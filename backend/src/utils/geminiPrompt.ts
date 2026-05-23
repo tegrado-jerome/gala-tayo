@@ -1,6 +1,10 @@
+export const ALLOWED_USER_TYPES = ["guest", "registered"] as const;
+
+export type GeminiUserType = (typeof ALLOWED_USER_TYPES)[number];
+
 type BuildGeminiPromptParams = {
   userPrompt: string;
-  userType: "guest" | "registered";
+  userType: GeminiUserType;
 };
 
 const GALATAYO_SYSTEM_PROMPT = `
@@ -185,4 +189,13 @@ ${userType}
 User request:
 ${userPrompt}
 `.trim();
+}
+
+export function isValidGeminiUserType(
+  userType: string | undefined
+): userType is GeminiUserType {
+  return (
+    typeof userType === "string" &&
+    ALLOWED_USER_TYPES.includes(userType as GeminiUserType)
+  );
 }

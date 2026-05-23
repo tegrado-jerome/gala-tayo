@@ -4,13 +4,35 @@ import {
   HttpResponseInit,
   InvocationContext,
 } from "@azure/functions";
-import { buildGeminiPrompt } from "../utils/geminiPrompt";
-import { generateGeminiResponse } from "../services/geminiService";
+import {
+  buildGeminiPrompt,
+  isValidGeminiUserType,
+} from "../utils/geminiPrompt";
+import {
+  GeminiServiceError,
+  generateGeminiResponse,
+} from "../services/geminiService";
 
 type GeminiTestBody = {
   prompt?: string;
-  userType?: "guest" | "registered";
+  userType?: string;
 };
+
+function getGeminiErrorMessage(status: number): string {
+  switch (status) {
+    case 403:
+      return "Gemini API request was denied.";
+    case 429:
+      return "Gemini API rate limit reached.";
+    case 500:
+    case 502:
+    case 503:
+    case 504:
+      return "Gemini API is currently unavailable.";
+    default:
+      return "Failed to generate Gemini response.";
+  }
+}
 
 export async function geminiTest(
   request: HttpRequest,
@@ -31,6 +53,15 @@ export async function geminiTest(
     }
 
     const userType = body.userType ?? "guest";
+
+    if (!isValidGeminiUserType(userType)) {
+      return {
+        status: 400,
+        jsonBody: {
+          message: "Invalid userType. Allowed values are guest or registered.",
+        },
+      };
+    }
 
     const geminiPrompt = buildGeminiPrompt({
       userPrompt: body.prompt.trim(),
@@ -53,10 +84,20 @@ export async function geminiTest(
   } catch (error) {
     context.error(error);
 
+    if (error instanceof GeminiServiceError) {
+      return {
+        status: error.status,
+        jsonBody: {
+          message: getGeminiErrorMessage(error.status),
+          error: error.message,
+        },
+      };
+    }
+
     return {
-      status: 500,
+      status: 400,
       jsonBody: {
-        message: "Failed to generate Gemini response.",
+        message: "Invalid request body.",
         error: error instanceof Error ? error.message : "Unknown error",
       },
     };

@@ -4,11 +4,14 @@ import {
   HttpResponseInit,
   InvocationContext,
 } from "@azure/functions";
-import { buildGeminiPrompt } from "../utils/geminiPrompt";
+import {
+  buildGeminiPrompt,
+  isValidGeminiUserType,
+} from "../utils/geminiPrompt";
 
 type GeminiPromptTestBody = {
   prompt?: string;
-  userType?: "guest" | "registered";
+  userType?: string;
 };
 
 export async function geminiPromptTest(
@@ -31,6 +34,15 @@ export async function geminiPromptTest(
 
     const userType = body.userType ?? "guest";
 
+    if (!isValidGeminiUserType(userType)) {
+      return {
+        status: 400,
+        jsonBody: {
+          message: "Invalid userType. Allowed values are guest or registered.",
+        },
+      };
+    }
+
     const geminiPrompt = buildGeminiPrompt({
       userPrompt: body.prompt.trim(),
       userType,
@@ -49,9 +61,9 @@ export async function geminiPromptTest(
     context.error(error);
 
     return {
-      status: 500,
+      status: 400,
       jsonBody: {
-        message: "Failed to generate Gemini prompt.",
+        message: "Invalid request body.",
         error: error instanceof Error ? error.message : "Unknown error",
       },
     };
