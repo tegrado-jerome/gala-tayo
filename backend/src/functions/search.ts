@@ -15,7 +15,7 @@ import {
 } from "../utils/rateLimit";
 import { generateSearchCacheKey } from "../utils/cacheKey";
 import { normalizeQuery } from "../utils/queryNormalizer";
-import { getCache } from "../services/redisCacheService";
+import { getCache, setCache } from "../services/redisCacheService";
 import {
   GeminiServiceError,
   generateGeminiResponse,
@@ -24,6 +24,10 @@ import {
 type SearchRequestBody = {
   query?: unknown;
   prompt?: unknown;
+};
+
+type CachedSearchResult = {
+  geminiResponse: string;
 };
 
 type SearchUserContext =
@@ -182,6 +186,11 @@ export async function search(
     const geminiResponse = await generateGeminiResponse({
       prompt: geminiPrompt,
     });
+    const resultToCache: CachedSearchResult = {
+      geminiResponse,
+    };
+
+    await setCache(cacheKey, resultToCache);
 
     return {
       status: 200,
@@ -192,7 +201,7 @@ export async function search(
         normalizedQuery,
         cacheKey,
         cacheHit: false,
-        geminiResponse,
+        result: resultToCache,
         remaining: rateLimitResult.remaining,
         limit: rateLimitResult.limit,
         resetAt: rateLimitResult.resetAt,

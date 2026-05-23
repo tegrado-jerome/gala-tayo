@@ -2,6 +2,7 @@ import { Redis } from "@upstash/redis";
 import { getSecret } from "../config/keyVault";
 
 let redisClient: Redis | null = null;
+const DEFAULT_CACHE_TTL_SECONDS = 60 * 60 * 24;
 
 async function getRedisClient(): Promise<Redis> {
   if (redisClient) {
@@ -30,4 +31,16 @@ async function getRedisClient(): Promise<Redis> {
 export async function getCache<T = unknown>(key: string): Promise<T | null> {
   const redis = await getRedisClient();
   return await redis.get<T>(key);
+}
+
+export async function setCache<T = unknown>(
+  key: string,
+  value: T,
+  ttlSeconds: number = DEFAULT_CACHE_TTL_SECONDS
+): Promise<void> {
+  const redis = await getRedisClient();
+
+  await redis.set(key, value, {
+    ex: ttlSeconds,
+  });
 }
