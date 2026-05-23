@@ -13,6 +13,7 @@ import {
   checkGuestRateLimit,
   checkRegisteredUserRateLimit,
 } from "../utils/rateLimit";
+import { generateSearchCacheKey } from "../utils/cacheKey";
 import { normalizeQuery } from "../utils/queryNormalizer";
 import {
   GeminiServiceError,
@@ -150,6 +151,7 @@ export async function search(
     }
 
     const normalizedQuery = normalizeQuery(query);
+    const cacheKey = generateSearchCacheKey(normalizedQuery);
     const userType: GeminiUserType = userContext.userType;
     const geminiPrompt = buildGeminiPrompt({
       userPrompt: normalizedQuery,
@@ -167,6 +169,7 @@ export async function search(
         userType,
         originalQuery: query,
         normalizedQuery,
+        cacheKey,
         geminiResponse,
         remaining: rateLimitResult.remaining,
         limit: rateLimitResult.limit,
