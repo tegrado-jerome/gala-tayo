@@ -13,6 +13,7 @@ import {
   checkGuestRateLimit,
   checkRegisteredUserRateLimit,
 } from "../utils/rateLimit";
+import { normalizeQuery } from "../utils/queryNormalizer";
 import {
   GeminiServiceError,
   generateGeminiResponse,
@@ -71,9 +72,7 @@ function getSearchQuery(body: SearchRequestBody): string | null {
     return null;
   }
 
-  const query = rawQuery.trim();
-
-  return query === "" ? null : query;
+  return rawQuery.trim() === "" ? null : rawQuery;
 }
 
 async function resolveUserContext(
@@ -150,9 +149,10 @@ export async function search(
       return buildRateLimitExceededResponse(userContext, rateLimitResult);
     }
 
+    const normalizedQuery = normalizeQuery(query);
     const userType: GeminiUserType = userContext.userType;
     const geminiPrompt = buildGeminiPrompt({
-      userPrompt: query,
+      userPrompt: normalizedQuery,
       userType,
     });
 
@@ -166,6 +166,7 @@ export async function search(
         message: "Search processed successfully.",
         userType,
         originalQuery: query,
+        normalizedQuery,
         geminiResponse,
         remaining: rateLimitResult.remaining,
         limit: rateLimitResult.limit,
