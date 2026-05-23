@@ -5,10 +5,12 @@ type RateLimitResult = {
 };
 
 const GUEST_DAILY_LIMIT = 5;
+const REGISTERED_USER_DAILY_LIMIT = 30;
 
-// Temporary in-memory storage for local testing.
-// Later we can replace this with Supabase or Redis.
+// In-memory counters for local development.
+// These reset whenever the Azure Functions host restarts.
 const guestUsage = new Map<string, number>();
+const registeredUserUsage = new Map<string, number>();
 
 export function checkGuestRateLimit(ipAddress: string): RateLimitResult {
   const currentUsage = guestUsage.get(ipAddress) ?? 0;
@@ -28,5 +30,26 @@ export function checkGuestRateLimit(ipAddress: string): RateLimitResult {
     allowed: true,
     remaining: GUEST_DAILY_LIMIT - newUsage,
     limit: GUEST_DAILY_LIMIT,
+  };
+}
+
+export function checkRegisteredUserRateLimit(userId: string): RateLimitResult {
+  const currentUsage = registeredUserUsage.get(userId) ?? 0;
+
+  if (currentUsage >= REGISTERED_USER_DAILY_LIMIT) {
+    return {
+      allowed: false,
+      remaining: 0,
+      limit: REGISTERED_USER_DAILY_LIMIT,
+    };
+  }
+
+  const newUsage = currentUsage + 1;
+  registeredUserUsage.set(userId, newUsage);
+
+  return {
+    allowed: true,
+    remaining: REGISTERED_USER_DAILY_LIMIT - newUsage,
+    limit: REGISTERED_USER_DAILY_LIMIT,
   };
 }
