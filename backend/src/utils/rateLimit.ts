@@ -38,34 +38,50 @@ function getOrCreateRecord(
   return existingRecord;
 }
 
+function buildRateLimitResult(
+  record: RateLimitRecord,
+  limit: number,
+  promptLoginOnLimit: boolean
+): RateLimitResult {
+  const remaining = Math.max(limit - record.count, 0);
+  const allowed = record.count < limit;
+
+  return {
+    allowed,
+    remaining,
+    limit,
+    resetAt: new Date(record.resetAt).toISOString(),
+    promptLogin: !allowed ? promptLoginOnLimit : false,
+  };
+}
+
 function checkRateLimit(
   storage: Map<string, RateLimitRecord>,
   key: string,
   limit: number,
-  promptLogin: boolean
+  promptLoginOnLimit: boolean
 ): RateLimitResult {
   const record = getOrCreateRecord(storage, key);
 
   if (record.count >= limit) {
-    return {
-      allowed: false,
-      remaining: 0,
-      limit,
-      resetAt: new Date(record.resetAt).toISOString(),
-      promptLogin,
-    };
+    return buildRateLimitResult(record, limit, promptLoginOnLimit);
   }
 
   record.count += 1;
   storage.set(key, record);
 
-  return {
-    allowed: true,
-    remaining: limit - record.count,
-    limit,
-    resetAt: new Date(record.resetAt).toISOString(),
-    promptLogin: false,
-  };
+  return buildRateLimitResult(record, limit, promptLoginOnLimit);
+}
+
+function getRateLimitStatus(
+  storage: Map<string, RateLimitRecord>,
+  key: string,
+  limit: number,
+  promptLoginOnLimit: boolean
+): RateLimitResult {
+  const record = getOrCreateRecord(storage, key);
+
+  return buildRateLimitResult(record, limit, promptLoginOnLimit);
 }
 
 export function checkGuestRateLimit(ipAddress: string): RateLimitResult {
@@ -74,6 +90,21 @@ export function checkGuestRateLimit(ipAddress: string): RateLimitResult {
 
 export function checkRegisteredUserRateLimit(userId: string): RateLimitResult {
   return checkRateLimit(
+    registeredUserUsage,
+    userId,
+    REGISTERED_USER_DAILY_LIMIT,
+    false
+  );
+}
+
+export function getGuestRateLimitStatus(ipAddress: string): RateLimitResult {
+  return getRateLimitStatus(guestUsage, ipAddress, GUEST_DAILY_LIMIT, true);
+}
+
+export function getRegisteredUserRateLimitStatus(
+  userId: string
+): RateLimitResult {
+  return getRateLimitStatus(
     registeredUserUsage,
     userId,
     REGISTERED_USER_DAILY_LIMIT,
