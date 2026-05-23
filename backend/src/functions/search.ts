@@ -23,7 +23,6 @@ import {
 
 type SearchRequestBody = {
   query?: unknown;
-  prompt?: unknown;
 };
 
 type CachedSearchResult = {
@@ -72,7 +71,7 @@ function getGeminiErrorMessage(status: number): string {
 }
 
 function getSearchQuery(body: SearchRequestBody): string | null {
-  const rawQuery = body.query ?? body.prompt;
+  const rawQuery = body.query;
 
   if (typeof rawQuery !== "string") {
     return null;
@@ -166,9 +165,6 @@ export async function search(
         jsonBody: {
           message: "Search result served from cache.",
           userType,
-          originalQuery: query,
-          normalizedQuery,
-          cacheKey,
           cacheHit: true,
           result: cachedResult,
           remaining: rateLimitResult.remaining,
@@ -194,15 +190,12 @@ export async function search(
 
     return {
       status: 200,
-      jsonBody: {
-        message: "Search processed successfully.",
-        userType,
-        originalQuery: query,
-        normalizedQuery,
-        cacheKey,
-        cacheHit: false,
-        result: resultToCache,
-        remaining: rateLimitResult.remaining,
+        jsonBody: {
+          message: "Search processed successfully.",
+          userType,
+          cacheHit: false,
+          result: resultToCache,
+          remaining: rateLimitResult.remaining,
         limit: rateLimitResult.limit,
         resetAt: rateLimitResult.resetAt,
       },
