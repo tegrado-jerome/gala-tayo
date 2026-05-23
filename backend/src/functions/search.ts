@@ -15,6 +15,7 @@ import {
 } from "../utils/rateLimit";
 import { generateSearchCacheKey } from "../utils/cacheKey";
 import { normalizeQuery } from "../utils/queryNormalizer";
+import { getCache } from "../services/redisCacheService";
 import {
   GeminiServiceError,
   generateGeminiResponse,
@@ -153,6 +154,26 @@ export async function search(
     const normalizedQuery = normalizeQuery(query);
     const cacheKey = generateSearchCacheKey(normalizedQuery);
     const userType: GeminiUserType = userContext.userType;
+    const cachedResult = await getCache(cacheKey);
+
+    if (cachedResult) {
+      return {
+        status: 200,
+        jsonBody: {
+          message: "Search result served from cache.",
+          userType,
+          originalQuery: query,
+          normalizedQuery,
+          cacheKey,
+          cacheHit: true,
+          result: cachedResult,
+          remaining: rateLimitResult.remaining,
+          limit: rateLimitResult.limit,
+          resetAt: rateLimitResult.resetAt,
+        },
+      };
+    }
+
     const geminiPrompt = buildGeminiPrompt({
       userPrompt: normalizedQuery,
       userType,
@@ -170,6 +191,7 @@ export async function search(
         originalQuery: query,
         normalizedQuery,
         cacheKey,
+        cacheHit: false,
         geminiResponse,
         remaining: rateLimitResult.remaining,
         limit: rateLimitResult.limit,
