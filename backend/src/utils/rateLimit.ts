@@ -3,6 +3,7 @@ type RateLimitResult = {
   remaining: number;
   limit: number;
   resetAt: string;
+  promptLogin: boolean;
 };
 
 type RateLimitRecord = {
@@ -40,7 +41,8 @@ function getOrCreateRecord(
 function checkRateLimit(
   storage: Map<string, RateLimitRecord>,
   key: string,
-  limit: number
+  limit: number,
+  promptLogin: boolean
 ): RateLimitResult {
   const record = getOrCreateRecord(storage, key);
 
@@ -50,6 +52,7 @@ function checkRateLimit(
       remaining: 0,
       limit,
       resetAt: new Date(record.resetAt).toISOString(),
+      promptLogin,
     };
   }
 
@@ -61,17 +64,19 @@ function checkRateLimit(
     remaining: limit - record.count,
     limit,
     resetAt: new Date(record.resetAt).toISOString(),
+    promptLogin: false,
   };
 }
 
 export function checkGuestRateLimit(ipAddress: string): RateLimitResult {
-  return checkRateLimit(guestUsage, ipAddress, GUEST_DAILY_LIMIT);
+  return checkRateLimit(guestUsage, ipAddress, GUEST_DAILY_LIMIT, true);
 }
 
 export function checkRegisteredUserRateLimit(userId: string): RateLimitResult {
   return checkRateLimit(
     registeredUserUsage,
     userId,
-    REGISTERED_USER_DAILY_LIMIT
+    REGISTERED_USER_DAILY_LIMIT,
+    false
   );
 }
