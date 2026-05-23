@@ -2,54 +2,76 @@ type RateLimitResult = {
   allowed: boolean;
   remaining: number;
   limit: number;
+  resetAt: string;
+};
+
+type RateLimitRecord = {
+  count: number;
+  resetAt: number;
 };
 
 const GUEST_DAILY_LIMIT = 5;
 const REGISTERED_USER_DAILY_LIMIT = 30;
+const RATE_LIMIT_WINDOW_MS = 24 * 60 * 60 * 1000;
 
-// In-memory counters for local development.
-// These reset whenever the Azure Functions host restarts.
-const guestUsage = new Map<string, number>();
-const registeredUserUsage = new Map<string, number>();
+const guestUsage = new Map<string, RateLimitRecord>();
+const registeredUserUsage = new Map<string, RateLimitRecord>();
 
-export function checkGuestRateLimit(ipAddress: string): RateLimitResult {
-  const currentUsage = guestUsage.get(ipAddress) ?? 0;
+function getOrCreateRecord(
+  storage: Map<string, RateLimitRecord>,
+  key: string
+): RateLimitRecord {
+  const now = Date.now();
+  const existingRecord = storage.get(key);
 
-  if (currentUsage >= GUEST_DAILY_LIMIT) {
+  if (!existingRecord || now >= existingRecord.resetAt) {
+    const newRecord: RateLimitRecord = {
+      count: 0,
+      resetAt: now + RATE_LIMIT_WINDOW_MS,
+    };
+
+    storage.set(key, newRecord);
+    return newRecord;
+  }
+
+  return existingRecord;
+}
+
+function checkRateLimit(
+  storage: Map<string, RateLimitRecord>,
+  key: string,
+  limit: number
+): RateLimitResult {
+  const record = getOrCreateRecord(storage, key);
+
+  if (record.count >= limit) {
     return {
       allowed: false,
       remaining: 0,
-      limit: GUEST_DAILY_LIMIT,
+      limit,
+      resetAt: new Date(record.resetAt).toISOString(),
     };
   }
 
-  const newUsage = currentUsage + 1;
-  guestUsage.set(ipAddress, newUsage);
+  record.count += 1;
+  storage.set(key, record);
 
   return {
     allowed: true,
-    remaining: GUEST_DAILY_LIMIT - newUsage,
-    limit: GUEST_DAILY_LIMIT,
+    remaining: limit - record.count,
+    limit,
+    resetAt: new Date(record.resetAt).toISOString(),
   };
 }
 
+export function checkGuestRateLimit(ipAddress: string): RateLimitResult {
+  return checkRateLimit(guestUsage, ipAddress, GUEST_DAILY_LIMIT);
+}
+
 export function checkRegisteredUserRateLimit(userId: string): RateLimitResult {
-  const currentUsage = registeredUserUsage.get(userId) ?? 0;
-
-  if (currentUsage >= REGISTERED_USER_DAILY_LIMIT) {
-    return {
-      allowed: false,
-      remaining: 0,
-      limit: REGISTERED_USER_DAILY_LIMIT,
-    };
-  }
-
-  const newUsage = currentUsage + 1;
-  registeredUserUsage.set(userId, newUsage);
-
-  return {
-    allowed: true,
-    remaining: REGISTERED_USER_DAILY_LIMIT - newUsage,
-    limit: REGISTERED_USER_DAILY_LIMIT,
-  };
+  return checkRateLimit(
+    registeredUserUsage,
+    userId,
+    REGISTERED_USER_DAILY_LIMIT
+  );
 }
