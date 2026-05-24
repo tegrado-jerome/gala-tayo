@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import SearchBar from '../components/SearchBar'
+import PlaceCard, { type PlaceCardData } from '../components/PlaceCard'
 
 type IconProps = {
   className?: string
@@ -10,26 +11,6 @@ function PinIcon({ className = 'h-4 w-4' }: IconProps) {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
       <path d="M12 21s6-5.7 6-11a6 6 0 1 0-12 0c0 5.3 6 11 6 11Z" />
       <circle cx="12" cy="10" r="2.4" />
-    </svg>
-  )
-}
-
-function ShareIcon({ className = 'h-4 w-4' }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
-      <circle cx="18" cy="5" r="2.2" />
-      <circle cx="6" cy="12" r="2.2" />
-      <circle cx="18" cy="19" r="2.2" />
-      <path d="m8.1 11 7.3-4.1" />
-      <path d="m8.1 13 7.3 4.1" />
-    </svg>
-  )
-}
-
-function SaveIcon({ className = 'h-4 w-4' }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
-      <path d="M6 4.5h12a1 1 0 0 1 1 1V21l-7-4-7 4V5.5a1 1 0 0 1 1-1Z" />
     </svg>
   )
 }
@@ -211,11 +192,47 @@ const metroManilaAreas = [
   { id: 'pateros', name: 'Pateros', type: 'municipality' },
 ] as const
 
-const mockPlaces = [
-  { name: 'Bonifacio High Street', area: 'BGC, Taguig', status: 'Open', badge: 'Popular' },
-  { name: 'The Mind Museum', area: 'BGC, Taguig', status: 'Closed', badge: 'Culture' },
-  { name: 'Market! Market!', area: 'BGC, Taguig', status: 'Open', badge: 'Budget' },
-  { name: 'Uptown Mall', area: 'BGC, Taguig', status: 'Closed', badge: 'Chill' },
+const mockPlaces: PlaceCardData[] = [
+  {
+    id: 'bhs',
+    name: 'Bonifacio High Street',
+    category: 'Hangout',
+    area: 'BGC, Taguig',
+    rating: '4.6',
+    status: 'Open',
+    reason: 'Open-air walk + food options for chill date nights.',
+    badge: 'Popular',
+  },
+  {
+    id: 'mind-museum',
+    name: 'The Mind Museum',
+    category: 'Museum',
+    area: 'BGC, Taguig',
+    rating: '4.5',
+    status: 'Closed',
+    reason: 'Interactive exhibits good for barkada or family learning trips.',
+    badge: 'Culture',
+  },
+  {
+    id: 'market-market',
+    name: 'Market! Market!',
+    category: 'Mall',
+    area: 'BGC, Taguig',
+    rating: '4.3',
+    status: 'Open',
+    reason: 'Budget-friendly food trip picks with many choices.',
+    badge: 'Budget',
+  },
+  {
+    id: 'uptown-mall',
+    name: 'Uptown Mall',
+    category: 'Mall',
+    area: 'BGC, Taguig',
+    rating: '4.4',
+    status: 'Closed',
+    reason: 'Good mix of dining and entertainment spots in one area.',
+    badge: 'Chill',
+  },
 ]
 
 const mapPins = [
@@ -240,6 +257,7 @@ function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [selectedArea, setSelectedArea] = useState('all')
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
+  const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null)
   const [isSearching, setIsSearching] = useState(false)
   const [searchError, setSearchError] = useState<string | null>(null)
   const [lastSearchQuery, setLastSearchQuery] = useState('')
@@ -429,52 +447,13 @@ function HomePage() {
 
             <div className="grid gap-3">
               {mockPlaces.map((place) => (
-                <article
-                  key={place.name}
-                  className="overflow-hidden rounded-2xl border border-[var(--line)] bg-white shadow-[0_14px_30px_rgba(28,77,160,0.07)]"
-                >
-                  <div className="flex gap-3 p-3">
-                    <div className="flex h-[76px] w-[86px] shrink-0 items-center justify-center rounded-xl border border-[var(--line)] bg-[linear-gradient(180deg,#f8fbff,#eef4fd)] text-[10px] text-slate-400">
-                      Photo
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-2">
-                        <h2 className="truncate text-sm font-semibold text-slate-800">{place.name}</h2>
-                        <span className="rounded-full bg-[var(--accent-wash)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--accent-deep)]">
-                          {place.badge}
-                        </span>
-                      </div>
-
-                      <div className="mt-1 flex items-center gap-1 text-[11px] text-[var(--muted)]">
-                        <PinIcon className="h-3.5 w-3.5" />
-                        <span>{place.area}</span>
-                      </div>
-
-                      <div className="mt-1 flex items-center gap-1 text-[11px] text-[var(--muted)]">
-                        <span className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
-                        <span>{place.status}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 border-t border-[var(--line)]">
-                    <button
-                      type="button"
-                      className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-xs font-medium text-slate-700"
-                    >
-                      <ShareIcon className="h-3.5 w-3.5" />
-                      <span>Share</span>
-                    </button>
-                    <button
-                      type="button"
-                      className="flex items-center justify-center gap-1.5 border-l border-[var(--line)] px-3 py-2.5 text-xs font-medium text-slate-700"
-                    >
-                      <SaveIcon className="h-3.5 w-3.5" />
-                      <span>Save</span>
-                    </button>
-                  </div>
-                </article>
+                <PlaceCard
+                  key={place.id}
+                  place={place}
+                  compact
+                  isSelected={selectedPlaceId === place.id}
+                  onSelect={setSelectedPlaceId}
+                />
               ))}
             </div>
           </section>
@@ -568,52 +547,12 @@ function HomePage() {
             <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
               <div className="grid gap-3">
                 {mockPlaces.map((place) => (
-                  <article
-                    key={place.name}
-                    className="overflow-hidden rounded-2xl border border-[var(--line)] bg-white shadow-[0_14px_32px_rgba(28,77,160,0.06)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_40px_rgba(28,77,160,0.10)]"
-                  >
-                    <div className="flex gap-3 p-3">
-                      <div className="flex h-[72px] w-[88px] shrink-0 items-center justify-center rounded-xl border border-[var(--line)] bg-[linear-gradient(180deg,#f8fbff,#eef4fd)] text-[10px] text-slate-400">
-                        Photo
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-start justify-between gap-2">
-                          <h2 className="truncate text-sm font-semibold text-slate-800">{place.name}</h2>
-                          <span className="rounded-full bg-[var(--accent-wash)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--accent-deep)]">
-                            {place.badge}
-                          </span>
-                        </div>
-
-                        <div className="mt-1 flex items-center gap-1 text-[11px] text-[var(--muted)]">
-                          <PinIcon className="h-3.5 w-3.5" />
-                          <span>{place.area}</span>
-                        </div>
-
-                        <div className="mt-1 flex items-center gap-1 text-[11px] text-[var(--muted)]">
-                          <span className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
-                          <span>{place.status}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 border-t border-[var(--line)]">
-                      <button
-                        type="button"
-                        className="flex items-center justify-center gap-1.5 px-3 py-2 text-[11px] font-medium text-slate-700 transition hover:bg-slate-50"
-                      >
-                        <ShareIcon className="h-3.5 w-3.5" />
-                        <span>Share</span>
-                      </button>
-                      <button
-                        type="button"
-                        className="flex items-center justify-center gap-1.5 border-l border-[var(--line)] px-3 py-2 text-[11px] font-medium text-slate-700 transition hover:bg-slate-50"
-                      >
-                        <SaveIcon className="h-3.5 w-3.5" />
-                        <span>Save</span>
-                      </button>
-                    </div>
-                  </article>
+                  <PlaceCard
+                    key={place.id}
+                    place={place}
+                    isSelected={selectedPlaceId === place.id}
+                    onSelect={setSelectedPlaceId}
+                  />
                 ))}
               </div>
             </div>
