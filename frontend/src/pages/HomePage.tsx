@@ -240,6 +240,10 @@ function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [selectedArea, setSelectedArea] = useState('all')
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
+  const [isSearching, setIsSearching] = useState(false)
+  const [searchError, setSearchError] = useState<string | null>(null)
+  const [lastSearchQuery, setLastSearchQuery] = useState('')
+  const [lastGeminiResponse, setLastGeminiResponse] = useState('')
   const filteredAdvancedCategories = useMemo(() => categories, [categories])
   const selectedCategoryName = useMemo(
     () =>
@@ -253,8 +257,48 @@ function HomePage() {
     [selectedArea]
   )
 
-  const handleSearch = (query: string) => {
-    console.log('Search query:', query, '| category:', selectedCategory, '| area:', selectedArea)
+  const handleSearch = async (query: string) => {
+    try {
+      setIsSearching(true)
+      setSearchError(null)
+
+      const response = await fetch('/api/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query,
+          category: selectedCategory,
+          area: selectedArea,
+        }),
+      })
+
+      const data = (await response.json()) as {
+        message?: string
+        error?: string
+        geminiResponse?: string
+        result?: {
+          geminiResponse?: string
+        }
+      }
+
+      if (!response.ok) {
+        throw new Error(data.error || data.message || 'Search failed.')
+      }
+
+      const geminiText = data.result?.geminiResponse ?? data.geminiResponse ?? ''
+
+      setLastSearchQuery(query)
+      setLastGeminiResponse(geminiText)
+      console.log('Search success:', { query, selectedCategory, selectedArea, data })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Search failed.'
+      setSearchError(message)
+      console.error('Search request failed:', error)
+    } finally {
+      setIsSearching(false)
+    }
   }
 
   useEffect(() => {
@@ -327,14 +371,21 @@ function HomePage() {
           <section className="border-b border-[var(--line)] bg-white/76 px-4 py-4 backdrop-blur">
             <SearchBar
               onSearch={handleSearch}
+              isLoading={isSearching}
               placeholder="Saan mo gustong pumunta ngayon?"
               animatedPlaceholders={animatedSearchPrompts}
               className="px-3 py-2.5 shadow-[0_10px_26px_rgba(28,77,160,0.06)]"
             />
+            {isSearching ? (
+              <p className="mt-2 text-xs text-[var(--accent-deep)]">Searching...</p>
+            ) : null}
+            {searchError ? (
+              <p className="mt-2 text-xs text-red-600">{searchError}</p>
+            ) : null}
             <button
               type="button"
               onClick={() => setShowAdvancedFilters(true)}
-              className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-white px-3 py-1.5 text-xs font-medium text-[var(--accent-deep)] transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)]"
+              className="mt-3 inline-flex items-center gap-1 rounded-full border border-[var(--line)] bg-white px-2.5 py-1 text-[11px] font-medium text-[var(--accent-deep)] transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)]"
             >
               <FilterIcon className="h-3.5 w-3.5" />
               Mga Filters
@@ -464,9 +515,11 @@ function HomePage() {
         </header>
 
         <section className="border-b border-[var(--line)] bg-white/72 backdrop-blur">
-          <div className="flex h-full items-center gap-4 px-8">
+          <div className="px-8 py-3">
+            <div className="flex items-center gap-4">
             <SearchBar
               onSearch={handleSearch}
+              isLoading={isSearching}
               placeholder="Saan mo gustong pumunta ngayon?"
               animatedPlaceholders={animatedSearchPrompts}
               className="min-w-0 flex-1"
@@ -479,6 +532,13 @@ function HomePage() {
               <FilterIcon className="h-3.5 w-3.5" />
               Mga Filters
             </button>
+            </div>
+            {isSearching ? (
+              <p className="mt-2 text-xs text-[var(--accent-deep)]">Searching...</p>
+            ) : null}
+            {searchError ? (
+              <p className="mt-2 text-xs text-red-600">{searchError}</p>
+            ) : null}
           </div>
         </section>
 
@@ -487,7 +547,11 @@ function HomePage() {
             <div className="flex items-start justify-between border-b border-[var(--line)] px-5 py-4">
               <div>
                 <p className="text-sm font-semibold text-slate-900">Mga Lugar</p>
-                <p className="text-[11px] text-[var(--muted)]">325 places found</p>
+                <p className="text-[11px] text-[var(--muted)]">
+                  {lastSearchQuery
+                    ? `Last search: "${lastSearchQuery}"`
+                    : '325 places found'}
+                </p>
               </div>
               <div className="text-right">
                 <p className="text-[11px] text-[var(--muted)]">Pinakarekomenda</p>
@@ -601,6 +665,12 @@ function HomePage() {
                   </div>
                 </div>
               </div>
+
+              {lastGeminiResponse ? (
+                <p className="mt-3 max-h-14 overflow-hidden text-[11px] text-[var(--muted)]">
+                  {lastGeminiResponse}
+                </p>
+              ) : null}
             </div>
           </section>
         </section>
@@ -617,17 +687,17 @@ function HomePage() {
         />
 
         <section className="absolute right-0 top-0 h-full w-full max-w-[540px] border-l border-[var(--line)] bg-[linear-gradient(180deg,#ffffff,#f4f8ff)] shadow-[-18px_0_40px_rgba(15,23,42,0.12)]">
-          <div className="flex items-start justify-between border-b border-[var(--line)] px-5 py-4">
+          <div className="flex items-start justify-between border-b border-[var(--line)] px-4 py-3.5 sm:px-5 sm:py-4">
             <div>
-              <p className="text-lg font-semibold text-slate-900">Pumili ng filters</p>
-              <p className="mt-1 text-xs text-[var(--muted)]">
+              <p className="text-[26px] font-semibold leading-tight text-slate-900 sm:text-lg">Pumili ng filters</p>
+              <p className="mt-1 text-[11px] text-[var(--muted)] sm:text-xs">
                 Selected: {selectedCategoryName} · {selectedAreaName}
               </p>
             </div>
             <button
               type="button"
               onClick={() => setShowAdvancedFilters(false)}
-              className="mt-1 flex h-9 w-9 items-center justify-center rounded-full border border-[var(--accent)] bg-[var(--accent)] text-white shadow-[0_8px_18px_rgba(47,116,232,0.3)] transition-all duration-200 hover:-translate-y-[1px] hover:bg-white hover:text-[var(--accent)] hover:shadow-[0_8px_16px_rgba(47,116,232,0.16)] active:scale-95 active:bg-[var(--accent-deep)] active:text-white"
+              className="mt-1 flex h-8 w-8 items-center justify-center rounded-full border border-[var(--accent)] bg-[var(--accent)] text-white shadow-[0_8px_18px_rgba(47,116,232,0.3)] transition-all duration-200 hover:-translate-y-[1px] hover:bg-white hover:text-[var(--accent)] hover:shadow-[0_8px_16px_rgba(47,116,232,0.16)] active:scale-95 active:bg-[var(--accent-deep)] active:text-white sm:h-9 sm:w-9"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.7" className="h-4 w-4">
                 <path d="M6 6l12 12" />
@@ -636,18 +706,18 @@ function HomePage() {
             </button>
           </div>
 
-          <div className="max-h-[calc(100%-170px)] overflow-y-auto px-5 pb-5 pt-4">
+          <div className="max-h-[calc(100%-164px)] overflow-y-auto px-4 pb-4 pt-3 sm:max-h-[calc(100%-170px)] sm:px-5 sm:pb-5 sm:pt-4">
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)] sm:text-xs">
                 Kategorya ng lugar
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
               <button
                 type="button"
                 onClick={() => setSelectedCategory('all')}
-                className={`group rounded-xl border px-3 py-2 text-left text-sm transition duration-200 active:scale-[0.98] ${
+                className={`group rounded-xl border px-2.5 py-1.5 text-left text-[13px] transition duration-200 active:scale-[0.98] sm:px-3 sm:py-2 sm:text-sm ${
                   selectedCategory === 'all'
                     ? 'border-[var(--accent)] bg-[linear-gradient(180deg,#eef5ff,#deecff)] text-[var(--accent-deep)] shadow-[0_8px_18px_rgba(47,116,232,0.14)] active:bg-[linear-gradient(180deg,#deecff,#d0e4ff)]'
                     : 'border-[var(--line)] bg-white text-slate-700 hover:-translate-y-[1px] hover:border-[var(--accent)] hover:bg-[linear-gradient(180deg,#f7fbff,#ecf4ff)] hover:text-[var(--accent-deep)] hover:shadow-[0_8px_16px_rgba(47,116,232,0.1)] active:border-[var(--accent)] active:bg-[linear-gradient(180deg,#eef5ff,#deecff)] active:text-[var(--accent-deep)]'
@@ -667,7 +737,7 @@ function HomePage() {
                   key={category.id}
                   type="button"
                   onClick={() => setSelectedCategory(category.id)}
-                  className={`group rounded-xl border px-3 py-2 text-left text-sm transition duration-200 active:scale-[0.98] ${
+                  className={`group rounded-xl border px-2.5 py-1.5 text-left text-[13px] transition duration-200 active:scale-[0.98] sm:px-3 sm:py-2 sm:text-sm ${
                     selectedCategory === category.id
                       ? 'border-[var(--accent)] bg-[linear-gradient(180deg,#eef5ff,#deecff)] text-[var(--accent-deep)] shadow-[0_8px_18px_rgba(47,116,232,0.14)] active:bg-[linear-gradient(180deg,#deecff,#d0e4ff)]'
                       : 'border-[var(--line)] bg-white text-slate-700 hover:-translate-y-[1px] hover:border-[var(--accent)] hover:bg-[linear-gradient(180deg,#f7fbff,#ecf4ff)] hover:text-[var(--accent-deep)] hover:shadow-[0_8px_16px_rgba(47,116,232,0.1)] active:border-[var(--accent)] active:bg-[linear-gradient(180deg,#eef5ff,#deecff)] active:text-[var(--accent-deep)]'
@@ -684,19 +754,19 @@ function HomePage() {
               ))}
             </div>
 
-            <div className="mt-5">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
+            <div className="mt-4 sm:mt-5">
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)] sm:text-xs">
                 Lungsod / Lugar sa Metro Manila
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
               {metroManilaAreas.map((area) => (
                 <button
                   key={area.id}
                   type="button"
                   onClick={() => setSelectedArea(area.id)}
-                  className={`group rounded-xl border px-3 py-2 text-left text-sm transition duration-200 active:scale-[0.98] ${
+                  className={`group rounded-xl border px-2.5 py-1.5 text-left text-[13px] transition duration-200 active:scale-[0.98] sm:px-3 sm:py-2 sm:text-sm ${
                     selectedArea === area.id
                       ? 'border-[var(--accent)] bg-[linear-gradient(180deg,#eef5ff,#deecff)] text-[var(--accent-deep)] shadow-[0_8px_18px_rgba(47,116,232,0.14)] active:bg-[linear-gradient(180deg,#deecff,#d0e4ff)]'
                       : 'border-[var(--line)] bg-white text-slate-700 hover:-translate-y-[1px] hover:border-[var(--accent)] hover:bg-[linear-gradient(180deg,#f7fbff,#ecf4ff)] hover:text-[var(--accent-deep)] hover:shadow-[0_8px_16px_rgba(47,116,232,0.1)] active:border-[var(--accent)] active:bg-[linear-gradient(180deg,#eef5ff,#deecff)] active:text-[var(--accent-deep)]'
@@ -714,11 +784,11 @@ function HomePage() {
             </div>
           </div>
 
-          <div className="absolute bottom-0 left-0 right-0 border-t border-[var(--line)] bg-white/95 px-5 py-3">
+          <div className="absolute bottom-0 left-0 right-0 border-t border-[var(--line)] bg-white/95 px-4 py-2.5 sm:px-5 sm:py-3">
             <button
               type="button"
               onClick={() => setShowAdvancedFilters(false)}
-              className="w-full rounded-full border border-[var(--accent)] bg-[var(--accent)] px-4 py-3 text-sm font-semibold tracking-[0.01em] text-white shadow-[0_10px_20px_rgba(47,116,232,0.26)] transition-all duration-200 hover:-translate-y-[1px] hover:bg-white hover:text-[var(--accent)] hover:shadow-[0_8px_16px_rgba(47,116,232,0.16)] active:scale-[0.99] active:bg-[var(--accent-deep)] active:text-white"
+              className="w-full rounded-full border border-[var(--accent)] bg-[var(--accent)] px-4 py-2.5 text-[15px] font-semibold tracking-[0.01em] text-white shadow-[0_10px_20px_rgba(47,116,232,0.26)] transition-all duration-200 hover:-translate-y-[1px] hover:bg-white hover:text-[var(--accent)] hover:shadow-[0_8px_16px_rgba(47,116,232,0.16)] active:scale-[0.99] active:bg-[var(--accent-deep)] active:text-white sm:py-3 sm:text-sm"
             >
               Gamitin ang filters
             </button>
