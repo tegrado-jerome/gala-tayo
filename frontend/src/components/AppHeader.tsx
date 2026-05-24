@@ -1,3 +1,5 @@
+import GoogleSignInButton from './GoogleSignInButton'
+
 type AppHeaderProps = {
   showTaglishChip?: boolean
   signInLabel?: string
@@ -22,7 +24,6 @@ function SparkIcon() {
 
 function AppHeader({
   showTaglishChip = true,
-  signInLabel = 'Mag-sign in',
   onBack,
   mobileCompact = false,
 }: AppHeaderProps) {
@@ -63,12 +64,7 @@ function AppHeader({
                 <p className="text-[11px] text-[var(--muted)]">Metro Manila place finder</p>
               </div>
             </div>
-            <button
-              type="button"
-              className="rounded-lg border border-[var(--line-strong)] bg-white px-3 py-2 text-xs font-medium text-[var(--accent-deep)]"
-            >
-              {signInLabel}
-            </button>
+            <GoogleSignInButton compact />
           </>
         )}
       </div>
@@ -91,12 +87,7 @@ function AppHeader({
               <span>Taglish-friendly search</span>
             </div>
           ) : null}
-          <button
-            type="button"
-            className="rounded-xl border border-[var(--line-strong)] bg-white px-4 py-2 text-sm font-medium text-[var(--accent-deep)] shadow-[0_10px_24px_rgba(15,23,42,0.04)] transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)]"
-          >
-            {signInLabel}
-          </button>
+          <GoogleSignInButton />
         </div>
       </div>
     </header>
