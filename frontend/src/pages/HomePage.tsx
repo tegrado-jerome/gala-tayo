@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from 'react'
 import SearchBar from '../components/SearchBar'
 
 type IconProps = {
@@ -33,14 +34,6 @@ function SaveIcon({ className = 'h-4 w-4' }: IconProps) {
   )
 }
 
-function ChevronRightIcon({ className = 'h-4 w-4' }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
-      <path d="m9 6 6 6-6 6" />
-    </svg>
-  )
-}
-
 function SparkIcon({ className = 'h-4 w-4' }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
@@ -56,7 +49,138 @@ function SparkIcon({ className = 'h-4 w-4' }: IconProps) {
   )
 }
 
-const mockCategories = ['Kainan', 'Cafe', 'Mall', 'Parke', 'Nightlife', 'Heritage']
+type BackendCategory = {
+  id: string
+  name: string
+  description: string
+  searchTerms: string[]
+}
+
+function FilterIcon({ className = 'h-4 w-4' }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
+      <path d="M4 6h16" />
+      <path d="M7 12h10" />
+      <path d="M10 18h4" />
+    </svg>
+  )
+}
+
+function CheckIcon({ className = 'h-4 w-4' }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className={className}>
+      <path d="m5 13 4 4L19 7" />
+    </svg>
+  )
+}
+
+function CategoryIcon({
+  className = 'h-3.5 w-3.5',
+  categoryId,
+}: IconProps & { categoryId: string }) {
+  const iconClass = `${className} text-[var(--accent-deep)]`
+
+  if (categoryId === 'all') {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={iconClass}>
+        <circle cx="12" cy="12" r="8.5" />
+        <path d="M12 3.5v17" />
+        <path d="M3.5 12h17" />
+      </svg>
+    )
+  }
+
+  if (['kainan', 'cafe', 'dessert'].includes(categoryId)) {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={iconClass}>
+        <path d="M5 8h10v4a5 5 0 0 1-5 5h0a5 5 0 0 1-5-5V8Z" />
+        <path d="M15 9h2.2a2.3 2.3 0 0 1 0 4.6H15" />
+      </svg>
+    )
+  }
+
+  if (['mall', 'shopping', 'market', 'services'].includes(categoryId)) {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={iconClass}>
+        <path d="M5 8h14l-1.1 10.5H6.1L5 8Z" />
+        <path d="M9 8a3 3 0 0 1 6 0" />
+      </svg>
+    )
+  }
+
+  if (['parke', 'pet-friendly', 'chill'].includes(categoryId)) {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={iconClass}>
+        <path d="M12 21V11" />
+        <path d="M12 11c0-3.5 2.2-6 5.5-6 0 3.5-2.2 6-5.5 6Z" />
+        <path d="M12 14c0-3.5-2.2-6-5.5-6 0 3.5 2.2 6 5.5 6Z" />
+      </svg>
+    )
+  }
+
+  if (['nightlife', 'date-spot', 'barkada'].includes(categoryId)) {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={iconClass}>
+        <path d="M9 3v8.2a3 3 0 1 1-2 0V3" />
+        <path d="M15 3h5v2.5h-3V9a3 3 0 1 1-2 0V3Z" />
+      </svg>
+    )
+  }
+
+  if (['heritage', 'museum', 'tourist-spot', 'religious'].includes(categoryId)) {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={iconClass}>
+        <path d="M3 9h18" />
+        <path d="M5.5 9v8.5M9.5 9v8.5M14.5 9v8.5M18.5 9v8.5" />
+        <path d="M2.5 20h19" />
+        <path d="M12 3 3 7.5h18L12 3Z" />
+      </svg>
+    )
+  }
+
+  if (['study-spot', 'coworking', 'family'].includes(categoryId)) {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={iconClass}>
+        <rect x="4" y="5" width="16" height="14" rx="1.8" />
+        <path d="M8 9h8M8 13h8" />
+      </svg>
+    )
+  }
+
+  if (['clinic', 'dental', 'pharmacy', 'hospital', 'wellness'].includes(categoryId)) {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={iconClass}>
+        <path d="M12 5v14M5 12h14" />
+        <rect x="4" y="4" width="16" height="16" rx="3" />
+      </svg>
+    )
+  }
+
+  if (['transport', 'hotel-stay'].includes(categoryId)) {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={iconClass}>
+        <rect x="4" y="6" width="16" height="10" rx="2" />
+        <path d="M7 16v2M17 16v2M8 10h8" />
+      </svg>
+    )
+  }
+
+  return <PinIcon className={iconClass} />
+}
+
+type CategoryChip = {
+  id: string
+  name: string
+}
+
+const fallbackCategories = [
+  { id: 'kainan', name: 'Kainan' },
+  { id: 'cafe', name: 'Cafe' },
+  { id: 'mall', name: 'Mall' },
+  { id: 'parke', name: 'Parke' },
+  { id: 'nightlife', name: 'Nightlife' },
+  { id: 'heritage', name: 'Heritage' },
+]
 
 const mockPlaces = [
   { name: 'Bonifacio High Street', area: 'BGC, Taguig', status: 'Open', badge: 'Popular' },
@@ -83,9 +207,56 @@ const animatedSearchPrompts = [
 ]
 
 function HomePage() {
+  const [categories, setCategories] = useState(fallbackCategories)
+  const [selectedCategory, setSelectedCategory] = useState('all')
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
+  const filteredAdvancedCategories = useMemo(() => categories, [categories])
+
   const handleSearch = (query: string) => {
-    console.log('Search query:', query)
+    console.log('Search query:', query, '| category:', selectedCategory)
   }
+
+  useEffect(() => {
+    const controller = new AbortController()
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
+    const categoriesEndpoint = apiBaseUrl ? `${apiBaseUrl}/categories` : '/api/categories'
+
+    const loadCategories = async () => {
+      try {
+        const response = await fetch(categoriesEndpoint, {
+          method: 'GET',
+          signal: controller.signal,
+        })
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch categories.')
+        }
+
+        const data = (await response.json()) as {
+          categories?: BackendCategory[]
+        }
+
+        if (!data.categories || data.categories.length === 0) {
+          return
+        }
+
+        const mappedCategories: CategoryChip[] = data.categories.map((category) => ({
+          id: category.id,
+          name: category.name,
+        }))
+
+        setCategories(mappedCategories)
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          console.error('Using fallback categories:', error)
+        }
+      }
+    }
+
+    void loadCategories()
+
+    return () => controller.abort()
+  }, [])
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
@@ -119,18 +290,14 @@ function HomePage() {
               animatedPlaceholders={animatedSearchPrompts}
               className="px-3 py-2.5 shadow-[0_10px_26px_rgba(28,77,160,0.06)]"
             />
-
-            <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-              {mockCategories.map((category) => (
-                <button
-                  key={category}
-                  type="button"
-                  className="shrink-0 rounded-full border border-[var(--line)] bg-white px-3.5 py-2 text-xs font-medium text-slate-700"
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
+            <button
+              type="button"
+              onClick={() => setShowAdvancedFilters(true)}
+              className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-white px-3 py-1.5 text-xs font-medium text-[var(--accent-deep)] transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)]"
+            >
+              <FilterIcon className="h-3.5 w-3.5" />
+              Mga Kategorya
+            </button>
           </section>
 
           <section className="relative h-[260px] overflow-hidden border-b border-[var(--line)] bg-[linear-gradient(180deg,#fbfdff,#f1f7ff)]">
@@ -263,25 +430,14 @@ function HomePage() {
               animatedPlaceholders={animatedSearchPrompts}
               className="min-w-0 flex-1"
             />
-
-            <div className="flex shrink-0 items-center gap-2">
-              {mockCategories.map((category) => (
-                <button
-                  key={category}
-                  type="button"
-                  className="rounded-full border border-[var(--line)] bg-white px-3.5 py-2 text-xs font-medium text-slate-700 shadow-[0_4px_12px_rgba(15,23,42,0.03)] transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)]"
-                >
-                  {category}
-                </button>
-              ))}
-
-              <button
-                type="button"
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line)] bg-white text-slate-700 transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)]"
-              >
-                <ChevronRightIcon />
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setShowAdvancedFilters(true)}
+              className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-white px-3 py-2 text-xs font-medium text-[var(--accent-deep)] transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)]"
+            >
+              <FilterIcon className="h-3.5 w-3.5" />
+              Mga Kategorya
+            </button>
           </div>
         </section>
 
@@ -406,6 +562,89 @@ function HomePage() {
               </div>
             </div>
           </section>
+        </section>
+      </div>
+
+      <div
+        className={`fixed inset-0 z-40 transition ${showAdvancedFilters ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'}`}
+      >
+        <button
+          type="button"
+          onClick={() => setShowAdvancedFilters(false)}
+          className="absolute inset-0 bg-slate-900/30 backdrop-blur-[1px]"
+          aria-label="Close advanced filters"
+        />
+
+        <section className="absolute right-0 top-0 h-full w-full max-w-[540px] border-l border-[var(--line)] bg-[linear-gradient(180deg,#ffffff,#f4f8ff)] shadow-[-18px_0_40px_rgba(15,23,42,0.12)]">
+          <div className="flex items-start justify-between border-b border-[var(--line)] px-5 py-4">
+            <div>
+              <p className="text-lg font-semibold text-slate-900">Pumili ng lugar</p>
+              <p className="mt-1 text-xs text-[var(--muted)]">{selectedCategory === 'all' ? 'All places selected' : `Selected: ${categories.find((category) => category.id === selectedCategory)?.name ?? 'Category'}`}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowAdvancedFilters(false)}
+              className="mt-1 flex h-9 w-9 items-center justify-center rounded-full border border-[var(--accent)] bg-[var(--accent)] text-white shadow-[0_8px_18px_rgba(47,116,232,0.3)] transition-all duration-200 hover:-translate-y-[1px] hover:bg-white hover:text-[var(--accent)] hover:shadow-[0_8px_16px_rgba(47,116,232,0.16)] active:scale-95 active:bg-[var(--accent-deep)] active:text-white"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.7" className="h-4 w-4">
+                <path d="M6 6l12 12" />
+                <path d="M18 6 6 18" />
+              </svg>
+            </button>
+          </div>
+
+          <div className="max-h-[calc(100%-170px)] overflow-y-auto px-5 pb-5 pt-4">
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setSelectedCategory('all')}
+                className={`group rounded-xl border px-3 py-2 text-left text-sm transition duration-200 active:scale-[0.98] ${
+                  selectedCategory === 'all'
+                    ? 'border-[var(--accent)] bg-[linear-gradient(180deg,#eef5ff,#deecff)] text-[var(--accent-deep)] shadow-[0_8px_18px_rgba(47,116,232,0.14)] active:bg-[linear-gradient(180deg,#deecff,#d0e4ff)]'
+                    : 'border-[var(--line)] bg-white text-slate-700 hover:-translate-y-[1px] hover:border-[var(--accent)] hover:bg-[linear-gradient(180deg,#f7fbff,#ecf4ff)] hover:text-[var(--accent-deep)] hover:shadow-[0_8px_16px_rgba(47,116,232,0.1)] active:border-[var(--accent)] active:bg-[linear-gradient(180deg,#eef5ff,#deecff)] active:text-[var(--accent-deep)]'
+                }`}
+              >
+                <span className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <CategoryIcon categoryId="all" />
+                    <span>All places</span>
+                  </span>
+                  {selectedCategory === 'all' ? <CheckIcon className="h-4 w-4" /> : null}
+                </span>
+              </button>
+
+              {filteredAdvancedCategories.map((category) => (
+                <button
+                  key={category.id}
+                  type="button"
+                  onClick={() => setSelectedCategory(category.id)}
+                  className={`group rounded-xl border px-3 py-2 text-left text-sm transition duration-200 active:scale-[0.98] ${
+                    selectedCategory === category.id
+                      ? 'border-[var(--accent)] bg-[linear-gradient(180deg,#eef5ff,#deecff)] text-[var(--accent-deep)] shadow-[0_8px_18px_rgba(47,116,232,0.14)] active:bg-[linear-gradient(180deg,#deecff,#d0e4ff)]'
+                      : 'border-[var(--line)] bg-white text-slate-700 hover:-translate-y-[1px] hover:border-[var(--accent)] hover:bg-[linear-gradient(180deg,#f7fbff,#ecf4ff)] hover:text-[var(--accent-deep)] hover:shadow-[0_8px_16px_rgba(47,116,232,0.1)] active:border-[var(--accent)] active:bg-[linear-gradient(180deg,#eef5ff,#deecff)] active:text-[var(--accent-deep)]'
+                  }`}
+                >
+                  <span className="flex items-center justify-between">
+                    <span className="flex items-center gap-2">
+                      <CategoryIcon categoryId={category.id} />
+                      <span>{category.name}</span>
+                    </span>
+                    {selectedCategory === category.id ? <CheckIcon className="h-4 w-4" /> : null}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="absolute bottom-0 left-0 right-0 border-t border-[var(--line)] bg-white/95 px-5 py-3">
+            <button
+              type="button"
+              onClick={() => setShowAdvancedFilters(false)}
+              className="w-full rounded-full border border-[var(--accent)] bg-[var(--accent)] px-4 py-3 text-sm font-semibold tracking-[0.01em] text-white shadow-[0_10px_20px_rgba(47,116,232,0.26)] transition-all duration-200 hover:-translate-y-[1px] hover:bg-white hover:text-[var(--accent)] hover:shadow-[0_8px_16px_rgba(47,116,232,0.16)] active:scale-[0.99] active:bg-[var(--accent-deep)] active:text-white"
+            >
+              Gamitin ang mga kategorya
+            </button>
+          </div>
         </section>
       </div>
     </div>
