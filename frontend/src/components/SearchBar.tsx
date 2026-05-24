@@ -39,7 +39,6 @@ function SearchBar({
 
   useEffect(() => {
     if (!animatedPlaceholders || animatedPlaceholders.length === 0) {
-      setAnimatedPlaceholder(placeholder)
       return
     }
 
@@ -115,7 +114,10 @@ function SearchBar({
   }
 
   const canClear = query.trim().length > 0
-  const shownPlaceholder = query.length > 0 ? placeholder : animatedPlaceholder
+  const shownPlaceholder =
+    query.length > 0 || !animatedPlaceholders || animatedPlaceholders.length === 0
+      ? placeholder
+      : animatedPlaceholder
 
   return (
     <form

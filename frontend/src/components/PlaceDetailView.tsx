@@ -1,5 +1,6 @@
 import type { PlaceCardData } from './PlaceCard'
 import AppHeader from './AppHeader'
+import MapView from './MapView'
 
 type PlaceDetailViewProps = {
   place: PlaceCardData
@@ -11,15 +12,6 @@ function MetaIcon({ symbol }: { symbol: string }) {
     <span className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-[var(--line)] bg-white text-[11px] text-[var(--muted)]">
       {symbol}
     </span>
-  )
-}
-
-function PinMapIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" className="h-12 w-12 drop-shadow-[0_8px_16px_rgba(15,23,42,0.22)]">
-      <path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12Z" fill="#2e3a53" />
-      <circle cx="12" cy="10" r="2.8" fill="#ffffff" />
-    </svg>
   )
 }
 
@@ -53,6 +45,8 @@ function DirectionsIcon() {
 }
 
 function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
+  const mapCenter: [number, number] = [place.coordinates.lat, place.coordinates.lng]
+
   return (
     <section className="min-h-screen overflow-x-hidden bg-[var(--bg)]">
       <AppHeader signInLabel="Mag-sign in" />
@@ -157,35 +151,18 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
           </div>
         </article>
 
-        <section className="overflow-hidden rounded-2xl border border-[var(--line)] bg-[linear-gradient(180deg,#eef5ff,#e7f0ff)] shadow-[0_16px_34px_rgba(28,77,160,0.12)]">
-          <div className="relative h-[430px] w-full overflow-hidden bg-[#edf3ff]">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(83,146,255,0.32),transparent_36%),radial-gradient(circle_at_80%_70%,rgba(47,116,232,0.22),transparent_38%)]" />
-            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(148,163,184,0.13)_1px,transparent_1px),linear-gradient(rgba(148,163,184,0.13)_1px,transparent_1px)] bg-[size:44px_44px]" />
-            <div className="absolute inset-0 opacity-25 bg-[linear-gradient(transparent_0%,rgba(47,116,232,0.22)_50%,transparent_100%)] bg-[length:100%_14px] animate-[pulse_4s_ease-in-out_infinite]" />
-            <div className="absolute -left-8 top-0 h-[120%] w-[26%] rotate-[14deg] rounded-[40%] bg-[#dbe6f8]" />
-            <div className="absolute left-[12%] top-[14%] h-[70%] w-[78%] rotate-[-12deg] rounded-[18px] border-2 border-[#d9e2f3]" />
-            <div className="absolute left-[20%] top-[10%] h-[75%] w-[70%] rotate-[8deg] rounded-[18px] border border-[#d5dff0]" />
-            <div className="absolute left-[8%] top-[30%] h-[2px] w-[82%] rotate-[7deg] bg-[#d9e2f2]" />
-            <div className="absolute left-[10%] top-[48%] h-[2px] w-[74%] rotate-[-9deg] bg-[#d9e2f2]" />
-            <div className="absolute left-[24%] top-[66%] h-[2px] w-[62%] rotate-[13deg] bg-[#d9e2f2]" />
-
-            <div className="absolute left-[55%] top-[52%] -translate-x-1/2 -translate-y-1/2">
-              <span className="absolute left-1/2 top-1/2 h-20 w-20 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[rgba(47,116,232,0.35)] animate-ping" />
-              <span className="absolute left-1/2 top-1/2 h-12 w-12 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[rgba(47,116,232,0.45)]" />
-              <PinMapIcon />
-            </div>
-
-            <div className="absolute left-4 top-4 rounded-full border border-[rgba(47,116,232,0.26)] bg-white/78 px-3 py-1 text-[11px] font-medium text-[var(--accent-deep)] backdrop-blur">
-              AI map insight
-            </div>
-            <div className="absolute right-4 top-4 rounded-full border border-[rgba(47,116,232,0.24)] bg-white/78 px-3 py-1 text-[11px] text-[var(--muted)] backdrop-blur">
-              Live preview
-            </div>
-          </div>
+        <section className="min-h-0 overflow-hidden rounded-2xl border border-[var(--line)] bg-white shadow-[0_16px_34px_rgba(28,77,160,0.12)]">
+          <MapView
+            places={[place]}
+            selectedPlaceId={place.id}
+            center={mapCenter}
+            zoom={16}
+            className="!h-full !rounded-none !border-0"
+          />
         </section>
       </section>
 
-      <section className="pb-4 pt-2 lg:hidden">
+      <section className="pt-2 lg:hidden">
         <div className="px-4">
           <div className="mb-2 flex items-center gap-2 border-b border-[var(--line)] pb-2 text-sm text-[var(--muted)]">
             <button
@@ -282,30 +259,14 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
               </button>
             </div>
           </div>
-        </div>
 
-        <div className="relative left-1/2 mt-3 w-screen -translate-x-1/2 overflow-hidden border-y border-[var(--line)] bg-[linear-gradient(180deg,#eef5ff,#e7f0ff)] shadow-[0_16px_34px_rgba(28,77,160,0.12)]">
-          <div className="relative h-[340px] w-full overflow-hidden bg-[#edf3ff]">
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(83,146,255,0.32),transparent_36%),radial-gradient(circle_at_80%_70%,rgba(47,116,232,0.22),transparent_38%)]" />
-            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(148,163,184,0.13)_1px,transparent_1px),linear-gradient(rgba(148,163,184,0.13)_1px,transparent_1px)] bg-[size:32px_32px]" />
-            <div className="absolute inset-0 opacity-25 bg-[linear-gradient(transparent_0%,rgba(47,116,232,0.22)_50%,transparent_100%)] bg-[length:100%_14px] animate-[pulse_4s_ease-in-out_infinite]" />
-            <div className="absolute -left-8 top-0 h-[120%] w-[34%] rotate-[14deg] rounded-[40%] bg-[#dbe6f8]" />
-            <div className="absolute left-[14%] top-[16%] h-[66%] w-[72%] rotate-[-12deg] rounded-[18px] border-2 border-[#d9e2f3]" />
-            <div className="absolute left-[24%] top-[14%] h-[72%] w-[62%] rotate-[8deg] rounded-[18px] border border-[#d5dff0]" />
-
-            <div className="absolute left-[50%] top-[48%] -translate-x-1/2 -translate-y-1/2">
-              <span className="absolute left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[rgba(47,116,232,0.35)] animate-ping" />
-              <span className="absolute left-1/2 top-1/2 h-10 w-10 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[rgba(47,116,232,0.45)]" />
-              <PinMapIcon />
-            </div>
-
-            <div className="absolute left-3 top-3 rounded-full border border-[rgba(47,116,232,0.26)] bg-white/78 px-3 py-1 text-[11px] font-medium text-[var(--accent-deep)] backdrop-blur">
-              AI map insight
-            </div>
-            <div className="absolute right-3 top-3 rounded-full border border-[rgba(47,116,232,0.24)] bg-white/78 px-3 py-1 text-[11px] text-[var(--muted)] backdrop-blur">
-              Live preview
-            </div>
-          </div>
+          <MapView
+            places={[place]}
+            selectedPlaceId={place.id}
+            center={mapCenter}
+            zoom={16}
+            className="!h-[340px] !rounded-none !border-x-0 !border-b-0"
+          />
         </div>
       </section>
     </section>

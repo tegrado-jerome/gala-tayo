@@ -7,6 +7,10 @@ type PlaceCardData = {
   status: 'Open' | 'Closed'
   reason: string
   badge: string
+  coordinates: {
+    lat: number
+    lng: number
+  }
 }
 
 type PlaceCardProps = {

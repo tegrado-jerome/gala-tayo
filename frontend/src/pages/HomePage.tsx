@@ -3,6 +3,7 @@ import SearchBar from '../components/SearchBar'
 import PlaceCard, { type PlaceCardData } from '../components/PlaceCard'
 import PlaceDetailView from '../components/PlaceDetailView'
 import AppHeader from '../components/AppHeader'
+import MapView from '../components/MapView'
 
 type IconProps = {
   className?: string
@@ -136,10 +137,7 @@ function CategoryIcon({
   return <PinIcon className={iconClass} />
 }
 
-function AreaIcon({
-  className = 'h-3.5 w-3.5',
-  areaType: _areaType,
-}: IconProps & { areaType: 'all' | 'city' | 'municipality' }) {
+function AreaIcon({ className = 'h-3.5 w-3.5' }: IconProps & { areaType: 'all' | 'city' | 'municipality' }) {
   const iconClass = `${className} text-[var(--accent-deep)]`
   return <PinIcon className={iconClass} />
 }
@@ -189,6 +187,7 @@ const mockPlaces: PlaceCardData[] = [
     status: 'Open',
     reason: 'Open-air walk + food options for chill date nights.',
     badge: 'Popular',
+    coordinates: { lat: 14.5507, lng: 121.0508 },
   },
   {
     id: 'mind-museum',
@@ -199,6 +198,7 @@ const mockPlaces: PlaceCardData[] = [
     status: 'Closed',
     reason: 'Interactive exhibits good for barkada or family learning trips.',
     badge: 'Culture',
+    coordinates: { lat: 14.5528, lng: 121.0442 },
   },
   {
     id: 'market-market',
@@ -209,6 +209,7 @@ const mockPlaces: PlaceCardData[] = [
     status: 'Open',
     reason: 'Budget-friendly food trip picks with many choices.',
     badge: 'Budget',
+    coordinates: { lat: 14.5497, lng: 121.0565 },
   },
   {
     id: 'uptown-mall',
@@ -219,16 +220,8 @@ const mockPlaces: PlaceCardData[] = [
     status: 'Closed',
     reason: 'Good mix of dining and entertainment spots in one area.',
     badge: 'Chill',
+    coordinates: { lat: 14.5566, lng: 121.0542 },
   },
-]
-
-const mapPins = [
-  { left: '18%', top: '20%' },
-  { left: '45%', top: '16%' },
-  { left: '67%', top: '27%' },
-  { left: '58%', top: '49%' },
-  { left: '30%', top: '63%' },
-  { left: '18%', top: '74%' },
 ]
 
 const animatedSearchPrompts = [
@@ -249,7 +242,6 @@ function HomePage() {
   const [isSearching, setIsSearching] = useState(false)
   const [searchError, setSearchError] = useState<string | null>(null)
   const [lastSearchQuery, setLastSearchQuery] = useState('')
-  const [lastGeminiResponse, setLastGeminiResponse] = useState('')
   const filteredAdvancedCategories = useMemo(() => categories, [categories])
   const selectedCategoryName = useMemo(
     () =>
@@ -270,6 +262,10 @@ function HomePage() {
   const handlePlaceSelect = (placeId: string) => {
     setSelectedPlaceId(placeId)
     setIsPlaceDetailOpen(true)
+  }
+
+  const handleMapPlaceSelect = (placeId: string) => {
+    setSelectedPlaceId(placeId)
   }
 
   const handleSearch = async (query: string) => {
@@ -302,10 +298,7 @@ function HomePage() {
         throw new Error(data.error || data.message || 'Search failed.')
       }
 
-      const geminiText = data.result?.geminiResponse ?? data.geminiResponse ?? ''
-
       setLastSearchQuery(query)
-      setLastGeminiResponse(geminiText)
       console.log('Search success:', { query, selectedCategory, selectedArea, data })
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Search failed.'
@@ -392,25 +385,14 @@ function HomePage() {
             </button>
           </section>
 
-          <section className="relative h-[260px] overflow-hidden border-b border-[var(--line)] bg-[linear-gradient(180deg,#fbfdff,#f1f7ff)]">
-            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(148,163,184,0.10)_1px,transparent_1px),linear-gradient(rgba(148,163,184,0.10)_1px,transparent_1px)] bg-[size:54px_54px]" />
-            <div className="absolute left-[15%] top-[22%] h-[34%] w-[42%] rotate-[13deg] rounded-[28px] border border-slate-200/80" />
-            <div className="absolute right-[8%] top-[20%] h-[36%] w-[34%] rotate-[-10deg] rounded-[30px] border border-slate-200/80" />
-            <div className="absolute left-[32%] bottom-[8%] h-[34%] w-[48%] rotate-[8deg] rounded-[32px] border border-slate-200/80" />
-
-            <div className="absolute left-[22%] top-[28%] text-[var(--accent-deep)]">
-              <PinIcon className="h-7 w-7 drop-shadow-[0_8px_16px_rgba(47,116,232,0.2)]" />
-            </div>
-            <div className="absolute left-[54%] top-[18%] text-[var(--accent-deep)]">
-              <PinIcon className="h-8 w-8 drop-shadow-[0_8px_16px_rgba(47,116,232,0.2)]" />
-            </div>
-            <div className="absolute left-[68%] top-[56%] text-[var(--accent-deep)]">
-              <PinIcon className="h-7 w-7 drop-shadow-[0_8px_16px_rgba(47,116,232,0.2)]" />
-            </div>
-
-            <div className="absolute left-4 top-4 rounded-full border border-[var(--line)] bg-white/82 px-3 py-1.5 text-[11px] text-[var(--muted)] shadow-[0_8px_20px_rgba(28,77,160,0.06)]">
-              Map preview
-            </div>
+          <section className="h-[380px] border-b border-[var(--line)] bg-white">
+            <MapView
+              places={mockPlaces}
+              selectedPlaceId={selectedPlaceId}
+              onPlaceSelect={handleMapPlaceSelect}
+              onPlaceOpen={handlePlaceSelect}
+              className="!h-full !rounded-none !border-0"
+            />
           </section>
 
           <section className="px-4 py-4">
@@ -510,59 +492,14 @@ function HomePage() {
             </div>
           </aside>
 
-          <section className="relative min-h-0 overflow-hidden bg-[linear-gradient(180deg,#fbfdff,#f1f7ff)]">
-            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(rgba(148,163,184,0.08)_1px,transparent_1px)] bg-[size:76px_76px]" />
-            <div className="absolute inset-0 opacity-75">
-              <div className="absolute left-[5%] top-[16%] h-[16%] w-[24%] rotate-[13deg] rounded-[36px] border border-slate-200/80" />
-              <div className="absolute left-[34%] top-[12%] h-[26%] w-[30%] rotate-[-9deg] rounded-[42px] border border-slate-200/80" />
-              <div className="absolute left-[70%] top-[20%] h-[20%] w-[17%] rotate-[11deg] rounded-[32px] border border-slate-200/80" />
-              <div className="absolute left-[16%] top-[56%] h-[20%] w-[26%] rotate-[-13deg] rounded-[34px] border border-slate-200/80" />
-              <div className="absolute left-[50%] top-[55%] h-[20%] w-[29%] rotate-[8deg] rounded-[36px] border border-slate-200/80" />
-            </div>
-
-            <div className="pointer-events-none absolute right-6 top-6 rounded-full border border-[var(--line)] bg-white/78 px-3 py-1.5 text-[11px] text-[var(--muted)] shadow-[0_8px_24px_rgba(28,77,160,0.06)]">
-              Interactive map preview
-            </div>
-
-            {mapPins.map((pin) => (
-              <div
-                key={`${pin.left}-${pin.top}`}
-                className="absolute text-[var(--accent-deep)]"
-                style={{ left: pin.left, top: pin.top }}
-              >
-                <PinIcon className="h-7 w-7 drop-shadow-[0_10px_18px_rgba(47,116,232,0.18)]" />
-              </div>
-            ))}
-
-            <div className="absolute left-[37%] top-[33%] w-[300px] rounded-[22px] border border-[var(--line-strong)] bg-white/96 px-4 py-3 shadow-[0_24px_44px_rgba(28,77,160,0.14)] backdrop-blur">
-              <div className="flex gap-3">
-                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-[var(--line)] bg-[linear-gradient(180deg,#f8fbff,#eef4fd)] text-[10px] text-slate-400">
-                  Photo
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-semibold text-slate-800">Bonifacio High Street</p>
-                    <button type="button" className="text-transparent transition after:text-slate-400 after:content-['x'] hover:after:text-slate-600">
-                      ×
-                    </button>
-                  </div>
-                  <div className="mt-1 flex items-center gap-1 text-[11px] text-[var(--muted)]">
-                    <PinIcon className="h-3.5 w-3.5" />
-                    <span>BGC, Taguig</span>
-                  </div>
-                  <div className="mt-1 flex items-center gap-1 text-[11px] text-[var(--muted)]">
-                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
-                    <span>Open</span>
-                  </div>
-                </div>
-              </div>
-
-              {lastGeminiResponse ? (
-                <p className="mt-3 max-h-14 overflow-hidden text-[11px] text-[var(--muted)]">
-                  {lastGeminiResponse}
-                </p>
-              ) : null}
-            </div>
+          <section className="min-h-0 bg-white">
+            <MapView
+              places={mockPlaces}
+              selectedPlaceId={selectedPlaceId}
+              onPlaceSelect={handleMapPlaceSelect}
+              onPlaceOpen={handlePlaceSelect}
+              className="!h-full !rounded-none !border-0"
+            />
           </section>
         </section>
       </div>
