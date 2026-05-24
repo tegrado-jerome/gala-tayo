@@ -1,3 +1,5 @@
+import SearchBar from '../components/SearchBar'
+
 type IconProps = {
   className?: string
 }
@@ -7,15 +9,6 @@ function PinIcon({ className = 'h-4 w-4' }: IconProps) {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
       <path d="M12 21s6-5.7 6-11a6 6 0 1 0-12 0c0 5.3 6 11 6 11Z" />
       <circle cx="12" cy="10" r="2.4" />
-    </svg>
-  )
-}
-
-function SearchIcon({ className = 'h-4 w-4' }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
-      <circle cx="11" cy="11" r="6.2" />
-      <path d="m16 16 4.5 4.5" />
     </svg>
   )
 }
@@ -63,15 +56,6 @@ function SparkIcon({ className = 'h-4 w-4' }: IconProps) {
   )
 }
 
-function ClockIcon({ className = 'h-4 w-4' }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
-      <circle cx="12" cy="12" r="8" />
-      <path d="M12 7.5v5l3 2" />
-    </svg>
-  )
-}
-
 const mockCategories = ['Kainan', 'Cafe', 'Mall', 'Parke', 'Nightlife', 'Heritage']
 
 const mockPlaces = [
@@ -90,7 +74,19 @@ const mapPins = [
   { left: '18%', top: '74%' },
 ]
 
+const animatedSearchPrompts = [
+  'Date Spot sa BGC under 1K',
+  'Chill Cafe sa QC na Tahimik',
+  'Food Trip sa Makati na Mura',
+  'Study Place near Taft na may Wi-Fi',
+  'Dental Clinic near Me na Abot-Kaya',
+]
+
 function HomePage() {
+  const handleSearch = (query: string) => {
+    console.log('Search query:', query)
+  }
+
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <div className="min-h-screen bg-[linear-gradient(180deg,#f8fbff,#edf4ff)] lg:hidden">
@@ -117,18 +113,12 @@ function HomePage() {
 
         <main className="pb-6">
           <section className="border-b border-[var(--line)] bg-white/76 px-4 py-4 backdrop-blur">
-            <div className="rounded-2xl border border-[var(--line)] bg-white px-3 py-3 shadow-[0_10px_26px_rgba(28,77,160,0.06)]">
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--chip)] text-[var(--muted)]">
-                  <SearchIcon className="h-4 w-4" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="Saan tayo today?"
-                  className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
-                />
-              </div>
-            </div>
+            <SearchBar
+              onSearch={handleSearch}
+              placeholder="Saan mo gustong pumunta ngayon?"
+              animatedPlaceholders={animatedSearchPrompts}
+              className="px-3 py-2.5 shadow-[0_10px_26px_rgba(28,77,160,0.06)]"
+            />
 
             <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
               {mockCategories.map((category) => (
@@ -267,22 +257,12 @@ function HomePage() {
 
         <section className="border-b border-[var(--line)] bg-white/72 backdrop-blur">
           <div className="flex h-full items-center gap-4 px-8">
-            <div className="min-w-0 flex-1 rounded-2xl border border-[var(--line)] bg-white px-4 py-3 shadow-[0_10px_28px_rgba(28,77,160,0.05)]">
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--chip)] text-[var(--muted)]">
-                  <SearchIcon className="h-4 w-4" />
-                </div>
-                <input
-                  type="text"
-                  placeholder="Saan mo gustong pumunta ngayon?"
-                  className="min-w-0 flex-1 bg-transparent text-sm text-slate-800 outline-none placeholder:text-slate-400"
-                />
-                <div className="hidden items-center gap-2 rounded-full bg-[var(--chip)] px-3 py-1.5 text-xs text-[var(--muted)] xl:flex">
-                  <ClockIcon className="h-3.5 w-3.5" />
-                  <span>Search in seconds</span>
-                </div>
-              </div>
-            </div>
+            <SearchBar
+              onSearch={handleSearch}
+              placeholder="Saan mo gustong pumunta ngayon?"
+              animatedPlaceholders={animatedSearchPrompts}
+              className="min-w-0 flex-1"
+            />
 
             <div className="flex shrink-0 items-center gap-2">
               {mockCategories.map((category) => (
