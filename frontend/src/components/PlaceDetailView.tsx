@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import type { PlaceCardData } from './PlaceCard'
 import AppHeader from './AppHeader'
 import MapView from './MapView'
+import SharePlaceModal from './SharePlaceModal'
 
 type PlaceDetailViewProps = {
   place: PlaceCardData
@@ -46,6 +48,7 @@ function DirectionsIcon() {
 
 function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
   const mapCenter: [number, number] = [place.coordinates.lat, place.coordinates.lng]
+  const [isShareOpen, setIsShareOpen] = useState(false)
 
   return (
     <section className="min-h-screen overflow-x-hidden bg-[var(--bg)]">
@@ -136,7 +139,11 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
           </div>
           <hr className="my-3 border-[var(--line)]" />
           <div className="grid grid-cols-3 gap-2">
-            <button type="button" className="inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--line-strong)] bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)]">
+            <button
+              type="button"
+              onClick={() => setIsShareOpen(true)}
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--line-strong)] bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)]"
+            >
               <ShareIcon />
               <span>Share</span>
             </button>
@@ -245,7 +252,11 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
             <hr className="my-3 border-[var(--line)]" />
 
             <div className="grid grid-cols-3 gap-2">
-              <button type="button" className="inline-flex items-center justify-center gap-1 rounded-lg border border-[var(--line-strong)] bg-white px-2 py-2 text-sm font-medium text-slate-700">
+              <button
+                type="button"
+                onClick={() => setIsShareOpen(true)}
+                className="inline-flex items-center justify-center gap-1 rounded-lg border border-[var(--line-strong)] bg-white px-2 py-2 text-sm font-medium text-slate-700"
+              >
                 <ShareIcon />
                 <span>Share</span>
               </button>
@@ -269,6 +280,8 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
           />
         </div>
       </section>
+
+      <SharePlaceModal place={place} isOpen={isShareOpen} onClose={() => setIsShareOpen(false)} />
     </section>
   )
 }
