@@ -168,6 +168,14 @@ function CategoryIcon({
   return <PinIcon className={iconClass} />
 }
 
+function AreaIcon({
+  className = 'h-3.5 w-3.5',
+  areaType: _areaType,
+}: IconProps & { areaType: 'all' | 'city' | 'municipality' }) {
+  const iconClass = `${className} text-[var(--accent-deep)]`
+  return <PinIcon className={iconClass} />
+}
+
 type CategoryChip = {
   id: string
   name: string
@@ -181,6 +189,27 @@ const fallbackCategories = [
   { id: 'nightlife', name: 'Nightlife' },
   { id: 'heritage', name: 'Heritage' },
 ]
+
+const metroManilaAreas = [
+  { id: 'all', name: 'All areas', type: 'all' },
+  { id: 'caloocan', name: 'Caloocan', type: 'city' },
+  { id: 'las-pinas', name: 'Las Piñas', type: 'city' },
+  { id: 'makati', name: 'Makati', type: 'city' },
+  { id: 'malabon', name: 'Malabon', type: 'city' },
+  { id: 'mandaluyong', name: 'Mandaluyong', type: 'city' },
+  { id: 'manila', name: 'Manila', type: 'city' },
+  { id: 'marikina', name: 'Marikina', type: 'city' },
+  { id: 'muntinlupa', name: 'Muntinlupa', type: 'city' },
+  { id: 'navotas', name: 'Navotas', type: 'city' },
+  { id: 'paranaque', name: 'Parañaque', type: 'city' },
+  { id: 'pasay', name: 'Pasay', type: 'city' },
+  { id: 'pasig', name: 'Pasig', type: 'city' },
+  { id: 'quezon-city', name: 'Quezon City', type: 'city' },
+  { id: 'san-juan', name: 'San Juan', type: 'city' },
+  { id: 'taguig', name: 'Taguig', type: 'city' },
+  { id: 'valenzuela', name: 'Valenzuela', type: 'city' },
+  { id: 'pateros', name: 'Pateros', type: 'municipality' },
+] as const
 
 const mockPlaces = [
   { name: 'Bonifacio High Street', area: 'BGC, Taguig', status: 'Open', badge: 'Popular' },
@@ -209,11 +238,23 @@ const animatedSearchPrompts = [
 function HomePage() {
   const [categories, setCategories] = useState(fallbackCategories)
   const [selectedCategory, setSelectedCategory] = useState('all')
+  const [selectedArea, setSelectedArea] = useState('all')
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
   const filteredAdvancedCategories = useMemo(() => categories, [categories])
+  const selectedCategoryName = useMemo(
+    () =>
+      selectedCategory === 'all'
+        ? 'All places'
+        : categories.find((category) => category.id === selectedCategory)?.name ?? 'All places',
+    [categories, selectedCategory]
+  )
+  const selectedAreaName = useMemo(
+    () => metroManilaAreas.find((area) => area.id === selectedArea)?.name ?? 'All areas',
+    [selectedArea]
+  )
 
   const handleSearch = (query: string) => {
-    console.log('Search query:', query, '| category:', selectedCategory)
+    console.log('Search query:', query, '| category:', selectedCategory, '| area:', selectedArea)
   }
 
   useEffect(() => {
@@ -296,7 +337,7 @@ function HomePage() {
               className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-white px-3 py-1.5 text-xs font-medium text-[var(--accent-deep)] transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)]"
             >
               <FilterIcon className="h-3.5 w-3.5" />
-              Mga Kategorya
+              Mga Filters
             </button>
           </section>
 
@@ -436,7 +477,7 @@ function HomePage() {
               className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-white px-3 py-2 text-xs font-medium text-[var(--accent-deep)] transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)]"
             >
               <FilterIcon className="h-3.5 w-3.5" />
-              Mga Kategorya
+              Mga Filters
             </button>
           </div>
         </section>
@@ -578,8 +619,10 @@ function HomePage() {
         <section className="absolute right-0 top-0 h-full w-full max-w-[540px] border-l border-[var(--line)] bg-[linear-gradient(180deg,#ffffff,#f4f8ff)] shadow-[-18px_0_40px_rgba(15,23,42,0.12)]">
           <div className="flex items-start justify-between border-b border-[var(--line)] px-5 py-4">
             <div>
-              <p className="text-lg font-semibold text-slate-900">Pumili ng lugar</p>
-              <p className="mt-1 text-xs text-[var(--muted)]">{selectedCategory === 'all' ? 'All places selected' : `Selected: ${categories.find((category) => category.id === selectedCategory)?.name ?? 'Category'}`}</p>
+              <p className="text-lg font-semibold text-slate-900">Pumili ng filters</p>
+              <p className="mt-1 text-xs text-[var(--muted)]">
+                Selected: {selectedCategoryName} · {selectedAreaName}
+              </p>
             </div>
             <button
               type="button"
@@ -594,6 +637,12 @@ function HomePage() {
           </div>
 
           <div className="max-h-[calc(100%-170px)] overflow-y-auto px-5 pb-5 pt-4">
+            <div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
+                Kategorya ng lugar
+              </p>
+            </div>
+
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
@@ -634,6 +683,35 @@ function HomePage() {
                 </button>
               ))}
             </div>
+
+            <div className="mt-5">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
+                Lungsod / Lugar sa Metro Manila
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              {metroManilaAreas.map((area) => (
+                <button
+                  key={area.id}
+                  type="button"
+                  onClick={() => setSelectedArea(area.id)}
+                  className={`group rounded-xl border px-3 py-2 text-left text-sm transition duration-200 active:scale-[0.98] ${
+                    selectedArea === area.id
+                      ? 'border-[var(--accent)] bg-[linear-gradient(180deg,#eef5ff,#deecff)] text-[var(--accent-deep)] shadow-[0_8px_18px_rgba(47,116,232,0.14)] active:bg-[linear-gradient(180deg,#deecff,#d0e4ff)]'
+                      : 'border-[var(--line)] bg-white text-slate-700 hover:-translate-y-[1px] hover:border-[var(--accent)] hover:bg-[linear-gradient(180deg,#f7fbff,#ecf4ff)] hover:text-[var(--accent-deep)] hover:shadow-[0_8px_16px_rgba(47,116,232,0.1)] active:border-[var(--accent)] active:bg-[linear-gradient(180deg,#eef5ff,#deecff)] active:text-[var(--accent-deep)]'
+                  }`}
+                >
+                  <span className="flex items-center justify-between">
+                    <span className="flex min-w-0 items-center gap-2">
+                      <AreaIcon areaType={area.type} />
+                      <span className="truncate">{area.name}</span>
+                    </span>
+                    {selectedArea === area.id ? <CheckIcon className="h-4 w-4 shrink-0" /> : null}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="absolute bottom-0 left-0 right-0 border-t border-[var(--line)] bg-white/95 px-5 py-3">
@@ -642,7 +720,7 @@ function HomePage() {
               onClick={() => setShowAdvancedFilters(false)}
               className="w-full rounded-full border border-[var(--accent)] bg-[var(--accent)] px-4 py-3 text-sm font-semibold tracking-[0.01em] text-white shadow-[0_10px_20px_rgba(47,116,232,0.26)] transition-all duration-200 hover:-translate-y-[1px] hover:bg-white hover:text-[var(--accent)] hover:shadow-[0_8px_16px_rgba(47,116,232,0.16)] active:scale-[0.99] active:bg-[var(--accent-deep)] active:text-white"
             >
-              Gamitin ang mga kategorya
+              Gamitin ang filters
             </button>
           </div>
         </section>
