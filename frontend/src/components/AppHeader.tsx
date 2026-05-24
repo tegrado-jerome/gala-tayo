@@ -1,6 +1,8 @@
 type AppHeaderProps = {
   showTaglishChip?: boolean
   signInLabel?: string
+  onBack?: () => void
+  mobileCompact?: boolean
 }
 
 function SparkIcon() {
@@ -18,7 +20,12 @@ function SparkIcon() {
   )
 }
 
-function AppHeader({ showTaglishChip = true, signInLabel = 'Mag-sign in' }: AppHeaderProps) {
+function AppHeader({
+  showTaglishChip = true,
+  signInLabel = 'Mag-sign in',
+  onBack,
+  mobileCompact = false,
+}: AppHeaderProps) {
   return (
     <header className="relative overflow-hidden border-b border-[var(--line)] bg-[linear-gradient(180deg,rgba(255,255,255,0.82),rgba(255,255,255,0.62))] backdrop-blur">
       <div className="pointer-events-none absolute inset-0">
@@ -26,7 +33,47 @@ function AppHeader({ showTaglishChip = true, signInLabel = 'Mag-sign in' }: AppH
         <div className="absolute right-[12%] top-[-44px] h-24 w-24 rounded-full bg-[rgba(124,179,255,0.16)] blur-2xl" />
       </div>
 
-      <div className="relative flex h-[72px] items-center justify-between px-8">
+      <div className="relative flex h-[64px] items-center justify-between px-4 lg:hidden">
+        {mobileCompact ? (
+          <>
+            <button
+              type="button"
+              onClick={onBack}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--line)] bg-white text-slate-700 shadow-[0_6px_14px_rgba(28,77,160,0.08)]"
+              aria-label="Back"
+            >
+              ←
+            </button>
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[linear-gradient(180deg,var(--accent),#6ba5ff)] text-xs font-semibold text-white shadow-[0_8px_18px_rgba(47,116,232,0.2)]">
+                GT
+              </div>
+              <p className="text-2xl font-semibold tracking-tight text-slate-900">GalaTayo</p>
+            </div>
+            <div className="h-8 w-8 rounded-full border border-[var(--line)] bg-white shadow-[0_6px_14px_rgba(28,77,160,0.08)]" />
+          </>
+        ) : (
+          <>
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(180deg,var(--accent),#6ba5ff)] text-sm font-semibold text-white shadow-[0_10px_22px_rgba(47,116,232,0.22)]">
+                GT
+              </div>
+              <div>
+                <p className="text-base font-semibold tracking-tight text-slate-900">GalaTayo</p>
+                <p className="text-[11px] text-[var(--muted)]">Metro Manila place finder</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              className="rounded-lg border border-[var(--line-strong)] bg-white px-3 py-2 text-xs font-medium text-[var(--accent-deep)]"
+            >
+              {signInLabel}
+            </button>
+          </>
+        )}
+      </div>
+
+      <div className="relative hidden h-[72px] items-center justify-between px-8 lg:flex">
         <div className="flex items-center gap-4">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[linear-gradient(180deg,var(--accent),#6ba5ff)] text-sm font-semibold text-white shadow-[0_14px_28px_rgba(47,116,232,0.24)]">
             GT
