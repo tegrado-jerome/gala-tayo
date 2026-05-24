@@ -73,8 +73,8 @@ function PlaceCard({ place, isSelected = false, compact = false, onSelect }: Pla
         }
       }}
     >
-      <div className={`flex gap-3 ${compact ? 'p-3' : 'p-3'}`}>
-        <div className="flex h-[72px] w-[88px] shrink-0 items-center justify-center rounded-xl border border-[var(--line)] bg-[linear-gradient(180deg,#f8fbff,#eef4fd)] text-[10px] text-slate-400">
+      <div className={`flex items-stretch gap-3 ${compact ? 'p-3' : 'p-3'}`}>
+        <div className="flex min-h-[96px] w-[88px] shrink-0 self-stretch items-center justify-center rounded-xl border border-[var(--line)] bg-[linear-gradient(180deg,#f8fbff,#eef4fd)] text-[10px] text-slate-400">
           Photo
         </div>
 
