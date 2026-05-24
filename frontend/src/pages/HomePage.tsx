@@ -365,26 +365,7 @@ function HomePage() {
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <div className="min-h-screen bg-[linear-gradient(180deg,#f8fbff,#edf4ff)] lg:hidden">
-        <header className="sticky top-0 z-20 border-b border-[var(--line)] bg-white/88 px-4 py-3 backdrop-blur">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[linear-gradient(180deg,var(--accent),#6ba5ff)] text-sm font-semibold text-white shadow-[0_10px_24px_rgba(47,116,232,0.22)]">
-                GT
-              </div>
-              <div>
-                <p className="text-base font-semibold leading-tight text-slate-900">GalaTayo</p>
-                <p className="text-[11px] text-[var(--muted)]">Metro Manila place finder</p>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              className="rounded-lg border border-[var(--line-strong)] bg-white px-3 py-2 text-xs font-medium text-[var(--accent-deep)]"
-            >
-              Sign in
-            </button>
-          </div>
-        </header>
+        <AppHeader signInLabel="Mag-sign in" />
 
         <main className="pb-6">
           <section className="border-b border-[var(--line)] bg-white/76 px-4 py-4 backdrop-blur">
