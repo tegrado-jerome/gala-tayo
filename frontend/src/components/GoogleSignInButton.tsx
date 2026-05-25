@@ -62,14 +62,14 @@ function GoogleSignInButton({ compact = false, className = '' }: GoogleSignInBut
         onClick={() => void handleSignIn()}
         disabled={isSigningIn}
         className={`group inline-flex items-center justify-center rounded-md border border-[#dadce0] bg-white font-medium tracking-[0.01em] text-[#3c4043] shadow-[0_1px_2px_rgba(60,64,67,0.16)] transition duration-150 hover:border-[#c6cacf] hover:bg-[#f8fafd] hover:shadow-[0_2px_6px_rgba(60,64,67,0.18)] focus:outline-none focus:ring-2 focus:ring-[#1a73e8]/25 active:bg-[#f1f3f4] active:shadow-[0_1px_1px_rgba(60,64,67,0.12)] disabled:cursor-not-allowed disabled:opacity-70 ${
-          compact ? 'h-9 gap-1.5 px-2.5 text-[11px]' : 'h-10 gap-2.5 px-3.5 text-sm'
+          compact ? 'h-8 gap-1 px-2 text-[10px]' : 'h-10 gap-2.5 px-3.5 text-sm'
         }`}
       >
-        <span className={`flex shrink-0 items-center justify-center rounded-sm bg-white ${compact ? 'h-5 w-5' : 'h-6 w-6'}`}>
+        <span className={`flex shrink-0 items-center justify-center rounded-sm bg-white ${compact ? 'h-4 w-4' : 'h-6 w-6'}`}>
           <GoogleIcon />
         </span>
         <span className="whitespace-nowrap">
-          {isSigningIn ? 'Signing in...' : compact ? 'Google' : 'Sign in with Google'}
+          {isSigningIn ? 'Signing-in...' : 'Sign-in'}
         </span>
         {isSigningIn ? (
           <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#dadce0] border-t-[#4285f4]" />
