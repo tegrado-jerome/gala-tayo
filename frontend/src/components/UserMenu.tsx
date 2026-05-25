@@ -156,10 +156,10 @@ function UserMenu({ user, compact = false }: UserMenuProps) {
       <button
         type="button"
         onClick={() => setIsOpen((currentValue) => !currentValue)}
-        className={`group inline-flex items-center justify-center text-slate-800 transition duration-200 focus:outline-none focus:ring-2 focus:ring-[#1a73e8]/25 ${
+        className={`group inline-flex items-center justify-center text-slate-800 transition duration-200 focus:outline-none focus:ring-2 focus:ring-slate-300/35 ${
           compact
             ? 'mt-1 h-9 w-9 rounded-full bg-transparent p-0 hover:scale-105 active:scale-95'
-            : 'h-10 gap-2 rounded-full border border-[rgba(128,163,219,0.7)] bg-white/86 py-1 pl-1.5 pr-3 shadow-[0_10px_22px_rgba(28,77,160,0.12)] backdrop-blur hover:-translate-y-[1px] hover:border-[var(--accent)] hover:bg-white hover:shadow-[0_14px_28px_rgba(28,77,160,0.17)] active:translate-y-0'
+            : 'h-10 gap-2 rounded-full border border-[rgba(203,213,225,0.82)] bg-white/86 py-1 pl-1.5 pr-3 shadow-[0_10px_22px_rgba(28,77,160,0.12)] backdrop-blur hover:-translate-y-[1px] hover:border-[rgba(148,163,184,0.9)] hover:bg-white hover:shadow-[0_14px_28px_rgba(28,77,160,0.17)] active:translate-y-0'
         }`}
         aria-expanded={isOpen}
         aria-haspopup="menu"

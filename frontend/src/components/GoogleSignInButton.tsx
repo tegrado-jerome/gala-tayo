@@ -61,19 +61,26 @@ function GoogleSignInButton({ compact = false, className = '' }: GoogleSignInBut
         type="button"
         onClick={() => void handleSignIn()}
         disabled={isSigningIn}
-        className={`group inline-flex items-center justify-center rounded-md border border-[#dadce0] bg-white font-medium tracking-[0.01em] text-[#3c4043] shadow-[0_1px_2px_rgba(60,64,67,0.16)] transition duration-150 hover:border-[#c6cacf] hover:bg-[#f8fafd] hover:shadow-[0_2px_6px_rgba(60,64,67,0.18)] focus:outline-none focus:ring-2 focus:ring-[#1a73e8]/25 active:bg-[#f1f3f4] active:shadow-[0_1px_1px_rgba(60,64,67,0.12)] disabled:cursor-not-allowed disabled:opacity-70 ${
-          compact ? 'h-9 gap-1 px-2 text-[10px]' : 'h-10 gap-2.5 px-3.5 text-sm'
+        aria-busy={isSigningIn}
+        className={`group inline-flex items-center justify-center rounded-full border border-[rgba(203,213,225,0.82)] bg-white/86 font-semibold text-slate-800 shadow-[0_10px_22px_rgba(28,77,160,0.12)] backdrop-blur transition duration-200 hover:-translate-y-[1px] hover:border-[rgba(148,163,184,0.9)] hover:bg-white hover:shadow-[0_14px_28px_rgba(28,77,160,0.17)] focus:outline-none focus:ring-2 focus:ring-slate-300/35 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-70 ${
+          compact ? 'mt-1 h-9 w-9 p-0' : 'h-10 w-[108px] gap-2 py-1 pl-1.5 pr-3 text-sm'
         }`}
       >
-        <span className={`flex shrink-0 items-center justify-center rounded-sm bg-white ${compact ? 'h-4 w-4' : 'h-6 w-6'}`}>
+        <span className={`relative flex shrink-0 items-center justify-center rounded-full bg-white shadow-[0_6px_14px_rgba(28,77,160,0.08)] ring-1 ring-[var(--line)] transition group-hover:scale-105 ${
+          compact ? 'h-9 w-9 p-2' : 'h-8 w-8 p-1.5'
+        }`}
+        >
+          {isSigningIn ? (
+            <span className="absolute inset-[-3px] animate-spin rounded-full border-2 border-transparent border-t-[var(--accent)] border-r-[#7cb3ff]" aria-hidden="true" />
+          ) : null}
           <GoogleIcon />
         </span>
-        <span className="whitespace-nowrap">
-          {isSigningIn ? 'Signing-in...' : 'Sign-in'}
-        </span>
-        {isSigningIn ? (
-          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[#dadce0] border-t-[#4285f4]" />
+        {!isSigningIn && !compact ? (
+          <span className="whitespace-nowrap font-semibold text-slate-800">
+            Sign-in
+          </span>
         ) : null}
+        <span className="sr-only">{isSigningIn ? 'Signing in' : 'Sign-in'}</span>
       </button>
 
       {errorMessage ? (
