@@ -4,6 +4,7 @@ import PlaceCard, { type PlaceCardData } from '../components/PlaceCard'
 import PlaceDetailView from '../components/PlaceDetailView'
 import AppHeader from '../components/AppHeader'
 import MapView from '../components/MapView'
+import GuestLimitModal from '../components/GuestLimitModal'
 
 type IconProps = {
   className?: string
@@ -241,6 +242,7 @@ function HomePage() {
   const [isPlaceDetailOpen, setIsPlaceDetailOpen] = useState(false)
   const [isSearching, setIsSearching] = useState(false)
   const [searchError, setSearchError] = useState<string | null>(null)
+  const [promptLogin, setPromptLogin] = useState(false)
   const [lastSearchQuery, setLastSearchQuery] = useState('')
   const filteredAdvancedCategories = useMemo(() => categories, [categories])
   const selectedCategoryName = useMemo(
@@ -272,6 +274,7 @@ function HomePage() {
     try {
       setIsSearching(true)
       setSearchError(null)
+      setPromptLogin(false)
 
       const response = await fetch('/api/search', {
         method: 'POST',
@@ -288,10 +291,16 @@ function HomePage() {
       const data = (await response.json()) as {
         message?: string
         error?: string
+        promptLogin?: boolean
         geminiResponse?: string
         result?: {
           geminiResponse?: string
         }
+      }
+
+      if (data.promptLogin) {
+        setPromptLogin(true)
+        return
       }
 
       if (!response.ok) {
@@ -357,6 +366,8 @@ function HomePage() {
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
+      <GuestLimitModal isOpen={promptLogin} onClose={() => setPromptLogin(false)} />
+
       <div className="min-h-screen bg-[linear-gradient(180deg,#f8fbff,#edf4ff)] lg:hidden">
         <AppHeader signInLabel="Mag-sign in" />
 
