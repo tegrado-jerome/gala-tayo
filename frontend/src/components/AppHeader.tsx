@@ -1,4 +1,8 @@
+import { useEffect, useState } from 'react'
+import type { Session } from '@supabase/supabase-js'
 import GoogleSignInButton from './GoogleSignInButton'
+import UserMenu from './UserMenu'
+import { supabase } from '../supabase'
 
 type AppHeaderProps = {
   showTaglishChip?: boolean
@@ -27,8 +31,50 @@ function AppHeader({
   onBack,
   mobileCompact = false,
 }: AppHeaderProps) {
+  const [session, setSession] = useState<Session | null>(null)
+  const [isSessionLoading, setIsSessionLoading] = useState(true)
+
+  useEffect(() => {
+    let isMounted = true
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (isMounted) {
+        setSession(data.session)
+        setIsSessionLoading(false)
+      }
+    })
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession)
+      setIsSessionLoading(false)
+    })
+
+    return () => {
+      isMounted = false
+      subscription.unsubscribe()
+    }
+  }, [])
+
+  const authAction = session?.user ? (
+    <UserMenu user={session.user} compact />
+  ) : isSessionLoading ? (
+    <div className="h-9 w-[82px] rounded-md border border-[var(--line)] bg-white/70 shadow-[0_1px_2px_rgba(60,64,67,0.08)]" />
+  ) : (
+    <GoogleSignInButton compact />
+  )
+
+  const desktopAuthAction = session?.user ? (
+    <UserMenu user={session.user} />
+  ) : isSessionLoading ? (
+    <div className="h-10 w-[152px] rounded-md border border-[var(--line)] bg-white/70 shadow-[0_1px_2px_rgba(60,64,67,0.08)]" />
+  ) : (
+    <GoogleSignInButton />
+  )
+
   return (
-    <header className="relative overflow-hidden border-b border-[var(--line)] bg-[linear-gradient(180deg,rgba(255,255,255,0.82),rgba(255,255,255,0.62))] backdrop-blur">
+    <header className="relative z-[5000] overflow-visible border-b border-[var(--line)] bg-[linear-gradient(180deg,rgba(255,255,255,0.82),rgba(255,255,255,0.62))] backdrop-blur">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute left-[8%] top-[-60px] h-28 w-28 rounded-full bg-[rgba(83,146,255,0.16)] blur-2xl" />
         <div className="absolute right-[12%] top-[-44px] h-24 w-24 rounded-full bg-[rgba(124,179,255,0.16)] blur-2xl" />
@@ -64,7 +110,7 @@ function AppHeader({
                 <p className="text-[11px] text-[var(--muted)]">Metro Manila place finder</p>
               </div>
             </div>
-            <GoogleSignInButton compact />
+            {authAction}
           </>
         )}
       </div>
@@ -87,7 +133,7 @@ function AppHeader({
               <span>Taglish-friendly search</span>
             </div>
           ) : null}
-          <GoogleSignInButton />
+          {desktopAuthAction}
         </div>
       </div>
     </header>
