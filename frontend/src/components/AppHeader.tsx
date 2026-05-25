@@ -60,7 +60,7 @@ function AppHeader({
   const authAction = session?.user ? (
     <UserMenu user={session.user} compact />
   ) : isSessionLoading ? (
-    <div className="h-9 w-[82px] rounded-md border border-[var(--line)] bg-white/70 shadow-[0_1px_2px_rgba(60,64,67,0.08)]" />
+    <div className="invisible h-9 w-9" aria-hidden="true" />
   ) : (
     <GoogleSignInButton compact />
   )
@@ -68,7 +68,7 @@ function AppHeader({
   const desktopAuthAction = session?.user ? (
     <UserMenu user={session.user} />
   ) : isSessionLoading ? (
-    <div className="h-10 w-[152px] rounded-md border border-[var(--line)] bg-white/70 shadow-[0_1px_2px_rgba(60,64,67,0.08)]" />
+    <div className="invisible h-10 w-[108px]" aria-hidden="true" />
   ) : (
     <GoogleSignInButton />
   )

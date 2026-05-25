@@ -47,6 +47,15 @@ function ChevronIcon({ className = 'h-3.5 w-3.5' }: MenuIconProps) {
   )
 }
 
+function CloseIcon({ className = 'h-4 w-4' }: MenuIconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" className={className} aria-hidden="true">
+      <path d="M6 6l12 12" />
+      <path d="M18 6 6 18" />
+    </svg>
+  )
+}
+
 function getDisplayName(user: User) {
   const metadata = user.user_metadata
   const name = metadata.full_name ?? metadata.name
@@ -125,10 +134,14 @@ function UserMenu({ user, compact = false }: UserMenuProps) {
       return undefined
     }
 
+    const previousOverflow = document.body.style.overflow
+
     document.body.classList.add('gala-menu-open')
+    document.body.style.overflow = 'hidden'
 
     return () => {
       document.body.classList.remove('gala-menu-open')
+      document.body.style.overflow = previousOverflow
     }
   }, [isOpen])
 
@@ -214,6 +227,16 @@ function UserMenu({ user, compact = false }: UserMenuProps) {
             role="menu"
           >
             <div className={`${compact ? 'top-8 h-12' : 'top-10 h-16'} absolute left-0 w-1 rounded-r-full bg-[linear-gradient(180deg,var(--accent),#7cb3ff)] shadow-[0_0_18px_rgba(47,116,232,0.4)]`} />
+            {!compact ? (
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="absolute right-4 top-4 z-10 inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--line)] bg-white/78 text-slate-500 shadow-[0_8px_18px_rgba(28,77,160,0.1)] transition hover:-translate-y-[1px] hover:bg-white hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-300/35"
+                aria-label="Close account menu"
+              >
+                <CloseIcon />
+              </button>
+            ) : null}
             <div
               className={
                 compact
