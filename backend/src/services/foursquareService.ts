@@ -5,6 +5,8 @@ const FOURSQUARE_API_KEY_SECRET_NAME = "foursquare-api-key";
 const FOURSQUARE_PLACES_API_VERSION = "2025-06-17";
 const FOURSQUARE_SEARCH_FIELDS =
   "fsq_place_id,name,location,categories,distance,latitude,longitude";
+const FOURSQUARE_PLACE_FIELDS =
+  "fsq_place_id,name,location,categories,latitude,longitude";
 
 export class FoursquareServiceError extends Error {
   status: number;
@@ -129,4 +131,57 @@ export async function searchFoursquarePlaces({
 
   const results = Array.isArray(data.results) ? data.results : [];
   return results.map(normalizePlace);
+}
+
+export async function getFoursquarePlaceById(
+  foursquareId: string
+): Promise<NormalizedFoursquarePlace> {
+  const apiKey = await getFoursquareApiKey();
+  const trimmedId = foursquareId.trim();
+
+  if (!apiKey) {
+    throw new FoursquareServiceError("Foursquare API key is missing.", 500);
+  }
+
+  if (!trimmedId) {
+    throw new FoursquareServiceError("Foursquare place ID is required.", 400);
+  }
+
+  const url = new URL(
+    `${FOURSQUARE_BASE_URL}/places/${encodeURIComponent(trimmedId)}`
+  );
+  url.searchParams.set("fields", FOURSQUARE_PLACE_FIELDS);
+
+  let response: Response;
+  try {
+    response = await fetch(url.toString(), {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${apiKey}`,
+        "X-Places-Api-Version": FOURSQUARE_PLACES_API_VERSION,
+      },
+    });
+  } catch (error) {
+    throw new FoursquareServiceError(
+      error instanceof Error ? error.message : "Foursquare request failed.",
+      502
+    );
+  }
+
+  if (!response.ok) {
+    throw new FoursquareServiceError(
+      `Foursquare request failed with status ${response.status}.`,
+      response.status === 404 ? 404 : 502
+    );
+  }
+
+  let data: FoursquarePlace;
+  try {
+    data = (await response.json()) as FoursquarePlace;
+  } catch {
+    throw new FoursquareServiceError("Failed to parse Foursquare response.", 502);
+  }
+
+  return normalizePlace(data);
 }
