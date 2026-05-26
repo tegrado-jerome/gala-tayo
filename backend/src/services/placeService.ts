@@ -3,6 +3,7 @@ import {
   getFoursquarePlaceById,
   NormalizedFoursquarePlace,
 } from "./foursquareService";
+import { createBaseSlug } from "../utils/slug";
 
 export type StoredPlace = {
   id: string;
@@ -96,6 +97,42 @@ export async function findPlaceByNameAndCity(
   return (data as StoredPlace | null) ?? null;
 }
 
+async function slugExists(slug: string): Promise<boolean> {
+  const supabase = await getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("places")
+    .select("id")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (error) {
+    throw new PlaceServiceError("Failed to query place by slug.", 500);
+  }
+
+  return Boolean(data);
+}
+
+export async function generateUniqueSlug(
+  name: string,
+  city?: string
+): Promise<string> {
+  const baseSlug = createBaseSlug(name, city);
+
+  if (!baseSlug) {
+    throw new PlaceServiceError("Place name must create a valid slug.", 400);
+  }
+
+  let candidateSlug = baseSlug;
+  let suffix = 2;
+
+  while (await slugExists(candidateSlug)) {
+    candidateSlug = `${baseSlug}-${suffix}`;
+    suffix += 1;
+  }
+
+  return candidateSlug;
+}
+
 export async function lookupPlaceByFoursquareId(
   foursquareId: string
 ): Promise<PlaceLookupResult> {
@@ -113,4 +150,3 @@ export async function lookupPlaceByFoursquareId(
     place: await getFoursquarePlaceById(foursquareId),
   };
 }
-
