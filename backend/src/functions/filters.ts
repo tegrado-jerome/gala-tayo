@@ -1,13 +1,19 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 
-type Category = {
+export type Category = {
   id: string;
   name: string;
   description: string;
   searchTerms: string[];
 };
 
-const CATEGORIES: Category[] = [
+export type MetroManilaArea = {
+  id: string;
+  name: string;
+  type: "all" | "city" | "municipality";
+};
+
+export const CATEGORIES: Category[] = [
   {
     id: "kainan",
     name: "Kainan",
@@ -191,6 +197,58 @@ const CATEGORIES: Category[] = [
   },
 ];
 
+export const METRO_MANILA_AREAS: MetroManilaArea[] = [
+  { id: "all", name: "All areas", type: "all" },
+  { id: "caloocan", name: "Caloocan", type: "city" },
+  { id: "las-pinas", name: "Las Pinas", type: "city" },
+  { id: "makati", name: "Makati", type: "city" },
+  { id: "malabon", name: "Malabon", type: "city" },
+  { id: "mandaluyong", name: "Mandaluyong", type: "city" },
+  { id: "manila", name: "Manila", type: "city" },
+  { id: "marikina", name: "Marikina", type: "city" },
+  { id: "muntinlupa", name: "Muntinlupa", type: "city" },
+  { id: "navotas", name: "Navotas", type: "city" },
+  { id: "paranaque", name: "Paranaque", type: "city" },
+  { id: "pasay", name: "Pasay", type: "city" },
+  { id: "pasig", name: "Pasig", type: "city" },
+  { id: "quezon-city", name: "Quezon City", type: "city" },
+  { id: "san-juan", name: "San Juan", type: "city" },
+  { id: "taguig", name: "Taguig", type: "city" },
+  { id: "valenzuela", name: "Valenzuela", type: "city" },
+  { id: "pateros", name: "Pateros", type: "municipality" },
+];
+
+export function findCategoryById(id: string | undefined): Category | null {
+  if (!id || id === "all") {
+    return null;
+  }
+
+  return CATEGORIES.find((category) => category.id === id) ?? null;
+}
+
+export function findAreaById(id: string | undefined): MetroManilaArea | null {
+  if (!id || id === "all") {
+    return null;
+  }
+
+  return METRO_MANILA_AREAS.find((area) => area.id === id) ?? null;
+}
+
+export async function filters(
+  request: HttpRequest,
+  context: InvocationContext
+): Promise<HttpResponseInit> {
+  context.log("Fetching GalaTayo filters...");
+
+  return {
+    status: 200,
+    jsonBody: {
+      categories: CATEGORIES,
+      areas: METRO_MANILA_AREAS,
+    },
+  };
+}
+
 export async function categories(
   request: HttpRequest,
   context: InvocationContext
@@ -204,6 +262,13 @@ export async function categories(
     },
   };
 }
+
+app.http("filters", {
+  methods: ["GET"],
+  authLevel: "anonymous",
+  route: "filters",
+  handler: filters,
+});
 
 app.http("categories", {
   methods: ["GET"],

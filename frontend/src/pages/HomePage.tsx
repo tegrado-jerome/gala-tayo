@@ -26,6 +26,12 @@ type BackendCategory = {
   searchTerms: string[]
 }
 
+type BackendArea = {
+  id: string
+  name: string
+  type: 'all' | 'city' | 'municipality'
+}
+
 function FilterIcon({ className = 'h-4 w-4' }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
@@ -148,6 +154,12 @@ type CategoryChip = {
   name: string
 }
 
+type AreaChip = {
+  id: string
+  name: string
+  type: 'all' | 'city' | 'municipality'
+}
+
 const fallbackCategories = [
   { id: 'kainan', name: 'Kainan' },
   { id: 'cafe', name: 'Cafe' },
@@ -157,7 +169,7 @@ const fallbackCategories = [
   { id: 'heritage', name: 'Heritage' },
 ]
 
-const metroManilaAreas = [
+const fallbackAreas: AreaChip[] = [
   { id: 'all', name: 'All areas', type: 'all' },
   { id: 'caloocan', name: 'Caloocan', type: 'city' },
   { id: 'las-pinas', name: 'Las Piñas', type: 'city' },
@@ -176,7 +188,7 @@ const metroManilaAreas = [
   { id: 'taguig', name: 'Taguig', type: 'city' },
   { id: 'valenzuela', name: 'Valenzuela', type: 'city' },
   { id: 'pateros', name: 'Pateros', type: 'municipality' },
-] as const
+]
 
 const mockPlaces: PlaceCardData[] = [
   {
@@ -235,6 +247,7 @@ const animatedSearchPrompts = [
 
 function HomePage() {
   const [categories, setCategories] = useState(fallbackCategories)
+  const [areas, setAreas] = useState<AreaChip[]>(fallbackAreas)
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [selectedArea, setSelectedArea] = useState('all')
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
@@ -253,8 +266,8 @@ function HomePage() {
     [categories, selectedCategory]
   )
   const selectedAreaName = useMemo(
-    () => metroManilaAreas.find((area) => area.id === selectedArea)?.name ?? 'All areas',
-    [selectedArea]
+    () => areas.find((area) => area.id === selectedArea)?.name ?? 'All areas',
+    [areas, selectedArea]
   )
   const selectedPlace = useMemo(
     () => mockPlaces.find((place) => place.id === selectedPlaceId) ?? null,
@@ -321,41 +334,50 @@ function HomePage() {
   useEffect(() => {
     const controller = new AbortController()
     const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
-    const categoriesEndpoint = apiBaseUrl ? `${apiBaseUrl}/categories` : '/api/categories'
+    const filtersEndpoint = apiBaseUrl ? `${apiBaseUrl}/filters` : '/api/filters'
 
-    const loadCategories = async () => {
+    const loadFilters = async () => {
       try {
-        const response = await fetch(categoriesEndpoint, {
+        const response = await fetch(filtersEndpoint, {
           method: 'GET',
           signal: controller.signal,
         })
 
         if (!response.ok) {
-          throw new Error('Failed to fetch categories.')
+          throw new Error('Failed to fetch filters.')
         }
 
         const data = (await response.json()) as {
           categories?: BackendCategory[]
+          areas?: BackendArea[]
         }
 
-        if (!data.categories || data.categories.length === 0) {
-          return
+        if (data.categories && data.categories.length > 0) {
+          const mappedCategories: CategoryChip[] = data.categories.map((category) => ({
+            id: category.id,
+            name: category.name,
+          }))
+
+          setCategories(mappedCategories)
         }
 
-        const mappedCategories: CategoryChip[] = data.categories.map((category) => ({
-          id: category.id,
-          name: category.name,
-        }))
+        if (data.areas && data.areas.length > 0) {
+          const mappedAreas: AreaChip[] = data.areas.map((area) => ({
+            id: area.id,
+            name: area.name,
+            type: area.type,
+          }))
 
-        setCategories(mappedCategories)
+          setAreas(mappedAreas)
+        }
       } catch (error) {
         if ((error as Error).name !== 'AbortError') {
-          console.error('Using fallback categories:', error)
+          console.error('Using fallback filters:', error)
         }
       }
     }
 
-    void loadCategories()
+    void loadFilters()
 
     return () => controller.abort()
   }, [])
@@ -600,7 +622,7 @@ function HomePage() {
             </div>
 
             <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
-              {metroManilaAreas.map((area) => (
+              {areas.map((area) => (
                 <button
                   key={area.id}
                   type="button"
