@@ -5,6 +5,9 @@ export type GeminiUserType = (typeof ALLOWED_USER_TYPES)[number];
 type BuildGeminiPromptParams = {
   userPrompt: string;
   userType: GeminiUserType;
+  categoryName?: string;
+  categorySearchTerms?: string[];
+  areaName?: string;
 };
 
 const GALATAYO_SYSTEM_PROMPT = `
@@ -179,12 +182,31 @@ Sound helpful, not salesy.
 export function buildGeminiPrompt({
   userPrompt,
   userType,
+  categoryName,
+  categorySearchTerms = [],
+  areaName,
 }: BuildGeminiPromptParams): string {
+  const selectedFilters = [
+    categoryName
+      ? `Category filter: ${categoryName}${
+          categorySearchTerms.length > 0
+            ? ` (${categorySearchTerms.join(", ")})`
+            : ""
+        }`
+      : null,
+    areaName ? `Area filter: ${areaName}, Metro Manila` : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
   return `
 ${GALATAYO_SYSTEM_PROMPT}
 
 Current user type:
 ${userType}
+
+Selected filters:
+${selectedFilters || "No selected category or area filter."}
 
 User request:
 ${userPrompt}

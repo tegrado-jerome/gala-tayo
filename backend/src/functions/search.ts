@@ -20,9 +20,12 @@ import {
   GeminiServiceError,
   generateGeminiResponse,
 } from "../services/geminiService";
+import { findAreaById, findCategoryById } from "./filters";
 
 type SearchRequestBody = {
   query?: unknown;
+  category?: unknown;
+  area?: unknown;
 };
 
 type CachedSearchResult = {
@@ -78,6 +81,16 @@ function getSearchQuery(body: SearchRequestBody): string | null {
   }
 
   return rawQuery.trim() === "" ? null : rawQuery;
+}
+
+function getOptionalFilterId(value: unknown): string | undefined {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const trimmedValue = value.trim();
+
+  return trimmedValue === "" ? undefined : trimmedValue;
 }
 
 async function resolveUserContext(
@@ -155,7 +168,30 @@ export async function search(
     }
 
     const normalizedQuery = normalizeQuery(query);
-    const cacheKey = generateSearchCacheKey(normalizedQuery);
+    const categoryId = getOptionalFilterId(body.category) ?? "all";
+    const areaId = getOptionalFilterId(body.area) ?? "all";
+    const selectedCategory = findCategoryById(categoryId);
+    const selectedArea = findAreaById(areaId);
+
+    if (categoryId !== "all" && !selectedCategory) {
+      return {
+        status: 400,
+        jsonBody: {
+          message: "Invalid category filter.",
+        },
+      };
+    }
+
+    if (areaId !== "all" && !selectedArea) {
+      return {
+        status: 400,
+        jsonBody: {
+          message: "Invalid area filter.",
+        },
+      };
+    }
+
+    const cacheKey = generateSearchCacheKey(normalizedQuery, categoryId, areaId);
     const userType: GeminiUserType = userContext.userType;
     const cachedResult = await getCache(cacheKey);
 
@@ -177,6 +213,9 @@ export async function search(
     const geminiPrompt = buildGeminiPrompt({
       userPrompt: normalizedQuery,
       userType,
+      categoryName: selectedCategory?.name,
+      categorySearchTerms: selectedCategory?.searchTerms,
+      areaName: selectedArea?.name,
     });
 
     const geminiResponse = await generateGeminiResponse({
