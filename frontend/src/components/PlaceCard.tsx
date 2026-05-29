@@ -10,6 +10,8 @@ type PlaceCardData = {
   status: 'Open' | 'Closed'
   reason: string
   badge: string
+  imageUrl?: string | null
+  curatedImageUrl?: string | null
   coordinates: {
     lat: number
     lng: number
@@ -60,8 +62,20 @@ function SaveIcon() {
   )
 }
 
+function NoPhotoIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
+      <rect x="4" y="5" width="16" height="14" rx="2.2" />
+      <circle cx="9" cy="10" r="1.4" />
+      <path d="m7 17 3.3-3.4a1.4 1.4 0 0 1 2 0l1.1 1.1.8-.8a1.4 1.4 0 0 1 2 0L18 15.8" />
+      <path d="M5 4 19 20" />
+    </svg>
+  )
+}
+
 function PlaceCard({ place, isSelected = false, compact = false, onSelect }: PlaceCardProps) {
   const [isShareOpen, setIsShareOpen] = useState(false)
+  const photoUrl = place.imageUrl?.trim() || place.curatedImageUrl?.trim() || null
 
   return (
     <>
@@ -84,9 +98,21 @@ function PlaceCard({ place, isSelected = false, compact = false, onSelect }: Pla
         }}
       >
         <div className={`flex items-stretch gap-3 ${compact ? 'p-3' : 'p-3'}`}>
-          <div className="flex min-h-[96px] w-[88px] shrink-0 self-stretch items-center justify-center rounded-xl border border-[var(--line)] bg-[linear-gradient(180deg,#f8fbff,#eef4fd)] text-[10px] text-slate-400">
-            Photo
-          </div>
+          {photoUrl ? (
+            <img
+              src={photoUrl}
+              alt={place.name}
+              className="min-h-[96px] w-[88px] shrink-0 self-stretch rounded-xl border border-[var(--line)] object-cover"
+              loading="lazy"
+            />
+          ) : (
+            <div className="flex min-h-[96px] w-[88px] shrink-0 self-stretch flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-[var(--line-strong)] bg-[linear-gradient(180deg,#fbfdff,#eef4fb)] px-2 text-center text-slate-400">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--line)] bg-white text-slate-400">
+                <NoPhotoIcon />
+              </span>
+              <span className="text-[10px] font-medium leading-tight text-slate-500">No photo available</span>
+            </div>
+          )}
 
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-2">

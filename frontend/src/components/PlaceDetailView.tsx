@@ -46,9 +46,47 @@ function DirectionsIcon() {
   )
 }
 
+function NoPhotoIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-7 w-7">
+      <rect x="4" y="5" width="16" height="14" rx="2.2" />
+      <circle cx="9" cy="10" r="1.4" />
+      <path d="m7 17 3.3-3.4a1.4 1.4 0 0 1 2 0l1.1 1.1.8-.8a1.4 1.4 0 0 1 2 0L18 15.8" />
+      <path d="M5 4 19 20" />
+    </svg>
+  )
+}
+
+function DetailPhotoTile({ imageUrl, placeName }: { imageUrl?: string | null; placeName: string }) {
+  const photoUrl = imageUrl?.trim() || null
+
+  if (photoUrl) {
+    return (
+      <img
+        src={photoUrl}
+        alt={placeName}
+        className="h-full w-full rounded-2xl border border-[var(--line)] object-cover shadow-[0_10px_24px_rgba(28,77,160,0.08)]"
+      />
+    )
+  }
+
+  return (
+    <div className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[var(--line-strong)] bg-[linear-gradient(180deg,#fbfdff,#eef4fb)] text-center text-slate-400 shadow-[0_10px_24px_rgba(28,77,160,0.08)]">
+      <span className="flex h-12 w-12 items-center justify-center rounded-full border border-[var(--line)] bg-white text-slate-400">
+        <NoPhotoIcon />
+      </span>
+      <span className="text-xs font-medium text-slate-500">No photo available</span>
+    </div>
+  )
+}
+
 function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
   const mapCenter: [number, number] = [place.coordinates.lat, place.coordinates.lng]
   const [isShareOpen, setIsShareOpen] = useState(false)
+  const photoUrls = [place.imageUrl, place.curatedImageUrl].filter(
+    (imageUrl): imageUrl is string => Boolean(imageUrl?.trim())
+  )
+  const detailPhotos = Array.from({ length: 3 }, (_, index) => photoUrls[index] ?? null)
 
   return (
     <section className="min-h-screen overflow-x-hidden bg-[var(--bg)]">
@@ -73,13 +111,11 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
       </section>
 
       <main className="hidden w-full px-6 py-4 lg:block">
-        <section className="grid gap-0 lg:h-[320px] lg:grid-cols-[1.08fr_1.42fr]">
-          <div className="h-[320px] rounded-2xl border border-[var(--line)] bg-[linear-gradient(180deg,#f9fcff,#edf5ff)] shadow-[0_10px_24px_rgba(28,77,160,0.08)] lg:h-full" />
-          <div className="grid grid-cols-2 gap-0 lg:grid-rows-2">
-            <div className="h-[154px] rounded-2xl border border-[var(--line)] bg-[linear-gradient(180deg,#f9fcff,#edf5ff)] shadow-[0_10px_24px_rgba(28,77,160,0.08)] lg:h-full" />
-            <div className="h-[154px] rounded-2xl border border-[var(--line)] bg-[linear-gradient(180deg,#f9fcff,#edf5ff)] shadow-[0_10px_24px_rgba(28,77,160,0.08)] lg:h-full" />
-            <div className="h-[154px] rounded-2xl border border-[var(--line)] bg-[linear-gradient(180deg,#f9fcff,#edf5ff)] shadow-[0_10px_24px_rgba(28,77,160,0.08)] lg:h-full" />
-            <div className="h-[154px] rounded-2xl border border-[var(--line)] bg-[linear-gradient(180deg,#f9fcff,#edf5ff)] shadow-[0_10px_24px_rgba(28,77,160,0.08)] lg:h-full" />
+        <section className="grid gap-2 lg:h-[320px] lg:grid-cols-[1.02fr_0.98fr]">
+          <DetailPhotoTile imageUrl={detailPhotos[0]} placeName={place.name} />
+          <div className="grid grid-rows-2 gap-2">
+            <DetailPhotoTile imageUrl={detailPhotos[1]} placeName={place.name} />
+            <DetailPhotoTile imageUrl={detailPhotos[2]} placeName={place.name} />
           </div>
         </section>
       </main>
@@ -187,9 +223,10 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
         </div>
 
         <div className="overflow-hidden border-y border-[var(--line)] bg-white shadow-[0_12px_28px_rgba(28,77,160,0.1)]">
-          <div className="relative h-56 border-b border-[var(--line)] bg-[linear-gradient(180deg,#f7faff,#eef4ff)] sm:h-64">
+          <div className="relative h-56 border-b border-[var(--line)] sm:h-64">
+            <DetailPhotoTile imageUrl={detailPhotos[0]} placeName={place.name} />
             <div className="absolute right-3 top-3 rounded-full bg-slate-700/75 px-2 py-0.5 text-[11px] font-medium text-white">
-              1/5
+              1/3
             </div>
           </div>
 
