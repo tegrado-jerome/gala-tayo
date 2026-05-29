@@ -86,7 +86,8 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
   const photoUrls = [place.imageUrl, place.curatedImageUrl].filter(
     (imageUrl): imageUrl is string => Boolean(imageUrl?.trim())
   )
-  const detailPhotos = Array.from({ length: 3 }, (_, index) => photoUrls[index] ?? null)
+  const galleryPhotos = photoUrls.slice(0, 3)
+  const hasPhotos = galleryPhotos.length > 0
 
   return (
     <section className="min-h-screen overflow-x-hidden bg-[var(--bg)]">
@@ -111,13 +112,30 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
       </section>
 
       <main className="hidden w-full px-6 py-4 lg:block">
-        <section className="grid gap-2 lg:h-[320px] lg:grid-cols-[1.02fr_0.98fr]">
-          <DetailPhotoTile imageUrl={detailPhotos[0]} placeName={place.name} />
-          <div className="grid grid-rows-2 gap-2">
-            <DetailPhotoTile imageUrl={detailPhotos[1]} placeName={place.name} />
-            <DetailPhotoTile imageUrl={detailPhotos[2]} placeName={place.name} />
-          </div>
-        </section>
+        {galleryPhotos.length >= 3 ? (
+          <section className="grid gap-2 lg:h-[320px] lg:grid-cols-[1.02fr_0.98fr]">
+            <DetailPhotoTile imageUrl={galleryPhotos[0]} placeName={place.name} />
+            <div className="grid grid-rows-2 gap-2">
+              {galleryPhotos.slice(1).map((imageUrl, index) => (
+                <DetailPhotoTile key={`${imageUrl}-${index}`} imageUrl={imageUrl} placeName={place.name} />
+              ))}
+            </div>
+          </section>
+        ) : galleryPhotos.length === 2 ? (
+          <section className="grid gap-2 lg:h-[320px] lg:grid-cols-2">
+            {galleryPhotos.map((imageUrl, index) => (
+              <DetailPhotoTile key={`${imageUrl}-${index}`} imageUrl={imageUrl} placeName={place.name} />
+            ))}
+          </section>
+        ) : galleryPhotos.length === 1 ? (
+          <section className="h-[320px]">
+            <DetailPhotoTile imageUrl={galleryPhotos[0]} placeName={place.name} />
+          </section>
+        ) : (
+          <section className="h-[320px]">
+            <DetailPhotoTile placeName={place.name} />
+          </section>
+        )}
       </main>
 
       <section className="hidden w-full gap-0 px-6 pb-5 lg:grid lg:grid-cols-2">
@@ -224,10 +242,12 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
 
         <div className="overflow-hidden border-y border-[var(--line)] bg-white shadow-[0_12px_28px_rgba(28,77,160,0.1)]">
           <div className="relative h-56 border-b border-[var(--line)] sm:h-64">
-            <DetailPhotoTile imageUrl={detailPhotos[0]} placeName={place.name} />
-            <div className="absolute right-3 top-3 rounded-full bg-slate-700/75 px-2 py-0.5 text-[11px] font-medium text-white">
-              1/3
-            </div>
+            <DetailPhotoTile imageUrl={galleryPhotos[0]} placeName={place.name} />
+            {hasPhotos ? (
+              <div className="absolute right-3 top-3 rounded-full bg-slate-700/75 px-2 py-0.5 text-[11px] font-medium text-white">
+                1/{galleryPhotos.length}
+              </div>
+            ) : null}
           </div>
 
           <div className="p-4 sm:px-5">
