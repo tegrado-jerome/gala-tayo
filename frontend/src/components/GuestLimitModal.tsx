@@ -5,6 +5,7 @@ import GoogleSignInButton from './GoogleSignInButton'
 type GuestLimitModalProps = {
   isOpen: boolean
   onClose: () => void
+  mode?: 'searchLimit' | 'savePlace'
 }
 
 function SparkIcon() {
@@ -66,7 +67,14 @@ function UserIcon() {
   )
 }
 
-function GuestLimitModal({ isOpen, onClose }: GuestLimitModalProps) {
+function GuestLimitModal({ isOpen, onClose, mode = 'searchLimit' }: GuestLimitModalProps) {
+  const isSaveMode = mode === 'savePlace'
+  const title = isSaveMode
+    ? 'Mag-sign in para ma-save mo itong lugar.'
+    : 'Naabot mo na ang free searches today.'
+  const description = isSaveMode
+    ? 'Mag-sign in gamit ang iyong Google account para ma-save mo ang place na ito sa Favorites at mabalikan mo anytime.'
+    : 'Mag-sign in gamit ang iyong Google account para makakuha ng mas maraming AI searches, makapag-save ng favorites, at magamit ang GalaTayo nang mas personalized.'
   useEffect(() => {
     if (!isOpen) {
       return undefined
@@ -133,7 +141,7 @@ function GuestLimitModal({ isOpen, onClose }: GuestLimitModalProps) {
             <div className="min-w-0 pr-7">
               <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">Daily guest limit</p>
               <h2 id="guest-limit-title" className="mt-1 text-lg font-semibold leading-tight text-slate-950">
-                Naabot mo na ang free searches today.
+                {title}
               </h2>
             </div>
           </div>
@@ -141,7 +149,7 @@ function GuestLimitModal({ isOpen, onClose }: GuestLimitModalProps) {
 
         <div className="px-6 py-5">
           <p className="text-sm leading-6 text-slate-700">
-            Mag-sign in gamit ang iyong Google account para makakuha ng mas maraming AI searches, makapag-save ng favorites, at magamit ang GalaTayo nang mas personalized.
+            {description}
           </p>
 
           <div className="mt-4 grid gap-2 sm:grid-cols-3">

@@ -15,7 +15,7 @@ type PlatformShareLinks = {
 }
 
 function getPlaceShareUrl(placeId: string) {
-  return new URL(`/place/${encodeURIComponent(placeId)}`, window.location.origin).toString()
+  return new URL(`/places/${encodeURIComponent(placeId)}`, window.location.origin).toString()
 }
 
 function getPlaceShareText(place: ShareablePlace) {

@@ -3,6 +3,7 @@ import type { PlaceCardData } from './PlaceCard'
 import AppHeader from './AppHeader'
 import MapView from './MapView'
 import SharePlaceModal from './SharePlaceModal'
+import GuestLimitModal from './GuestLimitModal'
 import { getCuratedPlaceImages } from '../data/curatedPlaceImages'
 
 type PlaceDetailViewProps = {
@@ -110,6 +111,7 @@ function DetailPhotoTile({
 function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
   const mapCenter: [number, number] = [place.coordinates.lat, place.coordinates.lng]
   const [isShareOpen, setIsShareOpen] = useState(false)
+  const [isSavePromptOpen, setIsSavePromptOpen] = useState(false)
   const [mobilePhotoIndex, setMobilePhotoIndex] = useState(0)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const resolvedCuratedImageUrls = place.curatedImageUrls ?? getCuratedPlaceImages(place.name)
@@ -130,6 +132,12 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
     setMobilePhotoIndex((currentIndex) =>
       currentIndex === galleryPhotos.length - 1 ? 0 : currentIndex + 1
     )
+  }
+
+  const openDirections = () => {
+    const destination = `${place.coordinates.lat},${place.coordinates.lng}`
+    const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`
+    window.open(directionsUrl, '_blank', 'noopener,noreferrer')
   }
 
   return (
@@ -194,11 +202,11 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
           <div className="mt-2 space-y-2">
             <p className="flex items-center gap-2 text-sm text-[var(--muted)]">
               <MetaIcon symbol="📍" />
-              <span>{place.area}, Metro Manila</span>
+              <span>{place.area}</span>
             </p>
             <p className="flex items-center gap-2 text-sm text-slate-700">
               <MetaIcon symbol="★" />
-              <span>{place.rating} (1,248 reviews)</span>
+              <span>{place.rating}{place.reviewCount ? ` (${place.reviewCount} reviews)` : ''}</span>
             </p>
           </div>
           <hr className="my-3 border-[var(--line)]" />
@@ -226,11 +234,11 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
           <div className="grid gap-2 text-sm text-slate-700">
             <p className="inline-flex items-center gap-2">
               <MetaIcon symbol="🕒" />
-              <span>Open daily 8:00 AM - 6:00 PM</span>
+              <span>{place.hours ?? 'Hours not available'}</span>
             </p>
             <p className="inline-flex items-center gap-2">
               <MetaIcon symbol="🏷" />
-              <span>Entrance Fee: PHP 75.00</span>
+              <span>Entrance Fee: {place.entranceFee ?? 'Not specified'}</span>
             </p>
             <p className="inline-flex items-center gap-2">
               <MetaIcon symbol="📌" />
@@ -238,7 +246,7 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
             </p>
             <p className="inline-flex items-center gap-2">
               <MetaIcon symbol="🌐" />
-              <span>Website: www.intramuros.gov.ph</span>
+              <span>Website: {place.website ?? 'Not available'}</span>
             </p>
           </div>
           <hr className="my-3 border-[var(--line)]" />
@@ -251,11 +259,19 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
               <ShareIcon />
               <span>Share</span>
             </button>
-            <button type="button" className="inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--line-strong)] bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)]">
+            <button
+              type="button"
+              onClick={() => setIsSavePromptOpen(true)}
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--line-strong)] bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)]"
+            >
               <SaveIcon />
               <span>Save</span>
             </button>
-            <button type="button" className="inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--line-strong)] bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)]">
+            <button
+              type="button"
+              onClick={openDirections}
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--line-strong)] bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)]"
+            >
               <DirectionsIcon />
               <span>Directions</span>
             </button>
@@ -326,11 +342,11 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
             <h1 className="text-2xl font-semibold tracking-tight text-slate-900">{place.name}</h1>
             <p className="mt-1 flex items-center gap-2 text-sm text-[var(--muted)]">
               <MetaIcon symbol="📍" />
-              <span>{place.area}, Metro Manila</span>
+              <span>{place.area}</span>
             </p>
             <p className="mt-1 flex items-center gap-2 text-sm text-slate-700">
               <MetaIcon symbol="★" />
-              <span>{place.rating} (1,248 reviews)</span>
+              <span>{place.rating}{place.reviewCount ? ` (${place.reviewCount} reviews)` : ''}</span>
             </p>
 
             <hr className="my-3 border-[var(--line)]" />
@@ -362,11 +378,11 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
             <div className="grid gap-2 text-sm text-slate-700">
               <p className="inline-flex items-center gap-2">
                 <MetaIcon symbol="🕒" />
-                <span>Open daily 8:00 AM - 6:00 PM</span>
+                <span>{place.hours ?? 'Hours not available'}</span>
               </p>
               <p className="inline-flex items-center gap-2">
                 <MetaIcon symbol="🏷" />
-                <span>Entrance Fee: PHP 75.00</span>
+                <span>Entrance Fee: {place.entranceFee ?? 'Not specified'}</span>
               </p>
               <p className="inline-flex items-center gap-2">
                 <MetaIcon symbol="📌" />
@@ -374,7 +390,7 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
               </p>
               <p className="inline-flex items-center gap-2">
                 <MetaIcon symbol="🌐" />
-                <span>Website: www.intramuros.gov.ph</span>
+                <span>Website: {place.website ?? 'Not available'}</span>
               </p>
             </div>
 
@@ -389,11 +405,19 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
                 <ShareIcon />
                 <span>Share</span>
               </button>
-              <button type="button" className="inline-flex items-center justify-center gap-1 rounded-lg border border-[var(--line-strong)] bg-white px-2 py-2 text-sm font-medium text-slate-700">
+              <button
+                type="button"
+                onClick={() => setIsSavePromptOpen(true)}
+                className="inline-flex items-center justify-center gap-1 rounded-lg border border-[var(--line-strong)] bg-white px-2 py-2 text-sm font-medium text-slate-700"
+              >
                 <SaveIcon />
                 <span>Save</span>
               </button>
-              <button type="button" className="inline-flex items-center justify-center gap-1 rounded-lg border border-[var(--line-strong)] bg-white px-2 py-2 text-sm font-medium text-slate-700">
+              <button
+                type="button"
+                onClick={openDirections}
+                className="inline-flex items-center justify-center gap-1 rounded-lg border border-[var(--line-strong)] bg-white px-2 py-2 text-sm font-medium text-slate-700"
+              >
                 <DirectionsIcon />
                 <span>Directions</span>
               </button>
@@ -411,6 +435,11 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
       </section>
 
       <SharePlaceModal place={place} isOpen={isShareOpen} onClose={() => setIsShareOpen(false)} />
+      <GuestLimitModal
+        isOpen={isSavePromptOpen}
+        onClose={() => setIsSavePromptOpen(false)}
+        mode="savePlace"
+      />
       {selectedImage ? (
         <div
           className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/90 p-4"
@@ -440,3 +469,4 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
 }
 
 export default PlaceDetailView
+
