@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { getCuratedPlaceImages } from '../data/curatedPlaceImages'
 import SharePlaceModal from './SharePlaceModal'
 
 type PlaceCardData = {
@@ -10,8 +11,14 @@ type PlaceCardData = {
   status: 'Open' | 'Closed'
   reason: string
   badge: string
+  reviewCount?: string
+  hours?: string
+  entranceFee?: string
+  website?: string
+  highlights?: string[]
   imageUrl?: string | null
   curatedImageUrl?: string | null
+  curatedImageUrls?: string[]
   coordinates: {
     lat: number
     lng: number
@@ -75,7 +82,8 @@ function NoPhotoIcon() {
 
 function PlaceCard({ place, isSelected = false, compact = false, onSelect }: PlaceCardProps) {
   const [isShareOpen, setIsShareOpen] = useState(false)
-  const photoUrl = place.imageUrl?.trim() || place.curatedImageUrl?.trim() || null
+  const resolvedCuratedImageUrls = place.curatedImageUrls ?? getCuratedPlaceImages(place.name)
+  const photoUrl = place.imageUrl?.trim() || place.curatedImageUrl?.trim() || resolvedCuratedImageUrls[0]?.trim() || null
 
   return (
     <>

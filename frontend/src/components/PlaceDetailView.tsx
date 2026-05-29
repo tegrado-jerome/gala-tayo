@@ -3,6 +3,7 @@ import type { PlaceCardData } from './PlaceCard'
 import AppHeader from './AppHeader'
 import MapView from './MapView'
 import SharePlaceModal from './SharePlaceModal'
+import { getCuratedPlaceImages } from '../data/curatedPlaceImages'
 
 type PlaceDetailViewProps = {
   place: PlaceCardData
@@ -46,6 +47,14 @@ function DirectionsIcon() {
   )
 }
 
+function ChevronIcon({ direction }: { direction: 'left' | 'right' }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className="h-4 w-4">
+      {direction === 'left' ? <path d="m15 18-6-6 6-6" /> : <path d="m9 18 6-6-6-6" />}
+    </svg>
+  )
+}
+
 function NoPhotoIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-7 w-7">
@@ -57,16 +66,34 @@ function NoPhotoIcon() {
   )
 }
 
-function DetailPhotoTile({ imageUrl, placeName }: { imageUrl?: string | null; placeName: string }) {
+function DetailPhotoTile({
+  imageUrl,
+  placeName,
+  onOpen,
+}: {
+  imageUrl?: string | null
+  placeName: string
+  onOpen?: (imageUrl: string) => void
+}) {
   const photoUrl = imageUrl?.trim() || null
 
   if (photoUrl) {
     return (
-      <img
-        src={photoUrl}
-        alt={placeName}
-        className="h-full w-full rounded-2xl border border-[var(--line)] object-cover shadow-[0_10px_24px_rgba(28,77,160,0.08)]"
-      />
+      <button
+        type="button"
+        onClick={() => onOpen?.(photoUrl)}
+        className="group relative block h-full w-full overflow-hidden rounded-2xl border border-[var(--line)] bg-slate-950 text-left shadow-[0_10px_24px_rgba(28,77,160,0.08)]"
+        aria-label={`View full image of ${placeName}`}
+      >
+        <img
+          src={photoUrl}
+          alt={placeName}
+          className="h-full w-full object-cover transition duration-200 group-hover:scale-[1.02] group-hover:opacity-90"
+        />
+        <span className="absolute bottom-3 right-3 rounded-full bg-slate-950/75 px-3 py-1 text-xs font-medium text-white opacity-0 shadow-[0_8px_18px_rgba(15,23,42,0.28)] transition group-hover:opacity-100 group-focus-visible:opacity-100">
+          View full image
+        </span>
+      </button>
     )
   }
 
@@ -83,11 +110,27 @@ function DetailPhotoTile({ imageUrl, placeName }: { imageUrl?: string | null; pl
 function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
   const mapCenter: [number, number] = [place.coordinates.lat, place.coordinates.lng]
   const [isShareOpen, setIsShareOpen] = useState(false)
-  const photoUrls = [place.imageUrl, place.curatedImageUrl].filter(
+  const [mobilePhotoIndex, setMobilePhotoIndex] = useState(0)
+  const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const resolvedCuratedImageUrls = place.curatedImageUrls ?? getCuratedPlaceImages(place.name)
+  const photoUrls = [place.imageUrl, place.curatedImageUrl, ...resolvedCuratedImageUrls].filter(
     (imageUrl): imageUrl is string => Boolean(imageUrl?.trim())
   )
-  const galleryPhotos = photoUrls.slice(0, 3)
+  const galleryPhotos = Array.from(new Set(photoUrls)).slice(0, 3)
   const hasPhotos = galleryPhotos.length > 0
+  const mobilePhotoUrl = galleryPhotos[mobilePhotoIndex] ?? null
+
+  const showPreviousMobilePhoto = () => {
+    setMobilePhotoIndex((currentIndex) =>
+      currentIndex === 0 ? galleryPhotos.length - 1 : currentIndex - 1
+    )
+  }
+
+  const showNextMobilePhoto = () => {
+    setMobilePhotoIndex((currentIndex) =>
+      currentIndex === galleryPhotos.length - 1 ? 0 : currentIndex + 1
+    )
+  }
 
   return (
     <section className="min-h-screen overflow-x-hidden bg-[var(--bg)]">
@@ -113,23 +156,30 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
 
       <main className="hidden w-full px-6 py-4 lg:block">
         {galleryPhotos.length >= 3 ? (
-          <section className="grid gap-2 lg:h-[320px] lg:grid-cols-[1.02fr_0.98fr]">
-            <DetailPhotoTile imageUrl={galleryPhotos[0]} placeName={place.name} />
-            <div className="grid grid-rows-2 gap-2">
-              {galleryPhotos.slice(1).map((imageUrl, index) => (
-                <DetailPhotoTile key={`${imageUrl}-${index}`} imageUrl={imageUrl} placeName={place.name} />
-              ))}
-            </div>
+          <section className="grid h-[320px] gap-2 overflow-hidden lg:grid-cols-3">
+            {galleryPhotos.map((imageUrl, index) => (
+              <DetailPhotoTile
+                key={`${imageUrl}-${index}`}
+                imageUrl={imageUrl}
+                placeName={place.name}
+                onOpen={setSelectedImage}
+              />
+            ))}
           </section>
         ) : galleryPhotos.length === 2 ? (
-          <section className="grid gap-2 lg:h-[320px] lg:grid-cols-2">
+          <section className="grid h-[320px] gap-2 overflow-hidden lg:grid-cols-2">
             {galleryPhotos.map((imageUrl, index) => (
-              <DetailPhotoTile key={`${imageUrl}-${index}`} imageUrl={imageUrl} placeName={place.name} />
+              <DetailPhotoTile
+                key={`${imageUrl}-${index}`}
+                imageUrl={imageUrl}
+                placeName={place.name}
+                onOpen={setSelectedImage}
+              />
             ))}
           </section>
         ) : galleryPhotos.length === 1 ? (
           <section className="h-[320px]">
-            <DetailPhotoTile imageUrl={galleryPhotos[0]} placeName={place.name} />
+            <DetailPhotoTile imageUrl={galleryPhotos[0]} placeName={place.name} onOpen={setSelectedImage} />
           </section>
         ) : (
           <section className="h-[320px]">
@@ -138,7 +188,7 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
         )}
       </main>
 
-      <section className="hidden w-full gap-0 px-6 pb-5 lg:grid lg:grid-cols-2">
+      <section className="hidden w-full gap-4 px-6 pb-5 lg:grid lg:grid-cols-2">
         <article className="rounded-2xl border border-[var(--line)] bg-white p-5 shadow-[0_14px_32px_rgba(28,77,160,0.08)]">
           <h1 className="text-[40px] font-semibold tracking-tight text-slate-900">{place.name}</h1>
           <div className="mt-2 space-y-2">
@@ -212,13 +262,13 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
           </div>
         </article>
 
-        <section className="min-h-0 overflow-hidden rounded-2xl border border-[var(--line)] bg-white shadow-[0_16px_34px_rgba(28,77,160,0.12)]">
+        <section className="min-h-[520px] overflow-hidden rounded-2xl border border-[var(--line)] bg-white shadow-[0_16px_34px_rgba(28,77,160,0.12)]">
           <MapView
             places={[place]}
             selectedPlaceId={place.id}
             center={mapCenter}
             zoom={16}
-            className="!h-full !rounded-none !border-0"
+            className="!h-[520px] !rounded-none !border-0"
           />
         </section>
       </section>
@@ -242,11 +292,33 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
 
         <div className="overflow-hidden border-y border-[var(--line)] bg-white shadow-[0_12px_28px_rgba(28,77,160,0.1)]">
           <div className="relative h-56 border-b border-[var(--line)] sm:h-64">
-            <DetailPhotoTile imageUrl={galleryPhotos[0]} placeName={place.name} />
+            <DetailPhotoTile imageUrl={mobilePhotoUrl} placeName={place.name} onOpen={setSelectedImage} />
             {hasPhotos ? (
-              <div className="absolute right-3 top-3 rounded-full bg-slate-700/75 px-2 py-0.5 text-[11px] font-medium text-white">
-                1/{galleryPhotos.length}
-              </div>
+              <>
+                <div className="absolute right-3 top-3 rounded-full bg-slate-700/75 px-2 py-0.5 text-[11px] font-medium text-white">
+                  {mobilePhotoIndex + 1}/{galleryPhotos.length}
+                </div>
+                {galleryPhotos.length > 1 ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={showPreviousMobilePhoto}
+                      className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/70 bg-slate-900/55 text-white shadow-[0_8px_18px_rgba(15,23,42,0.22)]"
+                      aria-label="Previous photo"
+                    >
+                      <ChevronIcon direction="left" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={showNextMobilePhoto}
+                      className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/70 bg-slate-900/55 text-white shadow-[0_8px_18px_rgba(15,23,42,0.22)]"
+                      aria-label="Next photo"
+                    >
+                      <ChevronIcon direction="right" />
+                    </button>
+                  </>
+                ) : null}
+              </>
             ) : null}
           </div>
 
@@ -339,6 +411,30 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
       </section>
 
       <SharePlaceModal place={place} isOpen={isShareOpen} onClose={() => setIsShareOpen(false)} />
+      {selectedImage ? (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/90 p-4"
+          onClick={() => setSelectedImage(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Full place image"
+        >
+          <button
+            type="button"
+            className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 text-xl leading-none text-white shadow-[0_10px_24px_rgba(0,0,0,0.28)] transition hover:bg-white/20"
+            onClick={() => setSelectedImage(null)}
+            aria-label="Close full image"
+          >
+            x
+          </button>
+          <img
+            src={selectedImage}
+            alt={`Full view of ${place.name}`}
+            className="max-h-full max-w-full rounded-xl object-contain shadow-[0_24px_70px_rgba(0,0,0,0.45)]"
+            onClick={(event) => event.stopPropagation()}
+          />
+        </div>
+      ) : null}
     </section>
   )
 }

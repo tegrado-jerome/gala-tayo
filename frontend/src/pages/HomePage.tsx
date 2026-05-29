@@ -5,6 +5,7 @@ import PlaceDetailView from '../components/PlaceDetailView'
 import AppHeader from '../components/AppHeader'
 import MapView from '../components/MapView'
 import GuestLimitModal from '../components/GuestLimitModal'
+import { getCuratedPlaceImages } from '../data/curatedPlaceImages'
 
 type IconProps = {
   className?: string
@@ -197,9 +198,14 @@ const mockPlaces: PlaceCardData[] = [
     category: 'Hangout',
     area: 'BGC, Taguig',
     rating: '4.6',
+    reviewCount: '1,248',
     status: 'Open',
-    reason: 'Open-air walk + food options for chill date nights.',
+    reason: 'Open-air walk + food options for chill date nights, shopping, public art, and people-watching in the heart of BGC.',
     badge: 'Popular',
+    hours: 'Open daily; shop and restaurant hours vary',
+    entranceFee: 'Free',
+    website: 'www.bgc.com.ph',
+    highlights: ['Open-air shops and dining', 'Good for dates or barkada', 'Best visited late afternoon or evening'],
     coordinates: { lat: 14.5507, lng: 121.0508 },
   },
   {
@@ -208,9 +214,14 @@ const mockPlaces: PlaceCardData[] = [
     category: 'Museum',
     area: 'BGC, Taguig',
     rating: '4.5',
+    reviewCount: '920',
     status: 'Closed',
     reason: 'Interactive exhibits good for barkada or family learning trips.',
     badge: 'Culture',
+    hours: 'Hours vary by schedule',
+    entranceFee: 'Ticketed entry',
+    website: 'www.themindmuseum.org',
+    highlights: ['Interactive science exhibits', 'Family-friendly indoor stop', 'Good rainy-day option'],
     coordinates: { lat: 14.5528, lng: 121.0442 },
   },
   {
@@ -219,9 +230,13 @@ const mockPlaces: PlaceCardData[] = [
     category: 'Mall',
     area: 'BGC, Taguig',
     rating: '4.3',
+    reviewCount: '1,060',
     status: 'Open',
     reason: 'Budget-friendly food trip picks with many choices.',
     badge: 'Budget',
+    hours: 'Open daily; store hours vary',
+    entranceFee: 'Free',
+    highlights: ['Budget-friendly food choices', 'Casual shopping', 'Easy meetup spot'],
     coordinates: { lat: 14.5497, lng: 121.0565 },
   },
   {
@@ -230,12 +245,31 @@ const mockPlaces: PlaceCardData[] = [
     category: 'Mall',
     area: 'BGC, Taguig',
     rating: '4.4',
+    reviewCount: '870',
     status: 'Closed',
     reason: 'Good mix of dining and entertainment spots in one area.',
     badge: 'Chill',
+    hours: 'Open daily; store hours vary',
+    entranceFee: 'Free',
+    website: 'www.uptownbonifacio.com',
+    highlights: ['Dining and entertainment', 'Mall comfort in BGC', 'Good evening option'],
     coordinates: { lat: 14.5566, lng: 121.0542 },
   },
 ]
+
+const placesWithCuratedImages: PlaceCardData[] = mockPlaces.map((place) => {
+  const curatedImageUrls = getCuratedPlaceImages(place.name)
+
+  if (curatedImageUrls.length === 0) {
+    return place
+  }
+
+  return {
+    ...place,
+    curatedImageUrl: curatedImageUrls[0],
+    curatedImageUrls,
+  }
+})
 
 const animatedSearchPrompts = [
   'Date Spot sa BGC under 1K',
@@ -270,7 +304,7 @@ function HomePage() {
     [areas, selectedArea]
   )
   const selectedPlace = useMemo(
-    () => mockPlaces.find((place) => place.id === selectedPlaceId) ?? null,
+    () => placesWithCuratedImages.find((place) => place.id === selectedPlaceId) ?? null,
     [selectedPlaceId]
   )
 
@@ -420,7 +454,7 @@ function HomePage() {
 
           <section className="h-[380px] border-b border-[var(--line)] bg-white">
             <MapView
-              places={mockPlaces}
+              places={placesWithCuratedImages}
               selectedPlaceId={selectedPlaceId}
               onPlaceSelect={handleMapPlaceSelect}
               onPlaceOpen={handlePlaceSelect}
@@ -443,7 +477,7 @@ function HomePage() {
             </div>
 
             <div className="grid gap-3">
-              {mockPlaces.map((place) => (
+              {placesWithCuratedImages.map((place) => (
                 <PlaceCard
                   key={place.id}
                   place={place}
@@ -513,7 +547,7 @@ function HomePage() {
 
             <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
               <div className="grid gap-3">
-                {mockPlaces.map((place) => (
+                {placesWithCuratedImages.map((place) => (
                   <PlaceCard
                     key={place.id}
                     place={place}
@@ -527,7 +561,7 @@ function HomePage() {
 
           <section className="min-h-0 bg-white">
             <MapView
-              places={mockPlaces}
+              places={placesWithCuratedImages}
               selectedPlaceId={selectedPlaceId}
               onPlaceSelect={handleMapPlaceSelect}
               onPlaceOpen={handlePlaceSelect}
