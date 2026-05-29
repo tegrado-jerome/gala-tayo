@@ -1,0 +1,53 @@
+import {
+  app,
+  HttpRequest,
+  HttpResponseInit,
+  InvocationContext,
+} from "@azure/functions";
+import { findPlaceDetailById } from "../data/placeDetails";
+
+export async function placePhotos(
+  request: HttpRequest,
+  context: InvocationContext
+): Promise<HttpResponseInit> {
+  const placeId = request.params.id;
+
+  if (!placeId || placeId.trim() === "") {
+    return {
+      status: 400,
+      jsonBody: {
+        message: "Place id is required.",
+      },
+    };
+  }
+
+  const place = findPlaceDetailById(placeId);
+
+  if (!place) {
+    return {
+      status: 404,
+      jsonBody: {
+        message: `Photos not found for place id: ${placeId}`,
+      },
+    };
+  }
+
+  const photos = place.curatedImageUrls ?? [];
+
+  context.log(`Returning ${photos.length} photos for ${place.id}`);
+
+  return {
+    status: 200,
+    jsonBody: {
+      placeId: place.id,
+      photos,
+    },
+  };
+}
+
+app.http("placePhotos", {
+  methods: ["GET"],
+  authLevel: "anonymous",
+  route: "places/{id}/photos",
+  handler: placePhotos,
+});
