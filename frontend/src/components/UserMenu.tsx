@@ -164,6 +164,12 @@ function UserMenu({ user, compact = false }: UserMenuProps) {
     }
   }
 
+  const openFavorites = () => {
+    setIsOpen(false)
+    window.history.pushState(null, '', '/favorites')
+    window.dispatchEvent(new PopStateEvent('popstate'))
+  }
+
   return (
     <div ref={menuRef} className="relative">
       <button
@@ -272,6 +278,7 @@ function UserMenu({ user, compact = false }: UserMenuProps) {
             <p className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">Places</p>
             <button
               type="button"
+              onClick={openFavorites}
               className={`group flex w-full items-center gap-2.5 rounded-xl text-left font-medium text-slate-700 transition duration-150 hover:-translate-y-[1px] hover:bg-white hover:text-[var(--accent-deep)] hover:shadow-[0_10px_22px_rgba(28,77,160,0.1),inset_0_0_0_1px_rgba(83,146,255,0.12)] focus:outline-none focus:ring-2 focus:ring-[#1a73e8]/20 ${compact ? 'px-2 py-2 text-[13px]' : 'px-2.5 py-2.5 text-sm'}`}
               role="menuitem"
             >

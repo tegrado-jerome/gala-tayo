@@ -4,6 +4,7 @@ import { supabase } from '../supabase'
 type GoogleSignInButtonProps = {
   compact?: boolean
   className?: string
+  redirectTo?: string
 }
 
 function GoogleIcon() {
@@ -29,7 +30,7 @@ function GoogleIcon() {
   )
 }
 
-function GoogleSignInButton({ compact = false, className = '' }: GoogleSignInButtonProps) {
+function GoogleSignInButton({ compact = false, className = '', redirectTo = window.location.origin }: GoogleSignInButtonProps) {
   const [isSigningIn, setIsSigningIn] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
 
@@ -41,7 +42,7 @@ function GoogleSignInButton({ compact = false, className = '' }: GoogleSignInBut
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin,
+          redirectTo,
         },
       })
 

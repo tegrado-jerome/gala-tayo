@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import HomePage from './pages/HomePage'
+import FavoritesPage from './pages/FavoritesPage'
 import PlaceDetailView from './components/PlaceDetailView'
 import type { PlaceCardData } from './components/PlaceCard'
+import { SavedFavoritesProvider } from './context/SavedFavoritesContext'
 
 type BackendPlaceDetail = {
   id: string
@@ -49,6 +51,7 @@ function mapBackendPlaceToCardData(place: BackendPlaceDetail): PlaceCardData {
     entranceFee: place.entranceFee,
     website: place.website,
     imageUrl: place.imageUrl,
+    slug: place.id,
     curatedImageUrls: place.curatedImageUrls,
     coordinates: {
       lat: place.latitude,
@@ -153,11 +156,19 @@ function App() {
 
   const sharedPlaceId = useMemo(() => parsePlaceIdFromPath(pathname), [pathname])
 
-  if (sharedPlaceId) {
-    return <SharedPlacePage placeId={sharedPlaceId} />
-  }
+  const content = (() => {
+    if (pathname === '/favorites' || pathname === '/favorites/') {
+      return <FavoritesPage />
+    }
 
-  return <HomePage />
+    if (sharedPlaceId) {
+      return <SharedPlacePage placeId={sharedPlaceId} />
+    }
+
+    return <HomePage />
+  })()
+
+  return <SavedFavoritesProvider>{content}</SavedFavoritesProvider>
 }
 
 export default App

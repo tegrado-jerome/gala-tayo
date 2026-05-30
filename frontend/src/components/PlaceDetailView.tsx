@@ -4,7 +4,8 @@ import AppHeader from './AppHeader'
 import MapView from './MapView'
 import SharePlaceModal from './SharePlaceModal'
 import GuestLimitModal from './GuestLimitModal'
-import { getCuratedPlaceImages } from '../data/curatedPlaceImages'
+import { getCuratedPlaceImages, normalizePlaceSlug } from '../data/curatedPlaceImages'
+import { useSavedFavorites } from '../context/SavedFavoritesContext'
 
 type PlaceDetailViewProps = {
   place: PlaceCardData
@@ -112,6 +113,10 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
   const mapCenter: [number, number] = [place.coordinates.lat, place.coordinates.lng]
   const [isShareOpen, setIsShareOpen] = useState(false)
   const [isSavePromptOpen, setIsSavePromptOpen] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveMessage, setSaveMessage] = useState('')
+  const [saveError, setSaveError] = useState('')
+  const { isPlaceSaved, saveFavorite } = useSavedFavorites()
   const [mobilePhotoIndex, setMobilePhotoIndex] = useState(0)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const resolvedCuratedImageUrls = place.curatedImageUrls ?? getCuratedPlaceImages(place.name)
@@ -121,6 +126,9 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
   const galleryPhotos = Array.from(new Set(photoUrls)).slice(0, 3)
   const hasPhotos = galleryPhotos.length > 0
   const mobilePhotoUrl = galleryPhotos[mobilePhotoIndex] ?? null
+  const normalizedNameSlug = normalizePlaceSlug(place.name)
+  const placeSlug = place.slug || normalizedNameSlug
+  const isSaved = [place.slug, normalizedNameSlug, place.id].some((slug) => isPlaceSaved(slug))
 
   const showPreviousMobilePhoto = () => {
     setMobilePhotoIndex((currentIndex) =>
@@ -138,6 +146,32 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
     const destination = `${place.coordinates.lat},${place.coordinates.lng}`
     const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`
     window.open(directionsUrl, '_blank', 'noopener,noreferrer')
+  }
+
+  const handleSavePlace = async () => {
+    try {
+      setIsSaving(true)
+      setSaveMessage('')
+      setSaveError('')
+
+      if (isSaved) {
+        setSaveMessage('Place already saved to favorites.')
+        return
+      }
+
+      const result = await saveFavorite(placeSlug)
+
+      if (result.status === 'guest') {
+        setIsSavePromptOpen(true)
+        return
+      }
+
+      setSaveMessage(result.message)
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : 'Failed to save favorite.')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -261,11 +295,16 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
             </button>
             <button
               type="button"
-              onClick={() => setIsSavePromptOpen(true)}
+              onClick={() => void handleSavePlace()}
+              disabled={isSaving}
               className="inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--line-strong)] bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)]"
             >
-              <SaveIcon />
-              <span>Save</span>
+              {isSaving ? (
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-[var(--accent)]" />
+              ) : (
+                <SaveIcon />
+              )}
+              <span>{isSaved ? 'Saved' : 'Save'}</span>
             </button>
             <button
               type="button"
@@ -276,6 +315,8 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
               <span>Directions</span>
             </button>
           </div>
+          {saveMessage ? <p className="mt-2 text-xs font-medium text-[var(--accent-deep)]">{saveMessage}</p> : null}
+          {saveError ? <p className="mt-2 text-xs font-medium text-red-600">{saveError}</p> : null}
         </article>
 
         <section className="min-h-[520px] overflow-hidden rounded-2xl border border-[var(--line)] bg-white shadow-[0_16px_34px_rgba(28,77,160,0.12)]">
@@ -407,11 +448,16 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
               </button>
               <button
                 type="button"
-                onClick={() => setIsSavePromptOpen(true)}
+                onClick={() => void handleSavePlace()}
+                disabled={isSaving}
                 className="inline-flex items-center justify-center gap-1 rounded-lg border border-[var(--line-strong)] bg-white px-2 py-2 text-sm font-medium text-slate-700"
               >
-                <SaveIcon />
-                <span>Save</span>
+                {isSaving ? (
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-200 border-t-[var(--accent)]" />
+                ) : (
+                  <SaveIcon />
+                )}
+                <span>{isSaved ? 'Saved' : 'Save'}</span>
               </button>
               <button
                 type="button"
@@ -422,6 +468,8 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
                 <span>Directions</span>
               </button>
             </div>
+            {saveMessage ? <p className="mt-2 text-xs font-medium text-[var(--accent-deep)]">{saveMessage}</p> : null}
+            {saveError ? <p className="mt-2 text-xs font-medium text-red-600">{saveError}</p> : null}
           </div>
 
           <MapView

@@ -26,6 +26,19 @@ function SparkIcon() {
   )
 }
 
+function HeartIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className="h-3.5 w-3.5">
+      <path d="M20.8 5.6a5.1 5.1 0 0 0-7.2 0L12 7.2l-1.6-1.6a5.1 5.1 0 1 0-7.2 7.2L12 21l8.8-8.2a5.1 5.1 0 0 0 0-7.2Z" />
+    </svg>
+  )
+}
+
+function openFavoritesPage() {
+  window.history.pushState(null, '', '/favorites')
+  window.dispatchEvent(new PopStateEvent('popstate'))
+}
+
 function AppHeader({
   showTaglishChip = true,
   onBack,
@@ -127,6 +140,16 @@ function AppHeader({
         </div>
 
         <div className="flex items-center gap-3">
+          {session?.user ? (
+            <button
+              type="button"
+              onClick={openFavoritesPage}
+              className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white/70 px-3 py-1.5 text-xs font-semibold text-[var(--accent-deep)] shadow-[0_8px_18px_rgba(28,77,160,0.06)] transition hover:-translate-y-[1px] hover:border-[var(--accent)] hover:bg-white"
+            >
+              <HeartIcon />
+              <span>Favorites</span>
+            </button>
+          ) : null}
           {showTaglishChip ? (
             <div className="flex items-center gap-2 rounded-full border border-[var(--line)] bg-white/70 px-3 py-1.5 text-xs text-[var(--muted)]">
               <SparkIcon />

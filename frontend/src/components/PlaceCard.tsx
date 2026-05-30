@@ -1,9 +1,12 @@
 import { useState } from 'react'
-import { getCuratedPlaceImages } from '../data/curatedPlaceImages'
+import { getCuratedPlaceImages, normalizePlaceSlug } from '../data/curatedPlaceImages'
+import { useSavedFavorites } from '../context/SavedFavoritesContext'
+import GuestLimitModal from './GuestLimitModal'
 import SharePlaceModal from './SharePlaceModal'
 
 type PlaceCardData = {
   id: string
+  slug?: string
   name: string
   category: string
   area: string
@@ -82,8 +85,42 @@ function NoPhotoIcon() {
 
 function PlaceCard({ place, isSelected = false, compact = false, onSelect }: PlaceCardProps) {
   const [isShareOpen, setIsShareOpen] = useState(false)
+  const [isSavePromptOpen, setIsSavePromptOpen] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveMessage, setSaveMessage] = useState('')
+  const [saveError, setSaveError] = useState('')
+  const { isPlaceSaved, saveFavorite } = useSavedFavorites()
   const resolvedCuratedImageUrls = place.curatedImageUrls ?? getCuratedPlaceImages(place.name)
   const photoUrl = place.imageUrl?.trim() || place.curatedImageUrl?.trim() || resolvedCuratedImageUrls[0]?.trim() || null
+  const normalizedNameSlug = normalizePlaceSlug(place.name)
+  const placeSlug = place.slug || normalizedNameSlug
+  const isSaved = [place.slug, normalizedNameSlug, place.id].some((slug) => isPlaceSaved(slug))
+
+  const handleSave = async () => {
+    try {
+      setIsSaving(true)
+      setSaveMessage('')
+      setSaveError('')
+
+      if (isSaved) {
+        setSaveMessage('Place already saved to favorites.')
+        return
+      }
+
+      const result = await saveFavorite(placeSlug)
+
+      if (result.status === 'guest') {
+        setIsSavePromptOpen(true)
+        return
+      }
+
+      setSaveMessage(result.message)
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : 'Failed to save favorite.')
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   return (
     <>
@@ -172,16 +209,39 @@ function PlaceCard({ place, isSelected = false, compact = false, onSelect }: Pla
           </button>
           <button
             type="button"
-            onClick={(event) => event.stopPropagation()}
+            onClick={(event) => {
+              event.stopPropagation()
+              void handleSave()
+            }}
+            disabled={isSaving}
             className="flex items-center justify-center gap-1.5 border-l border-[var(--line)] px-3 py-2 text-[11px] font-medium text-slate-700 transition hover:bg-slate-50"
           >
-            <SaveIcon />
-            <span>Save</span>
+            {isSaving ? (
+              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-200 border-t-[var(--accent)]" />
+            ) : (
+              <SaveIcon />
+            )}
+            <span>{isSaved ? 'Saved' : 'Save'}</span>
           </button>
         </div>
+        {saveError ? (
+          <p className="border-t border-red-100 bg-red-50 px-3 py-2 text-[11px] text-red-600">
+            {saveError}
+          </p>
+        ) : null}
+        {saveMessage ? (
+          <p className="border-t border-[var(--line)] bg-[var(--accent-wash)] px-3 py-2 text-[11px] text-[var(--accent-deep)]">
+            {saveMessage}
+          </p>
+        ) : null}
       </article>
 
       <SharePlaceModal place={place} isOpen={isShareOpen} onClose={() => setIsShareOpen(false)} />
+      <GuestLimitModal
+        isOpen={isSavePromptOpen}
+        onClose={() => setIsSavePromptOpen(false)}
+        mode="savePlace"
+      />
     </>
   )
 }
