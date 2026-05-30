@@ -150,6 +150,17 @@ function AreaIcon({ className = 'h-3.5 w-3.5' }: IconProps & { areaType: 'all' |
   return <PinIcon className={iconClass} />
 }
 
+function BudgetIcon({ className = 'h-3.5 w-3.5' }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={`${className} text-[var(--accent-deep)]`}>
+      <rect x="3.5" y="6.5" width="17" height="11" rx="2.2" />
+      <circle cx="12" cy="12" r="2.3" />
+      <path d="M6.5 9.2v5.6" />
+      <path d="M17.5 9.2v5.6" />
+    </svg>
+  )
+}
+
 type CategoryChip = {
   id: string
   name: string
@@ -745,7 +756,10 @@ function HomePage() {
                   }`}
                 >
                   <span className="flex items-center justify-between">
-                    <span className="min-w-0 truncate">{budget.label}</span>
+                    <span className="flex min-w-0 items-center gap-2">
+                      <BudgetIcon />
+                      <span className="truncate">{budget.label}</span>
+                    </span>
                     {selectedBudget === budget.value ? <CheckIcon className="h-4 w-4 shrink-0" /> : null}
                   </span>
                 </button>
