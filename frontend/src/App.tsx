@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import HomePage from './pages/HomePage'
 import FavoritesPage from './pages/FavoritesPage'
+import HistoryPage from './pages/HistoryPage'
 import PlaceDetailView from './components/PlaceDetailView'
 import type { PlaceCardData } from './components/PlaceCard'
 import { SavedFavoritesProvider } from './context/SavedFavoritesContext'
@@ -159,6 +160,10 @@ function App() {
   const content = (() => {
     if (pathname === '/favorites' || pathname === '/favorites/') {
       return <FavoritesPage />
+    }
+
+    if (pathname === '/history' || pathname === '/history/') {
+      return <HistoryPage />
     }
 
     if (sharedPlaceId) {
