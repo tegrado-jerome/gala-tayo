@@ -172,7 +172,7 @@ type AreaChip = {
   type: 'all' | 'city' | 'municipality'
 }
 
-type BudgetValue = 'any' | 'under-500' | '500-1000' | '1000-2000' | '2000-plus'
+type BudgetValue = 'under-500' | '500-1000' | '1000-2000' | '2000-plus'
 
 type BudgetOption = {
   value: BudgetValue
@@ -210,7 +210,6 @@ const fallbackAreas: AreaChip[] = [
 ]
 
 const budgetOptions: BudgetOption[] = [
-  { value: 'any', label: 'Any budget' },
   { value: 'under-500', label: 'Under ₱500' },
   { value: '500-1000', label: '₱500–₱1,000' },
   { value: '1000-2000', label: '₱1,000–₱2,000' },
@@ -308,9 +307,9 @@ const animatedSearchPrompts = [
 function HomePage() {
   const [categories, setCategories] = useState(fallbackCategories)
   const [areas, setAreas] = useState<AreaChip[]>(fallbackAreas)
-  const [selectedCategory, setSelectedCategory] = useState('all')
-  const [selectedArea, setSelectedArea] = useState('all')
-  const [selectedBudget, setSelectedBudget] = useState<BudgetValue>('any')
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [selectedArea, setSelectedArea] = useState<string | null>(null)
+  const [selectedBudget, setSelectedBudget] = useState<BudgetValue | null>(null)
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null)
   const [isPlaceDetailOpen, setIsPlaceDetailOpen] = useState(false)
@@ -322,32 +321,41 @@ function HomePage() {
   const filteredAdvancedCategories = useMemo(() => categories, [categories])
   const selectedCategoryName = useMemo(
     () =>
-      selectedCategory === 'all'
-        ? 'All places'
-        : categories.find((category) => category.id === selectedCategory)?.name ?? 'All places',
+      selectedCategory
+        ? categories.find((category) => category.id === selectedCategory)?.name ?? null
+        : null,
     [categories, selectedCategory]
   )
   const selectedAreaName = useMemo(
-    () => areas.find((area) => area.id === selectedArea)?.name ?? 'All areas',
+    () => (selectedArea ? areas.find((area) => area.id === selectedArea)?.name ?? null : null),
     [areas, selectedArea]
   )
   const selectedBudgetLabel = useMemo(
-    () => budgetOptions.find((budget) => budget.value === selectedBudget)?.label ?? 'Any budget',
+    () => (selectedBudget ? budgetOptions.find((budget) => budget.value === selectedBudget)?.label ?? null : null),
     [selectedBudget]
   )
+  const selectedFilterLabels = [selectedCategoryName, selectedAreaName, selectedBudgetLabel].filter(Boolean)
+  const hasActiveFilters = selectedFilterLabels.length > 0
   const selectedPlace = useMemo(
     () => placesWithCuratedImages.find((place) => place.id === selectedPlaceId) ?? null,
     [selectedPlaceId]
   )
 
   const handleClearSearch = () => {
-    setSelectedCategory('all')
-    setSelectedArea('all')
-    setSelectedBudget('any')
+    setSelectedCategory(null)
+    setSelectedArea(null)
+    setSelectedBudget(null)
     setSearchError(null)
     setPromptLogin(false)
     setLastSearchQuery('')
     setClearSearchSignal((signal) => signal + 1)
+  }
+
+  const handleClearFilters = () => {
+    setSelectedCategory(null)
+    setSelectedArea(null)
+    setSelectedBudget(null)
+    setSearchError(null)
   }
 
   const handlePlaceSelect = (placeId: string) => {
@@ -360,6 +368,8 @@ function HomePage() {
   }
 
   const handleSearch = async (query: string) => {
+    const trimmedQuery = query.trim()
+
     try {
       setIsSearching(true)
       setSearchError(null)
@@ -371,9 +381,12 @@ function HomePage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          query,
-          category: selectedCategory,
-          area: selectedArea,
+          query: trimmedQuery,
+          filters: {
+            category: selectedCategory,
+            area: selectedArea,
+            budget: selectedBudget,
+          },
         }),
       })
 
@@ -396,12 +409,66 @@ function HomePage() {
         throw new Error(data.error || data.message || 'Search failed.')
       }
 
-      setLastSearchQuery(query)
-      console.log('Search success:', { query, selectedCategory, selectedArea, selectedBudget, data })
+      setLastSearchQuery(trimmedQuery || selectedFilterLabels.join(' · '))
+      console.log('Search success:', {
+        query: trimmedQuery,
+        selectedCategory,
+        selectedArea,
+        selectedBudget,
+        data,
+      })
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Search failed.'
       setSearchError(message)
       console.error('Search request failed:', error)
+    } finally {
+      setIsSearching(false)
+    }
+  }
+
+  const handleExploreAllPlaces = async () => {
+    try {
+      setIsSearching(true)
+      setSearchError(null)
+      setPromptLogin(false)
+
+      const response = await fetch('/api/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: '',
+          filters: {
+            category: null,
+            area: null,
+            budget: null,
+          },
+          exploreAll: true,
+        }),
+      })
+
+      const data = (await response.json()) as {
+        message?: string
+        error?: string
+        promptLogin?: boolean
+      }
+
+      if (data.promptLogin) {
+        setPromptLogin(true)
+        return
+      }
+
+      if (!response.ok) {
+        throw new Error(data.error || data.message || 'Search failed.')
+      }
+
+      setLastSearchQuery('Explore all places')
+      console.log('Broad discovery success:', data)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Search failed.'
+      setSearchError(message)
+      console.error('Broad discovery request failed:', error)
     } finally {
       setIsSearching(false)
     }
@@ -488,6 +555,7 @@ function HomePage() {
               onSearch={handleSearch}
               onClear={handleClearSearch}
               clearSignal={clearSearchSignal}
+              hasActiveFilters={hasActiveFilters}
               isLoading={isSearching}
               placeholder="Saan mo gustong pumunta ngayon?"
               animatedPlaceholders={animatedSearchPrompts}
@@ -558,6 +626,7 @@ function HomePage() {
               onSearch={handleSearch}
               onClear={handleClearSearch}
               clearSignal={clearSearchSignal}
+              hasActiveFilters={hasActiveFilters}
               isLoading={isSearching}
               placeholder="Saan mo gustong pumunta ngayon?"
               animatedPlaceholders={animatedSearchPrompts}
@@ -645,7 +714,7 @@ function HomePage() {
             <div>
               <p className="text-[26px] font-semibold leading-tight text-slate-900 sm:text-lg">Pumili ng filters</p>
               <p className="mt-1 text-[11px] text-[var(--muted)] sm:text-xs">
-                Selected: {selectedCategoryName} · {selectedAreaName} · {selectedBudgetLabel}
+                {hasActiveFilters ? `Selected: ${selectedFilterLabels.join(' · ')}` : 'No filters selected yet'}
               </p>
             </div>
             <button
@@ -660,7 +729,7 @@ function HomePage() {
             </button>
           </div>
 
-          <div className="max-h-[calc(100%-204px)] overflow-y-auto px-4 pb-4 pt-3 sm:max-h-[calc(100%-214px)] sm:px-5 sm:pb-5 sm:pt-4">
+          <div className="max-h-[calc(100%-264px)] overflow-y-auto px-4 pb-4 pt-3 sm:max-h-[calc(100%-274px)] sm:px-5 sm:pb-5 sm:pt-4">
             <div>
               <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)] sm:text-xs">
                 Kategorya ng lugar
@@ -668,24 +737,6 @@ function HomePage() {
             </div>
 
             <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
-              <button
-                type="button"
-                onClick={() => setSelectedCategory('all')}
-                className={`group rounded-xl border px-2.5 py-1.5 text-left text-[13px] transition duration-200 active:scale-[0.98] sm:px-3 sm:py-2 sm:text-sm ${
-                  selectedCategory === 'all'
-                    ? 'border-[var(--accent)] bg-[linear-gradient(180deg,#eef5ff,#deecff)] text-[var(--accent-deep)] shadow-[0_8px_18px_rgba(47,116,232,0.14)] active:bg-[linear-gradient(180deg,#deecff,#d0e4ff)]'
-                    : 'border-[var(--line)] bg-white text-slate-700 hover:-translate-y-[1px] hover:border-[var(--accent)] hover:bg-[linear-gradient(180deg,#f7fbff,#ecf4ff)] hover:text-[var(--accent-deep)] hover:shadow-[0_8px_16px_rgba(47,116,232,0.1)] active:border-[var(--accent)] active:bg-[linear-gradient(180deg,#eef5ff,#deecff)] active:text-[var(--accent-deep)]'
-                }`}
-              >
-                <span className="flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <CategoryIcon categoryId="all" />
-                    <span>All places</span>
-                  </span>
-                  {selectedCategory === 'all' ? <CheckIcon className="h-4 w-4" /> : null}
-                </span>
-              </button>
-
               {filteredAdvancedCategories.map((category) => (
                 <button
                   key={category.id}
@@ -715,7 +766,7 @@ function HomePage() {
             </div>
 
             <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
-              {areas.map((area) => (
+              {areas.filter((area) => area.id !== 'all').map((area) => (
                 <button
                   key={area.id}
                   type="button"
@@ -770,17 +821,32 @@ function HomePage() {
           <div className="absolute bottom-0 left-0 right-0 grid gap-2 border-t border-[var(--line)] bg-white/95 px-4 py-2.5 sm:px-5 sm:py-3">
             <button
               type="button"
-              onClick={handleClearSearch}
-              className="w-full rounded-full border border-[var(--line)] bg-white px-4 py-2.5 text-[15px] font-semibold tracking-[0.01em] text-[var(--accent-deep)] transition-all duration-200 hover:-translate-y-[1px] hover:border-[var(--accent)] hover:bg-[var(--accent-wash)] active:scale-[0.99] sm:py-3 sm:text-sm"
+              onClick={handleClearFilters}
+              disabled={!hasActiveFilters}
+              className="w-full rounded-full border border-[var(--line)] bg-white px-4 py-2.5 text-[15px] font-semibold tracking-[0.01em] text-[var(--accent-deep)] transition-all duration-200 hover:-translate-y-[1px] hover:border-[var(--accent)] hover:bg-[var(--accent-wash)] active:scale-[0.99] disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-400 disabled:hover:translate-y-0 disabled:hover:bg-white sm:py-3 sm:text-sm"
             >
-              Clear Search
+              Clear filters
             </button>
             <button
               type="button"
-              onClick={() => setShowAdvancedFilters(false)}
-              className="w-full rounded-full border border-[var(--accent)] bg-[var(--accent)] px-4 py-2.5 text-[15px] font-semibold tracking-[0.01em] text-white shadow-[0_10px_20px_rgba(47,116,232,0.26)] transition-all duration-200 hover:-translate-y-[1px] hover:bg-white hover:text-[var(--accent)] hover:shadow-[0_8px_16px_rgba(47,116,232,0.16)] active:scale-[0.99] active:bg-[var(--accent-deep)] active:text-white sm:py-3 sm:text-sm"
+              onClick={() => {
+                setShowAdvancedFilters(false)
+                void handleSearch('')
+              }}
+              disabled={!hasActiveFilters}
+              className="w-full rounded-full border border-[var(--accent)] bg-[var(--accent)] px-4 py-2.5 text-[15px] font-semibold tracking-[0.01em] text-white shadow-[0_10px_20px_rgba(47,116,232,0.26)] transition-all duration-200 hover:-translate-y-[1px] hover:bg-white hover:text-[var(--accent)] hover:shadow-[0_8px_16px_rgba(47,116,232,0.16)] active:scale-[0.99] active:bg-[var(--accent-deep)] active:text-white disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none disabled:hover:translate-y-0 sm:py-3 sm:text-sm"
             >
-              Gamitin ang filters
+              Apply filters
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setShowAdvancedFilters(false)
+                void handleExploreAllPlaces()
+              }}
+              className="w-full rounded-full border border-[var(--line)] bg-[linear-gradient(180deg,#f8fbff,#eef5ff)] px-4 py-2.5 text-[15px] font-semibold tracking-[0.01em] text-[var(--accent-deep)] transition-all duration-200 hover:-translate-y-[1px] hover:border-[var(--accent)] hover:bg-white active:scale-[0.99] sm:py-3 sm:text-sm"
+            >
+              Explore all places
             </button>
           </div>
         </section>

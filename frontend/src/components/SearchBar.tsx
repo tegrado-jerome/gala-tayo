@@ -5,6 +5,7 @@ type SearchBarProps = {
   onSearch: (query: string) => void
   onClear?: () => void
   clearSignal?: number
+  hasActiveFilters?: boolean
   isLoading?: boolean
   placeholder?: string
   className?: string
@@ -31,6 +32,7 @@ function SearchBar({
   onSearch,
   onClear,
   clearSignal = 0,
+  hasActiveFilters = false,
   isLoading = false,
   placeholder = 'Saan mo gustong pumunta ngayon?',
   className = '',
@@ -114,7 +116,7 @@ function SearchBar({
 
     const trimmedQuery = query.trim()
 
-    if (!trimmedQuery || isLoading) {
+    if (isLoading) {
       return
     }
 
@@ -128,7 +130,9 @@ function SearchBar({
     onClear?.()
   }
 
-  const canClear = query.trim().length > 0
+  const hasQuery = query.trim().length > 0
+  const canSubmit = hasQuery || hasActiveFilters
+  const canClear = hasQuery || hasActiveFilters
   const shownPlaceholder =
     query.length > 0 || !animatedPlaceholders || animatedPlaceholders.length === 0
       ? placeholder
@@ -166,7 +170,7 @@ function SearchBar({
 
         <button
           type="submit"
-          disabled={isLoading || !canClear}
+          disabled={isLoading || !canSubmit}
           aria-label="Search"
           className="shrink-0 rounded-md bg-[linear-gradient(180deg,var(--accent),#6ba5ff)] p-1.5 text-white shadow-[0_8px_18px_rgba(47,116,232,0.26)] transition-all duration-300 hover:-translate-y-[1px] hover:bg-[var(--accent-deep)] hover:shadow-[0_12px_22px_rgba(47,116,232,0.3)] active:translate-y-0 disabled:cursor-not-allowed disabled:bg-slate-300 sm:p-2"
         >

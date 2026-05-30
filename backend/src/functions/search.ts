@@ -21,16 +21,36 @@ import {
   generateGeminiResponse,
 } from "../services/geminiService";
 import { findAreaById, findCategoryById } from "./filters";
+import { PLACE_DETAILS } from "../data/placeDetails";
 
 type SearchRequestBody = {
   query?: unknown;
   category?: unknown;
   area?: unknown;
+  budget?: unknown;
+  filters?: unknown;
+  exploreAll?: unknown;
 };
 
 type CachedSearchResult = {
   geminiResponse: string;
+  places?: typeof PLACE_DETAILS;
 };
+
+type BudgetValue =
+  | "any"
+  | "under-500"
+  | "500-1000"
+  | "1000-2000"
+  | "2000-plus";
+
+const VALID_BUDGET_VALUES: BudgetValue[] = [
+  "any",
+  "under-500",
+  "500-1000",
+  "1000-2000",
+  "2000-plus",
+];
 
 type SearchUserContext =
   | {
@@ -73,14 +93,14 @@ function getGeminiErrorMessage(status: number): string {
   }
 }
 
-function getSearchQuery(body: SearchRequestBody): string | null {
+function getSearchQuery(body: SearchRequestBody): string {
   const rawQuery = body.query;
 
   if (typeof rawQuery !== "string") {
-    return null;
+    return "";
   }
 
-  return rawQuery.trim() === "" ? null : rawQuery;
+  return rawQuery.trim();
 }
 
 function getOptionalFilterId(value: unknown): string | undefined {
@@ -91,6 +111,38 @@ function getOptionalFilterId(value: unknown): string | undefined {
   const trimmedValue = value.trim();
 
   return trimmedValue === "" ? undefined : trimmedValue;
+}
+
+function getFiltersPayload(body: SearchRequestBody): Record<string, unknown> {
+  if (!body.filters || typeof body.filters !== "object") {
+    return {};
+  }
+
+  return body.filters as Record<string, unknown>;
+}
+
+function getFilterValue(
+  body: SearchRequestBody,
+  filters: Record<string, unknown>,
+  key: "category" | "area" | "budget"
+): unknown {
+  if (Object.prototype.hasOwnProperty.call(filters, key)) {
+    return filters[key];
+  }
+
+  return body[key];
+}
+
+function getBudgetFilter(value: unknown): BudgetValue {
+  if (typeof value !== "string") {
+    return "any";
+  }
+
+  const trimmedValue = value.trim();
+
+  return VALID_BUDGET_VALUES.includes(trimmedValue as BudgetValue)
+    ? (trimmedValue as BudgetValue)
+    : "any";
 }
 
 async function resolveUserContext(
@@ -149,29 +201,34 @@ export async function search(
 
   try {
     const body = (await request.json()) as SearchRequestBody;
+    const filters = getFiltersPayload(body);
     const query = getSearchQuery(body);
+    const categoryId =
+      getOptionalFilterId(getFilterValue(body, filters, "category")) ?? "all";
+    const areaId =
+      getOptionalFilterId(getFilterValue(body, filters, "area")) ?? "all";
+    const budget = getBudgetFilter(getFilterValue(body, filters, "budget"));
+    const shouldExploreAll = body.exploreAll === true;
+    const normalizedQuery = normalizeQuery(query);
+    const selectedCategory = findCategoryById(categoryId);
+    const selectedArea = findAreaById(areaId);
+    const hasSelectedFilters =
+      categoryId !== "all" || areaId !== "all" || budget !== "any";
+    const isBroadDiscoverySearch =
+      shouldExploreAll &&
+      !normalizedQuery &&
+      categoryId === "all" &&
+      areaId === "all" &&
+      budget === "any";
 
-    if (!query) {
+    if (!normalizedQuery && !hasSelectedFilters && !isBroadDiscoverySearch) {
       return {
         status: 400,
         jsonBody: {
-          message: "Query is required.",
+          message: "Type what you're looking for or choose at least one filter.",
         },
       };
     }
-
-    const userContext = await resolveUserContext(request);
-    const rateLimitResult = checkSearchRateLimit(userContext);
-
-    if (!rateLimitResult.allowed) {
-      return buildRateLimitExceededResponse(userContext, rateLimitResult);
-    }
-
-    const normalizedQuery = normalizeQuery(query);
-    const categoryId = getOptionalFilterId(body.category) ?? "all";
-    const areaId = getOptionalFilterId(body.area) ?? "all";
-    const selectedCategory = findCategoryById(categoryId);
-    const selectedArea = findAreaById(areaId);
 
     if (categoryId !== "all" && !selectedCategory) {
       return {
@@ -191,8 +248,44 @@ export async function search(
       };
     }
 
-    const cacheKey = generateSearchCacheKey(normalizedQuery, categoryId, areaId);
+    const cacheKey = generateSearchCacheKey(
+      normalizedQuery,
+      categoryId,
+      areaId,
+      budget
+    );
+    const userContext = await resolveUserContext(request);
     const userType: GeminiUserType = userContext.userType;
+
+    if (isBroadDiscoverySearch) {
+      return {
+        status: 200,
+        jsonBody: {
+          message: "Broad discovery places served from curated defaults.",
+          userType,
+          cacheHit: false,
+          cacheKey,
+          searchMode: "broad-discovery",
+          searchContext: {
+            query: normalizedQuery,
+            category: categoryId,
+            area: areaId,
+            budget,
+          },
+          result: {
+            geminiResponse: "",
+            places: PLACE_DETAILS.slice(0, 10),
+          },
+        },
+      };
+    }
+
+    const rateLimitResult = checkSearchRateLimit(userContext);
+
+    if (!rateLimitResult.allowed) {
+      return buildRateLimitExceededResponse(userContext, rateLimitResult);
+    }
+
     const cachedResult = await getCache(cacheKey);
 
     if (cachedResult) {
@@ -202,6 +295,13 @@ export async function search(
           message: "Search result served from cache.",
           userType,
           cacheHit: true,
+          cacheKey,
+          searchContext: {
+            query: normalizedQuery,
+            category: categoryId,
+            area: areaId,
+            budget,
+          },
           result: cachedResult,
           remaining: rateLimitResult.remaining,
           limit: rateLimitResult.limit,
@@ -211,7 +311,8 @@ export async function search(
     }
 
     const geminiPrompt = buildGeminiPrompt({
-      userPrompt: normalizedQuery,
+      userPrompt:
+        normalizedQuery || "Recommend places based on the selected filters.",
       userType,
       categoryName: selectedCategory?.name,
       categorySearchTerms: selectedCategory?.searchTerms,
@@ -233,6 +334,13 @@ export async function search(
           message: "Search processed successfully.",
           userType,
           cacheHit: false,
+          cacheKey,
+          searchContext: {
+            query: normalizedQuery,
+            category: categoryId,
+            area: areaId,
+            budget,
+          },
           result: resultToCache,
           remaining: rateLimitResult.remaining,
         limit: rateLimitResult.limit,
