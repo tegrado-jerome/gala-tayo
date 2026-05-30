@@ -167,6 +167,7 @@ function HistoryPage() {
   const { session, isSessionLoading } = useSavedFavorites()
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [isClearing, setIsClearing] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
 
   useEffect(() => {
@@ -217,6 +218,43 @@ function HistoryPage() {
     () => history.filter((item) => item.place?.slug),
     [history]
   )
+  const canClearHistory = Boolean(session?.access_token) && visibleHistory.length > 0
+
+  const handleClearHistory = async () => {
+    if (!session?.access_token || isClearing) {
+      return
+    }
+
+    const shouldClear = window.confirm('Clear all history?')
+
+    if (!shouldClear) {
+      return
+    }
+
+    try {
+      setIsClearing(true)
+      setErrorMessage('')
+
+      const response = await fetch(getApiEndpoint('/history'), {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      })
+
+      const data = (await response.json()) as { message?: string }
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Unable to clear history. Please try again.')
+      }
+
+      setHistory([])
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Unable to clear history. Please try again.')
+    } finally {
+      setIsClearing(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
@@ -237,16 +275,28 @@ function HistoryPage() {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => {
-              window.history.pushState(null, '', '/')
-              window.dispatchEvent(new PopStateEvent('popstate'))
-            }}
-            className="inline-flex w-fit items-center justify-center rounded-full border border-[var(--line)] bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-[0_8px_18px_rgba(28,77,160,0.08)] transition hover:-translate-y-[1px] hover:border-[var(--accent)] hover:text-[var(--accent-deep)]"
-          >
-            Back to search
-          </button>
+          <div className="flex flex-wrap gap-2">
+            {canClearHistory ? (
+              <button
+                type="button"
+                onClick={() => void handleClearHistory()}
+                disabled={isClearing}
+                className="inline-flex w-fit items-center justify-center rounded-full border border-red-200 bg-white px-4 py-2 text-sm font-semibold text-red-600 shadow-[0_8px_18px_rgba(28,77,160,0.08)] transition hover:-translate-y-[1px] hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isClearing ? 'Clearing...' : 'Clear history'}
+              </button>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => {
+                window.history.pushState(null, '', '/')
+                window.dispatchEvent(new PopStateEvent('popstate'))
+              }}
+              className="inline-flex w-fit items-center justify-center rounded-full border border-[var(--line)] bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-[0_8px_18px_rgba(28,77,160,0.08)] transition hover:-translate-y-[1px] hover:border-[var(--accent)] hover:text-[var(--accent-deep)]"
+            >
+              Back to search
+            </button>
+          </div>
         </section>
 
         {isSessionLoading ? (
@@ -271,7 +321,7 @@ function HistoryPage() {
               {isLoading ? (
                 <p className="text-sm text-[var(--accent-deep)]">Loading your history...</p>
               ) : errorMessage ? (
-                <p className="text-sm font-medium text-red-600">Unable to load history. Please try again.</p>
+                <p className="text-sm font-medium text-red-600">{errorMessage}</p>
               ) : null}
             </div>
 
