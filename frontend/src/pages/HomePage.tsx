@@ -6,6 +6,7 @@ import AppHeader from '../components/AppHeader'
 import MapView from '../components/MapView'
 import GuestLimitModal from '../components/GuestLimitModal'
 import { getCuratedPlaceImages } from '../data/curatedPlaceImages'
+import { supabase } from '../supabase'
 
 type IconProps = {
   className?: string
@@ -304,6 +305,24 @@ const animatedSearchPrompts = [
   'Dental Clinic near Me na Abot-Kaya',
 ]
 
+async function getSearchRequestHeaders(): Promise<Record<string, string>> {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  }
+
+  const accessToken = session?.access_token
+
+  if (accessToken) {
+    headers.Authorization = `Bearer ${accessToken}`
+  }
+
+  return headers
+}
+
 function HomePage() {
   const [categories, setCategories] = useState(fallbackCategories)
   const [areas, setAreas] = useState<AreaChip[]>(fallbackAreas)
@@ -317,6 +336,7 @@ function HomePage() {
   const [searchError, setSearchError] = useState<string | null>(null)
   const [promptLogin, setPromptLogin] = useState(false)
   const [lastSearchQuery, setLastSearchQuery] = useState('')
+  const [searchId, setSearchId] = useState<string | null>(null)
   const [clearSearchSignal, setClearSearchSignal] = useState(0)
   const filteredAdvancedCategories = useMemo(() => categories, [categories])
   const selectedCategoryName = useMemo(
@@ -348,6 +368,7 @@ function HomePage() {
     setSearchError(null)
     setPromptLogin(false)
     setLastSearchQuery('')
+    setSearchId(null)
     setClearSearchSignal((signal) => signal + 1)
   }
 
@@ -359,6 +380,10 @@ function HomePage() {
   }
 
   const handlePlaceSelect = (placeId: string) => {
+    if (searchId) {
+      console.log('Selected place from search:', { placeId, searchId })
+    }
+
     setSelectedPlaceId(placeId)
     setIsPlaceDetailOpen(true)
   }
@@ -377,9 +402,7 @@ function HomePage() {
 
       const response = await fetch('/api/search', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: await getSearchRequestHeaders(),
         body: JSON.stringify({
           query: trimmedQuery,
           filters: {
@@ -393,6 +416,7 @@ function HomePage() {
       const data = (await response.json()) as {
         message?: string
         error?: string
+        searchId?: string
         promptLogin?: boolean
         geminiResponse?: string
         result?: {
@@ -410,6 +434,7 @@ function HomePage() {
       }
 
       setLastSearchQuery(trimmedQuery || selectedFilterLabels.join(' · '))
+      setSearchId(data.searchId ?? null)
       console.log('Search success:', {
         query: trimmedQuery,
         selectedCategory,
@@ -434,9 +459,7 @@ function HomePage() {
 
       const response = await fetch('/api/search', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: await getSearchRequestHeaders(),
         body: JSON.stringify({
           query: '',
           filters: {
@@ -451,6 +474,7 @@ function HomePage() {
       const data = (await response.json()) as {
         message?: string
         error?: string
+        searchId?: string
         promptLogin?: boolean
       }
 
@@ -464,6 +488,7 @@ function HomePage() {
       }
 
       setLastSearchQuery('Explore all places')
+      setSearchId(data.searchId ?? null)
       console.log('Broad discovery success:', data)
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Search failed.'

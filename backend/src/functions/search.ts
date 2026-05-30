@@ -4,7 +4,9 @@ import {
   HttpResponseInit,
   InvocationContext,
 } from "@azure/functions";
+import { randomUUID } from "crypto";
 import { validateJwt } from "../utils/auth";
+import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import {
   buildGeminiPrompt,
   GeminiUserType,
@@ -35,6 +37,17 @@ type SearchRequestBody = {
 type CachedSearchResult = {
   geminiResponse: string;
   places?: typeof PLACE_DETAILS;
+};
+
+type SearchContext = {
+  searchId: string;
+  query: string;
+  category: string | null;
+  area: string | null;
+  budget: string | null;
+  language: "taglish";
+  userType: "guest" | "registered";
+  createdAt: string;
 };
 
 type BudgetValue =
@@ -193,6 +206,82 @@ function buildRateLimitExceededResponse(
   };
 }
 
+function createSearchId(): string {
+  return `search_${randomUUID()}`;
+}
+
+function normalizeSearchFilter(value: string, emptyValue: string): string | null {
+  return value === emptyValue ? null : value;
+}
+
+function buildSearchContext({
+  searchId,
+  query,
+  categoryId,
+  areaId,
+  budget,
+  userType,
+  createdAt,
+}: {
+  searchId: string;
+  query: string;
+  categoryId: string;
+  areaId: string;
+  budget: BudgetValue;
+  userType: SearchContext["userType"];
+  createdAt: string;
+}): SearchContext {
+  return {
+    searchId,
+    query,
+    category: normalizeSearchFilter(categoryId, "all"),
+    area: normalizeSearchFilter(areaId, "all"),
+    budget: normalizeSearchFilter(budget, "any"),
+    language: "taglish",
+    userType,
+    createdAt,
+  };
+}
+
+async function storeSearchContext({
+  searchContext,
+  userContext,
+  cacheKey,
+  context,
+}: {
+  searchContext: SearchContext;
+  userContext: SearchUserContext;
+  cacheKey: string;
+  context: InvocationContext;
+}): Promise<void> {
+  try {
+    const supabase = await getSupabaseAdminClient();
+    const searchContexts = supabase.from("search_contexts") as ReturnType<
+      typeof supabase.from
+    > & {
+      insert: (row: Record<string, unknown>) => Promise<{ error: unknown }>;
+    };
+    const { error } = await searchContexts.insert({
+      search_id: searchContext.searchId,
+      query: searchContext.query,
+      category: searchContext.category,
+      area: searchContext.area,
+      budget: searchContext.budget,
+      language: searchContext.language,
+      user_type: searchContext.userType,
+      user_id: userContext.userType === "registered" ? userContext.user.id : null,
+      cache_key: cacheKey,
+      created_at: searchContext.createdAt,
+    });
+
+    if (error) {
+      context.warn("Failed to store search context.", error);
+    }
+  } catch (error) {
+    context.warn("Failed to store search context.", error);
+  }
+}
+
 export async function search(
   request: HttpRequest,
   context: InvocationContext
@@ -258,20 +347,34 @@ export async function search(
     const userType: GeminiUserType = userContext.userType;
 
     if (isBroadDiscoverySearch) {
+      const searchId = createSearchId();
+      const searchContext = buildSearchContext({
+        searchId,
+        query,
+        categoryId,
+        areaId,
+        budget,
+        userType,
+        createdAt: new Date().toISOString(),
+      });
+
+      await storeSearchContext({
+        searchContext,
+        userContext,
+        cacheKey,
+        context,
+      });
+
       return {
         status: 200,
         jsonBody: {
           message: "Broad discovery places served from curated defaults.",
+          searchId,
           userType,
           cacheHit: false,
           cacheKey,
           searchMode: "broad-discovery",
-          searchContext: {
-            query: normalizedQuery,
-            category: categoryId,
-            area: areaId,
-            budget,
-          },
+          searchContext,
           result: {
             geminiResponse: "",
             places: PLACE_DETAILS.slice(0, 10),
@@ -286,6 +389,24 @@ export async function search(
       return buildRateLimitExceededResponse(userContext, rateLimitResult);
     }
 
+    const searchId = createSearchId();
+    const searchContext = buildSearchContext({
+      searchId,
+      query,
+      categoryId,
+      areaId,
+      budget,
+      userType,
+      createdAt: new Date().toISOString(),
+    });
+
+    await storeSearchContext({
+      searchContext,
+      userContext,
+      cacheKey,
+      context,
+    });
+
     const cachedResult = await getCache(cacheKey);
 
     if (cachedResult) {
@@ -293,15 +414,11 @@ export async function search(
         status: 200,
         jsonBody: {
           message: "Search result served from cache.",
+          searchId,
           userType,
           cacheHit: true,
           cacheKey,
-          searchContext: {
-            query: normalizedQuery,
-            category: categoryId,
-            area: areaId,
-            budget,
-          },
+          searchContext,
           result: cachedResult,
           remaining: rateLimitResult.remaining,
           limit: rateLimitResult.limit,
@@ -332,15 +449,11 @@ export async function search(
       status: 200,
         jsonBody: {
           message: "Search processed successfully.",
+          searchId,
           userType,
           cacheHit: false,
           cacheKey,
-          searchContext: {
-            query: normalizedQuery,
-            category: categoryId,
-            area: areaId,
-            budget,
-          },
+          searchContext,
           result: resultToCache,
           remaining: rateLimitResult.remaining,
         limit: rateLimitResult.limit,
