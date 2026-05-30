@@ -3,6 +3,8 @@ import type { FormEvent } from 'react'
 
 type SearchBarProps = {
   onSearch: (query: string) => void
+  onClear?: () => void
+  clearSignal?: number
   isLoading?: boolean
   placeholder?: string
   className?: string
@@ -27,6 +29,8 @@ function SearchIcon() {
 
 function SearchBar({
   onSearch,
+  onClear,
+  clearSignal = 0,
   isLoading = false,
   placeholder = 'Saan mo gustong pumunta ngayon?',
   className = '',
@@ -36,6 +40,11 @@ function SearchBar({
   const [query, setQuery] = useState('')
   const [animatedPlaceholder, setAnimatedPlaceholder] = useState(placeholder)
   const lastSubmittedQuery = useRef('')
+
+  useEffect(() => {
+    setQuery('')
+    lastSubmittedQuery.current = ''
+  }, [clearSignal])
 
   useEffect(() => {
     if (!animatedPlaceholders || animatedPlaceholders.length === 0) {
@@ -113,6 +122,12 @@ function SearchBar({
     onSearch(trimmedQuery)
   }
 
+  const handleClear = () => {
+    setQuery('')
+    lastSubmittedQuery.current = ''
+    onClear?.()
+  }
+
   const canClear = query.trim().length > 0
   const shownPlaceholder =
     query.length > 0 || !animatedPlaceholders || animatedPlaceholders.length === 0
@@ -133,6 +148,21 @@ function SearchBar({
           disabled={isLoading}
           className="min-w-0 flex-1 bg-transparent px-1.5 text-[13px] text-slate-700 outline-none placeholder:text-[clamp(11px,3.4vw,14px)] placeholder:text-slate-400 disabled:cursor-not-allowed sm:px-2 sm:text-sm"
         />
+
+        {canClear ? (
+          <button
+            type="button"
+            onClick={handleClear}
+            disabled={isLoading}
+            aria-label="Clear Search"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-[var(--line)] bg-white text-slate-400 transition hover:border-[var(--accent)] hover:text-[var(--accent-deep)] disabled:cursor-not-allowed disabled:opacity-60 sm:h-8 sm:w-8"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className="h-3.5 w-3.5">
+              <path d="M6 6l12 12" />
+              <path d="M18 6 6 18" />
+            </svg>
+          </button>
+        ) : null}
 
         <button
           type="submit"
