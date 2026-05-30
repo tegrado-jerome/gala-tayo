@@ -23,7 +23,6 @@ import {
   generateGeminiResponse,
 } from "../services/geminiService";
 import { findAreaById, findCategoryById } from "./filters";
-import { PLACE_DETAILS } from "../data/placeDetails";
 
 type SearchRequestBody = {
   query?: unknown;
@@ -36,7 +35,29 @@ type SearchRequestBody = {
 
 type CachedSearchResult = {
   geminiResponse: string;
-  places?: typeof PLACE_DETAILS;
+  places: SearchPlaceResult[];
+};
+
+type PlaceRow = Record<string, unknown>;
+
+type SearchPlaceResult = {
+  id: string;
+  slug: string | null;
+  name: string | null;
+  description: string | null;
+  area: string | null;
+  city: string | null;
+  location: string | null;
+  category: string | null;
+  categories: unknown;
+  latitude: number | null;
+  longitude: number | null;
+  imageUrl: string | null;
+  curatedImageUrls: string[];
+  address: string | null;
+  budget: string | null;
+  budgetRange: string | null;
+  reason: string | null;
 };
 
 type SearchContext = {
@@ -64,6 +85,19 @@ const VALID_BUDGET_VALUES: BudgetValue[] = [
   "1000-2000",
   "2000-plus",
 ];
+
+const CATEGORY_TO_DB_CATEGORIES: Record<string, string[]> = {
+  cafe: ["Cafe"],
+  mall: ["Mall"],
+  museum: ["Museum"],
+  heritage: ["Heritage"],
+  "date-spot": ["Hangout", "Mall", "Cafe"],
+  barkada: ["Hangout", "Mall"],
+  family: ["Mall", "Museum", "Heritage", "Hangout"],
+  "tourist-spot": ["Heritage", "Museum", "Hangout"],
+  "study-spot": ["Cafe", "Museum"],
+  chill: ["Cafe", "Hangout"],
+};
 
 type SearchUserContext =
   | {
@@ -156,6 +190,208 @@ function getBudgetFilter(value: unknown): BudgetValue {
   return VALID_BUDGET_VALUES.includes(trimmedValue as BudgetValue)
     ? (trimmedValue as BudgetValue)
     : "any";
+}
+
+function getStringField(row: PlaceRow, keys: string[]): string | null {
+  for (const key of keys) {
+    const value = row[key];
+
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+  }
+
+  return null;
+}
+
+function getNumberField(row: PlaceRow, keys: string[]): number | null {
+  for (const key of keys) {
+    const value = row[key];
+
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value;
+    }
+
+    if (typeof value === "string") {
+      const parsedValue = Number(value);
+
+      if (Number.isFinite(parsedValue)) {
+        return parsedValue;
+      }
+    }
+  }
+
+  return null;
+}
+
+function getStringArrayField(row: PlaceRow, keys: string[]): string[] {
+  for (const key of keys) {
+    const value = row[key];
+
+    if (Array.isArray(value)) {
+      return value.filter(
+        (item): item is string => typeof item === "string" && item.trim() !== ""
+      );
+    }
+  }
+
+  return [];
+}
+
+function normalizeComparableText(value: unknown): string {
+  if (typeof value === "string") {
+    return normalizeQuery(value);
+  }
+
+  if (Array.isArray(value)) {
+    return normalizeQuery(value.filter(Boolean).join(" "));
+  }
+
+  return "";
+}
+
+function getMappedDbCategories(categoryId: string): string[] {
+  if (categoryId === "all") {
+    return [];
+  }
+
+  const mappedCategories = CATEGORY_TO_DB_CATEGORIES[categoryId];
+
+  if (mappedCategories) {
+    return mappedCategories;
+  }
+
+  const selectedCategory = findCategoryById(categoryId);
+
+  return selectedCategory?.name ? [selectedCategory.name] : [categoryId];
+}
+
+function rowMatchesCategory(row: PlaceRow, categoryId: string): boolean {
+  const mappedCategories = getMappedDbCategories(categoryId);
+
+  if (mappedCategories.length === 0) {
+    return true;
+  }
+
+  const categoryText = normalizeComparableText([
+    getStringField(row, ["category"]),
+    row.categories,
+  ]);
+
+  return mappedCategories.some((category) =>
+    categoryText.includes(normalizeComparableText(category))
+  );
+}
+
+function rowMatchesArea(row: PlaceRow, areaId: string): boolean {
+  if (areaId === "all") {
+    return true;
+  }
+
+  const selectedArea = findAreaById(areaId);
+  const areaName = selectedArea?.name ?? areaId;
+  const areaText = normalizeComparableText([
+    getStringField(row, ["city", "area", "address", "location"]),
+  ]);
+
+  return areaText.includes(normalizeComparableText(areaName));
+}
+
+function rowMatchesPrompt(row: PlaceRow, normalizedQuery: string): boolean {
+  if (!normalizedQuery) {
+    return true;
+  }
+
+  const promptTerms = normalizedQuery
+    .split(" ")
+    .filter((term) => term.length >= 3 && !/^gm\d+$/i.test(term));
+
+  if (promptTerms.length === 0) {
+    return true;
+  }
+
+  const searchableText = normalizeComparableText([
+    getStringField(row, ["name", "category", "city", "area", "address", "description"]),
+    row.categories,
+  ]);
+
+  return promptTerms.some((term) => searchableText.includes(term));
+}
+
+function rowMatchesBudget(row: PlaceRow, budget: BudgetValue): boolean {
+  if (budget === "any") {
+    return true;
+  }
+
+  const budgetText = normalizeComparableText(
+    getStringField(row, ["budget", "budget_range", "budgetRange", "price_range", "priceRange"])
+  );
+
+  if (!budgetText) {
+    return true;
+  }
+
+  return budgetText.includes(budget);
+}
+
+function mapPlaceRowToSearchResult(row: PlaceRow): SearchPlaceResult {
+  const imageUrl = getStringField(row, ["imageUrl", "image_url", "photo_url", "photoUrl"]);
+  const curatedImageUrls = getStringArrayField(row, [
+    "curatedImageUrls",
+    "curated_image_urls",
+    "photos",
+  ]);
+  const city = getStringField(row, ["city", "area"]);
+  const address = getStringField(row, ["address", "formatted_address"]);
+  const fallbackLocation = [address, city].filter(Boolean).join(", ");
+  const location = getStringField(row, ["location"]) ?? (fallbackLocation || null);
+
+  return {
+    id: String(row.id ?? row.foursquare_id ?? row.slug ?? ""),
+    slug: getStringField(row, ["slug"]),
+    name: getStringField(row, ["name"]),
+    description: getStringField(row, ["description", "reason"]),
+    area: getStringField(row, ["area", "city"]),
+    city,
+    location,
+    category: getStringField(row, ["category"]),
+    categories: row.categories ?? null,
+    latitude: getNumberField(row, ["latitude", "lat"]),
+    longitude: getNumberField(row, ["longitude", "lng", "lon"]),
+    imageUrl,
+    curatedImageUrls,
+    address,
+    budget: getStringField(row, ["budget"]),
+    budgetRange: getStringField(row, ["budgetRange", "budget_range", "priceRange", "price_range"]),
+    reason: getStringField(row, ["reason", "description"]),
+  };
+}
+
+function buildPlaceCandidateContext(places: SearchPlaceResult[]): string {
+  if (places.length === 0) {
+    return "No matching Supabase places were found for this search.";
+  }
+
+  return places
+    .map((place, index) => {
+      const location = place.location ?? place.city ?? place.area ?? "Metro Manila";
+      const category = place.category ?? "Place";
+
+      return `${index + 1}. ${place.name ?? "Unnamed place"} — ${category} — ${location}`;
+    })
+    .join("\n");
+}
+
+function constrainPromptToPlaces(
+  prompt: string,
+  places: SearchPlaceResult[]
+): string {
+  return `${prompt}
+
+Supabase place candidates for this search:
+${buildPlaceCandidateContext(places)}
+
+Only recommend or discuss places from the Supabase place candidates above. If no candidates are available, say that no matching places were found yet and suggest adjusting the filters.`;
 }
 
 async function resolveUserContext(
@@ -282,6 +518,66 @@ async function storeSearchContext({
   }
 }
 
+async function findSearchPlaces({
+  normalizedQuery,
+  categoryId,
+  areaId,
+  budget,
+}: {
+  normalizedQuery: string;
+  categoryId: string;
+  areaId: string;
+  budget: BudgetValue;
+}): Promise<SearchPlaceResult[]> {
+  const supabase = await getSupabaseAdminClient();
+  const placesTable = supabase.from("places") as ReturnType<
+    typeof supabase.from
+  > & {
+    select: (columns: string) => {
+      order: (
+        column: string,
+        options?: { ascending?: boolean; nullsFirst?: boolean }
+      ) => unknown;
+      limit: (count: number) => Promise<{ data: PlaceRow[] | null; error: unknown }>;
+      ilike: (column: string, pattern: string) => unknown;
+      or: (filters: string) => unknown;
+    };
+  };
+
+  let queryBuilder = placesTable.select("*") as {
+    order: (
+      column: string,
+      options?: { ascending?: boolean; nullsFirst?: boolean }
+    ) => typeof queryBuilder;
+    limit: (count: number) => Promise<{ data: PlaceRow[] | null; error: unknown }>;
+    ilike: (column: string, pattern: string) => typeof queryBuilder;
+    or: (filters: string) => typeof queryBuilder;
+  };
+
+  const orderedQuery = queryBuilder.order("rating", {
+    ascending: false,
+    nullsFirst: false,
+  });
+  const { data, error } = await orderedQuery.limit(30);
+
+  if (error) {
+    throw new Error("Failed to query search places.");
+  }
+
+  return (data ?? [])
+    .filter((row) => rowMatchesArea(row, areaId))
+    .filter((row) => rowMatchesCategory(row, categoryId))
+    .filter((row) => rowMatchesBudget(row, budget))
+    .filter((row) => {
+      const hasSelectedFilters =
+        categoryId !== "all" || areaId !== "all" || budget !== "any";
+
+      return hasSelectedFilters || rowMatchesPrompt(row, normalizedQuery);
+    })
+    .slice(0, 10)
+    .map(mapPlaceRowToSearchResult);
+}
+
 export async function search(
   request: HttpRequest,
   context: InvocationContext
@@ -347,6 +643,12 @@ export async function search(
     const userType: GeminiUserType = userContext.userType;
 
     if (isBroadDiscoverySearch) {
+      const places = await findSearchPlaces({
+        normalizedQuery,
+        categoryId,
+        areaId,
+        budget,
+      });
       const searchId = createSearchId();
       const searchContext = buildSearchContext({
         searchId,
@@ -375,9 +677,10 @@ export async function search(
           cacheKey,
           searchMode: "broad-discovery",
           searchContext,
+          places,
           result: {
             geminiResponse: "",
-            places: PLACE_DETAILS.slice(0, 10),
+            places,
           },
         },
       };
@@ -410,6 +713,17 @@ export async function search(
     const cachedResult = await getCache(cacheKey);
 
     if (cachedResult) {
+      const cachedSearchResult = cachedResult as Partial<CachedSearchResult>;
+      const cachedPlaces = (
+        cachedSearchResult.places ??
+        (await findSearchPlaces({
+          normalizedQuery,
+          categoryId,
+          areaId,
+          budget,
+        }))
+      ).slice(0, 10);
+
       return {
         status: 200,
         jsonBody: {
@@ -419,7 +733,11 @@ export async function search(
           cacheHit: true,
           cacheKey,
           searchContext,
-          result: cachedResult,
+          places: cachedPlaces,
+          result: {
+            geminiResponse: cachedSearchResult.geminiResponse ?? "",
+            places: cachedPlaces,
+          },
           remaining: rateLimitResult.remaining,
           limit: rateLimitResult.limit,
           resetAt: rateLimitResult.resetAt,
@@ -427,20 +745,30 @@ export async function search(
       };
     }
 
-    const geminiPrompt = buildGeminiPrompt({
-      userPrompt:
-        normalizedQuery || "Recommend places based on the selected filters.",
-      userType,
-      categoryName: selectedCategory?.name,
-      categorySearchTerms: selectedCategory?.searchTerms,
-      areaName: selectedArea?.name,
+    const places = await findSearchPlaces({
+      normalizedQuery,
+      categoryId,
+      areaId,
+      budget,
     });
+    const geminiPrompt = constrainPromptToPlaces(
+      buildGeminiPrompt({
+        userPrompt:
+          normalizedQuery || "Recommend places based on the selected filters.",
+        userType,
+        categoryName: selectedCategory?.name,
+        categorySearchTerms: selectedCategory?.searchTerms,
+        areaName: selectedArea?.name,
+      }),
+      places
+    );
 
     const geminiResponse = await generateGeminiResponse({
       prompt: geminiPrompt,
     });
     const resultToCache: CachedSearchResult = {
       geminiResponse,
+      places,
     };
 
     await setCache(cacheKey, resultToCache);
@@ -454,6 +782,7 @@ export async function search(
           cacheHit: false,
           cacheKey,
           searchContext,
+          places,
           result: resultToCache,
           remaining: rateLimitResult.remaining,
         limit: rateLimitResult.limit,
