@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { User } from '@supabase/supabase-js'
 import { supabase } from '../supabase'
+import FeedbackModal from './FeedbackModal'
 
 type UserMenuProps = {
   user: User
@@ -25,6 +26,16 @@ function ClockIcon({ className = 'h-4 w-4' }: MenuIconProps) {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className} aria-hidden="true">
       <circle cx="12" cy="12" r="8.5" />
       <path d="M12 7.8v4.7l3 1.8" />
+    </svg>
+  )
+}
+
+function FeedbackIcon({ className = 'h-4 w-4' }: MenuIconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className} aria-hidden="true">
+      <path d="M5 5.5h14v9.5H8.7L5 18.5V5.5Z" />
+      <path d="M8.5 9h7" />
+      <path d="M8.5 12h4.5" />
     </svg>
   )
 }
@@ -87,6 +98,7 @@ function UserMenu({ user, compact = false }: UserMenuProps) {
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [failedAvatarUrl, setFailedAvatarUrl] = useState('')
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const drawerRef = useRef<HTMLDivElement>(null)
 
@@ -174,6 +186,11 @@ function UserMenu({ user, compact = false }: UserMenuProps) {
     setIsOpen(false)
     window.history.pushState(null, '', '/history')
     window.dispatchEvent(new PopStateEvent('popstate'))
+  }
+
+  const openFeedback = () => {
+    setIsOpen(false)
+    setIsFeedbackOpen(true)
   }
 
   return (
@@ -306,6 +323,20 @@ function UserMenu({ user, compact = false }: UserMenuProps) {
               <span className="flex-1">History</span>
               <ChevronIcon className="h-3 w-3 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-[var(--accent-deep)]" />
             </button>
+
+            <p className="px-2 pb-1 pt-3 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">App</p>
+            <button
+              type="button"
+              onClick={openFeedback}
+              className={`group flex w-full items-center gap-2.5 rounded-xl text-left font-medium text-slate-700 transition duration-150 hover:-translate-y-[1px] hover:bg-white hover:text-[var(--accent-deep)] hover:shadow-[0_10px_22px_rgba(28,77,160,0.1),inset_0_0_0_1px_rgba(83,146,255,0.12)] focus:outline-none focus:ring-2 focus:ring-[#1a73e8]/20 ${compact ? 'px-2 py-2 text-[13px]' : 'px-2.5 py-2.5 text-sm'}`}
+              role="menuitem"
+            >
+              <span className={`flex items-center justify-center rounded-lg bg-[#f1f6ff] text-[var(--accent-deep)] transition group-hover:bg-white group-hover:shadow-[0_8px_16px_rgba(28,77,160,0.12)] ${compact ? 'h-8 w-8' : 'h-9 w-9'}`}>
+                <FeedbackIcon className="h-3.5 w-3.5" />
+              </span>
+              <span className="flex-1">Feedback</span>
+              <ChevronIcon className="h-3 w-3 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-[var(--accent-deep)]" />
+            </button>
           </div>
 
           <div className={`border-t border-[var(--line)] bg-white/60 ${compact ? 'p-3' : 'p-4'}`}>
@@ -332,6 +363,7 @@ function UserMenu({ user, compact = false }: UserMenuProps) {
         </>,
         document.body,
       ) : null}
+      <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
     </div>
   )
 }

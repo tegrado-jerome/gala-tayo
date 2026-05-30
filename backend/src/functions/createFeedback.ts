@@ -7,6 +7,9 @@ type FeedbackRequestBody = {
   comment?: string;
 };
 
+const DAILY_FEEDBACK_LIMIT = 3;
+const COMMENT_MAX_LENGTH = 500;
+
 function unauthorized(message: string): HttpResponseInit {
   return {
     status: 401,
@@ -93,8 +96,46 @@ export async function createFeedback(
     }
 
     const cleanComment = comment?.trim() || null;
+
+    if (cleanComment && cleanComment.length > COMMENT_MAX_LENGTH) {
+      return {
+        status: 400,
+        jsonBody: {
+          message: "Comment must be 500 characters or less.",
+        },
+      };
+    }
+
     const supabaseAdmin = await getSupabaseAdminClient();
     const feedbackTable = supabaseAdmin.from("feedback") as any;
+    const feedbackWindowStart = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+    const { count: recentFeedbackCount, error: countError } = await feedbackTable
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .gte("created_at", feedbackWindowStart);
+
+    if (countError) {
+      context.error("Failed to check feedback limit:", countError);
+
+      return {
+        status: 500,
+        jsonBody: {
+          message: "Failed to check feedback limit.",
+          error: countError.message,
+        },
+      };
+    }
+
+    if ((recentFeedbackCount ?? 0) >= DAILY_FEEDBACK_LIMIT) {
+      return {
+        status: 429,
+        jsonBody: {
+          message: "Daily feedback limit reached. Please try again tomorrow.",
+          limit: DAILY_FEEDBACK_LIMIT,
+        },
+      };
+    }
 
     const { data, error } = await feedbackTable
       .insert({
