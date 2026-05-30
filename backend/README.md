@@ -36,3 +36,15 @@ After seeding, restart the backend and test:
 POST /api/favorites
 body: { "placeSlug": "bonifacio-high-street" }
 ```
+
+## History Place Views
+
+GM-109 uses an upsert so repeated views of the same place update recency instead of creating duplicate rows. Run this SQL in Supabase before testing `POST /api/history/place-view`:
+
+```sql
+alter table public.history
+add constraint history_user_type_place_unique
+unique (user_id, type, place_id);
+```
+
+The same SQL is saved in `backend/sql/gm109_history_unique.sql`.

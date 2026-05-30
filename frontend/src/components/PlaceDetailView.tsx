@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { PlaceCardData } from './PlaceCard'
 import AppHeader from './AppHeader'
 import MapView from './MapView'
@@ -6,6 +6,7 @@ import SharePlaceModal from './SharePlaceModal'
 import GuestLimitModal from './GuestLimitModal'
 import { getCuratedPlaceImages, normalizePlaceSlug } from '../data/curatedPlaceImages'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
+import { supabase } from '../supabase'
 
 type PlaceDetailViewProps = {
   place: PlaceCardData
@@ -109,6 +110,11 @@ function DetailPhotoTile({
   )
 }
 
+function getApiEndpoint(path: string) {
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
+  return apiBaseUrl ? `${apiBaseUrl}${path}` : `/api${path}`
+}
+
 function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
   const mapCenter: [number, number] = [place.coordinates.lat, place.coordinates.lng]
   const [isShareOpen, setIsShareOpen] = useState(false)
@@ -129,6 +135,44 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
   const normalizedNameSlug = normalizePlaceSlug(place.name)
   const placeSlug = place.slug || normalizedNameSlug
   const isSaved = [place.slug, normalizedNameSlug, place.id].some((slug) => isPlaceSaved(slug))
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    const savePlaceViewHistory = async () => {
+      try {
+        const { data } = await supabase.auth.getSession()
+        const token = data.session?.access_token
+
+        if (!token) {
+          return
+        }
+
+        const response = await fetch(getApiEndpoint('/history/place-view'), {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ placeSlug }),
+          signal: controller.signal,
+        })
+
+        if (!response.ok) {
+          const result = (await response.json().catch(() => null)) as { message?: string } | null
+          throw new Error(result?.message || 'Failed to save place view history.')
+        }
+      } catch (error) {
+        if ((error as Error).name !== 'AbortError') {
+          console.warn('Place view history was not saved:', error)
+        }
+      }
+    }
+
+    void savePlaceViewHistory()
+
+    return () => controller.abort()
+  }, [placeSlug])
 
   const showPreviousMobilePhoto = () => {
     setMobilePhotoIndex((currentIndex) =>
