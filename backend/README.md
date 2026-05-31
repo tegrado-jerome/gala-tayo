@@ -98,3 +98,70 @@ https://www.google.com/maps/dir/?api=1&destination={latitude},{longitude}
 ```
 
 Photos are optional and do not block validation.
+
+## Seed Metro Manila Places
+
+GM-137 adds the import foundation for researched Metro Manila place coverage across cities and categories. The seed data file is:
+
+```txt
+backend/scripts/metroManilaPlaceSeeds.json
+```
+
+The file is intentionally empty until real place data has been researched, reviewed, and approved. Do not add a large unverified dataset.
+
+Validate the seed file with the GM-138 validator:
+
+```powershell
+npm run validate:place-seeds -- ./scripts/metroManilaPlaceSeeds.json
+```
+
+Import the validated seed file:
+
+```powershell
+npm run seed:metro-manila-places
+```
+
+The Metro Manila import script reuses the GM-138 validation before it writes anything. Validation errors block import. Warnings are printed and reviewed, but do not block import.
+
+Required fields for each record:
+
+- `name`
+- `slug`
+- `city` or `city_id`
+- `address` or `area`
+- `latitude`
+- `longitude`
+- `categories`
+- `tags`
+
+Optional fields include:
+
+- `description`
+- `google_maps_url`
+- `source_url`
+- `official_url`
+- `website_url`
+- `data_source`
+- `last_verified_at`
+- `verification_status`
+- `budget_min`
+- `budget_max`
+- `budget_currency`
+- `budget_label`
+- `is_free`
+- `is_known_place`
+- `popularity_score`
+- `ranking_priority`
+- `quality_score`
+- `rating`
+- `hours`
+- `photo_url`
+- `photos`
+
+Coordinates are required. Google Maps URL is optional because directions can be generated from coordinates. Photos are optional and should only be added when they are accurate for the place.
+
+Categories and tags must already exist in `public.categories` and `public.tags`. The importer does not create categories or tags. It upserts valid records into `public.places`, links categories through `public.place_categories`, and links tags through `public.place_tags` without creating duplicate links. Existing places are preserved; no rows are deleted.
+
+The import summary prints total records, valid records, inserted and updated places, category and tag link counts, warnings, errors, and developer-only coverage counts per city and category.
+
+Normal Search Places remains Supabase-only. This seed workflow does not add Gemini, Search Grounding, Google Places, Foursquare, Unsplash, runtime scraping, or any runtime external search/image APIs.
