@@ -35,6 +35,11 @@ type SearchRequestBody = {
 type PlaceRow = Record<string, unknown>;
 type PlaceCategoryJoin = {
   category_id?: unknown;
+  categories?: unknown;
+};
+type PlaceTagJoin = {
+  strength?: unknown;
+  tags?: unknown;
 };
 
 type SearchPlaceResult = {
@@ -231,6 +236,20 @@ function normalizeComparableText(value: unknown): string {
   return "";
 }
 
+function includesNormalizedPhrase(text: string, phrase: string): boolean {
+  const normalizedPhrase = normalizeComparableText(phrase);
+
+  if (!normalizedPhrase) {
+    return false;
+  }
+
+  return new RegExp(`(^|\\s)${escapeRegExp(normalizedPhrase)}($|\\s)`).test(text);
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function getLinkedCategoryIds(row: PlaceRow): string[] {
   const linkedCategories = row.place_categories;
 
@@ -244,6 +263,74 @@ function getLinkedCategoryIds(row: PlaceRow): string[] {
       return typeof categoryId === "string" ? categoryId.trim() : "";
     })
     .filter((categoryId) => categoryId !== "");
+}
+
+function getNestedObject(value: unknown): Record<string, unknown> | null {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+
+  return null;
+}
+
+function getLinkedCategoryNames(row: PlaceRow): string[] {
+  const linkedCategories = row.place_categories;
+
+  if (!Array.isArray(linkedCategories)) {
+    return [];
+  }
+
+  return linkedCategories
+    .map((item) => {
+      const category = getNestedObject((item as PlaceCategoryJoin).categories);
+      return getStringField(category ?? {}, ["name"]);
+    })
+    .filter((name): name is string => Boolean(name));
+}
+
+function getLinkedCategorySearchTerms(row: PlaceRow): string[] {
+  const linkedCategories = row.place_categories;
+
+  if (!Array.isArray(linkedCategories)) {
+    return [];
+  }
+
+  return linkedCategories.flatMap((item) => {
+    const category = getNestedObject((item as PlaceCategoryJoin).categories);
+    return category ? getStringArrayField(category, ["search_terms", "searchTerms"]) : [];
+  });
+}
+
+function getLinkedTags(row: PlaceRow): {
+  id: string;
+  name: string | null;
+  searchTerms: string[];
+  strength: number;
+}[] {
+  const linkedTags = row.place_tags;
+
+  if (!Array.isArray(linkedTags)) {
+    return [];
+  }
+
+  return linkedTags
+    .map((item) => {
+      const placeTag = item as PlaceTagJoin;
+      const tag = getNestedObject(placeTag.tags);
+      const id = getStringField(tag ?? {}, ["id"]);
+
+      if (!id) {
+        return null;
+      }
+
+      return {
+        id,
+        name: getStringField(tag ?? {}, ["name"]),
+        searchTerms: getStringArrayField(tag ?? {}, ["search_terms", "searchTerms"]),
+        strength: Math.min(Math.max(getNumberField(placeTag as PlaceRow, ["strength"]) ?? 3, 1), 5),
+      };
+    })
+    .filter((tag): tag is NonNullable<typeof tag> => tag !== null);
 }
 
 function getMappedDbCategories(categoryId: string): string[] {
@@ -274,6 +361,8 @@ function rowMatchesCategory(row: PlaceRow, categoryIds: string[]): boolean {
     getStringField(row, ["category"]),
     row.categories,
     linkedCategoryIds,
+    getLinkedCategoryNames(row),
+    getLinkedCategorySearchTerms(row),
   ]);
 
   return selectedCategoryIds.some((categoryId) =>
@@ -324,18 +413,211 @@ function rowMatchesPrompt(row: PlaceRow, normalizedQuery: string): boolean {
     getStringField(row, ["name", "category", "city", "area", "address", "description"]),
     row.categories,
     getLinkedCategoryIds(row),
+    getLinkedCategoryNames(row),
+    getLinkedCategorySearchTerms(row),
+    getLinkedTags(row).flatMap((tag) => [tag.id, tag.name, ...tag.searchTerms]),
   ]);
 
   return promptTerms.some((term) => searchableText.includes(term));
 }
 
-function scoreSearchRow(row: PlaceRow, normalizedQuery: string): number {
+function scoreLocationMatch(row: PlaceRow, areaIds: string[]): number {
+  const selectedAreaIds = areaIds.filter((areaId) => areaId !== "all");
+
+  if (selectedAreaIds.length === 0) {
+    return 0;
+  }
+
+  return rowMatchesArea(row, selectedAreaIds) ? 35 : 0;
+}
+
+function scoreCategoryMatch(row: PlaceRow, categoryIds: string[]): number {
+  const selectedCategoryIds = categoryIds.filter((categoryId) => categoryId !== "all");
+
+  if (selectedCategoryIds.length === 0) {
+    return 0;
+  }
+
+  const linkedCategoryIds = getLinkedCategoryIds(row);
+  const categoryText = normalizeComparableText([
+    getStringField(row, ["category"]),
+    row.categories,
+    linkedCategoryIds,
+    getLinkedCategoryNames(row),
+    getLinkedCategorySearchTerms(row),
+  ]);
+
+  let bestScore = 0;
+
+  for (const categoryId of selectedCategoryIds) {
+    if (linkedCategoryIds.includes(categoryId)) {
+      bestScore = Math.max(bestScore, 30);
+      continue;
+    }
+
+    const selectedCategory = findCategoryById(categoryId);
+    const exactTerms = [
+      categoryId,
+      selectedCategory?.name,
+      ...(selectedCategory?.searchTerms ?? []),
+    ].filter((term): term is string => Boolean(term));
+
+    if (exactTerms.some((term) => includesNormalizedPhrase(categoryText, term))) {
+      bestScore = Math.max(bestScore, 30);
+      continue;
+    }
+
+    if (
+      getMappedDbCategories(categoryId).some((category) =>
+        includesNormalizedPhrase(categoryText, category)
+      )
+    ) {
+      bestScore = Math.max(bestScore, 18);
+    }
+  }
+
+  return bestScore;
+}
+
+function scoreTagMatch(row: PlaceRow, normalizedQuery: string): number {
+  if (!normalizedQuery) {
+    return 0;
+  }
+
+  const scoreByStrength: Record<number, number> = {
+    1: 2,
+    2: 4,
+    3: 6,
+    4: 8,
+    5: 10,
+  };
+  const totalScore = getLinkedTags(row).reduce((score, tag) => {
+    const tagTerms = [tag.id, tag.name, ...tag.searchTerms].filter(
+      (term): term is string => Boolean(term)
+    );
+    const isMatch = tagTerms.some((term) =>
+      includesNormalizedPhrase(normalizedQuery, term)
+    );
+
+    return isMatch ? score + scoreByStrength[tag.strength] : score;
+  }, 0);
+
+  return Math.min(totalScore, 25);
+}
+
+function getBudgetRangeForFilter(budget: BudgetValue): { min: number; max: number } | null {
+  switch (budget) {
+    case "under-500":
+      return { min: 0, max: 500 };
+    case "500-1000":
+      return { min: 500, max: 1000 };
+    case "1000-2000":
+      return { min: 1000, max: 2000 };
+    case "2000-plus":
+      return { min: 2000, max: Number.POSITIVE_INFINITY };
+    default:
+      return null;
+  }
+}
+
+function getPlaceBudgetRange(row: PlaceRow): { min: number; max: number } | null {
+  const min = getNumberField(row, ["budget_min"]);
+  const max = getNumberField(row, ["budget_max"]);
+
+  if (min === null && max === null) {
+    return null;
+  }
+
+  return {
+    min: min ?? 0,
+    max: max ?? Number.POSITIVE_INFINITY,
+  };
+}
+
+function rangesOverlap(
+  left: { min: number; max: number },
+  right: { min: number; max: number }
+): boolean {
+  return left.min <= right.max && right.min <= left.max;
+}
+
+function rangesAreNear(
+  left: { min: number; max: number },
+  right: { min: number; max: number }
+): boolean {
+  const finiteLeftMax = Number.isFinite(left.max) ? left.max : left.min;
+  const finiteRightMax = Number.isFinite(right.max) ? right.max : right.min;
+  const gap =
+    left.max < right.min ? right.min - finiteLeftMax : left.min - finiteRightMax;
+
+  return gap >= 0 && gap <= 500;
+}
+
+function getBooleanField(row: PlaceRow, keys: string[]): boolean {
+  for (const key of keys) {
+    const value = row[key];
+
+    if (typeof value === "boolean") {
+      return value;
+    }
+  }
+
+  return false;
+}
+
+function scoreBudgetMatch(
+  row: PlaceRow,
+  budget: BudgetValue,
+  normalizedQuery: string
+): number {
+  let score = 0;
+  const selectedBudgetRange = getBudgetRangeForFilter(budget);
+  const placeBudgetRange = getPlaceBudgetRange(row);
+
+  if (selectedBudgetRange && placeBudgetRange) {
+    if (rangesOverlap(selectedBudgetRange, placeBudgetRange)) {
+      score = Math.max(score, 15);
+    } else if (rangesAreNear(selectedBudgetRange, placeBudgetRange)) {
+      score = Math.max(score, 5);
+    }
+  }
+
+  const budgetLabel = normalizeComparableText(getStringField(row, ["budget_label"]));
+  const mentionsFree = ["free", "libre", "walang entrance"].some((term) =>
+    includesNormalizedPhrase(normalizedQuery, term)
+  );
+  const mentionsBudget = ["budget", "mura", "cheap", "tipid", "affordable"].some(
+    (term) => includesNormalizedPhrase(normalizedQuery, term)
+  );
+  const mentionsPremium = ["premium", "fancy", "upscale", "luxury"].some((term) =>
+    includesNormalizedPhrase(normalizedQuery, term)
+  );
+
+  if (mentionsFree && getBooleanField(row, ["is_free"])) {
+    score = Math.max(score, 15);
+  }
+
+  if (mentionsBudget && budgetLabel === "budget") {
+    score = Math.max(score, 10);
+  }
+
+  if (mentionsPremium && budgetLabel === "premium") {
+    score = Math.max(score, 10);
+  }
+
+  return score;
+}
+
+function scoreKeywordMatch(row: PlaceRow, normalizedQuery: string): number {
   const promptTerms = getPromptTerms(normalizedQuery);
   const nameText = normalizeComparableText(getStringField(row, ["name"]));
+  const slugText = normalizeComparableText(getStringField(row, ["slug"]));
   const categoryText = normalizeComparableText([
     getStringField(row, ["category"]),
     row.categories,
     getLinkedCategoryIds(row),
+    getLinkedCategoryNames(row),
+    getLinkedCategorySearchTerms(row),
   ]);
   const locationText = normalizeComparableText([
     getStringField(row, ["city", "area", "address", "location"]),
@@ -345,28 +627,80 @@ function scoreSearchRow(row: PlaceRow, normalizedQuery: string): number {
   );
   const searchableText = normalizeComparableText([
     nameText,
+    slugText,
     categoryText,
     locationText,
     descriptionText,
+    getLinkedTags(row).flatMap((tag) => [tag.id, tag.name, ...tag.searchTerms]),
   ]);
-  const rating = getNumberField(row, ["rating"]) ?? 0;
 
   if (promptTerms.length === 0) {
-    return rating;
+    return 0;
   }
 
   const matchedTerms = promptTerms.filter((term) => searchableText.includes(term));
-  const allTermsMatch = matchedTerms.length === promptTerms.length;
-  const exactQueryInName = Boolean(normalizedQuery && nameText.includes(normalizedQuery));
+  const exactQueryInName = Boolean(
+    normalizedQuery && includesNormalizedPhrase(nameText, normalizedQuery)
+  );
+  const partialNameMatch = promptTerms.some((term) => nameText.includes(term));
 
+  if (exactQueryInName) {
+    return 20;
+  }
+
+  let score = partialNameMatch ? 10 : 0;
+  score += Math.min(matchedTerms.length * 3, 8);
+
+  return Math.min(score, 20);
+}
+
+function scoreRankingSignals(row: PlaceRow): number {
+  const knownPlaceScore = getBooleanField(row, ["is_known_place"]) ? 5 : 0;
+  const popularityScore = Math.min(
+    (getNumberField(row, ["popularity_score"]) ?? 0) / 10,
+    10
+  );
+  const rankingPriorityScore = Math.min(
+    (getNumberField(row, ["ranking_priority"]) ?? 0) / 10,
+    10
+  );
+  const qualityScore = Math.min(
+    (getNumberField(row, ["quality_score"]) ?? 0) / 10,
+    10
+  );
+
+  return knownPlaceScore + popularityScore + rankingPriorityScore + qualityScore;
+}
+
+function hasPhotoSignal(row: PlaceRow): boolean {
+  return Boolean(
+    getStringField(row, ["imageUrl", "image_url", "photo_url", "photoUrl"]) ||
+      getStringArrayField(row, ["curatedImageUrls", "curated_image_urls", "photos"])
+        .length > 0
+  );
+}
+
+function scorePlaceForSearch({
+  row,
+  normalizedQuery,
+  categoryIds,
+  areaIds,
+  budget,
+}: {
+  row: PlaceRow;
+  normalizedQuery: string;
+  categoryIds: string[];
+  areaIds: string[];
+  budget: BudgetValue;
+}): number {
   return (
-    matchedTerms.length * 6 +
-    (allTermsMatch ? 12 : 0) +
-    (exactQueryInName ? 20 : 0) +
-    promptTerms.filter((term) => nameText.includes(term)).length * 8 +
-    promptTerms.filter((term) => categoryText.includes(term)).length * 5 +
-    promptTerms.filter((term) => locationText.includes(term)).length * 4 +
-    rating
+    scoreLocationMatch(row, areaIds) +
+    scoreCategoryMatch(row, categoryIds) +
+    scoreTagMatch(row, normalizedQuery) +
+    scoreBudgetMatch(row, budget, normalizedQuery) +
+    scoreKeywordMatch(row, normalizedQuery) +
+    scoreRankingSignals(row) +
+    (hasPhotoSignal(row) ? 5 : 0)
   );
 }
 
@@ -375,8 +709,25 @@ function rowMatchesBudget(row: PlaceRow, budget: BudgetValue): boolean {
     return true;
   }
 
+  const selectedBudgetRange = getBudgetRangeForFilter(budget);
+  const placeBudgetRange = getPlaceBudgetRange(row);
+
+  if (selectedBudgetRange && placeBudgetRange) {
+    return (
+      rangesOverlap(selectedBudgetRange, placeBudgetRange) ||
+      rangesAreNear(selectedBudgetRange, placeBudgetRange)
+    );
+  }
+
   const budgetText = normalizeComparableText(
-    getStringField(row, ["budget", "budget_range", "budgetRange", "price_range", "priceRange"])
+    getStringField(row, [
+      "budget",
+      "budget_label",
+      "budget_range",
+      "budgetRange",
+      "price_range",
+      "priceRange",
+    ])
   );
 
   if (!budgetText) {
@@ -542,7 +893,9 @@ async function findSearchPlaces({
     };
   };
 
-  let queryBuilder = placesTable.select("*,place_categories(category_id)") as {
+  let queryBuilder = placesTable.select(
+    "*,place_categories(category_id,categories(id,name,search_terms)),place_tags(strength,tags(id,name,search_terms))"
+  ) as {
     order: (
       column: string,
       options?: { ascending?: boolean; nullsFirst?: boolean }
@@ -552,7 +905,7 @@ async function findSearchPlaces({
     or: (filters: string) => typeof queryBuilder;
   };
 
-  const orderedQuery = queryBuilder.order("rating", {
+  const orderedQuery = queryBuilder.order("ranking_priority", {
     ascending: false,
     nullsFirst: false,
   });
@@ -569,9 +922,47 @@ async function findSearchPlaces({
     .filter((row) => !requirePromptMatch || rowMatchesPrompt(row, normalizedQuery))
     .map((row) => ({
       row,
-      score: scoreSearchRow(row, normalizedQuery),
+      score: scorePlaceForSearch({
+        row,
+        normalizedQuery,
+        categoryIds,
+        areaIds,
+        budget,
+      }),
     }))
-    .sort((left, right) => right.score - left.score)
+    .sort((left, right) => {
+      if (right.score !== left.score) {
+        return right.score - left.score;
+      }
+
+      const rankingPriorityDifference =
+        (getNumberField(right.row, ["ranking_priority"]) ?? 0) -
+        (getNumberField(left.row, ["ranking_priority"]) ?? 0);
+
+      if (rankingPriorityDifference !== 0) {
+        return rankingPriorityDifference;
+      }
+
+      const popularityDifference =
+        (getNumberField(right.row, ["popularity_score"]) ?? 0) -
+        (getNumberField(left.row, ["popularity_score"]) ?? 0);
+
+      if (popularityDifference !== 0) {
+        return popularityDifference;
+      }
+
+      const qualityDifference =
+        (getNumberField(right.row, ["quality_score"]) ?? 0) -
+        (getNumberField(left.row, ["quality_score"]) ?? 0);
+
+      if (qualityDifference !== 0) {
+        return qualityDifference;
+      }
+
+      return (getStringField(left.row, ["name"]) ?? "").localeCompare(
+        getStringField(right.row, ["name"]) ?? ""
+      );
+    })
     .slice(0, 10)
     .map(({ row }) => mapPlaceRowToSearchResult(row));
 }
