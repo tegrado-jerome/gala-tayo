@@ -10,6 +10,7 @@
     "prestart": "npm run clean && npm run build",
     "start": "func start",
     "seed:curated-places": "node scripts/seedCuratedPlaces.cjs",
+    "validate:place-seeds": "node scripts/validatePlaceSeedData.cjs",
     "test": "echo \"No tests yet...\""
   },
   "dependencies": {

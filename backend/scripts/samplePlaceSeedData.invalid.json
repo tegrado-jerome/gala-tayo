@@ -1,0 +1,50 @@
+[
+  {
+    "name": "",
+    "slug": "Bad Slug!",
+    "city": "Cebu City",
+    "address": "",
+    "latitude": "not-a-number",
+    "longitude": 123.8854,
+    "description": "Too short",
+    "categories": ["unknown-category", "museum", "museum"],
+    "tags": [
+      { "id": "unknown-tag", "strength": 7, "source": "bot" },
+      { "id": "indoor", "strength": 3, "source": "seed" },
+      { "id": "indoor", "strength": 3, "source": "seed" }
+    ],
+    "google_maps_url": "not a url",
+    "source_url": "",
+    "last_verified_at": "not-a-date",
+    "verification_status": "done",
+    "budget_min": 1000,
+    "budget_max": 500,
+    "budget_currency": "USD",
+    "budget_label": "Cheap",
+    "is_free": "no",
+    "is_known_place": "yes",
+    "popularity_score": 101,
+    "ranking_priority": -1,
+    "quality_score": "excellent"
+  },
+  {
+    "name": "Duplicate Place",
+    "slug": "duplicate-place",
+    "city": "Taguig",
+    "area": "BGC",
+    "latitude": 14.55,
+    "longitude": 121.05,
+    "categories": ["mall"],
+    "tags": ["indoor"]
+  },
+  {
+    "name": "Duplicate Place",
+    "slug": "duplicate-place",
+    "city": "Taguig",
+    "area": "BGC",
+    "latitude": 14.5501,
+    "longitude": 121.0501,
+    "categories": ["mall"],
+    "tags": ["indoor"]
+  }
+]
