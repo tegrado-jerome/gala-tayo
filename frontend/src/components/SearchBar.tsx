@@ -6,10 +6,10 @@ type SearchBarProps = {
   onClear?: () => void
   clearSignal?: number
   hasActiveFilters?: boolean
+  hasClearableSearch?: boolean
   isLoading?: boolean
   placeholder?: string
   className?: string
-  debounceMs?: number
   animatedPlaceholders?: string[]
 }
 
@@ -33,10 +33,10 @@ function SearchBar({
   onClear,
   clearSignal = 0,
   hasActiveFilters = false,
+  hasClearableSearch = false,
   isLoading = false,
   placeholder = 'Saan mo gustong pumunta ngayon?',
   className = '',
-  debounceMs = 400,
   animatedPlaceholders,
 }: SearchBarProps) {
   const [query, setQuery] = useState('')
@@ -92,31 +92,12 @@ function SearchBar({
     return () => clearTimeout(timeoutId)
   }, [animatedPlaceholders, placeholder])
 
-  useEffect(() => {
-    if (isLoading) {
-      return
-    }
-
-    const trimmedQuery = query.trim()
-
-    if (!trimmedQuery || trimmedQuery === lastSubmittedQuery.current) {
-      return
-    }
-
-    const timeoutId = setTimeout(() => {
-      lastSubmittedQuery.current = trimmedQuery
-      onSearch(trimmedQuery)
-    }, debounceMs)
-
-    return () => clearTimeout(timeoutId)
-  }, [query, onSearch, isLoading, debounceMs])
-
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
     const trimmedQuery = query.trim()
 
-    if (isLoading) {
+    if ((!trimmedQuery && !hasActiveFilters) || isLoading) {
       return
     }
 
@@ -132,7 +113,7 @@ function SearchBar({
 
   const hasQuery = query.trim().length > 0
   const canSubmit = hasQuery || hasActiveFilters
-  const canClear = hasQuery || hasActiveFilters
+  const canClear = hasQuery || hasActiveFilters || hasClearableSearch
   const shownPlaceholder =
     query.length > 0 || !animatedPlaceholders || animatedPlaceholders.length === 0
       ? placeholder

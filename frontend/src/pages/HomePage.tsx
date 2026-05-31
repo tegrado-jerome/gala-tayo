@@ -5,7 +5,6 @@ import PlaceDetailView from '../components/PlaceDetailView'
 import AppHeader from '../components/AppHeader'
 import MapView from '../components/MapView'
 import GuestLimitModal from '../components/GuestLimitModal'
-import { getCuratedPlaceImages } from '../data/curatedPlaceImages'
 import { supabase } from '../supabase'
 
 type IconProps = {
@@ -180,6 +179,27 @@ type BudgetOption = {
   label: string
 }
 
+type BackendSearchPlace = {
+  id?: string | null
+  slug?: string | null
+  name?: string | null
+  description?: string | null
+  area?: string | null
+  city?: string | null
+  location?: string | null
+  category?: string | null
+  latitude?: number | string | null
+  longitude?: number | string | null
+  imageUrl?: string | null
+  curatedImageUrls?: string[] | null
+  address?: string | null
+  budget?: string | null
+  budgetRange?: string | null
+  reason?: string | null
+  rating?: number | string | null
+  reviewCount?: number | string | null
+}
+
 const fallbackCategories = [
   { id: 'kainan', name: 'Kainan' },
   { id: 'cafe', name: 'Cafe' },
@@ -217,86 +237,6 @@ const budgetOptions: BudgetOption[] = [
   { value: '2000-plus', label: '₱2,000+' },
 ]
 
-const mockPlaces: PlaceCardData[] = [
-  {
-    id: 'bhs',
-    name: 'Bonifacio High Street',
-    category: 'Hangout',
-    area: 'BGC, Taguig',
-    rating: '4.6',
-    reviewCount: '1,248',
-    status: 'Open',
-    reason: 'Open-air walk + food options for chill date nights, shopping, public art, and people-watching in the heart of BGC.',
-    badge: 'Popular',
-    hours: 'Open daily; shop and restaurant hours vary',
-    entranceFee: 'Free',
-    website: 'www.bgc.com.ph',
-    highlights: ['Open-air shops and dining', 'Good for dates or barkada', 'Best visited late afternoon or evening'],
-    coordinates: { lat: 14.5507, lng: 121.0508 },
-  },
-  {
-    id: 'mind-museum',
-    name: 'The Mind Museum',
-    category: 'Museum',
-    area: 'BGC, Taguig',
-    rating: '4.5',
-    reviewCount: '920',
-    status: 'Closed',
-    reason: 'Interactive exhibits good for barkada or family learning trips.',
-    badge: 'Culture',
-    hours: 'Hours vary by schedule',
-    entranceFee: 'Ticketed entry',
-    website: 'www.themindmuseum.org',
-    highlights: ['Interactive science exhibits', 'Family-friendly indoor stop', 'Good rainy-day option'],
-    coordinates: { lat: 14.5528, lng: 121.0442 },
-  },
-  {
-    id: 'market-market',
-    name: 'Market! Market!',
-    category: 'Mall',
-    area: 'BGC, Taguig',
-    rating: '4.3',
-    reviewCount: '1,060',
-    status: 'Open',
-    reason: 'Budget-friendly food trip picks with many choices.',
-    badge: 'Budget',
-    hours: 'Open daily; store hours vary',
-    entranceFee: 'Free',
-    highlights: ['Budget-friendly food choices', 'Casual shopping', 'Easy meetup spot'],
-    coordinates: { lat: 14.5497, lng: 121.0565 },
-  },
-  {
-    id: 'uptown-mall',
-    name: 'Uptown Mall',
-    category: 'Mall',
-    area: 'BGC, Taguig',
-    rating: '4.4',
-    reviewCount: '870',
-    status: 'Closed',
-    reason: 'Good mix of dining and entertainment spots in one area.',
-    badge: 'Chill',
-    hours: 'Open daily; store hours vary',
-    entranceFee: 'Free',
-    website: 'www.uptownbonifacio.com',
-    highlights: ['Dining and entertainment', 'Mall comfort in BGC', 'Good evening option'],
-    coordinates: { lat: 14.5566, lng: 121.0542 },
-  },
-]
-
-const placesWithCuratedImages: PlaceCardData[] = mockPlaces.map((place) => {
-  const curatedImageUrls = getCuratedPlaceImages(place.name)
-
-  if (curatedImageUrls.length === 0) {
-    return place
-  }
-
-  return {
-    ...place,
-    curatedImageUrl: curatedImageUrls[0],
-    curatedImageUrls,
-  }
-})
-
 const animatedSearchPrompts = [
   'Date Spot sa BGC under 1K',
   'Chill Cafe sa QC na Tahimik',
@@ -323,6 +263,67 @@ async function getSearchRequestHeaders(): Promise<Record<string, string>> {
   return headers
 }
 
+function parseCoordinate(value: number | string | null | undefined) {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value
+  }
+
+  if (typeof value === 'string') {
+    const parsedValue = Number(value)
+
+    if (Number.isFinite(parsedValue)) {
+      return parsedValue
+    }
+  }
+
+  return null
+}
+
+function mapBackendPlaceToCard(place: BackendSearchPlace): PlaceCardData | null {
+  const lat = parseCoordinate(place.latitude)
+  const lng = parseCoordinate(place.longitude)
+  const name = place.name?.trim()
+
+  if (
+    !name ||
+    lat === null ||
+    lng === null ||
+    lat < -90 ||
+    lat > 90 ||
+    lng < -180 ||
+    lng > 180
+  ) {
+    return null
+  }
+
+  const area = place.location || place.address || place.city || place.area || 'Metro Manila'
+  const rating = place.rating === null || place.rating === undefined ? 'N/A' : String(place.rating)
+  const reviewCount =
+    place.reviewCount === null || place.reviewCount === undefined ? undefined : String(place.reviewCount)
+  const curatedImageUrls = Array.isArray(place.curatedImageUrls)
+    ? place.curatedImageUrls.filter((imageUrl): imageUrl is string => Boolean(imageUrl?.trim()))
+    : []
+
+  return {
+    id: String(place.id || place.slug || name),
+    slug: place.slug || undefined,
+    name,
+    category: place.category || 'Place',
+    area,
+    rating,
+    reviewCount,
+    status: 'Unknown',
+    reason: place.reason || place.description || place.address || 'Real place result from GalaTayo search.',
+    badge: place.category || 'Place',
+    imageUrl: place.imageUrl || null,
+    curatedImageUrls,
+    coordinates: {
+      lat,
+      lng,
+    },
+  }
+}
+
 function HomePage() {
   const [categories, setCategories] = useState(fallbackCategories)
   const [areas, setAreas] = useState<AreaChip[]>(fallbackAreas)
@@ -337,6 +338,8 @@ function HomePage() {
   const [promptLogin, setPromptLogin] = useState(false)
   const [lastSearchQuery, setLastSearchQuery] = useState('')
   const [searchId, setSearchId] = useState<string | null>(null)
+  const [searchResults, setSearchResults] = useState<PlaceCardData[]>([])
+  const [hasSearched, setHasSearched] = useState(false)
   const [clearSearchSignal, setClearSearchSignal] = useState(0)
   const filteredAdvancedCategories = useMemo(() => categories, [categories])
   const selectedCategoryName = useMemo(
@@ -356,9 +359,10 @@ function HomePage() {
   )
   const selectedFilterLabels = [selectedCategoryName, selectedAreaName, selectedBudgetLabel].filter(Boolean)
   const hasActiveFilters = selectedFilterLabels.length > 0
+  const visiblePlaces = hasSearched ? searchResults : []
   const selectedPlace = useMemo(
-    () => placesWithCuratedImages.find((place) => place.id === selectedPlaceId) ?? null,
-    [selectedPlaceId]
+    () => visiblePlaces.find((place) => place.id === selectedPlaceId) ?? null,
+    [selectedPlaceId, visiblePlaces]
   )
 
   const handleClearSearch = () => {
@@ -369,6 +373,9 @@ function HomePage() {
     setPromptLogin(false)
     setLastSearchQuery('')
     setSearchId(null)
+    setSearchResults([])
+    setHasSearched(false)
+    setSelectedPlaceId(null)
     setClearSearchSignal((signal) => signal + 1)
   }
 
@@ -418,9 +425,11 @@ function HomePage() {
         error?: string
         searchId?: string
         promptLogin?: boolean
+        places?: BackendSearchPlace[]
         geminiResponse?: string
         result?: {
           geminiResponse?: string
+          places?: BackendSearchPlace[]
         }
       }
 
@@ -435,6 +444,14 @@ function HomePage() {
 
       setLastSearchQuery(trimmedQuery || selectedFilterLabels.join(' · '))
       setSearchId(data.searchId ?? null)
+      const backendPlaces = data.places ?? data.result?.places ?? []
+      const mappedPlaces = backendPlaces
+        .map(mapBackendPlaceToCard)
+        .filter((place): place is PlaceCardData => Boolean(place))
+
+      setSearchResults(mappedPlaces)
+      setHasSearched(true)
+      setSelectedPlaceId(mappedPlaces[0]?.id ?? null)
       console.log('Search success:', {
         query: trimmedQuery,
         selectedCategory,
@@ -475,7 +492,11 @@ function HomePage() {
         message?: string
         error?: string
         searchId?: string
+        places?: BackendSearchPlace[]
         promptLogin?: boolean
+        result?: {
+          places?: BackendSearchPlace[]
+        }
       }
 
       if (data.promptLogin) {
@@ -489,6 +510,14 @@ function HomePage() {
 
       setLastSearchQuery('Explore all places')
       setSearchId(data.searchId ?? null)
+      const backendPlaces = data.places ?? data.result?.places ?? []
+      const mappedPlaces = backendPlaces
+        .map(mapBackendPlaceToCard)
+        .filter((place): place is PlaceCardData => Boolean(place))
+
+      setSearchResults(mappedPlaces)
+      setHasSearched(true)
+      setSelectedPlaceId(mappedPlaces[0]?.id ?? null)
       console.log('Broad discovery success:', data)
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Search failed.'
@@ -581,6 +610,7 @@ function HomePage() {
               onClear={handleClearSearch}
               clearSignal={clearSearchSignal}
               hasActiveFilters={hasActiveFilters}
+              hasClearableSearch={hasSearched}
               isLoading={isSearching}
               placeholder="Saan mo gustong pumunta ngayon?"
               animatedPlaceholders={animatedSearchPrompts}
@@ -604,10 +634,11 @@ function HomePage() {
 
           <section className="h-[380px] border-b border-[var(--line)] bg-white">
             <MapView
-              places={placesWithCuratedImages}
+              places={visiblePlaces}
               selectedPlaceId={selectedPlaceId}
               onPlaceSelect={handleMapPlaceSelect}
               onPlaceOpen={handlePlaceSelect}
+              autoFitToPlaces={hasSearched}
               className="!h-full !rounded-none !border-0"
             />
           </section>
@@ -616,18 +647,30 @@ function HomePage() {
             <div className="mb-3 flex items-end justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold text-slate-900">Mga Lugar</p>
-                <p className="text-[11px] text-[var(--muted)]">325 places found</p>
+                <p className="text-[11px] text-[var(--muted)]">
+                  {hasSearched ? `${visiblePlaces.length} places found` : 'Search to show matching places'}
+                </p>
               </div>
-              <button
-                type="button"
-                className="rounded-full border border-[var(--line)] bg-white px-3 py-1.5 text-[11px] font-medium text-[var(--accent-deep)]"
-              >
-                Recommended
-              </button>
+              {hasSearched || hasActiveFilters ? (
+                <button
+                  type="button"
+                  onClick={handleClearSearch}
+                  className="rounded-full border border-[var(--accent)] bg-white px-3 py-1.5 text-[11px] font-semibold text-[var(--accent-deep)] shadow-[0_8px_18px_rgba(47,116,232,0.12)] transition hover:bg-[var(--accent-wash)]"
+                >
+                  Clear Search
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="rounded-full border border-[var(--line)] bg-white px-3 py-1.5 text-[11px] font-medium text-[var(--accent-deep)]"
+                >
+                  Recommended
+                </button>
+              )}
             </div>
 
             <div className="grid gap-3">
-              {placesWithCuratedImages.map((place) => (
+              {visiblePlaces.map((place) => (
                 <PlaceCard
                   key={place.id}
                   place={place}
@@ -636,6 +679,11 @@ function HomePage() {
                   onSelect={handlePlaceSelect}
                 />
               ))}
+              {hasSearched && visiblePlaces.length === 0 && lastSearchQuery ? (
+                <p className="rounded-xl border border-[var(--line)] bg-white px-4 py-5 text-sm text-[var(--muted)]">
+                  No places found for this search.
+                </p>
+              ) : null}
             </div>
           </section>
         </main>
@@ -652,6 +700,7 @@ function HomePage() {
               onClear={handleClearSearch}
               clearSignal={clearSearchSignal}
               hasActiveFilters={hasActiveFilters}
+              hasClearableSearch={hasSearched}
               isLoading={isSearching}
               placeholder="Saan mo gustong pumunta ngayon?"
               animatedPlaceholders={animatedSearchPrompts}
@@ -683,13 +732,25 @@ function HomePage() {
                 <p className="text-[11px] text-[var(--muted)]">
                   {lastSearchQuery
                     ? `Last search: "${lastSearchQuery}"`
-                    : '325 places found'}
+                    : hasSearched
+                      ? `${visiblePlaces.length} places found`
+                      : 'Search to show matching places'}
                 </p>
               </div>
-              <div className="text-right">
-                <p className="text-[11px] text-[var(--muted)]">Pinakarekomenda</p>
-                <p className="mt-1 text-[11px] font-medium text-[var(--accent-deep)]">Sorted by relevance</p>
-              </div>
+              {hasSearched || hasActiveFilters ? (
+                <button
+                  type="button"
+                  onClick={handleClearSearch}
+                  className="rounded-full border border-[var(--accent)] bg-white px-3 py-1.5 text-[11px] font-semibold text-[var(--accent-deep)] shadow-[0_8px_18px_rgba(47,116,232,0.12)] transition hover:bg-[var(--accent-wash)]"
+                >
+                  Clear Search
+                </button>
+              ) : (
+                <div className="text-right">
+                  <p className="text-[11px] text-[var(--muted)]">Pinakarekomenda</p>
+                  <p className="mt-1 text-[11px] font-medium text-[var(--accent-deep)]">Sorted by relevance</p>
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-3 gap-px border-b border-[var(--line)] bg-[var(--line)]">
@@ -700,7 +761,7 @@ function HomePage() {
 
             <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
               <div className="grid gap-3">
-                {placesWithCuratedImages.map((place) => (
+                {visiblePlaces.map((place) => (
                   <PlaceCard
                     key={place.id}
                     place={place}
@@ -708,16 +769,22 @@ function HomePage() {
                     onSelect={handlePlaceSelect}
                   />
                 ))}
+                {hasSearched && visiblePlaces.length === 0 && lastSearchQuery ? (
+                  <p className="rounded-xl border border-[var(--line)] bg-white px-4 py-5 text-sm text-[var(--muted)]">
+                    No places found for this search.
+                  </p>
+                ) : null}
               </div>
             </div>
           </aside>
 
           <section className="min-h-0 bg-white">
             <MapView
-              places={placesWithCuratedImages}
+              places={visiblePlaces}
               selectedPlaceId={selectedPlaceId}
               onPlaceSelect={handleMapPlaceSelect}
               onPlaceOpen={handlePlaceSelect}
+              autoFitToPlaces={hasSearched}
               className="!h-full !rounded-none !border-0"
             />
           </section>
@@ -734,7 +801,7 @@ function HomePage() {
           aria-label="Close advanced filters"
         />
 
-        <section className="absolute right-0 top-0 h-full w-full max-w-[540px] border-l border-[var(--line)] bg-[linear-gradient(180deg,#ffffff,#f4f8ff)] shadow-[-18px_0_40px_rgba(15,23,42,0.12)]">
+        <section className="absolute right-0 top-0 flex h-full w-full max-w-[540px] flex-col border-l border-[var(--line)] bg-[linear-gradient(180deg,#ffffff,#f4f8ff)] shadow-[-18px_0_40px_rgba(15,23,42,0.12)]">
           <div className="flex items-start justify-between border-b border-[var(--line)] px-4 py-3.5 sm:px-5 sm:py-4">
             <div>
               <p className="text-[26px] font-semibold leading-tight text-slate-900 sm:text-lg">Pumili ng filters</p>
@@ -754,7 +821,10 @@ function HomePage() {
             </button>
           </div>
 
-          <div className="max-h-[calc(100%-264px)] overflow-y-auto px-4 pb-4 pt-3 sm:max-h-[calc(100%-274px)] sm:px-5 sm:pb-5 sm:pt-4">
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4 pt-3 sm:px-5 sm:pb-5 sm:pt-4">
+            <p className="mb-3 rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[11px] leading-snug text-[var(--muted)] sm:text-xs">
+              Choose filters, then click Search. You can search with filters only even without typing.
+            </p>
             <div>
               <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)] sm:text-xs">
                 Kategorya ng lugar
@@ -843,7 +913,7 @@ function HomePage() {
             </div>
           </div>
 
-          <div className="absolute bottom-0 left-0 right-0 grid gap-2 border-t border-[var(--line)] bg-white/95 px-4 py-2.5 sm:px-5 sm:py-3">
+          <div className="grid shrink-0 gap-2 border-t border-[var(--line)] bg-white/95 px-4 py-2.5 sm:px-5 sm:py-3">
             <button
               type="button"
               onClick={handleClearFilters}
@@ -856,13 +926,15 @@ function HomePage() {
               type="button"
               onClick={() => {
                 setShowAdvancedFilters(false)
-                void handleSearch('')
               }}
               disabled={!hasActiveFilters}
               className="w-full rounded-full border border-[var(--accent)] bg-[var(--accent)] px-4 py-2.5 text-[15px] font-semibold tracking-[0.01em] text-white shadow-[0_10px_20px_rgba(47,116,232,0.26)] transition-all duration-200 hover:-translate-y-[1px] hover:bg-white hover:text-[var(--accent)] hover:shadow-[0_8px_16px_rgba(47,116,232,0.16)] active:scale-[0.99] active:bg-[var(--accent-deep)] active:text-white disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none disabled:hover:translate-y-0 sm:py-3 sm:text-sm"
             >
               Apply filters
             </button>
+            <p className="px-2 text-center text-[11px] leading-snug text-[var(--muted)]">
+              Choose filters, then click Search. You can search with filters only even without typing.
+            </p>
             <button
               type="button"
               onClick={() => {

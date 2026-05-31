@@ -11,7 +11,7 @@ type PlaceCardData = {
   category: string
   area: string
   rating: string
-  status: 'Open' | 'Closed'
+  status: 'Open' | 'Closed' | 'Unknown'
   reason: string
   badge: string
   reviewCount?: string

@@ -22,7 +22,12 @@ import {
   GeminiServiceError,
   generateGeminiResponse,
 } from "../services/geminiService";
-import { findAreaById, findCategoryById } from "./filters";
+import {
+  CATEGORIES,
+  METRO_MANILA_AREAS,
+  findAreaById,
+  findCategoryById,
+} from "./filters";
 
 type SearchRequestBody = {
   query?: unknown;
@@ -266,6 +271,60 @@ function getMappedDbCategories(categoryId: string): string[] {
   return selectedCategory?.name ? [selectedCategory.name] : [categoryId];
 }
 
+function inferCategoryIdFromQuery(normalizedQuery: string): string {
+  if (!normalizedQuery) {
+    return "all";
+  }
+
+  const synonymMatches: Array<[string, string[]]> = [
+    ["date-spot", ["date", "date spot", "romantic", "couple"]],
+    ["tourist-spot", ["tourist", "attraction", "sightseeing"]],
+    ["heritage", ["heritage", "historic", "historical", "old town"]],
+    ["study-spot", ["study", "quiet", "student"]],
+    ["chill", ["chill", "tambay", "relax"]],
+  ];
+
+  for (const [categoryId, terms] of synonymMatches) {
+    if (terms.some((term) => normalizedQuery.includes(normalizeQuery(term)))) {
+      return categoryId;
+    }
+  }
+
+  for (const category of CATEGORIES) {
+    const terms = [category.id, category.name, ...category.searchTerms];
+
+    if (terms.some((term) => normalizedQuery.includes(normalizeQuery(term)))) {
+      return category.id;
+    }
+  }
+
+  return "all";
+}
+
+function inferAreaIdFromQuery(normalizedQuery: string): string {
+  if (!normalizedQuery) {
+    return "all";
+  }
+
+  if (/\bbgc\b/.test(normalizedQuery) || normalizedQuery.includes("bonifacio global city")) {
+    return "taguig";
+  }
+
+  for (const area of METRO_MANILA_AREAS) {
+    if (area.id === "all") {
+      continue;
+    }
+
+    const terms = [area.id, area.name];
+
+    if (terms.some((term) => normalizedQuery.includes(normalizeQuery(term)))) {
+      return area.id;
+    }
+  }
+
+  return "all";
+}
+
 function rowMatchesCategory(row: PlaceRow, categoryId: string): boolean {
   const mappedCategories = getMappedDbCategories(categoryId);
 
@@ -302,9 +361,25 @@ function rowMatchesPrompt(row: PlaceRow, normalizedQuery: string): boolean {
     return true;
   }
 
+  const ignoredPromptTerms = new Set([
+    "and",
+    "for",
+    "near",
+    "place",
+    "places",
+    "spot",
+    "spots",
+    "the",
+    "with",
+  ]);
   const promptTerms = normalizedQuery
     .split(" ")
-    .filter((term) => term.length >= 3 && !/^gm\d+$/i.test(term));
+    .filter(
+      (term) =>
+        term.length >= 3 &&
+        !ignoredPromptTerms.has(term) &&
+        !/^gm\d+$/i.test(term)
+    );
 
   if (promptTerms.length === 0) {
     return true;
@@ -523,11 +598,13 @@ async function findSearchPlaces({
   categoryId,
   areaId,
   budget,
+  requirePromptMatch,
 }: {
   normalizedQuery: string;
   categoryId: string;
   areaId: string;
   budget: BudgetValue;
+  requirePromptMatch: boolean;
 }): Promise<SearchPlaceResult[]> {
   const supabase = await getSupabaseAdminClient();
   const placesTable = supabase.from("places") as ReturnType<
@@ -558,7 +635,7 @@ async function findSearchPlaces({
     ascending: false,
     nullsFirst: false,
   });
-  const { data, error } = await orderedQuery.limit(30);
+  const { data, error } = await orderedQuery.limit(1000);
 
   if (error) {
     throw new Error("Failed to query search places.");
@@ -568,12 +645,7 @@ async function findSearchPlaces({
     .filter((row) => rowMatchesArea(row, areaId))
     .filter((row) => rowMatchesCategory(row, categoryId))
     .filter((row) => rowMatchesBudget(row, budget))
-    .filter((row) => {
-      const hasSelectedFilters =
-        categoryId !== "all" || areaId !== "all" || budget !== "any";
-
-      return hasSelectedFilters || rowMatchesPrompt(row, normalizedQuery);
-    })
+    .filter((row) => !requirePromptMatch || rowMatchesPrompt(row, normalizedQuery))
     .slice(0, 10)
     .map(mapPlaceRowToSearchResult);
 }
@@ -597,8 +669,16 @@ export async function search(
     const normalizedQuery = normalizeQuery(query);
     const selectedCategory = findCategoryById(categoryId);
     const selectedArea = findAreaById(areaId);
+    const discoveryCategoryId =
+      categoryId !== "all" ? categoryId : inferCategoryIdFromQuery(normalizedQuery);
+    const discoveryAreaId =
+      areaId !== "all" ? areaId : inferAreaIdFromQuery(normalizedQuery);
     const hasSelectedFilters =
       categoryId !== "all" || areaId !== "all" || budget !== "any";
+    const shouldRequirePromptMatch =
+      !hasSelectedFilters &&
+      Boolean(normalizedQuery) &&
+      (discoveryCategoryId === "all" || discoveryAreaId === "all");
     const isBroadDiscoverySearch =
       shouldExploreAll &&
       !normalizedQuery &&
@@ -645,9 +725,10 @@ export async function search(
     if (isBroadDiscoverySearch) {
       const places = await findSearchPlaces({
         normalizedQuery,
-        categoryId,
-        areaId,
+        categoryId: discoveryCategoryId,
+        areaId: discoveryAreaId,
         budget,
+        requirePromptMatch: false,
       });
       const searchId = createSearchId();
       const searchContext = buildSearchContext({
@@ -715,13 +796,13 @@ export async function search(
     if (cachedResult) {
       const cachedSearchResult = cachedResult as Partial<CachedSearchResult>;
       const cachedPlaces = (
-        cachedSearchResult.places ??
-        (await findSearchPlaces({
+        await findSearchPlaces({
           normalizedQuery,
-          categoryId,
-          areaId,
+          categoryId: discoveryCategoryId,
+          areaId: discoveryAreaId,
           budget,
-        }))
+          requirePromptMatch: shouldRequirePromptMatch,
+        })
       ).slice(0, 10);
 
       return {
@@ -747,9 +828,10 @@ export async function search(
 
     const places = await findSearchPlaces({
       normalizedQuery,
-      categoryId,
-      areaId,
+      categoryId: discoveryCategoryId,
+      areaId: discoveryAreaId,
       budget,
+      requirePromptMatch: shouldRequirePromptMatch,
     });
     const geminiPrompt = constrainPromptToPlaces(
       buildGeminiPrompt({
