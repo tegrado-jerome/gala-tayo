@@ -42,6 +42,18 @@ type PlaceTagJoin = {
   tags?: unknown;
 };
 
+type SearchCategoryMetadata = {
+  id: string;
+  name: string;
+};
+
+type SearchTagMetadata = {
+  id: string;
+  name: string;
+  group: string;
+  strength: number;
+};
+
 type SearchPlaceResult = {
   id: string;
   slug: string | null;
@@ -51,7 +63,7 @@ type SearchPlaceResult = {
   city: string | null;
   location: string | null;
   category: string | null;
-  categories: unknown;
+  categories: SearchCategoryMetadata[];
   latitude: number | null;
   longitude: number | null;
   imageUrl: string | null;
@@ -60,6 +72,9 @@ type SearchPlaceResult = {
   budget: string | null;
   budgetRange: string | null;
   reason: string | null;
+  tags?: SearchTagMetadata[];
+  matchedCategories?: SearchCategoryMetadata[];
+  matchedTags?: SearchTagMetadata[];
 };
 
 type SearchContext = {
@@ -288,6 +303,34 @@ function getLinkedCategoryNames(row: PlaceRow): string[] {
     .filter((name): name is string => Boolean(name));
 }
 
+function getLinkedCategories(row: PlaceRow): SearchCategoryMetadata[] {
+  const linkedCategories = row.place_categories;
+
+  if (!Array.isArray(linkedCategories)) {
+    return [];
+  }
+
+  return linkedCategories
+    .map((item) => {
+      const categoryId = (item as PlaceCategoryJoin).category_id;
+      const category = getNestedObject((item as PlaceCategoryJoin).categories);
+      const id =
+        typeof categoryId === "string" && categoryId.trim()
+          ? categoryId.trim()
+          : getStringField(category ?? {}, ["id"]);
+
+      if (!id) {
+        return null;
+      }
+
+      return {
+        id,
+        name: getStringField(category ?? {}, ["name"]) ?? id,
+      };
+    })
+    .filter((category): category is SearchCategoryMetadata => category !== null);
+}
+
 function getLinkedCategorySearchTerms(row: PlaceRow): string[] {
   const linkedCategories = row.place_categories;
 
@@ -304,6 +347,7 @@ function getLinkedCategorySearchTerms(row: PlaceRow): string[] {
 function getLinkedTags(row: PlaceRow): {
   id: string;
   name: string | null;
+  group: string;
   searchTerms: string[];
   strength: number;
 }[] {
@@ -326,11 +370,29 @@ function getLinkedTags(row: PlaceRow): {
       return {
         id,
         name: getStringField(tag ?? {}, ["name"]),
+        group: getStringField(tag ?? {}, ["tag_group", "group"]) ?? "general",
         searchTerms: getStringArrayField(tag ?? {}, ["search_terms", "searchTerms"]),
         strength: Math.min(Math.max(getNumberField(placeTag as PlaceRow, ["strength"]) ?? 3, 1), 5),
       };
     })
     .filter((tag): tag is NonNullable<typeof tag> => tag !== null);
+}
+
+function getLinkedTagMetadata(row: PlaceRow): SearchTagMetadata[] {
+  return getLinkedTags(row)
+    .map((tag) => ({
+      id: tag.id,
+      name: tag.name ?? tag.id,
+      group: tag.group,
+      strength: tag.strength,
+    }))
+    .sort((left, right) => {
+      if (right.strength !== left.strength) {
+        return right.strength - left.strength;
+      }
+
+      return left.name.localeCompare(right.name);
+    });
 }
 
 function getMappedDbCategories(categoryId: string): string[] {
@@ -479,6 +541,60 @@ function scoreCategoryMatch(row: PlaceRow, categoryIds: string[]): number {
   return bestScore;
 }
 
+function getMatchedCategories(
+  row: PlaceRow,
+  categoryIds: string[]
+): SearchCategoryMetadata[] {
+  const selectedCategoryIds = categoryIds.filter((categoryId) => categoryId !== "all");
+  const linkedCategories = getLinkedCategories(row);
+
+  if (selectedCategoryIds.length === 0) {
+    return linkedCategories.slice(0, 2);
+  }
+
+  const categoryText = normalizeComparableText([
+    getStringField(row, ["category"]),
+    row.categories,
+    linkedCategories.flatMap((category) => [category.id, category.name]),
+    getLinkedCategorySearchTerms(row),
+  ]);
+  const matchedCategories = linkedCategories.filter((category) =>
+    selectedCategoryIds.some((categoryId) => {
+      if (category.id === categoryId) {
+        return true;
+      }
+
+      const selectedCategory = findCategoryById(categoryId);
+      const directTerms = [
+        categoryId,
+        selectedCategory?.name,
+        ...(selectedCategory?.searchTerms ?? []),
+      ].filter((term): term is string => Boolean(term));
+
+      if (
+        directTerms.some((term) => includesNormalizedPhrase(categoryText, term)) &&
+        directTerms.some((term) =>
+          includesNormalizedPhrase(
+            normalizeComparableText([category.id, category.name]),
+            term
+          )
+        )
+      ) {
+        return true;
+      }
+
+      return getMappedDbCategories(categoryId).some((mappedCategory) =>
+        includesNormalizedPhrase(
+          normalizeComparableText([category.id, category.name]),
+          mappedCategory
+        )
+      );
+    })
+  );
+
+  return (matchedCategories.length > 0 ? matchedCategories : linkedCategories).slice(0, 2);
+}
+
 function scoreTagMatch(row: PlaceRow, normalizedQuery: string): number {
   if (!normalizedQuery) {
     return 0;
@@ -503,6 +619,36 @@ function scoreTagMatch(row: PlaceRow, normalizedQuery: string): number {
   }, 0);
 
   return Math.min(totalScore, 25);
+}
+
+function getMatchedTags(row: PlaceRow, normalizedQuery: string): SearchTagMetadata[] {
+  const matchedTags = getLinkedTags(row)
+    .filter((tag) => {
+      if (!normalizedQuery) {
+        return false;
+      }
+
+      const tagTerms = [tag.id, tag.name, ...tag.searchTerms].filter(
+        (term): term is string => Boolean(term)
+      );
+
+      return tagTerms.some((term) => includesNormalizedPhrase(normalizedQuery, term));
+    })
+    .map((tag) => ({
+      id: tag.id,
+      name: tag.name ?? tag.id,
+      group: tag.group,
+      strength: tag.strength,
+    }))
+    .sort((left, right) => {
+      if (right.strength !== left.strength) {
+        return right.strength - left.strength;
+      }
+
+      return left.name.localeCompare(right.name);
+    });
+
+  return matchedTags.length > 0 ? matchedTags : getLinkedTagMetadata(row).slice(0, 4);
 }
 
 function getBudgetRangeForFilter(budget: BudgetValue): { min: number; max: number } | null {
@@ -737,7 +883,16 @@ function rowMatchesBudget(row: PlaceRow, budget: BudgetValue): boolean {
   return budgetText.includes(budget);
 }
 
-function mapPlaceRowToSearchResult(row: PlaceRow): SearchPlaceResult {
+function mapPlaceRowToSearchResult(
+  row: PlaceRow,
+  {
+    normalizedQuery,
+    categoryIds,
+  }: {
+    normalizedQuery: string;
+    categoryIds: string[];
+  }
+): SearchPlaceResult {
   const imageUrl = getStringField(row, ["imageUrl", "image_url", "photo_url", "photoUrl"]);
   const curatedImageUrls = getStringArrayField(row, [
     "curatedImageUrls",
@@ -748,6 +903,8 @@ function mapPlaceRowToSearchResult(row: PlaceRow): SearchPlaceResult {
   const address = getStringField(row, ["address", "formatted_address"]);
   const fallbackLocation = [address, city].filter(Boolean).join(", ");
   const location = getStringField(row, ["location"]) ?? (fallbackLocation || null);
+  const categories = getLinkedCategories(row);
+  const tags = getLinkedTagMetadata(row);
 
   return {
     id: String(row.id ?? row.foursquare_id ?? row.slug ?? ""),
@@ -758,7 +915,13 @@ function mapPlaceRowToSearchResult(row: PlaceRow): SearchPlaceResult {
     city,
     location,
     category: getStringField(row, ["category"]),
-    categories: row.categories ?? getLinkedCategoryIds(row),
+    categories:
+      categories.length > 0
+        ? categories
+        : getLinkedCategoryIds(row).map((categoryId) => ({
+            id: categoryId,
+            name: categoryId,
+          })),
     latitude: getNumberField(row, ["latitude", "lat"]),
     longitude: getNumberField(row, ["longitude", "lng", "lon"]),
     imageUrl,
@@ -767,6 +930,9 @@ function mapPlaceRowToSearchResult(row: PlaceRow): SearchPlaceResult {
     budget: getStringField(row, ["budget"]),
     budgetRange: getStringField(row, ["budgetRange", "budget_range", "priceRange", "price_range"]),
     reason: getStringField(row, ["reason", "description"]),
+    tags,
+    matchedCategories: getMatchedCategories(row, categoryIds),
+    matchedTags: getMatchedTags(row, normalizedQuery),
   };
 }
 
@@ -894,7 +1060,7 @@ async function findSearchPlaces({
   };
 
   let queryBuilder = placesTable.select(
-    "*,place_categories(category_id,categories(id,name,search_terms)),place_tags(strength,tags(id,name,search_terms))"
+    "*,place_categories(category_id,categories(id,name,search_terms)),place_tags(strength,tags(id,name,tag_group,search_terms))"
   ) as {
     order: (
       column: string,
@@ -964,7 +1130,12 @@ async function findSearchPlaces({
       );
     })
     .slice(0, 10)
-    .map(({ row }) => mapPlaceRowToSearchResult(row));
+    .map(({ row }) =>
+      mapPlaceRowToSearchResult(row, {
+        normalizedQuery,
+        categoryIds,
+      })
+    );
 }
 
 export async function search(

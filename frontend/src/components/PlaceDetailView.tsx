@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { PlaceCardData } from './PlaceCard'
+import type { PlaceCardData, PlaceCategoryMeta, PlaceTagMeta } from './PlaceCard'
 import AppHeader from './AppHeader'
 import MapView from './MapView'
 import SharePlaceModal from './SharePlaceModal'
@@ -106,6 +106,107 @@ function DetailPhotoTile({
         <NoPhotoIcon />
       </span>
       <span className="text-xs font-medium text-slate-500">No photo available</span>
+    </div>
+  )
+}
+
+function getReadableChipName(value: string) {
+  return value
+    .split(/[-_\s]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(' ')
+}
+
+function uniqueCategoryChips(chips: PlaceCategoryMeta[] = []) {
+  const seenNames = new Set<string>()
+
+  return chips
+    .map((chip) => ({
+      id: chip.id,
+      name: chip.name?.trim() || getReadableChipName(chip.id),
+    }))
+    .filter((chip) => {
+      const normalizedName = chip.name.toLowerCase()
+
+      if (!normalizedName || seenNames.has(normalizedName)) {
+        return false
+      }
+
+      seenNames.add(normalizedName)
+      return true
+    })
+}
+
+function uniqueTagChips(chips: PlaceTagMeta[] = []) {
+  const seenNames = new Set<string>()
+
+  return chips
+    .map((chip) => ({
+      id: chip.id,
+      name: chip.name?.trim() || getReadableChipName(chip.id),
+      strength: chip.strength,
+    }))
+    .sort((left, right) => right.strength - left.strength)
+    .filter((chip) => {
+      const normalizedName = chip.name.toLowerCase()
+
+      if (!normalizedName || seenNames.has(normalizedName)) {
+        return false
+      }
+
+      seenNames.add(normalizedName)
+      return true
+    })
+}
+
+function MatchReasonSection({ place }: { place: PlaceCardData }) {
+  const categories = uniqueCategoryChips(
+    place.matchedCategories?.length ? place.matchedCategories : place.categories
+  ).slice(0, 4)
+  const goodForTags = uniqueTagChips(
+    place.matchedTags?.length ? place.matchedTags : place.tags
+  ).slice(0, 6)
+
+  if (categories.length === 0 && goodForTags.length === 0) {
+    return null
+  }
+
+  return (
+    <div className="mt-3 rounded-xl border border-[var(--line)] bg-[linear-gradient(180deg,#f9fcff,#f1f7ff)] p-3">
+      <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--accent-deep)]">
+        Good for
+      </p>
+      {categories.length > 0 ? (
+        <div className="mt-2">
+          <p className="text-[11px] font-medium text-[var(--muted)]">Categories</p>
+          <div className="mt-1 flex flex-wrap gap-1.5">
+            {categories.map((category) => (
+              <span
+                key={`${category.id}-${category.name}`}
+                className="rounded-full border border-[var(--line-strong)] bg-white px-2.5 py-1 text-xs text-slate-700"
+              >
+                {category.name}
+              </span>
+            ))}
+          </div>
+        </div>
+      ) : null}
+      {goodForTags.length > 0 ? (
+        <div className="mt-2">
+          <p className="text-[11px] font-medium text-[var(--muted)]">Tags</p>
+          <div className="mt-1 flex flex-wrap gap-1.5">
+            {goodForTags.map((tag) => (
+              <span
+                key={`${tag.id}-${tag.name}`}
+                className="rounded-full border border-[var(--line-strong)] bg-white px-2.5 py-1 text-xs text-slate-700"
+              >
+                {tag.name}
+              </span>
+            ))}
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -289,25 +390,9 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
           </div>
           <hr className="my-3 border-[var(--line)]" />
           <p className="text-sm leading-relaxed text-slate-700">
-            {place.reason} Step back in time and explore this spot with rich culture,
-            landmarks, and charming streets that tell the story of Manila&apos;s past.
+            {place.reason}
           </p>
-          <div className="mt-3 rounded-xl border border-[var(--line)] bg-[linear-gradient(180deg,#f9fcff,#f1f7ff)] p-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--accent-deep)]">
-              Bakit ito recommended
-            </p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <span className="rounded-full border border-[var(--line-strong)] bg-white px-2.5 py-1 text-xs text-slate-700">
-                Budget-friendly picks nearby
-              </span>
-              <span className="rounded-full border border-[var(--line-strong)] bg-white px-2.5 py-1 text-xs text-slate-700">
-                Chill vibe for dates or barkada
-              </span>
-              <span className="rounded-full border border-[var(--line-strong)] bg-white px-2.5 py-1 text-xs text-slate-700">
-                Best visited late afternoon
-              </span>
-            </div>
-          </div>
+          <MatchReasonSection place={place} />
           <hr className="my-3 border-[var(--line)]" />
           <div className="grid gap-2 text-sm text-slate-700">
             <p className="inline-flex items-center gap-2">
@@ -437,26 +522,10 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
             <hr className="my-3 border-[var(--line)]" />
 
             <p className="text-sm leading-relaxed text-slate-700">
-              {place.reason} Step back in time and explore this spot with rich culture,
-              landmarks, and charming streets that tell the story of Manila&apos;s past.
+              {place.reason}
             </p>
 
-            <div className="mt-3 rounded-xl border border-[var(--line)] bg-[linear-gradient(180deg,#f9fcff,#f1f7ff)] p-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--accent-deep)]">
-                Bakit ito recommended
-              </p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                <span className="rounded-full border border-[var(--line-strong)] bg-white px-2.5 py-1 text-xs text-slate-700">
-                  Budget-friendly picks nearby
-                </span>
-                <span className="rounded-full border border-[var(--line-strong)] bg-white px-2.5 py-1 text-xs text-slate-700">
-                  Chill vibe for dates or barkada
-                </span>
-                <span className="rounded-full border border-[var(--line-strong)] bg-white px-2.5 py-1 text-xs text-slate-700">
-                  Best visited late afternoon
-                </span>
-              </div>
-            </div>
+            <MatchReasonSection place={place} />
 
             <hr className="my-3 border-[var(--line)]" />
 

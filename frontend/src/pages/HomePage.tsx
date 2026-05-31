@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import SearchBar from '../components/SearchBar'
-import PlaceCard, { type PlaceCardData } from '../components/PlaceCard'
+import PlaceCard, { type PlaceCardData, type PlaceCategoryMeta, type PlaceTagMeta } from '../components/PlaceCard'
 import PlaceDetailView from '../components/PlaceDetailView'
 import AppHeader from '../components/AppHeader'
 import MapView from '../components/MapView'
@@ -198,6 +198,10 @@ type BackendSearchPlace = {
   reason?: string | null
   rating?: number | string | null
   reviewCount?: number | string | null
+  categories?: PlaceCategoryMeta[] | null
+  tags?: PlaceTagMeta[] | null
+  matchedCategories?: PlaceCategoryMeta[] | null
+  matchedTags?: PlaceTagMeta[] | null
 }
 
 const fallbackCategories = [
@@ -303,6 +307,10 @@ function mapBackendPlaceToCard(place: BackendSearchPlace): PlaceCardData | null 
   const curatedImageUrls = Array.isArray(place.curatedImageUrls)
     ? place.curatedImageUrls.filter((imageUrl): imageUrl is string => Boolean(imageUrl?.trim()))
     : []
+  const categories = Array.isArray(place.categories) ? place.categories : []
+  const tags = Array.isArray(place.tags) ? place.tags : []
+  const matchedCategories = Array.isArray(place.matchedCategories) ? place.matchedCategories : []
+  const matchedTags = Array.isArray(place.matchedTags) ? place.matchedTags : []
 
   return {
     id: String(place.id || place.slug || name),
@@ -317,6 +325,10 @@ function mapBackendPlaceToCard(place: BackendSearchPlace): PlaceCardData | null 
     badge: place.category || 'Place',
     imageUrl: place.imageUrl || null,
     curatedImageUrls,
+    categories,
+    tags,
+    matchedCategories,
+    matchedTags,
     coordinates: {
       lat,
       lng,

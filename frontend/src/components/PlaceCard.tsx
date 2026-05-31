@@ -4,6 +4,18 @@ import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import GuestLimitModal from './GuestLimitModal'
 import SharePlaceModal from './SharePlaceModal'
 
+type PlaceCategoryMeta = {
+  id: string
+  name: string
+}
+
+type PlaceTagMeta = {
+  id: string
+  name: string
+  group: string
+  strength: number
+}
+
 type PlaceCardData = {
   id: string
   slug?: string
@@ -22,6 +34,10 @@ type PlaceCardData = {
   imageUrl?: string | null
   curatedImageUrl?: string | null
   curatedImageUrls?: string[]
+  categories?: PlaceCategoryMeta[]
+  tags?: PlaceTagMeta[]
+  matchedCategories?: PlaceCategoryMeta[]
+  matchedTags?: PlaceTagMeta[]
   coordinates: {
     lat: number
     lng: number
@@ -83,6 +99,40 @@ function NoPhotoIcon() {
   )
 }
 
+function getReadableChipName(value: string) {
+  return value
+    .split(/[-_\s]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(' ')
+}
+
+function getPlaceChips(place: PlaceCardData) {
+  const sourceChips = [
+    ...(place.matchedTags ?? []),
+    ...(place.matchedCategories ?? []),
+    ...((place.matchedTags?.length || place.matchedCategories?.length) ? [] : place.tags ?? []),
+  ]
+  const seenChipNames = new Set<string>()
+
+  return sourceChips
+    .map((chip) => ({
+      id: chip.id,
+      name: chip.name?.trim() || getReadableChipName(chip.id),
+    }))
+    .filter((chip) => {
+      const normalizedName = chip.name.toLowerCase()
+
+      if (!normalizedName || seenChipNames.has(normalizedName)) {
+        return false
+      }
+
+      seenChipNames.add(normalizedName)
+      return true
+    })
+    .slice(0, 4)
+}
+
 function PlaceCard({ place, isSelected = false, compact = false, onSelect }: PlaceCardProps) {
   const [isShareOpen, setIsShareOpen] = useState(false)
   const [isSavePromptOpen, setIsSavePromptOpen] = useState(false)
@@ -95,6 +145,7 @@ function PlaceCard({ place, isSelected = false, compact = false, onSelect }: Pla
   const normalizedNameSlug = normalizePlaceSlug(place.name)
   const placeSlug = place.slug || normalizedNameSlug
   const isSaved = [place.slug, normalizedNameSlug, place.id].some((slug) => isPlaceSaved(slug))
+  const displayChips = getPlaceChips(place)
 
   const handleSave = async () => {
     try {
@@ -174,6 +225,21 @@ function PlaceCard({ place, isSelected = false, compact = false, onSelect }: Pla
               <span>{place.area}</span>
             </div>
 
+            {displayChips.length > 0 ? (
+              <div className="mt-2 flex max-h-[3.5rem] min-h-6 flex-wrap gap-1.5 overflow-hidden">
+                {displayChips.map((chip, index) => (
+                  <span
+                    key={`${chip.id}-${chip.name}`}
+                    className={`inline-flex max-w-full min-w-0 rounded-full border border-[var(--line)] bg-slate-50 px-2 py-0.5 text-[10px] font-medium text-slate-700 ${
+                      index >= 3 ? 'hidden sm:inline-flex' : 'inline-flex'
+                    }`}
+                  >
+                    <span className="truncate">{chip.name}</span>
+                  </span>
+                ))}
+              </div>
+            ) : null}
+
             <div className="mt-1 flex items-center gap-3 text-[11px] text-[var(--muted)]">
               <span className="inline-flex items-center gap-1">
                 <span className="text-amber-500">
@@ -247,4 +313,4 @@ function PlaceCard({ place, isSelected = false, compact = false, onSelect }: Pla
 }
 
 export default PlaceCard
-export type { PlaceCardData }
+export type { PlaceCardData, PlaceCategoryMeta, PlaceTagMeta }
