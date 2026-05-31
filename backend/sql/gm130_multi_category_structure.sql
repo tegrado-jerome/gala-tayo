@@ -120,88 +120,16 @@ values
     array['cinema', 'movie theater', 'films', 'imax', 'screening']
   ),
   (
-    'dessert',
-    'Dessert',
-    'Dessert cafes, pastry shops, ice cream, and sweet treat spots.',
-    array['dessert', 'ice cream', 'cake', 'pastry', 'sweet']
-  ),
-  (
-    'market',
-    'Market',
-    'Public markets, food markets, weekend bazaars, and tiangge spots.',
-    array['market', 'bazar', 'tiangge', 'food market', 'public market']
-  ),
-  (
     'shopping',
     'Shopping',
     'Retail strips, boutiques, outlet areas, and shopping destinations.',
     array['shopping', 'boutique', 'retail', 'outlet', 'store']
   ),
   (
-    'sports-fitness',
-    'Sports',
-    'Gyms, sports centers, courts, and fitness activity places.',
-    array['gym', 'fitness', 'sports', 'court', 'workout']
-  ),
-  (
     'wellness',
     'Wellness',
     'Spas, massage places, self-care spots, and wellness centers.',
     array['wellness', 'spa', 'massage', 'self care', 'relaxation']
-  ),
-  (
-    'clinic',
-    'Clinic',
-    'General clinics and healthcare consultation places.',
-    array['clinic', 'doctor', 'healthcare', 'consultation', 'medical']
-  ),
-  (
-    'dental',
-    'Dental',
-    'Dental clinics for checkups, cleaning, and oral care services.',
-    array['dental', 'dentist', 'oral care', 'teeth cleaning', 'toothache']
-  ),
-  (
-    'pharmacy',
-    'Pharmacy',
-    'Pharmacies and medicine stores for health needs.',
-    array['pharmacy', 'drugstore', 'medicine', 'gamot', '24/7 pharmacy']
-  ),
-  (
-    'hospital',
-    'Hospital',
-    'Hospitals, emergency care facilities, and major medical centers.',
-    array['hospital', 'emergency', 'medical center', 'er', 'health facility']
-  ),
-  (
-    'services',
-    'Services',
-    'Repair, errands, personal services, and practical establishments.',
-    array['services', 'repair', 'errands', 'laundry', 'printing']
-  ),
-  (
-    'transport',
-    'Transport',
-    'Transport hubs, terminals, and commute-related places.',
-    array['transport', 'terminal', 'station', 'bus', 'commute']
-  ),
-  (
-    'pet-friendly',
-    'Pets',
-    'Places where pets are welcome or can comfortably join.',
-    array['pet friendly', 'dogs allowed', 'pets', 'pet cafe', 'pet park']
-  ),
-  (
-    'religious',
-    'Religious',
-    'Churches, chapels, mosques, temples, and spiritual destinations.',
-    array['church', 'chapel', 'mosque', 'temple', 'religious']
-  ),
-  (
-    'hotel-stay',
-    'Hotel',
-    'Hotels, inns, staycations, and accommodation options.',
-    array['hotel', 'staycation', 'inn', 'accommodation', 'lodging']
   ),
   (
     'chill',

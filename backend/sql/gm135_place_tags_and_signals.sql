@@ -101,7 +101,27 @@ values
   ('educational', 'Educational', 'Good for learning, exhibits, or educational visits.', 'activity', array['educational', 'learn', 'learning', 'museum', 'field trip']),
 
   ('commuter-friendly', 'Commuter-friendly', 'Reasonably reachable by public transport.', 'accessibility', array['commute', 'commuter', 'mrt', 'lrt', 'bus', 'jeep', 'sakayan']),
-  ('senior-friendly', 'Senior-friendly', 'Potentially suitable for seniors or slower-paced visits.', 'accessibility', array['senior', 'seniors', 'lolo', 'lola', 'elderly'])
+  ('commute-friendly', 'Commute-friendly', 'Easy or practical to reach by public transport.', 'accessibility', array['commute friendly', 'commute', 'mrt', 'lrt', 'bus', 'jeep', 'sakayan']),
+  ('terminal-nearby', 'Terminal nearby', 'Near a terminal, station, or common commute point.', 'accessibility', array['terminal nearby', 'terminal', 'station', 'bus station', 'transport hub']),
+  ('senior-friendly', 'Senior-friendly', 'Potentially suitable for seniors or slower-paced visits.', 'accessibility', array['senior', 'seniors', 'lolo', 'lola', 'elderly']),
+
+  ('dessert', 'Dessert', 'Desserts, pastries, ice cream, cakes, and sweet treats.', 'activity', array['dessert', 'cake', 'ice cream', 'pastry', 'sweet', 'matamis']),
+  ('bakery', 'Bakery', 'Bakeries, pastry shops, breads, and baked goods.', 'activity', array['bakery', 'bread', 'pastry', 'bakeshop', 'panaderya']),
+  ('sweets', 'Sweets', 'Sweet cravings and treat-focused stops.', 'activity', array['sweets', 'sweet', 'candy', 'chocolate', 'cravings']),
+  ('market', 'Market', 'Markets, bazaars, tiangge, and local shopping areas.', 'activity', array['market', 'palengke', 'tiangge', 'bazaar', 'local market']),
+  ('local-food', 'Local food', 'Local food options, street food, or Filipino casual eats.', 'activity', array['local food', 'street food', 'filipino food', 'lutong bahay', 'local eats']),
+  ('religious', 'Religious', 'Religious, prayer, or spiritual places.', 'activity', array['religious', 'church', 'chapel', 'cathedral', 'mosque', 'temple', 'pray']),
+  ('peaceful', 'Peaceful', 'Peaceful or reflective atmosphere.', 'vibe', array['peaceful', 'quiet', 'calm', 'reflective', 'tahimik']),
+  ('hotel-nearby', 'Hotel nearby', 'Near hotels or useful for visitors staying nearby.', 'amenity', array['hotel nearby', 'hotel', 'accommodation', 'lodging']),
+  ('staycation', 'Staycation', 'Useful for staycation-style plans or overnight nearby trips.', 'activity', array['staycation', 'overnight', 'hotel stay', 'weekend stay']),
+  ('sports-friendly', 'Sports-friendly', 'Supports sports, fitness, or active plans.', 'activity', array['sports', 'fitness', 'court', 'workout', 'active']),
+  ('gym', 'Gym', 'Gym or workout-oriented place.', 'activity', array['gym', 'fitness center', 'workout', 'training']),
+  ('active', 'Active', 'Good for active, movement-heavy plans.', 'activity', array['active', 'activity', 'workout', 'sports', 'papawis']),
+  ('clinic-nearby', 'Clinic nearby', 'Clinic or healthcare option nearby for future essentials use.', 'general', array['clinic', 'doctor', 'healthcare', 'checkup']),
+  ('dental-care', 'Dental care', 'Dental care option for future essentials use.', 'general', array['dental', 'dentist', 'oral care', 'teeth']),
+  ('pharmacy-nearby', 'Pharmacy nearby', 'Pharmacy or medicine store nearby for future essentials use.', 'general', array['pharmacy', 'drugstore', 'medicine', 'gamot', 'botika']),
+  ('hospital-nearby', 'Hospital nearby', 'Hospital or major medical facility nearby for future essentials use.', 'general', array['hospital', 'medical center', 'emergency', 'er']),
+  ('services-nearby', 'Services nearby', 'Practical services nearby for future essentials use.', 'general', array['services', 'repair', 'laundry', 'printing', 'errands'])
 on conflict (id) do update
 set
   name = excluded.name,

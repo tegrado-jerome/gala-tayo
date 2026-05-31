@@ -67,7 +67,7 @@ function CategoryIcon({
     )
   }
 
-  if (['kainan', 'cafe', 'dessert'].includes(categoryId)) {
+  if (['kainan', 'cafe'].includes(categoryId)) {
     return (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={iconClass}>
         <path d="M5 8h10v4a5 5 0 0 1-5 5h0a5 5 0 0 1-5-5V8Z" />
@@ -76,7 +76,7 @@ function CategoryIcon({
     )
   }
 
-  if (['mall', 'shopping', 'market', 'services'].includes(categoryId)) {
+  if (['mall', 'shopping'].includes(categoryId)) {
     return (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={iconClass}>
         <path d="M5 8h14l-1.1 10.5H6.1L5 8Z" />
@@ -85,7 +85,7 @@ function CategoryIcon({
     )
   }
 
-  if (['parke', 'pet-friendly', 'chill'].includes(categoryId)) {
+  if (['parke', 'chill'].includes(categoryId)) {
     return (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={iconClass}>
         <path d="M12 21V11" />
@@ -104,7 +104,7 @@ function CategoryIcon({
     )
   }
 
-  if (['heritage', 'museum', 'tourist-spot', 'religious'].includes(categoryId)) {
+  if (['heritage', 'museum', 'tourist-spot'].includes(categoryId)) {
     return (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={iconClass}>
         <path d="M3 9h18" />
@@ -124,20 +124,11 @@ function CategoryIcon({
     )
   }
 
-  if (['clinic', 'dental', 'pharmacy', 'hospital', 'wellness'].includes(categoryId)) {
+  if (categoryId === 'wellness') {
     return (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={iconClass}>
         <path d="M12 5v14M5 12h14" />
         <rect x="4" y="4" width="16" height="16" rx="3" />
-      </svg>
-    )
-  }
-
-  if (['transport', 'hotel-stay'].includes(categoryId)) {
-    return (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={iconClass}>
-        <rect x="4" y="6" width="16" height="10" rx="2" />
-        <path d="M7 16v2M17 16v2M8 10h8" />
       </svg>
     )
   }
@@ -211,6 +202,18 @@ const fallbackCategories = [
   { id: 'parke', name: 'Parke' },
   { id: 'nightlife', name: 'Nightlife' },
   { id: 'heritage', name: 'Heritage' },
+  { id: 'museum', name: 'Museum' },
+  { id: 'tourist-spot', name: 'Tourist' },
+  { id: 'date-spot', name: 'Date' },
+  { id: 'barkada', name: 'Barkada' },
+  { id: 'family', name: 'Family' },
+  { id: 'study-spot', name: 'Study' },
+  { id: 'coworking', name: 'Coworking' },
+  { id: 'arcade-games', name: 'Arcade' },
+  { id: 'cinema', name: 'Cinema' },
+  { id: 'shopping', name: 'Shopping' },
+  { id: 'wellness', name: 'Wellness' },
+  { id: 'chill', name: 'Chill' },
 ]
 
 const fallbackAreas: AreaChip[] = [
@@ -246,7 +249,7 @@ const animatedSearchPrompts = [
   'Chill Cafe sa QC na Tahimik',
   'Food Trip sa Makati na Mura',
   'Study Place near Taft na may Wi-Fi',
-  'Dental Clinic near Me na Abot-Kaya',
+  'Museum Date sa Manila',
 ]
 
 async function getSearchRequestHeaders(): Promise<Record<string, string>> {
