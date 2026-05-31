@@ -121,15 +121,15 @@ Use simple category labels that match GalaTayo-style browsing, such as:
 - Parke
 - Nightlife
 - Heritage
-- Study Spot
+- Study
 - Clinic
 - Dental
 - Pharmacy
 - Service
 - Family
-- Date Spot
+- Date
 - Barkada
-- Tourist Spot
+- Tourist
 
 Place Card and Map Awareness:
 The GalaTayo interface displays recommendations as place cards and map pins.

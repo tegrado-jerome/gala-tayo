@@ -59,13 +59,13 @@ export const CATEGORIES: Category[] = [
   },
   {
     id: "tourist-spot",
-    name: "Tourist Spot",
+    name: "Tourist",
     description: "Popular attractions, landmarks, and must-visit destination spots.",
     searchTerms: ["tourist spot", "attraction", "landmark", "destination", "sightseeing"],
   },
   {
     id: "date-spot",
-    name: "Date Spot",
+    name: "Date",
     description: "Romantic, cozy, and couple-friendly places for dates.",
     searchTerms: ["date spot", "romantic", "couple", "cozy", "anniversary"],
   },
@@ -83,7 +83,7 @@ export const CATEGORIES: Category[] = [
   },
   {
     id: "study-spot",
-    name: "Study Spot",
+    name: "Study",
     description: "Quiet cafes, libraries, and work-friendly places for studying.",
     searchTerms: ["study spot", "library", "quiet cafe", "student friendly", "wifi"],
   },
@@ -95,7 +95,7 @@ export const CATEGORIES: Category[] = [
   },
   {
     id: "arcade-games",
-    name: "Arcade & Games",
+    name: "Arcade",
     description: "Arcades, gaming lounges, and fun activity spots.",
     searchTerms: ["arcade", "games", "gaming", "bowling", "billiards"],
   },
@@ -125,7 +125,7 @@ export const CATEGORIES: Category[] = [
   },
   {
     id: "sports-fitness",
-    name: "Sports & Fitness",
+    name: "Sports",
     description: "Gyms, sports centers, courts, and fitness activity places.",
     searchTerms: ["gym", "fitness", "sports", "court", "workout"],
   },
@@ -173,7 +173,7 @@ export const CATEGORIES: Category[] = [
   },
   {
     id: "pet-friendly",
-    name: "Pet-Friendly",
+    name: "Pets",
     description: "Places where pets are welcome or can comfortably join.",
     searchTerms: ["pet friendly", "dogs allowed", "pets", "pet cafe", "pet park"],
   },
@@ -185,7 +185,7 @@ export const CATEGORIES: Category[] = [
   },
   {
     id: "hotel-stay",
-    name: "Hotel & Stay",
+    name: "Hotel",
     description: "Hotels, inns, staycations, and accommodation options.",
     searchTerms: ["hotel", "staycation", "inn", "accommodation", "lodging"],
   },

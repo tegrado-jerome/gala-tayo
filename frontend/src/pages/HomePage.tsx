@@ -238,7 +238,7 @@ const budgetOptions: BudgetOption[] = [
 ]
 
 const animatedSearchPrompts = [
-  'Date Spot sa BGC under 1K',
+  'Date sa BGC under 1K',
   'Chill Cafe sa QC na Tahimik',
   'Food Trip sa Makati na Mura',
   'Study Place near Taft na may Wi-Fi',
