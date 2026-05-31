@@ -8,9 +8,12 @@ import { randomUUID } from "crypto";
 import { validateJwt } from "../utils/auth";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { generateSearchCacheKey } from "../utils/cacheKey";
-import { normalizeQuery } from "../utils/queryNormalizer";
 import {
-  CATEGORIES,
+  getSearchTerms,
+  inferCategoryIdsFromQuery,
+  normalizeSearchText,
+} from "../utils/searchMatching";
+import {
   METRO_MANILA_AREAS,
   findAreaById,
   findCategoryById,
@@ -26,6 +29,9 @@ type SearchRequestBody = {
 };
 
 type PlaceRow = Record<string, unknown>;
+type PlaceCategoryJoin = {
+  category_id?: unknown;
+};
 
 type SearchPlaceResult = {
   id: string;
@@ -211,14 +217,29 @@ function getStringArrayField(row: PlaceRow, keys: string[]): string[] {
 
 function normalizeComparableText(value: unknown): string {
   if (typeof value === "string") {
-    return normalizeQuery(value);
+    return normalizeSearchText(value);
   }
 
   if (Array.isArray(value)) {
-    return normalizeQuery(value.filter(Boolean).join(" "));
+    return normalizeSearchText(value.filter(Boolean).join(" "));
   }
 
   return "";
+}
+
+function getLinkedCategoryIds(row: PlaceRow): string[] {
+  const linkedCategories = row.place_categories;
+
+  if (!Array.isArray(linkedCategories)) {
+    return [];
+  }
+
+  return linkedCategories
+    .map((item) => {
+      const categoryId = (item as PlaceCategoryJoin).category_id;
+      return typeof categoryId === "string" ? categoryId.trim() : "";
+    })
+    .filter((categoryId) => categoryId !== "");
 }
 
 function getMappedDbCategories(categoryId: string): string[] {
@@ -237,36 +258,6 @@ function getMappedDbCategories(categoryId: string): string[] {
   return selectedCategory?.name ? [selectedCategory.name] : [categoryId];
 }
 
-function inferCategoryIdFromQuery(normalizedQuery: string): string {
-  if (!normalizedQuery) {
-    return "all";
-  }
-
-  const synonymMatches: Array<[string, string[]]> = [
-    ["date-spot", ["date", "date spot", "romantic", "couple"]],
-    ["tourist-spot", ["tourist", "attraction", "sightseeing"]],
-    ["heritage", ["heritage", "historic", "historical", "old town"]],
-    ["study-spot", ["study", "quiet", "student"]],
-    ["chill", ["chill", "tambay", "relax"]],
-  ];
-
-  for (const [categoryId, terms] of synonymMatches) {
-    if (terms.some((term) => normalizedQuery.includes(normalizeQuery(term)))) {
-      return categoryId;
-    }
-  }
-
-  for (const category of CATEGORIES) {
-    const terms = [category.id, category.name, ...category.searchTerms];
-
-    if (terms.some((term) => normalizedQuery.includes(normalizeQuery(term)))) {
-      return category.id;
-    }
-  }
-
-  return "all";
-}
-
 function inferAreaIdFromQuery(normalizedQuery: string): string {
   if (!normalizedQuery) {
     return "all";
@@ -283,7 +274,7 @@ function inferAreaIdFromQuery(normalizedQuery: string): string {
 
     const terms = [area.id, area.name];
 
-    if (terms.some((term) => normalizedQuery.includes(normalizeQuery(term)))) {
+    if (terms.some((term) => normalizedQuery.includes(normalizeSearchText(term)))) {
       return area.id;
     }
   }
@@ -291,20 +282,25 @@ function inferAreaIdFromQuery(normalizedQuery: string): string {
   return "all";
 }
 
-function rowMatchesCategory(row: PlaceRow, categoryId: string): boolean {
-  const mappedCategories = getMappedDbCategories(categoryId);
+function rowMatchesCategory(row: PlaceRow, categoryIds: string[]): boolean {
+  const selectedCategoryIds = categoryIds.filter((categoryId) => categoryId !== "all");
 
-  if (mappedCategories.length === 0) {
+  if (selectedCategoryIds.length === 0) {
     return true;
   }
 
+  const linkedCategoryIds = getLinkedCategoryIds(row);
   const categoryText = normalizeComparableText([
     getStringField(row, ["category"]),
     row.categories,
+    linkedCategoryIds,
   ]);
 
-  return mappedCategories.some((category) =>
-    categoryText.includes(normalizeComparableText(category))
+  return selectedCategoryIds.some((categoryId) =>
+    linkedCategoryIds.includes(categoryId) ||
+    getMappedDbCategories(categoryId).some((category) =>
+      categoryText.includes(normalizeComparableText(category))
+    )
   );
 }
 
@@ -323,27 +319,7 @@ function rowMatchesArea(row: PlaceRow, areaId: string): boolean {
 }
 
 function getPromptTerms(normalizedQuery: string): string[] {
-  const ignoredPromptTerms = new Set([
-    "and",
-    "for",
-    "in",
-    "near",
-    "place",
-    "places",
-    "spot",
-    "spots",
-    "the",
-    "with",
-  ]);
-
-  return normalizedQuery
-    .split(" ")
-    .filter(
-      (term) =>
-        term.length >= 3 &&
-        !ignoredPromptTerms.has(term) &&
-        !/^gm\d+$/i.test(term)
-    );
+  return getSearchTerms(normalizedQuery).filter((term) => !/^gm\d+$/i.test(term));
 }
 
 function rowMatchesPrompt(row: PlaceRow, normalizedQuery: string): boolean {
@@ -354,12 +330,13 @@ function rowMatchesPrompt(row: PlaceRow, normalizedQuery: string): boolean {
   const promptTerms = getPromptTerms(normalizedQuery);
 
   if (promptTerms.length === 0) {
-    return true;
+    return false;
   }
 
   const searchableText = normalizeComparableText([
     getStringField(row, ["name", "category", "city", "area", "address", "description"]),
     row.categories,
+    getLinkedCategoryIds(row),
   ]);
 
   return promptTerms.some((term) => searchableText.includes(term));
@@ -371,6 +348,7 @@ function scoreSearchRow(row: PlaceRow, normalizedQuery: string): number {
   const categoryText = normalizeComparableText([
     getStringField(row, ["category"]),
     row.categories,
+    getLinkedCategoryIds(row),
   ]);
   const locationText = normalizeComparableText([
     getStringField(row, ["city", "area", "address", "location"]),
@@ -442,7 +420,7 @@ function mapPlaceRowToSearchResult(row: PlaceRow): SearchPlaceResult {
     city,
     location,
     category: getStringField(row, ["category"]),
-    categories: row.categories ?? null,
+    categories: row.categories ?? getLinkedCategoryIds(row),
     latitude: getNumberField(row, ["latitude", "lat"]),
     longitude: getNumberField(row, ["longitude", "lng", "lon"]),
     imageUrl,
@@ -551,13 +529,13 @@ async function storeSearchContext({
 
 async function findSearchPlaces({
   normalizedQuery,
-  categoryId,
+  categoryIds,
   areaId,
   budget,
   requirePromptMatch,
 }: {
   normalizedQuery: string;
-  categoryId: string;
+  categoryIds: string[];
   areaId: string;
   budget: BudgetValue;
   requirePromptMatch: boolean;
@@ -577,7 +555,7 @@ async function findSearchPlaces({
     };
   };
 
-  let queryBuilder = placesTable.select("*") as {
+  let queryBuilder = placesTable.select("*,place_categories(category_id)") as {
     order: (
       column: string,
       options?: { ascending?: boolean; nullsFirst?: boolean }
@@ -599,7 +577,7 @@ async function findSearchPlaces({
 
   return (data ?? [])
     .filter((row) => rowMatchesArea(row, areaId))
-    .filter((row) => rowMatchesCategory(row, categoryId))
+    .filter((row) => rowMatchesCategory(row, categoryIds))
     .filter((row) => rowMatchesBudget(row, budget))
     .filter((row) => !requirePromptMatch || rowMatchesPrompt(row, normalizedQuery))
     .map((row) => ({
@@ -627,11 +605,12 @@ export async function search(
       getOptionalFilterId(getFilterValue(body, filters, "area")) ?? "all";
     const budget = getBudgetFilter(getFilterValue(body, filters, "budget"));
     const shouldExploreAll = body.exploreAll === true;
-    const normalizedQuery = normalizeQuery(query);
+    const normalizedQuery = normalizeSearchText(query);
     const selectedCategory = findCategoryById(categoryId);
     const selectedArea = findAreaById(areaId);
-    const discoveryCategoryId =
-      categoryId !== "all" ? categoryId : inferCategoryIdFromQuery(normalizedQuery);
+    const inferredCategoryIds = inferCategoryIdsFromQuery(normalizedQuery);
+    const discoveryCategoryIds =
+      categoryId !== "all" ? [categoryId] : inferredCategoryIds;
     const discoveryAreaId =
       areaId !== "all" ? areaId : inferAreaIdFromQuery(normalizedQuery);
     const hasSelectedFilters =
@@ -639,7 +618,8 @@ export async function search(
     const shouldRequirePromptMatch =
       !hasSelectedFilters &&
       Boolean(normalizedQuery) &&
-      (discoveryCategoryId === "all" || discoveryAreaId === "all");
+      discoveryCategoryIds.length === 0 &&
+      discoveryAreaId === "all";
     const isBroadDiscoverySearch =
       shouldExploreAll &&
       !normalizedQuery &&
@@ -703,7 +683,7 @@ export async function search(
 
     const places = await findSearchPlaces({
       normalizedQuery,
-      categoryId: discoveryCategoryId,
+      categoryIds: discoveryCategoryIds,
       areaId: discoveryAreaId,
       budget,
       requirePromptMatch: isBroadDiscoverySearch ? false : shouldRequirePromptMatch,
