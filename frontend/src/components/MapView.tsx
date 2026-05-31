@@ -236,6 +236,7 @@ function FitMapToPlaces({
       .filter((latLng): latLng is ValidLatLng => latLng !== null)
 
     if (safeLatLngs.length === 0) {
+      safeSetView(map, safeDefaultCenter, safeDefaultZoom)
       return
     }
 

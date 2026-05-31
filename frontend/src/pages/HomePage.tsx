@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import SearchBar from '../components/SearchBar'
 import PlaceCard, { type PlaceCardData } from '../components/PlaceCard'
 import PlaceDetailView from '../components/PlaceDetailView'
@@ -324,6 +324,21 @@ function mapBackendPlaceToCard(place: BackendSearchPlace): PlaceCardData | null 
   }
 }
 
+function SearchEmptyState({ hasSearched }: { hasSearched: boolean }) {
+  return (
+    <div className="rounded-lg border border-dashed border-[var(--line)] bg-white px-4 py-6 text-center">
+      <p className="text-sm font-semibold text-slate-900">
+        {hasSearched ? 'No places found for this search.' : 'Search for places around Metro Manila.'}
+      </p>
+      <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">
+        {hasSearched
+          ? 'Try changing your keyword, city, category, or budget.'
+          : 'Start by searching for a place or choosing filters.'}
+      </p>
+    </div>
+  )
+}
+
 function HomePage() {
   const [categories, setCategories] = useState(fallbackCategories)
   const [areas, setAreas] = useState<AreaChip[]>(fallbackAreas)
@@ -341,6 +356,7 @@ function HomePage() {
   const [searchResults, setSearchResults] = useState<PlaceCardData[]>([])
   const [hasSearched, setHasSearched] = useState(false)
   const [clearSearchSignal, setClearSearchSignal] = useState(0)
+  const searchRequestVersion = useRef(0)
   const filteredAdvancedCategories = useMemo(() => categories, [categories])
   const selectedCategoryName = useMemo(
     () =>
@@ -366,9 +382,11 @@ function HomePage() {
   )
 
   const handleClearSearch = () => {
+    searchRequestVersion.current += 1
     setSelectedCategory(null)
     setSelectedArea(null)
     setSelectedBudget(null)
+    setIsSearching(false)
     setSearchError(null)
     setPromptLogin(false)
     setLastSearchQuery('')
@@ -376,6 +394,7 @@ function HomePage() {
     setSearchResults([])
     setHasSearched(false)
     setSelectedPlaceId(null)
+    setIsPlaceDetailOpen(false)
     setClearSearchSignal((signal) => signal + 1)
   }
 
@@ -401,11 +420,14 @@ function HomePage() {
 
   const handleSearch = async (query: string) => {
     const trimmedQuery = query.trim()
+    const requestVersion = searchRequestVersion.current + 1
+    searchRequestVersion.current = requestVersion
 
     try {
       setIsSearching(true)
       setSearchError(null)
       setPromptLogin(false)
+      setSelectedPlaceId(null)
 
       const response = await fetch('/api/search', {
         method: 'POST',
@@ -431,6 +453,10 @@ function HomePage() {
           geminiResponse?: string
           places?: BackendSearchPlace[]
         }
+      }
+
+      if (searchRequestVersion.current !== requestVersion) {
+        return
       }
 
       if (data.promptLogin) {
@@ -460,19 +486,29 @@ function HomePage() {
         data,
       })
     } catch (error) {
+      if (searchRequestVersion.current !== requestVersion) {
+        return
+      }
+
       const message = error instanceof Error ? error.message : 'Search failed.'
       setSearchError(message)
       console.error('Search request failed:', error)
     } finally {
-      setIsSearching(false)
+      if (searchRequestVersion.current === requestVersion) {
+        setIsSearching(false)
+      }
     }
   }
 
   const handleExploreAllPlaces = async () => {
+    const requestVersion = searchRequestVersion.current + 1
+    searchRequestVersion.current = requestVersion
+
     try {
       setIsSearching(true)
       setSearchError(null)
       setPromptLogin(false)
+      setSelectedPlaceId(null)
 
       const response = await fetch('/api/search', {
         method: 'POST',
@@ -499,6 +535,10 @@ function HomePage() {
         }
       }
 
+      if (searchRequestVersion.current !== requestVersion) {
+        return
+      }
+
       if (data.promptLogin) {
         setPromptLogin(true)
         return
@@ -520,11 +560,17 @@ function HomePage() {
       setSelectedPlaceId(mappedPlaces[0]?.id ?? null)
       console.log('Broad discovery success:', data)
     } catch (error) {
+      if (searchRequestVersion.current !== requestVersion) {
+        return
+      }
+
       const message = error instanceof Error ? error.message : 'Search failed.'
       setSearchError(message)
       console.error('Broad discovery request failed:', error)
     } finally {
-      setIsSearching(false)
+      if (searchRequestVersion.current === requestVersion) {
+        setIsSearching(false)
+      }
     }
   }
 
@@ -659,31 +705,21 @@ function HomePage() {
                 >
                   Clear Search
                 </button>
-              ) : (
-                <button
-                  type="button"
-                  className="rounded-full border border-[var(--line)] bg-white px-3 py-1.5 text-[11px] font-medium text-[var(--accent-deep)]"
-                >
-                  Recommended
-                </button>
-              )}
+              ) : null}
             </div>
 
             <div className="grid gap-3">
-              {visiblePlaces.map((place) => (
-                <PlaceCard
-                  key={place.id}
-                  place={place}
-                  compact
-                  isSelected={selectedPlaceId === place.id}
-                  onSelect={handlePlaceSelect}
-                />
-              ))}
-              {hasSearched && visiblePlaces.length === 0 && lastSearchQuery ? (
-                <p className="rounded-xl border border-[var(--line)] bg-white px-4 py-5 text-sm text-[var(--muted)]">
-                  No places found for this search.
-                </p>
-              ) : null}
+              {visiblePlaces.length > 0
+                ? visiblePlaces.map((place) => (
+                    <PlaceCard
+                      key={place.id}
+                      place={place}
+                      compact
+                      isSelected={selectedPlaceId === place.id}
+                      onSelect={handlePlaceSelect}
+                    />
+                  ))
+                : <SearchEmptyState hasSearched={hasSearched} />}
             </div>
           </section>
         </main>
@@ -745,12 +781,7 @@ function HomePage() {
                 >
                   Clear Search
                 </button>
-              ) : (
-                <div className="text-right">
-                  <p className="text-[11px] text-[var(--muted)]">Pinakarekomenda</p>
-                  <p className="mt-1 text-[11px] font-medium text-[var(--accent-deep)]">Sorted by relevance</p>
-                </div>
-              )}
+              ) : null}
             </div>
 
             <div className="grid grid-cols-3 gap-px border-b border-[var(--line)] bg-[var(--line)]">
@@ -761,19 +792,16 @@ function HomePage() {
 
             <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
               <div className="grid gap-3">
-                {visiblePlaces.map((place) => (
-                  <PlaceCard
-                    key={place.id}
-                    place={place}
-                    isSelected={selectedPlaceId === place.id}
-                    onSelect={handlePlaceSelect}
-                  />
-                ))}
-                {hasSearched && visiblePlaces.length === 0 && lastSearchQuery ? (
-                  <p className="rounded-xl border border-[var(--line)] bg-white px-4 py-5 text-sm text-[var(--muted)]">
-                    No places found for this search.
-                  </p>
-                ) : null}
+                {visiblePlaces.length > 0
+                  ? visiblePlaces.map((place) => (
+                      <PlaceCard
+                        key={place.id}
+                        place={place}
+                        isSelected={selectedPlaceId === place.id}
+                        onSelect={handlePlaceSelect}
+                      />
+                    ))
+                  : <SearchEmptyState hasSearched={hasSearched} />}
               </div>
             </div>
           </aside>
