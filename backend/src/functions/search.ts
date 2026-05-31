@@ -7,21 +7,8 @@ import {
 import { randomUUID } from "crypto";
 import { validateJwt } from "../utils/auth";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
-import {
-  buildGeminiPrompt,
-  GeminiUserType,
-} from "../utils/geminiPrompt";
-import {
-  checkGuestRateLimit,
-  checkRegisteredUserRateLimit,
-} from "../utils/rateLimit";
 import { generateSearchCacheKey } from "../utils/cacheKey";
 import { normalizeQuery } from "../utils/queryNormalizer";
-import { getCache, setCache } from "../services/redisCacheService";
-import {
-  GeminiServiceError,
-  generateGeminiResponse,
-} from "../services/geminiService";
 import {
   CATEGORIES,
   METRO_MANILA_AREAS,
@@ -36,11 +23,6 @@ type SearchRequestBody = {
   budget?: unknown;
   filters?: unknown;
   exploreAll?: unknown;
-};
-
-type CachedSearchResult = {
-  geminiResponse: string;
-  places: SearchPlaceResult[];
 };
 
 type PlaceRow = Record<string, unknown>;
@@ -127,22 +109,6 @@ function getClientIp(request: HttpRequest): string {
   }
 
   return "127.0.0.1";
-}
-
-function getGeminiErrorMessage(status: number): string {
-  switch (status) {
-    case 403:
-      return "Gemini API request was denied.";
-    case 429:
-      return "Gemini API rate limit reached.";
-    case 500:
-    case 502:
-    case 503:
-    case 504:
-      return "Gemini API is currently unavailable.";
-    default:
-      return "Failed to generate Gemini response.";
-  }
 }
 
 function getSearchQuery(body: SearchRequestBody): string {
@@ -356,14 +322,11 @@ function rowMatchesArea(row: PlaceRow, areaId: string): boolean {
   return areaText.includes(normalizeComparableText(areaName));
 }
 
-function rowMatchesPrompt(row: PlaceRow, normalizedQuery: string): boolean {
-  if (!normalizedQuery) {
-    return true;
-  }
-
+function getPromptTerms(normalizedQuery: string): string[] {
   const ignoredPromptTerms = new Set([
     "and",
     "for",
+    "in",
     "near",
     "place",
     "places",
@@ -372,7 +335,8 @@ function rowMatchesPrompt(row: PlaceRow, normalizedQuery: string): boolean {
     "the",
     "with",
   ]);
-  const promptTerms = normalizedQuery
+
+  return normalizedQuery
     .split(" ")
     .filter(
       (term) =>
@@ -380,6 +344,14 @@ function rowMatchesPrompt(row: PlaceRow, normalizedQuery: string): boolean {
         !ignoredPromptTerms.has(term) &&
         !/^gm\d+$/i.test(term)
     );
+}
+
+function rowMatchesPrompt(row: PlaceRow, normalizedQuery: string): boolean {
+  if (!normalizedQuery) {
+    return true;
+  }
+
+  const promptTerms = getPromptTerms(normalizedQuery);
 
   if (promptTerms.length === 0) {
     return true;
@@ -391,6 +363,46 @@ function rowMatchesPrompt(row: PlaceRow, normalizedQuery: string): boolean {
   ]);
 
   return promptTerms.some((term) => searchableText.includes(term));
+}
+
+function scoreSearchRow(row: PlaceRow, normalizedQuery: string): number {
+  const promptTerms = getPromptTerms(normalizedQuery);
+  const nameText = normalizeComparableText(getStringField(row, ["name"]));
+  const categoryText = normalizeComparableText([
+    getStringField(row, ["category"]),
+    row.categories,
+  ]);
+  const locationText = normalizeComparableText([
+    getStringField(row, ["city", "area", "address", "location"]),
+  ]);
+  const descriptionText = normalizeComparableText(
+    getStringField(row, ["description", "reason"])
+  );
+  const searchableText = normalizeComparableText([
+    nameText,
+    categoryText,
+    locationText,
+    descriptionText,
+  ]);
+  const rating = getNumberField(row, ["rating"]) ?? 0;
+
+  if (promptTerms.length === 0) {
+    return rating;
+  }
+
+  const matchedTerms = promptTerms.filter((term) => searchableText.includes(term));
+  const allTermsMatch = matchedTerms.length === promptTerms.length;
+  const exactQueryInName = Boolean(normalizedQuery && nameText.includes(normalizedQuery));
+
+  return (
+    matchedTerms.length * 6 +
+    (allTermsMatch ? 12 : 0) +
+    (exactQueryInName ? 20 : 0) +
+    promptTerms.filter((term) => nameText.includes(term)).length * 8 +
+    promptTerms.filter((term) => categoryText.includes(term)).length * 5 +
+    promptTerms.filter((term) => locationText.includes(term)).length * 4 +
+    rating
+  );
 }
 
 function rowMatchesBudget(row: PlaceRow, budget: BudgetValue): boolean {
@@ -442,33 +454,6 @@ function mapPlaceRowToSearchResult(row: PlaceRow): SearchPlaceResult {
   };
 }
 
-function buildPlaceCandidateContext(places: SearchPlaceResult[]): string {
-  if (places.length === 0) {
-    return "No matching Supabase places were found for this search.";
-  }
-
-  return places
-    .map((place, index) => {
-      const location = place.location ?? place.city ?? place.area ?? "Metro Manila";
-      const category = place.category ?? "Place";
-
-      return `${index + 1}. ${place.name ?? "Unnamed place"} — ${category} — ${location}`;
-    })
-    .join("\n");
-}
-
-function constrainPromptToPlaces(
-  prompt: string,
-  places: SearchPlaceResult[]
-): string {
-  return `${prompt}
-
-Supabase place candidates for this search:
-${buildPlaceCandidateContext(places)}
-
-Only recommend or discuss places from the Supabase place candidates above. If no candidates are available, say that no matching places were found yet and suggest adjusting the filters.`;
-}
-
 async function resolveUserContext(
   request: HttpRequest
 ): Promise<SearchUserContext> {
@@ -486,35 +471,6 @@ async function resolveUserContext(
       identifier: getClientIp(request),
     };
   }
-}
-
-function checkSearchRateLimit(userContext: SearchUserContext) {
-  if (userContext.userType === "registered") {
-    return checkRegisteredUserRateLimit(userContext.identifier);
-  }
-
-  return checkGuestRateLimit(userContext.identifier);
-}
-
-function buildRateLimitExceededResponse(
-  userContext: SearchUserContext,
-  rateLimitResult: ReturnType<typeof checkGuestRateLimit>
-): HttpResponseInit {
-  return {
-    status: 429,
-    jsonBody: {
-      message:
-        userContext.userType === "registered"
-          ? "Registered user daily limit reached."
-          : "Guest daily limit reached.",
-      userType: userContext.userType,
-      promptLogin:
-        userContext.userType === "guest" ? rateLimitResult.promptLogin : false,
-      remaining: rateLimitResult.remaining,
-      limit: rateLimitResult.limit,
-      resetAt: rateLimitResult.resetAt,
-    },
-  };
 }
 
 function createSearchId(): string {
@@ -646,15 +602,20 @@ async function findSearchPlaces({
     .filter((row) => rowMatchesCategory(row, categoryId))
     .filter((row) => rowMatchesBudget(row, budget))
     .filter((row) => !requirePromptMatch || rowMatchesPrompt(row, normalizedQuery))
+    .map((row) => ({
+      row,
+      score: scoreSearchRow(row, normalizedQuery),
+    }))
+    .sort((left, right) => right.score - left.score)
     .slice(0, 10)
-    .map(mapPlaceRowToSearchResult);
+    .map(({ row }) => mapPlaceRowToSearchResult(row));
 }
 
 export async function search(
   request: HttpRequest,
   context: InvocationContext
 ): Promise<HttpResponseInit> {
-  context.log("Processing AI search request...");
+  context.log("Processing Supabase search request...");
 
   try {
     const body = (await request.json()) as SearchRequestBody;
@@ -720,58 +681,7 @@ export async function search(
       budget
     );
     const userContext = await resolveUserContext(request);
-    const userType: GeminiUserType = userContext.userType;
-
-    if (isBroadDiscoverySearch) {
-      const places = await findSearchPlaces({
-        normalizedQuery,
-        categoryId: discoveryCategoryId,
-        areaId: discoveryAreaId,
-        budget,
-        requirePromptMatch: false,
-      });
-      const searchId = createSearchId();
-      const searchContext = buildSearchContext({
-        searchId,
-        query,
-        categoryId,
-        areaId,
-        budget,
-        userType,
-        createdAt: new Date().toISOString(),
-      });
-
-      await storeSearchContext({
-        searchContext,
-        userContext,
-        cacheKey,
-        context,
-      });
-
-      return {
-        status: 200,
-        jsonBody: {
-          message: "Broad discovery places served from curated defaults.",
-          searchId,
-          userType,
-          cacheHit: false,
-          cacheKey,
-          searchMode: "broad-discovery",
-          searchContext,
-          places,
-          result: {
-            geminiResponse: "",
-            places,
-          },
-        },
-      };
-    }
-
-    const rateLimitResult = checkSearchRateLimit(userContext);
-
-    if (!rateLimitResult.allowed) {
-      return buildRateLimitExceededResponse(userContext, rateLimitResult);
-    }
+    const userType = userContext.userType;
 
     const searchId = createSearchId();
     const searchContext = buildSearchContext({
@@ -791,98 +701,33 @@ export async function search(
       context,
     });
 
-    const cachedResult = await getCache(cacheKey);
-
-    if (cachedResult) {
-      const cachedSearchResult = cachedResult as Partial<CachedSearchResult>;
-      const cachedPlaces = (
-        await findSearchPlaces({
-          normalizedQuery,
-          categoryId: discoveryCategoryId,
-          areaId: discoveryAreaId,
-          budget,
-          requirePromptMatch: shouldRequirePromptMatch,
-        })
-      ).slice(0, 10);
-
-      return {
-        status: 200,
-        jsonBody: {
-          message: "Search result served from cache.",
-          searchId,
-          userType,
-          cacheHit: true,
-          cacheKey,
-          searchContext,
-          places: cachedPlaces,
-          result: {
-            geminiResponse: cachedSearchResult.geminiResponse ?? "",
-            places: cachedPlaces,
-          },
-          remaining: rateLimitResult.remaining,
-          limit: rateLimitResult.limit,
-          resetAt: rateLimitResult.resetAt,
-        },
-      };
-    }
-
     const places = await findSearchPlaces({
       normalizedQuery,
       categoryId: discoveryCategoryId,
       areaId: discoveryAreaId,
       budget,
-      requirePromptMatch: shouldRequirePromptMatch,
+      requirePromptMatch: isBroadDiscoverySearch ? false : shouldRequirePromptMatch,
     });
-    const geminiPrompt = constrainPromptToPlaces(
-      buildGeminiPrompt({
-        userPrompt:
-          normalizedQuery || "Recommend places based on the selected filters.",
-        userType,
-        categoryName: selectedCategory?.name,
-        categorySearchTerms: selectedCategory?.searchTerms,
-        areaName: selectedArea?.name,
-      }),
-      places
-    );
-
-    const geminiResponse = await generateGeminiResponse({
-      prompt: geminiPrompt,
-    });
-    const resultToCache: CachedSearchResult = {
-      geminiResponse,
-      places,
-    };
-
-    await setCache(cacheKey, resultToCache);
 
     return {
       status: 200,
-        jsonBody: {
-          message: "Search processed successfully.",
-          searchId,
-          userType,
-          cacheHit: false,
-          cacheKey,
-          searchContext,
+      jsonBody: {
+        message: "Search processed successfully.",
+        searchId,
+        userType,
+        cacheHit: false,
+        cacheKey,
+        searchMode: isBroadDiscoverySearch ? "broad-discovery" : "supabase",
+        searchContext,
+        places,
+        result: {
+          geminiResponse: "",
           places,
-          result: resultToCache,
-          remaining: rateLimitResult.remaining,
-        limit: rateLimitResult.limit,
-        resetAt: rateLimitResult.resetAt,
+        },
       },
     };
   } catch (error) {
     context.error(error);
-
-    if (error instanceof GeminiServiceError) {
-      return {
-        status: error.status,
-        jsonBody: {
-          message: getGeminiErrorMessage(error.status),
-          error: error.message,
-        },
-      };
-    }
 
     return {
       status: 400,
