@@ -101,11 +101,12 @@ function DetailPhotoTile({
   }
 
   return (
-    <div className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[var(--line-strong)] bg-[linear-gradient(180deg,#fbfdff,#eef4fb)] text-center text-slate-400 shadow-[0_10px_24px_rgba(28,77,160,0.08)]">
+    <div className="flex h-full w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[var(--line-strong)] bg-[linear-gradient(180deg,#fbfdff,#eef4fb)] px-4 text-center text-slate-400 shadow-[0_10px_24px_rgba(28,77,160,0.08)]">
       <span className="flex h-12 w-12 items-center justify-center rounded-full border border-[var(--line)] bg-white text-slate-400">
         <NoPhotoIcon />
       </span>
-      <span className="text-xs font-medium text-slate-500">No photo available</span>
+      <span className="line-clamp-2 max-w-full text-sm font-semibold text-slate-700">{placeName}</span>
+      <span className="text-xs font-medium text-slate-500">No photo</span>
     </div>
   )
 }

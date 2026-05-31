@@ -363,9 +363,12 @@ function HistoryPage() {
                             loading="lazy"
                           />
                         ) : (
-                          <div className="flex h-[88px] w-[88px] shrink-0 flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-[var(--line-strong)] bg-[linear-gradient(180deg,#fbfdff,#eef4fb)] text-center text-slate-500 sm:h-[108px] sm:w-[132px]">
+                          <div className="flex h-[88px] w-[88px] shrink-0 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-[var(--line-strong)] bg-[linear-gradient(180deg,#fbfdff,#eef4fb)] px-2 text-center text-slate-500 sm:h-[108px] sm:w-[132px] sm:gap-1.5">
                             <ImageIcon />
-                            <span className="px-2 text-[10px] font-medium">No photo</span>
+                            <span className="line-clamp-2 text-[10px] font-semibold leading-tight text-slate-700 sm:text-[11px]">
+                              {place.name || 'Viewed place'}
+                            </span>
+                            <span className="text-[10px] font-medium">No photo</span>
                           </div>
                         )}
 

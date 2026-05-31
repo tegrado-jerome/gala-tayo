@@ -215,11 +215,14 @@ function FavoritesPage() {
                             loading="lazy"
                           />
                         ) : (
-                          <div className="flex h-40 w-full flex-col items-center justify-center gap-2 border-b border-dashed border-[var(--line-strong)] bg-[linear-gradient(180deg,#fbfdff,#eef4fb)] text-slate-500">
+                          <div className="flex h-40 w-full flex-col items-center justify-center gap-2 border-b border-dashed border-[var(--line-strong)] bg-[linear-gradient(180deg,#fbfdff,#eef4fb)] px-4 text-center text-slate-500">
                             <span className="flex h-11 w-11 items-center justify-center rounded-full border border-[var(--line)] bg-white">
                               <ImageIcon />
                             </span>
-                            <span className="text-xs font-medium">No photo available</span>
+                            <span className="line-clamp-2 max-w-full text-sm font-semibold text-slate-700">
+                              {place.name || 'Saved place'}
+                            </span>
+                            <span className="text-xs font-medium">No photo</span>
                           </div>
                         )}
 

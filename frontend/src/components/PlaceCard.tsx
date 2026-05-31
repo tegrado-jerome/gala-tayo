@@ -202,11 +202,14 @@ function PlaceCard({ place, isSelected = false, compact = false, onSelect }: Pla
               loading="lazy"
             />
           ) : (
-            <div className="flex min-h-[96px] w-[88px] shrink-0 self-stretch flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-[var(--line-strong)] bg-[linear-gradient(180deg,#fbfdff,#eef4fb)] px-2 text-center text-slate-400">
+            <div className="flex min-h-[96px] w-[88px] shrink-0 self-stretch flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-[var(--line-strong)] bg-[linear-gradient(180deg,#fbfdff,#eef4fb)] px-2 text-center text-slate-400">
               <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[var(--line)] bg-white text-slate-400">
                 <NoPhotoIcon />
               </span>
-              <span className="text-[10px] font-medium leading-tight text-slate-500">No photo available</span>
+              <span className="line-clamp-2 text-[10px] font-semibold leading-tight text-slate-700">
+                {place.name}
+              </span>
+              <span className="text-[10px] font-medium leading-tight text-slate-500">No photo</span>
             </div>
           )}
 
