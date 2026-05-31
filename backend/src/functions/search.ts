@@ -14,6 +14,10 @@ import {
   normalizeSearchText,
 } from "../utils/searchMatching";
 import {
+  getMetroManilaLocationKeywordsForCity,
+  inferMetroManilaLocationsFromQuery,
+} from "../utils/metroManilaLocations";
+import {
   METRO_MANILA_AREAS,
   findAreaById,
   findCategoryById,
@@ -258,30 +262,6 @@ function getMappedDbCategories(categoryId: string): string[] {
   return selectedCategory?.name ? [selectedCategory.name] : [categoryId];
 }
 
-function inferAreaIdFromQuery(normalizedQuery: string): string {
-  if (!normalizedQuery) {
-    return "all";
-  }
-
-  if (/\bbgc\b/.test(normalizedQuery) || normalizedQuery.includes("bonifacio global city")) {
-    return "taguig";
-  }
-
-  for (const area of METRO_MANILA_AREAS) {
-    if (area.id === "all") {
-      continue;
-    }
-
-    const terms = [area.id, area.name];
-
-    if (terms.some((term) => normalizedQuery.includes(normalizeSearchText(term)))) {
-      return area.id;
-    }
-  }
-
-  return "all";
-}
-
 function rowMatchesCategory(row: PlaceRow, categoryIds: string[]): boolean {
   const selectedCategoryIds = categoryIds.filter((categoryId) => categoryId !== "all");
 
@@ -304,18 +284,25 @@ function rowMatchesCategory(row: PlaceRow, categoryIds: string[]): boolean {
   );
 }
 
-function rowMatchesArea(row: PlaceRow, areaId: string): boolean {
-  if (areaId === "all") {
+function rowMatchesArea(row: PlaceRow, areaIds: string[]): boolean {
+  const selectedAreaIds = areaIds.filter((areaId) => areaId !== "all");
+
+  if (selectedAreaIds.length === 0) {
     return true;
   }
 
-  const selectedArea = findAreaById(areaId);
-  const areaName = selectedArea?.name ?? areaId;
   const areaText = normalizeComparableText([
     getStringField(row, ["city", "area", "address", "location"]),
   ]);
 
-  return areaText.includes(normalizeComparableText(areaName));
+  return selectedAreaIds.some((areaId) => {
+    const selectedArea = findAreaById(areaId);
+    const areaName = selectedArea?.name ?? areaId;
+    const locationKeywords = getMetroManilaLocationKeywordsForCity(areaId);
+    const terms = [areaId, areaName, ...locationKeywords];
+
+    return terms.some((term) => areaText.includes(normalizeComparableText(term)));
+  });
 }
 
 function getPromptTerms(normalizedQuery: string): string[] {
@@ -530,13 +517,13 @@ async function storeSearchContext({
 async function findSearchPlaces({
   normalizedQuery,
   categoryIds,
-  areaId,
+  areaIds,
   budget,
   requirePromptMatch,
 }: {
   normalizedQuery: string;
   categoryIds: string[];
-  areaId: string;
+  areaIds: string[];
   budget: BudgetValue;
   requirePromptMatch: boolean;
 }): Promise<SearchPlaceResult[]> {
@@ -576,7 +563,7 @@ async function findSearchPlaces({
   }
 
   return (data ?? [])
-    .filter((row) => rowMatchesArea(row, areaId))
+    .filter((row) => rowMatchesArea(row, areaIds))
     .filter((row) => rowMatchesCategory(row, categoryIds))
     .filter((row) => rowMatchesBudget(row, budget))
     .filter((row) => !requirePromptMatch || rowMatchesPrompt(row, normalizedQuery))
@@ -609,17 +596,18 @@ export async function search(
     const selectedCategory = findCategoryById(categoryId);
     const selectedArea = findAreaById(areaId);
     const inferredCategoryIds = inferCategoryIdsFromQuery(normalizedQuery);
+    const inferredLocations = inferMetroManilaLocationsFromQuery(normalizedQuery);
     const discoveryCategoryIds =
       categoryId !== "all" ? [categoryId] : inferredCategoryIds;
-    const discoveryAreaId =
-      areaId !== "all" ? areaId : inferAreaIdFromQuery(normalizedQuery);
+    const discoveryAreaIds =
+      areaId !== "all" ? [areaId] : inferredLocations.cityIds;
     const hasSelectedFilters =
       categoryId !== "all" || areaId !== "all" || budget !== "any";
     const shouldRequirePromptMatch =
       !hasSelectedFilters &&
       Boolean(normalizedQuery) &&
       discoveryCategoryIds.length === 0 &&
-      discoveryAreaId === "all";
+      discoveryAreaIds.length === 0;
     const isBroadDiscoverySearch =
       shouldExploreAll &&
       !normalizedQuery &&
@@ -684,7 +672,7 @@ export async function search(
     const places = await findSearchPlaces({
       normalizedQuery,
       categoryIds: discoveryCategoryIds,
-      areaId: discoveryAreaId,
+      areaIds: discoveryAreaIds,
       budget,
       requirePromptMatch: isBroadDiscoverySearch ? false : shouldRequirePromptMatch,
     });
