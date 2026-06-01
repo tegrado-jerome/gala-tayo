@@ -88,24 +88,6 @@ export const CATEGORIES: Category[] = [
     searchTerms: ["study spot", "library", "quiet cafe", "student friendly", "wifi"],
   },
   {
-    id: "coworking",
-    name: "Coworking",
-    description: "Coworking spaces and work hubs for productivity and meetings.",
-    searchTerms: ["coworking", "workspace", "remote work", "meeting room", "office"],
-  },
-  {
-    id: "arcade-games",
-    name: "Arcade",
-    description: "Arcades, gaming lounges, and fun activity spots.",
-    searchTerms: ["arcade", "games", "gaming", "bowling", "billiards"],
-  },
-  {
-    id: "cinema",
-    name: "Cinema",
-    description: "Movie theaters and film-watching venues.",
-    searchTerms: ["cinema", "movie theater", "films", "imax", "screening"],
-  },
-  {
     id: "shopping",
     name: "Shopping",
     description: "Retail strips, boutiques, outlet areas, and shopping destinations.",

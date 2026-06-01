@@ -30,6 +30,14 @@ type PlaceCardData = {
   hours?: string
   entranceFee?: string
   website?: string
+  detail_summary?: string | null
+  best_for?: string[]
+  what_to_expect?: string[]
+  tips?: string[]
+  hours_text?: string | null
+  entrance_fee_text?: string | null
+  best_time_text?: string | null
+  website_url?: string | null
   highlights?: string[]
   imageUrl?: string | null
   curatedImageUrl?: string | null

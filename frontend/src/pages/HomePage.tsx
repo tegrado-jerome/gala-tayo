@@ -115,7 +115,7 @@ function CategoryIcon({
     )
   }
 
-  if (['study-spot', 'coworking', 'family'].includes(categoryId)) {
+  if (['study-spot', 'family'].includes(categoryId)) {
     return (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={iconClass}>
         <rect x="4" y="5" width="16" height="14" rx="1.8" />
@@ -193,6 +193,14 @@ type BackendSearchPlace = {
   tags?: PlaceTagMeta[] | null
   matchedCategories?: PlaceCategoryMeta[] | null
   matchedTags?: PlaceTagMeta[] | null
+  detail_summary?: string | null
+  best_for?: string[] | null
+  what_to_expect?: string[] | null
+  tips?: string[] | null
+  hours_text?: string | null
+  entrance_fee_text?: string | null
+  best_time_text?: string | null
+  website_url?: string | null
 }
 
 const fallbackCategories = [
@@ -208,9 +216,6 @@ const fallbackCategories = [
   { id: 'barkada', name: 'Barkada' },
   { id: 'family', name: 'Family' },
   { id: 'study-spot', name: 'Study' },
-  { id: 'coworking', name: 'Coworking' },
-  { id: 'arcade-games', name: 'Arcade' },
-  { id: 'cinema', name: 'Cinema' },
   { id: 'shopping', name: 'Shopping' },
   { id: 'wellness', name: 'Wellness' },
   { id: 'chill', name: 'Chill' },
@@ -314,6 +319,9 @@ function mapBackendPlaceToCard(place: BackendSearchPlace): PlaceCardData | null 
   const tags = Array.isArray(place.tags) ? place.tags : []
   const matchedCategories = Array.isArray(place.matchedCategories) ? place.matchedCategories : []
   const matchedTags = Array.isArray(place.matchedTags) ? place.matchedTags : []
+  const bestFor = Array.isArray(place.best_for) ? place.best_for.filter((item): item is string => Boolean(item?.trim())) : []
+  const whatToExpect = Array.isArray(place.what_to_expect) ? place.what_to_expect.filter((item): item is string => Boolean(item?.trim())) : []
+  const tips = Array.isArray(place.tips) ? place.tips.filter((item): item is string => Boolean(item?.trim())) : []
 
   return {
     id: String(place.id || place.slug || name),
@@ -332,6 +340,17 @@ function mapBackendPlaceToCard(place: BackendSearchPlace): PlaceCardData | null 
     tags,
     matchedCategories,
     matchedTags,
+    detail_summary: place.detail_summary || null,
+    best_for: bestFor,
+    what_to_expect: whatToExpect,
+    tips,
+    hours_text: place.hours_text || null,
+    entrance_fee_text: place.entrance_fee_text || null,
+    best_time_text: place.best_time_text || null,
+    website_url: place.website_url || null,
+    hours: place.hours_text || undefined,
+    entranceFee: place.entrance_fee_text || place.budget || place.budgetRange || undefined,
+    website: place.website_url || undefined,
     coordinates: {
       lat,
       lng,

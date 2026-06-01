@@ -13,6 +13,14 @@ type BackendPlaceDetail = {
   rating: number
   reviewCount: number
   description: string
+  detail_summary?: string | null
+  best_for?: string[]
+  what_to_expect?: string[]
+  tips?: string[]
+  hours_text?: string | null
+  entrance_fee_text?: string | null
+  best_time_text?: string | null
+  website_url?: string | null
   category: string
   entranceFee: string
   openHours: string
@@ -51,6 +59,14 @@ function mapBackendPlaceToCardData(place: BackendPlaceDetail): PlaceCardData {
     hours: place.openHours,
     entranceFee: place.entranceFee,
     website: place.website,
+    detail_summary: place.detail_summary,
+    best_for: place.best_for ?? [],
+    what_to_expect: place.what_to_expect ?? [],
+    tips: place.tips ?? [],
+    hours_text: place.hours_text,
+    entrance_fee_text: place.entrance_fee_text,
+    best_time_text: place.best_time_text,
+    website_url: place.website_url,
     imageUrl: place.imageUrl,
     slug: place.id,
     curatedImageUrls: place.curatedImageUrls,

@@ -29,10 +29,6 @@ const CATEGORY_NAME_TO_ID = new Map([
   ["family", "family"],
   ["study", "study-spot"],
   ["study spot", "study-spot"],
-  ["coworking", "coworking"],
-  ["arcade", "arcade-games"],
-  ["arcade games", "arcade-games"],
-  ["cinema", "cinema"],
   ["shopping", "shopping"],
   ["wellness", "wellness"],
   ["chill", "chill"],
@@ -67,6 +63,9 @@ const TAG_IDS = new Set([
   "premium",
   "free-entry",
   "study-friendly",
+  "coworking",
+  "arcade",
+  "cinema",
   "tourist-friendly",
   "historical",
   "educational",
@@ -141,6 +140,16 @@ function getNumberOrNull(value) {
 
 function getNullableString(record, field) {
   return getTrimmedString(record, field);
+}
+
+function getStringArray(record, field) {
+  if (!Array.isArray(record[field])) {
+    return [];
+  }
+
+  return record[field]
+    .filter((value) => typeof value === "string" && value.trim())
+    .map((value) => value.trim());
 }
 
 function getNullableNumber(record, field) {
@@ -258,6 +267,13 @@ function toPlaceRow(record) {
     photos: getPhotos(record),
     area: getNullableString(record, "area"),
     description: getNullableString(record, "description"),
+    detail_summary: getNullableString(record, "detail_summary"),
+    best_for: getStringArray(record, "best_for"),
+    what_to_expect: getStringArray(record, "what_to_expect"),
+    tips: getStringArray(record, "tips"),
+    hours_text: getNullableString(record, "hours_text"),
+    entrance_fee_text: getNullableString(record, "entrance_fee_text"),
+    best_time_text: getNullableString(record, "best_time_text"),
     google_maps_url: getNullableString(record, "google_maps_url"),
     source_url: getNullableString(record, "source_url"),
     official_url: getNullableString(record, "official_url"),

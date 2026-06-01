@@ -72,6 +72,14 @@ type SearchPlaceResult = {
   budget: string | null;
   budgetRange: string | null;
   reason: string | null;
+  detail_summary: string | null;
+  best_for: string[];
+  what_to_expect: string[];
+  tips: string[];
+  hours_text: string | null;
+  entrance_fee_text: string | null;
+  best_time_text: string | null;
+  website_url: string | null;
   tags?: SearchTagMetadata[];
   matchedCategories?: SearchCategoryMetadata[];
   matchedTags?: SearchTagMetadata[];
@@ -930,6 +938,14 @@ function mapPlaceRowToSearchResult(
     budget: getStringField(row, ["budget"]),
     budgetRange: getStringField(row, ["budgetRange", "budget_range", "priceRange", "price_range"]),
     reason: getStringField(row, ["reason", "description"]),
+    detail_summary: getStringField(row, ["detail_summary"]),
+    best_for: getStringArrayField(row, ["best_for"]),
+    what_to_expect: getStringArrayField(row, ["what_to_expect"]),
+    tips: getStringArrayField(row, ["tips"]),
+    hours_text: getStringField(row, ["hours_text"]),
+    entrance_fee_text: getStringField(row, ["entrance_fee_text"]),
+    best_time_text: getStringField(row, ["best_time_text"]),
+    website_url: getStringField(row, ["website_url", "official_url"]),
     tags,
     matchedCategories: getMatchedCategories(row, categoryIds),
     matchedTags: getMatchedTags(row, normalizedQuery),

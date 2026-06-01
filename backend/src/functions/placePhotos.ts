@@ -4,7 +4,7 @@ import {
   HttpResponseInit,
   InvocationContext,
 } from "@azure/functions";
-import { findPlaceDetailById } from "../data/placeDetails";
+import { findPlaceDetailByIdOrSlug } from "../data/placeDetails";
 
 export async function placePhotos(
   request: HttpRequest,
@@ -21,7 +21,7 @@ export async function placePhotos(
     };
   }
 
-  const place = findPlaceDetailById(placeId);
+  const place = await findPlaceDetailByIdOrSlug(placeId);
 
   if (!place) {
     return {

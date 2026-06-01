@@ -48,9 +48,6 @@ const VALID_CATEGORY_IDS = new Set([
   "barkada",
   "family",
   "study-spot",
-  "coworking",
-  "arcade-games",
-  "cinema",
   "shopping",
   "wellness",
   "chill",
@@ -73,10 +70,6 @@ const CATEGORY_NAME_TO_ID = new Map([
   ["family", "family"],
   ["study", "study-spot"],
   ["study spot", "study-spot"],
-  ["coworking", "coworking"],
-  ["arcade", "arcade-games"],
-  ["arcade games", "arcade-games"],
-  ["cinema", "cinema"],
   ["shopping", "shopping"],
   ["wellness", "wellness"],
   ["chill", "chill"],
@@ -109,6 +102,9 @@ const KNOWN_TAG_IDS = new Set([
   "premium",
   "free-entry",
   "study-friendly",
+  "coworking",
+  "arcade",
+  "cinema",
   "tourist-friendly",
   "historical",
   "educational",
@@ -492,6 +488,75 @@ function validateDescription(
   }
 }
 
+function validateOptionalStringField(
+  record: PlaceSeedRecord,
+  result: PlaceSeedValidationResult,
+  field: string,
+  index?: number,
+  requireNonEmpty = false
+): void {
+  const value = record[field];
+
+  if (value === undefined || value === null) {
+    return;
+  }
+
+  if (typeof value !== "string" || (requireNonEmpty && value.trim() === "")) {
+    addError(result, {
+      field,
+      code: `${field}_invalid`,
+      message: `${field} must be a${requireNonEmpty ? " non-empty" : ""} string when provided.`,
+    }, index);
+  }
+}
+
+function validateOptionalStringArrayField(
+  record: PlaceSeedRecord,
+  result: PlaceSeedValidationResult,
+  field: string,
+  index?: number
+): void {
+  const value = record[field];
+
+  if (value === undefined || value === null) {
+    return;
+  }
+
+  if (!Array.isArray(value)) {
+    addError(result, {
+      field,
+      code: `${field}_invalid`,
+      message: `${field} must be an array of non-empty strings when provided.`,
+    }, index);
+    return;
+  }
+
+  value.forEach((item, itemIndex) => {
+    if (typeof item !== "string" || item.trim() === "") {
+      addError(result, {
+        field: `${field}[${itemIndex}]`,
+        code: `${field}_item_invalid`,
+        message: `${field} items must be non-empty strings.`,
+      }, index);
+    }
+  });
+}
+
+function validateEnrichedDetailFields(
+  record: PlaceSeedRecord,
+  result: PlaceSeedValidationResult,
+  index?: number
+): void {
+  validateOptionalStringField(record, result, "detail_summary", index, true);
+  validateOptionalStringArrayField(record, result, "best_for", index);
+  validateOptionalStringArrayField(record, result, "what_to_expect", index);
+  validateOptionalStringArrayField(record, result, "tips", index);
+
+  for (const field of ["hours_text", "entrance_fee_text", "best_time_text"]) {
+    validateOptionalStringField(record, result, field, index);
+  }
+}
+
 function validateBudgetFields(
   record: PlaceSeedRecord,
   result: PlaceSeedValidationResult,
@@ -759,6 +824,14 @@ function validateTags(
 
   tags.forEach((tag, tagIndex) => {
     if (isObjectRecord(tag)) {
+      if (tag.slug !== undefined) {
+        addError(result, {
+          field: `tags[${tagIndex}].slug`,
+          code: "tag_slug_not_allowed",
+          message: "Tags must use id, not slug.",
+        }, index);
+      }
+
       if (tag.strength !== undefined) {
         const strength = parseNumberValue(tag.strength);
 
@@ -830,6 +903,7 @@ export function validatePlaceSeedRecord(
   validateCoordinates(record, result, index);
   validateUrlAndSourceFields(record, result, index);
   validateDescription(record, result, index);
+  validateEnrichedDetailFields(record, result, index);
   validateBudgetFields(record, result, index);
   validateRankingSignals(record, result, index);
   validateCategories(record, result, index);

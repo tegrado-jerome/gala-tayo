@@ -212,6 +212,97 @@ function MatchReasonSection({ place }: { place: PlaceCardData }) {
   )
 }
 
+function getCleanStringArray(value?: string[] | null) {
+  return Array.isArray(value) ? value.filter((item) => Boolean(item?.trim())).map((item) => item.trim()) : []
+}
+
+function DetailListSection({
+  title,
+  items,
+  fallback,
+}: {
+  title: string
+  items: string[]
+  fallback: string
+}) {
+  return (
+    <section>
+      <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
+      {items.length > 0 ? (
+        <ul className="mt-2 grid gap-2">
+          {items.map((item) => (
+            <li key={item} className="rounded-lg border border-[var(--line)] bg-slate-50 px-3 py-2 text-sm leading-relaxed text-slate-700">
+              {item}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">{fallback}</p>
+      )}
+    </section>
+  )
+}
+
+function PracticalInfoRow({
+  label,
+  value,
+  href,
+}: {
+  label: string
+  value: string
+  href?: string | null
+}) {
+  return (
+    <div className="grid gap-0.5 rounded-lg border border-[var(--line)] bg-white px-3 py-2">
+      <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">{label}</span>
+      {href ? (
+        <a
+          href={href}
+          target="_blank"
+          rel="noreferrer"
+          className="break-words text-sm font-medium text-[var(--accent-deep)] underline-offset-2 hover:underline"
+        >
+          {value}
+        </a>
+      ) : (
+        <span className="text-sm text-slate-700">{value}</span>
+      )}
+    </div>
+  )
+}
+
+function EnrichedDetailSections({ place }: { place: PlaceCardData }) {
+  const overview = place.detail_summary?.trim() || place.reason || 'No overview available yet.'
+  const bestFor = getCleanStringArray(place.best_for)
+  const whatToExpect = getCleanStringArray(place.what_to_expect)
+  const tips = getCleanStringArray(place.tips)
+  const hoursText = place.hours_text?.trim() || place.hours?.trim() || 'Not available'
+  const entranceFeeText = place.entrance_fee_text?.trim() || place.entranceFee?.trim() || 'Not available'
+  const bestTimeText = place.best_time_text?.trim() || 'Not available'
+  const websiteUrl = place.website_url?.trim() || place.website?.trim() || ''
+
+  return (
+    <div className="grid gap-4">
+      <section>
+        <h2 className="text-sm font-semibold text-slate-900">Overview</h2>
+        <p className="mt-2 text-sm leading-relaxed text-slate-700">{overview}</p>
+      </section>
+      <DetailListSection title="Good for" items={bestFor} fallback="Good-for details are not available yet." />
+      <DetailListSection title="What to expect" items={whatToExpect} fallback="What-to-expect details are not available yet." />
+      <DetailListSection title="Tips" items={tips} fallback="No tips available yet." />
+      <section>
+        <h2 className="text-sm font-semibold text-slate-900">Practical info</h2>
+        <div className="mt-2 grid gap-2 sm:grid-cols-2">
+          <PracticalInfoRow label="Hours" value={hoursText} />
+          <PracticalInfoRow label="Entrance fee" value={entranceFeeText} />
+          <PracticalInfoRow label="Best time" value={bestTimeText} />
+          <PracticalInfoRow label="Website" value={websiteUrl || 'Not available'} href={websiteUrl || null} />
+        </div>
+      </section>
+    </div>
+  )
+}
+
 function getApiEndpoint(path: string) {
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
   return apiBaseUrl ? `${apiBaseUrl}${path}` : `/api${path}`
@@ -237,6 +328,7 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
   const normalizedNameSlug = normalizePlaceSlug(place.name)
   const placeSlug = place.slug || normalizedNameSlug
   const isSaved = [place.slug, normalizedNameSlug, place.id].some((slug) => isPlaceSaved(slug))
+  const entranceFeeLabel = place.entrance_fee_text?.trim() || place.entranceFee?.trim() || 'Not available'
 
   useEffect(() => {
     const controller = new AbortController()
@@ -386,16 +478,14 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
             </p>
             <p className="flex items-center gap-2 text-sm text-slate-700">
               <MetaIcon symbol="★" />
-              <span>{place.rating}{place.reviewCount ? ` (${place.reviewCount} reviews)` : ''}</span>
+              <span>Budget / entrance fee: {entranceFeeLabel}</span>
             </p>
           </div>
           <hr className="my-3 border-[var(--line)]" />
-          <p className="text-sm leading-relaxed text-slate-700">
-            {place.reason}
-          </p>
+          <EnrichedDetailSections place={place} />
           <MatchReasonSection place={place} />
           <hr className="my-3 border-[var(--line)]" />
-          <div className="grid gap-2 text-sm text-slate-700">
+          <div className="hidden">
             <p className="inline-flex items-center gap-2">
               <MetaIcon symbol="🕒" />
               <span>{place.hours ?? 'Hours not available'}</span>
@@ -517,20 +607,18 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
             </p>
             <p className="mt-1 flex items-center gap-2 text-sm text-slate-700">
               <MetaIcon symbol="★" />
-              <span>{place.rating}{place.reviewCount ? ` (${place.reviewCount} reviews)` : ''}</span>
+              <span>Budget / entrance fee: {entranceFeeLabel}</span>
             </p>
 
             <hr className="my-3 border-[var(--line)]" />
 
-            <p className="text-sm leading-relaxed text-slate-700">
-              {place.reason}
-            </p>
+            <EnrichedDetailSections place={place} />
 
             <MatchReasonSection place={place} />
 
             <hr className="my-3 border-[var(--line)]" />
 
-            <div className="grid gap-2 text-sm text-slate-700">
+            <div className="hidden">
               <p className="inline-flex items-center gap-2">
                 <MetaIcon symbol="🕒" />
                 <span>{place.hours ?? 'Hours not available'}</span>
