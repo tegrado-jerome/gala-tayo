@@ -367,7 +367,23 @@ function validateUrlAndSourceFields(
   result: PlaceSeedValidationResult,
   index?: number
 ): void {
-  for (const field of ["google_maps_url", "source_url", "official_url", "website_url"]) {
+  const googleMapsUrl = record.google_maps_url;
+
+  if (
+    googleMapsUrl !== undefined &&
+    googleMapsUrl !== null &&
+    (typeof googleMapsUrl !== "string" ||
+      googleMapsUrl.trim() === "" ||
+      !isValidUrl(googleMapsUrl))
+  ) {
+    addError(result, {
+      field: "google_maps_url",
+      code: "url_invalid",
+      message: "google_maps_url must be a non-empty valid http or https URL when provided.",
+    }, index);
+  }
+
+  for (const field of ["source_url", "official_url", "website_url"]) {
     const value = record[field];
 
     if (value === undefined || value === null || value === "") {

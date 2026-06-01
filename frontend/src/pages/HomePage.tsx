@@ -201,6 +201,7 @@ type BackendSearchPlace = {
   entrance_fee_text?: string | null
   best_time_text?: string | null
   website_url?: string | null
+  google_maps_url?: string | null
 }
 
 const fallbackCategories = [
@@ -348,6 +349,7 @@ function mapBackendPlaceToCard(place: BackendSearchPlace): PlaceCardData | null 
     entrance_fee_text: place.entrance_fee_text || null,
     best_time_text: place.best_time_text || null,
     website_url: place.website_url || null,
+    googleMapsUrl: place.google_maps_url || null,
     hours: place.hours_text || undefined,
     entranceFee: place.entrance_fee_text || place.budget || place.budgetRange || undefined,
     website: place.website_url || undefined,

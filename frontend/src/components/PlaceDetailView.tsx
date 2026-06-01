@@ -329,6 +329,12 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
   const placeSlug = place.slug || normalizedNameSlug
   const isSaved = [place.slug, normalizedNameSlug, place.id].some((slug) => isPlaceSaved(slug))
   const entranceFeeLabel = place.entrance_fee_text?.trim() || place.entranceFee?.trim() || 'Not available'
+  const hasCoordinateDirections =
+    Number.isFinite(place.coordinates.lat) && Number.isFinite(place.coordinates.lng)
+  const directionsUrl = place.googleMapsUrl?.trim()
+    || (hasCoordinateDirections
+      ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${place.coordinates.lat},${place.coordinates.lng}`)}`
+      : null)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -381,8 +387,10 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
   }
 
   const openDirections = () => {
-    const destination = `${place.coordinates.lat},${place.coordinates.lng}`
-    const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`
+    if (!directionsUrl) {
+      return
+    }
+
     window.open(directionsUrl, '_blank', 'noopener,noreferrer')
   }
 
@@ -529,7 +537,8 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
             <button
               type="button"
               onClick={openDirections}
-              className="inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--line-strong)] bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)]"
+              disabled={!directionsUrl}
+              className="inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--line-strong)] bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)] disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-400"
             >
               <DirectionsIcon />
               <span>Directions</span>
@@ -664,7 +673,8 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
               <button
                 type="button"
                 onClick={openDirections}
-                className="inline-flex items-center justify-center gap-1 rounded-lg border border-[var(--line-strong)] bg-white px-2 py-2 text-sm font-medium text-slate-700"
+                disabled={!directionsUrl}
+                className="inline-flex items-center justify-center gap-1 rounded-lg border border-[var(--line-strong)] bg-white px-2 py-2 text-sm font-medium text-slate-700 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-400"
               >
                 <DirectionsIcon />
                 <span>Directions</span>

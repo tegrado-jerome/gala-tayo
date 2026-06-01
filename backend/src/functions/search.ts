@@ -80,6 +80,7 @@ type SearchPlaceResult = {
   entrance_fee_text: string | null;
   best_time_text: string | null;
   website_url: string | null;
+  google_maps_url: string | null;
   tags?: SearchTagMetadata[];
   matchedCategories?: SearchCategoryMetadata[];
   matchedTags?: SearchTagMetadata[];
@@ -946,6 +947,7 @@ function mapPlaceRowToSearchResult(
     entrance_fee_text: getStringField(row, ["entrance_fee_text"]),
     best_time_text: getStringField(row, ["best_time_text"]),
     website_url: getStringField(row, ["website_url", "official_url"]),
+    google_maps_url: getStringField(row, ["google_maps_url"]),
     tags,
     matchedCategories: getMatchedCategories(row, categoryIds),
     matchedTags: getMatchedTags(row, normalizedQuery),
