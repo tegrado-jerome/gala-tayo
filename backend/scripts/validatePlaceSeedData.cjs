@@ -21,9 +21,10 @@ function readSeedData(filePath) {
 
 function printIssue(issue) {
   const indexText = issue.index === undefined ? "-" : String(issue.index);
+  const placeText = issue.place || "-";
   const fieldText = issue.field || "-";
   console.log(
-    `  [index=${indexText}] [field=${fieldText}] ${issue.code}: ${issue.message}`
+    `  [index=${indexText}] [place=${placeText}] [field=${fieldText}] ${issue.code}: ${issue.message}`
   );
 }
 

@@ -6,6 +6,7 @@ import { normalizeSearchText } from "./searchMatching";
 
 export type PlaceSeedValidationIssue = {
   index?: number;
+  place?: string;
   field?: string;
   code: string;
   message: string;
@@ -40,17 +41,17 @@ const VALID_CATEGORY_IDS = new Set([
   "cafe",
   "mall",
   "parke",
-  "nightlife",
-  "heritage",
   "museum",
-  "tourist-spot",
-  "date-spot",
+  "heritage",
+  "tourist",
+  "date",
   "barkada",
   "family",
-  "study-spot",
-  "shopping",
-  "wellness",
+  "study",
   "chill",
+  "nightlife",
+  "arcade",
+  "cinema",
 ]);
 
 const CATEGORY_NAME_TO_ID = new Map([
@@ -59,92 +60,153 @@ const CATEGORY_NAME_TO_ID = new Map([
   ["mall", "mall"],
   ["parke", "parke"],
   ["park", "parke"],
-  ["nightlife", "nightlife"],
-  ["heritage", "heritage"],
   ["museum", "museum"],
-  ["tourist", "tourist-spot"],
-  ["tourist spot", "tourist-spot"],
-  ["date", "date-spot"],
-  ["date spot", "date-spot"],
+  ["heritage", "heritage"],
+  ["tourist", "tourist"],
+  ["date", "date"],
   ["barkada", "barkada"],
   ["family", "family"],
-  ["study", "study-spot"],
-  ["study spot", "study-spot"],
-  ["shopping", "shopping"],
-  ["wellness", "wellness"],
+  ["study", "study"],
   ["chill", "chill"],
+  ["nightlife", "nightlife"],
+  ["arcade", "arcade"],
+  ["cinema", "cinema"],
 ]);
 
-const KNOWN_TAG_IDS = new Set([
+const REMOVED_CATEGORY_IDS = new Set([
+  "tourist-spot",
+  "tourist spot",
+  "date-spot",
+  "date spot",
+  "study-spot",
+  "study spot",
+  "arcade-games",
+  "arcade games",
+  "shopping",
+  "wellness",
+  "clinic",
+  "dental",
+  "pharmacy",
+  "hospital",
+  "transport",
+  "service",
+  "services",
+  "hotel",
+  "hotel-stay",
+  "hotel stay",
+  "pets",
+  "pet-friendly",
+  "pet friendly",
+  "religious",
+  "market",
+  "sports",
+  "sports-fitness",
+  "sports fitness",
+  "coworking",
+  "dessert",
+]);
+
+const EXPERIENCE_TAG_IDS = new Set([
   "indoor",
   "outdoor",
-  "airconditioned",
-  "rain-friendly",
   "walkable",
+  "commute-friendly",
+  "commuter-friendly",
+  "budget-friendly",
+  "family-friendly",
+  "date-friendly",
+  "group-friendly",
+  "barkada-friendly",
   "quiet",
+  "photo-friendly",
+  "airconditioned",
+  "late-night",
+  "food-options",
+  "study-friendly",
+  "kid-friendly",
   "relaxing",
+  "rain-friendly",
   "lively",
   "crowded",
-  "photo-friendly",
-  "night-friendly",
-  "wifi",
-  "food-options",
-  "shopping-area",
-  "parking-friendly",
-  "restroom-access",
-  "date-friendly",
-  "family-friendly",
-  "barkada-friendly",
   "solo-friendly",
-  "kid-friendly",
-  "pet-friendly",
-  "budget-friendly",
-  "premium",
   "free-entry",
-  "study-friendly",
-  "coworking",
-  "arcade",
-  "cinema",
+  "paid-entry",
   "tourist-friendly",
-  "historical",
   "educational",
-  "commuter-friendly",
-  "senior-friendly",
-  "dessert",
-  "bakery",
-  "sweets",
-  "market",
-  "local-food",
-  "commute-friendly",
-  "terminal-nearby",
-  "religious",
+  "historical",
   "peaceful",
-  "hotel-nearby",
-  "staycation",
-  "sports-friendly",
-  "gym",
-  "active",
-  "clinic-nearby",
-  "dental-care",
-  "pharmacy-nearby",
-  "hospital-nearby",
-  "services-nearby",
+  "local-experience",
+  "activity-friendly",
+  "activity-based",
+  "culture",
+  "art",
+  "cultural",
+  "scenic",
+  "skyline-view",
+  "rooftop",
+  "reservation-recommended",
+  "reservation-required",
+  "queue-likely",
 ]);
 
 const TAG_NAME_TO_ID = new Map(
-  [...KNOWN_TAG_IDS].flatMap((tagId) => [
+  [...EXPERIENCE_TAG_IDS].flatMap((tagId) => [
     [tagId, tagId],
     [normalizeSearchText(tagId), tagId],
     [normalizeSearchText(tagId.replace(/-/g, " ")), tagId],
   ])
 );
 
+TAG_NAME_TO_ID.set("rainy day friendly", "rain-friendly");
+TAG_NAME_TO_ID.set("rainy-day-friendly", "rain-friendly");
+TAG_NAME_TO_ID.set("commute friendly", "commute-friendly");
+TAG_NAME_TO_ID.set("commuter friendly", "commuter-friendly");
+TAG_NAME_TO_ID.set("food trip", "food-options");
+TAG_NAME_TO_ID.set("food-trip", "food-options");
+TAG_NAME_TO_ID.set("group friendly", "group-friendly");
+TAG_NAME_TO_ID.set("barkada friendly", "barkada-friendly");
+
+const REJECTED_TAG_TERMS = new Set([
+  "churros",
+  "mango",
+  "mozzarella-sticks",
+  "mozzarella sticks",
+  "cream-cheese",
+  "cream cheese",
+  "shawarma",
+  "books",
+  "parking",
+  "gas-station",
+  "gas station",
+  "mall-grocery",
+  "mall grocery",
+  "clinic",
+  "dental",
+  "pharmacy",
+  "hospital",
+  "service",
+  "services",
+  "hotel",
+  "pet-friendly",
+  "market",
+  "sports",
+  "dessert",
+  "coffee",
+  "matcha",
+  "ramen",
+  "pizza",
+  "burger",
+  "milk-tea",
+]);
+
 const VALID_TAG_SOURCES = new Set(["manual", "seed", "import", "system"]);
 const VALID_VERIFICATION_STATUSES = new Set([
-  "draft",
-  "needs-review",
   "verified",
-  "rejected",
+  "needs_review",
+  "rejected_closed",
+  "rejected_duplicate",
+  "rejected_wrong_city",
+  "rejected_not_gala_relevant",
 ]);
 const VALID_BUDGET_LABELS = new Set(["Free", "Budget", "Mid-range", "Premium"]);
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -154,6 +216,49 @@ const PHILIPPINES_SAFE_BOUNDS = {
   minLongitude: 120.5,
   maxLongitude: 121.5,
 };
+
+const REQUIRED_PLACE_GUIDE_FIELDS = [
+  "best_time_to_visit",
+  "visit_duration",
+  "good_for",
+  "not_ideal_for",
+  "crowd_level",
+  "indoor_outdoor",
+  "weather_fit",
+  "commute_friendly",
+  "commute_access",
+  "parking_info",
+  "accessibility_notes",
+  "nearby_context",
+  "decision_reason",
+] as const;
+
+const DIRECTORY_TERMS = [
+  "clinic",
+  "dental",
+  "dentist",
+  "pharmacy",
+  "hospital",
+  "transport",
+  "terminal",
+  "repair",
+  "laundry",
+  "errand",
+  "government office",
+  "gas station",
+  "pet shop",
+  "religious service",
+  "hotel stay",
+];
+
+const ROBOTIC_PHRASES = [
+  "is a place that offers",
+  "provides a variety of",
+  "perfect for everyone",
+  "must visit destination for all",
+  "located in the heart of",
+  "one of the best places",
+];
 
 const CITY_ID_TO_NAME = new Map(
   METRO_MANILA_LOCATION_KEYWORDS.map((location) => [
@@ -252,6 +357,20 @@ function isValidDateString(value: string): boolean {
   return Number.isFinite(parsedTime);
 }
 
+function getRecordLabel(record: PlaceSeedRecord, index: number): string {
+  const slug = getTrimmedString(record, "slug");
+  const name = getTrimmedString(record, "name");
+
+  return slug ?? name ?? `index ${index}`;
+}
+
+function withPlace(
+  issues: PlaceSeedValidationIssue[],
+  place: string
+): PlaceSeedValidationIssue[] {
+  return issues.map((issue) => ({ ...issue, place: issue.place ?? place }));
+}
+
 function resolveMetroManilaCityId(record: PlaceSeedRecord): string | null {
   const cityId = getTrimmedString(record, "city_id");
   const city = getTrimmedString(record, "city");
@@ -265,6 +384,34 @@ function resolveMetroManilaCityId(record: PlaceSeedRecord): string | null {
   }
 
   return null;
+}
+
+function getStringArrayValue(value: unknown): string[] | null {
+  if (!Array.isArray(value)) {
+    return null;
+  }
+
+  const strings = value.filter(
+    (item): item is string => typeof item === "string" && item.trim() !== ""
+  );
+
+  return strings.length === value.length ? strings.map((item) => item.trim()) : null;
+}
+
+function countSentences(value: string): number {
+  const normalized = value.replace(/\s+/g, " ").trim();
+
+  if (!normalized) {
+    return 0;
+  }
+
+  const matches = normalized.match(/[^.!?]+[.!?]+(?:\s|$)/g);
+
+  if (matches) {
+    return matches.length;
+  }
+
+  return normalized.length >= 40 ? 1 : 0;
 }
 
 function validateIdentityFields(
@@ -321,7 +468,7 @@ function validateCoordinates(
   record: PlaceSeedRecord,
   result: PlaceSeedValidationResult,
   index?: number
-): { latitude: number | null; longitude: number | null } {
+): void {
   const latitude = parseNumberValue(record.latitude);
   const longitude = parseNumberValue(record.longitude);
 
@@ -358,219 +505,187 @@ function validateCoordinates(
       message: "Longitude must be between 120.5 and 121.5 for Metro Manila seed data.",
     }, index);
   }
-
-  return { latitude, longitude };
 }
 
-function validateUrlAndSourceFields(
+function validateRequiredUrl(
+  record: PlaceSeedRecord,
+  result: PlaceSeedValidationResult,
+  field: string,
+  index?: number
+): void {
+  const value = getTrimmedString(record, field);
+
+  if (!value) {
+    addError(result, {
+      field,
+      code: `${field}_required`,
+      message: `${field} is required and must be a non-empty URL.`,
+    }, index);
+    return;
+  }
+
+  if (!isValidUrl(value)) {
+    addError(result, {
+      field,
+      code: "url_invalid",
+      message: `${field} must be a valid http or https URL.`,
+    }, index);
+  }
+}
+
+function validateVerificationFields(
   record: PlaceSeedRecord,
   result: PlaceSeedValidationResult,
   index?: number
 ): void {
-  const googleMapsUrl = record.google_maps_url;
+  validateRequiredUrl(record, result, "google_maps_url", index);
 
-  if (
-    googleMapsUrl !== undefined &&
-    googleMapsUrl !== null &&
-    (typeof googleMapsUrl !== "string" ||
-      googleMapsUrl.trim() === "" ||
-      !isValidUrl(googleMapsUrl))
-  ) {
+  const verificationStatus = getTrimmedString(record, "verification_status");
+  if (!verificationStatus) {
     addError(result, {
-      field: "google_maps_url",
-      code: "url_invalid",
-      message: "google_maps_url must be a non-empty valid http or https URL when provided.",
+      field: "verification_status",
+      code: "verification_status_required",
+      message: "verification_status is required.",
     }, index);
-  }
-
-  for (const field of ["source_url", "official_url", "website_url"]) {
-    const value = record[field];
-
-    if (value === undefined || value === null || value === "") {
-      continue;
-    }
-
-    if (typeof value !== "string" || !isValidUrl(value)) {
-      addError(result, {
-        field,
-        code: "url_invalid",
-        message: `${field} must be a valid http or https URL when provided.`,
-      }, index);
-    }
-  }
-
-  const lastVerifiedAt = record.last_verified_at;
-
-  if (
-    lastVerifiedAt !== undefined &&
-    lastVerifiedAt !== null &&
-    lastVerifiedAt !== "" &&
-    (typeof lastVerifiedAt !== "string" || !isValidDateString(lastVerifiedAt))
-  ) {
-    addError(result, {
-      field: "last_verified_at",
-      code: "last_verified_at_invalid",
-      message: "last_verified_at must be a valid date string when provided.",
-    }, index);
-  }
-
-  const verificationStatus = record.verification_status;
-
-  if (
-    verificationStatus !== undefined &&
-    verificationStatus !== null &&
-    verificationStatus !== "" &&
-    (typeof verificationStatus !== "string" ||
-      !VALID_VERIFICATION_STATUSES.has(verificationStatus))
-  ) {
+  } else if (!VALID_VERIFICATION_STATUSES.has(verificationStatus)) {
     addError(result, {
       field: "verification_status",
       code: "verification_status_invalid",
       message:
-        "verification_status must be one of draft, needs-review, verified, or rejected.",
+        "verification_status must be one of verified, needs_review, rejected_closed, rejected_duplicate, rejected_wrong_city, or rejected_not_gala_relevant.",
+    }, index);
+  } else if (verificationStatus !== "verified") {
+    addError(result, {
+      field: "verification_status",
+      code: "verification_status_blocks_import",
+      message: `Only verification_status "verified" can be imported; "${verificationStatus}" is blocked.`,
     }, index);
   }
 
-  if (!getTrimmedString(record, "source_url")) {
-    addWarning(result, {
-      field: "source_url",
-      code: "source_url_missing",
-      message: "source_url is recommended for future data review.",
+  if (!getTrimmedString(record, "verification_notes")) {
+    addError(result, {
+      field: "verification_notes",
+      code: "verification_notes_required",
+      message: "verification_notes is required and must explain the verification decision.",
     }, index);
   }
 
-  if (!getTrimmedString(record, "last_verified_at")) {
-    addWarning(result, {
+  const sources = getStringArrayValue(record.verification_sources);
+  if (!sources || sources.length === 0) {
+    addError(result, {
+      field: "verification_sources",
+      code: "verification_sources_required",
+      message: "verification_sources is required and must be a non-empty array of source labels or URLs.",
+    }, index);
+  }
+
+  const lastVerifiedAt = getTrimmedString(record, "last_verified_at");
+  if (!lastVerifiedAt) {
+    addError(result, {
       field: "last_verified_at",
-      code: "last_verified_at_missing",
-      message: "last_verified_at is recommended so imported place data has freshness metadata.",
+      code: "last_verified_at_required",
+      message: "last_verified_at is required.",
     }, index);
-  }
-
-  if (!getTrimmedString(record, "verification_status")) {
-    addWarning(result, {
-      field: "verification_status",
-      code: "verification_status_missing",
-      message: "verification_status is recommended and should be verified before large imports.",
-    }, index);
-  } else if (record.verification_status !== "verified") {
-    addWarning(result, {
-      field: "verification_status",
-      code: "verification_status_not_verified",
-      message: "verification_status is not verified; review before importing at scale.",
-    }, index);
-  }
-
-  if (!getTrimmedString(record, "google_maps_url")) {
-    addWarning(result, {
-      field: "google_maps_url",
-      code: "google_maps_url_missing",
-      message: "google_maps_url is optional because directions can use coordinates.",
+  } else if (!isValidDateString(lastVerifiedAt)) {
+    addError(result, {
+      field: "last_verified_at",
+      code: "last_verified_at_invalid",
+      message: "last_verified_at must be a valid date string.",
     }, index);
   }
 }
 
-function validateDescription(
+function validateSentenceText(
+  record: PlaceSeedRecord,
+  result: PlaceSeedValidationResult,
+  field: "description" | "place_history",
+  index?: number
+): void {
+  const value = getTrimmedString(record, field);
+
+  if (!value) {
+    addError(result, {
+      field,
+      code: `${field}_required`,
+      message: `${field} is required and should be 3 to 5 human, local, SEO-friendly sentences.`,
+    }, index);
+    return;
+  }
+
+  const sentenceCount = countSentences(value);
+  if (sentenceCount < 3 || sentenceCount > 5) {
+    addError(result, {
+      field,
+      code: `${field}_sentence_count_invalid`,
+      message: `${field} should be 3 to 5 sentences; found ${sentenceCount}.`,
+    }, index);
+  }
+
+  const normalized = normalizeSearchText(value);
+  const roboticPhrase = ROBOTIC_PHRASES.find((phrase) =>
+    normalized.includes(normalizeSearchText(phrase))
+  );
+
+  if (roboticPhrase) {
+    addWarning(result, {
+      field,
+      code: `${field}_robotic_tone`,
+      message: `${field} sounds generic or robotic because it includes "${roboticPhrase}".`,
+    }, index);
+  }
+}
+
+function validateRequiredGuideFields(
   record: PlaceSeedRecord,
   result: PlaceSeedValidationResult,
   index?: number
 ): void {
-  const description = record.description;
+  for (const field of REQUIRED_PLACE_GUIDE_FIELDS) {
+    const value = record[field];
 
-  if (description === undefined || description === null || description === "") {
-    addWarning(result, {
-      field: "description",
-      code: "description_missing",
-      message: "Description is recommended for detail pages but does not block seeding.",
-    }, index);
-    return;
-  }
-
-  if (typeof description !== "string") {
-    addError(result, {
-      field: "description",
-      code: "description_invalid",
-      message: "Description must be a string when provided.",
-    }, index);
-    return;
-  }
-
-  if (description.trim().length < 20) {
-    addWarning(result, {
-      field: "description",
-      code: "description_too_short",
-      message: "Description is shorter than 20 characters; add more useful context if available.",
-    }, index);
-  }
-}
-
-function validateOptionalStringField(
-  record: PlaceSeedRecord,
-  result: PlaceSeedValidationResult,
-  field: string,
-  index?: number,
-  requireNonEmpty = false
-): void {
-  const value = record[field];
-
-  if (value === undefined || value === null) {
-    return;
-  }
-
-  if (typeof value !== "string" || (requireNonEmpty && value.trim() === "")) {
-    addError(result, {
-      field,
-      code: `${field}_invalid`,
-      message: `${field} must be a${requireNonEmpty ? " non-empty" : ""} string when provided.`,
-    }, index);
-  }
-}
-
-function validateOptionalStringArrayField(
-  record: PlaceSeedRecord,
-  result: PlaceSeedValidationResult,
-  field: string,
-  index?: number
-): void {
-  const value = record[field];
-
-  if (value === undefined || value === null) {
-    return;
-  }
-
-  if (!Array.isArray(value)) {
-    addError(result, {
-      field,
-      code: `${field}_invalid`,
-      message: `${field} must be an array of non-empty strings when provided.`,
-    }, index);
-    return;
-  }
-
-  value.forEach((item, itemIndex) => {
-    if (typeof item !== "string" || item.trim() === "") {
+    if (value === undefined || value === null || value === "") {
       addError(result, {
-        field: `${field}[${itemIndex}]`,
-        code: `${field}_item_invalid`,
-        message: `${field} items must be non-empty strings.`,
+        field,
+        code: `${field}_required`,
+        message: `${field} is required for GalaTayo place-guide seed data.`,
+      }, index);
+      continue;
+    }
+
+    if (field === "good_for" || field === "not_ideal_for") {
+      const values = getStringArrayValue(value);
+      if (!values || values.length === 0) {
+        addError(result, {
+          field,
+          code: `${field}_invalid`,
+          message: `${field} must be a non-empty array of strings.`,
+        }, index);
+      }
+      continue;
+    }
+
+    if (field === "commute_friendly") {
+      if (typeof value !== "boolean") {
+        addError(result, {
+          field,
+          code: `${field}_invalid`,
+          message: `${field} must be a boolean.`,
+        }, index);
+      }
+      continue;
+    }
+
+    if (typeof value !== "string" || value.trim() === "") {
+      addError(result, {
+        field,
+        code: `${field}_invalid`,
+        message: `${field} must be a non-empty string.`,
       }, index);
     }
-  });
-}
-
-function validateEnrichedDetailFields(
-  record: PlaceSeedRecord,
-  result: PlaceSeedValidationResult,
-  index?: number
-): void {
-  validateOptionalStringField(record, result, "detail_summary", index, true);
-  validateOptionalStringArrayField(record, result, "best_for", index);
-  validateOptionalStringArrayField(record, result, "what_to_expect", index);
-  validateOptionalStringArrayField(record, result, "tips", index);
-
-  for (const field of ["hours_text", "entrance_fee_text", "best_time_text"]) {
-    validateOptionalStringField(record, result, field, index);
   }
+
+  validateSentenceText(record, result, "description", index);
+  validateSentenceText(record, result, "place_history", index);
 }
 
 function validateBudgetFields(
@@ -578,33 +693,16 @@ function validateBudgetFields(
   result: PlaceSeedValidationResult,
   index?: number
 ): void {
-  const hasAnyBudgetField = [
-    "budget_min",
-    "budget_max",
-    "budget_currency",
-    "budget_label",
-    "is_free",
-  ].some((field) => isPresent(record, field));
-  const budgetMin = record.budget_min === null ? null : parseNumberValue(record.budget_min);
+  const budgetMin = parseNumberValue(record.budget_min);
   const budgetMax = record.budget_max === null ? null : parseNumberValue(record.budget_max);
 
-  if (!hasAnyBudgetField) {
-    addWarning(result, {
-      field: "budget",
-      code: "budget_fields_missing",
-      message: "Budget fields are recommended for budget-aware ranking and filters.",
+  if (!isPresent(record, "budget_min") || budgetMin === null || budgetMin < 0) {
+    addError(result, {
+      field: "budget_min",
+      code: "budget_min_required",
+      message:
+        "budget_min is required and must be a number greater than or equal to 0. Use the starting budget, not a strict maximum.",
     }, index);
-    return;
-  }
-
-  if (isPresent(record, "budget_min") && record.budget_min !== null) {
-    if (budgetMin === null || budgetMin < 0) {
-      addError(result, {
-        field: "budget_min",
-        code: "budget_min_invalid",
-        message: "budget_min must be null or a number greater than or equal to 0.",
-      }, index);
-    }
   }
 
   if (isPresent(record, "budget_max") && record.budget_max !== null) {
@@ -617,17 +715,35 @@ function validateBudgetFields(
     }
   }
 
-  if (
-    budgetMin !== null &&
-    budgetMax !== null &&
-    Number.isFinite(budgetMin) &&
-    Number.isFinite(budgetMax) &&
-    budgetMax < budgetMin
-  ) {
+  if (budgetMin !== null && budgetMax !== null && budgetMax < budgetMin) {
     addError(result, {
       field: "budget_max",
       code: "budget_range_invalid",
-      message: "budget_max must be greater than or equal to budget_min.",
+      message: "budget_max must be greater than or equal to budget_min when provided.",
+    }, index);
+  }
+
+  const budgetLabel = getTrimmedString(record, "budget_label");
+  if (!budgetLabel) {
+    addError(result, {
+      field: "budget_label",
+      code: "budget_label_required",
+      message: "budget_label is required.",
+    }, index);
+  } else if (!VALID_BUDGET_LABELS.has(budgetLabel)) {
+    addError(result, {
+      field: "budget_label",
+      code: "budget_label_invalid",
+      message: "budget_label must be one of Free, Budget, Mid-range, or Premium.",
+    }, index);
+  }
+
+  if (!getTrimmedString(record, "budget_notes")) {
+    addError(result, {
+      field: "budget_notes",
+      code: "budget_notes_required",
+      message:
+        "budget_notes is required and should explain that budget_min is a starting budget, not strict max spending.",
     }, index);
   }
 
@@ -642,88 +758,6 @@ function validateBudgetFields(
       code: "budget_currency_invalid",
       message: "budget_currency must be PHP when provided.",
     }, index);
-  }
-
-  if (
-    isPresent(record, "budget_label") &&
-    record.budget_label !== undefined &&
-    record.budget_label !== null &&
-    !VALID_BUDGET_LABELS.has(String(record.budget_label))
-  ) {
-    addError(result, {
-      field: "budget_label",
-      code: "budget_label_invalid",
-      message: "budget_label must be one of Free, Budget, Mid-range, or Premium.",
-    }, index);
-  }
-
-  if (isPresent(record, "is_free") && typeof record.is_free !== "boolean") {
-    addError(result, {
-      field: "is_free",
-      code: "is_free_invalid",
-      message: "is_free must be a boolean when provided.",
-    }, index);
-  }
-
-  if (record.is_free === true && budgetMin !== null && budgetMin > 0) {
-    addWarning(result, {
-      field: "budget_min",
-      code: "free_place_budget_min_positive",
-      message: "is_free is true, so budget_min should usually be 0.",
-    }, index);
-  }
-
-  if (record.budget_label === "Free" && record.is_free === false) {
-    addWarning(result, {
-      field: "is_free",
-      code: "free_label_is_free_false",
-      message: "budget_label is Free but is_free is false.",
-    }, index);
-  }
-}
-
-function validateRankingSignals(
-  record: PlaceSeedRecord,
-  result: PlaceSeedValidationResult,
-  index?: number
-): void {
-  const rankingFields = [
-    "is_known_place",
-    "popularity_score",
-    "ranking_priority",
-    "quality_score",
-  ];
-
-  if (!rankingFields.every((field) => isPresent(record, field))) {
-    addWarning(result, {
-      field: "ranking",
-      code: "ranking_signals_missing",
-      message: "Ranking signals are recommended; database defaults can fill missing values.",
-    }, index);
-  }
-
-  if (isPresent(record, "is_known_place") && typeof record.is_known_place !== "boolean") {
-    addError(result, {
-      field: "is_known_place",
-      code: "is_known_place_invalid",
-      message: "is_known_place must be a boolean when provided.",
-    }, index);
-  }
-
-  for (const field of ["popularity_score", "ranking_priority", "quality_score"]) {
-    if (!isPresent(record, field) || record[field] === null || record[field] === undefined) {
-      continue;
-    }
-
-    const score = parseNumberValue(record[field]);
-
-    if (score === null || score < 0 || score > 100) {
-      addError(result, {
-        field,
-        code: "ranking_score_invalid",
-        message: `${field} must be a number between 0 and 100 when provided.`,
-      }, index);
-    }
   }
 }
 
@@ -761,7 +795,7 @@ function validateCategories(
     addError(result, {
       field: "categories",
       code: "categories_required",
-      message: "categories must be a non-empty array of known GalaTayo category IDs or names.",
+      message: "Every place must have at least one category from the final 15 GalaTayo categories.",
     }, index);
     return;
   }
@@ -769,13 +803,32 @@ function validateCategories(
   const seenCategoryIds = new Set<string>();
 
   categories.forEach((category, categoryIndex) => {
+    const rawCategory =
+      typeof category === "string"
+        ? category
+        : isObjectRecord(category)
+          ? getTrimmedString(category, "id") ??
+            getTrimmedString(category, "category_id") ??
+            getTrimmedString(category, "name")
+          : null;
+
+    if (rawCategory && REMOVED_CATEGORY_IDS.has(normalizeSearchText(rawCategory))) {
+      addError(result, {
+        field: `categories[${categoryIndex}]`,
+        code: "category_removed",
+        message: `Category "${rawCategory}" was removed from GalaTayo and is not allowed in new seed data.`,
+      }, index);
+      return;
+    }
+
     const normalizedCategory = normalizeCategory(category);
 
     if (!normalizedCategory) {
       addError(result, {
         field: `categories[${categoryIndex}]`,
         code: "category_unknown",
-        message: "Category must exist in the known GalaTayo category list.",
+        message:
+          "Category must be one of kainan, cafe, mall, parke, museum, heritage, tourist, date, barkada, family, study, chill, nightlife, arcade, or cinema.",
       }, index);
       return;
     }
@@ -795,7 +848,7 @@ function validateCategories(
 function normalizeTag(value: unknown): NormalizedTag | null {
   if (typeof value === "string") {
     const normalizedValue = normalizeSearchText(value);
-    const id = KNOWN_TAG_IDS.has(value) ? value : TAG_NAME_TO_ID.get(normalizedValue);
+    const id = EXPERIENCE_TAG_IDS.has(value) ? value : TAG_NAME_TO_ID.get(normalizedValue);
 
     return id ? { id, name: value } : null;
   }
@@ -808,7 +861,7 @@ function normalizeTag(value: unknown): NormalizedTag | null {
   const rawName = getTrimmedString(value, "name") ?? rawId;
   const normalizedName = rawName ? normalizeSearchText(rawName) : "";
   const id =
-    rawId && KNOWN_TAG_IDS.has(rawId) ? rawId : TAG_NAME_TO_ID.get(normalizedName);
+    rawId && EXPERIENCE_TAG_IDS.has(rawId) ? rawId : TAG_NAME_TO_ID.get(normalizedName);
 
   return id
     ? {
@@ -831,7 +884,7 @@ function validateTags(
     addError(result, {
       field: "tags",
       code: "tags_required",
-      message: "tags must be a non-empty array of known GalaTayo tag IDs, names, or tag objects.",
+      message: "tags must be a non-empty array of approved experience-based GalaTayo tags.",
     }, index);
     return;
   }
@@ -839,6 +892,25 @@ function validateTags(
   const seenTagIds = new Set<string>();
 
   tags.forEach((tag, tagIndex) => {
+    const rawTag =
+      typeof tag === "string"
+        ? tag
+        : isObjectRecord(tag)
+          ? getTrimmedString(tag, "id") ??
+            getTrimmedString(tag, "tag_id") ??
+            getTrimmedString(tag, "name")
+          : null;
+    const normalizedRawTag = rawTag ? normalizeSearchText(rawTag) : "";
+
+    if (rawTag && REJECTED_TAG_TERMS.has(normalizedRawTag)) {
+      addError(result, {
+        field: `tags[${tagIndex}]`,
+        code: "tag_not_experience_based",
+        message: `Tag "${rawTag}" is not allowed. Tags must describe user experience; put parking in parking_info and avoid products, menu items, services, or place names.`,
+      }, index);
+      return;
+    }
+
     if (isObjectRecord(tag)) {
       if (tag.slug !== undefined) {
         addError(result, {
@@ -883,7 +955,8 @@ function validateTags(
       addError(result, {
         field: `tags[${tagIndex}]`,
         code: "tag_unknown",
-        message: "Tag must exist in the known GalaTayo tag list.",
+        message:
+          "Tag must be an approved experience-based tag such as indoor, outdoor, walkable, commute-friendly, budget-friendly, family-friendly, date-friendly, group-friendly, quiet, photo-friendly, airconditioned, late-night, food-trip, study-friendly, kid-friendly, relaxing, or rainy-day-friendly.",
       }, index);
       return;
     }
@@ -898,6 +971,91 @@ function validateTags(
 
     seenTagIds.add(normalizedTag.id);
   });
+}
+
+function validateGalaRelevance(
+  record: PlaceSeedRecord,
+  result: PlaceSeedValidationResult,
+  index?: number
+): void {
+  if (record.is_gala_relevant === false) {
+    addError(result, {
+      field: "is_gala_relevant",
+      code: "not_gala_relevant",
+      message: "Seed records marked is_gala_relevant=false cannot be imported.",
+    }, index);
+  }
+
+  const combinedText = normalizeSearchText([
+    getTrimmedString(record, "name"),
+    getTrimmedString(record, "category"),
+    getTrimmedString(record, "description"),
+    getTrimmedString(record, "decision_reason"),
+  ].filter(Boolean).join(" "));
+
+  const directoryTerm = DIRECTORY_TERMS.find((term) =>
+    combinedText.includes(normalizeSearchText(term))
+  );
+
+  if (directoryTerm) {
+    addError(result, {
+      field: "gala_relevance",
+      code: "directory_like_place",
+      message: `Seed record looks directory-like because it mentions "${directoryTerm}". GalaTayo seed data should focus on gala-worthy places.`,
+    }, index);
+  }
+}
+
+function validateOptionalUrlFields(
+  record: PlaceSeedRecord,
+  result: PlaceSeedValidationResult,
+  index?: number
+): void {
+  for (const field of ["source_url", "official_url", "website_url"]) {
+    const value = record[field];
+
+    if (value === undefined || value === null || value === "") {
+      continue;
+    }
+
+    if (typeof value !== "string" || !isValidUrl(value)) {
+      addError(result, {
+        field,
+        code: "url_invalid",
+        message: `${field} must be a valid http or https URL when provided.`,
+      }, index);
+    }
+  }
+}
+
+function validateRankingSignals(
+  record: PlaceSeedRecord,
+  result: PlaceSeedValidationResult,
+  index?: number
+): void {
+  if (isPresent(record, "is_known_place") && typeof record.is_known_place !== "boolean") {
+    addError(result, {
+      field: "is_known_place",
+      code: "is_known_place_invalid",
+      message: "is_known_place must be a boolean when provided.",
+    }, index);
+  }
+
+  for (const field of ["popularity_score", "ranking_priority", "quality_score"]) {
+    if (!isPresent(record, field) || record[field] === null || record[field] === undefined) {
+      continue;
+    }
+
+    const score = parseNumberValue(record[field]);
+
+    if (score === null || score < 0 || score > 100) {
+      addError(result, {
+        field,
+        code: "ranking_score_invalid",
+        message: `${field} must be a number between 0 and 100 when provided.`,
+      }, index);
+    }
+  }
 }
 
 export function validatePlaceSeedRecord(
@@ -917,13 +1075,14 @@ export function validatePlaceSeedRecord(
 
   validateIdentityFields(record, result, index);
   validateCoordinates(record, result, index);
-  validateUrlAndSourceFields(record, result, index);
-  validateDescription(record, result, index);
-  validateEnrichedDetailFields(record, result, index);
+  validateVerificationFields(record, result, index);
+  validateOptionalUrlFields(record, result, index);
+  validateRequiredGuideFields(record, result, index);
   validateBudgetFields(record, result, index);
-  validateRankingSignals(record, result, index);
   validateCategories(record, result, index);
   validateTags(record, result, index);
+  validateGalaRelevance(record, result, index);
+  validateRankingSignals(record, result, index);
 
   return result;
 }
@@ -985,8 +1144,15 @@ export function validatePlaceSeedRecords(records: unknown): PlaceSeedValidationR
 
   records.forEach((record, index) => {
     const recordResult = validatePlaceSeedRecord(record, { index });
-    result.errors.push(...recordResult.errors);
-    result.warnings.push(...recordResult.warnings);
+
+    if (isObjectRecord(record)) {
+      const place = getRecordLabel(record, index);
+      result.errors.push(...withPlace(recordResult.errors, place));
+      result.warnings.push(...withPlace(recordResult.warnings, place));
+    } else {
+      result.errors.push(...recordResult.errors);
+      result.warnings.push(...recordResult.warnings);
+    }
 
     if (!recordResult.valid) {
       result.valid = false;
@@ -1004,6 +1170,7 @@ export function validatePlaceSeedRecords(records: unknown): PlaceSeedValidationR
       if (previousIndex !== undefined) {
         addError(result, {
           index,
+          place: getRecordLabel(record, index),
           field: "slug",
           code: "duplicate_slug",
           message: `Duplicate slug "${slug}" also appears at index ${previousIndex}.`,
@@ -1021,6 +1188,7 @@ export function validatePlaceSeedRecords(records: unknown): PlaceSeedValidationR
       if (previousIndex !== undefined) {
         addWarning(result, {
           index,
+          place: getRecordLabel(record, index),
           field: "name",
           code: "duplicate_name_city",
           message: `Same name and city also appear at index ${previousIndex}; confirm this is not a duplicate place.`,
@@ -1038,6 +1206,7 @@ export function validatePlaceSeedRecords(records: unknown): PlaceSeedValidationR
       if (previousIndex !== undefined) {
         addWarning(result, {
           index,
+          place: getRecordLabel(record, index),
           field: "coordinates",
           code: "duplicate_coordinates",
           message: `Exact coordinates also appear at index ${previousIndex}; confirm these are distinct places.`,
@@ -1057,6 +1226,7 @@ export function validatePlaceSeedRecords(records: unknown): PlaceSeedValidationR
       ) {
         addWarning(result, {
           index,
+          place: getRecordLabel(record, index),
           field: "coordinates",
           code: "coordinates_very_close",
           message: `Coordinates are very close to index ${previousIndex}; confirm this is not a duplicate place.`,

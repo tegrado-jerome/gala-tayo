@@ -18,87 +18,76 @@ const CATEGORY_NAME_TO_ID = new Map([
   ["mall", "mall"],
   ["parke", "parke"],
   ["park", "parke"],
-  ["nightlife", "nightlife"],
-  ["heritage", "heritage"],
   ["museum", "museum"],
-  ["tourist", "tourist-spot"],
-  ["tourist spot", "tourist-spot"],
-  ["date", "date-spot"],
-  ["date spot", "date-spot"],
+  ["heritage", "heritage"],
+  ["tourist", "tourist"],
+  ["date", "date"],
   ["barkada", "barkada"],
   ["family", "family"],
-  ["study", "study-spot"],
-  ["study spot", "study-spot"],
-  ["shopping", "shopping"],
-  ["wellness", "wellness"],
+  ["study", "study"],
   ["chill", "chill"],
+  ["nightlife", "nightlife"],
+  ["arcade", "arcade"],
+  ["cinema", "cinema"],
 ]);
 
 const KNOWN_CATEGORY_IDS = new Set(CATEGORY_NAME_TO_ID.values());
 
-const TAG_IDS = new Set([
+const EXPERIENCE_TAG_IDS = new Set([
   "indoor",
   "outdoor",
-  "airconditioned",
-  "rain-friendly",
   "walkable",
+  "commute-friendly",
+  "commuter-friendly",
+  "budget-friendly",
+  "family-friendly",
+  "date-friendly",
+  "group-friendly",
+  "barkada-friendly",
   "quiet",
+  "photo-friendly",
+  "airconditioned",
+  "late-night",
+  "food-options",
+  "study-friendly",
+  "kid-friendly",
   "relaxing",
+  "rain-friendly",
   "lively",
   "crowded",
-  "photo-friendly",
-  "night-friendly",
-  "wifi",
-  "food-options",
-  "shopping-area",
-  "parking-friendly",
-  "restroom-access",
-  "date-friendly",
-  "family-friendly",
-  "barkada-friendly",
   "solo-friendly",
-  "kid-friendly",
-  "pet-friendly",
-  "budget-friendly",
-  "premium",
   "free-entry",
-  "study-friendly",
-  "coworking",
-  "arcade",
-  "cinema",
+  "paid-entry",
   "tourist-friendly",
-  "historical",
   "educational",
-  "commuter-friendly",
-  "senior-friendly",
-  "dessert",
-  "bakery",
-  "sweets",
-  "market",
-  "local-food",
-  "commute-friendly",
-  "terminal-nearby",
-  "religious",
+  "historical",
   "peaceful",
-  "hotel-nearby",
-  "staycation",
-  "sports-friendly",
-  "gym",
-  "active",
-  "clinic-nearby",
-  "dental-care",
-  "pharmacy-nearby",
-  "hospital-nearby",
-  "services-nearby",
+  "local-experience",
+  "activity-friendly",
+  "activity-based",
+  "culture",
+  "art",
+  "cultural",
+  "scenic",
+  "skyline-view",
+  "rooftop",
+  "reservation-recommended",
+  "reservation-required",
+  "queue-likely",
 ]);
 
 const TAG_NAME_TO_ID = new Map(
-  [...TAG_IDS].flatMap((tagId) => [
+  [...EXPERIENCE_TAG_IDS].flatMap((tagId) => [
     [tagId, tagId],
     [normalizeText(tagId), tagId],
     [normalizeText(tagId.replace(/-/g, " ")), tagId],
   ])
 );
+
+TAG_NAME_TO_ID.set("rainy-day-friendly", "rain-friendly");
+TAG_NAME_TO_ID.set("rainy day friendly", "rain-friendly");
+TAG_NAME_TO_ID.set("food-trip", "food-options");
+TAG_NAME_TO_ID.set("food trip", "food-options");
 
 function readJson(filePath) {
   return JSON.parse(fs.readFileSync(filePath, "utf8"));
@@ -106,9 +95,10 @@ function readJson(filePath) {
 
 function printIssue(issue) {
   const indexText = issue.index === undefined ? "-" : String(issue.index);
+  const placeText = issue.place || "-";
   const fieldText = issue.field || "-";
   console.log(
-    `  [index=${indexText}] [field=${fieldText}] ${issue.code}: ${issue.message}`
+    `  [index=${indexText}] [place=${placeText}] [field=${fieldText}] ${issue.code}: ${issue.message}`
   );
 }
 
@@ -152,6 +142,10 @@ function getStringArray(record, field) {
     .map((value) => value.trim());
 }
 
+function getJsonArray(record, field) {
+  return Array.isArray(record[field]) ? record[field] : [];
+}
+
 function getNullableNumber(record, field) {
   return record[field] === undefined ? null : getNumberOrNull(record[field]);
 }
@@ -183,7 +177,7 @@ function getCategoryId(category) {
 
 function getTagId(tag) {
   if (typeof tag === "string") {
-    return TAG_IDS.has(tag) ? tag : TAG_NAME_TO_ID.get(normalizeText(tag)) || null;
+    return EXPERIENCE_TAG_IDS.has(tag) ? tag : TAG_NAME_TO_ID.get(normalizeText(tag)) || null;
   }
 
   if (!tag || typeof tag !== "object" || Array.isArray(tag)) {
@@ -193,7 +187,7 @@ function getTagId(tag) {
   const rawId = getTrimmedString(tag, "id") || getTrimmedString(tag, "tag_id");
   const rawName = getTrimmedString(tag, "name") || rawId;
 
-  if (rawId && TAG_IDS.has(rawId)) {
+  if (rawId && EXPERIENCE_TAG_IDS.has(rawId)) {
     return rawId;
   }
 
@@ -217,12 +211,6 @@ function getTagSource(tag) {
 }
 
 function getPrimaryCategory(record) {
-  const explicitCategory = getTrimmedString(record, "category");
-
-  if (explicitCategory) {
-    return explicitCategory;
-  }
-
   const categories = Array.isArray(record.categories) ? record.categories : [];
   const firstCategoryId = getCategoryId(categories[0]);
   return firstCategoryId || "Place";
@@ -267,8 +255,22 @@ function toPlaceRow(record) {
     photos: getPhotos(record),
     area: getNullableString(record, "area"),
     description: getNullableString(record, "description"),
+    place_history: getNullableString(record, "place_history"),
     detail_summary: getNullableString(record, "detail_summary"),
     best_for: getStringArray(record, "best_for"),
+    best_time_to_visit: getNullableString(record, "best_time_to_visit"),
+    visit_duration: getNullableString(record, "visit_duration"),
+    good_for: getStringArray(record, "good_for"),
+    not_ideal_for: getStringArray(record, "not_ideal_for"),
+    crowd_level: getNullableString(record, "crowd_level"),
+    indoor_outdoor: getNullableString(record, "indoor_outdoor"),
+    weather_fit: getNullableString(record, "weather_fit"),
+    commute_friendly: getNullableBoolean(record, "commute_friendly"),
+    commute_access: getNullableString(record, "commute_access"),
+    parking_info: getNullableString(record, "parking_info"),
+    accessibility_notes: getNullableString(record, "accessibility_notes"),
+    nearby_context: getNullableString(record, "nearby_context"),
+    decision_reason: getNullableString(record, "decision_reason"),
     what_to_expect: getStringArray(record, "what_to_expect"),
     tips: getStringArray(record, "tips"),
     hours_text: getNullableString(record, "hours_text"),
@@ -281,10 +283,13 @@ function toPlaceRow(record) {
     data_source: getNullableString(record, "data_source"),
     last_verified_at: getNullableString(record, "last_verified_at"),
     verification_status: getNullableString(record, "verification_status"),
+    verification_notes: getNullableString(record, "verification_notes"),
+    verification_sources: getJsonArray(record, "verification_sources"),
     budget_min: getNullableNumber(record, "budget_min"),
     budget_max: getNullableNumber(record, "budget_max"),
     budget_currency: getNullableString(record, "budget_currency") || "PHP",
     budget_label: getNullableString(record, "budget_label"),
+    budget_notes: getNullableString(record, "budget_notes"),
     is_free: getNullableBoolean(record, "is_free") ?? false,
     is_known_place: getNullableBoolean(record, "is_known_place") ?? false,
     popularity_score: getNullableNumber(record, "popularity_score") ?? 0,
@@ -670,7 +675,21 @@ async function main() {
     return;
   }
 
-  const normalizedRecords = records.map((record) => ({
+  const importableRecords = records.filter(
+    (record) =>
+      record &&
+      typeof record === "object" &&
+      !Array.isArray(record) &&
+      record.verification_status === "verified"
+  );
+
+  if (importableRecords.length !== totalRecords) {
+    throw new Error(
+      `Only verified places can be imported. ${totalRecords - importableRecords.length} non-verified record(s) were blocked.`
+    );
+  }
+
+  const normalizedRecords = importableRecords.map((record) => ({
     ...record,
     slug: getTrimmedString(record, "slug"),
   }));
