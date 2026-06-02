@@ -113,16 +113,21 @@ const VALID_BUDGET_VALUES: BudgetValue[] = [
 ];
 
 const CATEGORY_TO_DB_CATEGORIES: Record<string, string[]> = {
+  kainan: ["Kainan", "Restaurant", "Food"],
   cafe: ["Cafe"],
   mall: ["Mall"],
+  parke: ["Parke", "Park"],
   museum: ["Museum"],
   heritage: ["Heritage"],
-  "date-spot": ["Hangout", "Mall", "Cafe"],
+  tourist: ["Tourist", "Heritage", "Museum", "Hangout"],
+  date: ["Date", "Hangout", "Mall", "Cafe"],
   barkada: ["Hangout", "Mall"],
   family: ["Mall", "Museum", "Heritage", "Hangout"],
-  "tourist-spot": ["Heritage", "Museum", "Hangout"],
-  "study-spot": ["Cafe", "Museum"],
+  study: ["Study", "Cafe", "Museum"],
   chill: ["Cafe", "Hangout"],
+  nightlife: ["Nightlife", "Bar"],
+  arcade: ["Arcade", "Games", "Gaming"],
+  cinema: ["Cinema", "Movie Theater"],
 };
 
 type SearchUserContext =

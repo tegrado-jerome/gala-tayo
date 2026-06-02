@@ -76,7 +76,7 @@ function CategoryIcon({
     )
   }
 
-  if (['mall', 'shopping'].includes(categoryId)) {
+  if (categoryId === 'mall') {
     return (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={iconClass}>
         <path d="M5 8h14l-1.1 10.5H6.1L5 8Z" />
@@ -95,7 +95,7 @@ function CategoryIcon({
     )
   }
 
-  if (['nightlife', 'date-spot', 'barkada'].includes(categoryId)) {
+  if (['nightlife', 'date', 'barkada'].includes(categoryId)) {
     return (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={iconClass}>
         <path d="M9 3v8.2a3 3 0 1 1-2 0V3" />
@@ -104,7 +104,7 @@ function CategoryIcon({
     )
   }
 
-  if (['heritage', 'museum', 'tourist-spot'].includes(categoryId)) {
+  if (['heritage', 'museum', 'tourist'].includes(categoryId)) {
     return (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={iconClass}>
         <path d="M3 9h18" />
@@ -115,7 +115,7 @@ function CategoryIcon({
     )
   }
 
-  if (['study-spot', 'family'].includes(categoryId)) {
+  if (['study', 'family'].includes(categoryId)) {
     return (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={iconClass}>
         <rect x="4" y="5" width="16" height="14" rx="1.8" />
@@ -124,7 +124,7 @@ function CategoryIcon({
     )
   }
 
-  if (categoryId === 'wellness') {
+  if (['arcade', 'cinema'].includes(categoryId)) {
     return (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={iconClass}>
         <path d="M12 5v14M5 12h14" />
@@ -209,17 +209,17 @@ const fallbackCategories = [
   { id: 'cafe', name: 'Cafe' },
   { id: 'mall', name: 'Mall' },
   { id: 'parke', name: 'Parke' },
-  { id: 'nightlife', name: 'Nightlife' },
-  { id: 'heritage', name: 'Heritage' },
   { id: 'museum', name: 'Museum' },
-  { id: 'tourist-spot', name: 'Tourist' },
-  { id: 'date-spot', name: 'Date' },
+  { id: 'heritage', name: 'Heritage' },
+  { id: 'tourist', name: 'Tourist' },
+  { id: 'date', name: 'Date' },
   { id: 'barkada', name: 'Barkada' },
   { id: 'family', name: 'Family' },
-  { id: 'study-spot', name: 'Study' },
-  { id: 'shopping', name: 'Shopping' },
-  { id: 'wellness', name: 'Wellness' },
+  { id: 'study', name: 'Study' },
   { id: 'chill', name: 'Chill' },
+  { id: 'nightlife', name: 'Nightlife' },
+  { id: 'arcade', name: 'Arcade' },
+  { id: 'cinema', name: 'Cinema' },
 ]
 
 const fallbackAreas: AreaChip[] = [
