@@ -72,13 +72,25 @@ type SearchPlaceResult = {
   budget: string | null;
   budgetRange: string | null;
   reason: string | null;
-  detail_summary: string | null;
-  best_for: string[];
-  what_to_expect: string[];
-  tips: string[];
-  hours_text: string | null;
-  entrance_fee_text: string | null;
-  best_time_text: string | null;
+  place_history: string | null;
+  best_time_to_visit: string | null;
+  visit_duration: string | null;
+  good_for: string[];
+  not_ideal_for: string[];
+  crowd_level: string | null;
+  indoor_outdoor: string | null;
+  weather_fit: string | null;
+  parking_info: string | null;
+  accessibility_notes: string | null;
+  decision_reason: string | null;
+  commute_friendly: boolean | null;
+  commute_access: string | null;
+  nearby_context: string | null;
+  budget_notes: string | null;
+  verification_status: string | null;
+  verification_notes: string | null;
+  verification_sources: string[];
+  last_verified_at: string | null;
   website_url: string | null;
   google_maps_url: string | null;
   tags?: SearchTagMetadata[];
@@ -814,32 +826,6 @@ function scoreKeywordMatch(row: PlaceRow, normalizedQuery: string): number {
   return Math.min(score, 20);
 }
 
-function scoreRankingSignals(row: PlaceRow): number {
-  const knownPlaceScore = getBooleanField(row, ["is_known_place"]) ? 5 : 0;
-  const popularityScore = Math.min(
-    (getNumberField(row, ["popularity_score"]) ?? 0) / 10,
-    10
-  );
-  const rankingPriorityScore = Math.min(
-    (getNumberField(row, ["ranking_priority"]) ?? 0) / 10,
-    10
-  );
-  const qualityScore = Math.min(
-    (getNumberField(row, ["quality_score"]) ?? 0) / 10,
-    10
-  );
-
-  return knownPlaceScore + popularityScore + rankingPriorityScore + qualityScore;
-}
-
-function hasPhotoSignal(row: PlaceRow): boolean {
-  return Boolean(
-    getStringField(row, ["imageUrl", "image_url", "photo_url", "photoUrl"]) ||
-      getStringArrayField(row, ["curatedImageUrls", "curated_image_urls", "photos"])
-        .length > 0
-  );
-}
-
 function scorePlaceForSearch({
   row,
   normalizedQuery,
@@ -858,9 +844,7 @@ function scorePlaceForSearch({
     scoreCategoryMatch(row, categoryIds) +
     scoreTagMatch(row, normalizedQuery) +
     scoreBudgetMatch(row, budget, normalizedQuery) +
-    scoreKeywordMatch(row, normalizedQuery) +
-    scoreRankingSignals(row) +
-    (hasPhotoSignal(row) ? 5 : 0)
+    scoreKeywordMatch(row, normalizedQuery)
   );
 }
 
@@ -907,12 +891,6 @@ function mapPlaceRowToSearchResult(
     categoryIds: string[];
   }
 ): SearchPlaceResult {
-  const imageUrl = getStringField(row, ["imageUrl", "image_url", "photo_url", "photoUrl"]);
-  const curatedImageUrls = getStringArrayField(row, [
-    "curatedImageUrls",
-    "curated_image_urls",
-    "photos",
-  ]);
   const city = getStringField(row, ["city", "area"]);
   const address = getStringField(row, ["address", "formatted_address"]);
   const fallbackLocation = [address, city].filter(Boolean).join(", ");
@@ -938,20 +916,32 @@ function mapPlaceRowToSearchResult(
           })),
     latitude: getNumberField(row, ["latitude", "lat"]),
     longitude: getNumberField(row, ["longitude", "lng", "lon"]),
-    imageUrl,
-    curatedImageUrls,
+    imageUrl: null,
+    curatedImageUrls: [],
     address,
     budget: getStringField(row, ["budget"]),
     budgetRange: getStringField(row, ["budgetRange", "budget_range", "priceRange", "price_range"]),
     reason: getStringField(row, ["reason", "description"]),
-    detail_summary: getStringField(row, ["detail_summary"]),
-    best_for: getStringArrayField(row, ["best_for"]),
-    what_to_expect: getStringArrayField(row, ["what_to_expect"]),
-    tips: getStringArrayField(row, ["tips"]),
-    hours_text: getStringField(row, ["hours_text"]),
-    entrance_fee_text: getStringField(row, ["entrance_fee_text"]),
-    best_time_text: getStringField(row, ["best_time_text"]),
-    website_url: getStringField(row, ["website_url", "official_url"]),
+    place_history: getStringField(row, ["place_history"]),
+    best_time_to_visit: getStringField(row, ["best_time_to_visit"]),
+    visit_duration: getStringField(row, ["visit_duration"]),
+    good_for: getStringArrayField(row, ["good_for"]),
+    not_ideal_for: getStringArrayField(row, ["not_ideal_for"]),
+    crowd_level: getStringField(row, ["crowd_level"]),
+    indoor_outdoor: getStringField(row, ["indoor_outdoor"]),
+    weather_fit: getStringField(row, ["weather_fit"]),
+    parking_info: getStringField(row, ["parking_info"]),
+    accessibility_notes: getStringField(row, ["accessibility_notes"]),
+    decision_reason: getStringField(row, ["decision_reason"]),
+    commute_friendly: typeof row.commute_friendly === "boolean" ? row.commute_friendly : null,
+    commute_access: getStringField(row, ["commute_access"]),
+    nearby_context: getStringField(row, ["nearby_context"]),
+    budget_notes: getStringField(row, ["budget_notes"]),
+    verification_status: getStringField(row, ["verification_status"]),
+    verification_notes: getStringField(row, ["verification_notes"]),
+    verification_sources: getStringArrayField(row, ["verification_sources"]),
+    last_verified_at: getStringField(row, ["last_verified_at"]),
+    website_url: getStringField(row, ["website_url"]),
     google_maps_url: getStringField(row, ["google_maps_url"]),
     tags,
     matchedCategories: getMatchedCategories(row, categoryIds),
@@ -1094,8 +1084,8 @@ async function findSearchPlaces({
     or: (filters: string) => typeof queryBuilder;
   };
 
-  const orderedQuery = queryBuilder.order("ranking_priority", {
-    ascending: false,
+  const orderedQuery = queryBuilder.order("name", {
+    ascending: true,
     nullsFirst: false,
   });
   const { data, error } = await orderedQuery.limit(1000);
@@ -1122,30 +1112,6 @@ async function findSearchPlaces({
     .sort((left, right) => {
       if (right.score !== left.score) {
         return right.score - left.score;
-      }
-
-      const rankingPriorityDifference =
-        (getNumberField(right.row, ["ranking_priority"]) ?? 0) -
-        (getNumberField(left.row, ["ranking_priority"]) ?? 0);
-
-      if (rankingPriorityDifference !== 0) {
-        return rankingPriorityDifference;
-      }
-
-      const popularityDifference =
-        (getNumberField(right.row, ["popularity_score"]) ?? 0) -
-        (getNumberField(left.row, ["popularity_score"]) ?? 0);
-
-      if (popularityDifference !== 0) {
-        return popularityDifference;
-      }
-
-      const qualityDifference =
-        (getNumberField(right.row, ["quality_score"]) ?? 0) -
-        (getNumberField(left.row, ["quality_score"]) ?? 0);
-
-      if (qualityDifference !== 0) {
-        return qualityDifference;
       }
 
       return (getStringField(left.row, ["name"]) ?? "").localeCompare(

@@ -320,7 +320,7 @@ function MapView({
                   {place.category} / {place.area}
                 </p>
                 <p className="mt-1 text-xs text-slate-600">
-                  Rating {place.rating} / {place.status === 'Open' ? 'Open now' : place.status}
+                  {place.status === 'Open' ? 'Open now' : place.status}
                 </p>
                 {onPlaceOpen ? (
                   <button

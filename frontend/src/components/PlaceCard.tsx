@@ -22,22 +22,34 @@ type PlaceCardData = {
   name: string
   category: string
   area: string
-  rating: string
   status: 'Open' | 'Closed' | 'Unknown'
   reason: string
+  description?: string | null
   badge: string
   reviewCount?: string
   hours?: string
   entranceFee?: string
   website?: string
   googleMapsUrl?: string | null
-  detail_summary?: string | null
-  best_for?: string[]
-  what_to_expect?: string[]
-  tips?: string[]
-  hours_text?: string | null
-  entrance_fee_text?: string | null
-  best_time_text?: string | null
+  place_history?: string | null
+  best_time_to_visit?: string | null
+  visit_duration?: string | null
+  good_for?: string[]
+  not_ideal_for?: string[]
+  crowd_level?: string | null
+  indoor_outdoor?: string | null
+  weather_fit?: string | null
+  parking_info?: string | null
+  accessibility_notes?: string | null
+  decision_reason?: string | null
+  commute_friendly?: boolean | null
+  commute_access?: string | null
+  nearby_context?: string | null
+  budget_notes?: string | null
+  verification_status?: string | null
+  verification_notes?: string | null
+  verification_sources?: string[]
+  last_verified_at?: string | null
   website_url?: string | null
   highlights?: string[]
   imageUrl?: string | null
@@ -65,14 +77,6 @@ function PinIcon() {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className="h-3.5 w-3.5">
       <path d="M12 21s6-5.7 6-11a6 6 0 1 0-12 0c0 5.3 6 11 6 11Z" />
       <circle cx="12" cy="10" r="2.4" />
-    </svg>
-  )
-}
-
-function StarIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className="h-3.5 w-3.5">
-      <path d="m12 3.5 2.6 5.3 5.9.9-4.2 4.1 1 5.8L12 17l-5.3 2.8 1-5.8-4.2-4.1 5.9-.9L12 3.5Z" />
     </svg>
   )
 }
@@ -253,12 +257,6 @@ function PlaceCard({ place, isSelected = false, compact = false, onSelect }: Pla
             ) : null}
 
             <div className="mt-1 flex items-center gap-3 text-[11px] text-[var(--muted)]">
-              <span className="inline-flex items-center gap-1">
-                <span className="text-amber-500">
-                  <StarIcon />
-                </span>
-                {place.rating}
-              </span>
               <span className="inline-flex items-center gap-1">
                 <span
                   className={`inline-block h-1.5 w-1.5 rounded-full ${

@@ -187,19 +187,30 @@ type BackendSearchPlace = {
   budget?: string | null
   budgetRange?: string | null
   reason?: string | null
-  rating?: number | string | null
   reviewCount?: number | string | null
   categories?: PlaceCategoryMeta[] | null
   tags?: PlaceTagMeta[] | null
   matchedCategories?: PlaceCategoryMeta[] | null
   matchedTags?: PlaceTagMeta[] | null
-  detail_summary?: string | null
-  best_for?: string[] | null
-  what_to_expect?: string[] | null
-  tips?: string[] | null
-  hours_text?: string | null
-  entrance_fee_text?: string | null
-  best_time_text?: string | null
+  place_history?: string | null
+  best_time_to_visit?: string | null
+  visit_duration?: string | null
+  good_for?: string[] | null
+  not_ideal_for?: string[] | null
+  crowd_level?: string | null
+  indoor_outdoor?: string | null
+  weather_fit?: string | null
+  parking_info?: string | null
+  accessibility_notes?: string | null
+  decision_reason?: string | null
+  commute_friendly?: boolean | null
+  commute_access?: string | null
+  nearby_context?: string | null
+  budget_notes?: string | null
+  verification_status?: string | null
+  verification_notes?: string | null
+  verification_sources?: string[] | null
+  last_verified_at?: string | null
   website_url?: string | null
   google_maps_url?: string | null
 }
@@ -310,7 +321,6 @@ function mapBackendPlaceToCard(place: BackendSearchPlace): PlaceCardData | null 
   }
 
   const area = place.location || place.address || place.city || place.area || 'Metro Manila'
-  const rating = place.rating === null || place.rating === undefined ? 'N/A' : String(place.rating)
   const reviewCount =
     place.reviewCount === null || place.reviewCount === undefined ? undefined : String(place.reviewCount)
   const curatedImageUrls = Array.isArray(place.curatedImageUrls)
@@ -320,9 +330,8 @@ function mapBackendPlaceToCard(place: BackendSearchPlace): PlaceCardData | null 
   const tags = Array.isArray(place.tags) ? place.tags : []
   const matchedCategories = Array.isArray(place.matchedCategories) ? place.matchedCategories : []
   const matchedTags = Array.isArray(place.matchedTags) ? place.matchedTags : []
-  const bestFor = Array.isArray(place.best_for) ? place.best_for.filter((item): item is string => Boolean(item?.trim())) : []
-  const whatToExpect = Array.isArray(place.what_to_expect) ? place.what_to_expect.filter((item): item is string => Boolean(item?.trim())) : []
-  const tips = Array.isArray(place.tips) ? place.tips.filter((item): item is string => Boolean(item?.trim())) : []
+  const goodFor = Array.isArray(place.good_for) ? place.good_for.filter((item): item is string => Boolean(item?.trim())) : []
+  const notIdealFor = Array.isArray(place.not_ideal_for) ? place.not_ideal_for.filter((item): item is string => Boolean(item?.trim())) : []
 
   return {
     id: String(place.id || place.slug || name),
@@ -330,10 +339,10 @@ function mapBackendPlaceToCard(place: BackendSearchPlace): PlaceCardData | null 
     name,
     category: place.category || 'Place',
     area,
-    rating,
     reviewCount,
     status: 'Unknown',
     reason: place.reason || place.description || place.address || 'Real place result from GalaTayo search.',
+    description: place.description || null,
     badge: place.category || 'Place',
     imageUrl: place.imageUrl || null,
     curatedImageUrls,
@@ -341,17 +350,28 @@ function mapBackendPlaceToCard(place: BackendSearchPlace): PlaceCardData | null 
     tags,
     matchedCategories,
     matchedTags,
-    detail_summary: place.detail_summary || null,
-    best_for: bestFor,
-    what_to_expect: whatToExpect,
-    tips,
-    hours_text: place.hours_text || null,
-    entrance_fee_text: place.entrance_fee_text || null,
-    best_time_text: place.best_time_text || null,
+    place_history: place.place_history || null,
+    best_time_to_visit: place.best_time_to_visit || null,
+    visit_duration: place.visit_duration || null,
+    good_for: goodFor,
+    not_ideal_for: notIdealFor,
+    crowd_level: place.crowd_level || null,
+    indoor_outdoor: place.indoor_outdoor || null,
+    weather_fit: place.weather_fit || null,
+    parking_info: place.parking_info || null,
+    accessibility_notes: place.accessibility_notes || null,
+    decision_reason: place.decision_reason || null,
+    commute_friendly: place.commute_friendly ?? null,
+    commute_access: place.commute_access || null,
+    nearby_context: place.nearby_context || null,
+    budget_notes: place.budget_notes || null,
+    verification_status: place.verification_status || null,
+    verification_notes: place.verification_notes || null,
+    verification_sources: place.verification_sources ?? [],
+    last_verified_at: place.last_verified_at || null,
     website_url: place.website_url || null,
     googleMapsUrl: place.google_maps_url || null,
-    hours: place.hours_text || undefined,
-    entranceFee: place.entrance_fee_text || place.budget || place.budgetRange || undefined,
+    entranceFee: place.budget_notes || place.budget || place.budgetRange || undefined,
     website: place.website_url || undefined,
     coordinates: {
       lat,

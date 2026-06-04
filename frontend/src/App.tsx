@@ -8,18 +8,29 @@ import { SavedFavoritesProvider } from './context/SavedFavoritesContext'
 
 type BackendPlaceDetail = {
   id: string
+  slug?: string | null
   name: string
   location: string
-  rating: number
-  reviewCount: number
   description: string
-  detail_summary?: string | null
-  best_for?: string[]
-  what_to_expect?: string[]
-  tips?: string[]
-  hours_text?: string | null
-  entrance_fee_text?: string | null
-  best_time_text?: string | null
+  place_history?: string | null
+  best_time_to_visit?: string | null
+  visit_duration?: string | null
+  good_for?: string[]
+  not_ideal_for?: string[]
+  crowd_level?: string | null
+  indoor_outdoor?: string | null
+  weather_fit?: string | null
+  parking_info?: string | null
+  accessibility_notes?: string | null
+  decision_reason?: string | null
+  commute_friendly?: boolean | null
+  commute_access?: string | null
+  nearby_context?: string | null
+  budget_notes?: string | null
+  verification_status?: string | null
+  verification_notes?: string | null
+  verification_sources?: string[]
+  last_verified_at?: string | null
   website_url?: string | null
   google_maps_url?: string | null
   category: string
@@ -49,28 +60,39 @@ function parsePlaceIdFromPath(pathname: string): string | null {
 function mapBackendPlaceToCardData(place: BackendPlaceDetail): PlaceCardData {
   return {
     id: place.id,
+    slug: place.slug || place.id,
     name: place.name,
     category: place.category,
     area: place.location,
-    rating: String(place.rating),
-    reviewCount: String(place.reviewCount),
     status: 'Open',
     reason: place.description,
+    description: place.description,
     badge: 'Shared',
     hours: place.openHours,
     entranceFee: place.entranceFee,
     website: place.website,
     googleMapsUrl: place.google_maps_url,
-    detail_summary: place.detail_summary,
-    best_for: place.best_for ?? [],
-    what_to_expect: place.what_to_expect ?? [],
-    tips: place.tips ?? [],
-    hours_text: place.hours_text,
-    entrance_fee_text: place.entrance_fee_text,
-    best_time_text: place.best_time_text,
+    place_history: place.place_history,
+    best_time_to_visit: place.best_time_to_visit,
+    visit_duration: place.visit_duration,
+    good_for: place.good_for ?? [],
+    not_ideal_for: place.not_ideal_for ?? [],
+    crowd_level: place.crowd_level,
+    indoor_outdoor: place.indoor_outdoor,
+    weather_fit: place.weather_fit,
+    parking_info: place.parking_info,
+    accessibility_notes: place.accessibility_notes,
+    decision_reason: place.decision_reason,
+    commute_friendly: place.commute_friendly,
+    commute_access: place.commute_access,
+    nearby_context: place.nearby_context,
+    budget_notes: place.budget_notes,
+    verification_status: place.verification_status,
+    verification_notes: place.verification_notes,
+    verification_sources: place.verification_sources ?? [],
+    last_verified_at: place.last_verified_at,
     website_url: place.website_url,
     imageUrl: place.imageUrl,
-    slug: place.id,
     curatedImageUrls: place.curatedImageUrls,
     coordinates: {
       lat: place.latitude,

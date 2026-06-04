@@ -5,16 +5,26 @@ export type PlaceDetail = {
   slug?: string | null;
   name: string;
   location: string;
-  rating: number;
-  reviewCount: number;
   description: string;
-  detail_summary?: string | null;
-  best_for?: string[];
-  what_to_expect?: string[];
-  tips?: string[];
-  hours_text?: string | null;
-  entrance_fee_text?: string | null;
-  best_time_text?: string | null;
+  place_history?: string | null;
+  best_time_to_visit?: string | null;
+  visit_duration?: string | null;
+  good_for?: string[];
+  not_ideal_for?: string[];
+  crowd_level?: string | null;
+  indoor_outdoor?: string | null;
+  weather_fit?: string | null;
+  parking_info?: string | null;
+  accessibility_notes?: string | null;
+  decision_reason?: string | null;
+  commute_friendly?: boolean | null;
+  commute_access?: string | null;
+  nearby_context?: string | null;
+  budget_notes?: string | null;
+  verification_status?: string | null;
+  verification_notes?: string | null;
+  verification_sources?: string[];
+  last_verified_at?: string | null;
   website_url?: string | null;
   google_maps_url?: string | null;
   category: string;
@@ -27,72 +37,6 @@ export type PlaceDetail = {
   curatedImageUrls: string[];
 };
 
-export const PLACE_DETAILS: PlaceDetail[] = [
-  {
-    id: "bonifacio-high-street",
-    name: "Bonifacio High Street",
-    location: "BGC, Taguig, Metro Manila",
-    rating: 4.6,
-    reviewCount: 1248,
-    description:
-      "Open-air lifestyle strip in BGC with shopping, dining, and public art, ideal for relaxed walks and meetups.",
-    detail_summary:
-      "A walkable BGC favorite for relaxed meetups, casual dining, shopping, and people-watching without needing a fixed itinerary.",
-    best_for: ["Barkada walks", "Date nights", "Dining before or after errands"],
-    what_to_expect: ["Open-air pedestrian areas", "Restaurants and cafes", "Public art and retail shops"],
-    tips: ["Go late afternoon for cooler walks.", "Expect heavier crowds on weekends."],
-    hours_text: "Open daily; shop and restaurant hours vary",
-    entrance_fee_text: "Free entry",
-    best_time_text: "Late afternoon to evening",
-    website_url: "https://www.bgc.com.ph",
-    google_maps_url: "https://www.google.com/maps/search/?api=1&query=Bonifacio+High+Street+BGC+Taguig",
-    category: "Hangout",
-    entranceFee: "Free",
-    openHours: "Open daily; shop and restaurant hours vary",
-    website: "https://www.bgc.com.ph",
-    latitude: 14.5509,
-    longitude: 121.051,
-    imageUrl:
-      "/images/places/bonifacio-high-street/bonifacio-high-street-1.webp",
-    curatedImageUrls: [
-      "/images/places/bonifacio-high-street/bonifacio-high-street-1.webp",
-      "/images/places/bonifacio-high-street/bonifacio-high-street-2.webp",
-      "/images/places/bonifacio-high-street/bonifacio-high-street-3.webp",
-    ],
-  },
-  {
-    id: "intramuros",
-    name: "Intramuros",
-    location: "Manila, Metro Manila",
-    rating: 4.5,
-    reviewCount: 920,
-    description:
-      "Historic walled city featuring Spanish-era landmarks, museums, churches, and cobblestone streets.",
-    detail_summary:
-      "A heritage district for history walks, old Manila architecture, museums, churches, and slow photo-friendly wandering.",
-    best_for: ["Heritage trips", "Tourists", "Photo walks"],
-    what_to_expect: ["Spanish-era landmarks", "Museums and churches", "Cobblestone streets"],
-    tips: ["Wear comfortable shoes.", "Bring water and sun protection for daytime walks."],
-    hours_text: "Open daily; attraction schedules vary",
-    entrance_fee_text: "Some attractions are ticketed",
-    best_time_text: "Morning or late afternoon",
-    website_url: "https://intramuros.gov.ph",
-    google_maps_url: "https://www.google.com/maps/search/?api=1&query=Intramuros+Manila",
-    category: "Heritage",
-    entranceFee: "Some attractions ticketed",
-    openHours: "Open daily; attraction schedules vary",
-    website: "https://intramuros.gov.ph",
-    latitude: 14.5896,
-    longitude: 120.9751,
-    imageUrl: "/images/places/intramuros/intramuros-1.webp",
-    curatedImageUrls: [
-      "/images/places/intramuros/intramuros-1.webp",
-      "/images/places/intramuros/intramuros-2.webp",
-      "/images/places/intramuros/intramuros-3.webp",
-    ],
-  },
-];
-
 export function findPlaceDetailById(id: string): PlaceDetail | null {
   const trimmedId = id.trim().toLowerCase();
 
@@ -100,7 +44,7 @@ export function findPlaceDetailById(id: string): PlaceDetail | null {
     return null;
   }
 
-  return PLACE_DETAILS.find((place) => place.id === trimmedId) ?? null;
+  return null;
 }
 
 function getStringArray(value: unknown): string[] {
@@ -117,25 +61,15 @@ function mapPlaceRowToDetail(row: Record<string, unknown>): PlaceDetail {
   const description =
     typeof row.description === "string" && row.description.trim()
       ? row.description.trim()
-      : typeof row.detail_summary === "string" && row.detail_summary.trim()
-        ? row.detail_summary.trim()
-        : "";
-  const hoursText =
-    typeof row.hours_text === "string" && row.hours_text.trim()
-      ? row.hours_text.trim()
-      : "Hours not available";
-  const entranceFeeText =
-    typeof row.entrance_fee_text === "string" && row.entrance_fee_text.trim()
-      ? row.entrance_fee_text.trim()
-      : typeof row.budget_label === "string" && row.budget_label.trim()
-        ? row.budget_label.trim()
-        : "Not specified";
+      : "";
+  const budgetNotes =
+    typeof row.budget_notes === "string" && row.budget_notes.trim()
+      ? row.budget_notes.trim()
+      : null;
   const websiteUrl =
     typeof row.website_url === "string" && row.website_url.trim()
       ? row.website_url.trim()
-      : typeof row.official_url === "string" && row.official_url.trim()
-        ? row.official_url.trim()
-        : "";
+      : "";
   const googleMapsUrl =
     typeof row.google_maps_url === "string" && row.google_maps_url.trim()
       ? row.google_maps_url.trim()
@@ -146,33 +80,43 @@ function mapPlaceRowToDetail(row: Record<string, unknown>): PlaceDetail {
     slug: typeof row.slug === "string" ? row.slug : null,
     name: typeof row.name === "string" ? row.name : "Untitled place",
     location,
-    rating: typeof row.rating === "number" ? row.rating : 0,
-    reviewCount: 0,
     description,
-    detail_summary: typeof row.detail_summary === "string" ? row.detail_summary : null,
-    best_for: getStringArray(row.best_for),
-    what_to_expect: getStringArray(row.what_to_expect),
-    tips: getStringArray(row.tips),
-    hours_text: typeof row.hours_text === "string" ? row.hours_text : null,
-    entrance_fee_text: typeof row.entrance_fee_text === "string" ? row.entrance_fee_text : null,
-    best_time_text: typeof row.best_time_text === "string" ? row.best_time_text : null,
+    place_history: typeof row.place_history === "string" ? row.place_history : null,
+    best_time_to_visit: typeof row.best_time_to_visit === "string" ? row.best_time_to_visit : null,
+    visit_duration: typeof row.visit_duration === "string" ? row.visit_duration : null,
+    good_for: getStringArray(row.good_for),
+    not_ideal_for: getStringArray(row.not_ideal_for),
+    crowd_level: typeof row.crowd_level === "string" ? row.crowd_level : null,
+    indoor_outdoor: typeof row.indoor_outdoor === "string" ? row.indoor_outdoor : null,
+    weather_fit: typeof row.weather_fit === "string" ? row.weather_fit : null,
+    parking_info: typeof row.parking_info === "string" ? row.parking_info : null,
+    accessibility_notes: typeof row.accessibility_notes === "string" ? row.accessibility_notes : null,
+    decision_reason: typeof row.decision_reason === "string" ? row.decision_reason : null,
+    commute_friendly: typeof row.commute_friendly === "boolean" ? row.commute_friendly : null,
+    commute_access: typeof row.commute_access === "string" ? row.commute_access : null,
+    nearby_context: typeof row.nearby_context === "string" ? row.nearby_context : null,
+    budget_notes: budgetNotes,
+    verification_status: typeof row.verification_status === "string" ? row.verification_status : null,
+    verification_notes: typeof row.verification_notes === "string" ? row.verification_notes : null,
+    verification_sources: getStringArray(row.verification_sources),
+    last_verified_at: typeof row.last_verified_at === "string" ? row.last_verified_at : null,
     website_url: websiteUrl || null,
     google_maps_url: googleMapsUrl,
     category: typeof row.category === "string" ? row.category : "Place",
-    entranceFee: entranceFeeText,
-    openHours: hoursText,
+    entranceFee: budgetNotes ?? "Not specified",
+    openHours: "Not available",
     website: websiteUrl,
     latitude: typeof row.latitude === "number" ? row.latitude : 0,
     longitude: typeof row.longitude === "number" ? row.longitude : 0,
-    imageUrl: typeof row.photo_url === "string" ? row.photo_url : "",
-    curatedImageUrls: getStringArray(row.photos),
+    imageUrl: "",
+    curatedImageUrls: [],
   };
 }
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const PLACE_DETAIL_COLUMNS =
-  "id,slug,name,category,address,city,area,latitude,longitude,rating,photo_url,photos,description,detail_summary,best_for,what_to_expect,tips,hours_text,entrance_fee_text,best_time_text,website_url,google_maps_url,official_url,budget_label";
+  "id,slug,name,category,address,city,area,latitude,longitude,description,place_history,best_time_to_visit,visit_duration,good_for,not_ideal_for,crowd_level,indoor_outdoor,weather_fit,parking_info,accessibility_notes,decision_reason,commute_friendly,commute_access,nearby_context,budget_notes,verification_status,verification_notes,verification_sources,last_verified_at,website_url,google_maps_url";
 
 export async function findPlaceDetailByIdOrSlug(id: string): Promise<PlaceDetail | null> {
   const trimmedId = id.trim();

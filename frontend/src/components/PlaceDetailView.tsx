@@ -216,6 +216,10 @@ function getCleanStringArray(value?: string[] | null) {
   return Array.isArray(value) ? value.filter((item) => Boolean(item?.trim())).map((item) => item.trim()) : []
 }
 
+function getTextValue(value?: string | null) {
+  return value?.trim() || 'Not available'
+}
+
 function DetailListSection({
   title,
   items,
@@ -243,7 +247,7 @@ function DetailListSection({
   )
 }
 
-function PracticalInfoRow({
+function DetailInfoRow({
   label,
   value,
   href,
@@ -271,32 +275,67 @@ function PracticalInfoRow({
   )
 }
 
+function DetailTextSection({
+  title,
+  value,
+  fallback = 'Not available',
+}: {
+  title: string
+  value?: string | null
+  fallback?: string
+}) {
+  return (
+    <section>
+      <h2 className="text-sm font-semibold text-slate-900">{title}</h2>
+      <p className="mt-2 text-sm leading-relaxed text-slate-700">{value?.trim() || fallback}</p>
+    </section>
+  )
+}
+
 function EnrichedDetailSections({ place }: { place: PlaceCardData }) {
-  const overview = place.detail_summary?.trim() || place.reason || 'No overview available yet.'
-  const bestFor = getCleanStringArray(place.best_for)
-  const whatToExpect = getCleanStringArray(place.what_to_expect)
-  const tips = getCleanStringArray(place.tips)
-  const hoursText = place.hours_text?.trim() || place.hours?.trim() || 'Not available'
-  const entranceFeeText = place.entrance_fee_text?.trim() || place.entranceFee?.trim() || 'Not available'
-  const bestTimeText = place.best_time_text?.trim() || 'Not available'
+  const goodFor = getCleanStringArray(place.good_for)
+  const notIdealFor = getCleanStringArray(place.not_ideal_for)
   const websiteUrl = place.website_url?.trim() || place.website?.trim() || ''
+  const googleMapsUrl = place.googleMapsUrl?.trim() || ''
+  const commuteFriendly = place.commute_friendly === null || place.commute_friendly === undefined
+    ? 'Not available'
+    : place.commute_friendly
+      ? 'Yes'
+      : 'No'
 
   return (
     <div className="grid gap-4">
+      <DetailTextSection title="Main description" value={place.description || place.reason} fallback="No description available yet." />
+      <DetailTextSection title="Why go" value={place.decision_reason} />
+      <DetailListSection title="Good for" items={goodFor} fallback="Good-for details are not available yet." />
+      <DetailListSection title="Not ideal for" items={notIdealFor} fallback="Not-ideal-for details are not available yet." />
       <section>
-        <h2 className="text-sm font-semibold text-slate-900">Overview</h2>
-        <p className="mt-2 text-sm leading-relaxed text-slate-700">{overview}</p>
-      </section>
-      <DetailListSection title="Good for" items={bestFor} fallback="Good-for details are not available yet." />
-      <DetailListSection title="What to expect" items={whatToExpect} fallback="What-to-expect details are not available yet." />
-      <DetailListSection title="Tips" items={tips} fallback="No tips available yet." />
-      <section>
-        <h2 className="text-sm font-semibold text-slate-900">Practical info</h2>
+        <h2 className="text-sm font-semibold text-slate-900">Visit fit</h2>
         <div className="mt-2 grid gap-2 sm:grid-cols-2">
-          <PracticalInfoRow label="Hours" value={hoursText} />
-          <PracticalInfoRow label="Entrance fee" value={entranceFeeText} />
-          <PracticalInfoRow label="Best time" value={bestTimeText} />
-          <PracticalInfoRow label="Website" value={websiteUrl || 'Not available'} href={websiteUrl || null} />
+          <DetailInfoRow label="Best time to visit" value={getTextValue(place.best_time_to_visit)} />
+          <DetailInfoRow label="Visit duration" value={getTextValue(place.visit_duration)} />
+          <DetailInfoRow label="Crowd level" value={getTextValue(place.crowd_level)} />
+          <DetailInfoRow label="Indoor/outdoor" value={getTextValue(place.indoor_outdoor)} />
+          <DetailInfoRow label="Weather fit" value={getTextValue(place.weather_fit)} />
+          <DetailInfoRow label="Budget notes" value={getTextValue(place.budget_notes)} />
+        </div>
+      </section>
+      <section>
+        <h2 className="text-sm font-semibold text-slate-900">Access</h2>
+        <div className="mt-2 grid gap-2 sm:grid-cols-2">
+          <DetailInfoRow label="Parking info" value={getTextValue(place.parking_info)} />
+          <DetailInfoRow label="Accessibility notes" value={getTextValue(place.accessibility_notes)} />
+          <DetailInfoRow label="Commute friendly" value={commuteFriendly} />
+          <DetailInfoRow label="Commute access" value={getTextValue(place.commute_access)} />
+          <DetailInfoRow label="Nearby context" value={getTextValue(place.nearby_context)} />
+        </div>
+      </section>
+      <DetailTextSection title="Place history/background" value={place.place_history} />
+      <section>
+        <h2 className="text-sm font-semibold text-slate-900">Links</h2>
+        <div className="mt-2 grid gap-2 sm:grid-cols-2">
+          <DetailInfoRow label="Website" value={websiteUrl || 'Not available'} href={websiteUrl || null} />
+          <DetailInfoRow label="Google Maps directions" value={googleMapsUrl ? 'Open in Google Maps' : 'Not available'} href={googleMapsUrl || null} />
         </div>
       </section>
     </div>
@@ -328,7 +367,7 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
   const normalizedNameSlug = normalizePlaceSlug(place.name)
   const placeSlug = place.slug || normalizedNameSlug
   const isSaved = [place.slug, normalizedNameSlug, place.id].some((slug) => isPlaceSaved(slug))
-  const entranceFeeLabel = place.entrance_fee_text?.trim() || place.entranceFee?.trim() || 'Not available'
+  const budgetLabel = place.budget_notes?.trim() || place.entranceFee?.trim() || 'Not available'
   const hasCoordinateDirections =
     Number.isFinite(place.coordinates.lat) && Number.isFinite(place.coordinates.lng)
   const directionsUrl = place.googleMapsUrl?.trim()
@@ -486,7 +525,7 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
             </p>
             <p className="flex items-center gap-2 text-sm text-slate-700">
               <MetaIcon symbol="★" />
-              <span>Budget / entrance fee: {entranceFeeLabel}</span>
+              <span>Budget notes: {budgetLabel}</span>
             </p>
           </div>
           <hr className="my-3 border-[var(--line)]" />
@@ -616,7 +655,7 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
             </p>
             <p className="mt-1 flex items-center gap-2 text-sm text-slate-700">
               <MetaIcon symbol="★" />
-              <span>Budget / entrance fee: {entranceFeeLabel}</span>
+              <span>Budget notes: {budgetLabel}</span>
             </p>
 
             <hr className="my-3 border-[var(--line)]" />
