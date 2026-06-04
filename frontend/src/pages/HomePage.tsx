@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import SearchBar from '../components/SearchBar'
 import PlaceCard, { type PlaceCardData, type PlaceCategoryMeta, type PlaceTagMeta } from '../components/PlaceCard'
-import PlaceDetailView from '../components/PlaceDetailView'
 import AppHeader from '../components/AppHeader'
 import MapView from '../components/MapView'
 import GuestLimitModal from '../components/GuestLimitModal'
 import { supabase } from '../supabase'
+import { navigateToPlace } from '../utils/navigation'
 
 type IconProps = {
   className?: string
@@ -403,7 +403,6 @@ function HomePage() {
   const [selectedBudget, setSelectedBudget] = useState<BudgetValue | null>(null)
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null)
-  const [isPlaceDetailOpen, setIsPlaceDetailOpen] = useState(false)
   const [isSearching, setIsSearching] = useState(false)
   const [searchError, setSearchError] = useState<string | null>(null)
   const [promptLogin, setPromptLogin] = useState(false)
@@ -432,11 +431,6 @@ function HomePage() {
   const selectedFilterLabels = [selectedCategoryName, selectedAreaName, selectedBudgetLabel].filter(Boolean)
   const hasActiveFilters = selectedFilterLabels.length > 0
   const visiblePlaces = hasSearched ? searchResults : []
-  const selectedPlace = useMemo(
-    () => visiblePlaces.find((place) => place.id === selectedPlaceId) ?? null,
-    [selectedPlaceId, visiblePlaces]
-  )
-
   const handleClearSearch = () => {
     searchRequestVersion.current += 1
     setSelectedCategory(null)
@@ -450,7 +444,6 @@ function HomePage() {
     setSearchResults([])
     setHasSearched(false)
     setSelectedPlaceId(null)
-    setIsPlaceDetailOpen(false)
     setClearSearchSignal((signal) => signal + 1)
   }
 
@@ -462,12 +455,15 @@ function HomePage() {
   }
 
   const handlePlaceSelect = (placeId: string) => {
+    const place = visiblePlaces.find((visiblePlace) => visiblePlace.id === placeId)
+    const canonicalPlaceSlug = place?.slug || place?.id || placeId
+
     if (searchId) {
-      console.log('Selected place from search:', { placeId, searchId })
+      console.log('Selected place from search:', { placeId, slug: canonicalPlaceSlug, searchId })
     }
 
     setSelectedPlaceId(placeId)
-    setIsPlaceDetailOpen(true)
+    navigateToPlace(canonicalPlaceSlug)
   }
 
   const handleMapPlaceSelect = (placeId: string) => {
@@ -693,10 +689,6 @@ function HomePage() {
       document.body.style.overflow = previousOverflow
     }
   }, [showAdvancedFilters])
-
-  if (isPlaceDetailOpen && selectedPlace) {
-    return <PlaceDetailView place={selectedPlace} onBack={() => setIsPlaceDetailOpen(false)} />
-  }
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">

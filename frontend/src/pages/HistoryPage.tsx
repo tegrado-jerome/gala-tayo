@@ -3,6 +3,7 @@ import AppHeader from '../components/AppHeader'
 import GoogleSignInButton from '../components/GoogleSignInButton'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { getCuratedPlaceImages } from '../data/curatedPlaceImages'
+import { navigateToPath, navigateToPlace } from '../utils/navigation'
 
 type HistoryPlace = {
   id: string
@@ -159,8 +160,7 @@ function formatViewedAt(value: string) {
 }
 
 function openPlace(slug: string) {
-  window.history.pushState(null, '', `/places/${encodeURIComponent(slug)}`)
-  window.dispatchEvent(new PopStateEvent('popstate'))
+  navigateToPlace(slug)
 }
 
 function HistoryPage() {
@@ -289,8 +289,7 @@ function HistoryPage() {
             <button
               type="button"
               onClick={() => {
-                window.history.pushState(null, '', '/')
-                window.dispatchEvent(new PopStateEvent('popstate'))
+                navigateToPath('/')
               }}
               className="inline-flex w-fit items-center justify-center rounded-full border border-[var(--line)] bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-[0_8px_18px_rgba(28,77,160,0.08)] transition hover:-translate-y-[1px] hover:border-[var(--accent)] hover:text-[var(--accent-deep)]"
             >

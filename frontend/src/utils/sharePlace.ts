@@ -1,5 +1,6 @@
 type ShareablePlace = {
   id: string
+  slug?: string | null
   name: string
   category: string
   area: string
@@ -14,19 +15,23 @@ type PlatformShareLinks = {
   email: string
 }
 
-function getPlaceShareUrl(placeId: string) {
-  return new URL(`/places/${encodeURIComponent(placeId)}`, window.location.origin).toString()
+function getPlaceRouteId(place: ShareablePlace) {
+  return place.slug?.trim() || place.id
+}
+
+function getPlaceShareUrl(place: ShareablePlace) {
+  return new URL(`/places/${encodeURIComponent(getPlaceRouteId(place))}`, window.location.origin).toString()
 }
 
 function getPlaceShareText(place: ShareablePlace) {
   return `Tingnan mo 'to sa GalaTayo: ${place.name}
 ${place.reason}
 
-${getPlaceShareUrl(place.id)}`
+${getPlaceShareUrl(place)}`
 }
 
 function getPlatformShareLinks(place: ShareablePlace): PlatformShareLinks {
-  const placeUrl = getPlaceShareUrl(place.id)
+  const placeUrl = getPlaceShareUrl(place)
   const shareText = getPlaceShareText(place)
   const encodedUrl = encodeURIComponent(placeUrl)
   const encodedText = encodeURIComponent(shareText)
@@ -66,7 +71,7 @@ async function copyTextToClipboard(text: string) {
 }
 
 async function copyPlaceLink(place: ShareablePlace) {
-  await copyTextToClipboard(getPlaceShareUrl(place.id))
+  await copyTextToClipboard(getPlaceShareUrl(place))
 }
 
 export { copyPlaceLink, getPlaceShareText, getPlaceShareUrl, getPlatformShareLinks }
