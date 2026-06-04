@@ -21,6 +21,7 @@ type BackendPlaceDetail = {
   entrance_fee_text?: string | null
   best_time_text?: string | null
   website_url?: string | null
+  google_maps_url?: string | null
   category: string
   entranceFee: string
   openHours: string
@@ -59,6 +60,7 @@ function mapBackendPlaceToCardData(place: BackendPlaceDetail): PlaceCardData {
     hours: place.openHours,
     entranceFee: place.entranceFee,
     website: place.website,
+    googleMapsUrl: place.google_maps_url,
     detail_summary: place.detail_summary,
     best_for: place.best_for ?? [],
     what_to_expect: place.what_to_expect ?? [],

@@ -109,44 +109,39 @@ const REMOVED_CATEGORY_IDS = new Set([
 const EXPERIENCE_TAG_IDS = new Set([
   "indoor",
   "outdoor",
-  "walkable",
-  "commute-friendly",
-  "commuter-friendly",
-  "budget-friendly",
-  "family-friendly",
-  "date-friendly",
-  "group-friendly",
-  "barkada-friendly",
-  "quiet",
-  "photo-friendly",
   "airconditioned",
-  "late-night",
-  "food-options",
-  "study-friendly",
-  "kid-friendly",
-  "relaxing",
   "rain-friendly",
+  "walkable",
+  "quiet",
+  "chill",
   "lively",
   "crowded",
-  "solo-friendly",
+  "photo-friendly",
+  "late-night",
+  "rooftop",
+  "romantic",
+  "scenic",
+  "green-space",
+  "food-trip",
+  "parking-available",
+  "date-friendly",
+  "family-friendly",
+  "barkada-friendly",
+  "kid-friendly",
+  "budget-friendly",
+  "premium",
   "free-entry",
-  "paid-entry",
+  "study-friendly",
   "tourist-friendly",
   "educational",
-  "historical",
-  "peaceful",
-  "local-experience",
-  "activity-friendly",
+  "heritage",
   "activity-based",
-  "culture",
-  "art",
   "cultural",
-  "scenic",
-  "skyline-view",
-  "rooftop",
-  "reservation-recommended",
-  "reservation-required",
-  "queue-likely",
+  "live-music",
+  "sports-friendly",
+  "active",
+  "known-place",
+  "commute-friendly",
 ]);
 
 const TAG_NAME_TO_ID = new Map(
@@ -159,12 +154,30 @@ const TAG_NAME_TO_ID = new Map(
 
 TAG_NAME_TO_ID.set("rainy day friendly", "rain-friendly");
 TAG_NAME_TO_ID.set("rainy-day-friendly", "rain-friendly");
+TAG_NAME_TO_ID.set("relaxing", "chill");
+TAG_NAME_TO_ID.set("relaxed", "chill");
+TAG_NAME_TO_ID.set("cozy", "chill");
+TAG_NAME_TO_ID.set("student friendly", "study-friendly");
+TAG_NAME_TO_ID.set("student-friendly", "study-friendly");
 TAG_NAME_TO_ID.set("commute friendly", "commute-friendly");
-TAG_NAME_TO_ID.set("commuter friendly", "commuter-friendly");
-TAG_NAME_TO_ID.set("food trip", "food-options");
-TAG_NAME_TO_ID.set("food-trip", "food-options");
-TAG_NAME_TO_ID.set("group friendly", "group-friendly");
+TAG_NAME_TO_ID.set("commuter friendly", "commute-friendly");
+TAG_NAME_TO_ID.set("commuter-friendly", "commute-friendly");
+TAG_NAME_TO_ID.set("food trip", "food-trip");
+TAG_NAME_TO_ID.set("food-trip", "food-trip");
+TAG_NAME_TO_ID.set("group friendly", "barkada-friendly");
+TAG_NAME_TO_ID.set("group-friendly", "barkada-friendly");
 TAG_NAME_TO_ID.set("barkada friendly", "barkada-friendly");
+TAG_NAME_TO_ID.set("local favorite", "known-place");
+TAG_NAME_TO_ID.set("local-favorite", "known-place");
+TAG_NAME_TO_ID.set("historic", "heritage");
+TAG_NAME_TO_ID.set("mall based", "indoor");
+TAG_NAME_TO_ID.set("mall-based", "indoor");
+TAG_NAME_TO_ID.set("parking available", "parking-available");
+TAG_NAME_TO_ID.set("parking-available", "parking-available");
+TAG_NAME_TO_ID.set("parking friendly", "parking-available");
+TAG_NAME_TO_ID.set("parking-friendly", "parking-available");
+TAG_NAME_TO_ID.set("late night", "late-night");
+TAG_NAME_TO_ID.set("late-night", "late-night");
 
 const REJECTED_TAG_TERMS = new Set([
   "churros",
@@ -196,6 +209,7 @@ const REJECTED_TAG_TERMS = new Set([
   "ramen",
   "pizza",
   "burger",
+  "froyo",
   "milk-tea",
 ]);
 
@@ -208,7 +222,13 @@ const VALID_VERIFICATION_STATUSES = new Set([
   "rejected_wrong_city",
   "rejected_not_gala_relevant",
 ]);
-const VALID_BUDGET_LABELS = new Set(["Free", "Budget", "Mid-range", "Premium"]);
+const VALID_BUDGET_LABELS = new Set([
+  "Free",
+  "Under ₱500",
+  "₱500–₱1,000",
+  "₱1,000–₱2,000",
+  "₱2,000+",
+]);
 const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const PHILIPPINES_SAFE_BOUNDS = {
   minLatitude: 14.0,
@@ -243,13 +263,14 @@ const DIRECTORY_TERMS = [
   "terminal",
   "repair",
   "laundry",
-  "errand",
   "government office",
   "gas station",
   "pet shop",
   "religious service",
   "hotel stay",
 ];
+
+const DIRECTORY_WARNING_TERMS = ["errand", "errands", "services nearby"];
 
 const ROBOTIC_PHRASES = [
   "is a place that offers",
@@ -734,7 +755,8 @@ function validateBudgetFields(
     addError(result, {
       field: "budget_label",
       code: "budget_label_invalid",
-      message: "budget_label must be one of Free, Budget, Mid-range, or Premium.",
+      message:
+        "budget_label must be one of Free, Under ₱500, ₱500–₱1,000, ₱1,000–₱2,000, or ₱2,000+.",
     }, index);
   }
 
@@ -956,13 +978,13 @@ function validateTags(
         field: `tags[${tagIndex}]`,
         code: "tag_unknown",
         message:
-          "Tag must be an approved experience-based tag such as indoor, outdoor, walkable, commute-friendly, budget-friendly, family-friendly, date-friendly, group-friendly, quiet, photo-friendly, airconditioned, late-night, food-trip, study-friendly, kid-friendly, relaxing, or rainy-day-friendly.",
+          "Tag must be an approved GalaTayo tag such as indoor, outdoor, airconditioned, rain-friendly, free-entry, kid-friendly, date-friendly, family-friendly, barkada-friendly, study-friendly, quiet, photo-friendly, walkable, commute-friendly, parking-available, live-music, budget-friendly, premium, romantic, scenic, rooftop, green-space, or sports-friendly.",
       }, index);
       return;
     }
 
     if (seenTagIds.has(normalizedTag.id)) {
-      addError(result, {
+      addWarning(result, {
         field: `tags[${tagIndex}]`,
         code: "tag_duplicate",
         message: `Duplicate tag "${normalizedTag.id}" within the same place record.`,
@@ -1002,6 +1024,18 @@ function validateGalaRelevance(
       field: "gala_relevance",
       code: "directory_like_place",
       message: `Seed record looks directory-like because it mentions "${directoryTerm}". GalaTayo seed data should focus on gala-worthy places.`,
+    }, index);
+  }
+
+  const directoryWarningTerm = DIRECTORY_WARNING_TERMS.find((term) =>
+    combinedText.includes(normalizeSearchText(term))
+  );
+
+  if (directoryWarningTerm) {
+    addWarning(result, {
+      field: "gala_relevance",
+      code: "directory_like_place",
+      message: `Seed record mentions "${directoryWarningTerm}". Confirm this is still a gala-worthy place rather than a practical errand-only listing.`,
     }, index);
   }
 }

@@ -16,6 +16,7 @@ export type PlaceDetail = {
   entrance_fee_text?: string | null;
   best_time_text?: string | null;
   website_url?: string | null;
+  google_maps_url?: string | null;
   category: string;
   entranceFee: string;
   openHours: string;
@@ -44,6 +45,7 @@ export const PLACE_DETAILS: PlaceDetail[] = [
     entrance_fee_text: "Free entry",
     best_time_text: "Late afternoon to evening",
     website_url: "https://www.bgc.com.ph",
+    google_maps_url: "https://www.google.com/maps/search/?api=1&query=Bonifacio+High+Street+BGC+Taguig",
     category: "Hangout",
     entranceFee: "Free",
     openHours: "Open daily; shop and restaurant hours vary",
@@ -75,6 +77,7 @@ export const PLACE_DETAILS: PlaceDetail[] = [
     entrance_fee_text: "Some attractions are ticketed",
     best_time_text: "Morning or late afternoon",
     website_url: "https://intramuros.gov.ph",
+    google_maps_url: "https://www.google.com/maps/search/?api=1&query=Intramuros+Manila",
     category: "Heritage",
     entranceFee: "Some attractions ticketed",
     openHours: "Open daily; attraction schedules vary",
@@ -133,6 +136,10 @@ function mapPlaceRowToDetail(row: Record<string, unknown>): PlaceDetail {
       : typeof row.official_url === "string" && row.official_url.trim()
         ? row.official_url.trim()
         : "";
+  const googleMapsUrl =
+    typeof row.google_maps_url === "string" && row.google_maps_url.trim()
+      ? row.google_maps_url.trim()
+      : null;
 
   return {
     id: String(row.slug ?? row.id ?? ""),
@@ -150,6 +157,7 @@ function mapPlaceRowToDetail(row: Record<string, unknown>): PlaceDetail {
     entrance_fee_text: typeof row.entrance_fee_text === "string" ? row.entrance_fee_text : null,
     best_time_text: typeof row.best_time_text === "string" ? row.best_time_text : null,
     website_url: websiteUrl || null,
+    google_maps_url: googleMapsUrl,
     category: typeof row.category === "string" ? row.category : "Place",
     entranceFee: entranceFeeText,
     openHours: hoursText,
@@ -164,7 +172,7 @@ function mapPlaceRowToDetail(row: Record<string, unknown>): PlaceDetail {
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const PLACE_DETAIL_COLUMNS =
-  "id,slug,name,category,address,city,area,latitude,longitude,rating,photo_url,photos,description,detail_summary,best_for,what_to_expect,tips,hours_text,entrance_fee_text,best_time_text,website_url,official_url,budget_label";
+  "id,slug,name,category,address,city,area,latitude,longitude,rating,photo_url,photos,description,detail_summary,best_for,what_to_expect,tips,hours_text,entrance_fee_text,best_time_text,website_url,google_maps_url,official_url,budget_label";
 
 export async function findPlaceDetailByIdOrSlug(id: string): Promise<PlaceDetail | null> {
   const trimmedId = id.trim();

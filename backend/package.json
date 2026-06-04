@@ -11,6 +11,7 @@
     "start": "func start",
     "seed:curated-places": "node scripts/seedCuratedPlaces.cjs",
     "seed:metro-manila-places": "node scripts/seedMetroManilaPlaces.cjs",
+    "normalize:place-seeds": "node scripts/normalizePlaceSeedData.cjs",
     "validate:place-seeds": "node scripts/validatePlaceSeedData.cjs",
     "test": "echo \"No tests yet...\""
   },
