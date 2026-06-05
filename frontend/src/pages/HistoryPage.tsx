@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import AppHeader from '../components/AppHeader'
 import GoogleSignInButton from '../components/GoogleSignInButton'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
-import { getCuratedPlaceImages } from '../data/curatedPlaceImages'
 import { getDirectionsUrl, openDirectionsUrl } from '../utils/directions'
 import { navigateToPath, navigateToPlace } from '../utils/navigation'
 
@@ -11,15 +10,14 @@ type HistoryPlace = {
   slug: string | null
   name: string | null
   category?: string | null
-  city?: string | null
   address?: string | null
+  area?: string | null
+  city?: string | null
   google_maps_url?: string | null
   latitude?: number | null
   longitude?: number | null
-  photo_url?: string | null
-  photos?: string[] | null
-  image_url?: string | null
-  curated_image_urls?: string[] | null
+  description?: string | null
+  budget_label?: string | null
 }
 
 type HistoryItem = {
@@ -78,28 +76,20 @@ function getApiEndpoint(path: string) {
   return apiBaseUrl ? `${apiBaseUrl}${path}` : `/api${path}`
 }
 
-function getPhotoUrl(place: HistoryPlace) {
-  const curatedImages = getCuratedPlaceImages(place.slug || place.name || '')
-
-  return (
-    place.photo_url?.trim() ||
-    place.image_url?.trim() ||
-    place.photos?.find((photo) => photo?.trim())?.trim() ||
-    place.curated_image_urls?.find((photo) => photo?.trim())?.trim() ||
-    curatedImages[0]?.trim() ||
-    null
-  )
-}
-
 function getPlaceLocation(place: HistoryPlace) {
   const address = place.address?.trim() || ''
+  const area = place.area?.trim() || ''
   const city = place.city?.trim() || ''
 
   if (address && city && !address.toLowerCase().includes(city.toLowerCase())) {
     return `${address}, ${city}`
   }
 
-  return address || city || 'Location unavailable'
+  return address || area || city || 'Location unavailable'
+}
+
+function getPlaceCategory(place: HistoryPlace) {
+  return place.category?.trim() || 'Place'
 }
 
 function parseSupabaseTimestamp(value: string) {
@@ -354,8 +344,8 @@ function HistoryPage() {
                 {visibleHistory.map((item) => {
                   const place = item.place as HistoryPlace
                   const placeSlug = place.slug as string
-                  const photoUrl = getPhotoUrl(place)
                   const location = getPlaceLocation(place)
+                  const category = getPlaceCategory(place)
                   const directionsUrl = getDirectionsUrl(place)
 
                   return (
@@ -369,22 +359,13 @@ function HistoryPage() {
                           onClick={() => openPlace(placeSlug)}
                           className="flex min-w-0 flex-1 items-stretch gap-3 text-left sm:gap-4"
                         >
-                          {photoUrl ? (
-                            <img
-                              src={photoUrl}
-                              alt={place.name || 'Viewed place'}
-                              className="h-[88px] w-[88px] shrink-0 rounded-lg border border-[var(--line)] object-cover sm:h-[108px] sm:w-[132px]"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <div className="flex h-[88px] w-[88px] shrink-0 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-[var(--line-strong)] bg-[linear-gradient(180deg,#fbfdff,#eef4fb)] px-2 text-center text-slate-500 sm:h-[108px] sm:w-[132px] sm:gap-1.5">
-                              <ImageIcon />
-                              <span className="line-clamp-2 text-[10px] font-semibold leading-tight text-slate-700 sm:text-[11px]">
-                                {place.name || 'Viewed place'}
-                              </span>
-                              <span className="text-[10px] font-medium">No photo</span>
-                            </div>
-                          )}
+                          <div className="flex h-[88px] w-[88px] shrink-0 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-[var(--line-strong)] bg-[linear-gradient(180deg,#fbfdff,#eef4fb)] px-2 text-center text-slate-500 sm:h-[108px] sm:w-[132px] sm:gap-1.5">
+                            <ImageIcon />
+                            <span className="line-clamp-2 text-[10px] font-semibold leading-tight text-slate-700 sm:text-[11px]">
+                              {place.name || 'Viewed place'}
+                            </span>
+                            <span className="text-[10px] font-medium">No photo</span>
+                          </div>
 
                           <div className="min-w-0 flex-1 py-0.5">
                             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
@@ -392,6 +373,9 @@ function HistoryPage() {
                                 <h2 className="truncate text-base font-semibold text-slate-950">
                                   {place.name || 'Viewed place'}
                                 </h2>
+                                <p className="mt-1 text-xs font-medium text-[var(--accent-deep)]">
+                                  {category}
+                                </p>
                                 <p className="mt-1 flex items-start gap-1.5 text-sm text-[var(--muted)]">
                                   <PinIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                                   <span className="line-clamp-2">{location}</span>

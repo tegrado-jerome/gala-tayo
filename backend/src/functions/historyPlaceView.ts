@@ -37,8 +37,8 @@ async function findPlaceBySlug(placeSlug: string): Promise<HistoryPlace | null> 
   const { data: place, error } = await supabaseAdmin
     .from("places")
     .select("id, slug, name")
-    .eq("slug", placeSlug)
-    .single();
+    .eq("slug", placeSlug.trim().toLowerCase())
+    .maybeSingle();
 
   if (error || !place) {
     return null;

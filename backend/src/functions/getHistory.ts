@@ -52,13 +52,14 @@ export async function getHistory(
           slug,
           name,
           category,
-          city,
           address,
+          area,
+          city,
           google_maps_url,
           latitude,
           longitude,
-          photo_url,
-          photos
+          description,
+          budget_label
         )
       `
       )
