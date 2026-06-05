@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import type { Session } from '@supabase/supabase-js'
 import SearchBar from '../components/SearchBar'
 import PlaceCard, { type PlaceCardData, type PlaceCategoryMeta, type PlaceTagMeta } from '../components/PlaceCard'
 import AppHeader from '../components/AppHeader'
 import MapView from '../components/MapView'
 import GuestLimitModal from '../components/GuestLimitModal'
+import GoogleSignInButton from '../components/GoogleSignInButton'
 import { supabase } from '../supabase'
 import { navigateToPlace } from '../utils/navigation'
 
@@ -454,8 +456,46 @@ function AskAiPlaceholder({ className = '' }: { className?: string }) {
   )
 }
 
+function AskAiSignInRequired({ className = '' }: { className?: string }) {
+  return (
+    <section className={`flex min-h-[280px] items-center justify-center bg-[linear-gradient(180deg,#f8fbff,#eef5ff)] px-4 py-8 ${className}`}>
+      <div className="w-full max-w-[520px] rounded-lg border border-[var(--line)] bg-white px-5 py-7 text-center shadow-[0_14px_30px_rgba(28,77,160,0.07)]">
+        <p className="text-base font-semibold text-slate-900">Sign in to use Ask AI.</p>
+        <p className="mx-auto mt-2 max-w-[380px] text-sm leading-relaxed text-[var(--muted)]">
+          Ask AI is for registered GalaTayo users. Search Places is still available without signing in.
+        </p>
+        <GoogleSignInButton className="mt-4 inline-flex" />
+      </div>
+    </section>
+  )
+}
+
+function AskAiModePanel({
+  isRegistered,
+  isSessionLoading,
+  className = '',
+}: {
+  isRegistered: boolean
+  isSessionLoading: boolean
+  className?: string
+}) {
+  if (isSessionLoading) {
+    return (
+      <section className={`flex min-h-[280px] items-center justify-center bg-[linear-gradient(180deg,#f8fbff,#eef5ff)] px-4 py-8 ${className}`}>
+        <div className="rounded-lg border border-[var(--line)] bg-white px-5 py-4 text-sm font-medium text-[var(--muted)] shadow-[0_14px_30px_rgba(28,77,160,0.07)]">
+          Checking account...
+        </div>
+      </section>
+    )
+  }
+
+  return isRegistered ? <AskAiPlaceholder className={className} /> : <AskAiSignInRequired className={className} />
+}
+
 function HomePage() {
   const [selectedMode, setSelectedMode] = useState<SearchMode>('places')
+  const [session, setSession] = useState<Session | null>(null)
+  const [isSessionLoading, setIsSessionLoading] = useState(true)
   const [categories, setCategories] = useState(fallbackCategories)
   const [areas, setAreas] = useState<AreaChip[]>(fallbackAreas)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
@@ -491,6 +531,7 @@ function HomePage() {
   const selectedFilterLabels = [selectedCategoryName, selectedAreaName, selectedBudgetLabel].filter(Boolean)
   const hasActiveFilters = selectedFilterLabels.length > 0
   const visiblePlaces = hasSearched ? searchResults : []
+  const isRegisteredUser = Boolean(session?.user)
   const handleModeChange = (mode: SearchMode) => {
     setSelectedMode(mode)
 
@@ -699,6 +740,29 @@ function HomePage() {
   }
 
   useEffect(() => {
+    let isMounted = true
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (isMounted) {
+        setSession(data.session)
+        setIsSessionLoading(false)
+      }
+    })
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession)
+      setIsSessionLoading(false)
+    })
+
+    return () => {
+      isMounted = false
+      subscription.unsubscribe()
+    }
+  }, [])
+
+  useEffect(() => {
     const controller = new AbortController()
     const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
     const filtersEndpoint = apiBaseUrl ? `${apiBaseUrl}/filters` : '/api/filters'
@@ -851,7 +915,7 @@ function HomePage() {
               </section>
             </>
           ) : (
-            <AskAiPlaceholder />
+            <AskAiModePanel isRegistered={isRegisteredUser} isSessionLoading={isSessionLoading} />
           )}
         </main>
       </div>
@@ -955,7 +1019,7 @@ function HomePage() {
             </section>
           </section>
         ) : (
-          <AskAiPlaceholder className="min-h-0" />
+          <AskAiModePanel isRegistered={isRegisteredUser} isSessionLoading={isSessionLoading} className="min-h-0" />
         )}
       </div>
 
