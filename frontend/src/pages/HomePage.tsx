@@ -170,6 +170,8 @@ type BudgetOption = {
   label: string
 }
 
+type SearchMode = 'places' | 'ask-ai'
+
 type BackendSearchPlace = {
   id?: string | null
   slug?: string | null
@@ -395,7 +397,65 @@ function SearchEmptyState({ hasSearched }: { hasSearched: boolean }) {
   )
 }
 
+function SearchModeTabs({
+  selectedMode,
+  onModeChange,
+  className = '',
+}: {
+  selectedMode: SearchMode
+  onModeChange: (mode: SearchMode) => void
+  className?: string
+}) {
+  const modes: { id: SearchMode; label: string }[] = [
+    { id: 'places', label: 'Search Places' },
+    { id: 'ask-ai', label: 'Ask AI' },
+  ]
+
+  return (
+    <div
+      className={`grid grid-cols-2 gap-1 rounded-lg border border-[var(--line)] bg-[var(--chip)] p-1 ${className}`}
+      role="tablist"
+      aria-label="Search mode"
+    >
+      {modes.map((mode) => {
+        const isSelected = selectedMode === mode.id
+
+        return (
+          <button
+            key={mode.id}
+            type="button"
+            role="tab"
+            aria-selected={isSelected}
+            onClick={() => onModeChange(mode.id)}
+            className={`rounded-md px-3 py-2 text-xs font-semibold transition ${
+              isSelected
+                ? 'bg-white text-[var(--accent-deep)] shadow-[0_6px_14px_rgba(47,116,232,0.12)]'
+                : 'text-[var(--muted)] hover:bg-white/70 hover:text-[var(--accent-deep)]'
+            }`}
+          >
+            {mode.label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+function AskAiPlaceholder({ className = '' }: { className?: string }) {
+  return (
+    <section className={`flex min-h-[280px] items-center justify-center bg-[linear-gradient(180deg,#f8fbff,#eef5ff)] px-4 py-8 ${className}`}>
+      <div className="w-full max-w-[520px] rounded-lg border border-dashed border-[var(--line-strong)] bg-white px-5 py-7 text-center shadow-[0_14px_30px_rgba(28,77,160,0.07)]">
+        <p className="text-base font-semibold text-slate-900">Ask AI is coming soon.</p>
+        <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
+          This will help with smarter gala planning and fresh/current questions.
+        </p>
+      </div>
+    </section>
+  )
+}
+
 function HomePage() {
+  const [selectedMode, setSelectedMode] = useState<SearchMode>('places')
   const [categories, setCategories] = useState(fallbackCategories)
   const [areas, setAreas] = useState<AreaChip[]>(fallbackAreas)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
@@ -431,6 +491,18 @@ function HomePage() {
   const selectedFilterLabels = [selectedCategoryName, selectedAreaName, selectedBudgetLabel].filter(Boolean)
   const hasActiveFilters = selectedFilterLabels.length > 0
   const visiblePlaces = hasSearched ? searchResults : []
+  const handleModeChange = (mode: SearchMode) => {
+    setSelectedMode(mode)
+
+    if (mode === 'ask-ai') {
+      searchRequestVersion.current += 1
+      setIsSearching(false)
+      setSearchError(null)
+      setPromptLogin(false)
+      setShowAdvancedFilters(false)
+    }
+  }
+
   const handleClearSearch = () => {
     searchRequestVersion.current += 1
     setSelectedCategory(null)
@@ -699,77 +771,88 @@ function HomePage() {
 
         <main className="pb-6">
           <section className="border-b border-[var(--line)] bg-white/76 px-4 py-4 backdrop-blur">
-            <SearchBar
-              onSearch={handleSearch}
-              onClear={handleClearSearch}
-              clearSignal={clearSearchSignal}
-              hasActiveFilters={hasActiveFilters}
-              hasClearableSearch={hasSearched}
-              isLoading={isSearching}
-              placeholder="Saan mo gustong pumunta ngayon?"
-              animatedPlaceholders={animatedSearchPrompts}
-              className="px-3 py-2.5 shadow-[0_10px_26px_rgba(28,77,160,0.06)]"
-            />
-            {isSearching ? (
-              <p className="mt-2 text-xs text-[var(--accent-deep)]">Searching...</p>
-            ) : null}
-            {searchError ? (
-              <p className="mt-2 text-xs text-red-600">{searchError}</p>
-            ) : null}
-            <button
-              type="button"
-              onClick={() => setShowAdvancedFilters(true)}
-              className="mt-3 inline-flex items-center gap-1 rounded-full border border-[var(--line)] bg-white px-2.5 py-1 text-[11px] font-medium text-[var(--accent-deep)] transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)]"
-            >
-              <FilterIcon className="h-3.5 w-3.5" />
-              Mga Filters
-            </button>
-          </section>
-
-          <section className="h-[380px] border-b border-[var(--line)] bg-white">
-            <MapView
-              places={visiblePlaces}
-              selectedPlaceId={selectedPlaceId}
-              onPlaceSelect={handleMapPlaceSelect}
-              onPlaceOpen={handlePlaceSelect}
-              autoFitToPlaces={hasSearched}
-              className="!h-full !rounded-none !border-0"
-            />
-          </section>
-
-          <section className="px-4 py-4">
-            <div className="mb-3 flex items-end justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold text-slate-900">Mga Lugar</p>
-                <p className="text-[11px] text-[var(--muted)]">
-                  {hasSearched ? `${visiblePlaces.length} places found` : 'Search to show matching places'}
-                </p>
-              </div>
-              {hasSearched || hasActiveFilters ? (
+            <SearchModeTabs selectedMode={selectedMode} onModeChange={handleModeChange} className="mb-3" />
+            {selectedMode === 'places' ? (
+              <>
+                <SearchBar
+                  onSearch={handleSearch}
+                  onClear={handleClearSearch}
+                  clearSignal={clearSearchSignal}
+                  hasActiveFilters={hasActiveFilters}
+                  hasClearableSearch={hasSearched}
+                  isLoading={isSearching}
+                  placeholder="Saan mo gustong pumunta ngayon?"
+                  animatedPlaceholders={animatedSearchPrompts}
+                  className="px-3 py-2.5 shadow-[0_10px_26px_rgba(28,77,160,0.06)]"
+                />
+                {isSearching ? (
+                  <p className="mt-2 text-xs text-[var(--accent-deep)]">Searching...</p>
+                ) : null}
+                {searchError ? (
+                  <p className="mt-2 text-xs text-red-600">{searchError}</p>
+                ) : null}
                 <button
                   type="button"
-                  onClick={handleClearSearch}
-                  className="rounded-full border border-[var(--accent)] bg-white px-3 py-1.5 text-[11px] font-semibold text-[var(--accent-deep)] shadow-[0_8px_18px_rgba(47,116,232,0.12)] transition hover:bg-[var(--accent-wash)]"
+                  onClick={() => setShowAdvancedFilters(true)}
+                  className="mt-3 inline-flex items-center gap-1 rounded-full border border-[var(--line)] bg-white px-2.5 py-1 text-[11px] font-medium text-[var(--accent-deep)] transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)]"
                 >
-                  Clear Search
+                  <FilterIcon className="h-3.5 w-3.5" />
+                  Mga Filters
                 </button>
-              ) : null}
-            </div>
-
-            <div className="grid gap-3">
-              {visiblePlaces.length > 0
-                ? visiblePlaces.map((place) => (
-                    <PlaceCard
-                      key={place.id}
-                      place={place}
-                      compact
-                      isSelected={selectedPlaceId === place.id}
-                      onSelect={handlePlaceSelect}
-                    />
-                  ))
-                : <SearchEmptyState hasSearched={hasSearched} />}
-            </div>
+              </>
+            ) : null}
           </section>
+
+          {selectedMode === 'places' ? (
+            <>
+              <section className="h-[380px] border-b border-[var(--line)] bg-white">
+                <MapView
+                  places={visiblePlaces}
+                  selectedPlaceId={selectedPlaceId}
+                  onPlaceSelect={handleMapPlaceSelect}
+                  onPlaceOpen={handlePlaceSelect}
+                  autoFitToPlaces={hasSearched}
+                  className="!h-full !rounded-none !border-0"
+                />
+              </section>
+
+              <section className="px-4 py-4">
+                <div className="mb-3 flex items-end justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">Mga Lugar</p>
+                    <p className="text-[11px] text-[var(--muted)]">
+                      {hasSearched ? `${visiblePlaces.length} places found` : 'Search to show matching places'}
+                    </p>
+                  </div>
+                  {hasSearched || hasActiveFilters ? (
+                    <button
+                      type="button"
+                      onClick={handleClearSearch}
+                      className="rounded-full border border-[var(--accent)] bg-white px-3 py-1.5 text-[11px] font-semibold text-[var(--accent-deep)] shadow-[0_8px_18px_rgba(47,116,232,0.12)] transition hover:bg-[var(--accent-wash)]"
+                    >
+                      Clear Search
+                    </button>
+                  ) : null}
+                </div>
+
+                <div className="grid gap-3">
+                  {visiblePlaces.length > 0
+                    ? visiblePlaces.map((place) => (
+                        <PlaceCard
+                          key={place.id}
+                          place={place}
+                          compact
+                          isSelected={selectedPlaceId === place.id}
+                          onSelect={handlePlaceSelect}
+                        />
+                      ))
+                    : <SearchEmptyState hasSearched={hasSearched} />}
+                </div>
+              </section>
+            </>
+          ) : (
+            <AskAiPlaceholder />
+          )}
         </main>
       </div>
 
@@ -779,92 +862,101 @@ function HomePage() {
         <section className="border-b border-[var(--line)] bg-white/72 backdrop-blur">
           <div className="px-8 py-3">
             <div className="flex items-center gap-4">
-            <SearchBar
-              onSearch={handleSearch}
-              onClear={handleClearSearch}
-              clearSignal={clearSearchSignal}
-              hasActiveFilters={hasActiveFilters}
-              hasClearableSearch={hasSearched}
-              isLoading={isSearching}
-              placeholder="Saan mo gustong pumunta ngayon?"
-              animatedPlaceholders={animatedSearchPrompts}
-              className="min-w-0 flex-1"
-            />
-            <button
-              type="button"
-              onClick={() => setShowAdvancedFilters(true)}
-              className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-white px-3 py-2 text-xs font-medium text-[var(--accent-deep)] transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)]"
-            >
-              <FilterIcon className="h-3.5 w-3.5" />
-              Mga Filters
-            </button>
+              <SearchModeTabs selectedMode={selectedMode} onModeChange={handleModeChange} className="w-[280px] shrink-0" />
+              {selectedMode === 'places' ? (
+                <>
+                  <SearchBar
+                    onSearch={handleSearch}
+                    onClear={handleClearSearch}
+                    clearSignal={clearSearchSignal}
+                    hasActiveFilters={hasActiveFilters}
+                    hasClearableSearch={hasSearched}
+                    isLoading={isSearching}
+                    placeholder="Saan mo gustong pumunta ngayon?"
+                    animatedPlaceholders={animatedSearchPrompts}
+                    className="min-w-0 flex-1"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowAdvancedFilters(true)}
+                    className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-white px-3 py-2 text-xs font-medium text-[var(--accent-deep)] transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)]"
+                  >
+                    <FilterIcon className="h-3.5 w-3.5" />
+                    Mga Filters
+                  </button>
+                </>
+              ) : null}
             </div>
-            {isSearching ? (
+            {selectedMode === 'places' && isSearching ? (
               <p className="mt-2 text-xs text-[var(--accent-deep)]">Searching...</p>
             ) : null}
-            {searchError ? (
+            {selectedMode === 'places' && searchError ? (
               <p className="mt-2 text-xs text-red-600">{searchError}</p>
             ) : null}
           </div>
         </section>
 
-        <section className="grid min-h-0 grid-cols-[380px_minmax(0,1fr)]">
-          <aside className="relative flex min-h-0 flex-col border-r border-[var(--line)] bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(244,249,255,0.96))]">
-            <div className="flex items-start justify-between border-b border-[var(--line)] px-5 py-4">
-              <div>
-                <p className="text-sm font-semibold text-slate-900">Mga Lugar</p>
-                <p className="text-[11px] text-[var(--muted)]">
-                  {lastSearchQuery
-                    ? `Last search: "${lastSearchQuery}"`
-                    : hasSearched
-                      ? `${visiblePlaces.length} places found`
-                      : 'Search to show matching places'}
-                </p>
+        {selectedMode === 'places' ? (
+          <section className="grid min-h-0 grid-cols-[380px_minmax(0,1fr)]">
+            <aside className="relative flex min-h-0 flex-col border-r border-[var(--line)] bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(244,249,255,0.96))]">
+              <div className="flex items-start justify-between border-b border-[var(--line)] px-5 py-4">
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">Mga Lugar</p>
+                  <p className="text-[11px] text-[var(--muted)]">
+                    {lastSearchQuery
+                      ? `Last search: "${lastSearchQuery}"`
+                      : hasSearched
+                        ? `${visiblePlaces.length} places found`
+                        : 'Search to show matching places'}
+                  </p>
+                </div>
+                {hasSearched || hasActiveFilters ? (
+                  <button
+                    type="button"
+                    onClick={handleClearSearch}
+                    className="rounded-full border border-[var(--accent)] bg-white px-3 py-1.5 text-[11px] font-semibold text-[var(--accent-deep)] shadow-[0_8px_18px_rgba(47,116,232,0.12)] transition hover:bg-[var(--accent-wash)]"
+                  >
+                    Clear Search
+                  </button>
+                ) : null}
               </div>
-              {hasSearched || hasActiveFilters ? (
-                <button
-                  type="button"
-                  onClick={handleClearSearch}
-                  className="rounded-full border border-[var(--accent)] bg-white px-3 py-1.5 text-[11px] font-semibold text-[var(--accent-deep)] shadow-[0_8px_18px_rgba(47,116,232,0.12)] transition hover:bg-[var(--accent-wash)]"
-                >
-                  Clear Search
-                </button>
-              ) : null}
-            </div>
 
-            <div className="grid grid-cols-3 gap-px border-b border-[var(--line)] bg-[var(--line)]">
-              <div className="bg-white px-3 py-2 text-center text-[11px] font-medium text-[var(--muted)]">All</div>
-              <div className="bg-white px-3 py-2 text-center text-[11px] font-medium text-[var(--muted)]">Open</div>
-              <div className="bg-white px-3 py-2 text-center text-[11px] font-medium text-[var(--muted)]">Saved</div>
-            </div>
-
-            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
-              <div className="grid gap-3">
-                {visiblePlaces.length > 0
-                  ? visiblePlaces.map((place) => (
-                      <PlaceCard
-                        key={place.id}
-                        place={place}
-                        isSelected={selectedPlaceId === place.id}
-                        onSelect={handlePlaceSelect}
-                      />
-                    ))
-                  : <SearchEmptyState hasSearched={hasSearched} />}
+              <div className="grid grid-cols-3 gap-px border-b border-[var(--line)] bg-[var(--line)]">
+                <div className="bg-white px-3 py-2 text-center text-[11px] font-medium text-[var(--muted)]">All</div>
+                <div className="bg-white px-3 py-2 text-center text-[11px] font-medium text-[var(--muted)]">Open</div>
+                <div className="bg-white px-3 py-2 text-center text-[11px] font-medium text-[var(--muted)]">Saved</div>
               </div>
-            </div>
-          </aside>
 
-          <section className="min-h-0 bg-white">
-            <MapView
-              places={visiblePlaces}
-              selectedPlaceId={selectedPlaceId}
-              onPlaceSelect={handleMapPlaceSelect}
-              onPlaceOpen={handlePlaceSelect}
-              autoFitToPlaces={hasSearched}
-              className="!h-full !rounded-none !border-0"
-            />
+              <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+                <div className="grid gap-3">
+                  {visiblePlaces.length > 0
+                    ? visiblePlaces.map((place) => (
+                        <PlaceCard
+                          key={place.id}
+                          place={place}
+                          isSelected={selectedPlaceId === place.id}
+                          onSelect={handlePlaceSelect}
+                        />
+                      ))
+                    : <SearchEmptyState hasSearched={hasSearched} />}
+                </div>
+              </div>
+            </aside>
+
+            <section className="min-h-0 bg-white">
+              <MapView
+                places={visiblePlaces}
+                selectedPlaceId={selectedPlaceId}
+                onPlaceSelect={handleMapPlaceSelect}
+                onPlaceOpen={handlePlaceSelect}
+                autoFitToPlaces={hasSearched}
+                className="!h-full !rounded-none !border-0"
+              />
+            </section>
           </section>
-        </section>
+        ) : (
+          <AskAiPlaceholder className="min-h-0" />
+        )}
       </div>
 
       <div
