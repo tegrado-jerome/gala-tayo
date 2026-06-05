@@ -163,11 +163,11 @@ function PlaceCard({ place, isSelected = false, compact = false, onSelect }: Pla
   const [shareError, setShareError] = useState('')
   const [saveMessage, setSaveMessage] = useState('')
   const [saveError, setSaveError] = useState('')
-  const { isPlaceSaved, saveFavorite } = useSavedFavorites()
+  const { isPlaceSaved, saveFavorite, removeFavorite } = useSavedFavorites()
   const resolvedCuratedImageUrls = place.curatedImageUrls ?? getCuratedPlaceImages(place.name)
   const photoUrl = place.imageUrl?.trim() || place.curatedImageUrl?.trim() || resolvedCuratedImageUrls[0]?.trim() || null
   const normalizedNameSlug = normalizePlaceSlug(place.name)
-  const placeSlug = place.slug || normalizedNameSlug
+  const placeSlug = place.slug?.trim() || place.id
   const isSaved = [place.slug, normalizedNameSlug, place.id].some((slug) => isPlaceSaved(slug))
   const displayChips = getPlaceChips(place)
   const directionsUrl = getDirectionsUrl(place)
@@ -190,7 +190,8 @@ function PlaceCard({ place, isSelected = false, compact = false, onSelect }: Pla
       setSaveError('')
 
       if (isSaved) {
-        setSaveMessage('Place already saved to favorites.')
+        const message = await removeFavorite(placeSlug)
+        setSaveMessage(message)
         return
       }
 
@@ -332,7 +333,7 @@ function PlaceCard({ place, isSelected = false, compact = false, onSelect }: Pla
             ) : (
               <SaveIcon />
             )}
-            <span>{isSaved ? 'Saved' : 'Save'}</span>
+            <span>{isSaved ? 'Unsave' : 'Save'}</span>
           </button>
         </div>
         {saveError ? (

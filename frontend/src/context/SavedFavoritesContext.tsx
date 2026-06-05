@@ -9,6 +9,7 @@ type FavoritePlace = {
   category?: string | null
   address?: string | null
   city?: string | null
+  area?: string | null
   google_maps_url?: string | null
   latitude?: number | null
   longitude?: number | null
@@ -61,11 +62,32 @@ function normalizeKnownSlug(placeSlug: string) {
   return placeSlug.trim().toLowerCase()
 }
 
+function dedupeFavoritesBySlug(favorites: FavoriteRow[]) {
+  const seenSlugs = new Set<string>()
+
+  return favorites.filter((favorite) => {
+    const slug = favorite.place?.slug?.trim()
+
+    if (!slug) {
+      return false
+    }
+
+    const normalizedSlug = normalizeKnownSlug(slug)
+
+    if (seenSlugs.has(normalizedSlug)) {
+      return false
+    }
+
+    seenSlugs.add(normalizedSlug)
+    return true
+  })
+}
+
 function getSavedSlugs(favorites: FavoriteRow[]) {
   return new Set(
     favorites
-      .map((favorite) => favorite.place?.slug)
-      .filter((slug): slug is string => Boolean(slug?.trim()))
+      .flatMap((favorite) => [favorite.place?.slug, favorite.place?.id])
+      .filter((slugOrId): slugOrId is string => Boolean(slugOrId?.trim()))
       .map(normalizeKnownSlug)
   )
 }
@@ -131,7 +153,7 @@ function SavedFavoritesProvider({ children }: { children: ReactNode }) {
           throw new Error(data.message || 'Failed to load favorites.')
         }
 
-        const nextFavorites = data.favorites || []
+        const nextFavorites = dedupeFavoritesBySlug(data.favorites || [])
         setFavorites(nextFavorites)
         setSavedPlaceSlugs(getSavedSlugs(nextFavorites))
       } catch (error) {
@@ -196,21 +218,23 @@ function SavedFavoritesProvider({ children }: { children: ReactNode }) {
       setSavedPlaceSlugs((currentSlugs) => new Set(currentSlugs).add(normalizedSlug))
 
       if (data.favorites) {
-        setFavorites(data.favorites)
+        const nextFavorites = dedupeFavoritesBySlug(data.favorites)
+        setFavorites(nextFavorites)
+        setSavedPlaceSlugs(getSavedSlugs(nextFavorites))
       } else if (data.place) {
         setFavorites((currentFavorites) => {
-          if (currentFavorites.some((favorite) => favorite.place?.slug === normalizedSlug)) {
+          if (currentFavorites.some((favorite) => favorite.place?.slug && normalizeKnownSlug(favorite.place.slug) === normalizedSlug)) {
             return currentFavorites
           }
 
-          return [
+          return dedupeFavoritesBySlug([
             {
               id: data.favorite?.id || `saved-${normalizedSlug}`,
               created_at: data.favorite?.created_at || new Date().toISOString(),
               place: data.place || null,
             },
             ...currentFavorites,
-          ]
+          ])
         })
       }
 
@@ -234,7 +258,7 @@ function SavedFavoritesProvider({ children }: { children: ReactNode }) {
         },
       })
 
-      const data = (await response.json()) as { message?: string }
+      const data = (await response.json()) as FavoritesResponse
 
       if (!response.ok) {
         throw new Error(data.message || 'Failed to remove favorite.')
@@ -246,8 +270,17 @@ function SavedFavoritesProvider({ children }: { children: ReactNode }) {
         return nextSlugs
       })
       setFavorites((currentFavorites) =>
-        currentFavorites.filter((favorite) => favorite.place?.slug !== normalizedSlug)
+        currentFavorites.filter((favorite) => {
+          const slug = favorite.place?.slug
+          return !slug || normalizeKnownSlug(slug) !== normalizedSlug
+        })
       )
+
+      if (data.favorites) {
+        const nextFavorites = dedupeFavoritesBySlug(data.favorites)
+        setFavorites(nextFavorites)
+        setSavedPlaceSlugs(getSavedSlugs(nextFavorites))
+      }
 
       return data.message || 'Favorite removed'
     }

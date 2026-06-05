@@ -356,7 +356,7 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
   const [shareError, setShareError] = useState('')
   const [saveMessage, setSaveMessage] = useState('')
   const [saveError, setSaveError] = useState('')
-  const { isPlaceSaved, saveFavorite } = useSavedFavorites()
+  const { isPlaceSaved, saveFavorite, removeFavorite } = useSavedFavorites()
   const [mobilePhotoIndex, setMobilePhotoIndex] = useState(0)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const resolvedCuratedImageUrls = place.curatedImageUrls ?? getCuratedPlaceImages(place.name)
@@ -368,6 +368,7 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
   const mobilePhotoUrl = galleryPhotos[mobilePhotoIndex] ?? null
   const normalizedNameSlug = normalizePlaceSlug(place.name)
   const placeSlug = place.slug || normalizedNameSlug
+  const favoritePlaceKey = place.slug?.trim() || place.id
   const isSaved = [place.slug, normalizedNameSlug, place.id].some((slug) => isPlaceSaved(slug))
   const budgetLabel = place.budget_notes?.trim() || place.entranceFee?.trim() || 'Not available'
   const directionsUrl = getDirectionsUrl(place)
@@ -444,11 +445,12 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
       setSaveError('')
 
       if (isSaved) {
-        setSaveMessage('Place already saved to favorites.')
+        const message = await removeFavorite(favoritePlaceKey)
+        setSaveMessage(message)
         return
       }
 
-      const result = await saveFavorite(placeSlug)
+      const result = await saveFavorite(favoritePlaceKey)
 
       if (result.status === 'guest') {
         setIsSavePromptOpen(true)
@@ -575,7 +577,7 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
               ) : (
                 <SaveIcon />
               )}
-              <span>{isSaved ? 'Saved' : 'Save'}</span>
+              <span>{isSaved ? 'Unsave' : 'Save'}</span>
             </button>
             <button
               type="button"
@@ -713,7 +715,7 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
                 ) : (
                   <SaveIcon />
                 )}
-                <span>{isSaved ? 'Saved' : 'Save'}</span>
+                <span>{isSaved ? 'Unsave' : 'Save'}</span>
               </button>
               <button
                 type="button"
