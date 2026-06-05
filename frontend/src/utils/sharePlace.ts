@@ -4,46 +4,23 @@ type ShareablePlace = {
   name: string
   category: string
   area: string
+  city?: string | null
   reason: string
 }
 
-type PlatformShareLinks = {
-  facebook: string
-  telegram: string
-  whatsapp: string
-  viber: string
-  email: string
-}
+function getPlaceSlug(place: ShareablePlace) {
+  const slug = place.slug?.trim()
 
-function getPlaceRouteId(place: ShareablePlace) {
-  return place.slug?.trim() || place.id
+  if (!slug) {
+    throw new Error('Cannot share place without a canonical slug.')
+  }
+
+  return slug
 }
 
 function getPlaceShareUrl(place: ShareablePlace) {
-  return new URL(`/places/${encodeURIComponent(getPlaceRouteId(place))}`, window.location.origin).toString()
-}
-
-function getPlaceShareText(place: ShareablePlace) {
-  return `Tingnan mo 'to sa GalaTayo: ${place.name}
-${place.reason}
-
-${getPlaceShareUrl(place)}`
-}
-
-function getPlatformShareLinks(place: ShareablePlace): PlatformShareLinks {
-  const placeUrl = getPlaceShareUrl(place)
-  const shareText = getPlaceShareText(place)
-  const encodedUrl = encodeURIComponent(placeUrl)
-  const encodedText = encodeURIComponent(shareText)
-  const encodedSubject = encodeURIComponent(`${place.name} sa GalaTayo`)
-
-  return {
-    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
-    telegram: `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`,
-    whatsapp: `https://wa.me/?text=${encodedText}`,
-    viber: `viber://forward?text=${encodedText}`,
-    email: `mailto:?subject=${encodedSubject}&body=${encodedText}`,
-  }
+  const placeUrl = `${window.location.origin}/places/${getPlaceSlug(place)}`
+  return placeUrl
 }
 
 async function copyTextToClipboard(text: string) {
@@ -74,5 +51,5 @@ async function copyPlaceLink(place: ShareablePlace) {
   await copyTextToClipboard(getPlaceShareUrl(place))
 }
 
-export { copyPlaceLink, getPlaceShareText, getPlaceShareUrl, getPlatformShareLinks }
-export type { PlatformShareLinks, ShareablePlace }
+export { copyPlaceLink, getPlaceShareUrl }
+export type { ShareablePlace }

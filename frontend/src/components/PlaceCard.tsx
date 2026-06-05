@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { getCuratedPlaceImages, normalizePlaceSlug } from '../data/curatedPlaceImages'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import GuestLimitModal from './GuestLimitModal'
-import SharePlaceModal from './SharePlaceModal'
+import { copyPlaceLink } from '../utils/sharePlace'
 
 type PlaceCategoryMeta = {
   id: string
@@ -147,9 +147,10 @@ function getPlaceChips(place: PlaceCardData) {
 }
 
 function PlaceCard({ place, isSelected = false, compact = false, onSelect }: PlaceCardProps) {
-  const [isShareOpen, setIsShareOpen] = useState(false)
   const [isSavePromptOpen, setIsSavePromptOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [shareMessage, setShareMessage] = useState('')
+  const [shareError, setShareError] = useState('')
   const [saveMessage, setSaveMessage] = useState('')
   const [saveError, setSaveError] = useState('')
   const { isPlaceSaved, saveFavorite } = useSavedFavorites()
@@ -159,6 +160,17 @@ function PlaceCard({ place, isSelected = false, compact = false, onSelect }: Pla
   const placeSlug = place.slug || normalizedNameSlug
   const isSaved = [place.slug, normalizedNameSlug, place.id].some((slug) => isPlaceSaved(slug))
   const displayChips = getPlaceChips(place)
+
+  const handleShare = async () => {
+    try {
+      setShareMessage('')
+      setShareError('')
+      await copyPlaceLink(place)
+      setShareMessage('Link copied - paste it anywhere.')
+    } catch {
+      setShareError('Could not copy the link. Please try again.')
+    }
+  }
 
   const handleSave = async () => {
     try {
@@ -276,7 +288,7 @@ function PlaceCard({ place, isSelected = false, compact = false, onSelect }: Pla
             type="button"
             onClick={(event) => {
               event.stopPropagation()
-              setIsShareOpen(true)
+              void handleShare()
             }}
             className="flex items-center justify-center gap-1.5 px-3 py-2 text-[11px] font-medium text-slate-700 transition hover:bg-slate-50"
           >
@@ -305,6 +317,16 @@ function PlaceCard({ place, isSelected = false, compact = false, onSelect }: Pla
             {saveError}
           </p>
         ) : null}
+        {shareError ? (
+          <p className="border-t border-red-100 bg-red-50 px-3 py-2 text-[11px] text-red-600">
+            {shareError}
+          </p>
+        ) : null}
+        {shareMessage ? (
+          <p className="border-t border-[var(--line)] bg-[var(--accent-wash)] px-3 py-2 text-[11px] text-[var(--accent-deep)]">
+            {shareMessage}
+          </p>
+        ) : null}
         {saveMessage ? (
           <p className="border-t border-[var(--line)] bg-[var(--accent-wash)] px-3 py-2 text-[11px] text-[var(--accent-deep)]">
             {saveMessage}
@@ -312,7 +334,6 @@ function PlaceCard({ place, isSelected = false, compact = false, onSelect }: Pla
         ) : null}
       </article>
 
-      <SharePlaceModal place={place} isOpen={isShareOpen} onClose={() => setIsShareOpen(false)} />
       <GuestLimitModal
         isOpen={isSavePromptOpen}
         onClose={() => setIsSavePromptOpen(false)}

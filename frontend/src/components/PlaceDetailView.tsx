@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react'
 import type { PlaceCardData, PlaceCategoryMeta, PlaceTagMeta } from './PlaceCard'
 import AppHeader from './AppHeader'
 import MapView from './MapView'
-import SharePlaceModal from './SharePlaceModal'
 import GuestLimitModal from './GuestLimitModal'
 import { getCuratedPlaceImages, normalizePlaceSlug } from '../data/curatedPlaceImages'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { supabase } from '../supabase'
+import { copyPlaceLink } from '../utils/sharePlace'
 
 type PlaceDetailViewProps = {
   place: PlaceCardData
@@ -349,9 +349,10 @@ function getApiEndpoint(path: string) {
 
 function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
   const mapCenter: [number, number] = [place.coordinates.lat, place.coordinates.lng]
-  const [isShareOpen, setIsShareOpen] = useState(false)
   const [isSavePromptOpen, setIsSavePromptOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [shareMessage, setShareMessage] = useState('')
+  const [shareError, setShareError] = useState('')
   const [saveMessage, setSaveMessage] = useState('')
   const [saveError, setSaveError] = useState('')
   const { isPlaceSaved, saveFavorite } = useSavedFavorites()
@@ -431,6 +432,17 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
     }
 
     window.open(directionsUrl, '_blank', 'noopener,noreferrer')
+  }
+
+  const handleSharePlace = async () => {
+    try {
+      setShareMessage('')
+      setShareError('')
+      await copyPlaceLink(place)
+      setShareMessage('Link copied - paste it anywhere.')
+    } catch {
+      setShareError('Could not copy the link. Please try again.')
+    }
   }
 
   const handleSavePlace = async () => {
@@ -554,7 +566,7 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
           <div className="grid grid-cols-3 gap-2">
             <button
               type="button"
-              onClick={() => setIsShareOpen(true)}
+              onClick={() => void handleSharePlace()}
               className="inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--line-strong)] bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)]"
             >
               <ShareIcon />
@@ -583,6 +595,8 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
               <span>Directions</span>
             </button>
           </div>
+          {shareMessage ? <p className="mt-2 text-xs font-medium text-[var(--accent-deep)]">{shareMessage}</p> : null}
+          {shareError ? <p className="mt-2 text-xs font-medium text-red-600">{shareError}</p> : null}
           {saveMessage ? <p className="mt-2 text-xs font-medium text-[var(--accent-deep)]">{saveMessage}</p> : null}
           {saveError ? <p className="mt-2 text-xs font-medium text-red-600">{saveError}</p> : null}
         </article>
@@ -690,7 +704,7 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
             <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
-                onClick={() => setIsShareOpen(true)}
+                onClick={() => void handleSharePlace()}
                 className="inline-flex items-center justify-center gap-1 rounded-lg border border-[var(--line-strong)] bg-white px-2 py-2 text-sm font-medium text-slate-700"
               >
                 <ShareIcon />
@@ -719,6 +733,8 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
                 <span>Directions</span>
               </button>
             </div>
+            {shareMessage ? <p className="mt-2 text-xs font-medium text-[var(--accent-deep)]">{shareMessage}</p> : null}
+            {shareError ? <p className="mt-2 text-xs font-medium text-red-600">{shareError}</p> : null}
             {saveMessage ? <p className="mt-2 text-xs font-medium text-[var(--accent-deep)]">{saveMessage}</p> : null}
             {saveError ? <p className="mt-2 text-xs font-medium text-red-600">{saveError}</p> : null}
           </div>
@@ -733,7 +749,6 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
         </div>
       </section>
 
-      <SharePlaceModal place={place} isOpen={isShareOpen} onClose={() => setIsShareOpen(false)} />
       <GuestLimitModal
         isOpen={isSavePromptOpen}
         onClose={() => setIsSavePromptOpen(false)}
