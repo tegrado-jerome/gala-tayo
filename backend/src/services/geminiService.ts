@@ -1,7 +1,9 @@
 import { GoogleGenAI } from "@google/genai";
 import { getSecret } from "../config/keyVault";
-
-const GEMINI_MODEL = "gemini-2.5-flash";
+import {
+  ASK_AI_GUIDE_FALLBACK_MODEL,
+  ASK_AI_GUIDE_MODEL,
+} from "../config/askAiConfig";
 
 export class GeminiServiceError extends Error {
   status: number;
@@ -16,6 +18,25 @@ export class GeminiServiceError extends Error {
 type GenerateGeminiResponseParams = {
   prompt: string;
 };
+
+async function generateContentText(
+  ai: GoogleGenAI,
+  model: string,
+  prompt: string
+): Promise<string> {
+  const response = await ai.models.generateContent({
+    model,
+    contents: prompt,
+  });
+
+  const text = response.text;
+
+  if (!text) {
+    throw new GeminiServiceError("Gemini returned an empty response.", 502);
+  }
+
+  return text;
+}
 
 function getGeminiErrorStatus(error: unknown): number {
   if (
@@ -61,28 +82,19 @@ export async function generateGeminiResponse({
     apiKey,
   });
 
-  let response;
-
   try {
-    response = await ai.models.generateContent({
-      model: GEMINI_MODEL,
-      contents: prompt,
-    });
-  } catch (error) {
-    const status = getGeminiErrorStatus(error);
-    const message =
-      error instanceof Error
-        ? error.message
-        : "Gemini API request failed.";
+    return await generateContentText(ai, ASK_AI_GUIDE_MODEL, prompt);
+  } catch {
+    try {
+      return await generateContentText(ai, ASK_AI_GUIDE_FALLBACK_MODEL, prompt);
+    } catch (fallbackError) {
+      const status = getGeminiErrorStatus(fallbackError);
+      const message =
+        fallbackError instanceof Error
+          ? fallbackError.message
+          : "Gemini API request failed.";
 
-    throw new GeminiServiceError(message, status);
+      throw new GeminiServiceError(message, status);
+    }
   }
-
-  const text = response.text;
-
-  if (!text) {
-    throw new GeminiServiceError("Gemini returned an empty response.", 502);
-  }
-
-  return text;
 }

@@ -35,6 +35,12 @@ type BackendArea = {
   type: 'all' | 'city' | 'municipality'
 }
 
+const askAiLoadingMessages = [
+  'Planning your gala...',
+  'Checking the best options...',
+  'Making it easier to decide...',
+]
+
 function FilterIcon({ className = 'h-4 w-4' }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className}>
@@ -175,11 +181,31 @@ type BudgetOption = {
 type SearchMode = 'places' | 'ask-ai'
 
 type AskAiUsageStatus = {
+  usageType: 'ask_ai_total' | 'live_search'
   allowed: boolean
   limit: number
   used: number
   remaining: number
   resetAt: string
+  message?: string
+}
+
+type AskAiSource = {
+  title: string
+  url: string
+}
+
+type AskAiUsageSummary = {
+  askAi: AskAiUsageStatus
+  liveSearch: AskAiUsageStatus
+}
+
+type AskAiAnswerResponse = {
+  mode: 'ask_ai'
+  answer: string
+  usedLiveSearch: boolean
+  sources: AskAiSource[]
+  usage: AskAiUsageSummary
   message?: string
 }
 
@@ -465,40 +491,176 @@ function formatResetAt(resetAt: string) {
   })
 }
 
+function isAskAiUsageStatus(value: unknown): value is AskAiUsageStatus {
+  if (!value || typeof value !== 'object') {
+    return false
+  }
+
+  const usage = value as Partial<AskAiUsageStatus>
+
+  return (
+    (usage.usageType === 'ask_ai_total' || usage.usageType === 'live_search') &&
+    typeof usage.allowed === 'boolean' &&
+    typeof usage.limit === 'number' &&
+    typeof usage.used === 'number' &&
+    typeof usage.remaining === 'number' &&
+    typeof usage.resetAt === 'string'
+  )
+}
+
+function getAskAiSourceList(value: unknown): AskAiSource[] {
+  if (!Array.isArray(value)) {
+    return []
+  }
+
+  return value
+    .map((source) => {
+      if (!source || typeof source !== 'object') {
+        return null
+      }
+
+      const candidate = source as Partial<AskAiSource>
+      const url = typeof candidate.url === 'string' ? candidate.url : null
+
+      if (!url) {
+        return null
+      }
+
+      return {
+        title: typeof candidate.title === 'string' && candidate.title.trim() ? candidate.title : url,
+        url,
+      }
+    })
+    .filter((source): source is AskAiSource => Boolean(source))
+}
+
 function AskAiPlaceholder({
   usageStatus,
+  liveSearchUsageStatus,
+  question,
+  answer,
+  sources,
+  usedLiveSearch,
+  isSubmitting,
+  answerError,
+  onQuestionChange,
+  onSubmit,
   className = '',
 }: {
   usageStatus: AskAiUsageStatus
+  liveSearchUsageStatus: AskAiUsageStatus | null
+  question: string
+  answer: string
+  sources: AskAiSource[]
+  usedLiveSearch: boolean
+  isSubmitting: boolean
+  answerError: string | null
+  onQuestionChange: (question: string) => void
+  onSubmit: () => void
   className?: string
 }) {
   const isLimitReached = !usageStatus.allowed || usageStatus.remaining <= 0
+  const isLiveSearchUsedUp = Boolean(liveSearchUsageStatus && liveSearchUsageStatus.remaining <= 0)
+  const canSubmit = !isSubmitting && !isLimitReached && question.trim().length > 0
+  const [loadingMessageIndex, setLoadingMessageIndex] = useState(0)
+  const loadingMessage = askAiLoadingMessages[loadingMessageIndex]
+
+  useEffect(() => {
+    if (!isSubmitting) {
+      setLoadingMessageIndex(0)
+      return
+    }
+
+    const intervalId = window.setInterval(() => {
+      setLoadingMessageIndex((index) => (index + 1) % askAiLoadingMessages.length)
+    }, 1800)
+
+    return () => window.clearInterval(intervalId)
+  }, [isSubmitting])
 
   return (
-    <section className={`flex min-h-[280px] items-center justify-center bg-[linear-gradient(180deg,#f8fbff,#eef5ff)] px-4 py-8 ${className}`}>
-      <div className="w-full max-w-[560px] rounded-lg border border-dashed border-[var(--line-strong)] bg-white px-5 py-7 text-center shadow-[0_14px_30px_rgba(28,77,160,0.07)]">
-        <p className="text-base font-semibold text-slate-900">
-          {isLimitReached ? 'Daily Ask AI limit reached.' : 'Ask AI is coming soon.'}
-        </p>
-        {isLimitReached ? (
-          <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
-            You have used all Ask AI requests for today. Search Places is still available.
+    <section className={`min-h-[280px] bg-[linear-gradient(180deg,#f8fbff,#eef5ff)] px-4 py-6 ${className}`}>
+      <div className="mx-auto grid w-full max-w-[720px] gap-4">
+        <div className="rounded-lg border border-[var(--line)] bg-white px-4 py-4 shadow-[0_14px_30px_rgba(28,77,160,0.07)]">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-semibold text-slate-900">
+              Ask AI uses left today: {usageStatus.remaining}/{usageStatus.limit}
+            </p>
+            {usedLiveSearch && answer ? (
+              <span className="rounded-full border border-[var(--accent)] bg-[var(--accent-wash)] px-2.5 py-1 text-[11px] font-semibold text-[var(--accent-deep)]">
+                Used Live Search
+              </span>
+            ) : null}
+          </div>
+          <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">
+            {isLiveSearchUsedUp
+              ? 'Live Search checks are used up today. Ask AI can still help with general planning.'
+              : 'Live Search available for current info.'}
           </p>
-        ) : (
-          <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
-            This will help with smarter gala planning and fresh/current questions.
+          <p className="mt-1 text-[11px] leading-relaxed text-[var(--muted)]">
+            Resets at: {formatResetAt(usageStatus.resetAt)}
           </p>
-        )}
-        <div className="mt-5 grid gap-2 rounded-lg border border-[var(--line)] bg-[linear-gradient(180deg,#f8fbff,#eef5ff)] px-4 py-3 text-left">
-          <p className="text-sm font-semibold text-slate-900">{usageStatus.limit} Ask AI requests per day</p>
-          <p className="text-sm text-[var(--muted)]">Remaining today: {usageStatus.remaining}</p>
-          <p className="text-xs leading-relaxed text-[var(--muted)]">Resets at: {formatResetAt(usageStatus.resetAt)}</p>
-          {usageStatus.message ? (
-            <p className="rounded-md border border-red-100 bg-red-50 px-3 py-2 text-xs font-medium text-red-600">
-              {usageStatus.message}
+        </div>
+
+        <div className="rounded-lg border border-[var(--line)] bg-white p-4 shadow-[0_14px_30px_rgba(28,77,160,0.07)]">
+          <label className="text-sm font-semibold text-slate-900" htmlFor="ask-ai-question">
+            Ask AI
+          </label>
+          <textarea
+            id="ask-ai-question"
+            value={question}
+            onChange={(event) => onQuestionChange(event.target.value)}
+            disabled={isSubmitting || isLimitReached}
+            rows={4}
+            placeholder="Plan a chill date in Makati"
+            className="mt-2 min-h-[112px] w-full resize-y rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-sm leading-relaxed text-slate-900 outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[rgba(47,116,232,0.12)] disabled:bg-slate-50 disabled:text-slate-400"
+          />
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={onSubmit}
+              disabled={!canSubmit}
+              className="rounded-full border border-[var(--accent)] bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(47,116,232,0.22)] transition hover:-translate-y-[1px] hover:bg-white hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none disabled:hover:translate-y-0"
+            >
+              {isSubmitting ? 'Asking...' : 'Ask AI'}
+            </button>
+            {isSubmitting ? (
+              <span className="text-xs font-semibold text-[var(--accent-deep)]">{loadingMessage}</span>
+            ) : null}
+            {isLimitReached ? (
+              <span className="text-xs font-medium text-red-600">Daily Ask AI limit reached.</span>
+            ) : null}
+          </div>
+          {answerError ? (
+            <p className="mt-3 rounded-md border border-red-100 bg-red-50 px-3 py-2 text-xs font-medium text-red-600">
+              {answerError}
             </p>
           ) : null}
         </div>
+
+        {answer ? (
+          <div className="rounded-lg border border-[var(--line)] bg-white p-4 shadow-[0_14px_30px_rgba(28,77,160,0.07)]">
+            <p className="whitespace-pre-line text-sm leading-relaxed text-slate-800">{answer}</p>
+            {usedLiveSearch ? (
+              <p className="mt-3 text-xs font-semibold text-[var(--accent-deep)]">This answer used Live Search.</p>
+            ) : null}
+            {sources.length > 0 ? (
+              <div className="mt-3 grid gap-1.5">
+                {sources.map((source) => (
+                  <a
+                    key={source.url}
+                    href={source.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="truncate text-xs font-medium text-[var(--accent-deep)] underline-offset-2 hover:underline"
+                  >
+                    {source.title || source.url}
+                  </a>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
       </div>
     </section>
   )
@@ -522,17 +684,35 @@ function AskAiModePanel({
   isRegistered,
   isSessionLoading,
   usageStatus,
+  liveSearchUsageStatus,
   isUsageLoading,
   usageError,
+  question,
+  answer,
+  sources,
+  usedLiveSearch,
+  isSubmitting,
+  answerError,
   onRetryUsage,
+  onQuestionChange,
+  onSubmit,
   className = '',
 }: {
   isRegistered: boolean
   isSessionLoading: boolean
   usageStatus: AskAiUsageStatus | null
+  liveSearchUsageStatus: AskAiUsageStatus | null
   isUsageLoading: boolean
   usageError: string | null
+  question: string
+  answer: string
+  sources: AskAiSource[]
+  usedLiveSearch: boolean
+  isSubmitting: boolean
+  answerError: string | null
   onRetryUsage: () => void
+  onQuestionChange: (question: string) => void
+  onSubmit: () => void
   className?: string
 }) {
   if (isSessionLoading) {
@@ -579,7 +759,21 @@ function AskAiModePanel({
     )
   }
 
-  return <AskAiPlaceholder usageStatus={usageStatus} className={className} />
+  return (
+    <AskAiPlaceholder
+      usageStatus={usageStatus}
+      liveSearchUsageStatus={liveSearchUsageStatus}
+      question={question}
+      answer={answer}
+      sources={sources}
+      usedLiveSearch={usedLiveSearch}
+      isSubmitting={isSubmitting}
+      answerError={answerError}
+      onQuestionChange={onQuestionChange}
+      onSubmit={onSubmit}
+      className={className}
+    />
+  )
 }
 
 function HomePage() {
@@ -587,9 +781,16 @@ function HomePage() {
   const [session, setSession] = useState<Session | null>(null)
   const [isSessionLoading, setIsSessionLoading] = useState(true)
   const [askAiUsageStatus, setAskAiUsageStatus] = useState<AskAiUsageStatus | null>(null)
+  const [liveSearchUsageStatus, setLiveSearchUsageStatus] = useState<AskAiUsageStatus | null>(null)
   const [isAskAiUsageLoading, setIsAskAiUsageLoading] = useState(false)
   const [askAiUsageError, setAskAiUsageError] = useState<string | null>(null)
   const [askAiUsageRefreshSignal, setAskAiUsageRefreshSignal] = useState(0)
+  const [askAiQuestion, setAskAiQuestion] = useState('')
+  const [askAiAnswer, setAskAiAnswer] = useState('')
+  const [askAiSources, setAskAiSources] = useState<AskAiSource[]>([])
+  const [askAiUsedLiveSearch, setAskAiUsedLiveSearch] = useState(false)
+  const [isAskAiSubmitting, setIsAskAiSubmitting] = useState(false)
+  const [askAiAnswerError, setAskAiAnswerError] = useState<string | null>(null)
   const [categories, setCategories] = useState(fallbackCategories)
   const [areas, setAreas] = useState<AreaChip[]>(fallbackAreas)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
@@ -628,6 +829,60 @@ function HomePage() {
   const isRegisteredUser = Boolean(session?.user)
   const handleRetryAskAiUsage = () => {
     setAskAiUsageRefreshSignal((signal) => signal + 1)
+  }
+
+  const handleAskAiSubmit = async () => {
+    const question = askAiQuestion.trim()
+
+    if (!question || isAskAiSubmitting || !session?.access_token) {
+      return
+    }
+
+    try {
+      setIsAskAiSubmitting(true)
+      setAskAiAnswerError(null)
+
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
+      const askAiEndpoint = apiBaseUrl ? `${apiBaseUrl}/ask-ai` : '/api/ask-ai'
+      const response = await fetch(askAiEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ question }),
+      })
+      const data = (await response.json()) as Partial<AskAiAnswerResponse> & {
+        error?: string
+        message?: string
+      }
+
+      if (!response.ok) {
+        throw new Error(data.message || data.error || 'Ask AI could not answer right now.')
+      }
+
+      if (
+        data.mode !== 'ask_ai' ||
+        typeof data.answer !== 'string' ||
+        typeof data.usedLiveSearch !== 'boolean' ||
+        !data.usage ||
+        !isAskAiUsageStatus(data.usage.askAi) ||
+        !isAskAiUsageStatus(data.usage.liveSearch)
+      ) {
+        throw new Error('Ask AI response was incomplete.')
+      }
+
+      setAskAiAnswer(data.answer)
+      setAskAiUsedLiveSearch(data.usedLiveSearch)
+      setAskAiSources(getAskAiSourceList(data.sources))
+      setAskAiUsageStatus(data.usage.askAi)
+      setLiveSearchUsageStatus(data.usage.liveSearch)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Ask AI could not answer right now.'
+      setAskAiAnswerError(message)
+    } finally {
+      setIsAskAiSubmitting(false)
+    }
   }
 
   const handleModeChange = (mode: SearchMode) => {
@@ -867,6 +1122,7 @@ function HomePage() {
 
     if (!session?.access_token) {
       setAskAiUsageStatus(null)
+      setLiveSearchUsageStatus(null)
       setIsAskAiUsageLoading(false)
       setAskAiUsageError(null)
       return
@@ -889,7 +1145,7 @@ function HomePage() {
           signal: controller.signal,
         })
 
-        const data = (await response.json()) as Partial<AskAiUsageStatus> & {
+        const data = (await response.json()) as Partial<AskAiUsageSummary> & {
           error?: string
           message?: string
         }
@@ -898,24 +1154,12 @@ function HomePage() {
           throw new Error(data.message || data.error || 'Failed to check Ask AI usage.')
         }
 
-        if (
-          typeof data.allowed !== 'boolean' ||
-          typeof data.limit !== 'number' ||
-          typeof data.used !== 'number' ||
-          typeof data.remaining !== 'number' ||
-          typeof data.resetAt !== 'string'
-        ) {
+        if (!isAskAiUsageStatus(data.askAi) || !isAskAiUsageStatus(data.liveSearch)) {
           throw new Error('Ask AI usage response was incomplete.')
         }
 
-        setAskAiUsageStatus({
-          allowed: data.allowed,
-          limit: data.limit,
-          used: data.used,
-          remaining: data.remaining,
-          resetAt: data.resetAt,
-          message: data.message,
-        })
+        setAskAiUsageStatus(data.askAi)
+        setLiveSearchUsageStatus(data.liveSearch)
       } catch (error) {
         if ((error as Error).name === 'AbortError') {
           return
@@ -923,6 +1167,7 @@ function HomePage() {
 
         const message = error instanceof Error ? error.message : 'Failed to check Ask AI usage.'
         setAskAiUsageStatus(null)
+        setLiveSearchUsageStatus(null)
         setAskAiUsageError(message)
       } finally {
         if (!controller.signal.aborted) {
@@ -1093,9 +1338,18 @@ function HomePage() {
               isRegistered={isRegisteredUser}
               isSessionLoading={isSessionLoading}
               usageStatus={askAiUsageStatus}
+              liveSearchUsageStatus={liveSearchUsageStatus}
               isUsageLoading={isAskAiUsageLoading}
               usageError={askAiUsageError}
+              question={askAiQuestion}
+              answer={askAiAnswer}
+              sources={askAiSources}
+              usedLiveSearch={askAiUsedLiveSearch}
+              isSubmitting={isAskAiSubmitting}
+              answerError={askAiAnswerError}
               onRetryUsage={handleRetryAskAiUsage}
+              onQuestionChange={setAskAiQuestion}
+              onSubmit={handleAskAiSubmit}
             />
           )}
         </main>
@@ -1204,9 +1458,18 @@ function HomePage() {
             isRegistered={isRegisteredUser}
             isSessionLoading={isSessionLoading}
             usageStatus={askAiUsageStatus}
+            liveSearchUsageStatus={liveSearchUsageStatus}
             isUsageLoading={isAskAiUsageLoading}
             usageError={askAiUsageError}
+            question={askAiQuestion}
+            answer={askAiAnswer}
+            sources={askAiSources}
+            usedLiveSearch={askAiUsedLiveSearch}
+            isSubmitting={isAskAiSubmitting}
+            answerError={askAiAnswerError}
             onRetryUsage={handleRetryAskAiUsage}
+            onQuestionChange={setAskAiQuestion}
+            onSubmit={handleAskAiSubmit}
             className="min-h-0"
           />
         )}

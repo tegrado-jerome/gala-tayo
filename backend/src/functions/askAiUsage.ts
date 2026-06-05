@@ -6,9 +6,16 @@ import {
 } from "@azure/functions";
 import { validateJwt } from "../utils/auth";
 import {
+  AskAiUsageTypeInput,
+  checkAllAskAiUsage,
   checkAskAiUsage,
   consumeAskAiUsage,
+  isAskAiUsageTypeInput,
 } from "../services/askAiUsageService";
+
+type UsageTypeParseResult =
+  | { ok: true; usageType: AskAiUsageTypeInput | null }
+  | { ok: false; response: HttpResponseInit };
 
 function isAuthError(message: string): boolean {
   return (
@@ -33,6 +40,55 @@ function handleAskAiUsageError(error: unknown, action: "check" | "consume"): Htt
   };
 }
 
+function invalidUsageTypeResponse(): HttpResponseInit {
+  return {
+    status: 400,
+    jsonBody: {
+      message: "Invalid Ask AI usage type.",
+      allowedTypes: ["ask_ai_total", "live_search"],
+    },
+  };
+}
+
+function parseUsageType(value: unknown, required: boolean): UsageTypeParseResult {
+  if (value === null || value === undefined || value === "") {
+    if (required) {
+      return { ok: false, response: invalidUsageTypeResponse() };
+    }
+
+    return { ok: true, usageType: null };
+  }
+
+  if (!isAskAiUsageTypeInput(value)) {
+    return { ok: false, response: invalidUsageTypeResponse() };
+  }
+
+  return { ok: true, usageType: value };
+}
+
+function getCheckUsageType(request: HttpRequest): UsageTypeParseResult {
+  return parseUsageType(request.query.get("type"), false);
+}
+
+async function getConsumeUsageType(request: HttpRequest): Promise<UsageTypeParseResult> {
+  let body: unknown;
+
+  try {
+    body = await request.json();
+  } catch {
+    return parseUsageType(null, true);
+  }
+
+  const type =
+    body &&
+    typeof body === "object" &&
+    "type" in body
+      ? (body as { type?: unknown }).type
+      : null;
+
+  return parseUsageType(type, true);
+}
+
 export async function checkAskAiUsageRequest(
   request: HttpRequest,
   context: InvocationContext
@@ -41,7 +97,15 @@ export async function checkAskAiUsageRequest(
 
   try {
     const user = await validateJwt(request);
-    const usage = await checkAskAiUsage(user.id);
+    const usageTypeResult = getCheckUsageType(request);
+
+    if (usageTypeResult.ok === false) {
+      return usageTypeResult.response;
+    }
+
+    const usage = usageTypeResult.usageType
+      ? await checkAskAiUsage(user.id, usageTypeResult.usageType)
+      : await checkAllAskAiUsage(user.id);
 
     return {
       status: 200,
@@ -62,14 +126,22 @@ export async function consumeAskAiUsageRequest(
 
   try {
     const user = await validateJwt(request);
-    const usage = await consumeAskAiUsage(user.id);
+    const usageTypeResult = await getConsumeUsageType(request);
 
-    if (!usage.allowed) {
+    if (usageTypeResult.ok === false) {
+      return usageTypeResult.response;
+    }
+
+    const currentUsage = await checkAskAiUsage(user.id, usageTypeResult.usageType);
+
+    if (!currentUsage.allowed) {
       return {
         status: 429,
-        jsonBody: usage,
+        jsonBody: currentUsage,
       };
     }
+
+    const usage = await consumeAskAiUsage(user.id, usageTypeResult.usageType);
 
     return {
       status: 200,
