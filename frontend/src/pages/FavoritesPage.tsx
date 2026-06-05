@@ -80,12 +80,13 @@ function getPlaceCategory(place: FavoritePlace) {
 function getPlaceLocation(place: FavoritePlace) {
   const address = place.address?.trim() || ''
   const city = place.city?.trim() || ''
+  const area = place.area?.trim() || ''
 
   if (address && city && !address.toLowerCase().includes(city.toLowerCase())) {
     return `${address}, ${city}`
   }
 
-  return address || city || 'Location unavailable'
+  return address || area || city || 'Location unavailable'
 }
 
 function openPlace(slug: string) {
