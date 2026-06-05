@@ -174,6 +174,15 @@ type BudgetOption = {
 
 type SearchMode = 'places' | 'ask-ai'
 
+type AskAiUsageStatus = {
+  allowed: boolean
+  limit: number
+  used: number
+  remaining: number
+  resetAt: string
+  message?: string
+}
+
 type BackendSearchPlace = {
   id?: string | null
   slug?: string | null
@@ -443,14 +452,53 @@ function SearchModeTabs({
   )
 }
 
-function AskAiPlaceholder({ className = '' }: { className?: string }) {
+function formatResetAt(resetAt: string) {
+  const resetDate = new Date(resetAt)
+
+  if (Number.isNaN(resetDate.getTime())) {
+    return resetAt
+  }
+
+  return resetDate.toLocaleString([], {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  })
+}
+
+function AskAiPlaceholder({
+  usageStatus,
+  className = '',
+}: {
+  usageStatus: AskAiUsageStatus
+  className?: string
+}) {
+  const isLimitReached = !usageStatus.allowed || usageStatus.remaining <= 0
+
   return (
     <section className={`flex min-h-[280px] items-center justify-center bg-[linear-gradient(180deg,#f8fbff,#eef5ff)] px-4 py-8 ${className}`}>
-      <div className="w-full max-w-[520px] rounded-lg border border-dashed border-[var(--line-strong)] bg-white px-5 py-7 text-center shadow-[0_14px_30px_rgba(28,77,160,0.07)]">
-        <p className="text-base font-semibold text-slate-900">Ask AI is coming soon.</p>
-        <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
-          This will help with smarter gala planning and fresh/current questions.
+      <div className="w-full max-w-[560px] rounded-lg border border-dashed border-[var(--line-strong)] bg-white px-5 py-7 text-center shadow-[0_14px_30px_rgba(28,77,160,0.07)]">
+        <p className="text-base font-semibold text-slate-900">
+          {isLimitReached ? 'Daily Ask AI limit reached.' : 'Ask AI is coming soon.'}
         </p>
+        {isLimitReached ? (
+          <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
+            You have used all Ask AI requests for today. Search Places is still available.
+          </p>
+        ) : (
+          <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
+            This will help with smarter gala planning and fresh/current questions.
+          </p>
+        )}
+        <div className="mt-5 grid gap-2 rounded-lg border border-[var(--line)] bg-[linear-gradient(180deg,#f8fbff,#eef5ff)] px-4 py-3 text-left">
+          <p className="text-sm font-semibold text-slate-900">{usageStatus.limit} Ask AI requests per day</p>
+          <p className="text-sm text-[var(--muted)]">Remaining today: {usageStatus.remaining}</p>
+          <p className="text-xs leading-relaxed text-[var(--muted)]">Resets at: {formatResetAt(usageStatus.resetAt)}</p>
+          {usageStatus.message ? (
+            <p className="rounded-md border border-red-100 bg-red-50 px-3 py-2 text-xs font-medium text-red-600">
+              {usageStatus.message}
+            </p>
+          ) : null}
+        </div>
       </div>
     </section>
   )
@@ -473,10 +521,18 @@ function AskAiSignInRequired({ className = '' }: { className?: string }) {
 function AskAiModePanel({
   isRegistered,
   isSessionLoading,
+  usageStatus,
+  isUsageLoading,
+  usageError,
+  onRetryUsage,
   className = '',
 }: {
   isRegistered: boolean
   isSessionLoading: boolean
+  usageStatus: AskAiUsageStatus | null
+  isUsageLoading: boolean
+  usageError: string | null
+  onRetryUsage: () => void
   className?: string
 }) {
   if (isSessionLoading) {
@@ -489,13 +545,51 @@ function AskAiModePanel({
     )
   }
 
-  return isRegistered ? <AskAiPlaceholder className={className} /> : <AskAiSignInRequired className={className} />
+  if (!isRegistered) {
+    return <AskAiSignInRequired className={className} />
+  }
+
+  if (isUsageLoading) {
+    return (
+      <section className={`flex min-h-[280px] items-center justify-center bg-[linear-gradient(180deg,#f8fbff,#eef5ff)] px-4 py-8 ${className}`}>
+        <div className="rounded-lg border border-[var(--line)] bg-white px-5 py-4 text-sm font-medium text-[var(--muted)] shadow-[0_14px_30px_rgba(28,77,160,0.07)]">
+          Checking Ask AI usage...
+        </div>
+      </section>
+    )
+  }
+
+  if (usageError || !usageStatus) {
+    return (
+      <section className={`flex min-h-[280px] items-center justify-center bg-[linear-gradient(180deg,#f8fbff,#eef5ff)] px-4 py-8 ${className}`}>
+        <div className="w-full max-w-[520px] rounded-lg border border-[var(--line)] bg-white px-5 py-7 text-center shadow-[0_14px_30px_rgba(28,77,160,0.07)]">
+          <p className="text-base font-semibold text-slate-900">Ask AI usage is unavailable.</p>
+          <p className="mx-auto mt-2 max-w-[380px] text-sm leading-relaxed text-[var(--muted)]">
+            {usageError ?? 'Try checking your daily Ask AI status again.'}
+          </p>
+          <button
+            type="button"
+            onClick={onRetryUsage}
+            className="mt-4 rounded-full border border-[var(--accent)] bg-white px-4 py-2 text-sm font-semibold text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)]"
+          >
+            Retry
+          </button>
+        </div>
+      </section>
+    )
+  }
+
+  return <AskAiPlaceholder usageStatus={usageStatus} className={className} />
 }
 
 function HomePage() {
   const [selectedMode, setSelectedMode] = useState<SearchMode>('places')
   const [session, setSession] = useState<Session | null>(null)
   const [isSessionLoading, setIsSessionLoading] = useState(true)
+  const [askAiUsageStatus, setAskAiUsageStatus] = useState<AskAiUsageStatus | null>(null)
+  const [isAskAiUsageLoading, setIsAskAiUsageLoading] = useState(false)
+  const [askAiUsageError, setAskAiUsageError] = useState<string | null>(null)
+  const [askAiUsageRefreshSignal, setAskAiUsageRefreshSignal] = useState(0)
   const [categories, setCategories] = useState(fallbackCategories)
   const [areas, setAreas] = useState<AreaChip[]>(fallbackAreas)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
@@ -532,6 +626,10 @@ function HomePage() {
   const hasActiveFilters = selectedFilterLabels.length > 0
   const visiblePlaces = hasSearched ? searchResults : []
   const isRegisteredUser = Boolean(session?.user)
+  const handleRetryAskAiUsage = () => {
+    setAskAiUsageRefreshSignal((signal) => signal + 1)
+  }
+
   const handleModeChange = (mode: SearchMode) => {
     setSelectedMode(mode)
 
@@ -763,6 +861,82 @@ function HomePage() {
   }, [])
 
   useEffect(() => {
+    if (selectedMode !== 'ask-ai' || isSessionLoading) {
+      return
+    }
+
+    if (!session?.access_token) {
+      setAskAiUsageStatus(null)
+      setIsAskAiUsageLoading(false)
+      setAskAiUsageError(null)
+      return
+    }
+
+    const controller = new AbortController()
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
+    const usageEndpoint = apiBaseUrl ? `${apiBaseUrl}/ask-ai/usage/check` : '/api/ask-ai/usage/check'
+
+    const loadAskAiUsage = async () => {
+      try {
+        setIsAskAiUsageLoading(true)
+        setAskAiUsageError(null)
+
+        const response = await fetch(usageEndpoint, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          signal: controller.signal,
+        })
+
+        const data = (await response.json()) as Partial<AskAiUsageStatus> & {
+          error?: string
+          message?: string
+        }
+
+        if (!response.ok) {
+          throw new Error(data.message || data.error || 'Failed to check Ask AI usage.')
+        }
+
+        if (
+          typeof data.allowed !== 'boolean' ||
+          typeof data.limit !== 'number' ||
+          typeof data.used !== 'number' ||
+          typeof data.remaining !== 'number' ||
+          typeof data.resetAt !== 'string'
+        ) {
+          throw new Error('Ask AI usage response was incomplete.')
+        }
+
+        setAskAiUsageStatus({
+          allowed: data.allowed,
+          limit: data.limit,
+          used: data.used,
+          remaining: data.remaining,
+          resetAt: data.resetAt,
+          message: data.message,
+        })
+      } catch (error) {
+        if ((error as Error).name === 'AbortError') {
+          return
+        }
+
+        const message = error instanceof Error ? error.message : 'Failed to check Ask AI usage.'
+        setAskAiUsageStatus(null)
+        setAskAiUsageError(message)
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsAskAiUsageLoading(false)
+        }
+      }
+    }
+
+    void loadAskAiUsage()
+
+    return () => controller.abort()
+  }, [askAiUsageRefreshSignal, isSessionLoading, selectedMode, session?.access_token])
+
+  useEffect(() => {
     const controller = new AbortController()
     const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
     const filtersEndpoint = apiBaseUrl ? `${apiBaseUrl}/filters` : '/api/filters'
@@ -915,7 +1089,14 @@ function HomePage() {
               </section>
             </>
           ) : (
-            <AskAiModePanel isRegistered={isRegisteredUser} isSessionLoading={isSessionLoading} />
+            <AskAiModePanel
+              isRegistered={isRegisteredUser}
+              isSessionLoading={isSessionLoading}
+              usageStatus={askAiUsageStatus}
+              isUsageLoading={isAskAiUsageLoading}
+              usageError={askAiUsageError}
+              onRetryUsage={handleRetryAskAiUsage}
+            />
           )}
         </main>
       </div>
@@ -1019,7 +1200,15 @@ function HomePage() {
             </section>
           </section>
         ) : (
-          <AskAiModePanel isRegistered={isRegisteredUser} isSessionLoading={isSessionLoading} className="min-h-0" />
+          <AskAiModePanel
+            isRegistered={isRegisteredUser}
+            isSessionLoading={isSessionLoading}
+            usageStatus={askAiUsageStatus}
+            isUsageLoading={isAskAiUsageLoading}
+            usageError={askAiUsageError}
+            onRetryUsage={handleRetryAskAiUsage}
+            className="min-h-0"
+          />
         )}
       </div>
 

@@ -5,7 +5,54 @@ import {
   InvocationContext,
 } from "@azure/functions";
 import { validateJwt } from "../utils/auth";
-import { consumeAskAiUsage } from "../services/askAiUsageService";
+import {
+  checkAskAiUsage,
+  consumeAskAiUsage,
+} from "../services/askAiUsageService";
+
+function isAuthError(message: string): boolean {
+  return (
+    message === "Missing Authorization header." ||
+    message === "Invalid Authorization header format." ||
+    message === "Invalid or expired token."
+  );
+}
+
+function handleAskAiUsageError(error: unknown, action: "check" | "consume"): HttpResponseInit {
+  const message = error instanceof Error ? error.message : "Unknown error";
+  const isUnauthorized = isAuthError(message);
+
+  return {
+    status: isUnauthorized ? 401 : 500,
+    jsonBody: {
+      message: isUnauthorized
+        ? "Unauthorized."
+        : `Failed to ${action} Ask AI usage.`,
+      error: message,
+    },
+  };
+}
+
+export async function checkAskAiUsageRequest(
+  request: HttpRequest,
+  context: InvocationContext
+): Promise<HttpResponseInit> {
+  context.log("Checking Ask AI usage...");
+
+  try {
+    const user = await validateJwt(request);
+    const usage = await checkAskAiUsage(user.id);
+
+    return {
+      status: 200,
+      jsonBody: usage,
+    };
+  } catch (error) {
+    context.error(error);
+
+    return handleAskAiUsageError(error, "check");
+  }
+}
 
 export async function consumeAskAiUsageRequest(
   request: HttpRequest,
@@ -31,21 +78,16 @@ export async function consumeAskAiUsageRequest(
   } catch (error) {
     context.error(error);
 
-    const message = error instanceof Error ? error.message : "Unknown error";
-    const isUnauthorized =
-      message === "Missing Authorization header." ||
-      message === "Invalid Authorization header format." ||
-      message === "Invalid or expired token.";
-
-    return {
-      status: isUnauthorized ? 401 : 500,
-      jsonBody: {
-        message: isUnauthorized ? "Unauthorized." : "Failed to consume Ask AI usage.",
-        error: message,
-      },
-    };
+    return handleAskAiUsageError(error, "consume");
   }
 }
+
+app.http("askAiUsageCheck", {
+  methods: ["GET"],
+  authLevel: "anonymous",
+  route: "ask-ai/usage/check",
+  handler: checkAskAiUsageRequest,
+});
 
 app.http("askAiUsageConsume", {
   methods: ["POST"],
