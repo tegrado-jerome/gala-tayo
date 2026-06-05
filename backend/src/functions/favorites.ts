@@ -16,6 +16,7 @@ type FavoritePlace = {
   category?: string | null;
   address?: string | null;
   city?: string | null;
+  google_maps_url?: string | null;
   latitude?: number | null;
   longitude?: number | null;
   rating?: number | null;
@@ -30,6 +31,7 @@ type PlaceRow = {
   category?: string | null;
   address?: string | null;
   city?: string | null;
+  google_maps_url?: string | null;
   latitude?: number | null;
   longitude?: number | null;
   rating?: number | null;
@@ -65,7 +67,7 @@ async function findPlaceBySlug(placeSlug: string): Promise<FavoritePlace | null>
 
   const { data: placeData, error: placeError } = await supabaseAdmin
     .from("places")
-    .select("id, name, slug, category, address, city, latitude, longitude, rating, photo_url, photos")
+    .select("id, name, slug, category, address, city, google_maps_url, latitude, longitude, rating, photo_url, photos")
     .eq("slug", placeSlug)
     .single();
 
@@ -122,7 +124,7 @@ export async function favoritesList(
     const { data: places, error: placesError } = await supabaseAdmin
       .from("places")
       .select(
-        "id, name, slug, category, address, city, latitude, longitude, rating, photo_url, photos"
+        "id, name, slug, category, address, city, google_maps_url, latitude, longitude, rating, photo_url, photos"
       )
       .in("id", placeIds);
 

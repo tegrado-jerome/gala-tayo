@@ -3,6 +3,7 @@ import AppHeader from '../components/AppHeader'
 import GoogleSignInButton from '../components/GoogleSignInButton'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { getCuratedPlaceImages } from '../data/curatedPlaceImages'
+import { getDirectionsUrl, openDirectionsUrl } from '../utils/directions'
 import { navigateToPath, navigateToPlace } from '../utils/navigation'
 
 type HistoryPlace = {
@@ -12,6 +13,9 @@ type HistoryPlace = {
   category?: string | null
   city?: string | null
   address?: string | null
+  google_maps_url?: string | null
+  latitude?: number | null
+  longitude?: number | null
   photo_url?: string | null
   photos?: string[] | null
   image_url?: string | null
@@ -56,6 +60,15 @@ function ImageIcon({ className = 'h-5 w-5' }: { className?: string }) {
       <rect x="4" y="5" width="16" height="14" rx="2.2" />
       <circle cx="9" cy="10" r="1.4" />
       <path d="m7 17 3.3-3.4a1.4 1.4 0 0 1 2 0l1.1 1.1.8-.8a1.4 1.4 0 0 1 2 0L18 15.8" />
+    </svg>
+  )
+}
+
+function DirectionsIcon({ className = 'h-4 w-4' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className} aria-hidden="true">
+      <path d="M21 3 10 14" />
+      <path d="m21 3-6 18-5-7-7-5 18-6Z" />
     </svg>
   )
 }
@@ -343,56 +356,68 @@ function HistoryPage() {
                   const placeSlug = place.slug as string
                   const photoUrl = getPhotoUrl(place)
                   const location = getPlaceLocation(place)
+                  const directionsUrl = getDirectionsUrl(place)
 
                   return (
                     <article
                       key={item.id}
                       className="overflow-hidden rounded-lg border border-[var(--line)] bg-white shadow-[0_14px_30px_rgba(28,77,160,0.07)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_40px_rgba(28,77,160,0.1)]"
                     >
-                      <button
-                        type="button"
-                        onClick={() => openPlace(placeSlug)}
-                        className="flex w-full items-stretch gap-3 p-3 text-left sm:gap-4 sm:p-4"
-                      >
-                        {photoUrl ? (
-                          <img
-                            src={photoUrl}
-                            alt={place.name || 'Viewed place'}
-                            className="h-[88px] w-[88px] shrink-0 rounded-lg border border-[var(--line)] object-cover sm:h-[108px] sm:w-[132px]"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="flex h-[88px] w-[88px] shrink-0 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-[var(--line-strong)] bg-[linear-gradient(180deg,#fbfdff,#eef4fb)] px-2 text-center text-slate-500 sm:h-[108px] sm:w-[132px] sm:gap-1.5">
-                            <ImageIcon />
-                            <span className="line-clamp-2 text-[10px] font-semibold leading-tight text-slate-700 sm:text-[11px]">
-                              {place.name || 'Viewed place'}
-                            </span>
-                            <span className="text-[10px] font-medium">No photo</span>
-                          </div>
-                        )}
-
-                        <div className="min-w-0 flex-1 py-0.5">
-                          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                            <div className="min-w-0">
-                              <h2 className="truncate text-base font-semibold text-slate-950">
+                      <div className="flex w-full items-stretch gap-3 p-3 text-left sm:gap-4 sm:p-4">
+                        <button
+                          type="button"
+                          onClick={() => openPlace(placeSlug)}
+                          className="flex min-w-0 flex-1 items-stretch gap-3 text-left sm:gap-4"
+                        >
+                          {photoUrl ? (
+                            <img
+                              src={photoUrl}
+                              alt={place.name || 'Viewed place'}
+                              className="h-[88px] w-[88px] shrink-0 rounded-lg border border-[var(--line)] object-cover sm:h-[108px] sm:w-[132px]"
+                              loading="lazy"
+                            />
+                          ) : (
+                            <div className="flex h-[88px] w-[88px] shrink-0 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-[var(--line-strong)] bg-[linear-gradient(180deg,#fbfdff,#eef4fb)] px-2 text-center text-slate-500 sm:h-[108px] sm:w-[132px] sm:gap-1.5">
+                              <ImageIcon />
+                              <span className="line-clamp-2 text-[10px] font-semibold leading-tight text-slate-700 sm:text-[11px]">
                                 {place.name || 'Viewed place'}
-                              </h2>
-                              <p className="mt-1 flex items-start gap-1.5 text-sm text-[var(--muted)]">
-                                <PinIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                                <span className="line-clamp-2">{location}</span>
-                              </p>
+                              </span>
+                              <span className="text-[10px] font-medium">No photo</span>
                             </div>
-                            <span className="inline-flex w-fit shrink-0 items-center gap-1 rounded-full bg-[var(--accent-wash)] px-2 py-1 text-xs font-medium text-[var(--accent-deep)]">
-                              <ClockIcon className="h-3.5 w-3.5" />
-                              {formatViewedAt(item.created_at)}
-                            </span>
-                          </div>
+                          )}
 
-                          <p className="mt-3 text-xs font-semibold text-[var(--accent-deep)]">
-                            View details
-                          </p>
-                        </div>
-                      </button>
+                          <div className="min-w-0 flex-1 py-0.5">
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                              <div className="min-w-0">
+                                <h2 className="truncate text-base font-semibold text-slate-950">
+                                  {place.name || 'Viewed place'}
+                                </h2>
+                                <p className="mt-1 flex items-start gap-1.5 text-sm text-[var(--muted)]">
+                                  <PinIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                                  <span className="line-clamp-2">{location}</span>
+                                </p>
+                              </div>
+                              <span className="inline-flex w-fit shrink-0 items-center gap-1 rounded-full bg-[var(--accent-wash)] px-2 py-1 text-xs font-medium text-[var(--accent-deep)]">
+                                <ClockIcon className="h-3.5 w-3.5" />
+                                {formatViewedAt(item.created_at)}
+                              </span>
+                            </div>
+
+                            <p className="mt-3 text-xs font-semibold text-[var(--accent-deep)]">
+                              View details
+                            </p>
+                          </div>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openDirectionsUrl(directionsUrl)}
+                          disabled={!directionsUrl}
+                          className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-[var(--line-strong)] bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)] hover:text-[var(--accent-deep)] disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-400"
+                        >
+                          <DirectionsIcon className="h-3.5 w-3.5" />
+                          <span className="hidden sm:inline">Directions</span>
+                        </button>
+                      </div>
                     </article>
                   )
                 })}

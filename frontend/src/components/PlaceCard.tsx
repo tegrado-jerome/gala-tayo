@@ -3,6 +3,7 @@ import { getCuratedPlaceImages, normalizePlaceSlug } from '../data/curatedPlaceI
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import GuestLimitModal from './GuestLimitModal'
 import { copyPlaceLink } from '../utils/sharePlace'
+import { getDirectionsUrl, openDirectionsUrl } from '../utils/directions'
 
 type PlaceCategoryMeta = {
   id: string
@@ -101,6 +102,15 @@ function SaveIcon() {
   )
 }
 
+function DirectionsIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className="h-3.5 w-3.5">
+      <path d="M21 3 10 14" />
+      <path d="m21 3-6 18-5-7-7-5 18-6Z" />
+    </svg>
+  )
+}
+
 function NoPhotoIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-5 w-5">
@@ -160,6 +170,7 @@ function PlaceCard({ place, isSelected = false, compact = false, onSelect }: Pla
   const placeSlug = place.slug || normalizedNameSlug
   const isSaved = [place.slug, normalizedNameSlug, place.id].some((slug) => isPlaceSaved(slug))
   const displayChips = getPlaceChips(place)
+  const directionsUrl = getDirectionsUrl(place)
 
   const handleShare = async () => {
     try {
@@ -283,7 +294,7 @@ function PlaceCard({ place, isSelected = false, compact = false, onSelect }: Pla
           </div>
         </div>
 
-        <div className="grid grid-cols-2 border-t border-[var(--line)]">
+        <div className="grid grid-cols-3 border-t border-[var(--line)]">
           <button
             type="button"
             onClick={(event) => {
@@ -294,6 +305,18 @@ function PlaceCard({ place, isSelected = false, compact = false, onSelect }: Pla
           >
             <ShareIcon />
             <span>Share</span>
+          </button>
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation()
+              openDirectionsUrl(directionsUrl)
+            }}
+            disabled={!directionsUrl}
+            className="flex items-center justify-center gap-1.5 border-l border-[var(--line)] px-3 py-2 text-[11px] font-medium text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
+          >
+            <DirectionsIcon />
+            <span>Directions</span>
           </button>
           <button
             type="button"

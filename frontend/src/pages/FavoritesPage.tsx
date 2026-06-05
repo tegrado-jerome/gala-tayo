@@ -3,6 +3,7 @@ import AppHeader from '../components/AppHeader'
 import GoogleSignInButton from '../components/GoogleSignInButton'
 import { useSavedFavorites, type FavoritePlace } from '../context/SavedFavoritesContext'
 import { getCuratedPlaceImages } from '../data/curatedPlaceImages'
+import { getDirectionsUrl, openDirectionsUrl } from '../utils/directions'
 import { navigateToPath, navigateToPlace } from '../utils/navigation'
 
 function HeartIcon({ className = 'h-4 w-4' }: { className?: string }) {
@@ -48,6 +49,15 @@ function TrashIcon({ className = 'h-4 w-4' }: { className?: string }) {
       <path d="m10 11 .3 6" />
       <path d="m14 11-.3 6" />
       <path d="M6.5 7 7.4 20h9.2l.9-13" />
+    </svg>
+  )
+}
+
+function DirectionsIcon({ className = 'h-4 w-4' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className} aria-hidden="true">
+      <path d="M21 3 10 14" />
+      <path d="m21 3-6 18-5-7-7-5 18-6Z" />
     </svg>
   )
 }
@@ -195,6 +205,7 @@ function FavoritesPage() {
                   const photoUrl = getPhotoUrl(place)
                   const placeCategory = getPlaceCategory(place)
                   const placeLocation = getPlaceLocation(place)
+                  const directionsUrl = getDirectionsUrl(place)
 
                   return (
                     <article
@@ -250,13 +261,22 @@ function FavoritesPage() {
                         </div>
                       </button>
 
-                      <div className="grid grid-cols-2 border-t border-[var(--line)]">
+                      <div className="grid grid-cols-3 border-t border-[var(--line)]">
                         <button
                           type="button"
                           onClick={() => openPlace(placeSlug)}
                           className="px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 hover:text-[var(--accent-deep)]"
                         >
                           View details
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openDirectionsUrl(directionsUrl)}
+                          disabled={!directionsUrl}
+                          className="inline-flex items-center justify-center gap-1.5 border-l border-[var(--line)] px-3 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 hover:text-[var(--accent-deep)] disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400"
+                        >
+                          <DirectionsIcon className="h-3.5 w-3.5" />
+                          Directions
                         </button>
                         <button
                           type="button"

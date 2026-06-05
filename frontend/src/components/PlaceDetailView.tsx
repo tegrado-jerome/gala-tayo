@@ -7,6 +7,7 @@ import { getCuratedPlaceImages, normalizePlaceSlug } from '../data/curatedPlaceI
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { supabase } from '../supabase'
 import { copyPlaceLink } from '../utils/sharePlace'
+import { getDirectionsUrl, openDirectionsUrl } from '../utils/directions'
 
 type PlaceDetailViewProps = {
   place: PlaceCardData
@@ -369,12 +370,7 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
   const placeSlug = place.slug || normalizedNameSlug
   const isSaved = [place.slug, normalizedNameSlug, place.id].some((slug) => isPlaceSaved(slug))
   const budgetLabel = place.budget_notes?.trim() || place.entranceFee?.trim() || 'Not available'
-  const hasCoordinateDirections =
-    Number.isFinite(place.coordinates.lat) && Number.isFinite(place.coordinates.lng)
-  const directionsUrl = place.googleMapsUrl?.trim()
-    || (hasCoordinateDirections
-      ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${place.coordinates.lat},${place.coordinates.lng}`)}`
-      : null)
+  const directionsUrl = getDirectionsUrl(place)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -427,11 +423,7 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
   }
 
   const openDirections = () => {
-    if (!directionsUrl) {
-      return
-    }
-
-    window.open(directionsUrl, '_blank', 'noopener,noreferrer')
+    openDirectionsUrl(directionsUrl)
   }
 
   const handleSharePlace = async () => {

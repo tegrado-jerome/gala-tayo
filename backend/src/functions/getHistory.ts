@@ -54,6 +54,9 @@ export async function getHistory(
           category,
           city,
           address,
+          google_maps_url,
+          latitude,
+          longitude,
           photo_url,
           photos
         )
