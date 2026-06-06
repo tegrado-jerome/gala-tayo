@@ -6,8 +6,11 @@ import AppHeader from '../components/AppHeader'
 import MapView from '../components/MapView'
 import GuestLimitModal from '../components/GuestLimitModal'
 import GoogleSignInButton from '../components/GoogleSignInButton'
+import PromptBuilderModal from '../components/PromptBuilderModal'
 import { supabase } from '../supabase'
 import { navigateToPlace } from '../utils/navigation'
+import type { PromptBuilderState } from '../types/promptBuilder'
+import { createEmptyPromptBuilderState, getExternalSearchLinks } from '../utils/promptBuilder'
 
 type IconProps = {
   className?: string
@@ -417,17 +420,47 @@ function mapBackendPlaceToCard(place: BackendSearchPlace): PlaceCardData | null 
   }
 }
 
-function SearchEmptyState({ hasSearched }: { hasSearched: boolean }) {
+function SearchEmptyState({
+  hasSearched,
+  onBuildPrompt,
+  onSearchAgain,
+}: {
+  hasSearched: boolean
+  onBuildPrompt?: () => void
+  onSearchAgain?: () => void
+}) {
   return (
     <div className="rounded-lg border border-dashed border-[var(--line)] bg-white px-4 py-6 text-center">
       <p className="text-sm font-semibold text-slate-900">
-        {hasSearched ? 'No places found for this search.' : 'Search for places around Metro Manila.'}
+        {hasSearched ? 'No perfect match yet.' : 'Search for places around Metro Manila.'}
       </p>
       <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">
         {hasSearched
-          ? 'Try changing your keyword, city, category, or budget.'
+          ? 'Build a stronger prompt or try a smarter search.'
           : 'Start by searching for a place or choosing filters.'}
       </p>
+      {hasSearched ? (
+        <div className="mt-3 flex flex-wrap justify-center gap-2">
+          {onBuildPrompt ? (
+            <button
+              type="button"
+              onClick={onBuildPrompt}
+              className="rounded-full border border-[var(--accent)] bg-[var(--accent)] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white hover:text-[var(--accent-deep)]"
+            >
+              Build prompt
+            </button>
+          ) : null}
+          {onSearchAgain ? (
+            <button
+              type="button"
+              onClick={onSearchAgain}
+              className="rounded-full border border-[var(--line)] bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)] hover:text-[var(--accent-deep)]"
+            >
+              Search again
+            </button>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -564,6 +597,72 @@ function getAskAiSourceList(value: unknown): AskAiSource[] {
     })
 }
 
+function createPromptBuilderPrefill({
+  plan,
+  location,
+  budget,
+  priority,
+}: {
+  plan?: string | null
+  location?: string | null
+  budget?: string | null
+  priority?: string | null
+}) {
+  const state = createEmptyPromptBuilderState()
+
+  state.custom.plan = plan?.trim() ?? ''
+  state.custom.location = location?.trim() ?? ''
+  state.custom.budget = budget?.trim() ?? ''
+  state.custom.priorities = priority?.trim() ?? ''
+
+  return state
+}
+
+function ExternalPlatformShortcuts({
+  keyword,
+  className = '',
+}: {
+  keyword: string
+  className?: string
+}) {
+  const links = getExternalSearchLinks(keyword)
+
+  return (
+    <details className={`group relative ${className}`}>
+      <summary className="flex cursor-pointer list-none items-center justify-center rounded-full border border-[var(--line)] bg-white px-3 py-2 text-xs font-semibold text-[var(--accent-deep)] transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)] [&::-webkit-details-marker]:hidden">
+        External search
+      </summary>
+      <div className="absolute right-0 top-[calc(100%+8px)] z-[900] w-[280px] rounded-lg border border-[var(--line)] bg-white p-3 shadow-[0_18px_46px_rgba(15,23,42,0.14)]">
+        <p className="text-xs font-semibold text-slate-900">Search other platforms</p>
+        <div className="mt-2 grid grid-cols-2 gap-2">
+          {links.map((link) => (
+            <a
+              key={link.label}
+              href={link.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={link.helper}
+              aria-label={`Open ${link.label} search in a new tab`}
+              className="rounded-lg border border-[var(--line)] bg-[var(--soft)] px-3 py-2 text-center text-xs font-semibold text-[var(--accent-deep)] transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)]"
+            >
+              {link.label}
+            </a>
+          ))}
+        </div>
+        {keyword ? (
+          <p className="mt-2 truncate text-[11px] leading-relaxed text-[var(--muted)]">
+            Keyword: {keyword}
+          </p>
+        ) : (
+          <p className="mt-2 text-[11px] leading-relaxed text-[var(--muted)]">
+            Add a search or Ask AI question to make these links more specific.
+          </p>
+        )}
+      </div>
+    </details>
+  )
+}
+
 function AskAiAnswerText({ answer }: { answer: string }) {
   const lines = answer.replace(/\r\n/g, '\n').split('\n')
 
@@ -609,6 +708,7 @@ function AskAiPlaceholder({
   answerError,
   onQuestionChange,
   onSubmit,
+  onOpenPromptBuilder,
   className = '',
 }: {
   usageStatus: AskAiUsageStatus
@@ -619,6 +719,7 @@ function AskAiPlaceholder({
   answerError: string | null
   onQuestionChange: (question: string) => void
   onSubmit: () => void
+  onOpenPromptBuilder: () => void
   className?: string
 }) {
   const isLimitReached = !usageStatus.allowed || usageStatus.remaining <= 0
@@ -682,10 +783,34 @@ function AskAiPlaceholder({
               <span className="text-xs font-medium text-red-600">Daily Ask AI limit reached.</span>
             ) : null}
           </div>
+          {isLimitReached ? (
+            <div className="mt-3 rounded-lg border border-[var(--line)] bg-[var(--soft)] px-3 py-3">
+              <p className="text-xs leading-relaxed text-[var(--muted)]">
+                You've used today's Ask AI. You can still build a strong prompt or search manually.
+              </p>
+              <button
+                type="button"
+                onClick={onOpenPromptBuilder}
+                className="mt-2 rounded-full border border-[var(--accent)] bg-white px-3 py-1.5 text-xs font-semibold text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)]"
+              >
+                Build prompt
+              </button>
+            </div>
+          ) : null}
           {answerError ? (
-            <p className="mt-3 rounded-md border border-red-100 bg-red-50 px-3 py-2 text-xs font-medium text-red-600">
-              {answerError}
-            </p>
+            <div className="mt-3 rounded-md border border-red-100 bg-red-50 px-3 py-2">
+              <p className="text-xs font-medium text-red-600">{answerError}</p>
+              <p className="mt-1 text-xs leading-relaxed text-red-600/80">
+                Ask AI is temporarily unavailable. You can still build a prompt or search manually.
+              </p>
+              <button
+                type="button"
+                onClick={onOpenPromptBuilder}
+                className="mt-2 rounded-full border border-red-200 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-50"
+              >
+                Build prompt
+              </button>
+            </div>
           ) : null}
         </div>
 
@@ -708,6 +833,19 @@ function AskAiPlaceholder({
                 ))}
               </div>
             ) : null}
+            <div className="mt-4 rounded-lg border border-[var(--line)] bg-[var(--soft)] px-3 py-3">
+              <p className="text-xs font-semibold text-slate-900">Not satisfied?</p>
+              <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">
+                Want to ask another AI or search somewhere else?
+              </p>
+              <button
+                type="button"
+                onClick={onOpenPromptBuilder}
+                className="mt-2 rounded-full border border-[var(--accent)] bg-white px-3 py-1.5 text-xs font-semibold text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)]"
+              >
+                Build better prompt
+              </button>
+            </div>
           </div>
         ) : null}
       </div>
@@ -743,6 +881,7 @@ function AskAiModePanel({
   onRetryUsage,
   onQuestionChange,
   onSubmit,
+  onOpenPromptBuilder,
   className = '',
 }: {
   isRegistered: boolean
@@ -758,6 +897,7 @@ function AskAiModePanel({
   onRetryUsage: () => void
   onQuestionChange: (question: string) => void
   onSubmit: () => void
+  onOpenPromptBuilder: () => void
   className?: string
 }) {
   if (isSessionLoading) {
@@ -799,6 +939,13 @@ function AskAiModePanel({
           >
             Retry
           </button>
+          <button
+            type="button"
+            onClick={onOpenPromptBuilder}
+            className="ml-2 mt-4 rounded-full border border-[var(--line)] bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)] hover:text-[var(--accent-deep)]"
+          >
+            Build prompt
+          </button>
         </div>
       </section>
     )
@@ -814,6 +961,7 @@ function AskAiModePanel({
       answerError={answerError}
       onQuestionChange={onQuestionChange}
       onSubmit={onSubmit}
+      onOpenPromptBuilder={onOpenPromptBuilder}
       className={className}
     />
   )
@@ -832,6 +980,8 @@ function HomePage() {
   const [askAiSources, setAskAiSources] = useState<AskAiSource[]>([])
   const [isAskAiSubmitting, setIsAskAiSubmitting] = useState(false)
   const [askAiAnswerError, setAskAiAnswerError] = useState<string | null>(null)
+  const [isPromptBuilderOpen, setIsPromptBuilderOpen] = useState(false)
+  const [promptBuilderInitialState, setPromptBuilderInitialState] = useState<PromptBuilderState | null>(null)
   const [categories, setCategories] = useState(fallbackCategories)
   const [areas, setAreas] = useState<AreaChip[]>(fallbackAreas)
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
@@ -868,8 +1018,32 @@ function HomePage() {
   const hasActiveFilters = selectedFilterLabels.length > 0
   const visiblePlaces = hasSearched ? searchResults : []
   const isRegisteredUser = Boolean(session?.user)
+  const externalSearchKeyword = useMemo(() => {
+    if (selectedMode === 'ask-ai') {
+      return askAiQuestion.trim()
+    }
+
+    const query = lastSearchQuery && lastSearchQuery !== 'Explore all places' ? lastSearchQuery : ''
+    return [query, ...selectedFilterLabels].filter(Boolean).join(' ').trim()
+  }, [askAiQuestion, lastSearchQuery, selectedFilterLabels, selectedMode])
   const handleRetryAskAiUsage = () => {
     setAskAiUsageRefreshSignal((signal) => signal + 1)
+  }
+
+  const openPromptBuilder = (source: 'ask-ai' | 'search' | 'empty-search' = 'search') => {
+    const prefill = source === 'ask-ai'
+      ? createPromptBuilderPrefill({
+          plan: askAiQuestion,
+        })
+      : createPromptBuilderPrefill({
+          plan: lastSearchQuery && lastSearchQuery !== 'Explore all places' ? lastSearchQuery : null,
+          location: selectedAreaName,
+          budget: selectedBudgetLabel,
+          priority: selectedCategoryName,
+        })
+
+    setPromptBuilderInitialState(prefill)
+    setIsPromptBuilderOpen(true)
   }
 
   const handleAskAiSubmit = async () => {
@@ -1282,13 +1456,28 @@ function HomePage() {
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <GuestLimitModal isOpen={promptLogin} onClose={() => setPromptLogin(false)} />
+      <PromptBuilderModal
+        isOpen={isPromptBuilderOpen}
+        initialState={promptBuilderInitialState}
+        onClose={() => setIsPromptBuilderOpen(false)}
+      />
 
       <div className="min-h-screen bg-[linear-gradient(180deg,#f8fbff,#edf4ff)] lg:hidden">
         <AppHeader signInLabel="Mag-sign in" />
 
         <main className="pb-6">
           <section className="border-b border-[var(--line)] bg-white/76 px-4 py-4 backdrop-blur">
-            <SearchModeTabs selectedMode={selectedMode} onModeChange={handleModeChange} className="mb-3" />
+            <div className="mb-3 grid gap-2">
+              <SearchModeTabs selectedMode={selectedMode} onModeChange={handleModeChange} />
+              <button
+                type="button"
+                onClick={() => openPromptBuilder(selectedMode === 'ask-ai' ? 'ask-ai' : 'search')}
+                className="rounded-lg border border-[var(--accent)] bg-white px-3 py-2 text-xs font-semibold text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)]"
+              >
+                Build prompt
+              </button>
+              <ExternalPlatformShortcuts keyword={externalSearchKeyword} className="justify-self-stretch" />
+            </div>
             {selectedMode === 'places' ? (
               <>
                 <SearchBar
@@ -1354,7 +1543,9 @@ function HomePage() {
 
                 <div className="grid gap-3">
                   {visiblePlaces.length > 0
-                    ? visiblePlaces.map((place) => (
+                    ? (
+                        <>
+                          {visiblePlaces.map((place) => (
                         <PlaceCard
                           key={place.id}
                           place={place}
@@ -1362,8 +1553,26 @@ function HomePage() {
                           isSelected={selectedPlaceId === place.id}
                           onSelect={handlePlaceSelect}
                         />
-                      ))
-                    : <SearchEmptyState hasSearched={hasSearched} />}
+                          ))}
+                          <div className="rounded-lg border border-[var(--line)] bg-white px-4 py-3 text-center shadow-[0_10px_24px_rgba(28,77,160,0.05)]">
+                            <p className="text-xs font-semibold text-slate-900">Not finding the right gala plan?</p>
+                            <button
+                              type="button"
+                              onClick={() => openPromptBuilder('search')}
+                              className="mt-2 rounded-full border border-[var(--accent)] bg-white px-3 py-1.5 text-xs font-semibold text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)]"
+                            >
+                              Build better prompt
+                            </button>
+                          </div>
+                        </>
+                      )
+                    : (
+                        <SearchEmptyState
+                          hasSearched={hasSearched}
+                          onBuildPrompt={() => openPromptBuilder('empty-search')}
+                          onSearchAgain={() => openPromptBuilder('empty-search')}
+                        />
+                      )}
                 </div>
               </section>
             </>
@@ -1382,6 +1591,7 @@ function HomePage() {
               onRetryUsage={handleRetryAskAiUsage}
               onQuestionChange={setAskAiQuestion}
               onSubmit={handleAskAiSubmit}
+              onOpenPromptBuilder={() => openPromptBuilder('ask-ai')}
             />
           )}
         </main>
@@ -1394,6 +1604,14 @@ function HomePage() {
           <div className="px-8 py-3">
             <div className="flex items-center gap-4">
               <SearchModeTabs selectedMode={selectedMode} onModeChange={handleModeChange} className="w-[280px] shrink-0" />
+              <button
+                type="button"
+                onClick={() => openPromptBuilder(selectedMode === 'ask-ai' ? 'ask-ai' : 'search')}
+                className="shrink-0 rounded-full border border-[var(--accent)] bg-white px-4 py-2 text-xs font-semibold text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)]"
+              >
+                Build prompt
+              </button>
+              <ExternalPlatformShortcuts keyword={externalSearchKeyword} className="shrink-0" />
               {selectedMode === 'places' ? (
                 <>
                   <SearchBar
@@ -1461,15 +1679,35 @@ function HomePage() {
               <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
                 <div className="grid gap-3">
                   {visiblePlaces.length > 0
-                    ? visiblePlaces.map((place) => (
-                        <PlaceCard
-                          key={place.id}
-                          place={place}
-                          isSelected={selectedPlaceId === place.id}
-                          onSelect={handlePlaceSelect}
+                    ? (
+                        <>
+                          {visiblePlaces.map((place) => (
+                            <PlaceCard
+                              key={place.id}
+                              place={place}
+                              isSelected={selectedPlaceId === place.id}
+                              onSelect={handlePlaceSelect}
+                            />
+                          ))}
+                          <div className="rounded-lg border border-[var(--line)] bg-white px-4 py-3 text-center shadow-[0_10px_24px_rgba(28,77,160,0.05)]">
+                            <p className="text-xs font-semibold text-slate-900">Not finding the right gala plan?</p>
+                            <button
+                              type="button"
+                              onClick={() => openPromptBuilder('search')}
+                              className="mt-2 rounded-full border border-[var(--accent)] bg-white px-3 py-1.5 text-xs font-semibold text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)]"
+                            >
+                              Build better prompt
+                            </button>
+                          </div>
+                        </>
+                      )
+                    : (
+                        <SearchEmptyState
+                          hasSearched={hasSearched}
+                          onBuildPrompt={() => openPromptBuilder('empty-search')}
+                          onSearchAgain={() => openPromptBuilder('empty-search')}
                         />
-                      ))
-                    : <SearchEmptyState hasSearched={hasSearched} />}
+                      )}
                 </div>
               </div>
             </aside>
@@ -1500,6 +1738,7 @@ function HomePage() {
             onRetryUsage={handleRetryAskAiUsage}
             onQuestionChange={setAskAiQuestion}
             onSubmit={handleAskAiSubmit}
+            onOpenPromptBuilder={() => openPromptBuilder('ask-ai')}
             className="min-h-0"
           />
         )}
