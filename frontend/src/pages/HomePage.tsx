@@ -36,9 +36,9 @@ type BackendArea = {
 }
 
 const askAiLoadingMessages = [
-  'Planning your gala...',
-  'Checking the best options...',
-  'Making it easier to decide...',
+  'Thinking of a good gala answer...',
+  'Checking your question...',
+  'Preparing your answer...',
 ]
 
 function FilterIcon({ className = 'h-4 w-4' }: IconProps) {
@@ -202,7 +202,7 @@ type AskAiUsageSummary = {
 
 type AskAiAnswerResponse = {
   answer: string
-  sources?: AskAiSource[]
+  sources?: unknown
   usage: AskAiUsageSummary
   message?: string
 }
@@ -506,30 +506,98 @@ function isAskAiUsageStatus(value: unknown): value is AskAiUsageStatus {
   )
 }
 
+function getValidSourceUrl(source: Record<string, unknown>): string | null {
+  const rawUrl = typeof source.url === 'string'
+    ? source.url
+    : typeof source.uri === 'string'
+      ? source.uri
+      : null
+
+  if (!rawUrl) {
+    return null
+  }
+
+  try {
+    const parsedUrl = new URL(rawUrl)
+    return parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:' ? parsedUrl.href : null
+  } catch {
+    return null
+  }
+}
+
+function getSourceHostname(url: string) {
+  try {
+    return new URL(url).hostname.replace(/^www\./i, '')
+  } catch {
+    return url
+  }
+}
+
 function getAskAiSourceList(value: unknown): AskAiSource[] {
   if (!Array.isArray(value)) {
     return []
   }
 
+  const seenUrls = new Set<string>()
+
   return value
-    .map((source) => {
+    .flatMap((source) => {
       if (!source || typeof source !== 'object') {
-        return null
+        return []
       }
 
-      const candidate = source as Partial<AskAiSource>
-      const url = typeof candidate.url === 'string' ? candidate.url : null
+      const candidate = source as Record<string, unknown>
+      const url = getValidSourceUrl(candidate)
 
-      if (!url) {
-        return null
+      if (!url || seenUrls.has(url)) {
+        return []
       }
 
-      return {
-        title: typeof candidate.title === 'string' && candidate.title.trim() ? candidate.title : url,
+      seenUrls.add(url)
+
+      return [{
+        title: typeof candidate.title === 'string' && candidate.title.trim()
+          ? candidate.title.trim()
+          : getSourceHostname(url),
         url,
-      }
+      }]
     })
-    .filter((source): source is AskAiSource => Boolean(source))
+}
+
+function AskAiAnswerText({ answer }: { answer: string }) {
+  const lines = answer.replace(/\r\n/g, '\n').split('\n')
+
+  return (
+    <div className="grid gap-1 text-sm leading-relaxed text-slate-800">
+      {lines.map((line, index) => {
+        const trimmedLine = line.trim()
+        const key = `${index}-${trimmedLine}`
+
+        if (!trimmedLine) {
+          return <div key={key} className="h-1" aria-hidden="true" />
+        }
+
+        if (/^[A-Z][A-Za-z /]+(?: .+)?[:：]$/.test(trimmedLine)) {
+          return (
+            <p key={key} className={index === 0 ? 'font-semibold text-slate-950' : 'mt-2 font-semibold text-slate-950'}>
+              {trimmedLine}
+            </p>
+          )
+        }
+
+        if (/^[-*]\s+/.test(trimmedLine)) {
+          return (
+            <p key={key} className="pl-4 text-slate-800">
+              <span aria-hidden="true">• </span>
+              {trimmedLine.replace(/^[-*]\s+/, '')}
+            </p>
+          )
+        }
+
+        return <p key={key}>{trimmedLine}</p>
+      })}
+    </div>
+  )
 }
 
 function AskAiPlaceholder({
@@ -577,7 +645,7 @@ function AskAiPlaceholder({
         <div className="rounded-lg border border-[var(--line)] bg-white px-4 py-4 shadow-[0_14px_30px_rgba(28,77,160,0.07)]">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-sm font-semibold text-slate-900">
-              Ask AI uses left today: {usageStatus.remaining}/{usageStatus.limit}
+              Ask AI: {usageStatus.remaining} uses left today
             </p>
           </div>
           <p className="mt-1 text-[11px] leading-relaxed text-[var(--muted)]">
@@ -623,7 +691,7 @@ function AskAiPlaceholder({
 
         {answer ? (
           <div className="rounded-lg border border-[var(--line)] bg-white p-4 shadow-[0_14px_30px_rgba(28,77,160,0.07)]">
-            <p className="whitespace-pre-line text-sm leading-relaxed text-slate-800">{answer}</p>
+            <AskAiAnswerText answer={answer} />
             {sources.length > 0 ? (
               <div className="mt-3 grid gap-1.5">
                 <p className="text-xs font-semibold text-slate-900">Sources</p>
@@ -632,10 +700,10 @@ function AskAiPlaceholder({
                     key={source.url}
                     href={source.url}
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                     className="truncate text-xs font-medium text-[var(--accent-deep)] underline-offset-2 hover:underline"
                   >
-                    {source.title || source.url}
+                    {source.title}
                   </a>
                 ))}
               </div>
