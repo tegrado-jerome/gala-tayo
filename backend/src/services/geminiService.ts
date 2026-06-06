@@ -1,6 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 import { getSecret } from "../config/keyVault";
 import {
+  ASK_AI_GUIDE_GENERATION_CONFIG,
   ASK_AI_GUIDE_FALLBACK_MODEL,
   ASK_AI_GUIDE_MODEL,
 } from "../config/askAiConfig";
@@ -27,6 +28,7 @@ async function generateContentText(
   const response = await ai.models.generateContent({
     model,
     contents: prompt,
+    config: ASK_AI_GUIDE_GENERATION_CONFIG,
   });
 
   const text = response.text;
