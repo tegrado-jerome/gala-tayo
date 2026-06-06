@@ -201,10 +201,8 @@ type AskAiUsageSummary = {
 }
 
 type AskAiAnswerResponse = {
-  mode: 'ask_ai'
   answer: string
-  usedLiveSearch: boolean
-  sources: AskAiSource[]
+  sources?: AskAiSource[]
   usage: AskAiUsageSummary
   message?: string
 }
@@ -536,11 +534,9 @@ function getAskAiSourceList(value: unknown): AskAiSource[] {
 
 function AskAiPlaceholder({
   usageStatus,
-  liveSearchUsageStatus,
   question,
   answer,
   sources,
-  usedLiveSearch,
   isSubmitting,
   answerError,
   onQuestionChange,
@@ -548,11 +544,9 @@ function AskAiPlaceholder({
   className = '',
 }: {
   usageStatus: AskAiUsageStatus
-  liveSearchUsageStatus: AskAiUsageStatus | null
   question: string
   answer: string
   sources: AskAiSource[]
-  usedLiveSearch: boolean
   isSubmitting: boolean
   answerError: string | null
   onQuestionChange: (question: string) => void
@@ -560,7 +554,6 @@ function AskAiPlaceholder({
   className?: string
 }) {
   const isLimitReached = !usageStatus.allowed || usageStatus.remaining <= 0
-  const isLiveSearchUsedUp = Boolean(liveSearchUsageStatus && liveSearchUsageStatus.remaining <= 0)
   const canSubmit = !isSubmitting && !isLimitReached && question.trim().length > 0
   const [loadingMessageIndex, setLoadingMessageIndex] = useState(0)
   const loadingMessage = askAiLoadingMessages[loadingMessageIndex]
@@ -586,17 +579,7 @@ function AskAiPlaceholder({
             <p className="text-sm font-semibold text-slate-900">
               Ask AI uses left today: {usageStatus.remaining}/{usageStatus.limit}
             </p>
-            {usedLiveSearch && answer ? (
-              <span className="rounded-full border border-[var(--accent)] bg-[var(--accent-wash)] px-2.5 py-1 text-[11px] font-semibold text-[var(--accent-deep)]">
-                Used Live Search
-              </span>
-            ) : null}
           </div>
-          <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">
-            {isLiveSearchUsedUp
-              ? 'Live Search checks are used up today. Ask AI can still help with general planning.'
-              : 'Live Search available for current info.'}
-          </p>
           <p className="mt-1 text-[11px] leading-relaxed text-[var(--muted)]">
             Resets at: {formatResetAt(usageStatus.resetAt)}
           </p>
@@ -641,11 +624,9 @@ function AskAiPlaceholder({
         {answer ? (
           <div className="rounded-lg border border-[var(--line)] bg-white p-4 shadow-[0_14px_30px_rgba(28,77,160,0.07)]">
             <p className="whitespace-pre-line text-sm leading-relaxed text-slate-800">{answer}</p>
-            {usedLiveSearch ? (
-              <p className="mt-3 text-xs font-semibold text-[var(--accent-deep)]">This answer used Live Search.</p>
-            ) : null}
             {sources.length > 0 ? (
               <div className="mt-3 grid gap-1.5">
+                <p className="text-xs font-semibold text-slate-900">Sources</p>
                 {sources.map((source) => (
                   <a
                     key={source.url}
@@ -684,13 +665,11 @@ function AskAiModePanel({
   isRegistered,
   isSessionLoading,
   usageStatus,
-  liveSearchUsageStatus,
   isUsageLoading,
   usageError,
   question,
   answer,
   sources,
-  usedLiveSearch,
   isSubmitting,
   answerError,
   onRetryUsage,
@@ -701,13 +680,11 @@ function AskAiModePanel({
   isRegistered: boolean
   isSessionLoading: boolean
   usageStatus: AskAiUsageStatus | null
-  liveSearchUsageStatus: AskAiUsageStatus | null
   isUsageLoading: boolean
   usageError: string | null
   question: string
   answer: string
   sources: AskAiSource[]
-  usedLiveSearch: boolean
   isSubmitting: boolean
   answerError: string | null
   onRetryUsage: () => void
@@ -762,11 +739,9 @@ function AskAiModePanel({
   return (
     <AskAiPlaceholder
       usageStatus={usageStatus}
-      liveSearchUsageStatus={liveSearchUsageStatus}
       question={question}
       answer={answer}
       sources={sources}
-      usedLiveSearch={usedLiveSearch}
       isSubmitting={isSubmitting}
       answerError={answerError}
       onQuestionChange={onQuestionChange}
@@ -781,14 +756,12 @@ function HomePage() {
   const [session, setSession] = useState<Session | null>(null)
   const [isSessionLoading, setIsSessionLoading] = useState(true)
   const [askAiUsageStatus, setAskAiUsageStatus] = useState<AskAiUsageStatus | null>(null)
-  const [liveSearchUsageStatus, setLiveSearchUsageStatus] = useState<AskAiUsageStatus | null>(null)
   const [isAskAiUsageLoading, setIsAskAiUsageLoading] = useState(false)
   const [askAiUsageError, setAskAiUsageError] = useState<string | null>(null)
   const [askAiUsageRefreshSignal, setAskAiUsageRefreshSignal] = useState(0)
   const [askAiQuestion, setAskAiQuestion] = useState('')
   const [askAiAnswer, setAskAiAnswer] = useState('')
   const [askAiSources, setAskAiSources] = useState<AskAiSource[]>([])
-  const [askAiUsedLiveSearch, setAskAiUsedLiveSearch] = useState(false)
   const [isAskAiSubmitting, setIsAskAiSubmitting] = useState(false)
   const [askAiAnswerError, setAskAiAnswerError] = useState<string | null>(null)
   const [categories, setCategories] = useState(fallbackCategories)
@@ -862,9 +835,7 @@ function HomePage() {
       }
 
       if (
-        data.mode !== 'ask_ai' ||
         typeof data.answer !== 'string' ||
-        typeof data.usedLiveSearch !== 'boolean' ||
         !data.usage ||
         !isAskAiUsageStatus(data.usage.askAi) ||
         !isAskAiUsageStatus(data.usage.liveSearch)
@@ -873,10 +844,8 @@ function HomePage() {
       }
 
       setAskAiAnswer(data.answer)
-      setAskAiUsedLiveSearch(data.usedLiveSearch)
       setAskAiSources(getAskAiSourceList(data.sources))
       setAskAiUsageStatus(data.usage.askAi)
-      setLiveSearchUsageStatus(data.usage.liveSearch)
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Ask AI could not answer right now.'
       setAskAiAnswerError(message)
@@ -1122,7 +1091,6 @@ function HomePage() {
 
     if (!session?.access_token) {
       setAskAiUsageStatus(null)
-      setLiveSearchUsageStatus(null)
       setIsAskAiUsageLoading(false)
       setAskAiUsageError(null)
       return
@@ -1159,7 +1127,6 @@ function HomePage() {
         }
 
         setAskAiUsageStatus(data.askAi)
-        setLiveSearchUsageStatus(data.liveSearch)
       } catch (error) {
         if ((error as Error).name === 'AbortError') {
           return
@@ -1167,7 +1134,6 @@ function HomePage() {
 
         const message = error instanceof Error ? error.message : 'Failed to check Ask AI usage.'
         setAskAiUsageStatus(null)
-        setLiveSearchUsageStatus(null)
         setAskAiUsageError(message)
       } finally {
         if (!controller.signal.aborted) {
@@ -1338,13 +1304,11 @@ function HomePage() {
               isRegistered={isRegisteredUser}
               isSessionLoading={isSessionLoading}
               usageStatus={askAiUsageStatus}
-              liveSearchUsageStatus={liveSearchUsageStatus}
               isUsageLoading={isAskAiUsageLoading}
               usageError={askAiUsageError}
               question={askAiQuestion}
               answer={askAiAnswer}
               sources={askAiSources}
-              usedLiveSearch={askAiUsedLiveSearch}
               isSubmitting={isAskAiSubmitting}
               answerError={askAiAnswerError}
               onRetryUsage={handleRetryAskAiUsage}
@@ -1458,13 +1422,11 @@ function HomePage() {
             isRegistered={isRegisteredUser}
             isSessionLoading={isSessionLoading}
             usageStatus={askAiUsageStatus}
-            liveSearchUsageStatus={liveSearchUsageStatus}
             isUsageLoading={isAskAiUsageLoading}
             usageError={askAiUsageError}
             question={askAiQuestion}
             answer={askAiAnswer}
             sources={askAiSources}
-            usedLiveSearch={askAiUsedLiveSearch}
             isSubmitting={isAskAiSubmitting}
             answerError={askAiAnswerError}
             onRetryUsage={handleRetryAskAiUsage}

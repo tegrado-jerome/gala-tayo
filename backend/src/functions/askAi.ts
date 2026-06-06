@@ -11,10 +11,12 @@ import {
 import {
   AskAiServiceError,
   generateAskAiAnswer,
+  planAskAiRequest,
 } from "../services/askAiService";
 import { validateJwt } from "../utils/auth";
 
 const ASK_AI_COOLDOWN_MS = 10_000;
+const ASK_AI_DEBUG = process.env.ASK_AI_DEBUG === "true";
 const lastAskAiRequestAtByUser = new Map<string, number>();
 
 type AskAiRequestBody = {
@@ -146,10 +148,39 @@ export async function askAiRequest(
     }
 
     const liveSearchUsageBefore = await checkAskAiUsage(user.id, "live_search");
+    const responsePlan = planAskAiRequest(question);
+    const liveSearchIntentDetected = responsePlan.intent === "live_current_info";
+    const shouldUseLiveSearchTool =
+      liveSearchUsageBefore.allowed && responsePlan.groundingEnabled;
+
+    if (ASK_AI_DEBUG) {
+      context.log("Ask AI Live Search routing", {
+        liveSearchIntentDetected,
+        liveSearchQuotaAvailable: liveSearchUsageBefore.allowed,
+        sourceBackedProviderPathUsed: shouldUseLiveSearchTool,
+        responsePlan,
+      });
+    }
+
     const answerResult = await generateAskAiAnswer({
       question,
       placeSlug,
-      enableLiveSearch: liveSearchUsageBefore.allowed,
+      enableLiveSearch: shouldUseLiveSearchTool,
+    });
+
+    context.log("Ask AI source metadata", {
+      intent: responsePlan.intent,
+      answerFormat: responsePlan.answerFormat,
+      groundingEnabled: responsePlan.groundingEnabled,
+      sourceStatus: answerResult.sourceStatus,
+      webSearchQueriesCount: answerResult.webSearchQueriesCount,
+      groundingChunksCount: answerResult.groundingChunksCount,
+      groundingSupportsCount: answerResult.groundingSupportsCount,
+      modelUsed: answerResult.modelUsed,
+      latencyMs: answerResult.latencyMs,
+      fallbackUsed: answerResult.fallbackUsed,
+      answerRejectedDueToLeakageOrTruncation:
+        answerResult.answerRejectedDueToLeakageOrTruncation,
     });
 
     const askAiUsageAfter = await consumeAskAiUsage(user.id, "ask_ai_total");
@@ -161,9 +192,7 @@ export async function askAiRequest(
     return {
       status: 200,
       jsonBody: {
-        mode: "ask_ai",
         answer: answerResult.answer,
-        usedLiveSearch: answerResult.usedLiveSearch,
         sources: answerResult.sources,
         usage: {
           askAi: askAiUsageAfter,
