@@ -4,6 +4,7 @@ import type { Session } from '@supabase/supabase-js'
 import SearchBar from '../components/SearchBar'
 import PlaceCard, { type PlaceCardData, type PlaceCategoryMeta, type PlaceTagMeta } from '../components/PlaceCard'
 import AppHeader from '../components/AppHeader'
+import AppFooter from '../components/AppFooter'
 import MapView from '../components/MapView'
 import GuestLimitModal from '../components/GuestLimitModal'
 import GoogleSignInButton from '../components/GoogleSignInButton'
@@ -656,7 +657,7 @@ function DiscoveryControls({
         <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
           Pick a vibe
         </p>
-        <div className="flex gap-2 overflow-x-auto pb-1 lg:flex-wrap lg:overflow-visible">
+        <div className="flex max-w-full flex-wrap gap-2 pb-1">
           {quickIntentChips.map((chip) => (
             <DiscoveryChip
               key={chip.id}
@@ -673,7 +674,7 @@ function DiscoveryControls({
         <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
           Where
         </p>
-        <div className="flex gap-2 overflow-x-auto pb-1 lg:flex-wrap lg:overflow-visible">
+        <div className="flex max-w-full flex-wrap gap-2 pb-1">
           <DiscoveryChip
             isSelected={isNearMeActive}
             onClick={onNearMe}
@@ -704,7 +705,7 @@ function DiscoveryControls({
         <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
           Budget
         </p>
-        <div className="flex gap-2 overflow-x-auto pb-1 lg:flex-wrap lg:overflow-visible">
+        <div className="flex max-w-full flex-wrap gap-2 pb-1">
           {budgetOptions.slice(0, 4).map((budget) => (
             <DiscoveryChip
               key={budget.value}
@@ -1743,11 +1744,11 @@ function HomePage() {
         onClose={() => setIsPromptBuilderOpen(false)}
       />
 
-      <div className="min-h-screen bg-[linear-gradient(180deg,#f8fbff,#edf4ff)] lg:hidden">
+      <div className="min-h-screen overflow-x-hidden bg-[linear-gradient(180deg,#f8fbff,#edf4ff)] lg:hidden">
         <AppHeader signInLabel="Mag-sign in" />
 
-        <main className="pb-6">
-          <section className="border-b border-[var(--line)] bg-white/76 px-4 py-4 backdrop-blur">
+        <main className="overflow-x-hidden pb-6">
+          <section className="overflow-hidden border-b border-[var(--line)] bg-white/76 px-4 py-4 backdrop-blur">
             <div className="mb-3">
               <h1 className="text-[26px] font-semibold leading-tight text-slate-950">Saan tayo gala today?</h1>
               <p className="mt-1 text-sm leading-relaxed text-[var(--muted)]">
@@ -1897,9 +1898,10 @@ function HomePage() {
             />
           )}
         </main>
+        <AppFooter />
       </div>
 
-      <div className="hidden min-h-screen w-full lg:grid lg:grid-rows-[72px_auto_minmax(0,1fr)]">
+      <div className="hidden min-h-screen w-full lg:grid lg:grid-rows-[auto_auto_minmax(0,1fr)]">
         <AppHeader />
 
         <section className="border-b border-[var(--line)] bg-white/72 backdrop-blur">
@@ -2069,6 +2071,10 @@ function HomePage() {
             className="min-h-0"
           />
         )}
+      </div>
+
+      <div className="hidden lg:block">
+        <AppFooter />
       </div>
 
       <div

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import AppFooter from '../components/AppFooter'
 import AppHeader from '../components/AppHeader'
 import GoogleSignInButton from '../components/GoogleSignInButton'
 import { useSavedFavorites, type FavoritePlace } from '../context/SavedFavoritesContext'
@@ -301,6 +302,7 @@ function FavoritesPage() {
           </>
         ) : null}
       </main>
+      <AppFooter />
     </div>
   )
 }

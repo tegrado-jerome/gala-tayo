@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import AppFooter from '../components/AppFooter'
 import AppHeader from '../components/AppHeader'
 import GoogleSignInButton from '../components/GoogleSignInButton'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
@@ -410,6 +411,7 @@ function HistoryPage() {
           </>
         ) : null}
       </main>
+      <AppFooter />
     </div>
   )
 }

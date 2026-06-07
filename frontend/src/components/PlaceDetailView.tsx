@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { PlaceCardData, PlaceCategoryMeta, PlaceTagMeta } from './PlaceCard'
+import AppFooter from './AppFooter'
 import AppHeader from './AppHeader'
 import MapView from './MapView'
 import GuestLimitModal from './GuestLimitModal'
@@ -748,6 +749,7 @@ function PlaceDetailView({ place, onBack }: PlaceDetailViewProps) {
         onClose={() => setIsSavePromptOpen(false)}
         mode="savePlace"
       />
+      <AppFooter />
       {selectedImage ? (
         <div
           className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/90 p-4"
