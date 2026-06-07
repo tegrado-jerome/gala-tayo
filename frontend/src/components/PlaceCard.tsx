@@ -32,6 +32,7 @@ type PlaceCardData = {
   entranceFee?: string
   website?: string
   googleMapsUrl?: string | null
+  distanceKm?: number | null
   place_history?: string | null
   best_time_to_visit?: string | null
   visit_duration?: string | null

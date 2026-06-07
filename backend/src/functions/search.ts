@@ -30,6 +30,8 @@ type SearchRequestBody = {
   budget?: unknown;
   filters?: unknown;
   exploreAll?: unknown;
+  userLocation?: unknown;
+  radiusKm?: unknown;
 };
 
 type PlaceRow = Record<string, unknown>;
@@ -93,9 +95,20 @@ type SearchPlaceResult = {
   last_verified_at: string | null;
   website_url: string | null;
   google_maps_url: string | null;
+  distanceKm?: number | null;
   tags?: SearchTagMetadata[];
   matchedCategories?: SearchCategoryMetadata[];
   matchedTags?: SearchTagMetadata[];
+};
+
+type UserLocation = {
+  latitude: number;
+  longitude: number;
+};
+
+type NearbySearchContext = {
+  userLocation: UserLocation;
+  radiusKm: number;
 };
 
 type SearchContext = {
@@ -111,6 +124,7 @@ type SearchContext = {
 
 type BudgetValue =
   | "any"
+  | "free"
   | "under-500"
   | "500-1000"
   | "1000-2000"
@@ -118,6 +132,7 @@ type BudgetValue =
 
 const VALID_BUDGET_VALUES: BudgetValue[] = [
   "any",
+  "free",
   "under-500",
   "500-1000",
   "1000-2000",
@@ -217,6 +232,104 @@ function getBudgetFilter(value: unknown): BudgetValue {
   return VALID_BUDGET_VALUES.includes(trimmedValue as BudgetValue)
     ? (trimmedValue as BudgetValue)
     : "any";
+}
+
+function getFiniteNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === "string" && value.trim()) {
+    const parsedValue = Number(value);
+
+    if (Number.isFinite(parsedValue)) {
+      return parsedValue;
+    }
+  }
+
+  return null;
+}
+
+function isValidLatitude(value: number): boolean {
+  return value >= -90 && value <= 90;
+}
+
+function isValidLongitude(value: number): boolean {
+  return value >= -180 && value <= 180;
+}
+
+function getNearbySearchContext(body: SearchRequestBody): NearbySearchContext | null {
+  if (!body.userLocation || typeof body.userLocation !== "object") {
+    return null;
+  }
+
+  const userLocation = body.userLocation as Record<string, unknown>;
+  const latitude = getFiniteNumber(userLocation.latitude);
+  const longitude = getFiniteNumber(userLocation.longitude);
+  const radiusKm = getFiniteNumber(body.radiusKm);
+
+  if (
+    latitude === null ||
+    longitude === null ||
+    radiusKm === null ||
+    !isValidLatitude(latitude) ||
+    !isValidLongitude(longitude) ||
+    radiusKm <= 0
+  ) {
+    return null;
+  }
+
+  return {
+    userLocation: {
+      latitude,
+      longitude,
+    },
+    radiusKm: Math.min(radiusKm, 50),
+  };
+}
+
+function toRadians(value: number): number {
+  return (value * Math.PI) / 180;
+}
+
+function getDistanceKm(
+  from: UserLocation,
+  to: { latitude: number; longitude: number }
+): number {
+  const earthRadiusKm = 6371;
+  const latDelta = toRadians(to.latitude - from.latitude);
+  const lonDelta = toRadians(to.longitude - from.longitude);
+  const fromLat = toRadians(from.latitude);
+  const toLat = toRadians(to.latitude);
+  const haversine =
+    Math.sin(latDelta / 2) ** 2 +
+    Math.cos(fromLat) * Math.cos(toLat) * Math.sin(lonDelta / 2) ** 2;
+
+  return earthRadiusKm * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
+}
+
+function getRowDistanceKm(row: PlaceRow, userLocation: UserLocation): number | null {
+  const latitude = getNumberField(row, ["latitude", "lat"]);
+  const longitude = getNumberField(row, ["longitude", "lng", "lon"]);
+
+  if (
+    latitude === null ||
+    longitude === null ||
+    !isValidLatitude(latitude) ||
+    !isValidLongitude(longitude)
+  ) {
+    return null;
+  }
+
+  return getDistanceKm(userLocation, { latitude, longitude });
+}
+
+function roundDistanceKm(distanceKm: number | null): number | null {
+  if (distanceKm === null) {
+    return null;
+  }
+
+  return Math.round(distanceKm * 100) / 100;
 }
 
 function getStringField(row: PlaceRow, keys: string[]): string | null {
@@ -679,6 +792,8 @@ function getMatchedTags(row: PlaceRow, normalizedQuery: string): SearchTagMetada
 
 function getBudgetRangeForFilter(budget: BudgetValue): { min: number; max: number } | null {
   switch (budget) {
+    case "free":
+      return { min: 0, max: 0 };
     case "under-500":
       return { min: 0, max: 500 };
     case "500-1000":
@@ -746,7 +861,7 @@ function scoreBudgetMatch(
   const selectedBudgetRange = getBudgetRangeForFilter(budget);
   const placeBudgetRange = getPlaceBudgetRange(row);
 
-  if (selectedBudgetRange && placeBudgetRange) {
+  if (budget !== "free" && selectedBudgetRange && placeBudgetRange) {
     if (rangesOverlap(selectedBudgetRange, placeBudgetRange)) {
       score = Math.max(score, 15);
     } else if (rangesAreNear(selectedBudgetRange, placeBudgetRange)) {
@@ -767,6 +882,10 @@ function scoreBudgetMatch(
 
   if (mentionsFree && getBooleanField(row, ["is_free"])) {
     score = Math.max(score, 15);
+  }
+
+  if (budget === "free" && getBooleanField(row, ["is_free"])) {
+    score = Math.max(score, 18);
   }
 
   if (mentionsBudget && budgetLabel === "budget") {
@@ -856,6 +975,28 @@ function rowMatchesBudget(row: PlaceRow, budget: BudgetValue): boolean {
   const selectedBudgetRange = getBudgetRangeForFilter(budget);
   const placeBudgetRange = getPlaceBudgetRange(row);
 
+  if (budget === "free") {
+    if (getBooleanField(row, ["is_free"])) {
+      return true;
+    }
+
+    const freeBudgetText = normalizeComparableText(
+      getStringField(row, [
+        "budget",
+        "budget_label",
+        "budget_range",
+        "budgetRange",
+        "price_range",
+        "priceRange",
+        "budget_notes",
+      ])
+    );
+
+    return ["free", "libre", "walang entrance"].some((term) =>
+      includesNormalizedPhrase(freeBudgetText, term)
+    );
+  }
+
   if (selectedBudgetRange && placeBudgetRange) {
     return (
       rangesOverlap(selectedBudgetRange, placeBudgetRange) ||
@@ -886,9 +1027,11 @@ function mapPlaceRowToSearchResult(
   {
     normalizedQuery,
     categoryIds,
+    distanceKm,
   }: {
     normalizedQuery: string;
     categoryIds: string[];
+    distanceKm?: number | null;
   }
 ): SearchPlaceResult {
   const city = getStringField(row, ["city", "area"]);
@@ -943,6 +1086,7 @@ function mapPlaceRowToSearchResult(
     last_verified_at: getStringField(row, ["last_verified_at"]),
     website_url: getStringField(row, ["website_url"]),
     google_maps_url: getStringField(row, ["google_maps_url"]),
+    distanceKm: roundDistanceKm(distanceKm ?? null),
     tags,
     matchedCategories: getMatchedCategories(row, categoryIds),
     matchedTags: getMatchedTags(row, normalizedQuery),
@@ -1050,12 +1194,14 @@ async function findSearchPlaces({
   areaIds,
   budget,
   requirePromptMatch,
+  nearbySearch,
 }: {
   normalizedQuery: string;
   categoryIds: string[];
   areaIds: string[];
   budget: BudgetValue;
   requirePromptMatch: boolean;
+  nearbySearch: NearbySearchContext | null;
 }): Promise<SearchPlaceResult[]> {
   const supabase = await getSupabaseAdminClient();
   const placesTable = supabase.from("places") as ReturnType<
@@ -1094,7 +1240,7 @@ async function findSearchPlaces({
     throw new Error("Failed to query search places.");
   }
 
-  return (data ?? [])
+  const rankedRows = (data ?? [])
     .filter((row) => rowMatchesArea(row, areaIds))
     .filter((row) => rowMatchesCategory(row, categoryIds))
     .filter((row) => rowMatchesBudget(row, budget))
@@ -1108,10 +1254,53 @@ async function findSearchPlaces({
         areaIds,
         budget,
       }),
-    }))
+      distanceKm: nearbySearch
+        ? getRowDistanceKm(row, nearbySearch.userLocation)
+        : null,
+    }));
+
+  const hasNearbyMatches = nearbySearch
+    ? rankedRows.some(
+        ({ distanceKm }) => distanceKm !== null && distanceKm <= nearbySearch.radiusKm
+      )
+    : false;
+
+  return rankedRows
     .sort((left, right) => {
+      if (nearbySearch && hasNearbyMatches) {
+        const leftIsNearby =
+          left.distanceKm !== null && left.distanceKm <= nearbySearch.radiusKm;
+        const rightIsNearby =
+          right.distanceKm !== null && right.distanceKm <= nearbySearch.radiusKm;
+
+        if (leftIsNearby !== rightIsNearby) {
+          return leftIsNearby ? -1 : 1;
+        }
+
+        if (leftIsNearby && rightIsNearby && left.distanceKm !== right.distanceKm) {
+          if (left.distanceKm === null) {
+            return 1;
+          }
+
+          if (right.distanceKm === null) {
+            return -1;
+          }
+
+          return left.distanceKm - right.distanceKm;
+        }
+      }
+
       if (right.score !== left.score) {
         return right.score - left.score;
+      }
+
+      if (
+        nearbySearch &&
+        left.distanceKm !== null &&
+        right.distanceKm !== null &&
+        left.distanceKm !== right.distanceKm
+      ) {
+        return left.distanceKm - right.distanceKm;
       }
 
       return (getStringField(left.row, ["name"]) ?? "").localeCompare(
@@ -1119,10 +1308,11 @@ async function findSearchPlaces({
       );
     })
     .slice(0, 10)
-    .map(({ row }) =>
+    .map(({ row, distanceKm }) =>
       mapPlaceRowToSearchResult(row, {
         normalizedQuery,
         categoryIds,
+        distanceKm,
       })
     );
 }
@@ -1144,6 +1334,7 @@ export async function search(
     const budget = getBudgetFilter(getFilterValue(body, filters, "budget"));
     const shouldExploreAll = body.exploreAll === true;
     const normalizedQuery = normalizeSearchText(query);
+    const nearbySearch = getNearbySearchContext(body);
     const selectedCategory = findCategoryById(categoryId);
     const selectedArea = findAreaById(areaId);
     const inferredCategoryIds = inferCategoryIdsFromQuery(normalizedQuery);
@@ -1154,8 +1345,10 @@ export async function search(
       areaId !== "all" ? [areaId] : inferredLocations.cityIds;
     const hasSelectedFilters =
       categoryId !== "all" || areaId !== "all" || budget !== "any";
+    const hasNearbySearch = Boolean(nearbySearch);
     const shouldRequirePromptMatch =
       !hasSelectedFilters &&
+      !hasNearbySearch &&
       Boolean(normalizedQuery) &&
       discoveryCategoryIds.length === 0 &&
       discoveryAreaIds.length === 0;
@@ -1166,7 +1359,7 @@ export async function search(
       areaId === "all" &&
       budget === "any";
 
-    if (!normalizedQuery && !hasSelectedFilters && !isBroadDiscoverySearch) {
+    if (!normalizedQuery && !hasSelectedFilters && !hasNearbySearch && !isBroadDiscoverySearch) {
       return {
         status: 400,
         jsonBody: {
@@ -1226,6 +1419,7 @@ export async function search(
       areaIds: discoveryAreaIds,
       budget,
       requirePromptMatch: isBroadDiscoverySearch ? false : shouldRequirePromptMatch,
+      nearbySearch,
     });
 
     return {

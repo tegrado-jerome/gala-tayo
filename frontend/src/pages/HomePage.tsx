@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import type { ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import SearchBar from '../components/SearchBar'
 import PlaceCard, { type PlaceCardData, type PlaceCategoryMeta, type PlaceTagMeta } from '../components/PlaceCard'
@@ -174,7 +175,7 @@ type AreaChip = {
   type: 'all' | 'city' | 'municipality'
 }
 
-type BudgetValue = 'under-500' | '500-1000' | '1000-2000' | '2000-plus'
+type BudgetValue = 'free' | 'under-500' | '500-1000' | '1000-2000' | '2000-plus'
 
 type BudgetOption = {
   value: BudgetValue
@@ -182,6 +183,19 @@ type BudgetOption = {
 }
 
 type SearchMode = 'places' | 'ask-ai'
+
+type UserLocation = {
+  latitude: number
+  longitude: number
+} | null
+
+type LocationPermissionState =
+  | 'idle'
+  | 'requesting'
+  | 'granted'
+  | 'denied'
+  | 'unsupported'
+  | 'error'
 
 type AskAiUsageStatus = {
   usageType: 'ask_ai_total' | 'live_search'
@@ -253,6 +267,7 @@ type BackendSearchPlace = {
   last_verified_at?: string | null
   website_url?: string | null
   google_maps_url?: string | null
+  distanceKm?: number | null
 }
 
 const fallbackCategories = [
@@ -295,9 +310,10 @@ const fallbackAreas: AreaChip[] = [
 ]
 
 const budgetOptions: BudgetOption[] = [
+  { value: 'free', label: 'Free' },
   { value: 'under-500', label: 'Under ₱500' },
-  { value: '500-1000', label: '₱500–₱1,000' },
-  { value: '1000-2000', label: '₱1,000–₱2,000' },
+  { value: '500-1000', label: '₱500-₱1,000' },
+  { value: '1000-2000', label: '₱1,000-₱2,000' },
   { value: '2000-plus', label: '₱2,000+' },
 ]
 
@@ -307,6 +323,38 @@ const animatedSearchPrompts = [
   'Food Trip sa Makati na Mura',
   'Study Place near Taft na may Wi-Fi',
   'Museum Date sa Manila',
+]
+
+const quickIntentChips = [
+  { id: 'date', label: 'Date' },
+  { id: 'barkada', label: 'Barkada' },
+  { id: 'family', label: 'Family' },
+  { id: 'chill', label: 'Chill' },
+  { id: 'kainan', label: 'Foodtrip' },
+  { id: 'cafe', label: 'Cafe' },
+  { id: 'study', label: 'Study' },
+  { id: 'museum', label: 'Museum' },
+  { id: 'parke', label: 'Parke' },
+  { id: 'mall', label: 'Mall' },
+]
+
+const featuredAreaChips = [
+  { id: 'taguig', label: 'BGC' },
+  { id: 'makati', label: 'Makati' },
+  { id: 'manila', label: 'Manila' },
+  { id: 'quezon-city', label: 'Quezon City' },
+  { id: 'pasay', label: 'Pasay' },
+]
+
+const emptyStateHelperChips = [
+  { id: 'chill', label: 'Chill' },
+  { id: 'date', label: 'Date' },
+  { id: 'barkada', label: 'Barkada' },
+  { id: 'family', label: 'Family' },
+  { id: 'kainan', label: 'Kainan' },
+  { id: 'cafe', label: 'Cafe' },
+  { id: 'museum', label: 'Museum' },
+  { id: 'parke', label: 'Parke' },
 ]
 
 async function getSearchRequestHeaders(): Promise<Record<string, string>> {
@@ -411,6 +459,7 @@ function mapBackendPlaceToCard(place: BackendSearchPlace): PlaceCardData | null 
     last_verified_at: place.last_verified_at || null,
     website_url: place.website_url || null,
     googleMapsUrl: place.google_maps_url || null,
+    distanceKm: typeof place.distanceKm === 'number' ? place.distanceKm : null,
     entranceFee: place.budget_notes || place.budget || place.budgetRange || undefined,
     website: place.website_url || undefined,
     coordinates: {
@@ -424,21 +473,37 @@ function SearchEmptyState({
   hasSearched,
   onBuildPrompt,
   onSearchAgain,
+  onSelectCategory,
 }: {
   hasSearched: boolean
   onBuildPrompt?: () => void
   onSearchAgain?: () => void
+  onSelectCategory?: (categoryId: string) => void
 }) {
   return (
     <div className="rounded-lg border border-dashed border-[var(--line)] bg-white px-4 py-6 text-center">
       <p className="text-sm font-semibold text-slate-900">
-        {hasSearched ? 'No perfect match yet.' : 'Search for places around Metro Manila.'}
+        {hasSearched ? 'Hmm, wala pa kaming nahanap for that.' : 'Saan tayo gala today?'}
       </p>
       <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">
         {hasSearched
-          ? 'Build a stronger prompt or try a smarter search.'
-          : 'Start by searching for a place or choosing filters.'}
+          ? 'Try choosing a vibe or city.'
+          : 'Type a place, or pick a vibe to start exploring Metro Manila.'}
       </p>
+      {hasSearched && onSelectCategory ? (
+        <div className="mt-3 flex flex-wrap justify-center gap-2">
+          {emptyStateHelperChips.map((chip) => (
+            <button
+              key={chip.id}
+              type="button"
+              onClick={() => onSelectCategory(chip.id)}
+              className="rounded-full border border-[var(--line)] bg-[var(--chip)] px-3 py-1.5 text-xs font-semibold text-[var(--accent-deep)] transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)]"
+            >
+              {chip.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
       {hasSearched ? (
         <div className="mt-3 flex flex-wrap justify-center gap-2">
           {onBuildPrompt ? (
@@ -505,6 +570,167 @@ function SearchModeTabs({
           </button>
         )
       })}
+    </div>
+  )
+}
+
+function DiscoveryChip({
+  children,
+  isSelected,
+  onClick,
+  disabled = false,
+  className = '',
+}: {
+  children: ReactNode
+  isSelected: boolean
+  onClick: () => void
+  disabled?: boolean
+  className?: string
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`min-h-10 shrink-0 rounded-full border px-3.5 py-2 text-xs font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70 ${
+        isSelected
+          ? 'border-[var(--accent)] bg-[var(--accent)] text-white shadow-[0_10px_20px_rgba(47,116,232,0.2)]'
+          : 'border-[var(--line)] bg-white text-slate-700 hover:border-[var(--accent)] hover:bg-[var(--accent-wash)] hover:text-[var(--accent-deep)]'
+      } ${className}`}
+    >
+      {children}
+    </button>
+  )
+}
+
+function getLocationHelperText(permissionState: LocationPermissionState) {
+  if (permissionState === 'requesting') {
+    return 'Checking your location...'
+  }
+
+  if (permissionState === 'granted') {
+    return 'Location ready. Near Me is prepared for future nearby search.'
+  }
+
+  if (permissionState === 'denied' || permissionState === 'unsupported' || permissionState === 'error') {
+    return 'Location access is off. You can still choose a city instead.'
+  }
+
+  return null
+}
+
+function DiscoveryControls({
+  selectedCategory,
+  selectedArea,
+  selectedBudget,
+  hasUserLocation,
+  locationPermissionState,
+  onCategoryChange,
+  onAreaChange,
+  onBudgetChange,
+  onNearMe,
+  onMoreCities,
+  onClearFilters,
+  className = '',
+}: {
+  selectedCategory: string | null
+  selectedArea: string | null
+  selectedBudget: BudgetValue | null
+  hasUserLocation: boolean
+  locationPermissionState: LocationPermissionState
+  onCategoryChange: (categoryId: string | null) => void
+  onAreaChange: (areaId: string | null) => void
+  onBudgetChange: (budget: BudgetValue | null) => void
+  onNearMe: () => void
+  onMoreCities: () => void
+  onClearFilters: () => void
+  className?: string
+}) {
+  const locationHelperText = getLocationHelperText(locationPermissionState)
+  const isNearMeActive = locationPermissionState === 'granted' && hasUserLocation
+  const isNearMeLoading = locationPermissionState === 'requesting'
+
+  return (
+    <div className={`grid gap-3 ${className}`}>
+      <div>
+        <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
+          Pick a vibe
+        </p>
+        <div className="flex gap-2 overflow-x-auto pb-1 lg:flex-wrap lg:overflow-visible">
+          {quickIntentChips.map((chip) => (
+            <DiscoveryChip
+              key={chip.id}
+              isSelected={selectedCategory === chip.id}
+              onClick={() => onCategoryChange(selectedCategory === chip.id ? null : chip.id)}
+            >
+              {chip.label}
+            </DiscoveryChip>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
+          Where
+        </p>
+        <div className="flex gap-2 overflow-x-auto pb-1 lg:flex-wrap lg:overflow-visible">
+          <DiscoveryChip
+            isSelected={isNearMeActive}
+            onClick={onNearMe}
+            disabled={isNearMeLoading}
+            className={isNearMeActive ? '' : 'border-[rgba(47,116,232,0.28)] text-[var(--accent-deep)]'}
+          >
+            {isNearMeLoading ? 'Locating...' : 'Near Me'}
+          </DiscoveryChip>
+          {featuredAreaChips.map((chip) => (
+            <DiscoveryChip
+              key={chip.id}
+              isSelected={selectedArea === chip.id}
+              onClick={() => onAreaChange(selectedArea === chip.id ? null : chip.id)}
+            >
+              {chip.label}
+            </DiscoveryChip>
+          ))}
+          <DiscoveryChip isSelected={false} onClick={onMoreCities}>
+            More
+          </DiscoveryChip>
+        </div>
+        {locationHelperText ? (
+          <p className="mt-1 text-[11px] leading-relaxed text-[var(--muted)]">{locationHelperText}</p>
+        ) : null}
+      </div>
+
+      <div>
+        <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">
+          Budget
+        </p>
+        <div className="flex gap-2 overflow-x-auto pb-1 lg:flex-wrap lg:overflow-visible">
+          {budgetOptions.slice(0, 4).map((budget) => (
+            <DiscoveryChip
+              key={budget.value}
+              isSelected={selectedBudget === budget.value}
+              onClick={() => onBudgetChange(selectedBudget === budget.value ? null : budget.value)}
+            >
+              {budget.label === '₱1,000-₱2,000' ? '₱1,000+' : budget.label}
+            </DiscoveryChip>
+          ))}
+          <DiscoveryChip isSelected={selectedBudget === '2000-plus'} onClick={() => onBudgetChange(selectedBudget === '2000-plus' ? null : '2000-plus')}>
+            ₱2,000+
+          </DiscoveryChip>
+        </div>
+      </div>
+
+      {(selectedCategory || selectedArea || selectedBudget || isNearMeActive) ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={onClearFilters}
+            className="rounded-full border border-[var(--line)] bg-white px-3 py-1.5 text-[11px] font-semibold text-[var(--accent-deep)] transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)]"
+          >
+            Clear picks
+          </button>
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -987,6 +1213,8 @@ function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [selectedArea, setSelectedArea] = useState<string | null>(null)
   const [selectedBudget, setSelectedBudget] = useState<BudgetValue | null>(null)
+  const [userLocation, setUserLocation] = useState<UserLocation>(null)
+  const [locationPermissionState, setLocationPermissionState] = useState<LocationPermissionState>('idle')
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null)
   const [isSearching, setIsSearching] = useState(false)
@@ -1113,6 +1341,8 @@ function HomePage() {
     setSelectedCategory(null)
     setSelectedArea(null)
     setSelectedBudget(null)
+    setUserLocation(null)
+    setLocationPermissionState('idle')
     setIsSearching(false)
     setSearchError(null)
     setPromptLogin(false)
@@ -1128,7 +1358,39 @@ function HomePage() {
     setSelectedCategory(null)
     setSelectedArea(null)
     setSelectedBudget(null)
+    setUserLocation(null)
+    setLocationPermissionState('idle')
     setSearchError(null)
+  }
+
+  const handleNearMeClick = () => {
+    if (!('geolocation' in navigator)) {
+      setUserLocation(null)
+      setLocationPermissionState('unsupported')
+      return
+    }
+
+    setLocationPermissionState('requesting')
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserLocation({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        })
+        setSelectedArea(null)
+        setLocationPermissionState('granted')
+      },
+      (error) => {
+        setUserLocation(null)
+        setLocationPermissionState(error.code === error.PERMISSION_DENIED ? 'denied' : 'error')
+      },
+      {
+        enableHighAccuracy: false,
+        maximumAge: 5 * 60 * 1000,
+        timeout: 10000,
+      }
+    )
   }
 
   const handlePlaceSelect = (placeId: string) => {
@@ -1147,10 +1409,35 @@ function HomePage() {
     setSelectedPlaceId(placeId)
   }
 
+  const getOptionalLocationSearchPayload = () => {
+    const isNearMeActive = locationPermissionState === 'granted' && Boolean(userLocation)
+
+    if (!isNearMeActive || !userLocation) {
+      return {}
+    }
+
+    return {
+      userLocation: {
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+      },
+      radiusKm: 5,
+    }
+  }
+
   const handleSearch = async (query: string) => {
     const trimmedQuery = query.trim()
     const requestVersion = searchRequestVersion.current + 1
     searchRequestVersion.current = requestVersion
+    const searchPayload = {
+      query: trimmedQuery,
+      filters: {
+        category: selectedCategory,
+        area: selectedArea,
+        budget: selectedBudget,
+      },
+      ...getOptionalLocationSearchPayload(),
+    }
 
     try {
       setIsSearching(true)
@@ -1161,14 +1448,7 @@ function HomePage() {
       const response = await fetch('/api/search', {
         method: 'POST',
         headers: await getSearchRequestHeaders(),
-        body: JSON.stringify({
-          query: trimmedQuery,
-          filters: {
-            category: selectedCategory,
-            area: selectedArea,
-            budget: selectedBudget,
-          },
-        }),
+        body: JSON.stringify(searchPayload),
       })
 
       const data = (await response.json()) as {
@@ -1250,6 +1530,7 @@ function HomePage() {
             budget: null,
           },
           exploreAll: true,
+          ...getOptionalLocationSearchPayload(),
         }),
       })
 
@@ -1467,6 +1748,12 @@ function HomePage() {
 
         <main className="pb-6">
           <section className="border-b border-[var(--line)] bg-white/76 px-4 py-4 backdrop-blur">
+            <div className="mb-3">
+              <h1 className="text-[26px] font-semibold leading-tight text-slate-950">Saan tayo gala today?</h1>
+              <p className="mt-1 text-sm leading-relaxed text-[var(--muted)]">
+                Search freely, or tap a vibe when the plan is still vague.
+              </p>
+            </div>
             <div className="mb-3 grid gap-2">
               <SearchModeTabs selectedMode={selectedMode} onModeChange={handleModeChange} />
               <button
@@ -1497,6 +1784,20 @@ function HomePage() {
                 {searchError ? (
                   <p className="mt-2 text-xs text-red-600">{searchError}</p>
                 ) : null}
+                <DiscoveryControls
+                  selectedCategory={selectedCategory}
+                  selectedArea={selectedArea}
+                  selectedBudget={selectedBudget}
+                  hasUserLocation={Boolean(userLocation)}
+                  locationPermissionState={locationPermissionState}
+                  onCategoryChange={setSelectedCategory}
+                  onAreaChange={setSelectedArea}
+                  onBudgetChange={setSelectedBudget}
+                  onNearMe={handleNearMeClick}
+                  onMoreCities={() => setShowAdvancedFilters(true)}
+                  onClearFilters={handleClearFilters}
+                  className="mt-4"
+                />
                 <button
                   type="button"
                   onClick={() => setShowAdvancedFilters(true)}
@@ -1571,6 +1872,7 @@ function HomePage() {
                           hasSearched={hasSearched}
                           onBuildPrompt={() => openPromptBuilder('empty-search')}
                           onSearchAgain={() => openPromptBuilder('empty-search')}
+                          onSelectCategory={setSelectedCategory}
                         />
                       )}
                 </div>
@@ -1597,11 +1899,19 @@ function HomePage() {
         </main>
       </div>
 
-      <div className="hidden min-h-screen w-full lg:grid lg:grid-rows-[72px_86px_minmax(0,1fr)]">
+      <div className="hidden min-h-screen w-full lg:grid lg:grid-rows-[72px_auto_minmax(0,1fr)]">
         <AppHeader />
 
         <section className="border-b border-[var(--line)] bg-white/72 backdrop-blur">
-          <div className="px-8 py-3">
+          <div className="px-8 py-4">
+            <div className="mb-3 flex items-end justify-between gap-6">
+              <div>
+                <h1 className="text-2xl font-semibold leading-tight text-slate-950">Saan tayo gala today?</h1>
+                <p className="mt-1 text-sm text-[var(--muted)]">
+                  Search freely, or tap a vibe when the plan is still vague.
+                </p>
+              </div>
+            </div>
             <div className="flex items-center gap-4">
               <SearchModeTabs selectedMode={selectedMode} onModeChange={handleModeChange} className="w-[280px] shrink-0" />
               <button
@@ -1641,6 +1951,22 @@ function HomePage() {
             ) : null}
             {selectedMode === 'places' && searchError ? (
               <p className="mt-2 text-xs text-red-600">{searchError}</p>
+            ) : null}
+            {selectedMode === 'places' ? (
+              <DiscoveryControls
+                selectedCategory={selectedCategory}
+                selectedArea={selectedArea}
+                selectedBudget={selectedBudget}
+                hasUserLocation={Boolean(userLocation)}
+                locationPermissionState={locationPermissionState}
+                onCategoryChange={setSelectedCategory}
+                onAreaChange={setSelectedArea}
+                onBudgetChange={setSelectedBudget}
+                onNearMe={handleNearMeClick}
+                onMoreCities={() => setShowAdvancedFilters(true)}
+                onClearFilters={handleClearFilters}
+                className="mt-4"
+              />
             ) : null}
           </div>
         </section>
@@ -1706,6 +2032,7 @@ function HomePage() {
                           hasSearched={hasSearched}
                           onBuildPrompt={() => openPromptBuilder('empty-search')}
                           onSearchAgain={() => openPromptBuilder('empty-search')}
+                          onSelectCategory={setSelectedCategory}
                         />
                       )}
                 </div>
