@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700;800;900&display=swap");
 @import "tailwindcss";
 
 :root {
@@ -23,7 +24,7 @@ body {
     radial-gradient(circle at top right, rgba(183, 214, 255, 0.82), transparent 28%),
     linear-gradient(180deg, #f8fbff 0%, #edf4ff 100%);
   color: var(--text);
-  font-family: "Segoe UI", Inter, Arial, sans-serif;
+  font-family: "Nunito Sans", system-ui, sans-serif;
 }
 
 #root {
@@ -39,7 +40,7 @@ body {
 
 button,
 input {
-  font: inherit;
+  font-family: inherit;
 }
 
 body.gala-menu-open #root {

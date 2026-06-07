@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
+import WelcomePage from './pages/WelcomePage'
 import HomePage from './pages/HomePage'
+import LoginPage from './pages/LoginPage'
 import FavoritesPage from './pages/FavoritesPage'
 import HistoryPage from './pages/HistoryPage'
 import PlaceDetailView from './components/PlaceDetailView'
@@ -198,6 +200,18 @@ function App() {
   const sharedPlaceId = useMemo(() => parsePlaceIdFromPath(pathname), [pathname])
 
   const content = (() => {
+    if (pathname === '/' || pathname === '') {
+      return <WelcomePage />
+    }
+
+    if (pathname === '/search' || pathname === '/search/') {
+      return <HomePage />
+    }
+
+    if (pathname === '/login' || pathname === '/login/' || pathname === '/signup' || pathname === '/signup/') {
+      return <LoginPage />
+    }
+
     if (pathname === '/favorites' || pathname === '/favorites/') {
       return <FavoritesPage />
     }
