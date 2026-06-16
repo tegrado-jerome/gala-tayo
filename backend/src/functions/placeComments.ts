@@ -1490,6 +1490,6 @@ app.http("myCommentModerationNoticesList", {
 app.http("adminCommentReportModerate", {
   methods: ["PATCH"],
   authLevel: "anonymous",
-  route: "admin/comment-reports/{reportId}",
+  route: "app-admin/comment-reports/{reportId}",
   handler: adminCommentReportModerate,
 });

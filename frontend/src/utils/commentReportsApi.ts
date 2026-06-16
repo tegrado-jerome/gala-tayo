@@ -101,7 +101,7 @@ async function fetchMyCommentReports(token: string, signal?: AbortSignal) {
 }
 
 async function moderateCommentReport(reportId: string, token: string, action: ModerateCommentReportAction) {
-  const response = await fetch(getApiEndpoint(`/admin/comment-reports/${encodeURIComponent(reportId)}`), {
+  const response = await fetch(getApiEndpoint(`/app-admin/comment-reports/${encodeURIComponent(reportId)}`), {
     method: 'PATCH',
     headers: {
       Authorization: `Bearer ${token}`,
