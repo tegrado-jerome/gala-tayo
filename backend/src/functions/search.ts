@@ -1307,7 +1307,6 @@ async function findSearchPlaces({
         getStringField(right.row, ["name"]) ?? ""
       );
     })
-    .slice(0, 10)
     .map(({ row, distanceKm }) =>
       mapPlaceRowToSearchResult(row, {
         normalizedQuery,
@@ -1342,7 +1341,7 @@ export async function search(
     const discoveryCategoryIds =
       categoryId !== "all" ? [categoryId] : inferredCategoryIds;
     const discoveryAreaIds =
-      areaId !== "all" ? [areaId] : inferredLocations.cityIds;
+      areaId !== "all" ? [areaId] : inferredLocations.cityIds.slice(0, 1);
     const hasSelectedFilters =
       categoryId !== "all" || areaId !== "all" || budget !== "any";
     const hasNearbySearch = Boolean(nearbySearch);

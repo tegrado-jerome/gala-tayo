@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import L from 'leaflet'
-import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet'
+import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet'
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
 import markerIcon from 'leaflet/dist/images/marker-icon.png'
 import markerShadow from 'leaflet/dist/images/marker-shadow.png'
@@ -268,8 +268,6 @@ function FitMapToPlaces({
 function MapView({
   places,
   selectedPlaceId,
-  onPlaceSelect,
-  onPlaceOpen,
   center = metroManilaCenter,
   zoom = 12,
   autoFitToPlaces = true,
@@ -289,7 +287,7 @@ function MapView({
   )
 
   return (
-    <div className={`h-[360px] w-full overflow-hidden rounded-2xl border border-[var(--line)] md:h-[560px] ${className}`}>
+    <div className={`h-[360px] w-full select-none overflow-hidden rounded-2xl border border-[var(--line)] md:h-[560px] ${className}`}>
       <MapContainer center={safeCenter} zoom={safeZoom} scrollWheelZoom className="h-full w-full">
         <MapSizeSync center={safeCenter} zoom={safeZoom} />
         <FitMapToPlaces
@@ -308,32 +306,9 @@ function MapView({
           <Marker
             key={place.id}
             position={latLng}
-            eventHandlers={{
-              click: () => onPlaceSelect?.(place.id),
-            }}
+            interactive={false}
             opacity={selectedPlaceId === place.id ? 1 : 0.88}
-          >
-            <Popup>
-              <div className="min-w-[160px]">
-                <p className="font-semibold text-slate-900">{place.name}</p>
-                <p className="mt-1 text-xs text-slate-600">
-                  {place.category} / {place.area}
-                </p>
-                <p className="mt-1 text-xs text-slate-600">
-                  {place.status === 'Open' ? 'Open now' : place.status}
-                </p>
-                {onPlaceOpen ? (
-                  <button
-                    type="button"
-                    onClick={() => onPlaceOpen(place.id)}
-                    className="mt-3 rounded-md bg-[var(--accent)] px-2.5 py-1.5 text-xs font-semibold text-white"
-                  >
-                    View details
-                  </button>
-                ) : null}
-              </div>
-            </Popup>
-          </Marker>
+          />
         ))}
       </MapContainer>
     </div>

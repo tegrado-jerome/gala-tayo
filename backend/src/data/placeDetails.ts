@@ -1,10 +1,14 @@
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
+import { getApprovedPlaceImages } from "../services/placeImagesService";
 
 export type PlaceDetail = {
   id: string;
-  slug?: string | null;
+  slug: string;
   name: string;
   location: string;
+  address?: string | null;
+  city?: string | null;
+  area?: string | null;
   description: string;
   place_history?: string | null;
   best_time_to_visit?: string | null;
@@ -76,10 +80,13 @@ function mapPlaceRowToDetail(row: Record<string, unknown>): PlaceDetail {
       : null;
 
   return {
-    id: String(row.slug ?? row.id ?? ""),
-    slug: typeof row.slug === "string" ? row.slug : null,
+    id: String(row.id ?? ""),
+    slug: typeof row.slug === "string" ? row.slug : "",
     name: typeof row.name === "string" ? row.name : "Untitled place",
     location,
+    address,
+    city,
+    area,
     description,
     place_history: typeof row.place_history === "string" ? row.place_history : null,
     best_time_to_visit: typeof row.best_time_to_visit === "string" ? row.best_time_to_visit : null,
@@ -135,7 +142,14 @@ export async function findPlaceDetailByIdOrSlug(id: string): Promise<PlaceDetail
       .maybeSingle();
 
     if (!slugError && slugData) {
-      return mapPlaceRowToDetail(slugData as Record<string, unknown>);
+      const detail = mapPlaceRowToDetail(slugData as Record<string, unknown>);
+      const images = await getApprovedPlaceImages(detail.id);
+      const imageUrls = images.map((image) => image.image_url);
+      return {
+        ...detail,
+        imageUrl: imageUrls[0] ?? "",
+        curatedImageUrls: imageUrls,
+      };
     }
 
     if (UUID_PATTERN.test(trimmedId)) {
@@ -147,7 +161,14 @@ export async function findPlaceDetailByIdOrSlug(id: string): Promise<PlaceDetail
         .maybeSingle();
 
       if (!idError && idData) {
-        return mapPlaceRowToDetail(idData as Record<string, unknown>);
+        const detail = mapPlaceRowToDetail(idData as Record<string, unknown>);
+        const images = await getApprovedPlaceImages(detail.id);
+        const imageUrls = images.map((image) => image.image_url);
+        return {
+          ...detail,
+          imageUrl: imageUrls[0] ?? "",
+          curatedImageUrls: imageUrls,
+        };
       }
     }
   } catch {

@@ -11,6 +11,7 @@ type SearchBarProps = {
   placeholder?: string
   className?: string
   animatedPlaceholders?: string[]
+  submitLabel?: string
 }
 
 function SearchIcon() {
@@ -38,6 +39,7 @@ function SearchBar({
   placeholder = 'Saan mo gustong pumunta ngayon?',
   className = '',
   animatedPlaceholders,
+  submitLabel,
 }: SearchBarProps) {
   const [query, setQuery] = useState('')
   const [animatedPlaceholder, setAnimatedPlaceholder] = useState(placeholder)
@@ -153,9 +155,11 @@ function SearchBar({
           type="submit"
           disabled={isLoading || !canSubmit}
           aria-label="Search"
-          className="shrink-0 rounded-md bg-[linear-gradient(180deg,var(--accent),#6ba5ff)] p-1.5 text-white shadow-[0_8px_18px_rgba(47,116,232,0.26)] transition-all duration-300 hover:-translate-y-[1px] hover:bg-[var(--accent-deep)] hover:shadow-[0_12px_22px_rgba(47,116,232,0.3)] active:translate-y-0 disabled:cursor-not-allowed disabled:bg-slate-300 sm:p-2"
+          className={`shrink-0 rounded-md bg-[linear-gradient(180deg,var(--accent),#6ba5ff)] text-white shadow-[0_8px_18px_rgba(47,116,232,0.26)] transition-all duration-300 hover:-translate-y-[1px] hover:bg-[var(--accent-deep)] hover:shadow-[0_12px_22px_rgba(47,116,232,0.3)] active:translate-y-0 disabled:cursor-not-allowed disabled:bg-slate-300 ${
+            submitLabel ? 'px-4 py-1.5 text-sm font-extrabold sm:px-5 sm:py-2' : 'p-1.5 sm:p-2'
+          }`}
         >
-          <SearchIcon />
+          {submitLabel ?? <SearchIcon />}
         </button>
       </div>
     </form>

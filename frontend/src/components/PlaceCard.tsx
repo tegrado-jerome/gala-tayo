@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { getCuratedPlaceImages, normalizePlaceSlug } from '../data/curatedPlaceImages'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import GuestLimitModal from './GuestLimitModal'
+import AddToGalaPlanModal from './AddToGalaPlanModal'
 import { copyPlaceLink } from '../utils/sharePlace'
 import { getDirectionsUrl, openDirectionsUrl } from '../utils/directions'
 
@@ -23,6 +24,9 @@ type PlaceCardData = {
   name: string
   category: string
   area: string
+  address?: string | null
+  city?: string | null
+  localArea?: string | null
   status: 'Open' | 'Closed' | 'Unknown'
   reason: string
   description?: string | null
@@ -103,6 +107,16 @@ function SaveIcon() {
   )
 }
 
+function PlanIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className="h-3.5 w-3.5">
+      <path d="M7 4.5h10a2 2 0 0 1 2 2V20l-3-1.7L13 20l-3-1.7L7 20l-2-1.1V6.5a2 2 0 0 1 2-2Z" />
+      <path d="M8.5 9h7" />
+      <path d="M8.5 12.5h5" />
+    </svg>
+  )
+}
+
 function DirectionsIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className="h-3.5 w-3.5">
@@ -159,6 +173,7 @@ function getPlaceChips(place: PlaceCardData) {
 
 function PlaceCard({ place, isSelected = false, compact = false, onSelect }: PlaceCardProps) {
   const [isSavePromptOpen, setIsSavePromptOpen] = useState(false)
+  const [isAddToPlanOpen, setIsAddToPlanOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [shareMessage, setShareMessage] = useState('')
   const [shareError, setShareError] = useState('')
@@ -168,7 +183,7 @@ function PlaceCard({ place, isSelected = false, compact = false, onSelect }: Pla
   const resolvedCuratedImageUrls = place.curatedImageUrls ?? getCuratedPlaceImages(place.name)
   const photoUrl = place.imageUrl?.trim() || place.curatedImageUrl?.trim() || resolvedCuratedImageUrls[0]?.trim() || null
   const normalizedNameSlug = normalizePlaceSlug(place.name)
-  const placeSlug = place.slug?.trim() || place.id
+  const placeId = place.id.trim()
   const isSaved = [place.slug, normalizedNameSlug, place.id].some((slug) => isPlaceSaved(slug))
   const displayChips = getPlaceChips(place)
   const directionsUrl = getDirectionsUrl(place)
@@ -191,12 +206,12 @@ function PlaceCard({ place, isSelected = false, compact = false, onSelect }: Pla
       setSaveError('')
 
       if (isSaved) {
-        const message = await removeFavorite(placeSlug)
+        const message = await removeFavorite(placeId)
         setSaveMessage(message)
         return
       }
 
-      const result = await saveFavorite(placeSlug)
+      const result = await saveFavorite(placeId)
 
       if (result.status === 'guest') {
         setIsSavePromptOpen(true)
@@ -296,7 +311,7 @@ function PlaceCard({ place, isSelected = false, compact = false, onSelect }: Pla
           </div>
         </div>
 
-        <div className="grid grid-cols-3 border-t border-[var(--line)]">
+        <div className="grid grid-cols-4 border-t border-[var(--line)]">
           <button
             type="button"
             onClick={(event) => {
@@ -307,6 +322,17 @@ function PlaceCard({ place, isSelected = false, compact = false, onSelect }: Pla
           >
             <ShareIcon />
             <span>Share</span>
+          </button>
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation()
+              setIsAddToPlanOpen(true)
+            }}
+            className="flex items-center justify-center gap-1.5 border-l border-[var(--line)] px-3 py-2 text-[11px] font-medium text-slate-700 transition hover:bg-slate-50"
+          >
+            <PlanIcon />
+            <span>Plan</span>
           </button>
           <button
             type="button"
@@ -363,6 +389,12 @@ function PlaceCard({ place, isSelected = false, compact = false, onSelect }: Pla
         isOpen={isSavePromptOpen}
         onClose={() => setIsSavePromptOpen(false)}
         mode="savePlace"
+      />
+      <AddToGalaPlanModal
+        isOpen={isAddToPlanOpen}
+        placeId={place.id}
+        placeName={place.name}
+        onClose={() => setIsAddToPlanOpen(false)}
       />
     </>
   )

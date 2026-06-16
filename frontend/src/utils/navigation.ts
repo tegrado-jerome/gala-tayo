@@ -3,8 +3,8 @@ function navigateToPath(path: string) {
   window.dispatchEvent(new PopStateEvent('popstate'))
 }
 
-function navigateToPlace(slugOrId: string) {
-  navigateToPath(`/places/${encodeURIComponent(slugOrId)}`)
+function navigateToPlace(slug: string) {
+  navigateToPath(`/places/${encodeURIComponent(slug)}`)
 }
 
 export { navigateToPath, navigateToPlace }

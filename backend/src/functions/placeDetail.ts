@@ -10,24 +10,24 @@ export async function placeDetail(
   request: HttpRequest,
   context: InvocationContext
 ): Promise<HttpResponseInit> {
-  const placeId = request.params.id;
+  const slug = request.params.slug;
 
-  if (!placeId || placeId.trim() === "") {
+  if (!slug || slug.trim() === "") {
     return {
       status: 400,
       jsonBody: {
-        message: "Place id is required.",
+        message: "Place slug is required.",
       },
     };
   }
 
-  const place = await findPlaceDetailByIdOrSlug(placeId);
+  const place = await findPlaceDetailByIdOrSlug(slug);
 
   if (!place) {
     return {
       status: 404,
       jsonBody: {
-        message: `Place not found for id: ${placeId}`,
+        message: `Place not found for slug: ${slug}`,
       },
     };
   }
@@ -43,6 +43,6 @@ export async function placeDetail(
 app.http("placeDetail", {
   methods: ["GET"],
   authLevel: "anonymous",
-  route: "places/{id}",
+  route: "places/{slug}",
   handler: placeDetail,
 });
