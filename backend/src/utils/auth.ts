@@ -4,6 +4,7 @@ import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 export type AuthenticatedUser = {
   id: string;
   email?: string;
+  metadata?: Record<string, unknown>;
 };
 
 export async function validateJwt(request: HttpRequest): Promise<AuthenticatedUser> {
@@ -30,5 +31,6 @@ export async function validateJwt(request: HttpRequest): Promise<AuthenticatedUs
   return {
     id: data.user.id,
     email: data.user.email,
+    metadata: data.user.user_metadata as Record<string, unknown>,
   };
 }
