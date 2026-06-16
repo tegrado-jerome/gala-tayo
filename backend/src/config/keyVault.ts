@@ -1,17 +1,27 @@
 import { DefaultAzureCredential } from "@azure/identity";
 import { SecretClient } from "@azure/keyvault-secrets";
 
-const keyVaultUrl = process.env.KEY_VAULT_URL;
+let client: SecretClient | null = null;
 
-if (!keyVaultUrl) {
-  throw new Error("KEY_VAULT_URL is not configured.");
+function getKeyVaultClient(): SecretClient {
+  if (client) {
+    return client;
+  }
+
+  const keyVaultUrl = process.env.KEY_VAULT_URL?.trim();
+
+  if (!keyVaultUrl) {
+    throw new Error("KEY_VAULT_URL is not configured.");
+  }
+
+  const credential = new DefaultAzureCredential();
+  client = new SecretClient(keyVaultUrl, credential);
+
+  return client;
 }
 
-const credential = new DefaultAzureCredential();
-const client = new SecretClient(keyVaultUrl, credential);
-
 export async function getSecret(secretName: string): Promise<string> {
-  const secret = await client.getSecret(secretName);
+  const secret = await getKeyVaultClient().getSecret(secretName);
 
   if (!secret.value) {
     throw new Error(`Secret ${secretName} has no value.`);
