@@ -5,6 +5,7 @@ import {
   InvocationContext,
 } from "@azure/functions";
 import { findPlaceDetailByIdOrSlug } from "../data/placeDetails";
+import { getApprovedPlaceImages } from "../services/placeImagesService";
 
 export async function placePhotos(
   request: HttpRequest,
@@ -32,7 +33,8 @@ export async function placePhotos(
     };
   }
 
-  const photos = place.curatedImageUrls ?? [];
+  const images = await getApprovedPlaceImages(place.id);
+  const photos = images.map((image) => image.image_url);
 
   context.log(`Returning ${photos.length} photos for ${place.id}`);
 
@@ -41,6 +43,7 @@ export async function placePhotos(
     jsonBody: {
       placeId: place.id,
       photos,
+      images,
     },
   };
 }

@@ -22,7 +22,8 @@
     "@google/genai": "^2.6.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@supabase/supabase-js": "^2.106.1",
-    "@upstash/redis": "^1.38.0"
+    "@upstash/redis": "^1.38.0",
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "@types/node": "18.x",
