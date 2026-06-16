@@ -2,10 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { User } from '@supabase/supabase-js'
 import { supabase } from '../supabase'
-import FeedbackModal from './FeedbackModal'
+import type { CurrentUserResponse } from '../utils/profileApi'
 
 type UserMenuProps = {
   user?: User | null
+  profile?: CurrentUserResponse['profile'] | null
   compact?: boolean
 }
 
@@ -39,12 +40,41 @@ function ClockIcon({ className = 'h-5 w-5' }: IconProps) {
   )
 }
 
+function PlanIcon({ className = 'h-5 w-5' }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden="true">
+      <path d="M7 4.5h10a2 2 0 0 1 2 2V20l-3-1.7L13 20l-3-1.7L7 20l-2-1.1V6.5a2 2 0 0 1 2-2Z" />
+      <path d="M8.5 9h7" />
+      <path d="M8.5 12.5h5" />
+    </svg>
+  )
+}
+
 function FeedbackIcon({ className = 'h-5 w-5' }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden="true">
       <path d="M5 5.5h14v9.5H8.7L5 18.5V5.5Z" />
       <path d="M8.5 9h7" />
       <path d="M8.5 12h4.5" />
+    </svg>
+  )
+}
+
+function FlagIcon({ className = 'h-5 w-5' }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden="true">
+      <path d="M6 20V5" />
+      <path d="M6 5h10.5l-1.7 3 1.7 3H6" />
+    </svg>
+  )
+}
+
+function NoticeIcon({ className = 'h-5 w-5' }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden="true">
+      <path d="M12 3.5 20 7v5.5c0 4.5-3.1 7.1-8 8-4.9-.9-8-3.5-8-8V7l8-3.5Z" />
+      <path d="M8.5 11.8h7" />
+      <path d="M8.5 15h4.5" />
     </svg>
   )
 }
@@ -60,6 +90,17 @@ function SparkIcon({ className = 'h-5 w-5' }: IconProps) {
       <path d="m15.6 15.6 2.8 2.8" />
       <path d="m18.4 5.6-2.8 2.8" />
       <path d="m8.4 15.6-2.8 2.8" />
+    </svg>
+  )
+}
+
+function SearchUserIcon({ className = 'h-5 w-5' }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className={className} aria-hidden="true">
+      <circle cx="10.5" cy="8.2" r="3.2" />
+      <path d="M4.5 18a6.2 6.2 0 0 1 10.5-3.8" />
+      <circle cx="17" cy="17" r="2.6" />
+      <path d="m19 19 2 2" />
     </svg>
   )
 }
@@ -100,15 +141,12 @@ function CloseIcon({ className = 'h-5 w-5' }: IconProps) {
   )
 }
 
-function getDisplayName(user: User) {
-  const metadata = user.user_metadata
-  const name = metadata.full_name ?? metadata.name
-
-  return typeof name === 'string' && name.trim().length > 0 ? name : user.email ?? 'Account'
+function getDisplayName(user: User, profile: CurrentUserResponse['profile'] | null) {
+  return profile?.displayName ?? profile?.username ?? user.email ?? 'Account'
 }
 
-function getInitials(user: User) {
-  const label = getDisplayName(user)
+function getInitials(user: User, profile: CurrentUserResponse['profile'] | null) {
+  const label = getDisplayName(user, profile)
   const initials = label
     .split(/[.\s@_-]+/)
     .filter(Boolean)
@@ -120,11 +158,8 @@ function getInitials(user: User) {
   return initials || 'GT'
 }
 
-function getAvatarUrl(user: User) {
-  const metadata = user.user_metadata
-  const avatarUrl = metadata.avatar_url ?? metadata.picture
-
-  return typeof avatarUrl === 'string' && avatarUrl.length > 0 ? avatarUrl : ''
+function getAvatarUrl(profile: CurrentUserResponse['profile'] | null) {
+  return profile?.avatarUrl ?? profile?.providerAvatarUrl ?? ''
 }
 
 function navigateTo(path: string) {
@@ -132,20 +167,18 @@ function navigateTo(path: string) {
   window.dispatchEvent(new PopStateEvent('popstate'))
 }
 
-function UserMenu({ user = null, compact = false }: UserMenuProps) {
+function UserMenu({ user = null, profile = null, compact = false }: UserMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const [isSigningIn, setIsSigningIn] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [failedAvatarUrl, setFailedAvatarUrl] = useState('')
-  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const drawerRef = useRef<HTMLDivElement>(null)
 
-  const avatarUrl = user ? getAvatarUrl(user) : ''
+  const avatarUrl = user ? getAvatarUrl(profile) : ''
   const shouldShowAvatar = Boolean(user && avatarUrl && failedAvatarUrl !== avatarUrl)
-  const displayName = user ? getDisplayName(user) : 'Welcome to GalaTayo'
-  const initials = user ? getInitials(user) : 'GT'
+  const displayName = user ? getDisplayName(user, profile) : 'Welcome to GalaTayo'
+  const initials = user ? getInitials(user, profile) : 'GT'
 
   useEffect(() => {
     if (!isOpen) {
@@ -196,33 +229,12 @@ function UserMenu({ user = null, compact = false }: UserMenuProps) {
     }
   }, [isOpen])
 
-  const handleSignIn = async () => {
-    try {
-      setIsSigningIn(true)
-      setErrorMessage('')
-
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin,
-        },
-      })
-
-      if (error) {
-        throw error
-      }
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Sign in failed. Try again.')
-      setIsSigningIn(false)
-    }
-  }
-
   const handleSignOut = async () => {
     try {
       setIsSigningOut(true)
       setErrorMessage('')
 
-      const { error } = await supabase.auth.signOut()
+      const { error } = await supabase.auth.signOut({ scope: 'local' })
 
       if (error) {
         throw error
@@ -238,11 +250,6 @@ function UserMenu({ user = null, compact = false }: UserMenuProps) {
   const closeAndNavigate = (path: string) => {
     setIsOpen(false)
     navigateTo(path)
-  }
-
-  const openFeedback = () => {
-    setIsOpen(false)
-    setIsFeedbackOpen(true)
   }
 
   const menuItemClass =
@@ -362,9 +369,34 @@ function UserMenu({ user = null, compact = false }: UserMenuProps) {
                     <span className="flex-1">History</span>
                     <ChevronIcon className="h-4 w-4 text-slate-500" />
                   </button>
-                  <button type="button" onClick={openFeedback} className={menuItemClass} role="menuitem">
+                  <button type="button" onClick={() => closeAndNavigate('/gala-plans')} className={menuItemClass} role="menuitem">
+                    <span className={menuIconClass}><PlanIcon /></span>
+                    <span className="flex-1">Gala Plans</span>
+                    <ChevronIcon className="h-4 w-4 text-slate-500" />
+                  </button>
+                  <button type="button" onClick={() => closeAndNavigate('/profiles/search')} className={menuItemClass} role="menuitem">
+                    <span className={menuIconClass}><SearchUserIcon /></span>
+                    <span className="flex-1">Find Friends</span>
+                    <ChevronIcon className="h-4 w-4 text-slate-500" />
+                  </button>
+                  <button type="button" onClick={() => closeAndNavigate('/profile')} className={menuItemClass} role="menuitem">
+                    <span className={menuIconClass}><UserIcon /></span>
+                    <span className="flex-1">Profile</span>
+                    <ChevronIcon className="h-4 w-4 text-slate-500" />
+                  </button>
+                  <button type="button" onClick={() => closeAndNavigate('/feedback')} className={menuItemClass} role="menuitem">
                     <span className={menuIconClass}><FeedbackIcon /></span>
                     <span className="flex-1">Feedback</span>
+                    <ChevronIcon className="h-4 w-4 text-slate-500" />
+                  </button>
+                  <button type="button" onClick={() => closeAndNavigate('/reports')} className={menuItemClass} role="menuitem">
+                    <span className={menuIconClass}><FlagIcon /></span>
+                    <span className="flex-1">My Reports</span>
+                    <ChevronIcon className="h-4 w-4 text-slate-500" />
+                  </button>
+                  <button type="button" onClick={() => closeAndNavigate('/comment-notices')} className={menuItemClass} role="menuitem">
+                    <span className={menuIconClass}><NoticeIcon /></span>
+                    <span className="flex-1">Comment Notices</span>
                     <ChevronIcon className="h-4 w-4 text-slate-500" />
                   </button>
                   <button type="button" onClick={() => closeAndNavigate('/search')} className={menuItemClass} role="menuitem">
@@ -375,7 +407,7 @@ function UserMenu({ user = null, compact = false }: UserMenuProps) {
 
                   <div className="my-3 border-t border-slate-200" />
 
-                  <button type="button" onClick={() => setIsOpen(false)} className={menuItemClass} role="menuitem">
+                  <button type="button" onClick={() => closeAndNavigate('/profile')} className={menuItemClass} role="menuitem">
                     <span className={menuIconClass}><SettingsIcon /></span>
                     <span className="flex-1">Account settings</span>
                     <ChevronIcon className="h-4 w-4 text-slate-500" />
@@ -409,19 +441,10 @@ function UserMenu({ user = null, compact = false }: UserMenuProps) {
                 <div className="grid w-full gap-4">
                   <button
                     type="button"
-                    onClick={() => void handleSignIn()}
-                    disabled={isSigningIn}
+                    onClick={() => closeAndNavigate('/auth')}
                     className="h-14 rounded-lg bg-slate-600 px-4 text-lg font-bold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-70"
                   >
-                    {isSigningIn ? 'Logging in...' : 'Log in'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void handleSignIn()}
-                    disabled={isSigningIn}
-                    className="h-14 rounded-lg border border-slate-400 bg-white px-4 text-lg font-bold text-slate-900 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
-                  >
-                    Sign up
+                    Continue
                   </button>
                 </div>
               </div>
@@ -432,7 +455,6 @@ function UserMenu({ user = null, compact = false }: UserMenuProps) {
         </>,
         document.body,
       ) : null}
-      <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
     </div>
   )
 }

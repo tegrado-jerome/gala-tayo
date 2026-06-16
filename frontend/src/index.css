@@ -125,3 +125,89 @@ body.gala-menu-open #root {
     filter: blur(0);
   }
 }
+
+@keyframes gala-skeleton-shimmer {
+  from {
+    background-position: 120% 0;
+  }
+
+  to {
+    background-position: -120% 0;
+  }
+}
+
+@keyframes gala-score-pop {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.6;
+  }
+
+  60% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes gala-loading-slide {
+  0% {
+    transform: translateX(-80%);
+  }
+
+  50% {
+    transform: translateX(30%);
+  }
+
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+@keyframes gala-burst-pop {
+  0% {
+    transform: translate(-50%, -50%) scale(0.75);
+    opacity: 0;
+  }
+
+  20% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(1.12) translateY(-12px);
+    opacity: 0;
+  }
+}
+
+@keyframes gala-ring-pulse {
+  0% {
+    transform: scale(0.72);
+    opacity: 0.9;
+  }
+
+  100% {
+    transform: scale(1.28);
+    opacity: 0;
+  }
+}
+
+@keyframes gala-map-breathe {
+  0% {
+    opacity: 0.25;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.45;
+    transform: scale(1.02);
+  }
+
+  100% {
+    opacity: 0.25;
+    transform: scale(1);
+  }
+}
