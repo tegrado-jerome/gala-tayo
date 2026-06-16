@@ -17,6 +17,11 @@ type FavoritePlace = {
   address?: string | null;
   city?: string | null;
   area?: string | null;
+  budget_label?: string | null;
+  budget_min?: number | null;
+  budget_max?: number | null;
+  budget_notes?: string | null;
+  is_free?: boolean | null;
   google_maps_url?: string | null;
   latitude?: number | null;
   longitude?: number | null;
@@ -30,6 +35,11 @@ type PlaceRow = {
   address?: string | null;
   city?: string | null;
   area?: string | null;
+  budget_label?: string | null;
+  budget_min?: number | null;
+  budget_max?: number | null;
+  budget_notes?: string | null;
+  is_free?: boolean | null;
   google_maps_url?: string | null;
   latitude?: number | null;
   longitude?: number | null;
@@ -43,7 +53,7 @@ type FavoritePlaceIdentifier = {
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i;
 const FAVORITE_PLACE_COLUMNS =
-  "id, slug, name, category, address, city, area, google_maps_url, latitude, longitude";
+  "id, slug, name, category, address, city, area, budget_label, budget_min, budget_max, budget_notes, is_free, google_maps_url, latitude, longitude";
 
 function unauthorized(message: string): HttpResponseInit {
   return {
@@ -74,14 +84,14 @@ function getTrimmedString(value: unknown): string | null {
 
 async function readFavoritePlaceIdentifier(
   request: HttpRequest,
-  fallbackPlaceSlug?: string
+  fallbackPlaceIdentifier?: string
 ): Promise<FavoritePlaceIdentifier | null> {
-  const routePlaceSlug = getTrimmedString(fallbackPlaceSlug);
+  const routePlaceIdentifier = getTrimmedString(fallbackPlaceIdentifier);
 
-  if (routePlaceSlug) {
+  if (routePlaceIdentifier) {
     return {
-      value: routePlaceSlug,
-      source: "placeSlug",
+      value: routePlaceIdentifier,
+      source: UUID_PATTERN.test(routePlaceIdentifier) ? "placeId" : "placeSlug",
     };
   }
 
