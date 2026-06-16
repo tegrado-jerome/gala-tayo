@@ -2,13 +2,8 @@ export type PromptBuilderFieldId =
   | 'plan'
   | 'location'
   | 'companion'
-  | 'priorities'
   | 'vibe'
   | 'budget'
-  | 'time'
-  | 'outputStyle'
-  | 'currentInfo'
-  | 'avoid'
 
 export type PromptBuilderState = Record<PromptBuilderFieldId, string[]> & {
   custom: Record<PromptBuilderFieldId, string>
