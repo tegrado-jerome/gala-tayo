@@ -47,7 +47,7 @@ function AuthMethodChooser({ isLoading, onLoadingChange, onError }: AuthMethodCh
         type="button"
         onClick={() => void handleGoogleSignIn()}
         disabled={isLoading}
-        className="inline-flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-[rgba(191,210,225,0.9)] bg-white px-5 text-base font-black text-[var(--text)] shadow-[0_10px_24px_rgba(24,72,140,0.08)] transition hover:border-[rgba(47,128,237,0.42)] hover:bg-[rgba(255,255,255,0.98)] hover:shadow-[0_14px_28px_rgba(24,72,140,0.1)] focus:outline-none focus:ring-4 focus:ring-[rgba(47,128,237,0.14)] disabled:cursor-not-allowed disabled:opacity-70"
+        className="inline-flex h-[3.4rem] w-full items-center justify-center gap-3 rounded-[1.4rem] border border-[var(--line)] bg-white/80 px-5 text-[15px] font-black text-[var(--text)] shadow-[0_10px_30px_rgba(15,23,42,0.05)] backdrop-blur-md transition hover:-translate-y-0.5 hover:border-[var(--accent)] hover:bg-white focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)] disabled:cursor-not-allowed disabled:opacity-70"
       >
         <GoogleMark />
         {isLoading ? 'Opening Google...' : 'Continue with Google'}

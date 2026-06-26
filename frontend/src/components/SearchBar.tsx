@@ -110,7 +110,7 @@ function SearchBar({
   return (
     <form
       onSubmit={handleSubmit}
-      className={`rounded-xl border-2 border-[rgba(47,116,232,0.42)] bg-white px-1.5 py-1.5 shadow-[0_8px_24px_rgba(28,77,160,0.06)] transition-all duration-300 hover:border-[rgba(47,116,232,0.6)] hover:shadow-[0_12px_28px_rgba(28,77,160,0.1)] focus-within:border-[var(--accent)] focus-within:shadow-[0_0_0_3px_rgba(47,116,232,0.14),0_12px_28px_rgba(28,77,160,0.12)] ${className}`}
+      className={`rounded-xl border border-[var(--line)] bg-white px-1.5 py-1.5 shadow-sm transition-all duration-300 hover:border-[var(--line-strong)] hover:shadow-md focus-within:border-[var(--accent)] focus-within:shadow-[0_0_0_3px_rgba(30,58,138,0.12)] ${className}`}
     >
       <div className="flex items-center gap-1.5 sm:gap-2">
         <input
@@ -128,7 +128,7 @@ function SearchBar({
             onClick={handleClear}
             disabled={isLoading}
             aria-label="Clear Search"
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-[var(--line)] bg-white text-slate-400 transition hover:border-[var(--accent)] hover:text-[var(--accent-deep)] disabled:cursor-not-allowed disabled:opacity-60 sm:h-8 sm:w-8"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-[var(--line)] bg-[var(--bg-soft)] text-slate-400 transition hover:border-[var(--accent)] hover:bg-[var(--primary-soft)] hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-60 sm:h-8 sm:w-8"
           >
             <AppIcon name="clear" className="h-3.5 w-3.5" />
           </button>
@@ -138,8 +138,8 @@ function SearchBar({
           type="submit"
           disabled={isLoading || !canSubmit}
           aria-label="Search"
-          className={`shrink-0 rounded-md bg-[linear-gradient(180deg,var(--accent),#6ba5ff)] text-white shadow-[0_8px_18px_rgba(47,116,232,0.26)] transition-all duration-300 hover:-translate-y-[1px] hover:bg-[var(--accent-deep)] hover:shadow-[0_12px_22px_rgba(47,116,232,0.3)] active:translate-y-0 disabled:cursor-not-allowed disabled:bg-slate-300 ${
-            submitLabel ? 'px-4 py-1.5 text-sm font-extrabold sm:px-5 sm:py-2' : 'p-1.5 sm:p-2'
+          className={`shrink-0 rounded-xl bg-[var(--accent)] text-white shadow-sm transition-all duration-300 hover:-translate-y-[1px] hover:bg-[var(--accent-deep)] hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:bg-slate-300 ${
+            submitLabel ? 'px-4 py-1.5 text-sm font-semibold sm:px-5 sm:py-2' : 'p-1.5 sm:p-2'
           }`}
         >
           {submitLabel ?? <AppIcon name="search" className="h-4 w-4" />}

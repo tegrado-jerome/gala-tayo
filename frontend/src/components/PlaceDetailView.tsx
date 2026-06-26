@@ -7,7 +7,7 @@ import MapView from './MapView'
 import UnifiedLoadingState from './UnifiedLoadingState'
 import PlaceImageNotice from './PlaceImageNotice'
 import { AppIcon, type AppIconName } from './AppIcon'
-import { ChevronLeft, ChevronRight, ImagePlus } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Flag, ImagePlus, MessageCircle, MoreHorizontal, Pencil, Reply, Trash2 } from 'lucide-react'
 import { normalizePlaceSlug } from '../data/curatedPlaceImages'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { useSystemMessage } from '../context/SystemMessageContext'
@@ -219,13 +219,15 @@ function MemberAvatar({
   displayName,
   avatarUrl,
   compact = false,
+  reply = false,
 }: {
   displayName: string
   avatarUrl?: string | null
   compact?: boolean
+  reply?: boolean
 }) {
   const cleanAvatarUrl = cleanString(avatarUrl)
-  const sizeClass = compact ? 'h-8 w-8 text-[11px]' : 'h-9 w-9 text-[12px]'
+  const sizeClass = reply ? 'h-7 w-7 text-[10px]' : compact ? 'h-8 w-8 text-[11px]' : 'h-9 w-9 text-[12px]'
 
   return (
     <span className={`flex ${sizeClass} shrink-0 overflow-hidden rounded-full border border-[var(--line)] bg-[linear-gradient(180deg,#f8fbff,#e8f1ff)] font-black text-[var(--accent-deep)] shadow-[0_8px_16px_rgba(28,77,160,0.08)]`}>
@@ -333,7 +335,7 @@ function PlacePhoto({
                     <ImagePlus className="h-4 w-4" strokeWidth={2.2} />
                     Add photo
                   </button>
-                ) : null}
+                  ) : null}
               </div>
 
               <div className="flex h-full items-center justify-center px-6 py-8 text-center">
@@ -607,10 +609,10 @@ function DetailSection({ children }: { children: ReactNode }) {
 const filledStar = String.fromCharCode(9733)
 const commentReportReasons: Array<{ value: CommentReportReason; label: string }> = [
   { value: 'spam', label: 'Spam' },
-  { value: 'harassment', label: 'Harassment' },
+  { value: 'harassment', label: 'Hate or abusive content' },
   { value: 'inappropriate', label: 'Inappropriate content' },
-  { value: 'false_info', label: 'False information' },
-  { value: 'personal_info', label: 'Personal information' },
+  { value: 'false_info', label: 'False or misleading' },
+  { value: 'personal_info', label: 'Personal information shared' },
   { value: 'other', label: 'Other' },
 ]
 const placeConcernReasons: Array<{ value: PlaceReportReason; label: string }> = [
@@ -722,7 +724,7 @@ function markCommentReported(comments: PlaceComment[], commentId: string): Place
   }))
 }
 
-function countThreadComments(comments: PlaceComment[]) {
+function countThreadComments(comments: PlaceComment[]): number {
   return comments.reduce((total, comment) => total + 1 + countThreadComments(comment.replies), 0)
 }
 
@@ -739,6 +741,30 @@ function replaceCommentById(comments: PlaceComment[], commentId: string, nextCom
   })
 }
 
+function updateCommentById(
+  comments: PlaceComment[],
+  commentId: string,
+  updater: (comment: PlaceComment) => PlaceComment,
+): PlaceComment[] {
+  return comments.map((comment) => {
+    if (comment.id === commentId) {
+      return updater(comment)
+    }
+
+    return {
+      ...comment,
+      replies: updateCommentById(comment.replies, commentId, updater),
+    }
+  })
+}
+
+function appendReplyToComment(comments: PlaceComment[], parentCommentId: string, reply: PlaceComment): PlaceComment[] {
+  return updateCommentById(comments, parentCommentId, (comment) => ({
+    ...comment,
+    replies: [...comment.replies, reply],
+  }))
+}
+
 function removeCommentById(comments: PlaceComment[], commentId: string): PlaceComment[] {
   return comments
     .filter((comment) => comment.id !== commentId)
@@ -746,6 +772,38 @@ function removeCommentById(comments: PlaceComment[], commentId: string): PlaceCo
       ...comment,
       replies: removeCommentById(comment.replies, commentId),
     }))
+}
+
+function isCommentDeleted(comment: PlaceComment): boolean {
+  return comment.status === 'deleted' || Boolean(comment.deleted_at)
+}
+
+function markCommentDeletedById(comments: PlaceComment[], commentId: string, deletedAt?: string | null): PlaceComment[] {
+  return updateCommentById(comments, commentId, (comment) => ({
+    ...comment,
+    status: 'deleted',
+    comment: '[Deleted comment]',
+    deleted_at: deletedAt ?? comment.deleted_at ?? new Date().toISOString(),
+    updated_at: deletedAt ?? comment.updated_at,
+    local_post_state: undefined,
+    local_error_message: null,
+  }))
+}
+
+function findCommentById(comments: PlaceComment[], commentId: string): PlaceComment | null {
+  for (const comment of comments) {
+    if (comment.id === commentId) {
+      return comment
+    }
+
+    const replyMatch = findCommentById(comment.replies, commentId)
+
+    if (replyMatch) {
+      return replyMatch
+    }
+  }
+
+  return null
 }
 
 function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
@@ -781,10 +839,10 @@ function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
   const [isCommentComposerFocused, setIsCommentComposerFocused] = useState(false)
   const [replyingToCommentId, setReplyingToCommentId] = useState<string | null>(null)
   const [replyBody, setReplyBody] = useState('')
-  const [expandedReplyThreads, setExpandedReplyThreads] = useState<Record<string, boolean>>({})
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
   const [editCommentBody, setEditCommentBody] = useState('')
   const [mutatingCommentId, setMutatingCommentId] = useState<string | null>(null)
+  const [openCommentMenuId, setOpenCommentMenuId] = useState<string | null>(null)
   const [reportingCommentId, setReportingCommentId] = useState<string | null>(null)
   const [reportReason, setReportReason] = useState<CommentReportReason | ''>('')
   const [reportDetails, setReportDetails] = useState('')
@@ -795,6 +853,7 @@ function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
   const [placeConcernError, setPlaceConcernError] = useState('')
   const [isPlaceConcernSubmitting, setIsPlaceConcernSubmitting] = useState(false)
   const [isReportSubmitting, setIsReportSubmitting] = useState(false)
+  const commentMenuRef = useRef<HTMLDivElement | null>(null)
   const { isPlaceSaved, saveFavorite, removeFavorite } = useSavedFavorites()
   const { showSystemMessage } = useSystemMessage()
 
@@ -818,6 +877,32 @@ function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
   const placeSlug = cleanString(place.slug)
   const isCommunityPlaceReady = UUID_PATTERN.test(placeId)
   const canContributePhoto = Boolean(currentUserId && isCommunityPlaceReady && approvedImageCount < 3)
+
+  useEffect(() => {
+    if (!openCommentMenuId) {
+      return
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!commentMenuRef.current?.contains(event.target as Node)) {
+        setOpenCommentMenuId(null)
+      }
+    }
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setOpenCommentMenuId(null)
+      }
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    document.addEventListener('keydown', handleEscape)
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [openCommentMenuId])
   const isSaved = [place.id, place.slug, normalizedNameSlug].some((slugOrId) => isPlaceSaved(slugOrId))
   const hasCurrentUserReview = Boolean(currentUserReview)
   const headlineRating = averageRating ?? place.rating ?? null
@@ -1413,10 +1498,12 @@ function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
         throw new Error(result?.message || 'Unable to post comment.')
       }
 
+      const savedComment = result.comment
+
       setComments((currentComments) =>
         replaceCommentById(currentComments, commentId, {
-          ...result.comment,
-          replies: result.comment.replies ?? [],
+          ...savedComment,
+          replies: savedComment.replies ?? [],
           local_post_state: undefined,
           local_error_message: null,
         }),
@@ -1465,19 +1552,32 @@ function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
         body: JSON.stringify({ body }),
       })
       const responseText = await response.text()
-      const result = parseJsonResponse<{ message?: string }>(responseText)
+      const result = parseJsonResponse<{ message?: string; comment?: PlaceComment }>(responseText)
 
       if (!response.ok) {
         throw new Error(result?.message || 'Unable to post reply.')
       }
 
+      if (!result?.comment) {
+        throw new Error('Unable to post reply.')
+      }
+
+      const savedReply = result.comment
+
+      setComments((currentComments) =>
+        appendReplyToComment(currentComments, commentId, {
+          ...savedReply,
+          replies: savedReply.replies ?? [],
+          local_post_state: undefined,
+          local_error_message: null,
+        }),
+      )
       setReplyBody('')
       setReplyingToCommentId(null)
       showSystemMessage({
         title: 'Reply Posted!',
         description: 'Your reply is now live.',
       })
-      await fetchPlaceComments()
     } catch (error) {
       setCommentError(error instanceof Error ? error.message : 'Unable to post reply.')
     } finally {
@@ -1511,15 +1611,29 @@ function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
         body: JSON.stringify({ body }),
       })
       const responseText = await response.text()
-      const result = parseJsonResponse<{ message?: string }>(responseText)
+      const result = parseJsonResponse<{ message?: string; comment?: PlaceComment }>(responseText)
 
       if (!response.ok) {
         throw new Error(result?.message || 'Unable to update comment.')
       }
 
+      if (!result?.comment) {
+        throw new Error('Unable to update comment.')
+      }
+
+      const savedComment = result.comment
+
+      setComments((currentComments) =>
+        updateCommentById(currentComments, commentId, (comment) => ({
+          ...comment,
+          ...savedComment,
+          replies: comment.replies,
+          local_post_state: undefined,
+          local_error_message: null,
+        })),
+      )
       setEditingCommentId(null)
       setEditCommentBody('')
-      await fetchPlaceComments()
     } catch (error) {
       setCommentError(error instanceof Error ? error.message : 'Unable to update comment.')
     } finally {
@@ -1535,6 +1649,10 @@ function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
     try {
       setMutatingCommentId(commentId)
       setCommentError('')
+      setOpenCommentMenuId((currentId) => (currentId === commentId ? null : currentId))
+      setEditingCommentId((currentId) => (currentId === commentId ? null : currentId))
+      setReplyingToCommentId((currentId) => (currentId === commentId ? null : currentId))
+      setEditCommentBody('')
 
       const token = await getSessionToken('Sign in as a member to delete your comment.')
       const response = await fetch(getApiEndpoint(`/places/${encodeURIComponent(placeId)}/comments/${encodeURIComponent(commentId)}`), {
@@ -1544,17 +1662,28 @@ function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
         },
       })
       const responseText = await response.text()
-      const result = parseJsonResponse<{ message?: string }>(responseText)
+      const result = parseJsonResponse<{ message?: string; comment?: PlaceComment }>(responseText)
 
       if (!response.ok) {
+        if (response.status === 404) {
+          setComments((currentComments) => markCommentDeletedById(currentComments, commentId))
+          void fetchPlaceComments()
+          showSystemMessage({
+            title: 'Comment Removed',
+            description: 'That comment was already gone, so we cleared it from the list.',
+          })
+          return
+        }
+
         throw new Error(result?.message || 'Unable to delete comment.')
       }
 
+      setComments((currentComments) => markCommentDeletedById(currentComments, commentId, result?.comment?.deleted_at ?? new Date().toISOString()))
+      void fetchPlaceComments()
       showSystemMessage({
         title: 'Comment Deleted',
         description: 'Your comment was removed.',
       })
-      await fetchPlaceComments()
     } catch (error) {
       setCommentError(error instanceof Error ? error.message : 'Unable to delete comment.')
     } finally {
@@ -1577,18 +1706,19 @@ function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
       setReportError('')
 
       const token = await getSessionToken('Sign in as a member to report comments.')
-      await submitCommentReport(commentId, token, {
+      const result = await submitCommentReport(commentId, token, {
         reason: reportReason,
         details: reportDetails,
       })
 
       setReportingCommentId(null)
+      setOpenCommentMenuId(null)
       setReportReason('')
       setReportDetails('')
       setReportError('')
       showSystemMessage({
-        title: 'Report Submitted!',
-        description: 'You can track this report in My Reports.',
+        title: result.alreadyReported ? 'Already Reported' : 'Report Submitted!',
+        description: result.alreadyReported ? 'This comment was already in your reports.' : 'You can track this report in My Reports.',
       })
       setComments((currentComments) => markCommentReported(currentComments, commentId))
     } catch (error) {
@@ -1596,6 +1726,17 @@ function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
     } finally {
       setIsReportSubmitting(false)
     }
+  }
+
+  const closeReportCommentModal = () => {
+    if (isReportSubmitting) {
+      return
+    }
+
+    setReportingCommentId(null)
+    setReportReason('')
+    setReportDetails('')
+    setReportError('')
   }
 
   const handleReviewSignIn = async () => {
@@ -1707,36 +1848,134 @@ function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
     { icon: 'rain' as const, title: 'Rain-friendly', value: rainFit ? (/rain|indoor|covered/i.test(rainFit) ? 'Yes' : 'Check first') : 'Check first' },
     { icon: 'crowd' as const, title: 'Crowd', value: cleanString(place.crowd_level) || 'Not available' },
   ]
+  const visibleCommentCount = countThreadComments(comments)
+  const reportingComment = reportingCommentId ? findCommentById(comments, reportingCommentId) : null
+
   const renderComment = (comment: PlaceComment, isReply = false): ReactNode => {
+    const isDeleted = isCommentDeleted(comment)
     const isOwner = comment.user_id === currentUserId
     const isReportedByCurrentUser = Boolean(comment.current_user_reported)
-    const isEditing = editingCommentId === comment.id
+    const isEditing = !isDeleted && editingCommentId === comment.id
     const isMutating = mutatingCommentId === comment.id
     const isPending = comment.local_post_state === 'pending'
     const isFailed = comment.local_post_state === 'failed'
-    const hasReplies = comment.replies.length > 0
-    const areRepliesExpanded = expandedReplyThreads[comment.id] ?? false
-    const displayName = isOwner ? 'You' : cleanString(comment.member_display_name) || 'GalaTayo member'
+    const isMenuOpen = !isDeleted && openCommentMenuId === comment.id
+    const displayName =
+      cleanString(comment.member_display_name) ||
+      (isOwner ? cleanString(currentUserAvatarFallbackName) : '') ||
+      'GalaTayo member'
     const avatarUrl = cleanString(comment.member_avatar_url)
     const isEdited = wasEdited(comment.created_at, comment.updated_at)
 
     return (
-      <li key={comment.id}>
-        <div className={`flex items-start gap-3 ${isPending ? 'opacity-75' : ''}`}>
-            <MemberAvatar displayName={displayName} avatarUrl={avatarUrl} compact />
+      <li key={comment.id} className={isReply ? 'ml-2 border-l border-slate-200/80 pl-3 sm:ml-3 sm:pl-4' : ''}>
+        <div className={`flex items-start gap-2.5 sm:gap-3 ${isPending ? 'opacity-75' : ''}`}>
+          <MemberAvatar displayName={displayName} avatarUrl={avatarUrl} compact reply={isReply} />
 
-            <div className="min-w-0 flex-1">
-              <div className={`inline-block max-w-[min(100%,38rem)] rounded-2xl border border-slate-200/70 ${isReply ? 'bg-slate-50 px-3 py-2' : 'bg-slate-100/95 px-3 py-2.5'} shadow-[0_1px_2px_rgba(15,23,42,0.04)]`}>
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <span className="block min-w-0 truncate text-[13px] font-black text-slate-900">{displayName}</span>
-                  <span className="text-[11px] font-semibold text-slate-500">
-                    {formatReviewDate(comment.updated_at || comment.created_at)}
-                    {isEdited ? <span className="ml-1 text-slate-400">edited</span> : null}
-                  </span>
+          <div className="min-w-0 flex-1">
+            <div
+              className={`w-full min-w-0 rounded-[16px] border px-3 py-2.5 ${
+                isFailed
+                  ? 'border-red-200 bg-red-50/70'
+                  : isDeleted
+                    ? 'border-slate-200/70 bg-slate-100/90'
+                    : 'border-slate-200/80 bg-slate-50/80'
+              }`}
+            >
+              <div className="flex items-start gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span className="block min-w-0 truncate text-[14px] font-black text-slate-950">{displayName}</span>
+                    {isOwner ? (
+                      <span className="inline-flex items-center rounded-full bg-[var(--accent-wash)] px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-[var(--accent-deep)]">
+                        You
+                      </span>
+                    ) : null}
+                    <span className="text-[11px] font-semibold text-slate-500">
+                      {formatReviewDate(comment.updated_at || comment.created_at)}
+                      {isEdited ? <span className="ml-1 text-slate-400">edited</span> : null}
+                    </span>
+                    {isPending ? (
+                      <span className="inline-flex items-center rounded-full bg-[var(--accent-wash)] px-2 py-0.5 text-[10px] font-black text-[var(--accent-deep)]">
+                        Posting...
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
+                {!isDeleted ? (
+                  <div className="relative shrink-0" ref={isMenuOpen ? commentMenuRef : null}>
+                    <button
+                      type="button"
+                      aria-label="Open comment actions"
+                      aria-haspopup="menu"
+                      aria-expanded={isMenuOpen}
+                      onClick={() => setOpenCommentMenuId((currentId) => (currentId === comment.id ? null : comment.id))}
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-200/70 hover:text-slate-600"
+                    >
+                      <MoreHorizontal className="h-4 w-4" strokeWidth={2.2} />
+                    </button>
 
-                {isEditing ? (
-                <div className="mt-1.5">
+                    {isMenuOpen ? (
+                      <div
+                        role="menu"
+                        className="absolute right-0 top-8 z-20 min-w-[11rem] overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-[0_12px_28px_rgba(15,23,42,0.12)]"
+                      >
+                        {isOwner ? (
+                          <>
+                            <button
+                              type="button"
+                              role="menuitem"
+                              onClick={() => {
+                                setEditingCommentId(comment.id)
+                                setEditCommentBody(comment.comment)
+                                setCommentError('')
+                                setOpenCommentMenuId(null)
+                              }}
+                              className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-bold text-slate-700 transition hover:bg-slate-50 hover:text-slate-950"
+                            >
+                              <Pencil className="h-3.5 w-3.5" strokeWidth={2.2} />
+                              Edit comment
+                            </button>
+                            <button
+                              type="button"
+                              role="menuitem"
+                              onClick={() => {
+                                setOpenCommentMenuId(null)
+                                void handleDeleteComment(comment.id)
+                              }}
+                              disabled={isMutating}
+                              className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-bold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" strokeWidth={2.2} />
+                              {isMutating ? 'Deleting...' : 'Delete comment'}
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            type="button"
+                            role="menuitem"
+                            onClick={() => {
+                              setReportingCommentId(comment.id)
+                              setReportReason('')
+                              setReportDetails('')
+                              setReportError('')
+                              setOpenCommentMenuId(null)
+                            }}
+                            disabled={isReportedByCurrentUser || isReportSubmitting}
+                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-bold text-slate-700 transition hover:bg-slate-50 hover:text-slate-950 disabled:cursor-not-allowed disabled:text-slate-400"
+                          >
+                            <Flag className="h-3.5 w-3.5" strokeWidth={2.2} />
+                            {isReportedByCurrentUser ? 'Already reported' : isReportSubmitting && reportingCommentId === comment.id ? 'Reporting...' : 'Report comment'}
+                          </button>
+                        )}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+
+              {isEditing ? (
+                <div className="mt-2">
                   <textarea
                     value={editCommentBody}
                     onChange={(event) => setEditCommentBody(event.target.value)}
@@ -1767,77 +2006,98 @@ function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
                   </div>
                 </div>
               ) : (
-                <p className="mt-1 whitespace-pre-line text-[14px] font-semibold leading-5 text-slate-700">{comment.comment}</p>
+                <p className={`mt-1.5 whitespace-pre-line break-words text-[14px] font-semibold leading-[1.45] ${isDeleted ? 'italic text-slate-400' : 'text-slate-700'}`}>{comment.comment}</p>
               )}
-              </div>
 
-              {!isEditing ? (
-                <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] font-extrabold">
-                  {!isReply && currentUserId ? (
+              {isFailed && comment.local_error_message ? (
+                <p className="mt-2 text-[12px] font-bold text-red-600">{comment.local_error_message}</p>
+              ) : null}
+            </div>
+
+            {!isEditing ? (
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 pl-0.5 text-[11px] font-extrabold">
+                {!isDeleted && !isReply && currentUserId ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReplyingToCommentId(replyingToCommentId === comment.id ? null : comment.id)
+                      setReplyBody('')
+                      setCommentError('')
+                    }}
+                    disabled={isMutating}
+                    className="inline-flex items-center gap-1 text-slate-500 transition hover:text-[var(--accent-deep)] disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    <Reply className="h-3.5 w-3.5" strokeWidth={2.2} />
+                    Reply
+                  </button>
+                ) : null}
+                {!isDeleted && isOwner ? (
+                  <>
                     <button
                       type="button"
                       onClick={() => {
-                        setReplyingToCommentId(replyingToCommentId === comment.id ? null : comment.id)
-                        setReplyBody('')
+                        setEditingCommentId(comment.id)
+                        setEditCommentBody(comment.comment)
                         setCommentError('')
                       }}
-                      className="text-slate-500 transition hover:text-[var(--accent-deep)]"
+                      disabled={isMutating}
+                      className="inline-flex items-center gap-1 text-slate-500 transition hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
                     >
-                      Reply
+                      <Pencil className="h-3.5 w-3.5" strokeWidth={2.2} />
+                      Edit
                     </button>
-                  ) : null}
-                  {!isReply && currentUserId && (isOwner || !isOwner) ? <span className="text-slate-300">·</span> : null}
-                  {isOwner ? (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingCommentId(comment.id)
-                          setEditCommentBody(comment.comment)
-                          setCommentError('')
-                        }}
-                        className="text-slate-500 transition hover:text-slate-800"
-                      >
-                        Edit
-                      </button>
-                      <span className="text-slate-300">·</span>
-                      <button
-                        type="button"
-                        onClick={() => void handleDeleteComment(comment.id)}
-                        disabled={isMutating}
-                        className="text-[11px] text-red-500 transition hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-70"
-                      >
-                        {isMutating ? 'Deleting...' : 'Delete'}
-                      </button>
-                    </>
-                  ) : null}
-                  {!isOwner ? (
-                    isReportedByCurrentUser ? (
-                      <span className="text-amber-700">
-                        Reported
-                      </span>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setReportingCommentId(comment.id)
-                          setReportReason('')
-                          setReportDetails('')
-                          setReportError('')
-                        }}
-                        className="text-slate-500 transition hover:text-slate-800"
-                      >
-                        Report
-                      </button>
-                    )
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
+                  </>
+                ) : null}
+                {!isDeleted && !isOwner ? (
+                  isReportedByCurrentUser ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 text-slate-500">
+                      <Flag className="h-3.5 w-3.5" strokeWidth={2.2} />
+                      Reported
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setReportingCommentId(comment.id)
+                        setReportReason('')
+                        setReportDetails('')
+                        setReportError('')
+                      }}
+                      disabled={isReportSubmitting && reportingCommentId === comment.id}
+                      className="inline-flex items-center gap-1 text-slate-500 transition hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                      <Flag className="h-3.5 w-3.5" strokeWidth={2.2} />
+                      {isReportSubmitting && reportingCommentId === comment.id ? 'Reporting...' : 'Report'}
+                    </button>
+                  )
+                ) : null}
+                {isFailed ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => void handleRetryFailedComment(comment.id)}
+                      disabled={isCommentSubmitting}
+                      className="inline-flex items-center gap-1 text-[var(--accent-deep)] transition hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                      Retry
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDiscardFailedComment(comment.id)}
+                      disabled={isCommentSubmitting}
+                      className="inline-flex items-center gap-1 text-slate-500 transition hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                      Dismiss
+                    </button>
+                  </>
+                ) : null}
+              </div>
+            ) : null}
           </div>
+        </div>
 
         {replyingToCommentId === comment.id ? (
-          <div className="ml-6 mt-2 border-l border-[var(--line)] pl-4">
+          <div className="ml-8 mt-2.5 rounded-[16px] border border-slate-200/80 bg-slate-50 px-3 py-3 sm:ml-9">
             <textarea
               value={replyBody}
               onChange={(event) => setReplyBody(event.target.value)}
@@ -1871,7 +2131,7 @@ function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
         ) : null}
 
         {comment.replies.length > 0 ? (
-          <ul className="mt-2 grid gap-3">
+          <ul className="mt-2.5 grid gap-2.5">
             {comment.replies.map((reply) => renderComment(reply, true))}
           </ul>
         ) : null}
@@ -2046,11 +2306,26 @@ function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
             </div>
           </div>
 
-          <div className="mt-5 border-t border-[var(--line)] pt-5">
-            <h3 className="text-[18px] font-black text-slate-950">Comments</h3>
-            <p className="mt-1 text-[13px] font-semibold text-slate-500">
-              {isCommentsLoading ? 'Loading comments...' : comments.length === 0 ? 'No comments yet' : `${comments.length} comment${comments.length === 1 ? '' : 's'}`}
-            </p>
+          <div className="mt-5 rounded-[22px] border border-slate-200/80 bg-slate-50/55 p-4 sm:p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200/80 pb-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2.5">
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-2xl bg-[var(--accent-wash)] text-[var(--accent-deep)]">
+                    <MessageCircle className="h-4 w-4" strokeWidth={2.2} />
+                  </span>
+                  <div>
+                    <h3 className="text-[18px] font-black text-slate-950">Comments</h3>
+                    <p className="mt-0.5 text-[13px] font-semibold text-slate-500">
+                      {isCommentsLoading
+                        ? 'Loading comments...'
+                        : visibleCommentCount === 0
+                          ? '0 comments'
+                          : `${visibleCommentCount} comment${visibleCommentCount === 1 ? '' : 's'}`}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             {isCommentsLoading ? (
               <div className="mt-4">
@@ -2060,10 +2335,18 @@ function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
                   message="We are loading the conversation for this place."
                 />
               </div>
-            ) : comments.length === 0 ? (
-              <p className="mt-4 text-[14px] font-bold text-slate-600">No comments yet. Ikaw first?</p>
+            ) : visibleCommentCount === 0 ? (
+              <div className="mt-5 flex flex-col items-center rounded-[20px] border border-dashed border-[var(--line-strong)] bg-slate-50 px-6 py-8 text-center">
+                <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[var(--accent-wash)] text-[var(--accent-deep)]">
+                  <MessageCircle className="h-5 w-5" strokeWidth={2.2} />
+                </span>
+                <p className="mt-3 text-[16px] font-black text-slate-900">No comments yet</p>
+                <p className="mt-1 max-w-[26rem] text-[13px] font-semibold leading-5 text-slate-500">
+                  Be the first to share something about this place.
+                </p>
+              </div>
             ) : (
-              <ul className="mt-[18px] grid gap-4">
+              <ul className="mt-4 grid gap-3.5">
                 {comments.map((comment) => renderComment(comment))}
               </ul>
             )}
@@ -2254,14 +2537,7 @@ function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
           role="dialog"
           aria-modal="true"
           aria-labelledby="report-comment-title"
-          onClick={() => {
-            if (!isReportSubmitting) {
-              setReportingCommentId(null)
-              setReportReason('')
-              setReportDetails('')
-              setReportError('')
-            }
-          }}
+          onClick={closeReportCommentModal}
         >
           <div
             className="w-full max-w-md rounded-2xl border border-[var(--line)] bg-white p-4 shadow-[0_24px_70px_rgba(15,23,42,0.25)]"
@@ -2271,6 +2547,11 @@ function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
               Report comment
             </h3>
             <p className="mt-1 text-[14px] font-semibold text-slate-700">Why are you reporting this comment?</p>
+            {reportingComment ? (
+              <p className="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-[13px] font-semibold leading-5 text-slate-500">
+                "{reportingComment.comment.slice(0, 140)}{reportingComment.comment.length > 140 ? '…' : ''}"
+              </p>
+            ) : null}
 
             <div className="mt-4 grid gap-2">
               {commentReportReasons.map((reason) => (
@@ -2318,12 +2599,7 @@ function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
             <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <button
                 type="button"
-                onClick={() => {
-                  setReportingCommentId(null)
-                  setReportReason('')
-                  setReportDetails('')
-                  setReportError('')
-                }}
+                onClick={closeReportCommentModal}
                 disabled={isReportSubmitting}
                 className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--line)] bg-white px-4 text-[14px] font-extrabold text-slate-700 disabled:cursor-not-allowed disabled:opacity-70"
               >
@@ -2333,9 +2609,9 @@ function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
                 type="button"
                 onClick={() => void handleReportComment(reportingCommentId)}
                 disabled={isReportSubmitting || !reportReason}
-                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-red-600 bg-red-600 px-4 text-[14px] font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-70"
+                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--accent)] bg-[var(--accent)] px-4 text-[14px] font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-70"
               >
-                {isReportSubmitting ? 'Submitting...' : 'Submit report'}
+                {isReportSubmitting ? 'Reporting...' : 'Submit report'}
               </button>
             </div>
           </div>

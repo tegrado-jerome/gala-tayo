@@ -1,6 +1,7 @@
 import type { ChangeEvent } from 'react'
 import OnboardingLayout from './OnboardingLayout'
 import type { OnboardingErrors, OnboardingFormState } from './types'
+import { avatarUploadAccept } from '../../utils/avatarUpload'
 
 type UsernameStatus = 'idle' | 'checking' | 'available' | 'taken' | 'invalid'
 
@@ -14,9 +15,6 @@ type OnboardingPublicProfileStepProps = {
   onBack: () => void
   onNext: () => void
 }
-
-const maxAvatarBytes = 5 * 1024 * 1024
-const avatarTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
 
 function OnboardingPublicProfileStep({
   values,
@@ -34,13 +32,9 @@ function OnboardingPublicProfileStep({
 
   const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
+    event.target.value = ''
 
     if (!file) {
-      return
-    }
-
-    if (!avatarTypes.includes(file.type) || file.size > maxAvatarBytes) {
-      onUpdate({ avatarUrl: values.avatarUrl })
       return
     }
 
@@ -119,7 +113,7 @@ function OnboardingPublicProfileStep({
             Avatar
             <span className="optional-label">Optional</span>
           </span>
-          <input type="file" accept={avatarTypes.join(',')} onChange={handleAvatarChange} className="text-sm font-semibold text-slate-700 file:mr-4 file:h-10 file:rounded-lg file:border-0 file:bg-black file:px-4 file:text-sm file:font-black file:text-white" />
+          <input type="file" accept={avatarUploadAccept} onChange={handleAvatarChange} className="text-sm font-semibold text-slate-700 file:mr-4 file:h-10 file:rounded-lg file:border-0 file:bg-black file:px-4 file:text-sm file:font-black file:text-white" />
           <span className="text-xs font-semibold text-[var(--muted)]">JPEG, PNG, or WebP up to 5MB. You can continue without an avatar.</span>
           {isUploadingAvatar ? <span className="text-xs font-bold text-[var(--accent-deep)]">Uploading avatar...</span> : null}
           {errors.avatar ? <span className="text-xs font-bold text-red-600">{errors.avatar}</span> : null}

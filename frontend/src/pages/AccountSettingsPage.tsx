@@ -7,6 +7,7 @@ import ProfileAvatar from '../components/ProfileAvatar'
 import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { uploadProfileAvatar } from '../services/onboardingApi'
+import { avatarUploadAccept, avatarUploadErrorMessage, isValidAvatarFile, normalizeAvatarFile } from '../utils/avatarUpload'
 import {
   getCurrentUser,
   getMyProfile,
@@ -22,9 +23,6 @@ import { navigateToPath } from '../utils/navigation'
 type AccountSettingsPageProps = {
   session: Session
 }
-
-const avatarTypes = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/webp'])
-const maxAvatarBytes = 5 * 1024 * 1024
 
 function formatDate(value: string | null | undefined) {
   if (!value) return 'Not available'
@@ -121,8 +119,6 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
   const [usernameInput, setUsernameInput] = useState('')
   const [bioInput, setBioInput] = useState('')
   const [isPublic, setIsPublic] = useState(true)
-  const [showFollowers, setShowFollowers] = useState<Profile['show_followers']>('everyone')
-  const [showFollowing, setShowFollowing] = useState<Profile['show_following']>('everyone')
   const [defaultPlanVisibility, setDefaultPlanVisibility] = useState<Profile['default_gala_plan_visibility']>('private')
 
   const normalizedUsername = useMemo(() => normalizeUsername(usernameInput), [usernameInput])
@@ -155,8 +151,6 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
         setUsernameInput(profileData.profile?.username ?? '')
         setBioInput(profileData.profile?.bio ?? '')
         setIsPublic(profileData.profile?.is_public ?? true)
-        setShowFollowers(profileData.profile?.show_followers ?? 'everyone')
-        setShowFollowing(profileData.profile?.show_following ?? 'everyone')
         setDefaultPlanVisibility(profileData.profile?.default_gala_plan_visibility ?? 'private')
       } catch (error) {
         if (isMounted) {
@@ -209,8 +203,6 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
             username: normalizedUsername,
             bio: bioInput.trim() || null,
             is_public: isPublic,
-            show_followers: showFollowers,
-            show_following: showFollowing,
             default_gala_plan_visibility: defaultPlanVisibility,
           },
           session,
@@ -227,8 +219,6 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
       setUsernameInput(profileData.profile?.username ?? '')
       setBioInput(profileData.profile?.bio ?? '')
       setIsPublic(profileData.profile?.is_public ?? true)
-      setShowFollowers(profileData.profile?.show_followers ?? 'everyone')
-      setShowFollowing(profileData.profile?.show_following ?? 'everyone')
       setDefaultPlanVisibility(profileData.profile?.default_gala_plan_visibility ?? 'private')
       showSystemMessage({
         title: 'Account Update Successful!',
@@ -257,15 +247,15 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
       return
     }
 
-    if (!avatarTypes.has(file.type) || file.size > maxAvatarBytes) {
-      setAvatarError('Use a JPEG, PNG, or WebP image up to 5MB.')
+    if (!isValidAvatarFile(file)) {
+      setAvatarError(avatarUploadErrorMessage)
       return
     }
 
     try {
       setIsUploadingAvatar(true)
       setAvatarError('')
-      const result = await uploadProfileAvatar(file, session)
+      const result = await uploadProfileAvatar(normalizeAvatarFile(file), session)
 
       setCurrentUser((currentValue) =>
         currentValue
@@ -387,7 +377,7 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
                     <div className="sm:text-right">
                       <label className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
                         {isUploadingAvatar ? 'Uploading...' : 'Upload Photo'}
-                        <input type="file" accept="image/jpeg,image/jpg,image/png,image/webp" onChange={handleAvatarChange} className="sr-only" />
+                        <input type="file" accept={avatarUploadAccept} onChange={handleAvatarChange} className="sr-only" />
                       </label>
                       <p className="mt-2 flex items-center gap-2 text-xs text-slate-500">
                         JPEG, PNG, or WebP up to 5MB.
@@ -484,7 +474,7 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
                       <option value="public">Public</option>
                       <option value="private">Private</option>
                     </SelectField>
-                    <span className="text-xs text-slate-500">{isPublic ? 'Anyone can view your profile.' : 'People need to request access.'}</span>
+                    <span className="text-xs text-slate-500">{isPublic ? 'Anyone can view your profile and your follower/following lists.' : 'People need to request access, and follower/following names stay hidden.'}</span>
                   </label>
 
                   <label className="grid gap-2">
@@ -500,24 +490,6 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
                       <option value="unlisted">Unlisted</option>
                     </SelectField>
                     <span className="text-xs text-slate-500">Unlisted stays off your public profile but still works with a direct link.</span>
-                  </label>
-
-                  <label className="grid gap-2">
-                    <span className="text-sm font-semibold text-slate-800">Show Followers</span>
-                    <SelectField value={showFollowers} onChange={(event) => setShowFollowers(event.target.value as Profile['show_followers'])} className={sharedSelectClassName}>
-                      <option value="everyone">Everyone</option>
-                      <option value="followers">Followers only</option>
-                      <option value="only_me">Only me</option>
-                    </SelectField>
-                  </label>
-
-                  <label className="grid gap-2">
-                    <span className="text-sm font-semibold text-slate-800">Show Following</span>
-                    <SelectField value={showFollowing} onChange={(event) => setShowFollowing(event.target.value as Profile['show_following'])} className={sharedSelectClassName}>
-                      <option value="everyone">Everyone</option>
-                      <option value="followers">Followers only</option>
-                      <option value="only_me">Only me</option>
-                    </SelectField>
                   </label>
                 </div>
               </section>

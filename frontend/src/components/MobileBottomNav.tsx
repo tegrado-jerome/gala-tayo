@@ -50,7 +50,7 @@ function MobileBottomNav({ currentPath, session }: MobileBottomNavProps) {
   return (
     <nav
       aria-label="Primary"
-      className="fixed inset-x-0 bottom-0 z-[6000] border-t border-slate-200 bg-white px-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.25rem)] pt-1.5 lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-[6000] border-t border-[var(--line)] bg-[var(--bg)] px-3 pb-[calc(env(safe-area-inset-bottom,0px)+0.25rem)] pt-1.5 lg:hidden"
     >
       <div className="mx-auto grid h-[54px] max-w-[420px] grid-cols-4 items-center gap-2">
         {navItems.map((item) => (
@@ -59,9 +59,9 @@ function MobileBottomNav({ currentPath, session }: MobileBottomNavProps) {
             type="button"
             onClick={() => navigateToPath(item.href)}
             aria-current={item.isActive ? 'page' : undefined}
-            className={`flex h-[50px] flex-col items-center justify-center gap-1 rounded-xl px-2 py-1.5 text-[11px] font-bold leading-none transition ${
+            className={`flex h-[50px] flex-col items-center justify-center gap-1 rounded-xl px-2 py-1.5 text-[11px] font-medium leading-none transition ${
               item.isActive
-                ? 'bg-[var(--accent-wash)] text-[var(--accent-deep)]'
+                ? 'bg-[var(--accent-wash)] text-[var(--accent)]'
                 : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
             }`}
           >

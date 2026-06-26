@@ -3,7 +3,7 @@ import AppHeader from '../components/AppHeader'
 import GoogleSignInButton from '../components/GoogleSignInButton'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { getSupabaseAccessToken } from '../supabase'
-import { navigateToPath, navigateToPlace } from '../utils/navigation'
+import { navigateToPlace } from '../utils/navigation'
 import { getPlacePhoto } from '../utils/placePhoto'
 import historyActiveChibi from '../assets/chibis/features/history/chibi-history-active-state.webp'
 import historyEmptyChibi from '../assets/chibis/features/history/chibi-history-empty-state.webp'
@@ -81,14 +81,6 @@ function ClockIcon({ className = 'h-4 w-4' }: { className?: string }) {
   )
 }
 
-function BackIcon({ className = 'h-4 w-4' }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className} aria-hidden="true">
-      <path d="M15 18 9 12l6-6" />
-    </svg>
-  )
-}
-
 function TrashIcon({ className = 'h-4 w-4' }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className} aria-hidden="true">
@@ -128,7 +120,7 @@ function HistoryChibi() {
       <img
         src={historyActiveChibi}
         alt=""
-        className="gala-hero-asset max-h-[420px] w-[420px] max-w-none"
+        className="gala-hero-asset max-h-[680px] w-[680px] max-w-none"
         loading="lazy"
       />
     </div>
@@ -429,20 +421,11 @@ function HistoryPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[linear-gradient(180deg,#f8fbff,#edf4ff)] text-[var(--text)]">
+    <div className="flex min-h-screen flex-col bg-[var(--bg)] text-[var(--text)]">
       <AppHeader showTaglishChip={false} />
 
       <main className="mx-auto flex w-full max-w-[1480px] flex-1 flex-col gap-5 px-4 py-5 sm:px-6 lg:px-10 lg:py-8">
-        <button
-          type="button"
-          onClick={() => navigateToPath('/search')}
-          className="inline-flex w-fit items-center gap-2 rounded-lg border border-transparent px-1 py-1 text-sm font-black text-slate-700 transition hover:text-[var(--accent-deep)]"
-        >
-          <BackIcon className="h-5 w-5" />
-          Back
-        </button>
-
-        <section className="grid gap-5 md:grid-cols-[minmax(0,1fr)_520px] md:items-center">
+        <section className="grid gap-5 md:grid-cols-[minmax(0,1fr)_680px] md:items-center">
           <div>
             <h1 className="text-[34px] font-black leading-tight text-slate-950 sm:text-[42px]">Recently viewed</h1>
             <p className="mt-3 max-w-xl text-lg font-semibold leading-relaxed text-slate-600">

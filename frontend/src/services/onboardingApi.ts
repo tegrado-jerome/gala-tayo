@@ -167,8 +167,6 @@ export async function completeOnboardingSetup(values: OnboardingFormState, sessi
       avatar_url: values.avatarUrl,
       avatar_storage_key: values.avatarStorageKey,
       profile_visibility: values.profileVisibility,
-      show_followers: values.showFollowers,
-      show_following: values.showFollowing,
       accepted_terms: values.acceptedTerms,
       accepted_privacy: values.acceptedPrivacy,
     }),

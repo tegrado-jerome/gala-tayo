@@ -2,7 +2,7 @@ import OnboardingLayout from './OnboardingLayout'
 import type { OnboardingFormState, ProfileVisibility } from './types'
 
 type OnboardingPrivacyStepProps = {
-  values: Pick<OnboardingFormState, 'profileVisibility' | 'showFollowers' | 'showFollowing'>
+  values: Pick<OnboardingFormState, 'profileVisibility'>
   onUpdate: (updates: Partial<OnboardingFormState>) => void
   onBack: () => void
   onNext: () => void
@@ -54,17 +54,6 @@ function OnboardingPrivacyStep({ values, onUpdate, onBack, onNext }: OnboardingP
             </button>
           )
         })}
-
-        <div className="grid gap-3 rounded-lg bg-[var(--chip)] p-4">
-          <label className="flex items-center justify-between gap-4 text-sm font-black text-slate-900">
-            <span>Show followers on my profile</span>
-            <input type="checkbox" checked={values.showFollowers} onChange={(event) => onUpdate({ showFollowers: event.target.checked })} className="h-5 w-5 accent-[var(--accent)]" />
-          </label>
-          <label className="flex items-center justify-between gap-4 text-sm font-black text-slate-900">
-            <span>Show following on my profile</span>
-            <input type="checkbox" checked={values.showFollowing} onChange={(event) => onUpdate({ showFollowing: event.target.checked })} className="h-5 w-5 accent-[var(--accent)]" />
-          </label>
-        </div>
       </div>
     </OnboardingLayout>
   )

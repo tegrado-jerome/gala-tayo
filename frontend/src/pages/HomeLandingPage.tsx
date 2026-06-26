@@ -83,7 +83,7 @@ const compactTools = [
 ] as const
 
 const sharedCardClass =
-  'rounded-2xl border border-slate-200 bg-white'
+  'rounded-2xl border border-slate-200 bg-white shadow-sm'
 
 function parseCoordinate(value: number | string | null | undefined) {
   if (typeof value === 'number' && Number.isFinite(value)) {
@@ -242,20 +242,20 @@ function TrendingCard({ place }: { place: PlaceCardData }) {
           <span className="relative flex h-11 w-11 items-center justify-center rounded-lg border border-slate-200 bg-white text-[var(--accent)] lg:h-10 lg:w-10">
             <AppIcon name={placeholderIconName} className="h-5 w-5 lg:h-[18px] lg:w-[18px]" />
           </span>
-          <span className="relative text-sm font-bold text-slate-600">Photo soon</span>
+          <span className="relative text-sm font-semibold text-slate-600">Photo soon</span>
           <span className="relative text-xs font-medium text-slate-500">Cute spot preview</span>
         </div>
       )}
 
       <div className="flex min-h-0 flex-1 flex-col p-4 lg:p-[14px] xl:p-[16px]">
         <div className="flex flex-col items-start gap-2 lg:gap-2.5">
-          <h3 className="line-clamp-2 text-[1rem] font-black leading-5 text-slate-950 lg:text-[15.5px] lg:leading-5 xl:text-[16px]">{place.name}</h3>
-          <span className="shrink-0 rounded-full bg-[var(--accent-wash)] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-[var(--accent-deep)]">
+          <h3 className="line-clamp-2 text-[1rem] font-semibold leading-5 text-slate-950 lg:text-[15.5px] lg:leading-5 xl:text-[16px]">{place.name}</h3>
+          <span className="shrink-0 rounded-full bg-[var(--accent-wash)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--accent)]">
             {place.category}
           </span>
         </div>
 
-        <p className="mt-3 truncate text-[13px] font-semibold text-slate-800 lg:text-[12.5px] xl:text-[13px]">{location}</p>
+        <p className="mt-3 truncate text-[13px] font-medium text-slate-800 lg:text-[12.5px] xl:text-[13px]">{location}</p>
         <p className="mt-2 line-clamp-2 text-[13px] leading-5 text-slate-500 lg:text-[12.5px] xl:text-[13px]">
           {place.reason}
         </p>
@@ -276,7 +276,7 @@ function TrendingCard({ place }: { place: PlaceCardData }) {
           ) : null}
         </div>
 
-        <span className="mt-auto inline-flex items-center gap-1 pt-4 text-sm font-black text-[var(--accent-deep)] lg:text-[13px] lg:gap-1">
+        <span className="mt-auto inline-flex items-center gap-1 pt-4 text-sm font-semibold text-[var(--accent)] lg:text-[13px] lg:gap-1">
           View place
           <AppIcon name="arrowRight" className="h-4 w-4" />
         </span>
@@ -374,16 +374,16 @@ function HomeLandingPage() {
 
       <main className="mx-auto w-full px-4 pb-[calc(env(safe-area-inset-bottom,0px)+6.75rem)] pt-4 sm:px-6 sm:pt-5 md:px-8 lg:w-[calc(100%-64px)] lg:px-0 lg:pb-16 lg:pt-8 xl:w-[calc(100%-96px)] xl:px-0 2xl:w-[min(1680px,calc(100%-128px))]">
         <section className="relative px-3 pt-2 sm:px-6 sm:pt-4 lg:px-0">
-          <div className="pointer-events-none absolute inset-x-[16%] top-0 h-28 rounded-full bg-[radial-gradient(circle,rgba(255,255,255,0.92),rgba(255,255,255,0)_72%)] blur-xl" />
-          <div className="pointer-events-none absolute left-1/2 top-[41%] h-[148px] w-[148px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(59,130,246,0.10),rgba(59,130,246,0.02)_68%,transparent_78%)] blur-xl sm:h-[176px] sm:w-[176px] lg:left-[66%] lg:top-1/2 lg:h-[390px] lg:w-[390px] lg:-translate-y-1/2 xl:left-[68%] xl:h-[450px] xl:w-[450px]" />
+          <div className="pointer-events-none absolute inset-x-[16%] top-0 h-28 rounded-full bg-white/80 blur-xl" />
+          <div className="pointer-events-none absolute left-1/2 top-[41%] h-[148px] w-[148px] -translate-x-1/2 rounded-full bg-[var(--accent-wash)] blur-xl sm:h-[176px] sm:w-[176px] lg:left-[66%] lg:top-1/2 lg:h-[390px] lg:w-[390px] lg:-translate-y-1/2 xl:left-[68%] xl:h-[450px] xl:w-[450px]" />
 
           <div className="relative z-10 flex flex-col items-center text-center lg:grid lg:grid-cols-[minmax(520px,0.58fr)_minmax(480px,0.42fr)] lg:grid-rows-[auto_auto] lg:items-center lg:gap-x-4 lg:gap-y-4 lg:text-left xl:grid-cols-[minmax(560px,0.56fr)_minmax(520px,0.44fr)] xl:gap-x-8 2xl:grid-cols-[minmax(600px,0.55fr)_minmax(560px,0.45fr)]">
             <div className="flex flex-col items-center lg:col-start-1 lg:row-start-1 lg:items-start">
-              <h1 className="max-w-[11.2ch] text-[1.95rem] font-black leading-[0.95] tracking-[-0.055em] text-[#071633] sm:max-w-[12ch] sm:text-[3rem] lg:max-w-none lg:text-[4.2rem] xl:text-[4.75rem]">
+              <h1 className="max-w-[11.2ch] text-[1.95rem] font-bold leading-[0.95] tracking-[-0.055em] text-[#071633] sm:max-w-[12ch] sm:text-[3rem] lg:max-w-none lg:text-[4.2rem] xl:text-[4.75rem]">
                 <span className="block">Saan tayo</span>
                 <span className="block whitespace-nowrap">gagala today?</span>
               </h1>
-              <p className="mt-3.5 max-w-[27rem] text-sm font-semibold leading-6 text-[#667A99] sm:mt-4 sm:text-base lg:max-w-[39rem] lg:text-[1.24rem] lg:font-bold lg:leading-8 xl:max-w-[41rem] xl:text-[1.3rem]">
+              <p className="mt-3.5 max-w-[27rem] text-sm leading-6 text-[#667A99] sm:mt-4 sm:text-base lg:max-w-[39rem] lg:text-[1.24rem] lg:leading-8 xl:max-w-[41rem] xl:text-[1.3rem]">
                 Quick start your next gala with place search, AI help, and cute finds waiting below.
               </p>
             </div>
@@ -401,7 +401,7 @@ function HomeLandingPage() {
               <button
                 type="button"
                 onClick={handleSearchAction}
-                className="inline-flex min-h-[52px] w-full max-w-[248px] items-center justify-center gap-2.5 rounded-full bg-[linear-gradient(135deg,#2f80ed_0%,#1f66dc_100%)] px-5 text-[0.96rem] font-black text-white shadow-[0_18px_34px_rgba(47,116,232,0.24)] transition hover:brightness-105 lg:min-h-[54px] lg:w-[220px] lg:max-w-none"
+                className="inline-flex min-h-[52px] w-full max-w-[248px] items-center justify-center gap-2.5 rounded-2xl bg-[var(--accent)] px-5 text-[0.96rem] font-semibold text-white transition hover:bg-[var(--accent-deep)] lg:min-h-[54px] lg:w-[220px] lg:max-w-none"
               >
                 <span className="flex h-5 w-5 items-center justify-center rounded-full border border-white/70">
                   <AppIcon name="search" className="h-3.5 w-3.5" />
@@ -411,7 +411,7 @@ function HomeLandingPage() {
               <button
                 type="button"
                 onClick={handleAskAiAction}
-                className="inline-flex min-h-[52px] w-full max-w-[248px] items-center justify-center gap-2.5 rounded-full border-2 border-[#4C90F4] bg-white/96 px-5 text-[0.96rem] font-black text-[#1F66DC] shadow-[0_12px_24px_rgba(28,77,160,0.06)] transition hover:bg-[#F5FAFF] lg:min-h-[54px] lg:w-[220px] lg:max-w-none"
+                className="inline-flex min-h-[52px] w-full max-w-[248px] items-center justify-center gap-2.5 rounded-2xl border border-[var(--line)] bg-white px-5 text-[0.96rem] font-semibold text-[var(--text-main)] transition hover:bg-[var(--bg-soft)] lg:min-h-[54px] lg:w-[220px] lg:max-w-none"
               >
                 <AppIcon name="askAi" className="h-5 w-5" />
                 Ask AI
@@ -424,8 +424,8 @@ function HomeLandingPage() {
           <section>
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-black uppercase tracking-[0.16em] text-[var(--accent-deep)]">Your tools</p>
-                <h2 className="mt-1 text-xl font-black tracking-[-0.04em] text-slate-950 sm:text-2xl">Keep your gala flow moving</h2>
+                <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">Your tools</p>
+                <h2 className="mt-1 text-xl font-semibold tracking-[-0.04em] text-slate-950 sm:text-2xl">Keep your gala flow moving</h2>
               </div>
             </div>
 
@@ -435,15 +435,15 @@ function HomeLandingPage() {
                   key={tool.title}
                   type="button"
                   onClick={() => navigateToPath(tool.href)}
-                  className="flex min-h-[104px] flex-col items-start justify-between rounded-[24px] border border-[rgba(83,146,241,0.18)] bg-white px-4 py-4 text-left transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)] lg:min-h-[64px] lg:flex-row lg:items-center lg:gap-3 lg:px-4 lg:py-3"
+                  className="flex min-h-[104px] flex-col items-start justify-between rounded-[24px] border border-[var(--line)] bg-white px-4 py-4 text-left transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)] lg:min-h-[64px] lg:flex-row lg:items-center lg:gap-3 lg:px-4 lg:py-3"
                 >
                   <div className="lg:flex lg:min-w-0 lg:flex-1 lg:items-center lg:gap-3">
                     <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--accent-wash)] text-[var(--accent-deep)] lg:h-9 lg:w-9 lg:rounded-[14px]">
                       <AppIcon name={tool.icon} className="h-5 w-5 lg:h-[18px] lg:w-[18px]" />
                     </span>
                     <div className="lg:min-w-0">
-                      <p className="text-sm font-black text-slate-900 lg:text-[14px]">{tool.title}</p>
-                      <p className="mt-1 text-xs font-semibold leading-5 text-slate-500 lg:mt-0.5 lg:text-[11.5px] lg:leading-4">{tool.description}</p>
+                      <p className="text-sm font-semibold text-slate-900 lg:text-[14px]">{tool.title}</p>
+                      <p className="mt-1 text-xs leading-5 text-slate-500 lg:mt-0.5 lg:text-[11.5px] lg:leading-4">{tool.description}</p>
                     </div>
                   </div>
                   <div className="hidden lg:flex lg:items-center lg:text-[#7A90AE]">
@@ -458,8 +458,8 @@ function HomeLandingPage() {
             <div className="lg:w-[1544px] xl:w-[1584px]">
               <div className="flex items-end justify-between gap-3">
               <div>
-                <p className="text-sm font-black uppercase tracking-[0.16em] text-[var(--accent-deep)]">Trending Now</p>
-                <h2 className="mt-1 text-2xl font-black tracking-[-0.04em] text-slate-950">Cute finds people are eyeing lately</h2>
+                <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">Trending Now</p>
+                <h2 className="mt-1 text-2xl font-semibold tracking-[-0.04em] text-slate-950">Cute finds people are eyeing lately</h2>
               </div>
               {showDesktopTrendingPager ? (
                 <div className="hidden rounded-full border border-[#D6E8FF] bg-white/88 p-1 lg:inline-flex lg:items-center lg:gap-1">
@@ -474,7 +474,7 @@ function HomeLandingPage() {
                         type="button"
                         onClick={() => setDesktopTrendingPage(pageIndex)}
                         aria-pressed={isActive}
-                        className={`inline-flex min-h-[36px] items-center justify-center rounded-full px-4 text-[12px] font-black transition ${
+                        className={`inline-flex min-h-[36px] items-center justify-center rounded-full px-4 text-[12px] font-semibold transition ${
                           isActive
                             ? 'bg-[#1F66DC] text-white'
                             : 'text-[#5F7698] hover:bg-[#EEF6FF] hover:text-[#1F66DC]'
@@ -509,7 +509,7 @@ function HomeLandingPage() {
                 </div>
               </>
             ) : trendingError ? (
-              <p className="mt-4 text-sm font-semibold text-red-600">{trendingError}</p>
+              <p className="mt-4 text-sm text-red-600">{trendingError}</p>
             ) : (
               <>
                 <div className="mt-4 flex snap-x gap-3 overflow-x-auto pb-2 pr-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-2 md:gap-5 md:overflow-visible md:pb-0 md:pr-0 lg:hidden">
@@ -534,8 +534,8 @@ function HomeLandingPage() {
           <section>
             <div className="flex items-end justify-between gap-3">
               <div>
-                <p className="text-sm font-black uppercase tracking-[0.16em] text-[var(--accent-deep)]">Explore Categories</p>
-                <h2 className="mt-1 text-xl font-black tracking-[-0.04em] text-slate-950 sm:text-2xl">Pick a starting point</h2>
+                <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">Explore Categories</p>
+                <h2 className="mt-1 text-xl font-semibold tracking-[-0.04em] text-slate-950 sm:text-2xl">Pick a starting point</h2>
               </div>
             </div>
 
@@ -546,12 +546,12 @@ function HomeLandingPage() {
                     key={category.value}
                     type="button"
                     onClick={() => navigateToPath(`/search?category=${encodeURIComponent(category.value)}`)}
-                    className="inline-flex min-h-[60px] w-full items-center gap-2.5 rounded-[22px] border border-[rgba(83,146,241,0.16)] bg-white/92 px-3.5 py-2.5 text-left transition hover:border-[var(--accent)] hover:bg-white lg:min-h-[58px] lg:px-4"
+                    className="inline-flex min-h-[60px] w-full items-center gap-2.5 rounded-[22px] border border-[var(--line)] bg-white px-3.5 py-2.5 text-left transition hover:border-[var(--accent)] hover:bg-white lg:min-h-[58px] lg:px-4"
                   >
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--accent-wash)] text-[var(--accent-deep)]">
                       <AppIcon name={getCategoryIconName(category.value)} className="h-4 w-4" />
                     </span>
-                    <span className="text-sm font-black text-slate-900">{category.label}</span>
+                    <span className="text-sm font-semibold text-slate-900">{category.label}</span>
                   </button>
                 ))}
               </div>
@@ -562,12 +562,12 @@ function HomeLandingPage() {
                     key={category.value}
                     type="button"
                     onClick={() => navigateToPath(`/search?category=${encodeURIComponent(category.value)}`)}
-                    className="inline-flex min-h-[60px] w-full items-center gap-2.5 rounded-[22px] border border-[rgba(83,146,241,0.16)] bg-white/92 px-3.5 py-2.5 text-left transition hover:border-[var(--accent)] hover:bg-white lg:min-h-[56px]"
+                    className="inline-flex min-h-[60px] w-full items-center gap-2.5 rounded-[22px] border border-[var(--line)] bg-white px-3.5 py-2.5 text-left transition hover:border-[var(--accent)] hover:bg-white lg:min-h-[56px]"
                   >
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--accent-wash)] text-[var(--accent-deep)]">
                       <AppIcon name={getCategoryIconName(category.value)} className="h-4 w-4" />
                     </span>
-                    <span className="text-sm font-black text-slate-900">{category.label}</span>
+                    <span className="text-sm font-semibold text-slate-900">{category.label}</span>
                   </button>
                 ))}
               </div>

@@ -471,15 +471,15 @@ function SearchPageWords() {
               <div className="text-left">
                 <div className="mb-3 flex items-center justify-between gap-3 px-1">
                   <div>
-                    <p className="text-[12px] font-black uppercase tracking-[0.12em] text-[#7b92b3]">Discover</p>
-                    <p className="mt-1 text-[14px] font-semibold text-[#4f6483]">Search places around Metro Manila</p>
+                    <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[var(--accent)]">Discover</p>
+                    <p className="mt-1 text-[14px] text-[var(--muted)]">Search places around Metro Manila</p>
                   </div>
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#eef4fd] text-[#5f7fb2]" aria-hidden="true">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--primary-soft)] text-[var(--accent)]" aria-hidden="true">
                     <AppIcon name="place" className="h-4 w-4" />
                   </div>
                 </div>
 
-                <div className="flex overflow-hidden rounded-[22px] border border-[#d4e0f2] bg-white shadow-[0_12px_30px_rgba(42,111,240,0.08)] transition focus-within:border-[#7aa8f8] focus-within:shadow-[0_0_0_4px_rgba(42,111,240,0.10),0_14px_32px_rgba(42,111,240,0.1)]">
+                <div className="flex overflow-hidden rounded-[22px] border border-[var(--line)] bg-white shadow-sm transition focus-within:border-[var(--accent)] focus-within:shadow-[0_0_0_4px_rgba(30,58,138,0.10),0_14px_32px_rgba(17,24,39,0.08)]">
                   <div className="flex min-w-0 flex-1 items-center bg-white">
                     <input
                       id="search-input"
@@ -495,14 +495,14 @@ function SearchPageWords() {
                         }
                       }}
                       placeholder={animatedPlaceholder || 'Search'}
-                      className="h-[60px] min-w-0 flex-1 bg-white pl-5 pr-2 text-[15px] font-semibold text-slate-900 outline-none placeholder:font-medium placeholder:text-[#97a7c0] lg:h-[64px] lg:text-[16px]"
+                      className="h-[60px] min-w-0 flex-1 bg-white pl-5 pr-2 text-[15px] font-medium text-slate-900 outline-none placeholder:font-normal placeholder:text-[var(--text-light)] lg:h-[64px] lg:text-[16px]"
                     />
                     {rawQuery.length > 0 ? (
                       <button
                         type="button"
                         onClick={() => setRawQuery('')}
                         aria-label="Clear search"
-                        className="mr-2 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#eef4fd] text-[#5a78a5] transition hover:bg-[#e3edfb] hover:text-[#245fc4]"
+                        className="mr-2 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--bg-soft)] text-[var(--muted)] transition hover:bg-[var(--primary-soft)] hover:text-[var(--accent)]"
                       >
                         <AppIcon name="clear" className="h-4 w-4" />
                       </button>
@@ -514,7 +514,7 @@ function SearchPageWords() {
                     disabled={!canSearch}
                     aria-label="Search places"
                     className={`m-2 inline-flex h-[44px] w-[44px] items-center justify-center rounded-full transition lg:h-[48px] lg:w-[48px] ${
-                      canSearch ? 'bg-[#2a6ff0] text-white hover:bg-[#245fc4]' : 'bg-[#dfeafb] text-[#8da4c8]'
+                      canSearch ? 'bg-[var(--accent)] text-white hover:bg-[var(--accent-deep)]' : 'bg-[var(--bg-soft)] text-[var(--text-light)]'
                     }`}
                   >
                     <AppIcon name="search" className="h-5 w-5" />
@@ -528,12 +528,12 @@ function SearchPageWords() {
                       setIsFiltersOpen(true)
                       setActiveField((current) => current ?? 'category')
                     }}
-                    className="inline-flex items-center gap-2 rounded-full bg-[#eef4fd] px-3 py-2 text-[13px] font-black text-[#315b91] transition hover:bg-[#e6f0ff]"
+                    className="inline-flex items-center gap-2 rounded-full bg-[var(--bg-soft)] px-3 py-2 text-[13px] font-semibold text-[var(--accent)] transition hover:bg-[var(--primary-soft)]"
                   >
                     <AppIcon name="filter" className="h-4 w-4" />
                     <span>Filters</span>
                     {activeFilterCount > 0 ? (
-                      <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#2a6ff0] px-1.5 text-[11px] leading-none text-white">
+                      <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--accent)] px-1.5 text-[11px] leading-none text-white">
                         {activeFilterCount}
                       </span>
                     ) : null}
@@ -542,7 +542,7 @@ function SearchPageWords() {
                     <button
                       type="button"
                       onClick={handleClearFilters}
-                      className="inline-flex h-9 items-center rounded-full px-2 text-[13px] font-bold text-[#1877f2] transition hover:text-[#1457b8]"
+                      className="inline-flex h-9 items-center rounded-full px-2 text-[13px] font-medium text-[var(--accent)] transition hover:text-[var(--accent-deep)]"
                     >
                       Clear
                     </button>
@@ -555,7 +555,7 @@ function SearchPageWords() {
                       key={chip}
                       type="button"
                       onClick={() => setRawQuery(chip)}
-                      className="rounded-full border border-[#d7e7ff] bg-[#f8fbff] px-3.5 py-2 text-[13px] font-bold text-[#315b91] transition hover:border-[#a9c8fa] hover:bg-[#eef5ff] hover:text-[#174fa8]"
+                      className="rounded-full border border-[var(--line)] bg-white px-3.5 py-2 text-[13px] font-medium text-[#374151] transition hover:border-[var(--accent)] hover:bg-[var(--primary-soft)] hover:text-[var(--accent)]"
                     >
                       {chip}
                     </button>
@@ -565,22 +565,22 @@ function SearchPageWords() {
                 {(selectedCategory?.label || selectedCityName || selectedGoodForOption?.label || effectiveBudgetPreview) ? (
                   <div className="mt-3 flex flex-wrap gap-2">
                     {effectiveBudgetPreview ? (
-                      <span className="rounded-full bg-[#eef4fd] px-3 py-1.5 text-[12px] font-bold text-[#315b91]">
+                      <span className="rounded-full bg-[var(--primary-soft)] px-3 py-1.5 text-[12px] font-medium text-[var(--accent)]">
                         {effectiveBudgetPreview}
                       </span>
                     ) : null}
                     {selectedCategory?.label ? (
-                      <span className="rounded-full bg-[#eef4fd] px-3 py-1.5 text-[12px] font-bold text-[#315b91]">
+                      <span className="rounded-full bg-[var(--primary-soft)] px-3 py-1.5 text-[12px] font-medium text-[var(--accent)]">
                         {selectedCategory.label}
                       </span>
                     ) : null}
                     {selectedGoodForOption?.label ? (
-                      <span className="rounded-full bg-[#eef4fd] px-3 py-1.5 text-[12px] font-bold text-[#315b91]">
+                      <span className="rounded-full bg-[var(--primary-soft)] px-3 py-1.5 text-[12px] font-medium text-[var(--accent)]">
                         {selectedGoodForOption.label}
                       </span>
                     ) : null}
                     {selectedCityName ? (
-                      <span className="rounded-full bg-[#eef4fd] px-3 py-1.5 text-[12px] font-bold text-[#315b91]">
+                      <span className="rounded-full bg-[var(--primary-soft)] px-3 py-1.5 text-[12px] font-medium text-[var(--accent)]">
                         {selectedCityName}
                       </span>
                     ) : null}
@@ -588,11 +588,11 @@ function SearchPageWords() {
                 ) : null}
 
                 {(selectedCategory?.label || selectedCityName || selectedGoodForOption?.label || effectiveBudgetPreview) ? (
-                  <p className="mt-3 text-[14px] font-semibold leading-6 text-[#637690]">
+                  <p className="mt-3 text-[14px] leading-6 text-[var(--muted)]">
                     {searchPreviewText}
                   </p>
                 ) : (
-                  <p className="mt-3 text-[14px] font-semibold leading-6 text-[#637690]">
+                  <p className="mt-3 text-[14px] leading-6 text-[var(--muted)]">
                     Try &quot;cozy cafe in Makati&quot; or &quot;budget date in QC.&quot;
                   </p>
                 )}
@@ -603,7 +603,7 @@ function SearchPageWords() {
                     key={chip}
                     type="button"
                     onClick={() => setRawQuery(chip)}
-                    className="rounded-full border border-[#d7e7ff] bg-[#f8fbff] px-3.5 py-2 text-[13px] font-bold text-[#315b91] transition hover:border-[#a9c8fa] hover:bg-[#eef5ff] hover:text-[#174fa8]"
+                    className="rounded-full border border-[var(--line)] bg-white px-3.5 py-2 text-[13px] font-medium text-[#374151] transition hover:border-[var(--accent)] hover:bg-[var(--primary-soft)] hover:text-[var(--accent)]"
                   >
                     {chip}
                   </button>
@@ -635,18 +635,18 @@ function SearchPageWords() {
               setActiveField(null)
             }}
           />
-          <section className="relative max-h-[84vh] w-full overflow-y-auto rounded-t-[24px] bg-[#f0f2f5] px-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-18px_44px_rgba(0,0,0,0.18)]">
-            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-[#ccd0d5]" />
-            <div className="mb-3 grid grid-cols-[72px_1fr_72px] items-center gap-2 border-b border-[#e4e6eb] pb-3">
+          <section className="relative max-h-[84vh] w-full overflow-y-auto rounded-t-[24px] bg-[var(--bg)] px-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pt-3 shadow-[0_-18px_44px_rgba(17,24,39,0.18)]">
+            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-[var(--line-strong)]" />
+            <div className="mb-3 grid grid-cols-[72px_1fr_72px] items-center gap-2 border-b border-[var(--line)] pb-3">
               <button
                 type="button"
                 onClick={handleClearFilters}
                 disabled={activeFilterCount === 0}
-                className="justify-self-start text-[13px] font-bold text-[#1877f2] transition disabled:text-[#bcc0c4]"
+                className="justify-self-start text-[13px] font-medium text-[var(--accent)] transition disabled:text-[var(--text-light)]"
               >
                 Reset
               </button>
-              <h2 className="justify-self-center text-[17px] font-black text-[#050505]">Filters</h2>
+              <h2 className="justify-self-center text-[17px] font-semibold text-[var(--text-main)]">Filters</h2>
               <button
                 type="button"
                 aria-label="Close filters"
@@ -654,7 +654,7 @@ function SearchPageWords() {
                   setIsFiltersOpen(false)
                   setActiveField(null)
                 }}
-                className="inline-flex h-9 w-9 items-center justify-center justify-self-end rounded-full bg-[#e4e6eb] text-[#050505] transition hover:bg-[#d8dadf]"
+                className="inline-flex h-9 w-9 items-center justify-center justify-self-end rounded-full bg-white text-[var(--text-main)] transition hover:bg-[var(--bg-soft)]"
               >
                 <AppIcon name="clear" className="h-4 w-4" />
               </button>
@@ -667,14 +667,14 @@ function SearchPageWords() {
                 { key: 'good_for' as BuilderField, label: 'Vibe', value: selectedGoodForOption?.label ?? 'Any vibe' },
                 { key: 'budget' as BuilderField, label: 'Budget', value: effectiveBudgetPreview ?? 'Any budget' },
               ].map((row, index) => (
-                <div key={row.key} className={index > 0 ? 'border-t border-[#e4e6eb]' : undefined}>
+                <div key={row.key} className={index > 0 ? 'border-t border-[var(--line)]' : undefined}>
                   <button
                     type="button"
                     onClick={() => setActiveField((current) => (current === row.key ? null : row.key))}
-                    className="flex min-h-[54px] w-full items-center justify-between gap-3 bg-white px-4 text-left transition hover:bg-[#f7f8fa]"
+                    className="flex min-h-[54px] w-full items-center justify-between gap-3 bg-white px-4 text-left transition hover:bg-[var(--bg-soft)]"
                   >
-                    <span className="text-[14px] font-black text-[#050505]">{row.label}</span>
-                    <span className="flex min-w-0 items-center gap-2 text-right text-[13px] font-bold text-[#65676b]">
+                    <span className="text-[14px] font-semibold text-[var(--text-main)]">{row.label}</span>
+                    <span className="flex min-w-0 items-center gap-2 text-right text-[13px] font-medium text-[var(--muted)]">
                       <span className="truncate">{row.value}</span>
                       <AppIcon name="chevronRight" className={`h-4 w-4 transition ${activeField === row.key ? 'rotate-90' : ''}`} />
                     </span>
@@ -701,16 +701,16 @@ function SearchPageWords() {
                                   closeActiveFilterSection()
                                 }}
                                 className={`flex min-h-[44px] w-full items-center justify-between gap-3 rounded-xl px-3 text-left transition ${
-                                  isSelected ? 'bg-[#e7f3ff] text-[#1877f2]' : 'text-[#050505] hover:bg-[#f0f2f5]'
+                                  isSelected ? 'bg-[var(--primary-soft)] text-[var(--accent)]' : 'text-[var(--text-main)] hover:bg-[var(--bg-soft)]'
                                 }`}
                               >
                                 <span className="flex items-center gap-3">
                                   {option.value ? (
-                                    <span className={`inline-flex h-8 w-8 items-center justify-center rounded-full ${isSelected ? 'bg-white text-[#1877f2]' : 'bg-[#edf5ff] text-[#2a6ff0]'}`}>
+                                    <span className={`inline-flex h-8 w-8 items-center justify-center rounded-full ${isSelected ? 'bg-white text-[var(--accent)]' : 'bg-[var(--primary-soft)] text-[var(--accent)]'}`}>
                                       <AppIcon name={resolveCategoryIconName(option.value)} className="h-4 w-4" />
                                     </span>
                                   ) : null}
-                                  <span className="text-[14px] font-bold">{option.label}</span>
+                                  <span className="text-[14px] font-medium">{option.label}</span>
                                 </span>
                                 {isSelected ? <AppIcon name="check" className="h-4 w-4" /> : null}
                               </button>
@@ -738,10 +738,10 @@ function SearchPageWords() {
                                   closeActiveFilterSection()
                                 }}
                                 className={`flex min-h-[44px] w-full items-center justify-between gap-3 rounded-xl px-3 text-left transition ${
-                                  isSelected ? 'bg-[#e7f3ff] text-[#1877f2]' : 'text-[#050505] hover:bg-[#f0f2f5]'
+                                  isSelected ? 'bg-[var(--primary-soft)] text-[var(--accent)]' : 'text-[var(--text-main)] hover:bg-[var(--bg-soft)]'
                                 }`}
                               >
-                                <span className="truncate text-[14px] font-bold">{option.name}</span>
+                                <span className="truncate text-[14px] font-medium">{option.name}</span>
                                 {isSelected ? <AppIcon name="check" className="h-4 w-4 shrink-0" /> : null}
                               </button>
                             )
@@ -768,10 +768,10 @@ function SearchPageWords() {
                                   closeActiveFilterSection()
                                 }}
                                 className={`flex min-h-[44px] w-full items-center justify-between gap-3 rounded-xl px-3 text-left transition ${
-                                  isSelected ? 'bg-[#e7f3ff] text-[#1877f2]' : 'text-[#050505] hover:bg-[#f0f2f5]'
+                                  isSelected ? 'bg-[var(--primary-soft)] text-[var(--accent)]' : 'text-[var(--text-main)] hover:bg-[var(--bg-soft)]'
                                 }`}
                               >
-                                <span className="text-[14px] font-bold">{option.label}</span>
+                                <span className="text-[14px] font-medium">{option.label}</span>
                                 {isSelected ? <AppIcon name="check" className="h-4 w-4" /> : null}
                               </button>
                             )
@@ -799,10 +799,10 @@ function SearchPageWords() {
                                   closeActiveFilterSection()
                                 }}
                                 className={`flex min-h-[44px] w-full items-center justify-between gap-3 rounded-xl px-3 text-left transition ${
-                                  isSelected ? 'bg-[#e7f3ff] text-[#1877f2]' : 'text-[#050505] hover:bg-[#f0f2f5]'
+                                  isSelected ? 'bg-[var(--primary-soft)] text-[var(--accent)]' : 'text-[var(--text-main)] hover:bg-[var(--bg-soft)]'
                                 }`}
                               >
-                                <span className="text-[14px] font-bold">{option.label}</span>
+                                <span className="text-[14px] font-medium">{option.label}</span>
                                 {isSelected ? <AppIcon name="check" className="h-4 w-4" /> : null}
                               </button>
                             )
@@ -815,9 +815,9 @@ function SearchPageWords() {
               ))}
             </div>
 
-            <div className="mt-4 rounded-2xl border border-[#dce9fb] bg-white px-4 py-3 shadow-[0_8px_22px_rgba(86,128,188,0.06)]">
-              <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[#4e7dcb]">Preview</p>
-              <p className={`mt-1 text-[14px] font-semibold leading-6 ${canSearch ? 'text-[#16325c]' : 'text-[#6f7f99]'}`}>{searchPreviewText}</p>
+            <div className="mt-4 rounded-2xl border border-[var(--line)] bg-white px-4 py-3 shadow-sm">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--accent)]">Preview</p>
+              <p className={`mt-1 text-[14px] leading-6 ${canSearch ? 'text-[var(--text-main)]' : 'text-[var(--muted)]'}`}>{searchPreviewText}</p>
             </div>
 
             <button
@@ -826,7 +826,7 @@ function SearchPageWords() {
                 setIsFiltersOpen(false)
                 setActiveField(null)
               }}
-              className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-xl bg-[#1877f2] text-sm font-black text-white transition hover:bg-[#166fe5]"
+              className="mt-5 inline-flex h-12 w-full items-center justify-center rounded-xl bg-[var(--accent)] text-sm font-semibold text-white transition hover:bg-[var(--accent-deep)]"
             >
               Apply filters
             </button>

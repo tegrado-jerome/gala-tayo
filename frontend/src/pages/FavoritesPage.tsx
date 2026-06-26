@@ -3,21 +3,13 @@ import AppFooter from '../components/AppFooter'
 import AppHeader from '../components/AppHeader'
 import GoogleSignInButton from '../components/GoogleSignInButton'
 import { useSavedFavorites, type FavoritePlace, type FavoriteRow } from '../context/SavedFavoritesContext'
-import { navigateToPath, navigateToPlace } from '../utils/navigation'
+import { navigateToPlace } from '../utils/navigation'
 import { getPlacePhoto } from '../utils/placePhoto'
 import favoritesActiveChibi from '../assets/chibis/features/favorites/chibi-favorites-active-state.webp'
 import favoritesEmptyChibi from '../assets/chibis/features/favorites/chibi-favorites-empty-state.webp'
 
 type IconProps = {
   className?: string
-}
-
-function BackIcon({ className = 'h-4 w-4' }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className} aria-hidden="true">
-      <path d="M15 18 9 12l6-6" />
-    </svg>
-  )
 }
 
 function PinIcon({ className = 'h-4 w-4' }: IconProps) {
@@ -217,19 +209,10 @@ function FavoritesPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[linear-gradient(180deg,#f8fbff,#edf4ff)] text-[var(--text)]">
+    <div className="flex min-h-screen flex-col bg-[var(--bg)] text-[var(--text)]">
       <AppHeader showTaglishChip={false} />
 
       <main className="mx-auto flex w-full max-w-[1480px] flex-1 flex-col gap-5 px-4 py-5 sm:px-6 lg:px-10 lg:py-8">
-        <button
-          type="button"
-          onClick={() => navigateToPath('/search')}
-          className="inline-flex w-fit items-center gap-2 rounded-lg border border-transparent px-1 py-1 text-sm font-black text-slate-700 transition hover:text-[var(--accent-deep)]"
-        >
-          <BackIcon className="h-5 w-5" />
-          Back
-        </button>
-
         <section className="grid gap-5 md:grid-cols-[minmax(0,1fr)_420px] md:items-center">
           <div>
             <h1 className="text-[34px] font-black leading-tight text-slate-950 sm:text-[42px]">Saved places</h1>

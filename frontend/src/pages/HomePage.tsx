@@ -2722,12 +2722,12 @@ function AskAiPlaceholder({
             />
           </div>
 
-          <div className="grid max-w-[28rem] grid-cols-2 gap-2.5 px-1 text-[12px] font-medium text-slate-500 lg:max-w-[32rem] lg:text-[0.9rem]">
-            <span className="inline-flex min-w-0 items-center gap-1.5 rounded-2xl border border-[rgba(37,99,235,0.08)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(246,249,255,0.98))] px-3 py-2 text-slate-600 shadow-[0_10px_24px_rgba(37,99,235,0.06)]">
+          <div className="flex max-w-[28rem] flex-wrap gap-2.5 px-1 text-[12px] font-medium text-slate-500 lg:max-w-[32rem] lg:text-[0.9rem]">
+            <span className="inline-flex w-fit max-w-full min-w-0 items-center gap-1.5 rounded-2xl border border-[rgba(37,99,235,0.08)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(246,249,255,0.98))] px-3 py-2 text-slate-600 shadow-[0_10px_24px_rgba(37,99,235,0.06)]">
               <SparkIcon className="h-3.5 w-3.5 text-[var(--accent-deep)] lg:h-4 lg:w-4" />
               <span className="truncate">{usageStatus ? `${usageStatus.remaining} left today` : 'Checking asks...'}</span>
             </span>
-            <span className="inline-flex min-w-0 items-center gap-1.5 rounded-2xl border border-[rgba(20,35,58,0.07)] bg-white px-3 py-2 text-slate-500 shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
+            <span className="inline-flex w-fit max-w-full min-w-0 items-center gap-1.5 rounded-2xl border border-[rgba(20,35,58,0.07)] bg-white px-3 py-2 text-slate-500 shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
               <span className="h-2 w-2 shrink-0 rounded-full bg-[var(--accent-deep)]" />
               <span className="truncate">{usageStatus ? `${formatResetAtCompact(usageStatus.resetAt)} reset` : 'Checking reset...'}</span>
             </span>
@@ -2782,7 +2782,7 @@ function AskAiPlaceholder({
                     type="button"
                     onClick={handleSubmit}
                     disabled={!canSubmit}
-                    className="inline-flex h-12 w-full items-center justify-center rounded-full bg-[#2563eb] px-5 text-[0.96rem] font-black text-white transition hover:bg-[#1f56cc] disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-[var(--accent)] px-5 text-[0.96rem] font-semibold text-white transition hover:bg-[var(--accent-deep)] disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <span className="inline-flex items-center gap-2">
                       <SparkIcon className="h-4.5 w-4.5" />
@@ -2793,7 +2793,7 @@ function AskAiPlaceholder({
               </div>
 
               {answerError ? (
-                <p className="px-4 pb-4 text-sm font-semibold text-[#c94b6e] lg:px-5 lg:pb-5">{answerError}</p>
+                <p className="px-4 pb-4 text-sm text-red-600 lg:px-5 lg:pb-5">{answerError}</p>
               ) : null}
 
               {isUsageLoading && !usageStatus ? (

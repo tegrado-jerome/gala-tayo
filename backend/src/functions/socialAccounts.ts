@@ -306,6 +306,8 @@ export async function meProfile(request: HttpRequest, context: InvocationContext
     if (body.is_public !== undefined) {
       if (typeof body.is_public !== "boolean") return { status: 400, jsonBody: { message: "is_public must be a boolean." } };
       updates.is_public = body.is_public;
+      updates.show_followers = body.is_public ? "everyone" : "only_me";
+      updates.show_following = body.is_public ? "everyone" : "only_me";
     }
 
     for (const key of ["show_followers", "show_following"] as const) {

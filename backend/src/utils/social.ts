@@ -255,19 +255,13 @@ export async function canViewProfile(viewerId: string | null | undefined, profil
 }
 
 export async function canSeeFollowers(viewerId: string | null | undefined, targetProfile: SocialProfile) {
-  const visibility = targetProfile.show_followers ?? "everyone";
-  if (visibility === "everyone") return true;
   if (viewerId === targetProfile.user_id) return true;
-  if (visibility === "followers") return isAcceptedFollower(viewerId, targetProfile.user_id);
-  return false;
+  return targetProfile.is_public;
 }
 
 export async function canSeeFollowing(viewerId: string | null | undefined, targetProfile: SocialProfile) {
-  const visibility = targetProfile.show_following ?? "everyone";
-  if (visibility === "everyone") return true;
   if (viewerId === targetProfile.user_id) return true;
-  if (visibility === "followers") return isAcceptedFollower(viewerId, targetProfile.user_id);
-  return false;
+  return targetProfile.is_public;
 }
 
 export async function canViewGalaPlan(viewerId: string | null | undefined, galaPlan: SocialGalaPlan) {

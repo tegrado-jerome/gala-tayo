@@ -151,7 +151,7 @@ function AppHeader({
   const avatarUrl = user ? getAvatarUrl(currentProfile) : ''
   const shouldShowAvatar = Boolean(user && avatarUrl && failedAvatarUrl !== avatarUrl)
   const desktopNavButtonClass =
-    'inline-flex items-center gap-2 rounded-lg px-3 py-2 text-[13px] font-bold text-slate-600 transition hover:bg-slate-50 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
+    'inline-flex items-center gap-2 rounded-xl px-3 py-2 text-[13px] font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
 
   const handleSignOut = async () => {
     try {
@@ -204,7 +204,7 @@ function AppHeader({
         type="button"
         onClick={() => void handleSignOut()}
         disabled={isSigningOut}
-        className="inline-flex items-center gap-2 rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[13px] font-bold text-slate-600 transition hover:border-[var(--accent-coral-soft)] hover:bg-[var(--accent-coral-wash)] hover:text-[var(--accent-coral-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-coral-soft)] disabled:cursor-not-allowed disabled:opacity-60"
+        className="inline-flex items-center gap-2 rounded-xl border border-[var(--line)] bg-white px-3 py-2 text-[13px] font-medium text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)] disabled:cursor-not-allowed disabled:opacity-60"
       >
         <AppIcon name="logOut" size="ui" />
         {isSigningOut ? 'Logging out...' : 'Log out'}
@@ -213,7 +213,7 @@ function AppHeader({
   ) : null
 
   return (
-    <header className="relative z-[5000] w-full overflow-hidden border-b border-[var(--line)] bg-white">
+    <header className="relative z-[5000] w-full overflow-hidden border-b border-[var(--line)] bg-[var(--bg)]">
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-[var(--line)]" />
       <div
         className="relative mx-auto flex h-[68px] w-full max-w-[var(--gala-content-max)] items-center justify-between gap-4 px-[var(--gala-shell-padding)] lg:h-[82px]"
@@ -223,7 +223,7 @@ function AppHeader({
             <button
               type="button"
               onClick={onBack}
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[var(--line)] bg-white text-[var(--text)] transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)] lg:hidden"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--line)] bg-white text-[var(--text)] transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)] lg:hidden"
               aria-label="Back"
             >
               <AppIcon name="back" size="ui" />
@@ -238,10 +238,10 @@ function AppHeader({
         <div className="hidden min-w-0 flex-1 items-center justify-end gap-4 lg:flex">
           {desktopNav}
           {isSessionLoading ? (
-            <div className="h-10 w-[140px] rounded-lg bg-slate-100" aria-hidden="true" />
+            <div className="h-10 w-[140px] rounded-xl bg-slate-100" aria-hidden="true" />
           ) : user ? (
-            <div className="inline-flex h-11 max-w-[240px] items-center gap-2 rounded-lg border border-[var(--line)] bg-white px-2.5 pr-3 text-[var(--text)] transition hover:bg-slate-50">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--bg-soft)] text-xs font-bold text-[var(--accent-deep)]">
+            <div className="inline-flex h-11 max-w-[240px] items-center gap-2 rounded-xl border border-[var(--line)] bg-white px-2.5 pr-3 text-[var(--text)] transition hover:bg-slate-50">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--primary-soft)] text-xs font-semibold text-[var(--accent)]">
                 {shouldShowAvatar ? (
                   <img
                     src={avatarUrl}
@@ -255,7 +255,7 @@ function AppHeader({
                 )}
               </span>
               <div className="min-w-0">
-                <p className="truncate text-sm font-black text-slate-900">{displayName}</p>
+                <p className="truncate text-sm font-semibold text-slate-900">{displayName}</p>
               </div>
             </div>
           ) : (
@@ -271,7 +271,7 @@ function AppHeader({
 
         <div className="lg:hidden">
           {isSessionLoading ? (
-            <div className="h-10 w-10 rounded-lg bg-slate-100" aria-hidden="true" />
+            <div className="h-10 w-10 rounded-xl bg-slate-100" aria-hidden="true" />
           ) : (
             <UserMenu user={user} profile={currentProfile} compact />
           )}

@@ -35,6 +35,8 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
   const [notice, setNotice] = useState('')
   const [listTitle, setListTitle] = useState('')
   const [listUsers, setListUsers] = useState<FollowListUser[] | null>(null)
+  const canOpenFollowLists = relationshipState === 'self' || Boolean(profile?.is_public)
+
   useEffect(() => {
     let isMounted = true
 
@@ -209,11 +211,29 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
               </div>
 
               <div className="flex flex-wrap gap-x-8 gap-y-3 pt-4 text-sm">
-                <button type="button" onClick={() => void openList('followers')} className="inline-flex items-center gap-2 font-semibold text-slate-600 transition hover:text-slate-950">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (canOpenFollowLists) {
+                      void openList('followers')
+                    }
+                  }}
+                  disabled={!canOpenFollowLists}
+                  className={`inline-flex items-center gap-2 font-semibold transition ${canOpenFollowLists ? 'text-slate-600 hover:text-slate-950' : 'cursor-default text-slate-500'}`}
+                >
                   <span className="text-lg font-black text-slate-950">{profile.followers_count}</span>
                   <span>Followers</span>
                 </button>
-                <button type="button" onClick={() => void openList('following')} className="inline-flex items-center gap-2 font-semibold text-slate-600 transition hover:text-slate-950">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (canOpenFollowLists) {
+                      void openList('following')
+                    }
+                  }}
+                  disabled={!canOpenFollowLists}
+                  className={`inline-flex items-center gap-2 font-semibold transition ${canOpenFollowLists ? 'text-slate-600 hover:text-slate-950' : 'cursor-default text-slate-500'}`}
+                >
                   <span className="text-lg font-black text-slate-950">{profile.following_count}</span>
                   <span>Following</span>
                 </button>

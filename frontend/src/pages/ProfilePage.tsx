@@ -26,12 +26,6 @@ type ProfilePageProps = {
   session: Session
 }
 
-const listVisibilityLabel: Record<Profile['show_followers'], string> = {
-  everyone: 'Everyone',
-  followers: 'Followers only',
-  only_me: 'Only me',
-}
-
 const planVisibilityLabel: Record<Profile['default_gala_plan_visibility'], string> = {
   private: 'Private',
   followers: 'Followers only',
@@ -47,8 +41,6 @@ function ProfilePage({ session }: ProfilePageProps) {
   const [usernameInput, setUsernameInput] = useState('')
   const [bioInput, setBioInput] = useState('')
   const [isPublic, setIsPublic] = useState(true)
-  const [showFollowers, setShowFollowers] = useState<Profile['show_followers']>('everyone')
-  const [showFollowing, setShowFollowing] = useState<Profile['show_following']>('everyone')
   const [defaultPlanVisibility, setDefaultPlanVisibility] = useState<Profile['default_gala_plan_visibility']>('private')
   const [followRequests, setFollowRequests] = useState<FollowRequest[]>([])
   const [listTitle, setListTitle] = useState('')
@@ -87,8 +79,6 @@ function ProfilePage({ session }: ProfilePageProps) {
           setUsernameInput(data.profile.username ?? '')
           setBioInput(data.profile.bio ?? '')
           setIsPublic(data.profile.is_public)
-          setShowFollowers(data.profile.show_followers ?? 'everyone')
-          setShowFollowing(data.profile.show_following ?? 'everyone')
           setDefaultPlanVisibility(data.profile.default_gala_plan_visibility ?? 'private')
         }
         const requestsData = await getFollowRequests(session).catch(() => ({ requests: [] }))
@@ -130,8 +120,6 @@ function ProfilePage({ session }: ProfilePageProps) {
           username: normalizedUsername,
           bio: bioInput.trim() || null,
           is_public: isPublic,
-          show_followers: showFollowers,
-          show_following: showFollowing,
           default_gala_plan_visibility: defaultPlanVisibility,
         },
         session,
@@ -142,8 +130,6 @@ function ProfilePage({ session }: ProfilePageProps) {
         setUsernameInput(data.profile.username ?? '')
         setBioInput(data.profile.bio ?? '')
         setIsPublic(data.profile.is_public)
-        setShowFollowers(data.profile.show_followers ?? 'everyone')
-        setShowFollowing(data.profile.show_following ?? 'everyone')
         setDefaultPlanVisibility(data.profile.default_gala_plan_visibility ?? 'private')
       }
       setIsEditing(false)
@@ -273,12 +259,8 @@ function ProfilePage({ session }: ProfilePageProps) {
                   <span>Following</span>
                 </button>
                 <span className="inline-flex items-center gap-2 font-semibold text-slate-600">
-                  <AppIcon name="eye" className="h-4 w-4 text-slate-400" />
-                  Followers: {listVisibilityLabel[showFollowers]}
-                </span>
-                <span className="inline-flex items-center gap-2 font-semibold text-slate-600">
                   <AppIcon name={profile.is_public ? 'eye' : 'lock'} className="h-4 w-4 text-slate-400" />
-                  {profile.is_public ? 'Open to everyone' : 'Follow by request'}
+                  {profile.is_public ? 'Follower and following lists are visible system-wide' : 'Follower and following names stay hidden system-wide'}
                 </span>
                 <span className="inline-flex items-center gap-2 font-semibold text-slate-600">
                   <AppIcon name="profile" className="h-4 w-4 text-slate-400" />
@@ -344,24 +326,8 @@ function ProfilePage({ session }: ProfilePageProps) {
                         <option value="private">Private</option>
                       </select>
                       <span className="text-xs font-semibold text-[var(--muted)]">
-                        {isPublic ? 'Anyone can view your public profile.' : 'People need to request to follow you.'}
+                        {isPublic ? 'Anyone can view your profile and your follower/following lists.' : 'People need to request to follow you, and follower/following names stay hidden.'}
                       </span>
-                    </label>
-                    <label className="grid gap-2">
-                      <span className="text-sm font-black text-slate-900">Show Followers</span>
-                      <select value={showFollowers} onChange={(event) => setShowFollowers(event.target.value as Profile['show_followers'])} className="h-12 rounded-2xl border border-[var(--line-strong)] bg-white px-4 text-sm font-black text-slate-950 outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]">
-                        <option value="everyone">Everyone</option>
-                        <option value="followers">Followers only</option>
-                        <option value="only_me">Only me</option>
-                      </select>
-                    </label>
-                    <label className="grid gap-2">
-                      <span className="text-sm font-black text-slate-900">Show Following</span>
-                      <select value={showFollowing} onChange={(event) => setShowFollowing(event.target.value as Profile['show_following'])} className="h-12 rounded-2xl border border-[var(--line-strong)] bg-white px-4 text-sm font-black text-slate-950 outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]">
-                        <option value="everyone">Everyone</option>
-                        <option value="followers">Followers only</option>
-                        <option value="only_me">Only me</option>
-                      </select>
                     </label>
                     <label className="grid gap-2 sm:col-span-2">
                       <span className="text-sm font-black text-slate-900">Default Gala Plan Visibility</span>

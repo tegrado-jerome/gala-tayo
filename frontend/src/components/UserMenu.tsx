@@ -141,13 +141,13 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
   }
 
   const menuItemClass =
-    'group flex w-full items-center gap-4 rounded-lg px-3 py-3 text-left text-[15px] font-semibold text-slate-800 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
+    'group flex w-full items-center gap-4 rounded-xl px-3 py-3 text-left text-[15px] font-medium text-slate-800 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
   const menuIconClass =
-    'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-[var(--accent-deep)] ring-1 ring-slate-200 transition group-hover:bg-[var(--accent-wash)]'
+    'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-[var(--accent)] ring-1 ring-slate-200 transition group-hover:bg-[var(--accent-wash)]'
   const submenuItemClass =
-    'group flex w-full items-center gap-4 rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
+    'group flex w-full items-center gap-4 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
   const submenuIconClass =
-    'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-[var(--accent-deep)] ring-1 ring-slate-200 transition group-hover:bg-[var(--accent-wash)]'
+    'flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white text-[var(--accent)] ring-1 ring-slate-200 transition group-hover:bg-[var(--accent-wash)]'
 
   const accountButtonAvatar = user && shouldShowAvatar ? (
     <img
@@ -171,7 +171,7 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
         className={
           compact
             ? 'relative mt-2.5 inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-900 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
-            : 'inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-[15px] font-semibold text-slate-900 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
+            : 'inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-[15px] font-medium text-slate-900 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
         }
         aria-expanded={isOpen}
         aria-haspopup="menu"
@@ -182,8 +182,8 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
             <span className={`flex h-full w-full items-center justify-center overflow-hidden rounded-full ${user ? 'bg-slate-100 text-slate-700' : 'bg-white text-slate-800'}`}>
               {accountButtonAvatar}
             </span>
-            <span className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white shadow-sm ${user ? 'bg-emerald-400' : 'bg-slate-300'}`} aria-hidden="true">
-              {user ? <span className="absolute inset-0 animate-ping rounded-full bg-emerald-400/70" /> : null}
+            <span className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white shadow-sm ${user ? 'bg-[var(--accent)]' : 'bg-slate-300'}`} aria-hidden="true">
+              {user ? <span className="absolute inset-0 animate-ping rounded-full bg-[var(--accent-soft)]" /> : null}
             </span>
           </>
         ) : user ? (
@@ -213,8 +213,8 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
             ref={drawerRef}
             className={
               compact
-                ? 'gala-menu-drawer fixed inset-y-0 right-0 z-[6000] flex w-[300px] max-w-[82vw] flex-col overflow-hidden rounded-l-[16px] border-l border-slate-300 bg-white'
-                : 'gala-menu-drawer fixed inset-y-0 right-0 z-[6000] flex w-[380px] max-w-[36vw] flex-col overflow-hidden rounded-l-[16px] border-l border-slate-300 bg-white'
+                ? 'gala-menu-drawer fixed inset-y-0 right-0 z-[6000] flex w-[300px] max-w-[82vw] flex-col overflow-hidden rounded-l-[24px] border-l border-[var(--line)] bg-white shadow-xl'
+                : 'gala-menu-drawer fixed inset-y-0 right-0 z-[6000] flex w-[380px] max-w-[36vw] flex-col overflow-hidden rounded-l-[24px] border-l border-[var(--line)] bg-white shadow-xl'
             }
             role="menu"
           >
@@ -222,7 +222,7 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="absolute right-4 top-4 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-slate-300"
+              className="absolute right-4 top-4 z-10 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]"
               aria-label="Close account menu"
             >
               <AppIcon name="clear" size="ui" />
@@ -251,9 +251,9 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
                       initials
                     )}
                   </span>
-                  <p className="mt-3 max-w-full truncate text-lg font-bold text-slate-950">{displayName}</p>
+                  <p className="mt-3 max-w-full truncate text-lg font-semibold text-slate-950">{displayName}</p>
                   {user.email ? <p className="max-w-full truncate text-sm text-slate-600">{user.email}</p> : null}
-                  <span className="mt-2 inline-flex items-center gap-1 text-xs font-black uppercase tracking-[0.12em] text-[var(--accent-deep)]">
+                  <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--accent)]">
                     View profile
                     <AppIcon name="chevronRight" className="h-3.5 w-3.5" />
                   </span>
@@ -339,7 +339,7 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
                   <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 text-slate-700 ring-1 ring-slate-300">
                     <AppIcon name="profile" size="emptyLg" />
                   </span>
-                  <p className="mt-8 text-xl font-bold text-slate-950">Welcome to GalaTayo</p>
+                  <p className="mt-8 text-xl font-semibold text-slate-950">Welcome to GalaTayo</p>
                   <p className="mx-auto mt-2 max-w-[260px] text-sm leading-6 text-slate-500">
                     Log in or sign up to save favorites and keep your gala history.
                   </p>

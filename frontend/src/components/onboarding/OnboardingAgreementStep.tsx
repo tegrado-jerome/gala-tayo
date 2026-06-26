@@ -45,10 +45,6 @@ function OnboardingAgreementStep({ values, errors, isSubmitting, onUpdate, onBac
           </span>
         </label>
 
-        <p className="rounded-lg bg-white px-4 py-3 text-sm font-semibold leading-6 text-[var(--muted)] ring-1 ring-[var(--line)]">
-          GalaTayo may send necessary account and service emails, such as login, security, password reset, account updates, and important policy notices.
-        </p>
-
         {errors.form ? <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-bold text-red-700">{errors.form}</p> : null}
       </div>
     </OnboardingLayout>

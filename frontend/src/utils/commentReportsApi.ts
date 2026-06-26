@@ -38,6 +38,10 @@ type ApiErrorResponse = {
   message?: string
 }
 
+type SubmitCommentReportResult = {
+  alreadyReported?: boolean
+}
+
 function getApiEndpoint(path: string) {
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
   return apiBaseUrl ? `${apiBaseUrl}${path}` : `/api${path}`
@@ -57,7 +61,7 @@ async function readJson<T>(response: Response): Promise<T | null> {
   }
 }
 
-async function submitCommentReport(commentId: string, token: string, payload: SubmitCommentReportPayload) {
+async function submitCommentReport(commentId: string, token: string, payload: SubmitCommentReportPayload): Promise<SubmitCommentReportResult> {
   const details = payload.details?.trim() || ''
   const response = await fetch(getApiEndpoint(`/place-comments/${encodeURIComponent(commentId)}/report`), {
     method: 'POST',
@@ -74,13 +78,13 @@ async function submitCommentReport(commentId: string, token: string, payload: Su
 
   if (!response.ok) {
     if (response.status === 409 && result?.error === 'already_reported') {
-      throw new Error('You already reported this comment.')
+      return { alreadyReported: true }
     }
 
     throw new Error(result?.message || 'Could not submit report. Please try again.')
   }
 
-  return result
+  return { alreadyReported: false }
 }
 
 async function fetchMyCommentReports(token: string, signal?: AbortSignal) {

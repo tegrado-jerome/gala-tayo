@@ -14,6 +14,7 @@ import {
   uploadProfileAvatar,
 } from '../services/onboardingApi'
 import { getOnboardingStatus } from '../utils/profileApi'
+import { avatarUploadErrorMessage, isValidAvatarFile, normalizeAvatarFile } from '../utils/avatarUpload'
 import { navigateToPath } from '../utils/navigation'
 
 type OnboardingPageProps = {
@@ -184,13 +185,16 @@ function normalizeDraftValues(values: Partial<OnboardingFormState> | null | unde
     return fallbackValues
   }
 
+  const normalizedProfileVisibility = values.profileVisibility === 'private' ? 'private' : 'public'
+  const shouldShowFollowLists = normalizedProfileVisibility === 'public'
+
   return {
     ...fallbackValues,
     ...values,
     step: isValidStep(values.step) ? values.step : fallbackValues.step,
-    profileVisibility: values.profileVisibility === 'private' ? 'private' : 'public',
-    showFollowers: typeof values.showFollowers === 'boolean' ? values.showFollowers : fallbackValues.showFollowers,
-    showFollowing: typeof values.showFollowing === 'boolean' ? values.showFollowing : fallbackValues.showFollowing,
+    profileVisibility: normalizedProfileVisibility,
+    showFollowers: shouldShowFollowLists,
+    showFollowing: shouldShowFollowLists,
     acceptedTerms: Boolean(values.acceptedTerms),
     acceptedPrivacy: Boolean(values.acceptedPrivacy),
   }
@@ -346,7 +350,17 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
   }, [values.step])
 
   const updateValues = (updates: Partial<OnboardingFormState>) => {
-    setValues((currentValues) => ({ ...currentValues, ...updates }))
+    setValues((currentValues) => {
+      const nextValues = { ...currentValues, ...updates }
+
+      if (updates.profileVisibility) {
+        const shouldShowFollowLists = updates.profileVisibility === 'public'
+        nextValues.showFollowers = shouldShowFollowLists
+        nextValues.showFollowing = shouldShowFollowLists
+      }
+
+      return nextValues
+    })
     setErrors((currentErrors) => {
       const nextErrors = { ...currentErrors }
       Object.keys(updates).forEach((key) => {
@@ -413,10 +427,18 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
   }
 
   const handleAvatarSelected = async (file: File) => {
+    if (!isValidAvatarFile(file)) {
+      setErrors((currentErrors) => ({
+        ...currentErrors,
+        avatar: avatarUploadErrorMessage,
+      }))
+      return
+    }
+
     try {
       setIsUploadingAvatar(true)
       setErrors((currentErrors) => ({ ...currentErrors, avatar: '' }))
-      const result = await uploadProfileAvatar(file, session)
+      const result = await uploadProfileAvatar(normalizeAvatarFile(file), session)
       updateValues({ avatarUrl: result.avatar_url, avatarStorageKey: result.avatar_storage_key })
     } catch (error) {
       setErrors((currentErrors) => ({

@@ -214,7 +214,7 @@ function resolveIconSize(size: AppIconSize) {
 export function AppIcon({
   name,
   size = 'ui',
-  strokeWidth = 2,
+  strokeWidth = 1.75,
   className,
   ...rest
 }: AppIconProps) {

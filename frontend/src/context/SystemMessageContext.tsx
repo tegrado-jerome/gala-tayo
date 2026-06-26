@@ -60,7 +60,7 @@ function SystemMessageProvider({ children }: { children: ReactNode }) {
         <div className="pointer-events-none fixed inset-x-4 top-4 z-[9999] flex justify-center sm:inset-x-auto sm:right-5 sm:top-5 sm:justify-end">
           <div
             key={message.id}
-            className="w-full max-w-[420px] rounded-2xl border border-emerald-200 bg-white/96 px-4 py-3 text-slate-900 shadow-[0_20px_60px_rgba(15,23,42,0.18)] ring-1 ring-emerald-100 backdrop-blur"
+            className="w-full max-w-[420px] rounded-2xl border border-emerald-200 bg-white px-4 py-3 text-slate-900 shadow-md"
             role="status"
             aria-live="polite"
           >
@@ -69,8 +69,8 @@ function SystemMessageProvider({ children }: { children: ReactNode }) {
                 <AppIcon name="check" className="h-5 w-5" strokeWidth={2.25} />
               </span>
               <div className="min-w-0">
-                <p className="text-sm font-black text-slate-950">{message.title}</p>
-                {message.description ? <p className="mt-1 text-xs font-semibold leading-5 text-slate-600">{message.description}</p> : null}
+                <p className="text-sm font-semibold text-slate-950">{message.title}</p>
+                {message.description ? <p className="mt-1 text-xs leading-5 text-slate-600">{message.description}</p> : null}
               </div>
             </div>
           </div>

@@ -168,6 +168,75 @@ function validateUsername(username: string): string | null {
   return null;
 }
 
+function getFileExtension(fileName: string) {
+  const lastDotIndex = fileName.lastIndexOf(".");
+
+  if (lastDotIndex < 0) {
+    return "";
+  }
+
+  return fileName.slice(lastDotIndex).toLowerCase();
+}
+
+function detectAvatarMimeType(fileType: string, fileName: string, inputBuffer: Buffer) {
+  const normalizedFileType = fileType.trim().toLowerCase();
+
+  if (normalizedFileType === "image/jpeg" || normalizedFileType === "image/jpg") {
+    return "image/jpeg";
+  }
+
+  if (normalizedFileType === "image/png") {
+    return "image/png";
+  }
+
+  if (normalizedFileType === "image/webp") {
+    return "image/webp";
+  }
+
+  const extension = getFileExtension(fileName);
+
+  if (extension === ".jpg" || extension === ".jpeg") {
+    return "image/jpeg";
+  }
+
+  if (extension === ".png") {
+    return "image/png";
+  }
+
+  if (extension === ".webp") {
+    return "image/webp";
+  }
+
+  const isJpeg = inputBuffer.length >= 3 && inputBuffer[0] === 0xff && inputBuffer[1] === 0xd8 && inputBuffer[2] === 0xff;
+  if (isJpeg) {
+    return "image/jpeg";
+  }
+
+  const isPng =
+    inputBuffer.length >= 8 &&
+    inputBuffer[0] === 0x89 &&
+    inputBuffer[1] === 0x50 &&
+    inputBuffer[2] === 0x4e &&
+    inputBuffer[3] === 0x47 &&
+    inputBuffer[4] === 0x0d &&
+    inputBuffer[5] === 0x0a &&
+    inputBuffer[6] === 0x1a &&
+    inputBuffer[7] === 0x0a;
+  if (isPng) {
+    return "image/png";
+  }
+
+  const isWebp =
+    inputBuffer.length >= 12 &&
+    inputBuffer.subarray(0, 4).toString("ascii") === "RIFF" &&
+    inputBuffer.subarray(8, 12).toString("ascii") === "WEBP";
+  if (isWebp) {
+    return "image/webp";
+  }
+
+  return null;
+}
+
 function getErrorCode(error: unknown) {
   return typeof error === "object" && error !== null && "code" in error
     ? String((error as { code?: unknown }).code)
@@ -1059,8 +1128,6 @@ export async function onboardingComplete(
     const avatarStorageKey = getTrimmedString(body.avatar_storage_key, "avatar_storage_key", 500, false);
     const providerAvatarUrl = getTrimmedString(pickBodyValue(body, "provider_avatar_url", "providerAvatarUrl"), "provider_avatar_url", 500, false);
     const profileVisibility = pickBodyValue(body, "profile_visibility");
-    const showFollowers = pickBodyValue(body, "show_followers");
-    const showFollowing = pickBodyValue(body, "show_following");
     const acceptedTerms = pickBodyValue(body, "accepted_terms", "acceptedTerms");
     const acceptedPrivacy = pickBodyValue(body, "accepted_privacy", "acceptedPrivacy");
     const isPublic =
@@ -1081,8 +1148,6 @@ export async function onboardingComplete(
       avatarStorageKey.error ||
       providerAvatarUrl.error ||
       (profileVisibility !== undefined && profileVisibility !== "public" && profileVisibility !== "private" ? "profile_visibility must be public or private." : null) ||
-      (showFollowers !== undefined && typeof showFollowers !== "boolean" ? "show_followers must be a boolean." : null) ||
-      (showFollowing !== undefined && typeof showFollowing !== "boolean" ? "show_following must be a boolean." : null) ||
       (acceptedTerms !== true ? "accepted_terms must be true." : null) ||
       (acceptedPrivacy !== true ? "accepted_privacy must be true." : null) ||
       (body.isPublic !== undefined && typeof body.isPublic !== "boolean" ? "isPublic must be a boolean." : null);
@@ -1134,8 +1199,8 @@ export async function onboardingComplete(
         terms_version: TERMS_VERSION,
         privacy_version: PRIVACY_VERSION,
         default_gala_plan_visibility: existingAccountUser.default_gala_plan_visibility ?? "private",
-        followers_visibility: showFollowers === false ? "private" : "public",
-        following_visibility: showFollowing === false ? "private" : "public",
+        followers_visibility: isPublic ? "public" : "private",
+        following_visibility: isPublic ? "public" : "private",
         show_public_plans_on_profile: existingAccountUser.show_public_plans_on_profile ?? true,
         updated_at: now,
       })
@@ -1158,6 +1223,8 @@ export async function onboardingComplete(
           provider_avatar_url: nextProviderAvatarUrl,
           bio: getSafeBio(body.bio),
           is_public: isPublic,
+          show_followers: isPublic ? "everyone" : "only_me",
+          show_following: isPublic ? "everyone" : "only_me",
           onboarding_completed_at: now,
           updated_at: now,
         },
@@ -1254,17 +1321,6 @@ export async function profileAvatarUpload(
       };
     }
 
-    const allowedTypes = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp"]);
-
-    if (!allowedTypes.has(file.type)) {
-      return {
-        status: 400,
-        jsonBody: {
-          message: "Avatar must be a JPEG, PNG, or WebP image.",
-        },
-      };
-    }
-
     if (file.size > 5 * 1024 * 1024) {
       return {
         status: 400,
@@ -1275,10 +1331,11 @@ export async function profileAvatarUpload(
     }
 
     const inputBuffer = Buffer.from(await file.arrayBuffer());
+    const detectedAvatarMimeType = detectAvatarMimeType(file.type, typeof file.name === "string" ? file.name : "", inputBuffer);
     const isSvg = inputBuffer.subarray(0, 512).toString("utf8").toLowerCase().includes("<svg");
     const isGif = inputBuffer.length >= 6 && inputBuffer.subarray(0, 3).toString("ascii") === "GIF";
 
-    if (isSvg || isGif) {
+    if (!detectedAvatarMimeType || isSvg || isGif) {
       return {
         status: 400,
         jsonBody: {

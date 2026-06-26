@@ -397,6 +397,7 @@ async function enrichCommentsWithDisplayNames<T extends PlaceCommentRow>(
 function buildCommentTree(
   comments: Array<PlaceCommentRow & { member_display_name?: string | null; member_avatar_url?: string | null }>
 ): PlaceComment[] {
+  const commentsById = new Map(comments.map((comment) => [comment.id, comment]));
   const topLevel = comments
     .filter((comment) => !comment.parent_comment_id)
     .sort((left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime());
@@ -414,7 +415,31 @@ function buildCommentTree(
       repliesByParentId.set(parentId, replies);
     });
 
-  return topLevel.map((comment) => ({
+  const orphanPlaceholderParents = Array.from(repliesByParentId.entries())
+    .filter(([parentId]) => !commentsById.has(parentId))
+    .map(([parentId, replies]) => {
+      const firstReply = replies
+        .slice()
+        .sort((left, right) => new Date(left.created_at).getTime() - new Date(right.created_at).getTime())[0];
+
+      return {
+        id: parentId,
+        place_id: firstReply?.place_id || "",
+        user_id: "",
+        parent_comment_id: null,
+        comment: "[Deleted comment]",
+        status: "deleted" as const,
+        created_at: firstReply?.created_at || new Date(0).toISOString(),
+        updated_at: firstReply?.updated_at || firstReply?.created_at || new Date(0).toISOString(),
+        deleted_at: firstReply?.updated_at || firstReply?.created_at || new Date().toISOString(),
+        member_display_name: null,
+        member_avatar_url: null,
+      };
+    });
+
+  return [...topLevel, ...orphanPlaceholderParents]
+    .sort((left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime())
+    .map((comment) => ({
     ...comment,
     replies: (repliesByParentId.get(comment.id) || [])
       .sort((left, right) => new Date(left.created_at).getTime() - new Date(right.created_at).getTime())
@@ -422,7 +447,37 @@ function buildCommentTree(
         ...reply,
         replies: [],
       })),
-  }));
+    }));
+}
+
+function normalizeCommentForClient(
+  comment: PlaceCommentRow & {
+    member_display_name?: string | null;
+    member_avatar_url?: string | null;
+    current_user_reported?: boolean;
+  }
+): PlaceCommentRow & {
+  member_display_name?: string | null;
+  member_avatar_url?: string | null;
+  current_user_reported?: boolean;
+} {
+  if (comment.status === "hidden") {
+    return {
+      ...comment,
+      status: "deleted",
+      comment: "[Comment removed]",
+    };
+  }
+
+  if (comment.deleted_at || comment.status === "deleted") {
+    return {
+      ...comment,
+      status: "deleted",
+      comment: "[Deleted comment]",
+    };
+  }
+
+  return comment;
 }
 
 function getCommentPreview(comment: string) {
@@ -444,9 +499,7 @@ export async function placeCommentsList(
     const commentsTable = supabaseAdmin.from("place_comments") as any;
     const { data, error } = await commentsTable
       .select(COMMENT_COLUMNS)
-      .eq("place_id", placeId)
-      .eq("status", "visible")
-      .is("deleted_at", null);
+      .eq("place_id", placeId);
 
     if (error) {
       context.error("Failed to fetch place comments:", error);
@@ -481,7 +534,7 @@ export async function placeCommentsList(
 
     const comments = await enrichCommentsWithDisplayNames(
       visibleComments.map((comment) => ({
-        ...comment,
+        ...normalizeCommentForClient(comment),
         current_user_reported: reportedCommentIds.has(comment.id),
       }))
     );
@@ -821,20 +874,54 @@ export async function placeCommentsDelete(
     }
 
     const supabaseAdmin = await getSupabaseAdminClient();
-    const commentsTable = supabaseAdmin.from("place_comments") as any;
+    const { data: ownedCommentData, error: ownedCommentError } = await (supabaseAdmin.from("place_comments") as any)
+      .select(COMMENT_COLUMNS)
+      .eq("id", commentId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (ownedCommentError) {
+      context.error("Failed to load owned place comment for deletion:", ownedCommentError);
+
+      return {
+        status: 500,
+        jsonBody: {
+          message: "Failed to delete comment.",
+        },
+      };
+    }
+
+    const ownedComment = ownedCommentData as PlaceCommentRow | null;
+
+    if (!ownedComment) {
+      return {
+        status: 404,
+        jsonBody: {
+          message: "Comment not found.",
+        },
+      };
+    }
+
+    if (ownedComment.status !== "visible" || ownedComment.deleted_at) {
+      return {
+        status: 200,
+        jsonBody: {
+          message: "Comment already removed.",
+          comment: ownedComment,
+        },
+      };
+    }
+
     const deletedAt = new Date().toISOString();
-    const { data, error } = await commentsTable
+    const { data, error } = await (supabaseAdmin.from("place_comments") as any)
       .update({
-        status: "deleted",
         deleted_at: deletedAt,
         updated_at: deletedAt,
       })
       .eq("id", commentId)
-      .eq("place_id", placeId)
       .eq("user_id", user.id)
-      .eq("status", "visible")
-      .is("deleted_at", null)
-      .select(COMMENT_COLUMNS);
+      .select(COMMENT_COLUMNS)
+      .maybeSingle();
 
     if (error) {
       context.error("Failed to delete place comment:", error);
@@ -847,22 +934,11 @@ export async function placeCommentsDelete(
       };
     }
 
-    const deletedComments = (data || []) as PlaceCommentRow[];
-
-    if (deletedComments.length === 0) {
-      return {
-        status: 404,
-        jsonBody: {
-          message: "Comment not found.",
-        },
-      };
-    }
-
     return {
       status: 200,
       jsonBody: {
         message: "Comment deleted.",
-        comment: deletedComments[0],
+        comment: (data as PlaceCommentRow | null) ?? ownedComment,
       },
     };
   } catch (error) {
