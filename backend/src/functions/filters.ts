@@ -13,6 +13,13 @@ export type MetroManilaArea = {
   type: "all" | "city" | "municipality";
 };
 
+export type GoodForOption = {
+  id: string;
+  name: string;
+  description: string;
+  searchTerms: string[];
+};
+
 export const CATEGORIES: Category[] = [
   {
     id: "kainan",
@@ -58,6 +65,45 @@ export const CATEGORIES: Category[] = [
     searchTerms: ["tourist spot", "attraction", "landmark", "destination", "sightseeing"],
   },
   {
+    id: "nature",
+    name: "Nature",
+    description: "Nature parks, gardens, green escapes, and scenic outdoor spots.",
+    searchTerms: ["nature", "green space", "garden", "outdoor", "scenic"],
+  },
+  {
+    id: "activity",
+    name: "Activity",
+    description: "Hands-on things to do, active plans, and experience-based gala spots.",
+    searchTerms: ["activity", "things to do", "experience", "games", "fun activity"],
+  },
+  {
+    id: "stay",
+    name: "Stay",
+    description: "Hotels, staycations, and overnight-friendly places.",
+    searchTerms: ["stay", "hotel", "staycation", "overnight", "accommodation"],
+  },
+  {
+    id: "nightlife",
+    name: "Nightlife",
+    description: "Bars, clubs, live music spots, and late-night hangout places.",
+    searchTerms: ["bar", "club", "nightlife", "live music", "late night"],
+  },
+  {
+    id: "arcade",
+    name: "Arcade",
+    description: "Arcades, gaming lounges, and playful activity spots.",
+    searchTerms: ["arcade", "games", "gaming", "bowling", "billiards"],
+  },
+  {
+    id: "cinema",
+    name: "Cinema",
+    description: "Movie theaters and film-watching venues.",
+    searchTerms: ["cinema", "movie theater", "films", "imax", "screening"],
+  },
+];
+
+export const GOOD_FOR_OPTIONS: GoodForOption[] = [
+  {
     id: "date",
     name: "Date",
     description: "Romantic, cozy, and couple-friendly places for dates.",
@@ -87,30 +133,12 @@ export const CATEGORIES: Category[] = [
     description: "Relaxed tambayan spots for unwinding, views, and low-key hangouts.",
     searchTerms: ["chill", "tambayan", "relax", "view", "low key"],
   },
-  {
-    id: "nightlife",
-    name: "Nightlife",
-    description: "Bars, clubs, live music spots, and late-night hangout places.",
-    searchTerms: ["bar", "club", "nightlife", "live music", "late night"],
-  },
-  {
-    id: "arcade",
-    name: "Arcade",
-    description: "Arcades, gaming lounges, and playful activity spots.",
-    searchTerms: ["arcade", "games", "gaming", "bowling", "billiards"],
-  },
-  {
-    id: "cinema",
-    name: "Cinema",
-    description: "Movie theaters and film-watching venues.",
-    searchTerms: ["cinema", "movie theater", "films", "imax", "screening"],
-  },
 ];
 
 export const METRO_MANILA_AREAS: MetroManilaArea[] = [
   { id: "all", name: "All areas", type: "all" },
   { id: "caloocan", name: "Caloocan", type: "city" },
-  { id: "las-pinas", name: "Las Pinas", type: "city" },
+  { id: "las-pinas", name: "Las Piñas", type: "city" },
   { id: "makati", name: "Makati", type: "city" },
   { id: "malabon", name: "Malabon", type: "city" },
   { id: "mandaluyong", name: "Mandaluyong", type: "city" },
@@ -118,7 +146,7 @@ export const METRO_MANILA_AREAS: MetroManilaArea[] = [
   { id: "marikina", name: "Marikina", type: "city" },
   { id: "muntinlupa", name: "Muntinlupa", type: "city" },
   { id: "navotas", name: "Navotas", type: "city" },
-  { id: "paranaque", name: "Paranaque", type: "city" },
+  { id: "paranaque", name: "Parañaque", type: "city" },
   { id: "pasay", name: "Pasay", type: "city" },
   { id: "pasig", name: "Pasig", type: "city" },
   { id: "quezon-city", name: "Quezon City", type: "city" },
@@ -144,6 +172,14 @@ export function findAreaById(id: string | undefined): MetroManilaArea | null {
   return METRO_MANILA_AREAS.find((area) => area.id === id) ?? null;
 }
 
+export function findGoodForById(id: string | undefined): GoodForOption | null {
+  if (!id || id === "all") {
+    return null;
+  }
+
+  return GOOD_FOR_OPTIONS.find((option) => option.id === id) ?? null;
+}
+
 export async function filters(
   request: HttpRequest,
   context: InvocationContext
@@ -155,6 +191,7 @@ export async function filters(
     jsonBody: {
       categories: CATEGORIES,
       areas: METRO_MANILA_AREAS,
+      goodForOptions: GOOD_FOR_OPTIONS,
     },
   };
 }

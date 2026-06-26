@@ -34,6 +34,11 @@ type PublicOwnerProfileRow = Pick<
   "user_id" | "username" | "display_name" | "avatar_url" | "provider_avatar_url" | "bio"
 >;
 
+type FollowCountRow = {
+  follower_id: string;
+  following_id: string;
+};
+
 type AccountUserRow = {
   id: string;
   email: string | null;
@@ -85,7 +90,7 @@ type GalaPlanItemRow = {
   estimated_minutes: number | null;
   places?: (PlacePreviewRow & {
     address?: string | null;
-    budget_label?: string | null;
+    budget_min?: number | string | null;
     latitude?: number | string | null;
     longitude?: number | string | null;
     image_url?: string | null;
@@ -228,6 +233,18 @@ function pickBodyValue(body: Record<string, unknown>, ...keys: string[]) {
   }
 
   return undefined;
+}
+
+function canDeleteOwnedAvatarKey(userId: string, oldStorageKey: string | null | undefined, newStorageKey?: string | null) {
+  if (!oldStorageKey) {
+    return false;
+  }
+
+  if (newStorageKey && oldStorageKey === newStorageKey) {
+    return false;
+  }
+
+  return oldStorageKey.startsWith(`avatars/${userId}/`);
 }
 
 function validateBirthdate(value: unknown) {
@@ -379,6 +396,60 @@ async function getCompletedPublicProfileByUsername(username: string) {
   }) | null;
 
   return isCompletedPublicProfile(profile) ? profile : null;
+}
+
+async function getAccurateFollowCounts(userIds: string[]) {
+  const uniqueUserIds = [...new Set(userIds.filter(Boolean))];
+  const countsByUserId = new Map<string, { followers_count: number; following_count: number }>();
+
+  for (const userId of uniqueUserIds) {
+    countsByUserId.set(userId, {
+      followers_count: 0,
+      following_count: 0,
+    });
+  }
+
+  if (uniqueUserIds.length === 0) {
+    return countsByUserId;
+  }
+
+  const supabase = await getSupabaseAdminClient();
+  const [{ data: followerRows, error: followersError }, { data: followingRows, error: followingError }] = await Promise.all([
+    (supabase.from("user_follows") as any)
+      .select("following_id")
+      .in("following_id", uniqueUserIds)
+      .eq("status", "accepted"),
+    (supabase.from("user_follows") as any)
+      .select("follower_id")
+      .in("follower_id", uniqueUserIds)
+      .eq("status", "accepted"),
+  ]);
+
+  if (followersError) {
+    throw followersError;
+  }
+
+  if (followingError) {
+    throw followingError;
+  }
+
+  for (const row of (followerRows || []) as Array<Pick<FollowCountRow, "following_id">>) {
+    const current = countsByUserId.get(row.following_id);
+
+    if (current) {
+      current.followers_count += 1;
+    }
+  }
+
+  for (const row of (followingRows || []) as Array<Pick<FollowCountRow, "follower_id">>) {
+    const current = countsByUserId.get(row.follower_id);
+
+    if (current) {
+      current.following_count += 1;
+    }
+  }
+
+  return countsByUserId;
 }
 
 function mapPreviewPlace(item: GalaPlanItemRow): PlacePreviewRow | null {
@@ -668,10 +739,155 @@ export async function currentUserMe(
   try {
     const authUser = await validateJwt(request);
     const providerAvatarUrl = getMetadataString(authUser.metadata, ["avatar_url", "picture"]);
-    const [accountUser, profile] = await Promise.all([
+    const [existingAccountUser, existingProfile] = await Promise.all([
       getOrCreateAccountUser(authUser.id, authUser.email),
       getOrCreateProfile(authUser.id, providerAvatarUrl),
     ]);
+
+    if (request.method === "PATCH") {
+      const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
+
+      if (!body) {
+        return {
+          status: 400,
+          jsonBody: {
+            message: "Invalid JSON body.",
+          },
+        };
+      }
+
+      const accountUpdates: Record<string, unknown> = {};
+      const profileUpdates: {
+        display_name?: string | null;
+      } = {};
+
+      if (body.firstName !== undefined || body.first_name !== undefined) {
+        const firstName = getTrimmedString(pickBodyValue(body, "first_name", "firstName"), "first_name", 80);
+
+        if (firstName.error) {
+          return {
+            status: 400,
+            jsonBody: {
+              message: firstName.error,
+            },
+          };
+        }
+
+        accountUpdates.first_name = firstName.value;
+      }
+
+      if (body.middleName !== undefined || body.middle_name !== undefined) {
+        const middleName = getTrimmedString(pickBodyValue(body, "middle_name", "middleName"), "middle_name", 80, false);
+
+        if (middleName.error) {
+          return {
+            status: 400,
+            jsonBody: {
+              message: middleName.error,
+            },
+          };
+        }
+
+        accountUpdates.middle_name = middleName.value;
+      }
+
+      if (body.lastName !== undefined || body.last_name !== undefined) {
+        const lastName = getTrimmedString(pickBodyValue(body, "last_name", "lastName"), "last_name", 80);
+
+        if (lastName.error) {
+          return {
+            status: 400,
+            jsonBody: {
+              message: lastName.error,
+            },
+          };
+        }
+
+        accountUpdates.last_name = lastName.value;
+      }
+
+      if (body.birthdate !== undefined) {
+        const birthdate = validateBirthdate(body.birthdate);
+
+        if (birthdate.error) {
+          return {
+            status: 400,
+            jsonBody: {
+              message: birthdate.error,
+            },
+          };
+        }
+
+        accountUpdates.birthdate = birthdate.value;
+      }
+
+      if (body.displayName !== undefined || body.display_name !== undefined) {
+        const displayName = getTrimmedString(
+          pickBodyValue(body, "display_name", "displayName"),
+          "display_name",
+          DISPLAY_NAME_MAX_LENGTH
+        );
+
+        if (displayName.error) {
+          return {
+            status: 400,
+            jsonBody: {
+              message: displayName.error,
+            },
+          };
+        }
+
+        profileUpdates.display_name = displayName.value;
+      }
+
+      if (Object.keys(accountUpdates).length === 0 && Object.keys(profileUpdates).length === 0) {
+        return {
+          status: 400,
+          jsonBody: {
+            message: "At least one editable account field is required.",
+          },
+        };
+      }
+
+      let accountUser = existingAccountUser;
+      let profile = existingProfile;
+
+      if (Object.keys(accountUpdates).length > 0) {
+        const supabase = await getSupabaseAdminClient();
+        const { data: updatedAccountUser, error: accountError } = await (supabase.from("users") as any)
+          .update({
+            ...accountUpdates,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", authUser.id)
+          .select(ACCOUNT_USER_COLUMNS)
+          .single();
+
+        if (accountError) {
+          throw accountError;
+        }
+
+        accountUser = updatedAccountUser as AccountUserRow;
+      }
+
+      if (Object.keys(profileUpdates).length > 0) {
+        profile = await saveProfile(authUser.id, profileUpdates);
+      }
+
+      return {
+        status: 200,
+        jsonBody: {
+          user: mapAccountUser(accountUser),
+          profile: mapPublicProfile(profile),
+          onboarding: {
+            completed: Boolean(profile.onboarding_completed_at),
+          },
+        },
+      };
+    }
+
+    const accountUser = existingAccountUser;
+    const profile = existingProfile;
     const completed = Boolean(profile.onboarding_completed_at);
 
     return {
@@ -1099,7 +1315,7 @@ export async function profileAvatarUpload(
       throw updateError;
     }
 
-    if (oldStorageKey && oldStorageKey !== storageKey) {
+    if (canDeleteOwnedAvatarKey(authUser.id, oldStorageKey, storageKey)) {
       await deleteR2Object(oldStorageKey).catch((cleanupError) => {
         context.error("Failed to delete replaced avatar object:", cleanupError);
       });
@@ -1344,7 +1560,7 @@ export async function profileSearch(
     const supabase = await getSupabaseAdminClient();
     const user = await getOptionalAuthenticatedUser(request);
     const { data, error } = await (supabase.from("profiles") as any)
-      .select("user_id, username, display_name, avatar_url, provider_avatar_url, bio")
+      .select("user_id, username, display_name, avatar_url, provider_avatar_url, bio, is_public, followers_count, following_count")
       .eq("is_public", true)
       .not("username", "is", null)
       .not("onboarding_completed_at", "is", null)
@@ -1360,7 +1576,7 @@ export async function profileSearch(
 
     if (user?.id && !results.some((profile) => profile.user_id === user.id)) {
       const { data: ownProfile, error: ownProfileError } = await (supabase.from("profiles") as any)
-        .select("user_id, username, display_name, avatar_url, provider_avatar_url, bio")
+        .select("user_id, username, display_name, avatar_url, provider_avatar_url, bio, is_public, followers_count, following_count")
         .eq("user_id", user.id)
         .not("username", "is", null)
         .not("onboarding_completed_at", "is", null)
@@ -1380,10 +1596,22 @@ export async function profileSearch(
       String(firstProfile.username || "").localeCompare(String(secondProfile.username || ""))
     );
 
+    const accurateCountsByUserId = await getAccurateFollowCounts(results.map((profile) => profile.user_id));
+    const hydratedResults = results.slice(0, 20).map((profile) => {
+      const accurateCounts = accurateCountsByUserId.get(profile.user_id);
+
+      return {
+        ...profile,
+        is_public: true,
+        followers_count: accurateCounts?.followers_count ?? 0,
+        following_count: accurateCounts?.following_count ?? 0,
+      };
+    });
+
     return {
       status: 200,
       jsonBody: {
-        results: results.slice(0, 20),
+        results: hydratedResults,
       },
     };
   } catch (error) {
@@ -1393,6 +1621,66 @@ export async function profileSearch(
       status: 500,
       jsonBody: {
         message: "Failed to search profiles.",
+      },
+    };
+  }
+}
+
+export async function profileSuggestions(
+  request: HttpRequest,
+  context: InvocationContext
+): Promise<HttpResponseInit> {
+  try {
+    const supabase = await getSupabaseAdminClient();
+    const user = await getOptionalAuthenticatedUser(request);
+    let query = (supabase.from("profiles") as any)
+      .select("user_id, username, display_name, avatar_url, provider_avatar_url, bio, is_public, followers_count, following_count, created_at")
+      .eq("is_public", true)
+      .not("username", "is", null)
+      .not("onboarding_completed_at", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(12);
+
+    if (user?.id) {
+      query = query.neq("user_id", user.id);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      throw error;
+    }
+
+    const suggestions = (data || []) as Array<
+      Pick<
+        ProfileRow,
+        "user_id" | "username" | "display_name" | "avatar_url" | "provider_avatar_url" | "bio" | "created_at"
+      >
+    >;
+    const accurateCountsByUserId = await getAccurateFollowCounts(suggestions.map((profile) => profile.user_id));
+
+    return {
+      status: 200,
+      jsonBody: {
+        suggestions: suggestions.map((profile) => {
+          const accurateCounts = accurateCountsByUserId.get(profile.user_id);
+
+          return {
+            ...profile,
+            is_public: true,
+            followers_count: accurateCounts?.followers_count ?? 0,
+            following_count: accurateCounts?.following_count ?? 0,
+          };
+        }),
+      },
+    };
+  } catch (error) {
+    context.error("Profile suggestions failed:", error);
+
+    return {
+      status: 500,
+      jsonBody: {
+        message: "Failed to load suggested users.",
       },
     };
   }
@@ -1584,13 +1872,11 @@ export async function publicGalaPlan(
       };
     }
 
-    const { data: itemsData, error: itemsError } = await (supabase.from("gala_plan_items") as any)
-      .select(
-        "id, plan_id, place_id, day_number, sort_order, time_label, notes, estimated_minutes, places(id, name, slug, category, city, address, budget_label, latitude, longitude)"
-      )
-      .eq("plan_id", plan.id)
-      .order("day_number", { ascending: true })
-      .order("sort_order", { ascending: true });
+      const { data: itemsData, error: itemsError } = await (supabase.from("gala_plan_items") as any)
+        .select("id, plan_id, place_id, day_number, sort_order, time_label, notes, estimated_minutes, places(id, name, slug, category, city, address, budget_min, latitude, longitude)")
+        .eq("plan_id", plan.id)
+        .order("day_number", { ascending: true })
+        .order("sort_order", { ascending: true });
 
     if (itemsError) {
       throw itemsError;
@@ -1631,7 +1917,7 @@ export async function publicGalaPlan(
                 category: place?.category ?? null,
                 city: place?.city ?? null,
                 address: place?.address ?? null,
-                budget_label: place?.budget_label ?? null,
+                budget_min: toNullableNumber(place?.budget_min),
                 latitude: toNullableNumber(place?.latitude),
                 longitude: toNullableNumber(place?.longitude),
                 ...(place?.image_url !== undefined ? { image_url: place.image_url } : {}),
@@ -1661,7 +1947,7 @@ app.http("profileMe", {
 });
 
 app.http("currentUserMe", {
-  methods: ["GET"],
+  methods: ["GET", "PATCH"],
   authLevel: "anonymous",
   route: "me",
   handler: currentUserMe,
@@ -1721,6 +2007,13 @@ app.http("profileSearch", {
   authLevel: "anonymous",
   route: "profiles/search",
   handler: profileSearch,
+});
+
+app.http("profileSuggestions", {
+  methods: ["GET"],
+  authLevel: "anonymous",
+  route: "profiles/suggestions",
+  handler: profileSuggestions,
 });
 
 app.http("publicProfile", {

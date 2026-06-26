@@ -1,6 +1,34 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
+import { findPlaceDetailByIdOrSlug } from "../data/placeDetails";
 import { AuthenticatedUser, validateJwt } from "../utils/auth";
+
+type HistoryRow = {
+  id: string;
+  user_id: string;
+  type: string;
+  query: string | null;
+  place_id: string | null;
+  created_at: string;
+};
+
+type HistoryPlace = {
+  id: string;
+  slug: string | null;
+  name: string | null;
+  category?: string | null;
+  address: string | null;
+  city: string | null;
+  area: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  google_maps_url: string | null;
+  description: string | null;
+  budget_label?: string | null;
+  budget_min: number | null;
+  photo_url?: string | null;
+  photos: string[] | null;
+};
 
 function unauthorized(message: string): HttpResponseInit {
   return {
@@ -25,6 +53,102 @@ async function getAuthenticatedUser(request: HttpRequest): Promise<Authenticated
   }
 }
 
+function toSupabaseErrorDetails(error: unknown) {
+  const supabaseError = error as {
+    code?: string;
+    message?: string;
+    details?: string;
+    hint?: string;
+  } | null;
+
+  return {
+    code: supabaseError?.code ?? null,
+    message: supabaseError?.message ?? null,
+    details: supabaseError?.details ?? null,
+    hint: supabaseError?.hint ?? null,
+  };
+}
+
+async function getUserHistory(userId: string, context: InvocationContext): Promise<{
+  history: Array<HistoryRow & { place: HistoryPlace | null }>;
+  error: unknown;
+}> {
+  const supabaseAdmin = await getSupabaseAdminClient();
+  const historyTable = supabaseAdmin.from("history") as any;
+
+  const { data: historyData, error: historyError } = await historyTable
+    .select("id, user_id, type, query, place_id, created_at")
+    .eq("user_id", userId)
+    .eq("type", "place_view")
+    .order("created_at", { ascending: false });
+
+  if (historyError) {
+    context.error("Supabase history query failed.", toSupabaseErrorDetails(historyError));
+    return {
+      history: [],
+      error: historyError,
+    };
+  }
+
+  const historyRows = (historyData || []) as HistoryRow[];
+
+  if (historyRows.length === 0) {
+    return {
+      history: [],
+      error: null,
+    };
+  }
+
+  const uniquePlaceIds = Array.from(
+    new Set(
+      historyRows
+        .map((item) => item.place_id)
+        .filter((placeId): placeId is string => Boolean(placeId))
+    )
+  );
+
+  const placeEntries = await Promise.all(
+    uniquePlaceIds.map(async (placeId) => {
+      const detail = await findPlaceDetailByIdOrSlug(placeId);
+
+      if (!detail) {
+        return [placeId, null] as const;
+      }
+
+      return [
+        placeId,
+        {
+          id: detail.id,
+          slug: detail.slug,
+          name: detail.name,
+          category: detail.category,
+          address: detail.address ?? null,
+          city: detail.city ?? null,
+          area: detail.area ?? null,
+          latitude: detail.latitude ?? null,
+          longitude: detail.longitude ?? null,
+          google_maps_url: detail.google_maps_url ?? null,
+          description: detail.description ?? null,
+          budget_label: detail.budget_notes ?? null,
+          budget_min: null,
+          photo_url: detail.imageUrl || null,
+          photos: detail.curatedImageUrls ?? [],
+        } satisfies HistoryPlace,
+      ] as const;
+    })
+  );
+
+  const placeMap = new Map(placeEntries);
+
+  return {
+    history: historyRows.map((item) => ({
+      ...item,
+      place: item.place_id ? placeMap.get(item.place_id) || null : null,
+    })),
+    error: null,
+  };
+}
+
 export async function getHistory(
   request: HttpRequest,
   context: InvocationContext
@@ -36,45 +160,17 @@ export async function getHistory(
       return unauthorized("Missing or invalid Authorization header.");
     }
 
-    const supabaseAdmin = await getSupabaseAdminClient();
-    const historyTable = supabaseAdmin.from("history") as any;
-
-    const { data, error } = await historyTable
-      .select(
-        `
-        id,
-        type,
-        query,
-        place_id,
-        created_at,
-        place:places (
-          id,
-          slug,
-          name,
-          category,
-          address,
-          area,
-          city,
-          google_maps_url,
-          latitude,
-          longitude,
-          description,
-          budget_label
-        )
-      `
-      )
-      .eq("user_id", user.id)
-      .eq("type", "place_view")
-      .order("created_at", { ascending: false });
+    const { history, error } = await getUserHistory(user.id, context);
 
     if (error) {
-      context.error("Failed to fetch history:", error);
+      const historyError = toSupabaseErrorDetails(error);
+      context.error("Failed to fetch history:", historyError);
 
       return {
         status: 500,
         jsonBody: {
           message: "Failed to fetch history.",
-          error: error.message,
+          error: historyError?.message,
         },
       };
     }
@@ -82,7 +178,7 @@ export async function getHistory(
     return {
       status: 200,
       jsonBody: {
-        history: data ?? [],
+        history,
       },
     };
   } catch (error) {

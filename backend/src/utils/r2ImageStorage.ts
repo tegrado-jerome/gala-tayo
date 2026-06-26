@@ -132,18 +132,31 @@ export async function deleteR2Object(storageKey: string | null | undefined) {
   }
 }
 
-export async function convertImageToWebp(input: Buffer, options?: { resizeAvatar?: boolean }) {
-  let sharp: any;
-
+function loadSharp() {
   try {
-    sharp = require("sharp");
+    return require("sharp");
   } catch {
     throw new Error("Image conversion is not configured. Install the backend sharp dependency.");
   }
+}
+
+export async function detectImageFormat(input: Buffer) {
+  const sharp = loadSharp();
+  const metadata = await sharp(input, {
+    animated: false,
+    failOn: "error",
+    limitInputPixels: 25_000_000,
+  }).metadata();
+
+  return metadata.format ?? null;
+}
+
+export async function convertImageToWebp(input: Buffer, options?: { resizeAvatar?: boolean }) {
+  const sharp = loadSharp();
 
   const pipeline = sharp(input, {
     animated: false,
-    failOn: "warning",
+    failOn: "error",
     limitInputPixels: 25_000_000,
   }).rotate();
 

@@ -21,13 +21,20 @@ import {
   METRO_MANILA_AREAS,
   findAreaById,
   findCategoryById,
+  findGoodForById,
 } from "./filters";
 
 type SearchRequestBody = {
   query?: unknown;
   category?: unknown;
   area?: unknown;
+  city?: unknown;
+  good_for?: unknown;
   budget?: unknown;
+  indoor_outdoor?: unknown;
+  weather_fit?: unknown;
+  page?: unknown;
+  limit?: unknown;
   filters?: unknown;
   exploreAll?: unknown;
   userLocation?: unknown;
@@ -69,6 +76,8 @@ type SearchPlaceResult = {
   latitude: number | null;
   longitude: number | null;
   imageUrl: string | null;
+  thumbnailUrl?: string | null;
+  imageAlt?: string | null;
   curatedImageUrls: string[];
   address: string | null;
   budget: string | null;
@@ -111,11 +120,23 @@ type NearbySearchContext = {
   radiusKm: number;
 };
 
+type HistoryPlaceViewRow = {
+  place_id?: unknown;
+  user_id?: unknown;
+  created_at?: unknown;
+};
+
+type TrendingSignal = {
+  uniqueViewerCount: number;
+  latestViewedAt: number;
+};
+
 type SearchContext = {
   searchId: string;
   query: string;
   category: string | null;
   area: string | null;
+  good_for: string | null;
   budget: string | null;
   language: "taglish";
   userType: "guest" | "registered";
@@ -139,23 +160,102 @@ const VALID_BUDGET_VALUES: BudgetValue[] = [
   "2000-plus",
 ];
 
+const DEFAULT_SEARCH_PAGE = 1;
+const STRICT_SEARCH_LIMIT = 10;
+const TRENDING_LOOKBACK_DAYS = 14;
+const TRENDING_HISTORY_LIMIT = 5000;
+
 const CATEGORY_TO_DB_CATEGORIES: Record<string, string[]> = {
   kainan: ["Kainan", "Restaurant", "Food"],
   cafe: ["Cafe"],
   mall: ["Mall"],
   parke: ["Parke", "Park"],
+  nature: ["Nature", "Parke", "Park", "Garden"],
   museum: ["Museum"],
   heritage: ["Heritage"],
   tourist: ["Tourist", "Heritage", "Museum", "Hangout"],
-  date: ["Date", "Hangout", "Mall", "Cafe"],
-  barkada: ["Hangout", "Mall"],
-  family: ["Mall", "Museum", "Heritage", "Hangout"],
-  study: ["Study", "Cafe", "Museum"],
-  chill: ["Cafe", "Hangout"],
+  activity: ["Activity", "Arcade", "Cinema", "Games", "Hangout"],
+  stay: ["Stay", "Hotel", "Accommodation"],
   nightlife: ["Nightlife", "Bar"],
-  arcade: ["Arcade", "Games", "Gaming"],
   cinema: ["Cinema", "Movie Theater"],
 };
+
+const GOOD_FOR_TERMS: Record<string, string[]> = {
+  date: ["date", "dates", "romantic", "couple", "anniversary"],
+  barkada: ["barkada", "barkadas", "friends", "group", "hangout"],
+  family: ["family", "kids", "child friendly", "all ages"],
+  study: ["study", "student", "quiet", "work friendly", "wifi"],
+  chill: ["chill", "relax", "tambayan", "low key"],
+};
+
+const QUERY_INTENT_SIGNALS = [
+  {
+    id: "rain-friendly",
+    queryPhrases: ["rain", "rainy", "ulan"],
+    rowPhrases: ["rain", "rainy", "ulan", "indoor", "covered", "aircon", "air conditioned"],
+  },
+  {
+    id: "commute-friendly",
+    queryPhrases: ["commute", "commuter", "sakay", "lrt", "mrt", "jeep", "tricycle", "bus"],
+    rowPhrases: [
+      "commute",
+      "commuter",
+      "ride hailing",
+      "lrt",
+      "mrt",
+      "jeep",
+      "tricycle",
+      "bus",
+      "walkable",
+      "accessible",
+    ],
+  },
+  {
+    id: "drive-friendly",
+    queryPhrases: ["parking", "car", "drive", "driving", "roadtrip"],
+    rowPhrases: ["parking", "car", "drive", "parking available"],
+  },
+  {
+    id: "study-work",
+    queryPhrases: ["study", "work", "wifi", "laptop", "focus", "productive"],
+    rowPhrases: ["study", "work", "wifi", "laptop", "focus", "productive", "quiet"],
+  },
+  {
+    id: "quiet-chill",
+    queryPhrases: ["quiet", "peaceful", "calm", "tahimik", "relax", "chill"],
+    rowPhrases: ["quiet", "peaceful", "calm", "relax", "chill", "not crowded", "less crowded"],
+  },
+  {
+    id: "date",
+    queryPhrases: ["date", "romantic", "couple", "anniversary", "jowa"],
+    rowPhrases: ["date", "romantic", "couple", "anniversary"],
+  },
+  {
+    id: "family",
+    queryPhrases: ["family", "kids", "child", "children", "pamilya"],
+    rowPhrases: ["family", "kids", "child", "children", "all ages", "family friendly", "kid friendly"],
+  },
+  {
+    id: "group",
+    queryPhrases: ["barkada", "friends", "group", "tropa", "hangout"],
+    rowPhrases: ["barkada", "friends", "group", "hangout"],
+  },
+  {
+    id: "night",
+    queryPhrases: ["night", "late night", "gabi", "after work"],
+    rowPhrases: ["night", "late night", "gabi", "after work"],
+  },
+  {
+    id: "indoor",
+    queryPhrases: ["indoor", "aircon", "air conditioned", "covered"],
+    rowPhrases: ["indoor", "aircon", "air conditioned", "covered"],
+  },
+  {
+    id: "outdoor",
+    queryPhrases: ["outdoor", "outside", "fresh air", "open air"],
+    rowPhrases: ["outdoor", "outside", "fresh air", "open air", "park", "garden"],
+  },
+] as const;
 
 type SearchUserContext =
   | {
@@ -213,7 +313,14 @@ function getFiltersPayload(body: SearchRequestBody): Record<string, unknown> {
 function getFilterValue(
   body: SearchRequestBody,
   filters: Record<string, unknown>,
-  key: "category" | "area" | "budget"
+  key:
+    | "category"
+    | "area"
+    | "city"
+    | "good_for"
+    | "budget"
+    | "indoor_outdoor"
+    | "weather_fit"
 ): unknown {
   if (Object.prototype.hasOwnProperty.call(filters, key)) {
     return filters[key];
@@ -248,6 +355,29 @@ function getFiniteNumber(value: unknown): number | null {
   }
 
   return null;
+}
+
+function getPositiveInteger(
+  value: unknown,
+  fallbackValue: number,
+  {
+    min = 1,
+    max = Number.MAX_SAFE_INTEGER,
+  }: { min?: number; max?: number } = {}
+): number {
+  const numericValue = getFiniteNumber(value);
+
+  if (numericValue === null) {
+    return fallbackValue;
+  }
+
+  const roundedValue = Math.floor(numericValue);
+
+  if (!Number.isFinite(roundedValue)) {
+    return fallbackValue;
+  }
+
+  return Math.min(Math.max(roundedValue, min), max);
 }
 
 function isValidLatitude(value: number): boolean {
@@ -324,6 +454,85 @@ function getRowDistanceKm(row: PlaceRow, userLocation: UserLocation): number | n
   return getDistanceKm(userLocation, { latitude, longitude });
 }
 
+function getTrendingCutoffIso(days: number): string {
+  return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+}
+
+function getTrendingSignalSortValue(signal: TrendingSignal | undefined): number {
+  if (!signal) {
+    return -1;
+  }
+
+  return signal.uniqueViewerCount * 1_000_000_000_000 + signal.latestViewedAt;
+}
+
+async function getTrendingSignalsByPlaceId(): Promise<Map<string, TrendingSignal>> {
+  const supabase = await getSupabaseAdminClient();
+  const historyTable = supabase.from("history") as ReturnType<typeof supabase.from> & {
+    select: (columns: string) => {
+      eq: (column: string, value: string) => {
+        gte: (column: string, value: string) => {
+          order: (
+            column: string,
+            options?: { ascending?: boolean; nullsFirst?: boolean }
+          ) => {
+            limit: (
+              count: number
+            ) => Promise<{ data: HistoryPlaceViewRow[] | null; error: unknown }>;
+          };
+        };
+      };
+    };
+  };
+
+  const cutoffIso = getTrendingCutoffIso(TRENDING_LOOKBACK_DAYS);
+  const { data, error } = await historyTable
+    .select("place_id,user_id,created_at")
+    .eq("type", "place_view")
+    .gte("created_at", cutoffIso)
+    .order("created_at", {
+      ascending: false,
+      nullsFirst: false,
+    })
+    .limit(TRENDING_HISTORY_LIMIT);
+
+  if (error) {
+    throw new Error("Failed to query trending place views.");
+  }
+
+  const viewersByPlaceId = new Map<string, Set<string>>();
+  const latestViewedAtByPlaceId = new Map<string, number>();
+
+  for (const row of data ?? []) {
+    const placeId = typeof row.place_id === "string" ? row.place_id.trim() : "";
+    const userId = typeof row.user_id === "string" ? row.user_id.trim() : "";
+    const createdAt =
+      typeof row.created_at === "string" ? Date.parse(row.created_at) : Number.NaN;
+
+    if (!placeId || !userId || Number.isNaN(createdAt)) {
+      continue;
+    }
+
+    const viewers = viewersByPlaceId.get(placeId) ?? new Set<string>();
+    viewers.add(userId);
+    viewersByPlaceId.set(placeId, viewers);
+
+    const previousLatestViewedAt = latestViewedAtByPlaceId.get(placeId) ?? 0;
+    latestViewedAtByPlaceId.set(placeId, Math.max(previousLatestViewedAt, createdAt));
+  }
+
+  const signalsByPlaceId = new Map<string, TrendingSignal>();
+
+  for (const [placeId, viewers] of viewersByPlaceId.entries()) {
+    signalsByPlaceId.set(placeId, {
+      uniqueViewerCount: viewers.size,
+      latestViewedAt: latestViewedAtByPlaceId.get(placeId) ?? 0,
+    });
+  }
+
+  return signalsByPlaceId;
+}
+
 function roundDistanceKm(distanceKm: number | null): number | null {
   if (distanceKm === null) {
     return null;
@@ -388,6 +597,142 @@ function normalizeComparableText(value: unknown): string {
   }
 
   return "";
+}
+
+function getRowIdentityText(row: PlaceRow): string {
+  return normalizeComparableText([
+    getStringField(row, [
+      "name",
+      "normalized_name",
+      "slug",
+    ]),
+    getStringArrayField(row, ["search_aliases"]),
+  ]);
+}
+
+function getRowDiscoveryText(row: PlaceRow): string {
+  return normalizeComparableText([
+    getStringField(row, [
+      "category",
+      "city",
+      "area",
+      "address",
+      "searchable_text",
+    ]),
+    getStringArrayField(row, ["search_keywords"]),
+    row.categories,
+    getLinkedCategoryIds(row),
+    getLinkedCategoryNames(row),
+  ]);
+}
+
+function getRowIntentText(row: PlaceRow): string {
+  return normalizeComparableText([
+    getStringField(row, [
+      "best_time_to_visit",
+      "visit_duration",
+      "crowd_level",
+      "indoor_outdoor",
+      "weather_fit",
+      "commute_access",
+    ]),
+    getStringArrayField(row, ["good_for"]),
+  ]);
+}
+
+function getRowTagText(row: PlaceRow): string {
+  return normalizeComparableText(
+    getLinkedTags(row).flatMap((tag) => [tag.id, tag.name, ...tag.searchTerms])
+  );
+}
+
+function getRowPromptText(row: PlaceRow): string {
+  return normalizeComparableText([
+    getRowIdentityText(row),
+    getRowDiscoveryText(row),
+    getRowIntentText(row),
+    getRowSupportingText(row),
+    getRowLowPriorityText(row),
+    getRowTagText(row),
+  ]);
+}
+
+function getRowSupportingText(row: PlaceRow): string {
+  return normalizeComparableText([
+    getStringField(row, ["description", "nearby_context"]),
+  ]);
+}
+
+function getRowLowPriorityText(row: PlaceRow): string {
+  return normalizeComparableText([
+    getStringField(row, ["parking_info", "visit_duration"]),
+    getStringArrayField(row, ["not_ideal_for"]),
+  ]);
+}
+
+function countMatchedTerms(text: string, terms: string[]): number {
+  if (!text || terms.length === 0) {
+    return 0;
+  }
+
+  return terms.filter((term) => includesNormalizedPhrase(text, term)).length;
+}
+
+function queryMentionsAnyPhrase(text: string, phrases: readonly string[]): boolean {
+  if (!text || phrases.length === 0) {
+    return false;
+  }
+
+  return phrases.some((phrase) => includesNormalizedPhrase(text, phrase));
+}
+
+function scoreNotIdealPenalty(row: PlaceRow, normalizedQuery: string): number {
+  if (!normalizedQuery) {
+    return 0;
+  }
+
+  const notIdealFor = getStringArrayField(row, ["not_ideal_for"]);
+
+  if (notIdealFor.length === 0) {
+    return 0;
+  }
+
+  const matchingPhrases = notIdealFor.filter((phrase) =>
+    queryMentionsAnyPhrase(normalizedQuery, [
+      phrase,
+      ...getSearchTerms(phrase),
+    ])
+  );
+
+  return matchingPhrases.length > 0 ? Math.min(matchingPhrases.length * 8, 16) : 0;
+}
+
+function getStructuredLocationText(row: PlaceRow): string {
+  return normalizeComparableText(getStringField(row, ["city", "area"]));
+}
+
+function getStructuredCategoryText(row: PlaceRow): string {
+  return normalizeComparableText([
+    getStringField(row, ["category"]),
+    row.categories,
+    getLinkedCategoryIds(row),
+    getLinkedCategoryNames(row),
+  ]);
+}
+
+function getStructuredGoodForText(row: PlaceRow): string {
+  return normalizeComparableText([
+    getStringArrayField(row, ["good_for", "search_keywords"]),
+    getStringField(row, ["searchable_text"]),
+  ]);
+}
+
+function getIndoorOutdoorText(row: PlaceRow): string {
+  return normalizeComparableText(getStringField(row, ["indoor_outdoor"]));
+}
+
+function getWeatherFitText(row: PlaceRow): string {
+  return normalizeComparableText(getStringField(row, ["weather_fit"]));
 }
 
 function includesNormalizedPhrase(text: string, phrase: string): boolean {
@@ -558,18 +903,12 @@ function rowMatchesCategory(row: PlaceRow, categoryIds: string[]): boolean {
   }
 
   const linkedCategoryIds = getLinkedCategoryIds(row);
-  const categoryText = normalizeComparableText([
-    getStringField(row, ["category"]),
-    row.categories,
-    linkedCategoryIds,
-    getLinkedCategoryNames(row),
-    getLinkedCategorySearchTerms(row),
-  ]);
+  const categoryText = getStructuredCategoryText(row);
 
   return selectedCategoryIds.some((categoryId) =>
     linkedCategoryIds.includes(categoryId) ||
-    getMappedDbCategories(categoryId).some((category) =>
-      categoryText.includes(normalizeComparableText(category))
+    [categoryId, ...getMappedDbCategories(categoryId)].some((category) =>
+      includesNormalizedPhrase(categoryText, category)
     )
   );
 }
@@ -581,9 +920,7 @@ function rowMatchesArea(row: PlaceRow, areaIds: string[]): boolean {
     return true;
   }
 
-  const areaText = normalizeComparableText([
-    getStringField(row, ["city", "area", "address", "location"]),
-  ]);
+  const areaText = getStructuredLocationText(row);
 
   return selectedAreaIds.some((areaId) => {
     const selectedArea = findAreaById(areaId);
@@ -595,8 +932,63 @@ function rowMatchesArea(row: PlaceRow, areaIds: string[]): boolean {
   });
 }
 
+function rowMatchesGoodFor(row: PlaceRow, goodForIds: string[]): boolean {
+  const selectedGoodForIds = goodForIds.filter((goodForId) => goodForId !== "all");
+
+  if (selectedGoodForIds.length === 0) {
+    return true;
+  }
+
+  const goodForText = getStructuredGoodForText(row);
+
+  return selectedGoodForIds.some((goodForId) => {
+    const terms = [goodForId, ...(GOOD_FOR_TERMS[goodForId] ?? [])];
+    return terms.some((term) => includesNormalizedPhrase(goodForText, term));
+  });
+}
+
+function rowMatchesIndoorOutdoor(row: PlaceRow, filterValue: string | null): boolean {
+  if (!filterValue) {
+    return true;
+  }
+
+  return includesNormalizedPhrase(getIndoorOutdoorText(row), filterValue);
+}
+
+function rowMatchesWeatherFit(row: PlaceRow, filterValue: string | null): boolean {
+  if (!filterValue) {
+    return true;
+  }
+
+  return includesNormalizedPhrase(getWeatherFitText(row), filterValue);
+}
+
+function inferGoodForIdsFromQuery(normalizedQuery: string): string[] {
+  if (!normalizedQuery) {
+    return [];
+  }
+
+  return Object.entries(GOOD_FOR_TERMS)
+    .filter(([goodForId, terms]) =>
+      [goodForId, ...terms].some((term) =>
+        includesNormalizedPhrase(normalizedQuery, term)
+      )
+    )
+    .map(([goodForId]) => goodForId);
+}
+
 function getPromptTerms(normalizedQuery: string): string[] {
   return getSearchTerms(normalizedQuery).filter((term) => !/^gm\d+$/i.test(term));
+}
+
+function getMatchedQueryIntentSignals(normalizedQuery: string): (typeof QUERY_INTENT_SIGNALS)[number][] {
+  if (!normalizedQuery) {
+    return [];
+  }
+
+  return QUERY_INTENT_SIGNALS.filter((signal) =>
+    queryMentionsAnyPhrase(normalizedQuery, [...signal.queryPhrases, ...signal.rowPhrases])
+  );
 }
 
 function rowMatchesPrompt(row: PlaceRow, normalizedQuery: string): boolean {
@@ -610,16 +1002,16 @@ function rowMatchesPrompt(row: PlaceRow, normalizedQuery: string): boolean {
     return false;
   }
 
-  const searchableText = normalizeComparableText([
-    getStringField(row, ["name", "category", "city", "area", "address", "description"]),
-    row.categories,
-    getLinkedCategoryIds(row),
-    getLinkedCategoryNames(row),
-    getLinkedCategorySearchTerms(row),
-    getLinkedTags(row).flatMap((tag) => [tag.id, tag.name, ...tag.searchTerms]),
-  ]);
+  const promptText = getRowPromptText(row);
+  const matchedSignals = getMatchedQueryIntentSignals(normalizedQuery);
 
-  return promptTerms.some((term) => searchableText.includes(term));
+  if (promptTerms.some((term) => includesNormalizedPhrase(promptText, term))) {
+    return true;
+  }
+
+  return matchedSignals.some((signal) =>
+    queryMentionsAnyPhrase(promptText, signal.rowPhrases)
+  );
 }
 
 function scoreLocationMatch(row: PlaceRow, areaIds: string[]): number {
@@ -678,6 +1070,16 @@ function scoreCategoryMatch(row: PlaceRow, categoryIds: string[]): number {
   }
 
   return bestScore;
+}
+
+function scoreGoodForMatch(row: PlaceRow, goodForIds: string[]): number {
+  const selectedGoodForIds = goodForIds.filter((goodForId) => goodForId !== "all");
+
+  if (selectedGoodForIds.length === 0) {
+    return 0;
+  }
+
+  return rowMatchesGoodFor(row, selectedGoodForIds) ? 26 : 0;
 }
 
 function getMatchedCategories(
@@ -760,6 +1162,108 @@ function scoreTagMatch(row: PlaceRow, normalizedQuery: string): number {
   return Math.min(totalScore, 25);
 }
 
+function scoreIdentityMatch(row: PlaceRow, normalizedQuery: string): number {
+  if (!normalizedQuery) {
+    return 0;
+  }
+
+  const promptTerms = getPromptTerms(normalizedQuery);
+
+  if (promptTerms.length === 0) {
+    return 0;
+  }
+
+  const identityText = getRowIdentityText(row);
+  const exactIdentityQuery = includesNormalizedPhrase(identityText, normalizedQuery);
+  const identityMatches = countMatchedTerms(identityText, promptTerms);
+
+  let score = 0;
+
+  if (exactIdentityQuery) {
+    score += 28;
+  }
+
+  score += Math.min(identityMatches * 9, 27);
+
+  return Math.min(score, 55);
+}
+
+function scoreDiscoveryMatch(row: PlaceRow, normalizedQuery: string): number {
+  if (!normalizedQuery) {
+    return 0;
+  }
+
+  const promptTerms = getPromptTerms(normalizedQuery);
+
+  if (promptTerms.length === 0) {
+    return 0;
+  }
+
+  const discoveryText = getRowDiscoveryText(row);
+  const discoveryMatches = countMatchedTerms(discoveryText, promptTerms);
+
+  return Math.min(discoveryMatches * 6, 34);
+}
+
+function scoreIntentFieldMatch(
+  row: PlaceRow,
+  normalizedQuery: string,
+  {
+    selectedIndoorOutdoor,
+    selectedWeatherFit,
+  }: {
+    selectedIndoorOutdoor: string | null;
+    selectedWeatherFit: string | null;
+  }
+): number {
+  const promptTerms = getPromptTerms(normalizedQuery);
+  const intentText = getRowIntentText(row);
+  const promptText = getRowPromptText(row);
+  const intentMatches = countMatchedTerms(intentText, promptTerms);
+  const matchedSignals = getMatchedQueryIntentSignals(normalizedQuery);
+
+  let score = Math.min(intentMatches * 5, 25);
+
+  if (
+    queryMentionsAnyPhrase(normalizedQuery, ["rain", "rainy", "ulan"]) &&
+    queryMentionsAnyPhrase(intentText, ["rain", "rainy", "ulan"])
+  ) {
+    score += 8;
+  }
+
+  if (
+    queryMentionsAnyPhrase(normalizedQuery, ["commute", "commuter", "sakay", "lrt", "mrt", "jeep", "tricycle"]) &&
+    queryMentionsAnyPhrase(intentText, ["commute", "commuter", "ride hailing", "lrt", "mrt", "jeep", "tricycle"])
+  ) {
+    score += 8;
+  }
+
+  if (
+    queryMentionsAnyPhrase(normalizedQuery, ["parking", "car", "drive", "driving"]) &&
+    queryMentionsAnyPhrase(getRowLowPriorityText(row), ["parking", "car", "drive"])
+  ) {
+    score += 2;
+  }
+
+  if (selectedIndoorOutdoor && rowMatchesIndoorOutdoor(row, selectedIndoorOutdoor)) {
+    score += 18;
+  }
+
+  if (selectedWeatherFit && rowMatchesWeatherFit(row, selectedWeatherFit)) {
+    score += 18;
+  }
+
+  if (matchedSignals.length > 0) {
+    const signalMatches = matchedSignals.filter((signal) =>
+      queryMentionsAnyPhrase(promptText, signal.rowPhrases)
+    ).length;
+
+    score += Math.min(signalMatches * 6, 18);
+  }
+
+  return Math.min(score, 45);
+}
+
 function getMatchedTags(row: PlaceRow, normalizedQuery: string): SearchTagMetadata[] {
   const matchedTags = getLinkedTags(row)
     .filter((tag) => {
@@ -804,6 +1308,23 @@ function getBudgetRangeForFilter(budget: BudgetValue): { min: number; max: numbe
       return { min: 2000, max: Number.POSITIVE_INFINITY };
     default:
       return null;
+  }
+}
+
+function getBudgetLabelTermsForFilter(budget: BudgetValue): string[] {
+  switch (budget) {
+    case "free":
+      return ["free", "libre", "walang entrance"];
+    case "under-500":
+      return ["under 500", "below 500", "under ₱500", "under php 500"];
+    case "500-1000":
+      return ["500 1000", "500 to 1000", "₱500 ₱1 000", "php 500 php 1000"];
+    case "1000-2000":
+      return ["1000 2000", "1000 to 2000", "₱1 000 ₱2 000", "php 1000 php 2000"];
+    case "2000-plus":
+      return ["2000", "2000 plus", "₱2 000", "php 2000", "premium"];
+    default:
+      return [];
   }
 }
 
@@ -857,92 +1378,41 @@ function scoreBudgetMatch(
   budget: BudgetValue,
   normalizedQuery: string
 ): number {
-  let score = 0;
   const selectedBudgetRange = getBudgetRangeForFilter(budget);
-  const placeBudgetRange = getPlaceBudgetRange(row);
+  const budgetMin = getNumberField(row, ["budget_min"]);
+  void normalizedQuery;
 
-  if (budget !== "free" && selectedBudgetRange && placeBudgetRange) {
-    if (rangesOverlap(selectedBudgetRange, placeBudgetRange)) {
-      score = Math.max(score, 15);
-    } else if (rangesAreNear(selectedBudgetRange, placeBudgetRange)) {
-      score = Math.max(score, 5);
-    }
+  if (budget === "any" || !selectedBudgetRange || budgetMin === null) {
+    return 0;
   }
 
-  const budgetLabel = normalizeComparableText(getStringField(row, ["budget_label"]));
-  const mentionsFree = ["free", "libre", "walang entrance"].some((term) =>
-    includesNormalizedPhrase(normalizedQuery, term)
-  );
-  const mentionsBudget = ["budget", "mura", "cheap", "tipid", "affordable"].some(
-    (term) => includesNormalizedPhrase(normalizedQuery, term)
-  );
-  const mentionsPremium = ["premium", "fancy", "upscale", "luxury"].some((term) =>
-    includesNormalizedPhrase(normalizedQuery, term)
-  );
-
-  if (mentionsFree && getBooleanField(row, ["is_free"])) {
-    score = Math.max(score, 15);
-  }
-
-  if (budget === "free" && getBooleanField(row, ["is_free"])) {
-    score = Math.max(score, 18);
-  }
-
-  if (mentionsBudget && budgetLabel === "budget") {
-    score = Math.max(score, 10);
-  }
-
-  if (mentionsPremium && budgetLabel === "premium") {
-    score = Math.max(score, 10);
-  }
-
-  return score;
+  return budgetMin >= selectedBudgetRange.min && budgetMin <= selectedBudgetRange.max ? 15 : 0;
 }
 
-function scoreKeywordMatch(row: PlaceRow, normalizedQuery: string): number {
+function scoreSupportingMatch(row: PlaceRow, normalizedQuery: string): number {
   const promptTerms = getPromptTerms(normalizedQuery);
-  const nameText = normalizeComparableText(getStringField(row, ["name"]));
-  const slugText = normalizeComparableText(getStringField(row, ["slug"]));
-  const categoryText = normalizeComparableText([
-    getStringField(row, ["category"]),
-    row.categories,
-    getLinkedCategoryIds(row),
-    getLinkedCategoryNames(row),
-    getLinkedCategorySearchTerms(row),
-  ]);
-  const locationText = normalizeComparableText([
-    getStringField(row, ["city", "area", "address", "location"]),
-  ]);
-  const descriptionText = normalizeComparableText(
-    getStringField(row, ["description", "reason"])
-  );
-  const searchableText = normalizeComparableText([
-    nameText,
-    slugText,
-    categoryText,
-    locationText,
-    descriptionText,
-    getLinkedTags(row).flatMap((tag) => [tag.id, tag.name, ...tag.searchTerms]),
-  ]);
 
   if (promptTerms.length === 0) {
     return 0;
   }
 
-  const matchedTerms = promptTerms.filter((term) => searchableText.includes(term));
-  const exactQueryInName = Boolean(
-    normalizedQuery && includesNormalizedPhrase(nameText, normalizedQuery)
-  );
-  const partialNameMatch = promptTerms.some((term) => nameText.includes(term));
+  const supportingText = getRowSupportingText(row);
+  const matches = countMatchedTerms(supportingText, promptTerms);
 
-  if (exactQueryInName) {
-    return 20;
+  return Math.min(matches * 3, 10);
+}
+
+function scoreLowPriorityMatch(row: PlaceRow, normalizedQuery: string): number {
+  const promptTerms = getPromptTerms(normalizedQuery);
+
+  if (promptTerms.length === 0) {
+    return 0;
   }
 
-  let score = partialNameMatch ? 10 : 0;
-  score += Math.min(matchedTerms.length * 3, 8);
+  const lowPriorityText = getRowLowPriorityText(row);
+  const matches = countMatchedTerms(lowPriorityText, promptTerms);
 
-  return Math.min(score, 20);
+  return Math.min(matches, 3);
 }
 
 function scorePlaceForSearch({
@@ -950,21 +1420,42 @@ function scorePlaceForSearch({
   normalizedQuery,
   categoryIds,
   areaIds,
+  goodForIds,
   budget,
+  selectedIndoorOutdoor,
+  selectedWeatherFit,
 }: {
   row: PlaceRow;
   normalizedQuery: string;
   categoryIds: string[];
   areaIds: string[];
+  goodForIds: string[];
   budget: BudgetValue;
+  selectedIndoorOutdoor: string | null;
+  selectedWeatherFit: string | null;
 }): number {
-  return (
+  const structuredScore =
     scoreLocationMatch(row, areaIds) +
     scoreCategoryMatch(row, categoryIds) +
-    scoreTagMatch(row, normalizedQuery) +
-    scoreBudgetMatch(row, budget, normalizedQuery) +
-    scoreKeywordMatch(row, normalizedQuery)
-  );
+    scoreGoodForMatch(row, goodForIds) +
+    scoreBudgetMatch(row, budget, normalizedQuery);
+  const identityScore = scoreIdentityMatch(row, normalizedQuery);
+  const discoveryScore = scoreDiscoveryMatch(row, normalizedQuery);
+  const tagScore = scoreTagMatch(row, normalizedQuery);
+  const intentScore = scoreIntentFieldMatch(row, normalizedQuery, {
+    selectedIndoorOutdoor,
+    selectedWeatherFit,
+  });
+  const supportingScore = scoreSupportingMatch(row, normalizedQuery);
+  const lowPriorityScore = scoreLowPriorityMatch(row, normalizedQuery);
+  const penalty = scoreNotIdealPenalty(row, normalizedQuery);
+  const coreScore = structuredScore + identityScore + discoveryScore + tagScore + intentScore;
+
+  if (coreScore === 0) {
+    return Math.max(Math.min(supportingScore + lowPriorityScore, 3) - penalty, 0);
+  }
+
+  return Math.max(coreScore + supportingScore + lowPriorityScore - penalty, 0);
 }
 
 function rowMatchesBudget(row: PlaceRow, budget: BudgetValue): boolean {
@@ -972,54 +1463,26 @@ function rowMatchesBudget(row: PlaceRow, budget: BudgetValue): boolean {
     return true;
   }
 
-  const selectedBudgetRange = getBudgetRangeForFilter(budget);
-  const placeBudgetRange = getPlaceBudgetRange(row);
+  const budgetMin = getNumberField(row, ["budget_min"]);
 
-  if (budget === "free") {
-    if (getBooleanField(row, ["is_free"])) {
+  if (budgetMin === null) {
+    return false;
+  }
+
+  switch (budget) {
+    case "free":
+      return budgetMin === 0;
+    case "under-500":
+      return budgetMin <= 500;
+    case "500-1000":
+      return budgetMin >= 500 && budgetMin <= 1000;
+    case "1000-2000":
+      return budgetMin >= 1000 && budgetMin <= 2000;
+    case "2000-plus":
+      return budgetMin >= 2000;
+    default:
       return true;
-    }
-
-    const freeBudgetText = normalizeComparableText(
-      getStringField(row, [
-        "budget",
-        "budget_label",
-        "budget_range",
-        "budgetRange",
-        "price_range",
-        "priceRange",
-        "budget_notes",
-      ])
-    );
-
-    return ["free", "libre", "walang entrance"].some((term) =>
-      includesNormalizedPhrase(freeBudgetText, term)
-    );
   }
-
-  if (selectedBudgetRange && placeBudgetRange) {
-    return (
-      rangesOverlap(selectedBudgetRange, placeBudgetRange) ||
-      rangesAreNear(selectedBudgetRange, placeBudgetRange)
-    );
-  }
-
-  const budgetText = normalizeComparableText(
-    getStringField(row, [
-      "budget",
-      "budget_label",
-      "budget_range",
-      "budgetRange",
-      "price_range",
-      "priceRange",
-    ])
-  );
-
-  if (!budgetText) {
-    return true;
-  }
-
-  return budgetText.includes(budget);
 }
 
 function mapPlaceRowToSearchResult(
@@ -1060,6 +1523,8 @@ function mapPlaceRowToSearchResult(
     latitude: getNumberField(row, ["latitude", "lat"]),
     longitude: getNumberField(row, ["longitude", "lng", "lon"]),
     imageUrl: null,
+    thumbnailUrl: null,
+    imageAlt: getStringField(row, ["name"]),
     curatedImageUrls: [],
     address,
     budget: getStringField(row, ["budget"]),
@@ -1091,6 +1556,72 @@ function mapPlaceRowToSearchResult(
     matchedCategories: getMatchedCategories(row, categoryIds),
     matchedTags: getMatchedTags(row, normalizedQuery),
   };
+}
+
+type ApprovedSearchImageRow = {
+  place_id?: unknown;
+  image_url?: unknown;
+};
+
+async function attachApprovedImagesToSearchResults(
+  places: SearchPlaceResult[]
+): Promise<SearchPlaceResult[]> {
+  const placeIds = places
+    .map((place) => place.id?.trim())
+    .filter((placeId): placeId is string => Boolean(placeId));
+
+  if (placeIds.length === 0) {
+    return places;
+  }
+
+  const supabase = await getSupabaseAdminClient();
+  const { data, error } = await (supabase.from("place_images") as any)
+    .select("place_id, image_url, sort_order, created_at")
+    .in("place_id", placeIds)
+    .eq("status", "approved")
+    .order("sort_order", { ascending: true, nullsFirst: false })
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    throw new Error("Failed to load approved place images for search results.");
+  }
+
+  const imageUrlsByPlaceId = new Map<string, string[]>();
+
+  for (const row of (data ?? []) as ApprovedSearchImageRow[]) {
+    const placeId = typeof row.place_id === "string" ? row.place_id.trim() : "";
+    const imageUrl = typeof row.image_url === "string" ? row.image_url.trim() : "";
+
+    if (!placeId || !imageUrl) {
+      continue;
+    }
+
+    const existingUrls = imageUrlsByPlaceId.get(placeId) ?? [];
+
+    if (existingUrls.includes(imageUrl)) {
+      continue;
+    }
+
+    existingUrls.push(imageUrl);
+    imageUrlsByPlaceId.set(placeId, existingUrls);
+  }
+
+  return places.map((place) => {
+    const approvedImageUrls = imageUrlsByPlaceId.get(place.id) ?? [];
+    const primaryImageUrl = approvedImageUrls[0] ?? null;
+
+    if (!primaryImageUrl) {
+      return place;
+    }
+
+    return {
+      ...place,
+      imageUrl: primaryImageUrl,
+      thumbnailUrl: primaryImageUrl,
+      imageAlt: place.name ? `Photo of ${place.name}` : place.imageAlt ?? null,
+      curatedImageUrls: approvedImageUrls,
+    };
+  });
 }
 
 async function resolveUserContext(
@@ -1125,6 +1656,7 @@ function buildSearchContext({
   query,
   categoryId,
   areaId,
+  goodForId,
   budget,
   userType,
   createdAt,
@@ -1133,6 +1665,7 @@ function buildSearchContext({
   query: string;
   categoryId: string;
   areaId: string;
+  goodForId: string;
   budget: BudgetValue;
   userType: SearchContext["userType"];
   createdAt: string;
@@ -1142,6 +1675,7 @@ function buildSearchContext({
     query,
     category: normalizeSearchFilter(categoryId, "all"),
     area: normalizeSearchFilter(areaId, "all"),
+    good_for: normalizeSearchFilter(goodForId, "all"),
     budget: normalizeSearchFilter(budget, "any"),
     language: "taglish",
     userType,
@@ -1192,16 +1726,24 @@ async function findSearchPlaces({
   normalizedQuery,
   categoryIds,
   areaIds,
+  goodForIds,
   budget,
+  selectedIndoorOutdoor,
+  selectedWeatherFit,
   requirePromptMatch,
   nearbySearch,
+  prioritizeTrending,
 }: {
   normalizedQuery: string;
   categoryIds: string[];
   areaIds: string[];
+  goodForIds: string[];
   budget: BudgetValue;
+  selectedIndoorOutdoor: string | null;
+  selectedWeatherFit: string | null;
   requirePromptMatch: boolean;
   nearbySearch: NearbySearchContext | null;
+  prioritizeTrending: boolean;
 }): Promise<SearchPlaceResult[]> {
   const supabase = await getSupabaseAdminClient();
   const placesTable = supabase.from("places") as ReturnType<
@@ -1240,10 +1782,23 @@ async function findSearchPlaces({
     throw new Error("Failed to query search places.");
   }
 
+  let trendingSignalsByPlaceId = new Map<string, TrendingSignal>();
+
+  if (prioritizeTrending) {
+    try {
+      trendingSignalsByPlaceId = await getTrendingSignalsByPlaceId();
+    } catch {
+      trendingSignalsByPlaceId = new Map<string, TrendingSignal>();
+    }
+  }
+
   const rankedRows = (data ?? [])
     .filter((row) => rowMatchesArea(row, areaIds))
     .filter((row) => rowMatchesCategory(row, categoryIds))
+    .filter((row) => rowMatchesGoodFor(row, goodForIds))
     .filter((row) => rowMatchesBudget(row, budget))
+    .filter((row) => rowMatchesIndoorOutdoor(row, selectedIndoorOutdoor))
+    .filter((row) => rowMatchesWeatherFit(row, selectedWeatherFit))
     .filter((row) => !requirePromptMatch || rowMatchesPrompt(row, normalizedQuery))
     .map((row) => ({
       row,
@@ -1252,11 +1807,18 @@ async function findSearchPlaces({
         normalizedQuery,
         categoryIds,
         areaIds,
+        goodForIds,
         budget,
+        selectedIndoorOutdoor,
+        selectedWeatherFit,
       }),
       distanceKm: nearbySearch
         ? getRowDistanceKm(row, nearbySearch.userLocation)
         : null,
+      trendingSignal:
+        prioritizeTrending
+          ? trendingSignalsByPlaceId.get(getStringField(row, ["id"]) ?? "")
+          : undefined,
     }));
 
   const hasNearbyMatches = nearbySearch
@@ -1294,6 +1856,16 @@ async function findSearchPlaces({
         return right.score - left.score;
       }
 
+      if (prioritizeTrending) {
+        const trendDelta =
+          getTrendingSignalSortValue(right.trendingSignal) -
+          getTrendingSignalSortValue(left.trendingSignal);
+
+        if (trendDelta !== 0) {
+          return trendDelta;
+        }
+      }
+
       if (
         nearbySearch &&
         left.distanceKm !== null &&
@@ -1329,33 +1901,56 @@ export async function search(
     const categoryId =
       getOptionalFilterId(getFilterValue(body, filters, "category")) ?? "all";
     const areaId =
-      getOptionalFilterId(getFilterValue(body, filters, "area")) ?? "all";
+      getOptionalFilterId(
+        getFilterValue(body, filters, "city") ?? getFilterValue(body, filters, "area")
+      ) ?? "all";
+    const goodForId =
+      getOptionalFilterId(getFilterValue(body, filters, "good_for")) ?? "all";
     const budget = getBudgetFilter(getFilterValue(body, filters, "budget"));
+    const indoorOutdoorFilter =
+      getOptionalFilterId(getFilterValue(body, filters, "indoor_outdoor")) ?? null;
+    const weatherFitFilter =
+      getOptionalFilterId(getFilterValue(body, filters, "weather_fit")) ?? null;
+    const page = getPositiveInteger(body.page, DEFAULT_SEARCH_PAGE, {
+      min: 1,
+    });
+    const limit = STRICT_SEARCH_LIMIT;
     const shouldExploreAll = body.exploreAll === true;
     const normalizedQuery = normalizeSearchText(query);
     const nearbySearch = getNearbySearchContext(body);
     const selectedCategory = findCategoryById(categoryId);
     const selectedArea = findAreaById(areaId);
+    const selectedGoodFor = findGoodForById(goodForId);
     const inferredCategoryIds = inferCategoryIdsFromQuery(normalizedQuery);
     const inferredLocations = inferMetroManilaLocationsFromQuery(normalizedQuery);
+    const inferredGoodForIds = inferGoodForIdsFromQuery(normalizedQuery);
     const discoveryCategoryIds =
       categoryId !== "all" ? [categoryId] : inferredCategoryIds;
     const discoveryAreaIds =
       areaId !== "all" ? [areaId] : inferredLocations.cityIds.slice(0, 1);
+    const discoveryGoodForIds =
+      goodForId !== "all" ? [goodForId] : inferredGoodForIds;
     const hasSelectedFilters =
-      categoryId !== "all" || areaId !== "all" || budget !== "any";
+      categoryId !== "all" ||
+      areaId !== "all" ||
+      goodForId !== "all" ||
+      budget !== "any" ||
+      Boolean(indoorOutdoorFilter) ||
+      Boolean(weatherFitFilter);
     const hasNearbySearch = Boolean(nearbySearch);
     const shouldRequirePromptMatch =
       !hasSelectedFilters &&
       !hasNearbySearch &&
       Boolean(normalizedQuery) &&
       discoveryCategoryIds.length === 0 &&
-      discoveryAreaIds.length === 0;
+      discoveryAreaIds.length === 0 &&
+      discoveryGoodForIds.length === 0;
     const isBroadDiscoverySearch =
       shouldExploreAll &&
       !normalizedQuery &&
       categoryId === "all" &&
       areaId === "all" &&
+      goodForId === "all" &&
       budget === "any";
 
     if (!normalizedQuery && !hasSelectedFilters && !hasNearbySearch && !isBroadDiscoverySearch) {
@@ -1385,10 +1980,20 @@ export async function search(
       };
     }
 
+    if (goodForId !== "all" && !selectedGoodFor) {
+      return {
+        status: 400,
+        jsonBody: {
+          message: "Invalid good_for filter.",
+        },
+      };
+    }
+
     const cacheKey = generateSearchCacheKey(
       normalizedQuery,
       categoryId,
       areaId,
+      goodForId,
       budget
     );
     const userContext = await resolveUserContext(request);
@@ -1400,6 +2005,7 @@ export async function search(
       query,
       categoryId,
       areaId,
+      goodForId,
       budget,
       userType,
       createdAt: new Date().toISOString(),
@@ -1416,10 +2022,21 @@ export async function search(
       normalizedQuery,
       categoryIds: discoveryCategoryIds,
       areaIds: discoveryAreaIds,
+      goodForIds: discoveryGoodForIds,
       budget,
+      selectedIndoorOutdoor: indoorOutdoorFilter,
+      selectedWeatherFit: weatherFitFilter,
       requirePromptMatch: isBroadDiscoverySearch ? false : shouldRequirePromptMatch,
       nearbySearch,
+      prioritizeTrending: isBroadDiscoverySearch,
     });
+    const totalCount = places.length;
+    const totalPages = Math.max(1, Math.ceil(totalCount / limit));
+    const safePage = Math.min(page, totalPages);
+    const pageStartIndex = (safePage - 1) * limit;
+    const paginatedPlaces = await attachApprovedImagesToSearchResults(
+      places.slice(pageStartIndex, pageStartIndex + limit)
+    );
 
     return {
       status: 200,
@@ -1431,10 +2048,18 @@ export async function search(
         cacheKey,
         searchMode: isBroadDiscoverySearch ? "broad-discovery" : "supabase",
         searchContext,
-        places,
+        page: safePage,
+        limit,
+        totalCount,
+        totalPages,
+        places: paginatedPlaces,
         result: {
           geminiResponse: "",
-          places,
+          page: safePage,
+          limit,
+          totalCount,
+          totalPages,
+          places: paginatedPlaces,
         },
       },
     };

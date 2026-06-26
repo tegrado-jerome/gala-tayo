@@ -3,7 +3,7 @@ import { randomUUID } from "crypto";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { countApprovedPlaceImages, getApprovedPlaceImages } from "../services/placeImagesService";
 import { AuthenticatedUser, validateJwt } from "../utils/auth";
-import { convertImageToWebp, deleteR2Object, uploadWebpToR2 } from "../utils/r2ImageStorage";
+import { convertImageToWebp, deleteR2Object, detectImageFormat, uploadWebpToR2 } from "../utils/r2ImageStorage";
 
 type PlaceRow = {
   id: string;
@@ -41,6 +41,7 @@ type UserRow = {
 const MAX_APPROVED_IMAGES = 3;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp"]);
+const ALLOWED_IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp"];
 const PLACE_IMAGE_COLUMNS =
   "id, place_id, uploaded_by, image_url, storage_key, status, source_url, contributor_note, rejection_reason, sort_order, created_at, updated_at";
 
@@ -102,11 +103,27 @@ function getCleanText(value: unknown, maxLength: number) {
   return trimmed ? trimmed.slice(0, maxLength) : null;
 }
 
-function isDangerousImage(buffer: Buffer) {
-  const head = buffer.subarray(0, 512).toString("utf8").toLowerCase();
-  const isSvg = head.includes("<svg");
-  const isGif = buffer.length >= 6 && buffer.subarray(0, 3).toString("ascii") === "GIF";
-  return isSvg || isGif;
+function hasAllowedImageExtension(fileName: string) {
+  const normalizedName = fileName.trim().toLowerCase();
+  return ALLOWED_IMAGE_EXTENSIONS.some((extension) => normalizedName.endsWith(extension));
+}
+
+function isUnsupportedImageError(error: unknown) {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  const message = error.message.toLowerCase();
+
+  return (
+    message.includes("unsupported image format") ||
+    message.includes("input buffer") ||
+    message.includes("corrupt") ||
+    message.includes("bad seek") ||
+    message.includes("not a jpeg") ||
+    message.includes("not a png") ||
+    message.includes("not a webp")
+  );
 }
 
 async function getPlace(placeId: string): Promise<PlaceRow | null> {
@@ -197,7 +214,10 @@ export async function placeImageContributionCreate(
 
     const imageFile = file as any;
 
-    if (!ALLOWED_IMAGE_TYPES.has(imageFile.type)) {
+    const normalizedMimeType = String(imageFile.type || "").trim().toLowerCase();
+    const fileName = typeof imageFile.name === "string" ? imageFile.name : "";
+
+    if (normalizedMimeType && !ALLOWED_IMAGE_TYPES.has(normalizedMimeType) && !hasAllowedImageExtension(fileName)) {
       return response(400, "Image must be a JPEG, PNG, or WebP file.");
     }
 
@@ -207,11 +227,24 @@ export async function placeImageContributionCreate(
 
     const inputBuffer = Buffer.from(await imageFile.arrayBuffer());
 
-    if (isDangerousImage(inputBuffer)) {
+    const detectedFormat = await detectImageFormat(inputBuffer);
+
+    if (!detectedFormat || !["jpeg", "png", "webp"].includes(detectedFormat)) {
       return response(400, "Image must be a JPEG, PNG, or WebP file.");
     }
 
-    const webpBuffer = await convertImageToWebp(inputBuffer);
+    let webpBuffer: Buffer;
+
+    try {
+      webpBuffer = await convertImageToWebp(inputBuffer);
+    } catch (conversionError) {
+      if (isUnsupportedImageError(conversionError)) {
+        return response(400, "Image must be a JPEG, PNG, or WebP file.");
+      }
+
+      throw conversionError;
+    }
+
     const storageKey = `places/${normalizeStorageSlug(place.slug)}/${randomUUID()}.webp`;
     uploadedStorageKey = storageKey;
     const imageUrl = await uploadWebpToR2(storageKey, webpBuffer);

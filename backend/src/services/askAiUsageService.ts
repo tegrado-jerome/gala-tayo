@@ -13,6 +13,7 @@ const ASK_AI_DAILY_LIMITS: Record<AskAiUsageType, number> = {
 };
 
 export const ASK_AI_DAILY_LIMIT = ASK_AI_TOTAL_DAILY_LIMIT;
+const ASK_AI_USAGE_TIMEZONE = "Asia/Manila";
 
 type AskAiUsageRow = {
   id: string;
@@ -40,12 +41,37 @@ export type AskAiUsageSummaryResult = {
 };
 
 function getTodayUsageDate(): string {
-  return new Date().toISOString().slice(0, 10);
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: ASK_AI_USAGE_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+
+  const year = parts.find((part) => part.type === "year")?.value;
+  const month = parts.find((part) => part.type === "month")?.value;
+  const day = parts.find((part) => part.type === "day")?.value;
+
+  if (!year || !month || !day) {
+    throw new Error("Failed to resolve current Ask AI usage date in Asia/Manila.");
+  }
+
+  return `${year}-${month}-${day}`;
 }
 
 function getResetAt(usageDate: string): string {
-  const resetDate = new Date(`${usageDate}T00:00:00.000Z`);
-  resetDate.setUTCDate(resetDate.getUTCDate() + 1);
+  const [year, month, day] = usageDate.split("-").map(Number);
+
+  if (
+    !Number.isInteger(year) ||
+    !Number.isInteger(month) ||
+    !Number.isInteger(day)
+  ) {
+    throw new Error("Invalid Ask AI usage date.");
+  }
+
+  // Asia/Manila is UTC+8 year-round, so local midnight maps to 16:00 UTC on the same calendar date.
+  const resetDate = new Date(Date.UTC(year, month - 1, day, 16, 0, 0, 0));
 
   return resetDate.toISOString();
 }

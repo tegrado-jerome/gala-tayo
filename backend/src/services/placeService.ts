@@ -17,7 +17,7 @@ export type StoredPlace = {
   longitude: number | null;
   rating: number | null;
   hours: unknown;
-  photo_url: string | null;
+  photo_url?: string | null;
   photos: unknown;
   created_at: string | null;
   updated_at: string | null;
@@ -56,7 +56,7 @@ export async function findPlaceByFoursquareId(
   const { data, error } = await supabase
     .from("places")
     .select(
-      "id,foursquare_id,name,slug,category,address,city,latitude,longitude,rating,hours,photo_url,photos,created_at,updated_at"
+      "id,foursquare_id,name,slug,category,address,city,latitude,longitude,rating,hours,photos,created_at,updated_at"
     )
     .eq("foursquare_id", trimmedId)
     .maybeSingle();
@@ -83,7 +83,7 @@ export async function findPlaceByNameAndCity(
   const { data, error } = await supabase
     .from("places")
     .select(
-      "id,foursquare_id,name,slug,category,address,city,latitude,longitude,rating,hours,photo_url,photos,created_at,updated_at"
+      "id,foursquare_id,name,slug,category,address,city,latitude,longitude,rating,hours,photos,created_at,updated_at"
     )
     .ilike("name", trimmedName)
     .ilike("city", trimmedCity)

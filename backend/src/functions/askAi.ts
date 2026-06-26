@@ -5,19 +5,25 @@ import {
   InvocationContext,
 } from "@azure/functions";
 import {
+  AskAiUsageResult,
   checkAskAiUsage,
   consumeAskAiUsage,
 } from "../services/askAiUsageService";
 import {
   AskAiServiceError,
   generateAskAiAnswer,
-  planAskAiRequest,
+  shouldUseGroundedResearch,
 } from "../services/askAiService";
 import { validateJwt } from "../utils/auth";
 
 const ASK_AI_COOLDOWN_MS = 10_000;
-const ASK_AI_DEBUG = process.env.ASK_AI_DEBUG === "true";
 const lastAskAiRequestAtByUser = new Map<string, number>();
+const NO_STORE_HEADERS = {
+  "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+  Pragma: "no-cache",
+  Expires: "0",
+  "Surrogate-Control": "no-store",
+};
 
 type AskAiRequestBody = {
   question?: unknown;
@@ -37,6 +43,10 @@ function friendlyProviderMessage(status: number): string {
     return "Ask AI is busy right now. Please try again in a moment.";
   }
 
+  if (status === 504) {
+    return "Ask AI took too long to respond. Please try again in a moment.";
+  }
+
   if (status >= 500) {
     return "Ask AI is temporarily unavailable. Please try again later.";
   }
@@ -44,14 +54,36 @@ function friendlyProviderMessage(status: number): string {
   return "Ask AI could not answer that right now. Please try again.";
 }
 
-function handleAskAiError(error: unknown): HttpResponseInit {
+function buildUsagePayload(
+  askAi?: AskAiUsageResult,
+  liveSearch?: AskAiUsageResult
+) {
+  return askAi && liveSearch
+    ? {
+        usage: {
+          askAi,
+          liveSearch,
+        },
+      }
+    : {};
+}
+
+function handleAskAiError(
+  error: unknown,
+  usage?: {
+    askAi: AskAiUsageResult;
+    liveSearch: AskAiUsageResult;
+  }
+): HttpResponseInit {
   const message = error instanceof Error ? error.message : "Unknown error";
 
   if (isAuthError(message)) {
     return {
       status: 401,
+      headers: NO_STORE_HEADERS,
       jsonBody: {
         message: "Unauthorized.",
+        ...buildUsagePayload(usage?.askAi, usage?.liveSearch),
       },
     };
   }
@@ -59,16 +91,20 @@ function handleAskAiError(error: unknown): HttpResponseInit {
   if (error instanceof AskAiServiceError) {
     return {
       status: error.status >= 400 && error.status < 500 ? error.status : 502,
+      headers: NO_STORE_HEADERS,
       jsonBody: {
         message: friendlyProviderMessage(error.status),
+        ...buildUsagePayload(usage?.askAi, usage?.liveSearch),
       },
     };
   }
 
   return {
     status: 500,
+    headers: NO_STORE_HEADERS,
     jsonBody: {
       message: "Failed to ask AI.",
+      ...buildUsagePayload(usage?.askAi, usage?.liveSearch),
     },
   };
 }
@@ -109,13 +145,10 @@ export async function askAiRequest(
   request: HttpRequest,
   context: InvocationContext
 ): Promise<HttpResponseInit> {
-  context.log("Handling Ask AI request...");
-
   try {
     const user = await validateJwt(request);
     const body = await getRequestBody(request);
     const question = getStringField(body.question);
-    const placeSlug = getStringField(body.placeSlug) ?? undefined;
 
     if (!question) {
       return {
@@ -148,49 +181,34 @@ export async function askAiRequest(
     }
 
     const liveSearchUsageBefore = await checkAskAiUsage(user.id, "live_search");
-    const responsePlan = planAskAiRequest(question);
-    const liveSearchIntentDetected = responsePlan.intent === "live_current_info";
-    const shouldUseLiveSearchTool =
-      liveSearchUsageBefore.allowed && responsePlan.groundingEnabled;
+    const shouldUseLiveSearch =
+      liveSearchUsageBefore.allowed && shouldUseGroundedResearch(question);
 
-    if (ASK_AI_DEBUG) {
-      context.log("Ask AI Live Search routing", {
-        liveSearchIntentDetected,
-        liveSearchQuotaAvailable: liveSearchUsageBefore.allowed,
-        sourceBackedProviderPathUsed: shouldUseLiveSearchTool,
-        responsePlan,
+    let answerResult: Awaited<ReturnType<typeof generateAskAiAnswer>>;
+
+    try {
+      answerResult = await generateAskAiAnswer({
+        question,
+        enableLiveSearch: shouldUseLiveSearch,
+      });
+    } catch (error) {
+      lastAskAiRequestAtByUser.delete(user.id);
+      context.error(error);
+
+      return handleAskAiError(error, {
+        askAi: askAiUsageBefore,
+        liveSearch: liveSearchUsageBefore,
       });
     }
 
-    const answerResult = await generateAskAiAnswer({
-      question,
-      placeSlug,
-      enableLiveSearch: shouldUseLiveSearchTool,
-    });
-
-    context.log("Ask AI source metadata", {
-      intent: responsePlan.intent,
-      answerFormat: responsePlan.answerFormat,
-      groundingEnabled: responsePlan.groundingEnabled,
-      sourceStatus: answerResult.sourceStatus,
-      webSearchQueriesCount: answerResult.webSearchQueriesCount,
-      groundingChunksCount: answerResult.groundingChunksCount,
-      groundingSupportsCount: answerResult.groundingSupportsCount,
-      modelUsed: answerResult.modelUsed,
-      latencyMs: answerResult.latencyMs,
-      fallbackUsed: answerResult.fallbackUsed,
-      answerRejectedDueToLeakageOrTruncation:
-        answerResult.answerRejectedDueToLeakageOrTruncation,
-    });
-
     const askAiUsageAfter = await consumeAskAiUsage(user.id, "ask_ai_total");
-
     const liveSearchUsageAfter = answerResult.usedLiveSearch
       ? await consumeAskAiUsage(user.id, "live_search")
-      : await checkAskAiUsage(user.id, "live_search");
+      : liveSearchUsageBefore;
 
     return {
       status: 200,
+      headers: NO_STORE_HEADERS,
       jsonBody: {
         answer: answerResult.answer,
         sources: answerResult.sources,

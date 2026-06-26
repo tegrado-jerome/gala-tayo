@@ -10,6 +10,7 @@ import {
   getCurrentUser,
   getOptionalCurrentUser,
   getProfileByUsername,
+  getProfileByUserId,
   getRelationshipState,
   LIST_VISIBILITIES,
   PLAN_VISIBILITIES,
@@ -61,7 +62,7 @@ type PlanItemRow = {
     category: string | null;
     city: string | null;
     address?: string | null;
-    budget_label?: string | null;
+    budget_min?: number | string | null;
     latitude?: number | string | null;
     longitude?: number | string | null;
   } | null;
@@ -185,7 +186,7 @@ function mapPlanDetail(plan: SocialGalaPlan, items: PlanItemRow[], viewerHasHear
           category: place?.category ?? null,
           city: place?.city ?? null,
           address: place?.address ?? null,
-          budget_label: place?.budget_label ?? null,
+          budget_min: toNullableNumber(place?.budget_min),
           latitude: toNullableNumber(place?.latitude),
           longitude: toNullableNumber(place?.longitude),
         },
@@ -211,7 +212,7 @@ async function getPlanItems(planIds: string[]) {
 
   const supabase = await getSupabaseAdminClient();
   const { data, error } = await (supabase.from("gala_plan_items") as any)
-    .select("id, plan_id, place_id, day_number, sort_order, time_label, notes, estimated_minutes, created_at, updated_at, places(id, name, slug, category, city, address, budget_label, latitude, longitude)")
+    .select("id, plan_id, place_id, day_number, sort_order, time_label, notes, estimated_minutes, created_at, updated_at, places(id, name, slug, category, city, address, budget_min, latitude, longitude)")
     .in("plan_id", planIds)
     .order("day_number", { ascending: true })
     .order("sort_order", { ascending: true });
@@ -280,12 +281,8 @@ export async function meProfile(request: HttpRequest, context: InvocationContext
     const supabase = await getSupabaseAdminClient();
 
     if (request.method === "GET") {
-      const { data, error } = await (supabase.from("profiles") as any)
-        .select(PROFILE_COLUMNS)
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (error) throw error;
-      return { status: 200, jsonBody: { profile: data as SocialProfile | null } };
+      const profile = await getProfileByUserId(user.id);
+      return { status: 200, jsonBody: { profile } };
     }
 
     const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
@@ -337,7 +334,8 @@ export async function meProfile(request: HttpRequest, context: InvocationContext
       .select(PROFILE_COLUMNS)
       .single();
     if (error) throw error;
-    return { status: 200, jsonBody: { profile: data as SocialProfile } };
+    const profile = await getProfileByUserId((data as SocialProfile).user_id);
+    return { status: 200, jsonBody: { profile } };
   } catch (error) {
     if (error instanceof Error && error.message.toLowerCase().includes("authorization")) return unauthorized();
     if (getErrorCode(error) === "23505") return { status: 409, jsonBody: { message: "That username is already taken." } };

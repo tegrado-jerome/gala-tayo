@@ -5,6 +5,8 @@ export type PlaceDetail = {
   id: string;
   slug: string;
   name: string;
+  rating?: number | null;
+  review_count?: number | null;
   location: string;
   address?: string | null;
   city?: string | null;
@@ -57,64 +59,111 @@ function getStringArray(value: unknown): string[] {
     : [];
 }
 
+function getNullableString(value: unknown): string | null {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function getNullableNumber(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === "string" && value.trim()) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  return null;
+}
+
+async function getPlaceReviewSummary(placeId: string): Promise<{ averageRating: number | null; reviewCount: number }> {
+  try {
+    const supabase = await getSupabaseAdminClient();
+    const { data, error, count } = await (supabase.from("place_reviews") as any)
+      .select("rating", { count: "exact" })
+      .eq("place_id", placeId);
+
+    if (error) {
+      throw error;
+    }
+
+    const ratings = ((data || []) as Array<{ rating?: unknown }>)
+      .map((entry) => getNullableNumber(entry.rating))
+      .filter((rating): rating is number => rating !== null);
+
+    if (ratings.length === 0) {
+      return { averageRating: null, reviewCount: count ?? 0 };
+    }
+
+    const total = ratings.reduce((sum, rating) => sum + rating, 0);
+    return {
+      averageRating: Math.round((total / ratings.length) * 10) / 10,
+      reviewCount: count ?? ratings.length,
+    };
+  } catch {
+    return { averageRating: null, reviewCount: 0 };
+  }
+}
+
 function mapPlaceRowToDetail(row: Record<string, unknown>): PlaceDetail {
-  const address = typeof row.address === "string" ? row.address : null;
-  const city = typeof row.city === "string" ? row.city : null;
-  const area = typeof row.area === "string" ? row.area : null;
+  const address = getNullableString(row.address);
+  const city = getNullableString(row.city);
+  const area = getNullableString(row.area);
   const location = [area || address, city].filter(Boolean).join(", ") || "Metro Manila";
   const description =
     typeof row.description === "string" && row.description.trim()
       ? row.description.trim()
       : "";
   const budgetNotes =
-    typeof row.budget_notes === "string" && row.budget_notes.trim()
-      ? row.budget_notes.trim()
-      : null;
+    getNullableString(row.budget_notes) ??
+    (getNullableNumber(row.budget_min) != null ? `Starting budget around PHP ${getNullableNumber(row.budget_min)}.` : null);
   const websiteUrl =
-    typeof row.website_url === "string" && row.website_url.trim()
-      ? row.website_url.trim()
-      : "";
-  const googleMapsUrl =
-    typeof row.google_maps_url === "string" && row.google_maps_url.trim()
-      ? row.google_maps_url.trim()
-      : null;
+    getNullableString(row.website_url) ??
+    getNullableString(row.official_url) ??
+    getNullableString(row.source_url) ??
+    "";
+  const googleMapsUrl = getNullableString(row.google_maps_url);
+  const latitude = getNullableNumber(row.latitude) ?? 0;
+  const longitude = getNullableNumber(row.longitude) ?? 0;
 
   return {
     id: String(row.id ?? ""),
-    slug: typeof row.slug === "string" ? row.slug : "",
-    name: typeof row.name === "string" ? row.name : "Untitled place",
+    slug: getNullableString(row.slug) ?? "",
+    name: getNullableString(row.name) ?? "Untitled place",
+    rating: getNullableNumber(row.rating),
+    review_count: null,
     location,
     address,
     city,
     area,
     description,
-    place_history: typeof row.place_history === "string" ? row.place_history : null,
-    best_time_to_visit: typeof row.best_time_to_visit === "string" ? row.best_time_to_visit : null,
-    visit_duration: typeof row.visit_duration === "string" ? row.visit_duration : null,
+    place_history: getNullableString(row.place_history),
+    best_time_to_visit: getNullableString(row.best_time_to_visit),
+    visit_duration: getNullableString(row.visit_duration),
     good_for: getStringArray(row.good_for),
     not_ideal_for: getStringArray(row.not_ideal_for),
-    crowd_level: typeof row.crowd_level === "string" ? row.crowd_level : null,
-    indoor_outdoor: typeof row.indoor_outdoor === "string" ? row.indoor_outdoor : null,
-    weather_fit: typeof row.weather_fit === "string" ? row.weather_fit : null,
-    parking_info: typeof row.parking_info === "string" ? row.parking_info : null,
-    accessibility_notes: typeof row.accessibility_notes === "string" ? row.accessibility_notes : null,
-    decision_reason: typeof row.decision_reason === "string" ? row.decision_reason : null,
+    crowd_level: getNullableString(row.crowd_level),
+    indoor_outdoor: getNullableString(row.indoor_outdoor),
+    weather_fit: getNullableString(row.weather_fit),
+    parking_info: getNullableString(row.parking_info),
+    accessibility_notes: getNullableString(row.accessibility_notes),
+    decision_reason: getNullableString(row.decision_reason),
     commute_friendly: typeof row.commute_friendly === "boolean" ? row.commute_friendly : null,
-    commute_access: typeof row.commute_access === "string" ? row.commute_access : null,
-    nearby_context: typeof row.nearby_context === "string" ? row.nearby_context : null,
+    commute_access: getNullableString(row.commute_access),
+    nearby_context: getNullableString(row.nearby_context),
     budget_notes: budgetNotes,
-    verification_status: typeof row.verification_status === "string" ? row.verification_status : null,
-    verification_notes: typeof row.verification_notes === "string" ? row.verification_notes : null,
+    verification_status: getNullableString(row.verification_status),
+    verification_notes: getNullableString(row.verification_notes),
     verification_sources: getStringArray(row.verification_sources),
-    last_verified_at: typeof row.last_verified_at === "string" ? row.last_verified_at : null,
+    last_verified_at: getNullableString(row.last_verified_at),
     website_url: websiteUrl || null,
     google_maps_url: googleMapsUrl,
-    category: typeof row.category === "string" ? row.category : "Place",
+    category: getNullableString(row.category) ?? "Place",
     entranceFee: budgetNotes ?? "Not specified",
     openHours: "Not available",
     website: websiteUrl,
-    latitude: typeof row.latitude === "number" ? row.latitude : 0,
-    longitude: typeof row.longitude === "number" ? row.longitude : 0,
+    latitude,
+    longitude,
     imageUrl: "",
     curatedImageUrls: [],
   };
@@ -122,8 +171,7 @@ function mapPlaceRowToDetail(row: Record<string, unknown>): PlaceDetail {
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const PLACE_DETAIL_COLUMNS =
-  "id,slug,name,category,address,city,area,latitude,longitude,description,place_history,best_time_to_visit,visit_duration,good_for,not_ideal_for,crowd_level,indoor_outdoor,weather_fit,parking_info,accessibility_notes,decision_reason,commute_friendly,commute_access,nearby_context,budget_notes,verification_status,verification_notes,verification_sources,last_verified_at,website_url,google_maps_url";
+const PLACE_DETAIL_COLUMNS = "*";
 
 export async function findPlaceDetailByIdOrSlug(id: string): Promise<PlaceDetail | null> {
   const trimmedId = id.trim();
@@ -143,10 +191,13 @@ export async function findPlaceDetailByIdOrSlug(id: string): Promise<PlaceDetail
 
     if (!slugError && slugData) {
       const detail = mapPlaceRowToDetail(slugData as Record<string, unknown>);
+      const reviewSummary = await getPlaceReviewSummary(detail.id);
       const images = await getApprovedPlaceImages(detail.id);
       const imageUrls = images.map((image) => image.image_url);
       return {
         ...detail,
+        rating: reviewSummary.averageRating ?? detail.rating ?? null,
+        review_count: reviewSummary.reviewCount > 0 ? reviewSummary.reviewCount : null,
         imageUrl: imageUrls[0] ?? "",
         curatedImageUrls: imageUrls,
       };
@@ -162,10 +213,13 @@ export async function findPlaceDetailByIdOrSlug(id: string): Promise<PlaceDetail
 
       if (!idError && idData) {
         const detail = mapPlaceRowToDetail(idData as Record<string, unknown>);
+        const reviewSummary = await getPlaceReviewSummary(detail.id);
         const images = await getApprovedPlaceImages(detail.id);
         const imageUrls = images.map((image) => image.image_url);
         return {
           ...detail,
+          rating: reviewSummary.averageRating ?? detail.rating ?? null,
+          review_count: reviewSummary.reviewCount > 0 ? reviewSummary.reviewCount : null,
           imageUrl: imageUrls[0] ?? "",
           curatedImageUrls: imageUrls,
         };

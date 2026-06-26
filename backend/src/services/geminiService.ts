@@ -84,19 +84,26 @@ export async function generateGeminiResponse({
     apiKey,
   });
 
-  try {
-    return await generateContentText(ai, ASK_AI_GUIDE_MODEL, prompt);
-  } catch {
-    try {
-      return await generateContentText(ai, ASK_AI_GUIDE_FALLBACK_MODEL, prompt);
-    } catch (fallbackError) {
-      const status = getGeminiErrorStatus(fallbackError);
-      const message =
-        fallbackError instanceof Error
-          ? fallbackError.message
-          : "Gemini API request failed.";
+  const modelSequence = [
+    ASK_AI_GUIDE_MODEL,
+    ASK_AI_GUIDE_FALLBACK_MODEL,
+  ];
 
-      throw new GeminiServiceError(message, status);
+  let lastError: unknown = null;
+
+  for (const model of modelSequence) {
+    try {
+      return await generateContentText(ai, model, prompt);
+    } catch (error) {
+      lastError = error;
     }
   }
+
+  const status = getGeminiErrorStatus(lastError);
+  const message =
+    lastError instanceof Error
+      ? lastError.message
+      : "Gemini API request failed.";
+
+  throw new GeminiServiceError(message, status);
 }

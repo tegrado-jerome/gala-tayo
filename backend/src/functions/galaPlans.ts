@@ -26,7 +26,6 @@ type PlanRow = {
   created_at: string;
   updated_at: string;
   hearts_count: number | null;
-  profiles?: ProfileRow | null;
 };
 
 type PlaceRow = {
@@ -37,7 +36,7 @@ type PlaceRow = {
   city: string | null;
   area?: string | null;
   address?: string | null;
-  budget_label?: string | null;
+  budget_min?: number | string | null;
   latitude?: number | string | null;
   longitude?: number | string | null;
   image_url?: string | null;
@@ -59,14 +58,13 @@ type ItemRow = {
 
 const PLAN_COLUMNS =
   "id, user_id, title, slug, description, visibility, status, published_at, created_at, updated_at, hearts_count";
-const PLAN_WITH_OWNER_COLUMNS =
-  `${PLAN_COLUMNS}, profiles(user_id, username, display_name, avatar_url, provider_avatar_url, bio)`;
 const ITEM_COLUMNS =
-  "id, plan_id, place_id, day_number, sort_order, time_label, notes, estimated_minutes, created_at, updated_at, places(id, name, slug, category, city, area, address, budget_label, latitude, longitude, image_url)";
+  "id, plan_id, place_id, day_number, sort_order, time_label, notes, estimated_minutes, created_at, updated_at, places(id, name, slug, category, city, address, budget_min, latitude, longitude)";
 const PREVIEW_ITEM_COLUMNS = "id, plan_id, place_id, day_number, sort_order, places(id, name, slug, city, category)";
 const PLAN_VISIBILITIES = new Set<PlanVisibility>(["private", "public"]);
 const ACTIVE_STATUS = "active";
 const DELETED_STATUS = "deleted";
+const SHOULD_LOG_DETAIL_TRACE = process.env.NODE_ENV !== "production";
 
 function unauthorized(): HttpResponseInit {
   return { status: 401, jsonBody: { message: "Missing or invalid Authorization header." } };
@@ -126,6 +124,10 @@ function isActive(plan: PlanRow) {
   return (plan.status ?? ACTIVE_STATUS) === ACTIVE_STATUS;
 }
 
+function isDeleted(plan: PlanRow) {
+  return (plan.status ?? ACTIVE_STATUS) === DELETED_STATUS;
+}
+
 function sortItems(first: ItemRow, second: ItemRow) {
   const firstDay = first.day_number ?? 1;
   const secondDay = second.day_number ?? 1;
@@ -166,14 +168,20 @@ function mapPlace(place: PlaceRow | null | undefined, fallbackPlaceId: string) {
     city: place?.city ?? null,
     area: place?.area ?? null,
     address: place?.address ?? null,
-    budget_label: place?.budget_label ?? null,
+    budget_min: toNullableNumber(place?.budget_min),
     latitude: toNullableNumber(place?.latitude),
     longitude: toNullableNumber(place?.longitude),
     image_url: place?.image_url ?? null,
   };
 }
 
-function basePlanPayload(plan: PlanRow, items: ItemRow[], viewerHasHeart = false, viewerId?: string | null) {
+function basePlanPayload(
+  plan: PlanRow,
+  items: ItemRow[],
+  viewerHasHeart = false,
+  viewerId?: string | null,
+  owner?: ProfileRow | null,
+) {
   const sortedItems = [...items].sort(sortItems);
   const heartCount = plan.hearts_count ?? 0;
   const status = plan.status ?? ACTIVE_STATUS;
@@ -196,17 +204,29 @@ function basePlanPayload(plan: PlanRow, items: ItemRow[], viewerHasHeart = false
     place_count: sortedItems.length,
     places_count: sortedItems.length,
     preview_places: sortedItems.slice(0, 3).map(mapPreviewPlace).filter(Boolean),
-    owner: mapOwner(plan.profiles),
+    owner: mapOwner(owner),
   };
 }
 
-function mapPlanSummary(plan: PlanRow, items: ItemRow[], viewerHasHeart = false, viewerId?: string | null) {
-  return basePlanPayload(plan, items, viewerHasHeart, viewerId);
+function mapPlanSummary(
+  plan: PlanRow,
+  items: ItemRow[],
+  viewerHasHeart = false,
+  viewerId?: string | null,
+  owner?: ProfileRow | null,
+) {
+  return basePlanPayload(plan, items, viewerHasHeart, viewerId, owner);
 }
 
-function mapPlanDetail(plan: PlanRow, items: ItemRow[], viewerHasHeart = false, viewerId?: string | null) {
+function mapPlanDetail(
+  plan: PlanRow,
+  items: ItemRow[],
+  viewerHasHeart = false,
+  viewerId?: string | null,
+  owner?: ProfileRow | null,
+) {
   return {
-    ...basePlanPayload(plan, items, viewerHasHeart, viewerId),
+    ...basePlanPayload(plan, items, viewerHasHeart, viewerId, owner),
     items: [...items].sort(sortItems).map((item, index) => ({
       id: item.id,
       plan_id: item.plan_id,
@@ -271,10 +291,27 @@ async function getPlanItems(planIds: string[], previewOnly = false) {
   return byPlanId;
 }
 
+async function getProfilesByUserIds(userIds: string[]) {
+  const uniqueUserIds = Array.from(new Set(userIds.filter(Boolean)));
+  const profilesByUserId = new Map<string, ProfileRow>();
+  if (uniqueUserIds.length === 0) return profilesByUserId;
+
+  const supabase = await getSupabaseAdminClient();
+  const { data, error } = await (supabase.from("profiles") as any)
+    .select("user_id, username, display_name, avatar_url, provider_avatar_url, bio")
+    .in("user_id", uniqueUserIds);
+  if (error) throw error;
+
+  for (const profile of (data || []) as ProfileRow[]) {
+    profilesByUserId.set(profile.user_id, profile);
+  }
+  return profilesByUserId;
+}
+
 async function getPlanById(planId: string) {
   const supabase = await getSupabaseAdminClient();
   const { data, error } = await (supabase.from("gala_plans") as any)
-    .select(PLAN_WITH_OWNER_COLUMNS)
+    .select(PLAN_COLUMNS)
     .eq("id", planId)
     .maybeSingle();
   if (error) throw error;
@@ -284,7 +321,7 @@ async function getPlanById(planId: string) {
 async function getOwnedPlan(userId: string, planId: string) {
   const supabase = await getSupabaseAdminClient();
   const { data, error } = await (supabase.from("gala_plans") as any)
-    .select(PLAN_WITH_OWNER_COLUMNS)
+    .select(PLAN_COLUMNS)
     .eq("id", planId)
     .eq("user_id", userId)
     .neq("status", DELETED_STATUS)
@@ -378,7 +415,7 @@ export async function listMyGalaPlans(request: HttpRequest, context: InvocationC
     const user = await getCurrentUser(request);
     const supabase = await getSupabaseAdminClient();
     const { data, error } = await (supabase.from("gala_plans") as any)
-      .select(PLAN_WITH_OWNER_COLUMNS)
+      .select(PLAN_COLUMNS)
       .eq("user_id", user.id)
       .neq("status", DELETED_STATUS)
       .order("updated_at", { ascending: false });
@@ -386,9 +423,14 @@ export async function listMyGalaPlans(request: HttpRequest, context: InvocationC
 
     const plans = (data || []) as PlanRow[];
     const itemsByPlanId = await getPlanItems(plans.map((plan) => plan.id), true);
+    const ownersByUserId = await getProfilesByUserIds(plans.map((plan) => plan.user_id));
     return {
       status: 200,
-      jsonBody: { plans: plans.map((plan) => mapPlanSummary(plan, itemsByPlanId.get(plan.id) || [], false, user.id)) },
+      jsonBody: {
+        plans: plans.map((plan) =>
+          mapPlanSummary(plan, itemsByPlanId.get(plan.id) || [], false, user.id, ownersByUserId.get(plan.user_id) || null),
+        ),
+      },
     };
   } catch (error) {
     if (isAuthError(error)) return unauthorized();
@@ -426,7 +468,7 @@ export async function createGalaPlan(request: HttpRequest, context: InvocationCo
         status: ACTIVE_STATUS,
         published_at: visibility === "public" ? new Date().toISOString() : null,
       })
-      .select(PLAN_WITH_OWNER_COLUMNS)
+      .select(PLAN_COLUMNS)
       .single();
     if (error) throw error;
 
@@ -438,7 +480,11 @@ export async function createGalaPlan(request: HttpRequest, context: InvocationCo
     }
 
     const items = await getPlanItems([plan.id]);
-    return { status: 201, jsonBody: { plan: mapPlanDetail(plan, items.get(plan.id) || [], false, user.id) } };
+    const ownersByUserId = await getProfilesByUserIds([plan.user_id]);
+    return {
+      status: 201,
+      jsonBody: { plan: mapPlanDetail(plan, items.get(plan.id) || [], false, user.id, ownersByUserId.get(plan.user_id) || null) },
+    };
   } catch (error) {
     if (isAuthError(error)) return unauthorized();
     context.error("POST /api/gala-plans failed:", error);
@@ -446,63 +492,133 @@ export async function createGalaPlan(request: HttpRequest, context: InvocationCo
   }
 }
 
-export async function listLikedGalaPlans(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+export async function listFavoriteGalaPlans(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
   try {
     const user = await getCurrentUser(request);
     const supabase = await getSupabaseAdminClient();
     const { data: heartRows, error: heartError } = await (supabase.from("gala_plan_hearts") as any)
-      .select("gala_plan_id, created_at")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false });
+      .select("gala_plan_id")
+      .eq("user_id", user.id);
     if (heartError) throw heartError;
 
-    const planIds = ((heartRows || []) as Array<{ gala_plan_id: string }>).map((row) => row.gala_plan_id);
+    const planIds = Array.from(new Set(((heartRows || []) as Array<{ gala_plan_id: string }>).map((row) => row.gala_plan_id)));
     if (planIds.length === 0) return { status: 200, jsonBody: { plans: [] } };
 
     const { data: plansData, error: plansError } = await (supabase.from("gala_plans") as any)
-      .select(PLAN_WITH_OWNER_COLUMNS)
+      .select(PLAN_COLUMNS)
       .in("id", planIds)
       .eq("visibility", "public")
       .eq("status", ACTIVE_STATUS);
     if (plansError) throw plansError;
 
-    const order = new Map(planIds.map((planId, index) => [planId, index]));
-    const plans = ((plansData || []) as PlanRow[]).sort((first, second) => (order.get(first.id) ?? 0) - (order.get(second.id) ?? 0));
+    const plans = ((plansData || []) as PlanRow[]).sort(
+      (first, second) => new Date(second.updated_at).getTime() - new Date(first.updated_at).getTime(),
+    );
     const itemsByPlanId = await getPlanItems(plans.map((plan) => plan.id), true);
+    const ownersByUserId = await getProfilesByUserIds(plans.map((plan) => plan.user_id));
     return {
       status: 200,
-      jsonBody: { plans: plans.map((plan) => mapPlanSummary(plan, itemsByPlanId.get(plan.id) || [], true, user.id)) },
+      jsonBody: {
+        plans: plans.map((plan) =>
+          mapPlanSummary(plan, itemsByPlanId.get(plan.id) || [], true, user.id, ownersByUserId.get(plan.user_id) || null),
+        ),
+      },
     };
   } catch (error) {
     if (isAuthError(error)) return unauthorized();
-    context.error("GET /api/gala-plans/liked failed:", error);
-    return { status: 500, jsonBody: { message: "Failed to load liked gala plans." } };
+    context.error("GET /api/gala-plans/favorites failed:", error);
+    return { status: 500, jsonBody: { message: "Failed to load gala plan favorites." } };
   }
 }
 
 export async function getGalaPlanDetail(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
   try {
     const viewer = await getOptionalCurrentUser(request);
-    const idOrSlug = getString(request.params.idOrSlug);
+    const id = getString(request.params.id);
+    if (!isUuid(id)) {
+      return { status: 400, jsonBody: { message: "A valid gala plan id is required." } };
+    }
     const supabase = await getSupabaseAdminClient();
-    let query = (supabase.from("gala_plans") as any).select(PLAN_WITH_OWNER_COLUMNS);
-    query = isUuid(idOrSlug) ? query.eq("id", idOrSlug) : query.eq("slug", idOrSlug);
-    const { data, error } = await query.maybeSingle();
+    const { data, error } = await (supabase.from("gala_plans") as any)
+      .select(PLAN_COLUMNS)
+      .eq("id", id)
+      .maybeSingle();
     if (error) throw error;
 
     const plan = data as PlanRow | null;
-    if (!plan || !isActive(plan)) return notFound();
+    if (!plan || isDeleted(plan)) {
+      if (SHOULD_LOG_DETAIL_TRACE) {
+        context.log("GET /api/gala-plans/{id} decision", {
+          planId: plan?.id ?? id,
+          planUserId: plan?.user_id ?? null,
+          currentUserId: viewer?.id ?? null,
+          planStatus: plan?.status ?? null,
+          planVisibility: plan?.visibility ?? null,
+          isOwner: false,
+          allow: false,
+          denyReason: !plan ? "plan_not_found" : "plan_deleted",
+        });
+      }
+      return notFound();
+    }
 
     const viewerIsOwner = viewer?.id === plan.user_id;
-    if (!viewerIsOwner && plan.visibility !== "public") return notFound();
+    const decisionTrace = {
+      planId: plan.id,
+      planUserId: plan.user_id,
+      currentUserId: viewer?.id ?? null,
+      planStatus: plan.status ?? null,
+      planVisibility: plan.visibility,
+      isOwner: viewerIsOwner,
+    };
+    if (!viewerIsOwner) {
+      if (!isActive(plan)) {
+        if (SHOULD_LOG_DETAIL_TRACE) {
+          context.log("GET /api/gala-plans/{id} decision", {
+            ...decisionTrace,
+            allow: false,
+            denyReason: "not_active_for_non_owner",
+          });
+        }
+        return notFound();
+      }
+      if (plan.visibility !== "public") {
+        if (SHOULD_LOG_DETAIL_TRACE) {
+          context.log("GET /api/gala-plans/{id} decision", {
+            ...decisionTrace,
+            allow: false,
+            denyReason: "not_public_for_non_owner",
+          });
+        }
+        return notFound();
+      }
+    }
+    if (SHOULD_LOG_DETAIL_TRACE) {
+      context.log("GET /api/gala-plans/{id} decision", {
+        ...decisionTrace,
+        allow: true,
+      });
+    }
 
     const [itemsByPlanId, hearted] = await Promise.all([
       getPlanItems([plan.id]),
       getHeartedPlanIds(viewer?.id, [plan.id]),
     ]);
-    return { status: 200, jsonBody: { plan: mapPlanDetail(plan, itemsByPlanId.get(plan.id) || [], hearted.has(plan.id), viewer?.id) } };
+    const ownersByUserId = await getProfilesByUserIds([plan.user_id]);
+    return {
+      status: 200,
+      jsonBody: {
+        plan: mapPlanDetail(
+          plan,
+          itemsByPlanId.get(plan.id) || [],
+          hearted.has(plan.id),
+          viewer?.id,
+          ownersByUserId.get(plan.user_id) || null,
+        ),
+      },
+    };
   } catch (error) {
-    context.error("GET /api/gala-plans/{idOrSlug} failed:", error);
+    context.error("GET /api/gala-plans/{id} failed:", error);
     return { status: 500, jsonBody: { message: "Failed to load gala plan." } };
   }
 }
@@ -538,12 +654,17 @@ export async function updateGalaPlan(request: HttpRequest, context: InvocationCo
       .update(updates)
       .eq("id", plan.id)
       .eq("user_id", user.id)
-      .select(PLAN_WITH_OWNER_COLUMNS)
+      .select(PLAN_COLUMNS)
       .single();
     if (error) throw error;
 
     const items = await getPlanItems([plan.id]);
-    return { status: 200, jsonBody: { plan: mapPlanDetail(data as PlanRow, items.get(plan.id) || [], false, user.id) } };
+    const nextPlan = data as PlanRow;
+    const ownersByUserId = await getProfilesByUserIds([nextPlan.user_id]);
+    return {
+      status: 200,
+      jsonBody: { plan: mapPlanDetail(nextPlan, items.get(plan.id) || [], false, user.id, ownersByUserId.get(nextPlan.user_id) || null) },
+    };
   } catch (error) {
     if (isAuthError(error)) return unauthorized();
     context.error("PATCH /api/gala-plans/{id} failed:", error);
@@ -722,12 +843,12 @@ export async function toggleGalaPlanHeart(request: HttpRequest, context: Invocat
 
 app.http("listMyGalaPlans", { methods: ["GET"], authLevel: "anonymous", route: "gala-plans", handler: listMyGalaPlans });
 app.http("createGalaPlan", { methods: ["POST"], authLevel: "anonymous", route: "gala-plans", handler: createGalaPlan });
-app.http("listLikedGalaPlans", { methods: ["GET"], authLevel: "anonymous", route: "gala-plans/liked", handler: listLikedGalaPlans });
-app.http("getGalaPlanDetail", { methods: ["GET"], authLevel: "anonymous", route: "gala-plans/{idOrSlug}", handler: getGalaPlanDetail });
-app.http("updateGalaPlan", { methods: ["PATCH"], authLevel: "anonymous", route: "gala-plans/{id}", handler: updateGalaPlan });
-app.http("deleteGalaPlan", { methods: ["DELETE"], authLevel: "anonymous", route: "gala-plans/{id}", handler: deleteGalaPlan });
-app.http("addGalaPlanItem", { methods: ["POST"], authLevel: "anonymous", route: "gala-plans/{id}/items", handler: addGalaPlanItem });
-app.http("updateGalaPlanItem", { methods: ["PATCH"], authLevel: "anonymous", route: "gala-plans/{id}/items/{itemId}", handler: updateGalaPlanItem });
-app.http("deleteGalaPlanItem", { methods: ["DELETE"], authLevel: "anonymous", route: "gala-plans/{id}/items/{itemId}", handler: deleteGalaPlanItem });
-app.http("toggleGalaPlanHeart", { methods: ["POST"], authLevel: "anonymous", route: "gala-plans/{id}/heart", handler: toggleGalaPlanHeart });
-
+app.http("listFavoriteGalaPlans", { methods: ["GET"], authLevel: "anonymous", route: "gala-plans/favorites", handler: listFavoriteGalaPlans });
+app.http("listLikedGalaPlansLegacy", { methods: ["GET"], authLevel: "anonymous", route: "gala-plans/liked", handler: listFavoriteGalaPlans });
+app.http("getGalaPlanDetail", { methods: ["GET"], authLevel: "anonymous", route: "gala-plans/{id:guid}", handler: getGalaPlanDetail });
+app.http("updateGalaPlan", { methods: ["PATCH"], authLevel: "anonymous", route: "gala-plans/{id:guid}", handler: updateGalaPlan });
+app.http("deleteGalaPlan", { methods: ["DELETE"], authLevel: "anonymous", route: "gala-plans/{id:guid}", handler: deleteGalaPlan });
+app.http("addGalaPlanItem", { methods: ["POST"], authLevel: "anonymous", route: "gala-plans/{id:guid}/items", handler: addGalaPlanItem });
+app.http("updateGalaPlanItem", { methods: ["PATCH"], authLevel: "anonymous", route: "gala-plans/{id:guid}/items/{itemId:guid}", handler: updateGalaPlanItem });
+app.http("deleteGalaPlanItem", { methods: ["DELETE"], authLevel: "anonymous", route: "gala-plans/{id:guid}/items/{itemId:guid}", handler: deleteGalaPlanItem });
+app.http("toggleGalaPlanHeart", { methods: ["POST"], authLevel: "anonymous", route: "gala-plans/{id:guid}/heart", handler: toggleGalaPlanHeart });

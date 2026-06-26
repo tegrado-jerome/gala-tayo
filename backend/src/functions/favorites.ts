@@ -1,5 +1,6 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
+import { findPlaceDetailByIdOrSlug } from "../data/placeDetails";
 import { AuthenticatedUser, validateJwt } from "../utils/auth";
 
 type Favorite = {
@@ -25,24 +26,8 @@ type FavoritePlace = {
   google_maps_url?: string | null;
   latitude?: number | null;
   longitude?: number | null;
-};
-
-type PlaceRow = {
-  id: string;
-  name: string;
-  slug: string;
-  category?: string | null;
-  address?: string | null;
-  city?: string | null;
-  area?: string | null;
-  budget_label?: string | null;
-  budget_min?: number | null;
-  budget_max?: number | null;
-  budget_notes?: string | null;
-  is_free?: boolean | null;
-  google_maps_url?: string | null;
-  latitude?: number | null;
-  longitude?: number | null;
+  photo_url?: string | null;
+  photos?: string[] | null;
 };
 
 type FavoritePlaceIdentifier = {
@@ -52,9 +37,6 @@ type FavoritePlaceIdentifier = {
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i;
-const FAVORITE_PLACE_COLUMNS =
-  "id, slug, name, category, address, city, area, budget_label, budget_min, budget_max, budget_notes, is_free, google_maps_url, latitude, longitude";
-
 function unauthorized(message: string): HttpResponseInit {
   return {
     status: 401,
@@ -148,36 +130,35 @@ async function findPlaceForFavorite(
   identifier: FavoritePlaceIdentifier,
   context: InvocationContext
 ): Promise<FavoritePlace | null> {
-  const supabaseAdmin = await getSupabaseAdminClient();
-  const normalizedIdentifier = identifier.value.toLowerCase();
+  const detail = await findPlaceDetailByIdOrSlug(identifier.value);
 
-  if (identifier.source === "placeSlug" || !UUID_PATTERN.test(identifier.value)) {
-    const { data: slugPlaceData, error: slugPlaceError } = await supabaseAdmin
-      .from("places")
-      .select(FAVORITE_PLACE_COLUMNS)
-      .eq("slug", normalizedIdentifier)
-      .maybeSingle();
-
-    if (slugPlaceError || !slugPlaceData) {
-      logFavoriteLookupFailure(context, identifier, "slug", slugPlaceError, slugPlaceData);
-      return null;
-    }
-
-    return slugPlaceData as FavoritePlace;
-  }
-
-  const { data: idPlaceData, error: idPlaceError } = await supabaseAdmin
-    .from("places")
-    .select(FAVORITE_PLACE_COLUMNS)
-    .eq("id", identifier.value)
-    .maybeSingle();
-
-  if (idPlaceError || !idPlaceData) {
-    logFavoriteLookupFailure(context, identifier, "id", idPlaceError, idPlaceData);
+  if (!detail) {
+    logFavoriteLookupFailure(
+      context,
+      identifier,
+      identifier.source === "placeSlug" || !UUID_PATTERN.test(identifier.value) ? "slug" : "id",
+      null,
+      null
+    );
     return null;
   }
 
-  return idPlaceData as FavoritePlace;
+  return {
+    id: detail.id,
+    name: detail.name,
+    slug: detail.slug,
+    category: detail.category,
+    address: detail.address ?? null,
+    city: detail.city ?? null,
+    area: detail.area ?? null,
+    budget_label: detail.budget_notes ?? null,
+    budget_notes: detail.budget_notes ?? null,
+    google_maps_url: detail.google_maps_url ?? null,
+    latitude: detail.latitude ?? null,
+    longitude: detail.longitude ?? null,
+    photo_url: detail.imageUrl || null,
+    photos: detail.curatedImageUrls ?? [],
+  };
 }
 
 async function getUserFavorites(userId: string): Promise<{ favorites: Array<Favorite & { place: FavoritePlace | null }>; error: unknown }> {
@@ -207,20 +188,37 @@ async function getUserFavorites(userId: string): Promise<{ favorites: Array<Favo
 
   const uniquePlaceIds = Array.from(new Set(favoriteRows.map((favorite) => favorite.place_id)));
 
-  const { data: places, error: placesError } = await supabaseAdmin
-    .from("places")
-    .select(FAVORITE_PLACE_COLUMNS)
-    .in("id", uniquePlaceIds);
+  const placeEntries = await Promise.all(
+    uniquePlaceIds.map(async (placeId) => {
+      const detail = await findPlaceDetailByIdOrSlug(placeId);
 
-  if (placesError) {
-    return {
-      favorites: [],
-      error: placesError,
-    };
-  }
+      if (!detail) {
+        return [placeId, null] as const;
+      }
 
-  const placeRows = (places || []) as PlaceRow[];
-  const placeMap = new Map(placeRows.map((place) => [place.id, place]));
+      return [
+        placeId,
+        {
+          id: detail.id,
+          name: detail.name,
+          slug: detail.slug,
+          category: detail.category,
+          address: detail.address ?? null,
+          city: detail.city ?? null,
+          area: detail.area ?? null,
+          budget_label: detail.budget_notes ?? null,
+          budget_notes: detail.budget_notes ?? null,
+          google_maps_url: detail.google_maps_url ?? null,
+          latitude: detail.latitude ?? null,
+          longitude: detail.longitude ?? null,
+          photo_url: detail.imageUrl || null,
+          photos: detail.curatedImageUrls ?? [],
+        } satisfies FavoritePlace,
+      ] as const;
+    })
+  );
+
+  const placeMap = new Map(placeEntries);
   const seenPlaceIds = new Set<string>();
 
   return {

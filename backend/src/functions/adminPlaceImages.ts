@@ -25,6 +25,10 @@ type PlaceImageRow = {
   updated_at: string | null;
 };
 
+type PlaceImageWithPlaceRow = PlaceImageRow & {
+  places?: PlaceRow | null;
+};
+
 type ProfileRow = {
   user_id: string;
   username: string | null;
@@ -253,6 +257,66 @@ export async function adminApprovedPlaceImages(
   }
 }
 
+export async function adminApprovedPlaceImagesAll(
+  request: HttpRequest,
+  context: InvocationContext
+): Promise<HttpResponseInit> {
+  try {
+    const admin = await requireAdmin(request);
+
+    if (admin.response) {
+      return admin.response;
+    }
+
+    const query = request.query.get("query")?.trim().toLowerCase() ?? "";
+    const supabase = await getSupabaseAdminClient();
+    const { data, error } = await (supabase.from("place_images") as any)
+      .select(`${PLACE_IMAGE_COLUMNS}, places(id, name, slug)`)
+      .eq("status", "approved")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      throw error;
+    }
+
+    const rows = ((data || []) as PlaceImageWithPlaceRow[]).filter((row) => Boolean(row.image_url));
+    const filteredRows = query
+      ? rows.filter((row) => {
+          const placeName = row.places?.name?.toLowerCase() ?? "";
+          const placeSlug = row.places?.slug?.toLowerCase() ?? "";
+          const placeId = row.place_id.toLowerCase();
+          const imageUrl = row.image_url?.toLowerCase() ?? "";
+
+          return (
+            placeName.includes(query) ||
+            placeSlug.includes(query) ||
+            placeId.includes(query) ||
+            imageUrl.includes(query)
+          );
+        })
+      : rows;
+
+    return {
+      status: 200,
+      jsonBody: {
+        images: filteredRows.map((row) => ({
+          id: row.id,
+          placeId: row.place_id,
+          placeName: row.places?.name ?? "Unknown place",
+          placeSlug: row.places?.slug ?? "",
+          imageUrl: row.image_url,
+          storageKey: row.storage_key,
+          sortOrder: row.sort_order,
+          createdAt: row.created_at,
+        })),
+      },
+    };
+  } catch (error) {
+    context.error("GET /api/app-admin/place-images/approved/all failed:", error);
+    return response(500, "Failed to load approved place images.");
+  }
+}
+
 export async function adminPlaceImageApprove(
   request: HttpRequest,
   context: InvocationContext
@@ -462,6 +526,13 @@ app.http("adminPlaceImagesApproved", {
   authLevel: "anonymous",
   route: "app-admin/place-images/approved",
   handler: adminApprovedPlaceImages,
+});
+
+app.http("adminPlaceImagesApprovedAll", {
+  methods: ["GET"],
+  authLevel: "anonymous",
+  route: "app-admin/place-images/approved/all",
+  handler: adminApprovedPlaceImagesAll,
 });
 
 app.http("adminPlaceImageApprove", {

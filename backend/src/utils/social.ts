@@ -98,6 +98,49 @@ function withProfileDefaults(profile: Partial<SocialProfile> | null) {
     : null;
 }
 
+async function getLiveFollowCounts(userId: string) {
+  const supabase = await getSupabaseAdminClient();
+  const [{ count: followersCount, error: followersError }, { count: followingCount, error: followingError }] = await Promise.all([
+    (supabase.from("user_follows") as any)
+      .select("*", { count: "exact", head: true })
+      .eq("following_id", userId)
+      .eq("status", "accepted"),
+    (supabase.from("user_follows") as any)
+      .select("*", { count: "exact", head: true })
+      .eq("follower_id", userId)
+      .eq("status", "accepted"),
+  ]);
+
+  if (followersError) {
+    throw followersError;
+  }
+
+  if (followingError) {
+    throw followingError;
+  }
+
+  return {
+    followers_count: followersCount ?? 0,
+    following_count: followingCount ?? 0,
+  };
+}
+
+async function withLiveCounts(profile: Partial<SocialProfile> | null) {
+  const normalizedProfile = withProfileDefaults(profile);
+
+  if (!normalizedProfile) {
+    return null;
+  }
+
+  const liveCounts = await getLiveFollowCounts(normalizedProfile.user_id);
+
+  return {
+    ...normalizedProfile,
+    followers_count: liveCounts.followers_count,
+    following_count: liveCounts.following_count,
+  } as SocialProfile;
+}
+
 export async function getProfileByUsername(username: string) {
   const supabase = await getSupabaseAdminClient();
   const { data, error } = await (supabase.from("profiles") as any)
@@ -116,13 +159,13 @@ export async function getProfileByUsername(username: string) {
         throw baseError;
       }
 
-      return withProfileDefaults(baseData as Partial<SocialProfile> | null);
+      return withLiveCounts(baseData as Partial<SocialProfile> | null);
     }
 
     throw error;
   }
 
-  return withProfileDefaults(data as SocialProfile | null);
+  return withLiveCounts(data as SocialProfile | null);
 }
 
 export async function getProfileByUserId(userId: string) {
@@ -143,13 +186,13 @@ export async function getProfileByUserId(userId: string) {
         throw baseError;
       }
 
-      return withProfileDefaults(baseData as Partial<SocialProfile> | null);
+      return withLiveCounts(baseData as Partial<SocialProfile> | null);
     }
 
     throw error;
   }
 
-  return withProfileDefaults(data as SocialProfile | null);
+  return withLiveCounts(data as SocialProfile | null);
 }
 
 export async function isAcceptedFollower(viewerId: string | null | undefined, targetUserId: string) {
@@ -228,10 +271,10 @@ export async function canSeeFollowing(viewerId: string | null | undefined, targe
 }
 
 export async function canViewGalaPlan(viewerId: string | null | undefined, galaPlan: SocialGalaPlan) {
-  if (viewerId === galaPlan.user_id) return true;
-  if ((galaPlan.status ?? "active") !== "active") return false;
-  if (galaPlan.visibility === "public") return true;
-  return false;
+  const status = galaPlan.status ?? "active";
+  if (status === "deleted") return false;
+  if (viewerId && viewerId === galaPlan.user_id) return true;
+  return status === "active" && galaPlan.visibility === "public";
 }
 
 export function publicProfilePayload(profile: SocialProfile) {
