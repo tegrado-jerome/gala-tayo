@@ -55,7 +55,7 @@ function SparkleIcon() {
 }
 
 function BackToHomeButton({ className = '' }: { className?: string }) {
-  return <MinimalBackNav to="/home" className={className} />
+  return <MinimalBackNav to="/" className={className} />
 }
 
 function getExternalLinkImageSrc(label: string) {

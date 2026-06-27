@@ -17,6 +17,7 @@ type PlaceCommentRow = {
 
 type PlaceComment = PlaceCommentRow & {
   member_display_name?: string | null;
+  member_username?: string | null;
   member_avatar_url?: string | null;
   current_user_reported?: boolean;
   replies: PlaceComment[];
@@ -352,7 +353,7 @@ async function requireResolvedPlaceId(request: HttpRequest): Promise<{ placeId?:
 
 async function enrichCommentsWithDisplayNames<T extends PlaceCommentRow>(
   comments: T[]
-): Promise<Array<T & { member_display_name?: string | null; member_avatar_url?: string | null }>> {
+): Promise<Array<T & { member_display_name?: string | null; member_username?: string | null; member_avatar_url?: string | null }>> {
   if (comments.length === 0) {
     return comments;
   }
@@ -361,6 +362,7 @@ async function enrichCommentsWithDisplayNames<T extends PlaceCommentRow>(
     const supabaseAdmin = await getSupabaseAdminClient();
     const uniqueMemberIds = Array.from(new Set(comments.map((comment) => comment.user_id)));
     const displayNameByMemberId = new Map<string, string>();
+    const usernameByMemberId = new Map<string, string>();
     const avatarUrlByMemberId = new Map<string, string>();
 
     const { data, error } = await (supabaseAdmin.from("profiles") as any)
@@ -379,6 +381,10 @@ async function enrichCommentsWithDisplayNames<T extends PlaceCommentRow>(
         displayNameByMemberId.set(profile.user_id, displayName.trim());
       }
 
+      if (profile.username?.trim()) {
+        usernameByMemberId.set(profile.user_id, profile.username.trim());
+      }
+
       if (avatarUrl?.trim()) {
         avatarUrlByMemberId.set(profile.user_id, avatarUrl.trim());
       }
@@ -387,6 +393,7 @@ async function enrichCommentsWithDisplayNames<T extends PlaceCommentRow>(
     return comments.map((comment) => ({
       ...comment,
       member_display_name: displayNameByMemberId.get(comment.user_id) || null,
+      member_username: usernameByMemberId.get(comment.user_id) || null,
       member_avatar_url: avatarUrlByMemberId.get(comment.user_id) || null,
     }));
   } catch {
@@ -395,7 +402,7 @@ async function enrichCommentsWithDisplayNames<T extends PlaceCommentRow>(
 }
 
 function buildCommentTree(
-  comments: Array<PlaceCommentRow & { member_display_name?: string | null; member_avatar_url?: string | null }>
+  comments: Array<PlaceCommentRow & { member_display_name?: string | null; member_username?: string | null; member_avatar_url?: string | null }>
 ): PlaceComment[] {
   const commentsById = new Map(comments.map((comment) => [comment.id, comment]));
   const topLevel = comments
@@ -403,7 +410,7 @@ function buildCommentTree(
     .sort((left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime());
   const repliesByParentId = new Map<
     string,
-    Array<PlaceCommentRow & { member_display_name?: string | null; member_avatar_url?: string | null }>
+    Array<PlaceCommentRow & { member_display_name?: string | null; member_username?: string | null; member_avatar_url?: string | null }>
   >();
 
   comments
@@ -433,6 +440,7 @@ function buildCommentTree(
         updated_at: firstReply?.updated_at || firstReply?.created_at || new Date(0).toISOString(),
         deleted_at: firstReply?.updated_at || firstReply?.created_at || new Date().toISOString(),
         member_display_name: null,
+        member_username: null,
         member_avatar_url: null,
       };
     });
@@ -453,11 +461,13 @@ function buildCommentTree(
 function normalizeCommentForClient(
   comment: PlaceCommentRow & {
     member_display_name?: string | null;
+    member_username?: string | null;
     member_avatar_url?: string | null;
     current_user_reported?: boolean;
   }
 ): PlaceCommentRow & {
   member_display_name?: string | null;
+  member_username?: string | null;
   member_avatar_url?: string | null;
   current_user_reported?: boolean;
 } {

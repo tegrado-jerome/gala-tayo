@@ -5,7 +5,7 @@ import { AppIcon, getCategoryIconName } from '../components/AppIcon'
 import PlaceCard from '../components/PlaceCard'
 import type { PlaceCardData, PlaceCategoryMeta, PlaceTagMeta } from '../components/PlaceCard'
 import { supabase } from '../supabase'
-import { navigateToPath, navigateToPlace } from '../utils/navigation'
+import { navigateToCanonicalPlace, navigateToPath } from '../utils/navigation'
 import homeChibi from '../assets/chibis/public/chibi-welcome-page.webp'
 
 type HomeDashboardPageProps = {
@@ -90,7 +90,7 @@ const mainActions = [
   {
     title: 'Ask AI',
     description: 'Get a faster gala suggestion with one focused prompt.',
-    href: '/ask-ai',
+    href: '/ask-ai/text',
     icon: 'askAi' as const,
     tone: 'soft',
   },
@@ -361,7 +361,12 @@ function HomeDashboardPage({ session }: HomeDashboardPageProps) {
                     compact
                     onSelect={() => {
                       if (place.slug) {
-                        navigateToPlace(place.slug)
+                        navigateToCanonicalPlace({
+                          slug: place.slug,
+                          city: place.city,
+                          area: place.area,
+                          localArea: place.localArea,
+                        })
                       }
                     }}
                   />

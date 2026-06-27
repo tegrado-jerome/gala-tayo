@@ -3,7 +3,9 @@ import type { PlaceCardData } from './PlaceCard'
 import AppHeader from './AppHeader'
 import GuestLimitModal from './GuestLimitModal'
 import AddToGalaPlanModal from './AddToGalaPlanModal'
+import InternalLink from './InternalLink'
 import MapView from './MapView'
+import ReportUserModal from './ReportUserModal'
 import UnifiedLoadingState from './UnifiedLoadingState'
 import PlaceImageNotice from './PlaceImageNotice'
 import { AppIcon, type AppIconName } from './AppIcon'
@@ -16,7 +18,9 @@ import { buildPlaceShareUrl, shareLink } from '../utils/share'
 import { getDirectionsUrl, openDirectionsUrl } from '../utils/directions'
 import { submitCommentReport, type CommentReportReason } from '../utils/commentReportsApi'
 import { submitPlaceReport, type PlaceReportReason } from '../utils/placeReportsApi'
+import { getMyUserReports } from '../utils/userReportsApi'
 import { getMyProfile } from '../utils/profileApi'
+import { navigateToPath } from '../utils/navigation'
 
 type PlaceDetailViewProps = {
   place: PlaceCardData & {
@@ -24,6 +28,10 @@ type PlaceDetailViewProps = {
     slug: string
   }
   onBack: () => void
+  areaBreadcrumb?: {
+    areaSlug: string
+    areaName: string
+  } | null
 }
 
 type PlaceReview = {
@@ -50,6 +58,7 @@ type PlaceComment = {
   place_id: string
   user_id: string
   member_display_name?: string | null
+  member_username?: string | null
   member_avatar_url?: string | null
   parent_comment_id: string | null
   comment: string
@@ -816,7 +825,7 @@ function findCommentById(comments: PlaceComment[], commentId: string): PlaceComm
   return null
 }
 
-function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
+function PlaceDetailView({ place, areaBreadcrumb = null }: PlaceDetailViewProps) {
   const [isSavePromptOpen, setIsSavePromptOpen] = useState(false)
   const [isAddToPlanOpen, setIsAddToPlanOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -857,6 +866,9 @@ function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
   const [reportReason, setReportReason] = useState<CommentReportReason | ''>('')
   const [reportDetails, setReportDetails] = useState('')
   const [reportError, setReportError] = useState('')
+  const [reportingUser, setReportingUser] = useState<{ id: string; username?: string | null; displayName?: string | null } | null>(null)
+  const [reportedUserIds, setReportedUserIds] = useState<Set<string>>(new Set())
+  const [authToken, setAuthToken] = useState<string | null>(null)
   const [isPlaceConcernOpen, setIsPlaceConcernOpen] = useState(false)
   const [placeConcernReason, setPlaceConcernReason] = useState<PlaceReportReason | ''>('')
   const [placeConcernDetails, setPlaceConcernDetails] = useState('')
@@ -887,6 +899,22 @@ function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
   const placeSlug = cleanString(place.slug)
   const isCommunityPlaceReady = UUID_PATTERN.test(placeId)
   const canContributePhoto = Boolean(currentUserId && isCommunityPlaceReady && approvedImageCount < 3)
+  const areaLink = areaBreadcrumb ? `/places/${encodeURIComponent(areaBreadcrumb.areaSlug)}` : null
+  const canonicalPlaceLink = areaBreadcrumb ? `/places/${encodeURIComponent(areaBreadcrumb.areaSlug)}/${encodeURIComponent(placeSlug)}` : null
+  const quickAnswerItems = [
+    {
+      question: `What is ${place.name} best for?`,
+      answer: goodFor.length > 0 ? `${place.name} is best for ${goodFor.map(titleCase).join(', ')}.` : `${place.name} works best for a casual Metro Manila gala.`,
+    },
+    {
+      question: `Where is ${place.name}?`,
+      answer: `${place.name} is in ${addressLabel}.`,
+    },
+    {
+      question: `What should I know before going to ${place.name}?`,
+      answer: cleanString(place.best_time_to_visit) || cleanString(place.nearby_context) || cleanString(place.reason) || `Check the place details and route before heading to ${place.name}.`,
+    },
+  ]
 
   useEffect(() => {
     if (!openCommentMenuId) {
@@ -1062,6 +1090,32 @@ function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
     [isCommunityPlaceReady, placeId],
   )
 
+  const fetchMySubmittedUserReports = useCallback(
+    async (signal?: AbortSignal) => {
+      const session = await getSupabaseSession()
+      const token = await getSupabaseAccessToken(session)
+
+      setAuthToken(token)
+
+      if (!token) {
+        setReportedUserIds(new Set())
+        return
+      }
+
+      try {
+        const reports = await getMyUserReports(token, signal)
+        if (!signal?.aborted) {
+          setReportedUserIds(new Set(reports.map((report) => report.reported_user_id)))
+        }
+      } catch {
+        if (!signal?.aborted) {
+          setReportedUserIds(new Set())
+        }
+      }
+    },
+    [],
+  )
+
   useEffect(() => {
     const controller = new AbortController()
     let activeSession = null as Awaited<ReturnType<typeof getSupabaseSession>>
@@ -1069,11 +1123,13 @@ function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
     queueMicrotask(() => {
       void fetchPlaceReviews(controller.signal)
       void fetchPlaceComments(controller.signal)
+      void fetchMySubmittedUserReports(controller.signal)
     })
 
     void getSupabaseSession().then((session) => {
       activeSession = session
       void syncCurrentUserProfile(session)
+      void getSupabaseAccessToken(session).then((token) => setAuthToken(token))
     })
 
     const { data: authSubscription } = supabase.auth.onAuthStateChange((event, nextSession) => {
@@ -1084,6 +1140,7 @@ function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
         void syncCurrentUserProfile(nextSession)
         void fetchPlaceReviews()
         void fetchPlaceComments()
+        void fetchMySubmittedUserReports()
       }
     })
 
@@ -1091,7 +1148,7 @@ function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
       controller.abort()
       authSubscription.subscription.unsubscribe()
     }
-  }, [fetchPlaceComments, fetchPlaceReviews, syncCurrentUserProfile])
+  }, [fetchMySubmittedUserReports, fetchPlaceComments, fetchPlaceReviews, syncCurrentUserProfile])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -1749,6 +1806,20 @@ function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
     setReportError('')
   }
 
+  const handleOpenUserReport = (userId: string, username?: string | null, displayName?: string | null) => {
+    setOpenCommentMenuId(null)
+
+    if (!authToken) {
+      showSystemMessage({
+        title: 'Login required',
+        description: 'Log in to report a user.',
+      })
+      return
+    }
+
+    setReportingUser({ id: userId, username, displayName })
+  }
+
   const handleReviewSignIn = async () => {
     try {
       setIsReviewSignInStarting(true)
@@ -1874,13 +1945,37 @@ function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
       cleanString(comment.member_display_name) ||
       (isOwner ? cleanString(currentUserAvatarFallbackName) : '') ||
       'GalaTayo member'
+    const profileUsername = cleanString(comment.member_username)
     const avatarUrl = cleanString(comment.member_avatar_url)
     const isEdited = wasEdited(comment.created_at, comment.updated_at)
+    const canOpenProfile = isOwner || Boolean(profileUsername)
+
+    const handleOpenCommentProfile = () => {
+      if (isOwner) {
+        navigateToPath('/profile')
+        return
+      }
+
+      if (profileUsername) {
+        navigateToPath(`/u/${encodeURIComponent(profileUsername)}`)
+      }
+    }
 
     return (
       <li key={comment.id} className={isReply ? 'ml-2 border-l border-slate-200/80 pl-3 sm:ml-3 sm:pl-4' : ''}>
         <div className={`flex items-start gap-2.5 sm:gap-3 ${isPending ? 'opacity-75' : ''}`}>
-          <MemberAvatar displayName={displayName} avatarUrl={avatarUrl} compact reply={isReply} />
+          {canOpenProfile ? (
+            <button
+              type="button"
+              onClick={handleOpenCommentProfile}
+              aria-label={`Open ${displayName}'s profile`}
+              className="shrink-0 rounded-full"
+            >
+              <MemberAvatar displayName={displayName} avatarUrl={avatarUrl} compact reply={isReply} />
+            </button>
+          ) : (
+            <MemberAvatar displayName={displayName} avatarUrl={avatarUrl} compact reply={isReply} />
+          )}
 
           <div className="min-w-0 flex-1">
             <div
@@ -1895,7 +1990,17 @@ function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
               <div className="flex items-start gap-2">
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                    <span className="block min-w-0 truncate text-[14px] font-black text-slate-950">{displayName}</span>
+                    {canOpenProfile ? (
+                      <button
+                        type="button"
+                        onClick={handleOpenCommentProfile}
+                        className="block min-w-0 truncate text-[14px] font-black text-slate-950 transition hover:opacity-80"
+                      >
+                        {displayName}
+                      </button>
+                    ) : (
+                      <span className="block min-w-0 truncate text-[14px] font-black text-slate-950">{displayName}</span>
+                    )}
                     {isOwner ? (
                       <span className="inline-flex items-center rounded-full bg-[var(--accent-wash)] px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-[var(--accent-deep)]">
                         You
@@ -1930,7 +2035,7 @@ function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
                         role="menu"
                         className="absolute right-0 top-8 z-20 min-w-[11rem] overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-[0_12px_28px_rgba(15,23,42,0.12)]"
                       >
-                        {isOwner ? (
+                    {isOwner ? (
                           <>
                             <button
                               type="button"
@@ -1961,22 +2066,34 @@ function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
                             </button>
                           </>
                         ) : (
-                          <button
-                            type="button"
-                            role="menuitem"
-                            onClick={() => {
-                              setReportingCommentId(comment.id)
-                              setReportReason('')
-                              setReportDetails('')
-                              setReportError('')
-                              setOpenCommentMenuId(null)
-                            }}
-                            disabled={isReportedByCurrentUser || isReportSubmitting}
-                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-bold text-slate-700 transition hover:bg-slate-50 hover:text-slate-950 disabled:cursor-not-allowed disabled:text-slate-400"
-                          >
-                            <Flag className="h-3.5 w-3.5" strokeWidth={2.2} />
-                            {isReportedByCurrentUser ? 'Already reported' : isReportSubmitting && reportingCommentId === comment.id ? 'Reporting...' : 'Report comment'}
-                          </button>
+                          <>
+                            <button
+                              type="button"
+                              role="menuitem"
+                              onClick={() => {
+                                setReportingCommentId(comment.id)
+                                setReportReason('')
+                                setReportDetails('')
+                                setReportError('')
+                                setOpenCommentMenuId(null)
+                              }}
+                              disabled={isReportedByCurrentUser || isReportSubmitting}
+                              className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-bold text-slate-700 transition hover:bg-slate-50 hover:text-slate-950 disabled:cursor-not-allowed disabled:text-slate-400"
+                            >
+                              <Flag className="h-3.5 w-3.5" strokeWidth={2.2} />
+                              {isReportedByCurrentUser ? 'Already reported' : isReportSubmitting && reportingCommentId === comment.id ? 'Reporting...' : 'Report comment'}
+                            </button>
+                            <button
+                              type="button"
+                              role="menuitem"
+                              onClick={() => handleOpenUserReport(comment.user_id, comment.member_username, displayName)}
+                              disabled={reportedUserIds.has(comment.user_id)}
+                              className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-bold text-slate-700 transition hover:bg-slate-50 hover:text-slate-950 disabled:cursor-not-allowed disabled:text-slate-400"
+                            >
+                              <AppIcon name="profile" className="h-3.5 w-3.5" />
+                              {reportedUserIds.has(comment.user_id) ? 'Already reported user' : 'Report user'}
+                            </button>
+                          </>
                         )}
                       </div>
                     ) : null}
@@ -2384,6 +2501,20 @@ function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
           />
 
           <section className="py-5">
+            <nav aria-label="Breadcrumb" className="mb-4 text-sm text-slate-500">
+              <InternalLink href="/" className="hover:text-[var(--accent)]">Home</InternalLink>
+              <span className="px-2">/</span>
+              <InternalLink href="/places" className="hover:text-[var(--accent)]">Places</InternalLink>
+              {areaLink && areaBreadcrumb ? (
+                <>
+                  <span className="px-2">/</span>
+                  <InternalLink href={areaLink} className="hover:text-[var(--accent)]">{areaBreadcrumb.areaName}</InternalLink>
+                </>
+              ) : null}
+              <span className="px-2">/</span>
+              <span aria-current="page" className="font-semibold text-slate-700">{place.name}</span>
+            </nav>
+
             <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <div className="min-w-0">
                 <h1 className="min-w-0 text-[26px] font-black leading-tight text-slate-950 sm:text-[32px]">{place.name}</h1>
@@ -2529,6 +2660,30 @@ function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
             <p className="mt-3 text-[14px] font-semibold leading-6 text-slate-700">{vibeText}</p>
           </DetailSection>
 
+          <DetailSection>
+            <SectionHeading icon="book" title="Quick Answers" />
+            <div className="mt-4 space-y-4">
+              {quickAnswerItems.map((item) => (
+                <div key={item.question}>
+                  <h3 className="text-[15px] font-black text-slate-900">{item.question}</h3>
+                  <p className="mt-1 text-[14px] font-semibold leading-6 text-slate-700">{item.answer}</p>
+                </div>
+              ))}
+            </div>
+            {canonicalPlaceLink && areaLink && areaBreadcrumb ? (
+              <p className="mt-4 text-[13px] font-semibold leading-6 text-slate-600">
+                Explore more from{' '}
+                <InternalLink href={areaLink} className="text-[var(--accent)] underline underline-offset-2">
+                  {areaBreadcrumb.areaName}
+                </InternalLink>{' '}
+                or browse the full{' '}
+                <InternalLink href="/places" className="text-[var(--accent)] underline underline-offset-2">
+                  places hub
+                </InternalLink>.
+              </p>
+            ) : null}
+          </DetailSection>
+
           {communitySection}
         </div>
       </main>
@@ -2627,6 +2782,22 @@ function PlaceDetailView({ place, onBack: _onBack }: PlaceDetailViewProps) {
           </div>
         </div>
       ) : null}
+
+      <ReportUserModal
+        isOpen={Boolean(reportingUser)}
+        userId={reportingUser?.id ?? null}
+        username={reportingUser?.username}
+        displayName={reportingUser?.displayName}
+        authToken={authToken}
+        onClose={() => setReportingUser(null)}
+        onSubmitted={({ reportedUserId, alreadyReported, message }) => {
+          setReportedUserIds((current) => new Set([...current, reportedUserId]))
+          showSystemMessage({
+            title: alreadyReported ? 'Already reported' : 'Report submitted',
+            description: message,
+          })
+        }}
+      />
 
       {isPlaceConcernOpen ? (
         <div

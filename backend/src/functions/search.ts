@@ -63,7 +63,7 @@ type SearchTagMetadata = {
   strength: number;
 };
 
-type SearchPlaceResult = {
+export type SearchPlaceResult = {
   id: string;
   slug: string | null;
   name: string | null;
@@ -1563,7 +1563,7 @@ type ApprovedSearchImageRow = {
   image_url?: unknown;
 };
 
-async function attachApprovedImagesToSearchResults(
+export async function attachApprovedImagesToSearchResults(
   places: SearchPlaceResult[]
 ): Promise<SearchPlaceResult[]> {
   const placeIds = places
@@ -1722,7 +1722,7 @@ async function storeSearchContext({
   }
 }
 
-async function findSearchPlaces({
+export async function findSearchPlaces({
   normalizedQuery,
   categoryIds,
   areaIds,

@@ -3,6 +3,7 @@ import { AppIcon } from '../components/AppIcon'
 import WelcomeBackgroundDecorations from '../components/WelcomeBackgroundDecorations'
 import AuthMethodChooser from '../components/auth/AuthMethodChooser'
 import { checkEmailExists, getPostAuthRedirect, signInWithEmailPassword, signUpWithEmailPassword } from '../services/authApi'
+import { buildAuthPath, getRequestedNextPath } from '../utils/authRedirect'
 import { navigateToPath } from '../utils/navigation'
 
 type AuthMode = 'sign_in' | 'create_account'
@@ -67,6 +68,7 @@ function AuthPage({ mode = 'sign_in' }: AuthPageProps) {
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false)
 
   const isCreateMode = mode === 'create_account'
+  const nextPath = getRequestedNextPath()
   const normalizedEmail = useMemo(() => email.trim().toLowerCase(), [email])
   const emailAlreadyExists = isCreateMode && emailStatus === 'exists'
   const isEmailValid = emailPattern.test(normalizedEmail)
@@ -177,7 +179,7 @@ function AuthPage({ mode = 'sign_in' }: AuthPageProps) {
       setIsSubmitting(true)
 
       if (isCreateMode) {
-        await signUpWithEmailPassword(normalizedEmail, password)
+        await signUpWithEmailPassword(normalizedEmail, password, nextPath)
 
         setEmail(normalizedEmail)
         setPassword('')
@@ -411,7 +413,7 @@ function AuthPage({ mode = 'sign_in' }: AuthPageProps) {
               {isCreateMode ? 'Already have an account?' : 'New to GalaTayo?'}{' '}
                 <button
                   type="button"
-                  onClick={() => navigateToPath(isCreateMode ? '/login' : '/signup')}
+                  onClick={() => navigateToPath(buildAuthPath(isCreateMode ? '/login' : '/signup', nextPath))}
                   className="min-h-11 font-semibold text-[var(--accent-deep)] underline underline-offset-2 transition hover:text-[var(--accent)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)]"
                 >
                   {isCreateMode ? 'Log in' : 'Create account'}

@@ -4,6 +4,7 @@ import AppHeader from '../components/AppHeader'
 import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { getCurrentUser } from '../utils/profileApi'
+import { navigateToPath } from '../utils/navigation'
 
 type PendingPlaceImage = {
   id: string
@@ -331,6 +332,23 @@ function AdminPlaceImagesPage({ session }: { session: Session }) {
     <section className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <AppHeader />
       <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
+        <div className="mb-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => navigateToPath('/admin/place-submissions')}
+            className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[var(--line)] bg-white px-4 text-sm font-black text-slate-800"
+          >
+            Place submissions
+          </button>
+          <button
+            type="button"
+            onClick={() => navigateToPath('/admin/user-reports')}
+            className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[var(--line)] bg-white px-4 text-sm font-black text-slate-800"
+          >
+            User reports
+          </button>
+        </div>
+
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1 className="text-2xl font-black text-slate-950">Photo Review</h1>

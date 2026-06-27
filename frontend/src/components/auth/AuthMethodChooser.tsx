@@ -1,4 +1,5 @@
 import { signInWithGoogle } from '../../services/authApi'
+import { getRequestedNextPath } from '../../utils/authRedirect'
 
 type AuthMethodChooserProps = {
   isLoading: boolean
@@ -34,7 +35,7 @@ function AuthMethodChooser({ isLoading, onLoadingChange, onError }: AuthMethodCh
     try {
       onLoadingChange(true)
       onError('')
-      await signInWithGoogle()
+      await signInWithGoogle(getRequestedNextPath())
     } catch (error) {
       onError(error instanceof Error ? error.message : 'Google sign-in failed. Please try again.')
       onLoadingChange(false)

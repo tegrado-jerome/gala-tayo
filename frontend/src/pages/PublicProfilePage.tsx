@@ -1,8 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { MoreHorizontal } from 'lucide-react'
 import AppHeader from '../components/AppHeader'
 import { AppIcon } from '../components/AppIcon'
 import ProfileAvatar from '../components/ProfileAvatar'
+import ReportUserModal from '../components/ReportUserModal'
 import UnifiedLoadingState from '../components/UnifiedLoadingState'
+import { useSystemMessage } from '../context/SystemMessageContext'
+import { getSupabaseAccessToken, getSupabaseSession, supabase } from '../supabase'
 import {
   followProfile,
   getDisplayName,
@@ -19,6 +23,7 @@ import { navigateToPath } from '../utils/navigation'
 import { formatGalaPlanDate, parseGalaPlanDescription } from '../utils/galaPlanDescription'
 import { heartGalaPlan, unheartGalaPlan } from '../utils/galaPlanHeartsApi'
 import { buildPublicGalaPlanShareUrl, shareLink } from '../utils/share'
+import { getMyUserReports } from '../utils/userReportsApi'
 
 type PublicProfilePageProps = {
   username: string
@@ -35,7 +40,13 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
   const [notice, setNotice] = useState('')
   const [listTitle, setListTitle] = useState('')
   const [listUsers, setListUsers] = useState<FollowListUser[] | null>(null)
+  const [authToken, setAuthToken] = useState<string | null>(null)
+  const [isActionsOpen, setIsActionsOpen] = useState(false)
+  const [isReportUserOpen, setIsReportUserOpen] = useState(false)
+  const [reportedUserIds, setReportedUserIds] = useState<Set<string>>(new Set())
   const canOpenFollowLists = relationshipState === 'self' || Boolean(profile?.is_public)
+  const actionsMenuRef = useRef<HTMLDivElement | null>(null)
+  const { showSystemMessage } = useSystemMessage()
 
   useEffect(() => {
     let isMounted = true
@@ -71,6 +82,73 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
       isMounted = false
     }
   }, [username])
+
+  useEffect(() => {
+    let isMounted = true
+
+    const syncAuthState = async () => {
+      const session = await getSupabaseSession()
+      const token = await getSupabaseAccessToken(session)
+
+      if (!isMounted) return
+
+      setAuthToken(token)
+
+      if (!token) {
+        setReportedUserIds(new Set())
+        return
+      }
+
+      try {
+        const reports = await getMyUserReports(token)
+
+        if (!isMounted) return
+
+        setReportedUserIds(new Set(reports.map((report) => report.reported_user_id)))
+      } catch {
+        if (isMounted) {
+          setReportedUserIds(new Set())
+        }
+      }
+    }
+
+    void syncAuthState()
+
+    const { data: authSubscription } = supabase.auth.onAuthStateChange(() => {
+      void syncAuthState()
+    })
+
+    return () => {
+      isMounted = false
+      authSubscription.subscription.unsubscribe()
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!isActionsOpen) {
+      return
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!actionsMenuRef.current?.contains(event.target as Node)) {
+        setIsActionsOpen(false)
+      }
+    }
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsActionsOpen(false)
+      }
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    document.addEventListener('keydown', handleEscape)
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [isActionsOpen])
 
   const handleFollow = async () => {
     if (!profile) return
@@ -145,6 +223,22 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
     }
   }
 
+  const handleOpenReportUser = () => {
+    setIsActionsOpen(false)
+
+    if (!profile) return
+
+    if (!authToken) {
+      showSystemMessage({
+        title: 'Login required',
+        description: 'Log in to report a user.',
+      })
+      return
+    }
+
+    setIsReportUserOpen(true)
+  }
+
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <AppHeader />
@@ -183,31 +277,66 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
                       </p>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => relationshipState === 'self' ? navigateToPath('/profile') : void handleFollow()}
-                    className={`inline-flex h-11 w-fit items-center gap-2 rounded-full px-5 text-sm font-black transition ${
-                      relationshipState === 'following'
-                        ? 'border border-slate-300 bg-white text-slate-950 hover:bg-slate-50'
-                        : relationshipState === 'pending'
-                          ? 'border border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100'
-                          : 'bg-slate-950 text-white hover:bg-slate-800'
-                    }`}
-                  >
-                    <AppIcon
-                      name={
-                        relationshipState === 'self'
-                            ? 'settings'
-                          : relationshipState === 'following'
-                            ? 'check'
-                            : relationshipState === 'pending'
-                              ? 'history'
-                              : 'profile'
-                      }
-                      className="h-4 w-4"
-                    />
-                    {relationshipState === 'self' ? 'Edit profile' : relationshipState === 'following' ? 'Following' : relationshipState === 'pending' ? 'Requested' : 'Follow'}
-                  </button>
+                  <div className="flex items-center gap-2 self-start sm:self-auto">
+                    <button
+                      type="button"
+                      onClick={() => relationshipState === 'self' ? navigateToPath('/profile') : void handleFollow()}
+                      className={`inline-flex h-11 w-fit items-center gap-2 rounded-full px-5 text-sm font-black transition ${
+                        relationshipState === 'following'
+                          ? 'border border-slate-300 bg-white text-slate-950 hover:bg-slate-50'
+                          : relationshipState === 'pending'
+                            ? 'border border-amber-200 bg-amber-50 text-amber-800 hover:bg-amber-100'
+                            : 'bg-slate-950 text-white hover:bg-slate-800'
+                      }`}
+                    >
+                      <AppIcon
+                        name={
+                          relationshipState === 'self'
+                              ? 'settings'
+                            : relationshipState === 'following'
+                              ? 'check'
+                              : relationshipState === 'pending'
+                                ? 'history'
+                                : 'profile'
+                        }
+                        className="h-4 w-4"
+                      />
+                      {relationshipState === 'self' ? 'Edit profile' : relationshipState === 'following' ? 'Following' : relationshipState === 'pending' ? 'Requested' : 'Follow'}
+                    </button>
+
+                    {relationshipState !== 'self' ? (
+                      <div className="relative" ref={actionsMenuRef}>
+                        <button
+                          type="button"
+                          aria-label="Open profile actions"
+                          aria-haspopup="menu"
+                          aria-expanded={isActionsOpen}
+                          onClick={() => setIsActionsOpen((current) => !current)}
+                          className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[var(--line)] bg-white text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
+                        >
+                          <MoreHorizontal className="h-5 w-5" strokeWidth={2.2} />
+                        </button>
+
+                        {isActionsOpen ? (
+                          <div
+                            role="menu"
+                            className="absolute right-0 top-12 z-20 min-w-[12rem] overflow-hidden rounded-2xl border border-[var(--line)] bg-white py-1 shadow-[0_18px_40px_rgba(15,23,42,0.12)]"
+                          >
+                            <button
+                              type="button"
+                              role="menuitem"
+                              onClick={handleOpenReportUser}
+                              disabled={reportedUserIds.has(profile.user_id)}
+                              className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-[13px] font-bold text-slate-700 transition hover:bg-slate-50 hover:text-slate-950 disabled:cursor-not-allowed disabled:text-slate-400"
+                            >
+                              <AppIcon name="reports" className="h-4 w-4" />
+                              {reportedUserIds.has(profile.user_id) ? 'Already reported' : 'Report user'}
+                            </button>
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </div>
               </div>
 
               <div className="flex flex-wrap gap-x-8 gap-y-3 pt-4 text-sm">
@@ -405,6 +534,22 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
             </section>
           </div>
         ) : null}
+
+        <ReportUserModal
+          isOpen={isReportUserOpen && Boolean(profile) && relationshipState !== 'self'}
+          userId={profile && relationshipState !== 'self' ? profile.user_id : null}
+          username={profile?.username}
+          displayName={profile ? getDisplayName(profile) : null}
+          authToken={authToken}
+          onClose={() => setIsReportUserOpen(false)}
+          onSubmitted={({ reportedUserId, alreadyReported, message }) => {
+            setReportedUserIds((current) => new Set([...current, reportedUserId]))
+            showSystemMessage({
+              title: alreadyReported ? 'Already reported' : 'Report submitted',
+              description: message,
+            })
+          }}
+        />
       </main>
     </div>
   )

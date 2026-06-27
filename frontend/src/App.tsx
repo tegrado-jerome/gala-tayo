@@ -1,6 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
-import WelcomePage from './pages/WelcomePage'
 import HomePage from './pages/HomePage'
 import HomeLandingPage from './pages/HomeLandingPage'
 import SearchPage from './pages/SearchPageWords'
@@ -12,6 +11,7 @@ import GalaPlansPage from './pages/GalaPlansPage'
 import ReportsPage from './pages/ReportsPage'
 import AdminPlaceImagesPage from './pages/AdminPlaceImagesPage'
 import AdminPlaceSubmissionsPage from './pages/AdminPlaceSubmissionsPage'
+import AdminUserReportsPage from './pages/AdminUserReportsPage'
 import AuthPage from './pages/AuthPage'
 import AuthCallbackPage from './pages/AuthCallbackPage'
 import OnboardingPage from './pages/OnboardingPage'
@@ -25,16 +25,21 @@ import LegalPage from './pages/LegalPage'
 import PlaceSubmissionPage from './pages/PlaceSubmissionPage'
 import MyPlaceSubmissionsPage from './pages/MyPlaceSubmissionsPage'
 import AskAiMapPage from './pages/AskAiMapPage'
+import PlacesIndexPage from './pages/PlacesIndexPage'
+import AreaPlacesPage from './pages/AreaPlacesPage'
 import PlaceDetailView from './components/PlaceDetailView'
+import ProtectedFeatureGate from './components/ProtectedFeatureGate'
 import MobileBottomNav from './components/MobileBottomNav'
 import UnifiedLoadingState from './components/UnifiedLoadingState'
+import SeoHead from './components/SeoHead'
 import type { PlaceCardData } from './components/PlaceCard'
 import { SavedFavoritesProvider } from './context/SavedFavoritesContext'
 import { SystemMessageProvider } from './context/SystemMessageContext'
 import { supabase } from './supabase'
 import { getOnboardingStatus } from './utils/profileApi'
-import { navigateToPath } from './utils/navigation'
+import { navigateToPath, replaceWithPath } from './utils/navigation'
 import { markSoftNavigation } from './utils/navigationState'
+import { formatLabelFromSlug, getCanonicalPlacePath, resolveAreaMeta } from './utils/seo'
 
 type PlaceDetail = {
   id: string
@@ -83,15 +88,25 @@ type PlaceDetailCardData = PlaceCardData & {
   slug: string
 }
 
-function parsePlaceSlugFromPath(pathname: string): string | null {
-  const placesMatch = pathname.match(/^\/places\/([^/]+)\/?$/i)
-  if (placesMatch) {
-    return decodeURIComponent(placesMatch[1])
-  }
+function parseCanonicalPlacePath(pathname: string): { areaSlug: string; placeSlug: string } | null {
+  const match = pathname.match(/^\/places\/([^/]+)\/([^/]+)\/?$/i)
+  return match
+    ? {
+        areaSlug: decodeURIComponent(match[1]).toLowerCase(),
+        placeSlug: decodeURIComponent(match[2]),
+      }
+    : null
+}
 
+function parseLegacyPlaceSlugPath(pathname: string): string | null {
   const legacyPlaceMatch = pathname.match(/^\/place\/([^/]+)\/?$/i)
   if (legacyPlaceMatch) {
     return decodeURIComponent(legacyPlaceMatch[1])
+  }
+
+  const legacyPlacesMatch = pathname.match(/^\/places\/([^/]+)\/?$/i)
+  if (legacyPlacesMatch) {
+    return decodeURIComponent(legacyPlacesMatch[1])
   }
 
   return null
@@ -120,6 +135,11 @@ function parseOwnedGalaPlanPath(pathname: string): string | null {
 function parseEditGalaPlanPath(pathname: string): string | null {
   const match = pathname.match(/^\/gala-plan(?:s)?\/([^/]+)\/edit\/?$/i)
   return match ? decodeURIComponent(match[1]) : null
+}
+
+function parseAreaPagePath(pathname: string): string | null {
+  const match = pathname.match(/^\/places\/([^/]+)\/?$/i)
+  return match ? decodeURIComponent(match[1]).toLowerCase() : null
 }
 
 const searchRouteCachePrefix = 'galatayo:search-route:'
@@ -198,6 +218,26 @@ function getCanonicalSubmitPlacePath(pathname: string): '/submit-place' | null {
   return null
 }
 
+function getCanonicalHomePath(pathname: string): '/' | null {
+  if (isPath(pathname, '/home')) {
+    return '/'
+  }
+
+  return null
+}
+
+function getCanonicalAskAiPath(pathname: string): '/ask-ai/text' | '/ask-ai/maps' | null {
+  if (isPath(pathname, '/ask-ai')) {
+    return '/ask-ai/text'
+  }
+
+  if (isPath(pathname, '/ask-ai/map')) {
+    return '/ask-ai/maps'
+  }
+
+  return null
+}
+
 function isProtectedAccountPath(pathname: string) {
   const isExactProtectedPath = [
     '/favorites',
@@ -213,6 +253,7 @@ function isProtectedAccountPath(pathname: string) {
     '/gala-plans/favorites',
     '/reports',
     '/comment-notices',
+    '/admin/user-reports',
     '/admin/place-images',
     '/admin/place-submissions',
     '/profile',
@@ -224,6 +265,8 @@ function isProtectedAccountPath(pathname: string) {
     '/submissions',
     '/photos/upload',
     '/ask-ai',
+    '/ask-ai/text',
+    '/ask-ai/maps',
   ].some((path) => isPath(pathname, path))
 
   return (
@@ -271,11 +314,49 @@ function shouldReserveMobileBottomNavSpace(pathname: string) {
 }
 
 const sharedRouteMatchers = [
-  (pathname: string) => /^\/places\/[^/]+\/?$/i.test(pathname),
+  (pathname: string) => /^\/places\/[^/]+\/[^/]+\/?$/i.test(pathname),
   (pathname: string) => /^\/place\/[^/]+\/?$/i.test(pathname),
   (pathname: string) => /^\/u\/[^/]+\/?$/i.test(pathname),
   (pathname: string) => /^\/u\/[^/]+\/(?:plans|gala)\/[^/]+\/?$/i.test(pathname),
 ]
+
+function getNoindexForPath(pathname: string) {
+  if (
+    [
+      '/login',
+      '/signup',
+      '/auth',
+      '/auth/callback',
+      '/onboarding',
+      '/favorites',
+      '/history',
+      '/feedback',
+      '/reports',
+      '/comment-notices',
+      '/profile',
+      '/me',
+      '/settings',
+      '/settings/change-password',
+      '/submit-place',
+      '/submissions',
+      '/ask-ai',
+      '/ask-ai/text',
+      '/ask-ai/map',
+      '/ask-ai/maps',
+    ].some((path) => isPath(pathname, path))
+  ) {
+    return true
+  }
+
+  if (
+    pathname.startsWith('/admin/') ||
+    /^\/gala-plan(?:s)?\b/i.test(pathname)
+  ) {
+    return true
+  }
+
+  return false
+}
 
 function AppLoadingState({ message = 'Loading GalaTayo...' }: { message?: string }) {
   return (
@@ -336,7 +417,17 @@ function mapBackendPlaceToCardData(place: PlaceDetail): PlaceDetailCardData {
   }
 }
 
-function SharedPlacePage({ slug }: { slug: string }) {
+function SharedPlacePage({
+  slug,
+  currentPathname,
+  expectedAreaSlug = null,
+  redirectToCanonical = false,
+}: {
+  slug: string
+  currentPathname: string
+  expectedAreaSlug?: string | null
+  redirectToCanonical?: boolean
+}) {
   const [place, setPlace] = useState<PlaceDetailCardData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
@@ -386,33 +477,92 @@ function SharedPlacePage({ slug }: { slug: string }) {
     return () => controller.abort()
   }, [slug])
 
+  const areaMeta = place ? resolveAreaMeta(place) : null
+  const canonicalPath = place && areaMeta
+    ? getCanonicalPlacePath({
+        areaSlug: areaMeta.slug,
+        placeSlug: place.slug,
+      })
+    : null
+
+  useEffect(() => {
+    if (!canonicalPath) {
+      return
+    }
+
+    if ((redirectToCanonical || expectedAreaSlug !== null) && currentPathname !== canonicalPath) {
+      replaceWithPath(canonicalPath)
+    }
+  }, [canonicalPath, currentPathname, expectedAreaSlug, redirectToCanonical])
+
+  const placeJsonLd =
+    place && areaMeta && canonicalPath
+      ? {
+          '@context': 'https://schema.org',
+          '@graph': [
+            {
+              '@type': 'BreadcrumbList',
+              itemListElement: [
+                { '@type': 'ListItem', position: 1, name: 'Home', item: `${window.location.origin}/` },
+                { '@type': 'ListItem', position: 2, name: 'Places', item: `${window.location.origin}/places` },
+                { '@type': 'ListItem', position: 3, name: areaMeta.name, item: `${window.location.origin}/places/${encodeURIComponent(areaMeta.slug)}` },
+                { '@type': 'ListItem', position: 4, name: place.name, item: `${window.location.origin}${canonicalPath}` },
+              ],
+            },
+            {
+              '@type': 'Place',
+              name: place.name,
+              description: place.description || place.reason,
+              url: `${window.location.origin}${canonicalPath}`,
+              address: {
+                '@type': 'PostalAddress',
+                addressLocality: place.city || areaMeta.name,
+                streetAddress: place.address || undefined,
+                addressRegion: 'Metro Manila',
+                addressCountry: 'PH',
+              },
+              image: place.imageUrl || place.curatedImageUrls?.[0] || undefined,
+            },
+          ],
+        }
+      : null
+
   if (isLoading) {
     return (
-      <UnifiedLoadingState
-        variant="page"
-        title="Preparing place details..."
-        message="We are opening this shared place now."
-      />
+      <>
+        <SeoHead title="Loading place | GalaTayo" robots="noindex,follow" />
+        <UnifiedLoadingState
+          variant="page"
+          title="Preparing place details..."
+          message="We are opening this shared place now."
+        />
+      </>
     )
   }
 
   if (notFound) {
     return (
-      <main className="min-h-screen bg-[var(--bg)] px-6 py-10 text-[var(--text)]">
-        <h1 className="text-2xl font-semibold text-slate-900">Place not found</h1>
-        <p className="mt-2 text-sm text-[var(--muted)]">
-          We could not find details for this shared link.
-        </p>
-      </main>
+      <>
+        <SeoHead title="Place not found | GalaTayo" robots="noindex,follow" />
+        <main className="min-h-screen bg-[var(--bg)] px-6 py-10 text-[var(--text)]">
+          <h1 className="text-2xl font-semibold text-slate-900">Place not found</h1>
+          <p className="mt-2 text-sm text-[var(--muted)]">
+            We could not find details for this shared link.
+          </p>
+        </main>
+      </>
     )
   }
 
   if (errorMessage) {
     return (
-      <main className="min-h-screen bg-[var(--bg)] px-6 py-10 text-[var(--text)]">
-        <h1 className="text-2xl font-semibold text-slate-900">Unable to load place</h1>
-        <p className="mt-2 text-sm text-[var(--muted)]">{errorMessage}</p>
-      </main>
+      <>
+        <SeoHead title="Unable to load place | GalaTayo" robots="noindex,follow" />
+        <main className="min-h-screen bg-[var(--bg)] px-6 py-10 text-[var(--text)]">
+          <h1 className="text-2xl font-semibold text-slate-900">Unable to load place</h1>
+          <p className="mt-2 text-sm text-[var(--muted)]">{errorMessage}</p>
+        </main>
+      </>
     )
   }
 
@@ -420,7 +570,72 @@ function SharedPlacePage({ slug }: { slug: string }) {
     return null
   }
 
-  return <PlaceDetailView place={place} onBack={() => window.history.back()} />
+  return (
+    <>
+      <SeoHead
+        title={`${place.name} | GalaTayo`}
+        description={place.description || place.reason}
+        canonicalPath={canonicalPath}
+        openGraphType="article"
+        image={place.imageUrl ? { url: place.imageUrl, alt: place.name } : null}
+        jsonLd={placeJsonLd}
+      />
+      <PlaceDetailView
+        place={place}
+        onBack={() => window.history.back()}
+        areaBreadcrumb={{
+          areaSlug: areaMeta?.slug || expectedAreaSlug || formatLabelFromSlug(place.city || place.area || 'metro-manila').toLowerCase(),
+          areaName: areaMeta?.name || formatLabelFromSlug(expectedAreaSlug || 'metro-manila'),
+        }}
+      />
+    </>
+  )
+}
+
+function PlacesSlugResolverPage({ slug, currentPathname }: { slug: string; currentPathname: string }) {
+  const [resolvedMode, setResolvedMode] = useState<'loading' | 'area' | 'place'>('loading')
+
+  useEffect(() => {
+    const controller = new AbortController()
+    const apiBaseUrl = String(import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
+    const endpoint = apiBaseUrl ? `${apiBaseUrl}/seo/areas/${encodeURIComponent(slug)}` : `/api/seo/areas/${encodeURIComponent(slug)}`
+
+    const resolveSlug = async () => {
+      try {
+        const response = await fetch(endpoint, {
+          method: 'GET',
+          signal: controller.signal,
+        })
+
+        if (!controller.signal.aborted && response.ok) {
+          setResolvedMode('area')
+          return
+        }
+      } catch (error) {
+        if ((error as Error).name === 'AbortError') {
+          return
+        }
+      }
+
+      if (!controller.signal.aborted) {
+        setResolvedMode('place')
+      }
+    }
+
+    void resolveSlug()
+
+    return () => controller.abort()
+  }, [slug])
+
+  if (resolvedMode === 'loading') {
+    return <AppLoadingState message="Resolving place link..." />
+  }
+
+  if (resolvedMode === 'area') {
+    return <AreaPlacesPage areaSlug={slug.toLowerCase()} />
+  }
+
+  return <SharedPlacePage slug={slug} currentPathname={currentPathname} redirectToCanonical />
 }
 
 function App() {
@@ -498,7 +713,23 @@ function App() {
     const canonicalSubmitPlacePath = getCanonicalSubmitPlacePath(pathname)
 
     if (canonicalSubmitPlacePath && pathname !== canonicalSubmitPlacePath) {
-      navigateToPath(canonicalSubmitPlacePath)
+      replaceWithPath(canonicalSubmitPlacePath)
+    }
+  }, [pathname])
+
+  useEffect(() => {
+    const canonicalHomePath = getCanonicalHomePath(pathname)
+
+    if (canonicalHomePath && pathname !== canonicalHomePath) {
+      replaceWithPath(canonicalHomePath)
+    }
+  }, [pathname])
+
+  useEffect(() => {
+    const canonicalAskAiPath = getCanonicalAskAiPath(pathname)
+
+    if (canonicalAskAiPath && pathname !== canonicalAskAiPath) {
+      replaceWithPath(canonicalAskAiPath)
     }
   }, [pathname])
 
@@ -608,7 +839,7 @@ function App() {
     }
 
     if (!session) {
-      if (isPath(pathname, '/onboarding') || isProtectedAccountPath(pathname)) {
+      if (isPath(pathname, '/onboarding')) {
         navigateToPath('/login')
       }
       return
@@ -632,11 +863,13 @@ function App() {
       !needsOnboarding &&
       (isPath(pathname, '/onboarding') || isPath(pathname, '/auth/callback'))
     ) {
-      navigateToPath('/home')
+      navigateToPath('/')
     }
   }, [hasResolvedInitialAuth, hasResolvedProfile, needsOnboarding, pathname, session])
 
-  const sharedPlaceSlug = useMemo(() => parsePlaceSlugFromPath(pathname), [pathname])
+  const canonicalPlacePath = useMemo(() => parseCanonicalPlacePath(pathname), [pathname])
+  const areaPageSlug = useMemo(() => parseAreaPagePath(pathname), [pathname])
+  const legacyPlaceSlug = useMemo(() => parseLegacyPlaceSlugPath(pathname), [pathname])
   const publicGalaPlanPath = useMemo(() => parsePublicGalaPlanPath(pathname), [pathname])
   const publicProfileUsername = useMemo(() => parsePublicProfileUsername(pathname), [pathname])
   const editGalaPlanId = useMemo(() => parseEditGalaPlanPath(pathname), [pathname])
@@ -676,32 +909,93 @@ function App() {
     }
 
     if (!session && isProtectedAccountPath(pathname)) {
-      return <AuthPage mode="sign_in" />
+      return <ProtectedFeatureGate pathname={pathname} search={search} />
     }
 
     if (pathname === '/' || pathname === '') {
-      return <WelcomePage session={session} />
-    }
-
-    if (pathname === '/home' || pathname === '/home/') {
-      return <HomeLandingPage />
+      return (
+        <>
+          <SeoHead
+            title="GalaTayo | Metro Manila Place Search"
+            description="Discover Metro Manila gala spots with place search, AI help, and shareable place pages."
+            canonicalPath="/"
+          />
+          <HomeLandingPage />
+        </>
+      )
     }
 
     if (pathname === '/search' || pathname === '/search/') {
-      return <SearchPage key={`search:${search || 'root'}`} />
+      return (
+        <>
+          <SeoHead
+            title="Search Places | GalaTayo"
+            description="Search Metro Manila places on GalaTayo."
+            canonicalPath="/search"
+            robots="noindex,follow"
+          />
+          <SearchPage key={`search:${search || 'root'}`} />
+        </>
+      )
     }
 
-    if (pathname === '/ask-ai' || pathname === '/ask-ai/') {
+    if (pathname === '/ask-ai/text' || pathname === '/ask-ai/text/') {
       const initialAskAiQuestion = new URLSearchParams(search).get('q') ?? ''
-      return <HomePage key={`ask-ai:${search || 'root'}`} initialMode="ask-ai" initialAskAiQuestion={initialAskAiQuestion} />
+      return (
+        <>
+          <SeoHead
+            title="Ask AI Text | GalaTayo"
+            description="Ask AI text mode on GalaTayo."
+            canonicalPath="/ask-ai/text"
+            robots="noindex,follow"
+          />
+          <HomePage key={`ask-ai:${search || 'root'}`} initialMode="ask-ai" initialAskAiQuestion={initialAskAiQuestion} />
+        </>
+      )
     }
 
-    if (pathname === '/ask-ai/map' || pathname === '/ask-ai/map/') {
-      return <AskAiMapPage />
+    if (pathname === '/ask-ai/maps' || pathname === '/ask-ai/maps/') {
+      return (
+        <>
+          <SeoHead
+            title="Ask AI Maps | GalaTayo"
+            description="Ask AI maps mode on GalaTayo."
+            canonicalPath="/ask-ai/maps"
+            robots="noindex,follow"
+          />
+          <AskAiMapPage />
+        </>
+      )
     }
 
     if (pathname === '/prompt-builder' || pathname === '/prompt-builder/') {
-      return <HomePage initialPromptBuilderOpen />
+      return (
+        <>
+          <SeoHead
+            title="Prompt Builder | GalaTayo"
+            description="Prompt builder on GalaTayo."
+            canonicalPath="/prompt-builder"
+            robots="noindex,follow"
+          />
+          <HomePage initialPromptBuilderOpen />
+        </>
+      )
+    }
+
+    if (pathname === '/places' || pathname === '/places/') {
+      return <PlacesIndexPage />
+    }
+
+    if (canonicalPlacePath) {
+      return <SharedPlacePage slug={canonicalPlacePath.placeSlug} currentPathname={pathname} expectedAreaSlug={canonicalPlacePath.areaSlug} />
+    }
+
+    if (areaPageSlug && areaPageSlug !== 'new' && areaPageSlug !== 'submit') {
+      return <PlacesSlugResolverPage key={areaPageSlug} slug={areaPageSlug} currentPathname={pathname} />
+    }
+
+    if (legacyPlaceSlug) {
+      return <SharedPlacePage slug={legacyPlaceSlug} currentPathname={pathname} redirectToCanonical />
     }
 
     if (pathname === '/login' || pathname === '/login/') {
@@ -830,6 +1124,14 @@ function App() {
       return <AdminPlaceImagesPage session={session} />
     }
 
+    if (pathname === '/admin/user-reports' || pathname === '/admin/user-reports/') {
+      if (!session) {
+        return <LoginPage />
+      }
+
+      return <AdminUserReportsPage session={session} />
+    }
+
     if (pathname === '/admin/place-submissions' || pathname === '/admin/place-submissions/') {
       if (!session) {
         return <LoginPage />
@@ -857,19 +1159,23 @@ function App() {
       return <MyPlaceSubmissionsPage session={session} />
     }
 
-    if (sharedPlaceSlug) {
-      return <SharedPlacePage slug={sharedPlaceSlug} />
-    }
-
     return <HomeLandingPage />
   })()
 
   const showMobileBottomNav = shouldShowMobileBottomNav(pathname)
   const reserveMobileBottomNavSpace = shouldReserveMobileBottomNavSpace(pathname)
+  const shouldApplyGenericNoindex = getNoindexForPath(pathname) && !canonicalPlacePath && !(pathname === '/' || pathname === '') && !(pathname === '/places' || pathname === '/places/')
 
   return (
     <SystemMessageProvider>
       <SavedFavoritesProvider>
+        {shouldApplyGenericNoindex ? (
+          <SeoHead
+            title="GalaTayo"
+            canonicalPath={pathname}
+            robots="noindex,follow"
+          />
+        ) : null}
         <div className={reserveMobileBottomNavSpace ? 'pb-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] sm:pb-[calc(env(safe-area-inset-bottom,0px)+4.75rem)] lg:pb-0' : ''}>
           {content}
         </div>

@@ -1,16 +1,23 @@
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../supabase'
 import { getOnboardingStatus } from '../utils/profileApi'
+import { resolvePostAuthPath, sanitizeNextPath } from '../utils/authRedirect'
 
-export type AuthRedirectTarget = '/onboarding' | '/home'
+export type AuthRedirectTarget = string
 
 function getApiUrl(path: string) {
   const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
   return apiBaseUrl ? `${apiBaseUrl}${path}` : `/api${path}`
 }
 
-export function getAuthCallbackUrl() {
-  return `${window.location.origin}/auth/callback`
+export function getAuthCallbackUrl(nextPath?: string | null) {
+  const sanitizedNextPath = sanitizeNextPath(nextPath)
+
+  if (!sanitizedNextPath) {
+    return `${window.location.origin}/auth/callback`
+  }
+
+  return `${window.location.origin}/auth/callback?next=${encodeURIComponent(sanitizedNextPath)}`
 }
 
 export async function checkEmailExists(email: string) {
@@ -35,11 +42,11 @@ export async function checkEmailExists(email: string) {
   }
 }
 
-export async function signInWithGoogle() {
+export async function signInWithGoogle(nextPath?: string | null) {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: getAuthCallbackUrl(),
+      redirectTo: getAuthCallbackUrl(nextPath),
     },
   })
 
@@ -48,7 +55,7 @@ export async function signInWithGoogle() {
   }
 }
 
-export async function signUpWithEmailPassword(email: string, password: string) {
+export async function signUpWithEmailPassword(email: string, password: string, nextPath?: string | null) {
   const normalizedEmail = email.trim().toLowerCase()
   const existingEmailData = await checkEmailExists(normalizedEmail)
 
@@ -60,7 +67,7 @@ export async function signUpWithEmailPassword(email: string, password: string) {
     email: normalizedEmail,
     password,
     options: {
-      emailRedirectTo: getAuthCallbackUrl(),
+      emailRedirectTo: getAuthCallbackUrl(nextPath),
     },
   })
 
@@ -124,5 +131,5 @@ export async function updateAccountPassword(password: string) {
 
 export async function getPostAuthRedirect(session: Session): Promise<AuthRedirectTarget> {
   const status = await getOnboardingStatus(session)
-  return status.needsOnboarding ? '/onboarding' : '/home'
+  return resolvePostAuthPath(status.needsOnboarding ? '/onboarding' : '/')
 }

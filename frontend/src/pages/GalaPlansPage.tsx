@@ -125,7 +125,7 @@ function EmptyPlansState({ favorites }: { favorites?: boolean }) {
             Create Gala Plan
           </button>
         ) : null}
-        <button type="button" onClick={() => navigateToPath(favorites ? '/home' : '/gala-plans/favorites')} className="gala-secondary-button min-h-10 px-4">
+        <button type="button" onClick={() => navigateToPath(favorites ? '/' : '/gala-plans/favorites')} className="gala-secondary-button min-h-10 px-4">
           {favorites ? 'Discover Places' : 'View Gala Plan Favorites'}
         </button>
       </div>

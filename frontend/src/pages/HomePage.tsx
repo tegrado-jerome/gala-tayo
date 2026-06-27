@@ -14,7 +14,7 @@ import PromptBuilderModal from '../components/PromptBuilderModal'
 import TapGalaPinGame from '../components/TapGalaPinGame'
 import MinimalBackNav from '../components/MinimalBackNav'
 import { supabase } from '../supabase'
-import { navigateToPath, navigateToPlace } from '../utils/navigation'
+import { navigateToCanonicalPlace, navigateToPath } from '../utils/navigation'
 import {
   getAskAiRuntimeState,
   hasActiveAskAiRuntimeState,
@@ -910,7 +910,7 @@ function BackToHomeButton({
   className?: string
 }) {
   return (
-    <MinimalBackNav to="/home" className={className} />
+    <MinimalBackNav to="/" className={className} />
   )
 }
 
@@ -2773,7 +2773,7 @@ function AskAiPlaceholder({
                     </button>
                     <button
                       type="button"
-                      onClick={() => navigateToPath('/ask-ai/map')}
+                      onClick={() => navigateToPath('/ask-ai/maps')}
                       className="inline-flex items-center gap-1.5 text-[13px] font-medium text-slate-500 transition hover:text-slate-900 lg:text-[0.9rem]"
                     >
                       <AppIcon name="map" className="h-4 w-4 text-[var(--accent)]" />
@@ -3859,7 +3859,7 @@ function HomePage({
   }
 
   const handleSwitchToPlaces = () => {
-    navigateToPath('/home')
+    navigateToPath('/')
   }
 
   const handleClearSearch = () => {
@@ -3917,7 +3917,12 @@ function HomePage({
         selectedPlaceViewportTop: getSearchPlaceViewportTop(placeId),
         pendingScrollRestore: true,
       })
-      navigateToPlace(canonicalPlaceSlug)
+      navigateToCanonicalPlace({
+        slug: canonicalPlaceSlug,
+        city: place?.city,
+        area: place?.area,
+        localArea: place?.localArea,
+      })
     }
   }
 

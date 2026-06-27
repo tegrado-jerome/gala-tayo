@@ -8,6 +8,7 @@ import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { fetchMyCommentReports, type CommentReportReason, type CommentReportStatus, type MyCommentReport } from '../utils/commentReportsApi'
 import { fetchMyPlaceReports, type MyPlaceReport, type PlaceReportReason, type PlaceReportStatus } from '../utils/placeReportsApi'
+import { getMyUserReports, type MyUserReport, type UserReportReason, type UserReportStatus } from '../utils/userReportsApi'
 import { navigateToPlace } from '../utils/navigation'
 
 const commentReasonLabels: Record<CommentReportReason, string> = {
@@ -41,6 +42,21 @@ const placeStatusLabels: Record<PlaceReportStatus, string> = {
   dismissed: 'Dismissed',
 }
 
+const userReasonLabels: Record<UserReportReason, string> = {
+  fake_account: 'Fake account',
+  harassment: 'Harassment or bullying',
+  inappropriate_profile: 'Inappropriate profile',
+  spam: 'Spam',
+  impersonation: 'Impersonation',
+  other: 'Other',
+}
+
+const userStatusLabels: Record<UserReportStatus, string> = {
+  pending: 'Under review',
+  dismissed: 'Reviewed',
+  action_taken: 'Action taken',
+}
+
 function formatDate(value?: string | null) {
   if (!value) {
     return ''
@@ -57,6 +73,37 @@ function formatDate(value?: string | null) {
     day: 'numeric',
     year: 'numeric',
   })
+}
+
+function looksLikeSensitiveIdentifier(value?: string | null) {
+  const trimmedValue = value?.trim()
+
+  if (!trimmedValue) {
+    return false
+  }
+
+  return (
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(trimmedValue)
+    || /^[0-9a-f]{24,}$/i.test(trimmedValue)
+    || /^[A-Za-z0-9_-]{20,}$/.test(trimmedValue)
+  )
+}
+
+function sanitizeReportLabel(value: string | null | undefined, fallback: string) {
+  const trimmedValue = value?.trim()
+
+  if (!trimmedValue || looksLikeSensitiveIdentifier(trimmedValue)) {
+    return fallback
+  }
+
+  return trimmedValue
+}
+
+function redactSensitiveIdentifiers(value: string) {
+  return value
+    .replace(/\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/gi, '[hidden]')
+    .replace(/\b[0-9a-f]{24,}\b/gi, '[hidden]')
+    .replace(/\b[A-Za-z0-9_-]{20,}\b/g, '[hidden]')
 }
 
 function getStatusClass(status: CommentReportStatus | PlaceReportStatus) {
@@ -166,27 +213,6 @@ function SectionList({ children }: { children: ReactNode }) {
   )
 }
 
-function UserReportsPlaceholder() {
-  return (
-    <section className="py-1">
-      <div className="flex items-start gap-3 rounded-lg border border-dashed border-[var(--line)] bg-white px-4 py-4">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/80 bg-white/70 text-slate-700">
-          <AppIcon name="profile" size="ui" />
-        </span>
-        <div>
-          <h3 className="text-sm font-black text-slate-950">User reports will show here</h3>
-          <p className="mt-1 text-sm font-medium leading-6 text-slate-600">
-            When profile or account reporting is connected in the app, the reports you file against a user will appear in this section.
-          </p>
-          <p className="mt-2 text-xs font-black uppercase tracking-[0.14em] text-slate-400">
-            No user reports yet
-          </p>
-        </div>
-      </div>
-    </section>
-  )
-}
-
 function CompactEntry({
   topLine,
   title,
@@ -229,11 +255,29 @@ function CompactEntry({
   )
 }
 
+function UserReportCard({ report }: { report: MyUserReport }) {
+  const submittedDate = formatDate(report.created_at)
+
+  return (
+    <CompactEntry
+      topLine={userReasonLabels[report.reason]}
+      title="Reported account"
+      status={
+        <span className={`inline-flex w-fit shrink-0 rounded-full border px-2.5 py-1 text-xs font-black ${getStatusClass(report.status)}`}>
+          {userStatusLabels[report.status]}
+        </span>
+      }
+      meta={[submittedDate ? `Submitted ${submittedDate}` : ''].filter(Boolean)}
+    />
+  )
+}
+
 function CommentReportCard({ report }: { report: MyCommentReport }) {
-  const placeName = report.place?.name?.trim() || 'Reported place'
+  const placeName = sanitizeReportLabel(report.place?.name, 'Reported place')
   const placeSlug = report.place?.slug?.trim() || ''
   const submittedDate = formatDate(report.createdAt)
   const resolvedDate = formatDate(report.resolvedAt)
+  const commentPreview = report.comment?.text ? redactSensitiveIdentifiers(report.comment.text) : ''
 
   return (
     <CompactEntry
@@ -258,9 +302,9 @@ function CommentReportCard({ report }: { report: MyCommentReport }) {
       }
       meta={[submittedDate ? `Submitted ${submittedDate}` : '', resolvedDate ? `Resolved ${resolvedDate}` : ''].filter(Boolean)}
     >
-      {report.comment?.text ? (
+      {commentPreview ? (
         <blockquote className="rounded-[18px] border border-white/70 bg-white/58 px-3 py-2.5 text-sm font-medium leading-6 text-slate-800">
-          {report.comment.text}
+          {commentPreview}
         </blockquote>
       ) : (
         <p className="text-sm font-medium text-slate-500">Comment preview unavailable.</p>
@@ -275,7 +319,7 @@ function CommentReportCard({ report }: { report: MyCommentReport }) {
 }
 
 function PlaceReportCard({ report }: { report: MyPlaceReport }) {
-  const placeName = report.place?.name?.trim() || 'Reported place'
+  const placeName = sanitizeReportLabel(report.place?.name, 'Reported place')
   const placeSlug = report.place?.slug?.trim() || ''
   const submittedDate = formatDate(report.createdAt)
   const resolvedDate = formatDate(report.resolvedAt)
@@ -324,6 +368,7 @@ function PlaceReportCard({ report }: { report: MyPlaceReport }) {
 
 function ReportsPage() {
   const { session, isSessionLoading } = useSavedFavorites()
+  const [userReports, setUserReports] = useState<MyUserReport[]>([])
   const [commentReports, setCommentReports] = useState<MyCommentReport[]>([])
   const [placeReports, setPlaceReports] = useState<MyPlaceReport[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -345,10 +390,12 @@ function ReportsPage() {
       try {
         setIsLoading(true)
         setErrorMessage('')
-        const [nextCommentReports, nextPlaceReports] = await Promise.all([
+        const [nextUserReports, nextCommentReports, nextPlaceReports] = await Promise.all([
+          getMyUserReports(session.access_token, controller.signal),
           fetchMyCommentReports(session.access_token, controller.signal),
           fetchMyPlaceReports(session.access_token, controller.signal),
         ])
+        setUserReports(nextUserReports)
         setCommentReports(nextCommentReports)
         setPlaceReports(nextPlaceReports)
       } catch (error) {
@@ -367,7 +414,7 @@ function ReportsPage() {
 
   const visibleCommentReports = session?.access_token ? commentReports : []
   const visiblePlaceReports = session?.access_token ? placeReports : []
-  const visibleUserReports: Array<never> = []
+  const visibleUserReports = session?.access_token ? userReports : []
   const visibleIsLoading = Boolean(session?.access_token) && isLoading
   const visibleErrorMessage = session?.access_token ? errorMessage : ''
 
@@ -449,7 +496,18 @@ function ReportsPage() {
                 isOpen={openSections.userReports}
                 onToggle={() => setOpenSections((current) => ({ ...current, userReports: !current.userReports }))}
               >
-                <UserReportsPlaceholder />
+                {visibleUserReports.length > 0 ? (
+                  <SectionList>
+                    {visibleUserReports.map((report) => (
+                      <UserReportCard key={report.id} report={report} />
+                    ))}
+                  </SectionList>
+                ) : (
+                  <SectionEmptyState
+                    title="No user reports yet"
+                    description="When you report a user account or profile, it will appear in this section."
+                  />
+                )}
               </SectionDropdown>
 
               <SectionDropdown

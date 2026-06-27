@@ -8,7 +8,7 @@ import ProfileAvatar from '../components/ProfileAvatar'
 import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { uploadProfileAvatar } from '../services/onboardingApi'
-import { avatarUploadAccept, avatarUploadErrorMessage, isValidAvatarFile, normalizeAvatarFile } from '../utils/avatarUpload'
+import { avatarUploadAccept, avatarUploadErrorMessage, isValidAvatarFile, prepareAvatarUploadFile } from '../utils/avatarUpload'
 import {
   getCurrentUser,
   getMyProfile,
@@ -256,7 +256,7 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
     try {
       setIsUploadingAvatar(true)
       setAvatarError('')
-      const result = await uploadProfileAvatar(normalizeAvatarFile(file), session)
+      const result = await uploadProfileAvatar(await prepareAvatarUploadFile(file), session)
 
       setCurrentUser((currentValue) =>
         currentValue

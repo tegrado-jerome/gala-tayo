@@ -14,7 +14,7 @@ import {
   uploadProfileAvatar,
 } from '../services/onboardingApi'
 import { getOnboardingStatus } from '../utils/profileApi'
-import { avatarUploadErrorMessage, isValidAvatarFile, normalizeAvatarFile } from '../utils/avatarUpload'
+import { avatarUploadErrorMessage, isValidAvatarFile, prepareAvatarUploadFile } from '../utils/avatarUpload'
 import { navigateToPath } from '../utils/navigation'
 
 type OnboardingPageProps = {
@@ -272,7 +272,7 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
 
         if (isMounted && !status.needsOnboarding) {
           clearOnboardingDraft(session.user.id)
-          navigateToPath('/home')
+          navigateToPath('/')
           return
         }
 
@@ -438,7 +438,7 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
     try {
       setIsUploadingAvatar(true)
       setErrors((currentErrors) => ({ ...currentErrors, avatar: '' }))
-      const result = await uploadProfileAvatar(normalizeAvatarFile(file), session)
+      const result = await uploadProfileAvatar(await prepareAvatarUploadFile(file), session)
       updateValues({ avatarUrl: result.avatar_url, avatarStorageKey: result.avatar_storage_key })
     } catch (error) {
       setErrors((currentErrors) => ({
@@ -461,7 +461,7 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
       await completeOnboardingSetup({ ...values, username: normalizedUsername }, session)
       clearOnboardingDraft(session.user.id)
       onComplete?.()
-      navigateToPath('/home')
+      navigateToPath('/')
     } catch (error) {
       setErrors({
         form: error instanceof Error ? error.message : 'Could not finish onboarding.',

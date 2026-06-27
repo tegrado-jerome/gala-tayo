@@ -1,3 +1,5 @@
+import { getCanonicalPlacePath, resolveAreaMeta } from './seo'
+
 type ShareLinkOptions = {
   url: string
   title?: string
@@ -6,6 +8,9 @@ type ShareLinkOptions = {
 
 type ShareablePlace = {
   slug?: string | null
+  city?: string | null
+  area?: string | null
+  localArea?: string | null
 }
 
 function getOrigin() {
@@ -23,7 +28,8 @@ function getPlaceSlug(place: ShareablePlace) {
 }
 
 export function buildPlaceShareUrl(place: ShareablePlace) {
-  return `${getOrigin()}/places/${getPlaceSlug(place)}`
+  const areaMeta = resolveAreaMeta(place)
+  return `${getOrigin()}${getCanonicalPlacePath({ areaSlug: areaMeta.slug, placeSlug: getPlaceSlug(place) })}`
 }
 
 export function buildPublicGalaPlanShareUrl(username: string, slug: string) {

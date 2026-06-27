@@ -15,7 +15,7 @@ type MobileBottomNavProps = {
 }
 
 function MobileBottomNav({ currentPath, session }: MobileBottomNavProps) {
-  const isHomeActive = currentPath === '/home' || currentPath === '/home/'
+  const isHomeActive = currentPath === '/' || currentPath === ''
   const isSearchActive = currentPath === '/search' || currentPath === '/search/'
   const isAskAiActive =
     currentPath === '/ask-ai' ||
@@ -36,9 +36,9 @@ function MobileBottomNav({ currentPath, session }: MobileBottomNavProps) {
     currentPath === '/signup/'
 
   const navItems: NavItem[] = [
-    { label: 'Home', href: '/home', icon: 'home', isActive: isHomeActive },
+    { label: 'Home', href: '/', icon: 'home', isActive: isHomeActive },
     { label: 'Search', href: '/search', icon: 'search', isActive: isSearchActive },
-    { label: 'Ask AI', href: '/ask-ai', icon: 'askAi', isActive: isAskAiActive },
+    { label: 'Ask AI', href: '/ask-ai/text', icon: 'askAi', isActive: isAskAiActive },
     {
       label: 'Profile',
       href: session ? '/profile' : '/login',

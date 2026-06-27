@@ -1071,6 +1071,10 @@ body.gala-menu-open #root {
   animation: gala-modal-rise-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+.gala-protected-preview-frost {
+  backdrop-filter: blur(14px) saturate(0.92);
+}
+
 @keyframes gala-menu-fade-in {
   from {
     opacity: 0;

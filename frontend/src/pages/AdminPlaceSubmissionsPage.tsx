@@ -188,6 +188,13 @@ function AdminPlaceSubmissionsPage({ session }: { session: Session }) {
             >
               Photo review
             </button>
+            <button
+              type="button"
+              onClick={() => navigateToPath('/admin/user-reports')}
+              className="inline-flex min-h-10 items-center justify-center rounded-xl border border-[var(--line)] bg-white px-4 text-sm font-black text-slate-800"
+            >
+              User reports
+            </button>
           </div>
         </div>
 

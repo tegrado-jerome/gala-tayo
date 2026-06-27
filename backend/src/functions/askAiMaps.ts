@@ -60,6 +60,10 @@ function friendlyProviderMessage(status: number): string {
   return "Ask AI Map Finder could not load places right now. Please try again.";
 }
 
+function logAskAiMaps(context: InvocationContext, message: string) {
+  context.log(message);
+}
+
 function buildUsagePayload(
   askAi?: AskAiUsageResult,
   liveSearch?: AskAiUsageResult
@@ -249,7 +253,29 @@ export async function askAiMapsRequest(
         nearMe: getBooleanField(body.nearMe),
         openNow: getBooleanField(body.openNow),
         userLocation: getUserLocation(body.userLocation),
+      }, {
+        log: (message: string) => logAskAiMaps(context, message),
       });
+
+      if (result.fallbackUsed && !result.modelUsed) {
+        return {
+          status: 200,
+          headers: NO_STORE_HEADERS,
+          jsonBody: {
+            places: result.places,
+            modelUsed: null,
+            fallbackUsed: true,
+            message:
+              result.message ??
+              "Ask AI Maps is busy right now, so we showed regular GalaTayo search results instead.",
+            usage: {
+              askAi: askAiUsageBefore,
+              liveSearch: liveSearchUsageBefore,
+            },
+          },
+        };
+      }
+
       const askAiUsageAfter = await consumeAskAiUsage(user.id, "ask_ai_total");
       const liveSearchUsageAfter = await consumeAskAiUsage(user.id, "live_search");
 
@@ -258,6 +284,9 @@ export async function askAiMapsRequest(
         headers: NO_STORE_HEADERS,
         jsonBody: {
           places: result.places,
+          modelUsed: result.modelUsed ?? null,
+          fallbackUsed: result.fallbackUsed,
+          ...(result.message ? { message: result.message } : {}),
           usage: {
             askAi: askAiUsageAfter,
             liveSearch: liveSearchUsageAfter,

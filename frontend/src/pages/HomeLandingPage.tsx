@@ -3,7 +3,7 @@ import AppHeader from '../components/AppHeader'
 import { AppIcon, getCategoryIconName } from '../components/AppIcon'
 import type { PlaceCardData, PlaceCategoryMeta, PlaceTagMeta } from '../components/PlaceCard'
 import { supabase } from '../supabase'
-import { navigateToPath, navigateToPlace } from '../utils/navigation'
+import { navigateToCanonicalPlace, navigateToPath } from '../utils/navigation'
 import homeChibi from '../assets/chibis/public/chibi-welcome-page.webp'
 
 type BackendSearchPlace = {
@@ -225,7 +225,12 @@ function TrendingCard({ place }: { place: PlaceCardData }) {
       type="button"
       onClick={() => {
         if (place.slug) {
-          navigateToPlace(place.slug)
+          navigateToCanonicalPlace({
+            slug: place.slug,
+            city: place.city,
+            area: place.area,
+            localArea: place.localArea,
+          })
         }
       }}
       className={`flex min-h-[372px] w-[90vw] max-w-[368px] shrink-0 snap-start flex-col overflow-hidden text-left transition hover:border-slate-300 md:min-h-[388px] md:w-auto md:max-w-none lg:h-[324px] lg:max-w-[296px] xl:max-w-[304px] ${sharedCardClass}`}
@@ -361,7 +366,7 @@ function HomeLandingPage() {
   }
 
   const handleAskAiAction = () => {
-    navigateToPath('/ask-ai')
+    navigateToPath('/ask-ai/text')
   }
 
   const desktopTrendingPageCount = Math.ceil(trendingPlaces.length / 5)

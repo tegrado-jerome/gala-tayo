@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabase'
 import { getCurrentEmailConflict, getPostAuthRedirect } from '../services/authApi'
+import { buildAuthPath } from '../utils/authRedirect'
 import { navigateToPath } from '../utils/navigation'
 
 function AuthCallbackPage() {
@@ -68,7 +69,7 @@ function AuthCallbackPage() {
           <p className="mt-4 text-sm font-semibold leading-6 text-black/65">{errorMessage}</p>
           <button
             type="button"
-            onClick={() => navigateToPath('/login')}
+            onClick={() => navigateToPath(buildAuthPath('/login', window.location.search ? new URLSearchParams(window.location.search).get('next') : null))}
             className="mt-8 h-12 rounded-lg bg-black px-5 text-sm font-black text-white transition hover:bg-black/85"
           >
             Back to login

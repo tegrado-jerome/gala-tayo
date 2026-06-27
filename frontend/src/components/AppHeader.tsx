@@ -19,7 +19,7 @@ function LogoMark() {
     <button
       type="button"
       onClick={() => {
-        window.history.pushState(null, '', '/home')
+        window.history.pushState(null, '', '/')
         window.dispatchEvent(new PopStateEvent('popstate'))
       }}
       className="flex h-14 w-[210px] shrink-0 items-center justify-start transition hover:scale-[1.02] focus:outline-none lg:h-20 lg:w-[220px]"
