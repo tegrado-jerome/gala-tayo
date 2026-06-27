@@ -188,19 +188,17 @@ function SearchPageFinal() {
     <div className="gala-page-background min-h-screen text-[var(--text)]">
       <AppHeader minimal />
 
-      <main className="search-page relative mx-auto w-full max-w-[390px] px-5 pb-10 pt-7">
-        <section className="relative flex flex-col items-center text-center">
-          <div className="pointer-events-none absolute left-1/2 top-10 h-40 w-40 -translate-x-1/2 rounded-full bg-[rgba(115,175,255,0.24)] blur-3xl" />
-          <img src={searchBeforeChibi} alt="" className="mascot relative z-10 mt-[22px] h-[220px] w-auto object-contain" loading="eager" />
-
-          <div className="search-content mt-[18px]">
+      <main className="search-page relative mx-auto flex min-h-[calc(100svh-68px)] w-full max-w-[390px] flex-col px-5 pb-0 pt-7 sm:min-h-[calc(100svh-82px)]">
+        <section className="relative flex min-h-full flex-1 flex-col items-center justify-between text-center">
+          <div className="w-full">
+            <div className="search-content mt-[8px]">
             <h1 className="title text-[25px] font-black leading-[1.1] text-slate-950">Saan tayo gagala today?</h1>
             <p className="subtitle mt-2 text-[14px] leading-[1.45] text-[#4b5b76]">
               Search by typing, or build it if you need help.
             </p>
-          </div>
+            </div>
 
-          <section className="search-content mt-[34px] w-full text-left">
+            <section className="search-content mt-[26px] w-full text-left">
             {searchMode === 'typed' ? (
               <>
                 <p className="section-title mb-3 text-[17px] font-black text-slate-950">Search your gala</p>
@@ -294,7 +292,13 @@ function SearchPageFinal() {
             </button>
 
             {validationMessage ? <p className="mt-3 text-sm font-bold text-[var(--accent-deep)]">{validationMessage}</p> : null}
-          </section>
+            </section>
+          </div>
+
+          <div className="relative mt-6 flex w-full flex-1 items-end justify-center overflow-hidden pt-4">
+            <div className="pointer-events-none absolute left-1/2 top-2 h-40 w-40 -translate-x-1/2 rounded-full bg-[rgba(115,175,255,0.24)] blur-3xl" />
+            <img src={searchBeforeChibi} alt="" className="mascot relative z-10 h-[220px] w-auto object-contain sm:h-[250px]" loading="eager" />
+          </div>
         </section>
       </main>
 

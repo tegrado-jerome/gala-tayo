@@ -1,22 +1,12 @@
 import { useEffect, useMemo } from 'react'
 import L from 'leaflet'
 import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet'
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
-import markerIcon from 'leaflet/dist/images/marker-icon.png'
-import markerShadow from 'leaflet/dist/images/marker-shadow.png'
 import type { PlaceCardData } from './PlaceCard'
-
-delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl
-
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x,
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-})
 
 type MapViewProps = {
   places: PlaceCardData[]
   selectedPlaceId?: string | null
+  focusedPlaceId?: string | null
   onPlaceSelect?: (placeId: string) => void
   onPlaceOpen?: (placeId: string) => void
   center?: LatLngInput
@@ -45,6 +35,50 @@ type ValidMapPlace = {
 }
 
 const metroManilaCenter: ValidLatLng = [14.5995, 120.9842]
+
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;')
+}
+
+function getMarkerLabel(name: string): string {
+  const trimmedName = name.trim()
+  return trimmedName.length > 22 ? `${trimmedName.slice(0, 21).trimEnd()}...` : trimmedName
+}
+
+function createMarkerIcon(place: PlaceCardData, isSelected: boolean, isFocused: boolean) {
+  const markerClasses = ['gt-map-marker']
+
+  if (isSelected) {
+    markerClasses.push('is-selected')
+  }
+
+  if (isFocused) {
+    markerClasses.push('is-focused')
+  }
+
+  const label = escapeHtml(getMarkerLabel(place.name))
+
+  return L.divIcon({
+    className: '',
+    html: `
+      <div class="${markerClasses.join(' ')}" aria-label="${escapeHtml(place.name)}">
+        <svg class="gt-map-marker__pin" viewBox="0 0 32 44" aria-hidden="true">
+          <path d="M16 43C16 43 30 27.5 30 16C30 7.7 23.7 1 16 1C8.3 1 2 7.7 2 16C2 27.5 16 43 16 43Z"></path>
+          <circle cx="16" cy="16" r="5.5"></circle>
+        </svg>
+        <span class="gt-map-marker__label">${label}</span>
+      </div>
+    `,
+    iconSize: [160, 50],
+    iconAnchor: [16, 44],
+    popupAnchor: [0, -44],
+  })
+}
 
 function parseCoordinate(value: unknown): number | null {
   if (typeof value === 'number') {
@@ -268,6 +302,9 @@ function FitMapToPlaces({
 function MapView({
   places,
   selectedPlaceId,
+  focusedPlaceId,
+  onPlaceSelect,
+  onPlaceOpen,
   center = metroManilaCenter,
   zoom = 12,
   autoFitToPlaces = true,
@@ -288,7 +325,7 @@ function MapView({
 
   return (
     <div className={`h-[360px] w-full select-none overflow-hidden rounded-2xl border border-[var(--line)] md:h-[560px] ${className}`}>
-      <MapContainer center={safeCenter} zoom={safeZoom} scrollWheelZoom className="h-full w-full">
+      <MapContainer center={safeCenter} zoom={safeZoom} scrollWheelZoom className="galatayo-leaflet-map h-full w-full">
         <MapSizeSync center={safeCenter} zoom={safeZoom} />
         <FitMapToPlaces
           validPlaces={validPlaces}
@@ -298,16 +335,34 @@ function MapView({
           autoFitToPlaces={autoFitToPlaces}
         />
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution="&copy; OpenStreetMap contributors &copy; CARTO"
+          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
         />
 
         {validPlaces.map(({ place, latLng }) => (
           <Marker
             key={place.id}
             position={latLng}
-            interactive={false}
-            opacity={selectedPlaceId === place.id ? 1 : 0.88}
+            icon={createMarkerIcon(
+              place,
+              selectedPlaceId === place.id,
+              focusedPlaceId === place.id && selectedPlaceId !== place.id
+            )}
+            riseOnHover
+            zIndexOffset={selectedPlaceId === place.id ? 900 : 240}
+            eventHandlers={{
+              click() {
+                if (selectedPlaceId === place.id) {
+                  onPlaceOpen?.(place.id)
+                  return
+                }
+
+                onPlaceSelect?.(place.id)
+              },
+              dblclick() {
+                onPlaceOpen?.(place.id)
+              },
+            }}
           />
         ))}
       </MapContainer>

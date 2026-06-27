@@ -35,9 +35,10 @@ function getMimeTypeFromExtension(fileName: string) {
 
 export function isValidAvatarFile(file: File) {
   const hasValidMimeType = avatarMimeTypes.includes(file.type as (typeof avatarMimeTypes)[number])
+  const hasImageMimeType = file.type.trim().toLowerCase().startsWith('image/')
   const hasValidExtension = avatarExtensions.includes(getFileExtension(file.name) as (typeof avatarExtensions)[number])
 
-  return (hasValidMimeType || hasValidExtension) && file.size <= maxAvatarBytes
+  return (hasValidMimeType || hasImageMimeType || hasValidExtension) && file.size <= maxAvatarBytes
 }
 
 export function normalizeAvatarFile(file: File) {

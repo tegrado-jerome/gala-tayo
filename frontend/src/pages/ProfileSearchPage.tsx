@@ -24,29 +24,29 @@ function ProfileResultCard({
   const followersCount = profile.followers_count ?? 0
   const followingCount = profile.following_count ?? 0
   const actionPath = isOwnProfile ? '/profile' : `/u/${encodeURIComponent(profile.username)}`
-  
+
   if (emphasis === 'default') {
     return (
       <button
         type="button"
         onClick={() => navigateToPath(actionPath)}
-        className="group gala-card w-full px-3 py-3 text-left transition duration-200 hover:border-slate-300 hover:bg-slate-50"
+        className="group gala-card w-full overflow-hidden px-2.5 py-3 text-left transition duration-200 hover:border-slate-300 hover:bg-slate-50 sm:px-3"
       >
-        <span className="flex items-center gap-3">
+        <span className="flex min-w-0 items-center gap-2.5 sm:gap-3">
           <span className="shrink-0">
             <ProfileAvatar profile={profile} size="sm" />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="flex items-center gap-2">
+            <span className="flex min-w-0 items-center gap-1.5 sm:gap-2">
               <span className="truncate text-[14px] font-black text-slate-950">
                 @{profile.username}
               </span>
               {isOwnProfile ? (
-                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-slate-500">
+                <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-slate-500">
                   You
                 </span>
               ) : (
-                <span className="rounded-full bg-[#e7f0ff] px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-[#1669d6]">
+                <span className="shrink-0 rounded-full bg-[#e7f0ff] px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-[#1669d6]">
                   New
                 </span>
               )}
@@ -54,13 +54,13 @@ function ProfileResultCard({
             <span className="mt-1 block line-clamp-2 text-[12px] font-semibold leading-4.5 text-[var(--muted)]">
               {profile.bio || 'Public profile ready for new connections.'}
             </span>
-            <span className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-black uppercase tracking-[0.14em] text-slate-500">
+            <span className="mt-2 flex items-center gap-2 whitespace-nowrap text-[9px] font-black uppercase tracking-[0.12em] text-slate-500 sm:gap-x-3 sm:text-[10px] sm:tracking-[0.14em]">
               <span>{formatCompactCount(followersCount)} followers</span>
               <span>{formatCompactCount(followingCount)} following</span>
             </span>
           </span>
           <span className="flex shrink-0 flex-col items-end gap-2">
-            <span className="flex items-center gap-1 rounded-full bg-[var(--accent)] px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.14em] text-white transition group-hover:bg-[var(--accent-deep)]">
+            <span className="flex items-center gap-1 rounded-full bg-[var(--accent)] px-2.5 py-1.5 text-[8px] font-black uppercase tracking-[0.14em] text-white transition group-hover:bg-[var(--accent-deep)] sm:px-3 sm:text-[9px]">
               View
               <ArrowUpRight className="h-3 w-3" />
             </span>
@@ -74,18 +74,18 @@ function ProfileResultCard({
     <button
       type="button"
       onClick={() => navigateToPath(actionPath)}
-      className="group gala-card flex w-full items-center gap-3 px-4 py-3 text-left transition duration-200 hover:border-[var(--accent)]"
+      className="group gala-card flex w-full items-center gap-2.5 overflow-hidden px-3 py-3 text-left transition duration-200 hover:border-[var(--accent)] sm:gap-3 sm:px-4"
     >
       <span className="flex shrink-0 items-center self-center">
         <ProfileAvatar profile={profile} size="sm" />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="flex flex-wrap items-center gap-2">
+        <span className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
           <span className="truncate text-[14px] font-black text-slate-950 sm:text-[15px]">
             @{profile.username}
           </span>
           {isOwnProfile ? (
-            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">
+            <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">
               You
             </span>
           ) : null}
@@ -94,7 +94,7 @@ function ProfileResultCard({
           {profile.bio || 'Public profile ready for new connections.'}
         </span>
       </span>
-      <span className="flex shrink-0 items-center self-center gap-1 rounded-full bg-[var(--accent)] px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-white transition group-hover:bg-[var(--accent-deep)]">
+      <span className="flex shrink-0 items-center self-center gap-1 rounded-full bg-[var(--accent)] px-2.5 py-2 text-[9px] font-black uppercase tracking-[0.14em] text-white transition group-hover:bg-[var(--accent-deep)] sm:px-3 sm:text-[10px]">
         View
         <ArrowUpRight className="h-3.5 w-3.5" />
       </span>
@@ -107,13 +107,13 @@ function FollowedProfileRow({ profile }: { profile: FollowListUser }) {
     <button
       type="button"
       onClick={() => navigateToPath(`/u/${encodeURIComponent(profile.username)}`)}
-      className="group gala-card flex w-full items-center gap-3 px-4 py-3 text-left transition hover:border-slate-300 hover:bg-slate-50"
+      className="group gala-card flex w-full items-center gap-2.5 overflow-hidden px-3 py-3 text-left transition hover:border-slate-300 hover:bg-slate-50 sm:gap-3 sm:px-4"
     >
       <ProfileAvatar profile={profile} size="sm" />
       <span className="min-w-0 flex-1">
-        <span className="flex items-center gap-2">
+        <span className="flex min-w-0 items-center gap-1.5 sm:gap-2">
           <span className="truncate text-sm font-black text-slate-950">@{profile.username}</span>
-          <span className="rounded-full bg-[#e7f0ff] px-2 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#1669d6]">
+          <span className="shrink-0 rounded-full bg-[#e7f0ff] px-2 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#1669d6]">
             Following
           </span>
         </span>
@@ -121,7 +121,7 @@ function FollowedProfileRow({ profile }: { profile: FollowListUser }) {
           {profile.bio || 'Already part of your circle.'}
         </span>
       </span>
-      <span className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-400 transition group-hover:text-slate-700">
+      <span className="shrink-0 text-[10px] font-black uppercase tracking-[0.14em] text-slate-400 transition group-hover:text-slate-700 sm:text-[11px]">
         Open
       </span>
     </button>

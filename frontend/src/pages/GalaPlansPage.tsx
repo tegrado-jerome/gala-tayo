@@ -5,6 +5,7 @@ import type { Session } from '@supabase/supabase-js'
 import AppHeader from '../components/AppHeader'
 import { AppIcon } from '../components/AppIcon'
 import MinimalBackNav from '../components/MinimalBackNav'
+import PageHeroHeader from '../components/PageHeroHeader'
 import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import {
   createGalaPlan,
@@ -685,11 +686,18 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
     <form onSubmit={handleSubmit} className="grid gap-5">
       {isRefreshing ? <p className="text-sm text-[var(--muted)]">Refreshing your gala plan in the background...</p> : null}
       <section className="grid gap-5">
-        <div className="grid gap-2">
-          <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[var(--accent-deep)]">{isEdit ? 'Refine Your Route' : 'Build A New Route'}</p>
-          <h1 className="gala-page-title">{isEdit ? 'Edit Gala Plan' : 'Create Gala Plan'}</h1>
-          <p className="max-w-2xl text-sm font-semibold leading-6 text-slate-600">Start with the basics, then add places one by one so the plan stays clear and easy to follow.</p>
-        </div>
+        <PageHeroHeader
+          eyebrow="Gala Plans"
+          title={isEdit ? 'Edit your gala plan' : 'Create a gala plan'}
+          description="Start with the basics, then add places one by one so the plan stays clear and easy to follow."
+          icon={<AppIcon name="galaPlan" className="h-4 w-4" />}
+          badges={
+            <>
+              <span className="gala-count-pill">{items.length} stop{items.length === 1 ? '' : 's'}</span>
+              <span className="gala-count-pill">{visibility} visibility</span>
+            </>
+          }
+        />
         <div className="grid gap-5 border-t border-[var(--line)] pt-5">
           <label className="grid gap-2"><span className="text-sm font-black text-slate-800">Title</span><input value={title} onChange={(event) => setTitle(event.target.value)} className="h-12 rounded-2xl border border-[var(--line-strong)] px-4 text-base font-bold text-slate-950 outline-none transition focus:border-[var(--accent)] focus:ring-4 focus:ring-[var(--accent-soft)]" placeholder="Cafe crawl in BGC" /></label>
           <label className="grid gap-2"><span className="text-sm font-black text-slate-800">Description</span><textarea value={description} onChange={(event) => setDescription(event.target.value)} rows={4} className="resize-none rounded-2xl border border-[var(--line-strong)] px-4 py-3 text-sm font-semibold leading-6 text-slate-950 outline-none transition focus:border-[var(--accent)] focus:ring-4 focus:ring-[var(--accent-soft)]" placeholder="What kind of day is this plan for?" /></label>
@@ -734,22 +742,33 @@ function ListPage({ session, favorites = false }: { session?: Session | null; fa
 
   return (
     <>
-      <section className="border-b border-slate-200 pb-4">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="max-w-2xl">
-            <h1 className="gala-page-title">{favorites ? 'Gala Plan Favorites' : 'My Gala Plan'}</h1>
-            <p className="gala-page-description">{favorites ? 'Public gala plans you hearted and saved for quick access.' : 'Keep your routes clear, compact, and easy to edit.'}</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
+      <PageHeroHeader
+        eyebrow="Gala Plans"
+        title={favorites ? 'Gala plan favorites' : 'My gala plans'}
+        description={favorites ? 'Public gala plans you hearted and saved for quick access.' : 'Keep your routes clear, compact, and easy to edit.'}
+        icon={<AppIcon name="galaPlan" className="h-4 w-4" />}
+        badges={
+          <>
+            <span className="gala-count-pill">
+              {plans.length} {favorites ? 'saved plan' : 'plan'}{plans.length === 1 ? '' : 's'}
+            </span>
+            <span className="gala-count-pill">
+              {favorites ? 'Community picks' : `Latest update ${latestUpdate}`}
+            </span>
+          </>
+        }
+        aside={
+          <div className="flex flex-wrap gap-2 lg:justify-end">
             <button type="button" onClick={() => navigateToPath(favorites ? '/gala-plans' : '/gala-plans/favorites')} className="gala-secondary-button min-h-10 px-4">{favorites ? 'My Gala Plan' : 'Gala Plan Favorites'}</button>
             {!favorites ? <button type="button" onClick={() => navigateToPath('/gala-plans/new')} className="gala-primary-button min-h-10 px-4">Create Gala Plan</button> : null}
           </div>
-        </div>
-        <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
-          <PlanStat label={favorites ? 'Saved plans' : 'Total plans'} value={String(plans.length)} />
-          {!favorites ? <PlanStat label="Latest update" value={latestUpdate} /> : null}
-        </div>
-      </section>
+        }
+      />
+
+      <div className="mt-1 flex flex-wrap gap-x-5 gap-y-2">
+        <PlanStat label={favorites ? 'Saved plans' : 'Total plans'} value={String(plans.length)} />
+        {!favorites ? <PlanStat label="Latest update" value={latestUpdate} /> : null}
+      </div>
 
       {isLoading ? (
         <UnifiedLoadingState

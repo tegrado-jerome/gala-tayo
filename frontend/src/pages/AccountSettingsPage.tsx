@@ -3,6 +3,7 @@ import type { ChangeEvent, FormEvent, ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { ChevronDown, Globe2, Shield, UserRound } from 'lucide-react'
 import AppHeader from '../components/AppHeader'
+import PageHeroHeader from '../components/PageHeroHeader'
 import ProfileAvatar from '../components/ProfileAvatar'
 import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import { useSystemMessage } from '../context/SystemMessageContext'
@@ -313,11 +314,29 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
           />
         ) : currentUser && profile ? (
           <form onSubmit={handleSave} className="space-y-8">
+            <PageHeroHeader
+              className="account-settings-hero"
+              eyebrow="Account Settings"
+              title="Manage your profile and privacy"
+              description="Update your personal details, public profile, and default visibility settings in one place."
+              icon={<UserRound className="h-4 w-4" strokeWidth={2.2} />}
+              badges={
+                <div className="account-settings-hero-meta">
+                  <span className="account-settings-hero-chip">
+                    <Globe2 className="h-3.5 w-3.5" strokeWidth={2.2} />
+                    <span>{profile.is_public ? 'Public profile' : 'Private profile'}</span>
+                  </span>
+                  <span className="account-settings-hero-divider" aria-hidden="true" />
+                  <span className="account-settings-hero-chip account-settings-hero-chip-email">
+                    <span>{currentUser.user.email ?? 'Email unavailable'}</span>
+                  </span>
+                </div>
+              }
+            />
+
             <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
               <div className="grid gap-6 px-5 py-5 lg:grid-cols-[260px_minmax(0,1fr)] lg:px-6">
                 <div className="self-start">
-                  <p className="text-[13px] font-bold text-[#1877f2]">Settings</p>
-                  <h1 className="mt-1 text-2xl font-bold text-slate-900">Account Settings</h1>
                   <div className="mt-5 flex items-center gap-3">
                     <ProfileAvatar profile={avatarProfile} size="lg" />
                     <div className="min-w-0">

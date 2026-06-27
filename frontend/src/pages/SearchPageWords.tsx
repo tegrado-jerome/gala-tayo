@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import AppHeader from '../components/AppHeader'
-import { AppIcon } from '../components/AppIcon'
+import { AppIcon, type AppIconName } from '../components/AppIcon'
+import PageHeroHeader from '../components/PageHeroHeader'
 import { navigateToPath } from '../utils/navigation'
 import { buildSearchPath, hasActiveSearchCriteria, normalizeTypedSearchText, readSearchUrlState, type SearchBudgetValue, type SearchGoodForValue } from '../utils/searchParams'
 import HomePage from './HomePage'
@@ -12,6 +13,12 @@ type BuilderField = 'category' | 'city' | 'good_for' | 'budget' | null
 type SearchCategoryChoice = {
   value: string
   label: string
+}
+
+type SearchShortcutAction = {
+  label: string
+  query: string
+  icon: AppIconName
 }
 
 const searchCategoryChoices: SearchCategoryChoice[] = [
@@ -73,7 +80,12 @@ const sampleSearchQueries = [
   'budget-friendly food trip in Manila',
 ]
 
-const typedSuggestionChips = ['Budget cafe', 'Date spot', 'Near mall', 'Rainy day', 'Barkada food']
+const typedSuggestionChips: SearchShortcutAction[] = [
+  { label: 'Budget cafe', query: 'budget cafe', icon: 'wallet' },
+  { label: 'Date spot', query: 'date spot', icon: 'calendarPlan' },
+  { label: 'Rainy day', query: 'rainy day', icon: 'rain' },
+  { label: 'Park stroll', query: 'park stroll', icon: 'categoryParke' },
+]
 
 function getCategorySearchPhrase(categoryLabel: string) {
   switch (categoryLabel.toLowerCase()) {
@@ -296,6 +308,8 @@ function SearchPageWords() {
     selectedBudget,
   })
   const canSearch = activeTypedQuery.length > 0 || hasBuildSelection
+  const isDefaultEmptyState = activeTypedQuery.length === 0 && !hasBuildSelection
+  const shouldShowSearchMascot = !hasBuildSelection
   const filterOnlyQuery = buildComposerQuery({
     rawQuery: '',
     categoryLabel: selectedCategory?.label ?? null,
@@ -458,10 +472,10 @@ function SearchPageWords() {
       <AppHeader minimal />
 
       <main
-        className="relative mx-auto w-full max-w-[390px] px-5 pb-4 pt-4 sm:max-w-[720px] sm:px-8 sm:pb-10 sm:pt-5 lg:max-w-[980px] lg:px-10 lg:pb-8 lg:pt-6"
+        className="relative mx-auto w-full max-w-[390px] px-5 pb-[calc(7rem+env(safe-area-inset-bottom,0px))] pt-5 sm:max-w-[720px] sm:px-8 sm:pb-14 sm:pt-6 lg:max-w-[980px] lg:px-10 lg:pb-12 lg:pt-7"
       >
         <section
-          className="relative mx-auto flex w-full max-w-[520px] flex-col items-center justify-start text-center sm:max-w-[560px] lg:max-w-[620px]"
+          className="relative mx-auto flex w-full max-w-[520px] flex-col items-center gap-6 text-center sm:max-w-[560px] sm:gap-7 lg:max-w-[620px]"
         >
           <section className="w-full text-center">
             <label htmlFor="search-input" className="sr-only">
@@ -469,15 +483,13 @@ function SearchPageWords() {
             </label>
             <div className="mx-auto w-full max-w-[560px]">
               <div className="text-left">
-                <div className="mb-3 flex items-center justify-between gap-3 px-1">
-                  <div>
-                    <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[var(--accent)]">Discover</p>
-                    <p className="mt-1 text-[14px] text-[var(--muted)]">Search places around Metro Manila</p>
-                  </div>
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--primary-soft)] text-[var(--accent)]" aria-hidden="true">
-                    <AppIcon name="place" className="h-4 w-4" />
-                  </div>
-                </div>
+                <PageHeroHeader
+                  eyebrow="Search"
+                  title="Where do you want to go?"
+                  description="Find cafes, parks, malls, date spots, and gala ideas."
+                  icon={<AppIcon name="search" className="h-4 w-4" />}
+                  className="mb-5 border-b-0 pb-0"
+                />
 
                 <div className="flex overflow-hidden rounded-[22px] border border-[var(--line)] bg-white shadow-sm transition focus-within:border-[var(--accent)] focus-within:shadow-[0_0_0_4px_rgba(30,58,138,0.10),0_14px_32px_rgba(17,24,39,0.08)]">
                   <div className="flex min-w-0 flex-1 items-center bg-white">
@@ -521,7 +533,7 @@ function SearchPageWords() {
                   </button>
                 </div>
 
-                <div className="mt-3 flex items-center justify-between gap-3">
+                <div className="mt-5 flex items-center justify-between gap-3">
                   <button
                     type="button"
                     onClick={() => {
@@ -549,21 +561,22 @@ function SearchPageWords() {
                   ) : null}
                 </div>
 
-                <div className="mt-3 flex flex-wrap gap-2">
+                <div className="mt-5 grid grid-cols-2 gap-3">
                   {typedSuggestionChips.map((chip) => (
                     <button
-                      key={chip}
+                      key={chip.label}
                       type="button"
-                      onClick={() => setRawQuery(chip)}
-                      className="rounded-full border border-[var(--line)] bg-white px-3.5 py-2 text-[13px] font-medium text-[#374151] transition hover:border-[var(--accent)] hover:bg-[var(--primary-soft)] hover:text-[var(--accent)]"
+                      onClick={() => setRawQuery(chip.query)}
+                      className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-white px-3.5 py-2 text-[13px] font-medium text-[#374151] transition hover:border-[var(--accent)] hover:bg-[var(--primary-soft)] hover:text-[var(--accent)]"
                     >
-                      {chip}
+                      <AppIcon name={chip.icon} className="h-3.5 w-3.5" />
+                      <span>{chip.label}</span>
                     </button>
                   ))}
                 </div>
 
                 {(selectedCategory?.label || selectedCityName || selectedGoodForOption?.label || effectiveBudgetPreview) ? (
-                  <div className="mt-3 flex flex-wrap gap-2">
+                  <div className="mt-4 flex flex-wrap gap-2.5">
                     {effectiveBudgetPreview ? (
                       <span className="rounded-full bg-[var(--primary-soft)] px-3 py-1.5 text-[12px] font-medium text-[var(--accent)]">
                         {effectiveBudgetPreview}
@@ -587,40 +600,41 @@ function SearchPageWords() {
                   </div>
                 ) : null}
 
-                {(selectedCategory?.label || selectedCityName || selectedGoodForOption?.label || effectiveBudgetPreview) ? (
-                  <p className="mt-3 text-[14px] leading-6 text-[var(--muted)]">
+                {!isDefaultEmptyState && (selectedCategory?.label || selectedCityName || selectedGoodForOption?.label || effectiveBudgetPreview) ? (
+                  <p className="mt-4 text-[14px] leading-6 text-[var(--muted)]">
                     {searchPreviewText}
                   </p>
-                ) : (
-                  <p className="mt-3 text-[14px] leading-6 text-[var(--muted)]">
-                    Try &quot;cozy cafe in Makati&quot; or &quot;budget date in QC.&quot;
-                  </p>
-                )}
-              </div>
-              <div className="mt-3 hidden flex-wrap justify-center gap-2">
-                {typedSuggestionChips.map((chip) => (
-                  <button
-                    key={chip}
-                    type="button"
-                    onClick={() => setRawQuery(chip)}
-                    className="rounded-full border border-[var(--line)] bg-white px-3.5 py-2 text-[13px] font-medium text-[#374151] transition hover:border-[var(--accent)] hover:bg-[var(--primary-soft)] hover:text-[var(--accent)]"
-                  >
-                    {chip}
-                  </button>
-                ))}
+                ) : null}
+
+                {shouldShowSearchMascot ? (
+                  <div className="mt-6 flex items-start gap-3.5 text-left">
+                    <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--primary-soft)] text-[var(--accent)]">
+                      <AppIcon name="askAi" className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--accent-deep)]">Quick tip</p>
+                      <p className="mt-2 text-[13px] leading-6 text-[var(--muted)]">
+                        Try a vibe plus place type, like <span className="font-semibold text-[var(--text-main)]">&quot;cozy cafe&quot;</span> or <span className="font-semibold text-[var(--text-main)]">&quot;fun date spot&quot;</span>.
+                      </p>
+                    </div>
+                  </div>
+                ) : null}
               </div>
             </div>
           </section>
 
-          <div className="relative -mt-10 flex w-full justify-center">
-            <img
-              src={searchBeforeChibi}
-              alt=""
-              className="relative z-10 h-[300px] w-auto max-w-none origin-top scale-[1.55] object-contain sm:h-[360px] sm:scale-[1.58] lg:h-[400px] lg:scale-[1.6]"
-              style={{ transformOrigin: 'top center', marginTop: '-6px' }}
-              loading="eager"
-            />
-          </div>
+          {shouldShowSearchMascot ? (
+            <div className="relative flex w-full justify-center leading-none">
+              <div className="flex w-full max-w-[420px] flex-col items-center sm:max-w-[460px]">
+                <img
+                  src={searchBeforeChibi}
+                  alt=""
+                  className="block h-[clamp(220px,34vw,320px)] w-auto max-w-full object-contain sm:h-[clamp(260px,36vw,360px)] lg:h-[clamp(290px,30vw,390px)]"
+                  loading="eager"
+                />
+              </div>
+            </div>
+          ) : null}
         </section>
       </main>
 

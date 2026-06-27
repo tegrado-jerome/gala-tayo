@@ -330,12 +330,12 @@ function PlacePhoto({
                   <button
                     type="button"
                     onClick={onContribute}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-white/92 px-3.5 py-2 text-[12px] font-black text-slate-900 shadow-[0_12px_28px_rgba(15,23,42,0.18)] backdrop-blur-sm transition hover:bg-white"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-black/28 px-3.5 py-2 text-[12px] font-black text-white shadow-[0_14px_30px_rgba(15,23,42,0.24)] backdrop-blur-md transition hover:bg-black/36"
                   >
                     <ImagePlus className="h-4 w-4" strokeWidth={2.2} />
                     Add photo
                   </button>
-                  ) : null}
+                ) : null}
               </div>
 
               <div className="flex h-full items-center justify-center px-6 py-8 text-center">
@@ -361,10 +361,10 @@ function PlacePhoto({
                         type="button"
                         onClick={shouldUseAddTile ? onContribute : undefined}
                         disabled={!shouldUseAddTile}
-                        className={`flex h-16 w-16 items-center justify-center rounded-2xl border text-white backdrop-blur-sm shadow-[0_12px_24px_rgba(15,23,42,0.18)] transition ${
+                        className={`flex h-16 w-16 items-center justify-center rounded-2xl border shadow-[0_12px_24px_rgba(15,23,42,0.18)] transition ${
                           shouldUseAddTile
-                            ? 'border-dashed border-white/55 bg-white/12 hover:bg-white/18'
-                            : 'cursor-default border-white/18 bg-black/16 text-white/40'
+                            ? 'border-dashed border-white/70 bg-black/28 text-white backdrop-blur-md hover:bg-black/36'
+                            : 'cursor-default border-white/18 bg-black/16 text-white/40 backdrop-blur-sm'
                         }`}
                         aria-label={
                           shouldUseAddTile
@@ -413,7 +413,7 @@ function PlacePhoto({
                 <button
                   type="button"
                   onClick={onContribute}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-white/92 px-3.5 py-2 text-[12px] font-black text-slate-900 shadow-[0_12px_28px_rgba(15,23,42,0.18)] backdrop-blur-sm transition hover:bg-white"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-black/28 px-3.5 py-2 text-[12px] font-black text-white shadow-[0_14px_30px_rgba(15,23,42,0.24)] backdrop-blur-md transition hover:bg-black/36"
                 >
                   <ImagePlus className="h-4 w-4" strokeWidth={2.2} />
                   Add photo
@@ -426,19 +426,29 @@ function PlacePhoto({
                 type="button"
                 onClick={onPrevious}
                 disabled={!canGoPrevious}
-                className="absolute left-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/35 bg-white/10 text-white backdrop-blur-sm transition hover:bg-white/18 disabled:cursor-not-allowed disabled:border-white/15 disabled:bg-transparent disabled:text-white/40"
+                className={`absolute left-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border backdrop-blur-sm transition ${
+                  canGoPrevious
+                    ? 'border-white/70 bg-black/28 text-white shadow-[0_12px_26px_rgba(15,23,42,0.24)] hover:bg-black/38'
+                    : 'cursor-not-allowed border-white/22 bg-black/14 text-white/45'
+                }`}
                 aria-label={`Show previous photo of ${placeName}`}
+                aria-disabled={!canGoPrevious}
               >
-                <ChevronLeft className="h-5 w-5" strokeWidth={2.4} />
+                <ChevronLeft className="h-5 w-5" strokeWidth={2.6} />
               </button>
               <button
                 type="button"
                 onClick={onNext}
                 disabled={!canGoNext}
-                className="absolute right-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-white/35 bg-white/10 text-white backdrop-blur-sm transition hover:bg-white/18 disabled:cursor-not-allowed disabled:border-white/15 disabled:bg-transparent disabled:text-white/40"
+                className={`absolute right-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border backdrop-blur-sm transition ${
+                  canGoNext
+                    ? 'border-white/70 bg-black/28 text-white shadow-[0_12px_26px_rgba(15,23,42,0.24)] hover:bg-black/38'
+                    : 'cursor-not-allowed border-white/22 bg-black/14 text-white/45'
+                }`}
                 aria-label={`Show next photo of ${placeName}`}
+                aria-disabled={!canGoNext}
               >
-                <ChevronRight className="h-5 w-5" strokeWidth={2.4} />
+                <ChevronRight className="h-5 w-5" strokeWidth={2.6} />
               </button>
             </>
 
@@ -472,10 +482,10 @@ function PlacePhoto({
                       type="button"
                       onClick={shouldUseAddTile ? onContribute : undefined}
                       disabled={!shouldUseAddTile}
-                      className={`flex h-16 w-16 items-center justify-center rounded-2xl border text-white backdrop-blur-sm shadow-[0_12px_24px_rgba(15,23,42,0.18)] transition ${
+                      className={`flex h-16 w-16 items-center justify-center rounded-2xl border shadow-[0_12px_24px_rgba(15,23,42,0.18)] transition ${
                         shouldUseAddTile
-                          ? 'border-dashed border-white/55 bg-white/12 hover:bg-white/18'
-                          : 'cursor-default border-white/18 bg-black/16 text-white/40'
+                          ? 'border-dashed border-white/70 bg-black/28 text-white backdrop-blur-md hover:bg-black/36'
+                          : 'cursor-default border-white/18 bg-black/16 text-white/40 backdrop-blur-sm'
                       }`}
                       aria-label={
                         shouldUseAddTile

@@ -214,9 +214,9 @@ function SearchPage() {
     <div className="gala-page-background min-h-screen text-[var(--text)]">
       <AppHeader minimal />
 
-      <main className="relative mx-auto flex min-h-[calc(100vh-88px)] w-full max-w-[980px] flex-col px-4 pb-6 pt-5 sm:min-h-[calc(100vh-96px)] sm:px-6 lg:px-10">
+      <main className="relative mx-auto flex min-h-[calc(100svh-68px)] w-full max-w-[980px] flex-col px-4 pb-0 pt-5 sm:min-h-[calc(100svh-82px)] sm:px-6 lg:px-10">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[420px] bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.68),rgba(255,255,255,0))]" />
-        <section className="relative flex flex-1 flex-col items-center text-center">
+        <section className="relative flex flex-1 flex-col items-center justify-between text-center">
           <section className="relative z-20 w-full max-w-[760px] overflow-hidden rounded-[32px] bg-[linear-gradient(180deg,#1697f3_0%,#1777ea_100%)] px-4 py-4 text-left shadow-[0_24px_54px_rgba(23,119,234,0.28)] sm:px-5 sm:py-5">
             <div className="pointer-events-none absolute inset-0">
               <div className="absolute left-0 top-0 h-full w-[68%] bg-[linear-gradient(205deg,rgba(255,255,255,0.18)_0%,rgba(255,255,255,0.18)_28%,rgba(255,255,255,0)_29%)]" />
@@ -361,7 +361,7 @@ function SearchPage() {
             </div>
           </section>
 
-          <div className="relative -mt-4 flex flex-1 w-full items-start justify-center overflow-hidden pt-1 sm:-mt-6 sm:pt-2">
+          <div className="relative -mt-4 flex w-full flex-1 items-end justify-center overflow-hidden pt-4 sm:-mt-6 sm:pt-2">
             <div className="pointer-events-none absolute left-8 top-10 h-10 w-20 rounded-full bg-white/60 blur-sm" />
             <div className="pointer-events-none absolute right-8 top-14 h-12 w-24 rounded-full bg-white/65 blur-sm" />
             <div className="pointer-events-none absolute inset-x-0 top-12 mx-auto h-48 w-48 rounded-full bg-[rgba(115,175,255,0.3)] blur-3xl sm:h-60 sm:w-60" />

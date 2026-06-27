@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
-import AppFooter from '../components/AppFooter'
 import AppHeader from '../components/AppHeader'
 import GoogleSignInButton from '../components/GoogleSignInButton'
+import PageHeroHeader from '../components/PageHeroHeader'
 import { useSavedFavorites, type FavoritePlace, type FavoriteRow } from '../context/SavedFavoritesContext'
 import { navigateToPlace } from '../utils/navigation'
 import { getPlacePhoto } from '../utils/placePhoto'
@@ -213,15 +213,24 @@ function FavoritesPage() {
       <AppHeader showTaglishChip={false} />
 
       <main className="mx-auto flex w-full max-w-[1480px] flex-1 flex-col gap-5 px-4 py-5 sm:px-6 lg:px-10 lg:py-8">
-        <section className="grid gap-5 md:grid-cols-[minmax(0,1fr)_420px] md:items-center">
-          <div>
-            <h1 className="text-[34px] font-black leading-tight text-slate-950 sm:text-[42px]">Saved places</h1>
-            <p className="mt-3 max-w-xl text-lg font-semibold leading-relaxed text-slate-600">
-              Your favorite gala spots, ready when you are.
-            </p>
-          </div>
-          <SavedChibi />
-        </section>
+        <PageHeroHeader
+          eyebrow="Favorites"
+          title="Saved places"
+          description="Your favorite gala spots, ready when you are."
+          icon={<PinIcon />}
+          badges={
+            <>
+              <span className="gala-count-pill">
+                {savedPlaces.length} saved place{savedPlaces.length === 1 ? '' : 's'}
+              </span>
+              <span className="gala-count-pill">
+                {searchQuery.trim() ? `Filtering "${searchQuery.trim()}"` : 'Quick access'}
+              </span>
+            </>
+          }
+          aside={<SavedChibi />}
+          className="border-b-0 pb-0"
+        />
 
         {isSessionLoading ? (
           <section className="rounded-lg border border-[var(--line)] bg-white px-4 py-5 shadow-[0_14px_30px_rgba(28,77,160,0.07)]">
@@ -305,7 +314,6 @@ function FavoritesPage() {
           </>
         ) : null}
       </main>
-      <AppFooter />
     </div>
   )
 }

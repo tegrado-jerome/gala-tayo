@@ -372,7 +372,7 @@ function HomeLandingPage() {
     <div className="gala-page-background min-h-screen text-[#071633]">
       <AppHeader minimal />
 
-      <main className="mx-auto w-full px-4 pb-[calc(env(safe-area-inset-bottom,0px)+6.75rem)] pt-4 sm:px-6 sm:pt-5 md:px-8 lg:w-[calc(100%-64px)] lg:px-0 lg:pb-16 lg:pt-8 xl:w-[calc(100%-96px)] xl:px-0 2xl:w-[min(1680px,calc(100%-128px))]">
+      <main className="mx-auto w-full px-4 pb-6 pt-4 sm:px-6 sm:pb-8 sm:pt-5 md:px-8 lg:w-[calc(100%-64px)] lg:px-0 lg:pb-16 lg:pt-8 xl:w-[calc(100%-96px)] xl:px-0 2xl:w-[min(1680px,calc(100%-128px))]">
         <section className="relative px-3 pt-2 sm:px-6 sm:pt-4 lg:px-0">
           <div className="pointer-events-none absolute inset-x-[16%] top-0 h-28 rounded-full bg-white/80 blur-xl" />
           <div className="pointer-events-none absolute left-1/2 top-[41%] h-[148px] w-[148px] -translate-x-1/2 rounded-full bg-[var(--accent-wash)] blur-xl sm:h-[176px] sm:w-[176px] lg:left-[66%] lg:top-1/2 lg:h-[390px] lg:w-[390px] lg:-translate-y-1/2 xl:left-[68%] xl:h-[450px] xl:w-[450px]" />

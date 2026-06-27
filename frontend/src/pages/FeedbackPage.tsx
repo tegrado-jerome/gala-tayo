@@ -151,10 +151,15 @@ function FeedbackPage() {
       <main className="mx-auto flex w-full max-w-[1120px] flex-1 flex-col gap-4 px-3 py-4 sm:px-6 sm:py-6 lg:px-10 lg:py-8">
         <MinimalBackNav to="/search" />
 
-        <section className="gala-card overflow-hidden p-4 sm:p-7 lg:p-8">
+        <section className="overflow-hidden px-1 py-2 sm:px-0 sm:py-3">
           <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-center">
             <div className="space-y-2 sm:space-y-3">
-              <p className="gala-page-kicker">Help &amp; Feedback</p>
+              <p className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">
+                <span className="text-[var(--accent)]">
+                  <AppIcon name="comments" className="h-4 w-4" />
+                </span>
+                <span>Help &amp; Feedback</span>
+              </p>
               <h1 className="gala-page-title max-w-2xl">
                 How can we help?
               </h1>
@@ -178,7 +183,7 @@ function FeedbackPage() {
         ) : null}
 
         {!isSessionLoading && !session?.user ? (
-          <section className="gala-card px-5 py-6">
+          <section className="px-1 py-2 sm:px-0 sm:py-3">
             <h2 className="text-lg font-black text-slate-950">Sign in to use Help &amp; Feedback</h2>
             <p className="mt-2 max-w-xl text-sm text-[var(--muted)]">
               Feedback is connected to your account so we can keep submissions useful.
@@ -188,7 +193,7 @@ function FeedbackPage() {
         ) : null}
 
         {!isSessionLoading && session?.user ? (
-          <section id="feedback-form" className="gala-card mx-auto w-full max-w-3xl scroll-mt-6 px-4 py-5 sm:px-7 sm:py-7 lg:px-8">
+          <section id="feedback-form" className="mx-auto w-full max-w-3xl scroll-mt-6 px-1 py-2 sm:px-0 sm:py-3">
             <div className="grid gap-4 sm:gap-6">
               <section>
                 <h2 className="mb-2 text-[20px] font-black tracking-[-0.03em] text-slate-950 sm:mb-3 sm:text-[24px]">How was your experience?</h2>

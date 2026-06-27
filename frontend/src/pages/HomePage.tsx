@@ -9,6 +9,7 @@ import AppHeader from '../components/AppHeader'
 import MapView from '../components/MapView'
 import GuestLimitModal from '../components/GuestLimitModal'
 import GoogleSignInButton from '../components/GoogleSignInButton'
+import PageHeroHeader from '../components/PageHeroHeader'
 import PromptBuilderModal from '../components/PromptBuilderModal'
 import TapGalaPinGame from '../components/TapGalaPinGame'
 import MinimalBackNav from '../components/MinimalBackNav'
@@ -2704,33 +2705,28 @@ function AskAiPlaceholder({
         <AskAiBackButton onClick={onSwitchToPlaces} className="w-fit px-1" />
 
         <div className="grid gap-6 lg:gap-7">
-          <div className="grid items-center gap-4 px-1 pt-2 sm:grid-cols-[minmax(0,1fr)_230px] sm:gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,34vw)] lg:gap-10 lg:pt-4 xl:grid-cols-[minmax(0,1fr)_420px]">
-            <div className="min-w-0">
-              <h1 className="max-w-[8ch] text-[2.35rem] font-black leading-[0.98] tracking-[-0.05em] text-slate-950 lg:text-[3.55rem] xl:text-[4rem]">
-                <span className="text-slate-950">Ask </span>
-                <span className="text-[var(--accent-deep)]">AI</span>
-              </h1>
-              <p className="mt-3 max-w-[21rem] text-[14px] leading-6 text-slate-600 lg:max-w-[29rem] lg:text-[1rem] lg:leading-8">
-                Use <span className="font-semibold text-[var(--accent-deep)]">AI</span> to turn your <span className="font-semibold text-slate-800">GalaTayo</span> idea into a plan, place shortlist, or quick gala itinerary.
-              </p>
-            </div>
-            <img
-              src={chibiImage}
-              alt=""
-              className="mx-auto h-[204px] w-auto max-w-full object-contain sm:h-[228px] lg:h-[360px] xl:h-[420px]"
-              loading="lazy"
+          <div className="grid items-center gap-4 px-1 pt-0 sm:grid-cols-[minmax(0,1fr)_230px] sm:gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,34vw)] lg:gap-10 lg:pt-2 xl:grid-cols-[minmax(0,1fr)_420px]">
+            <PageHeroHeader
+              eyebrow="Ask AI"
+              title="Turn your gala idea into a real plan"
+              description="Use AI to turn your GalaTayo idea into a plan, place shortlist, or quick gala itinerary."
+              icon={<AppIcon name="askAi" className="h-4 w-4" />}
+              badges={
+                <>
+                  <span className="gala-count-pill">{usageStatus ? `${usageStatus.remaining} left today` : 'Checking asks...'}</span>
+                  <span className="gala-count-pill">{usageStatus ? `${formatResetAtCompact(usageStatus.resetAt)} reset` : 'Checking reset...'}</span>
+                </>
+              }
+              aside={
+                <img
+                  src={chibiImage}
+                  alt=""
+                  className="mx-auto h-[204px] w-auto max-w-full object-contain sm:h-[228px] lg:h-[360px] xl:h-[420px]"
+                  loading="lazy"
+                />
+              }
+              className="border-b-0 pb-0"
             />
-          </div>
-
-          <div className="flex max-w-[28rem] flex-wrap gap-2.5 px-1 text-[12px] font-medium text-slate-500 lg:max-w-[32rem] lg:text-[0.9rem]">
-            <span className="inline-flex w-fit max-w-full min-w-0 items-center gap-1.5 rounded-2xl border border-[rgba(37,99,235,0.08)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(246,249,255,0.98))] px-3 py-2 text-slate-600 shadow-[0_10px_24px_rgba(37,99,235,0.06)]">
-              <SparkIcon className="h-3.5 w-3.5 text-[var(--accent-deep)] lg:h-4 lg:w-4" />
-              <span className="truncate">{usageStatus ? `${usageStatus.remaining} left today` : 'Checking asks...'}</span>
-            </span>
-            <span className="inline-flex w-fit max-w-full min-w-0 items-center gap-1.5 rounded-2xl border border-[rgba(20,35,58,0.07)] bg-white px-3 py-2 text-slate-500 shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
-              <span className="h-2 w-2 shrink-0 rounded-full bg-[var(--accent-deep)]" />
-              <span className="truncate">{usageStatus ? `${formatResetAtCompact(usageStatus.resetAt)} reset` : 'Checking reset...'}</span>
-            </span>
           </div>
 
           <div className="w-full px-1">
@@ -2766,14 +2762,24 @@ function AskAiPlaceholder({
                 </div>
 
                 <div className="mt-4 flex items-center justify-between gap-3">
-                  <button
-                    type="button"
-                    onClick={handleOpenPromptBuilder}
-                    className="inline-flex items-center gap-1.5 text-[13px] font-medium text-slate-500 transition hover:text-slate-900 lg:text-[0.9rem]"
-                  >
-                    <span>Need help shaping it?</span>
-                    <span className="font-black text-[var(--accent-deep)]">Prompt Builder</span>
-                  </button>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={handleOpenPromptBuilder}
+                      className="inline-flex items-center gap-1.5 text-[13px] font-medium text-slate-500 transition hover:text-slate-900 lg:text-[0.9rem]"
+                    >
+                      <span>Need help shaping it?</span>
+                      <span className="font-black text-[var(--accent-deep)]">Prompt Builder</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => navigateToPath('/ask-ai/map')}
+                      className="inline-flex items-center gap-1.5 text-[13px] font-medium text-slate-500 transition hover:text-slate-900 lg:text-[0.9rem]"
+                    >
+                      <AppIcon name="map" className="h-4 w-4 text-[var(--accent)]" />
+                      <span className="font-black text-[var(--accent-deep)]">Find places on map</span>
+                    </button>
+                  </div>
                   <div className="shrink-0 text-right text-[12px] font-medium text-slate-400 lg:text-[0.88rem]">{questionLength}/{questionLimit}</div>
                 </div>
 

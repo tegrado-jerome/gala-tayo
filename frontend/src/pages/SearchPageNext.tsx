@@ -202,29 +202,20 @@ function SearchPageNext() {
     <div className="gala-page-background min-h-screen text-[var(--text)]">
       <AppHeader minimal />
 
-      <main className="relative mx-auto w-full max-w-[420px] px-5 pb-8 pt-6">
+      <main className="relative mx-auto flex min-h-[calc(100svh-68px)] w-full max-w-[420px] flex-col px-5 pb-0 pt-6 sm:min-h-[calc(100svh-82px)]">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[320px] bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.72),rgba(255,255,255,0))]" />
-        <section className="relative flex flex-col items-center text-center">
-          <div className="relative flex w-full justify-center pt-1">
-            <div className="pointer-events-none absolute inset-x-0 top-6 mx-auto h-24 w-24 rounded-full bg-[rgba(115,175,255,0.24)] blur-3xl" />
-            <img
-              src={searchBeforeChibi}
-              alt=""
-              className="relative z-10 h-[138px] w-auto object-contain"
-              loading="eager"
-            />
-          </div>
-
-          <div className="mt-5 max-w-[360px]">
+        <section className="relative flex min-h-full flex-1 flex-col items-center justify-between text-center">
+          <div className="w-full">
+            <div className="mt-2 max-w-[360px]">
             <h1 className="text-[28px] font-black leading-[1.1] tracking-[-0.03em] text-slate-950">
               Saan tayo gagala today?
             </h1>
             <p className="mt-2 text-[15px] font-medium leading-6 text-slate-600">
               Type your plan or build one with choices.
             </p>
-          </div>
+            </div>
 
-          <section className="mt-7 w-full text-left">
+            <section className="mt-7 w-full text-left">
             {!isBuilderOpen ? (
               <p className="mb-3 text-[17px] font-extrabold text-slate-900">Search your gala</p>
             ) : (
@@ -395,7 +386,18 @@ function SearchPageNext() {
             </button>
 
             {validationMessage ? <p className="mt-3 text-sm font-bold text-[var(--accent-deep)]">{validationMessage}</p> : null}
-          </section>
+            </section>
+          </div>
+
+          <div className="relative mt-6 flex w-full flex-1 items-end justify-center overflow-hidden pt-4">
+            <div className="pointer-events-none absolute inset-x-0 top-6 mx-auto h-24 w-24 rounded-full bg-[rgba(115,175,255,0.24)] blur-3xl" />
+            <img
+              src={searchBeforeChibi}
+              alt=""
+              className="relative z-10 h-[170px] w-auto object-contain sm:h-[210px]"
+              loading="eager"
+            />
+          </div>
         </section>
       </main>
 

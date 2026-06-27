@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import AppHeader from '../components/AppHeader'
 import GoogleSignInButton from '../components/GoogleSignInButton'
+import PageHeroHeader from '../components/PageHeroHeader'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { getSupabaseAccessToken } from '../supabase'
 import { navigateToPlace } from '../utils/navigation'
@@ -116,11 +117,11 @@ function getPlaceChips(place: HistoryPlace) {
 
 function HistoryChibi() {
   return (
-    <div className="flex justify-center" aria-hidden="true">
+    <div className="flex justify-center overflow-visible md:justify-end" aria-hidden="true">
       <img
         src={historyActiveChibi}
         alt=""
-        className="gala-hero-asset max-h-[680px] w-[680px] max-w-none"
+        className="block w-[135%] max-w-none origin-center scale-[1.2] object-contain sm:w-[145%] sm:scale-[1.28] md:w-[820px] md:scale-[1.34] lg:w-[980px] lg:scale-[1.42]"
         loading="lazy"
       />
     </div>
@@ -425,15 +426,24 @@ function HistoryPage() {
       <AppHeader showTaglishChip={false} />
 
       <main className="mx-auto flex w-full max-w-[1480px] flex-1 flex-col gap-5 px-4 py-5 sm:px-6 lg:px-10 lg:py-8">
-        <section className="grid gap-5 md:grid-cols-[minmax(0,1fr)_680px] md:items-center">
-          <div>
-            <h1 className="text-[34px] font-black leading-tight text-slate-950 sm:text-[42px]">Recently viewed</h1>
-            <p className="mt-3 max-w-xl text-lg font-semibold leading-relaxed text-slate-600">
-              Places you checked before, easy to revisit anytime.
-            </p>
-          </div>
-          <HistoryChibi />
-        </section>
+        <PageHeroHeader
+          eyebrow="History"
+          title="Recently viewed"
+          description="Places you checked before, easy to revisit anytime."
+          icon={<ClockIcon />}
+          badges={
+            <>
+              <span className="gala-count-pill">
+                {visibleHistory.length} visit{visibleHistory.length === 1 ? '' : 's'}
+              </span>
+              <span className="gala-count-pill">
+                {historySections.length > 0 ? `${historySections.length} time section${historySections.length === 1 ? '' : 's'}` : 'Private to your account'}
+              </span>
+            </>
+          }
+          aside={<HistoryChibi />}
+          className="border-b-0 pb-0"
+        />
 
         {canClearHistory ? (
           <div className="flex justify-start lg:justify-end">

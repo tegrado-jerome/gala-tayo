@@ -2,7 +2,7 @@ import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/fu
 import { randomUUID } from "crypto";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { validateJwt } from "../utils/auth";
-import { convertImageToWebp, deleteR2Object, uploadWebpToR2 } from "../utils/r2ImageStorage";
+import { convertImageToWebp, deleteR2Object, detectImageFormat, uploadWebpToR2 } from "../utils/r2ImageStorage";
 import {
   meProfile as meProfileSocial,
   publicGalaPlanSocial,
@@ -163,75 +163,6 @@ function validateUsername(username: string): string | null {
 
   if (username.includes("..")) {
     return "Username cannot contain consecutive dots.";
-  }
-
-  return null;
-}
-
-function getFileExtension(fileName: string) {
-  const lastDotIndex = fileName.lastIndexOf(".");
-
-  if (lastDotIndex < 0) {
-    return "";
-  }
-
-  return fileName.slice(lastDotIndex).toLowerCase();
-}
-
-function detectAvatarMimeType(fileType: string, fileName: string, inputBuffer: Buffer) {
-  const normalizedFileType = fileType.trim().toLowerCase();
-
-  if (normalizedFileType === "image/jpeg" || normalizedFileType === "image/jpg") {
-    return "image/jpeg";
-  }
-
-  if (normalizedFileType === "image/png") {
-    return "image/png";
-  }
-
-  if (normalizedFileType === "image/webp") {
-    return "image/webp";
-  }
-
-  const extension = getFileExtension(fileName);
-
-  if (extension === ".jpg" || extension === ".jpeg") {
-    return "image/jpeg";
-  }
-
-  if (extension === ".png") {
-    return "image/png";
-  }
-
-  if (extension === ".webp") {
-    return "image/webp";
-  }
-
-  const isJpeg = inputBuffer.length >= 3 && inputBuffer[0] === 0xff && inputBuffer[1] === 0xd8 && inputBuffer[2] === 0xff;
-  if (isJpeg) {
-    return "image/jpeg";
-  }
-
-  const isPng =
-    inputBuffer.length >= 8 &&
-    inputBuffer[0] === 0x89 &&
-    inputBuffer[1] === 0x50 &&
-    inputBuffer[2] === 0x4e &&
-    inputBuffer[3] === 0x47 &&
-    inputBuffer[4] === 0x0d &&
-    inputBuffer[5] === 0x0a &&
-    inputBuffer[6] === 0x1a &&
-    inputBuffer[7] === 0x0a;
-  if (isPng) {
-    return "image/png";
-  }
-
-  const isWebp =
-    inputBuffer.length >= 12 &&
-    inputBuffer.subarray(0, 4).toString("ascii") === "RIFF" &&
-    inputBuffer.subarray(8, 12).toString("ascii") === "WEBP";
-  if (isWebp) {
-    return "image/webp";
   }
 
   return null;
@@ -1331,11 +1262,11 @@ export async function profileAvatarUpload(
     }
 
     const inputBuffer = Buffer.from(await file.arrayBuffer());
-    const detectedAvatarMimeType = detectAvatarMimeType(file.type, typeof file.name === "string" ? file.name : "", inputBuffer);
+    const detectedAvatarFormat = await detectImageFormat(inputBuffer);
     const isSvg = inputBuffer.subarray(0, 512).toString("utf8").toLowerCase().includes("<svg");
     const isGif = inputBuffer.length >= 6 && inputBuffer.subarray(0, 3).toString("ascii") === "GIF";
 
-    if (!detectedAvatarMimeType || isSvg || isGif) {
+    if (!detectedAvatarFormat || !["jpeg", "png", "webp"].includes(detectedAvatarFormat) || isSvg || isGif) {
       return {
         status: 400,
         jsonBody: {

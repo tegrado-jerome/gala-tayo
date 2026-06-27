@@ -3,6 +3,7 @@ import AppHeader from '../components/AppHeader'
 import { AppIcon } from '../components/AppIcon'
 import GoogleSignInButton from '../components/GoogleSignInButton'
 import MinimalBackNav from '../components/MinimalBackNav'
+import PageHeroHeader from '../components/PageHeroHeader'
 import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { fetchMyCommentReports, type CommentReportReason, type CommentReportStatus, type MyCommentReport } from '../utils/commentReportsApi'
@@ -394,23 +395,20 @@ function ReportsPage() {
       <main className="mx-auto flex w-full max-w-[980px] flex-1 flex-col gap-6 px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
         <MinimalBackNav to="/search" />
 
-        <section className="px-1 py-1 sm:px-0">
-          <p className="gala-page-kicker">My Reports</p>
-          <div className="mt-2 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <h1 className="gala-page-title">Reports and updates</h1>
-              <p className="gala-page-description">
-                A compact view of everything you submitted, plus admin-reviewed outcomes when they are ready to share.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
+        <PageHeroHeader
+          eyebrow="Reports"
+          title="Reports and updates"
+          description="A compact view of everything you submitted, plus admin-reviewed outcomes when they are ready to share."
+          icon={<AppIcon name="reports" size="ui" />}
+          badges={
+            <>
               <SummaryPill icon="reports" label="All" value={reportCountLabel} />
               <SummaryPill icon="profile" label="Users" value={String(visibleUserReports.length)} />
               <SummaryPill icon="reports" label="Places" value={String(visiblePlaceReports.length)} />
               <SummaryPill icon="reports" label="Comments" value={String(visibleCommentReports.length)} />
-            </div>
-          </div>
-        </section>
+            </>
+          }
+        />
 
         {isSessionLoading ? (
           <UnifiedLoadingState

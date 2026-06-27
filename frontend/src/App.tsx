@@ -24,6 +24,7 @@ import PublicGalaPlanPage from './pages/PublicGalaPlanPage'
 import LegalPage from './pages/LegalPage'
 import PlaceSubmissionPage from './pages/PlaceSubmissionPage'
 import MyPlaceSubmissionsPage from './pages/MyPlaceSubmissionsPage'
+import AskAiMapPage from './pages/AskAiMapPage'
 import PlaceDetailView from './components/PlaceDetailView'
 import MobileBottomNav from './components/MobileBottomNav'
 import UnifiedLoadingState from './components/UnifiedLoadingState'
@@ -259,6 +260,14 @@ function shouldShowMobileBottomNav(pathname: string) {
   }
 
   return true
+}
+
+function shouldReserveMobileBottomNavSpace(pathname: string) {
+  if (isPath(pathname, '/search')) {
+    return false
+  }
+
+  return shouldShowMobileBottomNav(pathname)
 }
 
 const sharedRouteMatchers = [
@@ -687,6 +696,10 @@ function App() {
       return <HomePage key={`ask-ai:${search || 'root'}`} initialMode="ask-ai" initialAskAiQuestion={initialAskAiQuestion} />
     }
 
+    if (pathname === '/ask-ai/map' || pathname === '/ask-ai/map/') {
+      return <AskAiMapPage />
+    }
+
     if (pathname === '/prompt-builder' || pathname === '/prompt-builder/') {
       return <HomePage initialPromptBuilderOpen />
     }
@@ -852,11 +865,12 @@ function App() {
   })()
 
   const showMobileBottomNav = shouldShowMobileBottomNav(pathname)
+  const reserveMobileBottomNavSpace = shouldReserveMobileBottomNavSpace(pathname)
 
   return (
     <SystemMessageProvider>
       <SavedFavoritesProvider>
-        <div className={showMobileBottomNav ? 'pb-[calc(env(safe-area-inset-bottom,0px)+5.75rem)] lg:pb-0' : ''}>
+        <div className={reserveMobileBottomNavSpace ? 'pb-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] sm:pb-[calc(env(safe-area-inset-bottom,0px)+4.75rem)] lg:pb-0' : ''}>
           {content}
         </div>
         {showMobileBottomNav ? <MobileBottomNav currentPath={pathname} session={session} /> : null}

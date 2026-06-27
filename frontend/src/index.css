@@ -312,6 +312,52 @@ button:disabled {
   font-weight: 600;
 }
 
+.account-settings-hero .gala-page-description {
+  max-width: 40rem;
+}
+
+.account-settings-hero-meta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+  max-width: 100%;
+  border: 1px solid rgba(29, 78, 216, 0.12);
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(239, 246, 255, 0.96), rgba(248, 250, 252, 0.96));
+  padding: 8px;
+  box-shadow: 0 12px 28px -24px rgba(37, 99, 235, 0.55);
+}
+
+.account-settings-hero-chip {
+  display: inline-flex;
+  min-height: 36px;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 0 14px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  box-shadow: inset 0 0 0 1px rgba(29, 78, 216, 0.08);
+}
+
+.account-settings-hero-chip-email {
+  color: var(--text-main);
+  overflow-wrap: anywhere;
+}
+
+.account-settings-hero-divider {
+  width: 1px;
+  align-self: stretch;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(148, 163, 184, 0), rgba(148, 163, 184, 0.55), rgba(148, 163, 184, 0));
+}
+
 .gala-eyebrow {
   font-size: 11px;
   font-weight: 700;
@@ -726,6 +772,23 @@ button:disabled {
   }
 }
 
+@media (max-width: 640px) {
+  .account-settings-hero-meta {
+    display: flex;
+    width: 100%;
+    border-radius: 20px;
+  }
+
+  .account-settings-hero-chip {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .account-settings-hero-divider {
+    display: none;
+  }
+}
+
 @media (min-width: 1024px) {
   .gala-page-main {
     padding-top: 32px;
@@ -754,7 +817,7 @@ button:disabled {
 }
 
 :is(.gala-app-page, .gala-page-shell, .gala-page-background) > main {
-  min-height: calc(100dvh - 82px);
+  min-height: 0;
 }
 
 @media (max-width: 639px) {
@@ -1243,6 +1306,155 @@ body.gala-menu-open #root {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.galatayo-leaflet-map {
+  background:
+    linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 0.95));
+}
+
+.galatayo-leaflet-map .leaflet-tile {
+  filter: saturate(0.78) brightness(1.04) contrast(0.95);
+}
+
+.galatayo-leaflet-map .leaflet-pane,
+.galatayo-leaflet-map .leaflet-top,
+.galatayo-leaflet-map .leaflet-bottom {
+  z-index: 10;
+}
+
+.galatayo-leaflet-map .leaflet-control-zoom {
+  overflow: hidden;
+  border: 1px solid rgba(229, 231, 235, 0.96);
+  border-radius: 12px;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.12);
+}
+
+.galatayo-leaflet-map .leaflet-control-zoom a {
+  display: grid;
+  height: 42px;
+  width: 42px;
+  place-items: center;
+  border-bottom: 1px solid rgba(229, 231, 235, 0.88);
+  background: rgba(255, 255, 255, 0.96);
+  color: #0f172a;
+  font-size: 20px;
+  font-weight: 700;
+  transition:
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.galatayo-leaflet-map .leaflet-control-zoom a:last-child {
+  border-bottom: 0;
+}
+
+.galatayo-leaflet-map .leaflet-control-zoom a:hover {
+  background: #eff6ff;
+  color: #1e3a8a;
+}
+
+.galatayo-leaflet-map .leaflet-control-attribution {
+  border-radius: 10px 0 0;
+  background: rgba(255, 255, 255, 0.88);
+  padding: 4px 8px;
+  color: #475569;
+  font-size: 11px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
+.gt-map-marker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transform: translate(-16px, -44px);
+  pointer-events: auto;
+  white-space: nowrap;
+}
+
+.gt-map-marker__pin {
+  width: 32px;
+  height: 44px;
+  flex: 0 0 auto;
+  overflow: visible;
+  filter: drop-shadow(0 6px 10px rgba(17, 24, 39, 0.24));
+}
+
+.gt-map-marker__pin path {
+  fill: var(--primary, #1e3a8a);
+  stroke: #ffffff;
+  stroke-width: 3;
+}
+
+.gt-map-marker__pin circle {
+  fill: #ffffff;
+}
+
+.gt-map-marker__label {
+  max-width: 120px;
+  padding: 5px 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #111827;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 6px 14px rgba(17, 24, 39, 0.12);
+}
+
+.gt-map-marker:hover {
+  z-index: 800 !important;
+}
+
+.gt-map-marker:hover .gt-map-marker__pin {
+  filter: drop-shadow(0 10px 16px rgba(17, 24, 39, 0.28));
+}
+
+.gt-map-marker.is-selected {
+  z-index: 999 !important;
+  transform: translate(-16px, -44px) scale(1.08);
+}
+
+.gt-map-marker.is-selected .gt-map-marker__pin {
+  filter: drop-shadow(0 12px 20px rgba(30, 58, 138, 0.34));
+}
+
+.gt-map-marker.is-selected .gt-map-marker__label {
+  background: var(--primary, #1e3a8a);
+  border-color: var(--primary, #1e3a8a);
+  color: #ffffff;
+  box-shadow: 0 10px 22px rgba(30, 58, 138, 0.24);
+}
+
+.gt-map-marker.is-focused .gt-map-marker__pin {
+  filter: drop-shadow(0 10px 18px rgba(59, 130, 246, 0.3));
+}
+
+.gt-map-marker.is-focused .gt-map-marker__label {
+  border-color: rgba(59, 130, 246, 0.48);
+  box-shadow: 0 10px 22px rgba(59, 130, 246, 0.18);
+}
+
+@media (max-width: 640px) {
+  .galatayo-leaflet-map .leaflet-control-zoom {
+    margin-top: 12px;
+    margin-left: 12px;
+  }
+
+  .gt-map-marker {
+    gap: 5px;
+    transform: translate(-16px, -44px);
+  }
+
+  .gt-map-marker__label {
+    max-width: 92px;
+    padding: 4px 7px;
+    font-size: 10px;
+  }
 }
 
 @media (min-width: 1024px) {

@@ -2,23 +2,13 @@ import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent, type Re
 import type { Session } from '@supabase/supabase-js'
 import L from 'leaflet'
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet'
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
-import markerIcon from 'leaflet/dist/images/marker-icon.png'
-import markerShadow from 'leaflet/dist/images/marker-shadow.png'
 import AppHeader from '../components/AppHeader'
 import { AppIcon, type AppIconName } from '../components/AppIcon'
+import PageHeroHeader from '../components/PageHeroHeader'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import MinimalBackNav from '../components/MinimalBackNav'
 import { navigateToPath } from '../utils/navigation'
 import { submitPlaceSubmission } from '../utils/placeSubmissionsApi'
-
-delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl
-
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x,
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-})
 
 type PlaceDraft = {
   name: string
@@ -76,6 +66,21 @@ const textInputClassName = `${fieldClassName} h-11`
 const textAreaClassName = `${fieldClassName} py-3`
 const mapSearchInputClassName = `${fieldClassName} h-14 pl-11 text-[15px]`
 
+const submissionPinSvg = encodeURIComponent(`
+<svg width="32" height="44" viewBox="0 0 32 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <path d="M16 43C16 43 30 27.5 30 16C30 7.7 23.7 1 16 1C8.3 1 2 7.7 2 16C2 27.5 16 43 16 43Z" fill="#1E3A8A" stroke="white" stroke-width="3"/>
+  <circle cx="16" cy="16" r="5.5" fill="white"/>
+</svg>
+`)
+
+const submissionPinIcon = new L.Icon({
+  iconUrl: `data:image/svg+xml;charset=UTF-8,${submissionPinSvg}`,
+  iconSize: [32, 44],
+  iconAnchor: [16, 44],
+  popupAnchor: [0, -40],
+  className: 'gt-normal-map-pin gt-normal-map-pin-selected',
+})
+
 function PlaceMarkerPicker({
   position,
   onChange,
@@ -92,6 +97,7 @@ function PlaceMarkerPicker({
   return (
     <Marker
       position={position}
+      icon={submissionPinIcon}
       draggable
       eventHandlers={{
         dragend(event) {
@@ -413,37 +419,20 @@ function PlaceSubmissionPage({ session }: { session: Session | null }) {
 
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
           <section className="min-w-0">
-            <div className="relative overflow-hidden px-1 py-3 sm:px-0 sm:py-4">
-              <div className="relative">
-                <div className="flex flex-wrap items-center gap-2 text-[11px] font-black uppercase tracking-[0.16em] text-[var(--accent-deep)]">
-                  <span>Community places</span>
-                  <span className="rounded-full bg-[var(--accent-wash)] px-2.5 py-1 tracking-[0.08em] text-[var(--accent-deep)]">
-                    Pending review
-                  </span>
-                </div>
-                <h1 className="gala-page-title max-w-[15ch]">
-                  Submit a new place
-                </h1>
-                <p className="gala-page-description">
-                  Fill this like a clean social post: exact location, a short strong description, and a few real photos.
-                  The place stays private until admin approval.
-                </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-white px-3 py-1.5 text-xs font-bold text-slate-600">
-                    <AppIcon name="uploadPhoto" className="h-3.5 w-3.5" />
-                    1 to 3 photos
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-white px-3 py-1.5 text-xs font-bold text-slate-600">
-                    <AppIcon name="map" className="h-3.5 w-3.5" />
-                    Exact pin required
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-white px-3 py-1.5 text-xs font-bold text-slate-600">
-                    <AppIcon name="check" className="h-3.5 w-3.5" />
-                    Minimal, clear details
-                  </span>
-                </div>
-              </div>
-            </div>
+            <PageHeroHeader
+              eyebrow="Submit Places"
+              title="Submit a new place"
+              description="Fill this like a clean social post: exact location, a short strong description, and a few real photos. The place stays private until admin approval."
+              icon={<AppIcon name="place" className="h-4 w-4" />}
+              badges={
+                <>
+                  <span className="gala-count-pill">Pending review</span>
+                  <span className="gala-count-pill">1 to 3 photos</span>
+                  <span className="gala-count-pill">Exact pin required</span>
+                  <span className="gala-count-pill">Minimal, clear details</span>
+                </>
+              }
+            />
 
             <form className="mt-3 grid gap-8 sm:mt-4" onSubmit={handleSubmit}>
               <div className="sm:max-w-[220px]">
@@ -539,11 +528,11 @@ function PlaceSubmissionPage({ session }: { session: Session | null }) {
                   ) : null}
 
                   <div className="overflow-hidden rounded-[24px] ring-1 ring-[var(--line)]">
-                    <MapContainer center={coordinates} zoom={16} scrollWheelZoom className="h-[300px] w-full sm:h-[320px]">
+                    <MapContainer center={coordinates} zoom={16} scrollWheelZoom className="galatayo-leaflet-map h-[300px] w-full sm:h-[320px]">
                       <MapRecenter center={coordinates} />
                       <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        attribution="&copy; OpenStreetMap contributors &copy; CARTO"
+                        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
                       />
                       <PlaceMarkerPicker position={coordinates} onChange={handleCoordinateChange} />
                     </MapContainer>
