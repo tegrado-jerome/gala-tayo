@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
 import AppHeader from '../components/AppHeader'
+import InternalLink from '../components/InternalLink'
 import { AppIcon, getCategoryIconName } from '../components/AppIcon'
 import type { PlaceCardData, PlaceCategoryMeta, PlaceTagMeta } from '../components/PlaceCard'
 import { supabase } from '../supabase'
 import { navigateToCanonicalPlace, navigateToPath } from '../utils/navigation'
 import homeChibi from '../assets/chibis/public/chibi-welcome-page.webp'
+import { metroManilaAreas } from '../data/metroManilaAreas'
 
 type BackendSearchPlace = {
   id?: string | null
@@ -23,6 +25,7 @@ type BackendSearchPlace = {
   budget?: string | null
   budgetRange?: string | null
   reason?: string | null
+  rating?: number | string | null
   reviewCount?: number | string | null
   categories?: PlaceCategoryMeta[] | null
   tags?: PlaceTagMeta[] | null
@@ -69,16 +72,16 @@ const homeCategories = [
 
 const compactTools = [
   {
-    title: 'Gala Plan',
-    description: 'Save and organize your routes.',
-    href: '/gala-plans',
-    icon: 'galaPlan' as const,
+    title: 'Places',
+    description: 'Browse places near you.',
+    href: '/places',
+    icon: 'place' as const,
   },
   {
-    title: 'Prompt Builder',
-    description: 'Shape a better AI prompt.',
-    href: '/prompt-builder',
-    icon: 'promptBuilder' as const,
+    title: 'Categories',
+    description: 'Explore places by category.',
+    href: '/categories',
+    icon: 'list' as const,
   },
 ] as const
 
@@ -95,6 +98,24 @@ function parseCoordinate(value: number | string | null | undefined) {
     if (Number.isFinite(parsedValue)) {
       return parsedValue
     }
+  }
+
+  return null
+}
+
+function formatMarkerRatingText(value: number | string | null | undefined) {
+  if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+    return value.toFixed(1)
+  }
+
+  if (typeof value === 'string') {
+    const trimmedValue = value.trim()
+    if (!trimmedValue) {
+      return null
+    }
+
+    const numericValue = Number(trimmedValue)
+    return Number.isFinite(numericValue) && numericValue > 0 ? numericValue.toFixed(1) : trimmedValue
   }
 
   return null
@@ -134,11 +155,13 @@ function mapBackendPlaceToCard(place: BackendSearchPlace): PlaceCardData | null 
     address: place.address || null,
     city: place.city || null,
     localArea: place.area || null,
+    rating: typeof place.rating === 'number' ? place.rating : parseCoordinate(place.rating),
     status: 'Unknown',
     reason: place.reason || place.description || 'GalaTayo place suggestion.',
     description: place.description || null,
     badge: place.category || 'Place',
     reviewCount: place.reviewCount === null || place.reviewCount === undefined ? undefined : String(place.reviewCount),
+    markerRatingText: formatMarkerRatingText(place.rating),
     imageUrl: place.imageUrl || null,
     curatedImageUrls: Array.isArray(place.curatedImageUrls)
       ? place.curatedImageUrls.filter((item): item is string => Boolean(item?.trim()))
@@ -385,11 +408,11 @@ function HomeLandingPage() {
           <div className="relative z-10 flex flex-col items-center text-center lg:grid lg:grid-cols-[minmax(520px,0.58fr)_minmax(480px,0.42fr)] lg:grid-rows-[auto_auto] lg:items-center lg:gap-x-4 lg:gap-y-4 lg:text-left xl:grid-cols-[minmax(560px,0.56fr)_minmax(520px,0.44fr)] xl:gap-x-8 2xl:grid-cols-[minmax(600px,0.55fr)_minmax(560px,0.45fr)]">
             <div className="flex flex-col items-center lg:col-start-1 lg:row-start-1 lg:items-start">
               <h1 className="max-w-[11.2ch] text-[1.95rem] font-bold leading-[0.95] tracking-[-0.055em] text-[#071633] sm:max-w-[12ch] sm:text-[3rem] lg:max-w-none lg:text-[4.2rem] xl:text-[4.75rem]">
-                <span className="block">Saan tayo</span>
-                <span className="block whitespace-nowrap">gagala today?</span>
+                <span className="block">Plan your</span>
+                <span className="block whitespace-nowrap">next gala</span>
               </h1>
               <p className="mt-3.5 max-w-[27rem] text-sm leading-6 text-[#667A99] sm:mt-4 sm:text-base lg:max-w-[39rem] lg:text-[1.24rem] lg:leading-8 xl:max-w-[41rem] xl:text-[1.3rem]">
-                Quick start your next gala with place search, AI help, and cute finds waiting below.
+                Quick start your next gala with place search, AI help, map-grounded ideas, and cute finds waiting below.
               </p>
             </div>
 
@@ -421,6 +444,14 @@ function HomeLandingPage() {
                 <AppIcon name="askAi" className="h-5 w-5" />
                 Ask AI
               </button>
+              <button
+                type="button"
+                onClick={() => navigateToPath('/ask-ai/maps')}
+                className="inline-flex min-h-[52px] w-full max-w-[248px] items-center justify-center gap-2.5 rounded-2xl border border-[var(--line)] bg-white px-5 text-[0.96rem] font-semibold text-[var(--text-main)] transition hover:bg-[var(--bg-soft)] lg:min-h-[54px] lg:w-[220px] lg:max-w-none"
+              >
+                <AppIcon name="place" className="h-5 w-5" />
+                AI Maps
+              </button>
             </div>
           </div>
         </section>
@@ -429,7 +460,7 @@ function HomeLandingPage() {
           <section>
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">Your tools</p>
+                <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">Search places</p>
                 <h2 className="mt-1 text-xl font-semibold tracking-[-0.04em] text-slate-950 sm:text-2xl">Keep your gala flow moving</h2>
               </div>
             </div>
@@ -440,15 +471,17 @@ function HomeLandingPage() {
                   key={tool.title}
                   type="button"
                   onClick={() => navigateToPath(tool.href)}
-                  className="flex min-h-[104px] flex-col items-start justify-between rounded-[24px] border border-[var(--line)] bg-white px-4 py-4 text-left transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)] lg:min-h-[64px] lg:flex-row lg:items-center lg:gap-3 lg:px-4 lg:py-3"
+                  className="flex min-h-[68px] items-center gap-3 rounded-[20px] border border-[var(--line)] bg-white px-3 py-2.5 text-left transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)] lg:min-h-[52px] lg:gap-3 lg:px-3 lg:py-2.5"
                 >
-                  <div className="lg:flex lg:min-w-0 lg:flex-1 lg:items-center lg:gap-3">
-                    <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--accent-wash)] text-[var(--accent-deep)] lg:h-9 lg:w-9 lg:rounded-[14px]">
-                      <AppIcon name={tool.icon} className="h-5 w-5 lg:h-[18px] lg:w-[18px]" />
-                    </span>
-                    <div className="lg:min-w-0">
-                      <p className="text-sm font-semibold text-slate-900 lg:text-[14px]">{tool.title}</p>
-                      <p className="mt-1 text-xs leading-5 text-slate-500 lg:mt-0.5 lg:text-[11.5px] lg:leading-4">{tool.description}</p>
+                  <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                    <div className="min-w-0">
+                      <p className="flex items-center gap-1.5 text-sm font-semibold text-slate-900 lg:text-[13px]">
+                        <span className="flex h-5 w-5 items-center justify-center rounded-md bg-[var(--accent-wash)] text-[var(--accent-deep)]">
+                          <AppIcon name={tool.icon} className="h-3 w-3" />
+                        </span>
+                        {tool.title}
+                      </p>
+                      <p className="mt-0.5 text-xs leading-5 text-slate-500 lg:mt-0 lg:text-[11px] lg:leading-3.5">{tool.description}</p>
                     </div>
                   </div>
                   <div className="hidden lg:flex lg:items-center lg:text-[#7A90AE]">
@@ -539,43 +572,49 @@ function HomeLandingPage() {
           <section>
             <div className="flex items-end justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">Explore Categories</p>
-                <h2 className="mt-1 text-xl font-semibold tracking-[-0.04em] text-slate-950 sm:text-2xl">Pick a starting point</h2>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">Browse popular areas</p>
+                <h2 className="mt-0.5 text-lg font-semibold tracking-[-0.04em] text-slate-950 sm:text-xl">Jump into Metro Manila areas</h2>
               </div>
             </div>
 
-            <div className="mt-4 lg:w-[1544px] xl:w-[1584px]">
-              <div className="hidden lg:grid lg:grid-cols-6 lg:gap-3 xl:gap-4">
-                {homeCategories.map((category) => (
-                  <button
-                    key={category.value}
-                    type="button"
-                    onClick={() => navigateToPath(`/search?category=${encodeURIComponent(category.value)}`)}
-                    className="inline-flex min-h-[60px] w-full items-center gap-2.5 rounded-[22px] border border-[var(--line)] bg-white px-3.5 py-2.5 text-left transition hover:border-[var(--accent)] hover:bg-white lg:min-h-[58px] lg:px-4"
-                  >
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--accent-wash)] text-[var(--accent-deep)]">
-                      <AppIcon name={getCategoryIconName(category.value)} className="h-4 w-4" />
-                    </span>
-                    <span className="text-sm font-semibold text-slate-900">{category.label}</span>
-                  </button>
-                ))}
-              </div>
+            <div className="mt-3 grid grid-cols-3 gap-1.5">
+              {metroManilaAreas.map((area) => (
+                <InternalLink
+                  key={area.slug}
+                  href={`/places/${area.slug}`}
+                  className="inline-flex items-center gap-1.5 rounded-[14px] border border-[var(--line)] bg-white px-2 py-2 text-left transition hover:border-[var(--accent)] hover:bg-white"
+                >
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--accent-wash)] text-[var(--accent-deep)]">
+                    <AppIcon name="place" className="h-3.5 w-3.5" />
+                  </span>
+                  <span className="text-[11px] font-semibold text-slate-900 leading-none">{area.name}</span>
+                </InternalLink>
+              ))}
+            </div>
+          </section>
 
-              <div className="grid grid-cols-2 gap-2.5 md:grid-cols-3 lg:hidden">
-                {homeCategories.map((category) => (
-                  <button
-                    key={category.value}
-                    type="button"
-                    onClick={() => navigateToPath(`/search?category=${encodeURIComponent(category.value)}`)}
-                    className="inline-flex min-h-[60px] w-full items-center gap-2.5 rounded-[22px] border border-[var(--line)] bg-white px-3.5 py-2.5 text-left transition hover:border-[var(--accent)] hover:bg-white lg:min-h-[56px]"
-                  >
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--accent-wash)] text-[var(--accent-deep)]">
-                      <AppIcon name={getCategoryIconName(category.value)} className="h-4 w-4" />
-                    </span>
-                    <span className="text-sm font-semibold text-slate-900">{category.label}</span>
-                  </button>
-                ))}
+          <section>
+            <div className="flex items-end justify-between gap-3">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">Build your gala plan</p>
+                <h2 className="mt-0.5 text-lg font-semibold tracking-[-0.04em] text-slate-950 sm:text-xl">Pick a starting point</h2>
               </div>
+            </div>
+
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              {homeCategories.map((category) => (
+                <button
+                  key={category.value}
+                  type="button"
+                  onClick={() => navigateToPath(`/places/categories/${encodeURIComponent(category.value)}`)}
+                  className="inline-flex min-h-[42px] w-full items-center gap-1.5 rounded-[16px] border border-[var(--line)] bg-white px-2.5 py-1.5 text-left transition hover:border-[var(--accent)] hover:bg-white"
+                >
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--accent-wash)] text-[var(--accent-deep)]">
+                    <AppIcon name={getCategoryIconName(category.value)} className="h-3 w-3" />
+                  </span>
+                  <span className="text-xs font-semibold text-slate-900">{category.label}</span>
+                </button>
+              ))}
             </div>
           </section>
         </div>

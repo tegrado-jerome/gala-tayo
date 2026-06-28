@@ -1,0 +1,16 @@
+.welcome-skyline,
+.welcome-base-block {
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+@media (max-height: 760px) {
+  .welcome-skyline {
+    opacity: 0.1;
+  }
+}
+
+@media (max-height: 700px) {
+  .welcome-base-block {
+    opacity: 0.1;
+  }
+}

@@ -68,6 +68,7 @@ type PlaceCardData = {
   tags?: PlaceTagMeta[]
   matchedCategories?: PlaceCategoryMeta[]
   matchedTags?: PlaceTagMeta[]
+  markerRatingText?: string | null
   coordinates: {
     lat: number | string | null
     lng: number | string | null

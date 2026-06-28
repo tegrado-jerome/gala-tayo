@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import L from 'leaflet'
+import { renderToStaticMarkup } from 'react-dom/server'
 import { MapContainer, Marker, TileLayer, useMap } from 'react-leaflet'
 import type { PlaceCardData } from './PlaceCard'
 
@@ -13,6 +14,7 @@ type MapViewProps = {
   zoom?: number
   autoFitToPlaces?: boolean
   className?: string
+  mapMode?: 'default' | 'ask-ai-clean'
 }
 
 type LatLngInput = readonly [unknown, unknown] | null | undefined
@@ -50,8 +52,24 @@ function getMarkerLabel(name: string): string {
   return trimmedName.length > 22 ? `${trimmedName.slice(0, 21).trimEnd()}...` : trimmedName
 }
 
-function createMarkerIcon(place: PlaceCardData, isSelected: boolean, isFocused: boolean) {
-  const markerClasses = ['gt-map-marker']
+function renderMarkerPinIcon() {
+  return renderToStaticMarkup(
+    <span className="gt-map-capsule-marker__pin-shell" aria-hidden="true">
+      <svg className="gt-map-capsule-marker__pin" viewBox="0 0 32 44" aria-hidden="true">
+        <path d="M16 43C16 43 30 27.5 30 16C30 7.7 23.7 1 16 1C8.3 1 2 7.7 2 16C2 27.5 16 43 16 43Z" />
+        <circle cx="16" cy="16" r="5.5" />
+      </svg>
+    </span>
+  )
+}
+
+function createCapsuleMarkerIcon(
+  place: PlaceCardData,
+  showName: boolean,
+  isSelected: boolean,
+  isFocused: boolean
+) {
+  const markerClasses = ['gt-map-capsule-marker']
 
   if (isSelected) {
     markerClasses.push('is-selected')
@@ -62,21 +80,22 @@ function createMarkerIcon(place: PlaceCardData, isSelected: boolean, isFocused: 
   }
 
   const label = escapeHtml(getMarkerLabel(place.name))
+  const iconWidth = showName ? 168 : 60
+  const iconHeight = showName ? 92 : 60
+  const iconAnchorX = Math.round(iconWidth / 2)
+  const pinIcon = renderMarkerPinIcon()
 
   return L.divIcon({
     className: '',
     html: `
       <div class="${markerClasses.join(' ')}" aria-label="${escapeHtml(place.name)}">
-        <svg class="gt-map-marker__pin" viewBox="0 0 32 44" aria-hidden="true">
-          <path d="M16 43C16 43 30 27.5 30 16C30 7.7 23.7 1 16 1C8.3 1 2 7.7 2 16C2 27.5 16 43 16 43Z"></path>
-          <circle cx="16" cy="16" r="5.5"></circle>
-        </svg>
-        <span class="gt-map-marker__label">${label}</span>
+        ${pinIcon}
+        ${showName ? `<span class="gt-map-capsule-marker__name">${label}</span>` : ''}
       </div>
     `,
-    iconSize: [160, 50],
-    iconAnchor: [16, 44],
-    popupAnchor: [0, -44],
+    iconSize: [iconWidth, iconHeight],
+    iconAnchor: [iconAnchorX, 54],
+    popupAnchor: [0, -54],
   })
 }
 
@@ -221,6 +240,55 @@ function MapSizeSync({ center, zoom }: { center: ValidLatLng; zoom: number }) {
   return null
 }
 
+function MarkerLayer({
+  validPlaces,
+  selectedPlaceId,
+  focusedPlaceId,
+  onPlaceSelect,
+  onPlaceOpen,
+  mapMode,
+}: {
+  validPlaces: ValidMapPlace[]
+  selectedPlaceId?: string | null
+  focusedPlaceId?: string | null
+  onPlaceSelect?: (placeId: string) => void
+  onPlaceOpen?: (placeId: string) => void
+  mapMode: 'default' | 'ask-ai-clean'
+}) {
+  return (
+    <>
+      {validPlaces.map(({ place, latLng }) => {
+        const isSelected = selectedPlaceId === place.id
+        const isFocused = focusedPlaceId === place.id && !isSelected
+        const shouldShowName = mapMode === 'default' || mapMode === 'ask-ai-clean'
+
+        return (
+          <Marker
+            key={place.id}
+            position={latLng}
+            icon={createCapsuleMarkerIcon(place, shouldShowName, isSelected, isFocused)}
+            riseOnHover
+            zIndexOffset={isSelected ? 900 : isFocused ? 720 : 240}
+            eventHandlers={{
+              click() {
+                if (isSelected) {
+                  onPlaceOpen?.(place.id)
+                  return
+                }
+
+                onPlaceSelect?.(place.id)
+              },
+              dblclick() {
+                onPlaceOpen?.(place.id)
+              },
+            }}
+          />
+        )
+      })}
+    </>
+  )
+}
+
 function FitMapToPlaces({
   validPlaces,
   selectedPlaceId,
@@ -309,6 +377,7 @@ function MapView({
   zoom = 12,
   autoFitToPlaces = true,
   className = '',
+  mapMode = 'default',
 }: MapViewProps) {
   const safeCenter = useMemo(() => normalizeCenter(center), [center])
   const safeZoom = Number.isFinite(zoom) ? zoom : 12
@@ -322,9 +391,12 @@ function MapView({
         .filter((item): item is ValidMapPlace => item.latLng !== null),
     [places]
   )
+  const containerClassName = className.trim()
+    ? className
+    : 'h-[360px] md:h-[560px]'
 
   return (
-    <div className={`h-[360px] w-full select-none overflow-hidden rounded-2xl border border-[var(--line)] md:h-[560px] ${className}`}>
+    <div className={`w-full min-h-0 select-none overflow-hidden ${containerClassName}`}>
       <MapContainer center={safeCenter} zoom={safeZoom} scrollWheelZoom className="galatayo-leaflet-map h-full w-full">
         <MapSizeSync center={safeCenter} zoom={safeZoom} />
         <FitMapToPlaces
@@ -338,33 +410,14 @@ function MapView({
           attribution="&copy; OpenStreetMap contributors &copy; CARTO"
           url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
         />
-
-        {validPlaces.map(({ place, latLng }) => (
-          <Marker
-            key={place.id}
-            position={latLng}
-            icon={createMarkerIcon(
-              place,
-              selectedPlaceId === place.id,
-              focusedPlaceId === place.id && selectedPlaceId !== place.id
-            )}
-            riseOnHover
-            zIndexOffset={selectedPlaceId === place.id ? 900 : 240}
-            eventHandlers={{
-              click() {
-                if (selectedPlaceId === place.id) {
-                  onPlaceOpen?.(place.id)
-                  return
-                }
-
-                onPlaceSelect?.(place.id)
-              },
-              dblclick() {
-                onPlaceOpen?.(place.id)
-              },
-            }}
-          />
-        ))}
+        <MarkerLayer
+          validPlaces={validPlaces}
+          selectedPlaceId={selectedPlaceId}
+          focusedPlaceId={focusedPlaceId}
+          onPlaceSelect={onPlaceSelect}
+          onPlaceOpen={onPlaceOpen}
+          mapMode={mapMode}
+        />
       </MapContainer>
     </div>
   )

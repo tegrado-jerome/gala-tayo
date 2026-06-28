@@ -22,11 +22,14 @@ import PublicProfilePage from './pages/PublicProfilePage'
 import ProfileSearchPage from './pages/ProfileSearchPage'
 import PublicGalaPlanPage from './pages/PublicGalaPlanPage'
 import LegalPage from './pages/LegalPage'
+import AboutPage from './pages/AboutPage'
 import PlaceSubmissionPage from './pages/PlaceSubmissionPage'
 import MyPlaceSubmissionsPage from './pages/MyPlaceSubmissionsPage'
 import AskAiMapPage from './pages/AskAiMapPage'
 import PlacesIndexPage from './pages/PlacesIndexPage'
+import PlaceCategoriesIndexPage from './pages/PlaceCategoriesIndexPage'
 import AreaPlacesPage from './pages/AreaPlacesPage'
+import CategoryPlacesPage from './pages/CategoryPlacesPage'
 import PlaceDetailView from './components/PlaceDetailView'
 import ProtectedFeatureGate from './components/ProtectedFeatureGate'
 import MobileBottomNav from './components/MobileBottomNav'
@@ -40,6 +43,8 @@ import { getOnboardingStatus } from './utils/profileApi'
 import { navigateToPath, replaceWithPath } from './utils/navigation'
 import { markSoftNavigation } from './utils/navigationState'
 import { formatLabelFromSlug, getCanonicalPlacePath, resolveAreaMeta } from './utils/seo'
+import { getPlaceCategoryLabel } from './data/placeCategories'
+import { metroManilaAreas } from './data/metroManilaAreas'
 
 type PlaceDetail = {
   id: string
@@ -142,7 +147,17 @@ function parseAreaPagePath(pathname: string): string | null {
   return match ? decodeURIComponent(match[1]).toLowerCase() : null
 }
 
+function parseCategoryPagePath(pathname: string): string | null {
+  const match = pathname.match(/^\/places\/categories\/([^/]+)\/?$/i)
+  return match ? decodeURIComponent(match[1]).toLowerCase() : null
+}
+
 const searchRouteCachePrefix = 'galatayo:search-route:'
+const knownAreaSlugs = new Set<string>(metroManilaAreas.map((area) => area.slug))
+
+function isKnownAreaSlug(value: string) {
+  return knownAreaSlugs.has(value.toLowerCase())
+}
 
 function shouldSkipTopScrollRestore(pathname: string, search: string) {
   if (pathname !== '/search' && pathname !== '/search/') {
@@ -166,9 +181,16 @@ function shouldSkipTopScrollRestore(pathname: string, search: string) {
 
 function getCanonicalGalaPlanPath(pathname: string) {
   if (isPath(pathname, '/gala-plan')) return '/gala-plans'
-  if (isPath(pathname, '/gala-plan/new')) return '/gala-plans/new'
-  if (isPath(pathname, '/gala-plan/liked') || isPath(pathname, '/gala-plan/favorites')) return '/gala-plans/favorites'
-  if (isPath(pathname, '/gala-plans/liked')) return '/gala-plans/favorites'
+  if (isPath(pathname, '/gala-plan/new') || isPath(pathname, '/gala-plans/new')) return '/gala-plans/create'
+  if (
+    isPath(pathname, '/gala-plan/liked') ||
+    isPath(pathname, '/gala-plan/favorite') ||
+    isPath(pathname, '/gala-plan/favorites') ||
+    isPath(pathname, '/gala-plans/liked') ||
+    isPath(pathname, '/gala-plans/favorite')
+  ) {
+    return '/gala-plans/favorites'
+  }
 
   const editPlanId = parseEditGalaPlanPath(pathname)
   if (editPlanId && /^\/gala-plan\/[^/]+\/edit\/?$/i.test(pathname)) {
@@ -176,7 +198,7 @@ function getCanonicalGalaPlanPath(pathname: string) {
   }
 
   const ownedPlanId = parseOwnedGalaPlanPath(pathname)
-  if (ownedPlanId && /^\/gala-plan\/[^/]+\/?$/i.test(pathname) && ownedPlanId !== 'new' && ownedPlanId !== 'liked' && ownedPlanId !== 'favorites') {
+  if (ownedPlanId && /^\/gala-plan\/[^/]+\/?$/i.test(pathname) && ownedPlanId !== 'new' && ownedPlanId !== 'create' && ownedPlanId !== 'liked' && ownedPlanId !== 'favorite' && ownedPlanId !== 'favorites') {
     return `/gala-plans/${encodeURIComponent(ownedPlanId)}`
   }
 
@@ -226,6 +248,37 @@ function getCanonicalHomePath(pathname: string): '/' | null {
   return null
 }
 
+function getCategoryBreadcrumbMeta(listingLink: string | null, listingLabel: string | null) {
+  if (!listingLink) {
+    return null
+  }
+
+  const categoryMatch = listingLink.match(/^\/places\/categories\/([^/?#]+)/i)
+
+  if (!categoryMatch) {
+    return null
+  }
+
+  const categorySlug = decodeURIComponent(categoryMatch[1]).toLowerCase()
+  return {
+    parentName: 'Categories',
+    parentItem: `${window.location.origin}/places/categories`,
+    childName: listingLabel || getPlaceCategoryLabel(categorySlug),
+    childItem: `${window.location.origin}/places/categories/${encodeURIComponent(categorySlug)}`,
+  }
+}
+
+function getCanonicalMemberPath(pathname: string): '/find-friends' | null {
+  if (
+    isPath(pathname, '/profiles/search') ||
+    isPath(pathname, '/profile/search')
+  ) {
+    return '/find-friends'
+  }
+
+  return null
+}
+
 function getCanonicalAskAiPath(pathname: string): '/ask-ai/text' | '/ask-ai/maps' | null {
   if (isPath(pathname, '/ask-ai')) {
     return '/ask-ai/text'
@@ -249,19 +302,23 @@ function isProtectedAccountPath(pathname: string) {
     '/gala-plan/favorites',
     '/gala-plans',
     '/gala-plans/new',
+    '/gala-plans/create',
     '/gala-plans/liked',
     '/gala-plans/favorites',
     '/reports',
+    '/find-friends',
     '/comment-notices',
     '/admin/user-reports',
     '/admin/place-images',
     '/admin/place-submissions',
     '/profile',
     '/me',
+    '/account',
     '/settings',
     '/settings/change-password',
     '/places/new',
     '/places/submit',
+    '/my-submissions',
     '/submissions',
     '/photos/upload',
     '/ask-ai',
@@ -289,6 +346,7 @@ function shouldShowMobileBottomNav(pathname: string) {
       '/auth/callback',
       '/sign-up',
       '/onboarding',
+      '/about',
       '/terms',
       '/privacy',
     ].some((path) => isPath(pathname, path))
@@ -306,7 +364,10 @@ function shouldShowMobileBottomNav(pathname: string) {
 }
 
 function shouldReserveMobileBottomNavSpace(pathname: string) {
-  if (isPath(pathname, '/search')) {
+  if (
+    isPath(pathname, '/search') ||
+    isPath(pathname, '/ask-ai/maps')
+  ) {
     return false
   }
 
@@ -323,6 +384,8 @@ const sharedRouteMatchers = [
 function getNoindexForPath(pathname: string) {
   if (
     [
+      '/home',
+      '/search',
       '/login',
       '/signup',
       '/auth',
@@ -332,17 +395,22 @@ function getNoindexForPath(pathname: string) {
       '/history',
       '/feedback',
       '/reports',
+      '/find-friends',
       '/comment-notices',
       '/profile',
+      '/profile/edit',
       '/me',
+      '/account',
       '/settings',
       '/settings/change-password',
       '/submit-place',
+      '/my-submissions',
       '/submissions',
       '/ask-ai',
       '/ask-ai/text',
       '/ask-ai/map',
       '/ask-ai/maps',
+      '/prompt-builder',
     ].some((path) => isPath(pathname, path))
   ) {
     return true
@@ -350,6 +418,8 @@ function getNoindexForPath(pathname: string) {
 
   if (
     pathname.startsWith('/admin/') ||
+    pathname.startsWith('/auth/') ||
+    /^\/u\/[^/]+\/?$/i.test(pathname) ||
     /^\/gala-plan(?:s)?\b/i.test(pathname)
   ) {
     return true
@@ -368,6 +438,14 @@ function AppLoadingState({ message = 'Loading GalaTayo...' }: { message?: string
   )
 }
 
+function formatMarkerRatingText(value: number | null | undefined) {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
+    return null
+  }
+
+  return value.toFixed(1)
+}
+
 function mapBackendPlaceToCardData(place: PlaceDetail): PlaceDetailCardData {
   return {
     id: place.id,
@@ -375,6 +453,7 @@ function mapBackendPlaceToCardData(place: PlaceDetail): PlaceDetailCardData {
     name: place.name,
     rating: place.rating ?? null,
     ratingCount: place.review_count ?? null,
+    markerRatingText: formatMarkerRatingText(place.rating ?? null),
     category: place.category,
     area: place.location,
     address: place.address || null,
@@ -417,14 +496,36 @@ function mapBackendPlaceToCardData(place: PlaceDetail): PlaceDetailCardData {
   }
 }
 
+function getStructuredPlaceType(category: string | null | undefined) {
+  const normalizedCategory = category?.trim().toLowerCase() || ''
+
+  if (normalizedCategory.includes('museum')) return 'Museum'
+  if (normalizedCategory.includes('park') || normalizedCategory.includes('parke')) return 'Park'
+  if (normalizedCategory.includes('heritage') || normalizedCategory.includes('tourist')) return 'TouristAttraction'
+  if (
+    normalizedCategory.includes('cafe') ||
+    normalizedCategory.includes('kainan') ||
+    normalizedCategory.includes('mall') ||
+    normalizedCategory.includes('nightlife') ||
+    normalizedCategory.includes('cinema') ||
+    normalizedCategory.includes('arcade')
+  ) {
+    return 'LocalBusiness'
+  }
+
+  return 'Place'
+}
+
 function SharedPlacePage({
   slug,
   currentPathname,
+  currentSearch = '',
   expectedAreaSlug = null,
   redirectToCanonical = false,
 }: {
   slug: string
   currentPathname: string
+  currentSearch?: string
   expectedAreaSlug?: string | null
   redirectToCanonical?: boolean
 }) {
@@ -484,6 +585,12 @@ function SharedPlacePage({
         placeSlug: place.slug,
       })
     : null
+  const sharedPageSearchParams = useMemo(() => new URLSearchParams(currentSearch), [currentSearch])
+  const rawListingLink = sharedPageSearchParams.get('from')
+  const rawListingLabel = sharedPageSearchParams.get('fromLabel')
+  const listingLink = rawListingLink && rawListingLink.startsWith('/') ? rawListingLink : null
+  const listingLabel = rawListingLabel?.trim() || null
+  const categoryBreadcrumbMeta = getCategoryBreadcrumbMeta(listingLink, listingLabel)
 
   useEffect(() => {
     if (!canonicalPath) {
@@ -505,12 +612,20 @@ function SharedPlacePage({
               itemListElement: [
                 { '@type': 'ListItem', position: 1, name: 'Home', item: `${window.location.origin}/` },
                 { '@type': 'ListItem', position: 2, name: 'Places', item: `${window.location.origin}/places` },
-                { '@type': 'ListItem', position: 3, name: areaMeta.name, item: `${window.location.origin}/places/${encodeURIComponent(areaMeta.slug)}` },
-                { '@type': 'ListItem', position: 4, name: place.name, item: `${window.location.origin}${canonicalPath}` },
+                ...(categoryBreadcrumbMeta
+                  ? [
+                      { '@type': 'ListItem', position: 3, name: categoryBreadcrumbMeta.parentName, item: categoryBreadcrumbMeta.parentItem },
+                      { '@type': 'ListItem', position: 4, name: categoryBreadcrumbMeta.childName, item: categoryBreadcrumbMeta.childItem },
+                      { '@type': 'ListItem', position: 5, name: place.name, item: `${window.location.origin}${canonicalPath}` },
+                    ]
+                  : [
+                      { '@type': 'ListItem', position: 3, name: areaMeta.name, item: `${window.location.origin}/places/${encodeURIComponent(areaMeta.slug)}` },
+                      { '@type': 'ListItem', position: 4, name: place.name, item: `${window.location.origin}${canonicalPath}` },
+                    ]),
               ],
             },
             {
-              '@type': 'Place',
+              '@type': getStructuredPlaceType(place.category),
               name: place.name,
               description: place.description || place.reason,
               url: `${window.location.origin}${canonicalPath}`,
@@ -573,8 +688,8 @@ function SharedPlacePage({
   return (
     <>
       <SeoHead
-        title={`${place.name} | GalaTayo`}
-        description={place.description || place.reason}
+        title={`${place.name} in ${areaMeta?.name || 'Metro Manila'} | GalaTayo`}
+        description={`Explore ${place.name} in ${areaMeta?.name || 'Metro Manila'}. See location, budget info, reviews, good-for tags, map, and add it to your GalaTayo plan.`}
         canonicalPath={canonicalPath}
         openGraphType="article"
         image={place.imageUrl ? { url: place.imageUrl, alt: place.name } : null}
@@ -582,57 +697,36 @@ function SharedPlacePage({
       />
       <PlaceDetailView
         place={place}
-        onBack={() => window.history.back()}
+        onBack={() => {
+          if (listingLink) {
+            navigateToPath(listingLink)
+            return
+          }
+
+          window.history.back()
+        }}
         areaBreadcrumb={{
           areaSlug: areaMeta?.slug || expectedAreaSlug || formatLabelFromSlug(place.city || place.area || 'metro-manila').toLowerCase(),
           areaName: areaMeta?.name || formatLabelFromSlug(expectedAreaSlug || 'metro-manila'),
         }}
+        listingLink={listingLink}
+        listingLabel={listingLabel}
       />
     </>
   )
 }
 
-function PlacesSlugResolverPage({ slug, currentPathname }: { slug: string; currentPathname: string }) {
-  const [resolvedMode, setResolvedMode] = useState<'loading' | 'area' | 'place'>('loading')
-
-  useEffect(() => {
-    const controller = new AbortController()
-    const apiBaseUrl = String(import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
-    const endpoint = apiBaseUrl ? `${apiBaseUrl}/seo/areas/${encodeURIComponent(slug)}` : `/api/seo/areas/${encodeURIComponent(slug)}`
-
-    const resolveSlug = async () => {
-      try {
-        const response = await fetch(endpoint, {
-          method: 'GET',
-          signal: controller.signal,
-        })
-
-        if (!controller.signal.aborted && response.ok) {
-          setResolvedMode('area')
-          return
-        }
-      } catch (error) {
-        if ((error as Error).name === 'AbortError') {
-          return
-        }
-      }
-
-      if (!controller.signal.aborted) {
-        setResolvedMode('place')
-      }
-    }
-
-    void resolveSlug()
-
-    return () => controller.abort()
-  }, [slug])
-
-  if (resolvedMode === 'loading') {
-    return <AppLoadingState message="Resolving place link..." />
-  }
-
-  if (resolvedMode === 'area') {
-    return <AreaPlacesPage areaSlug={slug.toLowerCase()} />
+function PlacesSlugResolverPage({
+  slug,
+  currentPathname,
+  search,
+}: {
+  slug: string
+  currentPathname: string
+  search: string
+}) {
+  if (isKnownAreaSlug(slug)) {
+    return <AreaPlacesPage areaSlug={slug.toLowerCase()} search={search} />
   }
 
   return <SharedPlacePage slug={slug} currentPathname={currentPathname} redirectToCanonical />
@@ -722,6 +816,14 @@ function App() {
 
     if (canonicalHomePath && pathname !== canonicalHomePath) {
       replaceWithPath(canonicalHomePath)
+    }
+  }, [pathname])
+
+  useEffect(() => {
+    const canonicalMemberPath = getCanonicalMemberPath(pathname)
+
+    if (canonicalMemberPath && pathname !== canonicalMemberPath) {
+      replaceWithPath(canonicalMemberPath)
     }
   }, [pathname])
 
@@ -868,6 +970,7 @@ function App() {
   }, [hasResolvedInitialAuth, hasResolvedProfile, needsOnboarding, pathname, session])
 
   const canonicalPlacePath = useMemo(() => parseCanonicalPlacePath(pathname), [pathname])
+  const categoryPageSlug = useMemo(() => parseCategoryPagePath(pathname), [pathname])
   const areaPageSlug = useMemo(() => parseAreaPagePath(pathname), [pathname])
   const legacyPlaceSlug = useMemo(() => parseLegacyPlaceSlugPath(pathname), [pathname])
   const publicGalaPlanPath = useMemo(() => parsePublicGalaPlanPath(pathname), [pathname])
@@ -916,9 +1019,24 @@ function App() {
       return (
         <>
           <SeoHead
-            title="GalaTayo | Metro Manila Place Search"
-            description="Discover Metro Manila gala spots with place search, AI help, and shareable place pages."
+            title="GalaTayo | Plan Your Next Gala"
+            description="Discover places, plan gala ideas, and use AI-powered tools to find your next hangout, date, barkada, or family destination."
             canonicalPath="/"
+            jsonLd={[
+              {
+                '@context': 'https://schema.org',
+                '@type': 'WebSite',
+                name: 'GalaTayo',
+                url: `${window.location.origin}/`,
+              },
+              {
+                '@context': 'https://schema.org',
+                '@type': 'Organization',
+                name: 'GalaTayo',
+                url: `${window.location.origin}/`,
+                logo: `${window.location.origin}/favicon.svg`,
+              },
+            ]}
           />
           <HomeLandingPage />
         </>
@@ -986,16 +1104,24 @@ function App() {
       return <PlacesIndexPage />
     }
 
+    if (pathname === '/places/categories' || pathname === '/places/categories/') {
+      return <PlaceCategoriesIndexPage />
+    }
+
+    if (categoryPageSlug) {
+      return <CategoryPlacesPage key={`${categoryPageSlug}${search}`} categorySlug={categoryPageSlug} search={search} />
+    }
+
     if (canonicalPlacePath) {
-      return <SharedPlacePage slug={canonicalPlacePath.placeSlug} currentPathname={pathname} expectedAreaSlug={canonicalPlacePath.areaSlug} />
+      return <SharedPlacePage slug={canonicalPlacePath.placeSlug} currentPathname={pathname} currentSearch={search} expectedAreaSlug={canonicalPlacePath.areaSlug} />
     }
 
     if (areaPageSlug && areaPageSlug !== 'new' && areaPageSlug !== 'submit') {
-      return <PlacesSlugResolverPage key={areaPageSlug} slug={areaPageSlug} currentPathname={pathname} />
+      return <PlacesSlugResolverPage key={`${areaPageSlug}${search}`} slug={areaPageSlug} currentPathname={pathname} search={search} />
     }
 
     if (legacyPlaceSlug) {
-      return <SharedPlacePage slug={legacyPlaceSlug} currentPathname={pathname} redirectToCanonical />
+      return <SharedPlacePage slug={legacyPlaceSlug} currentPathname={pathname} currentSearch={search} redirectToCanonical />
     }
 
     if (pathname === '/login' || pathname === '/login/') {
@@ -1010,7 +1136,18 @@ function App() {
       return <AuthCallbackPage />
     }
 
-    if (pathname === '/profiles/search' || pathname === '/profiles/search/') {
+    if (pathname === '/about' || pathname === '/about/') {
+      return <AboutPage />
+    }
+
+    if (
+      pathname === '/find-friends' ||
+      pathname === '/find-friends/' ||
+      pathname === '/profiles/search' ||
+      pathname === '/profiles/search/' ||
+      pathname === '/profile/search' ||
+      pathname === '/profile/search/'
+    ) {
       return <ProfileSearchPage />
     }
 
@@ -1030,7 +1167,7 @@ function App() {
       return <ProfilePage session={session} />
     }
 
-    if (pathname === '/settings' || pathname === '/settings/') {
+    if (pathname === '/settings' || pathname === '/settings/' || pathname === '/account' || pathname === '/account/') {
       if (!session) {
         return <LoginPage />
       }
@@ -1071,7 +1208,14 @@ function App() {
       return <GalaPlansPage mode="list" session={session} />
     }
 
-    if (pathname === '/gala-plan/new' || pathname === '/gala-plan/new/' || pathname === '/gala-plans/new' || pathname === '/gala-plans/new/') {
+    if (
+      pathname === '/gala-plan/new' ||
+      pathname === '/gala-plan/new/' ||
+      pathname === '/gala-plans/new' ||
+      pathname === '/gala-plans/new/' ||
+      pathname === '/gala-plans/create' ||
+      pathname === '/gala-plans/create/'
+    ) {
       if (!session) {
         return <LoginPage />
       }
@@ -1151,7 +1295,7 @@ function App() {
       return <PlaceSubmissionPage session={session} />
     }
 
-    if (pathname === '/submissions' || pathname === '/submissions/') {
+    if (pathname === '/submissions' || pathname === '/submissions/' || pathname === '/my-submissions' || pathname === '/my-submissions/') {
       if (!session) {
         return <LoginPage />
       }
@@ -1159,12 +1303,27 @@ function App() {
       return <MyPlaceSubmissionsPage session={session} />
     }
 
-    return <HomeLandingPage />
+    return (
+      <>
+        <SeoHead title="Page not found | GalaTayo" robots="noindex,follow" />
+        <HomeLandingPage />
+      </>
+    )
   })()
 
   const showMobileBottomNav = shouldShowMobileBottomNav(pathname)
   const reserveMobileBottomNavSpace = shouldReserveMobileBottomNavSpace(pathname)
-  const shouldApplyGenericNoindex = getNoindexForPath(pathname) && !canonicalPlacePath && !(pathname === '/' || pathname === '') && !(pathname === '/places' || pathname === '/places/')
+  const isAreaQueryVariant = Boolean(areaPageSlug && search)
+  const shouldApplyGenericNoindex =
+    (getNoindexForPath(pathname) || isAreaQueryVariant) &&
+    !canonicalPlacePath &&
+    !categoryPageSlug &&
+    !areaPageSlug &&
+    !(pathname === '/' || pathname === '') &&
+    !(pathname === '/places' || pathname === '/places/') &&
+    !(pathname === '/about' || pathname === '/about/') &&
+    !(pathname === '/terms' || pathname === '/terms/') &&
+    !(pathname === '/privacy' || pathname === '/privacy/')
 
   return (
     <SystemMessageProvider>

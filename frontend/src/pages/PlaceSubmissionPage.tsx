@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import L from 'leaflet'
+import { renderToStaticMarkup } from 'react-dom/server'
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import AppHeader from '../components/AppHeader'
 import { AppIcon, type AppIconName } from '../components/AppIcon'
@@ -66,19 +67,21 @@ const textInputClassName = `${fieldClassName} h-11`
 const textAreaClassName = `${fieldClassName} py-3`
 const mapSearchInputClassName = `${fieldClassName} h-14 pl-11 text-[15px]`
 
-const submissionPinSvg = encodeURIComponent(`
-<svg width="32" height="44" viewBox="0 0 32 44" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M16 43C16 43 30 27.5 30 16C30 7.7 23.7 1 16 1C8.3 1 2 7.7 2 16C2 27.5 16 43 16 43Z" fill="#1E3A8A" stroke="white" stroke-width="3"/>
-  <circle cx="16" cy="16" r="5.5" fill="white"/>
-</svg>
-`)
-
-const submissionPinIcon = new L.Icon({
-  iconUrl: `data:image/svg+xml;charset=UTF-8,${submissionPinSvg}`,
-  iconSize: [32, 44],
-  iconAnchor: [16, 44],
-  popupAnchor: [0, -40],
-  className: 'gt-normal-map-pin gt-normal-map-pin-selected',
+const submissionPinIcon = L.divIcon({
+  className: '',
+  html: renderToStaticMarkup(
+    <span className="gt-map-capsule-marker gt-map-capsule-marker--submission" aria-hidden="true">
+      <span className="gt-map-capsule-marker__pin-shell">
+        <svg className="gt-map-capsule-marker__pin" viewBox="0 0 32 44" aria-hidden="true">
+          <path d="M16 43C16 43 30 27.5 30 16C30 7.7 23.7 1 16 1C8.3 1 2 7.7 2 16C2 27.5 16 43 16 43Z" />
+          <circle cx="16" cy="16" r="5.5" />
+        </svg>
+      </span>
+    </span>
+  ),
+  iconSize: [60, 60],
+  iconAnchor: [30, 54],
+  popupAnchor: [0, -54],
 })
 
 function PlaceMarkerPicker({

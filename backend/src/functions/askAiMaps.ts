@@ -257,25 +257,6 @@ export async function askAiMapsRequest(
         log: (message: string) => logAskAiMaps(context, message),
       });
 
-      if (result.fallbackUsed && !result.modelUsed) {
-        return {
-          status: 200,
-          headers: NO_STORE_HEADERS,
-          jsonBody: {
-            places: result.places,
-            modelUsed: null,
-            fallbackUsed: true,
-            message:
-              result.message ??
-              "Ask AI Maps is busy right now, so we showed regular GalaTayo search results instead.",
-            usage: {
-              askAi: askAiUsageBefore,
-              liveSearch: liveSearchUsageBefore,
-            },
-          },
-        };
-      }
-
       const askAiUsageAfter = await consumeAskAiUsage(user.id, "ask_ai_total");
       const liveSearchUsageAfter = await consumeAskAiUsage(user.id, "live_search");
 
@@ -283,10 +264,14 @@ export async function askAiMapsRequest(
         status: 200,
         headers: NO_STORE_HEADERS,
         jsonBody: {
+          mode: result.mode,
+          answerText: result.answerText,
           places: result.places,
+          sources: result.sources,
           modelUsed: result.modelUsed ?? null,
-          fallbackUsed: result.fallbackUsed,
+          ...(result.emptyReason ? { emptyReason: result.emptyReason } : {}),
           ...(result.message ? { message: result.message } : {}),
+          latencyMs: result.latencyMs,
           usage: {
             askAi: askAiUsageAfter,
             liveSearch: liveSearchUsageAfter,

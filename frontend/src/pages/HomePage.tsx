@@ -6,6 +6,7 @@ import { RotateCcw } from 'lucide-react'
 import { AppIcon } from '../components/AppIcon'
 import PlaceCard, { type PlaceCardData, type PlaceCategoryMeta, type PlaceTagMeta } from '../components/PlaceCard'
 import AppHeader from '../components/AppHeader'
+import CompactPagination from '../components/CompactPagination'
 import MapView from '../components/MapView'
 import GuestLimitModal from '../components/GuestLimitModal'
 import GoogleSignInButton from '../components/GoogleSignInButton'
@@ -155,6 +156,7 @@ type BackendSearchPlace = {
   budget?: string | null
   budgetRange?: string | null
   reason?: string | null
+  rating?: number | string | null
   reviewCount?: number | string | null
   categories?: PlaceCategoryMeta[] | null
   tags?: PlaceTagMeta[] | null
@@ -716,6 +718,25 @@ function parseCoordinate(value: number | string | null | undefined) {
   return null
 }
 
+function formatMarkerRatingText(value: number | string | null | undefined) {
+  if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+    return value.toFixed(1)
+  }
+
+  if (typeof value === 'string') {
+    const trimmedValue = value.trim()
+
+    if (!trimmedValue) {
+      return null
+    }
+
+    const numericValue = Number(trimmedValue)
+    return Number.isFinite(numericValue) && numericValue > 0 ? numericValue.toFixed(1) : trimmedValue
+  }
+
+  return null
+}
+
 function mapBackendPlaceToCard(place: BackendSearchPlace): PlaceCardData | null {
   const lat = parseCoordinate(place.latitude)
   const lng = parseCoordinate(place.longitude)
@@ -755,6 +776,7 @@ function mapBackendPlaceToCard(place: BackendSearchPlace): PlaceCardData | null 
     address: place.address || null,
     city: place.city || null,
     localArea: place.area || null,
+    rating: typeof place.rating === 'number' ? place.rating : parseCoordinate(place.rating),
     reviewCount,
     status: 'Unknown',
     reason: place.reason || place.description || place.address || 'Real place result from GalaTayo search.',
@@ -768,6 +790,7 @@ function mapBackendPlaceToCard(place: BackendSearchPlace): PlaceCardData | null 
     tags,
     matchedCategories,
     matchedTags,
+    markerRatingText: formatMarkerRatingText(place.rating),
     place_history: place.place_history || null,
     best_time_to_visit: place.best_time_to_visit || null,
     visit_duration: place.visit_duration || null,
@@ -1234,6 +1257,18 @@ function SearchPagination({
   if (totalCount <= 0) {
     return null
   }
+
+  return (
+    <CompactPagination
+      currentPage={currentPage}
+      totalPages={totalPages}
+      totalItems={totalCount}
+      pageSize={pageSize}
+      onPageChange={onPageChange}
+      isLoading={isLoading}
+      className={compact ? 'max-w-[360px] self-center pt-2' : 'pt-2'}
+    />
+  )
 
   const start = (currentPage - 1) * pageSize + 1
   const end = Math.min(currentPage * pageSize, totalCount)
