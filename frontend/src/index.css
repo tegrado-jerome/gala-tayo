@@ -1384,8 +1384,19 @@ body.gala-menu-open #root {
   cursor: pointer;
 }
 
+.gt-map-capsule-marker--mapview {
+  width: 100%;
+  transform: none;
+}
+
 .gt-map-capsule-marker--submission {
   transform: translate(-30px, -54px);
+}
+
+@media (max-width: 640px) {
+  .gt-map-capsule-marker--mapview {
+    transform: translateY(7px);
+  }
 }
 
 .gt-map-capsule-marker__pin-shell {

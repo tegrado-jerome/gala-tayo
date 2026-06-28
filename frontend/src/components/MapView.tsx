@@ -69,7 +69,7 @@ function createCapsuleMarkerIcon(
   isSelected: boolean,
   isFocused: boolean
 ) {
-  const markerClasses = ['gt-map-capsule-marker']
+  const markerClasses = ['gt-map-capsule-marker', 'gt-map-capsule-marker--mapview']
 
   if (isSelected) {
     markerClasses.push('is-selected')
@@ -94,7 +94,7 @@ function createCapsuleMarkerIcon(
       </div>
     `,
     iconSize: [iconWidth, iconHeight],
-    iconAnchor: [iconAnchorX, 54],
+    iconAnchor: [iconAnchorX, 47],
     popupAnchor: [0, -54],
   })
 }

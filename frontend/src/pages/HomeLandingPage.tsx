@@ -80,7 +80,7 @@ const compactTools = [
   {
     title: 'Categories',
     description: 'Explore places by category.',
-    href: '/categories',
+    href: '/places/categories',
     icon: 'list' as const,
   },
 ] as const
@@ -407,9 +407,8 @@ function HomeLandingPage() {
 
           <div className="relative z-10 flex flex-col items-center text-center lg:grid lg:grid-cols-[minmax(520px,0.58fr)_minmax(480px,0.42fr)] lg:grid-rows-[auto_auto] lg:items-center lg:gap-x-4 lg:gap-y-4 lg:text-left xl:grid-cols-[minmax(560px,0.56fr)_minmax(520px,0.44fr)] xl:gap-x-8 2xl:grid-cols-[minmax(600px,0.55fr)_minmax(560px,0.45fr)]">
             <div className="flex flex-col items-center lg:col-start-1 lg:row-start-1 lg:items-start">
-              <h1 className="max-w-[11.2ch] text-[1.95rem] font-bold leading-[0.95] tracking-[-0.055em] text-[#071633] sm:max-w-[12ch] sm:text-[3rem] lg:max-w-none lg:text-[4.2rem] xl:text-[4.75rem]">
-                <span className="block">Plan your</span>
-                <span className="block whitespace-nowrap">next gala</span>
+              <h1 className="whitespace-nowrap text-[1.55rem] font-bold leading-[0.95] tracking-[-0.055em] text-[#071633] sm:text-[2.25rem] lg:text-[2.85rem] xl:text-[3.25rem]">
+                <span className="block">Plan your next gala</span>
               </h1>
               <p className="mt-3.5 max-w-[27rem] text-sm leading-6 text-[#667A99] sm:mt-4 sm:text-base lg:max-w-[39rem] lg:text-[1.24rem] lg:leading-8 xl:max-w-[41rem] xl:text-[1.3rem]">
                 Quick start your next gala with place search, AI help, map-grounded ideas, and cute finds waiting below.
@@ -425,32 +424,26 @@ function HomeLandingPage() {
               />
             </div>
 
-            <div className="mt-5 flex w-full flex-col items-center gap-3 sm:mt-6 sm:flex-row sm:justify-center lg:col-start-1 lg:row-start-2 lg:mt-0 lg:gap-3.5 lg:justify-start">
-              <button
-                type="button"
-                onClick={handleSearchAction}
-                className="inline-flex min-h-[52px] w-full max-w-[248px] items-center justify-center gap-2.5 rounded-2xl bg-[var(--accent)] px-5 text-[0.96rem] font-semibold text-white transition hover:bg-[var(--accent-deep)] lg:min-h-[54px] lg:w-[220px] lg:max-w-none"
-              >
-                <span className="flex h-5 w-5 items-center justify-center rounded-full border border-white/70">
-                  <AppIcon name="search" className="h-3.5 w-3.5" />
-                </span>
-                Search Places
-              </button>
+            <div className="mt-5 flex w-full flex-row flex-wrap items-center justify-center gap-2.5 sm:mt-6 sm:gap-3 lg:col-start-1 lg:row-start-2 lg:mt-0 lg:justify-start">
               <button
                 type="button"
                 onClick={handleAskAiAction}
-                className="inline-flex min-h-[52px] w-full max-w-[248px] items-center justify-center gap-2.5 rounded-2xl border border-[var(--line)] bg-white px-5 text-[0.96rem] font-semibold text-[var(--text-main)] transition hover:bg-[var(--bg-soft)] lg:min-h-[54px] lg:w-[220px] lg:max-w-none"
+                className="group inline-flex h-12 items-center gap-2.5 rounded-full bg-[var(--accent)] pl-5 pr-6 text-[15px] font-semibold text-white shadow-[0_10px_24px_rgba(30,58,138,0.28)] transition hover:-translate-y-[1px] hover:bg-[var(--accent-deep)] hover:shadow-[0_14px_30px_rgba(30,58,138,0.36)] active:scale-[0.98] sm:h-[52px] sm:pr-7"
               >
-                <AppIcon name="askAi" className="h-5 w-5" />
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-[var(--accent-deep)] transition group-hover:bg-[var(--accent-wash)]">
+                  <AppIcon name="askAi" className="h-4 w-4" strokeWidth={2.25} />
+                </span>
                 Ask AI
               </button>
               <button
                 type="button"
-                onClick={() => navigateToPath('/ask-ai/maps')}
-                className="inline-flex min-h-[52px] w-full max-w-[248px] items-center justify-center gap-2.5 rounded-2xl border border-[var(--line)] bg-white px-5 text-[0.96rem] font-semibold text-[var(--text-main)] transition hover:bg-[var(--bg-soft)] lg:min-h-[54px] lg:w-[220px] lg:max-w-none"
+                onClick={handleSearchAction}
+                className="group inline-flex h-12 items-center gap-2.5 rounded-full border border-[var(--line)] bg-white pl-5 pr-6 text-[15px] font-semibold text-[var(--accent)] shadow-sm transition hover:-translate-y-[1px] hover:border-[var(--accent)] hover:bg-[var(--accent-wash)] hover:shadow-md active:scale-[0.98] sm:h-[52px] sm:pr-7"
               >
-                <AppIcon name="place" className="h-5 w-5" />
-                AI Maps
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--accent-wash)] text-[var(--accent)] transition group-hover:bg-[var(--accent-soft)]">
+                  <AppIcon name="search" className="h-4 w-4" />
+                </span>
+                Search Places
               </button>
             </div>
           </div>

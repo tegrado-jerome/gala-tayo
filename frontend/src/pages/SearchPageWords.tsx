@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import AppHeader from '../components/AppHeader'
-import { AppIcon, type AppIconName } from '../components/AppIcon'
+import { AppIcon } from '../components/AppIcon'
 import PageHeroHeader from '../components/PageHeroHeader'
 import { navigateToPath } from '../utils/navigation'
 import { buildSearchPath, hasActiveSearchCriteria, normalizeTypedSearchText, readSearchUrlState, type SearchBudgetValue, type SearchGoodForValue } from '../utils/searchParams'
@@ -13,12 +13,6 @@ type BuilderField = 'category' | 'city' | 'good_for' | 'budget' | null
 type SearchCategoryChoice = {
   value: string
   label: string
-}
-
-type SearchShortcutAction = {
-  label: string
-  query: string
-  icon: AppIconName
 }
 
 const searchCategoryChoices: SearchCategoryChoice[] = [
@@ -78,13 +72,6 @@ const sampleSearchQueries = [
   'fun date place in BGC tonight',
   'nature spot near Quezon City',
   'budget-friendly food trip in Manila',
-]
-
-const typedSuggestionChips: SearchShortcutAction[] = [
-  { label: 'Budget cafe', query: 'budget cafe', icon: 'wallet' },
-  { label: 'Date spot', query: 'date spot', icon: 'calendarPlan' },
-  { label: 'Rainy day', query: 'rainy day', icon: 'rain' },
-  { label: 'Park stroll', query: 'park stroll', icon: 'categoryParke' },
 ]
 
 function getCategorySearchPhrase(categoryLabel: string) {
@@ -561,20 +548,6 @@ function SearchPageWords() {
                   ) : null}
                 </div>
 
-                <div className="mt-5 grid grid-cols-2 gap-3">
-                  {typedSuggestionChips.map((chip) => (
-                    <button
-                      key={chip.label}
-                      type="button"
-                      onClick={() => setRawQuery(chip.query)}
-                      className="inline-flex min-h-[42px] items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-white px-3.5 py-2 text-[13px] font-medium text-[#374151] transition hover:border-[var(--accent)] hover:bg-[var(--primary-soft)] hover:text-[var(--accent)]"
-                    >
-                      <AppIcon name={chip.icon} className="h-3.5 w-3.5" />
-                      <span>{chip.label}</span>
-                    </button>
-                  ))}
-                </div>
-
                 {(selectedCategory?.label || selectedCityName || selectedGoodForOption?.label || effectiveBudgetPreview) ? (
                   <div className="mt-4 flex flex-wrap gap-2.5">
                     {effectiveBudgetPreview ? (
@@ -605,20 +578,6 @@ function SearchPageWords() {
                     {searchPreviewText}
                   </p>
                 ) : null}
-
-                {shouldShowSearchMascot ? (
-                  <div className="mt-6 flex items-start gap-3.5 text-left">
-                    <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--primary-soft)] text-[var(--accent)]">
-                      <AppIcon name="askAi" className="h-4 w-4" />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--accent-deep)]">Quick tip</p>
-                      <p className="mt-2 text-[13px] leading-6 text-[var(--muted)]">
-                        Try a vibe plus place type, like <span className="font-semibold text-[var(--text-main)]">&quot;cozy cafe&quot;</span> or <span className="font-semibold text-[var(--text-main)]">&quot;fun date spot&quot;</span>.
-                      </p>
-                    </div>
-                  </div>
-                ) : null}
               </div>
             </div>
           </section>
@@ -632,6 +591,12 @@ function SearchPageWords() {
                   className="block h-[clamp(220px,34vw,320px)] w-auto max-w-full object-contain sm:h-[clamp(260px,36vw,360px)] lg:h-[clamp(290px,30vw,390px)]"
                   loading="eager"
                 />
+                <div className="mt-5 flex w-full flex-col items-center text-center">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--accent-deep)]">Quick tip</p>
+                  <p className="mt-2 max-w-[20rem] text-[13px] leading-6 text-[var(--muted)]">
+                    Try a vibe plus place type, like <span className="font-semibold text-[var(--text-main)]">&quot;cozy cafe in Makati&quot;</span> or <span className="font-semibold text-[var(--text-main)]">&quot;fun date spot in Paranaque&quot;</span>.
+                  </p>
+                </div>
               </div>
             </div>
           ) : null}

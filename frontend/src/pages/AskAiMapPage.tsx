@@ -744,29 +744,6 @@ function AskAiMapPage() {
             />
 
             <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[linear-gradient(180deg,rgba(248,247,244,0.72)_0%,rgba(248,247,244,0.18)_58%,rgba(248,247,244,0)_100%)]" />
-            <div className="pointer-events-none absolute left-20 right-3 top-3 z-[620] sm:left-auto sm:right-4 sm:top-4 sm:w-auto">
-              <div className="pointer-events-auto ml-auto flex max-w-[min(84vw,360px)] items-start gap-3 rounded-[26px] border border-white/70 bg-white/84 px-3 py-3 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-                <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[rgba(23,45,107,0.08)] text-[var(--accent-deep)]">
-                  <AppIcon name="askAi" className="h-4 w-4" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[14px] font-medium tracking-[-0.01em] text-slate-900">Google Maps grounded local picks</p>
-                  <p className="mt-0.5 text-[11px] font-medium text-slate-500">Live Ask AI Maps · Metro Manila</p>
-                  {isSearching ? (
-                    <div className="mt-2 inline-flex items-center gap-2 text-[12px] font-medium text-slate-600">
-                      <span className="inline-flex items-center gap-1 text-[var(--accent-deep)]">
-                        <span className="h-1.5 w-1.5 rounded-full bg-current motion-safe:animate-bounce" />
-                        <span className="h-1.5 w-1.5 rounded-full bg-current motion-safe:animate-bounce [animation-delay:120ms]" />
-                        <span className="h-1.5 w-1.5 rounded-full bg-current motion-safe:animate-bounce [animation-delay:240ms]" />
-                      </span>
-                      <span>Searching for map-grounded matches</span>
-                    </div>
-                  ) : null}
-                  {!isSearching && answerText ? <p className="mt-2 line-clamp-3 text-[12px] leading-5 text-slate-700">{answerText}</p> : null}
-                </div>
-              </div>
-            </div>
-
             {isSearching ? (
               <div className="pointer-events-none absolute inset-0 rounded-[26px] bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.14))]">
                 <div className="absolute inset-0 animate-[gala-map-breathe_4s_ease-in-out_infinite] bg-[linear-gradient(135deg,rgba(255,255,255,0.0)_0%,rgba(255,255,255,0.28)_45%,rgba(255,255,255,0.0)_100%)]" />
