@@ -268,12 +268,15 @@ export default function PromptBuilderModal({
   const questionSections = promptBuilderSections.filter((section) => primaryQuestionIds.includes(section.id))
   return hasGeneratedPrompt || isGeneratingPrompt ? (
     <section
-      className="gala-page-background min-h-screen overflow-y-auto"
+      className="gala-page-background flex min-h-0 flex-1 flex-col overflow-y-auto"
       role="dialog"
       aria-modal="true"
       aria-labelledby="prompt-builder-title"
     >
-      <div ref={outputPanelRef} className="prompt-builder-shell mx-auto min-w-0 px-3 py-3 sm:px-4 sm:py-4">
+      <div
+        ref={outputPanelRef}
+        className="prompt-builder-shell mx-auto min-w-0 px-3 pb-[calc(env(safe-area-inset-bottom,0px)+5rem)] pt-3 sm:px-4 sm:pb-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] sm:pt-4"
+      >
         <div className="flex w-full justify-start">
           <BackToHomeButton />
         </div>
@@ -460,12 +463,12 @@ export default function PromptBuilderModal({
     </section>
   ) : (
     <section
-      className="gala-page-background min-h-screen overflow-y-auto"
+      className="gala-page-background flex min-h-0 flex-1 flex-col overflow-y-auto"
       role="dialog"
       aria-modal="true"
       aria-labelledby="prompt-builder-title"
     >
-      <div className="prompt-builder-shell mx-auto min-w-0 px-3 py-3 sm:px-4 sm:py-4">
+      <div className="prompt-builder-shell mx-auto min-w-0 px-3 pb-[calc(env(safe-area-inset-bottom,0px)+5rem)] pt-3 sm:px-4 sm:pb-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] sm:pt-4">
         <div className="flex w-full justify-start">
           <BackToHomeButton />
         </div>

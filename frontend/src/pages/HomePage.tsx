@@ -2,6 +2,8 @@ import { startTransition, useEffect, useLayoutEffect, useMemo, useRef, useState 
 import type { RefObject } from 'react'
 import { createPortal } from 'react-dom'
 import type { Session } from '@supabase/supabase-js'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { RotateCcw } from 'lucide-react'
 import { AppIcon } from '../components/AppIcon'
 import PlaceCard, { type PlaceCardData, type PlaceCategoryMeta, type PlaceTagMeta } from '../components/PlaceCard'
@@ -3515,9 +3517,31 @@ function AskAiModePanel({
                     <span className="text-xs font-bold text-[var(--muted)]">Ask AI</span>
                   </div>
                   <div className="px-4 py-3.5">
-                    <div className="text-[var(--type-body)] leading-relaxed text-[var(--text)] whitespace-pre-wrap">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        p: ({ children }) => (
+                          <p className="mb-3 last:mb-0 leading-relaxed text-[var(--text)]">{children}</p>
+                        ),
+                        strong: ({ children }) => (
+                          <strong className="font-semibold text-[var(--text)]">{children}</strong>
+                        ),
+                        ul: ({ children }) => (
+                          <ul className="my-3 list-disc space-y-1 pl-5 text-[var(--text)]">{children}</ul>
+                        ),
+                        ol: ({ children }) => (
+                          <ol className="my-3 list-decimal space-y-1 pl-5 text-[var(--text)]">{children}</ol>
+                        ),
+                        li: ({ children }) => (
+                          <li className="leading-relaxed text-[var(--text)]">{children}</li>
+                        ),
+                        em: ({ children }) => (
+                          <em className="italic text-[var(--text)]">{children}</em>
+                        ),
+                      }}
+                    >
                       {msg.content}
-                    </div>
+                    </ReactMarkdown>
                     {sources.length > 0 && (
                       <div className="mt-3 border-t border-[var(--line)] pt-3">
                         <p className="text-[0.7rem] font-bold uppercase tracking-[0.1em] text-[var(--text-light)]">Sources</p>
