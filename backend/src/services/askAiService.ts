@@ -52,10 +52,16 @@ export type AskAiAnswerResult = {
   answerRejectedDueToLeakageOrTruncation: boolean;
 };
 
+type ChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
+
 type GenerateAskAiAnswerParams = {
   question: string;
   placeSlug?: string;
   enableLiveSearch: boolean;
+  conversationHistory?: ChatMessage[];
 };
 
 const CURRENT_INFO_PATTERN =
@@ -255,7 +261,25 @@ export function shouldUseGroundedResearch(question: string): boolean {
   );
 }
 
-function buildAskAiPrompt(question: string, plan: AskAiResponsePlan): string {
+function buildAskAiPrompt(
+  question: string,
+  plan: AskAiResponsePlan,
+  conversationHistory?: { role: "user" | "assistant"; content: string }[]
+): string {
+  const historyBlock =
+    conversationHistory && conversationHistory.length > 0
+      ? `
+Previous conversation:
+${conversationHistory
+  .map(
+    (msg) =>
+      `${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}`
+  )
+  .join("\n\n")}
+
+`
+      : "";
+
   return `
 Ask AI intent plan:
 - Inferred intent: ${plan.intent}
@@ -270,8 +294,7 @@ Interpretation guidance:
 - Do not use a forced template, fixed structure, fixed length, or app-imposed answer format.
 - Use your full capability and decide the best way to answer the user's request.
 - For place/search-related prompts, include useful places, areas, categories, or search directions that match the user's intent.
-
-User request:
+${historyBlock}User request:
 ${question}
 `.trim();
 }
@@ -279,12 +302,13 @@ ${question}
 export async function generateAskAiAnswer({
   question,
   enableLiveSearch,
+  conversationHistory,
 }: GenerateAskAiAnswerParams): Promise<AskAiAnswerResult> {
   const startedAt = Date.now();
   const apiKey = await getGemmaApiKey();
   const ai = new GoogleGenAI({ apiKey });
   const plan = planAskAiRequest(question);
-  const prompt = buildAskAiPrompt(question, plan);
+  const prompt = buildAskAiPrompt(question, plan, conversationHistory);
   const modelAttempts = enableLiveSearch
     ? [
         { model: ASK_AI_LIVE_SEARCH_MODEL, liveSearch: true },

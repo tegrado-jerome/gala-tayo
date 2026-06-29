@@ -358,8 +358,6 @@ function shouldReserveMobileBottomNavSpace(pathname: string) {
 }
 
 const sharedRouteMatchers = [
-  (pathname: string) => /^\/places\/[^/]+\/[^/]+\/?$/i.test(pathname),
-  (pathname: string) => /^\/place\/[^/]+\/?$/i.test(pathname),
   (pathname: string) => /^\/u\/[^/]+\/?$/i.test(pathname),
   (pathname: string) => /^\/u\/[^/]+\/(?:plans|gala)\/[^/]+\/?$/i.test(pathname),
 ]

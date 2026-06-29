@@ -1,6 +1,8 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { House, MapPin } from 'lucide-react'
 import { AppIcon, getCategoryIconName } from '../components/AppIcon'
 import AppHeader from '../components/AppHeader'
+import Breadcrumb from '../components/Breadcrumb'
 import CompactPagination from '../components/CompactPagination'
 import InternalLink from '../components/InternalLink'
 import PlaceCard, { type PlaceCardData } from '../components/PlaceCard'
@@ -41,20 +43,16 @@ function sortPlacesAlphabetically(places: SeoPlaceSummary[]) {
   return [...places].sort((left, right) => left.name.localeCompare(right.name))
 }
 
-function renderPlaceGrid(areaSlug: string, places: SeoPlaceSummary[], currentListingPath: string, listingLabel: string) {
+function renderPlaceGrid(areaSlug: string, places: SeoPlaceSummary[]) {
   return (
     <div className="mt-4 grid gap-4 lg:grid-cols-2">
       {places.map((rawPlace) => {
         const place = mapSeoPlaceToCard(rawPlace) as PlaceCardData
         const canonicalPath = getCanonicalPlacePath({ areaSlug: rawPlace.areaSlug || areaSlug, placeSlug: rawPlace.slug })
-        const placeLinkParams = new URLSearchParams()
-        placeLinkParams.set('from', currentListingPath)
-        placeLinkParams.set('fromLabel', listingLabel)
-        const placeLink = `${canonicalPath}?${placeLinkParams.toString()}`
 
         return (
           <div key={rawPlace.id}>
-            <PlaceCard place={place} searchResultCard onOpen={() => navigateToPath(placeLink)} onSelect={() => undefined} />
+            <PlaceCard place={place} searchResultCard onOpen={() => navigateToPath(canonicalPath)} onSelect={() => undefined} />
           </div>
         )
       })}
@@ -225,7 +223,6 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
   const totalPages = payload?.totalPages ?? 1
   const safePage = payload?.page ?? currentPage
   const activeFilterLabel = FILTER_OPTIONS.find((filter) => filter.value === activeCategory)?.label ?? 'All'
-  const currentListingPath = `${window.location.pathname}${window.location.search}`
   const getPageHref = (page: number) => {
     const params = new URLSearchParams()
     if (activeCategory !== 'all') {
@@ -281,13 +278,13 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
       <AppHeader minimal />
 
       <main className="mx-auto w-full max-w-[1180px] px-4 pb-12 pt-5 sm:px-6 sm:pb-14 lg:px-8">
-        <nav aria-label="Breadcrumb" className="text-sm text-slate-500">
-          <InternalLink href="/" className="hover:text-[var(--accent)]">Home</InternalLink>
-          <span className="px-2">/</span>
-          <InternalLink href="/places" className="hover:text-[var(--accent)]">Places</InternalLink>
-          <span className="px-2">/</span>
-          <span aria-current="page" className="font-semibold text-slate-700">{areaName}</span>
-        </nav>
+        <Breadcrumb
+          items={[
+            { label: 'Home', href: '/', icon: <House className="h-3.5 w-3.5" /> },
+            { label: 'Places', href: '/places', icon: <MapPin className="h-3.5 w-3.5" /> },
+            { label: areaName, icon: <MapPin className="h-3.5 w-3.5" /> },
+          ]}
+        />
 
         <section className="mt-5 pb-2">
           <h1 className="text-[2.15rem] font-black leading-[0.95] tracking-[-0.045em] text-slate-950 sm:text-[2.6rem]">
@@ -373,7 +370,7 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
                     </p>
                   </div>
                 </div>
-                {renderPlaceGrid(areaSlug, allPlaces, currentListingPath, areaName)}
+                {renderPlaceGrid(areaSlug, allPlaces)}
               </section>
             )}
 

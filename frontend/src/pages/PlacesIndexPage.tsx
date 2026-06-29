@@ -1,4 +1,4 @@
-import { ArrowRight, Building2, Compass, MapPinned } from 'lucide-react'
+import { ArrowRight, Building2, Compass, House, MapPinned } from 'lucide-react'
 import AppHeader from '../components/AppHeader'
 import InternalLink from '../components/InternalLink'
 import Breadcrumb from '../components/Breadcrumb'
@@ -40,8 +40,8 @@ function PlacesIndexPage() {
       <main className="mx-auto w-full max-w-[1180px] px-4 pb-12 pt-5 sm:px-6 sm:pb-14 lg:px-8">
         <Breadcrumb
           items={[
-            { label: 'Home', href: '/' },
-            { label: 'Places' },
+            { label: 'Home', href: '/', icon: <House className="h-3.5 w-3.5" /> },
+            { label: 'Places', icon: <MapPinned className="h-3.5 w-3.5" /> },
           ]}
         />
 

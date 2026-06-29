@@ -2,7 +2,7 @@ import { startTransition, useEffect, useLayoutEffect, useMemo, useRef, useState 
 import type { RefObject } from 'react'
 import { createPortal } from 'react-dom'
 import type { Session } from '@supabase/supabase-js'
-import { RotateCcw } from 'lucide-react'
+import { RotateCcw, Sparkles } from 'lucide-react'
 import { AppIcon } from '../components/AppIcon'
 import PlaceCard, { type PlaceCardData, type PlaceCategoryMeta, type PlaceTagMeta } from '../components/PlaceCard'
 import AppHeader from '../components/AppHeader'
@@ -24,6 +24,7 @@ import {
   submitAskAiRuntimeRequest,
   subscribeToAskAiRuntime,
 } from '../utils/askAiRuntime'
+import type { ChatMessage } from '../utils/askAiRuntime'
 import { buildSearchPath, normalizeTypedSearchText, type SearchBudgetValue, type SearchGoodForValue } from '../utils/searchParams'
 import type { PromptBuilderState } from '../types/promptBuilder'
 import { createEmptyPromptBuilderState } from '../utils/promptBuilder'
@@ -47,6 +48,10 @@ function PinIcon({ className = 'h-4 w-4' }: IconProps) {
 
 function ChevronRightIcon({ className = 'h-4 w-4' }: IconProps) {
   return <AppIcon name="chevronRight" className={className} />
+}
+
+function ChevronLeftIcon({ className = 'h-4 w-4' }: IconProps) {
+  return <AppIcon name="back" className={className} />
 }
 
 type BackendCategory = {
@@ -209,6 +214,7 @@ type AskAiRouteCache = {
   answerError: string | null
   usageStatus: AskAiUsageStatus | null
   isSubmitting: boolean
+  messages: ChatMessage[]
 }
 
 const searchRouteCachePrefix = 'galatayo:search-route:'
@@ -317,6 +323,15 @@ function readAskAiRouteCache(): AskAiRouteCache | null {
       answerError,
       usageStatus,
       isSubmitting,
+      messages: Array.isArray(parsedCache.messages)
+        ? (parsedCache.messages as ChatMessage[]).filter(
+            (m) =>
+              m &&
+              typeof m === 'object' &&
+              (m.role === 'user' || m.role === 'assistant') &&
+              typeof m.content === 'string'
+          )
+        : [],
     }
   } catch (error) {
     console.warn('Unable to restore cached Ask AI state:', error)
@@ -2648,7 +2663,6 @@ function AskAiPlaceholder({
   const isUsagePending = !usageStatus
   const isLimitReached = usageStatus ? !usageStatus.allowed || usageStatus.remaining <= 0 : false
   const [draftQuestion, setDraftQuestion] = useState(question)
-  const canSubmit = !isSubmitting && !isUsagePending && !isLimitReached && draftQuestion.trim().length > 0
   const questionTextareaRef = useRef<HTMLTextAreaElement | null>(null)
   const chibiImage = answerError
     ? askAiErrorChibi
@@ -2682,9 +2696,11 @@ function AskAiPlaceholder({
     })
   }
 
-  const handleSubmit = () => {
-    onQuestionChange(draftQuestion)
-    onSubmit(draftQuestion)
+  const handleSubmit = (text?: string) => {
+    const finalQuestion = (text ?? draftQuestion).trim()
+    if (!finalQuestion || isSubmitting) return
+    onQuestionChange(finalQuestion)
+    onSubmit(finalQuestion)
   }
 
   const handleOpenPromptBuilder = () => {
@@ -2711,147 +2727,110 @@ function AskAiPlaceholder({
   }
 
   const promptChips = [
-    { id: 'date', label: 'Date plan', prompt: 'Plan a date in [CITY] for [PAX] people under [BUDGET].' },
-    {
-      id: 'food',
-      label: 'Food trip',
-      prompt: 'Suggest a food trip in [CITY] for [PAX] people around [BUDGET].',
-    },
-    {
-      id: 'itinerary',
-      label: 'Itinerary',
-      prompt: 'Make a [TIME] itinerary in [CITY] for [PAX] people.',
-    },
+    { id: 'date', label: 'Date plan', prompt: 'Plan a date gala' },
+    { id: 'food', label: 'Food trip', prompt: 'Plan a food trip' },
+    { id: 'itinerary', label: 'Itinerary', prompt: 'Create a quick itinerary' },
+    { id: 'find', label: 'Find places', prompt: 'Find places on map' },
   ]
 
-  const questionLength = draftQuestion.length
-  const questionLimit = 950
-
   return (
-    <section
-      className={`relative overflow-hidden px-4 py-6 text-[var(--text)] sm:px-5 sm:py-6 lg:px-8 lg:py-8 ${className}`}
-    >
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-12 top-12 h-36 w-36 rounded-full bg-[rgba(201,217,242,0.18)] blur-3xl" />
-        <div className="absolute right-0 top-0 h-44 w-44 rounded-full bg-[rgba(192,202,255,0.14)] blur-3xl" />
-      </div>
-
-      <div className="relative mx-auto flex w-full max-w-[min(1520px,calc(100vw-32px))] flex-col gap-7 lg:gap-8">
-        <AskAiBackButton onClick={onSwitchToPlaces} className="w-fit px-1" />
-
-        <div className="grid gap-6 lg:gap-7">
-          <div className="grid items-center gap-4 px-1 pt-0 sm:grid-cols-[minmax(0,1fr)_230px] sm:gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,34vw)] lg:gap-10 lg:pt-2 xl:grid-cols-[minmax(0,1fr)_420px]">
-            <PageHeroHeader
-              eyebrow="Ask AI"
-              title="Turn your gala idea into a real plan"
-              description="Use AI to turn your GalaTayo idea into a plan, place shortlist, or quick gala itinerary."
-              icon={<AppIcon name="askAi" className="h-4 w-4" />}
-              badges={
-                <>
-                  <span className="gala-count-pill">{usageStatus ? `${usageStatus.remaining} left today` : 'Checking asks...'}</span>
-                  <span className="gala-count-pill">{usageStatus ? `${formatResetAtCompact(usageStatus.resetAt)} reset` : 'Checking reset...'}</span>
-                </>
-              }
-              aside={
-                <img
-                  src={chibiImage}
-                  alt=""
-                  className="mx-auto h-[204px] w-auto max-w-full object-contain sm:h-[228px] lg:h-[360px] xl:h-[420px]"
-                  loading="lazy"
-                />
-              }
-              className="border-b-0 pb-0"
-            />
+    <div className={`flex flex-col h-full ${className}`}>
+      {/* Chat header */}
+      <div className="shrink-0 border-b border-[var(--line)] bg-white px-4 py-3 sm:px-5">
+        <div className="mx-auto flex w-full max-w-[768px] items-center gap-3">
+          <button
+            type="button"
+            onClick={onSwitchToPlaces}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 lg:hidden"
+            aria-label="Back"
+          >
+            <ChevronLeftIcon className="h-5 w-5" />
+          </button>
+          <div className="min-w-0">
+            <h1 className="text-[1.05rem] font-bold leading-tight text-slate-900 sm:text-[1.15rem]">Ask AI</h1>
+            <p className="text-[0.78rem] leading-tight text-[var(--muted)]">Plan your next gala with AI</p>
           </div>
-
-          <div className="w-full px-1">
-            <label className="sr-only" htmlFor="ask-ai-question">
-              Ask GalaTayo
-            </label>
-
-            <div className="rounded-[28px] border border-[rgba(20,35,58,0.12)] bg-white shadow-[0_18px_48px_rgba(15,23,42,0.07)] lg:rounded-[32px]">
-              <textarea
-                id="ask-ai-question"
-                ref={questionTextareaRef}
-                value={draftQuestion}
-                onChange={(event) => updateDraftQuestion(event.target.value)}
-                disabled={isSubmitting || isLimitReached}
-                rows={4}
-                maxLength={questionLimit}
-                placeholder={'Message Ask AI with your gala idea...'}
-                className="min-h-[164px] w-full resize-none overflow-hidden rounded-t-[28px] bg-transparent px-5 pb-4 pt-5 text-[15px] leading-7 text-slate-900 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed disabled:text-slate-400 lg:min-h-[188px] lg:rounded-t-[32px] lg:px-6 lg:pb-5 lg:pt-6 lg:text-[1rem] lg:leading-8"
-              />
-
-              <div className="border-t border-[rgba(20,35,58,0.08)] px-4 pb-4 pt-4 lg:px-5 lg:pb-5 lg:pt-5">
-                <div className="flex flex-wrap gap-2">
-                  {promptChips.map((chip) => (
-                    <button
-                      key={chip.id}
-                      type="button"
-                      onClick={() => updateDraftQuestion(chip.prompt)}
-                      className="rounded-full border border-[rgba(20,35,58,0.08)] bg-slate-50 px-3 py-1.5 text-[12px] font-semibold text-slate-600 transition hover:border-[rgba(20,35,58,0.16)] hover:bg-white focus:outline-none focus:ring-2 focus:ring-[rgba(47,116,232,0.10)] lg:px-3.5 lg:text-[0.84rem]"
-                    >
-                      {chip.label}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="mt-4 flex items-center justify-between gap-3">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={handleOpenPromptBuilder}
-                      className="inline-flex items-center gap-1.5 text-[13px] font-medium text-slate-500 transition hover:text-slate-900 lg:text-[0.9rem]"
-                    >
-                      <span>Need help shaping it?</span>
-                      <span className="font-black text-[var(--accent-deep)]">Prompt Builder</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => navigateToPath('/ask-ai/maps')}
-                      className="inline-flex items-center gap-1.5 text-[13px] font-medium text-slate-500 transition hover:text-slate-900 lg:text-[0.9rem]"
-                    >
-                      <AppIcon name="map" className="h-4 w-4 text-[var(--accent)]" />
-                      <span className="font-black text-[var(--accent-deep)]">Find places on map</span>
-                    </button>
-                  </div>
-                  <div className="shrink-0 text-right text-[12px] font-medium text-slate-400 lg:text-[0.88rem]">{questionLength}/{questionLimit}</div>
-                </div>
-
-                <div className="mt-4">
-                  <button
-                    type="button"
-                    onClick={handleSubmit}
-                    disabled={!canSubmit}
-                    className="inline-flex h-12 w-full items-center justify-center rounded-2xl bg-[var(--accent)] px-5 text-[0.96rem] font-semibold text-white transition hover:bg-[var(--accent-deep)] disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    <span className="inline-flex items-center gap-2">
-                      <SparkIcon className="h-4.5 w-4.5" />
-                      <span>{isSubmitting ? 'Asking...' : 'Ask AI'}</span>
-                    </span>
-                  </button>
-                </div>
-              </div>
-
-              {answerError ? (
-                <p className="px-4 pb-4 text-sm text-red-600 lg:px-5 lg:pb-5">{answerError}</p>
-              ) : null}
-
-              {isUsageLoading && !usageStatus ? (
-                <p className="px-4 pb-4 text-sm font-semibold text-slate-500 lg:px-5 lg:pb-5">
-                  Checking your Ask AI limit...
-                </p>
-              ) : null}
-
-              {isLimitReached ? (
-                <p className="px-4 pb-4 text-sm font-semibold text-slate-700 lg:px-5 lg:pb-5">You&apos;ve used today&apos;s Ask AI.</p>
-              ) : null}
-            </div>
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleOpenPromptBuilder}
+              className="hidden rounded-full border border-[var(--line)] px-3 py-1.5 text-[11px] font-semibold text-slate-500 transition hover:border-[var(--accent)] hover:text-[var(--accent-deep)] sm:inline-flex items-center gap-1"
+            >
+              <SparkIcon className="h-3 w-3" />
+              Prompt Builder
+            </button>
+            <button
+              type="button"
+              onClick={() => navigateToPath('/ask-ai/maps')}
+              className="rounded-full border border-[var(--line)] px-3 py-1.5 text-[11px] font-semibold text-slate-500 transition hover:border-[var(--accent)] hover:text-[var(--accent-deep)] sm:inline-flex items-center gap-1"
+            >
+              <AppIcon name="map" className="h-3 w-3" />
+              <span className="hidden sm:inline">Map</span>
+            </button>
           </div>
-          {/* Output stage is rendered above when an answer exists. */}
         </div>
       </div>
-    </section>
+
+      {/* Chat messages area */}
+      <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-5">
+        <div className="mx-auto flex w-full max-w-[768px] flex-col gap-5">
+          {/* AI greeting bubble */}
+          <div className="flex items-start gap-2.5">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#e8f0fe,#d4e4fc)] text-sm shadow-[0_2px_8px_rgba(47,116,232,0.10)]">
+              ✨
+            </div>
+            <div className="min-w-0 max-w-[82%] rounded-2xl rounded-tl-[6px] border border-[rgba(15,23,42,0.06)] bg-white px-4 py-3 shadow-[0_2px_8px_rgba(15,23,42,0.03)]">
+              <p className="text-[0.94rem] leading-relaxed text-slate-800">Hi! What kind of gala are you planning today?</p>
+            </div>
+          </div>
+
+          {/* Starter chips */}
+          <div className="flex flex-wrap gap-2 pl-10">
+            {promptChips.map((chip) => (
+              <button
+                key={chip.id}
+                type="button"
+                disabled={isLimitReached}
+                onClick={() => handleSubmit(chip.prompt)}
+                className="rounded-full border border-[rgba(47,116,232,0.16)] bg-[var(--accent-wash)] px-3.5 py-2 text-[0.82rem] font-semibold text-[var(--accent-deep)] transition hover:border-[var(--accent)] hover:bg-[rgba(var(--accent-rgb),0.18)] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {chip.label}
+              </button>
+            ))}
+            <button
+              type="button"
+              disabled={isLimitReached}
+              onClick={() => navigateToPath('/ask-ai/maps')}
+              className="rounded-full border border-[rgba(15,23,42,0.08)] bg-slate-50 px-3.5 py-2 text-[0.82rem] font-semibold text-slate-600 transition hover:border-[rgba(15,23,42,0.16)] hover:bg-white sm:hidden"
+            >
+              <span className="inline-flex items-center gap-1">
+                <AppIcon name="map" className="h-3.5 w-3.5" />
+                Find places
+              </span>
+            </button>
+          </div>
+
+          {isLimitReached && (
+            <div className="mx-10 rounded-2xl border border-[rgba(239,68,68,0.14)] bg-red-50/60 px-4 py-3">
+              <p className="text-[0.84rem] font-semibold text-red-700">You&apos;ve used all your Ask AI asks for today. Come back tomorrow!</p>
+            </div>
+          )}
+
+          {isUsageLoading && !usageStatus && (
+            <div className="mx-10 rounded-2xl bg-slate-50 px-4 py-3">
+              <p className="text-[0.84rem] text-slate-500">Checking your Ask AI limit...</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Hidden state keeper */}
+      {answerError ? (
+        <div className="shrink-0 border-t border-red-100 bg-red-50/50 px-4 py-2.5 text-center">
+          <p className="text-[0.82rem] text-red-600">{answerError}</p>
+        </div>
+      ) : null}
+    </div>
   )
 }
 
@@ -3181,113 +3160,78 @@ function AskAiOutputStageNext({
     : [{ title: 'Plan', lines: getAskAiDisplayLines(answer).filter(Boolean) }]
 
   return (
-    <section className={`gala-page-background relative overflow-x-hidden overflow-y-auto px-4 py-4 text-[var(--text)] sm:px-5 sm:py-5 ${className} min-h-[calc(100dvh-88px)]`}>
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute left-1/2 top-8 h-36 w-36 -translate-x-1/2 rounded-full bg-[rgba(148,163,184,0.08)] blur-3xl" />
-      </div>
+    <div className={`flex flex-col ${className}`}>
+      {/* Chat messages area */}
+      <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-5">
+        <div className="mx-auto flex w-full max-w-[768px] flex-col gap-5">
 
-      <div className="relative mx-auto flex min-h-[calc(100dvh-120px)] w-full max-w-[680px] flex-col gap-4 sm:gap-5">
-        <div className="flex justify-center pt-1">
-          <img src={chibiImage} alt="" className="h-[188px] w-auto max-w-none object-contain sm:h-[228px]" loading="lazy" />
-        </div>
-
-        <div className="flex justify-end">
-          <div className="max-w-[88%] rounded-[26px] rounded-br-[12px] bg-[#2f74e8] px-4 py-3.5 text-white shadow-[0_10px_20px_rgba(47,116,232,0.14)] sm:max-w-[76%]">
-            <p className="text-[0.64rem] font-black uppercase tracking-[0.14em] text-white/68">You</p>
-            <p className="mt-1.5 text-[0.97rem] font-medium leading-7">{question}</p>
-          </div>
-        </div>
-
-        <div className="flex justify-start">
-          <div className="min-w-0 w-full max-w-full">
-            <div className="overflow-hidden rounded-[28px] border border-[rgba(15,23,42,0.08)] bg-white shadow-[0_12px_28px_rgba(15,23,42,0.05)]">
-              <div className="flex items-center gap-3 border-b border-[rgba(15,23,42,0.06)] px-4 py-3.5 sm:px-5">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600">
-                  <SparkIcon className="h-4 w-4" />
-                </span>
-                <div className="min-w-0">
-                  <p className="text-sm font-black text-slate-900">
-                    GalaTayo <span className="text-[var(--accent-deep)]">AI</span>
-                  </p>
-                  <p className="text-xs text-slate-500">Curated plan for your <span className="font-semibold text-slate-700">gala idea</span></p>
-                </div>
-                <span className="ml-auto rounded-full bg-slate-100 px-2.5 py-1 text-[0.65rem] font-black uppercase tracking-[0.12em] text-slate-600">
-                  Answer
-                </span>
-              </div>
-
-              <div className="bg-[linear-gradient(180deg,#ffffff_0%,#fbfcfe_100%)] px-3 py-3 sm:px-4 sm:py-4">
-                <div className="grid gap-3">
-                  {displaySections.map((section, index) => (
-                    <AskAiStructuredSection
-                      key={`${section.title}-${index}`}
-                      section={section}
-                      isPrimary={index === 0}
-                    />
-                  ))}
-                </div>
-              </div>
+          {/* User message bubble */}
+          <div className="flex justify-end">
+            <div className="max-w-[82%] rounded-2xl rounded-tr-[6px] bg-[var(--accent)] px-4 py-3 shadow-[0_4px_14px_rgba(47,116,232,0.16)]">
+              <p className="text-[0.94rem] leading-relaxed text-white">{question}</p>
             </div>
+          </div>
 
-            {sources.length > 0 ? (
-              <div className="mt-4 overflow-hidden rounded-[24px] border border-[rgba(15,23,42,0.08)] bg-white shadow-[0_8px_20px_rgba(15,23,42,0.04)]">
-                <div className="flex items-center gap-2 border-b border-[rgba(15,23,42,0.06)] px-4 py-3 sm:px-5">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-slate-500">
-                    <BuildingIcon className="h-3.5 w-3.5" />
-                  </span>
-                  <p className="text-sm font-black text-slate-900">Sources</p>
+          {/* AI response bubble */}
+          <div className="flex items-start gap-2.5">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#e8f0fe,#d4e4fc)] shadow-[0_2px_8px_rgba(47,116,232,0.10)]">
+              <img src={chibiImage} alt="" className="h-6 w-6 object-contain" />
+            </div>
+            <div className="min-w-0 w-full max-w-[88%] sm:max-w-[82%]">
+              {displaySections.map((section, index) => (
+                <div key={`${section.title}-${index}`}>
+                  <AskAiStructuredSection
+                    section={section}
+                    isPrimary={index === 0}
+                  />
+                  {index < displaySections.length - 1 && <div className="h-3" />}
                 </div>
-                <div className="grid gap-2 p-3 sm:p-4">
-                  {sources.map((source) => (
-                    <a
-                      key={source.url}
-                      href={source.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex min-h-[54px] items-center justify-between gap-3 rounded-[18px] bg-slate-50 px-3.5 py-3 text-sm transition hover:bg-slate-100"
-                    >
-                      <div className="min-w-0">
-                        <p className="truncate font-bold text-slate-900">{source.title}</p>
-                        <p className="mt-1 truncate text-xs text-slate-500">{getSourceHostname(source.url)}</p>
-                      </div>
-                      <ChevronRightIcon className="h-4 w-4 shrink-0 text-slate-400" />
-                    </a>
-                  ))}
+              ))}
+
+              {sources.length > 0 && (
+                <div className="mt-3 rounded-2xl border border-[rgba(15,23,42,0.06)] bg-white/70 px-4 py-3">
+                  <p className="text-[0.7rem] font-black uppercase tracking-[0.1em] text-slate-400">Sources</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {sources.map((source) => (
+                      <a
+                        key={source.url}
+                        href={source.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 rounded-full border border-[rgba(15,23,42,0.06)] bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600 transition hover:border-[rgba(47,116,232,0.18)] hover:bg-white hover:text-[var(--accent-deep)]"
+                      >
+                        {source.title.length > 28 ? `${source.title.slice(0, 28)}...` : source.title}
+                        <ChevronRightIcon className="h-3 w-3 shrink-0" />
+                      </a>
+                    ))}
+                  </div>
                 </div>
+              )}
+
+              {/* Actions */}
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={onStartOver}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(15,23,42,0.08)] bg-white px-3 py-2 text-[0.78rem] font-semibold text-slate-500 transition hover:border-[rgba(15,23,42,0.16)] hover:text-slate-700"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" />
+                  Start over
+                </button>
+                <button
+                  type="button"
+                  onClick={onOpenPromptBuilder}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(47,116,232,0.14)] bg-[var(--accent-wash)] px-3 py-2 text-[0.78rem] font-semibold text-[var(--accent-deep)] transition hover:border-[rgba(47,116,232,0.24)] hover:bg-[rgba(var(--accent-rgb),0.18)]"
+                >
+                  <SparkIcon className="h-3.5 w-3.5" />
+                  Prompt Builder
+                </button>
               </div>
-            ) : null}
-
-            <div className="mt-4 grid gap-2">
-              <button
-                type="button"
-                onClick={onOpenPromptBuilder}
-                className="flex min-h-[56px] items-center justify-between gap-3 rounded-[20px] border border-[rgba(15,23,42,0.08)] bg-white px-4 py-3.5 text-left shadow-[0_8px_20px_rgba(15,23,42,0.04)] transition hover:border-[rgba(47,116,232,0.18)] hover:bg-slate-50"
-              >
-                <span className="flex min-w-0 items-center gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600">
-                    <SparkIcon className="h-4 w-4" />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-sm font-black text-slate-950">Use Prompt Builder</span>
-                    <span className="block text-xs leading-5 text-[var(--muted)]">Refine this idea before you ask again.</span>
-                  </span>
-                </span>
-                <ChevronRightIcon className="h-5 w-5 shrink-0 text-slate-400" />
-              </button>
-
-              <button
-                type="button"
-                onClick={onStartOver}
-                className="inline-flex items-center justify-center gap-2 rounded-full px-3 py-2 text-xs font-black text-slate-500 transition hover:bg-white/72 hover:text-slate-900"
-              >
-                <RotateCcw className="h-3.5 w-3.5" />
-                Start over
-              </button>
             </div>
           </div>
         </div>
       </div>
-    </section>
+    </div>
   )
 }
 
@@ -3320,121 +3264,80 @@ function AskAiThinkingStageNext({
   }, [miniGameOpen])
 
   return (
-    <section className={`gala-page-background relative overflow-hidden px-5 py-5 text-[var(--text)] ${className} min-h-[calc(100dvh-88px)]`}>
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-12 top-8 h-40 w-40 rounded-full bg-[rgba(160,201,255,0.24)] blur-3xl" />
-        <div className="absolute right-0 top-0 h-52 w-52 rounded-full bg-[rgba(192,202,255,0.22)] blur-3xl" />
-        <div className="absolute bottom-0 right-1/3 h-36 w-36 rounded-full bg-[rgba(201,235,255,0.24)] blur-3xl" />
-      </div>
-
-      <div className="relative mx-auto flex min-h-[calc(100dvh-128px)] w-full max-w-[560px] flex-col">
-        <h1 className="mt-6 text-[2.4rem] font-black leading-none tracking-[-0.04em] text-slate-950">
-          <span className="text-slate-950">Ask </span>
-          <span className="text-[var(--accent-deep)]">AI</span>
-        </h1>
-
-        <div className="mt-7">
-          <p className="text-[0.9rem] font-black uppercase tracking-[0.12em] text-slate-500">Your question</p>
-          <div className="mt-2.5 w-full rounded-[18px] border border-[rgba(20,35,58,0.14)] bg-white/88 px-4 py-3.5">
-            <p className="text-[1rem] font-bold leading-7 tracking-[-0.01em] text-slate-950">{question}</p>
-          </div>
-        </div>
-
-        <div className="mt-4 flex flex-1 flex-col justify-start">
-          <div className="mb-3 flex items-center justify-center overflow-visible py-3">
-            <img
-              src={chibiImage}
-              alt=""
-              className="h-auto w-[118%] max-w-none scale-[1.12] object-contain sm:w-[112%] sm:scale-[1.15]"
-              loading="lazy"
-            />
+    <div className={`flex flex-col ${className}`}>
+      {/* Chat messages area */}
+      <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-5">
+        <div className="mx-auto flex w-full max-w-[768px] flex-col gap-5">
+          {/* User message bubble */}
+          <div className="flex justify-end">
+            <div className="max-w-[82%] rounded-2xl rounded-tr-[6px] bg-[var(--accent)] px-4 py-3 shadow-[0_4px_14px_rgba(47,116,232,0.16)]">
+              <p className="text-[0.94rem] leading-relaxed text-white">{question}</p>
+            </div>
           </div>
 
-          <div className="-mt-1 grid gap-3">
-            <div className="w-full rounded-[20px] border border-[rgba(20,35,58,0.1)] bg-white/76 px-4 py-4">
-              <p className="text-[1rem] font-black text-slate-950">Generating your <span className="text-[var(--accent-deep)]">gala plan</span></p>
-              <p className="mt-1 text-sm leading-6 text-slate-500">Ask AI is shaping your GalaTayo idea. This usually takes a few seconds.</p>
-              <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-[rgba(20,35,58,0.08)]">
+          {/* AI thinking bubble */}
+          <div className="flex items-start gap-2.5">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#e8f0fe,#d4e4fc)] shadow-[0_2px_8px_rgba(47,116,232,0.10)]">
+              <img src={chibiImage} alt="" className="h-6 w-6 object-contain" />
+            </div>
+            <div className="min-w-0 max-w-[82%] rounded-2xl rounded-tl-[6px] border border-[rgba(15,23,42,0.06)] bg-white px-4 py-3.5 shadow-[0_2px_8px_rgba(15,23,42,0.03)]">
+              <div className="flex items-center gap-1.5">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-[var(--accent)]" />
+                <span className="h-2 w-2 animate-pulse rounded-full bg-[var(--accent)]" style={{ animationDelay: '140ms' }} />
+                <span className="h-2 w-2 animate-pulse rounded-full bg-[var(--accent)]" style={{ animationDelay: '280ms' }} />
+              </div>
+              <p className="mt-2 text-[0.84rem] leading-relaxed text-[var(--muted)]">Thinking about your gala plan...</p>
+              <div className="mt-3 h-1 overflow-hidden rounded-full bg-[rgba(20,35,58,0.06)]">
                 <div className="h-full w-2/3 rounded-full bg-[linear-gradient(90deg,#6fa8ff,#2f80ed)] motion-safe:animate-[gala-loading-slide_1.6s_ease-in-out_infinite]" />
               </div>
             </div>
-
-            {miniGameReady ? (
-              <div className="relative overflow-hidden rounded-[24px] border border-[rgba(37,99,235,0.14)] bg-white/78 p-3 backdrop-blur-xl animate-[gala-game-invite-pop_360ms_cubic-bezier(0.16,1,0.3,1)_both]">
-                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_16%_18%,rgba(94,214,199,0.18),transparent_24%),radial-gradient(circle_at_82%_18%,rgba(255,111,157,0.14),transparent_24%),linear-gradient(135deg,#f8fbff,#fff7fb)]" />
-                <div className="pointer-events-none absolute inset-0 opacity-60 [background-image:linear-gradient(rgba(37,99,235,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(37,99,235,0.06)_1px,transparent_1px)] [background-size:22px_22px]" />
-                <div className="relative grid grid-cols-[52px_1fr] gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setMiniGameOpen(true)}
-                    className="group relative flex h-[52px] w-[52px] items-center justify-center rounded-full bg-slate-950 text-white transition hover:scale-105 active:scale-95"
-                    aria-label="Play Pin Rush"
-                  >
-                    <span className="absolute inset-[-7px] rounded-full border border-[rgba(37,99,235,0.24)] animate-[gala-ring-pulse_1.2s_ease-out_infinite]" />
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="relative h-5 w-5 transition group-hover:translate-y-[-1px]">
-                      <path d="M12 21s6-5.7 6-11a6 6 0 1 0-12 0c0 5.3 6 11 6 11Z" />
-                      <circle cx="12" cy="10" r="2.3" />
-                    </svg>
-                  </button>
-
-                  <div className="min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#2563eb]">Still cooking</p>
-                        <p className="mt-0.5 text-[1rem] font-black leading-tight text-slate-950">Play while you wait?</p>
-                      </div>
-                      <span className="shrink-0 rounded-full bg-white/70 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-slate-500">
-                        Optional
-                      </span>
-                    </div>
-                    <p className="mt-1.5 text-xs leading-5 text-slate-600">Pin Rush is ready. Tiny taps, streaks, charms.</p>
-                  </div>
-                </div>
-
-                <div className="relative mt-3 grid grid-cols-[1fr_auto] items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setMiniGameOpen(true)}
-                    className="flex min-w-0 items-center gap-2 rounded-full bg-white/70 px-3 py-2 text-left transition hover:bg-white"
-                  >
-                    <span className="flex h-5 w-14 shrink-0 items-center rounded-full bg-[linear-gradient(90deg,#dbeafe,#fce7f3)] px-1">
-                      <span className="h-3 w-3 rounded-full bg-[#2563eb] animate-[gala-mini-pin-run_1.4s_ease-in-out_infinite]" />
-                    </span>
-                    <span className="truncate text-[11px] font-black text-slate-600">Streak boosts unlock charms</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMiniGameOpen(true)}
-                    className="inline-flex h-10 shrink-0 items-center justify-center rounded-full bg-slate-950 px-4 text-sm font-black text-white transition hover:brightness-110 active:scale-95"
-                  >
-                    Play
-                  </button>
-                </div>
-              </div>
-            ) : null}
           </div>
-        </div>
 
-        {miniGameOpen ? createPortal(
-          <div
-            className="fixed inset-0 z-[9990] flex h-[100dvh] items-stretch justify-center overscroll-none bg-white"
-            role="presentation"
-            onClick={() => setMiniGameOpen(false)}
-          >
-            <div
-              className="relative flex h-[100dvh] w-full flex-col overflow-hidden touch-auto"
-              role="dialog"
-              aria-modal="true"
-              aria-label="Tap the Gala Pin mini game"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <TapGalaPinGame isLoading={true} onClose={() => setMiniGameOpen(false)} className="min-h-0 w-full flex-1" />
+          {miniGameReady && (
+            <div className="flex items-start gap-2.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#fef3c7,#fde68a)] text-sm shadow-[0_2px_8px_rgba(245,158,11,0.12)]">
+                🎮
+              </div>
+              <div className="min-w-0 max-w-[82%] rounded-2xl rounded-tl-[6px] border border-[rgba(245,158,11,0.16)] bg-[#fffbeb] px-4 py-3 shadow-[0_2px_8px_rgba(15,23,42,0.02)]">
+                <p className="text-[0.78rem] font-semibold uppercase tracking-[0.08em] text-amber-700">While you wait</p>
+                <p className="mt-1 text-[0.94rem] font-bold text-slate-900">Play Pin Rush?</p>
+                <p className="mt-0.5 text-[0.82rem] leading-relaxed text-slate-600">Tiny taps, streaks, charms. Optional and fun.</p>
+                <button
+                  type="button"
+                  onClick={() => setMiniGameOpen(true)}
+                  className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-4 py-2 text-[0.82rem] font-semibold text-white transition hover:bg-slate-800 active:scale-[0.97]"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5">
+                    <path d="M12 21s6-5.7 6-11a6 6 0 1 0-12 0c0 5.3 6 11 6 11Z" />
+                    <circle cx="12" cy="10" r="2.3" />
+                  </svg>
+                  Play now
+                </button>
+              </div>
             </div>
-          </div>,
-          document.body,
-        ) : null}
+          )}
+        </div>
       </div>
-    </section>
+
+      {miniGameOpen ? createPortal(
+        <div
+          className="fixed inset-0 z-[9990] flex h-[100dvh] items-stretch justify-center overscroll-none bg-white"
+          role="presentation"
+          onClick={() => setMiniGameOpen(false)}
+        >
+          <div
+            className="relative flex h-[100dvh] w-full flex-col overflow-hidden touch-auto"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Tap the Gala Pin mini game"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <TapGalaPinGame isLoading={true} onClose={() => setMiniGameOpen(false)} className="min-h-0 w-full flex-1" />
+          </div>
+        </div>,
+        document.body,
+      ) : null}
+    </div>
   )
 }
 
@@ -3449,6 +3352,7 @@ function AskAiModePanel({
   sources,
   isSubmitting,
   answerError,
+  messages,
   onRetryUsage,
   onQuestionChange,
   onSubmit,
@@ -3467,6 +3371,7 @@ function AskAiModePanel({
   sources: AskAiSource[]
   isSubmitting: boolean
   answerError: string | null
+  messages: ChatMessage[]
   onRetryUsage: () => void
   onQuestionChange: (question: string) => void
   onSubmit: (questionOverride?: string) => void
@@ -3475,81 +3380,389 @@ function AskAiModePanel({
   onOpenPromptBuilder: (questionOverride?: string) => void
   className?: string
 }) {
-  const hasActiveAskAiView = Boolean(question.trim() || isSubmitting || answer || answerError || sources.length)
+  const isUsagePending = !usageStatus
+  const isLimitReached = usageStatus ? !usageStatus.allowed || usageStatus.remaining <= 0 : false
+  const [draftQuestion, setDraftQuestion] = useState('')
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
+  const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
-  if (hasActiveAskAiView) {
-    return (
-      <AskAiPlaceholder
-        usageStatus={usageStatus}
-        isUsageLoading={isUsageLoading}
-        question={question}
-        answer={answer}
-        sources={sources}
-        isSubmitting={isSubmitting}
-        answerError={answerError}
-        onQuestionChange={onQuestionChange}
-        onSubmit={onSubmit}
-        onSwitchToPlaces={onSwitchToPlaces}
-        onStartOver={onStartOver}
-        onOpenPromptBuilder={onOpenPromptBuilder}
-        className={className}
-      />
-    )
+  useEffect(() => {
+    const el = textareaRef.current
+    if (!el) return
+    el.style.height = '0px'
+    el.style.height = `${Math.min(Math.max(el.scrollHeight, 44), 120)}px`
+  }, [draftQuestion])
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, isSubmitting])
+
+  const handleSend = (text?: string) => {
+    const finalQuestion = (text ?? draftQuestion).trim()
+    if (!finalQuestion || isSubmitting || isLimitReached || isUsagePending) return
+    setDraftQuestion('')
+    onQuestionChange(finalQuestion)
+    onSubmit(finalQuestion)
   }
 
-  if (!isSessionLoading && !isRegistered) {
-    return <AskAiSignInRequired className={className} onOpenPromptBuilder={onOpenPromptBuilder} onBack={onSwitchToPlaces} />
+  const handleOpenPromptBuilder = () => {
+    if (draftQuestion.trim()) {
+      onQuestionChange(draftQuestion)
+    }
+    onOpenPromptBuilder(draftQuestion)
   }
 
-  if (!isSessionLoading && usageError) {
-    return (
-      <section className={`gala-page-background flex min-h-[280px] items-center justify-center px-4 py-8 ${className}`}>
-        <div className="w-full max-w-[520px]">
-          <AskAiBackButton onClick={onSwitchToPlaces} className="mb-4 w-fit" />
-          <div className="rounded-lg border border-[var(--line)] bg-white px-5 py-7 text-center shadow-[0_14px_30px_rgba(28,77,160,0.07)]">
-            <p className="text-base font-semibold text-slate-900">
-              <span className="text-slate-900">Ask </span>
-              <span className="text-[var(--accent-deep)]">AI</span> usage is unavailable.
-            </p>
-            <p className="mx-auto mt-2 max-w-[380px] text-sm leading-relaxed text-[var(--muted)]">
-              {usageError ?? 'Try checking your daily Ask AI status again.'}
-            </p>
+  const hasActiveAskAiView = messages.length > 0 || Boolean(question.trim() || isSubmitting || answer || answerError || sources.length)
+
+  const renderMessagesContent = () => {
+    if (!isSessionLoading && !isRegistered) {
+      return (
+        <AskAiSignInContent
+          onOpenPromptBuilder={handleOpenPromptBuilder}
+        />
+      )
+    }
+
+    if (!isSessionLoading && usageError) {
+      return (
+        <AskAiUsageErrorContent
+          usageError={usageError}
+          onRetryUsage={onRetryUsage}
+          onOpenPromptBuilder={handleOpenPromptBuilder}
+        />
+      )
+    }
+
+    const hasMessages = messages.length > 0
+
+    // Empty state: AI greeting + starter chips
+    if (!hasMessages && !isSubmitting && !answer) {
+      const promptChips = [
+        { id: 'date', label: 'Date plan', prompt: 'Plan a date gala' },
+        { id: 'food', label: 'Food trip', prompt: 'Plan a food trip' },
+        { id: 'itinerary', label: 'Itinerary', prompt: 'Create a quick itinerary' },
+        { id: 'find', label: 'Find places', prompt: 'Find places on map' },
+      ]
+
+      return (
+        <div className="flex flex-col gap-5">
+          <div className="flex items-start gap-2.5">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#e8f0fe,#d4e4fc)] shadow-[0_2px_8px_rgba(47,116,232,0.10)]">
+              <Sparkles className="h-4 w-4 text-[var(--accent-deep)]" />
+            </div>
+            <div className="min-w-0 max-w-[82%] rounded-2xl rounded-tl-[6px] border border-[rgba(15,23,42,0.06)] bg-white px-4 py-3 shadow-[0_2px_8px_rgba(15,23,42,0.03)]">
+              <p className="text-[0.94rem] leading-relaxed text-slate-800">Hi! What kind of gala are you planning today?</p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2 pl-10">
+            {promptChips.map((chip) => (
+              <button
+                key={chip.id}
+                type="button"
+                disabled={isLimitReached}
+                onClick={() => handleSend(chip.prompt)}
+                className="rounded-full border border-[rgba(47,116,232,0.16)] bg-[var(--accent-wash)] px-3.5 py-2 text-[0.82rem] font-semibold text-[var(--accent-deep)] transition hover:border-[var(--accent)] hover:bg-[rgba(var(--accent-rgb),0.18)] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {chip.label}
+              </button>
+            ))}
             <button
               type="button"
-              onClick={onRetryUsage}
-              className="mt-4 rounded-full border border-[var(--accent)] bg-white px-4 py-2 text-sm font-semibold text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)]"
+              disabled={isLimitReached}
+              onClick={() => navigateToPath('/ask-ai/maps')}
+              className="rounded-full border border-[rgba(15,23,42,0.08)] bg-slate-50 px-3.5 py-2 text-[0.82rem] font-semibold text-slate-600 transition hover:border-[rgba(15,23,42,0.16)] hover:bg-white sm:hidden"
             >
-              Retry
-            </button>
-            <button
-              type="button"
-              onClick={() => onOpenPromptBuilder()}
-              className="ml-2 mt-4 rounded-full border border-[var(--line)] bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)] hover:text-[var(--accent-deep)]"
-            >
-              Build prompt
+              <span className="inline-flex items-center gap-1">
+                <AppIcon name="map" className="h-3.5 w-3.5" />
+                Find places
+              </span>
             </button>
           </div>
+
+          {isLimitReached && (
+            <div className="mx-2 rounded-2xl border border-[rgba(239,68,68,0.14)] bg-red-50/60 px-4 py-3">
+              <p className="text-[0.84rem] font-semibold text-red-700">You&apos;ve used all your Ask AI asks for today. Come back tomorrow!</p>
+            </div>
+          )}
+
+          {isUsageLoading && !usageStatus && (
+            <div className="mx-2 rounded-2xl bg-slate-50 px-4 py-3">
+              <p className="text-[0.84rem] text-slate-500">Checking your Ask AI limit...</p>
+            </div>
+          )}
         </div>
-      </section>
+      )
+    }
+
+    // Render chat messages from the messages array
+    return (
+      <div className="flex flex-col gap-5">
+        {messages.map((msg, index) => {
+          if (msg.role === 'user') {
+            return (
+              <div key={index} className="flex justify-end">
+                <div className="max-w-[82%] rounded-2xl rounded-tr-[6px] bg-[var(--accent)] px-4 py-3 shadow-[0_4px_14px_rgba(47,116,232,0.16)]">
+                  <p className="text-[0.94rem] leading-relaxed text-white">{msg.content}</p>
+                </div>
+              </div>
+            )
+          }
+
+          return (
+            <div key={index} className="flex items-start gap-2.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#e8f0fe,#d4e4fc)] shadow-[0_2px_8px_rgba(47,116,232,0.10)]">
+                <Sparkles className="h-4 w-4 text-[var(--accent-deep)]" />
+              </div>
+              <div className="min-w-0 max-w-[88%] sm:max-w-[82%]">
+                <div className="overflow-hidden rounded-2xl rounded-tl-[6px] border border-[rgba(15,23,42,0.06)] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.03)]">
+                  <div className="flex items-center gap-2 border-b border-[rgba(15,23,42,0.05)] px-4 py-2.5">
+                    <Sparkles className="h-3.5 w-3.5 text-[var(--accent)]" />
+                    <span className="text-[0.75rem] font-bold text-slate-500">Ask AI</span>
+                  </div>
+                  <div className="px-4 py-3.5">
+                    <div className="text-[0.94rem] leading-relaxed text-slate-800 whitespace-pre-wrap">
+                      {msg.content}
+                    </div>
+                    {sources.length > 0 && (
+                      <div className="mt-3 border-t border-[rgba(15,23,42,0.05)] pt-3">
+                        <p className="text-[0.7rem] font-bold uppercase tracking-[0.1em] text-slate-400">Sources</p>
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {sources.map((source) => (
+                            <a
+                              key={source.url}
+                              href={source.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 rounded-full border border-[rgba(15,23,42,0.06)] bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600 transition hover:border-[rgba(47,116,232,0.18)] hover:bg-white hover:text-[var(--accent-deep)]"
+                            >
+                              {source.title.length > 28 ? `${source.title.slice(0, 28)}...` : source.title}
+                              <ChevronRightIcon className="h-3 w-3 shrink-0" />
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        })}
+
+        {/* Thinking indicator */}
+        {isSubmitting && (
+          <div className="flex items-start gap-2.5">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#e8f0fe,#d4e4fc)] shadow-[0_2px_8px_rgba(47,116,232,0.10)]">
+              <Sparkles className="h-4 w-4 text-[var(--accent-deep)]" />
+            </div>
+            <div className="min-w-0 max-w-[82%] rounded-2xl rounded-tl-[6px] border border-[rgba(15,23,42,0.06)] bg-white px-4 py-3.5 shadow-[0_2px_8px_rgba(15,23,42,0.03)]">
+              <div className="flex items-center gap-1.5">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-[var(--accent)]" />
+                <span className="h-2 w-2 animate-pulse rounded-full bg-[var(--accent)]" style={{ animationDelay: '140ms' }} />
+                <span className="h-2 w-2 animate-pulse rounded-full bg-[var(--accent)]" style={{ animationDelay: '280ms' }} />
+              </div>
+              <p className="mt-2 text-[0.84rem] leading-relaxed text-[var(--muted)]">Thinking about your gala plan...</p>
+              <div className="mt-3 h-1 overflow-hidden rounded-full bg-[rgba(20,35,58,0.06)]">
+                <div className="h-full w-2/3 rounded-full bg-[linear-gradient(90deg,#6fa8ff,#2f80ed)] motion-safe:animate-[gala-loading-slide_1.6s_ease-in-out_infinite]" />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Answer error indicator */}
+        {answerError && !isSubmitting && messages.length > 0 && (
+          <div className="mx-2 rounded-2xl border border-red-100 bg-red-50/50 px-4 py-3">
+            <p className="text-[0.84rem] text-red-600">{answerError}</p>
+          </div>
+        )}
+
+        {/* Post-conversation actions (only after the last assistant message, not during thinking) */}
+        {!isSubmitting && messages.length > 0 && answer && (
+          <div className="flex flex-wrap items-center gap-2 pl-10">
+            <button
+              type="button"
+              onClick={onStartOver}
+              className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(15,23,42,0.08)] bg-white px-3 py-2 text-[0.78rem] font-semibold text-slate-500 transition hover:border-[rgba(15,23,42,0.16)] hover:text-slate-700"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              Start over
+            </button>
+            <button
+              type="button"
+              onClick={handleOpenPromptBuilder}
+              className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(47,116,232,0.14)] bg-[var(--accent-wash)] px-3 py-2 text-[0.78rem] font-semibold text-[var(--accent-deep)] transition hover:border-[rgba(47,116,232,0.24)] hover:bg-[rgba(var(--accent-rgb),0.18)]"
+            >
+              <SparkIcon className="h-3.5 w-3.5" />
+              Prompt Builder
+            </button>
+          </div>
+        )}
+
+        {isLimitReached && messages.length > 0 && (
+          <div className="mx-2 rounded-2xl border border-[rgba(239,68,68,0.14)] bg-red-50/60 px-4 py-3">
+            <p className="text-[0.84rem] font-semibold text-red-700">You&apos;ve used all your Ask AI asks for today. Come back tomorrow!</p>
+          </div>
+        )}
+      </div>
     )
   }
 
   return (
-    <AskAiPlaceholder
-      usageStatus={usageStatus}
-      isUsageLoading={isUsageLoading}
-      question={question}
-      answer={answer}
-      sources={sources}
-      isSubmitting={isSubmitting}
-      answerError={answerError}
-      onQuestionChange={onQuestionChange}
-      onSubmit={onSubmit}
-      onSwitchToPlaces={onSwitchToPlaces}
-      onStartOver={onStartOver}
-      onOpenPromptBuilder={onOpenPromptBuilder}
-      className={className}
-    />
+    <div className={`flex h-full flex-col bg-[#F8FAFC] ${className}`}>
+      {/* Chat header */}
+      <div className="shrink-0 border-b border-[var(--line)] bg-white px-4 py-3 sm:px-5">
+        <div className="mx-auto flex w-full max-w-[768px] items-center gap-3">
+          <button
+            type="button"
+            onClick={onSwitchToPlaces}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+            aria-label="Back"
+          >
+            <ChevronLeftIcon className="h-5 w-5" />
+          </button>
+          <div className="min-w-0">
+            <h1 className="text-[1.05rem] font-bold leading-tight text-slate-900 sm:text-[1.15rem]">Ask AI</h1>
+            <p className="text-[0.78rem] leading-tight text-[var(--muted)]">Plan your next gala with AI</p>
+          </div>
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleOpenPromptBuilder}
+              className="hidden rounded-full border border-[var(--line)] px-3 py-1.5 text-[11px] font-semibold text-slate-500 transition hover:border-[var(--accent)] hover:text-[var(--accent-deep)] sm:inline-flex items-center gap-1"
+            >
+              <SparkIcon className="h-3 w-3" />
+              Prompt Builder
+            </button>
+            <button
+              type="button"
+              onClick={() => navigateToPath('/ask-ai/maps')}
+              className="rounded-full border border-[var(--line)] px-3 py-1.5 text-[11px] font-semibold text-slate-500 transition hover:border-[var(--accent)] hover:text-[var(--accent-deep)] sm:inline-flex items-center gap-1"
+            >
+              <AppIcon name="map" className="h-3 w-3" />
+              <span className="hidden sm:inline">Map</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Scrollable messages area */}
+      <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-5">
+        <div className="mx-auto flex w-full max-w-[768px] flex-col">
+          {renderMessagesContent()}
+          <div ref={messagesEndRef} />
+        </div>
+      </div>
+
+      {/* Bottom composer */}
+      <div className="shrink-0 border-t border-[var(--line)] bg-white px-4 py-3 sm:px-5">
+        <div className="mx-auto flex w-full max-w-[768px] items-end gap-2">
+          <div className="flex-1 rounded-2xl border border-[rgba(15,23,42,0.10)] bg-[#F8FAFC] px-4 py-2.5 shadow-[0_1px_4px_rgba(15,23,42,0.04)] transition focus-within:border-[var(--accent)] focus-within:bg-white focus-within:shadow-[0_2px_12px_rgba(47,116,232,0.08)]">
+            <textarea
+              ref={textareaRef}
+              value={draftQuestion}
+              onChange={(e) => setDraftQuestion(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  handleSend()
+                }
+              }}
+              placeholder="Message Ask AI..."
+              rows={1}
+              disabled={isSubmitting || isLimitReached || isUsagePending}
+              className="w-full resize-none bg-transparent text-[0.94rem] leading-relaxed text-slate-900 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed disabled:text-slate-400"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => handleSend()}
+            disabled={isSubmitting || isLimitReached || isUsagePending || !draftQuestion.trim()}
+            className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-white transition hover:bg-[var(--accent-deep)] disabled:cursor-not-allowed disabled:opacity-40 active:scale-95"
+            aria-label="Send message"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+              <line x1="22" y1="2" x2="11" y2="13" />
+              <polygon points="22 2 15 22 11 13 2 9 22 2" />
+            </svg>
+          </button>
+        </div>
+        <p className="mx-auto mt-1.5 max-w-[768px] text-center text-[10px] text-slate-400">
+          GalaTayo AI can make mistakes. Check important info.
+        </p>
+      </div>
+    </div>
+  )
+}
+
+function AskAiSignInContent({
+  onOpenPromptBuilder,
+}: {
+  onOpenPromptBuilder: () => void
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center py-10 text-center">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[rgba(47,116,232,0.08)]">
+        <SparkIcon className="h-7 w-7 text-[var(--accent-deep)]" />
+      </div>
+      <h2 className="mt-4 text-xl font-bold text-slate-900">Sign in to use Ask AI</h2>
+      <p className="mt-2 max-w-sm text-[0.88rem] leading-relaxed text-[var(--muted)]">
+        Ask AI is reserved for GalaTayo members. Sign in to plan your next gala with AI.
+      </p>
+      <div className="mt-5 flex flex-col gap-2.5 items-center">
+        <GoogleSignInButton className="inline-flex" />
+        <button
+          type="button"
+          onClick={onOpenPromptBuilder}
+          className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:border-[var(--accent)] hover:text-[var(--accent-deep)]"
+        >
+          <SparkIcon className="h-3.5 w-3.5" />
+          Open Prompt Builder
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function AskAiUsageErrorContent({
+  usageError,
+  onRetryUsage,
+  onOpenPromptBuilder,
+}: {
+  usageError: string | null
+  onRetryUsage: () => void
+  onOpenPromptBuilder: () => void
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center py-10 text-center">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-50">
+        <span className="text-2xl">⚠️</span>
+      </div>
+      <h2 className="mt-4 text-xl font-bold text-slate-900">
+        <span className="text-slate-900">Ask </span>
+        <span className="text-[var(--accent-deep)]">AI</span> is unavailable
+      </h2>
+      <p className="mt-2 max-w-sm text-[0.88rem] leading-relaxed text-[var(--muted)]">
+        {usageError ?? 'Try checking your daily Ask AI status again.'}
+      </p>
+      <div className="mt-5 flex items-center gap-2.5">
+        <button
+          type="button"
+          onClick={onRetryUsage}
+          className="inline-flex items-center gap-1.5 rounded-full border border-[var(--accent)] bg-white px-4 py-2.5 text-sm font-semibold text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)]"
+        >
+          Retry
+        </button>
+        <button
+          type="button"
+          onClick={onOpenPromptBuilder}
+          className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:border-[var(--accent)] hover:text-[var(--accent-deep)]"
+        >
+          <SparkIcon className="h-3.5 w-3.5" />
+          Prompt Builder
+        </button>
+      </div>
+    </div>
   )
 }
 
@@ -3623,6 +3836,11 @@ function HomePage({
     shouldUseCachedAskAiState
       ? initialAskAiState?.answerError ?? null
       : null
+  )
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(
+    shouldUseCachedAskAiState
+      ? initialAskAiState?.messages ?? []
+      : []
   )
   const [isPromptBuilderOpen, setIsPromptBuilderOpen] = useState(initialPromptBuilderOpen)
   const [promptBuilderInitialState, setPromptBuilderInitialState] = useState<PromptBuilderState | null>(null)
@@ -3869,10 +4087,18 @@ function HomePage({
     }
 
     setAskAiQuestion(question)
+
+    const updatedMessages: ChatMessage[] = [
+      ...chatMessages,
+      { role: 'user' as const, content: question },
+    ]
+    setChatMessages(updatedMessages)
+
     await submitAskAiRuntimeRequest({
       question,
       accessToken: session.access_token,
       apiBaseUrl: import.meta.env.VITE_API_BASE_URL,
+      messages: updatedMessages,
     })
   }
 
@@ -3885,6 +4111,7 @@ function HomePage({
     setAskAiSources([])
     setAskAiAnswerError(null)
     setAskAiUsageError(null)
+    setChatMessages([])
 
     if (!askAiUsageStatus && session?.access_token) {
       setAskAiUsageRefreshSignal((current) => current + 1)
@@ -4295,6 +4522,7 @@ function HomePage({
       answerError: initialAskAiState?.answerError ?? null,
       usageStatus: initialAskAiState?.usageStatus ?? null,
       isSubmitting: initialAskAiState?.isSubmitting === true,
+      messages: initialAskAiState?.messages ?? [],
     })
 
     return subscribeToAskAiRuntime((runtimeState) => {
@@ -4304,6 +4532,19 @@ function HomePage({
       setAskAiAnswerError(runtimeState.answerError)
       setAskAiUsageStatus(runtimeState.usageStatus)
       setIsAskAiSubmitting(runtimeState.isSubmitting)
+
+      if (runtimeState.answer && !runtimeState.isSubmitting) {
+        setChatMessages((prev) => {
+          const lastMessage = prev[prev.length - 1]
+          if (lastMessage?.role === 'assistant' && lastMessage.content === runtimeState.answer) {
+            return prev
+          }
+          if (lastMessage?.role === 'assistant') {
+            return [...prev.slice(0, -1), { role: 'assistant' as const, content: runtimeState.answer }]
+          }
+          return [...prev, { role: 'assistant' as const, content: runtimeState.answer }]
+        })
+      }
     })
   }, [initialAskAiRuntimeState, initialAskAiState, initialMode])
 
@@ -4355,8 +4596,9 @@ function HomePage({
       answerError: askAiAnswerError,
       usageStatus: askAiUsageStatus,
       isSubmitting: isAskAiSubmitting,
+      messages: chatMessages,
     })
-  }, [askAiAnswer, askAiAnswerError, askAiQuestion, askAiSources, askAiUsageStatus, initialMode, isAskAiSubmitting])
+  }, [askAiAnswer, askAiAnswerError, askAiQuestion, askAiSources, askAiUsageStatus, initialMode, isAskAiSubmitting, chatMessages])
 
   useEffect(() => {
     let isMounted = true
@@ -4496,10 +4738,10 @@ function HomePage({
       <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
         <GuestLimitModal isOpen={promptLogin} onClose={() => setPromptLogin(false)} />
 
-        <div className="gala-page-background min-h-screen overflow-x-hidden lg:hidden">
+        <div className={`gala-page-background overflow-x-hidden lg:hidden ${selectedMode === 'ask-ai' ? 'flex h-[100dvh] flex-col' : 'min-h-screen'}`}>
           <AppHeader signInLabel="Mag-sign in" minimal />
 
-          <main className="overflow-x-hidden pb-6">
+          <main className={`overflow-x-hidden ${selectedMode === 'ask-ai' ? 'flex flex-1 flex-col' : 'pb-6'}`}>
             {isPromptBuilderOpen ? (
               <PromptBuilderModal
                 isOpen={isPromptBuilderOpen}
@@ -4584,9 +4826,10 @@ function HomePage({
                     sources={askAiSources}
                     isSubmitting={isAskAiSubmitting}
                     answerError={askAiAnswerError}
+                    messages={chatMessages}
                     onRetryUsage={handleRetryAskAiUsage}
                     onQuestionChange={setAskAiQuestion}
-                    onSubmit={() => void handleAskAiSubmit()}
+                    onSubmit={(questionOverride) => void handleAskAiSubmit(questionOverride)}
                     onSwitchToPlaces={handleSwitchToPlaces}
                     onStartOver={handleStartOverAskAi}
                     onOpenPromptBuilder={(questionOverride) => openPromptBuilder('ask-ai', questionOverride)}
@@ -4697,9 +4940,10 @@ function HomePage({
                     sources={askAiSources}
                     isSubmitting={isAskAiSubmitting}
                     answerError={askAiAnswerError}
+                    messages={chatMessages}
                     onRetryUsage={handleRetryAskAiUsage}
                     onQuestionChange={setAskAiQuestion}
-                    onSubmit={() => void handleAskAiSubmit()}
+                    onSubmit={(questionOverride) => void handleAskAiSubmit(questionOverride)}
                     onSwitchToPlaces={handleSwitchToPlaces}
                     onStartOver={handleStartOverAskAi}
                     onOpenPromptBuilder={(questionOverride) => openPromptBuilder('ask-ai', questionOverride)}

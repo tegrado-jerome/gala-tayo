@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
+import { House, LayoutGrid, MapPin } from 'lucide-react'
 import { AppIcon, getCategoryIconName } from '../components/AppIcon'
 import AppHeader from '../components/AppHeader'
 import Breadcrumb from '../components/Breadcrumb'
 import CompactPagination from '../components/CompactPagination'
-import InternalLink from '../components/InternalLink'
 import PlaceCard, { type PlaceCardData } from '../components/PlaceCard'
 import SeoHead from '../components/SeoHead'
 import { getPlaceCategoryLabel } from '../data/placeCategories'
@@ -168,7 +168,6 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
   const places = useMemo(() => sortPlacesAlphabetically(payload?.items ?? []), [payload?.items])
   const totalPages = payload?.totalPages ?? 1
   const safePage = payload?.page ?? currentPage
-  const currentListingPath = `${window.location.pathname}${window.location.search}`
   const getPageHref = (page: number) => {
     const params = new URLSearchParams()
     if (page > 1) {
@@ -224,9 +223,9 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
       <main className="mx-auto w-full max-w-[1180px] px-4 pb-12 pt-5 sm:px-6 sm:pb-14 lg:px-8">
         <Breadcrumb
           items={[
-            { label: 'Home', href: '/' },
-            { label: 'Places', href: '/places' },
-            { label: 'Categories', href: '/places/categories' },
+            { label: 'Home', href: '/', icon: <House className="h-3.5 w-3.5" /> },
+            { label: 'Places', href: '/places', icon: <MapPin className="h-3.5 w-3.5" /> },
+            { label: 'Categories', href: '/places/categories', icon: <LayoutGrid className="h-3.5 w-3.5" /> },
             { label: categoryLabel },
           ]}
         />
@@ -275,14 +274,10 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
                   {places.map((rawPlace) => {
                     const place = mapSeoPlaceToCard(rawPlace) as PlaceCardData
                     const canonicalPath = getCanonicalPlacePath({ areaSlug: rawPlace.areaSlug, placeSlug: rawPlace.slug })
-                    const placeLinkParams = new URLSearchParams()
-                    placeLinkParams.set('from', currentListingPath)
-                    placeLinkParams.set('fromLabel', categoryLabel)
-                    const placeLink = `${canonicalPath}?${placeLinkParams.toString()}`
 
                     return (
                       <div key={rawPlace.id}>
-                        <PlaceCard place={place} searchResultCard onOpen={() => navigateToPath(placeLink)} onSelect={() => undefined} />
+                        <PlaceCard place={place} searchResultCard onOpen={() => navigateToPath(canonicalPath)} onSelect={() => undefined} />
                       </div>
                     )
                   })}

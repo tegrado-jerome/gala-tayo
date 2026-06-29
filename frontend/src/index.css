@@ -1375,17 +1375,15 @@ body.gala-menu-open #root {
 
 .gt-map-capsule-marker {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   gap: 8px;
-  transform: translate(-54px, -54px);
   pointer-events: auto;
   white-space: nowrap;
   cursor: pointer;
 }
 
 .gt-map-capsule-marker--mapview {
-  width: 100%;
   transform: none;
 }
 
@@ -1410,24 +1408,26 @@ body.gala-menu-open #root {
   background: #ffffff;
   box-shadow:
     0 20px 36px rgba(15, 23, 42, 0.16),
-    0 2px 6px rgba(15, 23, 42, 0.08);
+    0 2px 6px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92);
   transition:
-    transform 180ms ease,
-    box-shadow 180ms ease,
-    border-color 180ms ease;
+    transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 200ms ease,
+    border-color 200ms ease;
 }
 
 .gt-map-capsule-marker:hover .gt-map-capsule-marker__pin-shell {
-  transform: scale(1.06);
+  transform: scale(1.08);
   border-color: rgba(30, 58, 138, 0.16);
   box-shadow:
-    0 22px 40px rgba(15, 23, 42, 0.18),
-    0 0 0 4px rgba(30, 58, 138, 0.08);
+    0 24px 44px rgba(15, 23, 42, 0.2),
+    0 0 0 5px rgba(30, 58, 138, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92);
 }
 
 .gt-map-capsule-marker.is-selected:hover .gt-map-capsule-marker__pin-shell,
 .gt-map-capsule-marker.is-focused:hover .gt-map-capsule-marker__pin-shell {
-  transform: scale(1.06);
+  transform: scale(1.08);
 }
 
 .gt-map-capsule-marker__pin {
@@ -1447,18 +1447,21 @@ body.gala-menu-open #root {
 }
 
 .gt-map-capsule-marker__name {
+  display: inline-block;
   max-width: 140px;
-  padding: 0;
-  color: var(--accent-deep);
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(23, 45, 107, 0.9);
+  color: #ffffff;
   font-size: 11px;
   font-weight: 800;
-  line-height: 1.15;
-  text-align: center;
+  line-height: 1.3;
+  text-align: left;
   overflow: hidden;
   text-overflow: ellipsis;
-  text-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.95),
-    0 0 10px rgba(255, 255, 255, 0.85);
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+  flex-shrink: 1;
 }
 
 .gt-map-capsule-marker.is-selected,
@@ -1468,15 +1471,35 @@ body.gala-menu-open #root {
 
 .gt-map-capsule-marker.is-selected .gt-map-capsule-marker__pin-shell,
 .gt-map-capsule-marker.is-focused .gt-map-capsule-marker__pin-shell {
-  transform: scale(1.06);
-  border-color: rgba(30, 58, 138, 0.1);
+  transform: scale(1.08);
+  border-color: rgba(30, 58, 138, 0.14);
   box-shadow:
-    0 22px 40px rgba(15, 23, 42, 0.18),
-    0 0 0 6px rgba(30, 58, 138, 0.1);
+    0 24px 44px rgba(15, 23, 42, 0.2),
+    0 0 0 8px rgba(30, 58, 138, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92);
 }
 
 .gt-map-capsule-marker.is-selected .gt-map-capsule-marker__name {
-  font-weight: 700;
+  background: rgba(23, 45, 107, 0.95);
+}
+
+@keyframes gala-pin-pulse {
+  0%, 100% {
+    box-shadow:
+      0 24px 44px rgba(15, 23, 42, 0.2),
+      0 0 0 8px rgba(30, 58, 138, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  }
+  50% {
+    box-shadow:
+      0 24px 44px rgba(15, 23, 42, 0.2),
+      0 0 0 12px rgba(30, 58, 138, 0.04),
+      inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  }
+}
+
+.gt-map-capsule-marker.is-selected .gt-map-capsule-marker__pin-shell {
+  animation: gala-pin-pulse 2.4s ease-in-out infinite;
 }
 
 @media (max-width: 640px) {
@@ -1500,7 +1523,8 @@ body.gala-menu-open #root {
   }
 
   .gt-map-capsule-marker__name {
-    max-width: 112px;
+    max-width: 100px;
+    padding: 2px 6px;
     font-size: 10px;
   }
 }

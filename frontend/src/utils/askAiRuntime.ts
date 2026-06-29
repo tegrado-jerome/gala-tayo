@@ -13,6 +13,11 @@ type AskAiSource = {
   url: string
 }
 
+export type ChatMessage = {
+  role: 'user' | 'assistant'
+  content: string
+}
+
 type AskAiUsageSummary = {
   askAi: AskAiUsageStatus
   liveSearch: AskAiUsageStatus
@@ -32,9 +37,25 @@ type AskAiRuntimeState = {
   answerError: string | null
   usageStatus: AskAiUsageStatus | null
   isSubmitting: boolean
+  messages: ChatMessage[]
 }
 
 type AskAiRuntimeListener = (state: AskAiRuntimeState) => void
+
+const MAX_CONTEXT_MESSAGES = 8
+
+function trimAssistantContent(content: string): string {
+  return content.length > 1200 ? content.slice(0, 1200) + '...' : content
+}
+
+function buildConversationContext(messages: ChatMessage[]): ChatMessage[] {
+  const recent = messages.slice(-MAX_CONTEXT_MESSAGES)
+
+  return recent.map((msg) => ({
+    role: msg.role,
+    content: msg.role === 'assistant' ? trimAssistantContent(msg.content) : msg.content,
+  }))
+}
 
 const emptyAskAiRuntimeState: AskAiRuntimeState = {
   question: '',
@@ -43,6 +64,7 @@ const emptyAskAiRuntimeState: AskAiRuntimeState = {
   answerError: null,
   usageStatus: null,
   isSubmitting: false,
+  messages: [],
 }
 
 let askAiRuntimeState: AskAiRuntimeState = emptyAskAiRuntimeState
@@ -173,6 +195,7 @@ export function seedAskAiRuntimeState(state: Partial<AskAiRuntimeState>) {
     answerError: typeof state.answerError === 'string' ? state.answerError : null,
     usageStatus: state.usageStatus ?? null,
     isSubmitting: state.isSubmitting === true,
+    messages: Array.isArray(state.messages) ? state.messages : [],
   })
 }
 
@@ -194,10 +217,12 @@ export async function submitAskAiRuntimeRequest({
   question,
   accessToken,
   apiBaseUrl,
+  messages,
 }: {
   question: string
   accessToken: string
   apiBaseUrl?: string
+  messages: ChatMessage[]
 }) {
   const requestVersion = askAiRequestVersion + 1
   askAiRequestVersion = requestVersion
@@ -206,13 +231,16 @@ export async function submitAskAiRuntimeRequest({
   const abortController = new AbortController()
   askAiAbortController = abortController
 
+  const conversationHistory = buildConversationContext(messages)
+
   setAskAiRuntimeState({
+    ...askAiRuntimeState,
     question,
     answer: '',
     sources: [],
     answerError: null,
-    usageStatus: askAiRuntimeState.usageStatus,
     isSubmitting: true,
+    messages,
   })
 
   try {
@@ -228,7 +256,7 @@ export async function submitAskAiRuntimeRequest({
         Pragma: 'no-cache',
       },
       signal: abortController.signal,
-      body: JSON.stringify({ question }),
+      body: JSON.stringify({ question, conversationHistory }),
     })
 
     const data = (await response.json()) as Partial<AskAiAnswerResponse> & {
@@ -254,12 +282,14 @@ export async function submitAskAiRuntimeRequest({
     }
 
     setAskAiRuntimeState({
+      ...askAiRuntimeState,
       question,
       answer: data.answer,
       sources: getAskAiSourceList(data.sources),
       answerError: null,
       usageStatus: data.usage.askAi,
       isSubmitting: false,
+      messages,
     })
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') {
@@ -271,12 +301,14 @@ export async function submitAskAiRuntimeRequest({
     }
 
     setAskAiRuntimeState({
+      ...askAiRuntimeState,
       question,
       answer: '',
       sources: [],
       answerError: error instanceof Error ? error.message : 'Ask AI could not answer right now.',
       usageStatus: askAiRuntimeState.usageStatus,
       isSubmitting: false,
+      messages,
     })
   } finally {
     if (askAiAbortController === abortController) {

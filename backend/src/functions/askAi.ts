@@ -28,6 +28,7 @@ const NO_STORE_HEADERS = {
 type AskAiRequestBody = {
   question?: unknown;
   placeSlug?: unknown;
+  conversationHistory?: unknown;
 };
 
 function isAuthError(message: string): boolean {
@@ -123,6 +124,31 @@ function getStringField(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
+type ChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
+
+function getConversationHistory(value: unknown): ChatMessage[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .filter(
+      (item): item is ChatMessage =>
+        typeof item === "object" &&
+        item !== null &&
+        (item.role === "user" || item.role === "assistant") &&
+        typeof item.content === "string" &&
+        item.content.trim().length > 0
+    )
+    .map((item) => ({
+      role: item.role,
+      content: item.content.trim(),
+    }));
+}
+
 function checkCooldown(userId: string): HttpResponseInit | null {
   const now = Date.now();
   const lastRequestAt = lastAskAiRequestAtByUser.get(userId) ?? 0;
@@ -149,6 +175,7 @@ export async function askAiRequest(
     const user = await validateJwt(request);
     const body = await getRequestBody(request);
     const question = getStringField(body.question);
+    const conversationHistory = getConversationHistory(body.conversationHistory);
 
     if (!question) {
       return {
@@ -190,6 +217,7 @@ export async function askAiRequest(
       answerResult = await generateAskAiAnswer({
         question,
         enableLiveSearch: shouldUseLiveSearch,
+        conversationHistory,
       });
     } catch (error) {
       lastAskAiRequestAtByUser.delete(user.id);

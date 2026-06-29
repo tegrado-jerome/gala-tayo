@@ -10,25 +10,27 @@ export type AskAiMapOptionalDetails = {
 export type AskAiMapPlace = {
   id: string
   name: string
+  rating?: number
+  reviewCount?: number
+  category?: string
+  openStatus?: string
+  address?: string
+  locationText?: string
+  queryReason?: string
   reason: string
+  whyThisFits?: string
   subtitle?: string
   description?: string
   summary?: string
-  aiSummary?: string
-  aiTake?: string
-  whyItMatches?: string[]
-  whyRecommended?: string[]
-  bestForTags?: string[]
-  bestFor?: string[]
-  caveats?: string[]
-  goHereIf?: string
-  maybeSkipIf?: string
   googleMapsUrl?: string
   googleMapsUri?: string
   placeId?: string
+  reviewSnippets?: string[]
   sourceTitle?: string
   sourceUri?: string
   coordinates?: {
+    lat: number
+    lng: number
     latitude: number
     longitude: number
   }

@@ -4,12 +4,13 @@ import AppHeader from './AppHeader'
 import GuestLimitModal from './GuestLimitModal'
 import AddToGalaPlanModal from './AddToGalaPlanModal'
 import InternalLink from './InternalLink'
+import Breadcrumb from './Breadcrumb'
 import MapView from './MapView'
 import ReportUserModal from './ReportUserModal'
 import UnifiedLoadingState from './UnifiedLoadingState'
 import PlaceImageNotice from './PlaceImageNotice'
 import { AppIcon, type AppIconName } from './AppIcon'
-import { ChevronLeft, ChevronRight, Flag, ImagePlus, MessageCircle, MoreHorizontal, Pencil, Reply, Trash2 } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, Flag, House, ImagePlus, MapPin, MessageCircle, MoreHorizontal, Pencil, Reply, Search, Trash2 } from 'lucide-react'
 import { normalizePlaceSlug } from '../data/curatedPlaceImages'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { useSystemMessage } from '../context/SystemMessageContext'
@@ -2493,38 +2494,37 @@ function PlaceDetailView({ place, onBack, areaBreadcrumb = null, cameFromSearch 
         <div className="mx-auto w-full max-w-[980px]">
           {cameFromSearch ? (
             <>
-              <div className="mb-2 pt-5">
+              <div className="mb-3 pt-5">
                 <button
                   type="button"
                   onClick={onBack}
-                  className="inline-flex items-center gap-1 text-sm font-medium text-slate-500 transition hover:text-[var(--accent)]"
+                  className="group inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition hover:text-[var(--accent)]"
                 >
-                  <ChevronLeft className="h-3.5 w-3.5" strokeWidth={2.2} />
-                  Back to results for &ldquo;{returnLabel || 'search'}&rdquo;
+                  <ArrowLeft className="h-3.5 w-3.5 transition group-hover:-translate-x-0.5" strokeWidth={2} />
+                  Back to results for <span className="font-semibold text-slate-700 group-hover:text-[var(--accent)]">&ldquo;{returnLabel || 'search'}&rdquo;</span>
                 </button>
               </div>
-              <nav aria-label="Breadcrumb" className="mb-4 text-sm text-slate-500">
-                <InternalLink href="/" className="hover:text-[var(--accent)]">Home</InternalLink>
-                <span className="px-2">/</span>
-                <InternalLink href="/search" className="hover:text-[var(--accent)]">Search</InternalLink>
-                <span className="px-2">/</span>
-                <span aria-current="page" className="font-semibold text-slate-700">{place.name}</span>
-              </nav>
+              <Breadcrumb
+                className="mb-4"
+                items={[
+                  { label: 'Home', href: '/', icon: <House className="h-3.5 w-3.5" /> },
+                  { label: 'Search', href: '/search', icon: <Search className="h-3.5 w-3.5" /> },
+                  { label: place.name, icon: <MapPin className="h-3.5 w-3.5" /> },
+                ]}
+              />
             </>
           ) : (
-            <nav aria-label="Breadcrumb" className="mb-4 pt-5 text-sm text-slate-500">
-              <InternalLink href="/" className="hover:text-[var(--accent)]">Home</InternalLink>
-              <span className="px-2">/</span>
-              <InternalLink href="/places" className="hover:text-[var(--accent)]">Places</InternalLink>
-              {areaBreadcrumb ? (
-                <>
-                  <span className="px-2">/</span>
-                  <InternalLink href={areaLink!} className="hover:text-[var(--accent)]">{areaBreadcrumb.areaName}</InternalLink>
-                </>
-              ) : null}
-              <span className="px-2">/</span>
-              <span aria-current="page" className="font-semibold text-slate-700">{place.name}</span>
-            </nav>
+            <Breadcrumb
+              className="mb-4 pt-5"
+              items={[
+                { label: 'Home', href: '/', icon: <House className="h-3.5 w-3.5" /> },
+                { label: 'Places', href: '/places', icon: <MapPin className="h-3.5 w-3.5" /> },
+                ...(areaBreadcrumb
+                  ? [{ label: areaBreadcrumb.areaName, href: areaLink!, icon: <MapPin className="h-3.5 w-3.5" /> }]
+                  : []),
+                { label: place.name, icon: <MapPin className="h-3.5 w-3.5" /> },
+              ]}
+            />
           )}
 
           <PlacePhoto
@@ -2580,14 +2580,15 @@ function PlaceDetailView({ place, onBack, areaBreadcrumb = null, cameFromSearch 
               </div>
             </div>
 
-            <div className="mt-2">
+            <div className="mt-2 flex items-center gap-1.5 text-slate-500">
+              <Icon name="warning" className="h-3.5 w-3.5 shrink-0" />
+              <span className="text-[12px] font-medium leading-5">Something wrong with this place?</span>
               <button
                 type="button"
                 onClick={handleOpenPlaceConcern}
-                className="inline-flex items-center gap-1.5 text-left text-slate-500 transition hover:text-slate-700"
+                className="text-[12px] font-bold leading-5 text-red-600 underline transition hover:text-red-700"
               >
-                <Icon name="warning" className="h-3.5 w-3.5 shrink-0" />
-                <span className="text-[12px] font-medium leading-5">Something wrong with this place? Report a concern</span>
+                Report a concern
               </button>
             </div>
 

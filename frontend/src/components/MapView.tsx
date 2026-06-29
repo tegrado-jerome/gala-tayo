@@ -56,7 +56,16 @@ function renderMarkerPinIcon() {
   return renderToStaticMarkup(
     <span className="gt-map-capsule-marker__pin-shell" aria-hidden="true">
       <svg className="gt-map-capsule-marker__pin" viewBox="0 0 32 44" aria-hidden="true">
-        <path d="M16 43C16 43 30 27.5 30 16C30 7.7 23.7 1 16 1C8.3 1 2 7.7 2 16C2 27.5 16 43 16 43Z" />
+        <defs>
+          <linearGradient id="gt-pin-grad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#244995" />
+            <stop offset="100%" stopColor="#172d6b" />
+          </linearGradient>
+          <filter id="gt-pin-shadow" x="-20%" y="-10%" width="140%" height="130%">
+            <feDropShadow dx="0" dy="0.5" stdDeviation="0.8" floodColor="#0f172a" floodOpacity="0.15" />
+          </filter>
+        </defs>
+        <path d="M16 43C16 43 30 27.5 30 16C30 7.7 23.7 1 16 1C8.3 1 2 7.7 2 16C2 27.5 16 43 16 43Z" fill="url(#gt-pin-grad)" filter="url(#gt-pin-shadow)" />
         <circle cx="16" cy="16" r="5.5" />
       </svg>
     </span>
@@ -80,9 +89,10 @@ function createCapsuleMarkerIcon(
   }
 
   const label = escapeHtml(getMarkerLabel(place.name))
-  const iconWidth = showName ? 168 : 60
-  const iconHeight = showName ? 92 : 60
-  const iconAnchorX = Math.round(iconWidth / 2)
+  const iconWidth = showName ? 204 : 60
+  const iconHeight = 60
+  const iconAnchorX = showName ? 28 : 30
+  const iconAnchorY = showName ? 56 : 47
   const pinIcon = renderMarkerPinIcon()
 
   return L.divIcon({
@@ -94,7 +104,7 @@ function createCapsuleMarkerIcon(
       </div>
     `,
     iconSize: [iconWidth, iconHeight],
-    iconAnchor: [iconAnchorX, 47],
+    iconAnchor: [iconAnchorX, iconAnchorY],
     popupAnchor: [0, -54],
   })
 }
