@@ -42,7 +42,7 @@ function isAuthError(message: string): boolean {
 
 function friendlyProviderMessage(status: number): string {
   if (status === 404) {
-    return "No map-grounded places matched that request right now.";
+    return "No places matched that request right now.";
   }
 
   if (status === 429 || status === 503) {

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AppIcon, getCategoryIconName } from '../components/AppIcon'
 import AppHeader from '../components/AppHeader'
+import Breadcrumb from '../components/Breadcrumb'
 import CompactPagination from '../components/CompactPagination'
 import InternalLink from '../components/InternalLink'
 import PlaceCard, { type PlaceCardData } from '../components/PlaceCard'
@@ -221,15 +222,14 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
       <AppHeader minimal />
 
       <main className="mx-auto w-full max-w-[1180px] px-4 pb-12 pt-5 sm:px-6 sm:pb-14 lg:px-8">
-        <nav aria-label="Breadcrumb" className="text-sm text-slate-500">
-          <InternalLink href="/" className="hover:text-[var(--accent)]">Home</InternalLink>
-          <span className="px-2">/</span>
-          <InternalLink href="/places" className="hover:text-[var(--accent)]">Places</InternalLink>
-          <span className="px-2">/</span>
-          <InternalLink href="/places/categories" className="hover:text-[var(--accent)]">Categories</InternalLink>
-          <span className="px-2">/</span>
-          <span aria-current="page" className="font-semibold text-slate-700">{categoryLabel}</span>
-        </nav>
+        <Breadcrumb
+          items={[
+            { label: 'Home', href: '/' },
+            { label: 'Places', href: '/places' },
+            { label: 'Categories', href: '/places/categories' },
+            { label: categoryLabel },
+          ]}
+        />
 
         <section className="mt-5 pb-2">
           <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[#EFF6FF] text-[#1E3A8A]">

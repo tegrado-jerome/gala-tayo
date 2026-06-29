@@ -578,7 +578,7 @@ function SharedPlacePage({
     try {
       const stored = window.sessionStorage.getItem(`galatayo:place-return:${slug}`)
       if (stored) {
-        return JSON.parse(stored) as { returnTo?: string; returnLabel?: string }
+        return JSON.parse(stored) as { source?: string; returnTo?: string; returnLabel?: string }
       }
     } catch {
       // sessionStorage may be unavailable, ignore
@@ -588,6 +588,12 @@ function SharedPlacePage({
 
   const listingLink = urlListingLink || sessionReturn?.returnTo || null
   const listingLabel = urlListingLabel || sessionReturn?.returnLabel || null
+
+  const cameFromSearch =
+    !urlListingLink &&
+    sessionReturn?.source === 'search' &&
+    typeof sessionReturn?.returnTo === 'string' &&
+    sessionReturn.returnTo.startsWith('/search')
   const categoryBreadcrumbMeta = getCategoryBreadcrumbMeta(listingLink, listingLabel)
 
   useEffect(() => {
@@ -707,8 +713,8 @@ function SharedPlacePage({
           areaSlug: areaMeta?.slug || expectedAreaSlug || formatLabelFromSlug(place.city || place.area || 'metro-manila').toLowerCase(),
           areaName: areaMeta?.name || formatLabelFromSlug(expectedAreaSlug || 'metro-manila'),
         }}
-        listingLink={listingLink}
-        listingLabel={listingLabel}
+        cameFromSearch={cameFromSearch}
+        returnLabel={listingLabel}
       />
     </>
   )

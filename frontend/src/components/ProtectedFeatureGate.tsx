@@ -136,7 +136,7 @@ const featurePreviews: Array<{
       icon: 'askAi',
       eyebrow: 'AI planning',
       title: 'Log in to use account-based AI tools',
-      description: 'Your AI planning activity, preferences, and map-grounded results work best when tied to your account.',
+      description: 'Your AI planning activity, preferences, and map results work best when tied to your account.',
       chips: ['AI prompts', 'Map grounded', 'Session-based'],
       stat: '12',
       statLabel: 'AI requests',

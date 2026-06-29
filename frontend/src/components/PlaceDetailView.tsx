@@ -32,8 +32,8 @@ type PlaceDetailViewProps = {
     areaSlug: string
     areaName: string
   } | null
-  listingLink?: string | null
-  listingLabel?: string | null
+  cameFromSearch?: boolean
+  returnLabel?: string | null
 }
 
 type PlaceReview = {
@@ -827,7 +827,7 @@ function findCommentById(comments: PlaceComment[], commentId: string): PlaceComm
   return null
 }
 
-function PlaceDetailView({ place, onBack, areaBreadcrumb = null, listingLink = null, listingLabel = null }: PlaceDetailViewProps) {
+function PlaceDetailView({ place, onBack, areaBreadcrumb = null, cameFromSearch = false, returnLabel = null }: PlaceDetailViewProps) {
   const [isSavePromptOpen, setIsSavePromptOpen] = useState(false)
   const [isAddToPlanOpen, setIsAddToPlanOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -902,8 +902,6 @@ function PlaceDetailView({ place, onBack, areaBreadcrumb = null, listingLink = n
   const isCommunityPlaceReady = UUID_PATTERN.test(placeId)
   const canContributePhoto = Boolean(currentUserId && isCommunityPlaceReady && approvedImageCount < 3)
   const areaLink = areaBreadcrumb ? `/places/${encodeURIComponent(areaBreadcrumb.areaSlug)}` : null
-  const breadcrumbLink = listingLink ?? areaLink
-  const breadcrumbLabel = listingLabel ?? areaBreadcrumb?.areaName ?? null
   const canonicalPlaceLink = areaBreadcrumb ? `/places/${encodeURIComponent(areaBreadcrumb.areaSlug)}/${encodeURIComponent(placeSlug)}` : null
   const quickAnswerItems = [
     {
@@ -2493,27 +2491,41 @@ function PlaceDetailView({ place, onBack, areaBreadcrumb = null, listingLink = n
 
       <main className="gala-page-background min-h-screen w-full px-4 pb-8 pt-0 sm:px-6 md:px-8 lg:px-10">
         <div className="mx-auto w-full max-w-[980px]">
-          <nav aria-label="Breadcrumb" className="mb-4 pt-5 text-sm text-slate-500">
-            <button
-              type="button"
-              onClick={onBack}
-              className="mr-3 inline-flex items-center gap-1 font-semibold text-slate-600 hover:text-[var(--accent)]"
-            >
-              <ChevronLeft className="h-4 w-4" strokeWidth={2.6} />
-              {listingLabel ? `Back to results for "${listingLabel}"` : 'Back'}
-            </button>
-            <InternalLink href="/" className="hover:text-[var(--accent)]">Home</InternalLink>
-            <span className="px-2">/</span>
-            <InternalLink href="/places" className="hover:text-[var(--accent)]">Places</InternalLink>
-            {breadcrumbLink && breadcrumbLabel ? (
-              <>
+          {cameFromSearch ? (
+            <>
+              <div className="mb-2 pt-5">
+                <button
+                  type="button"
+                  onClick={onBack}
+                  className="inline-flex items-center gap-1 text-sm font-medium text-slate-500 transition hover:text-[var(--accent)]"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" strokeWidth={2.2} />
+                  Back to results for &ldquo;{returnLabel || 'search'}&rdquo;
+                </button>
+              </div>
+              <nav aria-label="Breadcrumb" className="mb-4 text-sm text-slate-500">
+                <InternalLink href="/" className="hover:text-[var(--accent)]">Home</InternalLink>
                 <span className="px-2">/</span>
-                <InternalLink href={breadcrumbLink} className="hover:text-[var(--accent)]">{breadcrumbLabel}</InternalLink>
-              </>
-            ) : null}
-            <span className="px-2">/</span>
-            <span aria-current="page" className="font-semibold text-slate-700">{place.name}</span>
-          </nav>
+                <InternalLink href="/search" className="hover:text-[var(--accent)]">Search</InternalLink>
+                <span className="px-2">/</span>
+                <span aria-current="page" className="font-semibold text-slate-700">{place.name}</span>
+              </nav>
+            </>
+          ) : (
+            <nav aria-label="Breadcrumb" className="mb-4 pt-5 text-sm text-slate-500">
+              <InternalLink href="/" className="hover:text-[var(--accent)]">Home</InternalLink>
+              <span className="px-2">/</span>
+              <InternalLink href="/places" className="hover:text-[var(--accent)]">Places</InternalLink>
+              {areaBreadcrumb ? (
+                <>
+                  <span className="px-2">/</span>
+                  <InternalLink href={areaLink!} className="hover:text-[var(--accent)]">{areaBreadcrumb.areaName}</InternalLink>
+                </>
+              ) : null}
+              <span className="px-2">/</span>
+              <span aria-current="page" className="font-semibold text-slate-700">{place.name}</span>
+            </nav>
+          )}
 
           <PlacePhoto
             imageUrls={galleryPhotos}

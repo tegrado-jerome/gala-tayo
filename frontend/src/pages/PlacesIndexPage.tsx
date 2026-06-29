@@ -1,6 +1,7 @@
-import { ArrowRight, Building2, Compass, MapPinned, Tags } from 'lucide-react'
+import { ArrowRight, Building2, Compass, MapPinned } from 'lucide-react'
 import AppHeader from '../components/AppHeader'
 import InternalLink from '../components/InternalLink'
+import Breadcrumb from '../components/Breadcrumb'
 import SeoHead from '../components/SeoHead'
 import { metroManilaAreas } from '../data/metroManilaAreas'
 import { getSiteOrigin } from '../utils/seo'
@@ -37,11 +38,12 @@ function PlacesIndexPage() {
       <AppHeader minimal />
 
       <main className="mx-auto w-full max-w-[1180px] px-4 pb-12 pt-5 sm:px-6 sm:pb-14 lg:px-8">
-        <nav aria-label="Breadcrumb" className="text-sm text-slate-500">
-          <InternalLink href="/" className="hover:text-[var(--accent)]">Home</InternalLink>
-          <span className="px-2">/</span>
-          <span aria-current="page" className="font-semibold text-slate-700">Places</span>
-        </nav>
+        <Breadcrumb
+          items={[
+            { label: 'Home', href: '/' },
+            { label: 'Places' },
+          ]}
+        />
 
         <section className="mt-5">
           <div className="flex items-center gap-2.5 text-[#1E3A8A]">
@@ -60,23 +62,6 @@ function PlacesIndexPage() {
               Pick a city first, then head into its area page to browse places there.
             </p>
           </div>
-          <InternalLink
-            href="/places/categories"
-            className="group mt-5 flex w-full max-w-[28rem] items-center justify-between gap-3 rounded-[22px] border border-[#DBEAFE] bg-[#F8FBFF] px-4 py-4 text-left shadow-[0_8px_24px_rgba(30,58,138,0.06)] transition hover:-translate-y-0.5 hover:border-[#BFDBFE] hover:bg-white"
-          >
-            <div className="flex min-w-0 items-center gap-3">
-              <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#EFF6FF] text-[#1E3A8A]">
-                <Tags className="h-4 w-4" strokeWidth={1.9} />
-              </span>
-              <div className="min-w-0">
-                <p className="text-[1.05rem] font-black tracking-[-0.02em] text-[#111827]">Browse by category</p>
-                <p className="mt-1 text-[13px] text-[#6B7280]">Open the full category index if you want place types instead of cities.</p>
-              </div>
-            </div>
-            <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white text-[#64748B] transition group-hover:bg-[#EFF6FF] group-hover:text-[#1E3A8A]">
-              <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.2} />
-            </span>
-          </InternalLink>
         </section>
 
         <section className="mt-8">

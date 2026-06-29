@@ -3942,6 +3942,7 @@ function HomePage({
         const label = rawQuery?.trim() || activeSearchLabel?.replace(/^Showing\s+/, '')?.trim() || ''
         const returnLabel = label || 'search results'
         window.sessionStorage.setItem(`galatayo:place-return:${canonicalPlaceSlug}`, JSON.stringify({
+          source: 'search',
           returnTo: searchUrl,
           returnLabel,
         }))

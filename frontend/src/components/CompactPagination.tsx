@@ -18,27 +18,20 @@ function buildPaginationItems(currentPage: number, totalPages: number) {
     return Array.from({ length: totalPages }, (_, index) => index + 1)
   }
 
-  const items: Array<number | 'ellipsis'> = []
-  const seen = new Set<number>()
+  const result: Array<number | 'ellipsis'> = [1]
 
-  const addPage = (page: number) => {
-    if (page < 1 || page > totalPages || seen.has(page)) return
-    seen.add(page)
-    items.push(page)
+  if (currentPage !== 1 && currentPage !== totalPages) {
+    result.push(currentPage)
   }
 
-  addPage(1)
-  addPage(currentPage)
-  addPage(currentPage + 1)
-
-  const lastAddedPage = items[items.length - 1] as number
-  if (totalPages - lastAddedPage > 1) {
-    items.push('ellipsis')
+  const lastAdded = result[result.length - 1] as number
+  if (lastAdded + 1 < totalPages) {
+    result.push('ellipsis')
   }
 
-  addPage(totalPages)
+  result.push(totalPages)
 
-  return items
+  return result
 }
 
 function CompactPagination({

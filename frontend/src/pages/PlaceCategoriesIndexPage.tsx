@@ -2,6 +2,7 @@ import { ArrowRight, Compass, Tags } from 'lucide-react'
 import { AppIcon, getCategoryIconName } from '../components/AppIcon'
 import AppHeader from '../components/AppHeader'
 import InternalLink from '../components/InternalLink'
+import Breadcrumb from '../components/Breadcrumb'
 import SeoHead from '../components/SeoHead'
 import { placeCategories } from '../data/placeCategories'
 import { getSiteOrigin } from '../utils/seo'
@@ -39,13 +40,13 @@ function PlaceCategoriesIndexPage() {
       <AppHeader minimal />
 
       <main className="mx-auto w-full max-w-[1180px] px-4 pb-12 pt-5 sm:px-6 sm:pb-14 lg:px-8">
-        <nav aria-label="Breadcrumb" className="text-sm text-slate-500">
-          <InternalLink href="/" className="hover:text-[var(--accent)]">Home</InternalLink>
-          <span className="px-2">/</span>
-          <InternalLink href="/places" className="hover:text-[var(--accent)]">Places</InternalLink>
-          <span className="px-2">/</span>
-          <span aria-current="page" className="font-semibold text-slate-700">Categories</span>
-        </nav>
+        <Breadcrumb
+          items={[
+            { label: 'Home', href: '/' },
+            { label: 'Places', href: '/places' },
+            { label: 'Categories' },
+          ]}
+        />
 
         <section className="mt-5">
           <div className="flex items-center gap-2.5 text-[#1E3A8A]">

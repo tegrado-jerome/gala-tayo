@@ -60,7 +60,7 @@ type AskAiUsageSummary = {
 }
 
 const DAILY_ASK_AI_LIMIT_MESSAGE = 'Daily Ask AI limit reached.'
-const ASK_AI_MAPS_REQUEST_TIMEOUT_MS = 25_000
+const ASK_AI_MAPS_REQUEST_TIMEOUT_MS = 45_000
 
 function getEmptyReasonMessage(emptyReason: AskAiMapsResponse['emptyReason']) {
   if (emptyReason === 'PROVIDER_BUSY') {
@@ -68,7 +68,7 @@ function getEmptyReasonMessage(emptyReason: AskAiMapsResponse['emptyReason']) {
   }
 
   if (emptyReason === 'NO_MAP_GROUNDING_RESULTS') {
-    return 'No map-grounded places matched that request. Try a more specific area or place type.'
+    return 'No places matched that request. Try a more specific area or place type.'
   }
 
   return null
@@ -150,9 +150,39 @@ function normalizeOptionalDetails(value: unknown): AskAiMapOptionalDetails | und
     ...(typeof candidate.reviewCountText === 'string' && candidate.reviewCountText.trim() ? { reviewCountText: candidate.reviewCountText.trim() } : {}),
     ...(typeof candidate.openStatusText === 'string' && candidate.openStatusText.trim() ? { openStatusText: candidate.openStatusText.trim() } : {}),
     ...(typeof candidate.addressText === 'string' && candidate.addressText.trim() ? { addressText: candidate.addressText.trim() } : {}),
+    ...(typeof candidate.hoursText === 'string' && candidate.hoursText.trim() ? { hoursText: candidate.hoursText.trim() } : {}),
   }
 
   return Object.keys(details).length > 0 ? details : undefined
+}
+
+function cleanDisplayText(value: unknown) {
+  if (typeof value !== 'string') {
+    return undefined
+  }
+
+  const text = value.trim()
+  if (!text) {
+    return undefined
+  }
+
+  if (/google maps (?:result|grounding|context)|map-grounded|grounded option|matched your request|returned by google maps/i.test(text)) {
+    return undefined
+  }
+
+  return text
+}
+
+function cleanDisplayList(value: unknown) {
+  if (!Array.isArray(value)) {
+    return undefined
+  }
+
+  const items = value
+    .map(cleanDisplayText)
+    .filter((item): item is string => Boolean(item))
+
+  return items.length > 0 ? items : undefined
 }
 
 function normalizePlaces(value: unknown): AskAiMapPlace[] {
@@ -175,30 +205,30 @@ function normalizePlaces(value: unknown): AskAiMapPlace[] {
       return []
     }
 
-    const whyItMatches = Array.isArray(candidate.whyItMatches)
-      ? candidate.whyItMatches.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
-      : undefined
-
-    const bestForTags = Array.isArray(candidate.bestForTags)
-      ? candidate.bestForTags.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
-      : undefined
+    const whyItMatches = cleanDisplayList(candidate.whyItMatches)
+    const whyRecommended = cleanDisplayList(candidate.whyRecommended) ?? whyItMatches
+    const bestForTags = cleanDisplayList(candidate.bestForTags)
+    const bestFor = cleanDisplayList(candidate.bestFor) ?? bestForTags
+    const caveats = cleanDisplayList(candidate.caveats)
 
     return [{
       id: candidate.id,
       name: candidate.name,
-      reason: candidate.reason,
-      aiSummary: typeof candidate.aiSummary === 'string' && candidate.aiSummary.trim()
-        ? candidate.aiSummary.trim()
-        : undefined,
-      whyItMatches: whyItMatches && whyItMatches.length > 0 ? whyItMatches : undefined,
-      bestForTags: bestForTags && bestForTags.length > 0 ? bestForTags : undefined,
-      goHereIf: typeof candidate.goHereIf === 'string' && candidate.goHereIf.trim()
-        ? candidate.goHereIf.trim()
-        : undefined,
-      maybeSkipIf: typeof candidate.maybeSkipIf === 'string' && candidate.maybeSkipIf.trim()
-        ? candidate.maybeSkipIf.trim()
-        : undefined,
+      reason: cleanDisplayText(candidate.reason) ?? cleanDisplayText(candidate.aiTake) ?? cleanDisplayText(candidate.summary) ?? 'Useful option for this search.',
+      subtitle: cleanDisplayText(candidate.subtitle),
+      description: cleanDisplayText(candidate.description),
+      summary: cleanDisplayText(candidate.summary),
+      aiSummary: cleanDisplayText(candidate.aiSummary),
+      aiTake: cleanDisplayText(candidate.aiTake) ?? cleanDisplayText(candidate.aiSummary),
+      whyItMatches,
+      whyRecommended,
+      bestForTags,
+      bestFor,
+      caveats,
+      goHereIf: cleanDisplayText(candidate.goHereIf),
+      maybeSkipIf: cleanDisplayText(candidate.maybeSkipIf),
       googleMapsUrl: typeof candidate.googleMapsUrl === 'string' ? candidate.googleMapsUrl : undefined,
+      googleMapsUri: typeof candidate.googleMapsUri === 'string' ? candidate.googleMapsUri : undefined,
       placeId: typeof candidate.placeId === 'string' ? candidate.placeId : undefined,
       sourceTitle: typeof candidate.sourceTitle === 'string' ? candidate.sourceTitle : undefined,
       sourceUri: typeof candidate.sourceUri === 'string' ? candidate.sourceUri : undefined,
@@ -257,34 +287,36 @@ function getMetaLine(place: AskAiMapPlace) {
   return parts.join(' · ')
 }
 
-function buildWhyItMatchesFallback(place: AskAiMapPlace): string[] {
-  const details = place.optionalDetails
-  const bullets: string[] = [place.reason]
-  const addBullet = (text: string) => {
-    const normalized = text.trim().toLowerCase()
-    if (!bullets.some((b) => b.trim().toLowerCase() === normalized)) {
-      bullets.push(text.trim())
-    }
-  }
+function getMapsUrl(place: AskAiMapPlace) {
+  return place.googleMapsUrl ?? place.googleMapsUri ?? place.sourceUri
+}
 
-  if (details?.categoryText) {
-    addBullet(`Listed as a ${details.categoryText}, so it fits that category of place.`)
-  }
-  if (details?.addressText) {
-    addBullet(`Located at ${details.addressText} — practical and easy to find.`)
-  }
-  if (details?.ratingText) {
-    if (details?.reviewCountText) {
-      addBullet(`Rated ${details.ratingText} from ${details.reviewCountText} reviews, showing consistent quality.`)
-    } else {
-      addBullet(`Rated ${details.ratingText} on Google Maps, indicating a solid reputation.`)
-    }
-  }
-  if (details?.openStatusText) {
-    addBullet(`Currently ${details.openStatusText.toLowerCase()} — available to visit now.`)
-  }
+function getPlaceSummary(place: AskAiMapPlace) {
+  return (
+    cleanDisplayText(place.description) ??
+    cleanDisplayText(place.summary) ??
+    cleanDisplayText(place.aiTake) ??
+    cleanDisplayText(place.aiSummary) ??
+    cleanDisplayText(place.reason)
+  )
+}
 
-  return bullets
+function getAiTake(place: AskAiMapPlace) {
+  return cleanDisplayText(place.aiTake) ?? cleanDisplayText(place.aiSummary) ?? getPlaceSummary(place)
+}
+
+function getWhyRecommended(place: AskAiMapPlace) {
+  return cleanDisplayList(place.whyRecommended) ?? cleanDisplayList(place.whyItMatches) ?? []
+}
+
+function getBestFor(place: AskAiMapPlace) {
+  return cleanDisplayList(place.bestFor) ?? cleanDisplayList(place.bestForTags) ?? []
+}
+
+function getCaveats(place: AskAiMapPlace) {
+  const caveats = cleanDisplayList(place.caveats) ?? []
+  const maybeSkipIf = cleanDisplayText(place.maybeSkipIf)
+  return maybeSkipIf ? [...caveats, maybeSkipIf] : caveats
 }
 
 function formatPlaceCoordinates(place: AskAiMapPlace) {
@@ -818,7 +850,7 @@ function AskAiMapPage() {
                 <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">Ask AI Maps</p>
                 <h1 className="mt-1 text-2xl font-black tracking-[-0.03em] text-slate-950">Sign in to find grounded places on the map</h1>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                  This route uses live Google Maps grounding, so we keep it tied to your GalaTayo session.
+                  This route uses live map results, so we keep it tied to your GalaTayo session.
                 </p>
               </div>
             </div>
@@ -938,8 +970,9 @@ function AskAiMapPage() {
                   {!isSearching ? places.map((place) => {
                     const isSelected = place.id === selectedPlaceId
                     const metaLine = getMetaLine(place)
-                    const mapsUrl = place.googleMapsUrl ?? place.sourceUri
+                    const mapsUrl = getMapsUrl(place)
                     const coordinatesText = formatPlaceCoordinates(place)
+                    const summary = getPlaceSummary(place)
 
                     return (
                       <div
@@ -970,12 +1003,19 @@ function AskAiMapPage() {
                                 </span>
                               ) : null}
                             </div>
+                            {place.subtitle ? <p className="mt-1 line-clamp-1 text-[12px] font-semibold text-slate-700">{place.subtitle}</p> : null}
                             {metaLine ? <p className="mt-1 line-clamp-1 text-[12px] font-medium text-slate-600">{metaLine}</p> : null}
                             <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-semibold text-slate-600">
                               {place.optionalDetails?.categoryText ? (
                                 <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1">
                                   <AppIcon name="list" className="h-3 w-3" />
                                   <span>{place.optionalDetails.categoryText}</span>
+                                </span>
+                              ) : null}
+                              {place.optionalDetails?.openStatusText ? (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-emerald-700">
+                                  <AppIcon name="history" className="h-3 w-3" />
+                                  <span>{place.optionalDetails.openStatusText}</span>
                                 </span>
                               ) : null}
                               {place.optionalDetails?.addressText ? (
@@ -991,7 +1031,9 @@ function AskAiMapPage() {
                                 </span>
                               ) : null}
                             </div>
-                            <p className="mt-3 line-clamp-2 flex-1 text-[12px] leading-5 text-slate-700">{place.reason}</p>
+                            {summary ? (
+                              <p className="mt-3 line-clamp-3 flex-1 text-[12px] leading-5 text-slate-700">{summary}</p>
+                            ) : null}
                           </div>
                         </button>
 
@@ -1050,48 +1092,34 @@ function AskAiMapPage() {
         if (!place) return null
         const details = place.optionalDetails
         const metaLine = getMetaLine(place)
-        const mapsUrl = place.googleMapsUrl ?? place.sourceUri
+        const mapsUrl = getMapsUrl(place)
+        const coordinatesText = formatPlaceCoordinates(place)
         const hasCoordinates = Boolean(
           typeof place.coordinates?.latitude === 'number' &&
           typeof place.coordinates?.longitude === 'number'
         )
-
-        const aiSummary = place.aiSummary || place.reason
-
-        let whyItMatches = place.whyItMatches?.length ? [...place.whyItMatches] : []
-        if (whyItMatches.length > 0) {
-          whyItMatches = whyItMatches.filter((item) => item.trim() !== aiSummary.trim())
-        }
-        if (whyItMatches.length < 2) {
-          const fallback = buildWhyItMatchesFallback(place)
-          const combined = [...whyItMatches, ...fallback]
-          const seen = new Set<string>()
-          whyItMatches = combined.filter((item) => {
-            const key = item.trim().toLowerCase()
-            if (seen.has(key)) return false
-            seen.add(key)
-            return true
-          })
-        }
-
-        const bestForTags = place.bestForTags?.length ? place.bestForTags : []
+        const aiTake = getAiTake(place)
+        const whyRecommended = getWhyRecommended(place)
+        const bestForTags = getBestFor(place)
+        const caveats = getCaveats(place)
 
         const hasDetails = Boolean(
-          details?.addressText || details?.openStatusText || details?.hoursText ||
+          details?.categoryText || details?.addressText || details?.openStatusText || details?.hoursText ||
           details?.ratingText || details?.reviewCountText || hasCoordinates
         )
 
         return (
           <div
-            className="fixed inset-0 z-[9999] overflow-y-auto bg-white"
+            className="fixed inset-0 z-[9999] flex items-end bg-slate-950/28 backdrop-blur-[2px] sm:items-center sm:justify-center sm:p-6"
             onClick={closePlaceModal}
             role="dialog"
             aria-modal="true"
           >
             <div
-              className="flex min-h-screen flex-col px-5 py-6"
+              className="flex max-h-[88vh] min-h-[52vh] w-full flex-col overflow-y-auto rounded-t-[28px] bg-white px-5 py-6 shadow-[0_-10px_40px_rgba(15,23,42,0.22)] sm:min-h-0 sm:max-w-md sm:rounded-[28px] sm:shadow-[0_24px_64px_rgba(15,23,42,0.22)]"
               onClick={(e) => e.stopPropagation()}
             >
+              <div className="mx-auto mb-4 h-1.5 w-14 rounded-full bg-slate-200 sm:hidden" />
               <div className="flex items-start justify-between">
                 <h2 className="text-xl font-black tracking-[-0.02em] text-slate-950">{place.name}</h2>
                 <button
@@ -1104,6 +1132,7 @@ function AskAiMapPage() {
                 </button>
               </div>
 
+              {place.subtitle ? <p className="mt-2 text-sm font-semibold text-slate-700">{place.subtitle}</p> : null}
               {metaLine ? <p className="mt-1.5 text-sm font-medium text-slate-600">{metaLine}</p> : null}
 
               <div className="mt-3 flex flex-wrap gap-2 text-[12px] font-semibold text-slate-600">
@@ -1119,22 +1148,26 @@ function AskAiMapPage() {
                 ))}
               </div>
 
-              <section className="mt-5">
-                <h3 className="text-[11px] font-black uppercase tracking-[0.12em] text-[var(--accent-deep)]">AI Take</h3>
-                <p className="mt-1.5 text-[15px] leading-7 text-slate-700">{aiSummary}</p>
-              </section>
+              {aiTake ? (
+                <section className="mt-5">
+                  <h3 className="text-[11px] font-black uppercase tracking-[0.12em] text-[var(--accent-deep)]">AI Take</h3>
+                  <p className="mt-1.5 text-[15px] leading-7 text-slate-700">{aiTake}</p>
+                </section>
+              ) : null}
 
-              <section className="mt-4">
-                <h3 className="text-[11px] font-black uppercase tracking-[0.12em] text-[var(--accent-deep)]">Why this matches</h3>
-                <ul className="mt-1.5 space-y-1.5">
-                  {whyItMatches.map((item, i) => (
-                    <li key={i} className="flex items-start gap-2.5 text-sm leading-6 text-slate-700">
-                      <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]" />
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
+              {whyRecommended.length > 0 ? (
+                <section className="mt-4">
+                  <h3 className="text-[11px] font-black uppercase tracking-[0.12em] text-[var(--accent-deep)]">Why I recommend this for you</h3>
+                  <ul className="mt-1.5 space-y-1.5">
+                    {whyRecommended.map((item, i) => (
+                      <li key={i} className="flex items-start gap-2.5 text-sm leading-6 text-slate-700">
+                        <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ) : null}
 
               {bestForTags.length > 0 ? (
                 <section className="mt-4">
@@ -1156,17 +1189,27 @@ function AskAiMapPage() {
                 </section>
               ) : null}
 
-              {place.maybeSkipIf ? (
+              {caveats.length > 0 ? (
                 <section className="mt-4 rounded-[16px] bg-amber-50/80 px-4 py-3">
-                  <h3 className="text-[11px] font-black uppercase tracking-[0.12em] text-amber-700">Maybe skip if</h3>
-                  <p className="mt-0.5 text-sm leading-6 text-amber-800">{place.maybeSkipIf}</p>
+                  <h3 className="text-[11px] font-black uppercase tracking-[0.12em] text-amber-700">Know before going</h3>
+                  <ul className="mt-1.5 space-y-1">
+                    {caveats.map((item) => (
+                      <li key={item} className="text-sm leading-6 text-amber-800">{item}</li>
+                    ))}
+                  </ul>
                 </section>
               ) : null}
 
               {hasDetails ? (
                 <section className="mt-4 border-t border-slate-100 pt-4">
-                  <h3 className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">Good to know</h3>
+                  <h3 className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">Map details</h3>
                   <div className="mt-2 space-y-1.5 text-sm leading-6 text-slate-600">
+                    {details?.categoryText ? (
+                      <div className="flex items-center gap-2">
+                        <AppIcon name="list" className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                        <span>{details.categoryText}</span>
+                      </div>
+                    ) : null}
                     {details?.addressText ? (
                       <div className="flex items-center gap-2">
                         <AppIcon name="place" className="h-3.5 w-3.5 shrink-0 text-slate-400" />
@@ -1197,7 +1240,7 @@ function AskAiMapPage() {
                     {hasCoordinates ? (
                       <div className="flex items-center gap-2 text-slate-400">
                         <AppIcon name="map" className="h-3.5 w-3.5 shrink-0" />
-                        <span>Map location available</span>
+                        <span>{coordinatesText || 'Map location available'}</span>
                       </div>
                     ) : null}
                   </div>
