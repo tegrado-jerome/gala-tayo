@@ -11,11 +11,11 @@ export type AskAiMapPlace = {
   id: string
   name: string
   reason: string
-  aiSummary: string
-  whyItMatches: string[]
-  bestForTags: string[]
-  goHereIf: string
-  maybeSkipIf: string
+  aiSummary?: string
+  whyItMatches?: string[]
+  bestForTags?: string[]
+  goHereIf?: string
+  maybeSkipIf?: string
   googleMapsUrl?: string
   placeId?: string
   sourceTitle?: string

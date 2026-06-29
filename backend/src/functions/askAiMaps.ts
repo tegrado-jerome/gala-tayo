@@ -214,7 +214,10 @@ export async function askAiMapsRequest(
       return cooldownResponse;
     }
 
-    const askAiUsageBefore = await checkAskAiUsage(user.id, "ask_ai_total");
+    const [askAiUsageBefore, liveSearchUsageBefore] = await Promise.all([
+      checkAskAiUsage(user.id, "ask_ai_total"),
+      checkAskAiUsage(user.id, "live_search"),
+    ]);
 
     if (!askAiUsageBefore.allowed) {
       return {
@@ -222,15 +225,10 @@ export async function askAiMapsRequest(
         headers: NO_STORE_HEADERS,
         jsonBody: {
           message: "Daily Ask AI limit reached.",
-          usage: {
-            askAi: askAiUsageBefore,
-            liveSearch: await checkAskAiUsage(user.id, "live_search"),
-          },
+          usage: { askAi: askAiUsageBefore, liveSearch: liveSearchUsageBefore },
         },
       };
     }
-
-    const liveSearchUsageBefore = await checkAskAiUsage(user.id, "live_search");
 
     if (!liveSearchUsageBefore.allowed) {
       return {
@@ -238,10 +236,7 @@ export async function askAiMapsRequest(
         headers: NO_STORE_HEADERS,
         jsonBody: {
           message: "Daily Ask AI live search limit reached.",
-          usage: {
-            askAi: askAiUsageBefore,
-            liveSearch: liveSearchUsageBefore,
-          },
+          usage: { askAi: askAiUsageBefore, liveSearch: liveSearchUsageBefore },
         },
       };
     }
@@ -257,8 +252,10 @@ export async function askAiMapsRequest(
         log: (message: string) => logAskAiMaps(context, message),
       });
 
-      const askAiUsageAfter = await consumeAskAiUsage(user.id, "ask_ai_total");
-      const liveSearchUsageAfter = await consumeAskAiUsage(user.id, "live_search");
+      const [askAiUsageAfter, liveSearchUsageAfter] = await Promise.all([
+        consumeAskAiUsage(user.id, "ask_ai_total"),
+        consumeAskAiUsage(user.id, "live_search"),
+      ]);
 
       return {
         status: 200,

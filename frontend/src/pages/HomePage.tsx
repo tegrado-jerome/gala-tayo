@@ -3937,6 +3937,18 @@ function HomePage({
 
     setSelectedPlaceId(placeId)
     if (canonicalPlaceSlug) {
+      try {
+        const searchUrl = `${window.location.pathname}${window.location.search}`
+        const label = rawQuery?.trim() || activeSearchLabel?.replace(/^Showing\s+/, '')?.trim() || ''
+        const returnLabel = label || 'search results'
+        window.sessionStorage.setItem(`galatayo:place-return:${canonicalPlaceSlug}`, JSON.stringify({
+          returnTo: searchUrl,
+          returnLabel,
+        }))
+      } catch {
+        // sessionStorage may be unavailable, ignore
+      }
+
       writeSearchRouteCache({
         lastSearchQuery,
         activeSearchLabel,

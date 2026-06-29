@@ -1,4 +1,4 @@
-﻿import { startTransition, useEffect, useMemo, useRef, useState } from 'react'
+﻿import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { AppIcon } from '../components/AppIcon'
 import GoogleSignInButton from '../components/GoogleSignInButton'
@@ -39,6 +39,7 @@ type AskAiMapsResponse = {
   places?: AskAiMapPlace[]
   sources?: AskAiMapSource[]
   modelUsed?: string | null
+  latencyMs?: number
   message?: string
   emptyReason?: 'NO_MAP_GROUNDING_RESULTS' | 'PROVIDER_BUSY'
 }
@@ -59,7 +60,7 @@ type AskAiUsageSummary = {
 }
 
 const DAILY_ASK_AI_LIMIT_MESSAGE = 'Daily Ask AI limit reached.'
-const ASK_AI_MAPS_REQUEST_TIMEOUT_MS = 20_000
+const ASK_AI_MAPS_REQUEST_TIMEOUT_MS = 25_000
 
 function getEmptyReasonMessage(emptyReason: AskAiMapsResponse['emptyReason']) {
   if (emptyReason === 'PROVIDER_BUSY') {
@@ -146,6 +147,7 @@ function normalizeOptionalDetails(value: unknown): AskAiMapOptionalDetails | und
   const details = {
     ...(typeof candidate.categoryText === 'string' && candidate.categoryText.trim() ? { categoryText: candidate.categoryText.trim() } : {}),
     ...(typeof candidate.ratingText === 'string' && candidate.ratingText.trim() ? { ratingText: candidate.ratingText.trim() } : {}),
+    ...(typeof candidate.reviewCountText === 'string' && candidate.reviewCountText.trim() ? { reviewCountText: candidate.reviewCountText.trim() } : {}),
     ...(typeof candidate.openStatusText === 'string' && candidate.openStatusText.trim() ? { openStatusText: candidate.openStatusText.trim() } : {}),
     ...(typeof candidate.addressText === 'string' && candidate.addressText.trim() ? { addressText: candidate.addressText.trim() } : {}),
   }
@@ -173,10 +175,29 @@ function normalizePlaces(value: unknown): AskAiMapPlace[] {
       return []
     }
 
+    const whyItMatches = Array.isArray(candidate.whyItMatches)
+      ? candidate.whyItMatches.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+      : undefined
+
+    const bestForTags = Array.isArray(candidate.bestForTags)
+      ? candidate.bestForTags.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+      : undefined
+
     return [{
       id: candidate.id,
       name: candidate.name,
       reason: candidate.reason,
+      aiSummary: typeof candidate.aiSummary === 'string' && candidate.aiSummary.trim()
+        ? candidate.aiSummary.trim()
+        : undefined,
+      whyItMatches: whyItMatches && whyItMatches.length > 0 ? whyItMatches : undefined,
+      bestForTags: bestForTags && bestForTags.length > 0 ? bestForTags : undefined,
+      goHereIf: typeof candidate.goHereIf === 'string' && candidate.goHereIf.trim()
+        ? candidate.goHereIf.trim()
+        : undefined,
+      maybeSkipIf: typeof candidate.maybeSkipIf === 'string' && candidate.maybeSkipIf.trim()
+        ? candidate.maybeSkipIf.trim()
+        : undefined,
       googleMapsUrl: typeof candidate.googleMapsUrl === 'string' ? candidate.googleMapsUrl : undefined,
       placeId: typeof candidate.placeId === 'string' ? candidate.placeId : undefined,
       sourceTitle: typeof candidate.sourceTitle === 'string' ? candidate.sourceTitle : undefined,
@@ -236,6 +257,36 @@ function getMetaLine(place: AskAiMapPlace) {
   return parts.join(' · ')
 }
 
+function buildWhyItMatchesFallback(place: AskAiMapPlace): string[] {
+  const details = place.optionalDetails
+  const bullets: string[] = [place.reason]
+  const addBullet = (text: string) => {
+    const normalized = text.trim().toLowerCase()
+    if (!bullets.some((b) => b.trim().toLowerCase() === normalized)) {
+      bullets.push(text.trim())
+    }
+  }
+
+  if (details?.categoryText) {
+    addBullet(`Listed as a ${details.categoryText}, so it fits that category of place.`)
+  }
+  if (details?.addressText) {
+    addBullet(`Located at ${details.addressText} — practical and easy to find.`)
+  }
+  if (details?.ratingText) {
+    if (details?.reviewCountText) {
+      addBullet(`Rated ${details.ratingText} from ${details.reviewCountText} reviews, showing consistent quality.`)
+    } else {
+      addBullet(`Rated ${details.ratingText} on Google Maps, indicating a solid reputation.`)
+    }
+  }
+  if (details?.openStatusText) {
+    addBullet(`Currently ${details.openStatusText.toLowerCase()} — available to visit now.`)
+  }
+
+  return bullets
+}
+
 function formatPlaceCoordinates(place: AskAiMapPlace) {
   if (
     typeof place.coordinates?.latitude !== 'number' ||
@@ -292,7 +343,7 @@ function readAskAiMapRouteCache(): AskAiMapRouteCache | null {
         typeof parsedCache.userLocation.longitude === 'number'
           ? parsedCache.userLocation
           : null,
-      isSearching: parsedCache.isSearching === true,
+      isSearching: false,
       errorMessage: typeof parsedCache.errorMessage === 'string' ? parsedCache.errorMessage : '',
       statusMessage: typeof parsedCache.statusMessage === 'string' ? parsedCache.statusMessage : '',
       answerText: typeof parsedCache.answerText === 'string' ? parsedCache.answerText : '',
@@ -323,7 +374,19 @@ function clearAskAiMapRouteCache() {
   }
 }
 
-function MinimalLoadingCard({ query }: { query: string }) {
+function MinimalLoadingCard({ query, startedAt }: { query: string; startedAt: number | null }) {
+  const [elapsedSeconds, setElapsedSeconds] = useState(0)
+
+  useEffect(() => {
+    if (!startedAt) {
+      return
+    }
+    const tick = () => setElapsedSeconds(Math.max(0, Math.floor((Date.now() - startedAt) / 1000)))
+    tick()
+    const intervalId = window.setInterval(tick, 1000)
+    return () => window.clearInterval(intervalId)
+  }, [startedAt])
+
   return (
     <div className="w-full min-w-0 shrink rounded-[24px] border border-[rgba(83,146,241,0.18)] bg-white/96 p-4 shadow-[0_16px_36px_rgba(15,23,42,0.12)]">
       <div className="flex items-start gap-3">
@@ -338,6 +401,9 @@ function MinimalLoadingCard({ query }: { query: string }) {
               <span className="h-1.5 w-1.5 rounded-full bg-current motion-safe:animate-bounce [animation-delay:120ms]" />
               <span className="h-1.5 w-1.5 rounded-full bg-current motion-safe:animate-bounce [animation-delay:240ms]" />
             </span>
+            {startedAt ? (
+              <span className="ml-auto text-[11px] font-semibold text-slate-500">{Math.max(elapsedSeconds, 1)}s</span>
+            ) : null}
           </div>
           <p className="mt-1 text-[12px] font-medium text-slate-500">Grounding live Google Maps picks for your prompt.</p>
           {query ? <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-700">“{query.trim()}”</p> : null}
@@ -378,6 +444,8 @@ function AskAiMapPage() {
   const [sources, setSources] = useState<AskAiMapSource[]>(initialAskAiMapState?.sources ?? [])
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(initialAskAiMapState?.selectedPlaceId ?? null)
   const [focusedPlaceId, setFocusedPlaceId] = useState<string | null>(initialAskAiMapState?.focusedPlaceId ?? null)
+  const [modalPlaceId, setModalPlaceId] = useState<string | null>(null)
+  const [searchStartedAt, setSearchStartedAt] = useState<number | null>(null)
 
   useEffect(() => {
     let isMounted = true
@@ -459,7 +527,7 @@ function AskAiMapPage() {
       query: initialAskAiMapState?.query ?? '',
       selectedChipIds: initialAskAiMapState?.selectedChipIds ?? [],
       userLocation: initialAskAiMapState?.userLocation ?? null,
-      isSearching: initialAskAiMapState?.isSearching === true,
+      isSearching: false,
       errorMessage: initialAskAiMapState?.errorMessage ?? '',
       statusMessage: initialAskAiMapState?.statusMessage ?? '',
       answerText: initialAskAiMapState?.answerText ?? '',
@@ -483,6 +551,10 @@ function AskAiMapPage() {
       setFocusedPlaceId(runtimeState.focusedPlaceId)
     })
   }, [initialAskAiMapState])
+
+  useEffect(() => {
+    setIsSearching(false)
+  }, [])
 
   const usesNearMe = selectedChipIds.includes('near-me')
   const usesOpenNow = selectedChipIds.includes('open-now')
@@ -524,7 +596,7 @@ function AskAiMapPage() {
       query,
       selectedChipIds,
       userLocation,
-      isSearching,
+      isSearching: false,
       errorMessage,
       statusMessage,
       answerText,
@@ -550,7 +622,21 @@ function AskAiMapPage() {
   function openPlace(placeId: string) {
     setSelectedPlaceId(placeId)
     setFocusedPlaceId(placeId)
+    setModalPlaceId(placeId)
   }
+
+  function closePlaceModal() {
+    setModalPlaceId(null)
+  }
+
+  useEffect(() => {
+    if (!modalPlaceId) return
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') closePlaceModal()
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [modalPlaceId])
 
   function requestLocationPermission() {
     if (!navigator.geolocation) {
@@ -588,7 +674,11 @@ function AskAiMapPage() {
       return
     }
 
+    const submitStart = Date.now()
+    console.log('[Ask AI Maps] Submit started', { query: requestQuery, selectedChipIds })
+
     setHasSearched(true)
+    setSearchStartedAt(submitStart)
     patchAskAiMapRuntimeState({
       query,
       selectedChipIds,
@@ -607,7 +697,11 @@ function AskAiMapPage() {
     const timeoutId = window.setTimeout(() => controller.abort(), ASK_AI_MAPS_REQUEST_TIMEOUT_MS)
 
     try {
-      const response = await fetch(`/api/ask-ai/maps?t=${Date.now()}`, {
+      const apiBaseUrl = String(import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
+      const mapsEndpoint = apiBaseUrl ? `${apiBaseUrl}/ask-ai/maps` : '/api/ask-ai/maps'
+      console.log('[Ask AI Maps] Fetching', { url: mapsEndpoint, timeoutMs: ASK_AI_MAPS_REQUEST_TIMEOUT_MS })
+
+      const fetchPromise = fetch(`${mapsEndpoint}?t=${Date.now()}`, {
         method: 'POST',
         cache: 'no-store',
         signal: controller.signal,
@@ -626,6 +720,13 @@ function AskAiMapPage() {
         }),
       })
 
+      const hardTimeoutPromise = new Promise<Response>((_, reject) => {
+        window.setTimeout(() => reject(new Error('Ask AI Maps request hard-timeout')), ASK_AI_MAPS_REQUEST_TIMEOUT_MS + 500)
+      })
+
+      const response = await Promise.race([fetchPromise, hardTimeoutPromise])
+      console.log('[Ask AI Maps] Response received', { status: response.status, elapsedMs: Date.now() - submitStart })
+
       const data = await response.json() as AskAiMapsResponse
 
       if (!response.ok) {
@@ -636,22 +737,23 @@ function AskAiMapPage() {
       const nextSources = normalizeSources(data.sources)
       const nextStatusMessage = getEmptyReasonMessage(data.emptyReason) ?? data.message ?? ''
 
-      startTransition(() => {
-        patchAskAiMapRuntimeState({
-          query,
-          selectedChipIds,
-          userLocation,
-          isSearching: false,
-          errorMessage: '',
-          statusMessage: nextPlaces.length === 0 ? nextStatusMessage : '',
-          answerText: typeof data.answerText === 'string' ? data.answerText : '',
-          places: nextPlaces,
-          sources: nextSources,
-          selectedPlaceId: nextPlaces[0]?.id ?? null,
-          focusedPlaceId: nextPlaces[0]?.id ?? null,
-        })
+      console.log('[Ask AI Maps] Parsed result', { places: nextPlaces.length, sources: nextSources.length, latencyMs: data.latencyMs })
+
+      patchAskAiMapRuntimeState({
+        query,
+        selectedChipIds,
+        userLocation,
+        isSearching: false,
+        errorMessage: '',
+        statusMessage: nextPlaces.length === 0 ? nextStatusMessage : '',
+        answerText: typeof data.answerText === 'string' ? data.answerText : '',
+        places: nextPlaces,
+        sources: nextSources,
+        selectedPlaceId: nextPlaces[0]?.id ?? null,
+        focusedPlaceId: nextPlaces[0]?.id ?? null,
       })
     } catch (error) {
+      console.warn('[Ask AI Maps] Submit failed', { error, elapsedMs: Date.now() - submitStart })
       patchAskAiMapRuntimeState({
         query,
         selectedChipIds,
@@ -667,6 +769,7 @@ function AskAiMapPage() {
       })
     } finally {
       window.clearTimeout(timeoutId)
+      setSearchStartedAt(null)
     }
   }
 
@@ -684,6 +787,7 @@ function AskAiMapPage() {
     setSources([])
     setSelectedPlaceId(null)
     setFocusedPlaceId(null)
+    setModalPlaceId(null)
     setPermissionError('')
     setPermissionState('idle')
   }
@@ -829,7 +933,7 @@ function AskAiMapPage() {
                 ) : null}
 
                 <div className="flex w-full gap-3 overflow-x-auto pb-2">
-                  {isSearching ? <MinimalLoadingCard query={query} /> : null}
+                  {isSearching ? <MinimalLoadingCard query={query} startedAt={searchStartedAt} /> : null}
 
                   {!isSearching ? places.map((place) => {
                     const isSelected = place.id === selectedPlaceId
@@ -860,6 +964,9 @@ function AskAiMapPage() {
                                 <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-50 px-2 py-1 text-[11px] font-bold text-amber-700">
                                   <AppIcon name="reviews" className="h-3 w-3" />
                                   <span>{place.optionalDetails.ratingText}</span>
+                                  {place.optionalDetails?.reviewCountText ? (
+                                    <span className="font-normal text-amber-500">&nbsp;({place.optionalDetails.reviewCountText})</span>
+                                  ) : null}
                                 </span>
                               ) : null}
                             </div>
@@ -909,7 +1016,12 @@ function AskAiMapPage() {
                 <div className="flex items-center gap-3 rounded-[22px] border border-white/86 bg-white/96 px-3 py-2.5 shadow-[0_10px_24px_rgba(15,23,42,0.08)] backdrop-blur-md">
                   <input
                     value={query}
-                    onChange={(event) => setQuery(event.target.value)}
+                    onChange={(event) => {
+                      setQuery(event.target.value)
+                      if (isSearching) {
+                        setIsSearching(false)
+                      }
+                    }}
                     onKeyDown={(event) => {
                       if (event.key === 'Enter') {
                         event.preventDefault()
@@ -933,6 +1045,180 @@ function AskAiMapPage() {
           </div>
         </section>
       </div>
+      {modalPlaceId ? (() => {
+        const place = places.find((p) => p.id === modalPlaceId)
+        if (!place) return null
+        const details = place.optionalDetails
+        const metaLine = getMetaLine(place)
+        const mapsUrl = place.googleMapsUrl ?? place.sourceUri
+        const hasCoordinates = Boolean(
+          typeof place.coordinates?.latitude === 'number' &&
+          typeof place.coordinates?.longitude === 'number'
+        )
+
+        const aiSummary = place.aiSummary || place.reason
+
+        let whyItMatches = place.whyItMatches?.length ? [...place.whyItMatches] : []
+        if (whyItMatches.length > 0) {
+          whyItMatches = whyItMatches.filter((item) => item.trim() !== aiSummary.trim())
+        }
+        if (whyItMatches.length < 2) {
+          const fallback = buildWhyItMatchesFallback(place)
+          const combined = [...whyItMatches, ...fallback]
+          const seen = new Set<string>()
+          whyItMatches = combined.filter((item) => {
+            const key = item.trim().toLowerCase()
+            if (seen.has(key)) return false
+            seen.add(key)
+            return true
+          })
+        }
+
+        const bestForTags = place.bestForTags?.length ? place.bestForTags : []
+
+        const hasDetails = Boolean(
+          details?.addressText || details?.openStatusText || details?.hoursText ||
+          details?.ratingText || details?.reviewCountText || hasCoordinates
+        )
+
+        return (
+          <div
+            className="fixed inset-0 z-[9999] overflow-y-auto bg-white"
+            onClick={closePlaceModal}
+            role="dialog"
+            aria-modal="true"
+          >
+            <div
+              className="flex min-h-screen flex-col px-5 py-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-start justify-between">
+                <h2 className="text-xl font-black tracking-[-0.02em] text-slate-950">{place.name}</h2>
+                <button
+                  type="button"
+                  onClick={closePlaceModal}
+                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full hover:bg-slate-100 transition"
+                  aria-label="Close"
+                >
+                  <AppIcon name="clear" className="h-5 w-5" />
+                </button>
+              </div>
+
+              {metaLine ? <p className="mt-1.5 text-sm font-medium text-slate-600">{metaLine}</p> : null}
+
+              <div className="mt-3 flex flex-wrap gap-2 text-[12px] font-semibold text-slate-600">
+                {details?.categoryText ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1">
+                    <span>{details.categoryText}</span>
+                  </span>
+                ) : null}
+                {bestForTags.slice(0, 4).map((tag) => (
+                  <span key={tag} className="inline-flex items-center gap-1 rounded-full bg-[var(--accent-wash)] px-3 py-1 text-[var(--accent-deep)]">
+                    <span>{tag}</span>
+                  </span>
+                ))}
+              </div>
+
+              <section className="mt-5">
+                <h3 className="text-[11px] font-black uppercase tracking-[0.12em] text-[var(--accent-deep)]">AI Take</h3>
+                <p className="mt-1.5 text-[15px] leading-7 text-slate-700">{aiSummary}</p>
+              </section>
+
+              <section className="mt-4">
+                <h3 className="text-[11px] font-black uppercase tracking-[0.12em] text-[var(--accent-deep)]">Why this matches</h3>
+                <ul className="mt-1.5 space-y-1.5">
+                  {whyItMatches.map((item, i) => (
+                    <li key={i} className="flex items-start gap-2.5 text-sm leading-6 text-slate-700">
+                      <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+
+              {bestForTags.length > 0 ? (
+                <section className="mt-4">
+                  <h3 className="text-[11px] font-black uppercase tracking-[0.12em] text-[var(--accent-deep)]">Best for</h3>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    {bestForTags.map((tag) => (
+                      <span key={tag} className="inline-flex items-center rounded-full border border-[var(--line)] bg-white px-2.5 py-0.5 text-[12px] font-semibold text-slate-700">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </section>
+              ) : null}
+
+              {place.goHereIf ? (
+                <section className="mt-4">
+                  <h3 className="text-[11px] font-black uppercase tracking-[0.12em] text-[var(--accent-deep)]">Go here if</h3>
+                  <p className="mt-1.5 text-sm leading-6 text-slate-700">{place.goHereIf}</p>
+                </section>
+              ) : null}
+
+              {place.maybeSkipIf ? (
+                <section className="mt-4 rounded-[16px] bg-amber-50/80 px-4 py-3">
+                  <h3 className="text-[11px] font-black uppercase tracking-[0.12em] text-amber-700">Maybe skip if</h3>
+                  <p className="mt-0.5 text-sm leading-6 text-amber-800">{place.maybeSkipIf}</p>
+                </section>
+              ) : null}
+
+              {hasDetails ? (
+                <section className="mt-4 border-t border-slate-100 pt-4">
+                  <h3 className="text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">Good to know</h3>
+                  <div className="mt-2 space-y-1.5 text-sm leading-6 text-slate-600">
+                    {details?.addressText ? (
+                      <div className="flex items-center gap-2">
+                        <AppIcon name="place" className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                        <span>{details.addressText}</span>
+                      </div>
+                    ) : null}
+                    {details?.openStatusText ? (
+                      <div className="flex items-center gap-2">
+                        <AppIcon name="history" className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                        <span>{details.openStatusText}</span>
+                        {details?.hoursText ? <span className="text-slate-400">· {details.hoursText}</span> : null}
+                      </div>
+                    ) : details?.hoursText ? (
+                      <div className="flex items-center gap-2">
+                        <AppIcon name="history" className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                        <span>{details.hoursText}</span>
+                      </div>
+                    ) : null}
+                    {details?.ratingText ? (
+                      <div className="flex items-center gap-2">
+                        <AppIcon name="reviews" className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                        <span>
+                          {details.ratingText}
+                          {details?.reviewCountText ? <span className="text-slate-400"> ({details.reviewCountText})</span> : null}
+                        </span>
+                      </div>
+                    ) : null}
+                    {hasCoordinates ? (
+                      <div className="flex items-center gap-2 text-slate-400">
+                        <AppIcon name="map" className="h-3.5 w-3.5 shrink-0" />
+                        <span>Map location available</span>
+                      </div>
+                    ) : null}
+                  </div>
+                </section>
+              ) : null}
+
+              {mapsUrl ? (
+                <a
+                  href={mapsUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800"
+                >
+                  <AppIcon name="map" className="h-4 w-4" />
+                  <span>Open in Google Maps</span>
+                </a>
+              ) : null}
+            </div>
+          </div>
+        )
+      })() : null}
     </main>
   )
 }

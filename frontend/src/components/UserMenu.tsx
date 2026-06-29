@@ -182,8 +182,8 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
             <span className={`flex h-full w-full items-center justify-center overflow-hidden rounded-full ${user ? 'bg-slate-100 text-slate-700' : 'bg-white text-slate-800'}`}>
               {accountButtonAvatar}
             </span>
-            <span className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white shadow-sm ${user ? 'bg-[var(--accent)]' : 'bg-slate-300'}`} aria-hidden="true">
-              {user ? <span className="absolute inset-0 animate-ping rounded-full bg-[var(--accent-soft)]" /> : null}
+            <span className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-white shadow-sm ${user ? 'bg-emerald-500' : 'bg-slate-300'}`} aria-hidden="true">
+              {user ? <span className="absolute inset-0 animate-ping rounded-full bg-emerald-500/40" /> : null}
             </span>
           </>
         ) : user ? (

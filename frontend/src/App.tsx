@@ -338,23 +338,6 @@ function isProtectedAccountPath(pathname: string) {
 
 function shouldShowMobileBottomNav(pathname: string) {
   if (
-    [
-      '/',
-      '/login',
-      '/signup',
-      '/auth',
-      '/auth/callback',
-      '/sign-up',
-      '/onboarding',
-      '/about',
-      '/terms',
-      '/privacy',
-    ].some((path) => isPath(pathname, path))
-  ) {
-    return false
-  }
-
-  if (
     sharedRouteMatchers.some((matcher) => matcher(pathname))
   ) {
     return false
@@ -588,8 +571,23 @@ function SharedPlacePage({
   const sharedPageSearchParams = useMemo(() => new URLSearchParams(currentSearch), [currentSearch])
   const rawListingLink = sharedPageSearchParams.get('from')
   const rawListingLabel = sharedPageSearchParams.get('fromLabel')
-  const listingLink = rawListingLink && rawListingLink.startsWith('/') ? rawListingLink : null
-  const listingLabel = rawListingLabel?.trim() || null
+  const urlListingLink = rawListingLink && rawListingLink.startsWith('/') ? rawListingLink : null
+  const urlListingLabel = rawListingLabel?.trim() || null
+
+  const sessionReturn = useMemo(() => {
+    try {
+      const stored = window.sessionStorage.getItem(`galatayo:place-return:${slug}`)
+      if (stored) {
+        return JSON.parse(stored) as { returnTo?: string; returnLabel?: string }
+      }
+    } catch {
+      // sessionStorage may be unavailable, ignore
+    }
+    return null
+  }, [slug])
+
+  const listingLink = urlListingLink || sessionReturn?.returnTo || null
+  const listingLabel = urlListingLabel || sessionReturn?.returnLabel || null
   const categoryBreadcrumbMeta = getCategoryBreadcrumbMeta(listingLink, listingLabel)
 
   useEffect(() => {

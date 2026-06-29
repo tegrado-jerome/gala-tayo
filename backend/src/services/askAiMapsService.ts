@@ -28,6 +28,11 @@ export type AskAiMapGroundedPlace = {
   id: string;
   name: string;
   reason: string;
+  aiSummary?: string;
+  whyItMatches?: string[];
+  bestForTags?: string[];
+  goHereIf?: string;
+  maybeSkipIf?: string;
   googleMapsUrl?: string;
   placeId?: string;
   sourceTitle?: string;
@@ -39,8 +44,10 @@ export type AskAiMapGroundedPlace = {
   optionalDetails?: {
     categoryText?: string;
     ratingText?: string;
+    reviewCountText?: string;
     openStatusText?: string;
     addressText?: string;
+    hoursText?: string;
   };
 };
 
@@ -66,10 +73,17 @@ export type AskAiMapsSearchResult = {
 type ParsedGroundedPlace = {
   name?: unknown;
   reason?: unknown;
+  aiSummary?: unknown;
+  whyItMatches?: unknown;
+  bestForTags?: unknown;
+  goHereIf?: unknown;
+  maybeSkipIf?: unknown;
   categoryText?: unknown;
   openStatusText?: unknown;
   addressText?: unknown;
   ratingText?: unknown;
+  reviewCountText?: unknown;
+  hoursText?: unknown;
   coordinates?: unknown;
   latitude?: unknown;
   longitude?: unknown;
@@ -115,14 +129,13 @@ type StoredPlaceCoordinateCandidate = {
 export const ASK_AI_MAPS_MODELS = [
   "gemini-2.5-flash",
   "gemini-2.5-flash-lite",
-  "gemini-3.1-flash-lite",
 ] as const;
 
 const ASK_AI_MAPS_MAX_PLACES = 8;
 const RETRYABLE_AI_STATUSES = new Set([403, 429, 500, 503, 504]);
-const ASK_AI_MAPS_FALLBACK_DELAY_MS = 650;
+const ASK_AI_MAPS_FALLBACK_DELAY_MS = 250;
 const ASK_AI_MAPS_PROVIDER_COOLDOWN_MS = 60_000;
-const ASK_AI_MAPS_PROVIDER_TIMEOUT_MS = 18_000;
+const ASK_AI_MAPS_PROVIDER_TIMEOUT_MS = 8_000;
 const PROVIDER_BUSY_MESSAGE = "Ask AI Maps is busy right now. Try again in a bit.";
 const NO_RESULTS_MESSAGE =
   "No map-grounded places matched that request. Try a more specific area or place type.";
@@ -141,6 +154,17 @@ const RETRYABLE_PROVIDER_MESSAGE_PATTERNS = [
 ] as const;
 
 let askAiMapsCooldownUntil = 0;
+const coordinateCache = new Map<string, { latitude: number; longitude: number }>();
+const COORDINATE_CACHE_MAX_SIZE = 200;
+
+function pruneCoordinateCache() {
+  if (coordinateCache.size > COORDINATE_CACHE_MAX_SIZE) {
+    const keysToDelete = [...coordinateCache.keys()].slice(0, coordinateCache.size - COORDINATE_CACHE_MAX_SIZE);
+    for (const key of keysToDelete) {
+      coordinateCache.delete(key);
+    }
+  }
+}
 
 function normalizeWhitespace(value: string): string {
   return value.replace(/\s+/g, " ").trim();
@@ -174,6 +198,19 @@ function normalizeOptionalDisplayText(value: unknown): string | undefined {
   }
 
   return normalized;
+}
+
+function normalizeStringArray(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+
+  const items = value
+    .filter((item): item is string => typeof item === "string")
+    .map((item) => normalizeWhitespace(item))
+    .filter(Boolean);
+
+  return items.length > 0 ? items : undefined;
 }
 
 function normalizePlaceKey(value: string): string {
@@ -743,12 +780,15 @@ async function logAskAiMapsLayer2Debug(args: {
 
 function isRetryableProviderError(error: unknown) {
   const status = getErrorStatus(error);
+  const message = getErrorMessage(error);
+
+  if (message.toLowerCase().includes("ask ai maps provider timed out")) {
+    return false;
+  }
 
   if (RETRYABLE_AI_STATUSES.has(status)) {
     return true;
   }
-
-  const message = getErrorMessage(error);
 
   if (!message) {
     return false;
@@ -795,51 +835,39 @@ function buildMapsGroundingPrompt({
       ? `${userLocation.latitude.toFixed(6)}, ${userLocation.longitude.toFixed(6)}`
       : "not provided";
 
-  return `
-You are GalaTayo's Ask AI Maps local guide.
+  return `You are GalaTayo's Ask AI Maps local guide. Use only Google Maps grounding. Do not invent details. Return 5-8 grounded places (never more than 8). Keep all text short and concrete. Skip generic filler like "popular place" or "matches your search".
 
-Use only the Google Maps grounding tool for this answer.
-Do not call or rely on Google Places API data.
-Do not invent missing details.
-Do not include photo URLs.
-Do not promise exact hours, ratings, phone numbers, websites, coordinates, or other details unless the grounded answer explicitly provides them.
-Return 6 to 8 recommendations when possible.
-Never return more than 8 places.
-Keep reasons short, natural, and useful.
-The answer must be based on Google Maps grounding.
+User request to justify every place against:
+Query: "${query}"
+Chips: [${chipText}]
+Near me: ${nearMe ? "yes" : "no"}
+Open now: ${openNow ? "yes" : "no"}
+User coords: near ${locationText}
 
-Return valid JSON only in this exact shape:
+Return ONLY this JSON (no prose, no markdown):
 {
-  "answerText": "A short grounded summary of the overall recommendations.",
+  "answerText": "One short sentence summarizing the picks.",
   "places": [
     {
-      "name": "Place name",
-      "reason": "Short reason",
-      "categoryText": "Optional category if obvious from the grounded answer",
-      "openStatusText": "Optional open or closed text only if available from the grounded answer",
-      "addressText": "Optional address text only if available from the grounded answer",
-      "ratingText": "Optional rating text only if available from the grounded answer",
-      "coordinates": {
-        "latitude": 14.5995,
-        "longitude": 120.9842
-      }
+      "name": "Place name from grounding",
+      "reason": "Why it fits this user's request (one short sentence)",
+      "aiSummary": "A good pick if... / Works well when... / Ideal for... — must reference the user's query",
+      "whyItMatches": ["Bullet 1 referencing the query or a chip", "Bullet 2 about a specific aspect of the place", "Bullet 3 about rating/popularity/notable feature"],
+      "bestForTags": ["Tag1", "Tag2", "Tag3"],
+      "goHereIf": "Go here if... (one sentence tied to the query)",
+      "maybeSkipIf": "Skip if... (omit if not needed)",
+      "categoryText": "from grounding or omit",
+      "openStatusText": "from grounding or omit",
+      "addressText": "from grounding or omit",
+      "ratingText": "from grounding or omit",
+      "reviewCountText": "from grounding or omit",
+      "hoursText": "from grounding or omit",
+      "coordinates": { "latitude": 0, "longitude": 0 }
     }
   ]
 }
 
-Include the "coordinates" object only when the grounded Google Maps result clearly resolves the place coordinates. Otherwise omit it.
-
-If there are no solid grounded matches, return:
-{
-  "answerText": "No strong grounded matches were found.",
-  "places": []
-}
-
-User query: ${query}
-Selected chips: ${chipText}
-Near me: ${nearMe ? "yes" : "no"}
-Open now: ${openNow ? "yes" : "no"}
-User coordinates: ${locationText}
+Include "coordinates" only when grounding clearly resolves them. Omit optional fields when not available. If no grounded matches: {"answerText":"No strong grounded matches were found.","places":[]}.
 `.trim();
 }
 
@@ -990,12 +1018,21 @@ function getAddressMatchScore(
 }
 
 async function findStoredPlaceCoordinateCandidate(
-  place: AskAiMapGroundedPlace
+  place: AskAiMapGroundedPlace,
+  logger?: AskAiMapsLogger
 ): Promise<StoredPlaceCoordinateCandidate | null> {
   const trimmedName = normalizeText(place.name);
 
   if (!trimmedName) {
     return null;
+  }
+
+  const cacheKey = normalizePlaceKey(trimmedName);
+  const cached = coordinateCache.get(cacheKey);
+
+  if (cached) {
+    logger?.log(`[Ask AI Maps] Cache hit for coordinates: ${trimmedName}`);
+    return { name: trimmedName, address: null, city: null, ...cached };
   }
 
   const supabase = await getSupabaseAdminClient();
@@ -1007,7 +1044,8 @@ async function findStoredPlaceCoordinateCandidate(
     .limit(8);
 
   if (error) {
-    throw new AskAiMapsServiceError("Failed to enrich Ask AI Maps coordinates.", 500);
+    logger?.log(`[Ask AI Maps] Coordinate lookup failed for "${trimmedName}": ${error.message}`);
+    return null;
   }
 
   const candidates = Array.isArray(data) ? (data as StoredPlaceCoordinateCandidate[]) : [];
@@ -1032,7 +1070,14 @@ async function findStoredPlaceCoordinateCandidate(
     }
   }
 
-  return bestScore >= 0.72 ? bestCandidate : null;
+  const result = bestScore >= 0.72 ? bestCandidate : null;
+
+  if (result) {
+    coordinateCache.set(cacheKey, { latitude: result.latitude!, longitude: result.longitude! });
+    pruneCoordinateCache();
+  }
+
+  return result;
 }
 
 async function hydrateGroundedPlacesWithCoordinates(
@@ -1045,7 +1090,7 @@ async function hydrateGroundedPlacesWithCoordinates(
         return place;
       }
 
-      const candidate = await findStoredPlaceCoordinateCandidate(place);
+      const candidate = await findStoredPlaceCoordinateCandidate(place, logger);
 
       if (!candidate) {
         return place;
@@ -1113,15 +1158,22 @@ function normalizeGroundedPlaces(
     const reason =
       normalizeOptionalDisplayText(candidate.reason) ??
       "Grounded Google Maps recommendation for your request.";
+    const aiSummary = normalizeOptionalDisplayText(candidate.aiSummary);
+    const whyItMatches = normalizeStringArray(candidate.whyItMatches);
+    const bestForTags = normalizeStringArray(candidate.bestForTags);
+    const goHereIf = normalizeOptionalDisplayText(candidate.goHereIf);
+    const maybeSkipIf = normalizeOptionalDisplayText(candidate.maybeSkipIf);
     const source = findBestGroundingSource(name, sources);
     const googleMapsUrl = source?.uri;
     const placeId = source?.placeId;
     const categoryText = normalizeOptionalDisplayText(candidate.categoryText);
     const ratingText = normalizeOptionalDisplayText(candidate.ratingText);
+    const reviewCountText = normalizeOptionalDisplayText(candidate.reviewCountText);
     const openStatusText = normalizeOptionalDisplayText(candidate.openStatusText);
     const addressText =
       normalizeOptionalDisplayText(candidate.addressText) ??
       normalizeOptionalDisplayText(source?.text);
+    const hoursText = normalizeOptionalDisplayText(candidate.hoursText);
     const coordinates =
       extractCoordinatesFromParsedPlace(candidate) ??
       extractCoordinatesFromGoogleMapsUrl(googleMapsUrl ?? source?.uri);
@@ -1136,18 +1188,25 @@ function normalizeGroundedPlaces(
       id: toPlaceId(placeId ?? googleMapsUrl ?? name, index),
       name,
       reason,
+      ...(aiSummary ? { aiSummary } : {}),
+      ...(whyItMatches && whyItMatches.length > 0 ? { whyItMatches } : {}),
+      ...(bestForTags && bestForTags.length > 0 ? { bestForTags } : {}),
+      ...(goHereIf ? { goHereIf } : {}),
+      ...(maybeSkipIf ? { maybeSkipIf } : {}),
       ...(googleMapsUrl ? { googleMapsUrl } : {}),
       ...(placeId ? { placeId } : {}),
       ...(source?.title ? { sourceTitle: source.title } : {}),
       ...(source?.uri ? { sourceUri: source.uri } : {}),
       ...(coordinates ? { coordinates } : {}),
-      ...(categoryText || ratingText || openStatusText || addressText
+      ...(categoryText || ratingText || reviewCountText || openStatusText || addressText || hoursText
         ? {
             optionalDetails: {
               ...(categoryText ? { categoryText } : {}),
               ...(ratingText ? { ratingText } : {}),
+              ...(reviewCountText ? { reviewCountText } : {}),
               ...(openStatusText ? { openStatusText } : {}),
               ...(addressText ? { addressText } : {}),
+              ...(hoursText ? { hoursText } : {}),
             },
           }
         : {}),
@@ -1183,8 +1242,8 @@ async function generateMapsResponse({
       model,
       contents: prompt,
       config: {
-        temperature: 0.25,
-        maxOutputTokens: 1800,
+        temperature: 0.2,
+        maxOutputTokens: 900,
         tools: [{ googleMaps: {} }],
       },
     }),
