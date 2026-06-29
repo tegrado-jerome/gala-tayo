@@ -3,7 +3,7 @@ import { AppIcon, getCategoryIconName } from './AppIcon'
 import { getCuratedPlaceImages, normalizePlaceSlug } from '../data/curatedPlaceImages'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { useSystemMessage } from '../context/SystemMessageContext'
-import GuestLimitModal from './GuestLimitModal'
+import { useGuestAuthPrompt } from '../utils/useGuestAuthPrompt'
 
 type PlaceCategoryMeta = {
   id: string
@@ -193,10 +193,10 @@ function PlaceCard({
   onSelect,
   dataSearchPlaceId,
 }: PlaceCardProps) {
-  const [isSavePromptOpen, setIsSavePromptOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
   const [hasImageLoadError, setHasImageLoadError] = useState(false)
+  const guestAuth = useGuestAuthPrompt()
   const { isPlaceSaved, saveFavorite, removeFavorite } = useSavedFavorites()
   const { showSystemMessage } = useSystemMessage()
   const resolvedCuratedImageUrls = place.curatedImageUrls ?? getCuratedPlaceImages(place.name)
@@ -257,7 +257,7 @@ function PlaceCard({
       const result = await saveFavorite(placeId, place.slug)
 
       if (result.status === 'guest') {
-        setIsSavePromptOpen(true)
+        guestAuth.open('favorite')
         return
       }
 
@@ -488,11 +488,7 @@ function PlaceCard({
         ) : null}
       </article>
 
-      <GuestLimitModal
-        isOpen={isSavePromptOpen}
-        onClose={() => setIsSavePromptOpen(false)}
-        mode="savePlace"
-      />
+      {guestAuth.promptElement}
     </>
   )
 }

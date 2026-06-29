@@ -90,7 +90,7 @@ const mainActions = [
   {
     title: 'Ask AI',
     description: 'Get a faster gala suggestion with one focused prompt.',
-    href: '/ask-ai/text',
+    href: '/ask-ai/chatbot',
     icon: 'askAi' as const,
     tone: 'soft',
   },
@@ -104,7 +104,7 @@ const mainActions = [
   {
     title: 'Prompt Builder',
     description: 'Shape a stronger AI prompt before you search or ask.',
-    href: '/prompt-builder',
+    href: '/ask-ai/prompt-builder',
     icon: 'askAi' as const,
     tone: 'soft',
   },

@@ -4,6 +4,7 @@ import {
   HttpResponseInit,
   InvocationContext,
 } from "@azure/functions";
+import { randomUUID } from "crypto";
 import {
   AskAiUsageResult,
   checkAskAiUsage,
@@ -16,6 +17,7 @@ import {
 import { validateJwt } from "../utils/auth";
 
 const ASK_AI_MAPS_COOLDOWN_MS = 10_000;
+const ASK_AI_MAPS_REQUEST_ID_HEADER = "x-ask-ai-maps-request-id";
 const lastAskAiMapsRequestAtByUser = new Map<string, number>();
 const NO_STORE_HEADERS = {
   "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
@@ -30,6 +32,12 @@ type AskAiMapsRequestBody = {
   nearMe?: unknown;
   openNow?: unknown;
   userLocation?: unknown;
+};
+
+type AskAiMapsRequestLogContext = {
+  requestId: string;
+  startedAt: number;
+  query: string | null;
 };
 
 function isAuthError(message: string): boolean {
@@ -64,6 +72,22 @@ function logAskAiMaps(context: InvocationContext, message: string) {
   context.log(message);
 }
 
+function isDebugMode(): boolean {
+  return process.env.NODE_ENV !== "production";
+}
+
+function getRequestId(request: HttpRequest): string {
+  const headerRequestId = request.headers.get("x-request-id")?.trim();
+  return headerRequestId || randomUUID();
+}
+
+function buildResponseHeaders(requestId: string) {
+  return {
+    ...NO_STORE_HEADERS,
+    [ASK_AI_MAPS_REQUEST_ID_HEADER]: requestId,
+  };
+}
+
 function buildUsagePayload(
   askAi?: AskAiUsageResult,
   liveSearch?: AskAiUsageResult
@@ -78,8 +102,36 @@ function buildUsagePayload(
     : {};
 }
 
+function logAskAiMapsError(
+  context: InvocationContext,
+  error: unknown,
+  meta: AskAiMapsRequestLogContext
+) {
+  const serviceError = error instanceof AskAiMapsServiceError ? error : null;
+  const elapsedMs = Date.now() - meta.startedAt;
+  const logPayload = {
+    requestId: meta.requestId,
+    query: meta.query,
+    selectedModel: serviceError?.model ?? null,
+    elapsedMs,
+    providerStatus: serviceError?.providerStatus ?? null,
+    responseStatus: serviceError?.status ?? null,
+    errorCode: serviceError?.code ?? null,
+    errorStage: serviceError?.stage ?? null,
+    errorMessage: error instanceof Error ? error.message : String(error),
+    details: serviceError?.details ?? null,
+  };
+
+  context.error(`[Ask AI Maps] Request failed ${JSON.stringify(logPayload)}`);
+
+  if (isDebugMode() && error instanceof Error && error.stack) {
+    context.error(error.stack);
+  }
+}
+
 function handleAskAiMapsError(
   error: unknown,
+  meta: AskAiMapsRequestLogContext,
   usage?: {
     askAi: AskAiUsageResult;
     liveSearch: AskAiUsageResult;
@@ -90,20 +142,44 @@ function handleAskAiMapsError(
   if (isAuthError(message)) {
     return {
       status: 401,
-      headers: NO_STORE_HEADERS,
+      headers: buildResponseHeaders(meta.requestId),
       jsonBody: {
+        ok: false,
+        error: "ASK_AI_MAPS_UNAUTHORIZED",
         message: "Unauthorized.",
+        requestId: meta.requestId,
+        places: [],
+        sources: [],
         ...buildUsagePayload(usage?.askAi, usage?.liveSearch),
       },
     };
   }
 
   if (error instanceof AskAiMapsServiceError) {
+    const status = error.status >= 400 && error.status < 600 ? error.status : 500;
+
     return {
-      status: error.status >= 400 && error.status < 500 ? error.status : 502,
-      headers: NO_STORE_HEADERS,
+      status,
+      headers: buildResponseHeaders(meta.requestId),
       jsonBody: {
-        message: friendlyProviderMessage(error.status),
+        ok: false,
+        error:
+          error.code ||
+          (status === 504
+            ? "ASK_AI_MAPS_TIMEOUT"
+            : status === 429
+              ? "ASK_AI_MAPS_RATE_LIMIT"
+              : "ASK_AI_MAPS_ERROR"),
+        message:
+          status === 400
+            ? message
+            : error.code === "ASK_AI_MAPS_PARSE_ERROR" ||
+                error.code === "ASK_AI_MAPS_NORMALIZATION_ERROR"
+              ? "Ask AI Map Finder could not process places right now. Please try again."
+              : friendlyProviderMessage(status),
+        requestId: meta.requestId,
+        places: [],
+        sources: [],
         ...buildUsagePayload(usage?.askAi, usage?.liveSearch),
       },
     };
@@ -111,9 +187,14 @@ function handleAskAiMapsError(
 
   return {
     status: 500,
-    headers: NO_STORE_HEADERS,
+    headers: buildResponseHeaders(meta.requestId),
     jsonBody: {
+      ok: false,
+      error: "ASK_AI_MAPS_ERROR",
       message: "Failed to load Ask AI map results.",
+      requestId: meta.requestId,
+      places: [],
+      sources: [],
       ...buildUsagePayload(usage?.askAi, usage?.liveSearch),
     },
   };
@@ -170,7 +251,7 @@ function getUserLocation(value: unknown): { latitude: number; longitude: number 
   return { latitude, longitude };
 }
 
-function checkCooldown(userId: string): HttpResponseInit | null {
+function checkCooldown(userId: string, requestId: string): HttpResponseInit | null {
   const now = Date.now();
   const lastRequestAt = lastAskAiMapsRequestAtByUser.get(userId) ?? 0;
   const elapsed = now - lastRequestAt;
@@ -178,9 +259,14 @@ function checkCooldown(userId: string): HttpResponseInit | null {
   if (elapsed < ASK_AI_MAPS_COOLDOWN_MS) {
     return {
       status: 429,
-      headers: NO_STORE_HEADERS,
+      headers: buildResponseHeaders(requestId),
       jsonBody: {
+        ok: false,
+        error: "ASK_AI_MAPS_COOLDOWN",
         message: "Ask AI Map Finder is busy right now. Please try again in a moment.",
+        requestId,
+        places: [],
+        sources: [],
       },
     };
   }
@@ -193,22 +279,35 @@ export async function askAiMapsRequest(
   request: HttpRequest,
   context: InvocationContext
 ): Promise<HttpResponseInit> {
+  const requestId = getRequestId(request);
+  const startedAt = Date.now();
+  const body = await getRequestBody(request);
+  const query = getStringField(body.query);
+  const requestLogContext: AskAiMapsRequestLogContext = {
+    requestId,
+    startedAt,
+    query,
+  };
+
   try {
     const user = await validateJwt(request);
-    const body = await getRequestBody(request);
-    const query = getStringField(body.query);
 
     if (!query) {
       return {
         status: 400,
-        headers: NO_STORE_HEADERS,
+        headers: buildResponseHeaders(requestId),
         jsonBody: {
+          ok: false,
+          error: "ASK_AI_MAPS_BAD_REQUEST",
           message: "Query is required.",
+          requestId,
+          places: [],
+          sources: [],
         },
       };
     }
 
-    const cooldownResponse = checkCooldown(user.id);
+    const cooldownResponse = checkCooldown(user.id, requestId);
 
     if (cooldownResponse) {
       return cooldownResponse;
@@ -222,9 +321,14 @@ export async function askAiMapsRequest(
     if (!askAiUsageBefore.allowed) {
       return {
         status: 429,
-        headers: NO_STORE_HEADERS,
+        headers: buildResponseHeaders(requestId),
         jsonBody: {
+          ok: false,
+          error: "ASK_AI_MAPS_DAILY_LIMIT",
           message: "Daily Ask AI limit reached.",
+          requestId,
+          places: [],
+          sources: [],
           usage: { askAi: askAiUsageBefore, liveSearch: liveSearchUsageBefore },
         },
       };
@@ -233,9 +337,14 @@ export async function askAiMapsRequest(
     if (!liveSearchUsageBefore.allowed) {
       return {
         status: 429,
-        headers: NO_STORE_HEADERS,
+        headers: buildResponseHeaders(requestId),
         jsonBody: {
+          ok: false,
+          error: "ASK_AI_MAPS_LIVE_SEARCH_LIMIT",
           message: "Daily Ask AI live search limit reached.",
+          requestId,
+          places: [],
+          sources: [],
           usage: { askAi: askAiUsageBefore, liveSearch: liveSearchUsageBefore },
         },
       };
@@ -249,7 +358,7 @@ export async function askAiMapsRequest(
         openNow: getBooleanField(body.openNow),
         userLocation: getUserLocation(body.userLocation),
       }, {
-        log: (message: string) => logAskAiMaps(context, message),
+        log: (message: string) => logAskAiMaps(context, `[Ask AI Maps][${requestId}] ${message}`),
       });
 
       const [askAiUsageAfter, liveSearchUsageAfter] = await Promise.all([
@@ -259,8 +368,10 @@ export async function askAiMapsRequest(
 
       return {
         status: 200,
-        headers: NO_STORE_HEADERS,
+        headers: buildResponseHeaders(requestId),
         jsonBody: {
+          ok: true,
+          requestId,
           mode: result.mode,
           answerText: result.answerText,
           places: result.places,
@@ -277,16 +388,16 @@ export async function askAiMapsRequest(
       };
     } catch (error) {
       lastAskAiMapsRequestAtByUser.delete(user.id);
-      context.error(error);
+      logAskAiMapsError(context, error, requestLogContext);
 
-      return handleAskAiMapsError(error, {
+      return handleAskAiMapsError(error, requestLogContext, {
         askAi: askAiUsageBefore,
         liveSearch: liveSearchUsageBefore,
       });
     }
   } catch (error) {
-    context.error(error);
-    return handleAskAiMapsError(error);
+    logAskAiMapsError(context, error, requestLogContext);
+    return handleAskAiMapsError(error, requestLogContext);
   }
 }
 

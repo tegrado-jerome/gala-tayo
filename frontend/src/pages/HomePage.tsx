@@ -10,11 +10,12 @@ import PlaceCard, { type PlaceCardData, type PlaceCategoryMeta, type PlaceTagMet
 import AppHeader from '../components/AppHeader'
 import CompactPagination from '../components/CompactPagination'
 import MapView from '../components/MapView'
-import GuestLimitModal from '../components/GuestLimitModal'
+import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
 import GoogleSignInButton from '../components/GoogleSignInButton'
 import PageHeroHeader from '../components/PageHeroHeader'
 import PromptBuilderModal from '../components/PromptBuilderModal'
 import TapGalaPinGame from '../components/TapGalaPinGame'
+import ThinkingMiniGamePopup from '../components/ThinkingMiniGamePopup'
 import MinimalBackNav from '../components/MinimalBackNav'
 import { supabase } from '../supabase'
 import { navigateToCanonicalPlace, navigateToPath } from '../utils/navigation'
@@ -2818,11 +2819,6 @@ function AskAiPlaceholder({
             </div>
           )}
 
-          {isUsageLoading && !usageStatus && (
-            <div className="mx-10 rounded-2xl bg-slate-50 px-4 py-3">
-              <p className="text-[0.84rem] text-slate-500">Checking your Ask AI limit...</p>
-            </div>
-          )}
         </div>
       </div>
 
@@ -3246,25 +3242,6 @@ function AskAiThinkingStageNext({
   chibiImage: string
   className?: string
 }) {
-  const [miniGameReady] = useState(true)
-  const [miniGameOpen, setMiniGameOpen] = useState(false)
-
-  useEffect(() => {
-    if (!miniGameOpen) {
-      return
-    }
-
-    const previousBodyOverflow = document.body.style.overflow
-    const previousHtmlOverflow = document.documentElement.style.overflow
-    document.body.style.overflow = 'hidden'
-    document.documentElement.style.overflow = 'hidden'
-
-    return () => {
-      document.body.style.overflow = previousBodyOverflow
-      document.documentElement.style.overflow = previousHtmlOverflow
-    }
-  }, [miniGameOpen])
-
   return (
     <div className={`flex flex-col ${className}`}>
       {/* Chat messages area */}
@@ -3294,51 +3271,10 @@ function AskAiThinkingStageNext({
               </div>
             </div>
           </div>
-
-          {miniGameReady && (
-            <div className="flex items-start gap-2.5">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#fef3c7,#fde68a)] text-sm shadow-[0_2px_8px_rgba(245,158,11,0.12)]">
-                🎮
-              </div>
-              <div className="min-w-0 max-w-[82%] rounded-2xl rounded-tl-[6px] border border-[rgba(245,158,11,0.16)] bg-[#fffbeb] px-4 py-3 shadow-[0_2px_8px_rgba(15,23,42,0.02)]">
-                <p className="text-[0.78rem] font-semibold uppercase tracking-[0.08em] text-amber-700">While you wait</p>
-                <p className="mt-1 text-[0.94rem] font-bold text-slate-900">Play Pin Rush?</p>
-                <p className="mt-0.5 text-[0.82rem] leading-relaxed text-slate-600">Tiny taps, streaks, charms. Optional and fun.</p>
-                <button
-                  type="button"
-                  onClick={() => setMiniGameOpen(true)}
-                  className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-4 py-2 text-[0.82rem] font-semibold text-white transition hover:bg-slate-800 active:scale-[0.97]"
-                >
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-3.5 w-3.5">
-                    <path d="M12 21s6-5.7 6-11a6 6 0 1 0-12 0c0 5.3 6 11 6 11Z" />
-                    <circle cx="12" cy="10" r="2.3" />
-                  </svg>
-                  Play now
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
-      {miniGameOpen ? createPortal(
-        <div
-          className="fixed inset-0 z-[9990] flex h-[100dvh] items-stretch justify-center overscroll-none bg-white"
-          role="presentation"
-          onClick={() => setMiniGameOpen(false)}
-        >
-          <div
-            className="relative flex h-[100dvh] w-full flex-col overflow-hidden touch-auto"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Tap the Gala Pin mini game"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <TapGalaPinGame isLoading={true} onClose={() => setMiniGameOpen(false)} className="min-h-0 w-full flex-1" />
-          </div>
-        </div>,
-        document.body,
-      ) : null}
+      <ThinkingMiniGamePopup isThinking={true} />
     </div>
   )
 }
@@ -3407,7 +3343,12 @@ function AskAiModePanel({
     if (draftQuestion.trim()) {
       onQuestionChange(draftQuestion)
     }
+    navigateToPath('/ask-ai/prompt-builder')
     onOpenPromptBuilder(draftQuestion)
+  }
+
+  const handleOpenMapsAi = () => {
+    navigateToPath('/ask-ai/maps')
   }
 
   const renderMessagesContent = () => {
@@ -3482,11 +3423,6 @@ function AskAiModePanel({
             </div>
           )}
 
-          {isUsageLoading && !usageStatus && (
-            <div className="mx-2 rounded-[var(--radius-lg)] bg-[var(--bg-soft)] px-4 py-3">
-              <p className="text-[0.84rem] text-[var(--muted)]">Checking your Ask AI limit...</p>
-            </div>
-          )}
         </div>
       )
     }
@@ -3606,6 +3542,29 @@ function AskAiModePanel({
 
   return (
     <div className={`flex h-full flex-col bg-[var(--bg)] ${className}`}>
+      {/* Compact internal chat header */}
+      <div className="shrink-0 border-b border-[var(--line)] bg-[var(--panel)] px-4 py-2 sm:px-5">
+        <div className="mx-auto flex w-full max-w-[768px] items-center gap-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--primary-soft)]">
+            <AppIcon name="askAi" size={16} className="text-[var(--accent)]" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-sm font-semibold leading-tight text-[var(--text)]">Ask AI</h2>
+            <p className="text-xs leading-tight text-[var(--muted)]">Gala planning assistant</p>
+          </div>
+          {messages.length > 0 && (
+            <button
+              type="button"
+              onClick={onStartOver}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--line)] bg-[var(--bg-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--muted)] transition hover:border-[var(--line-strong)] hover:bg-[var(--panel)] hover:text-[var(--text)]"
+            >
+              <AppIcon name="newChat" className="h-3.5 w-3.5" />
+              New chat
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Scrollable messages area */}
       <div className="flex-1 min-h-0 overflow-y-auto px-4 py-5 sm:px-5">
         <div className="mx-auto flex w-full max-w-[768px] flex-col">
@@ -3617,16 +3576,6 @@ function AskAiModePanel({
       {/* Bottom composer */}
       <div className="shrink-0 border-t border-[var(--line)] bg-[var(--bg)] px-4 py-3 sm:px-5 pb-[calc(env(safe-area-inset-bottom,0px)+4rem)]">
         <div className="mx-auto flex w-full max-w-[768px] items-center gap-2 mb-2">
-          {messages.length > 0 && (
-            <button
-              type="button"
-              onClick={onStartOver}
-              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-[var(--panel)] px-3 py-1.5 text-xs font-semibold text-[var(--muted)] transition hover:border-[var(--line-strong)] hover:text-[var(--text)]"
-            >
-              <AppIcon name="newChat" className="h-3.5 w-3.5" />
-              New chat
-            </button>
-          )}
           <button
             type="button"
             onClick={handleOpenPromptBuilder}
@@ -3668,6 +3617,8 @@ function AskAiModePanel({
           GalaTayo AI can make mistakes. Check important info.
         </p>
       </div>
+
+      <ThinkingMiniGamePopup isThinking={isSubmitting} />
     </div>
   )
 }
@@ -4709,7 +4660,7 @@ function HomePage({
 
     return (
       <div className={`${selectedMode === 'ask-ai' ? 'h-screen overflow-hidden' : 'min-h-screen'} bg-[var(--bg)] text-[var(--text)]`}>
-        <GuestLimitModal isOpen={promptLogin} onClose={() => setPromptLogin(false)} />
+        <GuestAuthPrompt variant="ask-ai" mode="modal" isOpen={promptLogin} onClose={() => setPromptLogin(false)} />
 
         <div className={`gala-page-background overflow-x-hidden lg:hidden ${selectedMode === 'ask-ai' ? 'flex h-[100dvh] flex-col overflow-hidden' : 'min-h-screen'}`}>
           <AppHeader signInLabel="Mag-sign in" minimal />

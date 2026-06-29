@@ -1,7 +1,8 @@
 ﻿import { startTransition, useEffect, useMemo, useRef, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
+import { createPortal } from 'react-dom'
 import { AppIcon } from '../components/AppIcon'
-import GoogleSignInButton from '../components/GoogleSignInButton'
+import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
 import MapView from '../components/MapView'
 import type { PlaceCardData } from '../components/PlaceCard'
 import { supabase } from '../supabase'
@@ -16,7 +17,7 @@ import {
   type AskAiMapPlace,
   type AskAiMapSource,
 } from '../utils/askAiMapRuntime'
-import { navigateToPath } from '../utils/navigation'
+import ThinkingMiniGamePopup from '../components/ThinkingMiniGamePopup'
 
 type AskAiMapChipId =
   | 'near-me'
@@ -60,6 +61,9 @@ type AskAiUsageSummary = {
 
 const DAILY_ASK_AI_LIMIT_MESSAGE = 'Daily Ask AI limit reached.'
 const ASK_AI_MAPS_REQUEST_TIMEOUT_MS = 45_000
+const caviteCenter: readonly [number, number] = [14.2814, 120.8685]
+const tagaytayCenter: readonly [number, number] = [14.1154, 120.9621]
+const manilaCenter: readonly [number, number] = [14.5995, 120.9842]
 
 function getEmptyReasonMessage(emptyReason: AskAiMapsResponse['emptyReason']) {
   if (emptyReason === 'PROVIDER_BUSY') {
@@ -195,6 +199,44 @@ function normalizeOptionalDetails(value: unknown): AskAiMapOptionalDetails | und
   return Object.keys(details).length > 0 ? details : undefined
 }
 
+function normalizeCoordinates(
+  value: unknown,
+  latitudeValue?: unknown,
+  longitudeValue?: unknown,
+) {
+  const coordinateCandidate =
+    value && typeof value === 'object'
+      ? value as { latitude?: unknown; longitude?: unknown; lat?: unknown; lng?: unknown }
+      : null
+  const latitude =
+    typeof coordinateCandidate?.latitude === 'number'
+      ? coordinateCandidate.latitude
+      : typeof coordinateCandidate?.lat === 'number'
+        ? coordinateCandidate.lat
+        : typeof latitudeValue === 'number'
+          ? latitudeValue
+          : null
+  const longitude =
+    typeof coordinateCandidate?.longitude === 'number'
+      ? coordinateCandidate.longitude
+      : typeof coordinateCandidate?.lng === 'number'
+        ? coordinateCandidate.lng
+        : typeof longitudeValue === 'number'
+          ? longitudeValue
+          : null
+
+  if (latitude === null || longitude === null) {
+    return undefined
+  }
+
+  return {
+    lat: latitude,
+    lng: longitude,
+    latitude,
+    longitude,
+  }
+}
+
 function normalizePlaces(value: unknown): AskAiMapPlace[] {
   if (!Array.isArray(value)) {
     return []
@@ -205,7 +247,11 @@ function normalizePlaces(value: unknown): AskAiMapPlace[] {
       return []
     }
 
-    const candidate = entry as Partial<AskAiMapPlace>
+    const candidate = entry as Partial<AskAiMapPlace> & Partial<AskAiMapOptionalDetails> & {
+      latitude?: unknown
+      longitude?: unknown
+      googleMapsUri?: unknown
+    }
 
     if (
       typeof candidate.id !== 'string' ||
@@ -219,18 +265,22 @@ function normalizePlaces(value: unknown): AskAiMapPlace[] {
       id: candidate.id,
       name: candidate.name,
       reason: candidate.reason,
-      googleMapsUrl: typeof candidate.googleMapsUrl === 'string' ? candidate.googleMapsUrl : undefined,
+      googleMapsUrl:
+        typeof candidate.googleMapsUrl === 'string'
+          ? candidate.googleMapsUrl
+          : typeof candidate.googleMapsUri === 'string'
+            ? candidate.googleMapsUri
+            : undefined,
+      googleMapsUri: typeof candidate.googleMapsUri === 'string' ? candidate.googleMapsUri : undefined,
       placeId: typeof candidate.placeId === 'string' ? candidate.placeId : undefined,
       sourceTitle: typeof candidate.sourceTitle === 'string' ? candidate.sourceTitle : undefined,
       sourceUri: typeof candidate.sourceUri === 'string' ? candidate.sourceUri : undefined,
-      coordinates:
-        candidate.coordinates &&
-        typeof candidate.coordinates === 'object' &&
-        typeof candidate.coordinates.latitude === 'number' &&
-        typeof candidate.coordinates.longitude === 'number'
-          ? candidate.coordinates
-          : undefined,
-      optionalDetails: normalizeOptionalDetails(candidate.optionalDetails),
+      coordinates: normalizeCoordinates(
+        candidate.coordinates,
+        candidate.latitude,
+        candidate.longitude,
+      ),
+      optionalDetails: normalizeOptionalDetails(candidate.optionalDetails) ?? normalizeOptionalDetails(candidate),
     }]
   })
 }
@@ -299,82 +349,118 @@ function deriveHeaderAreaLabel(query: string) {
   return 'Live map-grounded picks'
 }
 
+function deriveQueryMapCenter(query: string) {
+  const normalizedQuery = query.trim().toLowerCase()
+
+  if (normalizedQuery.includes('tagaytay')) {
+    return tagaytayCenter
+  }
+
+  if (normalizedQuery.includes('cavite')) {
+    return caviteCenter
+  }
+
+  if (normalizedQuery.includes('manila')) {
+    return manilaCenter
+  }
+
+  return metroManilaCenter
+}
+
 function isGenericReasonText(reason: string) {
   const normalizedReason = reason.trim().toLowerCase()
 
-  return (
-    normalizedReason === 'grounded google maps recommendation for your request.' ||
-    normalizedReason === 'recommended based on google maps grounding.' ||
-    normalizedReason === 'map-grounded match for your search.' ||
-    normalizedReason === 'match for your search.'
-  )
+  return [
+    'map-grounded',
+    'map grounded',
+    'grounded match',
+    'requested area',
+    'fits your query',
+    'matches your search',
+    'based on your query',
+  ].some((phrase) => normalizedReason.includes(phrase))
 }
 
-function rewritePlainReason(place: AskAiMapPlace, query: string, reason: string) {
+function rewritePlainReason(reason: string) {
   const normalizedReason = reason.trim()
-  const foldedReason = normalizedReason.toLowerCase()
-  const safeQuery = query.trim() || 'search'
-  const category = normalizeDisplayText(place.optionalDetails?.categoryText)
-  const rating = normalizeDisplayText(place.optionalDetails?.ratingText)
-
-  if (foldedReason.startsWith('a ') || foldedReason.startsWith('an ')) {
-    return `Good match for your ${safeQuery} because it is a map-grounded ${normalizedReason.replace(/\.$/, '')}.`
-  }
-
-  if (foldedReason.startsWith('this ') && category) {
-    return `Good match for your ${safeQuery} because it is a map-grounded ${category.toLowerCase()}${rating ? ` with ${rating}` : ''}.`
-  }
-
-  return normalizedReason
+  return normalizedReason.length > 220 ? normalizedReason.slice(0, 217).trimEnd() + '...' : normalizedReason
 }
 
-function buildPlaceReasonFallback(place: AskAiMapPlace) {
-  const name = place.name.trim()
+function buildPlaceReasonFallback(place: AskAiMapPlace, query: string) {
   const category = normalizeDisplayText(place.optionalDetails?.categoryText)
   const address = normalizeDisplayText(place.optionalDetails?.addressText)
   const rating = normalizeDisplayText(place.optionalDetails?.ratingText)
+  const openStatus = normalizeDisplayText(place.optionalDetails?.openStatusText)
+  const normalizedQuery = query.trim().toLowerCase()
+  const normalizedCategory = category?.toLowerCase() ?? ''
+  const areaLabel = address?.split(',').map((part) => part.trim()).filter(Boolean).slice(-2).join(', ')
+  const isMall =
+    normalizedQuery.includes('mall') ||
+    normalizedQuery.includes('shopping') ||
+    normalizedCategory.includes('mall')
+  const isSamgyup =
+    normalizedQuery.includes('samgyup') ||
+    normalizedQuery.includes('samgyeop') ||
+    normalizedQuery.includes('korean bbq') ||
+    normalizedCategory.includes('korean')
+  const isCafe =
+    normalizedQuery.includes('cafe') ||
+    normalizedQuery.includes('coffee') ||
+    normalizedQuery.includes('study') ||
+    normalizedCategory.includes('cafe') ||
+    normalizedCategory.includes('coffee')
+  const isRestaurant =
+    normalizedQuery.includes('restaurant') ||
+    normalizedQuery.includes('food') ||
+    normalizedQuery.includes('kainan') ||
+    normalizedCategory.includes('restaurant') ||
+    normalizedCategory.includes('food')
 
-  if (category && rating && address) {
-    return `${name} fits your search because it is a map-grounded ${category} around ${address} with ${rating}.`
+  if (isMall) {
+    return areaLabel
+      ? `Good mall option for shopping, food, and indoor tambayan around ${areaLabel}. ${openStatus ?? 'Useful map details are shown when available.'}`
+      : 'Good mall option for shopping, food, and indoor tambayan around this area.'
+  }
+
+  if (isSamgyup) {
+    return 'Good Korean BBQ option if you are craving samgyup nearby. Dine-in or map details are shown when available.'
+  }
+
+  if (isCafe) {
+    return 'Good cafe pick if you want a place to chill, study, or get coffee nearby. Helpful map details are shown when available.'
+  }
+
+  if (isRestaurant) {
+    return 'Good food spot to consider based on cuisine, location, and available map details. Easy to compare with nearby options.'
+  }
+
+  if (category && rating) {
+    return `Good ${category.toLowerCase()} option to check nearby. Google Maps shows ${rating}${openStatus ? ` and ${openStatus.toLowerCase()} info` : ''}.`
   }
 
   if (category && address) {
-    return `${name} fits your search because it is a map-grounded ${category} around ${address}.`
-  }
-
-  if (rating && address) {
-    return `${name} fits your search because it is a map-grounded place around ${address} with ${rating}.`
+    return `Good ${category.toLowerCase()} option to check around ${address}. Helpful map details are shown when available.`
   }
 
   if (address) {
-    return `${name} is a map-grounded match around ${address}.`
+    return `Good nearby place to consider around ${address}. Helpful map details are shown when available.`
   }
 
-  if (category) {
-    return `${name} is a map-grounded ${category} match for your search.`
-  }
-
-  return `${name} is a map-grounded match for your search.`
+  return 'Good nearby place to consider based on the grounded map result. Helpful details are shown when available.'
 }
 
 function getDisplayReason(place: AskAiMapPlace, query: string) {
   const reason = normalizeDisplayText(place.reason)
 
   if (!reason) {
-    return buildPlaceReasonFallback(place)
+    return buildPlaceReasonFallback(place, query)
   }
 
   if (isGenericReasonText(reason)) {
-    return buildPlaceReasonFallback(place)
+    return buildPlaceReasonFallback(place, query)
   }
 
-  return rewritePlainReason(place, query, reason)
-}
-
-function getMetaLine(place: AskAiMapPlace) {
-  const details = place.optionalDetails
-  const parts = [details?.categoryText].filter(Boolean)
-  return parts.join(' · ')
+  return rewritePlainReason(reason)
 }
 
 function getReviewBadgeText(place: AskAiMapPlace) {
@@ -386,6 +472,40 @@ function getReviewBadgeText(place: AskAiMapPlace) {
   }
 
   return ratingText ?? reviewCountText ?? null
+}
+
+function getShortLocationText(place: AskAiMapPlace) {
+  const addressText = normalizeDisplayText(place.optionalDetails?.addressText)
+
+  if (!addressText) {
+    return null
+  }
+
+  const parts = addressText
+    .split(',')
+    .map((part) => part.trim())
+    .filter(Boolean)
+  const trimmedParts =
+    parts[parts.length - 1]?.toLowerCase() === 'philippines'
+      ? parts.slice(0, -1)
+      : parts
+
+  if (trimmedParts.length >= 2) {
+    return trimmedParts.slice(-2).join(', ')
+  }
+
+  return addressText
+}
+
+function getCoordinateChipText(place: AskAiMapPlace) {
+  const latitude = place.coordinates?.latitude
+  const longitude = place.coordinates?.longitude
+
+  if (typeof latitude !== 'number' || typeof longitude !== 'number') {
+    return null
+  }
+
+  return `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
 }
 
 function mapPlaceToMapCard(place: AskAiMapPlace): PlaceCardData {
@@ -523,6 +643,7 @@ function AskAiMapPage() {
   const [sources, setSources] = useState<AskAiMapSource[]>(initialAskAiMapState?.sources ?? [])
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(initialAskAiMapState?.selectedPlaceId ?? null)
   const [focusedPlaceId, setFocusedPlaceId] = useState<string | null>(initialAskAiMapState?.focusedPlaceId ?? null)
+  const [isPlaceDetailOpen, setIsPlaceDetailOpen] = useState(false)
 
   useEffect(() => {
     let isMounted = true
@@ -639,7 +760,10 @@ function AskAiMapPage() {
   )
   const headerSubtitle = useMemo(() => deriveHeaderAreaLabel(requestQuery || query), [query, requestQuery])
   const canSubmit = requestQuery.trim().length > 0 && !isSearching
-  const mapCenter = userLocation ? [userLocation.latitude, userLocation.longitude] as const : metroManilaCenter
+  const mapCenter = userLocation
+    ? [userLocation.latitude, userLocation.longitude] as const
+    : deriveQueryMapCenter(requestQuery || query)
+  const mapLayoutKey = `${places.length}:${selectedPlaceId ?? 'none'}:${focusedPlaceId ?? 'none'}:${isPlaceDetailOpen ? 'modal-open' : 'modal-closed'}`
   const shouldShowPermissionPrompt =
     permissionState === 'prompt' || permissionState === 'requesting' || permissionState === 'denied'
 
@@ -649,6 +773,37 @@ function AskAiMapPage() {
       setFocusedPlaceId(places[0]?.id ?? null)
     }
   }, [places, selectedPlaceId])
+
+  useEffect(() => {
+    if (!isPlaceDetailOpen) {
+      return
+    }
+
+    const previousBodyOverflow = document.body.style.overflow
+    const previousHtmlOverflow = document.documentElement.style.overflow
+    document.body.style.overflow = 'hidden'
+    document.documentElement.style.overflow = 'hidden'
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsPlaceDetailOpen(false)
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow
+      document.documentElement.style.overflow = previousHtmlOverflow
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isPlaceDetailOpen])
+
+  useEffect(() => {
+    if (places.length === 0) {
+      setIsPlaceDetailOpen(false)
+    }
+  }, [places.length])
 
   useEffect(() => {
     if (!selectedPlaceId) {
@@ -715,9 +870,15 @@ function AskAiMapPage() {
     userLocation,
   ])
 
-  function openPlace(placeId: string) {
+  function selectPlace(placeId: string) {
     setSelectedPlaceId(placeId)
     setFocusedPlaceId(placeId)
+  }
+
+  function openPlaceDetails(placeId: string) {
+    setSelectedPlaceId(placeId)
+    setFocusedPlaceId(placeId)
+    setIsPlaceDetailOpen(true)
   }
 
   function requestLocationPermission() {
@@ -770,6 +931,7 @@ function AskAiMapPage() {
       selectedPlaceId: null,
       focusedPlaceId: null,
     })
+    setIsPlaceDetailOpen(false)
 
     const controller = new AbortController()
     const timeoutId = window.setTimeout(() => controller.abort(), ASK_AI_MAPS_REQUEST_TIMEOUT_MS)
@@ -852,6 +1014,7 @@ function AskAiMapPage() {
     setSources([])
     setSelectedPlaceId(null)
     setFocusedPlaceId(null)
+    setIsPlaceDetailOpen(false)
     setPermissionError('')
     setPermissionState('idle')
   }
@@ -861,40 +1024,11 @@ function AskAiMapPage() {
   }
 
   if (!session) {
-    return (
-      <main className="gala-page-background min-h-screen px-4 py-5 text-[var(--text)] sm:px-5 lg:px-8">
-        <div className="mx-auto flex min-h-[calc(100dvh-120px)] max-w-3xl flex-col justify-center">
-          <button
-            type="button"
-            onClick={() => navigateToPath('/ask-ai/text')}
-            className="inline-flex w-fit items-center gap-2 rounded-full border border-[var(--line)] bg-white/88 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-[var(--accent)] hover:text-[var(--accent-deep)]"
-          >
-            <AppIcon name="back" className="h-4 w-4" />
-            <span>Back to Ask AI</span>
-          </button>
-
-          <section className="mt-5 overflow-hidden rounded-[32px] border border-[rgba(83,146,241,0.16)] bg-white/92 p-6 shadow-[0_22px_60px_rgba(15,23,42,0.08)] sm:p-7">
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[linear-gradient(180deg,#eff6ff_0%,#dbeafe_100%)] text-[var(--accent)]">
-                <AppIcon name="map" className="h-7 w-7" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">Ask AI Maps</p>
-                <h1 className="mt-1 text-2xl font-black tracking-[-0.03em] text-slate-950">Sign in to find grounded places on the map</h1>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                  This route uses live Google Maps grounding, so we keep it tied to your GalaTayo session.
-                </p>
-              </div>
-            </div>
-
-            <GoogleSignInButton className="mt-6" redirectTo={`${window.location.origin}/ask-ai/maps`} />
-          </section>
-        </div>
-      </main>
-    )
+    return <GuestAuthPrompt variant="ask-ai" mode="page-state" />
   }
 
   return (
+    <>
     <main className="gala-page-background h-[100dvh] overflow-hidden overscroll-none text-[var(--text)]">
       <div className="h-full w-full">
         <section className="relative h-full overflow-hidden bg-transparent p-0">
@@ -907,8 +1041,9 @@ function AskAiMapPage() {
               zoom={userLocation ? 14 : 12}
               autoFitToPlaces={places.length > 0}
               className="h-full"
-              onPlaceSelect={openPlace}
-              onPlaceOpen={openPlace}
+              layoutKey={mapLayoutKey}
+              onPlaceSelect={selectPlace}
+              onPlaceOpen={openPlaceDetails}
             />
 
             <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[linear-gradient(180deg,rgba(248,247,244,0.72)_0%,rgba(248,247,244,0.18)_58%,rgba(248,247,244,0)_100%)]" />
@@ -943,6 +1078,8 @@ function AskAiMapPage() {
                 <div className="absolute left-[70%] top-[28%] h-4 w-4 animate-bounce rounded-full bg-[#5b95f8] shadow-[0_0_0_8px_rgba(59,130,246,0.11)] [animation-delay:320ms]" />
               </div>
             ) : null}
+
+            <ThinkingMiniGamePopup isThinking={isSearching} />
 
             {shouldShowPermissionPrompt ? (
               <div className="absolute inset-0 z-[700] flex items-center justify-center bg-slate-950/12 p-4">
@@ -1024,15 +1161,11 @@ function AskAiMapPage() {
 
                   {!isSearching ? places.map((place) => {
                     const isSelected = place.id === selectedPlaceId
-                    const metaLine = getMetaLine(place)
-                    const mapsUrl = place.googleMapsUrl ?? place.sourceUri
-                    const reasonText = getDisplayReason(place, requestQuery || query)
+                    const categoryText = normalizeDisplayText(place.optionalDetails?.categoryText)
                     const reviewBadgeText = getReviewBadgeText(place)
-                    const hasHoursText = Boolean(normalizeDisplayText(place.optionalDetails?.hoursText))
-                    const hasAddressText = Boolean(normalizeDisplayText(place.optionalDetails?.addressText))
+                    const shortLocationText = getShortLocationText(place)
                     const openStatusText = normalizeDisplayText(place.optionalDetails?.openStatusText)
                     const isClosedStatus = Boolean(openStatusText && /closed/i.test(openStatusText))
-                    const shouldEmphasizeClosed = usesOpenNow && isClosedStatus
 
                     return (
                       <div
@@ -1045,101 +1178,59 @@ function AskAiMapPage() {
 
                           cardRefs.current.delete(place.id)
                         }}
-                        className={`flex snap-center shrink-0 flex-col rounded-[26px] border bg-white/95 text-left transition ${
+                        className={`flex h-[170px] w-[236px] snap-center shrink-0 flex-col rounded-[24px] border bg-white/95 text-left transition ${
                           isSelected
-                            ? 'w-[304px] border-[var(--accent)] p-4 shadow-[0_18px_38px_rgba(15,23,42,0.14)] ring-2 ring-[rgba(59,130,246,0.12)]'
-                            : 'w-[232px] border-white/70 p-3 shadow-[0_10px_24px_rgba(15,23,42,0.08)] opacity-90 hover:border-[rgba(20,35,58,0.14)] hover:opacity-100'
+                            ? 'scale-[1.01] border-[var(--accent)] p-3.5 shadow-[0_18px_38px_rgba(15,23,42,0.14)] ring-2 ring-[rgba(59,130,246,0.12)]'
+                            : 'border-white/70 p-3.5 shadow-[0_10px_24px_rgba(15,23,42,0.08)] opacity-95 hover:border-[rgba(20,35,58,0.14)] hover:opacity-100'
                         }`}
                         onMouseEnter={() => setFocusedPlaceId(place.id)}
                         onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
                       >
                         <button
                           type="button"
-                          onClick={() => openPlace(place.id)}
-                          className="flex text-left"
+                          onClick={() => openPlaceDetails(place.id)}
+                          className="flex h-full text-left"
                         >
                           <div className="flex min-w-0 flex-1 flex-col">
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="min-w-0 flex-1">
-                                <h3 className={`${isSelected ? 'text-[17px] leading-6' : 'text-[15px] leading-5'} line-clamp-2 font-black tracking-[-0.02em] text-slate-950`}>
-                                  {place.name}
-                                </h3>
-                                {metaLine ? (
-                                  <p className={`mt-1 ${isSelected ? 'line-clamp-2 text-[12px]' : 'line-clamp-1 text-[12px]'} font-medium text-slate-600`}>
-                                    {metaLine}
-                                  </p>
-                                ) : null}
-                              </div>
-                              {reviewBadgeText ? (
-                                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700">
-                                  <AppIcon name="reviews" className="h-3 w-3" />
-                                  <span>{reviewBadgeText}</span>
-                                </span>
+                            <div className="min-w-0">
+                              <h3 className="line-clamp-2 min-h-[2.5rem] text-[15px] font-black leading-5 tracking-[-0.02em] text-slate-950">
+                                {place.name}
+                              </h3>
+                              {categoryText ? (
+                                <p className="mt-1 truncate text-[12px] font-medium text-slate-600">
+                                  {categoryText}
+                                </p>
                               ) : null}
                             </div>
 
-                            <div className={`${isSelected ? 'mt-2.5' : 'mt-2'} flex flex-wrap gap-2 text-[11px] font-semibold`}>
-                              {isSelected && openStatusText ? (
-                                <span
-                                  className={`inline-flex items-center rounded-full px-2.5 py-1 ${
+                            <div className="mt-3 flex flex-1 flex-col gap-2 text-[12px]">
+                              {reviewBadgeText ? (
+                                <div className="flex items-center gap-2 text-amber-700">
+                                  <AppIcon name="reviews" className="h-3.5 w-3.5 shrink-0" />
+                                  <span className="truncate font-semibold">{reviewBadgeText}</span>
+                                </div>
+                              ) : null}
+                              {shortLocationText ? (
+                                <div className="flex items-center gap-2 text-slate-600">
+                                  <AppIcon name="place" className="h-3.5 w-3.5 shrink-0 text-slate-500" />
+                                  <span className="truncate font-medium">{shortLocationText}</span>
+                                </div>
+                              ) : null}
+                              {openStatusText ? (
+                                <div
+                                  className={`inline-flex items-center self-start rounded-full px-2.5 py-1 ${
                                     isClosedStatus
-                                      ? shouldEmphasizeClosed
-                                        ? 'bg-amber-50 text-amber-700'
-                                        : 'bg-slate-100 text-slate-500'
+                                      ? 'bg-rose-50 text-rose-700'
                                       : 'bg-emerald-50 text-emerald-700'
                                   }`}
                                 >
+                                  <span className="mr-1.5 text-[10px]">●</span>
                                   {openStatusText}
-                                </span>
-                              ) : null}
-                              {!hasAddressText && place.coordinates ? (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-2.5 py-1 text-sky-700">
-                                  <AppIcon name="map" className="h-3 w-3" />
-                                  <span>Map location available</span>
-                                </span>
+                                </div>
                               ) : null}
                             </div>
-
-                            {hasAddressText ? (
-                              <div className={`${isSelected ? 'mt-2.5' : 'mt-2'} flex items-start gap-2 rounded-[18px] bg-slate-50/90 px-3 py-2.5 text-slate-700`}>
-                                <AppIcon name="place" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-500" />
-                                <p className={`${isSelected ? 'line-clamp-2 text-[12px]' : 'line-clamp-2 text-[11px]'} leading-5`}>
-                                  {place.optionalDetails?.addressText}
-                                </p>
-                              </div>
-                            ) : null}
-
-                            {isSelected && hasHoursText ? (
-                              <div className="mt-2 flex items-start gap-2 rounded-[18px] bg-slate-50/80 px-3 py-2 text-[11px] leading-5 text-slate-600">
-                                <AppIcon name="list" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-500" />
-                                <p className="line-clamp-2">{place.optionalDetails?.hoursText}</p>
-                              </div>
-                            ) : null}
-
-                            {isSelected ? (
-                              <div className="mt-2.5 rounded-[20px] border border-[rgba(20,35,58,0.08)] bg-[linear-gradient(180deg,rgba(248,250,252,0.96),rgba(241,245,249,0.88))] px-3 py-3">
-                                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">Why this fits</p>
-                                <p className="mt-2 line-clamp-3 text-[12px] leading-5 text-slate-700">{reasonText}</p>
-                              </div>
-                            ) : (
-                              <p className="mt-2.5 line-clamp-2 text-[12px] leading-5 text-slate-700">{reasonText}</p>
-                            )}
                           </div>
                         </button>
-
-                        <div className="mt-3 flex items-center">
-                          {mapsUrl ? (
-                            <a
-                              href={mapsUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-full bg-slate-950 px-3.5 text-[12px] font-semibold text-white transition hover:bg-slate-800"
-                            >
-                              <AppIcon name="map" className="h-3.5 w-3.5" />
-                              <span>Maps</span>
-                            </a>
-                          ) : null}
-                        </div>
                       </div>
                     )
                   }) : null}
@@ -1173,6 +1264,113 @@ function AskAiMapPage() {
         </section>
       </div>
     </main>
+    {selectedPlace && isPlaceDetailOpen ? createPortal(
+      <div className="fixed inset-0 z-[7000]">
+        <button
+          type="button"
+          aria-label="Close place details"
+          className="absolute inset-0 bg-slate-950/36 backdrop-blur-[3px]"
+          onClick={() => setIsPlaceDetailOpen(false)}
+        />
+        <section
+          className="absolute inset-x-0 bottom-0 h-[60vh] max-h-[80vh] overflow-hidden rounded-t-[28px] bg-white shadow-[0_-18px_48px_rgba(15,23,42,0.22)]"
+          aria-modal="true"
+          role="dialog"
+          aria-label={`${selectedPlace.name} details`}
+        >
+          <div className="flex justify-center px-4 pt-3">
+            <span className="h-1.5 w-14 rounded-full bg-slate-200" />
+          </div>
+          <div className="flex items-start justify-between gap-4 px-5 pb-4 pt-3">
+            <div className="min-w-0">
+              <h2 className="text-[22px] font-black tracking-[-0.03em] text-slate-950">
+                {selectedPlace.name}
+              </h2>
+              {normalizeDisplayText(selectedPlace.optionalDetails?.categoryText) ? (
+                <p className="mt-2 text-sm font-semibold text-slate-600">
+                  {selectedPlace.optionalDetails?.categoryText}
+                </p>
+              ) : null}
+              {getReviewBadgeText(selectedPlace) ? (
+                <p className="mt-1.5 text-sm font-semibold text-slate-700">
+                  <span className="text-amber-600">★</span> {getReviewBadgeText(selectedPlace)}
+                </p>
+              ) : null}
+              {normalizeDisplayText(selectedPlace.optionalDetails?.openStatusText) ? (
+                <p className={`mt-1.5 inline-flex items-center rounded-full px-2.5 py-1 text-sm font-semibold ${
+                  /closed/i.test(selectedPlace.optionalDetails?.openStatusText ?? '')
+                    ? 'bg-rose-50 text-rose-700'
+                    : 'bg-emerald-50 text-emerald-700'
+                }`}>
+                  <span className="mr-1.5 text-[10px]">●</span>
+                  {selectedPlace.optionalDetails?.openStatusText}
+                </p>
+              ) : null}
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsPlaceDetailOpen(false)}
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--line)] bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-900"
+              aria-label="Close place details"
+            >
+              <AppIcon name="clear" className="h-4 w-4" />
+            </button>
+          </div>
+
+          <div className="h-[calc(60vh-6.5rem)] max-h-[calc(80vh-6.5rem)] overflow-y-auto px-5 pb-[calc(env(safe-area-inset-bottom,0px)+1.25rem)]">
+            {normalizeDisplayText(selectedPlace.optionalDetails?.addressText) ? (
+              <div className="rounded-[22px] bg-slate-50 px-4 py-4">
+                <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">Address</p>
+                <p className="mt-2 text-sm leading-6 text-slate-700">
+                  {selectedPlace.optionalDetails?.addressText}
+                </p>
+              </div>
+            ) : null}
+
+            {normalizeDisplayText(selectedPlace.optionalDetails?.hoursText) ? (
+              <div className="mt-3 rounded-[22px] bg-slate-50 px-4 py-4">
+                <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">Hours</p>
+                <p className="mt-2 text-sm leading-6 text-slate-700">
+                  {selectedPlace.optionalDetails?.hoursText}
+                </p>
+              </div>
+            ) : null}
+
+            {getCoordinateChipText(selectedPlace) ? (
+              <div className="mt-3 rounded-[22px] bg-slate-50 px-4 py-4">
+                <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">Coordinates</p>
+                <p className="mt-2 text-sm leading-6 text-slate-700">
+                  {getCoordinateChipText(selectedPlace)}
+                </p>
+              </div>
+            ) : null}
+
+            {getDisplayReason(selectedPlace, requestQuery || query) ? (
+              <div className="mt-3 rounded-[22px] border border-[rgba(20,35,58,0.08)] bg-[linear-gradient(180deg,rgba(248,250,252,0.96),rgba(241,245,249,0.88))] px-4 py-4">
+                <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">Why this fits</p>
+                <p className="mt-2 text-sm leading-6 text-slate-700">
+                  {getDisplayReason(selectedPlace, requestQuery || query)}
+                </p>
+              </div>
+            ) : null}
+
+            {(selectedPlace.googleMapsUrl ?? selectedPlace.sourceUri) ? (
+              <a
+                href={selectedPlace.googleMapsUrl ?? selectedPlace.sourceUri}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800"
+              >
+                <AppIcon name="map" className="h-4 w-4" />
+                <span>Open in Google Maps</span>
+              </a>
+            ) : null}
+          </div>
+        </section>
+      </div>,
+      document.body
+    ) : null}
+    </>
   )
 }
 

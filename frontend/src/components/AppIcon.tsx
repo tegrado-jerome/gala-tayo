@@ -35,6 +35,7 @@ import {
   ImagePlus,
   Landmark,
   Laugh,
+  LayoutGrid,
   Leaf,
   List,
   LocateFixed,
@@ -69,6 +70,7 @@ import {
   Utensils,
   WandSparkles,
   Wallet,
+  Wrench,
   X,
 } from 'lucide-react'
 
@@ -84,6 +86,7 @@ type IconComponent = (props: ComponentProps<'svg'> & { size?: number; strokeWidt
 const appIcons = {
   addToPlan: PlusCircle,
   askAi: Sparkles,
+  sparkles: Sparkles,
   arrowRight: ArrowRight,
   back: ChevronLeft,
   bot: Bot,
@@ -144,6 +147,7 @@ const appIcons = {
   share: Share2,
   uploadPhoto: ImagePlus,
   map: Map,
+  layoutGrid: LayoutGrid,
   list: List,
   filter: Filter,
   trash: Trash2,
@@ -154,6 +158,7 @@ const appIcons = {
   calendarPlan: CalendarPlus,
   check: Check,
   wallet: Wallet,
+  wrench: Wrench,
 } satisfies Record<string, IconComponent>
 
 const categoryIconByKey = {

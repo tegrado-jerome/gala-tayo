@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import type { PlaceCardData } from './PlaceCard'
 import AppHeader from './AppHeader'
-import GuestLimitModal from './GuestLimitModal'
+import { GuestAuthPrompt } from './GuestAuthPrompt'
+import { useGuestAuthPrompt } from '../utils/useGuestAuthPrompt'
 import AddToGalaPlanModal from './AddToGalaPlanModal'
 import InternalLink from './InternalLink'
 import Breadcrumb from './Breadcrumb'
@@ -830,8 +831,8 @@ function findCommentById(comments: PlaceComment[], commentId: string): PlaceComm
 }
 
 function PlaceDetailView({ place, onBack, areaBreadcrumb = null, cameFromSearch = false, returnLabel = null, searchHref = null }: PlaceDetailViewProps) {
-  const [isSavePromptOpen, setIsSavePromptOpen] = useState(false)
   const [isAddToPlanOpen, setIsAddToPlanOpen] = useState(false)
+  const guestAuth = useGuestAuthPrompt()
   const [isSaving, setIsSaving] = useState(false)
   const [shareError, setShareError] = useState('')
   const [saveError, setSaveError] = useState('')
@@ -851,7 +852,6 @@ function PlaceDetailView({ place, onBack, areaBreadcrumb = null, cameFromSearch 
   const [reviewRating, setReviewRating] = useState(0)
   const [isReviewSubmitting, setIsReviewSubmitting] = useState(false)
   const [isReviewDeleting, setIsReviewDeleting] = useState(false)
-  const [isReviewSignInStarting, setIsReviewSignInStarting] = useState(false)
   const [reviewError, setReviewError] = useState('')
   const [isReviewEditing, setIsReviewEditing] = useState(false)
   const [comments, setComments] = useState<PlaceComment[]>([])
@@ -1224,7 +1224,7 @@ function PlaceDetailView({ place, onBack, areaBreadcrumb = null, cameFromSearch 
       const result = await saveFavorite(placeId, placeSlug)
 
       if (result.status === 'guest') {
-        setIsSavePromptOpen(true)
+        guestAuth.open('favorite')
         return
       }
 
@@ -1826,7 +1826,6 @@ function PlaceDetailView({ place, onBack, areaBreadcrumb = null, cameFromSearch 
 
   const handleReviewSignIn = async () => {
     try {
-      setIsReviewSignInStarting(true)
       setReviewError('')
 
       const { error } = await supabase.auth.signInWithOAuth({
@@ -1841,32 +1840,14 @@ function PlaceDetailView({ place, onBack, areaBreadcrumb = null, cameFromSearch 
       }
     } catch (error) {
       setReviewError(error instanceof Error ? error.message : 'Login failed. Please try again.')
-      setIsReviewSignInStarting(false)
-    }
-  }
-
-  const handleCommentSignIn = async () => {
-    try {
-      setIsReviewSignInStarting(true)
-      setCommentError('')
-
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin,
-        },
-      })
-
-      if (error) {
-        throw error
-      }
-    } catch (error) {
-      setCommentError(error instanceof Error ? error.message : 'Login failed. Please try again.')
-      setIsReviewSignInStarting(false)
     }
   }
 
   const handleOpenPlaceConcern = () => {
+    if (!currentUserId) {
+      guestAuth.open('report-place')
+      return
+    }
     setPlaceConcernError('')
     setIsPlaceConcernOpen(true)
   }
@@ -2021,7 +2002,7 @@ function PlaceDetailView({ place, onBack, areaBreadcrumb = null, cameFromSearch 
                     ) : null}
                   </div>
                 </div>
-                {!isDeleted ? (
+                {!isDeleted && currentUserId ? (
                   <div className="relative shrink-0" ref={isMenuOpen ? commentMenuRef : null}>
                     <button
                       type="button"
@@ -2069,7 +2050,7 @@ function PlaceDetailView({ place, onBack, areaBreadcrumb = null, cameFromSearch 
                               {isMutating ? 'Deleting...' : 'Delete comment'}
                             </button>
                           </>
-                        ) : (
+                        ) : currentUserId ? (
                           <>
                             <button
                               type="button"
@@ -2098,7 +2079,7 @@ function PlaceDetailView({ place, onBack, areaBreadcrumb = null, cameFromSearch 
                               {reportedUserIds.has(comment.user_id) ? 'Already reported user' : 'Report user'}
                             </button>
                           </>
-                        )}
+                        ) : null}
                       </div>
                     ) : null}
                   </div>
@@ -2370,16 +2351,7 @@ function PlaceDetailView({ place, onBack, areaBreadcrumb = null, cameFromSearch 
             </div>
           ) : (
             <div className="mt-4">
-              <p className="text-[13px] font-semibold text-slate-500">Sign in as a member to leave a rating.</p>
-              <button
-                type="button"
-                onClick={() => void handleReviewSignIn()}
-                disabled={isReviewSignInStarting}
-                className="mt-4 inline-flex min-h-11 items-center justify-center rounded-2xl border border-[var(--accent)] bg-white px-4 text-[13px] font-extrabold text-[var(--accent-deep)] transition hover:bg-[var(--accent)] hover:text-white disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                {isReviewSignInStarting ? 'Opening login...' : 'Login to rate'}
-              </button>
-              {reviewError ? <p className="mt-3 text-[13px] font-bold text-red-600">{reviewError}</p> : null}
+              <p className="text-[13px] font-semibold text-slate-400">Sign in to leave a rating.</p>
             </div>
           )}
         </div>
@@ -2420,15 +2392,7 @@ function PlaceDetailView({ place, onBack, areaBreadcrumb = null, cameFromSearch 
               </div>
             ) : (
               <div className="mt-3.5">
-                <p className="text-[13px] font-semibold text-slate-500">Sign in as a member to comment.</p>
-                <button
-                  type="button"
-                  onClick={() => void handleCommentSignIn()}
-                  disabled={isReviewSignInStarting}
-                  className="mt-3 inline-flex min-h-10 items-center justify-center rounded-xl border border-[var(--accent)] bg-white px-4 text-[13px] font-extrabold text-[var(--accent-deep)] transition hover:bg-[var(--accent)] hover:text-white disabled:cursor-not-allowed disabled:opacity-70"
-                >
-                  {isReviewSignInStarting ? 'Opening login...' : 'Login'}
-                </button>
+                <GuestAuthPrompt variant="community" mode="inline-card" />
               </div>
             )}
 
@@ -2571,7 +2535,13 @@ function PlaceDetailView({ place, onBack, areaBreadcrumb = null, cameFromSearch 
                   </ActionButton>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  <ActionButton icon="book" onClick={() => setIsAddToPlanOpen(true)}>
+                  <ActionButton icon="book" onClick={() => {
+                    if (!currentUserId) {
+                      guestAuth.open('add-plan')
+                      return
+                    }
+                    setIsAddToPlanOpen(true)
+                  }}>
                     Add to Plan
                   </ActionButton>
                   <ActionButton icon="directions" onClick={openDirections} disabled={!directionsUrl}>
@@ -2714,7 +2684,7 @@ function PlaceDetailView({ place, onBack, areaBreadcrumb = null, cameFromSearch 
         </div>
       </main>
 
-      <GuestLimitModal isOpen={isSavePromptOpen} onClose={() => setIsSavePromptOpen(false)} mode="savePlace" />
+      {guestAuth.promptElement}
       <AddToGalaPlanModal
         isOpen={isAddToPlanOpen}
         placeId={place.id}

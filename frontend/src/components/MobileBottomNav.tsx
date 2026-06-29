@@ -38,7 +38,7 @@ function MobileBottomNav({ currentPath, session }: MobileBottomNavProps) {
   const navItems: NavItem[] = [
     { label: 'Home', href: '/', icon: 'home', isActive: isHomeActive },
     { label: 'Search', href: '/search', icon: 'search', isActive: isSearchActive },
-    { label: 'Ask AI', href: '/ask-ai/text', icon: 'askAi', isActive: isAskAiActive },
+    { label: 'Ask AI', href: '/ask-ai', icon: 'askAi', isActive: isAskAiActive },
     {
       label: 'Profile',
       href: session ? '/profile' : '/login',

@@ -334,29 +334,27 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
                 </nav>
               </>
             ) : (
-              <div className="relative flex flex-1 flex-col px-5 pb-5 pt-16 text-center lg:pt-12">
-                <div className="flex-1">
-                  <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 text-slate-700 ring-1 ring-slate-300">
-                    <AppIcon name="profile" size="emptyLg" />
-                  </span>
-                  <p className="mt-8 text-xl font-semibold text-slate-950">Welcome to GalaTayo</p>
-                  <p className="mx-auto mt-2 max-w-[260px] text-sm leading-6 text-slate-500">
-                    Log in or sign up to save favorites and keep your gala history.
-                  </p>
-                </div>
+              <div className="relative flex flex-col px-5 pb-8 pt-16 text-center lg:pt-12">
+                <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 text-slate-700 ring-1 ring-slate-300">
+                  <AppIcon name="profile" size="emptyLg" />
+                </span>
+                <p className="mt-8 text-xl font-semibold text-slate-950">Welcome to GalaTayo</p>
+                <p className="mx-auto mt-2 max-w-[260px] text-sm leading-6 text-slate-500">
+                  Log in or sign up to save favorites and keep your gala history.
+                </p>
 
-                <div className="grid w-full gap-4">
+                <div className="mt-12 flex flex-col items-center gap-[11px]">
                   <button
                     type="button"
                     onClick={() => closeAndNavigate('/login')}
-                    className="gala-primary-button h-14 px-4 text-lg disabled:opacity-70"
+                    className="gala-primary-button h-11 w-full max-w-[240px] rounded-2xl"
                   >
                     Log in
                   </button>
                   <button
                     type="button"
                     onClick={() => closeAndNavigate('/signup')}
-                    className="inline-flex h-14 items-center justify-center rounded-2xl border border-[var(--line)] bg-white px-4 text-lg font-semibold text-[var(--text-main)] transition hover:bg-[var(--bg-soft)]"
+                    className="inline-flex h-11 w-full max-w-[240px] items-center justify-center rounded-2xl border border-[var(--line)] bg-white text-[14px] font-semibold leading-normal text-[var(--text-main)] transition hover:bg-[var(--bg-soft)]"
                   >
                     Sign up
                   </button>

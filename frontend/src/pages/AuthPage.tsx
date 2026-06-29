@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { AppIcon } from '../components/AppIcon'
-import WelcomeBackgroundDecorations from '../components/WelcomeBackgroundDecorations'
 import AuthMethodChooser from '../components/auth/AuthMethodChooser'
 import { checkEmailExists, getPostAuthRedirect, signInWithEmailPassword, signUpWithEmailPassword } from '../services/authApi'
 import { buildAuthPath, getRequestedNextPath } from '../utils/authRedirect'
@@ -209,28 +208,24 @@ function AuthPage({ mode = 'sign_in' }: AuthPageProps) {
 
   if (isConfirmationPending) {
     return (
-      <main className="gala-page-background relative flex min-h-screen min-h-[100dvh] items-center justify-center overflow-hidden px-5 py-8 text-[var(--text)] sm:px-8 sm:py-10">
-        <WelcomeBackgroundDecorations />
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[var(--accent-wash)] opacity-60 blur-3xl" />
-        <div className="pointer-events-none absolute left-1/2 top-[20%] h-52 w-52 -translate-x-1/2 rounded-full bg-[var(--primary-soft)] opacity-60 blur-3xl" />
-
-        <section className="relative z-[2] mx-auto flex w-full max-w-[420px] items-center justify-center">
+      <main className="gala-page-background relative flex min-h-screen min-h-[100dvh] items-center justify-center overflow-hidden px-4 py-6 text-[var(--text)] sm:px-6 sm:py-8">
+        <section className="relative z-[2] mx-auto flex w-full max-w-[360px] items-center justify-center">
           <div className="w-full text-center">
-            <div className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-[1.4rem] border border-[var(--line)] bg-white shadow-sm">
-              <AppIcon name="email" className="h-6 w-6 text-[var(--accent-deep)]" />
+            <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-[1.2rem] border border-[var(--line)] bg-white shadow-sm">
+              <AppIcon name="email" className="h-5 w-5 text-[var(--accent-deep)]" />
             </div>
-            <div className="mt-6">
-              <h1 className="text-[1.9rem] font-semibold leading-[1.02] tracking-[-0.04em] text-slate-950 sm:text-[2.15rem]">Check your email</h1>
-              <p className="mx-auto mt-4 max-w-[300px] text-[14px] leading-6 text-slate-500 sm:text-[15px] sm:leading-7">
+            <div className="mt-5">
+              <h1 className="text-[1.6rem] font-semibold leading-[1.02] tracking-[-0.04em] text-slate-950 sm:text-[1.85rem]">Check your email</h1>
+              <p className="mx-auto mt-3 max-w-[260px] text-[13px] leading-6 text-slate-500 sm:text-[14px] sm:leading-7">
                 Check your email to confirm your GalaTayo account.
               </p>
-              <p className="mt-3 text-sm leading-6 text-slate-500">
+              <p className="mt-3 text-[13px] leading-6 text-slate-500">
                 After confirming, return to GalaTayo with your email and password.
               </p>
               <button
                 type="button"
                 onClick={resetFormState}
-                className="mt-8 inline-flex min-h-[3.35rem] items-center justify-center rounded-[1.35rem] bg-[var(--accent)] px-6 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[var(--accent-deep)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)]"
+                className="mt-6 inline-flex min-h-[2.75rem] items-center justify-center rounded-[0.875rem] bg-[var(--accent)] px-6 text-[14px] font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[var(--accent-deep)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)]"
               >
                 Continue
               </button>
@@ -242,44 +237,42 @@ function AuthPage({ mode = 'sign_in' }: AuthPageProps) {
   }
 
   return (
-    <main className="gala-page-background relative flex min-h-screen min-h-[100dvh] items-center justify-center overflow-hidden px-5 py-8 text-[var(--text)] sm:px-8 sm:py-10">
-      <WelcomeBackgroundDecorations />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-44 bg-[var(--accent-wash)] opacity-60 blur-3xl" />
-      <div className="pointer-events-none absolute left-1/2 top-[14%] h-64 w-64 -translate-x-1/2 rounded-full bg-[var(--primary-soft)] opacity-55 blur-3xl" />
-      <div className="pointer-events-none absolute bottom-[-5rem] left-1/2 h-40 w-[22rem] -translate-x-1/2 rounded-full bg-[var(--accent-wash)] opacity-70 blur-3xl" />
+    <main className="gala-page-background relative flex min-h-screen min-h-[100dvh] items-center justify-center overflow-hidden px-4 py-6 text-[var(--text)] sm:px-6 sm:py-8">
 
-      <section className="relative z-[2] mx-auto flex w-full max-w-[420px] items-center justify-center">
+
+      <section className="relative z-[2] mx-auto flex w-full max-w-[360px] items-center justify-center">
         <div className="w-full">
-          <div className="pb-4 pt-2 text-center">
-            <div className="mx-auto max-w-[320px] px-2">
-              <h1 className="text-[2rem] font-bold leading-[0.96] tracking-[-0.05em] text-[var(--text-main)] sm:text-[2.35rem]">
-                  {isCreateMode ? 'Create your account' : 'Welcome back'}
+          <div className="pb-3 pt-1 text-center">
+            <div className="mx-auto max-w-[280px] px-2">
+              <h1 className="inline-flex flex-wrap items-center justify-center gap-2 text-[1.6rem] font-bold leading-[0.96] tracking-[-0.05em] text-[var(--text-main)] sm:text-[1.85rem]">
+                  <AppIcon name={isCreateMode ? 'sparkles' : 'home'} className="h-6 w-6 text-[var(--accent-deep)]" />
+                  {isCreateMode ? 'Create an account' : 'Welcome back'}
                 </h1>
-              <p className="mx-auto mt-4 max-w-[290px] text-[14px] leading-6 text-[var(--muted)] sm:text-[15px] sm:leading-7">
+              <p className="mx-auto mt-3 max-w-[260px] text-[13px] leading-6 text-[var(--muted)] sm:text-[14px] sm:leading-7">
                 {isCreateMode ? 'Set up your GalaTayo account and start planning your next gala.' : 'Continue planning your next gala.'}
               </p>
             </div>
 
-            <div className="mt-8">
+            <div className="mt-6">
               <AuthMethodChooser
                 isLoading={isOAuthLoading || isSubmitting}
                 onLoadingChange={handleLoadingChange}
                 onError={setError}
               />
 
-              <div className="my-6 flex items-center gap-4 text-[10px] font-semibold uppercase tracking-[0.26em] text-[var(--muted)]">
+              <div className="my-4 flex items-center gap-4 text-[9px] font-semibold uppercase tracking-[0.26em] text-[var(--muted)]">
                 <span className="h-px flex-1 bg-[var(--line)]" />
                 OR
                 <span className="h-px flex-1 bg-[var(--line)]" />
               </div>
 
-              <form className="mt-4 grid gap-4 text-left" onSubmit={handleSubmit}>
-                <label className="grid gap-2.5 text-sm font-medium text-[var(--text)]">
-                  <span className="inline-flex items-center gap-2 pl-1 text-sm font-medium text-[var(--text)]">
-                    <AppIcon name="email" className="h-4 w-4 text-[var(--accent-deep)]" />
+              <form className="mt-3 grid gap-3 text-left" onSubmit={handleSubmit}>
+                <label className="grid gap-2 text-[13px] font-medium text-[var(--text)]">
+                  <span className="inline-flex items-center gap-1.5 pl-1 text-[13px] font-medium text-[var(--text)]">
+                    <AppIcon name="email" className="h-3.5 w-3.5 text-[var(--accent-deep)]" />
                     Email
                   </span>
-                  <span className={`flex h-[3.45rem] items-center rounded-[1.4rem] border px-4 shadow-sm transition focus-within:-translate-y-0.5 focus-within:ring-4 ${emailAlreadyExists ? 'border-red-300 bg-white focus-within:border-red-400 focus-within:ring-red-100' : 'border-[var(--line)] bg-white focus-within:border-[var(--accent)] focus-within:bg-white focus-within:ring-[var(--accent-soft)]'}`}>
+                  <span className={`flex h-[2.85rem] items-center rounded-[1.2rem] border px-3.5 shadow-sm transition focus-within:-translate-y-0.5 focus-within:ring-4 ${emailAlreadyExists ? 'border-red-300 bg-white focus-within:border-red-400 focus-within:ring-red-100' : 'border-[var(--line)] bg-white focus-within:border-[var(--accent)] focus-within:bg-white focus-within:ring-[var(--accent-soft)]'}`}>
                     <input
                       type="email"
                       value={email}
@@ -287,7 +280,7 @@ function AuthPage({ mode = 'sign_in' }: AuthPageProps) {
                       required
                       autoComplete="email"
                       placeholder="Enter your email"
-                      className="h-full w-full bg-transparent text-[15px] font-medium text-[var(--text)] outline-none placeholder:font-normal placeholder:text-slate-400"
+                      className="h-full w-full bg-transparent text-[14px] font-medium text-[var(--text)] outline-none placeholder:font-normal placeholder:text-slate-400"
                     />
                   </span>
                   {isCreateMode && emailFieldMessage ? (
@@ -296,12 +289,12 @@ function AuthPage({ mode = 'sign_in' }: AuthPageProps) {
                     </span>
                   ) : null}
                 </label>
-                <label className="grid gap-2.5 text-sm font-medium text-[var(--text)]">
-                  <span className="inline-flex items-center gap-2 pl-1 text-sm font-medium text-[var(--text)]">
-                    <AppIcon name="lock" className="h-4 w-4 text-[var(--accent-deep)]" />
+                <label className="grid gap-2 text-[13px] font-medium text-[var(--text)]">
+                  <span className="inline-flex items-center gap-1.5 pl-1 text-[13px] font-medium text-[var(--text)]">
+                    <AppIcon name="lock" className="h-3.5 w-3.5 text-[var(--accent-deep)]" />
                     Password
                   </span>
-                  <span className="flex h-[3.45rem] items-center gap-3 rounded-[1.4rem] border border-[var(--line)] bg-white px-4 shadow-sm transition focus-within:-translate-y-0.5 focus-within:border-[var(--accent)] focus-within:bg-white focus-within:ring-4 focus-within:ring-[var(--accent-soft)]">
+                  <span className="flex h-[2.85rem] items-center gap-3 rounded-[1.2rem] border border-[var(--line)] bg-white px-3.5 shadow-sm transition focus-within:-translate-y-0.5 focus-within:border-[var(--accent)] focus-within:bg-white focus-within:ring-4 focus-within:ring-[var(--accent-soft)]">
                     <input
                       type={isPasswordVisible ? 'text' : 'password'}
                       value={password}
@@ -310,16 +303,16 @@ function AuthPage({ mode = 'sign_in' }: AuthPageProps) {
                       minLength={isCreateMode ? minPasswordLength : undefined}
                       autoComplete={isCreateMode ? 'new-password' : 'current-password'}
                       placeholder="Enter your password"
-                      className="h-full w-full min-w-0 bg-transparent text-[15px] font-medium text-[var(--text)] outline-none placeholder:font-normal placeholder:text-slate-400"
+                      className="h-full w-full min-w-0 bg-transparent text-[14px] font-medium text-[var(--text)] outline-none placeholder:font-normal placeholder:text-slate-400"
                     />
                     <button
                       type="button"
                       onClick={() => setIsPasswordVisible((current) => !current)}
-                      className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-full text-[var(--muted)] transition hover:bg-[var(--accent-wash)] hover:text-[var(--accent-deep)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)]"
+                      className="inline-flex h-8 w-8 flex-none items-center justify-center rounded-full text-[var(--muted)] transition hover:bg-[var(--accent-wash)] hover:text-[var(--accent-deep)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)]"
                       aria-label={isPasswordVisible ? 'Hide password' : 'Show password'}
                       aria-pressed={isPasswordVisible}
                     >
-                      <AppIcon name={isPasswordVisible ? 'eyeOff' : 'eye'} className="h-4.5 w-4.5" />
+                      <AppIcon name={isPasswordVisible ? 'eyeOff' : 'eye'} className="h-4 w-4" />
                     </button>
                   </span>
                   {isCreateMode ? (
@@ -331,18 +324,18 @@ function AuthPage({ mode = 'sign_in' }: AuthPageProps) {
                 {!isCreateMode ? (
                   <button
                     type="button"
-                    className="mt-0.5 min-h-11 w-fit pl-1 text-sm font-medium text-[var(--accent-deep)] transition hover:text-[var(--accent)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)]"
+                    className="mt-0 min-h-10 w-fit pl-1 text-[13px] font-medium text-[var(--accent-deep)] transition hover:text-[var(--accent)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)]"
                   >
                     Forgot password?
                   </button>
                 ) : null}
                 {isCreateMode ? (
-                  <label className="grid gap-2.5 text-sm font-medium text-[var(--text)]">
-                    <span className="inline-flex items-center gap-2 pl-1 text-sm font-medium text-[var(--text)]">
-                      <AppIcon name="lock" className="h-4 w-4 text-[var(--accent-deep)]" />
+                  <label className="grid gap-2 text-[13px] font-medium text-[var(--text)]">
+                    <span className="inline-flex items-center gap-1.5 pl-1 text-[13px] font-medium text-[var(--text)]">
+                      <AppIcon name="lock" className="h-3.5 w-3.5 text-[var(--accent-deep)]" />
                       Confirm Password
                     </span>
-                    <span className={`flex h-[3.45rem] items-center gap-3 rounded-[1.4rem] border px-4 shadow-sm transition focus-within:-translate-y-0.5 focus-within:ring-4 ${confirmPasswordHasMismatch ? 'border-red-300 bg-white focus-within:border-red-400 focus-within:ring-red-100' : 'border-[var(--line)] bg-white focus-within:border-[var(--accent)] focus-within:bg-white focus-within:ring-[var(--accent-soft)]'}`}>
+                    <span className={`flex h-[2.85rem] items-center gap-3 rounded-[1.2rem] border px-3.5 shadow-sm transition focus-within:-translate-y-0.5 focus-within:ring-4 ${confirmPasswordHasMismatch ? 'border-red-300 bg-white focus-within:border-red-400 focus-within:ring-red-100' : 'border-[var(--line)] bg-white focus-within:border-[var(--accent)] focus-within:bg-white focus-within:ring-[var(--accent-soft)]'}`}>
                       <input
                         type={isConfirmPasswordVisible ? 'text' : 'password'}
                         value={confirmPassword}
@@ -351,16 +344,16 @@ function AuthPage({ mode = 'sign_in' }: AuthPageProps) {
                         minLength={minPasswordLength}
                         autoComplete="new-password"
                         placeholder="Confirm your password"
-                        className="h-full w-full min-w-0 bg-transparent text-[15px] font-medium text-[var(--text)] outline-none placeholder:font-normal placeholder:text-slate-400"
+                        className="h-full w-full min-w-0 bg-transparent text-[14px] font-medium text-[var(--text)] outline-none placeholder:font-normal placeholder:text-slate-400"
                       />
                       <button
                         type="button"
                         onClick={() => setIsConfirmPasswordVisible((current) => !current)}
-                        className="inline-flex h-9 w-9 flex-none items-center justify-center rounded-full text-[var(--muted)] transition hover:bg-[var(--accent-wash)] hover:text-[var(--accent-deep)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)]"
+                        className="inline-flex h-8 w-8 flex-none items-center justify-center rounded-full text-[var(--muted)] transition hover:bg-[var(--accent-wash)] hover:text-[var(--accent-deep)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)]"
                         aria-label={isConfirmPasswordVisible ? 'Hide password' : 'Show password'}
                         aria-pressed={isConfirmPasswordVisible}
                       >
-                        <AppIcon name={isConfirmPasswordVisible ? 'eyeOff' : 'eye'} className="h-4.5 w-4.5" />
+                        <AppIcon name={isConfirmPasswordVisible ? 'eyeOff' : 'eye'} className="h-4 w-4" />
                       </button>
                     </span>
                     {confirmPasswordHasMismatch ? (
@@ -377,7 +370,7 @@ function AuthPage({ mode = 'sign_in' }: AuthPageProps) {
                 <button
                   type="submit"
                   disabled={isSubmitDisabled}
-                  className="mt-3 inline-flex h-[3.45rem] items-center justify-center gap-2 rounded-[1.45rem] bg-[var(--accent)] px-5 text-[15px] font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[var(--accent-deep)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)] disabled:cursor-not-allowed disabled:opacity-70"
+                  className="w-full inline-flex h-[2.75rem] items-center justify-center gap-2 rounded-[0.875rem] bg-[var(--accent)] px-5 text-[14px] font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[var(--accent-deep)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)] disabled:cursor-not-allowed disabled:opacity-70"
                 >
                   {isSubmitting ? (
                     <>
@@ -394,7 +387,7 @@ function AuthPage({ mode = 'sign_in' }: AuthPageProps) {
             </div>
 
             {isCreateMode ? (
-              <p className="mx-auto mt-5 max-w-[320px] text-center text-xs font-semibold leading-5 text-[var(--muted)]">
+              <p className="mx-auto mt-3 max-w-[280px] text-center text-[11px] font-semibold leading-5 text-[var(--muted)]">
                 By creating an account, you agree to GalaTayo&apos;s{' '}
                 <button type="button" onClick={() => navigateToPath('/terms')} className="font-semibold text-[var(--accent-deep)] underline underline-offset-2 focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)]">
                   Terms
@@ -407,14 +400,14 @@ function AuthPage({ mode = 'sign_in' }: AuthPageProps) {
               </p>
             ) : null}
 
-            {error ? <p className="mt-5 rounded-[1.3rem] border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 shadow-sm">{error}</p> : null}
+            {error ? <p className="mt-3 rounded-[0.875rem] border border-red-200 bg-red-50 px-4 py-3 text-[13px] text-red-700 shadow-sm">{error}</p> : null}
 
-            <p className="mt-6 text-center text-sm text-[var(--muted)]">
+            <p className="mt-4 text-center text-[13px] text-[var(--muted)]">
               {isCreateMode ? 'Already have an account?' : 'New to GalaTayo?'}{' '}
                 <button
                   type="button"
                   onClick={() => navigateToPath(buildAuthPath(isCreateMode ? '/login' : '/signup', nextPath))}
-                  className="min-h-11 font-semibold text-[var(--accent-deep)] underline underline-offset-2 transition hover:text-[var(--accent)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)]"
+                  className="min-h-10 font-semibold text-[var(--accent-deep)] underline underline-offset-2 transition hover:text-[var(--accent)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)]"
                 >
                   {isCreateMode ? 'Log in' : 'Create account'}
               </button>

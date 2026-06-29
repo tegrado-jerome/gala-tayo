@@ -56,20 +56,20 @@ type BackendSearchPlace = {
 const compactTools = [
   {
     title: 'Places',
-    description: 'Browse places near you.',
+    description: 'Find nearby spots',
     href: '/places',
     icon: 'place' as const,
   },
   {
     title: 'Categories',
-    description: 'Explore places by category.',
+    description: 'Browse by vibe',
     href: '/places/categories',
-    icon: 'list' as const,
+    icon: 'layoutGrid' as const,
   },
 ] as const
 
 const sharedCardClass =
-  'rounded-[20px] border border-slate-200/90 bg-white shadow-[0_8px_24px_rgba(15,23,42,0.04)]'
+  'rounded-[20px] border border-slate-200/90 bg-white'
 
 function parseCoordinate(value: number | string | null | undefined) {
   if (typeof value === 'number' && Number.isFinite(value)) {
@@ -239,7 +239,7 @@ function TrendingCard({ place }: { place: PlaceCardData }) {
           })
         }
       }}
-      className={`flex min-h-[372px] w-[90vw] max-w-[368px] shrink-0 snap-start flex-col overflow-hidden text-left transition hover:-translate-y-[1px] hover:border-slate-300 hover:shadow-[0_14px_32px_rgba(15,23,42,0.08)] md:min-h-[388px] md:w-auto md:max-w-none lg:h-[324px] lg:max-w-[296px] xl:max-w-[304px] ${sharedCardClass}`}
+      className={`flex h-full min-h-[372px] w-[90vw] max-w-[368px] shrink-0 snap-start flex-col overflow-hidden text-left transition hover:-translate-y-[1px] hover:border-slate-300 md:min-h-[388px] md:w-auto md:max-w-none lg:h-[324px] lg:max-w-[296px] xl:max-w-[304px] ${sharedCardClass}`}
     >
       {imageUrl ? (
         <img
@@ -258,7 +258,7 @@ function TrendingCard({ place }: { place: PlaceCardData }) {
         </div>
       )}
 
-      <div className="flex min-h-0 flex-1 flex-col p-4 lg:p-[14px] xl:p-[16px]">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden p-4 pb-3 lg:p-[14px] lg:pb-2.5 xl:p-[16px] xl:pb-3">
         <div className="flex flex-col items-start gap-2 lg:gap-2.5">
           <h3 className="line-clamp-2 text-[1rem] font-semibold leading-5 text-slate-950 lg:text-[15.5px] lg:leading-5 xl:text-[16px]">{place.name}</h3>
           <span className="shrink-0 rounded-full bg-[var(--accent-wash)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--accent)]">
@@ -287,7 +287,7 @@ function TrendingCard({ place }: { place: PlaceCardData }) {
           ) : null}
         </div>
 
-        <span className="mt-4 inline-flex items-center gap-1 self-start rounded-full bg-[var(--accent-wash)] px-3 py-1.5 text-[12.5px] font-semibold text-[var(--accent)] transition group-hover:bg-[var(--accent-soft)] lg:mt-auto lg:gap-1">
+        <span className="mt-auto inline-flex items-center gap-1 self-start rounded-full bg-[var(--accent-wash)] px-3 py-1.5 text-[12.5px] font-semibold text-[var(--accent)] transition group-hover:bg-[var(--accent-soft)] lg:gap-1">
           View place
           <AppIcon name="arrowRight" className="h-3.5 w-3.5" />
         </span>
@@ -372,7 +372,7 @@ function HomeLandingPage() {
   }
 
   const handleAskAiAction = () => {
-    navigateToPath('/ask-ai/text')
+    navigateToPath('/ask-ai/chatbot')
   }
 
   const desktopTrendingPageCount = Math.ceil(trendingPlaces.length / 5)
@@ -386,6 +386,13 @@ function HomeLandingPage() {
       <main className="mx-auto w-full px-4 pb-6 pt-4 sm:px-6 sm:pb-8 sm:pt-5 md:px-8 lg:w-[calc(100%-64px)] lg:px-0 lg:pb-16 lg:pt-8 xl:w-[calc(100%-96px)] xl:px-0 2xl:w-[min(1680px,calc(100%-128px))]">
         <section className="relative px-3 pt-3 sm:px-6 sm:pt-5 lg:px-0 lg:pt-6">
           <div className="relative z-10 flex flex-col items-center text-center">
+            <p className="mb-6 flex items-center justify-center gap-2 text-[17px] font-semibold leading-snug text-[#071633] sm:mb-8 sm:gap-2.5 sm:text-[19px] lg:mb-10 lg:text-[21px]">
+              <AppIcon name="compass" className="h-4 w-4 text-[var(--accent)] sm:h-[18px] sm:w-[18px]" strokeWidth={2} />
+              <span>
+                Saan tayo <span className="font-semibold text-[var(--accent)]">gagala</span> today?
+              </span>
+            </p>
+
             <img
               src={homeChibi}
               alt="GalaTayo mascot"
@@ -393,28 +400,24 @@ function HomeLandingPage() {
               loading="eager"
             />
 
-            <p className="mt-4 text-[13px] font-medium leading-relaxed text-slate-500 sm:mt-5 sm:text-[14px] lg:text-[15px]">
-              Where are we going today?
-            </p>
-
-            <div className="mt-5 flex w-full flex-row flex-wrap items-center justify-center gap-2.5 sm:mt-6 sm:gap-3">
+            <div className="mt-5 flex w-full flex-row flex-wrap items-center justify-center gap-3 sm:mt-6 sm:gap-3.5">
               <button
                 type="button"
                 onClick={handleAskAiAction}
-                className="group inline-flex h-11 items-center gap-2.5 rounded-full bg-[var(--accent)] px-5 text-[14.5px] font-semibold text-white shadow-[0_6px_18px_rgba(30,58,138,0.22)] transition hover:-translate-y-[1px] hover:bg-[var(--accent-deep)] hover:shadow-[0_10px_22px_rgba(30,58,138,0.28)] active:scale-[0.98] sm:h-[50px] sm:px-6 sm:text-[15px]"
+                className="group inline-flex h-12 items-center gap-3 rounded-full bg-[var(--accent)] px-6 text-[15px] font-semibold text-white shadow-[0_6px_18px_rgba(30,58,138,0.22)] transition hover:-translate-y-[1px] hover:bg-[var(--accent-deep)] hover:shadow-[0_10px_22px_rgba(30,58,138,0.28)] active:scale-[0.98] sm:h-[56px] sm:px-7 sm:text-[16px]"
               >
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-[var(--accent-deep)] transition group-hover:bg-[var(--accent-wash)] sm:h-7 sm:w-7">
-                  <AppIcon name="askAi" className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={2.25} />
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-[var(--accent-deep)] transition group-hover:bg-[var(--accent-wash)] sm:h-8 sm:w-8">
+                  <AppIcon name="askAi" className="h-4 w-4 sm:h-[18px] sm:w-[18px]" strokeWidth={2.25} />
                 </span>
                 Ask AI
               </button>
               <button
                 type="button"
                 onClick={handleSearchAction}
-                className="group inline-flex h-11 items-center gap-2.5 rounded-full border border-slate-200 bg-white px-5 text-[14.5px] font-semibold text-[var(--accent)] shadow-[0_4px_14px_rgba(15,23,42,0.04)] transition hover:-translate-y-[1px] hover:border-[var(--accent)] hover:bg-[var(--accent-wash)] hover:shadow-[0_8px_18px_rgba(30,58,138,0.10)] active:scale-[0.98] sm:h-[50px] sm:px-6 sm:text-[15px]"
+                className="group inline-flex h-12 items-center gap-3 rounded-full border border-slate-200 bg-white px-6 text-[15px] font-semibold text-[var(--accent)] shadow-[0_4px_14px_rgba(15,23,42,0.04)] transition hover:-translate-y-[1px] hover:border-[var(--accent)] hover:bg-[var(--accent-wash)] hover:shadow-[0_8px_18px_rgba(30,58,138,0.10)] active:scale-[0.98] sm:h-[56px] sm:px-7 sm:text-[16px]"
               >
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--accent-wash)] text-[var(--accent)] transition group-hover:bg-[var(--accent-soft)] sm:h-7 sm:w-7">
-                  <AppIcon name="search" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--accent-wash)] text-[var(--accent)] transition group-hover:bg-[var(--accent-soft)] sm:h-8 sm:w-8">
+                  <AppIcon name="search" className="h-4 w-4 sm:h-[18px] sm:w-[18px]" />
                 </span>
                 Search Places
               </button>
@@ -481,17 +484,17 @@ function HomeLandingPage() {
               <p className="mt-5 text-sm text-red-600">{trendingError}</p>
             ) : (
               <>
-                <div className="mt-5 flex snap-x gap-3 overflow-x-auto pb-2 pr-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-2 md:gap-5 md:overflow-visible md:pb-0 md:pr-0 lg:hidden">
+                <div className="mt-5 flex snap-x gap-3 overflow-x-auto pb-2 pr-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-2 md:items-stretch md:gap-5 md:overflow-visible md:pb-0 md:pr-0 lg:hidden">
                   {trendingPlaces.map((place) => (
-                    <div key={place.id}>
+                    <div key={place.id} className="flex">
                       <TrendingCard place={place} />
                     </div>
                   ))}
                 </div>
 
-                <div className="mt-5 hidden lg:grid lg:w-[1544px] lg:grid-cols-[repeat(5,296px)] lg:gap-4 xl:w-[1584px] xl:grid-cols-[repeat(5,304px)]">
+                <div className="mt-5 hidden lg:grid lg:w-[1544px] lg:grid-cols-[repeat(5,296px)] lg:items-stretch lg:gap-4 xl:w-[1584px] xl:grid-cols-[repeat(5,304px)]">
                   {visibleDesktopTrendingPlaces.map((place) => (
-                    <div key={place.id} className="w-full max-w-[296px] xl:max-w-[304px]">
+                    <div key={place.id} className="flex w-full max-w-[296px] xl:max-w-[304px]">
                       <TrendingCard place={place} />
                     </div>
                   ))}
@@ -508,26 +511,26 @@ function HomeLandingPage() {
               </div>
             </div>
 
-            <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-[repeat(2,minmax(320px,360px))] lg:gap-3 lg:justify-start xl:gap-4">
+            <div className="mt-5 grid grid-cols-1 gap-3 lg:grid-cols-[repeat(2,minmax(320px,360px))] lg:gap-3 lg:justify-start xl:gap-4">
               {compactTools.map((tool) => (
                 <button
                   key={tool.title}
                   type="button"
                   onClick={() => navigateToPath(tool.href)}
-                  className="group flex min-h-[72px] items-center gap-3 rounded-[20px] border border-slate-200/90 bg-white px-4 py-3 text-left shadow-[0_4px_14px_rgba(15,23,42,0.03)] transition hover:-translate-y-[1px] hover:border-[var(--accent)] hover:shadow-[0_10px_22px_rgba(30,58,138,0.08)] lg:min-h-[60px] lg:gap-3 lg:px-4 lg:py-3"
+                  className="group relative flex w-full items-center gap-3.5 rounded-[20px] border border-slate-200/80 bg-[linear-gradient(135deg,#ffffff_0%,rgba(30,58,138,0.018)_100%)] px-4 py-3.5 text-left shadow-[0_2px_12px_rgba(15,23,42,0.025)] transition-all duration-200 hover:-translate-y-[1px] hover:border-slate-300/90 hover:bg-[linear-gradient(135deg,#ffffff_0%,rgba(30,58,138,0.035)_100%)] hover:shadow-[0_8px_20px_rgba(30,58,138,0.06)] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[var(--accent-soft)] focus-visible:ring-offset-1 active:scale-[0.985] active:bg-[var(--accent-wash)]"
                 >
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--accent-wash)] text-[var(--accent-deep)] transition group-hover:bg-[var(--accent-soft)] lg:h-10 lg:w-10">
-                    <AppIcon name={tool.icon} className="h-4 w-4" />
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--accent-wash)] text-[var(--accent)] transition-all duration-200 group-hover:scale-105 group-hover:bg-[var(--accent-soft)] group-hover:text-[var(--accent-deep)] group-hover:shadow-[0_0_0_6px_rgba(30,58,138,0.04)] lg:h-[42px] lg:w-[42px]">
+                    <AppIcon name={tool.icon} className="h-[18px] w-[18px]" strokeWidth={1.8} />
                   </span>
                   <div className="flex min-w-0 flex-1 flex-col">
-                    <p className="text-sm font-semibold text-slate-900 lg:text-[14px]">
+                    <p className="text-[14px] font-semibold leading-snug text-slate-900">
                       {tool.title}
                     </p>
-                    <p className="mt-0.5 text-xs leading-5 text-slate-500 lg:text-[12px] lg:leading-4">{tool.description}</p>
+                    <p className="mt-0.5 text-[12px] leading-[1.35] text-slate-500">{tool.description}</p>
                   </div>
-                  <div className="hidden shrink-0 text-[#7A90AE] transition group-hover:text-[var(--accent)] lg:flex lg:items-center">
-                    <AppIcon name="arrowRight" className="h-4 w-4" />
-                  </div>
+                  <span className="flex shrink-0 items-center text-slate-300 transition-all duration-200 group-hover:translate-x-[2px] group-hover:text-[var(--accent)]">
+                    <AppIcon name="chevronRight" className="h-4 w-4" strokeWidth={2.2} />
+                  </span>
                 </button>
               ))}
             </div>

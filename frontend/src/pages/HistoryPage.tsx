@@ -117,7 +117,7 @@ function getPlaceChips(place: HistoryPlace) {
 
 function HistoryChibi() {
   return (
-    <div className="flex justify-center overflow-visible md:justify-end" aria-hidden="true">
+    <div className="flex justify-center overflow-visible py-4 md:justify-end" aria-hidden="true">
       <img
         src={historyActiveChibi}
         alt=""

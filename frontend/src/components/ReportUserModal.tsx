@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { AppIcon } from './AppIcon'
 import { reportUser, type SubmitUserReportPayload, type UserReportReason } from '../utils/userReportsApi'
+import { useGuestAuthPrompt } from '../utils/useGuestAuthPrompt'
 
 const userReportReasons: Array<{ label: string; value: UserReportReason }> = [
   { label: 'Fake account', value: 'fake_account' },
@@ -34,6 +35,7 @@ function ReportUserModal({
   const [details, setDetails] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const guestAuth = useGuestAuthPrompt()
 
   useEffect(() => {
     if (!isOpen) {
@@ -62,7 +64,7 @@ function ReportUserModal({
 
   const handleSubmit = async () => {
     if (!authToken) {
-      setErrorMessage('Log in to report a user.')
+      guestAuth.open('report-user')
       return
     }
 
@@ -94,17 +96,18 @@ function ReportUserModal({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-[9998] flex items-end justify-center bg-slate-950/40 px-4 pb-4 sm:items-center sm:pb-0"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="report-user-title"
-      onClick={closeIfIdle}
-    >
+    <>
       <div
-        className="w-full max-w-[380px] rounded-[24px] border border-[#E5E7EB] bg-[#FFFFFF] p-4 shadow-[0_24px_70px_rgba(15,23,42,0.16)] sm:p-4.5"
-        onClick={(event) => event.stopPropagation()}
+        className="fixed inset-0 z-[9998] flex items-end justify-center bg-slate-950/40 px-4 pb-4 sm:items-center sm:pb-0"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="report-user-title"
+        onClick={closeIfIdle}
       >
+        <div
+          className="w-full max-w-[380px] rounded-[24px] border border-[#E5E7EB] bg-[#FFFFFF] p-4 shadow-[0_24px_70px_rgba(15,23,42,0.16)] sm:p-4.5"
+          onClick={(event) => event.stopPropagation()}
+        >
         <div className="flex items-start gap-3">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#DBEAFE] text-[#1E3A8A]">
             <AppIcon name="reports" className="h-4 w-4" />
@@ -179,7 +182,9 @@ function ReportUserModal({
           </button>
         </div>
       </div>
-    </div>
+      </div>
+      {guestAuth.promptElement}
+    </>
   )
 }
 

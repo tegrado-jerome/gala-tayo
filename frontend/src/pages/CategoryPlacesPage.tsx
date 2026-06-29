@@ -8,7 +8,7 @@ import PlaceCard, { type PlaceCardData } from '../components/PlaceCard'
 import SeoHead from '../components/SeoHead'
 import { getPlaceCategoryLabel } from '../data/placeCategories'
 import { navigateToPath } from '../utils/navigation'
-import { getCanonicalPlacePath, getSiteOrigin } from '../utils/seo'
+import { getCanonicalPlacePath, getSiteOrigin, resolveAreaMeta } from '../utils/seo'
 import { mapSeoPlaceToCard, type SeoPlaceSummary } from '../utils/seoApi'
 
 type CategoryPlacesPageProps = {
@@ -273,7 +273,8 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
                 <div className="mt-4 grid gap-4 lg:grid-cols-2">
                   {places.map((rawPlace) => {
                     const place = mapSeoPlaceToCard(rawPlace) as PlaceCardData
-                    const canonicalPath = getCanonicalPlacePath({ areaSlug: rawPlace.areaSlug, placeSlug: rawPlace.slug })
+                    const resolvedAreaSlug = rawPlace.areaSlug || resolveAreaMeta(rawPlace).slug
+                    const canonicalPath = getCanonicalPlacePath({ areaSlug: resolvedAreaSlug, placeSlug: rawPlace.slug })
 
                     return (
                       <div key={rawPlace.id}>

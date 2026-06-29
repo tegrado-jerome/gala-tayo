@@ -983,7 +983,7 @@ body.gala-menu-open #root {
 
 .prompt-step-card {
   border-radius: var(--radius-lg);
-  padding: 22px;
+  padding: 14px;
   border: 1px solid var(--line);
   background: var(--panel);
   box-shadow: var(--shadow-soft);
@@ -991,8 +991,8 @@ body.gala-menu-open #root {
 
 .prompt-chip {
   border-radius: 999px;
-  padding: 8px 13px;
-  font-size: 13px;
+  padding: 5px 11px;
+  font-size: 12px;
   border: 1px solid var(--line);
   background: var(--panel);
   color: #374151;
@@ -1309,16 +1309,19 @@ body.gala-menu-open #root {
 .prompt-steps {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
 }
 
 .galatayo-leaflet-map {
-  background:
-    linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 0.95));
+  background: #eef2f7;
 }
 
 .galatayo-leaflet-map .leaflet-tile {
-  filter: saturate(0.78) brightness(1.04) contrast(0.95);
+  filter: none;
+}
+
+.galatayo-leaflet-map .leaflet-tile-pane {
+  opacity: 1;
 }
 
 .galatayo-leaflet-map .leaflet-pane,
@@ -1498,8 +1501,59 @@ body.gala-menu-open #root {
   }
 }
 
-.gt-map-capsule-marker.is-selected .gt-map-capsule-marker__pin-shell {
+  .gt-map-capsule-marker.is-selected .gt-map-capsule-marker__pin-shell {
   animation: gala-pin-pulse 2.4s ease-in-out infinite;
+}
+
+.gt-map-pin__stack {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0;
+  pointer-events: auto;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.gt-map-pin__stack:hover {
+  transform: scale(1.04);
+  z-index: 1000;
+}
+
+.gt-map-pin__stack.is-selected,
+.gt-map-pin__stack.is-focused {
+  z-index: 860 !important;
+}
+
+.gt-map-pin__stack.is-selected .gt-map-pin__label,
+.gt-map-pin__stack.is-focused .gt-map-pin__label {
+  box-shadow: 0 4px 10px rgba(30, 58, 138, 0.22);
+}
+
+.gt-map-pin__label {
+  display: inline-block;
+  max-width: 140px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.14);
+}
+
+.gt-map-pin__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  flex-shrink: 0;
 }
 
 @media (max-width: 640px) {

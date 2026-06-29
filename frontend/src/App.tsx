@@ -26,6 +26,7 @@ import AboutPage from './pages/AboutPage'
 import PlaceSubmissionPage from './pages/PlaceSubmissionPage'
 import MyPlaceSubmissionsPage from './pages/MyPlaceSubmissionsPage'
 import AskAiMapPage from './pages/AskAiMapPage'
+import AskAiOverviewPage from './pages/AskAiOverviewPage'
 import PlacesIndexPage from './pages/PlacesIndexPage'
 import PlaceCategoriesIndexPage from './pages/PlaceCategoriesIndexPage'
 import AreaPlacesPage from './pages/AreaPlacesPage'
@@ -279,13 +280,21 @@ function getCanonicalMemberPath(pathname: string): '/find-friends' | null {
   return null
 }
 
-function getCanonicalAskAiPath(pathname: string): '/ask-ai/text' | '/ask-ai/maps' | null {
-  if (isPath(pathname, '/ask-ai')) {
-    return '/ask-ai/text'
+function getCanonicalAskAiPath(pathname: string): '/ask-ai/chatbot' | '/ask-ai/maps' | null {
+  if (isPath(pathname, '/ask-ai/text')) {
+    return '/ask-ai/chatbot'
   }
 
   if (isPath(pathname, '/ask-ai/map')) {
     return '/ask-ai/maps'
+  }
+
+  return null
+}
+
+function getCanonicalPromptBuilderPath(pathname: string): '/ask-ai/prompt-builder' | null {
+  if (isPath(pathname, '/prompt-builder')) {
+    return '/ask-ai/prompt-builder'
   }
 
   return null
@@ -322,8 +331,11 @@ function isProtectedAccountPath(pathname: string) {
     '/submissions',
     '/photos/upload',
     '/ask-ai',
+    '/ask-ai/chatbot',
     '/ask-ai/text',
     '/ask-ai/maps',
+    '/ask-ai/prompt-builder',
+    '/prompt-builder',
   ].some((path) => isPath(pathname, path))
 
   return (
@@ -343,6 +355,10 @@ function shouldShowMobileBottomNav(pathname: string) {
     return false
   }
 
+  if (isPath(pathname, '/login') || isPath(pathname, '/signup') || isPath(pathname, '/onboarding')) {
+    return false
+  }
+
   return true
 }
 
@@ -350,7 +366,8 @@ function shouldReserveMobileBottomNavSpace(pathname: string) {
   if (
     isPath(pathname, '/search') ||
     isPath(pathname, '/ask-ai/maps') ||
-    isPath(pathname, '/ask-ai/text')
+    isPath(pathname, '/ask-ai/chatbot') ||
+    isPath(pathname, '/ask-ai/prompt-builder')
   ) {
     return false
   }
@@ -389,9 +406,11 @@ function getNoindexForPath(pathname: string) {
       '/my-submissions',
       '/submissions',
       '/ask-ai',
+      '/ask-ai/chatbot',
       '/ask-ai/text',
       '/ask-ai/map',
       '/ask-ai/maps',
+      '/ask-ai/prompt-builder',
       '/prompt-builder',
     ].some((path) => isPath(pathname, path))
   ) {
@@ -840,6 +859,14 @@ function App() {
   }, [pathname])
 
   useEffect(() => {
+    const canonicalPromptBuilderPath = getCanonicalPromptBuilderPath(pathname)
+
+    if (canonicalPromptBuilderPath && pathname !== canonicalPromptBuilderPath) {
+      replaceWithPath(canonicalPromptBuilderPath)
+    }
+  }, [pathname])
+
+  useEffect(() => {
     let isMounted = true
 
     supabase.auth.getSession().then(({ data }) => {
@@ -1061,14 +1088,28 @@ function App() {
       )
     }
 
-    if (pathname === '/ask-ai/text' || pathname === '/ask-ai/text/') {
+    if (pathname === '/ask-ai' || pathname === '/ask-ai/') {
+      return (
+        <>
+          <SeoHead
+            title="Ask AI | GalaTayo"
+            description="Choose how you want GalaTayo AI to help you."
+            canonicalPath="/ask-ai"
+            robots="noindex,follow"
+          />
+          <AskAiOverviewPage />
+        </>
+      )
+    }
+
+    if (pathname === '/ask-ai/chatbot' || pathname === '/ask-ai/chatbot/' || pathname === '/ask-ai/text' || pathname === '/ask-ai/text/') {
       const initialAskAiQuestion = new URLSearchParams(search).get('q') ?? ''
       return (
         <>
           <SeoHead
-            title="Ask AI Text | GalaTayo"
-            description="Ask AI text mode on GalaTayo."
-            canonicalPath="/ask-ai/text"
+            title="Ask AI Chatbot | GalaTayo"
+            description="Ask AI chatbot mode on GalaTayo."
+            canonicalPath="/ask-ai/chatbot"
             robots="noindex,follow"
           />
           <HomePage key={`ask-ai:${search || 'root'}`} initialMode="ask-ai" initialAskAiQuestion={initialAskAiQuestion} />
@@ -1090,13 +1131,13 @@ function App() {
       )
     }
 
-    if (pathname === '/prompt-builder' || pathname === '/prompt-builder/') {
+    if (pathname === '/ask-ai/prompt-builder' || pathname === '/ask-ai/prompt-builder/' || pathname === '/prompt-builder' || pathname === '/prompt-builder/') {
       return (
         <>
           <SeoHead
             title="Prompt Builder | GalaTayo"
             description="Prompt builder on GalaTayo."
-            canonicalPath="/prompt-builder"
+            canonicalPath="/ask-ai/prompt-builder"
             robots="noindex,follow"
           />
           <HomePage initialPromptBuilderOpen />

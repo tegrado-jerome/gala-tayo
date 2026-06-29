@@ -5,11 +5,32 @@ import { normalizeSearchText } from "../utils/searchMatching";
 
 export class AskAiMapsServiceError extends Error {
   status: number;
+  code: string;
+  providerStatus?: number;
+  model?: string;
+  stage?: string;
+  details?: Record<string, unknown>;
 
-  constructor(message: string, status = 500) {
-    super(message);
+  constructor(
+    message: string,
+    status = 500,
+    options?: {
+      code?: string;
+      providerStatus?: number;
+      model?: string;
+      stage?: string;
+      details?: Record<string, unknown>;
+      cause?: unknown;
+    }
+  ) {
+    super(message, options?.cause ? { cause: options.cause } : undefined);
     this.name = "AskAiMapsServiceError";
     this.status = status;
+    this.code = options?.code ?? "ASK_AI_MAPS_ERROR";
+    this.providerStatus = options?.providerStatus;
+    this.model = options?.model;
+    this.stage = options?.stage;
+    this.details = options?.details;
   }
 }
 
@@ -29,17 +50,28 @@ export type AskAiMapGroundedPlace = {
   name: string;
   reason: string;
   googleMapsUrl?: string;
+  googleMapsUri?: string;
   placeId?: string;
   sourceTitle?: string;
   sourceUri?: string;
   coordinates?: {
     latitude: number;
     longitude: number;
-  };
+  } | null;
+  categoryText?: string;
+  ratingText?: string;
+  reviewCountText?: string;
+  openStatusText?: string;
+  hoursText?: string;
+  addressText?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   optionalDetails?: {
     categoryText?: string;
     ratingText?: string;
+    reviewCountText?: string;
     openStatusText?: string;
+    hoursText?: string;
     addressText?: string;
   };
 };
@@ -66,10 +98,21 @@ export type AskAiMapsSearchResult = {
 type ParsedGroundedPlace = {
   name?: unknown;
   reason?: unknown;
+  category?: unknown;
   categoryText?: unknown;
+  reviewCount?: unknown;
+  reviewCountText?: unknown;
+  openStatus?: unknown;
   openStatusText?: unknown;
+  hours?: unknown;
+  hoursText?: unknown;
+  address?: unknown;
   addressText?: unknown;
   ratingText?: unknown;
+  placeId?: unknown;
+  googleMapsUri?: unknown;
+  googleMapsUrl?: unknown;
+  sourceUri?: unknown;
   coordinates?: unknown;
   latitude?: unknown;
   longitude?: unknown;
@@ -113,12 +156,101 @@ type GroundingSource = {
   placeId?: string;
   categoryText?: string;
   ratingText?: string;
+  reviewCountText?: string;
   openStatusText?: string;
+  hoursText?: string;
   addressText?: string;
   coordinates?: {
     latitude: number;
     longitude: number;
   };
+};
+
+function buildGroundingSourceKey(source: GroundingSource): string {
+  const placeId = normalizeText(source.placeId);
+  if (placeId) {
+    return `placeid:${placeId.toLowerCase()}`;
+  }
+
+  const uri = normalizeGoogleMapsSourceIdentity(source.uri);
+  if (uri) {
+    return `uri:${uri}`;
+  }
+
+  const nameAddress = normalizePlaceKey(
+    `${source.title ?? ""} ${source.addressText ?? source.text ?? ""}`
+  );
+  return nameAddress ? `nameaddr:${nameAddress}` : "";
+}
+
+function mergeGroundingSource(
+  left: GroundingSource | undefined,
+  right: GroundingSource
+): GroundingSource {
+  if (!left) {
+    return right;
+  }
+
+  return {
+    title: left.title ?? right.title,
+    text: left.text ?? right.text,
+    uri: left.uri ?? right.uri,
+    placeId: left.placeId ?? right.placeId,
+    categoryText: left.categoryText ?? right.categoryText,
+    ratingText: left.ratingText ?? right.ratingText,
+    reviewCountText: left.reviewCountText ?? right.reviewCountText,
+    openStatusText: left.openStatusText ?? right.openStatusText,
+    hoursText: left.hoursText ?? right.hoursText,
+    addressText: left.addressText ?? right.addressText,
+    coordinates: left.coordinates ?? right.coordinates,
+  };
+}
+
+function mergeGroundingSourceLists(...sourceLists: GroundingSource[][]): GroundingSource[] {
+  const merged = new Map<string, GroundingSource>();
+
+  for (const sourceList of sourceLists) {
+    for (const source of sourceList) {
+      const key = buildGroundingSourceKey(source);
+
+      if (!key) {
+        continue;
+      }
+
+      merged.set(key, mergeGroundingSource(merged.get(key), source));
+    }
+  }
+
+  return Array.from(merged.values());
+}
+
+type SourceMatchMethod =
+  | "sourceUri"
+  | "placeId"
+  | "name"
+  | "fuzzyNameAddress"
+  | "none";
+
+type RejectedPlaceDiagnostic = {
+  name: string;
+  missingFields: string[];
+  hadSourceMatch: boolean;
+  sourceMatchMethod?: SourceMatchMethod;
+};
+
+type AskAiMapsFilterDiagnostics = {
+  rawParsedPlaces: number;
+  groundingSources: number;
+  normalizedPlacesBeforeStrictFilter: number;
+  completePlacesAfterStrictFilter: number;
+  rejectedBecauseMissing: Record<string, number>;
+  rejectedPlaces: RejectedPlaceDiagnostic[];
+};
+
+type EnrichedGroundedPlaceCandidate = {
+  place: AskAiMapGroundedPlace;
+  hadSourceMatch: boolean;
+  sourceMatchMethod: SourceMatchMethod;
 };
 
 type AskAiMapsLogger = {
@@ -133,29 +265,12 @@ type StoredPlaceCoordinateCandidate = {
   longitude: number | null;
 };
 
-export const ASK_AI_MAPS_MODELS = [
-  "gemini-2.5-flash",
-  "gemini-2.5-flash-lite",
-  "gemini-3.1-flash-lite",
-] as const;
-
-const ASK_AI_MAPS_MAX_PLACES = 8;
-const FALLBACK_QUOTA_STATUSES = new Set([429]);
-const ASK_AI_MAPS_FALLBACK_DELAY_MS = 650;
-const ASK_AI_MAPS_PROVIDER_TIMEOUT_MS = 18_000;
+const ASK_AI_MAPS_EXPERIMENT_MODEL = "gemini-3.1-flash-lite";
+const ASK_AI_MAPS_MAX_PLACES = 10;
+const ASK_AI_MAPS_PROVIDER_TIMEOUT_MS = 20_000;
 const PROVIDER_BUSY_MESSAGE = "Ask AI Maps is busy right now. Try again in a bit.";
 const NO_RESULTS_MESSAGE =
   "No map-grounded places matched that request. Try a more specific area or place type.";
-const FALLBACK_QUOTA_MESSAGE_PATTERNS = [
-  /rate limit/i,
-  /too many requests/i,
-  /quota/i,
-  /resource exhausted/i,
-  /consumed/i,
-  /exceeded/i,
-  /daily limit/i,
-  /limit reached/i,
-] as const;
 
 function normalizeWhitespace(value: string): string {
   return value.replace(/\s+/g, " ").trim();
@@ -235,6 +350,66 @@ function normalizeOpenStatusText(value: unknown): string | undefined {
     const record = value as Record<string, unknown>;
     if (typeof record.openNow === "boolean") {
       return record.openNow ? "Open now" : "Closed now";
+    }
+  }
+
+  return normalizeOptionalDisplayText(value);
+}
+
+function normalizeRatingText(value: unknown): string | undefined {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value.toFixed(1);
+  }
+
+  return normalizeOptionalDisplayText(value);
+}
+
+function normalizeReviewCountText(value: unknown): string | undefined {
+  if (typeof value === "number" && Number.isFinite(value) && value >= 0) {
+    return `${Math.round(value).toLocaleString("en-US")} reviews`;
+  }
+
+  const normalized = normalizeOptionalDisplayText(value);
+
+  if (!normalized) {
+    return undefined;
+  }
+
+  if (/\breview/i.test(normalized)) {
+    return normalized;
+  }
+
+  if (/^\d[\d,]*$/.test(normalized)) {
+    return `${normalized} reviews`;
+  }
+
+  return normalized;
+}
+
+function normalizeHoursText(value: unknown): string | undefined {
+  if (Array.isArray(value)) {
+    const entries = value
+      .map((entry) => normalizeTextNode(entry) ?? normalizeOptionalDisplayText(entry))
+      .filter((entry): entry is string => Boolean(entry));
+
+    return entries.length > 0 ? entries.join(" | ") : undefined;
+  }
+
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    const weekdayDescriptions = getObjectField(record, [
+      "weekdayDescriptions",
+      "weekday_descriptions",
+      "weekdayText",
+      "weekday_text",
+      "periods",
+    ]);
+    const text =
+      normalizeTextNode(getObjectField(record, ["text", "hoursText", "hours_text"])) ??
+      normalizeHoursText(weekdayDescriptions);
+
+    if (text) {
+      return text;
     }
   }
 
@@ -370,6 +545,48 @@ function extractCoordinatesFromGoogleMapsPlaceObject(
   }
 
   return null;
+}
+
+function normalizeSourceUri(value: unknown): string | undefined {
+  return normalizeText(value) ?? undefined;
+}
+
+function normalizeGoogleMapsSourceIdentity(value: string | undefined | null): string | null {
+  const normalized = normalizeText(value);
+
+  if (!normalized) {
+    return null;
+  }
+
+  const decoded = (() => {
+    try {
+      return decodeURIComponent(normalized);
+    } catch {
+      return normalized;
+    }
+  })();
+
+  return decoded.replace(/\/+$/, "");
+}
+
+function isWeakGroundedReason(value: string | undefined): boolean {
+  const normalized = normalizeText(value)?.toLowerCase();
+
+  if (!normalized) {
+    return true;
+  }
+
+  return [
+    "map-grounded",
+    "grounded match",
+    "requested area",
+    "fits your query",
+    "matches your search",
+    "based on your query",
+    "map grounded",
+    "google maps recommendation for your request",
+    "recommended based on google maps grounding",
+  ].some((phrase) => normalized.includes(phrase));
 }
 
 function toPlaceId(value: string, fallbackIndex: number): string {
@@ -564,6 +781,11 @@ function getErrorStatus(error: unknown): number {
   return 502;
 }
 
+function getProviderStatus(error: unknown): number | undefined {
+  const status = getErrorStatus(error);
+  return status >= 400 ? status : undefined;
+}
+
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error && typeof error.message === "string") {
     return error.message;
@@ -597,7 +819,12 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: s
       promise,
       new Promise<T>((_, reject) => {
         timeoutHandle = setTimeout(() => {
-          reject(new AskAiMapsServiceError(message, 504));
+          reject(
+            new AskAiMapsServiceError(message, 504, {
+              code: "ASK_AI_MAPS_TIMEOUT",
+              stage: "provider_call",
+            })
+          );
         }, timeoutMs);
       }),
     ]);
@@ -609,7 +836,50 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: s
 }
 
 function isAskAiMapsRawDebugEnabled(): boolean {
-  return process.env.DEBUG_ASK_AI_MAPS_RAW === "true";
+  return true;
+}
+
+function isAskAiMapsFilterDebugEnabled(): boolean {
+  return process.env.DEBUG_ASK_AI_MAPS_FILTER === "true";
+}
+
+function logAskAiMapsDiagnostics(
+  logger: AskAiMapsLogger | undefined,
+  stage: string,
+  details: Record<string, unknown>
+) {
+  logger?.log(`[Ask AI Maps] ${stage} ${JSON.stringify(sanitizeForDebug(details))}`);
+}
+
+function toAskAiMapsServiceError(
+  error: unknown,
+  fallback: {
+    status: number;
+    code: string;
+    message: string;
+    stage: string;
+    model?: string;
+    details?: Record<string, unknown>;
+  }
+): AskAiMapsServiceError {
+  if (error instanceof AskAiMapsServiceError) {
+    return error;
+  }
+
+  const providerStatus = getProviderStatus(error);
+
+  return new AskAiMapsServiceError(
+    error instanceof Error && error.message ? error.message : fallback.message,
+    fallback.status,
+    {
+      code: fallback.code,
+      providerStatus,
+      model: fallback.model,
+      stage: fallback.stage,
+      details: fallback.details,
+      cause: error,
+    }
+  );
 }
 
 function sanitizeForDebug(value: unknown): unknown {
@@ -746,6 +1016,49 @@ function extractLatLngFromGoogleMapsUrl(
   if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
 
   return { latitude, longitude };
+}
+
+function extractPlaceIdFromGoogleMapsUrl(url?: string | null): string | null {
+  if (!url) {
+    return null;
+  }
+
+  const candidateValues = [
+    url,
+    (() => {
+      try {
+        return decodeURIComponent(url);
+      } catch {
+        return url;
+      }
+    })(),
+  ];
+
+  for (const candidateValue of candidateValues) {
+    try {
+      const parsed = new URL(candidateValue);
+      const fromQuery =
+        parsed.searchParams.get("query_place_id") ??
+        parsed.searchParams.get("placeid") ??
+        parsed.searchParams.get("place_id") ??
+        parsed.searchParams.get("ftid") ??
+        parsed.searchParams.get("cid");
+
+      if (fromQuery) {
+        return fromQuery;
+      }
+    } catch {
+      const match = candidateValue.match(
+        /[?&](?:query_place_id|placeid|place_id|ftid|cid)=([^&]+)/i
+      );
+
+      if (match?.[1]) {
+        return match[1];
+      }
+    }
+  }
+
+  return null;
 }
 
 async function extractGeminiCandidateTextForDebug(response: any): Promise<unknown> {
@@ -966,22 +1279,6 @@ async function logAskAiMapsLayer2Debug(args: {
   console.log("========== END ASK AI MAPS LAYER 2 DEBUG ==========");
 }
 
-function isQuotaOrRateLimitProviderError(error: unknown) {
-  const status = getErrorStatus(error);
-
-  if (FALLBACK_QUOTA_STATUSES.has(status)) {
-    return true;
-  }
-
-  const message = getErrorMessage(error);
-
-  if (!message) {
-    return false;
-  }
-
-  return FALLBACK_QUOTA_MESSAGE_PATTERNS.some((pattern) => pattern.test(message));
-}
-
 function getAmbiguousQueryMessage(
   query: string,
   userLocation?: { latitude: number; longitude: number } | null
@@ -999,6 +1296,38 @@ function getAmbiguousQueryMessage(
   return null;
 }
 
+function isBroadDiscoveryQuery({
+  query,
+  nearMe = false,
+  openNow = false,
+  userLocation,
+}: AskAiMapsSearchParams): boolean {
+  const normalizedQuery = normalizeSearchText(query);
+
+  if (!normalizedQuery) {
+    return false;
+  }
+
+  if (nearMe || openNow || userLocation) {
+    return false;
+  }
+
+  const broadCategoryPattern =
+    /\b(mall|malls|shopping|samgyup|samgyeop|korean bbq|cafe|cafes|coffee|restaurant|restaurants|kainan|food|tourist|tourist spots|attraction|attractions|museum|museums|park|parks)\b/i;
+  const narrowModifierPattern =
+    /\b(near me|near|around|closest|open now|wifi|pet[- ]friendly|wheelchair|accessible|quiet|study|small town|sm |up diliman)\b/i;
+
+  if (!broadCategoryPattern.test(normalizedQuery)) {
+    return false;
+  }
+
+  if (narrowModifierPattern.test(normalizedQuery)) {
+    return false;
+  }
+
+  return true;
+}
+
 function buildMapsGroundingPrompt({
   query,
   selectedChips = [],
@@ -1011,46 +1340,61 @@ function buildMapsGroundingPrompt({
     nearMe && userLocation
       ? `${userLocation.latitude.toFixed(6)}, ${userLocation.longitude.toFixed(6)}`
       : "not provided";
+  const broadDiscoveryQuery = isBroadDiscoveryQuery({
+    query,
+    selectedChips,
+    nearMe,
+    openNow,
+    userLocation,
+  });
+  const quantityInstruction = broadDiscoveryQuery
+    ? "Return 6 to 10 grounded places for broad/general discovery queries when enough relevant places are available. If there are many relevant options, return the best 6 to 10. Do not fabricate places to meet the minimum."
+    : "For specific or narrow queries, return fewer than 6 if only a few good grounded places exist. If there are only a few relevant options, return only those. Do not fabricate places to meet the minimum.";
 
-  return `
-You are GalaTayo's Ask AI Maps local guide.
+return `
+You are GalaTayo Ask AI Map, a grounded place recommendation assistant.
 
-Use only the Google Maps grounding tool for this answer.
-Do not call or rely on Google Places API data.
-Do not invent missing details.
-Do not include photo URLs.
-Do not promise exact hours, ratings, phone numbers, websites, coordinates, or other details unless the grounded answer explicitly provides them.
-Return 6 to 8 recommendations when possible.
-Never return more than 8 places.
-Keep reasons short, natural, and useful.
-The answer must be based on Google Maps grounding.
+Use Google Maps Grounding only.
 
-Return valid JSON only in this exact shape:
+Return JSON only. No markdown.
+
+${quantityInstruction}
+Prefer rich grounded places with category, rating, reviews, address, hours, and coordinates.
+Quality still matters, but do not over-limit broad discovery searches to only a few results.
+Do not include weak places if richer grounded places are available.
+
+Only use information supported by Google Maps Grounding. Never invent missing place details.
+
+A place is valid if it has:
+- name
+- reason
+- either googleMapsUri or placeId
+
+Each place should include this shape:
 {
-  "answerText": "A short grounded summary of the overall recommendations.",
+  "answerText": "A short grounded summary of the recommendations.",
   "places": [
     {
+      "placeId": "string",
       "name": "Place name",
-      "reason": "Short reason",
-      "categoryText": "Optional category if obvious from the grounded answer",
-      "openStatusText": "Optional open or closed text only if available from the grounded answer",
-      "addressText": "Optional address text only if available from the grounded answer",
-      "ratingText": "Optional rating text only if available from the grounded answer",
-      "coordinates": {
-        "latitude": 14.5995,
-        "longitude": 120.9842
-      }
+      "address": "string",
+      "category": "string",
+      "ratingText": "string",
+      "reviewCountText": "string",
+      "openStatusText": "string",
+      "hoursText": "string",
+      "googleMapsUri": "string",
+      "latitude": null,
+      "longitude": null,
+      "reason": "string"
     }
   ]
 }
 
-Include the "coordinates" object only when the grounded Google Maps result clearly resolves the place coordinates. Otherwise omit it.
+If a text field is unavailable, use an empty string.
+If latitude/longitude are unavailable, use null.
 
-If there are no solid grounded matches, return:
-{
-  "answerText": "No strong grounded matches were found.",
-  "places": []
-}
+The reason must be 1 short Taglish sentence explaining why this place fits the user query.
 
 User query: ${query}
 Selected chips: ${chipText}
@@ -1069,7 +1413,10 @@ async function getGoogleApiKey(): Promise<string> {
     const apiKey = envApiKey || (await getSecret("gemini-api-key"));
 
     if (!apiKey) {
-      throw new AskAiMapsServiceError("Google API key is missing.", 500);
+      throw new AskAiMapsServiceError("Google API key is missing.", 500, {
+        code: "ASK_AI_MAPS_CONFIG_ERROR",
+        stage: "load_api_key",
+      });
     }
 
     return apiKey;
@@ -1080,7 +1427,12 @@ async function getGoogleApiKey(): Promise<string> {
 
     throw new AskAiMapsServiceError(
       error instanceof Error ? error.message : "Failed to retrieve Google API key.",
-      500
+      500,
+      {
+        code: "ASK_AI_MAPS_CONFIG_ERROR",
+        stage: "load_api_key",
+        cause: error,
+      }
     );
   }
 }
@@ -1124,11 +1476,37 @@ function extractGroundingSources(
     const categoryText = normalizeCategoryText(
       getObjectField(maps, ["category", "categoryText", "category_text", "primaryTypeDisplayName", "primary_type_display_name", "primaryType", "primary_type", "types"])
     );
-    const ratingText = normalizeOptionalDisplayText(
-      getObjectField(maps, ["ratingText", "rating_text", "rating"])
+    const ratingText = normalizeRatingText(
+      getObjectField(maps, ["ratingText", "rating_text", "rating", "formattedRating", "formatted_rating"])
+    );
+    const reviewCountText = normalizeReviewCountText(
+      getObjectField(maps, [
+        "reviewCountText",
+        "review_count_text",
+        "userRatingCountText",
+        "user_rating_count_text",
+        "userRatingCount",
+        "user_rating_count",
+        "reviewCount",
+        "review_count",
+      ])
     );
     const openStatusText = normalizeOpenStatusText(
       getObjectField(maps, ["openStatus", "open_status", "openStatusText", "open_status_text", "openNow", "open_now", "currentOpeningHours", "current_opening_hours"])
+    );
+    const hoursText = normalizeHoursText(
+      getObjectField(maps, [
+        "hoursText",
+        "hours_text",
+        "openingHours",
+        "opening_hours",
+        "currentOpeningHours",
+        "current_opening_hours",
+        "regularOpeningHours",
+        "regular_opening_hours",
+        "weekdayDescriptions",
+        "weekday_descriptions",
+      ])
     );
     const addressText =
       normalizeTextNode(getObjectField(maps, ["shortFormattedAddress", "short_formatted_address"])) ??
@@ -1138,11 +1516,23 @@ function extractGroundingSources(
       extractCoordinatesFromGoogleMapsPlaceObject(maps) ??
       extractCoordinatesFromGoogleMapsUrl(uri);
 
-    if (!title && !uri && !placeId) {
+    if (!title && !uri && !placeId && !addressText && !categoryText && !coordinates) {
       continue;
     }
 
-    const dedupeKey = normalizePlaceKey(`${placeId ?? ""} ${uri ?? ""} ${title ?? ""}`);
+    const dedupeKey = buildGroundingSourceKey({
+      title,
+      text,
+      uri,
+      placeId,
+      categoryText,
+      ratingText,
+      reviewCountText,
+      openStatusText,
+      hoursText,
+      addressText,
+      coordinates,
+    });
 
     if (!dedupeKey || seenKeys.has(dedupeKey)) {
       continue;
@@ -1156,7 +1546,9 @@ function extractGroundingSources(
       ...(placeId ? { placeId } : {}),
       ...(categoryText ? { categoryText } : {}),
       ...(ratingText ? { ratingText } : {}),
+      ...(reviewCountText ? { reviewCountText } : {}),
       ...(openStatusText ? { openStatusText } : {}),
+      ...(hoursText ? { hoursText } : {}),
       ...(addressText ? { addressText } : {}),
       ...(coordinates ? { coordinates } : {}),
     });
@@ -1201,11 +1593,37 @@ function extractLooseGoogleMapsSources(value: unknown): GroundingSource[] {
     const categoryText = normalizeCategoryText(
       getObjectField(record, ["category", "categoryText", "category_text", "primaryTypeDisplayName", "primary_type_display_name", "primaryType", "primary_type", "types"])
     );
-    const ratingText = normalizeOptionalDisplayText(
-      getObjectField(record, ["ratingText", "rating_text", "rating"])
+    const ratingText = normalizeRatingText(
+      getObjectField(record, ["ratingText", "rating_text", "rating", "formattedRating", "formatted_rating"])
+    );
+    const reviewCountText = normalizeReviewCountText(
+      getObjectField(record, [
+        "reviewCountText",
+        "review_count_text",
+        "userRatingCountText",
+        "user_rating_count_text",
+        "userRatingCount",
+        "user_rating_count",
+        "reviewCount",
+        "review_count",
+      ])
     );
     const openStatusText = normalizeOpenStatusText(
       getObjectField(record, ["openStatus", "open_status", "openStatusText", "open_status_text", "openNow", "open_now", "currentOpeningHours", "current_opening_hours"])
+    );
+    const hoursText = normalizeHoursText(
+      getObjectField(record, [
+        "hoursText",
+        "hours_text",
+        "openingHours",
+        "opening_hours",
+        "currentOpeningHours",
+        "current_opening_hours",
+        "regularOpeningHours",
+        "regular_opening_hours",
+        "weekdayDescriptions",
+        "weekday_descriptions",
+      ])
     );
     const addressText =
       normalizeTextNode(getObjectField(record, ["shortFormattedAddress", "short_formatted_address"])) ??
@@ -1215,19 +1633,32 @@ function extractLooseGoogleMapsSources(value: unknown): GroundingSource[] {
       extractCoordinatesFromGoogleMapsPlaceObject(record) ??
       extractCoordinatesFromGoogleMapsUrl(uri);
 
-    if (title && (uri || placeId || addressText || categoryText || coordinates)) {
-      const dedupeKey = normalizePlaceKey(`${placeId ?? ""} ${uri ?? ""} ${title}`);
+    if (title || uri || placeId || addressText || categoryText || coordinates) {
+      const dedupeKey = buildGroundingSourceKey({
+        title,
+        uri,
+        placeId,
+        categoryText,
+        ratingText,
+        reviewCountText,
+        openStatusText,
+        hoursText,
+        addressText,
+        coordinates,
+      });
 
       if (dedupeKey && !seenKeys.has(dedupeKey)) {
         seenKeys.add(dedupeKey);
         sources.push({
-          title,
+          ...(title ? { title } : {}),
           ...(addressText ? { text: addressText } : {}),
           ...(uri ? { uri } : {}),
           ...(placeId ? { placeId } : {}),
           ...(categoryText ? { categoryText } : {}),
           ...(ratingText ? { ratingText } : {}),
+          ...(reviewCountText ? { reviewCountText } : {}),
           ...(openStatusText ? { openStatusText } : {}),
+          ...(hoursText ? { hoursText } : {}),
           ...(addressText ? { addressText } : {}),
           ...(coordinates ? { coordinates } : {}),
         });
@@ -1262,49 +1693,118 @@ function getOverlapScore(left: string, right: string) {
   return overlap / Math.max(leftTokens.size, rightTokens.size);
 }
 
-function findBestGroundingSource(
-  placeName: string,
-  sources: GroundingSource[]
-): GroundingSource | undefined {
-  const normalizedPlaceName = normalizePlaceKey(placeName);
+function getSourceAddressMatchScore(
+  leftAddress: string | undefined,
+  rightAddress: string | undefined
+) {
+  const left = normalizePlaceKey(leftAddress ?? "");
+  const right = normalizePlaceKey(rightAddress ?? "");
 
-  if (!normalizedPlaceName) {
-    return undefined;
+  if (!left || !right) {
+    return 0;
+  }
+
+  if (left === right) {
+    return 1;
+  }
+
+  if (left.includes(right) || right.includes(left)) {
+    return 0.9;
+  }
+
+  return getOverlapScore(left, right);
+}
+
+function findMatchingGroundingSource(args: {
+  parsedName?: string | null;
+  parsedAddress?: string | null;
+  parsedSourceUri?: string | null;
+  parsedPlaceId?: string | null;
+  sources: GroundingSource[];
+}): { source?: GroundingSource; method: SourceMatchMethod } {
+  const normalizedParsedName = normalizePlaceKey(args.parsedName ?? "");
+  const normalizedParsedAddress = normalizeText(args.parsedAddress);
+  const normalizedParsedSourceUri = normalizeGoogleMapsSourceIdentity(args.parsedSourceUri);
+  const normalizedParsedPlaceId = normalizeText(args.parsedPlaceId);
+
+  if (normalizedParsedPlaceId) {
+    const sourceByPlaceId = args.sources.find(
+      (source) => source.placeId === normalizedParsedPlaceId
+    );
+
+    if (sourceByPlaceId) {
+      return { source: sourceByPlaceId, method: "placeId" };
+    }
+  }
+
+  if (normalizedParsedSourceUri) {
+    const sourceByUri = args.sources.find(
+      (source) => normalizeGoogleMapsSourceIdentity(source.uri) === normalizedParsedSourceUri
+    );
+
+    if (sourceByUri) {
+      return { source: sourceByUri, method: "sourceUri" };
+    }
+  }
+
+  if (normalizedParsedName) {
+    const sourceByExactName = args.sources.find((source) => {
+      const normalizedTitle = normalizePlaceKey(source.title ?? "");
+      return normalizedTitle && normalizedTitle === normalizedParsedName;
+    });
+
+    if (sourceByExactName) {
+      return { source: sourceByExactName, method: "name" };
+    }
+
+    const sourceByPartialName = args.sources.find((source) => {
+      const normalizedTitle = normalizePlaceKey(source.title ?? "");
+      return (
+        normalizedTitle &&
+        (normalizedTitle.includes(normalizedParsedName) ||
+          normalizedParsedName.includes(normalizedTitle))
+      );
+    });
+
+    if (sourceByPartialName) {
+      return { source: sourceByPartialName, method: "fuzzyNameAddress" };
+    }
+  }
+
+  if (!normalizedParsedName) {
+    return { method: "none" };
   }
 
   let bestSource: GroundingSource | undefined;
   let bestScore = 0;
 
-  for (const source of sources) {
-    const title = source.title;
-
-    if (!title) {
-      continue;
-    }
-
-    const normalizedTitle = normalizePlaceKey(title);
+  for (const source of args.sources) {
+    const normalizedTitle = normalizePlaceKey(source.title ?? "");
 
     if (!normalizedTitle) {
       continue;
     }
 
-    if (normalizedTitle === normalizedPlaceName) {
-      return source;
-    }
-
-    const score =
-      normalizedTitle.includes(normalizedPlaceName) ||
-      normalizedPlaceName.includes(normalizedTitle)
+    const nameScore =
+      normalizedTitle.includes(normalizedParsedName) ||
+      normalizedParsedName.includes(normalizedTitle)
         ? 0.95
-        : getOverlapScore(placeName, title);
+        : getOverlapScore(normalizedParsedName, normalizedTitle);
+    const addressScore = getSourceAddressMatchScore(
+      normalizedParsedAddress ?? undefined,
+      source.addressText ?? source.text
+    );
+    const totalScore = nameScore * 0.75 + addressScore * 0.25;
 
-    if (score > bestScore) {
-      bestScore = score;
+    if (totalScore > bestScore) {
+      bestScore = totalScore;
       bestSource = source;
     }
   }
 
-  return bestScore >= 0.5 ? bestSource : undefined;
+  return bestScore >= 0.72
+    ? { source: bestSource, method: "fuzzyNameAddress" }
+    : { method: "none" };
 }
 
 function getAddressMatchScore(
@@ -1435,23 +1935,143 @@ function buildGroundedPlaceReason(args: {
   query: string;
   name: string;
   source?: GroundingSource;
+  categoryText?: string;
+  addressText?: string;
+  ratingText?: string;
+  reviewCountText?: string;
+  openStatusText?: string;
+  hoursText?: string;
 }) {
-  const category = args.source?.categoryText;
-  const address = args.source?.addressText ?? args.source?.text;
+  const query = normalizeText(args.query)?.toLowerCase() ?? "";
+  const category = normalizeText(args.categoryText ?? args.source?.categoryText)?.toLowerCase();
+  const rating = normalizeText(args.ratingText ?? args.source?.ratingText);
+  const reviewCount = normalizeText(
+    args.reviewCountText ?? args.source?.reviewCountText
+  );
+  const openStatus = normalizeText(
+    args.openStatusText ?? args.source?.openStatusText
+  );
+  const hoursText = normalizeText(args.hoursText ?? args.source?.hoursText);
+  const address = normalizeText(
+    args.addressText ?? args.source?.addressText ?? args.source?.text
+  );
+
+  const isMallQuery =
+    query.includes("mall") ||
+    query.includes("shopping") ||
+    Boolean(category && /(mall|shopping center|shopping mall)/i.test(category));
+  const isSamgyupQuery =
+    query.includes("samgyup") ||
+    query.includes("samgyeop") ||
+    query.includes("korean bbq") ||
+    Boolean(category && /(korean|bbq|barbecue)/i.test(category));
+  const isCafeQuery =
+    query.includes("cafe") ||
+    query.includes("coffee") ||
+    query.includes("study") ||
+    Boolean(category && /(cafe|coffee)/i.test(category));
+  const isRestaurantQuery =
+    query.includes("restaurant") ||
+    query.includes("food") ||
+    query.includes("kainan") ||
+    query.includes("eat") ||
+    Boolean(category && /(restaurant|eatery|diner|food)/i.test(category));
+  const isAttractionQuery =
+    query.includes("attraction") ||
+    query.includes("museum") ||
+    query.includes("park") ||
+    query.includes("tourist") ||
+    query.includes("visit") ||
+    Boolean(category && /(museum|park|attraction|landmark|tourist)/i.test(category));
+  const areaLabel = address
+    ? address.split(",").map((part) => part.trim()).filter(Boolean).slice(-2).join(", ")
+    : "";
+
+  if (isMallQuery) {
+    return areaLabel
+      ? `Good mall option for shopping, food, and indoor tambayan around ${areaLabel}. ${openStatus || hoursText ? `${openStatus ?? hoursText} based on Google Maps.` : "Useful map details are available if you want to compare options."}`
+      : "Good mall option for shopping, food, and indoor tambayan around this part of Cavite.";
+  }
+
+  if (isSamgyupQuery) {
+    return "Good Korean BBQ option if you're craving samgyup nearby. Dine-in or map details are included when available.";
+  }
+
+  if (isCafeQuery) {
+    return "Good cafe pick if you want a place to chill, study, or get coffee nearby. Helpful map details are included when available.";
+  }
+
+  if (isRestaurantQuery) {
+    return "Good food spot to consider based on the area and your search. Helpful map details are shown when available.";
+  }
+
+  if (isAttractionQuery) {
+    return "Nice place to check out if you're looking for something to visit nearby. Helpful map details are shown when available.";
+  }
+
+  if (category && rating && reviewCount) {
+    return `Good ${category} option to check nearby. Google Maps shows ${rating} and ${reviewCount}${openStatus ? `, with ${openStatus.toLowerCase()} details` : ""}.`;
+  }
 
   if (category && address) {
-    return `${args.name} matches your search for "${args.query}" as a ${category} around ${address}.`;
+    return `Good ${category} option to check around ${address}. Useful Google Maps details are included when available.`;
   }
 
   if (address) {
-    return `${args.name} is a map-grounded match for "${args.query}" around ${address}.`;
+    return `Good nearby place to consider around ${address}. Helpful map details are included when available.`;
   }
 
-  if (category) {
-    return `${args.name} is a map-grounded ${category} match for "${args.query}".`;
-  }
+  return "Relevant place to consider based on your search and location.";
+}
 
-  return `${args.name} is a map-grounded match for "${args.query}".`;
+function mergeGroundingMetadata(args: {
+  parsedCategoryText?: string;
+  parsedRatingText?: string;
+  parsedReviewCountText?: string;
+  parsedOpenStatusText?: string;
+  parsedHoursText?: string;
+  parsedAddressText?: string;
+  parsedCoordinates?: { latitude: number; longitude: number } | null;
+  parsedGoogleMapsUrl?: string;
+  parsedSourceUri?: string;
+  parsedPlaceId?: string;
+  source?: GroundingSource;
+}) {
+  const googleMapsUrl =
+    args.parsedGoogleMapsUrl ?? args.parsedSourceUri ?? args.source?.uri;
+  const sourceUri = args.parsedSourceUri ?? args.source?.uri ?? args.parsedGoogleMapsUrl;
+  const placeId =
+    args.parsedPlaceId ??
+    args.source?.placeId ??
+    extractPlaceIdFromGoogleMapsUrl(googleMapsUrl ?? sourceUri);
+  const categoryText = args.parsedCategoryText ?? args.source?.categoryText;
+  const ratingText = args.parsedRatingText ?? args.source?.ratingText;
+  const reviewCountText =
+    args.parsedReviewCountText ?? args.source?.reviewCountText;
+  const openStatusText =
+    args.parsedOpenStatusText ?? args.source?.openStatusText;
+  const hoursText = args.parsedHoursText ?? args.source?.hoursText;
+  const addressText =
+    args.parsedAddressText ??
+    args.source?.addressText ??
+    normalizeOptionalDisplayText(args.source?.text);
+  const coordinates =
+    args.parsedCoordinates ??
+    args.source?.coordinates ??
+    extractCoordinatesFromGoogleMapsUrl(googleMapsUrl ?? sourceUri ?? args.source?.uri);
+
+  return {
+    googleMapsUrl,
+    sourceUri,
+    placeId,
+    categoryText,
+    ratingText,
+    reviewCountText,
+    openStatusText,
+    hoursText,
+    addressText,
+    coordinates,
+  };
 }
 
 const CAVITE_LOCATION_HINTS = [
@@ -1494,13 +2114,578 @@ function filterSourcesForQuery(query: string, sources: GroundingSource[]) {
   return sources;
 }
 
+function hasRequiredCompletePlaceDetails(place: AskAiMapGroundedPlace) {
+  return getMissingRequiredPlaceFields(place).length === 0;
+}
+
+function getPlaceIdentityUri(place: Pick<AskAiMapGroundedPlace, "googleMapsUri" | "googleMapsUrl" | "sourceUri">): string | null {
+  return (
+    normalizeSourceUri(place.googleMapsUri) ??
+    normalizeSourceUri(place.googleMapsUrl) ??
+    normalizeSourceUri(place.sourceUri) ??
+    null
+  );
+}
+
+function getMissingRequiredPlaceFields(place: AskAiMapGroundedPlace): string[] {
+  const missingFields: string[] = [];
+
+  if (!normalizeText(place.name)) missingFields.push("name");
+  if (!normalizeText(place.reason)) {
+    missingFields.push("reason");
+  }
+  if (!(normalizeText(place.placeId) || getPlaceIdentityUri(place))) {
+    missingFields.push("googleMapsUri/placeId");
+  }
+
+  return missingFields;
+}
+
+function normalizePlaceName(value: string | undefined): string {
+  const normalized = normalizeText(value)?.toLowerCase() ?? "";
+
+  return normalized
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\b(branch|city branch|store|mall branch)\b/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function getCanonicalPlaceId(placeId: string | undefined): string | null {
+  const normalized = normalizeText(placeId);
+  return normalized ? normalized.toLowerCase() : null;
+}
+
+function getPlaceAddressText(place: AskAiMapGroundedPlace): string {
+  return (
+    normalizeText(place.addressText) ??
+    normalizeText(place.optionalDetails?.addressText) ??
+    ""
+  );
+}
+
+function getPlaceCategoryText(place: AskAiMapGroundedPlace): string {
+  return (
+    normalizeText(place.categoryText) ??
+    normalizeText(place.optionalDetails?.categoryText) ??
+    ""
+  );
+}
+
+function getPlaceRatingText(place: AskAiMapGroundedPlace): string {
+  return (
+    normalizeText(place.ratingText) ??
+    normalizeText(place.optionalDetails?.ratingText) ??
+    ""
+  );
+}
+
+function getPlaceReviewCountText(place: AskAiMapGroundedPlace): string {
+  return (
+    normalizeText(place.reviewCountText) ??
+    normalizeText(place.optionalDetails?.reviewCountText) ??
+    ""
+  );
+}
+
+function getPlaceOpenStatusText(place: AskAiMapGroundedPlace): string {
+  return (
+    normalizeText(place.openStatusText) ??
+    normalizeText(place.optionalDetails?.openStatusText) ??
+    ""
+  );
+}
+
+function getPlaceHoursText(place: AskAiMapGroundedPlace): string {
+  return (
+    normalizeText(place.hoursText) ??
+    normalizeText(place.optionalDetails?.hoursText) ??
+    ""
+  );
+}
+
+function isGenericMapReason(reason: string | undefined): boolean {
+  return isWeakGroundedReason(reason);
+}
+
+function getPlaceRichnessScore(place: AskAiMapGroundedPlace) {
+  let score = 0;
+
+  if (place.name) score += 5;
+  if (place.googleMapsUri || place.googleMapsUrl) score += 5;
+  if (place.placeId) score += 5;
+
+  if (getPlaceCategoryText(place)) score += 5;
+  if (getPlaceRatingText(place)) score += 7;
+  if (getPlaceReviewCountText(place)) score += 7;
+  if (getPlaceOpenStatusText(place)) score += 6;
+  if (getPlaceHoursText(place)) score += 6;
+  if (getPlaceAddressText(place)) score += 7;
+  if (
+    typeof place.latitude === "number" &&
+    typeof place.longitude === "number"
+  ) {
+    score += 10;
+  }
+  if (
+    typeof place.coordinates?.latitude === "number" &&
+    typeof place.coordinates?.longitude === "number"
+  ) {
+    score += 10;
+  }
+
+  if (place.reason && !isGenericMapReason(place.reason)) score += 8;
+
+  return score;
+}
+
+function getPlaceQueryRelevanceScore(
+  place: AskAiMapGroundedPlace,
+  query: string
+) {
+  const normalizedQuery = normalizeSearchText(query);
+
+  if (!normalizedQuery) {
+    return 0;
+  }
+
+  const name = normalizeSearchText(place.name);
+  const category = normalizeSearchText(getPlaceCategoryText(place));
+  const address = normalizeSearchText(getPlaceAddressText(place));
+  const reason = normalizeSearchText(place.reason);
+  let score = 0;
+
+  const queryTokens = normalizedQuery
+    .split(/\s+/)
+    .map((token) => token.trim())
+    .filter((token) => token.length >= 3);
+
+  for (const token of queryTokens) {
+    if (name.includes(token)) score += 5;
+    if (category.includes(token)) score += 6;
+    if (address.includes(token)) score += 4;
+    if (reason.includes(token)) score += 2;
+  }
+
+  return score;
+}
+
+function compareGroundedPlaceCandidates(
+  left: EnrichedGroundedPlaceCandidate,
+  right: EnrichedGroundedPlaceCandidate,
+  query: string
+) {
+  const relevanceDelta =
+    getPlaceQueryRelevanceScore(right.place, query) -
+    getPlaceQueryRelevanceScore(left.place, query);
+
+  if (relevanceDelta !== 0) {
+    return relevanceDelta;
+  }
+
+  const scoreDelta =
+    getPlaceRichnessScore(right.place) - getPlaceRichnessScore(left.place);
+
+  if (scoreDelta !== 0) {
+    return scoreDelta;
+  }
+
+  const leftHasSourceMatch = left.hadSourceMatch ? 1 : 0;
+  const rightHasSourceMatch = right.hadSourceMatch ? 1 : 0;
+  const sourceMatchDelta = rightHasSourceMatch - leftHasSourceMatch;
+
+  if (sourceMatchDelta !== 0) {
+    return sourceMatchDelta;
+  }
+
+  const leftGenericReason = isGenericMapReason(left.place.reason) ? 1 : 0;
+  const rightGenericReason = isGenericMapReason(right.place.reason) ? 1 : 0;
+  const genericReasonDelta = leftGenericReason - rightGenericReason;
+
+  if (genericReasonDelta !== 0) {
+    return genericReasonDelta;
+  }
+
+  return left.place.name.localeCompare(right.place.name);
+}
+
+function chooseBetterReason(
+  leftReason: string | undefined,
+  rightReason: string | undefined
+): string | undefined {
+  const left = normalizeText(leftReason) ?? undefined;
+  const right = normalizeText(rightReason) ?? undefined;
+
+  if (!left) return right;
+  if (!right) return left;
+
+  const leftGeneric = isGenericMapReason(left);
+  const rightGeneric = isGenericMapReason(right);
+
+  if (leftGeneric !== rightGeneric) {
+    return leftGeneric ? right : left;
+  }
+
+  return right.length > left.length ? right : left;
+}
+
+function chooseBetterMapsUri(
+  leftUri: string | undefined,
+  rightUri: string | undefined
+): string | undefined {
+  const left = normalizeText(leftUri) ?? undefined;
+  const right = normalizeText(rightUri) ?? undefined;
+
+  if (!left) return right;
+  if (!right) return left;
+
+  const leftCid = extractGoogleMapsCid(left);
+  const rightCid = extractGoogleMapsCid(right);
+
+  if (leftCid && !rightCid) return left;
+  if (rightCid && !leftCid) return right;
+
+  return right.length > left.length ? right : left;
+}
+
+function chooseBetterPlaceId(
+  leftPlaceId: string | undefined,
+  rightPlaceId: string | undefined
+): string | undefined {
+  const left = normalizeText(leftPlaceId) ?? undefined;
+  const right = normalizeText(rightPlaceId) ?? undefined;
+
+  if (!left) return right;
+  if (!right) return left;
+
+  const leftCanonical = /places\//i.test(left);
+  const rightCanonical = /places\//i.test(right);
+
+  if (leftCanonical && !rightCanonical) return left;
+  if (rightCanonical && !leftCanonical) return right;
+
+  return right.length > left.length ? right : left;
+}
+
+function mergeOptionalDetails(
+  richer: AskAiMapGroundedPlace,
+  weaker: AskAiMapGroundedPlace
+) {
+  return buildOptionalDetails({
+    categoryText: getPlaceCategoryText(richer) || getPlaceCategoryText(weaker) || undefined,
+    ratingText: getPlaceRatingText(richer) || getPlaceRatingText(weaker) || undefined,
+    reviewCountText:
+      getPlaceReviewCountText(richer) || getPlaceReviewCountText(weaker) || undefined,
+    openStatusText:
+      getPlaceOpenStatusText(richer) || getPlaceOpenStatusText(weaker) || undefined,
+    hoursText: getPlaceHoursText(richer) || getPlaceHoursText(weaker) || undefined,
+    addressText: getPlaceAddressText(richer) || getPlaceAddressText(weaker) || undefined,
+  });
+}
+
+function mergeDuplicatePlaces(
+  richerCandidate: EnrichedGroundedPlaceCandidate,
+  weakerCandidate: EnrichedGroundedPlaceCandidate
+): EnrichedGroundedPlaceCandidate {
+  const richerPlace = richerCandidate.place;
+  const weakerPlace = weakerCandidate.place;
+  const betterUri = chooseBetterMapsUri(
+    getPlaceIdentityUri(richerPlace) ?? undefined,
+    getPlaceIdentityUri(weakerPlace) ?? undefined
+  );
+  const betterPlaceId = chooseBetterPlaceId(richerPlace.placeId, weakerPlace.placeId);
+  const coordinates =
+    richerPlace.coordinates ??
+    weakerPlace.coordinates ??
+    (typeof richerPlace.latitude === "number" &&
+    typeof richerPlace.longitude === "number"
+      ? { latitude: richerPlace.latitude, longitude: richerPlace.longitude }
+      : typeof weakerPlace.latitude === "number" &&
+          typeof weakerPlace.longitude === "number"
+        ? { latitude: weakerPlace.latitude, longitude: weakerPlace.longitude }
+        : null);
+
+  return {
+    place: {
+      ...richerPlace,
+      reason: chooseBetterReason(richerPlace.reason, weakerPlace.reason) ?? richerPlace.reason,
+      googleMapsUrl: betterUri ?? richerPlace.googleMapsUrl ?? weakerPlace.googleMapsUrl,
+      googleMapsUri: betterUri ?? richerPlace.googleMapsUri ?? weakerPlace.googleMapsUri,
+      placeId: betterPlaceId ?? richerPlace.placeId ?? weakerPlace.placeId,
+      sourceTitle: richerPlace.sourceTitle ?? weakerPlace.sourceTitle,
+      sourceUri: richerPlace.sourceUri ?? weakerPlace.sourceUri,
+      coordinates,
+      optionalDetails: mergeOptionalDetails(richerPlace, weakerPlace),
+      categoryText: getPlaceCategoryText(richerPlace) || getPlaceCategoryText(weakerPlace) || undefined,
+      ratingText: getPlaceRatingText(richerPlace) || getPlaceRatingText(weakerPlace) || undefined,
+      reviewCountText:
+        getPlaceReviewCountText(richerPlace) || getPlaceReviewCountText(weakerPlace) || undefined,
+      openStatusText:
+        getPlaceOpenStatusText(richerPlace) || getPlaceOpenStatusText(weakerPlace) || undefined,
+      hoursText: getPlaceHoursText(richerPlace) || getPlaceHoursText(weakerPlace) || undefined,
+      addressText: getPlaceAddressText(richerPlace) || getPlaceAddressText(weakerPlace) || undefined,
+      latitude:
+        coordinates?.latitude ??
+        richerPlace.latitude ??
+        weakerPlace.latitude ??
+        null,
+      longitude:
+        coordinates?.longitude ??
+        richerPlace.longitude ??
+        weakerPlace.longitude ??
+        null,
+    },
+    hadSourceMatch: richerCandidate.hadSourceMatch || weakerCandidate.hadSourceMatch,
+    sourceMatchMethod:
+      richerCandidate.sourceMatchMethod !== "none"
+        ? richerCandidate.sourceMatchMethod
+        : weakerCandidate.sourceMatchMethod,
+  };
+}
+
+function arePlaceAddressesNearby(leftAddress: string, rightAddress: string) {
+  if (!leftAddress || !rightAddress) {
+    return false;
+  }
+
+  const left = normalizePlaceKey(leftAddress);
+  const right = normalizePlaceKey(rightAddress);
+
+  return (
+    left === right ||
+    left.includes(right) ||
+    right.includes(left) ||
+    getOverlapScore(left, right) >= 0.7
+  );
+}
+
+function buildDuplicateIdentityKeys(place: AskAiMapGroundedPlace): string[] {
+  const keys: string[] = [];
+  const identityUri = getPlaceIdentityUri(place);
+  const cid = extractGoogleMapsCid(identityUri ?? undefined);
+  const placeId = getCanonicalPlaceId(place.placeId);
+  const normalizedName = normalizePlaceName(place.name);
+  const normalizedAddress = normalizePlaceKey(getPlaceAddressText(place));
+
+  if (identityUri) keys.push(`uri:${identityUri}`);
+  if (cid) keys.push(`cid:${cid}`);
+  if (placeId) keys.push(`placeid:${placeId}`);
+  if (normalizedName && normalizedAddress) {
+    keys.push(`nameaddr:${normalizedName}|${normalizedAddress}`);
+  }
+  if (normalizedName) {
+    keys.push(`name:${normalizedName}`);
+  }
+
+  return keys;
+}
+
+function buildOptionalDetails(details: {
+  categoryText?: string;
+  ratingText?: string;
+  reviewCountText?: string;
+  openStatusText?: string;
+  hoursText?: string;
+  addressText?: string;
+}) {
+  const optionalDetails = {
+    ...(details.categoryText ? { categoryText: details.categoryText } : {}),
+    ...(details.ratingText ? { ratingText: details.ratingText } : {}),
+    ...(details.reviewCountText ? { reviewCountText: details.reviewCountText } : {}),
+    ...(details.openStatusText ? { openStatusText: details.openStatusText } : {}),
+    ...(details.hoursText ? { hoursText: details.hoursText } : {}),
+    ...(details.addressText ? { addressText: details.addressText } : {}),
+  };
+
+  return Object.keys(optionalDetails).length > 0 ? optionalDetails : undefined;
+}
+
+function cleanupFinalPlaceReason(
+  place: AskAiMapGroundedPlace,
+  query: string
+): AskAiMapGroundedPlace {
+  if (!isGenericMapReason(place.reason)) {
+    return place;
+  }
+
+  return {
+    ...place,
+    reason: buildGroundedPlaceReason({
+      query,
+      name: place.name,
+      categoryText: getPlaceCategoryText(place) || undefined,
+      ratingText: getPlaceRatingText(place) || undefined,
+      reviewCountText: getPlaceReviewCountText(place) || undefined,
+      openStatusText: getPlaceOpenStatusText(place) || undefined,
+      hoursText: getPlaceHoursText(place) || undefined,
+      addressText: getPlaceAddressText(place) || undefined,
+    }),
+  };
+}
+
+function serializePlaceForResponse(place: AskAiMapGroundedPlace): AskAiMapGroundedPlace {
+  const coordinates =
+    typeof place.coordinates?.latitude === "number" &&
+    typeof place.coordinates?.longitude === "number"
+      ? {
+          latitude: place.coordinates.latitude,
+          longitude: place.coordinates.longitude,
+        }
+      : null;
+  const googleMapsUri = getPlaceIdentityUri(place) ?? "";
+  const optionalDetails = {
+    categoryText: place.optionalDetails?.categoryText ?? "",
+    ratingText: place.optionalDetails?.ratingText ?? "",
+    reviewCountText: place.optionalDetails?.reviewCountText ?? "",
+    openStatusText: place.optionalDetails?.openStatusText ?? "",
+    hoursText: place.optionalDetails?.hoursText ?? "",
+    addressText: place.optionalDetails?.addressText ?? "",
+  };
+
+  return {
+    ...place,
+    googleMapsUrl: googleMapsUri,
+    googleMapsUri,
+    placeId: place.placeId ?? "",
+    sourceTitle: place.sourceTitle ?? "",
+    sourceUri: place.sourceUri ?? "",
+    coordinates,
+    categoryText: optionalDetails.categoryText,
+    ratingText: optionalDetails.ratingText,
+    reviewCountText: optionalDetails.reviewCountText,
+    openStatusText: optionalDetails.openStatusText,
+    hoursText: optionalDetails.hoursText,
+    addressText: optionalDetails.addressText,
+    latitude: coordinates?.latitude ?? null,
+    longitude: coordinates?.longitude ?? null,
+    optionalDetails,
+  };
+}
+
+function buildAskAiMapsFilterDiagnostics(args: {
+  rawParsedPlaces: number;
+  groundingSources: number;
+  candidates: EnrichedGroundedPlaceCandidate[];
+  finalPlaces: AskAiMapGroundedPlace[];
+}): AskAiMapsFilterDiagnostics {
+  const rejectedBecauseMissing: Record<string, number> = {};
+  const rejectedPlaces: RejectedPlaceDiagnostic[] = [];
+
+  for (const candidate of args.candidates) {
+    const missingFields = getMissingRequiredPlaceFields(candidate.place);
+
+    if (missingFields.length === 0) {
+      continue;
+    }
+
+    for (const field of missingFields) {
+      rejectedBecauseMissing[field] = (rejectedBecauseMissing[field] ?? 0) + 1;
+    }
+
+    rejectedPlaces.push({
+      name: candidate.place.name,
+      missingFields,
+      hadSourceMatch: candidate.hadSourceMatch,
+      sourceMatchMethod: candidate.sourceMatchMethod,
+    });
+  }
+
+  return {
+    rawParsedPlaces: args.rawParsedPlaces,
+    groundingSources: args.groundingSources,
+    normalizedPlacesBeforeStrictFilter: args.candidates.length,
+    completePlacesAfterStrictFilter: args.finalPlaces.length,
+    rejectedBecauseMissing,
+    rejectedPlaces,
+  };
+}
+
+function logAskAiMapsFilterDiagnostics(
+  diagnostics: AskAiMapsFilterDiagnostics,
+  logger?: AskAiMapsLogger
+) {
+  if (!isAskAiMapsRawDebugEnabled() && !isAskAiMapsFilterDebugEnabled()) {
+    return;
+  }
+
+  const serializedDiagnostics = JSON.stringify(diagnostics, null, 2);
+  logger?.log(`[Ask AI Maps] Filter diagnostics:\n${serializedDiagnostics}`);
+  console.log("[Ask AI Maps] Filter diagnostics");
+  console.dir(diagnostics, { depth: null });
+}
+
+function rankAndFilterGroundedPlaces(
+  candidates: EnrichedGroundedPlaceCandidate[],
+  rawParsedPlacesCount: number,
+  groundingSourcesCount: number,
+  query: string
+) {
+  const dedupedCandidates: EnrichedGroundedPlaceCandidate[] = [];
+  const keyToIndex = new Map<string, number>();
+
+  for (const candidate of candidates) {
+    const identityKeys = buildDuplicateIdentityKeys(candidate.place);
+    const matchingIndices = new Set<number>();
+
+    for (const key of identityKeys) {
+      const existingIndex = keyToIndex.get(key);
+      if (typeof existingIndex === "number") {
+        matchingIndices.add(existingIndex);
+      }
+    }
+
+    if (matchingIndices.size === 0) {
+      const nextIndex = dedupedCandidates.length;
+      dedupedCandidates.push(candidate);
+      for (const key of identityKeys) {
+        keyToIndex.set(key, nextIndex);
+      }
+      continue;
+    }
+
+    const [firstMatchIndex] = Array.from(matchingIndices.values());
+    const existing = dedupedCandidates[firstMatchIndex];
+    const keepCandidate =
+      getPlaceRichnessScore(candidate.place) > getPlaceRichnessScore(existing.place)
+        ? candidate
+        : existing;
+    const mergeFrom = keepCandidate === candidate ? existing : candidate;
+    const merged = mergeDuplicatePlaces(keepCandidate, mergeFrom);
+    dedupedCandidates[firstMatchIndex] = merged;
+
+    for (const key of buildDuplicateIdentityKeys(merged.place)) {
+      keyToIndex.set(key, firstMatchIndex);
+    }
+  }
+
+  const finalPlaces = dedupedCandidates
+    .filter((candidate) => hasRequiredCompletePlaceDetails(candidate.place))
+    .sort((left, right) => compareGroundedPlaceCandidates(left, right, query))
+    .map((candidate) => cleanupFinalPlaceReason(candidate.place, query))
+    .slice(0, ASK_AI_MAPS_MAX_PLACES);
+
+  const diagnostics = buildAskAiMapsFilterDiagnostics({
+    rawParsedPlaces: rawParsedPlacesCount,
+    groundingSources: groundingSourcesCount,
+    candidates: dedupedCandidates,
+    finalPlaces,
+  });
+
+  return {
+    finalPlaces,
+    diagnostics,
+  };
+}
+
 function normalizeGroundedPlaces(
   parsed: ParsedModelResponse | null,
   sources: GroundingSource[],
   query: string
-): AskAiMapGroundedPlace[] {
-  const seenKeys = new Set<string>();
-  const normalizedPlaces: AskAiMapGroundedPlace[] = [];
+): {
+  places: AskAiMapGroundedPlace[];
+  diagnostics: AskAiMapsFilterDiagnostics;
+} {
+  const normalizedPlaces: EnrichedGroundedPlaceCandidate[] = [];
   const rawPlaces = Array.isArray(parsed?.places) ? parsed.places : [];
 
   for (const [index, rawPlace] of rawPlaces.entries()) {
@@ -1510,104 +2695,177 @@ function normalizeGroundedPlaces(
 
     const candidate = rawPlace as ParsedGroundedPlace;
     const name = normalizeText(candidate.name);
-    const source = name ? findBestGroundingSource(name, sources) : undefined;
+    const parsedPlaceId = normalizeText(candidate.placeId);
+    const parsedGoogleMapsUrl = normalizeSourceUri(
+      candidate.googleMapsUri ?? candidate.googleMapsUrl
+    );
+    const parsedSourceUri = normalizeSourceUri(candidate.sourceUri);
+    const parsedAddressText = normalizeOptionalDisplayText(
+      candidate.addressText ?? candidate.address
+    );
 
     if (!name) {
       continue;
     }
 
+    const sourceMatch = findMatchingGroundingSource({
+      parsedName: name,
+      parsedAddress: parsedAddressText,
+      parsedSourceUri: parsedSourceUri ?? parsedGoogleMapsUrl ?? null,
+      parsedPlaceId,
+      sources,
+    });
+    const source = sourceMatch.source;
+    const mergedMetadata = mergeGroundingMetadata({
+      parsedCategoryText: normalizeCategoryText(
+        candidate.categoryText ?? candidate.category
+      ),
+      parsedRatingText: normalizeRatingText(candidate.ratingText),
+      parsedReviewCountText: normalizeReviewCountText(
+        candidate.reviewCountText ?? candidate.reviewCount
+      ),
+      parsedOpenStatusText: normalizeOpenStatusText(
+        candidate.openStatusText ?? candidate.openStatus
+      ),
+      parsedHoursText: normalizeHoursText(candidate.hoursText ?? candidate.hours),
+      parsedAddressText,
+      parsedCoordinates: extractCoordinatesFromParsedPlace(candidate),
+      parsedGoogleMapsUrl,
+      parsedSourceUri,
+      parsedPlaceId,
+      source,
+    });
+    const genericOrMissingReason = isWeakGroundedReason(
+      normalizeOptionalDisplayText(candidate.reason) ?? undefined
+    );
     const reason =
-      normalizeOptionalDisplayText(candidate.reason) ??
-      buildGroundedPlaceReason({ query, name, source });
-    const googleMapsUrl = source?.uri;
-    const placeId = source?.placeId;
-    const categoryText =
-      normalizeOptionalDisplayText(candidate.categoryText) ?? source?.categoryText;
-    const ratingText =
-      normalizeOptionalDisplayText(candidate.ratingText) ?? source?.ratingText;
-    const openStatusText =
-      normalizeOptionalDisplayText(candidate.openStatusText) ?? source?.openStatusText;
-    const addressText =
-      normalizeOptionalDisplayText(candidate.addressText) ??
-      source?.addressText ??
-      normalizeOptionalDisplayText(source?.text);
-    const coordinates =
-      extractCoordinatesFromParsedPlace(candidate) ??
-      source?.coordinates ??
-      extractCoordinatesFromGoogleMapsUrl(googleMapsUrl ?? source?.uri);
-    const dedupeKey = normalizePlaceKey(`${placeId ?? ""} ${googleMapsUrl ?? ""} ${name}`);
-
-    if (!dedupeKey || seenKeys.has(dedupeKey)) {
-      continue;
-    }
-
-    seenKeys.add(dedupeKey);
-    normalizedPlaces.push({
-      id: toPlaceId(placeId ?? googleMapsUrl ?? name, index),
+      !genericOrMissingReason && normalizeOptionalDisplayText(candidate.reason)
+        ? normalizeOptionalDisplayText(candidate.reason)!
+        : buildGroundedPlaceReason({
+            query,
+            name,
+            source,
+            categoryText: mergedMetadata.categoryText,
+            ratingText: mergedMetadata.ratingText,
+            reviewCountText: mergedMetadata.reviewCountText,
+            openStatusText: mergedMetadata.openStatusText,
+            hoursText: mergedMetadata.hoursText,
+            addressText: mergedMetadata.addressText,
+          });
+    const place: AskAiMapGroundedPlace = {
+      id: toPlaceId(
+        mergedMetadata.placeId ??
+          mergedMetadata.googleMapsUrl ??
+          mergedMetadata.sourceUri ??
+          name,
+        index
+      ),
       name,
       reason,
-      ...(googleMapsUrl ? { googleMapsUrl } : {}),
-      ...(placeId ? { placeId } : {}),
-      ...(source?.title ? { sourceTitle: source.title } : {}),
-      ...(source?.uri ? { sourceUri: source.uri } : {}),
-      ...(coordinates ? { coordinates } : {}),
-      ...(categoryText || ratingText || openStatusText || addressText
+      ...(mergedMetadata.googleMapsUrl
         ? {
-            optionalDetails: {
-              ...(categoryText ? { categoryText } : {}),
-              ...(ratingText ? { ratingText } : {}),
-              ...(openStatusText ? { openStatusText } : {}),
-              ...(addressText ? { addressText } : {}),
-            },
+            googleMapsUrl: mergedMetadata.googleMapsUrl,
+            googleMapsUri: mergedMetadata.googleMapsUrl,
           }
         : {}),
+      ...(mergedMetadata.placeId ? { placeId: mergedMetadata.placeId } : {}),
+      ...(source?.title ? { sourceTitle: source.title } : {}),
+      ...(mergedMetadata.sourceUri ? { sourceUri: mergedMetadata.sourceUri } : {}),
+      ...(mergedMetadata.coordinates ? { coordinates: mergedMetadata.coordinates } : {}),
+      ...(buildOptionalDetails({
+        categoryText: mergedMetadata.categoryText,
+        ratingText: mergedMetadata.ratingText,
+        reviewCountText: mergedMetadata.reviewCountText,
+        openStatusText: mergedMetadata.openStatusText,
+        hoursText: mergedMetadata.hoursText,
+        addressText: mergedMetadata.addressText,
+      })
+        ? {
+            optionalDetails: buildOptionalDetails({
+              categoryText: mergedMetadata.categoryText,
+              ratingText: mergedMetadata.ratingText,
+              reviewCountText: mergedMetadata.reviewCountText,
+              openStatusText: mergedMetadata.openStatusText,
+              hoursText: mergedMetadata.hoursText,
+              addressText: mergedMetadata.addressText,
+            }),
+          }
+        : {}),
+    };
+
+    normalizedPlaces.push({
+      place,
+      hadSourceMatch: Boolean(source),
+      sourceMatchMethod: source ? sourceMatch.method : "none",
     });
   }
 
-  if (normalizedPlaces.length === 0 && sources.length > 0) {
-    for (const [index, source] of sources.entries()) {
-      const name = normalizeText(source.title);
+  for (const [index, source] of sources.entries()) {
+    const name = normalizeText(source.title);
 
-      if (!name) {
-        continue;
-      }
-
-      const dedupeKey = normalizePlaceKey(`${source.placeId ?? ""} ${source.uri ?? ""} ${name}`);
-
-      if (!dedupeKey || seenKeys.has(dedupeKey)) {
-        continue;
-      }
-
-      seenKeys.add(dedupeKey);
-      normalizedPlaces.push({
-        id: toPlaceId(source.title, index),
-        name,
-        reason: buildGroundedPlaceReason({ query, name: source.title, source }),
-        ...(source.uri ? { googleMapsUrl: source.uri } : {}),
-        ...(source.placeId ? { placeId: source.placeId } : {}),
-        ...(source.title ? { sourceTitle: source.title } : {}),
-        ...(source.uri ? { sourceUri: source.uri } : {}),
-        ...(source.coordinates ?? extractCoordinatesFromGoogleMapsUrl(source.uri)
-          ? {
-              coordinates:
-                source.coordinates ?? extractCoordinatesFromGoogleMapsUrl(source.uri)!,
-            }
-          : {}),
-        ...(source.categoryText || source.ratingText || source.openStatusText || source.addressText
-          ? {
-              optionalDetails: {
-                ...(source.categoryText ? { categoryText: source.categoryText } : {}),
-                ...(source.ratingText ? { ratingText: source.ratingText } : {}),
-                ...(source.openStatusText ? { openStatusText: source.openStatusText } : {}),
-                ...(source.addressText ? { addressText: source.addressText } : {}),
-              },
-            }
-          : {}),
-      });
+    if (!name) {
+      continue;
     }
+
+    const sourceUri = source.uri;
+    const googleMapsUrl = source.uri;
+    const placeId = source.placeId ?? extractPlaceIdFromGoogleMapsUrl(sourceUri);
+    const place: AskAiMapGroundedPlace = {
+      id: toPlaceId(
+        placeId ?? sourceUri ?? source.title,
+        rawPlaces.length + index
+      ),
+      name,
+      reason: buildGroundedPlaceReason({ query, name, source }),
+      ...(googleMapsUrl ? { googleMapsUrl } : {}),
+      ...(googleMapsUrl ? { googleMapsUri: googleMapsUrl } : {}),
+      ...(placeId ? { placeId } : {}),
+      ...(source.title ? { sourceTitle: source.title } : {}),
+      ...(sourceUri ? { sourceUri } : {}),
+      ...(source.coordinates ?? extractCoordinatesFromGoogleMapsUrl(sourceUri)
+        ? {
+            coordinates: source.coordinates ?? extractCoordinatesFromGoogleMapsUrl(sourceUri)!,
+          }
+        : {}),
+      ...(buildOptionalDetails({
+        categoryText: source.categoryText,
+        ratingText: source.ratingText,
+        reviewCountText: source.reviewCountText,
+        openStatusText: source.openStatusText,
+        hoursText: source.hoursText,
+        addressText: source.addressText,
+      })
+        ? {
+            optionalDetails: buildOptionalDetails({
+              categoryText: source.categoryText,
+              ratingText: source.ratingText,
+              reviewCountText: source.reviewCountText,
+              openStatusText: source.openStatusText,
+              hoursText: source.hoursText,
+              addressText: source.addressText,
+            }),
+          }
+        : {}),
+    };
+
+    normalizedPlaces.push({
+      place,
+      hadSourceMatch: true,
+      sourceMatchMethod: sourceUri ? "sourceUri" : placeId ? "placeId" : "name",
+    });
   }
 
-  return normalizedPlaces.slice(0, ASK_AI_MAPS_MAX_PLACES);
+  const rankedResult = rankAndFilterGroundedPlaces(
+    normalizedPlaces,
+    rawPlaces.length,
+    sources.length,
+    query
+  );
+
+  return {
+    places: rankedResult.finalPlaces,
+    diagnostics: rankedResult.diagnostics,
+  };
 }
 
 function mapSourcesForResponse(sources: GroundingSource[]): AskAiMapsSource[] {
@@ -1631,6 +2889,12 @@ async function generateMapsResponse({
   params: AskAiMapsSearchParams;
   logger?: AskAiMapsLogger;
 }): Promise<Omit<AskAiMapsSearchResult, "latencyMs" | "modelUsed">> {
+  logAskAiMapsDiagnostics(logger, "before_provider_call", {
+    model,
+    query: params.query,
+    timeoutMs: ASK_AI_MAPS_PROVIDER_TIMEOUT_MS,
+  });
+
   const response = await withTimeout(
     ai.models.generateContent({
       model,
@@ -1645,7 +2909,14 @@ async function generateMapsResponse({
     "Ask AI Maps provider timed out."
   );
 
+  console.log("ASK AI MAP MODEL:", model);
+  console.log(JSON.stringify((response as any)?.candidates?.[0] ?? null, null, 2));
+
   logger?.log(`[Ask AI Maps] Model succeeded: ${model}`);
+  logAskAiMapsDiagnostics(logger, "after_provider_response", {
+    model,
+    hasCandidates: Boolean((response as any)?.candidates?.length),
+  });
 
   const candidateText = await extractGeminiCandidateTextForDebug(response as any);
   const rawText = typeof candidateText === "string" ? candidateText : "";
@@ -1658,15 +2929,94 @@ async function generateMapsResponse({
       | undefined;
   const metadataSources = extractGroundingSources(groundingMetadata);
   const looseSources = extractLooseGoogleMapsSources(response);
-  const sources = filterSourcesForQuery(
-    params.query,
-    metadataSources.length > 0 ? metadataSources : looseSources
-  );
-  const parsed = parseModelResponse(rawText);
+  const mergedSources = mergeGroundingSourceLists(metadataSources, looseSources);
+  const sources = filterSourcesForQuery(params.query, mergedSources);
+  logAskAiMapsDiagnostics(logger, "after_extracting_grounding_sources", {
+    model,
+    metadataSources: metadataSources.length,
+    looseSources: looseSources.length,
+    mergedSources: mergedSources.length,
+    finalSources: sources.length,
+  });
+
+  let parsed: ParsedModelResponse | null;
+
+  try {
+    parsed = parseModelResponse(rawText);
+  } catch (error) {
+    throw new AskAiMapsServiceError(
+      "Ask AI Maps could not parse the provider response.",
+      500,
+      {
+        code: "ASK_AI_MAPS_PARSE_ERROR",
+        providerStatus: getProviderStatus(error),
+        model,
+        stage: "parse_model_json",
+        details: {
+          rawTextLength: rawText.length,
+          looksStructuredJson: looksLikeStructuredJsonReply(rawText),
+        },
+        cause: error,
+      }
+    );
+  }
+
   const parsedPlaces = Array.isArray(parsed?.places) ? parsed.places : [];
-  const normalizedPlaces = normalizeGroundedPlaces(parsed, sources, params.query);
-  const places = await hydrateGroundedPlacesWithCoordinates(normalizedPlaces, logger);
+  logAskAiMapsDiagnostics(logger, "after_parsing_model_json", {
+    model,
+    parsedPlaces: parsedPlaces.length,
+    hasParsedAnswerText: Boolean(normalizeOptionalDisplayText(parsed?.answerText)),
+    looksStructuredJson: looksLikeStructuredJsonReply(rawText),
+  });
+
+  let normalizedResult: {
+    places: AskAiMapGroundedPlace[];
+    diagnostics: AskAiMapsFilterDiagnostics;
+  };
+
+  try {
+    normalizedResult = normalizeGroundedPlaces(parsed, sources, params.query);
+  } catch (error) {
+    throw new AskAiMapsServiceError(
+      "Ask AI Maps could not normalize the provider response.",
+      500,
+      {
+        code: "ASK_AI_MAPS_NORMALIZATION_ERROR",
+        providerStatus: getProviderStatus(error),
+        model,
+        stage: "normalization",
+        details: {
+          parsedPlaces: parsedPlaces.length,
+          sources: sources.length,
+        },
+        cause: error,
+      }
+    );
+  }
+
+  const places = await hydrateGroundedPlacesWithCoordinates(
+    normalizedResult.places,
+    logger
+  );
+  logAskAiMapsDiagnostics(logger, "after_normalization", {
+    model,
+    normalizedPlacesBeforeStrictFilter:
+      normalizedResult.diagnostics.normalizedPlacesBeforeStrictFilter,
+    finalPlaces: places.length,
+  });
+
   const answerText = buildAnswerText(parsed, places, rawText);
+  logAskAiMapsFilterDiagnostics(normalizedResult.diagnostics, logger);
+  logAskAiMapsDiagnostics(logger, "after_strict_filtering", {
+    model,
+    rawParsedPlaces: normalizedResult.diagnostics.rawParsedPlaces,
+    groundingSources: normalizedResult.diagnostics.groundingSources,
+    normalizedPlacesBeforeStrictFilter:
+      normalizedResult.diagnostics.normalizedPlacesBeforeStrictFilter,
+    completePlacesAfterStrictFilter:
+      normalizedResult.diagnostics.completePlacesAfterStrictFilter,
+    rejectedBecauseMissing: normalizedResult.diagnostics.rejectedBecauseMissing,
+  });
 
   await logAskAiMapsLayer2Debug({
     modelUsed: model,
@@ -1690,12 +3040,14 @@ async function generateMapsResponse({
     `[Ask AI Maps] Places with coordinates: ${places.filter((place) => place.coordinates).length}`
   );
 
+  const responsePlaces = places.map(serializePlaceForResponse);
+
   return {
     mode: "map_grounding_only",
     answerText,
-    places,
+    places: responsePlaces,
     sources: mapSourcesForResponse(sources),
-    ...(places.length === 0
+    ...(responsePlaces.length === 0
       ? {
           emptyReason: "NO_MAP_GROUNDING_RESULTS" as const,
           message: NO_RESULTS_MESSAGE,
@@ -1715,68 +3067,80 @@ export async function searchAskAiMaps(
   );
 
   if (ambiguousQueryMessage) {
-    throw new AskAiMapsServiceError(ambiguousQueryMessage, 400);
+    throw new AskAiMapsServiceError(ambiguousQueryMessage, 400, {
+      code: "ASK_AI_MAPS_BAD_REQUEST",
+      stage: "validate_query",
+    });
   }
 
   const apiKey = await getGoogleApiKey();
   const ai = new GoogleGenAI({ apiKey });
   const prompt = buildMapsGroundingPrompt(params);
-  let lastQuotaError: unknown = null;
-  let sawQuotaOrRateLimitFailure = false;
+  const modelUsed = ASK_AI_MAPS_EXPERIMENT_MODEL;
 
-  for (const [index, model] of ASK_AI_MAPS_MODELS.entries()) {
-    logger?.log(`[Ask AI Maps] Trying model: ${model}`);
+  logger?.log(`[Ask AI Maps] Experiment model locked: ${modelUsed}`);
 
-    try {
-      const result = await generateMapsResponse({
-        ai,
-        model,
-        prompt,
-        params,
-        logger,
-      });
+  try {
+    const result = await generateMapsResponse({
+      ai,
+      model: modelUsed,
+      prompt,
+      params,
+      logger,
+    });
 
-      return {
-        ...result,
-        modelUsed: model,
-        latencyMs: Date.now() - startedAt,
-      };
-    } catch (error) {
-      const status = getErrorStatus(error);
+    logAskAiMapsDiagnostics(logger, "attempted_models", {
+      modelUsed,
+      attemptedModels: [{ model: modelUsed, status: result.places.length === 0 ? "no_grounded_places" : "success" }],
+    });
 
-      if (!isQuotaOrRateLimitProviderError(error)) {
-        throw new AskAiMapsServiceError(
-          error instanceof Error ? error.message : "Gemini Maps request failed.",
-          status
-        );
-      }
-
-      logger?.log(`[Ask AI Maps] Model quota/rate-limited with status: ${status} (${model})`);
-      sawQuotaOrRateLimitFailure = true;
-      lastQuotaError = error;
-
-      if (index < ASK_AI_MAPS_MODELS.length - 1) {
-        await sleep(ASK_AI_MAPS_FALLBACK_DELAY_MS);
-      }
-    }
-  }
-
-  if (sawQuotaOrRateLimitFailure) {
     return {
-      mode: "map_grounding_only",
-      answerText: PROVIDER_BUSY_MESSAGE,
-      places: [],
-      sources: [],
-      emptyReason: "PROVIDER_BUSY",
-      message: PROVIDER_BUSY_MESSAGE,
+      ...result,
+      modelUsed,
       latencyMs: Date.now() - startedAt,
     };
-  }
+  } catch (error) {
+    const serviceError = toAskAiMapsServiceError(error, {
+      status: getErrorStatus(error),
+      code: "ASK_AI_MAPS_PROVIDER_ERROR",
+      message: "Gemini Maps request failed.",
+      stage: "provider_call",
+      model: modelUsed,
+    });
 
-  throw new AskAiMapsServiceError(
-    lastQuotaError instanceof Error
-      ? lastQuotaError.message
-      : "Gemini Maps request failed.",
-    getErrorStatus(lastQuotaError)
-  );
+    logAskAiMapsDiagnostics(logger, "provider_error", {
+      model: modelUsed,
+      status: serviceError.status,
+      providerStatus: serviceError.providerStatus,
+      code: serviceError.code,
+      stage: serviceError.stage,
+      message: serviceError.message,
+    });
+
+    throw new AskAiMapsServiceError(
+      serviceError.code === "ASK_AI_MAPS_PARSE_ERROR" ||
+      serviceError.code === "ASK_AI_MAPS_NORMALIZATION_ERROR"
+        ? "Ask AI Maps could not process places right now. Please try again."
+        : serviceError.status === 429
+          ? PROVIDER_BUSY_MESSAGE
+          : "Ask AI Maps could not load places right now.",
+      serviceError.status,
+      {
+        code:
+          serviceError.status === 429
+            ? "ASK_AI_MAPS_RATE_LIMIT"
+            : serviceError.code === "ASK_AI_MAPS_ERROR"
+              ? "ASK_AI_MAPS_PROVIDER_ERROR"
+              : serviceError.code,
+        providerStatus: serviceError.providerStatus ?? getProviderStatus(error),
+        model: modelUsed,
+        stage: serviceError.stage ?? "provider_call",
+        details: {
+          ...(serviceError.details ?? {}),
+          modelUsed,
+        },
+        cause: error,
+      }
+    );
+  }
 }

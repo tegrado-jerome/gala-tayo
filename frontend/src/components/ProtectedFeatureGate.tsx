@@ -1,6 +1,6 @@
 import { AppIcon, type AppIconName } from './AppIcon'
-import { buildAuthPath } from '../utils/authRedirect'
-import { navigateToPath } from '../utils/navigation'
+import { GuestAuthPrompt, type GuestAuthVariant } from './GuestAuthPrompt'
+import AskAiOverviewPage from '../pages/AskAiOverviewPage'
 
 type ProtectedFeatureGateProps = {
   pathname: string
@@ -126,12 +126,18 @@ const featurePreviews: Array<{
     matches: (pathname) =>
       pathname === '/ask-ai' ||
       pathname === '/ask-ai/' ||
+      pathname === '/ask-ai/chatbot' ||
+      pathname === '/ask-ai/chatbot/' ||
       pathname === '/ask-ai/text' ||
       pathname === '/ask-ai/text/' ||
       pathname === '/ask-ai/map' ||
       pathname === '/ask-ai/map/' ||
       pathname === '/ask-ai/maps' ||
-      pathname === '/ask-ai/maps/',
+      pathname === '/ask-ai/maps/' ||
+      pathname === '/ask-ai/prompt-builder' ||
+      pathname === '/ask-ai/prompt-builder/' ||
+      pathname === '/prompt-builder' ||
+      pathname === '/prompt-builder/',
     preview: {
       icon: 'askAi',
       eyebrow: 'AI planning',
@@ -147,6 +153,13 @@ const featurePreviews: Array<{
     },
   },
 ]
+
+function getAuthVariant(pathname: string): GuestAuthVariant {
+  if (pathname.startsWith('/ask-ai') || pathname === '/prompt-builder' || pathname === '/prompt-builder/') return 'ask-ai'
+  if (pathname === '/favorites' || pathname === '/favorites/') return 'favorite'
+  if (pathname.startsWith('/gala-plan') || pathname.startsWith('/gala-plans')) return 'add-plan'
+  return 'community'
+}
 
 function getFeaturePreview(pathname: string): FeaturePreview {
   return (
@@ -166,9 +179,33 @@ function getFeaturePreview(pathname: string): FeaturePreview {
   )
 }
 
-function ProtectedFeatureGate({ pathname, search = '' }: ProtectedFeatureGateProps) {
+function isAskAiPath(pathname: string): boolean {
+  return (
+    pathname.startsWith('/ask-ai') ||
+    pathname === '/prompt-builder' ||
+    pathname === '/prompt-builder/'
+  )
+}
+
+function ProtectedFeatureGate({ pathname }: ProtectedFeatureGateProps) {
   const preview = getFeaturePreview(pathname)
-  const nextPath = `${pathname}${search}`
+  const authVariant = getAuthVariant(pathname)
+
+  if (isAskAiPath(pathname)) {
+    return (
+      <div className="gala-page-background relative h-[100dvh] overflow-hidden overscroll-none text-[var(--text)]">
+        <div className="pointer-events-none absolute inset-0 select-none overflow-hidden blur-[3px] opacity-40">
+          <AskAiOverviewPage />
+        </div>
+
+        <div className="absolute inset-0 flex items-center justify-center overflow-hidden px-4 py-6">
+          <div className="w-full max-w-[420px]">
+            <GuestAuthPrompt variant={authVariant} mode="inline-card" />
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <main className="gala-page-background relative min-h-screen overflow-hidden px-4 py-5 text-[var(--text)] sm:px-6 sm:py-6">
@@ -261,42 +298,9 @@ function ProtectedFeatureGate({ pathname, search = '' }: ProtectedFeatureGatePro
           </div>
 
           <div className="absolute inset-0 z-20 flex items-center justify-center p-4 sm:p-6">
-            <section className="gala-modal-card w-full max-w-[440px] rounded-[30px] border border-[rgba(30,58,138,0.12)] bg-white/96 p-6 text-center shadow-[0_28px_90px_rgba(15,23,42,0.16)] sm:p-7">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-[18px] bg-[var(--accent-soft)] text-[var(--accent-deep)]">
-                <AppIcon name="lock" className="h-6 w-6" />
-              </div>
-              <p className="mt-5 text-xs font-bold uppercase tracking-[0.22em] text-[var(--accent)]">Account required</p>
-              <h2 className="mt-3 text-[1.8rem] font-black leading-[1] tracking-[-0.05em] text-[var(--text-main)] sm:text-[2rem]">
-                Create an account first or log in
-              </h2>
-              <p className="mt-4 text-sm leading-7 text-[var(--muted)] sm:text-[15px]">
-                This feature is available only for signed-in users. Continue to log in or create your account, and we can bring you back here right after.
-              </p>
-
-              <div className="mt-6 grid gap-3">
-                <button
-                  type="button"
-                  onClick={() => navigateToPath(buildAuthPath('/login', nextPath))}
-                  className="inline-flex min-h-[3.35rem] items-center justify-center rounded-[1.3rem] bg-[var(--accent)] px-5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[var(--accent-deep)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)]"
-                >
-                  Log in
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigateToPath(buildAuthPath('/signup', nextPath))}
-                  className="inline-flex min-h-[3.35rem] items-center justify-center rounded-[1.3rem] border border-[var(--line)] bg-white px-5 text-sm font-semibold text-[var(--text-main)] transition hover:-translate-y-0.5 hover:border-[var(--line-strong)] hover:bg-[var(--surface-alt)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)]"
-                >
-                  Create account
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigateToPath('/')}
-                  className="inline-flex min-h-11 items-center justify-center rounded-[1.15rem] px-5 text-sm font-semibold text-[var(--muted)] transition hover:text-[var(--text-main)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)]"
-                >
-                  Maybe later
-                </button>
-              </div>
-            </section>
+            <div className="w-full max-w-[420px]">
+              <GuestAuthPrompt variant={authVariant} mode="inline-card" />
+            </div>
           </div>
         </div>
       </section>

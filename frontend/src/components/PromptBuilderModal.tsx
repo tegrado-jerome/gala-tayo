@@ -54,6 +54,10 @@ function SparkleIcon() {
   return <AppIcon name="askAi" className="h-5 w-5" />
 }
 
+function BotIcon() {
+  return <AppIcon name="bot" className="h-5 w-5" />
+}
+
 function BackToHomeButton({ className = '' }: { className?: string }) {
   return <MinimalBackNav to="/" className={className} />
 }
@@ -159,6 +163,7 @@ export default function PromptBuilderModal({
   const aiLinks = useMemo(() => getExternalAiLinks(), [])
   const searchLinks = useMemo(() => getExternalSearchLinks(searchKeyword), [searchKeyword])
   const outputPanelRef = useRef<HTMLDivElement | null>(null)
+  const questionsPanelRef = useRef<HTMLDivElement | null>(null)
   const generationTimeoutRef = useRef<number | null>(null)
   const showClearAll = hasGeneratedPrompt || hasInput
 
@@ -241,6 +246,15 @@ export default function PromptBuilderModal({
       window.clearTimeout(generationTimeoutRef.current)
       generationTimeoutRef.current = null
     }
+
+    requestAnimationFrame(() => {
+      const scrollContainer = questionsPanelRef.current?.closest('.overflow-y-auto') as HTMLElement | null
+      if (scrollContainer) {
+        scrollContainer.scrollTo({ top: 0, behavior: 'smooth' })
+      } else {
+        questionsPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    })
   }
 
   const handleGeneratePrompt = () => {
@@ -338,6 +352,15 @@ export default function PromptBuilderModal({
                 >
                   <CopyIcon />
                   <span>{copiedTarget === 'prompt' ? 'Copied' : 'Copy full prompt'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="mt-3 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[14px] border border-[rgba(15,23,42,0.08)] bg-slate-100 px-4 py-2.5 text-[13px] font-semibold text-slate-700 transition hover:bg-slate-200"
+                >
+                  <BotIcon />
+                  <span>Back to Ask AI</span>
                 </button>
               </section>
 
@@ -446,14 +469,25 @@ export default function PromptBuilderModal({
                     </div>
                   </section>
 
-                  <button
-                    type="button"
-                    onClick={handleReset}
-                    className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-[14px] bg-transparent px-4 py-2.5 text-[13px] font-semibold text-[var(--accent)] transition hover:bg-[rgba(47,116,232,0.06)]"
-                  >
-                    <RefreshIcon />
-                    <span>Start over</span>
-                  </button>
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={handleReset}
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-[14px] bg-transparent px-3 py-2.5 text-[13px] font-semibold text-[var(--accent)] transition hover:bg-[rgba(47,116,232,0.06)]"
+                    >
+                      <RefreshIcon />
+                      <span>Start over</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-[14px] bg-transparent px-3 py-2.5 text-[13px] font-semibold text-slate-600 transition hover:bg-slate-100"
+                    >
+                      <BotIcon />
+                      <span>Back to Ask AI</span>
+                    </button>
+                  </div>
                 </div>
               </aside>
             </div>
@@ -468,7 +502,7 @@ export default function PromptBuilderModal({
       aria-modal="true"
       aria-labelledby="prompt-builder-title"
     >
-      <div className="prompt-builder-shell mx-auto min-w-0 px-3 pb-[calc(env(safe-area-inset-bottom,0px)+5rem)] pt-3 sm:px-4 sm:pb-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] sm:pt-4">
+      <div ref={questionsPanelRef} className="prompt-builder-shell mx-auto min-w-0 px-3 pb-[calc(env(safe-area-inset-bottom,0px)+5rem)] pt-3 sm:px-4 sm:pb-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] sm:pt-4">
         <div className="flex w-full justify-start">
           <BackToHomeButton />
         </div>
@@ -477,7 +511,7 @@ export default function PromptBuilderModal({
           <img
             src={promptBuilderQuestionsChibi}
             alt=""
-            className="pointer-events-none mx-auto mb-2 mt-1 block h-[15.5rem] w-auto max-w-full object-contain sm:h-[18rem]"
+            className="pointer-events-none mx-auto mb-2 mt-1 block h-[11rem] w-auto max-w-full object-contain sm:h-[13rem]"
             loading="lazy"
           />
 
@@ -490,9 +524,6 @@ export default function PromptBuilderModal({
                 Build a stronger gala prompt without using Ask AI credits.
               </p>
             </div>
-            <p className="max-w-xl px-2 text-[11px] leading-relaxed text-slate-500 sm:text-[12px]">
-              Pick a few quick details and GalaTayo will turn them into a ready-to-use prompt.
-            </p>
           </div>
         </div>
 
@@ -501,15 +532,15 @@ export default function PromptBuilderModal({
             {questionSections.map((section, index) => (
               <section
                 key={section.id}
-                className="prompt-step-card min-w-0 rounded-[18px] border border-[rgba(15,23,42,0.1)] bg-white p-4 shadow-[0_8px_22px_rgba(15,23,42,0.03)] sm:p-5"
+                className="prompt-step-card min-w-0 rounded-[18px] border border-[rgba(15,23,42,0.1)] bg-white p-3 shadow-[0_8px_22px_rgba(15,23,42,0.03)] sm:p-4"
               >
-                <div className="step-header flex min-w-0 items-start justify-between gap-3.5">
-                  <div className="step-title-group flex min-w-0 items-start gap-3.5">
-                    <span className="step-number mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] border border-[rgba(15,23,42,0.12)] bg-slate-50 text-[14px] font-bold text-slate-900 sm:h-9 sm:w-9 sm:text-[15px]">
+                <div className="step-header flex min-w-0 items-center justify-between gap-2.5">
+                  <div className="step-title-group flex min-w-0 items-center gap-2.5">
+                    <span className="step-number inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[10px] border border-[rgba(15,23,42,0.12)] bg-slate-50 text-[13px] font-bold text-slate-900 sm:h-8 sm:w-8 sm:text-[14px]">
                       {index + 1}
                     </span>
                     <div className="min-w-0">
-                      <h2 className="text-[1.08rem] font-black tracking-[-0.03em] text-slate-950 sm:text-[1.2rem]">
+                      <h2 className="text-[1rem] font-black tracking-[-0.03em] text-slate-950 sm:text-[1.1rem]">
                         {section.title}
                       </h2>
                     </div>
@@ -518,7 +549,7 @@ export default function PromptBuilderModal({
                   <span className="optional-label shrink-0">Optional</span>
                 </div>
 
-                <div className="mt-3.5 flex min-w-0 flex-wrap gap-2">
+                <div className="mt-2.5 flex min-w-0 flex-wrap gap-1.5">
                   {section.chips.map((chip) => {
                     const isSelected = state[section.id].includes(chip)
 
@@ -532,7 +563,7 @@ export default function PromptBuilderModal({
                             toggleFieldValue(currentState, section.id, chip, section.multiSelect)
                           )
                         }
-                        className={`prompt-chip max-w-full rounded-[999px] border px-3 py-1.5 text-[12px] transition sm:px-3.5 sm:text-[13px] ${
+                        className={`prompt-chip max-w-full rounded-[999px] border px-2.5 py-1 text-[11px] transition sm:px-3 sm:text-[12px] ${
                           isSelected
                             ? 'selected border-[var(--accent)] bg-[#eff6ff] text-[#1d4ed8]'
                             : 'border-[rgba(15,23,42,0.12)] bg-white text-slate-700 hover:border-slate-400'
@@ -543,12 +574,12 @@ export default function PromptBuilderModal({
                     )
                   })}
 
-                  <span className="inline-flex max-w-full rounded-[999px] border border-dashed border-[rgba(15,23,42,0.12)] px-3 py-1.5 text-[12px] text-slate-400 sm:px-3.5 sm:text-[13px]">
+                  <span className="inline-flex max-w-full rounded-[999px] border border-dashed border-[rgba(15,23,42,0.12)] px-2.5 py-1 text-[11px] text-slate-400 sm:px-3 sm:text-[12px]">
                     <span className="block max-w-full truncate">{`${section.customLabel}...`}</span>
                   </span>
                 </div>
 
-                <p className="mt-3 text-[12px] leading-relaxed text-slate-500 sm:text-[13px]">
+                <p className="mt-2 text-[11px] leading-relaxed text-slate-500 sm:text-[12px]">
                   {compactHelperText[section.id] ?? section.helperText}
                 </p>
 
@@ -557,17 +588,17 @@ export default function PromptBuilderModal({
                   value={state.custom[section.id]}
                   onChange={(event) => handleCustomChange(section.id, event.target.value)}
                   placeholder={section.placeholder}
-                  className="prompt-custom-input mt-3 block min-h-[44px] w-full min-w-0 max-w-full rounded-[14px] border border-[rgba(15,23,42,0.12)] bg-[rgba(248,250,252,0.9)] px-4 py-3 text-[14px] text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-300 focus:ring-2 focus:ring-slate-200"
+                  className="prompt-custom-input mt-2 block min-h-[38px] w-full min-w-0 max-w-full rounded-[12px] border border-[rgba(15,23,42,0.12)] bg-[rgba(248,250,252,0.9)] px-3 py-2 text-[13px] text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-300 focus:ring-2 focus:ring-slate-200 sm:text-[14px]"
                 />
               </section>
             ))}
 
-            <div className="mt-3 grid grid-cols-2 gap-3">
+            <div className="mt-3 grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={handleReset}
                 disabled={!showClearAll || isGeneratingPrompt}
-                className="inline-flex min-h-[48px] w-full items-center justify-center gap-1.5 rounded-[14px] border border-[rgba(15,23,42,0.1)] bg-white px-3 py-2.5 text-[0.88rem] font-semibold text-slate-900 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:border-[rgba(15,23,42,0.08)] disabled:bg-slate-50 disabled:text-slate-400"
+                className="inline-flex min-h-[38px] w-full items-center justify-center gap-1.5 rounded-[12px] border border-[rgba(15,23,42,0.1)] bg-white px-3 py-2 text-[0.82rem] font-semibold text-slate-900 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:border-[rgba(15,23,42,0.08)] disabled:bg-slate-50 disabled:text-slate-400"
               >
                 <TrashIcon />
                 <span>Clear all</span>
@@ -576,8 +607,8 @@ export default function PromptBuilderModal({
               <button
                 type="button"
                 onClick={handleGeneratePrompt}
-                disabled={isGeneratingPrompt}
-                className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[14px] bg-slate-900 px-3 py-2.5 text-[0.92rem] font-black tracking-[-0.02em] text-white shadow-[0_10px_20px_rgba(15,23,42,0.16)] transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-500"
+                disabled={isGeneratingPrompt || !hasInput}
+                className="inline-flex min-h-[38px] w-full items-center justify-center gap-2 rounded-[12px] bg-[var(--accent-deep)] px-3 py-2 text-[0.85rem] font-black tracking-[-0.02em] text-white shadow-[0_10px_20px_rgba(23,45,107,0.28)] transition hover:bg-[#0f1f4d] disabled:cursor-not-allowed disabled:bg-slate-500"
               >
                 {isGeneratingPrompt ? (
                   <span className="h-5 w-5 animate-spin rounded-full border-[3px] border-white/40 border-t-white" aria-hidden="true" />

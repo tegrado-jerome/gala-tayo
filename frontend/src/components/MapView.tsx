@@ -14,7 +14,7 @@ type MapViewProps = {
   zoom?: number
   autoFitToPlaces?: boolean
   className?: string
-  mapMode?: 'default' | 'ask-ai-clean'
+  layoutKey?: string | number
 }
 
 type LatLngInput = readonly [unknown, unknown] | null | undefined
@@ -38,74 +38,54 @@ type ValidMapPlace = {
 
 const metroManilaCenter: ValidLatLng = [14.5995, 120.9842]
 
-function escapeHtml(value: string): string {
-  return value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;')
-}
-
 function getMarkerLabel(name: string): string {
   const trimmedName = name.trim()
   return trimmedName.length > 22 ? `${trimmedName.slice(0, 21).trimEnd()}...` : trimmedName
 }
 
-function renderMarkerPinIcon() {
+function renderMarkerPinIcon(placeName: string, isSelected: boolean, isFocused: boolean) {
+  const stackClasses = ['gt-map-pin__stack']
+
+  if (isSelected) {
+    stackClasses.push('is-selected')
+  }
+
+  if (isFocused) {
+    stackClasses.push('is-focused')
+  }
+
   return renderToStaticMarkup(
-    <span className="gt-map-capsule-marker__pin-shell" aria-hidden="true">
-      <svg className="gt-map-capsule-marker__pin" viewBox="0 0 32 44" aria-hidden="true">
-        <defs>
-          <linearGradient id="gt-pin-grad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#244995" />
-            <stop offset="100%" stopColor="#172d6b" />
-          </linearGradient>
-          <filter id="gt-pin-shadow" x="-20%" y="-10%" width="140%" height="130%">
-            <feDropShadow dx="0" dy="0.5" stdDeviation="0.8" floodColor="#0f172a" floodOpacity="0.15" />
-          </filter>
-        </defs>
-        <path d="M16 43C16 43 30 27.5 30 16C30 7.7 23.7 1 16 1C8.3 1 2 7.7 2 16C2 27.5 16 43 16 43Z" fill="url(#gt-pin-grad)" filter="url(#gt-pin-shadow)" />
-        <circle cx="16" cy="16" r="5.5" />
-      </svg>
+    <span className={stackClasses.join(' ')}>
+      <span className="gt-map-pin__icon" aria-hidden="true">
+        <svg width="44" height="44" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"
+            fill="#1e3a8a"
+            stroke="#ffffff"
+            strokeWidth="1.5"
+            strokeLinejoin="round"
+          />
+          <circle cx="12" cy="10" r="3.5" fill="#ffffff" />
+        </svg>
+      </span>
+      <span className="gt-map-pin__label">{getMarkerLabel(placeName)}</span>
     </span>
   )
 }
 
 function createCapsuleMarkerIcon(
   place: PlaceCardData,
-  showName: boolean,
   isSelected: boolean,
-  isFocused: boolean
+  isFocused: boolean,
 ) {
-  const markerClasses = ['gt-map-capsule-marker', 'gt-map-capsule-marker--mapview']
-
-  if (isSelected) {
-    markerClasses.push('is-selected')
-  }
-
-  if (isFocused) {
-    markerClasses.push('is-focused')
-  }
-
-  const label = escapeHtml(getMarkerLabel(place.name))
-  const iconWidth = showName ? 204 : 60
-  const iconHeight = 60
-  const iconAnchorX = showName ? 28 : 30
-  const iconAnchorY = showName ? 56 : 47
-  const pinIcon = renderMarkerPinIcon()
+  const pinIcon = renderMarkerPinIcon(place.name, isSelected, isFocused)
 
   return L.divIcon({
     className: '',
-    html: `
-      <div class="${markerClasses.join(' ')}" aria-label="${escapeHtml(place.name)}">
-        ${pinIcon}
-        ${showName ? `<span class="gt-map-capsule-marker__name">${label}</span>` : ''}
-      </div>
-    `,
-    iconSize: [iconWidth, iconHeight],
-    iconAnchor: [iconAnchorX, iconAnchorY],
-    popupAnchor: [0, -54],
+    html: pinIcon,
+    iconSize: [186, 44],
+    iconAnchor: [22, 41],
+    popupAnchor: [0, -40],
   })
 }
 
@@ -227,7 +207,15 @@ function safeFitBounds(map: L.Map, latLngs: unknown) {
   }
 }
 
-function MapSizeSync({ center, zoom }: { center: ValidLatLng; zoom: number }) {
+function MapSizeSync({
+  center,
+  zoom,
+  layoutKey,
+}: {
+  center: ValidLatLng
+  zoom: number
+  layoutKey?: string | number
+}) {
   const map = useMap()
 
   useEffect(() => {
@@ -236,6 +224,7 @@ function MapSizeSync({ center, zoom }: { center: ValidLatLng; zoom: number }) {
     const invalidateMapSize = () => map.invalidateSize()
     const animationFrameId = requestAnimationFrame(invalidateMapSize)
     const timeoutId = window.setTimeout(invalidateMapSize, 250)
+    const extendedTimeoutId = window.setTimeout(invalidateMapSize, 600)
     const resizeObserver = new ResizeObserver(invalidateMapSize)
 
     resizeObserver.observe(map.getContainer())
@@ -243,9 +232,10 @@ function MapSizeSync({ center, zoom }: { center: ValidLatLng; zoom: number }) {
     return () => {
       cancelAnimationFrame(animationFrameId)
       window.clearTimeout(timeoutId)
+      window.clearTimeout(extendedTimeoutId)
       resizeObserver.disconnect()
     }
-  }, [center, map, zoom])
+  }, [center, layoutKey, map, zoom])
 
   return null
 }
@@ -256,27 +246,24 @@ function MarkerLayer({
   focusedPlaceId,
   onPlaceSelect,
   onPlaceOpen,
-  mapMode,
 }: {
   validPlaces: ValidMapPlace[]
   selectedPlaceId?: string | null
   focusedPlaceId?: string | null
   onPlaceSelect?: (placeId: string) => void
   onPlaceOpen?: (placeId: string) => void
-  mapMode: 'default' | 'ask-ai-clean'
 }) {
   return (
     <>
       {validPlaces.map(({ place, latLng }) => {
         const isSelected = selectedPlaceId === place.id
         const isFocused = focusedPlaceId === place.id && !isSelected
-        const shouldShowName = mapMode === 'default' || mapMode === 'ask-ai-clean'
 
         return (
           <Marker
             key={place.id}
             position={latLng}
-            icon={createCapsuleMarkerIcon(place, shouldShowName, isSelected, isFocused)}
+            icon={createCapsuleMarkerIcon(place, isSelected, isFocused)}
             riseOnHover
             zIndexOffset={isSelected ? 900 : isFocused ? 720 : 240}
             eventHandlers={{
@@ -387,7 +374,7 @@ function MapView({
   zoom = 12,
   autoFitToPlaces = true,
   className = '',
-  mapMode = 'default',
+  layoutKey,
 }: MapViewProps) {
   const safeCenter = useMemo(() => normalizeCenter(center), [center])
   const safeZoom = Number.isFinite(zoom) ? zoom : 12
@@ -408,7 +395,7 @@ function MapView({
   return (
     <div className={`w-full min-h-0 select-none overflow-hidden ${containerClassName}`}>
       <MapContainer center={safeCenter} zoom={safeZoom} scrollWheelZoom className="galatayo-leaflet-map h-full w-full">
-        <MapSizeSync center={safeCenter} zoom={safeZoom} />
+        <MapSizeSync center={safeCenter} zoom={safeZoom} layoutKey={layoutKey} />
         <FitMapToPlaces
           validPlaces={validPlaces}
           selectedPlaceId={selectedPlaceId}
@@ -417,8 +404,8 @@ function MapView({
           autoFitToPlaces={autoFitToPlaces}
         />
         <TileLayer
-          attribution="&copy; OpenStreetMap contributors &copy; CARTO"
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+          attribution="&copy; OpenStreetMap contributors"
+          url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <MarkerLayer
           validPlaces={validPlaces}
@@ -426,7 +413,6 @@ function MapView({
           focusedPlaceId={focusedPlaceId}
           onPlaceSelect={onPlaceSelect}
           onPlaceOpen={onPlaceOpen}
-          mapMode={mapMode}
         />
       </MapContainer>
     </div>
