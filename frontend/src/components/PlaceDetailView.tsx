@@ -35,6 +35,7 @@ type PlaceDetailViewProps = {
   } | null
   cameFromSearch?: boolean
   returnLabel?: string | null
+  searchHref?: string | null
 }
 
 type PlaceReview = {
@@ -828,7 +829,7 @@ function findCommentById(comments: PlaceComment[], commentId: string): PlaceComm
   return null
 }
 
-function PlaceDetailView({ place, onBack, areaBreadcrumb = null, cameFromSearch = false, returnLabel = null }: PlaceDetailViewProps) {
+function PlaceDetailView({ place, onBack, areaBreadcrumb = null, cameFromSearch = false, returnLabel = null, searchHref = null }: PlaceDetailViewProps) {
   const [isSavePromptOpen, setIsSavePromptOpen] = useState(false)
   const [isAddToPlanOpen, setIsAddToPlanOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -2508,7 +2509,7 @@ function PlaceDetailView({ place, onBack, areaBreadcrumb = null, cameFromSearch 
                 className="mb-4"
                 items={[
                   { label: 'Home', href: '/', icon: <House className="h-3.5 w-3.5" /> },
-                  { label: 'Search', href: '/search', icon: <Search className="h-3.5 w-3.5" /> },
+                  { label: 'Search', href: searchHref || '/search', icon: <Search className="h-3.5 w-3.5" /> },
                   { label: place.name, icon: <MapPin className="h-3.5 w-3.5" /> },
                 ]}
               />

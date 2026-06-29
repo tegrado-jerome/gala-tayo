@@ -80,6 +80,10 @@ type ParsedGroundedPlace = {
 type ParsedModelResponse = {
   answerText?: unknown;
   places?: unknown;
+  results?: unknown;
+  recommendations?: unknown;
+  items?: unknown;
+  data?: unknown;
 };
 
 type GroundingMetadataLike = {
@@ -88,8 +92,17 @@ type GroundingMetadataLike = {
       title?: string;
       text?: string;
       uri?: string;
+      url?: string;
+      sourceUri?: string;
       placeId?: string;
+      place_id?: string;
     };
+  }>;
+  grounding_chunks?: Array<{
+    maps?: Record<string, unknown>;
+    map?: Record<string, unknown>;
+    googleMaps?: Record<string, unknown>;
+    google_maps?: Record<string, unknown>;
   }>;
 };
 
@@ -98,6 +111,14 @@ type GroundingSource = {
   text?: string;
   uri?: string;
   placeId?: string;
+  categoryText?: string;
+  ratingText?: string;
+  openStatusText?: string;
+  addressText?: string;
+  coordinates?: {
+    latitude: number;
+    longitude: number;
+  };
 };
 
 type AskAiMapsLogger = {
@@ -119,28 +140,22 @@ export const ASK_AI_MAPS_MODELS = [
 ] as const;
 
 const ASK_AI_MAPS_MAX_PLACES = 8;
-const RETRYABLE_AI_STATUSES = new Set([403, 429, 500, 503, 504]);
+const FALLBACK_QUOTA_STATUSES = new Set([429]);
 const ASK_AI_MAPS_FALLBACK_DELAY_MS = 650;
-const ASK_AI_MAPS_PROVIDER_COOLDOWN_MS = 60_000;
 const ASK_AI_MAPS_PROVIDER_TIMEOUT_MS = 18_000;
 const PROVIDER_BUSY_MESSAGE = "Ask AI Maps is busy right now. Try again in a bit.";
 const NO_RESULTS_MESSAGE =
   "No map-grounded places matched that request. Try a more specific area or place type.";
-const RETRYABLE_PROVIDER_MESSAGE_PATTERNS = [
+const FALLBACK_QUOTA_MESSAGE_PATTERNS = [
   /rate limit/i,
   /too many requests/i,
   /quota/i,
   /resource exhausted/i,
   /consumed/i,
   /exceeded/i,
+  /daily limit/i,
   /limit reached/i,
-  /temporar(?:y|ily) unavailable/i,
-  /unavailable/i,
-  /overloaded/i,
-  /try again later/i,
 ] as const;
-
-let askAiMapsCooldownUntil = 0;
 
 function normalizeWhitespace(value: string): string {
   return value.replace(/\s+/g, " ").trim();
@@ -174,6 +189,56 @@ function normalizeOptionalDisplayText(value: unknown): string | undefined {
   }
 
   return normalized;
+}
+
+function getObjectField(source: Record<string, unknown>, keys: string[]): unknown {
+  for (const key of keys) {
+    if (key in source) {
+      return source[key];
+    }
+  }
+
+  return undefined;
+}
+
+function normalizeTextNode(value: unknown): string | null {
+  if (typeof value === "string") {
+    return normalizeText(value);
+  }
+
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    return normalizeText(record.text ?? record.displayName ?? record.label ?? null);
+  }
+
+  return null;
+}
+
+function normalizeCategoryText(value: unknown): string | undefined {
+  if (Array.isArray(value)) {
+    const first = value
+      .map((entry) => normalizeTextNode(entry))
+      .find(Boolean);
+
+    return first ?? undefined;
+  }
+
+  return normalizeTextNode(value) ?? normalizeOptionalDisplayText(value);
+}
+
+function normalizeOpenStatusText(value: unknown): string | undefined {
+  if (typeof value === "boolean") {
+    return value ? "Open now" : "Closed now";
+  }
+
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    if (typeof record.openNow === "boolean") {
+      return record.openNow ? "Open now" : "Closed now";
+    }
+  }
+
+  return normalizeOptionalDisplayText(value);
 }
 
 function normalizePlaceKey(value: string): string {
@@ -273,6 +338,40 @@ function extractCoordinatesFromParsedPlace(
   return { latitude, longitude };
 }
 
+function extractCoordinatesFromGoogleMapsPlaceObject(
+  place: Record<string, unknown>
+): { latitude: number; longitude: number } | null {
+  const location = getObjectField(place, ["location", "coordinates", "latLng", "lat_lng"]);
+  const geometry = getObjectField(place, ["geometry"]);
+  const candidates = [location, geometry];
+
+  for (const candidate of candidates) {
+    if (!candidate || typeof candidate !== "object") {
+      continue;
+    }
+
+    const record = candidate as Record<string, unknown>;
+    const nestedLocation = getObjectField(record, ["location"]);
+    const node =
+      nestedLocation && typeof nestedLocation === "object"
+        ? (nestedLocation as Record<string, unknown>)
+        : record;
+
+    const latitude = Number(
+      getObjectField(node, ["latitude", "lat", "_latitude", "x"])
+    );
+    const longitude = Number(
+      getObjectField(node, ["longitude", "lng", "lon", "_longitude", "y"])
+    );
+
+    if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+      return { latitude, longitude };
+    }
+  }
+
+  return null;
+}
+
 function toPlaceId(value: string, fallbackIndex: number): string {
   const normalized = value
     .toLowerCase()
@@ -313,6 +412,18 @@ function extractJsonObjectText(text: string): string {
   return sanitized.slice(firstBrace, lastBrace + 1);
 }
 
+function extractJsonArrayText(text: string): string {
+  const sanitized = normalizeJsonCandidateText(text);
+  const firstBracket = sanitized.indexOf("[");
+  const lastBracket = sanitized.lastIndexOf("]");
+
+  if (firstBracket === -1 || lastBracket === -1 || lastBracket < firstBracket) {
+    return sanitized;
+  }
+
+  return sanitized.slice(firstBracket, lastBracket + 1);
+}
+
 function parseJsonObject<T>(text: string): T | null {
   try {
     return JSON.parse(text) as T;
@@ -339,10 +450,14 @@ function extractJsonStringField(text: string, fieldName: string): string | null 
 
 function parseModelResponseLenient(text: string): ParsedModelResponse | null {
   const normalizedText = normalizeJsonCandidateText(text);
-  const answerText = extractJsonStringField(normalizedText, "answerText");
-  const placesMatch = normalizedText.match(/"places"\s*:\s*(\[[\s\S]*?\])/);
+  const answerText =
+    extractJsonStringField(normalizedText, "answerText") ??
+    extractJsonStringField(normalizedText, "answer_text") ??
+    extractJsonStringField(normalizedText, "answer") ??
+    extractJsonStringField(normalizedText, "summary");
+  const placesMatch = normalizedText.match(/"(places|results|recommendations|items)"\s*:\s*(\[[\s\S]*?\])/);
   const parsedPlaces = placesMatch?.[1]
-    ? parseJsonObject<unknown[]>(normalizeJsonCandidateText(placesMatch[1]))
+    ? parseJsonObject<unknown[]>(normalizeJsonCandidateText(placesMatch[2]))
     : null;
 
   if (!answerText && !parsedPlaces) {
@@ -355,21 +470,63 @@ function parseModelResponseLenient(text: string): ParsedModelResponse | null {
   };
 }
 
-function parseModelResponse(text: string): ParsedModelResponse | null {
-  const jsonText = extractJsonObjectText(text);
-
-  if (!jsonText.startsWith("{")) {
-    return parseModelResponseLenient(text);
+function coerceParsedModelResponse(value: unknown): ParsedModelResponse | null {
+  if (Array.isArray(value)) {
+    return { places: value };
   }
 
-  const directParse = parseJsonObject<ParsedModelResponse>(jsonText);
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const record = value as Record<string, unknown>;
+  const nestedData =
+    record.data && typeof record.data === "object"
+      ? (record.data as Record<string, unknown>)
+      : null;
+
+  return {
+    answerText:
+      record.answerText ??
+      record.answer_text ??
+      record.answer ??
+      record.summary ??
+      nestedData?.answerText ??
+      nestedData?.answer_text ??
+      nestedData?.answer ??
+      nestedData?.summary,
+    places:
+      record.places ??
+      record.results ??
+      record.recommendations ??
+      record.items ??
+      nestedData?.places ??
+      nestedData?.results ??
+      nestedData?.recommendations ??
+      nestedData?.items,
+  };
+}
+
+function parseModelResponse(text: string): ParsedModelResponse | null {
+  const jsonText = extractJsonObjectText(text);
+  const jsonArrayText = extractJsonArrayText(text);
+
+  if (!jsonText.startsWith("{")) {
+    return (
+      coerceParsedModelResponse(parseJsonObject<unknown>(jsonArrayText)) ??
+      parseModelResponseLenient(text)
+    );
+  }
+
+  const directParse = coerceParsedModelResponse(parseJsonObject<unknown>(jsonText));
 
   if (directParse) {
     return directParse;
   }
 
   return (
-    parseJsonObject<ParsedModelResponse>(normalizeJsonCandidateText(jsonText)) ??
+    coerceParsedModelResponse(parseJsonObject<unknown>(normalizeJsonCandidateText(jsonText))) ??
+    coerceParsedModelResponse(parseJsonObject<unknown>(jsonArrayText)) ??
     parseModelResponseLenient(jsonText) ??
     parseModelResponseLenient(text)
   );
@@ -809,10 +966,10 @@ async function logAskAiMapsLayer2Debug(args: {
   console.log("========== END ASK AI MAPS LAYER 2 DEBUG ==========");
 }
 
-function isRetryableProviderError(error: unknown) {
+function isQuotaOrRateLimitProviderError(error: unknown) {
   const status = getErrorStatus(error);
 
-  if (RETRYABLE_AI_STATUSES.has(status)) {
+  if (FALLBACK_QUOTA_STATUSES.has(status)) {
     return true;
   }
 
@@ -822,15 +979,7 @@ function isRetryableProviderError(error: unknown) {
     return false;
   }
 
-  return RETRYABLE_PROVIDER_MESSAGE_PATTERNS.some((pattern) => pattern.test(message));
-}
-
-function isAskAiMapsCoolingDown() {
-  return Date.now() < askAiMapsCooldownUntil;
-}
-
-function startAskAiMapsCooldown(ms: number) {
-  askAiMapsCooldownUntil = Date.now() + ms;
+  return FALLBACK_QUOTA_MESSAGE_PATTERNS.some((pattern) => pattern.test(message));
 }
 
 function getAmbiguousQueryMessage(
@@ -941,13 +1090,53 @@ function extractGroundingSources(
 ): GroundingSource[] {
   const seenKeys = new Set<string>();
   const sources: GroundingSource[] = [];
+  const chunks = [
+    ...(Array.isArray(groundingMetadata?.groundingChunks) ? groundingMetadata.groundingChunks : []),
+    ...(Array.isArray(groundingMetadata?.grounding_chunks) ? groundingMetadata.grounding_chunks : []),
+  ];
 
-  for (const chunk of groundingMetadata?.groundingChunks ?? []) {
-    const maps = chunk?.maps;
-    const title = normalizeText(maps?.title) ?? undefined;
-    const text = normalizeText(maps?.text) ?? undefined;
-    const uri = normalizeText(maps?.uri) ?? undefined;
-    const placeId = normalizeText(maps?.placeId) ?? undefined;
+  for (const chunk of chunks) {
+    const chunkRecord = chunk as Record<string, unknown>;
+    const maps = (
+      chunkRecord.maps ??
+      chunkRecord.map ??
+      chunkRecord.googleMaps ??
+      chunkRecord.google_maps
+    ) as Record<string, unknown> | undefined;
+
+    if (!maps || typeof maps !== "object") {
+      continue;
+    }
+
+    const title =
+      normalizeTextNode(getObjectField(maps, ["title", "name", "displayName", "display_name"])) ??
+      undefined;
+    const text =
+      normalizeTextNode(getObjectField(maps, ["text"])) ??
+      normalizeText(getObjectField(maps, ["address", "formattedAddress", "formatted_address"])) ??
+      undefined;
+    const uri =
+      normalizeText(getObjectField(maps, ["uri", "url", "sourceUri", "source_uri", "googleMapsUri", "google_maps_uri", "googleMapsUrl", "google_maps_url"])) ??
+      undefined;
+    const placeId =
+      normalizeText(getObjectField(maps, ["placeId", "place_id", "id"])) ??
+      undefined;
+    const categoryText = normalizeCategoryText(
+      getObjectField(maps, ["category", "categoryText", "category_text", "primaryTypeDisplayName", "primary_type_display_name", "primaryType", "primary_type", "types"])
+    );
+    const ratingText = normalizeOptionalDisplayText(
+      getObjectField(maps, ["ratingText", "rating_text", "rating"])
+    );
+    const openStatusText = normalizeOpenStatusText(
+      getObjectField(maps, ["openStatus", "open_status", "openStatusText", "open_status_text", "openNow", "open_now", "currentOpeningHours", "current_opening_hours"])
+    );
+    const addressText =
+      normalizeTextNode(getObjectField(maps, ["shortFormattedAddress", "short_formatted_address"])) ??
+      normalizeOptionalDisplayText(getObjectField(maps, ["address", "addressText", "address_text", "locationText", "location_text", "formattedAddress", "formatted_address"])) ??
+      text;
+    const coordinates =
+      extractCoordinatesFromGoogleMapsPlaceObject(maps) ??
+      extractCoordinatesFromGoogleMapsUrl(uri);
 
     if (!title && !uri && !placeId) {
       continue;
@@ -965,9 +1154,92 @@ function extractGroundingSources(
       ...(text ? { text } : {}),
       ...(uri ? { uri } : {}),
       ...(placeId ? { placeId } : {}),
+      ...(categoryText ? { categoryText } : {}),
+      ...(ratingText ? { ratingText } : {}),
+      ...(openStatusText ? { openStatusText } : {}),
+      ...(addressText ? { addressText } : {}),
+      ...(coordinates ? { coordinates } : {}),
     });
   }
 
+  return sources;
+}
+
+function extractLooseGoogleMapsSources(value: unknown): GroundingSource[] {
+  const sources: GroundingSource[] = [];
+  const seenKeys = new Set<string>();
+  const seenObjects = new WeakSet<object>();
+
+  function visit(node: unknown) {
+    if (!node || typeof node !== "object") {
+      return;
+    }
+
+    if (seenObjects.has(node as object)) {
+      return;
+    }
+
+    seenObjects.add(node as object);
+
+    if (Array.isArray(node)) {
+      for (const item of node) {
+        visit(item);
+      }
+      return;
+    }
+
+    const record = node as Record<string, unknown>;
+    const title =
+      normalizeTextNode(getObjectField(record, ["title", "name", "displayName", "display_name"])) ??
+      undefined;
+    const uri =
+      normalizeText(getObjectField(record, ["uri", "url", "sourceUri", "source_uri", "googleMapsUri", "google_maps_uri", "googleMapsUrl", "google_maps_url"])) ??
+      undefined;
+    const placeId =
+      normalizeText(getObjectField(record, ["placeId", "place_id", "id"])) ??
+      undefined;
+    const categoryText = normalizeCategoryText(
+      getObjectField(record, ["category", "categoryText", "category_text", "primaryTypeDisplayName", "primary_type_display_name", "primaryType", "primary_type", "types"])
+    );
+    const ratingText = normalizeOptionalDisplayText(
+      getObjectField(record, ["ratingText", "rating_text", "rating"])
+    );
+    const openStatusText = normalizeOpenStatusText(
+      getObjectField(record, ["openStatus", "open_status", "openStatusText", "open_status_text", "openNow", "open_now", "currentOpeningHours", "current_opening_hours"])
+    );
+    const addressText =
+      normalizeTextNode(getObjectField(record, ["shortFormattedAddress", "short_formatted_address"])) ??
+      normalizeOptionalDisplayText(getObjectField(record, ["address", "addressText", "address_text", "locationText", "location_text", "formattedAddress", "formatted_address"])) ??
+      undefined;
+    const coordinates =
+      extractCoordinatesFromGoogleMapsPlaceObject(record) ??
+      extractCoordinatesFromGoogleMapsUrl(uri);
+
+    if (title && (uri || placeId || addressText || categoryText || coordinates)) {
+      const dedupeKey = normalizePlaceKey(`${placeId ?? ""} ${uri ?? ""} ${title}`);
+
+      if (dedupeKey && !seenKeys.has(dedupeKey)) {
+        seenKeys.add(dedupeKey);
+        sources.push({
+          title,
+          ...(addressText ? { text: addressText } : {}),
+          ...(uri ? { uri } : {}),
+          ...(placeId ? { placeId } : {}),
+          ...(categoryText ? { categoryText } : {}),
+          ...(ratingText ? { ratingText } : {}),
+          ...(openStatusText ? { openStatusText } : {}),
+          ...(addressText ? { addressText } : {}),
+          ...(coordinates ? { coordinates } : {}),
+        });
+      }
+    }
+
+    for (const child of Object.values(record)) {
+      visit(child);
+    }
+  }
+
+  visit(value);
   return sources;
 }
 
@@ -1159,24 +1431,86 @@ function buildAnswerText(
   return normalizeText(rawText) ?? "No grounded summary was provided.";
 }
 
-function normalizeGroundedPlaces(
-  parsed: ParsedModelResponse | null,
-  sources: GroundingSource[]
-): AskAiMapGroundedPlace[] {
-  if (!Array.isArray(parsed?.places)) {
-    return [];
+function buildGroundedPlaceReason(args: {
+  query: string;
+  name: string;
+  source?: GroundingSource;
+}) {
+  const category = args.source?.categoryText;
+  const address = args.source?.addressText ?? args.source?.text;
+
+  if (category && address) {
+    return `${args.name} matches your search for "${args.query}" as a ${category} around ${address}.`;
   }
 
+  if (address) {
+    return `${args.name} is a map-grounded match for "${args.query}" around ${address}.`;
+  }
+
+  if (category) {
+    return `${args.name} is a map-grounded ${category} match for "${args.query}".`;
+  }
+
+  return `${args.name} is a map-grounded match for "${args.query}".`;
+}
+
+const CAVITE_LOCATION_HINTS = [
+  "cavite",
+  "cavite city",
+  "imus",
+  "bacoor",
+  "dasmarinas",
+  "dasmariñas",
+  "tagaytay",
+  "general trias",
+  "gen trias",
+  "kawit",
+  "silang",
+  "trece",
+  "trece martires",
+  "tanza",
+  "carmona",
+] as const;
+
+function filterSourcesForQuery(query: string, sources: GroundingSource[]) {
+  const normalizedQuery = normalizeSearchText(query);
+
+  if (!normalizedQuery.includes("cavite")) {
+    return sources;
+  }
+
+  const matchingSources = sources.filter((source) => {
+    const haystack = normalizePlaceKey(
+      [source.title ?? "", source.addressText ?? "", source.text ?? ""].join(" ")
+    );
+
+    return CAVITE_LOCATION_HINTS.some((hint) => haystack.includes(normalizePlaceKey(hint)));
+  });
+
+  if (matchingSources.length >= Math.min(3, sources.length)) {
+    return matchingSources;
+  }
+
+  return sources;
+}
+
+function normalizeGroundedPlaces(
+  parsed: ParsedModelResponse | null,
+  sources: GroundingSource[],
+  query: string
+): AskAiMapGroundedPlace[] {
   const seenKeys = new Set<string>();
   const normalizedPlaces: AskAiMapGroundedPlace[] = [];
+  const rawPlaces = Array.isArray(parsed?.places) ? parsed.places : [];
 
-  for (const [index, rawPlace] of parsed.places.entries()) {
+  for (const [index, rawPlace] of rawPlaces.entries()) {
     if (!rawPlace || typeof rawPlace !== "object") {
       continue;
     }
 
     const candidate = rawPlace as ParsedGroundedPlace;
     const name = normalizeText(candidate.name);
+    const source = name ? findBestGroundingSource(name, sources) : undefined;
 
     if (!name) {
       continue;
@@ -1184,18 +1518,22 @@ function normalizeGroundedPlaces(
 
     const reason =
       normalizeOptionalDisplayText(candidate.reason) ??
-      "Grounded Google Maps recommendation for your request.";
-    const source = findBestGroundingSource(name, sources);
+      buildGroundedPlaceReason({ query, name, source });
     const googleMapsUrl = source?.uri;
     const placeId = source?.placeId;
-    const categoryText = normalizeOptionalDisplayText(candidate.categoryText);
-    const ratingText = normalizeOptionalDisplayText(candidate.ratingText);
-    const openStatusText = normalizeOptionalDisplayText(candidate.openStatusText);
+    const categoryText =
+      normalizeOptionalDisplayText(candidate.categoryText) ?? source?.categoryText;
+    const ratingText =
+      normalizeOptionalDisplayText(candidate.ratingText) ?? source?.ratingText;
+    const openStatusText =
+      normalizeOptionalDisplayText(candidate.openStatusText) ?? source?.openStatusText;
     const addressText =
       normalizeOptionalDisplayText(candidate.addressText) ??
+      source?.addressText ??
       normalizeOptionalDisplayText(source?.text);
     const coordinates =
       extractCoordinatesFromParsedPlace(candidate) ??
+      source?.coordinates ??
       extractCoordinatesFromGoogleMapsUrl(googleMapsUrl ?? source?.uri);
     const dedupeKey = normalizePlaceKey(`${placeId ?? ""} ${googleMapsUrl ?? ""} ${name}`);
 
@@ -1224,6 +1562,49 @@ function normalizeGroundedPlaces(
           }
         : {}),
     });
+  }
+
+  if (normalizedPlaces.length === 0 && sources.length > 0) {
+    for (const [index, source] of sources.entries()) {
+      const name = normalizeText(source.title);
+
+      if (!name) {
+        continue;
+      }
+
+      const dedupeKey = normalizePlaceKey(`${source.placeId ?? ""} ${source.uri ?? ""} ${name}`);
+
+      if (!dedupeKey || seenKeys.has(dedupeKey)) {
+        continue;
+      }
+
+      seenKeys.add(dedupeKey);
+      normalizedPlaces.push({
+        id: toPlaceId(source.title, index),
+        name,
+        reason: buildGroundedPlaceReason({ query, name: source.title, source }),
+        ...(source.uri ? { googleMapsUrl: source.uri } : {}),
+        ...(source.placeId ? { placeId: source.placeId } : {}),
+        ...(source.title ? { sourceTitle: source.title } : {}),
+        ...(source.uri ? { sourceUri: source.uri } : {}),
+        ...(source.coordinates ?? extractCoordinatesFromGoogleMapsUrl(source.uri)
+          ? {
+              coordinates:
+                source.coordinates ?? extractCoordinatesFromGoogleMapsUrl(source.uri)!,
+            }
+          : {}),
+        ...(source.categoryText || source.ratingText || source.openStatusText || source.addressText
+          ? {
+              optionalDetails: {
+                ...(source.categoryText ? { categoryText: source.categoryText } : {}),
+                ...(source.ratingText ? { ratingText: source.ratingText } : {}),
+                ...(source.openStatusText ? { openStatusText: source.openStatusText } : {}),
+                ...(source.addressText ? { addressText: source.addressText } : {}),
+              },
+            }
+          : {}),
+      });
+    }
   }
 
   return normalizedPlaces.slice(0, ASK_AI_MAPS_MAX_PLACES);
@@ -1275,10 +1656,15 @@ async function generateMapsResponse({
       (response as any)?.response?.candidates?.[0]?.grounding_metadata) as
       | GroundingMetadataLike
       | undefined;
-  const sources = extractGroundingSources(groundingMetadata);
+  const metadataSources = extractGroundingSources(groundingMetadata);
+  const looseSources = extractLooseGoogleMapsSources(response);
+  const sources = filterSourcesForQuery(
+    params.query,
+    metadataSources.length > 0 ? metadataSources : looseSources
+  );
   const parsed = parseModelResponse(rawText);
   const parsedPlaces = Array.isArray(parsed?.places) ? parsed.places : [];
-  const normalizedPlaces = normalizeGroundedPlaces(parsed, sources);
+  const normalizedPlaces = normalizeGroundedPlaces(parsed, sources, params.query);
   const places = await hydrateGroundedPlacesWithCoordinates(normalizedPlaces, logger);
   const answerText = buildAnswerText(parsed, places, rawText);
 
@@ -1332,24 +1718,11 @@ export async function searchAskAiMaps(
     throw new AskAiMapsServiceError(ambiguousQueryMessage, 400);
   }
 
-  if (isAskAiMapsCoolingDown()) {
-    logger?.log("[Ask AI Maps] Cooldown active");
-    return {
-      mode: "map_grounding_only",
-      answerText: PROVIDER_BUSY_MESSAGE,
-      places: [],
-      sources: [],
-      emptyReason: "PROVIDER_BUSY",
-      message: PROVIDER_BUSY_MESSAGE,
-      latencyMs: Date.now() - startedAt,
-    };
-  }
-
   const apiKey = await getGoogleApiKey();
   const ai = new GoogleGenAI({ apiKey });
   const prompt = buildMapsGroundingPrompt(params);
-  let lastRetryableError: unknown = null;
-  let sawRetryableProviderFailure = false;
+  let lastQuotaError: unknown = null;
+  let sawQuotaOrRateLimitFailure = false;
 
   for (const [index, model] of ASK_AI_MAPS_MODELS.entries()) {
     logger?.log(`[Ask AI Maps] Trying model: ${model}`);
@@ -1371,16 +1744,16 @@ export async function searchAskAiMaps(
     } catch (error) {
       const status = getErrorStatus(error);
 
-      if (!isRetryableProviderError(error)) {
+      if (!isQuotaOrRateLimitProviderError(error)) {
         throw new AskAiMapsServiceError(
           error instanceof Error ? error.message : "Gemini Maps request failed.",
           status
         );
       }
 
-      logger?.log(`[Ask AI Maps] Model failed with status: ${status} (${model})`);
-      sawRetryableProviderFailure = true;
-      lastRetryableError = error;
+      logger?.log(`[Ask AI Maps] Model quota/rate-limited with status: ${status} (${model})`);
+      sawQuotaOrRateLimitFailure = true;
+      lastQuotaError = error;
 
       if (index < ASK_AI_MAPS_MODELS.length - 1) {
         await sleep(ASK_AI_MAPS_FALLBACK_DELAY_MS);
@@ -1388,10 +1761,7 @@ export async function searchAskAiMaps(
     }
   }
 
-  if (sawRetryableProviderFailure) {
-    startAskAiMapsCooldown(ASK_AI_MAPS_PROVIDER_COOLDOWN_MS);
-    logger?.log("[Ask AI Maps] Cooldown active");
-
+  if (sawQuotaOrRateLimitFailure) {
     return {
       mode: "map_grounding_only",
       answerText: PROVIDER_BUSY_MESSAGE,
@@ -1404,9 +1774,9 @@ export async function searchAskAiMaps(
   }
 
   throw new AskAiMapsServiceError(
-    lastRetryableError instanceof Error
-      ? lastRetryableError.message
+    lastQuotaError instanceof Error
+      ? lastQuotaError.message
       : "Gemini Maps request failed.",
-    getErrorStatus(lastRetryableError)
+    getErrorStatus(lastQuotaError)
   );
 }

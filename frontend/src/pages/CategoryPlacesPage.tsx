@@ -226,7 +226,7 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
             { label: 'Home', href: '/', icon: <House className="h-3.5 w-3.5" /> },
             { label: 'Places', href: '/places', icon: <MapPin className="h-3.5 w-3.5" /> },
             { label: 'Categories', href: '/places/categories', icon: <LayoutGrid className="h-3.5 w-3.5" /> },
-            { label: categoryLabel },
+            { label: categoryLabel, icon: <AppIcon name={iconName} className="h-3.5 w-3.5" /> },
           ]}
         />
 

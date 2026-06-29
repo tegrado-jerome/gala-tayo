@@ -252,13 +252,10 @@ export function planAskAiRequest(question: string): AskAiResponsePlan {
 }
 
 export function shouldUseGroundedResearch(question: string): boolean {
-  const plan = planAskAiRequest(question);
+  const LIVE_INFO_PATTERN =
+    /\b(latest|current|today|now\b|live|recent|open now|available now|search online|check online|weather|current prices|current schedule|temporary|updated hours|operating hours|real.time|breaking)\b/i
 
-  return (
-    plan.requiresPlaceAnswer ||
-    CURRENT_INFO_PATTERN.test(question) ||
-    PLACE_SEEKING_PATTERN.test(question)
-  );
+  return LIVE_INFO_PATTERN.test(question) || CURRENT_INFO_PATTERN.test(question)
 }
 
 function buildAskAiPrompt(

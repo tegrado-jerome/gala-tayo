@@ -2,7 +2,7 @@ import { startTransition, useEffect, useLayoutEffect, useMemo, useRef, useState 
 import type { RefObject } from 'react'
 import { createPortal } from 'react-dom'
 import type { Session } from '@supabase/supabase-js'
-import { RotateCcw, Sparkles } from 'lucide-react'
+import { RotateCcw } from 'lucide-react'
 import { AppIcon } from '../components/AppIcon'
 import PlaceCard, { type PlaceCardData, type PlaceCategoryMeta, type PlaceTagMeta } from '../components/PlaceCard'
 import AppHeader from '../components/AppHeader'
@@ -3347,7 +3347,6 @@ function AskAiModePanel({
   usageStatus,
   isUsageLoading,
   usageError,
-  question,
   answer,
   sources,
   isSubmitting,
@@ -3356,7 +3355,6 @@ function AskAiModePanel({
   onRetryUsage,
   onQuestionChange,
   onSubmit,
-  onSwitchToPlaces,
   onStartOver,
   onOpenPromptBuilder,
   className = '',
@@ -3366,7 +3364,6 @@ function AskAiModePanel({
   usageStatus: AskAiUsageStatus | null
   isUsageLoading: boolean
   usageError: string | null
-  question: string
   answer: string
   sources: AskAiSource[]
   isSubmitting: boolean
@@ -3375,7 +3372,6 @@ function AskAiModePanel({
   onRetryUsage: () => void
   onQuestionChange: (question: string) => void
   onSubmit: (questionOverride?: string) => void
-  onSwitchToPlaces: () => void
   onStartOver: () => void
   onOpenPromptBuilder: (questionOverride?: string) => void
   className?: string
@@ -3412,8 +3408,6 @@ function AskAiModePanel({
     onOpenPromptBuilder(draftQuestion)
   }
 
-  const hasActiveAskAiView = messages.length > 0 || Boolean(question.trim() || isSubmitting || answer || answerError || sources.length)
-
   const renderMessagesContent = () => {
     if (!isSessionLoading && !isRegistered) {
       return (
@@ -3447,22 +3441,22 @@ function AskAiModePanel({
       return (
         <div className="flex flex-col gap-5">
           <div className="flex items-start gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#e8f0fe,#d4e4fc)] shadow-[0_2px_8px_rgba(47,116,232,0.10)]">
-              <Sparkles className="h-4 w-4 text-[var(--accent-deep)]" />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--primary-soft)]">
+              <AppIcon name="bot" size={22} className="text-[var(--accent)]" />
             </div>
-            <div className="min-w-0 max-w-[82%] rounded-2xl rounded-tl-[6px] border border-[rgba(15,23,42,0.06)] bg-white px-4 py-3 shadow-[0_2px_8px_rgba(15,23,42,0.03)]">
-              <p className="text-[0.94rem] leading-relaxed text-slate-800">Hi! What kind of gala are you planning today?</p>
+            <div className="min-w-0 max-w-[82%] rounded-[var(--radius-lg)] rounded-tl-[6px] border border-[var(--line)] bg-[var(--panel)] px-4 py-3 shadow-[var(--shadow-soft)]">
+              <p className="text-[var(--type-body)] leading-relaxed text-[var(--text)]">Hi! What kind of gala are you planning today?</p>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2 pl-10">
+          <div className="flex flex-wrap gap-2 pl-14">
             {promptChips.map((chip) => (
               <button
                 key={chip.id}
                 type="button"
                 disabled={isLimitReached}
                 onClick={() => handleSend(chip.prompt)}
-                className="rounded-full border border-[rgba(47,116,232,0.16)] bg-[var(--accent-wash)] px-3.5 py-2 text-[0.82rem] font-semibold text-[var(--accent-deep)] transition hover:border-[var(--accent)] hover:bg-[rgba(var(--accent-rgb),0.18)] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-full border border-[var(--accent-soft)] bg-[var(--accent-wash)] px-3.5 py-2 text-[0.82rem] font-semibold text-[var(--accent-deep)] transition hover:border-[var(--accent)] hover:bg-[rgba(var(--accent-rgb),0.18)] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {chip.label}
               </button>
@@ -3471,7 +3465,7 @@ function AskAiModePanel({
               type="button"
               disabled={isLimitReached}
               onClick={() => navigateToPath('/ask-ai/maps')}
-              className="rounded-full border border-[rgba(15,23,42,0.08)] bg-slate-50 px-3.5 py-2 text-[0.82rem] font-semibold text-slate-600 transition hover:border-[rgba(15,23,42,0.16)] hover:bg-white sm:hidden"
+              className="rounded-full border border-[var(--line)] bg-[var(--bg-soft)] px-3.5 py-2 text-[0.82rem] font-semibold text-[var(--muted)] transition hover:border-[var(--line-strong)] hover:bg-[var(--panel)] sm:hidden"
             >
               <span className="inline-flex items-center gap-1">
                 <AppIcon name="map" className="h-3.5 w-3.5" />
@@ -3481,14 +3475,14 @@ function AskAiModePanel({
           </div>
 
           {isLimitReached && (
-            <div className="mx-2 rounded-2xl border border-[rgba(239,68,68,0.14)] bg-red-50/60 px-4 py-3">
-              <p className="text-[0.84rem] font-semibold text-red-700">You&apos;ve used all your Ask AI asks for today. Come back tomorrow!</p>
+            <div className="mx-2 rounded-[var(--radius-lg)] border border-[var(--danger-soft)] bg-[var(--danger-soft)] px-4 py-3">
+              <p className="text-[0.84rem] font-semibold text-[var(--danger)]">You&apos;ve used all your Ask AI asks for today. Come back tomorrow!</p>
             </div>
           )}
 
           {isUsageLoading && !usageStatus && (
-            <div className="mx-2 rounded-2xl bg-slate-50 px-4 py-3">
-              <p className="text-[0.84rem] text-slate-500">Checking your Ask AI limit...</p>
+            <div className="mx-2 rounded-[var(--radius-lg)] bg-[var(--bg-soft)] px-4 py-3">
+              <p className="text-[0.84rem] text-[var(--muted)]">Checking your Ask AI limit...</p>
             </div>
           )}
         </div>
@@ -3502,8 +3496,8 @@ function AskAiModePanel({
           if (msg.role === 'user') {
             return (
               <div key={index} className="flex justify-end">
-                <div className="max-w-[82%] rounded-2xl rounded-tr-[6px] bg-[var(--accent)] px-4 py-3 shadow-[0_4px_14px_rgba(47,116,232,0.16)]">
-                  <p className="text-[0.94rem] leading-relaxed text-white">{msg.content}</p>
+                <div className="max-w-[82%] rounded-[var(--radius-lg)] rounded-tr-[6px] bg-[var(--accent)] px-4 py-3 shadow-[var(--shadow-medium)]">
+                  <p className="text-[var(--type-body)] leading-relaxed text-white">{msg.content}</p>
                 </div>
               </div>
             )
@@ -3511,22 +3505,22 @@ function AskAiModePanel({
 
           return (
             <div key={index} className="flex items-start gap-2.5">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#e8f0fe,#d4e4fc)] shadow-[0_2px_8px_rgba(47,116,232,0.10)]">
-                <Sparkles className="h-4 w-4 text-[var(--accent-deep)]" />
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--primary-soft)]">
+                <AppIcon name="bot" size={22} className="text-[var(--accent)]" />
               </div>
               <div className="min-w-0 max-w-[88%] sm:max-w-[82%]">
-                <div className="overflow-hidden rounded-2xl rounded-tl-[6px] border border-[rgba(15,23,42,0.06)] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.03)]">
-                  <div className="flex items-center gap-2 border-b border-[rgba(15,23,42,0.05)] px-4 py-2.5">
-                    <Sparkles className="h-3.5 w-3.5 text-[var(--accent)]" />
-                    <span className="text-[0.75rem] font-bold text-slate-500">Ask AI</span>
+                <div className="overflow-hidden rounded-[var(--radius-lg)] rounded-tl-[6px] border border-[var(--line)] bg-[var(--panel)] shadow-[var(--shadow-soft)]">
+                  <div className="flex items-center gap-2 border-b border-[var(--line)] px-4 py-2.5">
+                    <AppIcon name="bot" size={16} className="text-[var(--accent)]" />
+                    <span className="text-xs font-bold text-[var(--muted)]">Ask AI</span>
                   </div>
                   <div className="px-4 py-3.5">
-                    <div className="text-[0.94rem] leading-relaxed text-slate-800 whitespace-pre-wrap">
+                    <div className="text-[var(--type-body)] leading-relaxed text-[var(--text)] whitespace-pre-wrap">
                       {msg.content}
                     </div>
                     {sources.length > 0 && (
-                      <div className="mt-3 border-t border-[rgba(15,23,42,0.05)] pt-3">
-                        <p className="text-[0.7rem] font-bold uppercase tracking-[0.1em] text-slate-400">Sources</p>
+                      <div className="mt-3 border-t border-[var(--line)] pt-3">
+                        <p className="text-[0.7rem] font-bold uppercase tracking-[0.1em] text-[var(--text-light)]">Sources</p>
                         <div className="mt-2 flex flex-wrap gap-1.5">
                           {sources.map((source) => (
                             <a
@@ -3534,7 +3528,7 @@ function AskAiModePanel({
                               href={source.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 rounded-full border border-[rgba(15,23,42,0.06)] bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600 transition hover:border-[rgba(47,116,232,0.18)] hover:bg-white hover:text-[var(--accent-deep)]"
+                              className="inline-flex items-center gap-1 rounded-full border border-[var(--line)] bg-[var(--bg-soft)] px-2.5 py-1 text-[11px] font-semibold text-[var(--muted)] transition hover:border-[var(--accent-soft)] hover:bg-[var(--panel)] hover:text-[var(--accent-deep)]"
                             >
                               {source.title.length > 28 ? `${source.title.slice(0, 28)}...` : source.title}
                               <ChevronRightIcon className="h-3 w-3 shrink-0" />
@@ -3553,18 +3547,18 @@ function AskAiModePanel({
         {/* Thinking indicator */}
         {isSubmitting && (
           <div className="flex items-start gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#e8f0fe,#d4e4fc)] shadow-[0_2px_8px_rgba(47,116,232,0.10)]">
-              <Sparkles className="h-4 w-4 text-[var(--accent-deep)]" />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--primary-soft)]">
+              <AppIcon name="bot" size={22} className="text-[var(--accent)]" />
             </div>
-            <div className="min-w-0 max-w-[82%] rounded-2xl rounded-tl-[6px] border border-[rgba(15,23,42,0.06)] bg-white px-4 py-3.5 shadow-[0_2px_8px_rgba(15,23,42,0.03)]">
+            <div className="min-w-0 max-w-[82%] rounded-[var(--radius-lg)] rounded-tl-[6px] border border-[var(--line)] bg-[var(--panel)] px-4 py-3.5 shadow-[var(--shadow-soft)]">
               <div className="flex items-center gap-1.5">
                 <span className="h-2 w-2 animate-pulse rounded-full bg-[var(--accent)]" />
                 <span className="h-2 w-2 animate-pulse rounded-full bg-[var(--accent)]" style={{ animationDelay: '140ms' }} />
                 <span className="h-2 w-2 animate-pulse rounded-full bg-[var(--accent)]" style={{ animationDelay: '280ms' }} />
               </div>
               <p className="mt-2 text-[0.84rem] leading-relaxed text-[var(--muted)]">Thinking about your gala plan...</p>
-              <div className="mt-3 h-1 overflow-hidden rounded-full bg-[rgba(20,35,58,0.06)]">
-                <div className="h-full w-2/3 rounded-full bg-[linear-gradient(90deg,#6fa8ff,#2f80ed)] motion-safe:animate-[gala-loading-slide_1.6s_ease-in-out_infinite]" />
+              <div className="mt-3 h-1 overflow-hidden rounded-full bg-[var(--bg-soft)]">
+                <div className="h-full w-2/3 rounded-full bg-[var(--accent)] motion-safe:animate-[gala-loading-slide_1.6s_ease-in-out_infinite]" />
               </div>
             </div>
           </div>
@@ -3572,36 +3566,14 @@ function AskAiModePanel({
 
         {/* Answer error indicator */}
         {answerError && !isSubmitting && messages.length > 0 && (
-          <div className="mx-2 rounded-2xl border border-red-100 bg-red-50/50 px-4 py-3">
-            <p className="text-[0.84rem] text-red-600">{answerError}</p>
-          </div>
-        )}
-
-        {/* Post-conversation actions (only after the last assistant message, not during thinking) */}
-        {!isSubmitting && messages.length > 0 && answer && (
-          <div className="flex flex-wrap items-center gap-2 pl-10">
-            <button
-              type="button"
-              onClick={onStartOver}
-              className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(15,23,42,0.08)] bg-white px-3 py-2 text-[0.78rem] font-semibold text-slate-500 transition hover:border-[rgba(15,23,42,0.16)] hover:text-slate-700"
-            >
-              <RotateCcw className="h-3.5 w-3.5" />
-              Start over
-            </button>
-            <button
-              type="button"
-              onClick={handleOpenPromptBuilder}
-              className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(47,116,232,0.14)] bg-[var(--accent-wash)] px-3 py-2 text-[0.78rem] font-semibold text-[var(--accent-deep)] transition hover:border-[rgba(47,116,232,0.24)] hover:bg-[rgba(var(--accent-rgb),0.18)]"
-            >
-              <SparkIcon className="h-3.5 w-3.5" />
-              Prompt Builder
-            </button>
+          <div className="mx-2 rounded-[var(--radius-lg)] border border-[var(--danger-soft)] bg-[var(--danger-soft)] px-4 py-3">
+            <p className="text-[0.84rem] text-[var(--danger)]">{answerError}</p>
           </div>
         )}
 
         {isLimitReached && messages.length > 0 && (
-          <div className="mx-2 rounded-2xl border border-[rgba(239,68,68,0.14)] bg-red-50/60 px-4 py-3">
-            <p className="text-[0.84rem] font-semibold text-red-700">You&apos;ve used all your Ask AI asks for today. Come back tomorrow!</p>
+          <div className="mx-2 rounded-[var(--radius-lg)] border border-[var(--danger-soft)] bg-[var(--danger-soft)] px-4 py-3">
+            <p className="text-[0.84rem] font-semibold text-[var(--danger)]">You&apos;ve used all your Ask AI asks for today. Come back tomorrow!</p>
           </div>
         )}
       </div>
@@ -3609,45 +3581,9 @@ function AskAiModePanel({
   }
 
   return (
-    <div className={`flex h-full flex-col bg-[#F8FAFC] ${className}`}>
-      {/* Chat header */}
-      <div className="shrink-0 border-b border-[var(--line)] bg-white px-4 py-3 sm:px-5">
-        <div className="mx-auto flex w-full max-w-[768px] items-center gap-3">
-          <button
-            type="button"
-            onClick={onSwitchToPlaces}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
-            aria-label="Back"
-          >
-            <ChevronLeftIcon className="h-5 w-5" />
-          </button>
-          <div className="min-w-0">
-            <h1 className="text-[1.05rem] font-bold leading-tight text-slate-900 sm:text-[1.15rem]">Ask AI</h1>
-            <p className="text-[0.78rem] leading-tight text-[var(--muted)]">Plan your next gala with AI</p>
-          </div>
-          <div className="ml-auto flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleOpenPromptBuilder}
-              className="hidden rounded-full border border-[var(--line)] px-3 py-1.5 text-[11px] font-semibold text-slate-500 transition hover:border-[var(--accent)] hover:text-[var(--accent-deep)] sm:inline-flex items-center gap-1"
-            >
-              <SparkIcon className="h-3 w-3" />
-              Prompt Builder
-            </button>
-            <button
-              type="button"
-              onClick={() => navigateToPath('/ask-ai/maps')}
-              className="rounded-full border border-[var(--line)] px-3 py-1.5 text-[11px] font-semibold text-slate-500 transition hover:border-[var(--accent)] hover:text-[var(--accent-deep)] sm:inline-flex items-center gap-1"
-            >
-              <AppIcon name="map" className="h-3 w-3" />
-              <span className="hidden sm:inline">Map</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
+    <div className={`flex h-full flex-col bg-[var(--bg)] ${className}`}>
       {/* Scrollable messages area */}
-      <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-5">
+      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-5 sm:px-5">
         <div className="mx-auto flex w-full max-w-[768px] flex-col">
           {renderMessagesContent()}
           <div ref={messagesEndRef} />
@@ -3655,9 +3591,29 @@ function AskAiModePanel({
       </div>
 
       {/* Bottom composer */}
-      <div className="shrink-0 border-t border-[var(--line)] bg-white px-4 py-3 sm:px-5">
+      <div className="shrink-0 border-t border-[var(--line)] bg-[var(--bg)] px-4 py-3 sm:px-5 pb-[calc(env(safe-area-inset-bottom,0px)+4rem)]">
+        <div className="mx-auto flex w-full max-w-[768px] items-center gap-2 mb-2">
+          {messages.length > 0 && (
+            <button
+              type="button"
+              onClick={onStartOver}
+              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-[var(--panel)] px-3 py-1.5 text-xs font-semibold text-[var(--muted)] transition hover:border-[var(--line-strong)] hover:text-[var(--text)]"
+            >
+              <AppIcon name="newChat" className="h-3.5 w-3.5" />
+              New chat
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={handleOpenPromptBuilder}
+            className="inline-flex items-center gap-1.5 rounded-full border border-[var(--accent-soft)] bg-[var(--accent-wash)] px-3 py-1.5 text-xs font-semibold text-[var(--accent-deep)] transition hover:border-[var(--accent-glow)] hover:bg-[rgba(var(--accent-rgb),0.18)]"
+          >
+            <AppIcon name="promptBuilder" className="h-3.5 w-3.5" />
+            Prompt Builder
+          </button>
+        </div>
         <div className="mx-auto flex w-full max-w-[768px] items-end gap-2">
-          <div className="flex-1 rounded-2xl border border-[rgba(15,23,42,0.10)] bg-[#F8FAFC] px-4 py-2.5 shadow-[0_1px_4px_rgba(15,23,42,0.04)] transition focus-within:border-[var(--accent)] focus-within:bg-white focus-within:shadow-[0_2px_12px_rgba(47,116,232,0.08)]">
+          <div className="flex-1 rounded-[var(--radius-lg)] border border-[var(--line)] bg-[var(--panel)] px-4 py-2.5 shadow-[var(--shadow-soft)] transition focus-within:border-[var(--accent)] focus-within:shadow-[var(--focus-ring)]">
             <textarea
               ref={textareaRef}
               value={draftQuestion}
@@ -3671,7 +3627,7 @@ function AskAiModePanel({
               placeholder="Message Ask AI..."
               rows={1}
               disabled={isSubmitting || isLimitReached || isUsagePending}
-              className="w-full resize-none bg-transparent text-[0.94rem] leading-relaxed text-slate-900 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed disabled:text-slate-400"
+              className="w-full resize-none bg-transparent text-[var(--type-body)] leading-relaxed text-[var(--text)] outline-none placeholder:text-[var(--text-light)] disabled:cursor-not-allowed disabled:text-[var(--text-light)]"
             />
           </div>
           <button
@@ -3681,13 +3637,10 @@ function AskAiModePanel({
             className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-white transition hover:bg-[var(--accent-deep)] disabled:cursor-not-allowed disabled:opacity-40 active:scale-95"
             aria-label="Send message"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-              <line x1="22" y1="2" x2="11" y2="13" />
-              <polygon points="22 2 15 22 11 13 2 9 22 2" />
-            </svg>
+            <AppIcon name="askAi" className="h-5 w-5" />
           </button>
         </div>
-        <p className="mx-auto mt-1.5 max-w-[768px] text-center text-[10px] text-slate-400">
+        <p className="mx-auto mt-1.5 max-w-[768px] text-center text-[10px] text-[var(--text-light)]">
           GalaTayo AI can make mistakes. Check important info.
         </p>
       </div>
@@ -3702,10 +3655,10 @@ function AskAiSignInContent({
 }) {
   return (
     <div className="flex flex-col items-center justify-center py-10 text-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[rgba(47,116,232,0.08)]">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--accent-wash)]">
         <SparkIcon className="h-7 w-7 text-[var(--accent-deep)]" />
       </div>
-      <h2 className="mt-4 text-xl font-bold text-slate-900">Sign in to use Ask AI</h2>
+      <h2 className="mt-4 text-xl font-bold text-[var(--text)]">Sign in to use Ask AI</h2>
       <p className="mt-2 max-w-sm text-[0.88rem] leading-relaxed text-[var(--muted)]">
         Ask AI is reserved for GalaTayo members. Sign in to plan your next gala with AI.
       </p>
@@ -3714,7 +3667,7 @@ function AskAiSignInContent({
         <button
           type="button"
           onClick={onOpenPromptBuilder}
-          className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:border-[var(--accent)] hover:text-[var(--accent-deep)]"
+          className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] px-4 py-2.5 text-sm font-semibold text-[var(--muted)] transition hover:border-[var(--accent)] hover:text-[var(--accent-deep)]"
         >
           <SparkIcon className="h-3.5 w-3.5" />
           Open Prompt Builder
@@ -3735,11 +3688,11 @@ function AskAiUsageErrorContent({
 }) {
   return (
     <div className="flex flex-col items-center justify-center py-10 text-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-amber-50">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--warning-soft)]">
         <span className="text-2xl">⚠️</span>
       </div>
-      <h2 className="mt-4 text-xl font-bold text-slate-900">
-        <span className="text-slate-900">Ask </span>
+      <h2 className="mt-4 text-xl font-bold text-[var(--text)]">
+        <span className="text-[var(--text)]">Ask </span>
         <span className="text-[var(--accent-deep)]">AI</span> is unavailable
       </h2>
       <p className="mt-2 max-w-sm text-[0.88rem] leading-relaxed text-[var(--muted)]">
@@ -3749,14 +3702,14 @@ function AskAiUsageErrorContent({
         <button
           type="button"
           onClick={onRetryUsage}
-          className="inline-flex items-center gap-1.5 rounded-full border border-[var(--accent)] bg-white px-4 py-2.5 text-sm font-semibold text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)]"
+          className="inline-flex items-center gap-1.5 rounded-full border border-[var(--accent)] bg-[var(--panel)] px-4 py-2.5 text-sm font-semibold text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)]"
         >
           Retry
         </button>
         <button
           type="button"
           onClick={onOpenPromptBuilder}
-          className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:border-[var(--accent)] hover:text-[var(--accent-deep)]"
+          className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-[var(--panel)] px-4 py-2.5 text-sm font-semibold text-[var(--muted)] transition hover:border-[var(--accent)] hover:text-[var(--accent-deep)]"
         >
           <SparkIcon className="h-3.5 w-3.5" />
           Prompt Builder
@@ -4118,10 +4071,6 @@ function HomePage({
     }
 
     clearAskAiRouteCache()
-  }
-
-  const handleSwitchToPlaces = () => {
-    navigateToPath('/')
   }
 
   const handleClearSearch = () => {
@@ -4735,13 +4684,13 @@ function HomePage({
   }, [])
 
     return (
-      <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
+      <div className={`${selectedMode === 'ask-ai' ? 'h-screen overflow-hidden' : 'min-h-screen'} bg-[var(--bg)] text-[var(--text)]`}>
         <GuestLimitModal isOpen={promptLogin} onClose={() => setPromptLogin(false)} />
 
-        <div className={`gala-page-background overflow-x-hidden lg:hidden ${selectedMode === 'ask-ai' ? 'flex h-[100dvh] flex-col' : 'min-h-screen'}`}>
+        <div className={`gala-page-background overflow-x-hidden lg:hidden ${selectedMode === 'ask-ai' ? 'flex h-[100dvh] flex-col overflow-hidden' : 'min-h-screen'}`}>
           <AppHeader signInLabel="Mag-sign in" minimal />
 
-          <main className={`overflow-x-hidden ${selectedMode === 'ask-ai' ? 'flex flex-1 flex-col' : 'pb-6'}`}>
+          <main className={`overflow-x-hidden ${selectedMode === 'ask-ai' ? 'flex flex-1 flex-col min-h-0 overflow-hidden' : 'pb-6'}`}>
             {isPromptBuilderOpen ? (
               <PromptBuilderModal
                 isOpen={isPromptBuilderOpen}
@@ -4821,7 +4770,6 @@ function HomePage({
                     usageStatus={askAiUsageStatus}
                     isUsageLoading={isAskAiUsageLoading}
                     usageError={askAiUsageError}
-                    question={askAiQuestion}
                     answer={askAiAnswer}
                     sources={askAiSources}
                     isSubmitting={isAskAiSubmitting}
@@ -4830,7 +4778,6 @@ function HomePage({
                     onRetryUsage={handleRetryAskAiUsage}
                     onQuestionChange={setAskAiQuestion}
                     onSubmit={(questionOverride) => void handleAskAiSubmit(questionOverride)}
-                    onSwitchToPlaces={handleSwitchToPlaces}
                     onStartOver={handleStartOverAskAi}
                     onOpenPromptBuilder={(questionOverride) => openPromptBuilder('ask-ai', questionOverride)}
                   />
@@ -4843,7 +4790,7 @@ function HomePage({
         <div
           className={`hidden w-full lg:grid ${
             isPromptBuilderOpen || selectedMode === 'ask-ai'
-              ? 'min-h-screen grid-rows-[auto_auto_auto]'
+              ? 'h-screen overflow-hidden grid-rows-[auto_minmax(0,1fr)]'
               : 'h-screen overflow-hidden lg:grid-rows-[auto_minmax(0,1fr)_auto]'
           }`}
         >
@@ -4852,7 +4799,7 @@ function HomePage({
           <div
             className={
               isPromptBuilderOpen || selectedMode === 'ask-ai'
-                ? 'min-h-0'
+                ? 'min-h-0 overflow-hidden'
                 : shouldShowGuidedSearch
                   ? 'min-h-0 overflow-hidden'
                   : 'grid min-h-0 overflow-hidden grid-rows-[auto_minmax(0,1fr)]'
@@ -4935,7 +4882,6 @@ function HomePage({
                     usageStatus={askAiUsageStatus}
                     isUsageLoading={isAskAiUsageLoading}
                     usageError={askAiUsageError}
-                    question={askAiQuestion}
                     answer={askAiAnswer}
                     sources={askAiSources}
                     isSubmitting={isAskAiSubmitting}
@@ -4944,7 +4890,6 @@ function HomePage({
                     onRetryUsage={handleRetryAskAiUsage}
                     onQuestionChange={setAskAiQuestion}
                     onSubmit={(questionOverride) => void handleAskAiSubmit(questionOverride)}
-                    onSwitchToPlaces={handleSwitchToPlaces}
                     onStartOver={handleStartOverAskAi}
                     onOpenPromptBuilder={(questionOverride) => openPromptBuilder('ask-ai', questionOverride)}
                     className="min-h-0"

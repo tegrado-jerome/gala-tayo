@@ -349,7 +349,8 @@ function shouldShowMobileBottomNav(pathname: string) {
 function shouldReserveMobileBottomNavSpace(pathname: string) {
   if (
     isPath(pathname, '/search') ||
-    isPath(pathname, '/ask-ai/maps')
+    isPath(pathname, '/ask-ai/maps') ||
+    isPath(pathname, '/ask-ai/text')
   ) {
     return false
   }
@@ -713,6 +714,7 @@ function SharedPlacePage({
         }}
         cameFromSearch={cameFromSearch}
         returnLabel={listingLabel}
+        searchHref={listingLink}
       />
     </>
   )
