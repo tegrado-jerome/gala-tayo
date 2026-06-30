@@ -3542,23 +3542,17 @@ function AskAiModePanel({
 
   return (
     <div className={`flex h-full flex-col bg-[var(--bg)] ${className}`}>
-      {/* Compact internal chat header */}
-      <div className="shrink-0 border-b border-[var(--line)] bg-[var(--panel)] px-4 py-2 sm:px-5">
-        <div className="mx-auto flex w-full max-w-[768px] items-center gap-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--primary-soft)]">
-            <AppIcon name="askAi" size={16} className="text-[var(--accent)]" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <h2 className="text-sm font-semibold leading-tight text-[var(--text)]">Ask AI</h2>
-            <p className="text-xs leading-tight text-[var(--muted)]">Gala planning assistant</p>
-          </div>
+      {/* Minimal top action area */}
+      <div className={`shrink-0 px-4 pt-3 sm:px-5 ${messages.length > 0 ? 'border-b border-[var(--line)] pb-3' : ''}`}>
+        <div className="mx-auto flex w-full max-w-[768px] justify-end">
           {messages.length > 0 && (
             <button
               type="button"
               onClick={onStartOver}
-              className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--line)] bg-[var(--bg-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--muted)] transition hover:border-[var(--line-strong)] hover:bg-[var(--panel)] hover:text-[var(--text)]"
+              aria-label="New chat"
+              className="inline-flex h-[36px] shrink-0 items-center justify-center gap-1.5 rounded-full px-2.5 text-xs font-medium text-[var(--muted)] transition hover:bg-[var(--bg-soft)] hover:text-[var(--text)] sm:px-3"
             >
-              <AppIcon name="newChat" className="h-3.5 w-3.5" />
+              <AppIcon name="newChat" size={16} strokeWidth={1.75} />
               New chat
             </button>
           )}
@@ -4663,7 +4657,7 @@ function HomePage({
         <GuestAuthPrompt variant="ask-ai" mode="modal" isOpen={promptLogin} onClose={() => setPromptLogin(false)} />
 
         <div className={`gala-page-background overflow-x-hidden lg:hidden ${selectedMode === 'ask-ai' ? 'flex h-[100dvh] flex-col overflow-hidden' : 'min-h-screen'}`}>
-          <AppHeader signInLabel="Mag-sign in" minimal />
+          {selectedMode !== 'ask-ai' && <AppHeader signInLabel="Mag-sign in" minimal />}
 
           <main className={`overflow-x-hidden ${selectedMode === 'ask-ai' ? 'flex flex-1 flex-col min-h-0 overflow-hidden' : 'pb-6'}`}>
             {isPromptBuilderOpen ? (
@@ -4769,7 +4763,7 @@ function HomePage({
               : 'h-screen overflow-hidden lg:grid-rows-[auto_minmax(0,1fr)_auto]'
           }`}
         >
-          <AppHeader minimal />
+          {selectedMode !== 'ask-ai' && <AppHeader minimal />}
 
           <div
             className={

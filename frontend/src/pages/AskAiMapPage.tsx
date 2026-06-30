@@ -61,9 +61,6 @@ type AskAiUsageSummary = {
 
 const DAILY_ASK_AI_LIMIT_MESSAGE = 'Daily Ask AI limit reached.'
 const ASK_AI_MAPS_REQUEST_TIMEOUT_MS = 45_000
-const caviteCenter: readonly [number, number] = [14.2814, 120.8685]
-const tagaytayCenter: readonly [number, number] = [14.1154, 120.9621]
-const manilaCenter: readonly [number, number] = [14.5995, 120.9842]
 
 function getEmptyReasonMessage(emptyReason: AskAiMapsResponse['emptyReason']) {
   if (emptyReason === 'PROVIDER_BUSY') {
@@ -181,52 +178,129 @@ type AskAiMapRouteCache = {
   focusedPlaceId: string | null
 }
 
+type NormalizedCoordinates = {
+  lat: number
+  lng: number
+  latitude: number
+  longitude: number
+}
+
+type AskAiMapNormalizedPlace = AskAiMapPlace & {
+  displayIndex: number
+  normalizedCoordinates: NormalizedCoordinates | null
+}
+
 function normalizeOptionalDetails(value: unknown): AskAiMapOptionalDetails | undefined {
   if (!value || typeof value !== 'object') {
     return undefined
   }
 
   const candidate = value as Partial<AskAiMapOptionalDetails>
+  const record = value as Record<string, unknown>
+  const normalizedCategoryText =
+    typeof candidate.categoryText === 'string' && candidate.categoryText.trim()
+      ? candidate.categoryText.trim()
+      : typeof record.category === 'string' && record.category.trim()
+        ? record.category.trim()
+        : undefined
+  const normalizedRatingText =
+    typeof candidate.ratingText === 'string' && candidate.ratingText.trim()
+      ? candidate.ratingText.trim()
+      : typeof record.rating === 'number'
+        ? record.rating.toFixed(1)
+        : typeof record.rating === 'string' && record.rating.trim()
+          ? record.rating.trim()
+          : undefined
+  const normalizedReviewCountText =
+    typeof candidate.reviewCountText === 'string' && candidate.reviewCountText.trim()
+      ? candidate.reviewCountText.trim()
+      : typeof record.reviewCount === 'number'
+        ? `${record.reviewCount.toLocaleString()} reviews`
+        : typeof record.reviewCount === 'string' && record.reviewCount.trim()
+          ? record.reviewCount.trim()
+          : undefined
+  const normalizedOpenStatusText =
+    typeof candidate.openStatusText === 'string' && candidate.openStatusText.trim()
+      ? candidate.openStatusText.trim()
+      : typeof record.openStatus === 'string' && record.openStatus.trim()
+        ? record.openStatus.trim()
+        : undefined
+  const normalizedAddressText =
+    typeof candidate.addressText === 'string' && candidate.addressText.trim()
+      ? candidate.addressText.trim()
+      : typeof record.address === 'string' && record.address.trim()
+        ? record.address.trim()
+        : typeof record.locationText === 'string' && record.locationText.trim()
+          ? record.locationText.trim()
+          : undefined
+  const normalizedHoursText =
+    typeof candidate.hoursText === 'string' && candidate.hoursText.trim()
+      ? candidate.hoursText.trim()
+      : typeof record.hours === 'string' && record.hours.trim()
+        ? record.hours.trim()
+        : undefined
+
   const details = {
-    ...(typeof candidate.categoryText === 'string' && candidate.categoryText.trim() ? { categoryText: candidate.categoryText.trim() } : {}),
-    ...(typeof candidate.ratingText === 'string' && candidate.ratingText.trim() ? { ratingText: candidate.ratingText.trim() } : {}),
-    ...(typeof candidate.reviewCountText === 'string' && candidate.reviewCountText.trim() ? { reviewCountText: candidate.reviewCountText.trim() } : {}),
-    ...(typeof candidate.openStatusText === 'string' && candidate.openStatusText.trim() ? { openStatusText: candidate.openStatusText.trim() } : {}),
-    ...(typeof candidate.addressText === 'string' && candidate.addressText.trim() ? { addressText: candidate.addressText.trim() } : {}),
-    ...(typeof candidate.hoursText === 'string' && candidate.hoursText.trim() ? { hoursText: candidate.hoursText.trim() } : {}),
+    ...(normalizedCategoryText ? { categoryText: normalizedCategoryText } : {}),
+    ...(normalizedRatingText ? { ratingText: normalizedRatingText } : {}),
+    ...(normalizedReviewCountText ? { reviewCountText: normalizedReviewCountText } : {}),
+    ...(normalizedOpenStatusText ? { openStatusText: normalizedOpenStatusText } : {}),
+    ...(normalizedAddressText ? { addressText: normalizedAddressText } : {}),
+    ...(normalizedHoursText ? { hoursText: normalizedHoursText } : {}),
   }
 
   return Object.keys(details).length > 0 ? details : undefined
 }
 
-function normalizeCoordinates(
-  value: unknown,
-  latitudeValue?: unknown,
-  longitudeValue?: unknown,
-) {
-  const coordinateCandidate =
-    value && typeof value === 'object'
-      ? value as { latitude?: unknown; longitude?: unknown; lat?: unknown; lng?: unknown }
-      : null
-  const latitude =
-    typeof coordinateCandidate?.latitude === 'number'
-      ? coordinateCandidate.latitude
-      : typeof coordinateCandidate?.lat === 'number'
-        ? coordinateCandidate.lat
-        : typeof latitudeValue === 'number'
-          ? latitudeValue
-          : null
-  const longitude =
-    typeof coordinateCandidate?.longitude === 'number'
-      ? coordinateCandidate.longitude
-      : typeof coordinateCandidate?.lng === 'number'
-        ? coordinateCandidate.lng
-        : typeof longitudeValue === 'number'
-          ? longitudeValue
-          : null
+function parseCoordinateNumber(value: unknown): number | null {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : null
+  }
+
+  if (typeof value === 'string') {
+    const trimmedValue = value.trim()
+
+    if (!trimmedValue) {
+      return null
+    }
+
+    const parsedValue = Number(trimmedValue)
+    return Number.isFinite(parsedValue) ? parsedValue : null
+  }
+
+  return null
+}
+
+function isValidCoordinatePair(lat: number, lng: number) {
+  return (
+    Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lng >= -180 &&
+    lng <= 180
+  )
+}
+
+function normalizeLatLngObject(latitudeValue: unknown, longitudeValue: unknown): NormalizedCoordinates | null {
+  const latitude = parseCoordinateNumber(latitudeValue)
+  const longitude = parseCoordinateNumber(longitudeValue)
 
   if (latitude === null || longitude === null) {
-    return undefined
+    return null
+  }
+
+  if (!isValidCoordinatePair(latitude, longitude)) {
+    if (isValidCoordinatePair(longitude, latitude)) {
+      return {
+        lat: longitude,
+        lng: latitude,
+        latitude: longitude,
+        longitude: latitude,
+      }
+    }
+
+    return null
   }
 
   return {
@@ -237,12 +311,102 @@ function normalizeCoordinates(
   }
 }
 
+function hasCoordinateLikeData(place: unknown) {
+  if (!place || typeof place !== 'object') {
+    return false
+  }
+
+  const candidate = place as Record<string, unknown>
+  return [
+    candidate.coordinates,
+    candidate.location,
+    candidate.coordinate,
+    candidate.coordinatesText,
+    candidate.lat,
+    candidate.lng,
+    candidate.latitude,
+    candidate.longitude,
+  ].some((value) => value !== undefined && value !== null)
+}
+
+function normalizePlaceCoordinates(place: unknown): NormalizedCoordinates | null {
+  if (!place || typeof place !== 'object') {
+    return null
+  }
+
+  const candidate = place as Record<string, unknown>
+  const coordinateObject =
+    candidate.coordinates && typeof candidate.coordinates === 'object'
+      ? candidate.coordinates as Record<string, unknown>
+      : null
+  const locationObject =
+    candidate.location && typeof candidate.location === 'object'
+      ? candidate.location as Record<string, unknown>
+      : null
+
+  const candidatePairs: Array<[unknown, unknown]> = [
+    [coordinateObject?.lat, coordinateObject?.lng],
+    [coordinateObject?.latitude, coordinateObject?.longitude],
+    [locationObject?.lat, locationObject?.lng],
+    [locationObject?.latitude, locationObject?.longitude],
+    [candidate.lat, candidate.lng],
+    [candidate.latitude, candidate.longitude],
+  ]
+
+  if (Array.isArray(candidate.coordinates)) {
+    candidatePairs.push([candidate.coordinates[0], candidate.coordinates[1]])
+  }
+
+  if (Array.isArray(candidate.location)) {
+    candidatePairs.push([candidate.location[0], candidate.location[1]])
+  }
+
+  for (const [latValue, lngValue] of candidatePairs) {
+    const normalized = normalizeLatLngObject(latValue, lngValue)
+
+    if (normalized) {
+      return normalized
+    }
+  }
+
+  const stringCandidates = [
+    candidate.coordinates,
+    candidate.location,
+    candidate.coordinate,
+    candidate.coordinatesText,
+  ]
+
+  for (const stringCandidate of stringCandidates) {
+    if (typeof stringCandidate !== 'string') {
+      continue
+    }
+
+    const match = stringCandidate.trim().match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/)
+
+    if (!match) {
+      continue
+    }
+
+    const normalized = normalizeLatLngObject(match[1], match[2])
+
+    if (normalized) {
+      return normalized
+    }
+  }
+
+  if (hasCoordinateLikeData(candidate)) {
+    console.warn('[AskAiMapPage] Unable to parse place coordinates:', candidate)
+  }
+
+  return null
+}
+
 function normalizePlaces(value: unknown): AskAiMapPlace[] {
   if (!Array.isArray(value)) {
     return []
   }
 
-  return value.flatMap((entry) => {
+  return value.flatMap((entry, index) => {
     if (!entry || typeof entry !== 'object') {
       return []
     }
@@ -252,19 +416,29 @@ function normalizePlaces(value: unknown): AskAiMapPlace[] {
       longitude?: unknown
       googleMapsUri?: unknown
     }
-
-    if (
-      typeof candidate.id !== 'string' ||
-      typeof candidate.name !== 'string' ||
-      typeof candidate.reason !== 'string'
-    ) {
-      return []
-    }
+    const fallbackName = 'Unknown place'
+    const normalizedName = typeof candidate.name === 'string' && candidate.name.trim() ? candidate.name.trim() : fallbackName
+    const normalizedId =
+      typeof candidate.id === 'string' && candidate.id.trim()
+        ? candidate.id.trim()
+        : `${normalizedName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'unknown-place'}-${index + 1}`
+    const normalizedCoordinates = normalizePlaceCoordinates(candidate)
+    const normalizedOptionalDetails = normalizeOptionalDetails(candidate.optionalDetails) ?? normalizeOptionalDetails(candidate)
+    const fallbackReason = 'Recommended based on your map search.'
+    const normalizedReason = [
+      candidate.whyThisFits,
+      candidate.reason,
+      candidate.queryReason,
+      candidate.summary,
+      candidate.description,
+      candidate.subtitle,
+    ].find((item): item is string => typeof item === 'string' && Boolean(item.trim()))?.trim() ?? fallbackReason
 
     return [{
-      id: candidate.id,
-      name: candidate.name,
-      reason: candidate.reason,
+      id: normalizedId,
+      name: normalizedName,
+      reason: normalizedReason,
+      whyThisFits: typeof candidate.whyThisFits === 'string' && candidate.whyThisFits.trim() ? candidate.whyThisFits.trim() : normalizedReason,
       googleMapsUrl:
         typeof candidate.googleMapsUrl === 'string'
           ? candidate.googleMapsUrl
@@ -275,12 +449,8 @@ function normalizePlaces(value: unknown): AskAiMapPlace[] {
       placeId: typeof candidate.placeId === 'string' ? candidate.placeId : undefined,
       sourceTitle: typeof candidate.sourceTitle === 'string' ? candidate.sourceTitle : undefined,
       sourceUri: typeof candidate.sourceUri === 'string' ? candidate.sourceUri : undefined,
-      coordinates: normalizeCoordinates(
-        candidate.coordinates,
-        candidate.latitude,
-        candidate.longitude,
-      ),
-      optionalDetails: normalizeOptionalDetails(candidate.optionalDetails) ?? normalizeOptionalDetails(candidate),
+      coordinates: normalizedCoordinates ?? undefined,
+      optionalDetails: normalizedOptionalDetails,
     }]
   })
 }
@@ -328,42 +498,12 @@ function normalizeDisplayText(value: string | undefined) {
 }
 
 function deriveHeaderAreaLabel(query: string) {
-  const normalizedQuery = query.trim().toLowerCase()
-
-  if (!normalizedQuery) {
-    return 'Live map-grounded picks'
-  }
-
-  if (normalizedQuery.includes('cavite')) {
-    return 'Live map-grounded picks · Cavite'
-  }
-
-  if (normalizedQuery.includes('tagaytay')) {
-    return 'Live map-grounded picks · Tagaytay'
-  }
-
-  if (normalizedQuery.includes('manila')) {
-    return 'Live map-grounded picks · Manila'
-  }
-
+  void query
   return 'Live map-grounded picks'
 }
 
 function deriveQueryMapCenter(query: string) {
-  const normalizedQuery = query.trim().toLowerCase()
-
-  if (normalizedQuery.includes('tagaytay')) {
-    return tagaytayCenter
-  }
-
-  if (normalizedQuery.includes('cavite')) {
-    return caviteCenter
-  }
-
-  if (normalizedQuery.includes('manila')) {
-    return manilaCenter
-  }
-
+  void query
   return metroManilaCenter
 }
 
@@ -390,77 +530,129 @@ function buildPlaceReasonFallback(place: AskAiMapPlace, query: string) {
   const category = normalizeDisplayText(place.optionalDetails?.categoryText)
   const address = normalizeDisplayText(place.optionalDetails?.addressText)
   const rating = normalizeDisplayText(place.optionalDetails?.ratingText)
+  const reviewCount = normalizeDisplayText(place.optionalDetails?.reviewCountText)
   const openStatus = normalizeDisplayText(place.optionalDetails?.openStatusText)
-  const normalizedQuery = query.trim().toLowerCase()
-  const normalizedCategory = category?.toLowerCase() ?? ''
-  const areaLabel = address?.split(',').map((part) => part.trim()).filter(Boolean).slice(-2).join(', ')
-  const isMall =
-    normalizedQuery.includes('mall') ||
-    normalizedQuery.includes('shopping') ||
-    normalizedCategory.includes('mall')
-  const isSamgyup =
-    normalizedQuery.includes('samgyup') ||
-    normalizedQuery.includes('samgyeop') ||
-    normalizedQuery.includes('korean bbq') ||
-    normalizedCategory.includes('korean')
-  const isCafe =
-    normalizedQuery.includes('cafe') ||
-    normalizedQuery.includes('coffee') ||
-    normalizedQuery.includes('study') ||
-    normalizedCategory.includes('cafe') ||
-    normalizedCategory.includes('coffee')
-  const isRestaurant =
-    normalizedQuery.includes('restaurant') ||
-    normalizedQuery.includes('food') ||
-    normalizedQuery.includes('kainan') ||
-    normalizedCategory.includes('restaurant') ||
-    normalizedCategory.includes('food')
+  const hours = normalizeDisplayText(place.optionalDetails?.hoursText)
+  const normalizedQuery = query.trim()
+  const queryContext = normalizedQuery || 'map search mo'
+  const typeContext = category ? ` as a ${category.toLowerCase()}` : ''
+  const addressParts = address
+    ?.split(',')
+    .map((part) => part.trim())
+    .filter(Boolean)
+  const areaLabel =
+    addressParts && addressParts.length > 1
+      ? addressParts.slice(-2).join(', ')
+      : address
+  const placeContext = [
+    areaLabel ? `nasa ${areaLabel}` : null,
+    category ? `matches the place type na hinahanap mo` : null,
+  ].filter(Boolean).join(' and ')
+  const proofPoints = [
+    rating ? `rating na ${rating}${reviewCount ? ` with ${reviewCount}` : ''}` : null,
+    openStatus ? openStatus.toLowerCase() : null,
+    hours ? `listed hours na ${hours}` : null,
+  ].filter(Boolean)
 
-  if (isMall) {
-    return areaLabel
-      ? `Good mall option for shopping, food, and indoor tambayan around ${areaLabel}. ${openStatus ?? 'Useful map details are shown when available.'}`
-      : 'Good mall option for shopping, food, and indoor tambayan around this area.'
-  }
+  const firstSentence = placeContext
+    ? `Pasok ito sa "${queryContext}"${typeContext} dahil ${placeContext}.`
+    : `Recommended ito based sa "${queryContext}" because it matches the place type and area you asked for.`
+  const secondSentence = proofPoints.length > 0
+    ? `Helpful din yung available map details like ${proofPoints.slice(0, 2).join(' and ')} para ma-check mo kung swak siya sa gala plan mo.`
+    : 'Check details like rating, hours, and address to confirm if swak siya sa gala plan mo.'
 
-  if (isSamgyup) {
-    return 'Good Korean BBQ option if you are craving samgyup nearby. Dine-in or map details are shown when available.'
-  }
+  return `${firstSentence} ${secondSentence}`
+}
 
-  if (isCafe) {
-    return 'Good cafe pick if you want a place to chill, study, or get coffee nearby. Helpful map details are shown when available.'
-  }
+function countSentences(value: string) {
+  return value.split(/[.!?]+/).map((part) => part.trim()).filter(Boolean).length
+}
 
-  if (isRestaurant) {
-    return 'Good food spot to consider based on cuisine, location, and available map details. Easy to compare with nearby options.'
-  }
+function isUsefulProvidedReason(reason: string) {
+  const normalizedReason = reason.trim()
+  const lowerReason = normalizedReason.toLowerCase()
+  const hasTaglishCue = /\b(ito|siya|hanap|gala|swak|pasok|bagay|kung|mo|nasa|dahil|para)\b/i.test(normalizedReason)
+  const hasGenericFiller =
+    isGenericReasonText(normalizedReason) ||
+    lowerReason.includes('perfect itong puntahan') ||
+    lowerReason.includes('perfect ito puntahan')
 
-  if (category && rating) {
-    return `Good ${category.toLowerCase()} option to check nearby. Google Maps shows ${rating}${openStatus ? ` and ${openStatus.toLowerCase()} info` : ''}.`
-  }
-
-  if (category && address) {
-    return `Good ${category.toLowerCase()} option to check around ${address}. Helpful map details are shown when available.`
-  }
-
-  if (address) {
-    return `Good nearby place to consider around ${address}. Helpful map details are shown when available.`
-  }
-
-  return 'Good nearby place to consider based on the grounded map result. Helpful details are shown when available.'
+  return normalizedReason.length >= 80 && countSentences(normalizedReason) >= 2 && hasTaglishCue && !hasGenericFiller
 }
 
 function getDisplayReason(place: AskAiMapPlace, query: string) {
-  const reason = normalizeDisplayText(place.reason)
+  const reason = normalizeDisplayText(place.whyThisFits) ?? normalizeDisplayText(place.reason)
 
-  if (!reason) {
-    return buildPlaceReasonFallback(place, query)
-  }
-
-  if (isGenericReasonText(reason)) {
+  if (!reason || !isUsefulProvidedReason(reason)) {
     return buildPlaceReasonFallback(place, query)
   }
 
   return rewritePlainReason(reason)
+}
+
+function getMiniReasonPreview(place: AskAiMapPlace, query: string) {
+  return `AI ${getDisplayReason(place, query)}`
+}
+
+function getDisplayName(place: AskAiMapPlace) {
+  return normalizeDisplayText(place.name) ?? 'Unknown place'
+}
+
+function getDisplayCategory(place: AskAiMapPlace) {
+  return normalizeDisplayText(place.optionalDetails?.categoryText) ?? normalizeDisplayText(place.category) ?? 'Place'
+}
+
+function getDisplayAddress(place: AskAiMapPlace) {
+  return normalizeDisplayText(place.optionalDetails?.addressText) ?? normalizeDisplayText(place.address) ?? 'Address not available'
+}
+
+function getDisplayHours(place: AskAiMapPlace) {
+  return normalizeDisplayText(place.optionalDetails?.hoursText) ?? 'Hours not available'
+}
+
+function getOpenStatusTone(place: AskAiMapPlace) {
+  const openStatusText = normalizeDisplayText(place.optionalDetails?.openStatusText)
+
+  if (!openStatusText) {
+    return {
+      label: 'Status unknown',
+      className: 'bg-slate-100 text-slate-600',
+      dotClassName: 'text-slate-400',
+      isUnknown: true,
+    }
+  }
+
+  if (/closed/i.test(openStatusText)) {
+    return {
+      label: openStatusText,
+      className: 'bg-rose-50 text-rose-700',
+      dotClassName: 'text-rose-500',
+      isUnknown: false,
+    }
+  }
+
+  return {
+    label: openStatusText,
+    className: 'bg-emerald-50 text-emerald-700',
+    dotClassName: 'text-emerald-500',
+    isUnknown: false,
+  }
+}
+
+function getMapsHref(place: AskAiMapPlace) {
+  const directUrl = normalizeDisplayText(place.googleMapsUrl) ?? normalizeDisplayText(place.googleMapsUri) ?? normalizeDisplayText(place.sourceUri)
+
+  if (directUrl) {
+    return directUrl
+  }
+
+  const placeId = normalizeDisplayText(place.placeId)
+
+  if (placeId) {
+    return `https://www.google.com/maps/search/?api=1&query_place_id=${encodeURIComponent(placeId)}`
+  }
+
+  return null
 }
 
 function getReviewBadgeText(place: AskAiMapPlace) {
@@ -510,21 +702,21 @@ function getCoordinateChipText(place: AskAiMapPlace) {
 
 function mapPlaceToMapCard(place: AskAiMapPlace): PlaceCardData {
   const displayReason = getDisplayReason(place, '')
-  const addressText = normalizeDisplayText(place.optionalDetails?.addressText)
+  const addressText = getDisplayAddress(place)
 
   return {
     id: place.id,
-    name: place.name,
-    category: place.optionalDetails?.categoryText ?? 'Google Maps pick',
+    name: getDisplayName(place),
+    category: getDisplayCategory(place),
     area: addressText ?? 'Map-grounded pick',
     address: addressText,
     city: addressText ?? 'Map-grounded area',
     localArea: addressText,
-    status: 'Unknown',
+    status: /closed/i.test(place.optionalDetails?.openStatusText ?? '') ? 'Closed' : normalizeDisplayText(place.optionalDetails?.openStatusText) ? 'Open' : 'Unknown',
     reason: displayReason,
     description: displayReason,
-    badge: place.optionalDetails?.categoryText ?? 'Google Maps',
-    googleMapsUrl: place.googleMapsUrl ?? place.sourceUri ?? null,
+    badge: getDisplayCategory(place),
+    googleMapsUrl: getMapsHref(place),
     coordinates: {
       lat: place.coordinates?.latitude ?? null,
       lng: place.coordinates?.longitude ?? null,
@@ -753,17 +945,31 @@ function AskAiMapPage() {
   const usesNearMe = selectedChipIds.includes('near-me')
   const usesOpenNow = selectedChipIds.includes('open-now')
   const requestQuery = useMemo(() => buildMapRequestQuery(query, selectedChipIds), [query, selectedChipIds])
-  const mapPlaces = useMemo(() => places.map(mapPlaceToMapCard), [places])
+  const normalizedPlaces = useMemo<AskAiMapNormalizedPlace[]>(
+    () =>
+      places.map((place, index) => {
+        const normalizedCoordinates = normalizePlaceCoordinates(place)
+
+        return {
+          ...place,
+          displayIndex: index + 1,
+          normalizedCoordinates,
+          coordinates: normalizedCoordinates ?? place.coordinates,
+        }
+      }),
+    [places]
+  )
+  const mapPlaces = useMemo(() => normalizedPlaces.map(mapPlaceToMapCard), [normalizedPlaces])
   const selectedPlace = useMemo(
-    () => places.find((place) => place.id === selectedPlaceId) ?? places[0] ?? null,
-    [places, selectedPlaceId]
+    () => normalizedPlaces.find((place) => place.id === selectedPlaceId) ?? normalizedPlaces[0] ?? null,
+    [normalizedPlaces, selectedPlaceId]
   )
   const headerSubtitle = useMemo(() => deriveHeaderAreaLabel(requestQuery || query), [query, requestQuery])
   const canSubmit = requestQuery.trim().length > 0 && !isSearching
   const mapCenter = userLocation
     ? [userLocation.latitude, userLocation.longitude] as const
     : deriveQueryMapCenter(requestQuery || query)
-  const mapLayoutKey = `${places.length}:${selectedPlaceId ?? 'none'}:${focusedPlaceId ?? 'none'}:${isPlaceDetailOpen ? 'modal-open' : 'modal-closed'}`
+  const mapLayoutKey = `${normalizedPlaces.length}:${selectedPlaceId ?? 'none'}:${focusedPlaceId ?? 'none'}:${isPlaceDetailOpen ? 'modal-open' : 'modal-closed'}`
   const shouldShowPermissionPrompt =
     permissionState === 'prompt' || permissionState === 'requesting' || permissionState === 'denied'
 
@@ -1159,13 +1365,13 @@ function AskAiMapPage() {
                 <div className="flex w-full snap-x snap-mandatory gap-3 overflow-x-auto overflow-y-hidden pb-4 pl-1 pr-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                   {isSearching ? <MinimalLoadingCard query={query} /> : null}
 
-                  {!isSearching ? places.map((place) => {
+                  {!isSearching ? normalizedPlaces.map((place) => {
                     const isSelected = place.id === selectedPlaceId
-                    const categoryText = normalizeDisplayText(place.optionalDetails?.categoryText)
+                    const categoryText = getDisplayCategory(place)
                     const reviewBadgeText = getReviewBadgeText(place)
                     const shortLocationText = getShortLocationText(place)
-                    const openStatusText = normalizeDisplayText(place.optionalDetails?.openStatusText)
-                    const isClosedStatus = Boolean(openStatusText && /closed/i.test(openStatusText))
+                    const displayReason = getMiniReasonPreview(place, requestQuery || query)
+                    const openStatusTone = getOpenStatusTone(place)
 
                     return (
                       <div
@@ -1178,10 +1384,10 @@ function AskAiMapPage() {
 
                           cardRefs.current.delete(place.id)
                         }}
-                        className={`flex h-[170px] w-[236px] snap-center shrink-0 flex-col rounded-[24px] border bg-white/95 text-left transition ${
+                        className={`flex h-[184px] w-[248px] snap-center shrink-0 flex-col rounded-[24px] border bg-[linear-gradient(180deg,rgba(255,255,255,0.97),rgba(248,250,252,0.95))] text-left backdrop-blur-md transition ${
                           isSelected
-                            ? 'scale-[1.01] border-[var(--accent)] p-3.5 shadow-[0_18px_38px_rgba(15,23,42,0.14)] ring-2 ring-[rgba(59,130,246,0.12)]'
-                            : 'border-white/70 p-3.5 shadow-[0_10px_24px_rgba(15,23,42,0.08)] opacity-95 hover:border-[rgba(20,35,58,0.14)] hover:opacity-100'
+                            ? 'scale-[1.01] border-[rgba(210,92,36,0.42)] p-3.5 shadow-[0_18px_38px_rgba(15,23,42,0.14)] ring-2 ring-[rgba(210,92,36,0.14)]'
+                            : 'border-white/70 p-3.5 shadow-[0_10px_24px_rgba(15,23,42,0.08)] opacity-95 hover:border-[rgba(210,92,36,0.18)] hover:opacity-100'
                         }`}
                         onMouseEnter={() => setFocusedPlaceId(place.id)}
                         onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
@@ -1189,45 +1395,53 @@ function AskAiMapPage() {
                         <button
                           type="button"
                           onClick={() => openPlaceDetails(place.id)}
-                          className="flex h-full text-left"
+                          className="flex h-full w-full min-w-0 overflow-hidden text-left"
                         >
-                          <div className="flex min-w-0 flex-1 flex-col">
-                            <div className="min-w-0">
-                              <h3 className="line-clamp-2 min-h-[2.5rem] text-[15px] font-black leading-5 tracking-[-0.02em] text-slate-950">
-                                {place.name}
-                              </h3>
-                              {categoryText ? (
+                          <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+                            <div className="flex min-w-0 items-start gap-3">
+                              <span className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl text-[13px] font-black ${
+                                isSelected
+                                  ? 'bg-[linear-gradient(180deg,#d25c24_0%,#bf4c16_100%)] text-white shadow-[0_10px_20px_rgba(210,92,36,0.24)]'
+                                  : 'bg-[rgba(210,92,36,0.12)] text-[#bf4c16]'
+                              }`}>
+                                {place.displayIndex}
+                              </span>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex min-w-0 items-start gap-2">
+                                  <h3 className="min-w-0 flex-1 truncate text-[15px] font-black leading-5 tracking-[-0.02em] text-slate-950">
+                                    {getDisplayName(place)}
+                                  </h3>
+                                  <span className="shrink-0 pt-0.5 text-slate-400">›</span>
+                                </div>
                                 <p className="mt-1 truncate text-[12px] font-medium text-slate-600">
                                   {categoryText}
                                 </p>
-                              ) : null}
+                              </div>
                             </div>
 
-                            <div className="mt-3 flex flex-1 flex-col gap-2 text-[12px]">
+                            <div className="mt-3 flex min-w-0 flex-1 flex-col gap-2 overflow-hidden text-[12px]">
                               {reviewBadgeText ? (
-                                <div className="flex items-center gap-2 text-amber-700">
+                                <div className="flex min-w-0 items-center gap-2 text-amber-700">
                                   <AppIcon name="reviews" className="h-3.5 w-3.5 shrink-0" />
-                                  <span className="truncate font-semibold">{reviewBadgeText}</span>
+                                  <span className="min-w-0 truncate font-semibold">{reviewBadgeText}</span>
                                 </div>
                               ) : null}
+                              <div className={`inline-flex max-w-full items-center self-start overflow-hidden rounded-full px-2.5 py-1 ${openStatusTone.className}`}>
+                                <span className={`mr-1.5 shrink-0 text-[10px] ${openStatusTone.dotClassName}`}>●</span>
+                                <span className="min-w-0 truncate">{openStatusTone.label}</span>
+                              </div>
                               {shortLocationText ? (
-                                <div className="flex items-center gap-2 text-slate-600">
+                                <div className="flex min-w-0 items-center gap-2 text-slate-600">
                                   <AppIcon name="place" className="h-3.5 w-3.5 shrink-0 text-slate-500" />
-                                  <span className="truncate font-medium">{shortLocationText}</span>
+                                  <span className="min-w-0 truncate font-medium">{shortLocationText}</span>
                                 </div>
                               ) : null}
-                              {openStatusText ? (
-                                <div
-                                  className={`inline-flex items-center self-start rounded-full px-2.5 py-1 ${
-                                    isClosedStatus
-                                      ? 'bg-rose-50 text-rose-700'
-                                      : 'bg-emerald-50 text-emerald-700'
-                                  }`}
-                                >
-                                  <span className="mr-1.5 text-[10px]">●</span>
-                                  {openStatusText}
+                              <div className="mt-auto min-w-0 overflow-hidden rounded-[16px] bg-[rgba(248,250,252,0.96)] px-3 py-2 text-slate-600">
+                                <div className="flex min-w-0 items-center gap-2">
+                                  <span className="shrink-0 text-[13px] font-black text-[#d25c24]">AI</span>
+                                  <span className="min-w-0 truncate font-medium">{displayReason.replace(/^AI\s+/, '')}</span>
                                 </div>
-                              ) : null}
+                              </div>
                             </div>
                           </div>
                         </button>
@@ -1272,40 +1486,34 @@ function AskAiMapPage() {
           className="absolute inset-0 bg-slate-950/36 backdrop-blur-[3px]"
           onClick={() => setIsPlaceDetailOpen(false)}
         />
+        <div className="absolute inset-x-0 bottom-0 flex items-end">
         <section
-          className="absolute inset-x-0 bottom-0 h-[60vh] max-h-[80vh] overflow-hidden rounded-t-[28px] bg-white shadow-[0_-18px_48px_rgba(15,23,42,0.22)]"
+          className="flex w-full max-h-[78dvh] flex-col overflow-hidden rounded-t-[24px] bg-white shadow-[0_-18px_48px_rgba(15,23,42,0.22)]"
           aria-modal="true"
           role="dialog"
-          aria-label={`${selectedPlace.name} details`}
+          aria-label={`${getDisplayName(selectedPlace)} details`}
         >
           <div className="flex justify-center px-4 pt-3">
             <span className="h-1.5 w-14 rounded-full bg-slate-200" />
           </div>
-          <div className="flex items-start justify-between gap-4 px-5 pb-4 pt-3">
+          <div className="flex shrink-0 items-start justify-between gap-4 px-5 pb-4 pt-3">
             <div className="min-w-0">
               <h2 className="text-[22px] font-black tracking-[-0.03em] text-slate-950">
-                {selectedPlace.name}
+                {getDisplayName(selectedPlace)}
               </h2>
-              {normalizeDisplayText(selectedPlace.optionalDetails?.categoryText) ? (
-                <p className="mt-2 text-sm font-semibold text-slate-600">
-                  {selectedPlace.optionalDetails?.categoryText}
-                </p>
-              ) : null}
+              <p className="mt-2 text-sm font-semibold text-slate-600">
+                {getDisplayCategory(selectedPlace)}
+              </p>
               {getReviewBadgeText(selectedPlace) ? (
                 <p className="mt-1.5 text-sm font-semibold text-slate-700">
                   <span className="text-amber-600">★</span> {getReviewBadgeText(selectedPlace)}
                 </p>
               ) : null}
-              {normalizeDisplayText(selectedPlace.optionalDetails?.openStatusText) ? (
-                <p className={`mt-1.5 inline-flex items-center rounded-full px-2.5 py-1 text-sm font-semibold ${
-                  /closed/i.test(selectedPlace.optionalDetails?.openStatusText ?? '')
-                    ? 'bg-rose-50 text-rose-700'
-                    : 'bg-emerald-50 text-emerald-700'
-                }`}>
-                  <span className="mr-1.5 text-[10px]">●</span>
-                  {selectedPlace.optionalDetails?.openStatusText}
-                </p>
-              ) : null}
+              <p className={`mt-2 inline-flex items-center rounded-full px-2.5 py-1 text-sm font-semibold ${getOpenStatusTone(selectedPlace).className}`}>
+                <span className={`mr-1.5 text-[10px] ${getOpenStatusTone(selectedPlace).dotClassName}`}>●</span>
+                {getOpenStatusTone(selectedPlace).label}
+                {getDisplayHours(selectedPlace) !== 'Hours not available' ? ` · ${getDisplayHours(selectedPlace)}` : ''}
+              </p>
             </div>
             <button
               type="button"
@@ -1317,46 +1525,42 @@ function AskAiMapPage() {
             </button>
           </div>
 
-          <div className="h-[calc(60vh-6.5rem)] max-h-[calc(80vh-6.5rem)] overflow-y-auto px-5 pb-[calc(env(safe-area-inset-bottom,0px)+1.25rem)]">
-            {normalizeDisplayText(selectedPlace.optionalDetails?.addressText) ? (
-              <div className="rounded-[22px] bg-slate-50 px-4 py-4">
-                <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">Address</p>
-                <p className="mt-2 text-sm leading-6 text-slate-700">
-                  {selectedPlace.optionalDetails?.addressText}
-                </p>
-              </div>
-            ) : null}
+          <div className="flex-1 overflow-y-auto px-5 pb-[calc(24px+env(safe-area-inset-bottom,0px))] [-webkit-overflow-scrolling:touch]">
+            <div className="rounded-[22px] border border-[rgba(210,92,36,0.12)] bg-[linear-gradient(180deg,rgba(255,248,243,0.96),rgba(255,255,255,0.94))] px-4 py-4">
+              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#bf4c16]">Why this fits</p>
+              <p className="mt-2 text-sm leading-6 text-slate-700">
+                {getDisplayReason(selectedPlace, requestQuery || query)}
+              </p>
+            </div>
 
-            {normalizeDisplayText(selectedPlace.optionalDetails?.hoursText) ? (
-              <div className="mt-3 rounded-[22px] bg-slate-50 px-4 py-4">
+            <div className="mt-3 rounded-[22px] bg-slate-50 px-4 py-4">
+              <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">Address</p>
+              <p className="mt-2 text-sm leading-6 text-slate-700">
+                {getDisplayAddress(selectedPlace)}
+              </p>
+            </div>
+
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <div className="rounded-[22px] bg-slate-50 px-4 py-4">
                 <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">Hours</p>
                 <p className="mt-2 text-sm leading-6 text-slate-700">
-                  {selectedPlace.optionalDetails?.hoursText}
+                  {getDisplayHours(selectedPlace)}
                 </p>
               </div>
-            ) : null}
 
-            {getCoordinateChipText(selectedPlace) ? (
-              <div className="mt-3 rounded-[22px] bg-slate-50 px-4 py-4">
-                <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">Coordinates</p>
-                <p className="mt-2 text-sm leading-6 text-slate-700">
-                  {getCoordinateChipText(selectedPlace)}
-                </p>
-              </div>
-            ) : null}
+              {getCoordinateChipText(selectedPlace) ? (
+                <div className="rounded-[22px] bg-slate-50 px-4 py-4">
+                  <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">Coords</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-700">
+                    {getCoordinateChipText(selectedPlace)}
+                  </p>
+                </div>
+              ) : null}
+            </div>
 
-            {getDisplayReason(selectedPlace, requestQuery || query) ? (
-              <div className="mt-3 rounded-[22px] border border-[rgba(20,35,58,0.08)] bg-[linear-gradient(180deg,rgba(248,250,252,0.96),rgba(241,245,249,0.88))] px-4 py-4">
-                <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">Why this fits</p>
-                <p className="mt-2 text-sm leading-6 text-slate-700">
-                  {getDisplayReason(selectedPlace, requestQuery || query)}
-                </p>
-              </div>
-            ) : null}
-
-            {(selectedPlace.googleMapsUrl ?? selectedPlace.sourceUri) ? (
+            {getMapsHref(selectedPlace) ? (
               <a
-                href={selectedPlace.googleMapsUrl ?? selectedPlace.sourceUri}
+                href={getMapsHref(selectedPlace) ?? undefined}
                 target="_blank"
                 rel="noreferrer"
                 className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800"
@@ -1367,6 +1571,7 @@ function AskAiMapPage() {
             ) : null}
           </div>
         </section>
+        </div>
       </div>,
       document.body
     ) : null}

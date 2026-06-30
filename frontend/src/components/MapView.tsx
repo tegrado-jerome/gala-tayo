@@ -25,26 +25,20 @@ type PlaceWithCoordinateAliases = PlaceCardData & {
   longitude?: number | string | null
   lat?: number | string | null
   lng?: number | string | null
-  coordinates?: {
-    lat?: number | string | null
-    lng?: number | string | null
-  } | null
+  coordinates?: unknown
+  location?: unknown
 }
 
 type ValidMapPlace = {
   place: PlaceCardData
   latLng: ValidLatLng
+  order: number
 }
 
 const metroManilaCenter: ValidLatLng = [14.5995, 120.9842]
 
-function getMarkerLabel(name: string): string {
-  const trimmedName = name.trim()
-  return trimmedName.length > 22 ? `${trimmedName.slice(0, 21).trimEnd()}...` : trimmedName
-}
-
-function renderMarkerPinIcon(placeName: string, isSelected: boolean, isFocused: boolean) {
-  const stackClasses = ['gt-map-pin__stack']
+function renderMarkerPinIcon(placeName: string, order: number, isSelected: boolean, isFocused: boolean) {
+  const stackClasses = ['gt-map-pin-badge']
 
   if (isSelected) {
     stackClasses.push('is-selected')
@@ -55,37 +49,30 @@ function renderMarkerPinIcon(placeName: string, isSelected: boolean, isFocused: 
   }
 
   return renderToStaticMarkup(
-    <span className={stackClasses.join(' ')}>
-      <span className="gt-map-pin__icon" aria-hidden="true">
-        <svg width="44" height="44" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-          <path
-            d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"
-            fill="#1e3a8a"
-            stroke="#ffffff"
-            strokeWidth="1.5"
-            strokeLinejoin="round"
-          />
-          <circle cx="12" cy="10" r="3.5" fill="#ffffff" />
-        </svg>
+    <span className={stackClasses.join(' ')} aria-hidden="true">
+      <span className="gt-map-pin-badge__label">{placeName}</span>
+      <span className="gt-map-pin-badge__body">
+        <span className="gt-map-pin-badge__number">{order}</span>
+        <span className="gt-map-pin-badge__star">*</span>
       </span>
-      <span className="gt-map-pin__label">{getMarkerLabel(placeName)}</span>
     </span>
   )
 }
 
 function createCapsuleMarkerIcon(
-  place: PlaceCardData,
+  placeName: string,
+  order: number,
   isSelected: boolean,
   isFocused: boolean,
 ) {
-  const pinIcon = renderMarkerPinIcon(place.name, isSelected, isFocused)
+  const pinIcon = renderMarkerPinIcon(placeName, order, isSelected, isFocused)
 
   return L.divIcon({
-    className: '',
+    className: 'gt-map-pin-badge-wrapper',
     html: pinIcon,
-    iconSize: [186, 44],
-    iconAnchor: [22, 41],
-    popupAnchor: [0, -40],
+    iconSize: [160, 72],
+    iconAnchor: [80, 68],
+    popupAnchor: [0, -68],
   })
 }
 
@@ -123,8 +110,12 @@ function normalizeLatLngValues(lat: unknown, lng: unknown): ValidLatLng | null {
   const parsedLat = parseCoordinate(lat)
   const parsedLng = parseCoordinate(lng)
 
-  if (parsedLat === null || parsedLng === null || !isValidLatLng(parsedLat, parsedLng)) {
+  if (parsedLat === null || parsedLng === null) {
     return null
+  }
+
+  if (!isValidLatLng(parsedLat, parsedLng)) {
+    return isValidLatLng(parsedLng, parsedLat) ? [parsedLng, parsedLat] : null
   }
 
   return [parsedLat, parsedLng]
@@ -149,6 +140,20 @@ function normalizeLatLng(value: unknown): ValidLatLng | null {
   return normalizeLatLngValues(value[0], value[1])
 }
 
+function normalizeCoordinateString(value: unknown): ValidLatLng | null {
+  if (typeof value !== 'string') {
+    return null
+  }
+
+  const match = value.trim().match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/)
+
+  if (!match) {
+    return null
+  }
+
+  return normalizeLatLngValues(match[1], match[2])
+}
+
 function normalizeCenter(center: LatLngInput): ValidLatLng {
   if (!Array.isArray(center) || center.length < 2) {
     return metroManilaCenter
@@ -159,14 +164,51 @@ function normalizeCenter(center: LatLngInput): ValidLatLng {
 
 function getPlaceLatLng(place: PlaceCardData): ValidLatLng | null {
   const placeWithAliases = place as PlaceWithCoordinateAliases
+  const coordinates =
+    placeWithAliases.coordinates && typeof placeWithAliases.coordinates === 'object' && !Array.isArray(placeWithAliases.coordinates)
+      ? placeWithAliases.coordinates as { latitude?: unknown; longitude?: unknown; lat?: unknown; lng?: unknown }
+      : null
+  const location =
+    placeWithAliases.location && typeof placeWithAliases.location === 'object' && !Array.isArray(placeWithAliases.location)
+      ? placeWithAliases.location as { latitude?: unknown; longitude?: unknown; lat?: unknown; lng?: unknown }
+      : null
+  const coordinateArray = Array.isArray(placeWithAliases.coordinates) ? placeWithAliases.coordinates : null
+  const locationArray = Array.isArray(placeWithAliases.location) ? placeWithAliases.location : null
+  const coordinateString =
+    normalizeCoordinateString(placeWithAliases.coordinates) ??
+    normalizeCoordinateString(placeWithAliases.location)
+
+  if (coordinateString) {
+    return coordinateString
+  }
+
+  const pairCandidates: Array<[unknown, unknown]> = [
+    [coordinates?.lat, coordinates?.lng],
+    [coordinates?.latitude, coordinates?.longitude],
+    [location?.lat, location?.lng],
+    [location?.latitude, location?.longitude],
+    [coordinateArray?.[0], coordinateArray?.[1]],
+    [locationArray?.[0], locationArray?.[1]],
+    [placeWithAliases.lat, placeWithAliases.lng],
+    [placeWithAliases.latitude, placeWithAliases.longitude],
+  ]
+
+  for (const [rawLat, rawLng] of pairCandidates) {
+    const normalized = normalizeLatLngValues(rawLat, rawLng)
+
+    if (normalized) {
+      return normalized
+    }
+  }
+
   const rawLat =
     placeWithAliases.latitude ??
     placeWithAliases.lat ??
-    placeWithAliases.coordinates?.lat
+    coordinates?.lat
   const rawLng =
     placeWithAliases.longitude ??
     placeWithAliases.lng ??
-    placeWithAliases.coordinates?.lng
+    coordinates?.lng
 
   return normalizeLatLngValues(rawLat, rawLng)
 }
@@ -183,6 +225,24 @@ function safeSetView(map: L.Map, center: unknown, zoom: number) {
     map.setView([safeCenter[0], safeCenter[1]], safeZoom, { animate: false })
   } catch {
     // Leaflet can throw if an existing map animation/state already contains NaN.
+  }
+}
+
+function safeFlyTo(map: L.Map, center: unknown, zoom: number) {
+  const safeCenter = normalizeLatLng(center) ?? metroManilaCenter
+  const safeZoom = Number.isFinite(zoom) ? zoom : 12
+
+  if (!isValidLatLngTuple(safeCenter)) {
+    return
+  }
+
+  try {
+    map.flyTo([safeCenter[0], safeCenter[1]], safeZoom, {
+      animate: true,
+      duration: 0.45,
+    })
+  } catch {
+    safeSetView(map, safeCenter, safeZoom)
   }
 }
 
@@ -255,7 +315,7 @@ function MarkerLayer({
 }) {
   return (
     <>
-      {validPlaces.map(({ place, latLng }) => {
+      {validPlaces.map(({ place, latLng, order }) => {
         const isSelected = selectedPlaceId === place.id
         const isFocused = focusedPlaceId === place.id && !isSelected
 
@@ -263,19 +323,12 @@ function MarkerLayer({
           <Marker
             key={place.id}
             position={latLng}
-            icon={createCapsuleMarkerIcon(place, isSelected, isFocused)}
+            icon={createCapsuleMarkerIcon(place.name, order, isSelected, isFocused)}
             riseOnHover
-            zIndexOffset={isSelected ? 900 : isFocused ? 720 : 240}
+            zIndexOffset={isSelected ? 1500 : isFocused ? 1200 : 900}
             eventHandlers={{
               click() {
-                if (isSelected) {
-                  onPlaceOpen?.(place.id)
-                  return
-                }
-
                 onPlaceSelect?.(place.id)
-              },
-              dblclick() {
                 onPlaceOpen?.(place.id)
               },
             }}
@@ -326,7 +379,7 @@ function FitMapToPlaces({
         return
       }
 
-      safeSetView(map, target, Math.max(safeDefaultZoom, 15))
+      safeFlyTo(map, target, Math.max(safeDefaultZoom, 15))
       return
     }
 
@@ -346,7 +399,7 @@ function FitMapToPlaces({
         return
       }
 
-      safeSetView(map, [target[0], target[1]], Math.max(safeDefaultZoom, 15))
+      safeFlyTo(map, [target[0], target[1]], Math.max(safeDefaultZoom, 15))
       return
     }
 
@@ -381,9 +434,10 @@ function MapView({
   const validPlaces = useMemo(
     () =>
       places
-        .map((place) => ({
+        .map((place, index) => ({
           place,
           latLng: getPlaceLatLng(place),
+          order: index + 1,
         }))
         .filter((item): item is ValidMapPlace => item.latLng !== null),
     [places]
