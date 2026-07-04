@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import type { Session, User } from '@supabase/supabase-js'
+import type { Session } from '@supabase/supabase-js'
 import UserMenu from './UserMenu'
 import { AppIcon } from './AppIcon'
 import { hasSessionUserChanged, shouldPropagateSessionChange, supabase } from '../supabase'
@@ -12,6 +12,7 @@ type AppHeaderProps = {
   onBack?: () => void
   mobileCompact?: boolean
   minimal?: boolean
+  fixed?: boolean
 }
 
 function LogoMark() {
@@ -35,27 +36,6 @@ function LogoMark() {
   )
 }
 
-function getDisplayName(user: User, profile: CurrentUserResponse['profile'] | null) {
-  return profile?.displayName ?? profile?.username ?? user.email ?? 'Account'
-}
-
-function getInitials(user: User, profile: CurrentUserResponse['profile'] | null) {
-  const label = getDisplayName(user, profile)
-  const initials = label
-    .split(/[.\s@_-]+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase()
-
-  return initials || 'GT'
-}
-
-function getAvatarUrl(profile: CurrentUserResponse['profile'] | null) {
-  return profile?.avatarUrl ?? profile?.providerAvatarUrl ?? ''
-}
-
 function navigateTo(path: string) {
   window.history.pushState(null, '', path)
   window.dispatchEvent(new PopStateEvent('popstate'))
@@ -65,14 +45,14 @@ function AppHeader({
   onBack,
   mobileCompact = false,
   minimal: _minimal = false,
+  fixed: _fixed = false,
 }: AppHeaderProps) {
   void _minimal
+  void _fixed
 
   const [session, setSession] = useState<Session | null>(null)
   const [currentProfile, setCurrentProfile] = useState<CurrentUserResponse['profile'] | null>(null)
   const [isSessionLoading, setIsSessionLoading] = useState(true)
-  const [failedAvatarUrl, setFailedAvatarUrl] = useState('')
-  const [isSigningOut, setIsSigningOut] = useState(false)
   const [profileRefreshKey, setProfileRefreshKey] = useState(0)
   const sessionRef = useRef<Session | null>(null)
 
@@ -147,23 +127,11 @@ function AppHeader({
   }, [profileRefreshKey, session?.user?.id])
 
   const user = session?.user ?? null
-  const displayName = user ? getDisplayName(user, currentProfile) : ''
-  const avatarUrl = user ? getAvatarUrl(currentProfile) : ''
-  const shouldShowAvatar = Boolean(user && avatarUrl && failedAvatarUrl !== avatarUrl)
   const desktopNavButtonClass =
-    'inline-flex items-center gap-2 rounded-xl px-3 py-2 text-[13px] font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
-
-  const handleSignOut = async () => {
-    try {
-      setIsSigningOut(true)
-      await supabase.auth.signOut({ scope: 'local' })
-    } finally {
-      setIsSigningOut(false)
-    }
-  }
+    'inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3 py-2 text-[13px] font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
 
   const desktopNav = user ? (
-    <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
+    <nav className="hidden min-w-0 items-center gap-1 md:flex" aria-label="Primary">
       <button type="button" onClick={() => navigateTo('/favorites')} className={desktopNavButtonClass}>
         <AppIcon name="favorites" size="ui" />
         Favorites
@@ -180,43 +148,14 @@ function AppHeader({
         <AppIcon name="profileSearch" size="ui" />
         Find Friends
       </button>
-      <button type="button" onClick={() => navigateTo('/profile')} className={desktopNavButtonClass}>
-        <AppIcon name="profile" size="ui" />
-        Profile
-      </button>
-      <button type="button" onClick={() => navigateTo('/settings')} className={desktopNavButtonClass}>
-        <AppIcon name="settings" size="ui" />
-        Settings
-      </button>
-      <button type="button" onClick={() => navigateTo('/feedback')} className={desktopNavButtonClass}>
-        <AppIcon name="comments" size="ui" />
-        Feedback
-      </button>
-      <button type="button" onClick={() => navigateTo('/reports')} className={desktopNavButtonClass}>
-        <AppIcon name="reports" size="ui" />
-        My Reports
-      </button>
-      <button type="button" onClick={() => navigateTo('/submit-place')} className={desktopNavButtonClass}>
-        <AppIcon name="place" size="ui" />
-        Submit Place
-      </button>
-      <button
-        type="button"
-        onClick={() => void handleSignOut()}
-        disabled={isSigningOut}
-        className="inline-flex items-center gap-2 rounded-xl border border-[var(--line)] bg-white px-3 py-2 text-[13px] font-medium text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)] disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        <AppIcon name="logOut" size="ui" />
-        {isSigningOut ? 'Logging out...' : 'Log out'}
-      </button>
     </nav>
   ) : null
 
   return (
-    <header className="relative z-[5000] w-full overflow-hidden border-b border-[var(--line)] bg-[var(--bg)]">
+    <header className={`${_fixed ? 'fixed left-0 right-0' : 'sticky'} top-0 z-[5000] w-full border-b border-[var(--line)] bg-[var(--bg)]`}>
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-[var(--line)]" />
       <div
-        className="relative mx-auto flex h-[68px] w-full max-w-[var(--gala-content-max)] items-center justify-between gap-4 px-[var(--gala-shell-padding)] lg:h-[82px]"
+        className="relative mx-auto flex h-[68px] w-full max-w-[var(--gala-content-max)] items-center justify-between gap-4 px-[var(--gala-shell-padding)] lg:h-[82px] lg:gap-6"
       >
         <div className="flex min-w-0 items-center gap-3.5">
           {mobileCompact && onBack ? (
@@ -235,28 +174,16 @@ function AppHeader({
           )}
         </div>
 
-        <div className="hidden min-w-0 flex-1 items-center justify-end gap-4 lg:flex">
+        <div className="hidden min-w-0 flex-1 items-center justify-end gap-3 md:flex xl:gap-4">
+          <div className="xl:hidden">
+            <UserMenu user={user} profile={currentProfile} />
+          </div>
           {desktopNav}
           {isSessionLoading ? (
-            <div className="h-10 w-[140px] rounded-xl bg-slate-100" aria-hidden="true" />
+            <div className="hidden h-10 w-[140px] rounded-xl bg-slate-100 xl:block" aria-hidden="true" />
           ) : user ? (
-            <div className="inline-flex h-11 max-w-[240px] items-center gap-2 rounded-xl border border-[var(--line)] bg-white px-2.5 pr-3 text-[var(--text)] transition hover:bg-slate-50">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[var(--primary-soft)] text-xs font-semibold text-[var(--accent)]">
-                {shouldShowAvatar ? (
-                  <img
-                    src={avatarUrl}
-                    alt=""
-                    className="h-full w-full object-cover"
-                    referrerPolicy="no-referrer"
-                    onError={() => setFailedAvatarUrl(avatarUrl)}
-                  />
-                ) : (
-                    getInitials(user, currentProfile)
-                )}
-              </span>
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-slate-900">{displayName}</p>
-              </div>
+            <div className="hidden xl:block">
+              <UserMenu user={user} profile={currentProfile} />
             </div>
           ) : (
             <button
@@ -269,7 +196,7 @@ function AppHeader({
           )}
         </div>
 
-        <div className="lg:hidden">
+        <div className="md:hidden">
           {isSessionLoading ? (
             <div className="h-10 w-10 rounded-xl bg-slate-100" aria-hidden="true" />
           ) : (

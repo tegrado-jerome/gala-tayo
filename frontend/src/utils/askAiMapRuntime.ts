@@ -15,16 +15,27 @@ export type AskAiMapPlace = {
   category?: string
   openStatus?: string
   address?: string
+  distanceKm?: number | null
+  openingHoursSummary?: string | null
+  lat?: number | null
+  lng?: number | null
+  latitude?: number | null
+  longitude?: number | null
+  hasPin?: boolean
+  coordinateConfidence?: 'high' | 'medium' | 'low' | 'none'
+  coordinateSource?: string
   locationText?: string
   queryReason?: string
   reason: string
   whyThisFits?: string
+  aiPreview?: string
   subtitle?: string
   description?: string
   summary?: string
   googleMapsUrl?: string
   googleMapsUri?: string
   placeId?: string
+  cid?: string
   reviewSnippets?: string[]
   sourceTitle?: string
   sourceUri?: string
@@ -33,7 +44,12 @@ export type AskAiMapPlace = {
     lng: number
     latitude: number
     longitude: number
-  }
+    source?: 'geoapify' | 'gemini_fallback' | 'maps_grounding' | 'places_metadata' | 'geocoded' | 'gemini_grounding_location_text'
+    trusted?: true
+    verified?: true
+    confidence?: 'high' | 'medium'
+  } | null
+  coordinateStatus?: 'geoapify_coordinate_fill' | 'gemini_coordinate_fallback' | 'missing_coordinates'
   optionalDetails?: AskAiMapOptionalDetails
 }
 
@@ -74,6 +90,11 @@ const emptyAskAiMapRuntimeState: AskAiMapRuntimeState = {
 }
 
 let askAiMapRuntimeState: AskAiMapRuntimeState = emptyAskAiMapRuntimeState
+let askAiMapAbortController: AbortController | null = null
+let askAiMapTimeoutId: number | null = null
+let askAiMapRequestCancelled = false
+let askAiMapRequestVersion = 0
+let latestAskAiMapRequestId = ''
 const listeners = new Set<AskAiMapRuntimeListener>()
 
 function emitAskAiMapRuntimeState() {
@@ -154,6 +175,57 @@ export function seedAskAiMapRuntimeState(state: Partial<AskAiMapRuntimeState>) {
   })
 }
 
+export function setAskAiMapAbortController(controller: AbortController, timeoutId: number) {
+  askAiMapRequestCancelled = false
+  askAiMapAbortController = controller
+  askAiMapTimeoutId = timeoutId
+}
+
+export function clearAskAiMapAbortController() {
+  askAiMapAbortController = null
+  askAiMapTimeoutId = null
+}
+
+export function wasAskAiMapRequestCancelled() {
+  return askAiMapRequestCancelled
+}
+
+export function getLatestAskAiMapRequestId() {
+  return latestAskAiMapRequestId
+}
+
+export function incrementAskAiMapRequestVersion() {
+  askAiMapRequestVersion += 1
+  latestAskAiMapRequestId = `${Date.now()}-${askAiMapRequestVersion}`
+  return { version: askAiMapRequestVersion, requestId: latestAskAiMapRequestId }
+}
+
+export function getAskAiMapRequestVersion() {
+  return askAiMapRequestVersion
+}
+
+export function cancelAskAiMapRequest() {
+  askAiMapRequestCancelled = true
+  askAiMapAbortController?.abort()
+  askAiMapAbortController = null
+  if (askAiMapTimeoutId !== null) {
+    window.clearTimeout(askAiMapTimeoutId)
+    askAiMapTimeoutId = null
+  }
+  askAiMapRequestVersion += 1
+  setAskAiMapRuntimeState({
+    ...askAiMapRuntimeState,
+    isSearching: false,
+  })
+}
+
 export function resetAskAiMapRuntimeState() {
+  askAiMapAbortController?.abort()
+  askAiMapAbortController = null
+  if (askAiMapTimeoutId !== null) {
+    window.clearTimeout(askAiMapTimeoutId)
+    askAiMapTimeoutId = null
+  }
+  askAiMapRequestVersion += 1
   setAskAiMapRuntimeState(emptyAskAiMapRuntimeState)
 }

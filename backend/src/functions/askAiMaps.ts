@@ -8,12 +8,11 @@ import { randomUUID } from "crypto";
 import {
   AskAiUsageResult,
   checkAskAiUsage,
-  consumeAskAiUsage,
 } from "../services/askAiUsageService";
 import {
   AskAiMapsServiceError,
   searchAskAiMaps,
-} from "../services/askAiMapsService";
+} from "../services/askAiMapsHybridService";
 import { validateJwt } from "../utils/auth";
 
 const ASK_AI_MAPS_COOLDOWN_MS = 10_000;
@@ -176,7 +175,9 @@ function handleAskAiMapsError(
             : error.code === "ASK_AI_MAPS_PARSE_ERROR" ||
                 error.code === "ASK_AI_MAPS_NORMALIZATION_ERROR"
               ? "Ask AI Map Finder could not process places right now. Please try again."
-              : friendlyProviderMessage(status),
+              : error.code === "ASK_AI_MAPS_NO_GROUNDING"
+                ? "Ask AI Map Finder ran, but Gemini did not return usable Google Maps-grounded places for that request."
+                : friendlyProviderMessage(status),
         requestId: meta.requestId,
         places: [],
         sources: [],
@@ -318,38 +319,6 @@ export async function askAiMapsRequest(
       checkAskAiUsage(user.id, "live_search"),
     ]);
 
-    if (!askAiUsageBefore.allowed) {
-      return {
-        status: 429,
-        headers: buildResponseHeaders(requestId),
-        jsonBody: {
-          ok: false,
-          error: "ASK_AI_MAPS_DAILY_LIMIT",
-          message: "Daily Ask AI limit reached.",
-          requestId,
-          places: [],
-          sources: [],
-          usage: { askAi: askAiUsageBefore, liveSearch: liveSearchUsageBefore },
-        },
-      };
-    }
-
-    if (!liveSearchUsageBefore.allowed) {
-      return {
-        status: 429,
-        headers: buildResponseHeaders(requestId),
-        jsonBody: {
-          ok: false,
-          error: "ASK_AI_MAPS_LIVE_SEARCH_LIMIT",
-          message: "Daily Ask AI live search limit reached.",
-          requestId,
-          places: [],
-          sources: [],
-          usage: { askAi: askAiUsageBefore, liveSearch: liveSearchUsageBefore },
-        },
-      };
-    }
-
     try {
       const result = await searchAskAiMaps({
         query,
@@ -361,11 +330,6 @@ export async function askAiMapsRequest(
         log: (message: string) => logAskAiMaps(context, `[Ask AI Maps][${requestId}] ${message}`),
       });
 
-      const [askAiUsageAfter, liveSearchUsageAfter] = await Promise.all([
-        consumeAskAiUsage(user.id, "ask_ai_total"),
-        consumeAskAiUsage(user.id, "live_search"),
-      ]);
-
       return {
         status: 200,
         headers: buildResponseHeaders(requestId),
@@ -373,16 +337,22 @@ export async function askAiMapsRequest(
           ok: true,
           requestId,
           mode: result.mode,
+          query: result.query,
+          searchArea: result.searchArea,
           answerText: result.answerText,
+          summary: result.summary,
+          resultMeta: result.resultMeta,
           places: result.places,
+          suggestedSearches: result.suggestedSearches,
           sources: result.sources,
           modelUsed: result.modelUsed ?? null,
+          explanationSource: result.explanationSource ?? null,
           ...(result.emptyReason ? { emptyReason: result.emptyReason } : {}),
           ...(result.message ? { message: result.message } : {}),
           latencyMs: result.latencyMs,
           usage: {
-            askAi: askAiUsageAfter,
-            liveSearch: liveSearchUsageAfter,
+            askAi: askAiUsageBefore,
+            liveSearch: liveSearchUsageBefore,
           },
         },
       };

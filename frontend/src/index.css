@@ -237,7 +237,14 @@ button:disabled {
   flex: 1 1 auto;
   flex-direction: column;
   gap: 20px;
-  padding: 20px var(--gala-shell-padding) 40px;
+  padding-top: var(--gala-app-main-padding-top, 20px);
+  padding-right: var(--gala-shell-padding);
+  padding-bottom: 40px;
+  padding-left: var(--gala-shell-padding);
+}
+
+.gala-app-main-fixed-header {
+  --gala-app-main-padding-top: 88px;
 }
 
 .gala-page-header {
@@ -772,43 +779,94 @@ button:disabled {
   }
 }
 
-@media (max-width: 640px) {
-  .account-settings-hero-meta {
-    display: flex;
-    width: 100%;
-    border-radius: 20px;
+@media (min-width: 768px) {
+  :root {
+    --gala-content-max: 1080px;
   }
 
-  .account-settings-hero-chip {
-    width: 100%;
-    justify-content: center;
+  .gala-card-list {
+    grid-template-columns: repeat(2, 1fr);
+    align-items: stretch;
+    gap: 16px;
   }
 
-  .account-settings-hero-divider {
-    display: none;
+  .gala-page-main {
+    padding-top: 24px;
+    padding-bottom: 48px;
+  }
+
+  .gala-app-main {
+    --gala-app-main-padding-top: 24px;
+    padding-bottom: 48px;
+  }
+
+  .gala-app-main-fixed-header {
+    --gala-app-main-padding-top: 88px;
+  }
+
+  .gala-section {
+    gap: 18px;
   }
 }
 
 @media (min-width: 1024px) {
+  :root {
+    --gala-content-max: 1180px;
+  }
+
   .gala-page-main {
     padding-top: 32px;
     padding-bottom: 56px;
   }
 
   .gala-app-main {
-    padding-top: 28px;
+    --gala-app-main-padding-top: 28px;
     padding-bottom: 56px;
+  }
+
+  .gala-app-main-fixed-header {
+    --gala-app-main-padding-top: 102px;
   }
 }
 
 @media (min-width: 1280px) {
+  :root {
+    --gala-content-max: 1280px;
+  }
+
   .gala-card-list {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
     align-items: stretch;
   }
 
   .gala-section {
-    gap: 18px;
+    gap: 20px;
+  }
+
+  .prompt-result-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+    gap: 24px;
+    align-items: start;
+  }
+
+  .prompt-result-layout > [aria-hidden="true"] {
+    display: none;
+  }
+
+  .prompt-preview-panel {
+    position: sticky;
+    top: 24px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .gala-page-main {
+    max-width: 1080px;
+  }
+
+  .gala-app-main {
+    max-width: 1080px;
   }
 }
 
@@ -827,6 +885,21 @@ button:disabled {
 
   :is(.gala-app-page, .gala-page-shell, .gala-page-background) > main.mx-auto {
     max-width: 100% !important;
+  }
+
+  .account-settings-hero-meta {
+    display: flex;
+    width: 100%;
+    border-radius: 20px;
+  }
+
+  .account-settings-hero-chip {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .account-settings-hero-divider {
+    display: none;
   }
 }
 
@@ -1324,6 +1397,13 @@ body.gala-menu-open #root {
 
 .galatayo-leaflet-map {
   background: #eef2f7;
+  contain: layout style paint;
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+}
+
+.galatayo-leaflet-map .leaflet-map-pane {
+  will-change: transform;
 }
 
 .galatayo-leaflet-map .leaflet-tile {
@@ -1332,6 +1412,11 @@ body.gala-menu-open #root {
 
 .galatayo-leaflet-map .leaflet-tile-pane {
   opacity: 1;
+  will-change: transform;
+}
+
+.galatayo-leaflet-map .leaflet-marker-pane {
+  will-change: transform;
 }
 
 .galatayo-leaflet-map .leaflet-pane,
@@ -1524,30 +1609,29 @@ body.gala-menu-open #root {
   border: 0;
 }
 
+.gt-map-moving .gt-map-pin-badge,
+.gt-map-dragging .gt-map-pin-badge {
+  transition: none;
+}
+
+.gt-map-moving .leaflet-control-zoom,
+.gt-map-moving .leaflet-control-attribution,
+.gt-map-dragging .leaflet-control-zoom,
+.gt-map-dragging .leaflet-control-attribution {
+  backdrop-filter: none;
+}
+
 .gt-map-pin-badge {
   position: relative;
   display: inline-flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
-  width: 160px;
-  height: 72px;
+  justify-content: flex-start;
+  width: auto;
+  height: auto;
   pointer-events: auto;
-  transform-origin: center bottom;
+  transform-origin: 17px bottom;
   transition: transform 180ms ease, filter 180ms ease;
-}
-
-.gt-map-pin-badge::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: 1px;
-  width: 12px;
-  height: 12px;
-  background: linear-gradient(180deg, #d25c24 0%, #bf4c16 100%);
-  clip-path: polygon(50% 100%, 0 0, 100% 0);
-  transform: translateX(-50%);
-  box-shadow: 0 8px 14px rgba(191, 76, 22, 0.28);
 }
 
 .gt-map-pin-badge__label {
@@ -1559,7 +1643,7 @@ body.gala-menu-open #root {
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.92);
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.14);
-  color: #1f2937;
+  color: #172a5a;
   font-size: 11px;
   font-weight: 800;
   line-height: 1;
@@ -1578,12 +1662,25 @@ body.gala-menu-open #root {
   height: 34px;
   border: 2px solid rgba(255, 255, 255, 0.96);
   border-radius: 16px;
-  background: linear-gradient(180deg, #d25c24 0%, #bf4c16 100%);
+  background: linear-gradient(180deg, #172a5a 0%, #0f1f46 100%);
   color: #ffffff;
-  margin-top: 4px;
+  margin-right: 6px;
   box-shadow:
-    0 14px 24px rgba(191, 76, 22, 0.28),
+    0 14px 24px rgba(23, 42, 90, 0.28),
     0 4px 10px rgba(15, 23, 42, 0.14);
+}
+
+.gt-map-pin-badge__body::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -10px;
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(180deg, #172a5a 0%, #0f1f46 100%);
+  clip-path: polygon(50% 100%, 0 0, 100% 0);
+  transform: translateX(-50%);
+  box-shadow: 0 8px 14px rgba(23, 42, 90, 0.28);
 }
 
 .gt-map-pin-badge__number {
@@ -1591,13 +1688,6 @@ body.gala-menu-open #root {
   font-weight: 900;
   line-height: 1;
   letter-spacing: -0.02em;
-}
-
-.gt-map-pin-badge__star {
-  margin-top: 1px;
-  font-size: 9px;
-  line-height: 1;
-  opacity: 0.92;
 }
 
 .gt-map-pin-badge:hover,
@@ -1609,15 +1699,15 @@ body.gala-menu-open #root {
 .gt-map-pin-badge.is-selected .gt-map-pin-badge__body,
 .gt-map-pin-badge.is-focused .gt-map-pin-badge__body {
   box-shadow:
-    0 18px 28px rgba(191, 76, 22, 0.3),
-    0 0 0 6px rgba(210, 92, 36, 0.14),
+    0 18px 28px rgba(23, 42, 90, 0.3),
+    0 0 0 6px rgba(23, 42, 90, 0.14),
     0 4px 10px rgba(15, 23, 42, 0.14);
 }
 
 .gt-map-pin-badge.is-selected .gt-map-pin-badge__label,
 .gt-map-pin-badge.is-focused .gt-map-pin-badge__label {
   background: rgba(255, 255, 255, 0.98);
-  color: #111827;
+  color: #172a5a;
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
 }
 
@@ -1657,5 +1747,56 @@ body.gala-menu-open #root {
   .prompt-hero {
     padding-top: 24px;
     padding-bottom: 20px;
+  }
+}
+
+@keyframes gala-ai-shine-sweep {
+  0% {
+    transform: translateX(-120%) skewX(-18deg);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(220%) skewX(-18deg);
+    opacity: 0;
+  }
+}
+
+@keyframes gala-ai-border-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes gala-ai-sparkle-twinkle {
+  0%, 100% {
+    opacity: 0.25;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes gala-ai-icon-shine {
+  0%, 100% {
+    transform: translateX(-160%) skewX(-20deg);
+    opacity: 0;
+  }
+  40%, 60% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateX(160%) skewX(-20deg);
+    opacity: 0;
   }
 }

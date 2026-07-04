@@ -300,7 +300,6 @@ function HomeLandingPage() {
   const [trendingPlaces, setTrendingPlaces] = useState<PlaceCardData[]>([])
   const [isTrendingLoading, setIsTrendingLoading] = useState(true)
   const [trendingError, setTrendingError] = useState<string | null>(null)
-  const [desktopTrendingPage, setDesktopTrendingPage] = useState(0)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -362,11 +361,6 @@ function HomeLandingPage() {
     return () => controller.abort()
   }, [])
 
-  useEffect(() => {
-    const maxPage = Math.max(Math.ceil(trendingPlaces.length / 5) - 1, 0)
-    setDesktopTrendingPage((currentPage) => Math.min(currentPage, maxPage))
-  }, [trendingPlaces])
-
   const handleSearchAction = () => {
     navigateToPath('/search')
   }
@@ -375,107 +369,92 @@ function HomeLandingPage() {
     navigateToPath('/ask-ai/chatbot')
   }
 
-  const desktopTrendingPageCount = Math.ceil(trendingPlaces.length / 5)
-  const showDesktopTrendingPager = desktopTrendingPageCount > 1
-  const visibleDesktopTrendingPlaces = trendingPlaces.slice(desktopTrendingPage * 5, desktopTrendingPage * 5 + 5)
-
   return (
     <div className="gala-page-background min-h-screen text-[#071633]">
       <AppHeader minimal />
 
-      <main className="mx-auto w-full px-4 pb-6 pt-4 sm:px-6 sm:pb-8 sm:pt-5 md:px-8 lg:w-[calc(100%-64px)] lg:px-0 lg:pb-16 lg:pt-8 xl:w-[calc(100%-96px)] xl:px-0 2xl:w-[min(1680px,calc(100%-128px))]">
-        <section className="relative px-3 pt-3 sm:px-6 sm:pt-5 lg:px-0 lg:pt-6">
-          <div className="relative z-10 flex flex-col items-center text-center">
-            <p className="mb-6 flex items-center justify-center gap-2 text-[17px] font-semibold leading-snug text-[#071633] sm:mb-8 sm:gap-2.5 sm:text-[19px] lg:mb-10 lg:text-[21px]">
-              <AppIcon name="compass" className="h-4 w-4 text-[var(--accent)] sm:h-[18px] sm:w-[18px]" strokeWidth={2} />
-              <span>
-                Saan tayo <span className="font-semibold text-[var(--accent)]">gagala</span> today?
-              </span>
-            </p>
-
-            <img
-              src={homeChibi}
-              alt="GalaTayo mascot"
-              className="relative h-[218px] w-auto scale-[1.18] bg-transparent object-contain object-center sm:h-[242px] sm:scale-[1.2] lg:h-[280px] lg:scale-[1.22] xl:h-[320px]"
-              loading="eager"
-            />
-
-            <div className="mt-5 flex w-full flex-row flex-wrap items-center justify-center gap-3 sm:mt-6 sm:gap-3.5">
-              <button
-                type="button"
-                onClick={handleAskAiAction}
-                className="group inline-flex h-12 items-center gap-3 rounded-full bg-[var(--accent)] px-6 text-[15px] font-semibold text-white shadow-[0_6px_18px_rgba(30,58,138,0.22)] transition hover:-translate-y-[1px] hover:bg-[var(--accent-deep)] hover:shadow-[0_10px_22px_rgba(30,58,138,0.28)] active:scale-[0.98] sm:h-[56px] sm:px-7 sm:text-[16px]"
-              >
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-[var(--accent-deep)] transition group-hover:bg-[var(--accent-wash)] sm:h-8 sm:w-8">
-                  <AppIcon name="askAi" className="h-4 w-4 sm:h-[18px] sm:w-[18px]" strokeWidth={2.25} />
+      <main className="mx-auto w-full px-4 pb-6 pt-4 sm:px-6 sm:pb-8 sm:pt-5 md:max-w-[820px] md:px-6 md:pb-5 md:pt-4 lg:max-w-[1100px] lg:px-8 lg:pb-6 lg:pt-4">
+        <section className="relative px-3 pt-3 sm:px-6 sm:pt-5 md:px-0 md:pt-1 lg:px-0 lg:pt-2">
+          <div className="relative z-10 flex flex-col items-center text-center md:mx-auto md:max-w-[820px] lg:max-w-none lg:grid lg:grid-cols-[minmax(0,1.02fr)_minmax(280px,0.98fr)] lg:items-center lg:gap-6 lg:text-left">
+            <div className="flex flex-col items-center lg:items-start">
+              <p className="mb-6 flex items-center justify-center gap-2 text-[17px] font-semibold leading-snug text-[#071633] sm:mb-8 sm:gap-2.5 sm:text-[19px] md:mb-4 md:text-[18px] lg:mb-5 lg:justify-start lg:text-[20px]">
+                <AppIcon name="compass" className="h-4 w-4 text-[var(--accent)] sm:h-[18px] sm:w-[18px]" strokeWidth={2} />
+                <span>
+                  Saan tayo <span className="font-semibold text-[var(--accent)]">gagala</span> today?
                 </span>
-                Ask AI
-              </button>
-              <button
-                type="button"
-                onClick={handleSearchAction}
-                className="group inline-flex h-12 items-center gap-3 rounded-full border border-slate-200 bg-white px-6 text-[15px] font-semibold text-[var(--accent)] shadow-[0_4px_14px_rgba(15,23,42,0.04)] transition hover:-translate-y-[1px] hover:border-[var(--accent)] hover:bg-[var(--accent-wash)] hover:shadow-[0_8px_18px_rgba(30,58,138,0.10)] active:scale-[0.98] sm:h-[56px] sm:px-7 sm:text-[16px]"
-              >
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--accent-wash)] text-[var(--accent)] transition group-hover:bg-[var(--accent-soft)] sm:h-8 sm:w-8">
-                  <AppIcon name="search" className="h-4 w-4 sm:h-[18px] sm:w-[18px]" />
-                </span>
-                Search Places
-              </button>
+              </p>
+
+              <div className="flex justify-center lg:hidden">
+                <img
+                  src={homeChibi}
+                  alt="GalaTayo mascot"
+                  className="relative h-[218px] w-auto scale-[1.18] bg-transparent object-contain object-center sm:h-[242px] sm:scale-[1.2] md:h-[220px] md:scale-[1.08]"
+                  loading="eager"
+                />
+              </div>
+
+              <div className="mt-5 flex w-full flex-row flex-wrap items-center justify-center gap-3 sm:mt-6 sm:gap-3.5 md:mt-4 md:gap-3 lg:mt-5 lg:justify-start">
+                <button
+                  type="button"
+                  onClick={handleSearchAction}
+                  className="group inline-flex h-12 items-center gap-3 rounded-full border border-slate-200 bg-white px-6 text-[15px] font-semibold text-[var(--accent)] shadow-[0_4px_14px_rgba(15,23,42,0.04)] transition hover:-translate-y-[1px] hover:border-[var(--accent)] hover:bg-[var(--accent-wash)] hover:shadow-[0_8px_18px_rgba(30,58,138,0.10)] active:scale-[0.98] sm:h-[56px] sm:px-7 sm:text-[16px] md:h-[52px] md:px-6 md:text-[15px] lg:h-[52px] lg:px-6 lg:text-[15px]"
+                >
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--accent-wash)] text-[var(--accent)] transition group-hover:bg-[var(--accent-soft)] sm:h-8 sm:w-8">
+                    <AppIcon name="search" className="h-4 w-4 sm:h-[18px] sm:w-[18px]" />
+                  </span>
+                  Search
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAskAiAction}
+                  className="group inline-flex h-12 items-center gap-3 rounded-full bg-[var(--accent)] px-6 text-[15px] font-semibold text-white shadow-[0_6px_18px_rgba(30,58,138,0.22)] transition hover:-translate-y-[1px] hover:bg-[var(--accent-deep)] hover:shadow-[0_10px_22px_rgba(30,58,138,0.28)] active:scale-[0.98] sm:h-[56px] sm:px-7 sm:text-[16px] md:h-[52px] md:px-6 md:text-[15px] lg:h-[52px] lg:px-6 lg:text-[15px]"
+                >
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-[var(--accent-deep)] transition group-hover:bg-[var(--accent-wash)] sm:h-8 sm:w-8">
+                    <AppIcon name="askAi" className="h-4 w-4 sm:h-[18px] sm:w-[18px]" strokeWidth={2.25} />
+                  </span>
+                  Ask AI
+                </button>
+              </div>
+            </div>
+
+            <div className="hidden lg:flex lg:justify-end">
+              <img
+                src={homeChibi}
+                alt="GalaTayo mascot"
+                className="relative h-[256px] w-auto max-h-[320px] scale-[1.04] bg-transparent object-contain object-center"
+                loading="eager"
+              />
             </div>
           </div>
         </section>
 
-        <div className="mt-10 space-y-8 sm:mt-12 lg:mt-16 lg:space-y-10 xl:space-y-12">
+        <div className="mt-8 space-y-8 sm:mt-10 md:mt-5 md:grid md:grid-cols-[minmax(0,1.1fr)_minmax(280px,320px)] md:gap-4 md:space-y-0 lg:mt-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(300px,340px)] lg:gap-6">
           <section>
-            <div className="lg:w-[1544px] xl:w-[1584px]">
-              <div className="flex items-end justify-between gap-3">
+            <div className="flex items-end justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">Trending Now</p>
-                <h2 className="mt-1 text-2xl font-semibold tracking-[-0.04em] text-slate-950">Cute spots people are eyeing lately</h2>
+                <h2 className="mt-1 text-2xl font-semibold tracking-[-0.04em] text-slate-950 md:text-[1.15rem] lg:text-[1.35rem]">
+                  Cute spots people are eyeing lately
+                </h2>
               </div>
-              {showDesktopTrendingPager ? (
-                <div className="hidden rounded-full border border-[#D6E8FF] bg-white/88 p-1 lg:inline-flex lg:items-center lg:gap-1">
-                  {Array.from({ length: desktopTrendingPageCount }).map((_, pageIndex) => {
-                    const pageStart = pageIndex * 5 + 1
-                    const pageEnd = Math.min((pageIndex + 1) * 5, trendingPlaces.length)
-                    const isActive = desktopTrendingPage === pageIndex
-
-                    return (
-                      <button
-                        key={pageIndex}
-                        type="button"
-                        onClick={() => setDesktopTrendingPage(pageIndex)}
-                        aria-pressed={isActive}
-                        className={`inline-flex min-h-[36px] items-center justify-center rounded-full px-4 text-[12px] font-semibold transition ${
-                          isActive
-                            ? 'bg-[#1F66DC] text-white'
-                            : 'text-[#5F7698] hover:bg-[#EEF6FF] hover:text-[#1F66DC]'
-                        }`}
-                      >
-                        {pageStart}-{pageEnd}
-                      </button>
-                    )
-                  })}
-                </div>
-              ) : null}
-            </div>
             </div>
 
             {isTrendingLoading ? (
               <>
-                <div className="mt-5 flex snap-x gap-3 overflow-x-auto pb-2 pr-3 md:grid md:grid-cols-2 md:gap-5 md:overflow-visible md:pr-0 lg:hidden">
+                <div className="mt-5 flex snap-x gap-3 overflow-x-auto pb-2 pr-3 md:hidden">
                   {Array.from({ length: 3 }).map((_, index) => (
                     <div
                       key={index}
-                      className="min-h-[360px] w-[90vw] max-w-[368px] shrink-0 rounded-[20px] border border-slate-200/90 bg-white/90 md:w-auto md:max-w-none"
+                      className="min-h-[360px] w-[90vw] max-w-[368px] shrink-0 rounded-[20px] border border-slate-200/90 bg-white/90"
                     />
                   ))}
                 </div>
-                <div className="mt-5 hidden lg:grid lg:w-[1544px] lg:grid-cols-[repeat(5,296px)] lg:gap-4 xl:w-[1584px] xl:grid-cols-[repeat(5,304px)]">
-                  {Array.from({ length: 5 }).map((_, index) => (
+
+                <div className="mt-5 hidden md:grid md:grid-cols-2 md:gap-3 lg:grid-cols-2 lg:gap-4">
+                  {Array.from({ length: 2 }).map((_, index) => (
                     <div
                       key={index}
-                      className="h-[324px] w-full max-w-[296px] rounded-[20px] border border-slate-200/90 bg-white/90 xl:max-w-[304px]"
+                      className="flex h-full min-h-[252px] rounded-[20px] border border-slate-200/90 bg-white/90"
                     />
                   ))}
                 </div>
@@ -484,7 +463,7 @@ function HomeLandingPage() {
               <p className="mt-5 text-sm text-red-600">{trendingError}</p>
             ) : (
               <>
-                <div className="mt-5 flex snap-x gap-3 overflow-x-auto pb-2 pr-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-2 md:items-stretch md:gap-5 md:overflow-visible md:pb-0 md:pr-0 lg:hidden">
+                <div className="mt-5 flex snap-x gap-3 overflow-x-auto pb-2 pr-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:hidden">
                   {trendingPlaces.map((place) => (
                     <div key={place.id} className="flex">
                       <TrendingCard place={place} />
@@ -492,9 +471,9 @@ function HomeLandingPage() {
                   ))}
                 </div>
 
-                <div className="mt-5 hidden lg:grid lg:w-[1544px] lg:grid-cols-[repeat(5,296px)] lg:items-stretch lg:gap-4 xl:w-[1584px] xl:grid-cols-[repeat(5,304px)]">
-                  {visibleDesktopTrendingPlaces.map((place) => (
-                    <div key={place.id} className="flex w-full max-w-[296px] xl:max-w-[304px]">
+                <div className="mt-5 hidden md:grid md:grid-cols-2 md:gap-3 lg:grid-cols-2 lg:gap-4">
+                  {trendingPlaces.map((place) => (
+                    <div key={place.id} className="flex w-full">
                       <TrendingCard place={place} />
                     </div>
                   ))}
@@ -507,25 +486,25 @@ function HomeLandingPage() {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">Search places</p>
-                <h2 className="mt-1 text-xl font-semibold tracking-[-0.04em] text-slate-950 sm:text-2xl">Keep your gala flow moving</h2>
+                <h2 className="mt-1 text-xl font-semibold tracking-[-0.04em] text-slate-950 sm:text-2xl md:text-[1.15rem] lg:text-[1.35rem]">
+                  Keep your gala flow moving
+                </h2>
               </div>
             </div>
 
-            <div className="mt-5 grid grid-cols-1 gap-3 lg:grid-cols-[repeat(2,minmax(320px,360px))] lg:gap-3 lg:justify-start xl:gap-4">
+            <div className="mt-5 grid grid-cols-1 gap-3 md:gap-2.5 lg:gap-3">
               {compactTools.map((tool) => (
                 <button
                   key={tool.title}
                   type="button"
                   onClick={() => navigateToPath(tool.href)}
-                  className="group relative flex w-full items-center gap-3.5 rounded-[20px] border border-slate-200/80 bg-[linear-gradient(135deg,#ffffff_0%,rgba(30,58,138,0.018)_100%)] px-4 py-3.5 text-left shadow-[0_2px_12px_rgba(15,23,42,0.025)] transition-all duration-200 hover:-translate-y-[1px] hover:border-slate-300/90 hover:bg-[linear-gradient(135deg,#ffffff_0%,rgba(30,58,138,0.035)_100%)] hover:shadow-[0_8px_20px_rgba(30,58,138,0.06)] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[var(--accent-soft)] focus-visible:ring-offset-1 active:scale-[0.985] active:bg-[var(--accent-wash)]"
+                  className="group relative flex w-full items-center gap-3.5 rounded-[20px] border border-slate-200/80 bg-[linear-gradient(135deg,#ffffff_0%,rgba(30,58,138,0.018)_100%)] px-4 py-3.5 text-left shadow-[0_2px_12px_rgba(15,23,42,0.025)] transition-all duration-200 hover:-translate-y-[1px] hover:border-slate-300/90 hover:bg-[linear-gradient(135deg,#ffffff_0%,rgba(30,58,138,0.035)_100%)] hover:shadow-[0_8px_20px_rgba(30,58,138,0.06)] focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-[var(--accent-soft)] focus-visible:ring-offset-1 active:scale-[0.985] active:bg-[var(--accent-wash)] md:py-3 md:px-3.5 lg:py-3 lg:px-4"
                 >
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--accent-wash)] text-[var(--accent)] transition-all duration-200 group-hover:scale-105 group-hover:bg-[var(--accent-soft)] group-hover:text-[var(--accent-deep)] group-hover:shadow-[0_0_0_6px_rgba(30,58,138,0.04)] lg:h-[42px] lg:w-[42px]">
                     <AppIcon name={tool.icon} className="h-[18px] w-[18px]" strokeWidth={1.8} />
                   </span>
                   <div className="flex min-w-0 flex-1 flex-col">
-                    <p className="text-[14px] font-semibold leading-snug text-slate-900">
-                      {tool.title}
-                    </p>
+                    <p className="text-[14px] font-semibold leading-snug text-slate-900">{tool.title}</p>
                     <p className="mt-0.5 text-[12px] leading-[1.35] text-slate-500">{tool.description}</p>
                   </div>
                   <span className="flex shrink-0 items-center text-slate-300 transition-all duration-200 group-hover:translate-x-[2px] group-hover:text-[var(--accent)]">

@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import {
   app,
   HttpRequest,
@@ -5,25 +6,15 @@ import {
   InvocationContext,
 } from "@azure/functions";
 import {
-  AskAiUsageResult,
   checkAskAiUsage,
   consumeAskAiUsage,
 } from "../services/askAiUsageService";
 import {
-  AskAiServiceError,
-  generateAskAiAnswer,
-  shouldUseGroundedResearch,
-} from "../services/askAiService";
+  GroqChatProviderError,
+  generateFromGroq,
+  sanitizeChatbotAnswer,
+} from "../services/groqChatProvider";
 import { validateJwt } from "../utils/auth";
-
-const ASK_AI_COOLDOWN_MS = 10_000;
-const lastAskAiRequestAtByUser = new Map<string, number>();
-const NO_STORE_HEADERS = {
-  "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
-  Pragma: "no-cache",
-  Expires: "0",
-  "Surrogate-Control": "no-store",
-};
 
 type AskAiRequestBody = {
   question?: unknown;
@@ -37,77 +28,6 @@ function isAuthError(message: string): boolean {
     message === "Invalid Authorization header format." ||
     message === "Invalid or expired token."
   );
-}
-
-function friendlyProviderMessage(status: number): string {
-  if (status === 429 || status === 503) {
-    return "Ask AI is busy right now. Please try again in a moment.";
-  }
-
-  if (status === 504) {
-    return "Ask AI took too long to respond. Please try again in a moment.";
-  }
-
-  if (status >= 500) {
-    return "Ask AI is temporarily unavailable. Please try again later.";
-  }
-
-  return "Ask AI could not answer that right now. Please try again.";
-}
-
-function buildUsagePayload(
-  askAi?: AskAiUsageResult,
-  liveSearch?: AskAiUsageResult
-) {
-  return askAi && liveSearch
-    ? {
-        usage: {
-          askAi,
-          liveSearch,
-        },
-      }
-    : {};
-}
-
-function handleAskAiError(
-  error: unknown,
-  usage?: {
-    askAi: AskAiUsageResult;
-    liveSearch: AskAiUsageResult;
-  }
-): HttpResponseInit {
-  const message = error instanceof Error ? error.message : "Unknown error";
-
-  if (isAuthError(message)) {
-    return {
-      status: 401,
-      headers: NO_STORE_HEADERS,
-      jsonBody: {
-        message: "Unauthorized.",
-        ...buildUsagePayload(usage?.askAi, usage?.liveSearch),
-      },
-    };
-  }
-
-  if (error instanceof AskAiServiceError) {
-    return {
-      status: error.status >= 400 && error.status < 500 ? error.status : 502,
-      headers: NO_STORE_HEADERS,
-      jsonBody: {
-        message: friendlyProviderMessage(error.status),
-        ...buildUsagePayload(usage?.askAi, usage?.liveSearch),
-      },
-    };
-  }
-
-  return {
-    status: 500,
-    headers: NO_STORE_HEADERS,
-    jsonBody: {
-      message: "Failed to ask AI.",
-      ...buildUsagePayload(usage?.askAi, usage?.liveSearch),
-    },
-  };
 }
 
 async function getRequestBody(request: HttpRequest): Promise<AskAiRequestBody> {
@@ -124,138 +44,232 @@ function getStringField(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
-type ChatMessage = {
-  role: "user" | "assistant";
-  content: string;
+const JSON_HEADERS = {
+  "Content-Type": "application/json",
+  "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+  Pragma: "no-cache",
+  Expires: "0",
+  "Surrogate-Control": "no-store",
 };
 
-function getConversationHistory(value: unknown): ChatMessage[] {
-  if (!Array.isArray(value)) {
-    return [];
+function getErrorStatus(error: unknown): number {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "status" in error &&
+    typeof (error as { status?: unknown }).status === "number"
+  ) {
+    return (error as { status: number }).status;
   }
 
-  return value
-    .filter(
-      (item): item is ChatMessage =>
-        typeof item === "object" &&
-        item !== null &&
-        (item.role === "user" || item.role === "assistant") &&
-        typeof item.content === "string" &&
-        item.content.trim().length > 0
-    )
-    .map((item) => ({
-      role: item.role,
-      content: item.content.trim(),
-    }));
-}
-
-function checkCooldown(userId: string): HttpResponseInit | null {
-  const now = Date.now();
-  const lastRequestAt = lastAskAiRequestAtByUser.get(userId) ?? 0;
-  const elapsed = now - lastRequestAt;
-
-  if (elapsed < ASK_AI_COOLDOWN_MS) {
-    return {
-      status: 429,
-      jsonBody: {
-        message: "Ask AI is busy right now. Please try again in a moment.",
-      },
-    };
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "statusCode" in error &&
+    typeof (error as { statusCode?: unknown }).statusCode === "number"
+  ) {
+    return (error as { statusCode: number }).statusCode;
   }
 
-  lastAskAiRequestAtByUser.set(userId, now);
-  return null;
+  return 500;
 }
 
-export async function askAiRequest(
+export async function postAskAiChatbot(
   request: HttpRequest,
   context: InvocationContext
 ): Promise<HttpResponseInit> {
+  const requestId = randomUUID();
+
   try {
+    context.log(`[AskAI Chatbot] REQUEST STARTED requestId=${requestId}`);
+
     const user = await validateJwt(request);
     const body = await getRequestBody(request);
-    const question = getStringField(body.question);
-    const conversationHistory = getConversationHistory(body.conversationHistory);
+    const message =
+      getStringField(body.question) ??
+      getStringField((body as Record<string, unknown>).message);
 
-    if (!question) {
+    if (!message) {
       return {
         status: 400,
+        headers: JSON_HEADERS,
         jsonBody: {
-          message: "Question is required.",
+          ok: false,
+          error: "Message is required.",
+          requestId,
         },
       };
     }
 
-    const cooldownResponse = checkCooldown(user.id);
+    const usageBefore = await checkAskAiUsage(user.id, "ask_ai_total");
 
-    if (cooldownResponse) {
-      return cooldownResponse;
-    }
-
-    const askAiUsageBefore = await checkAskAiUsage(user.id, "ask_ai_total");
-
-    if (!askAiUsageBefore.allowed) {
+    if (!usageBefore.allowed) {
       return {
         status: 429,
+        headers: JSON_HEADERS,
         jsonBody: {
-          message: "Daily Ask AI limit reached.",
+          ok: false,
+          error: "AI limit reached. Please try again later.",
+          errorCode: "AI_PROVIDER_RATE_LIMITED",
+          userMessage: "AI limit reached. Please try again later.",
           usage: {
-            askAi: askAiUsageBefore,
+            askAi: usageBefore,
             liveSearch: await checkAskAiUsage(user.id, "live_search"),
           },
+          requestId,
         },
       };
     }
 
-    const liveSearchUsageBefore = await checkAskAiUsage(user.id, "live_search");
-    const shouldUseLiveSearch =
-      liveSearchUsageBefore.allowed && shouldUseGroundedResearch(question);
+    context.log(
+      `[AskAI Chatbot] provider=groq requestId=${requestId} MODEL REQUEST STARTED questionLength=${message.length}`
+    );
 
-    let answerResult: Awaited<ReturnType<typeof generateAskAiAnswer>>;
+    const answer = sanitizeChatbotAnswer(
+      await generateFromGroq({
+        message,
+        requestId,
+      })
+    );
 
-    try {
-      answerResult = await generateAskAiAnswer({
-        question,
-        enableLiveSearch: shouldUseLiveSearch,
-        conversationHistory,
-      });
-    } catch (error) {
-      lastAskAiRequestAtByUser.delete(user.id);
-      context.error(error);
+    context.log(
+      `[AskAI Chatbot] provider=groq requestId=${requestId} MODEL RESPONSE RECEIVED answerLength=${answer.length}`
+    );
 
-      return handleAskAiError(error, {
-        askAi: askAiUsageBefore,
-        liveSearch: liveSearchUsageBefore,
-      });
-    }
+    const usageAfter = await consumeAskAiUsage(user.id, "ask_ai_total");
+    const liveSearchUsage = await checkAskAiUsage(user.id, "live_search");
 
-    const askAiUsageAfter = await consumeAskAiUsage(user.id, "ask_ai_total");
-    const liveSearchUsageAfter = answerResult.usedLiveSearch
-      ? await consumeAskAiUsage(user.id, "live_search")
-      : liveSearchUsageBefore;
+    context.log(`[AskAI Chatbot] REQUEST COMPLETED requestId=${requestId}`);
 
     return {
       status: 200,
-      headers: NO_STORE_HEADERS,
+      headers: JSON_HEADERS,
       jsonBody: {
-        answer: answerResult.answer,
-        sources: answerResult.sources,
+        ok: true,
+        answer,
+        sources: [],
         usage: {
-          askAi: askAiUsageAfter,
-          liveSearch: liveSearchUsageAfter,
+          askAi: usageAfter,
+          liveSearch: liveSearchUsage,
         },
+        requestId,
       },
     };
   } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    const status = getErrorStatus(error);
+    const providerError =
+      error instanceof GroqChatProviderError ? error : null;
+    context.error(
+      `[AskAI Chatbot] REQUEST FAILED requestId=${requestId} reason=${message}`
+    );
     context.error(error);
 
-    return handleAskAiError(error);
+    if (isAuthError(message)) {
+      return {
+        status: 401,
+        headers: JSON_HEADERS,
+        jsonBody: {
+          ok: false,
+          error: "Unauthorized.",
+          requestId,
+        },
+      };
+    }
+
+    if (
+      error instanceof Error &&
+      (error.name === "AbortError" || error.name === "TimeoutError")
+    ) {
+      return {
+        status: 504,
+        headers: JSON_HEADERS,
+        jsonBody: {
+          ok: false,
+          error: "The AI model had a temporary issue. Please try again in a moment.",
+          errorCode: "AI_PROVIDER_TEMPORARY_ERROR",
+          userMessage:
+            "The AI model had a temporary issue. Please try again in a moment.",
+          requestId,
+        },
+      };
+    }
+
+    if (providerError?.status === 429) {
+      return {
+        status: 429,
+        headers: JSON_HEADERS,
+        jsonBody: {
+          ok: false,
+          error: providerError.userMessage,
+          errorCode: providerError.errorCode,
+          userMessage: providerError.userMessage,
+          requestId,
+        },
+      };
+    }
+
+    if (providerError) {
+      return {
+        status: providerError.status >= 500 ? 503 : providerError.status,
+        headers: JSON_HEADERS,
+        jsonBody: {
+          ok: false,
+          error: providerError.userMessage,
+          errorCode: providerError.errorCode,
+          userMessage: providerError.userMessage,
+          requestId,
+        },
+      };
+    }
+
+    if (status === 429) {
+      return {
+        status: 429,
+        headers: JSON_HEADERS,
+        jsonBody: {
+          ok: false,
+          error: "AI limit reached. Please try again later.",
+          errorCode: "AI_PROVIDER_RATE_LIMITED",
+          userMessage: "AI limit reached. Please try again later.",
+          requestId,
+        },
+      };
+    }
+
+    if (status >= 500) {
+      return {
+        status: 503,
+        headers: JSON_HEADERS,
+        jsonBody: {
+          ok: false,
+          error: "The AI model had a temporary issue. Please try again in a moment.",
+          errorCode: "AI_PROVIDER_TEMPORARY_ERROR",
+          userMessage:
+            "The AI model had a temporary issue. Please try again in a moment.",
+          requestId,
+        },
+      };
+    }
+
+    return {
+      status: 500,
+      headers: JSON_HEADERS,
+      jsonBody: {
+        ok: false,
+        error: "The AI model had a temporary issue. Please try again in a moment.",
+        errorCode: "AI_PROVIDER_TEMPORARY_ERROR",
+        userMessage:
+          "The AI model had a temporary issue. Please try again in a moment.",
+        requestId,
+      },
+    };
   }
 }
 
-app.http("askAi", {
+app.http("askAiChatbot", {
   methods: ["POST"],
   authLevel: "anonymous",
-  route: "ask-ai",
-  handler: askAiRequest,
+  route: "ask-ai/chatbot",
+  handler: postAskAiChatbot,
 });

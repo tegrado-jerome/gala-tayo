@@ -1,23 +1,39 @@
 ﻿import { startTransition, useEffect, useMemo, useRef, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
+import { memo, useLayoutEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { Bot } from 'lucide-react'
 import { AppIcon } from '../components/AppIcon'
+import InternalLink from '../components/InternalLink'
 import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
 import MapView from '../components/MapView'
 import type { PlaceCardData } from '../components/PlaceCard'
 import { supabase } from '../supabase'
 import {
+  cancelAskAiMapRequest,
+  clearAskAiMapAbortController,
+  getAskAiMapRequestVersion,
   getAskAiMapRuntimeState,
   hasActiveAskAiMapRuntimeState,
+  incrementAskAiMapRequestVersion,
   patchAskAiMapRuntimeState,
-  resetAskAiMapRuntimeState,
   seedAskAiMapRuntimeState,
+  setAskAiMapAbortController,
   subscribeToAskAiMapRuntime,
+  wasAskAiMapRequestCancelled,
   type AskAiMapOptionalDetails,
   type AskAiMapPlace,
   type AskAiMapSource,
 } from '../utils/askAiMapRuntime'
-import ThinkingMiniGamePopup from '../components/ThinkingMiniGamePopup'
+import {
+  getOpenStatusChip,
+  getShortAreaText,
+  toDisplayPlace,
+  formatDistanceKm,
+  formatReviewCount,
+  type AskAiMapDisplayPlace,
+} from '../utils/askAiMapDisplay'
+import { registerAskAiTask, completeAskAiTask, failAskAiTask } from '../utils/askAiTaskStore'
 
 type AskAiMapChipId =
   | 'near-me'
@@ -35,11 +51,42 @@ type AskAiMapChip = {
 }
 
 type AskAiMapsResponse = {
-  mode?: 'map_grounding_only'
+  mode?: 'gemini_map_grounding_only' | 'gemini_maps_grounding_geoapify_verified' | 'hybrid_mixed_verified' | 'geoapify_places_soft_expanded' | 'geoapify_places_strict' | 'no_verified_results'
+  query?: string
+  searchArea?: string | null
   answerText?: string
+  summary?: string
+  resultMeta?: {
+    queryType?: 'broad_discovery' | 'specific_lookup' | 'nearby_discovery' | 'strict_category' | 'broad_gala' | 'specific_place' | 'mixed_intent' | 'near_me' | 'unknown'
+    strictCategory?: boolean
+    targetMinResults?: number
+    targetMaxResults?: number
+    geminiGroundedCount?: number
+    geoapifyCoordinateFilledCount?: number
+    geminiCoordinateFallbackCount?: number
+    cardOnlyCount?: number
+    geoapifyFallbackCount?: number
+    actualResults?: number
+    returnedCount?: number
+    pinCount?: number
+    coordinateSource?: 'mixed'
+    resultCountReason?: string | null
+  }
   places?: AskAiMapPlace[]
+  suggestedSearches?: string[]
   sources?: AskAiMapSource[]
   modelUsed?: string | null
+  responseMetadata?: {
+    mode?: 'gemini_map_grounding_only'
+    provider?: 'gemini'
+    modelUsed?: string
+    geoapifyUsed?: boolean
+    googlePlacesApiUsed?: boolean
+    groundingSourcesCount?: number
+    finalGroundedPlacesCount?: number
+    placesWithCoordinatesCount?: number
+    placesWithoutCoordinatesCount?: number
+  }
   message?: string
   emptyReason?: 'NO_MAP_GROUNDING_RESULTS' | 'PROVIDER_BUSY'
 }
@@ -60,7 +107,7 @@ type AskAiUsageSummary = {
 }
 
 const DAILY_ASK_AI_LIMIT_MESSAGE = 'Daily Ask AI limit reached.'
-const ASK_AI_MAPS_REQUEST_TIMEOUT_MS = 45_000
+const ASK_AI_MAPS_REQUEST_TIMEOUT_MS = 120_000
 
 function getEmptyReasonMessage(emptyReason: AskAiMapsResponse['emptyReason']) {
   if (emptyReason === 'PROVIDER_BUSY') {
@@ -68,10 +115,22 @@ function getEmptyReasonMessage(emptyReason: AskAiMapsResponse['emptyReason']) {
   }
 
   if (emptyReason === 'NO_MAP_GROUNDING_RESULTS') {
-    return 'No map-grounded places matched that request. Try a more specific area or place type.'
+    return 'No verified places matched that request. Try a more specific area or place type.'
   }
 
   return null
+}
+
+function buildSuggestedSearchesMessage(value: unknown) {
+  if (!Array.isArray(value)) {
+    return ''
+  }
+
+  const suggestions = value
+    .filter((entry): entry is string => typeof entry === 'string' && entry.trim().length > 0)
+    .slice(0, 5)
+
+  return suggestions.length > 0 ? `Try: ${suggestions.join(' • ')}` : ''
 }
 
 function isAskAiUsageStatus(value: unknown): value is AskAiUsageStatus {
@@ -101,7 +160,7 @@ function isAbortError(error: unknown) {
 
 function getAskAiMapsRequestErrorMessage(error: unknown) {
   if (isAbortError(error)) {
-    return 'Ask AI Maps took too long to respond. Try again with a more specific place or area.'
+    return 'Ask AI Maps hit the 120-second limit before finishing. Try again in a moment or narrow the search a bit.'
   }
 
   return error instanceof Error ? error.message : 'Ask AI Maps could not load places right now.'
@@ -183,11 +242,175 @@ type NormalizedCoordinates = {
   lng: number
   latitude: number
   longitude: number
+  source?: 'maps_grounding' | 'places_metadata' | 'geocoded' | 'geoapify' | 'gemini_grounding_location_text' | 'gemini_fallback'
+  trusted?: true
+  verified?: true
 }
+
+type CoordinateVerificationStatus = 'verified' | 'unverified' | 'missing'
 
 type AskAiMapNormalizedPlace = AskAiMapPlace & {
   displayIndex: number
   normalizedCoordinates: NormalizedCoordinates | null
+  mapCoordinates: NormalizedCoordinates | null
+  coordinateVerificationStatus: CoordinateVerificationStatus
+}
+
+type OpenStatusDisplay = {
+  label: 'Open' | 'Closed' | 'Status unknown'
+  tone: 'open' | 'closed' | 'unknown'
+  className: string
+  dotClassName: string
+  hoursText?: string
+}
+
+const coordinatePlausibilityHints = [
+  { keys: ['abra', 'bangued'], center: { lat: 17.5967, lng: 120.6155 }, maxDistanceKm: 35 },
+  { keys: ['tayum'], center: { lat: 17.6167, lng: 120.7297 }, maxDistanceKm: 30 },
+  { keys: ['tagaytay'], center: { lat: 14.1154, lng: 120.9621 }, maxDistanceKm: 35 },
+  { keys: ['tarlac'], center: { lat: 15.4755, lng: 120.5963 }, maxDistanceKm: 45 },
+  { keys: ['imus'], center: { lat: 14.4297, lng: 120.9367 }, maxDistanceKm: 35 },
+  { keys: ['makati'], center: { lat: 14.5547, lng: 121.0244 }, maxDistanceKm: 30 },
+  { keys: ['quezon city', 'qc'], center: { lat: 14.676, lng: 121.0437 }, maxDistanceKm: 40 },
+  { keys: ['baguio'], center: { lat: 16.4023, lng: 120.596 }, maxDistanceKm: 35 },
+  { keys: ['alabang'], center: { lat: 14.4191, lng: 121.0443 }, maxDistanceKm: 30 },
+  { keys: ['moa', 'mall of asia'], center: { lat: 14.5353, lng: 120.9821 }, maxDistanceKm: 20 },
+  { keys: ['manila'], center: { lat: 14.5995, lng: 120.9842 }, maxDistanceKm: 45 },
+  { keys: ['cavite'], center: { lat: 14.2814, lng: 120.8685 }, maxDistanceKm: 75 },
+] as const
+
+function getDistanceKm(
+  from: { lat: number; lng: number },
+  to: { lat: number; lng: number },
+) {
+  const earthRadiusKm = 6371
+  const toRadians = (value: number) => value * Math.PI / 180
+  const dLat = toRadians(to.lat - from.lat)
+  const dLng = toRadians(to.lng - from.lng)
+  const lat1 = toRadians(from.lat)
+  const lat2 = toRadians(to.lat)
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) * Math.sin(dLng / 2)
+
+  return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
+function getCoordinatePlausibilityHint(text: string) {
+  const normalizedText = text.toLowerCase()
+  return coordinatePlausibilityHints.find((hint) =>
+    hint.keys.some((key) => normalizedText.includes(key))
+  ) ?? null
+}
+
+function isCoordinatePlausibleForContext(args: {
+  placeName: string
+  query: string
+  address: string
+  coordinates: NormalizedCoordinates
+}) {
+  const hint = getCoordinatePlausibilityHint(`${args.query} ${args.address} ${args.placeName}`)
+
+  if (!hint) {
+    return true
+  }
+
+  const distanceKm = getDistanceKm(
+    { lat: args.coordinates.latitude, lng: args.coordinates.longitude },
+    hint.center,
+  )
+  const isPlausible = distanceKm <= hint.maxDistanceKm
+
+  if (!isPlausible) {
+    console.warn('[AskAiMap] Suspicious coordinates', {
+      placeName: args.placeName,
+      query: args.query,
+      address: args.address,
+      lat: args.coordinates.latitude,
+      lng: args.coordinates.longitude,
+      reason: 'Coordinate appears far from requested/search-result location',
+    })
+  }
+
+  return isPlausible
+}
+
+function shouldUseCoordinatesForDisplay(args: {
+  placeName: string
+  query: string
+  address: string
+  coordinates: NormalizedCoordinates
+  allowImplausible?: boolean
+}) {
+  const isPlausible = isCoordinatePlausibleForContext(args)
+
+  if (isPlausible) {
+    return true
+  }
+
+  if (args.allowImplausible) {
+    console.warn('[AskAiMap] Keeping implausible-but-explicit coordinates for display', {
+      placeName: args.placeName,
+      query: args.query,
+      address: args.address,
+      lat: args.coordinates.latitude,
+      lng: args.coordinates.longitude,
+      reason: 'Result already provided explicit coordinates, so map pins should still render.',
+    })
+    return true
+  }
+
+  return false
+}
+
+function normalizeOpenStatusLabel(value: unknown): OpenStatusDisplay['label'] | null {
+  if (typeof value === 'boolean') {
+    return value ? 'Open' : 'Closed'
+  }
+
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase()
+
+    if (!normalized) {
+      return null
+    }
+
+    if (['true', 'yes', 'y', 'open', 'open now', 'opened'].includes(normalized)) {
+      return 'Open'
+    }
+
+    if (['false', 'no', 'n', 'closed', 'closed now'].includes(normalized)) {
+      return 'Closed'
+    }
+
+    if (/\bclosed\b/.test(normalized)) {
+      return 'Closed'
+    }
+
+    if (/\bopen\b/.test(normalized)) {
+      return 'Open'
+    }
+  }
+
+  return null
+}
+
+function getObjectOpenStatus(value: unknown): OpenStatusDisplay['label'] | null {
+  if (!value || typeof value !== 'object') {
+    return null
+  }
+
+  const record = value as Record<string, unknown>
+  return (
+    normalizeOpenStatusLabel(record.openNow) ??
+    normalizeOpenStatusLabel(record.open_now) ??
+    normalizeOpenStatusLabel(record.isOpen) ??
+    normalizeOpenStatusLabel(record.is_open) ??
+    normalizeOpenStatusLabel(record.openStatus) ??
+    normalizeOpenStatusLabel(record.open_status) ??
+    normalizeOpenStatusLabel(record.businessStatus) ??
+    normalizeOpenStatusLabel(record.business_status)
+  )
 }
 
 function normalizeOptionalDetails(value: unknown): AskAiMapOptionalDetails | undefined {
@@ -221,10 +444,17 @@ function normalizeOptionalDetails(value: unknown): AskAiMapOptionalDetails | und
           : undefined
   const normalizedOpenStatusText =
     typeof candidate.openStatusText === 'string' && candidate.openStatusText.trim()
-      ? candidate.openStatusText.trim()
-      : typeof record.openStatus === 'string' && record.openStatus.trim()
-        ? record.openStatus.trim()
-        : undefined
+      ? normalizeOpenStatusLabel(candidate.openStatusText) ?? candidate.openStatusText.trim()
+      : getObjectOpenStatus(record) ??
+        normalizeOpenStatusLabel(record.openStatus) ??
+        normalizeOpenStatusLabel(record.open_status) ??
+        normalizeOpenStatusLabel(record.openNow) ??
+        normalizeOpenStatusLabel(record.open_now) ??
+        normalizeOpenStatusLabel(record.isOpen) ??
+        normalizeOpenStatusLabel(record.is_open) ??
+        normalizeOpenStatusLabel(record.businessStatus) ??
+        normalizeOpenStatusLabel(record.business_status) ??
+        undefined
   const normalizedAddressText =
     typeof candidate.addressText === 'string' && candidate.addressText.trim()
       ? candidate.addressText.trim()
@@ -250,6 +480,32 @@ function normalizeOptionalDetails(value: unknown): AskAiMapOptionalDetails | und
   }
 
   return Object.keys(details).length > 0 ? details : undefined
+}
+
+function parseAskAiMapReviewCount(value: unknown): number | null {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? Math.round(value) : null
+  }
+
+  if (typeof value !== 'string') {
+    return null
+  }
+
+  const trimmedValue = value.trim()
+
+  if (!trimmedValue) {
+    return null
+  }
+
+  const match = trimmedValue.match(/(\d[\d,]*)\s*(?:reviews?|ratings?)/i)
+
+  if (!match?.[1]) {
+    return null
+  }
+
+  const parsedValue = Number(match[1].replace(/,/g, ''))
+
+  return Number.isFinite(parsedValue) ? Math.round(parsedValue) : null
 }
 
 function parseCoordinateNumber(value: unknown): number | null {
@@ -282,7 +538,11 @@ function isValidCoordinatePair(lat: number, lng: number) {
   )
 }
 
-function normalizeLatLngObject(latitudeValue: unknown, longitudeValue: unknown): NormalizedCoordinates | null {
+function normalizeLatLngObject(
+  latitudeValue: unknown,
+  longitudeValue: unknown,
+  source?: NormalizedCoordinates['source'],
+): NormalizedCoordinates | null {
   const latitude = parseCoordinateNumber(latitudeValue)
   const longitude = parseCoordinateNumber(longitudeValue)
 
@@ -297,6 +557,7 @@ function normalizeLatLngObject(latitudeValue: unknown, longitudeValue: unknown):
         lng: latitude,
         latitude: longitude,
         longitude: latitude,
+        ...(source ? { source, trusted: true as const, ...(source === 'geoapify' ? { verified: true as const } : {}) } : {}),
       }
     }
 
@@ -308,6 +569,14 @@ function normalizeLatLngObject(latitudeValue: unknown, longitudeValue: unknown):
     lng: longitude,
     latitude,
     longitude,
+    ...(source
+      ? {
+          source,
+          ...(source === 'geoapify' || source === 'maps_grounding' || source === 'places_metadata'
+            ? { trusted: true as const, verified: true as const }
+            : {}),
+        }
+      : {}),
   }
 }
 
@@ -329,26 +598,70 @@ function hasCoordinateLikeData(place: unknown) {
   ].some((value) => value !== undefined && value !== null)
 }
 
-function normalizePlaceCoordinates(place: unknown): NormalizedCoordinates | null {
+function getRawCoordinateValueForDebug(place: unknown, axis: 'lat' | 'lng'): unknown {
+  if (!place || typeof place !== 'object') {
+    return undefined
+  }
+
+  const candidate = place as Record<string, unknown>
+  const coordinateObject =
+    candidate.coordinates && typeof candidate.coordinates === 'object' && !Array.isArray(candidate.coordinates)
+      ? candidate.coordinates as Record<string, unknown>
+      : null
+  const locationObject =
+    candidate.location && typeof candidate.location === 'object' && !Array.isArray(candidate.location)
+      ? candidate.location as Record<string, unknown>
+      : null
+
+  if (axis === 'lat') {
+    return coordinateObject?.lat ??
+      coordinateObject?.latitude ??
+      locationObject?.lat ??
+      locationObject?.latitude ??
+      candidate.lat ??
+      candidate.latitude
+  }
+
+  return coordinateObject?.lng ??
+    coordinateObject?.longitude ??
+    locationObject?.lng ??
+    locationObject?.longitude ??
+    candidate.lng ??
+    candidate.longitude
+}
+
+function normalizePlaceCoordinates(
+  place: unknown,
+  context: { query?: string; address?: string; placeName?: string } = {},
+): NormalizedCoordinates | null {
   if (!place || typeof place !== 'object') {
     return null
   }
 
   const candidate = place as Record<string, unknown>
+
+  if (candidate.hasPin === false) {
+    return null
+  }
+
   const coordinateObject =
     candidate.coordinates && typeof candidate.coordinates === 'object'
       ? candidate.coordinates as Record<string, unknown>
       : null
-  const locationObject =
-    candidate.location && typeof candidate.location === 'object'
-      ? candidate.location as Record<string, unknown>
-      : null
+  const rawCoordinateSource = coordinateObject?.source
+  const coordinateSource: NormalizedCoordinates['source'] =
+    rawCoordinateSource === 'geoapify' ||
+    rawCoordinateSource === 'gemini_fallback' ||
+    rawCoordinateSource === 'gemini_grounding_location_text' ||
+    rawCoordinateSource === 'places_metadata' ||
+    rawCoordinateSource === 'geocoded' ||
+    rawCoordinateSource === 'maps_grounding'
+      ? rawCoordinateSource
+      : undefined
 
   const candidatePairs: Array<[unknown, unknown]> = [
     [coordinateObject?.lat, coordinateObject?.lng],
     [coordinateObject?.latitude, coordinateObject?.longitude],
-    [locationObject?.lat, locationObject?.lng],
-    [locationObject?.latitude, locationObject?.longitude],
     [candidate.lat, candidate.lng],
     [candidate.latitude, candidate.longitude],
   ]
@@ -362,10 +675,15 @@ function normalizePlaceCoordinates(place: unknown): NormalizedCoordinates | null
   }
 
   for (const [latValue, lngValue] of candidatePairs) {
-    const normalized = normalizeLatLngObject(latValue, lngValue)
+    const normalized = normalizeLatLngObject(latValue, lngValue, coordinateSource)
 
     if (normalized) {
-      return normalized
+      return shouldUseCoordinatesForDisplay({
+        placeName: context.placeName ?? normalizeDisplayText(candidate.name as string | undefined) ?? 'Unknown place',
+        query: context.query ?? '',
+        address: context.address ?? normalizeDisplayText(candidate.address as string | undefined) ?? '',
+        coordinates: normalized,
+      }) ? normalized : null
     }
   }
 
@@ -387,10 +705,15 @@ function normalizePlaceCoordinates(place: unknown): NormalizedCoordinates | null
       continue
     }
 
-    const normalized = normalizeLatLngObject(match[1], match[2])
+    const normalized = normalizeLatLngObject(match[1], match[2], coordinateSource)
 
     if (normalized) {
-      return normalized
+      return shouldUseCoordinatesForDisplay({
+        placeName: context.placeName ?? normalizeDisplayText(candidate.name as string | undefined) ?? 'Unknown place',
+        query: context.query ?? '',
+        address: context.address ?? normalizeDisplayText(candidate.address as string | undefined) ?? '',
+        coordinates: normalized,
+      }) ? normalized : null
     }
   }
 
@@ -399,6 +722,50 @@ function normalizePlaceCoordinates(place: unknown): NormalizedCoordinates | null
   }
 
   return null
+}
+
+function isTrustedCoordinateSource(source: NormalizedCoordinates['source']) {
+  return source === 'geoapify' || source === 'maps_grounding' || source === 'places_metadata'
+}
+
+function hasVerifiedCoordinates(
+  place: {
+    coordinates?: unknown
+    coordinateStatus?: unknown
+    coordinateSource?: unknown
+    hasPin?: unknown
+  } & Record<string, unknown>,
+  normalizedCoordinates: NormalizedCoordinates | null,
+) {
+  if (!normalizedCoordinates) {
+    return false
+  }
+
+  const coordinateRecord =
+    place.coordinates && typeof place.coordinates === 'object' && !Array.isArray(place.coordinates)
+      ? place.coordinates as Record<string, unknown>
+      : null
+  const explicitStatus = typeof place.coordinateStatus === 'string' ? String(place.coordinateStatus) : ''
+  const source =
+    typeof coordinateRecord?.source === 'string'
+      ? (coordinateRecord.source as NormalizedCoordinates['source'])
+      : typeof place.coordinateSource === 'string'
+        ? (place.coordinateSource as NormalizedCoordinates['source'])
+        : normalizedCoordinates.source
+
+  if (explicitStatus === 'missing_coordinates' || explicitStatus === 'unverified') {
+    return false
+  }
+
+  if (explicitStatus === 'verified') {
+    return true
+  }
+
+  if (coordinateRecord?.verified === true || coordinateRecord?.trusted === true) {
+    return true
+  }
+
+  return isTrustedCoordinateSource(source)
 }
 
 function normalizePlaces(value: unknown): AskAiMapPlace[] {
@@ -412,9 +779,14 @@ function normalizePlaces(value: unknown): AskAiMapPlace[] {
     }
 
     const candidate = entry as Partial<AskAiMapPlace> & Partial<AskAiMapOptionalDetails> & {
+      lat?: unknown
+      lng?: unknown
       latitude?: unknown
       longitude?: unknown
       googleMapsUri?: unknown
+      googleMapsUrl?: unknown
+      mapsUrl?: unknown
+      coordinateSource?: unknown
     }
     const fallbackName = 'Unknown place'
     const normalizedName = typeof candidate.name === 'string' && candidate.name.trim() ? candidate.name.trim() : fallbackName
@@ -423,7 +795,16 @@ function normalizePlaces(value: unknown): AskAiMapPlace[] {
         ? candidate.id.trim()
         : `${normalizedName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'unknown-place'}-${index + 1}`
     const normalizedCoordinates = normalizePlaceCoordinates(candidate)
-    const normalizedOptionalDetails = normalizeOptionalDetails(candidate.optionalDetails) ?? normalizeOptionalDetails(candidate)
+    const normalizedReviewCount = parseAskAiMapReviewCount(
+      candidate.reviewCount ??
+        candidate.optionalDetails?.reviewCountText ??
+        (candidate as Record<string, unknown>).reviewCountText
+    )
+
+    if (normalizedReviewCount !== null && normalizedReviewCount < 5) {
+      return []
+    }
+
     const fallbackReason = 'Recommended based on your map search.'
     const normalizedReason = [
       candidate.whyThisFits,
@@ -433,24 +814,71 @@ function normalizePlaces(value: unknown): AskAiMapPlace[] {
       candidate.description,
       candidate.subtitle,
     ].find((item): item is string => typeof item === 'string' && Boolean(item.trim()))?.trim() ?? fallbackReason
-
     return [{
       id: normalizedId,
       name: normalizedName,
       reason: normalizedReason,
       whyThisFits: typeof candidate.whyThisFits === 'string' && candidate.whyThisFits.trim() ? candidate.whyThisFits.trim() : normalizedReason,
+      aiPreview: typeof candidate.aiPreview === 'string' && candidate.aiPreview.trim() ? candidate.aiPreview.trim() : undefined,
       googleMapsUrl:
-        typeof candidate.googleMapsUrl === 'string'
-          ? candidate.googleMapsUrl
-          : typeof candidate.googleMapsUri === 'string'
-            ? candidate.googleMapsUri
-            : undefined,
+        typeof candidate.googleMapsUrl === 'string' && candidate.googleMapsUrl.trim()
+          ? candidate.googleMapsUrl.trim()
+          : typeof candidate.googleMapsUri === 'string' && candidate.googleMapsUri.trim()
+            ? candidate.googleMapsUri.trim()
+            : typeof candidate.sourceUri === 'string' && candidate.sourceUri.trim()
+              ? candidate.sourceUri.trim()
+              : typeof candidate.mapsUrl === 'string' && candidate.mapsUrl.trim()
+                ? candidate.mapsUrl.trim()
+                : buildGoogleMapsSearchUrl(
+                    normalizedName,
+                    candidate.address as string | undefined,
+                  ),
       googleMapsUri: typeof candidate.googleMapsUri === 'string' ? candidate.googleMapsUri : undefined,
       placeId: typeof candidate.placeId === 'string' ? candidate.placeId : undefined,
       sourceTitle: typeof candidate.sourceTitle === 'string' ? candidate.sourceTitle : undefined,
       sourceUri: typeof candidate.sourceUri === 'string' ? candidate.sourceUri : undefined,
-      coordinates: normalizedCoordinates ?? undefined,
-      optionalDetails: normalizedOptionalDetails,
+      coordinates: normalizedCoordinates ?? candidate.coordinates ?? undefined,
+      lat: normalizedCoordinates?.latitude ?? (candidate.lat as number | null) ?? null,
+      lng: normalizedCoordinates?.longitude ?? (candidate.lng as number | null) ?? null,
+      latitude: normalizedCoordinates?.latitude ?? (candidate.latitude as number | null) ?? null,
+      longitude: normalizedCoordinates?.longitude ?? (candidate.longitude as number | null) ?? null,
+      hasPin: candidate.hasPin !== false && hasVerifiedCoordinates(candidate, normalizedCoordinates),
+      coordinateConfidence: (
+        candidate.coordinateConfidence === 'high' ||
+        candidate.coordinateConfidence === 'medium' ||
+        candidate.coordinateConfidence === 'low' ||
+        candidate.coordinateConfidence === 'none'
+      ) ? candidate.coordinateConfidence
+        : normalizedCoordinates ? 'medium'
+        : 'none',
+      coordinateStatus:
+        candidate.coordinateStatus === 'geoapify_coordinate_fill' ||
+        candidate.coordinateStatus === 'gemini_coordinate_fallback' ||
+        candidate.coordinateStatus === 'missing_coordinates'
+          ? candidate.coordinateStatus
+          : normalizedCoordinates
+            ? hasVerifiedCoordinates(candidate, normalizedCoordinates)
+              ? 'geoapify_coordinate_fill'
+              : 'gemini_coordinate_fallback'
+            : 'missing_coordinates',
+      coordinateSource:
+        typeof candidate.coordinateSource === 'string'
+          ? candidate.coordinateSource
+          : normalizedCoordinates?.source ?? undefined,
+      distanceKm:
+        typeof (candidate as Record<string, unknown>).distanceKm === 'number'
+          ? (candidate as Record<string, unknown>).distanceKm as number
+          : null,
+      openingHoursSummary:
+        typeof (candidate as Record<string, unknown>).openingHoursSummary === 'string'
+          ? ((candidate as Record<string, unknown>).openingHoursSummary as string).trim() || null
+          : null,
+      rating:
+        typeof (candidate as Record<string, unknown>).rating === 'number'
+          ? (candidate as Record<string, unknown>).rating as number
+          : undefined,
+      reviewCount: normalizedReviewCount ?? undefined,
+      optionalDetails: normalizeOptionalDetails(candidate.optionalDetails) ?? normalizeOptionalDetails(candidate),
     }]
   })
 }
@@ -497,103 +925,6 @@ function normalizeDisplayText(value: string | undefined) {
   return trimmedValue ? trimmedValue : undefined
 }
 
-function deriveHeaderAreaLabel(query: string) {
-  void query
-  return 'Live map-grounded picks'
-}
-
-function deriveQueryMapCenter(query: string) {
-  void query
-  return metroManilaCenter
-}
-
-function isGenericReasonText(reason: string) {
-  const normalizedReason = reason.trim().toLowerCase()
-
-  return [
-    'map-grounded',
-    'map grounded',
-    'grounded match',
-    'requested area',
-    'fits your query',
-    'matches your search',
-    'based on your query',
-  ].some((phrase) => normalizedReason.includes(phrase))
-}
-
-function rewritePlainReason(reason: string) {
-  const normalizedReason = reason.trim()
-  return normalizedReason.length > 220 ? normalizedReason.slice(0, 217).trimEnd() + '...' : normalizedReason
-}
-
-function buildPlaceReasonFallback(place: AskAiMapPlace, query: string) {
-  const category = normalizeDisplayText(place.optionalDetails?.categoryText)
-  const address = normalizeDisplayText(place.optionalDetails?.addressText)
-  const rating = normalizeDisplayText(place.optionalDetails?.ratingText)
-  const reviewCount = normalizeDisplayText(place.optionalDetails?.reviewCountText)
-  const openStatus = normalizeDisplayText(place.optionalDetails?.openStatusText)
-  const hours = normalizeDisplayText(place.optionalDetails?.hoursText)
-  const normalizedQuery = query.trim()
-  const queryContext = normalizedQuery || 'map search mo'
-  const typeContext = category ? ` as a ${category.toLowerCase()}` : ''
-  const addressParts = address
-    ?.split(',')
-    .map((part) => part.trim())
-    .filter(Boolean)
-  const areaLabel =
-    addressParts && addressParts.length > 1
-      ? addressParts.slice(-2).join(', ')
-      : address
-  const placeContext = [
-    areaLabel ? `nasa ${areaLabel}` : null,
-    category ? `matches the place type na hinahanap mo` : null,
-  ].filter(Boolean).join(' and ')
-  const proofPoints = [
-    rating ? `rating na ${rating}${reviewCount ? ` with ${reviewCount}` : ''}` : null,
-    openStatus ? openStatus.toLowerCase() : null,
-    hours ? `listed hours na ${hours}` : null,
-  ].filter(Boolean)
-
-  const firstSentence = placeContext
-    ? `Pasok ito sa "${queryContext}"${typeContext} dahil ${placeContext}.`
-    : `Recommended ito based sa "${queryContext}" because it matches the place type and area you asked for.`
-  const secondSentence = proofPoints.length > 0
-    ? `Helpful din yung available map details like ${proofPoints.slice(0, 2).join(' and ')} para ma-check mo kung swak siya sa gala plan mo.`
-    : 'Check details like rating, hours, and address to confirm if swak siya sa gala plan mo.'
-
-  return `${firstSentence} ${secondSentence}`
-}
-
-function countSentences(value: string) {
-  return value.split(/[.!?]+/).map((part) => part.trim()).filter(Boolean).length
-}
-
-function isUsefulProvidedReason(reason: string) {
-  const normalizedReason = reason.trim()
-  const lowerReason = normalizedReason.toLowerCase()
-  const hasTaglishCue = /\b(ito|siya|hanap|gala|swak|pasok|bagay|kung|mo|nasa|dahil|para)\b/i.test(normalizedReason)
-  const hasGenericFiller =
-    isGenericReasonText(normalizedReason) ||
-    lowerReason.includes('perfect itong puntahan') ||
-    lowerReason.includes('perfect ito puntahan')
-
-  return normalizedReason.length >= 80 && countSentences(normalizedReason) >= 2 && hasTaglishCue && !hasGenericFiller
-}
-
-function getDisplayReason(place: AskAiMapPlace, query: string) {
-  const reason = normalizeDisplayText(place.whyThisFits) ?? normalizeDisplayText(place.reason)
-
-  if (!reason || !isUsefulProvidedReason(reason)) {
-    return buildPlaceReasonFallback(place, query)
-  }
-
-  return rewritePlainReason(reason)
-}
-
-function getMiniReasonPreview(place: AskAiMapPlace, query: string) {
-  return `AI ${getDisplayReason(place, query)}`
-}
-
 function getDisplayName(place: AskAiMapPlace) {
   return normalizeDisplayText(place.name) ?? 'Unknown place'
 }
@@ -610,117 +941,122 @@ function getDisplayHours(place: AskAiMapPlace) {
   return normalizeDisplayText(place.optionalDetails?.hoursText) ?? 'Hours not available'
 }
 
-function getOpenStatusTone(place: AskAiMapPlace) {
-  const openStatusText = normalizeDisplayText(place.optionalDetails?.openStatusText)
+function formatOpenStatus(place: AskAiMapPlace): OpenStatusDisplay {
+  const placeRecord = place as AskAiMapPlace & Record<string, unknown>
+  const label =
+    normalizeOpenStatusLabel(place.optionalDetails?.openStatusText) ??
+    normalizeOpenStatusLabel(placeRecord.openStatus) ??
+    normalizeOpenStatusLabel(placeRecord.open_status) ??
+    normalizeOpenStatusLabel(placeRecord.openNow) ??
+    normalizeOpenStatusLabel(placeRecord.open_now) ??
+    normalizeOpenStatusLabel(placeRecord.isOpen) ??
+    normalizeOpenStatusLabel(placeRecord.is_open) ??
+    getObjectOpenStatus(placeRecord.currentOpeningHours) ??
+    getObjectOpenStatus(placeRecord.current_opening_hours)
+  const hoursText = getDisplayHours(place) !== 'Hours not available' ? getDisplayHours(place) : undefined
 
-  if (!openStatusText) {
+  if (!label) {
     return {
       label: 'Status unknown',
+      tone: 'unknown',
       className: 'bg-slate-100 text-slate-600',
       dotClassName: 'text-slate-400',
-      isUnknown: true,
+      hoursText,
     }
   }
 
-  if (/closed/i.test(openStatusText)) {
+  if (label === 'Closed') {
     return {
-      label: openStatusText,
+      label,
+      tone: 'closed',
       className: 'bg-rose-50 text-rose-700',
       dotClassName: 'text-rose-500',
-      isUnknown: false,
+      hoursText,
     }
   }
 
   return {
-    label: openStatusText,
+    label,
+    tone: 'open',
     className: 'bg-emerald-50 text-emerald-700',
     dotClassName: 'text-emerald-500',
-    isUnknown: false,
+    hoursText,
   }
+}
+
+function getDisplayDistance(place: AskAiMapPlace): string {
+  return formatDistanceKm(place.distanceKm)
+}
+
+function buildGoogleMapsSearchUrl(placeName: string, address?: string | null) {
+  const destination = [placeName.trim(), address?.trim()].filter(Boolean).join(', ')
+
+  if (!destination) {
+    return undefined
+  }
+
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(destination)}`
+}
+
+function shortenAddress(address: string, maxLength = 64) {
+  const normalizedAddress = address.trim()
+
+  if (!normalizedAddress || normalizedAddress === 'Address not available') {
+    return ''
+  }
+
+  return normalizedAddress.length > maxLength
+    ? `${normalizedAddress.slice(0, maxLength - 3).trimEnd()}...`
+    : normalizedAddress
+}
+
+function getMetaDot(hasPreviousValue: boolean) {
+  return hasPreviousValue ? <span className="text-[11px] text-slate-300">{'\u00B7'}</span> : null
 }
 
 function getMapsHref(place: AskAiMapPlace) {
-  const directUrl = normalizeDisplayText(place.googleMapsUrl) ?? normalizeDisplayText(place.googleMapsUri) ?? normalizeDisplayText(place.sourceUri)
+  const placeRecord = place as AskAiMapPlace & Record<string, unknown>
+  const candidates = [
+    place.googleMapsUrl,
+    place.googleMapsUri,
+    typeof placeRecord.sourceUri === 'string' ? placeRecord.sourceUri : undefined,
+    typeof placeRecord.mapsUrl === 'string' ? placeRecord.mapsUrl : undefined,
+  ]
 
-  if (directUrl) {
-    return directUrl
-  }
-
-  const placeId = normalizeDisplayText(place.placeId)
-
-  if (placeId) {
-    return `https://www.google.com/maps/search/?api=1&query_place_id=${encodeURIComponent(placeId)}`
-  }
-
-  return null
+  return candidates.find((value): value is string => typeof value === 'string' && value.trim().length > 0)?.trim() ?? null
 }
 
-function getReviewBadgeText(place: AskAiMapPlace) {
-  const ratingText = normalizeDisplayText(place.optionalDetails?.ratingText)
-  const reviewCountText = normalizeDisplayText(place.optionalDetails?.reviewCountText)
-
-  if (ratingText && reviewCountText) {
-    return `${ratingText} · ${reviewCountText}`
-  }
-
-  return ratingText ?? reviewCountText ?? null
-}
-
-function getShortLocationText(place: AskAiMapPlace) {
-  const addressText = normalizeDisplayText(place.optionalDetails?.addressText)
-
-  if (!addressText) {
-    return null
-  }
-
-  const parts = addressText
-    .split(',')
-    .map((part) => part.trim())
-    .filter(Boolean)
-  const trimmedParts =
-    parts[parts.length - 1]?.toLowerCase() === 'philippines'
-      ? parts.slice(0, -1)
-      : parts
-
-  if (trimmedParts.length >= 2) {
-    return trimmedParts.slice(-2).join(', ')
-  }
-
-  return addressText
-}
-
-function getCoordinateChipText(place: AskAiMapPlace) {
-  const latitude = place.coordinates?.latitude
-  const longitude = place.coordinates?.longitude
-
-  if (typeof latitude !== 'number' || typeof longitude !== 'number') {
-    return null
-  }
-
-  return `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`
-}
-
-function mapPlaceToMapCard(place: AskAiMapPlace): PlaceCardData {
-  const displayReason = getDisplayReason(place, '')
+function mapPlaceToMapCard(place: AskAiMapNormalizedPlace): PlaceCardData {
+  const displayReason = place.reason
   const addressText = getDisplayAddress(place)
+  const openStatus = formatOpenStatus(place)
+  const coordinateRecord =
+    place.coordinates && typeof place.coordinates === 'object' && !Array.isArray(place.coordinates)
+      ? place.coordinates
+      : null
+  const pinCoordinates = place.mapCoordinates && typeof place.mapCoordinates === 'object' ? place.mapCoordinates : null
+  const distanceText = getDisplayDistance(place)
 
   return {
     id: place.id,
+    displayIndex: place.displayIndex,
     name: getDisplayName(place),
     category: getDisplayCategory(place),
     area: addressText ?? 'Map-grounded pick',
     address: addressText,
     city: addressText ?? 'Map-grounded area',
     localArea: addressText,
-    status: /closed/i.test(place.optionalDetails?.openStatusText ?? '') ? 'Closed' : normalizeDisplayText(place.optionalDetails?.openStatusText) ? 'Open' : 'Unknown',
+    status: openStatus.tone === 'closed' ? 'Closed' : openStatus.tone === 'open' ? 'Open' : 'Unknown',
     reason: displayReason,
     description: displayReason,
-    badge: getDisplayCategory(place),
+    badge: distanceText || getDisplayCategory(place),
     googleMapsUrl: getMapsHref(place),
-    coordinates: {
-      lat: place.coordinates?.latitude ?? null,
-      lng: place.coordinates?.longitude ?? null,
-    },
+    hasPin: place.hasPin ?? Boolean(pinCoordinates),
+    coordinates: pinCoordinates as unknown as PlaceCardData['coordinates'],
+    latitude: pinCoordinates?.latitude ?? place.latitude ?? coordinateRecord?.latitude ?? null,
+    longitude: pinCoordinates?.longitude ?? place.longitude ?? coordinateRecord?.longitude ?? null,
+    lat: pinCoordinates?.lat ?? place.latitude ?? coordinateRecord?.lat ?? null,
+    lng: pinCoordinates?.lng ?? place.longitude ?? coordinateRecord?.lng ?? null,
   }
 }
 
@@ -795,7 +1131,7 @@ function MinimalLoadingCard({ query }: { query: string }) {
               <span className="h-1.5 w-1.5 rounded-full bg-current motion-safe:animate-bounce [animation-delay:240ms]" />
             </span>
           </div>
-          <p className="mt-1 text-[12px] font-medium text-slate-500">Grounding live Google Maps picks for your prompt.</p>
+          <p className="mt-1 text-[12px] font-medium text-slate-500">Searching verified places for your prompt.</p>
           {query ? <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-700">“{query.trim()}”</p> : null}
           <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-100">
             <div className="h-full w-2/3 rounded-full bg-[linear-gradient(90deg,#8bb8ff,#245dce)] motion-safe:animate-[gala-loading-slide_1.6s_ease-in-out_infinite]" />
@@ -805,6 +1141,89 @@ function MinimalLoadingCard({ query }: { query: string }) {
     </div>
   )
 }
+
+const AskAiMapComposer = memo(function AskAiMapComposer({
+  query,
+  selectedChipIds,
+  isSearching,
+  onSubmit,
+  onCancel,
+}: {
+  query: string
+  selectedChipIds: AskAiMapChipId[]
+  isSearching: boolean
+  onSubmit: (queryOverride?: string) => void
+  onCancel: () => void
+}) {
+  const [draftQuery, setDraftQuery] = useState(query)
+  const queryInputRef = useRef<HTMLTextAreaElement | null>(null)
+  const canSubmit = buildMapRequestQuery(draftQuery, selectedChipIds).trim().length > 0
+
+  useLayoutEffect(() => {
+    const element = queryInputRef.current
+    if (!element) {
+      return
+    }
+
+    element.style.height = 'auto'
+    element.style.height = `${Math.min(element.scrollHeight, 120)}px`
+  }, [draftQuery])
+
+  const handleSubmit = () => {
+    const finalQuery = draftQuery.trim()
+    if (!finalQuery) {
+      return
+    }
+
+    onSubmit(finalQuery)
+  }
+
+  return (
+    <div className="flex items-end gap-3 rounded-[22px] border border-white/86 bg-white/96 px-3 py-2.5 shadow-[0_10px_24px_rgba(15,23,42,0.08)] backdrop-blur-md lg:mx-auto lg:max-w-[680px]">
+      <textarea
+        ref={queryInputRef}
+        value={draftQuery}
+        onChange={(event) => setDraftQuery(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault()
+            event.stopPropagation()
+            if (isSearching) {
+              onCancel()
+            } else {
+              handleSubmit()
+            }
+          }
+        }}
+        placeholder="Discover places in an interactive map..."
+        rows={1}
+        className="h-11 min-w-0 flex-1 resize-none overflow-y-auto bg-transparent px-0.5 py-2.5 text-[14px] font-medium leading-relaxed text-slate-900 outline-none placeholder:whitespace-nowrap placeholder:overflow-hidden placeholder:text-ellipsis placeholder:font-medium placeholder:text-slate-400 sm:text-base"
+      />
+      <button
+        type="button"
+        onClick={() => {
+          if (isSearching) {
+            onCancel()
+          } else {
+            handleSubmit()
+          }
+        }}
+        disabled={!isSearching && !canSubmit}
+        className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--accent-deep)] text-white shadow-[0_10px_20px_rgba(23,45,107,0.18)] transition hover:bg-[var(--accent)] disabled:opacity-60"
+        aria-label={isSearching ? 'Stop searching' : 'Submit ask ai map search'}
+      >
+        {isSearching ? (
+          <svg className="h-[17px] w-[17px]" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="11" fill="#172A5A" />
+            <rect x="5.25" y="5.25" width="13.5" height="13.5" rx="2.5" fill="white" />
+          </svg>
+        ) : (
+          <AppIcon name="askAi" className="h-5 w-5" />
+        )}
+      </button>
+    </div>
+  )
+})
 
 function AskAiMapPage() {
   const initialAskAiMapRuntimeStateRef = useRef(
@@ -835,7 +1254,9 @@ function AskAiMapPage() {
   const [sources, setSources] = useState<AskAiMapSource[]>(initialAskAiMapState?.sources ?? [])
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(initialAskAiMapState?.selectedPlaceId ?? null)
   const [focusedPlaceId, setFocusedPlaceId] = useState<string | null>(initialAskAiMapState?.focusedPlaceId ?? null)
+  const [selectedPlaceFocusSignal, setSelectedPlaceFocusSignal] = useState(0)
   const [isPlaceDetailOpen, setIsPlaceDetailOpen] = useState(false)
+  const [isMapPinNoticeDismissed, setIsMapPinNoticeDismissed] = useState(false)
 
   useEffect(() => {
     let isMounted = true
@@ -942,36 +1363,95 @@ function AskAiMapPage() {
     })
   }, [initialAskAiMapState])
 
-  const usesNearMe = selectedChipIds.includes('near-me')
-  const usesOpenNow = selectedChipIds.includes('open-now')
   const requestQuery = useMemo(() => buildMapRequestQuery(query, selectedChipIds), [query, selectedChipIds])
   const normalizedPlaces = useMemo<AskAiMapNormalizedPlace[]>(
-    () =>
-      places.map((place, index) => {
-        const normalizedCoordinates = normalizePlaceCoordinates(place)
+    () => {
+      const normalized = places.map((place, index) => {
+        const normalizedCoordinates = normalizePlaceCoordinates(place, {
+          query: requestQuery || query,
+          address: getDisplayAddress(place),
+          placeName: getDisplayName(place),
+        })
+        const mapCoordinates = hasVerifiedCoordinates(place, normalizedCoordinates) ? normalizedCoordinates : null
+        const coordinateVerificationStatus: CoordinateVerificationStatus = mapCoordinates
+          ? 'verified'
+          : normalizedCoordinates
+            ? 'unverified'
+            : 'missing'
 
         return {
           ...place,
           displayIndex: index + 1,
           normalizedCoordinates,
-          coordinates: normalizedCoordinates ?? place.coordinates,
+          mapCoordinates,
+          coordinates: mapCoordinates ?? place.coordinates,
+          hasPin: Boolean(mapCoordinates),
+          coordinateVerificationStatus,
         }
-      }),
-    [places]
+      })
+
+      if (normalized.length > 0) {
+        console.table(
+          normalized.map((place, index) => {
+            const rawLat = getRawCoordinateValueForDebug(places[index], 'lat')
+            const rawLng = getRawCoordinateValueForDebug(places[index], 'lng')
+            const rawLngNumber = Number(rawLng)
+
+            return {
+              index,
+              displayIndex: index + 1,
+              name: place.name,
+              rawLat,
+              rawLng,
+              finalLat: place.normalizedCoordinates?.lat,
+              finalLng: place.normalizedCoordinates?.lng,
+              lngDelta:
+                place.normalizedCoordinates && Number.isFinite(rawLngNumber)
+                  ? place.normalizedCoordinates.lng - rawLngNumber
+                  : null,
+            }
+          })
+        )
+      }
+
+      return normalized
+    },
+    [places, query, requestQuery]
   )
-  const mapPlaces = useMemo(() => normalizedPlaces.map(mapPlaceToMapCard), [normalizedPlaces])
+  const mapPlaces = useMemo(
+    () => normalizedPlaces
+      .filter((place) => place.mapCoordinates !== null)
+      .map((place) => mapPlaceToMapCard(place)),
+    [normalizedPlaces]
+  )
+  const displayPlaces = useMemo<AskAiMapDisplayPlace[]>(
+    () => normalizedPlaces.map((place) => toDisplayPlace(place, requestQuery || query)),
+    [normalizedPlaces, query, requestQuery]
+  )
+  const placesWithPinsCount = useMemo(
+    () => normalizedPlaces.filter((place) => place.mapCoordinates !== null).length,
+    [normalizedPlaces]
+  )
+  const hasMissingMapPins = normalizedPlaces.some((place) => place.mapCoordinates === null)
   const selectedPlace = useMemo(
     () => normalizedPlaces.find((place) => place.id === selectedPlaceId) ?? normalizedPlaces[0] ?? null,
     [normalizedPlaces, selectedPlaceId]
   )
-  const headerSubtitle = useMemo(() => deriveHeaderAreaLabel(requestQuery || query), [query, requestQuery])
-  const canSubmit = requestQuery.trim().length > 0 && !isSearching
-  const mapCenter = userLocation
-    ? [userLocation.latitude, userLocation.longitude] as const
-    : deriveQueryMapCenter(requestQuery || query)
-  const mapLayoutKey = `${normalizedPlaces.length}:${selectedPlaceId ?? 'none'}:${focusedPlaceId ?? 'none'}:${isPlaceDetailOpen ? 'modal-open' : 'modal-closed'}`
+  const selectedDisplayPlace = useMemo<AskAiMapDisplayPlace | null>(
+    () => selectedPlace ? toDisplayPlace(selectedPlace, requestQuery || query) : null,
+    [selectedPlace, query, requestQuery]
+  )
+  const selectedGoogleMapsUrl = selectedDisplayPlace
+    ? selectedDisplayPlace.googleMapsUrl || buildGoogleMapsSearchUrl(selectedDisplayPlace.title, selectedDisplayPlace.address)
+    : null
+  const mapCenter = useMemo(
+    () => (userLocation ? [userLocation.latitude, userLocation.longitude] as const : metroManilaCenter),
+    [userLocation],
+  )
+  const mapLayoutKey = `${normalizedPlaces.length}:${placesWithPinsCount}`
   const shouldShowPermissionPrompt =
     permissionState === 'prompt' || permissionState === 'requesting' || permissionState === 'denied'
+  const shouldShowMapPinNotice = !isSearching && hasMissingMapPins && !isMapPinNoticeDismissed
 
   useEffect(() => {
     if (!selectedPlaceId && places.length > 0) {
@@ -1079,6 +1559,8 @@ function AskAiMapPage() {
   function selectPlace(placeId: string) {
     setSelectedPlaceId(placeId)
     setFocusedPlaceId(placeId)
+    setSelectedPlaceFocusSignal((currentValue) => currentValue + 1)
+    setIsPlaceDetailOpen(false)
   }
 
   function openPlaceDetails(placeId: string) {
@@ -1118,15 +1600,26 @@ function AskAiMapPage() {
     )
   }
 
-  async function handleSubmit() {
-    if (!session?.access_token || !canSubmit) {
+  async function handleSubmit(options?: { selectedChipIdsOverride?: AskAiMapChipId[]; queryOverride?: string }) {
+    const effectiveSelectedChipIds = options?.selectedChipIdsOverride ?? selectedChipIds
+    const effectiveQuery = options?.queryOverride ?? query
+    const effectiveCanSubmit = buildMapRequestQuery(effectiveQuery, effectiveSelectedChipIds).trim().length > 0 && !isSearching
+
+    if (!session?.access_token || !effectiveCanSubmit) {
       return
     }
 
+    const effectiveRequestQuery = buildMapRequestQuery(effectiveQuery, effectiveSelectedChipIds)
+    const effectiveUsesNearMe = effectiveSelectedChipIds.includes('near-me')
+    const effectiveUsesOpenNow = effectiveSelectedChipIds.includes('open-now')
+    const { version: requestVersion, requestId } = incrementAskAiMapRequestVersion()
+
+    setQuery(effectiveQuery)
     setHasSearched(true)
+    setIsMapPinNoticeDismissed(false)
     patchAskAiMapRuntimeState({
-      query,
-      selectedChipIds,
+      query: effectiveQuery,
+      selectedChipIds: effectiveSelectedChipIds,
       userLocation,
       isSearching: true,
       errorMessage: '',
@@ -1139,8 +1632,11 @@ function AskAiMapPage() {
     })
     setIsPlaceDetailOpen(false)
 
+    registerAskAiTask('maps')
+
     const controller = new AbortController()
     const timeoutId = window.setTimeout(() => controller.abort(), ASK_AI_MAPS_REQUEST_TIMEOUT_MS)
+    setAskAiMapAbortController(controller, timeoutId)
 
     try {
       const response = await fetch(`/api/ask-ai/maps?t=${Date.now()}`, {
@@ -1152,15 +1648,20 @@ function AskAiMapPage() {
           Authorization: `Bearer ${session.access_token}`,
           'Cache-Control': 'no-store',
           Pragma: 'no-cache',
+          'x-request-id': requestId,
         },
         body: JSON.stringify({
-          query: requestQuery,
-          selectedChips: selectedChipIds.map((chipId) => chipLabelsById.get(chipId) ?? chipId),
-          nearMe: usesNearMe,
-          openNow: usesOpenNow,
+          query: effectiveRequestQuery,
+          selectedChips: effectiveSelectedChipIds.map((chipId) => chipLabelsById.get(chipId) ?? chipId),
+          nearMe: effectiveUsesNearMe,
+          openNow: effectiveUsesOpenNow,
           userLocation,
         }),
       })
+
+      if (getAskAiMapRequestVersion() !== requestVersion) {
+        return
+      }
 
       const data = await response.json() as AskAiMapsResponse
 
@@ -1168,14 +1669,25 @@ function AskAiMapPage() {
         throw new Error(data.message || 'Ask AI Maps could not load places right now.')
       }
 
+      if (getAskAiMapRequestVersion() !== requestVersion) {
+        return
+      }
+
       const nextPlaces = normalizePlaces(data.places)
       const nextSources = normalizeSources(data.sources)
-      const nextStatusMessage = getEmptyReasonMessage(data.emptyReason) ?? data.message ?? ''
+      const emptyReasonMessage = getEmptyReasonMessage(data.emptyReason) ?? data.message ?? ''
+      const suggestedSearchesMessage = buildSuggestedSearchesMessage(data.suggestedSearches)
+      const nextStatusMessage = [emptyReasonMessage, suggestedSearchesMessage].filter(Boolean).join(' ')
 
       startTransition(() => {
+        if (getAskAiMapRequestVersion() !== requestVersion) {
+          return
+        }
+
+        completeAskAiTask('maps', { places: nextPlaces, answerText: typeof data.answerText === 'string' ? extractStructuredAnswerText(data.answerText) : undefined })
         patchAskAiMapRuntimeState({
-          query,
-          selectedChipIds,
+          query: effectiveQuery,
+          selectedChipIds: effectiveSelectedChipIds,
           userLocation,
           isSearching: false,
           errorMessage: '',
@@ -1188,9 +1700,21 @@ function AskAiMapPage() {
         })
       })
     } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        if (wasAskAiMapRequestCancelled()) {
+          return
+        }
+      }
+
+      if (getAskAiMapRequestVersion() !== requestVersion) {
+        return
+      }
+
+      const errorMessage = getAskAiMapsRequestErrorMessage(error)
+      failAskAiTask('maps', errorMessage)
       patchAskAiMapRuntimeState({
-        query,
-        selectedChipIds,
+        query: effectiveQuery,
+        selectedChipIds: effectiveSelectedChipIds,
         userLocation,
         isSearching: false,
         errorMessage: getAskAiMapsRequestErrorMessage(error),
@@ -1203,16 +1727,14 @@ function AskAiMapPage() {
       })
     } finally {
       window.clearTimeout(timeoutId)
+      if (!wasAskAiMapRequestCancelled()) {
+        clearAskAiMapAbortController()
+      }
     }
   }
 
-  function handleStartOver() {
-    resetAskAiMapRuntimeState()
-    clearAskAiMapRouteCache()
-    setQuery('')
-    setSelectedChipIds([])
-    setUserLocation(null)
-    setIsSearching(false)
+  function clearTransientSearchOutput() {
+    setIsPlaceDetailOpen(false)
     setErrorMessage('')
     setStatusMessage('')
     setAnswerText('')
@@ -1220,9 +1742,19 @@ function AskAiMapPage() {
     setSources([])
     setSelectedPlaceId(null)
     setFocusedPlaceId(null)
-    setIsPlaceDetailOpen(false)
-    setPermissionError('')
-    setPermissionState('idle')
+  }
+
+  async function handleEnterSearch(queryOverride?: string) {
+    if (isSearching) {
+      cancelAskAiMapRequest()
+      return
+    }
+
+    if (places.length > 0 || Boolean(errorMessage) || Boolean(statusMessage) || Boolean(answerText) || isPlaceDetailOpen) {
+      clearTransientSearchOutput()
+    }
+
+    await handleSubmit({ queryOverride })
   }
 
   if (isSessionLoading) {
@@ -1245,47 +1777,30 @@ function AskAiMapPage() {
               focusedPlaceId={focusedPlaceId}
               center={mapCenter}
               zoom={userLocation ? 14 : 12}
-              autoFitToPlaces={places.length > 0}
+              autoFitToPlaces={placesWithPinsCount > 0}
+              focusSelectedPlaceOnChange
+              selectedPlaceFocusSignal={selectedPlaceFocusSignal}
               className="h-full"
               layoutKey={mapLayoutKey}
               onPlaceSelect={selectPlace}
-              onPlaceOpen={openPlaceDetails}
             />
 
             <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[linear-gradient(180deg,rgba(248,247,244,0.72)_0%,rgba(248,247,244,0.18)_58%,rgba(248,247,244,0)_100%)]" />
-            <div className="pointer-events-none absolute left-20 right-3 top-3 z-[620] sm:left-auto sm:right-4 sm:top-4 sm:w-auto">
-              <div className="pointer-events-auto ml-auto flex max-w-[min(88vw,400px)] items-start gap-3 rounded-[26px] border border-white/70 bg-white/84 px-3 py-3 shadow-[0_12px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-                <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[rgba(23,45,107,0.08)] text-[var(--accent-deep)]">
-                  <AppIcon name="askAi" className="h-4 w-4" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[14px] font-semibold tracking-[-0.01em] text-slate-900">Google Maps picks</p>
-                  <p className="mt-0.5 text-[11px] font-medium text-slate-500">{headerSubtitle}</p>
-                  {isSearching ? (
-                    <div className="mt-2 inline-flex items-center gap-2 text-[12px] font-medium text-slate-600">
-                      <span className="inline-flex items-center gap-1 text-[var(--accent-deep)]">
-                        <span className="h-1.5 w-1.5 rounded-full bg-current motion-safe:animate-bounce" />
-                        <span className="h-1.5 w-1.5 rounded-full bg-current motion-safe:animate-bounce [animation-delay:120ms]" />
-                        <span className="h-1.5 w-1.5 rounded-full bg-current motion-safe:animate-bounce [animation-delay:240ms]" />
-                      </span>
-                      <span>Searching for map-grounded matches</span>
-                    </div>
-                  ) : null}
-                  {!isSearching && answerText ? <p className="mt-2 line-clamp-2 text-[12px] leading-5 text-slate-700">{answerText}</p> : null}
-                </div>
-              </div>
+            <div className="absolute right-3 top-3 z-[620] sm:right-4 sm:top-4">
+              <InternalLink
+                href="/ask-ai"
+                aria-label="Back to Menu"
+                className="pointer-events-auto inline-flex h-[34px] w-[34px] items-center justify-center rounded-xl bg-sky-100 text-sky-700 ring-1 ring-inset ring-sky-200/70 transition hover:bg-sky-200/80 hover:text-sky-800"
+              >
+                <Bot className="h-6 w-6" strokeWidth={2} />
+              </InternalLink>
             </div>
 
             {isSearching ? (
               <div className="pointer-events-none absolute inset-0 rounded-[26px] bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.14))]">
                 <div className="absolute inset-0 animate-[gala-map-breathe_4s_ease-in-out_infinite] bg-[linear-gradient(135deg,rgba(255,255,255,0.0)_0%,rgba(255,255,255,0.28)_45%,rgba(255,255,255,0.0)_100%)]" />
-                <div className="absolute left-[18%] top-[34%] h-4 w-4 animate-bounce rounded-full bg-[#3b82f6] shadow-[0_0_0_8px_rgba(59,130,246,0.12)]" />
-                <div className="absolute left-[52%] top-[48%] h-4 w-4 animate-bounce rounded-full bg-[#4f8ff6] shadow-[0_0_0_8px_rgba(59,130,246,0.10)] [animation-delay:180ms]" />
-                <div className="absolute left-[70%] top-[28%] h-4 w-4 animate-bounce rounded-full bg-[#5b95f8] shadow-[0_0_0_8px_rgba(59,130,246,0.11)] [animation-delay:320ms]" />
               </div>
             ) : null}
-
-            <ThinkingMiniGamePopup isThinking={isSearching} />
 
             {shouldShowPermissionPrompt ? (
               <div className="absolute inset-0 z-[700] flex items-center justify-center bg-slate-950/12 p-4">
@@ -1330,195 +1845,253 @@ function AskAiMapPage() {
               </div>
             ) : null}
 
-            <section className="absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom,0px)+5.25rem)] z-[640] overflow-hidden sm:inset-x-4 sm:bottom-4">
+            <section className="absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom,0px)+3.5rem)] z-[640] overflow-hidden sm:inset-x-4 sm:bottom-14 lg:inset-x-6 lg:bottom-16">
                 {errorMessage && !isSearching ? (
-                  <div className="mb-3 rounded-[24px] border border-rose-100 bg-white/96 px-4 py-3 text-sm font-medium text-rose-700 shadow-[0_16px_36px_rgba(15,23,42,0.12)]">
+                  <div className="mb-3 rounded-[22px] border border-rose-100 bg-white px-4 py-3 text-sm font-medium text-rose-700 shadow-[0_12px_30px_rgba(15,23,42,0.10)] lg:mx-auto lg:max-w-[680px]">
                     {errorMessage}
                   </div>
                 ) : null}
 
                 {!errorMessage && statusMessage && !isSearching ? (
-                  <div className="mb-3 rounded-[24px] border border-sky-100 bg-white/96 px-4 py-3 text-sm font-medium text-slate-700 shadow-[0_16px_36px_rgba(15,23,42,0.12)]">
+                  <div className="mb-3 rounded-[22px] border border-sky-100 bg-white px-4 py-3 text-sm font-medium text-slate-700 shadow-[0_12px_30px_rgba(15,23,42,0.10)] lg:mx-auto lg:max-w-[680px]">
                     {statusMessage}
                   </div>
                 ) : null}
 
                 {sources.length > 0 && !isSearching ? (
-                  <div className="mb-3 hidden rounded-[22px] border border-white/82 bg-white/92 px-4 py-3 text-[12px] font-medium text-slate-600 shadow-[0_10px_24px_rgba(15,23,42,0.08)] sm:block">
-                    {sources.length} Google Maps source{sources.length === 1 ? '' : 's'} grounded this answer.
+                  <div className="mb-3 hidden rounded-[20px] bg-white px-4 py-2.5 text-[12px] font-medium text-slate-500 shadow-[0_8px_20px_rgba(15,23,42,0.06)] sm:block lg:mx-auto lg:max-w-[680px]">
+                    {sources.length} verified source{sources.length === 1 ? '' : 's'}
                   </div>
                 ) : null}
 
-                {(!isSearching && (places.length > 0 || Boolean(answerText) || Boolean(errorMessage) || Boolean(statusMessage))) ? (
-                  <div className="mb-3 flex justify-end">
-                    <button
-                      type="button"
-                      onClick={handleStartOver}
-                      className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full border border-white/86 bg-white/94 px-3.5 text-[12px] font-semibold text-slate-700 shadow-[0_10px_24px_rgba(15,23,42,0.08)] transition hover:border-[rgba(20,35,58,0.16)] hover:text-slate-950"
-                    >
-                      <AppIcon name="refresh" className="h-3.5 w-3.5" />
-                      <span>Start over</span>
-                    </button>
+                {shouldShowMapPinNotice ? (
+                  <div className="mb-3 flex justify-center lg:mx-auto lg:max-w-[680px]">
+                    <div className="pointer-events-auto flex w-full items-start gap-2 rounded-[18px] border border-slate-200 bg-white/96 px-3 py-2 text-[11px] leading-5 text-slate-500 shadow-[0_8px_20px_rgba(15,23,42,0.06)] backdrop-blur-sm sm:text-[12px]">
+                      <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+                        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <circle cx="12" cy="12" r="10" />
+                          <line x1="12" y1="8" x2="12" y2="12" />
+                          <line x1="12" y1="16" x2="12.01" y2="16" />
+                        </svg>
+                      </div>
+                      <p className="min-w-0 flex-1">
+                        Some results do not have a map pin yet to keep this on free services. Open place details for the Google Maps link.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setIsMapPinNoticeDismissed(true)}
+                        className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                        aria-label="Dismiss map pin notice"
+                      >
+                        <AppIcon name="clear" className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   </div>
                 ) : null}
 
-                <div className="flex w-full snap-x snap-mandatory gap-3 overflow-x-auto overflow-y-hidden pb-4 pl-1 pr-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                <div className="flex w-full snap-x snap-mandatory gap-3 overflow-x-auto overflow-y-hidden pb-4 pl-1 pr-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden lg:justify-center">
                   {isSearching ? <MinimalLoadingCard query={query} /> : null}
 
-                  {!isSearching ? normalizedPlaces.map((place) => {
+                  {!isSearching ? normalizedPlaces.map((place, index) => {
+                    const display = displayPlaces[index]
+                    if (!display) return null
                     const isSelected = place.id === selectedPlaceId
-                    const categoryText = getDisplayCategory(place)
-                    const reviewBadgeText = getReviewBadgeText(place)
-                    const shortLocationText = getShortLocationText(place)
-                    const displayReason = getMiniReasonPreview(place, requestQuery || query)
-                    const openStatusTone = getOpenStatusTone(place)
+                    const areaText = getShortAreaText(display)
+                    const openStatusChip = getOpenStatusChip(display)
+                    const hoursSummary = display.openingHoursSummary || ''
+                    const ratingText = display.ratingText || (typeof place.rating === 'number' ? place.rating.toFixed(1) : '')
+                    const reviewCountText = display.reviewCountText || formatReviewCount(place.reviewCount)
+                    const previewText = display.whyThisFits.length > 110
+                      ? `${display.whyThisFits.slice(0, 107).trimEnd()}...`
+                      : display.whyThisFits
 
                     return (
                       <div
                         key={place.id}
                         ref={(node) => {
-                          if (node) {
-                            cardRefs.current.set(place.id, node)
-                            return
-                          }
-
-                          cardRefs.current.delete(place.id)
+                          if (node) cardRefs.current.set(place.id, node)
+                          else cardRefs.current.delete(place.id)
                         }}
-                        className={`flex h-[184px] w-[248px] snap-center shrink-0 flex-col rounded-[24px] border bg-[linear-gradient(180deg,rgba(255,255,255,0.97),rgba(248,250,252,0.95))] text-left backdrop-blur-md transition ${
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => {
+                          selectPlace(place.id)
+                        }}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault()
+                            selectPlace(place.id)
+                          }
+                        }}
+                        className={`relative w-[82vw] max-w-[340px] sm:max-w-[360px] lg:max-w-[400px] min-h-[168px] snap-center shrink-0 rounded-[24px] border bg-white px-4 py-3.5 cursor-pointer transition-all duration-200 ${
                           isSelected
-                            ? 'scale-[1.01] border-[rgba(210,92,36,0.42)] p-3.5 shadow-[0_18px_38px_rgba(15,23,42,0.14)] ring-2 ring-[rgba(210,92,36,0.14)]'
-                            : 'border-white/70 p-3.5 shadow-[0_10px_24px_rgba(15,23,42,0.08)] opacity-95 hover:border-[rgba(210,92,36,0.18)] hover:opacity-100'
+                            ? 'scale-[1.01] border-transparent shadow-[0_22px_52px_rgba(15,23,42,0.22)]'
+                            : 'border-slate-100/90 shadow-[0_14px_38px_rgba(15,23,42,0.10)] hover:border-slate-200 hover:shadow-[0_18px_42px_rgba(15,23,42,0.14)]'
                         }`}
                         onMouseEnter={() => setFocusedPlaceId(place.id)}
                         onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
                       >
-                        <button
-                          type="button"
-                          onClick={() => openPlaceDetails(place.id)}
-                          className="flex h-full w-full min-w-0 overflow-hidden text-left"
-                        >
-                          <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-                            <div className="flex min-w-0 items-start gap-3">
-                              <span className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl text-[13px] font-black ${
+                        <div className="flex h-full flex-col">
+                          <div className="flex items-start gap-2.5">
+                            <div className="flex shrink-0 items-center gap-2 pt-0.5">
+                              <span className={`h-2.5 w-2.5 rounded-full transition ${
+                                isSelected ? 'bg-[var(--accent-deep)] shadow-[0_0_0_5px_rgba(37,99,235,0.12)]' : 'bg-slate-200'
+                              }`} />
+                              <span className={`inline-flex h-7 min-w-7 items-center justify-center rounded-2xl px-2 text-[11px] font-black ${
                                 isSelected
-                                  ? 'bg-[linear-gradient(180deg,#d25c24_0%,#bf4c16_100%)] text-white shadow-[0_10px_20px_rgba(210,92,36,0.24)]'
-                                  : 'bg-[rgba(210,92,36,0.12)] text-[#bf4c16]'
+                                  ? 'bg-[#172A5A] text-white shadow-[0_8px_16px_rgba(23,42,90,0.24)]'
+                                  : 'bg-slate-100 text-[#172A5A]'
                               }`}>
                                 {place.displayIndex}
                               </span>
-                              <div className="min-w-0 flex-1">
-                                <div className="flex min-w-0 items-start gap-2">
-                                  <h3 className="min-w-0 flex-1 truncate text-[15px] font-black leading-5 tracking-[-0.02em] text-slate-950">
-                                    {getDisplayName(place)}
-                                  </h3>
-                                  <span className="shrink-0 pt-0.5 text-slate-400">›</span>
-                                </div>
-                                <p className="mt-1 truncate text-[12px] font-medium text-slate-600">
-                                  {categoryText}
-                                </p>
-                              </div>
                             </div>
 
-                            <div className="mt-3 flex min-w-0 flex-1 flex-col gap-2 overflow-hidden text-[12px]">
-                              {reviewBadgeText ? (
-                                <div className="flex min-w-0 items-center gap-2 text-amber-700">
-                                  <AppIcon name="reviews" className="h-3.5 w-3.5 shrink-0" />
-                                  <span className="min-w-0 truncate font-semibold">{reviewBadgeText}</span>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-start gap-2">
+                                <h3 className="min-w-0 flex-1 text-[15px] font-extrabold leading-[1.2] tracking-[-0.02em] text-slate-950 line-clamp-2">
+                                  {display.title}
+                                </h3>
+                                <div className="flex shrink-0 flex-col items-end gap-1">
+                                  {display.category !== 'Place' ? (
+                                    <span className="shrink-0 self-start rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-[10px] font-semibold text-slate-500">
+                                      {display.category}
+                                    </span>
+                                  ) : null}
                                 </div>
-                              ) : null}
-                              <div className={`inline-flex max-w-full items-center self-start overflow-hidden rounded-full px-2.5 py-1 ${openStatusTone.className}`}>
-                                <span className={`mr-1.5 shrink-0 text-[10px] ${openStatusTone.dotClassName}`}>●</span>
-                                <span className="min-w-0 truncate">{openStatusTone.label}</span>
                               </div>
-                              {shortLocationText ? (
-                                <div className="flex min-w-0 items-center gap-2 text-slate-600">
-                                  <AppIcon name="place" className="h-3.5 w-3.5 shrink-0 text-slate-500" />
-                                  <span className="min-w-0 truncate font-medium">{shortLocationText}</span>
-                                </div>
-                              ) : null}
-                              <div className="mt-auto min-w-0 overflow-hidden rounded-[16px] bg-[rgba(248,250,252,0.96)] px-3 py-2 text-slate-600">
-                                <div className="flex min-w-0 items-center gap-2">
-                                  <span className="shrink-0 text-[13px] font-black text-[#d25c24]">AI</span>
-                                  <span className="min-w-0 truncate font-medium">{displayReason.replace(/^AI\s+/, '')}</span>
-                                </div>
+
+                              <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[12px] font-medium text-slate-500">
+                                {ratingText ? (
+                                  <span className="inline-flex items-center gap-0.5 font-semibold text-slate-700">
+                                    <span className="text-[13px] leading-none text-amber-500">{'\u2605'}</span>
+                                    <span>{ratingText}</span>
+                                  </span>
+                                ) : null}
+                                {reviewCountText ? (
+                                  <>
+                                    {getMetaDot(Boolean(ratingText))}
+                                    <span>{reviewCountText}</span>
+                                  </>
+                                ) : null}
                               </div>
                             </div>
                           </div>
-                        </button>
+
+                          {areaText ? (
+                            <div className="mt-2 flex items-start gap-1.5 text-[12px] text-slate-400">
+                              <AppIcon name="place" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-350" />
+                              <span className="line-clamp-1 font-medium">{shortenAddress(display.address || areaText)}</span>
+                            </div>
+                          ) : null}
+
+                          <p className="mt-2 line-clamp-2 text-[12px] leading-[1.5] text-slate-500">
+                            {previewText}
+                          </p>
+
+                          <div className="mt-auto flex items-center justify-between gap-3 pt-2.5">
+                            <div className="min-w-0 flex items-center gap-2">
+                              {openStatusChip ? (
+                                <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-1.5 py-0.5 text-[11px] font-semibold ${openStatusChip.className}`}>
+                                  <span className={`text-[7px] ${openStatusChip.dotClassName}`}>{'\u25CF'}</span>
+                                  {openStatusChip.label}
+                                </span>
+                              ) : null}
+                              {hoursSummary ? (
+                                <span className="line-clamp-1 text-[11px] font-medium text-slate-400">{hoursSummary}</span>
+                              ) : null}
+                            </div>
+                            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+                              <button
+                                type="button"
+                                onClick={(event) => {
+                                  event.stopPropagation()
+                                  event.preventDefault()
+                                  openPlaceDetails(place.id)
+                                }}
+                                className="inline-flex shrink-0 items-center gap-1 rounded-full border border-[var(--accent)]/16 bg-[var(--accent-wash)] px-3 py-1.5 text-[11px] font-semibold text-[var(--accent-deep)] transition hover:bg-[var(--accent)]/15 active:scale-95"
+                              >
+                                <span>View details</span>
+                                <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M5 12h14M12 5l7 7-7 7" />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     )
                   }) : null}
                 </div>
 
-                <div className="flex items-center gap-3 rounded-[22px] border border-white/86 bg-white/96 px-3 py-2.5 shadow-[0_10px_24px_rgba(15,23,42,0.08)] backdrop-blur-md">
-                  <input
-                    value={query}
-                    onChange={(event) => setQuery(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter') {
-                        event.preventDefault()
-                        void handleSubmit()
-                      }
-                    }}
-                    placeholder="Ask about malls in Parañaque, cafes near me, date spots..."
-                    className="h-12 min-w-0 flex-1 bg-transparent px-0.5 text-[15px] font-medium text-slate-900 outline-none placeholder:font-medium placeholder:text-slate-400"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => void handleSubmit()}
-                    disabled={!canSubmit}
-                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--accent-deep)] text-white shadow-[0_10px_20px_rgba(23,45,107,0.18)] transition hover:bg-[var(--accent)] disabled:opacity-60"
-                    aria-label="Submit ask ai map search"
-                  >
-                    <AppIcon name="askAi" className="h-5 w-5" />
-                  </button>
-                </div>
+                <AskAiMapComposer
+                  key={query}
+                  query={query}
+                  selectedChipIds={selectedChipIds}
+                  isSearching={isSearching}
+                  onSubmit={(queryOverride) => {
+                    void handleEnterSearch(queryOverride)
+                  }}
+                  onCancel={() => {
+                    setIsSearching(false)
+                    cancelAskAiMapRequest()
+                  }}
+                />
               </section>
           </div>
         </section>
       </div>
     </main>
-    {selectedPlace && isPlaceDetailOpen ? createPortal(
+    {selectedDisplayPlace && isPlaceDetailOpen ? createPortal(
       <div className="fixed inset-0 z-[7000]">
         <button
           type="button"
           aria-label="Close place details"
-          className="absolute inset-0 bg-slate-950/36 backdrop-blur-[3px]"
+          className="absolute inset-0 bg-slate-950/40 backdrop-blur-[4px]"
           onClick={() => setIsPlaceDetailOpen(false)}
         />
-        <div className="absolute inset-x-0 bottom-0 flex items-end">
+        <div className="absolute inset-x-0 bottom-0 flex items-end lg:inset-0 lg:items-center lg:justify-center lg:p-4">
         <section
-          className="flex w-full max-h-[78dvh] flex-col overflow-hidden rounded-t-[24px] bg-white shadow-[0_-18px_48px_rgba(15,23,42,0.22)]"
+          className="flex w-full max-h-[82dvh] flex-col overflow-hidden rounded-t-[28px] bg-white shadow-[0_-18px_48px_rgba(15,23,42,0.22)] lg:max-w-[580px] lg:max-h-[88dvh] lg:rounded-[28px] lg:shadow-[0_26px_60px_rgba(15,23,42,0.24)]"
           aria-modal="true"
           role="dialog"
-          aria-label={`${getDisplayName(selectedPlace)} details`}
+          aria-label={`${selectedDisplayPlace.title} details`}
         >
           <div className="flex justify-center px-4 pt-3">
             <span className="h-1.5 w-14 rounded-full bg-slate-200" />
           </div>
-          <div className="flex shrink-0 items-start justify-between gap-4 px-5 pb-4 pt-3">
-            <div className="min-w-0">
+
+          <div className="flex shrink-0 items-start justify-between gap-4 px-5 pb-3 pt-3">
+            <div className="min-w-0 flex-1">
               <h2 className="text-[22px] font-black tracking-[-0.03em] text-slate-950">
-                {getDisplayName(selectedPlace)}
+                {selectedDisplayPlace.title}
               </h2>
-              <p className="mt-2 text-sm font-semibold text-slate-600">
-                {getDisplayCategory(selectedPlace)}
-              </p>
-              {getReviewBadgeText(selectedPlace) ? (
-                <p className="mt-1.5 text-sm font-semibold text-slate-700">
-                  <span className="text-amber-600">★</span> {getReviewBadgeText(selectedPlace)}
-                </p>
+
+              {selectedDisplayPlace.category !== 'Place' ? (
+                <span className="mt-2 inline-block rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-600">
+                  {selectedDisplayPlace.category}
+                </span>
               ) : null}
-              <p className={`mt-2 inline-flex items-center rounded-full px-2.5 py-1 text-sm font-semibold ${getOpenStatusTone(selectedPlace).className}`}>
-                <span className={`mr-1.5 text-[10px] ${getOpenStatusTone(selectedPlace).dotClassName}`}>●</span>
-                {getOpenStatusTone(selectedPlace).label}
-                {getDisplayHours(selectedPlace) !== 'Hours not available' ? ` · ${getDisplayHours(selectedPlace)}` : ''}
-              </p>
+
+              <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+                {selectedDisplayPlace.ratingText ? (
+                  <span className="inline-flex items-center gap-1 font-semibold text-slate-700">
+                    <span className="text-amber-500">{'\u2605'}</span>
+                    <span>{selectedDisplayPlace.ratingText}</span>
+                  </span>
+                ) : null}
+                {selectedDisplayPlace.reviewCountText ? (
+                  <>
+                    {getMetaDot(Boolean(selectedDisplayPlace.ratingText))}
+                    <span className="font-medium text-slate-500">{selectedDisplayPlace.reviewCountText}</span>
+                  </>
+                ) : null}
+              </div>
             </div>
+
             <button
               type="button"
               onClick={() => setIsPlaceDetailOpen(false)}
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--line)] bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-900"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 transition hover:border-slate-300 hover:text-slate-600"
               aria-label="Close place details"
             >
               <AppIcon name="clear" className="h-4 w-4" />
@@ -1526,49 +2099,148 @@ function AskAiMapPage() {
           </div>
 
           <div className="flex-1 overflow-y-auto px-5 pb-[calc(24px+env(safe-area-inset-bottom,0px))] [-webkit-overflow-scrolling:touch]">
-            <div className="rounded-[22px] border border-[rgba(210,92,36,0.12)] bg-[linear-gradient(180deg,rgba(255,248,243,0.96),rgba(255,255,255,0.94))] px-4 py-4">
-              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#bf4c16]">Why this fits</p>
+            <div className="rounded-[20px] border border-[rgba(23,42,90,0.10)] bg-[linear-gradient(180deg,rgba(248,250,252,0.98),rgba(255,255,255,0.94))] px-4 py-4">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#172A5A]">Why this fits</p>
               <p className="mt-2 text-sm leading-6 text-slate-700">
-                {getDisplayReason(selectedPlace, requestQuery || query)}
+                {selectedDisplayPlace.whyThisFits}
               </p>
             </div>
 
-            <div className="mt-3 rounded-[22px] bg-slate-50 px-4 py-4">
-              <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">Address</p>
-              <p className="mt-2 text-sm leading-6 text-slate-700">
-                {getDisplayAddress(selectedPlace)}
-              </p>
-            </div>
+            {(selectedDisplayPlace.address !== 'Address not available' ||
+              selectedDisplayPlace.hoursLines.length > 0 ||
+              selectedDisplayPlace.phoneText ||
+              selectedDisplayPlace.isCoordinateVerified) ? (
+              <div className="mt-3 rounded-[20px] bg-slate-50 px-4 py-4">
+                <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-500">Info</p>
 
-            <div className="mt-3 grid grid-cols-2 gap-3">
-              <div className="rounded-[22px] bg-slate-50 px-4 py-4">
-                <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">Hours</p>
-                <p className="mt-2 text-sm leading-6 text-slate-700">
-                  {getDisplayHours(selectedPlace)}
-                </p>
+                {selectedDisplayPlace.address !== 'Address not available' ? (
+                  <div className="mt-2.5 flex items-start gap-2 text-sm text-slate-700">
+                    <AppIcon name="place" className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
+                    <span className="leading-6">{selectedDisplayPlace.address}</span>
+                  </div>
+                ) : null}
+
+                {selectedDisplayPlace.hoursLines.length > 0 ? (
+                  <div className="mt-2.5 flex items-start gap-2 text-sm text-slate-700">
+                    <svg className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                    <div>
+                      {selectedDisplayPlace.hoursLines.map((line) => (
+                        <p key={line} className="leading-6">{line}</p>
+                      ))}
+                    </div>
+                  </div>
+                ) : selectedDisplayPlace.openingHoursSummary ? (
+                  <div className="mt-2.5 flex items-start gap-2 text-sm text-slate-700">
+                    <svg className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                    <span className="leading-6">{selectedDisplayPlace.openingHoursSummary}</span>
+                  </div>
+                ) : null}
+
+                {(() => {
+                  const chip = getOpenStatusChip(selectedDisplayPlace)
+                  if (!chip) return null
+                  return (
+                    <div className="mt-2.5 flex items-center gap-2">
+                      <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${chip.className}`}>
+                        <span className={`text-[8px] ${chip.dotClassName}`}>{'\u25CF'}</span>
+                        {chip.label}
+                      </span>
+                    </div>
+                  )
+                })()}
+
+                {selectedDisplayPlace.phoneText ? (
+                  <div className="mt-2.5 flex items-start gap-2 text-sm text-slate-700">
+                    <svg className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                    </svg>
+                    <span className="leading-6">{selectedDisplayPlace.phoneText}</span>
+                  </div>
+                ) : null}
+
+                {selectedDisplayPlace.isCoordinateVerified ? (
+                  <div className="mt-2.5 flex items-center gap-2">
+                    <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100">
+                      <svg className="h-3 w-3 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    </span>
+                    <span className="text-[13px] font-semibold text-emerald-700">{selectedDisplayPlace.coordinateTrustLabel || 'Verified map location'}</span>
+                  </div>
+                ) : null}
               </div>
+            ) : null}
 
-              {getCoordinateChipText(selectedPlace) ? (
-                <div className="rounded-[22px] bg-slate-50 px-4 py-4">
-                  <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">Coords</p>
-                  <p className="mt-2 text-sm leading-6 text-slate-700">
-                    {getCoordinateChipText(selectedPlace)}
-                  </p>
-                </div>
-              ) : null}
-            </div>
+            {selectedDisplayPlace.nearbyItems.length > 0 ? (
+              <div className="mt-3 rounded-[20px] bg-slate-50 px-4 py-4">
+                <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-500">Nearby</p>
+                <ul className="mt-2 space-y-1.5">
+                  {selectedDisplayPlace.nearbyItems.map((item) => (
+                    <li key={item} className="flex items-center gap-2 text-[13px] leading-6 text-slate-700">
+                      <span className="h-1 w-1 shrink-0 rounded-full bg-slate-300" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
 
-            {getMapsHref(selectedPlace) ? (
+            {selectedDisplayPlace.parkingItems.length > 0 ? (
+              <div className="mt-3 rounded-[20px] bg-slate-50 px-4 py-4">
+                <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-500">Parking</p>
+                <ul className="mt-2 space-y-1.5">
+                  {selectedDisplayPlace.parkingItems.map((item) => (
+                    <li key={item} className="flex items-center gap-2 text-[13px] leading-6 text-slate-700">
+                      <span className="h-1 w-1 shrink-0 rounded-full bg-slate-300" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+
+            {selectedDisplayPlace.accessibilityItems.length > 0 ? (
+              <div className="mt-3 rounded-[20px] bg-slate-50 px-4 py-4">
+                <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-500">Accessibility</p>
+                <ul className="mt-2 space-y-1.5">
+                  {selectedDisplayPlace.accessibilityItems.map((item) => (
+                    <li key={item} className="flex items-center gap-2 text-[13px] leading-6 text-slate-700">
+                      <span className="h-1 w-1 shrink-0 rounded-full bg-slate-300" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+
+            {selectedGoogleMapsUrl ? (
               <a
-                href={getMapsHref(selectedPlace) ?? undefined}
+                href={selectedGoogleMapsUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800"
+                className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-slate-950 px-4 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(15,23,42,0.16)] transition hover:bg-slate-800 active:scale-[0.98]"
               >
-                <AppIcon name="map" className="h-4 w-4" />
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
                 <span>Open in Google Maps</span>
               </a>
-            ) : null}
+            ) : (
+              <div className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-400">
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+                <span>Google Maps link unavailable</span>
+              </div>
+            )}
           </div>
         </section>
         </div>

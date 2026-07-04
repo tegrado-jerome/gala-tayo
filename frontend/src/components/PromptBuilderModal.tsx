@@ -469,7 +469,7 @@ export default function PromptBuilderModal({
                     </div>
                   </section>
 
-                  <div className="mt-4 grid grid-cols-2 gap-2">
+                  <div className="mt-4">
                     <button
                       type="button"
                       onClick={handleReset}
@@ -477,15 +477,6 @@ export default function PromptBuilderModal({
                     >
                       <RefreshIcon />
                       <span>Start over</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={onClose}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-[14px] bg-transparent px-3 py-2.5 text-[13px] font-semibold text-slate-600 transition hover:bg-slate-100"
-                    >
-                      <BotIcon />
-                      <span>Back to Ask AI</span>
                     </button>
                   </div>
                 </div>

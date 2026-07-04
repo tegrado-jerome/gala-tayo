@@ -459,10 +459,10 @@ function SearchPageWords() {
       <AppHeader minimal />
 
       <main
-        className="relative mx-auto w-full max-w-[390px] px-5 pb-[calc(7rem+env(safe-area-inset-bottom,0px))] pt-5 sm:max-w-[720px] sm:px-8 sm:pb-14 sm:pt-6 lg:max-w-[980px] lg:px-10 lg:pb-12 lg:pt-7"
+        className="relative mx-auto w-full max-w-[390px] px-5 pb-[calc(7rem+env(safe-area-inset-bottom,0px))] pt-5 sm:max-w-[720px] sm:px-8 sm:pb-14 sm:pt-6 md:min-h-[calc(100svh-68px)] md:max-w-[1180px] md:px-6 md:pb-8 md:pt-6 lg:max-w-[1180px] lg:px-8 lg:pb-10 lg:pt-7"
       >
         <section
-          className="relative mx-auto flex w-full max-w-[520px] flex-col items-center gap-6 text-center sm:max-w-[560px] sm:gap-7 lg:max-w-[620px]"
+          className="relative mx-auto flex w-full max-w-[520px] flex-col items-center gap-6 text-center sm:max-w-[560px] sm:gap-7 lg:max-w-[620px] md:hidden"
         >
           <section className="w-full text-center">
             <label htmlFor="search-input" className="sr-only">
@@ -600,6 +600,198 @@ function SearchPageWords() {
               </div>
             </div>
           ) : null}
+        </section>
+
+        <section className="relative hidden w-full md:block">
+          <div className="mx-auto grid w-full max-w-[1100px] items-center gap-8 md:grid-cols-2 md:gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-8">
+            <div className="min-w-0">
+              <PageHeroHeader
+                eyebrow="Search"
+                title="Where do you want to go?"
+                description="Find cafes, parks, malls, date spots, and gala ideas."
+                icon={<AppIcon name="search" className="h-4 w-4" />}
+                className="mb-4 border-b-0 pb-0 text-left"
+              />
+
+              <div className="relative overflow-hidden rounded-[32px] bg-[linear-gradient(180deg,#1697f3_0%,#1777ea_100%)] px-4 py-4 text-left shadow-[0_24px_54px_rgba(23,119,234,0.28)] sm:px-5 sm:py-5">
+                <div className="pointer-events-none absolute inset-0">
+                  <div className="absolute left-0 top-0 h-full w-[68%] bg-[linear-gradient(205deg,rgba(255,255,255,0.18)_0%,rgba(255,255,255,0.18)_28%,rgba(255,255,255,0)_29%)]" />
+                  <div className="absolute right-0 top-0 h-28 w-28 rounded-full bg-white/10 blur-2xl" />
+                </div>
+                <div className="relative">
+                  <label htmlFor="search-input-desktop" className="sr-only">
+                    Search place, city, or vibe
+                  </label>
+                  <div className="flex items-stretch gap-3">
+                    <div className="flex min-w-0 flex-1 items-start gap-3 rounded-[22px] border-2 border-white/80 bg-[rgba(19,132,234,0.28)] px-4 py-3 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-sm sm:px-5 sm:py-4">
+                      <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/12 text-white">
+                        <AppIcon name="search" className="h-5 w-5" />
+                      </div>
+                      <textarea
+                        id="search-input-desktop"
+                        value={rawQuery}
+                        onChange={(event) => {
+                          setRawQuery(event.target.value)
+                        }}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter') {
+                            event.preventDefault()
+                            handleSearch()
+                          }
+                        }}
+                        placeholder={animatedPlaceholder || 'Search'}
+                        rows={2}
+                        className="min-h-[58px] flex-1 resize-none bg-transparent pt-1 text-[1.02rem] font-semibold leading-6 text-white outline-none placeholder:font-semibold placeholder:text-white/78 lg:text-[1.05rem]"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleSearch}
+                      disabled={!canSearch}
+                      aria-label="Search places"
+                      className={`flex min-h-[88px] w-[62px] shrink-0 items-center justify-center rounded-[22px] border-2 border-white/80 bg-[rgba(19,132,234,0.28)] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] transition hover:bg-white/20 lg:w-[64px] ${
+                        canSearch ? '' : 'cursor-not-allowed opacity-70'
+                      }`}
+                    >
+                      <AppIcon name="search" className="h-7 w-7" />
+                    </button>
+                  </div>
+
+                  <div className="mt-3 rounded-[24px] bg-white/12 px-3 py-3 backdrop-blur-[10px] sm:px-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex items-center gap-2 rounded-full bg-white/18 px-3 py-2 text-sm font-bold text-white">
+                        <AppIcon name="filter" className="h-4 w-4" />
+                        <span>Filters</span>
+                        <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1.5 text-[11px] font-black text-[#1777ea]">
+                          {activeFilterCount}
+                        </span>
+                      </div>
+
+                      <label className="min-w-0 flex-1 sm:flex-none">
+                        <select
+                          value={selectedCategoryValue ?? ''}
+                          onChange={(event) => {
+                            const nextValue = event.target.value || null
+                            setSelectedCategoryValue(nextValue)
+                            syncQueryWithFilters({
+                              categoryValue: nextValue,
+                              cityValue: selectedCity,
+                              goodForValue: selectedGoodFor,
+                              budgetValue: selectedBudget,
+                            })
+                          }}
+                          className="min-h-11 w-full rounded-full border border-white/28 bg-white/95 px-4 text-sm font-bold text-[#1d4f96] outline-none transition focus:border-white sm:min-w-[152px]"
+                        >
+                          <option value="">Category</option>
+                          {searchCategoryChoices.map((category) => (
+                            <option key={category.value} value={category.value}>
+                              {category.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label className="min-w-0 flex-1 sm:flex-none">
+                        <select
+                          value={selectedCity ?? ''}
+                          onChange={(event) => {
+                            const nextValue = event.target.value || null
+                            setSelectedCity(nextValue)
+                            syncQueryWithFilters({
+                              categoryValue: selectedCategoryValue,
+                              cityValue: nextValue,
+                              goodForValue: selectedGoodFor,
+                              budgetValue: selectedBudget,
+                            })
+                          }}
+                          className="min-h-11 w-full rounded-full border border-white/28 bg-white/95 px-4 text-sm font-bold text-[#1d4f96] outline-none transition focus:border-white sm:min-w-[148px]"
+                        >
+                          <option value="">City</option>
+                          {cityOptions.map((city) => (
+                            <option key={city.id} value={city.id}>
+                              {city.name}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+
+                      <label className="min-w-0 flex-1 sm:flex-none">
+                        <select
+                          value={selectedBudget ?? ''}
+                          onChange={(event) => {
+                            const nextValue = (event.target.value as BudgetValue) || null
+                            setSelectedBudget(nextValue)
+                            syncQueryWithFilters({
+                              categoryValue: selectedCategoryValue,
+                              cityValue: selectedCity,
+                              goodForValue: selectedGoodFor,
+                              budgetValue: nextValue,
+                            })
+                          }}
+                          className="min-h-11 w-full rounded-full border border-white/28 bg-white/95 px-4 text-sm font-bold text-[#1d4f96] outline-none transition focus:border-white sm:min-w-[170px]"
+                        >
+                          <option value="">Budget</option>
+                          {budgetOptions.map((budget) => (
+                            <option key={budget.value} value={budget.value}>
+                              {budget.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+
+                    {(selectedCategory?.label || selectedCityName || selectedGoodForOption?.label || effectiveBudgetPreview) ? (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {effectiveBudgetPreview ? (
+                          <span className="rounded-full border border-white/24 bg-white/18 px-3 py-1.5 text-sm font-semibold text-white">
+                            {effectiveBudgetPreview}
+                          </span>
+                        ) : null}
+                        {selectedCategory?.label ? (
+                          <span className="rounded-full border border-white/24 bg-white/18 px-3 py-1.5 text-sm font-semibold text-white">
+                            {selectedCategory.label}
+                          </span>
+                        ) : null}
+                        {selectedGoodForOption?.label ? (
+                          <span className="rounded-full border border-white/24 bg-white/18 px-3 py-1.5 text-sm font-semibold text-white">
+                            {selectedGoodForOption.label}
+                          </span>
+                        ) : null}
+                        {selectedCityName ? (
+                          <span className="rounded-full border border-white/24 bg-white/18 px-3 py-1.5 text-sm font-semibold text-white">
+                            {selectedCityName}
+                          </span>
+                        ) : null}
+                      </div>
+                    ) : null}
+
+                    {!isDefaultEmptyState && (selectedCategory?.label || selectedCityName || selectedGoodForOption?.label || effectiveBudgetPreview) ? (
+                      <p className="mt-3 text-sm leading-6 text-white/88">
+                        {searchPreviewText}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex min-w-0 flex-col items-center justify-center">
+              <div className="flex w-full max-w-[420px] flex-col items-center">
+                <img
+                  src={searchBeforeChibi}
+                  alt=""
+                  className="block h-[clamp(240px,24vw,320px)] w-auto max-w-full object-contain"
+                  loading="eager"
+                />
+                <div className="mt-4 w-full rounded-[24px] border border-[var(--line)] bg-white px-4 py-4 text-center shadow-[0_14px_32px_rgba(15,23,42,0.05)]">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--accent-deep)]">Quick tip</p>
+                  <p className="mt-2 text-[14px] leading-6 text-[var(--muted)]">
+                    Try a vibe plus place type, like <span className="font-semibold text-[var(--text-main)]">&quot;cozy cafe in Makati&quot;</span> or <span className="font-semibold text-[var(--text-main)]">&quot;fun date spot in Paranaque&quot;</span>.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
       </main>
 

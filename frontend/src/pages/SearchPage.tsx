@@ -214,10 +214,10 @@ function SearchPage() {
     <div className="gala-page-background min-h-screen text-[var(--text)]">
       <AppHeader minimal />
 
-      <main className="relative mx-auto flex min-h-[calc(100svh-68px)] w-full max-w-[980px] flex-col px-4 pb-0 pt-5 sm:min-h-[calc(100svh-82px)] sm:px-6 lg:px-10">
+      <main className="relative mx-auto flex min-h-[calc(100svh-68px)] w-full max-w-[980px] flex-col px-4 pb-0 pt-5 sm:min-h-[calc(100svh-82px)] sm:px-6 md:max-w-[1040px] lg:max-w-[1180px] lg:px-8 xl:max-w-[1260px] xl:px-10">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[420px] bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.68),rgba(255,255,255,0))]" />
         <section className="relative flex flex-1 flex-col items-center justify-between text-center">
-          <section className="relative z-20 w-full max-w-[760px] overflow-hidden rounded-[32px] bg-[linear-gradient(180deg,#1697f3_0%,#1777ea_100%)] px-4 py-4 text-left shadow-[0_24px_54px_rgba(23,119,234,0.28)] sm:px-5 sm:py-5">
+          <section className="relative z-20 w-full max-w-[760px] overflow-hidden rounded-[32px] bg-[linear-gradient(180deg,#1697f3_0%,#1777ea_100%)] px-4 py-4 text-left shadow-[0_24px_54px_rgba(23,119,234,0.28)] sm:px-5 sm:py-5 md:max-w-[860px] lg:max-w-[980px]">
             <div className="pointer-events-none absolute inset-0">
               <div className="absolute left-0 top-0 h-full w-[68%] bg-[linear-gradient(205deg,rgba(255,255,255,0.18)_0%,rgba(255,255,255,0.18)_28%,rgba(255,255,255,0)_29%)]" />
               <div className="absolute right-0 top-0 h-28 w-28 rounded-full bg-white/10 blur-2xl" />

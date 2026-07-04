@@ -83,6 +83,24 @@ const iconSizeMap = {
 
 type IconComponent = (props: ComponentProps<'svg'> & { size?: number; strokeWidth?: number }) => ReactNode
 
+const CircleStopIcon = (props: ComponentProps<'svg'> & { size?: number; strokeWidth?: number }) => {
+  const { fill, ...rest } = props
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.75}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...rest}
+    >
+      <circle cx="12" cy="12" r="10" />
+      <rect x="9.75" y="9.75" width="4.5" height="4.5" rx="0.5" fill={fill ?? 'none'} />
+    </svg>
+  )
+}
+
 const appIcons = {
   addToPlan: PlusCircle,
   askAi: Sparkles,
@@ -157,6 +175,7 @@ const appIcons = {
   compass: Compass,
   calendarPlan: CalendarPlus,
   check: Check,
+  circleStop: CircleStopIcon,
   wallet: Wallet,
   wrench: Wrench,
 } satisfies Record<string, IconComponent>

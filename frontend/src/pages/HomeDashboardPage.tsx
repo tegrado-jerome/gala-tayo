@@ -279,7 +279,7 @@ function HomeDashboardPage({ session }: HomeDashboardPageProps) {
     <div className="gala-page-background min-h-screen text-[var(--text)]">
       <AppHeader minimal />
 
-      <main className="mx-auto w-full max-w-[1180px] px-4 pb-10 pt-5 sm:px-6 lg:px-10">
+      <main className="mx-auto w-full max-w-[1180px] px-4 pb-10 pt-5 sm:px-6 lg:px-10 xl:max-w-[1280px]">
         <section className="relative overflow-hidden rounded-[32px] bg-[linear-gradient(135deg,#dff0ff_0%,#f6fbff_50%,#ffffff_100%)] px-5 py-6 shadow-[0_20px_48px_rgba(28,77,160,0.10)] sm:px-7 sm:py-8 lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:items-center lg:gap-8">
           <div className="pointer-events-none absolute -left-10 top-4 h-40 w-40 rounded-full bg-[rgba(47,116,232,0.12)] blur-3xl" />
           <div className="pointer-events-none absolute right-0 top-0 h-44 w-44 rounded-full bg-[rgba(255,204,92,0.16)] blur-3xl" />
@@ -345,17 +345,17 @@ function HomeDashboardPage({ session }: HomeDashboardPageProps) {
           </div>
 
           {isTrendingLoading ? (
-            <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
+            <div className="mt-4 flex gap-3 overflow-x-auto pb-2 md:grid md:grid-cols-2 md:overflow-visible xl:grid-cols-4">
               {Array.from({ length: 3 }).map((_, index) => (
-                <div key={index} className="h-[154px] min-w-[320px] rounded-2xl border border-[var(--line)] bg-white/80" />
+                <div key={index} className="h-[154px] min-w-[320px] rounded-2xl border border-[var(--line)] bg-white/80 md:min-w-0" />
               ))}
             </div>
           ) : trendingError ? (
             <p className="mt-4 text-sm font-semibold text-red-600">{trendingError}</p>
           ) : (
-            <div className="mt-4 flex gap-3 overflow-x-auto pb-2">
+            <div className="mt-4 flex gap-3 overflow-x-auto pb-2 md:grid md:grid-cols-2 md:overflow-visible xl:grid-cols-4">
               {trendingPlaces.map((place) => (
-                <div key={place.id} className="min-w-[320px] max-w-[320px]">
+                <div key={place.id} className="min-w-[320px] max-w-[320px] md:min-w-0 md:max-w-none">
                   <PlaceCard
                     place={place}
                     compact

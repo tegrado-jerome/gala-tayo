@@ -1,13 +1,14 @@
-import { GoogleGenAI } from "@google/genai";
 import {
-  ASK_AI_GUIDE_FALLBACK_MODEL,
-  ASK_AI_GUIDE_GENERATION_CONFIG,
-  ASK_AI_GUIDE_MODEL,
-  ASK_AI_LIVE_SEARCH_FALLBACK_MODEL,
-  ASK_AI_LIVE_SEARCH_GENERATION_CONFIG,
-  ASK_AI_LIVE_SEARCH_MODEL,
+  streamFromGemini,
+  GeminiProviderResult,
+} from "./geminiProvider";
+import {
+  ASK_AI_CHATBOT_MODEL,
+  OPENROUTER_API_KEY,
+  OPENROUTER_MODEL_ID,
+  OPENROUTER_BASE_URL,
+  OPENROUTER_TIMEOUT_MS,
 } from "../config/askAiConfig";
-import { getSecret } from "../config/keyVault";
 
 export class AskAiServiceError extends Error {
   status: number;
@@ -24,18 +25,10 @@ export type AskAiSource = {
   url: string;
 };
 
-export type AskAiIntent =
-  | "place_recommendation"
-  | "place_lookup"
-  | "trip_planning"
-  | "general_advice";
-export type AskAiAnswerFormat = "plain_text";
-
-export type AskAiResponsePlan = {
-  intent: AskAiIntent;
-  requiresPlaceAnswer: boolean;
-  answerFormat: AskAiAnswerFormat;
-  groundingEnabled: boolean;
+export type AskAiProviderMeta = {
+  provider: "gemini-direct" | "openrouter-fallback";
+  model: string;
+  fallbackUsed: boolean;
 };
 
 export type AskAiAnswerResult = {
@@ -50,6 +43,7 @@ export type AskAiAnswerResult = {
   latencyMs: number;
   fallbackUsed: boolean;
   answerRejectedDueToLeakageOrTruncation: boolean;
+  provider: AskAiProviderMeta;
 };
 
 type ChatMessage = {
@@ -57,47 +51,38 @@ type ChatMessage = {
   content: string;
 };
 
-type GenerateAskAiAnswerParams = {
+export type GenerateAskAiAnswerParams = {
   question: string;
   placeSlug?: string;
   enableLiveSearch: boolean;
   conversationHistory?: ChatMessage[];
+  signal?: AbortSignal;
+  onChunk?: (chunk: string) => void;
 };
 
-const CURRENT_INFO_PATTERN =
-  /\b(open|hours|schedule|fee|price|entrance|ticket|menu|address|located|location|where is|how to get|commute|contact|website|reservation|booking|available|today|current|latest|updated)\b/i;
-const PLACE_SEEKING_PATTERN =
-  /\b(place|places|lugar|spot|spots|where to go|where can|where should|saan|san\b|saan pwede|saan maganda|recommend|recommendation|suggest|hanap|hahanap|punta|puntahan|gala|hangout|tambay|tambayan|date|food trip|kainan|cafe|coffee|restaurant|museum|park|church|mall|hotel|resort|beach|pool|tourist spot|destination|pasyalan)\b/i;
-const PLACE_LOOKUP_PATTERN =
-  /\b(where is|address|located|location|how to get|commute|directions|open|hours|schedule|fee|price|entrance|ticket|menu|contact|website|reservation|booking)\b/i;
-const TRIP_PLANNING_PATTERN =
-  /\b(itinerary|plan|route|day trip|half day|whole day|schedule|after|before|nearby|near me|around|within|under|budget|kasama|family|barkada|partner|parents|kids|solo)\b/i;
-const NON_PLACE_ADVICE_PATTERN =
-  /\b(write|caption|translate|explain|define|summarize|debug|code|essay|email|message|joke|recipe)\b/i;
-const ASK_AI_TAGLISH_INSTRUCTION =
-  "You are GalaTayo AI. Always answer in natural Taglish. Understand Tagalog, Taglish, broken Tagalog, broken Taglish, broken English, typos, and incomplete casual prompts. Focus on the user's real search intent from the whole message, not isolated keywords. Do not follow a fixed answer template, fixed length, or forced format; use your full capability to answer naturally and completely.";
-const RETRYABLE_AI_STATUSES = new Set([403, 429, 500, 503, 504]);
-const RETRYABLE_PROVIDER_MESSAGE_PATTERNS = [
-  /rate limit/i,
-  /too many requests/i,
-  /quota/i,
-  /resource exhausted/i,
-  /exhausted/i,
-  /consumed/i,
-  /exceeded/i,
-  /limit reached/i,
-  /temporar(?:y|ily) unavailable/i,
-  /unavailable/i,
-  /overloaded/i,
-  /try again later/i,
-] as const;
-const ASK_AI_FALLBACK_DELAY_MS = 450;
+function buildPrompt(
+  question: string,
+  conversationHistory?: ChatMessage[]
+): string {
+  if (!conversationHistory || conversationHistory.length === 0) {
+    return question;
+  }
 
-function sanitizeAnswer(text: string): string {
-  return text.replace(/\r\n/g, "\n").trim();
+  const historyBlock = conversationHistory
+    .map(
+      (msg) =>
+        `${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}`
+    )
+    .join("\n\n");
+
+  return `${historyBlock}\n\nUser: ${question}`;
 }
 
 function getErrorStatus(error: unknown): number {
+  if (error instanceof Error && error.name === "AbortError") {
+    return 504;
+  }
+
   if (
     typeof error === "object" &&
     error !== null &&
@@ -120,14 +105,12 @@ function getErrorStatus(error: unknown): number {
 }
 
 function getErrorMessage(error: unknown): string {
-  if (error instanceof Error && typeof error.message === "string") {
+  if (error instanceof Error) {
     return error.message;
   }
-
   if (typeof error === "string") {
     return error;
   }
-
   if (
     typeof error === "object" &&
     error !== null &&
@@ -136,235 +119,176 @@ function getErrorMessage(error: unknown): string {
   ) {
     return error.message;
   }
-
-  return "";
+  return String(error);
 }
 
-function isRetryableProviderError(error: unknown) {
-  const status = getErrorStatus(error);
-
-  if (RETRYABLE_AI_STATUSES.has(status)) {
-    return true;
-  }
-
-  const message = getErrorMessage(error);
-
-  if (!message) {
-    return false;
-  }
-
-  return RETRYABLE_PROVIDER_MESSAGE_PATTERNS.some((pattern) => pattern.test(message));
+export function shouldUseGroundedResearch(_question: string): boolean {
+  return false;
 }
 
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+async function callOpenRouterFallback({
+  prompt,
+  model,
+  signal,
+}: {
+  prompt: string;
+  model: string;
+  signal?: AbortSignal;
+}): Promise<GeminiProviderResult> {
+  const startedAt = Date.now();
+  const apiKey = OPENROUTER_API_KEY;
 
-async function getGemmaApiKey(): Promise<string> {
-  try {
-    const envApiKey =
-      process.env.GEMINI_API_KEY?.trim() ||
-      process.env.GOOGLE_API_KEY?.trim() ||
-      process.env.GOOGLE_GENAI_API_KEY?.trim();
-    const apiKey = envApiKey || (await getSecret("gemini-api-key"));
-
-    if (!apiKey) {
-      throw new AskAiServiceError("Gemma API key is missing.", 500);
-    }
-
-    return apiKey;
-  } catch (error) {
-    if (error instanceof AskAiServiceError) {
-      throw error;
-    }
-
-    throw new AskAiServiceError(
-      error instanceof Error ? error.message : "Failed to retrieve Gemma API key.",
-      500
+  if (!apiKey) {
+    throw Object.assign(
+      new Error("OpenRouter API key is not configured."),
+      { status: 500 }
     );
   }
-}
 
-async function generateContentText({
-  ai,
-  model,
-  prompt,
-  enableLiveSearch,
-}: {
-  ai: GoogleGenAI;
-  model: string;
-  prompt: string;
-  enableLiveSearch: boolean;
-}): Promise<string> {
-  const response = await ai.models.generateContent({
-    model,
-    contents: prompt,
-    config: {
-      ...(enableLiveSearch
-        ? ASK_AI_LIVE_SEARCH_GENERATION_CONFIG
-        : ASK_AI_GUIDE_GENERATION_CONFIG),
-      systemInstruction: ASK_AI_TAGLISH_INSTRUCTION,
-      ...(enableLiveSearch
-        ? {
-            tools: [{ googleSearch: {} }],
-          }
-        : {}),
-    },
-  });
+  console.log(
+    `[openrouter-fallback] OPENROUTER REQUEST START model=${model}`
+  );
 
-  return sanitizeAnswer(response.text ?? "");
-}
+  const abortSignal = signal ?? AbortSignal.timeout(OPENROUTER_TIMEOUT_MS);
 
-function getIntentReason(intent: AskAiIntent): string {
-  switch (intent) {
-    case "place_recommendation":
-      return "The user is asking for places, hangout options, venues, destinations, or searchable recommendations.";
-    case "place_lookup":
-      return "The user is asking about a specific place or practical place detail.";
-    case "trip_planning":
-      return "The user is planning a route, day, budget, group outing, or sequence that should include places.";
-    default:
-      return "The user is asking for general help that does not require place candidates.";
+  const response = await fetch(
+    `${OPENROUTER_BASE_URL}/chat/completions`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: "user", content: prompt }],
+        stream: false,
+        max_tokens: 1200,
+        temperature: 0.7,
+      }),
+      signal: abortSignal,
+    }
+  );
+
+  if (!response.ok) {
+    const errorText = await response.text().catch(() => "");
+    console.error(
+      `[openrouter-fallback] OPENROUTER ERROR status=${response.status} body=${errorText.slice(0, 500)}`
+    );
+    throw Object.assign(
+      new Error(`OpenRouter returned status ${response.status}.`),
+      { status: response.status }
+    );
   }
-}
 
-export function planAskAiRequest(question: string): AskAiResponsePlan {
-  const isPlaceSeeking = PLACE_SEEKING_PATTERN.test(question);
-  const isPlaceLookup = PLACE_LOOKUP_PATTERN.test(question);
-  const isTripPlanning = TRIP_PLANNING_PATTERN.test(question);
-  const looksNonPlace = NON_PLACE_ADVICE_PATTERN.test(question) && !isPlaceSeeking;
-  const intent: AskAiIntent = looksNonPlace
-    ? "general_advice"
-    : isPlaceLookup && isPlaceSeeking
-      ? "place_lookup"
-      : isPlaceSeeking
-        ? "place_recommendation"
-        : isTripPlanning
-          ? "trip_planning"
-          : "general_advice";
+  const data = (await response.json()) as {
+    choices?: Array<{ message?: { content?: string } }>;
+  };
+
+  const answer =
+    data.choices?.[0]?.message?.content?.trim() || "(no response)";
+
+  const latency = Date.now() - startedAt;
+  console.log(
+    `[openrouter-fallback] OPENROUTER COMPLETE model=${model} answerLength=${answer.length} latencyMs=${latency}`
+  );
 
   return {
-    intent,
-    requiresPlaceAnswer: intent !== "general_advice",
-    answerFormat: "plain_text",
-    groundingEnabled: intent !== "general_advice" || CURRENT_INFO_PATTERN.test(question),
+    answer,
+    model,
+    latencyMs: latency,
   };
-}
-
-export function shouldUseGroundedResearch(question: string): boolean {
-  const LIVE_INFO_PATTERN =
-    /\b(latest|current|today|now\b|live|recent|open now|available now|search online|check online|weather|current prices|current schedule|temporary|updated hours|operating hours|real.time|breaking)\b/i
-
-  return LIVE_INFO_PATTERN.test(question) || CURRENT_INFO_PATTERN.test(question)
-}
-
-function buildAskAiPrompt(
-  question: string,
-  plan: AskAiResponsePlan,
-  conversationHistory?: { role: "user" | "assistant"; content: string }[]
-): string {
-  const historyBlock =
-    conversationHistory && conversationHistory.length > 0
-      ? `
-Previous conversation:
-${conversationHistory
-  .map(
-    (msg) =>
-      `${msg.role === "user" ? "User" : "Assistant"}: ${msg.content}`
-  )
-  .join("\n\n")}
-
-`
-      : "";
-
-  return `
-Ask AI intent plan:
-- Inferred intent: ${plan.intent}
-- Intent reason: ${getIntentReason(plan.intent)}
-- Place/search related: ${plan.requiresPlaceAnswer ? "yes" : "no"}
-
-Interpretation guidance:
-- Understand Tagalog, Taglish, broken Tagalog, broken Taglish, broken English, typos, shorthand, and incomplete casual prompts.
-- Focus on the actual search intent and user need behind the message.
-- Output must be natural Taglish.
-- Answer naturally with as much useful detail as the request deserves.
-- Do not use a forced template, fixed structure, fixed length, or app-imposed answer format.
-- Use your full capability and decide the best way to answer the user's request.
-- For place/search-related prompts, include useful places, areas, categories, or search directions that match the user's intent.
-${historyBlock}User request:
-${question}
-`.trim();
 }
 
 export async function generateAskAiAnswer({
   question,
-  enableLiveSearch,
+  enableLiveSearch: _enableLiveSearch,
   conversationHistory,
+  signal,
+  onChunk,
 }: GenerateAskAiAnswerParams): Promise<AskAiAnswerResult> {
-  const startedAt = Date.now();
-  const apiKey = await getGemmaApiKey();
-  const ai = new GoogleGenAI({ apiKey });
-  const plan = planAskAiRequest(question);
-  const prompt = buildAskAiPrompt(question, plan, conversationHistory);
-  const modelAttempts = enableLiveSearch
-    ? [
-        { model: ASK_AI_LIVE_SEARCH_MODEL, liveSearch: true },
-        { model: ASK_AI_LIVE_SEARCH_FALLBACK_MODEL, liveSearch: true },
-        { model: ASK_AI_GUIDE_MODEL, liveSearch: false },
-        { model: ASK_AI_GUIDE_FALLBACK_MODEL, liveSearch: false },
-      ]
-    : [
-        { model: ASK_AI_GUIDE_MODEL, liveSearch: false },
-        { model: ASK_AI_GUIDE_FALLBACK_MODEL, liveSearch: false },
-      ];
-  let lastError: unknown = null;
+  const prompt = buildPrompt(question, conversationHistory);
+  const geminiModel = ASK_AI_CHATBOT_MODEL;
+  let usedProvider: AskAiProviderMeta["provider"] = "gemini-direct";
+  let usedModel = geminiModel;
+  let fallbackUsed = false;
+  let result: GeminiProviderResult;
 
-  for (const attempt of modelAttempts) {
+  try {
+    console.log(
+      `[gemini-direct] Provider selected model=${geminiModel}`
+    );
+
+    result = await streamFromGemini({
+      prompt,
+      onChunk: onChunk ?? (() => {}),
+      signal,
+    });
+  } catch (geminiError) {
+    const geminiRawMessage = getErrorMessage(geminiError);
+    const geminiStatus = getErrorStatus(geminiError);
+    console.error(
+      `[gemini-direct] Gemma 4 26B direct streaming failed: ${geminiRawMessage} status=${geminiStatus}`
+    );
+
+    if (signal?.aborted) {
+      throw new AskAiServiceError("Generation was aborted.", 499);
+    }
+
+    if (!OPENROUTER_API_KEY) {
+      console.error(
+        `[openrouter-fallback] Skipped – OPENROUTER_API_KEY not configured.`
+      );
+      throw new AskAiServiceError(geminiRawMessage, geminiStatus);
+    }
+
+    console.log(
+      `[openrouter-fallback] Retrying with OpenRouter non-streaming model=${OPENROUTER_MODEL_ID}`
+    );
+
     try {
-      const answer = await generateContentText({
-        ai,
-        model: attempt.model,
+      result = await callOpenRouterFallback({
         prompt,
-        enableLiveSearch: attempt.liveSearch,
+        model: OPENROUTER_MODEL_ID,
+        signal,
       });
+      usedProvider = "openrouter-fallback";
+      usedModel = OPENROUTER_MODEL_ID;
+      fallbackUsed = true;
+    } catch (fallbackError) {
+      const fallbackMessage = getErrorMessage(fallbackError);
+      const fallbackStatus = getErrorStatus(fallbackError);
+      console.error(
+        `[openrouter-fallback] OpenRouter fallback also failed: ${fallbackMessage} status=${fallbackStatus}`
+      );
 
-      if (!answer) {
-        throw new AskAiServiceError("Gemma returned an empty response.", 502);
+      if (signal?.aborted) {
+        throw new AskAiServiceError("Generation was aborted.", 499);
       }
 
-      return {
-        answer,
-        usedLiveSearch: attempt.liveSearch,
-        sources: [],
-        sourceStatus: "no_grounding_metadata",
-        webSearchQueriesCount: 0,
-        groundingChunksCount: 0,
-        groundingSupportsCount: 0,
-        modelUsed: attempt.model,
-        latencyMs: Date.now() - startedAt,
-        fallbackUsed:
-          attempt.model !== modelAttempts[0].model ||
-          attempt.liveSearch !== enableLiveSearch,
-        answerRejectedDueToLeakageOrTruncation: false,
-      };
-    } catch (error) {
-      lastError = error;
-
-      if (!isRetryableProviderError(error)) {
-        throw new AskAiServiceError(
-          error instanceof Error ? error.message : "Gemma API request failed.",
-          getErrorStatus(error)
-        );
-      }
-
-      if (attempt !== modelAttempts[modelAttempts.length - 1]) {
-        await sleep(ASK_AI_FALLBACK_DELAY_MS);
-      }
+      throw new AskAiServiceError(
+        "The AI provider is busy right now. Please try again.",
+        502
+      );
     }
   }
 
-  throw new AskAiServiceError(
-    lastError instanceof Error ? lastError.message : "Gemma API request failed.",
-    getErrorStatus(lastError)
-  );
+  return {
+    answer: result.answer,
+    usedLiveSearch: false,
+    sources: [],
+    sourceStatus: "no_grounding_metadata",
+    webSearchQueriesCount: 0,
+    groundingChunksCount: 0,
+    groundingSupportsCount: 0,
+    modelUsed: usedModel,
+    latencyMs: result.latencyMs,
+    fallbackUsed,
+    answerRejectedDueToLeakageOrTruncation: false,
+    provider: {
+      provider: usedProvider,
+      model: usedModel,
+      fallbackUsed,
+    },
+  };
 }

@@ -19,6 +19,7 @@ type PlaceTagMeta = {
 
 type PlaceCardData = {
   id: string
+  displayIndex?: number
   slug?: string
   name: string
   category: string
@@ -69,6 +70,11 @@ type PlaceCardData = {
   matchedCategories?: PlaceCategoryMeta[]
   matchedTags?: PlaceTagMeta[]
   markerRatingText?: string | null
+  hasPin?: boolean
+  latitude?: number | string | null
+  longitude?: number | string | null
+  lat?: number | string | null
+  lng?: number | string | null
   coordinates: {
     lat: number | string | null
     lng: number | string | null

@@ -1,11 +1,10 @@
-import { startTransition, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { memo, startTransition, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { RefObject } from 'react'
-import { createPortal } from 'react-dom'
 import type { Session } from '@supabase/supabase-js'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { RotateCcw } from 'lucide-react'
-import { AppIcon } from '../components/AppIcon'
+import { Bot, RotateCcw } from 'lucide-react'
+import { AppIcon, type AppIconName } from '../components/AppIcon'
 import PlaceCard, { type PlaceCardData, type PlaceCategoryMeta, type PlaceTagMeta } from '../components/PlaceCard'
 import AppHeader from '../components/AppHeader'
 import CompactPagination from '../components/CompactPagination'
@@ -14,20 +13,21 @@ import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
 import GoogleSignInButton from '../components/GoogleSignInButton'
 import PageHeroHeader from '../components/PageHeroHeader'
 import PromptBuilderModal from '../components/PromptBuilderModal'
-import TapGalaPinGame from '../components/TapGalaPinGame'
-import ThinkingMiniGamePopup from '../components/ThinkingMiniGamePopup'
+import InternalLink from '../components/InternalLink'
 import MinimalBackNav from '../components/MinimalBackNav'
 import { supabase } from '../supabase'
 import { navigateToCanonicalPlace, navigateToPath } from '../utils/navigation'
 import {
+  cancelAskAiRuntimeRequest,
   getAskAiRuntimeState,
   hasActiveAskAiRuntimeState,
   resetAskAiRuntimeState,
+  resumeAskAiRuntimeJob,
   seedAskAiRuntimeState,
   submitAskAiRuntimeRequest,
   subscribeToAskAiRuntime,
 } from '../utils/askAiRuntime'
-import type { ChatMessage } from '../utils/askAiRuntime'
+import type { AskAiJobStatus, ChatMessage } from '../utils/askAiRuntime'
 import { buildSearchPath, normalizeTypedSearchText, type SearchBudgetValue, type SearchGoodForValue } from '../utils/searchParams'
 import type { PromptBuilderState } from '../types/promptBuilder'
 import { createEmptyPromptBuilderState } from '../utils/promptBuilder'
@@ -36,6 +36,8 @@ import askAiOutputChibi from '../assets/chibis/core/ask-ai/chibi-ask-ai-output.w
 import askAiStartChibi from '../assets/chibis/core/ask-ai/chibi-ask-ai-start.webp'
 import askAiThinkingChibi from '../assets/chibis/core/ask-ai/chibi-ask-ai-thinking.webp'
 import protectedFeatureChibi from '../assets/chibis/shared-states/chibi-protected-feature.webp'
+
+void PageHeroHeader
 import searchBeforeChibi from '../assets/chibis/core/search-places/chibi-search-places-before-active-state.webp'
 import searchLoadingChibi from '../assets/chibis/core/search-places/chibi-search-places-loading-state.webp'
 import searchNoResultsChibi from '../assets/chibis/core/search-places/chibi-search-places-no-results.webp'
@@ -218,6 +220,8 @@ type AskAiRouteCache = {
   usageStatus: AskAiUsageStatus | null
   isSubmitting: boolean
   messages: ChatMessage[]
+  jobId: string | null
+  jobStatus: AskAiJobStatus | null
 }
 
 const searchRouteCachePrefix = 'galatayo:search-route:'
@@ -326,6 +330,15 @@ function readAskAiRouteCache(): AskAiRouteCache | null {
       answerError,
       usageStatus,
       isSubmitting,
+      jobId: typeof parsedCache.jobId === 'string' ? parsedCache.jobId : null,
+      jobStatus:
+        parsedCache.jobStatus === 'pending' ||
+        parsedCache.jobStatus === 'streaming' ||
+        parsedCache.jobStatus === 'completed' ||
+        parsedCache.jobStatus === 'failed' ||
+        parsedCache.jobStatus === 'cancelled'
+          ? parsedCache.jobStatus
+          : null,
       messages: Array.isArray(parsedCache.messages)
         ? (parsedCache.messages as ChatMessage[]).filter(
             (m) =>
@@ -851,10 +864,10 @@ function SearchEmptyState({
 }) {
   return (
     <div
-      className={`bg-white text-center ${
+      className={`text-center ${
         hasSearched
           ? 'px-2 py-3 sm:px-4 sm:py-5'
-          : 'rounded-lg border border-dashed border-[var(--line)] px-4 py-6'
+          : 'bg-white rounded-lg border border-dashed border-[var(--line)] px-4 py-6'
       }`}
     >
       {hasSearched ? (
@@ -1050,8 +1063,8 @@ function SearchLoadingState({ searchLabel }: { searchLabel: string }) {
   const displayLabel = searchLabel.trim() || 'gala spots in Metro Manila'
 
   return (
-    <section className="min-h-0 w-full px-5 py-7 sm:px-8 lg:px-12 lg:py-12">
-      <div className="mx-auto grid w-full max-w-[1440px] gap-8 lg:grid-cols-[360px_minmax(0,1fr)] lg:gap-12">
+    <section className="min-h-0 w-full px-5 py-7 sm:px-8 md:flex md:min-h-[calc(100svh-68px)] md:items-center md:px-6 md:py-6 lg:px-12 lg:py-12">
+      <div className="mx-auto grid w-full max-w-[1440px] gap-8 md:grid-cols-[320px_minmax(0,1fr)] md:gap-8 lg:grid-cols-[360px_minmax(0,1fr)] lg:gap-12">
         <aside className="text-center lg:pt-4 lg:text-left">
           <p className="text-[26px] font-extrabold leading-tight text-slate-800 sm:text-[30px] lg:text-[32px]">Searching for</p>
           <h1 className="mt-3 text-[32px] font-black leading-tight text-slate-950 sm:text-[38px] lg:text-[38px]">
@@ -1066,7 +1079,7 @@ function SearchLoadingState({ searchLabel }: { searchLabel: string }) {
           </p>
         </aside>
 
-        <div className="grid content-start gap-5 lg:pt-4">
+        <div className="grid content-start gap-5 md:max-h-[calc(100svh-168px)] md:overflow-y-auto md:pr-1 lg:pt-4">
           <div className="grid gap-4 lg:hidden">
             <SearchLoadingCard compact />
             <SearchLoadingCard compact />
@@ -1602,13 +1615,13 @@ function DesktopResultsView({
   onRemoveBudget: () => void
 }) {
   return (
-    <section className="gala-page-background grid h-full min-h-0 select-none overflow-hidden xl:grid-cols-[minmax(440px,560px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(500px,620px)_minmax(0,1fr)]">
-      <aside ref={scrollContainerRef} className="min-h-0 overflow-y-auto overscroll-contain border-r border-[var(--line)] px-6 py-6">
+    <section className="gala-page-background grid h-full min-h-0 select-none overflow-hidden md:grid-cols-[minmax(380px,480px)_minmax(0,1fr)] lg:grid-cols-[minmax(420px,500px)_minmax(0,1fr)] xl:grid-cols-[minmax(460px,560px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(500px,620px)_minmax(0,1fr)]">
+      <aside ref={scrollContainerRef} className="min-h-0 overflow-y-auto overscroll-contain border-r border-[var(--line)] px-5 py-5 md:px-5 md:py-5 lg:px-6 lg:py-6">
         {showBackHome ? <BackToHomeButton className="mb-4" /> : null}
-        <div className="flex items-start justify-between gap-6">
+        <div className="flex items-start justify-between gap-4 md:gap-5">
           <div>
-            <h1 className="text-3xl font-black leading-tight text-slate-950">{heading}</h1>
-            <p className="mt-1 text-xl font-semibold text-slate-800">{subheading}</p>
+            <h1 className="text-3xl font-black leading-tight text-slate-950 md:text-[2rem] lg:text-3xl">{heading}</h1>
+            <p className="mt-1 text-xl font-semibold text-slate-800 md:text-lg lg:text-xl">{subheading}</p>
             <ActiveSearchChips
               cityLabel={cityLabel}
               categoryLabel={categoryLabel}
@@ -1633,18 +1646,18 @@ function DesktopResultsView({
           <SearchResetButton onClick={onClearSearch} layout="desktop" />
         </div>
 
-        <div className="mt-4 flex h-80 justify-center overflow-hidden">
+        <div className="mt-4 flex h-72 justify-center overflow-hidden md:h-[18rem] lg:h-80">
           <img
             src={searchSuccessChibi}
             alt=""
-            className="h-80 w-auto max-w-none shrink-0 scale-[1.2] object-contain"
+            className="h-72 w-auto max-w-none shrink-0 scale-[1.16] object-contain md:h-[18rem] md:scale-[1.12] lg:h-80 lg:scale-[1.2]"
             loading="eager"
             aria-hidden="true"
           />
         </div>
 
-        <div className="mx-auto mt-6 w-full max-w-[760px]">
-          <div className={`grid grid-cols-1 gap-3 transition ${isPageLoading ? 'pointer-events-none opacity-60' : 'opacity-100'}`}>
+        <div className="mx-auto mt-5 w-full max-w-[760px] md:max-w-none">
+          <div className={`grid grid-cols-1 gap-3 md:grid-cols-1 xl:grid-cols-1 transition ${isPageLoading ? 'pointer-events-none opacity-60' : 'opacity-100'}`}>
             {places.map((place) => (
               <PlaceCard
                 key={place.id}
@@ -1656,7 +1669,7 @@ function DesktopResultsView({
               />
             ))}
           </div>
-          <div className="mt-3">
+          <div className="mt-3 md:sticky md:bottom-0 md:bg-[var(--bg)] md:pb-1 md:pt-3">
             <SearchPagination
               currentPage={currentPage}
               totalPages={totalPages}
@@ -1669,7 +1682,7 @@ function DesktopResultsView({
         </div>
       </aside>
 
-      <section className="relative hidden min-h-0 overflow-hidden bg-white xl:block">
+      <section className="relative hidden min-h-0 overflow-hidden bg-white md:block">
         <MapView
           places={places}
           selectedPlaceId={selectedPlaceId}
@@ -1911,6 +1924,8 @@ function formatResetAtCompact(resetAt: string) {
 
   return timePart
 }
+
+void formatResetAtCompact
 
 function isAskAiUsageStatus(value: unknown): value is AskAiUsageStatus {
   if (!value || typeof value !== 'object') {
@@ -2337,9 +2352,9 @@ function AskAiOutputStageLegacy({
                     <p className="text-[1.05rem] font-black text-[var(--accent-deep)]">Quick answer</p>
                     <div className="mt-2">
                       <AskAiAnswerText answer={answer} />
-                    </div>
-                  </div>
-                </div>
+        </div>
+      </div>
+    </div>
               </div>
 
             <div className="grid gap-3 border-b border-dashed border-[rgba(83,146,241,0.16)] py-4">
@@ -2477,33 +2492,6 @@ function AskAiThinkingStageLegacy({
   className?: string
 }) {
   const loadingMessageText = 'This may take a few seconds if current info is needed.'
-  const [miniGameStage, setMiniGameStage] = useState<'hidden' | 'invite' | 'game'>('hidden')
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setMiniGameStage('invite')
-    }, 4500)
-
-    return () => {
-      window.clearTimeout(timer)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (miniGameStage !== 'game') {
-      return
-    }
-
-    const previousBodyOverflow = document.body.style.overflow
-    const previousHtmlOverflow = document.documentElement.style.overflow
-    document.body.style.overflow = 'hidden'
-    document.documentElement.style.overflow = 'hidden'
-
-    return () => {
-      document.body.style.overflow = previousBodyOverflow
-      document.documentElement.style.overflow = previousHtmlOverflow
-    }
-  }, [miniGameStage])
 
   return (
     <section className={`gala-page-background relative overflow-hidden px-4 py-4 text-[var(--text)] sm:px-5 sm:py-5 lg:px-8 lg:py-7 ${className} min-h-[calc(100dvh-88px)]`}>
@@ -2540,95 +2528,19 @@ function AskAiThinkingStageLegacy({
           <div className="relative -mt-3 w-full max-w-[370px] rounded-[18px] border border-[rgba(20,35,58,0.34)] bg-white px-4 pb-4 pt-4 shadow-[0_12px_28px_rgba(15,23,42,0.045)] sm:max-w-[420px] sm:px-5 lg:max-w-[370px]">
             <span className="absolute left-1/2 top-0 h-4.5 w-4.5 -translate-x-1/2 -translate-y-1/2 rotate-45 border-l border-t border-[rgba(20,35,58,0.34)] bg-white" />
             <div className="relative flex flex-col items-center gap-2.5">
-              <span className="flex items-center gap-2.5">
-                <span className="h-3.5 w-3.5 rounded-full bg-slate-600 animate-pulse" />
-                <span className="h-3.5 w-3.5 rounded-full bg-slate-600 animate-pulse" style={{ animationDelay: '120ms' }} />
-                <span className="h-3.5 w-3.5 rounded-full bg-slate-600 animate-pulse" style={{ animationDelay: '240ms' }} />
-              </span>
-              <p className="text-[1.15rem] font-bold leading-tight text-slate-700 sm:text-[1.35rem] lg:text-[1.15rem]">
-                GalaTayo is thinking...
+              <p className="text-[0.9rem] font-semibold uppercase tracking-[0.08em] text-slate-600 sm:text-[0.98rem] lg:text-[0.9rem]">
+                Ask AI is responding...
               </p>
             </div>
           </div>
 
           <p className="mt-7 max-w-[680px] text-[1.2rem] font-semibold italic leading-8 tracking-[-0.02em] text-slate-700 sm:text-[1.45rem] sm:leading-[2.25rem] lg:mt-6 lg:text-[1.3rem]">
-            “Inaayos ko yung best gala plan for you...”
+            "Generating your gala plan..."
           </p>
-          <p className="mt-3 text-[0.95rem] italic leading-6 text-slate-500 sm:text-[1.05rem] lg:text-[0.95rem]">
-            {loadingMessageText}
-          </p>
-        </div>
-
-        {miniGameStage === 'invite' ? createPortal(
-          <div className="fixed inset-0 z-[9990] pointer-events-none flex h-[100dvh] items-center justify-center px-4 py-6">
-            <div className="pointer-events-auto w-full max-w-[360px] overflow-hidden rounded-[24px] border border-[rgba(37,99,235,0.14)] bg-white/90 p-3 backdrop-blur-xl animate-[gala-game-invite-pop_360ms_cubic-bezier(0.16,1,0.3,1)_both] sm:max-w-[390px]">
-              <div className="relative rounded-[20px] bg-[linear-gradient(135deg,#f8fbff,#fff7fb)] p-3">
-                <div className="pointer-events-none absolute inset-0 opacity-70 [background-image:linear-gradient(rgba(37,99,235,0.07)_1px,transparent_1px),linear-gradient(90deg,rgba(37,99,235,0.07)_1px,transparent_1px)] [background-size:22px_22px]" />
-                <div className="relative flex items-start gap-3">
-                  <div className="mt-0.5 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-950 text-white animate-[gala-charm-wiggle_1.8s_ease-in-out_infinite]">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
-                      <path d="M12 21s6-5.7 6-11a6 6 0 1 0-12 0c0 5.3 6 11 6 11Z" />
-                      <circle cx="12" cy="10" r="2.3" />
-                    </svg>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#2563eb]">Still cooking</p>
-                        <h3 className="mt-1 text-[1.05rem] font-black leading-tight text-slate-950">Want a tiny tap break?</h3>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setMiniGameStage('hidden')}
-                        className="inline-flex h-8 shrink-0 items-center justify-center rounded-full bg-white/74 px-3 text-[11px] font-black text-slate-600 transition hover:bg-white hover:text-slate-950"
-                      >
-                        Later
-                      </button>
-                    </div>
-                    <p className="mt-2 text-[0.84rem] leading-5 text-slate-600">
-                      Optional lang. Play Pin Rush while your answer finishes.
-                    </p>
-                  </div>
-                </div>
-                <div className="relative mt-3 grid grid-cols-[1fr_auto] items-center gap-2">
-                  <div className="flex h-10 items-center gap-1.5 rounded-full bg-white/70 px-3">
-                    <span className="h-2.5 w-2.5 rounded-full bg-[#2563eb]" />
-                    <span className="h-2.5 w-2.5 rounded-full bg-[#5ed6c7]" />
-                    <span className="h-2.5 w-2.5 rounded-full bg-[#ffcc4d]" />
-                    <span className="ml-1 text-[11px] font-black text-slate-500">8+ pts charms</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setMiniGameStage('game')}
-                    className="inline-flex h-10 items-center justify-center rounded-full bg-slate-950 px-4 text-sm font-black text-white transition hover:brightness-110"
-                  >
-                    Play
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>,
-          document.body,
-        ) : null}
-
-        {miniGameStage === 'game' ? createPortal(
-          <div
-            className="fixed inset-0 z-[9990] flex h-[100dvh] items-stretch justify-center overscroll-none bg-white"
-            role="presentation"
-            onClick={() => setMiniGameStage('hidden')}
-          >
-            <div
-              className="relative flex h-[100dvh] w-full flex-col overflow-hidden touch-auto"
-              role="dialog"
-              aria-modal="true"
-              aria-label="Tap the Gala Pin mini game"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <TapGalaPinGame isLoading={true} onClose={() => setMiniGameStage('hidden')} className="min-h-0 w-full flex-1" />
-            </div>
-          </div>,
-          document.body,
-        ) : null}
+        <p className="mt-3 text-[0.95rem] italic leading-6 text-slate-500 sm:text-[1.05rem] lg:text-[0.95rem]">
+          {loadingMessageText}
+        </p>
+      </div>
       </div>
     </section>
   )
@@ -2663,7 +2575,9 @@ function AskAiPlaceholder({
   onOpenPromptBuilder: (questionOverride?: string) => void
   className?: string
 }) {
+  void isUsageLoading
   const isUsagePending = !usageStatus
+  void isUsagePending
   const isLimitReached = usageStatus ? !usageStatus.allowed || usageStatus.remaining <= 0 : false
   const [draftQuestion, setDraftQuestion] = useState(question)
   const questionTextareaRef = useRef<HTMLTextAreaElement | null>(null)
@@ -2698,6 +2612,7 @@ function AskAiPlaceholder({
       onQuestionChange(nextQuestion)
     })
   }
+  void updateDraftQuestion
 
   const handleSubmit = (text?: string) => {
     const finalQuestion = (text ?? draftQuestion).trim()
@@ -2813,7 +2728,7 @@ function AskAiPlaceholder({
             </button>
           </div>
 
-          {isLimitReached && (
+          {isLimitReached && !isSubmitting && (
             <div className="mx-10 rounded-2xl border border-[rgba(239,68,68,0.14)] bg-red-50/60 px-4 py-3">
               <p className="text-[0.84rem] font-semibold text-red-700">You&apos;ve used all your Ask AI asks for today. Come back tomorrow!</p>
             </div>
@@ -2831,6 +2746,8 @@ function AskAiPlaceholder({
     </div>
   )
 }
+
+void AskAiPlaceholder
 
 function AskAiGateLoadingState({
   className = '',
@@ -2872,6 +2789,8 @@ function AskAiGateLoadingState({
     </section>
   )
 }
+
+void AskAiSignInRequired
 
 function AskAiSignInRequired({
   className = '',
@@ -3233,6 +3152,14 @@ function AskAiOutputStageNext({
   )
 }
 
+function ThinkingLoadingBar({ className = '' }: { className?: string }) {
+  return (
+    <div className={`h-1.5 overflow-hidden rounded-full bg-slate-100 ${className}`}>
+      <div className="h-full w-2/3 rounded-full bg-[linear-gradient(90deg,#8bb8ff,#245dce)] motion-safe:animate-[gala-loading-slide_1.6s_ease-in-out_infinite]" />
+    </div>
+  )
+}
+
 function AskAiThinkingStageNext({
   question,
   chibiImage,
@@ -3260,21 +3187,20 @@ function AskAiThinkingStageNext({
               <img src={chibiImage} alt="" className="h-6 w-6 object-contain" />
             </div>
             <div className="min-w-0 max-w-[82%] rounded-2xl rounded-tl-[6px] border border-[rgba(15,23,42,0.06)] bg-white px-4 py-3.5 shadow-[0_2px_8px_rgba(15,23,42,0.03)]">
-              <div className="flex items-center gap-1.5">
-                <span className="h-2 w-2 animate-pulse rounded-full bg-[var(--accent)]" />
-                <span className="h-2 w-2 animate-pulse rounded-full bg-[var(--accent)]" style={{ animationDelay: '140ms' }} />
-                <span className="h-2 w-2 animate-pulse rounded-full bg-[var(--accent)]" style={{ animationDelay: '280ms' }} />
+              <div className="flex items-center gap-2">
+                <p className="text-[0.78rem] font-semibold tracking-[-0.02em] text-slate-950">Thinking</p>
+                <span className="inline-flex items-center gap-1 text-[var(--accent-deep)]">
+                  <span className="h-1.5 w-1.5 rounded-full bg-current motion-safe:animate-bounce" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-current motion-safe:animate-bounce [animation-delay:120ms]" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-current motion-safe:animate-bounce [animation-delay:240ms]" />
+                </span>
               </div>
-              <p className="mt-2 text-[0.84rem] leading-relaxed text-[var(--muted)]">Thinking about your gala plan...</p>
-              <div className="mt-3 h-1 overflow-hidden rounded-full bg-[rgba(20,35,58,0.06)]">
-                <div className="h-full w-2/3 rounded-full bg-[linear-gradient(90deg,#6fa8ff,#2f80ed)] motion-safe:animate-[gala-loading-slide_1.6s_ease-in-out_infinite]" />
-              </div>
+              <p className="mt-1 text-[12px] font-medium text-slate-500">Shaping your Ask AI reply.</p>
+              <ThinkingLoadingBar className="mt-3" />
             </div>
           </div>
         </div>
       </div>
-
-      <ThinkingMiniGamePopup isThinking={true} />
     </div>
   )
 }
@@ -3291,7 +3217,6 @@ function AskAiModePanel({
   answerError,
   messages,
   onRetryUsage,
-  onQuestionChange,
   onSubmit,
   onStartOver,
   onOpenPromptBuilder,
@@ -3308,232 +3233,252 @@ function AskAiModePanel({
   answerError: string | null
   messages: ChatMessage[]
   onRetryUsage: () => void
-  onQuestionChange: (question: string) => void
   onSubmit: (questionOverride?: string) => void
   onStartOver: () => void
   onOpenPromptBuilder: (questionOverride?: string) => void
   className?: string
 }) {
+  void isUsageLoading
   const isUsagePending = !usageStatus
   const isLimitReached = usageStatus ? !usageStatus.allowed || usageStatus.remaining <= 0 : false
-  const [draftQuestion, setDraftQuestion] = useState('')
-  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
+  const isCenteredEmptyState = !messages.length && !isSubmitting && !answer
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
-    const el = textareaRef.current
-    if (!el) return
-    el.style.height = '0px'
-    el.style.height = `${Math.min(Math.max(el.scrollHeight, 44), 120)}px`
-  }, [draftQuestion])
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [answer, isSubmitting, messages])
+
+  const [draftQuestion, setDraftQuestion] = useState('')
+  const draftQuestionRef = useRef('')
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, isSubmitting])
+    draftQuestionRef.current = draftQuestion
+  }, [draftQuestion])
 
-  const handleSend = (text?: string) => {
-    const finalQuestion = (text ?? draftQuestion).trim()
+  useLayoutEffect(() => {
+    const el = textareaRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${Math.min(el.scrollHeight, 120)}px`
+  }, [draftQuestion])
+
+  const updateDraftQuestion = useCallback((nextQuestion: string) => {
+    draftQuestionRef.current = nextQuestion
+    setDraftQuestion(nextQuestion)
+  }, [])
+
+  const handleSend = useCallback((text?: string) => {
+    const finalQuestion = (text ?? draftQuestionRef.current).trim()
     if (!finalQuestion || isSubmitting || isLimitReached || isUsagePending) return
-    setDraftQuestion('')
-    onQuestionChange(finalQuestion)
+
+    updateDraftQuestion('')
     onSubmit(finalQuestion)
-  }
+  }, [isLimitReached, isSubmitting, isUsagePending, onSubmit, updateDraftQuestion])
 
-  const handleOpenPromptBuilder = () => {
-    if (draftQuestion.trim()) {
-      onQuestionChange(draftQuestion)
-    }
+  const handleOpenPromptBuilder = useCallback(() => {
     navigateToPath('/ask-ai/prompt-builder')
-    onOpenPromptBuilder(draftQuestion)
-  }
+    onOpenPromptBuilder(draftQuestionRef.current.trim() || undefined)
+  }, [onOpenPromptBuilder])
 
-  const handleOpenMapsAi = () => {
-    navigateToPath('/ask-ai/maps')
-  }
+  return (
+    <div className={`relative flex h-full flex-col overflow-hidden bg-[#fafafa] ${className}`}>
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-32 left-1/2 h-[420px] w-[820px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.08),transparent_60%)] blur-3xl" />
+        <div className="absolute -top-20 left-1/4 h-[320px] w-[480px] rounded-full bg-[radial-gradient(circle,rgba(56,189,248,0.06),transparent_60%)] blur-3xl" />
+        <div className="absolute -top-16 right-1/4 h-[320px] w-[480px] rounded-full bg-[radial-gradient(circle,rgba(168,85,247,0.05),transparent_60%)] blur-3xl" />
+      </div>
 
-  const renderMessagesContent = () => {
-    if (!isSessionLoading && !isRegistered) {
-      return (
-        <AskAiSignInContent
-          onOpenPromptBuilder={handleOpenPromptBuilder}
-        />
-      )
-    }
-
-    if (!isSessionLoading && usageError) {
-      return (
-        <AskAiUsageErrorContent
-          usageError={usageError}
-          onRetryUsage={onRetryUsage}
-          onOpenPromptBuilder={handleOpenPromptBuilder}
-        />
-      )
-    }
-
-    const hasMessages = messages.length > 0
-
-    // Empty state: AI greeting + starter chips
-    if (!hasMessages && !isSubmitting && !answer) {
-      const promptChips = [
-        { id: 'date', label: 'Date plan', prompt: 'Plan a date gala' },
-        { id: 'food', label: 'Food trip', prompt: 'Plan a food trip' },
-        { id: 'itinerary', label: 'Itinerary', prompt: 'Create a quick itinerary' },
-        { id: 'find', label: 'Find places', prompt: 'Find places on map' },
-      ]
-
-      return (
-        <div className="flex flex-col gap-5">
-          <div className="flex items-start gap-2.5">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--primary-soft)]">
-              <AppIcon name="bot" size={22} className="text-[var(--accent)]" />
-            </div>
-            <div className="min-w-0 max-w-[82%] rounded-[var(--radius-lg)] rounded-tl-[6px] border border-[var(--line)] bg-[var(--panel)] px-4 py-3 shadow-[var(--shadow-soft)]">
-              <p className="text-[var(--type-body)] leading-relaxed text-[var(--text)]">Hi! What kind of gala are you planning today?</p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-2 pl-14">
-            {promptChips.map((chip) => (
-              <button
-                key={chip.id}
-                type="button"
-                disabled={isLimitReached}
-                onClick={() => handleSend(chip.prompt)}
-                className="rounded-full border border-[var(--accent-soft)] bg-[var(--accent-wash)] px-3.5 py-2 text-[0.82rem] font-semibold text-[var(--accent-deep)] transition hover:border-[var(--accent)] hover:bg-[rgba(var(--accent-rgb),0.18)] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {chip.label}
-              </button>
-            ))}
+      <div className={`relative shrink-0 px-4 pb-3 pt-3 sm:px-5 ${messages.length > 0 ? 'border-b border-slate-300' : ''}`}>
+        <div className="mx-auto flex w-full max-w-[760px] items-center gap-2">
+          <span />
+          {messages.length > 0 && (
             <button
               type="button"
-              disabled={isLimitReached}
-              onClick={() => navigateToPath('/ask-ai/maps')}
-              className="rounded-full border border-[var(--line)] bg-[var(--bg-soft)] px-3.5 py-2 text-[0.82rem] font-semibold text-[var(--muted)] transition hover:border-[var(--line-strong)] hover:bg-[var(--panel)] sm:hidden"
+              onClick={onStartOver}
+              aria-label="New chat"
+              className="ml-auto mr-1 inline-flex h-[34px] w-[34px] items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100 hover:text-slate-800"
             >
-              <span className="inline-flex items-center gap-1">
-                <AppIcon name="map" className="h-3.5 w-3.5" />
-                Find places
-              </span>
+              <AppIcon name="newChat" size={24} strokeWidth={2} />
+            </button>
+          )}
+          <InternalLink
+            href="/ask-ai"
+            aria-label="Back to Menu"
+            className={`inline-flex h-[34px] w-[34px] items-center justify-center rounded-xl bg-sky-100 text-sky-700 ring-1 ring-inset ring-sky-200/70 transition hover:bg-sky-200/80 hover:text-sky-800 ${messages.length === 0 ? 'ml-auto' : ''}`}
+          >
+            <Bot className="h-6 w-6" strokeWidth={2} />
+          </InternalLink>
+        </div>
+      </div>
+
+      <div className="relative flex-1 min-h-0 overflow-y-auto px-4 sm:px-5">
+        <div className={isCenteredEmptyState ? 'mx-auto flex h-full w-full max-w-[760px] flex-col items-center justify-center gap-4 py-6 sm:py-8' : 'mx-auto flex w-full max-w-[760px] flex-col gap-4 py-6 sm:py-8'}>
+          <ChatMessageList
+            isSessionLoading={isSessionLoading}
+            isRegistered={isRegistered}
+            usageError={usageError}
+            messages={messages}
+            isSubmitting={isSubmitting}
+            answer={answer}
+            sources={sources}
+            answerError={answerError}
+            isLimitReached={isLimitReached}
+            onSend={handleSend}
+            onOpenPromptBuilder={handleOpenPromptBuilder}
+            onRetryUsage={onRetryUsage}
+          />
+          <div ref={messagesEndRef} />
+        </div>
+      </div>
+
+      <div className="relative shrink-0 border-t border-slate-200/80 bg-white/60 px-4 pt-3 pb-[env(safe-area-inset-bottom,0px)] shadow-[0_-1px_0_rgba(15,23,42,0.02),0_-8px_24px_-12px_rgba(15,23,42,0.06)] backdrop-blur-md sm:px-5">
+        <div className="mx-auto w-full max-w-[760px]">
+          <div className="mb-2 flex items-center gap-1">
+            <button
+              type="button"
+              onClick={handleOpenPromptBuilder}
+              className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11.5px] font-medium text-slate-500 transition hover:bg-slate-200/60 hover:text-slate-700"
+            >
+              <AppIcon name="promptBuilder" className="h-3.5 w-3.5" />
+              Prompt Builder
             </button>
           </div>
-
-          {isLimitReached && (
-            <div className="mx-2 rounded-[var(--radius-lg)] border border-[var(--danger-soft)] bg-[var(--danger-soft)] px-4 py-3">
-              <p className="text-[0.84rem] font-semibold text-[var(--danger)]">You&apos;ve used all your Ask AI asks for today. Come back tomorrow!</p>
-            </div>
-          )}
-
+          <div className="group/composer relative flex items-end gap-1.5 rounded-2xl border border-slate-200/80 bg-white/90 p-1.5 shadow-[0_4px_24px_-8px_rgba(15,23,42,0.08),0_1px_2px_rgba(15,23,42,0.04)] backdrop-blur-sm transition focus-within:border-slate-300/90 focus-within:bg-white focus-within:shadow-[0_8px_32px_-8px_rgba(15,23,42,0.1),0_0_0_4px_rgba(99,102,241,0.06)]">
+            <textarea
+              ref={textareaRef}
+              value={draftQuestion}
+              onChange={(e) => updateDraftQuestion(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  handleSend()
+                }
+              }}
+              placeholder="Message Ask AI…"
+              rows={1}
+              disabled={isSubmitting || isLimitReached || isUsagePending}
+              className="min-h-[40px] flex-1 resize-none bg-transparent px-3 py-2 text-[15px] leading-relaxed text-slate-800 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed disabled:text-slate-300"
+            />
+            <button
+              type="button"
+              onClick={() => (isSubmitting ? cancelAskAiRuntimeRequest() : handleSend())}
+              disabled={!isSubmitting && (isLimitReached || isUsagePending || !draftQuestion.trim())}
+              aria-label={isSubmitting ? 'Cancel request' : 'Send message'}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#172d6b] to-[#0f1f4a] text-white shadow-[0_4px_12px_-2px_rgba(23,45,107,0.4)] transition hover:from-[#1e3a82] hover:to-[#172d6b] hover:shadow-[0_6px_16px_-2px_rgba(23,45,107,0.5)] active:scale-95 disabled:cursor-not-allowed disabled:from-slate-200 disabled:to-slate-200 disabled:text-slate-400 disabled:shadow-none"
+            >
+              {isSubmitting ? (
+                <svg className="h-[15px] w-[15px]" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="11" fill="#0f1f4a" />
+                  <rect x="6.5" y="6.5" width="11" height="11" rx="2" fill="white" />
+                </svg>
+              ) : (
+                <AppIcon name="send" className="h-[15px] w-[15px]" strokeWidth={2.25} />
+              )}
+            </button>
+          </div>
+          <p className="mt-2 text-center text-[10.5px] text-slate-400">
+            GalaTayo AI can make mistakes. Check important info.
+          </p>
         </div>
-      )
-    }
+      </div>
+    </div>
+  )
+}
 
-    // Render chat messages from the messages array
+const ChatMessageList = memo(function ChatMessageList({
+  isSessionLoading,
+  isRegistered,
+  usageError,
+  messages,
+  isSubmitting,
+  answer,
+  sources,
+  answerError,
+  isLimitReached,
+  onSend,
+  onOpenPromptBuilder,
+  onRetryUsage,
+}: {
+  isSessionLoading: boolean
+  isRegistered: boolean
+  usageError: string | null
+  messages: ChatMessage[]
+  isSubmitting: boolean
+  answer: string
+  sources: AskAiSource[]
+  answerError: string | null
+  isLimitReached: boolean
+  onSend: (text?: string) => void
+  onOpenPromptBuilder: () => void
+  onRetryUsage: () => void
+}) {
+  if (!isSessionLoading && !isRegistered) {
     return (
-      <div className="flex flex-col gap-5">
-        {messages.map((msg, index) => {
-          if (msg.role === 'user') {
-            return (
-              <div key={index} className="flex justify-end">
-                <div className="max-w-[82%] rounded-[var(--radius-lg)] rounded-tr-[6px] bg-[var(--accent)] px-4 py-3 shadow-[var(--shadow-medium)]">
-                  <p className="text-[var(--type-body)] leading-relaxed text-white">{msg.content}</p>
-                </div>
-              </div>
-            )
-          }
+      <AskAiSignInContent
+        onOpenPromptBuilder={onOpenPromptBuilder}
+      />
+    )
+  }
 
-          return (
-            <div key={index} className="flex items-start gap-2.5">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--primary-soft)]">
-                <AppIcon name="bot" size={22} className="text-[var(--accent)]" />
-              </div>
-              <div className="min-w-0 max-w-[88%] sm:max-w-[82%]">
-                <div className="overflow-hidden rounded-[var(--radius-lg)] rounded-tl-[6px] border border-[var(--line)] bg-[var(--panel)] shadow-[var(--shadow-soft)]">
-                  <div className="flex items-center gap-2 border-b border-[var(--line)] px-4 py-2.5">
-                    <AppIcon name="bot" size={16} className="text-[var(--accent)]" />
-                    <span className="text-xs font-bold text-[var(--muted)]">Ask AI</span>
-                  </div>
-                  <div className="px-4 py-3.5">
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm]}
-                      components={{
-                        p: ({ children }) => (
-                          <p className="mb-3 last:mb-0 leading-relaxed text-[var(--text)]">{children}</p>
-                        ),
-                        strong: ({ children }) => (
-                          <strong className="font-semibold text-[var(--text)]">{children}</strong>
-                        ),
-                        ul: ({ children }) => (
-                          <ul className="my-3 list-disc space-y-1 pl-5 text-[var(--text)]">{children}</ul>
-                        ),
-                        ol: ({ children }) => (
-                          <ol className="my-3 list-decimal space-y-1 pl-5 text-[var(--text)]">{children}</ol>
-                        ),
-                        li: ({ children }) => (
-                          <li className="leading-relaxed text-[var(--text)]">{children}</li>
-                        ),
-                        em: ({ children }) => (
-                          <em className="italic text-[var(--text)]">{children}</em>
-                        ),
-                      }}
-                    >
-                      {msg.content}
-                    </ReactMarkdown>
-                    {sources.length > 0 && (
-                      <div className="mt-3 border-t border-[var(--line)] pt-3">
-                        <p className="text-[0.7rem] font-bold uppercase tracking-[0.1em] text-[var(--text-light)]">Sources</p>
-                        <div className="mt-2 flex flex-wrap gap-1.5">
-                          {sources.map((source) => (
-                            <a
-                              key={source.url}
-                              href={source.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 rounded-full border border-[var(--line)] bg-[var(--bg-soft)] px-2.5 py-1 text-[11px] font-semibold text-[var(--muted)] transition hover:border-[var(--accent-soft)] hover:bg-[var(--panel)] hover:text-[var(--accent-deep)]"
-                            >
-                              {source.title.length > 28 ? `${source.title.slice(0, 28)}...` : source.title}
-                              <ChevronRightIcon className="h-3 w-3 shrink-0" />
-                            </a>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )
-        })}
+  if (!isSessionLoading && usageError) {
+    return (
+      <AskAiUsageErrorContent
+        usageError={usageError}
+        onRetryUsage={onRetryUsage}
+        onOpenPromptBuilder={onOpenPromptBuilder}
+      />
+    )
+  }
 
-        {/* Thinking indicator */}
-        {isSubmitting && (
-          <div className="flex items-start gap-2.5">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--primary-soft)]">
-              <AppIcon name="bot" size={22} className="text-[var(--accent)]" />
-            </div>
-            <div className="min-w-0 max-w-[82%] rounded-[var(--radius-lg)] rounded-tl-[6px] border border-[var(--line)] bg-[var(--panel)] px-4 py-3.5 shadow-[var(--shadow-soft)]">
-              <div className="flex items-center gap-1.5">
-                <span className="h-2 w-2 animate-pulse rounded-full bg-[var(--accent)]" />
-                <span className="h-2 w-2 animate-pulse rounded-full bg-[var(--accent)]" style={{ animationDelay: '140ms' }} />
-                <span className="h-2 w-2 animate-pulse rounded-full bg-[var(--accent)]" style={{ animationDelay: '280ms' }} />
-              </div>
-              <p className="mt-2 text-[0.84rem] leading-relaxed text-[var(--muted)]">Thinking about your gala plan...</p>
-              <div className="mt-3 h-1 overflow-hidden rounded-full bg-[var(--bg-soft)]">
-                <div className="h-full w-2/3 rounded-full bg-[var(--accent)] motion-safe:animate-[gala-loading-slide_1.6s_ease-in-out_infinite]" />
-              </div>
+  if (messages.length === 0 && !isSubmitting && !answer) {
+    const promptChips: Array<{ id: string; label: string; description: string; prompt: string; icon: AppIconName }> = [
+      { id: 'date', label: 'Date plan', description: 'Plan a cozy evening for two', prompt: 'Plan a date gala', icon: 'sparkles' },
+      { id: 'food', label: 'Food trip', description: 'Discover the best spots to eat', prompt: 'Plan a food trip', icon: 'cafe' },
+      { id: 'itinerary', label: 'Day itinerary', description: 'Build a quick day-by-day plan', prompt: 'Create a quick itinerary', icon: 'galaPlan' },
+      { id: 'budget', label: 'Budget picks', description: 'Find great places that won\u2019t break the bank', prompt: 'Suggest budget-friendly places to visit', icon: 'wallet' },
+    ]
+
+    return (
+      <div className="flex w-full max-w-[760px] flex-col items-center">
+        <div className="flex flex-col items-center text-center">
+          <div className="relative mb-5">
+            <div className="pointer-events-none absolute -inset-4 rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.18),transparent_65%)] blur-2xl" />
+            <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 via-blue-500 to-cyan-400 shadow-[0_10px_28px_-6px_rgba(59,130,246,0.45),inset_0_1px_0_rgba(255,255,255,0.25)]">
+              <SparkIcon className="h-6 w-6 text-white" />
             </div>
           </div>
-        )}
+          <h1 className="text-[1.55rem] font-semibold leading-tight tracking-[-0.02em] text-slate-900 sm:text-[1.9rem]">
+            How can I help you plan your <span className="bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500 bg-clip-text text-transparent">gala</span>?
+          </h1>
+          <p className="mt-2 max-w-md text-[14px] leading-relaxed text-slate-500 sm:text-[14.5px]">
+            Ask me anything about places, food, dates, and itineraries around Metro Manila.
+          </p>
+        </div>
 
-        {/* Answer error indicator */}
-        {answerError && !isSubmitting && messages.length > 0 && (
-          <div className="mx-2 rounded-[var(--radius-lg)] border border-[var(--danger-soft)] bg-[var(--danger-soft)] px-4 py-3">
-            <p className="text-[0.84rem] text-[var(--danger)]">{answerError}</p>
-          </div>
-        )}
+        <div className="mt-7 grid w-full grid-cols-1 gap-2.5 sm:grid-cols-2">
+          {promptChips.map((chip) => (
+            <button
+              key={chip.id}
+              type="button"
+              disabled={isLimitReached}
+              onClick={() => onSend(chip.prompt)}
+              className="group flex items-start gap-3 rounded-2xl border border-slate-200/70 bg-white/70 p-3.5 text-left shadow-[0_1px_2px_rgba(15,23,42,0.03)] backdrop-blur-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white hover:shadow-[0_8px_24px_-12px_rgba(15,23,42,0.12)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+            >
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 text-slate-500 ring-1 ring-inset ring-slate-200/70 transition group-hover:from-indigo-50 group-hover:to-blue-50 group-hover:text-indigo-600 group-hover:ring-indigo-100">
+                <AppIcon name={chip.icon} className="h-4 w-4" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-[13.5px] font-semibold text-slate-800">{chip.label}</div>
+                <div className="mt-0.5 text-[12px] leading-relaxed text-slate-500">{chip.description}</div>
+              </div>
+            </button>
+          ))}
+        </div>
 
-        {isLimitReached && messages.length > 0 && (
-          <div className="mx-2 rounded-[var(--radius-lg)] border border-[var(--danger-soft)] bg-[var(--danger-soft)] px-4 py-3">
-            <p className="text-[0.84rem] font-semibold text-[var(--danger)]">You&apos;ve used all your Ask AI asks for today. Come back tomorrow!</p>
+        {isLimitReached && !isSubmitting && (
+          <div className="mt-6 w-full rounded-2xl border border-red-200/60 bg-red-50/80 px-4 py-3 text-left">
+            <p className="text-[13px] font-medium text-red-700">You&apos;ve used all your Ask AI asks for today. Come back tomorrow!</p>
           </div>
         )}
       </div>
@@ -3541,81 +3486,156 @@ function AskAiModePanel({
   }
 
   return (
-    <div className={`flex h-full flex-col bg-[var(--bg)] ${className}`}>
-      {/* Minimal top action area */}
-      <div className={`shrink-0 px-4 pt-3 sm:px-5 ${messages.length > 0 ? 'border-b border-[var(--line)] pb-3' : ''}`}>
-        <div className="mx-auto flex w-full max-w-[768px] justify-end">
-          {messages.length > 0 && (
-            <button
-              type="button"
-              onClick={onStartOver}
-              aria-label="New chat"
-              className="inline-flex h-[36px] shrink-0 items-center justify-center gap-1.5 rounded-full px-2.5 text-xs font-medium text-[var(--muted)] transition hover:bg-[var(--bg-soft)] hover:text-[var(--text)] sm:px-3"
-            >
-              <AppIcon name="newChat" size={16} strokeWidth={1.75} />
-              New chat
-            </button>
-          )}
-        </div>
-      </div>
+    <div className="flex flex-col gap-5">
+      {messages.map((msg, index) => {
+        if (msg.role === 'user') {
+          return (
+            <div key={index} className="flex justify-end">
+              <div className="max-w-[85%] rounded-2xl rounded-tr-md border border-[#0f1f4a]/40 bg-gradient-to-br from-[#172d6b] to-[#0f1f4a] px-4 py-2.5 shadow-[0_4px_14px_-4px_rgba(23,45,107,0.35)]">
+                <p className="whitespace-pre-wrap text-[14.5px] leading-relaxed text-white">{msg.content}</p>
+              </div>
+            </div>
+          )
+        }
 
-      {/* Scrollable messages area */}
-      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-5 sm:px-5">
-        <div className="mx-auto flex w-full max-w-[768px] flex-col">
-          {renderMessagesContent()}
-          <div ref={messagesEndRef} />
-        </div>
-      </div>
-
-      {/* Bottom composer */}
-      <div className="shrink-0 border-t border-[var(--line)] bg-[var(--bg)] px-4 py-3 sm:px-5 pb-[calc(env(safe-area-inset-bottom,0px)+4rem)]">
-        <div className="mx-auto flex w-full max-w-[768px] items-center gap-2 mb-2">
-          <button
-            type="button"
-            onClick={handleOpenPromptBuilder}
-            className="inline-flex items-center gap-1.5 rounded-full border border-[var(--accent-soft)] bg-[var(--accent-wash)] px-3 py-1.5 text-xs font-semibold text-[var(--accent-deep)] transition hover:border-[var(--accent-glow)] hover:bg-[rgba(var(--accent-rgb),0.18)]"
-          >
-            <AppIcon name="promptBuilder" className="h-3.5 w-3.5" />
-            Prompt Builder
-          </button>
-        </div>
-        <div className="mx-auto flex w-full max-w-[768px] items-end gap-2">
-          <div className="flex-1 rounded-[var(--radius-lg)] border border-[var(--line)] bg-[var(--panel)] px-4 py-2.5 shadow-[var(--shadow-soft)] transition focus-within:border-[var(--accent)] focus-within:shadow-[var(--focus-ring)]">
-            <textarea
-              ref={textareaRef}
-              value={draftQuestion}
-              onChange={(e) => setDraftQuestion(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault()
-                  handleSend()
-                }
-              }}
-              placeholder="Message Ask AI..."
-              rows={1}
-              disabled={isSubmitting || isLimitReached || isUsagePending}
-              className="w-full resize-none bg-transparent text-[var(--type-body)] leading-relaxed text-[var(--text)] outline-none placeholder:text-[var(--text-light)] disabled:cursor-not-allowed disabled:text-[var(--text-light)]"
-            />
+        return (
+          <div key={index} className="flex flex-col gap-2.5 rounded-2xl border border-slate-200/80 bg-white/70 p-4 shadow-[0_1px_2px_rgba(15,23,42,0.03)] backdrop-blur-sm">
+            <div className="flex items-center gap-2">
+              <div className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-indigo-500 via-blue-500 to-cyan-400 shadow-[0_4px_10px_-2px_rgba(59,130,246,0.4)]">
+                <SparkIcon className="h-3 w-3 text-white" />
+              </div>
+              <span className="text-[12px] font-semibold tracking-wide text-slate-500">Ask AI</span>
+            </div>
+            <div className="pl-8">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  p: ({ children }) => (
+                    <p className="mb-3 last:mb-0 whitespace-pre-wrap text-[15px] leading-[1.7] text-slate-800 break-words [overflow-wrap:anywhere]">{children}</p>
+                  ),
+                  strong: ({ children }) => (
+                    <strong className="font-semibold text-slate-900 break-words">{children}</strong>
+                  ),
+                  ul: ({ children }) => (
+                    <ul className="my-3 list-disc space-y-1.5 pl-5 text-[15px] leading-[1.7] text-slate-800 marker:text-slate-400">{children}</ul>
+                  ),
+                  ol: ({ children }) => (
+                    <ol className="my-3 list-decimal space-y-1.5 pl-5 text-[15px] leading-[1.7] text-slate-800 marker:text-slate-400">{children}</ol>
+                  ),
+                  li: ({ children }) => (
+                    <li className="leading-[1.7] text-slate-800 break-words [overflow-wrap:anywhere]">{children}</li>
+                  ),
+                  em: ({ children }) => (
+                    <em className="italic text-slate-800">{children}</em>
+                  ),
+                  a: ({ children, href }) => (
+                    <a href={href} target="_blank" rel="noopener noreferrer" className="text-indigo-600 underline decoration-indigo-200 underline-offset-2 transition hover:decoration-indigo-400">{children}</a>
+                  ),
+                  code: ({ children }) => (
+                    <code className="rounded-md bg-slate-100 px-1.5 py-0.5 font-mono text-[13px] text-slate-800 whitespace-pre-wrap break-all">{children}</code>
+                  ),
+                  pre: ({ children }) => (
+                    <pre className="my-3 overflow-x-auto rounded-xl bg-slate-100 p-3 text-[13px] leading-relaxed text-slate-800">{children}</pre>
+                  ),
+                  h1: ({ children }) => (
+                    <h1 className="mb-2 mt-4 text-[20px] font-semibold tracking-[-0.01em] text-slate-900 first:mt-0">{children}</h1>
+                  ),
+                  h2: ({ children }) => (
+                    <h2 className="mb-2 mt-4 text-[17px] font-semibold tracking-[-0.01em] text-slate-900 first:mt-0">{children}</h2>
+                  ),
+                  h3: ({ children }) => (
+                    <h3 className="mb-1.5 mt-3 text-[15px] font-semibold text-slate-900 first:mt-0">{children}</h3>
+                  ),
+                  blockquote: ({ children }) => (
+                    <blockquote className="my-3 border-l-2 border-slate-200 pl-4 italic text-slate-600">{children}</blockquote>
+                  ),
+                  table: ({ children }) => (
+                    <div className="my-3 max-w-full overflow-x-auto">
+                      <table className="min-w-max border-collapse text-[14px] leading-[1.6] text-slate-800">
+                        {children}
+                      </table>
+                    </div>
+                  ),
+                  thead: ({ children }) => (
+                    <thead className="bg-slate-50 text-slate-600">{children}</thead>
+                  ),
+                  tbody: ({ children }) => (
+                    <tbody className="divide-y divide-slate-200">{children}</tbody>
+                  ),
+                  tr: ({ children }) => (
+                    <tr className="border-b border-slate-200 last:border-b-0">{children}</tr>
+                  ),
+                  th: ({ children }) => (
+                    <th className="whitespace-nowrap border border-slate-200 px-3 py-2 text-left font-semibold text-slate-700">{children}</th>
+                  ),
+                  td: ({ children }) => (
+                    <td className="border border-slate-200 px-3 py-2 align-top text-slate-800">{children}</td>
+                  ),
+                }}
+              >
+                {msg.content}
+              </ReactMarkdown>
+              {sources.length > 0 && (
+                <div className="mt-4 flex flex-wrap items-center gap-1.5 border-t border-slate-200/70 pt-3">
+                  <span className="mr-1 text-[10.5px] font-semibold uppercase tracking-[0.1em] text-slate-400">Sources</span>
+                  {sources.map((source) => (
+                    <a
+                      key={source.url}
+                      href={source.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group inline-flex max-w-[200px] items-center gap-1 rounded-full border border-slate-200/80 bg-white px-2.5 py-1 text-[11.5px] font-medium text-slate-600 transition hover:border-indigo-200 hover:bg-indigo-50/60 hover:text-indigo-700"
+                    >
+                      <span className="truncate">{source.title.length > 32 ? `${source.title.slice(0, 32)}\u2026` : source.title}</span>
+                      <ChevronRightIcon className="h-3 w-3 shrink-0 text-slate-400 transition group-hover:text-indigo-500" />
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={() => handleSend()}
-            disabled={isSubmitting || isLimitReached || isUsagePending || !draftQuestion.trim()}
-            className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-white transition hover:bg-[var(--accent-deep)] disabled:cursor-not-allowed disabled:opacity-40 active:scale-95"
-            aria-label="Send message"
-          >
-            <AppIcon name="askAi" className="h-5 w-5" />
-          </button>
-        </div>
-        <p className="mx-auto mt-1.5 max-w-[768px] text-center text-[10px] text-[var(--text-light)]">
-          GalaTayo AI can make mistakes. Check important info.
-        </p>
-      </div>
+        )
+      })}
 
-      <ThinkingMiniGamePopup isThinking={isSubmitting} />
+      {isSubmitting && !answer && (
+        <div className="flex flex-col gap-2.5 rounded-2xl border border-slate-200/80 bg-white/70 p-4 shadow-[0_1px_2px_rgba(15,23,42,0.03)] backdrop-blur-sm">
+          <div className="flex items-center gap-2">
+            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-indigo-500 via-blue-500 to-cyan-400 shadow-[0_4px_10px_-2px_rgba(59,130,246,0.4)]">
+              <SparkIcon className="h-3 w-3 text-white" />
+            </div>
+            <span className="text-[12px] font-semibold tracking-wide text-slate-500">Ask AI</span>
+          </div>
+          <div className="pl-8">
+            <div className="flex items-center gap-2">
+              <span className="text-[11.5px] font-semibold uppercase tracking-[0.08em] text-slate-700">
+                Thinking
+              </span>
+              <span className="inline-flex items-center gap-1 text-[var(--accent-deep)]">
+                <span className="h-1.5 w-1.5 rounded-full bg-current motion-safe:animate-bounce" />
+                <span className="h-1.5 w-1.5 rounded-full bg-current motion-safe:animate-bounce [animation-delay:120ms]" />
+                <span className="h-1.5 w-1.5 rounded-full bg-current motion-safe:animate-bounce [animation-delay:240ms]" />
+              </span>
+            </div>
+            <p className="mt-1 text-[12px] font-medium text-slate-500">Shaping your Ask AI reply.</p>
+            <ThinkingLoadingBar className="mt-3" />
+          </div>
+        </div>
+      )}
+
+      {answerError && !isSubmitting && messages.length > 0 && (
+        <div className="rounded-2xl border border-red-200/60 bg-red-50/80 px-4 py-3">
+          <p className="text-[13px] text-red-700">{answerError}</p>
+        </div>
+      )}
+
+      {isLimitReached && !isSubmitting && messages.length > 0 && (
+        <div className="rounded-2xl border border-red-200/60 bg-red-50/80 px-4 py-3">
+          <p className="text-[13px] font-medium text-red-700">You&apos;ve used all your Ask AI asks for today. Come back tomorrow!</p>
+        </div>
+      )}
     </div>
   )
-}
+})
 
 function AskAiSignInContent({
   onOpenPromptBuilder,
@@ -3623,20 +3643,25 @@ function AskAiSignInContent({
   onOpenPromptBuilder: () => void
 }) {
   return (
-    <div className="flex flex-col items-center justify-center py-10 text-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--accent-wash)]">
-        <SparkIcon className="h-7 w-7 text-[var(--accent-deep)]" />
+    <div className="mx-auto flex w-full max-w-[760px] flex-col items-center justify-center py-8 text-center">
+      <div className="relative mb-5">
+        <div className="pointer-events-none absolute -inset-4 rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.16),transparent_65%)] blur-2xl" />
+        <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 via-blue-500 to-cyan-400 shadow-[0_10px_28px_-6px_rgba(59,130,246,0.45),inset_0_1px_0_rgba(255,255,255,0.25)]">
+          <SparkIcon className="h-6 w-6 text-white" />
+        </div>
       </div>
-      <h2 className="mt-4 text-xl font-bold text-[var(--text)]">Sign in to use Ask AI</h2>
-      <p className="mt-2 max-w-sm text-[0.88rem] leading-relaxed text-[var(--muted)]">
+      <h2 className="text-[1.5rem] font-semibold tracking-[-0.02em] text-slate-900 sm:text-[1.7rem]">
+        Sign in to use <span className="bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500 bg-clip-text text-transparent">Ask AI</span>
+      </h2>
+      <p className="mt-2 max-w-sm text-[14px] leading-relaxed text-slate-500">
         Ask AI is reserved for GalaTayo members. Sign in to plan your next gala with AI.
       </p>
-      <div className="mt-5 flex flex-col gap-2.5 items-center">
+      <div className="mt-6 flex flex-col items-center gap-2.5">
         <GoogleSignInButton className="inline-flex" />
         <button
           type="button"
           onClick={onOpenPromptBuilder}
-          className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] px-4 py-2.5 text-sm font-semibold text-[var(--muted)] transition hover:border-[var(--accent)] hover:text-[var(--accent-deep)]"
+          className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/80 bg-white/80 px-4 py-2 text-[13px] font-medium text-slate-600 shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition hover:border-slate-300 hover:bg-white hover:text-slate-800"
         >
           <SparkIcon className="h-3.5 w-3.5" />
           Open Prompt Builder
@@ -3656,29 +3681,33 @@ function AskAiUsageErrorContent({
   onOpenPromptBuilder: () => void
 }) {
   return (
-    <div className="flex flex-col items-center justify-center py-10 text-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[var(--warning-soft)]">
-        <span className="text-2xl">⚠️</span>
+    <div className="mx-auto flex w-full max-w-[760px] flex-col items-center justify-center py-8 text-center">
+      <div className="relative mb-5">
+        <div className="pointer-events-none absolute -inset-4 rounded-full bg-[radial-gradient(circle,rgba(245,158,11,0.18),transparent_65%)] blur-2xl" />
+        <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 shadow-[0_10px_28px_-6px_rgba(245,158,11,0.4),inset_0_1px_0_rgba(255,255,255,0.25)]">
+          <AppIcon name="warning" className="h-6 w-6 text-white" />
+        </div>
       </div>
-      <h2 className="mt-4 text-xl font-bold text-[var(--text)]">
-        <span className="text-[var(--text)]">Ask </span>
-        <span className="text-[var(--accent-deep)]">AI</span> is unavailable
+      <h2 className="text-[1.5rem] font-semibold tracking-[-0.02em] text-slate-900 sm:text-[1.7rem]">
+        <span>Ask </span>
+        <span className="bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500 bg-clip-text text-transparent">AI</span>
+        <span> is unavailable</span>
       </h2>
-      <p className="mt-2 max-w-sm text-[0.88rem] leading-relaxed text-[var(--muted)]">
+      <p className="mt-2 max-w-sm text-[14px] leading-relaxed text-slate-500">
         {usageError ?? 'Try checking your daily Ask AI status again.'}
       </p>
-      <div className="mt-5 flex items-center gap-2.5">
+      <div className="mt-6 flex items-center gap-2.5">
         <button
           type="button"
           onClick={onRetryUsage}
-          className="inline-flex items-center gap-1.5 rounded-full border border-[var(--accent)] bg-[var(--panel)] px-4 py-2.5 text-sm font-semibold text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)]"
+          className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-br from-slate-900 to-slate-700 px-4 py-2 text-[13px] font-semibold text-white shadow-[0_4px_12px_-2px_rgba(15,23,42,0.3)] transition hover:from-slate-800 hover:to-slate-700"
         >
           Retry
         </button>
         <button
           type="button"
           onClick={onOpenPromptBuilder}
-          className="inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-[var(--panel)] px-4 py-2.5 text-sm font-semibold text-[var(--muted)] transition hover:border-[var(--accent)] hover:text-[var(--accent-deep)]"
+          className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/80 bg-white/80 px-4 py-2 text-[13px] font-medium text-slate-600 shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition hover:border-slate-300 hover:bg-white hover:text-slate-800"
         >
           <SparkIcon className="h-3.5 w-3.5" />
           Prompt Builder
@@ -4441,6 +4470,8 @@ function HomePage({
       usageStatus: initialAskAiState?.usageStatus ?? null,
       isSubmitting: initialAskAiState?.isSubmitting === true,
       messages: initialAskAiState?.messages ?? [],
+      jobId: initialAskAiState?.jobId ?? null,
+      jobStatus: initialAskAiState?.jobStatus ?? null,
     })
 
     return subscribeToAskAiRuntime((runtimeState) => {
@@ -4451,7 +4482,7 @@ function HomePage({
       setAskAiUsageStatus(runtimeState.usageStatus)
       setIsAskAiSubmitting(runtimeState.isSubmitting)
 
-      if (runtimeState.answer && !runtimeState.isSubmitting) {
+      if (runtimeState.answer && runtimeState.jobStatus === 'completed') {
         setChatMessages((prev) => {
           const lastMessage = prev[prev.length - 1]
           if (lastMessage?.role === 'assistant' && lastMessage.content === runtimeState.answer) {
@@ -4507,6 +4538,8 @@ function HomePage({
       return
     }
 
+    const runtimeState = getAskAiRuntimeState()
+
     writeAskAiRouteCache({
       question: normalizedQuestion,
       answer: askAiAnswer,
@@ -4515,8 +4548,21 @@ function HomePage({
       usageStatus: askAiUsageStatus,
       isSubmitting: isAskAiSubmitting,
       messages: chatMessages,
+      jobId: runtimeState.jobId,
+      jobStatus: runtimeState.jobStatus,
     })
   }, [askAiAnswer, askAiAnswerError, askAiQuestion, askAiSources, askAiUsageStatus, initialMode, isAskAiSubmitting, chatMessages])
+
+  useEffect(() => {
+    if (initialMode !== 'ask-ai' || !session?.access_token) {
+      return
+    }
+
+    void resumeAskAiRuntimeJob({
+      accessToken: session.access_token,
+      apiBaseUrl: import.meta.env.VITE_API_BASE_URL,
+    })
+  }, [initialMode, session?.access_token])
 
   useEffect(() => {
     let isMounted = true
@@ -4656,7 +4702,7 @@ function HomePage({
       <div className={`${selectedMode === 'ask-ai' ? 'h-screen overflow-hidden' : 'min-h-screen'} bg-[var(--bg)] text-[var(--text)]`}>
         <GuestAuthPrompt variant="ask-ai" mode="modal" isOpen={promptLogin} onClose={() => setPromptLogin(false)} />
 
-        <div className={`gala-page-background overflow-x-hidden lg:hidden ${selectedMode === 'ask-ai' ? 'flex h-[100dvh] flex-col overflow-hidden' : 'min-h-screen'}`}>
+      <div className={`gala-page-background overflow-x-hidden md:hidden ${selectedMode === 'ask-ai' ? 'flex h-[100dvh] flex-col overflow-hidden' : 'min-h-screen'}`}>
           {selectedMode !== 'ask-ai' && <AppHeader signInLabel="Mag-sign in" minimal />}
 
           <main className={`overflow-x-hidden ${selectedMode === 'ask-ai' ? 'flex flex-1 flex-col min-h-0 overflow-hidden' : 'pb-6'}`}>
@@ -4745,7 +4791,6 @@ function HomePage({
                     answerError={askAiAnswerError}
                     messages={chatMessages}
                     onRetryUsage={handleRetryAskAiUsage}
-                    onQuestionChange={setAskAiQuestion}
                     onSubmit={(questionOverride) => void handleAskAiSubmit(questionOverride)}
                     onStartOver={handleStartOverAskAi}
                     onOpenPromptBuilder={(questionOverride) => openPromptBuilder('ask-ai', questionOverride)}
@@ -4757,7 +4802,7 @@ function HomePage({
       </div>
 
         <div
-          className={`hidden w-full lg:grid ${
+          className={`hidden w-full md:grid ${
             isPromptBuilderOpen || selectedMode === 'ask-ai'
               ? 'h-screen overflow-hidden grid-rows-[auto_minmax(0,1fr)]'
               : 'h-screen overflow-hidden lg:grid-rows-[auto_minmax(0,1fr)_auto]'
@@ -4857,7 +4902,6 @@ function HomePage({
                     answerError={askAiAnswerError}
                     messages={chatMessages}
                     onRetryUsage={handleRetryAskAiUsage}
-                    onQuestionChange={setAskAiQuestion}
                     onSubmit={(questionOverride) => void handleAskAiSubmit(questionOverride)}
                     onStartOver={handleStartOverAskAi}
                     onOpenPromptBuilder={(questionOverride) => openPromptBuilder('ask-ai', questionOverride)}

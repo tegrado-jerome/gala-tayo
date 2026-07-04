@@ -1,13 +1,11 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import L from 'leaflet'
-import { renderToStaticMarkup } from 'react-dom/server'
-import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import AppHeader from '../components/AppHeader'
 import { AppIcon, type AppIconName } from '../components/AppIcon'
 import PageHeroHeader from '../components/PageHeroHeader'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import MinimalBackNav from '../components/MinimalBackNav'
+import MapView from '../components/MapView'
 import { navigateToPath } from '../utils/navigation'
 import { submitPlaceSubmission } from '../utils/placeSubmissionsApi'
 
@@ -66,70 +64,6 @@ const fieldClassName =
 const textInputClassName = `${fieldClassName} h-11`
 const textAreaClassName = `${fieldClassName} py-3`
 const mapSearchInputClassName = `${fieldClassName} h-14 pl-11 text-[15px]`
-
-const submissionPinIcon = L.divIcon({
-  className: '',
-  html: renderToStaticMarkup(
-    <span className="gt-map-capsule-marker gt-map-capsule-marker--submission" aria-hidden="true">
-      <span className="gt-map-capsule-marker__pin-shell">
-        <svg className="gt-map-capsule-marker__pin" viewBox="0 0 32 44" aria-hidden="true">
-          <defs>
-            <linearGradient id="gt-pin-grad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#244995" />
-              <stop offset="100%" stopColor="#172d6b" />
-            </linearGradient>
-            <filter id="gt-pin-shadow" x="-20%" y="-10%" width="140%" height="130%">
-              <feDropShadow dx="0" dy="0.5" stdDeviation="0.8" floodColor="#0f172a" floodOpacity="0.15" />
-            </filter>
-          </defs>
-          <path d="M16 43C16 43 30 27.5 30 16C30 7.7 23.7 1 16 1C8.3 1 2 7.7 2 16C2 27.5 16 43 16 43Z" fill="url(#gt-pin-grad)" filter="url(#gt-pin-shadow)" />
-          <circle cx="16" cy="16" r="5.5" />
-        </svg>
-      </span>
-    </span>
-  ),
-  iconSize: [60, 60],
-  iconAnchor: [30, 54],
-  popupAnchor: [0, -54],
-})
-
-function PlaceMarkerPicker({
-  position,
-  onChange,
-}: {
-  position: [number, number]
-  onChange: (value: [number, number]) => void
-}) {
-  useMapEvents({
-    click(event) {
-      onChange([event.latlng.lat, event.latlng.lng])
-    },
-  })
-
-  return (
-    <Marker
-      position={position}
-      icon={submissionPinIcon}
-      draggable
-      eventHandlers={{
-        dragend(event) {
-          const nextLatLng = event.target.getLatLng()
-          onChange([nextLatLng.lat, nextLatLng.lng])
-        },
-      }}
-    />
-  )
-}
-
-function MapRecenter({ center }: { center: [number, number] }) {
-  const map = useMap()
-
-  useEffect(() => {
-    map.setView(center, Math.max(map.getZoom(), 15), { animate: true })
-  }, [center, map])
-
-  return null
-}
 
 function splitList(value: string) {
   return value
@@ -231,6 +165,7 @@ function FormSection({
 function PlaceSubmissionPage({ session }: { session: Session | null }) {
   const [draft, setDraft] = useState<PlaceDraft>(emptyDraft)
   const [coordinates, setCoordinates] = useState<[number, number]>(metroManilaCenter)
+  const [shouldRecenter, setShouldRecenter] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
@@ -333,6 +268,7 @@ function PlaceSubmissionPage({ session }: { session: Session | null }) {
     const nextCoordinates: [number, number] = [Number(result.lat), Number(result.lon)]
     const locationParts = getLocationParts(result.address)
 
+    setShouldRecenter(true)
     setCoordinates(nextCoordinates)
     setDraft((current) => ({
       ...current,
@@ -344,6 +280,7 @@ function PlaceSubmissionPage({ session }: { session: Session | null }) {
   }
 
   const handleCoordinateChange = (nextCoordinates: [number, number]) => {
+    setShouldRecenter(false)
     setCoordinates(nextCoordinates)
     void applyReverseGeocode(nextCoordinates)
   }
@@ -540,14 +477,15 @@ function PlaceSubmissionPage({ session }: { session: Session | null }) {
                   ) : null}
 
                   <div className="overflow-hidden rounded-[24px] ring-1 ring-[var(--line)]">
-                    <MapContainer center={coordinates} zoom={16} scrollWheelZoom className="galatayo-leaflet-map h-[300px] w-full sm:h-[320px]">
-                      <MapRecenter center={coordinates} />
-                      <TileLayer
-                        attribution="&copy; OpenStreetMap contributors &copy; CARTO"
-                        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-                      />
-                      <PlaceMarkerPicker position={coordinates} onChange={handleCoordinateChange} />
-                    </MapContainer>
+                    <MapView
+                      pickMode
+                      pickPosition={coordinates}
+                      onPickPositionChange={handleCoordinateChange}
+                      pickRecenterSignal={shouldRecenter ? 1 : 0}
+                      center={coordinates}
+                      zoom={16}
+                      className="h-[300px] w-full sm:h-[320px]"
+                    />
                   </div>
 
                   <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-600">

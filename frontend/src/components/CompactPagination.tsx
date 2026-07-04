@@ -18,20 +18,31 @@ function buildPaginationItems(currentPage: number, totalPages: number) {
     return Array.from({ length: totalPages }, (_, index) => index + 1)
   }
 
-  const result: Array<number | 'ellipsis'> = [1]
+  const items: Array<number | 'ellipsis'> = []
 
-  if (currentPage !== 1 && currentPage !== totalPages) {
-    result.push(currentPage)
+  const addRange = (start: number, end: number) => {
+    for (let page = start; page <= end; page += 1) {
+      items.push(page)
+    }
   }
 
-  const lastAdded = result[result.length - 1] as number
-  if (lastAdded + 1 < totalPages) {
-    result.push('ellipsis')
+  if (currentPage <= 3) {
+    addRange(1, 5)
+    items.push('ellipsis', totalPages)
+    return items
   }
 
-  result.push(totalPages)
+  if (currentPage >= totalPages - 2) {
+    items.push(1, 'ellipsis')
+    addRange(totalPages - 4, totalPages)
+    return items
+  }
 
-  return result
+  items.push(1, 'ellipsis')
+  addRange(currentPage - 1, currentPage + 1)
+  items.push('ellipsis', totalPages)
+
+  return items
 }
 
 function CompactPagination({
@@ -60,8 +71,15 @@ function CompactPagination({
   const hasSummary = typeof totalItems === 'number' && typeof pageSize === 'number' && totalItems > 0 && pageSize > 0
   const rangeStart = hasSummary ? (currentPage - 1) * pageSize + 1 : 0
   const rangeEnd = hasSummary ? Math.min(currentPage * pageSize, totalItems) : 0
-
-  const baseItemClass = 'inline-flex shrink-0 items-center justify-center rounded-[12px] border transition disabled:cursor-not-allowed disabled:opacity-50'
+  const controlBaseClass =
+    'inline-flex shrink-0 items-center justify-center border transition duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50'
+  const pageChipBaseClass = `${controlBaseClass} h-8 min-w-8 rounded-full px-2.5 text-[0.9rem] font-semibold sm:h-9 sm:min-w-9`
+  const arrowChipClass = `${controlBaseClass} h-8 w-8 rounded-full border-transparent bg-transparent text-slate-500 hover:border-transparent hover:bg-slate-100 hover:text-slate-900 sm:h-9 sm:w-9`
+  const inactivePageChipClass =
+    'border-transparent bg-transparent text-slate-500 hover:border-transparent hover:bg-slate-100 hover:text-slate-900'
+  const activePageChipClass = 'cursor-default border-[var(--accent-deep)] bg-[var(--accent-deep)] text-white'
+  const shellClass =
+    'flex max-w-full flex-col items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-2'
 
   const renderPageControl = (
     page: number,
@@ -106,67 +124,65 @@ function CompactPagination({
       className={`flex w-full flex-col items-center ${className ?? ''}`.trim()}
     >
       <div className="flex w-full flex-col items-center gap-3">
-        <div className="flex w-full items-center justify-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {currentPage > 1 ? (
-            renderPageControl(
-              previousPage,
-              <ChevronLeft className="h-4 w-4" strokeWidth={2.6} />,
-              'Previous page',
-              `${baseItemClass} h-10 w-10 border-[var(--line)] bg-white text-slate-400 hover:border-[var(--accent)] hover:text-[var(--accent-deep)] sm:h-11 sm:w-11`,
-            )
+        <div className={`${shellClass} overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}>
+          <div className="flex items-center justify-center gap-1">
+            {currentPage > 1 ? (
+              renderPageControl(
+                previousPage,
+                <ChevronLeft className="h-3.5 w-3.5" strokeWidth={2.6} />,
+                'Previous page',
+                arrowChipClass,
+              )
           ) : (
             <span
               aria-hidden="true"
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] border border-[var(--line)] bg-white text-slate-300 sm:h-11 sm:w-11"
+              className={`${arrowChipClass} pointer-events-none text-slate-300 hover:text-slate-300`}
             >
-              <ChevronLeft className="h-4 w-4" strokeWidth={2.6} />
+              <ChevronLeft className="h-3.5 w-3.5" strokeWidth={2.6} />
             </span>
           )}
 
-          {items.map((item, index) =>
-            item === 'ellipsis' ? (
-              <span
-                key={`ellipsis-${index}`}
-                className="inline-flex h-10 min-w-10 shrink-0 items-center justify-center rounded-[12px] border border-[var(--line)] bg-white px-3 text-[0.95rem] font-semibold text-slate-600 sm:h-11 sm:min-w-11"
-              >
-                ...
-              </span>
+            {items.map((item, index) =>
+              item === 'ellipsis' ? (
+                <span
+                  key={`ellipsis-${index}`}
+                  className="inline-flex h-8 min-w-4 shrink-0 items-center justify-center px-1 text-[0.9rem] font-semibold text-slate-400 sm:h-9"
+                >
+                  ...
+                </span>
+              ) : (
+                <span key={item}>
+                  {renderPageControl(
+                    item,
+                    item,
+                    item === currentPage ? `Current page, page ${item}` : `Go to page ${item}`,
+                    `${pageChipBaseClass} ${item === currentPage ? activePageChipClass : inactivePageChipClass}`,
+                  )}
+                </span>
+              )
+            )}
+
+            {currentPage < totalPages ? (
+              renderPageControl(
+                nextPage,
+                <ChevronRight className="h-3.5 w-3.5" strokeWidth={2.6} />,
+                'Next page',
+                arrowChipClass,
+              )
             ) : (
-              <span key={item}>
-                {renderPageControl(
-                  item,
-                  item,
-                  item === currentPage ? `Current page, page ${item}` : `Go to page ${item}`,
-                  `${baseItemClass} h-10 min-w-10 px-3 text-[0.95rem] font-semibold sm:h-11 sm:min-w-11 ${
-                    item === currentPage
-                      ? 'cursor-default border-[var(--accent-deep)] bg-[var(--accent-deep)] text-white'
-                      : 'border-[var(--line)] bg-white text-slate-700 hover:border-[var(--accent)] hover:text-[var(--accent-deep)]'
-                  }`,
-                )}
+              <span
+                aria-hidden="true"
+                className={`${arrowChipClass} pointer-events-none text-slate-300 hover:text-slate-300`}
+              >
+                <ChevronRight className="h-3.5 w-3.5" strokeWidth={2.6} />
               </span>
-            )
-          )}
-
-          {currentPage < totalPages ? (
-            renderPageControl(
-              nextPage,
-              <ChevronRight className="h-4 w-4" strokeWidth={2.6} />,
-              'Next page',
-              `${baseItemClass} h-10 w-10 border-[var(--line)] bg-white text-slate-500 hover:border-[var(--accent)] hover:text-[var(--accent-deep)] sm:h-11 sm:w-11`,
-            )
-          ) : (
-            <span
-              aria-hidden="true"
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] border border-[var(--line)] bg-white text-slate-300 sm:h-11 sm:w-11"
-            >
-              <ChevronRight className="h-4 w-4" strokeWidth={2.6} />
-            </span>
-          )}
+            )}
+          </div>
         </div>
 
         {hasSummary ? (
           <div className="w-full text-center">
-            <p className="text-sm font-semibold text-slate-700 sm:text-[15px]">
+            <p className="text-xs font-medium text-slate-500 sm:text-sm">
               Results: {rangeStart}-{rangeEnd} of {totalItems}
             </p>
           </div>
@@ -174,7 +190,7 @@ function CompactPagination({
 
         {isLoading ? (
           <div className="w-full text-center">
-            <p className="text-[11px] font-semibold text-slate-400">Loading page...</p>
+            <p className="text-[11px] font-medium text-slate-400">Loading page...</p>
           </div>
         ) : null}
       </div>

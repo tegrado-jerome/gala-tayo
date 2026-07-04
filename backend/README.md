@@ -18,6 +18,7 @@ If your local Azure identity can access the Key Vault, the seed can read:
 
 - `supabase-url`
 - `supabase-service-role-key`
+- `groq-api-key`
 
 ```powershell
 $env:KEY_VAULT_URL="https://your-key-vault-name.vault.azure.net/"
@@ -25,6 +26,8 @@ npm run seed:curated-places
 ```
 
 You can also combine both options. Env vars are used first, and Key Vault fills in anything missing.
+
+For the Ask AI chatbot backend, you can also set `GROQ_API_KEY` locally as a fallback. That key must stay server-side and should never be exposed to the frontend.
 
 The seed uses `upsert` with `onConflict: "slug"`, so it is safe to run more than once as long as `public.places.slug` has a unique constraint.
 

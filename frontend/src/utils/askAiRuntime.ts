@@ -1,3 +1,10 @@
+import {
+  cancelAskAiTask,
+  completeAskAiTask,
+  failAskAiTask,
+  registerAskAiTask,
+} from './askAiTaskStore'
+
 type AskAiUsageStatus = {
   usageType: 'ask_ai_total' | 'live_search'
   allowed: boolean
@@ -13,6 +20,8 @@ type AskAiSource = {
   url: string
 }
 
+export type AskAiJobStatus = 'pending' | 'streaming' | 'completed' | 'failed' | 'cancelled'
+
 export type ChatMessage = {
   role: 'user' | 'assistant'
   content: string
@@ -23,13 +32,6 @@ type AskAiUsageSummary = {
   liveSearch: AskAiUsageStatus
 }
 
-type AskAiAnswerResponse = {
-  answer: string
-  sources?: unknown
-  usage: AskAiUsageSummary
-  message?: string
-}
-
 type AskAiRuntimeState = {
   question: string
   answer: string
@@ -38,11 +40,22 @@ type AskAiRuntimeState = {
   usageStatus: AskAiUsageStatus | null
   isSubmitting: boolean
   messages: ChatMessage[]
+  jobId: string | null
+  jobStatus: AskAiJobStatus | null
 }
 
 type AskAiRuntimeListener = (state: AskAiRuntimeState) => void
 
 const MAX_CONTEXT_MESSAGES = 8
+
+function sanitizeChatbotAnswer(text: string): string {
+  return text
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/?p>/gi, '\n')
+    .replace(/<\/?div>/gi, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
 
 function trimAssistantContent(content: string): string {
   return content.length > 1200 ? content.slice(0, 1200) + '...' : content
@@ -65,6 +78,8 @@ const emptyAskAiRuntimeState: AskAiRuntimeState = {
   usageStatus: null,
   isSubmitting: false,
   messages: [],
+  jobId: null,
+  jobStatus: null,
 }
 
 let askAiRuntimeState: AskAiRuntimeState = emptyAskAiRuntimeState
@@ -81,6 +96,10 @@ function emitAskAiRuntimeState() {
 function setAskAiRuntimeState(nextState: AskAiRuntimeState) {
   askAiRuntimeState = nextState
   emitAskAiRuntimeState()
+}
+
+function updateAskAiRuntimeState(updater: (state: AskAiRuntimeState) => AskAiRuntimeState) {
+  setAskAiRuntimeState(updater(askAiRuntimeState))
 }
 
 function getValidSourceUrl(source: Record<string, unknown>) {
@@ -196,7 +215,41 @@ export function seedAskAiRuntimeState(state: Partial<AskAiRuntimeState>) {
     usageStatus: state.usageStatus ?? null,
     isSubmitting: state.isSubmitting === true,
     messages: Array.isArray(state.messages) ? state.messages : [],
+    jobId: typeof state.jobId === 'string' ? state.jobId : null,
+    jobStatus: state.jobStatus ?? null,
   })
+}
+
+export function cancelAskAiRuntimeRequest() {
+  askAiAbortController?.abort()
+  askAiAbortController = null
+  askAiRequestVersion += 1
+  updateAskAiRuntimeState((state) => ({
+    ...state,
+    isSubmitting: false,
+    jobStatus: 'cancelled',
+    answerError: null,
+  }))
+
+  cancelAskAiTask('chatbot', askAiRuntimeState.answer
+    ? { answer: askAiRuntimeState.answer, sources: askAiRuntimeState.sources }
+    : null)
+}
+
+export async function resumeAskAiRuntimeJob({
+  accessToken,
+  apiBaseUrl,
+}: {
+  accessToken: string
+  apiBaseUrl?: string
+}) {
+  void accessToken
+  void apiBaseUrl
+  // Non-streaming: can't resume an in-flight fetch across page navigations.
+  // Reset any stale pending state so the UI doesn't appear stuck.
+  if (askAiRuntimeState.isSubmitting) {
+    cancelAskAiRuntimeRequest()
+  }
 }
 
 export function resetAskAiRuntimeState({
@@ -233,6 +286,8 @@ export async function submitAskAiRuntimeRequest({
 
   const conversationHistory = buildConversationContext(messages)
 
+  registerAskAiTask('chatbot')
+
   setAskAiRuntimeState({
     ...askAiRuntimeState,
     question,
@@ -241,12 +296,14 @@ export async function submitAskAiRuntimeRequest({
     answerError: null,
     isSubmitting: true,
     messages,
+    jobId: null,
+    jobStatus: 'pending',
   })
 
   try {
-    const askAiEndpointBase = apiBaseUrl ? `${apiBaseUrl}/ask-ai` : '/api/ask-ai'
-    const askAiEndpoint = `${askAiEndpointBase}?t=${Date.now()}`
-    const response = await fetch(askAiEndpoint, {
+    const chatbotEndpoint = apiBaseUrl ? `${apiBaseUrl}/ask-ai/chatbot` : '/api/ask-ai/chatbot'
+
+    const response = await fetch(chatbotEndpoint, {
       method: 'POST',
       cache: 'no-store',
       headers: {
@@ -255,42 +312,56 @@ export async function submitAskAiRuntimeRequest({
         'Cache-Control': 'no-store',
         Pragma: 'no-cache',
       },
-      signal: abortController.signal,
       body: JSON.stringify({ question, conversationHistory }),
+      signal: abortController.signal,
     })
 
-    const data = (await response.json()) as Partial<AskAiAnswerResponse> & {
+    const data = await response.json() as {
+      ok?: boolean
+      answer?: string
+      sources?: unknown
       error?: string
-      message?: string
+      usage?: AskAiUsageSummary
+      requestId?: string
     }
 
-    if (!response.ok) {
-      throw new Error(data.message || data.error || 'Ask AI could not answer right now.')
-    }
-
-    if (
-      typeof data.answer !== 'string' ||
-      !data.usage ||
-      !isAskAiUsageStatus(data.usage.askAi) ||
-      !isAskAiUsageStatus(data.usage.liveSearch)
-    ) {
-      throw new Error('Ask AI response was incomplete.')
+    if (!response.ok || !data.ok) {
+      const errorMessage = data.error || 'Sorry, I couldn’t answer that right now. Please try again.'
+      interface ChatbotErrorBody {
+        usage?: AskAiUsageSummary
+        error?: string
+      }
+      const errorBody: ChatbotErrorBody = {
+        usage: data.usage,
+        error: errorMessage,
+      }
+      throw Object.assign(new Error(errorMessage), { errorBody })
     }
 
     if (askAiRequestVersion !== requestVersion) {
       return
     }
 
-    setAskAiRuntimeState({
-      ...askAiRuntimeState,
+    const finalAnswer = sanitizeChatbotAnswer(data.answer ?? '')
+    const finalSources = getAskAiSourceList(data.sources)
+
+    const usageStatus = data.usage?.askAi && isAskAiUsageStatus(data.usage.askAi)
+      ? data.usage.askAi
+      : askAiRuntimeState.usageStatus
+
+    completeAskAiTask('chatbot', { answer: finalAnswer, sources: finalSources })
+
+    updateAskAiRuntimeState((state) => ({
+      ...state,
       question,
-      answer: data.answer,
-      sources: getAskAiSourceList(data.sources),
+      answer: finalAnswer,
+      sources: finalSources,
       answerError: null,
-      usageStatus: data.usage.askAi,
+      usageStatus,
       isSubmitting: false,
+      jobStatus: 'completed',
       messages,
-    })
+    }))
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') {
       return
@@ -300,19 +371,42 @@ export async function submitAskAiRuntimeRequest({
       return
     }
 
-    setAskAiRuntimeState({
-      ...askAiRuntimeState,
-      question,
-      answer: '',
-      sources: [],
-      answerError: error instanceof Error ? error.message : 'Ask AI could not answer right now.',
-      usageStatus: askAiRuntimeState.usageStatus,
-      isSubmitting: false,
-      messages,
-    })
-  } finally {
-    if (askAiAbortController === abortController) {
-      askAiAbortController = null
+    const rawMessage = error instanceof Error ? error.message : 'Ask AI could not answer right now.'
+    const isNetworkError =
+      rawMessage === 'Failed to fetch' ||
+      rawMessage === 'NetworkError' ||
+      rawMessage === 'Load failed'
+
+    const errorMessage = isNetworkError
+      ? 'Sorry, I couldn’t answer that right now. Please try again.'
+      : 'Sorry, I couldn’t answer that right now. Please try again.'
+
+    interface ErrorBody {
+      usage?: AskAiUsageSummary
+      error?: string
     }
+    const errorBody: ErrorBody | undefined =
+      error instanceof Error && 'errorBody' in error
+        ? (error as Error & { errorBody: ErrorBody }).errorBody
+        : undefined
+
+    const updatedUsageStatus =
+      errorBody?.usage?.askAi && isAskAiUsageStatus(errorBody.usage.askAi)
+        ? errorBody.usage.askAi
+        : askAiRuntimeState.usageStatus
+
+    failAskAiTask('chatbot', errorMessage)
+
+    updateAskAiRuntimeState((state) => ({
+      ...state,
+      question,
+      answerError: errorMessage,
+      usageStatus: updatedUsageStatus,
+      isSubmitting: false,
+      jobStatus: 'failed',
+      messages,
+    }))
+  } finally {
+    askAiAbortController = null
   }
 }

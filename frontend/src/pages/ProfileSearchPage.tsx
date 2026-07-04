@@ -393,8 +393,8 @@ function ProfileSearchPage() {
 
   return (
     <div className="gala-app-page">
-      <AppHeader />
-      <main className="gala-app-main">
+      <AppHeader fixed />
+      <main className="gala-app-main gala-app-main-fixed-header">
         <section className="gala-page-header">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-[560px]">

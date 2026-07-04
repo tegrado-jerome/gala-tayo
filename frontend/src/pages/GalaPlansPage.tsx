@@ -136,8 +136,8 @@ function EmptyPlansState({ favorites }: { favorites?: boolean }) {
 function PageShell({ children }: { children: ReactNode }) {
   return (
     <div className="gala-app-page">
-      <AppHeader />
-      <main className="gala-app-main">
+      <AppHeader fixed />
+      <main className="gala-app-main gala-app-main-fixed-header">
         {children}
       </main>
     </div>

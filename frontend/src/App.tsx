@@ -39,6 +39,7 @@ import SeoHead from './components/SeoHead'
 import type { PlaceCardData } from './components/PlaceCard'
 import { SavedFavoritesProvider } from './context/SavedFavoritesContext'
 import { SystemMessageProvider } from './context/SystemMessageContext'
+import { AskAiNotificationProvider } from './context/AskAiNotificationContext'
 import { supabase } from './supabase'
 import { getOnboardingStatus } from './utils/profileApi'
 import { navigateToPath, replaceWithPath } from './utils/navigation'
@@ -356,6 +357,15 @@ function shouldShowMobileBottomNav(pathname: string) {
   }
 
   if (isPath(pathname, '/login') || isPath(pathname, '/signup') || isPath(pathname, '/onboarding')) {
+    return false
+  }
+
+  if (
+    isPath(pathname, '/ask-ai/chatbot') ||
+    isPath(pathname, '/ask-ai/text') ||
+    isPath(pathname, '/ask-ai/maps') ||
+    isPath(pathname, '/ask-ai/map')
+  ) {
     return false
   }
 
@@ -1373,17 +1383,19 @@ function App() {
   return (
     <SystemMessageProvider>
       <SavedFavoritesProvider>
-        {shouldApplyGenericNoindex ? (
-          <SeoHead
-            title="GalaTayo"
-            canonicalPath={pathname}
-            robots="noindex,follow"
-          />
-        ) : null}
-        <div className={reserveMobileBottomNavSpace ? 'pb-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] sm:pb-[calc(env(safe-area-inset-bottom,0px)+4.75rem)] lg:pb-0' : ''}>
-          {content}
-        </div>
-        {showMobileBottomNav ? <MobileBottomNav currentPath={pathname} session={session} /> : null}
+        <AskAiNotificationProvider>
+          {shouldApplyGenericNoindex ? (
+            <SeoHead
+              title="GalaTayo"
+              canonicalPath={pathname}
+              robots="noindex,follow"
+            />
+          ) : null}
+          <div className={reserveMobileBottomNavSpace ? 'pb-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] sm:pb-[calc(env(safe-area-inset-bottom,0px)+4.75rem)] lg:pb-0' : ''}>
+            {content}
+          </div>
+          {showMobileBottomNav ? <MobileBottomNav currentPath={pathname} session={session} /> : null}
+        </AskAiNotificationProvider>
       </SavedFavoritesProvider>
     </SystemMessageProvider>
   )
