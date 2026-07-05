@@ -7,6 +7,7 @@ import CompactPagination from '../components/CompactPagination'
 import InternalLink from '../components/InternalLink'
 import PlaceCard, { type PlaceCardData } from '../components/PlaceCard'
 import SeoHead from '../components/SeoHead'
+import { PageContainer, ResponsiveGrid } from '../components/layout/ResponsiveLayouts'
 import { placeCategories } from '../data/placeCategories'
 import { metroManilaAreaNameBySlug } from '../data/metroManilaAreas'
 import { navigateToPath } from '../utils/navigation'
@@ -41,23 +42,6 @@ function normalizeValue(value: string | null | undefined) {
 
 function sortPlacesAlphabetically(places: SeoPlaceSummary[]) {
   return [...places].sort((left, right) => left.name.localeCompare(right.name))
-}
-
-function renderPlaceGrid(areaSlug: string, places: SeoPlaceSummary[]) {
-  return (
-    <div className="mt-4 grid gap-4 lg:grid-cols-2">
-      {places.map((rawPlace) => {
-        const place = mapSeoPlaceToCard(rawPlace) as PlaceCardData
-        const canonicalPath = getCanonicalPlacePath({ areaSlug: rawPlace.areaSlug || areaSlug, placeSlug: rawPlace.slug })
-
-        return (
-          <div key={rawPlace.id}>
-            <PlaceCard place={place} searchResultCard onOpen={() => navigateToPath(canonicalPath)} onSelect={() => undefined} />
-          </div>
-        )
-      })}
-    </div>
-  )
 }
 
 function getAreaSearchApiUrl() {
@@ -277,7 +261,8 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
       />
       <AppHeader minimal />
 
-      <main className="mx-auto w-full max-w-[1180px] px-4 pb-12 pt-5 sm:px-6 sm:pb-14 lg:px-8">
+      <main className="w-full pb-12 pt-5 sm:pb-14">
+        <PageContainer className="px-4 sm:px-6 lg:px-8">
         <Breadcrumb
           items={[
             { label: 'Home', href: '/', icon: <House className="h-3.5 w-3.5" /> },
@@ -370,7 +355,18 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
                     </p>
                   </div>
                 </div>
-                {renderPlaceGrid(areaSlug, allPlaces)}
+                <ResponsiveGrid className="mt-4 gap-4">
+                  {allPlaces.map((rawPlace) => {
+                    const place = mapSeoPlaceToCard(rawPlace) as PlaceCardData
+                    const canonicalPath = getCanonicalPlacePath({ areaSlug: rawPlace.areaSlug || areaSlug, placeSlug: rawPlace.slug })
+
+                    return (
+                      <div key={rawPlace.id}>
+                        <PlaceCard place={place} searchResultCard onOpen={() => navigateToPath(canonicalPath)} onSelect={() => undefined} />
+                      </div>
+                    )
+                  })}
+                </ResponsiveGrid>
               </section>
             )}
 
@@ -387,6 +383,7 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
             ) : null}
           </>
         ) : null}
+        </PageContainer>
       </main>
     </div>
   )

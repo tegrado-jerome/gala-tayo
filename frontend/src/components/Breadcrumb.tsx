@@ -32,7 +32,7 @@ function Breadcrumb({ items, className }: BreadcrumbProps) {
 
   return (
     <nav aria-label="Breadcrumb" className={`border-b border-slate-200 pb-3${className ? ` ${className}` : ''}`}>
-      <ol className="hidden md:flex flex-wrap items-center gap-1 text-sm">
+      <ol className="hidden md:flex flex-wrap items-center gap-1.5 text-sm">
         {items.map((item, idx) => (
           <BreadcrumbItemEl
             key={idx}
@@ -41,7 +41,7 @@ function Breadcrumb({ items, className }: BreadcrumbProps) {
           />
         ))}
       </ol>
-      <ol className="flex md:hidden flex-nowrap items-center gap-1 text-sm overflow-hidden">
+      <ol className="flex md:hidden flex-nowrap items-center gap-1.5 text-sm overflow-hidden">
         {mobileItems.map((item, idx) => (
           <BreadcrumbItemEl
             key={idx}
@@ -59,7 +59,7 @@ function BreadcrumbItemEl({ item, showChevron }: { item: BreadcrumbItem; showChe
   const isCurrent = !isEllipsis && !item.href
 
   return (
-    <li className={`flex items-center gap-1 ${isCurrent ? 'min-w-0' : 'shrink-0'}`}>
+    <li className={`flex items-center gap-1.5 ${isCurrent ? 'min-w-0' : 'shrink-0'}`}>
       {showChevron && (
         <ChevronRight className="h-3.5 w-3.5 flex-shrink-0 text-slate-300" strokeWidth={2} />
       )}

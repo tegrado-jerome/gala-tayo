@@ -3,6 +3,7 @@ import AppHeader from '../components/AppHeader'
 import InternalLink from '../components/InternalLink'
 import Breadcrumb from '../components/Breadcrumb'
 import SeoHead from '../components/SeoHead'
+import { PageContainer, ResponsiveGrid } from '../components/layout/ResponsiveLayouts'
 import { metroManilaAreas } from '../data/metroManilaAreas'
 import { getSiteOrigin } from '../utils/seo'
 
@@ -37,7 +38,8 @@ function PlacesIndexPage() {
       />
       <AppHeader minimal />
 
-      <main className="mx-auto w-full max-w-[1180px] px-4 pb-12 pt-5 sm:px-6 sm:pb-14 lg:px-8">
+      <main className="w-full pb-12 pt-5 sm:pb-14">
+        <PageContainer className="px-4 sm:px-6 lg:px-8">
         <Breadcrumb
           items={[
             { label: 'Home', href: '/', icon: <House className="h-3.5 w-3.5" /> },
@@ -71,7 +73,7 @@ function PlacesIndexPage() {
               <p className="mt-1 text-sm text-[#6B7280]">A simple city list to help you move around faster.</p>
             </div>
           </div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <ResponsiveGrid className="mt-4 gap-3">
             {areaCards.map((area) => (
               <InternalLink
                 key={area.slug}
@@ -97,8 +99,9 @@ function PlacesIndexPage() {
                 </div>
               </InternalLink>
             ))}
-          </div>
+          </ResponsiveGrid>
         </section>
+        </PageContainer>
       </main>
     </div>
   )

@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import AppHeader from '../components/AppHeader'
 import { AppIcon } from '../components/AppIcon'
 import MinimalBackNav from '../components/MinimalBackNav'
+import { FormContainer } from '../components/layout/ResponsiveLayouts'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { updateAccountPassword } from '../services/authApi'
 
@@ -50,6 +51,7 @@ function ChangePasswordPage() {
         <MinimalBackNav to="/settings" label="Back to settings" />
 
         <section className="gala-card mt-4 overflow-hidden">
+          <FormContainer className="w-full md:px-0">
           <div className="border-b border-slate-100 px-5 py-6 sm:px-7">
             <div className="flex items-start gap-4">
               <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-700">
@@ -112,6 +114,7 @@ function ChangePasswordPage() {
               </button>
             </div>
           </form>
+          </FormContainer>
         </section>
       </main>
     </div>

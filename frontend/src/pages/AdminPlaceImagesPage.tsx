@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import AppHeader from '../components/AppHeader'
 import UnifiedLoadingState from '../components/UnifiedLoadingState'
+import { PageContainer, StateContainer } from '../components/layout/ResponsiveLayouts'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { getCurrentUser } from '../utils/profileApi'
 import { navigateToPath } from '../utils/navigation'
@@ -308,11 +309,13 @@ function AdminPlaceImagesPage({ session }: { session: Session }) {
 
   if (isCheckingAccess) {
     return (
-      <UnifiedLoadingState
-        variant="page"
-        title="Checking admin access..."
-        message="We are confirming your photo review permissions."
-      />
+      <StateContainer>
+        <UnifiedLoadingState
+          variant="page"
+          title="Checking admin access..."
+          message="We are confirming your photo review permissions."
+        />
+      </StateContainer>
     )
   }
 
@@ -321,8 +324,10 @@ function AdminPlaceImagesPage({ session }: { session: Session }) {
       <section className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
         <AppHeader />
         <main className="mx-auto max-w-3xl px-4 py-10">
-          <h1 className="text-2xl font-black text-slate-950">Admin access required</h1>
-          <p className="mt-2 text-sm font-semibold text-slate-700">Only admins can review place photo contributions.</p>
+          <StateContainer>
+            <h1 className="text-2xl font-black text-slate-950">Admin access required</h1>
+            <p className="mt-2 text-sm font-semibold text-slate-700">Only admins can review place photo contributions.</p>
+          </StateContainer>
         </main>
       </section>
     )
@@ -332,7 +337,8 @@ function AdminPlaceImagesPage({ session }: { session: Session }) {
     <section className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <AppHeader />
       <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
-        <div className="mb-4 flex flex-wrap gap-2">
+        <PageContainer>
+          <div className="mb-4 flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => navigateToPath('/admin/place-submissions')}
@@ -347,9 +353,9 @@ function AdminPlaceImagesPage({ session }: { session: Session }) {
           >
             User reports
           </button>
-        </div>
+          </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1 className="text-2xl font-black text-slate-950">Photo Review</h1>
             <p className="mt-1 text-sm font-semibold text-slate-700">Review pending place photo contributions before they appear publicly.</p>
@@ -364,88 +370,92 @@ function AdminPlaceImagesPage({ session }: { session: Session }) {
           >
             {isLoading ? 'Refreshing...' : 'Refresh'}
           </button>
-        </div>
-
-        <div className="mt-4 min-h-5">
-          {errorMessage ? <p className="text-sm font-bold text-red-600">{errorMessage}</p> : null}
-        </div>
-
-        {isLoading ? (
-          <UnifiedLoadingState
-            title="Preparing pending photos..."
-            message="We are loading place photo contributions for review."
-          />
-        ) : pendingImages.length === 0 ? (
-          <p className="mt-6 rounded-lg border border-dashed border-[var(--line-strong)] bg-white px-4 py-6 text-sm font-bold text-slate-600">
-            No pending photo contributions.
-          </p>
-        ) : (
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
-            {pendingImages.map((image) => (
-              <article key={image.id} className="overflow-hidden rounded-lg border border-[var(--line)] bg-white shadow-[0_10px_24px_rgba(28,77,160,0.05)]">
-                {image.imageUrl ? <img src={image.imageUrl} alt="" className="h-56 w-full object-cover" /> : null}
-                <div className="p-4">
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                      <h2 className="text-lg font-black text-slate-950">{image.placeName}</h2>
-                      <p className="mt-1 text-xs font-bold text-slate-500">Submitted {formatDate(image.submittedAt)}</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => selectApprovedPlace({ id: image.placeId, name: image.placeName })}
-                      className="inline-flex min-h-9 items-center justify-center rounded-lg border border-[var(--line)] bg-white px-3 text-xs font-black text-[var(--accent-deep)]"
-                    >
-                      Manage approved
-                    </button>
-                  </div>
-
-                  <div className="mt-3 grid gap-1 text-sm font-semibold text-slate-700">
-                    <p>By {image.contributorUsername || image.contributorEmail || image.uploadedBy || 'Unknown user'}</p>
-                    {image.contributorEmail ? <p>{image.contributorEmail}</p> : null}
-                    {image.sourceUrl ? (
-                      <a href={image.sourceUrl} target="_blank" rel="noreferrer" className="text-[var(--accent-deep)] underline underline-offset-2">
-                        Source URL
-                      </a>
-                    ) : null}
-                    {image.contributorNote ? <p className="rounded-lg border border-[var(--line)] bg-[var(--chip)] px-3 py-2">{image.contributorNote}</p> : null}
-                  </div>
-
-                  <label className="mt-4 block">
-                    <span className="flex items-center gap-2 text-xs font-black text-slate-800">
-                      Rejection reason
-                      <span className="optional-label">Optional</span>
-                    </span>
-                    <textarea
-                      value={rejectionReasons[image.id] ?? ''}
-                      onChange={(event) => setRejectionReasons((current) => ({ ...current, [image.id]: event.target.value.slice(0, 1000) }))}
-                      rows={2}
-                      className="mt-2 w-full resize-none rounded-lg border border-[var(--line)] px-3 py-2 text-sm font-semibold outline-none focus:border-[var(--accent)]"
-                    />
-                  </label>
-
-                  <div className="mt-4 grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => void mutatePending(image.id, 'approve')}
-                      disabled={Boolean(mutatingId)}
-                      className="min-h-10 rounded-lg border border-[var(--accent)] bg-[var(--accent)] px-3 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-70"
-                    >
-                      {mutatingId === image.id ? 'Working...' : 'Approve'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void mutatePending(image.id, 'reject')}
-                      disabled={Boolean(mutatingId)}
-                      className="min-h-10 rounded-lg border border-red-200 bg-white px-3 text-sm font-black text-red-600 disabled:cursor-not-allowed disabled:opacity-70"
-                    >
-                      Reject
-                    </button>
-                  </div>
-                </div>
-              </article>
-            ))}
           </div>
-        )}
+
+          <div className="mt-4 min-h-5">
+          {errorMessage ? <p className="text-sm font-bold text-red-600">{errorMessage}</p> : null}
+          </div>
+
+          {isLoading ? (
+            <StateContainer>
+              <UnifiedLoadingState
+                title="Preparing pending photos..."
+                message="We are loading place photo contributions for review."
+              />
+            </StateContainer>
+          ) : pendingImages.length === 0 ? (
+            <StateContainer>
+              <p className="mt-6 rounded-lg border border-dashed border-[var(--line-strong)] bg-white px-4 py-6 text-sm font-bold text-slate-600">
+                No pending photo contributions.
+              </p>
+            </StateContainer>
+          ) : (
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              {pendingImages.map((image) => (
+                <article key={image.id} className="overflow-hidden rounded-lg border border-[var(--line)] bg-white shadow-[0_10px_24px_rgba(28,77,160,0.05)]">
+                  {image.imageUrl ? <img src={image.imageUrl} alt="" className="h-56 w-full object-cover" /> : null}
+                  <div className="p-4">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <h2 className="text-lg font-black text-slate-950">{image.placeName}</h2>
+                        <p className="mt-1 text-xs font-bold text-slate-500">Submitted {formatDate(image.submittedAt)}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => selectApprovedPlace({ id: image.placeId, name: image.placeName })}
+                        className="inline-flex min-h-9 items-center justify-center rounded-lg border border-[var(--line)] bg-white px-3 text-xs font-black text-[var(--accent-deep)]"
+                      >
+                        Manage approved
+                      </button>
+                    </div>
+
+                    <div className="mt-3 grid gap-1 text-sm font-semibold text-slate-700">
+                      <p>By {image.contributorUsername || image.contributorEmail || image.uploadedBy || 'Unknown user'}</p>
+                      {image.contributorEmail ? <p>{image.contributorEmail}</p> : null}
+                      {image.sourceUrl ? (
+                        <a href={image.sourceUrl} target="_blank" rel="noreferrer" className="text-[var(--accent-deep)] underline underline-offset-2">
+                          Source URL
+                        </a>
+                      ) : null}
+                      {image.contributorNote ? <p className="rounded-lg border border-[var(--line)] bg-[var(--chip)] px-3 py-2">{image.contributorNote}</p> : null}
+                    </div>
+
+                    <label className="mt-4 block">
+                      <span className="flex items-center gap-2 text-xs font-black text-slate-800">
+                        Rejection reason
+                        <span className="optional-label">Optional</span>
+                      </span>
+                      <textarea
+                        value={rejectionReasons[image.id] ?? ''}
+                        onChange={(event) => setRejectionReasons((current) => ({ ...current, [image.id]: event.target.value.slice(0, 1000) }))}
+                        rows={2}
+                        className="mt-2 w-full resize-none rounded-lg border border-[var(--line)] px-3 py-2 text-sm font-semibold outline-none focus:border-[var(--accent)]"
+                      />
+                    </label>
+
+                    <div className="mt-4 grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => void mutatePending(image.id, 'approve')}
+                        disabled={Boolean(mutatingId)}
+                        className="min-h-10 rounded-lg border border-[var(--accent)] bg-[var(--accent)] px-3 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-70"
+                      >
+                        {mutatingId === image.id ? 'Working...' : 'Approve'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void mutatePending(image.id, 'reject')}
+                        disabled={Boolean(mutatingId)}
+                        className="min-h-10 rounded-lg border border-red-200 bg-white px-3 text-sm font-black text-red-600 disabled:cursor-not-allowed disabled:opacity-70"
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
 
         <section className="mt-8 border-t border-[var(--line)] pt-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -467,9 +477,13 @@ function AdminPlaceImagesPage({ session }: { session: Session }) {
           </div>
 
           {isApprovedLoading ? (
-            <p className="mt-4 text-sm font-semibold text-slate-600">Loading approved images...</p>
+            <StateContainer>
+              <p className="mt-4 text-sm font-semibold text-slate-600">Loading approved images...</p>
+            </StateContainer>
           ) : allApprovedImages.length === 0 ? (
-            <p className="mt-4 text-sm font-semibold text-slate-600">No approved images found.</p>
+            <StateContainer>
+              <p className="mt-4 text-sm font-semibold text-slate-600">No approved images found.</p>
+            </StateContainer>
           ) : (
             <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {allApprovedImages.map((image) => (
@@ -590,6 +604,7 @@ function AdminPlaceImagesPage({ session }: { session: Session }) {
             <p className="mt-3 text-sm font-semibold text-slate-600">Choose a place to inspect its approved photo order.</p>
           )}
         </section>
+        </PageContainer>
       </main>
 
       {deleteTarget ? (

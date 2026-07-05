@@ -5,6 +5,7 @@ import OnboardingPersonalInfoStep from '../components/onboarding/OnboardingPerso
 import OnboardingPrivacyStep from '../components/onboarding/OnboardingPrivacyStep'
 import OnboardingPublicProfileStep from '../components/onboarding/OnboardingPublicProfileStep'
 import OnboardingWelcomeStep from '../components/onboarding/OnboardingWelcomeStep'
+import { StateContainer } from '../components/layout/ResponsiveLayouts'
 import type { OnboardingErrors, OnboardingFormState, OnboardingStep } from '../components/onboarding/types'
 import {
   checkUsernameAvailable,
@@ -478,10 +479,12 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
   if (statusError) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-[var(--bg)] px-6 text-[var(--text)]">
-        <section className="w-full max-w-[420px] rounded-lg bg-white p-5 text-center shadow-[0_18px_42px_rgba(47,116,232,0.12)]">
-          <h1 className="text-2xl font-black text-slate-950">Onboarding problem</h1>
-          <p className="mt-3 text-sm font-semibold leading-6 text-red-700">{statusError}</p>
-        </section>
+        <StateContainer>
+          <section className="w-full max-w-[420px] rounded-lg bg-white p-5 text-center shadow-[0_18px_42px_rgba(47,116,232,0.12)]">
+            <h1 className="text-2xl font-black text-slate-950">Onboarding problem</h1>
+            <p className="mt-3 text-sm font-semibold leading-6 text-red-700">{statusError}</p>
+          </section>
+        </StateContainer>
       </main>
     )
   }

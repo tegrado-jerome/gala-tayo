@@ -10,6 +10,10 @@ import {
   checkAskAiUsage,
 } from "../services/askAiUsageService";
 import {
+  normalizeAskAiMapQuery,
+  shouldNormalizeAskAiMapPrompt,
+} from "../services/askAiMapQueryNormalizer";
+import {
   AskAiMapsServiceError,
   searchAskAiMaps,
 } from "../services/askAiMapsHybridService";
@@ -252,6 +256,34 @@ function getUserLocation(value: unknown): { latitude: number; longitude: number 
   return { latitude, longitude };
 }
 
+function uniqueQueries(values: Array<string | null | undefined>, limit = 3): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+
+  for (const value of values) {
+    const query = typeof value === "string" ? value.trim() : "";
+
+    if (!query) {
+      continue;
+    }
+
+    const key = query.toLowerCase();
+
+    if (seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    result.push(query);
+
+    if (result.length >= limit) {
+      break;
+    }
+  }
+
+  return result;
+}
+
 function checkCooldown(userId: string, requestId: string): HttpResponseInit | null {
   const now = Date.now();
   const lastRequestAt = lastAskAiMapsRequestAtByUser.get(userId) ?? 0;
@@ -319,16 +351,112 @@ export async function askAiMapsRequest(
       checkAskAiUsage(user.id, "live_search"),
     ]);
 
+    const shouldNormalize = shouldNormalizeAskAiMapPrompt(query);
+    let normalizedQuery:
+      | Awaited<ReturnType<typeof normalizeAskAiMapQuery>>
+      | null = null;
+
+    if (shouldNormalize) {
+      try {
+        normalizedQuery = await normalizeAskAiMapQuery(query);
+        if (!normalizedQuery.coreSearchQuery) {
+          normalizedQuery = null;
+        }
+      } catch (error) {
+        context.log(
+          `[Ask AI Maps][${requestId}] normalization skipped: ${error instanceof Error ? error.message : String(error)}`
+        );
+        normalizedQuery = null;
+      }
+    }
+
+    const candidateQueries = normalizedQuery
+      ? uniqueQueries(
+          [
+            normalizedQuery.coreSearchQuery,
+            ...normalizedQuery.fallbackQueries.slice(0, 2),
+          ],
+          3
+        )
+      : [query];
+
+    context.log(
+      `[Ask AI Maps][${requestId}] normalization_context ${JSON.stringify({
+        rawPrompt: query,
+        shouldNormalize,
+        normalizedCoreSearchQuery: normalizedQuery?.coreSearchQuery ?? null,
+        normalizedLocation: normalizedQuery?.location ?? null,
+        candidateQueries,
+      })}`
+    );
+
+    let lastResult = null as Awaited<ReturnType<typeof searchAskAiMaps>> | null;
+
     try {
-      const result = await searchAskAiMaps({
-        query,
-        selectedChips: getSelectedChips(body.selectedChips),
-        nearMe: getBooleanField(body.nearMe),
-        openNow: getBooleanField(body.openNow),
-        userLocation: getUserLocation(body.userLocation),
-      }, {
-        log: (message: string) => logAskAiMaps(context, `[Ask AI Maps][${requestId}] ${message}`),
-      });
+      for (let index = 0; index < candidateQueries.length; index += 1) {
+        const candidateQuery = candidateQueries[index];
+
+        context.log(
+          `[Ask AI Maps][${requestId}] maps_query_attempt ${JSON.stringify({
+            attempt: index + 1,
+            actualQuerySentToMaps: candidateQuery,
+          })}`
+        );
+
+        try {
+          const result = await searchAskAiMaps(
+            {
+              query,
+              searchQuery: candidateQuery,
+              normalizedQuery,
+              selectedChips: getSelectedChips(body.selectedChips),
+              nearMe: getBooleanField(body.nearMe),
+              openNow: getBooleanField(body.openNow),
+              userLocation: getUserLocation(body.userLocation),
+            },
+            {
+              log: (message: string) =>
+                logAskAiMaps(context, `[Ask AI Maps][${requestId}] ${message}`),
+            }
+          );
+
+          lastResult = result;
+
+          if (result.places.length > 0 || !normalizedQuery) {
+            break;
+          }
+
+          if (index < candidateQueries.length - 1) {
+            context.log(
+              `[Ask AI Maps][${requestId}] fallback_query_used ${JSON.stringify({
+                fromQuery: candidateQuery,
+                toNextFallback: candidateQueries[index + 1],
+              })}`
+            );
+          }
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          const isMissingAreaError = /Please add a city or area/i.test(message);
+
+          context.log(
+            `[Ask AI Maps][${requestId}] candidate_query_failed ${JSON.stringify({
+              attempt: index + 1,
+              query: candidateQuery,
+              reason: message,
+            })}`
+          );
+
+          if (!isMissingAreaError || index >= candidateQueries.length - 1) {
+            throw error;
+          }
+        }
+      }
+
+      const result = lastResult;
+
+      if (!result) {
+        throw new Error("Ask AI Maps could not load places right now.");
+      }
 
       return {
         status: 200,

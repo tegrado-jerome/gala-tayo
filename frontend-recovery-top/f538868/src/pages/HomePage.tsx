@@ -1191,11 +1191,11 @@ function MobileResultIntro({
             Refreshing results...
           </p>
         ) : null}
-        <div className="mt-3 flex h-64 justify-center overflow-hidden">
+        <div className="mt-3 flex h-56 justify-center overflow-hidden">
           <img
             src={searchSuccessChibi}
             alt=""
-            className="h-64 w-auto max-w-none shrink-0 scale-[1.22] object-contain"
+            className="h-56 w-auto max-w-none shrink-0 scale-[1.08] object-contain"
             loading="eager"
             aria-hidden="true"
           />

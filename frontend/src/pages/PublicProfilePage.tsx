@@ -5,6 +5,7 @@ import { AppIcon } from '../components/AppIcon'
 import ProfileAvatar from '../components/ProfileAvatar'
 import ReportUserModal from '../components/ReportUserModal'
 import UnifiedLoadingState from '../components/UnifiedLoadingState'
+import { PageContainer } from '../components/layout/ResponsiveLayouts'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { getSupabaseAccessToken, getSupabaseSession, supabase } from '../supabase'
 import {
@@ -243,20 +244,21 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <AppHeader />
       <main className="mx-auto w-full max-w-[1100px] px-4 py-6 sm:px-6 lg:py-10">
-        {isLoading ? (
-          <UnifiedLoadingState
-            title="Preparing profile..."
-            message="We are loading this public profile now."
-          />
-        ) : notFound ? (
-          <section className="rounded-[28px] border border-[var(--line)] bg-white/85 p-8 text-center backdrop-blur-sm">
-            <h1 className="text-2xl font-black text-slate-950">Profile not found.</h1>
-          </section>
-        ) : errorMessage ? (
-          <section className="rounded-[28px] border border-[var(--line)] bg-white/85 p-8 text-center text-sm font-bold text-red-700 backdrop-blur-sm">{errorMessage}</section>
-        ) : profile ? (
-          <div className="grid gap-8">
-            <section className="rounded-[32px] border border-[var(--line)] bg-white px-5 py-6 sm:px-7">
+        <PageContainer>
+          {isLoading ? (
+            <UnifiedLoadingState
+              title="Preparing profile..."
+              message="We are loading this public profile now."
+            />
+          ) : notFound ? (
+            <section className="rounded-[28px] border border-[var(--line)] bg-white/85 p-8 text-center backdrop-blur-sm">
+              <h1 className="text-2xl font-black text-slate-950">Profile not found.</h1>
+            </section>
+          ) : errorMessage ? (
+            <section className="rounded-[28px] border border-[var(--line)] bg-white/85 p-8 text-center text-sm font-bold text-red-700 backdrop-blur-sm">{errorMessage}</section>
+          ) : profile ? (
+            <div className="grid gap-8">
+              <section className="rounded-[32px] border border-[var(--line)] bg-white px-5 py-6 sm:px-7">
               <div className="flex flex-col gap-5 border-b border-[var(--line)] pb-5 sm:flex-row sm:items-end sm:justify-between">
                   <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end">
                     <div>
@@ -550,6 +552,7 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
             })
           }}
         />
+        </PageContainer>
       </main>
     </div>
   )

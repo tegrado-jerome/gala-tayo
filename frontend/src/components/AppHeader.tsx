@@ -131,7 +131,7 @@ function AppHeader({
     'inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3 py-2 text-[13px] font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
 
   const desktopNav = user ? (
-    <nav className="hidden min-w-0 items-center gap-1 md:flex" aria-label="Primary">
+    <nav className="hidden min-w-0 items-center gap-1 xl:flex" aria-label="Primary">
       <button type="button" onClick={() => navigateTo('/favorites')} className={desktopNavButtonClass}>
         <AppIcon name="favorites" size="ui" />
         Favorites
@@ -174,7 +174,7 @@ function AppHeader({
           )}
         </div>
 
-        <div className="hidden min-w-0 flex-1 items-center justify-end gap-3 md:flex xl:gap-4">
+        <div className="hidden min-w-0 flex-1 items-center justify-end gap-3 lg:flex xl:gap-4">
           <div className="xl:hidden">
             <UserMenu user={user} profile={currentProfile} />
           </div>
@@ -196,7 +196,7 @@ function AppHeader({
           )}
         </div>
 
-        <div className="md:hidden">
+        <div className="lg:hidden">
           {isSessionLoading ? (
             <div className="h-10 w-10 rounded-xl bg-slate-100" aria-hidden="true" />
           ) : (

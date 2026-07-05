@@ -302,7 +302,7 @@ function GuestAuthPromptModal({
         aria-label="Close"
         onClick={onClose}
       />
-      <div className="relative w-full max-w-[420px]">
+      <div className="relative w-full max-w-[420px] lg:max-w-[440px] xl:max-w-[460px] 2xl:max-w-[480px]">
         <GuestAuthPromptCard variant={variant} mode="modal" onClose={onClose} />
       </div>
     </div>,
@@ -321,7 +321,7 @@ function GuestAuthPromptPageState({
 }) {
   return (
     <main className="gala-page-background flex min-h-screen items-center justify-center px-4 py-8">
-      <div className="w-full max-w-[440px]">
+      <div className="w-full max-w-[440px] lg:max-w-[460px] xl:max-w-[480px] 2xl:max-w-[500px]">
         {backPath ? (
           <button
             type="button"

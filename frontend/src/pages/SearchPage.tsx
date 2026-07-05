@@ -361,14 +361,14 @@ function SearchPage() {
             </div>
           </section>
 
-          <div className="relative -mt-4 flex w-full flex-1 items-end justify-center overflow-hidden pt-4 sm:-mt-6 sm:pt-2">
+          <div className="relative -mt-4 flex w-full flex-1 items-end justify-center pt-4 sm:-mt-6 sm:pt-2">
             <div className="pointer-events-none absolute left-8 top-10 h-10 w-20 rounded-full bg-white/60 blur-sm" />
             <div className="pointer-events-none absolute right-8 top-14 h-12 w-24 rounded-full bg-white/65 blur-sm" />
             <div className="pointer-events-none absolute inset-x-0 top-12 mx-auto h-48 w-48 rounded-full bg-[rgba(115,175,255,0.3)] blur-3xl sm:h-60 sm:w-60" />
             <img
               src={searchBeforeChibi}
               alt=""
-              className="relative z-10 h-[360px] w-auto max-w-none object-contain sm:h-[440px] lg:h-[500px]"
+              className="relative z-10 h-auto w-full max-w-[520px] object-contain sm:max-w-[600px] lg:max-w-[700px]"
               loading="eager"
             />
           </div>

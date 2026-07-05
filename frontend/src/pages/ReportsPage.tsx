@@ -5,6 +5,7 @@ import GoogleSignInButton from '../components/GoogleSignInButton'
 import MinimalBackNav from '../components/MinimalBackNav'
 import PageHeroHeader from '../components/PageHeroHeader'
 import UnifiedLoadingState from '../components/UnifiedLoadingState'
+import { PageContainer } from '../components/layout/ResponsiveLayouts'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { fetchMyCommentReports, type CommentReportReason, type CommentReportStatus, type MyCommentReport } from '../utils/commentReportsApi'
 import { fetchMyPlaceReports, type MyPlaceReport, type PlaceReportReason, type PlaceReportStatus } from '../utils/placeReportsApi'
@@ -440,122 +441,124 @@ function ReportsPage() {
       <AppHeader showTaglishChip={false} />
 
       <main className="mx-auto flex w-full max-w-[980px] flex-1 flex-col gap-6 px-4 py-5 sm:px-6 lg:px-8 lg:py-7">
-        <MinimalBackNav to="/search" />
+        <PageContainer>
+          <MinimalBackNav to="/search" />
 
-        <PageHeroHeader
-          eyebrow="Reports"
-          title="Reports and updates"
-          description="A compact view of everything you submitted, plus admin-reviewed outcomes when they are ready to share."
-          icon={<AppIcon name="reports" size="ui" />}
-          badges={
-            <>
-              <SummaryPill icon="reports" label="All" value={reportCountLabel} />
-              <SummaryPill icon="profile" label="Users" value={String(visibleUserReports.length)} />
-              <SummaryPill icon="reports" label="Places" value={String(visiblePlaceReports.length)} />
-              <SummaryPill icon="reports" label="Comments" value={String(visibleCommentReports.length)} />
-            </>
-          }
-        />
-
-        {isSessionLoading ? (
-          <UnifiedLoadingState
-            title="Checking your account..."
-            message="We are confirming access to your reports."
+          <PageHeroHeader
+            eyebrow="Reports"
+            title="Reports and updates"
+            description="A compact view of everything you submitted, plus admin-reviewed outcomes when they are ready to share."
+            icon={<AppIcon name="reports" size="ui" />}
+            badges={
+              <>
+                <SummaryPill icon="reports" label="All" value={reportCountLabel} />
+                <SummaryPill icon="profile" label="Users" value={String(visibleUserReports.length)} />
+                <SummaryPill icon="reports" label="Places" value={String(visiblePlaceReports.length)} />
+                <SummaryPill icon="reports" label="Comments" value={String(visibleCommentReports.length)} />
+              </>
+            }
           />
-        ) : null}
 
-        {!isSessionLoading && !session?.user ? (
-          <section className="gala-card px-5 py-6">
-            <h2 className="text-lg font-black text-slate-950">Please sign in to view your reports.</h2>
-            <p className="mt-2 max-w-xl text-sm font-medium leading-6 text-[var(--muted)]">
-              Your submitted reports stay private to your account, and admin-reviewed outcomes are only shown here after the team validates the issue.
-            </p>
-            <GoogleSignInButton className="mt-4" redirectTo={`${window.location.origin}/reports`} />
-          </section>
-        ) : null}
+          {isSessionLoading ? (
+            <UnifiedLoadingState
+              title="Checking your account..."
+              message="We are confirming access to your reports."
+            />
+          ) : null}
 
-        {!isSessionLoading && session?.user ? (
-          <>
-            <div>
-              {visibleIsLoading ? (
-                <UnifiedLoadingState
-                  variant="inline"
-                  title="Preparing your reports..."
-                  message="We are loading your submitted report history."
-                />
-              ) : null}
-              {!visibleIsLoading && visibleErrorMessage ? <p className="text-sm font-medium text-red-600">{visibleErrorMessage}</p> : null}
-            </div>
+          {!isSessionLoading && !session?.user ? (
+            <section className="gala-card px-5 py-6">
+              <h2 className="text-lg font-black text-slate-950">Please sign in to view your reports.</h2>
+              <p className="mt-2 max-w-xl text-sm font-medium leading-6 text-[var(--muted)]">
+                Your submitted reports stay private to your account, and admin-reviewed outcomes are only shown here after the team validates the issue.
+              </p>
+              <GoogleSignInButton className="mt-4" redirectTo={`${window.location.origin}/reports`} />
+            </section>
+          ) : null}
 
-            <div className="grid gap-3">
-              <SectionDropdown
-                icon="profile"
-                title="User Reports"
-                description="Reports you submit against a user account or profile will live here."
-                countLabel={userReportsLabel}
-                isOpen={openSections.userReports}
-                onToggle={() => setOpenSections((current) => ({ ...current, userReports: !current.userReports }))}
-              >
-                {visibleUserReports.length > 0 ? (
-                  <SectionList>
-                    {visibleUserReports.map((report) => (
-                      <UserReportCard key={report.id} report={report} />
-                    ))}
-                  </SectionList>
-                ) : (
-                  <SectionEmptyState
-                    title="No user reports yet"
-                    description="When you report a user account or profile, it will appear in this section."
+          {!isSessionLoading && session?.user ? (
+            <>
+              <div>
+                {visibleIsLoading ? (
+                  <UnifiedLoadingState
+                    variant="inline"
+                    title="Preparing your reports..."
+                    message="We are loading your submitted report history."
                   />
-                )}
-              </SectionDropdown>
+                ) : null}
+                {!visibleIsLoading && visibleErrorMessage ? <p className="text-sm font-medium text-red-600">{visibleErrorMessage}</p> : null}
+              </div>
 
-              <SectionDropdown
-                icon="reports"
-                title="Place Reports"
-                description="Concerns you submitted about a place, listing, details, or photo."
-                countLabel={placeReportsLabel}
-                isOpen={openSections.placeReports}
-                onToggle={() => setOpenSections((current) => ({ ...current, placeReports: !current.placeReports }))}
-              >
-                {visiblePlaceReports.length > 0 ? (
-                  <SectionList>
-                    {visiblePlaceReports.map((report) => (
-                      <PlaceReportCard key={report.id} report={report} />
-                    ))}
-                  </SectionList>
-                ) : (
-                  <SectionEmptyState
-                    title="No place reports yet"
-                    description="When you report a place concern or a photo issue, it will show up here."
-                  />
-                )}
-              </SectionDropdown>
+              <div className="grid gap-3">
+                <SectionDropdown
+                  icon="profile"
+                  title="User Reports"
+                  description="Reports you submit against a user account or profile will live here."
+                  countLabel={userReportsLabel}
+                  isOpen={openSections.userReports}
+                  onToggle={() => setOpenSections((current) => ({ ...current, userReports: !current.userReports }))}
+                >
+                  {visibleUserReports.length > 0 ? (
+                    <SectionList>
+                      {visibleUserReports.map((report) => (
+                        <UserReportCard key={report.id} report={report} />
+                      ))}
+                    </SectionList>
+                  ) : (
+                    <SectionEmptyState
+                      title="No user reports yet"
+                      description="When you report a user account or profile, it will appear in this section."
+                    />
+                  )}
+                </SectionDropdown>
 
-              <SectionDropdown
-                icon="comments"
-                title="Comment Reports"
-                description="Reports you submitted against comments posted on a place."
-                countLabel={commentReportsLabel}
-                isOpen={openSections.commentReports}
-                onToggle={() => setOpenSections((current) => ({ ...current, commentReports: !current.commentReports }))}
-              >
-                {visibleCommentReports.length > 0 ? (
-                  <SectionList>
-                    {visibleCommentReports.map((report) => (
-                      <CommentReportCard key={report.id} report={report} />
-                    ))}
-                  </SectionList>
-                ) : (
-                  <SectionEmptyState
-                    title="No comment reports yet"
-                    description="When you report a comment on a place, it will appear in this section."
-                  />
-                )}
-              </SectionDropdown>
-            </div>
-          </>
-        ) : null}
+                <SectionDropdown
+                  icon="reports"
+                  title="Place Reports"
+                  description="Concerns you submitted about a place, listing, details, or photo."
+                  countLabel={placeReportsLabel}
+                  isOpen={openSections.placeReports}
+                  onToggle={() => setOpenSections((current) => ({ ...current, placeReports: !current.placeReports }))}
+                >
+                  {visiblePlaceReports.length > 0 ? (
+                    <SectionList>
+                      {visiblePlaceReports.map((report) => (
+                        <PlaceReportCard key={report.id} report={report} />
+                      ))}
+                    </SectionList>
+                  ) : (
+                    <SectionEmptyState
+                      title="No place reports yet"
+                      description="When you report a place concern or a photo issue, it will show up here."
+                    />
+                  )}
+                </SectionDropdown>
+
+                <SectionDropdown
+                  icon="comments"
+                  title="Comment Reports"
+                  description="Reports you submitted against comments posted on a place."
+                  countLabel={commentReportsLabel}
+                  isOpen={openSections.commentReports}
+                  onToggle={() => setOpenSections((current) => ({ ...current, commentReports: !current.commentReports }))}
+                >
+                  {visibleCommentReports.length > 0 ? (
+                    <SectionList>
+                      {visibleCommentReports.map((report) => (
+                        <CommentReportCard key={report.id} report={report} />
+                      ))}
+                    </SectionList>
+                  ) : (
+                    <SectionEmptyState
+                      title="No comment reports yet"
+                      description="When you report a comment on a place, it will appear in this section."
+                    />
+                  )}
+                </SectionDropdown>
+              </div>
+            </>
+          ) : null}
+        </PageContainer>
       </main>
     </div>
   )

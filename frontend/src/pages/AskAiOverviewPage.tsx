@@ -1,5 +1,6 @@
 import AppHeader from '../components/AppHeader'
 import InternalLink from '../components/InternalLink'
+import { PageContainer, ResponsiveGrid } from '../components/layout/ResponsiveLayouts'
 import { AppIcon, type AppIconName } from '../components/AppIcon'
 import askAiOverviewChibi from '../assets/chibis/core/ask-ai/chibi-ai-overview.webp'
 
@@ -117,7 +118,8 @@ function AskAiOverviewPage() {
         <AppHeader minimal />
       </div>
 
-      <main className="mx-auto flex w-full max-w-[1080px] flex-1 flex-col px-4 pt-4 sm:px-6 sm:pt-5 md:max-w-[1140px] md:pt-7 lg:px-8 lg:pt-9 xl:max-w-[1200px] xl:px-10">
+      <main className="flex w-full flex-1 flex-col pt-4 sm:pt-5 md:pt-7 lg:pt-9">
+        <PageContainer className="px-4 sm:px-6 lg:px-8 xl:px-10">
         <section className="shrink-0">
           <div className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">
             <AppIcon name="askAi" className="h-3.5 w-3.5" />
@@ -140,11 +142,11 @@ function AskAiOverviewPage() {
           </p>
         </div>
 
-        <div className="mt-2 shrink-0 grid grid-cols-1 gap-2 sm:mt-3 sm:grid-cols-2 sm:gap-3 lg:mt-4 lg:gap-5">
+        <ResponsiveGrid className="mt-2 shrink-0 gap-2 sm:mt-3 sm:gap-3 lg:mt-4 lg:gap-5">
           <ToolCard
             href="/ask-ai/chatbot"
             title="Chatbot AI"
-            description="Ask questions, plan ideas, and get quick help."
+            description="Ask gala questions and plan ideas."
             icon="bot"
           />
 
@@ -154,7 +156,7 @@ function AskAiOverviewPage() {
             description="Find places with an AI-powered map."
             icon="map"
           />
-        </div>
+        </ResponsiveGrid>
 
         <div className="mt-4 flex flex-col items-center justify-center pb-4 text-center sm:mt-5">
           <div className="flex w-full max-w-[360px] items-start justify-center">
@@ -177,6 +179,7 @@ function AskAiOverviewPage() {
             <span className="font-semibold text-[var(--text-main)]">Maps AI</span> to look for specific places in a Map interface.
           </p>
         </div>
+        </PageContainer>
       </main>
     </div>
   )

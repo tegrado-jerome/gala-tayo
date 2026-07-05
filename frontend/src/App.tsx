@@ -617,11 +617,6 @@ function SharedPlacePage({
   const listingLink = urlListingLink || sessionReturn?.returnTo || null
   const listingLabel = urlListingLabel || sessionReturn?.returnLabel || null
 
-  const cameFromSearch =
-    !urlListingLink &&
-    sessionReturn?.source === 'search' &&
-    typeof sessionReturn?.returnTo === 'string' &&
-    sessionReturn.returnTo.startsWith('/search')
   const categoryBreadcrumbMeta = getCategoryBreadcrumbMeta(listingLink, listingLabel)
 
   useEffect(() => {
@@ -729,20 +724,10 @@ function SharedPlacePage({
       />
       <PlaceDetailView
         place={place}
-        onBack={() => {
-          if (listingLink) {
-            navigateToPath(listingLink)
-            return
-          }
-
-          window.history.back()
-        }}
         areaBreadcrumb={{
           areaSlug: areaMeta?.slug || expectedAreaSlug || formatLabelFromSlug(place.city || place.area || 'metro-manila').toLowerCase(),
           areaName: areaMeta?.name || formatLabelFromSlug(expectedAreaSlug || 'metro-manila'),
         }}
-        cameFromSearch={cameFromSearch}
-        returnLabel={listingLabel}
         searchHref={listingLink}
       />
     </>

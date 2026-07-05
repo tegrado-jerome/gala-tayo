@@ -283,7 +283,11 @@ function PlaceCard({
       <article
         data-search-place-id={dataSearchPlaceId}
         onClick={handleActivate}
-        onMouseEnter={() => onSelect?.(place.id)}
+        onMouseEnter={() => {
+          if (!searchResultCard) {
+            onSelect?.(place.id)
+          }
+        }}
         onFocus={() => onSelect?.(place.id)}
         className={`overflow-hidden rounded-[26px] border ${searchResultCard ? 'bg-white shadow-[0_8px_22px_rgba(15,23,42,0.05)]' : 'bg-[linear-gradient(180deg,#ffffff_0%,#fcfdff_100%)] shadow-[0_12px_28px_rgba(15,23,42,0.06)]'} transition ${
           compact ? '' : 'hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(15,23,42,0.09)]'

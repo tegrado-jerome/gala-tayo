@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import AppHeader from '../components/AppHeader'
 import MinimalBackNav from '../components/MinimalBackNav'
+import { PageContainer } from '../components/layout/ResponsiveLayouts'
 import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import { navigateToPath } from '../utils/navigation'
 import { getMyPlaceSubmissions, type PlaceSubmission } from '../utils/placeSubmissionsApi'
@@ -62,7 +63,8 @@ function MyPlaceSubmissionsPage({ session }: { session: Session }) {
   return (
     <section className="gala-page-shell">
       <AppHeader />
-      <main className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6">
+      <main className="w-full py-6">
+        <PageContainer className="px-4 sm:px-6">
         <MinimalBackNav onClick={() => window.history.back()} className="mb-4" />
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -150,6 +152,7 @@ function MyPlaceSubmissionsPage({ session }: { session: Session }) {
             ))}
           </div>
         )}
+        </PageContainer>
       </main>
     </section>
   )

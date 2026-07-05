@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import AppHeader from '../components/AppHeader'
 import GoogleSignInButton from '../components/GoogleSignInButton'
 import PageHeroHeader from '../components/PageHeroHeader'
+import { PageContainer } from '../components/layout/ResponsiveLayouts'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { getSupabaseAccessToken } from '../supabase'
 import { navigateToPlace } from '../utils/navigation'
@@ -239,7 +240,7 @@ function HistoryCard({ item }: { item: HistoryItem }) {
   const photoUrl = getPlacePhoto(place)
 
   return (
-    <article className="flex h-full min-h-[290px] w-full max-w-[760px] flex-col overflow-hidden rounded-lg border border-[var(--line)] bg-white shadow-[0_10px_24px_rgba(28,77,160,0.05)] transition hover:border-[var(--line-strong)] hover:shadow-[0_16px_34px_rgba(28,77,160,0.08)]">
+    <article className="flex h-full min-h-[290px] w-full max-w-[760px] flex-col overflow-hidden rounded-lg border border-[var(--line)] bg-white shadow-[0_10px_24px_rgba(28,77,160,0.05)] transition hover:border-[var(--line-strong)] hover:shadow-[0_16px_34px_rgba(28,77,160,0.08)] lg:max-w-[900px] xl:max-w-[980px]">
       {photoUrl ? (
         <img
           src={photoUrl}
@@ -426,97 +427,99 @@ function HistoryPage() {
       <AppHeader showTaglishChip={false} />
 
       <main className="mx-auto flex w-full max-w-[1480px] flex-1 flex-col gap-5 px-4 py-5 sm:px-6 lg:px-10 lg:py-8">
-        <PageHeroHeader
-          eyebrow="History"
-          title="Recently viewed"
-          description="Places you checked before, easy to revisit anytime."
-          icon={<ClockIcon />}
-          badges={
-            <>
-              <span className="gala-count-pill">
-                {visibleHistory.length} visit{visibleHistory.length === 1 ? '' : 's'}
-              </span>
-              <span className="gala-count-pill">
-                {historySections.length > 0 ? `${historySections.length} time section${historySections.length === 1 ? '' : 's'}` : 'Private to your account'}
-              </span>
-            </>
-          }
-          aside={<HistoryChibi />}
-          className="border-b-0 pb-0"
-        />
+        <PageContainer>
+          <PageHeroHeader
+            eyebrow="History"
+            title="Recently viewed"
+            description="Places you checked before, easy to revisit anytime."
+            icon={<ClockIcon />}
+            badges={
+              <>
+                <span className="gala-count-pill">
+                  {visibleHistory.length} visit{visibleHistory.length === 1 ? '' : 's'}
+                </span>
+                <span className="gala-count-pill">
+                  {historySections.length > 0 ? `${historySections.length} time section${historySections.length === 1 ? '' : 's'}` : 'Private to your account'}
+                </span>
+              </>
+            }
+            aside={<HistoryChibi />}
+            className="border-b-0 pb-0"
+          />
 
-        {canClearHistory ? (
-          <div className="flex justify-start lg:justify-end">
-            <button
-              type="button"
-              onClick={() => void handleClearHistory()}
-              disabled={isClearing}
-              className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-white px-4 text-sm font-black text-red-600 shadow-[0_10px_24px_rgba(28,77,160,0.04)] transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
-            >
-              <TrashIcon className="h-4 w-4" />
-              {isClearing ? 'Clearing...' : 'Clear history'}
-            </button>
-          </div>
-        ) : null}
-
-        {isSessionLoading ? (
-          <section className="rounded-lg border border-[var(--line)] bg-white px-4 py-5 shadow-[0_14px_30px_rgba(28,77,160,0.07)]">
-            <p className="text-sm text-[var(--muted)]">Checking account...</p>
-          </section>
-        ) : null}
-
-        {!isSessionLoading && !session?.user ? (
-          <section className="rounded-lg border border-[var(--line)] bg-white px-5 py-6 shadow-[0_14px_30px_rgba(28,77,160,0.07)]">
-            <h2 className="text-lg font-black text-slate-950">Please sign in to view your history.</h2>
-            <p className="mt-2 max-w-xl text-sm text-[var(--muted)]">
-              Your recently viewed places are private to your account.
-            </p>
-            <GoogleSignInButton className="mt-4" redirectTo={`${window.location.origin}/history`} />
-          </section>
-        ) : null}
-
-        {!isSessionLoading && session?.user ? (
-          <>
-            <div className="min-h-5">
-              {isLoading ? (
-                <p className="text-sm font-semibold text-[var(--accent-deep)]">Loading your history...</p>
-              ) : errorMessage ? (
-                <p className="text-sm font-medium text-red-600">{errorMessage}</p>
-              ) : null}
+          {canClearHistory ? (
+            <div className="flex justify-start lg:justify-end">
+              <button
+                type="button"
+                onClick={() => void handleClearHistory()}
+                disabled={isClearing}
+                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-white px-4 text-sm font-black text-red-600 shadow-[0_10px_24px_rgba(28,77,160,0.04)] transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+              >
+                <TrashIcon className="h-4 w-4" />
+                {isClearing ? 'Clearing...' : 'Clear history'}
+              </button>
             </div>
+          ) : null}
 
-            {!isLoading && !errorMessage && visibleHistory.length === 0 ? (
-              <section className="rounded-lg border border-dashed border-[var(--line-strong)] bg-white/82 px-5 py-8 text-center shadow-[0_14px_30px_rgba(28,77,160,0.06)]">
-                <img src={historyEmptyChibi} alt="" className="mx-auto h-32 w-32 object-contain" loading="lazy" />
-                <h2 className="mt-3 text-lg font-black text-slate-950">No viewed places yet.</h2>
-                <p className="mx-auto mt-2 max-w-md text-sm text-[var(--muted)]">
-                  Start exploring places and they&apos;ll appear here.
-                </p>
-              </section>
-            ) : null}
+          {isSessionLoading ? (
+            <section className="rounded-lg border border-[var(--line)] bg-white px-4 py-5 shadow-[0_14px_30px_rgba(28,77,160,0.07)]">
+              <p className="text-sm text-[var(--muted)]">Checking account...</p>
+            </section>
+          ) : null}
 
-            {historySections.length > 0 ? (
-              <div className="grid gap-7">
-                {historySections.map((section) => (
-                  <section key={section.title}>
-                    <div className="mb-3 flex items-center gap-3">
-                      <h2 className="shrink-0 text-base font-black text-slate-950 lg:text-lg">{section.title}</h2>
-                      <div className="h-px flex-1 bg-[var(--line)]" />
-                    </div>
-                    <div className="grid justify-center gap-4 [grid-template-columns:minmax(0,760px)]">
-                      {section.items.map((item) => (
-                        <HistoryCard key={item.id} item={item} />
-                      ))}
-                    </div>
-                  </section>
-                ))}
-                <section className="rounded-lg border border-[var(--line)] bg-white/80 px-4 py-3 text-sm font-semibold text-slate-700 shadow-[0_10px_24px_rgba(28,77,160,0.04)]">
-                  <span className="font-black text-[var(--accent-deep)]">Tip:</span> Places you view will appear here for easy access. Save the ones you love to keep them in Favorites.
-                </section>
+          {!isSessionLoading && !session?.user ? (
+            <section className="rounded-lg border border-[var(--line)] bg-white px-5 py-6 shadow-[0_14px_30px_rgba(28,77,160,0.07)]">
+              <h2 className="text-lg font-black text-slate-950">Please sign in to view your history.</h2>
+              <p className="mt-2 max-w-xl text-sm text-[var(--muted)]">
+                Your recently viewed places are private to your account.
+              </p>
+              <GoogleSignInButton className="mt-4" redirectTo={`${window.location.origin}/history`} />
+            </section>
+          ) : null}
+
+          {!isSessionLoading && session?.user ? (
+            <>
+              <div className="min-h-5">
+                {isLoading ? (
+                  <p className="text-sm font-semibold text-[var(--accent-deep)]">Loading your history...</p>
+                ) : errorMessage ? (
+                  <p className="text-sm font-medium text-red-600">{errorMessage}</p>
+                ) : null}
               </div>
-            ) : null}
-          </>
-        ) : null}
+
+              {!isLoading && !errorMessage && visibleHistory.length === 0 ? (
+                <section className="rounded-lg border border-dashed border-[var(--line-strong)] bg-white/82 px-5 py-8 text-center shadow-[0_14px_30px_rgba(28,77,160,0.06)]">
+                  <img src={historyEmptyChibi} alt="" className="mx-auto h-32 w-32 object-contain" loading="lazy" />
+                  <h2 className="mt-3 text-lg font-black text-slate-950">No viewed places yet.</h2>
+                  <p className="mx-auto mt-2 max-w-md text-sm text-[var(--muted)]">
+                    Start exploring places and they&apos;ll appear here.
+                  </p>
+                </section>
+              ) : null}
+
+              {historySections.length > 0 ? (
+                <div className="grid gap-7">
+                  {historySections.map((section) => (
+                    <section key={section.title}>
+                      <div className="mb-3 flex items-center gap-3">
+                        <h2 className="shrink-0 text-base font-black text-slate-950 lg:text-lg">{section.title}</h2>
+                        <div className="h-px flex-1 bg-[var(--line)]" />
+                      </div>
+                      <div className="grid justify-center gap-4 [grid-template-columns:minmax(0,760px)] lg:[grid-template-columns:minmax(0,900px)] xl:[grid-template-columns:minmax(0,980px)]">
+                        {section.items.map((item) => (
+                          <HistoryCard key={item.id} item={item} />
+                        ))}
+                      </div>
+                    </section>
+                  ))}
+                  <section className="rounded-lg border border-[var(--line)] bg-white/80 px-4 py-3 text-sm font-semibold text-slate-700 shadow-[0_10px_24px_rgba(28,77,160,0.04)]">
+                    <span className="font-black text-[var(--accent-deep)]">Tip:</span> Places you view will appear here for easy access. Save the ones you love to keep them in Favorites.
+                  </section>
+                </div>
+              ) : null}
+            </>
+          ) : null}
+        </PageContainer>
       </main>
     </div>
   )

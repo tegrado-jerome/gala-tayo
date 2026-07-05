@@ -3,6 +3,7 @@ import AppHeader from '../components/AppHeader'
 import { AppIcon } from '../components/AppIcon'
 import GoogleSignInButton from '../components/GoogleSignInButton'
 import MinimalBackNav from '../components/MinimalBackNav'
+import { FormContainer } from '../components/layout/ResponsiveLayouts'
 import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 
@@ -193,7 +194,8 @@ function FeedbackPage() {
         ) : null}
 
         {!isSessionLoading && session?.user ? (
-          <section id="feedback-form" className="mx-auto w-full max-w-3xl scroll-mt-6 px-1 py-2 sm:px-0 sm:py-3">
+          <section id="feedback-form" className="scroll-mt-6 px-1 py-2 sm:px-0 sm:py-3">
+            <FormContainer className="px-0">
             <div className="grid gap-4 sm:gap-6">
               <section>
                 <h2 className="mb-2 text-[20px] font-black tracking-[-0.03em] text-slate-950 sm:mb-3 sm:text-[24px]">How was your experience?</h2>
@@ -258,6 +260,7 @@ function FeedbackPage() {
                 {isSubmitting ? 'Sending...' : 'Send Feedback'}
               </button>
             </div>
+            </FormContainer>
           </section>
         ) : null}
       </main>

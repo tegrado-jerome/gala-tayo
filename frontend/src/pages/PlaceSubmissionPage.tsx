@@ -3,6 +3,7 @@ import type { Session } from '@supabase/supabase-js'
 import AppHeader from '../components/AppHeader'
 import { AppIcon, type AppIconName } from '../components/AppIcon'
 import PageHeroHeader from '../components/PageHeroHeader'
+import { DetailLayout, FormContainer } from '../components/layout/ResponsiveLayouts'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import MinimalBackNav from '../components/MinimalBackNav'
 import MapView from '../components/MapView'
@@ -366,8 +367,9 @@ function PlaceSubmissionPage({ session }: { session: Session | null }) {
       <main className="mx-auto w-full max-w-[1080px] px-4 py-5 sm:px-6">
         <MinimalBackNav onClick={() => window.history.back()} className="mb-4" />
 
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
+        <DetailLayout className="gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
           <section className="min-w-0">
+            <FormContainer>
             <PageHeroHeader
               eyebrow="Submit Places"
               title="Submit a new place"
@@ -787,6 +789,7 @@ function PlaceSubmissionPage({ session }: { session: Session | null }) {
                 </div>
               </div>
             </form>
+            </FormContainer>
           </section>
 
           <aside className="hidden self-start lg:sticky lg:top-24 lg:grid lg:gap-4">
@@ -832,7 +835,7 @@ function PlaceSubmissionPage({ session }: { session: Session | null }) {
               </div>
             </section>
           </aside>
-        </div>
+        </DetailLayout>
       </main>
     </section>
   )

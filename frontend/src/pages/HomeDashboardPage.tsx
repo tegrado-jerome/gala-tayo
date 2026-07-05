@@ -90,7 +90,7 @@ const mainActions = [
   {
     title: 'Ask AI',
     description: 'Get a faster gala suggestion with one focused prompt.',
-    href: '/ask-ai/chatbot',
+    href: '/ask-ai',
     icon: 'askAi' as const,
     tone: 'soft',
   },

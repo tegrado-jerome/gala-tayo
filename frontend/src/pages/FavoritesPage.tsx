@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import AppHeader from '../components/AppHeader'
 import GoogleSignInButton from '../components/GoogleSignInButton'
 import PageHeroHeader from '../components/PageHeroHeader'
+import { PageContainer } from '../components/layout/ResponsiveLayouts'
 import { useSavedFavorites, type FavoritePlace, type FavoriteRow } from '../context/SavedFavoritesContext'
 import { navigateToPlace } from '../utils/navigation'
 import { getPlacePhoto } from '../utils/placePhoto'
@@ -213,106 +214,108 @@ function FavoritesPage() {
       <AppHeader showTaglishChip={false} />
 
       <main className="mx-auto flex w-full max-w-[1480px] flex-1 flex-col gap-5 px-4 py-5 sm:px-6 lg:px-10 lg:py-8">
-        <PageHeroHeader
-          eyebrow="Favorites"
-          title="Saved places"
-          description="Your favorite gala spots, ready when you are."
-          icon={<PinIcon />}
-          badges={
-            <>
-              <span className="gala-count-pill">
-                {savedPlaces.length} saved place{savedPlaces.length === 1 ? '' : 's'}
-              </span>
-              <span className="gala-count-pill">
-                {searchQuery.trim() ? `Filtering "${searchQuery.trim()}"` : 'Quick access'}
-              </span>
-            </>
-          }
-          aside={<SavedChibi />}
-          className="border-b-0 pb-0"
-        />
+        <PageContainer>
+          <PageHeroHeader
+            eyebrow="Favorites"
+            title="Saved places"
+            description="Your favorite gala spots, ready when you are."
+            icon={<PinIcon />}
+            badges={
+              <>
+                <span className="gala-count-pill">
+                  {savedPlaces.length} saved place{savedPlaces.length === 1 ? '' : 's'}
+                </span>
+                <span className="gala-count-pill">
+                  {searchQuery.trim() ? `Filtering "${searchQuery.trim()}"` : 'Quick access'}
+                </span>
+              </>
+            }
+            aside={<SavedChibi />}
+            className="border-b-0 pb-0"
+          />
 
-        {isSessionLoading ? (
-          <section className="rounded-lg border border-[var(--line)] bg-white px-4 py-5 shadow-[0_14px_30px_rgba(28,77,160,0.07)]">
-            <p className="text-sm text-[var(--muted)]">Checking account...</p>
-          </section>
-        ) : null}
-
-        {!isSessionLoading && !session?.user ? (
-          <section className="rounded-lg border border-[var(--line)] bg-white px-5 py-6 shadow-[0_14px_30px_rgba(28,77,160,0.07)]">
-            <h2 className="text-lg font-black text-slate-950">Sign in to view favorites</h2>
-            <p className="mt-2 max-w-xl text-sm text-[var(--muted)]">
-              Your saved places are connected to your account.
-            </p>
-            <GoogleSignInButton className="mt-4" redirectTo={`${window.location.origin}/favorites`} />
-          </section>
-        ) : null}
-
-        {!isSessionLoading && session?.user ? (
-          <>
-            <section className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
-              <div className="grid gap-2">
-                <label className="relative block">
-                  <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">
-                    <SearchIcon className="h-5 w-5" />
-                  </span>
-                  <input
-                    value={searchQuery}
-                    onChange={(event) => setSearchQuery(event.target.value)}
-                    placeholder="Search saved places"
-                    className="h-12 w-full rounded-lg border border-[var(--line-strong)] bg-white px-12 text-base font-semibold text-slate-950 shadow-[0_10px_24px_rgba(28,77,160,0.04)] outline-none transition placeholder:text-slate-400 focus:border-[var(--accent)] focus:ring-2 focus:ring-[rgba(47,116,232,0.14)]"
-                  />
-                </label>
-              </div>
+          {isSessionLoading ? (
+            <section className="rounded-lg border border-[var(--line)] bg-white px-4 py-5 shadow-[0_14px_30px_rgba(28,77,160,0.07)]">
+              <p className="text-sm text-[var(--muted)]">Checking account...</p>
             </section>
+          ) : null}
 
-            <div className="min-h-5">
-              {isFavoritesLoading ? (
-                <p className="text-sm font-semibold text-[var(--accent-deep)]">Loading favorites...</p>
-              ) : favoritesError ? (
-                <p className="text-sm font-medium text-red-600">{favoritesError}</p>
-              ) : statusMessage ? (
-                <p className="text-sm text-[var(--muted)]">{statusMessage}</p>
+          {!isSessionLoading && !session?.user ? (
+            <section className="rounded-lg border border-[var(--line)] bg-white px-5 py-6 shadow-[0_14px_30px_rgba(28,77,160,0.07)]">
+              <h2 className="text-lg font-black text-slate-950">Sign in to view favorites</h2>
+              <p className="mt-2 max-w-xl text-sm text-[var(--muted)]">
+                Your saved places are connected to your account.
+              </p>
+              <GoogleSignInButton className="mt-4" redirectTo={`${window.location.origin}/favorites`} />
+            </section>
+          ) : null}
+
+          {!isSessionLoading && session?.user ? (
+            <>
+              <section className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+                <div className="grid gap-2">
+                  <label className="relative block">
+                    <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">
+                      <SearchIcon className="h-5 w-5" />
+                    </span>
+                    <input
+                      value={searchQuery}
+                      onChange={(event) => setSearchQuery(event.target.value)}
+                      placeholder="Search saved places"
+                      className="h-12 w-full rounded-lg border border-[var(--line-strong)] bg-white px-12 text-base font-semibold text-slate-950 shadow-[0_10px_24px_rgba(28,77,160,0.04)] outline-none transition placeholder:text-slate-400 focus:border-[var(--accent)] focus:ring-2 focus:ring-[rgba(47,116,232,0.14)]"
+                    />
+                  </label>
+                </div>
+              </section>
+
+              <div className="min-h-5">
+                {isFavoritesLoading ? (
+                  <p className="text-sm font-semibold text-[var(--accent-deep)]">Loading favorites...</p>
+                ) : favoritesError ? (
+                  <p className="text-sm font-medium text-red-600">{favoritesError}</p>
+                ) : statusMessage ? (
+                  <p className="text-sm text-[var(--muted)]">{statusMessage}</p>
+                ) : null}
+              </div>
+
+              {!isFavoritesLoading && savedPlaces.length === 0 && !favoritesError ? (
+                <section className="rounded-lg border border-dashed border-[var(--line-strong)] bg-white/82 px-5 py-8 text-center shadow-[0_14px_30px_rgba(28,77,160,0.06)]">
+                  <img src={favoritesEmptyChibi} alt="" className="mx-auto h-32 w-32 object-contain" loading="lazy" />
+                  <h2 className="mt-3 text-lg font-black text-slate-950">Wala ka pang saved places.</h2>
+                  <p className="mx-auto mt-2 max-w-md text-sm text-[var(--muted)]">
+                    Mag-search muna ng places para ma-save mo sila dito.
+                  </p>
+                </section>
               ) : null}
-            </div>
 
-            {!isFavoritesLoading && savedPlaces.length === 0 && !favoritesError ? (
-              <section className="rounded-lg border border-dashed border-[var(--line-strong)] bg-white/82 px-5 py-8 text-center shadow-[0_14px_30px_rgba(28,77,160,0.06)]">
-                <img src={favoritesEmptyChibi} alt="" className="mx-auto h-32 w-32 object-contain" loading="lazy" />
-                <h2 className="mt-3 text-lg font-black text-slate-950">Wala ka pang saved places.</h2>
-                <p className="mx-auto mt-2 max-w-md text-sm text-[var(--muted)]">
-                  Mag-search muna ng places para ma-save mo sila dito.
-                </p>
-              </section>
-            ) : null}
+              {!isFavoritesLoading && savedPlaces.length > 0 && filteredSavedPlaces.length === 0 ? (
+                <section className="rounded-lg border border-dashed border-[var(--line-strong)] bg-white/82 px-5 py-8 text-center shadow-[0_14px_30px_rgba(28,77,160,0.06)]">
+                  <p className="text-sm font-black text-slate-950">No saved places match that search.</p>
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="mt-3 rounded-lg border border-[var(--accent)] bg-white px-4 py-2 text-sm font-black text-[var(--accent-deep)]"
+                  >
+                    Clear search
+                  </button>
+                </section>
+              ) : null}
 
-            {!isFavoritesLoading && savedPlaces.length > 0 && filteredSavedPlaces.length === 0 ? (
-              <section className="rounded-lg border border-dashed border-[var(--line-strong)] bg-white/82 px-5 py-8 text-center shadow-[0_14px_30px_rgba(28,77,160,0.06)]">
-                <p className="text-sm font-black text-slate-950">No saved places match that search.</p>
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="mt-3 rounded-lg border border-[var(--accent)] bg-white px-4 py-2 text-sm font-black text-[var(--accent-deep)]"
-                >
-                  Clear search
-                </button>
-              </section>
-            ) : null}
-
-            {filteredSavedPlaces.length > 0 ? (
-              <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                {filteredSavedPlaces.map((favorite) => (
-                  <FavoriteCard
-                    key={favorite.id}
-                    favorite={favorite}
-                    removingPlaceId={removingPlaceId}
-                    onRemove={(placeId) => void handleRemove(placeId)}
-                  />
-                ))}
-              </section>
-            ) : null}
-          </>
-        ) : null}
+              {filteredSavedPlaces.length > 0 ? (
+                <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                  {filteredSavedPlaces.map((favorite) => (
+                    <FavoriteCard
+                      key={favorite.id}
+                      favorite={favorite}
+                      removingPlaceId={removingPlaceId}
+                      onRemove={(placeId) => void handleRemove(placeId)}
+                    />
+                  ))}
+                </section>
+              ) : null}
+            </>
+          ) : null}
+        </PageContainer>
       </main>
     </div>
   )

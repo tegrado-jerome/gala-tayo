@@ -5,6 +5,7 @@ import { ChevronDown, Globe2, Shield, UserRound } from 'lucide-react'
 import AppHeader from '../components/AppHeader'
 import PageHeroHeader from '../components/PageHeroHeader'
 import ProfileAvatar from '../components/ProfileAvatar'
+import { PageContainer } from '../components/layout/ResponsiveLayouts'
 import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { uploadProfileAvatar } from '../services/onboardingApi'
@@ -307,6 +308,7 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
     <div className="gala-page-shell">
       <AppHeader />
       <main className="mx-auto w-full max-w-[1100px] px-4 py-6 sm:px-6 lg:py-8">
+        <PageContainer className="px-0">
         {isLoading ? (
           <UnifiedLoadingState
             title="Preparing account settings..."
@@ -532,6 +534,7 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
             {errorMessage || 'Account settings are unavailable right now.'}
           </p>
         )}
+        </PageContainer>
       </main>
     </div>
   )

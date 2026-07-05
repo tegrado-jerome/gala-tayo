@@ -4,6 +4,7 @@ import AppHeader from '../components/AppHeader'
 import InternalLink from '../components/InternalLink'
 import Breadcrumb from '../components/Breadcrumb'
 import SeoHead from '../components/SeoHead'
+import { PageContainer, ResponsiveGrid } from '../components/layout/ResponsiveLayouts'
 import { placeCategories } from '../data/placeCategories'
 import { getSiteOrigin } from '../utils/seo'
 
@@ -39,7 +40,8 @@ function PlaceCategoriesIndexPage() {
       />
       <AppHeader minimal />
 
-      <main className="mx-auto w-full max-w-[1180px] px-4 pb-12 pt-5 sm:px-6 sm:pb-14 lg:px-8">
+      <main className="w-full pb-12 pt-5 sm:pb-14">
+        <PageContainer className="px-4 sm:px-6 lg:px-8">
         <Breadcrumb
           items={[
             { label: 'Home', href: '/', icon: <House className="h-3.5 w-3.5" /> },
@@ -74,7 +76,7 @@ function PlaceCategoriesIndexPage() {
               <p className="mt-1 text-sm text-[#6B7280]">Each category page gathers places across cities and keeps them arranged.</p>
             </div>
           </div>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <ResponsiveGrid className="mt-4 gap-3">
             {categoryCards.map((category) => (
               <InternalLink
                 key={category.value}
@@ -100,8 +102,9 @@ function PlaceCategoriesIndexPage() {
                 </div>
               </InternalLink>
             ))}
-          </div>
+          </ResponsiveGrid>
         </section>
+        </PageContainer>
       </main>
     </div>
   )

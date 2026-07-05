@@ -1,5 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { getSecret } from "../config/keyVault";
+import type { NormalizedAskAiMapQuery } from "./askAiMapQueryNormalizer";
 
 export class AskAiMapsServiceError extends Error {
   status: number;
@@ -34,6 +35,8 @@ export class AskAiMapsServiceError extends Error {
 
 export type AskAiMapsSearchParams = {
   query: string;
+  searchQuery?: string;
+  normalizedQuery?: NormalizedAskAiMapQuery | null;
   selectedChips?: string[];
   nearMe?: boolean;
   openNow?: boolean;
@@ -631,12 +634,53 @@ function normalizeKey(value: string): string {
     .trim();
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function normalizeParanaqueAlias(rawArea: string): KnownAreaAlias | null {
+  const normalized = normalizeKey(rawArea.replace(/\bphilippines\b/gi, ""));
+  if (!normalized) {
+    return null;
+  }
+
+  if (
+    /\b(pque|paranaque|para naque)\b/.test(normalized) ||
+    /\b(sa paranaque|dito sa paranaque|near paranaque|near para naque)\b/.test(normalized)
+  ) {
+    return {
+      canonicalLabel: "Parañaque, Metro Manila, Philippines",
+      city: "Parañaque",
+      province: "Metro Manila",
+    };
+  }
+
+  return null;
+}
+
 function resolveKnownAreaAlias(rawArea: string | null | undefined): KnownAreaAlias | null {
   const normalized = rawArea ? normalizeKey(rawArea.replace(/\bphilippines\b/gi, "")) : "";
   if (!normalized) {
     return null;
   }
-  return KNOWN_AREA_ALIASES[normalized] ?? null;
+
+  const paraqueAlias = normalizeParanaqueAlias(normalized);
+  if (paraqueAlias) {
+    return paraqueAlias;
+  }
+
+  if (KNOWN_AREA_ALIASES[normalized]) {
+    return KNOWN_AREA_ALIASES[normalized];
+  }
+
+  const keys = Object.keys(KNOWN_AREA_ALIASES).sort((a, b) => b.length - a.length);
+  for (const key of keys) {
+    if (new RegExp(`(^|\\s)${escapeRegExp(key)}(\\s|$)`).test(normalized)) {
+      return KNOWN_AREA_ALIASES[key];
+    }
+  }
+
+  return null;
 }
 
 function uniqueStrings(values: Array<string | null | undefined>, limit = 12): string[] {
@@ -975,29 +1019,43 @@ function extractCandidateCoordinates(record: Record<string, unknown>): { latitud
   return null;
 }
 
-function parseAskAiMapIntent(rawQuery: string, params: AskAiMapsSearchParams): AskAiMapIntent {
-  const normalizedQuery = normalizeTaglishQuery(rawQuery);
+function parseAskAiMapIntent(
+  rawQuery: string,
+  searchQuery: string,
+  params: AskAiMapsSearchParams
+): AskAiMapIntent {
+  const normalizedQuery = normalizeTaglishQuery(searchQuery);
   const categoryIntent = detectCategoryIntent(normalizedQuery);
   const galaIntents = detectGalaIntents(normalizedQuery, categoryIntent);
   const nearMe =
     params.nearMe === true ||
-    /\b(near me|nearby|around me|close to me|malapit sakin|malapit sa akin)\b/i.test(rawQuery);
-  const rawSearchAreaText = extractSearchAreaText(rawQuery);
-  const normalizedAreaText = rawSearchAreaText ? buildAreaResolutionText(rawSearchAreaText.replace(/\s*,\s*philippines$/i, "")) : null;
-  const areaAlias = resolveKnownAreaAlias(normalizedAreaText);
+    /\b(near me|nearby|around me|close to me|malapit sakin|malapit sa akin)\b/i.test(rawQuery) ||
+    /\b(near me|nearby|around me|close to me|malapit sakin|malapit sa akin)\b/i.test(searchQuery);
+  const normalizedLocationText = resolveKnownAreaAlias(params.normalizedQuery?.location ?? null)?.canonicalLabel ?? normalizeText(params.normalizedQuery?.location);
+  const rawSearchAreaText =
+    extractSearchAreaText(searchQuery) ??
+    extractSearchAreaText(rawQuery) ??
+    normalizedLocationText ??
+    resolveKnownAreaAlias(searchQuery)?.canonicalLabel ??
+    resolveKnownAreaAlias(rawQuery)?.canonicalLabel ??
+    null;
+  const normalizedAreaText = rawSearchAreaText
+    ? buildAreaResolutionText(rawSearchAreaText.replace(/\s*,\s*philippines$/i, ""))
+    : null;
+  const areaAlias = resolveKnownAreaAlias(normalizedAreaText) ?? resolveKnownAreaAlias(rawSearchAreaText);
   let queryType: AskAiMapsQueryType = "general_discovery";
 
   if (nearMe) {
     queryType = "near_me";
   } else if (
-    /\b(places to go|gala spots|san maganda gumala|date ideas|galaan|pasyalan)\b/i.test(rawQuery) ||
+    /\b(places to go|gala spots|san maganda gumala|date ideas|galaan|pasyalan)\b/i.test(searchQuery) ||
     categoryIntent === "tourist_spot" ||
     categoryIntent === "activity" ||
     isProvinceLevelArea(normalizedAreaText ?? "") ||
     /\bmetro manila\b/i.test(normalizedAreaText ?? "")
   ) {
     queryType = "broad_discovery";
-  } else if (categoryIntent === "unknown" && rawQuery.split(" ").length <= 4) {
+  } else if (categoryIntent === "unknown" && searchQuery.split(" ").length <= 4) {
     queryType = "specific_place";
   }
 
@@ -2888,6 +2946,7 @@ export async function searchAskAiMaps(
 ): Promise<AskAiMapsSearchResult> {
   const startedAt = Date.now();
   const rawQuery = normalizeText(params.query);
+  const searchQuery = normalizeText(params.searchQuery ?? params.query);
 
   if (!rawQuery) {
     throw new AskAiMapsServiceError("Query is required.", 400, {
@@ -2896,7 +2955,7 @@ export async function searchAskAiMaps(
     });
   }
 
-  const intent = parseAskAiMapIntent(rawQuery, params);
+  const intent = parseAskAiMapIntent(rawQuery, searchQuery || rawQuery, params);
   if (intent.nearMe && !params.userLocation) {
     throw new AskAiMapsServiceError("This search needs your location so I can find verified nearby places.", 400, {
       code: "ASK_AI_MAPS_BAD_REQUEST",
@@ -2906,6 +2965,13 @@ export async function searchAskAiMaps(
 
   const area = await resolveSearchAreaWithGeoapify(intent);
   if (!area) {
+    logStructured(logger, "missing_area", {
+      rawQuery,
+      searchQuery,
+      normalizedLocation: params.normalizedQuery?.location ?? null,
+      resolvedSearchArea: intent.searchAreaText,
+      reason: "missing_city_or_area",
+    });
     throw new AskAiMapsServiceError("Please add a city or area so I can verify places in the right location.", 400, {
       code: "ASK_AI_MAPS_BAD_REQUEST",
       stage: "resolve_location",
@@ -2916,9 +2982,14 @@ export async function searchAskAiMaps(
 
   logStructured(logger, "request", {
     rawQuery,
+    searchQuery,
     normalizedQuery: intent.normalizedQuery,
+    normalizedOverrideApplied: searchQuery !== rawQuery,
+    normalizedLocation: params.normalizedQuery?.location ?? null,
     parsedIntent: intent,
     searchAreaText: area.label,
+    resolvedSearchArea: area.label,
+    actualQuerySentToMaps: searchQuery,
     provider: "gemini_geoapify_hybrid_fast",
   });
 

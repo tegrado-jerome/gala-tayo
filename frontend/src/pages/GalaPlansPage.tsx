@@ -684,30 +684,32 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-5">
-      {isRefreshing ? <p className="text-sm text-[var(--muted)]">Refreshing your gala plan in the background...</p> : null}
-      <section className="grid gap-5">
-        <PageHeroHeader
-          eyebrow="Gala Plans"
-          title={isEdit ? 'Edit your gala plan' : 'Create a gala plan'}
-          description="Start with the basics, then add places one by one so the plan stays clear and easy to follow."
-          icon={<AppIcon name="galaPlan" className="h-4 w-4" />}
-          badges={
-            <>
-              <span className="gala-count-pill">{items.length} stop{items.length === 1 ? '' : 's'}</span>
-              <span className="gala-count-pill">{visibility} visibility</span>
-            </>
-          }
-        />
-        <div className="grid gap-5 border-t border-[var(--line)] pt-5">
-          <label className="grid gap-2"><span className="text-sm font-black text-slate-800">Title</span><input value={title} onChange={(event) => setTitle(event.target.value)} className="h-12 rounded-2xl border border-[var(--line-strong)] px-4 text-base font-bold text-slate-950 outline-none transition focus:border-[var(--accent)] focus:ring-4 focus:ring-[var(--accent-soft)]" placeholder="Cafe crawl in BGC" /></label>
-          <label className="grid gap-2"><span className="text-sm font-black text-slate-800">Description</span><textarea value={description} onChange={(event) => setDescription(event.target.value)} rows={4} className="resize-none rounded-2xl border border-[var(--line-strong)] px-4 py-3 text-sm font-semibold leading-6 text-slate-950 outline-none transition focus:border-[var(--accent)] focus:ring-4 focus:ring-[var(--accent-soft)]" placeholder="What kind of day is this plan for?" /></label>
-          <label className="grid gap-2"><span className="text-sm font-black text-slate-800">Visibility</span><VisibilitySelector value={visibility} onChange={setVisibility} /></label>
-        </div>
-      </section>
+      <div className="lg:mx-auto lg:max-w-[920px] xl:max-w-[1000px] 2xl:max-w-[1080px]">
+        {isRefreshing ? <p className="text-sm text-[var(--muted)]">Refreshing your gala plan in the background...</p> : null}
+        <section className="grid gap-5">
+          <PageHeroHeader
+            eyebrow="Gala Plans"
+            title={isEdit ? 'Edit your gala plan' : 'Create a gala plan'}
+            description="Start with the basics, then add places one by one so the plan stays clear and easy to follow."
+            icon={<AppIcon name="galaPlan" className="h-4 w-4" />}
+            badges={
+              <>
+                <span className="gala-count-pill">{items.length} stop{items.length === 1 ? '' : 's'}</span>
+                <span className="gala-count-pill">{visibility} visibility</span>
+              </>
+            }
+          />
+          <div className="grid gap-5 border-t border-[var(--line)] pt-5">
+            <label className="grid gap-2"><span className="text-sm font-black text-slate-800">Title</span><input value={title} onChange={(event) => setTitle(event.target.value)} className="h-12 rounded-2xl border border-[var(--line-strong)] px-4 text-base font-bold text-slate-950 outline-none transition focus:border-[var(--accent)] focus:ring-4 focus:ring-[var(--accent-soft)]" placeholder="Cafe crawl in BGC" /></label>
+            <label className="grid gap-2"><span className="text-sm font-black text-slate-800">Description</span><textarea value={description} onChange={(event) => setDescription(event.target.value)} rows={4} className="resize-none rounded-2xl border border-[var(--line-strong)] px-4 py-3 text-sm font-semibold leading-6 text-slate-950 outline-none transition focus:border-[var(--accent)] focus:ring-4 focus:ring-[var(--accent-soft)]" placeholder="What kind of day is this plan for?" /></label>
+            <label className="grid gap-2"><span className="text-sm font-black text-slate-800">Visibility</span><VisibilitySelector value={visibility} onChange={setVisibility} /></label>
+          </div>
+        </section>
 
-      <ItineraryBuilder items={items} onItemsChange={setItems} />
-      {errorMessage ? <p className="rounded-2xl bg-red-50 p-4 text-sm font-bold text-red-700">{errorMessage}</p> : null}
-      <button type="submit" disabled={isSaving || !title.trim()} className="gala-primary-button h-12 w-fit px-6 disabled:border-slate-300 disabled:bg-slate-300">{isSaving ? 'Saving...' : isEdit ? 'Save Changes' : 'Create Gala Plan'}</button>
+        <ItineraryBuilder items={items} onItemsChange={setItems} />
+        {errorMessage ? <p className="rounded-2xl bg-red-50 p-4 text-sm font-bold text-red-700">{errorMessage}</p> : null}
+        <button type="submit" disabled={isSaving || !title.trim()} className="gala-primary-button h-12 w-fit px-6 disabled:border-slate-300 disabled:bg-slate-300">{isSaving ? 'Saving...' : isEdit ? 'Save Changes' : 'Create Gala Plan'}</button>
+      </div>
     </form>
   )
 }
@@ -742,6 +744,7 @@ function ListPage({ session, favorites = false }: { session?: Session | null; fa
 
   return (
     <>
+      <div className="lg:mx-auto lg:max-w-[1320px] xl:max-w-[1400px] 2xl:max-w-[1500px]">
       <PageHeroHeader
         eyebrow="Gala Plans"
         title={favorites ? 'Gala plan favorites' : 'My gala plans'}
@@ -779,9 +782,10 @@ function ListPage({ session, favorites = false }: { session?: Session | null; fa
       {!isLoading && isRefreshing ? <p className="text-sm text-[var(--muted)]">Refreshing gala plans in the background...</p> : null}
       {errorMessage ? <p className="rounded-lg bg-red-50 p-4 text-sm font-bold text-red-700">{errorMessage}</p> : null}
       {!isLoading && !errorMessage && plans.length === 0 ? <EmptyPlansState favorites={favorites} /> : null}
-      <section className="grid gap-4 md:grid-cols-2">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {plans.map((plan) => <PlanCard key={plan.id} plan={plan} showOwner={favorites} onDeleted={(planId) => setPlans((current) => current.filter((currentPlan) => currentPlan.id !== planId))} />)}
       </section>
+      </div>
     </>
   )
 }
@@ -853,9 +857,10 @@ function DetailPage({ planId, session }: { planId: string; session?: Session | n
   if (!plan) return <p className="rounded-lg border border-[var(--line)] bg-white p-5 text-sm font-bold text-red-700">{errorMessage || 'Gala plan unavailable.'}</p>
 
   return (
-    <div className="grid gap-5">
-      {isRefreshing ? <p className="text-sm text-[var(--muted)]">Refreshing this gala plan in the background...</p> : null}
-      <section className="gala-card overflow-hidden">
+    <div className="lg:mx-auto lg:max-w-[1120px] xl:max-w-[1240px] 2xl:max-w-[1320px]">
+      <div className="grid gap-5">
+        {isRefreshing ? <p className="text-sm text-[var(--muted)]">Refreshing this gala plan in the background...</p> : null}
+        <section className="gala-card overflow-hidden">
         <div className="border-b border-[var(--line)] bg-white px-5 py-5 sm:px-6 sm:py-6">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
@@ -910,9 +915,9 @@ function DetailPage({ planId, session }: { planId: string; session?: Session | n
           </div>
         </div>
         {notice ? <p className="mx-5 mb-5 rounded-2xl bg-amber-50 px-4 py-3 text-sm font-bold text-amber-800 sm:mx-6 sm:mb-6">{notice}</p> : null}
-      </section>
+        </section>
 
-      <section className="grid gap-4">
+        <section className="grid gap-4">
         {groupedItems.length === 0 ? <p className="rounded-lg border border-[var(--line)] bg-white p-4 text-sm font-semibold text-[var(--muted)]">This gala plan has no places yet.</p> : groupedItems.map(([dayNumber, items]) => (
           <div key={dayNumber} className="grid gap-3">
             <div className="flex items-center gap-3">
@@ -937,7 +942,8 @@ function DetailPage({ planId, session }: { planId: string; session?: Session | n
             ))}
           </div>
         ))}
-      </section>
+        </section>
+      </div>
     </div>
   )
 }

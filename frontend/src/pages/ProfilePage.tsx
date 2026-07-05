@@ -4,6 +4,7 @@ import type { Session } from '@supabase/supabase-js'
 import AppHeader from '../components/AppHeader'
 import { AppIcon } from '../components/AppIcon'
 import ProfileAvatar from '../components/ProfileAvatar'
+import { PageContainer } from '../components/layout/ResponsiveLayouts'
 import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { updateAccountPassword } from '../services/authApi'
@@ -237,6 +238,7 @@ function ProfilePage({ session }: ProfilePageProps) {
     <div className="gala-page-shell">
       <AppHeader />
       <main className="mx-auto w-full max-w-[1120px] px-4 py-6 sm:px-6 lg:py-10">
+        <PageContainer className="px-0">
         {isLoading ? (
           <UnifiedLoadingState
             title="Preparing profile..."
@@ -649,6 +651,7 @@ function ProfilePage({ session }: ProfilePageProps) {
             </section>
           </div>
         ) : null}
+        </PageContainer>
       </main>
     </div>
   )

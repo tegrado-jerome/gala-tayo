@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import AppHeader from '../components/AppHeader'
 import { AppIcon, getCategoryIconName } from '../components/AppIcon'
 import type { PlaceCardData, PlaceCategoryMeta, PlaceTagMeta } from '../components/PlaceCard'
+import { PageContainer } from '../components/layout/ResponsiveLayouts'
 import { supabase } from '../supabase'
 import { navigateToCanonicalPlace, navigateToPath } from '../utils/navigation'
 import homeChibi from '../assets/chibis/public/chibi-welcome-page.webp'
@@ -366,14 +367,15 @@ function HomeLandingPage() {
   }
 
   const handleAskAiAction = () => {
-    navigateToPath('/ask-ai/chatbot')
+    navigateToPath('/ask-ai')
   }
 
   return (
     <div className="gala-page-background min-h-screen text-[#071633]">
       <AppHeader minimal />
 
-      <main className="mx-auto w-full px-4 pb-6 pt-4 sm:px-6 sm:pb-8 sm:pt-5 md:max-w-[820px] md:px-6 md:pb-5 md:pt-4 lg:max-w-[1100px] lg:px-8 lg:pb-6 lg:pt-4">
+      <main className="w-full px-4 pb-6 pt-4 sm:px-6 sm:pb-8 sm:pt-5 md:pb-5 md:pt-4 lg:pb-6 lg:pt-4">
+        <PageContainer className="px-0">
         <section className="relative px-3 pt-3 sm:px-6 sm:pt-5 md:px-0 md:pt-1 lg:px-0 lg:pt-2">
           <div className="relative z-10 flex flex-col items-center text-center md:mx-auto md:max-w-[820px] lg:max-w-none lg:grid lg:grid-cols-[minmax(0,1.02fr)_minmax(280px,0.98fr)] lg:items-center lg:gap-6 lg:text-left">
             <div className="flex flex-col items-center lg:items-start">
@@ -515,6 +517,7 @@ function HomeLandingPage() {
             </div>
           </section>
         </div>
+        </PageContainer>
       </main>
     </div>
   )

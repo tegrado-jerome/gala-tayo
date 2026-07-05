@@ -7,6 +7,7 @@ import { AppIcon } from '../components/AppIcon'
 import InternalLink from '../components/InternalLink'
 import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
 import MapView from '../components/MapView'
+import { MapResponsiveLayout } from '../components/layout/ResponsiveLayouts'
 import type { PlaceCardData } from '../components/PlaceCard'
 import { supabase } from '../supabase'
 import {
@@ -1767,7 +1768,7 @@ function AskAiMapPage() {
 
   return (
     <>
-    <main className="gala-page-background h-[100dvh] overflow-hidden overscroll-none text-[var(--text)]">
+    <main className="gala-page-background h-[100dvh] overflow-hidden overscroll-none text-[var(--text)] lg:hidden">
       <div className="h-full w-full">
         <section className="relative h-full overflow-hidden bg-transparent p-0">
           <div className="relative h-full">
@@ -1803,7 +1804,7 @@ function AskAiMapPage() {
             ) : null}
 
             {shouldShowPermissionPrompt ? (
-              <div className="absolute inset-0 z-[700] flex items-center justify-center bg-slate-950/12 p-4">
+              <div className="absolute inset-0 z-[700] flex items-center justify-center bg-[#08162f]/12 p-4">
                 <div className="w-full max-w-sm rounded-[26px] border border-white/80 bg-white/96 p-5 shadow-[0_24px_64px_rgba(15,23,42,0.14)]">
                   <div className="flex items-start gap-3">
                     <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--accent-wash)] text-[var(--accent)]">
@@ -2041,12 +2042,212 @@ function AskAiMapPage() {
         </section>
       </div>
     </main>
+    <main className="hidden h-[100dvh] overflow-hidden overscroll-none bg-[var(--bg)] text-[var(--text)] lg:block">
+      <MapResponsiveLayout className="h-full px-4 py-4 lg:mx-auto lg:max-w-[1500px] lg:px-6 lg:py-6 xl:max-w-[1640px] 2xl:max-w-[1760px]">
+        <section className="relative h-full overflow-hidden rounded-[28px] bg-transparent">
+          <div className="relative h-full">
+            <MapView
+              places={mapPlaces}
+              selectedPlaceId={selectedPlaceId}
+              focusedPlaceId={focusedPlaceId}
+              center={mapCenter}
+              zoom={userLocation ? 14 : 12}
+              autoFitToPlaces={placesWithPinsCount > 0}
+              focusSelectedPlaceOnChange
+              selectedPlaceFocusSignal={selectedPlaceFocusSignal}
+              className="h-full"
+              layoutKey={mapLayoutKey}
+              onPlaceSelect={selectPlace}
+            />
+
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[linear-gradient(180deg,rgba(248,247,244,0.72)_0%,rgba(248,247,244,0.18)_58%,rgba(248,247,244,0)_100%)]" />
+            <div className="absolute right-3 top-3 z-[620]">
+              <InternalLink
+                href="/ask-ai"
+                aria-label="Back to Menu"
+                className="pointer-events-auto inline-flex h-[34px] w-[34px] items-center justify-center rounded-xl bg-sky-100 text-sky-700 ring-1 ring-inset ring-sky-200/70 transition hover:bg-sky-200/80 hover:text-sky-800"
+              >
+                <Bot className="h-6 w-6" strokeWidth={2} />
+              </InternalLink>
+            </div>
+          </div>
+        </section>
+
+        <aside className="flex h-full min-h-0 flex-col overflow-hidden rounded-[28px] border border-[var(--line)] bg-white shadow-[0_18px_44px_rgba(15,23,42,0.12)]">
+          <div className="shrink-0 border-b border-[var(--line)] px-4 py-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">Ask AI Maps</p>
+                <h1 className="mt-1 text-[22px] font-black tracking-[-0.03em] text-slate-950">
+                  {query.trim() || 'Map results'}
+                </h1>
+              </div>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-slate-600">
+                {normalizedPlaces.length} places
+              </span>
+            </div>
+            {statusMessage ? <p className="mt-2 text-sm font-medium text-slate-600">{statusMessage}</p> : null}
+            {errorMessage ? <p className="mt-2 text-sm font-medium text-rose-600">{errorMessage}</p> : null}
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+            <div className="grid gap-3">
+              {isSearching ? <MinimalLoadingCard query={query} /> : null}
+
+              {!isSearching ? normalizedPlaces.map((place, index) => {
+                const display = displayPlaces[index]
+                if (!display) return null
+                const isSelected = place.id === selectedPlaceId
+                const areaText = getShortAreaText(display)
+                const openStatusChip = getOpenStatusChip(display)
+                const hoursSummary = display.openingHoursSummary || ''
+                const ratingText = display.ratingText || (typeof place.rating === 'number' ? place.rating.toFixed(1) : '')
+                const reviewCountText = display.reviewCountText || formatReviewCount(place.reviewCount)
+                const previewText = display.whyThisFits.length > 110
+                  ? `${display.whyThisFits.slice(0, 107).trimEnd()}...`
+                  : display.whyThisFits
+
+                return (
+                  <div
+                    key={place.id}
+                    ref={(node) => {
+                      if (node) cardRefs.current.set(place.id, node)
+                      else cardRefs.current.delete(place.id)
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => {
+                      selectPlace(place.id)
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        selectPlace(place.id)
+                      }
+                    }}
+                    className={`relative min-h-[160px] w-full snap-center rounded-[24px] border bg-white px-4 py-3.5 text-left cursor-pointer transition-all duration-200 ${
+                      isSelected
+                        ? 'scale-[1.01] border-transparent shadow-[0_22px_52px_rgba(15,23,42,0.22)]'
+                        : 'border-slate-100/90 shadow-[0_14px_38px_rgba(15,23,42,0.10)] hover:border-slate-200 hover:shadow-[0_18px_42px_rgba(15,23,42,0.14)]'
+                    }`}
+                    onMouseEnter={() => setFocusedPlaceId(place.id)}
+                    onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
+                  >
+                    <div className="flex h-full flex-col">
+                      <div className="flex items-start gap-2.5">
+                        <div className="flex shrink-0 items-center gap-2 pt-0.5">
+                          <span className={`h-2.5 w-2.5 rounded-full transition ${
+                            isSelected ? 'bg-[var(--accent-deep)] shadow-[0_0_0_5px_rgba(37,99,235,0.12)]' : 'bg-slate-200'
+                          }`} />
+                          <span className={`inline-flex h-7 min-w-7 items-center justify-center rounded-2xl px-2 text-[11px] font-black ${
+                            isSelected
+                              ? 'bg-[#172A5A] text-white shadow-[0_8px_16px_rgba(23,42,90,0.24)]'
+                              : 'bg-slate-100 text-[#172A5A]'
+                          }`}>
+                            {place.displayIndex}
+                          </span>
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-start gap-2">
+                            <h3 className="min-w-0 flex-1 text-[15px] font-extrabold leading-[1.2] tracking-[-0.02em] text-slate-950 line-clamp-2">
+                              {display.title}
+                            </h3>
+                            <div className="flex shrink-0 flex-col items-end gap-1">
+                              {display.category !== 'Place' ? (
+                                <span className="shrink-0 self-start rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-[10px] font-semibold text-slate-500">
+                                  {display.category}
+                                </span>
+                              ) : null}
+                            </div>
+                          </div>
+
+                          <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[12px] font-medium text-slate-500">
+                            {ratingText ? (
+                              <span className="inline-flex items-center gap-0.5 font-semibold text-slate-700">
+                                <span className="text-[13px] leading-none text-amber-500">{'\u2605'}</span>
+                                <span>{ratingText}</span>
+                              </span>
+                            ) : null}
+                            {reviewCountText ? (
+                              <>
+                                {getMetaDot(Boolean(ratingText))}
+                                <span>{reviewCountText}</span>
+                              </>
+                            ) : null}
+                          </div>
+                        </div>
+                      </div>
+
+                      {areaText ? (
+                        <div className="mt-2 flex items-start gap-1.5 text-[12px] text-slate-400">
+                          <AppIcon name="place" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-350" />
+                          <span className="line-clamp-1 font-medium">{shortenAddress(display.address || areaText)}</span>
+                        </div>
+                      ) : null}
+
+                      <p className="mt-2 line-clamp-2 text-[12px] leading-[1.5] text-slate-500">
+                        {previewText}
+                      </p>
+
+                      <div className="mt-auto flex items-center justify-between gap-3 pt-2.5">
+                        <div className="min-w-0 flex items-center gap-2">
+                          {openStatusChip ? (
+                            <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-1.5 py-0.5 text-[11px] font-semibold ${openStatusChip.className}`}>
+                              <span className={`text-[7px] ${openStatusChip.dotClassName}`}>{'\u25CF'}</span>
+                              {openStatusChip.label}
+                            </span>
+                          ) : null}
+                          {hoursSummary ? (
+                            <span className="line-clamp-1 text-[11px] font-medium text-slate-400">{hoursSummary}</span>
+                          ) : null}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            event.preventDefault()
+                            openPlaceDetails(place.id)
+                          }}
+                          className="inline-flex shrink-0 items-center gap-1 rounded-full border border-[var(--accent)]/16 bg-[var(--accent-wash)] px-3 py-1.5 text-[11px] font-semibold text-[var(--accent-deep)] transition hover:bg-[var(--accent)]/15 active:scale-95"
+                        >
+                          <span>View details</span>
+                          <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M5 12h14M12 5l7 7-7 7" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )
+              }) : null}
+            </div>
+
+            <div className="mt-4">
+              <AskAiMapComposer
+                key={`${query}:desktop`}
+                query={query}
+                selectedChipIds={selectedChipIds}
+                isSearching={isSearching}
+                onSubmit={(queryOverride) => {
+                  void handleEnterSearch(queryOverride)
+                }}
+                onCancel={() => {
+                  setIsSearching(false)
+                  cancelAskAiMapRequest()
+                }}
+              />
+            </div>
+          </div>
+        </aside>
+      </MapResponsiveLayout>
+    </main>
     {selectedDisplayPlace && isPlaceDetailOpen ? createPortal(
       <div className="fixed inset-0 z-[7000]">
         <button
           type="button"
           aria-label="Close place details"
-          className="absolute inset-0 bg-slate-950/40 backdrop-blur-[4px]"
+          className="absolute inset-0 bg-[#08162f]/42 backdrop-blur-[4px]"
           onClick={() => setIsPlaceDetailOpen(false)}
         />
         <div className="absolute inset-x-0 bottom-0 flex items-end lg:inset-0 lg:items-center lg:justify-center lg:p-4">
@@ -2224,7 +2425,7 @@ function AskAiMapPage() {
                 href={selectedGoogleMapsUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-slate-950 px-4 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(15,23,42,0.16)] transition hover:bg-slate-800 active:scale-[0.98]"
+                className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#172A5A] px-4 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(23,42,90,0.22)] transition hover:bg-[#0F2147] active:scale-[0.98]"
               >
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />

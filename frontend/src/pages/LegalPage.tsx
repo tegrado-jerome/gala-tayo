@@ -1,5 +1,6 @@
 import AppHeader from '../components/AppHeader'
 import MinimalBackNav from '../components/MinimalBackNav'
+import { PageContainer } from '../components/layout/ResponsiveLayouts'
 import { navigateToPath } from '../utils/navigation'
 import SeoHead from '../components/SeoHead'
 import { getSiteOrigin } from '../utils/seo'
@@ -284,38 +285,40 @@ function LegalPage({ type }: LegalPageProps) {
       <SeoHead title={seoTitle} description={seoDescription} canonicalPath={canonicalPath} jsonLd={jsonLd} />
       <AppHeader />
       <main className="mx-auto w-full max-w-[900px] px-4 py-6 sm:px-6 lg:py-10">
-        <article className="rounded-lg border border-[var(--line)] bg-white p-5 shadow-[0_18px_42px_rgba(47,116,232,0.1)] sm:p-8">
-          <MinimalBackNav
-            onClick={() => window.history.length > 1 ? window.history.back() : navigateToPath('/search')}
-            className="mb-6"
-          />
-          <header className="border-b border-[var(--line)] pb-6">
-            <h1 className="text-3xl font-black leading-tight text-slate-950 sm:text-4xl">{title}</h1>
-            <p className="mt-4 text-sm font-semibold leading-6 text-slate-700">{intro}</p>
-            <dl className="mt-5 grid gap-2 text-sm font-bold text-[var(--muted)] sm:grid-cols-2">
-              <div><dt className="inline text-slate-900">Effective Date: </dt><dd className="inline">Launch Date</dd></div>
-              <div><dt className="inline text-slate-900">Last Updated: </dt><dd className="inline">June 14, 2026</dd></div>
-            </dl>
-          </header>
+        <PageContainer>
+          <article className="rounded-lg border border-[var(--line)] bg-white p-5 shadow-[0_18px_42px_rgba(47,116,232,0.1)] sm:p-8">
+            <MinimalBackNav
+              onClick={() => window.history.length > 1 ? window.history.back() : navigateToPath('/search')}
+              className="mb-6"
+            />
+            <header className="border-b border-[var(--line)] pb-6">
+              <h1 className="text-3xl font-black leading-tight text-slate-950 sm:text-4xl">{title}</h1>
+              <p className="mt-4 text-sm font-semibold leading-6 text-slate-700">{intro}</p>
+              <dl className="mt-5 grid gap-2 text-sm font-bold text-[var(--muted)] sm:grid-cols-2">
+                <div><dt className="inline text-slate-900">Effective Date: </dt><dd className="inline">Launch Date</dd></div>
+                <div><dt className="inline text-slate-900">Last Updated: </dt><dd className="inline">June 14, 2026</dd></div>
+              </dl>
+            </header>
 
-          <div className="mt-7 grid gap-7">
-            {sections.map((section) => (
-              <section key={section.title} className="grid gap-3">
-                <h2 className="text-xl font-black text-slate-950">{section.title}</h2>
-                {section.body.map((paragraph) => (
-                  <p key={paragraph} className="text-sm font-semibold leading-7 text-slate-700">{paragraph}</p>
-                ))}
-                {section.bullets ? (
-                  <ul className="grid gap-2 pl-5 text-sm font-semibold leading-7 text-slate-700">
-                    {section.bullets.map((item) => (
-                      <li key={item} className="list-disc">{item}</li>
-                    ))}
-                  </ul>
-                ) : null}
-              </section>
-            ))}
-          </div>
-        </article>
+            <div className="mt-7 grid gap-7">
+              {sections.map((section) => (
+                <section key={section.title} className="grid gap-3">
+                  <h2 className="text-xl font-black text-slate-950">{section.title}</h2>
+                  {section.body.map((paragraph) => (
+                    <p key={paragraph} className="text-sm font-semibold leading-7 text-slate-700">{paragraph}</p>
+                  ))}
+                  {section.bullets ? (
+                    <ul className="grid gap-2 pl-5 text-sm font-semibold leading-7 text-slate-700">
+                      {section.bullets.map((item) => (
+                        <li key={item} className="list-disc">{item}</li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </section>
+              ))}
+            </div>
+          </article>
+        </PageContainer>
       </main>
     </div>
   )

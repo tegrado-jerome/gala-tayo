@@ -627,7 +627,7 @@ function TransportColumn({
 }
 
 function DetailSection({ children }: { children: ReactNode }) {
-  return <section className="border-t border-[var(--line)] py-5 first:border-t-0">{children}</section>
+  return <section className="border-t border-[var(--line)] py-5 first:border-t-0 lg:py-6 xl:py-7">{children}</section>
 }
 
 const filledStar = String.fromCharCode(9733)
@@ -2456,7 +2456,7 @@ function PlaceDetailView({ place, onBack, areaBreadcrumb = null, cameFromSearch 
       <AppHeader />
 
       <main className="gala-page-background min-h-screen w-full px-4 pb-8 pt-0 sm:px-6 md:px-8 lg:px-10">
-        <div className="mx-auto w-full max-w-[980px]">
+        <div className="mx-auto w-full max-w-[980px] lg:max-w-[1120px] xl:max-w-[1240px] 2xl:max-w-[1360px]">
           {cameFromSearch ? (
             <>
               <div className="mb-3 pt-5">
@@ -2503,8 +2503,8 @@ function PlaceDetailView({ place, onBack, areaBreadcrumb = null, cameFromSearch 
             onContribute={handleOpenContribution}
           />
 
-          <section className="py-5">
-            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <section className="py-5 lg:py-6">
+            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between lg:gap-6">
               <div className="min-w-0">
                 <h1 className="min-w-0 text-[26px] font-black leading-tight text-slate-950 sm:text-[32px]">{place.name}</h1>
                 {headlineRating !== null ? (
@@ -2525,7 +2525,7 @@ function PlaceDetailView({ place, onBack, areaBreadcrumb = null, cameFromSearch 
                 </div>
               </div>
 
-              <div className="grid w-full shrink-0 gap-2 md:w-[300px]">
+              <div className="grid w-full shrink-0 gap-2 md:w-[300px] lg:w-[340px] xl:w-[360px] 2xl:w-[380px]">
                 <div className="grid grid-cols-2 gap-2">
                   <ActionButton icon="save" onClick={handleSavePlace} disabled={isSaving} active={isSaved}>
                     {isSaving ? 'Saving' : 'Favorite'}

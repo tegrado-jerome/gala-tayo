@@ -4,6 +4,7 @@ import AppHeader from '../components/AppHeader'
 import { AppIcon } from '../components/AppIcon'
 import MinimalBackNav from '../components/MinimalBackNav'
 import ProfileAvatar from '../components/ProfileAvatar'
+import { PageContainer } from '../components/layout/ResponsiveLayouts'
 import { getDisplayName, getPublicGalaPlan, type PublicGalaPlan } from '../utils/profileApi'
 import { navigateToPath } from '../utils/navigation'
 import { formatGalaPlanDate, parseGalaPlanDescription } from '../utils/galaPlanDescription'
@@ -90,24 +91,25 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <AppHeader />
-      <main className="mx-auto w-full max-w-[720px] px-4 py-4 sm:px-5 sm:py-6">
-        {isLoading ? (
-          <section className="rounded-2xl border border-[var(--line)] bg-white px-4 py-5 text-sm font-semibold text-[var(--muted)]">Loading gala plan...</section>
-        ) : notFound ? (
-          <section className="rounded-2xl border border-[var(--line)] bg-white px-5 py-8 text-center">
-            <h1 className="text-xl font-black text-slate-950">Gala plan not found.</h1>
-          </section>
-        ) : lockedMessage ? (
-          <section className="rounded-2xl border border-[var(--line)] bg-white px-5 py-8 text-center">
-            <h1 className="text-xl font-black text-slate-950">{lockedMessage}</h1>
-            <p className="mt-2 text-sm font-semibold text-[var(--muted)]">Follow to request access kung followers-only ito.</p>
-            <button type="button" onClick={() => navigateToPath(`/u/${encodeURIComponent(username)}`)} className="mt-5 h-10 rounded-full bg-slate-950 px-4 text-sm font-black text-white">View profile</button>
-          </section>
-        ) : errorMessage ? (
-          <section className="rounded-2xl border border-[var(--line)] bg-white px-5 py-8 text-center text-sm font-bold text-red-700">{errorMessage}</section>
-        ) : plan ? (
-          <div className="space-y-5">
-            <section className="relative overflow-hidden py-1">
+      <main className="mx-auto w-full max-w-[720px] px-4 py-4 sm:px-5 sm:py-6 lg:max-w-[860px] xl:max-w-[920px]">
+        <PageContainer>
+          {isLoading ? (
+            <section className="rounded-2xl border border-[var(--line)] bg-white px-4 py-5 text-sm font-semibold text-[var(--muted)]">Loading gala plan...</section>
+          ) : notFound ? (
+            <section className="rounded-2xl border border-[var(--line)] bg-white px-5 py-8 text-center">
+              <h1 className="text-xl font-black text-slate-950">Gala plan not found.</h1>
+            </section>
+          ) : lockedMessage ? (
+            <section className="rounded-2xl border border-[var(--line)] bg-white px-5 py-8 text-center">
+              <h1 className="text-xl font-black text-slate-950">{lockedMessage}</h1>
+              <p className="mt-2 text-sm font-semibold text-[var(--muted)]">Follow to request access kung followers-only ito.</p>
+              <button type="button" onClick={() => navigateToPath(`/u/${encodeURIComponent(username)}`)} className="mt-5 h-10 rounded-full bg-slate-950 px-4 text-sm font-black text-white">View profile</button>
+            </section>
+          ) : errorMessage ? (
+            <section className="rounded-2xl border border-[var(--line)] bg-white px-5 py-8 text-center text-sm font-bold text-red-700">{errorMessage}</section>
+          ) : plan ? (
+            <div className="space-y-5">
+              <section className="relative overflow-hidden py-1">
               <div className="pointer-events-none absolute -right-12 top-0 h-32 w-32 rounded-full bg-sky-100/80 blur-2xl" />
               <div className="pointer-events-none absolute left-0 top-20 h-24 w-24 rounded-full bg-emerald-100/60 blur-2xl" />
 
@@ -191,9 +193,9 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
                   {notice ? <p className="text-sm font-bold text-amber-800">{notice}</p> : null}
                 </div>
               </div>
-            </section>
+              </section>
 
-            <section className="space-y-3">
+              <section className="space-y-3">
               <div className="flex items-center justify-between gap-3 px-1">
                 <span className="inline-flex items-center text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
                   Places
@@ -241,9 +243,10 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
                   ))}
                 </div>
               )}
-            </section>
-          </div>
-        ) : null}
+              </section>
+            </div>
+          ) : null}
+        </PageContainer>
       </main>
     </div>
   )

@@ -1064,7 +1064,7 @@ function SearchLoadingState({ searchLabel }: { searchLabel: string }) {
 
   return (
     <section className="min-h-0 w-full px-5 py-7 sm:px-8 md:flex md:min-h-[calc(100svh-68px)] md:items-center md:px-6 md:py-6 lg:px-12 lg:py-12">
-      <div className="mx-auto grid w-full max-w-[1440px] gap-8 md:grid-cols-[320px_minmax(0,1fr)] md:gap-8 lg:grid-cols-[360px_minmax(0,1fr)] lg:gap-12">
+      <div className="mx-auto grid w-full max-w-[1440px] gap-8 lg:grid-cols-[360px_minmax(0,1fr)] lg:gap-12">
         <aside className="text-center lg:pt-4 lg:text-left">
           <p className="text-[26px] font-extrabold leading-tight text-slate-800 sm:text-[30px] lg:text-[32px]">Searching for</p>
           <h1 className="mt-3 text-[32px] font-black leading-tight text-slate-950 sm:text-[38px] lg:text-[38px]">
@@ -1079,7 +1079,7 @@ function SearchLoadingState({ searchLabel }: { searchLabel: string }) {
           </p>
         </aside>
 
-        <div className="grid content-start gap-5 md:max-h-[calc(100svh-168px)] md:overflow-y-auto md:pr-1 lg:pt-4">
+        <div className="grid content-start gap-5 lg:pt-4">
           <div className="grid gap-4 lg:hidden">
             <SearchLoadingCard compact />
             <SearchLoadingCard compact />
@@ -1250,11 +1250,11 @@ function MobileResultIntro({
             Refreshing results...
           </p>
         ) : null}
-        <div className="mt-3 flex h-64 justify-center overflow-hidden">
+        <div className="mt-3 flex h-64 justify-center overflow-hidden sm:h-68">
           <img
             src={searchSuccessChibi}
             alt=""
-            className="h-64 w-auto max-w-none shrink-0 scale-[1.22] object-contain"
+            className="h-full w-auto max-w-none shrink-0 scale-[1.22] object-contain"
             loading="eager"
             aria-hidden="true"
           />
@@ -1615,13 +1615,13 @@ function DesktopResultsView({
   onRemoveBudget: () => void
 }) {
   return (
-    <section className="gala-page-background grid h-full min-h-0 select-none overflow-hidden md:grid-cols-[minmax(380px,480px)_minmax(0,1fr)] lg:grid-cols-[minmax(420px,500px)_minmax(0,1fr)] xl:grid-cols-[minmax(460px,560px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(500px,620px)_minmax(0,1fr)]">
-      <aside ref={scrollContainerRef} className="min-h-0 overflow-y-auto overscroll-contain border-r border-[var(--line)] px-5 py-5 md:px-5 md:py-5 lg:px-6 lg:py-6">
+    <section className="gala-page-background grid h-full min-h-0 select-none overflow-hidden lg:grid-cols-[minmax(380px,480px)_minmax(0,1fr)] xl:grid-cols-[minmax(440px,560px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(500px,620px)_minmax(0,1fr)]">
+      <aside ref={scrollContainerRef} className="min-h-0 overflow-y-auto overscroll-contain border-r border-[var(--line)] px-6 py-6">
         {showBackHome ? <BackToHomeButton className="mb-4" /> : null}
-        <div className="flex items-start justify-between gap-4 md:gap-5">
+        <div className="flex items-start justify-between gap-6">
           <div>
-            <h1 className="text-3xl font-black leading-tight text-slate-950 md:text-[2rem] lg:text-3xl">{heading}</h1>
-            <p className="mt-1 text-xl font-semibold text-slate-800 md:text-lg lg:text-xl">{subheading}</p>
+            <h1 className="text-3xl font-black leading-tight text-slate-950">{heading}</h1>
+            <p className="mt-1 text-xl font-semibold text-slate-800">{subheading}</p>
             <ActiveSearchChips
               cityLabel={cityLabel}
               categoryLabel={categoryLabel}
@@ -1646,18 +1646,18 @@ function DesktopResultsView({
           <SearchResetButton onClick={onClearSearch} layout="desktop" />
         </div>
 
-        <div className="mt-4 flex h-72 justify-center overflow-hidden md:h-[18rem] lg:h-80">
+        <div className="mt-4 flex h-60 justify-center overflow-hidden sm:h-68">
           <img
             src={searchSuccessChibi}
             alt=""
-            className="h-72 w-auto max-w-none shrink-0 scale-[1.16] object-contain md:h-[18rem] md:scale-[1.12] lg:h-80 lg:scale-[1.2]"
+            className="h-full w-auto max-w-none shrink-0 scale-[0.96] object-contain"
             loading="eager"
             aria-hidden="true"
           />
         </div>
 
-        <div className="mx-auto mt-5 w-full max-w-[760px] md:max-w-none">
-          <div className={`grid grid-cols-1 gap-3 md:grid-cols-1 xl:grid-cols-1 transition ${isPageLoading ? 'pointer-events-none opacity-60' : 'opacity-100'}`}>
+        <div className="mx-auto mt-6 w-full max-w-[760px] lg:max-w-[860px] xl:max-w-[960px] 2xl:max-w-[1040px]">
+          <div className={`grid grid-cols-1 gap-3 transition ${isPageLoading ? 'pointer-events-none opacity-60' : 'opacity-100'}`}>
             {places.map((place) => (
               <PlaceCard
                 key={place.id}
@@ -1669,7 +1669,7 @@ function DesktopResultsView({
               />
             ))}
           </div>
-          <div className="mt-3 md:sticky md:bottom-0 md:bg-[var(--bg)] md:pb-1 md:pt-3">
+          <div className="mt-3">
             <SearchPagination
               currentPage={currentPage}
               totalPages={totalPages}
@@ -1682,7 +1682,7 @@ function DesktopResultsView({
         </div>
       </aside>
 
-      <section className="relative hidden min-h-0 overflow-hidden bg-white md:block">
+      <section className="relative hidden min-h-0 overflow-hidden bg-white xl:block">
         <MapView
           places={places}
           selectedPlaceId={selectedPlaceId}
@@ -1753,13 +1753,13 @@ function GuidedSearchPage({
           <div className="pointer-events-none absolute bottom-8 left-[14%] h-14 w-24 rounded-[18px] bg-white/35 shadow-[0_10px_26px_rgba(28,77,160,0.08)]" />
           <div className="pointer-events-none absolute bottom-6 right-[16%] h-16 w-28 rounded-[20px] bg-white/40 shadow-[0_10px_28px_rgba(28,77,160,0.08)]" />
           <div className="pointer-events-none absolute inset-x-0 top-10 mx-auto h-40 w-40 rounded-full bg-[rgba(115,175,255,0.3)] blur-3xl sm:h-48 sm:w-48" />
-          <img
-            src={searchBeforeChibi}
-            alt=""
-            className="relative z-10 h-[310px] w-auto object-contain sm:h-[350px] lg:h-[380px]"
-            loading="eager"
-          />
-        </div>
+        <img
+          src={searchBeforeChibi}
+          alt=""
+          className="relative z-10 h-[310px] w-auto object-contain sm:h-[350px] lg:h-[380px]"
+          loading="eager"
+        />
+      </div>
 
         <div className="-mt-4 max-w-[560px]">
           <h1 className="text-[2rem] font-black leading-[1.02] tracking-[-0.04em] text-slate-950 sm:text-[2.5rem]">
@@ -3440,7 +3440,7 @@ const ChatMessageList = memo(function ChatMessageList({
     ]
 
     return (
-      <div className="flex w-full max-w-[760px] flex-col items-center">
+      <div className="flex w-full max-w-[760px] flex-col items-center lg:max-w-[860px] xl:max-w-[960px] 2xl:max-w-[1040px]">
         <div className="flex flex-col items-center text-center">
           <div className="relative mb-5">
             <div className="pointer-events-none absolute -inset-4 rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.18),transparent_65%)] blur-2xl" />
@@ -3643,7 +3643,7 @@ function AskAiSignInContent({
   onOpenPromptBuilder: () => void
 }) {
   return (
-    <div className="mx-auto flex w-full max-w-[760px] flex-col items-center justify-center py-8 text-center">
+    <div className="mx-auto flex w-full max-w-[760px] flex-col items-center justify-center py-8 text-center lg:max-w-[860px] xl:max-w-[960px] 2xl:max-w-[1040px]">
       <div className="relative mb-5">
         <div className="pointer-events-none absolute -inset-4 rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.16),transparent_65%)] blur-2xl" />
         <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 via-blue-500 to-cyan-400 shadow-[0_10px_28px_-6px_rgba(59,130,246,0.45),inset_0_1px_0_rgba(255,255,255,0.25)]">
@@ -3681,7 +3681,7 @@ function AskAiUsageErrorContent({
   onOpenPromptBuilder: () => void
 }) {
   return (
-    <div className="mx-auto flex w-full max-w-[760px] flex-col items-center justify-center py-8 text-center">
+    <div className="mx-auto flex w-full max-w-[760px] flex-col items-center justify-center py-8 text-center lg:max-w-[860px] xl:max-w-[960px] 2xl:max-w-[1040px]">
       <div className="relative mb-5">
         <div className="pointer-events-none absolute -inset-4 rounded-full bg-[radial-gradient(circle,rgba(245,158,11,0.18),transparent_65%)] blur-2xl" />
         <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 shadow-[0_10px_28px_-6px_rgba(245,158,11,0.4),inset_0_1px_0_rgba(255,255,255,0.25)]">
@@ -4702,7 +4702,7 @@ function HomePage({
       <div className={`${selectedMode === 'ask-ai' ? 'h-screen overflow-hidden' : 'min-h-screen'} bg-[var(--bg)] text-[var(--text)]`}>
         <GuestAuthPrompt variant="ask-ai" mode="modal" isOpen={promptLogin} onClose={() => setPromptLogin(false)} />
 
-      <div className={`gala-page-background overflow-x-hidden md:hidden ${selectedMode === 'ask-ai' ? 'flex h-[100dvh] flex-col overflow-hidden' : 'min-h-screen'}`}>
+      <div className={`gala-page-background overflow-x-hidden lg:hidden ${selectedMode === 'ask-ai' ? 'flex h-[100dvh] flex-col overflow-hidden' : 'min-h-screen'}`}>
           {selectedMode !== 'ask-ai' && <AppHeader signInLabel="Mag-sign in" minimal />}
 
           <main className={`overflow-x-hidden ${selectedMode === 'ask-ai' ? 'flex flex-1 flex-col min-h-0 overflow-hidden' : 'pb-6'}`}>
@@ -4802,7 +4802,7 @@ function HomePage({
       </div>
 
         <div
-          className={`hidden w-full md:grid ${
+          className={`hidden w-full lg:grid ${
             isPromptBuilderOpen || selectedMode === 'ask-ai'
               ? 'h-screen overflow-hidden grid-rows-[auto_minmax(0,1fr)]'
               : 'h-screen overflow-hidden lg:grid-rows-[auto_minmax(0,1fr)_auto]'

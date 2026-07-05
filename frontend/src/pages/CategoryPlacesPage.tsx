@@ -6,6 +6,7 @@ import Breadcrumb from '../components/Breadcrumb'
 import CompactPagination from '../components/CompactPagination'
 import PlaceCard, { type PlaceCardData } from '../components/PlaceCard'
 import SeoHead from '../components/SeoHead'
+import { PageContainer, ResponsiveGrid } from '../components/layout/ResponsiveLayouts'
 import { getPlaceCategoryLabel } from '../data/placeCategories'
 import { navigateToPath } from '../utils/navigation'
 import { getCanonicalPlacePath, getSiteOrigin, resolveAreaMeta } from '../utils/seo'
@@ -220,7 +221,8 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
       />
       <AppHeader minimal />
 
-      <main className="mx-auto w-full max-w-[1180px] px-4 pb-12 pt-5 sm:px-6 sm:pb-14 lg:px-8">
+      <main className="w-full pb-12 pt-5 sm:pb-14">
+        <PageContainer className="px-4 sm:px-6 lg:px-8">
         <Breadcrumb
           items={[
             { label: 'Home', href: '/', icon: <House className="h-3.5 w-3.5" /> },
@@ -270,7 +272,7 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
                     <p className="mt-1 text-[13px] leading-6 text-[#6b7280]">Listed alphabetically across Metro Manila.</p>
                   </div>
                 </div>
-                <div className="mt-4 grid gap-4 lg:grid-cols-2">
+                <ResponsiveGrid desktopColumns={2} className="mt-4 gap-4">
                   {places.map((rawPlace) => {
                     const place = mapSeoPlaceToCard(rawPlace) as PlaceCardData
                     const resolvedAreaSlug = rawPlace.areaSlug || resolveAreaMeta(rawPlace).slug
@@ -282,7 +284,7 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
                       </div>
                     )
                   })}
-                </div>
+                </ResponsiveGrid>
               </section>
             )}
 
@@ -299,6 +301,7 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
             ) : null}
           </>
         ) : null}
+        </PageContainer>
       </main>
     </div>
   )

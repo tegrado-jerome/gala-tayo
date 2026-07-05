@@ -199,7 +199,7 @@ function ProtectedFeatureGate({ pathname }: ProtectedFeatureGateProps) {
         </div>
 
         <div className="absolute inset-0 flex items-center justify-center overflow-hidden px-4 py-6">
-          <div className="w-full max-w-[420px]">
+          <div className="w-full max-w-[420px] lg:max-w-[440px] xl:max-w-[460px] 2xl:max-w-[480px]">
             <GuestAuthPrompt variant={authVariant} mode="inline-card" />
           </div>
         </div>
@@ -212,7 +212,7 @@ function ProtectedFeatureGate({ pathname }: ProtectedFeatureGateProps) {
       <div className="pointer-events-none absolute inset-x-0 top-0 h-44 bg-[var(--accent-wash)] opacity-80 blur-3xl" />
       <div className="pointer-events-none absolute left-1/2 top-24 h-52 w-52 -translate-x-1/2 rounded-full bg-[var(--primary-soft)] opacity-70 blur-3xl" />
 
-      <section className="relative mx-auto flex w-full max-w-6xl flex-col gap-6">
+      <section className="relative mx-auto flex w-full max-w-6xl flex-col gap-6 lg:max-w-[72rem] xl:max-w-[80rem] 2xl:max-w-[88rem]">
         <div className="flex items-center justify-between rounded-[24px] border border-[var(--line)] bg-white/88 px-4 py-3 shadow-[0_18px_40px_rgba(15,23,42,0.06)]">
           <div className="flex items-center gap-3">
             <span className="flex h-11 w-11 items-center justify-center rounded-[16px] bg-[var(--accent-soft)] text-[var(--accent-deep)]">
@@ -232,7 +232,7 @@ function ProtectedFeatureGate({ pathname }: ProtectedFeatureGateProps) {
           <div className="pointer-events-none absolute inset-0 z-10 bg-[linear-gradient(180deg,rgba(248,247,244,0.1),rgba(248,247,244,0.72))]" />
           <div className="gala-protected-preview-frost pointer-events-none absolute inset-0 z-10" />
 
-          <div className="grid gap-5 p-5 blur-[2px] saturate-[0.88] sm:p-7 lg:grid-cols-[minmax(0,1.15fr)_minmax(280px,0.85fr)] lg:items-start">
+          <div className="grid gap-5 p-5 blur-[2px] saturate-[0.88] sm:p-7 lg:grid-cols-[minmax(0,1.15fr)_minmax(280px,0.85fr)] lg:items-start xl:grid-cols-[minmax(0,1.08fr)_minmax(300px,0.92fr)] 2xl:grid-cols-[minmax(0,1.02fr)_minmax(320px,0.98fr)]">
             <section className="rounded-[28px] border border-[var(--line)] bg-[linear-gradient(180deg,#ffffff,rgba(248,250,252,0.94))] p-5 shadow-[0_18px_44px_rgba(15,23,42,0.06)]">
               <div className="flex flex-wrap items-center gap-2">
                 {preview.chips.map((chip) => (
