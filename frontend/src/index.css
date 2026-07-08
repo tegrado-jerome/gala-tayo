@@ -251,10 +251,6 @@ button:disabled {
   padding-left: var(--gala-shell-padding);
 }
 
-.gala-app-main-fixed-header {
-  --gala-app-main-padding-top: 88px;
-}
-
 .gala-page-header {
   display: grid;
   gap: 8px;
@@ -837,10 +833,6 @@ button:disabled {
     padding-bottom: 48px;
   }
 
-  .gala-app-main-fixed-header {
-    --gala-app-main-padding-top: 88px;
-  }
-
   .gala-section {
     gap: 18px;
   }
@@ -861,9 +853,6 @@ button:disabled {
     padding-bottom: 56px;
   }
 
-  .gala-app-main-fixed-header {
-    --gala-app-main-padding-top: 102px;
-  }
 }
 
 @media (min-width: 1280px) {

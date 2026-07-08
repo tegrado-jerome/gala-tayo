@@ -232,6 +232,10 @@ button:disabled {
   padding: 20px var(--gala-shell-padding) 40px;
 }
 
+.gala-app-main--tight-top {
+  padding-top: 8px;
+}
+
 .gala-page-header {
   display: grid;
   gap: 8px;
@@ -458,6 +462,10 @@ button:disabled {
   .gala-app-main {
     padding-top: 28px;
     padding-bottom: 56px;
+  }
+
+  .gala-app-main--tight-top {
+    padding-top: 12px;
   }
 }
 

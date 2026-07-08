@@ -3,7 +3,7 @@ import { ChevronRight } from 'lucide-react'
 import InternalLink from './InternalLink'
 import useBackNavigation from '../hooks/useBackNavigation'
 import { navigateToPath } from '../utils/navigation'
-import { MINIMAL_NAV_LINK_CLASS } from './navigationStyles'
+import { MINIMAL_BREADCRUMB_LINK_CLASS, MINIMAL_NAV_LINK_CLASS } from './navigationStyles'
 
 type BreadcrumbItem = {
   label: string
@@ -128,7 +128,7 @@ function BreadcrumbItemEl({ item, showChevron }: { item: BreadcrumbItem; showChe
       ) : item.href ? (
         <InternalLink
           href={item.href}
-          className={MINIMAL_NAV_LINK_CLASS}
+          className={MINIMAL_BREADCRUMB_LINK_CLASS}
         >
           {item.icon}
           {item.label}

@@ -159,7 +159,7 @@ function SectionHeader({
   trailing?: ReactNode
 }) {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div>
         <span className="gala-eyebrow">{eyebrow}</span>
         <h2 className="gala-section-title mt-2">{title}</h2>
@@ -394,9 +394,9 @@ function ProfileSearchPage() {
   return (
     <div className="gala-app-page">
       <AppHeader />
-      <main className="gala-app-main">
+      <main className="gala-app-main gala-app-main--tight-top">
         <section className="gala-page-header">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div className="max-w-[560px]">
               <div className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">
                 <Users className="h-4 w-4 text-[var(--accent)]" />
@@ -421,7 +421,7 @@ function ProfileSearchPage() {
             </div>
           </div>
 
-          <label className="gala-field mt-5 flex items-center gap-3 bg-white px-4 py-3">
+          <label className="gala-field mt-4 flex items-center gap-3 bg-white px-4 py-3">
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[var(--chip)] text-slate-500">
               <Search className="h-5 w-5" />
             </span>
@@ -432,7 +432,8 @@ function ProfileSearchPage() {
               <input
                 value={query}
                 onChange={(event) => setQuery(event.target.value.toLowerCase())}
-                className="mt-1 min-w-0 w-full border-0 bg-transparent p-0 text-[1.05rem] font-black text-slate-950 outline-none placeholder:font-bold placeholder:text-slate-400 sm:text-[1.15rem]"
+                className="mt-1 min-w-0 w-full border-0 bg-transparent text-[1.05rem] font-black text-slate-950 outline-none placeholder:font-bold placeholder:text-slate-400 sm:text-[1.15rem]"
+                style={{ paddingLeft: '14px' }}
                 placeholder="@username"
                 autoCapitalize="none"
                 spellCheck={false}

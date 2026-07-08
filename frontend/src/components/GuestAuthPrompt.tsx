@@ -4,6 +4,7 @@ import { AppIcon, type AppIconName } from './AppIcon'
 import { CenteredModal } from './layout/Primitives'
 import { buildAuthPath } from '../utils/authRedirect'
 import { navigateToPath } from '../utils/navigation'
+import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
 
 export type GuestAuthVariant =
   | 'ask-ai'
@@ -270,8 +271,7 @@ function GuestAuthPromptModal({
       return undefined
     }
 
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    lockBodyScroll()
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -282,7 +282,7 @@ function GuestAuthPromptModal({
     document.addEventListener('keydown', handleKeyDown)
 
     return () => {
-      document.body.style.overflow = previousOverflow
+      unlockBodyScroll()
       document.removeEventListener('keydown', handleKeyDown)
     }
   }, [isOpen, onClose])

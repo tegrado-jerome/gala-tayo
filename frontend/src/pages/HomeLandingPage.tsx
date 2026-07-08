@@ -290,6 +290,48 @@ function TrendingCard({ place, rank }: { place: PlaceCardData; rank: number }) {
   )
 }
 
+function TrendingCardSkeleton({ rank }: { rank: number }) {
+  const isTopThree = rank <= 3
+
+  return (
+    <div className={getTrendingCardShellClass(isTopThree)} aria-hidden="true">
+      {isTopThree ? (
+        <>
+          <span className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-white/90 via-white/35 to-transparent" />
+          <span className="pointer-events-none absolute -left-1/3 top-1/4 h-24 w-1/2 rounded-full bg-amber-200/35 blur-3xl" />
+          <span className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,transparent_20%,rgba(255,255,255,0.1)_35%,rgba(255,255,255,0.85)_46%,rgba(255,255,255,0.1)_57%,transparent_72%)] [background-size:220%_100%] [animation:gala-ai-shine-sweep_4.8s_ease-in-out_infinite]" />
+        </>
+      ) : null}
+
+      <div className="relative h-28 w-full overflow-hidden bg-[linear-gradient(180deg,#f8fbff_0%,#eef4fb_100%)] sm:h-32">
+        {isTopThree ? (
+          <>
+            <span className="pointer-events-none absolute left-2 top-2 h-10 w-10 rounded-full bg-amber-300/35 blur-md motion-safe:animate-ping" />
+            <div className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full border border-white/70 bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 px-2.5 py-1 text-[10px] font-black text-white shadow-[0_10px_24px_rgba(249,115,22,0.32)] motion-safe:animate-[gala-score-pop_900ms_ease-out_1_both]">
+              <Flame size={11} strokeWidth={2.5} className="motion-safe:animate-bounce" />
+              <span>{rank}</span>
+            </div>
+          </>
+        ) : null}
+      </div>
+
+      <div className="flex min-h-0 flex-1 flex-col gap-1.5 p-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="h-3.5 w-[70%] rounded-full bg-slate-100" />
+          <div className="h-4 w-[22%] shrink-0 rounded-full bg-slate-100" />
+        </div>
+
+        <div className="h-3 w-[88%] rounded-full bg-slate-100" />
+        <div className="h-3 w-[76%] rounded-full bg-slate-100" />
+
+        <div className="mt-1 flex gap-1.5">
+          <div className="h-5 w-16 rounded-full bg-slate-100" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function HomeLandingPage() {
   const [trendingPlaces, setTrendingPlaces] = useState<PlaceCardData[]>([])
   const [isTrendingLoading, setIsTrendingLoading] = useState(true)
@@ -435,10 +477,9 @@ function HomeLandingPage() {
             {isTrendingLoading ? (
               <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                 {Array.from({ length: 12 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className={`h-56 animate-pulse rounded-2xl border border-slate-100 bg-slate-50 ${i >= 10 ? 'hidden sm:block' : ''}`}
-                  />
+                  <div key={i} className={i >= 10 ? 'hidden sm:block' : ''}>
+                    <TrendingCardSkeleton rank={i + 1} />
+                  </div>
                 ))}
               </div>
             ) : trendingError ? (

@@ -946,7 +946,7 @@ function GalaPlansPage({ mode = 'list', planId = null, session = null }: GalaPla
   return (
     <PageShell>
       <AppHeader fixed />
-      <main className="gala-app-main gala-app-main-fixed-header">
+      <main className="gala-app-main">
         {mode !== 'list' && mode !== 'favorites' ? <MinimalBackNav to="/gala-plans" /> : null}
         {mode === 'list' ? <ListPage session={session} /> : null}
         {mode === 'favorites' ? <ListPage session={session} favorites /> : null}

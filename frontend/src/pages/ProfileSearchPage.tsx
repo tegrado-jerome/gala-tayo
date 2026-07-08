@@ -394,9 +394,9 @@ function ProfileSearchPage() {
   const summaryCount = isShowingSearchResults ? visibleResults.length : visibleSuggestions.length
 
   return (
-    <div className="gala-app-page">
+    <div className="gala-app-page pb-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] sm:pb-[calc(env(safe-area-inset-bottom,0px)+4.75rem)] lg:pb-0">
       <AppHeader fixed />
-      <main className="gala-app-main gala-app-main-fixed-header">
+      <main className="gala-app-main">
         <PageContainer size="wide" className="grid gap-5 sm:gap-6">
           <div className="pt-2">
             <MinimalBackNav to="/" label="Home" preferHistory={false} />
@@ -427,7 +427,7 @@ function ProfileSearchPage() {
                     <input
                       value={query}
                       onChange={(event) => setQuery(event.target.value.toLowerCase())}
-                      className="gala-field border-0 bg-transparent p-0 text-[1.05rem] font-black text-slate-950 outline-none placeholder:font-bold placeholder:text-slate-400 sm:text-[1.15rem]"
+                      className="gala-field border-0 bg-transparent pl-2 text-[1.05rem] font-black text-slate-950 outline-none placeholder:font-bold placeholder:text-slate-400 sm:pl-2 sm:text-[1.15rem]"
                       placeholder="@username"
                       autoCapitalize="none"
                       spellCheck={false}

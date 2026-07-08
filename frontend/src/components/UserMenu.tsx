@@ -4,6 +4,7 @@ import type { User } from '@supabase/supabase-js'
 import { AppIcon } from './AppIcon'
 import { supabase } from '../supabase'
 import type { CurrentUserResponse } from '../utils/profileApi'
+import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
 
 type UserMenuProps = {
   user?: User | null
@@ -101,19 +102,14 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
       return undefined
     }
 
-    const previousHtmlOverflow = document.documentElement.style.overflow
-    const previousBodyOverflow = document.body.style.overflow
-
+    lockBodyScroll()
     document.documentElement.classList.add('gala-menu-open')
     document.body.classList.add('gala-menu-open')
-    document.documentElement.style.overflow = 'hidden'
-    document.body.style.overflow = 'hidden'
 
     return () => {
+      unlockBodyScroll()
       document.documentElement.classList.remove('gala-menu-open')
       document.body.classList.remove('gala-menu-open')
-      document.documentElement.style.overflow = previousHtmlOverflow
-      document.body.style.overflow = previousBodyOverflow
     }
   }, [isOpen])
 

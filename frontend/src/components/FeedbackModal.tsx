@@ -4,6 +4,7 @@ import { AppIcon } from './AppIcon'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { supabase } from '../supabase'
 import { CenteredModal } from './layout/Primitives'
+import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
 
 type FeedbackModalProps = {
   isOpen: boolean
@@ -48,8 +49,7 @@ function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
       return undefined
     }
 
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
+    lockBodyScroll()
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -60,7 +60,7 @@ function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
     document.addEventListener('keydown', handleKeyDown)
 
     return () => {
-      document.body.style.overflow = previousOverflow
+      unlockBodyScroll()
       document.removeEventListener('keydown', handleKeyDown)
     }
   }, [isOpen, onClose])

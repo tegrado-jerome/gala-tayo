@@ -34,6 +34,7 @@ import {
   type AskAiMapDisplayPlace,
 } from '../utils/askAiMapDisplay'
 import { registerAskAiTask, completeAskAiTask, failAskAiTask } from '../utils/askAiTaskStore'
+import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
 
 type AskAiMapChipId =
   | 'near-me'
@@ -1578,10 +1579,7 @@ function AskAiMapPage() {
       return
     }
 
-    const previousBodyOverflow = document.body.style.overflow
-    const previousHtmlOverflow = document.documentElement.style.overflow
-    document.body.style.overflow = 'hidden'
-    document.documentElement.style.overflow = 'hidden'
+    lockBodyScroll()
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -1592,8 +1590,7 @@ function AskAiMapPage() {
     document.addEventListener('keydown', handleKeyDown)
 
     return () => {
-      document.body.style.overflow = previousBodyOverflow
-      document.documentElement.style.overflow = previousHtmlOverflow
+      unlockBodyScroll()
       document.removeEventListener('keydown', handleKeyDown)
     }
   }, [isPlaceDetailOpen])

@@ -74,12 +74,15 @@ export default function ActivityPlaceCard({
   const budgetClass = compactMobile
     ? 'hidden line-clamp-1 text-[11px] font-bold text-slate-950 sm:block'
     : 'line-clamp-1 text-sm font-bold text-slate-950'
+  const titleClass = compactMobile
+    ? 'mt-0.5 line-clamp-2 min-h-[2.6rem] text-[13px] font-black leading-tight text-slate-950 lg:text-lg'
+    : 'mt-0.5 text-base font-black leading-snug text-slate-950 lg:text-lg'
 
   return (
     <article
       className={[
         'group flex w-full flex-col overflow-hidden rounded-xl border border-[var(--line)] bg-white shadow-[0_2px_8px_rgba(28,77,160,0.04)] transition-all hover:border-[var(--line-strong)] hover:shadow-[0_8px_24px_rgba(28,77,160,0.08)]',
-        compactMobile ? 'self-start' : 'h-full sm:h-[440px] lg:h-[460px]',
+        compactMobile ? 'self-start h-auto' : 'h-full sm:h-[440px] lg:h-[460px]',
       ].join(' ')}
     >
       <div className="relative shrink-0">
@@ -104,7 +107,7 @@ export default function ActivityPlaceCard({
       <div className={cardBodyClass}>
         <div className="min-w-0 shrink-0">
           <p className={compactMobile ? 'text-[10px] font-semibold text-[var(--muted)]' : 'text-xs font-semibold text-[var(--muted)]'}>{categoryLabel}</p>
-          <h2 className={compactMobile ? 'mt-0.5 text-[13px] font-black leading-tight text-slate-950 lg:text-lg' : 'mt-0.5 text-base font-black leading-snug text-slate-950 lg:text-lg'}>
+          <h2 className={titleClass}>
             {title}
           </h2>
         </div>

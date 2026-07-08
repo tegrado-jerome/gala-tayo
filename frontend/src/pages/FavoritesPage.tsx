@@ -78,16 +78,11 @@ function getPlaceSearchText(place: FavoritePlace) {
 
 function FavoriteCard({
   favorite,
-  removingPlaceId,
-  onRemove,
 }: {
   favorite: { id: string; place: FavoritePlace | null }
-  removingPlaceId: string
-  onRemove: (placeId: string) => void
 }) {
   const place = favorite.place as FavoritePlace
-  const placeId = place.id as string
-  const placeSlug = place.slug?.trim() || placeId
+  const placeSlug = place.slug?.trim() || place.id
   const chips = getPlaceChips(place)
   const location = getPlaceLocation(place)
   const category = getPlaceCategory(place)
@@ -106,23 +101,11 @@ function FavoriteCard({
       placeSlug={placeSlug}
       photoAlt={place.name || 'Saved place'}
       compactMobile
-      footer={(
-        <button
-          type="button"
-          onClick={() => onRemove(placeId)}
-          disabled={removingPlaceId === placeId}
-          className="h-8 text-[11px] font-bold text-[var(--muted)] underline underline-offset-4 transition hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {removingPlaceId === placeId ? 'Removing...' : 'Remove from saved'}
-        </button>
-      )}
     />
   )
 }
 
 function FavoritesPage() {
-  const [statusMessage, setStatusMessage] = useState('')
-  const [removingPlaceId, setRemovingPlaceId] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const {
     session,
@@ -130,7 +113,6 @@ function FavoritesPage() {
     isFavoritesLoading,
     favoritesError,
     favorites,
-    removeFavorite,
   } = useSavedFavorites()
 
   const savedPlaces = useMemo(
@@ -148,25 +130,6 @@ function FavoritesPage() {
       return !normalizedQuery || haystack.includes(normalizedQuery)
     })
   }, [savedPlaces, searchQuery])
-
-  const handleRemove = async (placeId: string) => {
-    if (!session?.access_token || removingPlaceId) {
-      return
-    }
-
-    try {
-      setRemovingPlaceId(placeId)
-      setStatusMessage('')
-
-      const place = favorites.find((favorite) => favorite.place?.id === placeId)?.place
-      const message = await removeFavorite(placeId, place?.slug)
-      setStatusMessage(message)
-    } catch (error) {
-      setStatusMessage(error instanceof Error ? error.message : 'Failed to remove favorite.')
-    } finally {
-      setRemovingPlaceId('')
-    }
-  }
 
   return (
     <PageShell>
@@ -233,8 +196,6 @@ function FavoritesPage() {
                   <p className="text-sm font-semibold text-[var(--accent-deep)]">Loading favorites...</p>
                 ) : favoritesError ? (
                   <p className="text-sm font-medium text-red-600">{favoritesError}</p>
-                ) : statusMessage ? (
-                  <p className="text-sm text-[var(--muted)]">{statusMessage}</p>
                 ) : null}
               </div>
 
@@ -260,15 +221,21 @@ function FavoritesPage() {
               ) : null}
 
               {filteredSavedPlaces.length > 0 ? (
-                <div className="grid w-full grid-cols-2 gap-2.5 sm:gap-4 xl:justify-start xl:[grid-template-columns:repeat(auto-fill,minmax(340px,340px))]">
-                  {filteredSavedPlaces.map((favorite) => (
-                    <FavoriteCard
-                      key={favorite.id}
-                      favorite={favorite}
-                      removingPlaceId={removingPlaceId}
-                      onRemove={(placeId) => void handleRemove(placeId)}
-                    />
-                  ))}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between px-1">
+                    <p className="text-[11px] font-black uppercase tracking-[0.24em] text-[var(--accent-deep)]">Saved</p>
+                    <p className="text-xs font-semibold text-[var(--muted)]">
+                      {filteredSavedPlaces.length} card{filteredSavedPlaces.length === 1 ? '' : 's'}
+                    </p>
+                  </div>
+                  <div className="grid w-full grid-cols-2 gap-2.5 sm:gap-4 xl:justify-start xl:[grid-template-columns:repeat(auto-fill,minmax(340px,340px))]">
+                    {filteredSavedPlaces.map((favorite) => (
+                      <FavoriteCard
+                        key={favorite.id}
+                        favorite={favorite}
+                      />
+                    ))}
+                  </div>
                 </div>
               ) : null}
             </Stack>

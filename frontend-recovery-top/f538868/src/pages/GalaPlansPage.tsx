@@ -137,7 +137,7 @@ function PageShell({ children }: { children: ReactNode }) {
   return (
     <div className="gala-app-page">
       <AppHeader />
-      <main className="gala-app-main">
+      <main className="gala-app-main gala-app-main--tight-top">
         {children}
       </main>
     </div>
@@ -736,7 +736,7 @@ function ListPage({ session, favorites = false }: { session?: Session | null; fa
   return (
     <>
       <section className="border-b border-slate-200 pb-4">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="max-w-2xl">
             <h1 className="gala-page-title">{favorites ? 'Gala Plan Favorites' : 'My Gala Plan'}</h1>
             <p className="gala-page-description">{favorites ? 'Public gala plans you hearted and saved for quick access.' : 'Keep your routes clear, compact, and easy to edit.'}</p>
@@ -746,7 +746,7 @@ function ListPage({ session, favorites = false }: { session?: Session | null; fa
             {!favorites ? <button type="button" onClick={() => navigateToPath('/gala-plans/new')} className="gala-primary-button min-h-10 px-4">Create Gala Plan</button> : null}
           </div>
         </div>
-        <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
+        <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2">
           <PlanStat label={favorites ? 'Saved plans' : 'Total plans'} value={String(plans.length)} />
           {!favorites ? <PlanStat label="Latest update" value={latestUpdate} /> : null}
         </div>

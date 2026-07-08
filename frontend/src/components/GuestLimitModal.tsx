@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { AppIcon } from './AppIcon'
 import GoogleSignInButton from './GoogleSignInButton'
 import { CenteredModal } from './layout/Primitives'
+import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
 
 type GuestLimitModalProps = {
   isOpen: boolean
@@ -23,9 +24,7 @@ function GuestLimitModal({ isOpen, onClose, mode = 'searchLimit' }: GuestLimitMo
       return undefined
     }
 
-    const previousOverflow = document.body.style.overflow
-
-    document.body.style.overflow = 'hidden'
+    lockBodyScroll()
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -36,7 +35,7 @@ function GuestLimitModal({ isOpen, onClose, mode = 'searchLimit' }: GuestLimitMo
     document.addEventListener('keydown', handleKeyDown)
 
     return () => {
-      document.body.style.overflow = previousOverflow
+      unlockBodyScroll()
       document.removeEventListener('keydown', handleKeyDown)
     }
   }, [isOpen, onClose])

@@ -122,7 +122,7 @@ function AskAiOverviewPage() {
           size="wide"
           className="px-4 sm:px-6 lg:flex lg:min-h-full lg:flex-col lg:justify-center lg:px-8 xl:px-10"
         >
-          <div className="mb-6">
+          <div className="mb-6 mt-4">
             <MinimalBackNav to="/" label="Home" preferHistory={false} />
           </div>
 
