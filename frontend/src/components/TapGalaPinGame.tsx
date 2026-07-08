@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { ChibiIllustration } from './layout/Primitives'
 
 type TapGalaPinGameProps = {
   isLoading: boolean
@@ -141,7 +142,7 @@ function getMarkerTone(kind: GameItemKind) {
   }
 
   return {
-    button: 'bg-white text-[#2563eb]',
+    button: 'bg-white text-[var(--accent)]',
     ring: 'border-[rgba(37,99,235,0.34)]',
     ringSoft: 'border-[rgba(37,99,235,0.18)]',
     label: 'Tap',
@@ -320,7 +321,7 @@ export default function TapGalaPinGame({
 
   if (isAnswerReady) {
     return (
-      <div className={`relative flex min-h-0 flex-col overflow-hidden bg-[#f8fbff] p-5 text-slate-950 ${className}`}>
+      <div className={`relative flex min-h-0 flex-col overflow-hidden bg-[var(--surface-alt)] p-5 text-slate-950 ${className}`}>
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_22%_18%,rgba(94,214,199,0.22),transparent_28%),radial-gradient(circle_at_82%_16%,rgba(255,111,157,0.18),transparent_24%),linear-gradient(180deg,#ffffff,#f5f9ff_52%,#fff8fb)]" />
         <div className="relative flex items-start justify-between gap-3">
           <div className="min-w-0">
@@ -346,13 +347,13 @@ export default function TapGalaPinGame({
   }
 
   return (
-    <div className={`relative flex min-h-0 flex-col overflow-hidden bg-[#f8fbff] text-slate-950 ${className}`}>
+    <div className={`relative flex min-h-0 flex-col overflow-hidden bg-[var(--surface-alt)] text-slate-950 ${className}`}>
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_16%_18%,rgba(94,214,199,0.24),transparent_24%),radial-gradient(circle_at_84%_14%,rgba(255,111,157,0.18),transparent_24%),radial-gradient(circle_at_54%_72%,rgba(37,99,235,0.16),transparent_32%),linear-gradient(180deg,#ffffff_0%,#f4f8ff_48%,#fff7fb_100%)]" />
       <div className="pointer-events-none absolute inset-0 opacity-70 [background-image:linear-gradient(rgba(37,99,235,0.07)_1px,transparent_1px),linear-gradient(90deg,rgba(37,99,235,0.07)_1px,transparent_1px)] [background-size:28px_28px] animate-[gala-grid-drift_8s_linear_infinite]" />
 
       <div className="relative z-10 flex shrink-0 items-start justify-between gap-4 px-5 pb-2 pt-[max(18px,env(safe-area-inset-top))] sm:px-7 lg:px-8">
         <div className="min-w-0">
-          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#2563eb]">Mini game</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[var(--accent)]">Mini game</p>
           <h3 className="mt-1 text-[1.55rem] font-black leading-none text-slate-950 sm:text-[1.9rem]">Pin Rush</h3>
           <p className="mt-2 max-w-[34rem] text-sm leading-6 text-slate-600">Chain pins for streak boosts, grab stars, and unlock tiny gala charms while AI finishes.</p>
         </div>
@@ -360,7 +361,7 @@ export default function TapGalaPinGame({
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-10 shrink-0 items-center justify-center rounded-full bg-white/70 px-4 text-sm font-black text-slate-700 backdrop-blur transition hover:bg-white hover:text-[#2563eb]"
+            className="inline-flex h-10 shrink-0 items-center justify-center rounded-full bg-white/70 px-4 text-sm font-black text-slate-700 backdrop-blur transition hover:bg-white hover:text-[var(--accent)]"
           >
             Close
           </button>
@@ -434,7 +435,7 @@ export default function TapGalaPinGame({
 
           {chibiImage ? (
             <div className="absolute left-5 top-5 flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-white/76 backdrop-blur">
-              <img src={chibiImage} alt="" className="h-full w-full object-contain" loading="lazy" />
+              <ChibiIllustration src={chibiImage} alt="" variant="compact" className="h-full w-full object-cover" />
             </div>
           ) : null}
 

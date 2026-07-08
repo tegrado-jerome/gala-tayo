@@ -6,7 +6,7 @@ import Breadcrumb from '../components/Breadcrumb'
 import CompactPagination from '../components/CompactPagination'
 import PlaceCard, { type PlaceCardData } from '../components/PlaceCard'
 import SeoHead from '../components/SeoHead'
-import { PageContainer, ResponsiveGrid } from '../components/layout/ResponsiveLayouts'
+import { PageContainer, PageShell, ResponsiveGrid } from '../components/layout/ResponsiveLayouts'
 import { getPlaceCategoryLabel } from '../data/placeCategories'
 import { navigateToPath } from '../utils/navigation'
 import { getCanonicalPlacePath, getSiteOrigin, resolveAreaMeta } from '../utils/seo'
@@ -211,7 +211,7 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
     : null
 
   return (
-    <div className="gala-page-background min-h-screen text-[var(--text)]">
+    <PageShell>
       <SeoHead
         title={`${categoryLabel} Places | GalaTayo`}
         description={`Browse ${categoryLabel.toLowerCase()} places across Metro Manila on GalaTayo.`}
@@ -224,6 +224,7 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
       <main className="w-full pb-12 pt-5 sm:pb-14">
         <PageContainer className="px-4 sm:px-6 lg:px-8">
         <Breadcrumb
+          showBack
           items={[
             { label: 'Home', href: '/', icon: <House className="h-3.5 w-3.5" /> },
             { label: 'Places', href: '/places', icon: <MapPin className="h-3.5 w-3.5" /> },
@@ -233,13 +234,13 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
         />
 
         <section className="mt-5 pb-2">
-          <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[#EFF6FF] text-[#1E3A8A]">
+          <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
             <AppIcon name={iconName} className="h-5 w-5" />
           </div>
           <h1 className="mt-4 text-[2.15rem] font-black leading-[0.95] tracking-[-0.045em] text-slate-950 sm:text-[2.6rem]">
             {categoryLabel} places
           </h1>
-          <p className="mt-3 max-w-[40rem] text-[15px] leading-7 text-[#6b7280]">
+          <p className="mt-3 max-w-[40rem] text-[15px] leading-7 text-[var(--muted)]">
             Explore handpicked {categoryLabel.toLowerCase()} spots and find your next stop.
           </p>
         </section>
@@ -247,8 +248,8 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
         {isLoading ? <p className="mt-6 text-sm text-slate-500">Loading category places...</p> : null}
         {errorMessage ? (
           <section className="mt-6 rounded-[24px] border border-[#E5E7EB] bg-white px-5 py-6 shadow-[0_6px_20px_rgba(17,24,39,0.03)]">
-            <h2 className="text-base font-semibold text-[#111827]">We couldn't load {categoryLabel.toLowerCase()} places right now.</h2>
-            <p className="mt-1 text-sm leading-6 text-[#6B7280]">Please try again in a bit.</p>
+            <h2 className="text-base font-semibold text-[var(--text-main)]">We couldn't load {categoryLabel.toLowerCase()} places right now.</h2>
+            <p className="mt-1 text-sm leading-6 text-[var(--muted)]">Please try again in a bit.</p>
           </section>
         ) : null}
 
@@ -256,11 +257,11 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
           <>
             {places.length === 0 ? (
               <section className="mt-10 rounded-[28px] border border-[#e5e7eb] bg-white px-5 py-8 text-center shadow-sm sm:px-6">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#dbeafe] text-[#1e3a8a]">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
                   <AppIcon name="compass" className="h-7 w-7" />
                 </div>
                 <h2 className="mt-4 text-[1.2rem] font-black text-slate-950">No {categoryLabel.toLowerCase()} places found yet.</h2>
-                <p className="mt-2 text-sm leading-6 text-[#6b7280]">
+                <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
                   Check back later or try another category page.
                 </p>
               </section>
@@ -269,7 +270,7 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
                 <div className="flex items-end justify-between gap-3">
                   <div>
                     <h2 className="text-[1.35rem] font-black tracking-[-0.03em] text-slate-950">{categoryLabel} places</h2>
-                    <p className="mt-1 text-[13px] leading-6 text-[#6b7280]">Listed alphabetically across Metro Manila.</p>
+                    <p className="mt-1 text-[13px] leading-6 text-[var(--muted)]">Listed alphabetically across Metro Manila.</p>
                   </div>
                 </div>
                 <ResponsiveGrid desktopColumns={2} className="mt-4 gap-4">
@@ -303,7 +304,7 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
         ) : null}
         </PageContainer>
       </main>
-    </div>
+    </PageShell>
   )
 }
 

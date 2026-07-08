@@ -5,6 +5,7 @@ import { addPlaceToGalaPlan, listMyGalaPlans, type GalaPlanSummary } from '../ut
 import { navigateToPath } from '../utils/navigation'
 import { AppIcon } from './AppIcon'
 import UnifiedLoadingState from './UnifiedLoadingState'
+import { BottomSheet } from './layout/Primitives'
 
 type AddToGalaPlanModalProps = {
   isOpen: boolean
@@ -88,9 +89,8 @@ function AddToGalaPlanModal({ isOpen, placeId, placeName, onClose }: AddToGalaPl
   const selectedPlan = plans.find((plan) => plan.id === selectedPlanId)
 
   return (
-    <div className="gala-modal-backdrop fixed inset-0 z-[7000] flex items-end justify-center bg-slate-950/45 px-4 pb-4 sm:items-center sm:pb-0">
-      <section className="gala-modal-card w-full max-w-md rounded-lg border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.22)]">
-        <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
+    <BottomSheet isOpen={isOpen} onClose={onClose} ariaLabel="Add to gala plan">
+      <div className="flex items-start justify-between gap-3 border-b border-slate-100 px-5 py-4">
           <div className="flex min-w-0 items-start gap-3">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-wash)] text-[var(--accent-deep)]">
               <AppIcon name="addToPlan" className="h-5 w-5" />
@@ -231,8 +231,7 @@ function AddToGalaPlanModal({ isOpen, placeId, placeName, onClose }: AddToGalaPl
           ) : null}
           {errorMessage ? <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm font-bold text-red-700">{errorMessage}</p> : null}
         </div>
-      </section>
-    </div>
+    </BottomSheet>
   )
 }
 

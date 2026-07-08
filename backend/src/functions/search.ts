@@ -1914,7 +1914,10 @@ export async function search(
     const page = getPositiveInteger(body.page, DEFAULT_SEARCH_PAGE, {
       min: 1,
     });
-    const limit = STRICT_SEARCH_LIMIT;
+    const limit = Math.min(
+      getPositiveInteger(body.limit, STRICT_SEARCH_LIMIT, { min: 1 }),
+      20
+    );
     const shouldExploreAll = body.exploreAll === true;
     const normalizedQuery = normalizeSearchText(query);
     const nearbySearch = getNearbySearchContext(body);

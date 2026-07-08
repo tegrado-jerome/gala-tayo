@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import AppHeader from '../components/AppHeader'
 import UnifiedLoadingState from '../components/UnifiedLoadingState'
-import { PageContainer, StateContainer } from '../components/layout/ResponsiveLayouts'
+import { PageContainer, PageShell, StateContainer } from '../components/layout/ResponsiveLayouts'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { getCurrentUser } from '../utils/profileApi'
 import {
@@ -153,23 +153,23 @@ function AdminPlaceSubmissionsPage({ session }: { session: Session }) {
 
   if (!isAdmin) {
     return (
-      <section className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
+      <PageShell tone="plain">
         <AppHeader />
-        <main className="mx-auto max-w-3xl px-4 py-10">
+        <main className="mx-auto w-full max-w-3xl px-4 py-10">
           <StateContainer>
             <h1 className="text-2xl font-black text-slate-950">Admin access required</h1>
             <p className="mt-2 text-sm font-semibold text-slate-700">Only admins can review pending place submissions.</p>
           </StateContainer>
         </main>
-      </section>
+      </PageShell>
     )
   }
 
   return (
-    <section className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
+    <PageShell>
       <AppHeader />
-      <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
-        <PageContainer>
+      <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
+        <PageContainer size="wide">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <p className="text-[12px] font-black uppercase tracking-[0.2em] text-[var(--accent-deep)]">Admin dashboard</p>
@@ -183,21 +183,21 @@ function AdminPlaceSubmissionsPage({ session }: { session: Session }) {
               type="button"
               onClick={() => void loadPendingSubmissions()}
               disabled={isLoading}
-              className="inline-flex min-h-10 items-center justify-center rounded-xl border border-[var(--line)] bg-white px-4 text-sm font-black text-slate-800"
+              className="app-button app-button-ghost app-button-md"
             >
               {isLoading ? 'Refreshing...' : 'Refresh'}
             </button>
             <button
               type="button"
               onClick={() => navigateToPath('/admin/place-images')}
-              className="inline-flex min-h-10 items-center justify-center rounded-xl border border-[var(--line)] bg-white px-4 text-sm font-black text-slate-800"
+              className="app-button app-button-ghost app-button-md"
             >
               Photo review
             </button>
             <button
               type="button"
               onClick={() => navigateToPath('/admin/user-reports')}
-              className="inline-flex min-h-10 items-center justify-center rounded-xl border border-[var(--line)] bg-white px-4 text-sm font-black text-slate-800"
+              className="app-button app-button-ghost app-button-md"
             >
               User reports
             </button>
@@ -423,7 +423,7 @@ function AdminPlaceSubmissionsPage({ session }: { session: Session }) {
           )}
         </PageContainer>
       </main>
-    </section>
+    </PageShell>
   )
 }
 

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { User } from '@supabase/supabase-js'
 import { AppIcon } from './AppIcon'
@@ -39,6 +39,7 @@ function navigateTo(path: string) {
 
 function UserMenu({ user = null, profile = null, compact = false }: UserMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const [closing, setClosing] = useState(false)
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [isHelpOpen, setIsHelpOpen] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
@@ -50,6 +51,17 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
   const shouldShowAvatar = Boolean(user && avatarUrl && failedAvatarUrl !== avatarUrl)
   const displayName = user ? getDisplayName(user, profile) : 'Welcome to GalaTayo'
   const initials = user ? getInitials(user, profile) : 'GT'
+
+  const show = isOpen || closing
+
+  const close = useCallback(() => {
+    if (closing) return
+    setClosing(true)
+    setTimeout(() => {
+      setIsOpen(false)
+      setClosing(false)
+    }, 300)
+  }, [closing])
 
   useEffect(() => {
     if (!isOpen) {
@@ -65,13 +77,13 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
         drawerRef.current &&
         !drawerRef.current.contains(target)
       ) {
-        setIsOpen(false)
+        close()
       }
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        setIsOpen(false)
+        close()
       }
     }
 
@@ -82,39 +94,35 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
       document.removeEventListener('pointerdown', handlePointerDown)
       document.removeEventListener('keydown', handleKeyDown)
     }
-  }, [isOpen])
+  }, [isOpen, close])
 
   useEffect(() => {
     if (!isOpen) {
       return undefined
     }
 
-    const scrollY = window.scrollY
     const previousHtmlOverflow = document.documentElement.style.overflow
     const previousBodyOverflow = document.body.style.overflow
-    const previousBodyPosition = document.body.style.position
-    const previousBodyTop = document.body.style.top
-    const previousBodyWidth = document.body.style.width
 
     document.documentElement.classList.add('gala-menu-open')
     document.body.classList.add('gala-menu-open')
     document.documentElement.style.overflow = 'hidden'
     document.body.style.overflow = 'hidden'
-    document.body.style.position = 'fixed'
-    document.body.style.top = `-${scrollY}px`
-    document.body.style.width = '100%'
 
     return () => {
       document.documentElement.classList.remove('gala-menu-open')
       document.body.classList.remove('gala-menu-open')
       document.documentElement.style.overflow = previousHtmlOverflow
       document.body.style.overflow = previousBodyOverflow
-      document.body.style.position = previousBodyPosition
-      document.body.style.top = previousBodyTop
-      document.body.style.width = previousBodyWidth
-      window.scrollTo(0, scrollY)
     }
   }, [isOpen])
+
+  useEffect(() => {
+    if (closing) {
+      document.documentElement.classList.remove('gala-menu-open')
+      document.body.classList.remove('gala-menu-open')
+    }
+  }, [closing])
 
   const handleSignOut = async () => {
     try {
@@ -127,7 +135,7 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
         throw error
       }
 
-      setIsOpen(false)
+      close()
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Sign out failed. Try again.')
       setIsSigningOut(false)
@@ -135,15 +143,21 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
   }
 
   const closeAndNavigate = (path: string) => {
-    setIsOpen(false)
     setIsHelpOpen(false)
-    navigateTo(path)
+    close()
+    setTimeout(() => {
+      navigateTo(path)
+    }, 300)
   }
 
   const menuItemClass =
     'group flex w-full items-center gap-4 rounded-xl px-3 py-3 text-left text-[15px] font-medium text-slate-800 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
   const menuIconClass =
     'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-[var(--accent)] ring-1 ring-slate-200 transition group-hover:bg-[var(--accent-wash)]'
+  const soonMenuItemClass =
+    'pointer-events-none group flex w-full items-center gap-4 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-left text-[15px] font-medium text-slate-400 opacity-90'
+  const soonMenuIconClass =
+    'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-slate-400 ring-1 ring-slate-200'
   const submenuItemClass =
     'group flex w-full items-center gap-4 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
   const submenuIconClass =
@@ -167,7 +181,13 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
     <div ref={menuRef} className="relative">
       <button
         type="button"
-        onClick={() => setIsOpen((currentValue) => !currentValue)}
+        onClick={() => {
+          if (isOpen) {
+            close()
+          } else {
+            setIsOpen(true)
+          }
+        }}
         className={
           compact
             ? 'relative mt-2.5 inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-900 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
@@ -201,27 +221,28 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
         )}
       </button>
 
-      {isOpen ? createPortal(
+      {show ? createPortal(
         <>
           <button
             type="button"
-            className="gala-menu-backdrop fixed inset-0 z-[5990] bg-slate-950/25"
+            className={`gala-menu-backdrop fixed inset-0 z-[5990] bg-slate-950/25 ${closing ? 'exit' : 'enter'}`}
             aria-label="Close account menu"
-            onClick={() => setIsOpen(false)}
+            onClick={close}
           />
           <aside
             ref={drawerRef}
             className={
-              compact
+              (compact
                 ? 'gala-menu-drawer fixed inset-y-0 right-0 z-[6000] flex w-[300px] max-w-[82vw] flex-col overflow-hidden rounded-l-[24px] border-l border-[var(--line)] bg-white shadow-xl'
-                : 'gala-menu-drawer fixed inset-y-0 right-0 z-[6000] flex w-[380px] max-w-[36vw] flex-col overflow-hidden rounded-l-[24px] border-l border-[var(--line)] bg-white shadow-xl'
+                : 'gala-menu-drawer fixed inset-y-0 right-0 z-[6000] flex w-[380px] max-w-[36vw] flex-col overflow-hidden rounded-l-[24px] border-l border-[var(--line)] bg-white shadow-xl') +
+              ` ${closing ? 'exit' : 'enter'}`
             }
             role="menu"
           >
             <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-white" />
             <button
               type="button"
-              onClick={() => setIsOpen(false)}
+              onClick={close}
               className="absolute right-4 top-4 z-10 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]"
               aria-label="Close account menu"
             >
@@ -280,11 +301,13 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
                     <span className="flex-1">Gala Plans</span>
                     <AppIcon name="chevronRight" className="h-4 w-4 text-slate-500" />
                   </button>
-                  <button type="button" onClick={() => closeAndNavigate('/submit-place')} className={menuItemClass} role="menuitem">
-                    <span className={menuIconClass}><AppIcon name="place" size="ui" /></span>
+                  <div className={soonMenuItemClass} role="menuitem" aria-disabled="true" title="Coming soon">
+                    <span className={soonMenuIconClass}><AppIcon name="place" size="ui" /></span>
                     <span className="flex-1">Submit Place</span>
-                    <AppIcon name="chevronRight" className="h-4 w-4 text-slate-500" />
-                  </button>
+                    <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
+                      Soon
+                    </span>
+                  </div>
 
                   <div className="my-3 border-t border-slate-200" />
 
@@ -347,14 +370,14 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
                   <button
                     type="button"
                     onClick={() => closeAndNavigate('/login')}
-                    className="gala-primary-button h-11 w-full max-w-[240px] rounded-2xl"
+                    className="app-button app-button-primary app-button-md w-full max-w-[240px]"
                   >
                     Log in
                   </button>
                   <button
                     type="button"
                     onClick={() => closeAndNavigate('/signup')}
-                    className="inline-flex h-11 w-full max-w-[240px] items-center justify-center rounded-2xl border border-[var(--line)] bg-white text-[14px] font-semibold leading-normal text-[var(--text-main)] transition hover:bg-[var(--bg-soft)]"
+                    className="app-button app-button-secondary app-button-md w-full max-w-[240px]"
                   >
                     Sign up
                   </button>

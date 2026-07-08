@@ -119,6 +119,16 @@ export async function getCurrentEmailConflict(session: Session) {
   }
 }
 
+export async function sendPasswordResetEmail(email: string) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+    redirectTo: `${window.location.origin}/auth/reset-password`,
+  })
+
+  if (error) {
+    throw error
+  }
+}
+
 export async function updateAccountPassword(password: string) {
   const { data, error } = await supabase.auth.updateUser({ password })
 

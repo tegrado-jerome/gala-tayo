@@ -73,8 +73,8 @@ function CompactPagination({
   const rangeEnd = hasSummary ? Math.min(currentPage * pageSize, totalItems) : 0
   const controlBaseClass =
     'inline-flex shrink-0 items-center justify-center border transition duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50'
-  const pageChipBaseClass = `${controlBaseClass} h-8 min-w-8 rounded-full px-2.5 text-[0.9rem] font-semibold sm:h-9 sm:min-w-9`
-  const arrowChipClass = `${controlBaseClass} h-8 w-8 rounded-full border-transparent bg-transparent text-slate-500 hover:border-transparent hover:bg-slate-100 hover:text-slate-900 sm:h-9 sm:w-9`
+  const pageChipBaseClass = `${controlBaseClass} h-10 min-w-10 rounded-full px-3 text-[0.9rem] font-semibold sm:h-11 sm:min-w-11 sm:px-3.5`
+  const arrowChipClass = `${controlBaseClass} h-10 w-10 rounded-full border-transparent bg-transparent text-slate-500 hover:border-transparent hover:bg-slate-100 hover:text-slate-900 sm:h-11 sm:w-11`
   const inactivePageChipClass =
     'border-transparent bg-transparent text-slate-500 hover:border-transparent hover:bg-slate-100 hover:text-slate-900'
   const activePageChipClass = 'cursor-default border-[var(--accent-deep)] bg-[var(--accent-deep)] text-white'

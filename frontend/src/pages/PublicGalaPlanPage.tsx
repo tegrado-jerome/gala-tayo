@@ -4,7 +4,7 @@ import AppHeader from '../components/AppHeader'
 import { AppIcon } from '../components/AppIcon'
 import MinimalBackNav from '../components/MinimalBackNav'
 import ProfileAvatar from '../components/ProfileAvatar'
-import { PageContainer } from '../components/layout/ResponsiveLayouts'
+import { PageContainer, PageShell, CardSurface, Stack } from '../components/layout/ResponsiveLayouts'
 import { getDisplayName, getPublicGalaPlan, type PublicGalaPlan } from '../utils/profileApi'
 import { navigateToPath } from '../utils/navigation'
 import { formatGalaPlanDate, parseGalaPlanDescription } from '../utils/galaPlanDescription'
@@ -89,26 +89,26 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
+    <PageShell>
       <AppHeader />
-      <main className="mx-auto w-full max-w-[720px] px-4 py-4 sm:px-5 sm:py-6 lg:max-w-[860px] xl:max-w-[920px]">
-        <PageContainer>
+      <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
+        <PageContainer size="narrow">
           {isLoading ? (
-            <section className="rounded-2xl border border-[var(--line)] bg-white px-4 py-5 text-sm font-semibold text-[var(--muted)]">Loading gala plan...</section>
+            <CardSurface pad="default" className="text-sm font-semibold text-[var(--muted)]">Loading gala plan...</CardSurface>
           ) : notFound ? (
-            <section className="rounded-2xl border border-[var(--line)] bg-white px-5 py-8 text-center">
+            <CardSurface pad="loose" className="text-center">
               <h1 className="text-xl font-black text-slate-950">Gala plan not found.</h1>
-            </section>
+            </CardSurface>
           ) : lockedMessage ? (
-            <section className="rounded-2xl border border-[var(--line)] bg-white px-5 py-8 text-center">
+            <CardSurface pad="loose" className="text-center">
               <h1 className="text-xl font-black text-slate-950">{lockedMessage}</h1>
               <p className="mt-2 text-sm font-semibold text-[var(--muted)]">Follow to request access kung followers-only ito.</p>
               <button type="button" onClick={() => navigateToPath(`/u/${encodeURIComponent(username)}`)} className="mt-5 h-10 rounded-full bg-slate-950 px-4 text-sm font-black text-white">View profile</button>
-            </section>
+            </CardSurface>
           ) : errorMessage ? (
-            <section className="rounded-2xl border border-[var(--line)] bg-white px-5 py-8 text-center text-sm font-bold text-red-700">{errorMessage}</section>
+            <CardSurface pad="loose" className="text-center text-sm font-bold text-red-700">{errorMessage}</CardSurface>
           ) : plan ? (
-            <div className="space-y-5">
+            <Stack gap="default">
               <section className="relative overflow-hidden py-1">
               <div className="pointer-events-none absolute -right-12 top-0 h-32 w-32 rounded-full bg-sky-100/80 blur-2xl" />
               <div className="pointer-events-none absolute left-0 top-20 h-24 w-24 rounded-full bg-emerald-100/60 blur-2xl" />
@@ -171,7 +171,7 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
                     <button
                       type="button"
                       onClick={() => void toggleHeart()}
-                      className={`flex min-w-0 flex-1 items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-black transition ${
+                      className={`inline-flex min-w-0 flex-1 sm:flex-none items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-black transition ${
                         plan.viewer_has_hearted
                           ? 'bg-rose-50 text-rose-700 hover:bg-rose-100'
                           : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
@@ -183,7 +183,7 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
                       <button
                         type="button"
                         onClick={() => void shareGalaPlanLink(plan.owner.username, plan.slug, plan.title)}
-                        className="flex min-w-0 flex-1 items-center justify-center gap-2 rounded-full bg-slate-100 px-4 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-200"
+                        className="inline-flex min-w-0 flex-1 sm:flex-none items-center justify-center gap-2 rounded-full bg-slate-100 px-4 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-200"
                       >
                       <AppIcon name="share" className="h-4 w-4" />
                       <span>Share</span>
@@ -206,7 +206,7 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
               {items.length === 0 ? (
                 <p className="px-1 text-sm font-semibold text-[var(--muted)]">This plan has no places yet.</p>
               ) : (
-                <div className="space-y-3">
+                <Stack gap="tight">
                   {items.map((item, index) => (
                     <article key={item.id} className="border-b border-slate-200/80 px-1 pb-4 last:border-b-0">
                       <div className="flex items-start gap-3">
@@ -241,14 +241,14 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
                       </div>
                     </article>
                   ))}
-                </div>
+                </Stack>
               )}
               </section>
-            </div>
+            </Stack>
           ) : null}
         </PageContainer>
       </main>
-    </div>
+    </PageShell>
   )
 }
 

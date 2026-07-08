@@ -1,0 +1,2752 @@
+{
+  "city": "Valenzuela City",
+  "place_count": 19,
+  "places": [
+    {
+      "id": "10-25-cafe",
+      "name": "10.25 Café",
+      "slug": "10-25-cafe",
+      "category": "Cafe",
+      "city": "Valenzuela City",
+      "area": "Marulas",
+      "address": "24 A Silangan Park Subdivision, Marulas, Valenzuela City, Metro Manila",
+      "latitude": 14.6784375,
+      "longitude": 120.9821875,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=10.25+Cafe+Valenzuela",
+      "budget_min": 200,
+      "price_level": 1,
+      "budget_note": "Low-cost place; bring extra budget for food, drinks, transport, or optional purchases.",
+      "description": "Cozy hidden-gem cafe inside a subdivision, good for coffee, pasta, dessert, and lowkey tambay. Pasok siya for GalaTayo because it feels more intentional than a random cafe branch, especially for casual dates or chill barkada catch-up. Since it is tucked inside a neighborhood, check your route before going.",
+      "good_for": [
+        "Casual Date",
+        "Study Spot",
+        "Chill",
+        "Barkada Hangout",
+        "Food Trip",
+        "Rainy Day"
+      ],
+      "not_ideal_for": [
+        "Large Groups Without Reservation",
+        "Users Looking For Free Activities Only",
+        "Very Loud Hangouts"
+      ],
+      "best_time_to_visit": "Afternoon to late evening",
+      "visit_duration": "1–2 hours",
+      "indoor_outdoor": "Indoor",
+      "weather_fit": "Rain-friendly",
+      "crowd_level": "Can feel full during night cafe hours because the space is more intimate.",
+      "parking_info": "Subdivision parking may be limited; better to ask or check street parking rules before staying long.",
+      "commute_access": "Reachable from Marulas/MacArthur Highway area, then short tricycle or walk depending on drop-off point.",
+      "nearby_context": "Inside Silangan Park Subdivision, near Marulas and Fatima Avenue food/cafe areas.",
+      "normalized_name": "10 25 cafe",
+      "search_keywords": [
+        "Valenzuela City",
+        "Valenzuela",
+        "Marulas",
+        "Cafe",
+        "food",
+        "date",
+        "chill",
+        "group",
+        "gala",
+        "pasyal",
+        "tambay",
+        "coffee",
+        "kapihan",
+        "kape",
+        "coffee shop",
+        "chill cafe",
+        "dessert",
+        "budget friendly",
+        "food trip",
+        "rain friendly",
+        "indoor",
+        "parking available",
+        "date friendly",
+        "group friendly",
+        "quiet chill",
+        "10.25",
+        "Café"
+      ],
+      "search_aliases": [
+        "10.25 Café",
+        "10.25 Café Valenzuela City",
+        "10.25 Café Valenzuela",
+        "10 25 cafe",
+        "10.25 Cafe",
+        "Ten Twenty Five Cafe"
+      ],
+      "searchable_text": "10 25 cafe cafe valenzuela city marulas 24 a silangan park subdivision marulas valenzuela city metro manila cozy hidden gem cafe inside a subdivision good for coffee pasta dessert and lowkey tambay pasok siya for galatayo because it feels more intentional than a random cafe branch especially for casual dates or chill barkada catch up since it is tucked inside a neighborhood check your route before going afternoon to late evening 12 hours indoor rain friendly can feel full during night cafe hours because the space is more intimate reachable from marulas macarthur highway area then short tricycle or walk depending on drop off point subdivision parking may be limited better to ask or check street parking rules before staying long inside silangan park subdivision near marulas and fatima avenue food cafe areas casual date study spot chill barkada hangout food trip rainy day large groups without reservation users looking for free activities only very loud hangouts cafe food date chill group valenzuela city valenzuela marulas cafe food date chill group gala pasyal tambay coffee kapihan kape coffee shop chill cafe dessert budget friendly food trip rain friendly indoor parking available date friendly group friendly quiet chill 10 25 cafe 10 25 cafe 10 25 cafe valenzuela city 10 25 cafe valenzuela 10 25 cafe 10 25 cafe ten twenty five cafe budget friendly works for low budget gala plans cafe good fit for coffee cafe dates or chill cafe plans food trip good fit for food trip plans rain friendly indoor or mostly covered place that works during rain indoor mostly indoor place parking available parking may be available nearby or on site date friendly good fit for casual dates or date night plans group friendly good fit for barkada or group plans quiet chill good fit for calmer or chill plans",
+      "status": "published",
+      "average_rating": 0,
+      "review_count": 0,
+      "categories": [
+        "cafe",
+        "food",
+        "date",
+        "chill",
+        "group"
+      ],
+      "tags": [
+        {
+          "id": "budget-friendly",
+          "strength": 4,
+          "notes": "Works for low-budget gala plans."
+        },
+        {
+          "id": "cafe",
+          "strength": 5,
+          "notes": "Good fit for coffee, cafe dates, or chill cafe plans."
+        },
+        {
+          "id": "food-trip",
+          "strength": 5,
+          "notes": "Good fit for food trip plans."
+        },
+        {
+          "id": "rain-friendly",
+          "strength": 4,
+          "notes": "Indoor or mostly covered place that works during rain."
+        },
+        {
+          "id": "indoor",
+          "strength": 4,
+          "notes": "Mostly indoor place."
+        },
+        {
+          "id": "parking-available",
+          "strength": 3,
+          "notes": "Parking may be available nearby or on site."
+        },
+        {
+          "id": "date-friendly",
+          "strength": 4,
+          "notes": "Good fit for casual dates or date-night plans."
+        },
+        {
+          "id": "group-friendly",
+          "strength": 4,
+          "notes": "Good fit for barkada or group plans."
+        },
+        {
+          "id": "quiet-chill",
+          "strength": 4,
+          "notes": "Good fit for calmer or chill plans."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "10-25-cafe-1",
+          "storage_key": "galatayo-photos/places/10-25-cafe/10-25-cafe-1.webp",
+          "alt_text": "10.25 Café in Valenzuela City photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "alvarez-park-cafe",
+      "name": "Alvarez Park Cafe",
+      "slug": "alvarez-park-cafe",
+      "category": "Cafe",
+      "city": "Valenzuela City",
+      "area": "Tagalag",
+      "address": "09 Barangay Tagalag, Valenzuela City, Metro Manila",
+      "latitude": 14.7161,
+      "longitude": 120.9434,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Alvarez+Park+Cafe+Valenzuela",
+      "budget_min": 350,
+      "price_level": 2,
+      "budget_note": "Moderate spending place; budget depends on food, tickets, or activities.",
+      "description": "Floating cafe, restaurant, and fishing-ground style spot sa Tagalag na may out-of-town feel kahit nasa Valenzuela ka lang. Worth it siya for dates, family meals, or chill food trip kapag gusto mo ng al fresco view and hindi puro mall. Best siya puntahan kapag may time ka talaga kasi medyo destination siya, not quick grab-and-go.",
+      "good_for": [
+        "Casual Date",
+        "Date Night",
+        "Family Trip",
+        "Barkada Hangout",
+        "Food Trip",
+        "Chill",
+        "Photo Spot"
+      ],
+      "not_ideal_for": [
+        "Users Looking For Free Activities Only",
+        "Quiet Study",
+        "Heavy Rain",
+        "Quick Errands",
+        "Very Tight Budget"
+      ],
+      "best_time_to_visit": "Late afternoon to sunset",
+      "visit_duration": "2–3 hours",
+      "indoor_outdoor": "Mixed",
+      "weather_fit": "Mixed",
+      "crowd_level": "Can get busy on weekends and meal times; calmer on weekday afternoons.",
+      "parking_info": "Parking appears available on-site or nearby, but expect tighter space during peak dining hours.",
+      "commute_access": "Commute is possible via Malanday or Bisig then tricycle to Tagalag, but private car or motorcycle is easier because the roads going in can be narrow.",
+      "nearby_context": "Inside the Tagalag Fishing Village area, near Kamayan sa Palapat and the Valenzuela Boardwalk/Tagalag riverside spots.",
+      "normalized_name": "alvarez park cafe",
+      "search_keywords": [
+        "Valenzuela City",
+        "Valenzuela",
+        "Tagalag",
+        "Cafe",
+        "food",
+        "date",
+        "chill",
+        "group",
+        "gala",
+        "pasyal",
+        "tambay",
+        "coffee",
+        "kapihan",
+        "kape",
+        "coffee shop",
+        "chill cafe",
+        "dessert",
+        "food trip",
+        "indoor",
+        "outdoor",
+        "parking available",
+        "date friendly",
+        "family friendly",
+        "group friendly",
+        "tourist friendly",
+        "quiet chill",
+        "Alvarez",
+        "Park"
+      ],
+      "search_aliases": [
+        "Alvarez Park Cafe",
+        "Alvarez Park Cafe Valenzuela City",
+        "Alvarez Park Cafe Valenzuela"
+      ],
+      "searchable_text": "alvarez park cafe cafe valenzuela city tagalag 09 barangay tagalag valenzuela city metro manila floating cafe restaurant and fishing ground style spot sa tagalag na may out of town feel kahit nasa valenzuela ka lang worth it siya for dates family meals or chill food trip kapag gusto mo ng al fresco view and hindi puro mall best siya puntahan kapag may time ka talaga kasi medyo destination siya not quick grab and go late afternoon to sunset 23 hours mixed mixed can get busy on weekends and meal times calmer on weekday afternoons commute is possible via malanday or bisig then tricycle to tagalag but private car or motorcycle is easier because the roads going in can be narrow parking appears available on site or nearby but expect tighter space during peak dining hours inside the tagalag fishing village area near kamayan sa palapat and the valenzuela boardwalk tagalag riverside spots casual date date night family trip barkada hangout food trip chill photo spot users looking for free activities only quiet study heavy rain quick errands very tight budget cafe food date chill group valenzuela city valenzuela tagalag cafe food date chill group gala pasyal tambay coffee kapihan kape coffee shop chill cafe dessert food trip indoor outdoor parking available date friendly family friendly group friendly tourist friendly quiet chill alvarez park alvarez park cafe alvarez park cafe valenzuela city alvarez park cafe valenzuela cafe good fit for coffee cafe dates or chill cafe plans food trip good fit for food trip plans indoor mostly indoor place outdoor outdoor or open air place parking available parking may be available nearby or on site date friendly good fit for casual dates or date night plans family friendly good fit for family friendly plans group friendly good fit for barkada or group plans tourist friendly good fit for visitors or landmark style gala plans quiet chill good fit for calmer or chill plans",
+      "status": "published",
+      "average_rating": 0,
+      "review_count": 0,
+      "categories": [
+        "cafe",
+        "food",
+        "date",
+        "chill",
+        "group"
+      ],
+      "tags": [
+        {
+          "id": "cafe",
+          "strength": 5,
+          "notes": "Good fit for coffee, cafe dates, or chill cafe plans."
+        },
+        {
+          "id": "food-trip",
+          "strength": 5,
+          "notes": "Good fit for food trip plans."
+        },
+        {
+          "id": "indoor",
+          "strength": 3,
+          "notes": "Mostly indoor place."
+        },
+        {
+          "id": "outdoor",
+          "strength": 3,
+          "notes": "Outdoor or open-air place."
+        },
+        {
+          "id": "parking-available",
+          "strength": 4,
+          "notes": "Parking may be available nearby or on site."
+        },
+        {
+          "id": "date-friendly",
+          "strength": 4,
+          "notes": "Good fit for casual dates or date-night plans."
+        },
+        {
+          "id": "family-friendly",
+          "strength": 4,
+          "notes": "Good fit for family-friendly plans."
+        },
+        {
+          "id": "group-friendly",
+          "strength": 4,
+          "notes": "Good fit for barkada or group plans."
+        },
+        {
+          "id": "tourist-friendly",
+          "strength": 4,
+          "notes": "Good fit for visitors or landmark-style gala plans."
+        },
+        {
+          "id": "quiet-chill",
+          "strength": 4,
+          "notes": "Good fit for calmer or chill plans."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "alvarez-park-cafe-1",
+          "storage_key": "galatayo-photos/places/alvarez-park-cafe/alvarez-park-cafe-1.webp",
+          "alt_text": "Alvarez Park Cafe in Valenzuela City photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "casita-de-francesca-private-resort-and-events-place",
+      "name": "Casita de Francesca Private Resort and Events Place",
+      "slug": "casita-de-francesca-private-resort-and-events-place",
+      "category": "Tourist",
+      "city": "Valenzuela City",
+      "area": "Gen. T. De Leon",
+      "address": "1110 Ricky Avenue, Tañada Subdivision, Gen. T. De Leon, Valenzuela City, Metro Manila",
+      "latitude": 14.6887,
+      "longitude": 121.0043,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Casita+de+Francesca+1110+Ricky+Avenue+Tanada+Subdivision+Valenzuela",
+      "budget_min": 500,
+      "price_level": 2,
+      "budget_note": "Moderate spending place; budget depends on food, tickets, or activities.",
+      "description": "Private resort and events place for birthdays, reunions, family pool days, and small group celebrations. GalaTayo-worthy siya if your plan is a reserved private swimming or overnight-style hangout rather than a walk-in tambay. Always message ahead because availability, rates, and slots change by date.",
+      "good_for": [
+        "Private Resort",
+        "Family Trip",
+        "Barkada Hangout",
+        "Group Friendly",
+        "Staycation",
+        "Celebration"
+      ],
+      "not_ideal_for": [
+        "Walk-In Plans",
+        "Users Looking For Free Activities Only",
+        "Small Quick Hangouts",
+        "Rainy Days"
+      ],
+      "best_time_to_visit": "Reserved day-use or overnight slot",
+      "visit_duration": "Half day to overnight",
+      "indoor_outdoor": "Mixed",
+      "weather_fit": "Sunny-friendly",
+      "crowd_level": "Private-reservation setup, so crowd depends on your booked group and event schedule.",
+      "parking_info": "Parking is likely available for guests but should be confirmed during booking.",
+      "commute_access": "Located inside Tañada Subdivision in Gen. T. De Leon; tricycle or ride-hailing is helpful from main roads.",
+      "nearby_context": "Near Gen. T. De Leon neighborhood routes, One Mall Valenzuela, and local food stops.",
+      "normalized_name": "casita de francesca private resort and events place",
+      "search_keywords": [
+        "Valenzuela City",
+        "Valenzuela",
+        "Gen. T. De Leon",
+        "Tourist",
+        "family",
+        "group",
+        "date",
+        "chill",
+        "gala",
+        "pasyal",
+        "tambay",
+        "resort",
+        "swimming",
+        "staycation",
+        "family outing",
+        "celebration",
+        "photo spot",
+        "indoor",
+        "outdoor",
+        "avoid rain",
+        "parking available",
+        "family friendly",
+        "group friendly",
+        "tourist friendly",
+        "special occasion",
+        "Casita",
+        "Francesca",
+        "Private",
+        "and",
+        "Events",
+        "Place"
+      ],
+      "search_aliases": [
+        "Casita de Francesca Private Resort and Events Place",
+        "Casita de Francesca Private Resort and Events Place Valenzuela City",
+        "Casita de Francesca Private Resort and Events Place Valenzuela"
+      ],
+      "searchable_text": "casita de francesca private resort and events place tourist valenzuela city gen t de leon 1110 ricky avenue tanada subdivision gen t de leon valenzuela city metro manila private resort and events place for birthdays reunions family pool days and small group celebrations galatayo worthy siya if your plan is a reserved private swimming or overnight style hangout rather than a walk in tambay always message ahead because availability rates and slots change by date reserved day use or overnight slot half day to overnight mixed sunny friendly private reservation setup so crowd depends on your booked group and event schedule located inside tanada subdivision in gen t de leon tricycle or ride hailing is helpful from main roads parking is likely available for guests but should be confirmed during booking near gen t de leon neighborhood routes one mall valenzuela and local food stops private resort family trip barkada hangout group friendly staycation celebration walk in plans users looking for free activities only small quick hangouts rainy days tourist family group date chill valenzuela city valenzuela gen t de leon tourist family group date chill gala pasyal tambay resort swimming staycation family outing celebration photo spot indoor outdoor avoid rain parking available family friendly group friendly tourist friendly special occasion casita francesca private and events place casita de francesca private resort and events place casita de francesca private resort and events place valenzuela city casita de francesca private resort and events place valenzuela indoor mostly indoor place outdoor outdoor or open air place avoid rain outdoor or open air place that is best avoided during rain parking available parking may be available nearby or on site family friendly good fit for family friendly plans group friendly good fit for barkada or group plans tourist friendly good fit for visitors or landmark style gala plans special occasion better for birthdays celebrations or planned special trips",
+      "status": "published",
+      "average_rating": 0,
+      "review_count": 0,
+      "categories": [
+        "tourist",
+        "family",
+        "group",
+        "date",
+        "chill"
+      ],
+      "tags": [
+        {
+          "id": "indoor",
+          "strength": 3,
+          "notes": "Mostly indoor place."
+        },
+        {
+          "id": "outdoor",
+          "strength": 3,
+          "notes": "Outdoor or open-air place."
+        },
+        {
+          "id": "avoid-rain",
+          "strength": 4,
+          "notes": "Outdoor or open-air place that is best avoided during rain."
+        },
+        {
+          "id": "parking-available",
+          "strength": 4,
+          "notes": "Parking may be available nearby or on site."
+        },
+        {
+          "id": "family-friendly",
+          "strength": 4,
+          "notes": "Good fit for family-friendly plans."
+        },
+        {
+          "id": "group-friendly",
+          "strength": 4,
+          "notes": "Good fit for barkada or group plans."
+        },
+        {
+          "id": "tourist-friendly",
+          "strength": 5,
+          "notes": "Good fit for visitors or landmark-style gala plans."
+        },
+        {
+          "id": "special-occasion",
+          "strength": 4,
+          "notes": "Better for birthdays, celebrations, or planned special trips."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "casita-de-francesca-private-resort-and-events-place-1",
+          "storage_key": "galatayo-photos/places/casita-de-francesca-private-resort-and-events-place/casita-de-francesca-private-resort-and-events-place-1.webp",
+          "alt_text": "Casita de Francesca Private Resort and Events Place in Valenzuela City photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "escape-the-city-cafe-and-lounge",
+      "name": "Escape the City Cafe and Lounge",
+      "slug": "escape-the-city-cafe-and-lounge",
+      "category": "Nightlife",
+      "city": "Valenzuela City",
+      "area": "Paso de Blas",
+      "address": "4th Floor, H&A Building, 121 Paso de Blas Road, Valenzuela City, Metro Manila",
+      "latitude": 14.7059,
+      "longitude": 120.9956,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=EscapeTheCity+Cafe+and+Lounge+121+Paso+de+Blas+Valenzuela",
+      "budget_min": 150,
+      "price_level": 1,
+      "budget_note": "Low-cost place; bring extra budget for food, drinks, transport, or optional purchases.",
+      "description": "Cafe-lounge and billiards-style hangout in Paso de Blas with late-night hours. Good siya for barkada na gusto ng chill indoor activity, drinks, and laro instead of just sitting in a cafe. Since it is on an upper floor, check accessibility if may kasama kang hirap sa stairs/elevator.",
+      "good_for": [
+        "Nightlife",
+        "Barkada Hangout",
+        "Activity",
+        "Billiards",
+        "Late Night",
+        "Rainy Day"
+      ],
+      "not_ideal_for": [
+        "Young Kids At Night",
+        "Quiet Study",
+        "Users Looking For Free Activities Only",
+        "Users Avoiding Upper-Floor Venues"
+      ],
+      "best_time_to_visit": "Evening to late night",
+      "visit_duration": "1–3 hours",
+      "indoor_outdoor": "Indoor",
+      "weather_fit": "Rain-friendly",
+      "crowd_level": "Can be lively during night hours; weekdays may be more relaxed.",
+      "parking_info": "Parking depends on the building or nearby roadside availability; confirm before going with a group car.",
+      "commute_access": "Accessible from Paso de Blas Road near Metrobank/H&A Building; jeep, bus, tricycle, or ride-hailing can work depending on origin.",
+      "nearby_context": "Near Paso de Blas commercial area, VGC, and NLEX/Paso de Blas access.",
+      "normalized_name": "escape the city cafe and lounge",
+      "search_keywords": [
+        "Valenzuela City",
+        "Valenzuela",
+        "Paso de Blas",
+        "Nightlife",
+        "group",
+        "date",
+        "food",
+        "chill",
+        "gala",
+        "pasyal",
+        "tambay",
+        "bar",
+        "lounge",
+        "billiards",
+        "drinks",
+        "late night",
+        "barkada",
+        "budget friendly",
+        "activity",
+        "rain friendly",
+        "indoor",
+        "parking available",
+        "commute friendly",
+        "date friendly",
+        "group friendly",
+        "Escape",
+        "the",
+        "City",
+        "Cafe",
+        "and",
+        "EscapeTheCity Cafe and Lounge"
+      ],
+      "search_aliases": [
+        "Escape the City Cafe and Lounge",
+        "Escape the City Cafe and Lounge Valenzuela City",
+        "Escape the City Cafe and Lounge Valenzuela",
+        "EscapeTheCity Cafe and Lounge",
+        "EscapeTheCity Cafe and Lounge Valenzuela City",
+        "Escape the City Valenzuela"
+      ],
+      "searchable_text": "escape the city cafe and lounge nightlife valenzuela city paso de blas 4th floor h and a building 121 paso de blas road valenzuela city metro manila cafe lounge and billiards style hangout in paso de blas with late night hours good siya for barkada na gusto ng chill indoor activity drinks and laro instead of just sitting in a cafe since it is on an upper floor check accessibility if may kasama kang hirap sa stairs elevator evening to late night 13 hours indoor rain friendly can be lively during night hours weekdays may be more relaxed accessible from paso de blas road near metrobank h and a building jeep bus tricycle or ride hailing can work depending on origin parking depends on the building or nearby roadside availability confirm before going with a group car near paso de blas commercial area vgc and nlex paso de blas access nightlife barkada hangout activity billiards late night rainy day young kids at night quiet study users looking for free activities only users avoiding upper floor venues nightlife group date food chill valenzuela city valenzuela paso de blas nightlife group date food chill gala pasyal tambay bar lounge billiards drinks late night barkada budget friendly activity rain friendly indoor parking available commute friendly date friendly group friendly escape the city cafe and escapethecity cafe and lounge escape the city cafe and lounge escape the city cafe and lounge valenzuela city escape the city cafe and lounge valenzuela escapethecity cafe and lounge escapethecity cafe and lounge valenzuela city escape the city valenzuela budget friendly works for low budget gala plans nightlife works better for evening or livelier plans activity good fit when users want an actual activity to do rain friendly indoor or mostly covered place that works during rain indoor mostly indoor place parking available parking may be available nearby or on site commute friendly reasonably accessible by commute or common transport routes date friendly good fit for casual dates or date night plans group friendly good fit for barkada or group plans",
+      "status": "published",
+      "average_rating": 0,
+      "review_count": 0,
+      "categories": [
+        "nightlife",
+        "group",
+        "date",
+        "food",
+        "chill"
+      ],
+      "tags": [
+        {
+          "id": "budget-friendly",
+          "strength": 4,
+          "notes": "Works for low-budget gala plans."
+        },
+        {
+          "id": "nightlife",
+          "strength": 5,
+          "notes": "Works better for evening or livelier plans."
+        },
+        {
+          "id": "activity",
+          "strength": 5,
+          "notes": "Good fit when users want an actual activity to do."
+        },
+        {
+          "id": "rain-friendly",
+          "strength": 4,
+          "notes": "Indoor or mostly covered place that works during rain."
+        },
+        {
+          "id": "indoor",
+          "strength": 4,
+          "notes": "Mostly indoor place."
+        },
+        {
+          "id": "parking-available",
+          "strength": 3,
+          "notes": "Parking may be available nearby or on site."
+        },
+        {
+          "id": "commute-friendly",
+          "strength": 4,
+          "notes": "Reasonably accessible by commute or common transport routes."
+        },
+        {
+          "id": "date-friendly",
+          "strength": 3,
+          "notes": "Good fit for casual dates or date-night plans."
+        },
+        {
+          "id": "group-friendly",
+          "strength": 5,
+          "notes": "Good fit for barkada or group plans."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "escape-the-city-cafe-and-lounge-1",
+          "storage_key": "galatayo-photos/places/escape-the-city-cafe-and-lounge/escape-the-city-cafe-and-lounge-1.webp",
+          "alt_text": "Escape the City Cafe and Lounge in Valenzuela City photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "hirus-cafe",
+      "name": "Hirus Cafe",
+      "slug": "hirus-cafe",
+      "category": "Cafe",
+      "city": "Valenzuela City",
+      "area": "Punturin",
+      "address": "73 Doña Elena Street, Barangay Punturin, Valenzuela City, Metro Manila",
+      "latitude": 14.7285,
+      "longitude": 120.9959,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Hirus+Cafe+73+Dona+Elena+Punturin+Valenzuela",
+      "budget_min": 180,
+      "price_level": 1,
+      "budget_note": "Low-cost place; bring extra budget for food, drinks, transport, or optional purchases.",
+      "description": "Cozy cafe in Punturin with coffee, comfort food, and a more tucked-away local cafe feel. Good siya for north Valenzuela users looking for a chill date, solo coffee, or small barkada stop. Since it is not in a mall, check commute or parking before going.",
+      "good_for": [
+        "Casual Date",
+        "Chill",
+        "Study Spot",
+        "Barkada Hangout",
+        "Food Trip",
+        "Rainy Day"
+      ],
+      "not_ideal_for": [
+        "Large Groups Without Reservation",
+        "Users Looking For Free Activities Only",
+        "Late Night After 10 PM"
+      ],
+      "best_time_to_visit": "Afternoon to early evening",
+      "visit_duration": "1–2 hours",
+      "indoor_outdoor": "Indoor",
+      "weather_fit": "Rain-friendly",
+      "crowd_level": "Moderate neighborhood cafe crowd; may be busier on weekends and dinner time.",
+      "parking_info": "Parking appears limited/local; confirm or use nearby legal street parking if available.",
+      "commute_access": "Reachable by local jeep/tricycle routes around Punturin; private vehicle is easier from central or south Valenzuela.",
+      "nearby_context": "Near Punturin residential and sports/community areas, not far from WES Arena by vehicle.",
+      "normalized_name": "hirus cafe",
+      "search_keywords": [
+        "Valenzuela City",
+        "Valenzuela",
+        "Punturin",
+        "Cafe",
+        "food",
+        "date",
+        "chill",
+        "group",
+        "gala",
+        "pasyal",
+        "tambay",
+        "coffee",
+        "kapihan",
+        "kape",
+        "coffee shop",
+        "chill cafe",
+        "dessert",
+        "budget friendly",
+        "food trip",
+        "rain friendly",
+        "indoor",
+        "parking available",
+        "date friendly",
+        "group friendly",
+        "quiet chill",
+        "Hirus"
+      ],
+      "search_aliases": [
+        "Hirus Cafe",
+        "Hirus Cafe Valenzuela City",
+        "Hirus Cafe Valenzuela"
+      ],
+      "searchable_text": "hirus cafe cafe valenzuela city punturin 73 dona elena street barangay punturin valenzuela city metro manila cozy cafe in punturin with coffee comfort food and a more tucked away local cafe feel good siya for north valenzuela users looking for a chill date solo coffee or small barkada stop since it is not in a mall check commute or parking before going afternoon to early evening 12 hours indoor rain friendly moderate neighborhood cafe crowd may be busier on weekends and dinner time reachable by local jeep tricycle routes around punturin private vehicle is easier from central or south valenzuela parking appears limited local confirm or use nearby legal street parking if available near punturin residential and sports community areas not far from wes arena by vehicle casual date chill study spot barkada hangout food trip rainy day large groups without reservation users looking for free activities only late night after 10 pm cafe food date chill group valenzuela city valenzuela punturin cafe food date chill group gala pasyal tambay coffee kapihan kape coffee shop chill cafe dessert budget friendly food trip rain friendly indoor parking available date friendly group friendly quiet chill hirus hirus cafe hirus cafe valenzuela city hirus cafe valenzuela budget friendly works for low budget gala plans cafe good fit for coffee cafe dates or chill cafe plans food trip good fit for food trip plans rain friendly indoor or mostly covered place that works during rain indoor mostly indoor place parking available parking may be available nearby or on site date friendly good fit for casual dates or date night plans group friendly good fit for barkada or group plans quiet chill good fit for calmer or chill plans",
+      "status": "published",
+      "average_rating": 0,
+      "review_count": 0,
+      "categories": [
+        "cafe",
+        "food",
+        "date",
+        "chill",
+        "group"
+      ],
+      "tags": [
+        {
+          "id": "budget-friendly",
+          "strength": 4,
+          "notes": "Works for low-budget gala plans."
+        },
+        {
+          "id": "cafe",
+          "strength": 5,
+          "notes": "Good fit for coffee, cafe dates, or chill cafe plans."
+        },
+        {
+          "id": "food-trip",
+          "strength": 5,
+          "notes": "Good fit for food trip plans."
+        },
+        {
+          "id": "rain-friendly",
+          "strength": 4,
+          "notes": "Indoor or mostly covered place that works during rain."
+        },
+        {
+          "id": "indoor",
+          "strength": 4,
+          "notes": "Mostly indoor place."
+        },
+        {
+          "id": "parking-available",
+          "strength": 3,
+          "notes": "Parking may be available nearby or on site."
+        },
+        {
+          "id": "date-friendly",
+          "strength": 4,
+          "notes": "Good fit for casual dates or date-night plans."
+        },
+        {
+          "id": "group-friendly",
+          "strength": 4,
+          "notes": "Good fit for barkada or group plans."
+        },
+        {
+          "id": "quiet-chill",
+          "strength": 4,
+          "notes": "Good fit for calmer or chill plans."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "hirus-cafe-1",
+          "storage_key": "galatayo-photos/places/hirus-cafe/hirus-cafe-1.webp",
+          "alt_text": "Hirus Cafe in Valenzuela City photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "house-of-us-restaurant-valenzuela",
+      "name": "House of Us Restaurant Valenzuela",
+      "slug": "house-of-us-restaurant-valenzuela",
+      "category": "Food",
+      "city": "Valenzuela City",
+      "area": "Marulas",
+      "address": "7 Tamaraw Hills, Marulas, Valenzuela City, Metro Manila",
+      "latitude": 14.6787,
+      "longitude": 120.9814,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=House+of+Us+Restaurant+7+Tamaraw+Hills+Marulas+Valenzuela",
+      "budget_min": 150,
+      "price_level": 1,
+      "budget_note": "Low-cost place; bring extra budget for food, drinks, transport, or optional purchases.",
+      "description": "Affordable local restaurant in Marulas for comfort food, group meals, and casual family dining. Good siya for GalaTayo kapag gusto niyo ng sulit kainan near Fatima/Marulas without mall pricing. Mas practical-food-trip siya than scenic destination.",
+      "good_for": [
+        "Food Trip",
+        "Family Trip",
+        "Barkada Hangout",
+        "Budget Friendly",
+        "Casual Date",
+        "Rainy Day"
+      ],
+      "not_ideal_for": [
+        "Quiet Study",
+        "Users Looking For Free Activities Only",
+        "Fancy Date Night"
+      ],
+      "best_time_to_visit": "Lunch or dinner",
+      "visit_duration": "1–2 hours",
+      "indoor_outdoor": "Indoor",
+      "weather_fit": "Rain-friendly",
+      "crowd_level": "Can get busy during regular meal hours, especially dinner.",
+      "parking_info": "Parking may be limited around Tamaraw Hills; better to confirm if bringing a car.",
+      "commute_access": "Accessible from Marulas/Fatima area; jeepney routes on nearby main roads may require a short walk or tricycle.",
+      "nearby_context": "Near Fatima Hospital/OLFU area, Fatima Avenue, and Marulas cafe/food spots.",
+      "normalized_name": "house of us restaurant valenzuela",
+      "search_keywords": [
+        "Valenzuela City",
+        "Valenzuela",
+        "Marulas",
+        "Food",
+        "family",
+        "group",
+        "date",
+        "chill",
+        "gala",
+        "pasyal",
+        "tambay",
+        "food trip",
+        "kainan",
+        "restaurant",
+        "resto",
+        "dinner",
+        "lunch",
+        "family meal",
+        "budget friendly",
+        "rain friendly",
+        "indoor",
+        "parking available",
+        "commute friendly",
+        "date friendly",
+        "family friendly",
+        "group friendly",
+        "House"
+      ],
+      "search_aliases": [
+        "House of Us Restaurant Valenzuela",
+        "House of Us Restaurant Valenzuela Valenzuela City",
+        "House of Us Restaurant Valenzuela Valenzuela"
+      ],
+      "searchable_text": "house of us restaurant valenzuela food valenzuela city marulas 7 tamaraw hills marulas valenzuela city metro manila affordable local restaurant in marulas for comfort food group meals and casual family dining good siya for galatayo kapag gusto niyo ng sulit kainan near fatima marulas without mall pricing mas practical food trip siya than scenic destination lunch or dinner 12 hours indoor rain friendly can get busy during regular meal hours especially dinner accessible from marulas fatima area jeepney routes on nearby main roads may require a short walk or tricycle parking may be limited around tamaraw hills better to confirm if bringing a car near fatima hospital olfu area fatima avenue and marulas cafe food spots food trip family trip barkada hangout budget friendly casual date rainy day quiet study users looking for free activities only fancy date night food family group date chill valenzuela city valenzuela marulas food family group date chill gala pasyal tambay food trip kainan restaurant resto dinner lunch family meal budget friendly rain friendly indoor parking available commute friendly date friendly family friendly group friendly house house of us restaurant valenzuela house of us restaurant valenzuela valenzuela city house of us restaurant valenzuela valenzuela budget friendly works for low budget gala plans food trip good fit for food trip plans rain friendly indoor or mostly covered place that works during rain indoor mostly indoor place parking available parking may be available nearby or on site commute friendly reasonably accessible by commute or common transport routes date friendly good fit for casual dates or date night plans family friendly good fit for family friendly plans group friendly good fit for barkada or group plans",
+      "status": "published",
+      "average_rating": 0,
+      "review_count": 0,
+      "categories": [
+        "food",
+        "family",
+        "group",
+        "date",
+        "chill"
+      ],
+      "tags": [
+        {
+          "id": "budget-friendly",
+          "strength": 4,
+          "notes": "Works for low-budget gala plans."
+        },
+        {
+          "id": "food-trip",
+          "strength": 5,
+          "notes": "Good fit for food trip plans."
+        },
+        {
+          "id": "rain-friendly",
+          "strength": 4,
+          "notes": "Indoor or mostly covered place that works during rain."
+        },
+        {
+          "id": "indoor",
+          "strength": 4,
+          "notes": "Mostly indoor place."
+        },
+        {
+          "id": "parking-available",
+          "strength": 3,
+          "notes": "Parking may be available nearby or on site."
+        },
+        {
+          "id": "commute-friendly",
+          "strength": 4,
+          "notes": "Reasonably accessible by commute or common transport routes."
+        },
+        {
+          "id": "date-friendly",
+          "strength": 4,
+          "notes": "Good fit for casual dates or date-night plans."
+        },
+        {
+          "id": "family-friendly",
+          "strength": 4,
+          "notes": "Good fit for family-friendly plans."
+        },
+        {
+          "id": "group-friendly",
+          "strength": 4,
+          "notes": "Good fit for barkada or group plans."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "house-of-us-restaurant-valenzuela-1",
+          "storage_key": "galatayo-photos/places/house-of-us-restaurant-valenzuela/house-of-us-restaurant-valenzuela-1.webp",
+          "alt_text": "House of Us Restaurant Valenzuela in Valenzuela City photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "kamayan-sa-palapat",
+      "name": "Kamayan sa Palapat",
+      "slug": "kamayan-sa-palapat",
+      "category": "Food",
+      "city": "Valenzuela City",
+      "area": "Tagalag",
+      "address": "24 Tagalag Road, Barangay Tagalag, Valenzuela City, Metro Manila",
+      "latitude": 14.7169,
+      "longitude": 120.9426,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Kamayan+sa+Palapat+24+Tagalag+Road+Valenzuela",
+      "budget_min": 250,
+      "price_level": 1,
+      "budget_note": "Low-cost place; bring extra budget for food, drinks, transport, or optional purchases.",
+      "description": "Tagalag food-trip spot for Filipino dishes, seafood-style meals, and group dining near the fishing village. Good siya kapag gusto niyo ng kainan na may local destination feel instead of usual city resto. Pair it with a Tagalag walk or boardwalk stop para mas sulit ang gala.",
+      "good_for": [
+        "Food Trip",
+        "Family Trip",
+        "Barkada Hangout",
+        "Group Friendly",
+        "Casual Date"
+      ],
+      "not_ideal_for": [
+        "Quiet Study",
+        "Users Looking For Free Activities Only",
+        "Heavy Rain If Planning Outdoor Side Trip"
+      ],
+      "best_time_to_visit": "Lunch or early dinner",
+      "visit_duration": "1–2 hours",
+      "indoor_outdoor": "Mixed",
+      "weather_fit": "Mixed",
+      "crowd_level": "Can be busy during family meal hours and weekends.",
+      "parking_info": "Parking may be available near the restaurant or Tagalag dining area, but weekends can be tight.",
+      "commute_access": "Commute via Malanday/Bisig then tricycle to Tagalag; private vehicle is easier for groups.",
+      "nearby_context": "Inside Tagalag Fishing Village area, near Alvarez Park Cafe and the Valenzuela Boardwalk.",
+      "normalized_name": "kamayan sa palapat",
+      "search_keywords": [
+        "Valenzuela City",
+        "Valenzuela",
+        "Tagalag",
+        "Food",
+        "family",
+        "group",
+        "date",
+        "chill",
+        "gala",
+        "pasyal",
+        "tambay",
+        "food trip",
+        "kainan",
+        "restaurant",
+        "resto",
+        "dinner",
+        "lunch",
+        "family meal",
+        "budget friendly",
+        "indoor",
+        "outdoor",
+        "parking available",
+        "date friendly",
+        "family friendly",
+        "group friendly",
+        "Kamayan",
+        "Palapat"
+      ],
+      "search_aliases": [
+        "Kamayan sa Palapat",
+        "Kamayan sa Palapat Valenzuela City",
+        "Kamayan sa Palapat Valenzuela"
+      ],
+      "searchable_text": "kamayan sa palapat food valenzuela city tagalag 24 tagalag road barangay tagalag valenzuela city metro manila tagalag food trip spot for filipino dishes seafood style meals and group dining near the fishing village good siya kapag gusto niyo ng kainan na may local destination feel instead of usual city resto pair it with a tagalag walk or boardwalk stop para mas sulit ang gala lunch or early dinner 12 hours mixed mixed can be busy during family meal hours and weekends commute via malanday bisig then tricycle to tagalag private vehicle is easier for groups parking may be available near the restaurant or tagalag dining area but weekends can be tight inside tagalag fishing village area near alvarez park cafe and the valenzuela boardwalk food trip family trip barkada hangout group friendly casual date quiet study users looking for free activities only heavy rain if planning outdoor side trip food family group date chill valenzuela city valenzuela tagalag food family group date chill gala pasyal tambay food trip kainan restaurant resto dinner lunch family meal budget friendly indoor outdoor parking available date friendly family friendly group friendly kamayan palapat kamayan sa palapat kamayan sa palapat valenzuela city kamayan sa palapat valenzuela budget friendly works for low budget gala plans food trip good fit for food trip plans indoor mostly indoor place outdoor outdoor or open air place parking available parking may be available nearby or on site date friendly good fit for casual dates or date night plans family friendly good fit for family friendly plans group friendly good fit for barkada or group plans",
+      "status": "published",
+      "average_rating": 0,
+      "review_count": 0,
+      "categories": [
+        "food",
+        "family",
+        "group",
+        "date",
+        "chill"
+      ],
+      "tags": [
+        {
+          "id": "budget-friendly",
+          "strength": 4,
+          "notes": "Works for low-budget gala plans."
+        },
+        {
+          "id": "food-trip",
+          "strength": 5,
+          "notes": "Good fit for food trip plans."
+        },
+        {
+          "id": "indoor",
+          "strength": 3,
+          "notes": "Mostly indoor place."
+        },
+        {
+          "id": "outdoor",
+          "strength": 3,
+          "notes": "Outdoor or open-air place."
+        },
+        {
+          "id": "parking-available",
+          "strength": 4,
+          "notes": "Parking may be available nearby or on site."
+        },
+        {
+          "id": "date-friendly",
+          "strength": 4,
+          "notes": "Good fit for casual dates or date-night plans."
+        },
+        {
+          "id": "family-friendly",
+          "strength": 4,
+          "notes": "Good fit for family-friendly plans."
+        },
+        {
+          "id": "group-friendly",
+          "strength": 4,
+          "notes": "Good fit for barkada or group plans."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "kamayan-sa-palapat-1",
+          "storage_key": "galatayo-photos/places/kamayan-sa-palapat/kamayan-sa-palapat-1.webp",
+          "alt_text": "Kamayan sa Palapat in Valenzuela City photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "la-taza-cafe",
+      "name": "La Taza Cafe",
+      "slug": "la-taza-cafe",
+      "category": "Cafe",
+      "city": "Valenzuela City",
+      "area": "Lingunan",
+      "address": "70 Meyland Drive, Lingunan, Valenzuela City, Metro Manila",
+      "latitude": 14.7042,
+      "longitude": 120.9704,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=La+Taza+Cafe+70+Meyland+Drive+Lingunan+Valenzuela",
+      "budget_min": 200,
+      "price_level": 1,
+      "budget_note": "Low-cost place; bring extra budget for food, drinks, transport, or optional purchases.",
+      "description": "Rooftop cafe with coffee, food, and sunset/chill-night vibe in Lingunan. GalaTayo-worthy siya for casual dates and barkada tambay kapag gusto niyo ng view plus food without going far. Best siya sa hapon hanggang gabi para mas ramdam yung rooftop setup.",
+      "good_for": [
+        "Casual Date",
+        "Date Night",
+        "Chill",
+        "Barkada Hangout",
+        "Food Trip",
+        "Photo Spot"
+      ],
+      "not_ideal_for": [
+        "Heavy Rain",
+        "Users Looking For Free Activities Only",
+        "Very Quiet Study"
+      ],
+      "best_time_to_visit": "Sunset to evening",
+      "visit_duration": "1–2 hours",
+      "indoor_outdoor": "Mixed",
+      "weather_fit": "Mixed",
+      "crowd_level": "Can get busier during sunset and night hours; weekdays are usually better for a calmer visit.",
+      "parking_info": "Parking may be limited around the building/roadside; check before peak evening hours.",
+      "commute_access": "Reachable by local tricycle from Lingunan/MacArthur Highway side; private vehicle is easier if coming from outside Valenzuela.",
+      "nearby_context": "Located in Lingunan, within reach of MacArthur Highway and neighborhood food spots.",
+      "normalized_name": "la taza cafe",
+      "search_keywords": [
+        "Valenzuela City",
+        "Valenzuela",
+        "Lingunan",
+        "Cafe",
+        "food",
+        "date",
+        "chill",
+        "group",
+        "gala",
+        "pasyal",
+        "tambay",
+        "coffee",
+        "kapihan",
+        "kape",
+        "coffee shop",
+        "chill cafe",
+        "dessert",
+        "budget friendly",
+        "food trip",
+        "indoor",
+        "outdoor",
+        "parking available",
+        "date friendly",
+        "group friendly",
+        "tourist friendly",
+        "quiet chill",
+        "Taza"
+      ],
+      "search_aliases": [
+        "La Taza Cafe",
+        "La Taza Cafe Valenzuela City",
+        "La Taza Cafe Valenzuela"
+      ],
+      "searchable_text": "la taza cafe cafe valenzuela city lingunan 70 meyland drive lingunan valenzuela city metro manila rooftop cafe with coffee food and sunset chill night vibe in lingunan galatayo worthy siya for casual dates and barkada tambay kapag gusto niyo ng view plus food without going far best siya sa hapon hanggang gabi para mas ramdam yung rooftop setup sunset to evening 12 hours mixed mixed can get busier during sunset and night hours weekdays are usually better for a calmer visit reachable by local tricycle from lingunan macarthur highway side private vehicle is easier if coming from outside valenzuela parking may be limited around the building roadside check before peak evening hours located in lingunan within reach of macarthur highway and neighborhood food spots casual date date night chill barkada hangout food trip photo spot heavy rain users looking for free activities only very quiet study cafe food date chill group valenzuela city valenzuela lingunan cafe food date chill group gala pasyal tambay coffee kapihan kape coffee shop chill cafe dessert budget friendly food trip indoor outdoor parking available date friendly group friendly tourist friendly quiet chill taza la taza cafe la taza cafe valenzuela city la taza cafe valenzuela budget friendly works for low budget gala plans cafe good fit for coffee cafe dates or chill cafe plans food trip good fit for food trip plans indoor mostly indoor place outdoor outdoor or open air place parking available parking may be available nearby or on site date friendly good fit for casual dates or date night plans group friendly good fit for barkada or group plans tourist friendly good fit for visitors or landmark style gala plans quiet chill good fit for calmer or chill plans",
+      "status": "published",
+      "average_rating": 0,
+      "review_count": 0,
+      "categories": [
+        "cafe",
+        "food",
+        "date",
+        "chill",
+        "group"
+      ],
+      "tags": [
+        {
+          "id": "budget-friendly",
+          "strength": 4,
+          "notes": "Works for low-budget gala plans."
+        },
+        {
+          "id": "cafe",
+          "strength": 5,
+          "notes": "Good fit for coffee, cafe dates, or chill cafe plans."
+        },
+        {
+          "id": "food-trip",
+          "strength": 5,
+          "notes": "Good fit for food trip plans."
+        },
+        {
+          "id": "indoor",
+          "strength": 3,
+          "notes": "Mostly indoor place."
+        },
+        {
+          "id": "outdoor",
+          "strength": 3,
+          "notes": "Outdoor or open-air place."
+        },
+        {
+          "id": "parking-available",
+          "strength": 3,
+          "notes": "Parking may be available nearby or on site."
+        },
+        {
+          "id": "date-friendly",
+          "strength": 4,
+          "notes": "Good fit for casual dates or date-night plans."
+        },
+        {
+          "id": "group-friendly",
+          "strength": 4,
+          "notes": "Good fit for barkada or group plans."
+        },
+        {
+          "id": "tourist-friendly",
+          "strength": 4,
+          "notes": "Good fit for visitors or landmark-style gala plans."
+        },
+        {
+          "id": "quiet-chill",
+          "strength": 4,
+          "notes": "Good fit for calmer or chill plans."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "la-taza-cafe-1",
+          "storage_key": "galatayo-photos/places/la-taza-cafe/la-taza-cafe-1.webp",
+          "alt_text": "La Taza Cafe in Valenzuela City photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "museo-ni-dr-pio-valenzuela",
+      "name": "Museo ni Dr. Pio Valenzuela",
+      "slug": "museo-ni-dr-pio-valenzuela",
+      "category": "Museum",
+      "city": "Valenzuela City",
+      "area": "Pariancillo Villa",
+      "address": "Pascual Deato Street corner Kapitan Velilla Street, Pariancillo Villa, Valenzuela City, Metro Manila",
+      "latitude": 14.7086055,
+      "longitude": 120.9448653,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Museo+ni+Dr.+Pio+Valenzuela+Pascual+Deato+Kapitan+Velilla",
+      "budget_min": 0,
+      "price_level": 0,
+      "budget_note": "Free or no required entrance fee; bring extra money only for optional food, transport, or nearby purchases.",
+      "description": "Free historical museum built around the story and legacy of Dr. Pio Valenzuela. GalaTayo-worthy siya for a quick cultural stop, school-friendly visit, or heritage route around old Polo. It is not a loud hangout spot, so pair it with a nearby walk or food stop if you want a fuller gala.",
+      "good_for": [
+        "Museum Visit",
+        "Educational Trip",
+        "Family Trip",
+        "Free Activity",
+        "Solo Visit",
+        "Rainy Day"
+      ],
+      "not_ideal_for": [
+        "Late Night Gala",
+        "Food Trip Only",
+        "Loud Barkada Hangout",
+        "Users Looking For Long Activities"
+      ],
+      "best_time_to_visit": "Morning to afternoon",
+      "visit_duration": "30 minutes–1 hour",
+      "indoor_outdoor": "Indoor",
+      "weather_fit": "Rain-friendly",
+      "crowd_level": "Usually calm; may get busier with school or guided groups.",
+      "parking_info": "Parking may be limited on nearby streets; better for small-group or commute visits.",
+      "commute_access": "Reachable by jeep/tricycle within Polo/Pariancillo Villa area; ask locals for the museum near P. Deato and Kap. Velilla.",
+      "nearby_context": "Near Polo heritage area, San Diego de Alcala Church/Bell Tower, and Polo Riverwalk access points.",
+      "normalized_name": "museo ni dr pio valenzuela",
+      "search_keywords": [
+        "Valenzuela City",
+        "Valenzuela",
+        "Pariancillo Villa",
+        "Museum",
+        "heritage",
+        "family",
+        "chill",
+        "tourist",
+        "gala",
+        "pasyal",
+        "tambay",
+        "museo",
+        "history",
+        "culture",
+        "educational",
+        "free entry",
+        "activity",
+        "rain friendly",
+        "indoor",
+        "parking available",
+        "family friendly",
+        "solo friendly",
+        "Dr.",
+        "Pio"
+      ],
+      "search_aliases": [
+        "Museo ni Dr. Pio Valenzuela",
+        "Museo ni Dr. Pio Valenzuela Valenzuela City",
+        "Museo ni Dr. Pio Valenzuela Valenzuela",
+        "museo ni dr pio valenzuela"
+      ],
+      "searchable_text": "museo ni dr pio valenzuela museum valenzuela city pariancillo villa pascual deato street corner kapitan velilla street pariancillo villa valenzuela city metro manila free historical museum built around the story and legacy of dr pio valenzuela galatayo worthy siya for a quick cultural stop school friendly visit or heritage route around old polo it is not a loud hangout spot so pair it with a nearby walk or food stop if you want a fuller gala morning to afternoon 30 minutes1 hour indoor rain friendly usually calm may get busier with school or guided groups reachable by jeep tricycle within polo pariancillo villa area ask locals for the museum near p deato and kap velilla parking may be limited on nearby streets better for small group or commute visits near polo heritage area san diego de alcala church bell tower and polo riverwalk access points museum visit educational trip family trip free activity solo visit rainy day late night gala food trip only loud barkada hangout users looking for long activities museum heritage family chill tourist valenzuela city valenzuela pariancillo villa museum heritage family chill tourist gala pasyal tambay museo history culture educational free entry activity rain friendly indoor parking available family friendly solo friendly dr pio museo ni dr pio valenzuela museo ni dr pio valenzuela valenzuela city museo ni dr pio valenzuela valenzuela museo ni dr pio valenzuela free entry free or no required entrance fee museum good fit for museum learning or culture visits heritage useful for history culture and landmark visits activity good fit when users want an actual activity to do rain friendly indoor or mostly covered place that works during rain indoor mostly indoor place parking available parking may be available nearby or on site family friendly good fit for family friendly plans solo friendly works for solo visits or solo errands",
+      "status": "published",
+      "average_rating": 0,
+      "review_count": 0,
+      "categories": [
+        "museum",
+        "heritage",
+        "family",
+        "chill",
+        "tourist"
+      ],
+      "tags": [
+        {
+          "id": "free-entry",
+          "strength": 5,
+          "notes": "Free or no required entrance fee."
+        },
+        {
+          "id": "museum",
+          "strength": 5,
+          "notes": "Good fit for museum, learning, or culture visits."
+        },
+        {
+          "id": "heritage",
+          "strength": 4,
+          "notes": "Useful for history, culture, and landmark visits."
+        },
+        {
+          "id": "activity",
+          "strength": 5,
+          "notes": "Good fit when users want an actual activity to do."
+        },
+        {
+          "id": "rain-friendly",
+          "strength": 4,
+          "notes": "Indoor or mostly covered place that works during rain."
+        },
+        {
+          "id": "indoor",
+          "strength": 4,
+          "notes": "Mostly indoor place."
+        },
+        {
+          "id": "parking-available",
+          "strength": 3,
+          "notes": "Parking may be available nearby or on site."
+        },
+        {
+          "id": "family-friendly",
+          "strength": 4,
+          "notes": "Good fit for family-friendly plans."
+        },
+        {
+          "id": "solo-friendly",
+          "strength": 4,
+          "notes": "Works for solo visits or solo errands."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "museo-ni-dr-pio-valenzuela-1",
+          "storage_key": "galatayo-photos/places/museo-ni-dr-pio-valenzuela/museo-ni-dr-pio-valenzuela-1.webp",
+          "alt_text": "Museo ni Dr. Pio Valenzuela in Valenzuela City photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "museo-valenzuela",
+      "name": "Museo Valenzuela",
+      "slug": "museo-valenzuela",
+      "category": "Museum",
+      "city": "Valenzuela City",
+      "area": "Marulas / Fatima Avenue",
+      "address": "2 Fatima Avenue, Marulas, Valenzuela City, Metro Manila",
+      "latitude": 14.6769,
+      "longitude": 120.9824,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Museo+Valenzuela+2+Fatima+Avenue+Valenzuela",
+      "budget_min": 0,
+      "price_level": 0,
+      "budget_note": "Free or no required entrance fee; bring extra money only for optional food, transport, or nearby purchases.",
+      "description": "Free city museum for a short history and culture stop in Valenzuela. Hindi siya viral cafe-type gala, pero useful siya for museum visits, school-friendly plans, or a quick heritage route around Fatima Avenue. Best siya isama with nearby cafes or the shrine para hindi bitin ang lakad.",
+      "good_for": [
+        "Museum Visit",
+        "Family Trip",
+        "Educational Trip",
+        "Free Activity",
+        "Rainy Day",
+        "Solo Visit"
+      ],
+      "not_ideal_for": [
+        "Food Trip Only",
+        "Late Night Gala",
+        "Users Looking For Loud Barkada Activities"
+      ],
+      "best_time_to_visit": "Weekday morning or afternoon",
+      "visit_duration": "30 minutes–1 hour",
+      "indoor_outdoor": "Indoor",
+      "weather_fit": "Rain-friendly",
+      "crowd_level": "Usually calm unless there are school groups, exhibits, or city events.",
+      "parking_info": "Nearby parking may depend on Fatima Avenue traffic and adjacent establishments; commute is easier.",
+      "commute_access": "Accessible via Fatima Avenue and MacArthur Highway area; jeepney routes pass nearby with a short walk.",
+      "nearby_context": "Near National Shrine of Our Lady of Fatima, Fatima Avenue, OLFU, and Marulas food spots.",
+      "normalized_name": "museo valenzuela",
+      "search_keywords": [
+        "Valenzuela City",
+        "Valenzuela",
+        "Marulas / Fatima Avenue",
+        "Museum",
+        "heritage",
+        "family",
+        "chill",
+        "tourist",
+        "gala",
+        "pasyal",
+        "tambay",
+        "museo",
+        "history",
+        "culture",
+        "educational",
+        "free entry",
+        "activity",
+        "rain friendly",
+        "indoor",
+        "parking available",
+        "commute friendly",
+        "family friendly",
+        "solo friendly"
+      ],
+      "search_aliases": [
+        "Museo Valenzuela",
+        "Museo Valenzuela Valenzuela City",
+        "Museo Valenzuela Valenzuela"
+      ],
+      "searchable_text": "museo valenzuela museum valenzuela city marulas fatima avenue 2 fatima avenue marulas valenzuela city metro manila free city museum for a short history and culture stop in valenzuela hindi siya viral cafe type gala pero useful siya for museum visits school friendly plans or a quick heritage route around fatima avenue best siya isama with nearby cafes or the shrine para hindi bitin ang lakad weekday morning or afternoon 30 minutes1 hour indoor rain friendly usually calm unless there are school groups exhibits or city events accessible via fatima avenue and macarthur highway area jeepney routes pass nearby with a short walk nearby parking may depend on fatima avenue traffic and adjacent establishments commute is easier near national shrine of our lady of fatima fatima avenue olfu and marulas food spots museum visit family trip educational trip free activity rainy day solo visit food trip only late night gala users looking for loud barkada activities museum heritage family chill tourist valenzuela city valenzuela marulas fatima avenue museum heritage family chill tourist gala pasyal tambay museo history culture educational free entry activity rain friendly indoor parking available commute friendly family friendly solo friendly museo valenzuela museo valenzuela valenzuela city museo valenzuela valenzuela free entry free or no required entrance fee museum good fit for museum learning or culture visits heritage useful for history culture and landmark visits activity good fit when users want an actual activity to do rain friendly indoor or mostly covered place that works during rain indoor mostly indoor place parking available parking may be available nearby or on site commute friendly reasonably accessible by commute or common transport routes family friendly good fit for family friendly plans solo friendly works for solo visits or solo errands",
+      "status": "published",
+      "average_rating": 0,
+      "review_count": 0,
+      "categories": [
+        "museum",
+        "heritage",
+        "family",
+        "chill",
+        "tourist"
+      ],
+      "tags": [
+        {
+          "id": "free-entry",
+          "strength": 5,
+          "notes": "Free or no required entrance fee."
+        },
+        {
+          "id": "museum",
+          "strength": 5,
+          "notes": "Good fit for museum, learning, or culture visits."
+        },
+        {
+          "id": "heritage",
+          "strength": 4,
+          "notes": "Useful for history, culture, and landmark visits."
+        },
+        {
+          "id": "activity",
+          "strength": 5,
+          "notes": "Good fit when users want an actual activity to do."
+        },
+        {
+          "id": "rain-friendly",
+          "strength": 4,
+          "notes": "Indoor or mostly covered place that works during rain."
+        },
+        {
+          "id": "indoor",
+          "strength": 4,
+          "notes": "Mostly indoor place."
+        },
+        {
+          "id": "parking-available",
+          "strength": 3,
+          "notes": "Parking may be available nearby or on site."
+        },
+        {
+          "id": "commute-friendly",
+          "strength": 4,
+          "notes": "Reasonably accessible by commute or common transport routes."
+        },
+        {
+          "id": "family-friendly",
+          "strength": 4,
+          "notes": "Good fit for family-friendly plans."
+        },
+        {
+          "id": "solo-friendly",
+          "strength": 4,
+          "notes": "Works for solo visits or solo errands."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "museo-valenzuela-1",
+          "storage_key": "galatayo-photos/places/museo-valenzuela/museo-valenzuela-1.webp",
+          "alt_text": "Museo Valenzuela in Valenzuela City photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "national-shrine-of-our-lady-of-fatima",
+      "name": "National Shrine of Our Lady of Fatima",
+      "slug": "national-shrine-of-our-lady-of-fatima",
+      "category": "Heritage",
+      "city": "Valenzuela City",
+      "area": "Marulas / Fatima Avenue",
+      "address": "Fatima Avenue, Marulas, Valenzuela City, Metro Manila",
+      "latitude": 14.6779,
+      "longitude": 120.9822,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=National+Shrine+of+Our+Lady+of+Fatima+Valenzuela",
+      "budget_min": 0,
+      "price_level": 0,
+      "budget_note": "Free or no required entrance fee; bring extra money only for optional food, transport, or nearby purchases.",
+      "description": "Active national shrine and pilgrimage site near OLFU and Fatima Avenue. It is best for heritage, faith-based visits, quiet reflection, or a cultural route with nearby Museo Valenzuela. Not a barkada hype spot, but it adds real Valenzuela identity to the app.",
+      "good_for": [
+        "Heritage Visit",
+        "Family Trip",
+        "Quiet Visit",
+        "Free Activity",
+        "Cultural Stop",
+        "Solo Visit"
+      ],
+      "not_ideal_for": [
+        "Loud Barkada Hangout",
+        "Nightlife",
+        "Food Trip Only",
+        "Users Uncomfortable With Religious Sites"
+      ],
+      "best_time_to_visit": "Morning or late afternoon",
+      "visit_duration": "30 minutes–1 hour",
+      "indoor_outdoor": "Indoor",
+      "weather_fit": "Rain-friendly",
+      "crowd_level": "Can get crowded during masses, feast days, pilgrim visits, and Sundays.",
+      "parking_info": "Parking may be limited during mass times and church events; commute or arrive early.",
+      "commute_access": "Very accessible from Fatima Avenue and MacArthur Highway; jeepney routes and short walks are common.",
+      "nearby_context": "Beside or near OLFU Valenzuela, Museo Valenzuela, Fatima Avenue food spots, and Marulas cafes.",
+      "normalized_name": "national shrine of our lady of fatima",
+      "search_keywords": [
+        "Valenzuela City",
+        "Valenzuela",
+        "Marulas / Fatima Avenue",
+        "Heritage",
+        "tourist",
+        "family",
+        "chill",
+        "gala",
+        "pasyal",
+        "tambay",
+        "history",
+        "landmark",
+        "historical",
+        "cultural",
+        "church",
+        "simbahan",
+        "misa",
+        "mass",
+        "dasal",
+        "pray",
+        "prayer",
+        "shrine",
+        "dambana",
+        "parish",
+        "parokya",
+        "pilgrimage",
+        "free entry",
+        "activity",
+        "rain friendly",
+        "indoor",
+        "parking available",
+        "commute friendly",
+        "family friendly",
+        "tourist friendly",
+        "quiet chill",
+        "solo friendly",
+        "National",
+        "Our",
+        "Lady",
+        "Fatima"
+      ],
+      "search_aliases": [
+        "National Shrine of Our Lady of Fatima",
+        "National Shrine of Our Lady of Fatima Valenzuela City",
+        "National Shrine of Our Lady of Fatima Valenzuela",
+        "Fatima Church Valenzuela",
+        "Our Lady of Fatima Shrine Valenzuela",
+        "Fatima Shrine Valenzuela",
+        "Simbahan sa Fatima Valenzuela"
+      ],
+      "searchable_text": "national shrine of our lady of fatima heritage valenzuela city marulas fatima avenue fatima avenue marulas valenzuela city metro manila active national shrine and pilgrimage site near olfu and fatima avenue it is best for heritage faith based visits quiet reflection or a cultural route with nearby museo valenzuela not a barkada hype spot but it adds real valenzuela identity to the app morning or late afternoon 30 minutes1 hour indoor rain friendly can get crowded during masses feast days pilgrim visits and sundays very accessible from fatima avenue and macarthur highway jeepney routes and short walks are common parking may be limited during mass times and church events commute or arrive early beside or near olfu valenzuela museo valenzuela fatima avenue food spots and marulas cafes heritage visit family trip quiet visit free activity cultural stop solo visit loud barkada hangout nightlife food trip only users uncomfortable with religious sites heritage tourist family chill valenzuela city valenzuela marulas fatima avenue heritage tourist family chill gala pasyal tambay history landmark historical cultural church simbahan misa mass dasal pray prayer shrine dambana parish parokya pilgrimage free entry activity rain friendly indoor parking available commute friendly family friendly tourist friendly quiet chill solo friendly national our lady fatima national shrine of our lady of fatima national shrine of our lady of fatima valenzuela city national shrine of our lady of fatima valenzuela fatima church valenzuela our lady of fatima shrine valenzuela fatima shrine valenzuela simbahan sa fatima valenzuela free entry free or no required entrance fee heritage useful for history culture and landmark visits church good fit for church visits prayer or quiet reflection activity good fit when users want an actual activity to do rain friendly indoor or mostly covered place that works during rain indoor mostly indoor place parking available parking may be available nearby or on site commute friendly reasonably accessible by commute or common transport routes family friendly good fit for family friendly plans tourist friendly good fit for visitors or landmark style gala plans quiet chill good fit for calmer or chill plans solo friendly works for solo visits or solo errands",
+      "status": "published",
+      "average_rating": 0,
+      "review_count": 0,
+      "categories": [
+        "heritage",
+        "tourist",
+        "family",
+        "chill"
+      ],
+      "tags": [
+        {
+          "id": "free-entry",
+          "strength": 5,
+          "notes": "Free or no required entrance fee."
+        },
+        {
+          "id": "heritage",
+          "strength": 5,
+          "notes": "Useful for history, culture, and landmark visits."
+        },
+        {
+          "id": "church",
+          "strength": 5,
+          "notes": "Good fit for church visits, prayer, or quiet reflection."
+        },
+        {
+          "id": "activity",
+          "strength": 5,
+          "notes": "Good fit when users want an actual activity to do."
+        },
+        {
+          "id": "rain-friendly",
+          "strength": 4,
+          "notes": "Indoor or mostly covered place that works during rain."
+        },
+        {
+          "id": "indoor",
+          "strength": 4,
+          "notes": "Mostly indoor place."
+        },
+        {
+          "id": "parking-available",
+          "strength": 3,
+          "notes": "Parking may be available nearby or on site."
+        },
+        {
+          "id": "commute-friendly",
+          "strength": 4,
+          "notes": "Reasonably accessible by commute or common transport routes."
+        },
+        {
+          "id": "family-friendly",
+          "strength": 4,
+          "notes": "Good fit for family-friendly plans."
+        },
+        {
+          "id": "tourist-friendly",
+          "strength": 4,
+          "notes": "Good fit for visitors or landmark-style gala plans."
+        },
+        {
+          "id": "quiet-chill",
+          "strength": 4,
+          "notes": "Good fit for calmer or chill plans."
+        },
+        {
+          "id": "solo-friendly",
+          "strength": 4,
+          "notes": "Works for solo visits or solo errands."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "national-shrine-of-our-lady-of-fatima-1",
+          "storage_key": "galatayo-photos/places/national-shrine-of-our-lady-of-fatima/national-shrine-of-our-lady-of-fatima-1.webp",
+          "alt_text": "National Shrine of Our Lady of Fatima in Valenzuela City photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "one-mall-skytheater-cinema",
+      "name": "One Mall SkyTheater Cinema",
+      "slug": "one-mall-skytheater-cinema",
+      "category": "Cinema",
+      "city": "Valenzuela City",
+      "area": "One Mall Valenzuela / Gen. T. De Leon",
+      "address": "Level 4, One Mall Valenzuela, 6045 Gen. T. De Leon Road, Valenzuela City, Metro Manila",
+      "latitude": 14.6875303,
+      "longitude": 121.0002891,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=One+Mall+SkyTheater+Cinema+Valenzuela",
+      "budget_min": 280,
+      "price_level": 1,
+      "budget_note": "Low-cost place; bring extra budget for food, drinks, transport, or optional purchases.",
+      "description": "Cinema option inside One Mall for Gen. T. De Leon movie plans without going to a bigger mall. Good siya for simple date night, barkada movie, or family screening with food nearby. Check the official schedule before going since showtimes can change.",
+      "good_for": [
+        "Cinema",
+        "Date Night",
+        "Family Trip",
+        "Barkada Hangout",
+        "Rainy Day",
+        "Casual Date"
+      ],
+      "not_ideal_for": [
+        "Users Looking For Free Activities Only",
+        "Outdoor Activities",
+        "Users Wanting Premium Large-Mall Cinema Options"
+      ],
+      "best_time_to_visit": "Afternoon to evening showtimes",
+      "visit_duration": "2–3 hours",
+      "indoor_outdoor": "Indoor",
+      "weather_fit": "Rain-friendly",
+      "crowd_level": "Usually community-mall cinema crowd; busier on weekends and popular movie releases.",
+      "parking_info": "Use One Mall parking; allow extra time during weekends or mall events.",
+      "commute_access": "Reachable via Gen. T. De Leon jeep/tricycle routes; ride-hailing is convenient for night screenings.",
+      "nearby_context": "Inside One Mall Valenzuela, near food stalls, services, and Gen. T. De Leon commercial spots.",
+      "normalized_name": "one mall skytheater cinema",
+      "search_keywords": [
+        "Valenzuela City",
+        "Valenzuela",
+        "One Mall Valenzuela / Gen. T. De Leon",
+        "Cinema",
+        "date",
+        "family",
+        "group",
+        "mall",
+        "chill",
+        "gala",
+        "pasyal",
+        "tambay",
+        "movie",
+        "movies",
+        "sine",
+        "pelikula",
+        "date night",
+        "rainy day",
+        "budget friendly",
+        "rain friendly",
+        "indoor",
+        "parking available",
+        "date friendly",
+        "family friendly",
+        "group friendly",
+        "One",
+        "SkyTheater"
+      ],
+      "search_aliases": [
+        "One Mall SkyTheater Cinema",
+        "One Mall SkyTheater Cinema Valenzuela City",
+        "One Mall SkyTheater Cinema Valenzuela",
+        "SkyTheater Cinema Valenzuela",
+        "One Mall Cinema"
+      ],
+      "searchable_text": "one mall skytheater cinema cinema valenzuela city one mall valenzuela gen t de leon level 4 one mall valenzuela 6045 gen t de leon road valenzuela city metro manila cinema option inside one mall for gen t de leon movie plans without going to a bigger mall good siya for simple date night barkada movie or family screening with food nearby check the official schedule before going since showtimes can change afternoon to evening showtimes 23 hours indoor rain friendly usually community mall cinema crowd busier on weekends and popular movie releases reachable via gen t de leon jeep tricycle routes ride hailing is convenient for night screenings use one mall parking allow extra time during weekends or mall events inside one mall valenzuela near food stalls services and gen t de leon commercial spots cinema date night family trip barkada hangout rainy day casual date users looking for free activities only outdoor activities users wanting premium large mall cinema options cinema date family group mall chill valenzuela city valenzuela one mall valenzuela gen t de leon cinema date family group mall chill gala pasyal tambay movie movies sine pelikula date night rainy day budget friendly rain friendly indoor parking available date friendly family friendly group friendly one skytheater one mall skytheater cinema one mall skytheater cinema valenzuela city one mall skytheater cinema valenzuela skytheater cinema valenzuela one mall cinema budget friendly works for low budget gala plans cinema good fit for movie plans and cinema dates rain friendly indoor or mostly covered place that works during rain indoor mostly indoor place parking available parking may be available nearby or on site date friendly good fit for casual dates or date night plans family friendly good fit for family friendly plans group friendly good fit for barkada or group plans",
+      "status": "published",
+      "average_rating": 0,
+      "review_count": 0,
+      "categories": [
+        "cinema",
+        "date",
+        "family",
+        "group",
+        "mall",
+        "chill"
+      ],
+      "tags": [
+        {
+          "id": "budget-friendly",
+          "strength": 4,
+          "notes": "Works for low-budget gala plans."
+        },
+        {
+          "id": "cinema",
+          "strength": 5,
+          "notes": "Good fit for movie plans and cinema dates."
+        },
+        {
+          "id": "rain-friendly",
+          "strength": 5,
+          "notes": "Indoor or mostly covered place that works during rain."
+        },
+        {
+          "id": "indoor",
+          "strength": 5,
+          "notes": "Mostly indoor place."
+        },
+        {
+          "id": "parking-available",
+          "strength": 4,
+          "notes": "Parking may be available nearby or on site."
+        },
+        {
+          "id": "date-friendly",
+          "strength": 4,
+          "notes": "Good fit for casual dates or date-night plans."
+        },
+        {
+          "id": "family-friendly",
+          "strength": 4,
+          "notes": "Good fit for family-friendly plans."
+        },
+        {
+          "id": "group-friendly",
+          "strength": 4,
+          "notes": "Good fit for barkada or group plans."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "one-mall-skytheater-cinema-1",
+          "storage_key": "galatayo-photos/places/one-mall-skytheater-cinema/one-mall-skytheater-cinema-1.webp",
+          "alt_text": "One Mall SkyTheater Cinema in Valenzuela City photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "one-mall-valenzuela",
+      "name": "One Mall Valenzuela",
+      "slug": "one-mall-valenzuela",
+      "category": "Mall",
+      "city": "Valenzuela City",
+      "area": "Gen. T. De Leon",
+      "address": "6045 Gen. T. De Leon Road, Valenzuela City, Metro Manila",
+      "latitude": 14.6875303,
+      "longitude": 121.0002891,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=One+Mall+Valenzuela+6045+Gen+T+De+Leon",
+      "budget_min": 0,
+      "price_level": 0,
+      "budget_note": "Free or no required entrance fee; bring extra money only for optional food, transport, or nearby purchases.",
+      "description": "Community mall in Gen. T. De Leon with dining, shops, services, and its own cinema. Good siya as a local meetup place for east Valenzuela, especially if your plan is food plus movie or simple tambay. Less big-mall energy than SM, but useful and accessible for nearby residents.",
+      "good_for": [
+        "Shopping",
+        "Food Trip",
+        "Family Trip",
+        "Casual Date",
+        "Barkada Hangout",
+        "Cinema",
+        "Rainy Day"
+      ],
+      "not_ideal_for": [
+        "Users Looking For Big Mall Variety",
+        "Outdoor Activities",
+        "Unique Destination Trips"
+      ],
+      "best_time_to_visit": "Afternoon to evening",
+      "visit_duration": "1–3 hours",
+      "indoor_outdoor": "Indoor",
+      "weather_fit": "Rain-friendly",
+      "crowd_level": "Moderate community-mall crowd; busier on weekends, events, and movie schedules.",
+      "parking_info": "Mall parking is available, including basement/covered options, but peak hours may still get busy.",
+      "commute_access": "Located along Gen. T. De Leon Road; reachable by jeep, tricycle, or ride-hailing from nearby barangays.",
+      "nearby_context": "Near Gen. T. De Leon residential/commercial area and One Mall SkyTheater Cinema.",
+      "normalized_name": "one mall valenzuela",
+      "search_keywords": [
+        "Valenzuela City",
+        "Valenzuela",
+        "Gen. T. De Leon",
+        "Mall",
+        "food",
+        "family",
+        "group",
+        "date",
+        "chill",
+        "gala",
+        "pasyal",
+        "tambay",
+        "malling",
+        "shopping",
+        "food court",
+        "rainy day",
+        "indoor",
+        "grocery",
+        "free entry",
+        "food trip",
+        "mall day",
+        "rain friendly",
+        "parking available",
+        "date friendly",
+        "family friendly",
+        "group friendly",
+        "One"
+      ],
+      "search_aliases": [
+        "One Mall Valenzuela",
+        "One Mall Valenzuela Valenzuela City",
+        "One Mall Valenzuela Valenzuela"
+      ],
+      "searchable_text": "one mall valenzuela mall valenzuela city gen t de leon 6045 gen t de leon road valenzuela city metro manila community mall in gen t de leon with dining shops services and its own cinema good siya as a local meetup place for east valenzuela especially if your plan is food plus movie or simple tambay less big mall energy than sm but useful and accessible for nearby residents afternoon to evening 13 hours indoor rain friendly moderate community mall crowd busier on weekends events and movie schedules located along gen t de leon road reachable by jeep tricycle or ride hailing from nearby barangays mall parking is available including basement covered options but peak hours may still get busy near gen t de leon residential commercial area and one mall skytheater cinema shopping food trip family trip casual date barkada hangout cinema rainy day users looking for big mall variety outdoor activities unique destination trips mall food family group date chill valenzuela city valenzuela gen t de leon mall food family group date chill gala pasyal tambay malling shopping food court rainy day indoor grocery free entry food trip mall day rain friendly parking available date friendly family friendly group friendly one one mall valenzuela one mall valenzuela valenzuela city one mall valenzuela valenzuela free entry free or no required entrance fee food trip good fit for food trip plans mall day works well as an indoor mall plan rain friendly indoor or mostly covered place that works during rain indoor mostly indoor place parking available parking may be available nearby or on site date friendly good fit for casual dates or date night plans family friendly good fit for family friendly plans group friendly good fit for barkada or group plans",
+      "status": "published",
+      "average_rating": 0,
+      "review_count": 0,
+      "categories": [
+        "mall",
+        "food",
+        "family",
+        "group",
+        "date",
+        "chill"
+      ],
+      "tags": [
+        {
+          "id": "free-entry",
+          "strength": 5,
+          "notes": "Free or no required entrance fee."
+        },
+        {
+          "id": "food-trip",
+          "strength": 5,
+          "notes": "Good fit for food trip plans."
+        },
+        {
+          "id": "mall-day",
+          "strength": 5,
+          "notes": "Works well as an indoor mall plan."
+        },
+        {
+          "id": "rain-friendly",
+          "strength": 4,
+          "notes": "Indoor or mostly covered place that works during rain."
+        },
+        {
+          "id": "indoor",
+          "strength": 4,
+          "notes": "Mostly indoor place."
+        },
+        {
+          "id": "parking-available",
+          "strength": 4,
+          "notes": "Parking may be available nearby or on site."
+        },
+        {
+          "id": "date-friendly",
+          "strength": 4,
+          "notes": "Good fit for casual dates or date-night plans."
+        },
+        {
+          "id": "family-friendly",
+          "strength": 4,
+          "notes": "Good fit for family-friendly plans."
+        },
+        {
+          "id": "group-friendly",
+          "strength": 4,
+          "notes": "Good fit for barkada or group plans."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "one-mall-valenzuela-1",
+          "storage_key": "galatayo-photos/places/one-mall-valenzuela/one-mall-valenzuela-1.webp",
+          "alt_text": "One Mall Valenzuela in Valenzuela City photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "paraiso-ni-baste-resort",
+      "name": "Paraiso ni Baste Resort",
+      "slug": "paraiso-ni-baste-resort",
+      "category": "Tourist",
+      "city": "Valenzuela City",
+      "area": "Canumay East / Bagbaguin side",
+      "address": "46 G. Molina Street, Valenzuela City, Metro Manila",
+      "latitude": 14.7293,
+      "longitude": 120.9864,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Paraiso+ni+Baste+Resort+46+G.+Molina+Valenzuela",
+      "budget_min": 250,
+      "price_level": 1,
+      "budget_note": "Low-cost place; bring extra budget for food, drinks, transport, or optional purchases.",
+      "description": "Public resort and pool destination for quick swimming plans, family outings, and barkada summer gala inside Valenzuela. Best siya kapag pool day talaga ang trip niyo, not just casual tambay. Reviews and crowd can be mixed on busy days, so go with managed expectations and check current rates before visiting.",
+      "good_for": [
+        "Swimming",
+        "Family Trip",
+        "Barkada Hangout",
+        "Staycation",
+        "Group Friendly",
+        "Summer Trip"
+      ],
+      "not_ideal_for": [
+        "Quiet Study",
+        "Users Looking For Free Activities Only",
+        "Crowd-Avoidant Users",
+        "Rainy Days"
+      ],
+      "best_time_to_visit": "Morning to afternoon on weekdays",
+      "visit_duration": "Half day",
+      "indoor_outdoor": "Outdoor",
+      "weather_fit": "Sunny-friendly",
+      "crowd_level": "Can get packed on weekends, holidays, and pool-party/event days.",
+      "parking_info": "Parking appears available around the resort area, but expect tighter capacity during weekends or events.",
+      "commute_access": "Reachable by bus/jeep/UV plus local tricycle near Bagbaguin/Canumay area; private vehicle is easier for groups.",
+      "nearby_context": "Near Canumay East/Bagbaguin side, G. Molina Street, and north Valenzuela residential areas.",
+      "normalized_name": "paraiso ni baste resort",
+      "search_keywords": [
+        "Valenzuela City",
+        "Valenzuela",
+        "Canumay East / Bagbaguin side",
+        "Tourist",
+        "family",
+        "group",
+        "date",
+        "chill",
+        "gala",
+        "pasyal",
+        "tambay",
+        "resort",
+        "swimming",
+        "staycation",
+        "family outing",
+        "celebration",
+        "photo spot",
+        "budget friendly",
+        "outdoor",
+        "avoid rain",
+        "parking available",
+        "family friendly",
+        "group friendly",
+        "tourist friendly",
+        "special occasion",
+        "Paraiso",
+        "Baste"
+      ],
+      "search_aliases": [
+        "Paraiso ni Baste Resort",
+        "Paraiso ni Baste Resort Valenzuela City",
+        "Paraiso ni Baste Resort Valenzuela"
+      ],
+      "searchable_text": "paraiso ni baste resort tourist valenzuela city canumay east bagbaguin side 46 g molina street valenzuela city metro manila public resort and pool destination for quick swimming plans family outings and barkada summer gala inside valenzuela best siya kapag pool day talaga ang trip niyo not just casual tambay reviews and crowd can be mixed on busy days so go with managed expectations and check current rates before visiting morning to afternoon on weekdays half day outdoor sunny friendly can get packed on weekends holidays and pool party event days reachable by bus jeep uv plus local tricycle near bagbaguin canumay area private vehicle is easier for groups parking appears available around the resort area but expect tighter capacity during weekends or events near canumay east bagbaguin side g molina street and north valenzuela residential areas swimming family trip barkada hangout staycation group friendly summer trip quiet study users looking for free activities only crowd avoidant users rainy days tourist family group date chill valenzuela city valenzuela canumay east bagbaguin side tourist family group date chill gala pasyal tambay resort swimming staycation family outing celebration photo spot budget friendly outdoor avoid rain parking available family friendly group friendly tourist friendly special occasion paraiso baste paraiso ni baste resort paraiso ni baste resort valenzuela city paraiso ni baste resort valenzuela budget friendly works for low budget gala plans outdoor outdoor or open air place avoid rain outdoor or open air place that is best avoided during rain parking available parking may be available nearby or on site family friendly good fit for family friendly plans group friendly good fit for barkada or group plans tourist friendly good fit for visitors or landmark style gala plans special occasion better for birthdays celebrations or planned special trips",
+      "status": "published",
+      "average_rating": 0,
+      "review_count": 0,
+      "categories": [
+        "tourist",
+        "family",
+        "group",
+        "date",
+        "chill"
+      ],
+      "tags": [
+        {
+          "id": "budget-friendly",
+          "strength": 4,
+          "notes": "Works for low-budget gala plans."
+        },
+        {
+          "id": "outdoor",
+          "strength": 4,
+          "notes": "Outdoor or open-air place."
+        },
+        {
+          "id": "avoid-rain",
+          "strength": 4,
+          "notes": "Outdoor or open-air place that is best avoided during rain."
+        },
+        {
+          "id": "parking-available",
+          "strength": 4,
+          "notes": "Parking may be available nearby or on site."
+        },
+        {
+          "id": "family-friendly",
+          "strength": 4,
+          "notes": "Good fit for family-friendly plans."
+        },
+        {
+          "id": "group-friendly",
+          "strength": 4,
+          "notes": "Good fit for barkada or group plans."
+        },
+        {
+          "id": "tourist-friendly",
+          "strength": 5,
+          "notes": "Good fit for visitors or landmark-style gala plans."
+        },
+        {
+          "id": "special-occasion",
+          "strength": 4,
+          "notes": "Better for birthdays, celebrations, or planned special trips."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "paraiso-ni-baste-resort-1",
+          "storage_key": "galatayo-photos/places/paraiso-ni-baste-resort/paraiso-ni-baste-resort-1.webp",
+          "alt_text": "Paraiso ni Baste Resort in Valenzuela City photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "polo-riverwalk",
+      "name": "Polo Riverwalk",
+      "slug": "polo-riverwalk",
+      "category": "Park",
+      "city": "Valenzuela City",
+      "area": "Polo / Poblacion / Balangkas side",
+      "address": "Polo Riverwalk, Valenzuela City, Metro Manila",
+      "latitude": 14.7118,
+      "longitude": 120.9437,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Polo+Riverwalk+Valenzuela",
+      "budget_min": 0,
+      "price_level": 0,
+      "budget_note": "Free or no required entrance fee; bring extra money only for optional food, transport, or nearby purchases.",
+      "description": "Newer riverside public space for walking, jogging, biking, and chill tambay along the Polo River. GalaTayo-worthy siya as a free outdoor stop, lalo na kung gusto mo ng light activity instead of food lang. Since public linear park siya, best siya kapag good weather and hindi sobrang init.",
+      "good_for": [
+        "Free Activity",
+        "Walking",
+        "Biking",
+        "Chill",
+        "Casual Date",
+        "Barkada Hangout",
+        "Family Trip"
+      ],
+      "not_ideal_for": [
+        "Rainy Days",
+        "Extreme Heat",
+        "Users Looking For Full Indoor Comfort",
+        "Long Seated Hangouts"
+      ],
+      "best_time_to_visit": "Early morning or late afternoon",
+      "visit_duration": "1–2 hours",
+      "indoor_outdoor": "Outdoor",
+      "weather_fit": "Avoid during rain",
+      "crowd_level": "Expect more people during opening-season hype, weekends, and sunset hours.",
+      "parking_info": "Parking is access-point dependent; nearby street or barangay-area parking may be limited.",
+      "commute_access": "Accessible from Polo/Poblacion and nearby barangays by jeep or tricycle; exact access point depends on which riverwalk segment is open.",
+      "nearby_context": "Near Polo heritage area, San Diego de Alcala Church, and other north Valenzuela riverwalk connections.",
+      "normalized_name": "polo riverwalk",
+      "search_keywords": [
+        "Valenzuela City",
+        "Valenzuela",
+        "Polo / Poblacion / Balangkas side",
+        "Park",
+        "tourist",
+        "family",
+        "group",
+        "chill",
+        "date",
+        "gala",
+        "pasyal",
+        "tambay",
+        "nature",
+        "outdoor",
+        "walk",
+        "walking",
+        "bike",
+        "biking",
+        "free",
+        "free entry",
+        "activity",
+        "avoid rain",
+        "parking available",
+        "commute friendly",
+        "date friendly",
+        "family friendly",
+        "group friendly",
+        "tourist friendly",
+        "quiet chill",
+        "Polo",
+        "Riverwalk"
+      ],
+      "search_aliases": [
+        "Polo Riverwalk",
+        "Polo Riverwalk Valenzuela City",
+        "Polo Riverwalk Valenzuela"
+      ],
+      "searchable_text": "polo riverwalk park valenzuela city polo poblacion balangkas side polo riverwalk valenzuela city metro manila newer riverside public space for walking jogging biking and chill tambay along the polo river galatayo worthy siya as a free outdoor stop lalo na kung gusto mo ng light activity instead of food lang since public linear park siya best siya kapag good weather and hindi sobrang init early morning or late afternoon 12 hours outdoor avoid during rain expect more people during opening season hype weekends and sunset hours accessible from polo poblacion and nearby barangays by jeep or tricycle exact access point depends on which riverwalk segment is open parking is access point dependent nearby street or barangay area parking may be limited near polo heritage area san diego de alcala church and other north valenzuela riverwalk connections free activity walking biking chill casual date barkada hangout family trip rainy days extreme heat users looking for full indoor comfort long seated hangouts park tourist family group chill date valenzuela city valenzuela polo poblacion balangkas side park tourist family group chill date gala pasyal tambay nature outdoor walk walking bike biking free free entry activity avoid rain parking available commute friendly date friendly family friendly group friendly tourist friendly quiet chill polo riverwalk polo riverwalk polo riverwalk valenzuela city polo riverwalk valenzuela free entry free or no required entrance fee activity good fit when users want an actual activity to do outdoor outdoor or open air place avoid rain outdoor or open air place that is best avoided during rain parking available parking may be available nearby or on site commute friendly reasonably accessible by commute or common transport routes date friendly good fit for casual dates or date night plans family friendly good fit for family friendly plans group friendly good fit for barkada or group plans tourist friendly good fit for visitors or landmark style gala plans quiet chill good fit for calmer or chill plans",
+      "status": "published",
+      "average_rating": 0,
+      "review_count": 0,
+      "categories": [
+        "park",
+        "tourist",
+        "family",
+        "group",
+        "chill",
+        "date"
+      ],
+      "tags": [
+        {
+          "id": "free-entry",
+          "strength": 5,
+          "notes": "Free or no required entrance fee."
+        },
+        {
+          "id": "activity",
+          "strength": 5,
+          "notes": "Good fit when users want an actual activity to do."
+        },
+        {
+          "id": "outdoor",
+          "strength": 5,
+          "notes": "Outdoor or open-air place."
+        },
+        {
+          "id": "avoid-rain",
+          "strength": 4,
+          "notes": "Outdoor or open-air place that is best avoided during rain."
+        },
+        {
+          "id": "parking-available",
+          "strength": 3,
+          "notes": "Parking may be available nearby or on site."
+        },
+        {
+          "id": "commute-friendly",
+          "strength": 4,
+          "notes": "Reasonably accessible by commute or common transport routes."
+        },
+        {
+          "id": "date-friendly",
+          "strength": 4,
+          "notes": "Good fit for casual dates or date-night plans."
+        },
+        {
+          "id": "family-friendly",
+          "strength": 4,
+          "notes": "Good fit for family-friendly plans."
+        },
+        {
+          "id": "group-friendly",
+          "strength": 4,
+          "notes": "Good fit for barkada or group plans."
+        },
+        {
+          "id": "tourist-friendly",
+          "strength": 4,
+          "notes": "Good fit for visitors or landmark-style gala plans."
+        },
+        {
+          "id": "quiet-chill",
+          "strength": 4,
+          "notes": "Good fit for calmer or chill plans."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "polo-riverwalk-1",
+          "storage_key": "galatayo-photos/places/polo-riverwalk/polo-riverwalk-1.webp",
+          "alt_text": "Polo Riverwalk in Valenzuela City photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "san-diego-de-alcala-parish",
+      "name": "San Diego de Alcala Parish",
+      "slug": "san-diego-de-alcala-parish",
+      "category": "Heritage",
+      "city": "Valenzuela City",
+      "area": "Polo / Poblacion",
+      "address": "1444 Marcelo H. Del Pilar Street, Poblacion Polo, Valenzuela City, Metro Manila",
+      "latitude": 14.7101,
+      "longitude": 120.9447,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=San+Diego+de+Alcala+Parish+Polo+Valenzuela",
+      "budget_min": 0,
+      "price_level": 0,
+      "budget_note": "Free or no required entrance fee; bring extra money only for optional food, transport, or nearby purchases.",
+      "description": "Historic Polo church site with the old bell tower and entrance arch from Valenzuela’s Spanish-era heritage. Worth adding as a heritage stop because it is one of the city’s strongest old-town landmarks, not just a random church listing. Best siya for quick cultural visit, photo stop, or route with Museo ni Dr. Pio Valenzuela.",
+      "good_for": [
+        "Heritage Visit",
+        "Cultural Stop",
+        "Family Trip",
+        "Free Activity",
+        "Photo Spot",
+        "Quiet Visit"
+      ],
+      "not_ideal_for": [
+        "Loud Barkada Hangout",
+        "Nightlife",
+        "Food Trip Only",
+        "Users Avoiding Religious Sites"
+      ],
+      "best_time_to_visit": "Morning or late afternoon",
+      "visit_duration": "30 minutes–1 hour",
+      "indoor_outdoor": "Mixed",
+      "weather_fit": "Mixed",
+      "crowd_level": "Can be busier during masses, Sundays, and local church events; otherwise usually calm.",
+      "parking_info": "Limited church/street parking may be available; arrive early during mass or fiesta periods.",
+      "commute_access": "Reachable by jeep/tricycle within Polo/Poblacion; use San Diego de Alcala Parish as the local landmark.",
+      "nearby_context": "Near Polo Riverwalk, Museo ni Dr. Pio Valenzuela, and old Polo/Poblacion heritage area.",
+      "normalized_name": "san diego de alcala parish",
+      "search_keywords": [
+        "Valenzuela City",
+        "Valenzuela",
+        "Polo / Poblacion",
+        "Heritage",
+        "tourist",
+        "family",
+        "chill",
+        "gala",
+        "pasyal",
+        "tambay",
+        "history",
+        "landmark",
+        "historical",
+        "cultural",
+        "church",
+        "simbahan",
+        "misa",
+        "mass",
+        "dasal",
+        "pray",
+        "prayer",
+        "shrine",
+        "dambana",
+        "parish",
+        "parokya",
+        "pilgrimage",
+        "free entry",
+        "activity",
+        "indoor",
+        "outdoor",
+        "parking available",
+        "family friendly",
+        "tourist friendly",
+        "quiet chill",
+        "San",
+        "Diego",
+        "Alcala",
+        "Polo",
+        "Bell",
+        "Tower"
+      ],
+      "search_aliases": [
+        "San Diego de Alcala Church / Polo Church Bell Tower",
+        "San Diego de Alcala Church / Polo Church Bell Tower Valenzuela City",
+        "San Diego de Alcala Church / Polo Church Bell Tower Valenzuela",
+        "san diego de alcala church polo church bell tower",
+        "Polo Church",
+        "San Diego de Alcala Parish",
+        "Polo Church Bell Tower",
+        "Simbahan ng Polo Valenzuela"
+      ],
+      "searchable_text": "san diego de alcala church polo church bell tower heritage valenzuela city polo poblacion 1444 marcelo h del pilar street poblacion polo valenzuela city metro manila historic polo church site with the old bell tower and entrance arch from valenzuelas spanish era heritage worth adding as a heritage stop because it is one of the citys strongest old town landmarks not just a random church listing best siya for quick cultural visit photo stop or route with museo ni dr pio valenzuela morning or late afternoon 30 minutes1 hour mixed mixed can be busier during masses sundays and local church events otherwise usually calm reachable by jeep tricycle within polo poblacion use san diego de alcala parish as the local landmark limited church street parking may be available arrive early during mass or fiesta periods near polo riverwalk museo ni dr pio valenzuela and old polo poblacion heritage area heritage visit cultural stop family trip free activity photo spot quiet visit loud barkada hangout nightlife food trip only users avoiding religious sites heritage tourist family chill valenzuela city valenzuela polo poblacion heritage tourist family chill gala pasyal tambay history landmark historical cultural church simbahan misa mass dasal pray prayer shrine dambana parish parokya pilgrimage free entry activity indoor outdoor parking available family friendly tourist friendly quiet chill san diego alcala polo bell tower san diego de alcala church polo church bell tower san diego de alcala church polo church bell tower valenzuela city san diego de alcala church polo church bell tower valenzuela san diego de alcala church polo church bell tower polo church san diego de alcala parish polo church bell tower simbahan ng polo valenzuela free entry free or no required entrance fee heritage useful for history culture and landmark visits church good fit for church visits prayer or quiet reflection activity good fit when users want an actual activity to do indoor mostly indoor place outdoor outdoor or open air place parking available parking may be available nearby or on site family friendly good fit for family friendly plans tourist friendly good fit for visitors or landmark style gala plans quiet chill good fit for calmer or chill plans",
+      "status": "published",
+      "average_rating": 0,
+      "review_count": 0,
+      "categories": [
+        "heritage",
+        "tourist",
+        "family",
+        "chill"
+      ],
+      "tags": [
+        {
+          "id": "free-entry",
+          "strength": 5,
+          "notes": "Free or no required entrance fee."
+        },
+        {
+          "id": "heritage",
+          "strength": 5,
+          "notes": "Useful for history, culture, and landmark visits."
+        },
+        {
+          "id": "church",
+          "strength": 5,
+          "notes": "Good fit for church visits, prayer, or quiet reflection."
+        },
+        {
+          "id": "activity",
+          "strength": 5,
+          "notes": "Good fit when users want an actual activity to do."
+        },
+        {
+          "id": "indoor",
+          "strength": 3,
+          "notes": "Mostly indoor place."
+        },
+        {
+          "id": "outdoor",
+          "strength": 3,
+          "notes": "Outdoor or open-air place."
+        },
+        {
+          "id": "parking-available",
+          "strength": 3,
+          "notes": "Parking may be available nearby or on site."
+        },
+        {
+          "id": "family-friendly",
+          "strength": 4,
+          "notes": "Good fit for family-friendly plans."
+        },
+        {
+          "id": "tourist-friendly",
+          "strength": 4,
+          "notes": "Good fit for visitors or landmark-style gala plans."
+        },
+        {
+          "id": "quiet-chill",
+          "strength": 4,
+          "notes": "Good fit for calmer or chill plans."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "san-diego-de-alcala-parish-1",
+          "storage_key": "galatayo-photos/places/san-diego-de-alcala-parish/san-diego-de-alcala-parish-1.webp",
+          "alt_text": "San Diego de Alcala Parish in Valenzuela City photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "sm-cinema-valenzuela",
+      "name": "SM Cinema Valenzuela",
+      "slug": "sm-cinema-valenzuela",
+      "category": "Cinema",
+      "city": "Valenzuela City",
+      "area": "SM City Valenzuela / Karuhatan",
+      "address": "3rd Floor, SM City Valenzuela, MacArthur Highway, Barangay Karuhatan, Valenzuela City, Metro Manila",
+      "latitude": 14.686,
+      "longitude": 120.976425,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=SM+Cinema+Valenzuela+3rd+Floor+SM+City+Valenzuela",
+      "budget_min": 300,
+      "price_level": 1,
+      "budget_note": "Low-cost place; bring extra budget for food, drinks, transport, or optional purchases.",
+      "description": "Cinema branch inside SM City Valenzuela for easy movie-date, family movie, or barkada film plans. GalaTayo-worthy siya because cinema is a clear activity and you can pair it with food before or after. Check current showtimes first because schedules change daily.",
+      "good_for": [
+        "Cinema",
+        "Date Night",
+        "Family Trip",
+        "Barkada Hangout",
+        "Rainy Day",
+        "Casual Date"
+      ],
+      "not_ideal_for": [
+        "Users Looking For Free Activities Only",
+        "Outdoor Activities",
+        "Very Long Tambay Without Movie Plan"
+      ],
+      "best_time_to_visit": "Afternoon to evening showtimes",
+      "visit_duration": "2–3 hours",
+      "indoor_outdoor": "Indoor",
+      "weather_fit": "Rain-friendly",
+      "crowd_level": "Can get crowded on weekends, holidays, and big movie releases.",
+      "parking_info": "Use SM City Valenzuela mall parking; expect higher demand during peak mall hours.",
+      "commute_access": "Very commute-friendly via MacArthur Highway jeep/bus routes to SM City Valenzuela.",
+      "nearby_context": "Inside SM City Valenzuela, near food court, shops, and MacArthur Highway transport.",
+      "normalized_name": "sm cinema valenzuela",
+      "search_keywords": [
+        "Valenzuela City",
+        "Valenzuela",
+        "SM City Valenzuela / Karuhatan",
+        "Cinema",
+        "date",
+        "family",
+        "group",
+        "mall",
+        "chill",
+        "gala",
+        "pasyal",
+        "tambay",
+        "movie",
+        "movies",
+        "sine",
+        "pelikula",
+        "date night",
+        "rainy day",
+        "budget friendly",
+        "rain friendly",
+        "indoor",
+        "parking available",
+        "commute friendly",
+        "date friendly",
+        "family friendly",
+        "group friendly"
+      ],
+      "search_aliases": [
+        "SM Cinema Valenzuela",
+        "SM Cinema Valenzuela Valenzuela City",
+        "SM Cinema Valenzuela Valenzuela"
+      ],
+      "searchable_text": "sm cinema valenzuela cinema valenzuela city sm city valenzuela karuhatan 3rd floor sm city valenzuela macarthur highway barangay karuhatan valenzuela city metro manila cinema branch inside sm city valenzuela for easy movie date family movie or barkada film plans galatayo worthy siya because cinema is a clear activity and you can pair it with food before or after check current showtimes first because schedules change daily afternoon to evening showtimes 23 hours indoor rain friendly can get crowded on weekends holidays and big movie releases very commute friendly via macarthur highway jeep bus routes to sm city valenzuela use sm city valenzuela mall parking expect higher demand during peak mall hours inside sm city valenzuela near food court shops and macarthur highway transport cinema date night family trip barkada hangout rainy day casual date users looking for free activities only outdoor activities very long tambay without movie plan cinema date family group mall chill valenzuela city valenzuela sm city valenzuela karuhatan cinema date family group mall chill gala pasyal tambay movie movies sine pelikula date night rainy day budget friendly rain friendly indoor parking available commute friendly date friendly family friendly group friendly sm cinema valenzuela sm cinema valenzuela valenzuela city sm cinema valenzuela valenzuela budget friendly works for low budget gala plans cinema good fit for movie plans and cinema dates rain friendly indoor or mostly covered place that works during rain indoor mostly indoor place parking available parking may be available nearby or on site commute friendly reasonably accessible by commute or common transport routes date friendly good fit for casual dates or date night plans family friendly good fit for family friendly plans group friendly good fit for barkada or group plans",
+      "status": "published",
+      "average_rating": 0,
+      "review_count": 0,
+      "categories": [
+        "cinema",
+        "date",
+        "family",
+        "group",
+        "mall",
+        "chill"
+      ],
+      "tags": [
+        {
+          "id": "budget-friendly",
+          "strength": 4,
+          "notes": "Works for low-budget gala plans."
+        },
+        {
+          "id": "cinema",
+          "strength": 5,
+          "notes": "Good fit for movie plans and cinema dates."
+        },
+        {
+          "id": "rain-friendly",
+          "strength": 5,
+          "notes": "Indoor or mostly covered place that works during rain."
+        },
+        {
+          "id": "indoor",
+          "strength": 5,
+          "notes": "Mostly indoor place."
+        },
+        {
+          "id": "parking-available",
+          "strength": 4,
+          "notes": "Parking may be available nearby or on site."
+        },
+        {
+          "id": "commute-friendly",
+          "strength": 4,
+          "notes": "Reasonably accessible by commute or common transport routes."
+        },
+        {
+          "id": "date-friendly",
+          "strength": 4,
+          "notes": "Good fit for casual dates or date-night plans."
+        },
+        {
+          "id": "family-friendly",
+          "strength": 4,
+          "notes": "Good fit for family-friendly plans."
+        },
+        {
+          "id": "group-friendly",
+          "strength": 4,
+          "notes": "Good fit for barkada or group plans."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "sm-cinema-valenzuela-1",
+          "storage_key": "galatayo-photos/places/sm-cinema-valenzuela/sm-cinema-valenzuela-1.webp",
+          "alt_text": "SM Cinema Valenzuela in Valenzuela City photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "sm-city-valenzuela",
+      "name": "SM City Valenzuela",
+      "slug": "sm-city-valenzuela",
+      "category": "Mall",
+      "city": "Valenzuela City",
+      "area": "Karuhatan",
+      "address": "MacArthur Highway, Barangay Karuhatan, Valenzuela City, Metro Manila",
+      "latitude": 14.686,
+      "longitude": 120.976425,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=SM+City+Valenzuela+MacArthur+Highway+Karuhatan",
+      "budget_min": 0,
+      "price_level": 0,
+      "budget_note": "Free or no required entrance fee; bring extra money only for optional food, transport, or nearby purchases.",
+      "description": "Main SM mall option in Valenzuela for food, shopping, groceries, errands, and movie plans in one place. It is not the most unique gala spot, but it is reliable, commute-friendly, and rain-safe. Good siya kapag kailangan ng easy meetup place for family, date, or barkada.",
+      "good_for": [
+        "Shopping",
+        "Food Trip",
+        "Family Trip",
+        "Casual Date",
+        "Barkada Hangout",
+        "Rainy Day",
+        "Cinema"
+      ],
+      "not_ideal_for": [
+        "Users Looking For Unique Hidden Gems",
+        "Users Avoiding Mall Crowds",
+        "Outdoor Chill"
+      ],
+      "best_time_to_visit": "Weekday afternoon or early evening",
+      "visit_duration": "1–3 hours",
+      "indoor_outdoor": "Indoor",
+      "weather_fit": "Rain-friendly",
+      "crowd_level": "Expect heavier crowds on weekends, payday periods, and movie release days.",
+      "parking_info": "Mall parking is available, but may fill up during peak weekends and holidays.",
+      "commute_access": "Very commute-friendly along MacArthur Highway with jeepney, bus, and ride-hailing access.",
+      "nearby_context": "Along MacArthur Highway in Karuhatan, with SM Cinema Valenzuela inside the mall.",
+      "normalized_name": "sm city valenzuela",
+      "search_keywords": [
+        "Valenzuela City",
+        "Valenzuela",
+        "Karuhatan",
+        "Mall",
+        "food",
+        "family",
+        "group",
+        "date",
+        "chill",
+        "gala",
+        "pasyal",
+        "tambay",
+        "malling",
+        "shopping",
+        "food court",
+        "rainy day",
+        "indoor",
+        "grocery",
+        "free entry",
+        "food trip",
+        "mall day",
+        "rain friendly",
+        "parking available",
+        "commute friendly",
+        "date friendly",
+        "family friendly",
+        "group friendly",
+        "City"
+      ],
+      "search_aliases": [
+        "SM City Valenzuela",
+        "SM City Valenzuela Valenzuela City",
+        "SM City Valenzuela Valenzuela"
+      ],
+      "searchable_text": "sm city valenzuela mall valenzuela city karuhatan macarthur highway barangay karuhatan valenzuela city metro manila main sm mall option in valenzuela for food shopping groceries errands and movie plans in one place it is not the most unique gala spot but it is reliable commute friendly and rain safe good siya kapag kailangan ng easy meetup place for family date or barkada weekday afternoon or early evening 13 hours indoor rain friendly expect heavier crowds on weekends payday periods and movie release days very commute friendly along macarthur highway with jeepney bus and ride hailing access mall parking is available but may fill up during peak weekends and holidays along macarthur highway in karuhatan with sm cinema valenzuela inside the mall shopping food trip family trip casual date barkada hangout rainy day cinema users looking for unique hidden gems users avoiding mall crowds outdoor chill mall food family group date chill valenzuela city valenzuela karuhatan mall food family group date chill gala pasyal tambay malling shopping food court rainy day indoor grocery free entry food trip mall day rain friendly parking available commute friendly date friendly family friendly group friendly city sm city valenzuela sm city valenzuela valenzuela city sm city valenzuela valenzuela free entry free or no required entrance fee food trip good fit for food trip plans mall day works well as an indoor mall plan rain friendly indoor or mostly covered place that works during rain indoor mostly indoor place parking available parking may be available nearby or on site commute friendly reasonably accessible by commute or common transport routes date friendly good fit for casual dates or date night plans family friendly good fit for family friendly plans group friendly good fit for barkada or group plans",
+      "status": "published",
+      "average_rating": 0,
+      "review_count": 0,
+      "categories": [
+        "mall",
+        "food",
+        "family",
+        "group",
+        "date",
+        "chill"
+      ],
+      "tags": [
+        {
+          "id": "free-entry",
+          "strength": 5,
+          "notes": "Free or no required entrance fee."
+        },
+        {
+          "id": "food-trip",
+          "strength": 5,
+          "notes": "Good fit for food trip plans."
+        },
+        {
+          "id": "mall-day",
+          "strength": 5,
+          "notes": "Works well as an indoor mall plan."
+        },
+        {
+          "id": "rain-friendly",
+          "strength": 4,
+          "notes": "Indoor or mostly covered place that works during rain."
+        },
+        {
+          "id": "indoor",
+          "strength": 4,
+          "notes": "Mostly indoor place."
+        },
+        {
+          "id": "parking-available",
+          "strength": 4,
+          "notes": "Parking may be available nearby or on site."
+        },
+        {
+          "id": "commute-friendly",
+          "strength": 4,
+          "notes": "Reasonably accessible by commute or common transport routes."
+        },
+        {
+          "id": "date-friendly",
+          "strength": 4,
+          "notes": "Good fit for casual dates or date-night plans."
+        },
+        {
+          "id": "family-friendly",
+          "strength": 4,
+          "notes": "Good fit for family-friendly plans."
+        },
+        {
+          "id": "group-friendly",
+          "strength": 4,
+          "notes": "Good fit for barkada or group plans."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "sm-city-valenzuela-1",
+          "storage_key": "galatayo-photos/places/sm-city-valenzuela/sm-city-valenzuela-1.webp",
+          "alt_text": "SM City Valenzuela in Valenzuela City photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "tagalag-fishing-village",
+      "name": "Tagalag Fishing Village",
+      "slug": "tagalag-fishing-village",
+      "category": "Park",
+      "city": "Valenzuela City",
+      "area": "Tagalag",
+      "address": "Tagalag, Valenzuela City, Metro Manila",
+      "latitude": 14.71797,
+      "longitude": 120.94168,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Tagalag+Fishing+Village+Valenzuela",
+      "budget_min": 0,
+      "price_level": 0,
+      "budget_note": "Free or no required entrance fee; bring extra money only for optional food, transport, or nearby purchases.",
+      "description": "Nature and food-trip area sa north side ng Valenzuela, known for fishing spots, riverside views, and Tagalag kainan options. Good siya for casual gala kapag gusto mo ng fresh-air break without leaving Metro Manila. Hindi siya polished-mall type, so mas bagay siya sa chill, outdoor, and lakad-trip mood.",
+      "good_for": [
+        "Family Trip",
+        "Barkada Hangout",
+        "Food Trip",
+        "Chill",
+        "Nature Trip",
+        "Photo Spot",
+        "Casual Date"
+      ],
+      "not_ideal_for": [
+        "Rainy Days",
+        "Users Expecting Air-Conditioned Comfort",
+        "Quiet Study",
+        "Late Night Gala"
+      ],
+      "best_time_to_visit": "Morning or late afternoon",
+      "visit_duration": "2–4 hours",
+      "indoor_outdoor": "Outdoor",
+      "weather_fit": "Avoid during rain",
+      "crowd_level": "Usually manageable, but weekends and food-trip hours can feel busier.",
+      "parking_info": "Parking depends on the specific restaurant or fishing facility you visit; bring patience during weekends.",
+      "commute_access": "Reachable via jeep routes toward Malanday/Bisig then tricycle to Tagalag; easier by car, motorcycle, or ride-hailing when available.",
+      "nearby_context": "Near Alvarez Park Cafe, Kamayan sa Palapat, Tagalag Mini Park, and the Valenzuela Boardwalk.",
+      "normalized_name": "tagalag fishing village",
+      "search_keywords": [
+        "Valenzuela City",
+        "Valenzuela",
+        "Tagalag",
+        "Park",
+        "food",
+        "tourist",
+        "family",
+        "group",
+        "chill",
+        "gala",
+        "pasyal",
+        "tambay",
+        "nature",
+        "outdoor",
+        "walk",
+        "walking",
+        "bike",
+        "biking",
+        "free",
+        "free entry",
+        "food trip",
+        "avoid rain",
+        "parking available",
+        "date friendly",
+        "family friendly",
+        "group friendly",
+        "tourist friendly",
+        "quiet chill",
+        "Fishing",
+        "Village"
+      ],
+      "search_aliases": [
+        "Tagalag Fishing Village",
+        "Tagalag Fishing Village Valenzuela City",
+        "Tagalag Fishing Village Valenzuela"
+      ],
+      "searchable_text": "tagalag fishing village park valenzuela city tagalag tagalag valenzuela city metro manila nature and food trip area sa north side ng valenzuela known for fishing spots riverside views and tagalag kainan options good siya for casual gala kapag gusto mo ng fresh air break without leaving metro manila hindi siya polished mall type so mas bagay siya sa chill outdoor and lakad trip mood morning or late afternoon 24 hours outdoor avoid during rain usually manageable but weekends and food trip hours can feel busier reachable via jeep routes toward malanday bisig then tricycle to tagalag easier by car motorcycle or ride hailing when available parking depends on the specific restaurant or fishing facility you visit bring patience during weekends near alvarez park cafe kamayan sa palapat tagalag mini park and the valenzuela boardwalk family trip barkada hangout food trip chill nature trip photo spot casual date rainy days users expecting air conditioned comfort quiet study late night gala park food tourist family group chill valenzuela city valenzuela tagalag park food tourist family group chill gala pasyal tambay nature outdoor walk walking bike biking free free entry food trip avoid rain parking available date friendly family friendly group friendly tourist friendly quiet chill fishing village tagalag fishing village tagalag fishing village valenzuela city tagalag fishing village valenzuela free entry free or no required entrance fee food trip good fit for food trip plans outdoor outdoor or open air place avoid rain outdoor or open air place that is best avoided during rain parking available parking may be available nearby or on site date friendly good fit for casual dates or date night plans family friendly good fit for family friendly plans group friendly good fit for barkada or group plans tourist friendly good fit for visitors or landmark style gala plans quiet chill good fit for calmer or chill plans",
+      "status": "published",
+      "average_rating": 0,
+      "review_count": 0,
+      "categories": [
+        "park",
+        "food",
+        "tourist",
+        "family",
+        "group",
+        "chill"
+      ],
+      "tags": [
+        {
+          "id": "free-entry",
+          "strength": 5,
+          "notes": "Free or no required entrance fee."
+        },
+        {
+          "id": "food-trip",
+          "strength": 5,
+          "notes": "Good fit for food trip plans."
+        },
+        {
+          "id": "outdoor",
+          "strength": 5,
+          "notes": "Outdoor or open-air place."
+        },
+        {
+          "id": "avoid-rain",
+          "strength": 4,
+          "notes": "Outdoor or open-air place that is best avoided during rain."
+        },
+        {
+          "id": "parking-available",
+          "strength": 3,
+          "notes": "Parking may be available nearby or on site."
+        },
+        {
+          "id": "date-friendly",
+          "strength": 4,
+          "notes": "Good fit for casual dates or date-night plans."
+        },
+        {
+          "id": "family-friendly",
+          "strength": 4,
+          "notes": "Good fit for family-friendly plans."
+        },
+        {
+          "id": "group-friendly",
+          "strength": 4,
+          "notes": "Good fit for barkada or group plans."
+        },
+        {
+          "id": "tourist-friendly",
+          "strength": 4,
+          "notes": "Good fit for visitors or landmark-style gala plans."
+        },
+        {
+          "id": "quiet-chill",
+          "strength": 4,
+          "notes": "Good fit for calmer or chill plans."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "tagalag-fishing-village-1",
+          "storage_key": "galatayo-photos/places/tagalag-fishing-village/tagalag-fishing-village-1.webp",
+          "alt_text": "Tagalag Fishing Village in Valenzuela City photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    }
+  ]
+}

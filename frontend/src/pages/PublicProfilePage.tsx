@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { MoreHorizontal } from 'lucide-react'
 import AppHeader from '../components/AppHeader'
+import MinimalBackNav from '../components/MinimalBackNav'
 import { AppIcon } from '../components/AppIcon'
 import ProfileAvatar from '../components/ProfileAvatar'
 import ReportUserModal from '../components/ReportUserModal'
 import UnifiedLoadingState from '../components/UnifiedLoadingState'
-import { PageContainer } from '../components/layout/ResponsiveLayouts'
+import { PageContainer, PageShell, CardSurface, Stack } from '../components/layout/ResponsiveLayouts'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { getSupabaseAccessToken, getSupabaseSession, supabase } from '../supabase'
 import {
@@ -241,24 +242,28 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
+    <PageShell>
       <AppHeader />
-      <main className="mx-auto w-full max-w-[1100px] px-4 py-6 sm:px-6 lg:py-10">
-        <PageContainer>
+      <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
+        <PageContainer size="wide">
+          <div className="mb-5">
+            <MinimalBackNav to="/" label="Home" preferHistory={false} />
+          </div>
+
           {isLoading ? (
             <UnifiedLoadingState
               title="Preparing profile..."
               message="We are loading this public profile now."
             />
           ) : notFound ? (
-            <section className="rounded-[28px] border border-[var(--line)] bg-white/85 p-8 text-center backdrop-blur-sm">
+            <CardSurface pad="loose" className="text-center">
               <h1 className="text-2xl font-black text-slate-950">Profile not found.</h1>
-            </section>
+            </CardSurface>
           ) : errorMessage ? (
-            <section className="rounded-[28px] border border-[var(--line)] bg-white/85 p-8 text-center text-sm font-bold text-red-700 backdrop-blur-sm">{errorMessage}</section>
+            <CardSurface pad="loose" className="text-center text-sm font-bold text-red-700">{errorMessage}</CardSurface>
           ) : profile ? (
-            <div className="grid gap-8">
-              <section className="rounded-[32px] border border-[var(--line)] bg-white px-5 py-6 sm:px-7">
+            <Stack gap="loose">
+              <CardSurface pad="loose" className="rounded-[32px]">
               <div className="flex flex-col gap-5 border-b border-[var(--line)] pb-5 sm:flex-row sm:items-end sm:justify-between">
                   <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end">
                     <div>
@@ -382,7 +387,7 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
 
               {notice ? <p className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm font-bold text-amber-800">{notice}</p> : null}
 
-            </section>
+            </CardSurface>
 
             <section>
               <div className="border-b border-[var(--line)] px-1 pt-1">
@@ -496,11 +501,11 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
                         </div>
                       </article>
                     )
-                  })}
+                  }                  )}
                 </div>
               )}
             </section>
-          </div>
+            </Stack>
         ) : null}
 
         {listUsers ? (
@@ -554,7 +559,7 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
         />
         </PageContainer>
       </main>
-    </div>
+    </PageShell>
   )
 }
 

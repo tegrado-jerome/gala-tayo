@@ -1,44 +1,38 @@
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
-import {
-  ASK_AI_LIVE_SEARCH_DAILY_LIMIT,
-  ASK_AI_TOTAL_DAILY_LIMIT,
-} from "../config/askAiConfig";
 
-export type AskAiUsageType = "ask_ai_total" | "live_search";
-export type AskAiUsageTypeInput = AskAiUsageType | "ai_guide";
-
-const ASK_AI_DAILY_LIMITS: Record<AskAiUsageType, number> = {
-  ask_ai_total: ASK_AI_TOTAL_DAILY_LIMIT,
-  live_search: ASK_AI_LIVE_SEARCH_DAILY_LIMIT,
-};
-
-export const ASK_AI_DAILY_LIMIT = ASK_AI_TOTAL_DAILY_LIMIT;
-const ASK_AI_USAGE_TIMEZONE = "Asia/Manila";
-
-type AskAiUsageRow = {
-  id: string;
-  user_id: string;
-  usage_type: AskAiUsageType;
-  usage_date: string;
-  request_count: number;
-  created_at: string;
-  updated_at: string;
-};
+export type AskAiUsageType = "ask_ai_maps" | "chatbot_ai";
 
 export type AskAiUsageResult = {
-  usageType: AskAiUsageType;
   allowed: boolean;
-  limit: number;
-  used: number;
+  usageType: string;
+  dailyLimit: number;
+  requestCount: number;
   remaining: number;
-  resetAt: string;
-  message?: string;
+  usageDate: string;
+  resetsAt: string;
 };
 
 export type AskAiUsageSummaryResult = {
-  askAi: AskAiUsageResult;
-  liveSearch: AskAiUsageResult;
+  askAiMaps: AskAiUsageResult;
+  chatbotAi: AskAiUsageResult;
 };
+
+export type AskAiUsageTypeInput =
+  | AskAiUsageType
+  | "ask_ai_total"
+  | "live_search"
+  | "ai_guide";
+
+const ASK_AI_DAILY_LIMITS: Record<string, number> = {
+  ask_ai_maps: 10,
+  chatbot_ai: 20,
+  ask_ai_total: 10,
+  live_search: 5,
+};
+
+const ASK_AI_USAGE_TIMEZONE = "Asia/Manila";
+
+export const ASK_AI_DAILY_LIMIT = 10;
 
 function getTodayUsageDate(): string {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -62,183 +56,135 @@ function getTodayUsageDate(): string {
 function getResetAt(usageDate: string): string {
   const [year, month, day] = usageDate.split("-").map(Number);
 
-  if (
-    !Number.isInteger(year) ||
-    !Number.isInteger(month) ||
-    !Number.isInteger(day)
-  ) {
+  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) {
     throw new Error("Invalid Ask AI usage date.");
   }
 
-  // Asia/Manila is UTC+8 year-round, so local midnight maps to 16:00 UTC on the same calendar date.
   const resetDate = new Date(Date.UTC(year, month - 1, day, 16, 0, 0, 0));
-
   return resetDate.toISOString();
 }
 
-function getUsageLimit(usageType: AskAiUsageType): number {
-  return ASK_AI_DAILY_LIMITS[usageType];
+function getDailyLimit(usageType: string): number {
+  return ASK_AI_DAILY_LIMITS[usageType] ?? 0;
 }
 
 export function normalizeAskAiUsageType(
   usageType: AskAiUsageTypeInput
-): AskAiUsageType {
-  return usageType === "ai_guide" ? "ask_ai_total" : usageType;
+): string {
+  if (usageType === "ai_guide" || usageType === "ask_ai_total") {
+    return "ask_ai_total";
+  }
+
+  return usageType;
+}
+
+export function isAskAiUsageType(value: unknown): value is AskAiUsageType {
+  return value === "ask_ai_maps" || value === "chatbot_ai";
 }
 
 export function isAskAiUsageTypeInput(
   value: unknown
 ): value is AskAiUsageTypeInput {
   return (
+    value === "ask_ai_maps" ||
+    value === "chatbot_ai" ||
     value === "ask_ai_total" ||
     value === "live_search" ||
     value === "ai_guide"
   );
 }
 
+function normalizeRpcRow(row: unknown): AskAiUsageResult | null {
+  if (!row || typeof row !== "object") return null;
+
+  const record = row as Record<string, unknown>;
+  const usageType = record.usage_type as string | undefined;
+  const allowed = record.allowed;
+  const dailyLimit = record.daily_limit;
+  const requestCount = record.request_count;
+  const remaining = record.remaining;
+  const usageDate = record.usage_date;
+  const resetsAt = record.resets_at;
+
+  if (
+    typeof usageType !== "string" ||
+    typeof allowed !== "boolean" ||
+    typeof dailyLimit !== "number" ||
+    typeof requestCount !== "number" ||
+    typeof remaining !== "number" ||
+    typeof usageDate !== "string" ||
+    typeof resetsAt !== "string"
+  ) {
+    return null;
+  }
+
+  return {
+    allowed,
+    usageType,
+    dailyLimit,
+    requestCount,
+    remaining,
+    usageDate,
+    resetsAt,
+  };
+}
+
 function buildUsageResult(
-  usageType: AskAiUsageType,
-  used: number,
+  usageType: string,
+  requestCount: number,
   usageDate: string
 ): AskAiUsageResult {
-  const limit = getUsageLimit(usageType);
-  const normalizedUsed = Math.max(0, used);
-  const remaining = Math.max(limit - normalizedUsed, 0);
-  const allowed = normalizedUsed < limit;
+  const limit = getDailyLimit(usageType);
+  const normalizedCount = Math.max(0, requestCount);
+  const remaining = Math.max(limit - normalizedCount, 0);
+  const allowed = normalizedCount < limit;
 
   return {
     usageType,
     allowed,
-    limit,
-    used: normalizedUsed,
+    dailyLimit: limit,
+    requestCount: normalizedCount,
     remaining,
-    resetAt: getResetAt(usageDate),
-    ...(allowed ? {} : { message: "Daily Ask AI limit reached." }),
+    usageDate,
+    resetsAt: getResetAt(usageDate),
   };
-}
-
-function isUniqueViolation(error: unknown): boolean {
-  return Boolean(
-    error &&
-      typeof error === "object" &&
-      "code" in error &&
-      (error as { code?: string }).code === "23505"
-  );
-}
-
-function isMissingUsageTypeColumn(error: unknown): boolean {
-  if (!error || typeof error !== "object") {
-    return false;
-  }
-
-  const candidate = error as { code?: unknown; message?: unknown };
-  const message = typeof candidate.message === "string" ? candidate.message : "";
-
-  return candidate.code === "42703" || message.includes("usage_type");
-}
-
-function handleUsageTableError(error: unknown, fallbackMessage: string): never {
-  if (isMissingUsageTypeColumn(error)) {
-    throw new Error(
-      "public.ask_ai_usage.usage_type is missing. Apply the manual Supabase SQL update before testing Ask AI usage buckets."
-    );
-  }
-
-  throw new Error(fallbackMessage);
-}
-
-async function getUsageRow(
-  userId: string,
-  usageType: AskAiUsageType,
-  usageDate: string
-): Promise<AskAiUsageRow | null> {
-  const supabase = await getSupabaseAdminClient();
-  const askAiUsageTable = supabase.from("ask_ai_usage") as any;
-  const { data, error } = await askAiUsageTable
-    .select("id,user_id,usage_type,usage_date,request_count,created_at,updated_at")
-    .eq("user_id", userId)
-    .eq("usage_type", usageType)
-    .eq("usage_date", usageDate)
-    .maybeSingle();
-
-  if (error) {
-    handleUsageTableError(error, "Failed to check Ask AI usage.");
-  }
-
-  return (data as AskAiUsageRow | null) ?? null;
 }
 
 export async function checkAskAiUsage(
   userId: string,
-  usageTypeInput: AskAiUsageTypeInput
+  usageType: string
 ): Promise<AskAiUsageResult> {
-  const usageType = normalizeAskAiUsageType(usageTypeInput);
-  const usageDate = getTodayUsageDate();
-  const usageRow = await getUsageRow(userId, usageType, usageDate);
+  const today = getTodayUsageDate();
 
-  return buildUsageResult(usageType, usageRow?.request_count ?? 0, usageDate);
+  const supabase = await getSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("ask_ai_usage")
+    .select("request_count")
+    .eq("user_id", userId)
+    .eq("usage_type", usageType)
+    .eq("usage_date", today)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to check Ask AI usage: ${error.message}`);
+  }
+
+  const requestCount = (data as { request_count?: number } | null)?.request_count ?? 0;
+  return buildUsageResult(usageType, requestCount, today);
 }
 
 export async function checkAllAskAiUsage(
   userId: string
 ): Promise<AskAiUsageSummaryResult> {
-  const [askAi, liveSearch] = await Promise.all([
-    checkAskAiUsage(userId, "ask_ai_total"),
-    checkAskAiUsage(userId, "live_search"),
+  const [askAiMaps, chatbotAi] = await Promise.all([
+    checkAskAiUsage(userId, "ask_ai_maps"),
+    checkAskAiUsage(userId, "chatbot_ai"),
   ]);
 
   return {
-    askAi,
-    liveSearch,
+    askAiMaps,
+    chatbotAi,
   };
-}
-
-async function createFirstUsageRow(
-  userId: string,
-  usageType: AskAiUsageType,
-  usageDate: string
-): Promise<AskAiUsageRow | null> {
-  const supabase = await getSupabaseAdminClient();
-  const askAiUsageTable = supabase.from("ask_ai_usage") as any;
-  const { data, error } = await askAiUsageTable
-    .insert({
-      user_id: userId,
-      usage_type: usageType,
-      usage_date: usageDate,
-      request_count: 1,
-    })
-    .select("id,user_id,usage_type,usage_date,request_count,created_at,updated_at")
-    .single();
-
-  if (error) {
-    if (isUniqueViolation(error)) {
-      return null;
-    }
-
-    handleUsageTableError(error, "Failed to create Ask AI usage row.");
-  }
-
-  return data as AskAiUsageRow;
-}
-
-async function incrementUsageRow(
-  usageRow: AskAiUsageRow
-): Promise<AskAiUsageRow | null> {
-  const nextRequestCount = usageRow.request_count + 1;
-  const supabase = await getSupabaseAdminClient();
-  const askAiUsageTable = supabase.from("ask_ai_usage") as any;
-  const { data, error } = await askAiUsageTable
-    .update({ request_count: nextRequestCount })
-    .eq("id", usageRow.id)
-    .eq("request_count", usageRow.request_count)
-    .select("id,user_id,usage_type,usage_date,request_count,created_at,updated_at")
-    .maybeSingle();
-
-  if (error) {
-    handleUsageTableError(error, "Failed to update Ask AI usage.");
-  }
-
-  return (data as AskAiUsageRow | null) ?? null;
 }
 
 export async function consumeAskAiUsage(
@@ -246,38 +192,138 @@ export async function consumeAskAiUsage(
   usageTypeInput: AskAiUsageTypeInput
 ): Promise<AskAiUsageResult> {
   const usageType = normalizeAskAiUsageType(usageTypeInput);
-  const usageDate = getTodayUsageDate();
-  const limit = getUsageLimit(usageType);
+
+  if (usageType === "ask_ai_maps" || usageType === "chatbot_ai") {
+    return consumeAskAiUsageRpc({ userId, usageType });
+  }
+
+  const today = getTodayUsageDate();
+  const limit = getDailyLimit(usageType);
 
   for (let attempt = 0; attempt < 3; attempt += 1) {
-    const usageRow = await getUsageRow(userId, usageType, usageDate);
+    const supabase = await getSupabaseAdminClient();
+    const usageTable = supabase.from("ask_ai_usage") as any;
 
-    if (!usageRow) {
-      const createdRow = await createFirstUsageRow(userId, usageType, usageDate);
+    const { data: existing } = await usageTable
+      .select("id,request_count")
+      .eq("user_id", userId)
+      .eq("usage_type", usageType)
+      .eq("usage_date", today)
+      .maybeSingle();
 
-      if (createdRow) {
-        return buildUsageResult(usageType, createdRow.request_count, usageDate);
+    if (!existing) {
+      const { data: created, error: createError } = await usageTable
+        .insert({
+          user_id: userId,
+          usage_type: usageType,
+          usage_date: today,
+          request_count: 1,
+        })
+        .select("request_count")
+        .single();
+
+      if (createError) {
+        if (createError.code === "23505") {
+          continue;
+        }
+        throw new Error(`Failed to create Ask AI usage: ${createError.message}`);
       }
 
-      continue;
+      return buildUsageResult(
+        usageType,
+        (created as { request_count: number }).request_count,
+        today
+      );
     }
 
-    if (usageRow.request_count >= limit) {
-      return buildUsageResult(usageType, usageRow.request_count, usageDate);
+    const existingRow = existing as { id: string; request_count: number };
+
+    if (existingRow.request_count >= limit) {
+      return buildUsageResult(usageType, existingRow.request_count, today);
     }
 
-    const updatedRow = await incrementUsageRow(usageRow);
+    const nextCount = existingRow.request_count + 1;
 
-    if (updatedRow) {
-      return buildUsageResult(usageType, updatedRow.request_count, usageDate);
+    const { data: updated, error: updateError } = await usageTable
+      .update({ request_count: nextCount })
+      .eq("id", existingRow.id)
+      .eq("request_count", existingRow.request_count)
+      .select("request_count")
+      .maybeSingle();
+
+    if (updateError) {
+      throw new Error(`Failed to update Ask AI usage: ${updateError.message}`);
+    }
+
+    if (updated) {
+      return buildUsageResult(
+        usageType,
+        (updated as { request_count: number }).request_count,
+        today
+      );
     }
   }
 
-  const latestUsage = await checkAskAiUsage(userId, usageType);
-
-  if (!latestUsage.allowed) {
-    return latestUsage;
+  const latest = await checkAskAiUsage(userId, usageType);
+  if (!latest.allowed) {
+    return latest;
   }
 
   throw new Error("Failed to consume Ask AI usage.");
+}
+
+async function consumeAskAiUsageRpc(params: {
+  userId: string;
+  usageType: AskAiUsageType;
+}): Promise<AskAiUsageResult> {
+  const supabase = await getSupabaseAdminClient();
+
+  const { data, error } = await (supabase.rpc as any)("consume_ask_ai_usage", {
+    p_user_id: params.userId,
+    p_usage_type: params.usageType,
+  });
+
+  if (error) {
+    console.error(
+      `[AskAI Usage] consume RPC failed: ${error.message}`,
+      params
+    );
+    throw new Error("Failed to process usage quota right now. Please try again.");
+  }
+
+  const rows = Array.isArray(data) ? data : [data];
+  const row = rows[0];
+  const normalized = normalizeRpcRow(row);
+
+  if (!normalized) {
+    throw new Error("Failed to parse usage quota response from database.");
+  }
+
+  console.log(
+    `[AskAI Usage] quota consumed: type=${normalized.usageType} remaining=${normalized.remaining} userId=${params.userId}`
+  );
+
+  return normalized;
+}
+
+export async function refundAskAiUsage(params: {
+  userId: string;
+  usageType: AskAiUsageType;
+}): Promise<void> {
+  const supabase = await getSupabaseAdminClient();
+
+  const { error } = await (supabase.rpc as any)("refund_ask_ai_usage", {
+    p_user_id: params.userId,
+    p_usage_type: params.usageType,
+  });
+
+  if (error) {
+    console.error(
+      `[AskAI Usage] refund failed for user=${params.userId} type=${params.usageType}: ${error.message}`
+    );
+  } else {
+    console.log(
+      `[AskAI Usage] refunded: type=${params.usageType} userId=${params.userId}`
+    );
+  }
 }

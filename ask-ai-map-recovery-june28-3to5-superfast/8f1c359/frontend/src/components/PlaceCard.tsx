@@ -295,17 +295,19 @@ function PlaceCard({
         }}
       >
         {searchResultCard ? (
-          <div className="grid grid-cols-[104px_minmax(0,1fr)] items-stretch gap-3.5 p-3">
+          <div className="grid min-h-[132px] grid-cols-[104px_minmax(0,1fr)] items-stretch gap-3.5 p-3 md:min-h-[172px] md:grid-cols-[140px_minmax(0,1fr)] md:gap-4">
             {shouldShowPhoto ? (
-              <img
-                src={photoUrl ?? undefined}
-                alt={photoAlt}
-                className="h-[132px] w-[104px] shrink-0 self-stretch rounded-[20px] border border-[rgba(148,163,184,0.18)] object-cover object-center shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]"
-                loading="lazy"
-                onError={() => setHasImageLoadError(true)}
-              />
+              <div className="relative h-full min-h-[132px] w-[104px] self-stretch overflow-hidden rounded-[20px] border border-[rgba(148,163,184,0.18)] bg-[linear-gradient(180deg,#f8fbff_0%,#eef4fb_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.5)] md:min-h-[172px] md:w-[140px]">
+                <img
+                  src={photoUrl ?? undefined}
+                  alt={photoAlt}
+                  className="absolute inset-0 h-full w-full object-cover object-center"
+                  loading="lazy"
+                  onError={() => setHasImageLoadError(true)}
+                />
+              </div>
             ) : (
-              <div className="flex h-[132px] w-[104px] shrink-0 self-stretch items-center justify-center rounded-[20px] border border-[rgba(148,163,184,0.16)] bg-[linear-gradient(180deg,#f8fbff_0%,#f2f6fb_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)]">
+              <div className="flex min-h-[132px] w-[104px] shrink-0 self-stretch items-center justify-center rounded-[20px] border border-[rgba(148,163,184,0.16)] bg-[linear-gradient(180deg,#f8fbff_0%,#f2f6fb_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] md:min-h-[172px] md:w-[140px]">
                 <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-slate-400 shadow-[0_4px_12px_rgba(148,163,184,0.14)]">
                   <AppIcon name={categoryIconName} size="card" className="h-5 w-5" />
                 </span>

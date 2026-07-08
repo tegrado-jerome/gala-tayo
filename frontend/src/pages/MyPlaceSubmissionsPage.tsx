@@ -2,9 +2,8 @@ import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import AppHeader from '../components/AppHeader'
 import MinimalBackNav from '../components/MinimalBackNav'
-import { PageContainer } from '../components/layout/ResponsiveLayouts'
+import { PageContainer, PageShell, EmptyState, Stack } from '../components/layout/ResponsiveLayouts'
 import UnifiedLoadingState from '../components/UnifiedLoadingState'
-import { navigateToPath } from '../utils/navigation'
 import { getMyPlaceSubmissions, type PlaceSubmission } from '../utils/placeSubmissionsApi'
 
 function formatDate(value?: string | null) {
@@ -61,10 +60,11 @@ function MyPlaceSubmissionsPage({ session }: { session: Session }) {
   }, [session])
 
   return (
-    <section className="gala-page-shell">
+    <PageShell>
       <AppHeader />
-      <main className="w-full py-6">
-        <PageContainer className="px-4 sm:px-6">
+      <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
+        <PageContainer size="wide">
+        <Stack gap="default">
         <MinimalBackNav onClick={() => window.history.back()} className="mb-4" />
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -77,10 +77,15 @@ function MyPlaceSubmissionsPage({ session }: { session: Session }) {
           </div>
           <button
             type="button"
-            onClick={() => navigateToPath('/submit-place')}
-            className="gala-primary-button px-4"
+            disabled
+            aria-disabled="true"
+            title="Coming soon"
+            className="app-button app-button-primary app-button-md cursor-not-allowed opacity-70"
           >
             Submit another place
+            <span className="ml-2 rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.14em] text-white">
+              Soon
+            </span>
           </button>
         </div>
 
@@ -92,10 +97,11 @@ function MyPlaceSubmissionsPage({ session }: { session: Session }) {
             message="We are loading the places you submitted for review."
           />
         ) : submissions.length === 0 ? (
-          <div className="mt-8 py-10 text-center">
-            <p className="text-base font-black text-slate-950">No place submissions yet.</p>
-            <p className="mt-2 text-sm font-semibold text-slate-700">Once you submit a place for review, it will show up here.</p>
-          </div>
+          <EmptyState
+            title="No place submissions yet."
+            description="Once you submit a place for review, it will show up here."
+            variant="plain"
+          />
         ) : (
           <div className="mt-8 grid gap-0">
             {submissions.map((submission) => (
@@ -152,9 +158,10 @@ function MyPlaceSubmissionsPage({ session }: { session: Session }) {
             ))}
           </div>
         )}
+        </Stack>
         </PageContainer>
       </main>
-    </section>
+    </PageShell>
   )
 }
 

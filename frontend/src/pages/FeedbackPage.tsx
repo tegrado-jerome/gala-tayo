@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react'
 import AppHeader from '../components/AppHeader'
+import MinimalBackNav from '../components/MinimalBackNav'
 import { AppIcon } from '../components/AppIcon'
 import GoogleSignInButton from '../components/GoogleSignInButton'
-import MinimalBackNav from '../components/MinimalBackNav'
-import { FormContainer } from '../components/layout/ResponsiveLayouts'
+import { FormContainer, PageContainer, PageShell, CardSurface, Stack } from '../components/layout/ResponsiveLayouts'
 import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 
@@ -146,35 +146,39 @@ function FeedbackPage() {
   }
 
   return (
-    <div className="gala-page-background flex min-h-screen flex-col text-[var(--text)]">
+    <PageShell>
       <AppHeader showTaglishChip={false} />
 
-      <main className="mx-auto flex w-full max-w-[1120px] flex-1 flex-col gap-4 px-3 py-4 sm:px-6 sm:py-6 lg:px-10 lg:py-8">
-        <MinimalBackNav to="/search" />
+      <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-8">
+        <PageContainer size="wide">
+          <Stack gap="default">
+            <div className="mb-5">
+              <MinimalBackNav to="/" label="Home" preferHistory={false} />
+            </div>
 
-        <section className="overflow-hidden px-1 py-2 sm:px-0 sm:py-3">
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-center">
-            <div className="space-y-2 sm:space-y-3">
-              <p className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">
-                <span className="text-[var(--accent)]">
-                  <AppIcon name="comments" className="h-4 w-4" />
-                </span>
-                <span>Help &amp; Feedback</span>
-              </p>
-              <h1 className="gala-page-title max-w-2xl">
-                How can we help?
-              </h1>
-              <p className="gala-page-description">
-                Send feedback connected to your account.
-              </p>
-            </div>
-            <div className="hidden justify-end lg:flex" aria-hidden="true">
-              <div className="drop-shadow-[0_18px_34px_rgba(47,116,232,0.22)]">
-                <HeartGraphic />
+            <section className="overflow-hidden">
+              <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-center">
+                <div className="space-y-2 sm:space-y-3">
+                  <p className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">
+                    <span className="text-[var(--accent)]">
+                      <AppIcon name="comments" className="h-4 w-4" />
+                    </span>
+                    <span>Help &amp; Feedback</span>
+                  </p>
+                  <h1 className="gala-page-title max-w-2xl">
+                    How can we help?
+                  </h1>
+                  <p className="gala-page-description">
+                    Send feedback connected to your account.
+                  </p>
+                </div>
+                <div className="hidden justify-end lg:flex" aria-hidden="true">
+                  <div className="drop-shadow-[0_18px_34px_rgba(47,116,232,0.22)]">
+                    <HeartGraphic />
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        </section>
+            </section>
 
         {isSessionLoading ? (
           <UnifiedLoadingState
@@ -184,88 +188,89 @@ function FeedbackPage() {
         ) : null}
 
         {!isSessionLoading && !session?.user ? (
-          <section className="px-1 py-2 sm:px-0 sm:py-3">
+          <CardSurface pad="loose">
             <h2 className="text-lg font-black text-slate-950">Sign in to use Help &amp; Feedback</h2>
             <p className="mt-2 max-w-xl text-sm text-[var(--muted)]">
               Feedback is connected to your account so we can keep submissions useful.
             </p>
             <GoogleSignInButton className="mt-4" redirectTo={`${window.location.origin}/feedback`} />
-          </section>
+          </CardSurface>
         ) : null}
 
         {!isSessionLoading && session?.user ? (
-          <section id="feedback-form" className="scroll-mt-6 px-1 py-2 sm:px-0 sm:py-3">
+          <section id="feedback-form" className="scroll-mt-6">
             <FormContainer className="px-0">
-            <div className="grid gap-4 sm:gap-6">
-              <section>
-                <h2 className="mb-2 text-[20px] font-black tracking-[-0.03em] text-slate-950 sm:mb-3 sm:text-[24px]">How was your experience?</h2>
-                <div className="grid grid-cols-5 gap-1 sm:gap-3">
-                  {ratingOptions.map((option) => {
-                    const isSelected = rating === option.value
+              <Stack gap="loose">
+                <section>
+                  <h2 className="mb-2 text-[20px] font-black tracking-[-0.03em] text-slate-950 sm:mb-3 sm:text-[24px]">How was your experience?</h2>
+                  <div className="grid grid-cols-5 gap-1 sm:gap-3">
+                    {ratingOptions.map((option) => {
+                      const isSelected = rating === option.value
 
-                    return (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => setRating(option.value)}
-                        className={`flex min-w-0 flex-col items-center justify-center gap-1 rounded-none border-0 bg-transparent px-0 py-1 text-center font-black transition active:scale-[0.98] ${
-                          isSelected
-                            ? 'text-[var(--accent-deep)]'
-                            : 'text-slate-700 hover:text-[var(--accent-deep)]'
-                        }`}
-                        aria-label={`Rate ${option.label}`}
-                      >
-                        <FaceIcon mood={option.face} className={`h-7 w-7 sm:h-12 sm:w-12 ${isSelected ? 'scale-105' : ''}`} />
-                        <span className="text-[9px] leading-tight sm:text-sm">{option.label}</span>
-                      </button>
-                    )
-                  })}
-                </div>
-              </section>
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => setRating(option.value)}
+                          className={`flex min-w-0 flex-col items-center justify-center gap-1 rounded-none border-0 bg-transparent px-0 py-1 text-center font-black transition active:scale-[0.98] ${
+                            isSelected
+                              ? 'text-[var(--accent-deep)]'
+                              : 'text-slate-700 hover:text-[var(--accent-deep)]'
+                          }`}
+                          aria-label={`Rate ${option.label}`}
+                        >
+                          <FaceIcon mood={option.face} className={`h-7 w-7 sm:h-12 sm:w-12 ${isSelected ? 'scale-105' : ''}`} />
+                          <span className="text-[9px] leading-tight sm:text-sm">{option.label}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </section>
 
-              <label className="block">
-                <span className="mb-2 block text-[20px] font-black tracking-[-0.03em] text-slate-950 sm:mb-3 sm:text-[22px]">Tell us more</span>
-                <div className="relative">
-                  <textarea
-                    value={comment}
-                    onChange={(event) => setComment(event.target.value)}
-                    maxLength={COMMENT_MAX_LENGTH}
-                    rows={5}
-                    placeholder="Share your thoughts about your experience on GalaTayo..."
-                    className="gala-field min-h-40 w-full resize-none px-4 py-3.5 pb-9 text-sm leading-relaxed placeholder:text-slate-400 sm:min-h-44 sm:py-4 sm:pb-10 sm:text-base"
-                  />
-                  <span className="absolute bottom-2.5 right-3.5 text-xs font-semibold text-[var(--muted)] sm:bottom-3 sm:right-4 sm:text-sm">
-                    {comment.length} / {COMMENT_MAX_LENGTH}
-                  </span>
-                </div>
-                {remainingCount < 60 ? (
-                  <p className="mt-2 text-xs font-semibold text-[var(--muted)]">{remainingCount} characters left</p>
+                <label className="block">
+                  <span className="mb-2 block text-[20px] font-black tracking-[-0.03em] text-slate-950 sm:mb-3 sm:text-[22px]">Tell us more</span>
+                  <div className="relative">
+                    <textarea
+                      value={comment}
+                      onChange={(event) => setComment(event.target.value)}
+                      maxLength={COMMENT_MAX_LENGTH}
+                      rows={5}
+                      placeholder="Share your thoughts about your experience on GalaTayo..."
+                      className="gala-field min-h-40 w-full resize-none px-4 py-3.5 pb-9 text-sm leading-relaxed placeholder:text-slate-400 sm:min-h-44 sm:py-4 sm:pb-10 sm:text-base"
+                    />
+                    <span className="absolute bottom-2.5 right-3.5 text-xs font-semibold text-[var(--muted)] sm:bottom-3 sm:right-4 sm:text-sm">
+                      {comment.length} / {COMMENT_MAX_LENGTH}
+                    </span>
+                  </div>
+                  {remainingCount < 60 ? (
+                    <p className="mt-2 text-xs font-semibold text-[var(--muted)]">{remainingCount} characters left</p>
+                  ) : null}
+                </label>
+
+                {errorMessage || statusMessage ? (
+                  <div className="-mt-1">
+                    {errorMessage ? <p className="text-sm font-semibold text-red-600">{errorMessage}</p> : null}
+                    {statusMessage ? <p className="text-sm font-semibold text-[var(--accent-deep)]">{statusMessage}</p> : null}
+                  </div>
                 ) : null}
-              </label>
 
-              {errorMessage || statusMessage ? (
-                <div className="-mt-1">
-                  {errorMessage ? <p className="text-sm font-semibold text-red-600">{errorMessage}</p> : null}
-                  {statusMessage ? <p className="text-sm font-semibold text-[var(--accent-deep)]">{statusMessage}</p> : null}
-                </div>
-              ) : null}
-
-              <button
-                type="button"
-                onClick={() => void handleSubmit()}
-                disabled={isSubmitting}
-                className="gala-primary-button h-12 w-full gap-3 px-4 sm:h-14 sm:text-base"
-              >
-                <AppIcon name="send" className="h-5 w-5" />
-                {isSubmitting ? 'Sending...' : 'Send Feedback'}
-              </button>
-            </div>
+                <button
+                  type="button"
+                  onClick={() => void handleSubmit()}
+                  disabled={isSubmitting}
+                  className="app-button app-button-primary app-button-md w-full sm:w-auto"
+                >
+                  <AppIcon name="send" className="h-5 w-5" />
+                  {isSubmitting ? 'Sending...' : 'Send Feedback'}
+                </button>
+              </Stack>
             </FormContainer>
           </section>
         ) : null}
+          </Stack>
+        </PageContainer>
       </main>
-
-    </div>
+    </PageShell>
   )
 }
 

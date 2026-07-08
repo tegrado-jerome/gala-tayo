@@ -152,6 +152,8 @@ function AppHeader({
   const shouldShowAvatar = Boolean(user && avatarUrl && failedAvatarUrl !== avatarUrl)
   const desktopNavButtonClass =
     'inline-flex items-center gap-2 rounded-lg px-3 py-2 text-[13px] font-bold text-slate-600 transition hover:bg-slate-50 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
+  const soonNavItemClass =
+    'pointer-events-none inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-[13px] font-bold text-slate-400 opacity-90'
 
   const handleSignOut = async () => {
     try {
@@ -196,10 +198,13 @@ function AppHeader({
         <AppIcon name="reports" size="ui" />
         My Reports
       </button>
-      <button type="button" onClick={() => navigateTo('/submit-place')} className={desktopNavButtonClass}>
+      <div className={soonNavItemClass} aria-disabled="true" title="Coming soon">
         <AppIcon name="place" size="ui" />
         Submit Place
-      </button>
+        <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
+          Soon
+        </span>
+      </div>
       <button
         type="button"
         onClick={() => void handleSignOut()}

@@ -4,6 +4,7 @@ import GoogleSignInButton from '../components/GoogleSignInButton'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { fetchMyCommentModerationNotices, type CommentModerationNotice } from '../utils/commentModerationNoticesApi'
 import { navigateToPath, navigateToPlace } from '../utils/navigation'
+import { PageContainer, PageShell, CardSurface, Stack } from '../components/layout/ResponsiveLayouts'
 
 function BackIcon({ className = 'h-4 w-4' }: { className?: string }) {
   return (
@@ -126,78 +127,82 @@ function CommentNoticesPage() {
   }, [session?.access_token])
 
   return (
-    <div className="flex min-h-screen flex-col bg-[linear-gradient(180deg,#f8fbff,#edf4ff)] text-[var(--text)]">
+    <PageShell tone="surface">
       <AppHeader showTaglishChip={false} />
 
-      <main className="mx-auto flex w-full max-w-[1040px] flex-1 flex-col gap-5 px-4 py-5 sm:px-6 lg:px-10 lg:py-8">
-        <button
-          type="button"
-          onClick={() => navigateToPath('/search')}
-          className="inline-flex w-fit items-center gap-2 rounded-lg border border-transparent px-1 py-1 text-sm font-black text-slate-700 transition hover:text-[var(--accent-deep)]"
-        >
-          <BackIcon className="h-5 w-5" />
-          Back
-        </button>
+      <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-8">
+        <PageContainer size="default">
+          <Stack gap="default">
+            <button
+              type="button"
+              onClick={() => navigateToPath('/search')}
+              className="inline-flex w-fit items-center gap-2 rounded-lg border border-transparent px-1 py-1 text-sm font-black text-slate-700 transition hover:text-[var(--accent-deep)]"
+            >
+              <BackIcon className="h-5 w-5" />
+              Back
+            </button>
 
-        <section className="border-b border-[var(--line)] pb-5">
-          <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-lg border border-[var(--line)] bg-white text-[var(--accent-deep)] shadow-[0_10px_24px_rgba(28,77,160,0.05)]">
-              <NoticeIcon />
-            </span>
-            <h1 className="text-[34px] font-black leading-tight text-slate-950 sm:text-[42px]">Comment Notices</h1>
-          </div>
-          <p className="mt-3 max-w-xl text-base font-semibold leading-relaxed text-slate-600">
-            Moderation notices for your own comments.
-          </p>
-        </section>
+            <section className="border-b border-[var(--line)] pb-5">
+              <div className="flex items-center gap-3">
+                <span className="flex h-11 w-11 items-center justify-center rounded-lg border border-[var(--line)] bg-white text-[var(--accent-deep)] shadow-[0_10px_24px_rgba(28,77,160,0.05)]">
+                  <NoticeIcon />
+                </span>
+                <h1 className="text-[34px] font-black leading-tight text-slate-950 sm:text-[42px]">Comment Notices</h1>
+              </div>
+              <p className="mt-3 max-w-xl text-base font-semibold leading-relaxed text-slate-600">
+                Moderation notices for your own comments.
+              </p>
+            </section>
 
-        {isSessionLoading ? (
-          <section className="rounded-lg border border-[var(--line)] bg-white px-4 py-5 shadow-[0_14px_30px_rgba(28,77,160,0.07)]">
-            <p className="text-sm text-[var(--muted)]">Checking account...</p>
-          </section>
-        ) : null}
+            {isSessionLoading ? (
+              <CardSurface pad="default">
+                <p className="text-sm text-[var(--muted)]">Checking account...</p>
+              </CardSurface>
+            ) : null}
 
-        {!isSessionLoading && !session?.user ? (
-          <section className="rounded-lg border border-[var(--line)] bg-white px-5 py-6 shadow-[0_14px_30px_rgba(28,77,160,0.07)]">
-            <h2 className="text-lg font-black text-slate-950">Please sign in to view comment notices.</h2>
-            <p className="mt-2 max-w-xl text-sm text-[var(--muted)]">
-              Comment moderation notices are private to your account.
-            </p>
-            <GoogleSignInButton className="mt-4" redirectTo={`${window.location.origin}/comment-notices`} />
-          </section>
-        ) : null}
-
-        {!isSessionLoading && session?.user ? (
-          <>
-            <div className="min-h-5">
-              {isLoading ? (
-                <p className="text-sm font-semibold text-[var(--accent-deep)]">Loading your comment notices...</p>
-              ) : errorMessage ? (
-                <p className="text-sm font-medium text-red-600">{errorMessage}</p>
-              ) : null}
-            </div>
-
-            {!isLoading && !errorMessage && notices.length === 0 ? (
-              <section className="rounded-lg border border-dashed border-[var(--line-strong)] bg-white/82 px-5 py-8 text-center shadow-[0_14px_30px_rgba(28,77,160,0.06)]">
-                <NoticeIcon className="mx-auto h-10 w-10 text-[var(--accent-deep)]" />
-                <h2 className="mt-3 text-lg font-black text-slate-950">No comment notices yet.</h2>
-                <p className="mx-auto mt-2 max-w-md text-sm text-[var(--muted)]">
-                  If moderation action is taken on one of your comments, it will appear here.
+            {!isSessionLoading && !session?.user ? (
+              <CardSurface pad="loose">
+                <h2 className="text-lg font-black text-slate-950">Please sign in to view comment notices.</h2>
+                <p className="mt-2 max-w-xl text-sm text-[var(--muted)]">
+                  Comment moderation notices are private to your account.
                 </p>
-              </section>
+                <GoogleSignInButton className="mt-4" redirectTo={`${window.location.origin}/comment-notices`} />
+              </CardSurface>
             ) : null}
 
-            {notices.length > 0 ? (
-              <section className="grid gap-4">
-                {notices.map((notice) => (
-                  <NoticeCard key={notice.id} notice={notice} />
-                ))}
-              </section>
+            {!isSessionLoading && session?.user ? (
+              <Stack gap="default">
+                <div className="min-h-5">
+                  {isLoading ? (
+                    <p className="text-sm font-semibold text-[var(--accent-deep)]">Loading your comment notices...</p>
+                  ) : errorMessage ? (
+                    <p className="text-sm font-medium text-red-600">{errorMessage}</p>
+                  ) : null}
+                </div>
+
+                {!isLoading && !errorMessage && notices.length === 0 ? (
+                  <CardSurface tone="outlined" pad="loose" className="text-center">
+                    <NoticeIcon className="mx-auto h-10 w-10 text-[var(--accent-deep)]" />
+                    <h2 className="mt-3 text-lg font-black text-slate-950">No comment notices yet.</h2>
+                    <p className="mx-auto mt-2 max-w-md text-sm text-[var(--muted)]">
+                      If moderation action is taken on one of your comments, it will appear here.
+                    </p>
+                  </CardSurface>
+                ) : null}
+
+                {notices.length > 0 ? (
+                  <Stack gap="default">
+                    {notices.map((notice) => (
+                      <NoticeCard key={notice.id} notice={notice} />
+                    ))}
+                  </Stack>
+                ) : null}
+              </Stack>
             ) : null}
-          </>
-        ) : null}
+          </Stack>
+        </PageContainer>
       </main>
-    </div>
+    </PageShell>
   )
 }
 

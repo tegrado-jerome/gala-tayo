@@ -1,0 +1,4809 @@
+[
+  {
+    "id": "74-apartment-cafe",
+    "name": "74 Apartment Cafe",
+    "slug": "74-apartment-cafe",
+    "category": "Cafe",
+    "address": "73 Clemente Jose Street, Malibay, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.5349,
+    "longitude": 121.0059,
+    "budget_min": 180,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=74%20Apartment%20Cafe%2C%2073%20Clemente%20Jose%20Street%2C%20Malibay%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "Malibay",
+    "description": "Small neighborhood café siya, so best siya kung nasa Malibay area ka na and gusto mo lang ng cozy coffee stop. Good for casual date or catch-up na hindi kailangan bongga. Medyo local gem feels, so manage expectations kung hanap mo big café setup.",
+    "best_time_to_visit": "Afternoon to evening",
+    "visit_duration": "1 to 2 hours",
+    "good_for": [
+      "Casual Date",
+      "Chill",
+      "Coffee",
+      "Barkada Hangout"
+    ],
+    "not_ideal_for": [
+      "Large Groups",
+      "Users Looking For Free Activities Only",
+      "People Looking For Big Scenic Views"
+    ],
+    "crowd_level": "Usually more relaxed than major mall cafés, but seats can still fill during peak snack hours.",
+    "indoor_outdoor": "Indoor",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "Parking is likely limited around the neighborhood, so commute, walking, or drop-off is better.",
+    "commute_access": "Reachable by jeep or tricycle within Malibay and by short ride from MRT Taft, LRT EDSA, or the NAIA/Newport area.",
+    "nearby_context": "Near Malibay, EDSA/Taft transport links, and the airport/Newport side of Pasay.",
+    "normalized_name": "74 apartment cafe",
+    "searchable_text": "74 Apartment Cafe Cafe Pasay Malibay 73 Clemente Jose Street, Malibay, Pasay City, Metro Manila Small neighborhood café siya, so best siya kung nasa Malibay area ka na and gusto mo lang ng cozy coffee stop. Good for casual date or catch-up na hindi kailangan bongga. Medyo local gem feels, so manage expectations kung hanap mo big café setup. Casual Date Chill Coffee Barkada Hangout Large Groups Users Looking For Free Activities Only People Looking For Big Scenic Views kapihan kape dessert coffee shop chika date couple date night relax tambay low-key food restaurant kainan pagkain dinner lunch food trip seafood apartment cafe pasay malibay cafe clemente jose cafe",
+    "search_keywords": [
+      "74 Apartment Cafe",
+      "Cafe",
+      "Pasay",
+      "Malibay",
+      "73 Clemente Jose Street, Malibay, Pasay City, Metro Manila",
+      "coffee",
+      "kapihan",
+      "kape",
+      "dessert",
+      "coffee shop",
+      "chika",
+      "date",
+      "couple",
+      "date night",
+      "casual date",
+      "chill",
+      "relax",
+      "tambay",
+      "low-key",
+      "food",
+      "restaurant",
+      "kainan",
+      "pagkain",
+      "dinner",
+      "lunch",
+      "food trip",
+      "seafood",
+      "Barkada Hangout",
+      "apartment cafe pasay",
+      "malibay cafe",
+      "clemente jose cafe"
+    ],
+    "search_aliases": [
+      "74 apartment cafe",
+      "apartment cafe pasay",
+      "malibay cafe",
+      "clemente jose cafe"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 1,
+    "budget_note": "Estimated minimum budget starts around ₱180 per person.",
+    "categories": [
+      "cafe",
+      "date",
+      "chill",
+      "food"
+    ],
+    "tags": [
+      {
+        "id": "food-trip",
+        "strength": 5,
+        "notes": "Good for meals, cravings, or planned food stops."
+      },
+      {
+        "id": "cafe-hopping",
+        "strength": 5,
+        "notes": "Good for coffee, desserts, or relaxed cafe hangouts."
+      },
+      {
+        "id": "date-friendly",
+        "strength": 4,
+        "notes": "Works well for casual dates or low-pressure couple plans."
+      },
+      {
+        "id": "chill",
+        "strength": 4,
+        "notes": "Good for relaxed, low-pressure gala."
+      },
+      {
+        "id": "budget-friendly",
+        "strength": 5,
+        "notes": "Low or flexible spend compared with typical paid activities."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "74-apartment-cafe-1",
+        "storage_key": "galatayo-photos/places/74-apartment-cafe/74-apartment-cafe-1.webp",
+        "alt_text": "74 Apartment Cafe in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "aims-museo-maritimo",
+    "name": "AIMS Museo Maritimo",
+    "slug": "aims-museo-maritimo",
+    "category": "Museum",
+    "address": "Gate 1, Lighthouse Building, AIMS Campus, Roxas Boulevard corner A. Arnaiz Avenue, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.5477,
+    "longitude": 120.9934,
+    "budget_min": 100,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=AIMS%20Museo%20Maritimo%2C%20Gate%201%2C%20Lighthouse%20Building%2C%20AIMS%20Campus%2C%20Roxas%20Boulevard%20corner%20A.%20Arnaiz%20Avenue%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "Roxas Boulevard / AIMS Campus",
+    "description": "AIMS Museo Maritimo is a smaller maritime museum for users na curious sa ships, seafaring, and maritime history. Hindi siya pang flashy gala, pero okay siya for quick educational stop. Since campus-based siya, mas safe mag-check muna ng visiting hours before pumunta.",
+    "best_time_to_visit": "Weekday or Saturday daytime",
+    "visit_duration": "45 minutes to 1.5 hours",
+    "good_for": [
+      "Museum Visit",
+      "Educational Trip",
+      "Family Trip",
+      "History",
+      "Rainy Day"
+    ],
+    "not_ideal_for": [
+      "Late Night Plans",
+      "Users Wanting A Big Attraction",
+      "Large Casual Barkada Hangouts"
+    ],
+    "crowd_level": "Usually calmer than mall museums; visits may depend on school or campus flow.",
+    "indoor_outdoor": "Indoor",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "Parking may be available on or near campus, but confirm before visiting because access can vary.",
+    "commute_access": "Along Roxas Boulevard near A. Arnaiz Avenue. Accessible by jeep/bus routes and short rides from LRT-1 Gil Puyat or Libertad.",
+    "nearby_context": "Near Roxas Boulevard, A. Arnaiz Avenue, Libertad, and central Pasay.",
+    "normalized_name": "aims museo maritimo",
+    "searchable_text": "AIMS Museo Maritimo Museum Pasay Roxas Boulevard / AIMS Campus Gate 1, Lighthouse Building, AIMS Campus, Roxas Boulevard corner A. Arnaiz Avenue, Pasay City, Metro Manila AIMS Museo Maritimo is a smaller maritime museum for users na curious sa ships, seafaring, and maritime history. Hindi siya pang flashy gala, pero okay siya for quick educational stop. Since campus-based siya, mas safe mag-check muna ng visiting hours before pumunta. Museum Visit Educational Trip Family Trip History Rainy Day Late Night Plans Users Wanting A Big Attraction Large Casual Barkada Hangouts museo educational exhibit culture heritage kasaysayan landmark old pasay family pamilya kids tourist photo spot pasikat visitor-friendly aims maritime museum museo maritimo maritime museum pasay",
+    "search_keywords": [
+      "AIMS Museo Maritimo",
+      "Museum",
+      "Pasay",
+      "Roxas Boulevard / AIMS Campus",
+      "Gate 1, Lighthouse Building, AIMS Campus, Roxas Boulevard corner A. Arnaiz Avenue, Pasay City, Metro Manila",
+      "museo",
+      "educational",
+      "exhibit",
+      "history",
+      "culture",
+      "heritage",
+      "kasaysayan",
+      "landmark",
+      "old pasay",
+      "family",
+      "pamilya",
+      "kids",
+      "family trip",
+      "tourist",
+      "photo spot",
+      "pasikat",
+      "visitor-friendly",
+      "Museum Visit",
+      "Educational Trip",
+      "Rainy Day",
+      "aims maritime museum",
+      "museo maritimo",
+      "maritime museum pasay"
+    ],
+    "search_aliases": [
+      "aims museo maritimo",
+      "aims maritime museum",
+      "museo maritimo",
+      "maritime museum pasay"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 1,
+    "budget_note": "Estimated minimum budget starts around ₱100 per person.",
+    "categories": [
+      "museum",
+      "heritage",
+      "family",
+      "tourist"
+    ],
+    "tags": [
+      {
+        "id": "museum",
+        "strength": 5,
+        "notes": "Good for a short educational or culture-focused stop."
+      },
+      {
+        "id": "heritage",
+        "strength": 5,
+        "notes": "Highlights Pasay culture, history, or landmark character."
+      },
+      {
+        "id": "family-friendly",
+        "strength": 4,
+        "notes": "Comfortable option for family visits or shared meals."
+      },
+      {
+        "id": "photo-friendly",
+        "strength": 4,
+        "notes": "Has tourist, landmark, heritage, or photo-stop value."
+      },
+      {
+        "id": "budget-friendly",
+        "strength": 5,
+        "notes": "Low or flexible spend compared with typical paid activities."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "aims-museo-maritimo-1",
+        "storage_key": "galatayo-photos/places/aims-museo-maritimo/aims-museo-maritimo-1.webp",
+        "alt_text": "AIMS Museo Maritimo in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "blue-bay-walk",
+    "name": "Blue Bay Walk",
+    "slug": "blue-bay-walk",
+    "category": "Mall",
+    "address": "Metropolitan Park Building, Macapagal Boulevard corner EDSA Extension, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.5367,
+    "longitude": 120.9883,
+    "budget_min": 0,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Blue%20Bay%20Walk%2C%20Metropolitan%20Park%20Building%2C%20Macapagal%20Boulevard%20corner%20EDSA%20Extension%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "Metro Park / Bay Area",
+    "description": "Blue Bay Walk is more chill outdoor lifestyle strip than full mall. Good siya for casual dinner, quick walk, or low-pressure hangout around the Bay Area. Best siya kapag hindi umuulan and gusto niyo ng open-air vibe na hindi as crowded as MOA.",
+    "best_time_to_visit": "Late afternoon to evening",
+    "visit_duration": "1 to 2.5 hours",
+    "good_for": [
+      "Casual Date",
+      "Chill",
+      "Food Trip",
+      "Barkada Hangout",
+      "Outdoor"
+    ],
+    "not_ideal_for": [
+      "Rainy Days",
+      "Users Looking For Big Mall Shopping",
+      "Very Quiet Study"
+    ],
+    "crowd_level": "Usually manageable, with more people during dinner and weekend evenings.",
+    "indoor_outdoor": "Outdoor",
+    "weather_fit": "Avoid during rain",
+    "parking_info": "Parking is available in the development, but dinner-hour slots can be tighter.",
+    "commute_access": "Near EDSA Extension and Macapagal Boulevard. Accessible by EDSA Carousel or MOA-bound routes, Grab, taxi, or short ride from MRT Taft.",
+    "nearby_context": "Near MET Live, MOA Complex, DoubleDragon Plaza, and the Bay Area CBD.",
+    "normalized_name": "blue bay walk",
+    "searchable_text": "Blue Bay Walk Mall Pasay Metro Park / Bay Area Metropolitan Park Building, Macapagal Boulevard corner EDSA Extension, Pasay City, Metro Manila Blue Bay Walk is more chill outdoor lifestyle strip than full mall. Good siya for casual dinner, quick walk, or low-pressure hangout around the Bay Area. Best siya kapag hindi umuulan and gusto niyo ng open-air vibe na hindi as crowded as MOA. Casual Date Chill Food Trip Barkada Hangout Outdoor Rainy Days Users Looking For Big Mall Shopping Very Quiet Study shopping aircon rainy day shops errands food restaurant kainan pagkain dinner lunch seafood date couple date night relax tambay low-key barkada group friends group dining bluebay walk metro park pasay macapagal blue bay",
+    "search_keywords": [
+      "Blue Bay Walk",
+      "Mall",
+      "Pasay",
+      "Metro Park / Bay Area",
+      "Metropolitan Park Building, Macapagal Boulevard corner EDSA Extension, Pasay City, Metro Manila",
+      "shopping",
+      "aircon",
+      "rainy day",
+      "shops",
+      "errands",
+      "food",
+      "restaurant",
+      "kainan",
+      "pagkain",
+      "dinner",
+      "lunch",
+      "food trip",
+      "seafood",
+      "date",
+      "couple",
+      "date night",
+      "casual date",
+      "chill",
+      "relax",
+      "tambay",
+      "low-key",
+      "barkada",
+      "group",
+      "friends",
+      "group dining",
+      "Barkada Hangout",
+      "Outdoor",
+      "bluebay walk",
+      "metro park pasay",
+      "macapagal blue bay"
+    ],
+    "search_aliases": [
+      "blue bay walk",
+      "bluebay walk",
+      "metro park pasay",
+      "macapagal blue bay"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 0,
+    "budget_note": "Free entry or no required minimum spend.",
+    "categories": [
+      "mall",
+      "food",
+      "date",
+      "chill",
+      "group"
+    ],
+    "tags": [
+      {
+        "id": "food-trip",
+        "strength": 5,
+        "notes": "Good for meals, cravings, or planned food stops."
+      },
+      {
+        "id": "mall-day",
+        "strength": 5,
+        "notes": "Convenient for shopping, food, errands, and rainy-day plans."
+      },
+      {
+        "id": "group-friendly",
+        "strength": 4,
+        "notes": "Works well for barkada or small group hangouts."
+      },
+      {
+        "id": "date-friendly",
+        "strength": 4,
+        "notes": "Works well for casual dates or low-pressure couple plans."
+      },
+      {
+        "id": "chill",
+        "strength": 4,
+        "notes": "Good for relaxed, low-pressure gala."
+      },
+      {
+        "id": "budget-friendly",
+        "strength": 5,
+        "notes": "Low or flexible spend compared with typical paid activities."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "blue-bay-walk-1",
+        "storage_key": "galatayo-photos/places/blue-bay-walk/blue-bay-walk-1.webp",
+        "alt_text": "Blue Bay Walk in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "cartimar-shopping-center",
+    "name": "Cartimar Shopping Center",
+    "slug": "cartimar-shopping-center",
+    "category": "Mall",
+    "address": "Cartimar Avenue / Leveriza Street, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.55073,
+    "longitude": 120.9965,
+    "budget_min": 0,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Cartimar%20Shopping%20Center%2C%20Cartimar%20Avenue%20/%20Leveriza%20Street%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "Cartimar / Leveriza",
+    "description": "Cartimar is for people na enjoy ang old-school shopping hunt, hindi yung polished mall stroll. Expect local finds, pet supplies, bikes, shoes, groceries, and bargain-style browsing. Good siya for practical shopping gala, pero hindi siya date-night aesthetic type.",
+    "best_time_to_visit": "Morning to afternoon",
+    "visit_duration": "1 to 2.5 hours",
+    "good_for": [
+      "Shopping",
+      "Budget-Friendly",
+      "Barkada Hangout",
+      "Pet Supplies",
+      "Local Finds"
+    ],
+    "not_ideal_for": [
+      "Date Night",
+      "Rainy Days",
+      "People Looking For Aesthetic Mall Vibes"
+    ],
+    "crowd_level": "Busy during daytime shopping hours, especially weekends.",
+    "indoor_outdoor": "Mixed",
+    "weather_fit": "Mixed",
+    "parking_info": "Parking can be limited and street traffic can be tight, so commuting is often easier.",
+    "commute_access": "Near Taft, Leveriza, and Libertad area. Reachable from LRT-1 Libertad or Gil Puyat with a short ride or walk depending on entry point.",
+    "nearby_context": "Near Taft Avenue, Leveriza, Libertad, and central Pasay shopping streets.",
+    "normalized_name": "cartimar shopping center",
+    "searchable_text": "Cartimar Shopping Center Mall Pasay Cartimar / Leveriza Cartimar Avenue / Leveriza Street, Pasay City, Metro Manila Cartimar is for people na enjoy ang old-school shopping hunt, hindi yung polished mall stroll. Expect local finds, pet supplies, bikes, shoes, groceries, and bargain-style browsing. Good siya for practical shopping gala, pero hindi siya date-night aesthetic type. Shopping Budget-Friendly Barkada Hangout Pet Supplies Local Finds Date Night Rainy Days People Looking For Aesthetic Mall Vibes aircon rainy day shops errands food restaurant kainan pagkain dinner lunch food trip seafood barkada group friends group dining chill relax tambay low-key cartimar cartimar pasay cartimar mall",
+    "search_keywords": [
+      "Cartimar Shopping Center",
+      "Mall",
+      "Pasay",
+      "Cartimar / Leveriza",
+      "Cartimar Avenue / Leveriza Street, Pasay City, Metro Manila",
+      "shopping",
+      "aircon",
+      "rainy day",
+      "shops",
+      "errands",
+      "food",
+      "restaurant",
+      "kainan",
+      "pagkain",
+      "dinner",
+      "lunch",
+      "food trip",
+      "seafood",
+      "barkada",
+      "group",
+      "friends",
+      "group dining",
+      "chill",
+      "relax",
+      "tambay",
+      "low-key",
+      "Budget-Friendly",
+      "Barkada Hangout",
+      "Pet Supplies",
+      "Local Finds",
+      "cartimar",
+      "cartimar pasay",
+      "cartimar mall"
+    ],
+    "search_aliases": [
+      "cartimar",
+      "cartimar shopping center",
+      "cartimar pasay",
+      "cartimar mall"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 0,
+    "budget_note": "Free entry or no required minimum spend.",
+    "categories": [
+      "mall",
+      "food",
+      "group",
+      "chill"
+    ],
+    "tags": [
+      {
+        "id": "food-trip",
+        "strength": 5,
+        "notes": "Good for meals, cravings, or planned food stops."
+      },
+      {
+        "id": "mall-day",
+        "strength": 5,
+        "notes": "Convenient for shopping, food, errands, and rainy-day plans."
+      },
+      {
+        "id": "group-friendly",
+        "strength": 4,
+        "notes": "Works well for barkada or small group hangouts."
+      },
+      {
+        "id": "chill",
+        "strength": 4,
+        "notes": "Good for relaxed, low-pressure gala."
+      },
+      {
+        "id": "budget-friendly",
+        "strength": 5,
+        "notes": "Low or flexible spend compared with typical paid activities."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "cartimar-shopping-center-1",
+        "storage_key": "galatayo-photos/places/cartimar-shopping-center/cartimar-shopping-center-1.webp",
+        "alt_text": "Cartimar Shopping Center in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "coffee-chapters-burgos",
+    "name": "Coffee Chapters Burgos",
+    "slug": "coffee-chapters-burgos",
+    "category": "Cafe",
+    "address": "2369 Padre Burgos Street, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.5487,
+    "longitude": 121.001,
+    "budget_min": 180,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Coffee%20Chapters%20Burgos%2C%202369%20Padre%20Burgos%20Street%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "Burgos / Libertad",
+    "description": "Ito yung café na bagay kapag kailangan mo ng tambayan na hindi nagmamadali. May study-friendly and bookish vibe, kaya okay for students, night owls, or lowkey chikahan. Hindi siya flashy, pero very useful siya kapag gusto mo ng chill café sa Pasay.",
+    "best_time_to_visit": "Late afternoon, evening, or late night",
+    "visit_duration": "1 to 3 hours",
+    "good_for": [
+      "Study Spot",
+      "Chill",
+      "Barkada Hangout",
+      "Late Night",
+      "Coffee"
+    ],
+    "not_ideal_for": [
+      "Large Groups",
+      "Users Looking For Free Activities Only",
+      "People Wanting Outdoor Views"
+    ],
+    "crowd_level": "Can get occupied during study hours and late-night café peaks.",
+    "indoor_outdoor": "Indoor",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "Street-side or nearby paid parking may be limited, so commuting is easier.",
+    "commute_access": "Near Libertad and Burgos area. Reachable from LRT-1 Libertad with a short walk or tricycle ride.",
+    "nearby_context": "Near Sta. Clara de Montefalco Parish, Libertad area, and local Pasay schools.",
+    "normalized_name": "coffee chapters burgos",
+    "searchable_text": "Coffee Chapters Burgos Cafe Pasay Burgos / Libertad 2369 Padre Burgos Street, Pasay City, Metro Manila Ito yung café na bagay kapag kailangan mo ng tambayan na hindi nagmamadali. May study-friendly and bookish vibe, kaya okay for students, night owls, or lowkey chikahan. Hindi siya flashy, pero very useful siya kapag gusto mo ng chill café sa Pasay. Study Spot Chill Barkada Hangout Late Night Coffee Large Groups Users Looking For Free Activities Only People Wanting Outdoor Views kapihan kape dessert coffee shop chika relax tambay low-key barkada group friends group dining food restaurant kainan pagkain dinner lunch food trip seafood coffee chapters pasay burgos cafe pasay libertad cafe",
+    "search_keywords": [
+      "Coffee Chapters Burgos",
+      "Cafe",
+      "Pasay",
+      "Burgos / Libertad",
+      "2369 Padre Burgos Street, Pasay City, Metro Manila",
+      "coffee",
+      "kapihan",
+      "kape",
+      "dessert",
+      "coffee shop",
+      "chika",
+      "chill",
+      "relax",
+      "tambay",
+      "low-key",
+      "barkada",
+      "group",
+      "friends",
+      "group dining",
+      "food",
+      "restaurant",
+      "kainan",
+      "pagkain",
+      "dinner",
+      "lunch",
+      "food trip",
+      "seafood",
+      "Study Spot",
+      "Barkada Hangout",
+      "Late Night",
+      "coffee chapters pasay",
+      "burgos cafe pasay",
+      "libertad cafe"
+    ],
+    "search_aliases": [
+      "coffee chapters burgos",
+      "coffee chapters pasay",
+      "burgos cafe pasay",
+      "libertad cafe"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 1,
+    "budget_note": "Estimated minimum budget starts around ₱180 per person.",
+    "categories": [
+      "cafe",
+      "chill",
+      "group",
+      "food"
+    ],
+    "tags": [
+      {
+        "id": "food-trip",
+        "strength": 5,
+        "notes": "Good for meals, cravings, or planned food stops."
+      },
+      {
+        "id": "cafe-hopping",
+        "strength": 5,
+        "notes": "Good for coffee, desserts, or relaxed cafe hangouts."
+      },
+      {
+        "id": "group-friendly",
+        "strength": 4,
+        "notes": "Works well for barkada or small group hangouts."
+      },
+      {
+        "id": "chill",
+        "strength": 4,
+        "notes": "Good for relaxed, low-pressure gala."
+      },
+      {
+        "id": "budget-friendly",
+        "strength": 5,
+        "notes": "Low or flexible spend compared with typical paid activities."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "coffee-chapters-burgos-1",
+        "storage_key": "galatayo-photos/places/coffee-chapters-burgos/coffee-chapters-burgos-1.webp",
+        "alt_text": "Coffee Chapters Burgos in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "cultural-center-of-the-philippines-complex",
+    "name": "Cultural Center of the Philippines Complex",
+    "slug": "cultural-center-of-the-philippines-complex",
+    "category": "Heritage",
+    "address": "CCP Complex, Roxas Boulevard, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.5583,
+    "longitude": 120.9851,
+    "budget_min": 0,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Cultural%20Center%20of%20the%20Philippines%20Complex%2C%20CCP%20Complex%2C%20Roxas%20Boulevard%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "CCP Complex / Roxas Boulevard",
+    "description": "CCP Complex is for artsy, culture, and bay-side plans na hindi lang puro mall. Pwede kang pumunta for shows, exhibits, architecture, or chill walks around the area. Best siya kapag may event or kung gusto mo ng more meaningful stop before food trip sa nearby spots.",
+    "best_time_to_visit": "Afternoon to evening, depending on shows or exhibits",
+    "visit_duration": "1 to 3 hours",
+    "good_for": [
+      "Museum Visit",
+      "Date Night",
+      "Family Trip",
+      "Culture",
+      "Photo Spot"
+    ],
+    "not_ideal_for": [
+      "Users Looking For Mall Convenience",
+      "Very Late Night Plans",
+      "People Expecting One Single Attraction"
+    ],
+    "crowd_level": "Crowd level depends heavily on events, shows, and festival dates.",
+    "indoor_outdoor": "Mixed",
+    "weather_fit": "Mixed",
+    "parking_info": "Parking is available in parts of the CCP Complex, but event days can get crowded.",
+    "commute_access": "Reachable via Roxas Boulevard. From LRT-1 Vito Cruz or Gil Puyat, take a jeep, taxi, or short ride toward CCP Complex.",
+    "nearby_context": "Near PICC, Star City, Seascape Village, Manila Bay, and Roxas Boulevard.",
+    "normalized_name": "cultural center of the philippines complex",
+    "searchable_text": "Cultural Center of the Philippines Complex Heritage Pasay CCP Complex / Roxas Boulevard CCP Complex, Roxas Boulevard, Pasay City, Metro Manila CCP Complex is for artsy, culture, and bay-side plans na hindi lang puro mall. Pwede kang pumunta for shows, exhibits, architecture, or chill walks around the area. Best siya kapag may event or kung gusto mo ng more meaningful stop before food trip sa nearby spots. Museum Visit Date Night Family Trip Culture Photo Spot Users Looking For Mall Convenience Very Late Night Plans People Expecting One Single Attraction history kasaysayan landmark old pasay tourist pasikat visitor-friendly museum museo educational exhibit date couple casual date family pamilya kids chill relax tambay low-key ccp complex cultural center philippines cultural center of the philippines ccp pasay ccp complex pasay",
+    "search_keywords": [
+      "Cultural Center of the Philippines Complex",
+      "Heritage",
+      "Pasay",
+      "CCP Complex / Roxas Boulevard",
+      "CCP Complex, Roxas Boulevard, Pasay City, Metro Manila",
+      "history",
+      "kasaysayan",
+      "culture",
+      "landmark",
+      "old pasay",
+      "tourist",
+      "photo spot",
+      "pasikat",
+      "visitor-friendly",
+      "museum",
+      "museo",
+      "educational",
+      "exhibit",
+      "date",
+      "couple",
+      "date night",
+      "casual date",
+      "family",
+      "pamilya",
+      "kids",
+      "family trip",
+      "chill",
+      "relax",
+      "tambay",
+      "low-key",
+      "Museum Visit",
+      "ccp complex",
+      "cultural center philippines",
+      "cultural center of the philippines",
+      "ccp pasay",
+      "ccp complex pasay"
+    ],
+    "search_aliases": [
+      "ccp complex",
+      "cultural center philippines",
+      "cultural center of the philippines",
+      "ccp pasay",
+      "ccp complex pasay"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 0,
+    "budget_note": "Free entry or no required minimum spend.",
+    "categories": [
+      "heritage",
+      "tourist",
+      "museum",
+      "date",
+      "family",
+      "chill"
+    ],
+    "tags": [
+      {
+        "id": "museum",
+        "strength": 5,
+        "notes": "Good for a short educational or culture-focused stop."
+      },
+      {
+        "id": "heritage",
+        "strength": 5,
+        "notes": "Highlights Pasay culture, history, or landmark character."
+      },
+      {
+        "id": "family-friendly",
+        "strength": 4,
+        "notes": "Comfortable option for family visits or shared meals."
+      },
+      {
+        "id": "date-friendly",
+        "strength": 4,
+        "notes": "Works well for casual dates or low-pressure couple plans."
+      },
+      {
+        "id": "chill",
+        "strength": 4,
+        "notes": "Good for relaxed, low-pressure gala."
+      },
+      {
+        "id": "photo-friendly",
+        "strength": 4,
+        "notes": "Has tourist, landmark, heritage, or photo-stop value."
+      },
+      {
+        "id": "budget-friendly",
+        "strength": 5,
+        "notes": "Low or flexible spend compared with typical paid activities."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "cultural-center-of-the-philippines-complex-1",
+        "storage_key": "galatayo-photos/places/cultural-center-of-the-philippines-complex/cultural-center-of-the-philippines-complex-1.webp",
+        "alt_text": "Cultural Center of the Philippines Complex in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "el-calle-food-music-hall",
+    "name": "El Calle Food & Music Hall",
+    "slug": "el-calle-food-music-hall",
+    "category": "Nightlife",
+    "address": "2nd Floor, Newport Mall, Newport Boulevard, Newport City, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.5218,
+    "longitude": 121.0161,
+    "budget_min": 500,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=El%20Calle%20Food%20%26%20Music%20Hall%2C%202nd%20Floor%2C%20Newport%20Mall%2C%20Newport%20Boulevard%2C%20Newport%20City%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "Newport Mall",
+    "description": "El Calle is more chill than club energy, so bagay siya for food, drinks, and live music with friends. Good siya for acoustic nights or relaxed date night inside Newport. If you want nightlife na hindi super intense, this is the safer vibe.",
+    "best_time_to_visit": "Evening to midnight",
+    "visit_duration": "1.5 to 3 hours",
+    "good_for": [
+      "Nightlife",
+      "Live Music",
+      "Barkada Hangout",
+      "Date Night",
+      "Late Night"
+    ],
+    "not_ideal_for": [
+      "Young Kids At Night",
+      "Quiet Study",
+      "Users Looking For Free Activities Only"
+    ],
+    "crowd_level": "More lively during live music nights, weekends, and private events.",
+    "indoor_outdoor": "Indoor",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "Paid parking is available in Newport World Resorts and Newport Mall.",
+    "commute_access": "Inside Newport Mall. Accessible via Runway Manila from NAIA Terminal 3 or by Grab, taxi, or shuttle to Newport World Resorts.",
+    "nearby_context": "Near KAO, Limitless Barcade, Newport Cinemas, Newport Performing Arts Theater, and Newport hotels.",
+    "normalized_name": "el calle food and music hall",
+    "searchable_text": "El Calle Food & Music Hall Nightlife Pasay Newport Mall 2nd Floor, Newport Mall, Newport Boulevard, Newport City, Pasay City, Metro Manila El Calle is more chill than club energy, so bagay siya for food, drinks, and live music with friends. Good siya for acoustic nights or relaxed date night inside Newport. If you want nightlife na hindi super intense, this is the safer vibe. Live Music Barkada Hangout Date Night Late Night Young Kids At Night Quiet Study Users Looking For Free Activities Only bar club drinks food restaurant kainan pagkain dinner lunch food trip seafood barkada group friends group dining date couple casual date chill relax tambay low-key el calle el calle food music hall el calle newport newport live music",
+    "search_keywords": [
+      "El Calle Food & Music Hall",
+      "Nightlife",
+      "Pasay",
+      "Newport Mall",
+      "2nd Floor, Newport Mall, Newport Boulevard, Newport City, Pasay City, Metro Manila",
+      "bar",
+      "club",
+      "drinks",
+      "live music",
+      "late night",
+      "food",
+      "restaurant",
+      "kainan",
+      "pagkain",
+      "dinner",
+      "lunch",
+      "food trip",
+      "seafood",
+      "barkada",
+      "group",
+      "friends",
+      "group dining",
+      "date",
+      "couple",
+      "date night",
+      "casual date",
+      "chill",
+      "relax",
+      "tambay",
+      "low-key",
+      "Barkada Hangout",
+      "el calle",
+      "el calle food music hall",
+      "el calle newport",
+      "newport live music"
+    ],
+    "search_aliases": [
+      "el calle",
+      "el calle food music hall",
+      "el calle newport",
+      "newport live music"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 3,
+    "budget_note": "Estimated minimum budget starts around ₱500 per person.",
+    "categories": [
+      "nightlife",
+      "food",
+      "group",
+      "date",
+      "chill"
+    ],
+    "tags": [
+      {
+        "id": "food-trip",
+        "strength": 5,
+        "notes": "Good for meals, cravings, or planned food stops."
+      },
+      {
+        "id": "nightlife",
+        "strength": 5,
+        "notes": "Better for evening meals, drinks, or after-work hangouts."
+      },
+      {
+        "id": "group-friendly",
+        "strength": 4,
+        "notes": "Works well for barkada or small group hangouts."
+      },
+      {
+        "id": "date-friendly",
+        "strength": 4,
+        "notes": "Works well for casual dates or low-pressure couple plans."
+      },
+      {
+        "id": "chill",
+        "strength": 4,
+        "notes": "Good for relaxed, low-pressure gala."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "el-calle-food-music-hall-1",
+        "storage_key": "galatayo-photos/places/el-calle-food-music-hall/el-calle-food-music-hall-1.webp",
+        "alt_text": "El Calle Food & Music Hall in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "gala-food-park",
+    "name": "Gala Food Park",
+    "slug": "gala-food-park",
+    "category": "Food",
+    "address": "Lot 4 Block 2 Superblock A, CBP 1-A, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.5329,
+    "longitude": 120.9857,
+    "budget_min": 250,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Gala%20Food%20Park%2C%20Lot%204%20Block%202%20Superblock%20A%2C%20CBP%201-A%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "MOA Complex / CBP 1-A",
+    "description": "Perfect ito kapag gusto niyo ng food trip na may konting theme and photo-friendly vibe. Hindi siya ordinary food court kasi may Japan-inspired feels and maraming choices for casual kain. Sakto siya before or after MOA gala kapag gusto niyo medyo playful yung stop.",
+    "best_time_to_visit": "Evening or late afternoon",
+    "visit_duration": "1 to 2 hours",
+    "good_for": [
+      "Food Trip",
+      "Barkada Hangout",
+      "Casual Date",
+      "Instagrammable",
+      "Chill"
+    ],
+    "not_ideal_for": [
+      "Quiet Study",
+      "Users Looking For Free Activities Only",
+      "People Avoiding Themed Spaces"
+    ],
+    "crowd_level": "Expect a livelier crowd during dinner and weekends.",
+    "indoor_outdoor": "Mixed",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "Parking depends on nearby MOA and CBP parking areas and can be tight during peak mall hours.",
+    "commute_access": "Accessible from the MOA Complex via jeep, bus, Grab, or private car. Main nearby transport points are SM MOA terminal and EDSA Carousel or MRT Taft connections.",
+    "nearby_context": "Near SM Mall of Asia, S Maison, MOA Arena, SM By The Bay, and other Bay Area spots.",
+    "normalized_name": "gala food park",
+    "searchable_text": "Gala Food Park Food Pasay MOA Complex / CBP 1-A Lot 4 Block 2 Superblock A, CBP 1-A, Pasay City, Metro Manila Perfect ito kapag gusto niyo ng food trip na may konting theme and photo-friendly vibe. Hindi siya ordinary food court kasi may Japan-inspired feels and maraming choices for casual kain. Sakto siya before or after MOA gala kapag gusto niyo medyo playful yung stop. Food Trip Barkada Hangout Casual Date Instagrammable Chill Quiet Study Users Looking For Free Activities Only People Avoiding Themed Spaces restaurant kainan pagkain dinner lunch seafood barkada group friends group dining date couple date night relax tambay low-key gala food park pasay japan food park pasay moa food park",
+    "search_keywords": [
+      "Gala Food Park",
+      "Food",
+      "Pasay",
+      "MOA Complex / CBP 1-A",
+      "Lot 4 Block 2 Superblock A, CBP 1-A, Pasay City, Metro Manila",
+      "restaurant",
+      "kainan",
+      "pagkain",
+      "dinner",
+      "lunch",
+      "food trip",
+      "seafood",
+      "barkada",
+      "group",
+      "friends",
+      "group dining",
+      "date",
+      "couple",
+      "date night",
+      "casual date",
+      "chill",
+      "relax",
+      "tambay",
+      "low-key",
+      "Barkada Hangout",
+      "Instagrammable",
+      "gala food park pasay",
+      "japan food park pasay",
+      "moa food park"
+    ],
+    "search_aliases": [
+      "gala food park",
+      "gala food park pasay",
+      "japan food park pasay",
+      "moa food park"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 2,
+    "budget_note": "Estimated minimum budget starts around ₱250 per person.",
+    "categories": [
+      "food",
+      "group",
+      "date",
+      "chill"
+    ],
+    "tags": [
+      {
+        "id": "food-trip",
+        "strength": 5,
+        "notes": "Good for meals, cravings, or planned food stops."
+      },
+      {
+        "id": "group-friendly",
+        "strength": 4,
+        "notes": "Works well for barkada or small group hangouts."
+      },
+      {
+        "id": "date-friendly",
+        "strength": 4,
+        "notes": "Works well for casual dates or low-pressure couple plans."
+      },
+      {
+        "id": "chill",
+        "strength": 4,
+        "notes": "Good for relaxed, low-pressure gala."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "gala-food-park-1",
+        "storage_key": "galatayo-photos/places/gala-food-park/gala-food-park-1.webp",
+        "alt_text": "Gala Food Park in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "hard-rock-cafe-manila",
+    "name": "Hard Rock Cafe Manila",
+    "slug": "hard-rock-cafe-manila",
+    "category": "Nightlife",
+    "address": "Level 2, S Maison at Conrad Manila, Coral Way, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.5315,
+    "longitude": 120.9813,
+    "budget_min": 800,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Hard%20Rock%20Cafe%20Manila%2C%20Level%202%2C%20S%20Maison%20at%20Conrad%20Manila%2C%20Coral%20Way%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "S Maison / MOA Complex",
+    "description": "Hard Rock Cafe Manila is a good pick if you want dinner with music and a nightlife feel without going full club. Bagay siya for date nights, barkada dinners, or visitors who want a familiar live-music vibe. Not the cheapest, but strong siya as a MOA side night plan.",
+    "best_time_to_visit": "Evening, especially live music hours",
+    "visit_duration": "1.5 to 3 hours",
+    "good_for": [
+      "Nightlife",
+      "Date Night",
+      "Barkada Hangout",
+      "Live Music",
+      "Food Trip"
+    ],
+    "not_ideal_for": [
+      "Quiet Study",
+      "Users Looking For Budget-Friendly Hangouts",
+      "People Avoiding Loud Music"
+    ],
+    "crowd_level": "Busier during dinner, live band schedules, weekends, and event nights.",
+    "indoor_outdoor": "Indoor",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "Paid parking is available at S Maison/Conrad or nearby MOA parking areas.",
+    "commute_access": "Accessible through S Maison/MOA transport access. Ride to SM MOA then walk or transfer within the complex.",
+    "nearby_context": "Inside S Maison, near The Dessert Museum, Space & Time Cube+, Conrad Manila, and SM By The Bay.",
+    "normalized_name": "hard rock cafe manila",
+    "searchable_text": "Hard Rock Cafe Manila Nightlife Pasay S Maison / MOA Complex Level 2, S Maison at Conrad Manila, Coral Way, Pasay City, Metro Manila Hard Rock Cafe Manila is a good pick if you want dinner with music and a nightlife feel without going full club. Bagay siya for date nights, barkada dinners, or visitors who want a familiar live-music vibe. Not the cheapest, but strong siya as a MOA side night plan. Date Night Barkada Hangout Live Music Food Trip Quiet Study Users Looking For Budget-Friendly Hangouts People Avoiding Loud Music bar club drinks late night food restaurant kainan pagkain dinner lunch seafood barkada group friends group dining date couple casual date hard rock cafe pasay hard rock s maison live music moa",
+    "search_keywords": [
+      "Hard Rock Cafe Manila",
+      "Nightlife",
+      "Pasay",
+      "S Maison / MOA Complex",
+      "Level 2, S Maison at Conrad Manila, Coral Way, Pasay City, Metro Manila",
+      "bar",
+      "club",
+      "drinks",
+      "live music",
+      "late night",
+      "food",
+      "restaurant",
+      "kainan",
+      "pagkain",
+      "dinner",
+      "lunch",
+      "food trip",
+      "seafood",
+      "barkada",
+      "group",
+      "friends",
+      "group dining",
+      "date",
+      "couple",
+      "date night",
+      "casual date",
+      "Barkada Hangout",
+      "hard rock cafe pasay",
+      "hard rock s maison",
+      "live music moa"
+    ],
+    "search_aliases": [
+      "hard rock cafe manila",
+      "hard rock cafe pasay",
+      "hard rock s maison",
+      "live music moa"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 3,
+    "budget_note": "Estimated minimum budget starts around ₱800 per person.",
+    "categories": [
+      "nightlife",
+      "food",
+      "group",
+      "date"
+    ],
+    "tags": [
+      {
+        "id": "food-trip",
+        "strength": 5,
+        "notes": "Good for meals, cravings, or planned food stops."
+      },
+      {
+        "id": "nightlife",
+        "strength": 5,
+        "notes": "Better for evening meals, drinks, or after-work hangouts."
+      },
+      {
+        "id": "group-friendly",
+        "strength": 4,
+        "notes": "Works well for barkada or small group hangouts."
+      },
+      {
+        "id": "date-friendly",
+        "strength": 4,
+        "notes": "Works well for casual dates or low-pressure couple plans."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "hard-rock-cafe-manila-1",
+        "storage_key": "galatayo-photos/places/hard-rock-cafe-manila/hard-rock-cafe-manila-1.webp",
+        "alt_text": "Hard Rock Cafe Manila in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "kao-day-night-club",
+    "name": "Kao Day & Night Club",
+    "slug": "kao-day-night-club",
+    "category": "Nightlife",
+    "address": "2nd Floor, Newport Mall, Newport World Resorts, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.5218,
+    "longitude": 121.0161,
+    "budget_min": 1000,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Kao%20Day%20%26%20Night%20Club%2C%202nd%20Floor%2C%20Newport%20Mall%2C%20Newport%20World%20Resorts%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "Newport Mall",
+    "description": "KAO is for nights na gusto niyo ng dressed-up, music, drinks, and party energy. Mas adult barkada and date-night siya kaysa casual family stop. Since nasa Newport siya, convenient yung food, hotel, and ride options nearby.",
+    "best_time_to_visit": "Evening to late night",
+    "visit_duration": "2 to 4 hours",
+    "good_for": [
+      "Nightlife",
+      "Date Night",
+      "Barkada Hangout",
+      "Late Night",
+      "Drinks"
+    ],
+    "not_ideal_for": [
+      "Young Kids At Night",
+      "Users Looking For Budget-Friendly Hangouts",
+      "Quiet Hangouts"
+    ],
+    "crowd_level": "Lively at night, especially on weekends and DJ/event nights.",
+    "indoor_outdoor": "Indoor",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "Paid parking is available in Newport World Resorts and Newport Mall.",
+    "commute_access": "Inside Newport Mall. Accessible via Runway Manila from NAIA Terminal 3 or by Grab, taxi, or shuttle to Newport World Resorts.",
+    "nearby_context": "Near Newport Cinemas, El Calle, Limitless Barcade, Newport Performing Arts Theater, and Newport hotels.",
+    "normalized_name": "kao day and night club",
+    "searchable_text": "Kao Day & Night Club Nightlife Pasay Newport Mall 2nd Floor, Newport Mall, Newport World Resorts, Pasay City, Metro Manila KAO is for nights na gusto niyo ng dressed-up, music, drinks, and party energy. Mas adult barkada and date-night siya kaysa casual family stop. Since nasa Newport siya, convenient yung food, hotel, and ride options nearby. Date Night Barkada Hangout Late Night Drinks Young Kids At Night Users Looking For Budget-Friendly Hangouts Quiet Hangouts bar club live music barkada group friends group dining date couple casual date kao day night club kao club kao newport club newport pasay",
+    "search_keywords": [
+      "Kao Day & Night Club",
+      "Nightlife",
+      "Pasay",
+      "Newport Mall",
+      "2nd Floor, Newport Mall, Newport World Resorts, Pasay City, Metro Manila",
+      "bar",
+      "club",
+      "drinks",
+      "live music",
+      "late night",
+      "barkada",
+      "group",
+      "friends",
+      "group dining",
+      "date",
+      "couple",
+      "date night",
+      "casual date",
+      "Barkada Hangout",
+      "kao day night club",
+      "kao club",
+      "kao newport",
+      "club newport pasay"
+    ],
+    "search_aliases": [
+      "kao day night club",
+      "kao club",
+      "kao newport",
+      "club newport pasay"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 3,
+    "budget_note": "Estimated minimum budget starts around ₱1000 per person.",
+    "categories": [
+      "nightlife",
+      "group",
+      "date"
+    ],
+    "tags": [
+      {
+        "id": "nightlife",
+        "strength": 5,
+        "notes": "Better for evening meals, drinks, or after-work hangouts."
+      },
+      {
+        "id": "group-friendly",
+        "strength": 4,
+        "notes": "Works well for barkada or small group hangouts."
+      },
+      {
+        "id": "date-friendly",
+        "strength": 4,
+        "notes": "Works well for casual dates or low-pressure couple plans."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "kao-day-night-club-1",
+        "storage_key": "galatayo-photos/places/kao-day-night-club/kao-day-night-club-1.webp",
+        "alt_text": "Kao Day & Night Club in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "limitless-barcade",
+    "name": "Limitless Barcade",
+    "slug": "limitless-barcade",
+    "category": "Arcade",
+    "address": "4th Level, Newport Mall, Newport World Resorts, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.5218,
+    "longitude": 121.0161,
+    "budget_min": 700,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Limitless%20Barcade%2C%204th%20Level%2C%20Newport%20Mall%2C%20Newport%20World%20Resorts%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "Newport Mall",
+    "description": "Limitless Barcade is for older barkadas or dates na gusto ng games plus hangout vibe. Mas elevated siya kaysa usual arcade kasi may barcade feel. Best siya for indoor fun around Newport, especially kung ayaw niyo na bumiyahe pa to MOA.",
+    "best_time_to_visit": "Afternoon to evening",
+    "visit_duration": "1 to 3 hours",
+    "good_for": [
+      "Barkada Hangout",
+      "Casual Date",
+      "Arcade",
+      "Nightlife",
+      "Rainy Day"
+    ],
+    "not_ideal_for": [
+      "Users Looking For Free Activities Only",
+      "Young Kids At Night",
+      "Quiet Study"
+    ],
+    "crowd_level": "Can get lively during weekends and evening barkada hours.",
+    "indoor_outdoor": "Indoor",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "Paid parking is available in Newport World Resorts and Newport Mall.",
+    "commute_access": "Inside Newport Mall. Accessible from NAIA Terminal 3 via Runway Manila or by Grab, taxi, or shuttle to Newport World Resorts.",
+    "nearby_context": "Near Newport Cinemas, KAO, El Calle, Newport Performing Arts Theater, hotels, and NAIA Terminal 3.",
+    "normalized_name": "limitless barcade",
+    "searchable_text": "Limitless Barcade Arcade Pasay Newport Mall 4th Level, Newport Mall, Newport World Resorts, Pasay City, Metro Manila Limitless Barcade is for older barkadas or dates na gusto ng games plus hangout vibe. Mas elevated siya kaysa usual arcade kasi may barcade feel. Best siya for indoor fun around Newport, especially kung ayaw niyo na bumiyahe pa to MOA. Barkada Hangout Casual Date Nightlife Rainy Day Users Looking For Free Activities Only Young Kids At Night Quiet Study games game center laro indoor games activity bar club drinks live music late night barkada group friends group dining date couple date night chill relax tambay low-key limitless newport newport barcade barcade pasay",
+    "search_keywords": [
+      "Limitless Barcade",
+      "Arcade",
+      "Pasay",
+      "Newport Mall",
+      "4th Level, Newport Mall, Newport World Resorts, Pasay City, Metro Manila",
+      "games",
+      "game center",
+      "laro",
+      "indoor games",
+      "activity",
+      "nightlife",
+      "bar",
+      "club",
+      "drinks",
+      "live music",
+      "late night",
+      "barkada",
+      "group",
+      "friends",
+      "group dining",
+      "date",
+      "couple",
+      "date night",
+      "casual date",
+      "chill",
+      "relax",
+      "tambay",
+      "low-key",
+      "Barkada Hangout",
+      "Rainy Day",
+      "limitless newport",
+      "newport barcade",
+      "barcade pasay"
+    ],
+    "search_aliases": [
+      "limitless barcade",
+      "limitless newport",
+      "newport barcade",
+      "barcade pasay"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 3,
+    "budget_note": "Estimated minimum budget starts around ₱700 per person.",
+    "categories": [
+      "arcade",
+      "nightlife",
+      "group",
+      "date",
+      "chill"
+    ],
+    "tags": [
+      {
+        "id": "nightlife",
+        "strength": 5,
+        "notes": "Better for evening meals, drinks, or after-work hangouts."
+      },
+      {
+        "id": "arcade-games",
+        "strength": 5,
+        "notes": "Good for games, playful activities, or active indoor hangouts."
+      },
+      {
+        "id": "group-friendly",
+        "strength": 4,
+        "notes": "Works well for barkada or small group hangouts."
+      },
+      {
+        "id": "date-friendly",
+        "strength": 4,
+        "notes": "Works well for casual dates or low-pressure couple plans."
+      },
+      {
+        "id": "chill",
+        "strength": 4,
+        "notes": "Good for relaxed, low-pressure gala."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "limitless-barcade-1",
+        "storage_key": "galatayo-photos/places/limitless-barcade/limitless-barcade-1.webp",
+        "alt_text": "Limitless Barcade in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "mall-of-asia-arena",
+    "name": "Mall of Asia Arena",
+    "slug": "mall-of-asia-arena",
+    "category": "Tourist",
+    "address": "J.W. Diokno Boulevard, Mall of Asia Complex, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.5319,
+    "longitude": 120.9836,
+    "budget_min": null,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Mall%20of%20Asia%20Arena%2C%20J.W.%20Diokno%20Boulevard%2C%20Mall%20of%20Asia%20Complex%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "MOA Complex",
+    "description": "MOA Arena is worth it kapag may concert, game, or big event ka talagang pupuntahan. On normal days, landmark siya more than activity spot. Best siya as a gala anchor, then pair mo with MOA food, S Maison, or SM By The Bay after.",
+    "best_time_to_visit": "During scheduled events, arrive early evening for shows",
+    "visit_duration": "2 to 4 hours",
+    "good_for": [
+      "Events",
+      "Concerts",
+      "Sports",
+      "Barkada Hangout",
+      "Date Night"
+    ],
+    "not_ideal_for": [
+      "Walk-In Activities",
+      "Users Looking For Free Activities Only",
+      "Quiet Hangouts"
+    ],
+    "crowd_level": "Very crowded before and after concerts, sports events, and major shows.",
+    "indoor_outdoor": "Indoor",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "MOA Arena and MOA Complex parking are available, but event-day congestion is expected.",
+    "commute_access": "Accessible through SM MOA transport terminal, EDSA Carousel, buses, vans, and rides from MRT Taft or LRT EDSA.",
+    "nearby_context": "Beside SM Mall of Asia, MOA Square, MAAX, IKEA, SM By The Bay, and S Maison.",
+    "normalized_name": "mall of asia arena",
+    "searchable_text": "Mall of Asia Arena Tourist Pasay MOA Complex J.W. Diokno Boulevard, Mall of Asia Complex, Pasay City, Metro Manila MOA Arena is worth it kapag may concert, game, or big event ka talagang pupuntahan. On normal days, landmark siya more than activity spot. Best siya as a gala anchor, then pair mo with MOA food, S Maison, or SM By The Bay after. Events Concerts Sports Barkada Hangout Date Night Walk-In Activities Users Looking For Free Activities Only Quiet Hangouts landmark photo spot pasikat visitor-friendly barkada group friends group dining date couple casual date family pamilya kids family trip moa arena sm moa arena concert venue pasay",
+    "search_keywords": [
+      "Mall of Asia Arena",
+      "Tourist",
+      "Pasay",
+      "MOA Complex",
+      "J.W. Diokno Boulevard, Mall of Asia Complex, Pasay City, Metro Manila",
+      "landmark",
+      "photo spot",
+      "pasikat",
+      "visitor-friendly",
+      "barkada",
+      "group",
+      "friends",
+      "group dining",
+      "date",
+      "couple",
+      "date night",
+      "casual date",
+      "family",
+      "pamilya",
+      "kids",
+      "family trip",
+      "Events",
+      "Concerts",
+      "Sports",
+      "Barkada Hangout",
+      "moa arena",
+      "sm moa arena",
+      "concert venue pasay"
+    ],
+    "search_aliases": [
+      "mall of asia arena",
+      "moa arena",
+      "sm moa arena",
+      "concert venue pasay"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": null,
+    "budget_note": "Budget varies depending on ticket, event, booking, or activity choice.",
+    "categories": [
+      "tourist",
+      "group",
+      "date",
+      "family"
+    ],
+    "tags": [
+      {
+        "id": "family-friendly",
+        "strength": 4,
+        "notes": "Comfortable option for family visits or shared meals."
+      },
+      {
+        "id": "group-friendly",
+        "strength": 4,
+        "notes": "Works well for barkada or small group hangouts."
+      },
+      {
+        "id": "date-friendly",
+        "strength": 4,
+        "notes": "Works well for casual dates or low-pressure couple plans."
+      },
+      {
+        "id": "photo-friendly",
+        "strength": 4,
+        "notes": "Has tourist, landmark, heritage, or photo-stop value."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      },
+      {
+        "id": "event-friendly",
+        "strength": 5,
+        "notes": "Best when there are concerts, shows, conventions, games, or scheduled events."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "mall-of-asia-arena-1",
+        "storage_key": "galatayo-photos/places/mall-of-asia-arena/mall-of-asia-arena-1.webp",
+        "alt_text": "Mall of Asia Arena in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "met-live",
+    "name": "Met Live",
+    "slug": "met-live",
+    "category": "Mall",
+    "address": "EDSA Extension corner Diosdado Macapagal Boulevard, Metro Park Bay Area, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.53715,
+    "longitude": 120.98797,
+    "budget_min": 0,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Met%20Live%2C%20EDSA%20Extension%20corner%20Diosdado%20Macapagal%20Boulevard%2C%20Metro%20Park%20Bay%20Area%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "Metro Park / Bay Area",
+    "description": "MET Live is a smaller lifestyle mall na okay for simple meetups, errands, and casual food stops. Hindi siya pang full-day gala like MOA, pero useful siya kung nasa Metro Park or Macapagal area ka. Good siya for chill plans na ayaw ng super big mall.",
+    "best_time_to_visit": "Late afternoon to evening",
+    "visit_duration": "1 to 2 hours",
+    "good_for": [
+      "Food Trip",
+      "Chill",
+      "Casual Date",
+      "Barkada Hangout",
+      "Rainy Day"
+    ],
+    "not_ideal_for": [
+      "People Expecting A Large Mall",
+      "Full-Day Shopping",
+      "Users Looking For Major Attractions"
+    ],
+    "crowd_level": "Usually lighter than MOA, with more activity around lunch and dinner.",
+    "indoor_outdoor": "Indoor",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "Parking is available in the Metro Park area, but it may vary by building and peak hours.",
+    "commute_access": "Located at EDSA Extension and Macapagal Boulevard. Accessible by Bay Area routes, EDSA Carousel connections, Grab, and taxi.",
+    "nearby_context": "Near Blue Bay Walk, DoubleDragon Plaza, MOA Complex, and Macapagal dining areas.",
+    "normalized_name": "met live",
+    "searchable_text": "Met Live Mall Pasay Metro Park / Bay Area EDSA Extension corner Diosdado Macapagal Boulevard, Metro Park Bay Area, Pasay City, Metro Manila MET Live is a smaller lifestyle mall na okay for simple meetups, errands, and casual food stops. Hindi siya pang full-day gala like MOA, pero useful siya kung nasa Metro Park or Macapagal area ka. Good siya for chill plans na ayaw ng super big mall. Food Trip Chill Casual Date Barkada Hangout Rainy Day People Expecting A Large Mall Full-Day Shopping Users Looking For Major Attractions shopping aircon shops errands food restaurant kainan pagkain dinner lunch seafood date couple date night barkada group friends group dining relax tambay low-key met live pasay metro park mall metlive mall",
+    "search_keywords": [
+      "Met Live",
+      "Mall",
+      "Pasay",
+      "Metro Park / Bay Area",
+      "EDSA Extension corner Diosdado Macapagal Boulevard, Metro Park Bay Area, Pasay City, Metro Manila",
+      "shopping",
+      "aircon",
+      "rainy day",
+      "shops",
+      "errands",
+      "food",
+      "restaurant",
+      "kainan",
+      "pagkain",
+      "dinner",
+      "lunch",
+      "food trip",
+      "seafood",
+      "date",
+      "couple",
+      "date night",
+      "casual date",
+      "barkada",
+      "group",
+      "friends",
+      "group dining",
+      "chill",
+      "relax",
+      "tambay",
+      "low-key",
+      "Barkada Hangout",
+      "met live pasay",
+      "metro park mall",
+      "metlive mall"
+    ],
+    "search_aliases": [
+      "met live",
+      "met live pasay",
+      "metro park mall",
+      "metlive mall"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 0,
+    "budget_note": "Free entry or no required minimum spend.",
+    "categories": [
+      "mall",
+      "food",
+      "date",
+      "group",
+      "chill"
+    ],
+    "tags": [
+      {
+        "id": "food-trip",
+        "strength": 5,
+        "notes": "Good for meals, cravings, or planned food stops."
+      },
+      {
+        "id": "mall-day",
+        "strength": 5,
+        "notes": "Convenient for shopping, food, errands, and rainy-day plans."
+      },
+      {
+        "id": "group-friendly",
+        "strength": 4,
+        "notes": "Works well for barkada or small group hangouts."
+      },
+      {
+        "id": "date-friendly",
+        "strength": 4,
+        "notes": "Works well for casual dates or low-pressure couple plans."
+      },
+      {
+        "id": "chill",
+        "strength": 4,
+        "notes": "Good for relaxed, low-pressure gala."
+      },
+      {
+        "id": "budget-friendly",
+        "strength": 5,
+        "notes": "Low or flexible spend compared with typical paid activities."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "met-live-1",
+        "storage_key": "galatayo-photos/places/met-live/met-live-1.webp",
+        "alt_text": "Met Live in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "museo-del-galeon",
+    "name": "Museo Del Galeon",
+    "slug": "museo-del-galeon",
+    "category": "Museum",
+    "address": "Seaside Boulevard corner Sunset Avenue, Mall of Asia Complex, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.539,
+    "longitude": 120.9822,
+    "budget_min": 675,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Museo%20Del%20Galeon%2C%20Seaside%20Boulevard%20corner%20Sunset%20Avenue%2C%20Mall%20of%20Asia%20Complex%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "MOA Complex",
+    "description": "Museo del Galeón is a fresh museum stop if gusto mo ng indoor gala na may history and visuals. Focus niya yung Manila-Acapulco galleon trade, so may educational value without feeling like random classroom trip. Best siya with family, date, or friends na game sa culture stop before MOA food trip.",
+    "best_time_to_visit": "Weekday afternoon or early weekend slot",
+    "visit_duration": "1.5 to 2.5 hours",
+    "good_for": [
+      "Museum Visit",
+      "Family Trip",
+      "Educational Trip",
+      "Casual Date",
+      "Rainy Day"
+    ],
+    "not_ideal_for": [
+      "Users Looking For Free Activities Only",
+      "Very Young Kids With Short Attention Span",
+      "Late Night Plans"
+    ],
+    "crowd_level": "Expect more visitors on weekends, holidays, and school-tour periods.",
+    "indoor_outdoor": "Indoor",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "Use MOA Complex parking areas and expect heavier parking demand on weekends and event days.",
+    "commute_access": "Accessible through SM MOA transport routes, then walk or ride within the MOA Complex toward Seaside Boulevard/Sunset Avenue.",
+    "nearby_context": "Near SM Mall of Asia, SM By The Bay, MOA Arena, S Maison, and SMX.",
+    "normalized_name": "museo del galeon",
+    "searchable_text": "Museo Del Galeon Museum Pasay MOA Complex Seaside Boulevard corner Sunset Avenue, Mall of Asia Complex, Pasay City, Metro Manila Museo del Galeón is a fresh museum stop if gusto mo ng indoor gala na may history and visuals. Focus niya yung Manila-Acapulco galleon trade, so may educational value without feeling like random classroom trip. Best siya with family, date, or friends na game sa culture stop before MOA food trip. Museum Visit Family Trip Educational Trip Casual Date Rainy Day Users Looking For Free Activities Only Very Young Kids With Short Attention Span Late Night Plans museo educational exhibit history culture heritage kasaysayan landmark old pasay family pamilya kids tourist photo spot pasikat visitor-friendly galeon museum moa museum",
+    "search_keywords": [
+      "Museo Del Galeon",
+      "Museum",
+      "Pasay",
+      "MOA Complex",
+      "Seaside Boulevard corner Sunset Avenue, Mall of Asia Complex, Pasay City, Metro Manila",
+      "museo",
+      "educational",
+      "exhibit",
+      "history",
+      "culture",
+      "heritage",
+      "kasaysayan",
+      "landmark",
+      "old pasay",
+      "family",
+      "pamilya",
+      "kids",
+      "family trip",
+      "tourist",
+      "photo spot",
+      "pasikat",
+      "visitor-friendly",
+      "Museum Visit",
+      "Educational Trip",
+      "Casual Date",
+      "Rainy Day",
+      "galeon museum",
+      "moa museum"
+    ],
+    "search_aliases": [
+      "museo del galeon",
+      "museo del galeón",
+      "galeon museum",
+      "moa museum"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 3,
+    "budget_note": "Estimated minimum budget starts around ₱675 per person.",
+    "categories": [
+      "museum",
+      "heritage",
+      "family",
+      "tourist"
+    ],
+    "tags": [
+      {
+        "id": "museum",
+        "strength": 5,
+        "notes": "Good for a short educational or culture-focused stop."
+      },
+      {
+        "id": "heritage",
+        "strength": 5,
+        "notes": "Highlights Pasay culture, history, or landmark character."
+      },
+      {
+        "id": "family-friendly",
+        "strength": 4,
+        "notes": "Comfortable option for family visits or shared meals."
+      },
+      {
+        "id": "photo-friendly",
+        "strength": 4,
+        "notes": "Has tourist, landmark, heritage, or photo-stop value."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "museo-del-galeon-1",
+        "storage_key": "galatayo-photos/places/museo-del-galeon/museo-del-galeon-1.webp",
+        "alt_text": "Museo Del Galeon in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "new-dampa-seaside-macapagal",
+    "name": "New Dampa Seaside Macapagal",
+    "slug": "new-dampa-seaside-macapagal",
+    "category": "Food",
+    "address": "New Seaside Dampa, Diosdado Macapagal Boulevard, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.5372,
+    "longitude": 120.9893,
+    "budget_min": 500,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=New%20Dampa%20Seaside%20Macapagal%2C%20New%20Seaside%20Dampa%2C%20Diosdado%20Macapagal%20Boulevard%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "Macapagal / Bay Area",
+    "description": "Kung seafood trip ang hanap mo, solid pick ito lalo na kapag barkada or family kayo. Pili ka ng seafood, paluto niyo, tapos kain na parang mini handaan. Hindi siya fancy date spot, pero kung gutom kayo at gusto niyo sulit na group dinner, pwede talaga.",
+    "best_time_to_visit": "Evening dinner or weekend lunch",
+    "visit_duration": "1.5 to 2.5 hours",
+    "good_for": [
+      "Food Trip",
+      "Barkada Hangout",
+      "Family Trip",
+      "Group Dining",
+      "Seafood"
+    ],
+    "not_ideal_for": [
+      "Quiet Date",
+      "Users Looking For Free Activities Only",
+      "Small Budget Meals"
+    ],
+    "crowd_level": "Usually busy during dinner, weekends, and holidays.",
+    "indoor_outdoor": "Mixed",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "Parking is generally available around the dampa area, but peak dinner hours can get tight.",
+    "commute_access": "Best by Grab, taxi, or private car. If commuting, use MOA or Bay Area routes then take a short ride along Diosdado Macapagal Boulevard.",
+    "nearby_context": "Near SM Mall of Asia, Blue Bay Walk, MET Live, and the Bay Area dining strip.",
+    "normalized_name": "new dampa seaside macapagal",
+    "searchable_text": "New Dampa Seaside Macapagal Food Pasay Macapagal / Bay Area New Seaside Dampa, Diosdado Macapagal Boulevard, Pasay City, Metro Manila Kung seafood trip ang hanap mo, solid pick ito lalo na kapag barkada or family kayo. Pili ka ng seafood, paluto niyo, tapos kain na parang mini handaan. Hindi siya fancy date spot, pero kung gutom kayo at gusto niyo sulit na group dinner, pwede talaga. Food Trip Barkada Hangout Family Trip Group Dining Seafood Quiet Date Users Looking For Free Activities Only Small Budget Meals restaurant kainan pagkain dinner lunch barkada group friends family pamilya kids dampa macapagal seaside dampa seafood dampa pasay",
+    "search_keywords": [
+      "New Dampa Seaside Macapagal",
+      "Food",
+      "Pasay",
+      "Macapagal / Bay Area",
+      "New Seaside Dampa, Diosdado Macapagal Boulevard, Pasay City, Metro Manila",
+      "restaurant",
+      "kainan",
+      "pagkain",
+      "dinner",
+      "lunch",
+      "food trip",
+      "seafood",
+      "barkada",
+      "group",
+      "friends",
+      "group dining",
+      "family",
+      "pamilya",
+      "kids",
+      "family trip",
+      "Barkada Hangout",
+      "dampa macapagal",
+      "seaside dampa",
+      "seafood dampa pasay"
+    ],
+    "search_aliases": [
+      "new dampa seaside macapagal",
+      "dampa macapagal",
+      "seaside dampa",
+      "seafood dampa pasay"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 3,
+    "budget_note": "Estimated minimum budget starts around ₱500 per person.",
+    "categories": [
+      "food",
+      "group",
+      "family"
+    ],
+    "tags": [
+      {
+        "id": "food-trip",
+        "strength": 5,
+        "notes": "Good for meals, cravings, or planned food stops."
+      },
+      {
+        "id": "family-friendly",
+        "strength": 4,
+        "notes": "Comfortable option for family visits or shared meals."
+      },
+      {
+        "id": "group-friendly",
+        "strength": 4,
+        "notes": "Works well for barkada or small group hangouts."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "new-dampa-seaside-macapagal-1",
+        "storage_key": "galatayo-photos/places/new-dampa-seaside-macapagal/new-dampa-seaside-macapagal-1.webp",
+        "alt_text": "New Dampa Seaside Macapagal in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "newport-cinemas",
+    "name": "Newport Cinemas",
+    "slug": "newport-cinemas",
+    "category": "Cinema",
+    "address": "Newport Mall, Newport Boulevard, Newport City, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.5218,
+    "longitude": 121.0161,
+    "budget_min": 300,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Newport%20Cinemas%2C%20Newport%20Mall%2C%20Newport%20Boulevard%2C%20Newport%20City%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "Newport Mall",
+    "description": "Newport Cinemas is a good movie plan if you want a more premium and less typical mall-cinema feel. Nice siya for date night, rainy day, or pre-flight hangout near Terminal 3. Pair it with dinner or dessert inside Newport para complete na yung gala.",
+    "best_time_to_visit": "Afternoon or evening movie schedule",
+    "visit_duration": "2 to 3 hours",
+    "good_for": [
+      "Cinema",
+      "Date Night",
+      "Barkada Hangout",
+      "Rainy Day",
+      "Chill"
+    ],
+    "not_ideal_for": [
+      "Users Looking For Free Activities Only",
+      "Outdoor Hangouts",
+      "People Far From Newport"
+    ],
+    "crowd_level": "Crowds depend on movie releases, weekends, and showtimes.",
+    "indoor_outdoor": "Indoor",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "Paid parking is available in Newport World Resorts and Newport Mall.",
+    "commute_access": "Accessible from NAIA Terminal 3 via Runway Manila. Also reachable by Grab, taxi, or shuttle to Newport World Resorts.",
+    "nearby_context": "Inside Newport Mall, near Newport Performing Arts Theater, restaurants, Limitless Barcade, and hotels.",
+    "normalized_name": "newport cinemas",
+    "searchable_text": "Newport Cinemas Cinema Pasay Newport Mall Newport Mall, Newport Boulevard, Newport City, Pasay City, Metro Manila Newport Cinemas is a good movie plan if you want a more premium and less typical mall-cinema feel. Nice siya for date night, rainy day, or pre-flight hangout near Terminal 3. Pair it with dinner or dessert inside Newport para complete na yung gala. Date Night Barkada Hangout Rainy Day Chill Users Looking For Free Activities Only Outdoor Hangouts People Far From Newport movie imax film date couple casual date barkada group friends group dining relax tambay low-key mall shopping aircon shops errands newport cinema cinema newport newport mall cinema",
+    "search_keywords": [
+      "Newport Cinemas",
+      "Cinema",
+      "Pasay",
+      "Newport Mall",
+      "Newport Mall, Newport Boulevard, Newport City, Pasay City, Metro Manila",
+      "movie",
+      "imax",
+      "film",
+      "date night",
+      "date",
+      "couple",
+      "casual date",
+      "barkada",
+      "group",
+      "friends",
+      "group dining",
+      "chill",
+      "relax",
+      "tambay",
+      "low-key",
+      "mall",
+      "shopping",
+      "aircon",
+      "rainy day",
+      "shops",
+      "errands",
+      "Barkada Hangout",
+      "newport cinema",
+      "cinema newport",
+      "newport mall cinema"
+    ],
+    "search_aliases": [
+      "newport cinemas",
+      "newport cinema",
+      "cinema newport",
+      "newport mall cinema"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 2,
+    "budget_note": "Estimated minimum budget starts around ₱300 per person.",
+    "categories": [
+      "cinema",
+      "date",
+      "group",
+      "chill",
+      "mall"
+    ],
+    "tags": [
+      {
+        "id": "mall-day",
+        "strength": 5,
+        "notes": "Convenient for shopping, food, errands, and rainy-day plans."
+      },
+      {
+        "id": "cinema-date",
+        "strength": 5,
+        "notes": "Good for movie plans with food or mall activities nearby."
+      },
+      {
+        "id": "group-friendly",
+        "strength": 4,
+        "notes": "Works well for barkada or small group hangouts."
+      },
+      {
+        "id": "date-friendly",
+        "strength": 4,
+        "notes": "Works well for casual dates or low-pressure couple plans."
+      },
+      {
+        "id": "chill",
+        "strength": 4,
+        "notes": "Good for relaxed, low-pressure gala."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "newport-cinemas-1",
+        "storage_key": "galatayo-photos/places/newport-cinemas/newport-cinemas-1.webp",
+        "alt_text": "Newport Cinemas in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "newport-mall",
+    "name": "Newport Mall",
+    "slug": "newport-mall",
+    "category": "Mall",
+    "address": "Newport Boulevard, Newport City, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.5218,
+    "longitude": 121.0161,
+    "budget_min": 0,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Newport%20Mall%2C%20Newport%20Boulevard%2C%20Newport%20City%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "Newport City",
+    "description": "Newport Mall is a solid pick kapag gusto niyo ng mall na may cinema, theater, food, and nightlife in one area. Airport-adjacent siya, so okay din for pre-flight or post-flight hangout. Mas bagay siya for date night and barkada plans kaysa budget tambay.",
+    "best_time_to_visit": "Evening or weekend afternoon",
+    "visit_duration": "2 to 4 hours",
+    "good_for": [
+      "Date Night",
+      "Barkada Hangout",
+      "Cinema",
+      "Nightlife",
+      "Shopping",
+      "Rainy Day"
+    ],
+    "not_ideal_for": [
+      "Users Looking For Budget-Friendly Hangouts",
+      "People Far From Newport",
+      "Quiet Study"
+    ],
+    "crowd_level": "Moderate to heavy depending on shows, movie schedules, and casino/hotel traffic.",
+    "indoor_outdoor": "Indoor",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "Paid parking is available within Newport World Resorts and Newport Mall.",
+    "commute_access": "Connected to NAIA Terminal 3 via Runway Manila. Reachable by Grab, taxi, airport routes, Newport shuttles, and nearby EDSA/Taft transfers.",
+    "nearby_context": "Near NAIA Terminal 3, Runway Manila, hotels, Newport Performing Arts Theater, KAO, and Limitless Barcade.",
+    "normalized_name": "newport mall",
+    "searchable_text": "Newport Mall Mall Pasay Newport City Newport Boulevard, Newport City, Pasay City, Metro Manila Newport Mall is a solid pick kapag gusto niyo ng mall na may cinema, theater, food, and nightlife in one area. Airport-adjacent siya, so okay din for pre-flight or post-flight hangout. Mas bagay siya for date night and barkada plans kaysa budget tambay. Date Night Barkada Hangout Cinema Nightlife Shopping Rainy Day Users Looking For Budget-Friendly Hangouts People Far From Newport Quiet Study aircon shops errands food restaurant kainan pagkain dinner lunch food trip seafood movie imax film bar club drinks live music late night date couple casual date barkada group friends group dining resorts world mall newport city mall mall near naia 3",
+    "search_keywords": [
+      "Newport Mall",
+      "Mall",
+      "Pasay",
+      "Newport City",
+      "Newport Boulevard, Newport City, Pasay City, Metro Manila",
+      "shopping",
+      "aircon",
+      "rainy day",
+      "shops",
+      "errands",
+      "food",
+      "restaurant",
+      "kainan",
+      "pagkain",
+      "dinner",
+      "lunch",
+      "food trip",
+      "seafood",
+      "cinema",
+      "movie",
+      "imax",
+      "film",
+      "date night",
+      "nightlife",
+      "bar",
+      "club",
+      "drinks",
+      "live music",
+      "late night",
+      "date",
+      "couple",
+      "casual date",
+      "barkada",
+      "group",
+      "friends",
+      "group dining",
+      "Barkada Hangout",
+      "resorts world mall",
+      "newport city mall",
+      "mall near naia 3"
+    ],
+    "search_aliases": [
+      "newport mall",
+      "resorts world mall",
+      "newport city mall",
+      "mall near naia 3"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 0,
+    "budget_note": "Free entry or no required minimum spend.",
+    "categories": [
+      "mall",
+      "food",
+      "cinema",
+      "nightlife",
+      "date",
+      "group"
+    ],
+    "tags": [
+      {
+        "id": "food-trip",
+        "strength": 5,
+        "notes": "Good for meals, cravings, or planned food stops."
+      },
+      {
+        "id": "mall-day",
+        "strength": 5,
+        "notes": "Convenient for shopping, food, errands, and rainy-day plans."
+      },
+      {
+        "id": "nightlife",
+        "strength": 5,
+        "notes": "Better for evening meals, drinks, or after-work hangouts."
+      },
+      {
+        "id": "cinema-date",
+        "strength": 5,
+        "notes": "Good for movie plans with food or mall activities nearby."
+      },
+      {
+        "id": "group-friendly",
+        "strength": 4,
+        "notes": "Works well for barkada or small group hangouts."
+      },
+      {
+        "id": "date-friendly",
+        "strength": 4,
+        "notes": "Works well for casual dates or low-pressure couple plans."
+      },
+      {
+        "id": "budget-friendly",
+        "strength": 5,
+        "notes": "Low or flexible spend compared with typical paid activities."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "newport-mall-1",
+        "storage_key": "galatayo-photos/places/newport-mall/newport-mall-1.webp",
+        "alt_text": "Newport Mall in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "newport-performing-arts-theater",
+    "name": "Newport Performing Arts Theater",
+    "slug": "newport-performing-arts-theater",
+    "category": "Tourist",
+    "address": "Level 2, Newport Mall, Newport Boulevard, Newport City, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.5218,
+    "longitude": 121.0161,
+    "budget_min": null,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Newport%20Performing%20Arts%20Theater%2C%20Level%202%2C%20Newport%20Mall%2C%20Newport%20Boulevard%2C%20Newport%20City%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "Newport City",
+    "description": "This is the Newport pick kapag may concert, musical, theater show, or special event. Hindi siya walk-in tambayan, pero kapag may show, buong gala plan na siya. Easy rin mag-food trip before or after since nasa Newport Mall area.",
+    "best_time_to_visit": "Evening showtime or weekend matinee",
+    "visit_duration": "2 to 4 hours",
+    "good_for": [
+      "Events",
+      "Theater",
+      "Date Night",
+      "Family Trip",
+      "Barkada Hangout",
+      "Rainy Day"
+    ],
+    "not_ideal_for": [
+      "Walk-In Activities Without A Show",
+      "Users Looking For Free Activities Only",
+      "Quiet Study"
+    ],
+    "crowd_level": "Crowds depend on show schedules and ticketed events.",
+    "indoor_outdoor": "Indoor",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "Paid parking is available at Newport World Resorts and Newport Mall. Allow extra time during big shows.",
+    "commute_access": "Inside Newport Mall. Accessible from NAIA Terminal 3 via Runway Manila or by Grab, taxi, or shuttle to Newport World Resorts.",
+    "nearby_context": "Near Newport Mall, Newport Cinemas, KAO, El Calle, Limitless Barcade, and Newport hotels.",
+    "normalized_name": "newport performing arts theater",
+    "searchable_text": "Newport Performing Arts Theater Tourist Pasay Newport City Level 2, Newport Mall, Newport Boulevard, Newport City, Pasay City, Metro Manila This is the Newport pick kapag may concert, musical, theater show, or special event. Hindi siya walk-in tambayan, pero kapag may show, buong gala plan na siya. Easy rin mag-food trip before or after since nasa Newport Mall area. Events Theater Date Night Family Trip Barkada Hangout Rainy Day Walk-In Activities Without A Show Users Looking For Free Activities Only Quiet Study landmark photo spot pasikat visitor-friendly date couple casual date family pamilya kids barkada group friends group dining nightlife bar club drinks live music late night npat newport theater newport theatre",
+    "search_keywords": [
+      "Newport Performing Arts Theater",
+      "Tourist",
+      "Pasay",
+      "Newport City",
+      "Level 2, Newport Mall, Newport Boulevard, Newport City, Pasay City, Metro Manila",
+      "landmark",
+      "photo spot",
+      "pasikat",
+      "visitor-friendly",
+      "date",
+      "couple",
+      "date night",
+      "casual date",
+      "family",
+      "pamilya",
+      "kids",
+      "family trip",
+      "barkada",
+      "group",
+      "friends",
+      "group dining",
+      "nightlife",
+      "bar",
+      "club",
+      "drinks",
+      "live music",
+      "late night",
+      "Events",
+      "Theater",
+      "Barkada Hangout",
+      "Rainy Day",
+      "npat",
+      "newport theater",
+      "newport theatre"
+    ],
+    "search_aliases": [
+      "newport performing arts theater",
+      "npat",
+      "newport theater",
+      "newport theatre"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": null,
+    "budget_note": "Budget varies depending on ticket, event, booking, or activity choice.",
+    "categories": [
+      "tourist",
+      "date",
+      "family",
+      "group",
+      "nightlife"
+    ],
+    "tags": [
+      {
+        "id": "nightlife",
+        "strength": 5,
+        "notes": "Better for evening meals, drinks, or after-work hangouts."
+      },
+      {
+        "id": "family-friendly",
+        "strength": 4,
+        "notes": "Comfortable option for family visits or shared meals."
+      },
+      {
+        "id": "group-friendly",
+        "strength": 4,
+        "notes": "Works well for barkada or small group hangouts."
+      },
+      {
+        "id": "date-friendly",
+        "strength": 4,
+        "notes": "Works well for casual dates or low-pressure couple plans."
+      },
+      {
+        "id": "photo-friendly",
+        "strength": 4,
+        "notes": "Has tourist, landmark, heritage, or photo-stop value."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      },
+      {
+        "id": "event-friendly",
+        "strength": 5,
+        "notes": "Best when there are concerts, shows, conventions, games, or scheduled events."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "newport-performing-arts-theater-1",
+        "storage_key": "galatayo-photos/places/newport-performing-arts-theater/newport-performing-arts-theater-1.webp",
+        "alt_text": "Newport Performing Arts Theater in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "newport-world-resorts",
+    "name": "Newport World Resorts",
+    "slug": "newport-world-resorts",
+    "category": "Tourist",
+    "address": "Newport Boulevard, Newport City, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.5218,
+    "longitude": 121.0161,
+    "budget_min": 3000,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Newport%20World%20Resorts%2C%20Newport%20Boulevard%2C%20Newport%20City%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "Newport City",
+    "description": "Newport World Resorts is the stay-and-play option near NAIA Terminal 3. Hotels, mall, cinema, theater, food, nightlife, and casino are all in one area. Best siya for staycation, event weekend, or airport-adjacent gala na ayaw mo nang lumayo.",
+    "best_time_to_visit": "Afternoon check-in to evening plans",
+    "visit_duration": "Half day to overnight",
+    "good_for": [
+      "Staycation",
+      "Date Night",
+      "Nightlife",
+      "Cinema",
+      "Barkada Hangout",
+      "Rainy Day"
+    ],
+    "not_ideal_for": [
+      "Users Looking For Free Activities Only",
+      "Budget-Friendly Hangouts",
+      "People Avoiding Casino Areas"
+    ],
+    "crowd_level": "Busy during weekends, holidays, flights, casino peaks, and major shows.",
+    "indoor_outdoor": "Indoor",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "Paid parking is available throughout Newport World Resorts, but it can be busy during events and peak weekends.",
+    "commute_access": "Across NAIA Terminal 3 and connected by Runway Manila. Reachable by airport routes, Grab, taxi, and Newport transport options.",
+    "nearby_context": "Near Newport Mall, NAIA Terminal 3, Runway Manila, Newport Performing Arts Theater, and Villamor.",
+    "normalized_name": "newport world resorts",
+    "searchable_text": "Newport World Resorts Tourist Pasay Newport City Newport Boulevard, Newport City, Pasay City, Metro Manila Newport World Resorts is the stay-and-play option near NAIA Terminal 3. Hotels, mall, cinema, theater, food, nightlife, and casino are all in one area. Best siya for staycation, event weekend, or airport-adjacent gala na ayaw mo nang lumayo. Staycation Date Night Nightlife Cinema Barkada Hangout Rainy Day Users Looking For Free Activities Only Budget-Friendly Hangouts People Avoiding Casino Areas landmark photo spot pasikat visitor-friendly bar club drinks live music late night mall shopping aircon shops errands date couple casual date barkada group friends group dining chill relax tambay low-key resorts world manila nwr newport casino newport pasay",
+    "search_keywords": [
+      "Newport World Resorts",
+      "Tourist",
+      "Pasay",
+      "Newport City",
+      "Newport Boulevard, Newport City, Pasay City, Metro Manila",
+      "landmark",
+      "photo spot",
+      "pasikat",
+      "visitor-friendly",
+      "nightlife",
+      "bar",
+      "club",
+      "drinks",
+      "live music",
+      "late night",
+      "mall",
+      "shopping",
+      "aircon",
+      "rainy day",
+      "shops",
+      "errands",
+      "date",
+      "couple",
+      "date night",
+      "casual date",
+      "barkada",
+      "group",
+      "friends",
+      "group dining",
+      "chill",
+      "relax",
+      "tambay",
+      "low-key",
+      "Staycation",
+      "Cinema",
+      "Barkada Hangout",
+      "resorts world manila",
+      "nwr",
+      "newport casino",
+      "newport pasay"
+    ],
+    "search_aliases": [
+      "newport world resorts",
+      "resorts world manila",
+      "nwr",
+      "newport casino",
+      "newport pasay"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 3,
+    "budget_note": "Estimated minimum budget starts around ₱3000 per person.",
+    "categories": [
+      "tourist",
+      "nightlife",
+      "mall",
+      "date",
+      "group",
+      "chill"
+    ],
+    "tags": [
+      {
+        "id": "mall-day",
+        "strength": 5,
+        "notes": "Convenient for shopping, food, errands, and rainy-day plans."
+      },
+      {
+        "id": "nightlife",
+        "strength": 5,
+        "notes": "Better for evening meals, drinks, or after-work hangouts."
+      },
+      {
+        "id": "group-friendly",
+        "strength": 4,
+        "notes": "Works well for barkada or small group hangouts."
+      },
+      {
+        "id": "date-friendly",
+        "strength": 4,
+        "notes": "Works well for casual dates or low-pressure couple plans."
+      },
+      {
+        "id": "chill",
+        "strength": 4,
+        "notes": "Good for relaxed, low-pressure gala."
+      },
+      {
+        "id": "photo-friendly",
+        "strength": 4,
+        "notes": "Has tourist, landmark, heritage, or photo-stop value."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      },
+      {
+        "id": "staycation",
+        "strength": 5,
+        "notes": "Useful for staycation, hotel, layover, or overnight plans."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "newport-world-resorts-1",
+        "storage_key": "galatayo-photos/places/newport-world-resorts/newport-world-resorts-1.webp",
+        "alt_text": "Newport World Resorts in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "newport-world-resorts-hotels",
+    "name": "Newport World Resorts Hotels",
+    "slug": "newport-world-resorts-hotels",
+    "category": "Tourist",
+    "address": "Newport Boulevard, Newport City, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.5218,
+    "longitude": 121.0161,
+    "budget_min": 2500,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Newport%20World%20Resorts%20Hotels%2C%20Newport%20Boulevard%2C%20Newport%20City%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "Newport City",
+    "description": "This is best treated as the Newport hotel cluster for staycations, airport layovers, and event weekends. Super convenient siya if your plan includes Newport Mall, NAIA Terminal 3, theater, cinema, or nightlife nearby. Later, mas okay pa itong i-split into actual hotel branches if you want cleaner stay listings.",
+    "best_time_to_visit": "Afternoon check-in, evening mall or show plan",
+    "visit_duration": "Overnight",
+    "good_for": [
+      "Staycation",
+      "Airport Layover",
+      "Date Night",
+      "Family Trip",
+      "Rainy Day"
+    ],
+    "not_ideal_for": [
+      "Users Looking For Free Activities Only",
+      "Very Budget Stays",
+      "People Avoiding Busy Hotel Districts"
+    ],
+    "crowd_level": "Hotel and lobby areas are busier during weekends, flight peaks, conventions, and holidays.",
+    "indoor_outdoor": "Indoor",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "Hotel and resort parking is available, usually paid or validated depending on property and booking.",
+    "commute_access": "Very convenient from NAIA Terminal 3 via Runway Manila. Also accessible by Grab, taxi, and Newport transport options.",
+    "nearby_context": "Near Newport Mall, Runway Manila, NAIA Terminal 3, Newport Performing Arts Theater, KAO, and Limitless Barcade.",
+    "normalized_name": "newport world resorts hotels",
+    "searchable_text": "Newport World Resorts Hotels Tourist Pasay Newport City Newport Boulevard, Newport City, Pasay City, Metro Manila This is best treated as the Newport hotel cluster for staycations, airport layovers, and event weekends. Super convenient siya if your plan includes Newport Mall, NAIA Terminal 3, theater, cinema, or nightlife nearby. Later, mas okay pa itong i-split into actual hotel branches if you want cleaner stay listings. Staycation Airport Layover Date Night Family Trip Rainy Day Users Looking For Free Activities Only Very Budget Stays People Avoiding Busy Hotel Districts landmark photo spot pasikat visitor-friendly date couple casual date family pamilya kids chill relax tambay low-key mall shopping aircon shops errands newport hotels hotels near naia terminal 3 newport staycation",
+    "search_keywords": [
+      "Newport World Resorts Hotels",
+      "Tourist",
+      "Pasay",
+      "Newport City",
+      "Newport Boulevard, Newport City, Pasay City, Metro Manila",
+      "landmark",
+      "photo spot",
+      "pasikat",
+      "visitor-friendly",
+      "date",
+      "couple",
+      "date night",
+      "casual date",
+      "family",
+      "pamilya",
+      "kids",
+      "family trip",
+      "chill",
+      "relax",
+      "tambay",
+      "low-key",
+      "mall",
+      "shopping",
+      "aircon",
+      "rainy day",
+      "shops",
+      "errands",
+      "Staycation",
+      "Airport Layover",
+      "newport hotels",
+      "hotels near naia terminal 3",
+      "newport staycation"
+    ],
+    "search_aliases": [
+      "newport world resorts hotels",
+      "newport hotels",
+      "hotels near naia terminal 3",
+      "newport staycation"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 3,
+    "budget_note": "Estimated minimum budget starts around ₱2500 per person.",
+    "categories": [
+      "tourist",
+      "date",
+      "family",
+      "chill",
+      "mall"
+    ],
+    "tags": [
+      {
+        "id": "mall-day",
+        "strength": 5,
+        "notes": "Convenient for shopping, food, errands, and rainy-day plans."
+      },
+      {
+        "id": "family-friendly",
+        "strength": 4,
+        "notes": "Comfortable option for family visits or shared meals."
+      },
+      {
+        "id": "date-friendly",
+        "strength": 4,
+        "notes": "Works well for casual dates or low-pressure couple plans."
+      },
+      {
+        "id": "chill",
+        "strength": 4,
+        "notes": "Good for relaxed, low-pressure gala."
+      },
+      {
+        "id": "photo-friendly",
+        "strength": 4,
+        "notes": "Has tourist, landmark, heritage, or photo-stop value."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      },
+      {
+        "id": "staycation",
+        "strength": 5,
+        "notes": "Useful for staycation, hotel, layover, or overnight plans."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "newport-world-resorts-hotels-1",
+        "storage_key": "galatayo-photos/places/newport-world-resorts-hotels/newport-world-resorts-hotels-1.webp",
+        "alt_text": "Newport World Resorts Hotels in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "our-lady-of-sorrows-parish",
+    "name": "Our Lady of Sorrows Parish",
+    "slug": "our-lady-of-sorrows-parish",
+    "category": "Heritage",
+    "address": "2130 F.B. Harrison Street, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.551563,
+    "longitude": 120.992688,
+    "budget_min": 0,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Our%20Lady%20of%20Sorrows%20Parish%2C%202130%20F.B.%20Harrison%20Street%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "F.B. Harrison",
+    "description": "This is a calm church stop along F.B. Harrison, good for prayer, family visits, or a quick heritage route. Hindi siya flashy attraction, pero useful siya for users na naghahanap ng quiet and meaningful place. Pair it with nearby central Pasay cafés or errands if gusto mo ng short gala.",
+    "best_time_to_visit": "Morning or late afternoon",
+    "visit_duration": "30 minutes to 1 hour",
+    "good_for": [
+      "Church Visit",
+      "Heritage",
+      "Family Trip",
+      "Quiet Visit"
+    ],
+    "not_ideal_for": [
+      "Nightlife Plans",
+      "Food Trip",
+      "Users Looking For Long Activities"
+    ],
+    "crowd_level": "Usually quiet outside Mass times, with heavier attendance during services.",
+    "indoor_outdoor": "Indoor",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "Street or nearby parking may be limited, so drop-off or commute is recommended.",
+    "commute_access": "Located along F.B. Harrison. Accessible by jeep or bus routes and short ride from LRT-1 Gil Puyat or Libertad.",
+    "nearby_context": "Near F.B. Harrison, Gil Puyat, Libertad, and central Pasay neighborhoods.",
+    "normalized_name": "our lady of sorrows parish",
+    "searchable_text": "Our Lady of Sorrows Parish Heritage Pasay F.B. Harrison 2130 F.B. Harrison Street, Pasay City, Metro Manila This is a calm church stop along F.B. Harrison, good for prayer, family visits, or a quick heritage route. Hindi siya flashy attraction, pero useful siya for users na naghahanap ng quiet and meaningful place. Pair it with nearby central Pasay cafés or errands if gusto mo ng short gala. Church Visit Family Trip Quiet Visit Nightlife Plans Food Trip Users Looking For Long Activities history kasaysayan culture landmark old pasay family pamilya kids chill relax tambay low-key tourist photo spot pasikat visitor-friendly ols parish pasay fb harrison church simbahan misa prayer catholic church pasay",
+    "search_keywords": [
+      "Our Lady of Sorrows Parish",
+      "Heritage",
+      "Pasay",
+      "F.B. Harrison",
+      "2130 F.B. Harrison Street, Pasay City, Metro Manila",
+      "history",
+      "kasaysayan",
+      "culture",
+      "landmark",
+      "old pasay",
+      "family",
+      "pamilya",
+      "kids",
+      "family trip",
+      "chill",
+      "relax",
+      "tambay",
+      "low-key",
+      "tourist",
+      "photo spot",
+      "pasikat",
+      "visitor-friendly",
+      "Church Visit",
+      "Quiet Visit",
+      "ols parish pasay",
+      "fb harrison church",
+      "simbahan",
+      "misa",
+      "prayer",
+      "catholic church pasay"
+    ],
+    "search_aliases": [
+      "our lady of sorrows parish",
+      "ols parish pasay",
+      "fb harrison church",
+      "simbahan",
+      "misa",
+      "prayer",
+      "catholic church pasay"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 0,
+    "budget_note": "Free entry or no required minimum spend.",
+    "categories": [
+      "heritage",
+      "family",
+      "chill",
+      "tourist"
+    ],
+    "tags": [
+      {
+        "id": "heritage",
+        "strength": 5,
+        "notes": "Highlights Pasay culture, history, or landmark character."
+      },
+      {
+        "id": "family-friendly",
+        "strength": 4,
+        "notes": "Comfortable option for family visits or shared meals."
+      },
+      {
+        "id": "chill",
+        "strength": 4,
+        "notes": "Good for relaxed, low-pressure gala."
+      },
+      {
+        "id": "photo-friendly",
+        "strength": 4,
+        "notes": "Has tourist, landmark, heritage, or photo-stop value."
+      },
+      {
+        "id": "budget-friendly",
+        "strength": 5,
+        "notes": "Low or flexible spend compared with typical paid activities."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      },
+      {
+        "id": "simbahan",
+        "strength": 5,
+        "notes": "Useful for church, Mass, prayer, and heritage-search intent."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "our-lady-of-sorrows-parish-1",
+        "storage_key": "galatayo-photos/places/our-lady-of-sorrows-parish/our-lady-of-sorrows-parish-1.webp",
+        "alt_text": "Our Lady of Sorrows Parish in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "philippine-air-force-aerospace-museum",
+    "name": "Philippine Air Force Aerospace Museum",
+    "slug": "philippine-air-force-aerospace-museum",
+    "category": "Museum",
+    "address": "Gate 4, Colonel Jesus Villamor Air Base, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.5209,
+    "longitude": 121.0163,
+    "budget_min": 20,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Philippine%20Air%20Force%20Aerospace%20Museum%2C%20Gate%204%2C%20Colonel%20Jesus%20Villamor%20Air%20Base%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "Villamor Air Base",
+    "description": "Good stop ito kung aviation fan ka or may kasamang kids na mahilig sa planes. May aircraft and Air Force history, so iba siya from the usual mall gala. Since nasa Villamor Air Base area siya, check muna current entry rules para sure ang visit.",
+    "best_time_to_visit": "Morning or early afternoon",
+    "visit_duration": "45 minutes to 1.5 hours",
+    "good_for": [
+      "Museum Visit",
+      "Family Trip",
+      "Educational Trip",
+      "Aviation",
+      "Quick Hangout"
+    ],
+    "not_ideal_for": [
+      "Late Night Plans",
+      "Users Looking For Food Trips",
+      "People Far From Newport/Villamor"
+    ],
+    "crowd_level": "Usually manageable, but availability and security procedures may affect entry flow.",
+    "indoor_outdoor": "Mixed",
+    "weather_fit": "Mixed",
+    "parking_info": "Parking or drop-off access may depend on Villamor Air Base gate rules, so confirm before going.",
+    "commute_access": "Near NAIA Terminal 3, Newport City, and Villamor. Reachable by Grab, taxi, airport routes, or short ride from Newport.",
+    "nearby_context": "Near Newport World Resorts, Runway Manila, NAIA Terminal 3, and Villamor Air Base.",
+    "normalized_name": "philippine air force aerospace museum",
+    "searchable_text": "Philippine Air Force Aerospace Museum Museum Pasay Villamor Air Base Gate 4, Colonel Jesus Villamor Air Base, Pasay City, Metro Manila Good stop ito kung aviation fan ka or may kasamang kids na mahilig sa planes. May aircraft and Air Force history, so iba siya from the usual mall gala. Since nasa Villamor Air Base area siya, check muna current entry rules para sure ang visit. Museum Visit Family Trip Educational Trip Aviation Quick Hangout Late Night Plans Users Looking For Food Trips People Far From Newport/Villamor museo educational exhibit history culture heritage kasaysayan landmark old pasay family pamilya kids tourist photo spot pasikat visitor-friendly air force museum aerospace museum pasay villamor museum",
+    "search_keywords": [
+      "Philippine Air Force Aerospace Museum",
+      "Museum",
+      "Pasay",
+      "Villamor Air Base",
+      "Gate 4, Colonel Jesus Villamor Air Base, Pasay City, Metro Manila",
+      "museo",
+      "educational",
+      "exhibit",
+      "history",
+      "culture",
+      "heritage",
+      "kasaysayan",
+      "landmark",
+      "old pasay",
+      "family",
+      "pamilya",
+      "kids",
+      "family trip",
+      "tourist",
+      "photo spot",
+      "pasikat",
+      "visitor-friendly",
+      "Museum Visit",
+      "Educational Trip",
+      "Aviation",
+      "Quick Hangout",
+      "air force museum",
+      "aerospace museum pasay",
+      "villamor museum"
+    ],
+    "search_aliases": [
+      "philippine air force aerospace museum",
+      "air force museum",
+      "aerospace museum pasay",
+      "villamor museum"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 1,
+    "budget_note": "Estimated minimum budget starts around ₱20 per person.",
+    "categories": [
+      "museum",
+      "heritage",
+      "family",
+      "tourist"
+    ],
+    "tags": [
+      {
+        "id": "museum",
+        "strength": 5,
+        "notes": "Good for a short educational or culture-focused stop."
+      },
+      {
+        "id": "heritage",
+        "strength": 5,
+        "notes": "Highlights Pasay culture, history, or landmark character."
+      },
+      {
+        "id": "family-friendly",
+        "strength": 4,
+        "notes": "Comfortable option for family visits or shared meals."
+      },
+      {
+        "id": "photo-friendly",
+        "strength": 4,
+        "notes": "Has tourist, landmark, heritage, or photo-stop value."
+      },
+      {
+        "id": "budget-friendly",
+        "strength": 5,
+        "notes": "Low or flexible spend compared with typical paid activities."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "philippine-air-force-aerospace-museum-1",
+        "storage_key": "galatayo-photos/places/philippine-air-force-aerospace-museum/philippine-air-force-aerospace-museum-1.webp",
+        "alt_text": "Philippine Air Force Aerospace Museum in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "philippine-international-convention-center",
+    "name": "Philippine International Convention Center",
+    "slug": "philippine-international-convention-center",
+    "category": "Heritage",
+    "address": "PICC Complex, Vicente Sotto Street, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.5557,
+    "longitude": 120.9821,
+    "budget_min": null,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Philippine%20International%20Convention%20Center%2C%20PICC%20Complex%2C%20Vicente%20Sotto%20Street%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "CCP Complex",
+    "description": "PICC is more of an event and landmark stop than a random walk-in tambayan. Worth it siya kapag may convention, graduation, expo, or kung trip mo architecture and photo spots. Kung walang event, quick exterior visit lang siya, so plan it with nearby CCP or Seascape.",
+    "best_time_to_visit": "During scheduled events or late afternoon for exterior photos",
+    "visit_duration": "30 minutes to 3 hours",
+    "good_for": [
+      "Events",
+      "Architecture",
+      "Photo Spot",
+      "Culture"
+    ],
+    "not_ideal_for": [
+      "Users Looking For Walk-In Activities",
+      "Users Looking For Free Indoor Attractions",
+      "Young Kids Without An Event"
+    ],
+    "crowd_level": "Can be quiet on normal days but very crowded during conventions and ceremonies.",
+    "indoor_outdoor": "Mixed",
+    "weather_fit": "Mixed",
+    "parking_info": "Large event parking is available, but it becomes congested during major events.",
+    "commute_access": "Reachable via Roxas Boulevard and CCP Complex. From LRT-1 Vito Cruz or Gil Puyat, take a jeep, taxi, or Grab toward PICC.",
+    "nearby_context": "Near CCP, Star City, Seascape Village, Sofitel area, and Manila Bay.",
+    "normalized_name": "philippine international convention center",
+    "searchable_text": "Philippine International Convention Center Heritage Pasay CCP Complex PICC Complex, Vicente Sotto Street, Pasay City, Metro Manila PICC is more of an event and landmark stop than a random walk-in tambayan. Worth it siya kapag may convention, graduation, expo, or kung trip mo architecture and photo spots. Kung walang event, quick exterior visit lang siya, so plan it with nearby CCP or Seascape. Events Architecture Photo Spot Culture Users Looking For Walk-In Activities Users Looking For Free Indoor Attractions Young Kids Without An Event history kasaysayan landmark old pasay tourist pasikat visitor-friendly family pamilya kids family trip picc picc pasay convention center pasay",
+    "search_keywords": [
+      "Philippine International Convention Center",
+      "Heritage",
+      "Pasay",
+      "CCP Complex",
+      "PICC Complex, Vicente Sotto Street, Pasay City, Metro Manila",
+      "history",
+      "kasaysayan",
+      "culture",
+      "landmark",
+      "old pasay",
+      "tourist",
+      "photo spot",
+      "pasikat",
+      "visitor-friendly",
+      "family",
+      "pamilya",
+      "kids",
+      "family trip",
+      "Events",
+      "Architecture",
+      "picc",
+      "picc pasay",
+      "convention center pasay"
+    ],
+    "search_aliases": [
+      "philippine international convention center",
+      "picc",
+      "picc pasay",
+      "convention center pasay"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": null,
+    "budget_note": "Budget varies depending on ticket, event, booking, or activity choice.",
+    "categories": [
+      "heritage",
+      "tourist",
+      "family"
+    ],
+    "tags": [
+      {
+        "id": "heritage",
+        "strength": 5,
+        "notes": "Highlights Pasay culture, history, or landmark character."
+      },
+      {
+        "id": "family-friendly",
+        "strength": 4,
+        "notes": "Comfortable option for family visits or shared meals."
+      },
+      {
+        "id": "photo-friendly",
+        "strength": 4,
+        "notes": "Has tourist, landmark, heritage, or photo-stop value."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      },
+      {
+        "id": "event-friendly",
+        "strength": 5,
+        "notes": "Best when there are concerts, shows, conventions, games, or scheduled events."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "philippine-international-convention-center-1",
+        "storage_key": "galatayo-photos/places/philippine-international-convention-center/philippine-international-convention-center-1.webp",
+        "alt_text": "Philippine International Convention Center in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "roxas-boulevard-promenade-light-park",
+    "name": "Roxas Boulevard Promenade Light Park",
+    "slug": "roxas-boulevard-promenade-light-park",
+    "category": "Park",
+    "address": "Roxas Boulevard Promenade, near Metrobank Avenue, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.5359,
+    "longitude": 120.9901,
+    "budget_min": 0,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Roxas%20Boulevard%20Promenade%20Light%20Park%2C%20Roxas%20Boulevard%20Promenade%2C%20near%20Metrobank%20Avenue%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "Roxas Boulevard / Metrobank Avenue",
+    "description": "This is more of a city promenade than a full park, pero pwede siya for evening walk, photos, and quick outdoor chill. Maganda siya if you want something free near the Bay Area. Since conditions can vary by section, treat it as a casual stop, not a guaranteed full gala destination.",
+    "best_time_to_visit": "Sunset to evening",
+    "visit_duration": "30 minutes to 1.5 hours",
+    "good_for": [
+      "Chill",
+      "Casual Date",
+      "Family Trip",
+      "Photo Spot",
+      "Walking",
+      "Budget-Friendly"
+    ],
+    "not_ideal_for": [
+      "Rainy Days",
+      "Quiet Study",
+      "Users Expecting A Full Nature Park"
+    ],
+    "crowd_level": "Can attract walkers and photo-takers in the evening, especially on weekends.",
+    "indoor_outdoor": "Outdoor",
+    "weather_fit": "Avoid during rain",
+    "parking_info": "Nearby parking depends on adjacent establishments and roadside availability, so drop-off is more practical.",
+    "commute_access": "Accessible from Roxas Boulevard and nearby Bay Area roads. Best reached by Grab, taxi, bus, or short ride from MOA/EDSA routes.",
+    "nearby_context": "Near Roxas Boulevard, Metrobank Avenue, Blue Bay Walk, MET Live, and the Bay Area.",
+    "normalized_name": "roxas boulevard promenade light park",
+    "searchable_text": "Roxas Boulevard Promenade Light Park Park Pasay Roxas Boulevard / Metrobank Avenue Roxas Boulevard Promenade, near Metrobank Avenue, Pasay City, Metro Manila This is more of a city promenade than a full park, pero pwede siya for evening walk, photos, and quick outdoor chill. Maganda siya if you want something free near the Bay Area. Since conditions can vary by section, treat it as a casual stop, not a guaranteed full gala destination. Chill Casual Date Family Trip Photo Spot Walking Budget-Friendly Rainy Days Quiet Study Users Expecting A Full Nature Park parke outdoor tambay sunset relax low-key date couple date night family pamilya kids tourist landmark pasikat visitor-friendly roxas boulevard promenade light park pasay bay walk pasay",
+    "search_keywords": [
+      "Roxas Boulevard Promenade Light Park",
+      "Park",
+      "Pasay",
+      "Roxas Boulevard / Metrobank Avenue",
+      "Roxas Boulevard Promenade, near Metrobank Avenue, Pasay City, Metro Manila",
+      "parke",
+      "outdoor",
+      "walking",
+      "tambay",
+      "sunset",
+      "chill",
+      "relax",
+      "low-key",
+      "date",
+      "couple",
+      "date night",
+      "casual date",
+      "family",
+      "pamilya",
+      "kids",
+      "family trip",
+      "tourist",
+      "landmark",
+      "photo spot",
+      "pasikat",
+      "visitor-friendly",
+      "Budget-Friendly",
+      "roxas boulevard promenade",
+      "light park pasay",
+      "bay walk pasay"
+    ],
+    "search_aliases": [
+      "roxas boulevard promenade light park",
+      "roxas boulevard promenade",
+      "light park pasay",
+      "bay walk pasay"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 0,
+    "budget_note": "Free entry or no required minimum spend.",
+    "categories": [
+      "park",
+      "chill",
+      "date",
+      "family",
+      "tourist"
+    ],
+    "tags": [
+      {
+        "id": "family-friendly",
+        "strength": 4,
+        "notes": "Comfortable option for family visits or shared meals."
+      },
+      {
+        "id": "date-friendly",
+        "strength": 4,
+        "notes": "Works well for casual dates or low-pressure couple plans."
+      },
+      {
+        "id": "chill",
+        "strength": 4,
+        "notes": "Good for relaxed, low-pressure gala."
+      },
+      {
+        "id": "photo-friendly",
+        "strength": 4,
+        "notes": "Has tourist, landmark, heritage, or photo-stop value."
+      },
+      {
+        "id": "outdoor-friendly",
+        "strength": 5,
+        "notes": "Best for walking, fresh air, sunset, and outdoor tambay."
+      },
+      {
+        "id": "budget-friendly",
+        "strength": 5,
+        "notes": "Low or flexible spend compared with typical paid activities."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "roxas-boulevard-promenade-light-park-1",
+        "storage_key": "galatayo-photos/places/roxas-boulevard-promenade-light-park/roxas-boulevard-promenade-light-park-1.webp",
+        "alt_text": "Roxas Boulevard Promenade Light Park in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "runway-manila",
+    "name": "Runway Manila",
+    "slug": "runway-manila",
+    "category": "Tourist",
+    "address": "Pedestrian bridge connecting Newport City and NAIA Terminal 3, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.52175,
+    "longitude": 121.01795,
+    "budget_min": 0,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Runway%20Manila%2C%20Pedestrian%20bridge%20connecting%20Newport%20City%20and%20NAIA%20Terminal%203%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "Newport City / NAIA Terminal 3",
+    "description": "Runway Manila is not really a tambayan, pero sobrang useful if your gala is around Newport or NAIA Terminal 3. Air-conditioned bridge siya, so convenient for airport meetups, layovers, or walking to Newport. Treat it as a commute-friendly landmark, not a full destination.",
+    "best_time_to_visit": "Anytime, especially before or after airport/Newport plans",
+    "visit_duration": "15 to 30 minutes",
+    "good_for": [
+      "Quick Hangout",
+      "Commute-Friendly",
+      "Airport Layover",
+      "Tourist Landmark"
+    ],
+    "not_ideal_for": [
+      "Full-Day Gala",
+      "Food Trip",
+      "Users Looking For Scenic Activities"
+    ],
+    "crowd_level": "Usually steady foot traffic, heavier around flight peak hours.",
+    "indoor_outdoor": "Indoor",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "Use NAIA Terminal 3 or Newport parking depending on your starting point.",
+    "commute_access": "Directly connects NAIA Terminal 3 and Newport City, making it very convenient for airport commuters and Newport visitors.",
+    "nearby_context": "Near Newport Mall, Newport World Resorts, Belmont Hotel, NAIA Terminal 3, and Villamor.",
+    "normalized_name": "runway manila",
+    "searchable_text": "Runway Manila Tourist Pasay Newport City / NAIA Terminal 3 Pedestrian bridge connecting Newport City and NAIA Terminal 3, Pasay City, Metro Manila Runway Manila is not really a tambayan, pero sobrang useful if your gala is around Newport or NAIA Terminal 3. Air-conditioned bridge siya, so convenient for airport meetups, layovers, or walking to Newport. Treat it as a commute-friendly landmark, not a full destination. Quick Hangout Commute-Friendly Airport Layover Tourist Landmark Full-Day Gala Food Trip Users Looking For Scenic Activities landmark photo spot pasikat visitor-friendly mall shopping aircon rainy day shops errands chill relax tambay low-key naia terminal 3 bridge newport bridge airport bridge pasay",
+    "search_keywords": [
+      "Runway Manila",
+      "Tourist",
+      "Pasay",
+      "Newport City / NAIA Terminal 3",
+      "Pedestrian bridge connecting Newport City and NAIA Terminal 3, Pasay City, Metro Manila",
+      "landmark",
+      "photo spot",
+      "pasikat",
+      "visitor-friendly",
+      "mall",
+      "shopping",
+      "aircon",
+      "rainy day",
+      "shops",
+      "errands",
+      "chill",
+      "relax",
+      "tambay",
+      "low-key",
+      "Quick Hangout",
+      "Commute-Friendly",
+      "Airport Layover",
+      "Tourist Landmark",
+      "naia terminal 3 bridge",
+      "newport bridge",
+      "airport bridge pasay"
+    ],
+    "search_aliases": [
+      "runway manila",
+      "naia terminal 3 bridge",
+      "newport bridge",
+      "airport bridge pasay"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 0,
+    "budget_note": "Free entry or no required minimum spend.",
+    "categories": [
+      "tourist",
+      "mall",
+      "chill"
+    ],
+    "tags": [
+      {
+        "id": "mall-day",
+        "strength": 5,
+        "notes": "Convenient for shopping, food, errands, and rainy-day plans."
+      },
+      {
+        "id": "chill",
+        "strength": 4,
+        "notes": "Good for relaxed, low-pressure gala."
+      },
+      {
+        "id": "photo-friendly",
+        "strength": 4,
+        "notes": "Has tourist, landmark, heritage, or photo-stop value."
+      },
+      {
+        "id": "budget-friendly",
+        "strength": 5,
+        "notes": "Low or flexible spend compared with typical paid activities."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "runway-manila-1",
+        "storage_key": "galatayo-photos/places/runway-manila/runway-manila-1.webp",
+        "alt_text": "Runway Manila in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "seascape-village-bay-market",
+    "name": "Seascape Village Bay Market",
+    "slug": "seascape-village-bay-market",
+    "category": "Food",
+    "address": "Atang Dela Rama Street corner Zoilo Hilario Street, CCP Complex, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.5526,
+    "longitude": 120.9815,
+    "budget_min": 500,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Seascape%20Village%20Bay%20Market%2C%20Atang%20Dela%20Rama%20Street%20corner%20Zoilo%20Hilario%20Street%2C%20CCP%20Complex%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "CCP Complex / Manila Bay",
+    "description": "Ito yung seafood place na mas chill and mas scenic compared sa typical dampa setup. Maganda siya for family dinner, barkada seafood cravings, or casual date na gusto niyo may bay area feels. Best siya kapag late afternoon para may chance pa sa sunset vibes.",
+    "best_time_to_visit": "Late afternoon to evening, especially near sunset",
+    "visit_duration": "1.5 to 3 hours",
+    "good_for": [
+      "Food Trip",
+      "Barkada Hangout",
+      "Family Trip",
+      "Casual Date",
+      "Group Dining"
+    ],
+    "not_ideal_for": [
+      "Users Looking For Free Activities Only",
+      "Very Quiet Hangouts",
+      "Tight Budgets"
+    ],
+    "crowd_level": "Can get crowded during sunset, dinner, and weekend nights.",
+    "indoor_outdoor": "Mixed",
+    "weather_fit": "Mixed",
+    "parking_info": "Paid parking is available within or near the compound, but it can fill up during peak dinner hours.",
+    "commute_access": "Best by Grab, taxi, or private car via Roxas Boulevard and CCP Complex. From LRT-1 Vito Cruz or Gil Puyat, take a short ride going to the bay side.",
+    "nearby_context": "Near CCP Complex, PICC, Star City, Sofitel area, and Manila Bay.",
+    "normalized_name": "seascape village bay market",
+    "searchable_text": "Seascape Village Bay Market Food Pasay CCP Complex / Manila Bay Atang Dela Rama Street corner Zoilo Hilario Street, CCP Complex, Pasay City, Metro Manila Ito yung seafood place na mas chill and mas scenic compared sa typical dampa setup. Maganda siya for family dinner, barkada seafood cravings, or casual date na gusto niyo may bay area feels. Best siya kapag late afternoon para may chance pa sa sunset vibes. Food Trip Barkada Hangout Family Trip Casual Date Group Dining Users Looking For Free Activities Only Very Quiet Hangouts Tight Budgets restaurant kainan pagkain dinner lunch seafood barkada group friends family pamilya kids date couple date night chill relax tambay low-key seascape village bay market pasay seascape seafood",
+    "search_keywords": [
+      "Seascape Village Bay Market",
+      "Food",
+      "Pasay",
+      "CCP Complex / Manila Bay",
+      "Atang Dela Rama Street corner Zoilo Hilario Street, CCP Complex, Pasay City, Metro Manila",
+      "restaurant",
+      "kainan",
+      "pagkain",
+      "dinner",
+      "lunch",
+      "food trip",
+      "seafood",
+      "barkada",
+      "group",
+      "friends",
+      "group dining",
+      "family",
+      "pamilya",
+      "kids",
+      "family trip",
+      "date",
+      "couple",
+      "date night",
+      "casual date",
+      "chill",
+      "relax",
+      "tambay",
+      "low-key",
+      "Barkada Hangout",
+      "seascape village",
+      "bay market pasay",
+      "seascape seafood"
+    ],
+    "search_aliases": [
+      "seascape village bay market",
+      "seascape village",
+      "bay market pasay",
+      "seascape seafood"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 3,
+    "budget_note": "Estimated minimum budget starts around ₱500 per person.",
+    "categories": [
+      "food",
+      "group",
+      "family",
+      "date",
+      "chill"
+    ],
+    "tags": [
+      {
+        "id": "food-trip",
+        "strength": 5,
+        "notes": "Good for meals, cravings, or planned food stops."
+      },
+      {
+        "id": "family-friendly",
+        "strength": 4,
+        "notes": "Comfortable option for family visits or shared meals."
+      },
+      {
+        "id": "group-friendly",
+        "strength": 4,
+        "notes": "Works well for barkada or small group hangouts."
+      },
+      {
+        "id": "date-friendly",
+        "strength": 4,
+        "notes": "Works well for casual dates or low-pressure couple plans."
+      },
+      {
+        "id": "chill",
+        "strength": 4,
+        "notes": "Good for relaxed, low-pressure gala."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "seascape-village-bay-market-1",
+        "storage_key": "galatayo-photos/places/seascape-village-bay-market/seascape-village-bay-market-1.webp",
+        "alt_text": "Seascape Village Bay Market in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "shrine-of-jesus-the-way-the-truth-and-the-life",
+    "name": "Shrine of Jesus, The Way, The Truth and The Life",
+    "slug": "shrine-of-jesus-the-way-the-truth-and-the-life",
+    "category": "Heritage",
+    "address": "Coral Way, Central Business Park, Reclamation Area, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.530938,
+    "longitude": 120.982063,
+    "budget_min": 0,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Shrine%20of%20Jesus%2C%20The%20Way%2C%20The%20Truth%20and%20The%20Life%2C%20Coral%20Way%2C%20Central%20Business%20Park%2C%20Reclamation%20Area%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "MOA Complex / Reclamation Area",
+    "description": "Kung nasa MOA area ka and gusto mo ng quiet church stop, ito yung easy add-on. Spacious siya and may calm vibe compared sa busy mall surroundings. Good for prayer, family stop, or quick heritage-style visit before or after gala.",
+    "best_time_to_visit": "Morning or late afternoon",
+    "visit_duration": "30 minutes to 1 hour",
+    "good_for": [
+      "Family Trip",
+      "Church Visit",
+      "Quiet Visit",
+      "Heritage",
+      "Photo Spot"
+    ],
+    "not_ideal_for": [
+      "Nightlife Plans",
+      "Users Looking For Food Trip",
+      "Large Noisy Barkada Hangouts"
+    ],
+    "crowd_level": "Usually calm outside Mass times, busier during Sunday Masses and church events.",
+    "indoor_outdoor": "Indoor",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "Nearby MOA or S Maison parking can be used depending on your route. Church/event parking may vary.",
+    "commute_access": "Accessible from SM MOA/S Maison area by walking or short ride. Commuters can use MOA-bound transport then transfer within the complex.",
+    "nearby_context": "Near S Maison, Conrad Manila, SM By The Bay, MOA Arena, and SM Mall of Asia.",
+    "normalized_name": "shrine of jesus the way the truth and the life",
+    "searchable_text": "Shrine of Jesus, The Way, The Truth and The Life Heritage Pasay MOA Complex / Reclamation Area Coral Way, Central Business Park, Reclamation Area, Pasay City, Metro Manila Kung nasa MOA area ka and gusto mo ng quiet church stop, ito yung easy add-on. Spacious siya and may calm vibe compared sa busy mall surroundings. Good for prayer, family stop, or quick heritage-style visit before or after gala. Family Trip Church Visit Quiet Visit Photo Spot Nightlife Plans Users Looking For Food Trip Large Noisy Barkada Hangouts history kasaysayan culture landmark old pasay family pamilya kids chill relax tambay low-key tourist pasikat visitor-friendly shrine of jesus moa church simbahan misa prayer catholic church moa",
+    "search_keywords": [
+      "Shrine of Jesus, The Way, The Truth and The Life",
+      "Heritage",
+      "Pasay",
+      "MOA Complex / Reclamation Area",
+      "Coral Way, Central Business Park, Reclamation Area, Pasay City, Metro Manila",
+      "history",
+      "kasaysayan",
+      "culture",
+      "landmark",
+      "old pasay",
+      "family",
+      "pamilya",
+      "kids",
+      "family trip",
+      "chill",
+      "relax",
+      "tambay",
+      "low-key",
+      "tourist",
+      "photo spot",
+      "pasikat",
+      "visitor-friendly",
+      "Church Visit",
+      "Quiet Visit",
+      "shrine of jesus",
+      "moa church",
+      "simbahan",
+      "misa",
+      "prayer",
+      "catholic church moa"
+    ],
+    "search_aliases": [
+      "shrine of jesus",
+      "shrine of jesus the way the truth and the life",
+      "moa church",
+      "simbahan",
+      "misa",
+      "prayer",
+      "catholic church moa"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 0,
+    "budget_note": "Free entry or no required minimum spend.",
+    "categories": [
+      "heritage",
+      "family",
+      "chill",
+      "tourist"
+    ],
+    "tags": [
+      {
+        "id": "heritage",
+        "strength": 5,
+        "notes": "Highlights Pasay culture, history, or landmark character."
+      },
+      {
+        "id": "family-friendly",
+        "strength": 4,
+        "notes": "Comfortable option for family visits or shared meals."
+      },
+      {
+        "id": "chill",
+        "strength": 4,
+        "notes": "Good for relaxed, low-pressure gala."
+      },
+      {
+        "id": "photo-friendly",
+        "strength": 4,
+        "notes": "Has tourist, landmark, heritage, or photo-stop value."
+      },
+      {
+        "id": "budget-friendly",
+        "strength": 5,
+        "notes": "Low or flexible spend compared with typical paid activities."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      },
+      {
+        "id": "simbahan",
+        "strength": 5,
+        "notes": "Useful for church, Mass, prayer, and heritage-search intent."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "shrine-of-jesus-the-way-the-truth-and-the-life-1",
+        "storage_key": "galatayo-photos/places/shrine-of-jesus-the-way-the-truth-and-the-life/shrine-of-jesus-the-way-the-truth-and-the-life-1.webp",
+        "alt_text": "Shrine of Jesus, The Way, The Truth and The Life in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "sm-cinema-imax-theatre-moa",
+    "name": "SM Cinema IMAX Theatre MOA",
+    "slug": "sm-cinema-imax-theatre-moa",
+    "category": "Cinema",
+    "address": "SM Mall of Asia, Seaside Boulevard, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.535067,
+    "longitude": 120.982155,
+    "budget_min": 300,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=SM%20Cinema%20IMAX%20Theatre%20MOA%2C%20SM%20Mall%20of%20Asia%2C%20Seaside%20Boulevard%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "SM Mall of Asia",
+    "description": "SM Cinema and IMAX MOA is the safest movie pick if your group is already planning around MOA. Easy siya i-combo with food, shopping, arcade, skating, or seaside walk. Expect crowds kapag blockbuster season or weekend, so book ahead if possible.",
+    "best_time_to_visit": "Afternoon or evening movie schedule",
+    "visit_duration": "2 to 3 hours",
+    "good_for": [
+      "Cinema",
+      "Date Night",
+      "Barkada Hangout",
+      "Family Trip",
+      "Rainy Day"
+    ],
+    "not_ideal_for": [
+      "Users Looking For Free Activities Only",
+      "Outdoor Activities",
+      "People Avoiding Crowds"
+    ],
+    "crowd_level": "Busy during blockbuster releases, weekends, holidays, and event days.",
+    "indoor_outdoor": "Indoor",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "MOA parking is available but heavy during weekends, concerts, and mall events.",
+    "commute_access": "Accessible through SM MOA terminal, EDSA Carousel, buses, vans, and rides from MRT Taft or LRT EDSA.",
+    "nearby_context": "Inside SM Mall of Asia, near SM Game Park, Timezone, SM Skating, MOA Arena, and SM By The Bay.",
+    "normalized_name": "sm cinema imax theatre moa",
+    "searchable_text": "SM Cinema IMAX Theatre MOA Cinema Pasay SM Mall of Asia SM Mall of Asia, Seaside Boulevard, Pasay City, Metro Manila SM Cinema and IMAX MOA is the safest movie pick if your group is already planning around MOA. Easy siya i-combo with food, shopping, arcade, skating, or seaside walk. Expect crowds kapag blockbuster season or weekend, so book ahead if possible. Date Night Barkada Hangout Family Trip Rainy Day Users Looking For Free Activities Only Outdoor Activities People Avoiding Crowds movie imax film date couple casual date barkada group friends group dining family pamilya kids mall shopping aircon shops errands sm cinema moa imax moa moa imax movie moa",
+    "search_keywords": [
+      "SM Cinema IMAX Theatre MOA",
+      "Cinema",
+      "Pasay",
+      "SM Mall of Asia",
+      "SM Mall of Asia, Seaside Boulevard, Pasay City, Metro Manila",
+      "movie",
+      "imax",
+      "film",
+      "date night",
+      "date",
+      "couple",
+      "casual date",
+      "barkada",
+      "group",
+      "friends",
+      "group dining",
+      "family",
+      "pamilya",
+      "kids",
+      "family trip",
+      "mall",
+      "shopping",
+      "aircon",
+      "rainy day",
+      "shops",
+      "errands",
+      "Barkada Hangout",
+      "sm cinema moa",
+      "imax moa",
+      "moa imax",
+      "movie moa"
+    ],
+    "search_aliases": [
+      "sm cinema imax theatre moa",
+      "sm cinema moa",
+      "imax moa",
+      "moa imax",
+      "movie moa"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 2,
+    "budget_note": "Estimated minimum budget starts around ₱300 per person.",
+    "categories": [
+      "cinema",
+      "date",
+      "group",
+      "family",
+      "mall"
+    ],
+    "tags": [
+      {
+        "id": "mall-day",
+        "strength": 5,
+        "notes": "Convenient for shopping, food, errands, and rainy-day plans."
+      },
+      {
+        "id": "cinema-date",
+        "strength": 5,
+        "notes": "Good for movie plans with food or mall activities nearby."
+      },
+      {
+        "id": "family-friendly",
+        "strength": 4,
+        "notes": "Comfortable option for family visits or shared meals."
+      },
+      {
+        "id": "group-friendly",
+        "strength": 4,
+        "notes": "Works well for barkada or small group hangouts."
+      },
+      {
+        "id": "date-friendly",
+        "strength": 4,
+        "notes": "Works well for casual dates or low-pressure couple plans."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "sm-cinema-imax-theatre-moa-1",
+        "storage_key": "galatayo-photos/places/sm-cinema-imax-theatre-moa/sm-cinema-imax-theatre-moa-1.webp",
+        "alt_text": "SM Cinema IMAX Theatre MOA in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "sm-game-park-moa",
+    "name": "SM Game Park MOA",
+    "slug": "sm-game-park-moa",
+    "category": "Arcade",
+    "address": "3rd Floor, South Entertainment Mall, SM Mall of Asia, J.W. Diokno Boulevard, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.5351,
+    "longitude": 120.9822,
+    "budget_min": 250,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=SM%20Game%20Park%20MOA%2C%203rd%20Floor%2C%20South%20Entertainment%20Mall%2C%20SM%20Mall%20of%20Asia%2C%20J.W.%20Diokno%20Boulevard%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "SM Mall of Asia",
+    "description": "SM Game Park is for barkadas na ayaw lang kumain at maglakad sa mall. May indoor games and activity options, so may actual gagawin kayo. Good siya for rainy day, casual date, or group hangout inside MOA.",
+    "best_time_to_visit": "Afternoon to evening",
+    "visit_duration": "1 to 3 hours",
+    "good_for": [
+      "Barkada Hangout",
+      "Casual Date",
+      "Activity",
+      "Rainy Day",
+      "Indoor Games"
+    ],
+    "not_ideal_for": [
+      "Users Looking For Free Activities Only",
+      "Quiet Study",
+      "Very Small Children Without Supervision"
+    ],
+    "crowd_level": "Usually busier on weekends, holidays, and after-school/after-work hours.",
+    "indoor_outdoor": "Indoor",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "MOA parking is available, but allow extra time on weekends and event days.",
+    "commute_access": "Use SM MOA transport access. From MOA terminal, walk to the South Entertainment Mall area.",
+    "nearby_context": "Inside SM Mall of Asia, near SM Cinema, Timezone, SM Skating, and MOA food areas.",
+    "normalized_name": "sm game park moa",
+    "searchable_text": "SM Game Park MOA Arcade Pasay SM Mall of Asia 3rd Floor, South Entertainment Mall, SM Mall of Asia, J.W. Diokno Boulevard, Pasay City, Metro Manila SM Game Park is for barkadas na ayaw lang kumain at maglakad sa mall. May indoor games and activity options, so may actual gagawin kayo. Good siya for rainy day, casual date, or group hangout inside MOA. Barkada Hangout Casual Date Activity Rainy Day Indoor Games Users Looking For Free Activities Only Quiet Study Very Small Children Without Supervision games game center laro barkada group friends group dining date couple date night family pamilya kids family trip chill relax tambay low-key game park moa sm game park indoor games moa",
+    "search_keywords": [
+      "SM Game Park MOA",
+      "Arcade",
+      "Pasay",
+      "SM Mall of Asia",
+      "3rd Floor, South Entertainment Mall, SM Mall of Asia, J.W. Diokno Boulevard, Pasay City, Metro Manila",
+      "games",
+      "game center",
+      "laro",
+      "indoor games",
+      "activity",
+      "barkada",
+      "group",
+      "friends",
+      "group dining",
+      "date",
+      "couple",
+      "date night",
+      "casual date",
+      "family",
+      "pamilya",
+      "kids",
+      "family trip",
+      "chill",
+      "relax",
+      "tambay",
+      "low-key",
+      "Barkada Hangout",
+      "Rainy Day",
+      "game park moa",
+      "sm game park",
+      "indoor games moa"
+    ],
+    "search_aliases": [
+      "sm game park moa",
+      "game park moa",
+      "sm game park",
+      "indoor games moa"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 2,
+    "budget_note": "Estimated minimum budget starts around ₱250 per person.",
+    "categories": [
+      "arcade",
+      "group",
+      "date",
+      "family",
+      "chill"
+    ],
+    "tags": [
+      {
+        "id": "arcade-games",
+        "strength": 5,
+        "notes": "Good for games, playful activities, or active indoor hangouts."
+      },
+      {
+        "id": "family-friendly",
+        "strength": 4,
+        "notes": "Comfortable option for family visits or shared meals."
+      },
+      {
+        "id": "group-friendly",
+        "strength": 4,
+        "notes": "Works well for barkada or small group hangouts."
+      },
+      {
+        "id": "date-friendly",
+        "strength": 4,
+        "notes": "Works well for casual dates or low-pressure couple plans."
+      },
+      {
+        "id": "chill",
+        "strength": 4,
+        "notes": "Good for relaxed, low-pressure gala."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "sm-game-park-moa-1",
+        "storage_key": "galatayo-photos/places/sm-game-park-moa/sm-game-park-moa-1.webp",
+        "alt_text": "SM Game Park MOA in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "sm-mall-of-asia",
+    "name": "SM Mall of Asia",
+    "slug": "sm-mall-of-asia",
+    "category": "Mall",
+    "address": "Seaside Boulevard, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.535067,
+    "longitude": 120.982155,
+    "budget_min": 0,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=SM%20Mall%20of%20Asia%2C%20Seaside%20Boulevard%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "MOA Complex / Bay Area",
+    "description": "MOA is the easy answer kapag hindi pa kayo sure kung anong gagawin. Food, shopping, cinema, activities, seaside walk, and events are all nearby. Sobrang flexible siya for date, barkada, family, or rainy-day gala, pero expect crowds talaga.",
+    "best_time_to_visit": "Weekday afternoon or early evening",
+    "visit_duration": "Half day",
+    "good_for": [
+      "Shopping",
+      "Food Trip",
+      "Date Night",
+      "Barkada Hangout",
+      "Family Trip",
+      "Chill",
+      "Rainy Day"
+    ],
+    "not_ideal_for": [
+      "Users Avoiding Crowds",
+      "Quiet Study",
+      "People Looking For Nature"
+    ],
+    "crowd_level": "Very crowded on weekends, sale days, holidays, and concert/event days.",
+    "indoor_outdoor": "Mixed",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "Large paid parking areas are available, but expect congestion during weekends and major events.",
+    "commute_access": "Accessible through the SM MOA transport terminal, EDSA Carousel, buses, jeeps, vans, and rides from MRT Taft or LRT EDSA.",
+    "nearby_context": "Near SM By The Bay, S Maison, MOA Arena, SMX, IKEA, and the Bay Area.",
+    "normalized_name": "sm mall of asia",
+    "searchable_text": "SM Mall of Asia Mall Pasay MOA Complex / Bay Area Seaside Boulevard, Pasay City, Metro Manila MOA is the easy answer kapag hindi pa kayo sure kung anong gagawin. Food, shopping, cinema, activities, seaside walk, and events are all nearby. Sobrang flexible siya for date, barkada, family, or rainy-day gala, pero expect crowds talaga. Shopping Food Trip Date Night Barkada Hangout Family Trip Chill Rainy Day Users Avoiding Crowds Quiet Study People Looking For Nature aircon shops errands food restaurant kainan pagkain dinner lunch seafood cinema movie imax film arcade games game center laro indoor games activity date couple casual date family pamilya kids barkada group friends group dining relax tambay low-key tourist landmark photo spot pasikat visitor-friendly mall of asia moa sm moa moa pasay",
+    "search_keywords": [
+      "SM Mall of Asia",
+      "Mall",
+      "Pasay",
+      "MOA Complex / Bay Area",
+      "Seaside Boulevard, Pasay City, Metro Manila",
+      "shopping",
+      "aircon",
+      "rainy day",
+      "shops",
+      "errands",
+      "food",
+      "restaurant",
+      "kainan",
+      "pagkain",
+      "dinner",
+      "lunch",
+      "food trip",
+      "seafood",
+      "cinema",
+      "movie",
+      "imax",
+      "film",
+      "date night",
+      "arcade",
+      "games",
+      "game center",
+      "laro",
+      "indoor games",
+      "activity",
+      "date",
+      "couple",
+      "casual date",
+      "family",
+      "pamilya",
+      "kids",
+      "family trip",
+      "barkada",
+      "group",
+      "friends",
+      "group dining",
+      "chill",
+      "relax",
+      "tambay",
+      "low-key",
+      "tourist",
+      "landmark",
+      "photo spot",
+      "pasikat",
+      "visitor-friendly",
+      "Barkada Hangout",
+      "mall of asia",
+      "moa",
+      "sm moa",
+      "moa pasay"
+    ],
+    "search_aliases": [
+      "sm mall of asia",
+      "mall of asia",
+      "moa",
+      "sm moa",
+      "moa pasay"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 0,
+    "budget_note": "Free entry or no required minimum spend.",
+    "categories": [
+      "mall",
+      "food",
+      "cinema",
+      "arcade",
+      "date",
+      "family",
+      "group",
+      "chill",
+      "tourist"
+    ],
+    "tags": [
+      {
+        "id": "food-trip",
+        "strength": 5,
+        "notes": "Good for meals, cravings, or planned food stops."
+      },
+      {
+        "id": "mall-day",
+        "strength": 5,
+        "notes": "Convenient for shopping, food, errands, and rainy-day plans."
+      },
+      {
+        "id": "cinema-date",
+        "strength": 5,
+        "notes": "Good for movie plans with food or mall activities nearby."
+      },
+      {
+        "id": "arcade-games",
+        "strength": 5,
+        "notes": "Good for games, playful activities, or active indoor hangouts."
+      },
+      {
+        "id": "family-friendly",
+        "strength": 4,
+        "notes": "Comfortable option for family visits or shared meals."
+      },
+      {
+        "id": "group-friendly",
+        "strength": 4,
+        "notes": "Works well for barkada or small group hangouts."
+      },
+      {
+        "id": "date-friendly",
+        "strength": 4,
+        "notes": "Works well for casual dates or low-pressure couple plans."
+      },
+      {
+        "id": "chill",
+        "strength": 4,
+        "notes": "Good for relaxed, low-pressure gala."
+      },
+      {
+        "id": "photo-friendly",
+        "strength": 4,
+        "notes": "Has tourist, landmark, heritage, or photo-stop value."
+      },
+      {
+        "id": "budget-friendly",
+        "strength": 5,
+        "notes": "Low or flexible spend compared with typical paid activities."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "sm-mall-of-asia-1",
+        "storage_key": "galatayo-photos/places/sm-mall-of-asia/sm-mall-of-asia-1.webp",
+        "alt_text": "SM Mall of Asia in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "sm-skating-moa",
+    "name": "SM Skating MOA",
+    "slug": "sm-skating-moa",
+    "category": "Arcade",
+    "address": "Level 3, Main Mall, SM Mall of Asia, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.535,
+    "longitude": 120.9821,
+    "budget_min": 350,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=SM%20Skating%20MOA%2C%20Level%203%2C%20Main%20Mall%2C%20SM%20Mall%20of%20Asia%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "SM Mall of Asia",
+    "description": "Tara skating is already a full plan, and this spot makes it easy inside MOA. Fun siya for dates, barkada, and family, lalo na kung gusto niyo ng indoor activity na hindi arcade lang. Good pick kapag maulan or sobrang init outside.",
+    "best_time_to_visit": "Weekday afternoon or early evening",
+    "visit_duration": "1 to 2.5 hours",
+    "good_for": [
+      "Casual Date",
+      "Barkada Hangout",
+      "Family Trip",
+      "Activity",
+      "Rainy Day"
+    ],
+    "not_ideal_for": [
+      "Users Looking For Free Activities Only",
+      "People With Mobility Concerns",
+      "Very Young Kids Without Supervision"
+    ],
+    "crowd_level": "Can get crowded during weekends, holidays, and promo periods.",
+    "indoor_outdoor": "Indoor",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "MOA parking is available, but expect congestion on weekends and event days.",
+    "commute_access": "Use SM MOA transport access. From the MOA terminal, go to the Main Mall Level 3 area.",
+    "nearby_context": "Inside SM Mall of Asia, near other MOA activities, cinemas, food areas, and SM By The Bay.",
+    "normalized_name": "sm skating moa",
+    "searchable_text": "SM Skating MOA Arcade Pasay SM Mall of Asia Level 3, Main Mall, SM Mall of Asia, Pasay City, Metro Manila Tara skating is already a full plan, and this spot makes it easy inside MOA. Fun siya for dates, barkada, and family, lalo na kung gusto niyo ng indoor activity na hindi arcade lang. Good pick kapag maulan or sobrang init outside. Casual Date Barkada Hangout Family Trip Activity Rainy Day Users Looking For Free Activities Only People With Mobility Concerns Very Young Kids Without Supervision games game center laro indoor games date couple date night barkada group friends group dining family pamilya kids chill relax tambay low-key ice skating moa sm ice skating skating rink moa",
+    "search_keywords": [
+      "SM Skating MOA",
+      "Arcade",
+      "Pasay",
+      "SM Mall of Asia",
+      "Level 3, Main Mall, SM Mall of Asia, Pasay City, Metro Manila",
+      "games",
+      "game center",
+      "laro",
+      "indoor games",
+      "activity",
+      "date",
+      "couple",
+      "date night",
+      "casual date",
+      "barkada",
+      "group",
+      "friends",
+      "group dining",
+      "family",
+      "pamilya",
+      "kids",
+      "family trip",
+      "chill",
+      "relax",
+      "tambay",
+      "low-key",
+      "Barkada Hangout",
+      "Rainy Day",
+      "ice skating moa",
+      "sm ice skating",
+      "skating rink moa"
+    ],
+    "search_aliases": [
+      "sm skating moa",
+      "ice skating moa",
+      "sm ice skating",
+      "skating rink moa"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 2,
+    "budget_note": "Estimated minimum budget starts around ₱350 per person.",
+    "categories": [
+      "arcade",
+      "date",
+      "group",
+      "family",
+      "chill"
+    ],
+    "tags": [
+      {
+        "id": "arcade-games",
+        "strength": 5,
+        "notes": "Good for games, playful activities, or active indoor hangouts."
+      },
+      {
+        "id": "family-friendly",
+        "strength": 4,
+        "notes": "Comfortable option for family visits or shared meals."
+      },
+      {
+        "id": "group-friendly",
+        "strength": 4,
+        "notes": "Works well for barkada or small group hangouts."
+      },
+      {
+        "id": "date-friendly",
+        "strength": 4,
+        "notes": "Works well for casual dates or low-pressure couple plans."
+      },
+      {
+        "id": "chill",
+        "strength": 4,
+        "notes": "Good for relaxed, low-pressure gala."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "sm-skating-moa-1",
+        "storage_key": "galatayo-photos/places/sm-skating-moa/sm-skating-moa-1.webp",
+        "alt_text": "SM Skating MOA in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "space-time-cube",
+    "name": "Space Time Cube",
+    "slug": "space-time-cube",
+    "category": "Museum",
+    "address": "Ground Floor, S Maison at Conrad, Seaside Boulevard, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.5315,
+    "longitude": 120.9813,
+    "budget_min": 880,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Space%20Time%20Cube%2C%20Ground%20Floor%2C%20S%20Maison%20at%20Conrad%2C%20Seaside%20Boulevard%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "S Maison / MOA Complex",
+    "description": "Kung gusto niyo ng indoor attraction na very photo-friendly, this one fits. Expect lights, interactive rooms, and immersive setups na mas pang fun experience kaysa serious museum. Good siya for date, barkada, or family lalo na kapag maulan and gusto niyo pa rin gumala.",
+    "best_time_to_visit": "Weekday afternoon or early evening",
+    "visit_duration": "1 to 2 hours",
+    "good_for": [
+      "Museum Visit",
+      "Date Night",
+      "Barkada Hangout",
+      "Family Trip",
+      "Instagrammable",
+      "Rainy Day"
+    ],
+    "not_ideal_for": [
+      "Users Looking For Free Activities Only",
+      "People Sensitive To Lights",
+      "Quiet Museum Visitors"
+    ],
+    "crowd_level": "Can get crowded during weekends and promo periods.",
+    "indoor_outdoor": "Indoor",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "Paid parking is available through S Maison, Conrad, or MOA parking areas.",
+    "commute_access": "Go through SM MOA/S Maison transport access. Commuters usually ride to MOA then walk or transfer within the complex.",
+    "nearby_context": "Inside S Maison, near The Dessert Museum, Hard Rock Cafe, Conrad Manila, and SM By The Bay.",
+    "normalized_name": "space time cube",
+    "searchable_text": "Space Time Cube Museum Pasay S Maison / MOA Complex Ground Floor, S Maison at Conrad, Seaside Boulevard, Pasay City, Metro Manila Kung gusto niyo ng indoor attraction na very photo-friendly, this one fits. Expect lights, interactive rooms, and immersive setups na mas pang fun experience kaysa serious museum. Good siya for date, barkada, or family lalo na kapag maulan and gusto niyo pa rin gumala. Museum Visit Date Night Barkada Hangout Family Trip Instagrammable Rainy Day Users Looking For Free Activities Only People Sensitive To Lights Quiet Museum Visitors museo educational exhibit history culture date couple casual date family pamilya kids barkada group friends group dining tourist landmark photo spot pasikat visitor-friendly space and time cube space time cube plus s maison museum",
+    "search_keywords": [
+      "Space Time Cube",
+      "Museum",
+      "Pasay",
+      "S Maison / MOA Complex",
+      "Ground Floor, S Maison at Conrad, Seaside Boulevard, Pasay City, Metro Manila",
+      "museo",
+      "educational",
+      "exhibit",
+      "history",
+      "culture",
+      "date",
+      "couple",
+      "date night",
+      "casual date",
+      "family",
+      "pamilya",
+      "kids",
+      "family trip",
+      "barkada",
+      "group",
+      "friends",
+      "group dining",
+      "tourist",
+      "landmark",
+      "photo spot",
+      "pasikat",
+      "visitor-friendly",
+      "Museum Visit",
+      "Barkada Hangout",
+      "Instagrammable",
+      "Rainy Day",
+      "space and time cube",
+      "space time cube plus",
+      "s maison museum"
+    ],
+    "search_aliases": [
+      "space time cube",
+      "space and time cube",
+      "space & time cube",
+      "space time cube plus",
+      "s maison museum"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 3,
+    "budget_note": "Estimated minimum budget starts around ₱880 per person.",
+    "categories": [
+      "museum",
+      "date",
+      "family",
+      "group",
+      "tourist"
+    ],
+    "tags": [
+      {
+        "id": "museum",
+        "strength": 5,
+        "notes": "Good for a short educational or culture-focused stop."
+      },
+      {
+        "id": "family-friendly",
+        "strength": 4,
+        "notes": "Comfortable option for family visits or shared meals."
+      },
+      {
+        "id": "group-friendly",
+        "strength": 4,
+        "notes": "Works well for barkada or small group hangouts."
+      },
+      {
+        "id": "date-friendly",
+        "strength": 4,
+        "notes": "Works well for casual dates or low-pressure couple plans."
+      },
+      {
+        "id": "photo-friendly",
+        "strength": 4,
+        "notes": "Has tourist, landmark, heritage, or photo-stop value."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "space-time-cube-1",
+        "storage_key": "galatayo-photos/places/space-time-cube/space-time-cube-1.webp",
+        "alt_text": "Space Time Cube in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "sta-clara-de-montefalco-parish",
+    "name": "Sta. Clara de Montefalco Parish",
+    "slug": "sta-clara-de-montefalco-parish",
+    "category": "Heritage",
+    "address": "2360 P. Burgos Street, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.548889,
+    "longitude": 121.001111,
+    "budget_min": 0,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Sta.%20Clara%20de%20Montefalco%20Parish%2C%202360%20P.%20Burgos%20Street%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "Burgos / Libertad",
+    "description": "Sta. Clara is a meaningful local church stop if you like quiet places and old Pasay landmarks. Hindi siya barkada destination, pero may heritage and spiritual value. Maganda siya for short visit, prayer, or simple church route around Libertad.",
+    "best_time_to_visit": "Morning or late afternoon",
+    "visit_duration": "30 minutes to 1 hour",
+    "good_for": [
+      "Church Visit",
+      "Heritage",
+      "Family Trip",
+      "Quiet Visit",
+      "History"
+    ],
+    "not_ideal_for": [
+      "Nightlife Plans",
+      "Food Trip",
+      "Users Looking For Long Activities"
+    ],
+    "crowd_level": "Generally calm outside Mass times, with heavier foot traffic during services and feast days.",
+    "indoor_outdoor": "Indoor",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "Street and nearby parking may be limited, so commute or drop-off is more practical.",
+    "commute_access": "Near LRT-1 Libertad area. Accessible by walking, jeep, or tricycle from nearby Taft/Libertad routes.",
+    "nearby_context": "Near Coffee Chapters Burgos, Libertad, P. Burgos Street, and central Pasay.",
+    "normalized_name": "sta clara de montefalco parish",
+    "searchable_text": "Sta. Clara de Montefalco Parish Heritage Pasay Burgos / Libertad 2360 P. Burgos Street, Pasay City, Metro Manila Sta. Clara is a meaningful local church stop if you like quiet places and old Pasay landmarks. Hindi siya barkada destination, pero may heritage and spiritual value. Maganda siya for short visit, prayer, or simple church route around Libertad. Church Visit Family Trip Quiet Visit History Nightlife Plans Food Trip Users Looking For Long Activities kasaysayan culture landmark old pasay family pamilya kids chill relax tambay low-key tourist photo spot pasikat visitor-friendly santa clara church pasay sta clara parish pasay simbahan misa prayer",
+    "search_keywords": [
+      "Sta. Clara de Montefalco Parish",
+      "Heritage",
+      "Pasay",
+      "Burgos / Libertad",
+      "2360 P. Burgos Street, Pasay City, Metro Manila",
+      "history",
+      "kasaysayan",
+      "culture",
+      "landmark",
+      "old pasay",
+      "family",
+      "pamilya",
+      "kids",
+      "family trip",
+      "chill",
+      "relax",
+      "tambay",
+      "low-key",
+      "tourist",
+      "photo spot",
+      "pasikat",
+      "visitor-friendly",
+      "Church Visit",
+      "Quiet Visit",
+      "santa clara church pasay",
+      "sta clara parish pasay",
+      "simbahan",
+      "misa",
+      "prayer"
+    ],
+    "search_aliases": [
+      "sta clara de montefalco parish",
+      "santa clara church pasay",
+      "sta clara parish pasay",
+      "simbahan",
+      "misa",
+      "prayer"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 0,
+    "budget_note": "Free entry or no required minimum spend.",
+    "categories": [
+      "heritage",
+      "family",
+      "chill",
+      "tourist"
+    ],
+    "tags": [
+      {
+        "id": "heritage",
+        "strength": 5,
+        "notes": "Highlights Pasay culture, history, or landmark character."
+      },
+      {
+        "id": "family-friendly",
+        "strength": 4,
+        "notes": "Comfortable option for family visits or shared meals."
+      },
+      {
+        "id": "chill",
+        "strength": 4,
+        "notes": "Good for relaxed, low-pressure gala."
+      },
+      {
+        "id": "photo-friendly",
+        "strength": 4,
+        "notes": "Has tourist, landmark, heritage, or photo-stop value."
+      },
+      {
+        "id": "budget-friendly",
+        "strength": 5,
+        "notes": "Low or flexible spend compared with typical paid activities."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      },
+      {
+        "id": "simbahan",
+        "strength": 5,
+        "notes": "Useful for church, Mass, prayer, and heritage-search intent."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "sta-clara-de-montefalco-parish-1",
+        "storage_key": "galatayo-photos/places/sta-clara-de-montefalco-parish/sta-clara-de-montefalco-parish-1.webp",
+        "alt_text": "Sta. Clara de Montefalco Parish in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "star-city",
+    "name": "Star City",
+    "slug": "star-city",
+    "category": "Tourist",
+    "address": "Star City, Roxas Boulevard, CCP Complex, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.5582,
+    "longitude": 120.9865,
+    "budget_min": 699,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Star%20City%2C%20Star%20City%2C%20Roxas%20Boulevard%2C%20CCP%20Complex%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "CCP Complex",
+    "description": "Star City is the classic Pasay amusement park pick for rides and barkada/family fun. Very straightforward yung plan dito, pasok kayo, ride, play, kain after. Check operating days before going kasi schedule can change, especially outside peak season.",
+    "best_time_to_visit": "Weekend afternoon or early evening",
+    "visit_duration": "2 to 4 hours",
+    "good_for": [
+      "Barkada Hangout",
+      "Family Trip",
+      "Casual Date",
+      "Amusement Park",
+      "Rainy Day"
+    ],
+    "not_ideal_for": [
+      "Users Looking For Free Activities Only",
+      "People Avoiding Crowds",
+      "Very Young Kids At Night"
+    ],
+    "crowd_level": "Crowds build up on weekends, holidays, and school breaks.",
+    "indoor_outdoor": "Mixed",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "Parking is available in the area, but it can get busy during weekends and events.",
+    "commute_access": "Reachable through Roxas Boulevard and CCP Complex. From LRT-1 Vito Cruz or Gil Puyat, take a short ride toward Star City.",
+    "nearby_context": "Near CCP Complex, PICC, Seascape Village, Manila Bay, and Roxas Boulevard.",
+    "normalized_name": "star city",
+    "searchable_text": "Star City Tourist Pasay CCP Complex Star City, Roxas Boulevard, CCP Complex, Pasay City, Metro Manila Star City is the classic Pasay amusement park pick for rides and barkada/family fun. Very straightforward yung plan dito, pasok kayo, ride, play, kain after. Check operating days before going kasi schedule can change, especially outside peak season. Barkada Hangout Family Trip Casual Date Amusement Park Rainy Day Users Looking For Free Activities Only People Avoiding Crowds Very Young Kids At Night landmark photo spot pasikat visitor-friendly arcade games game center laro indoor games activity date couple date night family pamilya kids barkada group friends group dining star city pasay amusement park pasay rides pasay",
+    "search_keywords": [
+      "Star City",
+      "Tourist",
+      "Pasay",
+      "CCP Complex",
+      "Star City, Roxas Boulevard, CCP Complex, Pasay City, Metro Manila",
+      "landmark",
+      "photo spot",
+      "pasikat",
+      "visitor-friendly",
+      "arcade",
+      "games",
+      "game center",
+      "laro",
+      "indoor games",
+      "activity",
+      "date",
+      "couple",
+      "date night",
+      "casual date",
+      "family",
+      "pamilya",
+      "kids",
+      "family trip",
+      "barkada",
+      "group",
+      "friends",
+      "group dining",
+      "Barkada Hangout",
+      "Amusement Park",
+      "Rainy Day",
+      "star city pasay",
+      "amusement park pasay",
+      "rides pasay"
+    ],
+    "search_aliases": [
+      "star city",
+      "star city pasay",
+      "amusement park pasay",
+      "rides pasay"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 3,
+    "budget_note": "Estimated minimum budget starts around ₱699 per person.",
+    "categories": [
+      "tourist",
+      "arcade",
+      "date",
+      "family",
+      "group"
+    ],
+    "tags": [
+      {
+        "id": "arcade-games",
+        "strength": 5,
+        "notes": "Good for games, playful activities, or active indoor hangouts."
+      },
+      {
+        "id": "family-friendly",
+        "strength": 4,
+        "notes": "Comfortable option for family visits or shared meals."
+      },
+      {
+        "id": "group-friendly",
+        "strength": 4,
+        "notes": "Works well for barkada or small group hangouts."
+      },
+      {
+        "id": "date-friendly",
+        "strength": 4,
+        "notes": "Works well for casual dates or low-pressure couple plans."
+      },
+      {
+        "id": "photo-friendly",
+        "strength": 4,
+        "notes": "Has tourist, landmark, heritage, or photo-stop value."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "star-city-1",
+        "storage_key": "galatayo-photos/places/star-city/star-city-1.webp",
+        "alt_text": "Star City in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "the-dessert-museum",
+    "name": "The Dessert Museum",
+    "slug": "the-dessert-museum",
+    "category": "Museum",
+    "address": "Level 1, S Maison Mall, Coral Way, SM Mall of Asia Complex, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.5315,
+    "longitude": 120.9813,
+    "budget_min": 648,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=The%20Dessert%20Museum%2C%20Level%201%2C%20S%20Maison%20Mall%2C%20Coral%20Way%2C%20SM%20Mall%20of%20Asia%20Complex%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "S Maison / MOA Complex",
+    "description": "The Dessert Museum is for users na gusto ng cute, colorful, and photo-heavy indoor stop. Light and playful siya, so mas bagay for casual dates, kids, and friends na mahilig mag-picture. If serious museum hanap mo, hindi ito yun, pero for fun content and quick gala, okay siya.",
+    "best_time_to_visit": "Weekday afternoon",
+    "visit_duration": "1 to 2 hours",
+    "good_for": [
+      "Museum Visit",
+      "Family Trip",
+      "Casual Date",
+      "Instagrammable",
+      "Rainy Day"
+    ],
+    "not_ideal_for": [
+      "Users Looking For Free Activities Only",
+      "Quiet Museum Visitors",
+      "People Avoiding Photo Spots"
+    ],
+    "crowd_level": "Usually busier on weekends, holidays, and family peak hours.",
+    "indoor_outdoor": "Indoor",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "Paid parking is available at S Maison/Conrad or nearby MOA parking areas.",
+    "commute_access": "Accessible via SM MOA and S Maison. Use MOA-bound buses, jeeps, vans, or EDSA Carousel connections then walk within the complex.",
+    "nearby_context": "Inside S Maison, near Space & Time Cube+, Hard Rock Cafe, Conrad Manila, and SM By The Bay.",
+    "normalized_name": "the dessert museum",
+    "searchable_text": "The Dessert Museum Museum Pasay S Maison / MOA Complex Level 1, S Maison Mall, Coral Way, SM Mall of Asia Complex, Pasay City, Metro Manila The Dessert Museum is for users na gusto ng cute, colorful, and photo-heavy indoor stop. Light and playful siya, so mas bagay for casual dates, kids, and friends na mahilig mag-picture. If serious museum hanap mo, hindi ito yun, pero for fun content and quick gala, okay siya. Museum Visit Family Trip Casual Date Instagrammable Rainy Day Users Looking For Free Activities Only Quiet Museum Visitors People Avoiding Photo Spots museo educational exhibit history culture date couple date night family pamilya kids tourist landmark photo spot pasikat visitor-friendly dessert museum dessert museum moa dessert museum s maison",
+    "search_keywords": [
+      "The Dessert Museum",
+      "Museum",
+      "Pasay",
+      "S Maison / MOA Complex",
+      "Level 1, S Maison Mall, Coral Way, SM Mall of Asia Complex, Pasay City, Metro Manila",
+      "museo",
+      "educational",
+      "exhibit",
+      "history",
+      "culture",
+      "date",
+      "couple",
+      "date night",
+      "casual date",
+      "family",
+      "pamilya",
+      "kids",
+      "family trip",
+      "tourist",
+      "landmark",
+      "photo spot",
+      "pasikat",
+      "visitor-friendly",
+      "Museum Visit",
+      "Instagrammable",
+      "Rainy Day",
+      "dessert museum",
+      "dessert museum moa",
+      "dessert museum s maison"
+    ],
+    "search_aliases": [
+      "the dessert museum",
+      "dessert museum",
+      "dessert museum moa",
+      "dessert museum s maison"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 3,
+    "budget_note": "Estimated minimum budget starts around ₱648 per person.",
+    "categories": [
+      "museum",
+      "date",
+      "family",
+      "tourist"
+    ],
+    "tags": [
+      {
+        "id": "museum",
+        "strength": 5,
+        "notes": "Good for a short educational or culture-focused stop."
+      },
+      {
+        "id": "family-friendly",
+        "strength": 4,
+        "notes": "Comfortable option for family visits or shared meals."
+      },
+      {
+        "id": "date-friendly",
+        "strength": 4,
+        "notes": "Works well for casual dates or low-pressure couple plans."
+      },
+      {
+        "id": "photo-friendly",
+        "strength": 4,
+        "notes": "Has tourist, landmark, heritage, or photo-stop value."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "the-dessert-museum-1",
+        "storage_key": "galatayo-photos/places/the-dessert-museum/the-dessert-museum-1.webp",
+        "alt_text": "The Dessert Museum in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "the-henry-hotel-manila",
+    "name": "The Henry Hotel Manila",
+    "slug": "the-henry-hotel-manila",
+    "category": "Tourist",
+    "address": "2680 F.B. Harrison Street, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.5377,
+    "longitude": 120.9951,
+    "budget_min": 2000,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=The%20Henry%20Hotel%20Manila%2C%202680%20F.B.%20Harrison%20Street%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "F.B. Harrison",
+    "description": "The Henry Hotel Manila is a boutique staycation pick if gusto mo ng mas quiet and charming vibe. May old-Manila feel siya compared sa usual big hotel or casino stay. Best for couples or chill staycation plans na hindi kailangan attached sa mall.",
+    "best_time_to_visit": "Afternoon check-in and evening staycation",
+    "visit_duration": "Overnight",
+    "good_for": [
+      "Staycation",
+      "Date Night",
+      "Chill",
+      "Boutique Hotel",
+      "Heritage"
+    ],
+    "not_ideal_for": [
+      "Users Looking For Free Activities Only",
+      "Big Barkada Parties",
+      "People Wanting Direct Mall Access"
+    ],
+    "crowd_level": "Generally calmer than casino/mall hotels, but availability depends on bookings and events.",
+    "indoor_outdoor": "Mixed",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "On-site parking is generally available for guests, but confirm with the hotel when booking.",
+    "commute_access": "Located along F.B. Harrison. Easiest by Grab or taxi, with access from Roxas Boulevard, EDSA, and Pasay local roads.",
+    "nearby_context": "Near Embassy of Japan, Roxas Boulevard, MOA/Bay Area, and central Pasay.",
+    "normalized_name": "the henry hotel manila",
+    "searchable_text": "The Henry Hotel Manila Tourist Pasay F.B. Harrison 2680 F.B. Harrison Street, Pasay City, Metro Manila The Henry Hotel Manila is a boutique staycation pick if gusto mo ng mas quiet and charming vibe. May old-Manila feel siya compared sa usual big hotel or casino stay. Best for couples or chill staycation plans na hindi kailangan attached sa mall. Staycation Date Night Chill Boutique Hotel Heritage Users Looking For Free Activities Only Big Barkada Parties People Wanting Direct Mall Access landmark photo spot pasikat visitor-friendly date couple casual date relax tambay low-key history kasaysayan culture old pasay henry hotel pasay boutique hotel pasay fb harrison hotel",
+    "search_keywords": [
+      "The Henry Hotel Manila",
+      "Tourist",
+      "Pasay",
+      "F.B. Harrison",
+      "2680 F.B. Harrison Street, Pasay City, Metro Manila",
+      "landmark",
+      "photo spot",
+      "pasikat",
+      "visitor-friendly",
+      "date",
+      "couple",
+      "date night",
+      "casual date",
+      "chill",
+      "relax",
+      "tambay",
+      "low-key",
+      "heritage",
+      "history",
+      "kasaysayan",
+      "culture",
+      "old pasay",
+      "Staycation",
+      "Boutique Hotel",
+      "henry hotel pasay",
+      "boutique hotel pasay",
+      "fb harrison hotel"
+    ],
+    "search_aliases": [
+      "the henry hotel manila",
+      "henry hotel pasay",
+      "boutique hotel pasay",
+      "fb harrison hotel"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 3,
+    "budget_note": "Estimated minimum budget starts around ₱2000 per person.",
+    "categories": [
+      "tourist",
+      "date",
+      "chill",
+      "heritage"
+    ],
+    "tags": [
+      {
+        "id": "heritage",
+        "strength": 5,
+        "notes": "Highlights Pasay culture, history, or landmark character."
+      },
+      {
+        "id": "date-friendly",
+        "strength": 4,
+        "notes": "Works well for casual dates or low-pressure couple plans."
+      },
+      {
+        "id": "chill",
+        "strength": 4,
+        "notes": "Good for relaxed, low-pressure gala."
+      },
+      {
+        "id": "photo-friendly",
+        "strength": 4,
+        "notes": "Has tourist, landmark, heritage, or photo-stop value."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      },
+      {
+        "id": "staycation",
+        "strength": 5,
+        "notes": "Useful for staycation, hotel, layover, or overnight plans."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "the-henry-hotel-manila-1",
+        "storage_key": "galatayo-photos/places/the-henry-hotel-manila/the-henry-hotel-manila-1.webp",
+        "alt_text": "The Henry Hotel Manila in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "timezone-sm-mall-of-asia",
+    "name": "Timezone SM Mall of Asia",
+    "slug": "timezone-sm-mall-of-asia",
+    "category": "Arcade",
+    "address": "SM Mall of Asia, Pasay City, Metro Manila",
+    "city": "Pasay",
+    "latitude": 14.5356,
+    "longitude": 120.9821,
+    "budget_min": 200,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Timezone%20SM%20Mall%20of%20Asia%2C%20SM%20Mall%20of%20Asia%2C%20Pasay%20City%2C%20Metro%20Manila",
+    "area": "SM Mall of Asia",
+    "description": "Timezone is the easy arcade add-on kapag nasa MOA na kayo. Good siya for quick games, date icebreaker, or family fun bago kumain or manood ng movie. Hindi siya full-day place, pero solid pang dagdag saya sa mall gala.",
+    "best_time_to_visit": "Afternoon to evening",
+    "visit_duration": "45 minutes to 2 hours",
+    "good_for": [
+      "Arcade",
+      "Barkada Hangout",
+      "Family Trip",
+      "Casual Date",
+      "Rainy Day"
+    ],
+    "not_ideal_for": [
+      "Users Looking For Free Activities Only",
+      "Quiet Study",
+      "People Avoiding Noisy Spaces"
+    ],
+    "crowd_level": "Often busy on weekends, holidays, and after-school hours.",
+    "indoor_outdoor": "Indoor",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "Use SM MOA parking. Slots can be harder during weekends and event days.",
+    "commute_access": "Accessible through SM MOA routes and transport terminal. Walk inside the mall to the arcade branch.",
+    "nearby_context": "Inside SM Mall of Asia, near cinemas, food courts, SM Skating, and SM By The Bay.",
+    "normalized_name": "timezone sm mall of asia",
+    "searchable_text": "Timezone SM Mall of Asia Arcade Pasay SM Mall of Asia SM Mall of Asia, Pasay City, Metro Manila Timezone is the easy arcade add-on kapag nasa MOA na kayo. Good siya for quick games, date icebreaker, or family fun bago kumain or manood ng movie. Hindi siya full-day place, pero solid pang dagdag saya sa mall gala. Barkada Hangout Family Trip Casual Date Rainy Day Users Looking For Free Activities Only Quiet Study People Avoiding Noisy Spaces games game center laro indoor games activity barkada group friends group dining date couple date night family pamilya kids chill relax tambay low-key mall shopping aircon shops errands timezone moa arcade moa timezone sm moa",
+    "search_keywords": [
+      "Timezone SM Mall of Asia",
+      "Arcade",
+      "Pasay",
+      "SM Mall of Asia",
+      "SM Mall of Asia, Pasay City, Metro Manila",
+      "games",
+      "game center",
+      "laro",
+      "indoor games",
+      "activity",
+      "barkada",
+      "group",
+      "friends",
+      "group dining",
+      "date",
+      "couple",
+      "date night",
+      "casual date",
+      "family",
+      "pamilya",
+      "kids",
+      "family trip",
+      "chill",
+      "relax",
+      "tambay",
+      "low-key",
+      "mall",
+      "shopping",
+      "aircon",
+      "rainy day",
+      "shops",
+      "errands",
+      "Barkada Hangout",
+      "timezone moa",
+      "arcade moa",
+      "timezone sm moa"
+    ],
+    "search_aliases": [
+      "timezone sm mall of asia",
+      "timezone moa",
+      "arcade moa",
+      "timezone sm moa"
+    ],
+    "status": "published",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 1,
+    "budget_note": "Estimated minimum budget starts around ₱200 per person.",
+    "categories": [
+      "arcade",
+      "group",
+      "date",
+      "family",
+      "chill",
+      "mall"
+    ],
+    "tags": [
+      {
+        "id": "mall-day",
+        "strength": 5,
+        "notes": "Convenient for shopping, food, errands, and rainy-day plans."
+      },
+      {
+        "id": "arcade-games",
+        "strength": 5,
+        "notes": "Good for games, playful activities, or active indoor hangouts."
+      },
+      {
+        "id": "family-friendly",
+        "strength": 4,
+        "notes": "Comfortable option for family visits or shared meals."
+      },
+      {
+        "id": "group-friendly",
+        "strength": 4,
+        "notes": "Works well for barkada or small group hangouts."
+      },
+      {
+        "id": "date-friendly",
+        "strength": 4,
+        "notes": "Works well for casual dates or low-pressure couple plans."
+      },
+      {
+        "id": "chill",
+        "strength": 4,
+        "notes": "Good for relaxed, low-pressure gala."
+      },
+      {
+        "id": "budget-friendly",
+        "strength": 5,
+        "notes": "Low or flexible spend compared with typical paid activities."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor or weather-safe compared with outdoor stops."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "timezone-sm-mall-of-asia-1",
+        "storage_key": "galatayo-photos/places/timezone-sm-mall-of-asia/timezone-sm-mall-of-asia-1.webp",
+        "alt_text": "Timezone SM Mall of Asia in Pasay photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  }
+]

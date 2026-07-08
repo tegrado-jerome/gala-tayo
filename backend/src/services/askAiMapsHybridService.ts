@@ -211,6 +211,9 @@ type AskAiMapIntent = {
   nearMe: boolean;
   strictCategory: boolean;
   strictness: StrictnessLevel;
+  budgetIntent?: "free" | "low_cost" | "free_or_low_cost" | "normal" | "unknown";
+  budgetAmount?: number | null;
+  budgetPerPerson?: boolean;
   userLocation?: { latitude: number; longitude: number } | null;
 };
 
@@ -1079,6 +1082,9 @@ function parseAskAiMapIntent(
     nearMe,
     strictCategory: false,
     strictness: "broad",
+    budgetIntent: params.normalizedQuery?.budgetIntent ?? "unknown",
+    budgetAmount: params.normalizedQuery?.budgetAmount ?? null,
+    budgetPerPerson: params.normalizedQuery?.budgetPerPerson ?? undefined,
     userLocation: params.userLocation ?? null,
   };
 }
@@ -2345,22 +2351,481 @@ function rankVerifiedPlaces(places: AskAiMapGroundedPlace[], intent: AskAiMapInt
     .sort((left, right) => (right.matchScore ?? 0) - (left.matchScore ?? 0));
 }
 
+function getPlaceDetailSummary(place: AskAiMapGroundedPlace): string {
+  const details = place.optionalDetails ?? {};
+  const parts = [
+    details.categoryText ?? place.category ?? place.displayCategory ?? null,
+    details.addressText ?? place.address ?? null,
+    details.openingHoursSummary ?? details.hoursText ?? null,
+    typeof place.rating === "number" && Number.isFinite(place.rating)
+      ? `${place.rating.toFixed(1)} rating`
+      : details.ratingText ?? null,
+    typeof place.reviewCount === "number" && Number.isFinite(place.reviewCount)
+      ? `${place.reviewCount} reviews`
+      : details.reviewCountText ?? null,
+  ].filter((value): value is string => typeof value === "string" && Boolean(value.trim()));
+
+  return parts.slice(0, 3).join(", ");
+}
+
+type WhyThisFitsMatchMode = "direct" | "secondary" | "budget-flexible";
+
+type WhyThisFitsInput = {
+  originalUserPrompt: string;
+  normalizedUserIntent: string;
+  placeName: string;
+  placeType: string;
+  foodActivityIntent: string;
+  budgetAmount: number | null;
+  budgetIntent: AskAiMapIntent["budgetIntent"];
+  matchMode: WhyThisFitsMatchMode;
+};
+
+function hasBudgetMention(intent: Pick<AskAiMapIntent, "budgetAmount" | "budgetIntent" | "budgetPerPerson">): boolean {
+  return (
+    Boolean(intent.budgetIntent && intent.budgetIntent !== "unknown") ||
+    typeof intent.budgetAmount === "number" ||
+    Boolean(intent.budgetPerPerson)
+  );
+}
+
+function getFoodOrActivityIntentLabel(intent: AskAiMapIntent): string {
+  const explicitIntent = intent.galaIntents
+    .map((value) => normalizeText(value))
+    .find((value): value is string => Boolean(value));
+  if (explicitIntent) {
+    return explicitIntent;
+  }
+
+  switch (intent.categoryIntent) {
+    case "samgyup":
+      return "samgyup";
+    case "cafe":
+      return "cafe stop";
+    case "mall":
+      return "mall run";
+    case "restaurant":
+      return "food trip";
+    case "park":
+      return "park visit";
+    case "cinema":
+      return "movie time";
+    case "museum":
+      return "museum visit";
+    case "hotel":
+      return "staycation";
+    case "resort":
+      return "resort day";
+    case "tourist_spot":
+      return "sightseeing";
+    case "activity":
+      return "activity";
+    case "bar":
+      return "night out";
+    case "karaoke":
+      return "karaoke night";
+    default:
+      return "your search";
+  }
+}
+
+function getPlaceTypeLabel(intent: AskAiMapIntent): string {
+  switch (intent.categoryIntent) {
+    case "samgyup":
+      return "wings/grill";
+    case "cafe":
+      return "cafe";
+    case "mall":
+      return "mall";
+    case "restaurant":
+      return "food spot";
+    case "park":
+      return "park";
+    case "cinema":
+      return "cinema";
+    case "museum":
+      return "museum";
+    case "hotel":
+      return "hotel";
+    case "resort":
+      return "resort";
+    case "tourist_spot":
+      return "sightseeing spot";
+    case "activity":
+      return "activity spot";
+    case "bar":
+      return "bar";
+    case "karaoke":
+      return "karaoke spot";
+    default:
+      return "place";
+  }
+}
+
+function classifyWhyThisFitsMatchMode(place: AskAiMapGroundedPlace, intent: AskAiMapIntent): WhyThisFitsMatchMode {
+  if (
+    hasBudgetMention(intent) &&
+    typeof intent.budgetAmount === "number" &&
+    Number.isFinite(intent.budgetAmount) &&
+    intent.budgetAmount <= 300
+  ) {
+    return "budget-flexible";
+  }
+
+  return place.matchConfidence === "high" ? "direct" : "secondary";
+}
+
+function inferWhyThisFitsBudgetTier(
+  intent: Pick<AskAiMapIntent, "budgetAmount" | "budgetIntent" | "budgetPerPerson">
+): "within" | "near" | "over" | "unknown" {
+  if (!hasBudgetMention(intent)) {
+    return "unknown";
+  }
+
+  if (intent.budgetIntent === "free") {
+    return "within";
+  }
+
+  if (typeof intent.budgetAmount !== "number" || !Number.isFinite(intent.budgetAmount)) {
+    return "unknown";
+  }
+
+  const amount = Math.round(intent.budgetAmount);
+
+  if (amount <= 250) {
+    return "over";
+  }
+
+  if (amount <= 500) {
+    return "near";
+  }
+
+  if (amount <= 800) {
+    return "within";
+  }
+
+  return "within";
+}
+
+function buildWhyThisFitsInput(place: AskAiMapGroundedPlace, intent: AskAiMapIntent): WhyThisFitsInput {
+  return {
+    originalUserPrompt: normalizeText(intent.rawQuery) ?? "",
+    normalizedUserIntent: normalizeText(intent.normalizedQuery) ?? normalizeText(intent.rawQuery) ?? "",
+    placeName: normalizeText(place.name) ?? "This place",
+    placeType: getPlaceTypeLabel(intent),
+    foodActivityIntent: getFoodOrActivityIntentLabel(intent),
+    budgetAmount:
+      typeof intent.budgetAmount === "number" && Number.isFinite(intent.budgetAmount)
+        ? Math.round(intent.budgetAmount)
+        : null,
+    budgetIntent: intent.budgetIntent ?? "unknown",
+    matchMode: classifyWhyThisFitsMatchMode(place, intent),
+  };
+}
+
+function buildWhyThisFitsBudgetSentence(input: WhyThisFitsInput): string {
+  if (
+    !hasBudgetMention({
+      budgetAmount: input.budgetAmount,
+      budgetIntent: input.budgetIntent,
+      budgetPerPerson: Boolean(input.budgetAmount),
+    })
+  ) {
+    return "";
+  }
+
+  const budgetTier = inferWhyThisFitsBudgetTier({
+    budgetAmount: input.budgetAmount,
+    budgetIntent: input.budgetIntent,
+    budgetPerPerson: Boolean(input.budgetAmount),
+  });
+  const budgetLabel =
+    typeof input.budgetAmount === "number"
+      ? `\u20B1${input.budgetAmount}`
+      : null;
+
+  if (budgetTier === "within") {
+    return budgetLabel
+      ? `Budget-wise, likely pasok or practical siya for your ${budgetLabel} budget.`
+      : "Budget-wise, likely practical siya for your plan.";
+  }
+
+  if (budgetTier === "near") {
+    return "Budget-wise, possible siya pero keep a little extra for add-ons.";
+  }
+
+  if (budgetTier === "over") {
+    return "Budget-wise, baka kailangan mong magdagdag, so better siya if flexible ang budget.";
+  }
+
+  return "Budget-wise, treat it as a possible match rather than a guaranteed cheapest pick.";
+}
+
+function buildWhyThisFitsFromInput(input: WhyThisFitsInput): string {
+  const budgetSentence = buildWhyThisFitsBudgetSentence(input);
+  const relatedLabel = input.placeType === "place" ? "related spots" : `related ${input.placeType} spots`;
+
+  if (input.matchMode === "direct") {
+    return budgetSentence
+      ? `Strong match ito for ${input.foodActivityIntent} since focused siya sa hinahanap mong craving. ${budgetSentence}`
+      : `Strong match ito for ${input.foodActivityIntent} since focused siya sa hinahanap mong craving.`;
+  }
+
+  if (input.matchMode === "budget-flexible") {
+    return budgetSentence
+      ? `Good option ito if open ka pa rin sa ${input.foodActivityIntent} pero okay lang sa'yo ang extra budget. ${budgetSentence}`
+      : `Good option ito if open ka pa rin sa ${input.foodActivityIntent} pero okay lang sa'yo ang extra budget.`;
+  }
+
+  return budgetSentence
+    ? `Possible option ito if open ka sa ${relatedLabel}, not strictly ${input.foodActivityIntent} lang. ${budgetSentence}`
+    : `Possible option ito if open ka sa ${relatedLabel}, not strictly ${input.foodActivityIntent} lang.`;
+}
+
+function sentenceLooksLikeMetadata(sentence: string, place: AskAiMapGroundedPlace): boolean {
+  const normalizedSentence = normalizeKey(sentence);
+  if (!normalizedSentence) {
+    return true;
+  }
+
+  const placeMetadataCandidates = [
+    place.address,
+    place.category,
+    place.displayCategory,
+    place.rawCategory,
+    place.optionalDetails?.categoryText,
+    place.optionalDetails?.addressText,
+    place.optionalDetails?.ratingText,
+    place.optionalDetails?.reviewCountText,
+    place.optionalDetails?.openStatusText,
+    place.optionalDetails?.hoursText,
+    place.openingHoursSummary,
+  ]
+    .map((value) => normalizeText(value))
+    .filter((value): value is string => Boolean(value));
+
+  const directMetadataPatterns = [
+    /\b(?:address|formatted address|opening hours|hours?|rating|review count|reviews?|coordinates?|latitude|longitude|place id|cid|google maps|maps grounding|open now|closed now)\b/i,
+    /\b(?:Metro Manila, Philippines|Philippines|Manila|Makati|Pasay|Paranaque|Parañaque|Pasig|Taguig|Quezon City)\b/i,
+    /\b\d{1,2}:\d{2}\s*(?:AM|PM)\b/i,
+    /\b(?:AM|PM)\b/i,
+    /,\s*\d{4}\b/,
+    /\b\d{4}\s+(?:Metro Manila|Philippines)\b/i,
+    /\b\d+(?:\.\d+)?\s*(?:stars?|rating)\b/i,
+    /\b\d+(?:,\d{3})?\s*reviews?\b/i,
+    /@-?\d+(?:\.\d+)?,-?\d+(?:\.\d+)?/,
+    /https?:\/\/\S+/i,
+  ];
+
+  if (directMetadataPatterns.some((pattern) => pattern.test(sentence))) {
+    return true;
+  }
+
+  if (placeMetadataCandidates.some((candidate) => candidate && normalizedSentence.includes(normalizeKey(candidate)))) {
+    return true;
+  }
+
+  const categoryOnlyPhrasePattern =
+    /^(?:[a-z&' -]+(?:restaurant|chicken wings restaurant|cafe|coffee shop|food spot|mall|park|museum|hotel|resort|bar|karaoke spot|activity spot))$/i;
+  if (categoryOnlyPhrasePattern.test(sentence.trim())) {
+    return true;
+  }
+
+  return false;
+}
+
+function sanitizeWhyThisFits(text: string, place: AskAiMapGroundedPlace): string {
+  const normalized = normalizeWhitespace(text);
+  if (!normalized) {
+    return "";
+  }
+
+  const sentences = normalized
+    .split(/(?<=[.!?])\s+/)
+    .map((sentence) => sentence.trim())
+    .filter(Boolean)
+    .slice(0, 3);
+
+  const safeSentences = sentences.filter((sentence) => !sentenceLooksLikeMetadata(sentence, place));
+  const cleaned = normalizeWhitespace(safeSentences.join(" "));
+  if (!cleaned) {
+    return "";
+  }
+
+  if (sentenceLooksLikeMetadata(cleaned, place)) {
+    return "";
+  }
+
+  return cleaned;
+}
+
+function buildWhyThisFitsFallback(input: WhyThisFitsInput): string {
+  const budgetSentence = buildWhyThisFitsBudgetSentence(input);
+
+  if (input.matchMode === "direct") {
+    return budgetSentence
+      ? `Strong match ito for ${input.foodActivityIntent} since focused siya sa hinahanap mong craving. ${budgetSentence}`
+      : `Strong match ito for ${input.foodActivityIntent} since focused siya sa hinahanap mong craving.`;
+  }
+
+  if (input.matchMode === "budget-flexible") {
+    return budgetSentence
+      ? `Good option ito if open ka pa rin sa ${input.foodActivityIntent} pero okay lang sa'yo ang extra budget. ${budgetSentence}`
+      : `Good option ito if open ka pa rin sa ${input.foodActivityIntent} pero okay lang sa'yo ang extra budget.`;
+  }
+
+  return budgetSentence
+    ? `Possible option ito if open ka sa related ${input.placeType} spots, not strictly ${input.foodActivityIntent} lang. ${budgetSentence}`
+    : `Possible option ito if open ka sa related ${input.placeType} spots, not strictly ${input.foodActivityIntent} lang.`;
+}
+
+function getBudgetAmountLabel(intent: AskAiMapIntent): string | null {
+  if (typeof intent.budgetAmount !== "number" || !Number.isFinite(intent.budgetAmount)) {
+    return null;
+  }
+
+  const amount = Math.round(intent.budgetAmount);
+  return intent.budgetPerPerson ? `₱${amount}/head` : `₱${amount}`;
+}
+
+function inferBudgetFitTier(
+  place: AskAiMapGroundedPlace,
+  intent: AskAiMapIntent
+): "within" | "near" | "over" | "unknown" {
+  if (intent.budgetIntent === "free") {
+    return "within";
+  }
+
+  if (typeof intent.budgetAmount !== "number" || !Number.isFinite(intent.budgetAmount)) {
+    return "unknown";
+  }
+
+  const amount = intent.budgetAmount;
+  const haystack = normalizeKey(
+    `${place.name} ${place.category ?? ""} ${place.displayCategory ?? ""} ${place.rawCategory ?? ""} ${place.address ?? ""} ${place.optionalDetails?.categoryText ?? ""} ${place.optionalDetails?.addressText ?? ""}`
+  );
+  const directMatch = /wing|wings|chicken wings|buffet|unli|unlimited|restaurant|food|eatery|kainan|diner/i.test(haystack);
+  const premiumSignals = /premium|fine dining|hotel|resort|steak|lobster/i.test(haystack);
+
+  if (premiumSignals && amount < 1000) {
+    return "over";
+  }
+
+  if (intent.budgetIntent === "low_cost" || intent.budgetIntent === "free_or_low_cost") {
+    if (amount <= 300) return directMatch ? "near" : "over";
+    return directMatch ? "within" : "near";
+  }
+
+  if (amount <= 300) {
+    return directMatch ? "near" : "over";
+  }
+
+  if (amount <= 500) {
+    return directMatch ? "within" : "near";
+  }
+
+  if (amount <= 800) {
+    return directMatch ? "within" : "near";
+  }
+
+  return directMatch ? "within" : "unknown";
+}
+
+function buildBudgetExplanationSuffixForPlace(
+  place: AskAiMapGroundedPlace,
+  intent: AskAiMapIntent
+): string {
+  const budgetMentioned =
+    (intent.budgetIntent && intent.budgetIntent !== "unknown") ||
+    typeof intent.budgetAmount === "number" ||
+    Boolean(intent.budgetPerPerson);
+
+  if (!budgetMentioned) {
+    return "";
+  }
+
+  const budgetLabel = getBudgetAmountLabel(intent);
+  const placeSummary = getPlaceDetailSummary(place);
+  const budgetFitTier = inferBudgetFitTier(place, intent);
+  const directIntentMatch = /wing|wings|chicken wings|buffet|unli|unlimited/i.test(
+    normalizeKey(`${place.name} ${place.category ?? ""} ${place.displayCategory ?? ""} ${place.rawCategory ?? ""} ${place.optionalDetails?.categoryText ?? ""}`)
+  );
+
+  if (intent.budgetIntent === "free") {
+    const activityText =
+      /mall|cafe|park|shopping|tourist/i.test(
+        normalizeKey(`${place.name} ${place.category ?? ""} ${place.displayCategory ?? ""}`)
+      )
+        ? "Window shopping, tambay, and enjoying the aircon are the low-cost parts here."
+        : "This is more of a browse-and-check spot, but food or extras can still add up.";
+
+    return ` Budget fit: good for low-cost gala. ${activityText} Food, parking, cinema, and shopping may still cost money.`;
+  }
+
+  if (!budgetLabel) {
+    return ` Budget fit: not clearly shown on Maps, so this is a possible match, not a guaranteed budget pick.${placeSummary ? ` ${placeSummary}.` : ""}`;
+  }
+
+  if (budgetFitTier === "within") {
+    return ` Budget fit: likely pasok sa ${budgetLabel}. ${directIntentMatch ? "Direct match siya sa hinahanap mong type of place." : "Relevant siya sa prompt mo."}${placeSummary ? ` ${placeSummary}.` : ""}`;
+  }
+
+  if (budgetFitTier === "near") {
+    return ` Budget fit: near ${budgetLabel}, pero expect possible dagdag if may drinks, sides, upgrades, or service fees. ${directIntentMatch ? "Good match siya for the craving/activity." : "Relevant pa rin siya as a shortlist option."}${placeSummary ? ` ${placeSummary}.` : ""}`;
+  }
+
+  if (budgetFitTier === "over") {
+    return ` Budget fit: likely above ${budgetLabel}, so kailangan magdagdag. ${directIntentMatch ? "Good match siya sa intent mo, pero hindi siya pinaka-tipid." : "Relevant pa rin siya, pero not the cheapest pick."}${placeSummary ? ` ${placeSummary}.` : ""}`;
+  }
+
+  return ` Budget fit: not clearly shown on Maps, so this is a possible match, not a guaranteed budget pick.${placeSummary ? ` ${placeSummary}.` : ""}`;
+}
+
+function buildBudgetExplanationSuffix(intent: AskAiMapIntent): string {
+  const budgetMentioned =
+    intent.budgetIntent &&
+    intent.budgetIntent !== "unknown" ||
+    typeof intent.budgetAmount === "number" ||
+    Boolean(intent.budgetPerPerson);
+
+  if (!budgetMentioned) {
+    return "";
+  }
+
+  const amountText =
+    typeof intent.budgetAmount === "number" && Number.isFinite(intent.budgetAmount)
+      ? `₱${Math.round(intent.budgetAmount)}`
+      : null;
+  const budgetLabel =
+    intent.budgetIntent === "free_or_low_cost"
+      ? "budget-friendly"
+      : intent.budgetIntent === "low_cost"
+        ? "low-cost"
+        : intent.budgetIntent === "free"
+          ? "free/low-cost"
+          : "budget-aware";
+
+  if (intent.budgetIntent === "free") {
+    return " Walking around, window shopping, and tambay are usually the low-cost parts, but food, parking, rides, and attractions may still cost money.";
+  }
+
+  if (amountText) {
+    return ` Budget note: possible match ito, pero check muna current promo/rate if you're targeting ${amountText}${intent.budgetPerPerson ? " per head" : ""}; prices can change.`;
+  }
+
+  return ` Budget note: possible match ito, but verify current price/promo first since rates can change.`;
+}
+
 function buildWhyThisFits(place: AskAiMapGroundedPlace, intent: AskAiMapIntent): string {
-  if (place.source?.recommendation === "gemini_map_grounding") {
-    const explicit = normalizeText(place.whyThisFits) ?? normalizeText(place.reason);
-    if (explicit) {
-      return explicit;
-    }
-    const area = intent.searchAreaText ?? "target area";
-    return `${place.name} mukhang relevant sa "${intent.rawQuery}" sa ${area}. May Google Maps listing ito na puwede mong i-check para sa latest details.`;
+  const whyThisFitsInput = buildWhyThisFitsInput(place, intent);
+  const generatedWhyThisFits = buildWhyThisFitsFromInput(whyThisFitsInput);
+  const sanitizedWhyThisFits = sanitizeWhyThisFits(generatedWhyThisFits, place);
+
+  if (sanitizedWhyThisFits) {
+    return sanitizedWhyThisFits;
   }
 
-  if (place.source?.recommendation === "geoapify_fallback") {
-    return "Nakita ito as a mapped commercial/place result near the search area, pero limited ang available details from the map source.";
-  }
-
-  const area = intent.searchAreaText ?? "target area";
-  return `${place.name} mukhang relevant sa "${intent.rawQuery}" sa ${area}. May usable map pin at place details ito, kaya puwede mo agad i-check sa map.`;
+  return buildWhyThisFitsFallback(whyThisFitsInput);
 }
 
 function buildSuggestedSearches(intent: AskAiMapIntent, searchArea: string | null): string[] {

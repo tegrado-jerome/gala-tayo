@@ -1,0 +1,2487 @@
+{
+  "city": "Malabon",
+  "city_slug": "malabon",
+  "place_count": 24,
+  "places": [
+    {
+      "id": "angel-cacnio-art-gallery",
+      "name": "Angel Cacnio Art Gallery",
+      "slug": "angel-cacnio-art-gallery",
+      "category": "Museum",
+      "address": "62 Don Basilio Bautista Boulevard, Hulong Duhat, Malabon City, Metro Manila",
+      "city": "Malabon",
+      "latitude": 14.6802125,
+      "longitude": 120.9410469,
+      "budget_min": 0,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Angel%20Cacnio%20Art%20Gallery%2C%2062%20Don%20Basilio%20Bautista%20Boulevard%2C%20Hulong%20Duhat%2C%20Malabon%20City%2C%20Metro%20Manila",
+      "area": "Hulong Duhat",
+      "description": "Good niche stop ito kung gusto mo ng art plus heritage combo sa Malabon. Hindi siya guaranteed na laging open like a mall, so check first before ka pumunta. Kapag accessible, nice siya for quiet culture trip and local art appreciation.",
+      "best_time_to_visit": "Weekday afternoon by prior check",
+      "visit_duration": "30 minutes to 1 hour",
+      "good_for": [
+        "Museum Visit",
+        "Heritage",
+        "Casual Date",
+        "Family Trip",
+        "Chill"
+      ],
+      "not_ideal_for": [
+        "Walk-in Without Checking",
+        "Late Night Hangout",
+        "Large Groups"
+      ],
+      "crowd_level": "Likely quiet, but access can depend on schedule or host availability",
+      "indoor_outdoor": "Indoor",
+      "weather_fit": "Rain-friendly",
+      "parking_info": "Dedicated visitor parking is not strongly confirmed; expect limited street parking.",
+      "commute_access": "Accessible through Hulong Duhat/Gasak routes and tricycles; Don Basilio Bautista Boulevard is the main landmark.",
+      "nearby_context": "Near Malabon Heritage and Library Museum, Hulong Duhat, and Santo Rosario area.",
+      "normalized_name": "angel cacnio art gallery",
+      "searchable_text": "Angel Cacnio Art Gallery Museum Malabon Hulong Duhat 62 Don Basilio Bautista Boulevard, Hulong Duhat, Malabon City, Metro Manila Good niche stop ito kung gusto mo ng art plus heritage combo sa Malabon. Hindi siya guaranteed na laging open like a mall, so check first before ka pumunta. Kapag accessible, nice siya for quiet culture trip and local art appreciation. Weekday afternoon by prior check 30 minutes to 1 hour Indoor Rain-friendly Likely quiet, but access can depend on schedule or host availability Accessible through Hulong Duhat/Gasak routes and tricycles; Don Basilio Bautista Boulevard is the main landmark. Dedicated visitor parking is not strongly confirmed; expect limited street parking. Near Malabon Heritage and Library Museum, Hulong Duhat, and Santo Rosario area. Museum Visit Heritage Casual Date Family Trip Chill Walk-in Without Checking Late Night Hangout Large Groups Angel Cacnio Art Gallery Malabon Hulong Duhat Museum gala places in Malabon gallery art culture history heritage local museum rain-friendly Angel Cacnio Gallery Angel Cacnio Museum angel cacnio art gallery Cacnio Art Gallery",
+      "search_keywords": [
+        "Angel Cacnio Art Gallery",
+        "Malabon",
+        "Hulong Duhat",
+        "Museum",
+        "gala",
+        "places in Malabon",
+        "gallery",
+        "art",
+        "culture",
+        "history",
+        "heritage",
+        "local museum",
+        "rain-friendly"
+      ],
+      "search_aliases": [
+        "Angel Cacnio Gallery",
+        "Angel Cacnio Museum",
+        "angel cacnio art gallery",
+        "Cacnio Art Gallery"
+      ],
+      "status": "active",
+      "average_rating": 0,
+      "review_count": 0,
+      "price_level": 0,
+      "budget_note": "Free entry or no required spend. Bring extra cash for food, commute, or optional purchases.",
+      "categories": [
+        "museum",
+        "heritage",
+        "tourist",
+        "chill",
+        "date"
+      ],
+      "tags": [
+        {
+          "id": "museum",
+          "strength": 5,
+          "notes": "Culture, learning, and local history/art stop."
+        },
+        {
+          "id": "heritage-walk",
+          "strength": 5,
+          "notes": "Works well as part of a Malabon heritage route."
+        },
+        {
+          "id": "rain-friendly",
+          "strength": 5,
+          "notes": "Indoor visit makes it a good rainy-day option."
+        },
+        {
+          "id": "quiet",
+          "strength": 4,
+          "notes": "Usually better for calm trips than loud hangouts."
+        },
+        {
+          "id": "family-friendly",
+          "strength": 4,
+          "notes": "Good for family or school-style learning trips."
+        },
+        {
+          "id": "art-gallery",
+          "strength": 5,
+          "notes": "Best for art appreciation and niche culture trips."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "angel-cacnio-art-gallery-1",
+          "storage_key": "galatayo-photos/places/angel-cacnio-art-gallery/angel-cacnio-art-gallery-1.webp",
+          "alt_text": "Angel Cacnio Art Gallery in Malabon photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "balsa-sa-niugan",
+      "name": "Balsa sa Niugan",
+      "slug": "balsa-sa-niugan",
+      "category": "Food",
+      "address": "3 M. Aquino Street, Niugan, Malabon City, Metro Manila",
+      "city": "Malabon",
+      "latitude": 14.663056,
+      "longitude": 120.955556,
+      "budget_min": 400,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Balsa%20sa%20Niugan%2C%203%20M.%20Aquino%20Street%2C%20Niugan%2C%20Malabon%20City%2C%20Metro%20Manila",
+      "area": "Niugan",
+      "description": "Good group meal spot ito kung gusto niyo Filipino food na mas destination-restaurant ang feel. Mas sulit siya for family or barkada kasi shareable yung dishes. Not the best for super tipid solo gala, but nice for planned kain.",
+      "best_time_to_visit": "Lunch or early dinner",
+      "visit_duration": "1 to 2 hours",
+      "good_for": [
+        "Food Trip",
+        "Family Trip",
+        "Barkada Hangout",
+        "Casual Date"
+      ],
+      "not_ideal_for": [
+        "Strict Budget Below ₱300",
+        "Quiet Study",
+        "Solo Quick Snack"
+      ],
+      "crowd_level": "Can be busy during meal times, weekends, and family gatherings",
+      "indoor_outdoor": "Mixed",
+      "weather_fit": "Mixed",
+      "parking_info": "Parking for customers has been listed on some map listings, but expect tighter access on peak hours.",
+      "commute_access": "Reachable by tricycle around Niugan/Tonsuya/Malabon routes; ride-hailing or private car is easier if unfamiliar with the area.",
+      "nearby_context": "In Niugan area, not far from Tonsuya, Letre/C-4 connections, and old Malabon routes.",
+      "normalized_name": "balsa sa niugan",
+      "searchable_text": "Balsa sa Niugan Food Malabon Niugan 3 M. Aquino Street, Niugan, Malabon City, Metro Manila Good group meal spot ito kung gusto niyo Filipino food na mas destination-restaurant ang feel. Mas sulit siya for family or barkada kasi shareable yung dishes. Not the best for super tipid solo gala, but nice for planned kain. Lunch or early dinner 1 to 2 hours Mixed Mixed Can be busy during meal times, weekends, and family gatherings Reachable by tricycle around Niugan/Tonsuya/Malabon routes; ride-hailing or private car is easier if unfamiliar with the area. Parking for customers has been listed on some map listings, but expect tighter access on peak hours. In Niugan area, not far from Tonsuya, Letre/C-4 connections, and old Malabon routes. Food Trip Family Trip Barkada Hangout Casual Date Strict Budget Below ₱300 Quiet Study Solo Quick Snack Balsa sa Niugan Malabon Niugan Food gala places in Malabon food trip restaurant kainan kumain Malabon food local food family meal Filipino food family restaurant group meal Balsa Niugan Balsa sa Niugan Malabon Balsa sa Niugan",
+      "search_keywords": [
+        "Balsa sa Niugan",
+        "Malabon",
+        "Niugan",
+        "Food",
+        "gala",
+        "places in Malabon",
+        "food trip",
+        "restaurant",
+        "kainan",
+        "kumain",
+        "Malabon food",
+        "local food",
+        "family meal",
+        "Filipino food",
+        "family restaurant",
+        "group meal"
+      ],
+      "search_aliases": [
+        "Balsa Niugan",
+        "Balsa sa Niugan Malabon",
+        "Balsa sa Niugan"
+      ],
+      "status": "active",
+      "average_rating": 0,
+      "review_count": 0,
+      "price_level": 3,
+      "budget_note": "Group or meal-based budget estimate starting around ₱400 per person.",
+      "categories": [
+        "food",
+        "family",
+        "group",
+        "date"
+      ],
+      "tags": [
+        {
+          "id": "food-trip",
+          "strength": 5,
+          "notes": "Main value is food, meals, snacks, or pasalubong."
+        },
+        {
+          "id": "family-friendly",
+          "strength": 4,
+          "notes": "Good for family food plans or take-home orders."
+        },
+        {
+          "id": "group-friendly",
+          "strength": 4,
+          "notes": "Works well for barkada or shared meals."
+        },
+        {
+          "id": "local-favorite",
+          "strength": 4,
+          "notes": "Strong local Malabon food context."
+        },
+        {
+          "id": "rain-friendly",
+          "strength": 3,
+          "notes": "Indoor or food-focused stop can still work when raining."
+        },
+        {
+          "id": "sit-down-restaurant",
+          "strength": 5,
+          "notes": "Better for proper meals than quick snacks."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "balsa-sa-niugan-1",
+          "storage_key": "galatayo-photos/places/balsa-sa-niugan/balsa-sa-niugan-1.webp",
+          "alt_text": "Balsa sa Niugan in Malabon photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "borja-ancestral-house-farmacia-borja",
+      "name": "Borja Ancestral House / Farmacia Borja",
+      "slug": "borja-ancestral-house-farmacia-borja",
+      "category": "Heritage",
+      "address": "269 Gen. Luna Street, Concepcion, Malabon City, Metro Manila",
+      "city": "Malabon",
+      "latitude": 14.668611,
+      "longitude": 120.946944,
+      "budget_min": 0,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Borja%20Ancestral%20House%20/%20Farmacia%20Borja%2C%20269%20Gen.%20Luna%20Street%2C%20Concepcion%2C%20Malabon%20City%2C%20Metro%20Manila",
+      "area": "Concepcion",
+      "description": "Convenient heritage stop ito kasi malapit siya sa Concepcion church and market area. Good siya for quick photos, old-town feels, and konting history while walking around. Hindi siya long-stay place, but solid siya as part of a Malabon heritage crawl.",
+      "best_time_to_visit": "Morning or late afternoon",
+      "visit_duration": "15 to 30 minutes",
+      "good_for": [
+        "Heritage",
+        "Photo Spot",
+        "Casual Gala",
+        "History Walk"
+      ],
+      "not_ideal_for": [
+        "Users Expecting Open Museum Access",
+        "Rainy Days",
+        "Large Groups"
+      ],
+      "crowd_level": "Often normal market/church-area movement rather than tourist crowd",
+      "indoor_outdoor": "Outdoor",
+      "weather_fit": "Avoid during rain",
+      "parking_info": "No dedicated visitor parking confirmed; area parking can be tight near church and market.",
+      "commute_access": "Easy via Gen. Luna jeepney routes and tricycles from Concepcion, Bayan, and Monumento-linked drop-offs.",
+      "nearby_context": "Across or near the Immaculate Conception Parish area, Concepcion Market, and Dolor’s Kakanin.",
+      "normalized_name": "borja ancestral house farmacia borja",
+      "searchable_text": "Borja Ancestral House / Farmacia Borja Heritage Malabon Concepcion 269 Gen. Luna Street, Concepcion, Malabon City, Metro Manila Convenient heritage stop ito kasi malapit siya sa Concepcion church and market area. Good siya for quick photos, old-town feels, and konting history while walking around. Hindi siya long-stay place, but solid siya as part of a Malabon heritage crawl. Morning or late afternoon 15 to 30 minutes Outdoor Avoid during rain Often normal market/church-area movement rather than tourist crowd Easy via Gen. Luna jeepney routes and tricycles from Concepcion, Bayan, and Monumento-linked drop-offs. No dedicated visitor parking confirmed; area parking can be tight near church and market. Across or near the Immaculate Conception Parish area, Concepcion Market, and Dolor’s Kakanin. Heritage Photo Spot Casual Gala History Walk Users Expecting Open Museum Access Rainy Days Large Groups Borja Ancestral House / Farmacia Borja Malabon Concepcion Heritage gala places in Malabon ancestral house old house historic house bahay na bato history walk photo spot old Malabon Farmacia Borja Borja Ancestral House / Farmacia Borja Borja Ancestral House",
+      "search_keywords": [
+        "Borja Ancestral House / Farmacia Borja",
+        "Malabon",
+        "Concepcion",
+        "Heritage",
+        "gala",
+        "places in Malabon",
+        "ancestral house",
+        "old house",
+        "historic house",
+        "bahay na bato",
+        "history walk",
+        "photo spot",
+        "old Malabon"
+      ],
+      "search_aliases": [
+        "Farmacia Borja",
+        "Borja Ancestral House / Farmacia Borja",
+        "Borja Ancestral House"
+      ],
+      "status": "active",
+      "average_rating": 0,
+      "review_count": 0,
+      "price_level": 0,
+      "budget_note": "Free entry or no required spend. Bring extra cash for food, commute, or optional purchases.",
+      "categories": [
+        "heritage",
+        "tourist",
+        "chill"
+      ],
+      "tags": [
+        {
+          "id": "ancestral-house",
+          "strength": 5,
+          "notes": "Old-house or historic facade stop."
+        },
+        {
+          "id": "heritage-walk",
+          "strength": 5,
+          "notes": "Best experienced as part of a walking heritage route."
+        },
+        {
+          "id": "photo-friendly",
+          "strength": 4,
+          "notes": "Good for respectful exterior photos and old-town visuals."
+        },
+        {
+          "id": "budget-friendly",
+          "strength": 5,
+          "notes": "No required spend for exterior viewing."
+        },
+        {
+          "id": "quick-stop",
+          "strength": 4,
+          "notes": "Usually a short stop, not a long activity."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "borja-ancestral-house-farmacia-borja-1",
+          "storage_key": "galatayo-photos/places/borja-ancestral-house-farmacia-borja/borja-ancestral-house-farmacia-borja-1.webp",
+          "alt_text": "Borja Ancestral House / Farmacia Borja in Malabon photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "dionisio-house",
+      "name": "Dionisio House",
+      "slug": "dionisio-house",
+      "category": "Heritage",
+      "address": "Gen. Luna Street corner Sigwa Street, Malabon City, Metro Manila",
+      "city": "Malabon",
+      "latitude": 14.6668,
+      "longitude": 120.9482,
+      "budget_min": 0,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Dionisio%20House%2C%20Gen.%20Luna%20Street%20corner%20Sigwa%20Street%2C%20Malabon%20City%2C%20Metro%20Manila",
+      "area": "Concepcion",
+      "description": "Another old-Malabon house stop na bagay sa mga mahilig sa architecture and local history. Hindi siya sure public-entry attraction, so best siya as a respectful exterior stop. Good siya kapag gusto mo buuin yung heritage-walk route without spending much.",
+      "best_time_to_visit": "Late afternoon",
+      "visit_duration": "15 to 30 minutes",
+      "good_for": [
+        "Heritage",
+        "Photo Spot",
+        "Casual Gala",
+        "History Walk"
+      ],
+      "not_ideal_for": [
+        "Indoor Tour Seekers",
+        "Rainy Days",
+        "Long Activity Seekers"
+      ],
+      "crowd_level": "Usually light visitor presence, but Gen. Luna can be busy",
+      "indoor_outdoor": "Outdoor",
+      "weather_fit": "Avoid during rain",
+      "parking_info": "No dedicated visitor parking confirmed; expect street parking limits.",
+      "commute_access": "Reachable by jeep or tricycle along Gen. Luna, with Concepcion and Bayan as common reference points.",
+      "nearby_context": "Near Gen. Luna food stops, Concepcion Market, Dolor’s Kakanin, and other ancestral houses.",
+      "normalized_name": "dionisio house",
+      "searchable_text": "Dionisio House Heritage Malabon Concepcion Gen. Luna Street corner Sigwa Street, Malabon City, Metro Manila Another old-Malabon house stop na bagay sa mga mahilig sa architecture and local history. Hindi siya sure public-entry attraction, so best siya as a respectful exterior stop. Good siya kapag gusto mo buuin yung heritage-walk route without spending much. Late afternoon 15 to 30 minutes Outdoor Avoid during rain Usually light visitor presence, but Gen. Luna can be busy Reachable by jeep or tricycle along Gen. Luna, with Concepcion and Bayan as common reference points. No dedicated visitor parking confirmed; expect street parking limits. Near Gen. Luna food stops, Concepcion Market, Dolor’s Kakanin, and other ancestral houses. Heritage Photo Spot Casual Gala History Walk Indoor Tour Seekers Rainy Days Long Activity Seekers Dionisio House Malabon Concepcion Heritage gala places in Malabon ancestral house old house historic house bahay na bato history walk photo spot old Malabon Dionisio House",
+      "search_keywords": [
+        "Dionisio House",
+        "Malabon",
+        "Concepcion",
+        "Heritage",
+        "gala",
+        "places in Malabon",
+        "ancestral house",
+        "old house",
+        "historic house",
+        "bahay na bato",
+        "history walk",
+        "photo spot",
+        "old Malabon"
+      ],
+      "search_aliases": [
+        "Dionisio House"
+      ],
+      "status": "active",
+      "average_rating": 0,
+      "review_count": 0,
+      "price_level": 0,
+      "budget_note": "Free entry or no required spend. Bring extra cash for food, commute, or optional purchases.",
+      "categories": [
+        "heritage",
+        "tourist",
+        "chill"
+      ],
+      "tags": [
+        {
+          "id": "ancestral-house",
+          "strength": 5,
+          "notes": "Old-house or historic facade stop."
+        },
+        {
+          "id": "heritage-walk",
+          "strength": 5,
+          "notes": "Best experienced as part of a walking heritage route."
+        },
+        {
+          "id": "photo-friendly",
+          "strength": 4,
+          "notes": "Good for respectful exterior photos and old-town visuals."
+        },
+        {
+          "id": "budget-friendly",
+          "strength": 5,
+          "notes": "No required spend for exterior viewing."
+        },
+        {
+          "id": "quick-stop",
+          "strength": 4,
+          "notes": "Usually a short stop, not a long activity."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "dionisio-house-1",
+          "storage_key": "galatayo-photos/places/dionisio-house/dionisio-house-1.webp",
+          "alt_text": "Dionisio House in Malabon photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "el-casa-katipunero",
+      "name": "El Casa Katipunero",
+      "slug": "el-casa-katipunero",
+      "category": "Heritage",
+      "address": "Baritan area near C. Arellano Street, Malabon City, Metro Manila",
+      "city": "Malabon",
+      "latitude": 14.671933,
+      "longitude": 120.946684,
+      "budget_min": 0,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=El%20Casa%20Katipunero%2C%20Baritan%20area%20near%20C.%20Arellano%20Street%2C%20Malabon%20City%2C%20Metro%20Manila",
+      "area": "Baritan",
+      "description": "Ito yung stop for people na gusto ng konting history habang gumagala, lalo na if curious ka sa Katipunan-era stories. Vibe niya is more heritage marker and old-house appreciation kaysa tambayan. Quick but meaningful siya kung isasama mo sa old Malabon route.",
+      "best_time_to_visit": "Morning or late afternoon",
+      "visit_duration": "15 to 30 minutes",
+      "good_for": [
+        "Heritage",
+        "History Walk",
+        "Casual Gala",
+        "Photo Spot"
+      ],
+      "not_ideal_for": [
+        "Users Looking For Modern Attractions",
+        "Rainy Days",
+        "Large Groups"
+      ],
+      "crowd_level": "Low tourist crowd, mostly neighborhood movement",
+      "indoor_outdoor": "Outdoor",
+      "weather_fit": "Avoid during rain",
+      "parking_info": "No dedicated visitor parking confirmed; drop-off is recommended.",
+      "commute_access": "Best reached by tricycle from Concepcion or Baritan; use map navigation because small streets can be confusing.",
+      "nearby_context": "Near Baritan heritage houses, C. Arellano Street, and Concepcion area.",
+      "normalized_name": "el casa katipunero",
+      "searchable_text": "El Casa Katipunero Heritage Malabon Baritan Baritan area near C. Arellano Street, Malabon City, Metro Manila Ito yung stop for people na gusto ng konting history habang gumagala, lalo na if curious ka sa Katipunan-era stories. Vibe niya is more heritage marker and old-house appreciation kaysa tambayan. Quick but meaningful siya kung isasama mo sa old Malabon route. Morning or late afternoon 15 to 30 minutes Outdoor Avoid during rain Low tourist crowd, mostly neighborhood movement Best reached by tricycle from Concepcion or Baritan; use map navigation because small streets can be confusing. No dedicated visitor parking confirmed; drop-off is recommended. Near Baritan heritage houses, C. Arellano Street, and Concepcion area. Heritage History Walk Casual Gala Photo Spot Users Looking For Modern Attractions Rainy Days Large Groups El Casa Katipunero Malabon Baritan Heritage gala places in Malabon ancestral house old house historic house bahay na bato history walk photo spot old Malabon el casa katipunero",
+      "search_keywords": [
+        "El Casa Katipunero",
+        "Malabon",
+        "Baritan",
+        "Heritage",
+        "gala",
+        "places in Malabon",
+        "ancestral house",
+        "old house",
+        "historic house",
+        "bahay na bato",
+        "history walk",
+        "photo spot",
+        "old Malabon"
+      ],
+      "search_aliases": [
+        "el casa katipunero"
+      ],
+      "status": "active",
+      "average_rating": 0,
+      "review_count": 0,
+      "price_level": 0,
+      "budget_note": "Free entry or no required spend. Bring extra cash for food, commute, or optional purchases.",
+      "categories": [
+        "heritage",
+        "tourist",
+        "chill"
+      ],
+      "tags": [
+        {
+          "id": "ancestral-house",
+          "strength": 5,
+          "notes": "Old-house or historic facade stop."
+        },
+        {
+          "id": "heritage-walk",
+          "strength": 5,
+          "notes": "Best experienced as part of a walking heritage route."
+        },
+        {
+          "id": "photo-friendly",
+          "strength": 4,
+          "notes": "Good for respectful exterior photos and old-town visuals."
+        },
+        {
+          "id": "budget-friendly",
+          "strength": 5,
+          "notes": "No required spend for exterior viewing."
+        },
+        {
+          "id": "quick-stop",
+          "strength": 4,
+          "notes": "Usually a short stop, not a long activity."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "el-casa-katipunero-1",
+          "storage_key": "galatayo-photos/places/el-casa-katipunero/el-casa-katipunero-1.webp",
+          "alt_text": "El Casa Katipunero in Malabon photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "fisher-box-office-malabon",
+      "name": "Fisher Box Office Malabon",
+      "slug": "fisher-box-office-malabon",
+      "category": "Cinema",
+      "address": "4th Floor, Fisher Mall Malabon, C-4 Road corner Dagat-Dagatan Avenue, Longos, Malabon City, Metro Manila",
+      "city": "Malabon",
+      "latitude": 14.65671,
+      "longitude": 120.96071,
+      "budget_min": 300,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Fisher%20Box%20Office%20Malabon%2C%204th%20Floor%2C%20Fisher%20Mall%20Malabon%2C%20C-4%20Road%20corner%20Dagat-Dagatan%20Avenue%2C%20Longos%2C%20Malabon%20City%2C%20Metro%20Manila",
+      "area": "Longos",
+      "description": "Solid movie-plan stop ito if gusto mo cinema plus mall food after. Since nasa Fisher Mall siya, easy i-pair with dinner, snacks, or quick errands. Check showtimes muna para hindi sayang punta.",
+      "best_time_to_visit": "Evening or weekend afternoon",
+      "visit_duration": "2 to 3 hours",
+      "good_for": [
+        "Cinema",
+        "Date Night",
+        "Barkada Hangout",
+        "Family Trip",
+        "Rainy Day"
+      ],
+      "not_ideal_for": [
+        "Users Looking For Free Activities Only",
+        "Outdoor Activities",
+        "Quiet Study"
+      ],
+      "crowd_level": "Can get busy during blockbuster weekends and evening screenings",
+      "indoor_outdoor": "Indoor",
+      "weather_fit": "Rain-friendly",
+      "parking_info": "Use Fisher Mall parking; arrive earlier during peak movie times.",
+      "commute_access": "Same access as Fisher Mall Malabon via C-4 and Dagat-Dagatan; jeep, bus, ride-hailing, and tricycle options are common nearby.",
+      "nearby_context": "Inside Fisher Mall Malabon near Malabon Citisquare and Longos/C-4 area.",
+      "normalized_name": "fisher box office malabon",
+      "searchable_text": "Fisher Box Office Malabon Cinema Malabon Longos 4th Floor, Fisher Mall Malabon, C-4 Road corner Dagat-Dagatan Avenue, Longos, Malabon City, Metro Manila Solid movie-plan stop ito if gusto mo cinema plus mall food after. Since nasa Fisher Mall siya, easy i-pair with dinner, snacks, or quick errands. Check showtimes muna para hindi sayang punta. Evening or weekend afternoon 2 to 3 hours Indoor Rain-friendly Can get busy during blockbuster weekends and evening screenings Same access as Fisher Mall Malabon via C-4 and Dagat-Dagatan; jeep, bus, ride-hailing, and tricycle options are common nearby. Use Fisher Mall parking; arrive earlier during peak movie times. Inside Fisher Mall Malabon near Malabon Citisquare and Longos/C-4 area. Cinema Date Night Barkada Hangout Family Trip Rainy Day Users Looking For Free Activities Only Outdoor Activities Quiet Study Fisher Box Office Malabon Malabon Longos Cinema gala places in Malabon movie movies sine film date rain-friendly mall cinema fisher box office malabon",
+      "search_keywords": [
+        "Fisher Box Office Malabon",
+        "Malabon",
+        "Longos",
+        "Cinema",
+        "gala",
+        "places in Malabon",
+        "movie",
+        "movies",
+        "sine",
+        "film",
+        "date",
+        "rain-friendly",
+        "mall cinema"
+      ],
+      "search_aliases": [
+        "fisher box office malabon"
+      ],
+      "status": "active",
+      "average_rating": 0,
+      "review_count": 0,
+      "price_level": 2,
+      "budget_note": "Moderate budget estimate starting around ₱300 per person.",
+      "categories": [
+        "cinema",
+        "date",
+        "group",
+        "family",
+        "chill"
+      ],
+      "tags": [
+        {
+          "id": "cinema",
+          "strength": 5,
+          "notes": "Movie plan or screening-based activity."
+        },
+        {
+          "id": "rain-friendly",
+          "strength": 5,
+          "notes": "Indoor activity for rainy days."
+        },
+        {
+          "id": "date-friendly",
+          "strength": 5,
+          "notes": "Easy casual date or movie night option."
+        },
+        {
+          "id": "group-friendly",
+          "strength": 4,
+          "notes": "Works for barkada movie plans."
+        },
+        {
+          "id": "mall-pairing",
+          "strength": 4,
+          "notes": "Best paired with mall food, snacks, or errands."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "fisher-box-office-malabon-1",
+          "storage_key": "galatayo-photos/places/fisher-box-office-malabon/fisher-box-office-malabon-1.webp",
+          "alt_text": "Fisher Box Office Malabon in Malabon photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "fisher-mall-malabon",
+      "name": "Fisher Mall Malabon",
+      "slug": "fisher-mall-malabon",
+      "category": "Mall",
+      "address": "C-4 Road corner Dagat-Dagatan Avenue, Longos, Malabon City, Metro Manila",
+      "city": "Malabon",
+      "latitude": 14.65671,
+      "longitude": 120.96071,
+      "budget_min": 200,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Fisher%20Mall%20Malabon%2C%20C-4%20Road%20corner%20Dagat-Dagatan%20Avenue%2C%20Longos%2C%20Malabon%20City%2C%20Metro%20Manila",
+      "area": "Longos",
+      "description": "Ito yung safe and easy gala pick kapag gusto mo aircon, food, errands, and tambay in one place. More practical than touristy, pero perfect siya for barkada, family, or casual date na ayaw na mag-isip masyado. Rain-friendly pa, so good backup plan siya.",
+      "best_time_to_visit": "Weekday afternoon or evening",
+      "visit_duration": "1 to 3 hours",
+      "good_for": [
+        "Shopping",
+        "Food Trip",
+        "Family Trip",
+        "Barkada Hangout",
+        "Casual Date",
+        "Cinema"
+      ],
+      "not_ideal_for": [
+        "Users Looking For Heritage",
+        "Quiet Study",
+        "Outdoor Activities"
+      ],
+      "crowd_level": "Moderate on weekdays, busier on weekends and cinema/meal times",
+      "indoor_outdoor": "Indoor",
+      "weather_fit": "Rain-friendly",
+      "parking_info": "Mall parking is available, but expect heavier parking demand on weekends and peak dining hours.",
+      "commute_access": "Located along C-4 and Dagat-Dagatan; accessible by jeep, bus, taxi, or ride-hailing from Monumento, Letre, Navotas, and nearby CAMANAVA areas.",
+      "nearby_context": "Near Malabon Citisquare, Fisher Box Office, C-4 Road, Dagat-Dagatan, and Longos area.",
+      "normalized_name": "fisher mall malabon",
+      "searchable_text": "Fisher Mall Malabon Mall Malabon Longos C-4 Road corner Dagat-Dagatan Avenue, Longos, Malabon City, Metro Manila Ito yung safe and easy gala pick kapag gusto mo aircon, food, errands, and tambay in one place. More practical than touristy, pero perfect siya for barkada, family, or casual date na ayaw na mag-isip masyado. Rain-friendly pa, so good backup plan siya. Weekday afternoon or evening 1 to 3 hours Indoor Rain-friendly Moderate on weekdays, busier on weekends and cinema/meal times Located along C-4 and Dagat-Dagatan; accessible by jeep, bus, taxi, or ride-hailing from Monumento, Letre, Navotas, and nearby CAMANAVA areas. Mall parking is available, but expect heavier parking demand on weekends and peak dining hours. Near Malabon Citisquare, Fisher Box Office, C-4 Road, Dagat-Dagatan, and Longos area. Shopping Food Trip Family Trip Barkada Hangout Casual Date Cinema Users Looking For Heritage Quiet Study Outdoor Activities Fisher Mall Malabon Malabon Longos Mall gala places in Malabon shopping aircon food court rain-friendly family tambay kainan fisher mall malabon",
+      "search_keywords": [
+        "Fisher Mall Malabon",
+        "Malabon",
+        "Longos",
+        "Mall",
+        "gala",
+        "places in Malabon",
+        "shopping",
+        "aircon",
+        "food court",
+        "rain-friendly",
+        "family",
+        "tambay",
+        "kainan"
+      ],
+      "search_aliases": [
+        "fisher mall malabon"
+      ],
+      "status": "active",
+      "average_rating": 0,
+      "review_count": 0,
+      "price_level": 2,
+      "budget_note": "Moderate budget estimate starting around ₱200 per person.",
+      "categories": [
+        "mall",
+        "food",
+        "family",
+        "group",
+        "chill"
+      ],
+      "tags": [
+        {
+          "id": "mall",
+          "strength": 5,
+          "notes": "Indoor mall for food, errands, shopping, and tambay."
+        },
+        {
+          "id": "rain-friendly",
+          "strength": 5,
+          "notes": "Reliable backup when weather is bad."
+        },
+        {
+          "id": "family-friendly",
+          "strength": 5,
+          "notes": "Easy pick for family errands or casual trips."
+        },
+        {
+          "id": "group-friendly",
+          "strength": 4,
+          "notes": "Works for barkada or group meetups."
+        },
+        {
+          "id": "food-trip",
+          "strength": 4,
+          "notes": "Has food options and nearby dining context."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "fisher-mall-malabon-1",
+          "storage_key": "galatayo-photos/places/fisher-mall-malabon/fisher-mall-malabon-1.webp",
+          "alt_text": "Fisher Mall Malabon in Malabon photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "ibaviosa-ancestral-house",
+      "name": "Ibaviosa Ancestral House",
+      "slug": "ibaviosa-ancestral-house",
+      "category": "Heritage",
+      "address": "T. Santos Street corner C. Arellano Street, Baritan, Malabon City, Metro Manila",
+      "city": "Malabon",
+      "latitude": 14.6727,
+      "longitude": 120.9451,
+      "budget_min": 0,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Ibaviosa%20Ancestral%20House%2C%20T.%20Santos%20Street%20corner%20C.%20Arellano%20Street%2C%20Baritan%2C%20Malabon%20City%2C%20Metro%20Manila",
+      "area": "Baritan",
+      "description": "Nice add-on ito kung trip mo makita yung quieter, old-neighborhood side ng Malabon. More exterior appreciation siya, so keep expectations chill and simple. Bagay siya sa mga mahilig sa history, photos, and lakad-lakad na hindi mall.",
+      "best_time_to_visit": "Morning or late afternoon",
+      "visit_duration": "15 to 30 minutes",
+      "good_for": [
+        "Heritage",
+        "Photo Spot",
+        "Casual Gala",
+        "History Walk"
+      ],
+      "not_ideal_for": [
+        "Rainy Days",
+        "Users Expecting Guided Tours",
+        "Large Groups"
+      ],
+      "crowd_level": "Light visitor crowd, but local streets can be busy depending on time",
+      "indoor_outdoor": "Outdoor",
+      "weather_fit": "Avoid during rain",
+      "parking_info": "No dedicated visitor parking confirmed; drop-off is safer than bringing a car.",
+      "commute_access": "Best reached by tricycle from Concepcion, Baritan, or Hulong Duhat routes; use C. Arellano and T. Santos as landmarks.",
+      "nearby_context": "Close to Baritan heritage streets, C. Arellano Street, and other ancestral house stops.",
+      "normalized_name": "ibaviosa ancestral house",
+      "searchable_text": "Ibaviosa Ancestral House Heritage Malabon Baritan T. Santos Street corner C. Arellano Street, Baritan, Malabon City, Metro Manila Nice add-on ito kung trip mo makita yung quieter, old-neighborhood side ng Malabon. More exterior appreciation siya, so keep expectations chill and simple. Bagay siya sa mga mahilig sa history, photos, and lakad-lakad na hindi mall. Morning or late afternoon 15 to 30 minutes Outdoor Avoid during rain Light visitor crowd, but local streets can be busy depending on time Best reached by tricycle from Concepcion, Baritan, or Hulong Duhat routes; use C. Arellano and T. Santos as landmarks. No dedicated visitor parking confirmed; drop-off is safer than bringing a car. Close to Baritan heritage streets, C. Arellano Street, and other ancestral house stops. Heritage Photo Spot Casual Gala History Walk Rainy Days Users Expecting Guided Tours Large Groups Ibaviosa Ancestral House Malabon Baritan Heritage gala places in Malabon ancestral house old house historic house bahay na bato history walk photo spot old Malabon ibaviosa ancestral house",
+      "search_keywords": [
+        "Ibaviosa Ancestral House",
+        "Malabon",
+        "Baritan",
+        "Heritage",
+        "gala",
+        "places in Malabon",
+        "ancestral house",
+        "old house",
+        "historic house",
+        "bahay na bato",
+        "history walk",
+        "photo spot",
+        "old Malabon"
+      ],
+      "search_aliases": [
+        "ibaviosa ancestral house"
+      ],
+      "status": "active",
+      "average_rating": 0,
+      "review_count": 0,
+      "price_level": 0,
+      "budget_note": "Free entry or no required spend. Bring extra cash for food, commute, or optional purchases.",
+      "categories": [
+        "heritage",
+        "tourist",
+        "chill"
+      ],
+      "tags": [
+        {
+          "id": "ancestral-house",
+          "strength": 5,
+          "notes": "Old-house or historic facade stop."
+        },
+        {
+          "id": "heritage-walk",
+          "strength": 5,
+          "notes": "Best experienced as part of a walking heritage route."
+        },
+        {
+          "id": "photo-friendly",
+          "strength": 4,
+          "notes": "Good for respectful exterior photos and old-town visuals."
+        },
+        {
+          "id": "budget-friendly",
+          "strength": 5,
+          "notes": "No required spend for exterior viewing."
+        },
+        {
+          "id": "quick-stop",
+          "strength": 4,
+          "notes": "Usually a short stop, not a long activity."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "ibaviosa-ancestral-house-1",
+          "storage_key": "galatayo-photos/places/ibaviosa-ancestral-house/ibaviosa-ancestral-house-1.webp",
+          "alt_text": "Ibaviosa Ancestral House in Malabon photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "judy-anns-crispy-pata-jamicos-restaurant",
+      "name": "Judy Ann's Crispy Pata / Jamico's Restaurant",
+      "slug": "judy-anns-crispy-pata-jamicos-restaurant",
+      "category": "Food",
+      "address": "201 General Luna Street, Ibaba, Malabon City, Metro Manila",
+      "city": "Malabon",
+      "latitude": 14.6619,
+      "longitude": 120.9495,
+      "budget_min": 350,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Judy%20Ann%E2%80%99s%20Crispy%20Pata%20/%20Jamico%E2%80%99s%20Restaurant%2C%20201%20General%20Luna%20Street%2C%20Ibaba%2C%20Malabon%20City%2C%20Metro%20Manila",
+      "area": "Ibaba",
+      "description": "Ito yung classic Malabon food-trip stop kung craving kayo ng crispy pata and Filipino sharing dishes. Mas sulit siya for barkada or family kasi pang-share yung food. Come hungry, kasi hindi ito light merienda vibes.",
+      "best_time_to_visit": "Lunch or early dinner",
+      "visit_duration": "1 to 2 hours",
+      "good_for": [
+        "Food Trip",
+        "Family Trip",
+        "Barkada Hangout",
+        "Casual Date"
+      ],
+      "not_ideal_for": [
+        "Users Looking For Light Snacks",
+        "Strict Budget Below ₱200",
+        "Quiet Study"
+      ],
+      "crowd_level": "Can get busy during lunch, dinner, weekends, and group meals",
+      "indoor_outdoor": "Indoor",
+      "weather_fit": "Rain-friendly",
+      "parking_info": "Parking is listed/available on some map listings, but arrive early during meal peaks.",
+      "commute_access": "Along General Luna, reachable by jeep/tricycle from Bayan, Concepcion, and Monumento-linked routes.",
+      "nearby_context": "Near old Malabon food route, San Bartolome area, and Gen. Luna heritage streets.",
+      "normalized_name": "judy anns crispy pata jamicos restaurant",
+      "searchable_text": "Judy Ann's Crispy Pata / Jamico's Restaurant Food Malabon Ibaba 201 General Luna Street, Ibaba, Malabon City, Metro Manila Ito yung classic Malabon food-trip stop kung craving kayo ng crispy pata and Filipino sharing dishes. Mas sulit siya for barkada or family kasi pang-share yung food. Come hungry, kasi hindi ito light merienda vibes. Lunch or early dinner 1 to 2 hours Indoor Rain-friendly Can get busy during lunch, dinner, weekends, and group meals Along General Luna, reachable by jeep/tricycle from Bayan, Concepcion, and Monumento-linked routes. Parking is listed/available on some map listings, but arrive early during meal peaks. Near old Malabon food route, San Bartolome area, and Gen. Luna heritage streets. Food Trip Family Trip Barkada Hangout Casual Date Users Looking For Light Snacks Strict Budget Below ₱200 Quiet Study Judy Ann's Crispy Pata / Jamico's Restaurant Malabon Ibaba Food gala places in Malabon food trip restaurant kainan kumain Malabon food local food family meal crispy pata filipino restaurant ulam group meal Judy Ann's Crispy Pata Jamico's Restaurant Judy Ann Crispy Pata Judy Ann Jamicos Judy Ann's Crispy Pata Jamico's Restaurant Jamico's Judy Ann's Restaurant",
+      "search_keywords": [
+        "Judy Ann's Crispy Pata / Jamico's Restaurant",
+        "Malabon",
+        "Ibaba",
+        "Food",
+        "gala",
+        "places in Malabon",
+        "food trip",
+        "restaurant",
+        "kainan",
+        "kumain",
+        "Malabon food",
+        "local food",
+        "family meal",
+        "crispy pata",
+        "filipino restaurant",
+        "ulam",
+        "group meal"
+      ],
+      "search_aliases": [
+        "Judy Ann's Crispy Pata Jamico's Restaurant",
+        "Judy Ann Crispy Pata",
+        "Judy Ann Jamicos",
+        "Judy Ann's Crispy Pata",
+        "Jamico's Restaurant",
+        "Jamico's",
+        "Judy Ann's Restaurant"
+      ],
+      "status": "active",
+      "average_rating": 0,
+      "review_count": 0,
+      "price_level": 3,
+      "budget_note": "Group or meal-based budget estimate starting around ₱350 per person.",
+      "categories": [
+        "food",
+        "family",
+        "group",
+        "date"
+      ],
+      "tags": [
+        {
+          "id": "food-trip",
+          "strength": 5,
+          "notes": "Main value is food, meals, snacks, or pasalubong."
+        },
+        {
+          "id": "family-friendly",
+          "strength": 4,
+          "notes": "Good for family food plans or take-home orders."
+        },
+        {
+          "id": "group-friendly",
+          "strength": 4,
+          "notes": "Works well for barkada or shared meals."
+        },
+        {
+          "id": "local-favorite",
+          "strength": 4,
+          "notes": "Strong local Malabon food context."
+        },
+        {
+          "id": "rain-friendly",
+          "strength": 3,
+          "notes": "Indoor or food-focused stop can still work when raining."
+        },
+        {
+          "id": "sit-down-restaurant",
+          "strength": 5,
+          "notes": "Better for proper meals than quick snacks."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "judy-anns-crispy-pata-jamicos-restaurant-1",
+          "storage_key": "galatayo-photos/places/judy-anns-crispy-pata-jamicos-restaurant/judy-anns-crispy-pata-jamicos-restaurant-1.webp",
+          "alt_text": "Judy Ann's Crispy Pata / Jamico's Restaurant in Malabon photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "malabon-heritage-and-library-museum",
+      "name": "Malabon Heritage and Library Museum",
+      "slug": "malabon-heritage-and-library-museum",
+      "category": "Museum",
+      "address": "M. Blas Street, Hulong Duhat, Malabon City, Metro Manila",
+      "city": "Malabon",
+      "latitude": 14.67785,
+      "longitude": 120.94182,
+      "budget_min": 0,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Malabon%20Heritage%20and%20Library%20Museum%2C%20M.%20Blas%20Street%2C%20Hulong%20Duhat%2C%20Malabon%20City%2C%20Metro%20Manila",
+      "area": "Hulong Duhat",
+      "description": "Small but meaningful stop siya kung gusto mo maintindihan kung bakit Malabon is more than pancit and old houses. Chill lang yung vibe, more learning and local culture than flashy attraction. Good siya as first stop before ka mag heritage walk or food crawl.",
+      "best_time_to_visit": "Weekday morning or afternoon",
+      "visit_duration": "30 minutes to 1 hour",
+      "good_for": [
+        "Museum Visit",
+        "Family Trip",
+        "Study Spot",
+        "Heritage",
+        "Chill"
+      ],
+      "not_ideal_for": [
+        "Late Night Hangout",
+        "Big Barkada Noise",
+        "Users Wanting Big Interactive Exhibits"
+      ],
+      "crowd_level": "Usually quiet, with possible school or group visits on some days",
+      "indoor_outdoor": "Indoor",
+      "weather_fit": "Rain-friendly",
+      "parking_info": "Parking is not strongly confirmed; expect limited street or facility-side parking.",
+      "commute_access": "Commute via Hulong Duhat or Gasak routes, then tricycle to M. Blas Street; easier with pin navigation.",
+      "nearby_context": "Near Hulong Duhat heritage area, Angel Cacnio Art Gallery, and Don Basilio Bautista Boulevard.",
+      "normalized_name": "malabon heritage and library museum",
+      "searchable_text": "Malabon Heritage and Library Museum Museum Malabon Hulong Duhat M. Blas Street, Hulong Duhat, Malabon City, Metro Manila Small but meaningful stop siya kung gusto mo maintindihan kung bakit Malabon is more than pancit and old houses. Chill lang yung vibe, more learning and local culture than flashy attraction. Good siya as first stop before ka mag heritage walk or food crawl. Weekday morning or afternoon 30 minutes to 1 hour Indoor Rain-friendly Usually quiet, with possible school or group visits on some days Commute via Hulong Duhat or Gasak routes, then tricycle to M. Blas Street; easier with pin navigation. Parking is not strongly confirmed; expect limited street or facility-side parking. Near Hulong Duhat heritage area, Angel Cacnio Art Gallery, and Don Basilio Bautista Boulevard. Museum Visit Family Trip Study Spot Heritage Chill Late Night Hangout Big Barkada Noise Users Wanting Big Interactive Exhibits Malabon Heritage and Library Museum Malabon Hulong Duhat Museum gala places in Malabon gallery art culture history heritage local museum rain-friendly Malabon Museum Malabon Heritage and Library Museum Heritage Library Museum Malabon Library Museum",
+      "search_keywords": [
+        "Malabon Heritage and Library Museum",
+        "Malabon",
+        "Hulong Duhat",
+        "Museum",
+        "gala",
+        "places in Malabon",
+        "gallery",
+        "art",
+        "culture",
+        "history",
+        "heritage",
+        "local museum",
+        "rain-friendly"
+      ],
+      "search_aliases": [
+        "Malabon Museum",
+        "Malabon Heritage and Library Museum",
+        "Heritage Library Museum",
+        "Malabon Library Museum"
+      ],
+      "status": "active",
+      "average_rating": 0,
+      "review_count": 0,
+      "price_level": 0,
+      "budget_note": "Free entry or no required spend. Bring extra cash for food, commute, or optional purchases.",
+      "categories": [
+        "museum",
+        "heritage",
+        "tourist",
+        "family",
+        "chill"
+      ],
+      "tags": [
+        {
+          "id": "museum",
+          "strength": 5,
+          "notes": "Culture, learning, and local history/art stop."
+        },
+        {
+          "id": "heritage-walk",
+          "strength": 5,
+          "notes": "Works well as part of a Malabon heritage route."
+        },
+        {
+          "id": "rain-friendly",
+          "strength": 5,
+          "notes": "Indoor visit makes it a good rainy-day option."
+        },
+        {
+          "id": "quiet",
+          "strength": 4,
+          "notes": "Usually better for calm trips than loud hangouts."
+        },
+        {
+          "id": "family-friendly",
+          "strength": 4,
+          "notes": "Good for family or school-style learning trips."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "malabon-heritage-and-library-museum-1",
+          "storage_key": "galatayo-photos/places/malabon-heritage-and-library-museum/malabon-heritage-and-library-museum-1.webp",
+          "alt_text": "Malabon Heritage and Library Museum in Malabon photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "malabon-peoples-park",
+      "name": "Malabon People's Park",
+      "slug": "malabon-peoples-park",
+      "category": "Park",
+      "address": "Hernandez Street / Justice Compound area, Catmon, Malabon City, Metro Manila",
+      "city": "Malabon",
+      "latitude": 14.67135,
+      "longitude": 120.96028,
+      "budget_min": 0,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Malabon%20People%E2%80%99s%20Park%2C%20Hernandez%20Street%20/%20Justice%20Compound%20area%2C%20Catmon%2C%20Malabon%20City%2C%20Metro%20Manila",
+      "area": "Catmon",
+      "description": "Simple community park siya for quick pahinga, family tambay, or casual outdoor stop. Hindi siya grand destination park, pero okay kung nasa area ka and gusto mo huminga muna from errands or food crawl. Best siya for light gala, not big plans.",
+      "best_time_to_visit": "Late afternoon",
+      "visit_duration": "30 minutes to 1 hour",
+      "good_for": [
+        "Family Trip",
+        "Chill",
+        "Casual Gala",
+        "Budget Trip"
+      ],
+      "not_ideal_for": [
+        "Rainy Days",
+        "Date Night",
+        "Users Wanting Big Park Attractions"
+      ],
+      "crowd_level": "Can be lively after school, late afternoon, and weekends",
+      "indoor_outdoor": "Outdoor",
+      "weather_fit": "Avoid during rain",
+      "parking_info": "Limited street or nearby public-area parking; expect better access by commute or drop-off.",
+      "commute_access": "Accessible by jeep or tricycle near Gov. Pascual Avenue and Sanciangco/Hernandez area; some stops are a short walk away.",
+      "nearby_context": "Near Catmon area, Malabon City Library side, justice compound area, and Gov. Pascual Avenue.",
+      "normalized_name": "malabon peoples park",
+      "searchable_text": "Malabon People's Park Park Malabon Catmon Hernandez Street / Justice Compound area, Catmon, Malabon City, Metro Manila Simple community park siya for quick pahinga, family tambay, or casual outdoor stop. Hindi siya grand destination park, pero okay kung nasa area ka and gusto mo huminga muna from errands or food crawl. Best siya for light gala, not big plans. Late afternoon 30 minutes to 1 hour Outdoor Avoid during rain Can be lively after school, late afternoon, and weekends Accessible by jeep or tricycle near Gov. Pascual Avenue and Sanciangco/Hernandez area; some stops are a short walk away. Limited street or nearby public-area parking; expect better access by commute or drop-off. Near Catmon area, Malabon City Library side, justice compound area, and Gov. Pascual Avenue. Family Trip Chill Casual Gala Budget Trip Rainy Days Date Night Users Wanting Big Park Attractions Malabon People's Park Malabon Catmon Park gala places in Malabon parke people's park community park family park tambayan outdoor free Malabon People's Park People's Park Malabon",
+      "search_keywords": [
+        "Malabon People's Park",
+        "Malabon",
+        "Catmon",
+        "Park",
+        "gala",
+        "places in Malabon",
+        "parke",
+        "people's park",
+        "community park",
+        "family park",
+        "tambayan",
+        "outdoor",
+        "free"
+      ],
+      "search_aliases": [
+        "Malabon People's Park",
+        "People's Park Malabon"
+      ],
+      "status": "active",
+      "average_rating": 0,
+      "review_count": 0,
+      "price_level": 0,
+      "budget_note": "Free entry or no required spend. Bring extra cash for food, commute, or optional purchases.",
+      "categories": [
+        "park",
+        "family",
+        "chill"
+      ],
+      "tags": [
+        {
+          "id": "park",
+          "strength": 5,
+          "notes": "Community park and outdoor breather stop."
+        },
+        {
+          "id": "family-friendly",
+          "strength": 5,
+          "notes": "Good for light family tambay or quick outdoor time."
+        },
+        {
+          "id": "budget-friendly",
+          "strength": 5,
+          "notes": "Free or low-cost outdoor stop."
+        },
+        {
+          "id": "chill",
+          "strength": 4,
+          "notes": "Best for casual pahinga or relaxed gala."
+        },
+        {
+          "id": "outdoor",
+          "strength": 5,
+          "notes": "Best when the weather is clear."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "malabon-peoples-park-1",
+          "storage_key": "galatayo-photos/places/malabon-peoples-park/malabon-peoples-park-1.webp",
+          "alt_text": "Malabon People's Park in Malabon photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "malabon-zoo-aquarium-and-botanical-garden",
+      "name": "Malabon Zoo, Aquarium and Botanical Garden",
+      "slug": "malabon-zoo-aquarium-and-botanical-garden",
+      "category": "Zoo",
+      "address": "Gov. Pascual Avenue, Potrero, Malabon City, Metro Manila",
+      "city": "Malabon",
+      "latitude": 14.6635,
+      "longitude": 120.9829,
+      "budget_min": 350,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Malabon%20Zoo%2C%20Aquarium%20and%20Botanical%20Garden%2C%20Gov.%20Pascual%20Avenue%2C%20Potrero%2C%20Malabon%20City%2C%20Metro%20Manila",
+      "area": "Potrero",
+      "description": "Classic Malabon name siya, pero be cautious and check recent visitor updates before ka mag-set ng plan. Pwede siya for families na specifically gusto ng animal-themed stop, pero hindi siya for everyone. Go only if okay sa inyo yung old-school zoo vibe.",
+      "best_time_to_visit": "Morning",
+      "visit_duration": "1 to 2 hours",
+      "good_for": [
+        "Family Trip",
+        "Zoo",
+        "Casual Gala",
+        "Kids Activity"
+      ],
+      "not_ideal_for": [
+        "Animal Welfare-Conscious Users",
+        "Date Night",
+        "Rainy Days",
+        "Users Expecting Modern Zoo Facilities"
+      ],
+      "crowd_level": "Usually depends on school groups, weekends, and holiday visits",
+      "indoor_outdoor": "Mixed",
+      "weather_fit": "Mixed",
+      "parking_info": "Parking details are not strongly confirmed; check ahead or use drop-off.",
+      "commute_access": "Accessible by routes around Potrero and Gov. Pascual Avenue, or by ride-hailing from Monumento/Valenzuela side.",
+      "nearby_context": "In Potrero near Gov. Pascual Avenue and the Malabon-Valenzuela side.",
+      "normalized_name": "malabon zoo aquarium and botanical garden",
+      "searchable_text": "Malabon Zoo, Aquarium and Botanical Garden Zoo Malabon Potrero Gov. Pascual Avenue, Potrero, Malabon City, Metro Manila Classic Malabon name siya, pero be cautious and check recent visitor updates before ka mag-set ng plan. Pwede siya for families na specifically gusto ng animal-themed stop, pero hindi siya for everyone. Go only if okay sa inyo yung old-school zoo vibe. Morning 1 to 2 hours Mixed Mixed Usually depends on school groups, weekends, and holiday visits Accessible by routes around Potrero and Gov. Pascual Avenue, or by ride-hailing from Monumento/Valenzuela side. Parking details are not strongly confirmed; check ahead or use drop-off. In Potrero near Gov. Pascual Avenue and the Malabon-Valenzuela side. Family Trip Zoo Casual Gala Kids Activity Animal Welfare-Conscious Users Date Night Rainy Days Users Expecting Modern Zoo Facilities Malabon Zoo, Aquarium and Botanical Garden Malabon Potrero Zoo gala places in Malabon aquarium botanical garden animals kids family tourist attraction Malabon Aquarium Malabon Zoo, Aquarium and Botanical Garden Malabon Zoo Malabon Botanical Garden",
+      "search_keywords": [
+        "Malabon Zoo, Aquarium and Botanical Garden",
+        "Malabon",
+        "Potrero",
+        "Zoo",
+        "gala",
+        "places in Malabon",
+        "aquarium",
+        "botanical garden",
+        "animals",
+        "kids",
+        "family",
+        "tourist attraction"
+      ],
+      "search_aliases": [
+        "Malabon Aquarium",
+        "Malabon Zoo, Aquarium and Botanical Garden",
+        "Malabon Zoo",
+        "Malabon Botanical Garden"
+      ],
+      "status": "active",
+      "average_rating": 0,
+      "review_count": 0,
+      "price_level": 3,
+      "budget_note": "Group or meal-based budget estimate starting around ₱350 per person.",
+      "categories": [
+        "tourist",
+        "family",
+        "park"
+      ],
+      "tags": [
+        {
+          "id": "kids-friendly",
+          "strength": 4,
+          "notes": "Animal-themed stop for family and kids trips."
+        },
+        {
+          "id": "tourist-friendly",
+          "strength": 4,
+          "notes": "Classic named Malabon attraction."
+        },
+        {
+          "id": "outdoor",
+          "strength": 4,
+          "notes": "Mixed/outdoor parts are weather-sensitive."
+        },
+        {
+          "id": "check-before-going",
+          "strength": 5,
+          "notes": "Best to verify current condition and access before visiting."
+        },
+        {
+          "id": "family-friendly",
+          "strength": 4,
+          "notes": "Most relevant for family plans."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "malabon-zoo-aquarium-and-botanical-garden-1",
+          "storage_key": "galatayo-photos/places/malabon-zoo-aquarium-and-botanical-garden/malabon-zoo-aquarium-and-botanical-garden-1.webp",
+          "alt_text": "Malabon Zoo, Aquarium and Botanical Garden in Malabon photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "master-cafe-malabon",
+      "name": "Master Café Malabon",
+      "slug": "master-cafe-malabon",
+      "category": "Cafe",
+      "address": "Gen. Luna Street, San Agustin, Malabon City, Metro Manila",
+      "city": "Malabon",
+      "latitude": 14.6599,
+      "longitude": 120.9511,
+      "budget_min": 180,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Master%20Caf%C3%A9%20Malabon%2C%20Gen.%20Luna%20Street%2C%20San%20Agustin%2C%20Malabon%20City%2C%20Metro%20Manila",
+      "area": "San Agustin",
+      "description": "Chill cafe stop ito kapag gusto mo ng coffee, snacks, or soft landing after a food or heritage route. Mas modern and relaxed siya compared sa classic Malabon food spots. Good for casual date, catch-up, or pahinga muna from lakad.",
+      "best_time_to_visit": "Afternoon to evening",
+      "visit_duration": "1 to 2 hours",
+      "good_for": [
+        "Cafe",
+        "Casual Date",
+        "Chill",
+        "Barkada Hangout",
+        "Study Spot"
+      ],
+      "not_ideal_for": [
+        "Large Groups Without Seats Reserved",
+        "Users Looking For Full Heritage Attraction",
+        "Outdoor Activities"
+      ],
+      "crowd_level": "Can get busy in the evening and on weekends",
+      "indoor_outdoor": "Indoor",
+      "weather_fit": "Rain-friendly",
+      "parking_info": "Parking details are not strongly confirmed; expect street or nearby shared parking limits.",
+      "commute_access": "Located along Gen. Luna/San Agustin area; accessible by tricycle or jeep from Bayan, City Hall, and Rizal Avenue.",
+      "nearby_context": "Near Master Garden, San Bartolome Church, Betsy’s Cake Center, and Malabon City Hall area.",
+      "normalized_name": "master cafe malabon",
+      "searchable_text": "Master Café Malabon Cafe Malabon San Agustin Gen. Luna Street, San Agustin, Malabon City, Metro Manila Chill cafe stop ito kapag gusto mo ng coffee, snacks, or soft landing after a food or heritage route. Mas modern and relaxed siya compared sa classic Malabon food spots. Good for casual date, catch-up, or pahinga muna from lakad. Afternoon to evening 1 to 2 hours Indoor Rain-friendly Can get busy in the evening and on weekends Located along Gen. Luna/San Agustin area; accessible by tricycle or jeep from Bayan, City Hall, and Rizal Avenue. Parking details are not strongly confirmed; expect street or nearby shared parking limits. Near Master Garden, San Bartolome Church, Betsy’s Cake Center, and Malabon City Hall area. Cafe Casual Date Chill Barkada Hangout Study Spot Large Groups Without Seats Reserved Users Looking For Full Heritage Attraction Outdoor Activities Master Café Malabon Malabon San Agustin Cafe gala places in Malabon coffee kape kapihan chill date snacks study cafe Master Cafe Master Cafe Malabon",
+      "search_keywords": [
+        "Master Café Malabon",
+        "Malabon",
+        "San Agustin",
+        "Cafe",
+        "gala",
+        "places in Malabon",
+        "coffee",
+        "kape",
+        "kapihan",
+        "chill",
+        "date",
+        "snacks",
+        "study cafe"
+      ],
+      "search_aliases": [
+        "Master Cafe",
+        "Master Cafe Malabon"
+      ],
+      "status": "active",
+      "average_rating": 0,
+      "review_count": 0,
+      "price_level": 2,
+      "budget_note": "Moderate budget estimate starting around ₱180 per person.",
+      "categories": [
+        "cafe",
+        "chill",
+        "date",
+        "group"
+      ],
+      "tags": [
+        {
+          "id": "cafe",
+          "strength": 5,
+          "notes": "Coffee, snacks, and chill cafe stop."
+        },
+        {
+          "id": "coffee",
+          "strength": 5,
+          "notes": "Good for coffee or light drinks."
+        },
+        {
+          "id": "chill",
+          "strength": 5,
+          "notes": "Good for relaxed catch-ups or soft landing after a route."
+        },
+        {
+          "id": "date-friendly",
+          "strength": 4,
+          "notes": "Good for casual dates or catch-ups."
+        },
+        {
+          "id": "rain-friendly",
+          "strength": 4,
+          "notes": "Indoor cafe stop can work during rain."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "master-cafe-malabon-1",
+          "storage_key": "galatayo-photos/places/master-cafe-malabon/master-cafe-malabon-1.webp",
+          "alt_text": "Master Café Malabon in Malabon photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "master-garden",
+      "name": "Master Garden",
+      "slug": "master-garden",
+      "category": "Food",
+      "address": "7 General Luna Street, San Agustin, Malabon City, Metro Manila",
+      "city": "Malabon",
+      "latitude": 14.6597,
+      "longitude": 120.9512,
+      "budget_min": 350,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Master%20Garden%2C%207%20General%20Luna%20Street%2C%20San%20Agustin%2C%20Malabon%20City%2C%20Metro%20Manila",
+      "area": "San Agustin",
+      "description": "Spacious Filipino restaurant ito na bagay for family meals, barkada kain, and simple celebrations. More sit-down and group-friendly siya compared sa quick food stops. Good pick kapag gusto niyo kumain nang maayos after exploring Malabon.",
+      "best_time_to_visit": "Lunch or dinner",
+      "visit_duration": "1 to 2 hours",
+      "good_for": [
+        "Food Trip",
+        "Family Trip",
+        "Barkada Hangout",
+        "Casual Date",
+        "Celebration"
+      ],
+      "not_ideal_for": [
+        "Strict Budget Below ₱250",
+        "Quiet Study",
+        "Users Wanting Fast Street Food"
+      ],
+      "crowd_level": "Can be busy during lunch, dinner, weekends, and private events",
+      "indoor_outdoor": "Indoor",
+      "weather_fit": "Rain-friendly",
+      "parking_info": "Customer parking is listed on some map listings, but group/event days may fill spaces.",
+      "commute_access": "Along Gen. Luna near San Agustin, accessible by jeep/tricycle from Bayan, Rizal Avenue, and Monumento-linked routes.",
+      "nearby_context": "Near San Bartolome Church, Betsy’s Cake Center, City Hall side, and old Malabon core.",
+      "normalized_name": "master garden",
+      "searchable_text": "Master Garden Food Malabon San Agustin 7 General Luna Street, San Agustin, Malabon City, Metro Manila Spacious Filipino restaurant ito na bagay for family meals, barkada kain, and simple celebrations. More sit-down and group-friendly siya compared sa quick food stops. Good pick kapag gusto niyo kumain nang maayos after exploring Malabon. Lunch or dinner 1 to 2 hours Indoor Rain-friendly Can be busy during lunch, dinner, weekends, and private events Along Gen. Luna near San Agustin, accessible by jeep/tricycle from Bayan, Rizal Avenue, and Monumento-linked routes. Customer parking is listed on some map listings, but group/event days may fill spaces. Near San Bartolome Church, Betsy’s Cake Center, City Hall side, and old Malabon core. Food Trip Family Trip Barkada Hangout Casual Date Celebration Strict Budget Below ₱250 Quiet Study Users Wanting Fast Street Food Master Garden Malabon San Agustin Food gala places in Malabon food trip restaurant kainan kumain Malabon food local food family meal Filipino restaurant family restaurant group meal celebration master garden",
+      "search_keywords": [
+        "Master Garden",
+        "Malabon",
+        "San Agustin",
+        "Food",
+        "gala",
+        "places in Malabon",
+        "food trip",
+        "restaurant",
+        "kainan",
+        "kumain",
+        "Malabon food",
+        "local food",
+        "family meal",
+        "Filipino restaurant",
+        "family restaurant",
+        "group meal",
+        "celebration"
+      ],
+      "search_aliases": [
+        "master garden"
+      ],
+      "status": "active",
+      "average_rating": 0,
+      "review_count": 0,
+      "price_level": 3,
+      "budget_note": "Group or meal-based budget estimate starting around ₱350 per person.",
+      "categories": [
+        "food",
+        "family",
+        "group",
+        "date"
+      ],
+      "tags": [
+        {
+          "id": "food-trip",
+          "strength": 5,
+          "notes": "Main value is food, meals, snacks, or pasalubong."
+        },
+        {
+          "id": "family-friendly",
+          "strength": 4,
+          "notes": "Good for family food plans or take-home orders."
+        },
+        {
+          "id": "group-friendly",
+          "strength": 4,
+          "notes": "Works well for barkada or shared meals."
+        },
+        {
+          "id": "local-favorite",
+          "strength": 4,
+          "notes": "Strong local Malabon food context."
+        },
+        {
+          "id": "rain-friendly",
+          "strength": 3,
+          "notes": "Indoor or food-focused stop can still work when raining."
+        },
+        {
+          "id": "sit-down-restaurant",
+          "strength": 5,
+          "notes": "Better for proper meals than quick snacks."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "master-garden-1",
+          "storage_key": "galatayo-photos/places/master-garden/master-garden-1.webp",
+          "alt_text": "Master Garden in Malabon photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "nanays-pancit-malabon",
+      "name": "Nanay's Pancit Malabon",
+      "slug": "nanays-pancit-malabon",
+      "category": "Food",
+      "address": "34 Governor Pascual Avenue, Baritan, Malabon City, Metro Manila",
+      "city": "Malabon",
+      "latitude": 14.6667,
+      "longitude": 120.9499,
+      "budget_min": 150,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Nanay%E2%80%99s%20Pancit%20Malabon%2C%2034%20Governor%20Pascual%20Avenue%2C%20Baritan%2C%20Malabon%20City%2C%20Metro%20Manila",
+      "area": "Baritan",
+      "description": "Good pick ito kung gusto mo yung classic pancit Malabon experience without overcomplicating the lakad. More eat-and-go or takeout siya than long tambay. Perfect siya as food stop before or after heritage walk.",
+      "best_time_to_visit": "Late morning to early afternoon",
+      "visit_duration": "30 minutes to 1 hour",
+      "good_for": [
+        "Food Trip",
+        "Pasalubong",
+        "Family Trip",
+        "Budget Trip"
+      ],
+      "not_ideal_for": [
+        "Date Night",
+        "Quiet Study",
+        "Users Wanting Aircon Ambience"
+      ],
+      "crowd_level": "Can be busy around lunch and takeout hours",
+      "indoor_outdoor": "Indoor",
+      "weather_fit": "Rain-friendly",
+      "parking_info": "Parking is limited or can be difficult; better for takeout, commute, or quick drop-off.",
+      "commute_access": "Reachable by jeep/tricycle along Gov. Pascual and nearby Concepcion/Baritan routes.",
+      "nearby_context": "Near Baritan, Concepcion, Gen. Luna food stops, and old Malabon heritage area.",
+      "normalized_name": "nanays pancit malabon",
+      "searchable_text": "Nanay's Pancit Malabon Food Malabon Baritan 34 Governor Pascual Avenue, Baritan, Malabon City, Metro Manila Good pick ito kung gusto mo yung classic pancit Malabon experience without overcomplicating the lakad. More eat-and-go or takeout siya than long tambay. Perfect siya as food stop before or after heritage walk. Late morning to early afternoon 30 minutes to 1 hour Indoor Rain-friendly Can be busy around lunch and takeout hours Reachable by jeep/tricycle along Gov. Pascual and nearby Concepcion/Baritan routes. Parking is limited or can be difficult; better for takeout, commute, or quick drop-off. Near Baritan, Concepcion, Gen. Luna food stops, and old Malabon heritage area. Food Trip Pasalubong Family Trip Budget Trip Date Night Quiet Study Users Wanting Aircon Ambience Nanay's Pancit Malabon Malabon Baritan Food gala places in Malabon food trip restaurant kainan kumain Malabon food local food family meal pancit pancit malabon noodles pasalubong Nanays Pancit Malabon Nanay Pancit Malabon Nanay's Pancit",
+      "search_keywords": [
+        "Nanay's Pancit Malabon",
+        "Malabon",
+        "Baritan",
+        "Food",
+        "gala",
+        "places in Malabon",
+        "food trip",
+        "restaurant",
+        "kainan",
+        "kumain",
+        "Malabon food",
+        "local food",
+        "family meal",
+        "pancit",
+        "pancit malabon",
+        "noodles",
+        "pasalubong"
+      ],
+      "search_aliases": [
+        "Nanays Pancit Malabon",
+        "Nanay Pancit Malabon",
+        "Nanay's Pancit"
+      ],
+      "status": "active",
+      "average_rating": 0,
+      "review_count": 0,
+      "price_level": 1,
+      "budget_note": "Budget-friendly estimate starting around ₱150 per person.",
+      "categories": [
+        "food",
+        "family",
+        "group"
+      ],
+      "tags": [
+        {
+          "id": "food-trip",
+          "strength": 5,
+          "notes": "Main value is food, meals, snacks, or pasalubong."
+        },
+        {
+          "id": "family-friendly",
+          "strength": 4,
+          "notes": "Good for family food plans or take-home orders."
+        },
+        {
+          "id": "group-friendly",
+          "strength": 4,
+          "notes": "Works well for barkada or shared meals."
+        },
+        {
+          "id": "local-favorite",
+          "strength": 4,
+          "notes": "Strong local Malabon food context."
+        },
+        {
+          "id": "rain-friendly",
+          "strength": 3,
+          "notes": "Indoor or food-focused stop can still work when raining."
+        },
+        {
+          "id": "pancit-malabon",
+          "strength": 5,
+          "notes": "Specific fit for classic Pancit Malabon cravings."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "nanays-pancit-malabon-1",
+          "storage_key": "galatayo-photos/places/nanays-pancit-malabon/nanays-pancit-malabon-1.webp",
+          "alt_text": "Nanay's Pancit Malabon in Malabon photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "nepomuceno-ancestral-house",
+      "name": "Nepomuceno Ancestral House",
+      "slug": "nepomuceno-ancestral-house",
+      "category": "Heritage",
+      "address": "Gen. Luna Street, Concepcion, Malabon City, Metro Manila",
+      "city": "Malabon",
+      "latitude": 14.667779,
+      "longitude": 120.947732,
+      "budget_min": 0,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Nepomuceno%20Ancestral%20House%2C%20Gen.%20Luna%20Street%2C%20Concepcion%2C%20Malabon%20City%2C%20Metro%20Manila",
+      "area": "Concepcion",
+      "description": "Good quick stop ito habang naglalakad ka sa old Malabon route. Hindi siya yung place na pupuntahan mo alone for hours, pero may charm siya if you like ancestral-house spotting. Best siya kasama ng other nearby heritage stops para hindi bitin.",
+      "best_time_to_visit": "Late afternoon",
+      "visit_duration": "15 to 30 minutes",
+      "good_for": [
+        "Heritage",
+        "Casual Gala",
+        "Photo Spot",
+        "History Walk"
+      ],
+      "not_ideal_for": [
+        "Indoor Tour Seekers",
+        "Rainy Days",
+        "Users Wanting Long Activities"
+      ],
+      "crowd_level": "Usually normal street activity, with possible market and church crowd nearby",
+      "indoor_outdoor": "Outdoor",
+      "weather_fit": "Avoid during rain",
+      "parking_info": "No dedicated visitor parking confirmed; expect tight street conditions.",
+      "commute_access": "Accessible through Gen. Luna jeepney routes and tricycles from Concepcion, Bayan, or Monumento-linked routes.",
+      "nearby_context": "Near Concepcion Market, Immaculate Conception Parish, Dolor’s Kakanin, and other heritage houses.",
+      "normalized_name": "nepomuceno ancestral house",
+      "searchable_text": "Nepomuceno Ancestral House Heritage Malabon Concepcion Gen. Luna Street, Concepcion, Malabon City, Metro Manila Good quick stop ito habang naglalakad ka sa old Malabon route. Hindi siya yung place na pupuntahan mo alone for hours, pero may charm siya if you like ancestral-house spotting. Best siya kasama ng other nearby heritage stops para hindi bitin. Late afternoon 15 to 30 minutes Outdoor Avoid during rain Usually normal street activity, with possible market and church crowd nearby Accessible through Gen. Luna jeepney routes and tricycles from Concepcion, Bayan, or Monumento-linked routes. No dedicated visitor parking confirmed; expect tight street conditions. Near Concepcion Market, Immaculate Conception Parish, Dolor’s Kakanin, and other heritage houses. Heritage Casual Gala Photo Spot History Walk Indoor Tour Seekers Rainy Days Users Wanting Long Activities Nepomuceno Ancestral House Malabon Concepcion Heritage gala places in Malabon ancestral house old house historic house bahay na bato history walk photo spot old Malabon nepomuceno ancestral house",
+      "search_keywords": [
+        "Nepomuceno Ancestral House",
+        "Malabon",
+        "Concepcion",
+        "Heritage",
+        "gala",
+        "places in Malabon",
+        "ancestral house",
+        "old house",
+        "historic house",
+        "bahay na bato",
+        "history walk",
+        "photo spot",
+        "old Malabon"
+      ],
+      "search_aliases": [
+        "nepomuceno ancestral house"
+      ],
+      "status": "active",
+      "average_rating": 0,
+      "review_count": 0,
+      "price_level": 0,
+      "budget_note": "Free entry or no required spend. Bring extra cash for food, commute, or optional purchases.",
+      "categories": [
+        "heritage",
+        "tourist",
+        "chill"
+      ],
+      "tags": [
+        {
+          "id": "ancestral-house",
+          "strength": 5,
+          "notes": "Old-house or historic facade stop."
+        },
+        {
+          "id": "heritage-walk",
+          "strength": 5,
+          "notes": "Best experienced as part of a walking heritage route."
+        },
+        {
+          "id": "photo-friendly",
+          "strength": 4,
+          "notes": "Good for respectful exterior photos and old-town visuals."
+        },
+        {
+          "id": "budget-friendly",
+          "strength": 5,
+          "notes": "No required spend for exterior viewing."
+        },
+        {
+          "id": "quick-stop",
+          "strength": 4,
+          "notes": "Usually a short stop, not a long activity."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "nepomuceno-ancestral-house-1",
+          "storage_key": "galatayo-photos/places/nepomuceno-ancestral-house/nepomuceno-ancestral-house-1.webp",
+          "alt_text": "Nepomuceno Ancestral House in Malabon photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "paez-house",
+      "name": "Paez House",
+      "slug": "paez-house",
+      "category": "Heritage",
+      "address": "Paez Street / Paez Street Extension, Concepcion, Malabon City, Metro Manila",
+      "city": "Malabon",
+      "latitude": 14.6694,
+      "longitude": 120.9451,
+      "budget_min": 0,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Paez%20House%2C%20Paez%20Street%20/%20Paez%20Street%20Extension%2C%20Concepcion%2C%20Malabon%20City%2C%20Metro%20Manila",
+      "area": "Concepcion",
+      "description": "Good isingit ito if nag-heheritage walk ka na around old Malabon. The vibe is quiet and historical, more tingin and appreciate than stay and hangout. Keep it simple, take photos respectfully, then move to the next nearby stop.",
+      "best_time_to_visit": "Morning or late afternoon",
+      "visit_duration": "15 to 30 minutes",
+      "good_for": [
+        "Heritage",
+        "Photo Spot",
+        "Casual Gala",
+        "History Walk"
+      ],
+      "not_ideal_for": [
+        "Users Expecting Guided Tours",
+        "Rainy Days",
+        "Large Groups"
+      ],
+      "crowd_level": "Low tourist crowd, with normal residential and market activity nearby",
+      "indoor_outdoor": "Outdoor",
+      "weather_fit": "Avoid during rain",
+      "parking_info": "No dedicated visitor parking confirmed; use drop-off where possible.",
+      "commute_access": "Accessible by tricycle from Gen. Luna, Concepcion Market, or Malabon Bayan; ask for Paez Street near old houses.",
+      "nearby_context": "Near C. Arellano Street, Teodoro Luna House, Raymundo House, and Concepcion Market.",
+      "normalized_name": "paez house",
+      "searchable_text": "Paez House Heritage Malabon Concepcion Paez Street / Paez Street Extension, Concepcion, Malabon City, Metro Manila Good isingit ito if nag-heheritage walk ka na around old Malabon. The vibe is quiet and historical, more tingin and appreciate than stay and hangout. Keep it simple, take photos respectfully, then move to the next nearby stop. Morning or late afternoon 15 to 30 minutes Outdoor Avoid during rain Low tourist crowd, with normal residential and market activity nearby Accessible by tricycle from Gen. Luna, Concepcion Market, or Malabon Bayan; ask for Paez Street near old houses. No dedicated visitor parking confirmed; use drop-off where possible. Near C. Arellano Street, Teodoro Luna House, Raymundo House, and Concepcion Market. Heritage Photo Spot Casual Gala History Walk Users Expecting Guided Tours Rainy Days Large Groups Paez House Malabon Concepcion Heritage gala places in Malabon ancestral house old house historic house bahay na bato history walk photo spot old Malabon paez house",
+      "search_keywords": [
+        "Paez House",
+        "Malabon",
+        "Concepcion",
+        "Heritage",
+        "gala",
+        "places in Malabon",
+        "ancestral house",
+        "old house",
+        "historic house",
+        "bahay na bato",
+        "history walk",
+        "photo spot",
+        "old Malabon"
+      ],
+      "search_aliases": [
+        "paez house"
+      ],
+      "status": "active",
+      "average_rating": 0,
+      "review_count": 0,
+      "price_level": 0,
+      "budget_note": "Free entry or no required spend. Bring extra cash for food, commute, or optional purchases.",
+      "categories": [
+        "heritage",
+        "tourist",
+        "chill"
+      ],
+      "tags": [
+        {
+          "id": "ancestral-house",
+          "strength": 5,
+          "notes": "Old-house or historic facade stop."
+        },
+        {
+          "id": "heritage-walk",
+          "strength": 5,
+          "notes": "Best experienced as part of a walking heritage route."
+        },
+        {
+          "id": "photo-friendly",
+          "strength": 4,
+          "notes": "Good for respectful exterior photos and old-town visuals."
+        },
+        {
+          "id": "budget-friendly",
+          "strength": 5,
+          "notes": "No required spend for exterior viewing."
+        },
+        {
+          "id": "quick-stop",
+          "strength": 4,
+          "notes": "Usually a short stop, not a long activity."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "paez-house-1",
+          "storage_key": "galatayo-photos/places/paez-house/paez-house-1.webp",
+          "alt_text": "Paez House in Malabon photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "raymundo-ancestral-house",
+      "name": "Raymundo Ancestral House",
+      "slug": "raymundo-ancestral-house",
+      "category": "Heritage",
+      "address": "144 C. Arellano Street, Malabon City, Metro Manila",
+      "city": "Malabon",
+      "latitude": 14.6714,
+      "longitude": 120.9448,
+      "budget_min": 0,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Raymundo%20Ancestral%20House%2C%20144%20C.%20Arellano%20Street%2C%20Malabon%20City%2C%20Metro%20Manila",
+      "area": "Concepcion / Baritan",
+      "description": "Isa ito sa mas interesting na old-house stops if gusto mo ng legit heritage feel sa Malabon. Quick photo and appreciation spot siya, hindi siya typical tourist attraction na may maraming activities. Best puntahan kasama ng Concepcion area stops para mas may flow yung gala.",
+      "best_time_to_visit": "Morning or late afternoon",
+      "visit_duration": "15 to 30 minutes",
+      "good_for": [
+        "Heritage",
+        "Photo Spot",
+        "Casual Gala",
+        "History Walk"
+      ],
+      "not_ideal_for": [
+        "Rainy Days",
+        "Users Expecting Long Activities",
+        "Large Groups"
+      ],
+      "crowd_level": "Usually not tourist-crowded, but street activity can be busy",
+      "indoor_outdoor": "Outdoor",
+      "weather_fit": "Avoid during rain",
+      "parking_info": "No dedicated parking confirmed; use drop-off or nearby legal street parking.",
+      "commute_access": "Reachable by tricycle from Concepcion, Bayan, or Hulong Duhat; C. Arellano Street is the key landmark.",
+      "nearby_context": "Along the old C. Arellano heritage stretch near other ancestral houses and Concepcion Market.",
+      "normalized_name": "raymundo ancestral house",
+      "searchable_text": "Raymundo Ancestral House Heritage Malabon Concepcion / Baritan 144 C. Arellano Street, Malabon City, Metro Manila Isa ito sa mas interesting na old-house stops if gusto mo ng legit heritage feel sa Malabon. Quick photo and appreciation spot siya, hindi siya typical tourist attraction na may maraming activities. Best puntahan kasama ng Concepcion area stops para mas may flow yung gala. Morning or late afternoon 15 to 30 minutes Outdoor Avoid during rain Usually not tourist-crowded, but street activity can be busy Reachable by tricycle from Concepcion, Bayan, or Hulong Duhat; C. Arellano Street is the key landmark. No dedicated parking confirmed; use drop-off or nearby legal street parking. Along the old C. Arellano heritage stretch near other ancestral houses and Concepcion Market. Heritage Photo Spot Casual Gala History Walk Rainy Days Users Expecting Long Activities Large Groups Raymundo Ancestral House Malabon Concepcion / Baritan Heritage gala places in Malabon ancestral house old house historic house bahay na bato history walk photo spot old Malabon raymundo ancestral house",
+      "search_keywords": [
+        "Raymundo Ancestral House",
+        "Malabon",
+        "Concepcion / Baritan",
+        "Heritage",
+        "gala",
+        "places in Malabon",
+        "ancestral house",
+        "old house",
+        "historic house",
+        "bahay na bato",
+        "history walk",
+        "photo spot",
+        "old Malabon"
+      ],
+      "search_aliases": [
+        "raymundo ancestral house"
+      ],
+      "status": "active",
+      "average_rating": 0,
+      "review_count": 0,
+      "price_level": 0,
+      "budget_note": "Free entry or no required spend. Bring extra cash for food, commute, or optional purchases.",
+      "categories": [
+        "heritage",
+        "tourist",
+        "chill"
+      ],
+      "tags": [
+        {
+          "id": "ancestral-house",
+          "strength": 5,
+          "notes": "Old-house or historic facade stop."
+        },
+        {
+          "id": "heritage-walk",
+          "strength": 5,
+          "notes": "Best experienced as part of a walking heritage route."
+        },
+        {
+          "id": "photo-friendly",
+          "strength": 4,
+          "notes": "Good for respectful exterior photos and old-town visuals."
+        },
+        {
+          "id": "budget-friendly",
+          "strength": 5,
+          "notes": "No required spend for exterior viewing."
+        },
+        {
+          "id": "quick-stop",
+          "strength": 4,
+          "notes": "Usually a short stop, not a long activity."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "raymundo-ancestral-house-1",
+          "storage_key": "galatayo-photos/places/raymundo-ancestral-house/raymundo-ancestral-house-1.webp",
+          "alt_text": "Raymundo Ancestral House in Malabon photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "rivera-ancestral-house",
+      "name": "Rivera Ancestral House",
+      "slug": "rivera-ancestral-house",
+      "category": "Heritage",
+      "address": "M. Naval Street / Gervacio Street area, Hulong Duhat, Malabon City, Metro Manila",
+      "city": "Malabon",
+      "latitude": 14.6819,
+      "longitude": 120.9419,
+      "budget_min": 0,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Rivera%20Ancestral%20House%2C%20M.%20Naval%20Street%20/%20Gervacio%20Street%20area%2C%20Hulong%20Duhat%2C%20Malabon%20City%2C%20Metro%20Manila",
+      "area": "Hulong Duhat",
+      "description": "Ito yung stop na pang slow heritage walk, hindi pang loud barkada gala. Since public access is not always clear, best siya for exterior viewing and old-house appreciation. Worth isingit if nasa route ka na around heritage Malabon.",
+      "best_time_to_visit": "Late afternoon",
+      "visit_duration": "15 to 30 minutes",
+      "good_for": [
+        "Heritage",
+        "Photo Spot",
+        "Casual Gala",
+        "History Walk"
+      ],
+      "not_ideal_for": [
+        "Users Expecting Open Museum Access",
+        "Rainy Days",
+        "Large Groups"
+      ],
+      "crowd_level": "Usually quiet, more residential than touristy",
+      "indoor_outdoor": "Outdoor",
+      "weather_fit": "Avoid during rain",
+      "parking_info": "No dedicated visitor parking confirmed; nearby streets may be narrow.",
+      "commute_access": "Commute through Hulong Duhat or Gasak routes, then tricycle or short walk depending on your drop-off point.",
+      "nearby_context": "Near Don Basilio Bautista Boulevard, Angel Cacnio Art Gallery, and Hulong Duhat heritage spots.",
+      "normalized_name": "rivera ancestral house",
+      "searchable_text": "Rivera Ancestral House Heritage Malabon Hulong Duhat M. Naval Street / Gervacio Street area, Hulong Duhat, Malabon City, Metro Manila Ito yung stop na pang slow heritage walk, hindi pang loud barkada gala. Since public access is not always clear, best siya for exterior viewing and old-house appreciation. Worth isingit if nasa route ka na around heritage Malabon. Late afternoon 15 to 30 minutes Outdoor Avoid during rain Usually quiet, more residential than touristy Commute through Hulong Duhat or Gasak routes, then tricycle or short walk depending on your drop-off point. No dedicated visitor parking confirmed; nearby streets may be narrow. Near Don Basilio Bautista Boulevard, Angel Cacnio Art Gallery, and Hulong Duhat heritage spots. Heritage Photo Spot Casual Gala History Walk Users Expecting Open Museum Access Rainy Days Large Groups Rivera Ancestral House Malabon Hulong Duhat Heritage gala places in Malabon ancestral house old house historic house bahay na bato history walk photo spot old Malabon rivera ancestral house",
+      "search_keywords": [
+        "Rivera Ancestral House",
+        "Malabon",
+        "Hulong Duhat",
+        "Heritage",
+        "gala",
+        "places in Malabon",
+        "ancestral house",
+        "old house",
+        "historic house",
+        "bahay na bato",
+        "history walk",
+        "photo spot",
+        "old Malabon"
+      ],
+      "search_aliases": [
+        "rivera ancestral house"
+      ],
+      "status": "active",
+      "average_rating": 0,
+      "review_count": 0,
+      "price_level": 0,
+      "budget_note": "Free entry or no required spend. Bring extra cash for food, commute, or optional purchases.",
+      "categories": [
+        "heritage",
+        "tourist",
+        "chill"
+      ],
+      "tags": [
+        {
+          "id": "ancestral-house",
+          "strength": 5,
+          "notes": "Old-house or historic facade stop."
+        },
+        {
+          "id": "heritage-walk",
+          "strength": 5,
+          "notes": "Best experienced as part of a walking heritage route."
+        },
+        {
+          "id": "photo-friendly",
+          "strength": 4,
+          "notes": "Good for respectful exterior photos and old-town visuals."
+        },
+        {
+          "id": "budget-friendly",
+          "strength": 5,
+          "notes": "No required spend for exterior viewing."
+        },
+        {
+          "id": "quick-stop",
+          "strength": 4,
+          "notes": "Usually a short stop, not a long activity."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "rivera-ancestral-house-1",
+          "storage_key": "galatayo-photos/places/rivera-ancestral-house/rivera-ancestral-house-1.webp",
+          "alt_text": "Rivera Ancestral House in Malabon photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "robinsons-citisquare-cinema-malabon-citisquare-cinema",
+      "name": "Robinsons Citisquare Cinema / Malabon Citisquare Cinema",
+      "slug": "robinsons-citisquare-cinema-malabon-citisquare-cinema",
+      "category": "Cinema",
+      "address": "Malabon Citisquare, C-4 Road corner Dagat-Dagatan Avenue, Longos, Malabon City, Metro Manila",
+      "city": "Malabon",
+      "latitude": 14.65799,
+      "longitude": 120.96095,
+      "budget_min": 300,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Robinsons%20Citisquare%20Cinema%20/%20Malabon%20Citisquare%20Cinema%2C%20Malabon%20Citisquare%2C%20C-4%20Road%20corner%20Dagat-Dagatan%20Avenue%2C%20Longos%2C%20Malabon%20City%2C%20Metro%20Manila",
+      "area": "Longos",
+      "description": "Okay ito for simple movie gala kung may current screenings na pasok sa trip mo. Vibe niya is more neighborhood cinema than big fancy date spot, pero practical for barkada or casual movie night. Best paired with nearby mall food.",
+      "best_time_to_visit": "Weekend afternoon or evening if showtimes are active",
+      "visit_duration": "2 to 3 hours",
+      "good_for": [
+        "Cinema",
+        "Casual Date",
+        "Barkada Hangout",
+        "Family Trip",
+        "Rainy Day"
+      ],
+      "not_ideal_for": [
+        "Users Looking For Premium Cinema",
+        "Users Looking For Free Activities Only",
+        "Outdoor Activities"
+      ],
+      "crowd_level": "Depends on active movie schedule, usually busier on weekends if films are showing",
+      "indoor_outdoor": "Indoor",
+      "weather_fit": "Rain-friendly",
+      "parking_info": "Use mall parking if available; expect shared parking demand with mall visitors.",
+      "commute_access": "Located along C-4 and Dagat-Dagatan beside the Fisher Mall area; accessible by CAMANAVA jeep, bus, tricycle, or ride-hailing.",
+      "nearby_context": "Inside/near Malabon Citisquare, across the Fisher Mall Malabon area on C-4.",
+      "normalized_name": "robinsons citisquare cinema malabon citisquare cinema",
+      "searchable_text": "Robinsons Citisquare Cinema / Malabon Citisquare Cinema Cinema Malabon Longos Malabon Citisquare, C-4 Road corner Dagat-Dagatan Avenue, Longos, Malabon City, Metro Manila Okay ito for simple movie gala kung may current screenings na pasok sa trip mo. Vibe niya is more neighborhood cinema than big fancy date spot, pero practical for barkada or casual movie night. Best paired with nearby mall food. Weekend afternoon or evening if showtimes are active 2 to 3 hours Indoor Rain-friendly Depends on active movie schedule, usually busier on weekends if films are showing Located along C-4 and Dagat-Dagatan beside the Fisher Mall area; accessible by CAMANAVA jeep, bus, tricycle, or ride-hailing. Use mall parking if available; expect shared parking demand with mall visitors. Inside/near Malabon Citisquare, across the Fisher Mall Malabon area on C-4. Cinema Casual Date Barkada Hangout Family Trip Rainy Day Users Looking For Premium Cinema Users Looking For Free Activities Only Outdoor Activities Robinsons Citisquare Cinema / Malabon Citisquare Cinema Malabon Longos Cinema gala places in Malabon movie movies sine film date rain-friendly mall cinema robinsons citisquare cinema malabon citisquare cinema Robinsons Citisquare Cinema Malabon Citisquare Cinema",
+      "search_keywords": [
+        "Robinsons Citisquare Cinema / Malabon Citisquare Cinema",
+        "Malabon",
+        "Longos",
+        "Cinema",
+        "gala",
+        "places in Malabon",
+        "movie",
+        "movies",
+        "sine",
+        "film",
+        "date",
+        "rain-friendly",
+        "mall cinema"
+      ],
+      "search_aliases": [
+        "robinsons citisquare cinema malabon citisquare cinema",
+        "Robinsons Citisquare Cinema",
+        "Malabon Citisquare Cinema"
+      ],
+      "status": "active",
+      "average_rating": 0,
+      "review_count": 0,
+      "price_level": 2,
+      "budget_note": "Moderate budget estimate starting around ₱300 per person.",
+      "categories": [
+        "cinema",
+        "date",
+        "group",
+        "family",
+        "chill"
+      ],
+      "tags": [
+        {
+          "id": "cinema",
+          "strength": 5,
+          "notes": "Movie plan or screening-based activity."
+        },
+        {
+          "id": "rain-friendly",
+          "strength": 5,
+          "notes": "Indoor activity for rainy days."
+        },
+        {
+          "id": "date-friendly",
+          "strength": 5,
+          "notes": "Easy casual date or movie night option."
+        },
+        {
+          "id": "group-friendly",
+          "strength": 4,
+          "notes": "Works for barkada movie plans."
+        },
+        {
+          "id": "mall-pairing",
+          "strength": 4,
+          "notes": "Best paired with mall food, snacks, or errands."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "robinsons-citisquare-cinema-malabon-citisquare-cinema-1",
+          "storage_key": "galatayo-photos/places/robinsons-citisquare-cinema-malabon-citisquare-cinema/robinsons-citisquare-cinema-malabon-citisquare-cinema-1.webp",
+          "alt_text": "Robinsons Citisquare Cinema / Malabon Citisquare Cinema in Malabon photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "robinsons-town-mall-malabon",
+      "name": "Robinsons Town Mall Malabon",
+      "slug": "robinsons-town-mall-malabon",
+      "category": "Mall",
+      "address": "#5 Governor Pascual Avenue corner Crispin Street, Tinajeros, Malabon City, Metro Manila",
+      "city": "Malabon",
+      "latitude": 14.6649,
+      "longitude": 120.9577,
+      "budget_min": 200,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Robinsons%20Town%20Mall%20Malabon%2C%20%235%20Governor%20Pascual%20Avenue%20corner%20Crispin%20Street%2C%20Tinajeros%2C%20Malabon%20City%2C%20Metro%20Manila",
+      "area": "Tinajeros",
+      "description": "Reliable neighborhood mall siya for food, quick shopping, and indoor tambay. Hindi siya super flashy, pero convenient siya kapag gusto mo chill lang and may kasama kang family or friends. Good siya as backup kapag umulan or kapag gusto mo simple gala.",
+      "best_time_to_visit": "Weekday afternoon or early evening",
+      "visit_duration": "1 to 2 hours",
+      "good_for": [
+        "Shopping",
+        "Food Trip",
+        "Family Trip",
+        "Casual Date",
+        "Barkada Hangout"
+      ],
+      "not_ideal_for": [
+        "Users Seeking Unique Tourist Spots",
+        "Outdoor Activities",
+        "Quiet Study"
+      ],
+      "crowd_level": "Usually manageable, busier during weekends, payday, and meal times",
+      "indoor_outdoor": "Indoor",
+      "weather_fit": "Rain-friendly",
+      "parking_info": "Mall parking is expected, but weekend slots may be tighter.",
+      "commute_access": "Along Gov. Pascual Avenue near Crispin Street; reachable by jeep/tricycle from Monumento, Tinajeros, Catmon, and Malabon Bayan routes.",
+      "nearby_context": "Near Gov. Pascual Avenue, Tinajeros residential areas, schools, and Catmon route.",
+      "normalized_name": "robinsons town mall malabon",
+      "searchable_text": "Robinsons Town Mall Malabon Mall Malabon Tinajeros #5 Governor Pascual Avenue corner Crispin Street, Tinajeros, Malabon City, Metro Manila Reliable neighborhood mall siya for food, quick shopping, and indoor tambay. Hindi siya super flashy, pero convenient siya kapag gusto mo chill lang and may kasama kang family or friends. Good siya as backup kapag umulan or kapag gusto mo simple gala. Weekday afternoon or early evening 1 to 2 hours Indoor Rain-friendly Usually manageable, busier during weekends, payday, and meal times Along Gov. Pascual Avenue near Crispin Street; reachable by jeep/tricycle from Monumento, Tinajeros, Catmon, and Malabon Bayan routes. Mall parking is expected, but weekend slots may be tighter. Near Gov. Pascual Avenue, Tinajeros residential areas, schools, and Catmon route. Shopping Food Trip Family Trip Casual Date Barkada Hangout Users Seeking Unique Tourist Spots Outdoor Activities Quiet Study Robinsons Town Mall Malabon Malabon Tinajeros Mall gala places in Malabon shopping aircon food court rain-friendly family tambay kainan Robinsons Town Mall Malabon",
+      "search_keywords": [
+        "Robinsons Town Mall Malabon",
+        "Malabon",
+        "Tinajeros",
+        "Mall",
+        "gala",
+        "places in Malabon",
+        "shopping",
+        "aircon",
+        "food court",
+        "rain-friendly",
+        "family",
+        "tambay",
+        "kainan"
+      ],
+      "search_aliases": [
+        "Robinsons Town Mall Malabon"
+      ],
+      "status": "active",
+      "average_rating": 0,
+      "review_count": 0,
+      "price_level": 2,
+      "budget_note": "Moderate budget estimate starting around ₱200 per person.",
+      "categories": [
+        "mall",
+        "food",
+        "family",
+        "group",
+        "chill"
+      ],
+      "tags": [
+        {
+          "id": "mall",
+          "strength": 5,
+          "notes": "Indoor mall for food, errands, shopping, and tambay."
+        },
+        {
+          "id": "rain-friendly",
+          "strength": 5,
+          "notes": "Reliable backup when weather is bad."
+        },
+        {
+          "id": "family-friendly",
+          "strength": 5,
+          "notes": "Easy pick for family errands or casual trips."
+        },
+        {
+          "id": "group-friendly",
+          "strength": 4,
+          "notes": "Works for barkada or group meetups."
+        },
+        {
+          "id": "food-trip",
+          "strength": 4,
+          "notes": "Has food options and nearby dining context."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "robinsons-town-mall-malabon-1",
+          "storage_key": "galatayo-photos/places/robinsons-town-mall-malabon/robinsons-town-mall-malabon-1.webp",
+          "alt_text": "Robinsons Town Mall Malabon in Malabon photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "san-bartolome-parish-church",
+      "name": "San Bartolome Parish Church",
+      "slug": "san-bartolome-parish-church",
+      "category": "Church",
+      "address": "6 Rizal Avenue, San Agustin, Malabon City, Metro Manila",
+      "city": "Malabon",
+      "latitude": 14.658882,
+      "longitude": 120.951412,
+      "budget_min": 0,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=San%20Bartolome%20Parish%20Church%2C%206%20Rizal%20Avenue%2C%20San%20Agustin%2C%20Malabon%20City%2C%20Metro%20Manila",
+      "area": "San Agustin",
+      "description": "Ito yung classic old-Malabon stop na bagay kapag gusto mo ng calm, historic, and medyo senti na gala. Hindi siya pang all-day activity, pero sulit puntahan for quick dasal, photos outside, or chill heritage side trip. Pair mo with nearby food spots para mas complete yung lakad.",
+      "best_time_to_visit": "Weekday morning or late afternoon",
+      "visit_duration": "30 minutes to 1 hour",
+      "good_for": [
+        "Family Trip",
+        "Casual Date",
+        "Heritage",
+        "Chill",
+        "Photo Spot"
+      ],
+      "not_ideal_for": [
+        "Users Looking For Food Trip Only",
+        "Large Groups During Mass",
+        "Long Activity Seekers"
+      ],
+      "crowd_level": "Usually calm, but can get busy during Mass, feast days, and weekends",
+      "indoor_outdoor": "Indoor",
+      "weather_fit": "Rain-friendly",
+      "parking_info": "Street or nearby area parking may be limited; better to commute or use drop-off during busy church hours.",
+      "commute_access": "Accessible by jeep or tricycle from Monumento, Bayan, and nearby Malabon routes along Rizal Avenue and F. Sevilla area.",
+      "nearby_context": "Near Malabon City Hall, St. James Academy, Oreta Sports Center, and old Malabon food spots.",
+      "normalized_name": "san bartolome parish church",
+      "searchable_text": "San Bartolome Parish Church Church Malabon San Agustin 6 Rizal Avenue, San Agustin, Malabon City, Metro Manila Ito yung classic old-Malabon stop na bagay kapag gusto mo ng calm, historic, and medyo senti na gala. Hindi siya pang all-day activity, pero sulit puntahan for quick dasal, photos outside, or chill heritage side trip. Pair mo with nearby food spots para mas complete yung lakad. Weekday morning or late afternoon 30 minutes to 1 hour Indoor Rain-friendly Usually calm, but can get busy during Mass, feast days, and weekends Accessible by jeep or tricycle from Monumento, Bayan, and nearby Malabon routes along Rizal Avenue and F. Sevilla area. Street or nearby area parking may be limited; better to commute or use drop-off during busy church hours. Near Malabon City Hall, St. James Academy, Oreta Sports Center, and old Malabon food spots. Family Trip Casual Date Heritage Chill Photo Spot Users Looking For Food Trip Only Large Groups During Mass Long Activity Seekers San Bartolome Parish Church Malabon San Agustin Church gala places in Malabon parish simbahan old church historic church dasal Malabon church San Bartolome Parish Malabon simbahan San Bartolome Parish Church Malabon church San Bartolome simbahan San Bartolome Church",
+      "search_keywords": [
+        "San Bartolome Parish Church",
+        "Malabon",
+        "San Agustin",
+        "Church",
+        "gala",
+        "places in Malabon",
+        "parish",
+        "simbahan",
+        "old church",
+        "historic church",
+        "dasal",
+        "Malabon church"
+      ],
+      "search_aliases": [
+        "San Bartolome Parish",
+        "Malabon simbahan",
+        "San Bartolome Parish Church",
+        "Malabon church",
+        "San Bartolome simbahan",
+        "San Bartolome Church"
+      ],
+      "status": "active",
+      "average_rating": 0,
+      "review_count": 0,
+      "price_level": 0,
+      "budget_note": "Free entry or no required spend. Bring extra cash for food, commute, or optional purchases.",
+      "categories": [
+        "heritage",
+        "tourist",
+        "family",
+        "chill"
+      ],
+      "tags": [
+        {
+          "id": "simbahan",
+          "strength": 5,
+          "notes": "Church and parish visit for prayer, reflection, and heritage context."
+        },
+        {
+          "id": "heritage-walk",
+          "strength": 5,
+          "notes": "Strong fit for old Malabon heritage routes."
+        },
+        {
+          "id": "budget-friendly",
+          "strength": 5,
+          "notes": "No required entrance spend."
+        },
+        {
+          "id": "quiet",
+          "strength": 4,
+          "notes": "Usually calm outside peak Mass times."
+        },
+        {
+          "id": "quick-stop",
+          "strength": 4,
+          "notes": "Best as a short stop paired with nearby food or heritage places."
+        },
+        {
+          "id": "rain-friendly",
+          "strength": 4,
+          "notes": "Indoor church visit can still work during rain."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "san-bartolome-parish-church-1",
+          "storage_key": "galatayo-photos/places/san-bartolome-parish-church/san-bartolome-parish-church-1.webp",
+          "alt_text": "San Bartolome Parish Church in Malabon photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "syjuco-mansion-syjuco-ancestral-house",
+      "name": "Syjuco Mansion / Syjuco Ancestral House",
+      "slug": "syjuco-mansion-syjuco-ancestral-house",
+      "category": "Heritage",
+      "address": "Rivera Street, Barangay Tañong, Malabon City, Metro Manila",
+      "city": "Malabon",
+      "latitude": 14.6546,
+      "longitude": 120.9535,
+      "budget_min": 0,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Syjuco%20Mansion%20/%20Syjuco%20Ancestral%20House%2C%20Rivera%20Street%2C%20Barangay%20Ta%C3%B1ong%2C%20Malabon%20City%2C%20Metro%20Manila",
+      "area": "Tañong",
+      "description": "Ito yung pang heritage-walk moment, especially kung bet mo old mansions and vintage Malabon feels. Since private or access can be limited, treat it more as a facade and history stop kaysa full indoor tour. Quick lang siya, pero aesthetic for old-town photos.",
+      "best_time_to_visit": "Morning or late afternoon",
+      "visit_duration": "15 to 30 minutes",
+      "good_for": [
+        "Heritage",
+        "Photo Spot",
+        "Casual Gala",
+        "History Walk"
+      ],
+      "not_ideal_for": [
+        "Users Expecting Indoor Tours",
+        "Rainy Days",
+        "Large Groups",
+        "Young Kids Who Need Activities"
+      ],
+      "crowd_level": "Usually light foot traffic, but streets can feel tight and local-residential",
+      "indoor_outdoor": "Outdoor",
+      "weather_fit": "Avoid during rain",
+      "parking_info": "No dedicated visitor parking confirmed; use drop-off or nearby street parking only where allowed.",
+      "commute_access": "Reachable by jeep or tricycle from Malabon Bayan, Monumento, or Tañong area; use the map pin for final navigation.",
+      "nearby_context": "Within the Tañong side of old Malabon, not far from City Hall, Rizal Avenue, and other heritage houses.",
+      "normalized_name": "syjuco mansion syjuco ancestral house",
+      "searchable_text": "Syjuco Mansion / Syjuco Ancestral House Heritage Malabon Tañong Rivera Street, Barangay Tañong, Malabon City, Metro Manila Ito yung pang heritage-walk moment, especially kung bet mo old mansions and vintage Malabon feels. Since private or access can be limited, treat it more as a facade and history stop kaysa full indoor tour. Quick lang siya, pero aesthetic for old-town photos. Morning or late afternoon 15 to 30 minutes Outdoor Avoid during rain Usually light foot traffic, but streets can feel tight and local-residential Reachable by jeep or tricycle from Malabon Bayan, Monumento, or Tañong area; use the map pin for final navigation. No dedicated visitor parking confirmed; use drop-off or nearby street parking only where allowed. Within the Tañong side of old Malabon, not far from City Hall, Rizal Avenue, and other heritage houses. Heritage Photo Spot Casual Gala History Walk Users Expecting Indoor Tours Rainy Days Large Groups Young Kids Who Need Activities Syjuco Mansion / Syjuco Ancestral House Malabon Tañong Heritage gala places in Malabon ancestral house old house historic house bahay na bato history walk photo spot old Malabon Syjuco Mansion Syjuco Ancestral House Syjuco Ancestral House Syjuco Mansion",
+      "search_keywords": [
+        "Syjuco Mansion / Syjuco Ancestral House",
+        "Malabon",
+        "Tañong",
+        "Heritage",
+        "gala",
+        "places in Malabon",
+        "ancestral house",
+        "old house",
+        "historic house",
+        "bahay na bato",
+        "history walk",
+        "photo spot",
+        "old Malabon"
+      ],
+      "search_aliases": [
+        "Syjuco Mansion Syjuco Ancestral House",
+        "Syjuco Ancestral House",
+        "Syjuco Mansion"
+      ],
+      "status": "active",
+      "average_rating": 0,
+      "review_count": 0,
+      "price_level": 0,
+      "budget_note": "Free entry or no required spend. Bring extra cash for food, commute, or optional purchases.",
+      "categories": [
+        "heritage",
+        "tourist",
+        "chill"
+      ],
+      "tags": [
+        {
+          "id": "ancestral-house",
+          "strength": 5,
+          "notes": "Old-house or historic facade stop."
+        },
+        {
+          "id": "heritage-walk",
+          "strength": 5,
+          "notes": "Best experienced as part of a walking heritage route."
+        },
+        {
+          "id": "photo-friendly",
+          "strength": 4,
+          "notes": "Good for respectful exterior photos and old-town visuals."
+        },
+        {
+          "id": "budget-friendly",
+          "strength": 5,
+          "notes": "No required spend for exterior viewing."
+        },
+        {
+          "id": "quick-stop",
+          "strength": 4,
+          "notes": "Usually a short stop, not a long activity."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "syjuco-mansion-syjuco-ancestral-house-1",
+          "storage_key": "galatayo-photos/places/syjuco-mansion-syjuco-ancestral-house/syjuco-mansion-syjuco-ancestral-house-1.webp",
+          "alt_text": "Syjuco Mansion / Syjuco Ancestral House in Malabon photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "teodoro-luna-house",
+      "name": "Teodoro Luna House",
+      "slug": "teodoro-luna-house",
+      "category": "Heritage",
+      "address": "200 C. Arellano Street, Concepcion, Malabon City, Metro Manila",
+      "city": "Malabon",
+      "latitude": 14.6698,
+      "longitude": 120.9459,
+      "budget_min": 0,
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Teodoro%20Luna%20House%2C%20200%20C.%20Arellano%20Street%2C%20Concepcion%2C%20Malabon%20City%2C%20Metro%20Manila",
+      "area": "Concepcion",
+      "description": "Pretty old-house stop ito kung gusto mo ng quick heritage photo habang nasa Concepcion area ka. Public entry is not always clear, so treat it as exterior-view muna. Best siya for chill walking route, not for people looking for a full activity.",
+      "best_time_to_visit": "Late afternoon",
+      "visit_duration": "15 to 30 minutes",
+      "good_for": [
+        "Heritage",
+        "Photo Spot",
+        "Casual Date",
+        "History Walk"
+      ],
+      "not_ideal_for": [
+        "Indoor Tour Seekers",
+        "Rainy Days",
+        "Users Wanting Long Activities"
+      ],
+      "crowd_level": "Usually light visitor traffic, but streets can be active with locals",
+      "indoor_outdoor": "Outdoor",
+      "weather_fit": "Avoid during rain",
+      "parking_info": "No dedicated visitor parking confirmed; nearby streets may be narrow.",
+      "commute_access": "Reachable by tricycle from Concepcion Market or Malabon Bayan; C. Arellano is the main route to follow.",
+      "nearby_context": "Near Raymundo House, Paez House, Concepcion Market, and Gen. Luna food stops.",
+      "normalized_name": "teodoro luna house",
+      "searchable_text": "Teodoro Luna House Heritage Malabon Concepcion 200 C. Arellano Street, Concepcion, Malabon City, Metro Manila Pretty old-house stop ito kung gusto mo ng quick heritage photo habang nasa Concepcion area ka. Public entry is not always clear, so treat it as exterior-view muna. Best siya for chill walking route, not for people looking for a full activity. Late afternoon 15 to 30 minutes Outdoor Avoid during rain Usually light visitor traffic, but streets can be active with locals Reachable by tricycle from Concepcion Market or Malabon Bayan; C. Arellano is the main route to follow. No dedicated visitor parking confirmed; nearby streets may be narrow. Near Raymundo House, Paez House, Concepcion Market, and Gen. Luna food stops. Heritage Photo Spot Casual Date History Walk Indoor Tour Seekers Rainy Days Users Wanting Long Activities Teodoro Luna House Malabon Concepcion Heritage gala places in Malabon ancestral house old house historic house bahay na bato history walk photo spot old Malabon Teodoro Luna House",
+      "search_keywords": [
+        "Teodoro Luna House",
+        "Malabon",
+        "Concepcion",
+        "Heritage",
+        "gala",
+        "places in Malabon",
+        "ancestral house",
+        "old house",
+        "historic house",
+        "bahay na bato",
+        "history walk",
+        "photo spot",
+        "old Malabon"
+      ],
+      "search_aliases": [
+        "Teodoro Luna House"
+      ],
+      "status": "active",
+      "average_rating": 0,
+      "review_count": 0,
+      "price_level": 0,
+      "budget_note": "Free entry or no required spend. Bring extra cash for food, commute, or optional purchases.",
+      "categories": [
+        "heritage",
+        "tourist",
+        "chill"
+      ],
+      "tags": [
+        {
+          "id": "ancestral-house",
+          "strength": 5,
+          "notes": "Old-house or historic facade stop."
+        },
+        {
+          "id": "heritage-walk",
+          "strength": 5,
+          "notes": "Best experienced as part of a walking heritage route."
+        },
+        {
+          "id": "photo-friendly",
+          "strength": 4,
+          "notes": "Good for respectful exterior photos and old-town visuals."
+        },
+        {
+          "id": "budget-friendly",
+          "strength": 5,
+          "notes": "No required spend for exterior viewing."
+        },
+        {
+          "id": "quick-stop",
+          "strength": 4,
+          "notes": "Usually a short stop, not a long activity."
+        }
+      ],
+      "images": [
+        {
+          "image_slug": "teodoro-luna-house-1",
+          "storage_key": "galatayo-photos/places/teodoro-luna-house/teodoro-luna-house-1.webp",
+          "alt_text": "Teodoro Luna House in Malabon photo 1",
+          "sort_order": 1,
+          "is_primary": true
+        }
+      ]
+    }
+  ]
+}

@@ -68,22 +68,24 @@ function normalizeKnownPlaceKey(placeSlugOrId: string) {
 }
 
 function dedupeFavoritesBySlug(favorites: FavoriteRow[]) {
-  const seenSlugs = new Set<string>()
+  const seenKeys = new Set<string>()
 
   return favorites.filter((favorite) => {
     const slug = favorite.place?.slug?.trim()
+    const id = favorite.place?.id?.trim()
+    const key = slug || id
 
-    if (!slug) {
+    if (!key) {
       return false
     }
 
-    const normalizedSlug = normalizeKnownPlaceKey(slug)
+    const normalizedKey = normalizeKnownPlaceKey(key)
 
-    if (seenSlugs.has(normalizedSlug)) {
+    if (seenKeys.has(normalizedKey)) {
       return false
     }
 
-    seenSlugs.add(normalizedSlug)
+    seenKeys.add(normalizedKey)
     return true
   })
 }

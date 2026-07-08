@@ -7,7 +7,7 @@ import CompactPagination from '../components/CompactPagination'
 import InternalLink from '../components/InternalLink'
 import PlaceCard, { type PlaceCardData } from '../components/PlaceCard'
 import SeoHead from '../components/SeoHead'
-import { PageContainer, ResponsiveGrid } from '../components/layout/ResponsiveLayouts'
+import { PageContainer, PageShell, ResponsiveGrid } from '../components/layout/ResponsiveLayouts'
 import { placeCategories } from '../data/placeCategories'
 import { metroManilaAreaNameBySlug } from '../data/metroManilaAreas'
 import { navigateToPath } from '../utils/navigation'
@@ -251,7 +251,7 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
     : null
 
   return (
-    <div className="gala-page-background min-h-screen text-[var(--text)]">
+    <PageShell>
       <SeoHead
         title={`Places to Visit in ${areaName} | GalaTayo`}
         description={`Browse places in ${areaName} on GalaTayo and filter them by category in alphabetical order.`}
@@ -264,6 +264,7 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
       <main className="w-full pb-12 pt-5 sm:pb-14">
         <PageContainer className="px-4 sm:px-6 lg:px-8">
         <Breadcrumb
+          showBack
           items={[
             { label: 'Home', href: '/', icon: <House className="h-3.5 w-3.5" /> },
             { label: 'Places', href: '/places', icon: <MapPin className="h-3.5 w-3.5" /> },
@@ -275,7 +276,7 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
           <h1 className="text-[2.15rem] font-black leading-[0.95] tracking-[-0.045em] text-slate-950 sm:text-[2.6rem]">
             {areaName}
           </h1>
-          <p className="mt-3 max-w-[36rem] text-[15px] leading-7 text-[#6b7280]">
+          <p className="mt-3 max-w-[36rem] text-[15px] leading-7 text-[var(--muted)]">
             Open a category filter or browse everything in one clean alphabetical list.
           </p>
         </section>
@@ -284,7 +285,7 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
           <div className="mb-3 flex items-end justify-between gap-3">
             <div>
               <h2 className="text-[1.05rem] font-black tracking-[-0.02em] text-slate-950">Browse by category</h2>
-              <p className="mt-1 text-[13px] text-[#6b7280]">Filters and results are arranged alphabetically.</p>
+              <p className="mt-1 text-[13px] text-[var(--muted)]">Filters and results are arranged alphabetically.</p>
             </div>
           </div>
           <div
@@ -308,11 +309,11 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
                   className={`inline-flex shrink-0 items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold transition ${
                     isActive
                       ? 'border-[#1e3a8a] bg-[#1e3a8a] text-white'
-                      : 'border-[#e5e7eb] bg-white text-slate-700 hover:border-[#bfdbfe] hover:bg-[#f8fafc] hover:text-[#1e3a8a]'
+                      : 'border-[#e5e7eb] bg-white text-slate-700 hover:border-[#bfdbfe] hover:bg-[var(--surface-alt)] hover:text-[var(--accent)]'
                   }`}
                 >
                   {iconName ? (
-                    <span className={`inline-flex h-7 w-7 items-center justify-center rounded-full ${isActive ? 'bg-white text-[#1e3a8a] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.35)]' : 'bg-[#f8fafc] text-[#64748b]'}`}>
+                    <span className={`inline-flex h-7 w-7 items-center justify-center rounded-full ${isActive ? 'bg-white text-[var(--accent)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.35)]' : 'bg-[var(--surface-alt)] text-[#64748b]'}`}>
                       <AppIcon name={iconName} className="h-4 w-4" />
                     </span>
                   ) : null}
@@ -326,8 +327,8 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
         {isLoading ? <p className="mt-6 text-sm text-slate-500">Loading area places...</p> : null}
         {errorMessage ? (
           <section className="mt-6 rounded-[24px] border border-[#E5E7EB] bg-white px-5 py-6 shadow-[0_6px_20px_rgba(17,24,39,0.03)]">
-            <h2 className="text-base font-semibold text-[#111827]">We couldn't load places in {areaName} right now.</h2>
-            <p className="mt-1 text-sm leading-6 text-[#6B7280]">Please try again in a bit.</p>
+            <h2 className="text-base font-semibold text-[var(--text-main)]">We couldn't load places in {areaName} right now.</h2>
+            <p className="mt-1 text-sm leading-6 text-[var(--muted)]">Please try again in a bit.</p>
           </section>
         ) : null}
 
@@ -335,11 +336,11 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
           <>
             {allPlaces.length === 0 ? (
               <section className="mt-10 rounded-[28px] border border-[#e5e7eb] bg-white px-5 py-8 text-center shadow-sm sm:px-6">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#dbeafe] text-[#1e3a8a]">
+                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
                   <AppIcon name="compass" className="h-7 w-7" />
                 </div>
                 <h2 className="mt-4 text-[1.2rem] font-black text-slate-950">No places found in {areaName} yet.</h2>
-                <p className="mt-2 text-sm leading-6 text-[#6b7280]">
+                <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
                   Check back later for new gala spots, or try another category in this city.
                 </p>
               </section>
@@ -350,7 +351,7 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
                     <h2 className="text-[1.35rem] font-black tracking-[-0.03em] text-slate-950">
                       {activeCategory === 'all' ? 'All places' : `${activeFilterLabel} places`}
                     </h2>
-                    <p className="mt-1 text-[13px] leading-6 text-[#6b7280]">
+                    <p className="mt-1 text-[13px] leading-6 text-[var(--muted)]">
                       Listed from A to Z for easier browsing in {areaName}.
                     </p>
                   </div>
@@ -385,7 +386,7 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
         ) : null}
         </PageContainer>
       </main>
-    </div>
+    </PageShell>
   )
 }
 

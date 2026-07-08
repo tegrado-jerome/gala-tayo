@@ -193,7 +193,7 @@ function ProtectedFeatureGate({ pathname }: ProtectedFeatureGateProps) {
 
   if (isAskAiPath(pathname)) {
     return (
-      <div className="gala-page-background relative h-[100dvh] overflow-hidden overscroll-none text-[var(--text)]">
+    <div className="gala-page-background relative min-h-[100dvh] overflow-x-hidden overflow-y-auto overscroll-contain text-[var(--text)]">
         <div className="pointer-events-none absolute inset-0 select-none overflow-hidden blur-[3px] opacity-40">
           <AskAiOverviewPage />
         </div>
@@ -208,7 +208,7 @@ function ProtectedFeatureGate({ pathname }: ProtectedFeatureGateProps) {
   }
 
   return (
-    <main className="gala-page-background relative min-h-screen overflow-hidden px-4 py-5 text-[var(--text)] sm:px-6 sm:py-6">
+    <main className="gala-page-background relative min-h-screen overflow-x-hidden overflow-y-auto px-4 py-5 text-[var(--text)] sm:px-6 sm:py-6">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-44 bg-[var(--accent-wash)] opacity-80 blur-3xl" />
       <div className="pointer-events-none absolute left-1/2 top-24 h-52 w-52 -translate-x-1/2 rounded-full bg-[var(--primary-soft)] opacity-70 blur-3xl" />
 
@@ -258,8 +258,8 @@ function ProtectedFeatureGate({ pathname }: ProtectedFeatureGateProps) {
 
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
                 {preview.cards.map((card) => (
-                  <article key={card.title} className="rounded-[22px] border border-[var(--line)] bg-white px-4 py-4 shadow-[0_12px_30px_rgba(15,23,42,0.04)]">
-                    <div className="h-28 rounded-[18px] bg-[linear-gradient(135deg,rgba(219,234,254,0.85),rgba(255,255,255,0.95))]" />
+                  <article key={card.title} className="rounded-3xl border border-[var(--line)] bg-white px-4 py-4 shadow-[0_12px_30px_rgba(15,23,42,0.04)]">
+                    <div className="h-28 rounded-2xl bg-[linear-gradient(135deg,rgba(219,234,254,0.85),rgba(255,255,255,0.95))]" />
                     <p className="mt-4 text-xs font-bold uppercase tracking-[0.16em] text-[var(--accent)]">{card.meta}</p>
                     <h2 className="mt-2 text-base font-black text-[var(--text-main)]">{card.title}</h2>
                     <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{card.body}</p>

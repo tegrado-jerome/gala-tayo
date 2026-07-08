@@ -8,6 +8,8 @@ type PageHeroHeaderProps = {
   badges?: ReactNode
   aside?: ReactNode
   className?: string
+  centered?: boolean
+  divider?: boolean
 }
 
 function PageHeroHeader({
@@ -18,11 +20,13 @@ function PageHeroHeader({
   badges,
   aside,
   className = '',
+  centered = false,
+  divider = true,
 }: PageHeroHeaderProps) {
   return (
-    <section className={`gala-page-header ${className}`.trim()}>
-      <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-        <div className="min-w-0 max-w-[560px]">
+    <section className={`gala-page-header ${divider ? '' : 'gala-page-header--no-divider'} ${className}`.trim()}>
+      <div className={centered ? 'flex flex-col items-center gap-5 text-center' : 'flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between'}>
+        <div className={centered ? 'min-w-0 max-w-[560px]' : 'min-w-0 max-w-[560px]'}>
           <div className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">
             {icon ? <span className="text-[var(--accent)]">{icon}</span> : null}
             <span>{eyebrow}</span>
@@ -30,13 +34,13 @@ function PageHeroHeader({
           <h1 className="gala-page-title">{title}</h1>
           <p className="gala-page-description">{description}</p>
           {badges ? (
-            <div className="mt-4 flex flex-wrap items-center gap-2 text-xs font-bold text-slate-500">
+            <div className={centered ? 'mt-4 flex flex-wrap items-center justify-center gap-2 text-xs font-bold text-slate-500' : 'mt-4 flex flex-wrap items-center gap-2 text-xs font-bold text-slate-500'}>
               {badges}
             </div>
           ) : null}
         </div>
 
-        {aside ? <div className="shrink-0">{aside}</div> : null}
+        {aside ? <div className={centered ? 'shrink-0' : 'shrink-0'}>{aside}</div> : null}
       </div>
     </section>
   )

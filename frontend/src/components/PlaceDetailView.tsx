@@ -11,8 +11,9 @@ import ReportUserModal from './ReportUserModal'
 import UnifiedLoadingState from './UnifiedLoadingState'
 import PlaceImageNotice from './PlaceImageNotice'
 import { AppIcon, type AppIconName } from './AppIcon'
-import { ArrowLeft, ChevronLeft, ChevronRight, Flag, House, ImagePlus, MapPin, MessageCircle, MoreHorizontal, Pencil, Reply, Search, Trash2 } from 'lucide-react'
-import { normalizePlaceSlug } from '../data/curatedPlaceImages'
+import { PageContainer, PageShell, DetailLayout, DetailSidebar, CardSurface, Stack } from './layout/ResponsiveLayouts'
+import { Flag, ImagePlus, MapPin, MessageCircle, MoreHorizontal, Pencil, Reply, Search, Trash2 } from 'lucide-react'
+import { getCuratedPlaceImages, normalizePlaceSlug } from '../data/curatedPlaceImages'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { getSupabaseAccessToken, getSupabaseSession, hasSessionUserChanged, shouldPropagateSessionChange, supabase } from '../supabase'
@@ -29,7 +30,6 @@ type PlaceDetailViewProps = {
     id: string
     slug: string
   }
-  onBack: () => void
   areaBreadcrumb?: {
     areaSlug: string
     areaName: string
@@ -195,6 +195,12 @@ function getAuthMetadataString(metadata: Record<string, unknown> | undefined, ke
   return ''
 }
 
+function formatPriceLevel(level: number | null | undefined): string {
+  if (level == null) return ''
+  const symbols = ['Free', '₱', '₱₱', '₱₱₱', '₱₱₱₱']
+  return symbols[Math.min(Math.max(Math.floor(level), 0), 4)] || ''
+}
+
 function titleCase(value: string) {
   return value
     .split(/[-_\s]+/)
@@ -299,6 +305,15 @@ function PlacePhoto({
   const canGoNext = hasCarouselControls && safeIndex < photos.length - 1
   const totalPhotoSlots = 3
   const thumbSlots = Array.from({ length: totalPhotoSlots }, (_, index) => photos[index] ?? null)
+  const sidePhotoIndexes = photos
+    .map((_, index) => index)
+    .filter((index) => index !== safeIndex)
+    .slice(0, 2)
+  const mobileFrameClassName =
+    'relative overflow-hidden border border-[rgba(148,163,184,0.22)] bg-[linear-gradient(180deg,#f7f9ff_0%,#eef3fb_44%,#e6ebf5_100%)] shadow-[0_18px_44px_rgba(15,23,42,0.08)] sm:rounded-[28px] md:border-white/14 md:bg-[rgba(15,23,42,0.12)] md:backdrop-blur-2xl'
+  const desktopGlassFrameClassName =
+    'relative overflow-hidden border border-white/14 bg-[rgba(15,23,42,0.12)] shadow-[0_18px_44px_rgba(15,23,42,0.08)] backdrop-blur-2xl md:rounded-[28px]'
+  const heroAspectClassName = 'aspect-[4/3] sm:aspect-[17/10] md:aspect-[1.75/1] lg:aspect-[1.95/1]'
 
   const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
     swipeStartX.current = event.changedTouches[0]?.clientX ?? null
@@ -333,18 +348,113 @@ function PlacePhoto({
   if (!activePhoto) {
     return (
       <div className="grid gap-2.5 sm:gap-3">
-        <div className="-mx-4 sm:mx-0">
-          <div className="overflow-hidden bg-slate-950 sm:rounded-[28px] sm:shadow-[0_24px_60px_rgba(15,23,42,0.16)]">
-            <div className="relative aspect-[4/3] w-full overflow-hidden bg-[linear-gradient(180deg,#eef5ff_0%,#f8fbff_100%)]">
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-slate-950/18 via-slate-950/5 to-transparent" />
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-slate-950/18 via-slate-950/6 to-transparent" />
+        <div className="-mx-4 sm:mx-0 md:mx-auto md:max-w-5xl lg:max-w-[88rem]">
+          <div className={mobileFrameClassName}>
+            <div className="relative isolate overflow-hidden">
+              <div className={`${heroAspectClassName} relative w-full overflow-hidden`}>
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.92),rgba(238,243,251,0.82)_38%,rgba(224,231,244,0.92)_100%)]" />
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-white/55 to-transparent sm:h-24" />
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-slate-950/10 via-slate-950/4 to-transparent sm:h-32" />
 
-              <div className="absolute inset-x-4 top-4 flex items-start justify-end gap-3">
+                <div className="absolute inset-x-4 top-4 z-10 flex items-start justify-end gap-3 sm:inset-x-5 sm:top-5">
+                  {showAddPhotoAction ? (
+                    <button
+                      type="button"
+                      onClick={onContribute}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-white/28 bg-[rgba(15,23,42,0.34)] px-3.5 py-2 text-[12px] font-black text-white shadow-[0_10px_24px_rgba(15,23,42,0.12)] backdrop-blur-md transition hover:bg-[rgba(15,23,42,0.46)]"
+                    >
+                      <ImagePlus className="h-4 w-4" strokeWidth={2.2} />
+                      Add photo
+                    </button>
+                  ) : null}
+                </div>
+
+                <div className="flex h-full items-center justify-center px-6 py-8 text-center sm:px-8 sm:py-10">
+                  <div className="flex max-w-[320px] flex-col items-center gap-3 text-[var(--accent-deep)]">
+                    <span className="flex h-14 w-14 items-center justify-center rounded-full border border-white/80 bg-white shadow-[0_16px_40px_rgba(37,99,235,0.12)]">
+                      <Icon name="photo" className="h-7 w-7" />
+                    </span>
+                    <p className="text-[17px] font-black text-slate-950">No place photos yet</p>
+                    <p className="text-[13px] font-semibold leading-5 text-slate-600">
+                      Be the first to add a photo for this spot.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="absolute inset-x-0 bottom-0 overflow-x-auto px-4 pb-4 pt-8 sm:px-5 sm:pb-5">
+                  <div className="flex min-w-max items-center gap-2.5">
+                    {thumbSlots.map((_, index) => {
+                      const shouldUseAddTile = showAddPhotoAction && index === 0
+
+                      return (
+                        <button
+                          key={`empty-gallery-thumb-${index}`}
+                          type="button"
+                          onClick={shouldUseAddTile ? onContribute : undefined}
+                          disabled={!shouldUseAddTile}
+                          className={`flex h-16 w-16 items-center justify-center rounded-2xl border shadow-[0_12px_24px_rgba(15,23,42,0.18)] transition ${
+                            shouldUseAddTile
+                              ? 'border-[rgba(96,165,250,0.48)] bg-[linear-gradient(180deg,rgba(30,41,59,0.9),rgba(15,23,42,0.78))] text-white shadow-[0_12px_24px_rgba(15,23,42,0.28)] backdrop-blur-xl hover:border-[rgba(147,197,253,0.55)] hover:bg-[linear-gradient(180deg,rgba(51,65,85,0.92),rgba(15,23,42,0.82))]'
+                              : 'cursor-default border-white/14 bg-[rgba(15,23,42,0.28)] text-white/35 backdrop-blur-md'
+                          }`}
+                          aria-label={
+                            shouldUseAddTile
+                              ? `Add a photo for ${placeName}`
+                              : `Empty photo slot ${index + 1} of ${placeName}`
+                          }
+                        >
+                          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-white/18 bg-white/12 text-white shadow-[0_6px_16px_rgba(15,23,42,0.16)] backdrop-blur-sm">
+                            <ImagePlus className="h-5 w-5" strokeWidth={2.2} />
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <PlaceImageNotice />
+      </div>
+    )
+  }
+
+  return (
+    <div className="grid gap-2.5 sm:gap-3">
+      <div className="-mx-4 sm:mx-0 md:mx-auto md:max-w-5xl lg:max-w-[88rem]">
+        <div className="md:hidden">
+          <div className={mobileFrameClassName}>
+            <div className="relative isolate overflow-hidden">
+              <div
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+                className={`${heroAspectClassName} h-full w-full bg-neutral-100`}
+              >
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.24),rgba(15,23,42,0.06)_42%,rgba(15,23,42,0.18)_100%)]" />
+                <img
+                  src={activePhoto}
+                  alt={placeName}
+                  className="h-full w-full object-cover transition duration-300 md:object-center"
+                  loading="eager"
+                />
+              </div>
+
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-slate-950/55 via-slate-950/18 to-transparent" />
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-slate-950/82 via-slate-950/32 to-transparent" />
+
+              <div className="absolute inset-x-4 top-4 flex items-start justify-between gap-3 sm:inset-x-5 sm:top-5">
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-black/45 px-3 py-1 text-[12px] font-black text-white backdrop-blur-sm">
+                    {safeIndex + 1} / {photos.length}
+                  </span>
+                </div>
                 {showAddPhotoAction ? (
                   <button
                     type="button"
                     onClick={onContribute}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-black/28 px-3.5 py-2 text-[12px] font-black text-white shadow-[0_14px_30px_rgba(15,23,42,0.24)] backdrop-blur-md transition hover:bg-black/36"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-white/28 bg-[rgba(15,23,42,0.34)] px-3.5 py-2 text-[12px] font-black text-white shadow-[0_10px_24px_rgba(15,23,42,0.12)] backdrop-blur-sm transition hover:bg-[rgba(15,23,42,0.46)]"
                   >
                     <ImagePlus className="h-4 w-4" strokeWidth={2.2} />
                     Add photo
@@ -352,33 +462,40 @@ function PlacePhoto({
                 ) : null}
               </div>
 
-              <div className="flex h-full items-center justify-center px-6 py-8 text-center">
-                <div className="flex max-w-[320px] flex-col items-center gap-3 text-[var(--accent-deep)]">
-                  <span className="flex h-14 w-14 items-center justify-center rounded-full border border-white/80 bg-white shadow-[0_16px_40px_rgba(37,99,235,0.12)]">
-                    <Icon name="photo" className="h-7 w-7" />
-                  </span>
-                  <p className="text-[17px] font-black text-slate-950">No place photos yet</p>
-                  <p className="text-[13px] font-semibold leading-5 text-slate-600">
-                    Be the first to add a photo for this spot.
-                  </p>
-                </div>
-              </div>
-
-              <div className="absolute inset-x-0 bottom-0 overflow-x-auto px-4 pb-4 pt-8">
+              <div className="absolute inset-x-0 bottom-0 overflow-x-auto px-4 pb-4 pt-8 sm:px-5 sm:pb-5">
                 <div className="flex min-w-max items-center gap-2.5">
-                  {thumbSlots.map((_, index) => {
-                    const shouldUseAddTile = showAddPhotoAction && index === 0
+                  {thumbSlots.map((photo, index) => {
+                    if (photo) {
+                      return (
+                        <button
+                          key={`${photo}-thumb`}
+                          type="button"
+                          onClick={() => onSelect?.(index)}
+                          className={`relative overflow-hidden rounded-2xl border transition ${
+                            index === safeIndex
+                              ? 'border-white shadow-[0_14px_30px_rgba(15,23,42,0.28)] ring-2 ring-white/90'
+                              : 'border-white/35 shadow-[0_12px_24px_rgba(15,23,42,0.22)]'
+                          }`}
+                          aria-label={`Show photo ${index + 1} of ${placeName}`}
+                          aria-pressed={index === safeIndex}
+                        >
+                          <img src={photo} alt={placeName} className="h-16 w-16 object-cover" />
+                        </button>
+                      )
+                    }
+
+                    const shouldUseAddTile = showAddPhotoAction && index === photos.length
 
                     return (
                       <button
-                        key={`empty-gallery-thumb-${index}`}
+                        key={`empty-thumb-${index}`}
                         type="button"
                         onClick={shouldUseAddTile ? onContribute : undefined}
                         disabled={!shouldUseAddTile}
-                        className={`flex h-16 w-16 items-center justify-center rounded-2xl border shadow-[0_12px_24px_rgba(15,23,42,0.18)] transition ${
+                        className={`flex h-16 w-16 items-center justify-center rounded-2xl border text-white backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.18)] transition ${
                           shouldUseAddTile
-                            ? 'border-dashed border-white/70 bg-black/28 text-white backdrop-blur-md hover:bg-black/36'
-                            : 'cursor-default border-white/18 bg-black/16 text-white/40 backdrop-blur-sm'
+                            ? 'border-dashed border-white/20 bg-[rgba(30,41,59,0.65)] hover:bg-[rgba(30,41,59,0.78)]'
+                            : 'cursor-default border-dashed border-white/10 bg-[rgba(30,41,59,0.35)] text-white/40'
                         }`}
                         aria-label={
                           shouldUseAddTile
@@ -396,138 +513,148 @@ function PlacePhoto({
           </div>
         </div>
 
-        <PlaceImageNotice />
-      </div>
-    )
-  }
+        <div className="hidden md:grid md:grid-cols-[minmax(0,1.32fr)_minmax(17rem,0.82fr)] md:gap-4 lg:grid-cols-[minmax(0,1.62fr)_minmax(21rem,0.78fr)] lg:gap-5">
+          <div className={`${desktopGlassFrameClassName} h-full`}>
+            <div className="relative isolate h-full overflow-hidden">
+              <div className="relative h-full min-h-[23.5rem] overflow-hidden bg-[rgba(15,23,42,0.08)] lg:min-h-[28rem]">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.12),rgba(15,23,42,0.04)_42%,rgba(15,23,42,0.16)_100%)]" />
+                <img
+                  src={activePhoto}
+                  alt={placeName}
+                  className="h-full w-full object-cover object-center transition duration-300"
+                  loading="eager"
+                />
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-slate-950/55 via-slate-950/18 to-transparent" />
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-slate-950/82 via-slate-950/32 to-transparent" />
 
-  return (
-    <div className="grid gap-2.5 sm:gap-3">
-      <div className="-mx-4 sm:mx-0">
-        <div className="overflow-hidden bg-slate-950 sm:rounded-[28px] sm:shadow-[0_24px_60px_rgba(15,23,42,0.16)]">
-          <div className="relative aspect-[4/3] w-full overflow-hidden">
-            <div
-              onTouchStart={handleTouchStart}
-              onTouchEnd={handleTouchEnd}
-              className="h-full w-full bg-neutral-100"
-            >
-              <img src={activePhoto} alt={placeName} className="h-full w-full object-cover transition duration-300" />
-            </div>
+                <div className="absolute inset-x-5 top-5 flex items-start justify-between gap-3">
+                  <span className="rounded-full bg-black/45 px-3 py-1 text-[12px] font-black text-white backdrop-blur-sm">
+                    {safeIndex + 1} / {photos.length}
+                  </span>
+                  {showAddPhotoAction ? (
+                    <button
+                      type="button"
+                      onClick={onContribute}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-white/28 bg-[rgba(15,23,42,0.34)] px-3.5 py-2 text-[12px] font-black text-white shadow-[0_10px_24px_rgba(15,23,42,0.12)] backdrop-blur-sm transition hover:bg-[rgba(15,23,42,0.46)]"
+                    >
+                      <ImagePlus className="h-4 w-4" strokeWidth={2.2} />
+                      Add photo
+                    </button>
+                  ) : null}
+                </div>
 
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-slate-950/55 via-slate-950/18 to-transparent" />
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-slate-950/82 via-slate-950/32 to-transparent" />
+                <div className="absolute inset-x-5 bottom-5 flex items-center gap-2.5">
+                  {thumbSlots.map((photo, index) => {
+                    if (photo) {
+                      return (
+                        <button
+                          key={`${photo}-desktop-thumb`}
+                          type="button"
+                          onClick={() => onSelect?.(index)}
+                          className={`relative overflow-hidden rounded-2xl border transition ${
+                            index === safeIndex
+                              ? 'border-white shadow-[0_14px_30px_rgba(15,23,42,0.28)] ring-2 ring-white/90'
+                              : 'border-white/35 shadow-[0_12px_24px_rgba(15,23,42,0.22)]'
+                          }`}
+                          aria-label={`Show photo ${index + 1} of ${placeName}`}
+                          aria-pressed={index === safeIndex}
+                        >
+                          <img src={photo} alt={placeName} className="h-16 w-16 object-cover" />
+                        </button>
+                      )
+                    }
 
-            <div className="absolute inset-x-4 top-4 flex items-start justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <span className="rounded-full bg-black/45 px-3 py-1 text-[12px] font-black text-white backdrop-blur-sm">
-                  {safeIndex + 1} / {photos.length}
-                </span>
-              </div>
-              {showAddPhotoAction ? (
-                <button
-                  type="button"
-                  onClick={onContribute}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-black/28 px-3.5 py-2 text-[12px] font-black text-white shadow-[0_14px_30px_rgba(15,23,42,0.24)] backdrop-blur-md transition hover:bg-black/36"
-                >
-                  <ImagePlus className="h-4 w-4" strokeWidth={2.2} />
-                  Add photo
-                </button>
-              ) : null}
-            </div>
+                    const shouldUseAddTile = showAddPhotoAction && index === photos.length
 
-            <>
-              <button
-                type="button"
-                onClick={onPrevious}
-                disabled={!canGoPrevious}
-                className={`absolute left-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border backdrop-blur-sm transition ${
-                  canGoPrevious
-                    ? 'border-white/70 bg-black/28 text-white shadow-[0_12px_26px_rgba(15,23,42,0.24)] hover:bg-black/38'
-                    : 'cursor-not-allowed border-white/22 bg-black/14 text-white/45'
-                }`}
-                aria-label={`Show previous photo of ${placeName}`}
-                aria-disabled={!canGoPrevious}
-              >
-                <ChevronLeft className="h-5 w-5" strokeWidth={2.6} />
-              </button>
-              <button
-                type="button"
-                onClick={onNext}
-                disabled={!canGoNext}
-                className={`absolute right-4 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border backdrop-blur-sm transition ${
-                  canGoNext
-                    ? 'border-white/70 bg-black/28 text-white shadow-[0_12px_26px_rgba(15,23,42,0.24)] hover:bg-black/38'
-                    : 'cursor-not-allowed border-white/22 bg-black/14 text-white/45'
-                }`}
-                aria-label={`Show next photo of ${placeName}`}
-                aria-disabled={!canGoNext}
-              >
-                <ChevronRight className="h-5 w-5" strokeWidth={2.6} />
-              </button>
-            </>
-
-            <div className="absolute inset-x-0 bottom-0 overflow-x-auto px-4 pb-4 pt-8">
-              <div className="flex min-w-max items-center gap-2.5">
-                {thumbSlots.map((photo, index) => {
-                  if (photo) {
                     return (
                       <button
-                        key={`${photo}-thumb`}
+                        key={`desktop-empty-thumb-${index}`}
                         type="button"
-                        onClick={() => onSelect?.(index)}
-                        className={`relative overflow-hidden rounded-2xl border transition ${
-                          index === safeIndex
-                            ? 'border-white shadow-[0_14px_30px_rgba(15,23,42,0.28)] ring-2 ring-white/90'
-                            : 'border-white/35 shadow-[0_12px_24px_rgba(15,23,42,0.22)]'
+                        onClick={shouldUseAddTile ? onContribute : undefined}
+                        disabled={!shouldUseAddTile}
+                        className={`flex h-16 w-16 items-center justify-center rounded-2xl border text-white backdrop-blur-sm shadow-[0_12px_24px_rgba(15,23,42,0.18)] transition ${
+                          shouldUseAddTile
+                            ? 'border-dashed border-white/24 bg-[linear-gradient(180deg,rgba(30,41,59,0.9),rgba(15,23,42,0.78))] text-white hover:border-white/32 hover:bg-[linear-gradient(180deg,rgba(51,65,85,0.92),rgba(15,23,42,0.82))]'
+                            : 'cursor-default border-white/14 bg-[rgba(15,23,42,0.28)] text-white/35'
                         }`}
-                        aria-label={`Show photo ${index + 1} of ${placeName}`}
-                        aria-pressed={index === safeIndex}
+                        aria-label={
+                          shouldUseAddTile
+                            ? `Add a photo for ${placeName}`
+                            : `Empty photo slot ${index + 1} of ${placeName}`
+                        }
                       >
-                        <img src={photo} alt={placeName} className="h-16 w-16 object-cover" />
+                        <ImagePlus className="h-5 w-5" strokeWidth={2.2} />
                       </button>
                     )
-                  }
-
-                  const shouldUseAddTile = showAddPhotoAction && index === photos.length
-
-                  return (
-                    <button
-                      key={`empty-thumb-${index}`}
-                      type="button"
-                      onClick={shouldUseAddTile ? onContribute : undefined}
-                      disabled={!shouldUseAddTile}
-                      className={`flex h-16 w-16 items-center justify-center rounded-2xl border shadow-[0_12px_24px_rgba(15,23,42,0.18)] transition ${
-                        shouldUseAddTile
-                          ? 'border-dashed border-white/70 bg-black/28 text-white backdrop-blur-md hover:bg-black/36'
-                          : 'cursor-default border-white/18 bg-black/16 text-white/40 backdrop-blur-sm'
-                      }`}
-                      aria-label={
-                        shouldUseAddTile
-                          ? `Add a photo for ${placeName}`
-                          : `Empty photo slot ${index + 1} of ${placeName}`
-                      }
-                    >
-                      <ImagePlus className="h-5 w-5" strokeWidth={2.2} />
-                    </button>
-                  )
-                })}
+                  })}
+                </div>
               </div>
             </div>
           </div>
+
+          <div className="grid min-h-[23.5rem] grid-rows-2 gap-4 lg:min-h-[28rem] lg:gap-5">
+            {[0, 1].map((slotIndex) => {
+              const photoIndex = sidePhotoIndexes[slotIndex]
+              const photo = photoIndex != null ? photos[photoIndex] : null
+              const shouldUseAddTile = showAddPhotoAction && photo == null
+
+              if (photo && photoIndex != null) {
+                return (
+                  <button
+                    key={`${photo}-desktop-side`}
+                    type="button"
+                    onClick={() => onSelect?.(photoIndex)}
+                    className={`${desktopGlassFrameClassName} group h-full min-h-[11.25rem] overflow-hidden text-left lg:min-h-[13.4rem]`}
+                    aria-label={`Show photo ${photoIndex + 1} of ${placeName}`}
+                    aria-pressed={photoIndex === safeIndex}
+                  >
+                    <div className="relative h-full w-full overflow-hidden">
+                      <img
+                        src={photo}
+                        alt={placeName}
+                        className="h-full w-full object-cover object-center transition duration-300 group-hover:scale-[1.02]"
+                      />
+                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/55 via-transparent to-slate-950/10" />
+                    </div>
+                  </button>
+                )
+              }
+
+              return (
+                <button
+                  key={`desktop-side-empty-${slotIndex}`}
+                  type="button"
+                  onClick={shouldUseAddTile ? onContribute : undefined}
+                  disabled={!shouldUseAddTile}
+                        className={`${desktopGlassFrameClassName} flex h-full min-h-[11.25rem] items-center justify-center overflow-hidden lg:min-h-[13.4rem] ${
+                    shouldUseAddTile
+                      ? 'rounded-2xl border border-[rgba(96,165,250,0.48)] bg-[linear-gradient(180deg,rgba(30,41,59,0.9),rgba(15,23,42,0.78))] text-white shadow-[0_18px_48px_rgba(15,23,42,0.18)] backdrop-blur-2xl transition hover:border-[rgba(147,197,253,0.55)] hover:bg-[linear-gradient(180deg,rgba(51,65,85,0.92),rgba(15,23,42,0.82))]'
+                      : 'cursor-default rounded-2xl border border-white/10 bg-[rgba(15,23,42,0.22)] text-white/40 backdrop-blur-xl'
+                  }`}
+                  aria-label={
+                    shouldUseAddTile
+                      ? `Add a photo for ${placeName}`
+                      : `Empty photo slot ${slotIndex + 1} of ${placeName}`
+                  }
+                >
+                  <span className="flex flex-col items-center gap-2 text-center">
+                    <span className="flex h-12 w-12 items-center justify-center rounded-full border border-white/18 bg-white/12 text-white shadow-[0_8px_18px_rgba(15,23,42,0.12)] backdrop-blur-sm">
+                      <ImagePlus className="h-5 w-5" strokeWidth={2.2} />
+                    </span>
+                    {shouldUseAddTile ? (
+                      <span className="text-[13px] font-black">Add photo</span>
+                    ) : (
+                      <span className="text-[13px] font-semibold">No image yet</span>
+                    )}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
         </div>
       </div>
-
       <PlaceImageNotice />
     </div>
-  )
-}
-
-function MetaLine({ icon, children }: { icon: IconName; children: string }) {
-  return (
-    <p className="flex items-start gap-2.5 text-[14px] font-semibold leading-5 text-slate-700">
-      <Icon name={icon} className="mt-0.5 h-4.5 w-4.5 shrink-0 text-slate-500" />
-      <span>{children}</span>
-    </p>
   )
 }
 
@@ -537,17 +664,25 @@ function ActionButton({
   disabled,
   active = false,
   onClick,
+  className = '',
+  iconClassName = 'h-4 w-4',
+  iconStrokeWidth = 2,
+  iconSize,
 }: {
   icon: IconName
   children: string
   disabled?: boolean
   active?: boolean
   onClick: () => void
+  className?: string
+  iconClassName?: string
+  iconStrokeWidth?: number
+  iconSize?: number
 }) {
   const buttonClassName = active
-    ? 'inline-flex w-full min-h-10 items-center justify-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-3 text-[12px] font-extrabold text-rose-700 transition hover:border-rose-300 hover:bg-rose-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-400'
-    : 'inline-flex w-full min-h-10 items-center justify-center gap-2 rounded-lg border border-[var(--line)] bg-white px-3 text-[12px] font-extrabold text-slate-700 transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)] hover:text-[var(--accent-deep)] disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-400'
-  const iconClassName = disabled
+    ? `inline-flex w-full min-h-9 items-center justify-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-2.5 text-[11px] font-extrabold text-rose-700 transition hover:border-rose-300 hover:bg-rose-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-400 md:flex-1 ${className}`
+    : `inline-flex w-full min-h-9 items-center justify-center gap-1.5 rounded-lg border border-[var(--line)] bg-white px-2.5 text-[11px] font-extrabold text-slate-700 transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)] hover:text-[var(--accent-deep)] disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-400 md:flex-1 ${className}`
+  const iconToneClassName = disabled
     ? 'text-slate-400'
     : active
       ? 'fill-current text-rose-600'
@@ -561,7 +696,12 @@ function ActionButton({
       aria-pressed={active}
       className={buttonClassName}
     >
-      <Icon name={icon} className={`h-4 w-4 ${iconClassName}`} />
+      <Icon
+        name={icon}
+        className={`${iconClassName} ${iconToneClassName}`.trim()}
+        strokeWidth={iconStrokeWidth}
+        size={iconSize}
+      />
       {children}
     </button>
   )
@@ -574,7 +714,7 @@ function GoodForList({ values }: { values: string[] }) {
     <ul className="grid gap-2 text-[14px] font-semibold leading-5 text-slate-700">
       {items.map((item, index) => (
         <li key={item} className="flex items-center gap-3">
-          <Icon name={pickGoodForIcon(item, index)} className="h-4.5 w-4.5 shrink-0 text-slate-500" />
+          <Icon name={pickGoodForIcon(item, index)} className="h-5 w-5 shrink-0 text-slate-500" />
           <span>{titleCase(item)}</span>
         </li>
       ))}
@@ -597,7 +737,7 @@ function pickGoodForIcon(value: string, index: number): IconName {
 function PlanStat({ icon, title, value }: { icon: IconName; title: string; value: string }) {
   return (
     <div className="flex min-w-0 items-start gap-3 rounded-xl bg-slate-50 px-3 py-3">
-      <Icon name={icon} className="mt-0.5 h-4.5 w-4.5 shrink-0 text-[var(--accent-deep)]" />
+      <Icon name={icon} className="mt-0.5 h-5 w-5 shrink-0 text-[var(--accent-deep)]" />
       <div className="min-w-0">
         <p className="text-[12px] font-black leading-tight text-slate-900">{title}</p>
         <p className="mt-1 text-[12px] font-semibold leading-4 text-slate-600">{value}</p>
@@ -616,18 +756,21 @@ function TransportColumn({
   children: ReactNode
 }) {
   return (
-    <div className="border-b border-[var(--line)] pb-3 last:border-b-0 last:pb-0">
-      <div className="flex items-center gap-2.5">
-        <Icon name={icon} className="h-4.5 w-4.5 shrink-0 text-[var(--accent-deep)]" />
-        <h3 className="text-[14px] font-black text-slate-900">{title}</h3>
+    <div>
+      <div className="flex items-start gap-2.5">
+        <Icon name={icon} className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent-deep)]" />
+        <div>
+          <span className="text-[12px] font-black text-slate-800">{title}: </span>
+          <span className="text-[13px] font-semibold leading-5 text-slate-600">{children}</span>
+        </div>
       </div>
-      <div className="mt-2 text-[13px] font-semibold leading-5 text-slate-600">{children}</div>
     </div>
   )
 }
 
-function DetailSection({ children }: { children: ReactNode }) {
-  return <section className="border-t border-[var(--line)] py-5 first:border-t-0 lg:py-6 xl:py-7">{children}</section>
+function DetailSection({ children, className }: { children: ReactNode; className?: string }) {
+  const baseClass = 'border-t border-[var(--line)] py-3 first:border-t-0 lg:py-4'
+  return <section className={className ? `${baseClass} ${className}` : baseClass}>{children}</section>
 }
 
 const filledStar = String.fromCharCode(9733)
@@ -830,13 +973,12 @@ function findCommentById(comments: PlaceComment[], commentId: string): PlaceComm
   return null
 }
 
-function PlaceDetailView({ place, onBack, areaBreadcrumb = null, cameFromSearch = false, returnLabel = null, searchHref = null }: PlaceDetailViewProps) {
+function PlaceDetailView({ place, areaBreadcrumb = null, cameFromSearch = false, returnLabel: _returnLabel = null, searchHref = null }: PlaceDetailViewProps) {
   const [isAddToPlanOpen, setIsAddToPlanOpen] = useState(false)
   const guestAuth = useGuestAuthPrompt()
   const [isSaving, setIsSaving] = useState(false)
   const [shareError, setShareError] = useState('')
   const [saveError, setSaveError] = useState('')
-  const [activePhotoIndex, setActivePhotoIndex] = useState(0)
   const [isContributionOpen, setIsContributionOpen] = useState(false)
   const [contributionFile, setContributionFile] = useState<File | null>(null)
   const [contributionSourceUrl, setContributionSourceUrl] = useState('')
@@ -879,13 +1021,28 @@ function PlaceDetailView({ place, onBack, areaBreadcrumb = null, cameFromSearch 
   const [placeConcernError, setPlaceConcernError] = useState('')
   const [isPlaceConcernSubmitting, setIsPlaceConcernSubmitting] = useState(false)
   const [isReportSubmitting, setIsReportSubmitting] = useState(false)
+  const [activeGalleryIndex, setActiveGalleryIndex] = useState(0)
   const commentMenuRef = useRef<HTMLDivElement | null>(null)
   const { isPlaceSaved, saveFavorite, removeFavorite } = useSavedFavorites()
   const { showSystemMessage } = useSystemMessage()
 
-  const galleryPhotos = uniqueList([place.imageUrl, ...(place.curatedImageUrls ?? [])]).slice(0, 3)
+  const galleryPhotos = uniqueList([
+    place.imageUrl,
+    place.thumbnailUrl,
+    place.curatedImageUrl,
+    ...(place.curatedImageUrls ?? []),
+    ...getCuratedPlaceImages(place.name),
+  ]).slice(0, 3)
   const approvedImageCount = galleryPhotos.length
-  const budgetLabel = cleanString(place.budget_notes) || cleanString(place.entranceFee) || 'Not available'
+  const budgetLabel = (() => {
+    const parts: string[] = []
+    const priceSymbol = formatPriceLevel(place.price_level)
+    if (priceSymbol) parts.push(priceSymbol)
+    if (place.budget_min != null) parts.push(`From ₱${Number(place.budget_min).toLocaleString()}`)
+    const note = cleanString(place.budget_notes)
+    if (note) parts.push(note)
+    return parts.join(' · ') || 'Not available'
+  })()
   const addressLabel =
     cleanString(place.address) ||
     [cleanString(place.localArea || place.area), cleanString(place.city)].filter(Boolean).join(', ') ||
@@ -897,7 +1054,6 @@ function PlaceDetailView({ place, onBack, areaBreadcrumb = null, cameFromSearch 
   const goodFor = uniqueList(place.good_for ?? [])
   const notIdealFor = uniqueList(place.not_ideal_for ?? [])
   const directionsUrl = getDirectionsUrl(place)
-  const websiteUrl = cleanString(place.website_url) || cleanString(place.website)
   const normalizedNameSlug = normalizePlaceSlug(place.name)
   const placeId = cleanString(place.id)
   const placeSlug = cleanString(place.slug)
@@ -945,6 +1101,10 @@ function PlaceDetailView({ place, onBack, areaBreadcrumb = null, cameFromSearch 
       document.removeEventListener('keydown', handleEscape)
     }
   }, [openCommentMenuId])
+
+  useEffect(() => {
+    setActiveGalleryIndex(0)
+  }, [galleryPhotos.length, place.id])
   const isSaved = [place.id, place.slug, normalizedNameSlug].some((slugOrId) => isPlaceSaved(slugOrId))
   const hasCurrentUserReview = Boolean(currentUserReview)
   const headlineRating = averageRating ?? place.rating ?? null
@@ -981,35 +1141,9 @@ function PlaceDetailView({ place, onBack, areaBreadcrumb = null, cameFromSearch 
   }, [])
 
   useEffect(() => {
-    setActivePhotoIndex(0)
-  }, [place.id])
-
-  useEffect(() => {
     setAverageRating(place.rating ?? null)
     setReviewCount(place.ratingCount ?? 0)
   }, [place.id, place.rating, place.ratingCount])
-
-  useEffect(() => {
-    if (activePhotoIndex >= galleryPhotos.length) {
-      setActivePhotoIndex(0)
-    }
-  }, [activePhotoIndex, galleryPhotos.length])
-
-  const showPreviousPhoto = () => {
-    if (galleryPhotos.length < 2 || activePhotoIndex <= 0) {
-      return
-    }
-
-    setActivePhotoIndex((currentIndex) => currentIndex - 1)
-  }
-
-  const showNextPhoto = () => {
-    if (galleryPhotos.length < 2 || activePhotoIndex >= galleryPhotos.length - 1) {
-      return
-    }
-
-    setActivePhotoIndex((currentIndex) => currentIndex + 1)
-  }
 
   const fetchPlaceReviews = useCallback(
     async (signal?: AbortSignal) => {
@@ -1896,10 +2030,6 @@ function PlaceDetailView({ place, onBack, areaBreadcrumb = null, cameFromSearch 
   const openDirections = () => openDirectionsUrl(directionsUrl)
   const rainFit = cleanString(place.weather_fit)
   const quickTake = cleanString(place.description) || cleanString(place.reason) || 'No quick take available yet.'
-  const vibeText =
-    cleanString(place.place_history) ||
-    cleanString(place.decision_reason) ||
-    `A local ${titleCase(categoryLabel)} spot around ${locationLabel}, good for a calm and easy plan.`
   const aroundHere =
     cleanString(place.nearby_context) ||
     `You're around ${locationLabel}, with nearby local food spots and transport options.`
@@ -2357,11 +2487,29 @@ function PlaceDetailView({ place, onBack, areaBreadcrumb = null, cameFromSearch 
         </div>
 
         <div className="mt-5 border-t border-[var(--line)] pt-5">
-          <div>
-            <h3 className="text-[18px] font-black text-slate-950">Add your comment</h3>
+          <div className="rounded-3xl border border-slate-200/80 bg-slate-50/55 p-4 sm:p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200/80 pb-3">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2.5">
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-2xl bg-[var(--accent-wash)] text-[var(--accent-deep)]">
+                    <MessageCircle className="h-4 w-4" strokeWidth={2.2} />
+                  </span>
+                  <div>
+                    <h3 className="text-[18px] font-black text-slate-950">Comments</h3>
+                    <p className="mt-0.5 text-[13px] font-semibold text-slate-500">
+                      {isCommentsLoading
+                        ? 'Loading comments...'
+                        : visibleCommentCount === 0
+                          ? '0 comments'
+                          : `${visibleCommentCount} comment${visibleCommentCount === 1 ? '' : 's'}`}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             {currentUserId ? (
-              <div className="mt-3.5 flex items-start gap-3">
+              <div className="mt-4 flex items-start gap-3 rounded-[22px] border border-slate-200/80 bg-white/90 p-3.5 sm:p-4">
                 <MemberAvatar displayName={currentUserAvatarFallbackName} avatarUrl={currentUserAvatarUrl} compact />
                 <div className="min-w-0 flex-1">
                   <div className="rounded-[14px] border border-[var(--line)] bg-white px-3 py-2.5 transition focus-within:border-[var(--accent)] focus-within:ring-2 focus-within:ring-[rgba(47,116,232,0.14)]">
@@ -2388,39 +2536,16 @@ function PlaceDetailView({ place, onBack, areaBreadcrumb = null, cameFromSearch 
                       </button>
                     </div>
                   </div>
-                </div>
-              </div>
-            ) : (
-              <div className="mt-3.5">
-                <GuestAuthPrompt variant="community" mode="inline-card" />
-              </div>
-            )}
-
-            <div className="mt-2 min-h-5">
-              {commentError ? <p className="text-[13px] font-bold text-red-600">{commentError}</p> : null}
-            </div>
-          </div>
-
-          <div className="mt-5 rounded-[22px] border border-slate-200/80 bg-slate-50/55 p-4 sm:p-5">
-            <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200/80 pb-3">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2.5">
-                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-2xl bg-[var(--accent-wash)] text-[var(--accent-deep)]">
-                    <MessageCircle className="h-4 w-4" strokeWidth={2.2} />
-                  </span>
-                  <div>
-                    <h3 className="text-[18px] font-black text-slate-950">Comments</h3>
-                    <p className="mt-0.5 text-[13px] font-semibold text-slate-500">
-                      {isCommentsLoading
-                        ? 'Loading comments...'
-                        : visibleCommentCount === 0
-                          ? '0 comments'
-                          : `${visibleCommentCount} comment${visibleCommentCount === 1 ? '' : 's'}`}
-                    </p>
+                  <div className="mt-2 min-h-5">
+                    {commentError ? <p className="text-[13px] font-bold text-red-600">{commentError}</p> : null}
                   </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="mt-4">
+                <GuestAuthPrompt variant="community" mode="inline-card" />
+              </div>
+            )}
 
             {isCommentsLoading ? (
               <div className="mt-4">
@@ -2452,37 +2577,27 @@ function PlaceDetailView({ place, onBack, areaBreadcrumb = null, cameFromSearch 
   )
 
   return (
-    <section className="min-h-screen bg-white px-0 py-0 text-[var(--text)] sm:bg-[var(--bg)] sm:py-0">
+    <PageShell tone="surface">
       <AppHeader />
 
-      <main className="gala-page-background min-h-screen w-full px-4 pb-8 pt-0 sm:px-6 md:px-8 lg:px-10">
-        <div className="mx-auto w-full max-w-[980px] lg:max-w-[1120px] xl:max-w-[1240px] 2xl:max-w-[1360px]">
+      <main className="w-full pb-12 pt-0 sm:pt-0">
+        <PageContainer size="wide">
           {cameFromSearch ? (
-            <>
-              <div className="mb-3 pt-5">
-                <button
-                  type="button"
-                  onClick={onBack}
-                  className="group inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 transition hover:text-[var(--accent)]"
-                >
-                  <ArrowLeft className="h-3.5 w-3.5 transition group-hover:-translate-x-0.5" strokeWidth={2} />
-                  Back to results for <span className="font-semibold text-slate-700 group-hover:text-[var(--accent)]">&ldquo;{returnLabel || 'search'}&rdquo;</span>
-                </button>
-              </div>
+            <div className="pt-5 sm:pt-5">
               <Breadcrumb
+                showBack
                 className="mb-4"
                 items={[
-                  { label: 'Home', href: '/', icon: <House className="h-3.5 w-3.5" /> },
                   { label: 'Search', href: searchHref || '/search', icon: <Search className="h-3.5 w-3.5" /> },
                   { label: place.name, icon: <MapPin className="h-3.5 w-3.5" /> },
                 ]}
               />
-            </>
+            </div>
           ) : (
             <Breadcrumb
+              showBack
               className="mb-4 pt-5"
               items={[
-                { label: 'Home', href: '/', icon: <House className="h-3.5 w-3.5" /> },
                 { label: 'Places', href: '/places', icon: <MapPin className="h-3.5 w-3.5" /> },
                 ...(areaBreadcrumb
                   ? [{ label: areaBreadcrumb.areaName, href: areaLink!, icon: <MapPin className="h-3.5 w-3.5" /> }]
@@ -2495,193 +2610,404 @@ function PlaceDetailView({ place, onBack, areaBreadcrumb = null, cameFromSearch 
           <PlacePhoto
             imageUrls={galleryPhotos}
             placeName={place.name}
-            currentIndex={activePhotoIndex}
-            onPrevious={showPreviousPhoto}
-            onNext={showNextPhoto}
-            onSelect={setActivePhotoIndex}
+            currentIndex={activeGalleryIndex}
+            onPrevious={() => setActiveGalleryIndex((currentIndex) => Math.max(currentIndex - 1, 0))}
+            onNext={() => setActiveGalleryIndex((currentIndex) => Math.min(currentIndex + 1, galleryPhotos.length - 1))}
+            onSelect={(index) => setActiveGalleryIndex(index)}
             showAddPhotoAction={isCommunityPlaceReady && approvedImageCount < 3}
             onContribute={handleOpenContribution}
           />
 
-          <section className="py-5 lg:py-6">
-            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between lg:gap-6">
-              <div className="min-w-0">
-                <h1 className="min-w-0 text-[26px] font-black leading-tight text-slate-950 sm:text-[32px]">{place.name}</h1>
-                {headlineRating !== null ? (
-                  <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[14px] font-semibold text-slate-600">
-                    <span className="text-[15px] font-black text-slate-950">{headlineRating.toFixed(1)}</span>
-                    <StarsDisplay rating={Math.round(headlineRating)} compact />
-                    {headlineReviewCount > 0 ? (
-                      <span className="text-slate-500">({formatRatingCount(headlineReviewCount)})</span>
-                    ) : (
-                      <span className="text-slate-500">Rating available</span>
-                    )}
-                  </div>
-                ) : null}
-                <div className="mt-3 grid gap-2">
-                  <MetaLine icon="category">{categoryLabel}</MetaLine>
-                  <MetaLine icon="location">{locationLabel}</MetaLine>
-                  <MetaLine icon="budget">{budgetLabel}</MetaLine>
+          <section className="py-3 lg:py-4">
+            <div className="flex flex-col gap-3 lg:gap-4">
+              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                <div className="min-w-0">
+                  <h1 className="min-w-0 text-[26px] font-black leading-tight text-slate-950 sm:text-[32px]">{place.name}</h1>
+                  {headlineRating !== null ? (
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[14px] font-semibold text-slate-600">
+                      <span className="text-[15px] font-black text-slate-950">{headlineRating.toFixed(1)}</span>
+                      <StarsDisplay rating={Math.round(headlineRating)} compact />
+                      {headlineReviewCount > 0 ? (
+                        <span className="text-slate-500">({formatRatingCount(headlineReviewCount)})</span>
+                      ) : (
+                        <span className="text-slate-500">Rating available</span>
+                      )}
+                    </div>
+                  ) : null}
                 </div>
-              </div>
 
-              <div className="grid w-full shrink-0 gap-2 md:w-[300px] lg:w-[340px] xl:w-[360px] 2xl:w-[380px]">
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid w-full shrink-0 grid-cols-2 gap-1.5 sm:gap-2 md:w-auto md:flex md:gap-1.5">
                   <ActionButton icon="save" onClick={handleSavePlace} disabled={isSaving} active={isSaved}>
                     {isSaving ? 'Saving' : 'Favorite'}
                   </ActionButton>
                   <ActionButton icon="share" onClick={handleSharePlace}>
                     Share
                   </ActionButton>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
                   <ActionButton icon="book" onClick={() => {
                     if (!currentUserId) {
                       guestAuth.open('add-plan')
                       return
                     }
                     setIsAddToPlanOpen(true)
-                  }}>
+                  }} className="md:flex-[1.2] md:min-w-[7.75rem]">
                     Add to Plan
                   </ActionButton>
-                  <ActionButton icon="directions" onClick={openDirections} disabled={!directionsUrl}>
+                  <ActionButton
+                    icon="directions"
+                    onClick={openDirections}
+                    disabled={!directionsUrl}
+                    iconSize={22}
+                    iconStrokeWidth={2.35}
+                  >
                     Directions
                   </ActionButton>
                 </div>
               </div>
-            </div>
 
-            <div className="mt-2 flex items-center gap-1.5 text-slate-500">
-              <Icon name="warning" className="h-3.5 w-3.5 shrink-0" />
-              <span className="text-[12px] font-medium leading-5">Something wrong with this place?</span>
-              <button
-                type="button"
-                onClick={handleOpenPlaceConcern}
-                className="text-[12px] font-bold leading-5 text-red-600 underline transition hover:text-red-700"
-              >
-                Report a concern
-              </button>
-            </div>
+              <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-600">
+                  <Icon name="category" className="h-4 w-4 shrink-0 text-slate-500" />
+                  {categoryLabel}
+                </span>
+                <span className="text-slate-300">·</span>
+                <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-600">
+                  <Icon name="location" className="h-4 w-4 shrink-0 text-slate-500" />
+                  {locationLabel}
+                </span>
+                <span className="text-slate-300">·</span>
+                <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-600">
+                  <Icon name="budget" className="h-4 w-4 shrink-0 text-slate-500" />
+                  {budgetLabel}
+                </span>
+                {(place.tags ?? []).length > 0 ? (
+                  <>
+                    <span className="text-slate-300">·</span>
+                    <div className="flex flex-wrap gap-1">
+                      {(place.tags ?? []).slice(0, 8).map((tag) => (
+                        <span
+                          key={tag.id}
+                          className="inline-flex items-center rounded-full border border-[rgba(148,163,184,0.16)] bg-slate-50 px-2 py-0.5 text-[9px] font-semibold text-slate-500"
+                        >
+                          {tag.name}
+                        </span>
+                      ))}
+                    </div>
+                  </>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={handleOpenPlaceConcern}
+                  className="ml-auto inline-flex items-center gap-1 text-[12px] font-bold leading-5 text-red-600 underline transition hover:text-red-700"
+                >
+                  <Icon name="warning" className="h-3 w-3" />
+                  Report a concern
+                </button>
+              </div>
 
-            <div className="mt-1">
-              {shareError ? <p className="text-[12px] font-bold text-red-600">{shareError}</p> : null}
-              {saveError ? <p className="text-[12px] font-bold text-red-600">{saveError}</p> : null}
-              {contributionError && !isContributionOpen ? <p className="text-[12px] font-bold text-red-600">{contributionError}</p> : null}
+              <div className="-mt-1">
+                {shareError ? <p className="text-[12px] font-bold text-red-600">{shareError}</p> : null}
+                {saveError ? <p className="text-[12px] font-bold text-red-600">{saveError}</p> : null}
+                {contributionError && !isContributionOpen ? <p className="text-[12px] font-bold text-red-600">{contributionError}</p> : null}
+              </div>
             </div>
           </section>
 
-          <DetailSection>
-            <div className="grid gap-4 md:grid-cols-[1fr_340px] md:items-start">
-              <div>
+
+
+          <DetailLayout sidebarWidth={360} tabletSidebarWidth={280}>
+            <div className="flex flex-col gap-4 lg:gap-5">
+              <DetailSection>
+                <div className="grid gap-5 md:grid-cols-2">
+                  <div>
+                    <SectionHeading icon="eye" title="Quick Take" />
+                    <p className="mt-3 text-[14px] font-semibold leading-6 text-slate-700">{quickTake}</p>
+                  </div>
+                  <div>
+                    <SectionHeading icon="fire" title="Best For" />
+                    <div className="mt-3">
+                      <GoodForList values={goodFor} />
+                    </div>
+                  </div>
+                </div>
+              </DetailSection>
+
+              <DetailSection>
+                <SectionHeading icon="sparkle" title="Game Plan" />
+                <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5">
+                  {planStats.map((stat) => (
+                    <PlanStat key={stat.title} icon={stat.icon} title={stat.title} value={stat.value} />
+                  ))}
+                </div>
+              </DetailSection>
+
+              <DetailSection>
+                <SectionHeading icon="bus" title="How To Get There" />
+                <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
+                  <TransportColumn icon="bus" title="Commute">
+                    {commuteText}
+                  </TransportColumn>
+                  <TransportColumn icon="car" title="Parking">
+                    {parkingText}
+                  </TransportColumn>
+                </div>
+              </DetailSection>
+
+              <DetailSection>
+                <SectionHeading icon="book" title="Quick Answers" />
+                <div className="mt-4 space-y-4">
+                  {quickAnswerItems.map((item) => (
+                    <div key={item.question}>
+                      <h3 className="text-[15px] font-black text-slate-900">{item.question}</h3>
+                      <p className="mt-1 text-[14px] font-semibold leading-6 text-slate-700">{item.answer}</p>
+                    </div>
+                  ))}
+                </div>
+                {canonicalPlaceLink && areaLink && areaBreadcrumb ? (
+                  <p className="mt-4 text-[13px] font-semibold leading-6 text-slate-600">
+                    Explore more from{' '}
+                    <InternalLink href={areaLink} className="text-[var(--accent)] underline underline-offset-2">
+                      {areaBreadcrumb.areaName}
+                    </InternalLink>{' '}
+                    or browse the full{' '}
+                    <InternalLink href="/places" className="text-[var(--accent)] underline underline-offset-2">
+                      places hub
+                    </InternalLink>.
+                  </p>
+                ) : null}
+              </DetailSection>
+
+              <CardSurface pad="default" tone="outlined" className="md:hidden rounded-2xl">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--accent-wash)] text-[var(--accent-deep)]">
+                    <Icon name="sparkle" className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Quick Facts</p>
+                    <h2 className="text-[15px] font-black text-slate-950">At a glance</h2>
+                  </div>
+                </div>
+                <dl className="mt-4 grid gap-3 text-[13px] font-semibold text-slate-700">
+                  <div className="flex items-start gap-2.5">
+                    <Icon name="category" className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+                    <div className="min-w-0">
+                      <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Category</dt>
+                      <dd className="mt-0.5 text-slate-800">{categoryLabel}</dd>
+                      {(place.categories ?? []).length > 0 ? (
+                        <div className="mt-1.5 flex flex-wrap gap-1">
+                          {(place.categories ?? []).slice(0, 6).map((cat) => (
+                            <span key={cat.id} className="inline-flex items-center rounded-full border border-[rgba(148,163,184,0.14)] bg-white px-2 py-0.5 text-[9px] font-semibold leading-4 text-slate-500">{cat.name}</span>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                  {(place.tags ?? []).length > 0 ? (
+                    <div className="flex items-start gap-2.5">
+                      <Icon name="sparkle" className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+                      <div className="min-w-0">
+                        <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Tags</dt>
+                        <dd className="mt-1 flex flex-wrap gap-1">
+                          {(place.tags ?? []).slice(0, 8).map((tag) => (
+                            <span key={tag.id} className="inline-flex items-center rounded-full border border-[rgba(148,163,184,0.14)] bg-white px-2 py-0.5 text-[9px] font-semibold leading-4 text-slate-500">{tag.name}</span>
+                          ))}
+                        </dd>
+                      </div>
+                    </div>
+                  ) : null}
+                  <div className="flex items-start gap-2.5">
+                    <Icon name="clock" className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+                    <div className="min-w-0">
+                      <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Best Time</dt>
+                      <dd className="mt-0.5 text-slate-800">{cleanString(place.best_time_to_visit) || 'Check on site'}</dd>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2.5">
+                    <Icon name="location" className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+                    <div className="min-w-0">
+                      <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Area</dt>
+                      <dd className="mt-0.5 text-slate-800">{locationLabel}</dd>
+                    </div>
+                  </div>
+                </dl>
+              </CardSurface>
+
+              <CardSurface pad="default" tone="outlined" className="md:hidden rounded-2xl">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 text-amber-700">
+                    <Icon name="warning" className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Before You Go</p>
+                    <h2 className="text-[15px] font-black text-slate-950">Not ideal for</h2>
+                  </div>
+                </div>
+                <ul className="mt-4 space-y-2 text-[13px] font-semibold leading-5 text-slate-600">
+                  {(notIdealFor.length > 0 ? notIdealFor : ['Whole-day plans', 'Out-of-town plans', 'Plans that need a totally different activity']).map((item) => (
+                    <li key={item} className="flex items-start gap-2.5">
+                      <Icon name="warning" className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+                      <span>{titleCase(item)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </CardSurface>
+
+              <CardSurface pad="default" tone="outlined" className="md:hidden rounded-2xl">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--accent-wash)] text-[var(--accent-deep)]">
+                    <Icon name="location" className="h-4 w-4" />
+                  </span>
+                  <div>
+                    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Neighborhood</p>
+                    <h2 className="text-[15px] font-black text-slate-950">Around Here</h2>
+                  </div>
+                </div>
+                <p className="mt-4 text-[13px] font-semibold leading-5 text-slate-600">{aroundHere}</p>
+              </CardSurface>
+
+              <DetailSection className="md:hidden">
                 <SectionHeading icon="location" title="Location" />
                 <p className="mt-3 whitespace-pre-line text-[14px] font-semibold leading-6 text-slate-700">{addressLabel}</p>
-              </div>
-              <div className="overflow-hidden rounded-xl border border-[var(--line)] bg-slate-50">
-                <MapView
-                  places={[place]}
-                  selectedPlaceId={place.id}
-                  center={[place.coordinates.lat, place.coordinates.lng]}
-                  zoom={16}
-                  autoFitToPlaces={false}
-                  className="!h-[176px] !rounded-none !border-0 md:!h-[190px]"
-                />
-              </div>
-            </div>
-          </DetailSection>
-
-          <DetailSection>
-            <div className="grid gap-5 md:grid-cols-2">
-              <div>
-                <SectionHeading icon="eye" title="Quick Take" />
-                <p className="mt-3 text-[14px] font-semibold leading-6 text-slate-700">{quickTake}</p>
-              </div>
-              <div>
-                <SectionHeading icon="fire" title="Best For" />
-                <div className="mt-3">
-                  <GoodForList values={goodFor} />
+                <div className="mt-4 overflow-hidden rounded-xl border border-[var(--line)] bg-slate-50">
+                  <MapView
+                    places={[place]}
+                    selectedPlaceId={place.id}
+                    center={[place.coordinates.lat, place.coordinates.lng]}
+                    zoom={16}
+                    autoFitToPlaces={false}
+                    className="!h-[180px] !rounded-none !border-0 sm:!h-[240px]"
+                  />
                 </div>
-              </div>
+              </DetailSection>
+
+              {communitySection}
             </div>
-          </DetailSection>
 
-          <DetailSection>
-            <SectionHeading icon="sparkle" title="Game Plan" />
-            <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-              {planStats.map((stat) => (
-                <PlanStat key={stat.title} icon={stat.icon} title={stat.title} value={stat.value} />
-              ))}
-            </div>
-          </DetailSection>
+            <DetailSidebar>
+              <Stack gap="default">
+                <CardSurface pad="loose" tone="outlined" className="hidden md:block rounded-2xl">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--accent-wash)] text-[var(--accent-deep)]">
+                      <Icon name="sparkle" className="h-4 w-4" />
+                    </span>
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Quick Facts</p>
+                      <h2 className="text-[15px] font-black text-slate-950">At a glance</h2>
+                    </div>
+                  </div>
+                  <dl className="mt-4 grid gap-3 text-[13px] font-semibold text-slate-700">
+                    {place.description ? (
+                      <div className="flex items-start gap-2.5">
+                        <Icon name="eye" className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+                        <div className="min-w-0">
+                          <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Description</dt>
+                          <dd className="mt-0.5 text-slate-800 line-clamp-2">{cleanString(place.description)}</dd>
+                        </div>
+                      </div>
+                    ) : null}
+                    <div className="flex items-start gap-2.5">
+                      <Icon name="category" className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+                      <div className="min-w-0">
+                        <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Category</dt>
+                        <dd className="mt-0.5 text-slate-800">{categoryLabel}</dd>
+                        {(place.categories ?? []).length > 0 ? (
+                          <div className="mt-1.5 flex flex-wrap gap-1">
+                            {(place.categories ?? []).slice(0, 6).map((cat) => (
+                              <span key={cat.id} className="inline-flex items-center rounded-full border border-[rgba(148,163,184,0.14)] bg-white px-2 py-0.5 text-[9px] font-semibold leading-4 text-slate-500">{cat.name}</span>
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                    {(place.tags ?? []).length > 0 ? (
+                      <div className="flex items-start gap-2.5">
+                        <Icon name="sparkle" className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+                        <div className="min-w-0">
+                          <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Tags</dt>
+                          <dd className="mt-1 flex flex-wrap gap-1">
+                            {(place.tags ?? []).slice(0, 8).map((tag) => (
+                              <span key={tag.id} className="inline-flex items-center rounded-full border border-[rgba(148,163,184,0.14)] bg-white px-2 py-0.5 text-[9px] font-semibold leading-4 text-slate-500">{tag.name}</span>
+                            ))}
+                          </dd>
+                        </div>
+                      </div>
+                    ) : null}
+                    <div className="flex items-start gap-2.5">
+                      <Icon name="clock" className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+                      <div className="min-w-0">
+                        <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Best Time</dt>
+                        <dd className="mt-0.5 text-slate-800">{cleanString(place.best_time_to_visit) || 'Check on site'}</dd>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2.5">
+                      <Icon name="budget" className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+                      <div className="min-w-0">
+                        <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Budget</dt>
+                        <dd className="mt-0.5 text-slate-800">{budgetLabel}</dd>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2.5">
+                      <Icon name="location" className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+                      <div className="min-w-0">
+                        <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Area</dt>
+                        <dd className="mt-0.5 text-slate-800">{locationLabel}</dd>
+                      </div>
+                    </div>
+                  </dl>
+                </CardSurface>
 
-          <DetailSection>
-            <SectionHeading icon="bus" title="How To Get There" />
-            <div className="mt-4 grid gap-4 sm:grid-cols-3">
-              <TransportColumn icon="bus" title="Commute">
-                <p>{commuteText}</p>
-              </TransportColumn>
-              <TransportColumn icon="car" title="Parking">
-                <p>{parkingText}</p>
-              </TransportColumn>
-              <TransportColumn icon="globe" title="Website">
-                {websiteUrl ? (
-                  <a href={websiteUrl} target="_blank" rel="noreferrer" className="underline underline-offset-2">
-                    Visit official page
-                  </a>
-                ) : (
-                  <p>Official page not available</p>
-                )}
-              </TransportColumn>
-            </div>
-          </DetailSection>
+                <CardSurface pad="loose" tone="outlined" className="hidden md:block rounded-2xl">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 text-amber-700">
+                      <Icon name="warning" className="h-4 w-4" />
+                    </span>
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">Before You Go</p>
+                      <h2 className="text-[15px] font-black text-slate-950">Not ideal for</h2>
+                    </div>
+                  </div>
+                  <ul className="mt-4 space-y-2 text-[13px] font-semibold leading-5 text-slate-600">
+                    {(notIdealFor.length > 0 ? notIdealFor : ['Whole-day plans', 'Out-of-town plans', 'Plans that need a totally different activity']).map((item) => (
+                      <li key={item} className="flex items-start gap-2.5">
+                        <Icon name="warning" className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+                        <span>{titleCase(item)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardSurface>
 
-          <DetailSection>
-            <SectionHeading icon="warning" title="Before You Go" />
-            <div className="mt-3 border-l-2 border-amber-200 pl-4">
-              <p className="text-[13px] font-black text-slate-700">Not ideal for</p>
-              <ul className="mt-2 list-disc space-y-1 pl-5 text-[13px] font-semibold leading-5 text-slate-600">
-                {(notIdealFor.length > 0 ? notIdealFor : ['Whole-day plans', 'Out-of-town plans', 'Plans that need a totally different activity']).map((item) => (
-                  <li key={item}>{titleCase(item)}</li>
-                ))}
-              </ul>
-            </div>
-          </DetailSection>
+                <CardSurface pad="loose" tone="outlined" className="hidden md:block rounded-2xl">
+                  <div className="flex items-center gap-2.5">
+                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--accent-wash)] text-[var(--accent-deep)]">
+                      <Icon name="location" className="h-4 w-4" />
+                    </span>
+                    <div>
+                      <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Neighborhood</p>
+                      <h2 className="text-[15px] font-black text-slate-950">Around Here</h2>
+                    </div>
+                  </div>
+                  <p className="mt-4 text-[13px] font-semibold leading-5 text-slate-600">{aroundHere}</p>
+                </CardSurface>
 
-          <DetailSection>
-            <SectionHeading icon="location" title="Around Here" />
-            <p className="mt-3 text-[14px] font-semibold leading-6 text-slate-700">{aroundHere}</p>
-          </DetailSection>
-
-          <DetailSection>
-            <SectionHeading icon="sparkle" title="The Vibe" />
-            <p className="mt-3 text-[14px] font-semibold leading-6 text-slate-700">{vibeText}</p>
-          </DetailSection>
-
-          <DetailSection>
-            <SectionHeading icon="book" title="Quick Answers" />
-            <div className="mt-4 space-y-4">
-              {quickAnswerItems.map((item) => (
-                <div key={item.question}>
-                  <h3 className="text-[15px] font-black text-slate-900">{item.question}</h3>
-                  <p className="mt-1 text-[14px] font-semibold leading-6 text-slate-700">{item.answer}</p>
+                <div className="hidden md:block">
+                  <DetailSection>
+                    <SectionHeading icon="location" title="Location" />
+                    <p className="mt-3 whitespace-pre-line text-[14px] font-semibold leading-6 text-slate-700">{addressLabel}</p>
+                    <div className="mt-4 overflow-hidden rounded-xl border border-[var(--line)] bg-slate-50">
+                      <MapView
+                        places={[place]}
+                        selectedPlaceId={place.id}
+                        center={[place.coordinates.lat, place.coordinates.lng]}
+                        zoom={16}
+                        autoFitToPlaces={false}
+                        className="!h-[160px] !rounded-none !border-0 sm:!h-[180px] lg:!h-[240px] xl:!h-[280px]"
+                      />
+                    </div>
+                  </DetailSection>
                 </div>
-              ))}
-            </div>
-            {canonicalPlaceLink && areaLink && areaBreadcrumb ? (
-              <p className="mt-4 text-[13px] font-semibold leading-6 text-slate-600">
-                Explore more from{' '}
-                <InternalLink href={areaLink} className="text-[var(--accent)] underline underline-offset-2">
-                  {areaBreadcrumb.areaName}
-                </InternalLink>{' '}
-                or browse the full{' '}
-                <InternalLink href="/places" className="text-[var(--accent)] underline underline-offset-2">
-                  places hub
-                </InternalLink>.
-              </p>
-            ) : null}
-          </DetailSection>
-
-          {communitySection}
-        </div>
+              </Stack>
+            </DetailSidebar>
+          </DetailLayout>
+        </PageContainer>
       </main>
 
       {guestAuth.promptElement}
@@ -2981,8 +3307,7 @@ function PlaceDetailView({ place, onBack, areaBreadcrumb = null, cameFromSearch 
           </div>
         </div>
       ) : null}
-
-    </section>
+    </PageShell>
   )
 }
 

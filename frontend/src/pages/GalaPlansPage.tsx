@@ -1,6 +1,6 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { FormEvent, ReactNode } from 'react'
+import type { FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import AppHeader from '../components/AppHeader'
 import { AppIcon } from '../components/AppIcon'
@@ -20,6 +20,7 @@ import {
   type GalaPlanSummary,
   type GalaPlanVisibility,
 } from '../utils/galaPlansApi'
+import { PageContainer, PageShell } from '../components/layout/ResponsiveLayouts'
 import { parseGalaPlanDescription } from '../utils/galaPlanDescription'
 import { navigateToPath } from '../utils/navigation'
 import { getCategoryIconName } from '../components/AppIcon'
@@ -121,26 +122,15 @@ function EmptyPlansState({ favorites }: { favorites?: boolean }) {
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
         {!favorites ? (
-          <button type="button" onClick={() => navigateToPath('/gala-plans/new')} className="gala-primary-button min-h-10 px-4">
+          <button type="button" onClick={() => navigateToPath('/gala-plans/new')} className="app-button app-button-primary app-button-md">
             Create Gala Plan
           </button>
         ) : null}
-        <button type="button" onClick={() => navigateToPath(favorites ? '/' : '/gala-plans/favorites')} className="gala-secondary-button min-h-10 px-4">
+        <button type="button" onClick={() => navigateToPath(favorites ? '/' : '/gala-plans/favorites')} className="app-button app-button-secondary app-button-md">
           {favorites ? 'Discover Places' : 'View Gala Plan Favorites'}
         </button>
       </div>
     </section>
-  )
-}
-
-function PageShell({ children }: { children: ReactNode }) {
-  return (
-    <div className="gala-app-page">
-      <AppHeader fixed />
-      <main className="gala-app-main gala-app-main-fixed-header">
-        {children}
-      </main>
-    </div>
   )
 }
 
@@ -229,17 +219,17 @@ function PlanCard({
         </div>
       ) : null}
       <div className="mt-5 flex flex-wrap gap-2">
-        <button type="button" onClick={openPlan} className="gala-primary-button min-h-10 px-4">
+        <button type="button" onClick={openPlan} className="app-button app-button-primary app-button-md">
           <AppIcon name="arrowRight" className="h-4 w-4" />
           View Plan
         </button>
         {plan.viewer_is_owner ? (
           <>
-            <button type="button" onClick={() => navigateToPath(`/gala-plans/${encodeURIComponent(plan.id)}/edit`)} className="gala-secondary-button min-h-10 px-4">
+            <button type="button" onClick={() => navigateToPath(`/gala-plans/${encodeURIComponent(plan.id)}/edit`)} className="app-button app-button-secondary app-button-md">
               <AppIcon name="settings" className="h-4 w-4" />
               Edit
             </button>
-            <button type="button" onClick={async () => { await deleteGalaPlan(plan.id); onDeleted?.(plan.id) }} className="inline-flex h-10 items-center gap-2 rounded-lg border border-red-200 bg-white px-4 text-sm font-black text-red-700 transition hover:border-red-300 hover:bg-red-50">
+            <button type="button" onClick={async () => { await deleteGalaPlan(plan.id); onDeleted?.(plan.id) }} className="app-button app-button-danger app-button-md">
               <AppIcon name="trash" className="h-4 w-4" />
               Delete
             </button>
@@ -393,7 +383,7 @@ function ItineraryBuilder({
   }
 
   return (
-    <section className="grid gap-5">
+    <section className="grid gap-5 lg:grid-cols-[minmax(0,1.08fr)_minmax(340px,0.92fr)] xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)] lg:items-start">
       <section className="grid gap-6">
         <div className="grid gap-2">
           <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[var(--accent-deep)]">Build The Route</p>
@@ -416,7 +406,7 @@ function ItineraryBuilder({
               <AppIcon name="search" className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
               <input value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); void searchPlaces() } }} className="h-12 w-full rounded-2xl border border-[var(--line-strong)] bg-white pl-11 pr-4 text-sm font-semibold outline-none transition focus:border-[var(--accent)] focus:ring-4 focus:ring-[var(--accent-soft)]" placeholder="Search places to add" />
             </div>
-            <button type="button" onClick={() => void searchPlaces()} disabled={isSearching} className="gala-primary-button h-12 px-5 disabled:border-slate-300 disabled:bg-slate-300">{isSearching ? 'Searching...' : 'Search'}</button>
+            <button type="button" onClick={() => void searchPlaces()} disabled={isSearching} className="app-button app-button-primary app-button-md">{isSearching ? 'Searching...' : 'Search'}</button>
           </div>
         </div>
 
@@ -517,7 +507,7 @@ function ItineraryBuilder({
                 <p>You are adding <span className="font-black text-slate-950">{selectedPlace.name}</span> as <span className="font-black text-slate-950">Day {draftDay}, Stop {draftOrder}</span>{buildTimeLabel(draftTime, draftTimePeriod) ? <span> at <span className="font-black text-slate-950">{buildTimeLabel(draftTime, draftTimePeriod)}</span></span> : null}.</p>
                 <div className="flex flex-wrap gap-2">
                   <button type="button" onClick={() => setSelectedPlace(null)} className="h-11 rounded-2xl border border-[var(--line)] bg-white px-4 text-sm font-black text-slate-700 transition hover:bg-slate-50">Cancel</button>
-                  <button type="button" onClick={confirmAddPlace} className="gala-primary-button h-11 px-5">
+                  <button type="button" onClick={confirmAddPlace} className="app-button app-button-primary app-button-md">
                     <AppIcon name="addToPlan" className="h-4 w-4" />
                     Add to plan
                   </button>
@@ -530,7 +520,7 @@ function ItineraryBuilder({
         {errorMessage ? <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-bold text-red-700">{errorMessage}</p> : null}
       </section>
 
-      <section className="grid gap-4 border-t border-[var(--line)] pt-5">
+      <section className="grid gap-4 rounded-3xl border border-[var(--line)] bg-white p-4 shadow-[var(--shadow-soft)] sm:p-5 lg:sticky lg:top-24">
         <div className="flex flex-col gap-1">
           <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[var(--accent-deep)]">Review The Plan</p>
           <h2 className="gala-section-title">Selected places</h2>
@@ -708,7 +698,7 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
 
         <ItineraryBuilder items={items} onItemsChange={setItems} />
         {errorMessage ? <p className="rounded-2xl bg-red-50 p-4 text-sm font-bold text-red-700">{errorMessage}</p> : null}
-        <button type="submit" disabled={isSaving || !title.trim()} className="gala-primary-button h-12 w-fit px-6 disabled:border-slate-300 disabled:bg-slate-300">{isSaving ? 'Saving...' : isEdit ? 'Save Changes' : 'Create Gala Plan'}</button>
+        <button type="submit" disabled={isSaving || !title.trim()} className="app-button app-button-primary app-button-md">{isSaving ? 'Saving...' : isEdit ? 'Save Changes' : 'Create Gala Plan'}</button>
       </div>
     </form>
   )
@@ -744,48 +734,52 @@ function ListPage({ session, favorites = false }: { session?: Session | null; fa
 
   return (
     <>
-      <div className="lg:mx-auto lg:max-w-[1320px] xl:max-w-[1400px] 2xl:max-w-[1500px]">
-      <PageHeroHeader
-        eyebrow="Gala Plans"
-        title={favorites ? 'Gala plan favorites' : 'My gala plans'}
-        description={favorites ? 'Public gala plans you hearted and saved for quick access.' : 'Keep your routes clear, compact, and easy to edit.'}
-        icon={<AppIcon name="galaPlan" className="h-4 w-4" />}
-        badges={
-          <>
-            <span className="gala-count-pill">
-              {plans.length} {favorites ? 'saved plan' : 'plan'}{plans.length === 1 ? '' : 's'}
-            </span>
-            <span className="gala-count-pill">
-              {favorites ? 'Community picks' : `Latest update ${latestUpdate}`}
-            </span>
-          </>
-        }
-        aside={
-          <div className="flex flex-wrap gap-2 lg:justify-end">
-            <button type="button" onClick={() => navigateToPath(favorites ? '/gala-plans' : '/gala-plans/favorites')} className="gala-secondary-button min-h-10 px-4">{favorites ? 'My Gala Plan' : 'Gala Plan Favorites'}</button>
-            {!favorites ? <button type="button" onClick={() => navigateToPath('/gala-plans/new')} className="gala-primary-button min-h-10 px-4">Create Gala Plan</button> : null}
-          </div>
-        }
-      />
+      <PageContainer size="wide" className="grid gap-5 sm:gap-6">
+        <div className="pt-2">
+          <MinimalBackNav to="/" label="Home" preferHistory={false} />
+        </div>
 
-      <div className="mt-1 flex flex-wrap gap-x-5 gap-y-2">
-        <PlanStat label={favorites ? 'Saved plans' : 'Total plans'} value={String(plans.length)} />
-        {!favorites ? <PlanStat label="Latest update" value={latestUpdate} /> : null}
-      </div>
-
-      {isLoading ? (
-        <UnifiedLoadingState
-          title={favorites ? 'Preparing saved gala plans...' : 'Preparing your gala plans...'}
-          message={favorites ? 'We are loading your favorited plans.' : 'We are loading your plans.'}
+        <PageHeroHeader
+          eyebrow="Gala Plans"
+          title={favorites ? 'Gala plan favorites' : 'My gala plans'}
+          description={favorites ? 'Public gala plans you hearted and saved for quick access.' : 'Keep your routes clear, compact, and easy to edit.'}
+          icon={<AppIcon name="galaPlan" className="h-4 w-4" />}
+          badges={
+            <>
+              <span className="gala-count-pill">
+                {plans.length} {favorites ? 'saved plan' : 'plan'}{plans.length === 1 ? '' : 's'}
+              </span>
+              <span className="gala-count-pill">
+                {favorites ? 'Community picks' : `Latest update ${latestUpdate}`}
+              </span>
+            </>
+          }
+          aside={
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
+              <button type="button" onClick={() => navigateToPath(favorites ? '/gala-plans' : '/gala-plans/favorites')} className="app-button app-button-secondary app-button-md">{favorites ? 'My Gala Plan' : 'Gala Plan Favorites'}</button>
+              {!favorites ? <button type="button" onClick={() => navigateToPath('/gala-plans/new')} className="app-button app-button-primary app-button-md">Create Gala Plan</button> : null}
+            </div>
+          }
         />
-      ) : null}
-      {!isLoading && isRefreshing ? <p className="text-sm text-[var(--muted)]">Refreshing gala plans in the background...</p> : null}
-      {errorMessage ? <p className="rounded-lg bg-red-50 p-4 text-sm font-bold text-red-700">{errorMessage}</p> : null}
-      {!isLoading && !errorMessage && plans.length === 0 ? <EmptyPlansState favorites={favorites} /> : null}
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {plans.map((plan) => <PlanCard key={plan.id} plan={plan} showOwner={favorites} onDeleted={(planId) => setPlans((current) => current.filter((currentPlan) => currentPlan.id !== planId))} />)}
-      </section>
-      </div>
+
+        <div className="flex flex-wrap gap-x-5 gap-y-2">
+          <PlanStat label={favorites ? 'Saved plans' : 'Total plans'} value={String(plans.length)} />
+          {!favorites ? <PlanStat label="Latest update" value={latestUpdate} /> : null}
+        </div>
+
+        {isLoading ? (
+          <UnifiedLoadingState
+            title={favorites ? 'Preparing saved gala plans...' : 'Preparing your gala plans...'}
+            message={favorites ? 'We are loading your favorited plans.' : 'We are loading your plans.'}
+          />
+        ) : null}
+        {!isLoading && isRefreshing ? <p className="text-sm text-[var(--muted)]">Refreshing gala plans in the background...</p> : null}
+        {errorMessage ? <p className="rounded-lg bg-red-50 p-4 text-sm font-bold text-red-700">{errorMessage}</p> : null}
+        {!isLoading && !errorMessage && plans.length === 0 ? <EmptyPlansState favorites={favorites} /> : null}
+        <section className="grid gap-4 md:grid-cols-2 2xl:grid-cols-4">
+          {plans.map((plan) => <PlanCard key={plan.id} plan={plan} showOwner={favorites} onDeleted={(planId) => setPlans((current) => current.filter((currentPlan) => currentPlan.id !== planId))} />)}
+        </section>
+      </PageContainer>
     </>
   )
 }
@@ -857,7 +851,7 @@ function DetailPage({ planId, session }: { planId: string; session?: Session | n
   if (!plan) return <p className="rounded-lg border border-[var(--line)] bg-white p-5 text-sm font-bold text-red-700">{errorMessage || 'Gala plan unavailable.'}</p>
 
   return (
-    <div className="lg:mx-auto lg:max-w-[1120px] xl:max-w-[1240px] 2xl:max-w-[1320px]">
+    <PageContainer size="wide" className="grid gap-5">
       <div className="grid gap-5">
         {isRefreshing ? <p className="text-sm text-[var(--muted)]">Refreshing this gala plan in the background...</p> : null}
         <section className="gala-card overflow-hidden">
@@ -944,19 +938,22 @@ function DetailPage({ planId, session }: { planId: string; session?: Session | n
         ))}
         </section>
       </div>
-    </div>
+    </PageContainer>
   )
 }
 
 function GalaPlansPage({ mode = 'list', planId = null, session = null }: GalaPlansPageProps) {
   return (
     <PageShell>
-      {mode !== 'list' && mode !== 'favorites' ? <MinimalBackNav to="/gala-plans" /> : null}
-      {mode === 'list' ? <ListPage session={session} /> : null}
-      {mode === 'favorites' ? <ListPage session={session} favorites /> : null}
-      {mode === 'new' ? <PlanForm session={session} /> : null}
-      {mode === 'edit' && planId ? <PlanForm session={session} planId={planId} /> : null}
-      {mode === 'detail' && planId ? <DetailPage planId={planId} session={session} /> : null}
+      <AppHeader fixed />
+      <main className="gala-app-main gala-app-main-fixed-header">
+        {mode !== 'list' && mode !== 'favorites' ? <MinimalBackNav to="/gala-plans" /> : null}
+        {mode === 'list' ? <ListPage session={session} /> : null}
+        {mode === 'favorites' ? <ListPage session={session} favorites /> : null}
+        {mode === 'new' ? <PlanForm session={session} /> : null}
+        {mode === 'edit' && planId ? <PlanForm session={session} planId={planId} /> : null}
+        {mode === 'detail' && planId ? <DetailPage planId={planId} session={session} /> : null}
+      </main>
     </PageShell>
   )
 }

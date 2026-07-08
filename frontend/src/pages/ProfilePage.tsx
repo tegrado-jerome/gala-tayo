@@ -2,9 +2,10 @@ import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import AppHeader from '../components/AppHeader'
+import MinimalBackNav from '../components/MinimalBackNav'
 import { AppIcon } from '../components/AppIcon'
 import ProfileAvatar from '../components/ProfileAvatar'
-import { PageContainer } from '../components/layout/ResponsiveLayouts'
+import { PageContainer, PageShell, CardSurface } from '../components/layout/ResponsiveLayouts'
 import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { updateAccountPassword } from '../services/authApi'
@@ -235,10 +236,14 @@ function ProfilePage({ session }: ProfilePageProps) {
   }
 
   return (
-    <div className="gala-page-shell">
+    <PageShell>
       <AppHeader />
-      <main className="mx-auto w-full max-w-[1120px] px-4 py-6 sm:px-6 lg:py-10">
-        <PageContainer className="px-0">
+      <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
+        <PageContainer size="wide">
+          <div className="mb-5">
+            <MinimalBackNav to="/" label="Home" preferHistory={false} />
+          </div>
+
         {isLoading ? (
           <UnifiedLoadingState
             title="Preparing profile..."
@@ -247,7 +252,7 @@ function ProfilePage({ session }: ProfilePageProps) {
         ) : profile ? (
           <>
             {isRefreshing ? <p className="mb-4 text-sm text-[var(--muted)]">Refreshing your profile in the background...</p> : null}
-            <section className="gala-card px-5 py-6 sm:px-7">
+            <CardSurface pad="loose">
               <div className="flex flex-col gap-5 border-b border-[var(--line)] pb-5 sm:flex-row sm:items-end sm:justify-between">
                   <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end">
                     <div>
@@ -275,7 +280,7 @@ function ProfilePage({ session }: ProfilePageProps) {
                       <button
                         type="button"
                         onClick={() => navigateToPath(`/u/${encodeURIComponent(profile.username || '')}`)}
-                        className="gala-secondary-button h-11 px-4"
+                        className="app-button app-button-secondary app-button-md"
                       >
                         <AppIcon name="share" className="h-4 w-4" />
                         View public
@@ -302,7 +307,7 @@ function ProfilePage({ session }: ProfilePageProps) {
                   {followRequests.length} pending requests
                 </span>
               </div>
-            </section>
+            </CardSurface>
 
             {isEditing ? (
               <form className="gala-card mt-8 overflow-hidden" onSubmit={handleSave}>
@@ -389,7 +394,7 @@ function ProfilePage({ session }: ProfilePageProps) {
                       Bio length: <span className="font-black text-slate-950">{bioCharacterCount}/280</span>
                     </div>
                   </div>
-                  <div className="grid gap-4 rounded-[24px] bg-[#f8fbff] p-4 sm:grid-cols-[auto,minmax(0,1fr)] sm:items-center">
+                  <div className="grid gap-4 rounded-[24px] bg-[var(--surface-alt)] p-4 sm:grid-cols-[auto,minmax(0,1fr)] sm:items-center">
                     <ProfileAvatar
                       profile={{
                         username: normalizedUsername || 'your-name',
@@ -445,7 +450,7 @@ function ProfilePage({ session }: ProfilePageProps) {
                       type="button"
                       onClick={() => void handleUpdatePassword()}
                       disabled={isSavingPassword || !newPassword || !confirmNewPassword}
-                    className="gala-primary-button disabled:border-slate-300 disabled:bg-slate-300"
+                    className="app-button app-button-primary app-button-md"
                     >
                       {isSavingPassword ? 'Updating password...' : 'Set password'}
                     </button>
@@ -460,7 +465,7 @@ function ProfilePage({ session }: ProfilePageProps) {
                   <button
                     type="submit"
                     disabled={Boolean(usernameError) || isSaving}
-                    className="gala-primary-button px-6 disabled:border-slate-300 disabled:bg-slate-300"
+                    className="app-button app-button-primary app-button-md"
                   >
                     {isSaving ? 'Saving...' : 'Save profile'}
                   </button>
@@ -653,7 +658,7 @@ function ProfilePage({ session }: ProfilePageProps) {
         ) : null}
         </PageContainer>
       </main>
-    </div>
+    </PageShell>
   )
 }
 

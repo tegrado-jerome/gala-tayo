@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { AppIcon } from './AppIcon'
 import GoogleSignInButton from './GoogleSignInButton'
+import { CenteredModal } from './layout/Primitives'
 
 type GuestLimitModalProps = {
   isOpen: boolean
@@ -45,16 +46,14 @@ function GuestLimitModal({ isOpen, onClose, mode = 'searchLimit' }: GuestLimitMo
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-[7000] flex items-center justify-center px-4 py-6">
-      <button
-        type="button"
-        className="gala-modal-backdrop absolute inset-0 bg-slate-950/28 backdrop-blur-[3px]"
-        aria-label="Close guest limit modal"
-        onClick={onClose}
-      />
-
-      <section
-        className="gala-modal-card gala-card relative w-full max-w-[430px] overflow-hidden"
+    <CenteredModal
+      isOpen={isOpen}
+      onClose={onClose}
+      maxWidth="sm"
+      panelClassName="gala-card relative max-w-[430px] overflow-hidden"
+      ariaLabel="Guest limit"
+    >
+      <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="guest-limit-title"
@@ -120,7 +119,7 @@ function GuestLimitModal({ isOpen, onClose, mode = 'searchLimit' }: GuestLimitMo
             <button
               type="button"
               onClick={onClose}
-              className="gala-secondary-button h-10 w-[150px] justify-start py-1 pl-1.5 pr-3"
+              className="app-button app-button-secondary app-button-md w-[150px]"
             >
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white text-[var(--accent-deep)] ring-1 ring-[var(--line)]">
                 <AppIcon name="history" className="h-4 w-4" />
@@ -129,8 +128,8 @@ function GuestLimitModal({ isOpen, onClose, mode = 'searchLimit' }: GuestLimitMo
             </button>
           </div>
         </div>
-      </section>
-    </div>,
+      </div>
+    </CenteredModal>,
     document.body,
   )
 }

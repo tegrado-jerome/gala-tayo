@@ -3,7 +3,6 @@ import type { Session } from '@supabase/supabase-js'
 import AppHeader from '../components/AppHeader'
 import MinimalBackNav from '../components/MinimalBackNav'
 import UnifiedLoadingState from '../components/UnifiedLoadingState'
-import { navigateToPath } from '../utils/navigation'
 import { getMyPlaceSubmissions, type PlaceSubmission } from '../utils/placeSubmissionsApi'
 
 function formatDate(value?: string | null) {
@@ -75,10 +74,15 @@ function MyPlaceSubmissionsPage({ session }: { session: Session }) {
           </div>
           <button
             type="button"
-            onClick={() => navigateToPath('/submit-place')}
-            className="gala-primary-button px-4"
+            disabled
+            aria-disabled="true"
+            title="Coming soon"
+            className="gala-primary-button cursor-not-allowed px-4 opacity-70"
           >
             Submit another place
+            <span className="ml-2 rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.14em] text-white">
+              Soon
+            </span>
           </button>
         </div>
 

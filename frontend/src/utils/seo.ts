@@ -1,4 +1,4 @@
-import galaTayoLogo from '../assets/brand/galatayo-logo.png'
+import galaTayoLogo from '../assets/brand/galatayo-logo.svg'
 import { metroManilaAreaNameBySlug } from '../data/metroManilaAreas'
 
 type CanonicalPlaceInput = {

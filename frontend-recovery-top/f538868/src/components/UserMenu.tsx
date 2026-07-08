@@ -144,6 +144,10 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
     'group flex w-full items-center gap-4 rounded-lg px-3 py-3 text-left text-[15px] font-semibold text-slate-800 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
   const menuIconClass =
     'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-[var(--accent-deep)] ring-1 ring-slate-200 transition group-hover:bg-[var(--accent-wash)]'
+  const soonMenuItemClass =
+    'pointer-events-none group flex w-full items-center gap-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-left text-[15px] font-semibold text-slate-400 opacity-90'
+  const soonMenuIconClass =
+    'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white text-slate-400 ring-1 ring-slate-200'
   const submenuItemClass =
     'group flex w-full items-center gap-4 rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
   const submenuIconClass =
@@ -280,11 +284,13 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
                     <span className="flex-1">Gala Plans</span>
                     <AppIcon name="chevronRight" className="h-4 w-4 text-slate-500" />
                   </button>
-                  <button type="button" onClick={() => closeAndNavigate('/submit-place')} className={menuItemClass} role="menuitem">
-                    <span className={menuIconClass}><AppIcon name="place" size="ui" /></span>
+                  <div className={soonMenuItemClass} role="menuitem" aria-disabled="true" title="Coming soon">
+                    <span className={soonMenuIconClass}><AppIcon name="place" size="ui" /></span>
                     <span className="flex-1">Submit Place</span>
-                    <AppIcon name="chevronRight" className="h-4 w-4 text-slate-500" />
-                  </button>
+                    <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
+                      Soon
+                    </span>
+                  </div>
 
                   <div className="my-3 border-t border-slate-200" />
 

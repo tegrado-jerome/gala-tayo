@@ -13,6 +13,7 @@ import {
 import { navigateToPath } from '../utils/navigation'
 import promptBuilderOutputChibi from '../assets/chibis/features/prompt-builder/chibi-prompt-builder-output.webp'
 import promptBuilderQuestionsChibi from '../assets/chibis/features/prompt-builder/chibi-prompt-builder-questions.webp'
+import { ChibiIllustration } from './layout/Primitives'
 
 type PromptBuilderModalProps = {
   isOpen: boolean
@@ -103,7 +104,7 @@ function ExternalLinkBadge({ label }: { label: string }) {
   }
 
   return (
-    <span className="relative inline-flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-[9px] border border-[rgba(15,23,42,0.1)] bg-white">
+    <span className="relative inline-flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[rgba(15,23,42,0.1)] bg-white">
       <span className="text-[9px] font-bold tracking-[0.04em] text-slate-500">
         {label.slice(0, 2).toUpperCase()}
       </span>
@@ -282,21 +283,21 @@ export default function PromptBuilderModal({
   const questionSections = promptBuilderSections.filter((section) => primaryQuestionIds.includes(section.id))
   return hasGeneratedPrompt || isGeneratingPrompt ? (
     <section
-      className="gala-page-background flex min-h-0 flex-1 flex-col overflow-y-auto"
+      className="gala-page-background flex h-full min-h-0 flex-1 flex-col overflow-hidden"
       role="dialog"
       aria-modal="true"
       aria-labelledby="prompt-builder-title"
     >
       <div
         ref={outputPanelRef}
-        className="prompt-builder-shell mx-auto min-w-0 px-3 pb-[calc(env(safe-area-inset-bottom,0px)+5rem)] pt-3 sm:px-4 sm:pb-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] sm:pt-4"
+        className="prompt-builder-shell mx-auto flex h-full min-h-0 w-full min-w-0 flex-col overflow-y-auto overscroll-contain px-3 pb-[calc(env(safe-area-inset-bottom,0px)+5rem)] pt-3 sm:px-4 sm:pb-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] sm:pt-4 lg:px-8 lg:pt-6"
       >
         <div className="flex w-full justify-start">
           <BackToHomeButton />
         </div>
 
         {isGeneratingPrompt ? (
-          <div className="mt-4 rounded-[18px] border border-[rgba(15,23,42,0.08)] bg-white px-4 py-5 shadow-[0_8px_24px_rgba(15,23,42,0.03)] sm:px-5 sm:py-6">
+          <div className="mt-4 rounded-2xl border border-[rgba(15,23,42,0.08)] bg-white px-4 py-5 shadow-[0_8px_24px_rgba(15,23,42,0.03)] sm:px-5 sm:py-6">
             <div className="animate-pulse space-y-3">
               <div className="h-6 w-40 rounded-full bg-slate-200" />
               <div className="h-4 w-64 rounded-full bg-slate-200" />
@@ -308,28 +309,30 @@ export default function PromptBuilderModal({
           </div>
         ) : (
           <>
-            <div className="prompt-hero mt-1 flex flex-col items-center gap-1 overflow-visible text-center">
-              <img
-                src={promptBuilderOutputChibi}
-                alt=""
-                className="mx-auto mb-1 block h-[13rem] w-auto max-w-full shrink-0 object-contain sm:h-[15rem]"
-                loading="lazy"
-              />
+            <div className="prompt-hero mt-1 flex flex-col items-center gap-2 overflow-visible text-center lg:mt-2 lg:flex-row lg:items-center lg:justify-start lg:gap-8 lg:text-left">
+              <div className="flex min-w-0 flex-1 flex-col items-center gap-3 lg:flex-row lg:items-center lg:gap-6">
+                <ChibiIllustration
+                  src={promptBuilderOutputChibi}
+                  variant="feature"
+                  className="mx-auto !w-[clamp(200px,28vw,300px)] !max-h-[240px] lg:mx-0 lg:!w-[clamp(220px,20vw,320px)] lg:!max-h-[280px]"
+                />
 
-              <div className="min-w-0">
-                <h1
-                  id="prompt-builder-title"
-                  className="text-[2rem] font-black tracking-[-0.05em] text-slate-950 sm:text-[2.5rem]"
-                >
-                  Prompt ready <span className="inline-flex text-amber-400"><SparkleIcon /></span>
-                </h1>
-                <p className="mt-1 text-[13px] leading-relaxed text-slate-600 sm:text-[14px]">
-                  Your stronger gala prompt is ready to copy and use anywhere.
-                </p>
+                <div className="min-w-0 max-w-2xl lg:self-center">
+                  <h1
+                    id="prompt-builder-title"
+                    className="text-[2rem] font-black tracking-[-0.05em] text-slate-950 sm:text-[2.5rem] lg:text-[2.15rem]"
+                  >
+                    Prompt ready <span className="inline-flex text-amber-400"><SparkleIcon /></span>
+                  </h1>
+                  <p className="mt-1 text-[13px] leading-relaxed text-slate-600 sm:text-[14px]">
+                    Your stronger gala prompt is ready to copy and use anywhere.
+                  </p>
+                </div>
               </div>
+
             </div>
 
-            <div className="prompt-result-layout mt-4">
+            <div className="prompt-result-layout mt-4 lg:mt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-8">
               <section className="min-w-0 p-1 sm:p-0.5">
                 <div className="flex items-start gap-3">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[rgba(47,116,232,0.1)] text-[var(--accent-deep)]">
@@ -341,7 +344,7 @@ export default function PromptBuilderModal({
                   </div>
                 </div>
 
-                <pre className="mt-3 max-h-[180px] overflow-auto whitespace-pre-wrap break-words rounded-[14px] border border-[rgba(15,23,42,0.1)] bg-[linear-gradient(180deg,#fcfdff,#f7f9fc)] p-3 text-[13px] leading-relaxed text-slate-800 sm:text-[14px]">
+                <pre className="mt-3 max-h-[180px] overflow-auto whitespace-pre-wrap break-words rounded-[14px] border border-[rgba(15,23,42,0.1)] bg-[linear-gradient(180deg,#fcfdff,#f7f9fc)] p-3 text-[13px] leading-relaxed text-slate-800 sm:text-[14px] lg:max-h-[240px]">
                   {aiPrompt}
                 </pre>
                 <button
@@ -366,7 +369,7 @@ export default function PromptBuilderModal({
 
               <div
                 aria-hidden="true"
-                className="my-4 h-px w-full bg-[rgba(15,23,42,0.08)]"
+                className="my-4 h-px w-full bg-[rgba(15,23,42,0.08)] lg:hidden"
               />
 
               <aside className="prompt-preview-panel">
@@ -488,59 +491,62 @@ export default function PromptBuilderModal({
     </section>
   ) : (
     <section
-      className="gala-page-background flex min-h-0 flex-1 flex-col overflow-y-auto"
+      className="gala-page-background flex h-full min-h-0 flex-1 flex-col overflow-hidden"
       role="dialog"
       aria-modal="true"
       aria-labelledby="prompt-builder-title"
     >
-      <div ref={questionsPanelRef} className="prompt-builder-shell mx-auto min-w-0 px-3 pb-[calc(env(safe-area-inset-bottom,0px)+5rem)] pt-3 sm:px-4 sm:pb-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] sm:pt-4">
+      <div
+        ref={questionsPanelRef}
+        className="prompt-builder-shell mx-auto flex h-full min-h-0 w-full min-w-0 flex-col overflow-y-auto overscroll-contain px-3 pb-[calc(env(safe-area-inset-bottom,0px)+5rem)] pt-3 sm:px-4 sm:pb-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] sm:pt-4 lg:px-8 lg:pt-6"
+      >
         <div className="flex w-full justify-start">
           <BackToHomeButton />
         </div>
 
-        <div className="prompt-hero">
-          <img
-            src={promptBuilderQuestionsChibi}
-            alt=""
-            className="pointer-events-none mx-auto mb-2 mt-1 block h-[11rem] w-auto max-w-full object-contain sm:h-[13rem]"
-            loading="lazy"
-          />
+        <div className="prompt-hero lg:mt-2 lg:flex lg:items-center lg:justify-between lg:gap-8">
+          <div className="flex min-w-0 flex-1 flex-col items-center gap-3 text-center lg:flex-row lg:items-center lg:text-left">
+            <ChibiIllustration
+              src={promptBuilderQuestionsChibi}
+              variant="feature"
+              className="mx-auto !w-[clamp(190px,26vw,300px)] !max-h-[240px] lg:mx-0 lg:!w-[clamp(210px,18vw,280px)] lg:!max-h-[270px]"
+            />
 
-          <div className="mt-0 flex flex-col items-center gap-2 px-1 text-center sm:px-2">
-            <div className="min-w-0">
-              <h1 id="prompt-builder-title" className="text-[1.45rem] font-black tracking-[-0.05em] text-slate-950 sm:text-[1.8rem]">
-                Prompt Builder
-              </h1>
-              <p className="mt-1 text-[12px] leading-relaxed text-slate-600 sm:text-[13px]">
-                Build a stronger gala prompt without using Ask AI credits.
-              </p>
+            <div className="mt-0 flex flex-col items-center gap-2 px-1 text-center sm:px-2 lg:items-start lg:text-left lg:px-0">
+              <div className="min-w-0">
+                <h1 id="prompt-builder-title" className="text-[1.45rem] font-black tracking-[-0.05em] text-slate-950 sm:text-[1.8rem] lg:text-[2rem]">
+                  Prompt Builder
+                </h1>
+                <p className="mt-1 text-[12px] leading-relaxed text-slate-600 sm:text-[13px] lg:text-[14px]">
+                  Build a stronger gala prompt without using Ask AI credits.
+                </p>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="prompt-builder-layout mt-4 sm:mt-5">
+        <div className="prompt-builder-layout mt-4 sm:mt-5 lg:mt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-8">
           <div className="prompt-steps flex flex-col">
             {questionSections.map((section, index) => (
               <section
                 key={section.id}
-                className="prompt-step-card min-w-0 rounded-[18px] border border-[rgba(15,23,42,0.1)] bg-white p-3 shadow-[0_8px_22px_rgba(15,23,42,0.03)] sm:p-4"
+                className="prompt-step-card min-w-0 rounded-2xl border border-[rgba(15,23,42,0.1)] bg-white p-3 shadow-[0_8px_22px_rgba(15,23,42,0.03)] sm:p-4 lg:p-5"
               >
                 <div className="step-header flex min-w-0 items-center justify-between gap-2.5">
                   <div className="step-title-group flex min-w-0 items-center gap-2.5">
-                    <span className="step-number inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-[10px] border border-[rgba(15,23,42,0.12)] bg-slate-50 text-[13px] font-bold text-slate-900 sm:h-8 sm:w-8 sm:text-[14px]">
+                    <span className="step-number inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-[rgba(15,23,42,0.12)] bg-slate-50 text-[13px] font-bold text-slate-900 sm:h-8 sm:w-8 sm:text-[14px] lg:h-9 lg:w-9 lg:text-[15px]">
                       {index + 1}
                     </span>
                     <div className="min-w-0">
-                      <h2 className="text-[1rem] font-black tracking-[-0.03em] text-slate-950 sm:text-[1.1rem]">
+                      <h2 className="text-[1rem] font-black tracking-[-0.03em] text-slate-950 sm:text-[1.1rem] lg:text-[1.15rem]">
                         {section.title}
                       </h2>
                     </div>
                   </div>
 
-                  <span className="optional-label shrink-0">Optional</span>
                 </div>
 
-                <div className="mt-2.5 flex min-w-0 flex-wrap gap-1.5">
+                <div className="mt-2.5 flex min-w-0 flex-wrap gap-1.5 lg:gap-2">
                   {section.chips.map((chip) => {
                     const isSelected = state[section.id].includes(chip)
 
@@ -554,9 +560,9 @@ export default function PromptBuilderModal({
                             toggleFieldValue(currentState, section.id, chip, section.multiSelect)
                           )
                         }
-                        className={`prompt-chip max-w-full rounded-[999px] border px-2.5 py-1 text-[11px] transition sm:px-3 sm:text-[12px] ${
+                        className={`prompt-chip max-w-full rounded-[999px] border px-2.5 py-1 text-[11px] transition sm:px-3 sm:text-[12px] lg:px-3.5 lg:py-1.5 lg:text-[13px] ${
                           isSelected
-                            ? 'selected border-[var(--accent)] bg-[#eff6ff] text-[#1d4ed8]'
+                            ? 'selected border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]'
                             : 'border-[rgba(15,23,42,0.12)] bg-white text-slate-700 hover:border-slate-400'
                         }`}
                       >
@@ -565,12 +571,12 @@ export default function PromptBuilderModal({
                     )
                   })}
 
-                  <span className="inline-flex max-w-full rounded-[999px] border border-dashed border-[rgba(15,23,42,0.12)] px-2.5 py-1 text-[11px] text-slate-400 sm:px-3 sm:text-[12px]">
+                  <span className="inline-flex max-w-full rounded-[999px] border border-dashed border-[rgba(15,23,42,0.12)] px-2.5 py-1 text-[11px] text-slate-400 sm:px-3 sm:text-[12px] lg:px-3.5 lg:py-1.5 lg:text-[13px]">
                     <span className="block max-w-full truncate">{`${section.customLabel}...`}</span>
                   </span>
                 </div>
 
-                <p className="mt-2 text-[11px] leading-relaxed text-slate-500 sm:text-[12px]">
+                <p className="mt-2 text-[11px] leading-relaxed text-slate-500 sm:text-[12px] lg:text-[13px]">
                   {compactHelperText[section.id] ?? section.helperText}
                 </p>
 
@@ -579,17 +585,17 @@ export default function PromptBuilderModal({
                   value={state.custom[section.id]}
                   onChange={(event) => handleCustomChange(section.id, event.target.value)}
                   placeholder={section.placeholder}
-                  className="prompt-custom-input mt-2 block min-h-[38px] w-full min-w-0 max-w-full rounded-[12px] border border-[rgba(15,23,42,0.12)] bg-[rgba(248,250,252,0.9)] px-3 py-2 text-[13px] text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-300 focus:ring-2 focus:ring-slate-200 sm:text-[14px]"
+                  className="prompt-custom-input mt-2 block min-h-[38px] w-full min-w-0 max-w-full rounded-xl border border-[rgba(15,23,42,0.12)] bg-[rgba(248,250,252,0.9)] px-3 py-2 text-[13px] text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-300 focus:ring-2 focus:ring-slate-200 sm:text-[14px] lg:min-h-[44px] lg:text-[15px]"
                 />
               </section>
             ))}
 
-            <div className="mt-3 grid grid-cols-2 gap-2">
+            <div className="mx-auto mt-4 grid w-full max-w-[560px] grid-cols-1 gap-2 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:mt-5">
               <button
                 type="button"
                 onClick={handleReset}
                 disabled={!showClearAll || isGeneratingPrompt}
-                className="inline-flex min-h-[38px] w-full items-center justify-center gap-1.5 rounded-[12px] border border-[rgba(15,23,42,0.1)] bg-white px-3 py-2 text-[0.82rem] font-semibold text-slate-900 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:border-[rgba(15,23,42,0.08)] disabled:bg-slate-50 disabled:text-slate-400"
+                className="inline-flex min-h-[42px] w-full items-center justify-center gap-2 rounded-full border border-[rgba(15,23,42,0.12)] bg-white px-4 py-2 text-[0.84rem] font-semibold text-slate-700 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:border-[rgba(15,23,42,0.2)] hover:bg-slate-50 disabled:cursor-not-allowed disabled:border-[rgba(15,23,42,0.08)] disabled:bg-slate-50 disabled:text-slate-400 lg:min-h-[44px] lg:text-[0.88rem]"
               >
                 <TrashIcon />
                 <span>Clear all</span>
@@ -599,10 +605,10 @@ export default function PromptBuilderModal({
                 type="button"
                 onClick={handleGeneratePrompt}
                 disabled={isGeneratingPrompt || !hasInput}
-                className="inline-flex min-h-[38px] w-full items-center justify-center gap-2 rounded-[12px] bg-[var(--accent-deep)] px-3 py-2 text-[0.85rem] font-black tracking-[-0.02em] text-white shadow-[0_10px_20px_rgba(23,45,107,0.28)] transition hover:bg-[#0f1f4d] disabled:cursor-not-allowed disabled:bg-slate-500"
+                className="inline-flex min-h-[42px] w-full items-center justify-center gap-2 rounded-full bg-[var(--accent-deep)] px-4 py-2 text-[0.86rem] font-semibold tracking-[-0.01em] text-white shadow-[0_8px_18px_rgba(23,45,107,0.22)] transition hover:bg-[#0f1f4d] disabled:cursor-not-allowed disabled:bg-slate-500 lg:min-h-[44px] lg:text-[0.9rem]"
               >
                 {isGeneratingPrompt ? (
-                  <span className="h-5 w-5 animate-spin rounded-full border-[3px] border-white/40 border-t-white" aria-hidden="true" />
+                  <span className="h-4 w-4 animate-spin rounded-full border-[2.5px] border-white/40 border-t-white" aria-hidden="true" />
                 ) : (
                   <GenerateIcon />
                 )}
@@ -611,6 +617,33 @@ export default function PromptBuilderModal({
             </div>
           </div>
 
+          <aside className="hidden lg:flex lg:flex-col lg:gap-4 lg:sticky lg:top-6 lg:self-start">
+            <div className="rounded-2xl border border-[rgba(15,23,42,0.08)] bg-white p-5 shadow-[0_8px_22px_rgba(15,23,42,0.03)]">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[rgba(47,116,232,0.1)] text-[var(--accent-deep)]">
+                  <SparkleIcon />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-[0.95rem] font-bold text-slate-950">Quick tips</h3>
+                  <p className="text-[12px] text-slate-500">Get better results</p>
+                </div>
+              </div>
+              <ul className="mt-4 space-y-3 text-[13px] leading-relaxed text-slate-600">
+                <li className="flex items-start gap-2">
+                  <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]" />
+                  <span>Fill in at least 2-3 fields for stronger prompts.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]" />
+                  <span>Use specific locations for better place matches.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]" />
+                  <span>Select your companion type for vibe-matched spots.</span>
+                </li>
+              </ul>
+            </div>
+          </aside>
         </div>
       </div>
     </section>

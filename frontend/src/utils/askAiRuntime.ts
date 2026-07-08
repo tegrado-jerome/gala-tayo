@@ -32,6 +32,23 @@ type AskAiUsageSummary = {
   liveSearch: AskAiUsageStatus
 }
 
+type BackendAskAiUsageStatus = {
+  usageType?: string
+  allowed?: boolean
+  dailyLimit?: number
+  requestCount?: number
+  remaining?: number
+  resetsAt?: string
+  message?: string
+}
+
+type AskAiUsageEnvelope = {
+  askAi?: unknown
+  liveSearch?: unknown
+  chatbotAi?: unknown
+  askAiMaps?: unknown
+}
+
 type AskAiRuntimeState = {
   question: string
   answer: string
@@ -173,6 +190,60 @@ function isAskAiUsageStatus(value: unknown): value is AskAiUsageStatus {
     typeof candidate.remaining === 'number' &&
     typeof candidate.resetAt === 'string'
   )
+}
+
+function normalizeAskAiUsageStatus(value: unknown): AskAiUsageStatus | null {
+  if (isAskAiUsageStatus(value)) {
+    return value
+  }
+
+  if (!value || typeof value !== 'object') {
+    return null
+  }
+
+  const candidate = value as BackendAskAiUsageStatus
+  const normalizedUsageType =
+    candidate.usageType === 'live_search'
+      ? 'live_search'
+      : candidate.usageType === 'ask_ai_total' || candidate.usageType === 'chatbot_ai'
+        ? 'ask_ai_total'
+        : null
+
+  if (
+    !normalizedUsageType ||
+    typeof candidate.allowed !== 'boolean' ||
+    typeof candidate.dailyLimit !== 'number' ||
+    typeof candidate.requestCount !== 'number' ||
+    typeof candidate.remaining !== 'number' ||
+    typeof candidate.resetsAt !== 'string'
+  ) {
+    return null
+  }
+
+  return {
+    usageType: normalizedUsageType,
+    allowed: candidate.allowed,
+    limit: candidate.dailyLimit,
+    used: candidate.requestCount,
+    remaining: candidate.remaining,
+    resetAt: candidate.resetsAt,
+    message: typeof candidate.message === 'string' ? candidate.message : undefined,
+  }
+}
+
+function getAskAiUsageStatus(value: unknown): AskAiUsageStatus | null {
+  const normalizedDirect = normalizeAskAiUsageStatus(value)
+
+  if (normalizedDirect) {
+    return normalizedDirect
+  }
+
+  if (!value || typeof value !== 'object') {
+    return null
+  }
+
+  const envelope = value as AskAiUsageEnvelope
+  return normalizeAskAiUsageStatus(envelope.askAi) ?? normalizeAskAiUsageStatus(envelope.chatbotAi)
 }
 
 function hasMeaningfulAskAiRuntimeState(state: AskAiRuntimeState) {
@@ -345,9 +416,7 @@ export async function submitAskAiRuntimeRequest({
     const finalAnswer = sanitizeChatbotAnswer(data.answer ?? '')
     const finalSources = getAskAiSourceList(data.sources)
 
-    const usageStatus = data.usage?.askAi && isAskAiUsageStatus(data.usage.askAi)
-      ? data.usage.askAi
-      : askAiRuntimeState.usageStatus
+    const usageStatus = getAskAiUsageStatus(data.usage) ?? askAiRuntimeState.usageStatus
 
     completeAskAiTask('chatbot', { answer: finalAnswer, sources: finalSources })
 
@@ -390,10 +459,7 @@ export async function submitAskAiRuntimeRequest({
         ? (error as Error & { errorBody: ErrorBody }).errorBody
         : undefined
 
-    const updatedUsageStatus =
-      errorBody?.usage?.askAi && isAskAiUsageStatus(errorBody.usage.askAi)
-        ? errorBody.usage.askAi
-        : askAiRuntimeState.usageStatus
+    const updatedUsageStatus = getAskAiUsageStatus(errorBody?.usage) ?? askAiRuntimeState.usageStatus
 
     failAskAiTask('chatbot', errorMessage)
 

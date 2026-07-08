@@ -1,13 +1,13 @@
 import { useMemo, useState } from 'react'
 import AppHeader from '../components/AppHeader'
+import MinimalBackNav from '../components/MinimalBackNav'
 import GoogleSignInButton from '../components/GoogleSignInButton'
 import PageHeroHeader from '../components/PageHeroHeader'
-import { PageContainer } from '../components/layout/ResponsiveLayouts'
-import { useSavedFavorites, type FavoritePlace, type FavoriteRow } from '../context/SavedFavoritesContext'
-import { navigateToPlace } from '../utils/navigation'
+import { PageContainer, PageShell, CardSurface, EmptyState, Stack, ChibiIllustration } from '../components/layout/ResponsiveLayouts'
+import ActivityPlaceCard from '../components/ActivityPlaceCard'
+import { useSavedFavorites, type FavoritePlace } from '../context/SavedFavoritesContext'
 import { getPlacePhoto } from '../utils/placePhoto'
 import favoritesActiveChibi from '../assets/chibis/features/favorites/chibi-favorites-active-state.webp'
-import favoritesEmptyChibi from '../assets/chibis/features/favorites/chibi-favorites-empty-state.webp'
 
 type IconProps = {
   className?: string
@@ -34,11 +34,11 @@ function SearchIcon({ className = 'h-4 w-4' }: IconProps) {
 function SavedChibi() {
   return (
     <div className="flex justify-center" aria-hidden="true">
-      <img
+      <ChibiIllustration
         src={favoritesActiveChibi}
         alt=""
-        className="gala-hero-asset max-h-[420px] w-[420px] max-w-none"
-        loading="lazy"
+        variant="feature"
+        className="!w-[clamp(240px,74vw,380px)] !max-h-[320px] sm:!w-[clamp(170px,20vw,280px)] sm:!max-h-[240px]"
       />
     </div>
   )
@@ -81,13 +81,13 @@ function FavoriteCard({
   removingPlaceId,
   onRemove,
 }: {
-  favorite: FavoriteRow
+  favorite: { id: string; place: FavoritePlace | null }
   removingPlaceId: string
   onRemove: (placeId: string) => void
 }) {
   const place = favorite.place as FavoritePlace
   const placeId = place.id as string
-  const placeSlug = place.slug as string
+  const placeSlug = place.slug?.trim() || placeId
   const chips = getPlaceChips(place)
   const location = getPlaceLocation(place)
   const category = getPlaceCategory(place)
@@ -95,69 +95,28 @@ function FavoriteCard({
   const photoUrl = getPlacePhoto(place)
 
   return (
-    <article className="overflow-hidden rounded-lg border border-[var(--line)] bg-white shadow-[0_10px_24px_rgba(28,77,160,0.05)] transition hover:border-[var(--line-strong)] hover:shadow-[0_16px_34px_rgba(28,77,160,0.08)]">
-      {photoUrl ? (
-        <img
-          src={photoUrl}
-          alt={place.name || 'Saved place'}
-          className="h-40 w-full object-cover"
-          loading="lazy"
-        />
-      ) : (
-        <div className="flex h-40 w-full items-center justify-center bg-[var(--chip)] text-[var(--accent-deep)]">
-          <PinIcon className="h-8 w-8" />
-        </div>
+    <ActivityPlaceCard
+      title={place.name || 'Saved place'}
+      categoryLabel={chips.slice(0, 2).join(' / ')}
+      location={location}
+      chips={chips}
+      budgetLabel={budgetLabel}
+      description={`Saved ${category.toLowerCase()} spot in ${location}. Open the details for hours, budget notes, and planning info.`}
+      photoUrl={photoUrl}
+      placeSlug={placeSlug}
+      photoAlt={place.name || 'Saved place'}
+      compactMobile
+      footer={(
+        <button
+          type="button"
+          onClick={() => onRemove(placeId)}
+          disabled={removingPlaceId === placeId}
+          className="h-8 text-[11px] font-bold text-[var(--muted)] underline underline-offset-4 transition hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {removingPlaceId === placeId ? 'Removing...' : 'Remove from saved'}
+        </button>
       )}
-
-      <div className="flex flex-col gap-4 p-4">
-        <div className="min-w-0">
-          <p className="text-xs font-semibold text-[var(--muted)]">{chips.slice(0, 2).join(' / ')}</p>
-          <h2 className="mt-1 text-lg font-black leading-tight text-slate-950 lg:text-xl">
-            {place.name || 'Saved place'}
-          </h2>
-          <p className="mt-2 flex items-center gap-1 text-sm font-semibold text-[var(--muted)]">
-            <PinIcon className="h-4 w-4" />
-            {location}
-          </p>
-
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {chips.map((chip) => (
-              <span
-                key={`${favorite.id}-${chip}`}
-                className="rounded-md border border-[var(--line)] bg-[var(--chip)] px-2 py-0.5 text-xs font-bold text-[var(--accent-deep)]"
-              >
-                {chip}
-              </span>
-            ))}
-          </div>
-
-          <p className="mt-4 text-sm text-slate-950">
-            <span className="font-black">Budget:</span> {budgetLabel}
-          </p>
-          <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-slate-700">
-            Saved {category.toLowerCase()} spot in {location}. Open the details for hours, budget notes, and planning info.
-          </p>
-        </div>
-
-        <div className="mt-4 grid gap-2">
-          <button
-            type="button"
-            onClick={() => navigateToPlace(placeSlug)}
-            className="h-11 rounded-lg border border-[var(--accent)] bg-white px-4 text-sm font-black text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)]"
-          >
-            View Details
-          </button>
-          <button
-            type="button"
-            onClick={() => onRemove(placeId)}
-            disabled={removingPlaceId === placeId}
-            className="h-9 text-sm font-bold text-[var(--muted)] underline underline-offset-4 transition hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {removingPlaceId === placeId ? 'Removing...' : 'Remove from saved'}
-          </button>
-        </div>
-      </div>
-    </article>
+    />
   )
 }
 
@@ -175,7 +134,7 @@ function FavoritesPage() {
   } = useSavedFavorites()
 
   const savedPlaces = useMemo(
-    () => favorites.filter((favorite) => favorite.place?.slug),
+    () => favorites.filter((favorite) => Boolean(favorite.place)),
     [favorites]
   )
 
@@ -210,11 +169,15 @@ function FavoritesPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[var(--bg)] text-[var(--text)]">
+    <PageShell>
       <AppHeader showTaglishChip={false} />
 
-      <main className="mx-auto flex w-full max-w-[1480px] flex-1 flex-col gap-5 px-4 py-5 sm:px-6 lg:px-10 lg:py-8">
-        <PageContainer>
+      <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-8">
+        <PageContainer size="wide">
+          <div className="mb-5">
+            <MinimalBackNav to="/" label="Home" preferHistory={false} />
+          </div>
+
           <PageHeroHeader
             eyebrow="Favorites"
             title="Saved places"
@@ -231,42 +194,39 @@ function FavoritesPage() {
               </>
             }
             aside={<SavedChibi />}
-            className="border-b-0 pb-0"
+            divider={false}
+            className="pb-0"
           />
 
           {isSessionLoading ? (
-            <section className="rounded-lg border border-[var(--line)] bg-white px-4 py-5 shadow-[0_14px_30px_rgba(28,77,160,0.07)]">
+            <CardSurface pad="default" className="mt-6">
               <p className="text-sm text-[var(--muted)]">Checking account...</p>
-            </section>
+            </CardSurface>
           ) : null}
 
           {!isSessionLoading && !session?.user ? (
-            <section className="rounded-lg border border-[var(--line)] bg-white px-5 py-6 shadow-[0_14px_30px_rgba(28,77,160,0.07)]">
+            <CardSurface pad="loose" className="mt-6">
               <h2 className="text-lg font-black text-slate-950">Sign in to view favorites</h2>
               <p className="mt-2 max-w-xl text-sm text-[var(--muted)]">
                 Your saved places are connected to your account.
               </p>
               <GoogleSignInButton className="mt-4" redirectTo={`${window.location.origin}/favorites`} />
-            </section>
+            </CardSurface>
           ) : null}
 
           {!isSessionLoading && session?.user ? (
-            <>
-              <section className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
-                <div className="grid gap-2">
-                  <label className="relative block">
-                    <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">
-                      <SearchIcon className="h-5 w-5" />
-                    </span>
-                    <input
-                      value={searchQuery}
-                      onChange={(event) => setSearchQuery(event.target.value)}
-                      placeholder="Search saved places"
-                      className="h-12 w-full rounded-lg border border-[var(--line-strong)] bg-white px-12 text-base font-semibold text-slate-950 shadow-[0_10px_24px_rgba(28,77,160,0.04)] outline-none transition placeholder:text-slate-400 focus:border-[var(--accent)] focus:ring-2 focus:ring-[rgba(47,116,232,0.14)]"
-                    />
-                  </label>
-                </div>
-              </section>
+            <Stack gap="default">
+              <label className="relative block">
+                <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">
+                  <SearchIcon className="h-5 w-5" />
+                </span>
+                <input
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder="Search saved places"
+                  className="gala-field px-12 text-base"
+                />
+              </label>
 
               <div className="min-h-5">
                 {isFavoritesLoading ? (
@@ -279,30 +239,28 @@ function FavoritesPage() {
               </div>
 
               {!isFavoritesLoading && savedPlaces.length === 0 && !favoritesError ? (
-                <section className="rounded-lg border border-dashed border-[var(--line-strong)] bg-white/82 px-5 py-8 text-center shadow-[0_14px_30px_rgba(28,77,160,0.06)]">
-                  <img src={favoritesEmptyChibi} alt="" className="mx-auto h-32 w-32 object-contain" loading="lazy" />
-                  <h2 className="mt-3 text-lg font-black text-slate-950">Wala ka pang saved places.</h2>
-                  <p className="mx-auto mt-2 max-w-md text-sm text-[var(--muted)]">
-                    Mag-search muna ng places para ma-save mo sila dito.
-                  </p>
-                </section>
+                <EmptyState
+                  title="Wala ka pang saved places."
+                  description="Mag-search muna ng places para ma-save mo sila dito."
+                  variant="plain"
+                />
               ) : null}
 
               {!isFavoritesLoading && savedPlaces.length > 0 && filteredSavedPlaces.length === 0 ? (
-                <section className="rounded-lg border border-dashed border-[var(--line-strong)] bg-white/82 px-5 py-8 text-center shadow-[0_14px_30px_rgba(28,77,160,0.06)]">
+                <CardSurface tone="outlined" pad="loose" className="text-center">
                   <p className="text-sm font-black text-slate-950">No saved places match that search.</p>
                   <button
                     type="button"
                     onClick={() => setSearchQuery('')}
-                    className="mt-3 rounded-lg border border-[var(--accent)] bg-white px-4 py-2 text-sm font-black text-[var(--accent-deep)]"
+                    className="mt-3 inline-flex h-10 items-center justify-center rounded-lg border border-[var(--accent)] bg-white px-4 py-2 text-sm font-black text-[var(--accent-deep)]"
                   >
                     Clear search
                   </button>
-                </section>
+                </CardSurface>
               ) : null}
 
               {filteredSavedPlaces.length > 0 ? (
-                <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                <div className="grid w-full grid-cols-2 gap-2.5 sm:gap-4 xl:justify-start xl:[grid-template-columns:repeat(auto-fill,minmax(340px,340px))]">
                   {filteredSavedPlaces.map((favorite) => (
                     <FavoriteCard
                       key={favorite.id}
@@ -311,13 +269,13 @@ function FavoritesPage() {
                       onRemove={(placeId) => void handleRemove(placeId)}
                     />
                   ))}
-                </section>
+                </div>
               ) : null}
-            </>
+            </Stack>
           ) : null}
         </PageContainer>
       </main>
-    </div>
+    </PageShell>
   )
 }
 

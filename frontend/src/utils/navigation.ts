@@ -1,4 +1,5 @@
 import { markSoftNavigation } from './navigationState'
+import { getLabelForPath } from './navigationHistory'
 import { getCanonicalPlacePath, resolveAreaMeta } from './seo'
 
 function navigateToPath(path: string) {
@@ -7,7 +8,11 @@ function navigateToPath(path: string) {
   }
 
   markSoftNavigation()
-  window.history.pushState(null, '', path)
+  window.history.pushState(
+    { from: window.location.pathname, fromLabel: getLabelForPath(window.location.pathname) },
+    '',
+    path
+  )
   window.dispatchEvent(new PopStateEvent('popstate'))
 }
 
@@ -17,7 +22,11 @@ function replaceWithPath(path: string) {
   }
 
   markSoftNavigation()
-  window.history.replaceState(null, '', path)
+  window.history.replaceState(
+    { from: window.location.pathname, fromLabel: getLabelForPath(window.location.pathname) },
+    '',
+    path
+  )
   window.dispatchEvent(new PopStateEvent('popstate'))
 }
 

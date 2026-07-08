@@ -1,50 +1,103 @@
-import type { HTMLAttributes, PropsWithChildren } from 'react'
+import type { HTMLAttributes, ReactNode } from 'react'
+import {
+  PageContainer as PrimitivesPageContainer,
+  ResponsiveGrid as PrimitivesResponsiveGrid,
+  DetailLayout as PrimitivesDetailLayout,
+  FormContainer as PrimitivesFormContainer,
+  StateContainer as PrimitivesStateContainer,
+  cn,
+} from './Primitives'
+import type { PageContainerSize } from './Primitives'
 
-function cn(...values: Array<string | false | null | undefined>) {
-  return values.filter(Boolean).join(' ')
+export {
+  MapLayout,
+  PageShell,
+  Section,
+  Stack,
+  CardSurface,
+  EmptyState,
+  BottomSheet,
+  CenteredModal,
+  DetailSidebar,
+  AppHeaderLayout,
+  MapContent,
+  MapSidebar,
+  FloatComposer,
+  ChibiIllustration,
+} from './Primitives'
+
+type LegacyLayoutProps = {
+  className?: string
+  children?: ReactNode
 }
 
-type LayoutProps = PropsWithChildren<{
-  className?: string
-}>
-
-export function PageContainer({ children, className }: LayoutProps) {
+export function PageContainer({ children, className, size = 'default' }: LegacyLayoutProps & { size?: PageContainerSize }) {
   return (
-    <div
-      className={cn(
-        'w-full md:mx-auto md:max-w-[760px] md:px-6 lg:max-w-[1080px] lg:px-8 2xl:max-w-[1180px]',
-        className,
-      )}
-    >
+    <PrimitivesPageContainer size={size} className={className}>
       {children}
-    </div>
+    </PrimitivesPageContainer>
   )
 }
 
 type ResponsiveGridProps = HTMLAttributes<HTMLDivElement> & {
   desktopColumns?: 2 | 3
   wideOnXl?: boolean
+  cols?: 1 | 2 | 3 | 4
+  gap?: 'tight' | 'default' | 'loose'
+  minCardWidth?: number
 }
 
-export function ResponsiveGrid({ className, desktopColumns = 3, wideOnXl = false, ...rest }: ResponsiveGridProps) {
+export function ResponsiveGrid({
+  className,
+  desktopColumns = 3,
+  wideOnXl = false,
+  cols,
+  gap,
+  minCardWidth,
+  ...rest
+}: ResponsiveGridProps) {
   return (
-    <div
-      className={cn(
-        'grid grid-cols-1 md:grid-cols-2',
-        desktopColumns === 2 ? 'lg:grid-cols-2' : 'lg:grid-cols-3',
-        wideOnXl && 'xl:grid-cols-4',
-        className,
-      )}
+    <PrimitivesResponsiveGrid
+      className={className}
+      cols={cols ?? desktopColumns}
+      gap={gap}
+      minCardWidth={minCardWidth ?? (wideOnXl ? 280 : undefined)}
       {...rest}
     />
   )
 }
 
-export function DetailLayout({ children, className }: LayoutProps) {
+export function DetailLayout({ children, className, sidebarWidth, tabletSidebarWidth, stickySidebar, reverseOnMobile }: LegacyLayoutProps & {
+  sidebarWidth?: number
+  tabletSidebarWidth?: number
+  stickySidebar?: boolean
+  reverseOnMobile?: boolean
+}) {
+  return (
+    <PrimitivesDetailLayout
+      className={className}
+      sidebarWidth={sidebarWidth}
+      tabletSidebarWidth={tabletSidebarWidth}
+      stickySidebar={stickySidebar}
+      reverseOnMobile={reverseOnMobile}
+    >
+      {children}
+    </PrimitivesDetailLayout>
+  )
+}
+
+export function MapResponsiveLayout({
+  children,
+  className,
+  sidebarVisible = true,
+}: LegacyLayoutProps & { sidebarVisible?: boolean }) {
   return (
     <div
       className={cn(
-        'grid lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start',
+        'grid h-full min-h-0 w-full grid-cols-1',
+        sidebarVisible
+          ? 'md:grid-cols-[minmax(0,1fr)_340px] lg:grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_460px] 2xl:grid-cols-[minmax(0,1fr)_500px]'
+          : 'md:grid-cols-1',
         className,
       )}
     >
@@ -53,41 +106,18 @@ export function DetailLayout({ children, className }: LayoutProps) {
   )
 }
 
-export function MapResponsiveLayout({ children, className }: LayoutProps) {
+export function FormContainer({ children, className }: LegacyLayoutProps) {
   return (
-    <div
-      className={cn(
-        'w-full lg:grid lg:grid-cols-[minmax(0,1fr)_420px] lg:items-start',
-        className,
-      )}
-    >
+    <PrimitivesFormContainer className={className}>
       {children}
-    </div>
+    </PrimitivesFormContainer>
   )
 }
 
-export function FormContainer({ children, className }: LayoutProps) {
+export function StateContainer({ children, className }: LegacyLayoutProps) {
   return (
-    <div
-      className={cn(
-        'w-full md:mx-auto md:max-w-[560px] lg:max-w-[520px] xl:max-w-[560px]',
-        className,
-      )}
-    >
+    <PrimitivesStateContainer className={className}>
       {children}
-    </div>
-  )
-}
-
-export function StateContainer({ children, className }: LayoutProps) {
-  return (
-    <div
-      className={cn(
-        'w-full md:mx-auto md:max-w-[640px] md:px-6 lg:max-w-[760px] lg:px-8 xl:max-w-[860px]',
-        className,
-      )}
-    >
-      {children}
-    </div>
+    </PrimitivesStateContainer>
   )
 }

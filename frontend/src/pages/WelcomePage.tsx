@@ -2,6 +2,7 @@ import type { Session } from '@supabase/supabase-js'
 import { AppIcon } from '../components/AppIcon'
 import WelcomeBackgroundDecorations from '../components/WelcomeBackgroundDecorations'
 import { navigateToPath } from '../utils/navigation'
+import { ChibiIllustration } from '../components/layout/Primitives'
 import welcomeChibi from '../assets/chibis/public/chibi-welcome-page.webp'
 import galaTayoLogo from '../assets/brand/galatayo-logo.webp'
 
@@ -19,7 +20,7 @@ function WelcomePage({ session = null }: WelcomePageProps) {
   const primaryCtaIcon = isLoggedIn ? 'place' : 'compass'
 
   return (
-    <main className="gala-page-background relative min-h-screen overflow-hidden text-[var(--text)]">
+    <main className="gala-page-background relative min-h-screen overflow-x-hidden text-[var(--text)]">
       <WelcomeBackgroundDecorations />
 
       <section className="relative z-[2] mx-auto flex min-h-screen w-full max-w-[980px] items-center justify-center px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-6">
@@ -36,16 +37,17 @@ function WelcomePage({ session = null }: WelcomePageProps) {
             loading="eager"
           />
 
-              <div className="relative mx-auto w-full max-w-[740px] overflow-visible sm:max-w-[760px] lg:max-w-[680px]">
+                <div className="relative mx-auto flex w-full items-center justify-center overflow-visible">
                 <div className="pointer-events-none absolute right-[10%] bottom-[20%] h-8 w-8 text-[var(--accent)] opacity-50 sm:h-9 sm:w-9">
                   <AppIcon name="compass" className="h-full w-full" />
                 </div>
 
                 <div className="absolute inset-x-[13%] top-[14%] h-[74%] rounded-full bg-[var(--accent-wash)] opacity-80 blur-3xl" />
-            <img
+            <ChibiIllustration
               src={welcomeChibi}
               alt="GalaTayo chibi travel illustration"
-                  className="relative mx-auto w-full max-w-[760px] scale-[1.3] object-contain sm:max-w-[780px] sm:scale-[1.22] lg:max-w-[640px] lg:scale-[1.06]"
+              variant="hero"
+              priority
             />
           </div>
             </div>

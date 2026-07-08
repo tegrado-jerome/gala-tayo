@@ -1,6 +1,6 @@
 import AppHeader from '../components/AppHeader'
 import MinimalBackNav from '../components/MinimalBackNav'
-import { PageContainer } from '../components/layout/ResponsiveLayouts'
+import { PageContainer, PageShell, CardSurface } from '../components/layout/ResponsiveLayouts'
 import { navigateToPath } from '../utils/navigation'
 import SeoHead from '../components/SeoHead'
 import { getSiteOrigin } from '../utils/seo'
@@ -281,12 +281,12 @@ function LegalPage({ type }: LegalPageProps) {
   ]
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
+    <PageShell>
       <SeoHead title={seoTitle} description={seoDescription} canonicalPath={canonicalPath} jsonLd={jsonLd} />
       <AppHeader />
-      <main className="mx-auto w-full max-w-[900px] px-4 py-6 sm:px-6 lg:py-10">
-        <PageContainer>
-          <article className="rounded-lg border border-[var(--line)] bg-white p-5 shadow-[0_18px_42px_rgba(47,116,232,0.1)] sm:p-8">
+      <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
+        <PageContainer size="narrow">
+          <CardSurface pad="loose" className="shadow-[0_18px_42px_rgba(47,116,232,0.1)]">
             <MinimalBackNav
               onClick={() => window.history.length > 1 ? window.history.back() : navigateToPath('/search')}
               className="mb-6"
@@ -317,10 +317,10 @@ function LegalPage({ type }: LegalPageProps) {
                 </section>
               ))}
             </div>
-          </article>
+          </CardSurface>
         </PageContainer>
       </main>
-    </div>
+    </PageShell>
   )
 }
 

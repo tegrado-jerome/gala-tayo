@@ -3,7 +3,7 @@ import type { RefObject } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { Bot, RotateCcw } from 'lucide-react'
+import { Bot, House, RotateCcw } from 'lucide-react'
 import { AppIcon, type AppIconName } from '../components/AppIcon'
 import PlaceCard, { type PlaceCardData, type PlaceCategoryMeta, type PlaceTagMeta } from '../components/PlaceCard'
 import AppHeader from '../components/AppHeader'
@@ -14,9 +14,11 @@ import GoogleSignInButton from '../components/GoogleSignInButton'
 import PageHeroHeader from '../components/PageHeroHeader'
 import PromptBuilderModal from '../components/PromptBuilderModal'
 import InternalLink from '../components/InternalLink'
-import MinimalBackNav from '../components/MinimalBackNav'
+import Breadcrumb from '../components/Breadcrumb'
+import { ChibiIllustration } from '../components/layout/ResponsiveLayouts'
+
 import { supabase } from '../supabase'
-import { navigateToCanonicalPlace, navigateToPath } from '../utils/navigation'
+import { navigateToCanonicalPlace, navigateToPath, replaceWithPath } from '../utils/navigation'
 import {
   cancelAskAiRuntimeRequest,
   getAskAiRuntimeState,
@@ -40,7 +42,6 @@ import protectedFeatureChibi from '../assets/chibis/shared-states/chibi-protecte
 void PageHeroHeader
 import searchBeforeChibi from '../assets/chibis/core/search-places/chibi-search-places-before-active-state.webp'
 import searchLoadingChibi from '../assets/chibis/core/search-places/chibi-search-places-loading-state.webp'
-import searchNoResultsChibi from '../assets/chibis/core/search-places/chibi-search-places-no-results.webp'
 import searchSuccessChibi from '../assets/chibis/core/search-places/chibi-search-success.webp'
 
 type IconProps = {
@@ -59,6 +60,34 @@ function ChevronLeftIcon({ className = 'h-4 w-4' }: IconProps) {
   return <AppIcon name="back" className={className} />
 }
 
+function FilterIcon({ className = 'h-4 w-4' }: IconProps) {
+  return <AppIcon name="filter" className={className} />
+}
+
+function BudgetIcon({ className = 'h-3.5 w-3.5' }: IconProps) {
+  return <AppIcon name="wallet" className={`${className} text-[var(--accent-deep)]`} />
+}
+
+function SparkIcon({ className = 'h-3.5 w-3.5' }: IconProps) {
+  return <AppIcon name="askAi" className={className} />
+}
+
+function HeartOutlineIcon({ className = 'h-4 w-4' }: IconProps) {
+  return <AppIcon name="favorites" className={className} />
+}
+
+function CafeIcon({ className = 'h-4 w-4' }: IconProps) {
+  return <AppIcon name="cafe" className={className} />
+}
+
+function MuseumIcon({ className = 'h-4 w-4' }: IconProps) {
+  return <AppIcon name="categoryMuseum" className={className} />
+}
+
+function BuildingIcon({ className = 'h-4 w-4' }: IconProps) {
+  return <AppIcon name="categoryHeritage" className={className} />
+}
+
 type BackendCategory = {
   id: string
   name: string
@@ -70,14 +99,6 @@ type BackendArea = {
   id: string
   name: string
   type: 'all' | 'city' | 'municipality'
-}
-
-function FilterIcon({ className = 'h-4 w-4' }: IconProps) {
-  return <AppIcon name="filter" className={className} />
-}
-
-function BudgetIcon({ className = 'h-3.5 w-3.5' }: IconProps) {
-  return <AppIcon name="wallet" className={`${className} text-[var(--accent-deep)]`} />
 }
 
 type CategoryChip = {
@@ -128,6 +149,23 @@ type AskAiSource = {
 type AskAiUsageSummary = {
   askAi: AskAiUsageStatus
   liveSearch: AskAiUsageStatus
+}
+
+type BackendAskAiUsageStatus = {
+  usageType?: string
+  allowed?: boolean
+  dailyLimit?: number
+  requestCount?: number
+  remaining?: number
+  resetsAt?: string
+  message?: string
+}
+
+type AskAiUsageResponse = Partial<AskAiUsageSummary> & {
+  askAiMaps?: unknown
+  chatbotAi?: unknown
+  error?: string
+  message?: string
 }
 
 type HomePageInitialSearchState = {
@@ -856,115 +894,59 @@ function mapBackendPlaceToCard(place: BackendSearchPlace): PlaceCardData | null 
 function SearchEmptyState({
   hasSearched,
   onSearchAgain,
-  showBackHome = false,
 }: {
   hasSearched: boolean
   onSearchAgain?: () => void
-  showBackHome?: boolean
 }) {
-  return (
-    <div
-      className={`text-center ${
-        hasSearched
-          ? 'px-2 py-3 sm:px-4 sm:py-5'
-          : 'bg-white rounded-lg border border-dashed border-[var(--line)] px-4 py-6'
-      }`}
-    >
-      {hasSearched ? (
-        <img
-          src={searchNoResultsChibi}
-          alt=""
-          className="mx-auto -mb-4 -mt-4 h-72 w-72 scale-[1.62] object-contain object-center sm:h-80 sm:w-80 sm:scale-[1.68]"
-          loading="lazy"
-        />
-      ) : (
-        <img
-          src={searchBeforeChibi}
-          alt=""
-          className="mx-auto mb-3 h-28 w-28 object-contain"
-          loading="lazy"
-        />
-      )}
-      <p className={hasSearched ? 'text-2xl font-black text-slate-900' : 'text-sm font-semibold text-slate-900'}>
-        {hasSearched ? 'No places found' : 'Saan tayo gala today?'}
-      </p>
-      <p
-        className={
-          hasSearched
-            ? 'mx-auto mt-2 max-w-[18rem] text-sm leading-relaxed text-[var(--muted)] sm:max-w-[22rem] sm:text-base'
-            : 'mt-1 text-xs leading-relaxed text-[var(--muted)]'
-        }
-      >
-        {hasSearched
-          ? 'Try another city, category, vibe, or budget.'
-          : 'Type a place, or pick a vibe to start exploring Metro Manila.'}
-      </p>
-      {hasSearched ? (
-        <div className="mt-5 flex justify-center">
+  if (hasSearched) {
+    return (
+      <div className="flex min-h-[calc(100svh-220px)] w-full items-center justify-center px-4 py-8">
+        <div className="mx-auto flex w-full max-w-[420px] flex-col items-center text-center">
+          <p className="text-3xl font-black text-slate-950 sm:text-4xl">No places found</p>
+          <p className="mt-3 max-w-[20rem] text-sm leading-relaxed text-[var(--muted)] sm:max-w-[24rem] sm:text-base">
+            Try another city, category, vibe, or budget.
+          </p>
           {onSearchAgain ? (
             <button
               type="button"
               onClick={onSearchAgain}
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition hover:border-[var(--accent)] hover:text-[var(--accent-deep)]"
+              className="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition hover:border-[var(--accent)] hover:text-[var(--accent-deep)]"
             >
               <RotateCcw className="h-4 w-4" />
               Search again
             </button>
           ) : null}
         </div>
-      ) : null}
-      {hasSearched ? (
-        <div className="mx-auto mt-6 max-w-[340px] rounded-2xl border border-slate-200 bg-slate-50 px-5 py-5 text-center sm:max-w-[380px]">
-          <p className="text-lg font-black text-slate-950">Want to add a place?</p>
-          <p className="mt-2 text-sm leading-relaxed text-slate-600">
-            Suggest a place and we'll review it before adding it to GalaTayo.
-          </p>
-          <button
-            type="button"
-            onClick={() => navigateToPath('/submit-place')}
-            className="mt-4 inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--accent)] bg-white px-5 text-sm font-black text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)]"
-          >
-            <AppIcon name="place" className="h-5 w-5" />
-            Submit a Place
-          </button>
-        </div>
-      ) : null}
-      {showBackHome ? (
-        <div className="mt-3 flex justify-center">
-          <BackToHomeButton />
-        </div>
-      ) : null}
+      </div>
+    )
+  }
+
+  return (
+    <div className="rounded-lg border border-dashed border-[var(--line)] bg-white px-4 py-6 text-center">
+        <img
+          src={searchBeforeChibi}
+          alt=""
+          className="mx-auto mb-3 h-28 w-28 object-contain"
+          loading="lazy"
+        />
+        <p className="text-sm font-semibold text-slate-900">Saan tayo gala today?</p>
+        <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">
+          Type a place, or pick a vibe to start exploring Metro Manila.
+        </p>
     </div>
   )
 }
 
-function SparkIcon({ className = 'h-3.5 w-3.5' }: IconProps) {
-  return <AppIcon name="askAi" className={className} />
-}
-
-function HeartOutlineIcon({ className = 'h-4 w-4' }: IconProps) {
-  return <AppIcon name="favorites" className={className} />
-}
-
-function CafeIcon({ className = 'h-4 w-4' }: IconProps) {
-  return <AppIcon name="cafe" className={className} />
-}
-
-function MuseumIcon({ className = 'h-4 w-4' }: IconProps) {
-  return <AppIcon name="categoryMuseum" className={className} />
-}
-
-function BuildingIcon({ className = 'h-4 w-4' }: IconProps) {
-  return <AppIcon name="categoryHeritage" className={className} />
-}
-
-function BackToHomeButton({
-  className = '',
-}: {
-  className?: string
-}) {
+function SearchPageBreadcrumb({ className = '' }: { className?: string }) {
   return (
-    <MinimalBackNav to="/" className={className} />
+    <Breadcrumb
+      showBack
+      className={className}
+      items={[
+        { label: 'Home', href: '/', icon: <House className="h-3.5 w-3.5" /> },
+        { label: 'Search', icon: <AppIcon name="search" className="h-3.5 w-3.5" /> },
+      ]}
+    />
   )
 }
 
@@ -1039,21 +1021,20 @@ function SearchLoadingCard({ compact = false }: { compact?: boolean }) {
 
 function ChibiPlaceholder({
   className = '',
-  src = searchLoadingChibi,
   imageClassName = '',
+  src = searchLoadingChibi,
 }: {
   className?: string
-  src?: string
   imageClassName?: string
-  showBubble?: boolean
+  src?: string
 }) {
   return (
-    <div className={`relative mx-auto flex items-center justify-center overflow-hidden ${className}`} aria-hidden="true">
-      <img
+    <div className={`relative mx-auto flex items-center justify-center ${className}`} aria-hidden="true">
+      <ChibiIllustration
         src={src}
-        alt=""
-        className={`h-full w-full object-contain ${imageClassName}`}
-        loading="eager"
+        variant="hero"
+        priority
+        className={imageClassName}
       />
     </div>
   )
@@ -1063,35 +1044,27 @@ function SearchLoadingState({ searchLabel }: { searchLabel: string }) {
   const displayLabel = searchLabel.trim() || 'gala spots in Metro Manila'
 
   return (
-    <section className="min-h-0 w-full px-5 py-7 sm:px-8 md:flex md:min-h-[calc(100svh-68px)] md:items-center md:px-6 md:py-6 lg:px-12 lg:py-12">
-      <div className="mx-auto grid w-full max-w-[1440px] gap-8 lg:grid-cols-[360px_minmax(0,1fr)] lg:gap-12">
-        <aside className="text-center lg:pt-4 lg:text-left">
+    <section className="flex min-h-0 w-full items-center justify-center px-5 py-6 sm:px-8 md:min-h-[calc(100svh-68px)] md:py-6 lg:px-12 lg:py-10">
+      <div className="mx-auto flex w-full max-w-[600px] flex-col items-center gap-4 text-center">
+        <div>
           <p className="text-[26px] font-extrabold leading-tight text-slate-800 sm:text-[30px] lg:text-[32px]">Searching for</p>
           <h1 className="mt-3 text-[32px] font-black leading-tight text-slate-950 sm:text-[38px] lg:text-[38px]">
             {displayLabel}
           </h1>
-          <ChibiPlaceholder
-            className="mt-7 h-[280px] w-full max-w-[320px] sm:h-[340px] sm:max-w-[360px] lg:h-[380px] lg:max-w-[390px]"
-            imageClassName="scale-[1.35] sm:scale-[1.42] lg:scale-[1.48]"
-          />
-          <p className="mx-auto mt-5 max-w-[360px] text-lg font-semibold leading-relaxed text-slate-600 lg:mx-4">
-            Finding gala spots around Metro Manila.
-          </p>
-        </aside>
+        </div>
+        <ChibiPlaceholder
+          className="mt-2"
+          imageClassName="!w-[clamp(260px,66vw,390px)] !max-h-[38vh] sm:!w-[clamp(220px,28vw,330px)] sm:!max-h-[30vh]"
+        />
+        <p className="mt-1 max-w-[360px] text-lg font-semibold leading-relaxed text-slate-600">
+          Finding gala spots around Metro Manila.
+        </p>
 
-        <div className="grid content-start gap-5 lg:pt-4">
-          <div className="grid gap-4 lg:hidden">
-            <SearchLoadingCard compact />
-            <SearchLoadingCard compact />
-            <p className="pt-4 text-center text-base font-semibold text-slate-400">
-              Konting hintay, naghahanap ng sulit spots...
-            </p>
-          </div>
-          <div className="hidden gap-6 lg:grid">
-            <SearchLoadingCard />
-            <SearchLoadingCard />
-            <SearchLoadingCard />
-          </div>
+        <div className="mt-2 grid w-full gap-4">
+          <SearchLoadingCard compact />
+          <p className="pt-2 text-center text-base font-semibold text-slate-400">
+            Konting hintay, naghahanap ng sulit spots...
+          </p>
         </div>
       </div>
     </section>
@@ -1121,20 +1094,7 @@ function SearchResetButton({
 }) {
   const className = layout === 'desktop'
     ? 'inline-flex h-10 shrink-0 items-center gap-2 rounded-full border border-[var(--line)] bg-white px-3 text-sm font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-900'
-    : 'inline-flex h-10 w-full items-center justify-between rounded-xl border border-[var(--line)] bg-white px-3 text-sm font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-900'
-
-  if (layout === 'desktop') {
-    return (
-      <button
-        type="button"
-        onClick={onClick}
-        className={className}
-      >
-        <ClearIcon className="h-4 w-4" />
-        <span>Clear search</span>
-      </button>
-    )
-  }
+    : 'inline-flex h-10 shrink-0 items-center gap-2 rounded-full border border-[var(--line)] bg-white px-3 text-sm font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-900'
 
   return (
     <button
@@ -1142,13 +1102,8 @@ function SearchResetButton({
       onClick={onClick}
       className={className}
     >
-      <span className="inline-flex items-center gap-2">
-        <ClearIcon className="h-4 w-4" />
-        <span>Clear search</span>
-      </span>
-      <span className="text-xs uppercase tracking-[0.08em] text-slate-400">
-        Reset
-      </span>
+      <ClearIcon className="h-4 w-4" />
+      <span>Clear search</span>
     </button>
   )
 }
@@ -1213,7 +1168,6 @@ function MobileResultIntro({
   onRemoveCategory,
   onRemoveGoodFor,
   onRemoveBudget,
-  showBackHome,
 }: {
   heading: string
   subheading: string
@@ -1227,13 +1181,15 @@ function MobileResultIntro({
   onRemoveCategory: () => void
   onRemoveGoodFor: () => void
   onRemoveBudget: () => void
-  showBackHome: boolean
 }) {
   return (
     <>
       <section className="px-4 pb-4 pt-5">
-        {showBackHome ? <BackToHomeButton className="mb-3" /> : null}
-        <h1 className="text-2xl font-black leading-tight text-slate-950">{heading}</h1>
+        <SearchPageBreadcrumb className="mb-3" />
+        <div className="flex items-start justify-between gap-3">
+          <h1 className="min-w-0 flex-1 text-2xl font-black leading-tight text-slate-950">{heading}</h1>
+          <SearchResetButton onClick={onClearSearch} />
+        </div>
         <p className="mt-1 text-lg font-semibold leading-tight text-slate-800">{subheading}</p>
         <ActiveSearchChips
           cityLabel={cityLabel}
@@ -1250,19 +1206,15 @@ function MobileResultIntro({
             Refreshing results...
           </p>
         ) : null}
-        <div className="mt-3 flex h-64 justify-center overflow-hidden sm:h-68">
+        <div className="mt-3 flex h-48 justify-center overflow-hidden sm:h-68">
           <img
             src={searchSuccessChibi}
             alt=""
-            className="h-full w-auto max-w-none shrink-0 scale-[1.22] object-contain"
+            className="h-full w-auto max-w-none shrink-0 scale-[1.05] object-contain sm:scale-[1.22]"
             loading="eager"
             aria-hidden="true"
           />
         </div>
-      </section>
-
-      <section className="px-4">
-        <SearchResetButton onClick={onClearSearch} />
       </section>
     </>
   )
@@ -1422,7 +1374,6 @@ function MobileResultsView({
   budgetLabel,
   isRefreshing,
   isPageLoading,
-  showBackHome,
   selectedView,
   onViewChange,
   onPageChange,
@@ -1448,7 +1399,6 @@ function MobileResultsView({
   budgetLabel: string | null
   isRefreshing: boolean
   isPageLoading: boolean
-  showBackHome: boolean
   selectedView: MobileResultsViewMode
   onViewChange: (view: MobileResultsViewMode) => void
   onPageChange: (page: number) => void
@@ -1461,22 +1411,21 @@ function MobileResultsView({
   onRemoveBudget: () => void
 }) {
   return (
-    <section className="mx-auto w-full max-w-[480px]">
-      <MobileResultIntro
-        heading={heading}
-        subheading={subheading}
-        cityLabel={cityLabel}
-        categoryLabel={categoryLabel}
-        goodForLabel={goodForLabel}
-        budgetLabel={budgetLabel}
-        isRefreshing={isRefreshing}
-        onClearSearch={onClearSearch}
-        onRemoveCity={onRemoveCity}
-        onRemoveCategory={onRemoveCategory}
-        onRemoveGoodFor={onRemoveGoodFor}
-        onRemoveBudget={onRemoveBudget}
-        showBackHome={showBackHome}
-      />
+    <section className="mx-auto w-full max-w-[480px] md:max-w-[640px]">
+        <MobileResultIntro
+          heading={heading}
+          subheading={subheading}
+          cityLabel={cityLabel}
+          categoryLabel={categoryLabel}
+          goodForLabel={goodForLabel}
+          budgetLabel={budgetLabel}
+          isRefreshing={isRefreshing}
+          onClearSearch={onClearSearch}
+          onRemoveCity={onRemoveCity}
+          onRemoveCategory={onRemoveCategory}
+          onRemoveGoodFor={onRemoveGoodFor}
+          onRemoveBudget={onRemoveBudget}
+        />
       <MobileResultsTabs selectedView={selectedView} onViewChange={onViewChange} />
 
       {selectedView === 'cards' ? (
@@ -1579,7 +1528,6 @@ function DesktopResultsView({
   budgetLabel,
   isRefreshing,
   isPageLoading,
-  showBackHome,
   scrollContainerRef,
   onSelectPlace,
   onPageChange,
@@ -1603,7 +1551,6 @@ function DesktopResultsView({
   budgetLabel: string | null
   isRefreshing: boolean
   isPageLoading: boolean
-  showBackHome: boolean
   scrollContainerRef: RefObject<HTMLElement | null>
   onSelectPlace: (placeId: string) => void
   onPageChange: (page: number) => void
@@ -1617,7 +1564,7 @@ function DesktopResultsView({
   return (
     <section className="gala-page-background grid h-full min-h-0 select-none overflow-hidden lg:grid-cols-[minmax(380px,480px)_minmax(0,1fr)] xl:grid-cols-[minmax(440px,560px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(500px,620px)_minmax(0,1fr)]">
       <aside ref={scrollContainerRef} className="min-h-0 overflow-y-auto overscroll-contain border-r border-[var(--line)] px-6 py-6">
-        {showBackHome ? <BackToHomeButton className="mb-4" /> : null}
+        <SearchPageBreadcrumb className="mb-4" />
         <div className="flex items-start justify-between gap-6">
           <div>
             <h1 className="text-3xl font-black leading-tight text-slate-950">{heading}</h1>
@@ -1646,23 +1593,22 @@ function DesktopResultsView({
           <SearchResetButton onClick={onClearSearch} layout="desktop" />
         </div>
 
-        <div className="mt-4 flex h-60 justify-center overflow-hidden sm:h-68">
-          <img
+        <div className="flex justify-center overflow-hidden">
+          <ChibiIllustration
             src={searchSuccessChibi}
-            alt=""
-            className="h-full w-auto max-w-none shrink-0 scale-[0.96] object-contain"
-            loading="eager"
-            aria-hidden="true"
+            variant="feature"
+            className="!w-[clamp(210px,28vw,340px)] !max-h-[300px] sm:!w-[clamp(170px,20vw,280px)] sm:!max-h-[240px]"
           />
         </div>
 
-        <div className="mx-auto mt-6 w-full max-w-[760px] lg:max-w-[860px] xl:max-w-[960px] 2xl:max-w-[1040px]">
+        <div className="mt-6 w-full">
           <div className={`grid grid-cols-1 gap-3 transition ${isPageLoading ? 'pointer-events-none opacity-60' : 'opacity-100'}`}>
             {places.map((place) => (
               <PlaceCard
                 key={place.id}
                 place={place}
                 isSelected={selectedPlaceId === place.id}
+                searchResultCard
                 dataSearchPlaceId={place.id}
                 onSelect={onSelectPlace}
                 onOpen={onViewDetails}
@@ -1682,7 +1628,7 @@ function DesktopResultsView({
         </div>
       </aside>
 
-      <section className="relative hidden min-h-0 overflow-hidden bg-white xl:block">
+      <section className="relative hidden min-h-0 overflow-hidden bg-white lg:block">
         <MapView
           places={places}
           selectedPlaceId={selectedPlaceId}
@@ -1704,7 +1650,6 @@ function GuidedSearchPage({
   selectedBudget,
   areas,
   isSearching,
-  showBackHome,
   validationMessage,
   searchError,
   onRawQueryChange,
@@ -1721,7 +1666,6 @@ function GuidedSearchPage({
   selectedBudget: BudgetValue | null
   areas: AreaChip[]
   isSearching: boolean
-  showBackHome: boolean
   validationMessage: string | null
   searchError: string | null
   onRawQueryChange: (query: string) => void
@@ -1742,23 +1686,16 @@ function GuidedSearchPage({
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[460px] bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.65),rgba(255,255,255,0))]" />
 
       <div className="relative mx-auto flex w-full max-w-[820px] flex-col items-center text-center">
-        {showBackHome ? (
-          <div className="mb-3 flex w-full justify-start sm:mb-4">
-            <BackToHomeButton className="text-[13px] sm:text-sm" />
-          </div>
-        ) : null}
+        <div className="mb-3 w-full sm:mb-4">
+          <SearchPageBreadcrumb />
+        </div>
         <div className="relative flex w-full justify-center pt-2">
           <div className="pointer-events-none absolute left-4 top-8 h-10 w-20 rounded-full bg-white/60 blur-sm sm:left-20" />
           <div className="pointer-events-none absolute right-6 top-12 h-12 w-24 rounded-full bg-white/65 blur-sm sm:right-20" />
-          <div className="pointer-events-none absolute bottom-8 left-[14%] h-14 w-24 rounded-[18px] bg-white/35 shadow-[0_10px_26px_rgba(28,77,160,0.08)]" />
+          <div className="pointer-events-none absolute bottom-8 left-[14%] h-14 w-24 rounded-2xl bg-white/35 shadow-[0_10px_26px_rgba(28,77,160,0.08)]" />
           <div className="pointer-events-none absolute bottom-6 right-[16%] h-16 w-28 rounded-[20px] bg-white/40 shadow-[0_10px_28px_rgba(28,77,160,0.08)]" />
           <div className="pointer-events-none absolute inset-x-0 top-10 mx-auto h-40 w-40 rounded-full bg-[rgba(115,175,255,0.3)] blur-3xl sm:h-48 sm:w-48" />
-        <img
-          src={searchBeforeChibi}
-          alt=""
-          className="relative z-10 h-[310px] w-auto object-contain sm:h-[350px] lg:h-[380px]"
-          loading="eager"
-        />
+        <ChibiIllustration src={searchBeforeChibi} variant="hero" priority />
       </div>
 
         <div className="-mt-4 max-w-[560px]">
@@ -1781,8 +1718,8 @@ function GuidedSearchPage({
             <label htmlFor="smart-search-input" className="sr-only">
               Search places, cities, or categories
             </label>
-            <div className="mt-3 flex items-stretch gap-3">
-              <div className="flex min-w-0 flex-1 items-start gap-3 rounded-[22px] border-2 border-white/80 bg-[rgba(19,132,234,0.28)] px-4 py-3 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-sm sm:px-5 sm:py-4">
+            <div className="mt-3 flex items-end gap-3">
+              <div className="flex min-w-0 flex-1 items-start gap-3 rounded-3xl border-2 border-white/80 bg-[rgba(19,132,234,0.28)] px-4 py-3 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-sm sm:px-5 sm:py-4">
                 <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/12 text-white">
                   <AppIcon name="search" className="h-5 w-5" />
                 </div>
@@ -1802,17 +1739,16 @@ function GuidedSearchPage({
                 onClick={onSubmitSearch}
                 disabled={isSearching}
                 aria-label="Search places"
-                className="flex min-h-[88px] w-[62px] shrink-0 items-center justify-center rounded-[22px] border-2 border-white/80 bg-[rgba(19,132,234,0.28)] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-70"
+                className="flex h-12 w-12 shrink-0 items-center justify-center self-end rounded-xl border-2 border-white/80 bg-[rgba(19,132,234,0.28)] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] transition hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-70 sm:h-14 sm:w-14"
               >
-                <FilterIcon className="h-7 w-7" />
+                <FilterIcon className="h-5 w-5 sm:h-6 sm:w-6" />
               </button>
             </div>
 
             <div className="mt-3 rounded-[24px] bg-white/12 px-3 py-3 backdrop-blur-[10px] sm:px-4">
               <div className="flex flex-wrap items-center gap-2">
-                <div className="flex items-center gap-2 rounded-full bg-white/18 px-3 py-2 text-sm font-bold text-white">
+                <div className="flex items-center gap-1.5 rounded-full bg-white/18 px-3 py-2 text-sm font-bold text-white">
                   <FilterIcon className="h-4 w-4" />
-                  <span>Filters</span>
                   <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1.5 text-[11px] font-black text-[#1777ea]">
                     {activeFilterCount}
                   </span>
@@ -1899,8 +1835,8 @@ function GuidedSearchPage({
               ) : null}
             </div>
 
-            {validationMessage ? <p className="mt-3 text-sm font-bold text-white">{validationMessage}</p> : null}
-            {searchError ? <p className="mt-2 text-sm font-bold text-[#ffe2e2]">{searchError}</p> : null}
+            {validationMessage ? <p className="mt-3 text-center text-sm font-bold text-white">{validationMessage}</p> : null}
+            {searchError ? <p className="mt-2 text-center text-sm font-bold text-[#ffe2e2]">{searchError}</p> : null}
           </div>
         </section>
       </div>
@@ -1942,6 +1878,60 @@ function isAskAiUsageStatus(value: unknown): value is AskAiUsageStatus {
     typeof usage.remaining === 'number' &&
     typeof usage.resetAt === 'string'
   )
+}
+
+function normalizeAskAiUsageStatus(value: unknown): AskAiUsageStatus | null {
+  if (isAskAiUsageStatus(value)) {
+    return value
+  }
+
+  if (!value || typeof value !== 'object') {
+    return null
+  }
+
+  const candidate = value as BackendAskAiUsageStatus
+  const normalizedUsageType =
+    candidate.usageType === 'live_search'
+      ? 'live_search'
+      : candidate.usageType === 'ask_ai_total' || candidate.usageType === 'chatbot_ai'
+        ? 'ask_ai_total'
+        : null
+
+  if (
+    !normalizedUsageType ||
+    typeof candidate.allowed !== 'boolean' ||
+    typeof candidate.dailyLimit !== 'number' ||
+    typeof candidate.requestCount !== 'number' ||
+    typeof candidate.remaining !== 'number' ||
+    typeof candidate.resetsAt !== 'string'
+  ) {
+    return null
+  }
+
+  return {
+    usageType: normalizedUsageType,
+    allowed: candidate.allowed,
+    limit: candidate.dailyLimit,
+    used: candidate.requestCount,
+    remaining: candidate.remaining,
+    resetAt: candidate.resetsAt,
+    message: typeof candidate.message === 'string' ? candidate.message : undefined,
+  }
+}
+
+function getAskAiUsageStatusFromResponse(value: unknown): AskAiUsageStatus | null {
+  const normalizedDirect = normalizeAskAiUsageStatus(value)
+
+  if (normalizedDirect) {
+    return normalizedDirect
+  }
+
+  if (!value || typeof value !== 'object') {
+    return null
+  }
+
+  const candidate = value as AskAiUsageResponse
+  return normalizeAskAiUsageStatus(candidate.askAi) ?? normalizeAskAiUsageStatus(candidate.chatbotAi)
 }
 
 function getSourceHostname(url: string) {
@@ -2185,7 +2175,7 @@ function AskAiStructuredSection({
 
   return (
     <article
-      className={`rounded-[22px] border px-4 py-4 sm:px-5 ${containerClassName}`}
+      className={`rounded-3xl border px-4 py-4 sm:px-5 ${containerClassName}`}
     >
       <div className="flex items-center gap-2.5">
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[rgba(47,116,232,0.08)] text-[var(--accent-deep)]">
@@ -2211,7 +2201,7 @@ function AskAiStructuredSection({
             {listBlocks.map((block, index) => (
               <div
                 key={`${section.title}-list-${index}`}
-                className="flex items-start gap-3 rounded-[18px] bg-slate-50 px-3.5 py-3"
+                className="flex items-start gap-3 rounded-2xl bg-slate-50 px-3.5 py-3"
               >
                 {block.type === 'numbered' ? (
                   <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[0.78rem] font-black text-slate-700">
@@ -2328,20 +2318,15 @@ function AskAiOutputStageLegacy({
 
         <div className="flex flex-col items-center gap-5 lg:-mt-2">
           <div className="relative flex items-end justify-center">
-            <img
-              src={chibiImage}
-              alt=""
-              className="h-[220px] w-auto max-w-full object-contain sm:h-[280px] lg:h-[330px] xl:h-[360px]"
-              loading="lazy"
-            />
-            <div className="absolute right-0 top-8 hidden rounded-[26px] border border-[rgba(83,146,241,0.16)] bg-white px-5 py-4 text-center shadow-[0_12px_24px_rgba(15,23,42,0.045)] lg:block">
+            <ChibiIllustration src={chibiImage} variant="feature" />
+            <div className="absolute right-0 top-8 hidden rounded-3xl border border-[rgba(83,146,241,0.16)] bg-white px-5 py-4 text-center shadow-[0_12px_24px_rgba(15,23,42,0.045)] lg:block">
               <p className="text-[1.1rem] font-black text-slate-900">Here’s a practical</p>
               <p className="mt-1 text-[1.1rem] font-black text-slate-900">gala plan for you.</p>
             </div>
           </div>
         </div>
         <div className="grid items-start gap-5 lg:mt-auto lg:grid-cols-[minmax(0,1fr)_360px] xl:grid-cols-[minmax(0,1fr)_400px]">
-          <div className="w-full rounded-[30px] border border-[rgba(83,146,241,0.16)] bg-white px-4 py-4 shadow-[0_16px_34px_rgba(15,23,42,0.05)] sm:px-6 sm:py-6">
+          <div className="w-full rounded-3xl border border-[rgba(83,146,241,0.16)] bg-white px-4 py-4 shadow-[0_16px_34px_rgba(15,23,42,0.05)] sm:px-6 sm:py-6">
             <div className="grid gap-0">
               <div className="grid gap-3 border-b border-dashed border-[rgba(83,146,241,0.16)] py-4 first:pt-0">
                 <div className="flex items-start gap-3">
@@ -2416,7 +2401,7 @@ function AskAiOutputStageLegacy({
               onClick={onStartOver}
               className="group relative flex items-center gap-3 overflow-hidden rounded-[24px] border border-[rgba(15,23,42,0.08)] bg-[linear-gradient(135deg,#0f172a,#1d4ed8)] px-4 py-4 text-left shadow-[0_18px_42px_rgba(29,78,216,0.24)] transition hover:-translate-y-[1px] hover:shadow-[0_24px_52px_rgba(29,78,216,0.28)]"
             >
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] bg-white/14 text-white ring-1 ring-white/16">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/14 text-white ring-1 ring-white/16">
                 <SparkIcon className="h-6 w-6" />
               </span>
               <div className="min-w-0 flex-1">
@@ -2432,9 +2417,9 @@ function AskAiOutputStageLegacy({
             <button
               type="button"
               onClick={onOpenPromptBuilder}
-              className="flex items-center gap-3 rounded-[22px] border border-[rgba(83,146,241,0.16)] bg-[linear-gradient(180deg,#ffffff,#f7fbff)] px-4 py-4 text-left shadow-[0_12px_28px_rgba(15,23,42,0.045)] transition hover:border-[var(--accent)]"
+              className="flex items-center gap-3 rounded-3xl border border-[rgba(83,146,241,0.16)] bg-[linear-gradient(180deg,#ffffff,#f7fbff)] px-4 py-4 text-left shadow-[0_12px_28px_rgba(15,23,42,0.045)] transition hover:border-[var(--accent)]"
             >
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] bg-[var(--accent-wash)] text-[var(--accent-deep)]">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--accent-wash)] text-[var(--accent-deep)]">
                 <SparkIcon className="h-6 w-6" />
               </span>
               <div className="min-w-0 flex-1">
@@ -2517,15 +2502,10 @@ function AskAiThinkingStageLegacy({
 
         <div className="mt-8 flex flex-1 flex-col items-center justify-center text-center sm:mt-10 lg:mt-5">
           <div className="flex items-center justify-center">
-            <img
-              src={chibiImage}
-              alt=""
-              className="h-[210px] w-auto max-w-full object-contain sm:h-[290px] lg:h-[250px]"
-              loading="lazy"
-            />
+              <ChibiIllustration src={chibiImage} variant="feature" />
           </div>
 
-          <div className="relative -mt-3 w-full max-w-[370px] rounded-[18px] border border-[rgba(20,35,58,0.34)] bg-white px-4 pb-4 pt-4 shadow-[0_12px_28px_rgba(15,23,42,0.045)] sm:max-w-[420px] sm:px-5 lg:max-w-[370px]">
+          <div className="relative -mt-3 w-full max-w-[370px] rounded-2xl border border-[rgba(20,35,58,0.34)] bg-white px-4 pb-4 pt-4 shadow-[0_12px_28px_rgba(15,23,42,0.045)] sm:max-w-[420px] sm:px-5 lg:max-w-[370px]">
             <span className="absolute left-1/2 top-0 h-4.5 w-4.5 -translate-x-1/2 -translate-y-1/2 rotate-45 border-l border-t border-[rgba(20,35,58,0.34)] bg-white" />
             <div className="relative flex flex-col items-center gap-2.5">
               <p className="text-[0.9rem] font-semibold uppercase tracking-[0.08em] text-slate-600 sm:text-[0.98rem] lg:text-[0.9rem]">
@@ -2766,13 +2746,7 @@ function AskAiGateLoadingState({
             <div className="pointer-events-none absolute inset-x-10 top-0 h-24 rounded-full bg-[radial-gradient(circle,rgba(160,201,255,0.22),transparent_72%)] blur-2xl" />
             <div className="relative">
               <div className="mx-auto flex h-[124px] w-[124px] items-center justify-center rounded-full bg-[linear-gradient(180deg,#f8fbff_0%,#edf5ff_100%)]">
-                <img
-                  src={askAiThinkingChibi}
-                  alt=""
-                  aria-hidden="true"
-                  className="h-[106px] w-auto object-contain"
-                  loading="eager"
-                />
+                <ChibiIllustration src={askAiThinkingChibi} variant="compact" priority />
               </div>
               <div className="mt-4 flex items-center justify-center gap-2" aria-hidden="true">
                 <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-[var(--accent)]" />
@@ -2812,12 +2786,7 @@ function AskAiSignInRequired({
         {onBack ? <AskAiBackButton onClick={onBack} className="w-fit lg:col-span-2" /> : null}
         <div className="overflow-hidden rounded-[32px] border border-[rgba(83,146,241,0.16)] bg-white/88 p-5 shadow-[0_22px_60px_rgba(15,23,42,0.08)] sm:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
-            <img
-              src={protectedFeatureChibi}
-              alt=""
-              className="mx-auto h-32 w-32 shrink-0 object-contain lg:mx-0"
-              loading="lazy"
-            />
+            <ChibiIllustration src={protectedFeatureChibi} variant="feature" className="mx-auto lg:mx-0" />
             <div className="min-w-0">
               <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(83,146,241,0.18)] bg-[rgba(242,247,255,0.96)] px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--accent-deep)]">
                 <SparkIcon className="h-4 w-4" />
@@ -2845,7 +2814,7 @@ function AskAiSignInRequired({
             <button
               type="button"
               onClick={onOpenPromptBuilder}
-              className="inline-flex items-center justify-center rounded-[18px] border border-[rgba(83,146,241,0.18)] bg-white px-4 py-3 text-sm font-black text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)]"
+              className="inline-flex items-center justify-center rounded-2xl border border-[rgba(83,146,241,0.18)] bg-white px-4 py-3 text-sm font-black text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)]"
             >
               Open Prompt Builder
             </button>
@@ -2911,13 +2880,13 @@ function AskAiOutputStageNextLegacy({
       <div className="relative mx-auto flex min-h-[calc(100dvh-128px)] w-full max-w-[430px] flex-col gap-5">
         <div>
           <p className="text-[0.9rem] font-black uppercase tracking-[0.12em] text-slate-500">Your question</p>
-          <div className="mt-2.5 w-full rounded-[18px] border border-[rgba(20,35,58,0.14)] bg-white/88 px-4 py-3.5">
+          <div className="mt-2.5 w-full rounded-2xl border border-[rgba(20,35,58,0.14)] bg-white/88 px-4 py-3.5">
             <p className="text-[1rem] font-bold leading-7 tracking-[-0.01em] text-slate-950">{question}</p>
           </div>
         </div>
 
         <div className="flex items-center justify-center">
-          <img src={chibiImage} alt="" className="h-[220px] w-auto max-w-full object-contain" loading="lazy" />
+          <ChibiIllustration src={chibiImage} variant="empty" />
         </div>
 
         <div className="grid gap-4 border-t border-[rgba(20,35,58,0.08)] pt-4">
@@ -3015,7 +2984,7 @@ function AskAiOutputStageNextLegacy({
             <button
               type="button"
               onClick={onOpenPromptBuilder}
-              className="flex items-center justify-between gap-3 rounded-[18px] border border-[rgba(83,146,241,0.14)] bg-[rgba(255,255,255,0.72)] px-4 py-3.5 text-left transition hover:border-[var(--accent)]"
+              className="flex items-center justify-between gap-3 rounded-2xl border border-[rgba(83,146,241,0.14)] bg-[rgba(255,255,255,0.72)] px-4 py-3.5 text-left transition hover:border-[var(--accent)]"
             >
               <div className="min-w-0">
                 <p className="text-sm font-black text-slate-950">Use Prompt Builder</p>
@@ -3036,7 +3005,7 @@ function AskAiOutputStageNextLegacy({
                     href={source.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex min-h-[64px] items-center justify-between gap-3 rounded-[18px] border border-[rgba(83,146,241,0.14)] bg-[rgba(255,255,255,0.7)] px-4 py-3 transition hover:border-[var(--accent)]"
+                    className="flex min-h-[64px] items-center justify-between gap-3 rounded-2xl border border-[rgba(83,146,241,0.14)] bg-[rgba(255,255,255,0.7)] px-4 py-3 transition hover:border-[var(--accent)]"
                   >
                     <div className="min-w-0">
                       <p className="truncate text-sm font-black text-slate-950">{source.title}</p>
@@ -3077,10 +3046,10 @@ function AskAiOutputStageNext({
     : [{ title: 'Plan', lines: getAskAiDisplayLines(answer).filter(Boolean) }]
 
   return (
-    <div className={`flex flex-col ${className}`}>
+    <div className={`flex h-full min-h-0 w-full flex-col ${className}`}>
       {/* Chat messages area */}
-      <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-5">
-        <div className="mx-auto flex w-full max-w-[768px] flex-col gap-5">
+      <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-5 lg:px-8">
+        <div className="flex w-full flex-col gap-5">
 
           {/* User message bubble */}
           <div className="flex justify-end">
@@ -3092,7 +3061,7 @@ function AskAiOutputStageNext({
           {/* AI response bubble */}
           <div className="flex items-start gap-2.5">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#e8f0fe,#d4e4fc)] shadow-[0_2px_8px_rgba(47,116,232,0.10)]">
-              <img src={chibiImage} alt="" className="h-6 w-6 object-contain" />
+              <ChibiIllustration src={chibiImage} alt="" variant="compact" />
             </div>
             <div className="min-w-0 w-full max-w-[88%] sm:max-w-[82%]">
               {displaySections.map((section, index) => (
@@ -3170,10 +3139,10 @@ function AskAiThinkingStageNext({
   className?: string
 }) {
   return (
-    <div className={`flex flex-col ${className}`}>
+    <div className={`flex h-full min-h-0 w-full flex-col ${className}`}>
       {/* Chat messages area */}
-      <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-5">
-        <div className="mx-auto flex w-full max-w-[768px] flex-col gap-5">
+      <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-5 lg:px-8">
+        <div className="flex w-full flex-col gap-5">
           {/* User message bubble */}
           <div className="flex justify-end">
             <div className="max-w-[82%] rounded-2xl rounded-tr-[6px] bg-[var(--accent)] px-4 py-3 shadow-[0_4px_14px_rgba(47,116,232,0.16)]">
@@ -3184,7 +3153,7 @@ function AskAiThinkingStageNext({
           {/* AI thinking bubble */}
           <div className="flex items-start gap-2.5">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#e8f0fe,#d4e4fc)] shadow-[0_2px_8px_rgba(47,116,232,0.10)]">
-              <img src={chibiImage} alt="" className="h-6 w-6 object-contain" />
+              <ChibiIllustration src={chibiImage} alt="" variant="compact" />
             </div>
             <div className="min-w-0 max-w-[82%] rounded-2xl rounded-tl-[6px] border border-[rgba(15,23,42,0.06)] bg-white px-4 py-3.5 shadow-[0_2px_8px_rgba(15,23,42,0.03)]">
               <div className="flex items-center gap-2">
@@ -3241,7 +3210,6 @@ function AskAiModePanel({
   void isUsageLoading
   const isUsagePending = !usageStatus
   const isLimitReached = usageStatus ? !usageStatus.allowed || usageStatus.remaining <= 0 : false
-  const isCenteredEmptyState = !messages.length && !isSubmitting && !answer
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -3282,38 +3250,37 @@ function AskAiModePanel({
   }, [onOpenPromptBuilder])
 
   return (
-    <div className={`relative flex h-full flex-col overflow-hidden bg-[#fafafa] ${className}`}>
+    <div className={`relative flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#f8fafc] ${className}`}>
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-32 left-1/2 h-[420px] w-[820px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.08),transparent_60%)] blur-3xl" />
-        <div className="absolute -top-20 left-1/4 h-[320px] w-[480px] rounded-full bg-[radial-gradient(circle,rgba(56,189,248,0.06),transparent_60%)] blur-3xl" />
-        <div className="absolute -top-16 right-1/4 h-[320px] w-[480px] rounded-full bg-[radial-gradient(circle,rgba(168,85,247,0.05),transparent_60%)] blur-3xl" />
+        <div className="absolute -top-32 left-1/2 h-[420px] w-[820px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.05),transparent_60%)] blur-3xl" />
+        <div className="absolute -top-20 left-1/4 h-[320px] w-[480px] rounded-full bg-[radial-gradient(circle,rgba(56,189,248,0.04),transparent_60%)] blur-3xl" />
+        <div className="absolute -top-16 right-1/4 h-[320px] w-[480px] rounded-full bg-[radial-gradient(circle,rgba(168,85,247,0.035),transparent_60%)] blur-3xl" />
       </div>
 
-      <div className={`relative shrink-0 px-4 pb-3 pt-3 sm:px-5 ${messages.length > 0 ? 'border-b border-slate-300' : ''}`}>
-        <div className="mx-auto flex w-full max-w-[760px] items-center gap-2">
-          <span />
+      <div className="relative shrink-0 mb-4 px-4 pt-5 sm:mb-5 sm:px-5 md:px-6 lg:px-8">
+        <div className="flex items-center justify-end gap-2">
           {messages.length > 0 && (
             <button
               type="button"
               onClick={onStartOver}
               aria-label="New chat"
-              className="ml-auto mr-1 inline-flex h-[34px] w-[34px] items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100 hover:text-slate-800"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-white/80 text-slate-600 ring-1 ring-inset ring-slate-200/80 shadow-[0_6px_18px_-10px_rgba(15,23,42,0.2)] transition hover:bg-white hover:text-slate-800"
             >
               <AppIcon name="newChat" size={24} strokeWidth={2} />
             </button>
           )}
           <InternalLink
             href="/ask-ai"
-            aria-label="Back to Menu"
-            className={`inline-flex h-[34px] w-[34px] items-center justify-center rounded-xl bg-sky-100 text-sky-700 ring-1 ring-inset ring-sky-200/70 transition hover:bg-sky-200/80 hover:text-sky-800 ${messages.length === 0 ? 'ml-auto' : ''}`}
+            aria-label="Back to Ask AI overview"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-sky-100 text-sky-700 ring-1 ring-inset ring-sky-200/70 shadow-[0_6px_18px_-8px_rgba(14,165,233,0.45)] transition hover:bg-sky-200/80 hover:text-sky-800"
           >
             <Bot className="h-6 w-6" strokeWidth={2} />
           </InternalLink>
         </div>
       </div>
 
-      <div className="relative flex-1 min-h-0 overflow-y-auto px-4 sm:px-5">
-        <div className={isCenteredEmptyState ? 'mx-auto flex h-full w-full max-w-[760px] flex-col items-center justify-center gap-4 py-6 sm:py-8' : 'mx-auto flex w-full max-w-[760px] flex-col gap-4 py-6 sm:py-8'}>
+      <div className="relative flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 sm:px-5 md:px-6 lg:px-8">
+        <div className="flex min-h-full w-full flex-col gap-4 py-5 sm:py-6">
           <ChatMessageList
             isSessionLoading={isSessionLoading}
             isRegistered={isRegistered}
@@ -3332,19 +3299,9 @@ function AskAiModePanel({
         </div>
       </div>
 
-      <div className="relative shrink-0 border-t border-slate-200/80 bg-white/60 px-4 pt-3 pb-[env(safe-area-inset-bottom,0px)] shadow-[0_-1px_0_rgba(15,23,42,0.02),0_-8px_24px_-12px_rgba(15,23,42,0.06)] backdrop-blur-md sm:px-5">
-        <div className="mx-auto w-full max-w-[760px]">
-          <div className="mb-2 flex items-center gap-1">
-            <button
-              type="button"
-              onClick={handleOpenPromptBuilder}
-              className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11.5px] font-medium text-slate-500 transition hover:bg-slate-200/60 hover:text-slate-700"
-            >
-              <AppIcon name="promptBuilder" className="h-3.5 w-3.5" />
-              Prompt Builder
-            </button>
-          </div>
-          <div className="group/composer relative flex items-end gap-1.5 rounded-2xl border border-slate-200/80 bg-white/90 p-1.5 shadow-[0_4px_24px_-8px_rgba(15,23,42,0.08),0_1px_2px_rgba(15,23,42,0.04)] backdrop-blur-sm transition focus-within:border-slate-300/90 focus-within:bg-white focus-within:shadow-[0_8px_32px_-8px_rgba(15,23,42,0.1),0_0_0_4px_rgba(99,102,241,0.06)]">
+      <div className="relative shrink-0 px-4 pt-1 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] sm:px-5 md:px-6 lg:px-8">
+        <div className="mx-auto w-full max-w-[920px]">
+          <div className="group/composer relative flex items-end gap-1.5 rounded-[24px] border border-slate-200/60 bg-[#f8fafc] p-1.5 shadow-none transition focus-within:border-slate-300/80 focus-within:shadow-[0_0_0_4px_rgba(99,102,241,0.04)]">
             <textarea
               ref={textareaRef}
               value={draftQuestion}
@@ -3355,26 +3312,36 @@ function AskAiModePanel({
                   handleSend()
                 }
               }}
-              placeholder="Message Ask AI…"
+              placeholder="Message Ask AI..."
               rows={1}
               disabled={isSubmitting || isLimitReached || isUsagePending}
-              className="min-h-[40px] flex-1 resize-none bg-transparent px-3 py-2 text-[15px] leading-relaxed text-slate-800 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed disabled:text-slate-300"
+              className="min-h-[40px] max-h-[120px] flex-1 resize-none overflow-y-auto bg-transparent px-3 py-2 text-[15px] leading-relaxed text-slate-800 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed disabled:text-slate-300"
             />
             <button
               type="button"
               onClick={() => (isSubmitting ? cancelAskAiRuntimeRequest() : handleSend())}
               disabled={!isSubmitting && (isLimitReached || isUsagePending || !draftQuestion.trim())}
               aria-label={isSubmitting ? 'Cancel request' : 'Send message'}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#172d6b] to-[#0f1f4a] text-white shadow-[0_4px_12px_-2px_rgba(23,45,107,0.4)] transition hover:from-[#1e3a82] hover:to-[#172d6b] hover:shadow-[0_6px_16px_-2px_rgba(23,45,107,0.5)] active:scale-95 disabled:cursor-not-allowed disabled:from-slate-200 disabled:to-slate-200 disabled:text-slate-400 disabled:shadow-none"
+              className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#172d6b] to-[#0f1f4a] text-white shadow-[0_4px_12px_-2px_rgba(23,45,107,0.4)] transition hover:from-[#1e3a82] hover:to-[#172d6b] hover:shadow-[0_6px_16px_-2px_rgba(23,45,107,0.5)] active:scale-95 disabled:cursor-not-allowed disabled:from-slate-200 disabled:to-slate-200 disabled:text-slate-400 disabled:shadow-none"
             >
               {isSubmitting ? (
-                <svg className="h-[15px] w-[15px]" viewBox="0 0 24 24">
+                <svg className="h-4 w-4" viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="11" fill="#0f1f4a" />
-                  <rect x="6.5" y="6.5" width="11" height="11" rx="2" fill="white" />
+                  <rect x="5.5" y="5.5" width="13" height="13" rx="2" fill="white" />
                 </svg>
               ) : (
-                <AppIcon name="send" className="h-[15px] w-[15px]" strokeWidth={2.25} />
+                <AppIcon name="send" className="h-4 w-4" strokeWidth={2.25} />
               )}
+            </button>
+          </div>
+          <div className="mt-1.5 flex items-center gap-1">
+            <button
+              type="button"
+              onClick={handleOpenPromptBuilder}
+              className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[11.5px] font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
+            >
+              <AppIcon name="promptBuilder" className="h-3.5 w-3.5" />
+              Prompt Builder
             </button>
           </div>
           <p className="mt-2 text-center text-[10.5px] text-slate-400">
@@ -3440,23 +3407,19 @@ const ChatMessageList = memo(function ChatMessageList({
     ]
 
     return (
-      <div className="flex w-full max-w-[760px] flex-col items-center lg:max-w-[860px] xl:max-w-[960px] 2xl:max-w-[1040px]">
-        <div className="flex flex-col items-center text-center">
-          <div className="relative mb-5">
-            <div className="pointer-events-none absolute -inset-4 rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.18),transparent_65%)] blur-2xl" />
-            <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 via-blue-500 to-cyan-400 shadow-[0_10px_28px_-6px_rgba(59,130,246,0.45),inset_0_1px_0_rgba(255,255,255,0.25)]">
-              <SparkIcon className="h-6 w-6 text-white" />
-            </div>
+      <div className="flex w-full flex-col items-stretch">
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div className="flex min-w-0 flex-col">
+            <h1 className="text-[1.55rem] font-semibold leading-tight tracking-[-0.02em] text-slate-900 sm:text-[1.9rem]">
+              How can I help you plan your <span className="bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500 bg-clip-text text-transparent">gala</span>?
+            </h1>
+            <p className="mt-2 max-w-md text-[14px] leading-relaxed text-slate-500 sm:text-[14.5px]">
+              Ask me anything about places, food, dates, and itineraries around Metro Manila.
+            </p>
           </div>
-          <h1 className="text-[1.55rem] font-semibold leading-tight tracking-[-0.02em] text-slate-900 sm:text-[1.9rem]">
-            How can I help you plan your <span className="bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500 bg-clip-text text-transparent">gala</span>?
-          </h1>
-          <p className="mt-2 max-w-md text-[14px] leading-relaxed text-slate-500 sm:text-[14.5px]">
-            Ask me anything about places, food, dates, and itineraries around Metro Manila.
-          </p>
         </div>
 
-        <div className="mt-7 grid w-full grid-cols-1 gap-2.5 sm:grid-cols-2">
+        <div className="mt-7 grid w-full grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
           {promptChips.map((chip) => (
             <button
               key={chip.id}
@@ -3643,7 +3606,7 @@ function AskAiSignInContent({
   onOpenPromptBuilder: () => void
 }) {
   return (
-    <div className="mx-auto flex w-full max-w-[760px] flex-col items-center justify-center py-8 text-center lg:max-w-[860px] xl:max-w-[960px] 2xl:max-w-[1040px]">
+    <div className="flex w-full flex-col items-center justify-center py-8 text-center">
       <div className="relative mb-5">
         <div className="pointer-events-none absolute -inset-4 rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.16),transparent_65%)] blur-2xl" />
         <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 via-blue-500 to-cyan-400 shadow-[0_10px_28px_-6px_rgba(59,130,246,0.45),inset_0_1px_0_rgba(255,255,255,0.25)]">
@@ -3681,7 +3644,7 @@ function AskAiUsageErrorContent({
   onOpenPromptBuilder: () => void
 }) {
   return (
-    <div className="mx-auto flex w-full max-w-[760px] flex-col items-center justify-center py-8 text-center lg:max-w-[860px] xl:max-w-[960px] 2xl:max-w-[1040px]">
+    <div className="flex w-full flex-col items-center justify-center py-8 text-center">
       <div className="relative mb-5">
         <div className="pointer-events-none absolute -inset-4 rounded-full bg-[radial-gradient(circle,rgba(245,158,11,0.18),transparent_65%)] blur-2xl" />
         <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 shadow-[0_10px_28px_-6px_rgba(245,158,11,0.4),inset_0_1px_0_rgba(255,255,255,0.25)]">
@@ -3743,7 +3706,6 @@ function HomePage({
       initialAskAiState?.question === normalizedInitialAskAiQuestion
     )
   const supportsSearchRouteCache = initialMode === 'places' && isSearchResultsRoute()
-  const showBackHomeLink = Boolean(initialSearchState?.autoSearch)
   const initialRequestedPage =
     typeof initialSearchState?.page === 'number' && Number.isFinite(initialSearchState.page) && initialSearchState.page > 0
       ? Math.floor(initialSearchState.page)
@@ -3830,7 +3792,7 @@ function HomePage({
   const [hasSearched, setHasSearched] = useState(Boolean(initialRouteCache))
   const hasRestoredInitialScrollRef = useRef(false)
   const searchRequestVersion = useRef(0)
-  const didAutoSubmitAskAiRef = useRef(false)
+  const lastAutoSubmittedAskAiQuestionRef = useRef('')
   const desktopResultsScrollRef = useRef<HTMLElement | null>(null)
   const selectedCategoryName = useMemo(
     () =>
@@ -4071,7 +4033,7 @@ function HomePage({
     clearAskAiRouteCache()
   }
 
-  const handleClearSearch = () => {
+  const resetSearchState = () => {
     if (supportsSearchRouteCache) {
       window.sessionStorage.removeItem(getCurrentSearchRouteCacheKey())
     }
@@ -4098,7 +4060,16 @@ function HomePage({
     setSelectedPlaceId(null)
     setCurrentPage(1)
     setMobileResultsView('cards')
+  }
+
+  const handleClearSearch = () => {
+    resetSearchState()
     navigateToPath('/search')
+  }
+
+  const handleSearchAgain = () => {
+    resetSearchState()
+    replaceWithPath('/search')
   }
 
   const handlePlaceSelect = (placeId: string) => {
@@ -4479,7 +4450,7 @@ function HomePage({
       setAskAiAnswer(runtimeState.answer)
       setAskAiSources(runtimeState.sources)
       setAskAiAnswerError(runtimeState.answerError)
-      setAskAiUsageStatus(runtimeState.usageStatus)
+      setAskAiUsageStatus((currentUsageStatus) => runtimeState.usageStatus ?? currentUsageStatus)
       setIsAskAiSubmitting(runtimeState.isSubmitting)
 
       if (runtimeState.answer && runtimeState.jobStatus === 'completed') {
@@ -4498,11 +4469,15 @@ function HomePage({
   }, [initialAskAiRuntimeState, initialAskAiState, initialMode])
 
   useEffect(() => {
-    if (initialMode !== 'ask-ai' || didAutoSubmitAskAiRef.current) {
+    if (initialMode !== 'ask-ai') {
       return
     }
 
     const question = normalizeSearchText(initialAskAiQuestion)
+    if (!question || lastAutoSubmittedAskAiQuestionRef.current === question) {
+      return
+    }
+
     const runtimeState = getAskAiRuntimeState()
     const hasActiveRequestForQuestion =
       question &&
@@ -4514,15 +4489,15 @@ function HomePage({
       Boolean(runtimeState.answer || runtimeState.answerError || runtimeState.sources.length)
 
     if (hasActiveRequestForQuestion || hasCachedResultForQuestion) {
-      didAutoSubmitAskAiRef.current = true
+      lastAutoSubmittedAskAiQuestionRef.current = question
       return
     }
 
-    if (!question || isSessionLoading || !session?.access_token) {
+    if (isSessionLoading || !session?.access_token) {
       return
     }
 
-    didAutoSubmitAskAiRef.current = true
+    lastAutoSubmittedAskAiQuestionRef.current = question
     void handleAskAiSubmit(question)
   }, [handleAskAiSubmit, initialAskAiQuestion, initialMode, isSessionLoading, session?.access_token])
 
@@ -4613,20 +4588,19 @@ function HomePage({
           signal: controller.signal,
         })
 
-        const data = (await response.json()) as Partial<AskAiUsageSummary> & {
-          error?: string
-          message?: string
-        }
+        const data = (await response.json()) as AskAiUsageResponse
 
         if (!response.ok) {
           throw new Error(data.message || data.error || 'Failed to check Ask AI usage.')
         }
 
-        if (!isAskAiUsageStatus(data.askAi) || !isAskAiUsageStatus(data.liveSearch)) {
+        const usageStatus = getAskAiUsageStatusFromResponse(data)
+
+        if (!usageStatus) {
           throw new Error('Ask AI usage response was incomplete.')
         }
 
-        setAskAiUsageStatus(data.askAi)
+        setAskAiUsageStatus(usageStatus)
       } catch (error) {
         if ((error as Error).name === 'AbortError') {
           return
@@ -4728,7 +4702,6 @@ function HomePage({
                 selectedBudget={selectedBudget}
                 areas={areas}
                 isSearching={isSearching}
-                showBackHome={showBackHomeLink}
                 validationMessage={searchValidationMessage}
                 searchError={searchError}
                 onRawQueryChange={handleRawQueryChange}
@@ -4757,7 +4730,6 @@ function HomePage({
                       budgetLabel={selectedBudgetLabel}
                       isRefreshing={isRefreshingSearch}
                       isPageLoading={isPageLoading}
-                      showBackHome={showBackHomeLink}
                       selectedView={mobileResultsView}
                       onViewChange={setMobileResultsView}
                       onPageChange={handlePageChange}
@@ -4773,8 +4745,7 @@ function HomePage({
                     <section className="px-4 py-4">
                       <SearchEmptyState
                         hasSearched={hasSearched}
-                        onSearchAgain={handleClearSearch}
-                        showBackHome={showBackHomeLink}
+                        onSearchAgain={handleSearchAgain}
                       />
                     </section>
                   )
@@ -4798,13 +4769,15 @@ function HomePage({
                 )}
               </>
             )}
-        </main>
-      </div>
+          </main>
+        </div>
 
         <div
           className={`hidden w-full lg:grid ${
-            isPromptBuilderOpen || selectedMode === 'ask-ai'
+            isPromptBuilderOpen
               ? 'h-screen overflow-hidden grid-rows-[auto_minmax(0,1fr)]'
+              : selectedMode === 'ask-ai'
+                ? 'h-screen overflow-hidden grid-rows-[minmax(0,1fr)]'
               : 'h-screen overflow-hidden lg:grid-rows-[auto_minmax(0,1fr)_auto]'
           }`}
         >
@@ -4812,8 +4785,10 @@ function HomePage({
 
           <div
             className={
-              isPromptBuilderOpen || selectedMode === 'ask-ai'
-                ? 'min-h-0 overflow-hidden'
+              isPromptBuilderOpen
+                ? 'flex h-full min-h-0 flex-col overflow-hidden'
+                : selectedMode === 'ask-ai'
+                ? 'flex h-full min-h-0 flex-col overflow-hidden'
                 : shouldShowGuidedSearch
                   ? 'min-h-0 overflow-hidden'
                   : 'grid min-h-0 overflow-hidden grid-rows-[auto_minmax(0,1fr)]'
@@ -4841,7 +4816,6 @@ function HomePage({
                 selectedBudget={selectedBudget}
                 areas={areas}
                 isSearching={isSearching}
-                showBackHome={showBackHomeLink}
                 validationMessage={searchValidationMessage}
                 searchError={searchError}
                 onRawQueryChange={handleRawQueryChange}
@@ -4869,7 +4843,6 @@ function HomePage({
                       budgetLabel={selectedBudgetLabel}
                       isRefreshing={isRefreshingSearch}
                       isPageLoading={isPageLoading}
-                      showBackHome={showBackHomeLink}
                       scrollContainerRef={desktopResultsScrollRef}
                       onSelectPlace={handleMapPlaceSelect}
                       onPageChange={handlePageChange}
@@ -4884,8 +4857,7 @@ function HomePage({
                     <section className="px-8 py-8">
                       <SearchEmptyState
                         hasSearched={hasSearched}
-                        onSearchAgain={handleClearSearch}
-                        showBackHome={showBackHomeLink}
+                        onSearchAgain={handleSearchAgain}
                       />
                     </section>
                   )
@@ -4905,17 +4877,16 @@ function HomePage({
                     onSubmit={(questionOverride) => void handleAskAiSubmit(questionOverride)}
                     onStartOver={handleStartOverAskAi}
                     onOpenPromptBuilder={(questionOverride) => openPromptBuilder('ask-ai', questionOverride)}
-                    className="min-h-0"
+                    className="h-full"
                   />
                 )}
               </>
             )}
+          </div>
         </div>
-
       </div>
-    </div>
-  )
-}
+    )
+  }
 
 export default HomePage
 

@@ -3,7 +3,7 @@ import type { Session } from '@supabase/supabase-js'
 import AppHeader from '../components/AppHeader'
 import ProfileAvatar from '../components/ProfileAvatar'
 import UnifiedLoadingState from '../components/UnifiedLoadingState'
-import { PageContainer, StateContainer } from '../components/layout/ResponsiveLayouts'
+import { PageContainer, PageShell, StateContainer } from '../components/layout/ResponsiveLayouts'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { getCurrentUser } from '../utils/profileApi'
 import { navigateToPath } from '../utils/navigation'
@@ -38,7 +38,7 @@ function formatDate(value?: string | null) {
 
 function getStatusClass(status: UserReportStatus) {
   if (status === 'action_taken') {
-    return 'border-[#DBEAFE] bg-[#DBEAFE] text-[#1E3A8A]'
+    return 'border-[#DBEAFE] bg-[var(--accent-soft)] text-[var(--accent)]'
   }
 
   if (status === 'dismissed') {
@@ -162,26 +162,26 @@ function AdminUserReportsPage({ session }: { session: Session }) {
 
   if (!isAdmin) {
     return (
-      <section className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
+      <PageShell>
         <AppHeader />
-        <main className="mx-auto max-w-3xl px-4 py-10">
+        <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
           <StateContainer>
             <h1 className="text-2xl font-black text-slate-950">Admin access required</h1>
             <p className="mt-2 text-sm font-semibold text-slate-700">Only admins can review user reports.</p>
           </StateContainer>
         </main>
-      </section>
+      </PageShell>
     )
   }
 
   return (
-    <section className="min-h-screen bg-[#F8F7F4] text-[#111827]">
+    <PageShell>
       <AppHeader />
-      <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
-        <PageContainer>
+      <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
+        <PageContainer size="wide">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-[12px] font-black uppercase tracking-[0.2em] text-[#1E3A8A]">Admin dashboard</p>
+            <p className="text-[12px] font-black uppercase tracking-[0.2em] text-[var(--accent)]">Admin dashboard</p>
             <h1 className="mt-2 text-3xl font-black tracking-[-0.03em] text-slate-950">User reports</h1>
             <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-slate-700">
               Review private reports submitted against user accounts and profiles.
@@ -191,14 +191,14 @@ function AdminUserReportsPage({ session }: { session: Session }) {
             <button
               type="button"
               onClick={() => navigateToPath('/admin/place-submissions')}
-              className="inline-flex min-h-10 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white px-4 text-sm font-black text-slate-800"
+              className="app-button app-button-ghost app-button-md"
             >
               Place submissions
             </button>
             <button
               type="button"
               onClick={() => navigateToPath('/admin/place-images')}
-              className="inline-flex min-h-10 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white px-4 text-sm font-black text-slate-800"
+              className="app-button app-button-ghost app-button-md"
             >
               Photo review
             </button>
@@ -206,7 +206,7 @@ function AdminUserReportsPage({ session }: { session: Session }) {
               type="button"
               onClick={() => void loadReports(statusFilter)}
               disabled={isLoading}
-              className="inline-flex min-h-10 items-center justify-center rounded-xl border border-[#E5E7EB] bg-white px-4 text-sm font-black text-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+              className="app-button app-button-ghost app-button-md"
             >
               {isLoading ? 'Refreshing...' : 'Refresh'}
             </button>
@@ -222,7 +222,7 @@ function AdminUserReportsPage({ session }: { session: Session }) {
               className={`inline-flex min-h-10 items-center justify-center rounded-full border px-4 text-sm font-black transition ${
                 statusFilter === status
                   ? 'border-[#1E3A8A] bg-[#1E3A8A] text-white'
-                  : 'border-[#E5E7EB] bg-white text-slate-700 hover:border-[#1E3A8A] hover:text-[#1E3A8A]'
+                  : 'border-[#E5E7EB] bg-white text-slate-700 hover:border-[#1E3A8A] hover:text-[var(--accent)]'
               }`}
             >
               {status === 'all' ? 'All' : statusLabels[status]}
@@ -371,7 +371,7 @@ function AdminUserReportsPage({ session }: { session: Session }) {
           )}
         </PageContainer>
       </main>
-    </section>
+    </PageShell>
   )
 }
 

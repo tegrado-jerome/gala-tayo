@@ -1,5 +1,6 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getSeoAreaPage, getSeoAreaSummaries, getSeoPlaceSummaries } from "../utils/seoPlaces";
+import { CATEGORIES } from "./filters";
 
 type SeoPlacesResponse = {
   areas: Awaited<ReturnType<typeof getSeoAreaSummaries>>;
@@ -93,6 +94,13 @@ export async function sitemapXml(request: HttpRequest, context: InvocationContex
     { path: "/about", lastmod: nowIso, priority: "0.5", changefreq: "monthly" },
     { path: "/privacy", lastmod: nowIso, priority: "0.4", changefreq: "yearly" },
     { path: "/terms", lastmod: nowIso, priority: "0.4", changefreq: "yearly" },
+    { path: "/places/categories", lastmod: nowIso, priority: "0.7", changefreq: "weekly" },
+    ...CATEGORIES.map((category) => ({
+      path: `/places/categories/${category.id}`,
+      lastmod: nowIso,
+      priority: "0.7",
+      changefreq: "weekly",
+    })),
     ...areas.map((area) => ({
       path: area.canonicalPath,
       lastmod: nowIso,

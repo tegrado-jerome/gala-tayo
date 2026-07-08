@@ -1,6 +1,7 @@
 import AppHeader from '../components/AppHeader'
 import InternalLink from '../components/InternalLink'
-import { PageContainer, ResponsiveGrid } from '../components/layout/ResponsiveLayouts'
+import MinimalBackNav from '../components/MinimalBackNav'
+import { PageContainer, PageShell, ChibiIllustration } from '../components/layout/ResponsiveLayouts'
 import { AppIcon, type AppIconName } from '../components/AppIcon'
 import askAiOverviewChibi from '../assets/chibis/core/ask-ai/chibi-ai-overview.webp'
 
@@ -113,75 +114,80 @@ function ToolCard({ href, title, description, icon }: ToolCardProps) {
 
 function AskAiOverviewPage() {
   return (
-    <div className="gala-page-background flex min-h-[100dvh] flex-col text-[var(--text)]">
-      <div className="shrink-0">
-        <AppHeader minimal />
-      </div>
+    <PageShell>
+      <AppHeader minimal />
 
-      <main className="flex w-full flex-1 flex-col pt-4 sm:pt-5 md:pt-7 lg:pt-9">
-        <PageContainer className="px-4 sm:px-6 lg:px-8 xl:px-10">
-        <section className="shrink-0">
-          <div className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">
-            <AppIcon name="askAi" className="h-3.5 w-3.5" />
-            <span>Ask AI</span>
+      <main className="flex w-full flex-col pt-6 sm:pt-7 md:pt-9 lg:flex-1 lg:pt-0">
+        <PageContainer
+          size="wide"
+          className="px-4 sm:px-6 lg:flex lg:min-h-full lg:flex-col lg:justify-center lg:px-8 xl:px-10"
+        >
+          <div className="mb-6">
+            <MinimalBackNav to="/" label="Home" preferHistory={false} />
           </div>
 
-          <h1 className="mt-1 text-[2rem] font-black leading-[1.05] tracking-[-0.04em] text-slate-950 sm:text-[2.35rem]">
-            How can GalaTayo AI help?
-          </h1>
+          <div className="grid gap-6 lg:gap-8">
+            <section className="shrink-0 lg:col-span-2">
+              <div className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">
+                <AppIcon name="askAi" className="h-3.5 w-3.5" />
+                <span>Ask AI</span>
+              </div>
 
-          <p className="mt-2 max-w-[30rem] text-[15px] leading-7 text-[#6b7280]">
-            Chat with AI or discover places around you.
-          </p>
-        </section>
+              <h1 className="mt-1 text-[2rem] font-black leading-[1.05] tracking-[-0.04em] text-slate-950 sm:text-[2.35rem]">
+                How can GalaTayo AI help?
+              </h1>
 
-        <div className="mt-4 shrink-0 border-t border-[var(--line)] pt-4 sm:mt-5">
-          <p className="inline-flex items-center gap-1.5 text-sm font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">
-            <AppIcon name="wrench" className="h-4 w-4" />
-            <span>Choose a tool</span>
-          </p>
-        </div>
+              <p className="mt-2 max-w-[30rem] text-[15px] leading-7 text-[var(--muted)]">
+                Chat with AI or discover places around you.
+              </p>
 
-        <ResponsiveGrid className="mt-2 shrink-0 gap-2 sm:mt-3 sm:gap-3 lg:mt-4 lg:gap-5">
-          <ToolCard
-            href="/ask-ai/chatbot"
-            title="Chatbot AI"
-            description="Ask gala questions and plan ideas."
-            icon="bot"
-          />
+              <div className="mt-4 border-t border-[var(--line)] pt-4 sm:mt-5">
+                <p className="inline-flex items-center gap-1.5 text-sm font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">
+                  <AppIcon name="wrench" className="h-4 w-4" />
+                  <span>Choose a tool</span>
+                </p>
+              </div>
 
-          <ToolCard
-            href="/ask-ai/maps"
-            title="Maps AI"
-            description="Find places with an AI-powered map."
-            icon="map"
-          />
-        </ResponsiveGrid>
+              <div className="mt-2 grid gap-2 sm:mt-3 sm:gap-3 md:grid-cols-2 lg:mt-4 lg:gap-5">
+                <ToolCard
+                  href="/ask-ai/chatbot"
+                  title="Chatbot AI"
+                  description="Ask gala questions and plan ideas."
+                  icon="bot"
+                />
 
-        <div className="mt-4 flex flex-col items-center justify-center pb-4 text-center sm:mt-5">
-          <div className="flex w-full max-w-[360px] items-start justify-center">
-            <img
-              src={askAiOverviewChibi}
-              alt=""
-              className="max-h-[36dvh] w-auto max-w-full object-contain md:max-h-[44dvh] lg:max-h-[48dvh]"
-              loading="eager"
-              onError={(e) => {
-                const el = e.currentTarget
-                el.style.display = 'none'
-              }}
-            />
+                <ToolCard
+                  href="/ask-ai/maps"
+                  title="Maps AI"
+                  description="Find places with an AI-powered map."
+                  icon="map"
+                />
+              </div>
+            </section>
+
+            <aside className="flex flex-col items-center justify-start text-center lg:col-span-2 lg:pt-2">
+              <ChibiIllustration
+                src={askAiOverviewChibi}
+                variant="hero"
+                priority
+                onError={(e) => {
+                  const el = e.currentTarget
+                  el.style.display = 'none'
+                }}
+              />
+              <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--accent-deep)]">
+                Quick tip
+              </p>
+              <p className="mt-1 max-w-[22rem] text-[13px] leading-6 text-[var(--muted)]">
+                Use <span className="font-semibold text-[var(--text-main)]">Chatbot AI</span> to plan your Gala,
+                otherwise use <span className="font-semibold text-[var(--text-main)]">Maps AI</span> to look for
+                specific places in a Map interface.
+              </p>
+            </aside>
           </div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--accent-deep)]">
-            Quick tip
-          </p>
-          <p className="mt-1 max-w-[22rem] text-[13px] leading-6 text-[var(--muted)]">
-            Use <span className="font-semibold text-[var(--text-main)]">Chatbot AI</span> to plan your Gala, otherwise use{' '}
-            <span className="font-semibold text-[var(--text-main)]">Maps AI</span> to look for specific places in a Map interface.
-          </p>
-        </div>
         </PageContainer>
       </main>
-    </div>
+    </PageShell>
   )
 }
 

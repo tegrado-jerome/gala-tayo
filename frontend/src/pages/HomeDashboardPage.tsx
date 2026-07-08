@@ -6,6 +6,7 @@ import PlaceCard from '../components/PlaceCard'
 import type { PlaceCardData, PlaceCategoryMeta, PlaceTagMeta } from '../components/PlaceCard'
 import { supabase } from '../supabase'
 import { navigateToCanonicalPlace, navigateToPath } from '../utils/navigation'
+import { ChibiIllustration, PageContainer, PageShell } from '../components/layout/ResponsiveLayouts'
 import homeChibi from '../assets/chibis/public/chibi-welcome-page.webp'
 
 type HomeDashboardPageProps = {
@@ -276,10 +277,10 @@ function HomeDashboardPage({ session }: HomeDashboardPageProps) {
   const greeting = useMemo(() => getGreeting(session), [session])
 
   return (
-    <div className="gala-page-background min-h-screen text-[var(--text)]">
+    <PageShell>
       <AppHeader minimal />
 
-      <main className="mx-auto w-full max-w-[1180px] px-4 pb-10 pt-5 sm:px-6 lg:px-10 xl:max-w-[1280px]">
+      <PageContainer size="wide">
         <section className="relative overflow-hidden rounded-[32px] bg-[linear-gradient(135deg,#dff0ff_0%,#f6fbff_50%,#ffffff_100%)] px-5 py-6 shadow-[0_20px_48px_rgba(28,77,160,0.10)] sm:px-7 sm:py-8 lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:items-center lg:gap-8">
           <div className="pointer-events-none absolute -left-10 top-4 h-40 w-40 rounded-full bg-[rgba(47,116,232,0.12)] blur-3xl" />
           <div className="pointer-events-none absolute right-0 top-0 h-44 w-44 rounded-full bg-[rgba(255,204,92,0.16)] blur-3xl" />
@@ -295,12 +296,7 @@ function HomeDashboardPage({ session }: HomeDashboardPageProps) {
           </div>
 
           <div className="relative z-10 mt-5 flex justify-center lg:mt-0 lg:justify-end">
-            <img
-              src={homeChibi}
-              alt="GalaTayo chibi illustration"
-              className="h-[220px] w-auto object-contain sm:h-[250px] lg:h-[280px]"
-              loading="eager"
-            />
+            <ChibiIllustration src={homeChibi} alt="GalaTayo chibi illustration" variant="hero" priority />
           </div>
         </section>
 
@@ -329,7 +325,7 @@ function HomeDashboardPage({ session }: HomeDashboardPageProps) {
           ))}
         </section>
 
-        <section className="mt-8">
+        <section className="mt-10">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="text-sm font-black uppercase tracking-[0.16em] text-[var(--accent-deep)]">Trending Now</p>
@@ -384,7 +380,7 @@ function HomeDashboardPage({ session }: HomeDashboardPageProps) {
                 key={category.value}
                 type="button"
                 onClick={() => navigateToPath(`/search?category=${encodeURIComponent(category.value)}`)}
-                className="flex min-h-[92px] flex-col items-start justify-between rounded-[22px] border border-[var(--line)] bg-[linear-gradient(180deg,#ffffff,#f7fbff)] px-4 py-4 text-left shadow-[0_10px_24px_rgba(28,77,160,0.05)] transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)]"
+                className="flex min-h-[92px] flex-col items-start justify-between rounded-3xl border border-[var(--line)] bg-[linear-gradient(180deg,#ffffff,#f7fbff)] px-4 py-4 text-left shadow-[0_10px_24px_rgba(28,77,160,0.05)] transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)]"
               >
                 <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--accent-wash)] text-[var(--accent-deep)]">
                   <AppIcon name={getCategoryIconName(category.value)} className="h-5 w-5" />
@@ -404,7 +400,7 @@ function HomeDashboardPage({ session }: HomeDashboardPageProps) {
                   key={item.href}
                   type="button"
                   onClick={() => navigateToPath(item.href)}
-                  className="flex min-h-[76px] items-center gap-3 rounded-[22px] border border-[var(--line)] bg-[linear-gradient(180deg,#ffffff,#f8fbff)] px-4 py-4 text-left transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)]"
+                  className="flex min-h-[76px] items-center gap-3 rounded-3xl border border-[var(--line)] bg-[linear-gradient(180deg,#ffffff,#f8fbff)] px-4 py-4 text-left transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)]"
                 >
                   <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--accent-wash)] text-[var(--accent-deep)]">
                     <AppIcon name={item.icon} className="h-5 w-5" />
@@ -415,9 +411,8 @@ function HomeDashboardPage({ session }: HomeDashboardPageProps) {
             </div>
           </section>
         ) : null}
-      </main>
-
-    </div>
+      </PageContainer>
+    </PageShell>
   )
 }
 

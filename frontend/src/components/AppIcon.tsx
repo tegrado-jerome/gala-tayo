@@ -125,7 +125,7 @@ const appIcons = {
   clear: X,
   comments: MessageCircle,
   copy: Copy,
-  directions: Navigation,
+  directions: Route,
   email: Mail,
   eye: Eye,
   eyeOff: EyeOff,

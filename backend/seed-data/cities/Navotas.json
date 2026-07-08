@@ -1,0 +1,1320 @@
+[
+  {
+    "id": "biancafe-by-meatin-place",
+    "name": "BianCafe by Meat’in Place",
+    "slug": "biancafe-by-meatin-place",
+    "category": "Cafe",
+    "address": "1348 M. Naval St., San Roque, Navotas City, Metro Manila",
+    "city": "Navotas",
+    "latitude": 14.6681,
+    "longitude": 120.9423,
+    "budget_min": 90,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=BianCafe%20by%20Meat%27in%20Place%201348%20M.%20Naval%20St%20San%20Roque%20Navotas",
+    "area": "San Roque",
+    "description": "BianCafe is more useful as a café and small gathering spot than a super trendy coffee place. Pwede siya for coffee, pastries, simple meals, or small celebration vibe. Since activity proof is not as loud as other cafés, better pa rin to check before going for a group plan.",
+    "best_time_to_visit": "Late afternoon to evening",
+    "visit_duration": "1 to 2 hours",
+    "good_for": [
+      "Casual Date",
+      "Family Trip",
+      "Small Celebration",
+      "Cafe Meal",
+      "Group Dining",
+      "Budget-Friendly Gala"
+    ],
+    "not_ideal_for": [
+      "Quiet Study During Events",
+      "Late-Night Hangout",
+      "Users Looking For A Strongly Trendy Cafe",
+      "Walk-In Events Without Reservation"
+    ],
+    "crowd_level": "Crowd can depend on private events, gatherings, and dine-in traffic.",
+    "indoor_outdoor": "Indoor",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "Parking may be limited along the street. Check ahead for events or group visits.",
+    "commute_access": "Along M. Naval Street in San Roque, reachable by jeepney, tricycle, or ride-hailing.",
+    "nearby_context": "Near San Roque, M. Naval food spots, and other neighborhood cafés.",
+    "normalized_name": "biancafe by meat in place",
+    "searchable_text": "biancafe by meat in place biancafe by meatin place cafe navotas san roque 1348 m naval st san roque navotas city metro manila biancafe is more useful as a cafe and small gathering spot than a super trendy coffee place pwede siya for coffee pastries simple meals or small celebration vibe since activity proof is not as loud as other cafes better pa rin to check before going for a group plan late afternoon to evening 1 to 2 hours indoor rain friendly crowd can depend on private events gatherings and dine in traffic along m naval street in san roque reachable by jeepney tricycle or ride hailing parking may be limited along the street check ahead for events or group visits near san roque m naval food spots and other neighborhood cafes casual date family trip small celebration cafe meal group dining budget friendly gala quiet study during events late night hangout users looking for a strongly trendy cafe walk in events without reservation biancafe by meat in place biancafe by meatin place san roque cafe navotas biancafe meatin place meat in place coffee kape cafe navotas san roque cafe cafe navotas san roque casual date family trip small celebration cafe meal group dining budget friendly gala family friendly budget friendly rain friendly biancafe meatin place meat in place coffee kape cafe navotas san roque cafe",
+    "search_keywords": [
+      "Cafe",
+      "Navotas",
+      "San Roque",
+      "Casual Date",
+      "Family Trip",
+      "Small Celebration",
+      "Cafe Meal",
+      "Group Dining",
+      "Budget-Friendly Gala",
+      "family friendly",
+      "budget friendly",
+      "rain friendly",
+      "biancafe",
+      "meatin place",
+      "meat in place",
+      "coffee",
+      "kape",
+      "cafe navotas",
+      "san roque cafe"
+    ],
+    "search_aliases": [
+      "BianCafe by Meat’in Place",
+      "biancafe by meatin place",
+      "San Roque",
+      "Cafe",
+      "Navotas",
+      "biancafe",
+      "meatin place",
+      "meat in place",
+      "coffee",
+      "kape",
+      "cafe navotas",
+      "san roque cafe"
+    ],
+    "status": "active",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 1,
+    "budget_note": "Budget can start around ₱90, depending on order or activity.",
+    "categories": [
+      "cafe",
+      "food",
+      "chill",
+      "date",
+      "family"
+    ],
+    "tags": [
+      {
+        "id": "cafe",
+        "strength": 5,
+        "notes": "Cafe-style stop for coffee, pastries, simple meals, or small gatherings."
+      },
+      {
+        "id": "casual-date",
+        "strength": 4,
+        "notes": "Good for a relaxed coffee date or light meal."
+      },
+      {
+        "id": "family-friendly",
+        "strength": 4,
+        "notes": "Works for family meals and small celebrations."
+      },
+      {
+        "id": "budget-friendly",
+        "strength": 3,
+        "notes": "Has lower starting spend compared with bigger restaurants."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor place that can work even during rainy weather."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "biancafe-by-meatin-place-1",
+        "storage_key": "galatayo-photos/places/biancafe-by-meatin-place/biancafe-by-meatin-place-1.webp",
+        "alt_text": "BianCafe by Meat’in Place in Navotas photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "coffee-by-monday-mornings",
+    "name": "Coffee by Monday Mornings",
+    "slug": "coffee-by-monday-mornings",
+    "category": "Cafe",
+    "address": "Unit E, 853 M. Naval Street, Sipac-Almacen, Navotas City, Metro Manila",
+    "city": "Navotas",
+    "latitude": 14.6599,
+    "longitude": 120.94923,
+    "budget_min": 100,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Coffee%20by%20Monday%20Mornings%20853%20M.%20Naval%20Street%20Navotas",
+    "area": "Sipac-Almacen",
+    "description": "Ito yung practical café pick along M. Naval kapag gusto mo ng kape, snack, or light tambay. Good siya for casual date, study-ish session, or after-school/work coffee. Hindi siya super destination café, pero useful siya for everyday Navotas gala.",
+    "best_time_to_visit": "Weekday afternoon or evening",
+    "visit_duration": "1 to 2 hours",
+    "good_for": [
+      "Casual Date",
+      "Study Spot",
+      "Chill",
+      "Coffee Run",
+      "Barkada Hangout",
+      "Rainy-Day Hangout"
+    ],
+    "not_ideal_for": [
+      "Large Groups Without Checking Seats",
+      "Users Looking For Full Restaurant Meals",
+      "Very Quiet Study During Peak Hours"
+    ],
+    "crowd_level": "Can get busier after school, after work, and at night because it is along a main road.",
+    "indoor_outdoor": "Indoor",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "Parking may be limited along M. Naval. Drop-off or nearby street parking is more realistic.",
+    "commute_access": "Along M. Naval Street, reachable by jeepney, tricycle, or ride-hailing.",
+    "nearby_context": "Along M. Naval Street in Sipac-Almacen, near local food spots, stores, and transport routes.",
+    "normalized_name": "coffee by monday mornings",
+    "searchable_text": "coffee by monday mornings coffee by monday mornings cafe navotas sipac almacen unit e 853 m naval street sipac almacen navotas city metro manila ito yung practical cafe pick along m naval kapag gusto mo ng kape snack or light tambay good siya for casual date study ish session or after school work coffee hindi siya super destination cafe pero useful siya for everyday navotas gala weekday afternoon or evening 1 to 2 hours indoor rain friendly can get busier after school after work and at night because it is along a main road along m naval street reachable by jeepney tricycle or ride hailing parking may be limited along m naval drop off or nearby street parking is more realistic along m naval street in sipac almacen near local food spots stores and transport routes casual date study spot chill coffee run barkada hangout rainy day hangout large groups without checking seats users looking for full restaurant meals very quiet study during peak hours coffee by monday mornings sipac almacen cafe navotas monday mornings coffee by monday coffee kape study cafe m naval cafe sipac almacen cafe cafe navotas sipac almacen casual date study spot chill coffee run barkada hangout rainy day hangout study friendly rain friendly monday mornings coffee by monday coffee kape study cafe m naval cafe sipac almacen cafe",
+    "search_keywords": [
+      "Cafe",
+      "Navotas",
+      "Sipac-Almacen",
+      "Casual Date",
+      "Study Spot",
+      "Chill",
+      "Coffee Run",
+      "Barkada Hangout",
+      "Rainy-Day Hangout",
+      "study friendly",
+      "rain friendly",
+      "monday mornings",
+      "coffee by monday",
+      "coffee",
+      "kape",
+      "study cafe",
+      "m naval cafe",
+      "sipac almacen cafe"
+    ],
+    "search_aliases": [
+      "Coffee by Monday Mornings",
+      "Sipac-Almacen",
+      "Cafe",
+      "Navotas",
+      "monday mornings",
+      "coffee by monday",
+      "coffee",
+      "kape",
+      "study cafe",
+      "m naval cafe",
+      "sipac almacen cafe"
+    ],
+    "status": "active",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 1,
+    "budget_note": "Budget can start around ₱100, depending on order or activity.",
+    "categories": [
+      "cafe",
+      "food",
+      "chill",
+      "date"
+    ],
+    "tags": [
+      {
+        "id": "cafe",
+        "strength": 5,
+        "notes": "Practical coffee and snack stop along M. Naval."
+      },
+      {
+        "id": "coffee-run",
+        "strength": 5,
+        "notes": "Good for quick coffee, light snacks, or everyday cafe plans."
+      },
+      {
+        "id": "study-friendly",
+        "strength": 3,
+        "notes": "Can work for light study or work when it is not too busy."
+      },
+      {
+        "id": "casual-date",
+        "strength": 4,
+        "notes": "Good for a simple coffee date."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor cafe that can work during rainy days."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "coffee-by-monday-mornings-1",
+        "storage_key": "galatayo-photos/places/coffee-by-monday-mornings/coffee-by-monday-mornings-1.webp",
+        "alt_text": "Coffee by Monday Mornings in Navotas photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "diocesan-shrine-and-parish-of-san-jose-de-navotas",
+    "name": "Diocesan Shrine and Parish of San Jose de Navotas",
+    "slug": "diocesan-shrine-and-parish-of-san-jose-de-navotas",
+    "category": "Church",
+    "address": "1086 M. Naval St., San Jose, Navotas, Metro Manila",
+    "city": "Navotas",
+    "latitude": 14.66595,
+    "longitude": 120.94412,
+    "budget_min": 0,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Diocesan%20Shrine%20and%20Parish%20of%20San%20Jose%20de%20Navotas",
+    "area": "San Jose",
+    "description": "Ito yung mas strong heritage church pick sa Navotas. Bagay siya for church visit, family stop, quiet reflection, or quick historic city stop. Since nasa M. Naval siya, madali rin siyang i-pair with nearby food or café after.",
+    "best_time_to_visit": "Morning or late afternoon, preferably outside peak Mass hours",
+    "visit_duration": "20 minutes to 1 hour",
+    "good_for": [
+      "Heritage Visit",
+      "Church Visit",
+      "Family Trip",
+      "Quiet Stop",
+      "Budget-Friendly Gala"
+    ],
+    "not_ideal_for": [
+      "Loud Barkada Hangout",
+      "Nightlife",
+      "Food Trip Only",
+      "Users Looking For Activities"
+    ],
+    "crowd_level": "Can get busy during Mass, parish events, and feast days. Mas chill siya on ordinary weekdays.",
+    "indoor_outdoor": "Indoor",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "Parking may be limited along the street. Drop-off or nearby street parking is more realistic.",
+    "commute_access": "Along M. Naval Street, so accessible by jeepney, tricycle, or ride-hailing.",
+    "nearby_context": "Near San Jose, M. Naval food spots, cafés, and Navotas city-center roads.",
+    "normalized_name": "diocesan shrine and parish of san jose de navotas",
+    "searchable_text": "diocesan shrine and parish of san jose de navotas diocesan shrine and parish of san jose de navotas church navotas san jose 1086 m naval st san jose navotas metro manila ito yung mas strong heritage church pick sa navotas bagay siya for church visit family stop quiet reflection or quick historic city stop since nasa m naval siya madali rin siyang i pair with nearby food or cafe after morning or late afternoon preferably outside peak mass hours 20 minutes to 1 hour indoor rain friendly can get busy during mass parish events and feast days mas chill siya on ordinary weekdays along m naval street so accessible by jeepney tricycle or ride hailing parking may be limited along the street drop off or nearby street parking is more realistic near san jose m naval food spots cafes and navotas city center roads heritage visit church visit family trip quiet stop budget friendly gala loud barkada hangout nightlife food trip only users looking for activities diocesan shrine and parish of san jose de navotas san jose church navotas san jose de navotas navotas church simbahan parish diocesan shrine m naval church heritage church church navotas san jose heritage visit church visit family trip quiet stop budget friendly gala heritage quiet family friendly budget friendly san jose de navotas navotas church simbahan parish diocesan shrine m naval church heritage church",
+    "search_keywords": [
+      "Church",
+      "Navotas",
+      "San Jose",
+      "Heritage Visit",
+      "Church Visit",
+      "Family Trip",
+      "Quiet Stop",
+      "Budget-Friendly Gala",
+      "heritage",
+      "quiet",
+      "family friendly",
+      "budget friendly",
+      "san jose de navotas",
+      "navotas church",
+      "simbahan",
+      "parish",
+      "diocesan shrine",
+      "m naval church",
+      "heritage church"
+    ],
+    "search_aliases": [
+      "Diocesan Shrine and Parish of San Jose de Navotas",
+      "San Jose",
+      "Church",
+      "Navotas",
+      "san jose de navotas",
+      "navotas church",
+      "simbahan",
+      "parish",
+      "diocesan shrine",
+      "m naval church",
+      "heritage church"
+    ],
+    "status": "active",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 0,
+    "budget_note": "Free entry or no required spend.",
+    "categories": [
+      "heritage",
+      "family",
+      "chill",
+      "tourist"
+    ],
+    "tags": [
+      {
+        "id": "church",
+        "strength": 5,
+        "notes": "Strong church and heritage stop in Navotas."
+      },
+      {
+        "id": "heritage",
+        "strength": 5,
+        "notes": "Meaningful historic and community landmark."
+      },
+      {
+        "id": "quiet",
+        "strength": 4,
+        "notes": "Good for prayer, reflection, and calm visits."
+      },
+      {
+        "id": "family-friendly",
+        "strength": 4,
+        "notes": "Works for family church visits."
+      },
+      {
+        "id": "budget-friendly",
+        "strength": 5,
+        "notes": "No required entrance spend."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "diocesan-shrine-and-parish-of-san-jose-de-navotas-1",
+        "storage_key": "galatayo-photos/places/diocesan-shrine-and-parish-of-san-jose-de-navotas/diocesan-shrine-and-parish-of-san-jose-de-navotas-1.webp",
+        "alt_text": "Diocesan Shrine and Parish of San Jose de Navotas in Navotas photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "mbar-restaurant-thembar-house-of-cocktails",
+    "name": "Mbar Restaurant / TheMbar House of Cocktails",
+    "slug": "mbar-restaurant-thembar-house-of-cocktails",
+    "category": "Nightlife",
+    "address": "39 T. Gonzales St., San Jose, Navotas City, Metro Manila",
+    "city": "Navotas",
+    "latitude": 14.66692,
+    "longitude": 120.94445,
+    "budget_min": 300,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Mbar%20Restaurant%2039%20T.%20Gonzales%20St%20San%20Jose%20Navotas",
+    "area": "San Jose",
+    "description": "Mbar is a neighborhood cocktail and restobar pick if you want drinks without leaving Navotas. Good siya for chillnuman, casual food, or late-night barkada plan. Mas local bar vibe siya, not upscale cocktail lounge.",
+    "best_time_to_visit": "Evening to late night",
+    "visit_duration": "1.5 to 3 hours",
+    "good_for": [
+      "Nightlife",
+      "Barkada Hangout",
+      "Drinks",
+      "Chillnuman",
+      "Late-Night Hangout",
+      "Casual Food"
+    ],
+    "not_ideal_for": [
+      "Young Kids At Night",
+      "Quiet Study",
+      "Fancy Cocktail Bar Expectations",
+      "Users Avoiding Alcohol-Centered Places"
+    ],
+    "crowd_level": "Likely busier on Friday and Saturday nights, with lighter crowds on ordinary weekdays.",
+    "indoor_outdoor": "Indoor",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "Parking may be limited around T. Gonzales Street. Ride-hailing or drop-off is recommended.",
+    "commute_access": "Reachable by tricycle or ride-hailing around San Jose. Jeepney access is practical from nearby M. Naval Street.",
+    "nearby_context": "Near San Jose, M. Naval Street, local food spots, and Navotas city-center roads.",
+    "normalized_name": "mbar restaurant thembar house of cocktails",
+    "searchable_text": "mbar restaurant thembar house of cocktails mbar restaurant thembar house of cocktails nightlife navotas san jose 39 t gonzales st san jose navotas city metro manila mbar is a neighborhood cocktail and restobar pick if you want drinks without leaving navotas good siya for chillnuman casual food or late night barkada plan mas local bar vibe siya not upscale cocktail lounge evening to late night 1 5 to 3 hours indoor rain friendly likely busier on friday and saturday nights with lighter crowds on ordinary weekdays reachable by tricycle or ride hailing around san jose jeepney access is practical from nearby m naval street parking may be limited around t gonzales street ride hailing or drop off is recommended near san jose m naval street local food spots and navotas city center roads nightlife barkada hangout drinks chillnuman late night hangout casual food young kids at night quiet study fancy cocktail bar expectations users avoiding alcohol centered places mbar restaurant thembar house of cocktails san jose nightlife navotas mbar thembar house of cocktails restobar cocktails drinks chillnuman bar navotas nightlife navotas san jose barkada hangout drinks chillnuman late night hangout casual food barkada friendly late night rain friendly mbar thembar house of cocktails restobar cocktails bar navotas",
+    "search_keywords": [
+      "Nightlife",
+      "Navotas",
+      "San Jose",
+      "Barkada Hangout",
+      "Drinks",
+      "Chillnuman",
+      "Late-Night Hangout",
+      "Casual Food",
+      "barkada friendly",
+      "late night",
+      "rain friendly",
+      "mbar",
+      "thembar",
+      "house of cocktails",
+      "restobar",
+      "cocktails",
+      "bar navotas"
+    ],
+    "search_aliases": [
+      "Mbar Restaurant / TheMbar House of Cocktails",
+      "San Jose",
+      "Nightlife",
+      "Navotas",
+      "mbar",
+      "thembar",
+      "house of cocktails",
+      "restobar",
+      "cocktails",
+      "drinks",
+      "chillnuman",
+      "bar navotas"
+    ],
+    "status": "active",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 2,
+    "budget_note": "Typical starting spend is around ₱300 per person.",
+    "categories": [
+      "nightlife",
+      "food",
+      "group",
+      "date"
+    ],
+    "tags": [
+      {
+        "id": "nightlife",
+        "strength": 5,
+        "notes": "Neighborhood cocktail and restobar option for night plans."
+      },
+      {
+        "id": "drinks",
+        "strength": 5,
+        "notes": "Good for cocktails, drinks, and chillnuman."
+      },
+      {
+        "id": "barkada-friendly",
+        "strength": 5,
+        "notes": "Best for friends looking for a casual night out."
+      },
+      {
+        "id": "late-night",
+        "strength": 4,
+        "notes": "Better suited for evening to late-night plans."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor restobar setting."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "mbar-restaurant-thembar-house-of-cocktails-1",
+        "storage_key": "galatayo-photos/places/mbar-restaurant-thembar-house-of-cocktails/mbar-restaurant-thembar-house-of-cocktails-1.webp",
+        "alt_text": "Mbar Restaurant / TheMbar House of Cocktails in Navotas photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "ms-noah-food-park",
+    "name": "M/S Noah Food Park",
+    "slug": "ms-noah-food-park",
+    "category": "Food",
+    "address": "2 Sampaguita Street, Barangay Tanza 1, Navotas City, Metro Manila",
+    "city": "Navotas",
+    "latitude": 14.67609,
+    "longitude": 120.93783,
+    "budget_min": 100,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=M%2FS%20Noah%20Food%20Park%202%20Sampaguita%20Street%20Tanza%201%20Navotas",
+    "area": "Tanza 1",
+    "description": "Ito yung food park na may mas memorable concept kasi ship-themed siya. Good siya for barkada food trip, casual date, or group na gusto ng something different sa usual kainan. Hindi siya quiet café type, mas fun siya as local themed food stop.",
+    "best_time_to_visit": "Dinner time to evening",
+    "visit_duration": "1 to 2 hours",
+    "good_for": [
+      "Food Trip",
+      "Barkada Hangout",
+      "Casual Date",
+      "Group Dining",
+      "Family Trip",
+      "Instagrammable"
+    ],
+    "not_ideal_for": [
+      "Quiet Study",
+      "Fancy Date Night",
+      "Rainy Days",
+      "Users Looking For Fast Solo Meals",
+      "Users Far From Tanza"
+    ],
+    "crowd_level": "Mas active during dinner and weekends, especially for samgyup or group dining.",
+    "indoor_outdoor": "Mixed",
+    "weather_fit": "Mixed",
+    "parking_info": "Parking may be limited around the food park. Drop-off is safer for first-time visitors.",
+    "commute_access": "Best reached by tricycle, local jeepney routes, or ride-hailing. Tanza can feel farther if galing ka central Navotas.",
+    "nearby_context": "In Barangay Tanza 1, near residential streets and local neighborhood food spots.",
+    "normalized_name": "m s noah food park",
+    "searchable_text": "m s noah food park ms noah food park food navotas tanza 1 2 sampaguita street barangay tanza 1 navotas city metro manila ito yung food park na may mas memorable concept kasi ship themed siya good siya for barkada food trip casual date or group na gusto ng something different sa usual kainan hindi siya quiet cafe type mas fun siya as local themed food stop dinner time to evening 1 to 2 hours mixed mixed mas active during dinner and weekends especially for samgyup or group dining best reached by tricycle local jeepney routes or ride hailing tanza can feel farther if galing ka central navotas parking may be limited around the food park drop off is safer for first time visitors in barangay tanza 1 near residential streets and local neighborhood food spots food trip barkada hangout casual date group dining family trip instagrammable quiet study fancy date night rainy days users looking for fast solo meals users far from tanza m s noah food park ms noah food park tanza 1 food navotas ms noah m s noah noah food park food park kainan samgyup tanza food park ship themed food navotas tanza 1 food trip barkada hangout casual date group dining family trip instagrammable group friendly family friendly ms noah m s noah noah food park food park kainan samgyup tanza food park ship themed",
+    "search_keywords": [
+      "Food",
+      "Navotas",
+      "Tanza 1",
+      "Food Trip",
+      "Barkada Hangout",
+      "Casual Date",
+      "Group Dining",
+      "Family Trip",
+      "Instagrammable",
+      "group friendly",
+      "family friendly",
+      "ms noah",
+      "m s noah",
+      "noah food park",
+      "food park",
+      "kainan",
+      "samgyup",
+      "tanza food park",
+      "ship themed"
+    ],
+    "search_aliases": [
+      "M/S Noah Food Park",
+      "ms noah food park",
+      "Tanza 1",
+      "Food",
+      "Navotas",
+      "ms noah",
+      "m s noah",
+      "noah food park",
+      "food park",
+      "kainan",
+      "samgyup",
+      "tanza food park",
+      "ship themed"
+    ],
+    "status": "active",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 1,
+    "budget_note": "Budget can start around ₱100, depending on order or activity.",
+    "categories": [
+      "food",
+      "group",
+      "family",
+      "date",
+      "chill"
+    ],
+    "tags": [
+      {
+        "id": "food-trip",
+        "strength": 5,
+        "notes": "Food park option for meals, snacks, and group cravings."
+      },
+      {
+        "id": "group-friendly",
+        "strength": 5,
+        "notes": "Works well for barkada or family group dining."
+      },
+      {
+        "id": "casual-date",
+        "strength": 4,
+        "notes": "Themed food park can work for a casual date."
+      },
+      {
+        "id": "family-friendly",
+        "strength": 4,
+        "notes": "Good for families looking for local food options."
+      },
+      {
+        "id": "instagrammable",
+        "strength": 3,
+        "notes": "Has a more memorable ship-themed concept."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "ms-noah-food-park-1",
+        "storage_key": "galatayo-photos/places/ms-noah-food-park/ms-noah-food-park-1.webp",
+        "alt_text": "M/S Noah Food Park in Navotas photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "navotas-centennial-park",
+    "name": "Navotas Centennial Park",
+    "slug": "navotas-centennial-park",
+    "category": "Park",
+    "address": "C-4, Bagumbayan North, Navotas, Metro Manila",
+    "city": "Navotas",
+    "latitude": 14.65117,
+    "longitude": 120.94729,
+    "budget_min": 0,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Navotas%20Centennial%20Park%20C-4%20Navotas",
+    "area": "Bagumbayan North / C-4",
+    "description": "Kung gusto mo ng chill na outdoor gala sa Navotas, ito yung pinaka-safe na starter pick. Waterfront siya along C-4, so bagay for walking, jogging, sunset tingin, or quick tambay with friends. Hindi siya fancy date spot, pero solid siya kung gusto mo lang huminga sa open air.",
+    "best_time_to_visit": "Late afternoon to sunset",
+    "visit_duration": "30 minutes to 1.5 hours",
+    "good_for": [
+      "Casual Date",
+      "Barkada Hangout",
+      "Family Trip",
+      "Chill",
+      "Walking",
+      "Jogging",
+      "Budget-Friendly Gala",
+      "Sunset Photos"
+    ],
+    "not_ideal_for": [
+      "Rainy Days",
+      "Users Looking For Air-Conditioned Spots",
+      "Quiet Study",
+      "Fancy Date Night",
+      "Long Stay During Midday Heat"
+    ],
+    "crowd_level": "Mas buhay siya late afternoon, evening, and weekends kapag may naglalakad, jogging, or tambay.",
+    "indoor_outdoor": "Outdoor",
+    "weather_fit": "Sunny-friendly",
+    "parking_info": "Expect limited or informal parking nearby. Mas okay kung drop-off or commute.",
+    "commute_access": "Madali siya puntahan via C-4 Road, Navotas Bus Terminal area, tricycle, jeepney, bus, or ride-hailing.",
+    "nearby_context": "Malapit sa Manila Bay waterfront, C-4 Road, R-10/Bangkulasi Bridge area, and Navotas Bus Terminal.",
+    "normalized_name": "navotas centennial park",
+    "searchable_text": "navotas centennial park navotas centenial park park navotas bagumbayan north c 4 c 4 bagumbayan north navotas metro manila kung gusto mo ng chill na outdoor gala sa navotas ito yung pinaka safe na starter pick waterfront siya along c 4 so bagay for walking jogging sunset tingin or quick tambay with friends hindi siya fancy date spot pero solid siya kung gusto mo lang huminga sa open air late afternoon to sunset 30 minutes to 1 5 hours outdoor sunny friendly mas buhay siya late afternoon evening and weekends kapag may naglalakad jogging or tambay madali siya puntahan via c 4 road navotas bus terminal area tricycle jeepney bus or ride hailing expect limited or informal parking nearby mas okay kung drop off or commute malapit sa manila bay waterfront c 4 road r 10 bangkulasi bridge area and navotas bus terminal casual date barkada hangout family trip chill walking jogging budget friendly gala sunset photos rainy days users looking for air conditioned spots quiet study fancy date night long stay during midday heat navotas centennial park navotas centenial park bagumbayan north c 4 park navotas centenial park centennial park waterfront sunset walking jogging park navotas park navotas bagumbayan north c 4 casual date barkada hangout family trip chill walking jogging budget friendly gala sunset photos budget friendly photo friendly family friendly outdoor navotas centennial park centenial park centennial park waterfront sunset park navotas",
+    "search_keywords": [
+      "Park",
+      "Navotas",
+      "Bagumbayan North / C-4",
+      "Casual Date",
+      "Barkada Hangout",
+      "Family Trip",
+      "Chill",
+      "Walking",
+      "Jogging",
+      "Budget-Friendly Gala",
+      "Sunset Photos",
+      "budget friendly",
+      "photo friendly",
+      "family friendly",
+      "outdoor",
+      "navotas centennial park",
+      "centenial park",
+      "centennial park",
+      "waterfront",
+      "sunset",
+      "park navotas"
+    ],
+    "search_aliases": [
+      "Navotas Centennial Park",
+      "navotas centenial park",
+      "Bagumbayan North / C-4",
+      "Park",
+      "Navotas",
+      "centenial park",
+      "centennial park",
+      "waterfront",
+      "sunset",
+      "walking",
+      "jogging",
+      "park navotas"
+    ],
+    "status": "active",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 0,
+    "budget_note": "Free entry or no required spend.",
+    "categories": [
+      "park",
+      "chill",
+      "family",
+      "tourist"
+    ],
+    "tags": [
+      {
+        "id": "park",
+        "strength": 5,
+        "notes": "Outdoor waterfront park for walking, jogging, and quick tambay."
+      },
+      {
+        "id": "budget-friendly",
+        "strength": 5,
+        "notes": "Free or very low-cost open-air stop."
+      },
+      {
+        "id": "photo-friendly",
+        "strength": 4,
+        "notes": "Good for waterfront and sunset photos."
+      },
+      {
+        "id": "family-friendly",
+        "strength": 4,
+        "notes": "Works for family walks and casual outdoor time."
+      },
+      {
+        "id": "outdoor",
+        "strength": 5,
+        "notes": "Best visited when the weather is clear."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "navotas-centennial-park-1",
+        "storage_key": "galatayo-photos/places/navotas-centennial-park/navotas-centennial-park-1.webp",
+        "alt_text": "Navotas Centennial Park in Navotas photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "navotas-citywalk-and-amphitheater",
+    "name": "Navotas Citywalk and Amphitheater",
+    "slug": "navotas-citywalk-and-amphitheater",
+    "category": "Park",
+    "address": "C-4, Navotas, Metro Manila",
+    "city": "Navotas",
+    "latitude": 14.65264,
+    "longitude": 120.95039,
+    "budget_min": 0,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Navotas%20Citywalk%20and%20Amphitheater%20C-4%20Navotas",
+    "area": "C-4 / Citywalk",
+    "description": "Ito yung type ng place na mas sulit puntahan kapag may event, bazaar, lighting setup, or LGU activity. Pwede rin siya for short walk or meetup kung nasa area ka na. Hindi siya pang buong araw na gala, pero okay siya for quick local tambay.",
+    "best_time_to_visit": "Late afternoon to evening, especially kapag may public event",
+    "visit_duration": "30 minutes to 1 hour",
+    "good_for": [
+      "Barkada Hangout",
+      "Family Trip",
+      "Chill",
+      "Budget-Friendly Gala",
+      "Local Events",
+      "Walking"
+    ],
+    "not_ideal_for": [
+      "Rainy Days",
+      "Quiet Study",
+      "Fancy Date Night",
+      "Users Looking For Many Food Options",
+      "Long Stay During Midday Heat"
+    ],
+    "crowd_level": "Usually chill on normal days, pero dumadami tao kapag may city events, bazaar, or holiday activities.",
+    "indoor_outdoor": "Outdoor",
+    "weather_fit": "Sunny-friendly",
+    "parking_info": "Parking can be limited, especially kapag may event. Better to expect drop-off or roadside parking.",
+    "commute_access": "Reachable via C-4 Road by jeepney, bus, tricycle, or ride-hailing. Pinaka-convenient kung galing ka within Navotas or Malabon.",
+    "nearby_context": "Near Navotas Centennial Park, C-4 Road, Navotas Bus Terminal area, and the waterfront side of Navotas.",
+    "normalized_name": "navotas citywalk and amphitheater",
+    "searchable_text": "navotas citywalk and amphitheater navotas citywalk and amphitheater park navotas c 4 citywalk c 4 navotas metro manila ito yung type ng place na mas sulit puntahan kapag may event bazaar lighting setup or lgu activity pwede rin siya for short walk or meetup kung nasa area ka na hindi siya pang buong araw na gala pero okay siya for quick local tambay late afternoon to evening especially kapag may public event 30 minutes to 1 hour outdoor sunny friendly usually chill on normal days pero dumadami tao kapag may city events bazaar or holiday activities reachable via c 4 road by jeepney bus tricycle or ride hailing pinaka convenient kung galing ka within navotas or malabon parking can be limited especially kapag may event better to expect drop off or roadside parking near navotas centennial park c 4 road navotas bus terminal area and the waterfront side of navotas barkada hangout family trip chill budget friendly gala local events walking rainy days quiet study fancy date night users looking for many food options long stay during midday heat navotas citywalk and amphitheater c 4 citywalk park navotas citywalk amphitheater navotas amphitheater navotas citywalk c4 navotas events park navotas park navotas c 4 citywalk barkada hangout family trip chill budget friendly gala local events walking budget friendly group friendly outdoor citywalk amphitheater navotas amphitheater navotas citywalk c4 navotas events park navotas",
+    "search_keywords": [
+      "Park",
+      "Navotas",
+      "C-4 / Citywalk",
+      "Barkada Hangout",
+      "Family Trip",
+      "Chill",
+      "Budget-Friendly Gala",
+      "Local Events",
+      "Walking",
+      "budget friendly",
+      "group friendly",
+      "outdoor",
+      "citywalk",
+      "amphitheater",
+      "navotas amphitheater",
+      "navotas citywalk",
+      "c4 navotas",
+      "events",
+      "park navotas"
+    ],
+    "search_aliases": [
+      "Navotas Citywalk and Amphitheater",
+      "C-4 / Citywalk",
+      "Park",
+      "Navotas",
+      "citywalk",
+      "amphitheater",
+      "navotas amphitheater",
+      "navotas citywalk",
+      "c4 navotas",
+      "events",
+      "park navotas"
+    ],
+    "status": "active",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 0,
+    "budget_note": "Free entry or no required spend.",
+    "categories": [
+      "park",
+      "chill",
+      "family",
+      "group",
+      "tourist"
+    ],
+    "tags": [
+      {
+        "id": "park",
+        "strength": 4,
+        "notes": "Outdoor citywalk and amphitheater area for short walks and local tambay."
+      },
+      {
+        "id": "local-events",
+        "strength": 5,
+        "notes": "Most useful when there are LGU activities, events, or public setups."
+      },
+      {
+        "id": "budget-friendly",
+        "strength": 5,
+        "notes": "No required entrance spend."
+      },
+      {
+        "id": "group-friendly",
+        "strength": 4,
+        "notes": "Works for meetups and casual barkada stops."
+      },
+      {
+        "id": "outdoor",
+        "strength": 5,
+        "notes": "Best visited during good weather."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "navotas-citywalk-and-amphitheater-1",
+        "storage_key": "galatayo-photos/places/navotas-citywalk-and-amphitheater/navotas-citywalk-and-amphitheater-1.webp",
+        "alt_text": "Navotas Citywalk and Amphitheater in Navotas photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "noki-kopi-navotas",
+    "name": "Noki Kopi Navotas",
+    "slug": "noki-kopi-navotas",
+    "category": "Cafe",
+    "address": "527 Governor A. Pascual St., Daanghari, Navotas City, Metro Manila",
+    "city": "Navotas",
+    "latitude": 14.67415,
+    "longitude": 120.93995,
+    "budget_min": 85,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Noki%20Kopi%20527%20Governor%20A.%20Pascual%20St%20Daanghari%20Navotas",
+    "area": "Daanghari",
+    "description": "Noki Kopi is a cozy small café for coffee runs, chill dates, or small barkada catch-up. Hindi siya pang-large group, pero okay siya kung gusto mo ng simple and affordable café stop. Best siya for relaxed kape lang, hindi full meal gala.",
+    "best_time_to_visit": "Late afternoon to evening",
+    "visit_duration": "45 minutes to 1.5 hours",
+    "good_for": [
+      "Casual Date",
+      "Barkada Hangout",
+      "Chill",
+      "Cafe Hop",
+      "Coffee Run",
+      "Budget-Friendly Gala"
+    ],
+    "not_ideal_for": [
+      "Large Groups",
+      "Quiet Study During Busy Hours",
+      "Users Looking For Full Meals",
+      "Fancy Date Night"
+    ],
+    "crowd_level": "Can fill up at night because it is a small café with local regulars.",
+    "indoor_outdoor": "Indoor",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "Parking is likely limited. Expect street-side parking or drop-off access.",
+    "commute_access": "Along Gov. A. Pascual Street in Daanghari, reachable by tricycle, jeepney, or ride-hailing.",
+    "nearby_context": "Near Daanghari, Gov. A. Pascual Street, local cafés, and neighborhood food spots.",
+    "normalized_name": "noki kopi navotas",
+    "searchable_text": "noki kopi navotas noki kopi navotas cafe navotas daanghari 527 governor a pascual st daanghari navotas city metro manila noki kopi is a cozy small cafe for coffee runs chill dates or small barkada catch up hindi siya pang large group pero okay siya kung gusto mo ng simple and affordable cafe stop best siya for relaxed kape lang hindi full meal gala late afternoon to evening 45 minutes to 1 5 hours indoor rain friendly can fill up at night because it is a small cafe with local regulars along gov a pascual street in daanghari reachable by tricycle jeepney or ride hailing parking is likely limited expect street side parking or drop off access near daanghari gov a pascual street local cafes and neighborhood food spots casual date barkada hangout chill cafe hop coffee run budget friendly gala large groups quiet study during busy hours users looking for full meals fancy date night noki kopi navotas daanghari cafe navotas noki kopi noki coffee coffee kape daanghari cafe gov pascual cafe cafe navotas cafe navotas daanghari casual date barkada hangout chill cafe hop coffee run budget friendly gala budget friendly rain friendly noki kopi noki coffee coffee kape daanghari cafe gov pascual cafe cafe navotas",
+    "search_keywords": [
+      "Cafe",
+      "Navotas",
+      "Daanghari",
+      "Casual Date",
+      "Barkada Hangout",
+      "Chill",
+      "Cafe Hop",
+      "Coffee Run",
+      "Budget-Friendly Gala",
+      "budget friendly",
+      "rain friendly",
+      "noki kopi",
+      "noki coffee",
+      "coffee",
+      "kape",
+      "daanghari cafe",
+      "gov pascual cafe",
+      "cafe navotas"
+    ],
+    "search_aliases": [
+      "Noki Kopi Navotas",
+      "Daanghari",
+      "Cafe",
+      "Navotas",
+      "noki kopi",
+      "noki coffee",
+      "coffee",
+      "kape",
+      "daanghari cafe",
+      "gov pascual cafe",
+      "cafe navotas"
+    ],
+    "status": "active",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 1,
+    "budget_note": "Budget can start around ₱85, depending on order or activity.",
+    "categories": [
+      "cafe",
+      "food",
+      "chill",
+      "date"
+    ],
+    "tags": [
+      {
+        "id": "cafe",
+        "strength": 5,
+        "notes": "Cozy small cafe for coffee runs and light tambay."
+      },
+      {
+        "id": "coffee-run",
+        "strength": 5,
+        "notes": "Good for simple and affordable coffee plans."
+      },
+      {
+        "id": "budget-friendly",
+        "strength": 4,
+        "notes": "Lower starting spend than many full restaurants."
+      },
+      {
+        "id": "casual-date",
+        "strength": 4,
+        "notes": "Works for relaxed coffee dates."
+      },
+      {
+        "id": "rain-friendly",
+        "strength": 4,
+        "notes": "Indoor cafe setting."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "noki-kopi-navotas-1",
+        "storage_key": "galatayo-photos/places/noki-kopi-navotas/noki-kopi-navotas-1.webp",
+        "alt_text": "Noki Kopi Navotas in Navotas photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "oppas-korean-cafe",
+    "name": "Oppa’s Korean Cafe",
+    "slug": "oppas-korean-cafe",
+    "category": "Cafe",
+    "address": "31C Judge A. Roldan St., Barangay San Roque, Navotas City, Metro Manila",
+    "city": "Navotas",
+    "latitude": 14.67092,
+    "longitude": 120.94167,
+    "budget_min": 150,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Oppa%27s%20Korean%20Cafe%2031C%20Judge%20A.%20Roldan%20St%20San%20Roque%20Navotas",
+    "area": "San Roque",
+    "description": "Cute pick ito kung gusto mo ng Korean-inspired café without going to a mall. Bagay for casual date, barkada cravings, or late-night Korean snacks. Simple and themed yung vibe, so expect tambayan energy more than premium K-resto feels.",
+    "best_time_to_visit": "Evening to late night",
+    "visit_duration": "1 to 2 hours",
+    "good_for": [
+      "Casual Date",
+      "Barkada Hangout",
+      "Food Trip",
+      "Chill",
+      "Late-Night Food",
+      "Korean Food"
+    ],
+    "not_ideal_for": [
+      "Quiet Study",
+      "Fancy Date Night",
+      "Large Groups Without Checking Seats",
+      "Users Looking For Premium Korean Dining"
+    ],
+    "crowd_level": "Can get active at night because of late hours and affordable Korean café food.",
+    "indoor_outdoor": "Indoor",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "Parking is likely limited around the street. Drop-off or nearby street parking is more realistic.",
+    "commute_access": "Reachable by tricycle or ride-hailing within San Roque. Jeepney access is practical from nearby M. Naval and Gov. A. Pascual areas.",
+    "nearby_context": "Near San Roque residential streets, M. Naval, Gov. A. Pascual, and local food spots.",
+    "normalized_name": "oppa s korean cafe",
+    "searchable_text": "oppa s korean cafe oppas korean cafe cafe navotas san roque 31c judge a roldan st barangay san roque navotas city metro manila cute pick ito kung gusto mo ng korean inspired cafe without going to a mall bagay for casual date barkada cravings or late night korean snacks simple and themed yung vibe so expect tambayan energy more than premium k resto feels evening to late night 1 to 2 hours indoor rain friendly can get active at night because of late hours and affordable korean cafe food reachable by tricycle or ride hailing within san roque jeepney access is practical from nearby m naval and gov a pascual areas parking is likely limited around the street drop off or nearby street parking is more realistic near san roque residential streets m naval gov a pascual and local food spots casual date barkada hangout food trip chill late night food korean food quiet study fancy date night large groups without checking seats users looking for premium korean dining oppa s korean cafe oppas korean cafe san roque cafe navotas oppa korean cafe oppas oppa s korean cafe korean food korean snacks san roque cafe cafe navotas san roque casual date barkada hangout food trip chill late night food korean food barkada friendly late night oppa korean cafe oppas oppa s korean cafe korean snacks san roque cafe",
+    "search_keywords": [
+      "Cafe",
+      "Navotas",
+      "San Roque",
+      "Casual Date",
+      "Barkada Hangout",
+      "Food Trip",
+      "Chill",
+      "Late-Night Food",
+      "Korean Food",
+      "barkada friendly",
+      "late night",
+      "oppa korean cafe",
+      "oppas",
+      "oppa's",
+      "korean cafe",
+      "korean snacks",
+      "san roque cafe"
+    ],
+    "search_aliases": [
+      "Oppa’s Korean Cafe",
+      "oppas korean cafe",
+      "San Roque",
+      "Cafe",
+      "Navotas",
+      "oppa korean cafe",
+      "oppas",
+      "oppa's",
+      "korean cafe",
+      "korean food",
+      "korean snacks",
+      "san roque cafe"
+    ],
+    "status": "active",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 1,
+    "budget_note": "Typical starting spend is around ₱150 per person.",
+    "categories": [
+      "cafe",
+      "food",
+      "chill",
+      "date",
+      "group"
+    ],
+    "tags": [
+      {
+        "id": "cafe",
+        "strength": 5,
+        "notes": "Korean-inspired cafe for snacks and casual hangouts."
+      },
+      {
+        "id": "korean-food",
+        "strength": 5,
+        "notes": "Good for Korean-inspired cravings without going to a mall."
+      },
+      {
+        "id": "casual-date",
+        "strength": 4,
+        "notes": "Cute pick for a casual date."
+      },
+      {
+        "id": "barkada-friendly",
+        "strength": 4,
+        "notes": "Works for friends craving affordable Korean cafe food."
+      },
+      {
+        "id": "late-night",
+        "strength": 3,
+        "notes": "Can work for later cafe and snack plans when open."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "oppas-korean-cafe-1",
+        "storage_key": "galatayo-photos/places/oppas-korean-cafe/oppas-korean-cafe-1.webp",
+        "alt_text": "Oppa’s Korean Cafe in Navotas photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "san-lorenzo-ruiz-and-companion-martyrs-parish",
+    "name": "San Lorenzo Ruiz and Companion Martyrs Parish",
+    "slug": "san-lorenzo-ruiz-and-companion-martyrs-parish",
+    "category": "Church",
+    "address": "Phase 1-C, Kaunlaran Village, North Bay Boulevard South, Navotas, Metro Manila",
+    "city": "Navotas",
+    "latitude": 14.64139,
+    "longitude": 120.95611,
+    "budget_min": 0,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=San%20Lorenzo%20Ruiz%20and%20Companion%20Martyrs%20Parish%20Navotas",
+    "area": "NBBS Kaunlaran / Dagat-Dagatan",
+    "description": "Kung gusto mo ng calm stop sa Navotas, this parish is more for prayer, quiet visit, or family church stop. Hindi siya high-energy gala place, pero may community and heritage value siya. Good siya isama sa app for users na naghahanap ng meaningful and peaceful na puntahan.",
+    "best_time_to_visit": "Morning or late afternoon, ideally around church hours",
+    "visit_duration": "20 minutes to 1 hour",
+    "good_for": [
+      "Family Trip",
+      "Heritage Visit",
+      "Church Visit",
+      "Quiet Stop",
+      "Budget-Friendly Gala"
+    ],
+    "not_ideal_for": [
+      "Loud Barkada Hangout",
+      "Food Trip",
+      "Late-Night Gala",
+      "Users Looking For Activities",
+      "Non-Religious Photo Trips"
+    ],
+    "crowd_level": "Usually calm outside Mass times, pero mas crowded kapag Sundays, feast days, or parish activities.",
+    "indoor_outdoor": "Indoor",
+    "weather_fit": "Rain-friendly",
+    "parking_info": "Parking may be limited around the parish area. Expect street or community parking lang.",
+    "commute_access": "Reachable by jeepney, tricycle, or ride-hailing around NBBS Kaunlaran and North Bay Boulevard South.",
+    "nearby_context": "Near Kaunlaran High School, Kapitbahayan Elementary School, Navotas Polytechnic College, and NBBS Kaunlaran.",
+    "normalized_name": "san lorenzo ruiz and companion martyrs parish",
+    "searchable_text": "san lorenzo ruiz and companion martyrs parish san lorenzo ruiz and companion martyrs parish church navotas nbbs kaunlaran dagat dagatan phase 1 c kaunlaran village north bay boulevard south navotas metro manila kung gusto mo ng calm stop sa navotas this parish is more for prayer quiet visit or family church stop hindi siya high energy gala place pero may community and heritage value siya good siya isama sa app for users na naghahanap ng meaningful and peaceful na puntahan morning or late afternoon ideally around church hours 20 minutes to 1 hour indoor rain friendly usually calm outside mass times pero mas crowded kapag sundays feast days or parish activities reachable by jeepney tricycle or ride hailing around nbbs kaunlaran and north bay boulevard south parking may be limited around the parish area expect street or community parking lang near kaunlaran high school kapitbahayan elementary school navotas polytechnic college and nbbs kaunlaran family trip heritage visit church visit quiet stop budget friendly gala loud barkada hangout food trip late night gala users looking for activities non religious photo trips san lorenzo ruiz and companion martyrs parish nbbs kaunlaran dagat dagatan church navotas san lorenzo ruiz parish companion martyrs parish navotas church simbahan parish nbbs church kaunlaran church church navotas nbbs kaunlaran dagat dagatan family trip heritage visit church visit quiet stop budget friendly gala heritage quiet family friendly budget friendly san lorenzo ruiz parish companion martyrs parish navotas church simbahan parish nbbs church kaunlaran church",
+    "search_keywords": [
+      "Church",
+      "Navotas",
+      "NBBS Kaunlaran / Dagat-Dagatan",
+      "Family Trip",
+      "Heritage Visit",
+      "Church Visit",
+      "Quiet Stop",
+      "Budget-Friendly Gala",
+      "heritage",
+      "quiet",
+      "family friendly",
+      "budget friendly",
+      "san lorenzo ruiz parish",
+      "companion martyrs parish",
+      "navotas church",
+      "simbahan",
+      "parish",
+      "nbbs church",
+      "kaunlaran church"
+    ],
+    "search_aliases": [
+      "San Lorenzo Ruiz and Companion Martyrs Parish",
+      "NBBS Kaunlaran / Dagat-Dagatan",
+      "Church",
+      "Navotas",
+      "san lorenzo ruiz parish",
+      "companion martyrs parish",
+      "navotas church",
+      "simbahan",
+      "parish",
+      "nbbs church",
+      "kaunlaran church"
+    ],
+    "status": "active",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 0,
+    "budget_note": "Free entry or no required spend.",
+    "categories": [
+      "heritage",
+      "family",
+      "chill",
+      "tourist"
+    ],
+    "tags": [
+      {
+        "id": "church",
+        "strength": 5,
+        "notes": "Community church stop for prayer and quiet visits."
+      },
+      {
+        "id": "heritage",
+        "strength": 4,
+        "notes": "Meaningful parish landmark with local community value."
+      },
+      {
+        "id": "quiet",
+        "strength": 4,
+        "notes": "Good for calm reflection outside busy Mass hours."
+      },
+      {
+        "id": "family-friendly",
+        "strength": 4,
+        "notes": "Works for family church visits."
+      },
+      {
+        "id": "budget-friendly",
+        "strength": 5,
+        "notes": "No required entrance spend."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "san-lorenzo-ruiz-and-companion-martyrs-parish-1",
+        "storage_key": "galatayo-photos/places/san-lorenzo-ruiz-and-companion-martyrs-parish/san-lorenzo-ruiz-and-companion-martyrs-parish-1.webp",
+        "alt_text": "San Lorenzo Ruiz and Companion Martyrs Parish in Navotas photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  },
+  {
+    "id": "villas-at-casadea",
+    "name": "Villas at Casadea",
+    "slug": "villas-at-casadea",
+    "category": "Private Pool",
+    "address": "111 F. Pascual St., San Jose, Navotas City, Metro Manila",
+    "city": "Navotas",
+    "latitude": 14.66676,
+    "longitude": 120.94121,
+    "budget_min": 1000,
+    "google_maps_url": "https://www.google.com/maps/search/?api=1&query=Villas%20at%20Casadea%20111%20F.%20Pascual%20St%20San%20Jose%20Navotas",
+    "area": "San Jose",
+    "description": "Kung staycation or private pool vibe sa Navotas ang hanap, ito yung strongest pick. Good siya for birthdays, barkada overnight, family pool day, or small private celebration. Book ahead kasi hindi ito casual walk-in hangout.",
+    "best_time_to_visit": "Booked daytime pool use or overnight stay",
+    "visit_duration": "Half day to overnight",
+    "good_for": [
+      "Staycation",
+      "Family Trip",
+      "Barkada Hangout",
+      "Private Pool",
+      "Birthday",
+      "Group Gathering",
+      "Overnight"
+    ],
+    "not_ideal_for": [
+      "Users Looking For Free Activities Only",
+      "Quick Hangout",
+      "Solo Budget Trip",
+      "Walk-In Without Booking",
+      "Quiet Study"
+    ],
+    "crowd_level": "Usually private or booking-based, so crowd depends on your group and reservation.",
+    "indoor_outdoor": "Mixed",
+    "weather_fit": "Mixed",
+    "parking_info": "Parking may be available for guests, but confirm during booking because capacity can vary.",
+    "commute_access": "Reachable by tricycle or ride-hailing from San Jose and nearby M. Naval/F. Pascual roads.",
+    "nearby_context": "In San Jose, near F. Pascual Street, residential streets, and Navotas city-center access.",
+    "normalized_name": "villas at casadea",
+    "searchable_text": "villas at casadea villas at casadea private pool navotas san jose 111 f pascual st san jose navotas city metro manila kung staycation or private pool vibe sa navotas ang hanap ito yung strongest pick good siya for birthdays barkada overnight family pool day or small private celebration book ahead kasi hindi ito casual walk in hangout booked daytime pool use or overnight stay half day to overnight mixed mixed usually private or booking based so crowd depends on your group and reservation reachable by tricycle or ride hailing from san jose and nearby m naval f pascual roads parking may be available for guests but confirm during booking because capacity can vary in san jose near f pascual street residential streets and navotas city center access staycation family trip barkada hangout private pool birthday group gathering overnight users looking for free activities only quick hangout solo budget trip walk in without booking quiet study villas at casadea san jose private pool navotas casadea villa staycation birthday overnight pool navotas family resort private pool navotas san jose staycation family trip barkada hangout birthday group gathering overnight group friendly reservation needed family friendly casadea villa pool navotas family resort",
+    "search_keywords": [
+      "Private Pool",
+      "Navotas",
+      "San Jose",
+      "Staycation",
+      "Family Trip",
+      "Barkada Hangout",
+      "Birthday",
+      "Group Gathering",
+      "Overnight",
+      "group friendly",
+      "reservation needed",
+      "family friendly",
+      "casadea",
+      "villa",
+      "pool navotas",
+      "family resort"
+    ],
+    "search_aliases": [
+      "Villas at Casadea",
+      "San Jose",
+      "Private Pool",
+      "Navotas",
+      "casadea",
+      "villa",
+      "staycation",
+      "birthday",
+      "overnight",
+      "pool navotas",
+      "family resort"
+    ],
+    "status": "active",
+    "average_rating": 0,
+    "review_count": 0,
+    "price_level": 4,
+    "budget_note": "Budget starts around ₱1000, but final rate depends on booking package, group size, and schedule.",
+    "categories": [
+      "family",
+      "group",
+      "chill",
+      "date",
+      "tourist"
+    ],
+    "tags": [
+      {
+        "id": "private-pool",
+        "strength": 5,
+        "notes": "Best for private pool plans and reserved gatherings."
+      },
+      {
+        "id": "staycation",
+        "strength": 5,
+        "notes": "Works for day-use or overnight staycation plans."
+      },
+      {
+        "id": "group-friendly",
+        "strength": 5,
+        "notes": "Good for barkada, family, birthdays, and small celebrations."
+      },
+      {
+        "id": "reservation-needed",
+        "strength": 5,
+        "notes": "Booking ahead is important because it is not a casual walk-in spot."
+      },
+      {
+        "id": "family-friendly",
+        "strength": 4,
+        "notes": "Works for family bonding and pool days."
+      }
+    ],
+    "images": [
+      {
+        "image_slug": "villas-at-casadea-1",
+        "storage_key": "galatayo-photos/places/villas-at-casadea/villas-at-casadea-1.webp",
+        "alt_text": "Villas at Casadea in Navotas photo 1",
+        "sort_order": 1,
+        "is_primary": true
+      }
+    ]
+  }
+]

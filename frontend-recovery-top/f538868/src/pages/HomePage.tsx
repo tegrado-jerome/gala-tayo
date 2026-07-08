@@ -854,22 +854,6 @@ function SearchEmptyState({
           ) : null}
         </div>
       ) : null}
-      {hasSearched ? (
-        <div className="mx-auto mt-6 max-w-[340px] rounded-2xl border border-slate-200 bg-slate-50 px-5 py-5 text-center sm:max-w-[380px]">
-          <p className="text-lg font-black text-slate-950">Want to add a place?</p>
-          <p className="mt-2 text-sm leading-relaxed text-slate-600">
-            Suggest a place and we'll review it before adding it to GalaTayo.
-          </p>
-          <button
-            type="button"
-            onClick={() => navigateToPath('/submit-place')}
-            className="mt-4 inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--accent)] bg-white px-5 text-sm font-black text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)]"
-          >
-            <AppIcon name="place" className="h-5 w-5" />
-            Submit a Place
-          </button>
-        </div>
-      ) : null}
       {showBackHome ? (
         <div className="mt-3 flex justify-center">
           <BackToHomeButton />
@@ -2741,52 +2725,54 @@ function AskAiPlaceholder({
 
   return (
     <section
-      className={`relative overflow-hidden px-4 py-6 text-[var(--text)] sm:px-5 sm:py-6 lg:px-8 lg:py-8 ${className}`}
+      className={`relative flex h-full min-h-0 flex-col overflow-hidden px-4 py-5 text-[var(--text)] sm:px-5 sm:py-6 lg:px-8 lg:py-8 ${className}`}
     >
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -left-12 top-12 h-36 w-36 rounded-full bg-[rgba(201,217,242,0.18)] blur-3xl" />
         <div className="absolute right-0 top-0 h-44 w-44 rounded-full bg-[rgba(192,202,255,0.14)] blur-3xl" />
       </div>
 
-      <div className="relative mx-auto flex w-full max-w-[min(1520px,calc(100vw-32px))] flex-col gap-7 lg:gap-8">
+      <div className="relative mx-auto flex h-full w-full max-w-[min(1520px,calc(100vw-32px))] flex-1 flex-col gap-6 lg:gap-8">
         <AskAiBackButton onClick={onSwitchToPlaces} className="w-fit px-1" />
 
-        <div className="grid gap-6 lg:gap-7">
-          <div className="grid items-center gap-4 px-1 pt-2 sm:grid-cols-[minmax(0,1fr)_230px] sm:gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,34vw)] lg:gap-10 lg:pt-4 xl:grid-cols-[minmax(0,1fr)_420px]">
-            <div className="min-w-0">
-              <h1 className="max-w-[8ch] text-[2.35rem] font-black leading-[0.98] tracking-[-0.05em] text-slate-950 lg:text-[3.55rem] xl:text-[4rem]">
-                <span className="text-slate-950">Ask </span>
-                <span className="text-[var(--accent-deep)]">AI</span>
-              </h1>
-              <p className="mt-3 max-w-[21rem] text-[14px] leading-6 text-slate-600 lg:max-w-[29rem] lg:text-[1rem] lg:leading-8">
-                Use <span className="font-semibold text-[var(--accent-deep)]">AI</span> to turn your <span className="font-semibold text-slate-800">GalaTayo</span> idea into a plan, place shortlist, or quick gala itinerary.
-              </p>
+        <div className="flex flex-1 flex-col justify-between gap-8 lg:gap-10">
+          <div className="grid gap-6 lg:gap-7">
+            <div className="grid items-center gap-4 px-1 pt-2 sm:grid-cols-[minmax(0,1fr)_230px] sm:gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(320px,34vw)] lg:gap-10 lg:pt-4 xl:grid-cols-[minmax(0,1fr)_420px]">
+              <div className="min-w-0">
+                <h1 className="max-w-[8ch] text-[2.35rem] font-black leading-[0.98] tracking-[-0.05em] text-slate-950 lg:text-[3.55rem] xl:text-[4rem]">
+                  <span className="text-slate-950">Ask </span>
+                  <span className="text-[var(--accent-deep)]">AI</span>
+                </h1>
+                <p className="mt-3 max-w-[21rem] text-[14px] leading-6 text-slate-600 lg:max-w-[29rem] lg:text-[1rem] lg:leading-8">
+                  Use <span className="font-semibold text-[var(--accent-deep)]">AI</span> to turn your <span className="font-semibold text-slate-800">GalaTayo</span> idea into a plan, place shortlist, or quick gala itinerary.
+                </p>
+              </div>
+              <img
+                src={chibiImage}
+                alt=""
+                className="mx-auto h-[204px] w-auto max-w-full object-contain sm:h-[228px] lg:h-[360px] xl:h-[420px]"
+                loading="lazy"
+              />
             </div>
-            <img
-              src={chibiImage}
-              alt=""
-              className="mx-auto h-[204px] w-auto max-w-full object-contain sm:h-[228px] lg:h-[360px] xl:h-[420px]"
-              loading="lazy"
-            />
+
+            <div className="flex flex-wrap items-center gap-2.5 px-1 text-[12.5px] font-medium text-slate-500 lg:text-[0.95rem]">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(37,99,235,0.08)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(246,249,255,0.98))] px-3.5 py-2 text-slate-600 shadow-[0_10px_24px_rgba(37,99,235,0.06)]">
+                <SparkIcon className="h-3.5 w-3.5 text-[var(--accent-deep)] lg:h-4 lg:w-4" />
+                <span>{usageStatus.remaining} asks left today</span>
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(20,35,58,0.07)] bg-white px-3.5 py-2 text-slate-500 shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
+                <span className="h-2 w-2 rounded-full bg-[var(--accent-deep)]" />
+                <span className="whitespace-nowrap">Resets {formatResetAtCompact(usageStatus.resetAt)}</span>
+              </span>
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5 px-1 text-[12.5px] font-medium text-slate-500 lg:text-[0.95rem]">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(37,99,235,0.08)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(246,249,255,0.98))] px-3.5 py-2 text-slate-600 shadow-[0_10px_24px_rgba(37,99,235,0.06)]">
-              <SparkIcon className="h-3.5 w-3.5 text-[var(--accent-deep)] lg:h-4 lg:w-4" />
-              <span>{usageStatus.remaining} asks left today</span>
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(20,35,58,0.07)] bg-white px-3.5 py-2 text-slate-500 shadow-[0_10px_24px_rgba(15,23,42,0.04)]">
-              <span className="h-2 w-2 rounded-full bg-[var(--accent-deep)]" />
-              <span className="whitespace-nowrap">Resets {formatResetAtCompact(usageStatus.resetAt)}</span>
-            </span>
-          </div>
-
-          <div className="w-full px-1">
+          <div className="mt-auto w-full px-1 pb-1 lg:pb-0">
             <label className="sr-only" htmlFor="ask-ai-question">
               Ask GalaTayo
             </label>
 
-            <div className="rounded-[28px] border border-[rgba(20,35,58,0.12)] bg-white shadow-[0_18px_48px_rgba(15,23,42,0.07)] lg:rounded-[32px]">
+            <div className="mx-auto w-full max-w-[980px] rounded-[28px] border border-[rgba(20,35,58,0.12)] bg-white shadow-[0_18px_48px_rgba(15,23,42,0.07)] lg:rounded-[32px]">
               <textarea
                 id="ask-ai-question"
                 ref={questionTextareaRef}
@@ -2849,7 +2835,6 @@ function AskAiPlaceholder({
               ) : null}
             </div>
           </div>
-          {/* Output stage is rendered above when an answer exists. */}
         </div>
       </div>
     </section>
@@ -4500,7 +4485,13 @@ function HomePage({
         <div className="gala-page-background min-h-screen overflow-x-hidden lg:hidden">
           <AppHeader signInLabel="Mag-sign in" minimal />
 
-          <main className="overflow-x-hidden pb-6">
+          <main
+            className={
+              selectedMode === 'ask-ai'
+                ? 'flex min-h-[calc(100dvh-68px)] flex-col overflow-x-hidden pb-0'
+                : 'overflow-x-hidden pb-6'
+            }
+          >
             {isPromptBuilderOpen ? (
               <PromptBuilderModal
                 isOpen={isPromptBuilderOpen}
@@ -4598,19 +4589,13 @@ function HomePage({
         </main>
       </div>
 
-        <div
-          className={`hidden w-full lg:grid ${
-            isPromptBuilderOpen || selectedMode === 'ask-ai'
-              ? 'min-h-screen grid-rows-[auto_auto_auto]'
-              : 'h-screen overflow-hidden lg:grid-rows-[auto_minmax(0,1fr)_auto]'
-          }`}
-        >
+        <div className="hidden min-h-screen w-full overflow-hidden lg:grid lg:grid-rows-[auto_minmax(0,1fr)_auto]">
           <AppHeader minimal />
 
           <div
             className={
               isPromptBuilderOpen || selectedMode === 'ask-ai'
-                ? 'min-h-0'
+                ? 'h-full min-h-0'
                 : shouldShowGuidedSearch
                   ? 'min-h-0 overflow-hidden'
                   : 'grid min-h-0 overflow-hidden grid-rows-[auto_minmax(0,1fr)]'
@@ -4704,7 +4689,7 @@ function HomePage({
                     onSwitchToPlaces={handleSwitchToPlaces}
                     onStartOver={handleStartOverAskAi}
                     onOpenPromptBuilder={(questionOverride) => openPromptBuilder('ask-ai', questionOverride)}
-                    className="min-h-0"
+                    className="h-full min-h-0"
                   />
                 )}
               </>

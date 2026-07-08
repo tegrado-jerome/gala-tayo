@@ -4,8 +4,9 @@ import type { Session } from '@supabase/supabase-js'
 import { ChevronDown, Globe2, Shield, UserRound } from 'lucide-react'
 import AppHeader from '../components/AppHeader'
 import PageHeroHeader from '../components/PageHeroHeader'
+import MinimalBackNav from '../components/MinimalBackNav'
 import ProfileAvatar from '../components/ProfileAvatar'
-import { PageContainer } from '../components/layout/ResponsiveLayouts'
+import { PageContainer, PageShell, ResponsiveGrid, CardSurface, Stack, Section } from '../components/layout/ResponsiveLayouts'
 import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { uploadProfileAvatar } from '../services/onboardingApi'
@@ -56,11 +57,11 @@ function emitAccountUpdated() {
 }
 
 function inputClassName() {
-  return 'h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm font-medium text-slate-900 outline-none transition focus:border-[#1877f2] focus:ring-4 focus:ring-[#e7f3ff]'
+  return 'gala-field px-3'
 }
 
 function selectClassName() {
-  return 'h-11 w-full appearance-none rounded-xl border border-slate-300 bg-white px-3 pr-10 text-sm font-medium text-slate-900 outline-none transition focus:border-[#1877f2] focus:ring-4 focus:ring-[#e7f3ff]'
+  return 'gala-field px-3 pr-10 appearance-none'
 }
 
 type SelectFieldProps = {
@@ -305,17 +306,21 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
   const sharedSelectClassName = selectClassName()
 
   return (
-    <div className="gala-page-shell">
+    <PageShell>
       <AppHeader />
-      <main className="mx-auto w-full max-w-[1100px] px-4 py-6 sm:px-6 lg:py-8">
-        <PageContainer className="px-0">
+      <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-8">
+        <PageContainer size="wide">
+          <div className="mb-5">
+            <MinimalBackNav to="/profile" label="Profile" preferHistory={false} />
+          </div>
+
         {isLoading ? (
           <UnifiedLoadingState
             title="Preparing account settings..."
             message="We are loading your account details and preferences."
           />
         ) : currentUser && profile ? (
-          <form onSubmit={handleSave} className="space-y-8">
+          <form onSubmit={handleSave} className="grid gap-6 lg:gap-8">
             <PageHeroHeader
               className="account-settings-hero"
               eyebrow="Account Settings"
@@ -336,8 +341,8 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
               }
             />
 
-            <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-              <div className="grid gap-6 px-5 py-5 lg:grid-cols-[260px_minmax(0,1fr)] lg:px-6">
+            <CardSurface pad="loose" tone="outlined" className="rounded-2xl">
+              <div className="grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
                 <div className="self-start">
                   <div className="mt-5 flex items-center gap-3">
                     <ProfileAvatar profile={avatarProfile} size="lg" />
@@ -349,7 +354,7 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
                   <button
                     type="button"
                     onClick={() => navigateToPath('/profile')}
-                    className="gala-primary-button mt-4 w-full"
+                    className="app-button app-button-primary app-button-md mt-4 w-full sm:w-auto"
                   >
                     Go to profile
                   </button>
@@ -377,10 +382,10 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
                   <p className="text-sm text-slate-500">{currentUser.user.email ?? 'No email on file'}</p>
                 </div>
               </div>
-            </section>
+            </CardSurface>
 
-            <div className="space-y-8">
-              <section className="border-b border-slate-200 pb-8">
+            <Section gap="loose">
+              <Section gap="default" as="section" className="border-b border-slate-200 pb-8">
                 <SectionHeader
                   title="Profile"
                   description="Basic info people recognize across GalaTayo."
@@ -408,7 +413,7 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
                   </div>
                   {avatarError ? <p className="mt-3 text-sm font-semibold text-red-600">{avatarError}</p> : null}
 
-                  <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                  <ResponsiveGrid cols={2} gap="default" className="mt-6">
                     <label className="grid gap-2">
                       <span className="text-sm font-semibold text-slate-800">First Name</span>
                       <input value={firstName} onChange={(event) => setFirstName(event.target.value)} className={sharedInputClassName} />
@@ -436,59 +441,57 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
                       <span className="text-sm font-semibold text-slate-800">Display Name</span>
                       <input value={displayName} onChange={(event) => setDisplayName(event.target.value)} maxLength={80} className={sharedInputClassName} />
                     </label>
-                  </div>
+                  </ResponsiveGrid>
                 </div>
-              </section>
+              </Section>
 
-              <section className="border-b border-slate-200 pb-8">
+              <Section gap="default" as="section" className="border-b border-slate-200 pb-8">
                 <SectionHeader
                   title="Public Details"
                   description="This is the information shown when people open your public profile."
                   icon={<Globe2 className="h-5 w-5" strokeWidth={2.2} />}
                 />
-                <div className="mt-5">
-                  <div className="grid gap-4">
-                    <label className="grid gap-2">
-                      <span className="text-sm font-semibold text-slate-800">Username</span>
-                      <span className="flex h-11 items-center rounded-xl border border-slate-300 bg-white px-3 focus-within:border-[#1877f2] focus-within:ring-4 focus-within:ring-[#e7f3ff]">
-                        <span className="font-semibold text-slate-500">@</span>
-                        <input
-                          value={usernameInput}
-                          onChange={(event) => setUsernameInput(event.target.value.toLowerCase())}
-                          className="min-w-0 flex-1 border-0 bg-transparent px-1 text-sm font-medium text-slate-900 outline-none"
-                          autoCapitalize="none"
-                          autoComplete="username"
-                          spellCheck={false}
-                        />
-                      </span>
-                      <span className={`text-xs font-medium ${usernameError ? 'text-red-600' : 'text-slate-500'}`}>
-                        {usernameError || 'People can search for you with this username.'}
-                      </span>
-                    </label>
-
-                    <label className="grid gap-2">
-                      <span className="flex items-center gap-2 text-sm font-semibold text-slate-800">
-                        Bio
-                        <span className="optional-label">Optional</span>
-                      </span>
-                      <textarea
-                        value={bioInput}
-                        onChange={(event) => setBioInput(event.target.value)}
-                        maxLength={280}
-                        className="min-h-28 resize-none rounded-xl border border-slate-300 bg-white px-3 py-3 text-sm font-medium leading-6 text-slate-900 outline-none transition focus:border-[#1877f2] focus:ring-4 focus:ring-[#e7f3ff]"
+                <div className="mt-5 grid gap-4">
+                  <label className="grid gap-2">
+                    <span className="text-sm font-semibold text-slate-800">Username</span>
+                    <span className="flex h-11 items-center rounded-xl border border-slate-300 bg-white px-3 focus-within:border-[#1877f2] focus-within:ring-4 focus-within:ring-[#e7f3ff]">
+                      <span className="font-semibold text-slate-500">@</span>
+                      <input
+                        value={usernameInput}
+                        onChange={(event) => setUsernameInput(event.target.value.toLowerCase())}
+                        className="min-w-0 flex-1 border-0 bg-transparent px-1 text-sm font-medium text-slate-900 outline-none"
+                        autoCapitalize="none"
+                        autoComplete="username"
+                        spellCheck={false}
                       />
-                    </label>
-                  </div>
-                </div>
-              </section>
+                    </span>
+                    <span className={`text-xs font-medium ${usernameError ? 'text-red-600' : 'text-slate-500'}`}>
+                      {usernameError || 'People can search for you with this username.'}
+                    </span>
+                  </label>
 
-              <section className="pb-2">
+                  <label className="grid gap-2">
+                    <span className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+                      Bio
+                      <span className="optional-label">Optional</span>
+                    </span>
+                    <textarea
+                      value={bioInput}
+                      onChange={(event) => setBioInput(event.target.value)}
+                      maxLength={280}
+                      className="min-h-28 resize-none rounded-xl border border-slate-300 bg-white px-3 py-3 text-sm font-medium leading-6 text-slate-900 outline-none transition focus:border-[#1877f2] focus:ring-4 focus:ring-[#e7f3ff]"
+                    />
+                  </label>
+                </div>
+              </Section>
+
+              <Section gap="default" as="section">
                 <SectionHeader
                   title="Privacy"
                   description="Keep these defaults simple and easy to scan."
                   icon={<Shield className="h-5 w-5" strokeWidth={2.2} />}
                 />
-                <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                <ResponsiveGrid cols={2} gap="default" className="mt-5">
                   <label className="grid gap-2">
                     <span className="text-sm font-semibold text-slate-800">Profile Visibility</span>
                     <SelectField value={isPublic ? 'public' : 'private'} onChange={(event) => setIsPublic(event.target.value === 'public')} className={sharedSelectClassName}>
@@ -512,22 +515,22 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
                     </SelectField>
                     <span className="text-xs text-slate-500">Unlisted stays off your public profile but still works with a direct link.</span>
                   </label>
-                </div>
-              </section>
+                </ResponsiveGrid>
+              </Section>
 
-              <div className="space-y-3">
+              <Stack gap="tight">
                 {errorMessage ? <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{errorMessage}</p> : null}
                 <div className="flex justify-end">
                   <button
                     type="submit"
                     disabled={Boolean(usernameError || personalInfoError) || isSaving}
-                    className="gala-primary-button px-6 disabled:border-slate-300 disabled:bg-slate-300"
+                    className="app-button app-button-primary app-button-md px-5"
                   >
                     {isSaving ? 'Saving...' : 'Save changes'}
                   </button>
                 </div>
-              </div>
-            </div>
+              </Stack>
+            </Section>
           </form>
         ) : (
           <p className="rounded-2xl border border-red-200 bg-white px-5 py-6 text-sm font-medium text-red-700 shadow-sm">
@@ -536,7 +539,7 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
         )}
         </PageContainer>
       </main>
-    </div>
+    </PageShell>
   )
 }
 

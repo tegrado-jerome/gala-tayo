@@ -128,7 +128,7 @@ function SearchBar({
             onClick={handleClear}
             disabled={isLoading}
             aria-label="Clear Search"
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-[var(--line)] bg-[var(--bg-soft)] text-slate-400 transition hover:border-[var(--accent)] hover:bg-[var(--primary-soft)] hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-60 sm:h-8 sm:w-8"
+            className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-lg border border-[var(--line)] bg-[var(--bg-soft)] text-slate-400 transition hover:border-[var(--accent)] hover:bg-[var(--primary-soft)] hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             <AppIcon name="clear" className="h-3.5 w-3.5" />
           </button>
@@ -139,7 +139,7 @@ function SearchBar({
           disabled={isLoading || !canSubmit}
           aria-label="Search"
           className={`shrink-0 rounded-xl bg-[var(--accent)] text-white shadow-sm transition-all duration-300 hover:-translate-y-[1px] hover:bg-[var(--accent-deep)] hover:shadow-md active:translate-y-0 disabled:cursor-not-allowed disabled:bg-slate-300 ${
-            submitLabel ? 'px-4 py-1.5 text-sm font-semibold sm:px-5 sm:py-2' : 'p-1.5 sm:p-2'
+            submitLabel ? 'inline-flex min-h-[44px] items-center justify-center px-4 text-sm font-semibold sm:px-5' : 'inline-flex min-h-[44px] min-w-[44px] items-center justify-center'
           }`}
         >
           {submitLabel ?? <AppIcon name="search" className="h-4 w-4" />}

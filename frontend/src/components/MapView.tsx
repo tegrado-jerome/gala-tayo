@@ -16,6 +16,7 @@ type MapViewProps = {
   focusSelectedPlaceOnChange?: boolean
   selectedPlaceFocusSignal?: number
   className?: string
+  mapClassName?: string
   layoutKey?: string | number
   pickMode?: boolean
   pickPosition?: LatLngInput
@@ -627,6 +628,7 @@ function MapView({
   zoom = 12,
   autoFitToPlaces = true,
   className = '',
+  mapClassName = '',
   layoutKey,
   pickMode = false,
   pickPosition,
@@ -669,7 +671,7 @@ function MapView({
         scrollWheelZoom
         inertia
         easeLinearity={0.15}
-        className="galatayo-leaflet-map h-full w-full"
+        className={`galatayo-leaflet-map h-full w-full ${mapClassName}`.trim()}
       >
         <MapSizeSync center={safeCenter} zoom={safeZoom} layoutKey={layoutKey} />
         {pickMode ? (

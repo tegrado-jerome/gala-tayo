@@ -7,7 +7,8 @@ import {
 import { randomUUID } from "crypto";
 import {
   AskAiUsageResult,
-  checkAskAiUsage,
+  consumeAskAiUsage,
+  refundAskAiUsage,
 } from "../services/askAiUsageService";
 import {
   normalizeAskAiMapQuery,
@@ -91,15 +92,15 @@ function buildResponseHeaders(requestId: string) {
   };
 }
 
-function buildUsagePayload(
-  askAi?: AskAiUsageResult,
-  liveSearch?: AskAiUsageResult
-) {
-  return askAi && liveSearch
+function buildAiUsagePayload(aiUsage?: AskAiUsageResult) {
+  return aiUsage
     ? {
         usage: {
-          askAi,
-          liveSearch,
+          usageType: aiUsage.usageType,
+          dailyLimit: aiUsage.dailyLimit,
+          requestCount: aiUsage.requestCount,
+          remaining: aiUsage.remaining,
+          resetsAt: aiUsage.resetsAt,
         },
       }
     : {};
@@ -135,10 +136,7 @@ function logAskAiMapsError(
 function handleAskAiMapsError(
   error: unknown,
   meta: AskAiMapsRequestLogContext,
-  usage?: {
-    askAi: AskAiUsageResult;
-    liveSearch: AskAiUsageResult;
-  }
+  aiUsage?: AskAiUsageResult
 ): HttpResponseInit {
   const message = error instanceof Error ? error.message : "Unknown error";
 
@@ -153,7 +151,7 @@ function handleAskAiMapsError(
         requestId: meta.requestId,
         places: [],
         sources: [],
-        ...buildUsagePayload(usage?.askAi, usage?.liveSearch),
+        ...buildAiUsagePayload(aiUsage),
       },
     };
   }
@@ -185,7 +183,7 @@ function handleAskAiMapsError(
         requestId: meta.requestId,
         places: [],
         sources: [],
-        ...buildUsagePayload(usage?.askAi, usage?.liveSearch),
+        ...buildAiUsagePayload(aiUsage),
       },
     };
   }
@@ -200,7 +198,7 @@ function handleAskAiMapsError(
       requestId: meta.requestId,
       places: [],
       sources: [],
-      ...buildUsagePayload(usage?.askAi, usage?.liveSearch),
+      ...buildAiUsagePayload(aiUsage),
     },
   };
 }
@@ -346,10 +344,35 @@ export async function askAiMapsRequest(
       return cooldownResponse;
     }
 
-    const [askAiUsageBefore, liveSearchUsageBefore] = await Promise.all([
-      checkAskAiUsage(user.id, "ask_ai_total"),
-      checkAskAiUsage(user.id, "live_search"),
-    ]);
+    const aiUsage = await consumeAskAiUsage(user.id, "ask_ai_maps");
+
+    if (!aiUsage.allowed) {
+      context.log(
+        `[Ask AI Maps] quota blocked: usageType=ask_ai_maps remaining=0 userId=${user.id}`
+      );
+
+      return {
+        status: 429,
+        headers: buildResponseHeaders(requestId),
+        jsonBody: {
+          ok: false,
+          error: "daily_ai_limit_reached",
+          usageType: "ask_ai_maps",
+          message: "You have reached your Ask AI Maps daily limit.",
+          dailyLimit: aiUsage.dailyLimit,
+          requestCount: aiUsage.requestCount,
+          remaining: aiUsage.remaining,
+          resetsAt: aiUsage.resetsAt,
+          requestId,
+          places: [],
+          sources: [],
+        },
+      };
+    }
+
+    context.log(
+      `[Ask AI Maps] quota consumed: remaining=${aiUsage.remaining} userId=${user.id}`
+    );
 
     const shouldNormalize = shouldNormalizeAskAiMapPrompt(query);
     let normalizedQuery:
@@ -479,19 +502,24 @@ export async function askAiMapsRequest(
           ...(result.message ? { message: result.message } : {}),
           latencyMs: result.latencyMs,
           usage: {
-            askAi: askAiUsageBefore,
-            liveSearch: liveSearchUsageBefore,
+            usageType: aiUsage.usageType,
+            dailyLimit: aiUsage.dailyLimit,
+            requestCount: aiUsage.requestCount,
+            remaining: aiUsage.remaining,
+            resetsAt: aiUsage.resetsAt,
           },
         },
       };
     } catch (error) {
+      context.log(
+        `[Ask AI Usage] refunding after provider failure: type=ask_ai_maps userId=${user.id}`
+      );
+      await refundAskAiUsage({ userId: user.id, usageType: "ask_ai_maps" });
+
       lastAskAiMapsRequestAtByUser.delete(user.id);
       logAskAiMapsError(context, error, requestLogContext);
 
-      return handleAskAiMapsError(error, requestLogContext, {
-        askAi: askAiUsageBefore,
-        liveSearch: liveSearchUsageBefore,
-      });
+      return handleAskAiMapsError(error, requestLogContext, aiUsage);
     }
   } catch (error) {
     logAskAiMapsError(context, error, requestLogContext);

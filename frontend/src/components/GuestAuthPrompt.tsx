@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { AppIcon, type AppIconName } from './AppIcon'
+import { CenteredModal } from './layout/Primitives'
 import { buildAuthPath } from '../utils/authRedirect'
 import { navigateToPath } from '../utils/navigation'
 
@@ -162,7 +163,7 @@ function GuestAuthPromptCard({
 
   const card = (
     <section
-      className={`gala-auth-prompt overflow-hidden rounded-[24px] border border-[var(--line)] bg-white shadow-[0_12px_38px_rgba(15,23,42,0.07)] ${mode === 'modal' ? '' : ''} ${className}`}
+      className={`gala-auth-prompt overflow-hidden rounded-[24px] border border-[var(--line)] bg-white shadow-[0_12px_38px_rgba(15,23,42,0.07)] ${mode === 'inline-card' ? 'mx-auto w-full max-w-[480px]' : ''} ${className}`}
     >
       <div className="px-5 pt-5 pb-3 sm:px-6 sm:pt-6">
         <div className="flex items-start gap-3.5">
@@ -185,7 +186,7 @@ function GuestAuthPromptCard({
               type="button"
               onClick={onClose}
               aria-label="Close"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[var(--line)] bg-white text-slate-500 transition hover:bg-slate-50 hover:text-slate-800"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-[var(--line)] bg-white text-slate-500 transition hover:bg-slate-50 hover:text-slate-800"
             >
               <AppIcon name="clear" className="h-3.5 w-3.5" />
             </button>
@@ -213,18 +214,18 @@ function GuestAuthPromptCard({
       ) : null}
 
       <div className="px-5 pt-1 pb-2 sm:px-6">
-        <div className="flex items-stretch gap-2.5">
+        <div className="flex items-center justify-center gap-2.5">
           <button
             type="button"
             onClick={() => navigateToPath(buildAuthPath('/login', currentPath))}
-            className="flex-1 inline-flex min-h-[44px] items-center justify-center rounded-[14px] bg-[var(--accent)] px-4 text-[14px] font-semibold text-white transition hover:bg-[var(--accent-deep)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)]"
+            className="inline-flex h-11 w-full items-center justify-center rounded-[14px] bg-[var(--accent)] px-4 text-[14px] font-semibold text-white transition hover:bg-[var(--accent-deep)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)] sm:w-auto"
           >
             Log in
           </button>
           <button
             type="button"
             onClick={() => navigateToPath(buildAuthPath('/signup', currentPath))}
-            className="flex-1 inline-flex min-h-[44px] items-center justify-center rounded-[14px] border border-[var(--line)] bg-white px-4 text-[14px] font-semibold text-[var(--text-main)] transition hover:border-[var(--line-strong)] hover:bg-[var(--surface-alt)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)]"
+            className="inline-flex h-11 w-full items-center justify-center rounded-[14px] border border-[var(--line)] bg-white px-4 text-[14px] font-semibold text-[var(--text-main)] transition hover:border-[var(--line-strong)] hover:bg-[var(--surface-alt)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)] sm:w-auto"
           >
             Create account
           </button>
@@ -234,7 +235,7 @@ function GuestAuthPromptCard({
             <button
               type="button"
               onClick={onClose}
-              className="text-[13px] font-semibold text-[var(--muted)] transition hover:text-[var(--text-main)]"
+              className="px-4 py-3 text-[13px] font-semibold text-[var(--muted)] transition hover:text-[var(--text-main)]"
             >
               Maybe later
             </button>
@@ -242,7 +243,7 @@ function GuestAuthPromptCard({
             <button
               type="button"
               onClick={() => navigateToPath('/')}
-              className="text-[13px] font-semibold text-[var(--muted)] transition hover:text-[var(--text-main)]"
+              className="px-4 py-3 text-[13px] font-semibold text-[var(--muted)] transition hover:text-[var(--text-main)]"
             >
               Maybe later
             </button>
@@ -291,21 +292,16 @@ function GuestAuthPromptModal({
   }
 
   return createPortal(
-    <div
-      className="fixed inset-0 z-[7000] flex items-center justify-center px-4 py-6"
-      role="dialog"
-      aria-modal="true"
+    <CenteredModal
+      isOpen={isOpen}
+      onClose={onClose}
+      maxWidth="sm"
+      ariaLabel="Sign in required"
     >
-      <button
-        type="button"
-        className="gala-modal-backdrop absolute inset-0 bg-slate-950/28 backdrop-blur-[3px]"
-        aria-label="Close"
-        onClick={onClose}
-      />
-      <div className="relative w-full max-w-[420px] lg:max-w-[440px] xl:max-w-[460px] 2xl:max-w-[480px]">
+      <div role="dialog" aria-modal="true" className="w-full">
         <GuestAuthPromptCard variant={variant} mode="modal" onClose={onClose} />
       </div>
-    </div>,
+    </CenteredModal>,
     document.body,
   )
 }

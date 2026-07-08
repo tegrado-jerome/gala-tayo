@@ -12,7 +12,7 @@ type OnboardingLayoutProps = {
 
 function OnboardingLayout({ step, title, description, children, actions }: OnboardingLayoutProps) {
   return (
-    <main className="flex min-h-screen items-start justify-center bg-[var(--bg)] px-4 py-8 text-[var(--text)] sm:items-center sm:px-6">
+    <main className="flex min-h-[100svh] items-center justify-center bg-[var(--bg)] px-4 py-6 text-[var(--text)] sm:px-6 sm:py-8">
       <section className="w-full max-w-[640px] rounded-3xl border border-[var(--line)] bg-white p-5 shadow-md sm:p-8">
         <OnboardingProgress step={step} />
         <div className="mt-7">

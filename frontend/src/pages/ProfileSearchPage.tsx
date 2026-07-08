@@ -1,6 +1,7 @@
 import { type ReactNode, useEffect, useMemo, useState } from 'react'
 import { ArrowUpRight, LoaderCircle, Search, Users } from 'lucide-react'
 import AppHeader from '../components/AppHeader'
+import MinimalBackNav from '../components/MinimalBackNav'
 import ProfileAvatar from '../components/ProfileAvatar'
 import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import { PageContainer } from '../components/layout/ResponsiveLayouts'
@@ -47,7 +48,7 @@ function ProfileResultCard({
                   You
                 </span>
               ) : (
-                <span className="shrink-0 rounded-full bg-[#e7f0ff] px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-[#1669d6]">
+                <span className="shrink-0 rounded-full bg-[var(--accent-wash)] px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-[#1669d6]">
                   New
                 </span>
               )}
@@ -114,7 +115,7 @@ function FollowedProfileRow({ profile }: { profile: FollowListUser }) {
       <span className="min-w-0 flex-1">
         <span className="flex min-w-0 items-center gap-1.5 sm:gap-2">
           <span className="truncate text-sm font-black text-slate-950">@{profile.username}</span>
-          <span className="shrink-0 rounded-full bg-[#e7f0ff] px-2 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#1669d6]">
+          <span className="shrink-0 rounded-full bg-[var(--accent-wash)] px-2 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#1669d6]">
             Following
           </span>
         </span>
@@ -396,10 +397,14 @@ function ProfileSearchPage() {
     <div className="gala-app-page">
       <AppHeader fixed />
       <main className="gala-app-main gala-app-main-fixed-header">
-        <PageContainer>
+        <PageContainer size="wide" className="grid gap-5 sm:gap-6">
+          <div className="pt-2">
+            <MinimalBackNav to="/" label="Home" preferHistory={false} />
+          </div>
+
           <section className="gala-page-header">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-              <div className="max-w-[560px]">
+            <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-end">
+              <div className="max-w-[620px]">
                 <div className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">
                   <Users className="h-4 w-4 text-[var(--accent)]" />
                   Find Friends
@@ -410,49 +415,60 @@ function ProfileSearchPage() {
                 <p className="gala-page-description">
                   Search usernames, open profiles fast, and browse suggested people in a familiar social layout.
                 </p>
+
+                <label className="gala-field mt-5 flex items-center gap-3 bg-white px-4 py-3">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[var(--chip)] text-slate-500">
+                    <Search className="h-5 w-5" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
+                      Search username
+                    </span>
+                    <input
+                      value={query}
+                      onChange={(event) => setQuery(event.target.value.toLowerCase())}
+                      className="gala-field border-0 bg-transparent p-0 text-[1.05rem] font-black text-slate-950 outline-none placeholder:font-bold placeholder:text-slate-400 sm:text-[1.15rem]"
+                      placeholder="@username"
+                      autoCapitalize="none"
+                      spellCheck={false}
+                    />
+                  </span>
+                  {isSearching ? <LoaderCircle className="h-5 w-5 animate-spin text-slate-400" /> : null}
+                  {query ? (
+                    <button
+                      type="button"
+                      onClick={() => setQuery('')}
+                      className="shrink-0 rounded-lg bg-slate-950 px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-white transition hover:bg-slate-800"
+                    >
+                      Clear
+                    </button>
+                  ) : null}
+                </label>
+
+                <p className="gala-section-description mt-3">{helperCopy}</p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 text-xs font-bold text-slate-500">
-                <span className="gala-count-pill">
-                  {summaryCount} {isShowingSearchResults ? 'match' : 'profile'}
-                  {summaryCount === 1 ? '' : 's'}
-                </span>
-                <span className="gala-count-pill">
-                  {isShowingSearchResults ? `Searching @${normalizedQuery}` : 'Suggested for you'}
-                </span>
-              </div>
+              <aside className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+                <div className="gala-card p-4">
+                  <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-500">Search view</p>
+                  <p className="mt-3 text-3xl font-black tracking-[-0.04em] text-slate-950">
+                    {summaryCount}
+                  </p>
+                  <p className="mt-1 text-sm font-semibold leading-6 text-slate-600">
+                    {summaryCount === 1 ? 'Profile currently visible.' : 'Profiles currently visible.'}
+                  </p>
+                </div>
+                <div className="gala-card p-4">
+                  <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-500">Your circle</p>
+                  <p className="mt-3 text-3xl font-black tracking-[-0.04em] text-slate-950">
+                    {isLoadingFollowing ? '...' : formatCompactCount(followingProfiles.length)}
+                  </p>
+                  <p className="mt-1 text-sm font-semibold leading-6 text-slate-600">
+                    People you already follow.
+                  </p>
+                </div>
+              </aside>
             </div>
-
-            <label className="gala-field mt-5 flex items-center gap-3 bg-white px-4 py-3">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[var(--chip)] text-slate-500">
-                <Search className="h-5 w-5" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
-                  Search username
-                </span>
-                <input
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value.toLowerCase())}
-                  className="mt-1 min-w-0 w-full border-0 bg-transparent p-0 text-[1.05rem] font-black text-slate-950 outline-none placeholder:font-bold placeholder:text-slate-400 sm:text-[1.15rem]"
-                  placeholder="@username"
-                  autoCapitalize="none"
-                  spellCheck={false}
-                />
-              </span>
-              {isSearching ? <LoaderCircle className="h-5 w-5 animate-spin text-slate-400" /> : null}
-              {query ? (
-                <button
-                  type="button"
-                  onClick={() => setQuery('')}
-                  className="shrink-0 rounded-lg bg-slate-950 px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-white transition hover:bg-slate-800"
-                >
-                  Clear
-                </button>
-              ) : null}
-            </label>
-
-            <p className="gala-section-description mt-3">{helperCopy}</p>
           </section>
 
           {hasStatusMessage ? (
@@ -480,8 +496,8 @@ function ProfileSearchPage() {
                     {results.length} match{results.length === 1 ? '' : 'es'}
                   </span>
                 }
-              />
-              <div className="mt-4 grid gap-3">
+                />
+              <div className="mt-4 grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
                 {visibleResults.map((profile) => (
                   <ProfileResultCard key={profile.user_id} profile={profile} currentUserId={currentUserId} emphasis="featured" />
                 ))}
@@ -517,7 +533,7 @@ function ProfileSearchPage() {
                       ) : null}
                       {followingErrorMessage ? <SectionMessage tone="error">{followingErrorMessage}</SectionMessage> : null}
                       {!isLoadingFollowing && !followingErrorMessage && followingProfiles.length > 0 ? (
-                        <div className="grid gap-2">
+                        <div className="grid gap-2 lg:grid-cols-2 2xl:grid-cols-3">
                           {followingProfiles.map((profile) => (
                             <FollowedProfileRow key={profile.user_id} profile={profile} />
                           ))}
@@ -569,7 +585,7 @@ function ProfileSearchPage() {
                       <SectionMessage>No suggested users yet.</SectionMessage>
                     ) : null}
 
-                    <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
                       {visibleSuggestions.map((profile) => (
                         <ProfileResultCard key={profile.user_id} profile={profile} currentUserId={currentUserId} />
                       ))}

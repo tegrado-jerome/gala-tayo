@@ -1,6 +1,18 @@
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { getApprovedPlaceImages } from "../services/placeImagesService";
 
+export type DetailCategoryMeta = {
+  id: string;
+  name: string;
+};
+
+export type DetailTagMeta = {
+  id: string;
+  name: string;
+  group: string;
+  strength: number;
+};
+
 export type PlaceDetail = {
   id: string;
   slug: string;
@@ -41,6 +53,8 @@ export type PlaceDetail = {
   longitude: number;
   imageUrl: string;
   curatedImageUrls: string[];
+  categories?: DetailCategoryMeta[];
+  tags?: DetailTagMeta[];
 };
 
 export function findPlaceDetailById(id: string): PlaceDetail | null {
@@ -166,12 +180,107 @@ function mapPlaceRowToDetail(row: Record<string, unknown>): PlaceDetail {
     longitude,
     imageUrl: "",
     curatedImageUrls: [],
+    categories: getLinkedCategories(row),
+    tags: getLinkedTags(row),
   };
+}
+
+type PlaceCategoryJoin = {
+  category_id?: unknown;
+  categories?: unknown;
+};
+
+type PlaceTagJoin = {
+  strength?: unknown;
+  tags?: unknown;
+};
+
+function getNestedObject(value: unknown): Record<string, unknown> | null {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+  return null;
+}
+
+function getStringField(value: unknown, keys: string[]): string | null {
+  const obj = getNestedObject(value);
+  if (!obj) return null;
+  for (const key of keys) {
+    const val = obj[key];
+    if (typeof val === "string" && val.trim()) {
+      return val.trim();
+    }
+  }
+  return null;
+}
+
+function getNumberField(value: unknown, keys: string[]): number | null {
+  const obj = getNestedObject(value);
+  if (!obj) return null;
+  for (const key of keys) {
+    const val = obj[key];
+    if (typeof val === "number" && Number.isFinite(val)) {
+      return val;
+    }
+    if (typeof val === "string" && val.trim()) {
+      const parsed = Number(val);
+      if (Number.isFinite(parsed)) return parsed;
+    }
+  }
+  return null;
+}
+
+function getLinkedCategories(row: Record<string, unknown>): DetailCategoryMeta[] {
+  const linkedCategories = row.place_categories;
+  if (!Array.isArray(linkedCategories)) {
+    return [];
+  }
+  return linkedCategories
+    .map((item: unknown) => {
+      const join = item as PlaceCategoryJoin;
+      const categoryId = join.category_id;
+      const category = getNestedObject(join.categories);
+      const id =
+        typeof categoryId === "string" && categoryId.trim()
+          ? categoryId.trim()
+          : getStringField(category, ["id"]);
+      if (!id) return null;
+      return {
+        id,
+        name: getStringField(category, ["name"]) ?? id,
+      };
+    })
+    .filter((cat): cat is DetailCategoryMeta => cat !== null);
+}
+
+function getLinkedTags(row: Record<string, unknown>): DetailTagMeta[] {
+  const linkedTags = row.place_tags;
+  if (!Array.isArray(linkedTags)) {
+    return [];
+  }
+  return linkedTags
+    .map((item: unknown) => {
+      const join = item as PlaceTagJoin;
+      const tag = getNestedObject(join.tags);
+      const id = getStringField(tag, ["id"]);
+      if (!id) return null;
+      return {
+        id,
+        name: getStringField(tag, ["name"]) ?? id,
+        group: getStringField(tag, ["tag_group", "group"]) ?? "general",
+        strength: Math.min(Math.max(getNumberField(join, ["strength"]) ?? 3, 1), 5),
+      };
+    })
+    .filter((tag): tag is DetailTagMeta => tag !== null)
+    .sort((a, b) => {
+      if (b.strength !== a.strength) return b.strength - a.strength;
+      return a.name.localeCompare(b.name);
+    });
 }
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const PLACE_DETAIL_COLUMNS = "*";
+const PLACE_DETAIL_COLUMNS = "*,place_categories(category_id,categories(id,name)),place_tags(strength,tags(id,name,tag_group))";
 
 export async function findPlaceDetailByIdOrSlug(id: string): Promise<PlaceDetail | null> {
   const trimmedId = id.trim();

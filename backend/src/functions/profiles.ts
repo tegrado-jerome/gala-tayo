@@ -306,19 +306,6 @@ function needsOnboarding(profile: ProfileRow | null) {
   return !profile?.onboarding_completed_at;
 }
 
-function hasRequiredOnboardingFields(user: AccountUserRow | null, profile: ProfileRow | null) {
-  return Boolean(
-      user?.first_name &&
-      user.last_name &&
-      user.terms_accepted_at &&
-      user.privacy_accepted_at &&
-      user.terms_version === TERMS_VERSION &&
-      user.privacy_version === PRIVACY_VERSION &&
-      profile?.username &&
-      profile.display_name
-  );
-}
-
 function mapAccountUser(row: AccountUserRow) {
   return {
     id: row.id,
@@ -923,17 +910,14 @@ export async function onboardingStatus(
   try {
     const authUser = await validateJwt(request);
     const providerAvatarUrl = getMetadataString(authUser.metadata, ["avatar_url", "picture"]);
-    const [accountUser, profile] = await Promise.all([
-      getOrCreateAccountUser(authUser.id, authUser.email),
-      getOrCreateProfile(authUser.id, providerAvatarUrl),
-    ]);
+    const profile = await getOrCreateProfile(authUser.id, providerAvatarUrl);
     const completed = Boolean(profile.onboarding_completed_at);
 
     return {
       status: 200,
       jsonBody: {
         completed,
-        needsOnboarding: !completed || !hasRequiredOnboardingFields(accountUser, profile),
+        needsOnboarding: !completed,
         profile: profile
           ? {
               username: profile.username,

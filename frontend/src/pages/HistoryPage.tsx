@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 import AppHeader from '../components/AppHeader'
+import MinimalBackNav from '../components/MinimalBackNav'
 import GoogleSignInButton from '../components/GoogleSignInButton'
 import PageHeroHeader from '../components/PageHeroHeader'
-import { PageContainer } from '../components/layout/ResponsiveLayouts'
+import { PageContainer, PageShell, CardSurface, EmptyState, Stack, ChibiIllustration } from '../components/layout/ResponsiveLayouts'
+import ActivityPlaceCard from '../components/ActivityPlaceCard'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { getSupabaseAccessToken } from '../supabase'
-import { navigateToPlace } from '../utils/navigation'
 import { getPlacePhoto } from '../utils/placePhoto'
 import historyActiveChibi from '../assets/chibis/features/history/chibi-history-active-state.webp'
-import historyEmptyChibi from '../assets/chibis/features/history/chibi-history-empty-state.webp'
 
 type HistoryPlace = {
   id: string
@@ -95,15 +95,6 @@ function TrashIcon({ className = 'h-4 w-4' }: { className?: string }) {
   )
 }
 
-function PinIcon({ className = 'h-4 w-4' }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className} aria-hidden="true">
-      <path d="M12 21s6-5.7 6-11a6 6 0 1 0-12 0c0 5.3 6 11 6 11Z" />
-      <circle cx="12" cy="10" r="2.4" />
-    </svg>
-  )
-}
-
 function getPlaceCategory(place: HistoryPlace) {
   return place.category?.trim() || 'Place'
 }
@@ -119,11 +110,11 @@ function getPlaceChips(place: HistoryPlace) {
 function HistoryChibi() {
   return (
     <div className="flex justify-center overflow-visible py-4 md:justify-end" aria-hidden="true">
-      <img
+      <ChibiIllustration
         src={historyActiveChibi}
         alt=""
-        className="block w-[135%] max-w-none origin-center scale-[1.2] object-contain sm:w-[145%] sm:scale-[1.28] md:w-[820px] md:scale-[1.34] lg:w-[980px] lg:scale-[1.42]"
-        loading="lazy"
+        variant="feature"
+        className="!w-[clamp(240px,74vw,380px)] !max-h-[320px] sm:!w-[clamp(170px,20vw,280px)] sm:!max-h-[240px]"
       />
     </div>
   )
@@ -227,10 +218,6 @@ function formatViewedAt(value: string) {
   })}`
 }
 
-function openPlace(slug: string) {
-  navigateToPlace(slug)
-}
-
 function HistoryCard({ item }: { item: HistoryItem }) {
   const place = item.place as HistoryPlace
   const placeSlug = place.slug as string
@@ -240,65 +227,24 @@ function HistoryCard({ item }: { item: HistoryItem }) {
   const photoUrl = getPlacePhoto(place)
 
   return (
-    <article className="flex h-full min-h-[290px] w-full max-w-[760px] flex-col overflow-hidden rounded-lg border border-[var(--line)] bg-white shadow-[0_10px_24px_rgba(28,77,160,0.05)] transition hover:border-[var(--line-strong)] hover:shadow-[0_16px_34px_rgba(28,77,160,0.08)] lg:max-w-[900px] xl:max-w-[980px]">
-      {photoUrl ? (
-        <img
-          src={photoUrl}
-          alt={place.name || 'Viewed place'}
-          className="h-40 w-full object-cover"
-          loading="lazy"
-        />
-      ) : (
-        <div className="flex h-40 w-full items-center justify-center bg-[var(--chip)] text-[var(--accent-deep)]">
-          <PinIcon className="h-8 w-8" />
-        </div>
-      )}
-
-      <div className="flex flex-1 flex-col gap-4 p-4">
-        <div className="min-w-0">
-          <p className="text-xs font-semibold text-[var(--muted)]">{chips.slice(0, 2).join(' / ')}</p>
-          <h2 className="mt-1 text-lg font-black leading-tight text-slate-950 lg:text-xl">
-            {place.name || 'Viewed place'}
-          </h2>
-          <div className="mt-2 grid gap-1 text-sm font-semibold text-[var(--muted)]">
-            <p className="flex items-center gap-1">
-              <PinIcon className="h-4 w-4" />
-              <span className="line-clamp-1">{location}</span>
-            </p>
-            <p className="flex items-center gap-1">
-              <ClockIcon className="h-4 w-4" />
-              {formatViewedAt(item.created_at)}
-            </p>
-          </div>
-
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {chips.map((chip) => (
-              <span
-                key={`${item.id}-${chip}`}
-                className="rounded-md border border-[var(--line)] bg-[var(--chip)] px-2 py-0.5 text-xs font-bold text-[var(--accent-deep)]"
-              >
-                {chip}
-              </span>
-            ))}
-          </div>
-
-          <p className="mt-4 text-sm text-slate-950">
-            <span className="font-black">Budget:</span> {budgetLabel}
-          </p>
-          <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-slate-700">
-            {place.description?.trim() || `Recently viewed ${getPlaceCategory(place).toLowerCase()} spot in ${location}.`}
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => openPlace(placeSlug)}
-          className="mt-4 h-11 w-full rounded-lg border border-[var(--accent)] bg-white px-4 text-sm font-black text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)]"
-        >
-          View Details
-        </button>
-      </div>
-    </article>
+    <ActivityPlaceCard
+      title={place.name || 'Viewed place'}
+      categoryLabel={chips.slice(0, 2).join(' / ')}
+      location={location}
+      chips={chips}
+      budgetLabel={budgetLabel}
+      description={place.description?.trim() || `Recently viewed ${getPlaceCategory(place).toLowerCase()} spot in ${location}.`}
+      photoUrl={photoUrl}
+      placeSlug={placeSlug}
+      photoAlt={place.name || 'Viewed place'}
+      compactMobile
+      secondaryRows={[
+        {
+          icon: ClockIcon,
+          label: formatViewedAt(item.created_at),
+        },
+      ]}
+    />
   )
 }
 
@@ -423,11 +369,15 @@ function HistoryPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[var(--bg)] text-[var(--text)]">
+    <PageShell>
       <AppHeader showTaglishChip={false} />
 
-      <main className="mx-auto flex w-full max-w-[1480px] flex-1 flex-col gap-5 px-4 py-5 sm:px-6 lg:px-10 lg:py-8">
-        <PageContainer>
+      <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-8">
+        <PageContainer size="wide">
+          <div className="mb-5">
+            <MinimalBackNav to="/" label="Home" preferHistory={false} />
+          </div>
+
           <PageHeroHeader
             eyebrow="History"
             title="Recently viewed"
@@ -444,41 +394,42 @@ function HistoryPage() {
               </>
             }
             aside={<HistoryChibi />}
-            className="border-b-0 pb-0"
+            divider={false}
+            className="pb-0"
           />
 
           {canClearHistory ? (
-            <div className="flex justify-start lg:justify-end">
+            <div className="flex justify-start">
               <button
                 type="button"
                 onClick={() => void handleClearHistory()}
                 disabled={isClearing}
-                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-white px-4 text-sm font-black text-red-600 shadow-[0_10px_24px_rgba(28,77,160,0.04)] transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-red-200 bg-white px-4 text-xs font-black text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                <TrashIcon className="h-4 w-4" />
+                <TrashIcon className="h-3.5 w-3.5" />
                 {isClearing ? 'Clearing...' : 'Clear history'}
               </button>
             </div>
           ) : null}
 
           {isSessionLoading ? (
-            <section className="rounded-lg border border-[var(--line)] bg-white px-4 py-5 shadow-[0_14px_30px_rgba(28,77,160,0.07)]">
+            <CardSurface pad="default" className="mt-6">
               <p className="text-sm text-[var(--muted)]">Checking account...</p>
-            </section>
+            </CardSurface>
           ) : null}
 
           {!isSessionLoading && !session?.user ? (
-            <section className="rounded-lg border border-[var(--line)] bg-white px-5 py-6 shadow-[0_14px_30px_rgba(28,77,160,0.07)]">
+            <CardSurface pad="loose" className="mt-6">
               <h2 className="text-lg font-black text-slate-950">Please sign in to view your history.</h2>
               <p className="mt-2 max-w-xl text-sm text-[var(--muted)]">
                 Your recently viewed places are private to your account.
               </p>
               <GoogleSignInButton className="mt-4" redirectTo={`${window.location.origin}/history`} />
-            </section>
+            </CardSurface>
           ) : null}
 
           {!isSessionLoading && session?.user ? (
-            <>
+            <Stack gap="default">
               <div className="min-h-5">
                 {isLoading ? (
                   <p className="text-sm font-semibold text-[var(--accent-deep)]">Loading your history...</p>
@@ -488,40 +439,37 @@ function HistoryPage() {
               </div>
 
               {!isLoading && !errorMessage && visibleHistory.length === 0 ? (
-                <section className="rounded-lg border border-dashed border-[var(--line-strong)] bg-white/82 px-5 py-8 text-center shadow-[0_14px_30px_rgba(28,77,160,0.06)]">
-                  <img src={historyEmptyChibi} alt="" className="mx-auto h-32 w-32 object-contain" loading="lazy" />
-                  <h2 className="mt-3 text-lg font-black text-slate-950">No viewed places yet.</h2>
-                  <p className="mx-auto mt-2 max-w-md text-sm text-[var(--muted)]">
-                    Start exploring places and they&apos;ll appear here.
-                  </p>
-                </section>
+                <EmptyState
+                  title="No viewed places yet."
+                  description="Start exploring places and they'll appear here."
+                  variant="plain"
+                />
               ) : null}
 
               {historySections.length > 0 ? (
-                <div className="grid gap-7">
+                <Stack gap="loose">
                   {historySections.map((section) => (
                     <section key={section.title}>
                       <div className="mb-3 flex items-center gap-3">
                         <h2 className="shrink-0 text-base font-black text-slate-950 lg:text-lg">{section.title}</h2>
-                        <div className="h-px flex-1 bg-[var(--line)]" />
                       </div>
-                      <div className="grid justify-center gap-4 [grid-template-columns:minmax(0,760px)] lg:[grid-template-columns:minmax(0,900px)] xl:[grid-template-columns:minmax(0,980px)]">
+                      <div className="grid w-full grid-cols-2 gap-2.5 sm:gap-4 xl:justify-start xl:[grid-template-columns:repeat(auto-fill,minmax(340px,340px))]">
                         {section.items.map((item) => (
                           <HistoryCard key={item.id} item={item} />
                         ))}
                       </div>
                     </section>
                   ))}
-                  <section className="rounded-lg border border-[var(--line)] bg-white/80 px-4 py-3 text-sm font-semibold text-slate-700 shadow-[0_10px_24px_rgba(28,77,160,0.04)]">
+                  <CardSurface pad="default" tone="soft" className="text-sm font-semibold text-slate-700">
                     <span className="font-black text-[var(--accent-deep)]">Tip:</span> Places you view will appear here for easy access. Save the ones you love to keep them in Favorites.
-                  </section>
-                </div>
+                  </CardSurface>
+                </Stack>
               ) : null}
-            </>
+            </Stack>
           ) : null}
         </PageContainer>
       </main>
-    </div>
+    </PageShell>
   )
 }
 

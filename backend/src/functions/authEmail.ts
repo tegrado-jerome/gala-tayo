@@ -8,10 +8,11 @@ function normalizeEmail(value: unknown) {
   return typeof value === "string" ? value.trim().toLowerCase() : "";
 }
 
-async function getAccountUserIdsByEmail(email: string) {
+async function getUserIdsByEmail(email: string) {
   const supabase = await getSupabaseAdminClient();
 
-  const { data, error } = await (supabase.from("users") as any)
+  const { data, error } = await supabase
+    .from("users")
     .select("id")
     .eq("email", email);
 
@@ -20,55 +21,6 @@ async function getAccountUserIdsByEmail(email: string) {
   }
 
   return ((data ?? []) as Array<{ id: string }>).map((user) => user.id);
-}
-
-async function getAuthUserIdsByEmail(email: string) {
-  const supabase = await getSupabaseAdminClient();
-  const matchingUserIds = new Set<string>();
-
-  const perPage = 1000;
-
-  for (let page = 1; page <= 50; page += 1) {
-    const { data, error } = await supabase.auth.admin.listUsers({
-      page,
-      perPage,
-    });
-
-    if (error) {
-      throw error;
-    }
-
-    const users = data?.users ?? [];
-
-    users.forEach((user) => {
-      const identityEmails = (user.identities ?? [])
-        .map((identity) => normalizeEmail((identity.identity_data as Record<string, unknown> | null | undefined)?.email))
-        .filter(Boolean);
-
-      if (normalizeEmail(user.email) === email || identityEmails.includes(email)) {
-        matchingUserIds.add(user.id);
-      }
-    });
-
-    if (users.length < perPage) {
-      break;
-    }
-  }
-
-  return [...matchingUserIds];
-}
-
-async function getUserIdsByEmail(email: string) {
-  const userIds = new Set<string>();
-  const [accountUserIds, authUserIds] = await Promise.all([
-    getAccountUserIdsByEmail(email),
-    getAuthUserIdsByEmail(email),
-  ]);
-
-  accountUserIds.forEach((userId) => userIds.add(userId));
-  authUserIds.forEach((userId) => userIds.add(userId));
-
-  return [...userIds];
 }
 
 async function emailExistsInAuth(email: string) {

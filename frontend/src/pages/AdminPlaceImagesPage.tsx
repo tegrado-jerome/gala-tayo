@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import AppHeader from '../components/AppHeader'
 import UnifiedLoadingState from '../components/UnifiedLoadingState'
-import { PageContainer, StateContainer } from '../components/layout/ResponsiveLayouts'
+import { PageContainer, PageShell, StateContainer } from '../components/layout/ResponsiveLayouts'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { getCurrentUser } from '../utils/profileApi'
 import { navigateToPath } from '../utils/navigation'
@@ -321,35 +321,35 @@ function AdminPlaceImagesPage({ session }: { session: Session }) {
 
   if (!isAdmin) {
     return (
-      <section className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
+      <PageShell>
         <AppHeader />
-        <main className="mx-auto max-w-3xl px-4 py-10">
+        <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
           <StateContainer>
             <h1 className="text-2xl font-black text-slate-950">Admin access required</h1>
             <p className="mt-2 text-sm font-semibold text-slate-700">Only admins can review place photo contributions.</p>
           </StateContainer>
         </main>
-      </section>
+      </PageShell>
     )
   }
 
   return (
-    <section className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
+    <PageShell>
       <AppHeader />
-      <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
-        <PageContainer>
+      <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
+        <PageContainer size="wide">
           <div className="mb-4 flex flex-wrap gap-2">
           <button
             type="button"
             onClick={() => navigateToPath('/admin/place-submissions')}
-            className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[var(--line)] bg-white px-4 text-sm font-black text-slate-800"
+            className="app-button app-button-ghost app-button-md"
           >
             Place submissions
           </button>
           <button
             type="button"
             onClick={() => navigateToPath('/admin/user-reports')}
-            className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[var(--line)] bg-white px-4 text-sm font-black text-slate-800"
+            className="app-button app-button-ghost app-button-md"
           >
             User reports
           </button>
@@ -438,7 +438,7 @@ function AdminPlaceImagesPage({ session }: { session: Session }) {
                         type="button"
                         onClick={() => void mutatePending(image.id, 'approve')}
                         disabled={Boolean(mutatingId)}
-                        className="min-h-10 rounded-lg border border-[var(--accent)] bg-[var(--accent)] px-3 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-70"
+                        className="app-button app-button-primary app-button-sm"
                       >
                         {mutatingId === image.id ? 'Working...' : 'Approve'}
                       </button>
@@ -446,7 +446,7 @@ function AdminPlaceImagesPage({ session }: { session: Session }) {
                         type="button"
                         onClick={() => void mutatePending(image.id, 'reject')}
                         disabled={Boolean(mutatingId)}
-                        className="min-h-10 rounded-lg border border-red-200 bg-white px-3 text-sm font-black text-red-600 disabled:cursor-not-allowed disabled:opacity-70"
+                        className="app-button app-button-danger app-button-sm"
                       >
                         Reject
                       </button>
@@ -638,7 +638,7 @@ function AdminPlaceImagesPage({ session }: { session: Session }) {
                 type="button"
                 onClick={() => setDeleteTarget(null)}
                 disabled={Boolean(mutatingId)}
-                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--line)] bg-white px-4 text-sm font-extrabold text-slate-700 disabled:cursor-not-allowed disabled:opacity-70"
+                className="app-button app-button-secondary app-button-md"
               >
                 Cancel
               </button>
@@ -646,7 +646,7 @@ function AdminPlaceImagesPage({ session }: { session: Session }) {
                 type="button"
                 onClick={() => void deleteApprovedImage(deleteTarget.id)}
                 disabled={Boolean(mutatingId)}
-                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-red-600 bg-red-600 px-4 text-sm font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-70"
+                className="app-button app-button-danger app-button-md"
               >
                 {mutatingId === deleteTarget.id ? 'Deleting...' : 'Delete Photo'}
               </button>
@@ -654,7 +654,7 @@ function AdminPlaceImagesPage({ session }: { session: Session }) {
           </div>
         </div>
       ) : null}
-    </section>
+    </PageShell>
   )
 }
 

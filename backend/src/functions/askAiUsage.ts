@@ -45,7 +45,7 @@ function invalidUsageTypeResponse(): HttpResponseInit {
     status: 400,
     jsonBody: {
       message: "Invalid Ask AI usage type.",
-      allowedTypes: ["ask_ai_total", "live_search"],
+      allowedTypes: ["ask_ai_maps", "chatbot_ai", "ask_ai_total", "live_search", "ai_guide"],
     },
   };
 }

@@ -1,6 +1,7 @@
 import AppHeader from '../components/AppHeader'
+import MinimalBackNav from '../components/MinimalBackNav'
 import SeoHead from '../components/SeoHead'
-import { PageContainer } from '../components/layout/ResponsiveLayouts'
+import { PageContainer, PageShell, ResponsiveGrid, CardSurface, ChibiIllustration } from '../components/layout/ResponsiveLayouts'
 import aboutChibi from '../assets/chibis/trust-pages/chibi-about.webp'
 import { getSiteOrigin } from '../utils/seo'
 
@@ -39,7 +40,7 @@ function AboutPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
+    <PageShell>
       <SeoHead
         title="About GalaTayo"
         description="Learn about GalaTayo and how it helps people discover places, plan gala ideas, and explore Metro Manila."
@@ -48,9 +49,13 @@ function AboutPage() {
       />
       <AppHeader />
 
-      <main className="mx-auto w-full max-w-[980px] px-4 py-6 sm:px-6 lg:py-10">
-        <PageContainer>
-          <article className="rounded-[28px] border border-[var(--line)] bg-white p-5 shadow-[0_18px_42px_rgba(47,116,232,0.1)] sm:p-8">
+      <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
+        <PageContainer size="default">
+          <div className="mb-5">
+            <MinimalBackNav to="/" label="Home" preferHistory={false} />
+          </div>
+
+          <CardSurface pad="loose" className="shadow-[0_18px_42px_rgba(47,116,232,0.1)]">
             <header className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">About</p>
@@ -61,21 +66,21 @@ function AboutPage() {
                 </p>
               </div>
 
-              <div className="overflow-hidden rounded-[24px] border border-[var(--line)] bg-[linear-gradient(180deg,#f8fbff,#eef5ff)] p-4">
-                <img src={aboutChibi} alt="About GalaTayo illustration" className="mx-auto h-auto w-full max-w-[320px] object-contain" loading="eager" />
+              <div className="flex items-center justify-center">
+                <ChibiIllustration src={aboutChibi} alt="About GalaTayo illustration" variant="feature" priority />
               </div>
             </header>
 
             <section className="mt-8">
               <h2 className="text-xl font-black text-slate-950">What GalaTayo helps you do</h2>
-              <div className="mt-4 grid gap-4 md:grid-cols-3">
+              <ResponsiveGrid cols={3} gap="default" className="mt-4">
                 {aboutHighlights.map((item) => (
-                  <section key={item.title} className="rounded-[24px] border border-[var(--line)] bg-slate-50 px-4 py-4">
+                  <CardSurface key={item.title} tone="soft" pad="default" className="rounded-3xl">
                     <h3 className="text-base font-black text-slate-950">{item.title}</h3>
                     <p className="mt-2 text-sm font-semibold leading-6 text-slate-700">{item.body}</p>
-                  </section>
+                  </CardSurface>
                 ))}
-              </div>
+              </ResponsiveGrid>
             </section>
 
             <section className="mt-8">
@@ -85,10 +90,10 @@ function AboutPage() {
                 consistent across the app.
               </p>
             </section>
-          </article>
+          </CardSurface>
         </PageContainer>
       </main>
-    </div>
+    </PageShell>
   )
 }
 

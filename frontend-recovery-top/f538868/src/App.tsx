@@ -601,10 +601,6 @@ function App() {
       return
     }
 
-    if (!hasResolvedProfile) {
-      return
-    }
-
     if (
       needsOnboarding &&
       !isPath(pathname, '/onboarding') &&
@@ -612,6 +608,10 @@ function App() {
       !isPath(pathname, '/privacy')
     ) {
       navigateToPath('/onboarding')
+      return
+    }
+
+    if (!hasResolvedProfile) {
       return
     }
 

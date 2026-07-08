@@ -58,6 +58,68 @@ function normalizeKey(value: string): string {
     .trim();
 }
 
+function splitNormalizedWords(value: string): string[] {
+  return normalizeKey(value).split(" ").filter(Boolean);
+}
+
+function levenshteinDistance(a: string, b: string): number {
+  if (a === b) return 0;
+  if (!a) return b.length;
+  if (!b) return a.length;
+
+  const previous = Array.from({ length: b.length + 1 }, (_, index) => index);
+  for (let i = 1; i <= a.length; i += 1) {
+    const current = [i];
+    for (let j = 1; j <= b.length; j += 1) {
+      const insertion = current[j - 1] + 1;
+      const deletion = previous[j] + 1;
+      const substitution = previous[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1);
+      current.push(Math.min(insertion, deletion, substitution));
+    }
+    for (let j = 0; j < current.length; j += 1) {
+      previous[j] = current[j];
+    }
+  }
+
+  return previous[b.length];
+}
+
+function maxAllowedDistance(term: string): number {
+  if (term.length <= 3) return 1;
+  if (term.length <= 5) return 1;
+  if (term.length <= 7) return 2;
+  return 3;
+}
+
+function tokenLooksLike(term: string, candidate: string): boolean {
+  const normalizedTerm = normalizeKey(term);
+  const normalizedCandidate = normalizeKey(candidate);
+  if (!normalizedTerm || !normalizedCandidate) return false;
+  if (normalizedTerm === normalizedCandidate) return true;
+
+  return levenshteinDistance(normalizedTerm, normalizedCandidate) <= maxAllowedDistance(normalizedCandidate);
+}
+
+function phraseLooksLike(text: string, phrase: string): boolean {
+  const words = splitNormalizedWords(text);
+  const phraseWords = splitNormalizedWords(phrase);
+  if (words.length === 0 || phraseWords.length === 0) return false;
+
+  if (phraseWords.length === 1) {
+    return words.some((word) => tokenLooksLike(word, phraseWords[0]));
+  }
+
+  const windowSize = phraseWords.length;
+  for (let i = 0; i <= words.length - windowSize; i += 1) {
+    const window = words.slice(i, i + windowSize).join(" ");
+    if (tokenLooksLike(window, phraseWords.join(" "))) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 function uniqueStrings(values: unknown[], limit: number): string[] {
   const seen = new Set<string>();
   const result: string[] = [];
@@ -109,6 +171,36 @@ function normalizeBudgetIntent(value: unknown): NormalizedAskAiMapQuery["budgetI
   return "unknown";
 }
 
+function detectBudgetIntent(text: string): NormalizedAskAiMapQuery["budgetIntent"] {
+  const normalized = normalizeKey(text);
+  if (!normalized) return "unknown";
+
+  if (
+    phraseLooksLike(normalized, "walang pera") ||
+    phraseLooksLike(normalized, "wlang pera") ||
+    phraseLooksLike(normalized, "free") ||
+    phraseLooksLike(normalized, "libre")
+  ) {
+    return "free_or_low_cost";
+  }
+
+  if (
+    phraseLooksLike(normalized, "mura") ||
+    phraseLooksLike(normalized, "murang") ||
+    phraseLooksLike(normalized, "mra") ||
+    phraseLooksLike(normalized, "tipid") ||
+    phraseLooksLike(normalized, "budget") ||
+    phraseLooksLike(normalized, "di mahal") ||
+    phraseLooksLike(normalized, "hindi mahal") ||
+    phraseLooksLike(normalized, "affordable") ||
+    phraseLooksLike(normalized, "cheap")
+  ) {
+    return "low_cost";
+  }
+
+  return "unknown";
+}
+
 function normalizeOptionalBoolean(value: unknown): boolean | undefined {
   return typeof value === "boolean" ? value : undefined;
 }
@@ -135,11 +227,27 @@ function detectLocationAlias(text: string): string | null {
   if (!normalized) return null;
 
   const patterns: Array<[RegExp, string]> = [
+    [/\b(bicutan|bcutan|sa bicutan|near bicutan)\b/i, "Bicutan, Parañaque, Philippines"],
+    [/\b(tagytay|tagayty|tagaytay)\b/i, "Tagaytay, Cavite, Philippines"],
+    [/\b(cavte|cavit|cavite)\b/i, "Cavite, Philippines"],
     [/\b(pque|paranaque|para naque|sa paranaque|dito sa paranaque|near paranaque|near para naque)\b/i, "Parañaque, Metro Manila, Philippines"],
   ];
 
   for (const [pattern, canonical] of patterns) {
     if (pattern.test(normalized)) return canonical;
+  }
+
+  if (phraseLooksLike(normalized, "paranaque") || phraseLooksLike(normalized, "pque")) {
+    return "Parañaque, Metro Manila, Philippines";
+  }
+  if (phraseLooksLike(normalized, "cavite") || phraseLooksLike(normalized, "cavte")) {
+    return "Cavite, Philippines";
+  }
+  if (phraseLooksLike(normalized, "tagaytay") || phraseLooksLike(normalized, "tagytay")) {
+    return "Tagaytay, Cavite, Philippines";
+  }
+  if (phraseLooksLike(normalized, "bicutan") || phraseLooksLike(normalized, "bcutan")) {
+    return "Bicutan, Parañaque, Philippines";
   }
 
   return null;
@@ -148,7 +256,17 @@ function detectLocationAlias(text: string): string | null {
 function detectFoodIntent(text: string): string | null {
   const normalized = normalizeKey(text);
   if (!normalized) return null;
-  if (/\b(unli wings|unlimited wings|unlimited chicken wings|all you can eat wings|ayce wings)\b/i.test(normalized)) return "chicken wings";
+  if (
+    phraseLooksLike(normalized, "unli wings") ||
+    phraseLooksLike(normalized, "unlimited wings") ||
+    phraseLooksLike(normalized, "unlimited chicken wings") ||
+    phraseLooksLike(normalized, "all you can eat wings") ||
+    phraseLooksLike(normalized, "ayce wings") ||
+    phraseLooksLike(normalized, "wngs") ||
+    phraseLooksLike(normalized, "wings")
+  ) {
+    return "chicken wings";
+  }
   return null;
 }
 
@@ -159,17 +277,49 @@ function detectDealType(text: string): string | null {
   return null;
 }
 
+function detectUserPreference(text: string): string | null {
+  const normalized = normalizeKey(text);
+  if (!normalized) return null;
+
+  if (phraseLooksLike(normalized, "aesthetic")) return "aesthetic";
+  if (phraseLooksLike(normalized, "date")) return "date";
+  if (phraseLooksLike(normalized, "chill") || phraseLooksLike(normalized, "tambay") || phraseLooksLike(normalized, "hangout") || phraseLooksLike(normalized, "hang out")) return "chill";
+  if (phraseLooksLike(normalized, "family friendly") || phraseLooksLike(normalized, "family")) return "family-friendly";
+  return null;
+}
+
 function detectPlaceType(text: string): string | null {
   const normalized = normalizeKey(text);
   if (!normalized) return null;
 
-  if (/\bmall(s)?\b/i.test(normalized)) return "mall";
-  if (/\bcafe(s)?\b|\bcoffee\b/i.test(normalized)) return "cafe";
-  if (/\bpark(s)?\b|\bgarden(s)?\b/i.test(normalized)) return "park";
-  if (/\brestaurant(s)?\b|\bfood\b|\bkainan\b|\beatery\b/i.test(normalized)) return "restaurant";
-  if (/\bbuffet\b/i.test(normalized)) return "buffet restaurant";
-  if (/\bwings\b/i.test(normalized)) return "chicken wings restaurant";
+  if (phraseLooksLike(normalized, "mall")) return "mall";
+  if (phraseLooksLike(normalized, "cafe") || phraseLooksLike(normalized, "coffee")) return "cafe";
+  if (phraseLooksLike(normalized, "park") || phraseLooksLike(normalized, "garden")) return "park";
+  if (phraseLooksLike(normalized, "resto")) return "restaurant";
+  if (phraseLooksLike(normalized, "restaurant") || phraseLooksLike(normalized, "food") || phraseLooksLike(normalized, "kainan") || phraseLooksLike(normalized, "eatery")) return "restaurant";
+  if (phraseLooksLike(normalized, "buffet")) return "buffet restaurant";
+  if (phraseLooksLike(normalized, "wngs") || phraseLooksLike(normalized, "wings")) return "chicken wings restaurant";
   return null;
+}
+
+function buildNormalizationHints(rawPrompt: string) {
+  const location = detectLocationAlias(rawPrompt);
+  const foodIntent = detectFoodIntent(rawPrompt);
+  const dealType = detectDealType(rawPrompt);
+  const placeType = detectPlaceType(rawPrompt);
+  const budgetIntent = detectBudgetIntent(rawPrompt);
+  const budgetAmount = detectBudgetAmount(rawPrompt);
+  const userPreference = detectUserPreference(rawPrompt);
+
+  return {
+    location,
+    foodIntent,
+    dealType,
+    placeType,
+    budgetIntent,
+    budgetAmount,
+    userPreference,
+  };
 }
 
 function buildCoreSearchQuery(args: {
@@ -208,8 +358,11 @@ function buildCoreSearchQuery(args: {
   const normalizedLocation = normalizeKey(location);
   if (normalizedCore.includes(normalizedLocation)) return parsedCore;
 
-  if (/\bin\b/i.test(parsedCore)) {
-    return `${parsedCore.replace(/\s+in\s+[^,]+(?:,\s*[^,]+)*$/i, "").trim()} in ${location}`;
+  const locationNeutralCore = parsedCore
+    .replace(/\s+(?:in|sa|near|around|within|at)\s+[^,]+(?:,\s*[^,]+)*$/i, "")
+    .trim();
+  if (locationNeutralCore && locationNeutralCore !== parsedCore) {
+    return `${locationNeutralCore} in ${location}`;
   }
 
   return `${parsedCore} in ${location}`;
@@ -255,9 +408,25 @@ function buildFallbackQueries(args: {
   return uniqueStrings([args.coreSearchQuery], 3);
 }
 
+function buildHintsForPrompt(rawPrompt: string): string {
+  const hints = buildNormalizationHints(rawPrompt);
+  const parts = [
+    hints.location ? `location alias => ${hints.location}` : null,
+    hints.foodIntent ? `food intent => ${hints.foodIntent}` : null,
+    hints.dealType ? `deal type => ${hints.dealType}` : null,
+    hints.placeType ? `place type => ${hints.placeType}` : null,
+    hints.budgetIntent !== "unknown" ? `budget intent => ${hints.budgetIntent}` : null,
+    typeof hints.budgetAmount === "number" ? `budget amount => ${hints.budgetAmount}` : null,
+    hints.userPreference ? `preference => ${hints.userPreference}` : null,
+  ].filter((value): value is string => Boolean(value));
+
+  return parts.length > 0 ? parts.join("; ") : "none";
+}
+
 function postProcessResponse(rawPrompt: string, parsed: ParsedNormalizerResponse | null): NormalizedAskAiMapQuery {
+  const localHints = buildNormalizationHints(rawPrompt);
   const parsedLocation = normalizeText(typeof parsed?.location === "string" ? parsed.location : "");
-  const detectedLocation = parsedLocation || detectLocationAlias(rawPrompt);
+  const detectedLocation = parsedLocation || localHints.location || detectLocationAlias(rawPrompt);
   const parsedCoreSearchQuery = normalizeText(
     typeof parsed?.coreSearchQuery === "string" ? parsed.coreSearchQuery : ""
   );
@@ -265,13 +434,14 @@ function postProcessResponse(rawPrompt: string, parsed: ParsedNormalizerResponse
   const detectedFoodIntent =
     typeof parsed?.foodIntent === "string" && parsed.foodIntent.trim()
       ? parsed.foodIntent.trim()
-      : detectFoodIntent(rawPrompt);
+      : localHints.foodIntent || detectFoodIntent(rawPrompt);
   const detectedDealType =
     typeof parsed?.dealType === "string" && parsed.dealType.trim()
       ? parsed.dealType.trim()
-      : detectDealType(rawPrompt);
+      : localHints.dealType || detectDealType(rawPrompt);
   const budgetAmount =
-    normalizeBudgetAmount(parsed?.budgetAmount) ??
+    normalizeBudgetAmount(parsed?.budgetAmount) ?? 
+    localHints.budgetAmount ??
     detectBudgetAmount(rawPrompt) ??
     detectBudgetAmount(detectedLocation ?? "") ??
     null;
@@ -284,8 +454,8 @@ function postProcessResponse(rawPrompt: string, parsed: ParsedNormalizerResponse
     dealType: detectedDealType,
   });
   const normalizedPlaceTypes =
-    detectedFoodIntent === "chicken wings"
-      ? uniqueStrings(
+      detectedFoodIntent === "chicken wings"
+        ? uniqueStrings(
           [
             "restaurant",
             "chicken wings restaurant",
@@ -294,7 +464,13 @@ function postProcessResponse(rawPrompt: string, parsed: ParsedNormalizerResponse
           ],
           6
         )
-      : placeTypes;
+      : uniqueStrings(
+          [
+            ...(localHints.placeType ? [localHints.placeType] : []),
+            ...placeTypes,
+          ],
+          6
+        );
   const fallbackQueries = buildFallbackQueries({
     location: detectedLocation,
     placeTypes: normalizedPlaceTypes,
@@ -312,7 +488,9 @@ function postProcessResponse(rawPrompt: string, parsed: ParsedNormalizerResponse
       normalizedPlaceTypes.length > 0
         ? normalizedPlaceTypes
         : uniqueStrings([detectPlaceType(rawPrompt) ?? "place"], 2),
-    budgetIntent: normalizeBudgetIntent(parsed?.budgetIntent),
+    budgetIntent: normalizeBudgetIntent(parsed?.budgetIntent) === "unknown"
+      ? localHints.budgetIntent
+      : normalizeBudgetIntent(parsed?.budgetIntent),
     budgetAmount,
     budgetCurrency:
       typeof parsed?.budgetCurrency === "string" && parsed.budgetCurrency.trim()
@@ -328,7 +506,7 @@ function postProcessResponse(rawPrompt: string, parsed: ParsedNormalizerResponse
     userPreference:
       typeof parsed?.userPreference === "string" && parsed.userPreference.trim()
         ? parsed.userPreference.trim()
-        : null,
+        : localHints.userPreference ?? null,
     fallbackQueries,
   };
 }
@@ -344,13 +522,30 @@ async function resolveGroqApiKey(): Promise<string> {
 }
 
 function buildNormalizerPrompt(rawPrompt: string): string {
+  const hints = buildHintsForPrompt(rawPrompt);
   return [
     "You are the GalaTayo Ask AI Map query normalizer.",
     "Return strict JSON only.",
     "Do not answer the user.",
     "Extract a short Google Maps-style query and keep budget/personal preference separate.",
-    "For location aliases, normalize Parañaque variants to Parañaque, Metro Manila, Philippines.",
-    "For unli wings or similar niche food prompts, keep the core query searchable.",
+    "Correct only obvious typos, aliases, and slang when the intent is clear.",
+    "Do not overcorrect unknown words or invent new meaning.",
+    "For location aliases, normalize these variants:",
+    "- pque / paranaque / parañaque -> Parañaque, Metro Manila, Philippines",
+    "- cavte / cavit / cavite -> Cavite, Philippines",
+    "- tagytay / tagayty / tagaytay -> Tagaytay, Cavite, Philippines",
+    "- bicutan / bcutan -> Bicutan, Parañaque, Philippines",
+    "For food aliases, normalize these variants:",
+    "- wngs / wings / unli wings -> chicken wings / unlimited chicken wings",
+    "For budget aliases, normalize these variants:",
+    "- mura / murang / mra / tipid / di mahal / budget -> low_cost",
+    "- wlang pera / walang pera / free / libre -> free_or_low_cost",
+    "Examples of nasty-typo handling:",
+    '- "unli wngs sa paranaque 500 per tao" -> coreSearchQuery about unlimited chicken wings in Parañaque and budget-aware output',
+    '- "murang kainan sa cavte" -> affordable restaurants in Cavite',
+    '- "resto sa pque for date na di mahal" -> affordable date restaurants in Parañaque',
+    "Use the hints below only as guidance, not as hard requirements.",
+    `Hints: ${hints}`,
     "JSON shape:",
     '{',
     '  "isMapIntent": true,',
@@ -390,6 +585,19 @@ function buildDefaultFallbackText(budgetIntent: NormalizedAskAiMapQuery["budgetI
 function shouldNormalizePrompt(rawPrompt: string): boolean {
   const normalized = normalizeText(rawPrompt).toLowerCase();
   if (!normalized) return false;
+
+  const aliasHints = buildNormalizationHints(rawPrompt);
+  if (
+    aliasHints.location ||
+    aliasHints.foodIntent ||
+    aliasHints.dealType ||
+    aliasHints.placeType ||
+    aliasHints.userPreference ||
+    aliasHints.budgetIntent !== "unknown" ||
+    aliasHints.budgetAmount !== null
+  ) {
+    return true;
+  }
 
   const wordCount = normalized.split(/\s+/).filter(Boolean).length;
   const hasPreferenceWords = /\b(walang pera|free|libre|no budget|mura|cheap|budget|tipid|affordable|aesthetic|date|tambay|chill|student|students|budget-friendly|di mahal|hindi mahal)\b/i.test(normalized);

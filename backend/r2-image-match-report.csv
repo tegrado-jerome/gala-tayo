@@ -1,0 +1,584 @@
+city,image_file,detected_slug,matched,matched_place_name,expected_r2_key,reason
+Caloocan,CALOOCAN\amparo-nature-park-1.jpg,amparo-nature-park,true,Amparo Nature Park,places/amparo-nature-park/amparo-nature-park-1.webp,matched
+Caloocan,CALOOCAN\amparo-nature-park-2.jpg,amparo-nature-park,true,Amparo Nature Park,places/amparo-nature-park/amparo-nature-park-2.webp,matched
+Caloocan,CALOOCAN\amparo-nature-park-3.jpg,amparo-nature-park,true,Amparo Nature Park,places/amparo-nature-park/amparo-nature-park-3.webp,matched
+Caloocan,CALOOCAN\andres-bonifacio-national-monument-1.jpg,andres-bonifacio-national-monument,true,Andres Bonifacio National Monument,places/andres-bonifacio-national-monument/andres-bonifacio-national-monument-1.webp,matched
+Caloocan,CALOOCAN\araneta-square-mall-1.jpg,araneta-square-mall,true,Araneta Square Mall,places/araneta-square-mall/araneta-square-mall-1.webp,matched
+Caloocan,CALOOCAN\caloocan-city-peoples-park-1.webp,caloocan-city-peoples-park,true,Caloocan City People’s Park,places/caloocan-city-peoples-park/caloocan-city-peoples-park-1.webp,matched
+Caloocan,CALOOCAN\caloocan-city-peoples-park-2.jpg,caloocan-city-peoples-park,true,Caloocan City People’s Park,places/caloocan-city-peoples-park/caloocan-city-peoples-park-2.webp,matched
+Caloocan,CALOOCAN\casa-hexa-1.jpg,casa-hexa,true,Casa Hexa,places/casa-hexa/casa-hexa-1.webp,matched
+Caloocan,CALOOCAN\casa-hexa-2.jpg,casa-hexa,true,Casa Hexa,places/casa-hexa/casa-hexa-2.webp,matched
+Caloocan,CALOOCAN\casa-z-agypha-private-pool-resort-1.jpg,casa-z-agypha-private-pool-resort,true,Casa Z Agypha Private Pool Resort,places/casa-z-agypha-private-pool-resort/casa-z-agypha-private-pool-resort-1.webp,matched
+Caloocan,CALOOCAN\cuppers-coffee-1.jpg,cuppers-coffee,true,Cuppers Coffee,places/cuppers-coffee/cuppers-coffee-1.webp,matched
+Caloocan,CALOOCAN\cuppers-coffee-2.jpg,cuppers-coffee,true,Cuppers Coffee,places/cuppers-coffee/cuppers-coffee-2.webp,matched
+Caloocan,CALOOCAN\diocesan-shrine-and-parish-of-our-lady-of-grace-1.jpg,diocesan-shrine-and-parish-of-our-lady-of-grace,true,Diocesan Shrine and Parish of Our Lady of Grace,places/diocesan-shrine-and-parish-of-our-lady-of-grace/diocesan-shrine-and-parish-of-our-lady-of-grace-1.webp,matched
+Caloocan,CALOOCAN\diocesan-shrine-and-parish-of-our-lady-of-grace-2.jpg,diocesan-shrine-and-parish-of-our-lady-of-grace,true,Diocesan Shrine and Parish of Our Lady of Grace,places/diocesan-shrine-and-parish-of-our-lady-of-grace/diocesan-shrine-and-parish-of-our-lady-of-grace-2.webp,matched
+Caloocan,CALOOCAN\diocesan-shrine-and-parish-of-our-lady-of-grace-3.jpg,diocesan-shrine-and-parish-of-our-lady-of-grace,true,Diocesan Shrine and Parish of Our Lady of Grace,places/diocesan-shrine-and-parish-of-our-lady-of-grace/diocesan-shrine-and-parish-of-our-lady-of-grace-3.webp,matched
+Caloocan,CALOOCAN\eskina-coffee-1.jpg,eskina-coffee,true,Eskina Coffee,places/eskina-coffee/eskina-coffee-1.webp,matched
+Caloocan,CALOOCAN\eskina-coffee-2.jpg,eskina-coffee,true,Eskina Coffee,places/eskina-coffee/eskina-coffee-2.webp,matched
+Caloocan,CALOOCAN\glorieta-park-1.jpg,glorieta-park,true,Glorieta Park,places/glorieta-park/glorieta-park-1.webp,matched
+Caloocan,CALOOCAN\glorieta-park-2.jpg,glorieta-park,true,Glorieta Park,places/glorieta-park/glorieta-park-2.webp,matched
+Caloocan,CALOOCAN\green-paddle-1.jpg,green-paddle,true,Green Paddle,places/green-paddle/green-paddle-1.webp,matched
+Caloocan,CALOOCAN\green-paddle-2.jpg,green-paddle,true,Green Paddle,places/green-paddle/green-paddle-2.webp,matched
+Caloocan,CALOOCAN\holiday-island-mall-1.jpg,holiday-island-mall,true,Holiday Island Mall,places/holiday-island-mall/holiday-island-mall-1.webp,matched
+Caloocan,CALOOCAN\holiday-island-mall-2.jpg,holiday-island-mall,true,Holiday Island Mall,places/holiday-island-mall/holiday-island-mall-2.webp,matched
+Caloocan,CALOOCAN\holiday-island-mall-3.jpg,holiday-island-mall,true,Holiday Island Mall,places/holiday-island-mall/holiday-island-mall-3.webp,matched
+Caloocan,CALOOCAN\hounds-and-grounds-cafe-1.jpg,hounds-and-grounds-cafe,true,Hounds and Grounds Café,places/hounds-and-grounds-cafe/hounds-and-grounds-cafe-1.webp,matched
+Caloocan,CALOOCAN\hounds-and-grounds-cafe-2.jpg,hounds-and-grounds-cafe,true,Hounds and Grounds Café,places/hounds-and-grounds-cafe/hounds-and-grounds-cafe-2.webp,matched
+Caloocan,CALOOCAN\inchangyeopsal-premium-korean-restaurant-caloocan-1.jpg,inchangyeopsal-premium-korean-restaurant-caloocan,true,Inchangyeopsal Premium Korean Restaurant Caloocan,places/inchangyeopsal-premium-korean-restaurant-caloocan/inchangyeopsal-premium-korean-restaurant-caloocan-1.webp,matched
+Caloocan,CALOOCAN\kidzooona-sm-city-caloocan-1.png,kidzooona-sm-city-caloocan,true,Kidzooona SM City Caloocan,places/kidzooona-sm-city-caloocan/kidzooona-sm-city-caloocan-1.webp,matched
+Caloocan,CALOOCAN\orient-pearl-seafood-and-restaurant-1.jpg,orient-pearl-seafood-and-restaurant,true,Orient Pearl Seafood and Restaurant,places/orient-pearl-seafood-and-restaurant/orient-pearl-seafood-and-restaurant-1.webp,matched
+Caloocan,CALOOCAN\padis-point-monumento-1.jpg,padis-point-monumento,true,Padis Point Monumento,places/padis-point-monumento/padis-point-monumento-1.webp,matched
+Caloocan,CALOOCAN\padis-point-monumento-2.jpg,padis-point-monumento,true,Padis Point Monumento,places/padis-point-monumento/padis-point-monumento-2.webp,matched
+Caloocan,CALOOCAN\padis-point-monumento-3.jpg,padis-point-monumento,true,Padis Point Monumento,places/padis-point-monumento/padis-point-monumento-3.webp,matched
+Caloocan,CALOOCAN\presko-coffee-caloocan-1.jpg,presko-coffee-caloocan,true,Presko Coffee Caloocan,places/presko-coffee-caloocan/presko-coffee-caloocan-1.webp,matched
+Caloocan,CALOOCAN\samgyupsalamat-morning-breeze-1.jpg,samgyupsalamat-morning-breeze,true,SamgyupSalamat Morning Breeze,places/samgyupsalamat-morning-breeze/samgyupsalamat-morning-breeze-1.webp,matched
+Caloocan,CALOOCAN\samgyupsalamat-morning-breeze-2.jpg,samgyupsalamat-morning-breeze,true,SamgyupSalamat Morning Breeze,places/samgyupsalamat-morning-breeze/samgyupsalamat-morning-breeze-2.webp,matched
+Caloocan,CALOOCAN\san-roque-cathedral-1.jpg,san-roque-cathedral,true,San Roque Cathedral,places/san-roque-cathedral/san-roque-cathedral-1.webp,matched
+Caloocan,CALOOCAN\san-roque-cathedral-2.jpg,san-roque-cathedral,true,San Roque Cathedral,places/san-roque-cathedral/san-roque-cathedral-2.webp,matched
+Caloocan,CALOOCAN\san-roque-cathedral-3.jpg,san-roque-cathedral,true,San Roque Cathedral,places/san-roque-cathedral/san-roque-cathedral-3.webp,matched
+Caloocan,CALOOCAN\sm-center-sangandaan-1.jpg,sm-center-sangandaan,true,SM Center Sangandaan,places/sm-center-sangandaan/sm-center-sangandaan-1.webp,matched
+Caloocan,CALOOCAN\sm-center-sangandaan-2.jpg,sm-center-sangandaan,true,SM Center Sangandaan,places/sm-center-sangandaan/sm-center-sangandaan-2.webp,matched
+Caloocan,CALOOCAN\sm-center-sangandaan-3.jpg,sm-center-sangandaan,true,SM Center Sangandaan,places/sm-center-sangandaan/sm-center-sangandaan-3.webp,matched
+Caloocan,CALOOCAN\sm-cinema-grand-central-1.jpg,sm-cinema-grand-central,true,SM Cinema Grand Central,places/sm-cinema-grand-central/sm-cinema-grand-central-1.webp,matched
+Caloocan,CALOOCAN\sm-cinema-grand-central-2.jpg,sm-cinema-grand-central,true,SM Cinema Grand Central,places/sm-cinema-grand-central/sm-cinema-grand-central-2.webp,matched
+Caloocan,CALOOCAN\sm-cinema-sangandaan-1.jpg,sm-cinema-sangandaan,true,SM Cinema Sangandaan,places/sm-cinema-sangandaan/sm-cinema-sangandaan-1.webp,matched
+Caloocan,CALOOCAN\sm-cinema-sm-city-caloocan-1.jpg,sm-cinema-sm-city-caloocan,true,SM Cinema SM City Caloocan,places/sm-cinema-sm-city-caloocan/sm-cinema-sm-city-caloocan-1.webp,matched
+Caloocan,CALOOCAN\sm-city-caloocan-1.png,sm-city-caloocan,true,SM City Caloocan,places/sm-city-caloocan/sm-city-caloocan-1.webp,matched
+Caloocan,CALOOCAN\sm-city-caloocan-2.jpg,sm-city-caloocan,true,SM City Caloocan,places/sm-city-caloocan/sm-city-caloocan-2.webp,matched
+Caloocan,CALOOCAN\sm-city-caloocan-3.jpg,sm-city-caloocan,true,SM City Caloocan,places/sm-city-caloocan/sm-city-caloocan-3.webp,matched
+Caloocan,CALOOCAN\sm-city-grand-central-1.jpg,sm-city-grand-central,true,SM City Grand Central,places/sm-city-grand-central/sm-city-grand-central-1.webp,matched
+Caloocan,CALOOCAN\sm-city-grand-central-2.jpg,sm-city-grand-central,true,SM City Grand Central,places/sm-city-grand-central/sm-city-grand-central-2.webp,matched
+Caloocan,CALOOCAN\sm-city-grand-central-3.jpg,sm-city-grand-central,true,SM City Grand Central,places/sm-city-grand-central/sm-city-grand-central-3.webp,matched
+Caloocan,CALOOCAN\thai-to-taoist-temple-1.jpg,thai-to-taoist-temple,true,Thai To Taoist Temple,places/thai-to-taoist-temple/thai-to-taoist-temple-1.webp,matched
+Caloocan,CALOOCAN\thai-to-taoist-temple-2.jpg,thai-to-taoist-temple,true,Thai To Taoist Temple,places/thai-to-taoist-temple/thai-to-taoist-temple-2.webp,matched
+Caloocan,CALOOCAN\the-hideout-bar-and-restaurant-1.jpg,the-hideout-bar-and-restaurant,true,The Hideout Bar and Restaurant,places/the-hideout-bar-and-restaurant/the-hideout-bar-and-restaurant-1.webp,matched
+Caloocan,CALOOCAN\the-hideout-bar-and-restaurant-2.jpg,the-hideout-bar-and-restaurant,true,The Hideout Bar and Restaurant,places/the-hideout-bar-and-restaurant/the-hideout-bar-and-restaurant-2.webp,matched
+Caloocan,CALOOCAN\the-prism-cabin-1.jpg,the-prism-cabin,true,The Prism Cabin,places/the-prism-cabin/the-prism-cabin-1.webp,matched
+Caloocan,CALOOCAN\the-prism-cabin-2.jpg,the-prism-cabin,true,The Prism Cabin,places/the-prism-cabin/the-prism-cabin-2.webp,matched
+Caloocan,CALOOCAN\the-prism-cabin-3.jpg,the-prism-cabin,true,The Prism Cabin,places/the-prism-cabin/the-prism-cabin-3.webp,matched
+Caloocan,CALOOCAN\toms-world-sm-city-caloocan-1.jpg,toms-world-sm-city-caloocan,true,Tom’s World SM City Caloocan,places/toms-world-sm-city-caloocan/toms-world-sm-city-caloocan-1.webp,matched
+Caloocan,CALOOCAN\victory-plaza-1.jpg,victory-plaza,true,Victory Plaza,places/victory-plaza/victory-plaza-1.webp,matched
+Caloocan,CALOOCAN\victory-plaza-2.jpg,victory-plaza,true,Victory Plaza,places/victory-plaza/victory-plaza-2.webp,matched
+Caloocan,CALOOCAN\victory-plaza-3.jpg,victory-plaza,true,Victory Plaza,places/victory-plaza/victory-plaza-3.webp,matched
+Caloocan,CALOOCAN\woodpecker-hanging-garden-resort-north-caloocan-1.jpg,woodpecker-hanging-garden-resort-north-caloocan,true,Woodpecker Hanging Garden Resort North Caloocan,places/woodpecker-hanging-garden-resort-north-caloocan/woodpecker-hanging-garden-resort-north-caloocan-1.webp,matched
+Caloocan,CALOOCAN\woodpecker-hanging-garden-resort-north-caloocan-2.jpg,woodpecker-hanging-garden-resort-north-caloocan,true,Woodpecker Hanging Garden Resort North Caloocan,places/woodpecker-hanging-garden-resort-north-caloocan/woodpecker-hanging-garden-resort-north-caloocan-2.webp,matched
+Caloocan,CALOOCAN\world-of-fun-sm-city-caloocan-1.jpg,world-of-fun-sm-city-caloocan,true,World of Fun SM City Caloocan,places/world-of-fun-sm-city-caloocan/world-of-fun-sm-city-caloocan-1.webp,matched
+Caloocan,CALOOCAN\zabarte-town-center-1.jpg,zabarte-town-center,true,Zabarte Town Center,places/zabarte-town-center/zabarte-town-center-1.webp,matched
+Caloocan,CALOOCAN\zabarte-town-center-2.jpg,zabarte-town-center,true,Zabarte Town Center,places/zabarte-town-center/zabarte-town-center-2.webp,matched
+Caloocan,CALOOCAN\zabarte-town-center-3.jpg,zabarte-town-center,true,Zabarte Town Center,places/zabarte-town-center/zabarte-town-center-3.webp,matched
+Las Pinas,LAS PINAS\bamboo-organ-museum-1.jpg,bamboo-organ-museum,true,Bamboo Organ Museum,places/bamboo-organ-museum/bamboo-organ-museum-1.webp,matched
+Las Pinas,LAS PINAS\evia-lifestyle-center-1.jpg,evia-lifestyle-center,true,Evia Lifestyle Center,places/evia-lifestyle-center/evia-lifestyle-center-1.webp,matched
+Las Pinas,LAS PINAS\glass-house-by-coffee-project-1.jpg,glass-house-by-coffee-project,true,Glass House by Coffee Project,places/glass-house-by-coffee-project/glass-house-by-coffee-project-1.webp,matched
+Las Pinas,LAS PINAS\las-pinas-historical-corridor-1.jpg,las-pinas-historical-corridor,true,Las Piñas Historical Corridor,places/las-pinas-historical-corridor/las-pinas-historical-corridor-1.webp,matched
+Las Pinas,LAS PINAS\las-pinas-paranaque-wetland-park-1.jpg,las-pinas-paranaque-wetland-park,true,Las Piñas-Parañaque Wetland Park,places/las-pinas-paranaque-wetland-park/las-pinas-paranaque-wetland-park-1.webp,matched
+Las Pinas,LAS PINAS\lppwp-wetland-centre-complex-1.jpg,lppwp-wetland-centre-complex,true,LPWP Wetland Centre Complex,places/lppwp-wetland-centre-complex/lppwp-wetland-centre-complex-1.webp,matched
+Las Pinas,LAS PINAS\mary-immaculate-parish-nature-church-1.jpg,mary-immaculate-parish-nature-church,true,Mary Immaculate Parish Nature Church,places/mary-immaculate-parish-nature-church/mary-immaculate-parish-nature-church-1.webp,matched
+Las Pinas,LAS PINAS\mella-hotel-1.jpg,mella-hotel,true,Mella Hotel,places/mella-hotel/mella-hotel-1.webp,matched
+Las Pinas,LAS PINAS\pio-garden-restaurant-events-place-1.jpg,pio-garden-restaurant-events-place,true,Pio Garden Restaurant Events Place,places/pio-garden-restaurant-events-place/pio-garden-restaurant-events-place-1.webp,matched
+Las Pinas,LAS PINAS\plaza-quezon-las-pinas-1.webp,plaza-quezon-las-pinas,true,Plaza Quezon Las Piñas,places/plaza-quezon-las-pinas/plaza-quezon-las-pinas-1.webp,matched
+Las Pinas,LAS PINAS\robinsons-las-pinas-1.jpg,robinsons-las-pinas,true,Robinsons Las Piñas,places/robinsons-las-pinas/robinsons-las-pinas-1.webp,matched
+Las Pinas,LAS PINAS\sarao-jeepney-factory-sarao-motors-1.jpg,sarao-jeepney-factory-sarao-motors,true,Sarao Jeepney Factory Sarao Motors,places/sarao-jeepney-factory-sarao-motors/sarao-jeepney-factory-sarao-motors-1.webp,matched
+Las Pinas,LAS PINAS\sm-center-las-pinas-1.jpg,sm-center-las-pinas,true,SM Center Las Piñas,places/sm-center-las-pinas/sm-center-las-pinas-1.webp,matched
+Las Pinas,LAS PINAS\sm-cinema-southmall-1.jpg,sm-cinema-southmall,true,SM Cinema Southmall,places/sm-cinema-southmall/sm-cinema-southmall-1.webp,matched
+Las Pinas,LAS PINAS\sm-game-park-southmall-1.jpg,sm-game-park-southmall,true,SM Game Park Southmall,places/sm-game-park-southmall/sm-game-park-southmall-1.webp,matched
+Las Pinas,LAS PINAS\sm-southmall-1.jpg,sm-southmall,true,SM Southmall,places/sm-southmall/sm-southmall-1.webp,matched
+Las Pinas,LAS PINAS\st-joseph-parish-bamboo-organ-church-1.jpg,st-joseph-parish-bamboo-organ-church,true,St. Joseph Parish Bamboo Organ Church,places/st-joseph-parish-bamboo-organ-church/st-joseph-parish-bamboo-organ-church-1.webp,matched
+Las Pinas,LAS PINAS\tablo-kitchen-x-cafe-south-las-pinas-1.jpg,tablo-kitchen-x-cafe-south-las-pinas,true,Tablo Kitchen x Cafe South Las Piñas,places/tablo-kitchen-x-cafe-south-las-pinas/tablo-kitchen-x-cafe-south-las-pinas-1.webp,matched
+Las Pinas,LAS PINAS\the-excelsior-hotel-las-pinas-1.jpg,the-excelsior-hotel-las-pinas,true,The Excelsior Hotel Las Piñas,places/the-excelsior-hotel-las-pinas/the-excelsior-hotel-las-pinas-1.webp,matched
+Las Pinas,LAS PINAS\the-port-alabang-food-park-1.jpg,the-port-alabang-food-park,true,The Port Alabang Food Park,places/the-port-alabang-food-park/the-port-alabang-food-park-1.webp,matched
+Las Pinas,LAS PINAS\timezone-sm-southmall-1.jpg,timezone-sm-southmall,true,Timezone SM Southmall,places/timezone-sm-southmall/timezone-sm-southmall-1.webp,matched
+Las Pinas,LAS PINAS\vista-cinemas-evia-imax-evia-1.jpg,vista-cinemas-evia-imax-evia,true,Vista Cinemas Evia IMAX Evia,places/vista-cinemas-evia-imax-evia/vista-cinemas-evia-imax-evia-1.webp,matched
+Las Pinas,LAS PINAS\vista-cinemas-las-pinas-1.png,vista-cinemas-las-pinas,true,Vista Cinemas Las Piñas,places/vista-cinemas-las-pinas/vista-cinemas-las-pinas-1.webp,matched
+Las Pinas,LAS PINAS\vista-mall-las-pinas-1.jpg,vista-mall-las-pinas,true,Vista Mall Las Piñas,places/vista-mall-las-pinas/vista-mall-las-pinas-1.webp,matched
+Las Pinas,LAS PINAS\wagyuniku-las-pinas-1.jpg,wagyuniku-las-pinas,true,Wagyuniku Las Piñas,places/wagyuniku-las-pinas/wagyuniku-las-pinas-1.webp,matched
+Makati,MAKATI\alamat-filipino-cuisine-1.jpg,alamat-filipino-cuisine,true,Alamat Filipino Cuisine,places/alamat-filipino-cuisine/alamat-filipino-cuisine-1.webp,matched
+Makati,MAKATI\ayala-center-makati-1.jpg,ayala-center-makati,true,Ayala Center Makati,places/ayala-center-makati/ayala-center-makati-1.webp,matched
+Makati,MAKATI\ayala-malls-circuit-1.jpg,ayala-malls-circuit,true,Ayala Malls Circuit,places/ayala-malls-circuit/ayala-malls-circuit-1.webp,matched
+Makati,MAKATI\ayala-malls-circuit-cinemas-1.jpg,ayala-malls-circuit-cinemas,true,Ayala Malls Circuit Cinemas,places/ayala-malls-circuit-cinemas/ayala-malls-circuit-cinemas-1.webp,matched
+Makati,MAKATI\ayala-museum-1.png,ayala-museum,true,Ayala Museum,places/ayala-museum/ayala-museum-1.webp,matched
+Makati,MAKATI\ayala-triangle-gardens-1.jpg,ayala-triangle-gardens,true,Ayala Triangle Gardens,places/ayala-triangle-gardens/ayala-triangle-gardens-1.webp,matched
+Makati,MAKATI\blackbird-at-the-nielson-tower-1.jpg,blackbird-at-the-nielson-tower,true,Blackbird at the Nielson Tower,places/blackbird-at-the-nielson-tower/blackbird-at-the-nielson-tower-1.webp,matched
+Makati,MAKATI\blue-pitch-circuit-makati-1.jpg,blue-pitch-circuit-makati,true,Blue Pitch Circuit Makati,places/blue-pitch-circuit-makati/blue-pitch-circuit-makati-1.webp,matched
+Makati,MAKATI\century-city-cinemas-1.jpg,century-city-cinemas,true,Century City Cinemas,places/century-city-cinemas/century-city-cinemas-1.webp,matched
+Makati,MAKATI\century-city-mall-1.jpg,century-city-mall,true,Century City Mall,places/century-city-mall/century-city-mall-1.webp,matched
+Makati,MAKATI\circuit-makati-1.jpg,circuit-makati,true,Circuit Makati,places/circuit-makati/circuit-makati-1.webp,matched
+Makati,MAKATI\commune-1.jpg,commune,true,Commune,places/commune/commune-1.webp,matched
+Makati,MAKATI\ermita-de-san-nicolas-de-tolentino-1.jpg,ermita-de-san-nicolas-de-tolentino,true,Ermita de San Nicolas de Tolentino,places/ermita-de-san-nicolas-de-tolentino/ermita-de-san-nicolas-de-tolentino-1.webp,matched
+Makati,MAKATI\filling-station-bar-cafe-1.jpg,filling-station-bar-cafe,true,Filling Station Bar Cafe,places/filling-station-bar-cafe/filling-station-bar-cafe-1.webp,matched
+Makati,MAKATI\gabriela-silang-monument-1.jpg,gabriela-silang-monument,true,Gabriela Silang Monument,places/gabriela-silang-monument/gabriela-silang-monument-1.webp,matched
+Makati,MAKATI\gen-pio-del-pilar-monument-1.jpg,gen-pio-del-pilar-monument,true,Gen. Pio del Pilar Monument,places/gen-pio-del-pilar-monument/gen-pio-del-pilar-monument-1.webp,matched
+Makati,MAKATI\globe-circuit-event-grounds-1.jpg,globe-circuit-event-grounds,true,Globe Circuit Event Grounds,places/globe-circuit-event-grounds/globe-circuit-event-grounds-1.webp,matched
+Makati,MAKATI\glorietta-1.jpg,glorietta,true,Glorietta,places/glorietta/glorietta-1.webp,matched
+Makati,MAKATI\glorietta-cinemas-1.jpg,glorietta-cinemas,true,Glorietta Cinemas,places/glorietta-cinemas/glorietta-cinemas-1.webp,matched
+Makati,MAKATI\grace-park-one-rockwell-1.jpg,grace-park-one-rockwell,true,Grace Park One Rockwell,places/grace-park-one-rockwell/grace-park-one-rockwell-1.webp,matched
+Makati,MAKATI\greenbelt-1.png,greenbelt,true,Greenbelt,places/greenbelt/greenbelt-1.webp,matched
+Makati,MAKATI\greenbelt-chapel-sto-nino-de-paz-chapel-1.jpg,greenbelt-chapel-sto-nino-de-paz-chapel,true,Greenbelt Chapel / Sto. Niño de Paz Chapel,places/greenbelt-chapel-sto-nino-de-paz-chapel/greenbelt-chapel-sto-nino-de-paz-chapel-1.webp,matched
+Makati,MAKATI\greenbelt-cinemas-1.jpg,greenbelt-cinemas,true,Greenbelt Cinemas,places/greenbelt-cinemas/greenbelt-cinemas-1.webp,matched
+Makati,MAKATI\greenbelt-park-1.jpg,greenbelt-park,true,Greenbelt Park,places/greenbelt-park/greenbelt-park-1.webp,matched
+Makati,MAKATI\jaime-c-velasquez-park-salcedo-park-1.jpg,jaime-c-velasquez-park-salcedo-park,true,Jaime C. Velasquez Park / Salcedo Park,places/jaime-c-velasquez-park-salcedo-park/jaime-c-velasquez-park-salcedo-park-1.webp,matched
+Makati,MAKATI\legazpi-active-park-1.jpg,legazpi-active-park,true,Legazpi Active Park,places/legazpi-active-park/legazpi-active-park-1.webp,matched
+Makati,MAKATI\legazpi-sunday-market-1.jpg,legazpi-sunday-market,true,Legazpi Sunday Market,places/legazpi-sunday-market/legazpi-sunday-market-1.webp,matched
+Makati,MAKATI\little-tokyo-makati-1.jpg,little-tokyo-makati,true,Little Tokyo Makati,places/little-tokyo-makati/little-tokyo-makati-1.webp,matched
+Makati,MAKATI\makati-central-square-1.jpg,makati-central-square,true,Makati Central Square,places/makati-central-square/makati-central-square-1.webp,matched
+Makati,MAKATI\museo-ng-makati-1.jpg,museo-ng-makati,true,Museo ng Makati,places/museo-ng-makati/museo-ng-makati-1.webp,matched
+Makati,MAKATI\mystery-manila-century-city-mall-1.jpg,mystery-manila-century-city-mall,true,Mystery Manila Century City Mall,places/mystery-manila-century-city-mall/mystery-manila-century-city-mall-1.webp,matched
+Makati,MAKATI\ninoy-aquino-monument-1.jpg,ninoy-aquino-monument,true,Ninoy Aquino Monument,places/ninoy-aquino-monument/ninoy-aquino-monument-1.webp,matched
+Makati,MAKATI\nuestra-senora-de-gracia-church-1.jpg,nuestra-senora-de-gracia-church,true,Nuestra Señora de Gracia Church,places/nuestra-senora-de-gracia-church/nuestra-senora-de-gracia-church-1.webp,matched
+Makati,MAKATI\one-ayala-1.jpg,one-ayala,true,One Ayala,places/one-ayala/one-ayala-1.webp,matched
+Makati,MAKATI\play-n-learn-ayala-malls-circuit-1.png,play-n-learn-ayala-malls-circuit,true,Play ’N’ Learn Ayala Malls Circuit,places/play-n-learn-ayala-malls-circuit/play-n-learn-ayala-malls-circuit-1.webp,matched
+Makati,MAKATI\power-mac-center-spotlight-blackbox-theater-1.jpg,power-mac-center-spotlight-blackbox-theater,true,Power Mac Center Spotlight Blackbox Theater,places/power-mac-center-spotlight-blackbox-theater/power-mac-center-spotlight-blackbox-theater-1.webp,matched
+Makati,MAKATI\power-plant-cinema-1.jpg,power-plant-cinema,true,Power Plant Cinema,places/power-plant-cinema/power-plant-cinema-1.webp,matched
+Makati,MAKATI\power-plant-mall-1.jpg,power-plant-mall,true,Power Plant Mall,places/power-plant-mall/power-plant-mall-1.webp,matched
+Makati,MAKATI\salcedo-saturday-market-1.jpg,salcedo-saturday-market,true,Salcedo Saturday Market,places/salcedo-saturday-market/salcedo-saturday-market-1.webp,matched
+Makati,MAKATI\samsung-performing-arts-theater-1.jpg,samsung-performing-arts-theater,true,Samsung Performing Arts Theater,places/samsung-performing-arts-theater/samsung-performing-arts-theater-1.webp,matched
+Makati,MAKATI\sciscape-by-dream-lab-1.webp,sciscape-by-dream-lab,true,SciScape by Dream Lab,places/sciscape-by-dream-lab/sciscape-by-dream-lab-1.webp,matched
+Makati,MAKATI\sm-makati-1.jpg,sm-makati,true,SM Makati,places/sm-makati/sm-makati-1.webp,matched
+Makati,MAKATI\sultan-kudarat-monument-1.jpg,sultan-kudarat-monument,true,Sultan Kudarat Monument,places/sultan-kudarat-monument/sultan-kudarat-monument-1.webp,matched
+Makati,MAKATI\the-alley-at-karrivin-1.jpg,the-alley-at-karrivin,true,The Alley at Karrivin,places/the-alley-at-karrivin/the-alley-at-karrivin-1.webp,matched
+Makati,MAKATI\the-curator-coffee-cocktails-1.png,the-curator-coffee-cocktails,true,The Curator Coffee & Cocktails,places/the-curator-coffee-cocktails/the-curator-coffee-cocktails-1.webp,matched
+Makati,MAKATI\the-fun-roof-poblacion-1.jpg,the-fun-roof-poblacion,true,The Fun Roof Poblacion,places/the-fun-roof-poblacion/the-fun-roof-poblacion-1.webp,matched
+Makati,MAKATI\the-garden-way-of-the-cross-1.png,the-garden-way-of-the-cross,true,The Garden Way of the Cross,places/the-garden-way-of-the-cross/the-garden-way-of-the-cross-1.webp,matched
+Makati,MAKATI\the-landmark-makati-1.jpg,the-landmark-makati,true,The Landmark Makati,places/the-landmark-makati/the-landmark-makati-1.webp,matched
+Makati,MAKATI\toyo-eatery-1.jpg,toyo-eatery,true,Toyo Eatery,places/toyo-eatery/toyo-eatery-1.webp,matched
+Makati,MAKATI\washington-sycip-park-1.jpg,washington-sycip-park,true,Washington SyCip Park,places/washington-sycip-park/washington-sycip-park-1.webp,matched
+Makati,MAKATI\yuchengco-museum-1.webp,yuchengco-museum,true,Yuchengco Museum,places/yuchengco-museum/yuchengco-museum-1.webp,matched
+Makati,MAKATI\z-hostel-rooftop-1.jpg,z-hostel-rooftop,true,Z Hostel Rooftop,places/z-hostel-rooftop/z-hostel-rooftop-1.webp,matched
+Malabon,MALABON\angel-cacnio-art-gallery-1.jpg,angel-cacnio-art-gallery,true,Angel Cacnio Art Gallery,places/angel-cacnio-art-gallery/angel-cacnio-art-gallery-1.webp,matched
+Malabon,MALABON\balsa-sa-niugan-1.jpg,balsa-sa-niugan,true,Balsa sa Niugan,places/balsa-sa-niugan/balsa-sa-niugan-1.webp,matched
+Malabon,MALABON\borja-ancestral-house-farmacia-borja-1.jpg,borja-ancestral-house-farmacia-borja,true,Borja Ancestral House / Farmacia Borja,places/borja-ancestral-house-farmacia-borja/borja-ancestral-house-farmacia-borja-1.webp,matched
+Malabon,MALABON\dionisio-house-1.jpg,dionisio-house,true,Dionisio House,places/dionisio-house/dionisio-house-1.webp,matched
+Malabon,MALABON\el-casa-katipunero-1.jpg,el-casa-katipunero,true,El Casa Katipunero,places/el-casa-katipunero/el-casa-katipunero-1.webp,matched
+Malabon,MALABON\fisher-box-office-malabon-1.jpg,fisher-box-office-malabon,true,Fisher Box Office Malabon,places/fisher-box-office-malabon/fisher-box-office-malabon-1.webp,matched
+Malabon,MALABON\fisher-mall-malabon-1.jpg,fisher-mall-malabon,true,Fisher Mall Malabon,places/fisher-mall-malabon/fisher-mall-malabon-1.webp,matched
+Malabon,MALABON\ibaviosa-ancestral-house-1.jpg,ibaviosa-ancestral-house,true,Ibaviosa Ancestral House,places/ibaviosa-ancestral-house/ibaviosa-ancestral-house-1.webp,matched
+Malabon,MALABON\judy-anns-crispy-pata-jamicos-restaurant-1.jpg,judy-anns-crispy-pata-jamicos-restaurant,true,Judy Ann's Crispy Pata / Jamico's Restaurant,places/judy-anns-crispy-pata-jamicos-restaurant/judy-anns-crispy-pata-jamicos-restaurant-1.webp,matched
+Malabon,MALABON\malabon-heritage-and-library-museum-1.jpg,malabon-heritage-and-library-museum,true,Malabon Heritage and Library Museum,places/malabon-heritage-and-library-museum/malabon-heritage-and-library-museum-1.webp,matched
+Malabon,MALABON\malabon-peoples-park-1.jpg,malabon-peoples-park,true,Malabon People's Park,places/malabon-peoples-park/malabon-peoples-park-1.webp,matched
+Malabon,MALABON\malabon-zoo-aquarium-and-botanical-garden-1.jpg,malabon-zoo-aquarium-and-botanical-garden,true,"Malabon Zoo, Aquarium and Botanical Garden",places/malabon-zoo-aquarium-and-botanical-garden/malabon-zoo-aquarium-and-botanical-garden-1.webp,matched
+Malabon,MALABON\master-cafe-malabon-1.jpg,master-cafe-malabon,true,Master Café Malabon,places/master-cafe-malabon/master-cafe-malabon-1.webp,matched
+Malabon,MALABON\master-garden-1.png,master-garden,true,Master Garden,places/master-garden/master-garden-1.webp,matched
+Malabon,MALABON\nanays-pancit-malabon-1.jpg,nanays-pancit-malabon,true,Nanay's Pancit Malabon,places/nanays-pancit-malabon/nanays-pancit-malabon-1.webp,matched
+Malabon,MALABON\nepomuceno-ancestral-house-1.jpg,nepomuceno-ancestral-house,true,Nepomuceno Ancestral House,places/nepomuceno-ancestral-house/nepomuceno-ancestral-house-1.webp,matched
+Malabon,MALABON\paez-house-1.jpg,paez-house,true,Paez House,places/paez-house/paez-house-1.webp,matched
+Malabon,MALABON\raymundo-ancestral-house-1.jpg,raymundo-ancestral-house,true,Raymundo Ancestral House,places/raymundo-ancestral-house/raymundo-ancestral-house-1.webp,matched
+Malabon,MALABON\rivera-ancestral-house-1.jpg,rivera-ancestral-house,true,Rivera Ancestral House,places/rivera-ancestral-house/rivera-ancestral-house-1.webp,matched
+Malabon,MALABON\robinsons-citisquare-cinema-malabon-citisquare-cinema-1.jpg,robinsons-citisquare-cinema-malabon-citisquare-cinema,true,Robinsons Citisquare Cinema / Malabon Citisquare Cinema,places/robinsons-citisquare-cinema-malabon-citisquare-cinema/robinsons-citisquare-cinema-malabon-citisquare-cinema-1.webp,matched
+Malabon,MALABON\robinsons-town-mall-malabon-1.jpg,robinsons-town-mall-malabon,true,Robinsons Town Mall Malabon,places/robinsons-town-mall-malabon/robinsons-town-mall-malabon-1.webp,matched
+Malabon,MALABON\san-bartolome-parish-church-1.jpg,san-bartolome-parish-church,true,San Bartolome Parish Church,places/san-bartolome-parish-church/san-bartolome-parish-church-1.webp,matched
+Malabon,MALABON\syjuco-mansion-syjuco-ancestral-house-1.jpg,syjuco-mansion-syjuco-ancestral-house,true,Syjuco Mansion / Syjuco Ancestral House,places/syjuco-mansion-syjuco-ancestral-house/syjuco-mansion-syjuco-ancestral-house-1.webp,matched
+Malabon,MALABON\teodoro-luna-house-1.jpg,teodoro-luna-house,true,Teodoro Luna House,places/teodoro-luna-house/teodoro-luna-house-1.webp,matched
+Mandaluyong,MANDALUYONG\bantayog-ng-kabataan-1.webp,bantayog-ng-kabataan,true,Bantayog ng Kabataan,places/bantayog-ng-kabataan/bantayog-ng-kabataan-1.webp,matched
+Mandaluyong,MANDALUYONG\breakout-philippines-shangri-la-plaza-1.jpg,breakout-philippines-shangri-la-plaza,true,Breakout Philippines Shangri-La Plaza,places/breakout-philippines-shangri-la-plaza/breakout-philippines-shangri-la-plaza-1.webp,matched
+Mandaluyong,MANDALUYONG\cantabria-by-chele-gonzalez-1.jpg,cantabria-by-chele-gonzalez,true,Cantabria by Chele Gonzalez,places/cantabria-by-chele-gonzalez/cantabria-by-chele-gonzalez-1.webp,matched
+Mandaluyong,MANDALUYONG\coffee-project-shaw-1.jpg,coffee-project-shaw,true,Coffee Project Shaw,places/coffee-project-shaw/coffee-project-shaw-1.webp,matched
+Mandaluyong,MANDALUYONG\dambana-ng-mga-alaala-1.jpg,dambana-ng-mga-alaala,true,Dambana ng mga Alaala,places/dambana-ng-mga-alaala/dambana-ng-mga-alaala-1.webp,matched
+Mandaluyong,MANDALUYONG\edsa-shangri-la-manila-1.jpg,edsa-shangri-la-manila,true,EDSA Shangri-La Manila,places/edsa-shangri-la-manila/edsa-shangri-la-manila-1.webp,matched
+Mandaluyong,MANDALUYONG\greenfield-district-central-park-1.jpg,greenfield-district-central-park,true,Greenfield District Central Park,places/greenfield-district-central-park/greenfield-district-central-park-1.webp,matched
+Mandaluyong,MANDALUYONG\greenfield-weekend-market-1.jpg,greenfield-weekend-market,true,Greenfield Weekend Market,places/greenfield-weekend-market/greenfield-weekend-market-1.webp,matched
+Mandaluyong,MANDALUYONG\greenfield-weekend-market-food-truck-food-market-area-1.jpg,greenfield-weekend-market-food-truck-food-market-area,true,Greenfield Weekend Market Food Truck / Food Market Area,places/greenfield-weekend-market-food-truck-food-market-area/greenfield-weekend-market-food-truck-food-market-area-1.webp,matched
+Mandaluyong,MANDALUYONG\juniper-by-josh-boutwood-1.jpg,juniper-by-josh-boutwood,true,Juniper by Josh Boutwood,places/juniper-by-josh-boutwood/juniper-by-josh-boutwood-1.webp,matched
+Mandaluyong,MANDALUYONG\kaban-ng-hiyas-1.png,kaban-ng-hiyas,true,Kaban ng Hiyas,places/kaban-ng-hiyas/kaban-ng-hiyas-1.webp,matched
+Mandaluyong,MANDALUYONG\kidzoona-shangri-la-plaza-1.jpg,kidzoona-shangri-la-plaza,true,Kidzooona Shangri-La Plaza,places/kidzoona-shangri-la-plaza/kidzoona-shangri-la-plaza-1.webp,matched
+Mandaluyong,MANDALUYONG\liwasang-katubusan-liberation-plaza-1.jpg,liwasang-katubusan-liberation-plaza,true,Liwasang Katubusan / Liberation Plaza,places/liwasang-katubusan-liberation-plaza/liwasang-katubusan-liberation-plaza-1.webp,matched
+Mandaluyong,MANDALUYONG\mandala-park-1.jpg,mandala-park,true,Mandala Park,places/mandala-park/mandala-park-1.webp,matched
+Mandaluyong,MANDALUYONG\novotel-suites-manila-at-acqua-1.jpg,novotel-suites-manila-at-acqua,true,Novotel Suites Manila at Acqua,places/novotel-suites-manila-at-acqua/novotel-suites-manila-at-acqua-1.webp,matched
+Mandaluyong,MANDALUYONG\now-now-1.jpg,now-now,true,Now Now,places/now-now/now-now-1.webp,matched
+Mandaluyong,MANDALUYONG\nueve-cafe-1.jpg,nueve-cafe,true,Nueve Café,places/nueve-cafe/nueve-cafe-1.webp,matched
+Mandaluyong,MANDALUYONG\osteria-antica-1.jpg,osteria-antica,true,Osteria Antica,places/osteria-antica/osteria-antica-1.webp,matched
+Mandaluyong,MANDALUYONG\pats-putts-shangri-la-plaza-1.png,pats-putts-shangri-la-plaza,true,Pat’s Putts Shangri-La Plaza,places/pats-putts-shangri-la-plaza/pats-putts-shangri-la-plaza-1.webp,matched
+Mandaluyong,MANDALUYONG\plain-sight-coffee-hq-1.jpg,plain-sight-coffee-hq,true,Plain Sight Coffee HQ,places/plain-sight-coffee-hq/plain-sight-coffee-hq-1.webp,matched
+Mandaluyong,MANDALUYONG\plaza-tatlong-bayani-1.jpg,plaza-tatlong-bayani,true,Plaza Tatlong Bayani,places/plaza-tatlong-bayani/plaza-tatlong-bayani-1.webp,matched
+Mandaluyong,MANDALUYONG\rizal-monument-mandaluyong-1.jpg,rizal-monument-mandaluyong,true,Rizal Monument Mandaluyong,places/rizal-monument-mandaluyong/rizal-monument-mandaluyong-1.webp,matched
+Mandaluyong,MANDALUYONG\san-felipe-neri-parish-church-1.jpg,san-felipe-neri-parish-church,true,San Felipe Neri Parish Church,places/san-felipe-neri-parish-church/san-felipe-neri-parish-church-1.webp,matched
+Mandaluyong,MANDALUYONG\sanctuario-de-san-jose-1.jpg,sanctuario-de-san-jose,true,Santuario de San Jose,places/sanctuario-de-san-jose/sanctuario-de-san-jose-1.webp,matched
+Mandaluyong,MANDALUYONG\shangri-la-plaza-1.png,shangri-la-plaza,true,Shangri-La Plaza,places/shangri-la-plaza/shangri-la-plaza-1.webp,matched
+Mandaluyong,MANDALUYONG\shaw-center-mall-1.jpg,shaw-center-mall,true,Shaw Center Mall,places/shaw-center-mall/shaw-center-mall-1.webp,matched
+Mandaluyong,MANDALUYONG\sm-bowling-megamall-1.jpg,sm-bowling-megamall,true,SM Bowling Megamall,places/sm-bowling-megamall/sm-bowling-megamall-1.webp,matched
+Mandaluyong,MANDALUYONG\sm-center-shaw-1.jpg,sm-center-shaw,true,SM Center Shaw,places/sm-center-shaw/sm-center-shaw-1.webp,matched
+Mandaluyong,MANDALUYONG\sm-cinema-megamall-imax-megamall-1.jpg,sm-cinema-megamall-imax-megamall,true,SM Cinema Megamall / IMAX Megamall,places/sm-cinema-megamall-imax-megamall/sm-cinema-megamall-imax-megamall-1.webp,matched
+Mandaluyong,MANDALUYONG\sm-megamall-1.png,sm-megamall,true,SM Megamall,places/sm-megamall/sm-megamall-1.webp,matched
+Mandaluyong,MANDALUYONG\sm-skating-megamall-1.jpg,sm-skating-megamall,true,SM Skating Megamall,places/sm-skating-megamall/sm-skating-megamall-1.webp,matched
+Mandaluyong,MANDALUYONG\smdc-light-mall-1.jpg,smdc-light-mall,true,SMDC Light Mall,places/smdc-light-mall/smdc-light-mall-1.webp,matched
+Mandaluyong,MANDALUYONG\sputnik-aviation-airline-experience-1.jpg,sputnik-aviation-airline-experience,true,Sputnik Aviation Airline Experience,places/sputnik-aviation-airline-experience/sputnik-aviation-airline-experience-1.webp,matched
+Mandaluyong,MANDALUYONG\st-francis-square-1.png,st-francis-square,true,St. Francis Square,places/st-francis-square/st-francis-square-1.webp,matched
+Mandaluyong,MANDALUYONG\summer-palace-at-edsa-shangri-la-1.jpg,summer-palace-at-edsa-shangri-la,true,Summer Palace at Edsa Shangri-La,places/summer-palace-at-edsa-shangri-la/summer-palace-at-edsa-shangri-la-1.webp,matched
+Mandaluyong,MANDALUYONG\the-giving-cafe-1.jpg,the-giving-cafe,true,The Giving Café,places/the-giving-cafe/the-giving-cafe-1.webp,matched
+Mandaluyong,MANDALUYONG\the-marketplace-shopping-mall-kalentong-1.png,the-marketplace-shopping-mall-kalentong,true,The Marketplace Shopping Mall Kalentong,places/the-marketplace-shopping-mall-kalentong/the-marketplace-shopping-mall-kalentong-1.webp,matched
+Mandaluyong,MANDALUYONG\the-podium-1.jpg,the-podium,true,The Podium,places/the-podium/the-podium-1.webp,matched
+Mandaluyong,MANDALUYONG\the-westin-manila-1.jpg,the-westin-manila,true,The Westin Manila,places/the-westin-manila/the-westin-manila-1.webp,matched
+Mandaluyong,MANDALUYONG\timezone-sm-megamall-1.jpg,timezone-sm-megamall,true,Timezone SM Megamall,places/timezone-sm-megamall/timezone-sm-megamall-1.webp,matched
+Mandaluyong,MANDALUYONG\wack-wack-golf-and-country-club-1.jpg,wack-wack-golf-and-country-club,true,Wack Wack Golf and Country Club,places/wack-wack-golf-and-country-club/wack-wack-golf-and-country-club-1.webp,matched
+Mandaluyong,MANDALUYONG\world-of-fun-sm-megamall-1.jpg,world-of-fun-sm-megamall,true,World of Fun SM Megamall,places/world-of-fun-sm-megamall/world-of-fun-sm-megamall-1.webp,matched
+Manila,MANILA\168-shopping-mall-1.jpg,168-shopping-mall,true,168 Shopping Mall,places/168-shopping-mall/168-shopping-mall-1.webp,matched
+Manila,MANILA\999-shopping-mall-1.jpg,999-shopping-mall,true,999 Shopping Mall,places/999-shopping-mall/999-shopping-mall-1.webp,matched
+Manila,MANILA\arroceros-forest-park-1.jpg,arroceros-forest-park,true,Arroceros Forest Park,places/arroceros-forest-park/arroceros-forest-park-1.webp,matched
+Manila,MANILA\baluarte-de-san-diego-1.jpg,baluarte-de-san-diego,true,Baluarte de San Diego,places/baluarte-de-san-diego/baluarte-de-san-diego-1.webp,matched
+Manila,MANILA\barbaras-heritage-restaurant-1.jpg,barbaras-heritage-restaurant,true,Barbara’s Heritage Restaurant,places/barbaras-heritage-restaurant/barbaras-heritage-restaurant-1.webp,matched
+Manila,MANILA\bayleaf-intramuros-1.webp,bayleaf-intramuros,true,Bayleaf Intramuros,places/bayleaf-intramuros/bayleaf-intramuros-1.webp,matched
+Manila,MANILA\binondo-chinatown-1.jpg,binondo-chinatown,true,Binondo Chinatown,places/binondo-chinatown/binondo-chinatown-1.webp,matched
+Manila,MANILA\binondo-church-1.jpg,binondo-church,true,Binondo Church,places/binondo-church/binondo-church-1.webp,matched
+Manila,MANILA\cafe-ilang-ilang-at-the-manila-hotel-1.jpg,cafe-ilang-ilang-at-the-manila-hotel,true,Cafe Ilang-Ilang at The Manila Hotel,places/cafe-ilang-ilang-at-the-manila-hotel/cafe-ilang-ilang-at-the-manila-hotel-1.webp,matched
+Manila,MANILA\casa-manila-1.jpg,casa-manila,true,Casa Manila,places/casa-manila/casa-manila-1.webp,matched
+Manila,MANILA\centro-de-turismo-intramuros-1.jpg,centro-de-turismo-intramuros,true,Centro de Turismo Intramuros,places/centro-de-turismo-intramuros/centro-de-turismo-intramuros-1.webp,matched
+Manila,MANILA\divisoria-market-1.jpg,divisoria-market,true,Divisoria Market,places/divisoria-market/divisoria-market-1.webp,matched
+Manila,MANILA\eng-bee-tin-binondo-1.jpg,eng-bee-tin-binondo,true,Eng Bee Tin Binondo,places/eng-bee-tin-binondo/eng-bee-tin-binondo-1.webp,matched
+Manila,MANILA\escolta-coffee-company-1.jpg,escolta-coffee-company,true,Escolta Coffee Company,places/escolta-coffee-company/escolta-coffee-company-1.webp,matched
+Manila,MANILA\first-united-building-1.jpg,first-united-building,true,First United Building,places/first-united-building/first-united-building-1.webp,matched
+Manila,MANILA\fort-santiago-1.jpg,fort-santiago,true,Fort Santiago,places/fort-santiago/fort-santiago-1.webp,matched
+Manila,MANILA\hub-make-lab-1.jpg,hub-make-lab,true,HUB: Make Lab,places/hub-make-lab/hub-make-lab-1.webp,matched
+Manila,MANILA\ilustrado-restaurant-1.webp,ilustrado-restaurant,true,Ilustrado Restaurant,places/ilustrado-restaurant/ilustrado-restaurant-1.webp,matched
+Manila,MANILA\intramuros-1.jpg,intramuros,true,Intramuros,places/intramuros/intramuros-1.webp,matched
+Manila,MANILA\jones-bridge-1.jpg,jones-bridge,true,Jones Bridge,places/jones-bridge/jones-bridge-1.webp,matched
+Manila,MANILA\la-cathedral-cafe-1.jpg,la-cathedral-cafe,true,La Cathedral Cafe,places/la-cathedral-cafe/la-cathedral-cafe-1.webp,matched
+Manila,MANILA\lucky-chinatown-cinemas-1.jpg,lucky-chinatown-cinemas,true,Lucky Chinatown Cinemas,places/lucky-chinatown-cinemas/lucky-chinatown-cinemas-1.webp,matched
+Manila,MANILA\lucky-chinatown-mall-1.png,lucky-chinatown-mall,true,Lucky Chinatown Mall,places/lucky-chinatown-mall/lucky-chinatown-mall-1.webp,matched
+Manila,MANILA\malate-church-1.jpg,malate-church,true,Malate Church,places/malate-church/malate-church-1.webp,matched
+Manila,MANILA\manila-cathedral-1.jpg,manila-cathedral,true,Manila Cathedral,places/manila-cathedral/manila-cathedral-1.webp,matched
+Manila,MANILA\manila-clock-tower-museum-1.jpg,manila-clock-tower-museum,true,Manila Clock Tower Museum,places/manila-clock-tower-museum/manila-clock-tower-museum-1.webp,matched
+Manila,MANILA\manila-ocean-park-1.png,manila-ocean-park,true,Manila Ocean Park,places/manila-ocean-park/manila-ocean-park-1.webp,matched
+Manila,MANILA\manila-zoo-1.jpg,manila-zoo,true,Manila Zoo,places/manila-zoo/manila-zoo-1.webp,matched
+Manila,MANILA\metropolitan-theater-1.jpg,metropolitan-theater,true,Metropolitan Theater,places/metropolitan-theater/metropolitan-theater-1.webp,matched
+Manila,MANILA\museo-de-intramuros-1.jpg,museo-de-intramuros,true,Museo de Intramuros,places/museo-de-intramuros/museo-de-intramuros-1.webp,matched
+Manila,MANILA\national-museum-of-fine-arts-1.jpg,national-museum-of-fine-arts,true,National Museum of Fine Arts,places/national-museum-of-fine-arts/national-museum-of-fine-arts-1.webp,matched
+Manila,MANILA\national-museum-of-natural-history-1.jpg,national-museum-of-natural-history,true,National Museum of Natural History,places/national-museum-of-natural-history/national-museum-of-natural-history-1.webp,matched
+Manila,MANILA\paco-park-1.jpg,paco-park,true,Paco Park,places/paco-park/paco-park-1.webp,matched
+Manila,MANILA\plaza-moriones-1.jpg,plaza-moriones,true,Plaza Moriones,places/plaza-moriones/plaza-moriones-1.webp,matched
+Manila,MANILA\plaza-roma-1.jpg,plaza-roma,true,Plaza Roma,places/plaza-roma/plaza-roma-1.webp,matched
+Manila,MANILA\plaza-san-luis-complex-1.jpg,plaza-san-luis-complex,true,Plaza San Luis Complex,places/plaza-san-luis-complex/plaza-san-luis-complex-1.webp,matched
+Manila,MANILA\puerta-real-gardens-1.jpg,puerta-real-gardens,true,Puerta Real Gardens,places/puerta-real-gardens/puerta-real-gardens-1.webp,matched
+Manila,MANILA\quiapo-church-1.jpg,quiapo-church,true,Quiapo Church,places/quiapo-church/quiapo-church-1.webp,matched
+Manila,MANILA\quinta-market-1.jpg,quinta-market,true,Quinta Market,places/quinta-market/quinta-market-1.webp,matched
+Manila,MANILA\rizal-monument-1.jpg,rizal-monument,true,Rizal Monument,places/rizal-monument/rizal-monument-1.webp,matched
+Manila,MANILA\rizal-park-luneta-park-1.webp,rizal-park-luneta-park,true,Rizal Park / Luneta Park,places/rizal-park-luneta-park/rizal-park-luneta-park-1.webp,matched
+Manila,MANILA\robinsons-movieworld-manila-1.jpg,robinsons-movieworld-manila,true,Robinsons Movieworld Manila,places/robinsons-movieworld-manila/robinsons-movieworld-manila-1.webp,matched
+Manila,MANILA\robinsons-place-manila-1.jpg,robinsons-place-manila,true,Robinsons Place Manila,places/robinsons-place-manila/robinsons-place-manila-1.webp,matched
+Manila,MANILA\san-agustin-church-1.jpg,san-agustin-church,true,San Agustin Church,places/san-agustin-church/san-agustin-church-1.webp,matched
+Manila,MANILA\san-agustin-museum-1.png,san-agustin-museum,true,San Agustin Museum,places/san-agustin-museum/san-agustin-museum-1.webp,matched
+Manila,MANILA\san-sebastian-basilica-1.jpg,san-sebastian-basilica,true,San Sebastian Basilica,places/san-sebastian-basilica/san-sebastian-basilica-1.webp,matched
+Manila,MANILA\santa-cruz-church-1.jpg,santa-cruz-church,true,Santa Cruz Church,places/santa-cruz-church/santa-cruz-church-1.webp,matched
+Manila,MANILA\sm-cinema-manila-1.jpg,sm-cinema-manila,true,SM Cinema Manila,places/sm-cinema-manila/sm-cinema-manila-1.webp,matched
+Manila,MANILA\sm-city-manila-1.jpg,sm-city-manila,true,SM City Manila,places/sm-city-manila/sm-city-manila-1.webp,matched
+Manila,MANILA\the-manila-hotel-1.jpg,the-manila-hotel,true,The Manila Hotel,places/the-manila-hotel/the-manila-hotel-1.webp,matched
+Manila,MANILA\tutuban-center-1.jpg,tutuban-center,true,Tutuban Center,places/tutuban-center/tutuban-center-1.webp,matched
+Marikina,MARIKINA\ayala-malls-marikina-1.jpg,ayala-malls-marikina,true,Ayala Malls Marikina,places/ayala-malls-marikina/ayala-malls-marikina-1.webp,matched
+Marikina,MARIKINA\blakes-wings-steaks-marikina-1.jpg,blakes-wings-steaks-marikina,true,Blake’s Wings & Steaks Marikina,places/blakes-wings-steaks-marikina/blakes-wings-steaks-marikina-1.webp,matched
+Marikina,MARIKINA\burrito-brothers-marikina-1.jpg,burrito-brothers-marikina,true,Burrito Brothers Marikina,places/burrito-brothers-marikina/burrito-brothers-marikina-1.webp,matched
+Marikina,MARIKINA\ca-phe-saigon-1.jpg,ca-phe-saigon,true,Ca Phe Saigon,places/ca-phe-saigon/ca-phe-saigon-1.webp,matched
+Marikina,MARIKINA\cafe-lidia-1.jpg,cafe-lidia,true,Cafe Lidia,places/cafe-lidia/cafe-lidia-1.webp,matched
+Marikina,MARIKINA\comedor-by-miguel-maria-1.webp,comedor-by-miguel-maria,true,Comedor by Miguel & Maria,places/comedor-by-miguel-maria/comedor-by-miguel-maria-1.webp,matched
+Marikina,MARIKINA\delicere-1.jpg,delicere,true,Delicere,places/delicere/delicere-1.webp,matched
+Marikina,MARIKINA\fino-deli-1.jpg,fino-deli,true,Fino Deli,places/fino-deli/fino-deli-1.webp,matched
+Marikina,MARIKINA\forget-me-not-cafe-marikina-1.jpg,forget-me-not-cafe-marikina,true,Forget Me Not Café Marikina,places/forget-me-not-cafe-marikina/forget-me-not-cafe-marikina-1.webp,matched
+Marikina,MARIKINA\jardin-ni-lola-1.jpg,jardin-ni-lola,true,Jardin ni Lola,places/jardin-ni-lola/jardin-ni-lola-1.webp,matched
+Marikina,MARIKINA\kapitan-moy-cultural-center-1.jpg,kapitan-moy-cultural-center,true,Kapitan Moy Cultural Center,places/kapitan-moy-cultural-center/kapitan-moy-cultural-center-1.webp,matched
+Marikina,MARIKINA\krung-thai-1.jpg,krung-thai,true,Krung Thai,places/krung-thai/krung-thai-1.webp,matched
+Marikina,MARIKINA\marikina-river-park-1.webp,marikina-river-park,true,Marikina River Park,places/marikina-river-park/marikina-river-park-1.webp,matched
+Marikina,MARIKINA\marikina-shoe-museum-1.webp,marikina-shoe-museum,true,Marikina Shoe Museum,places/marikina-shoe-museum/marikina-shoe-museum-1.webp,matched
+Marikina,MARIKINA\miguel-maria-marikina-1.jpg,miguel-maria-marikina,true,Miguel & Maria Marikina,places/miguel-maria-marikina/miguel-maria-marikina-1.webp,matched
+Marikina,MARIKINA\otto-shoe-museum-and-cafe-1.jpg,otto-shoe-museum-and-cafe,true,OTTO Shoe Museum and Cafe,places/otto-shoe-museum-and-cafe/otto-shoe-museum-and-cafe-1.webp,matched
+Marikina,MARIKINA\our-lady-of-the-abandoned-church-1.jpg,our-lady-of-the-abandoned-church,true,Our Lady of the Abandoned Church,places/our-lady-of-the-abandoned-church/our-lady-of-the-abandoned-church-1.webp,matched
+Marikina,MARIKINA\over-easy-marikina-1.webp,over-easy-marikina,true,Over Easy Marikina,places/over-easy-marikina/over-easy-marikina-1.webp,matched
+Marikina,MARIKINA\pan-de-amerikana-1.jpg,pan-de-amerikana,true,Pan de Amerikana,places/pan-de-amerikana/pan-de-amerikana-1.webp,matched
+Marikina,MARIKINA\riverbanks-center-1.jpg,riverbanks-center,true,Riverbanks Center,places/riverbanks-center/riverbanks-center-1.webp,matched
+Marikina,MARIKINA\rustic-mornings-by-isabelo-1.jpg,rustic-mornings-by-isabelo,true,Rustic Mornings by Isabelo,places/rustic-mornings-by-isabelo/rustic-mornings-by-isabelo-1.webp,matched
+Marikina,MARIKINA\sm-cinema-marikina-1.jpg,sm-cinema-marikina,true,SM Cinema Marikina,places/sm-cinema-marikina/sm-cinema-marikina-1.webp,matched
+Marikina,MARIKINA\sm-city-marikina-1.jpg,sm-city-marikina,true,SM City Marikina,places/sm-city-marikina/sm-city-marikina-1.webp,matched
+Marikina,MARIKINA\sundays-cafe-and-restaurant-1.webp,sundays-cafe-and-restaurant,true,Sundays Cafe and Restaurant,places/sundays-cafe-and-restaurant/sundays-cafe-and-restaurant-1.webp,matched
+Muntinlupa,MUNTINLUPA\acacia-hotel-manila-1.jpg,acacia-hotel-manila,true,Acacia Hotel Manila,places/acacia-hotel-manila/acacia-hotel-manila-1.webp,matched
+Muntinlupa,MUNTINLUPA\alabang-town-center-1.jpg,alabang-town-center,true,Alabang Town Center,places/alabang-town-center/alabang-town-center-1.webp,matched
+Muntinlupa,MUNTINLUPA\alabang-town-center-cinemas-1.jpg,alabang-town-center-cinemas,true,Alabang Town Center Cinemas,places/alabang-town-center-cinemas/alabang-town-center-cinemas-1.webp,matched
+Muntinlupa,MUNTINLUPA\auro-bistro-alabang-1.jpg,auro-bistro-alabang,true,Auro Bistro Alabang,places/auro-bistro-alabang/auro-bistro-alabang-1.webp,matched
+Muntinlupa,MUNTINLUPA\ayala-malls-south-park-1.jpg,ayala-malls-south-park,true,Ayala Malls South Park,places/ayala-malls-south-park/ayala-malls-south-park-1.webp,matched
+Muntinlupa,MUNTINLUPA\ayala-malls-south-park-cinemas-1.jpg,ayala-malls-south-park-cinemas,true,Ayala Malls South Park Cinemas,places/ayala-malls-south-park-cinemas/ayala-malls-south-park-cinemas-1.webp,matched
+Muntinlupa,MUNTINLUPA\azumi-boutique-hotel-1.jpg,azumi-boutique-hotel,true,Azumi Boutique Hotel,places/azumi-boutique-hotel/azumi-boutique-hotel-1.webp,matched
+Muntinlupa,MUNTINLUPA\biological-production-services-building-1.jpg,biological-production-services-building,true,Biological Production Services Building,places/biological-production-services-building/biological-production-services-building-1.webp,matched
+Muntinlupa,MUNTINLUPA\buglas-isla-cafe-westgate-1.jfif,buglas-isla-cafe-westgate,true,Buglas Isla Cafe Westgate,places/buglas-isla-cafe-westgate/buglas-isla-cafe-westgate-1.webp,matched
+Muntinlupa,MUNTINLUPA\bungalow-cafe-bakery-1.webp,bungalow-cafe-bakery,true,Bungalow Cafe & Bakery,places/bungalow-cafe-bakery/bungalow-cafe-bakery-1.webp,matched
+Muntinlupa,MUNTINLUPA\cafe-eight-1.jpg,cafe-eight,true,Cafe Eight,places/cafe-eight/cafe-eight-1.webp,matched
+Muntinlupa,MUNTINLUPA\commercenter-alabang-1.jpg,commercenter-alabang,true,CommerceCenter Alabang,places/commercenter-alabang/commercenter-alabang-1.webp,matched
+Muntinlupa,MUNTINLUPA\festival-cinemas-1.jpg,festival-cinemas,true,Festival Cinemas,places/festival-cinemas/festival-cinemas-1.webp,matched
+Muntinlupa,MUNTINLUPA\festival-mall-alabang-1.jpg,festival-mall-alabang,true,Festival Mall Alabang,places/festival-mall-alabang/festival-mall-alabang-1.webp,matched
+Muntinlupa,MUNTINLUPA\filinvest-city-central-park-1.jpg,filinvest-city-central-park,true,Filinvest City Central Park,places/filinvest-city-central-park/filinvest-city-central-park-1.webp,matched
+Muntinlupa,MUNTINLUPA\molito-lifestyle-center-1.png,molito-lifestyle-center,true,Molito Lifestyle Center,places/molito-lifestyle-center/molito-lifestyle-center-1.webp,matched
+Muntinlupa,MUNTINLUPA\museo-ng-muntinlupa-1.jpg,museo-ng-muntinlupa,true,Museo ng Muntinlupa,places/museo-ng-muntinlupa/museo-ng-muntinlupa-1.webp,matched
+Muntinlupa,MUNTINLUPA\neils-kitchen-1.jfif,neils-kitchen,true,Neil's Kitchen,places/neils-kitchen/neils-kitchen-1.webp,matched
+Muntinlupa,MUNTINLUPA\parque-espana-residence-hotel-1.jpg,parque-espana-residence-hotel,true,Parque España Residence Hotel,places/parque-espana-residence-hotel/parque-espana-residence-hotel-1.webp,matched
+Muntinlupa,MUNTINLUPA\pixie-forest-festival-mall-1.jpg,pixie-forest-festival-mall,true,Pixie Forest Festival Mall,places/pixie-forest-festival-mall/pixie-forest-festival-mall-1.webp,matched
+Muntinlupa,MUNTINLUPA\quest-plus-conference-center-manila-1.jpg,quest-plus-conference-center-manila,true,Quest Plus Conference Center Manila,places/quest-plus-conference-center-manila/quest-plus-conference-center-manila-1.webp,matched
+Muntinlupa,MUNTINLUPA\ramen-yushoken-alabang-1.webp,ramen-yushoken-alabang,true,Ramen Yushoken Alabang,places/ramen-yushoken-alabang/ramen-yushoken-alabang-1.webp,matched
+Muntinlupa,MUNTINLUPA\somerset-alabang-manila-1.jpg,somerset-alabang-manila,true,Somerset Alabang Manila,places/somerset-alabang-manila/somerset-alabang-manila-1.webp,matched
+Muntinlupa,MUNTINLUPA\spectrum-linear-park-1.jpg,spectrum-linear-park,true,Spectrum Linear Park,places/spectrum-linear-park/spectrum-linear-park-1.webp,matched
+Muntinlupa,MUNTINLUPA\the-bellevue-manila-1.jpg,the-bellevue-manila,true,The Bellevue Manila,places/the-bellevue-manila/the-bellevue-manila-1.webp,matched
+Muntinlupa,MUNTINLUPA\the-black-pig-1.jpg,the-black-pig,true,The Black Pig,places/the-black-pig/the-black-pig-1.webp,matched
+Muntinlupa,MUNTINLUPA\the-nest-dining-in-the-sky-1.jpg,the-nest-dining-in-the-sky,true,The Nest Dining in the Sky,places/the-nest-dining-in-the-sky/the-nest-dining-in-the-sky-1.webp,matched
+Muntinlupa,MUNTINLUPA\timezone-alabang-town-center-1.jfif,timezone-alabang-town-center,true,Timezone Alabang Town Center,places/timezone-alabang-town-center/timezone-alabang-town-center-1.webp,matched
+Muntinlupa,MUNTINLUPA\timezone-festival-mall-1.webp,timezone-festival-mall,true,Timezone Festival Mall,places/timezone-festival-mall/timezone-festival-mall-1.webp,matched
+Muntinlupa,MUNTINLUPA\vivere-hotel-alabang-1.jpg,vivere-hotel-alabang,true,Vivere Hotel Alabang,places/vivere-hotel-alabang/vivere-hotel-alabang-1.webp,matched
+Muntinlupa,MUNTINLUPA\vue-bar-1.jpg,vue-bar,true,Vue Bar,places/vue-bar/vue-bar-1.webp,matched
+Muntinlupa,MUNTINLUPA\westgate-center-alabang-1.jpg,westgate-center-alabang,true,Westgate Center Alabang,places/westgate-center-alabang/westgate-center-alabang-1.webp,matched
+Muntinlupa,MUNTINLUPA\x-site-festival-mall-1.jpg,x-site-festival-mall,true,X-Site Festival Mall,places/x-site-festival-mall/x-site-festival-mall-1.webp,matched
+Navotas,NAVOTAS\biancafe-by-meatin-place-1.jpg,biancafe-by-meatin-place,true,BianCafe by Meat’in Place,places/biancafe-by-meatin-place/biancafe-by-meatin-place-1.webp,matched
+Navotas,NAVOTAS\coffee-by-monday-mornings-1.jpg,coffee-by-monday-mornings,true,Coffee by Monday Mornings,places/coffee-by-monday-mornings/coffee-by-monday-mornings-1.webp,matched
+Navotas,NAVOTAS\diocesan-shrine-and-parish-of-san-jose-de-navotas-1.jpg,diocesan-shrine-and-parish-of-san-jose-de-navotas,true,Diocesan Shrine and Parish of San Jose de Navotas,places/diocesan-shrine-and-parish-of-san-jose-de-navotas/diocesan-shrine-and-parish-of-san-jose-de-navotas-1.webp,matched
+Navotas,NAVOTAS\mbar-restaurant-thembar-house-of-cocktails-1.jpg,mbar-restaurant-thembar-house-of-cocktails,true,Mbar Restaurant / TheMbar House of Cocktails,places/mbar-restaurant-thembar-house-of-cocktails/mbar-restaurant-thembar-house-of-cocktails-1.webp,matched
+Navotas,NAVOTAS\ms-noah-food-park-1.jfif,ms-noah-food-park,true,M/S Noah Food Park,places/ms-noah-food-park/ms-noah-food-park-1.webp,matched
+Navotas,NAVOTAS\navotas-centennial-park-1.jfif,navotas-centennial-park,true,Navotas Centennial Park,places/navotas-centennial-park/navotas-centennial-park-1.webp,matched
+Navotas,NAVOTAS\navotas-citywalk-and-amphitheater-1.jfif,navotas-citywalk-and-amphitheater,true,Navotas Citywalk and Amphitheater,places/navotas-citywalk-and-amphitheater/navotas-citywalk-and-amphitheater-1.webp,matched
+Navotas,NAVOTAS\noki-kopi-navotas-1.jpg,noki-kopi-navotas,true,Noki Kopi Navotas,places/noki-kopi-navotas/noki-kopi-navotas-1.webp,matched
+Navotas,NAVOTAS\oppas-korean-cafe-1.jpg,oppas-korean-cafe,true,Oppa’s Korean Cafe,places/oppas-korean-cafe/oppas-korean-cafe-1.webp,matched
+Navotas,NAVOTAS\san-lorenzo-ruiz-and-companion-martyrs-parish.jpg,san-lorenzo-ruiz-and-companion-martyrs-parish,true,San Lorenzo Ruiz and Companion Martyrs Parish,places/san-lorenzo-ruiz-and-companion-martyrs-parish/san-lorenzo-ruiz-and-companion-martyrs-parish-1.webp,matched
+Navotas,NAVOTAS\villas-at-casadea-1.jpg,villas-at-casadea,true,Villas at Casadea,places/villas-at-casadea/villas-at-casadea-1.webp,matched
+Paranaque,PARANAQUE\101-luna-resto-x-cafe-1.jpg,101-luna-resto-x-cafe,true,101 LUNA Resto x Café,places/101-luna-resto-x-cafe/101-luna-resto-x-cafe-1.webp,matched
+Paranaque,PARANAQUE\88-square-mall-1.jpg,88-square-mall,true,88 Square Mall,places/88-square-mall/88-square-mall-1.webp,matched
+Paranaque,PARANAQUE\a-museum-immersive-art-universe-1.jpg,a-museum-immersive-art-universe,true,A Museum / Immersive Art Universe,places/a-museum-immersive-art-universe/a-museum-immersive-art-universe-1.webp,matched
+Paranaque,PARANAQUE\ayala-malls-cinemas-manila-bay-1.jpg,ayala-malls-cinemas-manila-bay,true,Ayala Malls Cinemas Manila Bay,places/ayala-malls-cinemas-manila-bay/ayala-malls-cinemas-manila-bay-1.webp,matched
+Paranaque,PARANAQUE\ayala-malls-manila-bay-1.jpg,ayala-malls-manila-bay,true,Ayala Malls Manila Bay,places/ayala-malls-manila-bay/ayala-malls-manila-bay-1.webp,matched
+Paranaque,PARANAQUE\baclaran-church-1.jpg,baclaran-church,true,Baclaran Church,places/baclaran-church/baclaran-church-1.webp,matched
+Paranaque,PARANAQUE\bamba-bistro-1.jpg,bamba-bistro,true,Bamba Bistro,places/bamba-bistro/bamba-bistro-1.webp,matched
+Paranaque,PARANAQUE\brb-baccarat-room-bar-solaire-1.webp,brb-baccarat-room-bar-solaire,true,"BRB Baccarat Room & Bar, Solaire",places/brb-baccarat-room-bar-solaire/brb-baccarat-room-bar-solaire-1.webp,matched
+Paranaque,PARANAQUE\centerplay-city-of-dreams-manila-1.jpg,centerplay-city-of-dreams-manila,true,"CenterPlay, City of Dreams Manila",places/centerplay-city-of-dreams-manila/centerplay-city-of-dreams-manila-1.webp,matched
+Paranaque,PARANAQUE\city-of-dreams-manila-1.jpg,city-of-dreams-manila,true,City of Dreams Manila,places/city-of-dreams-manila/city-of-dreams-manila-1.webp,matched
+Paranaque,PARANAQUE\concordias-cafe-1.webp,concordias-cafe,true,Concordia’s Cafe,places/concordias-cafe/concordias-cafe-1.webp,matched
+Paranaque,PARANAQUE\dreamplay-city-of-dreams-manila-1.jpg,dreamplay-city-of-dreams-manila,true,DreamPlay City of Dreams Manila,places/dreamplay-city-of-dreams-manila/dreamplay-city-of-dreams-manila-1.webp,matched
+Paranaque,PARANAQUE\duty-free-philippines-fiestamall-1.jpg,duty-free-philippines-fiestamall,true,Duty Free Philippines Fiestamall,places/duty-free-philippines-fiestamall/duty-free-philippines-fiestamall-1.webp,matched
+Paranaque,PARANAQUE\elorde-sports-center-1.webp,elorde-sports-center,true,Elorde Sports Center,places/elorde-sports-center/elorde-sports-center-1.webp,matched
+Paranaque,PARANAQUE\fig-kitchen-cafe-1.jpg,fig-kitchen-cafe,true,FIG Kitchen & Cafe,places/fig-kitchen-cafe/fig-kitchen-cafe-1.webp,matched
+Paranaque,PARANAQUE\ginza-nagaoka-1.jpg,ginza-nagaoka,true,Ginza Nagaoka,places/ginza-nagaoka/ginza-nagaoka-1.webp,matched
+Paranaque,PARANAQUE\grand-westside-manila-bay-1.jpg,grand-westside-manila-bay,true,Grand Westside Manila Bay,places/grand-westside-manila-bay/grand-westside-manila-bay-1.webp,matched
+Paranaque,PARANAQUE\kingsford-hotel-manila-1.jpg,kingsford-hotel-manila,true,Kingsford Hotel Manila,places/kingsford-hotel-manila/kingsford-hotel-manila-1.webp,matched
+Paranaque,PARANAQUE\kumba-dining-1.jpg,kumba-dining,true,Kumba Dining,places/kumba-dining/kumba-dining-1.webp,matched
+Paranaque,PARANAQUE\la-chinesca-bf-homes-1.jpg,la-chinesca-bf-homes,true,La Chinesca BF Homes,places/la-chinesca-bf-homes/la-chinesca-bf-homes-1.webp,matched
+Paranaque,PARANAQUE\las-pinas-paranaque-wetland-park-1.jpg,las-pinas-paranaque-wetland-park,true,Las Piñas-Parañaque Wetland Park,places/las-pinas-paranaque-wetland-park/las-pinas-paranaque-wetland-park-1.webp,matched
+Paranaque,PARANAQUE\linamnam-mnl-1.jpg,linamnam-mnl,true,Linamnam MNL,places/linamnam-mnl/linamnam-mnl-1.webp,matched
+Paranaque,PARANAQUE\mk-cafe-1.jpg,mk-cafe,true,MK Café,places/mk-cafe/mk-cafe-1.webp,matched
+Paranaque,PARANAQUE\oh-hey-there-matcha-cafe-1.jpg,oh-hey-there-matcha-cafe,true,OH HEY THERE Matcha Cafe,places/oh-hey-there-matcha-cafe/oh-hey-there-matcha-cafe-1.webp,matched
+Paranaque,PARANAQUE\okada-kids-club-1.jpg,okada-kids-club,true,Okada Kids Club,places/okada-kids-club/okada-kids-club-1.webp,matched
+Paranaque,PARANAQUE\okada-manila-1.jpg,okada-manila,true,Okada Manila,places/okada-manila/okada-manila-1.webp,matched
+Paranaque,PARANAQUE\paranaque-cathedral-st-andrew-cathedral-1.jpg,paranaque-cathedral-st-andrew-cathedral,true,Parañaque Cathedral / St. Andrew Cathedral,places/paranaque-cathedral-st-andrew-cathedral/paranaque-cathedral-st-andrew-cathedral-1.webp,matched
+Paranaque,PARANAQUE\parqal-1.jpg,parqal,true,Parqal,places/parqal/parqal-1.webp,matched
+Paranaque,PARANAQUE\robinsons-townville-bf-paranaque-1.jpg,robinsons-townville-bf-paranaque,true,Robinsons Townville BF Parañaque,places/robinsons-townville-bf-paranaque/robinsons-townville-bf-paranaque-1.webp,matched
+Paranaque,PARANAQUE\seda-manila-bay-1.jpg,seda-manila-bay,true,Seda Manila Bay,places/seda-manila-bay/seda-manila-bay-1.webp,matched
+Paranaque,PARANAQUE\sm-cinema-bf-paranaque-1.jpg,sm-cinema-bf-paranaque,true,SM Cinema BF Parañaque,places/sm-cinema-bf-paranaque/sm-cinema-bf-paranaque-1.webp,matched
+Paranaque,PARANAQUE\sm-cinema-bicutan-1.jpg,sm-cinema-bicutan,true,SM Cinema Bicutan,places/sm-cinema-bicutan/sm-cinema-bicutan-1.webp,matched
+Paranaque,PARANAQUE\sm-cinema-sucat-1.jpg,sm-cinema-sucat,true,SM Cinema Sucat,places/sm-cinema-sucat/sm-cinema-sucat-1.webp,matched
+Paranaque,PARANAQUE\sm-city-bf-paranaque-1.jpg,sm-city-bf-paranaque,true,SM City BF Parañaque,places/sm-city-bf-paranaque/sm-city-bf-paranaque-1.webp,matched
+Paranaque,PARANAQUE\sm-city-bicutan-1.webp,sm-city-bicutan,true,SM City Bicutan,places/sm-city-bicutan/sm-city-bicutan-1.webp,matched
+Paranaque,PARANAQUE\sm-city-sucat-1.jpg,sm-city-sucat,true,SM City Sucat,places/sm-city-sucat/sm-city-sucat-1.webp,matched
+Paranaque,PARANAQUE\solaire-resort-entertainment-city-1.jpg,solaire-resort-entertainment-city,true,Solaire Resort Entertainment City,places/solaire-resort-entertainment-city/solaire-resort-entertainment-city-1.webp,matched
+Paranaque,PARANAQUE\the-alex-coffee-1.jpg,the-alex-coffee,true,The Alex Coffee,places/the-alex-coffee/the-alex-coffee-1.webp,matched
+Paranaque,PARANAQUE\the-black-bean-bf-homes-1.webp,the-black-bean-bf-homes,true,The Black Bean BF Homes,places/the-black-bean-bf-homes/the-black-bean-bf-homes-1.webp,matched
+Paranaque,PARANAQUE\the-coral-lounge-okada-manila-1.webp,the-coral-lounge-okada-manila,true,"The Coral Lounge, Okada Manila",places/the-coral-lounge-okada-manila/the-coral-lounge-okada-manila-1.webp,matched
+Paranaque,PARANAQUE\the-fountain-at-okada-manila-1.webp,the-fountain-at-okada-manila,true,The Fountain at Okada Manila,places/the-fountain-at-okada-manila/the-fountain-at-okada-manila-1.webp,matched
+Paranaque,PARANAQUE\timezone-ayala-malls-manila-bay-1.jpg,timezone-ayala-malls-manila-bay,true,Timezone Ayala Malls Manila Bay,places/timezone-ayala-malls-manila-bay/timezone-ayala-malls-manila-bay-1.webp,matched
+Pasay,PASAY\74-apartment-cafe-1.jpg,74-apartment-cafe,true,74 Apartment Cafe,places/74-apartment-cafe/74-apartment-cafe-1.webp,matched
+Pasay,PASAY\aims-museo-maritimo-1.jpg,aims-museo-maritimo,true,AIMS Museo Maritimo,places/aims-museo-maritimo/aims-museo-maritimo-1.webp,matched
+Pasay,PASAY\blue-bay-walk-1.jpg,blue-bay-walk,true,Blue Bay Walk,places/blue-bay-walk/blue-bay-walk-1.webp,matched
+Pasay,PASAY\cartimar-shopping-center-1.jpg,cartimar-shopping-center,true,Cartimar Shopping Center,places/cartimar-shopping-center/cartimar-shopping-center-1.webp,matched
+Pasay,PASAY\coffee-chapters-burgos-1.jpg,coffee-chapters-burgos,true,Coffee Chapters Burgos,places/coffee-chapters-burgos/coffee-chapters-burgos-1.webp,matched
+Pasay,PASAY\cultural-center-of-the-philippines-complex-1.jpg,cultural-center-of-the-philippines-complex,true,Cultural Center of the Philippines Complex,places/cultural-center-of-the-philippines-complex/cultural-center-of-the-philippines-complex-1.webp,matched
+Pasay,PASAY\el-calle-food-music-hall-1.jpg,el-calle-food-music-hall,true,El Calle Food & Music Hall,places/el-calle-food-music-hall/el-calle-food-music-hall-1.webp,matched
+Pasay,PASAY\gala-food-park-1.png,gala-food-park,true,Gala Food Park,places/gala-food-park/gala-food-park-1.webp,matched
+Pasay,PASAY\hard-rock-cafe-manila-1.jpg,hard-rock-cafe-manila,true,Hard Rock Cafe Manila,places/hard-rock-cafe-manila/hard-rock-cafe-manila-1.webp,matched
+Pasay,PASAY\kao-day-night-club-1.jpg,kao-day-night-club,true,Kao Day & Night Club,places/kao-day-night-club/kao-day-night-club-1.webp,matched
+Pasay,PASAY\limitless-barcade-1.jpg,limitless-barcade,true,Limitless Barcade,places/limitless-barcade/limitless-barcade-1.webp,matched
+Pasay,PASAY\mall-of-asia-arena-1.jpg,mall-of-asia-arena,true,Mall of Asia Arena,places/mall-of-asia-arena/mall-of-asia-arena-1.webp,matched
+Pasay,PASAY\met-live-1.jpg,met-live,true,Met Live,places/met-live/met-live-1.webp,matched
+Pasay,PASAY\museo-del-galeon-1.jpg,museo-del-galeon,true,Museo Del Galeon,places/museo-del-galeon/museo-del-galeon-1.webp,matched
+Pasay,PASAY\new-dampa-seaside-macapagal-1.jpg,new-dampa-seaside-macapagal,true,New Dampa Seaside Macapagal,places/new-dampa-seaside-macapagal/new-dampa-seaside-macapagal-1.webp,matched
+Pasay,PASAY\newport-cinemas-1.jpg,newport-cinemas,true,Newport Cinemas,places/newport-cinemas/newport-cinemas-1.webp,matched
+Pasay,PASAY\newport-mall-1.webp,newport-mall,true,Newport Mall,places/newport-mall/newport-mall-1.webp,matched
+Pasay,PASAY\newport-performing-arts-theater-1.webp,newport-performing-arts-theater,true,Newport Performing Arts Theater,places/newport-performing-arts-theater/newport-performing-arts-theater-1.webp,matched
+Pasay,PASAY\newport-world-resorts-1.jpg,newport-world-resorts,true,Newport World Resorts,places/newport-world-resorts/newport-world-resorts-1.webp,matched
+Pasay,PASAY\newport-world-resorts-hotels-1.webp,newport-world-resorts-hotels,true,Newport World Resorts Hotels,places/newport-world-resorts-hotels/newport-world-resorts-hotels-1.webp,matched
+Pasay,PASAY\our-lady-of-sorrows-parish-1.jpg,our-lady-of-sorrows-parish,true,Our Lady of Sorrows Parish,places/our-lady-of-sorrows-parish/our-lady-of-sorrows-parish-1.webp,matched
+Pasay,PASAY\philippine-air-force-aerospace-museum-1.jpg,philippine-air-force-aerospace-museum,true,Philippine Air Force Aerospace Museum,places/philippine-air-force-aerospace-museum/philippine-air-force-aerospace-museum-1.webp,matched
+Pasay,PASAY\philippine-international-convention-center-1.jpg,philippine-international-convention-center,true,Philippine International Convention Center,places/philippine-international-convention-center/philippine-international-convention-center-1.webp,matched
+Pasay,PASAY\roxas-boulevard-promenade-light-park-1.jpg,roxas-boulevard-promenade-light-park,true,Roxas Boulevard Promenade Light Park,places/roxas-boulevard-promenade-light-park/roxas-boulevard-promenade-light-park-1.webp,matched
+Pasay,PASAY\runway-manila-1.jpg,runway-manila,true,Runway Manila,places/runway-manila/runway-manila-1.webp,matched
+Pasay,PASAY\seascape-village-bay-market-1.jpg,seascape-village-bay-market,true,Seascape Village Bay Market,places/seascape-village-bay-market/seascape-village-bay-market-1.webp,matched
+Pasay,PASAY\shrine-of-jesus-the-way-the-truth-and-the-life-1.jpg,shrine-of-jesus-the-way-the-truth-and-the-life,true,"Shrine of Jesus, The Way, The Truth and The Life",places/shrine-of-jesus-the-way-the-truth-and-the-life/shrine-of-jesus-the-way-the-truth-and-the-life-1.webp,matched
+Pasay,PASAY\sm-cinema-imax-theatre-moa-1.jpg,sm-cinema-imax-theatre-moa,true,SM Cinema IMAX Theatre MOA,places/sm-cinema-imax-theatre-moa/sm-cinema-imax-theatre-moa-1.webp,matched
+Pasay,PASAY\sm-game-park-moa-1.jpg,sm-game-park-moa,true,SM Game Park MOA,places/sm-game-park-moa/sm-game-park-moa-1.webp,matched
+Pasay,PASAY\sm-mall-of-asia-1.jpg,sm-mall-of-asia,true,SM Mall of Asia,places/sm-mall-of-asia/sm-mall-of-asia-1.webp,matched
+Pasay,PASAY\sm-skating-moa-1.jpg,sm-skating-moa,true,SM Skating MOA,places/sm-skating-moa/sm-skating-moa-1.webp,matched
+Pasay,PASAY\space-time-cube-1.jpg,space-time-cube,true,Space Time Cube,places/space-time-cube/space-time-cube-1.webp,matched
+Pasay,PASAY\sta-clara-de-montefalco-parish-1.jpg,sta-clara-de-montefalco-parish,true,Sta. Clara de Montefalco Parish,places/sta-clara-de-montefalco-parish/sta-clara-de-montefalco-parish-1.webp,matched
+Pasay,PASAY\star-city-1.jpg,star-city,true,Star City,places/star-city/star-city-1.webp,matched
+Pasay,PASAY\the-dessert-museum-1.webp,the-dessert-museum,true,The Dessert Museum,places/the-dessert-museum/the-dessert-museum-1.webp,matched
+Pasay,PASAY\the-henry-hotel-manila-1.jpg,the-henry-hotel-manila,true,The Henry Hotel Manila,places/the-henry-hotel-manila/the-henry-hotel-manila-1.webp,matched
+Pasay,PASAY\timezone-sm-mall-of-asia-1.png,timezone-sm-mall-of-asia,true,Timezone SM Mall of Asia,places/timezone-sm-mall-of-asia/timezone-sm-mall-of-asia-1.webp,matched
+Pasig,PASIG\ace-hotel-suites-1.jpg,ace-hotel-suites,true,Ace Hotel & Suites,places/ace-hotel-suites/ace-hotel-suites-1.webp,matched
+Pasig,PASIG\ace-water-spa-pasig-1.jpg,ace-water-spa-pasig,true,Ace Water Spa Pasig,places/ace-water-spa-pasig/ace-water-spa-pasig-1.webp,matched
+Pasig,PASIG\arco-de-emperador-1.jpg,arco-de-emperador,true,Arco de Emperador,places/arco-de-emperador/arco-de-emperador-1.webp,matched
+Pasig,PASIG\astoria-plaza-1.jpg,astoria-plaza,true,Astoria Plaza,places/astoria-plaza/astoria-plaza-1.webp,matched
+Pasig,PASIG\ayala-malls-feliz-1.jpg,ayala-malls-feliz,true,Ayala Malls Feliz,places/ayala-malls-feliz/ayala-malls-feliz-1.webp,matched
+Pasig,PASIG\ayala-malls-feliz-cinemas-1.jpg,ayala-malls-feliz-cinemas,true,Ayala Malls Feliz Cinemas,places/ayala-malls-feliz-cinemas/ayala-malls-feliz-cinemas-1.webp,matched
+Pasig,PASIG\ayala-malls-the-30th-1.jpg,ayala-malls-the-30th,true,Ayala Malls The 30th,places/ayala-malls-the-30th/ayala-malls-the-30th-1.webp,matched
+Pasig,PASIG\bahay-na-tisa-1.jpg,bahay-na-tisa,true,Bahay na Tisa,places/bahay-na-tisa/bahay-na-tisa-1.webp,matched
+Pasig,PASIG\cache-coffee-cocktails-1.jpg,cache-coffee-cocktails,true,CACHE Coffee & Cocktails,places/cache-coffee-cocktails/cache-coffee-cocktails-1.webp,matched
+Pasig,PASIG\cafe-juanita-1.jpg,cafe-juanita,true,Cafe Juanita,places/cafe-juanita/cafe-juanita-1.webp,matched
+Pasig,PASIG\capitol-commons-park-1.jpg,capitol-commons-park,true,Capitol Commons Park,places/capitol-commons-park/capitol-commons-park-1.webp,matched
+Pasig,PASIG\citadines-millennium-ortigas-manila-1.jpg,citadines-millennium-ortigas-manila,true,Citadines Millennium Ortigas Manila,places/citadines-millennium-ortigas-manila/citadines-millennium-ortigas-manila-1.webp,matched
+Pasig,PASIG\cosmic-kapitolyo-1.jpg,cosmic-kapitolyo,true,Cosmic Kapitolyo,places/cosmic-kapitolyo/cosmic-kapitolyo-1.webp,matched
+Pasig,PASIG\discovery-suites-manila-1.jpg,discovery-suites-manila,true,Discovery Suites Manila,places/discovery-suites-manila/discovery-suites-manila-1.webp,matched
+Pasig,PASIG\estancia-at-capitol-commons-1.jpg,estancia-at-capitol-commons,true,Estancia at Capitol Commons,places/estancia-at-capitol-commons/estancia-at-capitol-commons-1.webp,matched
+Pasig,PASIG\hai-chix-steaks-1.jpg,hai-chix-steaks,true,Hai Chix & Steaks,places/hai-chix-steaks/hai-chix-steaks-1.webp,matched
+Pasig,PASIG\haru-sushi-bar-restaurant-1.jpg,haru-sushi-bar-restaurant,true,Haru Sushi Bar & Restaurant,places/haru-sushi-bar-restaurant/haru-sushi-bar-restaurant-1.webp,matched
+Pasig,PASIG\immaculate-conception-cathedral-of-pasig-1.jpg,immaculate-conception-cathedral-of-pasig,true,Immaculate Conception Cathedral of Pasig,places/immaculate-conception-cathedral-of-pasig/immaculate-conception-cathedral-of-pasig-1.webp,matched
+Pasig,PASIG\marco-polo-ortigas-manila-1.jpg,marco-polo-ortigas-manila,true,Marco Polo Ortigas Manila,places/marco-polo-ortigas-manila/marco-polo-ortigas-manila-1.webp,matched
+Pasig,PASIG\maybunga-rainforest-park-1.webp,maybunga-rainforest-park,true,Maybunga Rainforest Park,places/maybunga-rainforest-park/maybunga-rainforest-park-1.webp,matched
+Pasig,PASIG\o-bar-ortigas-1.jpg,o-bar-ortigas,true,O Bar Ortigas,places/o-bar-ortigas/o-bar-ortigas-1.webp,matched
+Pasig,PASIG\odd-cafe-ortigas-1.jpg,odd-cafe-ortigas,true,Odd Cafe Ortigas,places/odd-cafe-ortigas/odd-cafe-ortigas-1.webp,matched
+Pasig,PASIG\ortigas-cinemas-estancia-1.jpg,ortigas-cinemas-estancia,true,Ortigas Cinemas Estancia,places/ortigas-cinemas-estancia/ortigas-cinemas-estancia-1.webp,matched
+Pasig,PASIG\ortigas-park-1.jpg,ortigas-park,true,Ortigas Park,places/ortigas-park/ortigas-park-1.webp,matched
+Pasig,PASIG\pasig-city-museum-1.jpg,pasig-city-museum,true,Pasig City Museum,places/pasig-city-museum/pasig-city-museum-1.webp,matched
+Pasig,PASIG\pasig-revolving-tower-1.jpg,pasig-revolving-tower,true,Pasig Revolving Tower,places/pasig-revolving-tower/pasig-revolving-tower-1.webp,matched
+Pasig,PASIG\plaza-bonifacio-pasig-1.jpg,plaza-bonifacio-pasig,true,Plaza Bonifacio Pasig,places/plaza-bonifacio-pasig/plaza-bonifacio-pasig-1.webp,matched
+Pasig,PASIG\plaza-rizal-pasig-1.jpg,plaza-rizal-pasig,true,Plaza Rizal Pasig,places/plaza-rizal-pasig/plaza-rizal-pasig-1.webp,matched
+Pasig,PASIG\poco-deli-kapitolyo-1.jpg,poco-deli-kapitolyo,true,Poco Deli Kapitolyo,places/poco-deli-kapitolyo/poco-deli-kapitolyo-1.webp,matched
+Pasig,PASIG\rm-16-1.jpg,rm-16,true,RM-16,places/rm-16/rm-16-1.webp,matched
+Pasig,PASIG\sm-center-pasig-1.jpg,sm-center-pasig,true,SM Center Pasig,places/sm-center-pasig/sm-center-pasig-1.webp,matched
+Pasig,PASIG\sm-cinema-east-ortigas-1.jpg,sm-cinema-east-ortigas,true,SM Cinema East Ortigas,places/sm-cinema-east-ortigas/sm-cinema-east-ortigas-1.webp,matched
+Pasig,PASIG\sm-city-east-ortigas-1.jpg,sm-city-east-ortigas,true,SM City East Ortigas,places/sm-city-east-ortigas/sm-city-east-ortigas-1.webp,matched
+Pasig,PASIG\soul-good-cafe-1.jpg,soul-good-cafe,true,Soul Good Cafe,places/soul-good-cafe/soul-good-cafe-1.webp,matched
+Pasig,PASIG\studio-300-bowling-pioneer-1.jpg,studio-300-bowling-pioneer,true,Studio 300 Bowling Pioneer,places/studio-300-bowling-pioneer/studio-300-bowling-pioneer-1.webp,matched
+Pasig,PASIG\the-bistro-rooftop-1.jpg,the-bistro-rooftop,true,The Bistro Rooftop,places/the-bistro-rooftop/the-bistro-rooftop-1.webp,matched
+Pasig,PASIG\tiendesitas-1.jpg,tiendesitas,true,Tiendesitas,places/tiendesitas/tiendesitas-1.webp,matched
+Pasig,PASIG\timezone-ayala-malls-feliz-1.jpg,timezone-ayala-malls-feliz,true,Timezone Ayala Malls Feliz,places/timezone-ayala-malls-feliz/timezone-ayala-malls-feliz-1.webp,matched
+Pasig,PASIG\timezone-ayala-malls-the-30th-1.jpg,timezone-ayala-malls-the-30th,true,Timezone Ayala Malls The 30th,places/timezone-ayala-malls-the-30th/timezone-ayala-malls-the-30th-1.webp,matched
+Pasig,PASIG\tittos-latin-bbq-brew-kapitolyo-1.jpg,tittos-latin-bbq-brew-kapitolyo,true,Tittos Latin BBQ & Brew Kapitolyo,places/tittos-latin-bbq-brew-kapitolyo/tittos-latin-bbq-brew-kapitolyo-1.webp,matched
+Pasig,PASIG\vus-sky-bar-and-lounge-1.jpg,vus-sky-bar-and-lounge,true,VU's Sky Bar and Lounge,places/vus-sky-bar-and-lounge/vus-sky-bar-and-lounge-1.webp,matched
+Pateros,PATEROS\good-shot-billiards-ktv-and-restobar-1.jpg,good-shot-billiards-ktv-and-restobar,true,Good Shot Billiards KTV and Restobar,places/good-shot-billiards-ktv-and-restobar/good-shot-billiards-ktv-and-restobar-1.webp,matched
+Pateros,PATEROS\inapuyan-resto-grill-pateros-1.jpg,inapuyan-resto-grill-pateros,true,Inapuyan Resto Grill - Pateros,places/inapuyan-resto-grill-pateros/inapuyan-resto-grill-pateros-1.webp,matched
+Pateros,PATEROS\san-roque-parish-diocesan-shrine-of-sta-marta-1.jpg,san-roque-parish-diocesan-shrine-of-sta-marta,true,San Roque Parish / Diocesan Shrine of Sta. Marta,places/san-roque-parish-diocesan-shrine-of-sta-marta/san-roque-parish-diocesan-shrine-of-sta-marta-1.webp,matched
+Pateros,PATEROS\tuklas-coffee-1.jpg,tuklas-coffee,true,Tuklas Coffee,places/tuklas-coffee/tuklas-coffee-1.webp,matched
+Quezon City,QUEZON CITY\araneta-city-gateway-mall-1.jpg,araneta-city-gateway-mall,true,Araneta City Gateway Mall,places/araneta-city-gateway-mall/araneta-city-gateway-mall-1.webp,matched
+Quezon City,QUEZON CITY\art-in-island-1.jpg,art-in-island,true,Art in Island,places/art-in-island/art-in-island-1.webp,matched
+Quezon City,QUEZON CITY\ateneo-art-gallery-1.jpg,ateneo-art-gallery,true,Ateneo Art Gallery,places/ateneo-art-gallery/ateneo-art-gallery-1.webp,matched
+Quezon City,QUEZON CITY\best-of-luck-1.jpg,best-of-luck,true,Best of Luck,places/best-of-luck/best-of-luck-1.webp,matched
+Quezon City,QUEZON CITY\cubao-expo-1.jpg,cubao-expo,true,Cubao Expo,places/cubao-expo/cubao-expo-1.webp,matched
+Quezon City,QUEZON CITY\deo-gracias-1.jpg,deo-gracias,true,Deo Gracias,places/deo-gracias/deo-gracias-1.webp,matched
+Quezon City,QUEZON CITY\eastwood-city-1.jpg,eastwood-city,true,Eastwood City,places/eastwood-city/eastwood-city-1.webp,matched
+Quezon City,QUEZON CITY\esmeralda-kitchen-1.jpg,esmeralda-kitchen,true,Esmeralda Kitchen,places/esmeralda-kitchen/esmeralda-kitchen-1.webp,matched
+Quezon City,QUEZON CITY\gateway-cineplex-18-1.jpg,gateway-cineplex-18,true,Gateway Cineplex 18,places/gateway-cineplex-18/gateway-cineplex-18-1.webp,matched
+Quezon City,QUEZON CITY\gateway-gallery-1.jpg,gateway-gallery,true,Gateway Gallery,places/gateway-gallery/gateway-gallery-1.webp,matched
+Quezon City,QUEZON CITY\habanero-kitchen-bar-1.png,habanero-kitchen-bar,true,Habanero Kitchen Bar,places/habanero-kitchen-bar/habanero-kitchen-bar-1.webp,matched
+Quezon City,QUEZON CITY\int-bar-ext-cafe-1.webp,int-bar-ext-cafe,true,INT. Bar / EXT. Cafe,places/int-bar-ext-cafe/int-bar-ext-cafe-1.webp,matched
+Quezon City,QUEZON CITY\la-mesa-eco-park-1.jpg,la-mesa-eco-park,true,La Mesa Eco Park,places/la-mesa-eco-park/la-mesa-eco-park-1.webp,matched
+Quezon City,QUEZON CITY\las-casas-quezon-city-casa-juico-1.jpg,las-casas-quezon-city-casa-juico,true,Las Casas Quezon City / Casa Juico,places/las-casas-quezon-city-casa-juico/las-casas-quezon-city-casa-juico-1.webp,matched
+Quezon City,QUEZON CITY\magdamag-market-cafe-1.webp,magdamag-market-cafe,true,Magdamag Market Cafe,places/magdamag-market-cafe/magdamag-market-cafe-1.webp,matched
+Quezon City,QUEZON CITY\miranila-heritage-house-and-library-1.jpg,miranila-heritage-house-and-library,true,MiraNila Heritage House and Library,places/miranila-heritage-house-and-library/miranila-heritage-house-and-library-1.webp,matched
+Quezon City,QUEZON CITY\modan-1.jpg,modan,true,Modan,places/modan/modan-1.webp,matched
+Quezon City,QUEZON CITY\ninoy-aquino-parks-and-wildlife-center-1.jpg,ninoy-aquino-parks-and-wildlife-center,true,Ninoy Aquino Parks and Wildlife Center,places/ninoy-aquino-parks-and-wildlife-center/ninoy-aquino-parks-and-wildlife-center-1.webp,matched
+Quezon City,QUEZON CITY\palm-grill-1.jpg,palm-grill,true,Palm Grill,places/palm-grill/palm-grill-1.webp,matched
+Quezon City,QUEZON CITY\qc-hall-park-and-lagoon-1.jpg,qc-hall-park-and-lagoon,true,QC Hall Park and Lagoon,places/qc-hall-park-and-lagoon/qc-hall-park-and-lagoon-1.webp,matched
+Quezon City,QUEZON CITY\roller-fever-fairview-terraces-1.jpg,roller-fever-fairview-terraces,true,Roller Fever Fairview Terraces,places/roller-fever-fairview-terraces/roller-fever-fairview-terraces-1.webp,matched
+Quezon City,QUEZON CITY\sm-north-edsa-1.png,sm-north-edsa,true,SM North EDSA,places/sm-north-edsa/sm-north-edsa-1.webp,matched
+Quezon City,QUEZON CITY\solaire-resort-north-1.jpg,solaire-resort-north,true,Solaire Resort North,places/solaire-resort-north/solaire-resort-north-1.webp,matched
+Quezon City,QUEZON CITY\some-thai-1.jpg,some-thai,true,Some Thai,places/some-thai/some-thai-1.webp,matched
+Quezon City,QUEZON CITY\takeover-lounge-1.jpg,takeover-lounge,true,TakeOver Lounge,places/takeover-lounge/takeover-lounge-1.webp,matched
+Quezon City,QUEZON CITY\the-70s-bistro-1.jpg,the-70s-bistro,true,The 70s Bistro,places/the-70s-bistro/the-70s-bistro-1.webp,matched
+Quezon City,QUEZON CITY\the-pop-up-katipunan-1.jpg,the-pop-up-katipunan,true,The Pop Up Katipunan,places/the-pop-up-katipunan/the-pop-up-katipunan-1.webp,matched
+Quezon City,QUEZON CITY\timezone-trinoma-1.jpg,timezone-trinoma,true,Timezone Trinoma,places/timezone-trinoma/timezone-trinoma-1.webp,matched
+Quezon City,QUEZON CITY\up-academic-oval-up-sunken-garden-1.jpg,up-academic-oval-up-sunken-garden,true,UP Academic Oval / UP Sunken Garden,places/up-academic-oval-up-sunken-garden/up-academic-oval-up-sunken-garden-1.webp,matched
+Quezon City,QUEZON CITY\up-town-center-1.jpg,up-town-center,true,UP Town Center,places/up-town-center/up-town-center-1.webp,matched
+Quezon City,QUEZON CITY\up-town-center-cinemas-1.jpg,up-town-center-cinemas,true,UP Town Center Cinemas,places/up-town-center-cinemas/up-town-center-cinemas-1.webp,matched
+Quezon City,QUEZON CITY\up-vargas-museum-1.jpg,up-vargas-museum,true,UP Vargas Museum,places/up-vargas-museum/up-vargas-museum-1.webp,matched
+Quezon City,QUEZON CITY\wiijump-trampoline-park-fairview-terraces-1.jpg,wiijump-trampoline-park-fairview-terraces,true,WiiJUMP Trampoline Park Fairview Terraces,places/wiijump-trampoline-park-fairview-terraces/wiijump-trampoline-park-fairview-terraces-1.webp,matched
+San Juan,SAN JUAN\717-deli-1.jpg,717-deli,true,717 Deli,places/717-deli/717-deli-1.webp,matched
+San Juan,SAN JUAN\arcadia-billiards-plus-1.jpg,arcadia-billiards-plus,true,Arcadia Billiards Plus,places/arcadia-billiards-plus/arcadia-billiards-plus-1.webp,matched
+San Juan,SAN JUAN\art-underground-manila-1.jpg,art-underground-manila,true,Art Underground Manila,places/art-underground-manila/art-underground-manila-1.webp,matched
+San Juan,SAN JUAN\bun-run-1.jpg,bun-run,true,Bun Run,places/bun-run/bun-run-1.webp,matched
+San Juan,SAN JUAN\cafe-mabini-1.jpg,cafe-mabini,true,Cafe Mabini,places/cafe-mabini/cafe-mabini-1.webp,matched
+San Juan,SAN JUAN\chef-laudico-guevarras-1.jpg,chef-laudico-guevarras,true,Chef Laudico Guevarra’s,places/chef-laudico-guevarras/chef-laudico-guevarras-1.webp,matched
+San Juan,SAN JUAN\eraya-1.jpg,eraya,true,Eraya,places/eraya/eraya-1.webp,matched
+San Juan,SAN JUAN\fundacion-sanso-1.jpg,fundacion-sanso,true,Fundacion Sansó,places/fundacion-sanso/fundacion-sanso-1.webp,matched
+San Juan,SAN JUAN\gaea-1.jpg,gaea,true,Gaea,places/gaea/gaea-1.webp,matched
+San Juan,SAN JUAN\gianetto-pizzeria-1.jpg,gianetto-pizzeria,true,Gianetto Pizzeria,places/gianetto-pizzeria/gianetto-pizzeria-1.webp,matched
+San Juan,SAN JUAN\greenhills-elan-hotel-modern-1.jpg,greenhills-elan-hotel-modern,true,Greenhills Elan Hotel Modern,places/greenhills-elan-hotel-modern/greenhills-elan-hotel-modern-1.webp,matched
+San Juan,SAN JUAN\greenhills-mall-greenhills-shopping-center-1.jpg,greenhills-mall-greenhills-shopping-center,true,Greenhills Mall / Greenhills Shopping Center,places/greenhills-mall-greenhills-shopping-center/greenhills-mall-greenhills-shopping-center-1.webp,matched
+San Juan,SAN JUAN\icho-japanese-restaurant-1.jpg,icho-japanese-restaurant,true,Icho Japanese Restaurant,places/icho-japanese-restaurant/icho-japanese-restaurant-1.webp,matched
+San Juan,SAN JUAN\malagihay-cocktail-club-1.jpg,malagihay-cocktail-club,true,Malagihay Cocktail Club,places/malagihay-cocktail-club/malagihay-cocktail-club-1.webp,matched
+San Juan,SAN JUAN\moon-rabbit-1.jpg,moon-rabbit,true,Moon Rabbit,places/moon-rabbit/moon-rabbit-1.webp,matched
+San Juan,SAN JUAN\music-museum-1.jpg,music-museum,true,Music Museum,places/music-museum/music-museum-1.webp,matched
+San Juan,SAN JUAN\ortigas-greenhills-cinemas-1.jpg,ortigas-greenhills-cinemas,true,Ortigas Greenhills Cinemas,places/ortigas-greenhills-cinemas/ortigas-greenhills-cinemas-1.webp,matched
+San Juan,SAN JUAN\rockstar-ktv-greenhills-1.jpg,rockstar-ktv-greenhills,true,Rockstar KTV Greenhills,places/rockstar-ktv-greenhills/rockstar-ktv-greenhills-1.webp,matched
+San Juan,SAN JUAN\samin-bar-and-community-space-1.jpg,samin-bar-and-community-space,true,Sa'min Bar and Community Space,places/samin-bar-and-community-space/samin-bar-and-community-space-1.webp,matched
+San Juan,SAN JUAN\santolan-town-plaza-1.jpg,santolan-town-plaza,true,Santolan Town Plaza,places/santolan-town-plaza/santolan-town-plaza-1.webp,matched
+San Juan,SAN JUAN\seva-1.jpg,seva,true,Seva,places/seva/seva-1.webp,matched
+San Juan,SAN JUAN\summit-hotel-greenhills-1.jpg,summit-hotel-greenhills,true,Summit Hotel Greenhills,places/summit-hotel-greenhills/summit-hotel-greenhills-1.webp,matched
+San Juan,SAN JUAN\supernormal-1.jpg,supernormal,true,Supernormal,places/supernormal/supernormal-1.webp,matched
+San Juan,SAN JUAN\teatrino-promenade-1.jpg,teatrino-promenade,true,Teatrino Promenade,places/teatrino-promenade/teatrino-promenade-1.webp,matched
+San Juan,SAN JUAN\the-corner-house-1.jpg,the-corner-house,true,The Corner House,places/the-corner-house/the-corner-house-1.webp,matched
+San Juan,SAN JUAN\timezone-greenhills-1.webp,timezone-greenhills,true,Timezone Greenhills,places/timezone-greenhills/timezone-greenhills-1.webp,matched
+San Juan,SAN JUAN\tomo-japanese-dining-1.jpg,tomo-japanese-dining,true,Tomo Japanese Dining,places/tomo-japanese-dining/tomo-japanese-dining-1.webp,matched
+San Juan,SAN JUAN\toritori-kushiyaki-snack-bar-1.jpg,toritori-kushiyaki-snack-bar,true,ToriTori Kushiyaki Snack Bar,places/toritori-kushiyaki-snack-bar/toritori-kushiyaki-snack-bar-1.webp,matched
+San Juan,SAN JUAN\verse-cafe-1.jpg,verse-cafe,true,Verse Café,places/verse-cafe/verse-cafe-1.webp,matched
+San Juan,SAN JUAN\wahunomi-1.jpg,wahunomi,true,Wahunomi,places/wahunomi/wahunomi-1.webp,matched
+San Juan,SAN JUAN\yardstick-coffee-the-corner-house-1.jpg,yardstick-coffee-the-corner-house,true,"Yardstick Coffee, The Corner House",places/yardstick-coffee-the-corner-house/yardstick-coffee-the-corner-house-1.webp,matched
+Taguig,TAGUIG\ascott-bonifacio-global-city-manila-1.jpg,ascott-bonifacio-global-city-manila,true,Ascott Bonifacio Global City Manila,places/ascott-bonifacio-global-city-manila/ascott-bonifacio-global-city-manila-1.webp,matched
+Taguig,TAGUIG\ayala-malls-arca-south-1.jpg,ayala-malls-arca-south,true,Ayala Malls Arca South,places/ayala-malls-arca-south/ayala-malls-arca-south-1.webp,matched
+Taguig,TAGUIG\bakebe-sm-aura-1.jpg,bakebe-sm-aura,true,Bakebe SM Aura,places/bakebe-sm-aura/bakebe-sm-aura-1.webp,matched
+Taguig,TAGUIG\bgc-arts-center-1.jpg,bgc-arts-center,true,BGC Arts Center,places/bgc-arts-center/bgc-arts-center-1.webp,matched
+Taguig,TAGUIG\bgc-greenway-park-1.jpg,bgc-greenway-park,true,BGC Greenway Park,places/bgc-greenway-park/bgc-greenway-park-1.webp,matched
+Taguig,TAGUIG\bgc-public-art-bgc-mural-walk-1.jpg,bgc-public-art-bgc-mural-walk,true,BGC Public Art / BGC Mural Walk,places/bgc-public-art-bgc-mural-walk/bgc-public-art-bgc-mural-walk-1.webp,matched
+Taguig,TAGUIG\bonifacio-high-street-1.jpg,bonifacio-high-street,true,Bonifacio High Street,places/bonifacio-high-street/bonifacio-high-street-1.webp,matched
+Taguig,TAGUIG\burgos-circle-park-1.jpg,burgos-circle-park,true,Burgos Circle Park,places/burgos-circle-park/burgos-circle-park-1.webp,matched
+Taguig,TAGUIG\cafe-pocofino-bgc-1.jpg,cafe-pocofino-bgc,true,Cafe Pocofino BGC,places/cafe-pocofino-bgc/cafe-pocofino-bgc-1.webp,matched
+Taguig,TAGUIG\clubhouse-at-the-palace-1.jfif,clubhouse-at-the-palace,true,Clubhouse at The Palace,places/clubhouse-at-the-palace/clubhouse-at-the-palace-1.webp,matched
+Taguig,TAGUIG\eesome-1.png,eesome,true,Eesome,places/eesome/eesome-1.webp,matched
+Taguig,TAGUIG\enter10-bowling-1.jpg,enter10-bowling,true,Enter10 Bowling,places/enter10-bowling/enter10-bowling-1.webp,matched
+Taguig,TAGUIG\gallery-by-chele-1.jpg,gallery-by-chele,true,Gallery by Chele,places/gallery-by-chele/gallery-by-chele-1.webp,matched
+Taguig,TAGUIG\grand-hyatt-manila-1.jpg,grand-hyatt-manila,true,Grand Hyatt Manila,places/grand-hyatt-manila/grand-hyatt-manila-1.webp,matched
+Taguig,TAGUIG\harlan-holden-coffee-bgc-1.jpg,harlan-holden-coffee-bgc,true,Harlan + Holden Coffee BGC,places/harlan-holden-coffee-bgc/harlan-holden-coffee-bgc-1.webp,matched
+Taguig,TAGUIG\hikiniku-to-come-bgc-1.png,hikiniku-to-come-bgc,true,Hikiniku To Come BGC,places/hikiniku-to-come-bgc/hikiniku-to-come-bgc-1.webp,matched
+Taguig,TAGUIG\indus-modern-indian-kitchen-1.jpg,indus-modern-indian-kitchen,true,Indus Modern Indian Kitchen,places/indus-modern-indian-kitchen/indus-modern-indian-kitchen-1.webp,matched
+Taguig,TAGUIG\kasalikasan-garden-1.jpg,kasalikasan-garden,true,Kasalikasan Garden,places/kasalikasan-garden/kasalikasan-garden-1.webp,matched
+Taguig,TAGUIG\lazerxtreme-manila-1.jpg,lazerxtreme-manila,true,LazerXtreme Manila,places/lazerxtreme-manila/lazerxtreme-manila-1.webp,matched
+Taguig,TAGUIG\maker-made-1.jpg,maker-made,true,Maker & Made,places/maker-made/maker-made-1.webp,matched
+Taguig,TAGUIG\market-market-1.jpg,market-market,true,Market! Market!,places/market-market/market-market-1.webp,matched
+Taguig,TAGUIG\market-market-cinemas-1.jpg,market-market-cinemas,true,Market! Market! Cinemas,places/market-market-cinemas/market-market-cinemas-1.webp,matched
+Taguig,TAGUIG\metropolitan-museum-of-manila-at-bgc-1.jpg,metropolitan-museum-of-manila-at-bgc,true,Metropolitan Museum of Manila / The M,places/metropolitan-museum-of-manila-at-bgc/metropolitan-museum-of-manila-at-bgc-1.webp,matched
+Taguig,TAGUIG\mitsukoshi-bgc-1.jpg,mitsukoshi-bgc,true,MITSUKOSHI BGC,places/mitsukoshi-bgc/mitsukoshi-bgc-1.webp,matched
+Taguig,TAGUIG\ramen-ibuki-bgc-1.jpg,ramen-ibuki-bgc,true,Ramen IBUKI BGC,places/ramen-ibuki-bgc/ramen-ibuki-bgc-1.webp,matched
+Taguig,TAGUIG\revel-at-the-palace-1.jfif,revel-at-the-palace,true,Revel at The Palace,places/revel-at-the-palace/revel-at-the-palace-1.webp,matched
+Taguig,TAGUIG\seda-bgc-1.jpg,seda-bgc,true,Seda BGC,places/seda-bgc/seda-bgc-1.webp,matched
+Taguig,TAGUIG\shangri-la-the-fort-manila-1.jpg,shangri-la-the-fort-manila,true,Shangri-La The Fort Manila,places/shangri-la-the-fort-manila/shangri-la-the-fort-manila-1.webp,matched
+Taguig,TAGUIG\sm-aura-premier-1.jpg,sm-aura-premier,true,SM Aura Premier,places/sm-aura-premier/sm-aura-premier-1.webp,matched
+Taguig,TAGUIG\sm-aura-skypark-prism-park-1.jpg,sm-aura-skypark-prism-park,true,SM Aura Skypark / Prism Park,places/sm-aura-skypark-prism-park/sm-aura-skypark-prism-park-1.webp,matched
+Taguig,TAGUIG\sm-cinema-aura-premier-imax-1.jpg,sm-cinema-aura-premier-imax,true,SM Cinema Aura Premier / IMAX,places/sm-cinema-aura-premier-imax/sm-cinema-aura-premier-imax-1.webp,matched
+Taguig,TAGUIG\superpark-mckinley-1.jpg,superpark-mckinley,true,SuperPark McKinley,places/superpark-mckinley/superpark-mckinley-1.webp,matched
+Taguig,TAGUIG\taguig-eco-park-1.jpg,taguig-eco-park,true,Taguig Eco Park,places/taguig-eco-park/taguig-eco-park-1.webp,matched
+Taguig,TAGUIG\taguig-lakefront-community-park-tlc-park-1.jpg,taguig-lakefront-community-park-tlc-park,true,Taguig Lakefront Community Park / TLC Park,places/taguig-lakefront-community-park-tlc-park/taguig-lakefront-community-park-tlc-park-1.webp,matched
+Taguig,TAGUIG\terra-28th-park-1.jpg,terra-28th-park,true,Terra 28th Park,places/terra-28th-park/terra-28th-park-1.webp,matched
+Taguig,TAGUIG\the-fat-seed-cafe-roastery-bgc-1.jpg,the-fat-seed-cafe-roastery-bgc,true,The Fat Seed Cafe + Roastery BGC,places/the-fat-seed-cafe-roastery-bgc/the-fat-seed-cafe-roastery-bgc-1.webp,matched
+Taguig,TAGUIG\the-mind-museum-1.jpg,the-mind-museum,true,The Mind Museum,places/the-mind-museum/the-mind-museum-1.webp,matched
+Taguig,TAGUIG\timezone-market-market-1.jpg,timezone-market-market,true,Timezone Market! Market!,places/timezone-market-market/timezone-market-market-1.webp,matched
+Taguig,TAGUIG\tlc-peoples-park-west-rembo-1.jpg,tlc-peoples-park-west-rembo,true,"TLC People's Park, West Rembo",places/tlc-peoples-park-west-rembo/tlc-peoples-park-west-rembo-1.webp,matched
+Taguig,TAGUIG\track-30th-1.webp,track-30th,true,Track 30th,places/track-30th/track-30th-1.webp,matched
+Taguig,TAGUIG\uptown-cinemas-1.jpg,uptown-cinemas,true,Uptown Cinemas,places/uptown-cinemas/uptown-cinemas-1.webp,matched
+Taguig,TAGUIG\uptown-mall-1.jpg,uptown-mall,true,Uptown Mall,places/uptown-mall/uptown-mall-1.webp,matched
+Taguig,TAGUIG\venice-cineplex-1.jpg,venice-cineplex,true,Venice Cineplex,places/venice-cineplex/venice-cineplex-1.webp,matched
+Taguig,TAGUIG\venice-grand-canal-mall-1.jpg,venice-grand-canal-mall,true,Venice Grand Canal Mall,places/venice-grand-canal-mall/venice-grand-canal-mall-1.webp,matched
+Taguig,TAGUIG\wetpark-adventure-lagoon-1.jpg,wetpark-adventure-lagoon,true,Wetpark Adventure Lagoon,places/wetpark-adventure-lagoon/wetpark-adventure-lagoon-1.webp,matched
+Taguig,TAGUIG\yes-please-at-the-palace-1.jpg,yes-please-at-the-palace,true,Yes Please at The Palace,places/yes-please-at-the-palace/yes-please-at-the-palace-1.webp,matched
+Valenzuela,VALENZUELA\10-25-cafe-1.jpg,10-25-cafe,true,10.25 Café,places/10-25-cafe/10-25-cafe-1.webp,matched
+Valenzuela,VALENZUELA\alvarez-park-cafe-1.jpg,alvarez-park-cafe,true,Alvarez Park Cafe,places/alvarez-park-cafe/alvarez-park-cafe-1.webp,matched
+Valenzuela,VALENZUELA\casita-de-francesca-private-resort-and-events-place-1.jpg,casita-de-francesca-private-resort-and-events-place,true,Casita de Francesca Private Resort and Events Place,places/casita-de-francesca-private-resort-and-events-place/casita-de-francesca-private-resort-and-events-place-1.webp,matched
+Valenzuela,VALENZUELA\escape-the-city-cafe-and-lounge-1.jpg,escape-the-city-cafe-and-lounge,true,Escape the City Cafe and Lounge,places/escape-the-city-cafe-and-lounge/escape-the-city-cafe-and-lounge-1.webp,matched
+Valenzuela,VALENZUELA\hirus-cafe-1.jpg,hirus-cafe,true,Hirus Cafe,places/hirus-cafe/hirus-cafe-1.webp,matched
+Valenzuela,VALENZUELA\house-of-us-restaurant-valenzuela-1.jpg,house-of-us-restaurant-valenzuela,true,House of Us Restaurant Valenzuela,places/house-of-us-restaurant-valenzuela/house-of-us-restaurant-valenzuela-1.webp,matched
+Valenzuela,VALENZUELA\kamayan-sa-palapat-1.jpg,kamayan-sa-palapat,true,Kamayan sa Palapat,places/kamayan-sa-palapat/kamayan-sa-palapat-1.webp,matched
+Valenzuela,VALENZUELA\la-taza-cafe-1.jpg,la-taza-cafe,true,La Taza Cafe,places/la-taza-cafe/la-taza-cafe-1.webp,matched
+Valenzuela,VALENZUELA\museo-ni-dr-pio-valenzuela-1.jpg,museo-ni-dr-pio-valenzuela,true,Museo ni Dr. Pio Valenzuela,places/museo-ni-dr-pio-valenzuela/museo-ni-dr-pio-valenzuela-1.webp,matched
+Valenzuela,VALENZUELA\museo-valenzuela-1.jpg,museo-valenzuela,true,Museo Valenzuela,places/museo-valenzuela/museo-valenzuela-1.webp,matched
+Valenzuela,VALENZUELA\national-shrine-of-our-lady-of-fatima-1.jpg,national-shrine-of-our-lady-of-fatima,true,National Shrine of Our Lady of Fatima,places/national-shrine-of-our-lady-of-fatima/national-shrine-of-our-lady-of-fatima-1.webp,matched
+Valenzuela,VALENZUELA\one-mall-skytheater-cinema-1.jpg,one-mall-skytheater-cinema,true,One Mall SkyTheater Cinema,places/one-mall-skytheater-cinema/one-mall-skytheater-cinema-1.webp,matched
+Valenzuela,VALENZUELA\one-mall-valenzuela-1.jpg,one-mall-valenzuela,true,One Mall Valenzuela,places/one-mall-valenzuela/one-mall-valenzuela-1.webp,matched
+Valenzuela,VALENZUELA\paraiso-ni-baste-resort-1.jpg,paraiso-ni-baste-resort,true,Paraiso ni Baste Resort,places/paraiso-ni-baste-resort/paraiso-ni-baste-resort-1.webp,matched
+Valenzuela,VALENZUELA\polo-riverwalk-1.webp,polo-riverwalk,true,Polo Riverwalk,places/polo-riverwalk/polo-riverwalk-1.webp,matched
+Valenzuela,VALENZUELA\san-diego-de-alcala-parish-1.jpg,san-diego-de-alcala-parish,true,San Diego de Alcala Parish,places/san-diego-de-alcala-parish/san-diego-de-alcala-parish-1.webp,matched
+Valenzuela,VALENZUELA\sm-cinema-valenzuela-1.jpg,sm-cinema-valenzuela,true,SM Cinema Valenzuela,places/sm-cinema-valenzuela/sm-cinema-valenzuela-1.webp,matched
+Valenzuela,VALENZUELA\sm-city-valenzuela-1.jpg,sm-city-valenzuela,true,SM City Valenzuela,places/sm-city-valenzuela/sm-city-valenzuela-1.webp,matched
+Valenzuela,VALENZUELA\tagalag-fishing-village-1.jpg,tagalag-fishing-village,true,Tagalag Fishing Village,places/tagalag-fishing-village/tagalag-fishing-village-1.webp,matched

@@ -2,9 +2,8 @@
 import type { Session } from '@supabase/supabase-js'
 import { memo, useLayoutEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { Bot } from 'lucide-react'
 import { AppIcon } from '../components/AppIcon'
-import InternalLink from '../components/InternalLink'
+import MinimalBackNav from '../components/MinimalBackNav'
 import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
 import MapView from '../components/MapView'
 import { MapResponsiveLayout } from '../components/layout/ResponsiveLayouts'
@@ -107,6 +106,23 @@ type AskAiUsageSummary = {
   liveSearch: AskAiUsageStatus
 }
 
+type BackendAskAiUsageStatus = {
+  usageType?: string
+  allowed?: boolean
+  dailyLimit?: number
+  requestCount?: number
+  remaining?: number
+  resetsAt?: string
+  message?: string
+}
+
+type AskAiUsageResponse = Partial<AskAiUsageSummary> & {
+  askAiMaps?: unknown
+  chatbotAi?: unknown
+  error?: string
+  message?: string
+}
+
 const DAILY_ASK_AI_LIMIT_MESSAGE = 'Daily Ask AI limit reached.'
 const ASK_AI_MAPS_REQUEST_TIMEOUT_MS = 120_000
 
@@ -149,6 +165,62 @@ function isAskAiUsageStatus(value: unknown): value is AskAiUsageStatus {
     typeof candidate.remaining === 'number' &&
     typeof candidate.resetAt === 'string'
   )
+}
+
+function normalizeAskAiUsageStatus(value: unknown): AskAiUsageStatus | null {
+  if (isAskAiUsageStatus(value)) {
+    return value
+  }
+
+  if (!value || typeof value !== 'object') {
+    return null
+  }
+
+  const candidate = value as BackendAskAiUsageStatus
+  const normalizedUsageType =
+    candidate.usageType === 'live_search'
+      ? 'live_search'
+      : candidate.usageType === 'ask_ai_total' || candidate.usageType === 'chatbot_ai'
+        ? 'ask_ai_total'
+        : candidate.usageType === 'ask_ai_maps'
+          ? 'ask_ai_total'
+          : null
+
+  if (
+    !normalizedUsageType ||
+    typeof candidate.allowed !== 'boolean' ||
+    typeof candidate.dailyLimit !== 'number' ||
+    typeof candidate.requestCount !== 'number' ||
+    typeof candidate.remaining !== 'number' ||
+    typeof candidate.resetsAt !== 'string'
+  ) {
+    return null
+  }
+
+  return {
+    usageType: normalizedUsageType,
+    allowed: candidate.allowed,
+    limit: candidate.dailyLimit,
+    used: candidate.requestCount,
+    remaining: candidate.remaining,
+    resetAt: candidate.resetsAt,
+    message: typeof candidate.message === 'string' ? candidate.message : undefined,
+  }
+}
+
+function getAskAiUsageStatusFromResponse(value: unknown): AskAiUsageStatus | null {
+  const normalizedDirect = normalizeAskAiUsageStatus(value)
+
+  if (normalizedDirect) {
+    return normalizedDirect
+  }
+
+  if (!value || typeof value !== 'object') {
+    return null
+  }
+
+  const candidate = value as AskAiUsageResponse
+  return normalizeAskAiUsageStatus(candidate.askAi) ?? normalizeAskAiUsageStatus(candidate.askAiMaps)
 }
 
 function isDailyAskAiLimitMessage(message: string) {
@@ -1143,6 +1215,31 @@ function MinimalLoadingCard({ query }: { query: string }) {
   )
 }
 
+function MapPinNotice({ onDismiss }: { onDismiss: () => void }) {
+  return (
+    <div className="flex w-full items-start gap-2 rounded-[18px] border border-slate-200 bg-white px-3 py-2 text-[11px] leading-5 text-slate-500 shadow-[0_8px_20px_rgba(15,23,42,0.06)] sm:text-[12px]">
+      <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500">
+        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
+      </div>
+      <p className="min-w-0 flex-1">
+        Some results do not have a map pin yet to keep this on free services. Open place details for the Google Maps link.
+      </p>
+      <button
+        type="button"
+        onClick={onDismiss}
+        className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+        aria-label="Dismiss map pin notice"
+      >
+        <AppIcon name="clear" className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  )
+}
+
 const AskAiMapComposer = memo(function AskAiMapComposer({
   query,
   selectedChipIds,
@@ -1180,7 +1277,7 @@ const AskAiMapComposer = memo(function AskAiMapComposer({
   }
 
   return (
-    <div className="flex items-end gap-3 rounded-[22px] border border-white/86 bg-white/96 px-3 py-2.5 shadow-[0_10px_24px_rgba(15,23,42,0.08)] backdrop-blur-md lg:mx-auto lg:max-w-[680px]">
+    <div className="flex flex-row items-end gap-2 rounded-[22px] border border-white/86 bg-white px-3 py-2.5 shadow-[0_10px_24px_rgba(15,23,42,0.08)] sm:gap-3 lg:mx-auto lg:max-w-[680px]">
       <textarea
         ref={queryInputRef}
         value={draftQuery}
@@ -1198,7 +1295,7 @@ const AskAiMapComposer = memo(function AskAiMapComposer({
         }}
         placeholder="Discover places in an interactive map..."
         rows={1}
-        className="h-11 min-w-0 flex-1 resize-none overflow-y-auto bg-transparent px-0.5 py-2.5 text-[14px] font-medium leading-relaxed text-slate-900 outline-none placeholder:whitespace-nowrap placeholder:overflow-hidden placeholder:text-ellipsis placeholder:font-medium placeholder:text-slate-400 sm:text-base"
+        className="min-h-[48px] w-full min-w-0 flex-1 resize-none overflow-y-auto bg-transparent px-0.5 py-2.5 text-[14px] font-medium leading-relaxed text-slate-900 outline-none placeholder:whitespace-nowrap placeholder:overflow-hidden placeholder:text-ellipsis placeholder:font-medium placeholder:text-slate-400 sm:min-h-0 sm:text-base"
       />
       <button
         type="button"
@@ -1247,7 +1344,15 @@ function AskAiMapPage() {
     initialAskAiMapState?.userLocation ?? null
   )
   const [isSearching, setIsSearching] = useState(initialAskAiMapState?.isSearching === true)
-  const [, setHasSearched] = useState(false)
+  const [hasSearched, setHasSearched] = useState(Boolean(
+    (initialAskAiMapState?.places?.length ?? 0) > 0 ||
+    initialAskAiMapState?.isSearching === true ||
+    Boolean(initialAskAiMapState?.query?.trim()) ||
+    Boolean(initialAskAiMapState?.errorMessage?.trim()) ||
+    Boolean(initialAskAiMapState?.statusMessage?.trim()) ||
+    Boolean(initialAskAiMapState?.answerText?.trim()) ||
+    (initialAskAiMapState?.sources?.length ?? 0) > 0
+  ))
   const [errorMessage, setErrorMessage] = useState(initialAskAiMapState?.errorMessage ?? '')
   const [statusMessage, setStatusMessage] = useState(initialAskAiMapState?.statusMessage ?? '')
   const [answerText, setAnswerText] = useState(initialAskAiMapState?.answerText ?? '')
@@ -1301,20 +1406,19 @@ function AskAiMapPage() {
           signal: controller.signal,
         })
 
-        const data = (await response.json()) as Partial<AskAiUsageSummary> & {
-          error?: string
-          message?: string
-        }
+        const data = (await response.json()) as AskAiUsageResponse
 
         if (!response.ok) {
           throw new Error(data.message || data.error || 'Failed to check Ask AI usage.')
         }
 
-        if (!isAskAiUsageStatus(data.askAi)) {
+        const usageStatus = getAskAiUsageStatusFromResponse(data)
+
+        if (!usageStatus) {
           throw new Error('Ask AI usage response was incomplete.')
         }
 
-        if (data.askAi.allowed && (isDailyAskAiLimitMessage(errorMessage) || isDailyAskAiLimitMessage(statusMessage))) {
+        if (usageStatus.allowed && (isDailyAskAiLimitMessage(errorMessage) || isDailyAskAiLimitMessage(statusMessage))) {
           patchAskAiMapRuntimeState({
             errorMessage: isDailyAskAiLimitMessage(errorMessage) ? '' : errorMessage,
             statusMessage: isDailyAskAiLimitMessage(statusMessage) ? '' : statusMessage,
@@ -1453,6 +1557,14 @@ function AskAiMapPage() {
   const shouldShowPermissionPrompt =
     permissionState === 'prompt' || permissionState === 'requesting' || permissionState === 'denied'
   const shouldShowMapPinNotice = !isSearching && hasMissingMapPins && !isMapPinNoticeDismissed
+  const showDesktopResultsSidebar =
+    hasSearched ||
+    isSearching ||
+    normalizedPlaces.length > 0 ||
+    Boolean(answerText) ||
+    Boolean(statusMessage) ||
+    Boolean(errorMessage) ||
+    sources.length > 0
 
   useEffect(() => {
     if (!selectedPlaceId && places.length > 0) {
@@ -1768,7 +1880,7 @@ function AskAiMapPage() {
 
   return (
     <>
-    <main className="gala-page-background h-[100dvh] overflow-hidden overscroll-none text-[var(--text)] lg:hidden">
+    <main className="gala-page-background h-[100dvh] overflow-hidden overscroll-none text-[var(--text)] md:hidden lg:hidden">
       <div className="h-full w-full">
         <section className="relative h-full overflow-hidden bg-transparent p-0">
           <div className="relative h-full">
@@ -1782,26 +1894,21 @@ function AskAiMapPage() {
               focusSelectedPlaceOnChange
               selectedPlaceFocusSignal={selectedPlaceFocusSignal}
               className="h-full"
+              mapClassName="ask-ai-map-view"
               layoutKey={mapLayoutKey}
               onPlaceSelect={selectPlace}
             />
 
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[linear-gradient(180deg,rgba(248,247,244,0.72)_0%,rgba(248,247,244,0.18)_58%,rgba(248,247,244,0)_100%)]" />
-            <div className="absolute right-3 top-3 z-[620] sm:right-4 sm:top-4">
-              <InternalLink
-                href="/ask-ai"
-                aria-label="Back to Menu"
-                className="pointer-events-auto inline-flex h-[34px] w-[34px] items-center justify-center rounded-xl bg-sky-100 text-sky-700 ring-1 ring-inset ring-sky-200/70 transition hover:bg-sky-200/80 hover:text-sky-800"
-              >
-                <Bot className="h-6 w-6" strokeWidth={2} />
-              </InternalLink>
+            <div className="absolute left-3 top-3 z-[620] sm:left-4 sm:top-4">
+              <MinimalBackNav
+                to="/ask-ai"
+                label="Ask AI"
+                preferHistory={false}
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/90 px-3 py-1.5 text-[13px] font-semibold text-slate-700 shadow-[0_10px_24px_rgba(15,23,42,0.10)] backdrop-blur-md transition hover:border-[var(--accent)] hover:text-[var(--accent-deep)]"
+              />
             </div>
 
-            {isSearching ? (
-              <div className="pointer-events-none absolute inset-0 rounded-[26px] bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.14))]">
-                <div className="absolute inset-0 animate-[gala-map-breathe_4s_ease-in-out_infinite] bg-[linear-gradient(135deg,rgba(255,255,255,0.0)_0%,rgba(255,255,255,0.28)_45%,rgba(255,255,255,0.0)_100%)]" />
-              </div>
-            ) : null}
+            {isSearching ? null : null}
 
             {shouldShowPermissionPrompt ? (
               <div className="absolute inset-0 z-[700] flex items-center justify-center bg-[#08162f]/12 p-4">
@@ -1867,26 +1974,7 @@ function AskAiMapPage() {
 
                 {shouldShowMapPinNotice ? (
                   <div className="mb-3 flex justify-center lg:mx-auto lg:max-w-[680px]">
-                    <div className="pointer-events-auto flex w-full items-start gap-2 rounded-[18px] border border-slate-200 bg-white/96 px-3 py-2 text-[11px] leading-5 text-slate-500 shadow-[0_8px_20px_rgba(15,23,42,0.06)] backdrop-blur-sm sm:text-[12px]">
-                      <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-500">
-                        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                          <circle cx="12" cy="12" r="10" />
-                          <line x1="12" y1="8" x2="12" y2="12" />
-                          <line x1="12" y1="16" x2="12.01" y2="16" />
-                        </svg>
-                      </div>
-                      <p className="min-w-0 flex-1">
-                        Some results do not have a map pin yet to keep this on free services. Open place details for the Google Maps link.
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => setIsMapPinNoticeDismissed(true)}
-                        className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
-                        aria-label="Dismiss map pin notice"
-                      >
-                        <AppIcon name="clear" className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
+                    <MapPinNotice onDismiss={() => setIsMapPinNoticeDismissed(true)} />
                   </div>
                 ) : null}
 
@@ -2042,10 +2130,13 @@ function AskAiMapPage() {
         </section>
       </div>
     </main>
-    <main className="hidden h-[100dvh] overflow-hidden overscroll-none bg-[var(--bg)] text-[var(--text)] lg:block">
-      <MapResponsiveLayout className="h-full px-4 py-4 lg:mx-auto lg:max-w-[1500px] lg:px-6 lg:py-6 xl:max-w-[1640px] 2xl:max-w-[1760px]">
-        <section className="relative h-full overflow-hidden rounded-[28px] bg-transparent">
-          <div className="relative h-full">
+    <main className="fixed inset-0 hidden overflow-hidden overscroll-none bg-white text-[var(--text)] md:block">
+      <MapResponsiveLayout
+        sidebarVisible={showDesktopResultsSidebar}
+        className="h-full w-full gap-0 px-0 py-0"
+      >
+        <section className="relative h-full min-w-0 w-full overflow-hidden bg-transparent">
+          <div className="relative h-full w-full">
             <MapView
               places={mapPlaces}
               selectedPlaceId={selectedPlaceId}
@@ -2056,190 +2147,199 @@ function AskAiMapPage() {
               focusSelectedPlaceOnChange
               selectedPlaceFocusSignal={selectedPlaceFocusSignal}
               className="h-full"
+              mapClassName="ask-ai-map-view"
               layoutKey={mapLayoutKey}
               onPlaceSelect={selectPlace}
             />
 
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[linear-gradient(180deg,rgba(248,247,244,0.72)_0%,rgba(248,247,244,0.18)_58%,rgba(248,247,244,0)_100%)]" />
-            <div className="absolute right-3 top-3 z-[620]">
-              <InternalLink
-                href="/ask-ai"
-                aria-label="Back to Menu"
-                className="pointer-events-auto inline-flex h-[34px] w-[34px] items-center justify-center rounded-xl bg-sky-100 text-sky-700 ring-1 ring-inset ring-sky-200/70 transition hover:bg-sky-200/80 hover:text-sky-800"
-              >
-                <Bot className="h-6 w-6" strokeWidth={2} />
-              </InternalLink>
+            <div className="absolute left-3 top-3 z-[620]">
+              <MinimalBackNav
+                to="/ask-ai"
+                label="Ask AI"
+                preferHistory={false}
+                className="inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/90 px-3 py-1.5 text-[13px] font-semibold text-slate-700 shadow-[0_10px_24px_rgba(15,23,42,0.10)] backdrop-blur-md transition hover:border-[var(--accent)] hover:text-[var(--accent-deep)]"
+              />
+            </div>
+
+            <div className="absolute inset-x-0 bottom-0 z-[620] px-4 pb-2 pt-6">
+              <div className="mx-auto w-full max-w-[680px]">
+                <AskAiMapComposer
+                  key={`${query}:desktop`}
+                  query={query}
+                  selectedChipIds={selectedChipIds}
+                  isSearching={isSearching}
+                  onSubmit={(queryOverride) => {
+                    void handleEnterSearch(queryOverride)
+                  }}
+                  onCancel={() => {
+                    setIsSearching(false)
+                    cancelAskAiMapRequest()
+                  }}
+                />
+              </div>
             </div>
           </div>
         </section>
 
-        <aside className="flex h-full min-h-0 flex-col overflow-hidden rounded-[28px] border border-[var(--line)] bg-white shadow-[0_18px_44px_rgba(15,23,42,0.12)]">
-          <div className="shrink-0 border-b border-[var(--line)] px-4 py-4">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">Ask AI Maps</p>
-                <h1 className="mt-1 text-[22px] font-black tracking-[-0.03em] text-slate-950">
-                  {query.trim() || 'Map results'}
-                </h1>
+        {showDesktopResultsSidebar ? (
+          <aside className="flex h-full min-h-0 flex-col overflow-hidden border-l border-[var(--line)] bg-white">
+            <div className="shrink-0 border-b border-[var(--line)] px-4 py-4 md:px-3 md:py-3 lg:px-4 lg:py-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">Ask AI Maps</p>
+                  <h1 className="mt-1 truncate text-[20px] font-black tracking-[-0.03em] text-slate-950 md:text-[18px] lg:text-[22px]">
+                    {query.trim() || 'Map results'}
+                  </h1>
+                </div>
+                <span className="shrink-0 rounded-full bg-slate-100 px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-slate-600">
+                  {normalizedPlaces.length} places
+                </span>
               </div>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-slate-600">
-                {normalizedPlaces.length} places
-              </span>
+              {statusMessage ? <p className="mt-2 text-sm font-medium text-slate-600">{statusMessage}</p> : null}
+              {errorMessage ? <p className="mt-2 text-sm font-medium text-rose-600">{errorMessage}</p> : null}
+              {shouldShowMapPinNotice ? (
+                <div className="mt-3">
+                  <MapPinNotice onDismiss={() => setIsMapPinNoticeDismissed(true)} />
+                </div>
+              ) : null}
             </div>
-            {statusMessage ? <p className="mt-2 text-sm font-medium text-slate-600">{statusMessage}</p> : null}
-            {errorMessage ? <p className="mt-2 text-sm font-medium text-rose-600">{errorMessage}</p> : null}
-          </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
-            <div className="grid gap-3">
-              {isSearching ? <MinimalLoadingCard query={query} /> : null}
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 md:px-3 md:py-3 lg:px-4 lg:py-4">
+              <div className="grid gap-3 md:gap-2 lg:gap-3">
+                {isSearching ? <MinimalLoadingCard query={query} /> : null}
 
-              {!isSearching ? normalizedPlaces.map((place, index) => {
-                const display = displayPlaces[index]
-                if (!display) return null
-                const isSelected = place.id === selectedPlaceId
-                const areaText = getShortAreaText(display)
-                const openStatusChip = getOpenStatusChip(display)
-                const hoursSummary = display.openingHoursSummary || ''
-                const ratingText = display.ratingText || (typeof place.rating === 'number' ? place.rating.toFixed(1) : '')
-                const reviewCountText = display.reviewCountText || formatReviewCount(place.reviewCount)
-                const previewText = display.whyThisFits.length > 110
-                  ? `${display.whyThisFits.slice(0, 107).trimEnd()}...`
-                  : display.whyThisFits
+                {!isSearching ? normalizedPlaces.map((place, index) => {
+                  const display = displayPlaces[index]
+                  if (!display) return null
+                  const isSelected = place.id === selectedPlaceId
+                  const areaText = getShortAreaText(display)
+                  const openStatusChip = getOpenStatusChip(display)
+                  const hoursSummary = display.openingHoursSummary || ''
+                  const ratingText = display.ratingText || (typeof place.rating === 'number' ? place.rating.toFixed(1) : '')
+                  const reviewCountText = display.reviewCountText || formatReviewCount(place.reviewCount)
+                  const previewText = display.whyThisFits.length > 110
+                    ? `${display.whyThisFits.slice(0, 107).trimEnd()}...`
+                    : display.whyThisFits
 
-                return (
-                  <div
-                    key={place.id}
-                    ref={(node) => {
-                      if (node) cardRefs.current.set(place.id, node)
-                      else cardRefs.current.delete(place.id)
-                    }}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => {
-                      selectPlace(place.id)
-                    }}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault()
+                  return (
+                    <div
+                      key={place.id}
+                      ref={(node) => {
+                        if (node) cardRefs.current.set(place.id, node)
+                        else cardRefs.current.delete(place.id)
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => {
                         selectPlace(place.id)
-                      }
-                    }}
-                    className={`relative min-h-[160px] w-full snap-center rounded-[24px] border bg-white px-4 py-3.5 text-left cursor-pointer transition-all duration-200 ${
-                      isSelected
-                        ? 'scale-[1.01] border-transparent shadow-[0_22px_52px_rgba(15,23,42,0.22)]'
-                        : 'border-slate-100/90 shadow-[0_14px_38px_rgba(15,23,42,0.10)] hover:border-slate-200 hover:shadow-[0_18px_42px_rgba(15,23,42,0.14)]'
-                    }`}
-                    onMouseEnter={() => setFocusedPlaceId(place.id)}
-                    onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
-                  >
-                    <div className="flex h-full flex-col">
-                      <div className="flex items-start gap-2.5">
-                        <div className="flex shrink-0 items-center gap-2 pt-0.5">
-                          <span className={`h-2.5 w-2.5 rounded-full transition ${
-                            isSelected ? 'bg-[var(--accent-deep)] shadow-[0_0_0_5px_rgba(37,99,235,0.12)]' : 'bg-slate-200'
-                          }`} />
-                          <span className={`inline-flex h-7 min-w-7 items-center justify-center rounded-2xl px-2 text-[11px] font-black ${
-                            isSelected
-                              ? 'bg-[#172A5A] text-white shadow-[0_8px_16px_rgba(23,42,90,0.24)]'
-                              : 'bg-slate-100 text-[#172A5A]'
-                          }`}>
-                            {place.displayIndex}
-                          </span>
-                        </div>
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          event.preventDefault()
+                          selectPlace(place.id)
+                        }
+                      }}
+                      className={`relative min-h-[160px] w-full snap-center rounded-[24px] border bg-white px-4 py-3.5 text-left cursor-pointer transition-all duration-200 ${
+                        isSelected
+                          ? 'scale-[1.01] border-transparent shadow-[0_22px_52px_rgba(15,23,42,0.22)]'
+                          : 'border-slate-100/90 shadow-[0_14px_38px_rgba(15,23,42,0.10)] hover:border-slate-200 hover:shadow-[0_18px_42px_rgba(15,23,42,0.14)]'
+                      }`}
+                      onMouseEnter={() => setFocusedPlaceId(place.id)}
+                      onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
+                    >
+                      <div className="flex h-full flex-col">
+                        <div className="flex items-start gap-2.5">
+                          <div className="flex shrink-0 items-center gap-2 pt-0.5">
+                            <span className={`h-2.5 w-2.5 rounded-full transition ${
+                              isSelected ? 'bg-[var(--accent-deep)] shadow-[0_0_0_5px_rgba(37,99,235,0.12)]' : 'bg-slate-200'
+                            }`} />
+                            <span className={`inline-flex h-7 min-w-7 items-center justify-center rounded-2xl px-2 text-[11px] font-black ${
+                              isSelected
+                                ? 'bg-[#172A5A] text-white shadow-[0_8px_16px_rgba(23,42,90,0.24)]'
+                                : 'bg-slate-100 text-[#172A5A]'
+                            }`}>
+                              {place.displayIndex}
+                            </span>
+                          </div>
 
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-start gap-2">
-                            <h3 className="min-w-0 flex-1 text-[15px] font-extrabold leading-[1.2] tracking-[-0.02em] text-slate-950 line-clamp-2">
-                              {display.title}
-                            </h3>
-                            <div className="flex shrink-0 flex-col items-end gap-1">
-                              {display.category !== 'Place' ? (
-                                <span className="shrink-0 self-start rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-[10px] font-semibold text-slate-500">
-                                  {display.category}
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-start gap-2">
+                              <h3 className="min-w-0 flex-1 text-[15px] font-extrabold leading-[1.2] tracking-[-0.02em] text-slate-950 line-clamp-2">
+                                {display.title}
+                              </h3>
+                              <div className="flex shrink-0 flex-col items-end gap-1">
+                                {display.category !== 'Place' ? (
+                                  <span className="shrink-0 self-start rounded-full border border-slate-200 bg-slate-50 px-2.5 py-0.5 text-[10px] font-semibold text-slate-500">
+                                    {display.category}
+                                  </span>
+                                ) : null}
+                              </div>
+                            </div>
+
+                            <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[12px] font-medium text-slate-500">
+                              {ratingText ? (
+                                <span className="inline-flex items-center gap-0.5 font-semibold text-slate-700">
+                                  <span className="text-[13px] leading-none text-amber-500">{'\u2605'}</span>
+                                  <span>{ratingText}</span>
                                 </span>
+                              ) : null}
+                              {reviewCountText ? (
+                                <>
+                                  {getMetaDot(Boolean(ratingText))}
+                                  <span>{reviewCountText}</span>
+                                </>
                               ) : null}
                             </div>
                           </div>
+                        </div>
 
-                          <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[12px] font-medium text-slate-500">
-                            {ratingText ? (
-                              <span className="inline-flex items-center gap-0.5 font-semibold text-slate-700">
-                                <span className="text-[13px] leading-none text-amber-500">{'\u2605'}</span>
-                                <span>{ratingText}</span>
+                        {areaText ? (
+                          <div className="mt-2 flex items-start gap-1.5 text-[12px] text-slate-400">
+                            <AppIcon name="place" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-350" />
+                            <span className="line-clamp-1 font-medium">{shortenAddress(display.address || areaText)}</span>
+                          </div>
+                        ) : null}
+
+                        <p className="mt-2 line-clamp-2 text-[12px] leading-[1.5] text-slate-500">
+                          {previewText}
+                        </p>
+
+                        <div className="mt-auto flex items-center justify-between gap-3 pt-2.5">
+                          <div className="min-w-0 flex items-center gap-2">
+                            {openStatusChip ? (
+                              <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-1.5 py-0.5 text-[11px] font-semibold ${openStatusChip.className}`}>
+                                <span className={`text-[7px] ${openStatusChip.dotClassName}`}>{'\u25CF'}</span>
+                                {openStatusChip.label}
                               </span>
                             ) : null}
-                            {reviewCountText ? (
-                              <>
-                                {getMetaDot(Boolean(ratingText))}
-                                <span>{reviewCountText}</span>
-                              </>
+                            {hoursSummary ? (
+                              <span className="line-clamp-1 text-[11px] font-medium text-slate-400">{hoursSummary}</span>
                             ) : null}
                           </div>
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              event.preventDefault()
+                              openPlaceDetails(place.id)
+                            }}
+                            className="inline-flex shrink-0 items-center gap-1 rounded-full border border-[var(--accent)]/16 bg-[var(--accent-wash)] px-3 py-1.5 text-[11px] font-semibold text-[var(--accent-deep)] transition hover:bg-[var(--accent)]/15 active:scale-95"
+                          >
+                            <span>View details</span>
+                            <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M5 12h14M12 5l7 7-7 7" />
+                            </svg>
+                          </button>
                         </div>
-                      </div>
-
-                      {areaText ? (
-                        <div className="mt-2 flex items-start gap-1.5 text-[12px] text-slate-400">
-                          <AppIcon name="place" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-350" />
-                          <span className="line-clamp-1 font-medium">{shortenAddress(display.address || areaText)}</span>
-                        </div>
-                      ) : null}
-
-                      <p className="mt-2 line-clamp-2 text-[12px] leading-[1.5] text-slate-500">
-                        {previewText}
-                      </p>
-
-                      <div className="mt-auto flex items-center justify-between gap-3 pt-2.5">
-                        <div className="min-w-0 flex items-center gap-2">
-                          {openStatusChip ? (
-                            <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-1.5 py-0.5 text-[11px] font-semibold ${openStatusChip.className}`}>
-                              <span className={`text-[7px] ${openStatusChip.dotClassName}`}>{'\u25CF'}</span>
-                              {openStatusChip.label}
-                            </span>
-                          ) : null}
-                          {hoursSummary ? (
-                            <span className="line-clamp-1 text-[11px] font-medium text-slate-400">{hoursSummary}</span>
-                          ) : null}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={(event) => {
-                            event.stopPropagation()
-                            event.preventDefault()
-                            openPlaceDetails(place.id)
-                          }}
-                          className="inline-flex shrink-0 items-center gap-1 rounded-full border border-[var(--accent)]/16 bg-[var(--accent-wash)] px-3 py-1.5 text-[11px] font-semibold text-[var(--accent-deep)] transition hover:bg-[var(--accent)]/15 active:scale-95"
-                        >
-                          <span>View details</span>
-                          <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M5 12h14M12 5l7 7-7 7" />
-                          </svg>
-                        </button>
                       </div>
                     </div>
-                  </div>
-                )
-              }) : null}
-            </div>
+                  )
+                }) : null}
+              </div>
 
-            <div className="mt-4">
-              <AskAiMapComposer
-                key={`${query}:desktop`}
-                query={query}
-                selectedChipIds={selectedChipIds}
-                isSearching={isSearching}
-                onSubmit={(queryOverride) => {
-                  void handleEnterSearch(queryOverride)
-                }}
-                onCancel={() => {
-                  setIsSearching(false)
-                  cancelAskAiMapRequest()
-                }}
-              />
             </div>
-          </div>
-        </aside>
+          </aside>
+        ) : null}
       </MapResponsiveLayout>
     </main>
     {selectedDisplayPlace && isPlaceDetailOpen ? createPortal(
@@ -2250,9 +2350,9 @@ function AskAiMapPage() {
           className="absolute inset-0 bg-[#08162f]/42 backdrop-blur-[4px]"
           onClick={() => setIsPlaceDetailOpen(false)}
         />
-        <div className="absolute inset-x-0 bottom-0 flex items-end lg:inset-0 lg:items-center lg:justify-center lg:p-4">
+        <div className="absolute inset-x-0 bottom-0 flex items-end md:inset-0 md:items-center md:justify-center md:p-3 lg:inset-0 lg:items-center lg:justify-center lg:p-4">
         <section
-          className="flex w-full max-h-[82dvh] flex-col overflow-hidden rounded-t-[28px] bg-white shadow-[0_-18px_48px_rgba(15,23,42,0.22)] lg:max-w-[580px] lg:max-h-[88dvh] lg:rounded-[28px] lg:shadow-[0_26px_60px_rgba(15,23,42,0.24)]"
+          className="flex w-full max-h-[82dvh] flex-col overflow-hidden rounded-t-[28px] bg-white shadow-[0_-18px_48px_rgba(15,23,42,0.22)] md:max-w-[520px] md:max-h-[88dvh] md:rounded-[28px] md:shadow-[0_26px_60px_rgba(15,23,42,0.24)] lg:max-w-[580px] lg:max-h-[88dvh] lg:rounded-[28px] lg:shadow-[0_26px_60px_rgba(15,23,42,0.24)]"
           aria-modal="true"
           role="dialog"
           aria-label={`${selectedDisplayPlace.title} details`}

@@ -6,8 +6,8 @@ import {
   InvocationContext,
 } from "@azure/functions";
 import {
-  checkAskAiUsage,
   consumeAskAiUsage,
+  refundAskAiUsage,
 } from "../services/askAiUsageService";
 import {
   GroqChatProviderError,
@@ -79,6 +79,7 @@ export async function postAskAiChatbot(
   context: InvocationContext
 ): Promise<HttpResponseInit> {
   const requestId = randomUUID();
+  let quotaConsumedUserId: string | null = null;
 
   try {
     context.log(`[AskAI Chatbot] REQUEST STARTED requestId=${requestId}`);
@@ -101,25 +102,35 @@ export async function postAskAiChatbot(
       };
     }
 
-    const usageBefore = await checkAskAiUsage(user.id, "ask_ai_total");
+    const aiUsage = await consumeAskAiUsage(user.id, "chatbot_ai");
 
-    if (!usageBefore.allowed) {
+    if (!aiUsage.allowed) {
+      context.log(
+        `[AskAI Chatbot] quota blocked: usageType=chatbot_ai remaining=0 userId=${user.id}`
+      );
+
       return {
         status: 429,
         headers: JSON_HEADERS,
         jsonBody: {
           ok: false,
-          error: "AI limit reached. Please try again later.",
-          errorCode: "AI_PROVIDER_RATE_LIMITED",
-          userMessage: "AI limit reached. Please try again later.",
-          usage: {
-            askAi: usageBefore,
-            liveSearch: await checkAskAiUsage(user.id, "live_search"),
-          },
+          error: "daily_ai_limit_reached",
+          usageType: "chatbot_ai",
+          message: "You have reached your Chatbot AI daily limit.",
+          dailyLimit: aiUsage.dailyLimit,
+          requestCount: aiUsage.requestCount,
+          remaining: aiUsage.remaining,
+          resetsAt: aiUsage.resetsAt,
           requestId,
         },
       };
     }
+
+    quotaConsumedUserId = user.id;
+
+    context.log(
+      `[AskAI Chatbot] quota consumed: remaining=${aiUsage.remaining} userId=${user.id}`
+    );
 
     context.log(
       `[AskAI Chatbot] provider=groq requestId=${requestId} MODEL REQUEST STARTED questionLength=${message.length}`
@@ -136,9 +147,6 @@ export async function postAskAiChatbot(
       `[AskAI Chatbot] provider=groq requestId=${requestId} MODEL RESPONSE RECEIVED answerLength=${answer.length}`
     );
 
-    const usageAfter = await consumeAskAiUsage(user.id, "ask_ai_total");
-    const liveSearchUsage = await checkAskAiUsage(user.id, "live_search");
-
     context.log(`[AskAI Chatbot] REQUEST COMPLETED requestId=${requestId}`);
 
     return {
@@ -149,17 +157,27 @@ export async function postAskAiChatbot(
         answer,
         sources: [],
         usage: {
-          askAi: usageAfter,
-          liveSearch: liveSearchUsage,
+          usageType: aiUsage.usageType,
+          dailyLimit: aiUsage.dailyLimit,
+          requestCount: aiUsage.requestCount,
+          remaining: aiUsage.remaining,
+          resetsAt: aiUsage.resetsAt,
         },
         requestId,
       },
     };
   } catch (error) {
+    if (quotaConsumedUserId) {
+      context.log(
+        `[AskAI Chatbot] refunding after provider failure: userId=${quotaConsumedUserId}`
+      );
+      await refundAskAiUsage({
+        userId: quotaConsumedUserId,
+        usageType: "chatbot_ai",
+      });
+    }
+
     const message = error instanceof Error ? error.message : "Unknown error";
-    const status = getErrorStatus(error);
-    const providerError =
-      error instanceof GroqChatProviderError ? error : null;
     context.error(
       `[AskAI Chatbot] REQUEST FAILED requestId=${requestId} reason=${message}`
     );
@@ -195,6 +213,9 @@ export async function postAskAiChatbot(
       };
     }
 
+    const providerError =
+      error instanceof GroqChatProviderError ? error : null;
+
     if (providerError?.status === 429) {
       return {
         status: 429,
@@ -222,6 +243,8 @@ export async function postAskAiChatbot(
         },
       };
     }
+
+    const status = getErrorStatus(error);
 
     if (status === 429) {
       return {

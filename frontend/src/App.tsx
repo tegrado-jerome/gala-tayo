@@ -18,6 +18,8 @@ import OnboardingPage from './pages/OnboardingPage'
 import ProfilePage from './pages/ProfilePage'
 import AccountSettingsPage from './pages/AccountSettingsPage'
 import ChangePasswordPage from './pages/ChangePasswordPage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 import PublicProfilePage from './pages/PublicProfilePage'
 import ProfileSearchPage from './pages/ProfileSearchPage'
 import PublicGalaPlanPage from './pages/PublicGalaPlanPage'
@@ -52,14 +54,12 @@ type PlaceDetail = {
   id: string
   slug: string
   name: string
-  rating?: number | null
+  average_rating?: string | null
   review_count?: number | null
-  location: string
   address?: string | null
   city?: string | null
   area?: string | null
   description: string
-  place_history?: string | null
   best_time_to_visit?: string | null
   visit_duration?: string | null
   good_for?: string[]
@@ -68,26 +68,21 @@ type PlaceDetail = {
   indoor_outdoor?: string | null
   weather_fit?: string | null
   parking_info?: string | null
-  accessibility_notes?: string | null
-  decision_reason?: string | null
-  commute_friendly?: boolean | null
   commute_access?: string | null
   nearby_context?: string | null
-  budget_notes?: string | null
-  verification_status?: string | null
-  verification_notes?: string | null
-  verification_sources?: string[]
-  last_verified_at?: string | null
-  website_url?: string | null
+  budget_note?: string | null
+  budget_min?: number | null
+  price_level?: number | null
   google_maps_url?: string | null
   category: string
-  entranceFee: string
-  openHours: string
-  website: string
-  latitude: number
-  longitude: number
-  imageUrl: string
-  curatedImageUrls: string[]
+  latitude: number | string
+  longitude: number | string
+  status?: string
+  imageUrl?: string | null
+  thumbnailUrl?: string | null
+  curatedImageUrls?: string[] | null
+  categories?: { id: string; name: string }[]
+  tags?: { id: string; name: string; group: string; strength: number }[]
 }
 
 type PlaceDetailCardData = PlaceCardData & {
@@ -209,6 +204,14 @@ function getCanonicalGalaPlanPath(pathname: string) {
 
 function isPath(pathname: string, path: string) {
   return pathname === path || pathname === `${path}/`
+}
+
+function getCanonicalForgotPasswordPath(pathname: string): '/forgot-password' | null {
+  if (isPath(pathname, '/forgot') || isPath(pathname, '/forgot-password') || isPath(pathname, '/reset-password') || isPath(pathname, '/auth/forgot-password')) {
+    return '/forgot-password'
+  }
+
+  return null
 }
 
 function getCanonicalAuthPath(pathname: string): '/login' | '/signup' | null {
@@ -356,7 +359,7 @@ function shouldShowMobileBottomNav(pathname: string) {
     return false
   }
 
-  if (isPath(pathname, '/login') || isPath(pathname, '/signup') || isPath(pathname, '/onboarding')) {
+  if (isPath(pathname, '/login') || isPath(pathname, '/signup') || isPath(pathname, '/onboarding') || isPath(pathname, '/forgot-password') || isPath(pathname, '/auth/reset-password')) {
     return false
   }
 
@@ -399,6 +402,8 @@ function getNoindexForPath(pathname: string) {
       '/signup',
       '/auth',
       '/auth/callback',
+      '/auth/reset-password',
+      '/forgot-password',
       '/onboarding',
       '/favorites',
       '/history',
@@ -458,27 +463,25 @@ function formatMarkerRatingText(value: number | null | undefined) {
 }
 
 function mapBackendPlaceToCardData(place: PlaceDetail): PlaceDetailCardData {
+  const parsedRating = place.average_rating != null ? parseFloat(String(place.average_rating)) : null
+
   return {
     id: place.id,
     slug: place.slug,
     name: place.name,
-    rating: place.rating ?? null,
+    rating: parsedRating,
     ratingCount: place.review_count ?? null,
-    markerRatingText: formatMarkerRatingText(place.rating ?? null),
+    markerRatingText: formatMarkerRatingText(parsedRating),
     category: place.category,
-    area: place.location,
+    area: place.area || place.city || '',
     address: place.address || null,
     city: place.city || null,
     localArea: place.area || null,
-    status: 'Open',
+    status: place.status === 'active' ? 'Open' : 'Unknown',
     reason: place.description,
     description: place.description,
     badge: 'Shared',
-    hours: place.openHours,
-    entranceFee: place.entranceFee,
-    website: place.website,
     googleMapsUrl: place.google_maps_url,
-    place_history: place.place_history,
     best_time_to_visit: place.best_time_to_visit,
     visit_duration: place.visit_duration,
     good_for: place.good_for ?? [],
@@ -487,23 +490,114 @@ function mapBackendPlaceToCardData(place: PlaceDetail): PlaceDetailCardData {
     indoor_outdoor: place.indoor_outdoor,
     weather_fit: place.weather_fit,
     parking_info: place.parking_info,
-    accessibility_notes: place.accessibility_notes,
-    decision_reason: place.decision_reason,
-    commute_friendly: place.commute_friendly,
     commute_access: place.commute_access,
     nearby_context: place.nearby_context,
-    budget_notes: place.budget_notes,
-    verification_status: place.verification_status,
-    verification_notes: place.verification_notes,
-    verification_sources: place.verification_sources ?? [],
-    last_verified_at: place.last_verified_at,
-    website_url: place.website_url,
-    imageUrl: place.imageUrl,
-    curatedImageUrls: place.curatedImageUrls,
+    budget_notes: place.budget_note ?? null,
+    budget_min: place.budget_min ?? null,
+    price_level: place.price_level ?? null,
     coordinates: {
       lat: place.latitude,
       lng: place.longitude,
     },
+    imageUrl: place.imageUrl || null,
+    curatedImageUrls: Array.isArray(place.curatedImageUrls)
+      ? place.curatedImageUrls.filter((url): url is string => Boolean(url?.trim()))
+      : [],
+    categories: (place.categories ?? []).map((c) => ({ id: c.id, name: c.name })),
+    tags: (place.tags ?? []).map((t) => ({
+      id: t.id,
+      name: t.name,
+      group: t.group,
+      strength: t.strength,
+    })),
+  }
+}
+
+function buildPlaceDescription(place: PlaceDetailCardData, areaName: string) {
+  const parts: string[] = [`Explore ${place.name} in ${areaName}.`]
+  if (place.good_for && place.good_for.length > 0) {
+    parts.push(`Best for ${place.good_for.slice(0, 3).join(', ')}.`)
+  }
+  if (place.budget_min != null) {
+    parts.push(`Budget starts at ₱${place.budget_min}.`)
+  }
+  if (place.description?.trim()) {
+    const shortDesc = place.description.replace(/<[^>]*>/g, '').slice(0, 120).replace(/\s+\S*$/, '')
+    if (shortDesc.length > 20) parts.push(shortDesc + '.')
+  }
+  return parts.join(' ') + ' See location, photos, reviews, and add to your gala plan.'
+}
+
+function buildPlaceFaqSchema(place: PlaceDetailCardData) {
+  const items: { '@type': 'Question'; name: string; acceptedAnswer: { '@type': 'Answer'; text: string } }[] = []
+
+  const goodFor = place.good_for ?? []
+  if (goodFor.length > 0) {
+    items.push({
+      '@type': 'Question',
+      name: `Is ${place.name} good for a date?`,
+      acceptedAnswer: { '@type': 'Answer', text: goodFor.some((g) => /date|romantic|night/i.test(g)) ? `Yes, it is great for ${goodFor.filter((g) => /date|romantic|night/i.test(g)).join(', ')}.` : `It works best for ${goodFor.join(', ')}.` },
+    })
+    items.push({
+      '@type': 'Question',
+      name: `Is ${place.name} family-friendly?`,
+      acceptedAnswer: { '@type': 'Answer', text: goodFor.some((g) => /family|kid|children/i.test(g)) ? 'Yes, it is recommended for family trips.' : 'It is more suited for other vibes like ' + goodFor.join(', ') + '.' },
+    })
+  }
+
+  if (place.best_time_to_visit?.trim()) {
+    items.push({
+      '@type': 'Question',
+      name: `What is the best time to visit ${place.name}?`,
+      acceptedAnswer: { '@type': 'Answer', text: place.best_time_to_visit },
+    })
+  }
+
+  if (place.budget_min != null) {
+    items.push({
+      '@type': 'Question',
+      name: `How much budget is needed for ${place.name}?`,
+      acceptedAnswer: { '@type': 'Answer', text: `Starting budget is around ₱${place.budget_min}.` },
+    })
+  }
+
+  if (place.indoor_outdoor?.trim()) {
+    items.push({
+      '@type': 'Question',
+      name: `Is ${place.name} indoor or outdoor?`,
+      acceptedAnswer: { '@type': 'Answer', text: `${place.indoor_outdoor}.${place.weather_fit?.trim() ? ' It is ' + place.weather_fit + '.' : ''}` },
+    })
+  }
+
+  if (place.commute_access?.trim()) {
+    items.push({
+      '@type': 'Question',
+      name: `How do I get to ${place.name}?`,
+      acceptedAnswer: { '@type': 'Answer', text: place.commute_access },
+    })
+  }
+
+  if (place.parking_info?.trim()) {
+    items.push({
+      '@type': 'Question',
+      name: `Is parking available at ${place.name}?`,
+      acceptedAnswer: { '@type': 'Answer', text: place.parking_info },
+    })
+  }
+
+  if (place.nearby_context?.trim()) {
+    items.push({
+      '@type': 'Question',
+      name: `What is near ${place.name}?`,
+      acceptedAnswer: { '@type': 'Answer', text: place.nearby_context },
+    })
+  }
+
+  if (items.length === 0) return null
+
+  return {
+    '@type': 'FAQPage',
+    mainEntity: items,
   }
 }
 
@@ -616,6 +710,11 @@ function SharedPlacePage({
 
   const listingLink = urlListingLink || sessionReturn?.returnTo || null
   const listingLabel = urlListingLabel || sessionReturn?.returnLabel || null
+  const cameFromSearch =
+    !urlListingLink &&
+    sessionReturn?.source === 'search' &&
+    typeof sessionReturn?.returnTo === 'string' &&
+    sessionReturn.returnTo.startsWith('/search')
 
   const categoryBreadcrumbMeta = getCategoryBreadcrumbMeta(listingLink, listingLabel)
 
@@ -665,6 +764,7 @@ function SharedPlacePage({
               },
               image: place.imageUrl || place.curatedImageUrls?.[0] || undefined,
             },
+            ...(buildPlaceFaqSchema(place) ? [buildPlaceFaqSchema(place)!] : []),
           ],
         }
       : null
@@ -716,10 +816,14 @@ function SharedPlacePage({
     <>
       <SeoHead
         title={`${place.name} in ${areaMeta?.name || 'Metro Manila'} | GalaTayo`}
-        description={`Explore ${place.name} in ${areaMeta?.name || 'Metro Manila'}. See location, budget info, reviews, good-for tags, map, and add it to your GalaTayo plan.`}
+        description={buildPlaceDescription(place, areaMeta?.name || 'Metro Manila')}
         canonicalPath={canonicalPath}
         openGraphType="article"
-        image={place.imageUrl ? { url: place.imageUrl, alt: place.name } : null}
+        image={
+          place.imageUrl || place.thumbnailUrl || place.curatedImageUrls?.[0]
+            ? { url: place.imageUrl || place.thumbnailUrl || place.curatedImageUrls?.[0] || '', alt: place.name }
+            : null
+        }
         jsonLd={placeJsonLd}
       />
       <PlaceDetailView
@@ -728,6 +832,8 @@ function SharedPlacePage({
           areaSlug: areaMeta?.slug || expectedAreaSlug || formatLabelFromSlug(place.city || place.area || 'metro-manila').toLowerCase(),
           areaName: areaMeta?.name || formatLabelFromSlug(expectedAreaSlug || 'metro-manila'),
         }}
+        cameFromSearch={cameFromSearch}
+        returnLabel={listingLabel}
         searchHref={listingLink}
       />
     </>
@@ -755,6 +861,10 @@ function App() {
     pathname: window.location.pathname,
     search: window.location.search,
   }))
+  const [isRecoveryFlow] = useState(() => {
+    const hash = window.location.hash
+    return hash.includes('type=recovery') || hash.includes('access_token')
+  })
   const [session, setSession] = useState<Session | null>(null)
   const [hasResolvedInitialAuth, setHasResolvedInitialAuth] = useState(false)
   const [needsOnboarding, setNeedsOnboarding] = useState(false)
@@ -834,6 +944,14 @@ function App() {
 
     if (canonicalHomePath && pathname !== canonicalHomePath) {
       replaceWithPath(canonicalHomePath)
+    }
+  }, [pathname])
+
+  useEffect(() => {
+    const canonicalForgotPasswordPath = getCanonicalForgotPasswordPath(pathname)
+
+    if (canonicalForgotPasswordPath && pathname !== canonicalForgotPasswordPath) {
+      replaceWithPath(canonicalForgotPasswordPath)
     }
   }, [pathname])
 
@@ -1037,6 +1155,17 @@ function App() {
       return <AppLoadingState message="Taking you to onboarding..." />
     }
 
+    if (
+      pathname === '/submit-place' ||
+      pathname === '/submit-place/' ||
+      pathname === '/places/submit' ||
+      pathname === '/places/submit/' ||
+      pathname === '/places/new' ||
+      pathname === '/places/new/'
+    ) {
+      return <PlaceSubmissionPage session={session} />
+    }
+
     if (!session && isProtectedAccountPath(pathname)) {
       return <ProtectedFeatureGate pathname={pathname} search={search} />
     }
@@ -1174,6 +1303,18 @@ function App() {
 
     if (pathname === '/auth/callback' || pathname === '/auth/callback/') {
       return <AuthCallbackPage />
+    }
+
+    if (isPath(pathname, '/auth/reset-password')) {
+      if (!session && isRecoveryFlow) {
+        return <AppLoadingState message="Preparing your password reset..." />
+      }
+
+      return <ResetPasswordPage session={session} />
+    }
+
+    if (pathname === '/forgot-password' || pathname === '/forgot-password/') {
+      return <ForgotPasswordPage />
     }
 
     if (pathname === '/about' || pathname === '/about/') {
@@ -1324,17 +1465,6 @@ function App() {
       return <AdminPlaceSubmissionsPage session={session} />
     }
 
-    if (
-      pathname === '/submit-place' ||
-      pathname === '/submit-place/' ||
-      pathname === '/places/submit' ||
-      pathname === '/places/submit/' ||
-      pathname === '/places/new' ||
-      pathname === '/places/new/'
-    ) {
-      return <PlaceSubmissionPage session={session} />
-    }
-
     if (pathname === '/submissions' || pathname === '/submissions/' || pathname === '/my-submissions' || pathname === '/my-submissions/') {
       if (!session) {
         return <LoginPage />
@@ -1346,7 +1476,27 @@ function App() {
     return (
       <>
         <SeoHead title="Page not found | GalaTayo" robots="noindex,follow" />
-        <HomeLandingPage />
+        <main className="flex min-h-screen flex-col items-center justify-center bg-white px-6 text-center">
+          <h1 className="text-6xl font-black text-slate-900">404</h1>
+          <p className="mt-3 text-lg font-semibold text-slate-600">Page not found</p>
+          <p className="mt-1 text-sm text-slate-500">This page does not exist or has been moved.</p>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => navigateToPath('/')}
+              className="inline-flex h-11 items-center rounded-full bg-[#1E3A8A] px-6 text-sm font-bold text-white transition hover:bg-[#1E40AF]"
+            >
+              Go home
+            </button>
+            <button
+              type="button"
+              onClick={() => navigateToPath('/places')}
+              className="inline-flex h-11 items-center rounded-full border border-slate-200 bg-white px-6 text-sm font-bold text-slate-700 transition hover:border-slate-300"
+            >
+              Browse places
+            </button>
+          </div>
+        </main>
       </>
     )
   })()
@@ -1376,7 +1526,7 @@ function App() {
               robots="noindex,follow"
             />
           ) : null}
-          <div className={reserveMobileBottomNavSpace ? 'pb-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] sm:pb-[calc(env(safe-area-inset-bottom,0px)+4.75rem)] lg:pb-0' : ''}>
+          <div>
             {content}
           </div>
           {showMobileBottomNav ? <MobileBottomNav currentPath={pathname} session={session} /> : null}

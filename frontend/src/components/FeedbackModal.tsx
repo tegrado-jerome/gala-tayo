@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { AppIcon } from './AppIcon'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { supabase } from '../supabase'
+import { CenteredModal } from './layout/Primitives'
 
 type FeedbackModalProps = {
   isOpen: boolean
@@ -154,16 +155,14 @@ function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
   }
 
   return createPortal(
-    <div className="fixed inset-0 z-[7000] flex items-center justify-center px-4 py-6">
-      <button
-        type="button"
-        className="gala-modal-backdrop absolute inset-0 bg-slate-950/28 backdrop-blur-[3px]"
-        aria-label="Close feedback modal"
-        onClick={onClose}
-      />
-
-      <section
-        className="gala-modal-card gala-card relative w-full max-w-[460px] overflow-hidden"
+    <CenteredModal
+      isOpen={isOpen}
+      onClose={onClose}
+      maxWidth="md"
+      panelClassName="gala-card relative max-w-[460px] overflow-hidden"
+      ariaLabel="Submit feedback"
+    >
+      <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="feedback-title"
@@ -248,14 +247,14 @@ function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
               type="button"
               onClick={() => void handleSubmit()}
               disabled={isSubmitting || isLimitReached}
-              className="gala-primary-button min-h-10 px-4 disabled:opacity-70"
+              className="app-button app-button-primary app-button-md px-4"
             >
               {isSubmitting ? 'Submitting...' : isSubmitted ? 'Rate again' : 'Submit feedback'}
             </button>
           </div>
         </div>
-      </section>
-    </div>,
+      </div>
+    </CenteredModal>,
     document.body,
   )
 }
