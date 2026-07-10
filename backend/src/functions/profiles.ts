@@ -306,6 +306,26 @@ function needsOnboarding(profile: ProfileRow | null) {
   return !profile?.onboarding_completed_at;
 }
 
+function hasCompletedOnboarding(profile: ProfileRow | null, accountUser?: AccountUserRow | null) {
+  if (profile?.onboarding_completed_at) {
+    return true;
+  }
+
+  if (!profile || !accountUser) {
+    return false;
+  }
+
+  return Boolean(
+    profile.username &&
+      profile.display_name &&
+      accountUser.first_name &&
+      accountUser.last_name &&
+      accountUser.birthdate &&
+      accountUser.terms_accepted_at &&
+      accountUser.privacy_accepted_at
+  );
+}
+
 function mapAccountUser(row: AccountUserRow) {
   return {
     id: row.id,
@@ -730,6 +750,7 @@ export async function currentUserMe(
       getOrCreateAccountUser(authUser.id, authUser.email),
       getOrCreateProfile(authUser.id, providerAvatarUrl),
     ]);
+    const derivedOnboardingCompleted = hasCompletedOnboarding(existingProfile, existingAccountUser);
 
     if (request.method === "PATCH") {
       const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
@@ -861,13 +882,15 @@ export async function currentUserMe(
         profile = await saveProfile(authUser.id, profileUpdates);
       }
 
+      const completed = hasCompletedOnboarding(profile, accountUser);
+
       return {
         status: 200,
         jsonBody: {
           user: mapAccountUser(accountUser),
           profile: mapPublicProfile(profile),
           onboarding: {
-            completed: Boolean(profile.onboarding_completed_at),
+            completed,
           },
         },
       };
@@ -875,7 +898,25 @@ export async function currentUserMe(
 
     const accountUser = existingAccountUser;
     const profile = existingProfile;
-    const completed = Boolean(profile.onboarding_completed_at);
+    const completed = derivedOnboardingCompleted;
+
+    if (completed && !profile.onboarding_completed_at) {
+      const now = new Date().toISOString();
+      const updatedProfile = await saveProfile(authUser.id, {
+        onboarding_completed_at: now,
+      });
+
+      return {
+        status: 200,
+        jsonBody: {
+          user: mapAccountUser(accountUser),
+          profile: mapPublicProfile(updatedProfile),
+          onboarding: {
+            completed: true,
+          },
+        },
+      };
+    }
 
     return {
       status: 200,
@@ -910,8 +951,32 @@ export async function onboardingStatus(
   try {
     const authUser = await validateJwt(request);
     const providerAvatarUrl = getMetadataString(authUser.metadata, ["avatar_url", "picture"]);
-    const profile = await getOrCreateProfile(authUser.id, providerAvatarUrl);
-    const completed = Boolean(profile.onboarding_completed_at);
+    const [accountUser, profile] = await Promise.all([
+      getOrCreateAccountUser(authUser.id, authUser.email),
+      getOrCreateProfile(authUser.id, providerAvatarUrl),
+    ]);
+    const completed = hasCompletedOnboarding(profile, accountUser);
+
+    if (completed && !profile.onboarding_completed_at) {
+      const now = new Date().toISOString();
+      const updatedProfile = await saveProfile(authUser.id, {
+        onboarding_completed_at: now,
+      });
+
+      return {
+        status: 200,
+        jsonBody: {
+          completed: true,
+          needsOnboarding: false,
+          profile: {
+            username: updatedProfile.username,
+            displayName: updatedProfile.display_name,
+            avatarUrl: updatedProfile.avatar_url,
+            providerAvatarUrl: updatedProfile.provider_avatar_url,
+          },
+        },
+      };
+    }
 
     return {
       status: 200,

@@ -1,5 +1,16 @@
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
-import { getApprovedPlaceImages } from "../services/placeImagesService";
+import {
+  getApprovedPlaceImages,
+  getApprovedPlaceImagesByPlaceIds,
+} from "../services/placeImagesService";
+import {
+  buildPlaceDetailCacheKey,
+} from "../utils/cacheKey";
+import {
+  deleteJsonCacheValue,
+  getJsonCacheValue,
+  setJsonCacheValue,
+} from "../services/redisCacheService";
 
 export type DetailCategoryMeta = {
   id: string;
@@ -116,6 +127,68 @@ async function getPlaceReviewSummary(placeId: string): Promise<{ averageRating: 
     };
   } catch {
     return { averageRating: null, reviewCount: 0 };
+  }
+}
+
+async function getPlaceReviewSummaries(
+  placeIds: string[]
+): Promise<Map<string, { averageRating: number | null; reviewCount: number }>> {
+  const uniquePlaceIds = Array.from(
+    new Set(placeIds.map((placeId) => placeId.trim()).filter(Boolean))
+  );
+
+  if (uniquePlaceIds.length === 0) {
+    return new Map<string, { averageRating: number | null; reviewCount: number }>();
+  }
+
+  try {
+    const supabase = await getSupabaseAdminClient();
+    const { data, error } = await (supabase.from("place_reviews") as any)
+      .select("place_id, rating")
+      .in("place_id", uniquePlaceIds);
+
+    if (error) {
+      throw error;
+    }
+
+    const ratingTotals = new Map<string, { total: number; count: number }>();
+
+    for (const entry of (data || []) as Array<{ place_id?: unknown; rating?: unknown }>) {
+      const placeId = typeof entry.place_id === "string" ? entry.place_id.trim() : "";
+      const rating = getNullableNumber(entry.rating);
+
+      if (!placeId || rating === null) {
+        continue;
+      }
+
+      const current = ratingTotals.get(placeId) ?? { total: 0, count: 0 };
+      current.total += rating;
+      current.count += 1;
+      ratingTotals.set(placeId, current);
+    }
+
+    const summaries = new Map<string, { averageRating: number | null; reviewCount: number }>();
+
+    for (const placeId of uniquePlaceIds) {
+      const totals = ratingTotals.get(placeId);
+
+      if (!totals || totals.count === 0) {
+        summaries.set(placeId, {
+          averageRating: null,
+          reviewCount: 0,
+        });
+        continue;
+      }
+
+      summaries.set(placeId, {
+        averageRating: Math.round((totals.total / totals.count) * 10) / 10,
+        reviewCount: totals.count,
+      });
+    }
+
+    return summaries;
+  } catch {
+    return new Map<string, { averageRating: number | null; reviewCount: number }>();
   }
 }
 
@@ -281,12 +354,129 @@ function getLinkedTags(row: Record<string, unknown>): DetailTagMeta[] {
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const PLACE_DETAIL_COLUMNS = "*,place_categories(category_id,categories(id,name)),place_tags(strength,tags(id,name,tag_group))";
+const PLACE_DETAIL_CACHE_TTL_SECONDS = 60 * 15;
+
+function normalizePlaceLookupKey(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+async function readCachedPlaceDetail(lookupKey: string): Promise<PlaceDetail | null> {
+  const cachedDetail = await getJsonCacheValue<PlaceDetail>(buildPlaceDetailCacheKey(lookupKey));
+  return cachedDetail ?? null;
+}
+
+async function writeCachedPlaceDetail(detail: PlaceDetail): Promise<void> {
+  const cachePayload = detail;
+  await Promise.all([
+    setJsonCacheValue(buildPlaceDetailCacheKey(detail.id), cachePayload, {
+      ttlSeconds: PLACE_DETAIL_CACHE_TTL_SECONDS,
+    }),
+    setJsonCacheValue(buildPlaceDetailCacheKey(detail.slug), cachePayload, {
+      ttlSeconds: PLACE_DETAIL_CACHE_TTL_SECONDS,
+    }),
+  ]);
+}
+
+export async function invalidatePlaceDetailCache(
+  placeId: string,
+  slug?: string | null
+): Promise<void> {
+  const keys = [buildPlaceDetailCacheKey(placeId)];
+
+  if (slug?.trim()) {
+    keys.push(buildPlaceDetailCacheKey(slug));
+  }
+
+  await Promise.all(keys.map((key) => deleteJsonCacheValue(key)));
+}
+
+export async function findPlaceDetailsByIds(placeIds: string[]): Promise<Map<string, PlaceDetail>> {
+  const uniquePlaceIds = Array.from(
+    new Set(placeIds.map((placeId) => placeId.trim()).filter(Boolean))
+  );
+
+  if (uniquePlaceIds.length === 0) {
+    return new Map<string, PlaceDetail>();
+  }
+
+  const detailsById = new Map<string, PlaceDetail>();
+  const missingPlaceIds: string[] = [];
+
+  for (const placeId of uniquePlaceIds) {
+    const cachedDetail = await readCachedPlaceDetail(placeId);
+
+    if (cachedDetail) {
+      detailsById.set(placeId, cachedDetail);
+      continue;
+    }
+
+    missingPlaceIds.push(placeId);
+  }
+
+  try {
+    if (missingPlaceIds.length === 0) {
+      return detailsById;
+    }
+
+    const supabase = await getSupabaseAdminClient();
+    const { data, error } = await (supabase.from("places") as any)
+      .select(PLACE_DETAIL_COLUMNS)
+      .in("id", missingPlaceIds);
+
+    if (error) {
+      throw error;
+    }
+
+    const rows = (data || []) as Array<Record<string, unknown>>;
+    const resolvedPlaceIds = rows
+      .map((row) => getNullableString(row.id))
+      .filter((placeId): placeId is string => Boolean(placeId));
+    const [reviewSummaries, imagesByPlaceId] = await Promise.all([
+      getPlaceReviewSummaries(resolvedPlaceIds),
+      getApprovedPlaceImagesByPlaceIds(resolvedPlaceIds),
+    ]);
+    const loadedDetailsById = new Map<string, PlaceDetail>();
+
+    for (const row of rows) {
+      const detail = mapPlaceRowToDetail(row);
+      const reviewSummary = reviewSummaries.get(detail.id);
+      const images = imagesByPlaceId.get(detail.id) ?? [];
+      const imageUrls = images.map((image) => image.image_url);
+
+      loadedDetailsById.set(detail.id, {
+        ...detail,
+        rating: reviewSummary?.averageRating ?? detail.rating ?? null,
+        review_count:
+          reviewSummary && reviewSummary.reviewCount > 0
+            ? reviewSummary.reviewCount
+            : null,
+        imageUrl: imageUrls[0] ?? "",
+        curatedImageUrls: imageUrls,
+      });
+    }
+
+    await Promise.all(
+      Array.from(loadedDetailsById.values()).map((detail) => writeCachedPlaceDetail(detail))
+    );
+
+    return loadedDetailsById;
+  } catch {
+    return detailsById;
+  }
+}
 
 export async function findPlaceDetailByIdOrSlug(id: string): Promise<PlaceDetail | null> {
   const trimmedId = id.trim();
 
   if (!trimmedId) {
     return null;
+  }
+
+  const normalizedLookupKey = normalizePlaceLookupKey(trimmedId);
+  const cachedDetail = await readCachedPlaceDetail(normalizedLookupKey);
+
+  if (cachedDetail) {
+    return cachedDetail;
   }
 
   try {
@@ -303,16 +493,24 @@ export async function findPlaceDetailByIdOrSlug(id: string): Promise<PlaceDetail
       const reviewSummary = await getPlaceReviewSummary(detail.id);
       const images = await getApprovedPlaceImages(detail.id);
       const imageUrls = images.map((image) => image.image_url);
-      return {
+      const resolvedDetail = {
         ...detail,
         rating: reviewSummary.averageRating ?? detail.rating ?? null,
         review_count: reviewSummary.reviewCount > 0 ? reviewSummary.reviewCount : null,
         imageUrl: imageUrls[0] ?? "",
         curatedImageUrls: imageUrls,
       };
+      await writeCachedPlaceDetail(resolvedDetail);
+      return resolvedDetail;
     }
 
     if (UUID_PATTERN.test(trimmedId)) {
+      const cachedById = await readCachedPlaceDetail(trimmedId);
+
+      if (cachedById) {
+        return cachedById;
+      }
+
       const { data: idData, error: idError } = await supabase
         .from("places")
         .select(PLACE_DETAIL_COLUMNS)
@@ -325,13 +523,15 @@ export async function findPlaceDetailByIdOrSlug(id: string): Promise<PlaceDetail
         const reviewSummary = await getPlaceReviewSummary(detail.id);
         const images = await getApprovedPlaceImages(detail.id);
         const imageUrls = images.map((image) => image.image_url);
-        return {
+        const resolvedDetail = {
           ...detail,
           rating: reviewSummary.averageRating ?? detail.rating ?? null,
           review_count: reviewSummary.reviewCount > 0 ? reviewSummary.reviewCount : null,
           imageUrl: imageUrls[0] ?? "",
           curatedImageUrls: imageUrls,
         };
+        await writeCachedPlaceDetail(resolvedDetail);
+        return resolvedDetail;
       }
     }
   } catch {

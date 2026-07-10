@@ -8,10 +8,9 @@ export function createBaseSlug(name: string, city?: string): string {
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
-    .replace(/&/g, " ")
-    .replace(/['']/g, "")
+    .replace(/&/g, " and ")
+    .replace(/'/g, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .replace(/-{2,}/g, "-");
 }
-

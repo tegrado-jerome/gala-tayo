@@ -98,13 +98,18 @@ function getSignedR2Request(method: "PUT" | "DELETE", key: string, body?: Buffer
   });
 }
 
-export async function uploadWebpToR2(key: string, body: Buffer) {
+export async function uploadWebpToR2(
+  key: string,
+  body: Buffer,
+  options?: { cacheControl?: string }
+) {
   const signedRequest = await getSignedR2Request("PUT", key, body);
   const response = await fetch(signedRequest.url, {
     method: "PUT",
     headers: {
       ...signedRequest.headers,
       "Content-Type": "image/webp",
+      "Cache-Control": options?.cacheControl ?? "public, max-age=31536000, immutable",
     },
     body,
   });

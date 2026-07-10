@@ -115,12 +115,15 @@ export async function postAskAiChatbot(
         jsonBody: {
           ok: false,
           error: "daily_ai_limit_reached",
-          usageType: "chatbot_ai",
           message: "You have reached your Chatbot AI daily limit.",
-          dailyLimit: aiUsage.dailyLimit,
-          requestCount: aiUsage.requestCount,
-          remaining: aiUsage.remaining,
-          resetsAt: aiUsage.resetsAt,
+          usage: {
+            allowed: aiUsage.allowed,
+            usageType: aiUsage.usageType,
+            dailyLimit: aiUsage.dailyLimit,
+            requestCount: aiUsage.requestCount,
+            remaining: aiUsage.remaining,
+            resetsAt: aiUsage.resetsAt,
+          },
           requestId,
         },
       };
@@ -157,6 +160,7 @@ export async function postAskAiChatbot(
         answer,
         sources: [],
         usage: {
+          allowed: aiUsage.allowed,
           usageType: aiUsage.usageType,
           dailyLimit: aiUsage.dailyLimit,
           requestCount: aiUsage.requestCount,

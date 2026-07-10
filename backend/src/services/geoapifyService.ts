@@ -1,9 +1,18 @@
 import { getSecret } from "../config/keyVault";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
+import {
+  buildGeoapifyAreaCacheKey,
+  buildGeoapifyLookupCacheKey,
+} from "../utils/cacheKey";
+import {
+  getJsonCacheValue,
+  setJsonCacheValue,
+} from "./redisCacheService";
 
 const GEOAPIFY_GEOCODE_ENDPOINT = "https://api.geoapify.com/v1/geocode/search";
 const GEOAPIFY_TIMEOUT_MS = 6_500;
 const GEOAPIFY_CACHE_TABLE = "ask_ai_map_geoapify_cache";
+const GEOAPIFY_REDIS_CACHE_TTL_SECONDS = 60 * 60 * 24 * 7;
 
 type GeoapifyLogger = {
   log: (message: string) => void;
@@ -453,6 +462,41 @@ async function getGeoapifyApiKey(): Promise<string> {
   return envKey || (await getSecret("geoapify-api-key"));
 }
 
+async function readCachedTargetArea(
+  cacheKey: string
+): Promise<GeoapifyTargetAreaContext | null> {
+  const cachedTargetArea = await getJsonCacheValue<GeoapifyTargetAreaContext>(cacheKey);
+
+  return cachedTargetArea ?? null;
+}
+
+async function writeCachedTargetArea(
+  cacheKey: string,
+  targetArea: GeoapifyTargetAreaContext
+): Promise<void> {
+  await setJsonCacheValue(cacheKey, targetArea, {
+    ttlSeconds: GEOAPIFY_REDIS_CACHE_TTL_SECONDS,
+  });
+}
+
+async function readCachedVerifiedCoordinate(
+  normalizedKey: string
+): Promise<GeoapifyVerifiedCoordinate | null> {
+  const cachedCoordinate = await getJsonCacheValue<GeoapifyVerifiedCoordinate>(
+    buildGeoapifyLookupCacheKey(normalizedKey)
+  );
+
+  return cachedCoordinate ?? null;
+}
+
+async function writeCachedVerifiedCoordinate(
+  payload: GeoapifyVerifiedCoordinate
+): Promise<void> {
+  await setJsonCacheValue(buildGeoapifyLookupCacheKey(payload.normalizedKey), payload, {
+    ttlSeconds: GEOAPIFY_REDIS_CACHE_TTL_SECONDS,
+  });
+}
+
 async function readCachedCoordinate(
   normalizedKey: string,
   logger?: GeoapifyLogger
@@ -573,6 +617,13 @@ export async function resolveTargetAreaWithGeoapify(
     return null;
   }
 
+  const cacheKey = buildGeoapifyAreaCacheKey(normalizedTargetAreaText);
+  const cachedTargetArea = await readCachedTargetArea(cacheKey);
+
+  if (cachedTargetArea) {
+    return cachedTargetArea;
+  }
+
   const query = ensurePhilippinesSuffix(normalizedTargetAreaText);
   const apiKey = await getGeoapifyApiKey();
   const features = await fetchGeoapifyFeatures(query, apiKey, 1);
@@ -610,7 +661,7 @@ export async function resolveTargetAreaWithGeoapify(
     normalizeText(properties.formatted) ?? normalizedTargetAreaText
   );
 
-  return {
+  const resolvedTargetArea = {
     name,
     normalizedName: normalizeForMatch(name),
     query,
@@ -633,6 +684,10 @@ export async function resolveTargetAreaWithGeoapify(
       region,
     }),
   };
+
+  await writeCachedTargetArea(cacheKey, resolvedTargetArea);
+
+  return resolvedTargetArea;
 }
 
 export async function verifyPlaceCoordinatesWithGeoapify(
@@ -649,7 +704,7 @@ export async function verifyPlaceCoordinatesWithGeoapify(
     ...input,
     placeName,
   });
-  const cached = await readCachedCoordinate(normalizedKey, logger);
+  const cached = (await readCachedVerifiedCoordinate(normalizedKey)) ?? (await readCachedCoordinate(normalizedKey, logger));
 
   if (cached) {
     return cached;
@@ -670,6 +725,7 @@ export async function verifyPlaceCoordinatesWithGeoapify(
     cacheHit: false,
   };
 
+  await writeCachedVerifiedCoordinate(result);
   await writeCachedCoordinate(
     {
       ...result,

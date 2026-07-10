@@ -7,6 +7,7 @@ import {
 import { randomUUID } from "crypto";
 import { validateJwt } from "../utils/auth";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
+import { getJsonCacheValue, setJsonCacheValue } from "../services/redisCacheService";
 import { generateSearchCacheKey } from "../utils/cacheKey";
 import {
   getSearchTerms,
@@ -17,6 +18,10 @@ import {
   getMetroManilaLocationKeywordsForCity,
   inferMetroManilaLocationsFromQuery,
 } from "../utils/metroManilaLocations";
+import {
+  validateMetroManilaSearchQuery,
+  type SearchValidationStatus,
+} from "../utils/searchQueryValidation";
 import {
   METRO_MANILA_AREAS,
   findAreaById,
@@ -39,6 +44,7 @@ type SearchRequestBody = {
   exploreAll?: unknown;
   userLocation?: unknown;
   radiusKm?: unknown;
+  strictPlaceSearch?: unknown;
 };
 
 type PlaceRow = Record<string, unknown>;
@@ -143,6 +149,32 @@ type SearchContext = {
   createdAt: string;
 };
 
+type SearchResponseStatus =
+  | "ok"
+  | "empty_query"
+  | "too_vague"
+  | "unsupported_location"
+  | "no_results";
+
+type SearchResponsePayload = {
+  searchMode: "broad-discovery" | "supabase";
+  searchStatus: SearchResponseStatus;
+  searchFeedbackMessage: string | null;
+  page: number;
+  limit: number;
+  totalCount: number;
+  totalPages: number;
+  places: SearchPlaceResult[];
+  result: {
+    geminiResponse: string;
+    page: number;
+    limit: number;
+    totalCount: number;
+    totalPages: number;
+    places: SearchPlaceResult[];
+  };
+};
+
 type BudgetValue =
   | "any"
   | "free"
@@ -164,6 +196,7 @@ const DEFAULT_SEARCH_PAGE = 1;
 const STRICT_SEARCH_LIMIT = 10;
 const TRENDING_LOOKBACK_DAYS = 14;
 const TRENDING_HISTORY_LIMIT = 5000;
+const SEARCH_CACHE_TTL_SECONDS = 60 * 5;
 
 const CATEGORY_TO_DB_CATEGORIES: Record<string, string[]> = {
   kainan: ["Kainan", "Restaurant", "Food"],
@@ -1014,6 +1047,28 @@ function rowMatchesPrompt(row: PlaceRow, normalizedQuery: string): boolean {
   );
 }
 
+function rowMatchesStrictPlaceQuery(row: PlaceRow, normalizedQuery: string): boolean {
+  if (!normalizedQuery) {
+    return true;
+  }
+
+  const promptTerms = getPromptTerms(normalizedQuery);
+
+  if (promptTerms.length === 0) {
+    return false;
+  }
+
+  const strictText = normalizeComparableText([
+    getRowIdentityText(row),
+    getRowDiscoveryText(row),
+    getRowTagText(row),
+    getStructuredLocationText(row),
+    getStructuredCategoryText(row),
+  ]);
+
+  return promptTerms.every((term) => includesNormalizedPhrase(strictText, term));
+}
+
 function scoreLocationMatch(row: PlaceRow, areaIds: string[]): number {
   const selectedAreaIds = areaIds.filter((areaId) => areaId !== "all");
 
@@ -1424,6 +1479,7 @@ function scorePlaceForSearch({
   budget,
   selectedIndoorOutdoor,
   selectedWeatherFit,
+  strictPlaceSearch,
 }: {
   row: PlaceRow;
   normalizedQuery: string;
@@ -1433,6 +1489,7 @@ function scorePlaceForSearch({
   budget: BudgetValue;
   selectedIndoorOutdoor: string | null;
   selectedWeatherFit: string | null;
+  strictPlaceSearch: boolean;
 }): number {
   const structuredScore =
     scoreLocationMatch(row, areaIds) +
@@ -1442,12 +1499,14 @@ function scorePlaceForSearch({
   const identityScore = scoreIdentityMatch(row, normalizedQuery);
   const discoveryScore = scoreDiscoveryMatch(row, normalizedQuery);
   const tagScore = scoreTagMatch(row, normalizedQuery);
-  const intentScore = scoreIntentFieldMatch(row, normalizedQuery, {
-    selectedIndoorOutdoor,
-    selectedWeatherFit,
-  });
-  const supportingScore = scoreSupportingMatch(row, normalizedQuery);
-  const lowPriorityScore = scoreLowPriorityMatch(row, normalizedQuery);
+  const intentScore = strictPlaceSearch
+    ? 0
+    : scoreIntentFieldMatch(row, normalizedQuery, {
+        selectedIndoorOutdoor,
+        selectedWeatherFit,
+      });
+  const supportingScore = strictPlaceSearch ? 0 : scoreSupportingMatch(row, normalizedQuery);
+  const lowPriorityScore = strictPlaceSearch ? 0 : scoreLowPriorityMatch(row, normalizedQuery);
   const penalty = scoreNotIdealPenalty(row, normalizedQuery);
   const coreScore = structuredScore + identityScore + discoveryScore + tagScore + intentScore;
 
@@ -1683,6 +1742,56 @@ function buildSearchContext({
   };
 }
 
+function buildSearchResponseCacheKey(args: {
+  baseKey: string;
+  indoorOutdoorFilter: string | null;
+  weatherFitFilter: string | null;
+  page: number;
+  limit: number;
+  shouldExploreAll: boolean;
+  strictPlaceSearch: boolean;
+}): string {
+  return [
+    args.baseKey,
+    `indoor:${args.indoorOutdoorFilter ?? "all"}`,
+    `weather:${args.weatherFitFilter ?? "all"}`,
+    `page:${args.page}`,
+    `limit:${args.limit}`,
+    `explore:${args.shouldExploreAll ? "1" : "0"}`,
+    `strict:${args.strictPlaceSearch ? "1" : "0"}`,
+  ].join(":");
+}
+
+function buildSearchResponsePayload(args: {
+  searchMode: "broad-discovery" | "supabase";
+  searchStatus: SearchResponseStatus;
+  searchFeedbackMessage: string | null;
+  page: number;
+  limit: number;
+  totalCount: number;
+  totalPages: number;
+  places: SearchPlaceResult[];
+}): SearchResponsePayload {
+  return {
+    searchMode: args.searchMode,
+    searchStatus: args.searchStatus,
+    searchFeedbackMessage: args.searchFeedbackMessage,
+    page: args.page,
+    limit: args.limit,
+    totalCount: args.totalCount,
+    totalPages: args.totalPages,
+    places: args.places,
+    result: {
+      geminiResponse: "",
+      page: args.page,
+      limit: args.limit,
+      totalCount: args.totalCount,
+      totalPages: args.totalPages,
+      places: args.places,
+    },
+  };
+}
+
 async function storeSearchContext({
   searchContext,
   userContext,
@@ -1722,6 +1831,43 @@ async function storeSearchContext({
   }
 }
 
+function logSearchAnalyticsEvent(
+  context: InvocationContext,
+  {
+    searchId,
+    status,
+    query,
+    areaId,
+    categoryId,
+    goodForId,
+    budget,
+    totalCount,
+    unsupportedLocations,
+  }: {
+    searchId: string;
+    status: SearchValidationStatus | "no_results" | "ok";
+    query: string;
+    areaId: string;
+    categoryId: string;
+    goodForId: string;
+    budget: BudgetValue;
+    totalCount?: number;
+    unsupportedLocations?: string[];
+  }
+) {
+  context.log("search.analytics", {
+    searchId,
+    status,
+    query,
+    areaId,
+    categoryId,
+    goodForId,
+    budget,
+    totalCount: totalCount ?? null,
+    unsupportedLocations: unsupportedLocations ?? [],
+  });
+}
+
 export async function findSearchPlaces({
   normalizedQuery,
   categoryIds,
@@ -1733,6 +1879,7 @@ export async function findSearchPlaces({
   requirePromptMatch,
   nearbySearch,
   prioritizeTrending,
+  strictPlaceSearch,
 }: {
   normalizedQuery: string;
   categoryIds: string[];
@@ -1744,6 +1891,7 @@ export async function findSearchPlaces({
   requirePromptMatch: boolean;
   nearbySearch: NearbySearchContext | null;
   prioritizeTrending: boolean;
+  strictPlaceSearch: boolean;
 }): Promise<SearchPlaceResult[]> {
   const supabase = await getSupabaseAdminClient();
   const placesTable = supabase.from("places") as ReturnType<
@@ -1799,7 +1947,12 @@ export async function findSearchPlaces({
     .filter((row) => rowMatchesBudget(row, budget))
     .filter((row) => rowMatchesIndoorOutdoor(row, selectedIndoorOutdoor))
     .filter((row) => rowMatchesWeatherFit(row, selectedWeatherFit))
-    .filter((row) => !requirePromptMatch || rowMatchesPrompt(row, normalizedQuery))
+    .filter((row) =>
+      !requirePromptMatch ||
+      (strictPlaceSearch
+        ? rowMatchesStrictPlaceQuery(row, normalizedQuery)
+        : rowMatchesPrompt(row, normalizedQuery))
+    )
     .map((row) => ({
       row,
       score: scorePlaceForSearch({
@@ -1811,6 +1964,7 @@ export async function findSearchPlaces({
         budget,
         selectedIndoorOutdoor,
         selectedWeatherFit,
+        strictPlaceSearch,
       }),
       distanceKm: nearbySearch
         ? getRowDistanceKm(row, nearbySearch.userLocation)
@@ -1909,8 +2063,9 @@ export async function search(
     const budget = getBudgetFilter(getFilterValue(body, filters, "budget"));
     const indoorOutdoorFilter =
       getOptionalFilterId(getFilterValue(body, filters, "indoor_outdoor")) ?? null;
-    const weatherFitFilter =
+  const weatherFitFilter =
       getOptionalFilterId(getFilterValue(body, filters, "weather_fit")) ?? null;
+    const strictPlaceSearch = body.strictPlaceSearch === true;
     const page = getPositiveInteger(body.page, DEFAULT_SEARCH_PAGE, {
       min: 1,
     });
@@ -1955,15 +2110,13 @@ export async function search(
       areaId === "all" &&
       goodForId === "all" &&
       budget === "any";
-
-    if (!normalizedQuery && !hasSelectedFilters && !hasNearbySearch && !isBroadDiscoverySearch) {
-      return {
-        status: 400,
-        jsonBody: {
-          message: "Type what you're looking for or choose at least one filter.",
-        },
-      };
-    }
+    const queryValidation = validateMetroManilaSearchQuery({
+      query,
+      hasSelectedFilters,
+      hasNearbySearch,
+      hasExplicitAreaFilter: areaId !== "all",
+      allowBroadDiscovery: isBroadDiscoverySearch,
+    });
 
     if (categoryId !== "all" && !selectedCategory) {
       return {
@@ -1999,6 +2152,16 @@ export async function search(
       goodForId,
       budget
     );
+    const canUseSharedCache = !nearbySearch;
+    const responseCacheKey = buildSearchResponseCacheKey({
+      baseKey: cacheKey,
+      indoorOutdoorFilter,
+      weatherFitFilter,
+      page,
+      limit,
+      shouldExploreAll,
+      strictPlaceSearch,
+    });
     const userContext = await resolveUserContext(request);
     const userType = userContext.userType;
 
@@ -2014,12 +2177,89 @@ export async function search(
       createdAt: new Date().toISOString(),
     });
 
+    if (canUseSharedCache) {
+      const cachedPayload = await getJsonCacheValue<SearchResponsePayload>(responseCacheKey);
+
+      if (cachedPayload) {
+        await storeSearchContext({
+          searchContext,
+          userContext,
+          cacheKey: responseCacheKey,
+          context,
+        });
+
+        return {
+          status: 200,
+          jsonBody: {
+            message: "Search processed successfully.",
+            searchId,
+            userType,
+            cacheHit: true,
+            cacheKey: responseCacheKey,
+            searchMode: cachedPayload.searchMode,
+            searchStatus: cachedPayload.searchStatus,
+            searchFeedbackMessage: cachedPayload.searchFeedbackMessage,
+            searchContext,
+            page: cachedPayload.page,
+            limit: cachedPayload.limit,
+            totalCount: cachedPayload.totalCount,
+            totalPages: cachedPayload.totalPages,
+            places: cachedPayload.places,
+            result: cachedPayload.result,
+          },
+        };
+      }
+    }
+
     await storeSearchContext({
       searchContext,
       userContext,
-      cacheKey,
+      cacheKey: responseCacheKey,
       context,
     });
+
+    if (queryValidation.status !== "ok") {
+      logSearchAnalyticsEvent(context, {
+        searchId,
+        status: queryValidation.status,
+        query,
+        areaId,
+        categoryId,
+        goodForId,
+        budget,
+        unsupportedLocations: queryValidation.unsupportedLocationKeywords,
+      });
+
+      const searchStatus: SearchResponseStatus = queryValidation.status;
+
+      return {
+        status: 200,
+        jsonBody: {
+          message: queryValidation.message ?? "No places found.",
+          searchId,
+          userType,
+          cacheHit: false,
+          cacheKey: responseCacheKey,
+          searchMode: "supabase",
+          searchStatus,
+          searchFeedbackMessage: queryValidation.message,
+          searchContext,
+          page: 1,
+          limit,
+          totalCount: 0,
+          totalPages: 1,
+          places: [],
+          result: {
+            geminiResponse: "",
+            page: 1,
+            limit,
+            totalCount: 0,
+            totalPages: 1,
+            places: [],
+          },
+        },
+      };
+    }
 
     const places = await findSearchPlaces({
       normalizedQuery,
@@ -2032,6 +2272,7 @@ export async function search(
       requirePromptMatch: isBroadDiscoverySearch ? false : shouldRequirePromptMatch,
       nearbySearch,
       prioritizeTrending: isBroadDiscoverySearch,
+      strictPlaceSearch,
     });
     const totalCount = places.length;
     const totalPages = Math.max(1, Math.ceil(totalCount / limit));
@@ -2040,6 +2281,34 @@ export async function search(
     const paginatedPlaces = await attachApprovedImagesToSearchResults(
       places.slice(pageStartIndex, pageStartIndex + limit)
     );
+    const searchStatus: SearchResponseStatus = totalCount === 0 ? "no_results" : "ok";
+    const responsePayload = buildSearchResponsePayload({
+      searchMode: isBroadDiscoverySearch ? "broad-discovery" : "supabase",
+      searchStatus,
+      searchFeedbackMessage: null,
+      page: safePage,
+      limit,
+      totalCount,
+      totalPages,
+      places: paginatedPlaces,
+    });
+
+    logSearchAnalyticsEvent(context, {
+      searchId,
+      status: searchStatus,
+      query,
+      areaId,
+      categoryId,
+      goodForId,
+      budget,
+      totalCount,
+    });
+
+    if (canUseSharedCache) {
+      await setJsonCacheValue(responseCacheKey, responsePayload, {
+        ttlSeconds: SEARCH_CACHE_TTL_SECONDS,
+      });
+    }
 
     return {
       status: 200,
@@ -2048,22 +2317,17 @@ export async function search(
         searchId,
         userType,
         cacheHit: false,
-        cacheKey,
-        searchMode: isBroadDiscoverySearch ? "broad-discovery" : "supabase",
+        cacheKey: responseCacheKey,
+        searchMode: responsePayload.searchMode,
+        searchStatus: responsePayload.searchStatus,
+        searchFeedbackMessage: responsePayload.searchFeedbackMessage,
         searchContext,
-        page: safePage,
-        limit,
-        totalCount,
-        totalPages,
-        places: paginatedPlaces,
-        result: {
-          geminiResponse: "",
-          page: safePage,
-          limit,
-          totalCount,
-          totalPages,
-          places: paginatedPlaces,
-        },
+        page: responsePayload.page,
+        limit: responsePayload.limit,
+        totalCount: responsePayload.totalCount,
+        totalPages: responsePayload.totalPages,
+        places: responsePayload.places,
+        result: responsePayload.result,
       },
     };
   } catch (error) {

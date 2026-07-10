@@ -9,19 +9,10 @@
     "clean": "rimraf dist",
     "prestart": "npm run clean && npm run build",
     "start": "func start",
-    "seed:curated-places": "node scripts/seedCuratedPlaces.cjs",
-    "seed:metro-manila-places": "node scripts/seedMetroManilaPlaces.cjs",
-    "normalize:place-seeds": "node scripts/normalizePlaceSeedData.cjs",
-    "validate:place-seeds": "node scripts/validatePlaceSeedData.cjs",
-    "seed:validate": "tsx scripts/validateCitySeeds.ts",
-    "seed:places": "tsx scripts/seedPlaces.ts",
-    "seed:places:write": "tsx scripts/seedPlaces.ts --write",
-    "r2:images:dry": "node scripts/uploadR2PlaceImages.cjs",
-    "r2:images:upload": "node scripts/uploadR2PlaceImages.cjs --upload",
-    "r2:images:report": "node scripts/uploadR2PlaceImages.cjs --report",
     "backfill:image-urls": "tsx scripts/backfillPlaceImageUrls.ts",
     "backfill:image-urls:write": "tsx scripts/backfillPlaceImageUrls.ts --write",
-    "test": "echo \"No tests yet...\""
+    "coords:fix": "tsx scripts/fixPlaceCoordinates.cjs",
+    "test": "npm run build --silent && node scripts/testSearchQueryValidation.cjs"
   },
   "dependencies": {
     "@azure/functions": "^4.0.0",

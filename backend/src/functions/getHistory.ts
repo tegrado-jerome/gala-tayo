@@ -1,6 +1,6 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
-import { findPlaceDetailByIdOrSlug } from "../data/placeDetails";
+import { findPlaceDetailsByIds } from "../data/placeDetails";
 import { AuthenticatedUser, validateJwt } from "../utils/auth";
 
 type HistoryRow = {
@@ -107,9 +107,10 @@ async function getUserHistory(userId: string, context: InvocationContext): Promi
     )
   );
 
-  const placeEntries = await Promise.all(
-    uniquePlaceIds.map(async (placeId) => {
-      const detail = await findPlaceDetailByIdOrSlug(placeId);
+  const placeDetailsById = await findPlaceDetailsByIds(uniquePlaceIds);
+  const placeMap = new Map<string, HistoryPlace | null>(
+    uniquePlaceIds.map((placeId) => {
+      const detail = placeDetailsById.get(placeId);
 
       if (!detail) {
         return [placeId, null] as const;
@@ -137,8 +138,6 @@ async function getUserHistory(userId: string, context: InvocationContext): Promi
       ] as const;
     })
   );
-
-  const placeMap = new Map(placeEntries);
 
   return {
     history: historyRows.map((item) => ({

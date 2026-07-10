@@ -1,6 +1,6 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
-import { findPlaceDetailByIdOrSlug } from "../data/placeDetails";
+import { findPlaceDetailByIdOrSlug, findPlaceDetailsByIds } from "../data/placeDetails";
 import { AuthenticatedUser, validateJwt } from "../utils/auth";
 
 type Favorite = {
@@ -187,10 +187,10 @@ async function getUserFavorites(userId: string): Promise<{ favorites: Array<Favo
   }
 
   const uniquePlaceIds = Array.from(new Set(favoriteRows.map((favorite) => favorite.place_id)));
-
-  const placeEntries = await Promise.all(
-    uniquePlaceIds.map(async (placeId) => {
-      const detail = await findPlaceDetailByIdOrSlug(placeId);
+  const placeDetailsById = await findPlaceDetailsByIds(uniquePlaceIds);
+  const placeMap = new Map<string, FavoritePlace | null>(
+    uniquePlaceIds.map((placeId) => {
+      const detail = placeDetailsById.get(placeId);
 
       if (!detail) {
         return [placeId, null] as const;
@@ -217,8 +217,6 @@ async function getUserFavorites(userId: string): Promise<{ favorites: Array<Favo
       ] as const;
     })
   );
-
-  const placeMap = new Map(placeEntries);
   const seenPlaceIds = new Set<string>();
 
   return {

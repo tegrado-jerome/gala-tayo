@@ -27,3 +27,25 @@ export function generateSearchCacheKey(
 
   return `search:${sanitizedQuery}:${sanitizedCategory}:${sanitizedArea}:${sanitizedGoodFor}:${sanitizedBudget}:${sanitizedLanguage}`;
 }
+
+const CACHE_VERSION = "v1";
+
+export function buildPlaceDetailCacheKey(placeIdOrSlug: string): string {
+  return `${CACHE_VERSION}:place-detail:${sanitizeCachePart(placeIdOrSlug)}`;
+}
+
+export function buildApprovedPlaceImagesCacheKey(placeId: string): string {
+  return `${CACHE_VERSION}:approved-place-images:${sanitizeCachePart(placeId)}`;
+}
+
+export function buildApprovedPlaceImagesCountCacheKey(placeId: string): string {
+  return `${CACHE_VERSION}:approved-place-images-count:${sanitizeCachePart(placeId)}`;
+}
+
+export function buildGeoapifyLookupCacheKey(normalizedKey: string): string {
+  return `${CACHE_VERSION}:geoapify-lookup:${sanitizeCachePart(normalizedKey)}`;
+}
+
+export function buildGeoapifyAreaCacheKey(targetAreaText: string): string {
+  return `${CACHE_VERSION}:geoapify-area:${sanitizeCachePart(targetAreaText)}`;
+}

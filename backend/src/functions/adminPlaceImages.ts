@@ -1,8 +1,13 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
-import { getApprovedPlaceImages } from "../services/placeImagesService";
+import {
+  getApprovedPlaceImages,
+  getApprovedPlaceImagesFresh,
+  invalidateApprovedPlaceImagesCache,
+} from "../services/placeImagesService";
 import { AuthenticatedUser, validateJwt } from "../utils/auth";
 import { deleteR2Object } from "../utils/r2ImageStorage";
+import { invalidatePlaceDetailCache } from "../data/placeDetails";
 
 type PlaceRow = {
   id: string;
@@ -127,15 +132,24 @@ function mapImage(row: PlaceImageRow) {
 
 async function reorderApprovedImages(placeId: string) {
   const supabase = await getSupabaseAdminClient();
-  const images = await getApprovedPlaceImages(placeId);
+  const images = await getApprovedPlaceImagesFresh(placeId);
 
   await Promise.all(
     images.map((image, index) =>
       (supabase.from("place_images") as any)
         .update({ sort_order: index, updated_at: new Date().toISOString() })
-        .eq("id", image.id)
+      .eq("id", image.id)
     )
   );
+}
+
+async function invalidatePlaceCaches(placeId: string) {
+  const place = await getPlace(placeId);
+
+  await Promise.all([
+    invalidateApprovedPlaceImagesCache(placeId),
+    invalidatePlaceDetailCache(placeId, place?.slug ?? null),
+  ]);
 }
 
 export async function adminPendingPlaceImages(
@@ -352,7 +366,7 @@ export async function adminPlaceImageApprove(
       return response(409, "Only pending images can be approved.");
     }
 
-    const approvedImages = await getApprovedPlaceImages(image.place_id);
+    const approvedImages = await getApprovedPlaceImagesFresh(image.place_id);
 
     if (approvedImages.length >= MAX_APPROVED_IMAGES) {
       return response(409, "This place already has 3 approved images. Remove one approved image first before approving another.");
@@ -374,6 +388,8 @@ export async function adminPlaceImageApprove(
       .single();
 
     if (updateError) throw updateError;
+
+    await invalidatePlaceCaches(image.place_id);
 
     return {
       status: 200,
@@ -448,6 +464,8 @@ export async function adminPlaceImageReject(
 
     if (updateError) throw updateError;
 
+    await invalidatePlaceCaches(image.place_id);
+
     return {
       status: 200,
       jsonBody: {
@@ -501,6 +519,8 @@ export async function adminPlaceImageDelete(
     if (image.status === "approved") {
       await reorderApprovedImages(image.place_id);
     }
+
+    await invalidatePlaceCaches(image.place_id);
 
     return {
       status: 200,
