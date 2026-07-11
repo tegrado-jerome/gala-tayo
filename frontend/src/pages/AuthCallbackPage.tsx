@@ -1,9 +1,39 @@
 import { useEffect, useState } from 'react'
+import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../supabase'
 import { StateContainer } from '../components/layout/ResponsiveLayouts'
 import { getCurrentEmailConflict, getPostAuthRedirect } from '../services/authApi'
-import { buildAuthPath } from '../utils/authRedirect'
+import { buildAuthPath } from '../services/authApi'
 import { navigateToPath } from '../utils/navigation'
+
+async function waitForSession(): Promise<Session | null> {
+  const {
+    data: { session: currentSession },
+  } = await supabase.auth.getSession()
+
+  if (currentSession) {
+    return currentSession
+  }
+
+  return new Promise<Session | null>((resolve) => {
+    const timeoutId = window.setTimeout(() => {
+      subscription.unsubscribe()
+      resolve(null)
+    }, 2500)
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      if (!nextSession) {
+        return
+      }
+
+      window.clearTimeout(timeoutId)
+      subscription.unsubscribe()
+      resolve(nextSession as Session)
+    })
+  })
+}
 
 function AuthCallbackPage() {
   const [errorMessage, setErrorMessage] = useState('')
@@ -19,18 +49,15 @@ function AuthCallbackPage() {
           const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
 
           if (exchangeError) {
-            throw exchangeError
+            const existingSession = await waitForSession()
+
+            if (!existingSession) {
+              throw exchangeError
+            }
           }
         }
 
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession()
-
-        if (error) {
-          throw error
-        }
+        const session = await waitForSession()
 
         if (!session) {
           throw new Error('We could not finish signing you in.')
@@ -43,7 +70,7 @@ function AuthCallbackPage() {
           throw new Error('This email already has a GalaTayo account. Please log in using the original method for that account.')
         }
 
-        const redirectTo = await getPostAuthRedirect(session)
+        const redirectTo = await getPostAuthRedirect(session, window.location.search)
 
         if (isMounted) {
           navigateToPath(redirectTo)

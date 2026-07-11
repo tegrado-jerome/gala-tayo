@@ -1,34 +1,66 @@
-import { useState, type FormEvent } from 'react'
-import type { Session } from '@supabase/supabase-js'
+import { useEffect, useState, type FormEvent } from 'react'
 import { AppIcon } from '../components/AppIcon'
 import { FormContainer } from '../components/layout/ResponsiveLayouts'
-import { updateAccountPassword } from '../services/authApi'
+import { supabase } from '../supabase'
 import { navigateToPath } from '../utils/navigation'
 
-type ResetPasswordPageProps = {
-  session: Session | null
-}
+const minPasswordLength = 8
 
-function ResetPasswordPage({ session }: ResetPasswordPageProps) {
+function ResetPasswordPage() {
+  const [hasSession, setHasSession] = useState(false)
+  const [isSessionReady, setIsSessionReady] = useState(false)
   const [newPassword, setNewPassword] = useState('')
   const [confirmNewPassword, setConfirmNewPassword] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isDone, setIsDone] = useState(false)
   const [error, setError] = useState('')
   const [isPasswordVisible, setIsPasswordVisible] = useState(false)
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false)
 
-  const minPasswordLength = 8
+  useEffect(() => {
+    let isMounted = true
+
+    const initializeSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+
+      if (!isMounted) {
+        return
+      }
+
+      setHasSession(Boolean(session))
+      setIsSessionReady(true)
+    }
+
+    void initializeSession()
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      if (!isMounted) {
+        return
+      }
+
+      setHasSession(Boolean(nextSession))
+      setIsSessionReady(true)
+    })
+
+    return () => {
+      isMounted = false
+      subscription.unsubscribe()
+    }
+  }, [])
+
   const passwordMeetsLength = newPassword.length >= minPasswordLength
   const confirmPasswordMatches = confirmNewPassword.length === 0 || newPassword === confirmNewPassword
   const confirmPasswordHasMismatch = confirmNewPassword.length > 0 && newPassword !== confirmNewPassword
-  const isFormValid = passwordMeetsLength && newPassword === confirmNewPassword
+  const isFormValid = Boolean(newPassword.trim()) && passwordMeetsLength && newPassword === confirmNewPassword
   const isSubmitDisabled = isSubmitting || !isFormValid
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
-    if (!session) {
+    if (!hasSession) {
       setError('Your reset link is invalid or expired. Please request a new one.')
       return
     }
@@ -46,8 +78,20 @@ function ResetPasswordPage({ session }: ResetPasswordPageProps) {
     try {
       setIsSubmitting(true)
       setError('')
-      await updateAccountPassword(newPassword)
-      setIsDone(true)
+
+      const { error: updateError } = await supabase.auth.updateUser({ password: newPassword })
+
+      if (updateError) {
+        throw updateError
+      }
+
+      const { error: signOutError } = await supabase.auth.signOut({ scope: 'local' })
+
+      if (signOutError) {
+        throw signOutError
+      }
+
+      navigateToPath('/login?reset=success')
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : 'Could not reset your password. Please try again.')
     } finally {
@@ -55,14 +99,36 @@ function ResetPasswordPage({ session }: ResetPasswordPageProps) {
     }
   }
 
-  if (!session) {
+  if (!isSessionReady) {
     return (
       <main className="gala-page-background relative flex min-h-screen min-h-[100dvh] items-center justify-center overflow-x-hidden px-4 py-6 text-[var(--text)] sm:px-6 sm:py-8">
         <FormContainer className="relative z-[2]">
           <section className="mx-auto flex w-full max-w-[360px] items-center justify-center md:max-w-[420px] lg:max-w-[440px]">
             <div className="w-full text-center">
               <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-[1.2rem] border border-[var(--line)] bg-white shadow-sm">
-                <AppIcon name="warning" className="h-5 w-5 text-red-500" />
+                <span className="inline-flex h-5 w-5 animate-spin rounded-full border-2 border-[var(--accent-soft)] border-t-[var(--accent-deep)]" aria-hidden="true" />
+              </div>
+              <div className="mt-5">
+                <h1 className="text-[1.6rem] font-semibold leading-[1.02] tracking-[-0.04em] text-slate-950 sm:text-[1.85rem]">Preparing reset</h1>
+                <p className="mx-auto mt-3 max-w-[280px] text-[13px] leading-6 text-slate-500 sm:text-[14px] sm:leading-7">
+                  We are checking your password reset session.
+                </p>
+              </div>
+            </div>
+          </section>
+        </FormContainer>
+      </main>
+    )
+  }
+
+  if (!hasSession) {
+    return (
+      <main className="gala-page-background relative flex min-h-screen min-h-[100dvh] items-center justify-center overflow-x-hidden px-4 py-6 text-[var(--text)] sm:px-6 sm:py-8">
+        <FormContainer className="relative z-[2]">
+          <section className="mx-auto flex w-full max-w-[360px] items-center justify-center md:max-w-[420px] lg:max-w-[440px]">
+            <div className="w-full text-center">
+              <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-[1.2rem] border border-[var(--line)] bg-white shadow-sm">
+                <AppIcon name="warning" className="h-5 w-5 text-[var(--warning)]" />
               </div>
               <div className="mt-5">
                 <h1 className="text-[1.6rem] font-semibold leading-[1.02] tracking-[-0.04em] text-slate-950 sm:text-[1.85rem]">Invalid or expired link</h1>
@@ -75,35 +141,6 @@ function ResetPasswordPage({ session }: ResetPasswordPageProps) {
                   className="mt-6 inline-flex min-h-[2.75rem] items-center justify-center rounded-[0.875rem] bg-[var(--accent)] px-6 text-[14px] font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[var(--accent-deep)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)]"
                 >
                   Request new link
-                </button>
-              </div>
-            </div>
-          </section>
-        </FormContainer>
-      </main>
-    )
-  }
-
-  if (isDone) {
-    return (
-      <main className="gala-page-background relative flex min-h-screen min-h-[100dvh] items-center justify-center overflow-x-hidden px-4 py-6 text-[var(--text)] sm:px-6 sm:py-8">
-        <FormContainer className="relative z-[2]">
-          <section className="mx-auto flex w-full max-w-[360px] items-center justify-center md:max-w-[420px] lg:max-w-[440px]">
-            <div className="w-full text-center">
-              <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-[1.2rem] border border-[var(--line)] bg-white shadow-sm">
-                <AppIcon name="check" className="h-5 w-5 text-emerald-600" />
-              </div>
-              <div className="mt-5">
-                <h1 className="text-[1.6rem] font-semibold leading-[1.02] tracking-[-0.04em] text-slate-950 sm:text-[1.85rem]">Password updated!</h1>
-                <p className="mx-auto mt-3 max-w-[280px] text-[13px] leading-6 text-slate-500 sm:text-[14px] sm:leading-7">
-                  Your password has been reset successfully.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => navigateToPath('/login')}
-                  className="mt-6 inline-flex min-h-[2.75rem] items-center justify-center rounded-[0.875rem] bg-[var(--accent)] px-6 text-[14px] font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[var(--accent-deep)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)]"
-                >
-                  Back to login
                 </button>
               </div>
             </div>

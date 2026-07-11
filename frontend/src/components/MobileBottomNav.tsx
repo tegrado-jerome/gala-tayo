@@ -1,4 +1,3 @@
-import type { Session } from '@supabase/supabase-js'
 import { AppIcon, type AppIconName } from './AppIcon'
 import { navigateToPath } from '../utils/navigation'
 
@@ -11,10 +10,9 @@ type NavItem = {
 
 type MobileBottomNavProps = {
   currentPath: string
-  session: Session | null
 }
 
-function MobileBottomNav({ currentPath, session }: MobileBottomNavProps) {
+function MobileBottomNav({ currentPath }: MobileBottomNavProps) {
   const isHomeActive = currentPath === '/' || currentPath === ''
   const isSearchActive = currentPath === '/search' || currentPath === '/search/'
   const isAskAiActive =
@@ -26,6 +24,9 @@ function MobileBottomNav({ currentPath, session }: MobileBottomNavProps) {
     currentPath === '/profile/' ||
     currentPath === '/me' ||
     currentPath === '/me/' ||
+    currentPath === '/account-settings' ||
+    currentPath === '/account-settings/' ||
+    currentPath.startsWith('/account-settings') ||
     currentPath === '/settings' ||
     currentPath === '/settings/' ||
     currentPath === '/login' ||
@@ -41,7 +42,7 @@ function MobileBottomNav({ currentPath, session }: MobileBottomNavProps) {
     { label: 'Ask AI', href: '/ask-ai', icon: 'askAi', isActive: isAskAiActive },
     {
       label: 'Profile',
-      href: session ? '/profile' : '/login',
+      href: '/profile',
       icon: 'profile',
       isActive: isProfileActive,
     },

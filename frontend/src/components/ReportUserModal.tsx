@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { AppIcon } from './AppIcon'
 import { reportUser, type SubmitUserReportPayload, type UserReportReason } from '../utils/userReportsApi'
-import { useGuestAuthPrompt } from '../utils/useGuestAuthPrompt'
+import { useGuestAuthPrompt } from './GuestAuthPrompt'
 import { BottomSheet } from './layout/Primitives'
 
 const userReportReasons: Array<{ label: string; value: UserReportReason }> = [

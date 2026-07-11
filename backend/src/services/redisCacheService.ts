@@ -35,7 +35,7 @@ async function resolveRedisConfig(): Promise<{ url: string; token: string } | nu
   return { url, token };
 }
 
-async function getRedisClient(): Promise<Redis | null> {
+export async function getRedisClient(): Promise<Redis | null> {
   if (!redisClientPromise) {
     redisClientPromise = resolveRedisConfig()
       .then((config) => {

@@ -1,0 +1,39 @@
+import { Icon } from './Icon'
+import type { IconName } from './types'
+
+function pickGoodForIcon(value: string, index: number): IconName {
+  const normalized = value.toLowerCase()
+
+  if (normalized.includes('coffee') || normalized.includes('cafe')) return 'category'
+  if (normalized.includes('food') || normalized.includes('meal')) return 'utensils'
+  if (normalized.includes('date')) return 'heart'
+  if (normalized.includes('barkada') || normalized.includes('group') || normalized.includes('catch')) return 'users'
+  if (normalized.includes('study')) return 'book'
+
+  return (['category', 'utensils', 'heart', 'users', 'book'] as const)[index % 5]
+}
+
+function titleCase(value: string) {
+  return value
+    .split(/[-_\s]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(' ')
+}
+
+export function GoodForList({ values }: { values: string[] }) {
+  const items = (values.length > 0 ? values : ['Coffee hangouts', 'Food trips', 'Casual dates', 'Barkada catch-ups', 'Study breaks']).slice(0, 5)
+
+  return (
+    <ul className="grid gap-2 text-[14px] font-semibold leading-5 text-slate-700">
+      {items.map((item, index) => (
+        <li key={item} className="flex items-center gap-3">
+          <Icon name={pickGoodForIcon(item, index)} className="h-5 w-5 shrink-0 text-slate-500" />
+          <span>{titleCase(item)}</span>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+export default GoodForList

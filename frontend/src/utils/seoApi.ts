@@ -1,4 +1,5 @@
 import type { PlaceCardData, PlaceCategoryMeta, PlaceTagMeta } from '../components/PlaceCard'
+import { apiFetch } from './apiClient'
 
 type SeoPlaceSummary = {
   id: string
@@ -32,11 +33,6 @@ type SeoPlacesResponse = {
 type SeoAreaPageResponse = {
   area: SeoAreaSummary
   places: SeoPlaceSummary[]
-}
-
-function getSeoApiUrl(path: string) {
-  const apiBaseUrl = String(import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
-  return apiBaseUrl ? `${apiBaseUrl}${path}` : `/api${path}`
 }
 
 function mapSeoPlaceToCard(place: SeoPlaceSummary): PlaceCardData {
@@ -94,7 +90,7 @@ async function readJsonResponse<T>(response: Response): Promise<T> {
 }
 
 async function getSeoPlaces() {
-  const response = await fetch(getSeoApiUrl('/seo/places'), {
+  const response = await apiFetch('/seo/places', {
     method: 'GET',
   })
 
@@ -102,12 +98,12 @@ async function getSeoPlaces() {
 }
 
 async function getSeoAreaPage(areaSlug: string) {
-  const response = await fetch(getSeoApiUrl(`/seo/areas/${encodeURIComponent(areaSlug)}`), {
+  const response = await apiFetch(`/seo/areas/${encodeURIComponent(areaSlug)}`, {
     method: 'GET',
   })
 
   return readJsonResponse<SeoAreaPageResponse>(response)
 }
 
-export { getSeoApiUrl, getSeoAreaPage, getSeoPlaces, mapSeoPlaceToCard }
+export { getSeoAreaPage, getSeoPlaces, mapSeoPlaceToCard }
 export type { SeoAreaPageResponse, SeoAreaSummary, SeoPlaceSummary, SeoPlacesResponse }

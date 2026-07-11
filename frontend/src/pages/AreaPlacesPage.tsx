@@ -6,12 +6,14 @@ import Breadcrumb from '../components/Breadcrumb'
 import CompactPagination from '../components/CompactPagination'
 import InternalLink from '../components/InternalLink'
 import PlaceCard, { type PlaceCardData } from '../components/PlaceCard'
+import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import SeoHead from '../components/SeoHead'
 import { PageContainer, PageShell, ResponsiveGrid } from '../components/layout/ResponsiveLayouts'
 import { placeCategories } from '../data/placeCategories'
 import { metroManilaAreaNameBySlug } from '../data/metroManilaAreas'
-import { navigateToPath } from '../utils/navigation'
-import { formatLabelFromSlug, getCanonicalPlacePath, getSiteOrigin } from '../utils/seo'
+import { navigateToCanonicalPlace } from '../utils/navigation'
+import { formatLabelFromSlug, getSiteOrigin } from '../utils/seo'
+import { getApiUrl } from '../utils/apiClient'
 import { mapSeoPlaceToCard, type SeoPlaceSummary } from '../utils/seoApi'
 
 type AreaPlacesPageProps = {
@@ -45,8 +47,7 @@ function sortPlacesAlphabetically(places: SeoPlaceSummary[]) {
 }
 
 function getAreaSearchApiUrl() {
-  const apiBaseUrl = String(import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
-  return apiBaseUrl ? `${apiBaseUrl}/search` : '/api/search'
+  return getApiUrl('/search')
 }
 
 async function readAreaPlacesResponse(response: Response): Promise<AreaPlacesResponse> {
@@ -324,7 +325,7 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
           </div>
         </section>
 
-        {isLoading ? <p className="mt-6 text-sm text-slate-500">Loading area places...</p> : null}
+        {isLoading ? <UnifiedLoadingState title="Preparing area places..." message={`We are loading places in ${areaName}.`} /> : null}
         {errorMessage ? (
           <section className="mt-6 rounded-[24px] border border-[#E5E7EB] bg-white px-5 py-6 shadow-[0_6px_20px_rgba(17,24,39,0.03)]">
             <h2 className="text-base font-semibold text-[var(--text-main)]">We couldn't load places in {areaName} right now.</h2>
@@ -359,11 +360,23 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
                 <ResponsiveGrid className="mt-4 gap-4">
                   {allPlaces.map((rawPlace) => {
                     const place = mapSeoPlaceToCard(rawPlace) as PlaceCardData
-                    const canonicalPath = getCanonicalPlacePath({ areaSlug: rawPlace.areaSlug || areaSlug, placeSlug: rawPlace.slug })
-
                     return (
                       <div key={rawPlace.id}>
-                        <PlaceCard place={place} searchResultCard onOpen={() => navigateToPath(canonicalPath)} onSelect={() => undefined} />
+                        <PlaceCard
+                          place={place}
+                          searchResultCard
+                          onOpen={() => navigateToCanonicalPlace({
+                            slug: rawPlace.slug,
+                            city: rawPlace.city ?? areaName,
+                            area: rawPlace.area ?? areaName,
+                            localArea: rawPlace.area ?? null,
+                          }, {
+                            source: 'area',
+                            returnTo: `${window.location.pathname}${window.location.search}`,
+                            returnLabel: areaName,
+                          })}
+                          onSelect={() => undefined}
+                        />
                       </div>
                     )
                   })}

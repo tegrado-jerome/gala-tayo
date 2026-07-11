@@ -1,9 +1,9 @@
 import AppHeader from '../components/AppHeader'
-import MinimalBackNav from '../components/MinimalBackNav'
-import { PageContainer, PageShell, CardSurface } from '../components/layout/ResponsiveLayouts'
-import { navigateToPath } from '../utils/navigation'
+import Breadcrumb from '../components/Breadcrumb'
+import { PageContainer, PageShell } from '../components/layout/ResponsiveLayouts'
 import SeoHead from '../components/SeoHead'
 import { getSiteOrigin } from '../utils/seo'
+import { FileText, House, ShieldCheck, Sparkles } from 'lucide-react'
 
 type LegalPageProps = {
   type: 'terms' | 'privacy'
@@ -262,6 +262,27 @@ function LegalPage({ type }: LegalPageProps) {
   const seoDescription = isTerms
     ? 'Read GalaTayo terms covering accounts, content, place information, AI features, moderation, and service rules.'
     : 'Read the GalaTayo privacy policy covering account data, public content, AI feature usage, storage, and user rights.'
+  const breadcrumbItems = [
+    { label: 'Home', href: '/', icon: <House className="h-3.5 w-3.5" /> },
+    { label: isTerms ? 'Terms' : 'Privacy', icon: <ShieldCheck className="h-3.5 w-3.5" /> },
+  ]
+  const quickFacts = [
+    {
+      label: 'Applies to',
+      value: 'Users who access or use GalaTayo',
+      icon: <Sparkles className="h-4 w-4" />,
+    },
+    {
+      label: 'Updated',
+      value: 'June 14, 2026',
+      icon: <FileText className="h-4 w-4" />,
+    },
+    {
+      label: 'Contact',
+      value: contactEmail,
+      icon: <ShieldCheck className="h-4 w-4" />,
+    },
+  ]
   const jsonLd = [
     {
       '@context': 'https://schema.org',
@@ -284,40 +305,139 @@ function LegalPage({ type }: LegalPageProps) {
     <PageShell>
       <SeoHead title={seoTitle} description={seoDescription} canonicalPath={canonicalPath} jsonLd={jsonLd} />
       <AppHeader />
-      <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
-        <PageContainer size="narrow">
-          <CardSurface pad="loose" className="shadow-[0_18px_42px_rgba(47,116,232,0.1)]">
-            <MinimalBackNav
-              onClick={() => window.history.length > 1 ? window.history.back() : navigateToPath('/search')}
-              className="mb-6"
+      <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:pb-16 lg:pt-8">
+        <PageContainer size="wide" className="px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto w-full max-w-[1080px]">
+            <Breadcrumb
+              showBack
+              backTo="/"
+              preferHistory
+              className="mb-5 sm:mb-6"
+              items={breadcrumbItems}
             />
-            <header className="border-b border-[var(--line)] pb-6">
-              <h1 className="text-3xl font-black leading-tight text-slate-950 sm:text-4xl">{title}</h1>
-              <p className="mt-4 text-sm font-semibold leading-6 text-slate-700">{intro}</p>
-              <dl className="mt-5 grid gap-2 text-sm font-bold text-[var(--muted)] sm:grid-cols-2">
-                <div><dt className="inline text-slate-900">Effective Date: </dt><dd className="inline">Launch Date</dd></div>
-                <div><dt className="inline text-slate-900">Last Updated: </dt><dd className="inline">June 14, 2026</dd></div>
-              </dl>
-            </header>
 
-            <div className="mt-7 grid gap-7">
-              {sections.map((section) => (
-                <section key={section.title} className="grid gap-3">
-                  <h2 className="text-xl font-black text-slate-950">{section.title}</h2>
-                  {section.body.map((paragraph) => (
-                    <p key={paragraph} className="text-sm font-semibold leading-7 text-slate-700">{paragraph}</p>
+            <section className="relative overflow-hidden rounded-[32px] border border-[rgba(30,58,138,0.12)] bg-[linear-gradient(135deg,rgba(255,255,255,0.72),rgba(243,244,246,0.92))] px-5 py-6 shadow-[0_18px_42px_rgba(17,24,39,0.06)] backdrop-blur-sm sm:px-7 sm:py-8 lg:px-10 lg:py-10">
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(30,58,138,0.4)] to-transparent" />
+              <div className="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.8fr)] lg:items-start">
+                <div className="min-w-0">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(30,58,138,0.12)] bg-white/70 px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)] shadow-[0_8px_22px_rgba(17,24,39,0.04)]">
+                    <ShieldCheck className="h-3.5 w-3.5 text-[var(--accent)]" />
+                    <span>{isTerms ? 'Terms of Service' : 'Privacy Policy'}</span>
+                  </div>
+                  <h1 className="mt-4 text-3xl font-black leading-tight tracking-[-0.04em] text-slate-950 sm:text-4xl lg:text-5xl">
+                    {title}
+                  </h1>
+                  <p className="mt-4 max-w-3xl text-sm font-semibold leading-7 text-slate-700 sm:text-[15px]">
+                    {intro}
+                  </p>
+                  <div className="mt-6 flex flex-wrap gap-2">
+                    {isTerms ? (
+                      <>
+                        <span className="inline-flex items-center rounded-full bg-[var(--accent-soft)] px-3 py-1.5 text-[12px] font-bold text-[var(--accent)]">
+                          Account rules
+                        </span>
+                        <span className="inline-flex items-center rounded-full bg-[var(--surface-alt)] px-3 py-1.5 text-[12px] font-bold text-slate-700">
+                          Content & moderation
+                        </span>
+                        <span className="inline-flex items-center rounded-full bg-[var(--surface-alt)] px-3 py-1.5 text-[12px] font-bold text-slate-700">
+                          Service use
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="inline-flex items-center rounded-full bg-[var(--accent-soft)] px-3 py-1.5 text-[12px] font-bold text-[var(--accent)]">
+                          Data handling
+                        </span>
+                        <span className="inline-flex items-center rounded-full bg-[var(--surface-alt)] px-3 py-1.5 text-[12px] font-bold text-slate-700">
+                          User rights
+                        </span>
+                        <span className="inline-flex items-center rounded-full bg-[var(--surface-alt)] px-3 py-1.5 text-[12px] font-bold text-slate-700">
+                          Third-party processors
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <aside className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+                  {quickFacts.map((fact) => (
+                    <div
+                      key={fact.label}
+                      className="rounded-[24px] border border-[var(--line)] bg-white/85 p-4 shadow-[0_10px_24px_rgba(17,24,39,0.05)]"
+                    >
+                      <div className="flex items-start gap-3">
+                        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
+                          {fact.icon}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">{fact.label}</p>
+                          <p className="mt-1 break-words text-sm font-bold leading-6 text-slate-900">{fact.value}</p>
+                        </div>
+                      </div>
+                    </div>
                   ))}
-                  {section.bullets ? (
-                    <ul className="grid gap-2 pl-5 text-sm font-semibold leading-7 text-slate-700">
-                      {section.bullets.map((item) => (
-                        <li key={item} className="list-disc">{item}</li>
+                </aside>
+              </div>
+            </section>
+
+            <article className="mt-6 sm:mt-7 lg:mt-8">
+              <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                {[
+                  {
+                    title: isTerms ? 'How to use this' : 'What this covers',
+                    body: isTerms
+                      ? 'These terms explain how people can use GalaTayo, what content is allowed, and how moderation works.'
+                      : 'This policy explains what data may be collected, how it is used, and when it may be shared with service providers.',
+                  },
+                  {
+                    title: 'Your controls',
+                    body: 'We keep the language direct so users can understand what they can request, change, or delete.',
+                  },
+                  {
+                    title: 'Need help?',
+                    body: `Questions, rights requests, or content concerns can be sent to ${contactEmail}.`,
+                  },
+                ].map((card) => (
+                  <section
+                    key={card.title}
+                    className="rounded-[24px] border border-[var(--line)] bg-white/75 p-5 shadow-[0_8px_22px_rgba(17,24,39,0.04)]"
+                  >
+                    <h2 className="text-base font-black tracking-[-0.02em] text-slate-950">{card.title}</h2>
+                    <p className="mt-2 text-sm font-semibold leading-6 text-slate-700">{card.body}</p>
+                  </section>
+                ))}
+              </div>
+
+              <div className="mt-6 grid gap-5 sm:mt-7 sm:gap-6 lg:mt-8 lg:gap-7">
+                {sections.map((section) => (
+                  <section
+                    key={section.title}
+                    className="rounded-[28px] border border-[var(--line)] bg-[rgba(255,255,255,0.72)] px-5 py-5 shadow-[0_10px_24px_rgba(17,24,39,0.04)] sm:px-6 sm:py-6"
+                  >
+                    <h2 className="text-lg font-black tracking-[-0.02em] text-slate-950 sm:text-[1.2rem]">
+                      {section.title}
+                    </h2>
+                    <div className="mt-3 grid gap-3 sm:gap-4">
+                      {section.body.map((paragraph) => (
+                        <p key={paragraph} className="text-sm font-semibold leading-7 text-slate-700 sm:text-[15px]">
+                          {paragraph}
+                        </p>
                       ))}
-                    </ul>
-                  ) : null}
-                </section>
-              ))}
-            </div>
-          </CardSurface>
+                      {section.bullets ? (
+                        <ul className="grid gap-2 pl-5 text-sm font-semibold leading-7 text-slate-700 sm:text-[15px]">
+                          {section.bullets.map((item) => (
+                            <li key={item} className="list-disc">
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : null}
+                    </div>
+                  </section>
+                ))}
+              </div>
+            </article>
+          </div>
         </PageContainer>
       </main>
     </PageShell>

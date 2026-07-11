@@ -140,7 +140,7 @@ function SectionMessage({
   const toneClassName =
     tone === 'error'
       ? 'border-red-200 bg-red-50/90 text-red-700'
-      : 'border-slate-200 bg-white text-[var(--muted)]'
+      : 'border-0 bg-transparent px-0 text-[var(--muted)] shadow-none'
 
   return (
     <p className={`rounded-lg border px-4 py-3 text-sm font-semibold ${toneClassName}`}>
@@ -438,7 +438,7 @@ function ProfileSearchPage() {
                     <button
                       type="button"
                       onClick={() => setQuery('')}
-                      className="shrink-0 rounded-lg bg-slate-950 px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] text-white transition hover:bg-slate-800"
+                      className="inline-flex h-11 shrink-0 translate-y-1 items-center self-center rounded-full bg-[#0f1f4d] px-4 text-[10px] font-black uppercase tracking-[0.14em] text-white transition hover:bg-[#091633]"
                     >
                       Clear
                     </button>
@@ -449,7 +449,7 @@ function ProfileSearchPage() {
               </div>
 
               <aside className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                <div className="gala-card p-4">
+                <div className="rounded-[24px] border border-transparent bg-transparent p-0 shadow-none">
                   <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-500">Search view</p>
                   <p className="mt-3 text-3xl font-black tracking-[-0.04em] text-slate-950">
                     {summaryCount}
@@ -458,7 +458,7 @@ function ProfileSearchPage() {
                     {summaryCount === 1 ? 'Profile currently visible.' : 'Profiles currently visible.'}
                   </p>
                 </div>
-                <div className="gala-card p-4">
+                <div className="rounded-[24px] border border-transparent bg-transparent p-0 shadow-none">
                   <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-500">Your circle</p>
                   <p className="mt-3 text-3xl font-black tracking-[-0.04em] text-slate-950">
                     {isLoadingFollowing ? '...' : formatCompactCount(followingProfiles.length)}
@@ -506,8 +506,8 @@ function ProfileSearchPage() {
           ) : null}
 
           {!isShowingSearchResults ? (
-            <section className="mt-6">
-              <div className="grid gap-6">
+            <section className="mt-8 sm:mt-10">
+              <div className="grid gap-10 sm:gap-12">
                 {!isLoadingFollowing || followingErrorMessage || followingProfiles.length > 0 ? (
                   <section>
                     <SectionHeader
@@ -540,7 +540,7 @@ function ProfileSearchPage() {
                         </div>
                       ) : null}
                       {!isLoadingFollowing && !followingErrorMessage && followingProfiles.length === 0 ? (
-                        <div className="gala-empty-state px-4 py-5">
+                        <div className="gala-empty-state gala-empty-state-plain px-4 py-5">
                           <span className="gala-count-pill">
                             Start your circle
                           </span>
@@ -556,7 +556,7 @@ function ProfileSearchPage() {
                   </section>
                 ) : null}
 
-                <section>
+                <section className="border-t border-slate-200/70 pt-8 sm:pt-10">
                   <SectionHeader
                     eyebrow="Suggested Users"
                     title="Suggested for you"

@@ -93,6 +93,7 @@ function MyPlaceSubmissionsPage({ session }: { session: Session }) {
 
         {isLoading ? (
           <UnifiedLoadingState
+            variant="page"
             title="Preparing your submissions..."
             message="We are loading the places you submitted for review."
           />

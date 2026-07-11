@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import UnifiedLoadingState from './UnifiedLoadingState'
 import InternalLink from './InternalLink'
 
 type CompactPaginationProps = {
@@ -189,8 +190,8 @@ function CompactPagination({
         ) : null}
 
         {isLoading ? (
-          <div className="w-full text-center">
-            <p className="text-[11px] font-medium text-slate-400">Loading page...</p>
+          <div className="w-full">
+            <UnifiedLoadingState variant="inline" message="Loading page..." className="justify-center text-center" />
           </div>
         ) : null}
       </div>

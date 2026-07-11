@@ -5,9 +5,9 @@ import {
   DetailLayout as PrimitivesDetailLayout,
   FormContainer as PrimitivesFormContainer,
   StateContainer as PrimitivesStateContainer,
-  cn,
 } from './Primitives'
 import type { PageContainerSize } from './Primitives'
+import { cn } from '../AppUI'
 
 export {
   MapLayout,

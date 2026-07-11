@@ -1,5 +1,6 @@
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../supabase'
+import { getApiUrl } from '../utils/apiClient'
 import type { OnboardingFormState } from '../components/onboarding/types'
 
 export type UsernameAvailableResponse = {
@@ -18,11 +19,6 @@ export type AvatarUploadResponse = {
 export type OnboardingDraftResponse = {
   draft: OnboardingFormState | null
   updatedAt: string | null
-}
-
-function getApiUrl(path: string) {
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
-  return apiBaseUrl ? `${apiBaseUrl}${path}` : `/api${path}`
 }
 
 async function getAccessToken(session?: Session | null) {

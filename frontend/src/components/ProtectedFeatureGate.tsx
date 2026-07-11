@@ -1,6 +1,10 @@
+import { useEffect } from 'react'
 import { AppIcon, type AppIconName } from './AppIcon'
+import AppHeader from './AppHeader'
 import { GuestAuthPrompt, type GuestAuthVariant } from './GuestAuthPrompt'
+import { PageShell } from './layout/ResponsiveLayouts'
 import AskAiOverviewPage from '../pages/AskAiOverviewPage'
+import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
 
 type ProtectedFeatureGateProps = {
   pathname: string
@@ -75,7 +79,15 @@ const featurePreviews: Array<{
     },
   },
   {
-    matches: (pathname) => pathname === '/profile' || pathname === '/profile/' || pathname === '/me' || pathname === '/me/' || pathname.startsWith('/settings'),
+    matches: (pathname) =>
+      pathname === '/profile' ||
+      pathname === '/profile/' ||
+      pathname === '/me' ||
+      pathname === '/me/' ||
+      pathname === '/account-settings' ||
+      pathname === '/account-settings/' ||
+      pathname.startsWith('/account-settings') ||
+      pathname.startsWith('/settings'),
     preview: {
       icon: 'profile',
       eyebrow: 'Your account',
@@ -128,16 +140,10 @@ const featurePreviews: Array<{
       pathname === '/ask-ai/' ||
       pathname === '/ask-ai/chatbot' ||
       pathname === '/ask-ai/chatbot/' ||
-      pathname === '/ask-ai/text' ||
-      pathname === '/ask-ai/text/' ||
-      pathname === '/ask-ai/map' ||
-      pathname === '/ask-ai/map/' ||
       pathname === '/ask-ai/maps' ||
       pathname === '/ask-ai/maps/' ||
       pathname === '/ask-ai/prompt-builder' ||
-      pathname === '/ask-ai/prompt-builder/' ||
-      pathname === '/prompt-builder' ||
-      pathname === '/prompt-builder/',
+      pathname === '/ask-ai/prompt-builder/',
     preview: {
       icon: 'askAi',
       eyebrow: 'AI planning',
@@ -155,7 +161,7 @@ const featurePreviews: Array<{
 ]
 
 function getAuthVariant(pathname: string): GuestAuthVariant {
-  if (pathname.startsWith('/ask-ai') || pathname === '/prompt-builder' || pathname === '/prompt-builder/') return 'ask-ai'
+  if (pathname.startsWith('/ask-ai')) return 'ask-ai'
   if (pathname === '/favorites' || pathname === '/favorites/') return 'favorite'
   if (pathname.startsWith('/gala-plan') || pathname.startsWith('/gala-plans')) return 'add-plan'
   return 'community'
@@ -180,16 +186,106 @@ function getFeaturePreview(pathname: string): FeaturePreview {
 }
 
 function isAskAiPath(pathname: string): boolean {
+  return pathname.startsWith('/ask-ai')
+}
+
+function isProfileGatePath(pathname: string): boolean {
   return (
-    pathname.startsWith('/ask-ai') ||
-    pathname === '/prompt-builder' ||
-    pathname === '/prompt-builder/'
+    pathname === '/profile' ||
+    pathname === '/profile/' ||
+    pathname === '/me' ||
+    pathname === '/me/' ||
+    pathname === '/account' ||
+    pathname === '/account/' ||
+    pathname.startsWith('/account-settings') ||
+    pathname.startsWith('/settings')
   )
 }
 
+function ProfilePreviewBackdrop() {
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden bg-[radial-gradient(circle_at_50%_12%,rgba(255,255,255,0.9),rgba(243,246,252,0.55)_34%,rgba(236,240,248,0.25)_55%,rgba(232,238,248,0.72)_100%)]">
+      <div className="absolute inset-x-0 top-0 h-28 bg-[linear-gradient(180deg,rgba(248,247,244,0.95),rgba(248,247,244,0))]" />
+      <div className="absolute inset-x-0 bottom-0 h-32 bg-[linear-gradient(180deg,rgba(248,247,244,0),rgba(248,247,244,0.92))]" />
+
+      <div className="absolute inset-x-0 top-5 bottom-20 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto flex h-full w-full max-w-[440px] flex-col md:max-w-[620px] lg:max-w-[760px] xl:max-w-[860px]">
+          <div className="flex-1 rounded-[32px] bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(245,248,253,0.94))] blur-[7px] saturate-[0.76] md:rounded-[36px] lg:rounded-[40px]">
+            <div className="px-4 pt-5 sm:px-5 sm:pt-6">
+              <div className="rounded-[28px] bg-white/95 px-4 py-4 shadow-[0_18px_44px_rgba(15,23,42,0.04)] md:px-5 md:py-5 lg:px-6 lg:py-6">
+                <div className="flex items-center gap-4 md:gap-5 lg:gap-6">
+                  <div className="h-20 w-20 shrink-0 rounded-full bg-[linear-gradient(135deg,rgba(191,219,254,0.9),rgba(226,232,240,0.98))] md:h-24 md:w-24 lg:h-28 lg:w-28" />
+                  <div className="min-w-0 flex-1">
+                    <div className="h-3.5 w-24 rounded-full bg-[rgba(30,58,138,0.16)] md:w-28 lg:w-32" />
+                    <div className="mt-3 h-5 w-36 rounded-full bg-[rgba(15,23,42,0.12)] md:w-44 lg:w-56" />
+                    <div className="mt-3 h-4 w-48 rounded-full bg-[rgba(15,23,42,0.08)] md:w-64 lg:w-80" />
+                    <div className="mt-5 flex gap-4 md:mt-6 lg:gap-5">
+                      <div className="h-4 w-20 rounded-full bg-[rgba(15,23,42,0.1)] md:w-24 lg:w-28" />
+                      <div className="h-4 w-20 rounded-full bg-[rgba(15,23,42,0.1)] md:w-24 lg:w-28" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 rounded-[30px] bg-white/95 px-4 py-4 shadow-[0_18px_44px_rgba(15,23,42,0.04)] md:mt-5 md:px-5 md:py-5 lg:mt-6 lg:px-6 lg:py-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="h-3 w-20 rounded-full bg-[rgba(30,58,138,0.16)] md:w-24 lg:w-28" />
+                    <div className="mt-2 h-5 w-28 rounded-full bg-[rgba(15,23,42,0.12)] md:w-36 lg:w-44" />
+                  </div>
+                  <div className="h-10 w-10 rounded-[14px] bg-[var(--surface-alt)] md:h-11 md:w-11 lg:h-12 lg:w-12" />
+                </div>
+                <div className="mt-4 aspect-square rounded-[28px] bg-[linear-gradient(135deg,rgba(226,232,240,0.9),rgba(255,255,255,0.98))] md:mt-5 lg:mt-6" />
+                <div className="mt-4 grid grid-cols-3 gap-3 md:mt-5 md:gap-4 lg:mt-6 lg:gap-5">
+                  <div className="h-14 rounded-[20px] bg-[rgba(30,58,138,0.08)] md:h-16 lg:h-20" />
+                  <div className="h-14 rounded-[20px] bg-[rgba(15,23,42,0.06)] md:h-16 lg:h-20" />
+                  <div className="h-14 rounded-[20px] bg-[rgba(15,23,42,0.06)] md:h-16 lg:h-20" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 function ProtectedFeatureGate({ pathname }: ProtectedFeatureGateProps) {
   const preview = getFeaturePreview(pathname)
   const authVariant = getAuthVariant(pathname)
+  const profileGate = isProfileGatePath(pathname)
+
+  useEffect(() => {
+    if (!profileGate) {
+      return undefined
+    }
+
+    lockBodyScroll()
+
+    return () => {
+      unlockBodyScroll()
+    }
+  }, [profileGate])
+
+  if (profileGate) {
+    return (
+      <PageShell tone="plain" reserveBottomNav={false}>
+        <main className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden px-4 pb-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] pt-4 text-[var(--text)] sm:px-6 sm:pt-6">
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-20 overflow-hidden blur-[2px] saturate-[0.85] opacity-80">
+            <AppHeader minimal />
+          </div>
+          <ProfilePreviewBackdrop />
+
+          <div className="relative z-30 mx-auto flex w-full max-w-[420px] items-center justify-center sm:max-w-[440px] md:max-w-[480px] lg:max-w-[520px] xl:max-w-[560px]">
+            <GuestAuthPrompt
+              variant={authVariant}
+              mode="inline-card"
+              className="shadow-[0_20px_60px_rgba(15,23,42,0.08)]"
+            />
+          </div>
+        </main>
+      </PageShell>
+    )
+  }
 
   if (isAskAiPath(pathname)) {
     return (

@@ -201,7 +201,7 @@ function PlaceSubmissionComingSoonBlock() {
             </button>
             <button
               type="button"
-              onClick={() => navigateToPath('/home')}
+              onClick={() => navigateToPath('/')}
               className="inline-flex items-center justify-center rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-100"
             >
               Go home

@@ -197,6 +197,10 @@ function TrendingCard({ place, rank }: { place: PlaceCardData; rank: number }) {
             city: place.city,
             area: place.area,
             localArea: place.localArea,
+          }, {
+            source: 'home-trending',
+            returnTo: '/',
+            returnLabel: 'Trending now',
           })
         }
       }}
@@ -323,10 +327,6 @@ function TrendingCardSkeleton({ rank }: { rank: number }) {
 
         <div className="h-3 w-[88%] rounded-full bg-slate-100" />
         <div className="h-3 w-[76%] rounded-full bg-slate-100" />
-
-        <div className="mt-1 flex gap-1.5">
-          <div className="h-5 w-16 rounded-full bg-slate-100" />
-        </div>
       </div>
     </div>
   )

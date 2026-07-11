@@ -4,12 +4,13 @@ import AppHeader from '../components/AppHeader'
 import { AppIcon } from '../components/AppIcon'
 import MinimalBackNav from '../components/MinimalBackNav'
 import ProfileAvatar from '../components/ProfileAvatar'
+import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import { PageContainer, PageShell, CardSurface, Stack } from '../components/layout/ResponsiveLayouts'
 import { getDisplayName, getPublicGalaPlan, type PublicGalaPlan } from '../utils/profileApi'
 import { navigateToPath } from '../utils/navigation'
-import { formatGalaPlanDate, parseGalaPlanDescription } from '../utils/galaPlanDescription'
+import { formatGalaPlanDate, parseGalaPlanDescription } from '../utils/galaPlansApi'
 import { heartGalaPlan, unheartGalaPlan } from '../utils/galaPlanHeartsApi'
-import { shareGalaPlanLink } from '../utils/shareGalaPlan'
+import { shareGalaPlanLink } from '../utils/share'
 
 type PublicGalaPlanPageProps = {
   username: string
@@ -94,7 +95,7 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
       <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
         <PageContainer size="narrow">
           {isLoading ? (
-            <CardSurface pad="default" className="text-sm font-semibold text-[var(--muted)]">Loading gala plan...</CardSurface>
+            <UnifiedLoadingState title="Preparing gala plan..." message="We are loading this public gala plan now." />
           ) : notFound ? (
             <CardSurface pad="loose" className="text-center">
               <h1 className="text-xl font-black text-slate-950">Gala plan not found.</h1>

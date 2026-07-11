@@ -1,10 +1,6 @@
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../supabase'
-
-function getApiUrl(path: string) {
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
-  return apiBaseUrl ? `${apiBaseUrl}${path}` : `/api${path}`
-}
+import { getApiUrl } from './apiClient'
 
 async function getAccessToken(session?: Session | null) {
   if (session?.access_token) {

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { ChevronRight } from 'lucide-react'
 import InternalLink from './InternalLink'
-import useBackNavigation from '../hooks/useBackNavigation'
+import { useBackNavigation } from '../utils/navigation'
 import { navigateToPath } from '../utils/navigation'
 import { MINIMAL_BREADCRUMB_LINK_CLASS, MINIMAL_NAV_LINK_CLASS } from './navigationStyles'
 

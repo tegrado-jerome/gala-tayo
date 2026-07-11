@@ -249,12 +249,14 @@ function getSafeMarkerLatLng(place: PlaceCardData): ValidLatLng | null {
     return [latitude, longitude]
   }
 
-  console.warn('[Ask AI Maps][Suspicious Coordinate]', {
-    name: place.name,
-    latitude,
-    longitude,
-    reason: 'outside_ph_bounds_or_possible_swap',
-  })
+  if (import.meta.env.DEV) {
+    console.warn('[Ask AI Maps][Suspicious Coordinate]', {
+      name: place.name,
+      latitude,
+      longitude,
+      reason: 'outside_ph_bounds_or_possible_swap',
+    })
+  }
 
   const looksSwapped =
     latitude >= philippinesLngRange.min &&
@@ -265,11 +267,13 @@ function getSafeMarkerLatLng(place: PlaceCardData): ValidLatLng | null {
   if (looksSwapped) {
     const corrected: ValidLatLng = [longitude, latitude]
 
-    console.log('[Ask AI Maps][Coordinate Swap Corrected]', {
-      name: place.name,
-      latitude: corrected[0],
-      longitude: corrected[1],
-    })
+    if (import.meta.env.DEV) {
+      console.info('[Ask AI Maps][Coordinate Swap Corrected]', {
+        name: place.name,
+        latitude: corrected[0],
+        longitude: corrected[1],
+      })
+    }
 
     return corrected
   }
@@ -390,14 +394,6 @@ function MarkerLayer({
       {validPlaces.map(({ place, latLng, order }) => {
         const isSelected = selectedPlaceId === place.id
         const isFocused = focusedPlaceId === place.id && !isSelected
-        console.log('[Ask AI Map][Marker Render]', {
-          name: place.name,
-          latitude: latLng[0],
-          longitude: latLng[1],
-          coordinateStatus: (place as PlaceCardData & { coordinateStatus?: string }).coordinateStatus ?? null,
-          markerPositionUsed: [latLng[0], latLng[1]],
-        })
-
         return (
           <Marker
             key={place.id}

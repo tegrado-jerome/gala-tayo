@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { AppIcon, getCategoryIconName } from './AppIcon'
 import { getCuratedPlaceImages, normalizePlaceSlug } from '../data/curatedPlaceImages'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { useSystemMessage } from '../context/SystemMessageContext'
-import { useGuestAuthPrompt } from '../utils/useGuestAuthPrompt'
+import { useGuestAuthPrompt } from './GuestAuthPrompt'
 
 type PlaceCategoryMeta = {
   id: string
@@ -203,7 +203,7 @@ function PlaceCard({
 }: PlaceCardProps) {
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
-  const [hasImageLoadError, setHasImageLoadError] = useState(false)
+  const [failedPhotoUrl, setFailedPhotoUrl] = useState<string | null>(null)
   const guestAuth = useGuestAuthPrompt()
   const { isPlaceSaved, saveFavorite, removeFavorite } = useSavedFavorites()
   const { showSystemMessage } = useSystemMessage()
@@ -234,11 +234,7 @@ function PlaceCard({
   const mediaClassName = compact ? 'w-[84px] rounded-[20px] sm:w-[92px]' : 'w-[112px] rounded-[18px]'
   const cardBodyClassName = compact ? 'py-3' : 'min-h-[136px] p-3'
   const shouldRenderMedia = Boolean(photoUrl) || !compact
-  const shouldShowPhoto = Boolean(photoUrl) && !hasImageLoadError
-
-  useEffect(() => {
-    setHasImageLoadError(false)
-  }, [photoUrl, place.id])
+  const shouldShowPhoto = Boolean(photoUrl) && failedPhotoUrl !== photoUrl
   const handleActivate = () => {
     if (onOpen) {
       onOpen(place.id)
@@ -316,7 +312,7 @@ function PlaceCard({
                   alt={photoAlt}
                   className="absolute inset-0 h-full w-full object-cover object-center"
                   loading="lazy"
-                  onError={() => setHasImageLoadError(true)}
+                  onError={() => setFailedPhotoUrl(photoUrl)}
                 />
               </div>
             ) : (
@@ -395,7 +391,7 @@ function PlaceCard({
               alt={photoAlt}
               className={`${mediaClassName} shrink-0 border border-[rgba(148,163,184,0.18)] object-cover shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] ${compact ? 'h-full min-h-[112px] self-stretch' : 'h-full self-stretch'}`}
               loading="lazy"
-              onError={() => setHasImageLoadError(true)}
+              onError={() => setFailedPhotoUrl(photoUrl)}
             />
           ) : (
             <div className={`${mediaClassName} flex shrink-0 flex-col items-center justify-center gap-1.5 border border-dashed border-[rgba(148,163,184,0.32)] bg-[linear-gradient(180deg,#f8fbff,#eef4fb)] px-2 text-center text-slate-400 ${compact ? 'h-full min-h-[112px] self-stretch' : 'h-full self-stretch'}`}>

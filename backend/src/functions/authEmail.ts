@@ -1,6 +1,7 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { validateJwt } from "../utils/auth";
+import { checkEndpointRateLimit } from "../utils/redisRateLimit";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -21,10 +22,6 @@ async function getUserIdsByEmail(email: string) {
   }
 
   return ((data ?? []) as Array<{ id: string }>).map((user) => user.id);
-}
-
-async function emailExistsInAuth(email: string) {
-  return (await getUserIdsByEmail(email)).length > 0;
 }
 
 async function emailBelongsToAnotherAccount(email: string, currentUserId: string) {
@@ -93,11 +90,17 @@ export async function authEmailExists(
       };
     }
 
+    const rateLimit = await checkEndpointRateLimit(request, "auth-email-exists", 20, 60);
+    if (!rateLimit.allowed) {
+      return rateLimit.response;
+    }
+
     return {
       status: 200,
       jsonBody: {
         email,
-        exists: await emailExistsInAuth(email),
+        exists: false,
+        message: "If this email can be used, the sign-up flow will continue.",
       },
     };
   } catch (error) {

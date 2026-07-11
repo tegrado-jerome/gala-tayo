@@ -522,6 +522,52 @@ export async function favoritesDelete(
   }
 }
 
+export async function favoritesDeleteAll(
+  request: HttpRequest,
+  context: InvocationContext
+): Promise<HttpResponseInit> {
+  try {
+    const user = await getAuthenticatedUser(request);
+
+    if (!user?.id) {
+      return unauthorized("Missing or invalid Authorization header.");
+    }
+
+    const supabaseAdmin = await getSupabaseAdminClient();
+    const favoritesTable = supabaseAdmin.from("favorites") as any;
+
+    const { error } = await favoritesTable.delete().eq("user_id", user.id);
+
+    if (error) {
+      context.error("Failed to clear favorites:", error);
+
+      return {
+        status: 500,
+        jsonBody: {
+          message: "Failed to clear favorites.",
+          error: error.message,
+        },
+      };
+    }
+
+    return {
+      status: 200,
+      jsonBody: {
+        message: "All favorites cleared successfully.",
+      },
+    };
+  } catch (error) {
+    context.error("Unexpected error in DELETE /api/favorites/all:", error);
+
+    return {
+      status: 500,
+      jsonBody: {
+        message: "Unexpected server error.",
+      },
+    };
+  }
+}
+
 app.http("favoritesList", {
   methods: ["GET"],
   authLevel: "anonymous",
@@ -548,4 +594,11 @@ app.http("favoritesDeleteByBody", {
   authLevel: "anonymous",
   route: "favorites",
   handler: favoritesDelete,
+});
+
+app.http("favoritesDeleteAll", {
+  methods: ["DELETE"],
+  authLevel: "anonymous",
+  route: "favorites/all",
+  handler: favoritesDeleteAll,
 });

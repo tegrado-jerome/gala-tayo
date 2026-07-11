@@ -1,5 +1,5 @@
 import { navigateToPath } from '../utils/navigation'
-import { hasInAppBackHistory } from '../utils/navigationHistory'
+import { hasInAppBackHistory } from '../utils/routes'
 import { MINIMAL_NAV_LINK_CLASS } from './navigationStyles'
 
 type MinimalBackNavProps = {
@@ -19,6 +19,8 @@ function MinimalBackNav({
   ariaLabel,
   preferHistory = true,
 }: MinimalBackNavProps) {
+  const accessibleLabel = ariaLabel ?? (typeof label === 'string' ? label : 'Back')
+
   const handleClick = () => {
     if (onClick) {
       onClick()
@@ -47,7 +49,7 @@ function MinimalBackNav({
     <button
       type="button"
       onClick={handleClick}
-      aria-label={ariaLabel || label}
+      aria-label={accessibleLabel}
       className={
         className ||
         MINIMAL_NAV_LINK_CLASS

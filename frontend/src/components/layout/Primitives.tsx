@@ -4,12 +4,7 @@ import {
   type PropsWithChildren,
   type ReactNode,
 } from 'react'
-
-type ClassValue = string | number | false | null | undefined
-
-export function cn(...values: ClassValue[]): string {
-  return values.filter(Boolean).join(' ')
-}
+import { cn } from '../AppUI'
 
 const BOTTOM_NAV_RESERVED_CLASS =
   'pb-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] sm:pb-[calc(env(safe-area-inset-bottom,0px)+4.75rem)] lg:pb-0'
@@ -528,15 +523,21 @@ type AppHeaderLayoutProps = PropsWithChildren<{
 
 export function AppHeaderLayout({ children, className, showBorder = true }: AppHeaderLayoutProps) {
   return (
-    <header
-      className={cn(
-        'sticky top-0 z-[5000] w-full bg-[var(--bg)]',
-        showBorder ? 'border-b border-[var(--line)]' : '',
-        className,
-      )}
-    >
-      {children}
-    </header>
+    <>
+      <header
+        className={cn(
+          'fixed inset-x-0 top-0 z-[5000] w-full bg-[var(--header-bg)] backdrop-blur supports-[backdrop-filter]:bg-[var(--header-bg)]',
+          showBorder ? 'border-b border-[var(--line)]' : '',
+          className,
+        )}
+      >
+        {children}
+      </header>
+      <div
+        className="h-16 w-full shrink-0 sm:h-[72px] md:h-[84px] lg:h-[92px] xl:h-[96px]"
+        aria-hidden="true"
+      />
+    </>
   )
 }
 
@@ -564,7 +565,7 @@ export type ChibiIllustrationProps = {
   onError?: React.ReactEventHandler<HTMLImageElement>
 }
 
-const chibiBaseClass = 'block h-auto max-w-full object-contain shrink-0 select-none pointer-events-none'
+const chibiBaseClass = 'gala-chibi block h-auto max-w-full object-contain shrink-0 select-none pointer-events-none'
 
 const chibiVariantClasses: Record<ChibiVariant, string> = {
   hero: 'w-[clamp(220px,30vw,360px)] max-h-[34vh] md:max-h-[360px]',
@@ -592,10 +593,4 @@ export function ChibiIllustration({
       onError={onError}
     />
   )
-}
-
-export const layoutPrimitives = {
-  cn,
-  BOTTOM_NAV_RESERVED_CLASS,
-  SIZE_CLASSES,
 }

@@ -117,12 +117,12 @@ function AskAiOverviewPage() {
     <PageShell>
       <AppHeader minimal />
 
-      <main className="flex w-full flex-col pt-6 sm:pt-7 md:pt-9 lg:flex-1 lg:pt-0">
+      <main className="flex w-full flex-col pt-4 sm:pt-5 lg:flex-1 lg:py-8">
         <PageContainer
           size="wide"
           className="px-4 sm:px-6 lg:flex lg:min-h-full lg:flex-col lg:justify-center lg:px-8 xl:px-10"
         >
-          <div className="mb-6 mt-4">
+          <div className="mb-6">
             <MinimalBackNav to="/" label="Home" preferHistory={false} />
           </div>
 
@@ -169,6 +169,7 @@ function AskAiOverviewPage() {
               <ChibiIllustration
                 src={askAiOverviewChibi}
                 variant="hero"
+                className="!w-[clamp(264px,70vw,360px)] sm:!w-[clamp(312px,38vw,460px)] lg:!w-[clamp(340px,26vw,520px)] !max-h-[46vh] sm:!max-h-[50vh] lg:!max-h-[520px]"
                 priority
                 onError={(e) => {
                   const el = e.currentTarget

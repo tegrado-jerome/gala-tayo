@@ -38,10 +38,7 @@ type ApiErrorResponse = {
   message?: string
 }
 
-function getApiEndpoint(path: string) {
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
-  return apiBaseUrl ? `${apiBaseUrl}${path}` : `/api${path}`
-}
+import { apiFetch } from './apiClient'
 
 async function readJson<T>(response: Response): Promise<T | null> {
   const text = await response.text()
@@ -59,7 +56,7 @@ async function readJson<T>(response: Response): Promise<T | null> {
 
 async function submitPlaceReport(placeId: string, token: string, payload: SubmitPlaceReportPayload) {
   const details = payload.details?.trim() || ''
-  const response = await fetch(getApiEndpoint(`/places/${encodeURIComponent(placeId)}/reports`), {
+  const response = await apiFetch(`/places/${encodeURIComponent(placeId)}/reports`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -81,7 +78,7 @@ async function submitPlaceReport(placeId: string, token: string, payload: Submit
 }
 
 async function fetchMyPlaceReports(token: string, signal?: AbortSignal) {
-  const response = await fetch(getApiEndpoint('/me/place-reports'), {
+  const response = await apiFetch('/me/place-reports', {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${token}`,

@@ -3,11 +3,24 @@ import AppHeader from '../components/AppHeader'
 import MinimalBackNav from '../components/MinimalBackNav'
 import GoogleSignInButton from '../components/GoogleSignInButton'
 import PageHeroHeader from '../components/PageHeroHeader'
+import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import { PageContainer, PageShell, CardSurface, EmptyState, Stack, ChibiIllustration } from '../components/layout/ResponsiveLayouts'
 import ActivityPlaceCard from '../components/ActivityPlaceCard'
 import { useSavedFavorites, type FavoritePlace } from '../context/SavedFavoritesContext'
 import { getPlacePhoto } from '../utils/placePhoto'
 import favoritesActiveChibi from '../assets/chibis/features/favorites/chibi-favorites-active-state.webp'
+
+function TrashIcon({ className = 'h-4 w-4' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className} aria-hidden="true">
+      <path d="M4 7h16" />
+      <path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7" />
+      <path d="m10 11 .3 6" />
+      <path d="m14 11-.3 6" />
+      <path d="M6.5 7 7.4 20h9.2l.9-13" />
+    </svg>
+  )
+}
 
 type IconProps = {
   className?: string
@@ -78,8 +91,12 @@ function getPlaceSearchText(place: FavoritePlace) {
 
 function FavoriteCard({
   favorite,
+  onRemove,
+  isRemoving,
 }: {
   favorite: { id: string; place: FavoritePlace | null }
+  onRemove: () => void
+  isRemoving: boolean
 }) {
   const place = favorite.place as FavoritePlace
   const placeSlug = place.slug?.trim() || place.id
@@ -101,18 +118,36 @@ function FavoriteCard({
       placeSlug={placeSlug}
       photoAlt={place.name || 'Saved place'}
       compactMobile
+      footer={
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation()
+            onRemove()
+          }}
+          disabled={isRemoving}
+          className="inline-flex h-6 w-full items-center justify-center gap-1 rounded-md border border-red-200 bg-white text-[10px] font-black text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 sm:h-7 sm:text-xs"
+        >
+          <TrashIcon className="h-3 w-3" />
+          {isRemoving ? 'Removing...' : 'Remove'}
+        </button>
+      }
     />
   )
 }
 
 function FavoritesPage() {
   const [searchQuery, setSearchQuery] = useState('')
+  const [removingIds, setRemovingIds] = useState<Set<string>>(new Set())
+  const [isClearingAll, setIsClearingAll] = useState(false)
   const {
     session,
     isSessionLoading,
     isFavoritesLoading,
     favoritesError,
     favorites,
+    removeFavorite,
+    clearAllFavorites,
   } = useSavedFavorites()
 
   const savedPlaces = useMemo(
@@ -130,6 +165,36 @@ function FavoritesPage() {
       return !normalizedQuery || haystack.includes(normalizedQuery)
     })
   }, [savedPlaces, searchQuery])
+
+  const handleRemoveFavorite = async (favoriteId: string) => {
+    setRemovingIds((current) => new Set(current).add(favoriteId))
+
+    try {
+      await removeFavorite(favoriteId)
+    } catch {
+      setRemovingIds((current) => {
+        const next = new Set(current)
+        next.delete(favoriteId)
+        return next
+      })
+    }
+  }
+
+  const handleClearAll = async () => {
+    const shouldClear = window.confirm('Remove all saved places?')
+
+    if (!shouldClear) {
+      return
+    }
+
+    setIsClearingAll(true)
+
+    try {
+      await clearAllFavorites()
+    } catch {
+      setIsClearingAll(false)
+    }
+  }
 
   return (
     <PageShell>
@@ -193,7 +258,7 @@ function FavoritesPage() {
 
               <div className="min-h-5">
                 {isFavoritesLoading ? (
-                  <p className="text-sm font-semibold text-[var(--accent-deep)]">Loading favorites...</p>
+                  <UnifiedLoadingState title="Preparing favorites..." message="We are loading your saved places." />
                 ) : favoritesError ? (
                   <p className="text-sm font-medium text-red-600">{favoritesError}</p>
                 ) : null}
@@ -223,16 +288,29 @@ function FavoritesPage() {
               {filteredSavedPlaces.length > 0 ? (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between px-1">
-                    <p className="text-[11px] font-black uppercase tracking-[0.24em] text-[var(--accent-deep)]">Saved</p>
-                    <p className="text-xs font-semibold text-[var(--muted)]">
-                      {filteredSavedPlaces.length} card{filteredSavedPlaces.length === 1 ? '' : 's'}
-                    </p>
+                    <p className="text-sm font-black uppercase tracking-[0.2em] text-[var(--accent-deep)]">Saved</p>
+                    <div className="flex items-center gap-3">
+                      <p className="text-xs font-semibold text-[var(--muted)]">
+                        {filteredSavedPlaces.length} place{filteredSavedPlaces.length === 1 ? '' : 's'}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => void handleClearAll()}
+                        disabled={isClearingAll}
+                        className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-white px-4 text-xs font-black text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        <TrashIcon className="h-3.5 w-3.5" />
+                        {isClearingAll ? 'Removing...' : 'Remove all'}
+                      </button>
+                    </div>
                   </div>
                   <div className="grid w-full grid-cols-2 gap-2.5 sm:gap-4 xl:justify-start xl:[grid-template-columns:repeat(auto-fill,minmax(340px,340px))]">
                     {filteredSavedPlaces.map((favorite) => (
                       <FavoriteCard
                         key={favorite.id}
                         favorite={favorite}
+                        onRemove={() => void handleRemoveFavorite(favorite.place?.id || favorite.id)}
+                        isRemoving={removingIds.has(favorite.place?.id || favorite.id)}
                       />
                     ))}
                   </div>

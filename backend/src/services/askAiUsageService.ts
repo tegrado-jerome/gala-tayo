@@ -299,10 +299,6 @@ async function consumeAskAiUsageRpc(params: {
     throw new Error("Failed to parse usage quota response from database.");
   }
 
-  console.log(
-    `[AskAI Usage] quota consumed: type=${normalized.usageType} remaining=${normalized.remaining} userId=${params.userId}`
-  );
-
   return normalized;
 }
 
@@ -318,12 +314,6 @@ export async function refundAskAiUsage(params: {
   });
 
   if (error) {
-    console.error(
-      `[AskAI Usage] refund failed for user=${params.userId} type=${params.usageType}: ${error.message}`
-    );
-  } else {
-    console.log(
-      `[AskAI Usage] refunded: type=${params.usageType} userId=${params.userId}`
-    );
+    console.warn(`[AskAI Usage] refund failed: ${error.message}`);
   }
 }

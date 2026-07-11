@@ -3,7 +3,10 @@ import { randomUUID } from "crypto";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { generateUniqueSlug } from "../services/placeService";
 import { AuthenticatedUser, validateJwt } from "../utils/auth";
-import { convertImageToWebp, deleteR2Object, uploadWebpToR2 } from "../utils/r2ImageStorage";
+import { requireAdminAal2 } from "../utils/adminAuth";
+import { checkEndpointRateLimit } from "../utils/redisRateLimit";
+import { convertImageToWebp, deleteR2Object, uploadThumbnailToR2, uploadWebpToR2 } from "../utils/r2ImageStorage";
+import { logAdminAction } from "../utils/adminAudit";
 
 type UserRow = {
   id: string;
@@ -115,31 +118,6 @@ async function getAuthenticatedUser(request: HttpRequest): Promise<Authenticated
   } catch {
     return null;
   }
-}
-
-async function isAdminUser(userId: string) {
-  const supabase = await getSupabaseAdminClient();
-  const { data, error } = await (supabase.from("users") as any).select("role").eq("id", userId).maybeSingle();
-
-  if (error) {
-    return false;
-  }
-
-  return (data as UserRow | null)?.role === "admin";
-}
-
-async function requireAdmin(request: HttpRequest): Promise<{ user?: AuthenticatedUser; response?: HttpResponseInit }> {
-  const user = await getAuthenticatedUser(request);
-
-  if (!user?.id) {
-    return { response: response(401, "Missing or invalid Authorization header.") };
-  }
-
-  if (!(await isAdminUser(user.id))) {
-    return { response: response(403, "Admin access required.") };
-  }
-
-  return { user };
 }
 
 function getCleanText(value: unknown, maxLength: number, { required = false }: { required?: boolean } = {}) {
@@ -427,6 +405,11 @@ export async function createPlaceSubmission(
   const uploadedKeys: string[] = [];
 
   try {
+    const rateCheck = await checkEndpointRateLimit(request, "place-submissions", 5, 60);
+    if (!rateCheck.allowed && rateCheck.response) {
+      return rateCheck.response;
+    }
+
     const user = await getAuthenticatedUser(request);
 
     if (!user?.id) {
@@ -508,6 +491,7 @@ export async function createPlaceSubmission(
       const webpBuffer = await convertImageToWebp(inputBuffer);
       const storageKey = `place-submissions/${submissionSlug}/${submissionId}/${index + 1}-${randomUUID()}.webp`;
       const imageUrl = await uploadWebpToR2(storageKey, webpBuffer);
+      await uploadThumbnailToR2(storageKey, webpBuffer);
 
       uploadedKeys.push(storageKey);
       uploadedImages.push({
@@ -639,7 +623,7 @@ export async function getPendingPlaceSubmissions(
   context: InvocationContext
 ): Promise<HttpResponseInit> {
   try {
-    const admin = await requireAdmin(request);
+    const admin = await requireAdminAal2(request);
 
     if (admin.response) {
       return admin.response;
@@ -722,7 +706,7 @@ export async function approvePlaceSubmission(
   let createdPlaceId: string | null = null;
 
   try {
-    const admin = await requireAdmin(request);
+    const admin = await requireAdminAal2(request);
 
     if (admin.response) {
       return admin.response;
@@ -828,6 +812,10 @@ export async function approvePlaceSubmission(
       throw updateError;
     }
 
+    if (admin.user?.id) {
+      await logAdminAction(request, admin.user.id, "approve_place_submission", "place_submission", submissionId);
+    }
+
     return {
       status: 200,
       jsonBody: {
@@ -855,7 +843,7 @@ export async function rejectPlaceSubmission(
   context: InvocationContext
 ): Promise<HttpResponseInit> {
   try {
-    const admin = await requireAdmin(request);
+    const admin = await requireAdminAal2(request);
 
     if (admin.response) {
       return admin.response;
@@ -919,6 +907,10 @@ export async function rejectPlaceSubmission(
 
     if (updateError) {
       throw updateError;
+    }
+
+    if (admin.user?.id) {
+      await logAdminAction(request, admin.user.id, "reject_place_submission", "place_submission", submissionId, rejectionReason);
     }
 
     return response(200, "Place submission rejected.");

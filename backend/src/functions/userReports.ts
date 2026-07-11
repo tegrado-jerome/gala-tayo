@@ -1,7 +1,10 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { AuthenticatedUser, validateJwt } from "../utils/auth";
+import { requireAdminAal2 } from "../utils/adminAuth";
+import { checkEndpointRateLimit } from "../utils/redisRateLimit";
 import { isPlaceUuid } from "../utils/placeIdentity";
+import { logAdminAction } from "../utils/adminAudit";
 
 type UserReportReason =
   | "fake_account"
@@ -108,31 +111,6 @@ async function getAuthenticatedUser(request: HttpRequest): Promise<Authenticated
   } catch {
     return null;
   }
-}
-
-async function isAdminUser(userId: string): Promise<boolean> {
-  const supabaseAdmin = await getSupabaseAdminClient();
-  const { data, error } = await supabaseAdmin.from("users").select("role").eq("id", userId).maybeSingle();
-
-  if (error) {
-    return false;
-  }
-
-  return ((data as UserRoleRow | null)?.role || "").toLowerCase() === "admin";
-}
-
-async function requireAdmin(request: HttpRequest): Promise<{ user?: AuthenticatedUser; response?: HttpResponseInit }> {
-  const user = await getAuthenticatedUser(request);
-
-  if (!user?.id) {
-    return { response: unauthorized("Missing or invalid Authorization header.") };
-  }
-
-  if (!(await isAdminUser(user.id))) {
-    return { response: forbidden("Admin access required.") };
-  }
-
-  return { user };
 }
 
 async function readCleanUserReport(
@@ -248,6 +226,11 @@ export async function userReportsCreate(
   context: InvocationContext
 ): Promise<HttpResponseInit> {
   try {
+    const rateCheck = await checkEndpointRateLimit(request, "user-reports", 5, 60);
+    if (!rateCheck.allowed && rateCheck.response) {
+      return rateCheck.response;
+    }
+
     const user = await getAuthenticatedUser(request);
 
     if (!user?.id) {
@@ -390,7 +373,7 @@ export async function adminUserReportsList(
   context: InvocationContext
 ): Promise<HttpResponseInit> {
   try {
-    const admin = await requireAdmin(request);
+    const admin = await requireAdminAal2(request);
 
     if (admin.response) {
       return admin.response;
@@ -522,7 +505,7 @@ export async function adminUserReportUpdate(
   context: InvocationContext
 ): Promise<HttpResponseInit> {
   try {
-    const admin = await requireAdmin(request);
+    const admin = await requireAdminAal2(request);
 
     if (admin.response) {
       return admin.response;
@@ -598,6 +581,10 @@ export async function adminUserReportUpdate(
           message: "Failed to update user report.",
         },
       };
+    }
+
+    if (admin.user?.id) {
+      await logAdminAction(request, admin.user.id, "update_user_report", "user_report", reportId, `status=${status}`);
     }
 
     return {

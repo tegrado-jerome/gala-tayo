@@ -1,5 +1,6 @@
 import type { Session } from '@supabase/supabase-js'
 import { getSupabaseAccessToken } from '../supabase'
+import { getApiUrl } from './apiClient'
 import type { PublicGalaPlanPreviewPlace } from './profileApi'
 
 export type GalaPlanVisibility = 'private' | 'public'
@@ -76,11 +77,6 @@ export type GalaPlanDetail = GalaPlanSummary & {
 
 const GALA_PLAN_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
-function getApiUrl(path: string) {
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
-  return apiBaseUrl ? `${apiBaseUrl}${path}` : `/api${path}`
-}
-
 function normalizeGalaPlanId(planId: string) {
   const normalizedPlanId = planId.trim()
   if (!GALA_PLAN_ID_PATTERN.test(normalizedPlanId)) {
@@ -146,14 +142,6 @@ export async function getGalaPlan(planId: string, session?: Session | null) {
   const normalizedPlanId = normalizeGalaPlanId(planId)
   const requestPath = `/gala-plans/${encodeURIComponent(normalizedPlanId)}`
   const requestUrl = getApiUrl(requestPath)
-  if (import.meta.env.DEV) {
-    console.debug('[galaPlansApi.getGalaPlan] request', {
-      planId,
-      normalizedPlanId,
-      requestUrl,
-      hasAuthorization: Boolean(headers.Authorization),
-    })
-  }
   const response = await fetch(requestUrl, { headers })
   return readJson<{ plan: GalaPlanDetail }>(response)
 }
@@ -244,4 +232,53 @@ export async function reorderGalaPlanItems(
     }
   })
   return updateGalaPlan(planId, { items: nextItems }, session)
+}
+
+export type GalaPlanDateMode = 'anytime' | 'na' | 'date'
+
+const DATE_MARKER_PATTERN = /^\[gala_date:(anytime|na|\d{4}-\d{2}-\d{2})\]\n?/i
+
+export function parseGalaPlanDescription(description: string | null | undefined) {
+  const rawDescription = description ?? ''
+  const match = rawDescription.match(DATE_MARKER_PATTERN)
+  const markerValue = match?.[1] ?? 'anytime'
+  const cleanDescription = match ? rawDescription.replace(DATE_MARKER_PATTERN, '').trimStart() : rawDescription
+
+  return {
+    dateMode: markerValue === 'anytime' || markerValue === 'na' ? markerValue as GalaPlanDateMode : 'date' as GalaPlanDateMode,
+    date: markerValue === 'anytime' || markerValue === 'na' ? '' : markerValue,
+    description: cleanDescription,
+  }
+}
+
+export function composeGalaPlanDescription({
+  description,
+  dateMode,
+  date,
+}: {
+  description: string
+  dateMode: GalaPlanDateMode
+  date: string
+}) {
+  const markerValue = dateMode === 'date' && date ? date : dateMode
+  const cleanDescription = description.trim()
+  return `[gala_date:${markerValue}]${cleanDescription ? `\n${cleanDescription}` : ''}`
+}
+
+export function formatGalaPlanDate(description: string | null | undefined) {
+  const parsed = parseGalaPlanDescription(description)
+
+  if (parsed.dateMode === 'na') {
+    return 'N/A'
+  }
+
+  if (parsed.dateMode === 'anytime' || !parsed.date) {
+    return 'Anytime'
+  }
+
+  return new Intl.DateTimeFormat('en', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).format(new Date(`${parsed.date}T00:00:00`))
 }

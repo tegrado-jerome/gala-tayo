@@ -1,5 +1,5 @@
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import AppHeader from '../components/AppHeader'
@@ -21,10 +21,11 @@ import {
   type GalaPlanVisibility,
 } from '../utils/galaPlansApi'
 import { PageContainer, PageShell } from '../components/layout/ResponsiveLayouts'
-import { parseGalaPlanDescription } from '../utils/galaPlanDescription'
+import { parseGalaPlanDescription } from '../utils/galaPlansApi'
 import { navigateToPath } from '../utils/navigation'
 import { getCategoryIconName } from '../components/AppIcon'
 import { buildPrivateGalaPlanShareUrl, shareLink } from '../utils/share'
+import { getApiUrl } from '../utils/apiClient'
 
 type Mode = 'list' | 'favorites' | 'new' | 'detail' | 'edit'
 
@@ -50,14 +51,10 @@ type GalaPlansPageProps = {
 }
 
 const PLACE_SEARCH_DEFAULT_LIMIT = 10
+const PLACE_SEARCH_DEBOUNCE_MS = 325
 const TIME_PERIODS = ['AM', 'PM'] as const
 
 type TimePeriod = (typeof TIME_PERIODS)[number]
-
-function getApiUrl(path: string) {
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
-  return apiBaseUrl ? `${apiBaseUrl}${path}` : `/api${path}`
-}
 
 function formatDate(value: string | null | undefined) {
   if (!value) return ''
@@ -262,8 +259,34 @@ function orderDraftItems(items: DraftItem[]) {
       (first.day_number ?? 1) - (second.day_number ?? 1) ||
       (first.sort_order ?? 0) - (second.sort_order ?? 0) ||
       first.place.name?.localeCompare(second.place.name ?? '') ||
-      0,
+    0,
   )
+}
+
+type SearchResponse = {
+  page?: number
+  limit?: number
+  totalCount?: number
+  totalPages?: number
+  places?: SearchPlaceResult[]
+  result?: {
+    page?: number
+    limit?: number
+    totalCount?: number
+    totalPages?: number
+    places?: SearchPlaceResult[]
+  }
+  message?: string
+}
+
+function normalizeSearchResults(data: SearchResponse) {
+  return {
+    page: data.page ?? data.result?.page ?? 1,
+    limit: data.limit ?? data.result?.limit ?? PLACE_SEARCH_DEFAULT_LIMIT,
+    totalCount: data.totalCount ?? data.result?.totalCount ?? 0,
+    totalPages: data.totalPages ?? data.result?.totalPages ?? 1,
+    places: (data.places || data.result?.places || []).filter((place) => place.id && place.name),
+  }
 }
 
 function ItineraryBuilder({
@@ -275,7 +298,11 @@ function ItineraryBuilder({
 }) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchPlaceResult[]>([])
-  const [showAllResults, setShowAllResults] = useState(false)
+  const [searchPage, setSearchPage] = useState(1)
+  const [searchTotalPages, setSearchTotalPages] = useState(1)
+  const [searchTotalCount, setSearchTotalCount] = useState(0)
+  const [hasSearchedPlaces, setHasSearchedPlaces] = useState(false)
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false)
   const [isSearching, setIsSearching] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [selectedPlace, setSelectedPlace] = useState<SearchPlaceResult | null>(null)
@@ -286,6 +313,7 @@ function ItineraryBuilder({
   const [draftMinutes, setDraftMinutes] = useState('')
   const [draftNotes, setDraftNotes] = useState('')
   const draftIdSequence = useRef(0)
+  const searchRequestId = useRef(0)
   const orderedItems = useMemo(() => orderDraftItems(items), [items])
   const groupedItems = useMemo(() => {
     const groups = new Map<number, DraftItem[]>()
@@ -297,10 +325,23 @@ function ItineraryBuilder({
     }
     return Array.from(groups.entries()).sort(([first], [second]) => first - second)
   }, [orderedItems])
-  const visibleResults = useMemo(
-    () => (showAllResults ? results : results.slice(0, PLACE_SEARCH_DEFAULT_LIMIT)),
-    [results, showAllResults],
-  )
+  const hasPreviousSearchPage = searchPage > 1
+  const hasNextSearchPage = searchPage < searchTotalPages
+
+  const handleQueryChange = (value: string) => {
+    setQuery(value)
+    setErrorMessage('')
+    if (value.trim().length < 2) {
+      setResults([])
+      setSearchPage(1)
+      setSearchTotalPages(1)
+      setSearchTotalCount(0)
+      setHasSearchedPlaces(false)
+      setIsSearchModalOpen(false)
+      return
+    }
+    setIsSearchModalOpen(true)
+  }
 
   const startDraftForPlace = (place: SearchPlaceResult) => {
     const latestDay = orderedItems.length > 0 ? Math.max(...orderedItems.map((item) => item.day_number ?? 1)) : 1
@@ -313,32 +354,61 @@ function ItineraryBuilder({
     setDraftMinutes('')
     setDraftNotes('')
     setErrorMessage('')
+    setIsSearchModalOpen(false)
   }
 
-  const searchPlaces = async () => {
-    if (query.trim().length < 2) {
+  const searchPlaces = useCallback(async (page = 1, openModal = true) => {
+    const trimmedQuery = query.trim()
+    if (trimmedQuery.length < 2) {
       setErrorMessage('Search at least 2 characters.')
       return
     }
 
+    const requestId = ++searchRequestId.current
+
     try {
       setIsSearching(true)
       setErrorMessage('')
-      setShowAllResults(false)
+      setHasSearchedPlaces(true)
+      setSearchPage(page)
+      if (openModal) setIsSearchModalOpen(true)
       const response = await fetch(getApiUrl('/search'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query }),
+        body: JSON.stringify({
+          query: trimmedQuery,
+          page,
+          limit: PLACE_SEARCH_DEFAULT_LIMIT,
+          strictPlaceSearch: true,
+        }),
       })
-      const data = (await response.json().catch(() => ({}))) as { message?: string; places?: SearchPlaceResult[]; result?: { places?: SearchPlaceResult[] } }
+      const data = (await response.json().catch(() => ({}))) as SearchResponse
       if (!response.ok) throw new Error(data.message || 'Failed to search places.')
-      setResults((data.places || data.result?.places || []).filter((place) => place.id && place.name))
+      if (requestId !== searchRequestId.current) return
+      const normalized = normalizeSearchResults(data)
+      setResults(normalized.places)
+      setSearchPage(normalized.page)
+      setSearchTotalPages(normalized.totalPages)
+      setSearchTotalCount(normalized.totalCount)
     } catch (error) {
+      if (requestId !== searchRequestId.current) return
       setErrorMessage(error instanceof Error ? error.message : 'Failed to search places.')
     } finally {
-      setIsSearching(false)
+      if (requestId === searchRequestId.current) {
+        setIsSearching(false)
+      }
     }
-  }
+  }, [query])
+
+  useEffect(() => {
+    if (query.trim().length < 2) return
+
+    const timeout = window.setTimeout(() => {
+      void searchPlaces(1, false)
+    }, PLACE_SEARCH_DEBOUNCE_MS)
+
+    return () => window.clearTimeout(timeout)
+  }, [query, searchPlaces])
 
   const confirmAddPlace = () => {
     if (!selectedPlace) {
@@ -365,7 +435,9 @@ function ItineraryBuilder({
     ])
     setQuery('')
     setResults([])
-    setShowAllResults(false)
+    setSearchPage(1)
+    setSearchTotalPages(1)
+    setSearchTotalCount(0)
     setSelectedPlace(null)
     setErrorMessage('')
     setDraftTime('')
@@ -383,7 +455,8 @@ function ItineraryBuilder({
   }
 
   return (
-    <section className="grid gap-5 lg:grid-cols-[minmax(0,1.08fr)_minmax(340px,0.92fr)] xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.85fr)] lg:items-start">
+    <>
+    <section className="grid gap-6 xl:grid-cols-[minmax(0,1.18fr)_minmax(360px,0.82fr)] 2xl:grid-cols-[minmax(0,1.22fr)_minmax(400px,0.78fr)] lg:items-start">
       <section className="grid gap-6">
         <div className="grid gap-2">
           <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[var(--accent-deep)]">Build The Route</p>
@@ -391,7 +464,7 @@ function ItineraryBuilder({
           <p className="max-w-2xl text-sm font-semibold leading-6 text-slate-600">Search a place, choose it, fill in the visit details, then add it to your plan.</p>
         </div>
 
-        <div className="rounded-lg border border-[var(--line)] bg-[var(--accent-wash)] px-4 py-3 text-sm font-semibold leading-6 text-[var(--accent-deep)]">
+        <div className="rounded-2xl border border-[var(--line)] bg-[var(--accent-wash)] px-5 py-4 text-sm font-semibold leading-6 text-[var(--accent-deep)]">
           Tip: keep it simple. Start with the first place you know for sure, then add the next stop after.
         </div>
 
@@ -401,55 +474,104 @@ function ItineraryBuilder({
             Search and choose a place
           </div>
           <p className="text-sm font-semibold text-slate-600">Type an area or place name like `Intramuros`, then tap `Choose` on the result you want.</p>
-          <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+          <div className="relative grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
             <div className="relative">
               <AppIcon name="search" className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <input value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); void searchPlaces() } }} className="h-12 w-full rounded-2xl border border-[var(--line-strong)] bg-white pl-11 pr-4 text-sm font-semibold outline-none transition focus:border-[var(--accent)] focus:ring-4 focus:ring-[var(--accent-soft)]" placeholder="Search places to add" />
+              <input value={query} onChange={(event) => handleQueryChange(event.target.value)} onFocus={() => { if (query.trim().length >= 2) setIsSearchModalOpen(true) }} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); void searchPlaces(1, true) } }} className="h-12 w-full rounded-2xl border border-[var(--line-strong)] bg-white pl-11 pr-4 text-sm font-semibold outline-none transition focus:border-[var(--accent)] focus:ring-4 focus:ring-[var(--accent-soft)]" placeholder="Search places to add" />
             </div>
-            <button type="button" onClick={() => void searchPlaces()} disabled={isSearching} className="app-button app-button-primary app-button-md">{isSearching ? 'Searching...' : 'Search'}</button>
+            <button type="button" onClick={() => void searchPlaces(1, true)} disabled={isSearching} className="app-button app-button-primary app-button-md">{isSearching ? 'Searching...' : 'Search'}</button>
+
+            {isSearchModalOpen ? (
+              <div className="absolute left-0 right-0 top-[calc(100%+0.75rem)] z-20 overflow-hidden rounded-[24px] border border-[var(--line)] bg-white shadow-[0_24px_60px_rgba(15,23,42,0.18)] sm:left-0 sm:right-auto sm:w-[min(760px,calc(100vw-2rem))]">
+                <div className="flex items-start justify-between gap-3 border-b border-[var(--line)] px-4 py-3">
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[var(--accent-deep)]">Search Suggestions</p>
+                    <p className="mt-1 text-sm font-semibold text-slate-600">
+                      {searchTotalCount > 0
+                        ? `${searchTotalCount} result${searchTotalCount === 1 ? '' : 's'} found`
+                        : query.trim().length >= 2
+                          ? 'Searching suggestions...'
+                          : 'Type at least 2 characters.'}
+                    </p>
+                  </div>
+                  <button type="button" onClick={() => setIsSearchModalOpen(false)} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[var(--line)] bg-white text-slate-500 transition hover:border-[var(--line-strong)] hover:text-slate-800" aria-label="Close search suggestions">
+                    <AppIcon name="clear" className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <div className="max-h-[52vh] overflow-y-auto p-2">
+                  {results.length === 0 && isSearching ? (
+                    <div className="gala-empty-state m-2">
+                      <p className="text-base font-black text-slate-900">Searching places...</p>
+                      <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">We are loading suggestions for your query.</p>
+                    </div>
+                  ) : null}
+
+                  {!isSearching && !hasSearchedPlaces && query.trim().length >= 2 ? (
+                    <div className="gala-empty-state m-2">
+                      <p className="text-base font-black text-slate-900">Looking up suggestions...</p>
+                      <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">We are preparing place suggestions for your search.</p>
+                    </div>
+                  ) : null}
+
+                  {!isSearching && hasSearchedPlaces && results.length === 0 ? (
+                    <div className="gala-empty-state m-2">
+                      <p className="text-base font-black text-slate-900">No places found.</p>
+                      <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">Try a different spelling, neighborhood, or category.</p>
+                    </div>
+                  ) : null}
+
+                  <div className="grid gap-2">
+                    {results.map((place) => {
+                      const alreadyAdded = items.some((item) => item.place_id === place.id)
+                      const isSelected = selectedPlace?.id === place.id
+                      return (
+                        <article key={place.id} className={`flex items-start justify-between gap-4 rounded-2xl border px-4 py-3 transition ${isSelected ? 'border-[var(--accent)] bg-[var(--accent-wash)]' : 'border-[var(--line)] bg-white'}`}>
+                          <div className="flex min-w-0 gap-3">
+                            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-[var(--accent-deep)]">
+                              <AppIcon name={getCategoryIconName(place.category)} className="h-5 w-5" />
+                            </span>
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-black text-slate-950">{place.name}</p>
+                              <p className="mt-1 text-xs font-semibold text-slate-600">{getPlaceMeta(place) || place.address || 'Metro Manila place'}</p>
+                            </div>
+                          </div>
+                          <button type="button" onClick={() => startDraftForPlace(place)} disabled={alreadyAdded} className={`inline-flex h-10 items-center justify-center rounded-xl px-4 text-xs font-black transition ${alreadyAdded ? 'bg-slate-100 text-slate-400' : isSelected ? 'bg-[var(--accent)] text-white' : 'border border-[var(--line-strong)] bg-white text-slate-800 hover:border-[var(--accent)] hover:text-[var(--accent-deep)]'}`}>
+                            {alreadyAdded ? 'Added' : isSelected ? 'Selected' : 'Choose'}
+                          </button>
+                        </article>
+                      )
+                    })}
+                  </div>
+
+                  <div className="flex flex-col gap-2 border-t border-[var(--line)] px-2 py-3 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-xs font-semibold text-slate-600">Showing up to {PLACE_SEARCH_DEFAULT_LIMIT} places per page.</p>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => void searchPlaces(Math.max(1, searchPage - 1), false)}
+                        disabled={!hasPreviousSearchPage || isSearching}
+                        className="h-9 rounded-xl border border-[var(--line-strong)] bg-white px-3.5 text-xs font-black text-slate-700 transition hover:border-[var(--accent)] hover:text-[var(--accent-deep)] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Previous
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => void searchPlaces(searchPage + 1, false)}
+                        disabled={!hasNextSearchPage || isSearching}
+                        className="h-9 rounded-xl border border-[var(--line-strong)] bg-white px-3.5 text-xs font-black text-slate-700 transition hover:border-[var(--accent)] hover:text-[var(--accent-deep)] disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
 
-        {results.length > 0 ? (
-          <div className="overflow-hidden rounded-2xl border border-[var(--line)] bg-white">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--line)] px-4 py-3">
-              <p className="text-sm font-black text-slate-800">
-                Showing {visibleResults.length} of {results.length} places
-              </p>
-              {results.length > PLACE_SEARCH_DEFAULT_LIMIT ? (
-                <button
-                  type="button"
-                  onClick={() => setShowAllResults((current) => !current)}
-                  className="inline-flex h-9 items-center rounded-full border border-[var(--line-strong)] bg-white px-3 text-xs font-black text-[var(--accent-deep)] transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)]"
-                >
-                  {showAllResults ? `Show ${PLACE_SEARCH_DEFAULT_LIMIT}` : 'Show all'}
-                </button>
-              ) : null}
-            </div>
-            {visibleResults.map((place, index) => {
-              const alreadyAdded = items.some((item) => item.place_id === place.id)
-              const isSelected = selectedPlace?.id === place.id
-              return (
-                <article key={place.id} className={`flex items-start justify-between gap-4 px-4 py-4 transition ${index !== 0 ? 'border-t border-[var(--line)]' : ''} ${isSelected ? 'bg-[var(--accent-wash)]' : 'bg-white'}`}>
-                  <div className="flex min-w-0 gap-3">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-[var(--accent-deep)]">
-                      <AppIcon name={getCategoryIconName(place.category)} className="h-5 w-5" />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-black text-slate-950">{place.name}</p>
-                      <p className="mt-1 text-xs font-semibold text-slate-600">{getPlaceMeta(place) || place.address || 'Metro Manila place'}</p>
-                    </div>
-                  </div>
-                  <button type="button" onClick={() => startDraftForPlace(place)} disabled={alreadyAdded} className={`inline-flex h-10 items-center justify-center rounded-xl px-4 text-xs font-black transition ${alreadyAdded ? 'bg-slate-100 text-slate-400' : isSelected ? 'bg-[var(--accent)] text-white' : 'border border-[var(--line-strong)] bg-white text-slate-800 hover:border-[var(--accent)] hover:text-[var(--accent-deep)]'}`}>
-                    {alreadyAdded ? 'Added' : isSelected ? 'Selected' : 'Choose'}
-                  </button>
-                </article>
-              )
-            })}
-          </div>
-        ) : null}
-
-        <section className="grid gap-4 border-t border-[var(--line)] pt-5">
+        <section className="grid gap-4 border-t border-[var(--line)] pt-6">
           <div className="flex items-center gap-2 text-sm font-black text-slate-950">
             <span className={`flex h-8 w-8 items-center justify-center rounded-full ${selectedPlace ? 'bg-[var(--accent)] text-white' : 'bg-slate-100 text-slate-500'}`}>2</span>
             Set the visit details
@@ -520,7 +642,7 @@ function ItineraryBuilder({
         {errorMessage ? <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-bold text-red-700">{errorMessage}</p> : null}
       </section>
 
-      <section className="grid gap-4 rounded-3xl border border-[var(--line)] bg-white p-4 shadow-[var(--shadow-soft)] sm:p-5 lg:sticky lg:top-24">
+      <section className="grid gap-4 rounded-[28px] border border-[var(--line)] bg-white p-4 shadow-[var(--shadow-soft)] sm:p-5 lg:sticky lg:top-24">
         <div className="flex flex-col gap-1">
           <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[var(--accent-deep)]">Review The Plan</p>
           <h2 className="gala-section-title">Selected places</h2>
@@ -574,6 +696,7 @@ function ItineraryBuilder({
         )}
       </section>
     </section>
+    </>
   )
 }
 function toPayload(items: DraftItem[]): GalaPlanItemPayload[] {
@@ -666,6 +789,7 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
   if (isLoading) {
     return (
       <UnifiedLoadingState
+        variant="page"
         title="Preparing gala plan..."
         message="We are loading your plan editor now."
       />
@@ -673,33 +797,49 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
   }
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-5">
-      <div className="lg:mx-auto lg:max-w-[920px] xl:max-w-[1000px] 2xl:max-w-[1080px]">
+    <form onSubmit={handleSubmit} className="grid gap-6 sm:gap-7 xl:gap-8">
+      <PageContainer size="wide" className="grid gap-6 sm:gap-7 xl:gap-8">
         {isRefreshing ? <p className="text-sm text-[var(--muted)]">Refreshing your gala plan in the background...</p> : null}
-        <section className="grid gap-5">
-          <PageHeroHeader
-            eyebrow="Gala Plans"
-            title={isEdit ? 'Edit your gala plan' : 'Create a gala plan'}
-            description="Start with the basics, then add places one by one so the plan stays clear and easy to follow."
-            icon={<AppIcon name="galaPlan" className="h-4 w-4" />}
-            badges={
-              <>
-                <span className="gala-count-pill">{items.length} stop{items.length === 1 ? '' : 's'}</span>
-                <span className="gala-count-pill">{visibility} visibility</span>
-              </>
-            }
-          />
-          <div className="grid gap-5 border-t border-[var(--line)] pt-5">
-            <label className="grid gap-2"><span className="text-sm font-black text-slate-800">Title</span><input value={title} onChange={(event) => setTitle(event.target.value)} className="h-12 rounded-2xl border border-[var(--line-strong)] px-4 text-base font-bold text-slate-950 outline-none transition focus:border-[var(--accent)] focus:ring-4 focus:ring-[var(--accent-soft)]" placeholder="Cafe crawl in BGC" /></label>
-            <label className="grid gap-2"><span className="text-sm font-black text-slate-800">Description</span><textarea value={description} onChange={(event) => setDescription(event.target.value)} rows={4} className="resize-none rounded-2xl border border-[var(--line-strong)] px-4 py-3 text-sm font-semibold leading-6 text-slate-950 outline-none transition focus:border-[var(--accent)] focus:ring-4 focus:ring-[var(--accent-soft)]" placeholder="What kind of day is this plan for?" /></label>
-            <label className="grid gap-2"><span className="text-sm font-black text-slate-800">Visibility</span><VisibilitySelector value={visibility} onChange={setVisibility} /></label>
+        <section className="grid gap-6 rounded-[28px] border border-[var(--line)] bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,255,0.9))] px-5 py-5 shadow-[var(--shadow-soft)] sm:px-6 sm:py-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start lg:gap-6 xl:px-7 xl:py-7">
+          <div className="grid gap-5">
+            <PageHeroHeader
+              eyebrow="Gala Plans"
+              title={isEdit ? 'Edit your gala plan' : 'Create a gala plan'}
+              description="Start with the basics, then add places one by one so the plan stays clear and easy to follow."
+              icon={<AppIcon name="galaPlan" className="h-4 w-4" />}
+              divider={false}
+              className="border-0 p-0"
+            />
+            <div className="grid gap-5 border-t border-[var(--line)] pt-5">
+              <label className="grid gap-2"><span className="text-sm font-black text-slate-800">Title</span><input value={title} onChange={(event) => setTitle(event.target.value)} className="h-12 rounded-2xl border border-[var(--line-strong)] px-4 text-base font-bold text-slate-950 outline-none transition focus:border-[var(--accent)] focus:ring-4 focus:ring-[var(--accent-soft)]" placeholder="Cafe crawl in BGC" /></label>
+              <label className="grid gap-2"><span className="text-sm font-black text-slate-800">Description</span><textarea value={description} onChange={(event) => setDescription(event.target.value)} rows={4} className="resize-none rounded-2xl border border-[var(--line-strong)] px-4 py-3 text-sm font-semibold leading-6 text-slate-950 outline-none transition focus:border-[var(--accent)] focus:ring-4 focus:ring-[var(--accent-soft)]" placeholder="What kind of day is this plan for?" /></label>
+              <label className="grid gap-2"><span className="text-sm font-black text-slate-800">Visibility</span><VisibilitySelector value={visibility} onChange={setVisibility} /></label>
+            </div>
           </div>
+
+          <aside className="grid gap-3 rounded-[24px] border border-[var(--line)] bg-white p-4 shadow-[0_14px_30px_rgba(15,23,42,0.04)] sm:p-5 lg:sticky lg:top-24">
+            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[var(--accent-deep)]">Plan At A Glance</p>
+            <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+              <div className="rounded-2xl bg-[var(--accent-wash)] px-4 py-3">
+                <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">Stops</p>
+                <p className="mt-1 text-2xl font-black text-slate-950">{items.length}</p>
+              </div>
+              <div className="rounded-2xl bg-slate-50 px-4 py-3">
+                <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">Visibility</p>
+                <p className="mt-1 text-base font-black capitalize text-slate-950">{visibility}</p>
+              </div>
+              <div className="rounded-2xl bg-slate-50 px-4 py-3">
+                <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">Flow</p>
+                <p className="mt-1 text-sm font-semibold leading-6 text-slate-700">Search, choose, add, and review in one clear workspace.</p>
+              </div>
+            </div>
+            <button type="submit" disabled={isSaving || !title.trim()} className="app-button app-button-primary app-button-md w-full">{isSaving ? 'Saving...' : isEdit ? 'Save Changes' : 'Create Gala Plan'}</button>
+          </aside>
         </section>
 
         <ItineraryBuilder items={items} onItemsChange={setItems} />
         {errorMessage ? <p className="rounded-2xl bg-red-50 p-4 text-sm font-bold text-red-700">{errorMessage}</p> : null}
-        <button type="submit" disabled={isSaving || !title.trim()} className="app-button app-button-primary app-button-md">{isSaving ? 'Saving...' : isEdit ? 'Save Changes' : 'Create Gala Plan'}</button>
-      </div>
+      </PageContainer>
     </form>
   )
 }
@@ -769,6 +909,7 @@ function ListPage({ session, favorites = false }: { session?: Session | null; fa
 
         {isLoading ? (
           <UnifiedLoadingState
+            variant="page"
             title={favorites ? 'Preparing saved gala plans...' : 'Preparing your gala plans...'}
             message={favorites ? 'We are loading your favorited plans.' : 'We are loading your plans.'}
           />
@@ -843,6 +984,7 @@ function DetailPage({ planId, session }: { planId: string; session?: Session | n
   if (isLoading) {
     return (
       <UnifiedLoadingState
+        variant="page"
         title="Preparing gala plan..."
         message="We are loading this itinerary now."
       />

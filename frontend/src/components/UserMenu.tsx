@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import type { User } from '@supabase/supabase-js'
 import { AppIcon } from './AppIcon'
 import { supabase } from '../supabase'
+import { useAvatarImageSrc } from '../utils/avatarImageCache'
 import type { CurrentUserResponse } from '../utils/profileApi'
 import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
 
@@ -49,6 +50,7 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
   const drawerRef = useRef<HTMLDivElement>(null)
 
   const avatarUrl = user ? getAvatarUrl(profile) : ''
+  const resolvedAvatarSrc = useAvatarImageSrc(avatarUrl)
   const shouldShowAvatar = Boolean(user && avatarUrl && failedAvatarUrl !== avatarUrl)
   const displayName = user ? getDisplayName(user, profile) : 'Welcome to GalaTayo'
   const initials = user ? getInitials(user, profile) : 'GT'
@@ -151,7 +153,7 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
   const menuIconClass =
     'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-[var(--accent)] ring-1 ring-slate-200 transition group-hover:bg-[var(--accent-wash)]'
   const soonMenuItemClass =
-    'pointer-events-none group flex w-full items-center gap-4 rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-left text-[15px] font-medium text-slate-400 opacity-90'
+    'pointer-events-none group flex w-full items-center gap-4 rounded-xl px-3 py-3 text-left text-[15px] font-medium text-slate-400 opacity-90'
   const soonMenuIconClass =
     'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-slate-400 ring-1 ring-slate-200'
   const submenuItemClass =
@@ -160,13 +162,15 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
     'flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white text-[var(--accent)] ring-1 ring-slate-200 transition group-hover:bg-[var(--accent-wash)]'
 
   const accountButtonAvatar = user && shouldShowAvatar ? (
-    <img
-      src={avatarUrl}
-      alt=""
-      className="h-full w-full rounded-full object-cover"
-      referrerPolicy="no-referrer"
-      onError={() => setFailedAvatarUrl(avatarUrl)}
-    />
+      <img
+        src={resolvedAvatarSrc || avatarUrl}
+        alt=""
+        className="h-full w-full rounded-full object-cover"
+        referrerPolicy="no-referrer"
+        loading="eager"
+        decoding="async"
+        onError={() => setFailedAvatarUrl(avatarUrl)}
+      />
   ) : user ? (
     <span className="text-xs font-bold">{initials}</span>
   ) : (
@@ -258,10 +262,12 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
                   <span className="mx-auto flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-slate-100 text-xl font-bold text-slate-700 ring-1 ring-slate-300">
                     {shouldShowAvatar ? (
                       <img
-                        src={avatarUrl}
+                        src={resolvedAvatarSrc || avatarUrl}
                         alt=""
                         className="h-full w-full object-cover"
                         referrerPolicy="no-referrer"
+                        loading="eager"
+                        decoding="async"
                         onError={() => setFailedAvatarUrl(avatarUrl)}
                       />
                     ) : (
@@ -292,11 +298,13 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
                     <span className="flex-1">Find Friends</span>
                     <AppIcon name="chevronRight" className="h-4 w-4 text-slate-500" />
                   </button>
-                  <button type="button" onClick={() => closeAndNavigate('/gala-plans')} className={menuItemClass} role="menuitem">
-                    <span className={menuIconClass}><AppIcon name="galaPlan" size="ui" /></span>
+                  <div className={soonMenuItemClass} role="menuitem" aria-disabled="true" title="Coming soon">
+                    <span className={soonMenuIconClass}><AppIcon name="galaPlan" size="ui" /></span>
                     <span className="flex-1">Gala Plans</span>
-                    <AppIcon name="chevronRight" className="h-4 w-4 text-slate-500" />
-                  </button>
+                    <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
+                      Soon
+                    </span>
+                  </div>
                   <div className={soonMenuItemClass} role="menuitem" aria-disabled="true" title="Coming soon">
                     <span className={soonMenuIconClass}><AppIcon name="place" size="ui" /></span>
                     <span className="flex-1">Submit Place</span>
@@ -307,7 +315,7 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
 
                   <div className="my-3 border-t border-slate-200" />
 
-                  <button type="button" onClick={() => closeAndNavigate('/settings')} className={menuItemClass} role="menuitem">
+                  <button type="button" onClick={() => closeAndNavigate('/account-settings')} className={menuItemClass} role="menuitem">
                     <span className={menuIconClass}><AppIcon name="settings" size="ui" /></span>
                     <span className="flex-1">Account Settings</span>
                     <AppIcon name="chevronRight" className="h-4 w-4 text-slate-500" />

@@ -26,6 +26,7 @@ local.settings.json
 
 node_modules
 dist
+reports/
 
 # Local python packages
 .python_packages/

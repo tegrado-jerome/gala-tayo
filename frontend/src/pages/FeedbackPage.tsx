@@ -6,6 +6,7 @@ import GoogleSignInButton from '../components/GoogleSignInButton'
 import { FormContainer, PageContainer, PageShell, CardSurface, Stack } from '../components/layout/ResponsiveLayouts'
 import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
+import { getApiUrl } from '../utils/apiClient'
 
 const COMMENT_MAX_LENGTH = 500
 
@@ -65,11 +66,6 @@ function FaceIcon({ mood, className = 'h-10 w-10' }: IconProps & { mood: string 
   return <AppIcon name={iconName} className={className} strokeWidth={1.8} />
 }
 
-function getApiEndpoint(path: string) {
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
-  return apiBaseUrl ? `${apiBaseUrl}${path}` : `/api${path}`
-}
-
 function parseJsonResponse(text: string): { message?: string } {
   if (!text.trim()) {
     return {}
@@ -117,7 +113,7 @@ function FeedbackPage() {
       setErrorMessage('')
       setStatusMessage('')
 
-      const response = await fetch(getApiEndpoint('/feedback'), {
+      const response = await fetch(getApiUrl('/feedback'), {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${session.access_token}`,
@@ -182,6 +178,7 @@ function FeedbackPage() {
 
         {isSessionLoading ? (
           <UnifiedLoadingState
+            variant="page"
             title="Checking your account..."
             message="We are confirming feedback access for your account."
           />

@@ -29,16 +29,16 @@ function OnboardingPrivacyStep({ values, onUpdate, onBack, onNext }: OnboardingP
       description="Choose how your GalaTayo profile appears to the community."
       actions={
         <>
-          <button type="button" onClick={onBack} className="h-12 rounded-lg border border-[var(--line-strong)] bg-white px-5 text-sm font-black text-slate-700 transition hover:bg-slate-50">
+          <button type="button" onClick={onBack} className="onboarding-button onboarding-button-secondary">
             Back
           </button>
-          <button type="button" onClick={onNext} className="h-12 rounded-lg bg-[var(--accent)] px-5 text-sm font-black text-white transition hover:bg-[var(--accent-deep)]">
+          <button type="button" onClick={onNext} className="onboarding-button onboarding-button-primary">
             Next
           </button>
         </>
       }
     >
-      <div className="grid gap-4">
+      <div className="onboarding-form-grid">
         {options.map((option) => {
           const selected = values.profileVisibility === option.value
 
@@ -47,10 +47,10 @@ function OnboardingPrivacyStep({ values, onUpdate, onBack, onNext }: OnboardingP
               key={option.value}
               type="button"
               onClick={() => onUpdate({ profileVisibility: option.value })}
-              className={`rounded-lg border p-4 text-left transition ${selected ? 'border-[var(--accent)] bg-[var(--accent-soft)]' : 'border-[var(--line)] bg-white hover:bg-slate-50'}`}
+              className={`onboarding-choice ${selected ? 'is-selected' : ''}`}
             >
-              <span className="block text-base font-black text-slate-950">{option.title}</span>
-              <span className="mt-2 block text-sm font-semibold leading-6 text-[var(--muted)]">{option.description}</span>
+              <span className="block text-sm font-black text-slate-950 sm:text-base">{option.title}</span>
+              <span className="mt-1.5 block text-xs font-semibold leading-5 text-[var(--muted)] sm:mt-2 sm:text-sm sm:leading-6">{option.description}</span>
             </button>
           )
         })}

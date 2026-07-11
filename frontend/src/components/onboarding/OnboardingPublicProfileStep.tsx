@@ -58,65 +58,81 @@ function OnboardingPublicProfileStep({
       description="This is how other users may recognize you on GalaTayo."
       actions={
         <>
-          <button type="button" onClick={onBack} className="h-12 rounded-lg border border-[var(--line-strong)] bg-white px-5 text-sm font-black text-slate-700 transition hover:bg-slate-50">
+          <button type="button" onClick={onBack} className="onboarding-button onboarding-button-secondary">
             Back
           </button>
-          <button type="button" onClick={onNext} className="h-12 rounded-lg bg-[var(--accent)] px-5 text-sm font-black text-white transition hover:bg-[var(--accent-deep)]">
+          <button type="button" onClick={onNext} className="onboarding-button onboarding-button-primary">
             Next
           </button>
         </>
       }
     >
-      <div className="grid gap-5">
-        <div className="flex items-center gap-4 rounded-lg border border-[var(--line)] bg-[var(--chip)] p-4">
-          <span className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white text-lg font-black text-[var(--accent-deep)] ring-1 ring-[var(--line)]">
+      <div className="onboarding-form-grid">
+        <div className="onboarding-preview">
+          <span className="onboarding-avatar">
             {values.avatarUrl ? <img src={values.avatarUrl} alt="" className="h-full w-full object-cover" /> : previewName.charAt(0).toUpperCase()}
           </span>
           <span className="min-w-0">
-            <span className="block truncate text-lg font-black text-slate-950">{previewName}</span>
-            <span className="block truncate text-sm font-bold text-[var(--accent-deep)]">@{previewUsername}</span>
+            <span className="block truncate text-[15px] font-black text-slate-950 sm:text-lg">{previewName}</span>
+            <span className="block truncate text-xs font-bold text-[var(--accent-deep)] sm:text-sm">@{previewUsername}</span>
           </span>
         </div>
 
-        <label className="grid gap-2">
-          <span className="text-sm font-black text-slate-900">Display Name</span>
+        <label className="onboarding-field">
+          <span className="onboarding-label">Display Name</span>
           <input
             value={values.displayName}
             onChange={(event) => onUpdate({ displayName: event.target.value })}
             maxLength={80}
             autoComplete="nickname"
-            className="h-12 rounded-lg border border-[var(--line-strong)] px-4 text-sm font-semibold outline-none focus:border-[var(--accent)] focus:ring-4 focus:ring-[var(--accent-soft)]"
+            className="onboarding-input"
           />
-          {errors.displayName ? <span className="text-xs font-bold text-red-600">{errors.displayName}</span> : null}
+          {errors.displayName ? <span className="onboarding-error">{errors.displayName}</span> : null}
         </label>
 
-        <label className="grid gap-2">
-          <span className="text-sm font-black text-slate-900">Username</span>
-          <span className="flex h-12 items-center rounded-lg border border-[var(--line-strong)] bg-white px-4 focus-within:border-[var(--accent)] focus-within:ring-4 focus-within:ring-[var(--accent-soft)]">
+        <label className="onboarding-field">
+          <span className="onboarding-label">Username</span>
+          <span className="onboarding-input onboarding-input-row">
             <span className="font-black text-[var(--accent-deep)]">@</span>
             <input
               value={values.username}
               onChange={(event) => onUpdate({ username: event.target.value.toLowerCase().replace(/^@+/, '') })}
-              className="min-w-0 flex-1 border-0 bg-transparent px-1 text-sm font-black text-slate-950 outline-none"
+              className="min-w-0 flex-1 border-0 bg-transparent px-1 text-[13px] font-black text-slate-950 outline-none sm:text-sm"
               autoCapitalize="none"
               autoComplete="username"
               spellCheck={false}
             />
           </span>
-          <span className={`text-xs font-bold ${errors.username || usernameStatus === 'taken' ? 'text-red-600' : usernameStatus === 'available' ? 'text-emerald-700' : 'text-[var(--muted)]'}`}>
+          <span className={`onboarding-status ${errors.username || usernameStatus === 'taken' ? 'is-error' : usernameStatus === 'available' ? 'is-success' : ''}`}>
             {usernameMessage}
           </span>
         </label>
 
-        <label className="grid gap-2">
-          <span className="flex items-center gap-2 text-sm font-black text-slate-900">
+        <label className="onboarding-field">
+          <span className="onboarding-label onboarding-label-inline">
             Avatar
             <span className="optional-label">Optional</span>
           </span>
-          <input type="file" accept={avatarUploadAccept} onChange={handleAvatarChange} className="text-sm font-semibold text-slate-700 file:mr-4 file:h-10 file:rounded-lg file:border-0 file:bg-black file:px-4 file:text-sm file:font-black file:text-white" />
-          <span className="text-xs font-semibold text-[var(--muted)]">JPEG, PNG, or WebP up to 5MB. You can continue without an avatar.</span>
-          {isUploadingAvatar ? <span className="text-xs font-bold text-[var(--accent-deep)]">Uploading avatar...</span> : null}
-          {errors.avatar ? <span className="text-xs font-bold text-red-600">{errors.avatar}</span> : null}
+          <input
+            type="file"
+            accept={avatarUploadAccept}
+            onChange={handleAvatarChange}
+            className="onboarding-file-input"
+            disabled={isUploadingAvatar}
+            aria-busy={isUploadingAvatar}
+          />
+          {isUploadingAvatar ? (
+            <div className="onboarding-uploading-banner" aria-live="polite">
+              <span className="onboarding-uploading-spinner" aria-hidden="true" />
+              <div className="min-w-0">
+                <p className="onboarding-uploading-title">Uploading photo...</p>
+                <p className="onboarding-uploading-copy">Please wait while we prepare and upload your avatar.</p>
+              </div>
+            </div>
+          ) : (
+            <span className="onboarding-help">JPEG, PNG, or WebP up to 5MB. You can continue without an avatar.</span>
+          )}
+          {errors.avatar ? <span className="onboarding-error">{errors.avatar}</span> : null}
         </label>
       </div>
     </OnboardingLayout>

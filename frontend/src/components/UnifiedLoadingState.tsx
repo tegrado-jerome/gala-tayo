@@ -1,4 +1,4 @@
-import { shouldSuppressPageLoader } from '../utils/navigationState'
+import { shouldSuppressPageLoader } from '../utils/navigation'
 
 type UnifiedLoadingStateProps = {
   title?: string
@@ -15,6 +15,21 @@ function UnifiedLoadingState({
   variant = 'section',
   className = '',
 }: UnifiedLoadingStateProps) {
+  const loadingBody = (
+    <div className="flex flex-col items-center text-center">
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--accent-wash)]">
+        <span className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--primary-soft)] border-t-[var(--accent)]" />
+      </div>
+      <p className="mt-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--accent)] sm:mt-5 sm:text-[11px]">{eyebrow}</p>
+      <h1 className="mt-1 max-w-[calc(100vw-2rem)] truncate text-[clamp(0.92rem,4.2vw,1.5rem)] font-semibold leading-tight tracking-[-0.03em] text-slate-950 sm:mt-2 sm:max-w-[min(24rem,calc(100vw-3rem))] sm:whitespace-normal sm:text-2xl">
+        {title}
+      </h1>
+      <p className="mt-2 max-w-[calc(100vw-2rem)] truncate text-[clamp(0.75rem,3vw,0.875rem)] leading-5 text-slate-600 sm:mt-3 sm:max-w-[min(24rem,calc(100vw-3rem))] sm:whitespace-normal sm:leading-6 sm:text-sm">
+        {message}
+      </p>
+    </div>
+  )
+
   if (variant === 'inline') {
     return (
       <div className={`flex items-center gap-3 text-sm text-slate-600 ${className}`}>
@@ -30,27 +45,23 @@ function UnifiedLoadingState({
     }
 
     return (
-      <main className={`gala-page-background flex min-h-screen min-h-[100dvh] items-center justify-center px-6 py-10 text-[var(--text)] ${className}`}>
-        <section className="w-full max-w-[360px] rounded-3xl border border-[var(--line)] bg-white px-6 py-8 text-center shadow-md">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--accent-wash)]">
-            <span className="h-6 w-6 animate-spin rounded-full border-2 border-[var(--primary-soft)] border-t-[var(--accent)]" />
-          </div>
-          <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">{eyebrow}</p>
-          <h1 className="mt-2 text-2xl font-semibold tracking-[-0.03em] text-slate-950">{title}</h1>
-          <p className="mt-3 text-sm leading-6 text-slate-600">{message}</p>
-        </section>
+      <main
+        className={`gala-page-background fixed inset-0 z-50 flex min-h-screen min-h-[100dvh] items-center justify-center px-6 py-10 text-[var(--text)] ${className}`}
+        aria-busy="true"
+        aria-live="polite"
+      >
+        {loadingBody}
       </main>
     )
   }
 
   return (
-    <section className={`rounded-[24px] border border-[var(--line)] bg-white px-5 py-8 text-center shadow-sm ${className}`}>
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--accent-wash)]">
-        <span className="h-5 w-5 animate-spin rounded-full border-2 border-[var(--primary-soft)] border-t-[var(--accent)]" />
-      </div>
-      <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--accent)]">{eyebrow}</p>
-      <h2 className="mt-2 text-xl font-semibold tracking-[-0.03em] text-slate-950">{title}</h2>
-      <p className="mt-2 text-sm leading-6 text-slate-600">{message}</p>
+    <section
+      className={`flex min-h-[180px] w-full items-center justify-center px-6 py-8 text-[var(--text)] ${className}`}
+      aria-busy="true"
+      aria-live="polite"
+    >
+      {loadingBody}
     </section>
   )
 }

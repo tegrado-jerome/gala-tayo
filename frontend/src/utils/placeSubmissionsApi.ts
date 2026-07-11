@@ -1,4 +1,5 @@
 import type { Session } from '@supabase/supabase-js'
+import { apiFetch } from './apiClient'
 
 export type PlaceSubmissionImage = {
   id: string
@@ -49,16 +50,6 @@ export type AdminPlaceSubmission = PlaceSubmission & {
   contributorEmail: string | null
 }
 
-function getApiUrl(path: string) {
-  const apiBaseUrl = String(import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
-
-  if (!apiBaseUrl) {
-    return `/api${path}`
-  }
-
-  return apiBaseUrl.endsWith('/api') ? `${apiBaseUrl}${path}` : `${apiBaseUrl}/api${path}`
-}
-
 async function readJsonResponse<T>(response: Response): Promise<T> {
   const data = (await response.json().catch(() => ({}))) as T & {
     message?: string
@@ -73,7 +64,7 @@ async function readJsonResponse<T>(response: Response): Promise<T> {
 }
 
 export async function submitPlaceSubmission(formData: FormData, session: Session) {
-  const response = await fetch(getApiUrl('/place-submissions'), {
+  const response = await apiFetch('/place-submissions', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${session.access_token}`,
@@ -85,7 +76,7 @@ export async function submitPlaceSubmission(formData: FormData, session: Session
 }
 
 export async function getMyPlaceSubmissions(session: Session) {
-  const response = await fetch(getApiUrl('/place-submissions/mine'), {
+  const response = await apiFetch('/place-submissions/mine', {
     headers: {
       Authorization: `Bearer ${session.access_token}`,
     },
@@ -95,7 +86,7 @@ export async function getMyPlaceSubmissions(session: Session) {
 }
 
 export async function getPendingPlaceSubmissions(session: Session) {
-  const response = await fetch(getApiUrl('/app-admin/place-submissions/pending'), {
+  const response = await apiFetch('/app-admin/place-submissions/pending', {
     headers: {
       Authorization: `Bearer ${session.access_token}`,
     },
@@ -109,7 +100,7 @@ export async function approvePlaceSubmission(
   payload: { adminNote?: string },
   session: Session,
 ) {
-  const response = await fetch(getApiUrl(`/app-admin/place-submissions/${encodeURIComponent(submissionId)}/approve`), {
+  const response = await apiFetch(`/app-admin/place-submissions/${encodeURIComponent(submissionId)}/approve`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${session.access_token}`,
@@ -128,7 +119,7 @@ export async function rejectPlaceSubmission(
   payload: { rejectionReason?: string; adminNote?: string },
   session: Session,
 ) {
-  const response = await fetch(getApiUrl(`/app-admin/place-submissions/${encodeURIComponent(submissionId)}/reject`), {
+  const response = await apiFetch(`/app-admin/place-submissions/${encodeURIComponent(submissionId)}/reject`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${session.access_token}`,

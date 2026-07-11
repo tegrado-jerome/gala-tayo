@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "dist/src/functions/*.js",
+  "engines": {
+    "node": ">=20 <23"
+  },
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
@@ -12,6 +15,7 @@
     "backfill:image-urls": "tsx scripts/backfillPlaceImageUrls.ts",
     "backfill:image-urls:write": "tsx scripts/backfillPlaceImageUrls.ts --write",
     "coords:fix": "tsx scripts/fixPlaceCoordinates.cjs",
+    "validate": "npm test",
     "test": "npm run build --silent && node scripts/testSearchQueryValidation.cjs"
   },
   "dependencies": {

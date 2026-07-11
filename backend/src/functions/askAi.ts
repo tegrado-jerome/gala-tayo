@@ -172,9 +172,7 @@ export async function postAskAiChatbot(
     };
   } catch (error) {
     if (quotaConsumedUserId) {
-      context.log(
-        `[AskAI Chatbot] refunding after provider failure: userId=${quotaConsumedUserId}`
-      );
+      context.log("[AskAI Chatbot] refunding usage after provider failure.");
       await refundAskAiUsage({
         userId: quotaConsumedUserId,
         usageType: "chatbot_ai",

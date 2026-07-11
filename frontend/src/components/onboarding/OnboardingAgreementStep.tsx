@@ -20,24 +20,24 @@ function OnboardingAgreementStep({ values, errors, isSubmitting, onUpdate, onBac
       description="Review the essentials and finish your GalaTayo setup."
       actions={
         <>
-          <button type="button" onClick={onBack} disabled={isSubmitting} className="h-12 rounded-lg border border-[var(--line-strong)] bg-white px-5 text-sm font-black text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60">
+          <button type="button" onClick={onBack} disabled={isSubmitting} className="onboarding-button onboarding-button-secondary" >
             Back
           </button>
-          <button type="button" onClick={onFinish} disabled={!accepted || isSubmitting} className="h-12 rounded-lg bg-[var(--accent)] px-5 text-sm font-black text-white transition hover:bg-[var(--accent-deep)] disabled:cursor-not-allowed disabled:bg-slate-300">
+          <button type="button" onClick={onFinish} disabled={!accepted || isSubmitting} className="onboarding-button onboarding-button-primary disabled:cursor-not-allowed disabled:opacity-60">
             {isSubmitting ? 'Finishing...' : 'Finish Setup'}
           </button>
         </>
       }
     >
-      <div className="grid gap-5">
-        <label className={`flex items-start gap-3 rounded-lg border p-4 text-sm font-bold leading-6 ${accepted ? 'border-emerald-200 bg-emerald-50 text-emerald-950' : 'border-[var(--line)] bg-[var(--chip)] text-slate-800'}`}>
+      <div className="onboarding-form-grid">
+        <label className={`onboarding-choice onboarding-choice-checkbox ${accepted ? 'is-selected' : ''}`}>
           <input
             type="checkbox"
             checked={accepted}
             onChange={(event) => onUpdate({ acceptedTerms: event.target.checked, acceptedPrivacy: event.target.checked })}
             className="mt-1 h-5 w-5 shrink-0 accent-[var(--accent)]"
           />
-          <span>
+          <span className="text-sm font-bold leading-6 sm:text-[15px]">
             I have read and agree to GalaTayo's{' '}
             <a href="/terms" className="font-black text-[var(--accent-deep)] underline underline-offset-4">Terms of Service</a>
             {' '}and{' '}
@@ -45,7 +45,7 @@ function OnboardingAgreementStep({ values, errors, isSubmitting, onUpdate, onBac
           </span>
         </label>
 
-        {errors.form ? <p className="rounded-lg bg-red-50 px-3 py-2 text-sm font-bold text-red-700">{errors.form}</p> : null}
+        {errors.form ? <p className="onboarding-error-panel">{errors.form}</p> : null}
       </div>
     </OnboardingLayout>
   )

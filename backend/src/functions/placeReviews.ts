@@ -2,6 +2,7 @@ import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/fu
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { AuthenticatedUser, validateJwt } from "../utils/auth";
 import { getPlaceIdentifier, isPlaceUuid, resolvePlaceId } from "../utils/placeIdentity";
+import { checkEndpointRateLimit } from "../utils/redisRateLimit";
 
 type PlaceReview = {
   id: string;
@@ -126,6 +127,11 @@ export async function placeReviewsList(
   context: InvocationContext
 ): Promise<HttpResponseInit> {
   try {
+    const rateCheck = await checkEndpointRateLimit(request, "place-reviews", 30, 60);
+    if (!rateCheck.allowed && rateCheck.response) {
+      return rateCheck.response;
+    }
+
     const placeIdentifier = getPlaceIdentifier(request);
 
     if (!placeIdentifier) {
@@ -258,7 +264,8 @@ export async function placeReviewsUpsert(
       return badRequest("comment must be a string.");
     }
 
-    const cleanComment = typeof body.comment === "string" ? body.comment.trim() || null : null;
+    const stripHtml = (value: string): string => value.replace(/<[^>]*>/g, "");
+    const cleanComment = typeof body.comment === "string" ? stripHtml(body.comment).trim() || null : null;
 
     if (cleanComment && cleanComment.length > COMMENT_MAX_LENGTH) {
       return badRequest(`comment must be ${COMMENT_MAX_LENGTH} characters or less.`);

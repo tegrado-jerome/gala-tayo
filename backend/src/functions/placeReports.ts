@@ -1,6 +1,8 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { AuthenticatedUser, validateJwt } from "../utils/auth";
+import { requireAdminAal2 } from "../utils/adminAuth";
+import { checkEndpointRateLimit } from "../utils/redisRateLimit";
 import { isPlaceUuid } from "../utils/placeIdentity";
 
 type PlaceReportReason =
@@ -112,31 +114,6 @@ async function getAuthenticatedUser(request: HttpRequest): Promise<Authenticated
   } catch {
     return null;
   }
-}
-
-async function isAdminUser(userId: string): Promise<boolean> {
-  const supabaseAdmin = await getSupabaseAdminClient();
-  const { data, error } = await supabaseAdmin.from("users").select("role").eq("id", userId).maybeSingle();
-
-  if (error) {
-    return false;
-  }
-
-  return ((data as UserRoleRow | null)?.role || "").toLowerCase() === "admin";
-}
-
-async function requireAdmin(request: HttpRequest): Promise<{ user?: AuthenticatedUser; response?: HttpResponseInit }> {
-  const user = await getAuthenticatedUser(request);
-
-  if (!user?.id) {
-    return { response: unauthorized("Missing or invalid Authorization header.") };
-  }
-
-  if (!(await isAdminUser(user.id))) {
-    return { response: forbidden("Admin access required.") };
-  }
-
-  return { user };
 }
 
 async function getPlace(placeId: string): Promise<PlaceRow | null> {
@@ -284,6 +261,11 @@ export async function placeReportsCreate(
   context: InvocationContext
 ): Promise<HttpResponseInit> {
   try {
+    const rateCheck = await checkEndpointRateLimit(request, "place-reports", 5, 60);
+    if (!rateCheck.allowed && rateCheck.response) {
+      return rateCheck.response;
+    }
+
     const user = await getAuthenticatedUser(request);
 
     if (!user?.id) {
@@ -443,7 +425,7 @@ export async function adminPlaceReportsList(
   context: InvocationContext
 ): Promise<HttpResponseInit> {
   try {
-    const admin = await requireAdmin(request);
+    const admin = await requireAdminAal2(request);
 
     if (admin.response) {
       return admin.response;
@@ -596,7 +578,7 @@ export async function adminPlaceReportUpdate(
   context: InvocationContext
 ): Promise<HttpResponseInit> {
   try {
-    const admin = await requireAdmin(request);
+    const admin = await requireAdminAal2(request);
 
     if (admin.response) {
       return admin.response;
@@ -680,7 +662,7 @@ export async function adminPlaceReportDelete(
   context: InvocationContext
 ): Promise<HttpResponseInit> {
   try {
-    const admin = await requireAdmin(request);
+    const admin = await requireAdminAal2(request);
 
     if (admin.response) {
       return admin.response;

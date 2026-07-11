@@ -1,4 +1,4 @@
-import { AppIcon, type AppIconName } from '../AppIcon'
+import { AppIcon } from '../AppIcon'
 import MinimalBackNav from '../MinimalBackNav'
 
 type IconProps = {

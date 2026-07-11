@@ -1,5 +1,6 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
+import { checkEndpointRateLimit } from "../utils/redisRateLimit";
 import {
   canSeeFollowers,
   canSeeFollowing,
@@ -285,6 +286,11 @@ export async function meProfile(request: HttpRequest, context: InvocationContext
       return { status: 200, jsonBody: { profile } };
     }
 
+    const rateCheck = await checkEndpointRateLimit(request, "profile-update-social", 10, 60);
+    if (!rateCheck.allowed && rateCheck.response) {
+      return rateCheck.response;
+    }
+
     const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
     const updates: Record<string, unknown> = {};
 
@@ -348,6 +354,11 @@ export async function meProfile(request: HttpRequest, context: InvocationContext
 
 export async function publicProfileSocial(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
   try {
+    const rateCheck = await checkEndpointRateLimit(request, "public-profile", 30, 60);
+    if (!rateCheck.allowed && rateCheck.response) {
+      return rateCheck.response;
+    }
+
     const username = normalizeUsername(request.params.username);
     const viewer = await getOptionalCurrentUser(request);
     const profile = await getProfileByUsername(username);
@@ -420,6 +431,11 @@ export async function publicProfileGalaPlansSocial(request: HttpRequest, context
 
 export async function followProfile(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
   try {
+    const rateCheck = await checkEndpointRateLimit(request, "follow", 10, 60);
+    if (!rateCheck.allowed && rateCheck.response) {
+      return rateCheck.response;
+    }
+
     const user = await getCurrentUser(request);
     const target = await getProfileByUsername(normalizeUsername(request.params.username));
     if (!target?.username) return { status: 404, jsonBody: { message: "Profile not found." } };
@@ -452,6 +468,11 @@ export async function followProfile(request: HttpRequest, context: InvocationCon
 
 export async function unfollowProfile(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
   try {
+    const rateCheck = await checkEndpointRateLimit(request, "unfollow", 10, 60);
+    if (!rateCheck.allowed && rateCheck.response) {
+      return rateCheck.response;
+    }
+
     const user = await getCurrentUser(request);
     const target = await getProfileByUsername(normalizeUsername(request.params.username));
     if (!target?.username) return { status: 404, jsonBody: { message: "Profile not found." } };
@@ -501,6 +522,11 @@ async function getProfilesByUserId(userIds: string[]) {
 
 async function followList(request: HttpRequest, context: InvocationContext, kind: "followers" | "following"): Promise<HttpResponseInit> {
   try {
+    const rateCheck = await checkEndpointRateLimit(request, `follow-${kind}`, 30, 60);
+    if (!rateCheck.allowed && rateCheck.response) {
+      return rateCheck.response;
+    }
+
     const viewer = await getOptionalCurrentUser(request);
     const target = await getProfileByUsername(normalizeUsername(request.params.username));
     if (!target?.username) return { status: 404, jsonBody: { message: "Profile not found." } };
@@ -539,6 +565,11 @@ export function profileFollowing(request: HttpRequest, context: InvocationContex
 
 export async function myFollowRequests(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
   try {
+    const rateCheck = await checkEndpointRateLimit(request, "follow-requests", 20, 60);
+    if (!rateCheck.allowed && rateCheck.response) {
+      return rateCheck.response;
+    }
+
     const user = await getCurrentUser(request);
     const supabase = await getSupabaseAdminClient();
     const { data, error } = await (supabase.from("user_follows") as any)

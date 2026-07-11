@@ -27,7 +27,7 @@ import {
   handleAskAiMapsError,
   logAskAiMapsError,
   uniqueQueries,
-} from "./askAiMaps/http";
+} from "./askAiMaps/askAiMapsHelpers";
 import { validateJwt } from "../utils/auth";
 
 const ASK_AI_MAPS_COOLDOWN_MS = 10_000;
@@ -277,9 +277,7 @@ export async function askAiMapsRequest(
         },
       };
     } catch (error) {
-      context.log(
-        `[Ask AI Usage] refunding after provider failure: type=ask_ai_maps userId=${user.id}`
-      );
+      context.log("[Ask AI Usage] refunding map usage after provider failure.");
       await refundAskAiUsage({ userId: user.id, usageType: "ask_ai_maps" });
 
       lastAskAiMapsRequestAtByUser.delete(user.id);

@@ -7,9 +7,9 @@ import PageHeroHeader from '../components/PageHeroHeader'
 import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import { PageContainer, PageShell, CardSurface, Stack } from '../components/layout/ResponsiveLayouts'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
+import { getSupabaseAccessToken } from '../supabase'
 import { fetchMyCommentReports, type CommentReportReason, type CommentReportStatus, type MyCommentReport } from '../utils/commentReportsApi'
 import { fetchMyPlaceReports, type MyPlaceReport, type PlaceReportReason, type PlaceReportStatus } from '../utils/placeReportsApi'
-import { getMyUserReports, type MyUserReport, type UserReportReason, type UserReportStatus } from '../utils/userReportsApi'
 import { navigateToPlace } from '../utils/navigation'
 
 const commentReasonLabels: Record<CommentReportReason, string> = {
@@ -41,21 +41,6 @@ const placeStatusLabels: Record<PlaceReportStatus, string> = {
   reviewing: 'Reviewing',
   resolved: 'Resolved',
   dismissed: 'Dismissed',
-}
-
-const userReasonLabels: Record<UserReportReason, string> = {
-  fake_account: 'Fake account',
-  harassment: 'Harassment or bullying',
-  inappropriate_profile: 'Inappropriate profile',
-  spam: 'Spam',
-  impersonation: 'Impersonation',
-  other: 'Other',
-}
-
-const userStatusLabels: Record<UserReportStatus, string> = {
-  pending: 'Under review',
-  dismissed: 'Reviewed',
-  action_taken: 'Action taken',
 }
 
 function formatDate(value?: string | null) {
@@ -256,23 +241,6 @@ function CompactEntry({
   )
 }
 
-function UserReportCard({ report }: { report: MyUserReport }) {
-  const submittedDate = formatDate(report.created_at)
-
-  return (
-    <CompactEntry
-      topLine={userReasonLabels[report.reason]}
-      title="Reported account"
-      status={
-        <span className={`inline-flex w-fit shrink-0 rounded-full border px-2.5 py-1 text-xs font-black ${getStatusClass(report.status)}`}>
-          {userStatusLabels[report.status]}
-        </span>
-      }
-      meta={[submittedDate ? `Submitted ${submittedDate}` : ''].filter(Boolean)}
-    />
-  )
-}
-
 function CommentReportCard({ report }: { report: MyCommentReport }) {
   const placeName = sanitizeReportLabel(report.place?.name, 'Reported place')
   const placeSlug = report.place?.slug?.trim() || ''
@@ -369,19 +337,50 @@ function PlaceReportCard({ report }: { report: MyPlaceReport }) {
 
 function ReportsPage() {
   const { session, isSessionLoading } = useSavedFavorites()
-  const [userReports, setUserReports] = useState<MyUserReport[]>([])
   const [commentReports, setCommentReports] = useState<MyCommentReport[]>([])
   const [placeReports, setPlaceReports] = useState<MyPlaceReport[]>([])
+  const [accessToken, setAccessToken] = useState<string | null>(null)
+  const [isTokenLoading, setIsTokenLoading] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [openSections, setOpenSections] = useState({
-    userReports: false,
     placeReports: false,
     commentReports: false,
   })
 
   useEffect(() => {
-    if (!session?.access_token) {
+    if (!session?.user) {
+      return undefined
+    }
+
+    let isActive = true
+
+    const resolveAccessToken = async () => {
+      try {
+        setIsTokenLoading(true)
+        const nextAccessToken = await getSupabaseAccessToken(session)
+
+        if (!isActive) {
+          return
+        }
+
+        setAccessToken(nextAccessToken)
+      } finally {
+        if (isActive) {
+          setIsTokenLoading(false)
+        }
+      }
+    }
+
+    void resolveAccessToken()
+
+    return () => {
+      isActive = false
+    }
+  }, [session])
+
+  useEffect(() => {
+    if (!accessToken) {
       return undefined
     }
 
@@ -391,12 +390,10 @@ function ReportsPage() {
       try {
         setIsLoading(true)
         setErrorMessage('')
-        const [nextUserReports, nextCommentReports, nextPlaceReports] = await Promise.all([
-          getMyUserReports(session.access_token, controller.signal),
-          fetchMyCommentReports(session.access_token, controller.signal),
-          fetchMyPlaceReports(session.access_token, controller.signal),
+        const [nextCommentReports, nextPlaceReports] = await Promise.all([
+          fetchMyCommentReports(accessToken, controller.signal),
+          fetchMyPlaceReports(accessToken, controller.signal),
         ])
-        setUserReports(nextUserReports)
         setCommentReports(nextCommentReports)
         setPlaceReports(nextPlaceReports)
       } catch (error) {
@@ -411,22 +408,18 @@ function ReportsPage() {
     void loadReports()
 
     return () => controller.abort()
-  }, [session?.access_token])
+  }, [accessToken])
 
-  const visibleCommentReports = session?.access_token ? commentReports : []
-  const visiblePlaceReports = session?.access_token ? placeReports : []
-  const visibleUserReports = session?.access_token ? userReports : []
-  const visibleIsLoading = Boolean(session?.access_token) && isLoading
-  const visibleErrorMessage = session?.access_token ? errorMessage : ''
+  const hasAuthenticatedReportAccess = Boolean(session?.user && accessToken && !isTokenLoading)
+  const visibleCommentReports = hasAuthenticatedReportAccess ? commentReports : []
+  const visiblePlaceReports = hasAuthenticatedReportAccess ? placeReports : []
+  const visibleIsLoading = hasAuthenticatedReportAccess && isLoading
+  const visibleErrorMessage = hasAuthenticatedReportAccess ? errorMessage : ''
 
   const reportCountLabel = useMemo(() => {
-    const total = visibleCommentReports.length + visiblePlaceReports.length + visibleUserReports.length
+    const total = visibleCommentReports.length + visiblePlaceReports.length
     return total === 1 ? '1 report item' : `${total} report items`
-  }, [visibleCommentReports.length, visiblePlaceReports.length, visibleUserReports.length])
-
-  const userReportsLabel = useMemo(() => {
-    return visibleUserReports.length === 1 ? '1 user report' : `${visibleUserReports.length} user reports`
-  }, [visibleUserReports.length])
+  }, [visibleCommentReports.length, visiblePlaceReports.length])
 
   const placeReportsLabel = useMemo(() => {
     return visiblePlaceReports.length === 1 ? '1 place report' : `${visiblePlaceReports.length} place reports`
@@ -455,7 +448,6 @@ function ReportsPage() {
               badges={
                 <>
                   <SummaryPill icon="reports" label="All" value={reportCountLabel} />
-                  <SummaryPill icon="profile" label="Users" value={String(visibleUserReports.length)} />
                   <SummaryPill icon="reports" label="Places" value={String(visiblePlaceReports.length)} />
                   <SummaryPill icon="reports" label="Comments" value={String(visibleCommentReports.length)} />
                 </>
@@ -464,6 +456,7 @@ function ReportsPage() {
 
             {isSessionLoading ? (
               <UnifiedLoadingState
+                variant="page"
                 title="Checking your account..."
                 message="We are confirming access to your reports."
               />
@@ -479,42 +472,31 @@ function ReportsPage() {
               </CardSurface>
             ) : null}
 
-            {!isSessionLoading && session?.user ? (
+            {!isSessionLoading && session?.user && isTokenLoading ? (
+              <UnifiedLoadingState
+                variant="inline"
+                title="Refreshing your session..."
+                message="We are reconnecting your account before loading reports."
+              />
+            ) : null}
+
+            {!isSessionLoading && session?.user && !isTokenLoading && !accessToken ? (
+              <CardSurface pad="loose">
+                <h2 className="text-lg font-black text-slate-950">Please sign in again to view your reports.</h2>
+                <p className="mt-2 max-w-xl text-sm font-medium leading-6 text-[var(--muted)]">
+                  Your account is recognized, but the secure session needed to load private reports is missing.
+                </p>
+                <GoogleSignInButton className="mt-4" redirectTo={`${window.location.origin}/reports`} />
+              </CardSurface>
+            ) : null}
+
+            {!isSessionLoading && hasAuthenticatedReportAccess ? (
               <Stack gap="default">
                 <div>
-                  {visibleIsLoading ? (
-                    <UnifiedLoadingState
-                      variant="inline"
-                      title="Preparing your reports..."
-                      message="We are loading your submitted report history."
-                    />
-                  ) : null}
                   {!visibleIsLoading && visibleErrorMessage ? <p className="text-sm font-medium text-red-600">{visibleErrorMessage}</p> : null}
                 </div>
 
                 <Stack gap="tight">
-                  <SectionDropdown
-                    icon="profile"
-                    title="User Reports"
-                    description="Reports you submit against a user account or profile will live here."
-                    countLabel={userReportsLabel}
-                    isOpen={openSections.userReports}
-                    onToggle={() => setOpenSections((current) => ({ ...current, userReports: !current.userReports }))}
-                  >
-                    {visibleUserReports.length > 0 ? (
-                      <SectionList>
-                        {visibleUserReports.map((report) => (
-                          <UserReportCard key={report.id} report={report} />
-                        ))}
-                      </SectionList>
-                    ) : (
-                      <SectionEmptyState
-                        title="No user reports yet"
-                        description="When you report a user account or profile, it will appear in this section."
-                      />
-                    )}
-                  </SectionDropdown>
-
                   <SectionDropdown
                     icon="reports"
                     title="Place Reports"

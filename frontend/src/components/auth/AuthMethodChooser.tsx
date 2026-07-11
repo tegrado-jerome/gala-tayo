@@ -1,9 +1,9 @@
 import { signInWithGoogle } from '../../services/authApi'
-import { getRequestedNextPath } from '../../utils/authRedirect'
+import { getRequestedNextPath } from '../../services/authApi'
 
 type AuthMethodChooserProps = {
-  isLoading: boolean
-  onLoadingChange: (isLoading: boolean) => void
+  isGoogleLoading: boolean
+  onGoogleLoadingChange: (isLoading: boolean) => void
   onError: (message: string) => void
 }
 
@@ -30,15 +30,15 @@ function GoogleMark() {
   )
 }
 
-function AuthMethodChooser({ isLoading, onLoadingChange, onError }: AuthMethodChooserProps) {
+function AuthMethodChooser({ isGoogleLoading, onGoogleLoadingChange, onError }: AuthMethodChooserProps) {
   const handleGoogleSignIn = async () => {
     try {
-      onLoadingChange(true)
+      onGoogleLoadingChange(true)
       onError('')
       await signInWithGoogle(getRequestedNextPath())
     } catch (error) {
       onError(error instanceof Error ? error.message : 'Google sign-in failed. Please try again.')
-      onLoadingChange(false)
+      onGoogleLoadingChange(false)
     }
   }
 
@@ -47,11 +47,11 @@ function AuthMethodChooser({ isLoading, onLoadingChange, onError }: AuthMethodCh
       <button
         type="button"
         onClick={() => void handleGoogleSignIn()}
-        disabled={isLoading}
-        className="inline-flex h-12 w-full items-center justify-center gap-3 rounded-[12px] border border-[var(--line)] bg-white px-5 text-[14px] font-semibold text-[var(--text-main)] shadow-[0_10px_24px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-[rgba(37,99,235,0.25)] hover:bg-[var(--bg)] focus:outline-none focus:ring-4 focus:ring-[rgba(37,99,235,0.12)] disabled:cursor-not-allowed disabled:opacity-70"
+        disabled={isGoogleLoading}
+        className="mx-auto inline-flex h-12 w-[240px] max-w-full items-center justify-center gap-3 rounded-[12px] border border-[var(--line)] bg-white px-6 text-[14px] font-semibold text-[var(--text-main)] shadow-[0_10px_24px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-[rgba(37,99,235,0.25)] hover:bg-[var(--bg)] focus:outline-none focus:ring-4 focus:ring-[rgba(37,99,235,0.12)] disabled:cursor-not-allowed disabled:opacity-70 md:w-[220px] lg:w-[240px]"
       >
         <GoogleMark />
-        {isLoading ? 'Opening Google...' : 'Continue with Google'}
+        {isGoogleLoading ? 'Opening Google...' : 'Continue with Google'}
       </button>
     </div>
   )

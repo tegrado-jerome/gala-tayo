@@ -1,6 +1,7 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getSeoAreaPage, getSeoAreaSummaries, getSeoPlaceSummaries } from "../utils/seoPlaces";
 import { CATEGORIES } from "./filters";
+import { checkEndpointRateLimit } from "../utils/redisRateLimit";
 
 type SeoPlacesResponse = {
   areas: Awaited<ReturnType<typeof getSeoAreaSummaries>>;
@@ -8,16 +9,20 @@ type SeoPlacesResponse = {
 };
 
 function getSiteUrl(request: HttpRequest): string {
-  const configuredSiteUrl = process.env.SITE_URL || process.env.PUBLIC_SITE_URL || process.env.WEBSITE_URL;
+  const configuredSiteUrl = process.env.SITE_URL || process.env.PUBLIC_SITE_URL;
 
   if (configuredSiteUrl && configuredSiteUrl.trim()) {
     return configuredSiteUrl.trim().replace(/\/+$/, "");
   }
 
   const forwardedProto = request.headers.get("x-forwarded-proto") || "https";
-  const forwardedHost = request.headers.get("x-forwarded-host") || request.headers.get("host") || "localhost:4173";
+  const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "localhost:4173";
 
-  return `${forwardedProto}://${forwardedHost}`.replace(/\/+$/, "");
+  if (!host || host === "localhost:4173" || host.includes(":")) {
+    return "https://galatayo.app";
+  }
+
+  return `${forwardedProto}://${host}`.replace(/\/+$/, "");
 }
 
 function xmlEscape(value: string): string {
@@ -30,6 +35,11 @@ function xmlEscape(value: string): string {
 }
 
 export async function seoPlaces(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+  const rateCheck = await checkEndpointRateLimit(request, "seo-places", 30, 60);
+  if (!rateCheck.allowed && rateCheck.response) {
+    return rateCheck.response;
+  }
+
   context.log("Loading SEO places payload.");
 
   const areaSlug = request.query.get("area")?.trim().toLowerCase();
@@ -62,6 +72,11 @@ export async function seoPlaces(request: HttpRequest, context: InvocationContext
 }
 
 export async function seoArea(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+  const rateCheck = await checkEndpointRateLimit(request, "seo-area", 30, 60);
+  if (!rateCheck.allowed && rateCheck.response) {
+    return rateCheck.response;
+  }
+
   const areaSlug = request.params.areaSlug;
   context.log(`Loading SEO area payload for ${areaSlug}.`);
 
@@ -83,6 +98,11 @@ export async function seoArea(request: HttpRequest, context: InvocationContext):
 }
 
 export async function sitemapXml(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+  const rateCheck = await checkEndpointRateLimit(request, "sitemap", 10, 60);
+  if (!rateCheck.allowed && rateCheck.response) {
+    return rateCheck.response;
+  }
+
   context.log("Generating sitemap.xml.");
 
   const siteUrl = getSiteUrl(request);

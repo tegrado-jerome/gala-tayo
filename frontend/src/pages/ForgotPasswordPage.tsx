@@ -53,10 +53,7 @@ function ForgotPasswordPage() {
               <div className="mt-5">
                 <h1 className="text-[1.6rem] font-semibold leading-[1.02] tracking-[-0.04em] text-slate-950 sm:text-[1.85rem]">Check your email</h1>
                 <p className="mx-auto mt-3 max-w-[280px] text-[13px] leading-6 text-slate-500 sm:text-[14px] sm:leading-7">
-                  We sent a password reset link to <strong className="text-slate-700">{normalizedEmail}</strong>.
-                </p>
-                <p className="mt-3 text-[13px] leading-6 text-slate-500">
-                  Click the link in the email to reset your password. It may take a few minutes to arrive.
+                  If an account exists with that email, we sent password reset instructions.
                 </p>
                 <button
                   type="button"

@@ -33,7 +33,7 @@ export function buildPlaceShareUrl(place: ShareablePlace) {
 }
 
 export function buildPublicGalaPlanShareUrl(username: string, slug: string) {
-  return `${getOrigin()}/u/${encodeURIComponent(username)}/gala/${encodeURIComponent(slug)}`
+  return `${getOrigin()}/u/${encodeURIComponent(username)}/plans/${encodeURIComponent(slug)}`
 }
 
 export function buildPrivateGalaPlanShareUrl(planId: string) {
@@ -79,4 +79,16 @@ export async function shareLink({
   }
 
   await copyTextToClipboard(url)
+}
+
+export function buildGalaPlanShareUrl(username: string, slug: string) {
+  return buildPublicGalaPlanShareUrl(username, slug)
+}
+
+export async function shareGalaPlanLink(username: string, slug: string, title: string): Promise<void> {
+  await shareLink({
+    url: buildPublicGalaPlanShareUrl(username, slug),
+    title,
+    text: title,
+  })
 }

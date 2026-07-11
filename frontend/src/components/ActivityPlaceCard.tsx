@@ -154,7 +154,7 @@ export default function ActivityPlaceCard({
             type="button"
             onClick={handleAction}
             className={compactMobile
-              ? 'inline-flex h-7 w-full items-center justify-center rounded-lg border border-[var(--accent)] bg-white px-2.5 text-[10px] font-black text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)]'
+              ? 'inline-flex h-7 w-full items-center justify-center rounded-lg border border-[var(--accent)] bg-white px-2.5 text-[10px] font-black text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)] sm:text-xs'
               : 'inline-flex h-9 w-full items-center justify-center rounded-lg border border-[var(--accent)] bg-white px-4 text-xs font-black text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)]'}
           >
             {actionLabel}

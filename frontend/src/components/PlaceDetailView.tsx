@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
-import type { PlaceCardData } from './PlaceCard'
 import AppHeader from './AppHeader'
-import { GuestAuthPrompt } from './GuestAuthPrompt'
-import { useGuestAuthPrompt } from '../utils/useGuestAuthPrompt'
+import { AppIcon } from './AppIcon'
+import { GuestAuthPrompt, useGuestAuthPrompt } from './GuestAuthPrompt'
 import AddToGalaPlanModal from './AddToGalaPlanModal'
 import InternalLink from './InternalLink'
 import Breadcrumb from './Breadcrumb'
@@ -10,7 +9,6 @@ import MapView from './MapView'
 import ReportUserModal from './ReportUserModal'
 import UnifiedLoadingState from './UnifiedLoadingState'
 import PlaceImageNotice from './PlaceImageNotice'
-import { AppIcon, type AppIconName } from './AppIcon'
 import { PageContainer, PageShell, DetailLayout, DetailSidebar, CardSurface, Stack } from './layout/ResponsiveLayouts'
 import { Flag, ImagePlus, MapPin, MessageCircle, MoreHorizontal, Pencil, Reply, Search, Trash2 } from 'lucide-react'
 import { getCuratedPlaceImages, normalizePlaceSlug } from '../data/curatedPlaceImages'
@@ -23,165 +21,74 @@ import { submitCommentReport, type CommentReportReason } from '../utils/commentR
 import { submitPlaceReport, type PlaceReportReason } from '../utils/placeReportsApi'
 import { getMyUserReports } from '../utils/userReportsApi'
 import { getMyProfile } from '../utils/profileApi'
+import { getApiUrl } from '../utils/apiClient'
 import { navigateToPath } from '../utils/navigation'
+import { Icon } from './place-detail/Icon'
+import { MemberAvatar } from './place-detail/MemberAvatar'
+import { SectionHeading } from './place-detail/SectionHeading'
+import { ActionButton } from './place-detail/ActionButton'
+import { GoodForList } from './place-detail/GoodForList'
+import { PlanStat } from './place-detail/PlanStat'
+import { TransportColumn } from './place-detail/TransportColumn'
+import { DetailSection } from './place-detail/DetailSection'
+import { cleanString, titleCase, uniqueList, formatPriceLevel, isAcceptedContributionImage, parseJsonResponse } from './place-detail/helpers'
+import type { PlaceDetailViewProps, PlaceReview, PlaceReviewsResponse, PlaceComment, PlaceCommentsResponse, PlaceImageContributionResponse, PlaceDetailCommunityCache } from './place-detail/types'
 
-type PlaceDetailViewProps = {
-  place: PlaceCardData & {
-    id: string
-    slug: string
-  }
-  areaBreadcrumb?: {
-    areaSlug: string
-    areaName: string
-  } | null
-  cameFromSearch?: boolean
-  returnLabel?: string | null
-  searchHref?: string | null
-}
 
-type PlaceReview = {
-  id: string
-  place_id: string
-  submitted_by: string
-  member_display_name?: string | null
-  rating: number
-  comment: string | null
-  created_at: string
-  updated_at: string
-}
-
-type PlaceReviewsResponse = {
-  reviews: PlaceReview[]
-  average_rating: number | null
-  review_count: number
-  current_member_review: PlaceReview | null
-  message?: string
-}
-
-type PlaceComment = {
-  id: string
-  place_id: string
-  user_id: string
-  member_display_name?: string | null
-  member_username?: string | null
-  member_avatar_url?: string | null
-  parent_comment_id: string | null
-  comment: string
-  status: 'visible' | 'deleted'
-  created_at: string
-  updated_at: string
-  deleted_at: string | null
-  current_user_reported?: boolean
-  replies: PlaceComment[]
-  local_post_state?: 'pending' | 'failed'
-  local_error_message?: string | null
-}
-
-type PlaceCommentsResponse = {
-  comments: PlaceComment[]
-  message?: string
-}
-
-type PlaceImageContributionResponse = {
-  message?: string
-  image?: {
-    id: string
-    imageUrl: string
-    status: 'pending' | 'approved' | 'rejected'
-  }
-}
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-const CONTRIBUTION_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp']
-const CONTRIBUTION_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+const PLACE_DETAIL_COMMUNITY_CACHE_PREFIX = 'galatayo:place-community:'
+const PLACE_DETAIL_COMMUNITY_CACHE_TTL_MS = 10 * 60 * 1000
+const filledStar = '★'
 
-function isAcceptedContributionImage(file: File) {
-  const normalizedType = file.type.trim().toLowerCase()
 
-  if (CONTRIBUTION_IMAGE_TYPES.includes(normalizedType)) {
-    return true
-  }
 
-  const normalizedName = file.name.trim().toLowerCase()
-  return CONTRIBUTION_IMAGE_EXTENSIONS.some((extension) => normalizedName.endsWith(extension))
+function getPlaceDetailCommunityCacheKey(placeId: string) {
+  return `${PLACE_DETAIL_COMMUNITY_CACHE_PREFIX}${placeId}`
 }
 
-type IconName =
-  | 'back'
-  | 'photo'
-  | 'share'
-  | 'save'
-  | 'directions'
-  | 'location'
-  | 'category'
-  | 'budget'
-  | 'clock'
-  | 'hourglass'
-  | 'home'
-  | 'crowd'
-  | 'rain'
-  | 'eye'
-  | 'fire'
-  | 'utensils'
-  | 'heart'
-  | 'users'
-  | 'book'
-  | 'bus'
-  | 'car'
-  | 'globe'
-  | 'warning'
-  | 'sparkle'
-
-function Icon({ name, className = 'h-5 w-5' }: { name: IconName; className?: string }) {
-  const iconMap: Record<IconName, AppIconName> = {
-    back: 'back',
-    photo: 'photo',
-    share: 'share',
-    save: 'favorites',
-    directions: 'directions',
-    location: 'place',
-    category: 'categoryHeritage',
-    budget: 'wallet',
-    clock: 'history',
-    hourglass: 'hourglass',
-    home: 'home',
-    crowd: 'users',
-    rain: 'rain',
-    eye: 'eye',
-    fire: 'fire',
-    utensils: 'categoryKainan',
-    heart: 'favorites',
-    users: 'users',
-    book: 'book',
-    bus: 'bus',
-    car: 'car',
-    globe: 'tourist',
-    warning: 'warning',
-    sparkle: 'askAi',
-  }
-
-  return <AppIcon name={iconMap[name]} className={className} strokeWidth={2} />
-}
-
-function getApiEndpoint(path: string) {
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
-  return apiBaseUrl ? `${apiBaseUrl}${path}` : `/api${path}`
-}
-
-function parseJsonResponse<T>(text: string): T | null {
-  if (!text.trim()) {
-    return null
-  }
-
+function readPlaceDetailCommunityCache(placeId: string): PlaceDetailCommunityCache | null {
   try {
-    return JSON.parse(text) as T
+    const rawCache = window.localStorage.getItem(getPlaceDetailCommunityCacheKey(placeId))
+
+    if (!rawCache) {
+      return null
+    }
+
+    const parsedCache = JSON.parse(rawCache) as Partial<PlaceDetailCommunityCache>
+    if (
+      typeof parsedCache.cachedAt !== 'number' ||
+      !Number.isFinite(parsedCache.cachedAt) ||
+      Date.now() - parsedCache.cachedAt > PLACE_DETAIL_COMMUNITY_CACHE_TTL_MS ||
+      !Array.isArray(parsedCache.comments)
+    ) {
+      window.localStorage.removeItem(getPlaceDetailCommunityCacheKey(placeId))
+      return null
+    }
+
+    return {
+      averageRating:
+        typeof parsedCache.averageRating === 'number' && Number.isFinite(parsedCache.averageRating)
+          ? parsedCache.averageRating
+          : null,
+      reviewCount:
+        typeof parsedCache.reviewCount === 'number' && Number.isFinite(parsedCache.reviewCount)
+          ? Math.max(0, Math.floor(parsedCache.reviewCount))
+          : 0,
+      comments: parsedCache.comments as PlaceComment[],
+      cachedAt: parsedCache.cachedAt,
+    }
   } catch {
     return null
   }
 }
 
-function cleanString(value?: string | null) {
-  return value?.trim() || ''
+function writePlaceDetailCommunityCache(placeId: string, cache: PlaceDetailCommunityCache) {
+  try {
+    window.localStorage.setItem(getPlaceDetailCommunityCacheKey(placeId), JSON.stringify(cache))
+  } catch {
+    // localStorage may be unavailable, ignore
+  }
 }
 
 function getAuthMetadataString(metadata: Record<string, unknown> | undefined, keys: string[]) {
@@ -193,88 +100,6 @@ function getAuthMetadataString(metadata: Record<string, unknown> | undefined, ke
   }
 
   return ''
-}
-
-function formatPriceLevel(level: number | null | undefined): string {
-  if (level == null) return ''
-  const symbols = ['Free', '₱', '₱₱', '₱₱₱', '₱₱₱₱']
-  return symbols[Math.min(Math.max(Math.floor(level), 0), 4)] || ''
-}
-
-function titleCase(value: string) {
-  return value
-    .split(/[-_\s]+/)
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-    .join(' ')
-}
-
-function uniqueList(values: Array<string | undefined | null>) {
-  const seen = new Set<string>()
-  return values
-    .map((value) => cleanString(value))
-    .filter(Boolean)
-    .filter((value) => {
-      const normalized = value.toLowerCase()
-      if (seen.has(normalized)) {
-        return false
-      }
-      seen.add(normalized)
-      return true
-    })
-}
-
-function getInitials(label: string) {
-  const initials = label
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part.charAt(0).toUpperCase())
-    .join('')
-
-  return initials || 'GT'
-}
-
-function MemberAvatar({
-  displayName,
-  avatarUrl,
-  compact = false,
-  reply = false,
-}: {
-  displayName: string
-  avatarUrl?: string | null
-  compact?: boolean
-  reply?: boolean
-}) {
-  const cleanAvatarUrl = cleanString(avatarUrl)
-  const sizeClass = reply ? 'h-7 w-7 text-[10px]' : compact ? 'h-8 w-8 text-[11px]' : 'h-9 w-9 text-[12px]'
-
-  return (
-    <span className={`flex ${sizeClass} shrink-0 overflow-hidden rounded-full border border-[var(--line)] bg-[linear-gradient(180deg,#f8fbff,#e8f1ff)] font-black text-[var(--accent-deep)] shadow-[0_8px_16px_rgba(28,77,160,0.08)]`}>
-      {cleanAvatarUrl ? (
-        <img
-          src={cleanAvatarUrl}
-          alt={`${displayName} avatar`}
-          className="h-full w-full object-cover"
-          loading="lazy"
-          referrerPolicy="no-referrer"
-        />
-      ) : (
-        <span className="flex h-full w-full items-center justify-center">{getInitials(displayName)}</span>
-      )}
-    </span>
-  )
-}
-
-function SectionHeading({ icon, title }: { icon: IconName; title: string }) {
-  return (
-    <div className="flex items-center gap-2.5">
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-wash)] text-[var(--accent-deep)]">
-        <Icon name={icon} className="h-4 w-4" />
-      </span>
-      <h2 className="text-[13px] font-black uppercase tracking-[0.08em] text-slate-700">{title}</h2>
-    </div>
-  )
 }
 
 function PlacePhoto({
@@ -314,6 +139,10 @@ function PlacePhoto({
   const desktopGlassFrameClassName =
     'relative overflow-hidden border border-white/14 bg-[rgba(15,23,42,0.12)] shadow-[0_18px_44px_rgba(15,23,42,0.08)] backdrop-blur-2xl md:rounded-[28px]'
   const heroAspectClassName = 'aspect-[4/3] sm:aspect-[17/10] md:aspect-[1.75/1] lg:aspect-[1.95/1]'
+  const emptyAddTileClassName =
+    'border-2 border-dotted border-white/22 bg-[linear-gradient(180deg,rgba(0,0,0,0.74),rgba(12,12,12,0.62))] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_18px_34px_rgba(0,0,0,0.28)] backdrop-blur-2xl transition hover:border-white/32 hover:bg-[linear-gradient(180deg,rgba(0,0,0,0.82),rgba(10,10,10,0.7))]'
+  const emptySlotClassName =
+    'cursor-default border-white/12 bg-[linear-gradient(180deg,rgba(0,0,0,0.5),rgba(0,0,0,0.38))] text-white/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_12px_30px_rgba(0,0,0,0.2)] backdrop-blur-2xl'
 
   const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
     swipeStartX.current = event.changedTouches[0]?.clientX ?? null
@@ -370,14 +199,26 @@ function PlacePhoto({
                 </div>
 
                 <div className="flex h-full items-center justify-center px-6 py-8 text-center sm:px-8 sm:py-10">
-                  <div className="flex max-w-[320px] flex-col items-center gap-3 text-[var(--accent-deep)]">
-                    <span className="flex h-14 w-14 items-center justify-center rounded-full border border-white/80 bg-white shadow-[0_16px_40px_rgba(37,99,235,0.12)]">
-                      <Icon name="photo" className="h-7 w-7" />
+                  <div className="flex max-w-[340px] flex-col items-center gap-4 rounded-[28px] border border-white/45 bg-white/72 px-5 py-6 shadow-[0_18px_44px_rgba(15,23,42,0.08)] backdrop-blur-sm">
+                    <span className="flex h-14 w-14 items-center justify-center rounded-full border border-[rgba(96,165,250,0.22)] bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(239,246,255,0.92))] shadow-[0_16px_40px_rgba(37,99,235,0.12)]">
+                      <Icon name="photo" className="h-7 w-7 text-[var(--accent-deep)]" />
                     </span>
-                    <p className="text-[17px] font-black text-slate-950">No place photos yet</p>
-                    <p className="text-[13px] font-semibold leading-5 text-slate-600">
+                    <div className="space-y-1">
+                      <p className="text-[17px] font-black tracking-[-0.02em] text-slate-950">No place photos yet</p>
+                      <p className="text-[13px] font-semibold leading-5 text-slate-600">
                       Be the first to add a photo for this spot.
-                    </p>
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                      <span className="rounded-full border border-[rgba(148,163,184,0.22)] bg-white px-3 py-1 text-[11px] font-bold text-slate-600">
+                        Community contributed
+                      </span>
+                      {showAddPhotoAction ? (
+                        <span className="rounded-full border border-[rgba(96,165,250,0.22)] bg-[rgba(239,246,255,0.9)] px-3 py-1 text-[11px] font-black text-[var(--accent-deep)]">
+                          Add the first one
+                        </span>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
 
@@ -392,20 +233,17 @@ function PlacePhoto({
                           type="button"
                           onClick={shouldUseAddTile ? onContribute : undefined}
                           disabled={!shouldUseAddTile}
-                          className={`flex h-16 w-16 items-center justify-center rounded-2xl border shadow-[0_12px_24px_rgba(15,23,42,0.18)] transition ${
-                            shouldUseAddTile
-                              ? 'border-[rgba(96,165,250,0.48)] bg-[linear-gradient(180deg,rgba(30,41,59,0.9),rgba(15,23,42,0.78))] text-white shadow-[0_12px_24px_rgba(15,23,42,0.28)] backdrop-blur-xl hover:border-[rgba(147,197,253,0.55)] hover:bg-[linear-gradient(180deg,rgba(51,65,85,0.92),rgba(15,23,42,0.82))]'
-                              : 'cursor-default border-white/14 bg-[rgba(15,23,42,0.28)] text-white/35 backdrop-blur-md'
-                          }`}
+                          className={`flex h-16 w-16 items-center justify-center rounded-2xl border shadow-[0_12px_24px_rgba(15,23,42,0.18)] transition ${shouldUseAddTile ? emptyAddTileClassName : emptySlotClassName}`}
                           aria-label={
                             shouldUseAddTile
                               ? `Add a photo for ${placeName}`
                               : `Empty photo slot ${index + 1} of ${placeName}`
                           }
                         >
-                          <span className="flex h-10 w-10 items-center justify-center rounded-full border border-white/18 bg-white/12 text-white shadow-[0_6px_16px_rgba(15,23,42,0.16)] backdrop-blur-sm">
-                            <ImagePlus className="h-5 w-5" strokeWidth={2.2} />
-                          </span>
+                          <ImagePlus
+                            className={`h-5 w-5 ${shouldUseAddTile ? 'text-white/95 drop-shadow-[0_6px_16px_rgba(15,23,42,0.2)]' : 'text-white/45'}`}
+                            strokeWidth={2.1}
+                          />
                         </button>
                       )
                     })}
@@ -462,9 +300,9 @@ function PlacePhoto({
                 ) : null}
               </div>
 
-              <div className="absolute inset-x-0 bottom-0 overflow-x-auto px-4 pb-4 pt-8 sm:px-5 sm:pb-5">
-                <div className="flex min-w-max items-center gap-2.5">
-                  {thumbSlots.map((photo, index) => {
+                <div className="absolute inset-x-0 bottom-0 overflow-x-auto px-4 pb-4 pt-8 sm:px-5 sm:pb-5">
+                  <div className="flex min-w-max items-center gap-2.5">
+                    {thumbSlots.map((photo, index) => {
                     if (photo) {
                       return (
                         <button
@@ -487,21 +325,21 @@ function PlacePhoto({
                     const shouldUseAddTile = showAddPhotoAction && index === photos.length
 
                     return (
-                      <button
-                        key={`empty-thumb-${index}`}
-                        type="button"
-                        onClick={shouldUseAddTile ? onContribute : undefined}
-                        disabled={!shouldUseAddTile}
-                        className={`flex h-16 w-16 items-center justify-center rounded-2xl border text-white backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.18)] transition ${
-                          shouldUseAddTile
-                            ? 'border-dashed border-white/20 bg-[rgba(30,41,59,0.65)] hover:bg-[rgba(30,41,59,0.78)]'
-                            : 'cursor-default border-dashed border-white/10 bg-[rgba(30,41,59,0.35)] text-white/40'
-                        }`}
-                        aria-label={
-                          shouldUseAddTile
-                            ? `Add a photo for ${placeName}`
-                            : `Empty photo slot ${index + 1} of ${placeName}`
-                        }
+                        <button
+                          key={`empty-thumb-${index}`}
+                          type="button"
+                          onClick={shouldUseAddTile ? onContribute : undefined}
+                          disabled={!shouldUseAddTile}
+                          className={`flex h-16 w-16 items-center justify-center rounded-2xl border text-white backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.18)] transition ${
+                            shouldUseAddTile
+                              ? 'border-2 border-dotted border-white/22 bg-[linear-gradient(180deg,rgba(0,0,0,0.74),rgba(12,12,12,0.62))] hover:border-white/30 hover:bg-[linear-gradient(180deg,rgba(0,0,0,0.82),rgba(10,10,10,0.7))]'
+                              : 'cursor-default border-dashed border-white/10 bg-[rgba(30,41,59,0.35)] text-white/40'
+                          }`}
+                          aria-label={
+                            shouldUseAddTile
+                              ? `Add a photo for ${placeName}`
+                              : `Empty photo slot ${index + 1} of ${placeName}`
+                          }
                       >
                         <ImagePlus className="h-5 w-5" strokeWidth={2.2} />
                       </button>
@@ -626,10 +464,8 @@ function PlacePhoto({
                   type="button"
                   onClick={shouldUseAddTile ? onContribute : undefined}
                   disabled={!shouldUseAddTile}
-                        className={`${desktopGlassFrameClassName} flex h-full min-h-[11.25rem] items-center justify-center overflow-hidden lg:min-h-[13.4rem] ${
-                    shouldUseAddTile
-                      ? 'rounded-2xl border border-[rgba(96,165,250,0.48)] bg-[linear-gradient(180deg,rgba(30,41,59,0.9),rgba(15,23,42,0.78))] text-white shadow-[0_18px_48px_rgba(15,23,42,0.18)] backdrop-blur-2xl transition hover:border-[rgba(147,197,253,0.55)] hover:bg-[linear-gradient(180deg,rgba(51,65,85,0.92),rgba(15,23,42,0.82))]'
-                      : 'cursor-default rounded-2xl border border-white/10 bg-[rgba(15,23,42,0.22)] text-white/40 backdrop-blur-xl'
+                  className={`${desktopGlassFrameClassName} flex h-full min-h-[11.25rem] items-center justify-center overflow-hidden lg:min-h-[13.4rem] ${
+                    shouldUseAddTile ? emptyAddTileClassName : emptySlotClassName
                   }`}
                   aria-label={
                     shouldUseAddTile
@@ -637,15 +473,19 @@ function PlacePhoto({
                       : `Empty photo slot ${slotIndex + 1} of ${placeName}`
                   }
                 >
-                  <span className="flex flex-col items-center gap-2 text-center">
-                    <span className="flex h-12 w-12 items-center justify-center rounded-full border border-white/18 bg-white/12 text-white shadow-[0_8px_18px_rgba(15,23,42,0.12)] backdrop-blur-sm">
-                      <ImagePlus className="h-5 w-5" strokeWidth={2.2} />
-                    </span>
+                  <span className="flex flex-col items-center gap-2 px-4 text-center">
+                    <ImagePlus
+                      className={`h-6 w-6 ${shouldUseAddTile ? 'text-white/95 drop-shadow-[0_6px_16px_rgba(0,0,0,0.35)]' : 'text-white/40'}`}
+                      strokeWidth={2.1}
+                    />
                     {shouldUseAddTile ? (
-                      <span className="text-[13px] font-black">Add photo</span>
+                      <span className="text-[13px] font-black tracking-[-0.01em] text-white/95">Add photo</span>
                     ) : (
                       <span className="text-[13px] font-semibold">No image yet</span>
                     )}
+                    {shouldUseAddTile ? (
+                      <span className="text-[11px] font-semibold text-white/70">Tap to upload</span>
+                    ) : null}
                   </span>
                 </button>
               )
@@ -658,122 +498,8 @@ function PlacePhoto({
   )
 }
 
-function ActionButton({
-  icon,
-  children,
-  disabled,
-  active = false,
-  onClick,
-  className = '',
-  iconClassName = 'h-4 w-4',
-  iconStrokeWidth = 2,
-  iconSize,
-}: {
-  icon: IconName
-  children: string
-  disabled?: boolean
-  active?: boolean
-  onClick: () => void
-  className?: string
-  iconClassName?: string
-  iconStrokeWidth?: number
-  iconSize?: number
-}) {
-  const buttonClassName = active
-    ? `inline-flex w-full min-h-9 items-center justify-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-2.5 text-[11px] font-extrabold text-rose-700 transition hover:border-rose-300 hover:bg-rose-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-400 md:flex-1 ${className}`
-    : `inline-flex w-full min-h-9 items-center justify-center gap-1.5 rounded-lg border border-[var(--line)] bg-white px-2.5 text-[11px] font-extrabold text-slate-700 transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)] hover:text-[var(--accent-deep)] disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-400 md:flex-1 ${className}`
-  const iconToneClassName = disabled
-    ? 'text-slate-400'
-    : active
-      ? 'fill-current text-rose-600'
-      : 'text-[var(--accent-deep)]'
 
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      aria-pressed={active}
-      className={buttonClassName}
-    >
-      <Icon
-        name={icon}
-        className={`${iconClassName} ${iconToneClassName}`.trim()}
-        strokeWidth={iconStrokeWidth}
-        size={iconSize}
-      />
-      {children}
-    </button>
-  )
-}
 
-function GoodForList({ values }: { values: string[] }) {
-  const items = (values.length > 0 ? values : ['Coffee hangouts', 'Food trips', 'Casual dates', 'Barkada catch-ups', 'Study breaks']).slice(0, 5)
-
-  return (
-    <ul className="grid gap-2 text-[14px] font-semibold leading-5 text-slate-700">
-      {items.map((item, index) => (
-        <li key={item} className="flex items-center gap-3">
-          <Icon name={pickGoodForIcon(item, index)} className="h-5 w-5 shrink-0 text-slate-500" />
-          <span>{titleCase(item)}</span>
-        </li>
-      ))}
-    </ul>
-  )
-}
-
-function pickGoodForIcon(value: string, index: number): IconName {
-  const normalized = value.toLowerCase()
-
-  if (normalized.includes('coffee') || normalized.includes('cafe')) return 'category'
-  if (normalized.includes('food') || normalized.includes('meal')) return 'utensils'
-  if (normalized.includes('date')) return 'heart'
-  if (normalized.includes('barkada') || normalized.includes('group') || normalized.includes('catch')) return 'users'
-  if (normalized.includes('study')) return 'book'
-
-  return (['category', 'utensils', 'heart', 'users', 'book'] as const)[index % 5]
-}
-
-function PlanStat({ icon, title, value }: { icon: IconName; title: string; value: string }) {
-  return (
-    <div className="flex min-w-0 items-start gap-3 rounded-xl bg-slate-50 px-3 py-3">
-      <Icon name={icon} className="mt-0.5 h-5 w-5 shrink-0 text-[var(--accent-deep)]" />
-      <div className="min-w-0">
-        <p className="text-[12px] font-black leading-tight text-slate-900">{title}</p>
-        <p className="mt-1 text-[12px] font-semibold leading-4 text-slate-600">{value}</p>
-      </div>
-    </div>
-  )
-}
-
-function TransportColumn({
-  icon,
-  title,
-  children,
-}: {
-  icon: IconName
-  title: string
-  children: ReactNode
-}) {
-  return (
-    <div>
-      <div className="flex items-start gap-2.5">
-        <Icon name={icon} className="mt-0.5 h-4 w-4 shrink-0 text-[var(--accent-deep)]" />
-        <div>
-          <span className="text-[12px] font-black text-slate-800">{title}: </span>
-          <span className="text-[13px] font-semibold leading-5 text-slate-600">{children}</span>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function DetailSection({ children, className }: { children: ReactNode; className?: string }) {
-  const baseClass = 'border-t border-[var(--line)] py-3 first:border-t-0 lg:py-4'
-  return <section className={className ? `${baseClass} ${className}` : baseClass}>{children}</section>
-}
-
-const filledStar = String.fromCharCode(9733)
 const commentReportReasons: Array<{ value: CommentReportReason; label: string }> = [
   { value: 'spam', label: 'Spam' },
   { value: 'harassment', label: 'Hate or abusive content' },
@@ -973,7 +699,14 @@ function findCommentById(comments: PlaceComment[], commentId: string): PlaceComm
   return null
 }
 
-function PlaceDetailView({ place, areaBreadcrumb = null, cameFromSearch = false, returnLabel: _returnLabel = null, searchHref = null }: PlaceDetailViewProps) {
+function PlaceDetailView({
+  place,
+  areaBreadcrumb = null,
+  returnLabel = null,
+  returnHref = null,
+  categoryBreadcrumb = null,
+}: PlaceDetailViewProps) {
+  const [initialCommunityCache] = useState<PlaceDetailCommunityCache | null>(() => readPlaceDetailCommunityCache(place.id))
   const [isAddToPlanOpen, setIsAddToPlanOpen] = useState(false)
   const guestAuth = useGuestAuthPrompt()
   const [isSaving, setIsSaving] = useState(false)
@@ -985,8 +718,8 @@ function PlaceDetailView({ place, areaBreadcrumb = null, cameFromSearch = false,
   const [contributionNote, setContributionNote] = useState('')
   const [isContributionSubmitting, setIsContributionSubmitting] = useState(false)
   const [contributionError, setContributionError] = useState('')
-  const [averageRating, setAverageRating] = useState<number | null>(place.rating ?? null)
-  const [reviewCount, setReviewCount] = useState(place.ratingCount ?? 0)
+  const [averageRating, setAverageRating] = useState<number | null>(initialCommunityCache?.averageRating ?? place.rating ?? null)
+  const [reviewCount, setReviewCount] = useState(initialCommunityCache?.reviewCount ?? place.ratingCount ?? 0)
   const [currentUserReview, setCurrentUserReview] = useState<PlaceReview | null>(null)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [currentUserAvatarUrl, setCurrentUserAvatarUrl] = useState<string | null>(null)
@@ -996,8 +729,8 @@ function PlaceDetailView({ place, areaBreadcrumb = null, cameFromSearch = false,
   const [isReviewDeleting, setIsReviewDeleting] = useState(false)
   const [reviewError, setReviewError] = useState('')
   const [isReviewEditing, setIsReviewEditing] = useState(false)
-  const [comments, setComments] = useState<PlaceComment[]>([])
-  const [isCommentsLoading, setIsCommentsLoading] = useState(true)
+  const [comments, setComments] = useState<PlaceComment[]>(initialCommunityCache?.comments ?? [])
+  const [isCommentsLoading, setIsCommentsLoading] = useState(!initialCommunityCache)
   const [commentBody, setCommentBody] = useState('')
   const [commentError, setCommentError] = useState('')
   const [isCommentSubmitting, setIsCommentSubmitting] = useState(false)
@@ -1021,7 +754,6 @@ function PlaceDetailView({ place, areaBreadcrumb = null, cameFromSearch = false,
   const [placeConcernError, setPlaceConcernError] = useState('')
   const [isPlaceConcernSubmitting, setIsPlaceConcernSubmitting] = useState(false)
   const [isReportSubmitting, setIsReportSubmitting] = useState(false)
-  const [activeGalleryIndex, setActiveGalleryIndex] = useState(0)
   const commentMenuRef = useRef<HTMLDivElement | null>(null)
   const { isPlaceSaved, saveFavorite, removeFavorite } = useSavedFavorites()
   const { showSystemMessage } = useSystemMessage()
@@ -1033,6 +765,12 @@ function PlaceDetailView({ place, areaBreadcrumb = null, cameFromSearch = false,
     ...(place.curatedImageUrls ?? []),
     ...getCuratedPlaceImages(place.name),
   ]).slice(0, 3)
+  const galleryStateKey = `${place.id}:${galleryPhotos.join('|')}`
+  const [activeGalleryState, setActiveGalleryState] = useState({ key: galleryStateKey, index: 0 })
+  const activeGalleryIndex =
+    activeGalleryState.key === galleryStateKey
+      ? Math.min(activeGalleryState.index, Math.max(galleryPhotos.length - 1, 0))
+      : 0
   const approvedImageCount = galleryPhotos.length
   const budgetLabel = (() => {
     const parts: string[] = []
@@ -1060,6 +798,28 @@ function PlaceDetailView({ place, areaBreadcrumb = null, cameFromSearch = false,
   const isCommunityPlaceReady = UUID_PATTERN.test(placeId)
   const canContributePhoto = Boolean(currentUserId && isCommunityPlaceReady && approvedImageCount < 3)
   const areaLink = areaBreadcrumb ? `/places/${encodeURIComponent(areaBreadcrumb.areaSlug)}` : null
+  const breadcrumbItems = categoryBreadcrumb
+    ? [
+        { label: categoryBreadcrumb.parentName, href: new URL(categoryBreadcrumb.parentItem).pathname, icon: <MapPin className="h-3.5 w-3.5" /> },
+        { label: categoryBreadcrumb.childName, href: new URL(categoryBreadcrumb.childItem).pathname, icon: <MapPin className="h-3.5 w-3.5" /> },
+        { label: place.name, icon: <MapPin className="h-3.5 w-3.5" /> },
+      ]
+    : returnHref && returnLabel
+      ? [
+          {
+            label: returnLabel,
+            href: returnHref,
+            icon: returnHref.startsWith('/search') ? <Search className="h-3.5 w-3.5" /> : <MapPin className="h-3.5 w-3.5" />,
+          },
+          { label: place.name, icon: <MapPin className="h-3.5 w-3.5" /> },
+        ]
+      : [
+          { label: 'Places', href: '/places', icon: <MapPin className="h-3.5 w-3.5" /> },
+          ...(areaBreadcrumb
+            ? [{ label: areaBreadcrumb.areaName, href: areaLink!, icon: <MapPin className="h-3.5 w-3.5" /> }]
+            : []),
+          { label: place.name, icon: <MapPin className="h-3.5 w-3.5" /> },
+        ]
   const canonicalPlaceLink = areaBreadcrumb ? `/places/${encodeURIComponent(areaBreadcrumb.areaSlug)}/${encodeURIComponent(placeSlug)}` : null
   const quickAnswerItems = [
     {
@@ -1102,13 +862,28 @@ function PlaceDetailView({ place, areaBreadcrumb = null, cameFromSearch = false,
     }
   }, [openCommentMenuId])
 
-  useEffect(() => {
-    setActiveGalleryIndex(0)
-  }, [galleryPhotos.length, place.id])
   const isSaved = [place.id, place.slug, normalizedNameSlug].some((slugOrId) => isPlaceSaved(slugOrId))
   const hasCurrentUserReview = Boolean(currentUserReview)
   const headlineRating = averageRating ?? place.rating ?? null
   const headlineReviewCount = reviewCount > 0 ? reviewCount : place.ratingCount ?? 0
+
+  useEffect(() => {
+    const cachedCommunityState = readPlaceDetailCommunityCache(place.id)
+
+    setAverageRating(cachedCommunityState?.averageRating ?? place.rating ?? null)
+    setReviewCount(cachedCommunityState?.reviewCount ?? place.ratingCount ?? 0)
+    setComments(cachedCommunityState?.comments ?? [])
+    setIsCommentsLoading(!cachedCommunityState)
+  }, [place.id, place.rating, place.ratingCount])
+
+  useEffect(() => {
+    writePlaceDetailCommunityCache(place.id, {
+      averageRating,
+      reviewCount,
+      comments,
+      cachedAt: Date.now(),
+    })
+  }, [averageRating, comments, place.id, reviewCount])
 
   const syncCurrentUserProfile = useCallback(async (session?: Awaited<ReturnType<typeof getSupabaseSession>> | null) => {
     const nextSession = session ?? (await getSupabaseSession())
@@ -1121,22 +896,29 @@ function PlaceDetailView({ place, areaBreadcrumb = null, cameFromSearch = false,
       'GalaTayo member'
 
     setCurrentUserId(nextUser?.id ?? null)
-    setCurrentUserAvatarFallbackName(metadataDisplayName)
-    setCurrentUserAvatarUrl(metadataAvatarUrl || null)
 
     if (!nextUser) {
+      setCurrentUserAvatarFallbackName(metadataDisplayName)
+      setCurrentUserAvatarUrl(null)
       return
     }
+
+    setCurrentUserAvatarFallbackName((currentName) => currentName || metadataDisplayName)
+    setCurrentUserAvatarUrl((currentAvatarUrl) => metadataAvatarUrl || currentAvatarUrl || null)
 
     try {
       const result = await getMyProfile(nextSession)
       const profile = result.profile
+      const resolvedAvatarUrl =
+        cleanString(profile?.avatar_url) ||
+        cleanString(profile?.provider_avatar_url) ||
+        metadataAvatarUrl
 
-      setCurrentUserAvatarUrl(cleanString(profile?.avatar_url) || cleanString(profile?.provider_avatar_url) || metadataAvatarUrl || null)
+      setCurrentUserAvatarUrl((currentAvatarUrl) => resolvedAvatarUrl || currentAvatarUrl || null)
       setCurrentUserAvatarFallbackName(cleanString(profile?.username) || metadataDisplayName)
     } catch {
-      setCurrentUserAvatarUrl(metadataAvatarUrl || null)
-      setCurrentUserAvatarFallbackName(metadataDisplayName)
+      setCurrentUserAvatarUrl((currentAvatarUrl) => metadataAvatarUrl || currentAvatarUrl || null)
+      setCurrentUserAvatarFallbackName((currentName) => currentName || metadataDisplayName)
     }
   }, [])
 
@@ -1152,7 +934,6 @@ function PlaceDetailView({ place, areaBreadcrumb = null, cameFromSearch = false,
 
         const session = await getSupabaseSession()
         const token = await getSupabaseAccessToken(session)
-        await syncCurrentUserProfile(session)
 
         if (!isCommunityPlaceReady) {
           setAverageRating(place.rating ?? null)
@@ -1162,7 +943,7 @@ function PlaceDetailView({ place, areaBreadcrumb = null, cameFromSearch = false,
           return
         }
 
-        const response = await fetch(getApiEndpoint(`/places/${encodeURIComponent(placeId)}/reviews`), {
+        const response = await fetch(getApiUrl(`/places/${encodeURIComponent(placeId)}/reviews`), {
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
           signal,
         })
@@ -1180,6 +961,13 @@ function PlaceDetailView({ place, areaBreadcrumb = null, cameFromSearch = false,
         setCurrentUserReview(nextCurrentUserReview)
         setReviewRating(nextCurrentUserReview?.rating ?? 0)
         setIsReviewEditing(false)
+        const cachedComments = readPlaceDetailCommunityCache(placeId)?.comments ?? []
+        writePlaceDetailCommunityCache(placeId, {
+          averageRating: result?.average_rating ?? null,
+          reviewCount: result?.review_count ?? 0,
+          comments: cachedComments,
+          cachedAt: Date.now(),
+        })
       } catch (error) {
         if ((error as Error).name !== 'AbortError') {
           setReviewError(error instanceof Error ? error.message : 'Unable to load reviews.')
@@ -1192,18 +980,23 @@ function PlaceDetailView({ place, areaBreadcrumb = null, cameFromSearch = false,
   const fetchPlaceComments = useCallback(
     async (signal?: AbortSignal) => {
       try {
-        setIsCommentsLoading(true)
+        const cachedCommunityState = readPlaceDetailCommunityCache(placeId)
+
+        if (!cachedCommunityState) {
+          setIsCommentsLoading(true)
+        }
         setCommentError('')
 
         if (!isCommunityPlaceReady) {
           setComments([])
+          setIsCommentsLoading(false)
           return
         }
 
         const session = await getSupabaseSession()
         const token = await getSupabaseAccessToken(session)
 
-        const response = await fetch(getApiEndpoint(`/places/${encodeURIComponent(placeId)}/comments`), {
+        const response = await fetch(getApiUrl(`/places/${encodeURIComponent(placeId)}/comments`), {
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
           signal,
         })
@@ -1215,6 +1008,12 @@ function PlaceDetailView({ place, areaBreadcrumb = null, cameFromSearch = false,
         }
 
         setComments(result?.comments ?? [])
+        writePlaceDetailCommunityCache(placeId, {
+          averageRating,
+          reviewCount,
+          comments: result?.comments ?? [],
+          cachedAt: Date.now(),
+        })
       } catch (error) {
         if ((error as Error).name !== 'AbortError') {
           setCommentError(error instanceof Error ? error.message : 'Unable to load comments.')
@@ -1302,7 +1101,7 @@ function PlaceDetailView({ place, areaBreadcrumb = null, cameFromSearch = false,
           return
         }
 
-        const response = await fetch(getApiEndpoint('/history/place-view'), {
+        const response = await fetch(getApiUrl('/history/place-view'), {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -1436,7 +1235,7 @@ function PlaceDetailView({ place, areaBreadcrumb = null, cameFromSearch = false,
         body.append('contributor_note', contributionNote.trim())
       }
 
-      const response = await fetch(getApiEndpoint(`/places/${encodeURIComponent(placeId)}/images/contributions`), {
+      const response = await fetch(getApiUrl(`/places/${encodeURIComponent(placeId)}/images/contributions`), {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -1490,7 +1289,7 @@ function PlaceDetailView({ place, areaBreadcrumb = null, cameFromSearch = false,
         throw new Error('Sign in as a member to rate this place.')
       }
 
-      const response = await fetch(getApiEndpoint(`/places/${encodeURIComponent(placeId)}/reviews`), {
+      const response = await fetch(getApiUrl(`/places/${encodeURIComponent(placeId)}/reviews`), {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -1538,7 +1337,7 @@ function PlaceDetailView({ place, areaBreadcrumb = null, cameFromSearch = false,
         throw new Error('Sign in as a member to manage your review.')
       }
 
-      const response = await fetch(getApiEndpoint(`/places/${encodeURIComponent(placeId)}/reviews`), {
+      const response = await fetch(getApiUrl(`/places/${encodeURIComponent(placeId)}/reviews`), {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -1621,7 +1420,7 @@ function PlaceDetailView({ place, areaBreadcrumb = null, cameFromSearch = false,
 
       const token = await getSessionToken('Sign in as a member to comment.')
 
-      const response = await fetch(getApiEndpoint(`/places/${encodeURIComponent(placeId)}/comments`), {
+      const response = await fetch(getApiUrl(`/places/${encodeURIComponent(placeId)}/comments`), {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -1685,7 +1484,7 @@ function PlaceDetailView({ place, areaBreadcrumb = null, cameFromSearch = false,
       )
 
       const token = await getSessionToken('Sign in as a member to comment.')
-      const response = await fetch(getApiEndpoint(`/places/${encodeURIComponent(placeId)}/comments`), {
+      const response = await fetch(getApiUrl(`/places/${encodeURIComponent(placeId)}/comments`), {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -1748,7 +1547,7 @@ function PlaceDetailView({ place, areaBreadcrumb = null, cameFromSearch = false,
       setCommentError('')
 
       const token = await getSessionToken('Sign in as a member to reply.')
-      const response = await fetch(getApiEndpoint(`/places/${encodeURIComponent(placeId)}/comments/${encodeURIComponent(commentId)}/replies`), {
+      const response = await fetch(getApiUrl(`/places/${encodeURIComponent(placeId)}/comments/${encodeURIComponent(commentId)}/replies`), {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -1807,7 +1606,7 @@ function PlaceDetailView({ place, areaBreadcrumb = null, cameFromSearch = false,
       setCommentError('')
 
       const token = await getSessionToken('Sign in as a member to edit your comment.')
-      const response = await fetch(getApiEndpoint(`/places/${encodeURIComponent(placeId)}/comments/${encodeURIComponent(commentId)}`), {
+      const response = await fetch(getApiUrl(`/places/${encodeURIComponent(placeId)}/comments/${encodeURIComponent(commentId)}`), {
         method: 'PATCH',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -1860,7 +1659,7 @@ function PlaceDetailView({ place, areaBreadcrumb = null, cameFromSearch = false,
       setEditCommentBody('')
 
       const token = await getSessionToken('Sign in as a member to delete your comment.')
-      const response = await fetch(getApiEndpoint(`/places/${encodeURIComponent(placeId)}/comments/${encodeURIComponent(commentId)}`), {
+      const response = await fetch(getApiUrl(`/places/${encodeURIComponent(placeId)}/comments/${encodeURIComponent(commentId)}`), {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -2582,38 +2381,29 @@ function PlaceDetailView({ place, areaBreadcrumb = null, cameFromSearch = false,
 
       <main className="w-full pb-12 pt-0 sm:pt-0">
         <PageContainer size="wide">
-          {cameFromSearch ? (
-            <div className="pt-5 sm:pt-5">
-              <Breadcrumb
-                showBack
-                className="mb-4"
-                items={[
-                  { label: 'Search', href: searchHref || '/search', icon: <Search className="h-3.5 w-3.5" /> },
-                  { label: place.name, icon: <MapPin className="h-3.5 w-3.5" /> },
-                ]}
-              />
-            </div>
-          ) : (
-            <Breadcrumb
-              showBack
-              className="mb-4 pt-5"
-              items={[
-                { label: 'Places', href: '/places', icon: <MapPin className="h-3.5 w-3.5" /> },
-                ...(areaBreadcrumb
-                  ? [{ label: areaBreadcrumb.areaName, href: areaLink!, icon: <MapPin className="h-3.5 w-3.5" /> }]
-                  : []),
-                { label: place.name, icon: <MapPin className="h-3.5 w-3.5" /> },
-              ]}
-            />
-          )}
+          <Breadcrumb
+            showBack
+            className="mb-4 pt-5"
+            items={breadcrumbItems}
+          />
 
           <PlacePhoto
             imageUrls={galleryPhotos}
             placeName={place.name}
             currentIndex={activeGalleryIndex}
-            onPrevious={() => setActiveGalleryIndex((currentIndex) => Math.max(currentIndex - 1, 0))}
-            onNext={() => setActiveGalleryIndex((currentIndex) => Math.min(currentIndex + 1, galleryPhotos.length - 1))}
-            onSelect={(index) => setActiveGalleryIndex(index)}
+            onPrevious={() =>
+              setActiveGalleryState((currentState) => ({
+                key: galleryStateKey,
+                index: Math.max((currentState.key === galleryStateKey ? currentState.index : 0) - 1, 0),
+              }))
+            }
+            onNext={() =>
+              setActiveGalleryState((currentState) => ({
+                key: galleryStateKey,
+                index: Math.min((currentState.key === galleryStateKey ? currentState.index : 0) + 1, galleryPhotos.length - 1),
+              }))
+            }
+            onSelect={(index) => setActiveGalleryState({ key: galleryStateKey, index })}
             showAddPhotoAction={isCommunityPlaceReady && approvedImageCount < 3}
             onContribute={handleOpenContribution}
           />
@@ -2636,21 +2426,12 @@ function PlaceDetailView({ place, areaBreadcrumb = null, cameFromSearch = false,
                   ) : null}
                 </div>
 
-                <div className="grid w-full shrink-0 grid-cols-2 gap-1.5 sm:gap-2 md:w-auto md:flex md:gap-1.5">
+                <div className="grid w-full shrink-0 grid-cols-2 gap-2 sm:gap-2.5 md:mr-9 md:w-auto md:flex md:gap-2 lg:mr-11">
                   <ActionButton icon="save" onClick={handleSavePlace} disabled={isSaving} active={isSaved}>
                     {isSaving ? 'Saving' : 'Favorite'}
                   </ActionButton>
                   <ActionButton icon="share" onClick={handleSharePlace}>
                     Share
-                  </ActionButton>
-                  <ActionButton icon="book" onClick={() => {
-                    if (!currentUserId) {
-                      guestAuth.open('add-plan')
-                      return
-                    }
-                    setIsAddToPlanOpen(true)
-                  }} className="md:flex-[1.2] md:min-w-[7.75rem]">
-                    Add to Plan
                   </ActionButton>
                   <ActionButton
                     icon="directions"
@@ -2660,6 +2441,21 @@ function PlaceDetailView({ place, areaBreadcrumb = null, cameFromSearch = false,
                     iconStrokeWidth={2.35}
                   >
                     Directions
+                  </ActionButton>
+                  <ActionButton
+                    icon="sparkle"
+                    onClick={() => {}}
+                    disabled
+                    childrenClassName="flex-1 justify-between"
+                    className="border-slate-200/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.95),rgba(248,250,252,0.88))] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_18px_rgba(15,23,42,0.04)] backdrop-blur-sm disabled:border-slate-200/90 disabled:bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.9))] disabled:text-slate-500 disabled:shadow-[inset_0_1px_0_rgba(255,255,255,0.92),0_8px_18px_rgba(15,23,42,0.03)] md:min-w-[11.5rem] md:flex-[1.45]"
+                    iconClassName="h-4 w-4"
+                  >
+                    <span className="inline-flex min-w-0 items-center gap-2 whitespace-nowrap">
+                      <span className="text-[11px] font-extrabold text-slate-600">Add to Plan</span>
+                      <span className="inline-flex shrink-0 items-center rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">
+                        Soon
+                      </span>
+                    </span>
                   </ActionButton>
                 </div>
               </div>

@@ -1,5 +1,6 @@
 import type { Session } from '@supabase/supabase-js'
 import { getSupabaseAccessToken } from '../supabase'
+import { apiFetch, getApiUrl } from './apiClient'
 
 export type Profile = {
   user_id: string
@@ -225,11 +226,6 @@ export const reservedUsernames = new Set([
 const usernamePattern = /^[a-z0-9_.]{3,30}$/
 const emailLookingPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-function getApiUrl(path: string) {
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
-  return apiBaseUrl ? `${apiBaseUrl}${path}` : `/api${path}`
-}
-
 async function getAccessToken(session?: Session | null) {
   return getSupabaseAccessToken(session)
 }
@@ -281,6 +277,10 @@ export function getUsernameInitial(username: string | null | undefined) {
   return username?.trim().charAt(0).toUpperCase() || 'G'
 }
 
+export function isAdminRole(role: unknown) {
+  return typeof role === 'string' && role.trim().toLowerCase() === 'admin'
+}
+
 export async function getMyProfile(session?: Session | null) {
   const token = await getAccessToken(session)
 
@@ -288,7 +288,7 @@ export async function getMyProfile(session?: Session | null) {
     throw new Error('Sign in is required.')
   }
 
-  const response = await fetch(getApiUrl('/me/profile'), {
+  const response = await apiFetch('/me/profile', {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -305,7 +305,7 @@ export async function getCurrentUser(session?: Session | null) {
     throw new Error('Sign in is required.')
   }
 
-  const response = await fetch(getApiUrl('/me'), {
+  const response = await apiFetch('/me', {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -322,7 +322,7 @@ export async function updateCurrentUser(payload: UpdateCurrentUserPayload, sessi
     throw new Error('Sign in is required.')
   }
 
-  const response = await fetch(getApiUrl('/me'), {
+  const response = await apiFetch('/me', {
     method: 'PATCH',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -341,7 +341,7 @@ export async function getOnboardingStatus(session?: Session | null) {
     throw new Error('Sign in is required.')
   }
 
-  const response = await fetch(getApiUrl('/onboarding/status'), {
+  const response = await apiFetch('/onboarding/status', {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -358,7 +358,7 @@ export async function checkUsernameAvailability(username: string, session?: Sess
     throw new Error('Sign in is required.')
   }
 
-  const response = await fetch(getApiUrl(`/profiles/username-availability?username=${encodeURIComponent(username)}`), {
+  const response = await apiFetch(`/profiles/username-availability?username=${encodeURIComponent(username)}`, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -375,7 +375,7 @@ export async function completeOnboarding(payload: OnboardingCompleteRequest, ses
     throw new Error('Sign in is required.')
   }
 
-  const response = await fetch(getApiUrl('/onboarding/complete'), {
+  const response = await apiFetch('/onboarding/complete', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -405,7 +405,7 @@ export async function updateMyProfile(
     throw new Error('Sign in is required.')
   }
 
-  const response = await fetch(getApiUrl('/me/profile'), {
+  const response = await apiFetch('/me/profile', {
     method: 'PATCH',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -425,7 +425,7 @@ export async function searchProfiles(query: string) {
     headers.Authorization = `Bearer ${token}`
   }
 
-  const response = await fetch(getApiUrl(`/profiles/search?q=${encodeURIComponent(query)}`), {
+  const response = await apiFetch(`/profiles/search?q=${encodeURIComponent(query)}`, {
     method: 'GET',
     headers,
   })
@@ -441,7 +441,7 @@ export async function getProfileSuggestions() {
     headers.Authorization = `Bearer ${token}`
   }
 
-  const response = await fetch(getApiUrl('/profiles/suggestions'), {
+  const response = await apiFetch('/profiles/suggestions', {
     method: 'GET',
     headers,
   })
@@ -455,7 +455,7 @@ export async function getPublicProfile(username: string) {
   if (token) {
     headers.Authorization = `Bearer ${token}`
   }
-  const response = await fetch(getApiUrl(`/profiles/${encodeURIComponent(username)}`), {
+  const response = await apiFetch(`/profiles/${encodeURIComponent(username)}`, {
     method: 'GET',
     headers,
   })
@@ -469,7 +469,7 @@ export async function getPublicProfileGalaPlans(username: string) {
   if (token) {
     headers.Authorization = `Bearer ${token}`
   }
-  const response = await fetch(getApiUrl(`/profiles/${encodeURIComponent(username)}/gala-plans`), {
+  const response = await apiFetch(`/profiles/${encodeURIComponent(username)}/gala-plans`, {
     method: 'GET',
     headers,
   })
@@ -497,7 +497,7 @@ export async function getPublicGalaPlan(username: string, slug: string) {
 export async function followProfile(username: string, session?: Session | null) {
   const token = await getAccessToken(session)
   if (!token) throw new Error('Log in to follow this profile.')
-  const response = await fetch(getApiUrl(`/profiles/${encodeURIComponent(username)}/follow`), {
+  const response = await apiFetch(`/profiles/${encodeURIComponent(username)}/follow`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
   })
@@ -507,7 +507,7 @@ export async function followProfile(username: string, session?: Session | null) 
 export async function unfollowProfile(username: string, session?: Session | null) {
   const token = await getAccessToken(session)
   if (!token) throw new Error('Log in to update this follow.')
-  const response = await fetch(getApiUrl(`/profiles/${encodeURIComponent(username)}/follow`), {
+  const response = await apiFetch(`/profiles/${encodeURIComponent(username)}/follow`, {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${token}` },
   })
@@ -518,7 +518,7 @@ export async function getFollowers(username: string) {
   const token = await getAccessToken()
   const headers: Record<string, string> = {}
   if (token) headers.Authorization = `Bearer ${token}`
-  const response = await fetch(getApiUrl(`/profiles/${encodeURIComponent(username)}/followers`), { headers })
+  const response = await apiFetch(`/profiles/${encodeURIComponent(username)}/followers`, { headers })
   return readJsonResponse<{ users: FollowListUser[] }>(response)
 }
 
@@ -526,14 +526,14 @@ export async function getFollowing(username: string) {
   const token = await getAccessToken()
   const headers: Record<string, string> = {}
   if (token) headers.Authorization = `Bearer ${token}`
-  const response = await fetch(getApiUrl(`/profiles/${encodeURIComponent(username)}/following`), { headers })
+  const response = await apiFetch(`/profiles/${encodeURIComponent(username)}/following`, { headers })
   return readJsonResponse<{ users: FollowListUser[] }>(response)
 }
 
 export async function getFollowRequests(session?: Session | null) {
   const token = await getAccessToken(session)
   if (!token) throw new Error('Sign in is required.')
-  const response = await fetch(getApiUrl('/me/follow-requests'), {
+  const response = await apiFetch('/me/follow-requests', {
     headers: { Authorization: `Bearer ${token}` },
   })
   return readJsonResponse<{ requests: FollowRequest[] }>(response)
@@ -542,7 +542,7 @@ export async function getFollowRequests(session?: Session | null) {
 export async function respondToFollowRequest(id: string, action: 'accept' | 'reject', session?: Session | null) {
   const token = await getAccessToken(session)
   if (!token) throw new Error('Sign in is required.')
-  const response = await fetch(getApiUrl(`/follow-requests/${encodeURIComponent(id)}/${action}`), {
+  const response = await apiFetch(`/follow-requests/${encodeURIComponent(id)}/${action}`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
   })

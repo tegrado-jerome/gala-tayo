@@ -42,10 +42,7 @@ type SubmitCommentReportResult = {
   alreadyReported?: boolean
 }
 
-function getApiEndpoint(path: string) {
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
-  return apiBaseUrl ? `${apiBaseUrl}${path}` : `/api${path}`
-}
+import { apiFetch } from './apiClient'
 
 async function readJson<T>(response: Response): Promise<T | null> {
   const text = await response.text()
@@ -63,7 +60,7 @@ async function readJson<T>(response: Response): Promise<T | null> {
 
 async function submitCommentReport(commentId: string, token: string, payload: SubmitCommentReportPayload): Promise<SubmitCommentReportResult> {
   const details = payload.details?.trim() || ''
-  const response = await fetch(getApiEndpoint(`/place-comments/${encodeURIComponent(commentId)}/report`), {
+  const response = await apiFetch(`/place-comments/${encodeURIComponent(commentId)}/report`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -88,7 +85,7 @@ async function submitCommentReport(commentId: string, token: string, payload: Su
 }
 
 async function fetchMyCommentReports(token: string, signal?: AbortSignal) {
-  const response = await fetch(getApiEndpoint('/me/comment-reports'), {
+  const response = await apiFetch('/me/comment-reports', {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -105,7 +102,7 @@ async function fetchMyCommentReports(token: string, signal?: AbortSignal) {
 }
 
 async function moderateCommentReport(reportId: string, token: string, action: ModerateCommentReportAction) {
-  const response = await fetch(getApiEndpoint(`/app-admin/comment-reports/${encodeURIComponent(reportId)}`), {
+  const response = await apiFetch(`/app-admin/comment-reports/${encodeURIComponent(reportId)}`, {
     method: 'PATCH',
     headers: {
       Authorization: `Bearer ${token}`,

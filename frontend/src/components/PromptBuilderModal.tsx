@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AppIcon } from './AppIcon'
 import MinimalBackNav from './MinimalBackNav'
-import type { PromptBuilderFieldId, PromptBuilderState } from '../types/promptBuilder'
+import type { PromptBuilderFieldId, PromptBuilderState } from '../utils/promptBuilder'
 import {
   buildPromptBuilderOutputs,
   createEmptyPromptBuilderState,

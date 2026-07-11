@@ -2,35 +2,71 @@ import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import AppHeader from '../components/AppHeader'
+import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
 import MinimalBackNav from '../components/MinimalBackNav'
 import { AppIcon } from '../components/AppIcon'
 import ProfileAvatar from '../components/ProfileAvatar'
 import { PageContainer, PageShell, CardSurface } from '../components/layout/ResponsiveLayouts'
 import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import { useSystemMessage } from '../context/SystemMessageContext'
+import { useAppUser } from '../context/AppUserContext'
 import { updateAccountPassword } from '../services/authApi'
 import {
-  getDisplayName,
+  getDisplayAvatar,
   getFollowers,
   getFollowing,
   getFollowRequests,
   getMyProfile,
-  getPublicProfile,
   normalizeUsername,
   respondToFollowRequest,
-  type PublicGalaPlanSummary,
   type FollowListUser,
   type FollowRequest,
   type Profile,
   updateMyProfile,
   validateUsername,
 } from '../utils/profileApi'
-import { formatGalaPlanDate, parseGalaPlanDescription } from '../utils/galaPlanDescription'
+import { preloadAvatarImage } from '../utils/avatarImageCache'
+import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
 import { navigateToPath } from '../utils/navigation'
-import { buildPublicGalaPlanShareUrl, shareLink } from '../utils/share'
 
 type ProfilePageProps = {
-  session: Session
+  session: Session | null
+}
+
+const PROFILE_CACHE_PREFIX = 'galatayo:profile-page:'
+const PROFILE_CACHE_TTL_MS = 10 * 60 * 1000
+
+type ProfilePageCache = {
+  profile: Profile
+  followRequests: FollowRequest[]
+  cachedAt: number
+}
+
+function getCacheKey(userId: string) {
+  return `${PROFILE_CACHE_PREFIX}${userId}`
+}
+
+function readCache(userId: string): ProfilePageCache | null {
+  try {
+    const raw = localStorage.getItem(getCacheKey(userId))
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as Partial<ProfilePageCache>
+    if (typeof parsed.cachedAt !== 'number' || Date.now() - parsed.cachedAt > PROFILE_CACHE_TTL_MS) {
+      localStorage.removeItem(getCacheKey(userId))
+      return null
+    }
+    return parsed as ProfilePageCache
+  } catch {
+    return null
+  }
+}
+
+function writeCache(userId: string, cache: ProfilePageCache) {
+  try {
+    localStorage.setItem(getCacheKey(userId), JSON.stringify(cache))
+  } catch {
+    /* ignore */
+  }
 }
 
 const planVisibilityLabel: Record<Profile['default_gala_plan_visibility'], string> = {
@@ -40,21 +76,79 @@ const planVisibilityLabel: Record<Profile['default_gala_plan_visibility'], strin
   unlisted: 'Unlisted',
 }
 
+let memCache: { profile: Profile; followRequests: FollowRequest[] } | null = null
+let memCachedUserId: string | null = null
+
+const guestProfile: Profile = {
+  user_id: 'guest',
+  username: 'guest',
+  avatar_url: null,
+  provider_avatar_url: null,
+  bio: null,
+  is_public: true,
+  show_followers: 'everyone',
+  show_following: 'everyone',
+  default_gala_plan_visibility: 'private',
+  followers_count: 0,
+  following_count: 0,
+  onboarding_completed_at: null,
+  created_at: '',
+  updated_at: '',
+}
+
 function ProfilePage({ session }: ProfilePageProps) {
-  const [profile, setProfile] = useState<Profile | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isRefreshing, setIsRefreshing] = useState(false)
+  const { currentProfile } = useAppUser()
+  const isGuestProfile = !session?.user?.id
+  const cachedAtRender = useMemo(() => {
+    if (memCache && memCachedUserId === session?.user?.id) {
+      return memCache
+    }
+    if (!session?.user?.id) return null
+    const ls = readCache(session.user.id)
+    if (ls) {
+      memCache = { profile: ls.profile, followRequests: ls.followRequests }
+      memCachedUserId = session.user.id
+      return memCache
+    }
+    return null
+  }, [session?.user?.id])
+
+  const [profile, setProfile] = useState<Profile | null>(() => {
+    if (!session?.user?.id) return guestProfile
+    if (cachedAtRender?.profile) return cachedAtRender.profile
+    if (currentProfile) {
+      return {
+        user_id: session?.user?.id ?? '',
+        username: currentProfile.username,
+        avatar_url: currentProfile.avatarUrl,
+        provider_avatar_url: currentProfile.providerAvatarUrl,
+        bio: currentProfile.bio,
+        is_public: currentProfile.isPublic,
+        show_followers: 'everyone',
+        show_following: 'everyone',
+        default_gala_plan_visibility: 'private',
+        followers_count: 0,
+        following_count: 0,
+        onboarding_completed_at: null,
+        created_at: '',
+        updated_at: '',
+      } as Profile
+    }
+    return null
+  })
+  const [isLoading, setIsLoading] = useState(() => Boolean(session?.user?.id && !cachedAtRender))
+  const [, setIsRefreshing] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
-  const [usernameInput, setUsernameInput] = useState('')
-  const [bioInput, setBioInput] = useState('')
-  const [isPublic, setIsPublic] = useState(true)
-  const [defaultPlanVisibility, setDefaultPlanVisibility] = useState<Profile['default_gala_plan_visibility']>('private')
-  const [followRequests, setFollowRequests] = useState<FollowRequest[]>([])
-  const [publicPlans, setPublicPlans] = useState<PublicGalaPlanSummary[]>([])
+  const [usernameInput, setUsernameInput] = useState(() => cachedAtRender?.profile.username ?? '')
+  const [bioInput, setBioInput] = useState(() => cachedAtRender?.profile.bio ?? '')
+  const [isPublic, setIsPublic] = useState(() => cachedAtRender?.profile.is_public ?? true)
+  const [defaultPlanVisibility, setDefaultPlanVisibility] = useState<Profile['default_gala_plan_visibility']>(
+    () => cachedAtRender?.profile.default_gala_plan_visibility ?? 'private',
+  )
+  const [followRequests, setFollowRequests] = useState<FollowRequest[]>(() => cachedAtRender?.followRequests ?? [])
   const [listTitle, setListTitle] = useState('')
   const [listUsers, setListUsers] = useState<FollowListUser[] | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
-  const [plansErrorMessage, setPlansErrorMessage] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [newPassword, setNewPassword] = useState('')
   const [confirmNewPassword, setConfirmNewPassword] = useState('')
@@ -66,19 +160,29 @@ function ProfilePage({ session }: ProfilePageProps) {
   const usernameError = normalizedUsername ? validateUsername(normalizedUsername) : 'Username is required.'
   const bioCharacterCount = bioInput.trim().length
 
-  const loadPublicPlans = async (username: string) => {
-    try {
-      const publicProfileData = await getPublicProfile(username)
-      setPublicPlans(publicProfileData.plans)
-      setPlansErrorMessage('')
-    } catch (error) {
-      setPublicPlans([])
-      setPlansErrorMessage(error instanceof Error ? error.message : 'Failed to load gala plans.')
+  useEffect(() => {
+    if (!isGuestProfile) {
+      return undefined
     }
-  }
+
+    lockBodyScroll()
+
+    return () => {
+      unlockBodyScroll()
+    }
+  }, [isGuestProfile])
 
   useEffect(() => {
+    if (!session?.user?.id) {
+      setProfile(guestProfile)
+      setFollowRequests([])
+      setIsLoading(false)
+      setErrorMessage('')
+      return
+    }
+
     let isMounted = true
+    const controller = new AbortController()
 
     const loadProfile = async () => {
       try {
@@ -88,11 +192,13 @@ function ProfilePage({ session }: ProfilePageProps) {
           setIsLoading(true)
         }
         setErrorMessage('')
-        const data = await getMyProfile(session)
 
-        if (!isMounted) {
-          return
-        }
+        const [data, requestsData] = await Promise.all([
+          getMyProfile(session),
+          getFollowRequests(session).catch(() => ({ requests: [] as FollowRequest[] })),
+        ])
+
+        if (!isMounted) return
 
         if (data.profile) {
           setProfile(data.profile)
@@ -101,18 +207,22 @@ function ProfilePage({ session }: ProfilePageProps) {
           setIsPublic(data.profile.is_public)
           setDefaultPlanVisibility(data.profile.default_gala_plan_visibility ?? 'private')
 
-          if (data.profile.username) {
-            if (isMounted) {
-              await loadPublicPlans(data.profile.username)
-            }
-          } else {
-            setPublicPlans([])
-            setPlansErrorMessage('')
+          const avatarUrl = getDisplayAvatar(data.profile)
+          if (avatarUrl) {
+            void preloadAvatarImage(avatarUrl)
           }
         }
-        const requestsData = await getFollowRequests(session).catch(() => ({ requests: [] }))
-        if (isMounted) {
-          setFollowRequests(requestsData.requests)
+
+        setFollowRequests(requestsData.requests)
+
+        if (data.profile) {
+          memCache = { profile: data.profile, followRequests: requestsData.requests }
+          memCachedUserId = session.user.id
+          writeCache(session.user.id, {
+            profile: data.profile,
+            followRequests: requestsData.requests,
+            cachedAt: Date.now(),
+          })
         }
       } catch (error) {
         if (isMounted) {
@@ -130,6 +240,7 @@ function ProfilePage({ session }: ProfilePageProps) {
 
     return () => {
       isMounted = false
+      controller.abort()
     }
   }, [session?.user?.id])
 
@@ -160,11 +271,21 @@ function ProfilePage({ session }: ProfilePageProps) {
         setBioInput(data.profile.bio ?? '')
         setIsPublic(data.profile.is_public)
         setDefaultPlanVisibility(data.profile.default_gala_plan_visibility ?? 'private')
-        if (data.profile.username) {
-          await loadPublicPlans(data.profile.username)
-        } else {
-          setPublicPlans([])
-          setPlansErrorMessage('')
+
+        const avatarUrl = getDisplayAvatar(data.profile)
+        if (avatarUrl) {
+          void preloadAvatarImage(avatarUrl)
+        }
+
+        if (memCache) {
+          memCache.profile = data.profile
+        }
+        if (session?.user?.id) {
+          writeCache(session.user.id, {
+            profile: data.profile,
+            followRequests,
+            cachedAt: Date.now(),
+          })
         }
       }
       setIsEditing(false)
@@ -236,7 +357,9 @@ function ProfilePage({ session }: ProfilePageProps) {
   }
 
   return (
-    <PageShell>
+    <>
+      <div className={isGuestProfile ? 'pointer-events-none blur-[5px] saturate-[0.82]' : undefined}>
+        <PageShell>
       <AppHeader />
       <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
         <PageContainer size="wide">
@@ -246,12 +369,12 @@ function ProfilePage({ session }: ProfilePageProps) {
 
         {isLoading ? (
           <UnifiedLoadingState
+            variant="section"
             title="Preparing profile..."
             message="We are loading your profile details and follow activity."
           />
         ) : profile ? (
           <>
-            {isRefreshing ? <p className="mb-4 text-sm text-[var(--muted)]">Refreshing your profile in the background...</p> : null}
             <CardSurface pad="loose">
               <div className="flex flex-col gap-5 border-b border-[var(--line)] pb-5 sm:flex-row sm:items-end sm:justify-between">
                   <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end">
@@ -279,11 +402,23 @@ function ProfilePage({ session }: ProfilePageProps) {
                     <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
-                        onClick={() => navigateToPath(`/u/${encodeURIComponent(profile.username || '')}`)}
+                        onClick={() => navigateToPath(isGuestProfile ? '/login' : '/find-friends')}
+                        className="app-button app-button-secondary app-button-md"
+                      >
+                        <AppIcon name="users" className="h-4 w-4" />
+                        {isGuestProfile ? 'Log in' : 'Find friends'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          navigateToPath(
+                            isGuestProfile ? '/signup' : `/u/${encodeURIComponent(profile.username || '')}`,
+                          )
+                        }
                         className="app-button app-button-secondary app-button-md"
                       >
                         <AppIcon name="share" className="h-4 w-4" />
-                        View public
+                        {isGuestProfile ? 'Create account' : 'View public'}
                       </button>
                     </div>
                   ) : null}
@@ -309,7 +444,7 @@ function ProfilePage({ session }: ProfilePageProps) {
               </div>
             </CardSurface>
 
-            {isEditing ? (
+            {isEditing && !isGuestProfile ? (
               <form className="gala-card mt-8 overflow-hidden" onSubmit={handleSave}>
                 <section className="grid gap-4 px-5 py-6 sm:px-6">
                   <div>
@@ -474,109 +609,6 @@ function ProfilePage({ session }: ProfilePageProps) {
             ) : null}
 
             <section className="mt-8">
-              <div className="border-b border-[var(--line)] px-1 pt-1">
-                <div className="flex items-end justify-between gap-4">
-                  <div>
-                    <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-500">Plans</p>
-                    <h2 className="mt-1 text-xl font-black tracking-[-0.03em] text-slate-950">Gala Plans</h2>
-                    <p className="mt-1 text-sm font-semibold text-slate-500">Shared itineraries in a cleaner feed view.</p>
-                  </div>
-                  <span className="hidden rounded-full bg-slate-100 px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-slate-600 sm:inline-flex">
-                    {publicPlans.length} visible
-                  </span>
-                </div>
-                <div className="mt-5 flex items-center gap-6 text-sm font-black text-slate-900">
-                  <span className="relative inline-flex pb-3">
-                    Plans
-                    <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-slate-950" />
-                  </span>
-                </div>
-              </div>
-
-              {plansErrorMessage ? (
-                <p className="px-1 py-6 text-sm font-bold text-red-700">{plansErrorMessage}</p>
-              ) : publicPlans.length === 0 ? (
-                <div className="px-1 py-10 text-center">
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500">
-                    <AppIcon name="galaPlan" className="h-5 w-5" />
-                  </div>
-                  <p className="mt-4 text-base font-black text-slate-950">No visible gala plans yet</p>
-                  <p className="mt-2 text-sm font-semibold text-slate-500">Public plans from your account will show up here like a simple social feed.</p>
-                </div>
-              ) : (
-                <div>
-                  {publicPlans.map((plan) => {
-                    const parsedDescription = parseGalaPlanDescription(plan.description)
-
-                    return (
-                      <article key={plan.id} className="border-b border-[var(--line)] px-1 py-5 last:border-b-0">
-                        <div className="flex items-start gap-3">
-                          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600">
-                            <AppIcon name="galaPlan" className="h-5 w-5" />
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-black uppercase tracking-[0.12em] text-slate-500">
-                              <span>{profile.username ? getDisplayName({ username: profile.username }) : 'GalaTayo user'}</span>
-                              <span className="text-slate-300">|</span>
-                              <span>{formatGalaPlanDate(plan.description)}</span>
-                              <span className="text-slate-300">|</span>
-                              <span>{plan.places_count} {plan.places_count === 1 ? 'place' : 'places'}</span>
-                            </div>
-                            <h3 className="mt-2 text-lg font-black leading-tight text-slate-950">{plan.title}</h3>
-                            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
-                              {parsedDescription.description || 'A GalaTayo plan.'}
-                            </p>
-                            {plan.preview_places.length > 0 ? (
-                              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm font-semibold text-slate-500">
-                                {plan.preview_places.map((place) => (
-                                  <span key={`${plan.id}-${place.id}`} className="inline-flex items-center gap-1.5">
-                                    <AppIcon name="place" className="h-3.5 w-3.5 text-slate-400" />
-                                    {place.name}
-                                  </span>
-                                ))}
-                              </div>
-                            ) : null}
-                          </div>
-                        </div>
-
-                        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4">
-                          <button
-                            type="button"
-                            onClick={() => profile.username && navigateToPath(`/u/${encodeURIComponent(profile.username)}/gala/${encodeURIComponent(plan.slug)}`)}
-                            className="inline-flex h-10 items-center gap-2 rounded-full px-3 text-sm font-black text-slate-700 transition hover:bg-slate-100"
-                          >
-                            <AppIcon name="arrowRight" className="h-4 w-4" />
-                            View plan
-                          </button>
-                          <span className="inline-flex h-10 items-center gap-2 rounded-full px-3 text-sm font-black text-slate-500">
-                            <AppIcon name="favorites" className="h-4 w-4" />
-                            {plan.hearts_count} hearts
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              profile.username
-                                ? void shareLink({
-                                  url: buildPublicGalaPlanShareUrl(profile.username, plan.slug),
-                                  title: plan.title,
-                                  text: plan.title,
-                                })
-                                : undefined
-                            }
-                            className="inline-flex h-10 items-center gap-2 rounded-full px-3 text-sm font-black text-slate-700 transition hover:bg-slate-100"
-                          >
-                            <AppIcon name="share" className="h-4 w-4" />
-                            Share
-                          </button>
-                        </div>
-                      </article>
-                    )
-                  })}
-                </div>
-              )}
-            </section>
-
-            <section className="mt-8">
               <div className="flex flex-col gap-3 border-b border-[var(--line)] pb-5 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                   <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Social</p>
@@ -658,7 +690,17 @@ function ProfilePage({ session }: ProfilePageProps) {
         ) : null}
         </PageContainer>
       </main>
-    </PageShell>
+        </PageShell>
+      </div>
+
+      {isGuestProfile ? (
+        <div className="fixed inset-0 z-[7000] flex items-center justify-center overflow-hidden bg-slate-950/20 px-4 py-6">
+          <div className="w-full max-w-[420px]">
+            <GuestAuthPrompt variant="profile" mode="inline-card" />
+          </div>
+        </div>
+      ) : null}
+    </>
   )
 }
 

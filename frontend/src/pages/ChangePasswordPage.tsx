@@ -50,7 +50,7 @@ function ChangePasswordPage() {
       <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
         <PageContainer size="narrow">
           <Stack gap="default">
-            <MinimalBackNav to="/settings" label="Back to settings" />
+            <MinimalBackNav to="/account-settings" label="Back to account settings" />
             <CardSurface pad="loose">
               <div className="border-b border-slate-100 pb-6">
                 <div className="flex items-start gap-4">

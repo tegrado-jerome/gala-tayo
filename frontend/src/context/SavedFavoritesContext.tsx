@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { getSupabaseAccessToken, shouldPropagateSessionChange, supabase } from '../supabase'
+import { getApiUrl } from '../utils/apiClient'
 
 type FavoritePlace = {
   id: string
@@ -44,6 +45,7 @@ type SavedFavoritesContextValue = {
   isPlaceSaved: (placeSlugOrId?: string | null) => boolean
   saveFavorite: (placeId: string, placeSlug?: string | null) => Promise<SaveFavoriteResult>
   removeFavorite: (placeId: string, placeSlug?: string | null) => Promise<string>
+  clearAllFavorites: () => Promise<string>
 }
 
 type FavoritesResponse = {
@@ -56,11 +58,66 @@ type FavoritesResponse = {
   message?: string
 }
 
-const SavedFavoritesContext = createContext<SavedFavoritesContextValue | null>(null)
+type FavoritesResumeCache = {
+  favorites: FavoriteRow[]
+  cachedAt: number
+}
 
-function getApiEndpoint(path: string) {
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
-  return apiBaseUrl ? `${apiBaseUrl}${path}` : `/api${path}`
+const SavedFavoritesContext = createContext<SavedFavoritesContextValue | null>(null)
+const FAVORITES_RESUME_CACHE_PREFIX = 'galatayo:favorites:'
+const FAVORITES_RESUME_CACHE_TTL_MS = 30 * 60 * 1000
+
+
+
+function getFavoritesResumeCacheKey(userId: string) {
+  return `${FAVORITES_RESUME_CACHE_PREFIX}${userId}`
+}
+
+function readFavoritesResumeCache(userId: string): FavoriteRow[] | null {
+  try {
+    const rawCache = window.localStorage.getItem(getFavoritesResumeCacheKey(userId))
+
+    if (!rawCache) {
+      return null
+    }
+
+    const parsedCache = JSON.parse(rawCache) as Partial<FavoritesResumeCache>
+    if (
+      typeof parsedCache.cachedAt !== 'number' ||
+      !Number.isFinite(parsedCache.cachedAt) ||
+      Date.now() - parsedCache.cachedAt > FAVORITES_RESUME_CACHE_TTL_MS ||
+      !Array.isArray(parsedCache.favorites)
+    ) {
+      window.localStorage.removeItem(getFavoritesResumeCacheKey(userId))
+      return null
+    }
+
+    return dedupeFavoritesBySlug(parsedCache.favorites)
+  } catch {
+    return null
+  }
+}
+
+function writeFavoritesResumeCache(userId: string, favorites: FavoriteRow[]) {
+  try {
+    window.localStorage.setItem(
+      getFavoritesResumeCacheKey(userId),
+      JSON.stringify({
+        favorites,
+        cachedAt: Date.now(),
+      } satisfies FavoritesResumeCache)
+    )
+  } catch {
+    // localStorage may be unavailable, ignore
+  }
+}
+
+function clearFavoritesResumeCache(userId: string) {
+  try {
+    window.localStorage.removeItem(getFavoritesResumeCacheKey(userId))
+  } catch {
+    // localStorage may be unavailable, ignore
+  }
 }
 
 function normalizeKnownPlaceKey(placeSlugOrId: string) {
@@ -141,6 +198,13 @@ function SavedFavoritesProvider({ children }: { children: ReactNode }) {
       return undefined
     }
 
+    const cachedFavorites = readFavoritesResumeCache(session.user.id)
+    if (cachedFavorites) {
+      setFavorites(cachedFavorites)
+      setSavedPlaceKeys(getSavedPlaceKeys(cachedFavorites))
+      setIsFavoritesLoading(false)
+    }
+
     const controller = new AbortController()
 
     const loadFavorites = async () => {
@@ -154,7 +218,7 @@ function SavedFavoritesProvider({ children }: { children: ReactNode }) {
         setIsFavoritesLoading(favorites.length === 0)
         setFavoritesError('')
 
-        const response = await fetch(getApiEndpoint('/favorites'), {
+        const response = await fetch(getApiUrl('/favorites'), {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -171,6 +235,7 @@ function SavedFavoritesProvider({ children }: { children: ReactNode }) {
         const nextFavorites = dedupeFavoritesBySlug(data.favorites || [])
         setFavorites(nextFavorites)
         setSavedPlaceKeys(getSavedPlaceKeys(nextFavorites))
+        writeFavoritesResumeCache(session.user.id, nextFavorites)
       } catch (error) {
         if ((error as Error).name !== 'AbortError') {
           const message = error instanceof Error ? error.message : 'Failed to load favorites.'
@@ -186,6 +251,14 @@ function SavedFavoritesProvider({ children }: { children: ReactNode }) {
 
     return () => controller.abort()
   }, [session?.user?.id])
+
+  useEffect(() => {
+    if (!session?.user?.id) {
+      return
+    }
+
+    writeFavoritesResumeCache(session.user.id, favorites)
+  }, [favorites, session?.user?.id])
 
   const value = useMemo<SavedFavoritesContextValue>(() => {
     const isPlaceSaved = (placeSlugOrId?: string | null) => {
@@ -216,7 +289,7 @@ function SavedFavoritesProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      const response = await fetch(getApiEndpoint('/favorites'), {
+      const response = await fetch(getApiUrl('/favorites'), {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -253,13 +326,16 @@ function SavedFavoritesProvider({ children }: { children: ReactNode }) {
         const nextFavorites = dedupeFavoritesBySlug(data.favorites)
         setFavorites(nextFavorites)
         setSavedPlaceKeys(getSavedPlaceKeys(nextFavorites))
+        if (session?.user?.id) {
+          writeFavoritesResumeCache(session.user.id, nextFavorites)
+        }
       } else if (data.place) {
         setFavorites((currentFavorites) => {
           if (currentFavorites.some((favorite) => favorite.place?.id && normalizeKnownPlaceKey(favorite.place.id) === normalizedPlaceId)) {
             return currentFavorites
           }
 
-          return dedupeFavoritesBySlug([
+          const nextFavorites = dedupeFavoritesBySlug([
             {
               id: data.favorite?.id || `saved-${normalizedPlaceId}`,
               created_at: data.favorite?.created_at || new Date().toISOString(),
@@ -267,6 +343,12 @@ function SavedFavoritesProvider({ children }: { children: ReactNode }) {
             },
             ...currentFavorites,
           ])
+
+          if (session?.user?.id) {
+            writeFavoritesResumeCache(session.user.id, nextFavorites)
+          }
+
+          return nextFavorites
         })
       }
 
@@ -288,7 +370,7 @@ function SavedFavoritesProvider({ children }: { children: ReactNode }) {
 
       const routeIdentifier = normalizedPlaceSlug || normalizedPlaceId
 
-      const response = await fetch(getApiEndpoint(`/favorites/${encodeURIComponent(routeIdentifier)}`), {
+      const response = await fetch(getApiUrl(`/favorites/${encodeURIComponent(routeIdentifier)}`), {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -331,9 +413,41 @@ function SavedFavoritesProvider({ children }: { children: ReactNode }) {
         const nextFavorites = dedupeFavoritesBySlug(data.favorites)
         setFavorites(nextFavorites)
         setSavedPlaceKeys(getSavedPlaceKeys(nextFavorites))
+        if (session?.user?.id) {
+          writeFavoritesResumeCache(session.user.id, nextFavorites)
+        }
       }
 
       return data.message || 'Favorite removed'
+    }
+
+    const clearAllFavorites = async () => {
+      const token = await getSupabaseAccessToken(session)
+
+      if (!token) {
+        throw new Error('Sign in to manage favorites.')
+      }
+
+      const response = await fetch(getApiUrl('/favorites/all'), {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      const data = (await response.json()) as { message?: string }
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to clear favorites.')
+      }
+
+      setFavorites([])
+      setSavedPlaceKeys(new Set())
+      if (session?.user?.id) {
+        clearFavoritesResumeCache(session.user.id)
+      }
+
+      return data.message || 'All favorites cleared.'
     }
 
     return {
@@ -346,6 +460,7 @@ function SavedFavoritesProvider({ children }: { children: ReactNode }) {
       isPlaceSaved,
       saveFavorite,
       removeFavorite,
+      clearAllFavorites,
     }
   }, [favorites, favoritesError, isFavoritesLoading, isSessionLoading, savedPlaceKeys, session])
 

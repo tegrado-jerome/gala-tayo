@@ -50,8 +50,8 @@ const toneTextColors: Record<AskAiNotificationTone, string> = {
 
 function isOnFeaturePage(feature: string): boolean {
   const pathname = window.location.pathname.replace(/\/$/, '') || '/'
-  if (feature === 'chatbot') return pathname === '/ask-ai/chatbot' || pathname === '/ask-ai/text'
-  if (feature === 'maps') return pathname === '/ask-ai/maps' || pathname === '/ask-ai/map'
+  if (feature === 'chatbot') return pathname === '/ask-ai/chatbot'
+  if (feature === 'maps') return pathname === '/ask-ai/maps'
   return false
 }
 

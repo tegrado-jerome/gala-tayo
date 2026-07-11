@@ -142,9 +142,7 @@ function normalizeText(value: string | undefined | null): string {
 
 export function sanitizeChatbotAnswer(text: string): string {
   return text
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/?p>/gi, "\n")
-    .replace(/<\/?div>/gi, "\n")
+    .replace(/<[^>]*>/g, "")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
@@ -211,10 +209,6 @@ async function callGroq(
   const startedAt = Date.now();
   const apiKey = await resolveGroqApiKey();
   const abortSignal = AbortSignal.timeout(GROQ_TIMEOUT_MS);
-
-  console.log(
-    `[AskAI Chatbot][requestId=${requestId}] provider=groq model=${model} request-start`
-  );
 
   let response: Response;
 
@@ -319,10 +313,6 @@ async function callGroq(
       "Groq returned empty response."
     );
   }
-
-  console.log(
-    `[AskAI Chatbot][requestId=${requestId}] provider=groq model=${model} request-complete latencyMs=${latencyMs} answerLength=${answer.length} finishReason=${finishReason ?? "unknown"}`
-  );
 
   return {
     answer,

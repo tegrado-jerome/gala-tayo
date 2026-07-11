@@ -5,11 +5,17 @@ import {
   InvocationContext,
 } from "@azure/functions";
 import { findPlaceDetailByIdOrSlug } from "../data/placeDetails";
+import { checkEndpointRateLimit } from "../utils/redisRateLimit";
 
 export async function placeDetail(
   request: HttpRequest,
   context: InvocationContext
 ): Promise<HttpResponseInit> {
+  const rateCheck = await checkEndpointRateLimit(request, "place-detail", 60, 60);
+  if (!rateCheck.allowed && rateCheck.response) {
+    return rateCheck.response;
+  }
+
   const slug = request.params.slug;
 
   if (!slug || slug.trim() === "") {

@@ -5,11 +5,13 @@ import AppHeader from '../components/AppHeader'
 import Breadcrumb from '../components/Breadcrumb'
 import CompactPagination from '../components/CompactPagination'
 import PlaceCard, { type PlaceCardData } from '../components/PlaceCard'
+import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import SeoHead from '../components/SeoHead'
 import { PageContainer, PageShell, ResponsiveGrid } from '../components/layout/ResponsiveLayouts'
 import { getPlaceCategoryLabel } from '../data/placeCategories'
-import { navigateToPath } from '../utils/navigation'
-import { getCanonicalPlacePath, getSiteOrigin, resolveAreaMeta } from '../utils/seo'
+import { navigateToCanonicalPlace } from '../utils/navigation'
+import { getSiteOrigin } from '../utils/seo'
+import { getApiUrl } from '../utils/apiClient'
 import { mapSeoPlaceToCard, type SeoPlaceSummary } from '../utils/seoApi'
 
 type CategoryPlacesPageProps = {
@@ -28,8 +30,7 @@ type CategoryPlacesResponse = {
 }
 
 function getSearchApiUrl() {
-  const apiBaseUrl = String(import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
-  return apiBaseUrl ? `${apiBaseUrl}/search` : '/api/search'
+  return getApiUrl('/search')
 }
 
 function sortPlacesAlphabetically(places: SeoPlaceSummary[]) {
@@ -245,7 +246,7 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
           </p>
         </section>
 
-        {isLoading ? <p className="mt-6 text-sm text-slate-500">Loading category places...</p> : null}
+        {isLoading ? <UnifiedLoadingState title={`Preparing ${categoryLabel.toLowerCase()} places...`} message={`We are loading ${categoryLabel.toLowerCase()} places right now.`} /> : null}
         {errorMessage ? (
           <section className="mt-6 rounded-[24px] border border-[#E5E7EB] bg-white px-5 py-6 shadow-[0_6px_20px_rgba(17,24,39,0.03)]">
             <h2 className="text-base font-semibold text-[var(--text-main)]">We couldn't load {categoryLabel.toLowerCase()} places right now.</h2>
@@ -276,12 +277,23 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
                 <ResponsiveGrid desktopColumns={2} className="mt-4 gap-4">
                   {places.map((rawPlace) => {
                     const place = mapSeoPlaceToCard(rawPlace) as PlaceCardData
-                    const resolvedAreaSlug = rawPlace.areaSlug || resolveAreaMeta(rawPlace).slug
-                    const canonicalPath = getCanonicalPlacePath({ areaSlug: resolvedAreaSlug, placeSlug: rawPlace.slug })
-
                     return (
                       <div key={rawPlace.id}>
-                        <PlaceCard place={place} searchResultCard onOpen={() => navigateToPath(canonicalPath)} onSelect={() => undefined} />
+                        <PlaceCard
+                          place={place}
+                          searchResultCard
+                          onOpen={() => navigateToCanonicalPlace({
+                            slug: rawPlace.slug,
+                            city: rawPlace.city,
+                            area: rawPlace.area,
+                            localArea: rawPlace.area ?? null,
+                          }, {
+                            source: 'category',
+                            returnTo: `${window.location.pathname}${window.location.search}`,
+                            returnLabel: categoryLabel,
+                          })}
+                          onSelect={() => undefined}
+                        />
                       </div>
                     )
                   })}

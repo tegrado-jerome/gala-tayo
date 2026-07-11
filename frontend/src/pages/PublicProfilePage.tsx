@@ -17,14 +17,10 @@ import {
   getPublicProfile,
   unfollowProfile,
   type FollowListUser,
-  type PublicGalaPlanSummary,
   type PublicProfile,
   type RelationshipState,
 } from '../utils/profileApi'
 import { navigateToPath } from '../utils/navigation'
-import { formatGalaPlanDate, parseGalaPlanDescription } from '../utils/galaPlanDescription'
-import { heartGalaPlan, unheartGalaPlan } from '../utils/galaPlanHeartsApi'
-import { buildPublicGalaPlanShareUrl, shareLink } from '../utils/share'
 import { getMyUserReports } from '../utils/userReportsApi'
 
 type PublicProfilePageProps = {
@@ -33,9 +29,7 @@ type PublicProfilePageProps = {
 
 function PublicProfilePage({ username }: PublicProfilePageProps) {
   const [profile, setProfile] = useState<PublicProfile | null>(null)
-  const [plans, setPlans] = useState<PublicGalaPlanSummary[]>([])
   const [relationshipState, setRelationshipState] = useState<RelationshipState>('not_following')
-  const [isLocked, setIsLocked] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
@@ -63,9 +57,7 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
 
         if (!isMounted) return
         setProfile(data.profile)
-        setPlans(data.plans)
         setRelationshipState(data.relationship_state)
-        setIsLocked(data.locked)
       } catch (error) {
         if (!isMounted) return
         if ((error as Error & { status?: number }).status === 404) {
@@ -204,27 +196,6 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
     }
   }
 
-  const toggleHeart = async (plan: PublicGalaPlanSummary) => {
-    const previous = plan.viewer_has_hearted
-    setPlans((currentPlans) => currentPlans.map((currentPlan) => currentPlan.id === plan.id ? {
-      ...currentPlan,
-      viewer_has_hearted: !previous,
-      hearts_count: Math.max(0, currentPlan.hearts_count + (previous ? -1 : 1)),
-    } : currentPlan))
-
-    try {
-      const data = previous ? await unheartGalaPlan(plan.id) : await heartGalaPlan(plan.id)
-      setPlans((currentPlans) => currentPlans.map((currentPlan) => currentPlan.id === plan.id ? {
-        ...currentPlan,
-        viewer_has_hearted: data.viewer_has_hearted,
-        hearts_count: data.hearts_count,
-      } : currentPlan))
-    } catch (error) {
-      setPlans((currentPlans) => currentPlans.map((currentPlan) => currentPlan.id === plan.id ? plan : currentPlan))
-      setNotice(error instanceof Error ? error.message : 'Log in to heart this gala plan.')
-    }
-  }
-
   const handleOpenReportUser = () => {
     setIsActionsOpen(false)
 
@@ -252,6 +223,7 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
 
           {isLoading ? (
             <UnifiedLoadingState
+              variant="page"
               title="Preparing profile..."
               message="We are loading this public profile now."
             />
@@ -275,7 +247,7 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
                           <AppIcon name={profile.is_public ? 'eye' : 'lock'} className="h-3.5 w-3.5" />
                           {relationshipState === 'self' ? 'Your public view' : profile.is_public ? 'Public profile' : 'Private profile'}
                         </span>
-                        <span>{relationshipState === 'self' ? 'Owner mode' : relationshipState === 'following' ? 'Connected' : relationshipState === 'pending' ? 'Pending request' : 'Visitor mode'}</span>
+                        <span className="inline-flex items-center gap-1.5"><span className="inline-block h-1.5 w-1.5 rounded-full bg-current" />{relationshipState === 'self' ? 'You' : relationshipState === 'following' ? 'Connected' : relationshipState === 'pending' ? 'Pending request' : 'Visitor mode'}</span>
                       </div>
                       <h1 className="mt-3 truncate text-3xl font-black tracking-[-0.04em] text-slate-950 sm:text-4xl">{getDisplayName(profile)}</h1>
                       <p className="mt-1 text-sm font-black text-slate-500">@{profile.username}</p>
@@ -373,138 +345,11 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
                   <span className="text-lg font-black text-slate-950">{profile.following_count}</span>
                   <span>Following</span>
                 </button>
-                {isLocked ? (
-                  <span className="inline-flex items-center gap-2 font-semibold text-slate-600">
-                    <AppIcon name="lock" className="h-4 w-4 text-slate-400" />
-                    Locked for followers
-                  </span>
-                ) : null}
-                <span className="inline-flex items-center gap-2 font-semibold text-slate-600">
-                  <AppIcon name="galaPlan" className="h-4 w-4 text-slate-400" />
-                  {isLocked ? 0 : plans.length} visible plans
-                </span>
               </div>
 
               {notice ? <p className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm font-bold text-amber-800">{notice}</p> : null}
 
             </CardSurface>
-
-            <section>
-              <div className="border-b border-[var(--line)] px-1 pt-1">
-                <div className="flex items-end justify-between gap-4">
-                  <div>
-                    <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-500">Plans</p>
-                    <h2 className="mt-1 text-xl font-black tracking-[-0.03em] text-slate-950">Gala Plans</h2>
-                    <p className="mt-1 text-sm font-semibold text-slate-500">Shared itineraries in a cleaner feed view.</p>
-                  </div>
-                  <span className="hidden rounded-full bg-slate-100 px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-slate-600 sm:inline-flex">
-                    {isLocked ? 0 : plans.length} visible
-                  </span>
-                </div>
-                <div className="mt-5 flex items-center gap-6 text-sm font-black text-slate-900">
-                  <span className="relative inline-flex pb-3">
-                    Plans
-                    <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-slate-950" />
-                  </span>
-                </div>
-              </div>
-              {isLocked ? (
-                <div className="px-1 py-10 text-center">
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500">
-                    <AppIcon name="lock" className="h-5 w-5" />
-                  </div>
-                  <p className="mt-4 text-base font-black text-slate-950">Plans are private</p>
-                  <p className="mt-2 text-sm font-semibold text-slate-500">Follow this profile to request access to shared gala plans.</p>
-                </div>
-              ) : plans.length === 0 ? (
-                <div className="px-1 py-10 text-center">
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500">
-                    <AppIcon name="galaPlan" className="h-5 w-5" />
-                  </div>
-                  <p className="mt-4 text-base font-black text-slate-950">No visible gala plans yet</p>
-                  <p className="mt-2 text-sm font-semibold text-slate-500">When this user shares plans publicly, they’ll show up here like a simple social feed.</p>
-                </div>
-              ) : (
-                <div>
-                  {plans.map((plan) => {
-                    const parsedDescription = parseGalaPlanDescription(plan.description)
-
-                    return (
-                      <article key={plan.id} className="border-b border-[var(--line)] px-1 py-5 last:border-b-0">
-                        <div className="flex items-start gap-3">
-                          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-100 text-slate-600">
-                            <AppIcon name="galaPlan" className="h-5 w-5" />
-                          </span>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-black uppercase tracking-[0.12em] text-slate-500">
-                              <span>{getDisplayName(profile)}</span>
-                              <span className="text-slate-300">•</span>
-                              <span>{formatGalaPlanDate(plan.description)}</span>
-                              <span className="text-slate-300">•</span>
-                              <span>{plan.places_count} {plan.places_count === 1 ? 'place' : 'places'}</span>
-                            </div>
-                            <h3 className="mt-2 text-lg font-black leading-tight text-slate-950">{plan.title}</h3>
-                            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-600">
-                              {parsedDescription.description || 'A GalaTayo plan.'}
-                            </p>
-                            {plan.preview_places.length > 0 ? (
-                              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm font-semibold text-slate-500">
-                                {plan.preview_places.map((place) => (
-                                  <span key={`${plan.id}-${place.id}`} className="inline-flex items-center gap-1.5">
-                                    <AppIcon name="place" className="h-3.5 w-3.5 text-slate-400" />
-                                    {place.name}
-                                  </span>
-                                ))}
-                              </div>
-                            ) : null}
-                          </div>
-                        </div>
-
-                        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4">
-                          <button type="button" onClick={() => navigateToPath(`/u/${encodeURIComponent(profile.username)}/gala/${encodeURIComponent(plan.slug)}`)} className="inline-flex h-10 items-center gap-2 rounded-full px-3 text-sm font-black text-slate-700 transition hover:bg-slate-100">
-                            <AppIcon name="arrowRight" className="h-4 w-4" />
-                            View plan
-                          </button>
-                          {relationshipState !== 'self' ? (
-                            <button
-                              type="button"
-                              onClick={() => void toggleHeart(plan)}
-                              className={`inline-flex h-10 items-center gap-2 rounded-full px-3 text-sm font-black transition ${
-                                plan.viewer_has_hearted
-                                  ? 'bg-rose-50 text-rose-700 hover:bg-rose-100'
-                                  : 'text-slate-700 hover:bg-slate-100'
-                              }`}
-                            >
-                              <AppIcon name="favorites" className={`h-4 w-4 ${plan.viewer_has_hearted ? 'fill-current text-rose-600' : 'text-slate-500'}`} />
-                              {plan.hearts_count}
-                            </button>
-                          ) : (
-                            <span className="inline-flex h-10 items-center gap-2 rounded-full px-3 text-sm font-black text-slate-500">
-                              <AppIcon name="favorites" className="h-4 w-4" />
-                              {plan.hearts_count} hearts
-                            </span>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() =>
-                              void shareLink({
-                                url: buildPublicGalaPlanShareUrl(profile.username, plan.slug),
-                                title: plan.title,
-                                text: plan.title,
-                              })
-                            }
-                            className="inline-flex h-10 items-center gap-2 rounded-full px-3 text-sm font-black text-slate-700 transition hover:bg-slate-100"
-                          >
-                            <AppIcon name="share" className="h-4 w-4" />
-                            Share
-                          </button>
-                        </div>
-                      </article>
-                    )
-                  }                  )}
-                </div>
-              )}
-            </section>
             </Stack>
         ) : null}
 

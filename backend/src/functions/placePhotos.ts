@@ -6,11 +6,17 @@ import {
 } from "@azure/functions";
 import { findPlaceDetailByIdOrSlug } from "../data/placeDetails";
 import { getApprovedPlaceImages } from "../services/placeImagesService";
+import { checkEndpointRateLimit } from "../utils/redisRateLimit";
 
 export async function placePhotos(
   request: HttpRequest,
   context: InvocationContext
 ): Promise<HttpResponseInit> {
+  const rateCheck = await checkEndpointRateLimit(request, "place-photos", 30, 60);
+  if (!rateCheck.allowed && rateCheck.response) {
+    return rateCheck.response;
+  }
+
   const placeId = request.params.id;
 
   if (!placeId || placeId.trim() === "") {

@@ -79,10 +79,7 @@ type UpdateAdminUserReportPayload = {
   moderatorNote?: string | null
 }
 
-function getApiEndpoint(path: string) {
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
-  return apiBaseUrl ? `${apiBaseUrl}${path}` : `/api${path}`
-}
+import { apiFetch } from './apiClient'
 
 async function readJson<T>(response: Response): Promise<T | null> {
   const text = await response.text()
@@ -100,7 +97,7 @@ async function readJson<T>(response: Response): Promise<T | null> {
 
 async function reportUser(userId: string, token: string, payload: SubmitUserReportPayload) {
   const details = payload.details?.trim() || ''
-  const response = await fetch(getApiEndpoint(`/users/${encodeURIComponent(userId)}/report`), {
+  const response = await apiFetch(`/users/${encodeURIComponent(userId)}/report`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -133,7 +130,7 @@ async function reportUser(userId: string, token: string, payload: SubmitUserRepo
 }
 
 async function getMyUserReports(token: string, signal?: AbortSignal) {
-  const response = await fetch(getApiEndpoint('/me/user-reports'), {
+  const response = await apiFetch('/me/user-reports', {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -155,7 +152,7 @@ async function getAdminUserReports(token: string, status: UserReportStatus | 'al
     query.set('status', status)
   }
 
-  const response = await fetch(getApiEndpoint(`/app-admin/user-reports?${query.toString()}`), {
+  const response = await apiFetch(`/app-admin/user-reports?${query.toString()}`, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -172,7 +169,7 @@ async function getAdminUserReports(token: string, status: UserReportStatus | 'al
 }
 
 async function updateAdminUserReport(reportId: string, token: string, payload: UpdateAdminUserReportPayload) {
-  const response = await fetch(getApiEndpoint(`/app-admin/user-reports/${encodeURIComponent(reportId)}`), {
+  const response = await apiFetch(`/app-admin/user-reports/${encodeURIComponent(reportId)}`, {
     method: 'PATCH',
     headers: {
       Authorization: `Bearer ${token}`,

@@ -1,13 +1,14 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { AppIcon, type AppIconName } from './AppIcon'
 import { CenteredModal } from './layout/Primitives'
-import { buildAuthPath } from '../utils/authRedirect'
+import { buildAuthPath } from '../services/authApi'
 import { navigateToPath } from '../utils/navigation'
 import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
 
 export type GuestAuthVariant =
   | 'ask-ai'
+  | 'profile'
   | 'favorite'
   | 'add-plan'
   | 'report-place'
@@ -49,6 +50,19 @@ const variantConfigs: Record<GuestAuthVariant, VariantConfig> = {
       'Find friends and personalize picks',
     ],
     benefitIcons: ['askAi', 'galaPlan', 'favorites', 'users'],
+  },
+  profile: {
+    icon: 'profile',
+    label: 'PROFILE',
+    title: 'Log in to manage your profile',
+    description: 'Create an account or log in to set up your public profile, follow friends, and personalize GalaTayo.',
+    benefits: [
+      'Edit your username and bio',
+      'Manage your profile privacy',
+      'Find and follow friends',
+      'Keep your gala activity connected',
+    ],
+    benefitIcons: ['profile', 'lock', 'users', 'history'],
   },
   favorite: {
     icon: 'favorites',
@@ -196,7 +210,7 @@ function GuestAuthPromptCard({
       </div>
 
       {config.benefits.length > 0 ? (
-        <div className="px-5 pb-4 sm:px-6">
+        <div className="px-5 pb-4 pl-[4.5rem] sm:px-6 sm:pl-16 md:pl-20">
           <ul className="grid gap-1.5">
             {config.benefits.map((benefit, index) => (
               <li
@@ -215,18 +229,18 @@ function GuestAuthPromptCard({
       ) : null}
 
       <div className="px-5 pt-1 pb-2 sm:px-6">
-        <div className="flex items-center justify-center gap-2.5">
+        <div className="grid grid-cols-2 gap-2.5">
           <button
             type="button"
             onClick={() => navigateToPath(buildAuthPath('/login', currentPath))}
-            className="inline-flex h-11 w-full items-center justify-center rounded-[14px] bg-[var(--accent)] px-4 text-[14px] font-semibold text-white transition hover:bg-[var(--accent-deep)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)] sm:w-auto"
+            className="inline-flex h-11 w-full items-center justify-center rounded-[14px] bg-[var(--accent)] px-4 text-[14px] font-semibold text-white transition hover:bg-[var(--accent-deep)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)]"
           >
             Log in
           </button>
           <button
             type="button"
             onClick={() => navigateToPath(buildAuthPath('/signup', currentPath))}
-            className="inline-flex h-11 w-full items-center justify-center rounded-[14px] border border-[var(--line)] bg-white px-4 text-[14px] font-semibold text-[var(--text-main)] transition hover:border-[var(--line-strong)] hover:bg-[var(--surface-alt)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)] sm:w-auto"
+            className="inline-flex h-11 w-full items-center justify-center rounded-[14px] border border-[var(--line)] bg-white px-4 text-[14px] font-semibold text-[var(--text-main)] transition hover:border-[var(--line-strong)] hover:bg-[var(--surface-alt)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)]"
           >
             Create account
           </button>
@@ -332,6 +346,32 @@ function GuestAuthPromptPageState({
       </div>
     </main>
   )
+}
+
+export function useGuestAuthPrompt() {
+  const [state, setState] = useState<{
+    isOpen: boolean
+    variant: GuestAuthVariant
+  }>({ isOpen: false, variant: 'community' })
+
+  const open = (variant: GuestAuthVariant) => {
+    setState({ isOpen: true, variant })
+  }
+
+  const close = () => {
+    setState({ isOpen: false, variant: state.variant })
+  }
+
+  const promptElement = (
+    <GuestAuthPrompt
+      variant={state.variant}
+      mode="modal"
+      isOpen={state.isOpen}
+      onClose={close}
+    />
+  )
+
+  return { open, close, promptElement, isOpen: state.isOpen }
 }
 
 export function GuestAuthPrompt(props: GuestAuthPromptProps) {

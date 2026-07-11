@@ -1,509 +1,39 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
-import { AuthenticatedUser, validateJwt } from "../utils/auth";
-import { getPlaceIdentifier, isPlaceUuid, resolvePlaceId } from "../utils/placeIdentity";
-
-type PlaceCommentRow = {
-  id: string;
-  place_id: string;
-  user_id: string;
-  parent_comment_id: string | null;
-  comment: string;
-  status: "visible" | "deleted" | "hidden";
-  created_at: string;
-  updated_at: string;
-  deleted_at: string | null;
-};
-
-type PlaceComment = PlaceCommentRow & {
-  member_display_name?: string | null;
-  member_username?: string | null;
-  member_avatar_url?: string | null;
-  current_user_reported?: boolean;
-  replies: PlaceComment[];
-};
-
-type CommentRequestBody = {
-  placeId?: unknown;
-  comment?: unknown;
-  body?: unknown;
-};
-
-type CommentReportRequestBody = {
-  reason?: unknown;
-  details?: unknown;
-};
-
-type CommentReportModerationRequestBody = {
-  action?: unknown;
-};
-
-const COMMENT_COLUMNS =
-  "id, place_id, user_id, parent_comment_id, comment, status, created_at, updated_at, deleted_at";
-const BODY_MAX_LENGTH = 2000;
-const REPORT_DETAILS_MAX_LENGTH = 500;
-const REPORT_REASONS = ["spam", "harassment", "inappropriate", "false_info", "personal_info", "other"] as const;
-type ReportReason = (typeof REPORT_REASONS)[number];
-type ReportStatus = "pending" | "dismissed" | "action_taken";
-
-type CommentReportRow = {
-  id: string;
-  comment_id: string;
-  reason: ReportReason;
-  details: string | null;
-  status: ReportStatus;
-  created_at: string;
-  updated_at: string;
-  resolved_at: string | null;
-};
-
-type ReportPlaceRow = {
-  id: string;
-  name: string | null;
-  slug: string | null;
-};
-
-type CommentModerationNoticeReportRow = {
-  id: string;
-  comment_id: string;
-  status: "action_taken";
-  created_at: string;
-  resolved_at: string | null;
-};
-
-type AdminCommentReportRow = {
-  id: string;
-  comment_id: string;
-  status: ReportStatus;
-};
-
-type AdminUserRoleRow = {
-  role: string | null;
-};
-
-type CommentAuthorProfileRow = {
-  user_id: string;
-  username: string | null;
-  display_name: string | null;
-  avatar_url: string | null;
-  provider_avatar_url: string | null;
-};
-
-function unauthorized(message: string): HttpResponseInit {
-  return {
-    status: 401,
-    jsonBody: {
-      message,
-    },
-  };
-}
-
-function badRequest(message: string): HttpResponseInit {
-  return {
-    status: 400,
-    jsonBody: {
-      message,
-    },
-  };
-}
-
-function logDatabaseError(context: InvocationContext, message: string, error: unknown) {
-  context.error(message, error);
-
-  if (process.env.NODE_ENV !== "production") {
-    console.error(message, error);
-  }
-}
-
-async function getAuthenticatedUser(request: HttpRequest): Promise<AuthenticatedUser | null> {
-  const authHeader = request.headers.get("authorization");
-
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return null;
-  }
-
-  try {
-    return await validateJwt(request);
-  } catch {
-    return null;
-  }
-}
-
-async function isAdminUser(userId: string): Promise<boolean> {
-  const supabaseAdmin = await getSupabaseAdminClient();
-  const { data, error } = await supabaseAdmin
-    .from("users")
-    .select("role")
-    .eq("id", userId)
-    .maybeSingle();
-
-  if (error) {
-    return false;
-  }
-
-  const user = data as AdminUserRoleRow | null;
-  return user?.role === "admin";
-}
-
-function getCommentId(request: HttpRequest): string | null {
-  const commentId = request.params.commentId?.trim();
-  return commentId || null;
-}
-
-async function readCleanBody(request: HttpRequest): Promise<{ body?: string; response?: HttpResponseInit }> {
-  let payload: CommentRequestBody;
-
-  try {
-    payload = (await request.json()) as CommentRequestBody;
-  } catch {
-    return {
-      response: {
-        status: 400,
-        jsonBody: {
-          message: "Invalid JSON body.",
-        },
-      },
-    };
-  }
-
-  if (typeof payload.body !== "string") {
-    return {
-      response: {
-        status: 400,
-        jsonBody: {
-          message: "Comment body is required.",
-        },
-      },
-    };
-  }
-
-  const body = payload.body.trim();
-
-  if (!body) {
-    return {
-      response: {
-        status: 400,
-        jsonBody: {
-          message: "Comment body is required.",
-        },
-      },
-    };
-  }
-
-  if (body.length > BODY_MAX_LENGTH) {
-    return {
-      response: {
-        status: 400,
-        jsonBody: {
-          message: `Comment must be ${BODY_MAX_LENGTH} characters or less.`,
-        },
-      },
-    };
-  }
-
-  return { body };
-}
-
-async function readCleanCreateComment(
-  request: HttpRequest,
-  routePlaceIdentifier: string
-): Promise<{ placeId?: string; comment?: string; response?: HttpResponseInit }> {
-  let payload: CommentRequestBody;
-
-  try {
-    payload = (await request.json()) as CommentRequestBody;
-  } catch {
-    return {
-      response: badRequest("Invalid JSON body."),
-    };
-  }
-
-  if (!isPlaceUuid(payload.placeId)) {
-    return {
-      response: badRequest("placeId must be a valid place UUID."),
-    };
-  }
-
-  const placeId = payload.placeId.trim();
-
-  if (routePlaceIdentifier !== placeId) {
-    return {
-      response: badRequest("Route place id must match body placeId."),
-    };
-  }
-
-  if (typeof payload.comment !== "string") {
-    return {
-      response: badRequest("comment is required."),
-    };
-  }
-
-  const comment = payload.comment.trim();
-
-  if (!comment) {
-    return {
-      response: badRequest("comment is required."),
-    };
-  }
-
-  if (comment.length > BODY_MAX_LENGTH) {
-    return {
-      response: badRequest(`comment must be ${BODY_MAX_LENGTH} characters or less.`),
-    };
-  }
-
-  return { placeId, comment };
-}
-
-async function readCleanCommentReport(
-  request: HttpRequest
-): Promise<{ reason?: ReportReason; details?: string | null; response?: HttpResponseInit }> {
-  let payload: CommentReportRequestBody;
-
-  try {
-    payload = (await request.json()) as CommentReportRequestBody;
-  } catch {
-    return {
-      response: badRequest("Invalid JSON body."),
-    };
-  }
-
-  if (typeof payload.reason !== "string") {
-    return {
-      response: badRequest("reason must be a string."),
-    };
-  }
-
-  const reason = payload.reason.trim();
-
-  if (!REPORT_REASONS.includes(reason as ReportReason)) {
-    return {
-      response: badRequest("reason is not supported."),
-    };
-  }
-
-  if (payload.details !== undefined && payload.details !== null && typeof payload.details !== "string") {
-    return {
-      response: badRequest("details must be a string."),
-    };
-  }
-
-  const details = typeof payload.details === "string" ? payload.details.trim() : "";
-
-  if (details.length > REPORT_DETAILS_MAX_LENGTH) {
-    return {
-      response: badRequest(`details must be ${REPORT_DETAILS_MAX_LENGTH} characters or less.`),
-    };
-  }
-
-  return { reason: reason as ReportReason, details: details || null };
-}
-
-async function readCleanCommentReportModerationAction(
-  request: HttpRequest
-): Promise<{ action?: "dismiss" | "take_action"; response?: HttpResponseInit }> {
-  let payload: CommentReportModerationRequestBody;
-
-  try {
-    payload = (await request.json()) as CommentReportModerationRequestBody;
-  } catch {
-    return {
-      response: badRequest("Invalid JSON body."),
-    };
-  }
-
-  if (payload.action !== "dismiss" && payload.action !== "take_action") {
-    return {
-      response: badRequest("action must be dismiss or take_action."),
-    };
-  }
-
-  return { action: payload.action };
-}
-
-async function requireResolvedPlaceId(request: HttpRequest): Promise<{ placeId?: string; response?: HttpResponseInit }> {
-  const placeIdentifier = getPlaceIdentifier(request);
-
-  if (!placeIdentifier) {
-    return {
-      response: {
-        status: 400,
-        jsonBody: {
-          message: "Place id is required.",
-        },
-      },
-    };
-  }
-
-  const placeId = await resolvePlaceId(placeIdentifier);
-
-  if (!placeId) {
-    return {
-      response: {
-        status: 404,
-        jsonBody: {
-          message: "Place not found.",
-        },
-      },
-    };
-  }
-
-  return { placeId };
-}
-
-async function enrichCommentsWithDisplayNames<T extends PlaceCommentRow>(
-  comments: T[]
-): Promise<Array<T & { member_display_name?: string | null; member_username?: string | null; member_avatar_url?: string | null }>> {
-  if (comments.length === 0) {
-    return comments;
-  }
-
-  try {
-    const supabaseAdmin = await getSupabaseAdminClient();
-    const uniqueMemberIds = Array.from(new Set(comments.map((comment) => comment.user_id)));
-    const displayNameByMemberId = new Map<string, string>();
-    const usernameByMemberId = new Map<string, string>();
-    const avatarUrlByMemberId = new Map<string, string>();
-
-    const { data, error } = await (supabaseAdmin.from("profiles") as any)
-      .select("user_id, username, display_name, avatar_url, provider_avatar_url")
-      .in("user_id", uniqueMemberIds);
-
-    if (error) {
-      throw error;
-    }
-
-    ((data || []) as CommentAuthorProfileRow[]).forEach((profile) => {
-      const displayName = profile.display_name || profile.username;
-      const avatarUrl = profile.avatar_url || profile.provider_avatar_url;
-
-      if (displayName?.trim()) {
-        displayNameByMemberId.set(profile.user_id, displayName.trim());
-      }
-
-      if (profile.username?.trim()) {
-        usernameByMemberId.set(profile.user_id, profile.username.trim());
-      }
-
-      if (avatarUrl?.trim()) {
-        avatarUrlByMemberId.set(profile.user_id, avatarUrl.trim());
-      }
-    });
-
-    return comments.map((comment) => ({
-      ...comment,
-      member_display_name: displayNameByMemberId.get(comment.user_id) || null,
-      member_username: usernameByMemberId.get(comment.user_id) || null,
-      member_avatar_url: avatarUrlByMemberId.get(comment.user_id) || null,
-    }));
-  } catch {
-    return comments;
-  }
-}
-
-function buildCommentTree(
-  comments: Array<PlaceCommentRow & { member_display_name?: string | null; member_username?: string | null; member_avatar_url?: string | null }>
-): PlaceComment[] {
-  const commentsById = new Map(comments.map((comment) => [comment.id, comment]));
-  const topLevel = comments
-    .filter((comment) => !comment.parent_comment_id)
-    .sort((left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime());
-  const repliesByParentId = new Map<
-    string,
-    Array<PlaceCommentRow & { member_display_name?: string | null; member_username?: string | null; member_avatar_url?: string | null }>
-  >();
-
-  comments
-    .filter((comment) => Boolean(comment.parent_comment_id))
-    .forEach((reply) => {
-      const parentId = reply.parent_comment_id as string;
-      const replies = repliesByParentId.get(parentId) || [];
-      replies.push(reply);
-      repliesByParentId.set(parentId, replies);
-    });
-
-  const orphanPlaceholderParents = Array.from(repliesByParentId.entries())
-    .filter(([parentId]) => !commentsById.has(parentId))
-    .map(([parentId, replies]) => {
-      const firstReply = replies
-        .slice()
-        .sort((left, right) => new Date(left.created_at).getTime() - new Date(right.created_at).getTime())[0];
-
-      return {
-        id: parentId,
-        place_id: firstReply?.place_id || "",
-        user_id: "",
-        parent_comment_id: null,
-        comment: "[Deleted comment]",
-        status: "deleted" as const,
-        created_at: firstReply?.created_at || new Date(0).toISOString(),
-        updated_at: firstReply?.updated_at || firstReply?.created_at || new Date(0).toISOString(),
-        deleted_at: firstReply?.updated_at || firstReply?.created_at || new Date().toISOString(),
-        member_display_name: null,
-        member_username: null,
-        member_avatar_url: null,
-      };
-    });
-
-  return [...topLevel, ...orphanPlaceholderParents]
-    .sort((left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime())
-    .map((comment) => ({
-    ...comment,
-    replies: (repliesByParentId.get(comment.id) || [])
-      .sort((left, right) => new Date(left.created_at).getTime() - new Date(right.created_at).getTime())
-      .map((reply) => ({
-        ...reply,
-        replies: [],
-      })),
-    }));
-}
-
-function normalizeCommentForClient(
-  comment: PlaceCommentRow & {
-    member_display_name?: string | null;
-    member_username?: string | null;
-    member_avatar_url?: string | null;
-    current_user_reported?: boolean;
-  }
-): PlaceCommentRow & {
-  member_display_name?: string | null;
-  member_username?: string | null;
-  member_avatar_url?: string | null;
-  current_user_reported?: boolean;
-} {
-  if (comment.status === "hidden") {
-    return {
-      ...comment,
-      status: "deleted",
-      comment: "[Comment removed]",
-    };
-  }
-
-  if (comment.deleted_at || comment.status === "deleted") {
-    return {
-      ...comment,
-      status: "deleted",
-      comment: "[Deleted comment]",
-    };
-  }
-
-  return comment;
-}
-
-function getCommentPreview(comment: string) {
-  return comment.length > 180 ? `${comment.slice(0, 177)}...` : comment;
-}
+import { checkEndpointRateLimit } from "../utils/redisRateLimit";
+import {
+  unauthorized,
+  badRequest,
+  getAuthenticatedUser,
+  getCommentId,
+  readCleanBody,
+  readCleanCreateComment,
+  readCleanCommentReport,
+  requireResolvedPlaceId,
+  enrichCommentsWithDisplayNames,
+  buildCommentTree,
+  normalizeCommentForClient,
+  getCommentPreview,
+  type PlaceCommentRow,
+  type PlaceComment,
+  type CommentReportRow,
+  type CommentModerationNoticeReportRow,
+  type CommentAuthorProfileRow,
+  COMMENT_COLUMNS,
+  REPORT_REASONS,
+  type ReportReason,
+} from "./placeCommentHelpers";
 
 export async function placeCommentsList(
   request: HttpRequest,
   context: InvocationContext
 ): Promise<HttpResponseInit> {
   try {
-    const { placeId, response } = await requireResolvedPlaceId(request);
+    const rateCheck = await checkEndpointRateLimit(request, "place-comments", 30, 60);
+    if (!rateCheck.allowed && rateCheck.response) return rateCheck.response;
 
-    if (response) {
-      return response;
-    }
+    const { placeId, response } = await requireResolvedPlaceId(request);
+    if (response) return response;
 
     const supabaseAdmin = await getSupabaseAdminClient();
     const commentsTable = supabaseAdmin.from("place_comments") as any;
@@ -513,13 +43,7 @@ export async function placeCommentsList(
 
     if (error) {
       context.error("Failed to fetch place comments:", error);
-
-      return {
-        status: 500,
-        jsonBody: {
-          message: "Failed to fetch place comments.",
-        },
-      };
+      return { status: 500, jsonBody: { message: "Failed to fetch place comments." } };
     }
 
     const user = await getAuthenticatedUser(request);
@@ -551,19 +75,11 @@ export async function placeCommentsList(
 
     return {
       status: 200,
-      jsonBody: {
-        comments: buildCommentTree(comments),
-      },
+      jsonBody: { comments: buildCommentTree(comments) },
     };
   } catch (error) {
     context.error("Unexpected error in GET /api/places/{id}/comments:", error);
-
-    return {
-      status: 500,
-      jsonBody: {
-        message: "Unexpected server error.",
-      },
-    };
+    return { status: 500, jsonBody: { message: "Unexpected server error." } };
   }
 }
 
@@ -572,83 +88,44 @@ export async function placeCommentsCreate(
   context: InvocationContext
 ): Promise<HttpResponseInit> {
   try {
-    const placeIdentifier = getPlaceIdentifier(request);
+    const rateCheck = await checkEndpointRateLimit(request, "comments-create", 10, 60);
+    if (!rateCheck.allowed && rateCheck.response) return rateCheck.response;
 
-    if (!placeIdentifier) {
-      return badRequest("placeId is required.");
-    }
+    const placeIdentifier = request.params.id?.trim();
+    if (!placeIdentifier) return badRequest("placeId is required.");
 
     const user = await getAuthenticatedUser(request);
+    if (!user?.id) return unauthorized("Missing or invalid Authorization header.");
 
-    if (!user?.id) {
-      return unauthorized("Missing or invalid Authorization header.");
-    }
-
-    const { placeId, comment: newCommentBody, response: bodyResponse } = await readCleanCreateComment(
-      request,
-      placeIdentifier
-    );
-
-    if (bodyResponse) {
-      return bodyResponse;
-    }
-
-    const resolvedPlaceId = await resolvePlaceId(placeId as string);
-
-    if (!resolvedPlaceId) {
-      return {
-        status: 404,
-        jsonBody: {
-          message: "Place not found.",
-        },
-      };
-    }
+    const { placeId, comment, response: cleanResponse } = await readCleanCreateComment(request, placeIdentifier);
+    if (cleanResponse) return cleanResponse;
 
     const supabaseAdmin = await getSupabaseAdminClient();
     const commentsTable = supabaseAdmin.from("place_comments") as any;
-    const { data, error } = await commentsTable
+    const { data: createdComment, error: createError } = await commentsTable
       .insert({
-        place_id: resolvedPlaceId,
+        place_id: placeId,
         user_id: user.id,
+        comment,
         parent_comment_id: null,
-        comment: newCommentBody,
         status: "visible",
       })
       .select(COMMENT_COLUMNS)
       .single();
 
-    if (error) {
-      logDatabaseError(context, "Failed to create place comment:", error);
-
-      return {
-        status: 500,
-        jsonBody: {
-          message: "Database error while creating comment.",
-        },
-      };
+    if (createError) {
+      context.error("Failed to create place comment:", createError);
+      return { status: 500, jsonBody: { message: "Failed to create comment." } };
     }
 
-    const [createdComment] = await enrichCommentsWithDisplayNames([data as PlaceCommentRow]);
-
+    const enriched = await enrichCommentsWithDisplayNames([createdComment as PlaceCommentRow]);
     return {
       status: 201,
-      jsonBody: {
-        message: "Comment posted.",
-        comment: {
-          ...createdComment,
-          replies: [],
-        },
-      },
+      jsonBody: { comment: { ...enriched[0], replies: [] } },
     };
   } catch (error) {
     context.error("Unexpected error in POST /api/places/{id}/comments:", error);
-
-    return {
-      status: 500,
-      jsonBody: {
-        message: "Unexpected server error.",
-      },
-    };
+    return { status: 500, jsonBody: { message: "Unexpected server error." } };
   }
 }
 
@@ -657,107 +134,68 @@ export async function placeCommentRepliesCreate(
   context: InvocationContext
 ): Promise<HttpResponseInit> {
   try {
+    const rateCheck = await checkEndpointRateLimit(request, "comment-replies-create", 10, 60);
+    if (!rateCheck.allowed && rateCheck.response) return rateCheck.response;
+
+    const placeIdentifier = request.params.id?.trim();
+    if (!placeIdentifier) return badRequest("placeId is required.");
+
+    const parentCommentId = getCommentId(request);
+    if (!parentCommentId) return badRequest("commentId is required.");
+
     const user = await getAuthenticatedUser(request);
+    if (!user?.id) return unauthorized("Missing or invalid Authorization header.");
 
-    if (!user?.id) {
-      return unauthorized("Missing or invalid Authorization header.");
-    }
-
-    const { placeId, response: placeResponse } = await requireResolvedPlaceId(request);
-
-    if (placeResponse) {
-      return placeResponse;
-    }
-
-    const commentId = getCommentId(request);
-
-    if (!commentId) {
-      return {
-        status: 400,
-        jsonBody: {
-          message: "Comment id is required.",
-        },
-      };
-    }
-
-    const { body, response: bodyResponse } = await readCleanBody(request);
-
-    if (bodyResponse) {
-      return bodyResponse;
-    }
+    const { placeId, comment, response: cleanResponse } = await readCleanCreateComment(request, placeIdentifier);
+    if (cleanResponse) return cleanResponse;
 
     const supabaseAdmin = await getSupabaseAdminClient();
     const commentsTable = supabaseAdmin.from("place_comments") as any;
-    const { data: parentData, error: parentError } = await commentsTable
-      .select(COMMENT_COLUMNS)
-      .eq("id", commentId)
-      .eq("place_id", placeId)
-      .eq("status", "visible")
-      .is("deleted_at", null)
+
+    const { data: parentComment, error: parentError } = await commentsTable
+      .select("id, place_id, parent_comment_id, status")
+      .eq("id", parentCommentId)
       .maybeSingle();
-    const parent = parentData as PlaceCommentRow | null;
 
-    if (parentError || !parent) {
-      return {
-        status: 404,
-        jsonBody: {
-          message: "Parent comment not found.",
-        },
-      };
+    if (parentError) {
+      context.error("Failed to find parent comment:", parentError);
+      return { status: 500, jsonBody: { message: "Failed to find parent comment." } };
     }
 
-    if (parent.parent_comment_id) {
-      return {
-        status: 400,
-        jsonBody: {
-          message: "Replies can only be added to top-level comments.",
-        },
-      };
+    if (!parentComment) return badRequest("Parent comment not found.");
+
+    if (parentComment.parent_comment_id) {
+      return badRequest("Cannot reply to a reply.");
     }
 
-    const { data, error } = await commentsTable
+    if (parentComment.status !== "visible") {
+      return badRequest("Cannot reply to a deleted or hidden comment.");
+    }
+
+    const { data: createdReply, error: createError } = await commentsTable
       .insert({
         place_id: placeId,
         user_id: user.id,
-        parent_comment_id: parent.id,
-        comment: body,
+        comment,
+        parent_comment_id: parentCommentId,
         status: "visible",
       })
       .select(COMMENT_COLUMNS)
       .single();
 
-    if (error) {
-      context.error("Failed to create place comment reply:", error);
-
-      return {
-        status: 500,
-        jsonBody: {
-          message: "Failed to create reply.",
-        },
-      };
+    if (createError) {
+      context.error("Failed to create comment reply:", createError);
+      return { status: 500, jsonBody: { message: "Failed to create reply." } };
     }
 
-    const [reply] = await enrichCommentsWithDisplayNames([data as PlaceCommentRow]);
-
+    const enriched = await enrichCommentsWithDisplayNames([createdReply as PlaceCommentRow]);
     return {
       status: 201,
-      jsonBody: {
-        message: "Reply posted.",
-        comment: {
-          ...reply,
-          replies: [],
-        },
-      },
+      jsonBody: { comment: { ...enriched[0], replies: [] } },
     };
   } catch (error) {
     context.error("Unexpected error in POST /api/places/{id}/comments/{commentId}/replies:", error);
-
-    return {
-      status: 500,
-      jsonBody: {
-        message: "Unexpected server error.",
-      },
-    };
+    return { status: 500, jsonBody: { message: "Unexpected server error." } };
   }
 }
 
@@ -767,92 +205,75 @@ export async function placeCommentsUpdate(
 ): Promise<HttpResponseInit> {
   try {
     const user = await getAuthenticatedUser(request);
-
-    if (!user?.id) {
-      return unauthorized("Missing or invalid Authorization header.");
-    }
-
-    const { placeId, response: placeResponse } = await requireResolvedPlaceId(request);
-
-    if (placeResponse) {
-      return placeResponse;
-    }
+    if (!user?.id) return unauthorized("Missing or invalid Authorization header.");
 
     const commentId = getCommentId(request);
+    if (!commentId) return badRequest("commentId is required.");
 
-    if (!commentId) {
-      return {
-        status: 400,
-        jsonBody: {
-          message: "Comment id is required.",
-        },
-      };
-    }
-
-    const { body, response: bodyResponse } = await readCleanBody(request);
-
-    if (bodyResponse) {
-      return bodyResponse;
-    }
+    const { body, response: cleanResponse } = await readCleanBody(request);
+    if (cleanResponse) return cleanResponse;
 
     const supabaseAdmin = await getSupabaseAdminClient();
     const commentsTable = supabaseAdmin.from("place_comments") as any;
-    const { data, error } = await commentsTable
-      .update({
-        comment: body,
-        updated_at: new Date().toISOString(),
-      })
+
+    const { data: existingComment, error: lookupError } = await commentsTable
+      .select("id, user_id, status, deleted_at, comment, created_at, updated_at")
       .eq("id", commentId)
-      .eq("place_id", placeId)
-      .eq("user_id", user.id)
-      .eq("status", "visible")
-      .is("deleted_at", null)
-      .select(COMMENT_COLUMNS);
+      .maybeSingle();
 
-    if (error) {
-      context.error("Failed to update place comment:", error);
-
-      return {
-        status: 500,
-        jsonBody: {
-          message: "Failed to update comment.",
-        },
-      };
+    if (lookupError) {
+      context.error("Failed to find place comment for update:", lookupError);
+      return { status: 500, jsonBody: { message: "Failed to find comment." } };
     }
 
-    const updatedComments = (data || []) as PlaceCommentRow[];
+    if (!existingComment) return badRequest("Comment not found.");
 
-    if (updatedComments.length === 0) {
-      return {
-        status: 404,
-        jsonBody: {
-          message: "Comment not found.",
-        },
-      };
+    if (existingComment.user_id !== user.id) return unauthorized("You can only edit your own comments.");
+
+    if (existingComment.deleted_at || existingComment.status === "deleted") {
+      return badRequest("Cannot edit a deleted comment.");
     }
 
-    const [comment] = await enrichCommentsWithDisplayNames(updatedComments);
+    if (existingComment.status === "hidden") {
+      return badRequest("Cannot edit a hidden comment.");
+    }
 
+    const { data: updatedComment, error: updateError } = await commentsTable
+      .update({ comment: body, updated_at: new Date().toISOString() })
+      .eq("id", commentId)
+      .select(COMMENT_COLUMNS)
+      .single();
+
+    if (updateError) {
+      context.error("Failed to update place comment:", updateError);
+      return { status: 500, jsonBody: { message: "Failed to update comment." } };
+    }
+
+    const enriched = await enrichCommentsWithDisplayNames([updatedComment as PlaceCommentRow]);
     return {
       status: 200,
-      jsonBody: {
-        message: "Comment updated.",
-        comment: {
-          ...comment,
-          replies: [],
-        },
-      },
+      jsonBody: { comment: normalizedCommentForClientWithReplies(enriched[0]) },
     };
   } catch (error) {
     context.error("Unexpected error in PATCH /api/places/{id}/comments/{commentId}:", error);
-
-    return {
-      status: 500,
-      jsonBody: {
-        message: "Unexpected server error.",
-      },
-    };
+    return { status: 500, jsonBody: { message: "Unexpected server error." } };
   }
+}
+
+type PlaceCommentWithOptionalReplies = PlaceCommentRow & {
+  member_display_name?: string | null;
+  member_username?: string | null;
+  member_avatar_url?: string | null;
+  current_user_reported?: boolean;
+  replies?: PlaceComment[];
+};
+
+function normalizedCommentForClientWithReplies(comment: PlaceCommentWithOptionalReplies): PlaceComment {
+  const normalizedComment = normalizeCommentForClient(comment);
+  return {
+    ...normalizedComment,
+    replies: (comment.replies || []).map(normalizedCommentForClientWithReplies),
+  };
 }
 
 export async function placeCommentsDelete(
@@ -861,105 +282,46 @@ export async function placeCommentsDelete(
 ): Promise<HttpResponseInit> {
   try {
     const user = await getAuthenticatedUser(request);
-
-    if (!user?.id) {
-      return unauthorized("Missing or invalid Authorization header.");
-    }
-
-    const { placeId, response: placeResponse } = await requireResolvedPlaceId(request);
-
-    if (placeResponse) {
-      return placeResponse;
-    }
+    if (!user?.id) return unauthorized("Missing or invalid Authorization header.");
 
     const commentId = getCommentId(request);
-
-    if (!commentId) {
-      return {
-        status: 400,
-        jsonBody: {
-          message: "Comment id is required.",
-        },
-      };
-    }
+    if (!commentId) return badRequest("commentId is required.");
 
     const supabaseAdmin = await getSupabaseAdminClient();
-    const { data: ownedCommentData, error: ownedCommentError } = await (supabaseAdmin.from("place_comments") as any)
-      .select(COMMENT_COLUMNS)
+    const commentsTable = supabaseAdmin.from("place_comments") as any;
+
+    const { data: existingComment, error: lookupError } = await commentsTable
+      .select("id, user_id, status, deleted_at")
       .eq("id", commentId)
-      .eq("user_id", user.id)
       .maybeSingle();
 
-    if (ownedCommentError) {
-      context.error("Failed to load owned place comment for deletion:", ownedCommentError);
-
-      return {
-        status: 500,
-        jsonBody: {
-          message: "Failed to delete comment.",
-        },
-      };
+    if (lookupError) {
+      context.error("Failed to find place comment for delete:", lookupError);
+      return { status: 500, jsonBody: { message: "Failed to find comment." } };
     }
 
-    const ownedComment = ownedCommentData as PlaceCommentRow | null;
+    if (!existingComment) return badRequest("Comment not found.");
 
-    if (!ownedComment) {
-      return {
-        status: 404,
-        jsonBody: {
-          message: "Comment not found.",
-        },
-      };
+    if (existingComment.user_id !== user.id) return unauthorized("You can only delete your own comments.");
+
+    if (existingComment.deleted_at || existingComment.status === "deleted") {
+      return badRequest("Comment is already deleted.");
     }
 
-    if (ownedComment.status !== "visible" || ownedComment.deleted_at) {
-      return {
-        status: 200,
-        jsonBody: {
-          message: "Comment already removed.",
-          comment: ownedComment,
-        },
-      };
+    const now = new Date().toISOString();
+    const { error: deleteError } = await commentsTable
+      .update({ status: "deleted", deleted_at: now, updated_at: now })
+      .eq("id", commentId);
+
+    if (deleteError) {
+      context.error("Failed to delete place comment:", deleteError);
+      return { status: 500, jsonBody: { message: "Failed to delete comment." } };
     }
 
-    const deletedAt = new Date().toISOString();
-    const { data, error } = await (supabaseAdmin.from("place_comments") as any)
-      .update({
-        deleted_at: deletedAt,
-        updated_at: deletedAt,
-      })
-      .eq("id", commentId)
-      .eq("user_id", user.id)
-      .select(COMMENT_COLUMNS)
-      .maybeSingle();
-
-    if (error) {
-      context.error("Failed to delete place comment:", error);
-
-      return {
-        status: 500,
-        jsonBody: {
-          message: "Failed to delete comment.",
-        },
-      };
-    }
-
-    return {
-      status: 200,
-      jsonBody: {
-        message: "Comment deleted.",
-        comment: (data as PlaceCommentRow | null) ?? ownedComment,
-      },
-    };
+    return { status: 200, jsonBody: { message: "Comment deleted." } };
   } catch (error) {
     context.error("Unexpected error in DELETE /api/places/{id}/comments/{commentId}:", error);
-
-    return {
-      status: 500,
-      jsonBody: {
-        message: "Unexpected server error.",
-      },
-    };
+    return { status: 500, jsonBody: { message: "Unexpected server error." } };
   }
 }
 
@@ -968,102 +330,73 @@ export async function placeCommentReportsCreate(
   context: InvocationContext
 ): Promise<HttpResponseInit> {
   try {
+    const rateCheck = await checkEndpointRateLimit(request, "comment-reports-create", 5, 60);
+    if (!rateCheck.allowed && rateCheck.response) return rateCheck.response;
+
     const user = await getAuthenticatedUser(request);
+    if (!user?.id) return unauthorized("Missing or invalid Authorization header.");
 
-    if (!user?.id) {
-      return unauthorized("Missing or invalid Authorization header.");
-    }
+    const commentId = request.params.commentId?.trim();
+    if (!commentId) return badRequest("commentId is required.");
 
-    const commentId = getCommentId(request);
-
-    if (!commentId || !isPlaceUuid(commentId)) {
-      return {
-        status: 400,
-        jsonBody: {
-          message: "Comment id must be a valid UUID.",
-        },
-      };
-    }
-
-    const { reason, details, response: reportResponse } = await readCleanCommentReport(request);
-
-    if (reportResponse) {
-      return reportResponse;
-    }
+    const { reason, details, response: cleanResponse } = await readCleanCommentReport(request);
+    if (cleanResponse) return cleanResponse;
 
     const supabaseAdmin = await getSupabaseAdminClient();
+    const reportsTable = supabaseAdmin.from("place_comment_reports") as any;
     const commentsTable = supabaseAdmin.from("place_comments") as any;
-    const { data: commentData, error: commentError } = await commentsTable
-      .select("id, place_id, user_id, status, deleted_at")
+
+    const { data: targetComment, error: commentError } = await commentsTable
+      .select("id, status")
       .eq("id", commentId)
-      .eq("status", "visible")
-      .is("deleted_at", null)
       .maybeSingle();
 
-    const comment = commentData as Pick<PlaceCommentRow, "id" | "place_id" | "user_id" | "status" | "deleted_at"> | null;
-
-    if (commentError || !comment) {
-      return {
-        status: 404,
-        jsonBody: {
-          message: "Comment not found.",
-        },
-      };
+    if (commentError) {
+      context.error("Failed to find comment for report:", commentError);
+      return { status: 500, jsonBody: { message: "Failed to find comment." } };
     }
 
-    if (comment.user_id === user.id) {
-      return badRequest("You cannot report your own comment.");
+    if (!targetComment) return badRequest("Comment not found.");
+
+    if (targetComment.status !== "visible") {
+      return badRequest("Cannot report a deleted or hidden comment.");
     }
 
-    const reportsTable = supabaseAdmin.from("place_comment_reports") as any;
-    const { error } = await reportsTable
+    const { data: existingReport, error: existingError } = await reportsTable
+      .select("id")
+      .eq("comment_id", commentId)
+      .eq("reported_by", user.id)
+      .maybeSingle();
+
+    if (existingError) {
+      context.error("Failed to check existing report:", existingError);
+      return { status: 500, jsonBody: { message: "Failed to check existing report." } };
+    }
+
+    if (existingReport) {
+      return { status: 409, jsonBody: { message: "You have already reported this comment." } };
+    }
+
+    const { data: newReport, error: createError } = await reportsTable
       .insert({
-        comment_id: comment.id,
+        comment_id: commentId,
         reported_by: user.id,
         reason,
-        details: details ?? null,
+        details,
         status: "pending",
       })
-      .select("id")
+      .select("id, comment_id, reason, details, status, created_at")
       .single();
 
-    if (error) {
-      if ((error as { code?: string }).code === "23505") {
-        return {
-          status: 409,
-          jsonBody: {
-            error: "already_reported",
-            message: "You already reported this comment.",
-          },
-        };
-      }
-
-      context.error("Failed to create place comment report:", error);
-
-      return {
-        status: 500,
-        jsonBody: {
-          message: "Failed to report comment.",
-        },
-      };
+    if (createError) {
+      context.error("Failed to create comment report:", createError);
+      return { status: 500, jsonBody: { message: "Failed to submit report." } };
     }
 
-    return {
-      status: 201,
-      jsonBody: {
-        ok: true,
-        message: "Report submitted.",
-      },
-    };
+    return { status: 201, jsonBody: { report: newReport } };
   } catch (error) {
     context.error("Unexpected error in POST /api/place-comments/{commentId}/report:", error);
-
-    return {
-      status: 500,
-      jsonBody: {
-        message: "Unexpected server error.",
-      },
-    };
+    return { status: 500, jsonBody: { message: "Unexpected server error." } };
   }
 }
 
@@ -1073,107 +406,28 @@ export async function myCommentReportsList(
 ): Promise<HttpResponseInit> {
   try {
     const user = await getAuthenticatedUser(request);
-
-    if (!user?.id) {
-      return unauthorized("Missing or invalid Authorization header.");
-    }
+    if (!user?.id) return unauthorized("Missing or invalid Authorization header.");
 
     const supabaseAdmin = await getSupabaseAdminClient();
     const reportsTable = supabaseAdmin.from("place_comment_reports") as any;
-    const { data: reportData, error: reportsError } = await reportsTable
+
+    const { data, error } = await reportsTable
       .select("id, comment_id, reason, details, status, created_at, updated_at, resolved_at")
       .eq("reported_by", user.id)
       .order("created_at", { ascending: false });
 
-    if (reportsError) {
-      context.error("Failed to fetch user comment reports:", reportsError);
-
-      return {
-        status: 500,
-        jsonBody: {
-          message: "Failed to fetch comment reports.",
-        },
-      };
-    }
-
-    const reports = (reportData || []) as CommentReportRow[];
-    const commentIds = Array.from(new Set(reports.map((report) => report.comment_id).filter(Boolean)));
-    const commentsById = new Map<string, Pick<PlaceCommentRow, "id" | "place_id" | "comment" | "status">>();
-    const placesById = new Map<string, ReportPlaceRow>();
-
-    if (commentIds.length > 0) {
-      const { data: commentData, error: commentsError } = await (supabaseAdmin.from("place_comments") as any)
-        .select("id, place_id, comment, status")
-        .in("id", commentIds);
-
-      if (commentsError) {
-        context.error("Failed to fetch reported comments:", commentsError);
-      } else {
-        ((commentData || []) as Array<Pick<PlaceCommentRow, "id" | "place_id" | "comment" | "status">>).forEach((comment) => {
-          commentsById.set(comment.id, comment);
-        });
-      }
-    }
-
-    const placeIds = Array.from(new Set(Array.from(commentsById.values()).map((comment) => comment.place_id).filter(Boolean)));
-
-    if (placeIds.length > 0) {
-      const { data: placeData, error: placesError } = await supabaseAdmin
-        .from("places")
-        .select("id, name, slug")
-        .in("id", placeIds);
-
-      if (placesError) {
-        context.error("Failed to fetch places for comment reports:", placesError);
-      } else {
-        ((placeData || []) as ReportPlaceRow[]).forEach((place) => {
-          placesById.set(place.id, place);
-        });
-      }
+    if (error) {
+      context.error("Failed to fetch my comment reports:", error);
+      return { status: 500, jsonBody: { message: "Failed to load reports." } };
     }
 
     return {
       status: 200,
-      jsonBody: {
-        reports: reports.map((report) => {
-          const comment = commentsById.get(report.comment_id) || null;
-          const place = comment ? placesById.get(comment.place_id) || null : null;
-
-          return {
-            id: report.id,
-            commentId: report.comment_id,
-            reason: report.reason,
-            details: report.details,
-            status: report.status,
-            createdAt: report.created_at,
-            updatedAt: report.updated_at,
-            resolvedAt: report.resolved_at,
-            comment: comment
-              ? {
-                  text: getCommentPreview(comment.comment),
-                  status: comment.status,
-                }
-              : null,
-            place: place
-              ? {
-                  id: place.id,
-                  name: place.name,
-                  slug: place.slug,
-                }
-              : null,
-          };
-        }),
-      },
+      jsonBody: { reports: data || [] },
     };
   } catch (error) {
     context.error("Unexpected error in GET /api/me/comment-reports:", error);
-
-    return {
-      status: 500,
-      jsonBody: {
-        message: "Unexpected server error.",
-      },
-    };
+    return { status: 500, jsonBody: { message: "Unexpected server error." } };
   }
 }
 
@@ -1183,337 +437,46 @@ export async function myCommentModerationNoticesList(
 ): Promise<HttpResponseInit> {
   try {
     const user = await getAuthenticatedUser(request);
-
-    if (!user?.id) {
-      return unauthorized("Missing or invalid Authorization header.");
-    }
+    if (!user?.id) return unauthorized("Missing or invalid Authorization header.");
 
     const supabaseAdmin = await getSupabaseAdminClient();
     const commentsTable = supabaseAdmin.from("place_comments") as any;
-    const { data: commentData, error: commentsError } = await commentsTable
-      .select("id, place_id, comment, status")
+
+    const { data: myComments, error: myCommentsError } = await commentsTable
+      .select("id")
       .eq("user_id", user.id);
 
-    if (commentsError) {
-      context.error("Failed to fetch owned comments for moderation notices:", commentsError);
-
-      return {
-        status: 500,
-        jsonBody: {
-          message: "Failed to fetch comment moderation notices.",
-        },
-      };
+    if (myCommentsError) {
+      context.error("Failed to fetch user comments for moderation notices:", myCommentsError);
+      return { status: 500, jsonBody: { message: "Failed to load moderation notices." } };
     }
 
-    const comments = (commentData || []) as Array<Pick<PlaceCommentRow, "id" | "place_id" | "comment" | "status">>;
+    const myCommentRecords = (myComments || []) as Array<{ id: string }>;
+    const myCommentIds = myCommentRecords.map((c) => c.id);
 
-    if (comments.length === 0) {
-      return {
-        status: 200,
-        jsonBody: {
-          notices: [],
-        },
-      };
+    if (myCommentIds.length === 0) {
+      return { status: 200, jsonBody: { reports: [] } };
     }
 
-    const commentIds = comments.map((comment) => comment.id);
     const reportsTable = supabaseAdmin.from("place_comment_reports") as any;
-    const { data: reportData, error: reportsError } = await reportsTable
+    const { data, error } = await reportsTable
       .select("id, comment_id, status, created_at, resolved_at")
       .eq("status", "action_taken")
-      .in("comment_id", commentIds)
-      .order("resolved_at", { ascending: false, nullsFirst: false })
+      .in("comment_id", myCommentIds)
       .order("created_at", { ascending: false });
 
-    if (reportsError) {
-      context.error("Failed to fetch actioned comment reports for moderation notices:", reportsError);
-
-      return {
-        status: 500,
-        jsonBody: {
-          message: "Failed to fetch comment moderation notices.",
-        },
-      };
+    if (error) {
+      context.error("Failed to fetch moderation notices:", error);
+      return { status: 500, jsonBody: { message: "Failed to load moderation notices." } };
     }
-
-    const commentsById = new Map(comments.map((comment) => [comment.id, comment]));
-    const selectedReportsByCommentId = new Map<string, CommentModerationNoticeReportRow>();
-
-    ((reportData || []) as CommentModerationNoticeReportRow[]).forEach((report) => {
-      if (!selectedReportsByCommentId.has(report.comment_id)) {
-        selectedReportsByCommentId.set(report.comment_id, report);
-      }
-    });
-
-    const placeIds = Array.from(
-      new Set(
-        Array.from(selectedReportsByCommentId.keys())
-          .map((commentId) => commentsById.get(commentId)?.place_id)
-          .filter((placeId): placeId is string => Boolean(placeId))
-      )
-    );
-    const placesById = new Map<string, ReportPlaceRow>();
-
-    if (placeIds.length > 0) {
-      const { data: placeData, error: placesError } = await supabaseAdmin
-        .from("places")
-        .select("id, name, slug")
-        .in("id", placeIds);
-
-      if (placesError) {
-        context.error("Failed to fetch places for moderation notices:", placesError);
-      } else {
-        ((placeData || []) as ReportPlaceRow[]).forEach((place) => {
-          placesById.set(place.id, place);
-        });
-      }
-    }
-
-    const notices = Array.from(selectedReportsByCommentId.values())
-      .map((report) => {
-        const comment = commentsById.get(report.comment_id);
-
-        if (!comment) {
-          return null;
-        }
-
-        const place = placesById.get(comment.place_id) || null;
-
-        return {
-          id: report.id,
-          commentId: report.comment_id,
-          status: "action_taken",
-          message: "Your comment was removed after review.",
-          createdAt: report.created_at,
-          resolvedAt: report.resolved_at,
-          comment: {
-            text: getCommentPreview(comment.comment),
-            status: "hidden",
-          },
-          place: place
-            ? {
-                id: place.id,
-                name: place.name,
-                slug: place.slug,
-              }
-            : null,
-        };
-      })
-      .filter(Boolean);
 
     return {
       status: 200,
-      jsonBody: {
-        notices,
-      },
+      jsonBody: { reports: (data || []) as CommentModerationNoticeReportRow[] },
     };
   } catch (error) {
     context.error("Unexpected error in GET /api/me/comment-moderation-notices:", error);
-
-    return {
-      status: 500,
-      jsonBody: {
-        message: "Unexpected server error.",
-      },
-    };
-  }
-}
-
-export async function adminCommentReportModerate(
-  request: HttpRequest,
-  context: InvocationContext
-): Promise<HttpResponseInit> {
-  try {
-    const user = await getAuthenticatedUser(request);
-
-    if (!user?.id) {
-      return unauthorized("Missing or invalid Authorization header.");
-    }
-
-    if (!(await isAdminUser(user.id))) {
-      return {
-        status: 403,
-        jsonBody: {
-          message: "Admin access required.",
-        },
-      };
-    }
-
-    const reportId = request.params.reportId?.trim();
-
-    if (!reportId || !isPlaceUuid(reportId)) {
-      return badRequest("Report id must be a valid UUID.");
-    }
-
-    const { action, response: actionResponse } = await readCleanCommentReportModerationAction(request);
-
-    if (actionResponse) {
-      return actionResponse;
-    }
-
-    const supabaseAdmin = await getSupabaseAdminClient();
-    const reportsTable = supabaseAdmin.from("place_comment_reports") as any;
-    const { data: reportData, error: reportLookupError } = await reportsTable
-      .select("id, comment_id, status")
-      .eq("id", reportId)
-      .maybeSingle();
-
-    if (reportLookupError) {
-      context.error("Failed to fetch comment report for moderation:", reportLookupError);
-
-      return {
-        status: 500,
-        jsonBody: {
-          message: "Failed to load comment report.",
-        },
-      };
-    }
-
-    const report = reportData as AdminCommentReportRow | null;
-
-    if (!report) {
-      return {
-        status: 404,
-        jsonBody: {
-          message: "Comment report not found.",
-        },
-      };
-    }
-
-    const resolvedAt = new Date().toISOString();
-
-    if (action === "dismiss") {
-      const { data: updatedReportData, error: dismissError } = await reportsTable
-        .update({
-          status: "dismissed",
-          resolved_by: user.id,
-          resolved_at: resolvedAt,
-          updated_at: resolvedAt,
-        })
-        .eq("id", report.id)
-        .select("id, comment_id, status, resolved_at, updated_at")
-        .single();
-
-      if (dismissError) {
-        context.error("Failed to dismiss comment report:", dismissError);
-
-        return {
-          status: 500,
-          jsonBody: {
-            message: "Failed to dismiss report.",
-          },
-        };
-      }
-
-      return {
-        status: 200,
-        jsonBody: {
-          ok: true,
-          message: "Report dismissed.",
-          report: updatedReportData,
-        },
-      };
-    }
-
-    const commentsTable = supabaseAdmin.from("place_comments") as any;
-    const { data: commentData, error: commentLookupError } = await commentsTable
-      .select("id, status")
-      .eq("id", report.comment_id)
-      .maybeSingle();
-    const existingComment = commentData as Pick<PlaceCommentRow, "id" | "status"> | null;
-
-    if (commentLookupError) {
-      context.error("Failed to fetch reported comment for moderation:", commentLookupError);
-
-      return {
-        status: 500,
-        jsonBody: {
-          message: "Failed to load reported comment.",
-        },
-      };
-    }
-
-    if (!existingComment) {
-      return {
-        status: 404,
-        jsonBody: {
-          message: "Reported comment not found.",
-        },
-      };
-    }
-
-    const { data: hiddenCommentData, error: hideCommentError } = await commentsTable
-      .update({
-        status: "hidden",
-        updated_at: resolvedAt,
-      })
-      .eq("id", report.comment_id)
-      .select("id, status, updated_at")
-      .single();
-
-    if (hideCommentError) {
-      context.error("Failed to hide reported comment:", hideCommentError);
-
-      return {
-        status: 500,
-        jsonBody: {
-          message: "Failed to hide reported comment.",
-        },
-      };
-    }
-
-    const { data: updatedReportData, error: actionError } = await reportsTable
-      .update({
-        status: "action_taken",
-        resolved_by: user.id,
-        resolved_at: resolvedAt,
-        updated_at: resolvedAt,
-      })
-      .eq("id", report.id)
-      .select("id, comment_id, status, resolved_at, updated_at")
-      .single();
-
-    if (actionError) {
-      context.error("Failed to mark comment report as action_taken:", actionError);
-
-      const rollbackAt = new Date().toISOString();
-      const { error: rollbackError } = await commentsTable
-        .update({
-          status: existingComment.status,
-          updated_at: rollbackAt,
-        })
-        .eq("id", report.comment_id);
-
-      if (rollbackError) {
-        context.error("Failed to roll back hidden comment after report moderation failure:", rollbackError);
-      }
-
-      return {
-        status: 500,
-        jsonBody: {
-          message: "Failed to take action on report.",
-        },
-      };
-    }
-
-    return {
-      status: 200,
-      jsonBody: {
-        ok: true,
-        message: "Action taken. Comment hidden.",
-        report: updatedReportData,
-        comment: hiddenCommentData,
-      },
-    };
-  } catch (error) {
-    context.error("Unexpected error in PATCH /api/admin/comment-reports/{reportId}:", error);
-
-    return {
-      status: 500,
-      jsonBody: {
-        message: "Unexpected server error.",
-      },
-    };
+    return { status: 500, jsonBody: { message: "Unexpected server error." } };
   }
 }
 
@@ -1571,11 +534,4 @@ app.http("myCommentModerationNoticesList", {
   authLevel: "anonymous",
   route: "me/comment-moderation-notices",
   handler: myCommentModerationNoticesList,
-});
-
-app.http("adminCommentReportModerate", {
-  methods: ["PATCH"],
-  authLevel: "anonymous",
-  route: "app-admin/comment-reports/{reportId}",
-  handler: adminCommentReportModerate,
 });

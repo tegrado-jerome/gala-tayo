@@ -41,6 +41,14 @@ build/Release
 node_modules/
 jspm_packages/
 
+# Local quarantine for one-off recovery/backup trees.
+_archive/
+.recovery-backups/
+ask-ai-map-*-backup-*/
+ask-ai-map-recovery-*/
+*-manual-backup-*/
+*-recovery-*/
+
 # Snowpack dependency directory (https://snowpack.dev/)
 web_modules/
 

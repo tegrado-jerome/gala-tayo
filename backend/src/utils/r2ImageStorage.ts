@@ -121,6 +121,33 @@ export async function uploadWebpToR2(
   return signedRequest.publicUrl;
 }
 
+export function getImageUrl(baseUrl: string, size: "full" | "thumb" = "full"): string {
+  if (size === "thumb") {
+    return baseUrl.replace(/\.webp$/, "_thumb.webp");
+  }
+  return baseUrl;
+}
+
+export async function uploadThumbnailToR2(
+  key: string,
+  input: Buffer,
+  options?: { cacheControl?: string }
+): Promise<string> {
+  const sharp = loadSharp();
+  const thumbBody = await sharp(input, {
+    animated: false,
+    failOn: "error",
+    limitInputPixels: 25_000_000,
+  })
+    .rotate()
+    .resize(200, 200, { fit: "cover", position: "center" })
+    .webp({ quality: 75, effort: 2 })
+    .toBuffer();
+
+  const thumbKey = key.replace(/\.webp$/i, "_thumb.webp");
+  return uploadWebpToR2(thumbKey, thumbBody, options);
+}
+
 export async function deleteR2Object(storageKey: string | null | undefined) {
   if (!storageKey) {
     return;

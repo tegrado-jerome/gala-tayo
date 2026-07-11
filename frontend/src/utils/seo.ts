@@ -1,16 +1,6 @@
 import galaTayoLogo from '../assets/brand/galatayo-logo.svg'
 import { metroManilaAreaNameBySlug } from '../data/metroManilaAreas'
-
-type CanonicalPlaceInput = {
-  areaSlug: string
-  placeSlug: string
-}
-
-type AreaLike = {
-  city?: string | null
-  area?: string | null
-  localArea?: string | null
-}
+import { formatLabelFromSlug, getCanonicalPlacePath, resolveAreaMeta } from './routes'
 
 type OpenGraphImage = {
   url: string
@@ -31,26 +21,6 @@ const DEFAULT_TITLE = 'GalaTayo'
 const DEFAULT_DESCRIPTION = 'Discover gala spots around Metro Manila with place search, AI help, and shareable place pages.'
 const DEFAULT_OG_IMAGE = galaTayoLogo
 
-function normalizeText(value: string) {
-  return value
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/&/g, ' and ')
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim()
-}
-
-function slugify(value: string) {
-  return value
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/&/g, ' and ')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-}
-
 function getSiteOrigin() {
   const envSiteUrl = String(import.meta.env.VITE_SITE_URL || '').trim()
   const siteUrl = envSiteUrl || window.location.origin
@@ -67,37 +37,6 @@ function getAbsoluteUrl(pathOrUrl: string) {
 
 function getAreaNameBySlug(areaSlug: string) {
   return metroManilaAreaNameBySlug.get(areaSlug) ?? formatLabelFromSlug(areaSlug)
-}
-
-function formatLabelFromSlug(value: string) {
-  return value
-    .split('-')
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ')
-}
-
-function resolveAreaMeta(areaLike: AreaLike) {
-  const candidates = [areaLike.city, areaLike.localArea, areaLike.area]
-    .map((value) => value?.trim() || '')
-    .filter(Boolean)
-
-  for (const candidate of candidates) {
-    const match = [...metroManilaAreaNameBySlug.entries()].find(([, name]) => normalizeText(name) === normalizeText(candidate))
-    if (match) {
-      return { slug: match[0], name: match[1] }
-    }
-  }
-
-  const fallbackName = candidates[0] || 'Metro Manila'
-  return {
-    slug: slugify(fallbackName) || 'metro-manila',
-    name: fallbackName,
-  }
-}
-
-function getCanonicalPlacePath({ areaSlug, placeSlug }: CanonicalPlaceInput) {
-  return `/places/${encodeURIComponent(areaSlug)}/${encodeURIComponent(placeSlug)}`
 }
 
 function updateOrCreateMeta(selector: string, attributes: Record<string, string>) {

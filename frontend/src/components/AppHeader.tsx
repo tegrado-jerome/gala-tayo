@@ -1,11 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
-import type { Session } from '@supabase/supabase-js'
 import { LogIn } from 'lucide-react'
 import UserMenu from './UserMenu'
 import { AppIcon } from './AppIcon'
 import { AppHeaderLayout } from './layout/Primitives'
-import { hasSessionUserChanged, shouldPropagateSessionChange, supabase } from '../supabase'
-import { getCurrentUser, type CurrentUserResponse } from '../utils/profileApi'
+import { useAppUser } from '../context/AppUserContext'
 import logoPlaceholder from '../assets/brand/galatayo-logo.svg'
 
 type AppHeaderProps = {
@@ -51,85 +48,13 @@ function AppHeader({
 }: AppHeaderProps) {
   void _fixed
 
-  const [session, setSession] = useState<Session | null>(null)
-  const [currentProfile, setCurrentProfile] = useState<CurrentUserResponse['profile'] | null>(null)
-  const [isSessionLoading, setIsSessionLoading] = useState(true)
-  const [profileRefreshKey, setProfileRefreshKey] = useState(0)
-  const sessionRef = useRef<Session | null>(null)
-
-  useEffect(() => {
-    let isMounted = true
-
-    supabase.auth.getSession().then(({ data }) => {
-      if (isMounted) {
-        sessionRef.current = data.session
-        setSession(data.session)
-        setIsSessionLoading(false)
-      }
-    })
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, nextSession) => {
-      const previousSession = sessionRef.current
-      const shouldUpdateSession = shouldPropagateSessionChange(event, previousSession, nextSession)
-
-      if (shouldUpdateSession) {
-        sessionRef.current = nextSession
-        setSession(nextSession)
-      }
-
-      setIsSessionLoading(false)
-
-      if (hasSessionUserChanged(previousSession, nextSession) || event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
-        setProfileRefreshKey((currentValue) => currentValue + 1)
-      }
-    })
-
-    return () => {
-      isMounted = false
-      subscription.unsubscribe()
-    }
-  }, [])
-
-  useEffect(() => {
-    const handleAccountUpdated = () => {
-      setProfileRefreshKey((currentValue) => currentValue + 1)
-    }
-
-    window.addEventListener('galatayo:account-updated', handleAccountUpdated)
-
-    return () => window.removeEventListener('galatayo:account-updated', handleAccountUpdated)
-  }, [])
-
-  useEffect(() => {
-    let isMounted = true
-
-    if (!session) {
-      setCurrentProfile(null)
-      return undefined
-    }
-
-    void getCurrentUser(session)
-      .then((data) => {
-        if (isMounted) {
-          setCurrentProfile(data.profile)
-        }
-      })
-      .catch(() => {
-        if (isMounted) {
-          setCurrentProfile(null)
-        }
-      })
-
-    return () => {
-      isMounted = false
-    }
-  }, [profileRefreshKey, session?.user?.id])
+  const { session, currentProfile, isSessionLoading } = useAppUser()
 
   const user = session?.user ?? null
   const desktopNavButtonClass =
     'inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3 py-2.5 text-[14px] font-medium text-slate-600 transition hover:bg-slate-50 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)] xl:px-4'
+  const soonDesktopNavButtonClass =
+    'inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-[14px] font-medium text-slate-400 transition xl:px-4 cursor-not-allowed'
   const desktopNavBreakpointClass = minimal ? 'xl:flex' : 'lg:flex'
 
   const desktopNav = user ? (
@@ -142,13 +67,14 @@ function AppHeader({
         <AppIcon name="history" size="ui" />
         <span className="hidden xl:inline">History</span>
       </button>
-      <button type="button" onClick={() => navigateTo('/gala-plans')} className={desktopNavButtonClass} title="Gala Plan">
-        <AppIcon name="galaPlan" size="ui" />
-        <span className="hidden xl:inline">Gala Plan</span>
-      </button>
       <button type="button" onClick={() => navigateTo('/find-friends')} className={desktopNavButtonClass} title="Find Friends">
         <AppIcon name="profileSearch" size="ui" />
         <span className="hidden xl:inline">Find Friends</span>
+      </button>
+      <button type="button" disabled className={soonDesktopNavButtonClass} title="Coming soon" aria-disabled="true">
+        <AppIcon name="galaPlan" size="ui" />
+        <span className="hidden xl:inline">Gala Plan</span>
+        <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Soon</span>
       </button>
     </nav>
   ) : null
@@ -192,7 +118,7 @@ function AppHeader({
             <button
               type="button"
               onClick={() => navigateTo('/login')}
-              className="app-button app-button-primary app-button-sm"
+              className="app-button app-button-primary app-button-sm app-header-login-button"
             >
               <LogIn className="h-4 w-4" />
               Log in

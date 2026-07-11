@@ -19,29 +19,29 @@ function OnboardingPersonalInfoStep({ values, errors, onUpdate, onBack, onNext }
       description="Your full name helps complete your account profile. It is not shown publicly by default."
       actions={
         <>
-          <button type="button" onClick={onBack} className="h-12 rounded-lg border border-[var(--line-strong)] bg-white px-5 text-sm font-black text-slate-700 transition hover:bg-slate-50">
+          <button type="button" onClick={onBack} className="onboarding-button onboarding-button-secondary">
             Back
           </button>
-          <button type="button" onClick={onNext} className="h-12 rounded-lg bg-[var(--accent)] px-5 text-sm font-black text-white transition hover:bg-[var(--accent-deep)]">
+          <button type="button" onClick={onNext} className="onboarding-button onboarding-button-primary">
             Next
           </button>
         </>
       }
     >
-      <div className="grid gap-4">
-        <label className="grid gap-2">
-          <span className="text-sm font-black text-slate-900">First Name</span>
+      <div className="onboarding-form-grid">
+        <label className="onboarding-field">
+          <span className="onboarding-label">First Name</span>
           <input
             value={values.firstName}
             onChange={(event) => onUpdate({ firstName: event.target.value })}
             maxLength={80}
             autoComplete="given-name"
-            className="h-12 rounded-lg border border-[var(--line-strong)] px-4 text-sm font-semibold outline-none focus:border-[var(--accent)] focus:ring-4 focus:ring-[var(--accent-soft)]"
+            className="onboarding-input"
           />
-          {errors.firstName ? <span className="text-xs font-bold text-red-600">{errors.firstName}</span> : null}
+          {errors.firstName ? <span className="onboarding-error">{errors.firstName}</span> : null}
         </label>
-        <label className="grid gap-2">
-          <span className="flex items-center gap-2 text-sm font-black text-slate-900">
+        <label className="onboarding-field">
+          <span className="onboarding-label onboarding-label-inline">
             Middle Name
             <span className="optional-label">Optional</span>
           </span>
@@ -50,23 +50,23 @@ function OnboardingPersonalInfoStep({ values, errors, onUpdate, onBack, onNext }
             onChange={(event) => onUpdate({ middleName: event.target.value })}
             maxLength={80}
             autoComplete="additional-name"
-            className="h-12 rounded-lg border border-[var(--line-strong)] px-4 text-sm font-semibold outline-none focus:border-[var(--accent)] focus:ring-4 focus:ring-[var(--accent-soft)]"
+            className="onboarding-input"
           />
-          {errors.middleName ? <span className="text-xs font-bold text-red-600">{errors.middleName}</span> : null}
+          {errors.middleName ? <span className="onboarding-error">{errors.middleName}</span> : null}
         </label>
-        <label className="grid gap-2">
-          <span className="text-sm font-black text-slate-900">Last Name</span>
+        <label className="onboarding-field">
+          <span className="onboarding-label">Last Name</span>
           <input
             value={values.lastName}
             onChange={(event) => onUpdate({ lastName: event.target.value })}
             maxLength={80}
             autoComplete="family-name"
-            className="h-12 rounded-lg border border-[var(--line-strong)] px-4 text-sm font-semibold outline-none focus:border-[var(--accent)] focus:ring-4 focus:ring-[var(--accent-soft)]"
+            className="onboarding-input"
           />
-          {errors.lastName ? <span className="text-xs font-bold text-red-600">{errors.lastName}</span> : null}
+          {errors.lastName ? <span className="onboarding-error">{errors.lastName}</span> : null}
         </label>
-        <label className="grid gap-2">
-          <span className="text-sm font-black text-slate-900">Birthdate</span>
+        <label className="onboarding-field">
+          <span className="onboarding-label">Birthdate</span>
           <input
             type="date"
             value={values.birthdate}
@@ -74,9 +74,9 @@ function OnboardingPersonalInfoStep({ values, errors, onUpdate, onBack, onNext }
             min="1900-01-01"
             max={today}
             autoComplete="bday"
-            className="h-12 rounded-lg border border-[var(--line-strong)] px-4 text-sm font-semibold outline-none focus:border-[var(--accent)] focus:ring-4 focus:ring-[var(--accent-soft)]"
+            className="onboarding-input"
           />
-          {errors.birthdate ? <span className="text-xs font-bold text-red-600">{errors.birthdate}</span> : null}
+          {errors.birthdate ? <span className="onboarding-error">{errors.birthdate}</span> : null}
         </label>
       </div>
     </OnboardingLayout>

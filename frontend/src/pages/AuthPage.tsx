@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useMemo, useState, type FormEvent } from 'react'
 import { AppIcon } from '../components/AppIcon'
 import AuthMethodChooser from '../components/auth/AuthMethodChooser'
-import { checkEmailExists, getPostAuthRedirect, signInWithEmailPassword, signUpWithEmailPassword } from '../services/authApi'
-import { buildAuthPath, getRequestedNextPath } from '../utils/authRedirect'
+import { getPostAuthRedirect, signInWithEmailPassword, signOut, signUpWithEmailPassword } from '../services/authApi'
+import { buildAuthPath, getRequestedNextPath } from '../services/authApi'
 import { navigateToPath } from '../utils/navigation'
+import { getCurrentUser, isAdminRole } from '../utils/profileApi'
 import galaTayoLogo from '../assets/brand/galatayo-logo.svg'
 
 type AuthMode = 'sign_in' | 'create_account'
@@ -57,94 +58,53 @@ function getFriendlyAuthError(error: unknown, mode: AuthMode) {
 
 type AuthPageProps = {
   mode?: AuthMode
+  surface?: 'app' | 'admin'
 }
 
-function AuthPage({ mode = 'sign_in' }: AuthPageProps) {
+function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isOAuthLoading, setIsOAuthLoading] = useState(false)
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const [isConfirmationPending, setIsConfirmationPending] = useState(false)
   const [error, setError] = useState('')
-  const [emailLookupStatus, setEmailLookupStatus] = useState<'idle' | 'checking' | 'available' | 'exists'>('idle')
-  const [emailFieldMessage, setEmailFieldMessage] = useState('')
   const [isPasswordVisible, setIsPasswordVisible] = useState(false)
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false)
   const [confirmPasswordTouched, setConfirmPasswordTouched] = useState(false)
 
   const isCreateMode = mode === 'create_account'
+  const isAdminSurface = surface === 'admin'
   const nextPath = getRequestedNextPath()
+  const resetSuccess = new URLSearchParams(window.location.search).get('reset') === 'success'
   const normalizedEmail = useMemo(() => email.trim().toLowerCase(), [email])
   const isEmailValid = emailPattern.test(normalizedEmail)
   const emailFormatIsValid = !normalizedEmail || isEmailValid
-  const emailAlreadyExists = isCreateMode && emailLookupStatus === 'exists'
   const passwordMeetsLength = password.length >= minPasswordLength
-  const emailIsInvalid = isCreateMode && (!emailFormatIsValid || emailAlreadyExists)
+  const emailIsInvalid = isCreateMode && !emailFormatIsValid
   const passwordIsInvalid = isCreateMode && password.length > 0 && !passwordMeetsLength
   const confirmPasswordHasMismatch = isCreateMode && confirmPassword.length > 0 && password !== confirmPassword
   const isCreateFormValid =
     isEmailValid &&
     passwordMeetsLength &&
     confirmPassword.length >= minPasswordLength &&
-    password === confirmPassword &&
-    !emailAlreadyExists &&
-    emailLookupStatus !== 'checking'
+    password === confirmPassword
   const isLoginFormValid = isEmailValid && password.length > 0
-  const isSubmitDisabled = isSubmitting || isOAuthLoading || (isCreateMode ? !isCreateFormValid : !isLoginFormValid)
+  const allowGoogle = !isAdminSurface
+  const allowSignupLink = !isAdminSurface
+  const allowForgotPassword = !isCreateMode
+  const isSubmitDisabled = isSubmitting || isGoogleLoading || (isCreateMode ? !isCreateFormValid : !isLoginFormValid)
 
   const resetFormState = () => {
     setPassword('')
     setConfirmPassword('')
     setError('')
-    setEmailLookupStatus('idle')
-    setEmailFieldMessage('')
     setIsConfirmationPending(false)
+    setIsGoogleLoading(false)
     setIsPasswordVisible(false)
     setIsConfirmPasswordVisible(false)
     setConfirmPasswordTouched(false)
   }
-
-  useEffect(() => {
-    if (!isCreateMode || !normalizedEmail || !isEmailValid) {
-      return undefined
-    }
-
-    let isMounted = true
-    const timer = window.setTimeout(() => {
-      setEmailLookupStatus('checking')
-      setEmailFieldMessage('')
-
-      void checkEmailExists(normalizedEmail)
-        .then((result) => {
-          if (!isMounted) {
-            return
-          }
-
-          if (result.exists) {
-            setEmailLookupStatus('exists')
-            setEmailFieldMessage('This email already has an account.')
-            return
-          }
-
-          setEmailLookupStatus('available')
-          setEmailFieldMessage('')
-        })
-        .catch((caughtError) => {
-          if (!isMounted) {
-            return
-          }
-
-          setEmailLookupStatus('idle')
-          setEmailFieldMessage(caughtError instanceof Error ? caughtError.message : 'Could not check email.')
-        })
-    }, 450)
-
-    return () => {
-      isMounted = false
-      window.clearTimeout(timer)
-    }
-  }, [isCreateMode, normalizedEmail, isEmailValid])
 
   const validateForm = (normalizedValue: string) => {
     if (!normalizedValue) {
@@ -175,10 +135,6 @@ function AuthPage({ mode = 'sign_in' }: AuthPageProps) {
       setError('')
       validateForm(normalizedEmail)
 
-      if (emailAlreadyExists) {
-        throw new Error('This email already has an account.')
-      }
-
       setIsSubmitting(true)
 
       if (isCreateMode) {
@@ -197,7 +153,20 @@ function AuthPage({ mode = 'sign_in' }: AuthPageProps) {
         throw new Error('Please confirm your email before signing in.')
       }
 
-      const redirectTo = await getPostAuthRedirect(session)
+      if (isAdminSurface) {
+        const currentUser = await getCurrentUser(session)
+
+        if (!isAdminRole(currentUser.user.role)) {
+          await signOut().catch(() => undefined)
+          throw new Error('This email does not have admin access.')
+        }
+
+        const redirectTo = await getPostAuthRedirect(session, window.location.search)
+        navigateToPath(redirectTo)
+        return
+      }
+
+      const redirectTo = await getPostAuthRedirect(session, window.location.search)
       navigateToPath(redirectTo)
     } catch (caughtError) {
       setError(getFriendlyAuthError(caughtError, mode))
@@ -206,19 +175,24 @@ function AuthPage({ mode = 'sign_in' }: AuthPageProps) {
     }
   }
 
-  const handleLoadingChange = (isLoading: boolean) => {
-    setIsOAuthLoading(isLoading)
+  const handleGoogleLoadingChange = (isLoading: boolean) => {
+    setIsGoogleLoading(isLoading)
   }
 
-  const cardTitle = isCreateMode ? 'Create an account' : 'Welcome back'
-  const cardDescription = isCreateMode
+  const cardTitle = isAdminSurface ? 'Admin sign in' : isCreateMode ? 'Create an account' : 'Welcome back'
+  const cardDescription = isAdminSurface
+    ? 'Use your admin email and password to continue.'
+    : isCreateMode
     ? 'Set up your GalaTayo account and start planning your next gala.'
     : 'Continue planning your next gala.'
+  const authShellClassName = isCreateMode
+    ? 'mx-auto grid w-full max-w-[1240px] items-start md:ml-[clamp(6rem,8vw,8rem)] md:mr-auto md:min-h-[100dvh] md:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] md:items-center lg:ml-[clamp(7rem,9vw,9rem)] lg:max-w-[1320px]'
+    : 'mx-auto grid w-full max-w-[1240px] items-start md:ml-[clamp(4rem,6vw,6rem)] md:mr-auto md:min-h-[100dvh] md:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] md:items-center lg:ml-[clamp(5rem,7vw,7rem)] lg:max-w-[1320px]'
   if (isConfirmationPending) {
     return (
       <main className="gala-page-background min-h-screen min-h-[100dvh] px-4 py-6 text-[var(--text)] sm:px-6 sm:py-8">
         <section className="mx-auto flex min-h-[100dvh] w-full max-w-[560px] items-center justify-center">
-          <div className="w-full rounded-[24px] border border-[var(--line)] bg-white px-6 py-8 text-center shadow-[0_20px_40px_rgba(0,0,0,0.05)] sm:px-8 sm:py-10">
+          <div className="w-full px-6 py-8 text-center sm:px-8 sm:py-10">
             <img src={galaTayoLogo} alt="GalaTayo" className="mx-auto h-auto w-[160px] sm:w-[180px]" loading="eager" />
             <div className="mx-auto mt-6 inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--line)] bg-[var(--bg)]">
               <AppIcon name="email" className="h-5 w-5 text-[var(--accent)]" />
@@ -235,7 +209,7 @@ function AuthPage({ mode = 'sign_in' }: AuthPageProps) {
             <button
               type="button"
               onClick={resetFormState}
-              className="mt-6 inline-flex min-h-12 items-center justify-center rounded-[12px] bg-[#2563eb] px-6 text-[14px] font-semibold text-white shadow-[0_12px_24px_rgba(37,99,235,0.18)] transition hover:-translate-y-0.5 hover:bg-[#1d4ed8] focus:outline-none focus:ring-4 focus:ring-[rgba(37,99,235,0.16)]"
+              className="app-button app-button-primary app-button-md mt-6 w-[240px] max-w-full"
             >
               Continue
             </button>
@@ -247,47 +221,61 @@ function AuthPage({ mode = 'sign_in' }: AuthPageProps) {
 
   return (
     <main className="gala-page-background min-h-screen min-h-[100dvh] text-[var(--text)]">
-      <div className="mx-auto grid w-full max-w-[1100px] items-start md:min-h-[100dvh] md:items-center md:grid-cols-2">
-        <section className="flex flex-col items-center justify-start px-4 pb-2 pt-12 text-center md:items-start md:px-8 md:py-6 md:text-left lg:px-12 lg:py-8">
-          <div className="flex w-full max-w-[520px] flex-col items-center gap-4 md:items-center">
+      <div className={authShellClassName}>
+        <section className="flex flex-col items-center justify-start px-4 pb-2 pt-12 text-center md:items-start md:px-10 md:py-8 md:text-left lg:px-16 lg:py-10">
+          <div className="flex w-full max-w-[560px] flex-col items-center gap-4 md:items-center">
             <img
               src={galaTayoLogo}
               alt="GalaTayo"
               className="mb-2 h-auto w-[160px] sm:w-[180px] md:hidden"
               loading="eager"
             />
-            <div className="max-w-[28rem]">
-              <h1 className="text-[2rem] font-extrabold leading-[0.98] tracking-[-0.055em] text-[var(--text-main)] sm:text-[2.35rem] lg:text-[3rem]">
+            <div className="max-w-[31rem]">
+              <h1 className="text-[2rem] font-extrabold leading-[0.98] tracking-[-0.055em] text-[var(--text-main)] sm:text-[2.5rem] lg:text-[3.4rem]">
                 {cardTitle}
               </h1>
-              <p className="mt-2 max-w-[26rem] text-[15px] leading-7 text-[var(--muted)] sm:text-[16px]">
+              <p className="mt-2 max-w-[28rem] text-[15px] leading-7 text-[var(--muted)] sm:text-[16px] lg:text-[17px]">
                 {cardDescription}
               </p>
             </div>
           </div>
         </section>
 
-        <section className="flex items-start justify-center px-4 pb-8 pt-0 md:px-6 md:pb-8 lg:px-10 lg:pb-10">
-          <div className="w-full max-w-[540px] px-0 py-0">
+        <section className="flex items-start justify-center px-4 pb-8 pt-0 md:px-8 md:pb-10 md:pt-0 lg:px-12 lg:pb-12">
+          <div className="w-full max-w-[620px] px-0 py-0 lg:max-w-[680px]">
             <img
               src={galaTayoLogo}
               alt="GalaTayo"
-              className="mx-auto mb-4 hidden h-auto w-[160px] sm:w-[180px] md:block"
+              className="mx-auto mb-4 hidden h-auto w-[180px] sm:w-[190px] md:block lg:w-[210px]"
               loading="eager"
             />
             <div className="mt-3">
-              <AuthMethodChooser
-                isLoading={isOAuthLoading || isSubmitting}
-                onLoadingChange={handleLoadingChange}
-                onError={setError}
-              />
+              {resetSuccess ? (
+                <div className="mb-4 rounded-[12px] border border-[rgba(5,150,105,0.18)] bg-[var(--success-soft)] px-4 py-3 text-[13px] leading-6 text-[var(--success)] shadow-sm">
+                  Password updated. You can now sign in with your new password.
+                </div>
+              ) : null}
+
+              {allowGoogle ? (
+                <AuthMethodChooser
+                  isGoogleLoading={isGoogleLoading}
+                  onGoogleLoadingChange={handleGoogleLoadingChange}
+                  onError={setError}
+                />
+              ) : (
+                <div className="mx-auto w-full max-w-[360px] rounded-[14px] border border-[rgba(30,58,138,0.16)] bg-[var(--accent-wash)] px-4 py-3 text-center text-[13px] font-semibold leading-6 text-[var(--accent-deep)]">
+                  Admin access uses email and password only. Account creation is disabled here.
+                </div>
+              )}
             </div>
 
-            <div className="my-4 flex items-center gap-3 text-[9px] font-bold uppercase tracking-[0.28em] text-[var(--muted)]">
-              <span className="h-px flex-1 bg-[var(--line)]" />
-              OR
-              <span className="h-px flex-1 bg-[var(--line)]" />
-            </div>
+            {allowGoogle ? (
+              <div className="my-4 flex items-center gap-3 text-[9px] font-bold uppercase tracking-[0.28em] text-[var(--muted)]">
+                <span className="h-px flex-1 bg-[var(--line)]" />
+                OR
+                <span className="h-px flex-1 bg-[var(--line)]" />
+              </div>
+            ) : null}
 
             <form className="grid gap-4 text-left" onSubmit={handleSubmit}>
               <label className="grid gap-2 text-[13px] font-medium text-[var(--text)]">
@@ -310,9 +298,6 @@ function AuthPage({ mode = 'sign_in' }: AuthPageProps) {
                     className="h-full w-full bg-transparent text-[14px] font-medium text-[var(--text-main)] outline-none placeholder:font-normal placeholder:text-slate-400"
                   />
                 </span>
-                {isCreateMode && emailFieldMessage ? (
-                  <span className="text-xs text-red-600">{emailFieldMessage || 'This email already has an account.'}</span>
-                ) : null}
               </label>
 
               <label className="grid gap-2 text-[13px] font-medium text-[var(--text)]">
@@ -350,7 +335,7 @@ function AuthPage({ mode = 'sign_in' }: AuthPageProps) {
                 ) : null}
               </label>
 
-              {!isCreateMode ? (
+              {allowForgotPassword ? (
                 <button
                   type="button"
                   onClick={() => navigateToPath('/forgot-password')}
@@ -401,7 +386,7 @@ function AuthPage({ mode = 'sign_in' }: AuthPageProps) {
               <button
                 type="submit"
                 disabled={isSubmitDisabled}
-                className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-[12px] bg-[#2563eb] px-5 text-[14px] font-semibold text-white shadow-[0_14px_28px_rgba(37,99,235,0.18)] transition hover:-translate-y-0.5 hover:bg-[#1d4ed8] focus:outline-none focus:ring-4 focus:ring-[rgba(37,99,235,0.16)] disabled:cursor-not-allowed disabled:opacity-70"
+                className="app-button app-button-primary app-button-md mx-auto w-[240px] max-w-full disabled:cursor-not-allowed disabled:opacity-70 md:w-[220px] lg:w-[240px]"
               >
                 {isSubmitting ? (
                   <>
@@ -409,10 +394,10 @@ function AuthPage({ mode = 'sign_in' }: AuthPageProps) {
                       className="inline-flex h-4.5 w-4.5 animate-spin rounded-full border-2 border-white/35 border-t-white"
                       aria-hidden="true"
                     />
-                    {isCreateMode ? 'Creating account...' : 'Signing in...'}
+                    {isCreateMode ? 'Creating account...' : isAdminSurface ? 'Checking access...' : 'Signing in...'}
                   </>
                 ) : (
-                  <>{isCreateMode ? 'Create account' : 'Sign in'}</>
+                  <>{isCreateMode ? 'Create account' : isAdminSurface ? 'Sign in securely' : 'Sign in'}</>
                 )}
               </button>
             </form>
@@ -445,16 +430,18 @@ function AuthPage({ mode = 'sign_in' }: AuthPageProps) {
               </p>
             ) : null}
 
-            <p className="mt-5 text-center text-[13px] text-[var(--muted)]">
-              {isCreateMode ? 'Already have an account?' : 'New to GalaTayo?'}{' '}
-              <button
-                type="button"
-                onClick={() => navigateToPath(buildAuthPath(isCreateMode ? '/login' : '/signup', nextPath))}
-                className="min-h-10 font-semibold text-[var(--accent-deep)] underline underline-offset-2 transition hover:text-[#2563eb] focus:outline-none focus:ring-4 focus:ring-[rgba(37,99,235,0.12)]"
-              >
-                {isCreateMode ? 'Log in' : 'Create account'}
-              </button>
-            </p>
+            {allowSignupLink ? (
+              <p className="mt-5 text-center text-[13px] text-[var(--muted)]">
+                {isCreateMode ? 'Already have an account?' : 'New to GalaTayo?'}{' '}
+                <button
+                  type="button"
+                  onClick={() => navigateToPath(buildAuthPath(isCreateMode ? '/login' : '/signup', nextPath))}
+                  className="min-h-10 font-semibold text-[var(--accent-deep)] underline underline-offset-2 transition hover:text-[#2563eb] focus:outline-none focus:ring-4 focus:ring-[rgba(37,99,235,0.12)]"
+                >
+                  {isCreateMode ? 'Log in' : 'Create account'}
+                </button>
+              </p>
+            ) : null}
           </div>
         </section>
       </div>

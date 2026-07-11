@@ -4,9 +4,11 @@ import {
   failAskAiTask,
   registerAskAiTask,
 } from './askAiTaskStore'
+import { readCachedAskAiUsage, writeCachedAskAiUsage } from './askAiUsageCache'
+import { getApiUrl } from './apiClient'
 
 type AskAiUsageStatus = {
-  usageType: 'ask_ai_total' | 'live_search'
+  usageType: 'ask_ai_total' | 'live_search' | 'chatbot_ai' | 'ask_ai_maps'
   allowed: boolean
   limit: number
   used: number
@@ -49,6 +51,17 @@ type AskAiUsageEnvelope = {
   askAiMaps?: unknown
 }
 
+type AskAiErrorResponse = {
+  ok?: boolean
+  answer?: string
+  sources?: unknown
+  error?: string
+  message?: string
+  userMessage?: string
+  usage?: AskAiUsageSummary
+  requestId?: string
+}
+
 type AskAiRuntimeState = {
   question: string
   answer: string
@@ -75,7 +88,7 @@ function sanitizeChatbotAnswer(text: string): string {
 }
 
 function trimAssistantContent(content: string): string {
-  return content.length > 1200 ? content.slice(0, 1200) + '...' : content
+  return content.length > 1200 ? `${content.slice(0, 1200)}...` : content
 }
 
 function buildConversationContext(messages: ChatMessage[]): ChatMessage[] {
@@ -205,8 +218,8 @@ function normalizeAskAiUsageStatus(value: unknown): AskAiUsageStatus | null {
   const normalizedUsageType =
     candidate.usageType === 'live_search'
       ? 'live_search'
-      : candidate.usageType === 'ask_ai_total' || candidate.usageType === 'chatbot_ai'
-        ? 'ask_ai_total'
+      : candidate.usageType === 'ask_ai_total' || candidate.usageType === 'chatbot_ai' || candidate.usageType === 'ask_ai_maps'
+        ? candidate.usageType
         : null
 
   if (
@@ -244,6 +257,46 @@ function getAskAiUsageStatus(value: unknown): AskAiUsageStatus | null {
 
   const envelope = value as AskAiUsageEnvelope
   return normalizeAskAiUsageStatus(envelope.askAi) ?? normalizeAskAiUsageStatus(envelope.chatbotAi)
+}
+
+function incrementCachedAskAiUsage(): AskAiUsageStatus | null {
+  const cached = readCachedAskAiUsage('chatbotAi')
+  if (!cached) return null
+
+  const nextUsed = cached.used + 1
+  const nextRemaining = Math.max(cached.remaining - 1, 0)
+
+  return {
+    ...cached,
+    used: nextUsed,
+    remaining: nextRemaining,
+    allowed: nextUsed < cached.limit,
+  }
+}
+
+function normalizeAskAiErrorMessage(message: unknown): string | null {
+  if (typeof message !== 'string') {
+    return null
+  }
+
+  const normalized = message.trim()
+  return normalized ? normalized : null
+}
+
+function getAskAiErrorMessage({
+  response,
+  fallbackMessage,
+}: {
+  response?: Pick<AskAiErrorResponse, 'error' | 'message' | 'userMessage'> | null
+  fallbackMessage?: string | null
+}) {
+  return (
+    normalizeAskAiErrorMessage(response?.userMessage) ??
+    normalizeAskAiErrorMessage(response?.message) ??
+    normalizeAskAiErrorMessage(response?.error) ??
+    normalizeAskAiErrorMessage(fallbackMessage) ??
+    'Sorry, I could not answer that right now. Please try again.'
+  )
 }
 
 function hasMeaningfulAskAiRuntimeState(state: AskAiRuntimeState) {
@@ -309,13 +362,10 @@ export function cancelAskAiRuntimeRequest() {
 
 export async function resumeAskAiRuntimeJob({
   accessToken,
-  apiBaseUrl,
 }: {
   accessToken: string
-  apiBaseUrl?: string
 }) {
   void accessToken
-  void apiBaseUrl
   // Non-streaming: can't resume an in-flight fetch across page navigations.
   // Reset any stale pending state so the UI doesn't appear stuck.
   if (askAiRuntimeState.isSubmitting) {
@@ -340,12 +390,10 @@ export function resetAskAiRuntimeState({
 export async function submitAskAiRuntimeRequest({
   question,
   accessToken,
-  apiBaseUrl,
   messages,
 }: {
   question: string
   accessToken: string
-  apiBaseUrl?: string
   messages: ChatMessage[]
 }) {
   const requestVersion = askAiRequestVersion + 1
@@ -372,7 +420,7 @@ export async function submitAskAiRuntimeRequest({
   })
 
   try {
-    const chatbotEndpoint = apiBaseUrl ? `${apiBaseUrl}/ask-ai/chatbot` : '/api/ask-ai/chatbot'
+    const chatbotEndpoint = getApiUrl('/ask-ai/chatbot')
 
     const response = await fetch(chatbotEndpoint, {
       method: 'POST',
@@ -387,26 +435,27 @@ export async function submitAskAiRuntimeRequest({
       signal: abortController.signal,
     })
 
-    const data = await response.json() as {
-      ok?: boolean
-      answer?: string
-      sources?: unknown
-      error?: string
-      usage?: AskAiUsageSummary
-      requestId?: string
-    }
+    const data = await response.json() as AskAiErrorResponse
 
     if (!response.ok || !data.ok) {
-      const errorMessage = data.error || 'Sorry, I couldn’t answer that right now. Please try again.'
       interface ChatbotErrorBody {
         usage?: AskAiUsageSummary
         error?: string
+        message?: string
+        userMessage?: string
       }
+
       const errorBody: ChatbotErrorBody = {
         usage: data.usage,
-        error: errorMessage,
+        error: data.error,
+        message: data.message,
+        userMessage: data.userMessage,
       }
-      throw Object.assign(new Error(errorMessage), { errorBody })
+
+      throw Object.assign(
+        new Error(getAskAiErrorMessage({ response: data })),
+        { errorBody },
+      )
     }
 
     if (askAiRequestVersion !== requestVersion) {
@@ -416,7 +465,10 @@ export async function submitAskAiRuntimeRequest({
     const finalAnswer = sanitizeChatbotAnswer(data.answer ?? '')
     const finalSources = getAskAiSourceList(data.sources)
 
-    const usageStatus = getAskAiUsageStatus(data.usage) ?? askAiRuntimeState.usageStatus
+    const responseUsage = getAskAiUsageStatus(data.usage)
+    const usageStatus = responseUsage ?? incrementCachedAskAiUsage()
+
+    writeCachedAskAiUsage('chatbotAi', usageStatus)
 
     completeAskAiTask('chatbot', { answer: finalAnswer, sources: finalSources })
 
@@ -446,20 +498,28 @@ export async function submitAskAiRuntimeRequest({
       rawMessage === 'NetworkError' ||
       rawMessage === 'Load failed'
 
-    const errorMessage = isNetworkError
-      ? 'Sorry, I couldn’t answer that right now. Please try again.'
-      : 'Sorry, I couldn’t answer that right now. Please try again.'
-
     interface ErrorBody {
       usage?: AskAiUsageSummary
       error?: string
+      message?: string
+      userMessage?: string
     }
+
     const errorBody: ErrorBody | undefined =
       error instanceof Error && 'errorBody' in error
         ? (error as Error & { errorBody: ErrorBody }).errorBody
         : undefined
 
+    const errorMessage = isNetworkError
+      ? 'Sorry, I could not reach Ask AI right now. Please check your connection and try again.'
+      : getAskAiErrorMessage({
+          response: errorBody,
+          fallbackMessage: rawMessage,
+        })
+
     const updatedUsageStatus = getAskAiUsageStatus(errorBody?.usage) ?? askAiRuntimeState.usageStatus
+
+    writeCachedAskAiUsage('chatbotAi', updatedUsageStatus)
 
     failAskAiTask('chatbot', errorMessage)
 

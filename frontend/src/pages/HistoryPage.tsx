@@ -8,7 +8,38 @@ import ActivityPlaceCard from '../components/ActivityPlaceCard'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { getSupabaseAccessToken } from '../supabase'
 import { getPlacePhoto } from '../utils/placePhoto'
+import { getApiUrl } from '../utils/apiClient'
 import historyActiveChibi from '../assets/chibis/features/history/chibi-history-active-state.webp'
+
+const HISTORY_CACHE_PREFIX = 'galatayo:history:'
+const HISTORY_CACHE_TTL_MS = 5 * 60 * 1000
+
+function getHistoryCacheKey(userId: string) {
+  return `${HISTORY_CACHE_PREFIX}${userId}`
+}
+
+function readHistoryCache(userId: string): HistoryItem[] | null {
+  try {
+    const raw = localStorage.getItem(getHistoryCacheKey(userId))
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as { items: HistoryItem[]; cachedAt: number } | null
+    if (!parsed || typeof parsed.cachedAt !== 'number' || Date.now() - parsed.cachedAt > HISTORY_CACHE_TTL_MS) {
+      if (parsed) localStorage.removeItem(getHistoryCacheKey(userId))
+      return null
+    }
+    return parsed.items
+  } catch {
+    return null
+  }
+}
+
+function writeHistoryCache(userId: string, items: HistoryItem[]) {
+  try {
+    localStorage.setItem(getHistoryCacheKey(userId), JSON.stringify({ items, cachedAt: Date.now() }))
+  } catch {
+    /* ignore */
+  }
+}
 
 type HistoryPlace = {
   id: string
@@ -55,11 +86,6 @@ function getHistoryErrorMessage(error: unknown, fallbackMessage: string) {
   }
 
   return message
-}
-
-function getApiEndpoint(path: string) {
-  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL
-  return apiBaseUrl ? `${apiBaseUrl}${path}` : `/api${path}`
 }
 
 function getPlaceLocation(place: HistoryPlace) {
@@ -218,7 +244,15 @@ function formatViewedAt(value: string) {
   })}`
 }
 
-function HistoryCard({ item }: { item: HistoryItem }) {
+function HistoryCard({
+  item,
+  onRemove,
+  isRemoving,
+}: {
+  item: HistoryItem
+  onRemove: () => void
+  isRemoving: boolean
+}) {
   const place = item.place as HistoryPlace
   const placeSlug = place.slug as string
   const location = getPlaceLocation(place)
@@ -244,23 +278,38 @@ function HistoryCard({ item }: { item: HistoryItem }) {
           label: formatViewedAt(item.created_at),
         },
       ]}
+      footer={
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation()
+            onRemove()
+          }}
+          disabled={isRemoving}
+          className="inline-flex h-6 w-full items-center justify-center gap-1 rounded-md border border-red-200 bg-white text-[10px] font-black text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 sm:h-7 sm:text-xs"
+        >
+          <TrashIcon className="h-3 w-3" />
+          {isRemoving ? 'Removing...' : 'Remove'}
+        </button>
+      }
     />
   )
 }
 
 function HistoryPage() {
   const { session, isSessionLoading } = useSavedFavorites()
-  const [history, setHistory] = useState<HistoryItem[]>([])
-  const [isLoading, setIsLoading] = useState(false)
+  const [history, setHistory] = useState<HistoryItem[]>(() => {
+    return session?.user?.id ? readHistoryCache(session.user.id) ?? [] : []
+  })
   const [isClearing, setIsClearing] = useState(false)
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set())
   const [errorMessage, setErrorMessage] = useState('')
 
   useEffect(() => {
     if (!session?.user?.id) {
       setHistory([])
-      setIsLoading(false)
       setErrorMessage('')
-      return undefined
+      return
     }
 
     const controller = new AbortController()
@@ -273,10 +322,9 @@ function HistoryPage() {
           throw new Error('Sign in to view your history.')
         }
 
-        setIsLoading(true)
         setErrorMessage('')
 
-        const response = await fetch(getApiEndpoint('/history'), {
+        const response = await fetch(getApiUrl('/history'), {
           method: 'GET',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -290,13 +338,13 @@ function HistoryPage() {
           throw new Error(data.message || 'Unable to load history. Please try again.')
         }
 
-        setHistory(data.history || [])
+        const items = data.history || []
+        setHistory(items)
+        writeHistoryCache(session.user.id, items)
       } catch (error) {
         if ((error as Error).name !== 'AbortError') {
           setErrorMessage(getHistoryErrorMessage(error, 'Unable to load history. Please try again.'))
         }
-      } finally {
-        setIsLoading(false)
       }
     }
 
@@ -326,6 +374,41 @@ function HistoryPage() {
   }, [visibleHistory])
   const canClearHistory = Boolean(session?.user?.id) && visibleHistory.length > 0
 
+  const handleDeleteHistoryItem = async (itemId: string) => {
+    setDeletingIds((current) => new Set(current).add(itemId))
+
+    try {
+      const token = await getSupabaseAccessToken(session)
+
+      if (!token) {
+        throw new Error('Sign in to manage your history.')
+      }
+
+      const response = await fetch(getApiUrl(`/history/${encodeURIComponent(itemId)}`), {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      const data = (await response.json()) as { message?: string }
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Unable to delete history item.')
+      }
+
+      setHistory((current) => current.filter((item) => item.id !== itemId))
+    } catch (error) {
+      setErrorMessage(getHistoryErrorMessage(error, 'Unable to delete history item.'))
+    } finally {
+      setDeletingIds((current) => {
+        const next = new Set(current)
+        next.delete(itemId)
+        return next
+      })
+    }
+  }
+
   const handleClearHistory = async () => {
     if (!session?.user?.id || isClearing) {
       return
@@ -347,7 +430,7 @@ function HistoryPage() {
       setIsClearing(true)
       setErrorMessage('')
 
-      const response = await fetch(getApiEndpoint('/history'), {
+      const response = await fetch(getApiUrl('/history'), {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -391,26 +474,23 @@ function HistoryPage() {
                 <span className="gala-count-pill">
                   {historySections.length > 0 ? `${historySections.length} time section${historySections.length === 1 ? '' : 's'}` : 'Private to your account'}
                 </span>
+                {canClearHistory ? (
+                  <button
+                    type="button"
+                    onClick={() => void handleClearHistory()}
+                    disabled={isClearing}
+                    className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 text-xs font-black text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <TrashIcon className="h-3.5 w-3.5" />
+                    {isClearing ? 'Clearing...' : 'Clear history'}
+                  </button>
+                ) : null}
               </>
             }
             aside={<HistoryChibi />}
             divider={false}
             className="pb-0"
           />
-
-          {canClearHistory ? (
-            <div className="flex justify-start">
-              <button
-                type="button"
-                onClick={() => void handleClearHistory()}
-                disabled={isClearing}
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-red-200 bg-white px-4 text-xs font-black text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <TrashIcon className="h-3.5 w-3.5" />
-                {isClearing ? 'Clearing...' : 'Clear history'}
-              </button>
-            </div>
-          ) : null}
 
           {isSessionLoading ? (
             <CardSurface pad="default" className="mt-6">
@@ -430,15 +510,11 @@ function HistoryPage() {
 
           {!isSessionLoading && session?.user ? (
             <Stack gap="default">
-              <div className="min-h-5">
-                {isLoading ? (
-                  <p className="text-sm font-semibold text-[var(--accent-deep)]">Loading your history...</p>
-                ) : errorMessage ? (
-                  <p className="text-sm font-medium text-red-600">{errorMessage}</p>
-                ) : null}
-              </div>
+              {errorMessage ? (
+                <p className="text-sm font-medium text-red-600">{errorMessage}</p>
+              ) : null}
 
-              {!isLoading && !errorMessage && visibleHistory.length === 0 ? (
+              {!errorMessage && visibleHistory.length === 0 ? (
                 <EmptyState
                   title="No viewed places yet."
                   description="Start exploring places and they'll appear here."
@@ -455,7 +531,12 @@ function HistoryPage() {
                       </div>
                       <div className="grid w-full grid-cols-2 gap-2.5 sm:gap-4 xl:justify-start xl:[grid-template-columns:repeat(auto-fill,minmax(340px,340px))]">
                         {section.items.map((item) => (
-                          <HistoryCard key={item.id} item={item} />
+                          <HistoryCard
+                            key={item.id}
+                            item={item}
+                            onRemove={() => void handleDeleteHistoryItem(item.id)}
+                            isRemoving={deletingIds.has(item.id)}
+                          />
                         ))}
                       </div>
                     </section>
