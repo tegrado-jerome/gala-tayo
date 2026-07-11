@@ -10,7 +10,6 @@ import InternalLink from '../components/InternalLink'
 import MapView from '../components/MapView'
 import { MapResponsiveLayout } from '../components/layout/ResponsiveLayouts'
 import { supabase } from '../supabase'
-import { getApiUrl } from '../utils/apiClient'
 import {
   cancelAskAiMapRequest,
   clearAskAiMapAbortController,
