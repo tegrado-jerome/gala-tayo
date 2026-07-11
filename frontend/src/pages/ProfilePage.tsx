@@ -694,7 +694,7 @@ function ProfilePage({ session }: ProfilePageProps) {
       </div>
 
       {isGuestProfile ? (
-        <div className="fixed inset-0 z-[7000] flex items-center justify-center overflow-hidden bg-slate-950/20 px-4 py-6">
+        <div className="fixed inset-x-0 top-0 bottom-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] z-[7000] flex items-center justify-center overflow-hidden bg-slate-950/20 px-4 py-6">
           <div className="w-full max-w-[420px]">
             <GuestAuthPrompt variant="profile" mode="inline-card" />
           </div>
