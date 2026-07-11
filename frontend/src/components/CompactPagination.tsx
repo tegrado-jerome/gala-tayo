@@ -39,13 +39,8 @@ function CompactPagination({
   showLoadingMessage = true,
   navigationDelayMs = 120,
 }: CompactPaginationProps) {
-  if (totalPages <= 1) {
-    return null
-  }
-
   const [pendingPage, setPendingPage] = useState<number | null>(null)
   const pendingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const hasNavigationHandler = typeof onPageChange === 'function'
 
   useEffect(() => {
     if (pendingPage === null) {
@@ -64,6 +59,12 @@ function CompactPagination({
       }
     }
   }, [])
+
+  if (totalPages <= 1) {
+    return null
+  }
+
+  const hasNavigationHandler = typeof onPageChange === 'function'
 
   if (!getHref && !hasNavigationHandler) {
     return null
