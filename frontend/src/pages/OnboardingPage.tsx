@@ -318,7 +318,7 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
   useEffect(() => {
     setErrors((currentErrors) => {
       if (!usernameValidationError) {
-        const { username, ...rest } = currentErrors
+        const { username: _username, ...rest } = currentErrors
         return rest as OnboardingErrors
       }
 
