@@ -17,6 +17,16 @@ export type AskAiUsageSummaryResult = {
   chatbotAi: AskAiUsageResult;
 };
 
+export type AskAiUsageActor =
+  | {
+      kind: "registered";
+      id: string;
+    }
+  | {
+      kind: "guest";
+      id: string;
+    };
+
 export type AskAiUsageTypeInput =
   | AskAiUsageType
   | "ask_ai_total"
@@ -28,6 +38,11 @@ const ASK_AI_DAILY_LIMITS: Record<string, number> = {
   chatbot_ai: 20,
   ask_ai_total: 10,
   live_search: 5,
+};
+
+const ASK_AI_GUEST_DAILY_LIMITS: Record<AskAiUsageType, number> = {
+  ask_ai_maps: 3,
+  chatbot_ai: 5,
 };
 
 const ASK_AI_USAGE_TIMEZONE = "Asia/Manila";
@@ -66,6 +81,10 @@ function getResetAt(usageDate: string): string {
 
 function getDailyLimit(usageType: string): number {
   return ASK_AI_DAILY_LIMITS[usageType] ?? 0;
+}
+
+function getGuestDailyLimit(usageType: AskAiUsageType): number {
+  return ASK_AI_GUEST_DAILY_LIMITS[usageType];
 }
 
 export function normalizeAskAiUsageType(
@@ -132,12 +151,34 @@ function normalizeRpcRow(row: unknown): AskAiUsageResult | null {
 function buildUsageResult(
   usageType: string,
   requestCount: number,
-  usageDate: string
+  usageDate: string,
+  limitOverride?: number
 ): AskAiUsageResult {
-  const limit = getDailyLimit(usageType);
+  const limit = typeof limitOverride === "number" ? limitOverride : getDailyLimit(usageType);
   const normalizedCount = Math.max(0, requestCount);
   const remaining = Math.max(limit - normalizedCount, 0);
   const allowed = normalizedCount < limit;
+
+  return {
+    usageType,
+    allowed,
+    dailyLimit: limit,
+    requestCount: normalizedCount,
+    remaining,
+    usageDate,
+    resetsAt: getResetAt(usageDate),
+  };
+}
+
+function buildGuestUsageResult(
+  usageType: AskAiUsageType,
+  requestCount: number,
+  usageDate: string
+): AskAiUsageResult {
+  const limit = getGuestDailyLimit(usageType);
+  const normalizedCount = Math.max(0, requestCount);
+  const remaining = Math.max(limit - normalizedCount, 0);
+  const allowed = normalizedCount <= limit;
 
   return {
     usageType,
@@ -179,6 +220,43 @@ export async function checkAllAskAiUsage(
   const [askAiMaps, chatbotAi] = await Promise.all([
     checkAskAiUsage(userId, "ask_ai_maps"),
     checkAskAiUsage(userId, "chatbot_ai"),
+  ]);
+
+  return {
+    askAiMaps,
+    chatbotAi,
+  };
+}
+
+async function checkAskAiGuestUsage(
+  guestId: string,
+  usageType: AskAiUsageType
+): Promise<AskAiUsageResult> {
+  const supabase = await getSupabaseAdminClient();
+  const today = getTodayUsageDate();
+
+  const { data, error } = await supabase
+    .from("ask_ai_guest_usage")
+    .select("request_count")
+    .eq("guest_id", guestId)
+    .eq("usage_type", usageType)
+    .eq("usage_date", today)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to check guest Ask AI usage: ${error.message}`);
+  }
+
+  const requestCount = (data as { request_count?: number } | null)?.request_count ?? 0;
+  return buildGuestUsageResult(usageType, requestCount, today);
+}
+
+async function checkAllAskAiGuestUsage(
+  guestId: string
+): Promise<AskAiUsageSummaryResult> {
+  const [askAiMaps, chatbotAi] = await Promise.all([
+    checkAskAiGuestUsage(guestId, "ask_ai_maps"),
+    checkAskAiGuestUsage(guestId, "chatbot_ai"),
   ]);
 
   return {
@@ -272,6 +350,131 @@ export async function consumeAskAiUsage(
   throw new Error("Failed to consume Ask AI usage.");
 }
 
+async function consumeAskAiGuestUsage(params: {
+  guestId: string;
+  usageType: AskAiUsageTypeInput;
+}): Promise<AskAiUsageResult> {
+  const usageType = normalizeAskAiUsageType(params.usageType);
+
+  if (usageType !== "ask_ai_maps" && usageType !== "chatbot_ai") {
+    throw new Error("Guest Ask AI usage only supports chatbot_ai and ask_ai_maps.");
+  }
+
+  const supabase = await getSupabaseAdminClient();
+  const today = getTodayUsageDate();
+  const limit = getGuestDailyLimit(usageType);
+  const usageTable = supabase.from("ask_ai_guest_usage") as any;
+
+  const { data: existing, error: existingError } = await usageTable
+    .select("id,request_count")
+    .eq("guest_id", params.guestId)
+    .eq("usage_type", usageType)
+    .eq("usage_date", today)
+    .maybeSingle();
+
+  if (existingError) {
+    throw new Error(`Failed to check guest Ask AI usage: ${existingError.message}`);
+  }
+
+  if (!existing) {
+    const { data: created, error: createError } = await usageTable
+      .insert({
+        guest_id: params.guestId,
+        usage_type: usageType,
+        usage_date: today,
+        request_count: 1,
+      })
+      .select("request_count")
+      .single();
+
+    if (createError) {
+      if (createError.code === "23505") {
+        return consumeAskAiGuestUsage(params);
+      }
+
+      throw new Error(`Failed to create guest Ask AI usage: ${createError.message}`);
+    }
+
+    return buildUsageResult(
+      usageType,
+      (created as { request_count: number }).request_count,
+      today,
+      limit
+    );
+  }
+
+  const existingRow = existing as { id: string; request_count: number };
+
+  if (existingRow.request_count >= limit) {
+    return buildUsageResult(usageType, existingRow.request_count, today, limit);
+  }
+
+  const nextCount = existingRow.request_count + 1;
+
+  const { data: updated, error: updateError } = await usageTable
+    .update({ request_count: nextCount })
+    .eq("id", existingRow.id)
+    .eq("request_count", existingRow.request_count)
+    .select("request_count")
+    .maybeSingle();
+
+  if (updateError) {
+    throw new Error(`Failed to update guest Ask AI usage: ${updateError.message}`);
+  }
+
+  if (updated) {
+    return buildUsageResult(
+      usageType,
+      (updated as { request_count: number }).request_count,
+      today,
+      limit
+    );
+  }
+
+  const latest = await checkAskAiGuestUsage(params.guestId, usageType);
+  if (!latest.allowed) {
+    return latest;
+  }
+
+  throw new Error("Failed to consume guest Ask AI usage.");
+}
+
+async function refundAskAiGuestUsage(params: {
+  guestId: string;
+  usageType: AskAiUsageType;
+}): Promise<void> {
+  const supabase = await getSupabaseAdminClient();
+  const today = getTodayUsageDate();
+  const usageTable = supabase.from("ask_ai_guest_usage") as any;
+
+  const { data, error: readError } = await usageTable
+    .select("id,request_count")
+    .eq("guest_id", params.guestId)
+    .eq("usage_type", params.usageType)
+    .eq("usage_date", today)
+    .maybeSingle();
+
+  if (readError) {
+    console.warn(`[AskAI Usage] guest refund read failed: ${readError.message}`);
+    return;
+  }
+
+  if (!data) {
+    return;
+  }
+
+  const currentRow = data as { id: string; request_count: number };
+  const nextCount = Math.max((currentRow.request_count ?? 0) - 1, 0);
+
+  const { error } = await usageTable
+    .update({ request_count: nextCount })
+    .eq("id", currentRow.id);
+
+  if (error) {
+    console.warn(`[AskAI Usage] guest refund failed: ${error.message}`);
+  }
+}
+
 async function consumeAskAiUsageRpc(params: {
   userId: string;
   usageType: AskAiUsageType;
@@ -316,4 +519,53 @@ export async function refundAskAiUsage(params: {
   if (error) {
     console.warn(`[AskAI Usage] refund failed: ${error.message}`);
   }
+}
+
+export async function checkAskAiUsageForActor(
+  actor: AskAiUsageActor
+): Promise<AskAiUsageSummaryResult> {
+  if (actor.kind === "guest") {
+    return checkAllAskAiGuestUsage(actor.id);
+  }
+
+  return checkAllAskAiUsage(actor.id);
+}
+
+export async function checkAskAiUsageForActorType(
+  actor: AskAiUsageActor,
+  usageType: AskAiUsageTypeInput
+): Promise<AskAiUsageResult> {
+  if (actor.kind === "guest") {
+    const normalizedUsageType = normalizeAskAiUsageType(usageType);
+
+    if (normalizedUsageType !== "ask_ai_maps" && normalizedUsageType !== "chatbot_ai") {
+      throw new Error("Guest Ask AI usage only supports chatbot_ai and ask_ai_maps.");
+    }
+
+    return checkAskAiGuestUsage(actor.id, normalizedUsageType);
+  }
+
+  return checkAskAiUsage(actor.id, normalizeAskAiUsageType(usageType));
+}
+
+export async function consumeAskAiUsageForActor(
+  actor: AskAiUsageActor,
+  usageTypeInput: AskAiUsageTypeInput
+): Promise<AskAiUsageResult> {
+  if (actor.kind === "guest") {
+    return consumeAskAiGuestUsage({ guestId: actor.id, usageType: usageTypeInput });
+  }
+
+  return consumeAskAiUsage(actor.id, usageTypeInput);
+}
+
+export async function refundAskAiUsageForActor(params: {
+  actor: AskAiUsageActor;
+  usageType: AskAiUsageType;
+}): Promise<void> {
+  if (params.actor.kind === "guest") {
+    return refundAskAiGuestUsage({ guestId: params.actor.id, usageType: params.usageType });
+  }
+
+  return refundAskAiUsage({ userId: params.actor.id, usageType: params.usageType });
 }

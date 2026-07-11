@@ -6,29 +6,21 @@ import {
   InvocationContext,
 } from "@azure/functions";
 import {
-  consumeAskAiUsage,
-  refundAskAiUsage,
+  consumeAskAiUsageForActor,
+  refundAskAiUsageForActor,
 } from "../services/askAiUsageService";
 import {
   GroqChatProviderError,
   generateFromGroq,
   sanitizeChatbotAnswer,
 } from "../services/groqChatProvider";
-import { validateJwt } from "../utils/auth";
+import { resolveAskAiActor, type AskAiActor } from "../utils/askAiActor";
 
 type AskAiRequestBody = {
   question?: unknown;
   placeSlug?: unknown;
   conversationHistory?: unknown;
 };
-
-function isAuthError(message: string): boolean {
-  return (
-    message === "Missing Authorization header." ||
-    message === "Invalid Authorization header format." ||
-    message === "Invalid or expired token."
-  );
-}
 
 async function getRequestBody(request: HttpRequest): Promise<AskAiRequestBody> {
   try {
@@ -74,17 +66,30 @@ function getErrorStatus(error: unknown): number {
   return 500;
 }
 
+function isGuestIdentityError(message: string): boolean {
+  return message === "Missing Ask AI guest identifier.";
+}
+
+function isAuthError(message: string): boolean {
+  return (
+    message === "Missing Authorization header." ||
+    message === "Invalid Authorization header format." ||
+    message === "Invalid or expired token."
+  );
+}
+
 export async function postAskAiChatbot(
   request: HttpRequest,
   context: InvocationContext
 ): Promise<HttpResponseInit> {
   const requestId = randomUUID();
   let quotaConsumedUserId: string | null = null;
+  let resolvedActor: AskAiActor | null = null;
 
   try {
     context.log(`[AskAI Chatbot] REQUEST STARTED requestId=${requestId}`);
 
-    const user = await validateJwt(request);
+    resolvedActor = await resolveAskAiActor(request);
     const body = await getRequestBody(request);
     const message =
       getStringField(body.question) ??
@@ -102,11 +107,11 @@ export async function postAskAiChatbot(
       };
     }
 
-    const aiUsage = await consumeAskAiUsage(user.id, "chatbot_ai");
+    const aiUsage = await consumeAskAiUsageForActor(resolvedActor!, "chatbot_ai");
 
     if (!aiUsage.allowed) {
       context.log(
-        `[AskAI Chatbot] quota blocked: usageType=chatbot_ai remaining=0 userId=${user.id}`
+        `[AskAI Chatbot] quota blocked: usageType=chatbot_ai remaining=0 actorId=${resolvedActor!.id} actorKind=${resolvedActor!.kind}`
       );
 
       return {
@@ -129,10 +134,10 @@ export async function postAskAiChatbot(
       };
     }
 
-    quotaConsumedUserId = user.id;
+    quotaConsumedUserId = resolvedActor!.id;
 
     context.log(
-      `[AskAI Chatbot] quota consumed: remaining=${aiUsage.remaining} userId=${user.id}`
+      `[AskAI Chatbot] quota consumed: remaining=${aiUsage.remaining} actorId=${resolvedActor!.id} actorKind=${resolvedActor!.kind}`
     );
 
     context.log(
@@ -173,8 +178,8 @@ export async function postAskAiChatbot(
   } catch (error) {
     if (quotaConsumedUserId) {
       context.log("[AskAI Chatbot] refunding usage after provider failure.");
-      await refundAskAiUsage({
-        userId: quotaConsumedUserId,
+      await refundAskAiUsageForActor({
+        actor: resolvedActor ?? { kind: "guest", id: quotaConsumedUserId },
         usageType: "chatbot_ai",
       });
     }
@@ -184,6 +189,18 @@ export async function postAskAiChatbot(
       `[AskAI Chatbot] REQUEST FAILED requestId=${requestId} reason=${message}`
     );
     context.error(error);
+
+    if (isGuestIdentityError(message)) {
+      return {
+        status: 400,
+        headers: JSON_HEADERS,
+        jsonBody: {
+          ok: false,
+          error: message,
+          requestId,
+        },
+      };
+    }
 
     if (isAuthError(message)) {
       return {

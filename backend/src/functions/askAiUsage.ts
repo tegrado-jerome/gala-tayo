@@ -4,12 +4,12 @@ import {
   HttpResponseInit,
   InvocationContext,
 } from "@azure/functions";
-import { validateJwt } from "../utils/auth";
+import { resolveAskAiActor } from "../utils/askAiActor";
 import {
   AskAiUsageTypeInput,
-  checkAllAskAiUsage,
-  checkAskAiUsage,
-  consumeAskAiUsage,
+  checkAskAiUsageForActor,
+  checkAskAiUsageForActorType,
+  consumeAskAiUsageForActor,
   isAskAiUsageTypeInput,
 } from "../services/askAiUsageService";
 
@@ -17,23 +17,20 @@ type UsageTypeParseResult =
   | { ok: true; usageType: AskAiUsageTypeInput | null }
   | { ok: false; response: HttpResponseInit };
 
-function isAuthError(message: string): boolean {
-  return (
-    message === "Missing Authorization header." ||
-    message === "Invalid Authorization header format." ||
-    message === "Invalid or expired token."
-  );
-}
-
 function handleAskAiUsageError(error: unknown, action: "check" | "consume"): HttpResponseInit {
   const message = error instanceof Error ? error.message : "Unknown error";
-  const isUnauthorized = isAuthError(message);
+  const isUnauthorized = message === "Missing Authorization header." ||
+    message === "Invalid Authorization header format." ||
+    message === "Invalid or expired token.";
+  const isGuestIdentityError = message === "Missing Ask AI guest identifier.";
 
   return {
-    status: isUnauthorized ? 401 : 500,
+    status: isUnauthorized ? 401 : isGuestIdentityError ? 400 : 500,
     jsonBody: {
       message: isUnauthorized
         ? "Unauthorized."
+        : isGuestIdentityError
+          ? "Guest Ask AI identifier is required."
         : `Failed to ${action} Ask AI usage.`,
       error: message,
     },
@@ -96,7 +93,7 @@ export async function checkAskAiUsageRequest(
   context.log("Checking Ask AI usage...");
 
   try {
-    const user = await validateJwt(request);
+    const actor = await resolveAskAiActor(request);
     const usageTypeResult = getCheckUsageType(request);
 
     if (usageTypeResult.ok === false) {
@@ -104,8 +101,8 @@ export async function checkAskAiUsageRequest(
     }
 
     const usage = usageTypeResult.usageType
-      ? await checkAskAiUsage(user.id, usageTypeResult.usageType)
-      : await checkAllAskAiUsage(user.id);
+      ? await checkAskAiUsageForActorType(actor, usageTypeResult.usageType)
+      : await checkAskAiUsageForActor(actor);
 
     return {
       status: 200,
@@ -125,14 +122,14 @@ export async function consumeAskAiUsageRequest(
   context.log("Consuming Ask AI usage...");
 
   try {
-    const user = await validateJwt(request);
+    const actor = await resolveAskAiActor(request);
     const usageTypeResult = await getConsumeUsageType(request);
 
     if (usageTypeResult.ok === false) {
       return usageTypeResult.response;
     }
 
-    const currentUsage = await checkAskAiUsage(user.id, usageTypeResult.usageType);
+    const currentUsage = await checkAskAiUsageForActorType(actor, usageTypeResult.usageType);
 
     if (!currentUsage.allowed) {
       return {
@@ -141,7 +138,7 @@ export async function consumeAskAiUsageRequest(
       };
     }
 
-    const usage = await consumeAskAiUsage(user.id, usageTypeResult.usageType);
+    const usage = await consumeAskAiUsageForActor(actor, usageTypeResult.usageType);
 
     return {
       status: 200,

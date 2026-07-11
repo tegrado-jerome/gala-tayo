@@ -1,5 +1,5 @@
 import { inferMetroManilaLocationsFromQuery } from "./metroManilaLocations";
-import { inferCategoryIdsFromQuery, normalizeSearchText } from "./searchMatching";
+import { getSearchTerms, inferCategoryIdsFromQuery, normalizeSearchText } from "./searchMatching";
 
 const SUPPORTED_SCOPE_KEYWORDS = [
   "metro manila",
@@ -126,13 +126,13 @@ export function validateMetroManilaSearchQuery({
   const unsupportedLocationKeywords = getUnsupportedLocationKeywords(normalizedQuery);
   const inferredCategoryIds = inferCategoryIdsFromQuery(normalizedQuery);
   const inferredGoodForIds = inferGoodForIdsFromQuery(normalizedQuery);
+  const searchableTerms = getSearchTerms(normalizedQuery);
   const hasIntentSignals =
     inferredCategoryIds.length > 0 || inferredGoodForIds.length > 0;
   const hasSupportedLocationContext =
     hasExplicitAreaFilter ||
     supportedLocations.cityIds.length > 0 ||
     mentionsSupportedScope(normalizedQuery);
-
   if (allowBroadDiscovery) {
     return {
       status: "ok",
@@ -193,7 +193,13 @@ export function validateMetroManilaSearchQuery({
     };
   }
 
-  if (!hasSupportedLocationContext) {
+  const isIntentOnlyQuery = hasIntentSignals && searchableTerms.length < 2;
+  const isVeryShortNameQuery =
+    !hasIntentSignals &&
+    searchableTerms.length === 1 &&
+    searchableTerms[0].length < 5;
+
+  if (!hasSupportedLocationContext && (isIntentOnlyQuery || isVeryShortNameQuery)) {
     return {
       status: "too_vague",
       message: "Try adding a place, city, or vibe.",

@@ -6,8 +6,8 @@ import {
 } from "@azure/functions";
 import { randomUUID } from "crypto";
 import {
-  consumeAskAiUsage,
-  refundAskAiUsage,
+  consumeAskAiUsageForActor,
+  refundAskAiUsageForActor,
 } from "../services/askAiUsageService";
 import {
   normalizeAskAiMapQuery,
@@ -28,10 +28,10 @@ import {
   logAskAiMapsError,
   uniqueQueries,
 } from "./askAiMaps/askAiMapsHelpers";
-import { validateJwt } from "../utils/auth";
+import { resolveAskAiActor } from "../utils/askAiActor";
 
 const ASK_AI_MAPS_COOLDOWN_MS = 10_000;
-const lastAskAiMapsRequestAtByUser = new Map<string, number>();
+const lastAskAiMapsRequestAtByActor = new Map<string, number>();
 
 function logAskAiMaps(context: InvocationContext, message: string) {
   context.log(message);
@@ -42,10 +42,14 @@ function getRequestId(request: HttpRequest): string {
   return headerRequestId || randomUUID();
 }
 
+function isGuestIdentityError(message: string): boolean {
+  return message === "Missing Ask AI guest identifier.";
+}
 
-function checkCooldown(userId: string, requestId: string): HttpResponseInit | null {
+
+function checkCooldown(actorId: string, requestId: string): HttpResponseInit | null {
   const now = Date.now();
-  const lastRequestAt = lastAskAiMapsRequestAtByUser.get(userId) ?? 0;
+  const lastRequestAt = lastAskAiMapsRequestAtByActor.get(actorId) ?? 0;
   const elapsed = now - lastRequestAt;
 
   if (elapsed < ASK_AI_MAPS_COOLDOWN_MS) {
@@ -81,7 +85,7 @@ export async function askAiMapsRequest(
   };
 
   try {
-    const user = await validateJwt(request);
+    const actor = await resolveAskAiActor(request);
 
     if (!query) {
       return {
@@ -98,17 +102,17 @@ export async function askAiMapsRequest(
       };
     }
 
-    const cooldownResponse = checkCooldown(user.id, requestId);
+    const cooldownResponse = checkCooldown(actor.id, requestId);
 
     if (cooldownResponse) {
       return cooldownResponse;
     }
 
-    const aiUsage = await consumeAskAiUsage(user.id, "ask_ai_maps");
+    const aiUsage = await consumeAskAiUsageForActor(actor, "ask_ai_maps");
 
     if (!aiUsage.allowed) {
       context.log(
-        `[Ask AI Maps] quota blocked: usageType=ask_ai_maps remaining=0 userId=${user.id}`
+        `[Ask AI Maps] quota blocked: usageType=ask_ai_maps remaining=0 actorId=${actor.id} actorKind=${actor.kind}`
       );
 
       return {
@@ -133,10 +137,10 @@ export async function askAiMapsRequest(
       };
     }
 
-    lastAskAiMapsRequestAtByUser.set(user.id, Date.now());
+    lastAskAiMapsRequestAtByActor.set(actor.id, Date.now());
 
     context.log(
-      `[Ask AI Maps] quota consumed: remaining=${aiUsage.remaining} userId=${user.id}`
+      `[Ask AI Maps] quota consumed: remaining=${aiUsage.remaining} actorId=${actor.id} actorKind=${actor.kind}`
     );
 
     const shouldNormalize = shouldNormalizeAskAiMapPrompt(query);
@@ -278,15 +282,32 @@ export async function askAiMapsRequest(
       };
     } catch (error) {
       context.log("[Ask AI Usage] refunding map usage after provider failure.");
-      await refundAskAiUsage({ userId: user.id, usageType: "ask_ai_maps" });
+      await refundAskAiUsageForActor({ actor, usageType: "ask_ai_maps" });
 
-      lastAskAiMapsRequestAtByUser.delete(user.id);
+      lastAskAiMapsRequestAtByActor.delete(actor.id);
       logAskAiMapsError(context, error, requestLogContext);
 
       return handleAskAiMapsError(error, requestLogContext, aiUsage);
     }
   } catch (error) {
     logAskAiMapsError(context, error, requestLogContext);
+
+    const message = error instanceof Error ? error.message : "Unknown error";
+    if (isGuestIdentityError(message)) {
+      return {
+        status: 400,
+        headers: buildResponseHeaders(requestId),
+        jsonBody: {
+          ok: false,
+          error: "ASK_AI_GUEST_ID_REQUIRED",
+          message,
+          requestId,
+          places: [],
+          sources: [],
+        },
+      };
+    }
+
     return handleAskAiMapsError(error, requestLogContext);
   }
 }
