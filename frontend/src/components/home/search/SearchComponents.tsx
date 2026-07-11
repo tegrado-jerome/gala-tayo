@@ -221,9 +221,6 @@ function SearchLoadingState({ searchLabel }: { searchLabel: string }) {
 
         <div className="mt-2 grid w-full gap-4">
           <SearchLoadingCard compact />
-          <p className="pt-2 text-center text-base font-semibold text-slate-400">
-            Konting hintay, naghahanap ng sulit spots...
-          </p>
         </div>
       </div>
     </section>
