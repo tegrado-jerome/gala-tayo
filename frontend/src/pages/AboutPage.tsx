@@ -25,7 +25,7 @@ function AboutPage() {
     {
       '@context': 'https://schema.org',
       '@type': 'AboutPage',
-      name: 'About GalaTayo',
+      name: 'About | GalaTayo',
       description: 'Learn about GalaTayo and how it helps people discover places, plan gala ideas, and explore Metro Manila.',
       url: `${getSiteOrigin()}/about`,
     },
@@ -42,7 +42,7 @@ function AboutPage() {
   return (
     <PageShell>
       <SeoHead
-        title="About GalaTayo"
+        title="About | GalaTayo"
         description="Learn about GalaTayo and how it helps people discover places, plan gala ideas, and explore Metro Manila."
         canonicalPath="/about"
         jsonLd={jsonLd}

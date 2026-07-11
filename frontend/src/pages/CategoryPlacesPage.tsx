@@ -184,7 +184,7 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
         {
           '@context': 'https://schema.org',
           '@type': 'CollectionPage',
-          name: `${categoryLabel} Places | GalaTayo`,
+          name: `${categoryLabel} | GalaTayo`,
           description: `Browse ${categoryLabel.toLowerCase()} places across Metro Manila on GalaTayo.`,
           url: `${getSiteOrigin()}/places/categories/${encodeURIComponent(categorySlug)}`,
         },
@@ -214,7 +214,7 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
   return (
     <PageShell>
       <SeoHead
-        title={`${categoryLabel} Places | GalaTayo`}
+        title={`${categoryLabel} | GalaTayo`}
         description={`Browse ${categoryLabel.toLowerCase()} places across Metro Manila on GalaTayo.`}
         canonicalPath={`/places/categories/${encodeURIComponent(categorySlug)}`}
         robots={hasQueryVariant ? 'noindex,follow' : 'index,follow'}

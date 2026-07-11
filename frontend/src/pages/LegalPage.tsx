@@ -263,7 +263,7 @@ function LegalPage({ type }: LegalPageProps) {
     : 'This Privacy Policy explains how GalaTayo collects, uses, stores, shares, protects, and deletes personal data when users access or use the system.'
   const sections = isTerms ? termsSections : privacySections
   const canonicalPath = isTerms ? '/terms' : '/privacy'
-  const seoTitle = isTerms ? 'Terms of Service | GalaTayo' : 'Privacy Policy | GalaTayo'
+  const seoTitle = isTerms ? 'Terms | GalaTayo' : 'Privacy | GalaTayo'
   const seoDescription = isTerms
     ? 'Read GalaTayo terms covering accounts, content, place information, AI features, moderation, and service rules.'
     : 'Read the GalaTayo privacy policy covering account data, public content, AI feature usage, storage, and user rights.'

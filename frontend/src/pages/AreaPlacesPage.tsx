@@ -225,7 +225,7 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
         {
           '@context': 'https://schema.org',
           '@type': 'CollectionPage',
-          name: `Places to Visit in ${areaName} | GalaTayo`,
+          name: `${areaName} | GalaTayo`,
           description: `Browse places in ${areaName} on GalaTayo and filter them by category in alphabetical order.`,
           url: `${getSiteOrigin()}/places/${encodeURIComponent(areaSlug)}`,
         },
@@ -254,7 +254,7 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
   return (
     <PageShell>
       <SeoHead
-        title={`Places to Visit in ${areaName} | GalaTayo`}
+        title={`${areaName} | GalaTayo`}
         description={`Browse places in ${areaName} on GalaTayo and filter them by category in alphabetical order.`}
         canonicalPath={`/places/${encodeURIComponent(areaSlug)}`}
         robots={hasQueryVariant ? 'noindex,follow' : 'index,follow'}

@@ -14,7 +14,7 @@ function PlacesIndexPage() {
     {
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
-      name: 'Places to Visit | GalaTayo',
+      name: 'Places | GalaTayo',
       description: 'Browse Metro Manila cities and jump straight into area pages on GalaTayo.',
       url: `${getSiteOrigin()}/places`,
     },
@@ -31,7 +31,7 @@ function PlacesIndexPage() {
   return (
     <PageShell>
       <SeoHead
-        title="Places to Visit | GalaTayo"
+        title="Places | GalaTayo"
         description="Browse Metro Manila cities and jump straight into area pages on GalaTayo."
         canonicalPath="/places"
         jsonLd={jsonLd}

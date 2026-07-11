@@ -355,7 +355,7 @@ function matchRoute(inputs: RouteInputs) {
     return (
       <>
         <SeoHead
-          title="GalaTayo | Plan Your Next Gala"
+          title="Home | GalaTayo"
           description="Discover places, plan gala ideas, and use AI-powered tools to find your next hangout, date, barkada, or family destination."
           canonicalPath="/"
           jsonLd={[
@@ -382,7 +382,7 @@ function matchRoute(inputs: RouteInputs) {
   if (pathname === '/search' || pathname === '/search/') {
     return (
       <>
-        <SeoHead title="Search Places | GalaTayo" description="Search Metro Manila places on GalaTayo." canonicalPath="/search" robots="noindex,follow" />
+        <SeoHead title="Search | GalaTayo" description="Search Metro Manila places on GalaTayo." canonicalPath="/search" robots="noindex,follow" />
         <SearchPage />
       </>
     )
@@ -401,7 +401,7 @@ function matchRoute(inputs: RouteInputs) {
     const initialAskAiQuestion = new URLSearchParams(search).get('q') ?? ''
     return (
       <>
-        <SeoHead title="Ask AI Chatbot | GalaTayo" description="Ask AI chatbot mode on GalaTayo." canonicalPath="/ask-ai/chatbot" robots="noindex,follow" />
+        <SeoHead title="AI Chatbot | GalaTayo" description="Ask AI chatbot mode on GalaTayo." canonicalPath="/ask-ai/chatbot" robots="noindex,follow" />
         <HomePage key={`ask-ai:${search || 'root'}`} initialMode="ask-ai" initialAskAiQuestion={initialAskAiQuestion} />
       </>
     )
@@ -410,7 +410,7 @@ function matchRoute(inputs: RouteInputs) {
   if (pathname === '/ask-ai/maps' || pathname === '/ask-ai/maps/') {
     return (
       <>
-        <SeoHead title="Ask AI Maps | GalaTayo" description="Ask AI maps mode on GalaTayo." canonicalPath="/ask-ai/maps" robots="noindex,follow" />
+        <SeoHead title="AI Maps | GalaTayo" description="Ask AI maps mode on GalaTayo." canonicalPath="/ask-ai/maps" robots="noindex,follow" />
         <AskAiMapPage />
       </>
     )
@@ -605,7 +605,7 @@ function matchRoute(inputs: RouteInputs) {
 
   return (
     <>
-      <SeoHead title="Page not found | GalaTayo" robots="noindex,follow" />
+      <SeoHead title="Not Found | GalaTayo" robots="noindex,follow" />
       <main className="flex min-h-screen flex-col items-center justify-center bg-white px-6 text-center">
         <h1 className="text-6xl font-black text-slate-900">404</h1>
         <p className="mt-3 text-lg font-semibold text-slate-600">Page not found</p>

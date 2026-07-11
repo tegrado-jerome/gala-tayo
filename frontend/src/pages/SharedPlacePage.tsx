@@ -157,7 +157,7 @@ export default function SharedPlacePage({
   if (isLoading) {
     return (
       <>
-        <SeoHead title="Loading place | GalaTayo" robots="noindex,follow" />
+        <SeoHead title="Loading | GalaTayo" robots="noindex,follow" />
         <UnifiedLoadingState
           variant="page"
           title="Preparing place details..."
@@ -170,7 +170,7 @@ export default function SharedPlacePage({
   if (notFound) {
     return (
       <>
-        <SeoHead title="Place not found | GalaTayo" robots="noindex,follow" />
+        <SeoHead title="Not Found | GalaTayo" robots="noindex,follow" />
         <main className="min-h-screen bg-[var(--bg)] px-6 py-10 text-[var(--text)]">
           <h1 className="text-2xl font-semibold text-slate-900">Place not found</h1>
           <p className="mt-2 text-sm text-[var(--muted)]">
@@ -184,7 +184,7 @@ export default function SharedPlacePage({
   if (errorMessage) {
     return (
       <>
-        <SeoHead title="Unable to load place | GalaTayo" robots="noindex,follow" />
+        <SeoHead title="Error | GalaTayo" robots="noindex,follow" />
         <main className="min-h-screen bg-[var(--bg)] px-6 py-10 text-[var(--text)]">
           <h1 className="text-2xl font-semibold text-slate-900">Unable to load place</h1>
           <p className="mt-2 text-sm text-[var(--muted)]">{errorMessage}</p>
@@ -200,7 +200,7 @@ export default function SharedPlacePage({
   return (
     <>
       <SeoHead
-        title={`${place.name} in ${areaMeta?.name || 'Metro Manila'} | GalaTayo`}
+        title={`${place.name} | GalaTayo`}
         description={buildPlaceDescription(place, areaMeta?.name || 'Metro Manila')}
         canonicalPath={canonicalPath}
         openGraphType="article"
