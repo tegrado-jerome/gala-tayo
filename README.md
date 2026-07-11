@@ -87,10 +87,6 @@ Required backend secrets:
 - `r2-access-key-id`
 - `r2-secret-access-key`
 
-Optional backend secret if the Foursquare feature is active:
-
-- `foursquare-api-key`
-
 Azure Function App settings for R2 and local fallbacks:
 
 - `R2_ENDPOINT_URL`

@@ -47,10 +47,11 @@ export const PUBLIC_OWNER_PROFILE_COLUMNS = "user_id, username, display_name, av
 export const PUBLIC_GALA_PLAN_COLUMNS = "id, user_id, title, slug, description, visibility, status, published_at, created_at, updated_at";
 export const USERNAME_PATTERN = /^[a-z0-9_.]{3,30}$/;
 export const EMAIL_LOOKING_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-export const TERMS_VERSION = "2026-06-14";
-export const PRIVACY_VERSION = "2026-06-14";
+export const TERMS_VERSION = "2026-07-11";
+export const PRIVACY_VERSION = "2026-07-11";
 export const BIO_MAX_LENGTH = 280;
 export const DISPLAY_NAME_MAX_LENGTH = 80;
+export const MINIMUM_AGE = 13;
 export const RESERVED_USERNAMES = new Set(["admin", "api", "auth", "login", "logout", "signup", "settings", "profile", "profiles", "user", "users", "search", "support", "help", "terms", "privacy", "gala", "galatayo"]);
 
 export function normalizeUsername(value: unknown) {
@@ -91,12 +92,27 @@ export function getMetadataString(metadata: Record<string, unknown> | undefined,
   return null;
 }
 
+const FIELD_LABELS: Record<string, string> = {
+  first_name: "First Name",
+  middle_name: "Middle Name",
+  last_name: "Last Name",
+  display_name: "Display Name",
+  avatar_url: "Avatar",
+  avatar_storage_key: "Avatar",
+  provider_avatar_url: "Avatar",
+};
+
+function getFieldLabel(fieldName: string) {
+  return FIELD_LABELS[fieldName] || fieldName.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
 export function getTrimmedString(value: unknown, fieldName: string, maxLength: number, required = true) {
-  if (value === undefined || value === null) return { value: null as string | null, error: required ? `${fieldName} is required.` : null };
-  if (typeof value !== "string") return { value: null as string | null, error: `${fieldName} must be a string.` };
+  const label = getFieldLabel(fieldName);
+  if (value === undefined || value === null) return { value: null as string | null, error: required ? `You must provide your ${label}.` : null };
+  if (typeof value !== "string") return { value: null as string | null, error: `Your ${label} must be text.` };
   const trimmed = value.trim();
-  if (required && !trimmed) return { value: null as string | null, error: `${fieldName} is required.` };
-  if (trimmed.length > maxLength) return { value: null as string | null, error: `${fieldName} must be ${maxLength} characters or less.` };
+  if (required && !trimmed) return { value: null as string | null, error: `You forgot to enter your ${label}.` };
+  if (trimmed.length > maxLength) return { value: null as string | null, error: `Your ${label} must be ${maxLength} characters or less.` };
   return { value: trimmed || null, error: null };
 }
 
@@ -113,15 +129,21 @@ export function canDeleteOwnedAvatarKey(userId: string, oldStorageKey: string | 
 
 export function validateBirthdate(value: unknown) {
   const dateValue = getTrimmedString(value, "birthdate", 10);
-  if (dateValue.error || !dateValue.value) return { value: null as string | null, error: dateValue.error || "birthdate is required." };
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateValue.value)) return { value: null as string | null, error: "birthdate must use YYYY-MM-DD format." };
+  if (dateValue.error || !dateValue.value) return { value: null as string | null, error: dateValue.error || "You must provide your birthdate." };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateValue.value)) return { value: null as string | null, error: "Your birthdate must use YYYY-MM-DD format." };
   const date = new Date(`${dateValue.value}T00:00:00.000Z`);
-  if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== dateValue.value) return { value: null as string | null, error: "birthdate must be a real date." };
+  if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== dateValue.value) return { value: null as string | null, error: "You entered an invalid birthdate." };
   const now = new Date();
   const todayUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
   const minDate = new Date("1900-01-01T00:00:00.000Z");
-  if (date > todayUtc) return { value: null as string | null, error: "birthdate cannot be in the future." };
-  if (date < minDate) return { value: null as string | null, error: "birthdate cannot be before 1900-01-01." };
+  if (date > todayUtc) return { value: null as string | null, error: "Your birthdate cannot be in the future." };
+  if (date < minDate) return { value: null as string | null, error: "Your birthdate cannot be before 1900-01-01." };
+  let age = todayUtc.getUTCFullYear() - date.getUTCFullYear();
+  const monthDiff = todayUtc.getUTCMonth() - date.getUTCMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && todayUtc.getUTCDate() < date.getUTCDate())) {
+    age--;
+  }
+  if (age < MINIMUM_AGE) return { value: null as string | null, error: `You must be at least ${MINIMUM_AGE} years old to use GalaTayo.` };
   return { value: dateValue.value, error: null };
 }
 

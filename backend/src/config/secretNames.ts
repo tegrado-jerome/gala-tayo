@@ -4,7 +4,6 @@ export const KEY_VAULT_SECRET_NAMES = {
   GROQ_API_KEY: "groq-api-key",
   GEMINI_API_KEY: "gemini-api-key",
   GEOAPIFY_API_KEY: "geoapify-api-key",
-  FOURSQUARE_API_KEY: "foursquare-api-key",
   REDIS_REST_URL: "redis-rest-url",
   REDIS_REST_TOKEN: "redis-rest-token",
   // Legacy migration fallbacks for older Key Vaults. Do not use for new setup.

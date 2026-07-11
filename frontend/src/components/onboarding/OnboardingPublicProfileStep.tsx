@@ -10,6 +10,7 @@ type OnboardingPublicProfileStepProps = {
   errors: OnboardingErrors
   usernameStatus: UsernameStatus
   isUploadingAvatar: boolean
+  disableNext: boolean
   onUpdate: (updates: Partial<OnboardingFormState>) => void
   onAvatarSelected: (file: File) => void
   onBack: () => void
@@ -21,6 +22,7 @@ function OnboardingPublicProfileStep({
   errors,
   usernameStatus,
   isUploadingAvatar,
+  disableNext,
   onUpdate,
   onAvatarSelected,
   onBack,
@@ -61,8 +63,8 @@ function OnboardingPublicProfileStep({
           <button type="button" onClick={onBack} className="onboarding-button onboarding-button-secondary">
             Back
           </button>
-          <button type="button" onClick={onNext} className="onboarding-button onboarding-button-primary">
-            Next
+          <button type="button" onClick={onNext} disabled={disableNext || usernameStatus === 'checking' || isUploadingAvatar} className="onboarding-button onboarding-button-primary disabled:cursor-not-allowed disabled:opacity-60">
+            {usernameStatus === 'checking' ? 'Checking...' : 'Next'}
           </button>
         </>
       }

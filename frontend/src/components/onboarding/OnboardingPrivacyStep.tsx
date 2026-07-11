@@ -1,8 +1,10 @@
 import OnboardingLayout from './OnboardingLayout'
-import type { OnboardingFormState, ProfileVisibility } from './types'
+import type { OnboardingErrors, OnboardingFormState, ProfileVisibility } from './types'
 
 type OnboardingPrivacyStepProps = {
   values: Pick<OnboardingFormState, 'profileVisibility'>
+  errors: OnboardingErrors
+  disableNext: boolean
   onUpdate: (updates: Partial<OnboardingFormState>) => void
   onBack: () => void
   onNext: () => void
@@ -21,7 +23,7 @@ const options: Array<{ value: ProfileVisibility; title: string; description: str
   },
 ]
 
-function OnboardingPrivacyStep({ values, onUpdate, onBack, onNext }: OnboardingPrivacyStepProps) {
+function OnboardingPrivacyStep({ values, errors, disableNext, onUpdate, onBack, onNext }: OnboardingPrivacyStepProps) {
   return (
     <OnboardingLayout
       step={4}
@@ -32,7 +34,7 @@ function OnboardingPrivacyStep({ values, onUpdate, onBack, onNext }: OnboardingP
           <button type="button" onClick={onBack} className="onboarding-button onboarding-button-secondary">
             Back
           </button>
-          <button type="button" onClick={onNext} className="onboarding-button onboarding-button-primary">
+          <button type="button" onClick={onNext} disabled={disableNext} className="onboarding-button onboarding-button-primary disabled:cursor-not-allowed disabled:opacity-60">
             Next
           </button>
         </>
@@ -54,6 +56,7 @@ function OnboardingPrivacyStep({ values, onUpdate, onBack, onNext }: OnboardingP
             </button>
           )
         })}
+        {errors.profileVisibility ? <span className="onboarding-error">{errors.profileVisibility}</span> : null}
       </div>
     </OnboardingLayout>
   )

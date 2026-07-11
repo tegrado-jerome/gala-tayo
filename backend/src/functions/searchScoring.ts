@@ -305,7 +305,7 @@ export function mapPlaceRowToSearchResult(row: Helpers.PlaceRow, { normalizedQue
   const categories = Helpers.getLinkedCategories(row);
   const tags = Helpers.getLinkedTagMetadata(row);
   return {
-    id: String(row.id ?? row.foursquare_id ?? row.slug ?? ""),
+    id: String(row.id ?? row.slug ?? ""),
     slug: Helpers.getStringField(row, ["slug"]),
     name: Helpers.getStringField(row, ["name"]),
     description: Helpers.getStringField(row, ["description", "reason"]),

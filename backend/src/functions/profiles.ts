@@ -531,14 +531,14 @@ export async function onboardingComplete(
       lastName.error ||
       birthdate.error ||
       displayName.error ||
-      (username ? usernameError : "username is required.") ||
+      (username ? usernameError : "You must provide a username.") ||
       avatarUrl.error ||
       avatarStorageKey.error ||
       providerAvatarUrl.error ||
-      (profileVisibility !== undefined && profileVisibility !== "public" && profileVisibility !== "private" ? "profile_visibility must be public or private." : null) ||
-      (acceptedTerms !== true ? "accepted_terms must be true." : null) ||
-      (acceptedPrivacy !== true ? "accepted_privacy must be true." : null) ||
-      (body.isPublic !== undefined && typeof body.isPublic !== "boolean" ? "isPublic must be a boolean." : null);
+      (profileVisibility !== undefined && profileVisibility !== "public" && profileVisibility !== "private" ? "Please select either Public or Private profile visibility." : null) ||
+      (acceptedTerms !== true ? "You must accept the Terms of Service." : null) ||
+      (acceptedPrivacy !== true ? "You must accept the Privacy Policy." : null) ||
+      (body.isPublic !== undefined && typeof body.isPublic !== "boolean" ? "Profile visibility setting must be a boolean." : null);
 
     if (validationError) {
       return {
@@ -680,12 +680,13 @@ export async function onboardingComplete(
       };
     }
 
-    context.error("POST /api/onboarding/complete failed:", error);
+    const errorMessage = error instanceof Error ? error.message : "Failed to finish onboarding.";
+    context.error("POST /api/onboarding/complete failed:", errorMessage, JSON.stringify(error, Object.getOwnPropertyNames(error)));
 
     return {
       status: 500,
       jsonBody: {
-        message: "Failed to finish onboarding.",
+        message: errorMessage,
       },
     };
   }

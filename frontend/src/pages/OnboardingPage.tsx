@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import OnboardingAgreementStep from '../components/onboarding/OnboardingAgreementStep'
 import OnboardingPersonalInfoStep from '../components/onboarding/OnboardingPersonalInfoStep'
@@ -23,6 +23,7 @@ type OnboardingPageProps = {
   onComplete?: () => void
 }
 
+const MINIMUM_AGE = 13
 const usernamePattern = /^[a-z0-9_.]{3,30}$/
 const draftStorageVersion = 1
 
@@ -64,23 +65,23 @@ function splitName(fullName: string) {
 
 function validateUsername(username: string) {
   if (!username) {
-    return 'Username is required.'
+    return 'You need to enter a username.'
   }
 
   if (!usernamePattern.test(username)) {
-    return 'Use 3-30 lowercase letters, numbers, underscores, or dots.'
+    return 'Your username must be 3-30 lowercase letters, numbers, underscores, or dots only.'
   }
 
   if (username.startsWith('.')) {
-    return 'Username cannot start with a dot.'
+    return 'Your username cannot start with a dot.'
   }
 
   if (username.endsWith('.')) {
-    return 'Username cannot end with a dot.'
+    return 'Your username cannot end with a dot.'
   }
 
   if (username.includes('..')) {
-    return 'Username cannot contain consecutive dots.'
+    return 'Your username cannot contain consecutive dots.'
   }
 
   return ''
@@ -90,11 +91,11 @@ function trimError(value: string, label: string, maxLength = 80) {
   const trimmed = value.trim()
 
   if (!trimmed) {
-    return `${label} is required.`
+    return `You forgot to enter your ${label}.`
   }
 
   if (trimmed.length > maxLength) {
-    return `${label} must be ${maxLength} characters or less.`
+    return `Your ${label} must be ${maxLength} characters or less.`
   }
 
   return ''
@@ -104,28 +105,39 @@ function validateBirthdate(value: string) {
   const trimmed = value.trim()
 
   if (!trimmed) {
-    return 'Birthdate is required.'
+    return 'You forgot to enter your birthdate.'
   }
 
   if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
-    return 'Birthdate must use YYYY-MM-DD format.'
+    return 'Your birthdate must use YYYY-MM-DD format.'
   }
 
   const date = new Date(`${trimmed}T00:00:00.000Z`)
 
   if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== trimmed) {
-    return 'Birthdate must be a real date.'
+    return 'You entered an invalid birthdate.'
   }
 
   const now = new Date()
   const todayUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
 
   if (date > todayUtc) {
-    return 'Birthdate cannot be in the future.'
+    return 'Your birthdate cannot be in the future.'
   }
 
   if (date < new Date('1900-01-01T00:00:00.000Z')) {
-    return 'Birthdate cannot be before 1900-01-01.'
+    return 'Your birthdate cannot be before 1900-01-01.'
+  }
+
+  let age = todayUtc.getUTCFullYear() - date.getUTCFullYear()
+  const monthDiff = todayUtc.getUTCMonth() - date.getUTCMonth()
+
+  if (monthDiff < 0 || (monthDiff === 0 && todayUtc.getUTCDate() < date.getUTCDate())) {
+    age--
+  }
+
+  if (age < MINIMUM_AGE) {
+    return `You must be at least ${MINIMUM_AGE} years old to use GalaTayo.`
   }
 
   return ''
@@ -233,6 +245,8 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
   const [isCheckingStatus, setIsCheckingStatus] = useState(true)
   const [isDraftReady, setIsDraftReady] = useState(false)
   const [statusError, setStatusError] = useState('')
+  const valuesRef = useRef(values)
+  valuesRef.current = values
 
   const normalizedUsername = useMemo(() => values.username.trim().toLowerCase().replace(/^@+/, ''), [values.username])
   const usernameValidationError = useMemo(() => validateUsername(normalizedUsername), [normalizedUsername])
@@ -302,7 +316,14 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
   }, [session])
 
   useEffect(() => {
-    setErrors((currentErrors) => ({ ...currentErrors, username: usernameValidationError }))
+    setErrors((currentErrors) => {
+      if (!usernameValidationError) {
+        const { username, ...rest } = currentErrors
+        return rest as OnboardingErrors
+      }
+
+      return { ...currentErrors, username: usernameValidationError }
+    })
 
     if (usernameValidationError) {
       setUsernameStatus('invalid')
@@ -320,18 +341,17 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
           }
 
           setUsernameStatus(result.available ? 'available' : 'taken')
-          setErrors((currentErrors) => ({
-            ...currentErrors,
-            username: result.available ? '' : result.reason || 'That username is already taken.',
-          }))
-        })
-        .catch((error) => {
-          if (isMounted) {
-            setUsernameStatus('taken')
+
+          if (!result.available) {
             setErrors((currentErrors) => ({
               ...currentErrors,
-              username: error instanceof Error ? error.message : 'Could not check username.',
+              username: result.reason || 'That username is already taken.',
             }))
+          }
+        })
+        .catch(() => {
+          if (isMounted) {
+            setUsernameStatus('taken')
           }
         })
     }, 450)
@@ -385,7 +405,7 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
       nextErrors.birthdate = validateBirthdate(values.birthdate)
 
       if (values.middleName.trim().length > 80) {
-        nextErrors.middleName = 'Middle Name must be 80 characters or less.'
+        nextErrors.middleName = 'Your Middle Name must be 80 characters or less.'
       }
     }
 
@@ -394,20 +414,20 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
       nextErrors.username = usernameValidationError || errors.username
 
       if (usernameStatus === 'checking') {
-        nextErrors.username = 'Checking username...'
+        nextErrors.username = 'Please wait, we are checking your username...'
       }
 
       if (usernameStatus === 'taken') {
-        nextErrors.username = nextErrors.username || 'That username is already taken.'
+        nextErrors.username = nextErrors.username || 'That username is already taken by someone else. Choose another.'
       }
     }
 
     if (step === 4 && values.profileVisibility !== 'public' && values.profileVisibility !== 'private') {
-      nextErrors.profileVisibility = 'Choose public or private.'
+      nextErrors.profileVisibility = 'Please select whether you want a Public or Private profile.'
     }
 
     if (step === 5 && (!values.acceptedTerms || !values.acceptedPrivacy)) {
-      nextErrors.form = 'You must agree to the Terms of Service and Privacy Policy.'
+      nextErrors.form = 'You need to agree to both the Terms of Service and Privacy Policy to continue.'
     }
 
     const activeErrors = Object.fromEntries(Object.entries(nextErrors).filter(([, value]) => Boolean(value))) as OnboardingErrors
@@ -416,11 +436,13 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
   }
 
   const nextStep = () => {
-    if (!validateStep(values.step)) {
+    const currentValues = valuesRef.current
+
+    if (!validateStep(currentValues.step)) {
       return
     }
 
-    goToStep(Math.min(5, values.step + 1) as OnboardingStep)
+    goToStep(Math.min(5, currentValues.step + 1) as OnboardingStep)
   }
 
   const previousStep = () => {
@@ -464,8 +486,10 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
       onComplete?.()
       navigateToPath('/')
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Could not finish onboarding.'
+
       setErrors({
-        form: error instanceof Error ? error.message : 'Could not finish onboarding.',
+        form: message,
       })
     } finally {
       setIsSubmitting(false)
@@ -489,6 +513,8 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
     )
   }
 
+  const hasErrors = Object.values(errors).some((error) => Boolean(error))
+
   if (values.step === 1) {
     return <OnboardingWelcomeStep onNext={() => goToStep(2)} />
   }
@@ -498,6 +524,7 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
       <OnboardingPersonalInfoStep
         values={values}
         errors={errors}
+        disableNext={hasErrors}
         onUpdate={updateValues}
         onBack={previousStep}
         onNext={nextStep}
@@ -512,6 +539,7 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
         errors={errors}
         usernameStatus={usernameStatus}
         isUploadingAvatar={isUploadingAvatar}
+        disableNext={hasErrors}
         onUpdate={updateValues}
         onAvatarSelected={handleAvatarSelected}
         onBack={previousStep}
@@ -524,6 +552,8 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
     return (
       <OnboardingPrivacyStep
         values={values}
+        errors={errors}
+        disableNext={hasErrors}
         onUpdate={updateValues}
         onBack={previousStep}
         onNext={nextStep}
@@ -536,6 +566,7 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
       values={values}
       errors={errors}
       isSubmitting={isSubmitting}
+      disableNext={hasErrors}
       onUpdate={updateValues}
       onBack={previousStep}
       onFinish={() => void finishSetup()}

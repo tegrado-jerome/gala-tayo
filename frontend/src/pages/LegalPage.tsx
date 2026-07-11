@@ -31,6 +31,7 @@ const termsSections: LegalSection[] = [
     body: [
       'Users may need an account to access certain features, such as saving places, creating gala plans, posting comments, writing reviews, following users, submitting places, uploading photos, or using Ask AI features.',
       'When creating or using an account, you agree to provide accurate information and keep your account secure. You are responsible for activity under your account.',
+      'You must be at least 13 years old to create an account or use GalaTayo. If you are under 13, you may not create an account or use the system.',
       'GalaTayo may use third-party authentication providers, such as Google Sign-In, if enabled in the system.',
     ],
   },
@@ -230,7 +231,11 @@ const privacySections: LegalSection[] = [
   },
   {
     title: '16. Children and Minors',
-    body: ['GalaTayo is intended for users who can understand and agree to these Terms and Privacy Policy. If a user is a minor, they should use the system with guidance from a parent, guardian, or responsible adult.'],
+    body: [
+      'GalaTayo is not intended for users under 13 years of age. We do not knowingly collect, store, or process personal data from children under 13.',
+      'If we learn that a user under 13 has provided personal data, we will take steps to delete that information and restrict or remove the associated account.',
+      'If you are a parent, guardian, or responsible adult and believe a child under 13 has provided personal data to GalaTayo, please contact us at the address below.',
+    ],
   },
   {
     title: '17. Cookies, Local Storage, and Similar Technologies',
@@ -274,7 +279,7 @@ function LegalPage({ type }: LegalPageProps) {
     },
     {
       label: 'Updated',
-      value: 'June 14, 2026',
+      value: 'July 11, 2026',
       icon: <FileText className="h-4 w-4" />,
     },
     {

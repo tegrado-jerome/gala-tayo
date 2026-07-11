@@ -4,12 +4,13 @@ import type { OnboardingErrors, OnboardingFormState } from './types'
 type OnboardingPersonalInfoStepProps = {
   values: Pick<OnboardingFormState, 'firstName' | 'middleName' | 'lastName' | 'birthdate'>
   errors: OnboardingErrors
+  disableNext: boolean
   onUpdate: (updates: Partial<OnboardingFormState>) => void
   onBack: () => void
   onNext: () => void
 }
 
-function OnboardingPersonalInfoStep({ values, errors, onUpdate, onBack, onNext }: OnboardingPersonalInfoStepProps) {
+function OnboardingPersonalInfoStep({ values, errors, disableNext, onUpdate, onBack, onNext }: OnboardingPersonalInfoStepProps) {
   const today = new Date().toISOString().slice(0, 10)
 
   return (
@@ -22,7 +23,7 @@ function OnboardingPersonalInfoStep({ values, errors, onUpdate, onBack, onNext }
           <button type="button" onClick={onBack} className="onboarding-button onboarding-button-secondary">
             Back
           </button>
-          <button type="button" onClick={onNext} className="onboarding-button onboarding-button-primary">
+          <button type="button" onClick={onNext} disabled={disableNext} className="onboarding-button onboarding-button-primary disabled:cursor-not-allowed disabled:opacity-60">
             Next
           </button>
         </>

@@ -1,13 +1,8 @@
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
-import {
-  getFoursquarePlaceById,
-  NormalizedFoursquarePlace,
-} from "./foursquareService";
 import { createBaseSlug } from "../utils/slug";
 
 export type StoredPlace = {
   id: string;
-  foursquare_id: string | null;
   name: string | null;
   slug: string | null;
   category: string | null;
@@ -23,16 +18,6 @@ export type StoredPlace = {
   updated_at: string | null;
 };
 
-export type PlaceLookupResult =
-  | {
-      source: "supabase";
-      place: StoredPlace;
-    }
-  | {
-      source: "foursquare";
-      place: NormalizedFoursquarePlace;
-    };
-
 export class PlaceServiceError extends Error {
   status: number;
 
@@ -41,31 +26,6 @@ export class PlaceServiceError extends Error {
     this.name = "PlaceServiceError";
     this.status = status;
   }
-}
-
-export async function findPlaceByFoursquareId(
-  foursquareId: string
-): Promise<StoredPlace | null> {
-  const trimmedId = foursquareId.trim();
-
-  if (!trimmedId) {
-    return null;
-  }
-
-  const supabase = await getSupabaseAdminClient();
-  const { data, error } = await supabase
-    .from("places")
-    .select(
-      "id,foursquare_id,name,slug,category,address,city,latitude,longitude,rating,hours,photos,created_at,updated_at"
-    )
-    .eq("foursquare_id", trimmedId)
-    .maybeSingle();
-
-  if (error) {
-    throw new PlaceServiceError("Failed to query place by Foursquare ID.", 500);
-  }
-
-  return (data as StoredPlace | null) ?? null;
 }
 
 export async function findPlaceByNameAndCity(
@@ -83,7 +43,7 @@ export async function findPlaceByNameAndCity(
   const { data, error } = await supabase
     .from("places")
     .select(
-      "id,foursquare_id,name,slug,category,address,city,latitude,longitude,rating,hours,photos,created_at,updated_at"
+      "id,name,slug,category,address,city,latitude,longitude,rating,hours,photos,created_at,updated_at"
     )
     .ilike("name", trimmedName)
     .ilike("city", trimmedCity)
@@ -133,20 +93,3 @@ export async function generateUniqueSlug(
   return candidateSlug;
 }
 
-export async function lookupPlaceByFoursquareId(
-  foursquareId: string
-): Promise<PlaceLookupResult> {
-  const storedPlace = await findPlaceByFoursquareId(foursquareId);
-
-  if (storedPlace) {
-    return {
-      source: "supabase",
-      place: storedPlace,
-    };
-  }
-
-  return {
-    source: "foursquare",
-    place: await getFoursquarePlaceById(foursquareId),
-  };
-}

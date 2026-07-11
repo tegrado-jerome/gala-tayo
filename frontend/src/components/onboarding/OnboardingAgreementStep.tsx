@@ -5,12 +5,13 @@ type OnboardingAgreementStepProps = {
   values: Pick<OnboardingFormState, 'acceptedTerms' | 'acceptedPrivacy'>
   errors: OnboardingErrors
   isSubmitting: boolean
+  disableNext: boolean
   onUpdate: (updates: Partial<OnboardingFormState>) => void
   onBack: () => void
   onFinish: () => void
 }
 
-function OnboardingAgreementStep({ values, errors, isSubmitting, onUpdate, onBack, onFinish }: OnboardingAgreementStepProps) {
+function OnboardingAgreementStep({ values, errors, isSubmitting, disableNext, onUpdate, onBack, onFinish }: OnboardingAgreementStepProps) {
   const accepted = values.acceptedTerms && values.acceptedPrivacy
 
   return (
@@ -23,7 +24,7 @@ function OnboardingAgreementStep({ values, errors, isSubmitting, onUpdate, onBac
           <button type="button" onClick={onBack} disabled={isSubmitting} className="onboarding-button onboarding-button-secondary" >
             Back
           </button>
-          <button type="button" onClick={onFinish} disabled={!accepted || isSubmitting} className="onboarding-button onboarding-button-primary disabled:cursor-not-allowed disabled:opacity-60">
+          <button type="button" onClick={onFinish} disabled={disableNext || !accepted || isSubmitting} className="onboarding-button onboarding-button-primary disabled:cursor-not-allowed disabled:opacity-60">
             {isSubmitting ? 'Finishing...' : 'Finish Setup'}
           </button>
         </>
@@ -46,6 +47,10 @@ function OnboardingAgreementStep({ values, errors, isSubmitting, onUpdate, onBac
         </label>
 
         {errors.form ? <p className="onboarding-error-panel">{errors.form}</p> : null}
+
+        <p className="text-center text-xs font-semibold leading-5 text-[var(--muted)]">
+          By creating an account, you confirm that you are at least 13 years old.
+        </p>
       </div>
     </OnboardingLayout>
   )
