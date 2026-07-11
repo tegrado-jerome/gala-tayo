@@ -7,7 +7,6 @@ import PromptBuilderModal from '../components/PromptBuilderModal'
 
 import { supabase } from '../supabase'
 import { navigateToCanonicalPlace, navigateToPath, replaceWithPath, writePlaceReturnState } from '../utils/navigation'
-import { getApiUrl } from '../utils/apiClient'
 import {
   getAskAiRuntimeState,
   hasActiveAskAiRuntimeState,
@@ -739,6 +738,7 @@ function HomePage({
       setSearchError(message)
       setSearchStatus(null)
       setSearchFeedbackMessage(null)
+      setHasSearched(true)
       console.error('Search request failed:', error)
     } finally {
       if (searchRequestVersion.current === requestVersion) {
@@ -1154,6 +1154,7 @@ function HomePage({
                         hasSearched={hasSearched}
                         status={searchStatus}
                         message={searchFeedbackMessage}
+                        error={searchError}
                         onSearchAgain={handleSearchAgain}
                       />
                     </section>
@@ -1261,6 +1262,7 @@ function HomePage({
                         hasSearched={hasSearched}
                         status={searchStatus}
                         message={searchFeedbackMessage}
+                        error={searchError}
                         onSearchAgain={handleSearchAgain}
                       />
                     </section>
