@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import AppHeader from './AppHeader'
 import { AppIcon } from './AppIcon'
 import { GuestAuthPrompt, useGuestAuthPrompt } from './GuestAuthPrompt'
@@ -121,7 +121,16 @@ function PlacePhoto({
   onContribute?: () => void
 }) {
   const swipeStartX = useRef<number | null>(null)
-  const photos = uniqueList(imageUrls).slice(0, 3)
+  const [brokenPhotoUrls, setBrokenPhotoUrls] = useState<Set<string>>(new Set())
+  const photoSourceKey = uniqueList(imageUrls).join('|')
+
+  useEffect(() => {
+    setBrokenPhotoUrls(new Set())
+  }, [photoSourceKey])
+
+  const photos = uniqueList(imageUrls)
+    .filter((photo) => !brokenPhotoUrls.has(photo))
+    .slice(0, 3)
   const hasCarouselControls = photos.length > 1
   const safeIndex = photos.length > 0 ? Math.min(Math.max(currentIndex, 0), photos.length - 1) : 0
   const activePhoto = photos[safeIndex] ?? null
@@ -171,6 +180,22 @@ function PlacePhoto({
     if (canGoPrevious) {
       onPrevious?.()
     }
+  }
+
+  const markPhotoBroken = (photoUrl: string) => {
+    if (!photoUrl) {
+      return
+    }
+
+    setBrokenPhotoUrls((current) => {
+      if (current.has(photoUrl)) {
+        return current
+      }
+
+      const next = new Set(current)
+      next.add(photoUrl)
+      return next
+    })
   }
 
   if (!activePhoto) {
@@ -275,6 +300,7 @@ function PlacePhoto({
                   alt={placeName}
                   className="h-full w-full object-cover transition duration-300 md:object-center"
                   loading="eager"
+                  onError={() => markPhotoBroken(activePhoto)}
                 />
               </div>
 
@@ -316,7 +342,13 @@ function PlacePhoto({
                           aria-label={`Show photo ${index + 1} of ${placeName}`}
                           aria-pressed={index === safeIndex}
                         >
-                          <img src={photo} alt={placeName} className="h-16 w-16 object-cover" />
+                          <img
+                            src={photo}
+                            alt={placeName}
+                            className="h-16 w-16 object-cover"
+                            loading="lazy"
+                            onError={() => markPhotoBroken(photo)}
+                          />
                         </button>
                       )
                     }
@@ -360,6 +392,7 @@ function PlacePhoto({
                   alt={placeName}
                   className="h-full w-full object-cover object-center transition duration-300"
                   loading="eager"
+                  onError={() => markPhotoBroken(activePhoto)}
                 />
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-slate-950/55 via-slate-950/18 to-transparent" />
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-slate-950/82 via-slate-950/32 to-transparent" />
@@ -396,7 +429,13 @@ function PlacePhoto({
                           aria-label={`Show photo ${index + 1} of ${placeName}`}
                           aria-pressed={index === safeIndex}
                         >
-                          <img src={photo} alt={placeName} className="h-16 w-16 object-cover" />
+                          <img
+                            src={photo}
+                            alt={placeName}
+                            className="h-16 w-16 object-cover"
+                            loading="lazy"
+                            onError={() => markPhotoBroken(photo)}
+                          />
                         </button>
                       )
                     }
@@ -962,6 +1001,14 @@ function PlaceDetailView({
   const hasCurrentUserReview = Boolean(currentUserReview)
   const headlineRating = averageRating ?? place.rating ?? null
   const headlineReviewCount = reviewCount > 0 ? reviewCount : place.ratingCount ?? 0
+
+  useLayoutEffect(() => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'auto',
+    })
+  }, [place.id])
 
   useEffect(() => {
     const cachedCommunityState = readPlaceDetailCommunityCache(place.id)
@@ -2378,6 +2425,16 @@ function PlaceDetailView({
               <p className="text-[13px] font-semibold text-slate-400">Sign in to leave a rating.</p>
             </div>
           )}
+          <div className="mt-4 flex justify-start md:justify-end">
+            <button
+              type="button"
+              onClick={handleOpenPlaceConcern}
+              className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-red-600 transition hover:text-red-700"
+            >
+              <Icon name="warning" className="h-3.5 w-3.5" />
+              Report a concern
+            </button>
+          </div>
         </div>
 
         <div className="mt-5 border-t border-[var(--line)] pt-5">
@@ -2579,14 +2636,6 @@ function PlaceDetailView({
                     </div>
                   </>
                 ) : null}
-                <button
-                  type="button"
-                  onClick={handleOpenPlaceConcern}
-                  className="ml-auto inline-flex items-center gap-1 text-[12px] font-bold leading-5 text-red-600 underline transition hover:text-red-700"
-                >
-                  <Icon name="warning" className="h-3 w-3" />
-                  Report a concern
-                </button>
               </div>
 
               <div className="-mt-1">

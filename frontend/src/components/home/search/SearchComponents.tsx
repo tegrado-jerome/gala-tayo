@@ -1,5 +1,5 @@
 import type { RefObject } from 'react'
-import { RotateCcw, House, LoaderCircle } from 'lucide-react'
+import { RotateCcw, House } from 'lucide-react'
 import { AppIcon } from '../../AppIcon'
 import PlaceCard, { type PlaceCardData } from '../../PlaceCard'
 import Breadcrumb from '../../Breadcrumb'
@@ -516,19 +516,6 @@ function MobileResultsTabs({
   )
 }
 
-function MobilePageLoadingDock() {
-  return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom,0px)+4.75rem)] z-[5900] px-4 lg:hidden">
-      <div className="mx-auto flex w-fit max-w-[calc(100vw-2rem)] items-center gap-2 rounded-full border border-[rgba(47,116,232,0.14)] bg-white/95 px-4 py-2 shadow-[0_14px_32px_rgba(15,23,42,0.12)] backdrop-blur-md">
-        <LoaderCircle className="h-4 w-4 animate-spin text-[var(--accent)]" aria-hidden="true" />
-        <p className="whitespace-nowrap text-xs font-bold uppercase tracking-[0.14em] text-[var(--accent-deep)]">
-          Loading page...
-        </p>
-      </div>
-    </div>
-  )
-}
-
 function MobileResultsView({
   places,
   totalCount,
@@ -599,12 +586,10 @@ function MobileResultsView({
       <MobileResultsTabs selectedView={selectedView} onViewChange={onViewChange} />
 
       {selectedView === 'cards' ? (
-        <section id="search-results-anchor" className="grid gap-3 px-4 py-4">
-          {isPageLoading ? (
-            <div className="px-1 text-center text-[11px] font-semibold text-slate-400">
-              Loading page...
-            </div>
-          ) : null}
+        <section
+          id="search-results-anchor"
+          className="grid gap-3 px-4 py-4 pb-[calc(env(safe-area-inset-bottom,0px)+4.5rem)]"
+        >
           <div className={`grid gap-3 transition ${isPageLoading ? 'pointer-events-none opacity-60' : 'opacity-100'}`}>
             {places.map((place) => (
               <PlaceCard
@@ -628,14 +613,12 @@ function MobileResultsView({
             totalCount={totalCount}
             pageSize={SEARCH_RESULTS_PER_PAGE}
             isLoading={isPageLoading}
-            showLoadingMessage={false}
             compact
             onPageChange={onPageChange}
           />
-          {isPageLoading ? <MobilePageLoadingDock /> : null}
         </section>
       ) : (
-        <section className="px-4 py-4">
+        <section className="px-4 py-4 pb-[calc(env(safe-area-inset-bottom,0px)+4.5rem)]">
           <div className="overflow-hidden rounded-lg border border-[var(--line)] bg-white">
             <MapView
               places={places}
@@ -676,11 +659,9 @@ function MobileResultsView({
               totalCount={totalCount}
               pageSize={SEARCH_RESULTS_PER_PAGE}
               isLoading={isPageLoading}
-              showLoadingMessage={false}
               compact
               onPageChange={onPageChange}
             />
-            {isPageLoading ? <MobilePageLoadingDock /> : null}
           </div>
         </section>
       )}
@@ -756,11 +737,6 @@ function DesktopResultsView({
             {isRefreshing ? (
               <p className="mt-2 inline-flex rounded-full border border-[rgba(47,116,232,0.12)] bg-white/90 px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-[var(--accent-deep)]">
                 Refreshing results...
-              </p>
-            ) : null}
-            {isPageLoading ? (
-              <p className="mt-2 text-[11px] font-semibold text-slate-400">
-                Loading page...
               </p>
             ) : null}
           </div>

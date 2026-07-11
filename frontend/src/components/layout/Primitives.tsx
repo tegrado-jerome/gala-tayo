@@ -5,6 +5,7 @@ import {
   type ReactNode,
 } from 'react'
 import { cn } from '../AppUI'
+import { useChibiImageSrc } from '../../utils/chibiImageCache'
 
 const BOTTOM_NAV_RESERVED_CLASS =
   'pb-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] sm:pb-[calc(env(safe-area-inset-bottom,0px)+4.75rem)] lg:pb-0'
@@ -583,13 +584,16 @@ export function ChibiIllustration({
   onError,
 }: ChibiIllustrationProps) {
   const isDecorative = !alt
+  const resolvedSrc = useChibiImageSrc(src)
   return (
     <img
-      src={src}
+      src={resolvedSrc}
       alt={isDecorative ? '' : alt}
       aria-hidden={isDecorative || undefined}
       className={cn(chibiVariantClasses[variant], chibiBaseClass, className)}
       loading={priority ? 'eager' : 'lazy'}
+      fetchPriority={priority ? 'high' : 'auto'}
+      decoding={priority ? 'sync' : 'async'}
       onError={onError}
     />
   )

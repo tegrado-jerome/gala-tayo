@@ -21,31 +21,10 @@ function buildPaginationItems(currentPage: number, totalPages: number) {
     return Array.from({ length: totalPages }, (_, index) => index + 1)
   }
 
-  const items: Array<number | 'ellipsis'> = []
+  const start = Math.max(1, Math.min(currentPage - 2, totalPages - 4))
+  const end = start + 4
 
-  const addRange = (start: number, end: number) => {
-    for (let page = start; page <= end; page += 1) {
-      items.push(page)
-    }
-  }
-
-  if (currentPage <= 3) {
-    addRange(1, 5)
-    items.push('ellipsis', totalPages)
-    return items
-  }
-
-  if (currentPage >= totalPages - 2) {
-    items.push(1, 'ellipsis')
-    addRange(totalPages - 4, totalPages)
-    return items
-  }
-
-  items.push(1, 'ellipsis')
-  addRange(currentPage - 1, currentPage + 1)
-  items.push('ellipsis', totalPages)
-
-  return items
+  return Array.from({ length: end - start + 1 }, (_, index) => start + index)
 }
 
 function CompactPagination({
@@ -177,25 +156,16 @@ function CompactPagination({
             </span>
           )}
 
-            {items.map((item, index) =>
-              item === 'ellipsis' ? (
-                <span
-                  key={`ellipsis-${index}`}
-                  className="inline-flex h-8 min-w-4 shrink-0 items-center justify-center px-1 text-[0.9rem] font-semibold text-slate-400 sm:h-9"
-                >
-                  ...
-                </span>
-              ) : (
-                <span key={item}>
-                  {renderPageControl(
-                    item,
-                    item,
-                    item === currentPage ? `Current page, page ${item}` : `Go to page ${item}`,
-                    `${pageChipBaseClass} ${item === currentPage ? activePageChipClass : inactivePageChipClass}`,
-                  )}
-                </span>
-              )
-            )}
+            {items.map((item) => (
+              <span key={item}>
+                {renderPageControl(
+                  item,
+                  item,
+                  item === currentPage ? `Current page, page ${item}` : `Go to page ${item}`,
+                  `${pageChipBaseClass} ${item === currentPage ? activePageChipClass : inactivePageChipClass}`,
+                )}
+              </span>
+            ))}
 
             {currentPage < totalPages ? (
               renderPageControl(

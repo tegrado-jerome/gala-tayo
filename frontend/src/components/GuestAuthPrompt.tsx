@@ -41,15 +41,15 @@ const variantConfigs: Record<GuestAuthVariant, VariantConfig> = {
   'ask-ai': {
     icon: 'askAi',
     label: 'AI PLANNING',
-    title: 'Log in to use GalaTayo AI',
-    description: 'Create an account or log in to access Ask AI, plan smarter gala trips, and continue where you left off.',
+    title: 'You have reached your Ask AI limit',
+    description: 'Create an account to unlock 20 chatbot asks and 10 map searches per day, plus save your planning history.',
     benefits: [
-      'Access Ask AI features',
-      'Create and manage gala plans',
-      'Save favorites and history',
-      'Find friends and personalize picks',
+      '20 chatbot asks daily',
+      '10 map searches daily',
+      'Save your chats and plans',
+      'Keep browsing with your account',
     ],
-    benefitIcons: ['askAi', 'galaPlan', 'favorites', 'users'],
+    benefitIcons: ['askAi', 'map', 'galaPlan', 'users'],
   },
   profile: {
     icon: 'profile',

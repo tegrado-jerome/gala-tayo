@@ -641,6 +641,7 @@ function AskAiThinkingStageLegacy({
 function AskAiPlaceholder({
   usageStatus,
   isUsageLoading,
+  isRegistered,
   question,
   answer,
   sources,
@@ -655,6 +656,7 @@ function AskAiPlaceholder({
 }: {
   usageStatus: AskAiUsageStatus | null
   isUsageLoading: boolean
+  isRegistered: boolean
   question: string
   answer: string
   sources: AskAiSource[]
@@ -670,7 +672,11 @@ function AskAiPlaceholder({
   void isUsageLoading
   const isUsagePending = !usageStatus
   void isUsagePending
-  const isLimitReached = usageStatus ? !usageStatus.allowed || usageStatus.remaining <= 0 : false
+  const isLimitReached = usageStatus
+    ? isRegistered
+      ? !usageStatus.allowed || usageStatus.remaining <= 0
+      : !usageStatus.allowed
+    : false
   const [draftQuestion, setDraftQuestion] = useState(question)
   const questionTextareaRef = useRef<HTMLTextAreaElement | null>(null)
   const chibiImage = answerError
@@ -801,7 +807,7 @@ function AskAiPlaceholder({
               <button
                 key={chip.id}
                 type="button"
-                disabled={isLimitReached}
+                disabled={isLimitReached && isRegistered}
                 onClick={() => handleSubmit(chip.prompt)}
                 className="rounded-full border border-[rgba(47,116,232,0.16)] bg-[var(--accent-wash)] px-3.5 py-2 text-[0.82rem] font-semibold text-[var(--accent-deep)] transition hover:border-[var(--accent)] hover:bg-[rgba(var(--accent-rgb),0.18)] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
               >
@@ -810,7 +816,7 @@ function AskAiPlaceholder({
             ))}
             <button
               type="button"
-              disabled={isLimitReached}
+              disabled={isLimitReached && isRegistered}
               onClick={() => navigateToPath('/ask-ai/maps')}
               className="rounded-full border border-[rgba(15,23,42,0.08)] bg-slate-50 px-3.5 py-2 text-[0.82rem] font-semibold text-slate-600 transition hover:border-[rgba(15,23,42,0.16)] hover:bg-white sm:hidden"
             >
@@ -1302,6 +1308,7 @@ function AskAiModePanel({
   onSubmit,
   onStartOver,
   onOpenPromptBuilder,
+  onGuestUpgradePrompt,
   className = '',
 }: {
   isRegistered: boolean
@@ -1318,11 +1325,16 @@ function AskAiModePanel({
   onSubmit: (questionOverride?: string) => void
   onStartOver: () => void
   onOpenPromptBuilder: (questionOverride?: string) => void
+  onGuestUpgradePrompt: () => void
   className?: string
 }) {
   void isUsageLoading
   const isUsagePending = !usageStatus
-  const isLimitReached = usageStatus ? !usageStatus.allowed || usageStatus.remaining <= 0 : false
+  const isLimitReached = usageStatus
+    ? isRegistered
+      ? !usageStatus.allowed || usageStatus.remaining <= 0
+      : !usageStatus.allowed
+    : false
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -1351,11 +1363,20 @@ function AskAiModePanel({
 
   const handleSend = useCallback((text?: string) => {
     const finalQuestion = (text ?? draftQuestionRef.current).trim()
-    if (!finalQuestion || isSubmitting || isLimitReached || isUsagePending) return
+    if (isSubmitting || isUsagePending) return
+
+    if (isLimitReached && !isRegistered) {
+      onGuestUpgradePrompt()
+      return
+    }
+
+    if (!finalQuestion) return
+
+    if (isLimitReached) return
 
     updateDraftQuestion('')
     onSubmit(finalQuestion)
-  }, [isLimitReached, isSubmitting, isUsagePending, onSubmit, updateDraftQuestion])
+  }, [isLimitReached, isRegistered, isSubmitting, isUsagePending, onGuestUpgradePrompt, onSubmit, updateDraftQuestion])
 
   const handleOpenPromptBuilder = useCallback(() => {
     navigateToPath('/ask-ai/prompt-builder')
@@ -1430,13 +1451,13 @@ function AskAiModePanel({
               }}
               placeholder="Message Ask AI..."
               rows={1}
-              disabled={isSubmitting || isLimitReached || isUsagePending}
+              disabled={isSubmitting || isUsagePending || (isLimitReached && isRegistered)}
               className="min-h-[40px] max-h-[120px] flex-1 resize-none overflow-y-auto bg-transparent px-3 py-2 text-[15px] leading-relaxed text-slate-800 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed disabled:text-slate-300"
             />
             <button
               type="button"
               onClick={() => (isSubmitting ? cancelAskAiRuntimeRequest() : handleSend())}
-              disabled={!isSubmitting && (isLimitReached || isUsagePending || !draftQuestion.trim())}
+              disabled={!isSubmitting && (isUsagePending || (!draftQuestion.trim() && !isLimitReached) || (isLimitReached && isRegistered))}
               aria-label={isSubmitting ? 'Cancel request' : 'Send message'}
               className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#172d6b] to-[#0f1f4a] text-white shadow-[0_4px_12px_-2px_rgba(23,45,107,0.4)] transition hover:from-[#1e3a82] hover:to-[#172d6b] hover:shadow-[0_6px_16px_-2px_rgba(23,45,107,0.5)] active:scale-95 disabled:cursor-not-allowed disabled:from-slate-200 disabled:to-slate-200 disabled:text-slate-400 disabled:shadow-none"
             >
@@ -1496,14 +1517,6 @@ const ChatMessageList = memo(function ChatMessageList({
   onOpenPromptBuilder: () => void
   onRetryUsage: () => void
 }) {
-  if (!isSessionLoading && !isRegistered) {
-    return (
-      <AskAiSignInContent
-        onOpenPromptBuilder={onOpenPromptBuilder}
-      />
-    )
-  }
-
   if (!isSessionLoading && usageError) {
     return (
       <AskAiUsageErrorContent
@@ -1540,7 +1553,7 @@ const ChatMessageList = memo(function ChatMessageList({
             <button
               key={chip.id}
               type="button"
-              disabled={isLimitReached}
+              disabled={isLimitReached && isRegistered}
               onClick={() => onSend(chip.prompt)}
               className="group flex items-start gap-3 rounded-2xl border border-slate-200/70 bg-white/70 p-3.5 text-left shadow-[0_1px_2px_rgba(15,23,42,0.03)] backdrop-blur-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white hover:shadow-[0_8px_24px_-12px_rgba(15,23,42,0.12)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
             >
@@ -1716,40 +1729,6 @@ const ChatMessageList = memo(function ChatMessageList({
   )
 })
 
-function AskAiSignInContent({
-  onOpenPromptBuilder,
-}: {
-  onOpenPromptBuilder: () => void
-}) {
-  return (
-    <div className="flex w-full flex-col items-center justify-center py-8 text-center">
-      <div className="relative mb-5">
-        <div className="pointer-events-none absolute -inset-4 rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.16),transparent_65%)] blur-2xl" />
-        <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 via-blue-500 to-cyan-400 shadow-[0_10px_28px_-6px_rgba(59,130,246,0.45),inset_0_1px_0_rgba(255,255,255,0.25)]">
-          <SparkIcon className="h-6 w-6 text-white" />
-        </div>
-      </div>
-      <h2 className="text-[1.5rem] font-semibold tracking-[-0.02em] text-slate-900 sm:text-[1.7rem]">
-        Sign in to use <span className="bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500 bg-clip-text text-transparent">Ask AI</span>
-      </h2>
-      <p className="mt-2 max-w-sm text-[14px] leading-relaxed text-slate-500">
-        Ask AI is reserved for GalaTayo members. Sign in to plan your next gala with AI.
-      </p>
-      <div className="mt-6 flex flex-col items-center gap-2.5">
-        <GoogleSignInButton className="inline-flex" />
-        <button
-          type="button"
-          onClick={onOpenPromptBuilder}
-          className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/80 bg-white/80 px-4 py-2 text-[13px] font-medium text-slate-600 shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition hover:border-slate-300 hover:bg-white hover:text-slate-800"
-        >
-          <SparkIcon className="h-3.5 w-3.5" />
-          Open Prompt Builder
-        </button>
-      </div>
-    </div>
-  )
-}
-
 function AskAiUsageErrorContent({
   usageError,
   onRetryUsage,
@@ -1826,6 +1805,5 @@ export {
   AskAiThinkingStageNext,
   AskAiModePanel,
   ChatMessageList,
-  AskAiSignInContent,
   AskAiUsageErrorContent,
 }
