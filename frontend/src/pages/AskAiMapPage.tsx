@@ -36,6 +36,7 @@ import { readCachedAskAiUsage, subscribeToCachedAskAiUsage, writeCachedAskAiUsag
 import { registerAskAiTask, completeAskAiTask, failAskAiTask } from '../utils/askAiTaskStore'
 import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
 import { getApiUrl } from '../utils/apiClient'
+import { buildAskAiRequestHeaders, getOrCreateAskAiGuestId } from '../utils/askAiIdentity'
 import {
   type AskAiMapChipId,
   type AskAiMapsResponse,
@@ -124,18 +125,29 @@ const AskAiMapComposer = memo(function AskAiMapComposer({
   query,
   selectedChipIds,
   isSearching,
+  isRegistered,
+  usageStatus,
   onSubmit,
   onCancel,
+  onGuestUpgradePrompt,
 }: {
   query: string
   selectedChipIds: AskAiMapChipId[]
   isSearching: boolean
+  isRegistered: boolean
+  usageStatus: AskAiUsageStatus | null
   onSubmit: (queryOverride?: string) => void
   onCancel: () => void
+  onGuestUpgradePrompt: () => void
 }) {
   const [draftQuery, setDraftQuery] = useState(query)
   const queryInputRef = useRef<HTMLTextAreaElement | null>(null)
   const canSubmit = buildMapRequestQuery(draftQuery, selectedChipIds).trim().length > 0
+  const isLimitReached = usageStatus
+    ? isRegistered
+      ? !usageStatus.allowed || usageStatus.remaining <= 0
+      : !usageStatus.allowed
+    : false
 
   useLayoutEffect(() => {
     const element = queryInputRef.current
@@ -149,6 +161,11 @@ const AskAiMapComposer = memo(function AskAiMapComposer({
 
   const handleSubmit = () => {
     const finalQuery = draftQuery.trim()
+    if (isLimitReached && !isRegistered) {
+      onGuestUpgradePrompt()
+      return
+    }
+
     if (!finalQuery) {
       return
     }
@@ -186,7 +203,7 @@ const AskAiMapComposer = memo(function AskAiMapComposer({
             handleSubmit()
           }
         }}
-        disabled={!isSearching && !canSubmit}
+        disabled={!isSearching && (!canSubmit || (isLimitReached && isRegistered))}
         className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--accent-deep)] text-white shadow-[0_10px_20px_rgba(23,45,107,0.18)] transition hover:bg-[var(--accent)] disabled:opacity-60"
         aria-label={isSearching ? 'Stop searching' : 'Submit ask ai map search'}
       >
@@ -216,6 +233,7 @@ function AskAiMapPage() {
   const initialAskAiMapRouteCache = initialAskAiMapRouteCacheRef.current
   const initialAskAiMapState = initialAskAiMapRuntimeState ?? initialAskAiMapRouteCache
   const { session, isSessionLoading } = useSavedFavorites()
+  const isRegistered = Boolean(session?.user)
   const [query, setQuery] = useState(initialAskAiMapState?.query ?? '')
   const [selectedChipIds, setSelectedChipIds] = useState<AskAiMapChipId[]>(
     (initialAskAiMapState?.selectedChipIds as AskAiMapChipId[] | undefined) ?? []
@@ -243,6 +261,7 @@ function AskAiMapPage() {
   const [askAiMapsUsageStatus, setAskAiMapsUsageStatus] = useState<AskAiUsageStatus | null>(
     readCachedAskAiUsage('askAiMaps')
   )
+  const [isGuestUpgradePromptOpen, setIsGuestUpgradePromptOpen] = useState(false)
   const submitInFlightRef = useRef(false)
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(initialAskAiMapState?.selectedPlaceId ?? null)
   const [focusedPlaceId, setFocusedPlaceId] = useState<string | null>(initialAskAiMapState?.focusedPlaceId ?? null)
@@ -250,14 +269,17 @@ function AskAiMapPage() {
   const [isPlaceDetailOpen, setIsPlaceDetailOpen] = useState(false)
   const [isMapPinNoticeDismissed, setIsMapPinNoticeDismissed] = useState(false)
 
-  async function refreshAskAiMapsUsage(accessToken: string, signal?: AbortSignal) {
+  async function refreshAskAiMapsUsage(accessToken?: string | null, signal?: AbortSignal) {
     const usageEndpoint = getApiUrl('/ask-ai/usage/check?type=ask_ai_maps')
+    const guestId = accessToken ? null : getOrCreateAskAiGuestId()
+
+    if (!accessToken && !guestId) {
+      throw new Error('Missing Ask AI guest identifier.')
+    }
 
     const response = await fetch(usageEndpoint, {
       method: 'GET',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+      headers: buildAskAiRequestHeaders(accessToken ?? null),
       signal,
     })
 
@@ -303,7 +325,7 @@ function AskAiMapPage() {
   }, [])
 
   useEffect(() => {
-    if (!session?.access_token) {
+    if (isSessionLoading) {
       return
     }
 
@@ -311,7 +333,7 @@ function AskAiMapPage() {
 
     const loadAskAiUsage = async () => {
       try {
-        const usageStatus = await refreshAskAiMapsUsage(session.access_token, controller.signal)
+        const usageStatus = await refreshAskAiMapsUsage(session?.access_token ?? null, controller.signal)
 
         if (usageStatus.allowed && (isDailyAskAiLimitMessage(errorMessage) || isDailyAskAiLimitMessage(statusMessage))) {
           patchAskAiMapRuntimeState({
@@ -331,7 +353,7 @@ function AskAiMapPage() {
     void loadAskAiUsage()
 
     return () => controller.abort()
-  }, [errorMessage, session?.access_token, statusMessage])
+  }, [errorMessage, isSessionLoading, session?.access_token, statusMessage])
 
   useEffect(() => {
     seedAskAiMapRuntimeState({
@@ -642,7 +664,9 @@ function AskAiMapPage() {
     const effectiveQuery = options?.queryOverride ?? query
     const effectiveCanSubmit = buildMapRequestQuery(effectiveQuery, effectiveSelectedChipIds).trim().length > 0 && !isSearching
 
-    if (!session?.access_token || !effectiveCanSubmit || submitInFlightRef.current) {
+    const guestId = session?.access_token ? null : getOrCreateAskAiGuestId()
+
+    if ((!session?.access_token && !guestId) || !effectiveCanSubmit || submitInFlightRef.current) {
       return
     }
 
@@ -682,10 +706,7 @@ function AskAiMapPage() {
         cache: 'no-store',
         signal: controller.signal,
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-          'Cache-Control': 'no-store',
-          Pragma: 'no-cache',
+          ...buildAskAiRequestHeaders(session?.access_token ?? null),
           'x-request-id': requestId,
         },
         body: JSON.stringify({
@@ -754,6 +775,9 @@ function AskAiMapPage() {
       }
 
       const errorMessage = getAskAiMapsRequestErrorMessage(error)
+      if (!session?.access_token && errorMessage.toLowerCase().includes('daily limit')) {
+        setIsGuestUpgradePromptOpen(true)
+      }
       failAskAiTask('maps', errorMessage)
       patchAskAiMapRuntimeState({
         query: effectiveQuery,
@@ -769,9 +793,9 @@ function AskAiMapPage() {
         focusedPlaceId: null,
       })
     } finally {
-      if (session?.access_token) {
+      if (session?.access_token || getOrCreateAskAiGuestId()) {
         try {
-          await refreshAskAiMapsUsage(session.access_token)
+          await refreshAskAiMapsUsage(session?.access_token ?? null)
         } catch (error) {
           console.warn('Unable to refresh Ask AI Maps usage state:', error)
         }
@@ -813,12 +837,14 @@ function AskAiMapPage() {
     return <div className="gala-page-background min-h-screen" aria-hidden="true" />
   }
 
-  if (!session) {
-    return <GuestAuthPrompt variant="ask-ai" mode="page-state" />
-  }
-
   return (
     <>
+    <GuestAuthPrompt
+      variant="ask-ai"
+      mode="modal"
+      isOpen={isGuestUpgradePromptOpen}
+      onClose={() => setIsGuestUpgradePromptOpen(false)}
+    />
     <main className="gala-page-background h-[100dvh] overflow-hidden overscroll-none text-[var(--text)] md:hidden lg:hidden">
       <div className="h-full w-full">
         <section className="relative h-full overflow-hidden bg-transparent p-0">
@@ -1064,6 +1090,8 @@ function AskAiMapPage() {
                   query={query}
                   selectedChipIds={selectedChipIds}
                   isSearching={isSearching}
+                  isRegistered={isRegistered}
+                  usageStatus={askAiMapsUsageStatus}
                   onSubmit={(queryOverride) => {
                     void handleEnterSearch(queryOverride)
                   }}
@@ -1071,6 +1099,7 @@ function AskAiMapPage() {
                     setIsSearching(false)
                     cancelAskAiMapRequest()
                   }}
+                  onGuestUpgradePrompt={() => setIsGuestUpgradePromptOpen(true)}
                 />
               </section>
           </div>
@@ -1120,6 +1149,8 @@ function AskAiMapPage() {
                   query={query}
                   selectedChipIds={selectedChipIds}
                   isSearching={isSearching}
+                  isRegistered={isRegistered}
+                  usageStatus={askAiMapsUsageStatus}
                   onSubmit={(queryOverride) => {
                     void handleEnterSearch(queryOverride)
                   }}
@@ -1127,6 +1158,7 @@ function AskAiMapPage() {
                     setIsSearching(false)
                     cancelAskAiMapRequest()
                   }}
+                  onGuestUpgradePrompt={() => setIsGuestUpgradePromptOpen(true)}
                 />
               </div>
             </div>

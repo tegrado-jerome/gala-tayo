@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import PlaceDetailView from '../components/PlaceDetailView'
 import SeoHead from '../components/SeoHead'
 import { replaceWithPath } from '../utils/navigation'
@@ -8,71 +8,6 @@ import { mapBackendPlaceToCardData } from '../utils/placeMapping'
 import { formatLabelFromSlug } from '../utils/routes'
 import { getApiUrl } from '../utils/apiClient'
 import type { PlaceDetail, PlaceDetailCardData } from '../types/appTypes'
-
-const EMPTY_PLACE_DETAIL = (slug: string): PlaceDetailCardData => ({
-  id: '',
-  slug,
-  name: '',
-  category: '',
-  area: '',
-  address: '',
-  city: '',
-  localArea: '',
-  status: 'Unknown',
-  reason: '',
-  description: '',
-  badge: '',
-  rating: null,
-  reviewCount: '0',
-  ratingCount: 0,
-  hours: '',
-  entranceFee: '',
-  website: '',
-  googleMapsUrl: null,
-  distanceKm: null,
-  price_level: null,
-  budget_min: null,
-  place_history: null,
-  best_time_to_visit: null,
-  visit_duration: null,
-  good_for: [],
-  not_ideal_for: [],
-  crowd_level: null,
-  indoor_outdoor: null,
-  weather_fit: null,
-  parking_info: null,
-  accessibility_notes: null,
-  decision_reason: null,
-  commute_friendly: null,
-  commute_access: null,
-  nearby_context: null,
-  budget_notes: null,
-  verification_status: null,
-  verification_notes: null,
-  verification_sources: [],
-  last_verified_at: null,
-  website_url: null,
-  highlights: [],
-  imageUrl: null,
-  curatedImageUrl: null,
-  curatedImageUrls: [],
-  thumbnailUrl: null,
-  imageAlt: null,
-  categories: [],
-  tags: [],
-  matchedCategories: [],
-  matchedTags: [],
-  markerRatingText: null,
-  hasPin: false,
-  latitude: null,
-  longitude: null,
-  lat: null,
-  lng: null,
-  coordinates: {
-    lat: null,
-    lng: null,
-  },
-})
 
 export default function SharedPlacePage({
   slug,
@@ -88,6 +23,7 @@ export default function SharedPlacePage({
   redirectToCanonical?: boolean
 }) {
   const [place, setPlace] = useState<PlaceDetailCardData | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
@@ -97,6 +33,7 @@ export default function SharedPlacePage({
 
     const loadPlace = async () => {
       try {
+        setIsLoading(true)
         setNotFound(false)
         setErrorMessage(null)
         setPlace(null)
@@ -108,6 +45,7 @@ export default function SharedPlacePage({
 
         if (response.status === 404) {
           setNotFound(true)
+          setIsLoading(false)
           return
         }
 
@@ -117,9 +55,11 @@ export default function SharedPlacePage({
 
         const data = (await response.json()) as PlaceDetail
         setPlace(mapBackendPlaceToCardData(data))
+        setIsLoading(false)
       } catch (error) {
         if ((error as Error).name !== 'AbortError') {
           setErrorMessage(error instanceof Error ? error.message : 'Failed to load shared place.')
+          setIsLoading(false)
         }
       }
     }
@@ -162,7 +102,14 @@ export default function SharedPlacePage({
   const listingLabel = urlListingLabel || historyListingLabel || sessionReturn?.returnLabel || null
 
   const categoryBreadcrumbMeta = getCategoryBreadcrumbMeta(listingLink, listingLabel)
-  const placeForView = place ?? EMPTY_PLACE_DETAIL(slug)
+
+  useLayoutEffect(() => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'auto',
+    })
+  }, [slug])
 
   useEffect(() => {
     if (!canonicalPath) {
@@ -173,6 +120,14 @@ export default function SharedPlacePage({
       replaceWithPath(canonicalPath)
     }
   }, [canonicalPath, currentPathname, expectedAreaSlug, redirectToCanonical])
+
+  if (isLoading) {
+    return null
+  }
+
+  if (!place) {
+    return null
+  }
 
   const placeJsonLd =
     place && areaMeta && canonicalPath
@@ -256,13 +211,13 @@ export default function SharedPlacePage({
         jsonLd={placeJsonLd}
       />
       <PlaceDetailView
-        place={placeForView}
+        place={place}
         areaBreadcrumb={{
           areaSlug:
             areaMeta?.slug ||
             expectedAreaSlug ||
-            formatLabelFromSlug(placeForView.city || placeForView.area || 'metro-manila').toLowerCase(),
-          areaName: areaMeta?.name || formatLabelFromSlug(expectedAreaSlug || placeForView.city || placeForView.area || 'metro-manila'),
+            formatLabelFromSlug(place.city || place.area || 'metro-manila').toLowerCase(),
+          areaName: areaMeta?.name || formatLabelFromSlug(expectedAreaSlug || place.city || place.area || 'metro-manila'),
         }}
         returnLabel={listingLabel}
         returnHref={listingLink}

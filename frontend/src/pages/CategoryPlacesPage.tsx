@@ -8,7 +8,7 @@ import PlaceCard, { type PlaceCardData } from '../components/PlaceCard'
 import SeoHead from '../components/SeoHead'
 import { PageContainer, PageShell, ResponsiveGrid } from '../components/layout/ResponsiveLayouts'
 import { getPlaceCategoryLabel } from '../data/placeCategories'
-import { navigateToCanonicalPlace } from '../utils/navigation'
+import { navigateToCanonicalPlace, navigateToPath } from '../utils/navigation'
 import { getSiteOrigin } from '../utils/seo'
 import { getApiUrl } from '../utils/apiClient'
 import { mapSeoPlaceToCard, type SeoPlaceSummary } from '../utils/seoApi'
@@ -119,7 +119,7 @@ async function readCategoryPlacesResponse(response: Response): Promise<CategoryP
 
 function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPageProps) {
   const [payload, setPayload] = useState<CategoryPlacesResponse>(EMPTY_CATEGORY_PLACES_RESPONSE)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const categoryLabel = getPlaceCategoryLabel(categorySlug)
@@ -180,13 +180,29 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
   const places = useMemo(() => sortPlacesAlphabetically(payload.items), [payload.items])
   const totalPages = payload.totalPages
   const safePage = payload.page || currentPage
-  const getPageHref = (page: number) => {
+  const isPageTransitionLoading = isLoading || isRefreshing
+  const shouldShowEmptyState = !isPageTransitionLoading && places.length === 0 && !errorMessage
+  const getPagePath = (page: number) => {
     const params = new URLSearchParams()
     if (page > 1) {
       params.set('page', String(page))
     }
 
     return params.toString() ? `/places/categories/${categorySlug}?${params.toString()}` : `/places/categories/${categorySlug}`
+  }
+  const handlePageChange = (page: number) => {
+    const nextPage = Math.min(Math.max(page, 1), totalPages)
+
+    if (nextPage === safePage) {
+      return
+    }
+
+    setIsLoading(true)
+    setIsRefreshing(false)
+
+    window.requestAnimationFrame(() => {
+      navigateToPath(getPagePath(nextPage))
+    })
   }
 
   const jsonLd = !errorMessage
@@ -256,7 +272,6 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
           </p>
         </section>
 
-        {isLoading || isRefreshing ? <p className="mt-4 text-sm text-[var(--muted)]">Refreshing places in the background...</p> : null}
         {errorMessage ? (
           <section className="mt-6 rounded-[24px] border border-[#E5E7EB] bg-white px-5 py-6 shadow-[0_6px_20px_rgba(17,24,39,0.03)]">
             <h2 className="text-base font-semibold text-[var(--text-main)]">We couldn't load {categoryLabel.toLowerCase()} places right now.</h2>
@@ -266,7 +281,7 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
 
         {!errorMessage ? (
           <>
-            {places.length === 0 ? (
+            {shouldShowEmptyState ? (
               <section className="mt-10 rounded-[28px] border border-[#e5e7eb] bg-white px-5 py-8 text-center shadow-sm sm:px-6">
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
                   <AppIcon name="compass" className="h-7 w-7" />
@@ -318,7 +333,8 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
                   totalPages={totalPages}
                   totalItems={payload.total}
                   pageSize={payload.pageSize}
-                  getHref={getPageHref}
+                  onPageChange={handlePageChange}
+                  isLoading={isPageTransitionLoading}
                 />
               </section>
             ) : null}

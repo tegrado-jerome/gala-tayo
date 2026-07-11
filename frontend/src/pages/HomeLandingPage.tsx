@@ -1,12 +1,22 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent } from 'react'
 import { Flame, TrendingUp } from 'lucide-react'
 import AppHeader from '../components/AppHeader'
 import { AppIcon, getCategoryIconName } from '../components/AppIcon'
 import type { PlaceCardData, PlaceCategoryMeta, PlaceTagMeta } from '../components/PlaceCard'
 import { PageContainer, PageShell, ChibiIllustration } from '../components/layout/ResponsiveLayouts'
 import { supabase } from '../supabase'
-import { navigateToCanonicalPlace, navigateToPath } from '../utils/navigation'
+import {
+  navigateToCanonicalPlace,
+  navigateToPath,
+} from '../utils/navigation'
 import { getApiUrl } from '../utils/apiClient'
+import { readHomeTrendingCache, writeHomeTrendingCache } from '../utils/homeTrendingCache'
+import {
+  clearHomeLandingScrollCache,
+  readHomeLandingScrollCache,
+  restoreHomeLandingScroll,
+  writeHomeLandingScrollCache,
+} from '../utils/homeLandingScrollCache'
 import homeChibi from '../assets/chibis/public/chibi-welcome-page.webp'
 
 type BackendSearchPlace = {
@@ -188,23 +198,35 @@ function TrendingCard({ place, rank }: { place: PlaceCardData; rank: number }) {
   const isTopThree = rank <= 3
   const animationDelay = `${(rank - 1) * 140}ms`
 
+  const handleOpenPlace = (event: MouseEvent<HTMLButtonElement>) => {
+    if (!place.slug) {
+      return
+    }
+
+    writeHomeLandingScrollCache({
+      scrollY: window.scrollY,
+      selectedPlaceId: place.id,
+      selectedPlaceViewportTop: event.currentTarget.getBoundingClientRect().top,
+      pendingScrollRestore: true,
+    })
+
+    navigateToCanonicalPlace({
+      slug: place.slug,
+      city: place.city,
+      area: place.area,
+      localArea: place.localArea,
+    }, {
+      source: 'home-trending',
+      returnTo: '/',
+      returnLabel: 'Trending now',
+    })
+  }
+
   return (
     <button
       type="button"
-      onClick={() => {
-        if (place.slug) {
-          navigateToCanonicalPlace({
-            slug: place.slug,
-            city: place.city,
-            area: place.area,
-            localArea: place.localArea,
-          }, {
-            source: 'home-trending',
-            returnTo: '/',
-            returnLabel: 'Trending now',
-          })
-        }
-      }}
+      onClick={handleOpenPlace}
+      data-home-trending-place-id={place.id}
       className={getTrendingCardShellClass(isTopThree)}
     >
       {isTopThree ? (
@@ -334,16 +356,24 @@ function TrendingCardSkeleton({ rank }: { rank: number }) {
 }
 
 function HomeLandingPage() {
-  const [trendingPlaces, setTrendingPlaces] = useState<PlaceCardData[]>([])
-  const [isTrendingLoading, setIsTrendingLoading] = useState(true)
+  const cachedTrendingPlacesRef = useRef<PlaceCardData[] | null>(readHomeTrendingCache())
+  const initialHomeLandingScrollCacheRef = useRef(readHomeLandingScrollCache())
+  const [trendingPlaces, setTrendingPlaces] = useState<PlaceCardData[]>(cachedTrendingPlacesRef.current ?? [])
+  const [isTrendingLoading, setIsTrendingLoading] = useState(cachedTrendingPlacesRef.current === null)
   const [trendingError, setTrendingError] = useState<string | null>(null)
+  const hasCachedTrendingPlaces = cachedTrendingPlacesRef.current !== null
+  const hasRestoredHomeLandingScrollRef = useRef(false)
 
   useEffect(() => {
     const controller = new AbortController()
 
-    const loadTrendingPlaces = async () => {
+    async function loadTrendingPlaces() {
       try {
-        setIsTrendingLoading(true)
+        if (hasCachedTrendingPlaces) {
+          await new Promise((resolve) => window.setTimeout(resolve, 400))
+        } else {
+          setIsTrendingLoading(true)
+        }
         setTrendingError(null)
 
         const response = await fetch(getApiUrl('/search'), {
@@ -381,12 +411,16 @@ function HomeLandingPage() {
           .slice(0, 12)
 
         setTrendingPlaces(places)
+        writeHomeTrendingCache(places)
+        cachedTrendingPlacesRef.current = places
       } catch (error) {
         if ((error as Error).name === 'AbortError') {
           return
         }
 
-        setTrendingError(error instanceof Error ? error.message : 'Failed to load trending places.')
+        if (!hasCachedTrendingPlaces) {
+          setTrendingError(error instanceof Error ? error.message : 'Failed to load trending places.')
+        }
       } finally {
         if (!controller.signal.aborted) {
           setIsTrendingLoading(false)
@@ -396,7 +430,26 @@ function HomeLandingPage() {
 
     void loadTrendingPlaces()
 
-    return () => controller.abort()
+    return () => {
+      controller.abort()
+    }
+  }, [hasCachedTrendingPlaces])
+
+  useLayoutEffect(() => {
+    const homeLandingScrollCache = initialHomeLandingScrollCacheRef.current
+
+    if (!homeLandingScrollCache?.pendingScrollRestore || hasRestoredHomeLandingScrollRef.current) {
+      return
+    }
+
+    hasRestoredHomeLandingScrollRef.current = true
+    restoreHomeLandingScroll({
+      scrollY: homeLandingScrollCache.scrollY,
+      selectedPlaceId: homeLandingScrollCache.selectedPlaceId,
+      selectedPlaceViewportTop: homeLandingScrollCache.selectedPlaceViewportTop,
+    })
+
+    clearHomeLandingScrollCache()
   }, [])
 
   const handleSearchAction = () => {
@@ -406,6 +459,8 @@ function HomeLandingPage() {
   const handleAskAiAction = () => {
     navigateToPath('/ask-ai')
   }
+
+  const hasTrendingPlaces = trendingPlaces.length > 0
 
   return (
     <PageShell>
@@ -475,7 +530,7 @@ function HomeLandingPage() {
               Trending now
             </h2>
 
-            {isTrendingLoading ? (
+            {isTrendingLoading && !hasTrendingPlaces ? (
               <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                 {Array.from({ length: 12 }).map((_, i) => (
                   <div key={i} className={i >= 10 ? 'hidden sm:block' : ''}>
@@ -483,8 +538,10 @@ function HomeLandingPage() {
                   </div>
                 ))}
               </div>
-            ) : trendingError ? (
+            ) : trendingError && !hasTrendingPlaces ? (
               <p className="mt-4 text-sm text-red-500">{trendingError}</p>
+            ) : !hasTrendingPlaces ? (
+              <p className="mt-4 text-sm text-slate-500">No trending places available right now.</p>
             ) : (
               <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                 {trendingPlaces.map((place, i) => (

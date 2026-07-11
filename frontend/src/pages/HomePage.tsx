@@ -18,6 +18,7 @@ import type { ChatMessage } from '../utils/askAiRuntime'
 import { getApiUrl } from '../utils/apiClient'
 import { getAskAiUsageStatusFromResponse, type AskAiUsageResponse, type AskAiUsageStatus } from '../utils/askAiUsage'
 import { readCachedAskAiUsage, subscribeToCachedAskAiUsage, writeCachedAskAiUsage, writeCachedAskAiUsageFromResponse } from '../utils/askAiUsageCache'
+import { buildAskAiRequestHeaders, getOrCreateAskAiGuestId } from '../utils/askAiIdentity'
 import type { SearchGoodForValue } from '../utils/searchParams'
 import type { PromptBuilderState } from '../utils/promptBuilder'
 
@@ -186,6 +187,7 @@ function HomePage({
   const [searchTotalPages, setSearchTotalPages] = useState(initialRouteCache?.totalPages ?? 1)
   const [hasSearched, setHasSearched] = useState(Boolean(initialRouteCache))
   const hasRestoredInitialScrollRef = useRef(false)
+  const shouldScrollSearchResultsToTopRef = useRef(false)
   const searchRequestVersion = useRef(0)
   const lastAutoSearchSignatureRef = useRef<string | null>(
     initialSearchState?.autoSearch && initialRouteCacheRef.current
@@ -402,7 +404,9 @@ function HomePage({
   const handleAskAiSubmit = async (questionOverride?: string) => {
     const question = normalizeSearchText(questionOverride ?? askAiQuestion)
 
-    if (!question || isAskAiSubmitting || !session?.access_token) {
+    const guestId = session?.access_token ? null : getOrCreateAskAiGuestId()
+
+    if (!question || isAskAiSubmitting || (!session?.access_token && !guestId)) {
       return
     }
 
@@ -416,7 +420,8 @@ function HomePage({
 
     await submitAskAiRuntimeRequest({
       question,
-      accessToken: session.access_token,
+      accessToken: session?.access_token ?? null,
+      guestId,
       messages: updatedMessages,
     })
   }
@@ -472,8 +477,7 @@ function HomePage({
   }
 
   const handleSearchAgain = () => {
-    clearAllSearchRouteCaches()
-    void handleSearch({ page: 1 }, false)
+    handleClearSearch()
   }
 
   const handlePlaceSelect = (placeId: string) => {
@@ -548,13 +552,7 @@ function HomePage({
       return
     }
 
-    desktopResultsScrollRef.current?.scrollTo({ top: 0, behavior: 'auto' })
-    const anchor = document.getElementById('search-results-anchor')
-    if (anchor) {
-      const rect = anchor.getBoundingClientRect()
-      window.scrollTo({ top: rect.top + window.scrollY - 16, left: 0, behavior: 'auto' })
-    }
-
+    shouldScrollSearchResultsToTopRef.current = true
     void handleSearch({ page: nextPage }, true)
   }
 
@@ -670,6 +668,7 @@ function HomePage({
       }
 
       if (data.promptLogin) {
+        shouldScrollSearchResultsToTopRef.current = false
         setPromptLogin(true)
         return
       }
@@ -730,6 +729,7 @@ function HomePage({
         return
       }
 
+      shouldScrollSearchResultsToTopRef.current = false
       const message = error instanceof Error && !error.message.startsWith('Failed to execute \'json\'')
         ? error.message
         : 'Search failed.'
@@ -802,6 +802,19 @@ function HomePage({
     })
   }, [initialRouteCache, supportsSearchRouteCache])
 
+  useLayoutEffect(() => {
+    if (!shouldScrollSearchResultsToTopRef.current || isPageLoading || !hasSearched) {
+      return
+    }
+
+    shouldScrollSearchResultsToTopRef.current = false
+
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+      desktopResultsScrollRef.current?.scrollTo({ top: 0, behavior: 'auto' })
+    })
+  }, [hasSearched, isPageLoading, searchResults.length, safeCurrentPage])
+
   useEffect(() => {
     if (initialMode !== 'ask-ai') {
       return
@@ -867,7 +880,7 @@ function HomePage({
       return
     }
 
-    if (isSessionLoading || !session?.access_token) {
+    if (isSessionLoading || (!session?.access_token && !getOrCreateAskAiGuestId())) {
       return
     }
 
@@ -941,23 +954,22 @@ function HomePage({
       return
     }
 
-    if (!session?.access_token) {
-      return
-    }
-
     const controller = new AbortController()
     const usageEndpoint = getApiUrl('/ask-ai/usage/check')
+    const guestId = session?.access_token ? null : getOrCreateAskAiGuestId()
 
     const loadAskAiUsage = async () => {
       try {
         setIsAskAiUsageLoading(true)
         setAskAiUsageError(null)
 
+        if (!session?.access_token && !guestId) {
+          throw new Error('Missing Ask AI guest identifier.')
+        }
+
         const response = await fetch(usageEndpoint, {
           method: 'GET',
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
+          headers: buildAskAiRequestHeaders(session?.access_token ?? null),
           signal: controller.signal,
         })
 
@@ -1150,6 +1162,7 @@ function HomePage({
                     onSubmit={(questionOverride) => void handleAskAiSubmit(questionOverride)}
                     onStartOver={handleStartOverAskAi}
                     onOpenPromptBuilder={(questionOverride) => openPromptBuilder('ask-ai', questionOverride)}
+                    onGuestUpgradePrompt={() => setPromptLogin(true)}
                   />
                 )}
               </>
@@ -1258,6 +1271,7 @@ function HomePage({
                     onSubmit={(questionOverride) => void handleAskAiSubmit(questionOverride)}
                     onStartOver={handleStartOverAskAi}
                     onOpenPromptBuilder={(questionOverride) => openPromptBuilder('ask-ai', questionOverride)}
+                    onGuestUpgradePrompt={() => setPromptLogin(true)}
                     className="h-full"
                   />
                 )}
