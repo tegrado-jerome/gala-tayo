@@ -4,7 +4,6 @@ import { supabase } from '../supabase'
 import { addPlaceToGalaPlan, listMyGalaPlans, type GalaPlanSummary } from '../utils/galaPlansApi'
 import { navigateToPath } from '../utils/navigation'
 import { AppIcon } from './AppIcon'
-import UnifiedLoadingState from './UnifiedLoadingState'
 import { BottomSheet } from './layout/Primitives'
 
 type AddToGalaPlanModalProps = {
@@ -111,13 +110,7 @@ function AddToGalaPlanModal({ isOpen, placeId, placeName, onClose }: AddToGalaPl
         </div>
 
         <div className="px-5 py-5">
-          {isLoading ? (
-            <UnifiedLoadingState
-              variant="inline"
-              title="Preparing your gala plans..."
-              message="We are loading plans you can add this place to."
-            />
-          ) : null}
+          {isLoading ? <p className="text-sm text-[var(--muted)]">Loading your gala plans...</p> : null}
 
           {!isLoading && !errorMessage && plans.length === 0 ? (
             <div className="rounded-lg border border-[var(--line)] bg-[var(--chip)] p-4">

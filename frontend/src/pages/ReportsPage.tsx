@@ -4,7 +4,6 @@ import MinimalBackNav from '../components/MinimalBackNav'
 import { AppIcon } from '../components/AppIcon'
 import GoogleSignInButton from '../components/GoogleSignInButton'
 import PageHeroHeader from '../components/PageHeroHeader'
-import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import { PageContainer, PageShell, CardSurface, Stack } from '../components/layout/ResponsiveLayouts'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { getSupabaseAccessToken } from '../supabase'
@@ -454,13 +453,7 @@ function ReportsPage() {
               }
             />
 
-            {isSessionLoading ? (
-              <UnifiedLoadingState
-                variant="page"
-                title="Checking your account..."
-                message="We are confirming access to your reports."
-              />
-            ) : null}
+            {isSessionLoading ? <p className="text-sm text-[var(--muted)]">Checking your account...</p> : null}
 
             {!isSessionLoading && !session?.user ? (
               <CardSurface pad="loose">
@@ -473,11 +466,7 @@ function ReportsPage() {
             ) : null}
 
             {!isSessionLoading && session?.user && isTokenLoading ? (
-              <UnifiedLoadingState
-                variant="inline"
-                title="Refreshing your session..."
-                message="We are reconnecting your account before loading reports."
-              />
+              <p className="text-sm text-[var(--muted)]">Refreshing your session...</p>
             ) : null}
 
             {!isSessionLoading && session?.user && !isTokenLoading && !accessToken ? (

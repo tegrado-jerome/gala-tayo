@@ -9,7 +9,6 @@ import type {
 } from 'react'
 import { forwardRef } from 'react'
 import { AppIcon, type AppIconName } from './AppIcon'
-import UnifiedLoadingState from './UnifiedLoadingState'
 
 export function cn(...values: Array<string | number | false | null | undefined>) {
   return values.filter(Boolean).join(' ')
@@ -252,15 +251,4 @@ export function AppConfirmDialog({ className, title, description, actions, ...re
 
 export function AppBottomNav({ className, ...rest }: ComponentPropsWithoutRef<'nav'>) {
   return <nav className={cn('app-bottom-nav', className)} {...rest} />
-}
-
-export function AppChunkLoadingState({ message = 'Loading GalaTayo...' }: { message?: string }) {
-  return (
-    <UnifiedLoadingState
-      variant="section"
-      title={message}
-      message="We are opening this page in the background."
-      className="mx-auto my-8 w-full max-w-2xl rounded-[28px] border border-[var(--line)] bg-white/90 shadow-[var(--shadow-soft)]"
-    />
-  )
 }

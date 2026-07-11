@@ -6,7 +6,6 @@ import AppHeader from '../components/AppHeader'
 import { AppIcon } from '../components/AppIcon'
 import MinimalBackNav from '../components/MinimalBackNav'
 import PageHeroHeader from '../components/PageHeroHeader'
-import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import {
   createGalaPlan,
   deleteGalaPlan,
@@ -786,20 +785,10 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
     }
   }
 
-  if (isLoading) {
-    return (
-      <UnifiedLoadingState
-        variant="page"
-        title="Preparing gala plan..."
-        message="We are loading your plan editor now."
-      />
-    )
-  }
-
   return (
     <form onSubmit={handleSubmit} className="grid gap-6 sm:gap-7 xl:gap-8">
       <PageContainer size="wide" className="grid gap-6 sm:gap-7 xl:gap-8">
-        {isRefreshing ? <p className="text-sm text-[var(--muted)]">Refreshing your gala plan in the background...</p> : null}
+        {isLoading || isRefreshing ? <p className="text-sm text-[var(--muted)]">Refreshing your gala plan in the background...</p> : null}
         <section className="grid gap-6 rounded-[28px] border border-[var(--line)] bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,255,0.9))] px-5 py-5 shadow-[var(--shadow-soft)] sm:px-6 sm:py-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start lg:gap-6 xl:px-7 xl:py-7">
           <div className="grid gap-5">
             <PageHeroHeader
@@ -845,7 +834,7 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
 }
 function ListPage({ session, favorites = false }: { session?: Session | null; favorites?: boolean }) {
   const [plans, setPlans] = useState<GalaPlanSummary[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
 
@@ -907,16 +896,9 @@ function ListPage({ session, favorites = false }: { session?: Session | null; fa
           {!favorites ? <PlanStat label="Latest update" value={latestUpdate} /> : null}
         </div>
 
-        {isLoading ? (
-          <UnifiedLoadingState
-            variant="page"
-            title={favorites ? 'Preparing saved gala plans...' : 'Preparing your gala plans...'}
-            message={favorites ? 'We are loading your favorited plans.' : 'We are loading your plans.'}
-          />
-        ) : null}
-        {!isLoading && isRefreshing ? <p className="text-sm text-[var(--muted)]">Refreshing gala plans in the background...</p> : null}
+        {isLoading || isRefreshing ? <p className="text-sm text-[var(--muted)]">Refreshing gala plans in the background...</p> : null}
         {errorMessage ? <p className="rounded-lg bg-red-50 p-4 text-sm font-bold text-red-700">{errorMessage}</p> : null}
-        {!isLoading && !errorMessage && plans.length === 0 ? <EmptyPlansState favorites={favorites} /> : null}
+        {!errorMessage && plans.length === 0 ? <EmptyPlansState favorites={favorites} /> : null}
         <section className="grid gap-4 md:grid-cols-2 2xl:grid-cols-4">
           {plans.map((plan) => <PlanCard key={plan.id} plan={plan} showOwner={favorites} onDeleted={(planId) => setPlans((current) => current.filter((currentPlan) => currentPlan.id !== planId))} />)}
         </section>
@@ -927,7 +909,7 @@ function ListPage({ session, favorites = false }: { session?: Session | null; fa
 
 function DetailPage({ planId, session }: { planId: string; session?: Session | null }) {
   const [plan, setPlan] = useState<GalaPlanDetail | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [notice, setNotice] = useState('')
@@ -981,21 +963,12 @@ function DetailPage({ planId, session }: { planId: string; session?: Session | n
     }
   }
 
-  if (isLoading) {
-    return (
-      <UnifiedLoadingState
-        variant="page"
-        title="Preparing gala plan..."
-        message="We are loading this itinerary now."
-      />
-    )
-  }
   if (!plan) return <p className="rounded-lg border border-[var(--line)] bg-white p-5 text-sm font-bold text-red-700">{errorMessage || 'Gala plan unavailable.'}</p>
 
   return (
     <PageContainer size="wide" className="grid gap-5">
       <div className="grid gap-5">
-        {isRefreshing ? <p className="text-sm text-[var(--muted)]">Refreshing this gala plan in the background...</p> : null}
+        {isLoading || isRefreshing ? <p className="text-sm text-[var(--muted)]">Refreshing this gala plan in the background...</p> : null}
         <section className="gala-card overflow-hidden">
         <div className="border-b border-[var(--line)] bg-white px-5 py-5 sm:px-6 sm:py-6">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">

@@ -1,16 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { buildHistoryState, getCanonicalPlacePath, getHistoryState, getLabelForPath, hasInAppBackHistory, resolveAreaMeta, type PlaceReturnState } from './routes'
 
-let hasSoftNavigationOccurred = false
-
-function markSoftNavigation() {
-  hasSoftNavigationOccurred = true
-}
-
-function shouldSuppressPageLoader() {
-  return hasSoftNavigationOccurred
-}
-
 type BackNavigationState = {
   previousLabel: string | null
   previousPath: string | null
@@ -73,7 +63,6 @@ function navigateToPath(path: string) {
     return
   }
 
-  markSoftNavigation()
   window.history.pushState(
     buildHistoryState(getCurrentPathWithSearch()),
     '',
@@ -87,7 +76,6 @@ function replaceWithPath(path: string) {
     return
   }
 
-  markSoftNavigation()
   window.history.replaceState(
     buildHistoryState(getCurrentPathWithSearch()),
     '',
@@ -130,8 +118,6 @@ function navigateToCanonicalPlace({
 }
 
 export {
-  markSoftNavigation,
-  shouldSuppressPageLoader,
   useBackNavigation,
   navigateToCanonicalPlace,
   navigateToPath,

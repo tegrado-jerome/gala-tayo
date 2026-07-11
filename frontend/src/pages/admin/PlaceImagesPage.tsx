@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import AppHeader from '../../components/AppHeader'
-import UnifiedLoadingState from '../../components/UnifiedLoadingState'
 import { PageContainer, PageShell, StateContainer } from '../../components/layout/ResponsiveLayouts'
 import { useSystemMessage } from '../../context/SystemMessageContext'
 import { useAdminAccess } from '../../hooks/useAdminAccess'
@@ -280,13 +279,14 @@ function AdminPlaceImagesPage({ session }: { session: Session }) {
 
   if (isCheckingAccess) {
     return (
-      <StateContainer>
-        <UnifiedLoadingState
-          variant="page"
-          title="Checking admin access..."
-          message="We are confirming your photo review permissions."
-        />
-      </StateContainer>
+      <PageShell>
+        <AppHeader />
+        <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
+          <StateContainer>
+            <p className="text-sm text-[var(--muted)]">Checking admin access...</p>
+          </StateContainer>
+        </main>
+      </PageShell>
     )
   }
 
@@ -327,15 +327,8 @@ function AdminPlaceImagesPage({ session }: { session: Session }) {
           {errorMessage ? <p className="text-sm font-bold text-red-600">{errorMessage}</p> : null}
           </div>
 
-          {isLoading ? (
-            <StateContainer>
-              <UnifiedLoadingState
-                variant="page"
-                title="Preparing pending photos..."
-                message="We are loading place photo contributions for review."
-              />
-            </StateContainer>
-          ) : pendingImages.length === 0 ? (
+          {isLoading ? <p className="text-sm text-[var(--muted)]">Refreshing pending photos...</p> : null}
+          {pendingImages.length === 0 ? (
             <StateContainer>
               <p className="mt-6 rounded-lg border border-dashed border-[var(--line-strong)] bg-white px-4 py-6 text-sm font-bold text-slate-600">
                 No pending photo contributions.

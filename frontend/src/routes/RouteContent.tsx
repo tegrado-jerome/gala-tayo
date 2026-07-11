@@ -2,7 +2,6 @@ import { lazy, Suspense, useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import type { ReactNode } from 'react'
 import SeoHead from '../components/SeoHead'
-import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import MobileBottomNav from '../components/MobileBottomNav'
 import ProtectedFeatureGate from '../components/ProtectedFeatureGate'
 import SharedPlacePage from '../pages/SharedPlacePage'
@@ -36,7 +35,6 @@ import AskAiOverviewPage from '../pages/AskAiOverviewPage'
 import PlacesIndexPage from '../pages/PlacesIndexPage'
 import PlaceCategoriesIndexPage from '../pages/PlaceCategoriesIndexPage'
 import CategoryPlacesPage from '../pages/CategoryPlacesPage'
-import { AppChunkLoadingState } from '../components/AppUI'
 import { navigateToPath } from '../utils/navigation'
 import { isPath, parseAreaPagePath, parseCanonicalPlacePath, parseCategoryPagePath } from '../utils/routes'
 import { shouldShowMobileBottomNav, getNoindexForPath, isProtectedAccountPath, isAdminPath } from '../utils/routeGuards'
@@ -57,16 +55,6 @@ const AdminPlaceReportsPage = lazy(() => import('../pages/admin/PlaceReportsPage
 const AdminCommentReportsPage = lazy(() => import('../pages/admin/CommentReportsPage'))
 const AdminMfaSetupPage = lazy(() => import('../pages/admin/AdminMfaSetupPage'))
 const AdminMfaVerifyPage = lazy(() => import('../pages/admin/AdminMfaVerifyPage'))
-
-function AppLoadingState({ message = 'Loading GalaTayo...' }: { message?: string }) {
-  return (
-    <UnifiedLoadingState
-      variant="page"
-      title={message}
-      message="Please wait while we get things ready for you."
-    />
-  )
-}
 
 function AdminAccessDenied({ message = 'Your account does not have admin access.' }: { message?: string }) {
   const handleAdminSignIn = async () => {
@@ -156,16 +144,12 @@ function AdminRouteGate({
     navigateToPath(redirectTarget)
   }, [redirectTarget])
 
-  if (adminMfa.isLoading || !adminMfa.status) {
-    return <AppLoadingState message="Checking admin security..." />
-  }
-
-  if (!adminMfa.status.isAdmin) {
+  if (adminMfa.status && !adminMfa.status.isAdmin) {
     return <AdminAccessDenied message="This signed-in account is not an admin." />
   }
 
-  if (redirectTarget) {
-    return <AppLoadingState message="Checking admin security..." />
+  if (redirectTarget && adminMfa.status) {
+    return null
   }
 
   return <>{children}</>
@@ -202,15 +186,9 @@ type RouteInputs = {
 function matchRoute(inputs: RouteInputs) {
   const {
     session,
-    hasResolvedInitialAuth,
-    hasResolvedProfile,
-    isInitialProfileLoading,
-    profileError,
     pathname,
     search,
     isPasswordResetPath,
-    routeNeedsBlockingAuth,
-    soonFeatureRedirectPath,
     canonicalPlacePath,
     categoryPageSlug,
     areaPageSlug,
@@ -229,22 +207,6 @@ function matchRoute(inputs: RouteInputs) {
   const adminPlaceSubmissionsPath = getAdminPath('place-submissions')
   const adminPlaceReportsPath = getAdminPath('place-reports')
   const adminCommentReportsPath = getAdminPath('comment-reports')
-
-  if (!hasResolvedInitialAuth && routeNeedsBlockingAuth) {
-    return <AppLoadingState />
-  }
-
-  if (profileError && session && !hasResolvedProfile && routeNeedsBlockingAuth && !isPasswordResetPath) {
-    return <AppLoadingState message={profileError} />
-  }
-
-  if (session && isInitialProfileLoading && !hasResolvedProfile && routeNeedsBlockingAuth && !isPasswordResetPath) {
-    return <AppLoadingState message="Checking your profile..." />
-  }
-
-  if (soonFeatureRedirectPath) {
-    return <AppLoadingState message="Redirecting home..." />
-  }
 
   if (isPath(pathname, '/onboarding')) {
     if (!session) {
@@ -671,7 +633,7 @@ function AppShell({ session, currentUser, currentProfile, adminMfa, hasResolvedI
             {shouldApplyGenericNoindex ? (
               <SeoHead title="GalaTayo" canonicalPath={pathname} robots="noindex,follow" />
             ) : null}
-            <Suspense fallback={<AppChunkLoadingState />}>
+            <Suspense fallback={null}>
               <div>
                 {children}
               </div>

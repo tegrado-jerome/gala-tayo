@@ -4,7 +4,6 @@ import MinimalBackNav from '../components/MinimalBackNav'
 import { AppIcon } from '../components/AppIcon'
 import GoogleSignInButton from '../components/GoogleSignInButton'
 import { FormContainer, PageContainer, PageShell, CardSurface, Stack } from '../components/layout/ResponsiveLayouts'
-import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { getApiUrl } from '../utils/apiClient'
 
@@ -176,13 +175,7 @@ function FeedbackPage() {
               </div>
             </section>
 
-        {isSessionLoading ? (
-          <UnifiedLoadingState
-            variant="page"
-            title="Checking your account..."
-            message="We are confirming feedback access for your account."
-          />
-        ) : null}
+        {isSessionLoading ? <p className="text-sm text-[var(--muted)]">Checking your account...</p> : null}
 
         {!isSessionLoading && !session?.user ? (
           <CardSurface pad="loose">

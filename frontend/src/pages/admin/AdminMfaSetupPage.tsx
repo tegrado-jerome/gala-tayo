@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import AppHeader from '../../components/AppHeader'
-import UnifiedLoadingState from '../../components/UnifiedLoadingState'
 import { PageContainer, PageShell, StateContainer } from '../../components/layout/ResponsiveLayouts'
 import { supabase } from '../../supabase'
 import { refreshAdminMfaSession } from '../../utils/adminMfa'
@@ -116,23 +115,16 @@ function AdminMfaSetupPage({ session }: { session: Session }) {
     navigateToPath('/login')
   }
 
-  if (isLoading) {
-    return (
-      <StateContainer>
-        <UnifiedLoadingState
-          variant="page"
-          title="Setting up authenticator"
-          message="Preparing your admin MFA enrollment."
-        />
-      </StateContainer>
-    )
-  }
-
   return (
     <PageShell>
       <AppHeader />
       <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
         <PageContainer size="narrow">
+          {isLoading ? (
+            <StateContainer>
+              <p className="text-sm text-[var(--muted)]">Preparing your admin MFA enrollment...</p>
+            </StateContainer>
+          ) : null}
           <section className="admin-card p-5 sm:p-6">
             <p className="admin-eyebrow">Admin Security</p>
             <h1 className="mt-2 text-2xl font-black text-slate-950">Set up your authenticator</h1>

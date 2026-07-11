@@ -1,5 +1,3 @@
-import { shouldSuppressPageLoader } from '../utils/navigation'
-
 type UnifiedLoadingStateProps = {
   title?: string
   message?: string
@@ -36,23 +34,6 @@ function UnifiedLoadingState({
         <span className="inline-flex h-5 w-5 animate-spin rounded-full border-2 border-slate-200 border-t-[var(--accent)]" />
         <span>{message}</span>
       </div>
-    )
-  }
-
-  if (variant === 'page') {
-    const isSuppressed = shouldSuppressPageLoader()
-
-    return (
-      <main
-        className={`gala-page-background fixed inset-0 z-50 flex min-h-screen min-h-[100dvh] items-center justify-center px-6 py-10 text-[var(--text)] ${isSuppressed ? 'bg-[var(--bg)]/95' : ''} ${className}`}
-        aria-busy="true"
-        aria-live="polite"
-        data-loader-suppressed={isSuppressed ? 'true' : undefined}
-      >
-        <div className={isSuppressed ? 'opacity-80' : ''}>
-          {loadingBody}
-        </div>
-      </main>
     )
   }
 

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import AppHeader from '../../components/AppHeader'
-import UnifiedLoadingState from '../../components/UnifiedLoadingState'
 import { PageContainer, PageShell, StateContainer } from '../../components/layout/ResponsiveLayouts'
 import { useSystemMessage } from '../../context/SystemMessageContext'
 import { useAdminAccess } from '../../hooks/useAdminAccess'
@@ -115,13 +114,14 @@ function AdminPlaceSubmissionsPage({ session }: { session: Session }) {
 
   if (isCheckingAccess) {
     return (
-      <StateContainer>
-        <UnifiedLoadingState
-          variant="page"
-          title="Checking admin access..."
-          message="We are confirming your review permissions."
-        />
-      </StateContainer>
+      <PageShell tone="plain">
+        <AppHeader />
+        <main className="mx-auto w-full max-w-3xl px-4 py-10">
+          <StateContainer>
+            <p className="text-sm text-[var(--muted)]">Checking admin access...</p>
+          </StateContainer>
+        </main>
+      </PageShell>
     )
   }
 
@@ -155,15 +155,8 @@ function AdminPlaceSubmissionsPage({ session }: { session: Session }) {
           {errorMessage ? <p className="text-sm font-bold text-red-600">{errorMessage}</p> : null}
           </div>
 
-          {isLoading ? (
-            <StateContainer>
-              <UnifiedLoadingState
-                variant="page"
-                title="Preparing place submissions..."
-                message="We are loading pending place contributions for review."
-              />
-            </StateContainer>
-          ) : submissions.length === 0 ? (
+          {isLoading ? <p className="text-sm text-[var(--muted)]">Refreshing place submissions...</p> : null}
+          {submissions.length === 0 ? (
             <StateContainer>
               <p className="mt-6 rounded-2xl border border-dashed border-[var(--line-strong)] bg-white px-4 py-6 text-sm font-bold text-slate-600">
                 No pending place submissions.

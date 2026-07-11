@@ -3,7 +3,6 @@ import AppHeader from '../components/AppHeader'
 import MinimalBackNav from '../components/MinimalBackNav'
 import GoogleSignInButton from '../components/GoogleSignInButton'
 import PageHeroHeader from '../components/PageHeroHeader'
-import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import { PageContainer, PageShell, CardSurface, EmptyState, Stack, ChibiIllustration } from '../components/layout/ResponsiveLayouts'
 import ActivityPlaceCard from '../components/ActivityPlaceCard'
 import { useSavedFavorites, type FavoritePlace } from '../context/SavedFavoritesContext'
@@ -258,13 +257,13 @@ function FavoritesPage() {
 
               <div className="min-h-5">
                 {isFavoritesLoading ? (
-                  <UnifiedLoadingState title="Preparing favorites..." message="We are loading your saved places." />
+                  <p className="text-sm text-[var(--muted)]">Refreshing your saved places...</p>
                 ) : favoritesError ? (
                   <p className="text-sm font-medium text-red-600">{favoritesError}</p>
                 ) : null}
               </div>
 
-              {!isFavoritesLoading && savedPlaces.length === 0 && !favoritesError ? (
+              {savedPlaces.length === 0 && !favoritesError ? (
                 <EmptyState
                   title="Wala ka pang saved places."
                   description="Mag-search muna ng places para ma-save mo sila dito."
@@ -272,7 +271,7 @@ function FavoritesPage() {
                 />
               ) : null}
 
-              {!isFavoritesLoading && savedPlaces.length > 0 && filteredSavedPlaces.length === 0 ? (
+              {savedPlaces.length > 0 && filteredSavedPlaces.length === 0 ? (
                 <CardSurface tone="outlined" pad="loose" className="text-center">
                   <p className="text-sm font-black text-slate-950">No saved places match that search.</p>
                   <button

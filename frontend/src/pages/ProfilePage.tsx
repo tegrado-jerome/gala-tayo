@@ -7,7 +7,6 @@ import MinimalBackNav from '../components/MinimalBackNav'
 import { AppIcon } from '../components/AppIcon'
 import ProfileAvatar from '../components/ProfileAvatar'
 import { PageContainer, PageShell, CardSurface } from '../components/layout/ResponsiveLayouts'
-import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { useAppUser } from '../context/AppUserContext'
 import { updateAccountPassword } from '../services/authApi'
@@ -136,7 +135,7 @@ function ProfilePage({ session }: ProfilePageProps) {
     }
     return null
   })
-  const [isLoading, setIsLoading] = useState(() => Boolean(session?.user?.id && !cachedAtRender))
+  const [isLoading, setIsLoading] = useState(false)
   const [, setIsRefreshing] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [usernameInput, setUsernameInput] = useState(() => cachedAtRender?.profile.username ?? '')
@@ -188,8 +187,6 @@ function ProfilePage({ session }: ProfilePageProps) {
       try {
         if (profile) {
           setIsRefreshing(true)
-        } else {
-          setIsLoading(true)
         }
         setErrorMessage('')
 
@@ -367,13 +364,8 @@ function ProfilePage({ session }: ProfilePageProps) {
             <MinimalBackNav to="/" label="Home" preferHistory={false} />
           </div>
 
-        {isLoading ? (
-          <UnifiedLoadingState
-            variant="section"
-            title="Preparing profile..."
-            message="We are loading your profile details and follow activity."
-          />
-        ) : profile ? (
+        {isLoading ? <p className="text-sm text-[var(--muted)]">Refreshing your profile in the background...</p> : null}
+        {profile ? (
           <>
             <CardSurface pad="loose">
               <div className="flex flex-col gap-5 border-b border-[var(--line)] pb-5 sm:flex-row sm:items-end sm:justify-between">

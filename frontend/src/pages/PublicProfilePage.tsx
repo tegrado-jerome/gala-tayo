@@ -5,7 +5,6 @@ import MinimalBackNav from '../components/MinimalBackNav'
 import { AppIcon } from '../components/AppIcon'
 import ProfileAvatar from '../components/ProfileAvatar'
 import ReportUserModal from '../components/ReportUserModal'
-import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import { PageContainer, PageShell, CardSurface, Stack } from '../components/layout/ResponsiveLayouts'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { getSupabaseAccessToken, getSupabaseSession, supabase } from '../supabase'
@@ -30,7 +29,7 @@ type PublicProfilePageProps = {
 function PublicProfilePage({ username }: PublicProfilePageProps) {
   const [profile, setProfile] = useState<PublicProfile | null>(null)
   const [relationshipState, setRelationshipState] = useState<RelationshipState>('not_following')
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
   const [notFound, setNotFound] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [notice, setNotice] = useState('')
@@ -40,6 +39,17 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
   const [isActionsOpen, setIsActionsOpen] = useState(false)
   const [isReportUserOpen, setIsReportUserOpen] = useState(false)
   const [reportedUserIds, setReportedUserIds] = useState<Set<string>>(new Set())
+  const profileForView = profile ?? {
+    user_id: '',
+    username,
+    display_name: username,
+    avatar_url: null,
+    provider_avatar_url: null,
+    bio: '',
+    is_public: true,
+    followers_count: 0,
+    following_count: 0,
+  }
   const canOpenFollowLists = relationshipState === 'self' || Boolean(profile?.is_public)
   const actionsMenuRef = useRef<HTMLDivElement | null>(null)
   const { showSystemMessage } = useSystemMessage()
@@ -49,7 +59,6 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
 
     const loadProfile = async () => {
       try {
-        setIsLoading(true)
         setNotFound(false)
         setErrorMessage('')
         setNotice('')
@@ -221,38 +230,33 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
             <MinimalBackNav to="/" label="Home" preferHistory={false} />
           </div>
 
-          {isLoading ? (
-            <UnifiedLoadingState
-              variant="page"
-              title="Preparing profile..."
-              message="We are loading this public profile now."
-            />
-          ) : notFound ? (
+          {isLoading ? <p className="text-sm text-[var(--muted)]">Refreshing profile...</p> : null}
+          {notFound ? (
             <CardSurface pad="loose" className="text-center">
               <h1 className="text-2xl font-black text-slate-950">Profile not found.</h1>
             </CardSurface>
           ) : errorMessage ? (
             <CardSurface pad="loose" className="text-center text-sm font-bold text-red-700">{errorMessage}</CardSurface>
-          ) : profile ? (
+          ) : (
             <Stack gap="loose">
               <CardSurface pad="loose" className="rounded-[32px]">
               <div className="flex flex-col gap-5 border-b border-[var(--line)] pb-5 sm:flex-row sm:items-end sm:justify-between">
                   <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end">
                     <div>
-                      <ProfileAvatar profile={profile} size="lg" />
+                      <ProfileAvatar profile={profileForView} size="lg" />
                     </div>
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
                         <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--chip)] px-3 py-1 text-[var(--accent-deep)]">
-                          <AppIcon name={profile.is_public ? 'eye' : 'lock'} className="h-3.5 w-3.5" />
-                          {relationshipState === 'self' ? 'Your public view' : profile.is_public ? 'Public profile' : 'Private profile'}
+                          <AppIcon name={profileForView.is_public ? 'eye' : 'lock'} className="h-3.5 w-3.5" />
+                          {relationshipState === 'self' ? 'Your public view' : profileForView.is_public ? 'Public profile' : 'Private profile'}
                         </span>
                         <span className="inline-flex items-center gap-1.5"><span className="inline-block h-1.5 w-1.5 rounded-full bg-current" />{relationshipState === 'self' ? 'You' : relationshipState === 'following' ? 'Connected' : relationshipState === 'pending' ? 'Pending request' : 'Visitor mode'}</span>
                       </div>
-                      <h1 className="mt-3 truncate text-3xl font-black tracking-[-0.04em] text-slate-950 sm:text-4xl">{getDisplayName(profile)}</h1>
-                      <p className="mt-1 text-sm font-black text-slate-500">@{profile.username}</p>
+                      <h1 className="mt-3 truncate text-3xl font-black tracking-[-0.04em] text-slate-950 sm:text-4xl">{getDisplayName(profileForView)}</h1>
+                      <p className="mt-1 text-sm font-black text-slate-500">@{profileForView.username}</p>
                       <p className="mt-2 max-w-2xl text-sm font-semibold leading-7 text-slate-600">
-                        {profile.bio || 'No bio yet.'}
+                        {profileForView.bio || 'No bio yet.'}
                       </p>
                     </div>
                   </div>
@@ -305,11 +309,11 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
                               type="button"
                               role="menuitem"
                               onClick={handleOpenReportUser}
-                              disabled={reportedUserIds.has(profile.user_id)}
+                              disabled={reportedUserIds.has(profileForView.user_id)}
                               className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-[13px] font-bold text-slate-700 transition hover:bg-slate-50 hover:text-slate-950 disabled:cursor-not-allowed disabled:text-slate-400"
                             >
                               <AppIcon name="reports" className="h-4 w-4" />
-                              {reportedUserIds.has(profile.user_id) ? 'Already reported' : 'Report user'}
+                              {reportedUserIds.has(profileForView.user_id) ? 'Already reported' : 'Report user'}
                             </button>
                           </div>
                         ) : null}
@@ -329,7 +333,7 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
                   disabled={!canOpenFollowLists}
                   className={`inline-flex items-center gap-2 font-semibold transition ${canOpenFollowLists ? 'text-slate-600 hover:text-slate-950' : 'cursor-default text-slate-500'}`}
                 >
-                  <span className="text-lg font-black text-slate-950">{profile.followers_count}</span>
+                  <span className="text-lg font-black text-slate-950">{profileForView.followers_count}</span>
                   <span>Followers</span>
                 </button>
                 <button
@@ -342,7 +346,7 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
                   disabled={!canOpenFollowLists}
                   className={`inline-flex items-center gap-2 font-semibold transition ${canOpenFollowLists ? 'text-slate-600 hover:text-slate-950' : 'cursor-default text-slate-500'}`}
                 >
-                  <span className="text-lg font-black text-slate-950">{profile.following_count}</span>
+                  <span className="text-lg font-black text-slate-950">{profileForView.following_count}</span>
                   <span>Following</span>
                 </button>
               </div>
@@ -351,7 +355,7 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
 
             </CardSurface>
             </Stack>
-        ) : null}
+          )}
 
         {listUsers ? (
           <div className="fixed inset-0 z-[7000] flex items-center justify-center bg-slate-950/35 px-4">

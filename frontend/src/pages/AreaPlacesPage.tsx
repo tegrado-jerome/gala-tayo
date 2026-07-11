@@ -6,7 +6,6 @@ import Breadcrumb from '../components/Breadcrumb'
 import CompactPagination from '../components/CompactPagination'
 import InternalLink from '../components/InternalLink'
 import PlaceCard, { type PlaceCardData } from '../components/PlaceCard'
-import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import SeoHead from '../components/SeoHead'
 import { PageContainer, PageShell, ResponsiveGrid } from '../components/layout/ResponsiveLayouts'
 import { placeCategories } from '../data/placeCategories'
@@ -36,6 +35,14 @@ type AreaPlacesResponse = {
   totalPages: number
   error?: string
   message?: string
+}
+
+const EMPTY_AREA_PLACES_RESPONSE: AreaPlacesResponse = {
+  items: [],
+  total: 0,
+  page: 1,
+  pageSize: PAGE_SIZE,
+  totalPages: 1,
 }
 
 function normalizeValue(value: string | null | undefined) {
@@ -125,8 +132,9 @@ async function readAreaPlacesResponse(response: Response): Promise<AreaPlacesRes
 }
 
 function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
-  const [payload, setPayload] = useState<AreaPlacesResponse | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [payload, setPayload] = useState<AreaPlacesResponse>(EMPTY_AREA_PLACES_RESPONSE)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const filterScrollerRef = useRef<HTMLDivElement | null>(null)
   const activeFilterRef = useRef<HTMLAnchorElement | null>(null)
@@ -161,7 +169,8 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
 
     const loadPage = async () => {
       try {
-        setIsLoading(true)
+        setIsLoading(payload.items.length === 0)
+        setIsRefreshing(payload.items.length > 0)
         setErrorMessage(null)
         const response = await fetch(getAreaSearchApiUrl(), {
           method: 'POST',
@@ -190,11 +199,12 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
           return
         }
 
-        setPayload(null)
+        setPayload(EMPTY_AREA_PLACES_RESPONSE)
         setErrorMessage(error instanceof Error ? error.message : 'Failed to load area page.')
       } finally {
         if (!controller.signal.aborted) {
           setIsLoading(false)
+          setIsRefreshing(false)
         }
       }
     }
@@ -204,9 +214,9 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
     return () => controller.abort()
   }, [activeCategory, areaSlug, currentPage])
 
-  const allPlaces = useMemo(() => sortPlacesAlphabetically(payload?.items ?? []), [payload?.items])
-  const totalPages = payload?.totalPages ?? 1
-  const safePage = payload?.page ?? currentPage
+  const allPlaces = useMemo(() => sortPlacesAlphabetically(payload.items), [payload.items])
+  const totalPages = payload.totalPages
+  const safePage = payload.page || currentPage
   const activeFilterLabel = FILTER_OPTIONS.find((filter) => filter.value === activeCategory)?.label ?? 'All'
   const getPageHref = (page: number) => {
     const params = new URLSearchParams()
@@ -220,7 +230,7 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
     return params.toString() ? `/places/${areaSlug}?${params.toString()}` : `/places/${areaSlug}`
   }
 
-  const jsonLd = payload && !errorMessage
+  const jsonLd = !errorMessage
     ? [
         {
           '@context': 'https://schema.org',
@@ -325,7 +335,7 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
           </div>
         </section>
 
-        {isLoading ? <UnifiedLoadingState title="Preparing area places..." message={`We are loading places in ${areaName}.`} /> : null}
+        {isLoading || isRefreshing ? <p className="mt-4 text-sm text-[var(--muted)]">Refreshing places in the background...</p> : null}
         {errorMessage ? (
           <section className="mt-6 rounded-[24px] border border-[#E5E7EB] bg-white px-5 py-6 shadow-[0_6px_20px_rgba(17,24,39,0.03)]">
             <h2 className="text-base font-semibold text-[var(--text-main)]">We couldn't load places in {areaName} right now.</h2>
@@ -333,7 +343,7 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
           </section>
         ) : null}
 
-        {!isLoading && !errorMessage ? (
+        {!errorMessage ? (
           <>
             {allPlaces.length === 0 ? (
               <section className="mt-10 rounded-[28px] border border-[#e5e7eb] bg-white px-5 py-8 text-center shadow-sm sm:px-6">
@@ -389,8 +399,8 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
                 <CompactPagination
                   currentPage={safePage}
                   totalPages={totalPages}
-                  totalItems={payload?.total}
-                  pageSize={payload?.pageSize}
+                  totalItems={payload.total}
+                  pageSize={payload.pageSize}
                   getHref={getPageHref}
                 />
               </section>

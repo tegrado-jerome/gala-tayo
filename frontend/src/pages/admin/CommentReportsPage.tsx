@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import AppHeader from '../../components/AppHeader'
 import ProfileAvatar from '../../components/ProfileAvatar'
-import UnifiedLoadingState from '../../components/UnifiedLoadingState'
 import { PageContainer, PageShell, StateContainer } from '../../components/layout/ResponsiveLayouts'
 import { useSystemMessage } from '../../context/SystemMessageContext'
 import { useAdminAccess } from '../../hooks/useAdminAccess'
@@ -88,13 +87,14 @@ function AdminCommentReportsPage({ session }: { session: Session }) {
 
   if (isCheckingAccess) {
     return (
-      <StateContainer>
-        <UnifiedLoadingState
-          variant="page"
-          title="Checking admin access..."
-          message="We are confirming your moderation permissions."
-        />
-      </StateContainer>
+      <PageShell>
+        <AppHeader />
+        <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
+          <StateContainer>
+            <p className="text-sm text-[var(--muted)]">Checking admin access...</p>
+          </StateContainer>
+        </main>
+      </PageShell>
     )
   }
 
@@ -137,15 +137,8 @@ function AdminCommentReportsPage({ session }: { session: Session }) {
             {errorMessage ? <p className="text-sm font-bold text-red-600">{errorMessage}</p> : null}
           </div>
 
-          {isLoading ? (
-            <StateContainer>
-              <UnifiedLoadingState
-                variant="page"
-                title="Preparing comment reports..."
-                message="We are loading reports for moderation."
-              />
-            </StateContainer>
-          ) : reports.length === 0 ? (
+          {isLoading ? <p className="text-sm text-[var(--muted)]">Refreshing comment reports...</p> : null}
+          {reports.length === 0 ? (
             <StateContainer>
               <p className="mt-6 rounded-2xl border border-dashed border-[#E5E7EB] bg-white px-4 py-6 text-sm font-bold text-slate-600">
                 No comment reports in this view.

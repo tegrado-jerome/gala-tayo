@@ -2,7 +2,6 @@ import type { ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { Flag, Home, Image, MessageSquare, UserRound } from 'lucide-react'
 import AppHeader from '../../components/AppHeader'
-import UnifiedLoadingState from '../../components/UnifiedLoadingState'
 import { PageContainer, PageShell, StateContainer } from '../../components/layout/ResponsiveLayouts'
 import { useAdminAccess } from '../../hooks/useAdminAccess'
 import { navigateToPath } from '../../utils/navigation'
@@ -60,13 +59,14 @@ function AdminDashboard({ session }: { session: Session }) {
 
   if (isCheckingAccess) {
     return (
-      <StateContainer>
-        <UnifiedLoadingState
-          variant="page"
-          title="Checking admin access..."
-          message="We are confirming your moderation permissions."
-        />
-      </StateContainer>
+      <PageShell>
+        <AppHeader />
+        <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
+          <StateContainer>
+            <p className="text-sm text-[var(--muted)]">Checking admin access...</p>
+          </StateContainer>
+        </main>
+      </PageShell>
     )
   }
 

@@ -7,7 +7,6 @@ import InternalLink from './InternalLink'
 import Breadcrumb from './Breadcrumb'
 import MapView from './MapView'
 import ReportUserModal from './ReportUserModal'
-import UnifiedLoadingState from './UnifiedLoadingState'
 import PlaceImageNotice from './PlaceImageNotice'
 import { PageContainer, PageShell, DetailLayout, DetailSidebar, CardSurface, Stack } from './layout/ResponsiveLayouts'
 import { Flag, ImagePlus, MapPin, MessageCircle, MoreHorizontal, Pencil, Reply, Search, Trash2 } from 'lucide-react'
@@ -699,13 +698,110 @@ function findCommentById(comments: PlaceComment[], commentId: string): PlaceComm
   return null
 }
 
+const EMPTY_PLACE_DETAIL = {
+  id: '',
+  slug: '',
+  name: 'Place details',
+  category: '',
+  area: '',
+  address: null,
+  city: null,
+  localArea: null,
+  status: 'Unknown' as const,
+  reason: '',
+  description: null,
+  badge: '',
+  rating: null,
+  reviewCount: '',
+  ratingCount: 0,
+  hours: '',
+  entranceFee: '',
+  website: '',
+  googleMapsUrl: null,
+  distanceKm: null,
+  price_level: null,
+  budget_min: null,
+  place_history: null,
+  best_time_to_visit: null,
+  visit_duration: null,
+  good_for: [],
+  not_ideal_for: [],
+  crowd_level: null,
+  indoor_outdoor: null,
+  weather_fit: null,
+  parking_info: null,
+  accessibility_notes: null,
+  decision_reason: null,
+  commute_friendly: null,
+  commute_access: null,
+  nearby_context: null,
+  budget_notes: null,
+  verification_status: null,
+  verification_notes: null,
+  verification_sources: [],
+  last_verified_at: null,
+  website_url: null,
+  highlights: [],
+  imageUrl: null,
+  curatedImageUrl: null,
+  curatedImageUrls: [],
+  thumbnailUrl: null,
+  imageAlt: null,
+  categories: [],
+  tags: [],
+  matchedCategories: [],
+  matchedTags: [],
+  markerRatingText: null,
+  hasPin: false,
+  latitude: null,
+  longitude: null,
+  lat: null,
+  lng: null,
+  coordinates: {
+    lat: null,
+    lng: null,
+  },
+}
+
 function PlaceDetailView({
-  place,
+  place: inputPlace,
   areaBreadcrumb = null,
   returnLabel = null,
   returnHref = null,
   categoryBreadcrumb = null,
 }: PlaceDetailViewProps) {
+  const place = inputPlace ?? EMPTY_PLACE_DETAIL
+  const ReviewSkeleton = () => (
+    <div className="mt-4 grid gap-3" aria-hidden="true">
+      <div className="app-skeleton app-skeleton--soft h-5 w-40 rounded-full" />
+      <div className="app-skeleton h-11 w-full rounded-2xl" />
+      <div className="app-skeleton app-skeleton--soft h-4 w-52 rounded-full" />
+      <div className="app-skeleton h-10 w-28 rounded-xl" />
+    </div>
+  )
+
+  const CommentSkeleton = () => (
+    <ul className="mt-4 grid gap-3.5" aria-hidden="true">
+      {Array.from({ length: 3 }).map((_, index) => (
+        <li key={`comment-skeleton-${index}`} className="rounded-[22px] border border-slate-200/80 bg-white/90 p-4">
+          <div className="flex items-start gap-3">
+            <div className="app-skeleton h-10 w-10 shrink-0 rounded-full" />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <div className="app-skeleton h-4 w-28 rounded-full" />
+                <div className="app-skeleton app-skeleton--soft h-3 w-16 rounded-full" />
+              </div>
+              <div className="mt-3 grid gap-2">
+                <div className="app-skeleton h-4 w-full rounded-full" />
+                <div className="app-skeleton app-skeleton--soft h-4 w-4/5 rounded-full" />
+              </div>
+            </div>
+          </div>
+        </li>
+      ))}
+    </ul>
+  )
+
   const [initialCommunityCache] = useState<PlaceDetailCommunityCache | null>(() => readPlaceDetailCommunityCache(place.id))
   const [isAddToPlanOpen, setIsAddToPlanOpen] = useState(false)
   const guestAuth = useGuestAuthPrompt()
@@ -2183,12 +2279,11 @@ function PlaceDetailView({
   const communitySection = !isCommunityPlaceReady ? (
     <DetailSection>
       <SectionHeading icon="sparkle" title="Community" />
-      <div className="mt-4">
-        <UnifiedLoadingState
-          variant="inline"
-          title="Preparing community details..."
-          message="We are loading reviews, comments, and community activity."
-        />
+      <div className="mt-5 rounded-3xl border border-slate-200/80 bg-slate-50/55 p-4 sm:p-5">
+        <ReviewSkeleton />
+        <div className="mt-5 border-t border-[var(--line)] pt-5">
+          <CommentSkeleton />
+        </div>
       </div>
     </DetailSection>
   ) : (
@@ -2347,13 +2442,7 @@ function PlaceDetailView({
             )}
 
             {isCommentsLoading ? (
-              <div className="mt-4">
-                <UnifiedLoadingState
-                  variant="inline"
-                  title="Preparing comments..."
-                  message="We are loading the conversation for this place."
-                />
-              </div>
+              <CommentSkeleton />
             ) : visibleCommentCount === 0 ? (
               <div className="mt-5 flex flex-col items-center rounded-[20px] border border-dashed border-[var(--line-strong)] bg-slate-50 px-6 py-8 text-center">
                 <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[var(--accent-wash)] text-[var(--accent-deep)]">

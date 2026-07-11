@@ -4,7 +4,6 @@ import AppHeader from '../components/AppHeader'
 import { AppIcon } from '../components/AppIcon'
 import MinimalBackNav from '../components/MinimalBackNav'
 import ProfileAvatar from '../components/ProfileAvatar'
-import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import { PageContainer, PageShell, CardSurface, Stack } from '../components/layout/ResponsiveLayouts'
 import { getDisplayName, getPublicGalaPlan, type PublicGalaPlan } from '../utils/profileApi'
 import { navigateToPath } from '../utils/navigation'
@@ -28,7 +27,7 @@ function formatPlaceCountLabel(count: number) {
 
 function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
   const [plan, setPlan] = useState<PublicGalaPlan | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
   const [notFound, setNotFound] = useState(false)
   const [lockedMessage, setLockedMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
@@ -38,7 +37,6 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
 
     const loadPlan = async () => {
       try {
-        setIsLoading(true)
         setNotFound(false)
         setLockedMessage('')
         setErrorMessage('')
@@ -94,9 +92,8 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
       <AppHeader />
       <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
         <PageContainer size="narrow">
-          {isLoading ? (
-            <UnifiedLoadingState title="Preparing gala plan..." message="We are loading this public gala plan now." />
-          ) : notFound ? (
+          {isLoading ? <p className="text-sm text-[var(--muted)]">Refreshing gala plan...</p> : null}
+          {notFound ? (
             <CardSurface pad="loose" className="text-center">
               <h1 className="text-xl font-black text-slate-950">Gala plan not found.</h1>
             </CardSurface>
@@ -108,14 +105,14 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
             </CardSurface>
           ) : errorMessage ? (
             <CardSurface pad="loose" className="text-center text-sm font-bold text-red-700">{errorMessage}</CardSurface>
-          ) : plan ? (
+          ) : (
             <Stack gap="default">
               <section className="relative overflow-hidden py-1">
               <div className="pointer-events-none absolute -right-12 top-0 h-32 w-32 rounded-full bg-sky-100/80 blur-2xl" />
               <div className="pointer-events-none absolute left-0 top-20 h-24 w-24 rounded-full bg-emerald-100/60 blur-2xl" />
 
               <div className="relative">
-                <MinimalBackNav to={`/u/${encodeURIComponent(plan.owner.username)}`} className="mb-4 border-0 bg-transparent px-0 py-0 text-slate-500 shadow-none ring-0 hover:bg-transparent" />
+                <MinimalBackNav to={`/u/${encodeURIComponent(plan?.owner?.username || username)}`} className="mb-4 border-0 bg-transparent px-0 py-0 text-slate-500 shadow-none ring-0 hover:bg-transparent" />
 
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <span className="inline-flex items-center text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
@@ -123,44 +120,44 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
                   </span>
                   <span className="inline-flex shrink-0 items-center gap-1.5 text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">
                     <AppIcon name="place" className="h-3.5 w-3.5" />
-                    {formatPlaceCountLabel(plan.items.length)}
+                      {formatPlaceCountLabel(plan?.items.length ?? 0)}
                   </span>
                 </div>
 
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <h1 className="max-w-[13ch] text-[2rem] font-black leading-[0.95] tracking-[-0.05em] text-slate-950 sm:max-w-none sm:text-[2.35rem]">
-                      {plan.title}
+                      {plan?.title || 'Public gala plan'}
                     </h1>
                     <p className="text-sm font-semibold text-slate-500">
                       A minimalist route dropped into a clean social-style layout.
                     </p>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => navigateToPath(`/u/${encodeURIComponent(plan.owner.username)}`)}
-                    className="flex w-full items-center gap-2.5 px-0 py-2 text-left transition"
-                  >
-                    <ProfileAvatar profile={plan.owner} size="sm" />
+                    <button
+                      type="button"
+                      onClick={() => plan?.owner?.username ? navigateToPath(`/u/${encodeURIComponent(plan.owner.username)}`) : undefined}
+                      className="flex w-full items-center gap-2.5 px-0 py-2 text-left transition"
+                    >
+                      <ProfileAvatar profile={plan?.owner ?? { username, avatar_url: null, provider_avatar_url: null }} size="sm" />
                     <span className="min-w-0">
-                      <span className="block truncate text-sm font-black text-slate-950">{getDisplayName(plan.owner)}</span>
+                      <span className="block truncate text-sm font-black text-slate-950">{plan?.owner ? getDisplayName(plan.owner) : `@${username}`}</span>
                       <span className="mt-0.5 inline-flex max-w-full items-center gap-1 truncate text-xs font-black text-[var(--accent-deep)]">
-                        <span className="truncate">@{plan.owner.username}</span>
+                        <span className="truncate">@{plan?.owner?.username || username}</span>
                         <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" strokeWidth={2.2} />
                       </span>
-                      <span className="mt-1 block text-xs font-semibold text-slate-500">{formatGalaPlanDate(plan.description)}</span>
+                      <span className="mt-1 block text-xs font-semibold text-slate-500">{formatGalaPlanDate(plan?.description)}</span>
                     </span>
                   </button>
 
                   <div className="grid grid-cols-2 gap-2.5">
                     <div className="px-1 py-1">
                       <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-400">Stops</p>
-                      <p className="mt-2 text-lg font-black tracking-[-0.03em] text-slate-950">{plan.items.length}</p>
+                      <p className="mt-2 text-lg font-black tracking-[-0.03em] text-slate-950">{plan?.items.length ?? 0}</p>
                     </div>
                     <div className="px-1 py-1">
                       <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-400">Hearts</p>
-                      <p className="mt-2 text-lg font-black tracking-[-0.03em] text-slate-950">{plan.hearts_count}</p>
+                      <p className="mt-2 text-lg font-black tracking-[-0.03em] text-slate-950">{plan?.hearts_count ?? 0}</p>
                     </div>
                   </div>
 
@@ -173,17 +170,17 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
                       type="button"
                       onClick={() => void toggleHeart()}
                       className={`inline-flex min-w-0 flex-1 sm:flex-none items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-black transition ${
-                        plan.viewer_has_hearted
+                        plan?.viewer_has_hearted
                           ? 'bg-rose-50 text-rose-700 hover:bg-rose-100'
                           : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                       }`}
                     >
-                      <AppIcon name="favorites" className={`h-4 w-4 ${plan.viewer_has_hearted ? 'fill-current text-rose-600' : ''}`} />
-                      <span>{plan.hearts_count}</span>
+                      <AppIcon name="favorites" className={`h-4 w-4 ${plan?.viewer_has_hearted ? 'fill-current text-rose-600' : ''}`} />
+                      <span>{plan?.hearts_count ?? 0}</span>
                     </button>
                       <button
                         type="button"
-                        onClick={() => void shareGalaPlanLink(plan.owner.username, plan.slug, plan.title)}
+                        onClick={() => plan ? void shareGalaPlanLink(plan.owner.username, plan.slug, plan.title) : undefined}
                         className="inline-flex min-w-0 flex-1 sm:flex-none items-center justify-center gap-2 rounded-full bg-slate-100 px-4 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-200"
                       >
                       <AppIcon name="share" className="h-4 w-4" />
@@ -204,7 +201,7 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
                 <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">{formatPlaceCountLabel(items.length)}</p>
               </div>
 
-              {items.length === 0 ? (
+                  {items.length === 0 ? (
                 <p className="px-1 text-sm font-semibold text-[var(--muted)]">This plan has no places yet.</p>
               ) : (
                 <Stack gap="tight">
@@ -246,7 +243,7 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
               )}
               </section>
             </Stack>
-          ) : null}
+          )}
         </PageContainer>
       </main>
     </PageShell>

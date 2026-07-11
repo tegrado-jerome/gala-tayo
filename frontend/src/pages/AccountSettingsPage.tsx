@@ -8,7 +8,6 @@ import PageHeroHeader from '../components/PageHeroHeader'
 import MinimalBackNav from '../components/MinimalBackNav'
 import ProfileAvatar from '../components/ProfileAvatar'
 import { PageContainer, PageShell, ResponsiveGrid, CardSurface, Stack, Section } from '../components/layout/ResponsiveLayouts'
-import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import { useAppUser } from '../context/AppUserContext'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { uploadProfileAvatar } from '../services/onboardingApi'
@@ -337,12 +336,63 @@ function SectionHeader({ title, description, icon }: SectionHeaderProps) {
 
 function AccountSettingsPage({ session }: AccountSettingsPageProps) {
   const { currentProfile } = useAppUser()
+  const fallbackCurrentUser: CurrentUserResponse = {
+    user: {
+      id: session.user.id,
+      email: session.user.email ?? null,
+      firstName: null,
+      middleName: null,
+      lastName: null,
+      birthdate: null,
+      role: 'user',
+      lastSeenAt: null,
+      termsAcceptedAt: null,
+      privacyAcceptedAt: null,
+      termsVersion: null,
+      privacyVersion: null,
+      defaultGalaPlanVisibility: 'private',
+      followersVisibility: 'private',
+      followingVisibility: 'private',
+      showPublicPlansOnProfile: false,
+    },
+    profile: currentProfile
+      ? {
+          userId: currentProfile.userId,
+          username: currentProfile.username,
+          displayName: currentProfile.displayName,
+          avatarUrl: currentProfile.avatarUrl,
+          providerAvatarUrl: currentProfile.providerAvatarUrl,
+          bio: currentProfile.bio,
+          isPublic: currentProfile.isPublic,
+          onboardingCompletedAt: currentProfile.onboardingCompletedAt,
+        }
+      : null,
+    onboarding: {
+      completed: Boolean(currentProfile?.onboardingCompletedAt),
+    },
+  }
+  const fallbackProfile: Profile = {
+    user_id: session.user.id,
+    username: currentProfile?.username ?? '',
+    avatar_url: currentProfile?.avatarUrl ?? null,
+    provider_avatar_url: currentProfile?.providerAvatarUrl ?? null,
+    bio: currentProfile?.bio ?? null,
+    is_public: currentProfile?.isPublic ?? true,
+    show_followers: 'everyone',
+    show_following: 'everyone',
+    default_gala_plan_visibility: 'private',
+    followers_count: 0,
+    following_count: 0,
+    onboarding_completed_at: currentProfile?.onboardingCompletedAt ?? null,
+    created_at: '',
+    updated_at: '',
+  }
   const initialResumeCache = useMemo(() => readAccountSettingsResumeCache(session.user.id), [session.user.id])
   const initialCachedCurrentUser = initialResumeCache?.currentUser ?? null
   const initialCachedProfile = initialResumeCache?.profile ?? null
-  const [currentUser, setCurrentUser] = useState<CurrentUserResponse | null>(initialResumeCache?.currentUser ?? null)
-  const [profile, setProfile] = useState<Profile | null>(initialResumeCache?.profile ?? null)
-  const [isLoading, setIsLoading] = useState(() => !initialResumeCache)
+  const [currentUser, setCurrentUser] = useState<CurrentUserResponse | null>(initialResumeCache?.currentUser ?? fallbackCurrentUser)
+  const [profile, setProfile] = useState<Profile | null>(initialResumeCache?.profile ?? fallbackProfile)
+  const [isLoading, setIsLoading] = useState(false)
   const [, setIsRefreshing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
@@ -391,9 +441,7 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
 
     const loadSettings = async () => {
       try {
-        if (!initialResumeCache) {
-          setIsLoading(true)
-        } else {
+        if (initialResumeCache) {
           setIsRefreshing(true)
         }
         setErrorMessage('')
@@ -601,13 +649,8 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
             <MinimalBackNav to="/profile" label="Profile" preferHistory={false} />
           </div>
 
-          {isLoading ? (
-            <UnifiedLoadingState
-              variant="section"
-              title="Preparing account settings..."
-              message="We are loading your account details and preferences."
-            />
-          ) : currentUser && profile ? (
+          {isLoading ? <p className="text-sm text-[var(--muted)]">Refreshing account settings in the background...</p> : null}
+          {currentUser && profile ? (
             <form onSubmit={handleSave} className="grid gap-6 lg:gap-8">
               <PageHeroHeader
                 className="account-settings-hero"

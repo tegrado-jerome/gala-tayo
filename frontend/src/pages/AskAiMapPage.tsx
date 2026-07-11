@@ -1,5 +1,4 @@
 ﻿import { startTransition, useEffect, useMemo, useRef, useState } from 'react'
-import type { Session } from '@supabase/supabase-js'
 import { memo, useLayoutEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { Bot } from 'lucide-react'
@@ -9,7 +8,7 @@ import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
 import InternalLink from '../components/InternalLink'
 import MapView from '../components/MapView'
 import { MapResponsiveLayout } from '../components/layout/ResponsiveLayouts'
-import { supabase } from '../supabase'
+import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import {
   cancelAskAiMapRequest,
   clearAskAiMapAbortController,
@@ -216,8 +215,7 @@ function AskAiMapPage() {
   const initialAskAiMapRuntimeState = initialAskAiMapRuntimeStateRef.current
   const initialAskAiMapRouteCache = initialAskAiMapRouteCacheRef.current
   const initialAskAiMapState = initialAskAiMapRuntimeState ?? initialAskAiMapRouteCache
-  const [session, setSession] = useState<Session | null>(null)
-  const [isSessionLoading, setIsSessionLoading] = useState(true)
+  const { session, isSessionLoading } = useSavedFavorites()
   const [query, setQuery] = useState(initialAskAiMapState?.query ?? '')
   const [selectedChipIds, setSelectedChipIds] = useState<AskAiMapChipId[]>(
     (initialAskAiMapState?.selectedChipIds as AskAiMapChipId[] | undefined) ?? []
@@ -279,29 +277,6 @@ function AskAiMapPage() {
     setAskAiMapsUsageStatus(usageStatus)
     return usageStatus
   }
-
-  useEffect(() => {
-    let isMounted = true
-
-    supabase.auth.getSession().then(({ data }) => {
-      if (!isMounted) {
-        return
-      }
-
-      setSession(data.session)
-      setIsSessionLoading(false)
-    })
-
-    const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      setSession(nextSession)
-      setIsSessionLoading(false)
-    })
-
-    return () => {
-      isMounted = false
-      data.subscription.unsubscribe()
-    }
-  }, [])
 
   useEffect(() => {
     writeCachedAskAiUsage('askAiMaps', askAiMapsUsageStatus)

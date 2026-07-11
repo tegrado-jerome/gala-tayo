@@ -1,12 +1,10 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import type { Session } from '@supabase/supabase-js'
 import type { PlaceCardData } from '../components/PlaceCard'
 import AppHeader from '../components/AppHeader'
 import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
 import PromptBuilderModal from '../components/PromptBuilderModal'
-
-import { supabase } from '../supabase'
-import { navigateToCanonicalPlace, navigateToPath, replaceWithPath, writePlaceReturnState } from '../utils/navigation'
+import { useSavedFavorites } from '../context/SavedFavoritesContext'
+import { navigateToCanonicalPlace, navigateToPath, writePlaceReturnState } from '../utils/navigation'
 import {
   getAskAiRuntimeState,
   hasActiveAskAiRuntimeState,
@@ -43,8 +41,7 @@ import {
   fallbackGoodForOptions,
   fallbackAreas,
   budgetOptions,
-  removePersistentStorage,
-  getCurrentSearchRouteCacheKey,
+  clearAllSearchRouteCaches,
   readSearchRouteCache,
   writeSearchRouteCache,
   readAskAiRouteCache,
@@ -113,8 +110,7 @@ function HomePage({
   )
   const initialRouteCache = initialRouteCacheRef.current
   const [selectedMode, setSelectedMode] = useState<SearchMode>(initialMode)
-  const [session, setSession] = useState<Session | null>(null)
-  const [isSessionLoading, setIsSessionLoading] = useState(true)
+  const { session, isSessionLoading } = useSavedFavorites()
   const [askAiUsageStatus, setAskAiUsageStatus] = useState<AskAiUsageStatus | null>(
     readCachedAskAiUsage('chatbotAi') ??
       (shouldUseCachedAskAiState ? initialAskAiState?.usageStatus ?? null : null)
@@ -444,9 +440,7 @@ function HomePage({
   }
 
   const resetSearchState = () => {
-    if (supportsSearchRouteCache) {
-      removePersistentStorage(getCurrentSearchRouteCacheKey())
-    }
+    clearAllSearchRouteCaches()
 
     searchRequestVersion.current += 1
     setRawQuery('')
@@ -478,8 +472,8 @@ function HomePage({
   }
 
   const handleSearchAgain = () => {
-    resetSearchState()
-    replaceWithPath('/search')
+    clearAllSearchRouteCaches()
+    void handleSearch({ page: 1 }, false)
   }
 
   const handlePlaceSelect = (placeId: string) => {
@@ -554,10 +548,12 @@ function HomePage({
       return
     }
 
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
-    document.documentElement.scrollTop = 0
-    document.body.scrollTop = 0
     desktopResultsScrollRef.current?.scrollTo({ top: 0, behavior: 'auto' })
+    const anchor = document.getElementById('search-results-anchor')
+    if (anchor) {
+      const rect = anchor.getBoundingClientRect()
+      window.scrollTo({ top: rect.top + window.scrollY - 16, left: 0, behavior: 'auto' })
+    }
 
     void handleSearch({ page: nextPage }, true)
   }
@@ -915,29 +911,6 @@ function HomePage({
       accessToken: session.access_token,
     })
   }, [initialMode, session?.access_token])
-
-  useEffect(() => {
-    let isMounted = true
-
-    supabase.auth.getSession().then(({ data }) => {
-      if (isMounted) {
-        setSession(data.session)
-        setIsSessionLoading(false)
-      }
-    })
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      setSession(nextSession)
-      setIsSessionLoading(false)
-    })
-
-    return () => {
-      isMounted = false
-      subscription.unsubscribe()
-    }
-  }, [])
 
   useEffect(() => {
     writeCachedAskAiUsage('chatbotAi', askAiUsageStatus)

@@ -5,7 +5,6 @@ import AppHeader from '../components/AppHeader'
 import Breadcrumb from '../components/Breadcrumb'
 import CompactPagination from '../components/CompactPagination'
 import PlaceCard, { type PlaceCardData } from '../components/PlaceCard'
-import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import SeoHead from '../components/SeoHead'
 import { PageContainer, PageShell, ResponsiveGrid } from '../components/layout/ResponsiveLayouts'
 import { getPlaceCategoryLabel } from '../data/placeCategories'
@@ -27,6 +26,14 @@ type CategoryPlacesResponse = {
   page: number
   pageSize: number
   totalPages: number
+}
+
+const EMPTY_CATEGORY_PLACES_RESPONSE: CategoryPlacesResponse = {
+  items: [],
+  total: 0,
+  page: 1,
+  pageSize: PAGE_SIZE,
+  totalPages: 1,
 }
 
 function getSearchApiUrl() {
@@ -111,8 +118,9 @@ async function readCategoryPlacesResponse(response: Response): Promise<CategoryP
 }
 
 function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPageProps) {
-  const [payload, setPayload] = useState<CategoryPlacesResponse | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [payload, setPayload] = useState<CategoryPlacesResponse>(EMPTY_CATEGORY_PLACES_RESPONSE)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const categoryLabel = getPlaceCategoryLabel(categorySlug)
   const iconName = getCategoryIconName(categoryLabel)
@@ -125,7 +133,8 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
 
     const loadPage = async () => {
       try {
-        setIsLoading(true)
+        setIsLoading(payload.items.length === 0)
+        setIsRefreshing(payload.items.length > 0)
         setErrorMessage(null)
         const response = await fetch(getSearchApiUrl(), {
           method: 'POST',
@@ -153,11 +162,12 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
           return
         }
 
-        setPayload(null)
+        setPayload(EMPTY_CATEGORY_PLACES_RESPONSE)
         setErrorMessage(error instanceof Error ? error.message : 'Failed to load category page.')
       } finally {
         if (!controller.signal.aborted) {
           setIsLoading(false)
+          setIsRefreshing(false)
         }
       }
     }
@@ -167,9 +177,9 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
     return () => controller.abort()
   }, [categorySlug, currentPage])
 
-  const places = useMemo(() => sortPlacesAlphabetically(payload?.items ?? []), [payload?.items])
-  const totalPages = payload?.totalPages ?? 1
-  const safePage = payload?.page ?? currentPage
+  const places = useMemo(() => sortPlacesAlphabetically(payload.items), [payload.items])
+  const totalPages = payload.totalPages
+  const safePage = payload.page || currentPage
   const getPageHref = (page: number) => {
     const params = new URLSearchParams()
     if (page > 1) {
@@ -179,7 +189,7 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
     return params.toString() ? `/places/categories/${categorySlug}?${params.toString()}` : `/places/categories/${categorySlug}`
   }
 
-  const jsonLd = payload && !errorMessage
+  const jsonLd = !errorMessage
     ? [
         {
           '@context': 'https://schema.org',
@@ -246,7 +256,7 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
           </p>
         </section>
 
-        {isLoading ? <UnifiedLoadingState title={`Preparing ${categoryLabel.toLowerCase()} places...`} message={`We are loading ${categoryLabel.toLowerCase()} places right now.`} /> : null}
+        {isLoading || isRefreshing ? <p className="mt-4 text-sm text-[var(--muted)]">Refreshing places in the background...</p> : null}
         {errorMessage ? (
           <section className="mt-6 rounded-[24px] border border-[#E5E7EB] bg-white px-5 py-6 shadow-[0_6px_20px_rgba(17,24,39,0.03)]">
             <h2 className="text-base font-semibold text-[var(--text-main)]">We couldn't load {categoryLabel.toLowerCase()} places right now.</h2>
@@ -254,7 +264,7 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
           </section>
         ) : null}
 
-        {!isLoading && !errorMessage ? (
+        {!errorMessage ? (
           <>
             {places.length === 0 ? (
               <section className="mt-10 rounded-[28px] border border-[#e5e7eb] bg-white px-5 py-8 text-center shadow-sm sm:px-6">
@@ -306,8 +316,8 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
                 <CompactPagination
                   currentPage={safePage}
                   totalPages={totalPages}
-                  totalItems={payload?.total}
-                  pageSize={payload?.pageSize}
+                  totalItems={payload.total}
+                  pageSize={payload.pageSize}
                   getHref={getPageHref}
                 />
               </section>

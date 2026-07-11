@@ -1,10 +1,10 @@
 import type { PlaceCardData } from '../PlaceCard'
 
 export type PlaceDetailViewProps = {
-  place: PlaceCardData & {
+  place: (PlaceCardData & {
     id: string
     slug: string
-  }
+  }) | null
   areaBreadcrumb?: {
     areaSlug: string
     areaName: string

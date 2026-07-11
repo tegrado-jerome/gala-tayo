@@ -3,7 +3,6 @@ import type { Session } from '@supabase/supabase-js'
 import AppHeader from '../components/AppHeader'
 import MinimalBackNav from '../components/MinimalBackNav'
 import { PageContainer, PageShell, EmptyState, Stack } from '../components/layout/ResponsiveLayouts'
-import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import { getMyPlaceSubmissions, type PlaceSubmission } from '../utils/placeSubmissionsApi'
 
 function formatDate(value?: string | null) {
@@ -26,7 +25,7 @@ const statusStyles: Record<string, string> = {
 
 function MyPlaceSubmissionsPage({ session }: { session: Session }) {
   const [submissions, setSubmissions] = useState<PlaceSubmission[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
 
   useEffect(() => {
@@ -34,7 +33,6 @@ function MyPlaceSubmissionsPage({ session }: { session: Session }) {
 
     const loadSubmissions = async () => {
       try {
-        setIsLoading(true)
         setErrorMessage('')
         const data = await getMyPlaceSubmissions(session)
 
@@ -91,13 +89,8 @@ function MyPlaceSubmissionsPage({ session }: { session: Session }) {
 
         {errorMessage ? <p className="mt-4 text-sm font-bold text-red-600">{errorMessage}</p> : null}
 
-        {isLoading ? (
-          <UnifiedLoadingState
-            variant="page"
-            title="Preparing your submissions..."
-            message="We are loading the places you submitted for review."
-          />
-        ) : submissions.length === 0 ? (
+        {isLoading ? <p className="text-sm text-[var(--muted)]">Refreshing your submissions...</p> : null}
+        {submissions.length === 0 ? (
           <EmptyState
             title="No place submissions yet."
             description="Once you submit a place for review, it will show up here."

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import PlaceDetailView from '../components/PlaceDetailView'
 import SeoHead from '../components/SeoHead'
-import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import { replaceWithPath } from '../utils/navigation'
 import { getCanonicalPlacePath, getCategoryBreadcrumbMeta, getHistoryState, resolveAreaMeta } from '../utils/routes'
 import { buildPlaceDescription, buildPlaceFaqSchema, getStructuredPlaceType } from '../utils/placeSeo'
@@ -9,6 +8,71 @@ import { mapBackendPlaceToCardData } from '../utils/placeMapping'
 import { formatLabelFromSlug } from '../utils/routes'
 import { getApiUrl } from '../utils/apiClient'
 import type { PlaceDetail, PlaceDetailCardData } from '../types/appTypes'
+
+const EMPTY_PLACE_DETAIL = (slug: string): PlaceDetailCardData => ({
+  id: '',
+  slug,
+  name: '',
+  category: '',
+  area: '',
+  address: '',
+  city: '',
+  localArea: '',
+  status: 'Unknown',
+  reason: '',
+  description: '',
+  badge: '',
+  rating: null,
+  reviewCount: '0',
+  ratingCount: 0,
+  hours: '',
+  entranceFee: '',
+  website: '',
+  googleMapsUrl: null,
+  distanceKm: null,
+  price_level: null,
+  budget_min: null,
+  place_history: null,
+  best_time_to_visit: null,
+  visit_duration: null,
+  good_for: [],
+  not_ideal_for: [],
+  crowd_level: null,
+  indoor_outdoor: null,
+  weather_fit: null,
+  parking_info: null,
+  accessibility_notes: null,
+  decision_reason: null,
+  commute_friendly: null,
+  commute_access: null,
+  nearby_context: null,
+  budget_notes: null,
+  verification_status: null,
+  verification_notes: null,
+  verification_sources: [],
+  last_verified_at: null,
+  website_url: null,
+  highlights: [],
+  imageUrl: null,
+  curatedImageUrl: null,
+  curatedImageUrls: [],
+  thumbnailUrl: null,
+  imageAlt: null,
+  categories: [],
+  tags: [],
+  matchedCategories: [],
+  matchedTags: [],
+  markerRatingText: null,
+  hasPin: false,
+  latitude: null,
+  longitude: null,
+  lat: null,
+  lng: null,
+  coordinates: {
+    lat: null,
+    lng: null,
+  },
+})
 
 export default function SharedPlacePage({
   slug,
@@ -24,7 +88,6 @@ export default function SharedPlacePage({
   redirectToCanonical?: boolean
 }) {
   const [place, setPlace] = useState<PlaceDetailCardData | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
@@ -34,7 +97,6 @@ export default function SharedPlacePage({
 
     const loadPlace = async () => {
       try {
-        setIsLoading(true)
         setNotFound(false)
         setErrorMessage(null)
         setPlace(null)
@@ -59,8 +121,6 @@ export default function SharedPlacePage({
         if ((error as Error).name !== 'AbortError') {
           setErrorMessage(error instanceof Error ? error.message : 'Failed to load shared place.')
         }
-      } finally {
-        setIsLoading(false)
       }
     }
 
@@ -102,6 +162,7 @@ export default function SharedPlacePage({
   const listingLabel = urlListingLabel || historyListingLabel || sessionReturn?.returnLabel || null
 
   const categoryBreadcrumbMeta = getCategoryBreadcrumbMeta(listingLink, listingLabel)
+  const placeForView = place ?? EMPTY_PLACE_DETAIL(slug)
 
   useEffect(() => {
     if (!canonicalPath) {
@@ -154,19 +215,6 @@ export default function SharedPlacePage({
         }
       : null
 
-  if (isLoading) {
-    return (
-      <>
-        <SeoHead title="Loading | GalaTayo" robots="noindex,follow" />
-        <UnifiedLoadingState
-          variant="page"
-          title="Preparing place details..."
-          message="We are opening this shared place now."
-        />
-      </>
-    )
-  }
-
   if (notFound) {
     return (
       <>
@@ -193,29 +241,28 @@ export default function SharedPlacePage({
     )
   }
 
-  if (!place) {
-    return null
-  }
-
   return (
     <>
       <SeoHead
-        title={`${place.name} | GalaTayo`}
-        description={buildPlaceDescription(place, areaMeta?.name || 'Metro Manila')}
-        canonicalPath={canonicalPath}
+        title={place ? `${place.name} | GalaTayo` : 'Place Details | GalaTayo'}
+        description={place ? buildPlaceDescription(place, areaMeta?.name || 'Metro Manila') : 'Discover place details on GalaTayo.'}
+        canonicalPath={canonicalPath ?? undefined}
         openGraphType="article"
         image={
-          place.imageUrl || place.thumbnailUrl || place.curatedImageUrls?.[0]
+          place?.imageUrl || place?.thumbnailUrl || place?.curatedImageUrls?.[0]
             ? { url: place.imageUrl || place.thumbnailUrl || place.curatedImageUrls?.[0] || '', alt: place.name }
             : null
         }
         jsonLd={placeJsonLd}
       />
       <PlaceDetailView
-        place={place}
+        place={placeForView}
         areaBreadcrumb={{
-          areaSlug: areaMeta?.slug || expectedAreaSlug || formatLabelFromSlug(place.city || place.area || 'metro-manila').toLowerCase(),
-          areaName: areaMeta?.name || formatLabelFromSlug(expectedAreaSlug || 'metro-manila'),
+          areaSlug:
+            areaMeta?.slug ||
+            expectedAreaSlug ||
+            formatLabelFromSlug(placeForView.city || placeForView.area || 'metro-manila').toLowerCase(),
+          areaName: areaMeta?.name || formatLabelFromSlug(expectedAreaSlug || placeForView.city || placeForView.area || 'metro-manila'),
         }}
         returnLabel={listingLabel}
         returnHref={listingLink}
