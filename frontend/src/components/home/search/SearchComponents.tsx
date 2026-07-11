@@ -16,13 +16,38 @@ function SearchEmptyState({
   hasSearched,
   status,
   message,
+  error,
   onSearchAgain,
 }: {
   hasSearched: boolean
   status?: BackendSearchStatus | null
   message?: string | null
+  error?: string | null
   onSearchAgain?: () => void
 }) {
+  if (error) {
+    return (
+      <div className="flex min-h-[calc(100svh-220px)] w-full items-center justify-center px-4 py-8">
+        <div className="mx-auto flex w-full max-w-[420px] flex-col items-center text-center">
+          <p className="text-3xl font-black text-slate-950 sm:text-4xl">Something went wrong</p>
+          <p className="mt-3 max-w-[20rem] text-sm leading-relaxed text-[var(--muted)] sm:max-w-[24rem] sm:text-base">
+            {error}
+          </p>
+          {onSearchAgain ? (
+            <button
+              type="button"
+              onClick={onSearchAgain}
+              className="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition hover:border-[var(--accent)] hover:text-[var(--accent-deep)]"
+            >
+              <RotateCcw className="h-4 w-4" />
+              Search again
+            </button>
+          ) : null}
+        </div>
+      </div>
+    )
+  }
+
   if (hasSearched) {
     const title = status === 'unsupported_location' ? 'Metro Manila only' : 'No places found'
     const description =
