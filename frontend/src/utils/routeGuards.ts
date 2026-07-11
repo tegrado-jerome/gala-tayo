@@ -35,12 +35,6 @@ export function isProtectedAccountPath(pathname: string) {
     '/my-submissions',
     '/submissions',
     '/photos/upload',
-    '/ask-ai',
-    '/ask-ai/chatbot',
-    '/ask-ai/text',
-    '/ask-ai/maps',
-    '/ask-ai/prompt-builder',
-    '/prompt-builder',
   ].some((path) => isPath(pathname, path))
 
   return (

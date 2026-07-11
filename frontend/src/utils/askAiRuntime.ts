@@ -6,6 +6,7 @@ import {
 } from './askAiTaskStore'
 import { readCachedAskAiUsage, writeCachedAskAiUsage } from './askAiUsageCache'
 import { getApiUrl } from './apiClient'
+import { buildAskAiRequestHeaders, getOrCreateAskAiGuestId } from './askAiIdentity'
 
 type AskAiUsageStatus = {
   usageType: 'ask_ai_total' | 'live_search' | 'chatbot_ai' | 'ask_ai_maps'
@@ -390,10 +391,12 @@ export function resetAskAiRuntimeState({
 export async function submitAskAiRuntimeRequest({
   question,
   accessToken,
+  guestId,
   messages,
 }: {
   question: string
-  accessToken: string
+  accessToken?: string | null
+  guestId?: string | null
   messages: ChatMessage[]
 }) {
   const requestVersion = askAiRequestVersion + 1
@@ -421,16 +424,16 @@ export async function submitAskAiRuntimeRequest({
 
   try {
     const chatbotEndpoint = getApiUrl('/ask-ai/chatbot')
+    const requestGuestId = accessToken ? null : (guestId ?? getOrCreateAskAiGuestId())
+
+    if (!accessToken && !requestGuestId) {
+      throw new Error('Missing Ask AI guest identifier.')
+    }
 
     const response = await fetch(chatbotEndpoint, {
       method: 'POST',
       cache: 'no-store',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-        'Cache-Control': 'no-store',
-        Pragma: 'no-cache',
-      },
+      headers: buildAskAiRequestHeaders(accessToken ?? null),
       body: JSON.stringify({ question, conversationHistory }),
       signal: abortController.signal,
     })

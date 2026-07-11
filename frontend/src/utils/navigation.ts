@@ -1,6 +1,23 @@
 import { useCallback, useEffect, useState } from 'react'
 import { buildHistoryState, getCanonicalPlacePath, getHistoryState, getLabelForPath, hasInAppBackHistory, resolveAreaMeta, type PlaceReturnState } from './routes'
 
+type NavigationSource = 'push' | 'replace' | 'pop'
+
+let pendingNavigationSource: NavigationSource | null = null
+
+function saveCurrentScrollPosition() {
+  try {
+    const currentState = getHistoryState()
+    const nextState = currentState
+      ? { ...currentState, scrollY: window.scrollY }
+      : { ...buildHistoryState(getCurrentPathWithSearch()), scrollY: window.scrollY }
+
+    window.history.replaceState(nextState, '', getCurrentPathWithSearch())
+  } catch {
+    // history state may be unavailable, ignore
+  }
+}
+
 type BackNavigationState = {
   previousLabel: string | null
   previousPath: string | null
@@ -50,6 +67,21 @@ function getCurrentPathWithSearch() {
   return `${window.location.pathname}${window.location.search}`
 }
 
+function runWithInstantScroll(callback: () => void) {
+  const html = document.documentElement
+  const body = document.body
+  const previousHtmlScrollBehavior = html.style.scrollBehavior
+  const previousBodyScrollBehavior = body.style.scrollBehavior
+
+  html.style.scrollBehavior = 'auto'
+  body.style.scrollBehavior = 'auto'
+
+  callback()
+
+  html.style.scrollBehavior = previousHtmlScrollBehavior
+  body.style.scrollBehavior = previousBodyScrollBehavior
+}
+
 function writePlaceReturnState(slug: string, value: PlaceReturnState) {
   try {
     window.sessionStorage.setItem(`galatayo:place-return:${slug}`, JSON.stringify(value))
@@ -58,17 +90,27 @@ function writePlaceReturnState(slug: string, value: PlaceReturnState) {
   }
 }
 
+function consumePendingNavigationSource() {
+  const source = pendingNavigationSource
+  pendingNavigationSource = null
+  return source
+}
+
 function navigateToPath(path: string) {
   if (getCurrentPathWithSearch() === path) {
     return
   }
 
-  window.history.pushState(
-    buildHistoryState(getCurrentPathWithSearch()),
-    '',
-    path
-  )
-  window.dispatchEvent(new PopStateEvent('popstate'))
+  pendingNavigationSource = 'push'
+  saveCurrentScrollPosition()
+  runWithInstantScroll(() => {
+    window.history.pushState(
+      buildHistoryState(getCurrentPathWithSearch()),
+      '',
+      path
+    )
+    window.dispatchEvent(new PopStateEvent('popstate'))
+  })
 }
 
 function replaceWithPath(path: string) {
@@ -76,12 +118,16 @@ function replaceWithPath(path: string) {
     return
   }
 
-  window.history.replaceState(
-    buildHistoryState(getCurrentPathWithSearch()),
-    '',
-    path
-  )
-  window.dispatchEvent(new PopStateEvent('popstate'))
+  pendingNavigationSource = 'replace'
+  saveCurrentScrollPosition()
+  runWithInstantScroll(() => {
+    window.history.replaceState(
+      buildHistoryState(getCurrentPathWithSearch()),
+      '',
+      path
+    )
+    window.dispatchEvent(new PopStateEvent('popstate'))
+  })
 }
 
 function navigateToPlace(slug: string) {
@@ -118,6 +164,7 @@ function navigateToCanonicalPlace({
 }
 
 export {
+  consumePendingNavigationSource,
   useBackNavigation,
   navigateToCanonicalPlace,
   navigateToPath,
