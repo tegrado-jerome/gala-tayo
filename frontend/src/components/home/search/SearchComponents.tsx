@@ -1,5 +1,5 @@
 import type { RefObject } from 'react'
-import { RotateCcw, House } from 'lucide-react'
+import { RotateCcw, House, LoaderCircle } from 'lucide-react'
 import { AppIcon } from '../../AppIcon'
 import PlaceCard, { type PlaceCardData } from '../../PlaceCard'
 import Breadcrumb from '../../Breadcrumb'
@@ -381,6 +381,7 @@ function SearchPagination({
   pageSize,
   isLoading = false,
   compact = false,
+  showLoadingMessage = true,
   onPageChange,
 }: {
   currentPage: number
@@ -389,6 +390,7 @@ function SearchPagination({
   pageSize: number
   isLoading?: boolean
   compact?: boolean
+  showLoadingMessage?: boolean
   onPageChange: (page: number) => void
 }) {
   if (totalCount <= 0) {
@@ -403,6 +405,7 @@ function SearchPagination({
       pageSize={pageSize}
       onPageChange={onPageChange}
       isLoading={isLoading}
+      showLoadingMessage={showLoadingMessage}
       className={compact ? 'max-w-[360px] self-center pt-2' : 'pt-2'}
     />
   )
@@ -513,6 +516,19 @@ function MobileResultsTabs({
   )
 }
 
+function MobilePageLoadingDock() {
+  return (
+    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom,0px)+4.75rem)] z-[5900] px-4 lg:hidden">
+      <div className="mx-auto flex w-fit max-w-[calc(100vw-2rem)] items-center gap-2 rounded-full border border-[rgba(47,116,232,0.14)] bg-white/95 px-4 py-2 shadow-[0_14px_32px_rgba(15,23,42,0.12)] backdrop-blur-md">
+        <LoaderCircle className="h-4 w-4 animate-spin text-[var(--accent)]" aria-hidden="true" />
+        <p className="whitespace-nowrap text-xs font-bold uppercase tracking-[0.14em] text-[var(--accent-deep)]">
+          Loading page...
+        </p>
+      </div>
+    </div>
+  )
+}
+
 function MobileResultsView({
   places,
   totalCount,
@@ -612,9 +628,11 @@ function MobileResultsView({
             totalCount={totalCount}
             pageSize={SEARCH_RESULTS_PER_PAGE}
             isLoading={isPageLoading}
+            showLoadingMessage={false}
             compact
             onPageChange={onPageChange}
           />
+          {isPageLoading ? <MobilePageLoadingDock /> : null}
         </section>
       ) : (
         <section className="px-4 py-4">
@@ -658,9 +676,11 @@ function MobileResultsView({
               totalCount={totalCount}
               pageSize={SEARCH_RESULTS_PER_PAGE}
               isLoading={isPageLoading}
+              showLoadingMessage={false}
               compact
               onPageChange={onPageChange}
             />
+            {isPageLoading ? <MobilePageLoadingDock /> : null}
           </div>
         </section>
       )}

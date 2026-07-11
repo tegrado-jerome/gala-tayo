@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import UnifiedLoadingState from './UnifiedLoadingState'
 import InternalLink from './InternalLink'
@@ -12,6 +12,8 @@ type CompactPaginationProps = {
   pageSize?: number
   className?: string
   isLoading?: boolean
+  showLoadingMessage?: boolean
+  navigationDelayMs?: number
 }
 
 function buildPaginationItems(currentPage: number, totalPages: number) {
@@ -55,12 +57,34 @@ function CompactPagination({
   pageSize,
   className,
   isLoading = false,
+  showLoadingMessage = true,
+  navigationDelayMs = 120,
 }: CompactPaginationProps) {
   if (totalPages <= 1) {
     return null
   }
 
+  const [pendingPage, setPendingPage] = useState<number | null>(null)
+  const pendingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const hasNavigationHandler = typeof onPageChange === 'function'
+
+  useEffect(() => {
+    if (pendingPage === null) {
+      return
+    }
+
+    if (pendingPage === currentPage || isLoading) {
+      setPendingPage(null)
+    }
+  }, [currentPage, isLoading, pendingPage])
+
+  useEffect(() => {
+    return () => {
+      if (pendingTimerRef.current) {
+        clearTimeout(pendingTimerRef.current)
+      }
+    }
+  }, [])
 
   if (!getHref && !hasNavigationHandler) {
     return null
@@ -91,12 +115,22 @@ function CompactPagination({
   ) => {
     if (hasNavigationHandler) {
       const isCurrentPage = page === currentPage
-      const isDisabled = disabled || isLoading
+      const isDisabled = disabled || isLoading || pendingPage !== null
 
       return (
         <button
           type="button"
-          onClick={isCurrentPage || isDisabled ? undefined : () => onPageChange?.(page)}
+          onClick={isCurrentPage || isDisabled ? undefined : () => {
+            setPendingPage(page)
+
+            if (pendingTimerRef.current) {
+              clearTimeout(pendingTimerRef.current)
+            }
+
+            pendingTimerRef.current = setTimeout(() => {
+              onPageChange?.(page)
+            }, navigationDelayMs)
+          }}
           aria-label={ariaLabel}
           aria-current={isCurrentPage ? 'page' : undefined}
           aria-disabled={isCurrentPage || isDisabled ? 'true' : undefined}
@@ -189,7 +223,7 @@ function CompactPagination({
           </div>
         ) : null}
 
-        {isLoading ? (
+        {(isLoading || pendingPage !== null) && showLoadingMessage ? (
           <div className="w-full">
             <UnifiedLoadingState variant="inline" message="Loading page..." className="justify-center text-center" />
           </div>
