@@ -10,6 +10,7 @@ import InternalLink from '../components/InternalLink'
 import MapView from '../components/MapView'
 import { MapResponsiveLayout } from '../components/layout/ResponsiveLayouts'
 import { supabase } from '../supabase'
+import { getApiUrl } from '../utils/apiClient'
 import {
   cancelAskAiMapRequest,
   clearAskAiMapAbortController,
@@ -702,7 +703,7 @@ function AskAiMapPage() {
     setAskAiMapAbortController(controller, timeoutId)
 
     try {
-      const response = await fetch(`/api/ask-ai/maps?t=${Date.now()}`, {
+      const response = await fetch(getApiUrl(`/ask-ai/maps?t=${Date.now()}`), {
         method: 'POST',
         cache: 'no-store',
         signal: controller.signal,

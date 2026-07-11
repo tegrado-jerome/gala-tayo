@@ -6,6 +6,7 @@ import type { PlaceCardData, PlaceCategoryMeta, PlaceTagMeta } from '../componen
 import { PageContainer, PageShell, ChibiIllustration } from '../components/layout/ResponsiveLayouts'
 import { supabase } from '../supabase'
 import { navigateToCanonicalPlace, navigateToPath } from '../utils/navigation'
+import { getApiUrl } from '../utils/apiClient'
 import homeChibi from '../assets/chibis/public/chibi-welcome-page.webp'
 
 type BackendSearchPlace = {
@@ -345,7 +346,7 @@ function HomeLandingPage() {
         setIsTrendingLoading(true)
         setTrendingError(null)
 
-        const response = await fetch('/api/search', {
+        const response = await fetch(getApiUrl('/search'), {
           method: 'POST',
           headers: await getSearchRequestHeaders(),
           signal: controller.signal,

@@ -7,6 +7,7 @@ import PromptBuilderModal from '../components/PromptBuilderModal'
 
 import { supabase } from '../supabase'
 import { navigateToCanonicalPlace, navigateToPath, replaceWithPath, writePlaceReturnState } from '../utils/navigation'
+import { getApiUrl } from '../utils/apiClient'
 import {
   getAskAiRuntimeState,
   hasActiveAskAiRuntimeState,
@@ -640,7 +641,7 @@ function HomePage({
       setPromptLogin(false)
       setActiveSearchLabel(nextRawQuery || 'filtered GalaTayo places')
 
-      const response = await fetch('/api/search', {
+      const response = await fetch(getApiUrl('/search'), {
         method: 'POST',
         headers: await getSearchRequestHeaders(),
         body: JSON.stringify(searchPayload),
