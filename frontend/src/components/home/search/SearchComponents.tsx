@@ -199,11 +199,20 @@ function ChibiPlaceholder({
   )
 }
 
-function SearchLoadingState({ searchLabel }: { searchLabel: string }) {
+function SearchLoadingState({
+  searchLabel,
+  mobileViewportCentered = false,
+}: {
+  searchLabel: string
+  mobileViewportCentered?: boolean
+}) {
   const displayLabel = searchLabel.trim() || 'gala spots in Metro Manila'
+  const loadingShellClassName = mobileViewportCentered
+    ? 'fixed inset-x-0 top-16 bottom-[calc(env(safe-area-inset-bottom,0px)+4.75rem)] z-10 flex items-center justify-center px-5 py-6 sm:px-8 lg:px-12 lg:py-10'
+    : 'flex h-full min-h-0 w-full items-center justify-center px-5 py-6 sm:px-8 md:min-h-[calc(100svh-68px)] md:py-6 lg:px-12 lg:py-10'
 
   return (
-    <section className="flex min-h-0 w-full items-center justify-center px-5 py-6 sm:px-8 md:min-h-[calc(100svh-68px)] md:py-6 lg:px-12 lg:py-10">
+    <section className={loadingShellClassName}>
       <div className="mx-auto flex w-full max-w-[600px] flex-col items-center gap-4 text-center">
         <div>
           <p className="text-[26px] font-extrabold leading-tight text-slate-800 sm:text-[30px] lg:text-[32px]">Searching for</p>
