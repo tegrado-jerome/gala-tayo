@@ -734,7 +734,9 @@ function HomePage({
         return
       }
 
-      const message = error instanceof Error ? error.message : 'Search failed.'
+      const message = error instanceof Error && !error.message.startsWith('Failed to execute \'json\'')
+        ? error.message
+        : 'Search failed.'
       setSearchError(message)
       setSearchStatus(null)
       setSearchFeedbackMessage(null)
