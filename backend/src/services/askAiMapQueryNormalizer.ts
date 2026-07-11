@@ -1,4 +1,5 @@
-﻿import { getSecret } from "../config/keyVault";
+import { getSecret } from "../config/keyVault";
+import { KEY_VAULT_SECRET_NAMES } from "../config/secretNames";
 
 export type NormalizedAskAiMapQuery = {
   isMapIntent: boolean;
@@ -216,7 +217,7 @@ function normalizeBudgetAmount(value: unknown): number | null {
 
 function detectBudgetAmount(text: string): number | null {
   const normalized = normalizeKey(text);
-  const match = normalized.match(/(?:₱|php|pesos?|peso)?\s*(\d{2,4})(?:\s*(?:per\s*head|per\s*person|per\s*tao))?/i);
+  const match = normalized.match(/(?:php|pesos?|peso)?\s*(\d{2,4})(?:\s*(?:per\s*head|per\s*person|per\s*tao))?/i);
   if (!match?.[1]) return null;
   const amount = Number(match[1]);
   return Number.isFinite(amount) ? amount : null;
@@ -227,10 +228,10 @@ function detectLocationAlias(text: string): string | null {
   if (!normalized) return null;
 
   const patterns: Array<[RegExp, string]> = [
-    [/\b(bicutan|bcutan|sa bicutan|near bicutan)\b/i, "Bicutan, Parañaque, Philippines"],
+    [/\b(bicutan|bcutan|sa bicutan|near bicutan)\b/i, "Bicutan, Para�aque, Philippines"],
     [/\b(tagytay|tagayty|tagaytay)\b/i, "Tagaytay, Cavite, Philippines"],
     [/\b(cavte|cavit|cavite)\b/i, "Cavite, Philippines"],
-    [/\b(pque|paranaque|para naque|sa paranaque|dito sa paranaque|near paranaque|near para naque)\b/i, "Parañaque, Metro Manila, Philippines"],
+    [/\b(pque|paranaque|para naque|sa paranaque|dito sa paranaque|near paranaque|near para naque)\b/i, "Para�aque, Metro Manila, Philippines"],
   ];
 
   for (const [pattern, canonical] of patterns) {
@@ -238,7 +239,7 @@ function detectLocationAlias(text: string): string | null {
   }
 
   if (phraseLooksLike(normalized, "paranaque") || phraseLooksLike(normalized, "pque")) {
-    return "Parañaque, Metro Manila, Philippines";
+    return "Para�aque, Metro Manila, Philippines";
   }
   if (phraseLooksLike(normalized, "cavite") || phraseLooksLike(normalized, "cavte")) {
     return "Cavite, Philippines";
@@ -247,7 +248,7 @@ function detectLocationAlias(text: string): string | null {
     return "Tagaytay, Cavite, Philippines";
   }
   if (phraseLooksLike(normalized, "bicutan") || phraseLooksLike(normalized, "bcutan")) {
-    return "Bicutan, Parañaque, Philippines";
+    return "Bicutan, Para�aque, Philippines";
   }
 
   return null;
@@ -515,7 +516,7 @@ async function resolveGroqApiKey(): Promise<string> {
   const envApiKey = normalizeText(process.env.GROQ_API_KEY);
   if (envApiKey) return envApiKey;
 
-  const secretValue = normalizeText(await getSecret("groq-api-key"));
+  const secretValue = normalizeText(await getSecret(KEY_VAULT_SECRET_NAMES.GROQ_API_KEY));
   if (secretValue) return secretValue;
 
   throw new Error("Missing Groq API key.");
@@ -531,19 +532,19 @@ function buildNormalizerPrompt(rawPrompt: string): string {
     "Correct only obvious typos, aliases, and slang when the intent is clear.",
     "Do not overcorrect unknown words or invent new meaning.",
     "For location aliases, normalize these variants:",
-    "- pque / paranaque / parañaque -> Parañaque, Metro Manila, Philippines",
+    "- pque / paranaque / para�aque -> Para�aque, Metro Manila, Philippines",
     "- cavte / cavit / cavite -> Cavite, Philippines",
     "- tagytay / tagayty / tagaytay -> Tagaytay, Cavite, Philippines",
-    "- bicutan / bcutan -> Bicutan, Parañaque, Philippines",
+    "- bicutan / bcutan -> Bicutan, Para�aque, Philippines",
     "For food aliases, normalize these variants:",
     "- wngs / wings / unli wings -> chicken wings / unlimited chicken wings",
     "For budget aliases, normalize these variants:",
     "- mura / murang / mra / tipid / di mahal / budget -> low_cost",
     "- wlang pera / walang pera / free / libre -> free_or_low_cost",
     "Examples of nasty-typo handling:",
-    '- "unli wngs sa paranaque 500 per tao" -> coreSearchQuery about unlimited chicken wings in Parañaque and budget-aware output',
+    '- "unli wngs sa paranaque 500 per tao" -> coreSearchQuery about unlimited chicken wings in Para�aque and budget-aware output',
     '- "murang kainan sa cavte" -> affordable restaurants in Cavite',
-    '- "resto sa pque for date na di mahal" -> affordable date restaurants in Parañaque',
+    '- "resto sa pque for date na di mahal" -> affordable date restaurants in Para�aque',
     "Use the hints below only as guidance, not as hard requirements.",
     `Hints: ${hints}`,
     "JSON shape:",

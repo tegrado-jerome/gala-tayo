@@ -206,8 +206,11 @@ async function getGeoapifyApiKey() {
     return envKey;
   }
 
-  const { getSecret } = await import("../src/config/keyVault.ts");
-  return getSecret("geoapify-api-key");
+  const [{ getSecret }, { KEY_VAULT_SECRET_NAMES }] = await Promise.all([
+    import("../src/config/keyVault.ts"),
+    import("../src/config/secretNames.ts"),
+  ]);
+  return getSecret(KEY_VAULT_SECRET_NAMES.GEOAPIFY_API_KEY);
 }
 
 async function getSupabaseClient() {

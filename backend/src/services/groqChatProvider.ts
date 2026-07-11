@@ -1,4 +1,5 @@
 import { getSecret } from "../config/keyVault";
+import { KEY_VAULT_SECRET_NAMES } from "../config/secretNames";
 
 const GROQ_BASE_URL = "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_PRIMARY_MODEL = "openai/gpt-oss-20b";
@@ -179,7 +180,7 @@ async function resolveGroqApiKey(): Promise<string> {
   }
 
   try {
-    const secretValue = normalizeText(await getSecret("groq-api-key"));
+    const secretValue = normalizeText(await getSecret(KEY_VAULT_SECRET_NAMES.GROQ_API_KEY));
     if (secretValue) {
       return secretValue;
     }
@@ -189,7 +190,7 @@ async function resolveGroqApiKey(): Promise<string> {
       500,
       "AI_PROVIDER_CONFIGURATION_ERROR",
       "The AI provider is not configured right now. Please try again later.",
-      `Missing Groq API key. Checked GROQ_API_KEY and Key Vault secret groq-api-key.${reason}`
+      `Missing Groq API key. Checked GROQ_API_KEY and Key Vault secret ${KEY_VAULT_SECRET_NAMES.GROQ_API_KEY}.${reason}`
     );
   }
 
@@ -197,7 +198,7 @@ async function resolveGroqApiKey(): Promise<string> {
     500,
     "AI_PROVIDER_CONFIGURATION_ERROR",
     "The AI provider is not configured right now. Please try again later.",
-    "Missing Groq API key. Checked GROQ_API_KEY and Key Vault secret groq-api-key."
+    `Missing Groq API key. Checked GROQ_API_KEY and Key Vault secret ${KEY_VAULT_SECRET_NAMES.GROQ_API_KEY}.`
   );
 }
 

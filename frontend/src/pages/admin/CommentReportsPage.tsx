@@ -5,7 +5,8 @@ import ProfileAvatar from '../../components/ProfileAvatar'
 import UnifiedLoadingState from '../../components/UnifiedLoadingState'
 import { PageContainer, PageShell, StateContainer } from '../../components/layout/ResponsiveLayouts'
 import { useSystemMessage } from '../../context/SystemMessageContext'
-import { getCurrentUser, isAdminRole } from '../../utils/profileApi'
+import { useAdminAccess } from '../../hooks/useAdminAccess'
+import { getAdminPath } from '../../utils/adminRoutes'
 import { getAdminCommentReports, moderateAdminCommentReport, type AdminCommentReport } from '../../utils/adminCommentReportsApi'
 import { AdminPageHeader, AdminRefreshButton, AdminStatusFilters } from './AdminUI'
 
@@ -39,14 +40,13 @@ function getStatusClass(status: string) {
 }
 
 function AdminCommentReportsPage({ session }: { session: Session }) {
-  const [isAdmin, setIsAdmin] = useState(false)
-  const [isCheckingAccess, setIsCheckingAccess] = useState(true)
   const [isLoading, setIsLoading] = useState(true)
   const [reports, setReports] = useState<AdminCommentReport[]>([])
   const [statusFilter, setStatusFilter] = useState<string>('pending')
   const [errorMessage, setErrorMessage] = useState('')
   const [mutatingId, setMutatingId] = useState('')
   const { showSystemMessage } = useSystemMessage()
+  const { isAdmin, isCheckingAccess } = useAdminAccess(session)
 
   const loadReports = async (nextStatus = statusFilter) => {
     setIsLoading(true)
@@ -63,38 +63,9 @@ function AdminCommentReportsPage({ session }: { session: Session }) {
   }
 
   useEffect(() => {
-    let isMounted = true
-
-    const checkAccess = async () => {
-      try {
-        const currentUser = await getCurrentUser(session)
-        if (!isMounted) return
-
-        const nextIsAdmin = isAdminRole(currentUser.user.role)
-        setIsAdmin(nextIsAdmin)
-      } catch (error) {
-        if (isMounted) {
-          setErrorMessage(error instanceof Error ? error.message : 'Failed to check admin access.')
-        }
-      } finally {
-        if (isMounted) {
-          setIsCheckingAccess(false)
-          setIsLoading(false)
-        }
-      }
-    }
-
-    void checkAccess()
-
-    return () => {
-      isMounted = false
-    }
-  }, [session])
-
-  useEffect(() => {
-    if (!isAdmin) return
+    if (!isAdmin || isCheckingAccess) return
     void loadReports(statusFilter)
-  }, [isAdmin, statusFilter])
+  }, [isAdmin, isCheckingAccess, statusFilter])
 
   const handleModerate = async (reportId: string, action: 'dismiss' | 'take_action') => {
     try {
@@ -149,7 +120,7 @@ function AdminCommentReportsPage({ session }: { session: Session }) {
           <AdminPageHeader
             title="Comment reports"
             description="Review reports submitted against place comments."
-            activePath="/admin/comment-reports"
+            activePath={getAdminPath('comment-reports')}
             actions={<AdminRefreshButton isLoading={isLoading} onRefresh={() => void loadReports(statusFilter)} />}
           />
 

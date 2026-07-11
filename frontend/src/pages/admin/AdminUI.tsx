@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { cn } from '../../components/AppUI'
 import { navigateToPath } from '../../utils/navigation'
+import { ADMIN_BASE_PATH, getAdminPath } from '../../utils/adminRoutes'
 
 type AdminNavItem = {
   label: string
@@ -19,12 +20,12 @@ type AdminNavItem = {
 }
 
 export const adminNavItems: AdminNavItem[] = [
-  { label: 'Dashboard', path: '/admin', icon: <LayoutDashboard className="h-4 w-4" /> },
-  { label: 'Submissions', path: '/admin/place-submissions', icon: <Home className="h-4 w-4" /> },
-  { label: 'Photos', path: '/admin/place-images', icon: <Image className="h-4 w-4" /> },
-  { label: 'Places', path: '/admin/place-reports', icon: <Flag className="h-4 w-4" /> },
-  { label: 'Comments', path: '/admin/comment-reports', icon: <MessageSquare className="h-4 w-4" /> },
-  { label: 'Users', path: '/admin/user-reports', icon: <UserRound className="h-4 w-4" /> },
+  { label: 'Dashboard', path: ADMIN_BASE_PATH, icon: <LayoutDashboard className="h-4 w-4" /> },
+  { label: 'Submissions', path: getAdminPath('place-submissions'), icon: <Home className="h-4 w-4" /> },
+  { label: 'Photos', path: getAdminPath('place-images'), icon: <Image className="h-4 w-4" /> },
+  { label: 'Places', path: getAdminPath('place-reports'), icon: <Flag className="h-4 w-4" /> },
+  { label: 'Comments', path: getAdminPath('comment-reports'), icon: <MessageSquare className="h-4 w-4" /> },
+  { label: 'Users', path: getAdminPath('user-reports'), icon: <UserRound className="h-4 w-4" /> },
 ]
 
 type AdminPageHeaderProps = {

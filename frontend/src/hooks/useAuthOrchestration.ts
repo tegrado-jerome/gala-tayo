@@ -148,6 +148,7 @@ export function useAuthOrchestration() {
     const activeSession = sessionRef.current
 
     if (!activeSession) {
+      setCurrentUser(null)
       setCurrentProfile(null)
       setIsCurrentProfileLoading(false)
       return undefined

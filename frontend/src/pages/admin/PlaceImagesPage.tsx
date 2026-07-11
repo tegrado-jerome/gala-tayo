@@ -4,7 +4,8 @@ import AppHeader from '../../components/AppHeader'
 import UnifiedLoadingState from '../../components/UnifiedLoadingState'
 import { PageContainer, PageShell, StateContainer } from '../../components/layout/ResponsiveLayouts'
 import { useSystemMessage } from '../../context/SystemMessageContext'
-import { getCurrentUser, isAdminRole } from '../../utils/profileApi'
+import { useAdminAccess } from '../../hooks/useAdminAccess'
+import { getAdminPath } from '../../utils/adminRoutes'
 import { getApiUrl } from '../../utils/apiClient'
 import { AdminPageHeader, AdminRefreshButton } from './AdminUI'
 
@@ -70,8 +71,6 @@ function formatDate(value?: string | null) {
 }
 
 function AdminPlaceImagesPage({ session }: { session: Session }) {
-  const [isAdmin, setIsAdmin] = useState(false)
-  const [isCheckingAccess, setIsCheckingAccess] = useState(true)
   const [isLoading, setIsLoading] = useState(true)
   const [pendingImages, setPendingImages] = useState<PendingPlaceImage[]>([])
   const [approvedImages, setApprovedImages] = useState<ApprovedPlaceImage[]>([])
@@ -87,6 +86,7 @@ function AdminPlaceImagesPage({ session }: { session: Session }) {
   const [rejectionReasons, setRejectionReasons] = useState<Record<string, string>>({})
   const { showSystemMessage } = useSystemMessage()
   const hasRunApprovedSearchRef = useRef(false)
+  const { isAdmin, isCheckingAccess } = useAdminAccess(session)
 
   const authHeaders = {
     Authorization: `Bearer ${session.access_token}`,
@@ -152,38 +152,12 @@ function AdminPlaceImagesPage({ session }: { session: Session }) {
   }
 
   useEffect(() => {
-    let isMounted = true
-
-    const checkAccess = async () => {
-      try {
-        const currentUser = await getCurrentUser(session)
-
-        if (!isMounted) return
-
-        const nextIsAdmin = isAdminRole(currentUser.user.role)
-        setIsAdmin(nextIsAdmin)
-
-        if (nextIsAdmin) {
-          await Promise.all([loadPendingImages(), loadAllApprovedImages()])
-        }
-      } catch (error) {
-        if (isMounted) {
-          setErrorMessage(error instanceof Error ? error.message : 'Failed to check admin access.')
-        }
-      } finally {
-        if (isMounted) {
-          setIsCheckingAccess(false)
-          setIsLoading(false)
-        }
-      }
+    if (!isAdmin || isCheckingAccess) {
+      return
     }
 
-    void checkAccess()
-
-    return () => {
-      isMounted = false
-    }
-  }, [session])
+    void Promise.all([loadPendingImages(), loadAllApprovedImages()])
+  }, [isAdmin, isCheckingAccess])
 
   useEffect(() => {
     void loadApprovedImages(selectedPlaceId)
@@ -338,7 +312,7 @@ function AdminPlaceImagesPage({ session }: { session: Session }) {
           <AdminPageHeader
             title="Photo review"
             description="Review pending place photo contributions before they appear publicly."
-            activePath="/admin/place-images"
+            activePath={getAdminPath('place-images')}
             actions={
               <AdminRefreshButton
                 isLoading={isLoading}

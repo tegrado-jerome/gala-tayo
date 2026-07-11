@@ -1,16 +1,26 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { AppIcon } from '../components/AppIcon'
 import AuthMethodChooser from '../components/auth/AuthMethodChooser'
-import { getPostAuthRedirect, signInWithEmailPassword, signOut, signUpWithEmailPassword } from '../services/authApi'
+import {
+  getPostAuthRedirect,
+  markAdminPasswordSession,
+  resendSignUpConfirmationEmail,
+  signInWithEmailPassword,
+  signOut,
+  signUpWithEmailPassword,
+} from '../services/authApi'
 import { buildAuthPath, getRequestedNextPath } from '../services/authApi'
 import { navigateToPath } from '../utils/navigation'
 import { getCurrentUser, isAdminRole } from '../utils/profileApi'
 import galaTayoLogo from '../assets/brand/galatayo-logo.svg'
+import { formatCooldownDuration, useResendCooldown } from '../hooks/useResendCooldown'
+import { useAppUser } from '../context/AppUserContext'
 
 type AuthMode = 'sign_in' | 'create_account'
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const minPasswordLength = 8
+const resendCooldownMs = 2 * 60 * 1000
 
 function getFriendlyAuthError(error: unknown, mode: AuthMode) {
   const message = error instanceof Error ? error.message : ''
@@ -62,6 +72,7 @@ type AuthPageProps = {
 }
 
 function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
+  const { session } = useAppUser()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -69,6 +80,8 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false)
   const [isConfirmationPending, setIsConfirmationPending] = useState(false)
   const [error, setError] = useState('')
+  const [resendMessage, setResendMessage] = useState('')
+  const [isResendingConfirmation, setIsResendingConfirmation] = useState(false)
   const [isPasswordVisible, setIsPasswordVisible] = useState(false)
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false)
   const [confirmPasswordTouched, setConfirmPasswordTouched] = useState(false)
@@ -78,6 +91,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
   const nextPath = getRequestedNextPath()
   const resetSuccess = new URLSearchParams(window.location.search).get('reset') === 'success'
   const normalizedEmail = useMemo(() => email.trim().toLowerCase(), [email])
+  const signUpCooldown = useResendCooldown(isCreateMode && normalizedEmail ? `signup:${normalizedEmail}` : null, resendCooldownMs)
   const isEmailValid = emailPattern.test(normalizedEmail)
   const emailFormatIsValid = !normalizedEmail || isEmailValid
   const passwordMeetsLength = password.length >= minPasswordLength
@@ -95,6 +109,34 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
   const allowForgotPassword = !isCreateMode
   const isSubmitDisabled = isSubmitting || isGoogleLoading || (isCreateMode ? !isCreateFormValid : !isLoginFormValid)
 
+  useEffect(() => {
+    if (!isCreateMode || !session) {
+      return
+    }
+
+    let isMounted = true
+
+    const redirectSignedInUser = async () => {
+      try {
+        const redirectTo = await getPostAuthRedirect(session, window.location.search)
+
+        if (isMounted) {
+          navigateToPath(redirectTo)
+        }
+      } catch (caughtError) {
+        if (isMounted) {
+          setError(caughtError instanceof Error ? caughtError.message : 'We could not continue to onboarding.')
+        }
+      }
+    }
+
+    void redirectSignedInUser()
+
+    return () => {
+      isMounted = false
+    }
+  }, [isCreateMode, session])
+
   const resetFormState = () => {
     setPassword('')
     setConfirmPassword('')
@@ -104,6 +146,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
     setIsPasswordVisible(false)
     setIsConfirmPasswordVisible(false)
     setConfirmPasswordTouched(false)
+    setResendMessage('')
   }
 
   const validateForm = (normalizedValue: string) => {
@@ -144,6 +187,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
         setPassword('')
         setConfirmPassword('')
         setIsConfirmationPending(true)
+        signUpCooldown.startCooldown()
         return
       }
 
@@ -161,8 +205,8 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
           throw new Error('This email does not have admin access.')
         }
 
-        const redirectTo = await getPostAuthRedirect(session, window.location.search)
-        navigateToPath(redirectTo)
+        markAdminPasswordSession(session.user.id)
+        navigateToPath('/admin')
         return
       }
 
@@ -179,6 +223,28 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
     setIsGoogleLoading(isLoading)
   }
 
+  const handleResendConfirmationEmail = async () => {
+    if (signUpCooldown.isCoolingDown || isResendingConfirmation) {
+      return
+    }
+
+    try {
+      setIsResendingConfirmation(true)
+      setError('')
+      setResendMessage('')
+      await resendSignUpConfirmationEmail(normalizedEmail, nextPath)
+      signUpCooldown.startCooldown()
+      setResendMessage('We sent another confirmation email.')
+    } catch (caughtError) {
+      if (caughtError instanceof Error && typeof (caughtError as Error & { retryAfterMs?: number }).retryAfterMs === 'number') {
+        signUpCooldown.startCooldown((caughtError as Error & { retryAfterMs: number }).retryAfterMs)
+      }
+      setError(getFriendlyAuthError(caughtError, mode))
+    } finally {
+      setIsResendingConfirmation(false)
+    }
+  }
+
   const cardTitle = isAdminSurface ? 'Admin sign in' : isCreateMode ? 'Create an account' : 'Welcome back'
   const cardDescription = isAdminSurface
     ? 'Use your admin email and password to continue.'
@@ -189,6 +255,10 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
     ? 'mx-auto grid w-full max-w-[1240px] items-start md:ml-[clamp(6rem,8vw,8rem)] md:mr-auto md:min-h-[100dvh] md:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] md:items-center lg:ml-[clamp(7rem,9vw,9rem)] lg:max-w-[1320px]'
     : 'mx-auto grid w-full max-w-[1240px] items-start md:ml-[clamp(4rem,6vw,6rem)] md:mr-auto md:min-h-[100dvh] md:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] md:items-center lg:ml-[clamp(5rem,7vw,7rem)] lg:max-w-[1320px]'
   if (isConfirmationPending) {
+    const resendLabel = signUpCooldown.isCoolingDown
+      ? `Resend in ${formatCooldownDuration(signUpCooldown.remainingMs)}`
+      : 'Resend confirmation email'
+
     return (
       <main className="gala-page-background min-h-screen min-h-[100dvh] px-4 py-6 text-[var(--text)] sm:px-6 sm:py-8">
         <section className="mx-auto flex min-h-[100dvh] w-full max-w-[560px] items-center justify-center">
@@ -206,13 +276,30 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
             <p className="mx-auto mt-3 max-w-[300px] text-[14px] leading-6 text-[var(--muted)]">
               After confirming, return to GalaTayo with your email and password.
             </p>
-            <button
-              type="button"
-              onClick={resetFormState}
-              className="app-button app-button-primary app-button-md mt-6 w-[240px] max-w-full"
-            >
-              Continue
-            </button>
+            <div className="mt-6 flex flex-col items-center gap-3">
+              <button
+                type="button"
+                onClick={() => void handleResendConfirmationEmail()}
+                disabled={signUpCooldown.isCoolingDown || isResendingConfirmation}
+                className="app-button app-button-secondary app-button-md w-[240px] max-w-full disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {isResendingConfirmation ? (
+                  <>
+                    <span className="inline-flex h-4.5 w-4.5 animate-spin rounded-full border-2 border-[var(--text-main)]/25 border-t-[var(--text-main)]" aria-hidden="true" />
+                    Sending...
+                  </>
+                ) : (
+                  resendLabel
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={resetFormState}
+                className="app-button app-button-primary app-button-md w-[240px] max-w-full"
+              >
+                Continue
+              </button>
+            </div>
           </div>
         </section>
       </main>
@@ -275,6 +362,24 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
                 OR
                 <span className="h-px flex-1 bg-[var(--line)]" />
               </div>
+            ) : null}
+
+            {isCreateMode ? (
+              <p className="mb-2 text-center text-[12px] leading-6 text-[var(--muted)]">
+                We send the confirmation email right away. If you need another one, you can resend it after 2 minutes.
+              </p>
+            ) : null}
+
+            {resendMessage ? (
+              <p className="mb-4 rounded-[12px] border border-[rgba(5,150,105,0.18)] bg-[var(--success-soft)] px-4 py-3 text-center text-[13px] leading-6 text-[var(--success)] shadow-sm">
+                {resendMessage}
+              </p>
+            ) : null}
+
+            {error ? (
+              <p className="mb-4 rounded-[12px] border border-red-200 bg-red-50 px-4 py-3 text-center text-[13px] leading-6 text-red-700 shadow-sm">
+                {error}
+              </p>
             ) : null}
 
             <form className="grid gap-4 text-left" onSubmit={handleSubmit}>

@@ -1,9 +1,11 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getSupabaseAdminClient } from "../../config/supabaseAdmin";
-import { requireAdminAal2 } from "../../utils/adminAuth";
 import { isPlaceUuid } from "../../utils/placeIdentity";
 import {
+  unauthorized,
   badRequest,
+  getAuthenticatedUser,
+  isAdminUser,
   readCleanCommentReportModerationAction,
   getCommentPreview,
   type PlaceCommentRow,
@@ -25,8 +27,12 @@ export async function adminCommentReportModerate(
   context: InvocationContext
 ): Promise<HttpResponseInit> {
   try {
-    const admin = await requireAdminAal2(request);
-    if (admin.response || !admin.user?.id) return admin.response as HttpResponseInit;
+    const user = await getAuthenticatedUser(request);
+    if (!user?.id) return unauthorized("Missing or invalid Authorization header.");
+
+    if (!(await isAdminUser(user.id))) {
+      return { status: 403, jsonBody: { message: "Admin access required." } };
+    }
 
     const reportId = request.params.reportId?.trim();
     if (!reportId || !isUuid(reportId)) {
@@ -57,7 +63,7 @@ export async function adminCommentReportModerate(
 
     if (action === "dismiss") {
       const { data: updatedReportData, error: dismissError } = await reportsTable
-        .update({ status: "dismissed", resolved_by: admin.user.id, resolved_at: resolvedAt, updated_at: resolvedAt })
+        .update({ status: "dismissed", resolved_by: user.id, resolved_at: resolvedAt, updated_at: resolvedAt })
         .eq("id", report.id)
         .select("id, comment_id, status, resolved_at, updated_at")
         .single();
@@ -99,7 +105,7 @@ export async function adminCommentReportModerate(
     }
 
     const { data: updatedReportData, error: actionError } = await reportsTable
-      .update({ status: "action_taken", resolved_by: admin.user.id, resolved_at: resolvedAt, updated_at: resolvedAt })
+      .update({ status: "action_taken", resolved_by: user.id, resolved_at: resolvedAt, updated_at: resolvedAt })
       .eq("id", report.id)
       .select("id, comment_id, status, resolved_at, updated_at")
       .single();
@@ -133,8 +139,12 @@ export async function adminCommentReportsList(
   context: InvocationContext
 ): Promise<HttpResponseInit> {
   try {
-    const admin = await requireAdminAal2(request);
-    if (admin.response || !admin.user?.id) return admin.response as HttpResponseInit;
+    const user = await getAuthenticatedUser(request);
+    if (!user?.id) return unauthorized("Missing or invalid Authorization header.");
+
+    if (!(await isAdminUser(user.id))) {
+      return { status: 403, jsonBody: { message: "Admin access required." } };
+    }
 
     const statusQuery = request.query.get("status")?.trim() || "";
     if (statusQuery && !["pending", "dismissed", "action_taken"].includes(statusQuery)) {

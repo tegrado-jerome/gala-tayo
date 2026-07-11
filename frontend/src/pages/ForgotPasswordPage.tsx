@@ -3,16 +3,21 @@ import { AppIcon } from '../components/AppIcon'
 import { FormContainer } from '../components/layout/ResponsiveLayouts'
 import { sendPasswordResetEmail } from '../services/authApi'
 import { navigateToPath } from '../utils/navigation'
+import { formatCooldownDuration, useResendCooldown } from '../hooks/useResendCooldown'
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const resendCooldownMs = 2 * 60 * 1000
 
 function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSent, setIsSent] = useState(false)
   const [error, setError] = useState('')
-
+  const [statusMessage, setStatusMessage] = useState('')
+  const [isResending, setIsResending] = useState(false)
   const normalizedEmail = email.trim().toLowerCase()
+  const resendCooldown = useResendCooldown(normalizedEmail ? `recovery:${normalizedEmail}` : null, resendCooldownMs)
+
   const isEmailValid = emailPattern.test(normalizedEmail)
   const isSubmitDisabled = isSubmitting || !isEmailValid
 
@@ -32,8 +37,10 @@ function ForgotPasswordPage() {
     try {
       setIsSubmitting(true)
       setError('')
+      setStatusMessage('')
       await sendPasswordResetEmail(normalizedEmail)
       setIsSent(true)
+      resendCooldown.startCooldown()
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : 'Could not send reset email. Please try again.')
     } finally {
@@ -41,7 +48,33 @@ function ForgotPasswordPage() {
     }
   }
 
+  const handleResendResetEmail = async () => {
+    if (resendCooldown.isCoolingDown || isResending) {
+      return
+    }
+
+    try {
+      setIsResending(true)
+      setError('')
+      setStatusMessage('')
+      await sendPasswordResetEmail(normalizedEmail)
+      resendCooldown.startCooldown()
+      setStatusMessage('We sent another reset email.')
+    } catch (caughtError) {
+      if (caughtError instanceof Error && typeof (caughtError as Error & { retryAfterMs?: number }).retryAfterMs === 'number') {
+        resendCooldown.startCooldown((caughtError as Error & { retryAfterMs: number }).retryAfterMs)
+      }
+      setError(caughtError instanceof Error ? caughtError.message : 'Could not send reset email. Please try again.')
+    } finally {
+      setIsResending(false)
+    }
+  }
+
   if (isSent) {
+    const resendLabel = resendCooldown.isCoolingDown
+      ? `Resend in ${formatCooldownDuration(resendCooldown.remainingMs)}`
+      : 'Resend reset email'
+
     return (
       <main className="gala-page-background relative flex min-h-screen min-h-[100dvh] items-center justify-center overflow-x-hidden px-4 py-6 text-[var(--text)] sm:px-6 sm:py-8">
         <FormContainer className="relative z-[2]">
@@ -55,13 +88,35 @@ function ForgotPasswordPage() {
                 <p className="mx-auto mt-3 max-w-[280px] text-[13px] leading-6 text-slate-500 sm:text-[14px] sm:leading-7">
                   If an account exists with that email, we sent password reset instructions.
                 </p>
-                <button
-                  type="button"
-                  onClick={() => navigateToPath('/login')}
-                  className="mt-6 inline-flex min-h-[2.75rem] items-center justify-center rounded-[0.875rem] bg-[var(--accent)] px-6 text-[14px] font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[var(--accent-deep)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)]"
-                >
-                  Back to login
-                </button>
+                {statusMessage ? (
+                  <p className="mt-4 rounded-[0.875rem] border border-emerald-200 bg-emerald-50 px-4 py-3 text-[13px] text-emerald-700 shadow-sm">
+                    {statusMessage}
+                  </p>
+                ) : null}
+                <div className="mt-6 flex flex-col items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => void handleResendResetEmail()}
+                    disabled={resendCooldown.isCoolingDown || isResending}
+                    className="inline-flex min-h-[2.75rem] items-center justify-center rounded-[0.875rem] border border-[var(--line)] bg-white px-6 text-[14px] font-semibold text-[var(--text-main)] transition hover:-translate-y-0.5 hover:border-[var(--accent-soft)] hover:text-[var(--accent-deep)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)] disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    {isResending ? (
+                      <>
+                        <span className="inline-flex h-4.5 w-4.5 animate-spin rounded-full border-2 border-[var(--text-main)]/25 border-t-[var(--text-main)]" aria-hidden="true" />
+                        Sending...
+                      </>
+                    ) : (
+                      resendLabel
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigateToPath('/login')}
+                    className="inline-flex min-h-[2.75rem] items-center justify-center rounded-[0.875rem] bg-[var(--accent)] px-6 text-[14px] font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[var(--accent-deep)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)]"
+                  >
+                    Back to login
+                  </button>
+                </div>
               </div>
             </div>
           </section>
@@ -71,8 +126,8 @@ function ForgotPasswordPage() {
   }
 
   return (
-    <main className="gala-page-background relative flex min-h-screen min-h-[100dvh] items-center justify-center overflow-x-hidden px-4 py-6 text-[var(--text)] sm:px-6 sm:py-8">
-      <FormContainer className="relative z-[2]">
+      <main className="gala-page-background relative flex min-h-screen min-h-[100dvh] items-center justify-center overflow-x-hidden px-4 py-6 text-[var(--text)] sm:px-6 sm:py-8">
+        <FormContainer className="relative z-[2]">
         <section className="mx-auto flex w-full max-w-[360px] items-center justify-center md:max-w-[420px] lg:max-w-[440px]">
           <div className="w-full">
             <div className="pb-3 pt-1 text-center">
@@ -124,6 +179,10 @@ function ForgotPasswordPage() {
               </div>
 
               {error ? <p className="mt-3 rounded-[0.875rem] border border-red-200 bg-red-50 px-4 py-3 text-[13px] text-red-700 shadow-sm">{error}</p> : null}
+
+              <p className="mt-4 text-center text-[12px] leading-6 text-[var(--muted)]">
+                Need another reset link? We allow one resend every 2 minutes to keep things secure.
+              </p>
 
               <p className="mt-4 text-center text-[13px] text-[var(--muted)]">
                 Remember your password?{' '}

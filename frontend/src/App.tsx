@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { markSoftNavigation, navigateToPath, replaceWithPath } from './utils/navigation'
 import { isPath, parseAreaPagePath, parseCanonicalPlacePath, parseCategoryPagePath, parseEditGalaPlanPath, parseLegacyPlaceSlugPath, parseLegacyPublicGalaPlanPath, parseOwnedGalaPlanPath, parsePublicGalaPlanPath, parsePublicProfileUsername, shouldSkipTopScrollRestore, getSoonFeatureRedirectPath } from './utils/routes'
 import { isProtectedAccountPath } from './utils/routeGuards'
+import { getLegacyAdminRedirectPath } from './utils/adminRoutes'
 import { useAuthOrchestration } from './hooks/useAuthOrchestration'
 import { useCanonicalRedirects } from './hooks/useCanonicalRedirects'
 import { matchRoute, AppShell } from './routes/RouteContent'
@@ -27,6 +28,7 @@ function App() {
   }))
 
   const { pathname, search } = locationState
+  const legacyAdminRedirectPath = useMemo(() => getLegacyAdminRedirectPath(pathname), [pathname])
   const isPasswordResetPath = isPath(pathname, '/reset-password') || isPath(pathname, '/auth/reset-password')
   const routeNeedsBlockingAuth = isProtectedAccountPath(pathname) || isPath(pathname, '/onboarding') || isPath(pathname, '/auth/callback') || isPasswordResetPath
 
@@ -80,6 +82,11 @@ function App() {
       return
     }
 
+    if (needsOnboarding && !isPath(pathname, '/onboarding')) {
+      navigateToPath('/onboarding')
+      return
+    }
+
     if (!needsOnboarding && isPath(pathname, '/onboarding')) {
       navigateToPath('/')
     }
@@ -102,6 +109,14 @@ function App() {
     }
   }, [pathname, soonFeatureRedirectPath])
 
+  useEffect(() => {
+    if (!legacyAdminRedirectPath) {
+      return
+    }
+
+    replaceWithPath(legacyAdminRedirectPath)
+  }, [legacyAdminRedirectPath])
+
   const content = matchRoute({
     session,
     hasResolvedInitialAuth,
@@ -123,8 +138,8 @@ function App() {
     publicProfileUsername,
     editGalaPlanId,
     ownedGalaPlanId,
-    currentProfile,
     currentUser,
+    currentProfile,
     isAdminMfaLoading,
     adminMfaStatus,
     onProfileRefreshKeyUpdate: () => setProfileRefreshKey((v) => v + 1),

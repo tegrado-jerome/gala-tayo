@@ -1,5 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { getSecret } from "../config/keyVault";
+import { KEY_VAULT_SECRET_NAMES } from "../config/secretNames";
 import type { NormalizedAskAiMapQuery } from "./askAiMapQueryNormalizer";
 
 export class AskAiMapsServiceError extends Error {
@@ -1103,7 +1104,7 @@ async function getGeminiApiKey(): Promise<string> {
   if (envKey) {
     return envKey;
   }
-  const secret = await getSecret("gemini-api-key");
+  const secret = await getSecret(KEY_VAULT_SECRET_NAMES.GEMINI_API_KEY);
   const apiKey = normalizeText(secret);
   if (!apiKey) {
     throw new AskAiMapsServiceError("Gemini API key is missing.", 500, {
@@ -1119,7 +1120,7 @@ async function getGeoapifyApiKey(): Promise<string> {
   if (envKey) {
     return envKey;
   }
-  const secret = await getSecret("geoapify-api-key");
+  const secret = await getSecret(KEY_VAULT_SECRET_NAMES.GEOAPIFY_API_KEY);
   const apiKey = normalizeText(secret);
   if (!apiKey) {
     throw new AskAiMapsServiceError("Geoapify API key is missing.", 500, {

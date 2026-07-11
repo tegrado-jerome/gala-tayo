@@ -3,7 +3,6 @@ import { randomUUID } from "crypto";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { generateUniqueSlug } from "../services/placeService";
 import { AuthenticatedUser, validateJwt } from "../utils/auth";
-import { requireAdminAal2 } from "../utils/adminAuth";
 import { checkEndpointRateLimit } from "../utils/redisRateLimit";
 import { convertImageToWebp, deleteR2Object, uploadThumbnailToR2, uploadWebpToR2 } from "../utils/r2ImageStorage";
 import { logAdminAction } from "../utils/adminAudit";
@@ -118,6 +117,31 @@ async function getAuthenticatedUser(request: HttpRequest): Promise<Authenticated
   } catch {
     return null;
   }
+}
+
+async function isAdminUser(userId: string) {
+  const supabase = await getSupabaseAdminClient();
+  const { data, error } = await (supabase.from("users") as any).select("role").eq("id", userId).maybeSingle();
+
+  if (error) {
+    return false;
+  }
+
+  return ((data as UserRow | null)?.role || "").trim().toLowerCase() === "admin";
+}
+
+async function requireAdmin(request: HttpRequest): Promise<{ user?: AuthenticatedUser; response?: HttpResponseInit }> {
+  const user = await getAuthenticatedUser(request);
+
+  if (!user?.id) {
+    return { response: response(401, "Missing or invalid Authorization header.") };
+  }
+
+  if (!(await isAdminUser(user.id))) {
+    return { response: response(403, "Admin access required.") };
+  }
+
+  return { user };
 }
 
 function getCleanText(value: unknown, maxLength: number, { required = false }: { required?: boolean } = {}) {
@@ -623,7 +647,7 @@ export async function getPendingPlaceSubmissions(
   context: InvocationContext
 ): Promise<HttpResponseInit> {
   try {
-    const admin = await requireAdminAal2(request);
+    const admin = await requireAdmin(request);
 
     if (admin.response) {
       return admin.response;
@@ -706,7 +730,7 @@ export async function approvePlaceSubmission(
   let createdPlaceId: string | null = null;
 
   try {
-    const admin = await requireAdminAal2(request);
+    const admin = await requireAdmin(request);
 
     if (admin.response) {
       return admin.response;
@@ -843,7 +867,7 @@ export async function rejectPlaceSubmission(
   context: InvocationContext
 ): Promise<HttpResponseInit> {
   try {
-    const admin = await requireAdminAal2(request);
+    const admin = await requireAdmin(request);
 
     if (admin.response) {
       return admin.response;

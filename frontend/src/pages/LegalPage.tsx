@@ -15,7 +15,7 @@ type LegalSection = {
   bullets?: string[]
 }
 
-const contactEmail = 'tegradojeromebrent@gmail.com'
+const contactEmail = 'officialgalatayo@gmail.com'
 
 const termsSections: LegalSection[] = [
   {
@@ -359,20 +359,15 @@ function LegalPage({ type }: LegalPageProps) {
                   </div>
                 </div>
 
-                <aside className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+                <aside className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
                   {quickFacts.map((fact) => (
-                    <div
-                      key={fact.label}
-                      className="rounded-[24px] border border-[var(--line)] bg-white/85 p-4 shadow-[0_10px_24px_rgba(17,24,39,0.05)]"
-                    >
-                      <div className="flex items-start gap-3">
-                        <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
-                          {fact.icon}
-                        </span>
-                        <div className="min-w-0">
-                          <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">{fact.label}</p>
-                          <p className="mt-1 break-words text-sm font-bold leading-6 text-slate-900">{fact.value}</p>
-                        </div>
+                    <div key={fact.label} className="flex items-start gap-3 rounded-2xl bg-white/35 px-3 py-2.5">
+                      <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
+                        {fact.icon}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">{fact.label}</p>
+                        <p className="mt-1 break-words text-sm font-bold leading-6 text-slate-900">{fact.value}</p>
                       </div>
                     </div>
                   ))}
@@ -381,7 +376,7 @@ function LegalPage({ type }: LegalPageProps) {
             </section>
 
             <article className="mt-6 sm:mt-7 lg:mt-8">
-              <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {[
                   {
                     title: isTerms ? 'How to use this' : 'What this covers',
@@ -398,21 +393,18 @@ function LegalPage({ type }: LegalPageProps) {
                     body: `Questions, rights requests, or content concerns can be sent to ${contactEmail}.`,
                   },
                 ].map((card) => (
-                  <section
-                    key={card.title}
-                    className="rounded-[24px] border border-[var(--line)] bg-white/75 p-5 shadow-[0_8px_22px_rgba(17,24,39,0.04)]"
-                  >
+                  <div key={card.title} className="space-y-2">
                     <h2 className="text-base font-black tracking-[-0.02em] text-slate-950">{card.title}</h2>
-                    <p className="mt-2 text-sm font-semibold leading-6 text-slate-700">{card.body}</p>
-                  </section>
+                    <p className="text-sm font-semibold leading-6 text-slate-700">{card.body}</p>
+                  </div>
                 ))}
               </div>
 
-              <div className="mt-6 grid gap-5 sm:mt-7 sm:gap-6 lg:mt-8 lg:gap-7">
-                {sections.map((section) => (
+              <div className="mt-8 space-y-7 sm:mt-9 sm:space-y-8 lg:mt-10 lg:space-y-9">
+                {sections.map((section, index) => (
                   <section
                     key={section.title}
-                    className="rounded-[28px] border border-[var(--line)] bg-[rgba(255,255,255,0.72)] px-5 py-5 shadow-[0_10px_24px_rgba(17,24,39,0.04)] sm:px-6 sm:py-6"
+                    className={index === 0 ? 'pt-0' : 'border-t border-slate-200/70 pt-7 sm:pt-8'}
                   >
                     <h2 className="text-lg font-black tracking-[-0.02em] text-slate-950 sm:text-[1.2rem]">
                       {section.title}

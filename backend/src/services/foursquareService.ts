@@ -1,7 +1,8 @@
 import { getSecret } from "../config/keyVault";
+import { KEY_VAULT_SECRET_NAMES } from "../config/secretNames";
 
 const FOURSQUARE_BASE_URL = "https://places-api.foursquare.com";
-const FOURSQUARE_API_KEY_SECRET_NAME = "foursquare-api-key";
+const FOURSQUARE_API_KEY_SECRET_NAME = KEY_VAULT_SECRET_NAMES.FOURSQUARE_API_KEY;
 const FOURSQUARE_PLACES_API_VERSION = "2025-06-17";
 const FOURSQUARE_SEARCH_FIELDS =
   "fsq_place_id,name,location,categories,distance,latitude,longitude";

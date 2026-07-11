@@ -1,5 +1,6 @@
 import { metroManilaAreas, metroManilaAreaNameBySlug } from '../data/metroManilaAreas'
 import { getPlaceCategoryLabel } from '../data/placeCategories'
+import { ADMIN_BASE_PATH, ADMIN_MFA_SETUP_PATH, ADMIN_MFA_VERIFY_PATH } from './adminRoutes'
 
 const searchRouteCachePrefix = 'galatayo:search-route:'
 const knownAreaSlugs = new Set<string>(metroManilaAreas.map((area) => area.slug))
@@ -68,6 +69,9 @@ const exactLabels: Record<string, string> = {
   '/ask-ai/chatbot': 'Ask AI Chat',
   '/ask-ai/maps': 'Ask AI Maps',
   '/ask-ai/prompt-builder': 'Prompt Builder',
+  [ADMIN_BASE_PATH]: 'Admin Dashboard',
+  [ADMIN_MFA_SETUP_PATH]: 'Admin Security',
+  [ADMIN_MFA_VERIFY_PATH]: 'Admin Security',
 }
 
 const routePatterns: RoutePattern[] = [
@@ -78,8 +82,7 @@ const routePatterns: RoutePattern[] = [
   { pattern: /^\/gala-plans\/([^/]+)\/edit$/, getLabel: () => 'Edit Gala Plan' },
   { pattern: /^\/u\/([^/]+)$/, getLabel: ([, username]) => `@${username}` },
   { pattern: /^\/u\/([^/]+)\/(?:plans|gala)\/([^/]+)$/, getLabel: ([, , slug]) => slug.replace(/-/g, ' ') },
-  { pattern: /^\/admin\/?$/, getLabel: () => 'Admin Dashboard' },
-  { pattern: /^\/admin\/([^/]+)$/, getLabel: ([, section]) => `Admin: ${section.replace(/-/g, ' ')}` },
+  { pattern: new RegExp(`^${ADMIN_BASE_PATH.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/([^/]+)$`), getLabel: ([, section]) => `Admin: ${section.replace(/-/g, ' ')}` },
   { pattern: /^\/place\/([^/]+)$/, getLabel: ([, slug]) => slug.replace(/-/g, ' ') },
 ]
 

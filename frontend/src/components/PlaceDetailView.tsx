@@ -2424,39 +2424,39 @@ function PlaceDetailView({
                       )}
                     </div>
                   ) : null}
-                </div>
 
-                <div className="grid w-full shrink-0 grid-cols-2 gap-2 sm:gap-2.5 md:mr-9 md:w-auto md:flex md:gap-2 lg:mr-11">
-                  <ActionButton icon="save" onClick={handleSavePlace} disabled={isSaving} active={isSaved}>
-                    {isSaving ? 'Saving' : 'Favorite'}
-                  </ActionButton>
-                  <ActionButton icon="share" onClick={handleSharePlace}>
-                    Share
-                  </ActionButton>
-                  <ActionButton
-                    icon="directions"
-                    onClick={openDirections}
-                    disabled={!directionsUrl}
-                    iconSize={22}
-                    iconStrokeWidth={2.35}
-                  >
-                    Directions
-                  </ActionButton>
-                  <ActionButton
-                    icon="sparkle"
-                    onClick={() => {}}
-                    disabled
-                    childrenClassName="flex-1 justify-between"
-                    className="border-slate-200/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.95),rgba(248,250,252,0.88))] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_18px_rgba(15,23,42,0.04)] backdrop-blur-sm disabled:border-slate-200/90 disabled:bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.9))] disabled:text-slate-500 disabled:shadow-[inset_0_1px_0_rgba(255,255,255,0.92),0_8px_18px_rgba(15,23,42,0.03)] md:min-w-[11.5rem] md:flex-[1.45]"
-                    iconClassName="h-4 w-4"
-                  >
-                    <span className="inline-flex min-w-0 items-center gap-2 whitespace-nowrap">
-                      <span className="text-[11px] font-extrabold text-slate-600">Add to Plan</span>
-                      <span className="inline-flex shrink-0 items-center rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">
-                        Soon
+                  <div className="mt-3 grid w-full max-w-[28rem] grid-cols-2 gap-2 sm:gap-2.5 md:mt-4 md:gap-2.5 lg:flex lg:max-w-none lg:gap-2.5">
+                    <ActionButton icon="save" onClick={handleSavePlace} disabled={isSaving} active={isSaved}>
+                      {isSaving ? 'Saving' : 'Favorite'}
+                    </ActionButton>
+                    <ActionButton icon="share" onClick={handleSharePlace}>
+                      Share
+                    </ActionButton>
+                    <ActionButton
+                      icon="directions"
+                      onClick={openDirections}
+                      disabled={!directionsUrl}
+                      iconSize={22}
+                      iconStrokeWidth={2.35}
+                    >
+                      Directions
+                    </ActionButton>
+                    <ActionButton
+                      icon="sparkle"
+                      onClick={() => {}}
+                      disabled
+                      childrenClassName="flex-1 justify-between"
+                      className="border-slate-200/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.95),rgba(248,250,252,0.88))] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_18px_rgba(15,23,42,0.04)] backdrop-blur-sm disabled:border-slate-200/90 disabled:bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.9))] disabled:text-slate-500 disabled:shadow-[inset_0_1px_0_rgba(255,255,255,0.92),0_8px_18px_rgba(15,23,42,0.03)]"
+                      iconClassName="h-4 w-4"
+                    >
+                      <span className="inline-flex min-w-0 items-center gap-2 whitespace-nowrap">
+                        <span className="text-[11px] font-extrabold text-slate-600">Add to Plan</span>
+                        <span className="inline-flex shrink-0 items-center rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">
+                          Soon
+                        </span>
                       </span>
-                    </span>
-                  </ActionButton>
+                    </ActionButton>
+                  </div>
                 </div>
               </div>
 

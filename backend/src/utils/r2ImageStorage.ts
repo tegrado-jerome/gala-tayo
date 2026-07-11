@@ -1,5 +1,6 @@
 import { createHash, createHmac } from "crypto";
 import { getSecret } from "../config/keyVault";
+import { KEY_VAULT_SECRET_NAMES } from "../config/secretNames";
 
 type R2Config = {
   accessKeyId: string;
@@ -46,8 +47,8 @@ async function loadR2Config() {
     const bucketName = getRequiredEnv("R2_BUCKET_NAME");
     const publicBaseUrl = getRequiredEnv("R2_PUBLIC_BASE_URL").replace(/\/$/, "");
     const [accessKeyId, secretAccessKey] = await Promise.all([
-      getSecret("r2-access-key-id"),
-      getSecret("r2-secret-access-key"),
+      getSecret(KEY_VAULT_SECRET_NAMES.R2_ACCESS_KEY_ID),
+      getSecret(KEY_VAULT_SECRET_NAMES.R2_SECRET_ACCESS_KEY),
     ]);
 
     return {

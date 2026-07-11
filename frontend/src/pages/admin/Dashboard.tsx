@@ -1,11 +1,12 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { Flag, Home, Image, MessageSquare, UserRound } from 'lucide-react'
 import AppHeader from '../../components/AppHeader'
 import UnifiedLoadingState from '../../components/UnifiedLoadingState'
 import { PageContainer, PageShell, StateContainer } from '../../components/layout/ResponsiveLayouts'
-import { getCurrentUser, isAdminRole } from '../../utils/profileApi'
+import { useAdminAccess } from '../../hooks/useAdminAccess'
 import { navigateToPath } from '../../utils/navigation'
+import { ADMIN_BASE_PATH, getAdminPath } from '../../utils/adminRoutes'
 import { AdminPageHeader } from './AdminUI'
 
 type DashboardSection = {
@@ -20,72 +21,42 @@ const sections: DashboardSection[] = [
   {
     title: 'Place submissions',
     description: 'Review pending user-submitted places',
-    path: '/admin/place-submissions',
+    path: getAdminPath('place-submissions'),
     icon: <Home className="h-5 w-5" />,
     color: 'border-l-[#1E3A8A]',
   },
   {
     title: 'Photo review',
     description: 'Approve or reject contributed place photos',
-    path: '/admin/place-images',
+    path: getAdminPath('place-images'),
     icon: <Image className="h-5 w-5" />,
     color: 'border-l-[#059669]',
   },
   {
     title: 'Place reports',
     description: 'Review reports against place listings',
-    path: '/admin/place-reports',
+    path: getAdminPath('place-reports'),
     icon: <Flag className="h-5 w-5" />,
     color: 'border-l-[#D97706]',
   },
   {
     title: 'Comment reports',
     description: 'Review reports against comments',
-    path: '/admin/comment-reports',
+    path: getAdminPath('comment-reports'),
     icon: <MessageSquare className="h-5 w-5" />,
     color: 'border-l-[#7C3AED]',
   },
   {
     title: 'User reports',
     description: 'Review reports against user accounts',
-    path: '/admin/user-reports',
+    path: getAdminPath('user-reports'),
     icon: <UserRound className="h-5 w-5" />,
     color: 'border-l-[#DC2626]',
   },
 ]
 
 function AdminDashboard({ session }: { session: Session }) {
-  const [isAdmin, setIsAdmin] = useState(false)
-  const [isCheckingAccess, setIsCheckingAccess] = useState(true)
-  const [errorMessage, setErrorMessage] = useState('')
-
-  useEffect(() => {
-    let isMounted = true
-
-    const checkAccess = async () => {
-      try {
-        const currentUser = await getCurrentUser(session)
-
-        if (!isMounted) return
-
-        setIsAdmin(isAdminRole(currentUser.user.role))
-      } catch (error) {
-        if (isMounted) {
-          setErrorMessage(error instanceof Error ? error.message : 'Failed to check admin access.')
-        }
-      } finally {
-        if (isMounted) {
-          setIsCheckingAccess(false)
-        }
-      }
-    }
-
-    void checkAccess()
-
-    return () => {
-      isMounted = false
-    }
-  }, [session])
+  const { isAdmin, isCheckingAccess } = useAdminAccess(session)
 
   if (isCheckingAccess) {
     return (
@@ -121,12 +92,8 @@ function AdminDashboard({ session }: { session: Session }) {
           <AdminPageHeader
             title="GalaTayo Admin"
             description="Moderate content, manage reports, and keep the community safe."
-            activePath="/admin"
+            activePath={ADMIN_BASE_PATH}
           />
-
-          {errorMessage ? (
-            <p className="mt-4 text-sm font-bold text-red-600">{errorMessage}</p>
-          ) : null}
 
           <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {sections.map((section) => (

@@ -40,17 +40,18 @@ function UnifiedLoadingState({
   }
 
   if (variant === 'page') {
-    if (shouldSuppressPageLoader()) {
-      return <main className={`gala-page-background min-h-screen min-h-[100dvh] ${className}`} aria-hidden="true" />
-    }
+    const isSuppressed = shouldSuppressPageLoader()
 
     return (
       <main
-        className={`gala-page-background fixed inset-0 z-50 flex min-h-screen min-h-[100dvh] items-center justify-center px-6 py-10 text-[var(--text)] ${className}`}
+        className={`gala-page-background fixed inset-0 z-50 flex min-h-screen min-h-[100dvh] items-center justify-center px-6 py-10 text-[var(--text)] ${isSuppressed ? 'bg-[var(--bg)]/95' : ''} ${className}`}
         aria-busy="true"
         aria-live="polite"
+        data-loader-suppressed={isSuppressed ? 'true' : undefined}
       >
-        {loadingBody}
+        <div className={isSuppressed ? 'opacity-80' : ''}>
+          {loadingBody}
+        </div>
       </main>
     )
   }

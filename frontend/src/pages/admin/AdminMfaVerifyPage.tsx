@@ -5,6 +5,7 @@ import { supabase } from '../../supabase'
 import { refreshAdminMfaSession } from '../../utils/adminMfa'
 import { navigateToPath } from '../../utils/navigation'
 import { signOut } from '../../services/authApi'
+import { ADMIN_BASE_PATH } from '../../utils/adminRoutes'
 
 function normalizeCode(value: string) {
   return value.replace(/\D/g, '').slice(0, 6)
@@ -38,7 +39,7 @@ function AdminMfaVerifyPage({ factorId }: { factorId: string | null }) {
 
       await refreshAdminMfaSession()
       setSuccessMessage('Verification successful. Redirecting to admin tools...')
-      window.setTimeout(() => navigateToPath('/admin'), 500)
+      window.setTimeout(() => navigateToPath(ADMIN_BASE_PATH), 500)
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Invalid or expired code.')
     } finally {

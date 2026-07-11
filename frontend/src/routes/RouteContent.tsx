@@ -45,7 +45,8 @@ import { AppUserProvider } from '../context/AppUserContext'
 import { SavedFavoritesProvider } from '../context/SavedFavoritesContext'
 import { SystemMessageProvider } from '../context/SystemMessageContext'
 import { AskAiNotificationProvider } from '../context/AskAiNotificationContext'
-import type { CurrentUserResponse } from '../utils/profileApi'
+import { type CurrentUserResponse } from '../utils/profileApi'
+import { ADMIN_BASE_PATH, ADMIN_MFA_SETUP_PATH, ADMIN_MFA_VERIFY_PATH, getAdminPath } from '../utils/adminRoutes'
 import type { AdminMfaStatus } from '../utils/adminMfa'
 
 const AdminDashboard = lazy(() => import('../pages/admin/Dashboard'))
@@ -70,7 +71,7 @@ function AppLoadingState({ message = 'Loading GalaTayo...' }: { message?: string
 function AdminAccessDenied({ message = 'Your account does not have admin access.' }: { message?: string }) {
   const handleAdminSignIn = async () => {
     await signOut().catch(() => undefined)
-    navigateToPath('/admin')
+    navigateToPath(ADMIN_BASE_PATH)
   }
 
   return (
@@ -115,8 +116,8 @@ function AdminRouteGate({
   children: ReactNode
 }) {
   const [redirectTarget, setRedirectTarget] = useState<string | null>(null)
-  const isSetupPath = isPath(pathname, '/admin/mfa/setup')
-  const isVerifyPath = isPath(pathname, '/admin/mfa/verify')
+  const isSetupPath = isPath(pathname, ADMIN_MFA_SETUP_PATH)
+  const isVerifyPath = isPath(pathname, ADMIN_MFA_VERIFY_PATH)
 
   useEffect(() => {
     if (adminMfa.isLoading || !adminMfa.status) {
@@ -130,17 +131,17 @@ function AdminRouteGate({
     }
 
     if (adminMfa.status.needsSetup) {
-      setRedirectTarget(isSetupPath ? null : '/admin/mfa/setup')
+      setRedirectTarget(isSetupPath ? null : ADMIN_MFA_SETUP_PATH)
       return
     }
 
     if (adminMfa.status.needsVerification) {
-      setRedirectTarget(isVerifyPath ? null : '/admin/mfa/verify')
+      setRedirectTarget(isVerifyPath ? null : ADMIN_MFA_VERIFY_PATH)
       return
     }
 
     if ((isSetupPath || isVerifyPath) && adminMfa.status.isElevated) {
-      setRedirectTarget('/admin')
+      setRedirectTarget(ADMIN_BASE_PATH)
       return
     }
 
@@ -191,8 +192,8 @@ type RouteInputs = {
   publicProfileUsername: string | null
   editGalaPlanId: string | null
   ownedGalaPlanId: string | null
-  currentProfile: CurrentUserResponse['profile'] | null
   currentUser: CurrentUserResponse['user'] | null
+  currentProfile: CurrentUserResponse['profile'] | null
   isAdminMfaLoading: boolean
   adminMfaStatus: AdminMfaStatus | null
   onProfileRefreshKeyUpdate: () => void
@@ -219,9 +220,15 @@ function matchRoute(inputs: RouteInputs) {
     publicProfileUsername,
     editGalaPlanId,
     ownedGalaPlanId,
-    adminMfaStatus,
     isAdminMfaLoading,
+    adminMfaStatus,
   } = inputs
+  const adminHomePath = ADMIN_BASE_PATH
+  const adminPlaceImagesPath = getAdminPath('place-images')
+  const adminUserReportsPath = getAdminPath('user-reports')
+  const adminPlaceSubmissionsPath = getAdminPath('place-submissions')
+  const adminPlaceReportsPath = getAdminPath('place-reports')
+  const adminCommentReportsPath = getAdminPath('comment-reports')
 
   if (!hasResolvedInitialAuth && routeNeedsBlockingAuth) {
     return <AppLoadingState />
@@ -271,29 +278,23 @@ function matchRoute(inputs: RouteInputs) {
       return <AuthPage mode="sign_in" surface="admin" />
     }
 
-    if (isPath(pathname, '/admin/mfa/setup')) {
+    if (isPath(pathname, ADMIN_MFA_SETUP_PATH)) {
       return (
-        <AdminRouteGate
-          pathname={pathname}
-          adminMfa={{ isLoading: isAdminMfaLoading, status: adminMfaStatus }}
-        >
+        <AdminRouteGate pathname={pathname} adminMfa={{ isLoading: isAdminMfaLoading, status: adminMfaStatus }}>
           <AdminMfaSetupPage session={session} />
         </AdminRouteGate>
       )
     }
 
-    if (isPath(pathname, '/admin/mfa/verify')) {
+    if (isPath(pathname, ADMIN_MFA_VERIFY_PATH)) {
       return (
-        <AdminRouteGate
-          pathname={pathname}
-          adminMfa={{ isLoading: isAdminMfaLoading, status: adminMfaStatus }}
-        >
+        <AdminRouteGate pathname={pathname} adminMfa={{ isLoading: isAdminMfaLoading, status: adminMfaStatus }}>
           <AdminMfaVerifyPage factorId={adminMfaStatus?.verifiedTotpFactorId ?? null} />
         </AdminRouteGate>
       )
     }
 
-    if (pathname === '/admin' || pathname === '/admin/') {
+    if (pathname === adminHomePath || pathname === `${adminHomePath}/`) {
       return (
         <AdminRouteGate pathname={pathname} adminMfa={{ isLoading: isAdminMfaLoading, status: adminMfaStatus }}>
           <AdminDashboard session={session} />
@@ -301,7 +302,7 @@ function matchRoute(inputs: RouteInputs) {
       )
     }
 
-    if (pathname === '/admin/place-images' || pathname === '/admin/place-images/') {
+    if (pathname === adminPlaceImagesPath || pathname === `${adminPlaceImagesPath}/`) {
       return (
         <AdminRouteGate pathname={pathname} adminMfa={{ isLoading: isAdminMfaLoading, status: adminMfaStatus }}>
           <AdminPlaceImagesPage session={session} />
@@ -309,7 +310,7 @@ function matchRoute(inputs: RouteInputs) {
       )
     }
 
-    if (pathname === '/admin/user-reports' || pathname === '/admin/user-reports/') {
+    if (pathname === adminUserReportsPath || pathname === `${adminUserReportsPath}/`) {
       return (
         <AdminRouteGate pathname={pathname} adminMfa={{ isLoading: isAdminMfaLoading, status: adminMfaStatus }}>
           <AdminUserReportsPage session={session} />
@@ -317,7 +318,7 @@ function matchRoute(inputs: RouteInputs) {
       )
     }
 
-    if (pathname === '/admin/place-submissions' || pathname === '/admin/place-submissions/') {
+    if (pathname === adminPlaceSubmissionsPath || pathname === `${adminPlaceSubmissionsPath}/`) {
       return (
         <AdminRouteGate pathname={pathname} adminMfa={{ isLoading: isAdminMfaLoading, status: adminMfaStatus }}>
           <AdminPlaceSubmissionsPage session={session} />
@@ -325,7 +326,7 @@ function matchRoute(inputs: RouteInputs) {
       )
     }
 
-    if (pathname === '/admin/place-reports' || pathname === '/admin/place-reports/') {
+    if (pathname === adminPlaceReportsPath || pathname === `${adminPlaceReportsPath}/`) {
       return (
         <AdminRouteGate pathname={pathname} adminMfa={{ isLoading: isAdminMfaLoading, status: adminMfaStatus }}>
           <AdminPlaceReportsPage session={session} />
@@ -333,7 +334,7 @@ function matchRoute(inputs: RouteInputs) {
       )
     }
 
-    if (pathname === '/admin/comment-reports' || pathname === '/admin/comment-reports/') {
+    if (pathname === adminCommentReportsPath || pathname === `${adminCommentReportsPath}/`) {
       return (
         <AdminRouteGate pathname={pathname} adminMfa={{ isLoading: isAdminMfaLoading, status: adminMfaStatus }}>
           <AdminCommentReportsPage session={session} />

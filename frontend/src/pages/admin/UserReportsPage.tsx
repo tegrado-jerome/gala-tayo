@@ -5,7 +5,8 @@ import ProfileAvatar from '../../components/ProfileAvatar'
 import UnifiedLoadingState from '../../components/UnifiedLoadingState'
 import { PageContainer, PageShell, StateContainer } from '../../components/layout/ResponsiveLayouts'
 import { useSystemMessage } from '../../context/SystemMessageContext'
-import { getCurrentUser, isAdminRole } from '../../utils/profileApi'
+import { useAdminAccess } from '../../hooks/useAdminAccess'
+import { getAdminPath } from '../../utils/adminRoutes'
 import { getAdminUserReports, updateAdminUserReport, type AdminUserReport, type UserReportReason, type UserReportStatus } from '../../utils/userReportsApi'
 import { AdminPageHeader, AdminRefreshButton, AdminStatusFilters } from './AdminUI'
 
@@ -58,8 +59,6 @@ function getPersonLabel(reportUser: AdminUserReport['reportedUser']) {
 }
 
 function AdminUserReportsPage({ session }: { session: Session }) {
-  const [isAdmin, setIsAdmin] = useState(false)
-  const [isCheckingAccess, setIsCheckingAccess] = useState(true)
   const [isLoading, setIsLoading] = useState(true)
   const [reports, setReports] = useState<AdminUserReport[]>([])
   const [statusFilter, setStatusFilter] = useState<UserReportStatus | 'all'>('pending')
@@ -67,6 +66,7 @@ function AdminUserReportsPage({ session }: { session: Session }) {
   const [mutatingId, setMutatingId] = useState('')
   const [moderatorNotes, setModeratorNotes] = useState<Record<string, string>>({})
   const { showSystemMessage } = useSystemMessage()
+  const { isAdmin, isCheckingAccess } = useAdminAccess(session)
 
   const loadReports = async (nextStatus = statusFilter) => {
     setIsLoading(true)
@@ -90,46 +90,12 @@ function AdminUserReportsPage({ session }: { session: Session }) {
   }
 
   useEffect(() => {
-    let isMounted = true
-
-    const checkAccess = async () => {
-      try {
-        const currentUser = await getCurrentUser(session)
-
-        if (!isMounted) return
-
-        const nextIsAdmin = isAdminRole(currentUser.user.role)
-        setIsAdmin(nextIsAdmin)
-
-        if (nextIsAdmin) {
-          await loadReports('pending')
-        }
-      } catch (error) {
-        if (isMounted) {
-          setErrorMessage(error instanceof Error ? error.message : 'Failed to check admin access.')
-        }
-      } finally {
-        if (isMounted) {
-          setIsCheckingAccess(false)
-          setIsLoading(false)
-        }
-      }
-    }
-
-    void checkAccess()
-
-    return () => {
-      isMounted = false
-    }
-  }, [session])
-
-  useEffect(() => {
-    if (!isAdmin) {
+    if (!isAdmin || isCheckingAccess) {
       return
     }
 
     void loadReports(statusFilter)
-  }, [isAdmin, statusFilter])
+  }, [isAdmin, isCheckingAccess, statusFilter])
 
   const handleUpdate = async (reportId: string, status: UserReportStatus) => {
     try {
@@ -187,7 +153,7 @@ function AdminUserReportsPage({ session }: { session: Session }) {
           <AdminPageHeader
             title="User reports"
             description="Review private reports submitted against user accounts and profiles."
-            activePath="/admin/user-reports"
+            activePath={getAdminPath('user-reports')}
             actions={<AdminRefreshButton isLoading={isLoading} onRefresh={() => void loadReports(statusFilter)} />}
           />
 

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../supabase'
 import { StateContainer } from '../components/layout/ResponsiveLayouts'
-import { getCurrentEmailConflict, getPostAuthRedirect } from '../services/authApi'
+import { getCurrentEmailConflict, getPostAuthRedirect, getRequestedNextPath } from '../services/authApi'
 import { buildAuthPath } from '../services/authApi'
 import { navigateToPath } from '../utils/navigation'
 
@@ -68,6 +68,17 @@ function AuthCallbackPage() {
         if (emailConflict.conflict) {
           await supabase.auth.signOut({ scope: 'local' })
           throw new Error('This email already has a GalaTayo account. Please log in using the original method for that account.')
+        }
+
+        const params = new URLSearchParams(window.location.search)
+        const requestedNextPath = getRequestedNextPath(window.location.search)
+        const authFlow = params.get('flow')
+
+        if (authFlow === 'signup' || requestedNextPath === '/onboarding') {
+          if (isMounted) {
+            navigateToPath('/onboarding')
+          }
+          return
         }
 
         const redirectTo = await getPostAuthRedirect(session, window.location.search)

@@ -4,7 +4,8 @@ import AppHeader from '../../components/AppHeader'
 import UnifiedLoadingState from '../../components/UnifiedLoadingState'
 import { PageContainer, PageShell, StateContainer } from '../../components/layout/ResponsiveLayouts'
 import { useSystemMessage } from '../../context/SystemMessageContext'
-import { getCurrentUser, isAdminRole } from '../../utils/profileApi'
+import { useAdminAccess } from '../../hooks/useAdminAccess'
+import { getAdminPath } from '../../utils/adminRoutes'
 import {
   approvePlaceSubmission,
   getPendingPlaceSubmissions,
@@ -30,8 +31,6 @@ function buildOpenStreetMapUrl(latitude: number, longitude: number) {
 }
 
 function AdminPlaceSubmissionsPage({ session }: { session: Session }) {
-  const [isAdmin, setIsAdmin] = useState(false)
-  const [isCheckingAccess, setIsCheckingAccess] = useState(true)
   const [isLoading, setIsLoading] = useState(true)
   const [submissions, setSubmissions] = useState<AdminPlaceSubmission[]>([])
   const [errorMessage, setErrorMessage] = useState('')
@@ -39,6 +38,7 @@ function AdminPlaceSubmissionsPage({ session }: { session: Session }) {
   const [adminNotes, setAdminNotes] = useState<Record<string, string>>({})
   const [rejectionReasons, setRejectionReasons] = useState<Record<string, string>>({})
   const { showSystemMessage } = useSystemMessage()
+  const { isAdmin, isCheckingAccess } = useAdminAccess(session)
 
   const loadPendingSubmissions = async () => {
     setIsLoading(true)
@@ -55,38 +55,12 @@ function AdminPlaceSubmissionsPage({ session }: { session: Session }) {
   }
 
   useEffect(() => {
-    let isMounted = true
-
-    const checkAccess = async () => {
-      try {
-        const currentUser = await getCurrentUser(session)
-
-        if (!isMounted) return
-
-        const nextIsAdmin = isAdminRole(currentUser.user.role)
-        setIsAdmin(nextIsAdmin)
-
-        if (nextIsAdmin) {
-          await loadPendingSubmissions()
-        }
-      } catch (error) {
-        if (isMounted) {
-          setErrorMessage(error instanceof Error ? error.message : 'Failed to check admin access.')
-        }
-      } finally {
-        if (isMounted) {
-          setIsCheckingAccess(false)
-          setIsLoading(false)
-        }
-      }
+    if (!isAdmin || isCheckingAccess) {
+      return
     }
 
-    void checkAccess()
-
-    return () => {
-      isMounted = false
-    }
-  }, [session])
+    void loadPendingSubmissions()
+  }, [isAdmin, isCheckingAccess])
 
   const handleApprove = async (submissionId: string) => {
     try {
@@ -173,7 +147,7 @@ function AdminPlaceSubmissionsPage({ session }: { session: Session }) {
           <AdminPageHeader
             title="Place submission review"
             description="Review new place contributions before they appear publicly in GalaTayo."
-            activePath="/admin/place-submissions"
+            activePath={getAdminPath('place-submissions')}
             actions={<AdminRefreshButton isLoading={isLoading} onRefresh={() => void loadPendingSubmissions()} />}
           />
 

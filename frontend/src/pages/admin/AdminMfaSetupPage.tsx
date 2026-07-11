@@ -7,6 +7,7 @@ import { supabase } from '../../supabase'
 import { refreshAdminMfaSession } from '../../utils/adminMfa'
 import { navigateToPath } from '../../utils/navigation'
 import { signOut } from '../../services/authApi'
+import { ADMIN_BASE_PATH } from '../../utils/adminRoutes'
 
 type EnrollmentState = {
   factorId: string
@@ -102,7 +103,7 @@ function AdminMfaSetupPage({ session }: { session: Session }) {
 
       await refreshAdminMfaSession()
       setSuccessMessage('Verification successful. Redirecting to admin tools...')
-      window.setTimeout(() => navigateToPath('/admin'), 500)
+      window.setTimeout(() => navigateToPath(ADMIN_BASE_PATH), 500)
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Invalid or expired code.')
     } finally {

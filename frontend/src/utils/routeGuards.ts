@@ -1,4 +1,5 @@
 import { isPath } from './routes'
+import { isAdminPath as isSecretAdminPath } from './adminRoutes'
 
 const sharedRouteMatchers = [
   (pathname: string) => /^\/u\/[^/]+\/?$/i.test(pathname),
@@ -22,12 +23,6 @@ export function isProtectedAccountPath(pathname: string) {
     '/reports',
     '/find-friends',
     '/comment-notices',
-    '/admin',
-    '/admin/user-reports',
-    '/admin/place-images',
-    '/admin/place-submissions',
-    '/admin/place-reports',
-    '/admin/comment-reports',
     '/profile',
     '/me',
     '/account',
@@ -59,7 +54,7 @@ export function isProtectedAccountPath(pathname: string) {
 }
 
 export function isAdminPath(pathname: string) {
-  return pathname === '/admin' || pathname === '/admin/' || pathname.startsWith('/admin/')
+  return isSecretAdminPath(pathname)
 }
 
 export function shouldShowMobileBottomNav(pathname: string) {
@@ -136,7 +131,6 @@ export function getNoindexForPath(pathname: string) {
   }
 
   if (
-    pathname.startsWith('/admin/') ||
     pathname.startsWith('/auth/') ||
     /^\/u\/[^/]+\/?$/i.test(pathname) ||
     /^\/gala-plan(?:s)?\b/i.test(pathname)

@@ -1,5 +1,6 @@
 import { Redis } from "@upstash/redis";
 import { getSecret } from "../config/keyVault";
+import { KEY_VAULT_SECRET_NAMES } from "../config/secretNames";
 
 type JsonCacheOptions = {
   ttlSeconds?: number;
@@ -19,14 +20,24 @@ async function readOptionalSecret(secretName: string): Promise<string | null> {
 
 async function resolveRedisConfig(): Promise<{ url: string; token: string } | null> {
   const [kvUrl, kvToken, legacyKvUrl, legacyKvToken] = await Promise.all([
-    readOptionalSecret("redis-rest-url"),
-    readOptionalSecret("redis-rest-token"),
-    readOptionalSecret("upstash-redis-rest-url"),
-    readOptionalSecret("upstash-redis-rest-token"),
+    readOptionalSecret(KEY_VAULT_SECRET_NAMES.REDIS_REST_URL),
+    readOptionalSecret(KEY_VAULT_SECRET_NAMES.REDIS_REST_TOKEN),
+    readOptionalSecret(KEY_VAULT_SECRET_NAMES.UPSTASH_REDIS_REST_URL),
+    readOptionalSecret(KEY_VAULT_SECRET_NAMES.UPSTASH_REDIS_REST_TOKEN),
   ]);
 
-  const url = kvUrl ?? legacyKvUrl ?? process.env.UPSTASH_REDIS_REST_URL?.trim() ?? null;
-  const token = kvToken ?? legacyKvToken ?? process.env.UPSTASH_REDIS_REST_TOKEN?.trim() ?? null;
+  const url =
+    kvUrl ??
+    process.env.REDIS_REST_URL?.trim() ??
+    legacyKvUrl ??
+    process.env.UPSTASH_REDIS_REST_URL?.trim() ??
+    null;
+  const token =
+    kvToken ??
+    process.env.REDIS_REST_TOKEN?.trim() ??
+    legacyKvToken ??
+    process.env.UPSTASH_REDIS_REST_TOKEN?.trim() ??
+    null;
 
   if (!url || !token) {
     return null;

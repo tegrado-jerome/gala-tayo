@@ -4,6 +4,7 @@ import AppHeader from './AppHeader'
 import { GuestAuthPrompt, type GuestAuthVariant } from './GuestAuthPrompt'
 import { PageShell } from './layout/ResponsiveLayouts'
 import AskAiOverviewPage from '../pages/AskAiOverviewPage'
+import { ADMIN_BASE_PATH } from '../utils/adminRoutes'
 import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
 
 type ProtectedFeatureGateProps = {
@@ -103,7 +104,12 @@ const featurePreviews: Array<{
     },
   },
   {
-    matches: (pathname) => pathname === '/submit-place' || pathname === '/submit-place/' || pathname === '/submissions' || pathname === '/submissions/' || pathname.startsWith('/admin/place-'),
+    matches: (pathname) =>
+      pathname === '/submit-place' ||
+      pathname === '/submit-place/' ||
+      pathname === '/submissions' ||
+      pathname === '/submissions/' ||
+      pathname.startsWith(ADMIN_BASE_PATH),
     preview: {
       icon: 'uploadPhoto',
       eyebrow: 'Community places',
