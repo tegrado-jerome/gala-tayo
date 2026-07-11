@@ -1,11 +1,11 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
-import { navigateToPath, replaceWithPath } from './utils/navigation'
 import { isPath, parseAreaPagePath, parseCanonicalPlacePath, parseCategoryPagePath, parseEditGalaPlanPath, parseLegacyPlaceSlugPath, parseLegacyPublicGalaPlanPath, parseOwnedGalaPlanPath, parsePublicGalaPlanPath, parsePublicProfileUsername, shouldSkipTopScrollRestore, getSoonFeatureRedirectPath } from './utils/routes'
 import { isProtectedAccountPath } from './utils/routeGuards'
 import { getLegacyAdminRedirectPath } from './utils/adminRoutes'
 import { useAuthOrchestration } from './hooks/useAuthOrchestration'
 import { useCanonicalRedirects } from './hooks/useCanonicalRedirects'
 import { matchRoute, AppShell } from './routes/RouteContent'
+import { consumePendingNavigationSource, navigateToPath, replaceWithPath } from './utils/navigation'
 
 function App() {
   const {
@@ -26,6 +26,8 @@ function App() {
     pathname: window.location.pathname,
     search: window.location.search,
   }))
+  const [navigationSource, setNavigationSource] = useState<'push' | 'replace' | 'pop'>('push')
+  const [restoredScrollY, setRestoredScrollY] = useState<number | null>(null)
 
   const { pathname, search } = locationState
   const legacyAdminRedirectPath = useMemo(() => getLegacyAdminRedirectPath(pathname), [pathname])
@@ -34,6 +36,9 @@ function App() {
 
   useEffect(() => {
     const handlePopState = () => {
+      const nextNavigationSource = consumePendingNavigationSource() ?? 'pop'
+      setNavigationSource(nextNavigationSource)
+      setRestoredScrollY(nextNavigationSource === 'pop' ? (typeof window.history.state?.scrollY === 'number' ? window.history.state.scrollY : null) : null)
       setLocationState({
         pathname: window.location.pathname,
         search: window.location.search,
@@ -47,7 +52,36 @@ function App() {
     window.history.scrollRestoration = 'manual'
   }, [])
 
+  function runWithInstantScroll(callback: () => void) {
+    const html = document.documentElement
+    const body = document.body
+    const previousHtmlScrollBehavior = html.style.scrollBehavior
+    const previousBodyScrollBehavior = body.style.scrollBehavior
+
+    html.style.scrollBehavior = 'auto'
+    body.style.scrollBehavior = 'auto'
+
+    callback()
+
+    html.style.scrollBehavior = previousHtmlScrollBehavior
+    body.style.scrollBehavior = previousBodyScrollBehavior
+  }
+
   useLayoutEffect(() => {
+    if (navigationSource === 'pop') {
+      if (restoredScrollY !== null) {
+        runWithInstantScroll(() => {
+          window.scrollTo({
+            top: Math.max(restoredScrollY, 0),
+            left: 0,
+            behavior: 'auto',
+          })
+        })
+        setRestoredScrollY(null)
+      }
+      return
+    }
+
     if (shouldSkipTopScrollRestore(pathname, search)) {
       return
     }
@@ -57,7 +91,7 @@ function App() {
       left: 0,
       behavior: 'auto',
     })
-  }, [pathname, search])
+  }, [navigationSource, pathname, search, restoredScrollY])
 
   useCanonicalRedirects(pathname)
 

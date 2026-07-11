@@ -13,6 +13,7 @@ type RoutePattern = {
 export type NavigationHistoryState = {
   from: string
   fromLabel: string | null
+  scrollY?: number
 }
 
 export type PlaceReturnState = {
@@ -424,6 +425,7 @@ export function getHistoryState(): NavigationHistoryState | null {
   return {
     from: candidate.from,
     fromLabel: typeof candidate.fromLabel === 'string' ? candidate.fromLabel : null,
+    scrollY: typeof candidate.scrollY === 'number' && Number.isFinite(candidate.scrollY) ? candidate.scrollY : undefined,
   }
 }
 
