@@ -583,7 +583,7 @@ function MobileResultsView({
       <MobileResultsTabs selectedView={selectedView} onViewChange={onViewChange} />
 
       {selectedView === 'cards' ? (
-        <section className="grid gap-3 px-4 py-4">
+        <section id="search-results-anchor" className="grid gap-3 px-4 py-4">
           {isPageLoading ? (
             <div className="px-1 text-center text-[11px] font-semibold text-slate-400">
               Loading page...

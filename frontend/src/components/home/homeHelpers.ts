@@ -351,6 +351,25 @@ function clearAskAiRouteCache() {
   }
 }
 
+function clearAllSearchRouteCaches() {
+  for (const storage of [window.sessionStorage, window.localStorage]) {
+    try {
+      const toRemove: string[] = []
+
+      for (let i = 0; i < storage.length; i += 1) {
+        const key = storage.key(i)
+        if (key && key.startsWith(searchRouteCachePrefix)) {
+          toRemove.push(key)
+        }
+      }
+
+      toRemove.forEach((key) => storage.removeItem(key))
+    } catch {
+      // Storage can be unavailable in private browsing or restricted webviews.
+    }
+  }
+}
+
 function readFiltersCache(): FiltersCache | null {
   try {
     const rawCache = window.localStorage.getItem(filtersCacheKey)
@@ -885,6 +904,7 @@ export {
   readAskAiRouteCache,
   writeAskAiRouteCache,
   clearAskAiRouteCache,
+  clearAllSearchRouteCaches,
   readFiltersCache,
   writeFiltersCache,
   getSearchPlaceSelector,
