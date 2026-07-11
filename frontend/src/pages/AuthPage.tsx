@@ -364,12 +364,6 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
               </div>
             ) : null}
 
-            {isCreateMode ? (
-              <p className="mb-2 text-center text-[12px] leading-6 text-[var(--muted)]">
-                We send the confirmation email right away. If you need another one, you can resend it after 2 minutes.
-              </p>
-            ) : null}
-
             {resendMessage ? (
               <p className="mb-4 rounded-[12px] border border-[rgba(5,150,105,0.18)] bg-[var(--success-soft)] px-4 py-3 text-center text-[13px] leading-6 text-[var(--success)] shadow-sm">
                 {resendMessage}
