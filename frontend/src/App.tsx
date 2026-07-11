@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
-import { markSoftNavigation, navigateToPath, replaceWithPath } from './utils/navigation'
+import { navigateToPath, replaceWithPath } from './utils/navigation'
 import { isPath, parseAreaPagePath, parseCanonicalPlacePath, parseCategoryPagePath, parseEditGalaPlanPath, parseLegacyPlaceSlugPath, parseLegacyPublicGalaPlanPath, parseOwnedGalaPlanPath, parsePublicGalaPlanPath, parsePublicProfileUsername, shouldSkipTopScrollRestore, getSoonFeatureRedirectPath } from './utils/routes'
 import { isProtectedAccountPath } from './utils/routeGuards'
 import { getLegacyAdminRedirectPath } from './utils/adminRoutes'
@@ -34,7 +34,6 @@ function App() {
 
   useEffect(() => {
     const handlePopState = () => {
-      markSoftNavigation()
       setLocationState({
         pathname: window.location.pathname,
         search: window.location.search,

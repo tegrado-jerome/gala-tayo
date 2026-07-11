@@ -25,7 +25,6 @@ import {
   validateUsername,
 } from '../utils/profileApi'
 import { preloadAvatarImage } from '../utils/avatarImageCache'
-import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
 import { navigateToPath } from '../utils/navigation'
 
 type ProfilePageProps = {
@@ -158,18 +157,6 @@ function ProfilePage({ session }: ProfilePageProps) {
   const normalizedUsername = useMemo(() => normalizeUsername(usernameInput), [usernameInput])
   const usernameError = normalizedUsername ? validateUsername(normalizedUsername) : 'Username is required.'
   const bioCharacterCount = bioInput.trim().length
-
-  useEffect(() => {
-    if (!isGuestProfile) {
-      return undefined
-    }
-
-    lockBodyScroll()
-
-    return () => {
-      unlockBodyScroll()
-    }
-  }, [isGuestProfile])
 
   useEffect(() => {
     if (!session?.user?.id) {
@@ -353,345 +340,356 @@ function ProfilePage({ session }: ProfilePageProps) {
     }
   }
 
-  return (
+  const profileContent = (
     <>
-      <div className={isGuestProfile ? 'pointer-events-none blur-[5px] saturate-[0.82]' : undefined}>
-        <PageShell>
-      <AppHeader />
-      <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
-        <PageContainer size="wide">
-          <div className="mb-5">
-            <MinimalBackNav to="/" label="Home" preferHistory={false} />
-          </div>
-
-        {isLoading ? <p className="text-sm text-[var(--muted)]">Refreshing your profile in the background...</p> : null}
-        {profile ? (
-          <>
-            <CardSurface pad="loose">
-              <div className="flex flex-col gap-5 border-b border-[var(--line)] pb-5 sm:flex-row sm:items-end sm:justify-between">
-                  <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end">
-                    <div>
-                      <ProfileAvatar profile={profile} size="lg" />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
-                        <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--chip)] px-3 py-1 text-[var(--accent-deep)]">
-                          <AppIcon name={profile.is_public ? 'eye' : 'lock'} className="h-3.5 w-3.5" />
-                          {profile.is_public ? 'Public profile' : 'Private profile'}
-                        </span>
-                        <span>Default plans: {planVisibilityLabel[defaultPlanVisibility]}</span>
-                      </div>
-                      <h1 className="mt-3 truncate text-3xl font-black tracking-[-0.04em] text-slate-950 sm:text-4xl">
-                        @{profile.username}
-                      </h1>
-                      <p className="mt-2 max-w-2xl text-sm font-semibold leading-7 text-slate-600">
-                        {profile.bio || 'Give your profile a short intro so people know your vibe before they follow.'}
-                      </p>
-                    </div>
-                  </div>
-
-                  {profile.username ? (
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() => navigateToPath(isGuestProfile ? '/login' : '/find-friends')}
-                        className="app-button app-button-secondary app-button-md"
-                      >
-                        <AppIcon name="users" className="h-4 w-4" />
-                        {isGuestProfile ? 'Log in' : 'Find friends'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          navigateToPath(
-                            isGuestProfile ? '/signup' : `/u/${encodeURIComponent(profile.username || '')}`,
-                          )
-                        }
-                        className="app-button app-button-secondary app-button-md"
-                      >
-                        <AppIcon name="share" className="h-4 w-4" />
-                        {isGuestProfile ? 'Create account' : 'View public'}
-                      </button>
-                    </div>
-                  ) : null}
-              </div>
-
-              <div className="flex flex-wrap gap-x-8 gap-y-3 pt-4 text-sm">
-                <button type="button" onClick={() => void openList('followers')} className="inline-flex items-center gap-2 font-semibold text-slate-600 transition hover:text-slate-950">
-                  <span className="text-lg font-black text-slate-950">{profile.followers_count ?? 0}</span>
-                  <span>Followers</span>
-                </button>
-                <button type="button" onClick={() => void openList('following')} className="inline-flex items-center gap-2 font-semibold text-slate-600 transition hover:text-slate-950">
-                  <span className="text-lg font-black text-slate-950">{profile.following_count ?? 0}</span>
-                  <span>Following</span>
-                </button>
-                <span className="inline-flex items-center gap-2 font-semibold text-slate-600">
-                  <AppIcon name={profile.is_public ? 'eye' : 'lock'} className="h-4 w-4 text-slate-400" />
-                  {profile.is_public ? 'Follower and following lists are visible system-wide' : 'Follower and following names stay hidden system-wide'}
-                </span>
-                <span className="inline-flex items-center gap-2 font-semibold text-slate-600">
-                  <AppIcon name="profile" className="h-4 w-4 text-slate-400" />
-                  {followRequests.length} pending requests
-                </span>
-              </div>
-            </CardSurface>
-
-            {isEditing && !isGuestProfile ? (
-              <form className="gala-card mt-8 overflow-hidden" onSubmit={handleSave}>
-                <section className="grid gap-4 px-5 py-6 sm:px-6">
-                  <div>
-                    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Profile</p>
-                    <h2 className="mt-2 text-xl font-black tracking-[-0.03em] text-slate-950">Identity and presentation</h2>
-                  </div>
-                  <div className="grid gap-4">
-                    <label className="grid gap-2">
-                      <span className="text-sm font-black text-slate-900">Username</span>
-                      <span className="flex h-12 items-center rounded-2xl border border-[var(--line-strong)] bg-white px-4 focus-within:border-[var(--accent)] focus-within:ring-2 focus-within:ring-[var(--accent-soft)]">
-                        <span className="font-black text-[var(--accent-deep)]">@</span>
-                        <input
-                          value={usernameInput}
-                          onChange={(event) => setUsernameInput(event.target.value.toLowerCase())}
-                          className="min-w-0 flex-1 border-0 bg-transparent px-1 text-base font-black text-slate-950 outline-none"
-                          autoCapitalize="none"
-                          autoComplete="username"
-                          spellCheck={false}
-                        />
-                      </span>
-                      <span className={`text-xs font-semibold ${usernameError ? 'text-red-600' : 'text-[var(--muted)]'}`}>
-                        {usernameError || 'This is how friends find you on GalaTayo.'}
-                      </span>
-                    </label>
-
-                    <label className="grid gap-2">
-                      <div className="flex items-center justify-between gap-3">
-                        <span className="flex items-center gap-2 text-sm font-black text-slate-900">
-                          Bio
-                          <span className="optional-label">Optional</span>
-                        </span>
-                        <span className="text-xs font-black uppercase tracking-[0.12em] text-slate-400">{bioInput.length}/280</span>
-                      </div>
-                      <textarea
-                        value={bioInput}
-                        onChange={(event) => setBioInput(event.target.value)}
-                        className="min-h-32 resize-none rounded-2xl border border-[var(--line-strong)] bg-white px-4 py-3 text-sm font-semibold leading-6 text-slate-900 outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]"
-                        maxLength={280}
-                      />
-                    </label>
-                  </div>
-                </section>
-
-                <section className="grid gap-4 border-t border-[var(--line)] px-5 py-6 sm:px-6">
-                  <div>
-                    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Privacy</p>
-                    <h2 className="mt-2 text-xl font-black tracking-[-0.03em] text-slate-950">Audience and access</h2>
-                  </div>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <label className="grid gap-2 sm:col-span-2">
-                      <span className="text-sm font-black text-slate-900">Profile Visibility</span>
-                      <select value={isPublic ? 'public' : 'private'} onChange={(event) => setIsPublic(event.target.value === 'public')} className="h-12 rounded-2xl border border-[var(--line-strong)] bg-white px-4 text-sm font-black text-slate-950 outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]">
-                        <option value="public">Public</option>
-                        <option value="private">Private</option>
-                      </select>
-                      <span className="text-xs font-semibold text-[var(--muted)]">
-                        {isPublic ? 'Anyone can view your profile and your follower/following lists.' : 'People need to request to follow you, and follower/following names stay hidden.'}
-                      </span>
-                    </label>
-                    <label className="grid gap-2 sm:col-span-2">
-                      <span className="text-sm font-black text-slate-900">Default Gala Plan Visibility</span>
-                      <select value={defaultPlanVisibility} onChange={(event) => setDefaultPlanVisibility(event.target.value as Profile['default_gala_plan_visibility'])} className="h-12 rounded-2xl border border-[var(--line-strong)] bg-white px-4 text-sm font-black text-slate-950 outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]">
-                        <option value="private">Private</option>
-                        <option value="followers">Followers only</option>
-                        <option value="public">Public</option>
-                        <option value="unlisted">Unlisted</option>
-                      </select>
-                      <span className="text-xs font-semibold text-[var(--muted)]">
-                        Unlisted plan: Anyone with the link can view, but it will not appear on your profile.
-                      </span>
-                    </label>
-                  </div>
-                </section>
-
-                <section className="grid gap-4 border-t border-[var(--line)] px-5 py-6 sm:px-6">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                      <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Preview</p>
-                      <h2 className="mt-2 text-xl font-black tracking-[-0.03em] text-slate-950">How your profile looks</h2>
-                    </div>
-                    <div className="text-sm font-semibold text-slate-500">
-                      Bio length: <span className="font-black text-slate-950">{bioCharacterCount}/280</span>
-                    </div>
-                  </div>
-                  <div className="grid gap-4 rounded-[24px] bg-[var(--surface-alt)] p-4 sm:grid-cols-[auto,minmax(0,1fr)] sm:items-center">
-                    <ProfileAvatar
-                      profile={{
-                        username: normalizedUsername || 'your-name',
-                        avatar_url: profile.avatar_url,
-                        provider_avatar_url: profile.provider_avatar_url,
-                      }}
-                      size="md"
-                    />
-                    <div className="min-w-0">
-                      <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
-                        {isPublic ? 'Public profile' : 'Private profile'}
-                      </p>
-                      <p className="mt-1 truncate text-2xl font-black tracking-[-0.04em] text-slate-950">@{normalizedUsername || 'your-name'}</p>
-                      <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
-                        {bioInput.trim() || 'Add a short bio so other people know your vibe.'}
-                      </p>
-                    </div>
-                  </div>
-                </section>
-
-                <section className="grid gap-4 border-t border-[var(--line)] px-5 py-6 sm:px-6">
-                  <div>
-                    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Security</p>
-                    <h2 className="mt-2 text-xl font-black tracking-[-0.03em] text-slate-950">Account access</h2>
-                  </div>
-                  <div className="grid gap-4 sm:max-w-xl">
-                    <p className="text-sm font-semibold leading-6 text-[var(--muted)]">
-                      Add or update email/password login for this same GalaTayo account.
-                    </p>
-                    <label className="grid gap-2">
-                      <span className="text-sm font-black text-slate-900">New Password</span>
-                      <input
-                        type="password"
-                        value={newPassword}
-                        onChange={(event) => setNewPassword(event.target.value)}
-                        minLength={8}
-                        autoComplete="new-password"
-                        className="h-12 rounded-2xl border border-[var(--line-strong)] bg-white px-4 text-sm font-semibold outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]"
-                      />
-                    </label>
-                    <label className="grid gap-2">
-                      <span className="text-sm font-black text-slate-900">Confirm Password</span>
-                      <input
-                        type="password"
-                        value={confirmNewPassword}
-                        onChange={(event) => setConfirmNewPassword(event.target.value)}
-                        minLength={8}
-                        autoComplete="new-password"
-                        className="h-12 rounded-2xl border border-[var(--line-strong)] bg-white px-4 text-sm font-semibold outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]"
-                      />
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => void handleUpdatePassword()}
-                      disabled={isSavingPassword || !newPassword || !confirmNewPassword}
-                    className="app-button app-button-primary app-button-md"
-                    >
-                      {isSavingPassword ? 'Updating password...' : 'Set password'}
-                    </button>
-                    {securityError ? <span className="text-sm font-bold text-red-600">{securityError}</span> : null}
-                  </div>
-                </section>
-
-                {errorMessage ? <p className="border-t border-[var(--line)] px-5 py-4 text-sm font-bold text-red-700 sm:px-6">{errorMessage}</p> : null}
-
-                <div className="flex flex-col gap-3 border-t border-[var(--line)] px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-                  <p className="text-sm font-semibold text-slate-600">Changes update your public profile and future plan defaults.</p>
-                  <button
-                    type="submit"
-                    disabled={Boolean(usernameError) || isSaving}
-                    className="app-button app-button-primary app-button-md"
-                  >
-                    {isSaving ? 'Saving...' : 'Save profile'}
-                  </button>
-                </div>
-              </form>
-            ) : null}
-
-            <section className="mt-8">
-              <div className="flex flex-col gap-3 border-b border-[var(--line)] pb-5 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Social</p>
-                  <h2 className="mt-2 text-xl font-black tracking-[-0.03em] text-slate-950">Follow requests</h2>
-                  <p className="mt-1 text-sm font-semibold text-[var(--muted)]">
-                    {profile.is_public ? 'Public profiles accept followers automatically.' : 'Approve who can see your private activity.'}
-                  </p>
-                </div>
-                <span className="inline-flex items-center gap-2 self-start rounded-full bg-[var(--chip)] px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">
-                  <AppIcon name="profile" className="h-3.5 w-3.5" />
-                  {followRequests.length} pending
-                </span>
-              </div>
-
-              {followRequests.length === 0 ? (
-                <p className="pt-5 text-sm font-semibold text-[var(--muted)]">
-                  {profile.is_public ? 'Public profiles accept followers automatically.' : 'Approve who can see your private activity.'}
-                </p>
-              ) : (
-                <div className="divide-y divide-[var(--line)] pt-3">
-                  {followRequests.map((request) => (
-                    <article key={request.id} className="flex items-center justify-between gap-3 py-4">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-black text-slate-950">@{request.follower.username}</p>
-                        <p className="truncate text-xs font-semibold text-[var(--muted)]">{request.follower.bio || 'Wants to follow you.'}</p>
-                      </div>
-                      <div className="flex gap-2">
-                        <button type="button" onClick={() => void handleFollowRequest(request.id, 'accept')} className="h-9 rounded-lg bg-[var(--accent)] px-4 text-xs font-black text-white">
-                          Accept
-                        </button>
-                        <button type="button" onClick={() => void handleFollowRequest(request.id, 'reject')} className="h-9 rounded-full border border-[var(--line)] bg-white px-4 text-xs font-black text-slate-700">
-                          Reject
-                        </button>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              )}
-            </section>
-          </>
-        ) : (
-          <p className="rounded-3xl border border-red-100 bg-white px-5 py-6 text-sm font-semibold text-red-700">
-            {errorMessage || 'Profile unavailable.'}
-          </p>
-        )}
-
-        {listUsers ? (
-          <div className="fixed inset-0 z-[7000] flex items-center justify-center bg-slate-950/35 px-4">
-            <section className="w-full max-w-md rounded-[28px] bg-white p-5 shadow-xl">
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="text-lg font-black text-slate-950">{listTitle}</h2>
-                <button type="button" onClick={() => setListUsers(null)} className="h-9 rounded-full border border-[var(--line)] px-3 text-sm font-black">Close</button>
-              </div>
-              {listUsers.length === 0 ? <p className="mt-4 text-sm font-bold text-[var(--muted)]">No users yet.</p> : null}
-              <div className="mt-4 grid gap-2">
-                {listUsers.map((user) => (
-                  <button
-                    key={user.user_id}
-                    type="button"
-                    onClick={() => {
-                      setListUsers(null)
-                      navigateToPath(`/u/${encodeURIComponent(user.username)}`)
-                    }}
-                    className="flex min-w-0 items-center gap-3 rounded-2xl border border-[var(--line)] bg-white px-3 py-3 text-left transition hover:border-[var(--accent)] hover:bg-[var(--chip)]"
-                  >
-                    <ProfileAvatar profile={user} size="sm" />
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-black text-slate-950">@{user.username}</span>
-                      <span className="mt-0.5 block truncate text-xs font-semibold text-[var(--muted)]">
-                        {user.bio || 'View profile'}
-                      </span>
-                    </span>
-                    <span className="shrink-0 text-xs font-black text-[var(--accent-deep)]">View</span>
-                  </button>
-                ))}
-              </div>
-            </section>
-          </div>
-        ) : null}
-        </PageContainer>
-      </main>
-        </PageShell>
+      <div className="mb-5">
+        <MinimalBackNav to="/" label="Home" preferHistory={false} />
       </div>
 
-      {isGuestProfile ? (
-        <div className="fixed inset-x-0 top-0 bottom-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] z-[7000] flex items-center justify-center overflow-hidden bg-slate-950/20 px-4 py-6">
-          <div className="w-full max-w-[420px]">
-            <GuestAuthPrompt variant="profile" mode="inline-card" />
-          </div>
+      {isLoading ? <p className="text-sm text-[var(--muted)]">Refreshing your profile in the background...</p> : null}
+      {profile ? (
+        <>
+          <CardSurface pad="loose">
+            <div className="flex flex-col gap-5 border-b border-[var(--line)] pb-5 sm:flex-row sm:items-end sm:justify-between">
+              <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end">
+                <div>
+                  <ProfileAvatar profile={profile} size="lg" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--chip)] px-3 py-1 text-[var(--accent-deep)]">
+                      <AppIcon name={profile.is_public ? 'eye' : 'lock'} className="h-3.5 w-3.5" />
+                      {profile.is_public ? 'Public profile' : 'Private profile'}
+                    </span>
+                    <span>Default plans: {planVisibilityLabel[defaultPlanVisibility]}</span>
+                  </div>
+                  <h1 className="mt-3 truncate text-3xl font-black tracking-[-0.04em] text-slate-950 sm:text-4xl">
+                    @{profile.username}
+                  </h1>
+                  <p className="mt-2 max-w-2xl text-sm font-semibold leading-7 text-slate-600">
+                    {profile.bio || 'Give your profile a short intro so people know your vibe before they follow.'}
+                  </p>
+                </div>
+              </div>
+
+              {profile.username ? (
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => navigateToPath(isGuestProfile ? '/login' : '/find-friends')}
+                    className="app-button app-button-secondary app-button-md"
+                  >
+                    <AppIcon name="users" className="h-4 w-4" />
+                    {isGuestProfile ? 'Log in' : 'Find friends'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      navigateToPath(isGuestProfile ? '/signup' : `/u/${encodeURIComponent(profile.username || '')}`)
+                    }
+                    className="app-button app-button-secondary app-button-md"
+                  >
+                    <AppIcon name="share" className="h-4 w-4" />
+                    {isGuestProfile ? 'Create account' : 'View public'}
+                  </button>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="flex flex-wrap gap-x-8 gap-y-3 pt-4 text-sm">
+              <button type="button" onClick={() => void openList('followers')} className="inline-flex items-center gap-2 font-semibold text-slate-600 transition hover:text-slate-950">
+                <span className="text-lg font-black text-slate-950">{profile.followers_count ?? 0}</span>
+                <span>Followers</span>
+              </button>
+              <button type="button" onClick={() => void openList('following')} className="inline-flex items-center gap-2 font-semibold text-slate-600 transition hover:text-slate-950">
+                <span className="text-lg font-black text-slate-950">{profile.following_count ?? 0}</span>
+                <span>Following</span>
+              </button>
+              <span className="inline-flex items-center gap-2 font-semibold text-slate-600">
+                <AppIcon name={profile.is_public ? 'eye' : 'lock'} className="h-4 w-4 text-slate-400" />
+                {profile.is_public ? 'Follower and following lists are visible system-wide' : 'Follower and following names stay hidden system-wide'}
+              </span>
+              <span className="inline-flex items-center gap-2 font-semibold text-slate-600">
+                <AppIcon name="profile" className="h-4 w-4 text-slate-400" />
+                {followRequests.length} pending requests
+              </span>
+            </div>
+          </CardSurface>
+
+          {isEditing && !isGuestProfile ? (
+            <form className="gala-card mt-8 overflow-hidden" onSubmit={handleSave}>
+              <section className="grid gap-4 px-5 py-6 sm:px-6">
+                <div>
+                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Profile</p>
+                  <h2 className="mt-2 text-xl font-black tracking-[-0.03em] text-slate-950">Identity and presentation</h2>
+                </div>
+                <div className="grid gap-4">
+                  <label className="grid gap-2">
+                    <span className="text-sm font-black text-slate-900">Username</span>
+                    <span className="flex h-12 items-center rounded-2xl border border-[var(--line-strong)] bg-white px-4 focus-within:border-[var(--accent)] focus-within:ring-2 focus-within:ring-[var(--accent-soft)]">
+                      <span className="font-black text-[var(--accent-deep)]">@</span>
+                      <input
+                        value={usernameInput}
+                        onChange={(event) => setUsernameInput(event.target.value.toLowerCase())}
+                        className="min-w-0 flex-1 border-0 bg-transparent px-1 text-base font-black text-slate-950 outline-none"
+                        autoCapitalize="none"
+                        autoComplete="username"
+                        spellCheck={false}
+                      />
+                    </span>
+                    <span className={`text-xs font-semibold ${usernameError ? 'text-red-600' : 'text-[var(--muted)]'}`}>
+                      {usernameError || 'This is how friends find you on GalaTayo.'}
+                    </span>
+                  </label>
+
+                  <label className="grid gap-2">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="flex items-center gap-2 text-sm font-black text-slate-900">
+                        Bio
+                        <span className="optional-label">Optional</span>
+                      </span>
+                      <span className="text-xs font-black uppercase tracking-[0.12em] text-slate-400">{bioInput.length}/280</span>
+                    </div>
+                    <textarea
+                      value={bioInput}
+                      onChange={(event) => setBioInput(event.target.value)}
+                      className="min-h-32 resize-none rounded-2xl border border-[var(--line-strong)] bg-white px-4 py-3 text-sm font-semibold leading-6 text-slate-900 outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]"
+                      maxLength={280}
+                    />
+                  </label>
+                </div>
+              </section>
+
+              <section className="grid gap-4 border-t border-[var(--line)] px-5 py-6 sm:px-6">
+                <div>
+                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Privacy</p>
+                  <h2 className="mt-2 text-xl font-black tracking-[-0.03em] text-slate-950">Audience and access</h2>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <label className="grid gap-2 sm:col-span-2">
+                    <span className="text-sm font-black text-slate-900">Profile Visibility</span>
+                    <select value={isPublic ? 'public' : 'private'} onChange={(event) => setIsPublic(event.target.value === 'public')} className="h-12 rounded-2xl border border-[var(--line-strong)] bg-white px-4 text-sm font-black text-slate-950 outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]">
+                      <option value="public">Public</option>
+                      <option value="private">Private</option>
+                    </select>
+                    <span className="text-xs font-semibold text-[var(--muted)]">
+                      {isPublic ? 'Anyone can view your profile and your follower/following lists.' : 'People need to request to follow you, and follower/following names stay hidden.'}
+                    </span>
+                  </label>
+                  <label className="grid gap-2 sm:col-span-2">
+                    <span className="text-sm font-black text-slate-900">Default Gala Plan Visibility</span>
+                    <select value={defaultPlanVisibility} onChange={(event) => setDefaultPlanVisibility(event.target.value as Profile['default_gala_plan_visibility'])} className="h-12 rounded-2xl border border-[var(--line-strong)] bg-white px-4 text-sm font-black text-slate-950 outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]">
+                      <option value="private">Private</option>
+                      <option value="followers">Followers only</option>
+                      <option value="public">Public</option>
+                      <option value="unlisted">Unlisted</option>
+                    </select>
+                    <span className="text-xs font-semibold text-[var(--muted)]">
+                      Unlisted plan: Anyone with the link can view, but it will not appear on your profile.
+                    </span>
+                  </label>
+                </div>
+              </section>
+
+              <section className="grid gap-4 border-t border-[var(--line)] px-5 py-6 sm:px-6">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Preview</p>
+                    <h2 className="mt-2 text-xl font-black tracking-[-0.03em] text-slate-950">How your profile looks</h2>
+                  </div>
+                  <div className="text-sm font-semibold text-slate-500">
+                    Bio length: <span className="font-black text-slate-950">{bioCharacterCount}/280</span>
+                  </div>
+                </div>
+                <div className="grid gap-4 rounded-[24px] bg-[var(--surface-alt)] p-4 sm:grid-cols-[auto,minmax(0,1fr)] sm:items-center">
+                  <ProfileAvatar
+                    profile={{
+                      username: normalizedUsername || 'your-name',
+                      avatar_url: profile.avatar_url,
+                      provider_avatar_url: profile.provider_avatar_url,
+                    }}
+                    size="md"
+                  />
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
+                      {isPublic ? 'Public profile' : 'Private profile'}
+                    </p>
+                    <p className="mt-1 truncate text-2xl font-black tracking-[-0.04em] text-slate-950">@{normalizedUsername || 'your-name'}</p>
+                    <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
+                      {bioInput.trim() || 'Add a short bio so other people know your vibe.'}
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              <section className="grid gap-4 border-t border-[var(--line)] px-5 py-6 sm:px-6">
+                <div>
+                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Security</p>
+                  <h2 className="mt-2 text-xl font-black tracking-[-0.03em] text-slate-950">Account access</h2>
+                </div>
+                <div className="grid gap-4 sm:max-w-xl">
+                  <p className="text-sm font-semibold leading-6 text-[var(--muted)]">
+                    Add or update email/password login for this same GalaTayo account.
+                  </p>
+                  <label className="grid gap-2">
+                    <span className="text-sm font-black text-slate-900">New Password</span>
+                    <input
+                      type="password"
+                      value={newPassword}
+                      onChange={(event) => setNewPassword(event.target.value)}
+                      minLength={8}
+                      autoComplete="new-password"
+                      className="h-12 rounded-2xl border border-[var(--line-strong)] bg-white px-4 text-sm font-semibold outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]"
+                    />
+                  </label>
+                  <label className="grid gap-2">
+                    <span className="text-sm font-black text-slate-900">Confirm Password</span>
+                    <input
+                      type="password"
+                      value={confirmNewPassword}
+                      onChange={(event) => setConfirmNewPassword(event.target.value)}
+                      minLength={8}
+                      autoComplete="new-password"
+                      className="h-12 rounded-2xl border border-[var(--line-strong)] bg-white px-4 text-sm font-semibold outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]"
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => void handleUpdatePassword()}
+                    disabled={isSavingPassword || !newPassword || !confirmNewPassword}
+                    className="app-button app-button-primary app-button-md"
+                  >
+                    {isSavingPassword ? 'Updating password...' : 'Set password'}
+                  </button>
+                  {securityError ? <span className="text-sm font-bold text-red-600">{securityError}</span> : null}
+                </div>
+              </section>
+
+              {errorMessage ? <p className="border-t border-[var(--line)] px-5 py-4 text-sm font-bold text-red-700 sm:px-6">{errorMessage}</p> : null}
+
+              <div className="flex flex-col gap-3 border-t border-[var(--line)] px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+                <p className="text-sm font-semibold text-slate-600">Changes update your public profile and future plan defaults.</p>
+                <button
+                  type="submit"
+                  disabled={Boolean(usernameError) || isSaving}
+                  className="app-button app-button-primary app-button-md"
+                >
+                  {isSaving ? 'Saving...' : 'Save profile'}
+                </button>
+              </div>
+            </form>
+          ) : null}
+
+          <section className="mt-8">
+            <div className="flex flex-col gap-3 border-b border-[var(--line)] pb-5 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Social</p>
+                <h2 className="mt-2 text-xl font-black tracking-[-0.03em] text-slate-950">Follow requests</h2>
+                <p className="mt-1 text-sm font-semibold text-[var(--muted)]">
+                  {profile.is_public ? 'Public profiles accept followers automatically.' : 'Approve who can see your private activity.'}
+                </p>
+              </div>
+              <span className="inline-flex items-center gap-2 self-start rounded-full bg-[var(--chip)] px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">
+                <AppIcon name="profile" className="h-3.5 w-3.5" />
+                {followRequests.length} pending
+              </span>
+            </div>
+
+            {followRequests.length === 0 ? (
+              <p className="pt-5 text-sm font-semibold text-[var(--muted)]">
+                {profile.is_public ? 'Public profiles accept followers automatically.' : 'Approve who can see your private activity.'}
+              </p>
+            ) : (
+              <div className="divide-y divide-[var(--line)] pt-3">
+                {followRequests.map((request) => (
+                  <article key={request.id} className="flex items-center justify-between gap-3 py-4">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-black text-slate-950">@{request.follower.username}</p>
+                      <p className="truncate text-xs font-semibold text-[var(--muted)]">{request.follower.bio || 'Wants to follow you.'}</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={() => void handleFollowRequest(request.id, 'accept')} className="h-9 rounded-lg bg-[var(--accent)] px-4 text-xs font-black text-white">
+                        Accept
+                      </button>
+                      <button type="button" onClick={() => void handleFollowRequest(request.id, 'reject')} className="h-9 rounded-full border border-[var(--line)] bg-white px-4 text-xs font-black text-slate-700">
+                        Reject
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+        </>
+      ) : (
+        <p className="rounded-3xl border border-red-100 bg-white px-5 py-6 text-sm font-semibold text-red-700">
+          {errorMessage || 'Profile unavailable.'}
+        </p>
+      )}
+
+      {listUsers ? (
+        <div className="fixed inset-0 z-[7000] flex items-center justify-center bg-slate-950/35 px-4">
+          <section className="w-full max-w-md rounded-[28px] bg-white p-5 shadow-xl">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-lg font-black text-slate-950">{listTitle}</h2>
+              <button type="button" onClick={() => setListUsers(null)} className="h-9 rounded-full border border-[var(--line)] px-3 text-sm font-black">Close</button>
+            </div>
+            {listUsers.length === 0 ? <p className="mt-4 text-sm font-bold text-[var(--muted)]">No users yet.</p> : null}
+            <div className="mt-4 grid gap-2">
+              {listUsers.map((user) => (
+                <button
+                  key={user.user_id}
+                  type="button"
+                  onClick={() => {
+                    setListUsers(null)
+                    navigateToPath(`/u/${encodeURIComponent(user.username)}`)
+                  }}
+                  className="flex min-w-0 items-center gap-3 rounded-2xl border border-[var(--line)] bg-white px-3 py-3 text-left transition hover:border-[var(--accent)] hover:bg-[var(--chip)]"
+                >
+                  <ProfileAvatar profile={user} size="sm" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-black text-slate-950">@{user.username}</span>
+                    <span className="mt-0.5 block truncate text-xs font-semibold text-[var(--muted)]">
+                      {user.bio || 'View profile'}
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-xs font-black text-[var(--accent-deep)]">View</span>
+                </button>
+              ))}
+            </div>
+          </section>
         </div>
       ) : null}
+    </>
+  )
+
+  return (
+    <>
+      {isGuestProfile ? (
+        <div className="gala-page-background relative min-h-[100dvh] overflow-x-hidden overflow-y-auto overscroll-contain text-[var(--text)]">
+          <div className="pointer-events-none absolute inset-0 select-none overflow-hidden blur-[3px] opacity-40">
+            <PageShell>
+              <AppHeader />
+              <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
+                <PageContainer size="wide">{profileContent}</PageContainer>
+              </main>
+            </PageShell>
+          </div>
+
+          <div className="absolute inset-0 flex items-center justify-center overflow-hidden px-4 py-6">
+            <div className="w-full max-w-[420px] lg:max-w-[440px] xl:max-w-[460px] 2xl:max-w-[480px]">
+              <GuestAuthPrompt variant="profile" mode="inline-card" />
+            </div>
+          </div>
+        </div>
+      ) : (
+        <PageShell>
+          <AppHeader />
+          <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
+            <PageContainer size="wide">{profileContent}</PageContainer>
+          </main>
+        </PageShell>
+      )}
     </>
   )
 }
