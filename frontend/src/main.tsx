@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css'
 import './index.css'
 import App from './App.tsx'
 import { preloadChibiImages } from './utils/chibiImageCache'
+import { registerChibiServiceWorker } from './utils/chibiServiceWorker'
 import homeChibi from './assets/chibis/public/chibi-welcome-page.webp'
 import aboutChibi from './assets/chibis/trust-pages/chibi-about.webp'
 import searchBeforeChibi from './assets/chibis/core/search-places/chibi-search-places-before-active-state.webp'
@@ -20,7 +21,7 @@ import historyActiveChibi from './assets/chibis/features/history/chibi-history-a
 import promptBuilderOutputChibi from './assets/chibis/features/prompt-builder/chibi-prompt-builder-output.webp'
 import promptBuilderQuestionsChibi from './assets/chibis/features/prompt-builder/chibi-prompt-builder-questions.webp'
 
-void preloadChibiImages([
+const chibiPreloadUrls = [
   homeChibi,
   aboutChibi,
   searchBeforeChibi,
@@ -36,7 +37,32 @@ void preloadChibiImages([
   historyActiveChibi,
   promptBuilderOutputChibi,
   promptBuilderQuestionsChibi,
-])
+] as const
+
+function preloadImageHint(url: string) {
+  if (typeof document === 'undefined') {
+    return
+  }
+
+  const alreadyPreloaded = Array.from(document.head.querySelectorAll('link[rel="preload"][as="image"]')).some(
+    (link) => link.getAttribute('href') === url,
+  )
+
+  if (alreadyPreloaded) {
+    return
+  }
+
+  const link = document.createElement('link')
+  link.rel = 'preload'
+  link.as = 'image'
+  link.href = url
+  document.head.appendChild(link)
+}
+
+chibiPreloadUrls.forEach((url) => preloadImageHint(url))
+
+void preloadChibiImages([...chibiPreloadUrls])
+registerChibiServiceWorker([...chibiPreloadUrls])
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

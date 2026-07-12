@@ -180,6 +180,7 @@ type RouteInputs = {
   currentProfile: CurrentUserResponse['profile'] | null
   isAdminMfaLoading: boolean
   adminMfaStatus: AdminMfaStatus | null
+  navigationSource: 'push' | 'replace' | 'pop'
   onProfileRefreshKeyUpdate: () => void
 }
 
@@ -200,6 +201,7 @@ function matchRoute(inputs: RouteInputs) {
     ownedGalaPlanId,
     isAdminMfaLoading,
     adminMfaStatus,
+    navigationSource,
   } = inputs
   const adminHomePath = ADMIN_BASE_PATH
   const adminPlaceImagesPath = getAdminPath('place-images')
@@ -336,7 +338,7 @@ function matchRoute(inputs: RouteInputs) {
             },
           ]}
         />
-        <HomeLandingPage />
+        <HomeLandingPage navigationSource={navigationSource} />
       </>
     )
   }
@@ -345,7 +347,7 @@ function matchRoute(inputs: RouteInputs) {
     return (
       <>
         <SeoHead title="Search | GalaTayo" description="Search Metro Manila places on GalaTayo." canonicalPath="/search" robots="noindex,follow" />
-        <SearchPage />
+        <SearchPage navigationSource={navigationSource} />
       </>
     )
   }
@@ -364,7 +366,7 @@ function matchRoute(inputs: RouteInputs) {
     return (
       <>
         <SeoHead title="AI Chatbot | GalaTayo" description="Ask AI chatbot mode on GalaTayo." canonicalPath="/ask-ai/chatbot" robots="noindex,follow" />
-        <HomePage key={`ask-ai:${search || 'root'}`} initialMode="ask-ai" initialAskAiQuestion={initialAskAiQuestion} />
+        <HomePage key={`ask-ai:${search || 'root'}`} initialMode="ask-ai" initialAskAiQuestion={initialAskAiQuestion} navigationSource={navigationSource} />
       </>
     )
   }
@@ -382,7 +384,7 @@ function matchRoute(inputs: RouteInputs) {
     return (
       <>
         <SeoHead title="Prompt Builder | GalaTayo" description="Prompt builder on GalaTayo." canonicalPath="/ask-ai/prompt-builder" robots="noindex,follow" />
-        <HomePage initialPromptBuilderOpen />
+        <HomePage initialPromptBuilderOpen navigationSource={navigationSource} />
       </>
     )
   }
@@ -396,7 +398,7 @@ function matchRoute(inputs: RouteInputs) {
   }
 
   if (categoryPageSlug) {
-    return <CategoryPlacesPage key={`${categoryPageSlug}${search}`} categorySlug={categoryPageSlug} search={search} />
+    return <CategoryPlacesPage key={`${categoryPageSlug}${search}`} categorySlug={categoryPageSlug} search={search} navigationSource={navigationSource} />
   }
 
   if (canonicalPlacePath) {
@@ -404,7 +406,7 @@ function matchRoute(inputs: RouteInputs) {
   }
 
   if (areaPageSlug && areaPageSlug !== 'new' && areaPageSlug !== 'submit') {
-    return <PlacesSlugResolverPage key={`${areaPageSlug}${search}`} slug={areaPageSlug} currentPathname={pathname} search={search} />
+    return <PlacesSlugResolverPage key={`${areaPageSlug}${search}`} slug={areaPageSlug} currentPathname={pathname} search={search} navigationSource={navigationSource} />
   }
 
   if (legacyPlaceSlug) {

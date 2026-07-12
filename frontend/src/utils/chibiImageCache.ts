@@ -1,23 +1,28 @@
-import { useEffect, useState } from 'react'
-
-const chibiImageCache = new Map<string, string>()
-const chibiImageLoaders = new Map<string, Promise<string>>()
+const chibiImageCache = new Set<string>()
+const chibiImageLoaders = new Map<string, Promise<void>>()
 
 function isCacheableChibiUrl(url: string) {
   return Boolean(url.trim()) && !url.startsWith('data:') && !url.startsWith('blob:')
 }
 
-async function loadChibiImage(url: string) {
-  const response = await fetch(url, { mode: 'cors', credentials: 'omit' })
-
-  if (!response.ok) {
-    throw new Error(`Failed to load chibi image: ${response.status}`)
+function loadChibiImage(url: string) {
+  if (typeof Image === 'undefined') {
+    return Promise.resolve()
   }
 
-  const blob = await response.blob()
-  const objectUrl = URL.createObjectURL(blob)
-  chibiImageCache.set(url, objectUrl)
-  return objectUrl
+  return new Promise<void>((resolve, reject) => {
+    const image = new Image()
+
+    image.decoding = 'async'
+    image.onload = () => {
+      chibiImageCache.add(url)
+      resolve()
+    }
+    image.onerror = () => {
+      reject(new Error(`Failed to load chibi image: ${url}`))
+    }
+    image.src = url
+  })
 }
 
 export function preloadChibiImage(url: string | null | undefined) {
@@ -28,22 +33,22 @@ export function preloadChibiImage(url: string | null | undefined) {
   }
 
   if (chibiImageCache.has(normalizedUrl)) {
-    return Promise.resolve(chibiImageCache.get(normalizedUrl) ?? normalizedUrl)
+    return Promise.resolve(normalizedUrl)
   }
 
   const existingLoader = chibiImageLoaders.get(normalizedUrl)
   if (existingLoader) {
-    return existingLoader
+    return existingLoader.then(() => normalizedUrl)
   }
 
   const loader = loadChibiImage(normalizedUrl)
-    .catch(() => normalizedUrl)
+    .catch(() => {})
     .finally(() => {
       chibiImageLoaders.delete(normalizedUrl)
     })
 
   chibiImageLoaders.set(normalizedUrl, loader)
-  return loader
+  return loader.then(() => normalizedUrl)
 }
 
 export function preloadChibiImages(urls: Array<string | null | undefined>) {
@@ -51,36 +56,5 @@ export function preloadChibiImages(urls: Array<string | null | undefined>) {
 }
 
 export function useChibiImageSrc(url: string | null | undefined) {
-  const normalizedUrl = url?.trim() || ''
-  const [resolvedSrc, setResolvedSrc] = useState(normalizedUrl)
-
-  useEffect(() => {
-    let isMounted = true
-
-    if (!normalizedUrl) {
-      setResolvedSrc('')
-      return undefined
-    }
-
-    const cachedUrl = chibiImageCache.get(normalizedUrl)
-
-    if (cachedUrl) {
-      setResolvedSrc(cachedUrl)
-      return undefined
-    }
-
-    setResolvedSrc(normalizedUrl)
-
-    void preloadChibiImage(normalizedUrl).then((nextSrc) => {
-      if (isMounted && nextSrc) {
-        setResolvedSrc(nextSrc)
-      }
-    })
-
-    return () => {
-      isMounted = false
-    }
-  }, [normalizedUrl])
-
-  return resolvedSrc
+  return url?.trim() || ''
 }

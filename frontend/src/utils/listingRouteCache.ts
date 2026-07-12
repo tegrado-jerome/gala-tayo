@@ -1,4 +1,5 @@
 const listingRouteCachePrefix = 'galatayo:listing-route:'
+const pendingListingRouteCacheByPath = new Map<string, string>()
 
 type ListingRouteCache = {
   items: unknown[]
@@ -45,8 +46,12 @@ function writePersistentStorage(key: string, value: string) {
   }
 }
 
+function getListingRouteCacheKey(pathnameWithSearch: string) {
+  return `${listingRouteCachePrefix}${pathnameWithSearch}`
+}
+
 function getCurrentListingRouteCacheKey() {
-  return `${listingRouteCachePrefix}${window.location.pathname}${window.location.search}`
+  return getListingRouteCacheKey(`${window.location.pathname}${window.location.search}`)
 }
 
 function getListingPlaceSelector(placeId: string) {
@@ -111,9 +116,13 @@ export function readListingRouteCache(): ListingRouteCache | null {
 }
 
 export function writeListingRouteCache(cache: Omit<ListingRouteCache, 'cachedAt'>) {
+  writeListingRouteCacheForPath(`${window.location.pathname}${window.location.search}`, cache)
+}
+
+export function writeListingRouteCacheForPath(pathnameWithSearch: string, cache: Omit<ListingRouteCache, 'cachedAt'>) {
   try {
     writePersistentStorage(
-      getCurrentListingRouteCacheKey(),
+      getListingRouteCacheKey(pathnameWithSearch),
       JSON.stringify({
         ...cache,
         cachedAt: Date.now(),
@@ -121,6 +130,49 @@ export function writeListingRouteCache(cache: Omit<ListingRouteCache, 'cachedAt'
     )
   } catch {
     // Storage can be unavailable in private browsing or restricted webviews.
+  }
+}
+
+export function seedPendingListingRouteCache(pathnameWithSearch: string, cache: Omit<ListingRouteCache, 'cachedAt'>) {
+  pendingListingRouteCacheByPath.set(pathnameWithSearch, JSON.stringify({
+    ...cache,
+    cachedAt: Date.now(),
+  }))
+}
+
+export function consumePendingListingRouteCache(pathnameWithSearch: string): ListingRouteCache | null {
+  const rawCache = pendingListingRouteCacheByPath.get(pathnameWithSearch)
+
+  if (!rawCache) {
+    return null
+  }
+
+  pendingListingRouteCacheByPath.delete(pathnameWithSearch)
+
+  try {
+    const parsedCache = JSON.parse(rawCache) as Partial<ListingRouteCache>
+
+    if (typeof parsedCache.cachedAt !== 'number' || !Number.isFinite(parsedCache.cachedAt)) {
+      return null
+    }
+
+    return {
+      items: Array.isArray(parsedCache.items) ? parsedCache.items : [],
+      total: typeof parsedCache.total === 'number' && Number.isFinite(parsedCache.total) ? Math.max(0, Math.floor(parsedCache.total)) : 0,
+      page: typeof parsedCache.page === 'number' && Number.isFinite(parsedCache.page) && parsedCache.page > 0 ? Math.floor(parsedCache.page) : 1,
+      pageSize: typeof parsedCache.pageSize === 'number' && Number.isFinite(parsedCache.pageSize) && parsedCache.pageSize > 0 ? Math.floor(parsedCache.pageSize) : 0,
+      totalPages: typeof parsedCache.totalPages === 'number' && Number.isFinite(parsedCache.totalPages) && parsedCache.totalPages > 0 ? Math.floor(parsedCache.totalPages) : 1,
+      scrollY: typeof parsedCache.scrollY === 'number' && Number.isFinite(parsedCache.scrollY) ? parsedCache.scrollY : 0,
+      selectedPlaceId: typeof parsedCache.selectedPlaceId === 'string' ? parsedCache.selectedPlaceId : null,
+      selectedPlaceViewportTop:
+        typeof parsedCache.selectedPlaceViewportTop === 'number' && Number.isFinite(parsedCache.selectedPlaceViewportTop)
+          ? parsedCache.selectedPlaceViewportTop
+          : null,
+      pendingScrollRestore: parsedCache.pendingScrollRestore === true,
+      cachedAt: parsedCache.cachedAt,
+    }
+  } catch {
+    return null
   }
 }
 

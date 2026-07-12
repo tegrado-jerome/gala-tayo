@@ -6,6 +6,7 @@ import { useAuthOrchestration } from './hooks/useAuthOrchestration'
 import { useCanonicalRedirects } from './hooks/useCanonicalRedirects'
 import { matchRoute, AppShell } from './routes/RouteContent'
 import { consumePendingNavigationSource, navigateToPath, replaceWithPath } from './utils/navigation'
+import { initializeAnalytics, trackPageView } from './utils/analytics'
 
 function App() {
   const {
@@ -50,6 +51,10 @@ function App() {
 
   useEffect(() => {
     window.history.scrollRestoration = 'manual'
+  }, [])
+
+  useEffect(() => {
+    initializeAnalytics()
   }, [])
 
   function runWithInstantScroll(callback: () => void) {
@@ -139,6 +144,13 @@ function App() {
   useCanonicalRedirects(pathname)
 
   useEffect(() => {
+    trackPageView({
+      pathname,
+      title: document.title,
+    })
+  }, [pathname, search])
+
+  useEffect(() => {
     if (!hasResolvedInitialAuth) {
       return
     }
@@ -218,6 +230,7 @@ function App() {
     currentProfile,
     isAdminMfaLoading,
     adminMfaStatus,
+    navigationSource,
     onProfileRefreshKeyUpdate: () => setProfileRefreshKey((v) => v + 1),
   })
 

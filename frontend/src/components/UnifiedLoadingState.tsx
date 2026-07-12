@@ -31,7 +31,10 @@ function UnifiedLoadingState({
   if (variant === 'inline') {
     return (
       <div className={`flex items-center gap-3 text-sm text-slate-600 ${className}`}>
-        <span className="inline-flex h-5 w-5 animate-spin rounded-full border-2 border-slate-200 border-t-[var(--accent)]" />
+        <span
+          className="inline-flex h-5 w-5 shrink-0 animate-spin rounded-full border-[2.5px] border-slate-200/80 border-t-[var(--accent)] border-r-[var(--accent)]"
+          aria-hidden="true"
+        />
         <span>{message}</span>
       </div>
     )

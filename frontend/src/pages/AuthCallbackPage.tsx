@@ -5,6 +5,7 @@ import { StateContainer } from '../components/layout/ResponsiveLayouts'
 import { getCurrentEmailConflict, getPostAuthRedirect, getRequestedNextPath } from '../services/authApi'
 import { buildAuthPath } from '../services/authApi'
 import { navigateToPath } from '../utils/navigation'
+import { trackLoginCompleted, trackSignUpCompleted } from '../utils/analytics'
 
 async function waitForSession(): Promise<Session | null> {
   const {
@@ -75,6 +76,9 @@ function AuthCallbackPage() {
         const authFlow = params.get('flow')
 
         if (authFlow === 'signup' || requestedNextPath === '/onboarding') {
+          trackSignUpCompleted({
+            source: 'signup',
+          })
           if (isMounted) {
             navigateToPath('/onboarding')
           }
@@ -82,6 +86,9 @@ function AuthCallbackPage() {
         }
 
         const redirectTo = await getPostAuthRedirect(session, window.location.search)
+        trackLoginCompleted({
+          source: 'login',
+        })
 
         if (isMounted) {
           navigateToPath(redirectTo)

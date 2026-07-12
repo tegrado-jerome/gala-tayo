@@ -1,0 +1,17 @@
+{
+  "name": "GalaTayo",
+  "short_name": "GalaTayo",
+  "description": "Discover gala spots around Metro Manila with place search, AI help, and shareable place pages.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f8fbff",
+  "theme_color": "#1e3a8a",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

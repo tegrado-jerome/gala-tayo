@@ -153,7 +153,7 @@ export function AppAlert({
   children,
   ...rest
 }: AppAlertProps) {
-  const resolvedIcon = icon ?? (tone === 'success' ? 'check' : tone === 'error' ? 'warning' : tone === 'warning' ? 'hourglass' : tone === 'info' ? 'notice' : 'notice')
+  const resolvedIcon = icon ?? (tone === 'success' ? 'check' : tone === 'error' ? 'warning' : tone === 'warning' ? 'hourglass' : tone === 'info' ? 'info' : 'notice')
 
   return (
     <div className={cn('app-alert', toneClassMap[tone], className)} {...rest}>

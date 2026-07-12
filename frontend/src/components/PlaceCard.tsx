@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useState, type MouseEvent } from 'react'
 import { AppIcon, getCategoryIconName } from './AppIcon'
 import { getCuratedPlaceImages, normalizePlaceSlug } from '../data/curatedPlaceImages'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { useGuestAuthPrompt } from './GuestAuthPrompt'
+import InternalLink from './InternalLink'
+import { getCanonicalPlacePath, resolveAreaMeta } from '../utils/routes'
 
 type PlaceCategoryMeta = {
   id: string
@@ -93,6 +95,7 @@ type PlaceCardProps = {
   onOpen?: (placeId: string) => void
   onSelect?: (placeId: string) => void
   dataSearchPlaceId?: string
+  href?: string | null
 }
 
 function getReadableChipName(value: string) {
@@ -190,6 +193,31 @@ function getSearchResultLocation(place: PlaceCardData) {
   return candidates.find((candidate) => hasDisplayValue(candidate))?.trim() ?? ''
 }
 
+function getPlaceHref(place: PlaceCardData, overrideHref?: string | null) {
+  const trimmedOverrideHref = overrideHref?.trim()
+
+  if (trimmedOverrideHref) {
+    return trimmedOverrideHref
+  }
+
+  const trimmedSlug = place.slug?.trim()
+
+  if (!trimmedSlug) {
+    return null
+  }
+
+  const areaMeta = resolveAreaMeta({
+    city: place.city,
+    area: place.area,
+    localArea: place.localArea,
+  })
+
+  return getCanonicalPlacePath({
+    areaSlug: areaMeta.slug,
+    placeSlug: trimmedSlug,
+  })
+}
+
 function PlaceCard({
   place,
   isSelected = false,
@@ -200,6 +228,7 @@ function PlaceCard({
   onOpen,
   onSelect,
   dataSearchPlaceId,
+  href,
 }: PlaceCardProps) {
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
@@ -221,13 +250,13 @@ function PlaceCard({
   const displayChips = getPlaceChips(place)
   const categoryIconName = getCategoryIconName(place.badge || place.category)
   const compactLocation = getSearchResultLocation(place)
+  const resolvedHref = getPlaceHref(place, href)
   const mobileVisibleChips = displayChips.slice(0, 2)
   const mobileHiddenChipCount = Math.max(displayChips.length - 2, 0)
   const mobileChips =
     mobileHiddenChipCount > 0 && mobileVisibleChips.length > 0
       ? [mobileVisibleChips[0], { id: 'more', key: 'more', name: `+${mobileHiddenChipCount}` }]
       : mobileVisibleChips
-  const isInteractive = Boolean(onOpen || onSelect)
   const normalizedBadge = place.badge.trim().toLowerCase()
   const normalizedCategory = place.category.trim().toLowerCase()
   const shouldShowCategory = hasDisplayValue(place.category) && normalizedCategory !== normalizedBadge
@@ -235,12 +264,12 @@ function PlaceCard({
   const cardBodyClassName = compact ? 'py-3' : 'min-h-[136px] p-3'
   const shouldRenderMedia = Boolean(photoUrl) || !compact
   const shouldShowPhoto = Boolean(photoUrl) && failedPhotoUrl !== photoUrl
-  const handleActivate = () => {
-    if (onOpen) {
-      onOpen(place.id)
+  const handleActivate = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (event.button !== 0 || event.metaKey || event.altKey || event.ctrlKey || event.shiftKey) {
       return
     }
 
+    onOpen?.(place.id)
     onSelect?.(place.id)
   }
 
@@ -276,220 +305,202 @@ function PlaceCard({
     }
   }
 
+  const cardContent = searchResultCard ? (
+    <div className="grid min-h-[132px] grid-cols-[104px_minmax(0,1fr)] items-stretch gap-3.5 p-3 md:min-h-[172px] md:grid-cols-[140px_minmax(0,1fr)] md:gap-4">
+      {shouldShowPhoto ? (
+        <div className="relative h-full min-h-[132px] w-[104px] self-stretch overflow-hidden rounded-[20px] border border-[rgba(148,163,184,0.18)] bg-[linear-gradient(180deg,#f8fbff_0%,#eef4fb_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.5)] md:min-h-[172px] md:w-[140px]">
+          <img
+            src={photoUrl ?? undefined}
+            alt={photoAlt}
+            className="absolute inset-0 h-full w-full object-cover object-center"
+            loading="lazy"
+            onError={() => setFailedPhotoUrl(photoUrl)}
+          />
+        </div>
+      ) : (
+        <div className="flex min-h-[132px] w-[104px] shrink-0 self-stretch items-center justify-center rounded-[20px] border border-[rgba(148,163,184,0.16)] bg-[linear-gradient(180deg,#f8fbff_0%,#f2f6fb_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] md:min-h-[172px] md:w-[140px]">
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-slate-400 shadow-[0_4px_12px_rgba(148,163,184,0.14)]">
+            <AppIcon name={categoryIconName} size="card" className="h-5 w-5" />
+          </span>
+        </div>
+      )}
+
+      <div className="relative flex min-h-[132px] min-w-0 flex-col justify-start pr-10">
+        <h2 className="line-clamp-2 text-[16px] font-black leading-5 tracking-[-0.02em] text-slate-950">
+          {place.name}
+        </h2>
+
+        {hasDisplayValue(place.badge) ? (
+          <div className="mt-1.5">
+            <span className="inline-flex max-w-full items-center rounded-full bg-[#ebf3ff] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-[#2563eb]">
+              <span className="truncate">{place.badge}</span>
+            </span>
+          </div>
+        ) : null}
+
+        {compactLocation ? (
+          <div className="mt-2 flex items-start gap-1.5 text-[12px] leading-[1.35] text-slate-500">
+            <AppIcon name="place" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
+            <span className="line-clamp-2 min-w-0">{compactLocation}</span>
+          </div>
+        ) : null}
+
+        {mobileChips.length > 0 ? (
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {mobileChips.map((chip) => (
+              <span
+                key={`${chip.id}-${chip.name}`}
+                className={`inline-flex max-w-full min-w-0 items-center rounded-full px-2.5 py-1 text-[10px] font-semibold ${
+                  chip.key === 'more'
+                    ? 'bg-slate-100 text-slate-500'
+                    : 'border border-[rgba(148,163,184,0.16)] bg-slate-50 text-slate-600'
+                }`}
+              >
+                <span className="truncate">{chip.name}</span>
+              </span>
+            ))}
+          </div>
+        ) : null}
+      </div>
+    </div>
+  ) : (
+    <div className={`flex gap-3 px-3 ${compact ? 'items-stretch' : 'items-stretch'} ${cardBodyClassName}`}>
+      {shouldRenderMedia ? (
+        shouldShowPhoto ? (
+          <img
+            src={photoUrl ?? undefined}
+            alt={photoAlt}
+            className={`${mediaClassName} shrink-0 border border-[rgba(148,163,184,0.18)] object-cover shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] ${compact ? 'h-full min-h-[112px] self-stretch' : 'h-full self-stretch'}`}
+            loading="lazy"
+            onError={() => setFailedPhotoUrl(photoUrl)}
+          />
+        ) : (
+          <div className={`${mediaClassName} flex shrink-0 flex-col items-center justify-center gap-1.5 border border-dashed border-[rgba(148,163,184,0.32)] bg-[linear-gradient(180deg,#f8fbff,#eef4fb)] px-2 text-center text-slate-400 ${compact ? 'h-full min-h-[112px] self-stretch' : 'h-full self-stretch'}`}>
+            <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(148,163,184,0.22)] bg-white text-slate-400 shadow-[0_4px_12px_rgba(148,163,184,0.14)]">
+              <AppIcon name="emptyPhoto" size="card" />
+            </span>
+            <span className="line-clamp-2 text-[10px] font-semibold leading-tight text-slate-700">
+              {place.name}
+            </span>
+            <span className="text-[10px] font-medium leading-tight text-slate-500">No photo</span>
+          </div>
+        )
+      ) : null}
+
+      <div className="relative min-w-0 flex flex-1 flex-col overflow-hidden">
+        <div className={`flex items-start justify-between gap-2 ${compact ? 'pr-10' : ''}`}>
+          <div className="min-w-0 flex-1">
+            <h2 className={`line-clamp-2 font-black leading-[1.08] tracking-[-0.03em] text-[#0f172a] ${compact ? 'text-[15px]' : 'text-[17px]'}`}>
+              {place.name}
+            </h2>
+            <div className="mt-1.5 flex items-center gap-2">
+              <span className="rounded-full bg-[#ebf3ff] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-[#2563eb]">
+                {place.badge}
+              </span>
+              {shouldShowCategory ? (
+                <p className="line-clamp-1 text-[11px] font-medium text-[#64748b]">{place.category}</p>
+              ) : null}
+            </div>
+          </div>
+        </div>
+
+        <div className={`min-w-0 overflow-hidden ${compact ? 'mt-1.5 space-y-1' : 'mt-2 space-y-1.5'}`}>
+          <div className="flex items-start gap-1.5 text-[11px] text-[#64748b]">
+            <AppIcon name="place" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#94a3b8]" />
+            <span className={`leading-4 ${compact ? 'line-clamp-2' : 'line-clamp-2'}`}>{place.area}</span>
+          </div>
+
+          {displayChips.length > 0 ? (
+            <div className={`flex min-h-6 flex-wrap gap-1.5 overflow-hidden ${compact ? 'max-h-6' : 'max-h-[3rem]'}`}>
+              {displayChips.map((chip, index) => (
+                <span
+                  key={`${chip.id}-${chip.name}`}
+                  className={`inline-flex max-w-full min-w-0 rounded-full border border-[rgba(148,163,184,0.18)] bg-[#f8fbff] px-2.5 py-1 text-[10px] font-semibold text-[#475569] ${
+                    compact
+                      ? index >= 1 ? 'hidden' : 'inline-flex'
+                      : index >= 2 ? 'hidden sm:inline-flex' : 'inline-flex'
+                  }`}
+                >
+                  <span className="truncate">{chip.name}</span>
+                </span>
+              ))}
+            </div>
+          ) : null}
+        </div>
+
+        <div className={`min-w-0 ${compact ? 'mt-1.5' : 'mt-auto pt-2'}`}>
+          <div className="flex items-center gap-3 text-[11px] text-[#64748b]">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2 py-1">
+              <span
+                className={`inline-block h-1.5 w-1.5 rounded-full ${
+                  place.status === 'Open' ? 'bg-[var(--accent)]' : 'bg-slate-400'
+                }`}
+              />
+              {place.status}
+            </span>
+          </div>
+
+          <p className={`mt-1 text-[11px] leading-4 text-slate-500 ${compact ? 'line-clamp-1' : 'line-clamp-2'}`}>{place.reason}</p>
+          {footerNote ? (
+            <p className="mt-1 line-clamp-1 text-[10px] font-black uppercase tracking-[0.08em] text-[var(--accent-deep)]">
+              {footerNote}
+            </p>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  )
+
   return (
     <>
       <article
         data-search-place-id={dataSearchPlaceId}
-        onClick={handleActivate}
         onMouseEnter={() => {
           if (!searchResultCard) {
             onSelect?.(place.id)
           }
         }}
         onFocus={() => onSelect?.(place.id)}
-        className={`overflow-hidden rounded-[26px] border ${searchResultCard ? 'bg-white shadow-[0_8px_22px_rgba(15,23,42,0.05)]' : 'bg-[linear-gradient(180deg,#ffffff_0%,#fcfdff_100%)] shadow-[0_12px_28px_rgba(15,23,42,0.06)]'} transition ${
+        className={`relative overflow-hidden rounded-[26px] border ${searchResultCard ? 'bg-white shadow-[0_8px_22px_rgba(15,23,42,0.05)]' : 'bg-[linear-gradient(180deg,#ffffff_0%,#fcfdff_100%)] shadow-[0_12px_28px_rgba(15,23,42,0.06)]'} transition ${
           compact ? '' : 'hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(15,23,42,0.09)]'
         } ${
           isSelected
             ? 'border-[rgba(37,99,235,0.72)] ring-2 ring-[rgba(59,130,246,0.14)]'
             : 'border-[rgba(148,163,184,0.22)]'
         } ${className}`}
-        role={isInteractive ? 'button' : undefined}
-        tabIndex={isInteractive ? 0 : undefined}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault()
-            handleActivate()
-          }
-        }}
       >
-        {searchResultCard ? (
-          <div className="grid min-h-[132px] grid-cols-[104px_minmax(0,1fr)] items-stretch gap-3.5 p-3 md:min-h-[172px] md:grid-cols-[140px_minmax(0,1fr)] md:gap-4">
-            {shouldShowPhoto ? (
-              <div className="relative h-full min-h-[132px] w-[104px] self-stretch overflow-hidden rounded-[20px] border border-[rgba(148,163,184,0.18)] bg-[linear-gradient(180deg,#f8fbff_0%,#eef4fb_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.5)] md:min-h-[172px] md:w-[140px]">
-                <img
-                  src={photoUrl ?? undefined}
-                  alt={photoAlt}
-                  className="absolute inset-0 h-full w-full object-cover object-center"
-                  loading="lazy"
-                  onError={() => setFailedPhotoUrl(photoUrl)}
-                />
-              </div>
-            ) : (
-              <div className="flex min-h-[132px] w-[104px] shrink-0 self-stretch items-center justify-center rounded-[20px] border border-[rgba(148,163,184,0.16)] bg-[linear-gradient(180deg,#f8fbff_0%,#f2f6fb_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] md:min-h-[172px] md:w-[140px]">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-slate-400 shadow-[0_4px_12px_rgba(148,163,184,0.14)]">
-                  <AppIcon name={categoryIconName} size="card" className="h-5 w-5" />
-                </span>
-              </div>
-            )}
-
-            <div className="relative flex min-h-[132px] min-w-0 flex-col justify-start pr-10">
-              <button
-                type="button"
-                aria-label={isSaved ? 'Remove from favorites' : 'Save to favorites'}
-                onClick={(event) => {
-                  event.stopPropagation()
-                  void handleSave()
-                }}
-                disabled={isSaving}
-                className={`absolute right-0 top-0 inline-flex h-8 w-8 items-center justify-center rounded-full border bg-white transition disabled:cursor-not-allowed disabled:opacity-60 ${
-                  isSaved
-                    ? 'border-rose-200 text-rose-600 shadow-[0_6px_14px_rgba(244,63,94,0.16)]'
-                    : 'border-[rgba(148,163,184,0.22)] text-slate-400 hover:border-rose-200 hover:text-rose-600'
-                }`}
-              >
-                {isSaving ? (
-                  <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-200 border-t-[var(--accent)]" />
-                ) : (
-                  <AppIcon name="favorites" className={`h-4 w-4 ${isSaved ? 'fill-current text-rose-600' : ''}`} />
-                )}
-              </button>
-
-              <h2 className="line-clamp-2 text-[16px] font-black leading-5 tracking-[-0.02em] text-slate-950">
-                {place.name}
-              </h2>
-
-              {hasDisplayValue(place.badge) ? (
-                <div className="mt-1.5">
-                  <span className="inline-flex max-w-full items-center rounded-full bg-[#ebf3ff] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-[#2563eb]">
-                    <span className="truncate">{place.badge}</span>
-                  </span>
-                </div>
-              ) : null}
-
-              {compactLocation ? (
-                <div className="mt-2 flex items-start gap-1.5 text-[12px] leading-[1.35] text-slate-500">
-                  <AppIcon name="place" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
-                  <span className="line-clamp-2 min-w-0">{compactLocation}</span>
-                </div>
-              ) : null}
-
-              {mobileChips.length > 0 ? (
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {mobileChips.map((chip) => (
-                    <span
-                      key={`${chip.id}-${chip.name}`}
-                      className={`inline-flex max-w-full min-w-0 items-center rounded-full px-2.5 py-1 text-[10px] font-semibold ${
-                        chip.key === 'more'
-                          ? 'bg-slate-100 text-slate-500'
-                          : 'border border-[rgba(148,163,184,0.16)] bg-slate-50 text-slate-600'
-                      }`}
-                    >
-                      <span className="truncate">{chip.name}</span>
-                    </span>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-          </div>
+        {resolvedHref ? (
+          <InternalLink
+            href={resolvedHref}
+            onClick={handleActivate}
+            className="block h-full w-full outline-none focus-visible:ring-2 focus-visible:ring-[rgba(59,130,246,0.24)] focus-visible:ring-inset"
+          >
+            {cardContent}
+          </InternalLink>
         ) : (
-        <div className={`flex gap-3 px-3 ${compact ? 'items-stretch' : 'items-stretch'} ${cardBodyClassName}`}>
-          {shouldRenderMedia ? (
-            shouldShowPhoto ? (
-            <img
-              src={photoUrl ?? undefined}
-              alt={photoAlt}
-              className={`${mediaClassName} shrink-0 border border-[rgba(148,163,184,0.18)] object-cover shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] ${compact ? 'h-full min-h-[112px] self-stretch' : 'h-full self-stretch'}`}
-              loading="lazy"
-              onError={() => setFailedPhotoUrl(photoUrl)}
-            />
-          ) : (
-            <div className={`${mediaClassName} flex shrink-0 flex-col items-center justify-center gap-1.5 border border-dashed border-[rgba(148,163,184,0.32)] bg-[linear-gradient(180deg,#f8fbff,#eef4fb)] px-2 text-center text-slate-400 ${compact ? 'h-full min-h-[112px] self-stretch' : 'h-full self-stretch'}`}>
-              <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(148,163,184,0.22)] bg-white text-slate-400 shadow-[0_4px_12px_rgba(148,163,184,0.14)]">
-                <AppIcon name="emptyPhoto" size="card" />
-              </span>
-              <span className="line-clamp-2 text-[10px] font-semibold leading-tight text-slate-700">
-                {place.name}
-              </span>
-              <span className="text-[10px] font-medium leading-tight text-slate-500">No photo</span>
-            </div>
-          )) : null}
-
-          <div className="relative min-w-0 flex flex-1 flex-col overflow-hidden">
-            <div className={`flex items-start justify-between gap-2 ${compact ? 'pr-10' : ''}`}>
-              <div className="min-w-0 flex-1">
-                <h2 className={`line-clamp-2 font-black leading-[1.08] tracking-[-0.03em] text-[#0f172a] ${compact ? 'text-[15px]' : 'text-[17px]'}`}>
-                  {place.name}
-                </h2>
-                <div className="mt-1.5 flex items-center gap-2">
-                  <span className="rounded-full bg-[#ebf3ff] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-[#2563eb]">
-                    {place.badge}
-                  </span>
-                  {shouldShowCategory ? (
-                    <p className="line-clamp-1 text-[11px] font-medium text-[#64748b]">{place.category}</p>
-                  ) : null}
-                </div>
-              </div>
-              <div className={`flex shrink-0 items-center gap-2 ${compact ? 'absolute right-0 top-0' : ''}`}>
-                <button
-                  type="button"
-                  aria-label={isSaved ? 'Remove from favorites' : 'Save to favorites'}
-                  onClick={(event) => {
-                    event.stopPropagation()
-                    void handleSave()
-                  }}
-                  disabled={isSaving}
-                  className={`inline-flex h-8 w-8 items-center justify-center rounded-full border bg-white transition disabled:cursor-not-allowed disabled:opacity-60 ${
-                    isSaved
-                      ? 'border-rose-200 text-rose-600 shadow-[0_6px_14px_rgba(244,63,94,0.16)]'
-                      : 'border-[rgba(148,163,184,0.22)] text-slate-400 hover:border-rose-200 hover:text-rose-600'
-                  }`}
-                >
-                  {isSaving ? (
-                    <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-200 border-t-[var(--accent)]" />
-                  ) : (
-                    <AppIcon name="favorites" className={`h-4 w-4 ${isSaved ? 'fill-current text-rose-600' : ''}`} />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <div className={`min-w-0 overflow-hidden ${compact ? 'mt-1.5 space-y-1' : 'mt-2 space-y-1.5'}`}>
-              <div className="flex items-start gap-1.5 text-[11px] text-[#64748b]">
-                <AppIcon name="place" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#94a3b8]" />
-                <span className={`leading-4 ${compact ? 'line-clamp-2' : 'line-clamp-2'}`}>{place.area}</span>
-              </div>
-
-              {displayChips.length > 0 ? (
-                <div className={`flex min-h-6 flex-wrap gap-1.5 overflow-hidden ${compact ? 'max-h-6' : 'max-h-[3rem]'}`}>
-                  {displayChips.map((chip, index) => (
-                    <span
-                      key={`${chip.id}-${chip.name}`}
-                      className={`inline-flex max-w-full min-w-0 rounded-full border border-[rgba(148,163,184,0.18)] bg-[#f8fbff] px-2.5 py-1 text-[10px] font-semibold text-[#475569] ${
-                        compact
-                          ? index >= 1 ? 'hidden' : 'inline-flex'
-                          : index >= 2 ? 'hidden sm:inline-flex' : 'inline-flex'
-                      }`}
-                    >
-                      <span className="truncate">{chip.name}</span>
-                    </span>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-
-            <div className={`min-w-0 ${compact ? 'mt-1.5' : 'mt-auto pt-2'}`}>
-              <div className="flex items-center gap-3 text-[11px] text-[#64748b]">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2 py-1">
-                  <span
-                    className={`inline-block h-1.5 w-1.5 rounded-full ${
-                      place.status === 'Open' ? 'bg-[var(--accent)]' : 'bg-slate-400'
-                    }`}
-                  />
-                  {place.status}
-                </span>
-              </div>
-
-              <p className={`mt-1 text-[11px] leading-4 text-slate-500 ${compact ? 'line-clamp-1' : 'line-clamp-2'}`}>{place.reason}</p>
-              {footerNote ? (
-                <p className="mt-1 line-clamp-1 text-[10px] font-black uppercase tracking-[0.08em] text-[var(--accent-deep)]">
-                  {footerNote}
-                </p>
-              ) : null}
-            </div>
-          </div>
-        </div>
+          <div className="block h-full w-full">{cardContent}</div>
         )}
+
+        <button
+          type="button"
+          aria-label={isSaved ? 'Remove from favorites' : 'Save to favorites'}
+          onClick={(event) => {
+            event.stopPropagation()
+            void handleSave()
+          }}
+          disabled={isSaving}
+          className={`absolute right-3 top-3 z-20 inline-flex h-8 w-8 items-center justify-center rounded-full border bg-white transition disabled:cursor-not-allowed disabled:opacity-60 ${
+            isSaved
+              ? 'border-rose-200 text-rose-600 shadow-[0_6px_14px_rgba(244,63,94,0.16)]'
+              : 'border-[rgba(148,163,184,0.22)] text-slate-400 hover:border-rose-200 hover:text-rose-600'
+          }`}
+        >
+          {isSaving ? (
+            <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-200 border-t-[var(--accent)]" />
+          ) : (
+            <AppIcon name="favorites" className={`h-4 w-4 ${isSaved ? 'fill-current text-rose-600' : ''}`} />
+          )}
+        </button>
 
         {saveError ? (
           <p className="border-t border-red-100 bg-red-50 px-3 py-2 text-[11px] text-red-600">

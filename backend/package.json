@@ -12,13 +12,7 @@
     "clean": "rimraf dist",
     "prestart": "npm run clean && npm run build",
     "start": "func start",
-    "backfill:image-urls": "tsx scripts/backfillPlaceImageUrls.ts",
-    "backfill:image-urls:write": "tsx scripts/backfillPlaceImageUrls.ts --write",
-    "coords:fix": "tsx scripts/fixPlaceCoordinates.cjs",
-    "scan:broken-place-images": "tsx scripts/scanBrokenPlaceImages.ts",
-    "scan:broken-place-images:write": "tsx scripts/scanBrokenPlaceImages.ts --write",
-    "validate": "npm test",
-    "test": "npm run build --silent && node scripts/testSearchQueryValidation.cjs"
+    "test": "npm run build --silent"
   },
   "dependencies": {
     "@azure/functions": "^4.0.0",

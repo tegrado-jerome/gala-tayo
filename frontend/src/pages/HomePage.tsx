@@ -4,7 +4,9 @@ import AppHeader from '../components/AppHeader'
 import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
 import PromptBuilderModal from '../components/PromptBuilderModal'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
-import { navigateToCanonicalPlace, navigateToPath, writePlaceReturnState } from '../utils/navigation'
+import { navigateToPath, writePlaceReturnState } from '../utils/navigation'
+import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
+import { useAskAiUsageAutoRefresh } from '../hooks/useAskAiUsageAutoRefresh'
 import {
   getAskAiRuntimeState,
   hasActiveAskAiRuntimeState,
@@ -16,11 +18,15 @@ import {
 } from '../utils/askAiRuntime'
 import type { ChatMessage } from '../utils/askAiRuntime'
 import { getApiUrl } from '../utils/apiClient'
-import { getAskAiUsageStatusFromResponse, type AskAiUsageResponse, type AskAiUsageStatus } from '../utils/askAiUsage'
+import { getAskAiUsageStatusFromResponse, isAskAiUsageStatusExpired, type AskAiUsageResponse, type AskAiUsageStatus } from '../utils/askAiUsage'
 import { readCachedAskAiUsage, subscribeToCachedAskAiUsage, writeCachedAskAiUsage, writeCachedAskAiUsageFromResponse } from '../utils/askAiUsageCache'
 import { buildAskAiRequestHeaders, getOrCreateAskAiGuestId } from '../utils/askAiIdentity'
+import {
+  trackAskAiChatbotUsed,
+  trackSearchResultSelected,
+  trackSearchSubmitted,
+} from '../utils/analytics'
 import type { SearchGoodForValue } from '../utils/searchParams'
-import type { PromptBuilderState } from '../utils/promptBuilder'
 
 import {
   type BackendCategory,
@@ -71,15 +77,27 @@ import {
 } from '../components/home/search/SearchComponents'
 
 import {
-  createPromptBuilderPrefill,
   AskAiModePanel,
 } from '../components/home/ask-ai/AskAiComponents'
+
+function isAskAiChatbotDailyLimitMessage(message: string | null) {
+  if (!message) {
+    return false
+  }
+
+  const normalized = message.trim().toLowerCase()
+  return (
+    normalized === 'you have reached your chatbot ai daily limit.' ||
+    normalized === 'daily_ai_limit_reached'
+  )
+}
 
 function HomePage({
   initialMode = 'places',
   initialPromptBuilderOpen = false,
   initialSearchState,
   initialAskAiQuestion = '',
+  navigationSource = 'push',
 }: HomePageProps) {
   const initialFiltersCacheRef = useRef<FiltersCache | null>(readFiltersCache())
   const initialAskAiRuntimeStateRef = useRef(
@@ -101,7 +119,7 @@ function HomePage({
       !normalizedInitialAskAiQuestion ||
       initialAskAiState?.question === normalizedInitialAskAiQuestion
     )
-  const supportsSearchRouteCache = initialMode === 'places' && isSearchResultsRoute()
+  const supportsSearchRouteCache = initialMode === 'places' && isSearchResultsRoute() && navigationSource === 'pop'
   const initialRequestedPage =
     typeof initialSearchState?.page === 'number' && Number.isFinite(initialSearchState.page) && initialSearchState.page > 0
       ? Math.floor(initialSearchState.page)
@@ -118,7 +136,9 @@ function HomePage({
   )
   const [isAskAiUsageLoading, setIsAskAiUsageLoading] = useState(false)
   const [askAiUsageError, setAskAiUsageError] = useState<string | null>(null)
-  const [askAiUsageRefreshSignal, setAskAiUsageRefreshSignal] = useState(0)
+  const [askAiUsageRefreshSignal, setAskAiUsageRefreshSignal] = useState(
+    isAskAiUsageStatusExpired(readCachedAskAiUsage('chatbotAi')) ? 1 : 0
+  )
   const [askAiQuestion, setAskAiQuestion] = useState(
     shouldUseCachedAskAiState
       ? initialAskAiState?.question ?? ''
@@ -150,7 +170,6 @@ function HomePage({
       : []
   )
   const [isPromptBuilderOpen, setIsPromptBuilderOpen] = useState(initialPromptBuilderOpen)
-  const [promptBuilderInitialState, setPromptBuilderInitialState] = useState<PromptBuilderState | null>(null)
   const [categories, setCategories] = useState(initialFiltersCacheRef.current?.categories ?? fallbackCategories)
   const [areas, setAreas] = useState<AreaChip[]>(initialFiltersCacheRef.current?.areas ?? fallbackAreas)
   const [rawQuery, setRawQuery] = useState(normalizeSearchText(initialSearchState?.rawQuery ?? ''))
@@ -382,25 +401,6 @@ function HomePage({
     }
   }
 
-  const openPromptBuilder = (
-    source: 'ask-ai' | 'search' | 'empty-search' = 'search',
-    questionOverride?: string,
-  ) => {
-    const prefill = source === 'ask-ai'
-      ? createPromptBuilderPrefill({
-          plan: questionOverride ?? askAiQuestion,
-        })
-      : createPromptBuilderPrefill({
-          plan: lastSearchQuery && lastSearchQuery !== 'Explore all places' ? lastSearchQuery : null,
-          location: selectedAreaName,
-          budget: selectedBudgetLabel,
-          priority: selectedCategoryName,
-        })
-
-    setPromptBuilderInitialState(prefill)
-    setIsPromptBuilderOpen(true)
-  }
-
   const handleAskAiSubmit = async (questionOverride?: string) => {
     const question = normalizeSearchText(questionOverride ?? askAiQuestion)
 
@@ -489,6 +489,11 @@ function HomePage({
       const searchUrl = `${window.location.pathname}${window.location.search}`
       const label = rawQuery?.trim() || activeSearchLabel?.replace(/^Showing\s+/, '')?.trim() || ''
       const returnLabel = label || 'search results'
+      trackSearchResultSelected({
+        placeSlug: canonicalPlaceSlug,
+        areaSlug: place?.area?.trim() ?? null,
+        categorySlug: place?.category?.trim() ?? null,
+      })
       writePlaceReturnState(canonicalPlaceSlug, {
         source: 'search',
         returnTo: searchUrl,
@@ -509,16 +514,6 @@ function HomePage({
         desktopScrollTop: desktopResultsScrollRef.current?.scrollTop ?? 0,
         selectedPlaceViewportTop: getSearchPlaceViewportTop(placeId),
         pendingScrollRestore: true,
-      })
-      navigateToCanonicalPlace({
-        slug: canonicalPlaceSlug,
-        city: place?.city,
-        area: place?.area,
-        localArea: place?.localArea,
-      }, {
-        source: 'search',
-        returnTo: searchUrl,
-        returnLabel,
       })
     }
   }
@@ -703,6 +698,11 @@ function HomePage({
       setHasSearched(true)
       setSelectedPlaceId(null)
       setMobileResultsView('cards')
+      trackSearchSubmitted({
+        resultCount: mappedPlaces.length,
+        page: responsePage,
+        filterCount: [nextCategory, nextArea, nextGoodFor, nextBudget].filter(Boolean).length,
+      })
       if (supportsSearchRouteCache) {
         writeSearchRouteCache({
           lastSearchQuery: nextRawQuery,
@@ -841,6 +841,9 @@ function HomePage({
       setIsAskAiSubmitting(runtimeState.isSubmitting)
 
       if (runtimeState.answer && runtimeState.jobStatus === 'completed') {
+        trackAskAiChatbotUsed({
+          answerLength: runtimeState.answer.length,
+        })
         setChatMessages((prev) => {
           const lastMessage = prev[prev.length - 1]
           if (lastMessage?.role === 'assistant' && lastMessage.content === runtimeState.answer) {
@@ -948,6 +951,35 @@ function HomePage({
       })
     })
   }, [])
+
+  useEffect(() => {
+    if (!askAiUsageStatus?.allowed) {
+      return
+    }
+
+    setAskAiAnswerError((currentValue) =>
+      isAskAiChatbotDailyLimitMessage(currentValue) ? null : currentValue
+    )
+  }, [askAiUsageStatus?.allowed])
+
+  useAskAiUsageAutoRefresh({
+    enabled: selectedMode === 'ask-ai' && !isSessionLoading,
+    onRefresh: () => {
+      setAskAiUsageRefreshSignal((prev) => prev + 1)
+    },
+  })
+
+  useEffect(() => {
+    if (selectedMode !== 'ask-ai') {
+      return
+    }
+
+    lockBodyScroll()
+
+    return () => {
+      unlockBodyScroll()
+    }
+  }, [selectedMode])
 
   useEffect(() => {
     if (selectedMode !== 'ask-ai' || isSessionLoading) {
@@ -1074,17 +1106,17 @@ function HomePage({
   }, [])
 
     return (
-      <div className={`${selectedMode === 'ask-ai' ? 'h-screen overflow-hidden' : 'min-h-screen'} bg-[var(--bg)] text-[var(--text)]`}>
+      <div className={`${selectedMode === 'ask-ai' ? 'h-[100dvh] overflow-hidden overscroll-none' : 'min-h-screen'} bg-[var(--bg)] text-[var(--text)]`}>
         <GuestAuthPrompt variant="ask-ai" mode="modal" isOpen={promptLogin} onClose={() => setPromptLogin(false)} />
 
-      <div className={`gala-page-background overflow-x-hidden lg:hidden ${selectedMode === 'ask-ai' ? 'flex h-[100dvh] flex-col overflow-hidden' : 'flex min-h-screen flex-col'}`}>
+      <div className={`gala-page-background overflow-x-hidden lg:hidden ${selectedMode === 'ask-ai' ? 'flex h-[100dvh] flex-col overflow-hidden overscroll-none' : 'flex min-h-screen flex-col'}`}>
           {selectedMode !== 'ask-ai' && <AppHeader signInLabel="Mag-sign in" minimal />}
 
-          <main className={`overflow-x-hidden ${isPromptBuilderOpen ? 'flex h-[100dvh] flex-col overflow-hidden pb-0' : selectedMode === 'ask-ai' ? 'flex flex-1 flex-col min-h-0 overflow-hidden' : 'flex-1 min-h-0 pb-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] sm:pb-[calc(env(safe-area-inset-bottom,0px)+4.75rem)]'}`}>
+          <main className={`overflow-x-hidden ${isPromptBuilderOpen ? 'flex min-h-[100dvh] flex-col overflow-hidden pb-0' : selectedMode === 'ask-ai' ? 'flex flex-1 min-h-0 flex-col overflow-hidden overscroll-none' : 'flex-1 min-h-0 pb-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] sm:pb-[calc(env(safe-area-inset-bottom,0px)+4.75rem)]'}`}>
             {isPromptBuilderOpen ? (
               <PromptBuilderModal
                 isOpen={isPromptBuilderOpen}
-                initialState={promptBuilderInitialState}
+                initialState={null}
                 onClose={() => {
                   setIsPromptBuilderOpen(false)
                   if (initialPromptBuilderOpen) {
@@ -1161,8 +1193,8 @@ function HomePage({
                     onRetryUsage={handleRetryAskAiUsage}
                     onSubmit={(questionOverride) => void handleAskAiSubmit(questionOverride)}
                     onStartOver={handleStartOverAskAi}
-                    onOpenPromptBuilder={(questionOverride) => openPromptBuilder('ask-ai', questionOverride)}
                     onGuestUpgradePrompt={() => setPromptLogin(true)}
+                    className="h-full"
                   />
                 )}
               </>
@@ -1173,10 +1205,10 @@ function HomePage({
         <div
           className={`hidden w-full lg:grid ${
             isPromptBuilderOpen
-              ? 'h-screen overflow-hidden grid-rows-[auto_minmax(0,1fr)]'
+              ? 'h-[100dvh] overflow-hidden grid-rows-[auto_minmax(0,1fr)]'
               : selectedMode === 'ask-ai'
-                ? 'h-screen overflow-hidden grid-rows-[minmax(0,1fr)]'
-              : 'h-screen overflow-hidden lg:grid-rows-[auto_minmax(0,1fr)_auto]'
+                ? 'h-[100dvh] overflow-hidden grid-rows-[minmax(0,1fr)]'
+              : 'h-[100dvh] overflow-hidden lg:grid-rows-[auto_minmax(0,1fr)_auto]'
           }`}
         >
           {selectedMode !== 'ask-ai' && <AppHeader minimal />}
@@ -1185,17 +1217,17 @@ function HomePage({
             className={
               isPromptBuilderOpen
                 ? 'flex h-full min-h-0 flex-col overflow-hidden'
-                : selectedMode === 'ask-ai'
+              : selectedMode === 'ask-ai'
                 ? 'flex h-full min-h-0 flex-col overflow-hidden'
                 : shouldShowGuidedSearch
                   ? 'min-h-0 overflow-hidden'
-                  : 'grid min-h-0 overflow-hidden grid-rows-[auto_minmax(0,1fr)]'
+                  : 'grid h-full min-h-0 overflow-hidden grid-rows-[auto_minmax(0,1fr)]'
             }
           >
             {isPromptBuilderOpen ? (
               <PromptBuilderModal
                 isOpen={isPromptBuilderOpen}
-                initialState={promptBuilderInitialState}
+                initialState={null}
                 onClose={() => {
                   setIsPromptBuilderOpen(false)
                   if (initialPromptBuilderOpen) {
@@ -1270,7 +1302,6 @@ function HomePage({
                     onRetryUsage={handleRetryAskAiUsage}
                     onSubmit={(questionOverride) => void handleAskAiSubmit(questionOverride)}
                     onStartOver={handleStartOverAskAi}
-                    onOpenPromptBuilder={(questionOverride) => openPromptBuilder('ask-ai', questionOverride)}
                     onGuestUpgradePrompt={() => setPromptLogin(true)}
                     className="h-full"
                   />

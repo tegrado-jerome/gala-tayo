@@ -9,8 +9,9 @@ import MapView from './MapView'
 import ReportUserModal from './ReportUserModal'
 import PlaceImageNotice from './PlaceImageNotice'
 import { PageContainer, PageShell, DetailLayout, DetailSidebar, CardSurface, Stack } from './layout/ResponsiveLayouts'
-import { Flag, ImagePlus, MapPin, MessageCircle, MoreHorizontal, Pencil, Reply, Search, Trash2 } from 'lucide-react'
+import { Flag, ImagePlus, LayoutGrid, MapPin, MessageCircle, MoreHorizontal, Pencil, Reply, Search, Trash2 } from 'lucide-react'
 import { getCuratedPlaceImages, normalizePlaceSlug } from '../data/curatedPlaceImages'
+import { getCategoryIconName } from './AppIcon'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { getSupabaseAccessToken, getSupabaseSession, hasSessionUserChanged, shouldPropagateSessionChange, supabase } from '../supabase'
@@ -22,6 +23,7 @@ import { getMyUserReports } from '../utils/userReportsApi'
 import { getMyProfile } from '../utils/profileApi'
 import { getApiUrl } from '../utils/apiClient'
 import { navigateToPath } from '../utils/navigation'
+import { trackPlaceReportSubmitted, trackPlaceShared } from '../utils/analytics'
 import { Icon } from './place-detail/Icon'
 import { MemberAvatar } from './place-detail/MemberAvatar'
 import { SectionHeading } from './place-detail/SectionHeading'
@@ -935,8 +937,8 @@ function PlaceDetailView({
   const areaLink = areaBreadcrumb ? `/places/${encodeURIComponent(areaBreadcrumb.areaSlug)}` : null
   const breadcrumbItems = categoryBreadcrumb
     ? [
-        { label: categoryBreadcrumb.parentName, href: new URL(categoryBreadcrumb.parentItem).pathname, icon: <MapPin className="h-3.5 w-3.5" /> },
-        { label: categoryBreadcrumb.childName, href: new URL(categoryBreadcrumb.childItem).pathname, icon: <MapPin className="h-3.5 w-3.5" /> },
+        { label: categoryBreadcrumb.parentName, href: new URL(categoryBreadcrumb.parentItem).pathname, icon: <LayoutGrid className="h-3.5 w-3.5" /> },
+        { label: categoryBreadcrumb.childName, href: new URL(categoryBreadcrumb.childItem).pathname, icon: <AppIcon name={getCategoryIconName(categoryBreadcrumb.childName)} className="h-3.5 w-3.5" /> },
         { label: place.name, icon: <MapPin className="h-3.5 w-3.5" /> },
       ]
     : returnHref && returnLabel
@@ -1276,6 +1278,9 @@ function PlaceDetailView({
         url: buildPlaceShareUrl(place),
         title: place.name,
         text: place.name,
+      })
+      trackPlaceShared({
+        placeSlug: place.slug ?? null,
       })
     } catch {
       setShareError('Could not copy the link. Please try again.')
@@ -1868,6 +1873,10 @@ function PlaceDetailView({
         description: result.alreadyReported ? 'This comment was already in your reports.' : 'You can track this report in My Reports.',
       })
       setComments((currentComments) => markCommentReported(currentComments, commentId))
+      trackPlaceReportSubmitted({
+        placeSlug: place.slug ?? null,
+        reportType: 'comment',
+      })
     } catch (error) {
       setReportError(error instanceof Error ? error.message : 'Could not submit report. Please try again.')
     } finally {
@@ -1962,6 +1971,10 @@ function PlaceDetailView({
       setPlaceConcernReason('')
       setPlaceConcernDetails('')
       setPlaceConcernError('')
+      trackPlaceReportSubmitted({
+        placeSlug: place.slug ?? null,
+        reportType: 'place',
+      })
     } catch (error) {
       setPlaceConcernError(error instanceof Error ? error.message : 'Could not submit place report. Please try again.')
     } finally {

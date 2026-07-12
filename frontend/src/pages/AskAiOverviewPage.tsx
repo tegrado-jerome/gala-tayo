@@ -74,7 +74,6 @@ function ToolCard({ href, title, description, icon }: ToolCardProps) {
             aria-hidden="true"
             className="absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_28%_22%,rgba(255,255,255,0.5),transparent_55%)]"
           />
-          <span className="absolute right-1 top-1 z-20 h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.9)] ring-2 ring-white/80" />
           <AppIcon
             name={icon}
             className="relative z-10 h-5 w-5 text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)] sm:h-6 sm:w-6"

@@ -63,6 +63,7 @@ type HomePageProps = {
   initialPromptBuilderOpen?: boolean
   initialSearchState?: HomePageInitialSearchState
   initialAskAiQuestion?: string
+  navigationSource?: 'push' | 'replace' | 'pop'
 }
 
 type BackendSearchPlace = {

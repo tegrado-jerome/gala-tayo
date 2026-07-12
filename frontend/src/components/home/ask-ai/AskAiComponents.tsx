@@ -4,6 +4,7 @@ import remarkGfm from 'remark-gfm'
 import { Bot, RotateCcw } from 'lucide-react'
 import { AppIcon, type AppIconName } from '../../AppIcon'
 import AskAiUsagePill from '../../AskAiUsagePill'
+import { FeatureGuideModalTrigger, featureGuideContent } from '../../FeatureGuideModal'
 import GoogleSignInButton from '../../GoogleSignInButton'
 import InternalLink from '../../InternalLink'
 import { ChibiIllustration } from '../../layout/ResponsiveLayouts'
@@ -20,7 +21,6 @@ import type { AskAiSource } from '../homeHelpers'
 import { navigateToPath } from '../../../utils/navigation'
 import { cancelAskAiRuntimeRequest, type ChatMessage } from '../../../utils/askAiRuntime'
 import { type AskAiUsageStatus } from '../../../utils/askAiUsage'
-import { createEmptyPromptBuilderState } from '../../../utils/promptBuilder'
 import askAiErrorChibi from '../../../assets/chibis/core/ask-ai/chibi-ask-ai-error.webp'
 import askAiOutputChibi from '../../../assets/chibis/core/ask-ai/chibi-ask-ai-output.webp'
 import askAiStartChibi from '../../../assets/chibis/core/ask-ai/chibi-ask-ai-start.webp'
@@ -54,36 +54,15 @@ function getSourceHostname(url: string) {
   }
 }
 
-function createPromptBuilderPrefill({
-  plan,
-  location,
-  budget,
-  priority,
-}: {
-  plan?: string | null
-  location?: string | null
-  budget?: string | null
-  priority?: string | null
-}) {
-  const state = createEmptyPromptBuilderState()
-
-  state.custom.plan = plan?.trim() ?? ''
-  state.custom.location = location?.trim() ?? ''
-  state.custom.budget = budget?.trim() ?? ''
-  state.custom.vibe = priority?.trim() ?? ''
-
-  return state
-}
-
 function normalizeAskAiDisplayText(value: string) {
   return value
     .replace(/\r\n/g, '\n')
-    .replace(/Ã¢â‚¬Â¢|â€¢/g, '•')
-    .replace(/â€™/g, "'")
-    .replace(/â€œ|â€/g, '"')
-    .replace(/â€“/g, '-')
-    .replace(/â€¦/g, '...')
-    .replace(/Ã¯Â¼Å¡/g, ':')
+    .replace(/ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢|ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢/g, 'Ã¢â‚¬Â¢')
+    .replace(/ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢/g, "'")
+    .replace(/ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ|ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â/g, '"')
+    .replace(/ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“/g, '-')
+    .replace(/ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦/g, '...')
+    .replace(/ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¼Ãƒâ€¦Ã‚Â¡/g, ':')
 }
 
 function normalizeAskAiPresentationText(value: string) {
@@ -123,11 +102,11 @@ function AskAiAnswerBody({ answer }: { answer: string }) {
           )
         }
 
-        if (/^(?:[-*]|•)\s+/.test(line)) {
+        if (/^(?:[-*]|Ã¢â‚¬Â¢)\s+/.test(line)) {
           return (
             <p key={key} className="pl-5 -indent-5 text-slate-800">
-              <span aria-hidden="true" className="mr-2 text-slate-500">•</span>
-              {line.replace(/^(?:[-*]|•)\s+/, '')}
+              <span aria-hidden="true" className="mr-2 text-slate-500">Ã¢â‚¬Â¢</span>
+              {line.replace(/^(?:[-*]|Ã¢â‚¬Â¢)\s+/, '')}
             </p>
           )
         }
@@ -165,13 +144,13 @@ function getAskAiLeadLine(answer: string) {
 
 function getAskAiBestPlanLines(answer: string) {
   return getAskAiDisplayLines(answer)
-    .filter((line) => /^(?:[-*]|•)\s+/.test(line))
+    .filter((line) => /^(?:[-*]|Ã¢â‚¬Â¢)\s+/.test(line))
     .slice(0, 4)
-    .map((line) => line.replace(/^(?:[-*]|•)\s+/, ''))
+    .map((line) => line.replace(/^(?:[-*]|Ã¢â‚¬Â¢)\s+/, ''))
 }
 
 function getAskAiParagraphs(answer: string) {
-  return getAskAiDisplayLines(answer).filter((line) => line && !/^(?:[-*]|•)\s+/.test(line) && !/^[A-Z][A-Za-z /]+(?: .+)?:$/.test(line))
+  return getAskAiDisplayLines(answer).filter((line) => line && !/^(?:[-*]|Ã¢â‚¬Â¢)\s+/.test(line) && !/^[A-Z][A-Za-z /]+(?: .+)?:$/.test(line))
 }
 
 type AskAiParsedSection = {
@@ -234,10 +213,10 @@ function getAskAiSectionBlocks(lines: string[]): AskAiSectionBlock[] {
       }]
     }
 
-    if (/^(?:[-*]|â€¢)\s+/.test(trimmedLine)) {
+    if (/^(?:[-*]|ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢)\s+/.test(trimmedLine)) {
       return [{
         type: 'bullet',
-        content: trimmedLine.replace(/^(?:[-*]|â€¢)\s+/, ''),
+        content: trimmedLine.replace(/^(?:[-*]|ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢)\s+/, ''),
       }]
     }
 
@@ -287,7 +266,7 @@ function AskAiStructuredSection({
 
   return (
     <article
-      className={`rounded-3xl border px-4 py-4 sm:px-5 ${containerClassName}`}
+      className={`overflow-hidden rounded-3xl border px-4 py-4 sm:px-5 ${containerClassName}`}
     >
       <div className="flex items-center gap-2.5">
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[rgba(47,116,232,0.08)] text-[var(--accent-deep)]">
@@ -301,7 +280,7 @@ function AskAiStructuredSection({
 
       <div className="mt-3.5 grid gap-3">
         {paragraphBlocks.length > 0 ? (
-          <div className="grid gap-2.5 text-[0.98rem] leading-7 text-slate-700">
+          <div className="grid gap-2.5 break-words text-[0.98rem] leading-7 text-slate-700 [overflow-wrap:anywhere]">
             {paragraphBlocks.map((block, index) => (
               <p key={`${section.title}-paragraph-${index}`}>{block.content}</p>
             ))}
@@ -322,7 +301,7 @@ function AskAiStructuredSection({
                 ) : (
                   <span className="mt-[0.72rem] h-2 w-2 shrink-0 rounded-full bg-slate-400" aria-hidden="true" />
                 )}
-                <p className="min-w-0 text-[0.95rem] leading-7 text-slate-800">{block.content}</p>
+                <p className="min-w-0 break-words text-[0.95rem] leading-7 text-slate-800 [overflow-wrap:anywhere]">{block.content}</p>
               </div>
             ))}
           </div>
@@ -345,7 +324,7 @@ function AskAiAnswerText({ answer }: { answer: string }) {
           return <div key={key} className="h-1" aria-hidden="true" />
         }
 
-        if (/^[A-Z][A-Za-z /]+(?: .+)?[:ï¼š]$/.test(trimmedLine)) {
+        if (/^[A-Z][A-Za-z /]+(?: .+)?[:ÃƒÂ¯Ã‚Â¼Ã…Â¡]$/.test(trimmedLine)) {
           return (
             <p key={key} className={index === 0 ? 'font-semibold text-slate-950' : 'mt-2 font-semibold text-slate-950'}>
               {trimmedLine}
@@ -356,7 +335,7 @@ function AskAiAnswerText({ answer }: { answer: string }) {
         if (/^[-*]\s+/.test(trimmedLine)) {
           return (
             <p key={key} className="pl-4 text-slate-800">
-              <span aria-hidden="true">â€¢ </span>
+              <span aria-hidden="true">ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ </span>
               {trimmedLine.replace(/^[-*]\s+/, '')}
             </p>
           )
@@ -393,7 +372,6 @@ function AskAiOutputStageLegacy({
   answer,
   sources,
   chibiImage,
-  onOpenPromptBuilder,
   onStartOver,
   className = '',
 }: {
@@ -401,7 +379,6 @@ function AskAiOutputStageLegacy({
   answer: string
   sources: AskAiSource[]
   chibiImage: string
-  onOpenPromptBuilder: () => void
   onStartOver: () => void
   className?: string
 }) {
@@ -443,7 +420,7 @@ function AskAiOutputStageLegacy({
               <div className="grid gap-3 border-b border-dashed border-[rgba(83,146,241,0.16)] py-4 first:pt-0">
                 <div className="flex items-start gap-3">
                   <span className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--accent-wash)] text-[var(--accent-deep)]">
-                    <SparkIcon className="h-5 w-5" />
+                    <AppIcon name="info" className="h-5 w-5 text-[var(--accent-deep)]" strokeWidth={2.2} />
                   </span>
                   <div className="min-w-0">
                     <p className="text-[1.05rem] font-black text-[var(--accent-deep)]">Quick answer</p>
@@ -479,7 +456,7 @@ function AskAiOutputStageLegacy({
             <div className="grid gap-3 border-b border-dashed border-[rgba(83,146,241,0.16)] py-4">
               <div className="flex items-start gap-3">
                 <span className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--accent-wash)] text-[var(--accent-deep)]">
-                  <SparkIcon className="h-5 w-5" />
+                  <AppIcon name="info" className="h-5 w-5 text-[var(--accent-deep)]" strokeWidth={2.2} />
                 </span>
                 <div className="min-w-0">
                   <p className="text-[1.05rem] font-black text-[var(--accent-deep)]">Why this works</p>
@@ -493,7 +470,7 @@ function AskAiOutputStageLegacy({
             <div className="grid gap-3 py-4">
               <div className="flex items-start gap-3">
                 <span className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--accent-wash)] text-[var(--accent-deep)]">
-                  <SparkIcon className="h-5 w-5" />
+                  <AppIcon name="info" className="h-5 w-5 text-[var(--accent-deep)]" strokeWidth={2.2} />
                 </span>
                 <div className="min-w-0">
                   <p className="text-[1.05rem] font-black text-[var(--accent-deep)]">Tip</p>
@@ -514,7 +491,7 @@ function AskAiOutputStageLegacy({
               className="group relative flex items-center gap-3 overflow-hidden rounded-[24px] border border-[rgba(15,23,42,0.08)] bg-[linear-gradient(135deg,#0f172a,#1d4ed8)] px-4 py-4 text-left shadow-[0_18px_42px_rgba(29,78,216,0.24)] transition hover:-translate-y-[1px] hover:shadow-[0_24px_52px_rgba(29,78,216,0.28)]"
             >
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/14 text-white ring-1 ring-white/16">
-                <SparkIcon className="h-6 w-6" />
+                <AppIcon name="info" className="h-6 w-6 text-white" strokeWidth={2.2} />
               </span>
               <div className="min-w-0 flex-1">
                 <p className="text-[11px] font-black uppercase tracking-[0.16em] text-white/72">Reset Ask AI</p>
@@ -524,23 +501,6 @@ function AskAiOutputStageLegacy({
                 </p>
               </div>
               <ChevronRightIcon className="h-5 w-5 shrink-0 text-white transition group-hover:translate-x-0.5" />
-            </button>
-
-            <button
-              type="button"
-              onClick={onOpenPromptBuilder}
-              className="flex items-center gap-3 rounded-3xl border border-[rgba(83,146,241,0.16)] bg-[linear-gradient(180deg,#ffffff,#f7fbff)] px-4 py-4 text-left shadow-[0_12px_28px_rgba(15,23,42,0.045)] transition hover:border-[var(--accent)]"
-            >
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--accent-wash)] text-[var(--accent-deep)]">
-                <SparkIcon className="h-6 w-6" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-black text-slate-950">Use Prompt Builder</p>
-                <p className="mt-1 text-xs leading-5 text-[var(--muted)]">
-                  Turn the idea into a cleaner, stronger prompt.
-                </p>
-              </div>
-              <ChevronRightIcon className="h-5 w-5 shrink-0 text-[var(--accent-deep)]" />
             </button>
 
           </aside>
@@ -651,7 +611,6 @@ function AskAiPlaceholder({
   onSubmit,
   onSwitchToPlaces,
   onStartOver,
-  onOpenPromptBuilder,
   className = '',
 }: {
   usageStatus: AskAiUsageStatus | null
@@ -666,16 +625,13 @@ function AskAiPlaceholder({
   onSubmit: (questionOverride?: string) => void
   onSwitchToPlaces: () => void
   onStartOver: () => void
-  onOpenPromptBuilder: (questionOverride?: string) => void
   className?: string
 }) {
   void isUsageLoading
   const isUsagePending = !usageStatus
   void isUsagePending
   const isLimitReached = usageStatus
-    ? isRegistered
-      ? !usageStatus.allowed || usageStatus.remaining <= 0
-      : !usageStatus.allowed
+    ? !usageStatus.allowed || usageStatus.remaining <= 0
     : false
   const [draftQuestion, setDraftQuestion] = useState(question)
   const questionTextareaRef = useRef<HTMLTextAreaElement | null>(null)
@@ -719,11 +675,6 @@ function AskAiPlaceholder({
     onSubmit(finalQuestion)
   }
 
-  const handleOpenPromptBuilder = () => {
-    onQuestionChange(draftQuestion)
-    onOpenPromptBuilder(draftQuestion)
-  }
-
   if (isSubmitting) {
     return <AskAiThinkingStageNext question={draftQuestion} chibiImage={chibiImage} className={className} />
   }
@@ -735,7 +686,6 @@ function AskAiPlaceholder({
         answer={answer}
         sources={sources}
         chibiImage={chibiImage}
-        onOpenPromptBuilder={onOpenPromptBuilder}
         onStartOver={onStartOver}
         className={className}
       />
@@ -743,10 +693,10 @@ function AskAiPlaceholder({
   }
 
   const promptChips = [
-    { id: 'date', label: 'Date plan', prompt: 'Plan a date gala' },
-    { id: 'food', label: 'Food trip', prompt: 'Plan a food trip' },
+    { id: 'date', label: 'Date', prompt: 'Plan a date gala' },
+    { id: 'food', label: 'Food', prompt: 'Plan a food trip' },
     { id: 'itinerary', label: 'Itinerary', prompt: 'Create a quick itinerary' },
-    { id: 'find', label: 'Find places', prompt: 'Find places on map' },
+    { id: 'find', label: 'Find', prompt: 'Find places on map' },
   ]
 
   return (
@@ -764,18 +714,10 @@ function AskAiPlaceholder({
           </button>
           <div className="min-w-0">
             <h1 className="text-[1.05rem] font-bold leading-tight text-slate-900 sm:text-[1.15rem]">Ask AI</h1>
-            <p className="text-[0.78rem] leading-tight text-[var(--muted)]">Plan your next gala with AI</p>
+            <p className="text-[0.78rem] leading-tight text-[var(--muted)]">Plan your gala.</p>
           </div>
           <AskAiUsagePill label="Chatbot AI" usageStatus={usageStatus} className="ml-auto shrink-0" />
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleOpenPromptBuilder}
-              className="hidden rounded-full border border-[var(--line)] px-3 py-1.5 text-[11px] font-semibold text-slate-500 transition hover:border-[var(--accent)] hover:text-[var(--accent-deep)] sm:inline-flex items-center gap-1"
-            >
-              <SparkIcon className="h-3 w-3" />
-              Prompt Builder
-            </button>
             <button
               type="button"
               onClick={() => navigateToPath('/ask-ai/maps')}
@@ -794,7 +736,7 @@ function AskAiPlaceholder({
           {/* AI greeting bubble */}
           <div className="flex items-start gap-2.5">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#e8f0fe,#d4e4fc)] text-sm shadow-[0_2px_8px_rgba(47,116,232,0.10)]">
-              ✨
+              <AppIcon name="info" className="h-4 w-4 text-[#2f74e8]" strokeWidth={2.2} />
             </div>
             <div className="min-w-0 max-w-[82%] rounded-2xl rounded-tl-[6px] border border-[rgba(15,23,42,0.06)] bg-white px-4 py-3 shadow-[0_2px_8px_rgba(15,23,42,0.03)]">
               <p className="text-[0.94rem] leading-relaxed text-slate-800">Hi! What kind of gala are you planning today?</p>
@@ -822,7 +764,7 @@ function AskAiPlaceholder({
             >
               <span className="inline-flex items-center gap-1">
                 <AppIcon name="map" className="h-3.5 w-3.5" />
-                Find places
+                Maps
               </span>
             </button>
           </div>
@@ -887,11 +829,9 @@ void AskAiSignInRequired
 
 function AskAiSignInRequired({
   className = '',
-  onOpenPromptBuilder,
   onBack,
 }: {
   className?: string
-  onOpenPromptBuilder: () => void
   onBack?: () => void
 }) {
   return (
@@ -908,14 +848,14 @@ function AskAiSignInRequired({
             <ChibiIllustration src={protectedFeatureChibi} variant="feature" className="mx-auto lg:mx-0" />
             <div className="min-w-0">
               <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(83,146,241,0.18)] bg-[rgba(242,247,255,0.96)] px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--accent-deep)]">
-                <SparkIcon className="h-4 w-4" />
+                <AppIcon name="info" className="h-4 w-4" strokeWidth={2.2} />
                 Ask AI
               </div>
               <p className="mt-3 text-3xl font-black leading-tight text-slate-950 sm:text-[2.5rem]">
                 Sign in to unlock <span className="text-[var(--accent-deep)]">Ask AI</span>.
               </p>
               <p className="mt-3 max-w-xl text-sm leading-relaxed text-[var(--muted)] sm:text-[15px]">
-                <span className="font-semibold text-[var(--accent-deep)]">Ask AI</span> is reserved for <span className="font-semibold text-slate-800">GalaTayo members</span>. If you want to draft a prompt first, you can still open Prompt Builder anytime.
+                <span className="font-semibold text-[var(--accent-deep)]">Ask AI</span> is reserved for <span className="font-semibold text-slate-800">GalaTayo members</span>.
               </p>
               <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold text-slate-700">
                 <span className="rounded-full border border-[rgba(83,146,241,0.16)] bg-[rgba(247,251,255,0.96)] px-3 py-1.5">
@@ -930,13 +870,6 @@ function AskAiSignInRequired({
 
           <div className="mt-5 flex flex-col gap-3 sm:flex-row">
             <GoogleSignInButton className="inline-flex" />
-            <button
-              type="button"
-              onClick={onOpenPromptBuilder}
-              className="inline-flex items-center justify-center rounded-2xl border border-[rgba(83,146,241,0.18)] bg-white px-4 py-3 text-sm font-black text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)]"
-            >
-              Open Prompt Builder
-            </button>
           </div>
         </div>
 
@@ -968,7 +901,6 @@ function AskAiOutputStageNextLegacy({
   answer,
   sources,
   chibiImage,
-  onOpenPromptBuilder,
   onStartOver,
   className = '',
 }: {
@@ -976,7 +908,6 @@ function AskAiOutputStageNextLegacy({
   answer: string
   sources: AskAiSource[]
   chibiImage: string
-  onOpenPromptBuilder: () => void
   onStartOver: () => void
   className?: string
 }) {
@@ -996,7 +927,7 @@ function AskAiOutputStageNextLegacy({
         <div className="absolute bottom-0 right-1/3 h-36 w-36 rounded-full bg-[rgba(201,235,255,0.24)] blur-3xl" />
       </div>
 
-      <div className="relative mx-auto flex min-h-[calc(100dvh-128px)] w-full max-w-[430px] flex-col gap-5">
+      <div className="relative mx-auto flex min-h-[calc(100dvh-128px)] w-full max-w-[820px] flex-col gap-5 lg:max-w-[900px]">
         <div>
           <p className="text-[0.9rem] font-black uppercase tracking-[0.12em] text-slate-500">Your question</p>
           <div className="mt-2.5 w-full rounded-2xl border border-[rgba(20,35,58,0.14)] bg-white/88 px-4 py-3.5">
@@ -1012,9 +943,9 @@ function AskAiOutputStageNextLegacy({
           {parsedSections.length >= 2 ? parsedSections.map((section, index) => {
             const SectionIcon = getAskAiSectionIcon(section.title)
             const bulletOnlyLines = section.lines
-              .filter((line) => /^(?:[-*]|â€¢)\s+/.test(line))
-              .map((line) => line.replace(/^(?:[-*]|â€¢)\s+/, ''))
-            const plainLines = section.lines.filter((line) => line && !/^(?:[-*]|â€¢)\s+/.test(line))
+              .filter((line) => /^(?:[-*]|ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢)\s+/.test(line))
+              .map((line) => line.replace(/^(?:[-*]|ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢)\s+/, ''))
+            const plainLines = section.lines.filter((line) => line && !/^(?:[-*]|ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢)\s+/.test(line))
 
             return (
               <div key={`${section.title}-${index}`} className={`grid gap-2 ${index === 0 ? '' : 'border-t border-[rgba(20,35,58,0.08)] pt-4'}`}>
@@ -1042,7 +973,7 @@ function AskAiOutputStageNextLegacy({
             <>
               <div className="grid gap-2">
                 <p className="flex items-center gap-2 text-[0.98rem] font-black text-slate-950">
-                  <SparkIcon className="h-4 w-4 text-[var(--accent-deep)]" />
+                  <AppIcon name="info" className="h-4 w-4 text-[var(--accent-deep)]" strokeWidth={2.2} />
                   Quick answer
                 </p>
                 <p className="text-[0.95rem] leading-7 text-slate-800">{quickAnswer}</p>
@@ -1100,18 +1031,6 @@ function AskAiOutputStageNextLegacy({
               <ChevronRightIcon className="h-5 w-5 shrink-0 text-white transition group-hover:translate-x-0.5" />
             </button>
 
-            <button
-              type="button"
-              onClick={onOpenPromptBuilder}
-              className="flex items-center justify-between gap-3 rounded-2xl border border-[rgba(83,146,241,0.14)] bg-[rgba(255,255,255,0.72)] px-4 py-3.5 text-left transition hover:border-[var(--accent)]"
-            >
-              <div className="min-w-0">
-                <p className="text-sm font-black text-slate-950">Use Prompt Builder</p>
-                <p className="mt-1 text-xs leading-5 text-[var(--muted)]">Tighten the prompt before asking again.</p>
-              </div>
-              <ChevronRightIcon className="h-5 w-5 shrink-0 text-[var(--accent-deep)]" />
-            </button>
-
           </div>
 
           {sources.length > 0 ? (
@@ -1147,7 +1066,6 @@ function AskAiOutputStageNext({
   answer,
   sources,
   chibiImage,
-  onOpenPromptBuilder,
   onStartOver,
   className = '',
 }: {
@@ -1155,7 +1073,6 @@ function AskAiOutputStageNext({
   answer: string
   sources: AskAiSource[]
   chibiImage: string
-  onOpenPromptBuilder: () => void
   onStartOver: () => void
   className?: string
 }) {
@@ -1223,14 +1140,6 @@ function AskAiOutputStageNext({
                   <RotateCcw className="h-3.5 w-3.5" />
                   Start over
                 </button>
-                <button
-                  type="button"
-                  onClick={onOpenPromptBuilder}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(47,116,232,0.14)] bg-[var(--accent-wash)] px-3 py-2 text-[0.78rem] font-semibold text-[var(--accent-deep)] transition hover:border-[rgba(47,116,232,0.24)] hover:bg-[rgba(var(--accent-rgb),0.18)]"
-                >
-                  <SparkIcon className="h-3.5 w-3.5" />
-                  Prompt Builder
-                </button>
               </div>
             </div>
           </div>
@@ -1248,6 +1157,26 @@ function ThinkingLoadingBar({ className = '' }: { className?: string }) {
   )
 }
 
+function isChatbotDailyLimitMessage(message: string | null) {
+  if (!message) {
+    return false
+  }
+
+  const normalized = message.trim().toLowerCase()
+  return (
+    normalized === 'you have reached your chatbot ai daily limit.' ||
+    normalized === 'daily_ai_limit_reached'
+  )
+}
+
+function isChatbotUsageLimitReached(usageStatus: AskAiUsageStatus | null, isRegistered: boolean) {
+  return usageStatus
+    ? isRegistered
+      ? !usageStatus.allowed || usageStatus.remaining <= 0
+      : !usageStatus.allowed
+    : false
+}
+
 function AskAiThinkingStageNext({
   question,
   chibiImage,
@@ -1261,7 +1190,7 @@ function AskAiThinkingStageNext({
     <div className={`flex h-full min-h-0 w-full flex-col ${className}`}>
       {/* Chat messages area */}
       <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-5 lg:px-8">
-        <div className="flex w-full flex-col gap-5">
+        <div className="mx-auto flex w-full max-w-[820px] flex-col gap-5 lg:max-w-[900px]">
           {/* User message bubble */}
           <div className="flex justify-end">
             <div className="max-w-[82%] rounded-2xl rounded-tr-[6px] bg-[var(--accent)] px-4 py-3 shadow-[0_4px_14px_rgba(47,116,232,0.16)]">
@@ -1274,7 +1203,7 @@ function AskAiThinkingStageNext({
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#e8f0fe,#d4e4fc)] shadow-[0_2px_8px_rgba(47,116,232,0.10)]">
               <ChibiIllustration src={chibiImage} alt="" variant="compact" />
             </div>
-            <div className="min-w-0 max-w-[82%] rounded-2xl rounded-tl-[6px] border border-[rgba(15,23,42,0.06)] bg-white px-4 py-3.5 shadow-[0_2px_8px_rgba(15,23,42,0.03)]">
+            <div className="min-w-0 w-full max-w-[88%] rounded-2xl rounded-tl-[6px] border border-[rgba(15,23,42,0.06)] bg-white px-4 py-3.5 shadow-[0_2px_8px_rgba(15,23,42,0.03)] sm:max-w-[82%]">
               <div className="flex items-center gap-2">
                 <p className="text-[0.78rem] font-semibold tracking-[-0.02em] text-slate-950">Thinking</p>
                 <span className="inline-flex items-center gap-1 text-[var(--accent-deep)]">
@@ -1307,7 +1236,6 @@ function AskAiModePanel({
   onRetryUsage,
   onSubmit,
   onStartOver,
-  onOpenPromptBuilder,
   onGuestUpgradePrompt,
   className = '',
 }: {
@@ -1324,17 +1252,12 @@ function AskAiModePanel({
   onRetryUsage: () => void
   onSubmit: (questionOverride?: string) => void
   onStartOver: () => void
-  onOpenPromptBuilder: (questionOverride?: string) => void
   onGuestUpgradePrompt: () => void
   className?: string
 }) {
   void isUsageLoading
   const isUsagePending = !usageStatus
-  const isLimitReached = usageStatus
-    ? isRegistered
-      ? !usageStatus.allowed || usageStatus.remaining <= 0
-      : !usageStatus.allowed
-    : false
+  const isLimitReached = isChatbotUsageLimitReached(usageStatus, isRegistered)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -1378,11 +1301,6 @@ function AskAiModePanel({
     onSubmit(finalQuestion)
   }, [isLimitReached, isRegistered, isSubmitting, isUsagePending, onGuestUpgradePrompt, onSubmit, updateDraftQuestion])
 
-  const handleOpenPromptBuilder = useCallback(() => {
-    navigateToPath('/ask-ai/prompt-builder')
-    onOpenPromptBuilder(draftQuestionRef.current.trim() || undefined)
-  }, [onOpenPromptBuilder])
-
   return (
     <div className={`relative flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#f8fafc] ${className}`}>
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -1393,7 +1311,10 @@ function AskAiModePanel({
 
       <div className="relative shrink-0 mb-4 px-4 pt-5 sm:mb-5 sm:px-5 md:px-6 lg:px-8">
         <div className="flex items-center justify-between gap-2">
-          <AskAiUsagePill label="Chatbot AI" usageStatus={usageStatus} className="shrink-0" />
+          <div className="flex items-center gap-2">
+            <AskAiUsagePill label="Chatbot AI" usageStatus={usageStatus} className="shrink-0" />
+            <FeatureGuideModalTrigger content={featureGuideContent.chatbot} />
+          </div>
           <div className="flex items-center gap-2">
           {messages.length > 0 && (
             <button
@@ -1429,7 +1350,6 @@ function AskAiModePanel({
             answerError={answerError}
             isLimitReached={isLimitReached}
             onSend={handleSend}
-            onOpenPromptBuilder={handleOpenPromptBuilder}
             onRetryUsage={onRetryUsage}
           />
           <div ref={messagesEndRef} />
@@ -1438,7 +1358,7 @@ function AskAiModePanel({
 
       <div className="relative shrink-0 px-4 pt-1 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] sm:px-5 md:px-6 lg:px-8">
         <div className="mx-auto w-full max-w-[920px]">
-          <div className="group/composer relative flex items-end gap-1.5 rounded-[24px] border border-slate-200/60 bg-[#f8fafc] p-1.5 shadow-none transition focus-within:border-slate-300/80 focus-within:shadow-[0_0_0_4px_rgba(99,102,241,0.04)]">
+          <div className="group/composer relative flex items-end gap-1.5 rounded-[24px] border border-slate-200/60 bg-[#f8fafc] p-1.5 shadow-none transition focus-within:border-slate-300/80">
             <textarea
               ref={textareaRef}
               value={draftQuestion}
@@ -1452,7 +1372,7 @@ function AskAiModePanel({
               placeholder="Message Ask AI..."
               rows={1}
               disabled={isSubmitting || isUsagePending || (isLimitReached && isRegistered)}
-              className="min-h-[40px] max-h-[120px] flex-1 resize-none overflow-y-auto bg-transparent px-3 py-2 text-[15px] leading-relaxed text-slate-800 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed disabled:text-slate-300"
+              className="ask-ai-composer-input min-h-[40px] max-h-[120px] flex-1 resize-none overflow-y-auto bg-transparent px-3 py-2 text-[15px] leading-relaxed text-slate-800 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed disabled:text-slate-300"
             />
             <button
               type="button"
@@ -1469,16 +1389,6 @@ function AskAiModePanel({
               ) : (
                 <AppIcon name="send" className="h-4 w-4" strokeWidth={2.25} />
               )}
-            </button>
-          </div>
-          <div className="mt-1.5 flex items-center gap-1">
-            <button
-              type="button"
-              onClick={handleOpenPromptBuilder}
-              className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[11.5px] font-medium text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
-            >
-              <AppIcon name="promptBuilder" className="h-3.5 w-3.5" />
-              Prompt Builder
             </button>
           </div>
           <p className="mt-2 text-center text-[10.5px] text-slate-400">
@@ -1501,7 +1411,6 @@ const ChatMessageList = memo(function ChatMessageList({
   answerError,
   isLimitReached,
   onSend,
-  onOpenPromptBuilder,
   onRetryUsage,
 }: {
   isSessionLoading: boolean
@@ -1514,7 +1423,6 @@ const ChatMessageList = memo(function ChatMessageList({
   answerError: string | null
   isLimitReached: boolean
   onSend: (text?: string) => void
-  onOpenPromptBuilder: () => void
   onRetryUsage: () => void
 }) {
   if (!isSessionLoading && usageError) {
@@ -1522,63 +1430,71 @@ const ChatMessageList = memo(function ChatMessageList({
       <AskAiUsageErrorContent
         usageError={usageError}
         onRetryUsage={onRetryUsage}
-        onOpenPromptBuilder={onOpenPromptBuilder}
       />
     )
   }
 
   if (messages.length === 0 && !isSubmitting && !answer) {
     const promptChips: Array<{ id: string; label: string; description: string; prompt: string; icon: AppIconName }> = [
-      { id: 'date', label: 'Date plan', description: 'Plan a cozy evening for two', prompt: 'Plan a date gala', icon: 'sparkles' },
-      { id: 'food', label: 'Food trip', description: 'Discover the best spots to eat', prompt: 'Plan a food trip', icon: 'cafe' },
-      { id: 'itinerary', label: 'Day itinerary', description: 'Build a quick day-by-day plan', prompt: 'Create a quick itinerary', icon: 'galaPlan' },
-      { id: 'budget', label: 'Budget picks', description: 'Find great places that won\u2019t break the bank', prompt: 'Suggest budget-friendly places to visit', icon: 'wallet' },
+      { id: 'date', label: 'Date', description: 'Cozy date ideas.', prompt: 'Plan a date gala', icon: 'sparkles' },
+      { id: 'food', label: 'Food', description: 'Sulit food spots.', prompt: 'Plan a food trip', icon: 'cafe' },
+      { id: 'itinerary', label: 'Itinerary', description: 'Morning to night.', prompt: 'Create a quick itinerary', icon: 'galaPlan' },
+      { id: 'budget', label: 'Budget', description: 'Low-cost picks.', prompt: 'Suggest budget-friendly places to visit', icon: 'wallet' },
     ]
 
     return (
-      <div className="flex w-full flex-col items-stretch">
-        <div className="mb-4 flex items-start justify-between gap-3">
-          <div className="flex min-w-0 flex-col">
-            <h1 className="text-[1.55rem] font-semibold leading-tight tracking-[-0.02em] text-slate-900 sm:text-[1.9rem]">
-              How can I help you plan your <span className="bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500 bg-clip-text text-transparent">gala</span>?
-            </h1>
-            <p className="mt-2 max-w-md text-[14px] leading-relaxed text-slate-500 sm:text-[14.5px]">
-              Ask me anything about places, food, dates, and itineraries around Metro Manila.
+      <div className="flex w-full flex-1 items-center justify-center px-4 py-6 sm:px-5">
+        <div className="mx-auto flex w-full max-w-[820px] flex-col items-center text-center lg:max-w-[900px]">
+          <div className="mb-4 flex w-full flex-col items-center gap-1.5 sm:mb-5">
+            <h1 className="text-[1.3rem] font-semibold leading-tight tracking-[-0.02em] text-slate-900 sm:text-[1.9rem]">Ano ang plano today?</h1>
+            <p className="max-w-md text-[14px] leading-relaxed text-slate-500 sm:text-[14.5px]">
+              Places, food, dates, at iba pa.
             </p>
           </div>
-        </div>
 
-        <div className="mt-7 grid w-full grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="mb-3 flex items-center gap-2 sm:mb-4">
+            <span className="rounded-full bg-[var(--accent-wash)] px-2.5 py-1 text-[10.5px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">
+              Picks
+            </span>
+            <p className="text-[12px] leading-relaxed text-slate-500 sm:text-[12.5px]">
+              Pili ka lang.
+            </p>
+          </div>
+
+          <div className="grid w-full grid-cols-1 gap-2 sm:gap-2.5">
           {promptChips.map((chip) => (
             <button
               key={chip.id}
               type="button"
               disabled={isLimitReached && isRegistered}
               onClick={() => onSend(chip.prompt)}
-              className="group flex items-start gap-3 rounded-2xl border border-slate-200/70 bg-white/70 p-3.5 text-left shadow-[0_1px_2px_rgba(15,23,42,0.03)] backdrop-blur-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white hover:shadow-[0_8px_24px_-12px_rgba(15,23,42,0.12)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
+              className="group flex w-full items-center gap-2.5 rounded-2xl border border-slate-200/70 bg-white/80 p-3 text-left shadow-[0_1px_2px_rgba(15,23,42,0.03)] backdrop-blur-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white hover:shadow-[0_8px_24px_-12px_rgba(15,23,42,0.12)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 sm:items-start sm:gap-3 sm:p-3.5"
             >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 text-slate-500 ring-1 ring-inset ring-slate-200/70 transition group-hover:from-indigo-50 group-hover:to-blue-50 group-hover:text-indigo-600 group-hover:ring-indigo-100">
-                <AppIcon name={chip.icon} className="h-4 w-4" />
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 text-slate-500 ring-1 ring-inset ring-slate-200/70 transition group-hover:from-indigo-50 group-hover:to-blue-50 group-hover:text-indigo-600 group-hover:ring-indigo-100 sm:h-9 sm:w-9">
+                <AppIcon name={chip.icon} className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-[13.5px] font-semibold text-slate-800">{chip.label}</div>
+                <div className="text-[12.5px] font-semibold text-slate-800 sm:text-[13.5px]">{chip.label}</div>
                 <div className="mt-0.5 text-[12px] leading-relaxed text-slate-500">{chip.description}</div>
               </div>
             </button>
           ))}
-        </div>
-
-        {isLimitReached && !isSubmitting && (
-          <div className="mt-6 w-full rounded-2xl border border-red-200/60 bg-red-50/80 px-4 py-3 text-left">
-            <p className="text-[13px] font-medium text-red-700">You&apos;ve used all your Ask AI asks for today. Come back tomorrow!</p>
           </div>
-        )}
+
+          {isRegistered && isLimitReached && !isSubmitting && (
+            <div className="mt-5 w-full max-w-[820px] lg:max-w-[900px]">
+              <div className="rounded-2xl border border-red-200/60 bg-red-50/80 px-4 py-3 text-center">
+                <p className="text-[13px] font-medium text-red-700">Naubos na asks mo today. Balik bukas.</p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col gap-5 md:mx-auto md:max-w-[820px] lg:max-w-[900px]">
+    <div className="flex w-full flex-col gap-5 md:mx-auto md:max-w-[820px] lg:max-w-[900px]">
       {messages.map((msg, index) => {
         if (msg.role === 'user') {
           return (
@@ -1591,10 +1507,10 @@ const ChatMessageList = memo(function ChatMessageList({
         }
 
         return (
-          <div key={index} className="w-full rounded-2xl border border-slate-200/80 bg-white/70 p-4 shadow-[0_1px_2px_rgba(15,23,42,0.03)] backdrop-blur-sm">
+          <div key={index} className="w-full min-w-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-white/70 p-4 shadow-[0_1px_2px_rgba(15,23,42,0.03)] backdrop-blur-sm">
             <div className="flex items-center gap-2">
               <div className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-indigo-500 via-blue-500 to-cyan-400 shadow-[0_4px_10px_-2px_rgba(59,130,246,0.4)]">
-                <SparkIcon className="h-3 w-3 text-white" />
+                <AppIcon name="info" className="h-3 w-3 text-white" strokeWidth={2.2} />
               </div>
               <span className="text-[12px] font-semibold tracking-wide text-slate-500">Ask AI</span>
             </div>
@@ -1693,7 +1609,7 @@ const ChatMessageList = memo(function ChatMessageList({
         <div className="w-full rounded-2xl border border-slate-200/80 bg-white/70 p-4 shadow-[0_1px_2px_rgba(15,23,42,0.03)] backdrop-blur-sm">
           <div className="flex items-center gap-2">
             <div className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-indigo-500 via-blue-500 to-cyan-400 shadow-[0_4px_10px_-2px_rgba(59,130,246,0.4)]">
-              <SparkIcon className="h-3 w-3 text-white" />
+              <AppIcon name="info" className="h-3 w-3 text-white" strokeWidth={2.2} />
             </div>
             <span className="text-[12px] font-semibold tracking-wide text-slate-500">Ask AI</span>
           </div>
@@ -1714,13 +1630,13 @@ const ChatMessageList = memo(function ChatMessageList({
         </div>
       )}
 
-      {answerError && !isSubmitting && messages.length > 0 && (
+      {answerError && !isSubmitting && messages.length > 0 && !isChatbotDailyLimitMessage(answerError) && (
         <div className="rounded-2xl border border-red-200/60 bg-red-50/80 px-4 py-3">
           <p className="text-[13px] text-red-700">{answerError}</p>
         </div>
       )}
 
-      {isLimitReached && !isSubmitting && messages.length > 0 && (
+      {isRegistered && isLimitReached && !isSubmitting && messages.length > 0 && (
         <div className="rounded-2xl border border-red-200/60 bg-red-50/80 px-4 py-3">
           <p className="text-[13px] font-medium text-red-700">You&apos;ve used all your Ask AI asks for today. Come back tomorrow!</p>
         </div>
@@ -1732,11 +1648,9 @@ const ChatMessageList = memo(function ChatMessageList({
 function AskAiUsageErrorContent({
   usageError,
   onRetryUsage,
-  onOpenPromptBuilder,
 }: {
   usageError: string | null
   onRetryUsage: () => void
-  onOpenPromptBuilder: () => void
 }) {
   return (
     <div className="flex w-full flex-col items-center justify-center py-8 text-center">
@@ -1762,14 +1676,6 @@ function AskAiUsageErrorContent({
         >
           Retry
         </button>
-        <button
-          type="button"
-          onClick={onOpenPromptBuilder}
-          className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/80 bg-white/80 px-4 py-2 text-[13px] font-medium text-slate-600 shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition hover:border-slate-300 hover:bg-white hover:text-slate-800"
-        >
-          <SparkIcon className="h-3.5 w-3.5" />
-          Prompt Builder
-        </button>
       </div>
     </div>
   )
@@ -1778,7 +1684,6 @@ function AskAiUsageErrorContent({
 export {
   formatResetAtCompact,
   getSourceHostname,
-  createPromptBuilderPrefill,
   normalizeAskAiDisplayText,
   normalizeAskAiPresentationText,
   getAskAiDisplayLines,

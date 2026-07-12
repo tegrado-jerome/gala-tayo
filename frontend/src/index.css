@@ -100,6 +100,16 @@ body {
   font-family: "Nunito Sans", system-ui, sans-serif;
 }
 
+body.feature-guide-open #root {
+  filter: blur(2px) saturate(0.9);
+  pointer-events: none;
+  user-select: none;
+}
+
+body.feature-guide-open {
+  overflow: hidden;
+}
+
 .gala-page-background {
   background: var(--bg);
 }
@@ -231,6 +241,12 @@ button:disabled {
 :focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
+}
+
+.ask-ai-composer-input:focus,
+.ask-ai-composer-input:focus-visible {
+  outline: none;
+  box-shadow: none !important;
 }
 
 :where(.gala-app-page, .gala-page-shell, .gala-page-background) :is(button, input, textarea, select, [role="button"]) {
@@ -1937,6 +1953,58 @@ div[class*="border-white"] {
   }
 }
 
+@keyframes gala-info-ring {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.45;
+  }
+
+  50% {
+    transform: scale(1.18);
+    opacity: 0.08;
+  }
+}
+
+@keyframes gala-info-glow {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.42;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes gala-info-breathe {
+  0%, 100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+@keyframes gala-guide-sheen {
+  0%, 100% {
+    opacity: 0.45;
+    transform: translateX(-1%);
+  }
+
+  50% {
+    opacity: 0.95;
+    transform: translateX(1%);
+  }
+}
+
+body.feature-guide-open header,
+body.feature-guide-open nav[aria-label="Primary"] {
+  filter: blur(1.5px) saturate(0.88);
+  opacity: 0.55;
+}
+
 @keyframes gala-mini-pin-run {
   0%,
   100% {
@@ -2233,12 +2301,13 @@ div[class*="border-white"] {
   width: auto;
   height: auto;
   pointer-events: auto;
+  overflow: visible;
   transform-origin: 17px bottom;
   transition: transform var(--motion-base) var(--ease-soft), filter var(--motion-base) var(--ease-soft), box-shadow var(--motion-base) var(--ease-soft);
 }
 
 .gt-map-pin-badge__label {
-  display: block;
+  display: inline-block;
   max-width: min(150px, 40vw);
   min-width: 0;
   overflow: hidden;
@@ -2253,6 +2322,8 @@ div[class*="border-white"] {
   padding: 6px 9px;
   text-overflow: ellipsis;
   white-space: nowrap;
+  flex-shrink: 1;
+  margin-left: 6px;
 }
 
 .gt-map-pin-badge__body {

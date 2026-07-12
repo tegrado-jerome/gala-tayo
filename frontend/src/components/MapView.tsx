@@ -40,11 +40,40 @@ type ValidMapPlace = {
   place: PlaceCardData
   latLng: ValidLatLng
   order: number
+  mallClusterKey: string | null
+  mallClusterOrder: number
+  mallClusterSize: number
 }
 
 const metroManilaCenter: ValidLatLng = [14.5995, 120.9842]
 const philippinesLatRange = { min: 4, max: 21 }
 const philippinesLngRange = { min: 116, max: 127 }
+const mallParentMatchers: RegExp[] = [
+  /\bSM City\s+[A-Za-z0-9'’&.-]+(?:\s+[A-Za-z0-9'’&.-]+)*/i,
+  /\bSM (?:Aura|Southmall|Northmall|Fairview|Sangandaan|Megamall|Manila|Marikina|Caloocan|Sucat|Baguio|Bacoor|Dasmariñas|Dasmarinas|Grand Central)\b(?:\s+[A-Za-z0-9'’&.-]+)*/i,
+  /\bShangri-?La Plaza\b/i,
+  /\bAyala Malls?\s+[A-Za-z0-9'’&.-]+(?:\s+[A-Za-z0-9'’&.-]+)*/i,
+  /\bMarket!? Market!?/i,
+  /\bFestival Mall(?:\s+[A-Za-z0-9'’&.-]+)*/i,
+  /\bFisher Mall(?:\s+[A-Za-z0-9'’&.-]+)*/i,
+  /\bVista Mall(?:\s+[A-Za-z0-9'’&.-]+)*/i,
+  /\bCommerceCenter Alabang\b/i,
+  /\bAlabang Town Center\b/i,
+  /\bNewport Mall\b/i,
+  /\bNewport World Resorts\b/i,
+  /\bCity of Dreams Manila\b/i,
+  /\bSolaire Resort Entertainment City\b/i,
+  /\bGateway (?:Mall|Cineplex|Gallery)\b(?:\s+[A-Za-z0-9'’&.-]+)*/i,
+  /\bUP Town Center\b/i,
+  /\bThe Podium\b/i,
+  /\bRobinsons Place\s+[A-Za-z0-9'’&.-]+(?:\s+[A-Za-z0-9'’&.-]+)*/i,
+  /\bRobinsons (?:Galleria|Magnolia)\b/i,
+  /\bEastwood City\b/i,
+  /\bGreenbelt\b(?:\s+[A-Za-z0-9'’&.-]+)*/i,
+  /\bGlorietta\b(?:\s+[A-Za-z0-9'’&.-]+)*/i,
+  /\bRockwell Center\b/i,
+  /\bFairview Terraces\b/i,
+]
 
 function renderMarkerPinIcon(placeName: string, order: number, isSelected: boolean, isFocused: boolean) {
   const stackClasses = ['gt-map-pin-badge']
@@ -65,6 +94,23 @@ function renderMarkerPinIcon(placeName: string, order: number, isSelected: boole
       <span className="gt-map-pin-badge__label">{placeName}</span>
     </span>
   )
+}
+
+function getClusteredMarkerPosition(latLng: ValidLatLng, clusterOrder: number, clusterSize: number): ValidLatLng {
+  if (clusterSize <= 1) {
+    return latLng
+  }
+
+  const safeOrder = Number.isFinite(clusterOrder) ? clusterOrder : 0
+  const safeSize = Math.max(1, Math.floor(clusterSize))
+  const angle = (Math.PI * 2 * safeOrder) / safeSize - Math.PI / 2
+  const spreadMeters = Math.min(10 + safeSize * 1.5, 22)
+  const latitudeRadians = (latLng[0] * Math.PI) / 180
+  const latOffset = (Math.sin(angle) * spreadMeters) / 111_320
+  const lngScale = Math.max(Math.cos(latitudeRadians), 0.25)
+  const lngOffset = (Math.cos(angle) * spreadMeters) / (111_320 * lngScale)
+
+  return [latLng[0] + latOffset, latLng[1] + lngOffset]
 }
 
 function createCapsuleMarkerIcon(
@@ -169,6 +215,53 @@ function normalizeCoordinateString(value: unknown): ValidLatLng | null {
   }
 
   return normalizeLatLngValues(match[1], match[2])
+}
+
+function normalizeComparisonText(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function buildMallGroupingText(place: PlaceCardData) {
+  return [
+    place.name,
+    place.area,
+    place.address,
+    place.city,
+    place.localArea,
+    place.badge,
+    place.category,
+  ]
+    .filter((value): value is string => typeof value === 'string' && value.trim().length > 0)
+    .join(' | ')
+}
+
+function extractMallParentKey(place: PlaceCardData): string | null {
+  const corpus = buildMallGroupingText(place)
+
+  for (const matcher of mallParentMatchers) {
+    const match = corpus.match(matcher)
+
+    if (!match?.[0]) {
+      continue
+    }
+
+    return normalizeComparisonText(match[0])
+  }
+
+  return null
+}
+
+function isMallParentVenue(place: PlaceCardData, mallParentKey: string | null): boolean {
+  if (!mallParentKey) {
+    return false
+  }
+
+  const corpus = normalizeComparisonText(buildMallGroupingText(place))
+  return corpus === mallParentKey || corpus.startsWith(`${mallParentKey} `) || corpus.endsWith(` ${mallParentKey}`)
 }
 
 function normalizeCenter(center: LatLngInput): ValidLatLng {
@@ -482,9 +575,9 @@ function createPickPinIcon() {
         </span>
       </span>
     ),
-    iconSize: [50, 56],
-    iconAnchor: [17, 46],
-    popupAnchor: [0, -46],
+    iconSize: [44, 44],
+    iconAnchor: [22, 38],
+    popupAnchor: [0, -38],
   })
 }
 
@@ -641,16 +734,89 @@ function MapView({
     return normalizeCenter(center)
   }, [center, pickMode, pickPosition])
   const safeZoom = Number.isFinite(zoom) ? zoom : 12
-  const validPlaces = useMemo(
-    () =>
-      places
-        .map((place, index) => ({
+  const validPlaces = useMemo(() => {
+    const basePlaces = places
+      .map((place, index) => {
+        const latLng = getSafeMarkerLatLng(place)
+
+        return {
           place,
-          latLng: getSafeMarkerLatLng(place),
+          latLng,
           order: typeof place.displayIndex === 'number' ? place.displayIndex : index + 1,
-        }))
-        .filter((item): item is ValidMapPlace => item.latLng !== null),
-    [places]
+          mallClusterKey: latLng ? extractMallParentKey(place) : null,
+        }
+      })
+      .filter((item): item is Omit<ValidMapPlace, 'mallClusterOrder' | 'mallClusterSize'> => item.latLng !== null)
+
+    const clusters = new Map<string, typeof basePlaces>()
+
+    for (const item of basePlaces) {
+      if (!item.mallClusterKey) {
+        continue
+      }
+
+      const clusterKey = `${item.mallClusterKey}:${item.latLng[0].toFixed(6)}:${item.latLng[1].toFixed(6)}`
+      const existing = clusters.get(clusterKey) ?? []
+      existing.push(item)
+      clusters.set(clusterKey, existing)
+    }
+
+    return basePlaces.map((item) => {
+      if (!item.mallClusterKey) {
+        return {
+          ...item,
+          mallClusterOrder: 0,
+          mallClusterSize: 1,
+        }
+      }
+
+      const clusterKey = `${item.mallClusterKey}:${item.latLng[0].toFixed(6)}:${item.latLng[1].toFixed(6)}`
+      const clusterItems = clusters.get(clusterKey) ?? []
+
+      if (clusterItems.length <= 1) {
+        return {
+          ...item,
+          mallClusterOrder: 0,
+          mallClusterSize: 1,
+        }
+      }
+
+      const sortedClusterItems = [...clusterItems].sort((left, right) => {
+        const leftIsParent = isMallParentVenue(left.place, left.mallClusterKey)
+        const rightIsParent = isMallParentVenue(right.place, right.mallClusterKey)
+
+        if (leftIsParent !== rightIsParent) {
+          return leftIsParent ? -1 : 1
+        }
+
+        return (
+          left.place.name.localeCompare(right.place.name) ||
+          left.place.id.localeCompare(right.place.id)
+        )
+      })
+
+      const clusterOrder = sortedClusterItems.findIndex((clusterItem) => clusterItem.place.id === item.place.id)
+
+      return {
+        ...item,
+        mallClusterOrder: clusterOrder < 0 ? 0 : clusterOrder,
+        mallClusterSize: sortedClusterItems.length,
+      }
+    }).map((item) => item)
+  }, [places])
+  const clusteredPlaces = useMemo(
+    () =>
+      validPlaces.map((item) => {
+        if (item.mallClusterSize <= 1) {
+          return item
+        }
+
+        return {
+          ...item,
+          latLng: getClusteredMarkerPosition(item.latLng, item.mallClusterOrder, item.mallClusterSize),
+        }
+      }),
+    [validPlaces]
   )
   const containerClassName = className.trim()
     ? className
@@ -709,7 +875,7 @@ function MapView({
               url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             <MarkerLayer
-              validPlaces={validPlaces}
+              validPlaces={clusteredPlaces}
               selectedPlaceId={selectedPlaceId}
               focusedPlaceId={focusedPlaceId}
               onPlaceSelect={onPlaceSelect}

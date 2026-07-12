@@ -504,7 +504,9 @@ export function normalizeLatLngObject(
         lng: latitude,
         latitude: longitude,
         longitude: latitude,
-        ...(source ? { source, trusted: true as const, ...(source === 'geoapify' ? { verified: true as const } : {}) } : {}),
+        ...(source ? { source } : {}),
+        trusted: true as const,
+        verified: true as const,
       }
     }
 

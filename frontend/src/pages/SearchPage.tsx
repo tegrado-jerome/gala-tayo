@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import AppHeader from '../components/AppHeader'
 import MinimalBackNav from '../components/MinimalBackNav'
 import { AppIcon } from '../components/AppIcon'
+import { FeatureGuideModalTrigger, featureGuideContent } from '../components/FeatureGuideModal'
 import { navigateToPath } from '../utils/navigation'
 import { buildSearchPath, hasActiveSearchCriteria, normalizeTypedSearchText, readSearchUrlState } from '../utils/searchParams'
 import HomePage from './HomePage'
@@ -14,7 +15,11 @@ const sampleSearchQueries = [
   'budget-friendly food trip in Manila',
 ]
 
-function SearchPage() {
+function SearchPage({
+  navigationSource = 'push',
+}: {
+  navigationSource?: 'push' | 'replace' | 'pop'
+}) {
   const routeSearchState = readSearchUrlState(window.location.search)
   const initialQuery = routeSearchState.q
   const initialPage = routeSearchState.page
@@ -101,6 +106,7 @@ function SearchPage() {
           page: initialPage,
           autoSearch: true,
         }}
+        navigationSource={navigationSource}
       />
     )
   }
@@ -121,10 +127,14 @@ function SearchPage() {
             </label>
             <div className="mx-auto w-full">
               <div className="text-center">
-                <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-slate-500 sm:text-[13px]">Search</p>
-                <h1 className="mt-3 text-[30px] font-black leading-[1.05] tracking-[-0.03em] text-slate-950 sm:text-[38px] lg:text-[44px]">
-                  Where do you want to go?
-                </h1>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-[12px] font-semibold uppercase tracking-[0.18em] text-slate-500 sm:text-[13px]">Search</p>
+                </div>
+                <div className="mt-3">
+                  <h1 className="text-[30px] font-black leading-[1.05] tracking-[-0.03em] text-slate-950 sm:text-[38px] lg:text-[44px]">
+                    Where do you want to go?
+                  </h1>
+                </div>
                 <p className="mx-auto mt-3 max-w-[32ch] text-[14px] font-medium leading-6 text-slate-500 sm:text-[15px]">
                   Find cafes, parks, malls, date spots, and gala ideas around Metro Manila.
                 </p>
@@ -178,11 +188,19 @@ function SearchPage() {
                   </div>
                 </div>
 
-                <p className="mx-auto mt-4 max-w-[34rem] text-[12.5px] leading-6 text-slate-600 sm:text-[14px]">
-                  <span className="font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">Quick tip:</span>{' '}
-                  Try adding a vibe, area, or budget like <span className="font-semibold text-slate-900">"cozy cafe in Makati"</span> or{' '}
-                  <span className="font-semibold text-slate-900">"date spot near BGC"</span>.
-                </p>
+                <div className="mx-auto mt-4 max-w-[34rem] text-[12.5px] leading-6 text-slate-600 sm:text-[14px]">
+                  <div className="flex justify-center">
+                    <FeatureGuideModalTrigger
+                      content={featureGuideContent.search}
+                      triggerLabel="Quick Tip"
+                      className="border-emerald-100 bg-white/95 px-4 py-2.5 shadow-[0_1px_0_rgba(15,23,42,0.02)]"
+                    />
+                  </div>
+                  <p className="mt-3">
+                    Try adding a vibe, area, or budget like <span className="font-semibold text-slate-900">"cozy cafe in Makati"</span> or{' '}
+                    <span className="font-semibold text-slate-900">"date spot near BGC"</span>.
+                  </p>
+                </div>
               </div>
             </div>
           </section>

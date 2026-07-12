@@ -8,15 +8,16 @@ import PlaceCard, { type PlaceCardData } from '../components/PlaceCard'
 import SeoHead from '../components/SeoHead'
 import { PageContainer, PageShell, ResponsiveGrid } from '../components/layout/ResponsiveLayouts'
 import { getPlaceCategoryLabel } from '../data/placeCategories'
-import { navigateToCanonicalPlace, navigateToPath } from '../utils/navigation'
+import { navigateToPath } from '../utils/navigation'
 import { getSiteOrigin } from '../utils/seo'
 import { getApiUrl } from '../utils/apiClient'
-import { getListingPlaceViewportTop, readListingRouteCache, restoreListingRouteScroll, writeListingRouteCache } from '../utils/listingRouteCache'
+import { consumePendingListingRouteCache, getListingPlaceViewportTop, readListingRouteCache, restoreListingRouteScroll, seedPendingListingRouteCache, writeListingRouteCache } from '../utils/listingRouteCache'
 import { mapSeoPlaceToCard, type SeoPlaceSummary } from '../utils/seoApi'
 
 type CategoryPlacesPageProps = {
   categorySlug: string
   search?: string
+  navigationSource?: 'push' | 'replace' | 'pop'
 }
 
 const PAGE_SIZE = 12
@@ -118,8 +119,11 @@ async function readCategoryPlacesResponse(response: Response): Promise<CategoryP
   }
 }
 
-function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPageProps) {
-  const [routeCache] = useState(() => readListingRouteCache())
+function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'push' }: CategoryPlacesPageProps) {
+  const [routeCache] = useState(() => {
+    const currentPath = `${window.location.pathname}${window.location.search}`
+    return navigationSource === 'pop' ? readListingRouteCache() : consumePendingListingRouteCache(currentPath)
+  })
   const [payload, setPayload] = useState<CategoryPlacesResponse>(() =>
     routeCache
       ? {
@@ -135,16 +139,31 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(
-    routeCache?.pendingScrollRestore ? routeCache.selectedPlaceId : null,
+    navigationSource === 'pop' && routeCache?.pendingScrollRestore ? routeCache.selectedPlaceId : null,
   )
   const hasRestoredInitialScrollRef = useRef(false)
+  const skipInitialFetchRef = useRef(Boolean(routeCache) && navigationSource !== 'pop')
   const categoryLabel = getPlaceCategoryLabel(categorySlug)
   const iconName = getCategoryIconName(categoryLabel)
   const searchParams = useMemo(() => new URLSearchParams(search), [search])
   const currentPage = Math.max(Number(searchParams.get('page') || '1') || 1, 1)
+  const [confirmedPage, setConfirmedPage] = useState(() => routeCache?.page ?? currentPage)
   const hasQueryVariant = currentPage > 1
+  const getPagePath = (page: number) => {
+    const params = new URLSearchParams()
+    if (page > 1) {
+      params.set('page', String(page))
+    }
+
+    return params.toString() ? `/places/categories/${categorySlug}?${params.toString()}` : `/places/categories/${categorySlug}`
+  }
 
   useEffect(() => {
+    if (skipInitialFetchRef.current) {
+      skipInitialFetchRef.current = false
+      return
+    }
+
     const controller = new AbortController()
 
     const loadPage = async () => {
@@ -173,6 +192,7 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
         }
 
         setPayload(data)
+        setConfirmedPage(data.page || currentPage)
       } catch (error) {
         if ((error as Error).name === 'AbortError') {
           return
@@ -194,7 +214,7 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
   }, [categorySlug, currentPage])
 
   useLayoutEffect(() => {
-    if (!routeCache?.pendingScrollRestore || hasRestoredInitialScrollRef.current) {
+    if (navigationSource !== 'pop' || !routeCache?.pendingScrollRestore || hasRestoredInitialScrollRef.current) {
       return
     }
 
@@ -208,34 +228,68 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
       ...routeCache,
       pendingScrollRestore: false,
     })
-  }, [isLoading, isRefreshing, routeCache, selectedPlaceId])
+  }, [isLoading, isRefreshing, navigationSource, routeCache, selectedPlaceId])
 
   const places = useMemo(() => sortPlacesAlphabetically(payload.items), [payload.items])
   const totalPages = payload.totalPages
-  const safePage = payload.page || currentPage
+  const safePage = confirmedPage
   const isPageTransitionLoading = isLoading || isRefreshing
   const shouldShowEmptyState = !isPageTransitionLoading && places.length === 0 && !errorMessage
-  const getPagePath = (page: number) => {
-    const params = new URLSearchParams()
-    if (page > 1) {
-      params.set('page', String(page))
-    }
+  const fetchPlacesForPage = async (page: number, signal?: AbortSignal) => {
+    const response = await fetch(getSearchApiUrl(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      signal,
+      body: JSON.stringify({
+        query: '',
+        page,
+        filters: {
+          category: categorySlug,
+        },
+      }),
+    })
 
-    return params.toString() ? `/places/categories/${categorySlug}?${params.toString()}` : `/places/categories/${categorySlug}`
+    return readCategoryPlacesResponse(response)
   }
-  const handlePageChange = (page: number) => {
+  const handlePageChange = async (page: number) => {
     const nextPage = Math.min(Math.max(page, 1), totalPages)
+    let didNavigate = false
 
-    if (nextPage === safePage) {
+    if (nextPage === confirmedPage || nextPage === currentPage) {
       return
     }
 
-    setIsLoading(true)
-    setIsRefreshing(false)
+    setIsLoading(false)
+    setIsRefreshing(true)
+    setErrorMessage(null)
 
-    window.requestAnimationFrame(() => {
-      navigateToPath(getPagePath(nextPage))
-    })
+    try {
+      const data = await fetchPlacesForPage(nextPage)
+      const targetPath = getPagePath(nextPage)
+
+      seedPendingListingRouteCache(targetPath, {
+        items: data.items,
+        total: data.total,
+        page: data.page,
+        pageSize: data.pageSize,
+        totalPages: data.totalPages,
+        scrollY: 0,
+        selectedPlaceId: null,
+        selectedPlaceViewportTop: null,
+        pendingScrollRestore: false,
+      })
+
+      navigateToPath(targetPath)
+      didNavigate = true
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to load category page.')
+    } finally {
+      if (!didNavigate) {
+        setIsRefreshing(false)
+      }
+    }
   }
 
   useEffect(() => {
@@ -338,7 +392,8 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
                     <p className="mt-1 text-[13px] leading-6 text-[var(--muted)]">Listed alphabetically across Metro Manila.</p>
                   </div>
                 </div>
-                <ResponsiveGrid desktopColumns={2} className="mt-4 gap-4">
+                <div className={`mt-4 transition ${isPageTransitionLoading ? 'pointer-events-none opacity-60' : 'opacity-100'}`}>
+                  <ResponsiveGrid desktopColumns={2} className="gap-4">
                   {places.map((rawPlace) => {
                     const place = mapSeoPlaceToCard(rawPlace) as PlaceCardData
                     return (
@@ -362,22 +417,13 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
                               selectedPlaceViewportTop: getListingPlaceViewportTop(rawPlace.id),
                               pendingScrollRestore: true,
                             })
-                            navigateToCanonicalPlace({
-                              slug: rawPlace.slug,
-                              city: rawPlace.city,
-                              area: rawPlace.area,
-                              localArea: rawPlace.area ?? null,
-                            }, {
-                              source: 'category',
-                              returnTo: `${window.location.pathname}${window.location.search}`,
-                              returnLabel: categoryLabel,
-                            })
                           }}
                         />
                       </div>
                     )
                   })}
-                </ResponsiveGrid>
+                  </ResponsiveGrid>
+                </div>
               </section>
             )}
 

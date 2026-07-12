@@ -80,20 +80,7 @@ function SearchEmptyState({
     )
   }
 
-  return (
-    <div className="rounded-lg border border-dashed border-[var(--line)] bg-white px-4 py-6 text-center">
-        <img
-          src={searchBeforeChibi}
-          alt=""
-          className="gala-chibi mx-auto mb-3 h-28 w-28 object-contain"
-          loading="lazy"
-        />
-        <p className="text-sm font-semibold text-slate-900">Saan tayo gala today?</p>
-        <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">
-          Type a place, or pick a vibe to start exploring Metro Manila.
-        </p>
-    </div>
-  )
+  return null
 }
 
 function SearchPageBreadcrumb({ className = '' }: { className?: string }) {
@@ -727,7 +714,7 @@ function DesktopResultsView({
 }) {
   return (
     <section className="gala-page-background grid h-full min-h-0 select-none overflow-hidden lg:grid-cols-[minmax(380px,480px)_minmax(0,1fr)] xl:grid-cols-[minmax(440px,560px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(500px,620px)_minmax(0,1fr)]">
-      <aside ref={scrollContainerRef} className="min-h-0 overflow-y-auto overscroll-contain border-r border-[var(--line)] px-6 py-6">
+      <aside ref={scrollContainerRef} className="h-full min-h-0 overflow-y-auto overscroll-contain border-r border-[var(--line)] px-6 py-6">
         <SearchPageBreadcrumb className="mb-4" />
         <div className="flex items-start justify-between gap-6">
           <div>

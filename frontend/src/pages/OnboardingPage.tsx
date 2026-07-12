@@ -17,6 +17,7 @@ import {
 import { getOnboardingStatus } from '../utils/profileApi'
 import { avatarUploadErrorMessage, isValidAvatarFile, prepareAvatarUploadFile } from '../utils/avatarUpload'
 import { navigateToPath } from '../utils/navigation'
+import { trackOnboardingCompleted } from '../utils/analytics'
 
 type OnboardingPageProps = {
   session: Session
@@ -482,6 +483,9 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
       setIsSubmitting(true)
       setErrors({})
       await completeOnboardingSetup({ ...values, username: normalizedUsername }, session)
+      trackOnboardingCompleted({
+        method: 'profile_setup',
+      })
       clearOnboardingDraft(session.user.id)
       onComplete?.()
       navigateToPath('/')

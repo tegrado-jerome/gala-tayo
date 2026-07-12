@@ -7,6 +7,7 @@ import { buildPlaceDescription, buildPlaceFaqSchema, getStructuredPlaceType } fr
 import { mapBackendPlaceToCardData } from '../utils/placeMapping'
 import { formatLabelFromSlug } from '../utils/routes'
 import { getApiUrl } from '../utils/apiClient'
+import { trackPlaceViewed } from '../utils/analytics'
 import type { PlaceDetail, PlaceDetailCardData } from '../types/appTypes'
 
 export default function SharedPlacePage({
@@ -120,6 +121,18 @@ export default function SharedPlacePage({
       replaceWithPath(canonicalPath)
     }
   }, [canonicalPath, currentPathname, expectedAreaSlug, redirectToCanonical])
+
+  useEffect(() => {
+    if (!place || !areaMeta || !canonicalPath) {
+      return
+    }
+
+    trackPlaceViewed({
+      placeSlug: place.slug,
+      areaSlug: areaMeta.slug,
+      category: place.category,
+    })
+  }, [areaMeta, canonicalPath, place])
 
   if (isLoading) {
     return null

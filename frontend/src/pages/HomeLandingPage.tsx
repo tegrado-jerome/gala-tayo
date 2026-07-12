@@ -2,13 +2,11 @@ import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent } from 'r
 import { Flame, TrendingUp } from 'lucide-react'
 import AppHeader from '../components/AppHeader'
 import { AppIcon, getCategoryIconName } from '../components/AppIcon'
+import InternalLink from '../components/InternalLink'
 import type { PlaceCardData, PlaceCategoryMeta, PlaceTagMeta } from '../components/PlaceCard'
 import { PageContainer, PageShell, ChibiIllustration } from '../components/layout/ResponsiveLayouts'
 import { supabase } from '../supabase'
-import {
-  navigateToCanonicalPlace,
-  navigateToPath,
-} from '../utils/navigation'
+import { navigateToPath } from '../utils/navigation'
 import { getApiUrl } from '../utils/apiClient'
 import { readHomeTrendingCache, writeHomeTrendingCache } from '../utils/homeTrendingCache'
 import {
@@ -17,6 +15,7 @@ import {
   restoreHomeLandingScroll,
   writeHomeLandingScrollCache,
 } from '../utils/homeLandingScrollCache'
+import { getCanonicalPlacePath, resolveAreaMeta } from '../utils/routes'
 import homeChibi from '../assets/chibis/public/chibi-welcome-page.webp'
 
 type BackendSearchPlace = {
@@ -197,9 +196,23 @@ function TrendingCard({ place, rank }: { place: PlaceCardData; rank: number }) {
   const placeholderIconName = getCategoryIconName(place.category)
   const isTopThree = rank <= 3
   const animationDelay = `${(rank - 1) * 140}ms`
+  const resolvedHref = place.slug
+    ? getCanonicalPlacePath({
+        areaSlug: resolveAreaMeta({
+          city: place.city,
+          area: place.area,
+          localArea: place.localArea,
+        }).slug,
+        placeSlug: place.slug,
+      })
+    : null
 
-  const handleOpenPlace = (event: MouseEvent<HTMLButtonElement>) => {
+  const handleOpenPlace = (event: MouseEvent<HTMLAnchorElement>) => {
     if (!place.slug) {
+      return
+    }
+
+    if (event.button !== 0 || event.metaKey || event.altKey || event.ctrlKey || event.shiftKey) {
       return
     }
 
@@ -209,111 +222,140 @@ function TrendingCard({ place, rank }: { place: PlaceCardData; rank: number }) {
       selectedPlaceViewportTop: event.currentTarget.getBoundingClientRect().top,
       pendingScrollRestore: true,
     })
-
-    navigateToCanonicalPlace({
-      slug: place.slug,
-      city: place.city,
-      area: place.area,
-      localArea: place.localArea,
-    }, {
-      source: 'home-trending',
-      returnTo: '/',
-      returnLabel: 'Trending now',
-    })
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleOpenPlace}
-      data-home-trending-place-id={place.id}
-      className={getTrendingCardShellClass(isTopThree)}
-    >
-      {isTopThree ? (
-        <>
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-white/90 via-white/35 to-transparent"
-          />
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute -left-1/3 top-1/4 h-24 w-1/2 rounded-full bg-amber-200/35 blur-3xl"
-          />
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,transparent_20%,rgba(255,255,255,0.1)_35%,rgba(255,255,255,0.85)_46%,rgba(255,255,255,0.1)_57%,transparent_72%)] [background-size:220%_100%] [animation:gala-ai-shine-sweep_4.8s_ease-in-out_infinite]"
-            style={{ animationDelay }}
-          />
-        </>
-      ) : null}
+    <div data-home-trending-place-id={place.id}>
+      {resolvedHref ? (
+        <InternalLink
+          href={resolvedHref}
+          onClick={handleOpenPlace}
+          className={`${getTrendingCardShellClass(isTopThree)} block w-full text-left`}
+        >
+          {isTopThree ? (
+            <>
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-white/90 via-white/35 to-transparent"
+              />
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute -left-1/3 top-1/4 h-24 w-1/2 rounded-full bg-amber-200/35 blur-3xl"
+              />
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,transparent_20%,rgba(255,255,255,0.1)_35%,rgba(255,255,255,0.85)_46%,rgba(255,255,255,0.1)_57%,transparent_72%)] [background-size:220%_100%] [animation:gala-ai-shine-sweep_4.8s_ease-in-out_infinite]"
+                style={{ animationDelay }}
+              />
+            </>
+          ) : null}
 
-      {imageUrl ? (
-        <div className="relative h-28 w-full overflow-hidden sm:h-32">
-          <img
-            src={imageUrl}
-            alt={place.name}
-            className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-            loading="lazy"
-          />
-          {isTopThree ? (
-            <span
-              aria-hidden="true"
-              className="pointer-events-none absolute left-2 top-2 h-10 w-10 rounded-full bg-amber-300/35 blur-md motion-safe:animate-ping"
-              style={{ animationDelay }}
-            />
-          ) : null}
-          {isTopThree ? (
-            <div
-              className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full border border-white/70 bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 px-2.5 py-1 text-[10px] font-black text-white shadow-[0_10px_24px_rgba(249,115,22,0.32)] backdrop-blur-sm motion-safe:animate-[gala-score-pop_900ms_ease-out_1_both]"
-              style={{ animationDelay }}
-            >
-              <Flame size={11} strokeWidth={2.5} className="motion-safe:animate-bounce" />
-              <span>{rank}</span>
+          {imageUrl ? (
+            <div className="relative h-28 w-full overflow-hidden sm:h-32">
+              <img
+                src={imageUrl}
+                alt={place.name}
+                className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                loading="lazy"
+              />
+              {isTopThree ? (
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute left-2 top-2 h-10 w-10 rounded-full bg-amber-300/35 blur-md motion-safe:animate-ping"
+                  style={{ animationDelay }}
+                />
+              ) : null}
+              {isTopThree ? (
+                <div
+                  className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full border border-white/70 bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 px-2.5 py-1 text-[10px] font-black text-white shadow-[0_10px_24px_rgba(249,115,22,0.32)] backdrop-blur-sm motion-safe:animate-[gala-score-pop_900ms_ease-out_1_both]"
+                  style={{ animationDelay }}
+                >
+                  <Flame size={11} strokeWidth={2.5} className="motion-safe:animate-bounce" />
+                  <span>{rank}</span>
+                </div>
+              ) : null}
             </div>
-          ) : null}
-        </div>
+          ) : (
+            <div className="relative flex h-28 w-full shrink-0 flex-col items-center justify-center gap-1 overflow-hidden border-b border-slate-100 bg-slate-50 text-center sm:h-32">
+              {isTopThree ? (
+                <span
+                  aria-hidden="true"
+                  className="pointer-events-none absolute left-2 top-2 h-10 w-10 rounded-full bg-amber-300/35 blur-md motion-safe:animate-ping"
+                  style={{ animationDelay }}
+                />
+              ) : null}
+              {isTopThree ? (
+                <div
+                  className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full border border-white/70 bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 px-2.5 py-1 text-[10px] font-black text-white shadow-[0_10px_24px_rgba(249,115,22,0.32)] motion-safe:animate-[gala-score-pop_900ms_ease-out_1_both]"
+                  style={{ animationDelay }}
+                >
+                  <Flame size={11} strokeWidth={2.5} className="motion-safe:animate-bounce" />
+                  <span>{rank}</span>
+                </div>
+              ) : null}
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-[var(--accent)]">
+                <AppIcon name={placeholderIconName} className="h-4 w-4" />
+              </span>
+              <span className="text-[11px] font-medium text-slate-400">No photo yet</span>
+            </div>
+          )}
+
+          <div className="flex min-h-0 flex-1 flex-col gap-1.5 p-3">
+            <div className="flex items-start justify-between gap-2">
+              <h3 className="line-clamp-1 text-[13px] font-semibold leading-tight text-slate-900">
+                {place.name}
+              </h3>
+              <span className="shrink-0 rounded-full bg-[var(--accent-wash)] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[var(--accent)]">
+                {place.category}
+              </span>
+            </div>
+
+            {description ? (
+              <p className="line-clamp-2 text-[11px] leading-[1.4] text-slate-500">
+                {description}
+              </p>
+            ) : null}
+          </div>
+        </InternalLink>
       ) : (
-        <div className="relative flex h-28 w-full shrink-0 flex-col items-center justify-center gap-1 overflow-hidden border-b border-slate-100 bg-slate-50 text-center sm:h-32">
-          {isTopThree ? (
-            <span
-              aria-hidden="true"
-              className="pointer-events-none absolute left-2 top-2 h-10 w-10 rounded-full bg-amber-300/35 blur-md motion-safe:animate-ping"
-              style={{ animationDelay }}
-            />
-          ) : null}
-          {isTopThree ? (
-            <div
-              className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full border border-white/70 bg-gradient-to-r from-amber-400 via-orange-500 to-rose-500 px-2.5 py-1 text-[10px] font-black text-white shadow-[0_10px_24px_rgba(249,115,22,0.32)] motion-safe:animate-[gala-score-pop_900ms_ease-out_1_both]"
-              style={{ animationDelay }}
-            >
-              <Flame size={11} strokeWidth={2.5} className="motion-safe:animate-bounce" />
-              <span>{rank}</span>
+        <div className={`${getTrendingCardShellClass(isTopThree)} block w-full text-left`}>
+          {imageUrl ? (
+            <div className="relative h-28 w-full overflow-hidden sm:h-32">
+              <img
+                src={imageUrl}
+                alt={place.name}
+                className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                loading="lazy"
+              />
             </div>
-          ) : null}
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-[var(--accent)]">
-            <AppIcon name={placeholderIconName} className="h-4 w-4" />
-          </span>
-          <span className="text-[11px] font-medium text-slate-400">No photo yet</span>
+          ) : (
+            <div className="relative flex h-28 w-full shrink-0 flex-col items-center justify-center gap-1 overflow-hidden border-b border-slate-100 bg-slate-50 text-center sm:h-32">
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-[var(--accent)]">
+                <AppIcon name={placeholderIconName} className="h-4 w-4" />
+              </span>
+              <span className="text-[11px] font-medium text-slate-400">No photo yet</span>
+            </div>
+          )}
+
+          <div className="flex min-h-0 flex-1 flex-col gap-1.5 p-3">
+            <div className="flex items-start justify-between gap-2">
+              <h3 className="line-clamp-1 text-[13px] font-semibold leading-tight text-slate-900">
+                {place.name}
+              </h3>
+              <span className="shrink-0 rounded-full bg-[var(--accent-wash)] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[var(--accent)]">
+                {place.category}
+              </span>
+            </div>
+
+            {description ? (
+              <p className="line-clamp-2 text-[11px] leading-[1.4] text-slate-500">
+                {description}
+              </p>
+            ) : null}
+          </div>
         </div>
       )}
-
-      <div className="flex min-h-0 flex-1 flex-col gap-1.5 p-3">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="line-clamp-1 text-[13px] font-semibold leading-tight text-slate-900">
-            {place.name}
-          </h3>
-          <span className="shrink-0 rounded-full bg-[var(--accent-wash)] px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[var(--accent)]">
-            {place.category}
-          </span>
-        </div>
-
-        {description ? (
-          <p className="line-clamp-2 text-[11px] leading-[1.4] text-slate-500">
-            {description}
-          </p>
-        ) : null}
-      </div>
-    </button>
+    </div>
   )
 }
 
@@ -355,9 +397,15 @@ function TrendingCardSkeleton({ rank }: { rank: number }) {
   )
 }
 
-function HomeLandingPage() {
+function HomeLandingPage({
+  navigationSource = 'push',
+}: {
+  navigationSource?: 'push' | 'replace' | 'pop'
+}) {
   const cachedTrendingPlacesRef = useRef<PlaceCardData[] | null>(readHomeTrendingCache())
-  const initialHomeLandingScrollCacheRef = useRef(readHomeLandingScrollCache())
+  const initialHomeLandingScrollCacheRef = useRef(
+    navigationSource === 'pop' ? readHomeLandingScrollCache() : null
+  )
   const [trendingPlaces, setTrendingPlaces] = useState<PlaceCardData[]>(cachedTrendingPlacesRef.current ?? [])
   const [isTrendingLoading, setIsTrendingLoading] = useState(cachedTrendingPlacesRef.current === null)
   const [trendingError, setTrendingError] = useState<string | null>(null)
@@ -438,7 +486,7 @@ function HomeLandingPage() {
   useLayoutEffect(() => {
     const homeLandingScrollCache = initialHomeLandingScrollCacheRef.current
 
-    if (!homeLandingScrollCache?.pendingScrollRestore || hasRestoredHomeLandingScrollRef.current) {
+    if (navigationSource !== 'pop' || !homeLandingScrollCache?.pendingScrollRestore || hasRestoredHomeLandingScrollRef.current) {
       return
     }
 
@@ -450,7 +498,7 @@ function HomeLandingPage() {
     })
 
     clearHomeLandingScrollCache()
-  }, [])
+  }, [navigationSource])
 
   const handleSearchAction = () => {
     navigateToPath('/search')

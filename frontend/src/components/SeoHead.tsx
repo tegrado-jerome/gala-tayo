@@ -1,8 +1,8 @@
-import { useEffect } from 'react'
+import { useLayoutEffect } from 'react'
 import { applySeo, type SeoConfig } from '../utils/seo'
 
 function SeoHead(config: SeoConfig) {
-  useEffect(() => {
+  useLayoutEffect(() => {
     applySeo(config)
   }, [config])
 

@@ -10,15 +10,16 @@ import SeoHead from '../components/SeoHead'
 import { PageContainer, PageShell, ResponsiveGrid } from '../components/layout/ResponsiveLayouts'
 import { placeCategories } from '../data/placeCategories'
 import { metroManilaAreaNameBySlug } from '../data/metroManilaAreas'
-import { navigateToCanonicalPlace, navigateToPath } from '../utils/navigation'
+import { navigateToPath } from '../utils/navigation'
 import { formatLabelFromSlug, getSiteOrigin } from '../utils/seo'
 import { getApiUrl } from '../utils/apiClient'
-import { getListingPlaceViewportTop, readListingRouteCache, restoreListingRouteScroll, writeListingRouteCache } from '../utils/listingRouteCache'
+import { consumePendingListingRouteCache, getListingPlaceViewportTop, readListingRouteCache, restoreListingRouteScroll, seedPendingListingRouteCache, writeListingRouteCache } from '../utils/listingRouteCache'
 import { mapSeoPlaceToCard, type SeoPlaceSummary } from '../utils/seoApi'
 
 type AreaPlacesPageProps = {
   areaSlug: string
   search?: string
+  navigationSource?: 'push' | 'replace' | 'pop'
 }
 
 const FILTER_OPTIONS = [
@@ -132,8 +133,11 @@ async function readAreaPlacesResponse(response: Response): Promise<AreaPlacesRes
   }
 }
 
-function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
-  const [routeCache] = useState(() => readListingRouteCache())
+function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: AreaPlacesPageProps) {
+  const [routeCache] = useState(() => {
+    const currentPath = `${window.location.pathname}${window.location.search}`
+    return navigationSource === 'pop' ? readListingRouteCache() : consumePendingListingRouteCache(currentPath)
+  })
   const [payload, setPayload] = useState<AreaPlacesResponse>(() =>
     routeCache
       ? {
@@ -149,16 +153,29 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(
-    routeCache?.pendingScrollRestore ? routeCache.selectedPlaceId : null,
+    navigationSource === 'pop' && routeCache?.pendingScrollRestore ? routeCache.selectedPlaceId : null,
   )
   const filterScrollerRef = useRef<HTMLDivElement | null>(null)
   const activeFilterRef = useRef<HTMLAnchorElement | null>(null)
   const hasRestoredInitialScrollRef = useRef(false)
+  const skipInitialFetchRef = useRef(Boolean(routeCache) && navigationSource !== 'pop')
   const areaName = metroManilaAreaNameBySlug.get(areaSlug) || formatLabelFromSlug(areaSlug)
   const searchParams = useMemo(() => new URLSearchParams(search), [search])
   const activeCategory = normalizeValue(searchParams.get('category')) || 'all'
   const currentPage = Math.max(Number(searchParams.get('page') || '1') || 1, 1)
+  const [confirmedPage, setConfirmedPage] = useState(() => routeCache?.page ?? currentPage)
   const hasQueryVariant = activeCategory !== 'all' || currentPage > 1
+  const getPagePath = (page: number, category = activeCategory) => {
+    const params = new URLSearchParams()
+    if (category !== 'all') {
+      params.set('category', category)
+    }
+    if (page > 1) {
+      params.set('page', String(page))
+    }
+
+    return params.toString() ? `/places/${areaSlug}?${params.toString()}` : `/places/${areaSlug}`
+  }
 
   useLayoutEffect(() => {
     const scroller = filterScrollerRef.current
@@ -181,6 +198,11 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
   }, [activeCategory])
 
   useEffect(() => {
+    if (skipInitialFetchRef.current) {
+      skipInitialFetchRef.current = false
+      return
+    }
+
     const controller = new AbortController()
 
     const loadPage = async () => {
@@ -210,6 +232,7 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
         }
 
         setPayload(data)
+        setConfirmedPage(data.page || currentPage)
       } catch (error) {
         if ((error as Error).name === 'AbortError') {
           return
@@ -231,7 +254,7 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
   }, [activeCategory, areaSlug, currentPage])
 
   useLayoutEffect(() => {
-    if (!routeCache?.pendingScrollRestore || hasRestoredInitialScrollRef.current) {
+    if (navigationSource !== 'pop' || !routeCache?.pendingScrollRestore || hasRestoredInitialScrollRef.current) {
       return
     }
 
@@ -245,38 +268,103 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
       ...routeCache,
       pendingScrollRestore: false,
     })
-  }, [isLoading, isRefreshing, routeCache, selectedPlaceId])
+  }, [isLoading, isRefreshing, navigationSource, routeCache, selectedPlaceId])
 
   const allPlaces = useMemo(() => sortPlacesAlphabetically(payload.items), [payload.items])
   const totalPages = payload.totalPages
-  const safePage = payload.page || currentPage
+  const safePage = confirmedPage
   const isPageTransitionLoading = isLoading || isRefreshing
   const shouldShowEmptyState = !isPageTransitionLoading && allPlaces.length === 0 && !errorMessage
   const activeFilterLabel = FILTER_OPTIONS.find((filter) => filter.value === activeCategory)?.label ?? 'All'
-  const getPagePath = (page: number) => {
-    const params = new URLSearchParams()
-    if (activeCategory !== 'all') {
-      params.set('category', activeCategory)
-    }
-    if (page > 1) {
-      params.set('page', String(page))
-    }
+  const fetchPlacesForPage = async (page: number, category = activeCategory, signal?: AbortSignal) => {
+    const response = await fetch(getAreaSearchApiUrl(), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      signal,
+      body: JSON.stringify({
+        query: '',
+        page,
+        filters: {
+          city: areaSlug,
+          category,
+        },
+      }),
+    })
 
-    return params.toString() ? `/places/${areaSlug}?${params.toString()}` : `/places/${areaSlug}`
+    return readAreaPlacesResponse(response)
   }
-  const handlePageChange = (page: number) => {
+  const handlePageChange = async (page: number) => {
     const nextPage = Math.min(Math.max(page, 1), totalPages)
+    let didNavigate = false
 
-    if (nextPage === safePage) {
+    if (nextPage === confirmedPage || nextPage === currentPage) {
       return
     }
 
-    setIsLoading(true)
-    setIsRefreshing(false)
+    setIsLoading(false)
+    setIsRefreshing(true)
+    setErrorMessage(null)
 
-    window.requestAnimationFrame(() => {
-      navigateToPath(getPagePath(nextPage))
-    })
+    try {
+      const data = await fetchPlacesForPage(nextPage)
+      const targetPath = getPagePath(nextPage)
+
+      seedPendingListingRouteCache(targetPath, {
+        items: data.items,
+        total: data.total,
+        page: data.page,
+        pageSize: data.pageSize,
+        totalPages: data.totalPages,
+        scrollY: 0,
+        selectedPlaceId: null,
+        selectedPlaceViewportTop: null,
+        pendingScrollRestore: false,
+      })
+
+      navigateToPath(targetPath)
+      didNavigate = true
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to load area page.')
+    } finally {
+      if (!didNavigate) {
+        setIsRefreshing(false)
+      }
+    }
+  }
+  const handleCategoryChange = async (category: string) => {
+    const nextCategory = normalizeValue(category) || 'all'
+    const nextPath = getPagePath(1, nextCategory)
+
+    if (nextCategory === activeCategory) {
+      return
+    }
+
+    setIsLoading(false)
+    setIsRefreshing(true)
+    setErrorMessage(null)
+
+    try {
+      const data = await fetchPlacesForPage(1, nextCategory)
+
+      seedPendingListingRouteCache(nextPath, {
+        items: data.items,
+        total: data.total,
+        page: data.page,
+        pageSize: data.pageSize,
+        totalPages: data.totalPages,
+        scrollY: 0,
+        selectedPlaceId: null,
+        selectedPlaceViewportTop: null,
+        pendingScrollRestore: false,
+      })
+
+      navigateToPath(nextPath)
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Failed to load area page.')
+      setIsRefreshing(false)
+    }
   }
 
   useEffect(() => {
@@ -372,6 +460,14 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
                   key={filter.value}
                   ref={isActive ? activeFilterRef : null}
                   href={href}
+                  onClick={(event) => {
+                    if (event.button !== 0 || event.metaKey || event.altKey || event.ctrlKey || event.shiftKey) {
+                      return
+                    }
+
+                    event.preventDefault()
+                    void handleCategoryChange(filter.value)
+                  }}
                   className={`inline-flex shrink-0 items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold transition ${
                     isActive
                       ? 'border-[#1e3a8a] bg-[#1e3a8a] text-white'
@@ -421,7 +517,8 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
                     </p>
                   </div>
                 </div>
-                <ResponsiveGrid className="mt-4 gap-4">
+                <div className={`mt-4 transition ${isPageTransitionLoading ? 'pointer-events-none opacity-60' : 'opacity-100'}`}>
+                  <ResponsiveGrid className="gap-4">
                   {allPlaces.map((rawPlace) => {
                     const place = mapSeoPlaceToCard(rawPlace) as PlaceCardData
                     return (
@@ -445,22 +542,13 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
                               selectedPlaceViewportTop: getListingPlaceViewportTop(rawPlace.id),
                               pendingScrollRestore: true,
                             })
-                            navigateToCanonicalPlace({
-                              slug: rawPlace.slug,
-                              city: rawPlace.city ?? areaName,
-                              area: rawPlace.area ?? areaName,
-                              localArea: rawPlace.area ?? null,
-                            }, {
-                              source: 'area',
-                              returnTo: `${window.location.pathname}${window.location.search}`,
-                              returnLabel: areaName,
-                            })
                           }}
                         />
                       </div>
                     )
                   })}
-                </ResponsiveGrid>
+                  </ResponsiveGrid>
+                </div>
               </section>
             )}
 

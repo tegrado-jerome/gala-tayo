@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import type { Session } from '@supabase/supabase-js'
 import { getSupabaseAccessToken, shouldPropagateSessionChange, supabase } from '../supabase'
 import { getApiUrl } from '../utils/apiClient'
+import { trackFavoriteAdded } from '../utils/analytics'
 
 type FavoritePlace = {
   id: string
@@ -349,6 +350,12 @@ function SavedFavoritesProvider({ children }: { children: ReactNode }) {
           }
 
           return nextFavorites
+        })
+      }
+
+      if (data.message !== 'Place already saved to favorites.') {
+        trackFavoriteAdded({
+          placeSlug: normalizedPlaceSlug || data.place?.slug || null,
         })
       }
 

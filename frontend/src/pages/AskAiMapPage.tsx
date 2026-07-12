@@ -3,7 +3,9 @@ import { memo, useLayoutEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { Bot } from 'lucide-react'
 import { AppIcon } from '../components/AppIcon'
+import { FeatureGuideModalTrigger, featureGuideContent } from '../components/FeatureGuideModal'
 import AskAiUsagePill from '../components/AskAiUsagePill'
+import TapGalaPinGame from '../components/TapGalaPinGame'
 import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
 import InternalLink from '../components/InternalLink'
 import MapView from '../components/MapView'
@@ -31,12 +33,14 @@ import {
   formatReviewCount,
   type AskAiMapDisplayPlace,
 } from '../utils/askAiMapDisplay'
-import { getAskAiUsageStatusFromResponse, normalizeAskAiUsageStatus, type AskAiUsageResponse, type AskAiUsageStatus } from '../utils/askAiUsage'
+import { getAskAiUsageStatusFromResponse, isAskAiUsageStatusExpired, normalizeAskAiUsageStatus, type AskAiUsageResponse, type AskAiUsageStatus } from '../utils/askAiUsage'
 import { readCachedAskAiUsage, subscribeToCachedAskAiUsage, writeCachedAskAiUsage } from '../utils/askAiUsageCache'
 import { registerAskAiTask, completeAskAiTask, failAskAiTask } from '../utils/askAiTaskStore'
 import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
 import { getApiUrl } from '../utils/apiClient'
 import { buildAskAiRequestHeaders, getOrCreateAskAiGuestId } from '../utils/askAiIdentity'
+import { trackAskAiMapsUsed } from '../utils/analytics'
+import { useAskAiUsageAutoRefresh } from '../hooks/useAskAiUsageAutoRefresh'
 import {
   type AskAiMapChipId,
   type AskAiMapsResponse,
@@ -143,11 +147,7 @@ const AskAiMapComposer = memo(function AskAiMapComposer({
   const [draftQuery, setDraftQuery] = useState(query)
   const queryInputRef = useRef<HTMLTextAreaElement | null>(null)
   const canSubmit = buildMapRequestQuery(draftQuery, selectedChipIds).trim().length > 0
-  const isLimitReached = usageStatus
-    ? isRegistered
-      ? !usageStatus.allowed || usageStatus.remaining <= 0
-      : !usageStatus.allowed
-    : false
+  const isLimitReached = usageStatus ? !usageStatus.allowed || usageStatus.remaining <= 0 : false
 
   useLayoutEffect(() => {
     const element = queryInputRef.current
@@ -174,51 +174,63 @@ const AskAiMapComposer = memo(function AskAiMapComposer({
   }
 
   return (
-    <div className="flex flex-row items-end gap-2 rounded-[22px] border border-white/86 bg-white px-3 py-2.5 shadow-[0_10px_24px_rgba(15,23,42,0.08)] sm:gap-3 lg:mx-auto lg:max-w-[680px]">
-      <textarea
-        ref={queryInputRef}
-        value={draftQuery}
-        onChange={(event) => setDraftQuery(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter' && !event.shiftKey) {
-            event.preventDefault()
-            event.stopPropagation()
+    <>
+      <div className="flex flex-row items-end gap-2 rounded-[22px] border border-white/86 bg-white px-3 py-2.5 shadow-[0_10px_24px_rgba(15,23,42,0.08)] sm:gap-3 lg:mx-auto lg:max-w-[680px]">
+        <textarea
+          ref={queryInputRef}
+          value={draftQuery}
+          onChange={(event) => setDraftQuery(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+              event.preventDefault()
+              event.stopPropagation()
+              if (isSearching) {
+                onCancel()
+              } else {
+                handleSubmit()
+              }
+            }
+          }}
+          placeholder="Discover places in an interactive map..."
+          rows={1}
+          className="ask-ai-composer-input min-h-[48px] w-full min-w-0 flex-1 resize-none overflow-y-auto bg-transparent px-0.5 pb-2 pt-3 text-[14px] font-medium leading-relaxed text-slate-900 outline-none placeholder:whitespace-nowrap placeholder:overflow-hidden placeholder:text-ellipsis placeholder:font-medium placeholder:text-slate-400 sm:min-h-0 sm:text-base"
+        />
+        <button
+          type="button"
+          onClick={() => {
             if (isSearching) {
               onCancel()
             } else {
               handleSubmit()
             }
-          }
-        }}
-        placeholder="Discover places in an interactive map..."
-        rows={1}
-        className="min-h-[48px] w-full min-w-0 flex-1 resize-none overflow-y-auto bg-transparent px-0.5 pb-2 pt-3 text-[14px] font-medium leading-relaxed text-slate-900 outline-none placeholder:whitespace-nowrap placeholder:overflow-hidden placeholder:text-ellipsis placeholder:font-medium placeholder:text-slate-400 sm:min-h-0 sm:text-base"
-      />
-      <button
-        type="button"
-        onClick={() => {
-          if (isSearching) {
-            onCancel()
-          } else {
-            handleSubmit()
-          }
-        }}
-        disabled={!isSearching && (!canSubmit || (isLimitReached && isRegistered))}
-        className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--accent-deep)] text-white shadow-[0_10px_20px_rgba(23,45,107,0.18)] transition hover:bg-[var(--accent)] disabled:opacity-60"
-        aria-label={isSearching ? 'Stop searching' : 'Submit ask ai map search'}
-      >
-        {isSearching ? (
-          <svg className="h-[17px] w-[17px]" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="11" fill="#172A5A" />
-            <rect x="5.25" y="5.25" width="13.5" height="13.5" rx="2.5" fill="white" />
-          </svg>
-        ) : (
-          <AppIcon name="askAi" className="h-5 w-5" />
-        )}
-      </button>
-    </div>
+          }}
+          disabled={!isSearching && (!canSubmit || (isLimitReached && isRegistered))}
+          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--accent-deep)] text-white shadow-[0_10px_20px_rgba(23,45,107,0.18)] transition hover:bg-[var(--accent)] disabled:opacity-60"
+          aria-label={isSearching ? 'Stop searching' : 'Submit ask ai map search'}
+        >
+          {isSearching ? (
+            <svg className="h-[17px] w-[17px]" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="11" fill="#172A5A" />
+              <rect x="5.25" y="5.25" width="13.5" height="13.5" rx="2.5" fill="white" />
+            </svg>
+          ) : (
+            <AppIcon name="askAi" className="h-5 w-5" />
+          )}
+        </button>
+      </div>
+
+      {isRegistered && isLimitReached && !isSearching ? (
+        <div className="mt-3 lg:mx-auto lg:max-w-[680px]">
+          <div className="rounded-2xl border border-[rgba(239,68,68,0.14)] bg-red-50/60 px-4 py-3">
+            <p className="text-[0.84rem] font-semibold text-red-700">You&apos;ve used all your Ask AI asks for today. Come back tomorrow!</p>
+          </div>
+        </div>
+      ) : null}
+    </>
   )
 })
+
+const ASK_AI_MAP_WAIT_GAME_DELAY_MS = 3000
 
 function AskAiMapPage() {
   const initialAskAiMapRuntimeStateRef = useRef(
@@ -262,12 +274,17 @@ function AskAiMapPage() {
     readCachedAskAiUsage('askAiMaps')
   )
   const [isGuestUpgradePromptOpen, setIsGuestUpgradePromptOpen] = useState(false)
+  const [askAiMapsRefreshSignal, setAskAiMapsRefreshSignal] = useState(
+    isAskAiUsageStatusExpired(readCachedAskAiUsage('askAiMaps')) ? 1 : 0
+  )
   const submitInFlightRef = useRef(false)
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(initialAskAiMapState?.selectedPlaceId ?? null)
   const [focusedPlaceId, setFocusedPlaceId] = useState<string | null>(initialAskAiMapState?.focusedPlaceId ?? null)
   const [selectedPlaceFocusSignal, setSelectedPlaceFocusSignal] = useState(0)
   const [isPlaceDetailOpen, setIsPlaceDetailOpen] = useState(false)
   const [isMapPinNoticeDismissed, setIsMapPinNoticeDismissed] = useState(false)
+  const [askAiMapWaitGamePhase, setAskAiMapWaitGamePhase] = useState<'invite' | 'game' | null>(null)
+  const askAiMapWaitGameTimeoutRef = useRef<number | null>(null)
 
   async function refreshAskAiMapsUsage(accessToken?: string | null, signal?: AbortSignal) {
     const usageEndpoint = getApiUrl('/ask-ai/usage/check?type=ask_ai_maps')
@@ -325,6 +342,21 @@ function AskAiMapPage() {
   }, [])
 
   useEffect(() => {
+    if (!askAiMapsUsageStatus?.allowed) {
+      return
+    }
+
+    if (!isDailyAskAiLimitMessage(errorMessage) && !isDailyAskAiLimitMessage(statusMessage)) {
+      return
+    }
+
+    patchAskAiMapRuntimeState({
+      errorMessage: isDailyAskAiLimitMessage(errorMessage) ? '' : errorMessage,
+      statusMessage: isDailyAskAiLimitMessage(statusMessage) ? '' : statusMessage,
+    })
+  }, [askAiMapsUsageStatus?.allowed, errorMessage, statusMessage])
+
+  useEffect(() => {
     if (isSessionLoading) {
       return
     }
@@ -353,7 +385,14 @@ function AskAiMapPage() {
     void loadAskAiUsage()
 
     return () => controller.abort()
-  }, [errorMessage, isSessionLoading, session?.access_token, statusMessage])
+  }, [askAiMapsRefreshSignal, errorMessage, isSessionLoading, session?.access_token, statusMessage])
+
+  useAskAiUsageAutoRefresh({
+    enabled: !isSessionLoading,
+    onRefresh: () => {
+      setAskAiMapsRefreshSignal((prev) => prev + 1)
+    },
+  })
 
   useEffect(() => {
     seedAskAiMapRuntimeState({
@@ -516,6 +555,37 @@ function AskAiMapPage() {
       setIsPlaceDetailOpen(false)
     }
   }, [places.length])
+
+  useEffect(() => {
+    if (isSearching) {
+      return
+    }
+
+    if (askAiMapWaitGameTimeoutRef.current !== null) {
+      window.clearTimeout(askAiMapWaitGameTimeoutRef.current)
+      askAiMapWaitGameTimeoutRef.current = null
+    }
+
+    setAskAiMapWaitGamePhase(null)
+  }, [isSearching])
+
+  useEffect(() => {
+    if (!askAiMapWaitGamePhase) {
+      return
+    }
+
+    lockBodyScroll()
+    return () => unlockBodyScroll()
+  }, [askAiMapWaitGamePhase])
+
+  useEffect(() => {
+    return () => {
+      if (askAiMapWaitGameTimeoutRef.current !== null) {
+        window.clearTimeout(askAiMapWaitGameTimeoutRef.current)
+        askAiMapWaitGameTimeoutRef.current = null
+      }
+    }
+  }, [])
 
   useEffect(() => {
     if (!selectedPlaceId) {
@@ -696,6 +766,24 @@ function AskAiMapPage() {
 
     registerAskAiTask('maps')
 
+    if (askAiMapWaitGameTimeoutRef.current !== null) {
+      window.clearTimeout(askAiMapWaitGameTimeoutRef.current)
+      askAiMapWaitGameTimeoutRef.current = null
+    }
+    setAskAiMapWaitGamePhase(null)
+    askAiMapWaitGameTimeoutRef.current = window.setTimeout(() => {
+      const runtimeState = getAskAiMapRuntimeState()
+      if (getAskAiMapRequestVersion() !== requestVersion || !runtimeState.isSearching) {
+        return
+      }
+
+      if (askAiMapWaitGameTimeoutRef.current !== null) {
+        window.clearTimeout(askAiMapWaitGameTimeoutRef.current)
+        askAiMapWaitGameTimeoutRef.current = null
+      }
+      setAskAiMapWaitGamePhase('invite')
+    }, ASK_AI_MAP_WAIT_GAME_DELAY_MS)
+
     const controller = new AbortController()
     const timeoutId = window.setTimeout(() => controller.abort(), ASK_AI_MAPS_REQUEST_TIMEOUT_MS)
     setAskAiMapAbortController(controller, timeoutId)
@@ -749,6 +837,14 @@ function AskAiMapPage() {
         }
 
         completeAskAiTask('maps', { places: nextPlaces, answerText: typeof data.answerText === 'string' ? extractStructuredAnswerText(data.answerText) : undefined })
+        trackAskAiMapsUsed({
+          placeCount: nextPlaces.length,
+        })
+        if (askAiMapWaitGameTimeoutRef.current !== null) {
+          window.clearTimeout(askAiMapWaitGameTimeoutRef.current)
+          askAiMapWaitGameTimeoutRef.current = null
+        }
+        setAskAiMapWaitGamePhase(null)
         patchAskAiMapRuntimeState({
           query: effectiveQuery,
           selectedChipIds: effectiveSelectedChipIds,
@@ -779,6 +875,11 @@ function AskAiMapPage() {
         setIsGuestUpgradePromptOpen(true)
       }
       failAskAiTask('maps', errorMessage)
+      if (askAiMapWaitGameTimeoutRef.current !== null) {
+        window.clearTimeout(askAiMapWaitGameTimeoutRef.current)
+        askAiMapWaitGameTimeoutRef.current = null
+      }
+      setAskAiMapWaitGamePhase(null)
       patchAskAiMapRuntimeState({
         query: effectiveQuery,
         selectedChipIds: effectiveSelectedChipIds,
@@ -801,6 +902,10 @@ function AskAiMapPage() {
         }
       }
 
+      if (askAiMapWaitGameTimeoutRef.current !== null) {
+        window.clearTimeout(askAiMapWaitGameTimeoutRef.current)
+        askAiMapWaitGameTimeoutRef.current = null
+      }
       window.clearTimeout(timeoutId)
       if (!wasAskAiMapRequestCancelled()) {
         clearAskAiMapAbortController()
@@ -820,9 +925,22 @@ function AskAiMapPage() {
     setFocusedPlaceId(null)
   }
 
+  function closeAskAiMapWaitGame() {
+    if (askAiMapWaitGameTimeoutRef.current !== null) {
+      window.clearTimeout(askAiMapWaitGameTimeoutRef.current)
+      askAiMapWaitGameTimeoutRef.current = null
+    }
+    setAskAiMapWaitGamePhase(null)
+  }
+
   async function handleEnterSearch(queryOverride?: string) {
     if (isSearching) {
       cancelAskAiMapRequest()
+      if (askAiMapWaitGameTimeoutRef.current !== null) {
+        window.clearTimeout(askAiMapWaitGameTimeoutRef.current)
+        askAiMapWaitGameTimeoutRef.current = null
+      }
+      closeAskAiMapWaitGame()
       return
     }
 
@@ -874,8 +992,9 @@ function AskAiMapPage() {
               </InternalLink>
             </div>
 
-            <div className="absolute left-4 top-5 z-[620]">
+            <div className="absolute left-4 top-5 z-[620] flex items-center gap-2">
               <AskAiUsagePill label="Maps AI" usageStatus={askAiMapsUsageStatus} />
+              <FeatureGuideModalTrigger content={featureGuideContent.maps} />
             </div>
 
             {isSearching ? null : null}
@@ -1138,8 +1257,9 @@ function AskAiMapPage() {
               </InternalLink>
             </div>
 
-            <div className="absolute left-4 top-5 z-[620]">
+            <div className="absolute left-4 top-5 z-[620] flex items-center gap-2">
               <AskAiUsagePill label="Maps AI" usageStatus={askAiMapsUsageStatus} />
+              <FeatureGuideModalTrigger content={featureGuideContent.maps} />
             </div>
 
             <div className="absolute inset-x-0 bottom-0 z-[620] px-4 pb-2 pt-6">
@@ -1168,10 +1288,10 @@ function AskAiMapPage() {
         {showDesktopResultsSidebar ? (
           <aside className="flex h-full min-h-0 flex-col overflow-hidden border-l border-[var(--line)] bg-white">
             <div className="shrink-0 border-b border-[var(--line)] px-4 py-4 md:px-3 md:py-3 lg:px-4 lg:py-4">
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">Ask AI Maps</p>
-                  <h1 className="mt-1 truncate text-[20px] font-black tracking-[-0.03em] text-slate-950 md:text-[18px] lg:text-[22px]">
+                  <h1 className="mt-1 min-w-0 truncate text-[20px] font-black tracking-[-0.03em] text-slate-950 md:text-[18px] lg:text-[22px]">
                     {query.trim() || 'Map results'}
                   </h1>
                 </div>
@@ -1332,6 +1452,100 @@ function AskAiMapPage() {
         ) : null}
       </MapResponsiveLayout>
     </main>
+    {askAiMapWaitGamePhase ? createPortal(
+      askAiMapWaitGamePhase === 'invite' ? (
+        <div className="fixed inset-0 z-[7100] flex items-center justify-center bg-[#08162f]/42 px-4 py-6 backdrop-blur-[4px]">
+          <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_18%_18%,rgba(94,214,199,0.22),transparent_24%),radial-gradient(circle_at_82%_14%,rgba(255,111,157,0.18),transparent_24%),radial-gradient(circle_at_54%_72%,rgba(37,99,235,0.16),transparent_32%),linear-gradient(180deg,rgba(8,22,47,0.08),rgba(8,22,47,0.16))]" />
+          <section
+            className="relative w-full max-w-[520px] overflow-hidden rounded-[30px] border border-white/70 bg-[linear-gradient(180deg,#ffffff_0%,#f4f8ff_44%,#fff7fb_100%)] shadow-[0_28px_78px_rgba(15,23,42,0.28)]"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Play a mini game while waiting"
+          >
+            <div className="pointer-events-none absolute inset-0 opacity-80 [background-image:linear-gradient(rgba(37,99,235,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(37,99,235,0.06)_1px,transparent_1px)] [background-size:28px_28px] animate-[gala-grid-drift_8s_linear_infinite]" />
+            <div className="relative p-5 sm:p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#2563eb]">Still cooking</p>
+                  <h2 className="mt-1 text-[1.45rem] font-black tracking-[-0.03em] text-slate-950 sm:text-[1.8rem]">Play while you wait?</h2>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                    Optional lang. Pin Rush is ready, but the Ask AI Maps result will replace this automatically as soon as it finishes.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={closeAskAiMapWaitGame}
+                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/80 text-slate-400 shadow-[0_8px_20px_rgba(15,23,42,0.08)] transition hover:bg-white hover:text-slate-600"
+                  aria-label="Dismiss waiting game invite"
+                >
+                  <AppIcon name="clear" className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="mt-5 rounded-[24px] border border-white/80 bg-white/75 p-4 shadow-[0_12px_28px_rgba(15,23,42,0.06)] backdrop-blur">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="inline-flex h-9 items-center rounded-full bg-slate-950 px-4 text-[12px] font-black text-white">
+                    Tiny taps
+                  </span>
+                  <span className="inline-flex h-9 items-center rounded-full bg-[#fff1f5] px-4 text-[12px] font-black text-[#e24d78]">
+                    Charms
+                  </span>
+                </div>
+
+                <div className="mt-4 flex items-center gap-2 overflow-hidden rounded-full bg-white/70 px-3 py-2">
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#2563eb]" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#5ed6c7]" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#ffcc4d]" />
+                  <span className="ml-1 text-[11px] font-black text-slate-500">8+ pts charms</span>
+                  <span className="ml-auto inline-flex min-w-0 items-center gap-1 text-[11px] font-semibold text-slate-500">
+                    <span className="h-2 w-2 rounded-full bg-[#ff6f9d] animate-pulse" />
+                    The result will take over when ready
+                  </span>
+                </div>
+
+                <div className="relative mt-4 h-14 overflow-hidden rounded-[20px] bg-[linear-gradient(90deg,#dbeafe,#fce7f3)]">
+                  <span className="absolute left-6 top-1/2 h-3 w-3 -translate-y-1/2 rounded-full bg-[#2563eb] animate-[gala-mini-pin-run_1.4s_ease-in-out_infinite]" />
+                </div>
+              </div>
+
+              <div className="mt-5 flex gap-3">
+                <button
+                  type="button"
+                  onClick={closeAskAiMapWaitGame}
+                  className="inline-flex h-11 flex-1 items-center justify-center rounded-full bg-white/80 px-4 text-sm font-black text-slate-700 shadow-[0_8px_18px_rgba(15,23,42,0.06)] transition hover:bg-white"
+                >
+                  Later
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAskAiMapWaitGamePhase('game')}
+                  className="inline-flex h-11 flex-1 items-center justify-center rounded-full bg-slate-950 px-4 text-sm font-black text-white shadow-[0_10px_24px_rgba(15,23,42,0.18)] transition hover:brightness-110 active:scale-95"
+                >
+                  Play
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+      ) : (
+        <div
+          className="fixed inset-0 z-[9990] flex h-[100dvh] items-stretch justify-center overscroll-none bg-white"
+          role="presentation"
+          onClick={closeAskAiMapWaitGame}
+        >
+          <div
+            className="relative flex h-[100dvh] w-full flex-col overflow-hidden touch-auto"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Tap the Gala Pin mini game"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <TapGalaPinGame isLoading={true} onClose={closeAskAiMapWaitGame} className="min-h-0 w-full flex-1" />
+          </div>
+        </div>
+      ),
+      document.body
+    ) : null}
     {selectedDisplayPlace && isPlaceDetailOpen ? createPortal(
       <div className="fixed inset-0 z-[7000]">
         <button

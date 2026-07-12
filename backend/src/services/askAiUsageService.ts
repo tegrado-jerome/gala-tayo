@@ -152,12 +152,13 @@ function buildUsageResult(
   usageType: string,
   requestCount: number,
   usageDate: string,
-  limitOverride?: number
+  limitOverride?: number,
+  postConsume = false
 ): AskAiUsageResult {
   const limit = typeof limitOverride === "number" ? limitOverride : getDailyLimit(usageType);
   const normalizedCount = Math.max(0, requestCount);
   const remaining = Math.max(limit - normalizedCount, 0);
-  const allowed = normalizedCount < limit;
+  const allowed = postConsume ? normalizedCount <= limit : normalizedCount < limit;
 
   return {
     usageType,
@@ -173,12 +174,13 @@ function buildUsageResult(
 function buildGuestUsageResult(
   usageType: AskAiUsageType,
   requestCount: number,
-  usageDate: string
+  usageDate: string,
+  postConsume = false
 ): AskAiUsageResult {
   const limit = getGuestDailyLimit(usageType);
   const normalizedCount = Math.max(0, requestCount);
   const remaining = Math.max(limit - normalizedCount, 0);
-  const allowed = normalizedCount <= limit;
+  const allowed = postConsume ? normalizedCount <= limit : normalizedCount < limit;
 
   return {
     usageType,
@@ -310,7 +312,9 @@ export async function consumeAskAiUsage(
       return buildUsageResult(
         usageType,
         (created as { request_count: number }).request_count,
-        today
+        today,
+        undefined,
+        true
       );
     }
 
@@ -337,7 +341,9 @@ export async function consumeAskAiUsage(
       return buildUsageResult(
         usageType,
         (updated as { request_count: number }).request_count,
-        today
+        today,
+        undefined,
+        true
       );
     }
   }
@@ -399,7 +405,8 @@ async function consumeAskAiGuestUsage(params: {
       usageType,
       (created as { request_count: number }).request_count,
       today,
-      limit
+      limit,
+      true
     );
   }
 
@@ -427,7 +434,8 @@ async function consumeAskAiGuestUsage(params: {
       usageType,
       (updated as { request_count: number }).request_count,
       today,
-      limit
+      limit,
+      true
     );
   }
 

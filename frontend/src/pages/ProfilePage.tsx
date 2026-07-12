@@ -666,22 +666,20 @@ function ProfilePage({ session }: ProfilePageProps) {
   return (
     <>
       {isGuestProfile ? (
-        <div className="gala-page-background relative min-h-[100dvh] overflow-x-hidden overflow-y-auto overscroll-contain text-[var(--text)]">
-          <div className="pointer-events-none absolute inset-0 select-none overflow-hidden blur-[3px] opacity-40">
-            <PageShell>
-              <AppHeader />
-              <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
-                <PageContainer size="wide">{profileContent}</PageContainer>
-              </main>
-            </PageShell>
-          </div>
-
-          <div className="absolute inset-0 flex items-center justify-center overflow-hidden px-4 py-6">
-            <div className="w-full max-w-[420px] lg:max-w-[440px] xl:max-w-[460px] 2xl:max-w-[480px]">
-              <GuestAuthPrompt variant="profile" mode="inline-card" />
+        <PageShell tone="surface" reserveBottomNav={false}>
+          <AppHeader />
+          <main className="relative flex min-h-0 flex-1 overflow-hidden px-4 pb-12 pt-4 text-[var(--text)] sm:px-6 sm:pb-14 sm:pt-5 lg:py-10">
+            <div className="pointer-events-none absolute inset-0 select-none overflow-hidden blur-[3px] opacity-40">
+              <PageContainer size="wide">{profileContent}</PageContainer>
             </div>
-          </div>
-        </div>
+
+            <div className="relative z-20 flex w-full items-center justify-center">
+              <div className="w-full max-w-[420px] lg:max-w-[440px] xl:max-w-[460px] 2xl:max-w-[480px]">
+                <GuestAuthPrompt variant="profile" mode="inline-card" />
+              </div>
+            </div>
+          </main>
+        </PageShell>
       ) : (
         <PageShell>
           <AppHeader />

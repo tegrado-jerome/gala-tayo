@@ -91,6 +91,19 @@ export function normalizeAskAiUsageStatus(value: unknown): AskAiUsageStatus | nu
   }
 }
 
+export function isAskAiUsageStatusExpired(status: AskAiUsageStatus | null): boolean {
+  if (!status) {
+    return false
+  }
+
+  try {
+    const resetDate = new Date(status.resetAt)
+    return !Number.isNaN(resetDate.getTime()) && Date.now() >= resetDate.getTime()
+  } catch {
+    return false
+  }
+}
+
 export function getAskAiUsageStatusFromResponse(
   value: unknown,
   fallbackKeys: Array<'askAi' | 'askAiMaps' | 'chatbotAi'> = ['askAi', 'chatbotAi', 'askAiMaps'],

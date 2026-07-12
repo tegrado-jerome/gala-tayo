@@ -17,12 +17,17 @@ function getSiteUrl(request: HttpRequest): string {
 
   const forwardedProto = request.headers.get("x-forwarded-proto") || "https";
   const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "localhost:4173";
+  const requestOrigin = new URL(request.url).origin;
 
-  if (!host || host === "localhost:4173" || host.includes(":")) {
-    return "https://galatayo.app";
+  if (!host || host === "localhost:4173") {
+    return requestOrigin.replace(/\/+$/, "");
   }
 
-  return `${forwardedProto}://${host}`.replace(/\/+$/, "");
+  if (host.includes(":")) {
+    return `${forwardedProto}://${host}`.replace(/\/+$/, "");
+  }
+
+  return `${forwardedProto}://${host}`.replace(/\/+$/, "") || requestOrigin.replace(/\/+$/, "");
 }
 
 function xmlEscape(value: string): string {

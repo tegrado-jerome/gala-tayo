@@ -44,8 +44,8 @@ const variantConfigs: Record<GuestAuthVariant, VariantConfig> = {
     title: 'You have reached your Ask AI limit',
     description: 'Create an account to unlock 20 chatbot asks and 10 map searches per day, plus save your planning history.',
     benefits: [
-      '20 chatbot asks daily',
-      '10 map searches daily',
+      '20 AI chatbot asks daily',
+      '10 AI map searches daily',
       'Save your chats and plans',
       'Keep browsing with your account',
     ],

@@ -76,15 +76,15 @@ const exactLabels: Record<string, string> = {
 }
 
 const routePatterns: RoutePattern[] = [
-  { pattern: /^\/places\/([^/]+)\/([^/]+)$/, getLabel: ([, , slug]) => slug.replace(/-/g, ' ') },
-  { pattern: /^\/places\/([^/]+)$/, getLabel: ([, slug]) => slug.replace(/-/g, ' ') },
-  { pattern: /^\/places\/categories\/([^/]+)$/, getLabel: ([, slug]) => slug.replace(/-/g, ' ') },
+  { pattern: /^\/places\/([^/]+)\/([^/]+)$/, getLabel: ([, , slug]) => formatLabelFromSlug(decodeURIComponent(slug)) },
+  { pattern: /^\/places\/([^/]+)$/, getLabel: ([, slug]) => formatLabelFromSlug(decodeURIComponent(slug)) },
+  { pattern: /^\/places\/categories\/([^/]+)$/, getLabel: ([, slug]) => formatLabelFromSlug(decodeURIComponent(slug)) },
   { pattern: /^\/gala-plans\/([^/]+)$/, getLabel: ([, id]) => id === 'new' || id === 'create' ? '' : 'Gala Plan' },
   { pattern: /^\/gala-plans\/([^/]+)\/edit$/, getLabel: () => 'Edit Gala Plan' },
   { pattern: /^\/u\/([^/]+)$/, getLabel: ([, username]) => `@${username}` },
-  { pattern: /^\/u\/([^/]+)\/(?:plans|gala)\/([^/]+)$/, getLabel: ([, , slug]) => slug.replace(/-/g, ' ') },
-  { pattern: new RegExp(`^${ADMIN_BASE_PATH.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/([^/]+)$`), getLabel: ([, section]) => `Admin: ${section.replace(/-/g, ' ')}` },
-  { pattern: /^\/place\/([^/]+)$/, getLabel: ([, slug]) => slug.replace(/-/g, ' ') },
+  { pattern: /^\/u\/([^/]+)\/(?:plans|gala)\/([^/]+)$/, getLabel: ([, , slug]) => formatLabelFromSlug(decodeURIComponent(slug)) },
+  { pattern: new RegExp(`^${ADMIN_BASE_PATH.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/([^/]+)$`), getLabel: ([, section]) => `Admin: ${formatLabelFromSlug(decodeURIComponent(section))}` },
+  { pattern: /^\/place\/([^/]+)$/, getLabel: ([, slug]) => formatLabelFromSlug(decodeURIComponent(slug)) },
 ]
 
 function normalizeText(value: string) {
@@ -347,7 +347,7 @@ export function getCategoryBreadcrumbMeta(listingLink: string | null, listingLab
   return {
     parentName: 'Categories',
     parentItem: `${window.location.origin}/places/categories`,
-    childName: listingLabel || getPlaceCategoryLabel(categorySlug),
+    childName: listingLabel ? formatLabelFromSlug(listingLabel) : getPlaceCategoryLabel(categorySlug),
     childItem: `${window.location.origin}/places/categories/${encodeURIComponent(categorySlug)}`,
   }
 }
