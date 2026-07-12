@@ -5,7 +5,9 @@ import GoogleSignInButton from '../components/GoogleSignInButton'
 import PageHeroHeader from '../components/PageHeroHeader'
 import { PageContainer, PageShell, CardSurface, EmptyState, Stack, ChibiIllustration } from '../components/layout/ResponsiveLayouts'
 import ActivityPlaceCard from '../components/ActivityPlaceCard'
+import DestructiveConfirmModal from '../components/DestructiveConfirmModal'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
+import { useBottomNav } from '../context/BottomNavContext'
 import { getSupabaseAccessToken } from '../supabase'
 import { getPlacePhoto } from '../utils/placePhoto'
 import { getApiUrl } from '../utils/apiClient'
@@ -13,6 +15,7 @@ import historyActiveChibi from '../assets/chibis/features/history/chibi-history-
 
 const HISTORY_CACHE_PREFIX = 'galatayo:history:'
 const HISTORY_CACHE_TTL_MS = 5 * 60 * 1000
+const HISTORY_LOAD_MORE_BATCH_SIZE = 10
 
 function getHistoryCacheKey(userId: string) {
   return `${HISTORY_CACHE_PREFIX}${userId}`
@@ -298,21 +301,47 @@ function HistoryCard({
 
 function HistoryPage() {
   const { session, isSessionLoading } = useSavedFavorites()
-  const [history, setHistory] = useState<HistoryItem[]>(() => {
-    return session?.user?.id ? readHistoryCache(session.user.id) ?? [] : []
-  })
+  const currentUserId = session?.user?.id ?? null
+  const cachedHistory = currentUserId ? readHistoryCache(currentUserId) : null
+  const [history, setHistory] = useState<HistoryItem[] | null>(null)
+  const [historyUserId, setHistoryUserId] = useState<string | null>(null)
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false)
+  const [visibleHistoryCount, setVisibleHistoryCount] = useState(HISTORY_LOAD_MORE_BATCH_SIZE)
   const [isClearing, setIsClearing] = useState(false)
+  const [isClearHistoryDialogOpen, setIsClearHistoryDialogOpen] = useState(false)
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set())
   const [errorMessage, setErrorMessage] = useState('')
 
+  const displayHistory = currentUserId && historyUserId === currentUserId ? history : cachedHistory?.length ? cachedHistory : null
+  const { setHidden } = useBottomNav()
+
   useEffect(() => {
-    if (!session?.user?.id) {
-      setHistory([])
+    setHidden(Boolean(currentUserId) && displayHistory === null && !errorMessage)
+    return () => setHidden(false)
+  }, [currentUserId, displayHistory, errorMessage, setHidden])
+
+  useEffect(() => {
+    if (!currentUserId) {
+      setHistory(null)
+      setHistoryUserId(null)
+      setIsHistoryLoading(false)
       setErrorMessage('')
       return
     }
 
     const controller = new AbortController()
+
+    const cachedItems = readHistoryCache(currentUserId)
+
+    if (cachedItems?.length) {
+      setHistory(cachedItems)
+      setHistoryUserId(currentUserId)
+    } else {
+      setHistory(null)
+      setHistoryUserId(null)
+    }
+
+    setIsHistoryLoading(true)
 
     const loadHistory = async () => {
       try {
@@ -340,27 +369,34 @@ function HistoryPage() {
 
         const items = data.history || []
         setHistory(items)
-        writeHistoryCache(session.user.id, items)
+        setHistoryUserId(currentUserId)
+        writeHistoryCache(currentUserId, items)
       } catch (error) {
         if ((error as Error).name !== 'AbortError') {
           setErrorMessage(getHistoryErrorMessage(error, 'Unable to load history. Please try again.'))
         }
+      } finally {
+        setIsHistoryLoading(false)
       }
     }
 
     void loadHistory()
 
     return () => controller.abort()
-  }, [session])
+  }, [currentUserId, session])
 
   const visibleHistory = useMemo(
-    () => history.filter((item) => item.place?.slug),
-    [history]
+    () => (displayHistory || []).filter((item) => item.place?.slug),
+    [displayHistory]
+  )
+  const visibleHistoryItems = useMemo(
+    () => visibleHistory.slice(0, visibleHistoryCount),
+    [visibleHistory, visibleHistoryCount]
   )
   const historySections = useMemo(() => {
     const grouped = new Map<string, HistoryItem[]>()
 
-    visibleHistory.forEach((item) => {
+    visibleHistoryItems.forEach((item) => {
       const title = getHistorySectionTitle(item.created_at)
       grouped.set(title, [...(grouped.get(title) || []), item])
     })
@@ -371,8 +407,10 @@ function HistoryPage() {
         items: grouped.get(title) || [],
       }))
       .filter((section) => section.items.length > 0)
-  }, [visibleHistory])
-  const canClearHistory = Boolean(session?.user?.id) && visibleHistory.length > 0
+  }, [visibleHistoryItems])
+  const hasMoreHistory = visibleHistoryItems.length < visibleHistory.length
+  const canClearHistory = Boolean(currentUserId) && visibleHistory.length > 0
+  const shouldShowBlankHistoryArea = Boolean(currentUserId) && !displayHistory && (isSessionLoading || (isHistoryLoading && !errorMessage))
 
   const handleDeleteHistoryItem = async (itemId: string) => {
     setDeletingIds((current) => new Set(current).add(itemId))
@@ -397,7 +435,11 @@ function HistoryPage() {
         throw new Error(data.message || 'Unable to delete history item.')
       }
 
-      setHistory((current) => current.filter((item) => item.id !== itemId))
+      setHistoryUserId(currentUserId)
+      setHistory((current) => {
+        const nextHistory = current ?? displayHistory ?? []
+        return nextHistory.filter((item) => item.id !== itemId)
+      })
     } catch (error) {
       setErrorMessage(getHistoryErrorMessage(error, 'Unable to delete history item.'))
     } finally {
@@ -410,13 +452,15 @@ function HistoryPage() {
   }
 
   const handleClearHistory = async () => {
-    if (!session?.user?.id || isClearing) {
+    if (!currentUserId || isClearing) {
       return
     }
 
-    const shouldClear = window.confirm('Clear all history?')
+    setIsClearHistoryDialogOpen(true)
+  }
 
-    if (!shouldClear) {
+  const confirmClearHistory = async () => {
+    if (!currentUserId || isClearing) {
       return
     }
 
@@ -444,10 +488,13 @@ function HistoryPage() {
       }
 
       setHistory([])
+      setHistoryUserId(currentUserId)
+      setVisibleHistoryCount(HISTORY_LOAD_MORE_BATCH_SIZE)
     } catch (error) {
       setErrorMessage(getHistoryErrorMessage(error, 'Unable to clear history. Please try again.'))
     } finally {
       setIsClearing(false)
+      setIsClearHistoryDialogOpen(false)
     }
   }
 
@@ -461,44 +508,17 @@ function HistoryPage() {
             <MinimalBackNav to="/" label="Home" preferHistory={false} />
           </div>
 
-          <PageHeroHeader
-            eyebrow="History"
-            title="Recently viewed"
-            description="Places you checked before, easy to revisit anytime."
-            icon={<ClockIcon />}
-            badges={
-              <>
-                <span className="gala-count-pill">
-                  {visibleHistory.length} visit{visibleHistory.length === 1 ? '' : 's'}
-                </span>
-                <span className="gala-count-pill">
-                  {historySections.length > 0 ? `${historySections.length} time section${historySections.length === 1 ? '' : 's'}` : 'Private to your account'}
-                </span>
-                {canClearHistory ? (
-                  <button
-                    type="button"
-                    onClick={() => void handleClearHistory()}
-                    disabled={isClearing}
-                    className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 text-xs font-black text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    <TrashIcon className="h-3.5 w-3.5" />
-                    {isClearing ? 'Clearing...' : 'Clear history'}
-                  </button>
-                ) : null}
-              </>
-            }
-            aside={<HistoryChibi />}
-            divider={false}
-            className="pb-0"
+          <DestructiveConfirmModal
+            isOpen={isClearHistoryDialogOpen}
+            title="Clear all history?"
+            description="This will remove every item from your recently viewed history. You can rebuild it by browsing again."
+            confirmLabel="Clear history"
+            isConfirming={isClearing}
+            onCancel={() => setIsClearHistoryDialogOpen(false)}
+            onConfirm={() => void confirmClearHistory()}
           />
 
-          {isSessionLoading ? (
-            <CardSurface pad="default" className="mt-6">
-              <p className="text-sm text-[var(--muted)]">Checking account...</p>
-            </CardSurface>
-          ) : null}
-
-          {!isSessionLoading && !session?.user ? (
+          {!isSessionLoading && !currentUserId ? (
             <CardSurface pad="loose" className="mt-6">
               <h2 className="text-lg font-black text-slate-950">Please sign in to view your history.</h2>
               <p className="mt-2 max-w-xl text-sm text-[var(--muted)]">
@@ -508,13 +528,33 @@ function HistoryPage() {
             </CardSurface>
           ) : null}
 
-          {!isSessionLoading && session?.user ? (
+          {!shouldShowBlankHistoryArea && currentUserId && (displayHistory !== null || errorMessage) ? (
             <Stack gap="default">
+              <PageHeroHeader
+                eyebrow="History"
+                title="Recently viewed"
+                description="Places you checked before, easy to revisit anytime."
+                icon={<ClockIcon />}
+                badges={
+                  <>
+                    <span className="gala-count-pill">
+                      {visibleHistory.length} visit{visibleHistory.length === 1 ? '' : 's'}
+                    </span>
+                    <span className="gala-count-pill">
+                      {historySections.length > 0 ? `${historySections.length} time section${historySections.length === 1 ? '' : 's'}` : 'Private to your account'}
+                    </span>
+                  </>
+                }
+                aside={<HistoryChibi />}
+                divider={false}
+                className="pb-0"
+              />
+
               {errorMessage ? (
                 <p className="text-sm font-medium text-red-600">{errorMessage}</p>
               ) : null}
 
-              {!errorMessage && visibleHistory.length === 0 ? (
+              {!errorMessage && displayHistory !== null && visibleHistory.length === 0 ? (
                 <EmptyState
                   title="No viewed places yet."
                   description="Start exploring places and they'll appear here."
@@ -526,10 +566,23 @@ function HistoryPage() {
                 <Stack gap="loose">
                   {historySections.map((section) => (
                     <section key={section.title}>
-                      <div className="mb-3 flex items-center gap-3">
-                        <h2 className="shrink-0 text-base font-black text-slate-950 lg:text-lg">{section.title}</h2>
+                      <div className="flex items-center gap-3 px-1">
+                        <p className="min-w-0 flex-1 text-lg font-black uppercase tracking-[0.2em] text-[var(--accent-deep)]">
+                          {section.title}
+                        </p>
+                        {section.title === historySections[0]?.title && canClearHistory ? (
+                          <button
+                            type="button"
+                            onClick={handleClearHistory}
+                            disabled={isClearing}
+                            className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-white px-4 text-xs font-black text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            <TrashIcon className="h-3.5 w-3.5" />
+                            {isClearing ? 'Clearing...' : 'Clear history'}
+                          </button>
+                        ) : null}
                       </div>
-                      <div className="grid w-full grid-cols-2 gap-2.5 sm:gap-4 xl:justify-start xl:[grid-template-columns:repeat(auto-fill,minmax(340px,340px))]">
+                      <div className="mt-3 grid w-full grid-cols-2 gap-2.5 sm:mt-4 sm:gap-4 xl:justify-start xl:[grid-template-columns:repeat(auto-fill,minmax(340px,340px))]">
                         {section.items.map((item) => (
                           <HistoryCard
                             key={item.id}
@@ -541,6 +594,20 @@ function HistoryPage() {
                       </div>
                     </section>
                   ))}
+                  {hasMoreHistory ? (
+                    <div className="flex flex-col items-center gap-3 pt-1">
+                      <p className="text-xs font-semibold text-[var(--muted)]">
+                        Showing {visibleHistoryItems.length} of {visibleHistory.length} visits
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setVisibleHistoryCount((current) => current + HISTORY_LOAD_MORE_BATCH_SIZE)}
+                        className="inline-flex h-10 items-center justify-center rounded-lg border border-[var(--accent)] bg-white px-5 text-sm font-black text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)]"
+                      >
+                        Load {HISTORY_LOAD_MORE_BATCH_SIZE} more
+                      </button>
+                    </div>
+                  ) : null}
                   <CardSurface pad="default" tone="soft" className="text-sm font-semibold text-slate-700">
                     <span className="font-black text-[var(--accent-deep)]">Tip:</span> Places you view will appear here for easy access. Save the ones you love to keep them in Favorites.
                   </CardSurface>

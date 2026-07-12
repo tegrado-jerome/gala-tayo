@@ -233,7 +233,7 @@ export function AppLoginPrompt({ className, title, description, action, ...rest 
   )
 }
 
-type AppConfirmDialogProps = HTMLAttributes<HTMLDivElement> & {
+type AppConfirmDialogProps = Omit<HTMLAttributes<HTMLDivElement>, 'title'> & {
   title: ReactNode
   description?: ReactNode
   actions?: ReactNode
@@ -242,8 +242,8 @@ type AppConfirmDialogProps = HTMLAttributes<HTMLDivElement> & {
 export function AppConfirmDialog({ className, title, description, actions, ...rest }: AppConfirmDialogProps) {
   return (
     <div className={cn('app-confirm-dialog', className)} {...rest}>
-      <p className="app-confirm-title">{title}</p>
-      {description ? <p className="app-confirm-description">{description}</p> : null}
+      <div className="app-confirm-title">{title}</div>
+      {description ? <div className="app-confirm-description">{description}</div> : null}
       {actions ? <div className="app-confirm-actions">{actions}</div> : null}
     </div>
   )

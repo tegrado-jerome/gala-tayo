@@ -5,9 +5,12 @@ import GoogleSignInButton from '../components/GoogleSignInButton'
 import PageHeroHeader from '../components/PageHeroHeader'
 import { PageContainer, PageShell, CardSurface, EmptyState, Stack, ChibiIllustration } from '../components/layout/ResponsiveLayouts'
 import ActivityPlaceCard from '../components/ActivityPlaceCard'
+import DestructiveConfirmModal from '../components/DestructiveConfirmModal'
 import { useSavedFavorites, type FavoritePlace } from '../context/SavedFavoritesContext'
 import { getPlacePhoto } from '../utils/placePhoto'
 import favoritesActiveChibi from '../assets/chibis/features/favorites/chibi-favorites-active-state.webp'
+
+const FAVORITES_LOAD_MORE_BATCH_SIZE = 10
 
 function TrashIcon({ className = 'h-4 w-4' }: { className?: string }) {
   return (
@@ -139,6 +142,8 @@ function FavoritesPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [removingIds, setRemovingIds] = useState<Set<string>>(new Set())
   const [isClearingAll, setIsClearingAll] = useState(false)
+  const [isClearAllDialogOpen, setIsClearAllDialogOpen] = useState(false)
+  const [visibleFavoritesCount, setVisibleFavoritesCount] = useState(FAVORITES_LOAD_MORE_BATCH_SIZE)
   const {
     session,
     isSessionLoading,
@@ -164,6 +169,11 @@ function FavoritesPage() {
       return !normalizedQuery || haystack.includes(normalizedQuery)
     })
   }, [savedPlaces, searchQuery])
+  const visibleSavedPlaces = useMemo(
+    () => filteredSavedPlaces.slice(0, visibleFavoritesCount),
+    [filteredSavedPlaces, visibleFavoritesCount]
+  )
+  const hasMoreSavedPlaces = visibleSavedPlaces.length < filteredSavedPlaces.length
 
   const handleRemoveFavorite = async (favoriteId: string) => {
     setRemovingIds((current) => new Set(current).add(favoriteId))
@@ -179,10 +189,16 @@ function FavoritesPage() {
     }
   }
 
-  const handleClearAll = async () => {
-    const shouldClear = window.confirm('Remove all saved places?')
+  const handleClearAll = () => {
+    if (isClearingAll) {
+      return
+    }
 
-    if (!shouldClear) {
+    setIsClearAllDialogOpen(true)
+  }
+
+  const confirmClearAll = async () => {
+    if (isClearingAll) {
       return
     }
 
@@ -191,7 +207,11 @@ function FavoritesPage() {
     try {
       await clearAllFavorites()
     } catch {
+      // Keep the page responsive; the inline error area already covers failures from the data layer.
+    } finally {
       setIsClearingAll(false)
+      setIsClearAllDialogOpen(false)
+      setVisibleFavoritesCount(FAVORITES_LOAD_MORE_BATCH_SIZE)
     }
   }
 
@@ -223,6 +243,16 @@ function FavoritesPage() {
             aside={<SavedChibi />}
             divider={false}
             className="pb-0"
+          />
+
+          <DestructiveConfirmModal
+            isOpen={isClearAllDialogOpen}
+            title="Remove all saved places?"
+            description="This will clear every place from Favorites. You can save them again later."
+            confirmLabel="Remove all"
+            isConfirming={isClearingAll}
+            onCancel={() => setIsClearAllDialogOpen(false)}
+            onConfirm={() => void confirmClearAll()}
           />
 
           {isSessionLoading ? (
@@ -287,14 +317,14 @@ function FavoritesPage() {
               {filteredSavedPlaces.length > 0 ? (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between px-1">
-                    <p className="text-sm font-black uppercase tracking-[0.2em] text-[var(--accent-deep)]">Saved</p>
+                    <p className="text-lg font-black uppercase tracking-[0.2em] text-[var(--accent-deep)]">Saved</p>
                     <div className="flex items-center gap-3">
                       <p className="text-xs font-semibold text-[var(--muted)]">
-                        {filteredSavedPlaces.length} place{filteredSavedPlaces.length === 1 ? '' : 's'}
+                        Showing {visibleSavedPlaces.length} of {filteredSavedPlaces.length} place{filteredSavedPlaces.length === 1 ? '' : 's'}
                       </p>
                       <button
                         type="button"
-                        onClick={() => void handleClearAll()}
+                        onClick={handleClearAll}
                         disabled={isClearingAll}
                         className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-white px-4 text-xs font-black text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
                       >
@@ -304,7 +334,7 @@ function FavoritesPage() {
                     </div>
                   </div>
                   <div className="grid w-full grid-cols-2 gap-2.5 sm:gap-4 xl:justify-start xl:[grid-template-columns:repeat(auto-fill,minmax(340px,340px))]">
-                    {filteredSavedPlaces.map((favorite) => (
+                    {visibleSavedPlaces.map((favorite) => (
                       <FavoriteCard
                         key={favorite.id}
                         favorite={favorite}
@@ -313,6 +343,17 @@ function FavoritesPage() {
                       />
                     ))}
                   </div>
+                  {hasMoreSavedPlaces ? (
+                    <div className="flex justify-center pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setVisibleFavoritesCount((current) => current + FAVORITES_LOAD_MORE_BATCH_SIZE)}
+                        className="inline-flex h-10 items-center justify-center rounded-lg border border-[var(--accent)] bg-white px-5 text-sm font-black text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)]"
+                      >
+                        Load {FAVORITES_LOAD_MORE_BATCH_SIZE} more
+                      </button>
+                    </div>
+                  ) : null}
                 </div>
               ) : null}
             </Stack>

@@ -5,7 +5,6 @@ import { Bot } from 'lucide-react'
 import { AppIcon } from '../components/AppIcon'
 import { FeatureGuideModalTrigger, featureGuideContent } from '../components/FeatureGuideModal'
 import AskAiUsagePill from '../components/AskAiUsagePill'
-import TapGalaPinGame from '../components/TapGalaPinGame'
 import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
 import InternalLink from '../components/InternalLink'
 import MapView from '../components/MapView'
@@ -230,8 +229,6 @@ const AskAiMapComposer = memo(function AskAiMapComposer({
   )
 })
 
-const ASK_AI_MAP_WAIT_GAME_DELAY_MS = 3000
-
 function AskAiMapPage() {
   const initialAskAiMapRuntimeStateRef = useRef(
     hasActiveAskAiMapRuntimeState() ? getAskAiMapRuntimeState() : null
@@ -283,8 +280,6 @@ function AskAiMapPage() {
   const [selectedPlaceFocusSignal, setSelectedPlaceFocusSignal] = useState(0)
   const [isPlaceDetailOpen, setIsPlaceDetailOpen] = useState(false)
   const [isMapPinNoticeDismissed, setIsMapPinNoticeDismissed] = useState(false)
-  const [askAiMapWaitGamePhase, setAskAiMapWaitGamePhase] = useState<'invite' | 'game' | null>(null)
-  const askAiMapWaitGameTimeoutRef = useRef<number | null>(null)
 
   async function refreshAskAiMapsUsage(accessToken?: string | null, signal?: AbortSignal) {
     const usageEndpoint = getApiUrl('/ask-ai/usage/check?type=ask_ai_maps')
@@ -557,37 +552,6 @@ function AskAiMapPage() {
   }, [places.length])
 
   useEffect(() => {
-    if (isSearching) {
-      return
-    }
-
-    if (askAiMapWaitGameTimeoutRef.current !== null) {
-      window.clearTimeout(askAiMapWaitGameTimeoutRef.current)
-      askAiMapWaitGameTimeoutRef.current = null
-    }
-
-    setAskAiMapWaitGamePhase(null)
-  }, [isSearching])
-
-  useEffect(() => {
-    if (!askAiMapWaitGamePhase) {
-      return
-    }
-
-    lockBodyScroll()
-    return () => unlockBodyScroll()
-  }, [askAiMapWaitGamePhase])
-
-  useEffect(() => {
-    return () => {
-      if (askAiMapWaitGameTimeoutRef.current !== null) {
-        window.clearTimeout(askAiMapWaitGameTimeoutRef.current)
-        askAiMapWaitGameTimeoutRef.current = null
-      }
-    }
-  }, [])
-
-  useEffect(() => {
     if (!selectedPlaceId) {
       return
     }
@@ -766,24 +730,6 @@ function AskAiMapPage() {
 
     registerAskAiTask('maps')
 
-    if (askAiMapWaitGameTimeoutRef.current !== null) {
-      window.clearTimeout(askAiMapWaitGameTimeoutRef.current)
-      askAiMapWaitGameTimeoutRef.current = null
-    }
-    setAskAiMapWaitGamePhase(null)
-    askAiMapWaitGameTimeoutRef.current = window.setTimeout(() => {
-      const runtimeState = getAskAiMapRuntimeState()
-      if (getAskAiMapRequestVersion() !== requestVersion || !runtimeState.isSearching) {
-        return
-      }
-
-      if (askAiMapWaitGameTimeoutRef.current !== null) {
-        window.clearTimeout(askAiMapWaitGameTimeoutRef.current)
-        askAiMapWaitGameTimeoutRef.current = null
-      }
-      setAskAiMapWaitGamePhase('invite')
-    }, ASK_AI_MAP_WAIT_GAME_DELAY_MS)
-
     const controller = new AbortController()
     const timeoutId = window.setTimeout(() => controller.abort(), ASK_AI_MAPS_REQUEST_TIMEOUT_MS)
     setAskAiMapAbortController(controller, timeoutId)
@@ -840,11 +786,6 @@ function AskAiMapPage() {
         trackAskAiMapsUsed({
           placeCount: nextPlaces.length,
         })
-        if (askAiMapWaitGameTimeoutRef.current !== null) {
-          window.clearTimeout(askAiMapWaitGameTimeoutRef.current)
-          askAiMapWaitGameTimeoutRef.current = null
-        }
-        setAskAiMapWaitGamePhase(null)
         patchAskAiMapRuntimeState({
           query: effectiveQuery,
           selectedChipIds: effectiveSelectedChipIds,
@@ -875,11 +816,6 @@ function AskAiMapPage() {
         setIsGuestUpgradePromptOpen(true)
       }
       failAskAiTask('maps', errorMessage)
-      if (askAiMapWaitGameTimeoutRef.current !== null) {
-        window.clearTimeout(askAiMapWaitGameTimeoutRef.current)
-        askAiMapWaitGameTimeoutRef.current = null
-      }
-      setAskAiMapWaitGamePhase(null)
       patchAskAiMapRuntimeState({
         query: effectiveQuery,
         selectedChipIds: effectiveSelectedChipIds,
@@ -901,11 +837,6 @@ function AskAiMapPage() {
           console.warn('Unable to refresh Ask AI Maps usage state:', error)
         }
       }
-
-      if (askAiMapWaitGameTimeoutRef.current !== null) {
-        window.clearTimeout(askAiMapWaitGameTimeoutRef.current)
-        askAiMapWaitGameTimeoutRef.current = null
-      }
       window.clearTimeout(timeoutId)
       if (!wasAskAiMapRequestCancelled()) {
         clearAskAiMapAbortController()
@@ -925,22 +856,9 @@ function AskAiMapPage() {
     setFocusedPlaceId(null)
   }
 
-  function closeAskAiMapWaitGame() {
-    if (askAiMapWaitGameTimeoutRef.current !== null) {
-      window.clearTimeout(askAiMapWaitGameTimeoutRef.current)
-      askAiMapWaitGameTimeoutRef.current = null
-    }
-    setAskAiMapWaitGamePhase(null)
-  }
-
   async function handleEnterSearch(queryOverride?: string) {
     if (isSearching) {
       cancelAskAiMapRequest()
-      if (askAiMapWaitGameTimeoutRef.current !== null) {
-        window.clearTimeout(askAiMapWaitGameTimeoutRef.current)
-        askAiMapWaitGameTimeoutRef.current = null
-      }
-      closeAskAiMapWaitGame()
       return
     }
 
@@ -1452,100 +1370,6 @@ function AskAiMapPage() {
         ) : null}
       </MapResponsiveLayout>
     </main>
-    {askAiMapWaitGamePhase ? createPortal(
-      askAiMapWaitGamePhase === 'invite' ? (
-        <div className="fixed inset-0 z-[7100] flex items-center justify-center bg-[#08162f]/42 px-4 py-6 backdrop-blur-[4px]">
-          <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_18%_18%,rgba(94,214,199,0.22),transparent_24%),radial-gradient(circle_at_82%_14%,rgba(255,111,157,0.18),transparent_24%),radial-gradient(circle_at_54%_72%,rgba(37,99,235,0.16),transparent_32%),linear-gradient(180deg,rgba(8,22,47,0.08),rgba(8,22,47,0.16))]" />
-          <section
-            className="relative w-full max-w-[520px] overflow-hidden rounded-[30px] border border-white/70 bg-[linear-gradient(180deg,#ffffff_0%,#f4f8ff_44%,#fff7fb_100%)] shadow-[0_28px_78px_rgba(15,23,42,0.28)]"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Play a mini game while waiting"
-          >
-            <div className="pointer-events-none absolute inset-0 opacity-80 [background-image:linear-gradient(rgba(37,99,235,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(37,99,235,0.06)_1px,transparent_1px)] [background-size:28px_28px] animate-[gala-grid-drift_8s_linear_infinite]" />
-            <div className="relative p-5 sm:p-6">
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#2563eb]">Still cooking</p>
-                  <h2 className="mt-1 text-[1.45rem] font-black tracking-[-0.03em] text-slate-950 sm:text-[1.8rem]">Play while you wait?</h2>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-                    Optional lang. Pin Rush is ready, but the Ask AI Maps result will replace this automatically as soon as it finishes.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={closeAskAiMapWaitGame}
-                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/80 text-slate-400 shadow-[0_8px_20px_rgba(15,23,42,0.08)] transition hover:bg-white hover:text-slate-600"
-                  aria-label="Dismiss waiting game invite"
-                >
-                  <AppIcon name="clear" className="h-4 w-4" />
-                </button>
-              </div>
-
-              <div className="mt-5 rounded-[24px] border border-white/80 bg-white/75 p-4 shadow-[0_12px_28px_rgba(15,23,42,0.06)] backdrop-blur">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex h-9 items-center rounded-full bg-slate-950 px-4 text-[12px] font-black text-white">
-                    Tiny taps
-                  </span>
-                  <span className="inline-flex h-9 items-center rounded-full bg-[#fff1f5] px-4 text-[12px] font-black text-[#e24d78]">
-                    Charms
-                  </span>
-                </div>
-
-                <div className="mt-4 flex items-center gap-2 overflow-hidden rounded-full bg-white/70 px-3 py-2">
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#2563eb]" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#5ed6c7]" />
-                  <span className="h-2.5 w-2.5 rounded-full bg-[#ffcc4d]" />
-                  <span className="ml-1 text-[11px] font-black text-slate-500">8+ pts charms</span>
-                  <span className="ml-auto inline-flex min-w-0 items-center gap-1 text-[11px] font-semibold text-slate-500">
-                    <span className="h-2 w-2 rounded-full bg-[#ff6f9d] animate-pulse" />
-                    The result will take over when ready
-                  </span>
-                </div>
-
-                <div className="relative mt-4 h-14 overflow-hidden rounded-[20px] bg-[linear-gradient(90deg,#dbeafe,#fce7f3)]">
-                  <span className="absolute left-6 top-1/2 h-3 w-3 -translate-y-1/2 rounded-full bg-[#2563eb] animate-[gala-mini-pin-run_1.4s_ease-in-out_infinite]" />
-                </div>
-              </div>
-
-              <div className="mt-5 flex gap-3">
-                <button
-                  type="button"
-                  onClick={closeAskAiMapWaitGame}
-                  className="inline-flex h-11 flex-1 items-center justify-center rounded-full bg-white/80 px-4 text-sm font-black text-slate-700 shadow-[0_8px_18px_rgba(15,23,42,0.06)] transition hover:bg-white"
-                >
-                  Later
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setAskAiMapWaitGamePhase('game')}
-                  className="inline-flex h-11 flex-1 items-center justify-center rounded-full bg-slate-950 px-4 text-sm font-black text-white shadow-[0_10px_24px_rgba(15,23,42,0.18)] transition hover:brightness-110 active:scale-95"
-                >
-                  Play
-                </button>
-              </div>
-            </div>
-          </section>
-        </div>
-      ) : (
-        <div
-          className="fixed inset-0 z-[9990] flex h-[100dvh] items-stretch justify-center overscroll-none bg-white"
-          role="presentation"
-          onClick={closeAskAiMapWaitGame}
-        >
-          <div
-            className="relative flex h-[100dvh] w-full flex-col overflow-hidden touch-auto"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Tap the Gala Pin mini game"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <TapGalaPinGame isLoading={true} onClose={closeAskAiMapWaitGame} className="min-h-0 w-full flex-1" />
-          </div>
-        </div>
-      ),
-      document.body
-    ) : null}
     {selectedDisplayPlace && isPlaceDetailOpen ? createPortal(
       <div className="fixed inset-0 z-[7000]">
         <button

@@ -43,6 +43,7 @@ import { AppUserProvider } from '../context/AppUserContext'
 import { SavedFavoritesProvider } from '../context/SavedFavoritesContext'
 import { SystemMessageProvider } from '../context/SystemMessageContext'
 import { AskAiNotificationProvider } from '../context/AskAiNotificationContext'
+import { BottomNavProvider, useBottomNav } from '../context/BottomNavContext'
 import { type CurrentUserResponse } from '../utils/profileApi'
 import { ADMIN_BASE_PATH, ADMIN_MFA_SETUP_PATH, ADMIN_MFA_VERIFY_PATH, getAdminPath } from '../utils/adminRoutes'
 import type { AdminMfaStatus } from '../utils/adminMfa'
@@ -184,9 +185,26 @@ type RouteInputs = {
   onProfileRefreshKeyUpdate: () => void
 }
 
+function InitialAuthLoader() {
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-center bg-white px-6 text-center">
+      <div className="flex flex-col items-center gap-4">
+        <div className="h-10 w-44 animate-pulse rounded-full bg-slate-100" />
+        <div className="h-4 w-64 animate-pulse rounded-full bg-slate-100" />
+        <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-48 w-full animate-pulse rounded-2xl bg-slate-100" />
+          ))}
+        </div>
+      </div>
+    </main>
+  )
+}
+
 function matchRoute(inputs: RouteInputs) {
   const {
     session,
+    hasResolvedInitialAuth,
     pathname,
     search,
     isPasswordResetPath,
@@ -209,6 +227,10 @@ function matchRoute(inputs: RouteInputs) {
   const adminPlaceSubmissionsPath = getAdminPath('place-submissions')
   const adminPlaceReportsPath = getAdminPath('place-reports')
   const adminCommentReportsPath = getAdminPath('comment-reports')
+
+  if (!hasResolvedInitialAuth && isProtectedAccountPath(pathname)) {
+    return <InitialAuthLoader />
+  }
 
   if (isPath(pathname, '/onboarding')) {
     if (!session) {
@@ -595,6 +617,12 @@ function matchRoute(inputs: RouteInputs) {
   )
 }
 
+function BottomNavGate({ pathname }: { pathname: string }) {
+  const { hidden } = useBottomNav()
+  if (hidden) return null
+  return <MobileBottomNav currentPath={pathname} />
+}
+
 function AppShell({ session, currentUser, currentProfile, adminMfa, hasResolvedInitialAuth, pathname, search, children }: {
   session: Session | null
   currentUser: CurrentUserResponse['user'] | null
@@ -631,17 +659,19 @@ function AppShell({ session, currentUser, currentProfile, adminMfa, hasResolvedI
     >
       <SystemMessageProvider>
         <SavedFavoritesProvider>
-          <AskAiNotificationProvider>
-            {shouldApplyGenericNoindex ? (
-              <SeoHead title="GalaTayo" canonicalPath={pathname} robots="noindex,follow" />
-            ) : null}
-            <Suspense fallback={null}>
-              <div>
-                {children}
-              </div>
-            </Suspense>
-            {showMobileBottomNav ? <MobileBottomNav currentPath={pathname} /> : null}
-          </AskAiNotificationProvider>
+            <AskAiNotificationProvider>
+              <BottomNavProvider>
+                {shouldApplyGenericNoindex ? (
+                  <SeoHead title="GalaTayo" canonicalPath={pathname} robots="noindex,follow" />
+                ) : null}
+                <Suspense fallback={null}>
+                  <div>
+                    {children}
+                  </div>
+                </Suspense>
+                {showMobileBottomNav ? <BottomNavGate pathname={pathname} /> : null}
+              </BottomNavProvider>
+            </AskAiNotificationProvider>
         </SavedFavoritesProvider>
       </SystemMessageProvider>
     </AppUserProvider>
