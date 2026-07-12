@@ -143,7 +143,7 @@ function PlacePhoto({
     .filter((index) => index !== safeIndex)
     .slice(0, 2)
   const mobileFrameClassName =
-    'relative overflow-hidden border border-[rgba(148,163,184,0.22)] bg-[linear-gradient(180deg,#f7f9ff_0%,#eef3fb_44%,#e6ebf5_100%)] shadow-[0_18px_44px_rgba(15,23,42,0.08)] sm:rounded-[28px] md:border-white/14 md:bg-[rgba(15,23,42,0.12)] md:backdrop-blur-2xl'
+    'relative overflow-hidden bg-transparent shadow-none sm:rounded-[28px] sm:border sm:border-[rgba(148,163,184,0.22)] sm:bg-[linear-gradient(180deg,#f7f9ff_0%,#eef3fb_44%,#e6ebf5_100%)] sm:shadow-[0_18px_44px_rgba(15,23,42,0.08)] md:border-white/14 md:bg-[rgba(15,23,42,0.12)] md:backdrop-blur-2xl'
   const desktopGlassFrameClassName =
     'relative overflow-hidden border border-white/14 bg-[rgba(15,23,42,0.12)] shadow-[0_18px_44px_rgba(15,23,42,0.08)] backdrop-blur-2xl md:rounded-[28px]'
   const heroAspectClassName = 'aspect-[4/3] sm:aspect-[17/10] md:aspect-[1.75/1] lg:aspect-[1.95/1]'
@@ -201,7 +201,7 @@ function PlacePhoto({
   if (!activePhoto) {
     return (
       <div className="grid gap-2.5 sm:gap-3">
-        <div className="-mx-4 sm:mx-0 md:mx-auto md:max-w-5xl lg:max-w-[88rem]">
+        <div className="-mx-4 w-[calc(100%+2rem)] max-w-[calc(100%+2rem)] sm:mx-0 sm:w-full sm:max-w-none md:mx-auto md:max-w-5xl lg:max-w-[88rem]">
           <div className={mobileFrameClassName}>
             <div className="relative isolate overflow-hidden">
               <div className={`${heroAspectClassName} relative w-full overflow-hidden`}>
@@ -285,7 +285,7 @@ function PlacePhoto({
 
   return (
     <div className="grid gap-2.5 sm:gap-3">
-      <div className="-mx-4 sm:mx-0 md:mx-auto md:max-w-5xl lg:max-w-[88rem]">
+      <div className="-mx-4 w-[calc(100%+2rem)] max-w-[calc(100%+2rem)] sm:mx-0 sm:w-full sm:max-w-none md:mx-auto md:max-w-5xl lg:max-w-[88rem]">
         <div className="md:hidden">
           <div className={mobileFrameClassName}>
             <div className="relative isolate overflow-hidden">
