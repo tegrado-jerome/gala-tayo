@@ -38,7 +38,7 @@ function friendlyProviderMessage(status: number): string {
   }
 
   if (status === 429 || status === 503) {
-    return "Ask AI Map Finder is busy right now. Please try again in a moment.";
+    return "Please try again in a moment.";
   }
 
   if (status === 504) {

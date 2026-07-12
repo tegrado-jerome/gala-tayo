@@ -30,9 +30,6 @@ import {
 } from "./askAiMaps/askAiMapsHelpers";
 import { resolveAskAiActor } from "../utils/askAiActor";
 
-const ASK_AI_MAPS_COOLDOWN_MS = 10_000;
-const lastAskAiMapsRequestAtByActor = new Map<string, number>();
-
 function logAskAiMaps(context: InvocationContext, message: string) {
   context.log(message);
 }
@@ -44,30 +41,6 @@ function getRequestId(request: HttpRequest): string {
 
 function isGuestIdentityError(message: string): boolean {
   return message === "Missing Ask AI guest identifier.";
-}
-
-
-function checkCooldown(actorId: string, requestId: string): HttpResponseInit | null {
-  const now = Date.now();
-  const lastRequestAt = lastAskAiMapsRequestAtByActor.get(actorId) ?? 0;
-  const elapsed = now - lastRequestAt;
-
-  if (elapsed < ASK_AI_MAPS_COOLDOWN_MS) {
-    return {
-      status: 429,
-      headers: buildResponseHeaders(requestId),
-      jsonBody: {
-        ok: false,
-        error: "ASK_AI_MAPS_COOLDOWN",
-        message: "Ask AI Map Finder is busy right now. Please try again in a moment.",
-        requestId,
-        places: [],
-        sources: [],
-      },
-    };
-  }
-
-  return null;
 }
 
 export async function askAiMapsRequest(
@@ -102,12 +75,6 @@ export async function askAiMapsRequest(
       };
     }
 
-    const cooldownResponse = checkCooldown(actor.id, requestId);
-
-    if (cooldownResponse) {
-      return cooldownResponse;
-    }
-
     const aiUsage = await consumeAskAiUsageForActor(actor, "ask_ai_maps");
 
     if (!aiUsage.allowed) {
@@ -136,9 +103,6 @@ export async function askAiMapsRequest(
         },
       };
     }
-
-    lastAskAiMapsRequestAtByActor.set(actor.id, Date.now());
-
     context.log(
       `[Ask AI Maps] quota consumed: remaining=${aiUsage.remaining} actorId=${actor.id} actorKind=${actor.kind}`
     );
@@ -283,8 +247,6 @@ export async function askAiMapsRequest(
     } catch (error) {
       context.log("[Ask AI Usage] refunding map usage after provider failure.");
       await refundAskAiUsageForActor({ actor, usageType: "ask_ai_maps" });
-
-      lastAskAiMapsRequestAtByActor.delete(actor.id);
       logAskAiMapsError(context, error, requestLogContext);
 
       return handleAskAiMapsError(error, requestLogContext, aiUsage);

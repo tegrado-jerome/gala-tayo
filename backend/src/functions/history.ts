@@ -308,18 +308,15 @@ export async function historyPlaceView(
     const historyTable = supabaseAdmin.from("history") as any;
 
     const { data: history, error: historyError } = await historyTable
-      .upsert(
-        [
-          {
-            user_id: user.id,
-            type: "place_view",
-            query: null,
-            place_id: place.id,
-            created_at: new Date().toISOString(),
-          },
-        ],
-        { onConflict: "user_id,type,place_id" }
-      )
+      .insert([
+        {
+          user_id: user.id,
+          type: "place_view",
+          query: null,
+          place_id: place.id,
+          created_at: new Date().toISOString(),
+        },
+      ])
       .select("id, user_id, type, query, place_id, created_at")
       .single();
 

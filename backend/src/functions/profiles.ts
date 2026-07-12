@@ -218,18 +218,22 @@ export async function currentUserMe(
       }
 
       if (body.birthdate !== undefined) {
-        const birthdate = validateBirthdate(body.birthdate);
+        if (body.birthdate === null || body.birthdate === '') {
+          accountUpdates.birthdate = null;
+        } else {
+          const birthdate = validateBirthdate(body.birthdate);
 
-        if (birthdate.error) {
-          return {
-            status: 400,
-            jsonBody: {
-              message: birthdate.error,
-            },
-          };
+          if (birthdate.error) {
+            return {
+              status: 400,
+              jsonBody: {
+                message: birthdate.error,
+              },
+            };
+          }
+
+          accountUpdates.birthdate = birthdate.value;
         }
-
-        accountUpdates.birthdate = birthdate.value;
       }
 
       if (body.displayName !== undefined || body.display_name !== undefined) {
