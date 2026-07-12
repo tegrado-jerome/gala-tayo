@@ -33,20 +33,20 @@ function normalizeGuestId(value: string | null): string | null {
 }
 
 export async function resolveAskAiActor(request: HttpRequest): Promise<AskAiActor> {
-  const authHeader = request.headers.get("authorization");
-
-  if (authHeader) {
-    const user = await validateJwt(request);
-    return {
-      kind: "registered",
-      id: user.id,
-      user,
-    };
-  }
-
   const guestId = normalizeGuestId(request.headers.get(ASK_AI_GUEST_ID_HEADER));
 
   if (!guestId) {
+    const authHeader = request.headers.get("authorization");
+
+    if (authHeader) {
+      const user = await validateJwt(request);
+      return {
+        kind: "registered",
+        id: user.id,
+        user,
+      };
+    }
+
     throw new Error("Missing Ask AI guest identifier.");
   }
 
