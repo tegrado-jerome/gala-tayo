@@ -204,11 +204,13 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
     }
 
     const controller = new AbortController()
+    const hasVisibleCachedResults = payload.items.length > 0
+    const shouldShowLoadingUi = !hasVisibleCachedResults
 
     const loadPage = async () => {
       try {
-        setIsLoading(payload.items.length === 0)
-        setIsRefreshing(payload.items.length > 0)
+        setIsLoading(shouldShowLoadingUi)
+        setIsRefreshing(shouldShowLoadingUi ? false : navigationSource !== 'pop' && hasVisibleCachedResults)
         setErrorMessage(null)
         const response = await fetch(getAreaSearchApiUrl(), {
           method: 'POST',
