@@ -96,7 +96,7 @@ export function MapResponsiveLayout({
       className={cn(
         'grid h-full min-h-0 w-full grid-cols-1',
         sidebarVisible
-          ? 'md:grid-cols-[minmax(0,1fr)_340px] lg:grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_460px] 2xl:grid-cols-[minmax(0,1fr)_500px]'
+          ? 'md:grid-cols-[minmax(0,1fr)_360px] lg:grid-cols-[minmax(0,1fr)_420px] xl:grid-cols-[minmax(0,1fr)_480px] 2xl:grid-cols-[minmax(0,1fr)_520px]'
           : 'md:grid-cols-1',
         className,
       )}

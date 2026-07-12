@@ -47,8 +47,8 @@ export function PageShell({
 
 const SIZE_CLASSES = {
   narrow: 'w-full max-w-[480px] sm:max-w-[560px] md:max-w-[600px] lg:max-w-[640px]',
-  default: 'w-full max-w-[760px] sm:max-w-[820px] md:max-w-[980px] lg:max-w-[1080px] xl:max-w-[1180px] 2xl:max-w-[1320px]',
-  wide: 'w-full max-w-[960px] sm:max-w-[1080px] md:max-w-[1200px] lg:max-w-[1320px] xl:max-w-[1480px] 2xl:max-w-[1560px]',
+  default: 'w-full max-w-[760px] sm:max-w-[820px] md:max-w-[980px] lg:max-w-[1140px] xl:max-w-[1240px] 2xl:max-w-[1360px]',
+  wide: 'w-full max-w-[960px] sm:max-w-[1080px] md:max-w-[1200px] lg:max-w-[1360px] xl:max-w-[1500px] 2xl:max-w-[1600px]',
   full: 'w-full max-w-none',
 } as const
 
@@ -148,9 +148,9 @@ export function ResponsiveGrid({
       case 2:
         return 'grid-cols-1 sm:grid-cols-2'
       case 3:
-        return 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3'
+        return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
       case 4:
-        return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4'
+        return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
       default:
         return 'grid-cols-1'
     }
@@ -334,7 +334,7 @@ export function MapLayout({ children, className, height, tone = 'split' }: MapLa
     <div
       className={cn(
         'grid h-full min-h-0 w-full grid-cols-1 overflow-hidden',
-        'lg:grid-cols-[minmax(0,1fr)_minmax(360px,420px)] xl:grid-cols-[minmax(0,1fr)_minmax(380px,460px)] 2xl:grid-cols-[minmax(0,1fr)_minmax(420px,500px)]',
+        'lg:grid-cols-[minmax(0,1fr)_minmax(380px,440px)] xl:grid-cols-[minmax(0,1fr)_minmax(420px,480px)] 2xl:grid-cols-[minmax(0,1fr)_minmax(440px,520px)]',
         className,
       )}
       style={height ? { height } : undefined}
