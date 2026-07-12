@@ -574,6 +574,19 @@ function AskAiMapPage() {
     }
 
     const selectedContainer = visibleTarget?.container
+    const mobileCardScroller = mobileCardScrollerRef.current
+    const isMobileViewport = window.matchMedia('(max-width: 767px)').matches
+
+    if (isMobileViewport && selectedContainer && selectedContainer === mobileCardScroller && selectedContainer.getClientRects().length > 0) {
+      window.requestAnimationFrame(() => {
+        selectedCard.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest',
+          inline: 'center',
+        })
+      })
+      return
+    }
 
     if (selectedContainer && selectedContainer.getClientRects().length > 0) {
       const containerRect = selectedContainer.getBoundingClientRect()
@@ -987,7 +1000,7 @@ function AskAiMapPage() {
 
                 <div
                   ref={mobileCardScrollerRef}
-                  className="flex w-full snap-x snap-mandatory gap-3 overflow-x-auto overflow-y-hidden pb-4 pl-1 pr-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden lg:justify-center"
+                  className="flex w-full snap-x snap-mandatory gap-3 overflow-x-auto overflow-y-hidden pb-4 pl-1 pr-4 [scrollbar-width:none] [-ms-overflow-style:none] [-webkit-overflow-scrolling:touch] scroll-smooth [&::-webkit-scrollbar]:hidden lg:justify-center"
                 >
                   {isSearching ? <MinimalLoadingCard query={query} /> : null}
 

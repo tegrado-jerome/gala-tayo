@@ -11,6 +11,7 @@ import { useBottomNav } from '../context/BottomNavContext'
 import { getSupabaseAccessToken } from '../supabase'
 import { getPlacePhoto } from '../utils/placePhoto'
 import { getApiUrl } from '../utils/apiClient'
+import { getPublicSiteUrl } from '../utils/site'
 import historyActiveChibi from '../assets/chibis/features/history/chibi-history-active-state.webp'
 
 const HISTORY_CACHE_PREFIX = 'galatayo:history:'
@@ -524,7 +525,7 @@ function HistoryPage() {
               <p className="mt-2 max-w-xl text-sm text-[var(--muted)]">
                 Your recently viewed places are private to your account.
               </p>
-              <GoogleSignInButton className="mt-4" redirectTo={`${window.location.origin}/history`} />
+              <GoogleSignInButton className="mt-4" redirectTo={getPublicSiteUrl('/history')} />
             </CardSurface>
           ) : null}
 

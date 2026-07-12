@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../supabase'
+import { getPublicSiteOrigin } from '../utils/site'
 
 type GoogleSignInButtonProps = {
   compact?: boolean
@@ -30,9 +31,10 @@ function GoogleIcon() {
   )
 }
 
-function GoogleSignInButton({ compact = false, className = '', redirectTo = window.location.origin }: GoogleSignInButtonProps) {
+function GoogleSignInButton({ compact = false, className = '', redirectTo }: GoogleSignInButtonProps) {
   const [isSigningIn, setIsSigningIn] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  const targetRedirectTo = redirectTo ?? getPublicSiteOrigin()
 
   const handleSignIn = async () => {
     try {
@@ -42,7 +44,7 @@ function GoogleSignInButton({ compact = false, className = '', redirectTo = wind
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo,
+          redirectTo: targetRedirectTo,
         },
       })
 

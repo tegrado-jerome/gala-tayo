@@ -10,6 +10,7 @@ import { getSupabaseAccessToken } from '../supabase'
 import { fetchMyCommentReports, type CommentReportReason, type CommentReportStatus, type MyCommentReport } from '../utils/commentReportsApi'
 import { fetchMyPlaceReports, type MyPlaceReport, type PlaceReportReason, type PlaceReportStatus } from '../utils/placeReportsApi'
 import { navigateToPlace } from '../utils/navigation'
+import { getPublicSiteUrl } from '../utils/site'
 
 const commentReasonLabels: Record<CommentReportReason, string> = {
   spam: 'Spam',
@@ -461,7 +462,7 @@ function ReportsPage() {
                 <p className="mt-2 max-w-xl text-sm font-medium leading-6 text-[var(--muted)]">
                   Your submitted reports stay private to your account, and admin-reviewed outcomes are only shown here after the team validates the issue.
                 </p>
-                <GoogleSignInButton className="mt-4" redirectTo={`${window.location.origin}/reports`} />
+                <GoogleSignInButton className="mt-4" redirectTo={getPublicSiteUrl('/reports')} />
               </CardSurface>
             ) : null}
 
@@ -475,7 +476,7 @@ function ReportsPage() {
                 <p className="mt-2 max-w-xl text-sm font-medium leading-6 text-[var(--muted)]">
                   Your account is recognized, but the secure session needed to load private reports is missing.
                 </p>
-                <GoogleSignInButton className="mt-4" redirectTo={`${window.location.origin}/reports`} />
+                <GoogleSignInButton className="mt-4" redirectTo={getPublicSiteUrl('/reports')} />
               </CardSurface>
             ) : null}
 

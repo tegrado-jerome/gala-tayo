@@ -1,6 +1,7 @@
 import galaTayoLogo from '../assets/brand/galatayo-logo.svg'
 import { metroManilaAreaNameBySlug } from '../data/metroManilaAreas'
 import { formatLabelFromSlug, getCanonicalPlacePath, resolveAreaMeta } from './routes'
+import { getPublicSiteOrigin } from './site'
 
 type OpenGraphImage = {
   url: string
@@ -22,9 +23,7 @@ const DEFAULT_DESCRIPTION = 'Discover gala spots around Metro Manila with place 
 const DEFAULT_OG_IMAGE = galaTayoLogo
 
 function getSiteOrigin() {
-  const envSiteUrl = String(import.meta.env.VITE_SITE_URL || '').trim()
-  const siteUrl = envSiteUrl || window.location.origin
-  return siteUrl.replace(/\/+$/, '')
+  return getPublicSiteOrigin()
 }
 
 function getAbsoluteUrl(pathOrUrl: string) {

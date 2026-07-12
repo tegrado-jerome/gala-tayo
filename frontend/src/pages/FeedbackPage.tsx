@@ -6,6 +6,7 @@ import GoogleSignInButton from '../components/GoogleSignInButton'
 import { FormContainer, PageContainer, PageShell, CardSurface, Stack } from '../components/layout/ResponsiveLayouts'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { getApiUrl } from '../utils/apiClient'
+import { getPublicSiteUrl } from '../utils/site'
 
 const COMMENT_MAX_LENGTH = 500
 
@@ -183,7 +184,7 @@ function FeedbackPage() {
             <p className="mt-2 max-w-xl text-sm text-[var(--muted)]">
               Feedback is connected to your account so we can keep submissions useful.
             </p>
-            <GoogleSignInButton className="mt-4" redirectTo={`${window.location.origin}/feedback`} />
+            <GoogleSignInButton className="mt-4" redirectTo={getPublicSiteUrl('/feedback')} />
           </CardSurface>
         ) : null}
 

@@ -2,6 +2,7 @@ import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../supabase'
 import { getOnboardingStatus } from '../utils/profileApi'
 import { apiFetch, getApiUrl } from '../utils/apiClient'
+import { getPublicSiteOrigin } from '../utils/site'
 
 export type AuthRedirectTarget = string
 
@@ -25,7 +26,8 @@ export function getAuthCallbackUrl(nextPath?: string | null, flow?: 'signup' | '
   }
 
   const queryString = params.toString()
-  return queryString ? `${window.location.origin}/auth/callback?${queryString}` : `${window.location.origin}/auth/callback`
+  const callbackBase = `${getPublicSiteOrigin()}/auth/callback`
+  return queryString ? `${callbackBase}?${queryString}` : callbackBase
 }
 
 export async function signInWithGoogle(nextPath?: string | null) {
@@ -151,7 +153,7 @@ async function sendAuthResendEmail(type: 'signup' | 'recovery', email: string, n
       type,
       email: email.trim().toLowerCase(),
       nextPath: nextPath ?? null,
-      clientOrigin: window.location.origin,
+      clientOrigin: getPublicSiteOrigin(),
     }),
   })
 

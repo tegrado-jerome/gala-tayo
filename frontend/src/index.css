@@ -91,6 +91,7 @@ body {
   max-width: 100%;
   overflow-x: clip;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   background: var(--bg);
   color: var(--text);
   font-family: "Nunito Sans", system-ui, sans-serif;

@@ -8,6 +8,7 @@ import ActivityPlaceCard from '../components/ActivityPlaceCard'
 import DestructiveConfirmModal from '../components/DestructiveConfirmModal'
 import { useSavedFavorites, type FavoritePlace } from '../context/SavedFavoritesContext'
 import { getPlacePhoto } from '../utils/placePhoto'
+import { getPublicSiteUrl } from '../utils/site'
 import favoritesActiveChibi from '../assets/chibis/features/favorites/chibi-favorites-active-state.webp'
 
 const FAVORITES_LOAD_MORE_BATCH_SIZE = 10
@@ -267,7 +268,7 @@ function FavoritesPage() {
               <p className="mt-2 max-w-xl text-sm text-[var(--muted)]">
                 Your saved places are connected to your account.
               </p>
-              <GoogleSignInButton className="mt-4" redirectTo={`${window.location.origin}/favorites`} />
+              <GoogleSignInButton className="mt-4" redirectTo={getPublicSiteUrl('/favorites')} />
             </CardSurface>
           ) : null}
 
