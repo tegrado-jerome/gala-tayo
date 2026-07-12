@@ -74,7 +74,7 @@ export const ASK_AI_MAPS_REQUEST_TIMEOUT_MS = 120_000
 
 export function getEmptyReasonMessage(emptyReason: AskAiMapsResponse['emptyReason']) {
   if (emptyReason === 'PROVIDER_BUSY') {
-    return 'Ask AI Maps is busy right now. Try again in a bit.'
+    return 'Please try again in a moment.'
   }
 
   if (emptyReason === 'NO_MAP_GROUNDING_RESULTS') {

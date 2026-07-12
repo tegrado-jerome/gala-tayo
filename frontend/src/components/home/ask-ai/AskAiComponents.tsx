@@ -399,7 +399,7 @@ function AskAiOutputStageLegacy({
         <div>
           <p className="text-[0.9rem] font-black uppercase tracking-[0.12em] text-slate-500">Your question</p>
           <div className="mt-2.5 inline-block max-w-full rounded-[16px] border border-[rgba(20,35,58,0.22)] bg-white/96 px-4 py-3.5 shadow-[0_12px_26px_rgba(15,23,42,0.045),inset_0_1px_0_rgba(255,255,255,0.9)] sm:px-5 sm:py-4 lg:max-w-[980px] xl:max-w-[1120px]">
-            <p className="text-[1.08rem] font-bold leading-7 tracking-[-0.01em] text-slate-950 sm:text-[1.18rem] sm:leading-8 lg:text-[1.12rem]">
+            <p className="break-words text-[1.08rem] font-bold leading-7 tracking-[-0.01em] text-slate-950 [overflow-wrap:anywhere] sm:text-[1.18rem] sm:leading-8 lg:text-[1.12rem]">
               {question}
             </p>
           </div>
@@ -566,7 +566,7 @@ function AskAiThinkingStageLegacy({
         <div className="mt-7 lg:mt-8">
           <p className="text-[0.9rem] font-black uppercase tracking-[0.12em] text-slate-500">Your question</p>
           <div className="mt-2.5 inline-block max-w-full rounded-[16px] border border-[rgba(20,35,58,0.22)] bg-white/96 px-4 py-3.5 shadow-[0_12px_26px_rgba(15,23,42,0.045),inset_0_1px_0_rgba(255,255,255,0.9)] sm:px-5 sm:py-4 lg:max-w-[980px] xl:max-w-[1120px]">
-            <p className="text-[1.08rem] font-bold leading-7 tracking-[-0.01em] text-slate-950 sm:text-[1.18rem] sm:leading-8 lg:text-[1.12rem]">
+            <p className="break-words text-[1.08rem] font-bold leading-7 tracking-[-0.01em] text-slate-950 [overflow-wrap:anywhere] sm:text-[1.18rem] sm:leading-8 lg:text-[1.12rem]">
               {question}
             </p>
           </div>
@@ -931,7 +931,7 @@ function AskAiOutputStageNextLegacy({
         <div>
           <p className="text-[0.9rem] font-black uppercase tracking-[0.12em] text-slate-500">Your question</p>
           <div className="mt-2.5 w-full rounded-2xl border border-[rgba(20,35,58,0.14)] bg-white/88 px-4 py-3.5">
-            <p className="text-[1rem] font-bold leading-7 tracking-[-0.01em] text-slate-950">{question}</p>
+            <p className="break-words text-[1rem] font-bold leading-7 tracking-[-0.01em] text-slate-950 [overflow-wrap:anywhere]">{question}</p>
           </div>
         </div>
 
@@ -1089,8 +1089,8 @@ function AskAiOutputStageNext({
 
           {/* User message bubble */}
           <div className="flex justify-end">
-            <div className="max-w-[82%] rounded-2xl rounded-tr-[6px] bg-[var(--accent)] px-4 py-3 shadow-[0_4px_14px_rgba(47,116,232,0.16)]">
-              <p className="text-[0.94rem] leading-relaxed text-white">{question}</p>
+            <div className="min-w-0 max-w-[82%] rounded-2xl rounded-tr-[6px] bg-[var(--accent)] px-4 py-3 shadow-[0_4px_14px_rgba(47,116,232,0.16)]">
+              <p className="break-words text-[0.94rem] leading-relaxed text-white [overflow-wrap:anywhere]">{question}</p>
             </div>
           </div>
 
@@ -1193,8 +1193,8 @@ function AskAiThinkingStageNext({
         <div className="mx-auto flex w-full max-w-[820px] flex-col gap-5 lg:max-w-[900px]">
           {/* User message bubble */}
           <div className="flex justify-end">
-            <div className="max-w-[82%] rounded-2xl rounded-tr-[6px] bg-[var(--accent)] px-4 py-3 shadow-[0_4px_14px_rgba(47,116,232,0.16)]">
-              <p className="text-[0.94rem] leading-relaxed text-white">{question}</p>
+            <div className="min-w-0 max-w-[82%] rounded-2xl rounded-tr-[6px] bg-[var(--accent)] px-4 py-3 shadow-[0_4px_14px_rgba(47,116,232,0.16)]">
+              <p className="break-words text-[0.94rem] leading-relaxed text-white [overflow-wrap:anywhere]">{question}</p>
             </div>
           </div>
 
@@ -1500,7 +1500,7 @@ const ChatMessageList = memo(function ChatMessageList({
           return (
             <div key={index} className="flex justify-end">
               <div className="max-w-[85%] rounded-2xl rounded-tr-md border border-[#0f1f4a]/40 bg-gradient-to-br from-[#172d6b] to-[#0f1f4a] px-4 py-2.5 shadow-[0_4px_14px_-4px_rgba(23,45,107,0.35)]">
-                <p className="whitespace-pre-wrap text-[14.5px] leading-relaxed text-white">{msg.content}</p>
+                <p className="whitespace-pre-wrap break-words text-[14.5px] leading-relaxed text-white [overflow-wrap:anywhere]">{msg.content}</p>
               </div>
             </div>
           )

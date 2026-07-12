@@ -94,7 +94,7 @@ export function Section({ children, className, gap = 'default', as = 'div' }: Se
   const gapClass =
     gap === 'tight' ? 'gap-3 sm:gap-4' : gap === 'loose' ? 'gap-6 sm:gap-8' : 'gap-4 sm:gap-5 lg:gap-6'
   return (
-    <Component className={cn('grid w-full', gapClass, className)}>
+    <Component className={cn('grid w-full min-w-0', gapClass, className)}>
       {children}
     </Component>
   )
@@ -156,7 +156,7 @@ export function ResponsiveGrid({
     }
   })()
 
-  return <div className={cn('grid w-full', colsClass, gapClass, className)} {...rest} />
+  return <div className={cn('grid w-full min-w-0', colsClass, gapClass, className)} {...rest} />
 }
 
 type CardSurfaceTone = 'default' | 'soft' | 'outlined' | 'frosted'
