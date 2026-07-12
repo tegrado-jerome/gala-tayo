@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { House, LayoutGrid, MapPin } from 'lucide-react'
 import { AppIcon, getCategoryIconName } from '../components/AppIcon'
 import AppHeader from '../components/AppHeader'
@@ -11,6 +11,7 @@ import { getPlaceCategoryLabel } from '../data/placeCategories'
 import { navigateToCanonicalPlace, navigateToPath } from '../utils/navigation'
 import { getSiteOrigin } from '../utils/seo'
 import { getApiUrl } from '../utils/apiClient'
+import { getListingPlaceViewportTop, readListingRouteCache, restoreListingRouteScroll, writeListingRouteCache } from '../utils/listingRouteCache'
 import { mapSeoPlaceToCard, type SeoPlaceSummary } from '../utils/seoApi'
 
 type CategoryPlacesPageProps = {
@@ -118,10 +119,25 @@ async function readCategoryPlacesResponse(response: Response): Promise<CategoryP
 }
 
 function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPageProps) {
-  const [payload, setPayload] = useState<CategoryPlacesResponse>(EMPTY_CATEGORY_PLACES_RESPONSE)
-  const [isLoading, setIsLoading] = useState(true)
+  const [routeCache] = useState(() => readListingRouteCache())
+  const [payload, setPayload] = useState<CategoryPlacesResponse>(() =>
+    routeCache
+      ? {
+          items: (routeCache.items as SeoPlaceSummary[]) ?? [],
+          total: routeCache.total,
+          page: routeCache.page,
+          pageSize: routeCache.pageSize,
+          totalPages: routeCache.totalPages,
+        }
+      : EMPTY_CATEGORY_PLACES_RESPONSE
+  )
+  const [isLoading, setIsLoading] = useState(() => !routeCache)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(
+    routeCache?.pendingScrollRestore ? routeCache.selectedPlaceId : null,
+  )
+  const hasRestoredInitialScrollRef = useRef(false)
   const categoryLabel = getPlaceCategoryLabel(categorySlug)
   const iconName = getCategoryIconName(categoryLabel)
   const searchParams = useMemo(() => new URLSearchParams(search), [search])
@@ -177,6 +193,23 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
     return () => controller.abort()
   }, [categorySlug, currentPage])
 
+  useLayoutEffect(() => {
+    if (!routeCache?.pendingScrollRestore || hasRestoredInitialScrollRef.current) {
+      return
+    }
+
+    if (!selectedPlaceId) {
+      return
+    }
+
+    hasRestoredInitialScrollRef.current = true
+    restoreListingRouteScroll(routeCache)
+    writeListingRouteCache({
+      ...routeCache,
+      pendingScrollRestore: false,
+    })
+  }, [isLoading, isRefreshing, routeCache, selectedPlaceId])
+
   const places = useMemo(() => sortPlacesAlphabetically(payload.items), [payload.items])
   const totalPages = payload.totalPages
   const safePage = payload.page || currentPage
@@ -204,6 +237,12 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
       navigateToPath(getPagePath(nextPage))
     })
   }
+
+  useEffect(() => {
+    if (!isPageTransitionLoading && selectedPlaceId && !places.some((place) => place.id === selectedPlaceId)) {
+      setSelectedPlaceId(null)
+    }
+  }, [isPageTransitionLoading, places, selectedPlaceId])
 
   const jsonLd = !errorMessage
     ? [
@@ -306,18 +345,34 @@ function CategoryPlacesPage({ categorySlug, search = '' }: CategoryPlacesPagePro
                       <div key={rawPlace.id}>
                         <PlaceCard
                           place={place}
+                          isSelected={selectedPlaceId === rawPlace.id}
                           searchResultCard
-                          onOpen={() => navigateToCanonicalPlace({
-                            slug: rawPlace.slug,
-                            city: rawPlace.city,
-                            area: rawPlace.area,
-                            localArea: rawPlace.area ?? null,
-                          }, {
-                            source: 'category',
-                            returnTo: `${window.location.pathname}${window.location.search}`,
-                            returnLabel: categoryLabel,
-                          })}
-                          onSelect={() => undefined}
+                          onSelect={() => setSelectedPlaceId(rawPlace.id)}
+                          dataSearchPlaceId={rawPlace.id}
+                          onOpen={() => {
+                            setSelectedPlaceId(rawPlace.id)
+                            writeListingRouteCache({
+                              items: payload.items,
+                              total: payload.total,
+                              page: payload.page,
+                              pageSize: payload.pageSize,
+                              totalPages: payload.totalPages,
+                              scrollY: window.scrollY,
+                              selectedPlaceId: rawPlace.id,
+                              selectedPlaceViewportTop: getListingPlaceViewportTop(rawPlace.id),
+                              pendingScrollRestore: true,
+                            })
+                            navigateToCanonicalPlace({
+                              slug: rawPlace.slug,
+                              city: rawPlace.city,
+                              area: rawPlace.area,
+                              localArea: rawPlace.area ?? null,
+                            }, {
+                              source: 'category',
+                              returnTo: `${window.location.pathname}${window.location.search}`,
+                              returnLabel: categoryLabel,
+                            })
+                          }}
                         />
                       </div>
                     )

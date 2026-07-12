@@ -70,14 +70,57 @@ function App() {
   useLayoutEffect(() => {
     if (navigationSource === 'pop') {
       if (restoredScrollY !== null) {
-        runWithInstantScroll(() => {
-          window.scrollTo({
-            top: Math.max(restoredScrollY, 0),
-            left: 0,
-            behavior: 'auto',
+        const targetScrollY = Math.max(restoredScrollY, 0)
+        const maxRetries = 6
+        const timeoutIds: number[] = []
+        const animationFrameIds: number[] = []
+        let cancelled = false
+
+        const clearScheduledWork = () => {
+          timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId))
+          animationFrameIds.forEach((frameId) => window.cancelAnimationFrame(frameId))
+        }
+
+        const attemptRestore = (attempt: number) => {
+          if (cancelled) {
+            return
+          }
+
+          runWithInstantScroll(() => {
+            window.scrollTo({
+              top: targetScrollY,
+              left: 0,
+              behavior: 'auto',
+            })
           })
-        })
-        setRestoredScrollY(null)
+
+          if (cancelled) {
+            return
+          }
+
+          if (Math.abs(window.scrollY - targetScrollY) <= 1 || attempt >= maxRetries) {
+            clearScheduledWork()
+            setRestoredScrollY(null)
+            return
+          }
+
+          const nextAttempt = attempt + 1
+          const timeoutId = window.setTimeout(() => attemptRestore(nextAttempt), 120 * nextAttempt)
+          timeoutIds.push(timeoutId)
+
+          const frameId = window.requestAnimationFrame(() => {
+            const nextFrameId = window.requestAnimationFrame(() => attemptRestore(nextAttempt))
+            animationFrameIds.push(nextFrameId)
+          })
+          animationFrameIds.push(frameId)
+        }
+
+        attemptRestore(0)
+
+        return () => {
+          cancelled = true
+          clearScheduledWork()
+        }
       }
       return
     }

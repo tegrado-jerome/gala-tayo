@@ -13,6 +13,7 @@ import { metroManilaAreaNameBySlug } from '../data/metroManilaAreas'
 import { navigateToCanonicalPlace, navigateToPath } from '../utils/navigation'
 import { formatLabelFromSlug, getSiteOrigin } from '../utils/seo'
 import { getApiUrl } from '../utils/apiClient'
+import { getListingPlaceViewportTop, readListingRouteCache, restoreListingRouteScroll, writeListingRouteCache } from '../utils/listingRouteCache'
 import { mapSeoPlaceToCard, type SeoPlaceSummary } from '../utils/seoApi'
 
 type AreaPlacesPageProps = {
@@ -132,12 +133,27 @@ async function readAreaPlacesResponse(response: Response): Promise<AreaPlacesRes
 }
 
 function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
-  const [payload, setPayload] = useState<AreaPlacesResponse>(EMPTY_AREA_PLACES_RESPONSE)
-  const [isLoading, setIsLoading] = useState(true)
+  const [routeCache] = useState(() => readListingRouteCache())
+  const [payload, setPayload] = useState<AreaPlacesResponse>(() =>
+    routeCache
+      ? {
+          items: (routeCache.items as SeoPlaceSummary[]) ?? [],
+          total: routeCache.total,
+          page: routeCache.page,
+          pageSize: routeCache.pageSize,
+          totalPages: routeCache.totalPages,
+        }
+      : EMPTY_AREA_PLACES_RESPONSE
+  )
+  const [isLoading, setIsLoading] = useState(() => !routeCache)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(
+    routeCache?.pendingScrollRestore ? routeCache.selectedPlaceId : null,
+  )
   const filterScrollerRef = useRef<HTMLDivElement | null>(null)
   const activeFilterRef = useRef<HTMLAnchorElement | null>(null)
+  const hasRestoredInitialScrollRef = useRef(false)
   const areaName = metroManilaAreaNameBySlug.get(areaSlug) || formatLabelFromSlug(areaSlug)
   const searchParams = useMemo(() => new URLSearchParams(search), [search])
   const activeCategory = normalizeValue(searchParams.get('category')) || 'all'
@@ -214,6 +230,23 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
     return () => controller.abort()
   }, [activeCategory, areaSlug, currentPage])
 
+  useLayoutEffect(() => {
+    if (!routeCache?.pendingScrollRestore || hasRestoredInitialScrollRef.current) {
+      return
+    }
+
+    if (!selectedPlaceId) {
+      return
+    }
+
+    hasRestoredInitialScrollRef.current = true
+    restoreListingRouteScroll(routeCache)
+    writeListingRouteCache({
+      ...routeCache,
+      pendingScrollRestore: false,
+    })
+  }, [isLoading, isRefreshing, routeCache, selectedPlaceId])
+
   const allPlaces = useMemo(() => sortPlacesAlphabetically(payload.items), [payload.items])
   const totalPages = payload.totalPages
   const safePage = payload.page || currentPage
@@ -245,6 +278,12 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
       navigateToPath(getPagePath(nextPage))
     })
   }
+
+  useEffect(() => {
+    if (!isPageTransitionLoading && selectedPlaceId && !allPlaces.some((place) => place.id === selectedPlaceId)) {
+      setSelectedPlaceId(null)
+    }
+  }, [allPlaces, isPageTransitionLoading, selectedPlaceId])
 
   const jsonLd = !errorMessage
     ? [
@@ -389,18 +428,34 @@ function AreaPlacesPage({ areaSlug, search = '' }: AreaPlacesPageProps) {
                       <div key={rawPlace.id}>
                         <PlaceCard
                           place={place}
+                          isSelected={selectedPlaceId === rawPlace.id}
                           searchResultCard
-                          onOpen={() => navigateToCanonicalPlace({
-                            slug: rawPlace.slug,
-                            city: rawPlace.city ?? areaName,
-                            area: rawPlace.area ?? areaName,
-                            localArea: rawPlace.area ?? null,
-                          }, {
-                            source: 'area',
-                            returnTo: `${window.location.pathname}${window.location.search}`,
-                            returnLabel: areaName,
-                          })}
-                          onSelect={() => undefined}
+                          onSelect={() => setSelectedPlaceId(rawPlace.id)}
+                          dataSearchPlaceId={rawPlace.id}
+                          onOpen={() => {
+                            setSelectedPlaceId(rawPlace.id)
+                            writeListingRouteCache({
+                              items: payload.items,
+                              total: payload.total,
+                              page: payload.page,
+                              pageSize: payload.pageSize,
+                              totalPages: payload.totalPages,
+                              scrollY: window.scrollY,
+                              selectedPlaceId: rawPlace.id,
+                              selectedPlaceViewportTop: getListingPlaceViewportTop(rawPlace.id),
+                              pendingScrollRestore: true,
+                            })
+                            navigateToCanonicalPlace({
+                              slug: rawPlace.slug,
+                              city: rawPlace.city ?? areaName,
+                              area: rawPlace.area ?? areaName,
+                              localArea: rawPlace.area ?? null,
+                            }, {
+                              source: 'area',
+                              returnTo: `${window.location.pathname}${window.location.search}`,
+                              returnLabel: areaName,
+                            })
+                          }}
                         />
                       </div>
                     )
