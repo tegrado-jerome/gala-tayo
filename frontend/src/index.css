@@ -249,6 +249,19 @@ button:disabled {
   box-shadow: none !important;
 }
 
+@media (max-width: 639px) {
+  /* Hide the mobile scrollbar gutter so the composer doesn't show a phantom divider. */
+  .ask-ai-composer-input {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .ask-ai-composer-input::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+}
+
 :where(.gala-app-page, .gala-page-shell, .gala-page-background) :is(button, input, textarea, select, [role="button"]) {
   transition:
     transform var(--motion-base) var(--ease-soft),
