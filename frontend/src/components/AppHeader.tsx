@@ -84,7 +84,7 @@ function AppHeader({
       <div
         className="relative flex h-16 w-full items-center justify-between gap-3 px-[var(--gala-shell-padding)] sm:h-[72px] sm:px-6 sm:gap-4 md:h-[84px] md:px-8 md:gap-5 lg:h-[92px] lg:px-10 lg:gap-6 xl:h-[96px] xl:px-12"
       >
-        <div className="flex min-w-0 flex-1 items-center gap-3.5">
+        <div className="flex min-w-0 flex-1 items-center gap-3.5 lg:flex-none">
           {mobileCompact && onBack ? (
             <button
               type="button"
