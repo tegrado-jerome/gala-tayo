@@ -1,9 +1,9 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ChangeEvent, FormEvent, ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { Check, ChevronDown, Globe2, Shield, UserRound } from 'lucide-react'
 import AppHeader from '../components/AppHeader'
+import BirthdatePicker from '../components/BirthdatePicker'
 import PageHeroHeader from '../components/PageHeroHeader'
 import MinimalBackNav from '../components/MinimalBackNav'
 import ProfileAvatar from '../components/ProfileAvatar'
@@ -152,53 +152,16 @@ type PrivacySelectProps = {
 
 function PrivacySelect({ label, value, onChange, options, helperText, id }: PrivacySelectProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({})
   const rootRef = useRef<HTMLDivElement | null>(null)
-  const buttonRef = useRef<HTMLButtonElement | null>(null)
   const menuRef = useRef<HTMLDivElement | null>(null)
   const buttonId = `${id}-button`
   const menuId = `${id}-menu`
   const selectedOption = options.find((option) => option.value === value) ?? options[0]
 
-  const updateMenuPosition = () => {
-    if (!buttonRef.current || !menuRef.current) {
-      return
-    }
-
-    const rect = buttonRef.current.getBoundingClientRect()
-    const gap = 10
-    const viewportPadding = 16
-    const mobileBottomNav = document.querySelector<HTMLElement>('nav[aria-label="Primary"]')
-    const navRect = mobileBottomNav?.getBoundingClientRect()
-    const hasFixedBottomNav = Boolean(navRect && navRect.height > 0 && navRect.top < window.innerHeight)
-    const reservedBottomSpace = hasFixedBottomNav ? navRect!.height + 8 : 0
-    const spaceBelow = Math.max(96, window.innerHeight - rect.bottom - gap - viewportPadding - reservedBottomSpace)
-    const spaceAbove = Math.max(96, rect.top - gap - viewportPadding)
-    const naturalHeight = Math.min(menuRef.current.scrollHeight, 320)
-    const isMobile = window.innerWidth < 640
-    const shouldOpenUpward = isMobile && naturalHeight > spaceBelow && spaceAbove > spaceBelow
-    const maxHeight = isMobile ? Math.min(320, shouldOpenUpward ? spaceAbove : spaceBelow) : undefined
-
-    setMenuStyle({
-      position: 'fixed',
-      left: rect.left,
-      width: rect.width,
-      visibility: 'visible',
-      zIndex: 7000,
-      ...(isMobile ? { maxHeight: `${maxHeight}px`, overflowY: 'auto' } : { maxHeight: 'none', overflowY: 'visible' }),
-      ...(shouldOpenUpward
-        ? { bottom: window.innerHeight - rect.top + gap }
-        : { top: rect.bottom + gap }),
-    })
-  }
-
   useEffect(() => {
     function handlePointerDown(event: PointerEvent) {
       const targetNode = event.target as Node
-      const clickedTrigger = rootRef.current?.contains(targetNode)
-      const clickedMenu = menuRef.current?.contains(targetNode)
-
-      if (!clickedTrigger && !clickedMenu) {
+      if (!rootRef.current?.contains(targetNode)) {
         setIsOpen(false)
       }
     }
@@ -218,23 +181,6 @@ function PrivacySelect({ label, value, onChange, options, helperText, id }: Priv
     }
   }, [])
 
-  useLayoutEffect(() => {
-    if (!isOpen) {
-      return
-    }
-
-    updateMenuPosition()
-  }, [isOpen, options.length])
-
-  useEffect(() => {
-    if (!isOpen) return
-    function handleScroll() {
-      setIsOpen(false)
-    }
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [isOpen])
-
   useEffect(() => {
     if (!isOpen) {
       return
@@ -242,22 +188,43 @@ function PrivacySelect({ label, value, onChange, options, helperText, id }: Priv
 
     document.documentElement.classList.add('gala-select-open')
     document.body.classList.add('gala-select-open')
-    window.addEventListener('resize', updateMenuPosition)
-    updateMenuPosition()
+
+    const scrollMenuIntoView = () => {
+      const menuElement = menuRef.current
+      if (!menuElement) {
+        return
+      }
+
+      const menuRect = menuElement.getBoundingClientRect()
+      const viewportPadding = 16
+      const bottomNav = document.querySelector<HTMLElement>('nav[aria-label="Primary"]')
+      const navRect = bottomNav?.getBoundingClientRect()
+      const reservedBottomSpace = navRect && navRect.height > 0 && navRect.top < window.innerHeight ? navRect.height + 12 : 0
+      const visibleBottom = window.innerHeight - reservedBottomSpace - viewportPadding
+      const overflowBottom = menuRect.bottom - visibleBottom
+      const overflowTop = viewportPadding - menuRect.top
+
+      if (overflowBottom > 0) {
+        window.scrollBy({ top: overflowBottom + 12, behavior: 'smooth' })
+      } else if (overflowTop > 0) {
+        window.scrollBy({ top: -(overflowTop + 12), behavior: 'smooth' })
+      }
+    }
+
+    const frame = window.requestAnimationFrame(scrollMenuIntoView)
 
     return () => {
-      window.removeEventListener('resize', updateMenuPosition)
+      window.cancelAnimationFrame(frame)
       document.documentElement.classList.remove('gala-select-open')
       document.body.classList.remove('gala-select-open')
     }
   }, [isOpen])
 
   return (
-    <div ref={rootRef} className="gala-select-root grid gap-2">
+    <div ref={rootRef} className="gala-select-root grid w-full min-w-0 gap-2">
       <span className="text-sm font-semibold text-slate-800">{label}</span>
-      <div className="relative">
+      <div className="relative w-full min-w-0">
         <button
-          ref={buttonRef}
           id={buttonId}
           type="button"
           aria-haspopup="listbox"
@@ -276,41 +243,45 @@ function PrivacySelect({ label, value, onChange, options, helperText, id }: Priv
           <ChevronDown className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} strokeWidth={2.25} />
         </button>
 
-        {isOpen
-          ? createPortal(
-              <div ref={menuRef} id={menuId} role="listbox" aria-labelledby={buttonId} className="gala-select-menu" style={{ visibility: 'hidden', ...menuStyle }}>
-                {options.map((option) => {
-                  const selected = option.value === value
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      role="option"
-                      aria-selected={selected}
-                      onClick={() => {
-                        onChange(option.value)
-                        setIsOpen(false)
-                      }}
-                      className={`gala-select-option ${selected ? 'gala-select-option-selected' : ''}`}
-                    >
-                      <span className={`gala-select-tone gala-select-tone-${option.tone}`}>{option.label.slice(0, 1)}</span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-sm font-semibold text-slate-900">{option.label}</span>
-                        <span className="block text-xs text-slate-500">{option.description}</span>
-                      </span>
-                      {selected ? <Check className="h-4 w-4 text-[var(--accent)]" strokeWidth={2.5} /> : null}
-                    </button>
-                  )
-                })}
-              </div>,
-              document.body,
-            )
-          : null}
+        {isOpen ? (
+          <div
+            ref={menuRef}
+            id={menuId}
+            role="listbox"
+            aria-labelledby={buttonId}
+            className="gala-select-menu absolute left-0 top-full mt-2 w-full max-w-full"
+          >
+            {options.map((option) => {
+              const selected = option.value === value
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  role="option"
+                  aria-selected={selected}
+                  onClick={() => {
+                    onChange(option.value)
+                    setIsOpen(false)
+                  }}
+                  className={`gala-select-option ${selected ? 'gala-select-option-selected' : ''}`}
+                >
+                  <span className={`gala-select-tone gala-select-tone-${option.tone}`}>{option.label.slice(0, 1)}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold text-slate-900">{option.label}</span>
+                    <span className="block text-xs text-slate-500">{option.description}</span>
+                  </span>
+                  {selected ? <Check className="h-4 w-4 text-[var(--accent)]" strokeWidth={2.5} /> : null}
+                </button>
+              )
+            })}
+          </div>
+        ) : null}
       </div>
       <span className="text-xs text-slate-500">{helperText}</span>
     </div>
   )
 }
+
 
 type SectionHeaderProps = {
   title: string
@@ -399,6 +370,7 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
   const [errorMessage, setErrorMessage] = useState('')
   const [avatarError, setAvatarError] = useState('')
   const { showSystemMessage } = useSystemMessage()
+  const birthdateSaveQueueRef = useRef(Promise.resolve())
 
   const [firstName, setFirstName] = useState(initialCachedCurrentUser?.user.firstName ?? '')
   const [middleName, setMiddleName] = useState(initialCachedCurrentUser?.user.middleName ?? '')
@@ -558,6 +530,33 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
     }
   }
 
+  const saveBirthdate = (nextBirthdate: string) => {
+    const trimmedBirthdate = nextBirthdate.trim()
+    const payloadBirthdate = trimmedBirthdate ? trimmedBirthdate : null
+
+    birthdateSaveQueueRef.current = birthdateSaveQueueRef.current
+      .then(async () => {
+        const accountData = await updateCurrentUser(
+          {
+            birthdate: payloadBirthdate,
+          },
+          session,
+        )
+
+        setCurrentUser(accountData)
+        setBirthdate(accountData.user.birthdate ?? '')
+        writeAccountSettingsResumeCache(session.user.id, {
+          currentUser: accountData,
+          profile,
+          cachedAt: Date.now(),
+        })
+        emitAccountUpdated()
+      })
+      .catch((error) => {
+        setErrorMessage(error instanceof Error ? error.message : 'Failed to save birthdate.')
+      })
+  }
+
   const handleAvatarChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     event.target.value = ''
@@ -643,7 +642,7 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
   return (
     <PageShell>
       <AppHeader />
-      <main className="w-full pb-0 pt-4 sm:pt-5 lg:py-8">
+      <main className="w-full pb-20 pt-4 sm:pb-24 sm:pt-5 lg:py-8 lg:pb-28">
         <PageContainer size="wide">
           <div className="mb-5">
             <MinimalBackNav to="/profile" label="Profile" preferHistory={false} />
@@ -764,8 +763,15 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
                           Birthdate
                           <span className="optional-label">Optional</span>
                         </span>
-                        <input type="date" value={birthdate} onChange={(event) => setBirthdate(event.target.value)} className={sharedInputClassName} />
-                        {birthdateError ? <span className="text-xs font-semibold text-red-600">{birthdateError}</span> : null}
+                        <BirthdatePicker
+                          value={birthdate}
+                          onChange={(nextBirthdate) => {
+                            setBirthdate(nextBirthdate)
+                            saveBirthdate(nextBirthdate)
+                          }}
+                          helperText="Optional, and stored in YYYY-MM-DD format."
+                          error={birthdateError}
+                        />
                       </label>
                       <label className="grid gap-2 sm:col-span-2">
                         <span className="text-sm font-semibold text-slate-800">Display Name</span>
@@ -821,7 +827,7 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
                     description="Keep these defaults simple and easy to scan."
                     icon={<Shield className="h-5 w-5" strokeWidth={2.2} />}
                   />
-                  <ResponsiveGrid cols={2} gap="default" className="mt-5">
+                  <div className="mt-5 grid w-full min-w-0 gap-4">
                     <PrivacySelect
                       id="profile-visibility"
                       label="Profile Visibility"
@@ -830,8 +836,7 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
                       options={profileVisibilityOptions}
                       helperText={isPublic ? 'Anyone can view your profile and your follower/following lists.' : 'People need to request access, and follower/following names stay hidden.'}
                     />
-
-                  </ResponsiveGrid>
+                  </div>
                 </Section>
 
                 <Stack gap="tight">

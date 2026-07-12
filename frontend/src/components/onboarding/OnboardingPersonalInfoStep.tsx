@@ -1,4 +1,5 @@
 import OnboardingLayout from './OnboardingLayout'
+import BirthdatePicker from '../BirthdatePicker'
 import type { OnboardingErrors, OnboardingFormState } from './types'
 
 type OnboardingPersonalInfoStepProps = {
@@ -11,8 +12,6 @@ type OnboardingPersonalInfoStepProps = {
 }
 
 function OnboardingPersonalInfoStep({ values, errors, disableNext, onUpdate, onBack, onNext }: OnboardingPersonalInfoStepProps) {
-  const today = new Date().toISOString().slice(0, 10)
-
   return (
     <OnboardingLayout
       step={2}
@@ -68,16 +67,14 @@ function OnboardingPersonalInfoStep({ values, errors, disableNext, onUpdate, onB
         </label>
         <label className="onboarding-field">
           <span className="onboarding-label">Birthdate</span>
-          <input
-            type="date"
+          <BirthdatePicker
             value={values.birthdate}
-            onChange={(event) => onUpdate({ birthdate: event.target.value })}
-            min="1900-01-01"
-            max={today}
-            autoComplete="bday"
-            className="onboarding-input"
+            onChange={(birthdate) => onUpdate({ birthdate })}
+            minYear={1900}
+            maxYear={new Date().getUTCFullYear()}
+            helperText="Required. Stored as YYYY-MM-DD."
+            error={errors.birthdate}
           />
-          {errors.birthdate ? <span className="onboarding-error">{errors.birthdate}</span> : null}
         </label>
       </div>
     </OnboardingLayout>

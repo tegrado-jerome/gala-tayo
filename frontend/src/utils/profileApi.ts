@@ -164,7 +164,7 @@ export type UpdateCurrentUserPayload = {
   firstName?: string
   middleName?: string | null
   lastName?: string
-  birthdate?: string
+  birthdate?: string | null
   displayName?: string
 }
 
