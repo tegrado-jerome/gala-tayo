@@ -28,24 +28,24 @@ type GuideTheme = {
 const guideThemes: Record<FeatureGuideContent['id'], GuideTheme> = {
   search: {
     triggerClassName: 'border-[var(--line)] bg-[var(--panel)] text-[var(--muted)] shadow-sm',
-    triggerIconClassName: 'text-[var(--muted)] motion-safe:animate-[gala-info-breathe_1.6s_ease-in-out_infinite]',
-    accentClassName: 'text-[var(--text-main)]',
+    triggerIconClassName: 'text-[var(--muted)]',
+    accentClassName: 'text-[var(--accent)]',
     badgeClassName: 'border-[var(--line)] bg-[var(--surface-alt)] text-[var(--muted)]',
     bulletClassName: 'bg-[var(--muted)]',
     sampleClassName: 'border-[var(--line)] bg-[var(--surface-alt)]',
   },
   chatbot: {
-    triggerClassName: 'border-[#f3d77a] bg-[#f7dc6f] text-white shadow-sm',
-    triggerIconClassName: 'text-white motion-safe:animate-[gala-info-breathe_1.6s_ease-in-out_infinite]',
-    accentClassName: 'text-[var(--text-main)]',
+    triggerClassName: 'border-[var(--line)] bg-[var(--panel)] text-[var(--muted)] shadow-sm',
+    triggerIconClassName: 'text-[var(--muted)]',
+    accentClassName: 'text-[var(--accent)]',
     badgeClassName: 'border-[var(--line)] bg-[var(--surface-alt)] text-[var(--muted)]',
     bulletClassName: 'bg-[var(--muted)]',
     sampleClassName: 'border-[var(--line)] bg-[var(--surface-alt)]',
   },
   maps: {
-    triggerClassName: 'border-[#f3d77a] bg-[#f7dc6f] text-white shadow-sm',
-    triggerIconClassName: 'text-white motion-safe:animate-[gala-info-breathe_1.6s_ease-in-out_infinite]',
-    accentClassName: 'text-[var(--text-main)]',
+    triggerClassName: 'border-[var(--line)] bg-[var(--panel)] text-[var(--muted)] shadow-sm',
+    triggerIconClassName: 'text-[var(--muted)]',
+    accentClassName: 'text-[var(--accent)]',
     badgeClassName: 'border-[var(--line)] bg-[var(--surface-alt)] text-[var(--muted)]',
     bulletClassName: 'bg-[var(--muted)]',
     sampleClassName: 'border-[var(--line)] bg-[var(--surface-alt)]',
@@ -135,14 +135,13 @@ export function FeatureGuideModalTrigger({
               aria-modal="true"
               aria-labelledby={titleId}
               aria-describedby={`${descriptionId} ${bestForId} ${samplesId}`}
-              className="app-modal w-full max-w-[416px] p-5 sm:p-6"
+              className="app-modal w-full max-w-[380px] p-5 sm:p-6"
               onMouseDown={(event) => event.stopPropagation()}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${theme.badgeClassName}`}>
-                    <AppIcon name="info" className={`h-3.5 w-3.5 ${theme.triggerIconClassName}`} strokeWidth={2.4} />
-                    <span>Gabay</span>
+                  <div className={`inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${theme.badgeClassName}`}>
+                    Gabay
                   </div>
                   <h2 id={titleId} className="mt-3 text-[21px] font-semibold tracking-[-0.03em] text-[var(--text-main)]">
                     {content.title}
@@ -154,24 +153,24 @@ export function FeatureGuideModalTrigger({
                   type="button"
                   onClick={() => setIsOpen(false)}
                   aria-label="Close guide"
-                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--panel)] text-[var(--muted)] transition hover:border-[var(--line-strong)] hover:text-[var(--text-main)]"
+                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--muted)] transition hover:bg-[var(--surface-alt)] hover:text-[var(--text-main)]"
                 >
                   <X className="h-4 w-4" strokeWidth={2.5} />
                 </button>
               </div>
 
-              <div className="mt-5 space-y-5">
-                <div className="border-l border-[var(--line)] pl-4">
+              <div className="mt-5 space-y-4">
+                <div className="rounded-xl bg-[var(--primary-soft)] px-4 py-3">
                   <p id={descriptionId} className={`text-[15px] font-medium leading-7 ${theme.accentClassName}`}>
                     {content.intro}
                   </p>
-                  <p className="mt-1 text-[14px] leading-6 text-[var(--muted)]">
+                  <p className="mt-1 text-[14px] leading-6 text-[var(--accent-deep)]">
                     {content.body}
                   </p>
                 </div>
 
                 <div className="border-t border-[var(--line)] pt-4">
-                  <p id={bestForId} className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
+                  <p id={bestForId} className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
                     {content.bestForTitle}
                   </p>
                   <div className="mt-3">
@@ -180,16 +179,17 @@ export function FeatureGuideModalTrigger({
                 </div>
 
                 <div className="border-t border-[var(--line)] pt-4">
-                  <p id={samplesId} className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
+                  <p id={samplesId} className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--muted)]">
                     Mga puwedeng i-try
                   </p>
                   <div className="mt-3 grid gap-2">
                     {content.sampleInputs.map((sampleInput) => (
                       <div
                         key={sampleInput}
-                        className={`rounded-[14px] border px-3 py-2 text-[13px] leading-6 text-[var(--text-main)] ${theme.sampleClassName}`}
+                        className={`flex items-center gap-2 rounded-[14px] border px-3 py-2.5 text-[13px] leading-5 text-[var(--text-main)] ${theme.sampleClassName}`}
                       >
-                        {sampleInput}
+                        <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--primary-soft)]" aria-hidden="true" />
+                        <span>{sampleInput}</span>
                       </div>
                     ))}
                   </div>
@@ -215,7 +215,7 @@ export function FeatureGuideModalTrigger({
       >
         {triggerLabel ? (
           <>
-            <span className="text-[14px] font-black uppercase tracking-[0.16em] text-[var(--text-main)]">
+            <span className="text-[14px] font-black uppercase tracking-[0.12em] text-[var(--text-main)]">
               {triggerLabel}
             </span>
             <AppIcon name="info" className={`relative z-10 h-4 w-4 ${theme.triggerIconClassName}`} strokeWidth={2.35} />
