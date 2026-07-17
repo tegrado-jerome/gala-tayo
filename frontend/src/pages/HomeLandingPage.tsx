@@ -1679,6 +1679,7 @@ function HomeLandingPage({
     }
   }, [
     activeTopPicksTab,
+    isHomePageReady,
     isTabletUpHomeViewport,
     shouldShowTopPickSkeletons,
     syncHeroCarouselIndicator,
