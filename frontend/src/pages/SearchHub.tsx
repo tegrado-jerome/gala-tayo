@@ -195,7 +195,7 @@ function SearchHub({
     initialRouteCache?.mobileResultsView ?? 'cards'
   )
   const [isInitialSearching, setIsInitialSearching] = useState(
-    Boolean(initialSearchState?.autoSearch && shouldUseSearchRouteCache && !initialRouteCache)
+    Boolean(initialSearchState?.autoSearch && navigationSource !== 'pop')
   )
   const [isRefreshingSearch, setIsRefreshingSearch] = useState(false)
   const [isPageLoading, setIsPageLoading] = useState(false)
@@ -545,6 +545,16 @@ function SearchHub({
     const requestVersion = searchRequestVersion.current + 1
     searchRequestVersion.current = requestVersion
     const isFreshSearch = !suppressRefreshState
+
+    lastAutoSearchSignatureRef.current = JSON.stringify({
+      rawQuery: nextRawQuery,
+      category: nextCategory,
+      area: nextArea,
+      goodFor: nextGoodFor,
+      budget: nextBudget,
+      page: nextPage,
+    })
+
     const searchPayload = {
       query: nextRawQuery,
       page: nextPage,
