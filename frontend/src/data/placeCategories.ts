@@ -2,13 +2,13 @@ const placeCategories = [
   { value: 'activity', label: 'Activity' },
   { value: 'cafe', label: 'Cafe' },
   { value: 'cinema', label: 'Cinema' },
+  { value: 'food', label: 'Food' },
   { value: 'heritage', label: 'Heritage' },
-  { value: 'kainan', label: 'Kainan' },
+  { value: 'hotel', label: 'Hotel' },
   { value: 'mall', label: 'Mall' },
   { value: 'museum', label: 'Museum' },
   { value: 'nightlife', label: 'Nightlife' },
-  { value: 'parke', label: 'Parke' },
-  { value: 'tourist', label: 'Tourist' },
+  { value: 'park', label: 'Park' },
 ] as const
 
 function getPlaceCategoryLabel(categoryValue: string) {
