@@ -2706,42 +2706,6 @@ function PlaceDetailView({
                     </div>
                   </DetailSection>
 
-                  <DetailSection>
-                    <SectionHeading icon="bus" title="How To Get There" />
-                    <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
-                      <TransportColumn icon="bus" title="Commute">
-                        {commuteText}
-                      </TransportColumn>
-                      <TransportColumn icon="car" title="Parking">
-                        {parkingText}
-                      </TransportColumn>
-                    </div>
-                  </DetailSection>
-
-                  <DetailSection>
-                    <SectionHeading icon="book" title="FAQs" preserveCase />
-                    <div className="mt-4 space-y-4">
-                      {faqItems.map((item) => (
-                        <div key={item.question}>
-                          <h3 className="text-[15px] font-black text-slate-900">{item.question}</h3>
-                          <p className="mt-1 text-[14px] font-semibold leading-6 text-slate-700">{item.answer}</p>
-                        </div>
-                      ))}
-                    </div>
-                    {canonicalPlaceLink && areaLink && areaBreadcrumb ? (
-                      <p className="mt-4 text-[13px] font-semibold leading-6 text-slate-600">
-                        Explore more from{' '}
-                        <InternalLink href={areaLink} className="text-[var(--accent)] underline underline-offset-2">
-                          {areaBreadcrumb.areaName}
-                        </InternalLink>{' '}
-                        or browse the full{' '}
-                        <InternalLink href="/places" className="text-[var(--accent)] underline underline-offset-2">
-                          places hub
-                        </InternalLink>.
-                      </p>
-                    ) : null}
-                  </DetailSection>
-
                   <CardSurface pad="default" tone="outlined" className="rounded-2xl">
                     <div className="flex items-center gap-2.5">
                       <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--accent-wash)] text-[var(--accent-deep)]">
@@ -2790,6 +2754,42 @@ function PlaceDetailView({
                         className="!h-[180px] !rounded-none !border-0 sm:!h-[240px] lg:!h-[280px]"
                       />
                     </div>
+                  </DetailSection>
+
+                  <DetailSection>
+                    <SectionHeading icon="bus" title="How To Get There" />
+                    <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
+                      <TransportColumn icon="bus" title="Commute">
+                        {commuteText}
+                      </TransportColumn>
+                      <TransportColumn icon="car" title="Parking">
+                        {parkingText}
+                      </TransportColumn>
+                    </div>
+                  </DetailSection>
+
+                  <DetailSection>
+                    <SectionHeading icon="book" title="FAQs" preserveCase />
+                    <div className="mt-4 space-y-4">
+                      {faqItems.map((item) => (
+                        <div key={item.question}>
+                          <h3 className="text-[15px] font-black text-slate-900">{item.question}</h3>
+                          <p className="mt-1 text-[14px] font-semibold leading-6 text-slate-700">{item.answer}</p>
+                        </div>
+                      ))}
+                    </div>
+                    {canonicalPlaceLink && areaLink && areaBreadcrumb ? (
+                      <p className="mt-4 text-[13px] font-semibold leading-6 text-slate-600">
+                        Explore more from{' '}
+                        <InternalLink href={areaLink} className="text-[var(--accent)] underline underline-offset-2">
+                          {areaBreadcrumb.areaName}
+                        </InternalLink>{' '}
+                        or browse the full{' '}
+                        <InternalLink href="/places" className="text-[var(--accent)] underline underline-offset-2">
+                          places hub
+                        </InternalLink>.
+                      </p>
+                    ) : null}
                   </DetailSection>
 
                   {renderCommunitySection()}

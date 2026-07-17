@@ -175,7 +175,7 @@ export default function SharedPlacePage({
             {
               '@type': getStructuredPlaceType(place.category),
               name: place.name,
-              description: place.description || place.reason,
+              description: buildPlaceDescription(place, areaMeta.name || 'Metro Manila'),
               url: `${window.location.origin}${canonicalPath}`,
               address: {
                 '@type': 'PostalAddress',

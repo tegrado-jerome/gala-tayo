@@ -1,18 +1,47 @@
 import type { PlaceDetailCardData } from '../types/appTypes'
 
+function joinWithAnd(values: string[]) {
+  const filtered = values.filter(Boolean)
+
+  if (filtered.length <= 1) {
+    return filtered[0] ?? ''
+  }
+
+  if (filtered.length === 2) {
+    return `${filtered[0]} and ${filtered[1]}`
+  }
+
+  return `${filtered.slice(0, -1).join(', ')}, and ${filtered[filtered.length - 1]}`
+}
+
 export function buildPlaceDescription(place: PlaceDetailCardData, areaName: string) {
   const parts: string[] = [`Explore ${place.name} in ${areaName}.`]
+
   if (place.good_for && place.good_for.length > 0) {
     parts.push(`Best for ${place.good_for.slice(0, 3).join(', ')}.`)
   }
+
   if (place.budget_min != null) {
-    parts.push(`Budget starts at ₱${place.budget_min}.`)
+    parts.push(`Budget starts at PHP ${place.budget_min}.`)
   }
+
+  const practicalNotes: string[] = []
+  if (place.commute_access?.trim()) {
+    practicalNotes.push('commute')
+  }
+  if (place.parking_info?.trim()) {
+    practicalNotes.push('parking')
+  }
+  if (practicalNotes.length > 0) {
+    parts.push(`Check the ${joinWithAnd(practicalNotes)} details before you go.`)
+  }
+
   if (place.description?.trim()) {
     const shortDesc = place.description.replace(/<[^>]*>/g, '').slice(0, 120).replace(/\s+\S*$/, '')
     if (shortDesc.length > 20) parts.push(`${shortDesc}.`)
   }
-  return `${parts.join(' ')} See location, photos, reviews, and add to your gala plan.`
+
+  return `${parts.join(' ')} See location, photos, FAQs, and community notes below.`
 }
 
 export function buildPlaceFaqSchema(place: PlaceDetailCardData) {
@@ -69,7 +98,7 @@ export function buildPlaceFaqSchema(place: PlaceDetailCardData) {
     items.push({
       '@type': 'Question',
       name: `How much budget is needed for ${place.name}?`,
-      acceptedAnswer: { '@type': 'Answer', text: `Starting budget is around ₱${place.budget_min}.` },
+      acceptedAnswer: { '@type': 'Answer', text: `Starting budget is around PHP ${place.budget_min}.` },
     })
   }
 
