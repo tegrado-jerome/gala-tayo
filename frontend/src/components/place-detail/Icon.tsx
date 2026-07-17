@@ -16,6 +16,7 @@ export function Icon({
     back: 'back',
     photo: 'photo',
     share: 'share',
+    chevronDown: 'chevronDown',
     save: 'favorites',
     directions: 'directions',
     location: 'place',

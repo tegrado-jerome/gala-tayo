@@ -26,10 +26,10 @@ export function ActionButton({
   iconSize?: number
 }) {
   const baseClassName =
-    'inline-flex w-full min-h-11 items-center justify-center gap-2 rounded-xl border px-3 text-[11px] font-extrabold tracking-[0.01em] text-slate-700 transition disabled:cursor-not-allowed md:flex-1'
+    'inline-flex w-full min-h-12 items-center justify-center gap-2.5 rounded-2xl border px-3.5 py-2.5 text-[12px] font-black tracking-[0.01em] transition disabled:cursor-not-allowed md:flex-1'
   const buttonClassName = active
-    ? `${baseClassName} border-rose-200 bg-rose-50 text-rose-700 hover:border-rose-300 hover:bg-rose-100 disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-400 ${className}`
-    : `${baseClassName} border-[var(--line)] bg-white text-slate-700 hover:border-[var(--accent)] hover:bg-[var(--accent-wash)] hover:text-[var(--accent-deep)] disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-400 ${className}`
+    ? `${baseClassName} border-rose-200 bg-[linear-gradient(180deg,rgba(255,241,242,0.98),rgba(255,228,230,0.92))] text-rose-700 shadow-[0_12px_24px_rgba(244,63,94,0.12)] hover:border-rose-300 hover:bg-[linear-gradient(180deg,rgba(255,235,238,0.98),rgba(254,226,226,0.96))] disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-400 ${className}`
+    : `${baseClassName} border-[var(--line)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.94))] text-slate-700 shadow-[0_10px_24px_rgba(15,23,42,0.04)] hover:border-[var(--accent)] hover:bg-white hover:text-[var(--accent-deep)] hover:shadow-[0_14px_28px_rgba(37,99,235,0.08)] disabled:border-slate-200 disabled:bg-slate-50 disabled:text-slate-400 ${className}`
   const iconToneClassName = disabled
     ? 'text-slate-400'
     : active
@@ -48,7 +48,7 @@ export function ActionButton({
     >
       <Icon
         name={icon}
-        className={`${iconClassName} shrink-0 ${iconToneClassName}`.trim()}
+        className={`${iconToneClassName} ${iconClassName} shrink-0`.trim()}
         strokeWidth={iconStrokeWidth}
         size={iconSize}
       />

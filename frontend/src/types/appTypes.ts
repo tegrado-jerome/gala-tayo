@@ -5,7 +5,9 @@ export type PlaceDetail = {
   id: string
   slug: string
   name: string
+  faqs?: { question: string; answer: string }[]
   average_rating?: string | null
+  rating?: number | null
   review_count?: number | null
   address?: string | null
   city?: string | null
@@ -28,7 +30,7 @@ export type PlaceDetail = {
   category: string
   latitude: number | string
   longitude: number | string
-  status?: string
+  status?: string | null
   imageUrl?: string | null
   thumbnailUrl?: string | null
   curatedImageUrls?: string[] | null

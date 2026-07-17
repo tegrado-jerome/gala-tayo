@@ -70,6 +70,7 @@ export type IconName =
   | 'back'
   | 'photo'
   | 'share'
+  | 'chevronDown'
   | 'save'
   | 'directions'
   | 'location'

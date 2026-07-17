@@ -1,17 +1,15 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+﻿import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import AppHeader from './AppHeader'
 import { AppIcon } from './AppIcon'
 import { GuestAuthPrompt, useGuestAuthPrompt } from './GuestAuthPrompt'
 import AddToGalaPlanModal from './AddToGalaPlanModal'
 import InternalLink from './InternalLink'
-import Breadcrumb from './Breadcrumb'
 import MapView from './MapView'
 import ReportUserModal from './ReportUserModal'
 import PlaceImageNotice from './PlaceImageNotice'
-import { PageContainer, PageShell, DetailLayout, DetailSidebar, CardSurface, Stack } from './layout/ResponsiveLayouts'
-import { Flag, ImagePlus, LayoutGrid, MapPin, MessageCircle, MoreHorizontal, Pencil, Reply, Search, Trash2 } from 'lucide-react'
+import { PageContainer, PageShell, CardSurface } from './layout/ResponsiveLayouts'
+import { Check, Flag, ImagePlus, MessageCircle, MoreHorizontal, Pencil, Reply, Trash2, X } from 'lucide-react'
 import { getCuratedPlaceImages, normalizePlaceSlug } from '../data/curatedPlaceImages'
-import { getCategoryIconName } from './AppIcon'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { getSupabaseAccessToken, getSupabaseSession, hasSessionUserChanged, shouldPropagateSessionChange, supabase } from '../supabase'
@@ -29,11 +27,13 @@ import { MemberAvatar } from './place-detail/MemberAvatar'
 import { SectionHeading } from './place-detail/SectionHeading'
 import { ActionButton } from './place-detail/ActionButton'
 import { GoodForList } from './place-detail/GoodForList'
-import { PlanStat } from './place-detail/PlanStat'
 import { TransportColumn } from './place-detail/TransportColumn'
 import { DetailSection } from './place-detail/DetailSection'
 import { cleanString, titleCase, uniqueList, formatPriceLevel, isAcceptedContributionImage, parseJsonResponse } from './place-detail/helpers'
 import type { PlaceDetailViewProps, PlaceReview, PlaceReviewsResponse, PlaceComment, PlaceCommentsResponse, PlaceImageContributionResponse, PlaceDetailCommunityCache } from './place-detail/types'
+import Breadcrumb from './Breadcrumb'
+import { LayoutGrid, MapPin, Search } from 'lucide-react'
+import { getCategoryIconName } from './AppIcon'
 
 
 
@@ -103,6 +103,22 @@ function getAuthMetadataString(metadata: Record<string, unknown> | undefined, ke
   return ''
 }
 
+function buildPriceBadgeLabel(
+  budgetMin: number | null | undefined,
+  priceLevel: number | null | undefined,
+) {
+  if (budgetMin != null && Number.isFinite(budgetMin)) {
+    return `Starting from ₱${new Intl.NumberFormat('en-US').format(Math.max(0, Math.floor(budgetMin)))}`
+  }
+
+  if (priceLevel == null || !Number.isFinite(priceLevel)) {
+    return ''
+  }
+
+  const labels = ['Free', 'Budget', 'Moderate', 'Pricey', 'Premium']
+  return labels[Math.min(Math.max(Math.floor(priceLevel), 0), labels.length - 1)] || ''
+}
+
 function PlacePhoto({
   imageUrls = [],
   placeName,
@@ -112,6 +128,7 @@ function PlacePhoto({
   onSelect,
   showAddPhotoAction = false,
   onContribute,
+  priceBadgeLabel = '',
 }: {
   imageUrls?: string[]
   placeName: string
@@ -121,6 +138,7 @@ function PlacePhoto({
   onSelect?: (index: number) => void
   showAddPhotoAction?: boolean
   onContribute?: () => void
+  priceBadgeLabel?: string
 }) {
   const swipeStartX = useRef<number | null>(null)
   const [brokenPhotoUrls, setBrokenPhotoUrls] = useState<Set<string>>(new Set())
@@ -211,17 +229,24 @@ function PlacePhoto({
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-white/55 to-transparent sm:h-24" />
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-slate-950/10 via-slate-950/4 to-transparent sm:h-32" />
 
-                <div className="absolute inset-x-4 top-4 z-10 flex items-start justify-end gap-3 sm:inset-x-5 sm:top-5">
-                  {showAddPhotoAction ? (
-                    <button
-                      type="button"
-                      onClick={onContribute}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-white/28 bg-[rgba(15,23,42,0.34)] px-3.5 py-2 text-[12px] font-black text-white shadow-[0_10px_24px_rgba(15,23,42,0.12)] backdrop-blur-md transition hover:bg-[rgba(15,23,42,0.46)]"
-                    >
-                      <ImagePlus className="h-4 w-4" strokeWidth={2.2} />
-                      Add photo
-                    </button>
-                  ) : null}
+                <div className="absolute inset-x-4 top-4 z-10 flex items-start justify-end sm:inset-x-5 sm:top-5">
+                  <div className="ml-auto flex max-w-full flex-wrap items-center justify-end gap-2 sm:gap-3">
+                    {showAddPhotoAction ? (
+                      <button
+                        type="button"
+                        onClick={onContribute}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-white/28 bg-[rgba(15,23,42,0.34)] px-3 py-1.5 text-[11px] font-black text-white shadow-[0_10px_24px_rgba(15,23,42,0.12)] backdrop-blur-md transition hover:bg-[rgba(15,23,42,0.46)] sm:px-3.5 sm:py-2 sm:text-[12px]"
+                      >
+                        <ImagePlus className="h-4 w-4" strokeWidth={2.2} />
+                        Add photo
+                      </button>
+                    ) : null}
+                    {priceBadgeLabel ? (
+                      <span className="inline-flex items-center rounded-full bg-[rgba(21,128,61,0.95)] px-3 py-1.5 text-[12px] font-black text-white shadow-[0_12px_22px_rgba(21,128,61,0.28)]">
+                        {priceBadgeLabel}
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
 
                 <div className="flex h-full items-center justify-center px-6 py-8 text-center sm:px-8 sm:py-10">
@@ -248,7 +273,7 @@ function PlacePhoto({
                   </div>
                 </div>
 
-                <div className="absolute inset-x-0 bottom-0 overflow-x-auto px-4 pb-4 pt-8 sm:px-5 sm:pb-5">
+                <div className="absolute inset-x-0 bottom-0 hidden overflow-x-auto px-4 pb-4 pt-8 sm:block sm:px-5 sm:pb-5">
                   <div className="flex min-w-max items-center gap-2.5">
                     {thumbSlots.map((_, index) => {
                       const shouldUseAddTile = showAddPhotoAction && index === 0
@@ -309,27 +334,32 @@ function PlacePhoto({
               <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-slate-950/55 via-slate-950/18 to-transparent" />
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-slate-950/82 via-slate-950/32 to-transparent" />
 
-              <div className="absolute inset-x-4 top-4 flex items-start justify-between gap-3 sm:inset-x-5 sm:top-5">
-                <div className="flex items-center gap-2">
+              <div className="absolute inset-x-4 top-4 z-10 flex items-start justify-end sm:inset-x-5 sm:top-5">
+                <div className="ml-auto flex max-w-full flex-wrap items-center justify-end gap-2">
+                  {showAddPhotoAction ? (
+                    <button
+                      type="button"
+                      onClick={onContribute}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-white/28 bg-[rgba(15,23,42,0.34)] px-3 py-1.5 text-[11px] font-black text-white shadow-[0_10px_24px_rgba(15,23,42,0.12)] backdrop-blur-sm transition hover:bg-[rgba(15,23,42,0.46)] sm:px-3.5 sm:py-2 sm:text-[12px]"
+                    >
+                      <ImagePlus className="h-4 w-4" strokeWidth={2.2} />
+                      Add photo
+                    </button>
+                  ) : null}
+                  {priceBadgeLabel ? (
+                    <span className="inline-flex items-center rounded-full bg-[rgba(21,128,61,0.95)] px-3 py-1.5 text-[12px] font-black text-white shadow-[0_12px_22px_rgba(21,128,61,0.28)]">
+                      {priceBadgeLabel}
+                    </span>
+                  ) : null}
                   <span className="rounded-full bg-black/45 px-3 py-1 text-[12px] font-black text-white backdrop-blur-sm">
                     {safeIndex + 1} / {photos.length}
                   </span>
                 </div>
-                {showAddPhotoAction ? (
-                  <button
-                    type="button"
-                    onClick={onContribute}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-white/28 bg-[rgba(15,23,42,0.34)] px-3.5 py-2 text-[12px] font-black text-white shadow-[0_10px_24px_rgba(15,23,42,0.12)] backdrop-blur-sm transition hover:bg-[rgba(15,23,42,0.46)]"
-                  >
-                    <ImagePlus className="h-4 w-4" strokeWidth={2.2} />
-                    Add photo
-                  </button>
-                ) : null}
               </div>
 
-                <div className="absolute inset-x-0 bottom-0 overflow-x-auto px-4 pb-4 pt-8 sm:px-5 sm:pb-5">
-                  <div className="flex min-w-max items-center gap-2.5">
-                    {thumbSlots.map((photo, index) => {
+              <div className="absolute inset-x-0 bottom-0 hidden overflow-x-auto px-4 pb-4 pt-8 sm:block sm:px-5 sm:pb-5">
+                <div className="flex min-w-max items-center gap-2.5">
+                  {thumbSlots.map((photo, index) => {
                     if (photo) {
                       return (
                         <button
@@ -403,16 +433,23 @@ function PlacePhoto({
                   <span className="rounded-full bg-black/45 px-3 py-1 text-[12px] font-black text-white backdrop-blur-sm">
                     {safeIndex + 1} / {photos.length}
                   </span>
-                  {showAddPhotoAction ? (
-                    <button
-                      type="button"
-                      onClick={onContribute}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-white/28 bg-[rgba(15,23,42,0.34)] px-3.5 py-2 text-[12px] font-black text-white shadow-[0_10px_24px_rgba(15,23,42,0.12)] backdrop-blur-sm transition hover:bg-[rgba(15,23,42,0.46)]"
-                    >
-                      <ImagePlus className="h-4 w-4" strokeWidth={2.2} />
-                      Add photo
-                    </button>
-                  ) : null}
+                  <div className="flex max-w-[70%] flex-wrap items-center justify-end gap-2">
+                    {priceBadgeLabel ? (
+                      <span className="inline-flex items-center rounded-full bg-[rgba(21,128,61,0.95)] px-3 py-1.5 text-[12px] font-black text-white shadow-[0_12px_22px_rgba(21,128,61,0.28)]">
+                        {priceBadgeLabel}
+                      </span>
+                    ) : null}
+                    {showAddPhotoAction ? (
+                      <button
+                        type="button"
+                        onClick={onContribute}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-white/28 bg-[rgba(15,23,42,0.34)] px-3.5 py-2 text-[12px] font-black text-white shadow-[0_10px_24px_rgba(15,23,42,0.12)] backdrop-blur-sm transition hover:bg-[rgba(15,23,42,0.46)]"
+                      >
+                        <ImagePlus className="h-4 w-4" strokeWidth={2.2} />
+                        Add photo
+                      </button>
+                    ) : null}
+                  </div>
                 </div>
 
                 <div className="absolute inset-x-5 bottom-5 flex items-center gap-2.5">
@@ -891,6 +928,7 @@ function PlaceDetailView({
   const [placeConcernError, setPlaceConcernError] = useState('')
   const [isPlaceConcernSubmitting, setIsPlaceConcernSubmitting] = useState(false)
   const [isReportSubmitting, setIsReportSubmitting] = useState(false)
+  const [isDetailsExpanded, setIsDetailsExpanded] = useState(false)
   const commentMenuRef = useRef<HTMLDivElement | null>(null)
   const { isPlaceSaved, saveFavorite, removeFavorite } = useSavedFavorites()
   const { showSystemMessage } = useSystemMessage()
@@ -927,7 +965,7 @@ function PlaceDetailView({
   const categoryLabel = cleanString(place.category) || 'Place'
   const locationLabel = cleanString(place.localArea) || cleanString(place.area) || cleanString(place.city) || 'Metro Manila'
   const goodFor = uniqueList(place.good_for ?? [])
-  const notIdealFor = uniqueList(place.not_ideal_for ?? [])
+  const priceBadgeLabel = buildPriceBadgeLabel(place.budget_min, place.price_level)
   const directionsUrl = getDirectionsUrl(place)
   const normalizedNameSlug = normalizePlaceSlug(place.name)
   const placeId = cleanString(place.id)
@@ -958,20 +996,24 @@ function PlaceDetailView({
           { label: place.name, icon: <MapPin className="h-3.5 w-3.5" /> },
         ]
   const canonicalPlaceLink = areaBreadcrumb ? `/places/${encodeURIComponent(areaBreadcrumb.areaSlug)}/${encodeURIComponent(placeSlug)}` : null
-  const quickAnswerItems = [
+  const placeFaqs =
+    'faqs' in place && Array.isArray(place.faqs)
+      ? place.faqs.filter(
+          (item): item is { question: string; answer: string } =>
+            Boolean(item.question.trim()) && Boolean(item.answer.trim())
+        )
+      : []
+  const fallbackFaqItems = [
     {
       question: `What is ${place.name} best for?`,
       answer: goodFor.length > 0 ? `${place.name} is best for ${goodFor.map(titleCase).join(', ')}.` : `${place.name} works best for a casual Metro Manila gala.`,
-    },
-    {
-      question: `Where is ${place.name}?`,
-      answer: `${place.name} is in ${addressLabel}.`,
     },
     {
       question: `What should I know before going to ${place.name}?`,
       answer: cleanString(place.best_time_to_visit) || cleanString(place.nearby_context) || cleanString(place.reason) || `Check the place details and route before heading to ${place.name}.`,
     },
   ]
+  const faqItems: { question: string; answer: string }[] = placeFaqs.length > 0 ? placeFaqs : fallbackFaqItems
 
   useEffect(() => {
     if (!openCommentMenuId) {
@@ -1010,6 +1052,10 @@ function PlaceDetailView({
       left: 0,
       behavior: 'auto',
     })
+  }, [place.id])
+
+  useEffect(() => {
+    setIsDetailsExpanded(false)
   }, [place.id])
 
   useEffect(() => {
@@ -1169,7 +1215,7 @@ function PlaceDetailView({
         }
       }
     },
-    [isCommunityPlaceReady, placeId],
+    [averageRating, isCommunityPlaceReady, placeId, reviewCount],
   )
 
   const fetchMySubmittedUserReports = useCallback(
@@ -1983,22 +2029,11 @@ function PlaceDetailView({
   }
 
   const openDirections = () => openDirectionsUrl(directionsUrl)
-  const rainFit = cleanString(place.weather_fit)
   const quickTake = cleanString(place.description) || cleanString(place.reason) || 'No quick take available yet.'
-  const aroundHere =
-    cleanString(place.nearby_context) ||
-    `You're around ${locationLabel}, with nearby local food spots and transport options.`
   const commuteText =
     cleanString(place.commute_access) ||
     'Reachable by local routes, short walks, or ride-hailing depending on where you are coming from.'
   const parkingText = cleanString(place.parking_info) || 'Parking depends on time and crowd, so plan ahead if bringing a car.'
-  const planStats = [
-    { icon: 'clock' as const, title: 'Best time', value: cleanString(place.best_time_to_visit) || 'Not available' },
-    { icon: 'hourglass' as const, title: 'Stay', value: cleanString(place.visit_duration) || 'Not available' },
-    { icon: 'home' as const, title: 'Setup', value: cleanString(place.indoor_outdoor) || 'Not available' },
-    { icon: 'rain' as const, title: 'Rain-friendly', value: rainFit ? (/rain|indoor|covered/i.test(rainFit) ? 'Yes' : 'Check first') : 'Check first' },
-    { icon: 'crowd' as const, title: 'Crowd', value: cleanString(place.crowd_level) || 'Not available' },
-  ]
   const visibleCommentCount = countThreadComments(comments)
   const reportingComment = reportingCommentId ? findCommentById(comments, reportingCommentId) : null
 
@@ -2336,209 +2371,209 @@ function PlaceDetailView({
     )
   }
 
-  const communitySection = !isCommunityPlaceReady ? (
-    <DetailSection>
-      <SectionHeading icon="sparkle" title="Community" />
-      <div className="mt-5 rounded-3xl border border-slate-200/80 bg-slate-50/55 p-4 sm:p-5">
-        <ReviewSkeleton />
-        <div className="mt-5 border-t border-[var(--line)] pt-5">
-          <CommentSkeleton />
+  const renderCommunitySection = () =>
+    !isCommunityPlaceReady ? (
+      <DetailSection>
+        <SectionHeading icon="sparkle" title="Community" />
+        <div className="mt-5 rounded-3xl border border-slate-200/80 bg-slate-50/55 p-4 sm:p-5">
+          <ReviewSkeleton />
+          <div className="mt-5 border-t border-[var(--line)] pt-5">
+            <CommentSkeleton />
+          </div>
         </div>
-      </div>
-    </DetailSection>
-  ) : (
-    <DetailSection>
-      <SectionHeading icon="sparkle" title="Community" />
-      <div className="mt-5">
-        <div>
-          <h3 className="text-[20px] font-black text-slate-950">Rate this place</h3>
-          <p className="mt-1 text-[14px] font-semibold text-slate-600">
-            {reviewCount > 0 && averageRating !== null
-              ? `Rated ${averageRating.toFixed(1)} by ${reviewCount} ${reviewCount === 1 ? 'person' : 'people'}.`
-              : 'No ratings yet. Be the first to help others decide.'}
-          </p>
+      </DetailSection>
+    ) : (
+      <DetailSection>
+        <SectionHeading icon="sparkle" title="Community" />
+        <div className="mt-5">
+          <div>
+            <h3 className="text-[20px] font-black text-slate-950">Rate this place</h3>
+            <p className="mt-1 text-[14px] font-semibold text-slate-600">
+              {reviewCount > 0 && averageRating !== null
+                ? `Rated ${averageRating.toFixed(1)} by ${reviewCount} ${reviewCount === 1 ? 'person' : 'people'}.`
+                : 'No ratings yet. Be the first to help others decide.'}
+            </p>
 
-          {currentUserId && (!hasCurrentUserReview || isReviewEditing) ? (
-            <div className="mt-4">
-              <div className="w-full overflow-x-auto">
-                <StarRatingInput
-                  value={reviewRating}
-                  disabled={isReviewSubmitting || isReviewDeleting}
-                  onChange={(value) => {
-                    setReviewRating(value)
-                    setReviewError('')
-                  }}
-                />
-              </div>
-              <p className="mt-2 text-[13px] font-semibold text-slate-500">
-                {reviewRating > 0 ? `Your rating: ${reviewRating} star${reviewRating === 1 ? '' : 's'} \u00B7 ${getRatingTone(reviewRating)}` : 'Tap a star to rate this place.'}
-              </p>
-              <div className="mt-2 min-h-5">
-                {reviewError ? <p className="text-[13px] font-bold text-red-600">{reviewError}</p> : null}
-              </div>
+            {currentUserId && (!hasCurrentUserReview || isReviewEditing) ? (
+              <div className="mt-4">
+                <div className="w-full overflow-x-auto">
+                  <StarRatingInput
+                    value={reviewRating}
+                    disabled={isReviewSubmitting || isReviewDeleting}
+                    onChange={(value) => {
+                      setReviewRating(value)
+                      setReviewError('')
+                    }}
+                  />
+                </div>
+                <p className="mt-2 text-[13px] font-semibold text-slate-500">
+                  {reviewRating > 0 ? `Your rating: ${reviewRating} star${reviewRating === 1 ? '' : 's'} \u00B7 ${getRatingTone(reviewRating)}` : 'Tap a star to rate this place.'}
+                </p>
+                <div className="mt-2 min-h-5">
+                  {reviewError ? <p className="text-[13px] font-bold text-red-600">{reviewError}</p> : null}
+                </div>
 
-              <div className="mt-3">
-                <button
-                  type="button"
-                  onClick={() => void handleSubmitReview()}
-                  disabled={isReviewSubmitting || isReviewDeleting || reviewRating < 1}
-                  className="inline-flex min-h-10 items-center justify-center rounded-xl border border-[var(--accent)] bg-[var(--accent)] px-4 text-[13px] font-extrabold text-white shadow-[0_12px_24px_rgba(47,116,232,0.2)] transition hover:-translate-y-[1px] disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none disabled:opacity-100"
-                >
-                  {isReviewSubmitting ? 'Saving...' : 'Save rating'}
-                </button>
-                {hasCurrentUserReview ? (
+                <div className="mt-3">
+                  <button
+                    type="button"
+                    onClick={() => void handleSubmitReview()}
+                    disabled={isReviewSubmitting || isReviewDeleting || reviewRating < 1}
+                    className="inline-flex min-h-10 items-center justify-center rounded-xl border border-[var(--accent)] bg-[var(--accent)] px-4 text-[13px] font-extrabold text-white shadow-[0_12px_24px_rgba(47,116,232,0.2)] transition hover:-translate-y-[1px] disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none disabled:opacity-100"
+                  >
+                    {isReviewSubmitting ? 'Saving...' : 'Save rating'}
+                  </button>
+                  {hasCurrentUserReview ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsReviewEditing(false)
+                        setReviewRating(currentUserReview?.rating ?? 0)
+                        setReviewError('')
+                      }}
+                      disabled={isReviewSubmitting || isReviewDeleting}
+                      className="ml-3 text-[12px] font-extrabold text-slate-500 transition hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                      Cancel
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            ) : currentUserId && currentUserReview ? (
+              <div className="mt-4">
+                <div className="w-full overflow-x-auto">
+                  <StarsDisplay rating={currentUserReview.rating} />
+                </div>
+                <p className="mt-2 text-[13px] font-semibold text-slate-500">
+                  Your rating: {currentUserReview.rating} star{currentUserReview.rating === 1 ? '' : 's'} {'\u00B7'} {getRatingTone(currentUserReview.rating)}
+                </p>
+                <div className="mt-2 flex flex-wrap items-center gap-3 text-[12px] font-extrabold">
                   <button
                     type="button"
                     onClick={() => {
-                      setIsReviewEditing(false)
-                      setReviewRating(currentUserReview?.rating ?? 0)
+                      setIsReviewEditing(true)
+                      setReviewRating(currentUserReview.rating)
                       setReviewError('')
                     }}
                     disabled={isReviewSubmitting || isReviewDeleting}
-                    className="ml-3 text-[12px] font-extrabold text-slate-500 transition hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+                    className="text-slate-500 transition hover:text-[var(--accent-deep)] disabled:cursor-not-allowed disabled:opacity-70"
                   >
-                    Cancel
+                    Edit
                   </button>
-                ) : null}
-              </div>
-            </div>
-          ) : currentUserId && currentUserReview ? (
-            <div className="mt-4">
-              <div className="w-full overflow-x-auto">
-                <StarsDisplay rating={currentUserReview.rating} />
-              </div>
-              <p className="mt-2 text-[13px] font-semibold text-slate-500">
-                Your rating: {currentUserReview.rating} star{currentUserReview.rating === 1 ? '' : 's'} {'\u00B7'} {getRatingTone(currentUserReview.rating)}
-              </p>
-              <div className="mt-2 flex flex-wrap items-center gap-3 text-[12px] font-extrabold">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsReviewEditing(true)
-                    setReviewRating(currentUserReview.rating)
-                    setReviewError('')
-                  }}
-                  disabled={isReviewSubmitting || isReviewDeleting}
-                  className="text-slate-500 transition hover:text-[var(--accent-deep)] disabled:cursor-not-allowed disabled:opacity-70"
-                >
-                  Edit
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void handleDeleteReview()}
-                  disabled={isReviewSubmitting || isReviewDeleting}
-                  className="text-red-500 transition hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-70"
-                >
-                  {isReviewDeleting ? 'Removing...' : 'Remove'}
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="mt-4">
-              <p className="text-[13px] font-semibold text-slate-400">Sign in to leave a rating.</p>
-            </div>
-          )}
-          <div className="mt-4 flex justify-start md:justify-end">
-            <button
-              type="button"
-              onClick={handleOpenPlaceConcern}
-              className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-red-600 transition hover:text-red-700"
-            >
-              <Icon name="warning" className="h-3.5 w-3.5" />
-              Report a concern
-            </button>
-          </div>
-        </div>
-
-        <div className="mt-5 border-t border-[var(--line)] pt-5">
-          <div className="rounded-3xl border border-slate-200/80 bg-slate-50/55 p-4 sm:p-5">
-            <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200/80 pb-3">
-              <div className="min-w-0">
-                <div className="flex items-center gap-2.5">
-                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-2xl bg-[var(--accent-wash)] text-[var(--accent-deep)]">
-                    <MessageCircle className="h-4 w-4" strokeWidth={2.2} />
-                  </span>
-                  <div>
-                    <h3 className="text-[18px] font-black text-slate-950">Comments</h3>
-                    <p className="mt-0.5 text-[13px] font-semibold text-slate-500">
-                      {isCommentsLoading
-                        ? 'Loading comments...'
-                        : visibleCommentCount === 0
-                          ? '0 comments'
-                          : `${visibleCommentCount} comment${visibleCommentCount === 1 ? '' : 's'}`}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {currentUserId ? (
-              <div className="mt-4 flex items-start gap-3 rounded-[22px] border border-slate-200/80 bg-white/90 p-3.5 sm:p-4">
-                <MemberAvatar displayName={currentUserAvatarFallbackName} avatarUrl={currentUserAvatarUrl} compact />
-                <div className="min-w-0 flex-1">
-                  <div className="rounded-[14px] border border-[var(--line)] bg-white px-3 py-2.5 transition focus-within:border-[var(--accent)] focus-within:ring-2 focus-within:ring-[rgba(47,116,232,0.14)]">
-                    <textarea
-                      value={commentBody}
-                      onChange={(event) => setCommentBody(event.target.value)}
-                      onFocus={() => setIsCommentComposerFocused(true)}
-                      onBlur={() => setIsCommentComposerFocused(false)}
-                      rows={2}
-                      disabled={isCommentSubmitting}
-                      placeholder="Write a quick comment..."
-                      className={`w-full resize-none border-0 bg-transparent px-0 py-0 text-[14px] font-semibold text-slate-800 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed disabled:opacity-70 ${
-                        isCommentComposerFocused || commentBody.trim() ? 'h-[80px]' : 'h-[48px]'
-                      }`}
-                    />
-                    <div className="mt-2 flex justify-end">
-                      <button
-                        type="button"
-                        onClick={() => void handleSubmitComment()}
-                        disabled={isCommentSubmitting || !commentBody.trim()}
-                        className="rounded-lg border border-[var(--accent)] bg-[var(--accent)] px-4 py-2 text-[12px] font-extrabold text-white disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-200 disabled:text-slate-500 disabled:opacity-100"
-                      >
-                        {isCommentSubmitting ? 'Posting...' : 'Comment'}
-                      </button>
-                    </div>
-                  </div>
-                  <div className="mt-2 min-h-5">
-                    {commentError ? <p className="text-[13px] font-bold text-red-600">{commentError}</p> : null}
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void handleDeleteReview()}
+                    disabled={isReviewSubmitting || isReviewDeleting}
+                    className="text-red-500 transition hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    {isReviewDeleting ? 'Removing...' : 'Remove'}
+                  </button>
                 </div>
               </div>
             ) : (
               <div className="mt-4">
-                <GuestAuthPrompt variant="community" mode="inline-card" />
+                <p className="text-[13px] font-semibold text-slate-400">Sign in to leave a rating.</p>
               </div>
             )}
+            <div className="mt-4 flex justify-start md:justify-end">
+              <button
+                type="button"
+                onClick={handleOpenPlaceConcern}
+                className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-red-600 transition hover:text-red-700"
+              >
+                <Icon name="warning" className="h-3.5 w-3.5" />
+                Report a concern
+              </button>
+            </div>
+          </div>
 
-            {isCommentsLoading ? (
-              <CommentSkeleton />
-            ) : visibleCommentCount === 0 ? (
-              <div className="mt-5 flex flex-col items-center rounded-[20px] border border-dashed border-[var(--line-strong)] bg-slate-50 px-6 py-8 text-center">
-                <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[var(--accent-wash)] text-[var(--accent-deep)]">
-                  <MessageCircle className="h-5 w-5" strokeWidth={2.2} />
-                </span>
-                <p className="mt-3 text-[16px] font-black text-slate-900">No comments yet</p>
-                <p className="mt-1 max-w-[26rem] text-[13px] font-semibold leading-5 text-slate-500">
-                  Be the first to share something about this place.
-                </p>
+          <div className="mt-5 border-t border-[var(--line)] pt-5">
+            <div className="rounded-3xl border border-slate-200/80 bg-slate-50/55 p-4 sm:p-5">
+              <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200/80 pb-3">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2.5">
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-2xl bg-[var(--accent-wash)] text-[var(--accent-deep)]">
+                      <MessageCircle className="h-4 w-4" strokeWidth={2.2} />
+                    </span>
+                    <div>
+                      <h3 className="text-[18px] font-black text-slate-950">Comments</h3>
+                      <p className="mt-0.5 text-[13px] font-semibold text-slate-500">
+                        {isCommentsLoading
+                          ? 'Loading comments...'
+                          : visibleCommentCount === 0
+                            ? '0 comments'
+                            : `${visibleCommentCount} comment${visibleCommentCount === 1 ? '' : 's'}`}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
-            ) : (
-              <ul className="mt-4 grid gap-3.5">
-                {comments.map((comment) => renderComment(comment))}
-              </ul>
-            )}
+
+              {currentUserId ? (
+                <div className="mt-4 flex items-start gap-3">
+                  <MemberAvatar displayName={currentUserAvatarFallbackName} avatarUrl={currentUserAvatarUrl} compact />
+                  <div className="min-w-0 flex-1">
+                    <div className="rounded-[14px] border border-[var(--line)] bg-white px-3 py-2.5 transition focus-within:border-[var(--accent)] focus-within:ring-2 focus-within:ring-[rgba(47,116,232,0.14)]">
+                      <textarea
+                        value={commentBody}
+                        onChange={(event) => setCommentBody(event.target.value)}
+                        onFocus={() => setIsCommentComposerFocused(true)}
+                        onBlur={() => setIsCommentComposerFocused(false)}
+                        rows={2}
+                        disabled={isCommentSubmitting}
+                        placeholder="Write a quick comment..."
+                        className={`w-full resize-none border-0 bg-transparent px-0 py-0 text-[14px] font-semibold text-slate-800 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed disabled:opacity-70 ${
+                          isCommentComposerFocused || commentBody.trim() ? 'h-[80px]' : 'h-[48px]'
+                        }`}
+                      />
+                      <div className="mt-2 flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => void handleSubmitComment()}
+                          disabled={isCommentSubmitting || !commentBody.trim()}
+                          className="rounded-lg border border-[var(--accent)] bg-[var(--accent)] px-4 py-2 text-[12px] font-extrabold text-white disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-200 disabled:text-slate-500 disabled:opacity-100"
+                        >
+                          {isCommentSubmitting ? 'Posting...' : 'Comment'}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="mt-2 min-h-5">
+                      {commentError ? <p className="text-[13px] font-bold text-red-600">{commentError}</p> : null}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-4">
+                  <GuestAuthPrompt variant="community" mode="inline-card" />
+                </div>
+              )}
+
+              {isCommentsLoading ? (
+                <CommentSkeleton />
+              ) : visibleCommentCount === 0 ? (
+                <div className="mt-5 flex flex-col items-center rounded-[20px] border border-dashed border-[var(--line-strong)] bg-slate-50 px-6 py-8 text-center">
+                  <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[var(--accent-wash)] text-[var(--accent-deep)]">
+                    <MessageCircle className="h-5 w-5" strokeWidth={2.2} />
+                  </span>
+                  <p className="mt-3 text-[16px] font-black text-slate-900">No comments yet</p>
+                  <p className="mt-1 max-w-[26rem] text-[13px] font-semibold leading-5 text-slate-500">
+                    Be the first to share something about this place.
+                  </p>
+                </div>
+              ) : (
+                <ul className="mt-4 grid gap-3.5">
+                  {comments.map((comment) => renderComment(comment))}
+                </ul>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    </DetailSection>
-  )
-
+      </DetailSection>
+    )
   return (
     <PageShell tone="surface">
       <AppHeader />
 
-      <main className="w-full pb-12 pt-0 sm:pt-0">
+      <main className="w-full pb-36 pt-0 sm:pb-12 sm:pt-0">
         <PageContainer size="wide">
           <Breadcrumb
             showBack
@@ -2565,6 +2600,7 @@ function PlaceDetailView({
             onSelect={(index) => setActiveGalleryState({ key: galleryStateKey, index })}
             showAddPhotoAction={isCommunityPlaceReady && approvedImageCount < 3}
             onContribute={handleOpenContribution}
+            priceBadgeLabel={priceBadgeLabel}
           />
 
           <section className="py-3 lg:py-4">
@@ -2584,8 +2620,20 @@ function PlaceDetailView({
                     </div>
                   ) : null}
 
-                  <div className="mt-3 grid w-full max-w-[28rem] grid-cols-2 gap-2 sm:gap-2.5 md:mt-4 md:gap-2.5 lg:flex lg:max-w-none lg:gap-2.5">
-                    <ActionButton icon="save" onClick={handleSavePlace} disabled={isSaving} active={isSaved}>
+                  <div className="mt-3 grid w-full max-w-[28rem] grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-2.5 md:mt-4 md:gap-2.5 lg:flex lg:max-w-none lg:gap-2.5">
+                    <ActionButton
+                      icon="save"
+                      onClick={handleSavePlace}
+                      disabled={isSaving}
+                      active={isSaved}
+                      className={
+                        isSaved
+                          ? '!border-rose-200 !bg-[linear-gradient(180deg,rgba(255,241,242,0.98),rgba(255,228,230,0.92))] !text-rose-700 !shadow-[0_12px_24px_rgba(244,63,94,0.12)] hover:!border-rose-300 hover:!bg-[linear-gradient(180deg,rgba(255,235,238,0.98),rgba(254,226,226,0.96))] hover:!text-rose-700'
+                          : ''
+                      }
+                      iconClassName={isSaved ? 'h-4 w-4 !fill-current !text-rose-600' : 'h-4 w-4'}
+                      childrenClassName={isSaved ? '!text-rose-700' : ''}
+                    >
                       {isSaving ? 'Saving' : 'Favorite'}
                     </ActionButton>
                     <ActionButton icon="share" onClick={handleSharePlace}>
@@ -2595,25 +2643,13 @@ function PlaceDetailView({
                       icon="directions"
                       onClick={openDirections}
                       disabled={!directionsUrl}
-                      iconSize={22}
-                      iconStrokeWidth={2.35}
+                      className="col-span-2 sm:col-span-1 !border-0 !border-transparent !bg-none !bg-[#F4D35E] !text-black !shadow-none opacity-100 hover:!border-0 hover:!border-transparent hover:!bg-none hover:!bg-[#E9C94F] hover:!text-black hover:!shadow-none disabled:!border-0 disabled:!border-transparent disabled:!bg-none disabled:!bg-[#F4D35E] disabled:!text-black disabled:!shadow-none disabled:opacity-100"
+                      iconClassName="h-[18px] w-[18px] !text-black"
+                      childrenClassName="!text-black"
+                      iconSize={18}
+                      iconStrokeWidth={2.15}
                     >
                       Directions
-                    </ActionButton>
-                    <ActionButton
-                      icon="sparkle"
-                      onClick={() => {}}
-                      disabled
-                      childrenClassName="flex-1 justify-between"
-                      className="border-slate-200/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.95),rgba(248,250,252,0.88))] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_18px_rgba(15,23,42,0.04)] backdrop-blur-sm disabled:border-slate-200/90 disabled:bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,252,0.9))] disabled:text-slate-500 disabled:shadow-[inset_0_1px_0_rgba(255,255,255,0.92),0_8px_18px_rgba(15,23,42,0.03)]"
-                      iconClassName="h-4 w-4"
-                    >
-                      <span className="inline-flex min-w-0 items-center gap-2 whitespace-nowrap">
-                        <span className="text-[11px] font-extrabold text-slate-600">Add to Plan</span>
-                        <span className="inline-flex shrink-0 items-center rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-slate-400">
-                          Soon
-                        </span>
-                      </span>
                     </ActionButton>
                   </div>
                 </div>
@@ -2630,25 +2666,10 @@ function PlaceDetailView({
                   {locationLabel}
                 </span>
                 <span className="text-slate-300">·</span>
-                <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-600">
-                  <Icon name="budget" className="h-4 w-4 shrink-0 text-slate-500" />
-                  {budgetLabel}
+                <span className="inline-flex items-start gap-1.5 text-[13px] font-semibold text-slate-600">
+                  <Icon name="budget" className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+                  <span className="min-w-0 leading-5">{budgetLabel}</span>
                 </span>
-                {(place.tags ?? []).length > 0 ? (
-                  <>
-                    <span className="text-slate-300">·</span>
-                    <div className="flex flex-wrap gap-1">
-                      {(place.tags ?? []).slice(0, 8).map((tag) => (
-                        <span
-                          key={tag.id}
-                          className="inline-flex items-center rounded-full border border-[rgba(148,163,184,0.16)] bg-slate-50 px-2 py-0.5 text-[9px] font-semibold text-slate-500"
-                        >
-                          {tag.name}
-                        </span>
-                      ))}
-                    </div>
-                  </>
-                ) : null}
               </div>
 
               <div className="-mt-1">
@@ -2656,286 +2677,106 @@ function PlaceDetailView({
                 {saveError ? <p className="text-[12px] font-bold text-red-600">{saveError}</p> : null}
                 {contributionError && !isContributionOpen ? <p className="text-[12px] font-bold text-red-600">{contributionError}</p> : null}
               </div>
-            </div>
-          </section>
 
-
-
-          <DetailLayout sidebarWidth={360} tabletSidebarWidth={280}>
-            <div className="flex flex-col gap-4 lg:gap-5">
               <DetailSection>
-                <div className="grid gap-5 md:grid-cols-2">
-                  <div>
-                    <SectionHeading icon="eye" title="Quick Take" />
-                    <p className="mt-3 text-[14px] font-semibold leading-6 text-slate-700">{quickTake}</p>
-                  </div>
-                  <div>
+                <SectionHeading icon="eye" title="Quick Take" />
+                <p className="mt-3 text-[14px] font-semibold leading-6 text-slate-700">{quickTake}</p>
+              </DetailSection>
+
+              <div className="flex justify-start">
+                <button
+                  type="button"
+                  onClick={() => setIsDetailsExpanded((current) => !current)}
+                  className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white px-4 py-2 text-[13px] font-black text-slate-800 transition hover:border-[var(--accent)] hover:text-[var(--accent-deep)]"
+                >
+                  <Icon
+                    name="chevronDown"
+                    className={`h-4 w-4 transition-transform ${isDetailsExpanded ? 'rotate-180' : ''}`}
+                  />
+                  {isDetailsExpanded ? 'Show less details' : 'Show more details'}
+                </button>
+              </div>
+
+              {isDetailsExpanded ? (
+                <div className="grid gap-4 lg:gap-5">
+                  <DetailSection>
                     <SectionHeading icon="fire" title="Best For" />
                     <div className="mt-3">
                       <GoodForList values={goodFor} />
                     </div>
-                  </div>
-                </div>
-              </DetailSection>
+                  </DetailSection>
 
-              <DetailSection>
-                <SectionHeading icon="sparkle" title="Game Plan" />
-                <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5">
-                  {planStats.map((stat) => (
-                    <PlanStat key={stat.title} icon={stat.icon} title={stat.title} value={stat.value} />
-                  ))}
-                </div>
-              </DetailSection>
-
-              <DetailSection>
-                <SectionHeading icon="bus" title="How To Get There" />
-                <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
-                  <TransportColumn icon="bus" title="Commute">
-                    {commuteText}
-                  </TransportColumn>
-                  <TransportColumn icon="car" title="Parking">
-                    {parkingText}
-                  </TransportColumn>
-                </div>
-              </DetailSection>
-
-              <DetailSection>
-                <SectionHeading icon="book" title="Quick Answers" />
-                <div className="mt-4 space-y-4">
-                  {quickAnswerItems.map((item) => (
-                    <div key={item.question}>
-                      <h3 className="text-[15px] font-black text-slate-900">{item.question}</h3>
-                      <p className="mt-1 text-[14px] font-semibold leading-6 text-slate-700">{item.answer}</p>
+                  <DetailSection>
+                    <SectionHeading icon="bus" title="How To Get There" />
+                    <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
+                      <TransportColumn icon="bus" title="Commute">
+                        {commuteText}
+                      </TransportColumn>
+                      <TransportColumn icon="car" title="Parking">
+                        {parkingText}
+                      </TransportColumn>
                     </div>
-                  ))}
-                </div>
-                {canonicalPlaceLink && areaLink && areaBreadcrumb ? (
-                  <p className="mt-4 text-[13px] font-semibold leading-6 text-slate-600">
-                    Explore more from{' '}
-                    <InternalLink href={areaLink} className="text-[var(--accent)] underline underline-offset-2">
-                      {areaBreadcrumb.areaName}
-                    </InternalLink>{' '}
-                    or browse the full{' '}
-                    <InternalLink href="/places" className="text-[var(--accent)] underline underline-offset-2">
-                      places hub
-                    </InternalLink>.
-                  </p>
-                ) : null}
-              </DetailSection>
+                  </DetailSection>
 
-              <CardSurface pad="default" tone="outlined" className="md:hidden rounded-2xl">
-                <div className="flex items-center gap-2.5">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--accent-wash)] text-[var(--accent-deep)]">
-                    <Icon name="sparkle" className="h-4 w-4" />
-                  </span>
-                  <div>
-                    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Quick Facts</p>
-                    <h2 className="text-[15px] font-black text-slate-950">At a glance</h2>
-                  </div>
-                </div>
-                <dl className="mt-4 grid gap-3 text-[13px] font-semibold text-slate-700">
-                  <div className="flex items-start gap-2.5">
-                    <Icon name="category" className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
-                    <div className="min-w-0">
-                      <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Category</dt>
-                      <dd className="mt-0.5 text-slate-800">{categoryLabel}</dd>
-                      {(place.categories ?? []).length > 0 ? (
-                        <div className="mt-1.5 flex flex-wrap gap-1">
-                          {(place.categories ?? []).slice(0, 6).map((cat) => (
-                            <span key={cat.id} className="inline-flex items-center rounded-full border border-[rgba(148,163,184,0.14)] bg-white px-2 py-0.5 text-[9px] font-semibold leading-4 text-slate-500">{cat.name}</span>
-                          ))}
+                  <DetailSection>
+                    <SectionHeading icon="book" title="FAQs" preserveCase />
+                    <div className="mt-4 space-y-4">
+                      {faqItems.map((item) => (
+                        <div key={item.question}>
+                          <h3 className="text-[15px] font-black text-slate-900">{item.question}</h3>
+                          <p className="mt-1 text-[14px] font-semibold leading-6 text-slate-700">{item.answer}</p>
                         </div>
-                      ) : null}
+                      ))}
                     </div>
-                  </div>
-                  {(place.tags ?? []).length > 0 ? (
-                    <div className="flex items-start gap-2.5">
-                      <Icon name="sparkle" className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
-                      <div className="min-w-0">
-                        <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Tags</dt>
-                        <dd className="mt-1 flex flex-wrap gap-1">
-                          {(place.tags ?? []).slice(0, 8).map((tag) => (
-                            <span key={tag.id} className="inline-flex items-center rounded-full border border-[rgba(148,163,184,0.14)] bg-white px-2 py-0.5 text-[9px] font-semibold leading-4 text-slate-500">{tag.name}</span>
-                          ))}
-                        </dd>
-                      </div>
-                    </div>
-                  ) : null}
-                  <div className="flex items-start gap-2.5">
-                    <Icon name="clock" className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
-                    <div className="min-w-0">
-                      <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Best Time</dt>
-                      <dd className="mt-0.5 text-slate-800">{cleanString(place.best_time_to_visit) || 'Check on site'}</dd>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-2.5">
-                    <Icon name="location" className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
-                    <div className="min-w-0">
-                      <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Area</dt>
-                      <dd className="mt-0.5 text-slate-800">{locationLabel}</dd>
-                    </div>
-                  </div>
-                </dl>
-              </CardSurface>
-
-              <CardSurface pad="default" tone="outlined" className="md:hidden rounded-2xl">
-                <div className="flex items-center gap-2.5">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 text-amber-700">
-                    <Icon name="warning" className="h-4 w-4" />
-                  </span>
-                  <div>
-                    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Before You Go</p>
-                    <h2 className="text-[15px] font-black text-slate-950">Not ideal for</h2>
-                  </div>
-                </div>
-                <ul className="mt-4 space-y-2 text-[13px] font-semibold leading-5 text-slate-600">
-                  {(notIdealFor.length > 0 ? notIdealFor : ['Whole-day plans', 'Out-of-town plans', 'Plans that need a totally different activity']).map((item) => (
-                    <li key={item} className="flex items-start gap-2.5">
-                      <Icon name="warning" className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
-                      <span>{titleCase(item)}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardSurface>
-
-              <CardSurface pad="default" tone="outlined" className="md:hidden rounded-2xl">
-                <div className="flex items-center gap-2.5">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--accent-wash)] text-[var(--accent-deep)]">
-                    <Icon name="location" className="h-4 w-4" />
-                  </span>
-                  <div>
-                    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Neighborhood</p>
-                    <h2 className="text-[15px] font-black text-slate-950">Around Here</h2>
-                  </div>
-                </div>
-                <p className="mt-4 text-[13px] font-semibold leading-5 text-slate-600">{aroundHere}</p>
-              </CardSurface>
-
-              <DetailSection className="md:hidden">
-                <SectionHeading icon="location" title="Location" />
-                <p className="mt-3 whitespace-pre-line text-[14px] font-semibold leading-6 text-slate-700">{addressLabel}</p>
-                <div className="mt-4 overflow-hidden rounded-xl border border-[var(--line)] bg-slate-50">
-                  <MapView
-                    places={[place]}
-                    selectedPlaceId={place.id}
-                    center={[place.coordinates.lat, place.coordinates.lng]}
-                    zoom={16}
-                    autoFitToPlaces={false}
-                    className="!h-[180px] !rounded-none !border-0 sm:!h-[240px]"
-                  />
-                </div>
-              </DetailSection>
-
-              {communitySection}
-            </div>
-
-            <DetailSidebar>
-              <Stack gap="default">
-                <CardSurface pad="loose" tone="outlined" className="hidden md:block rounded-2xl">
-                  <div className="flex items-center gap-2.5">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--accent-wash)] text-[var(--accent-deep)]">
-                      <Icon name="sparkle" className="h-4 w-4" />
-                    </span>
-                    <div>
-                      <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Quick Facts</p>
-                      <h2 className="text-[15px] font-black text-slate-950">At a glance</h2>
-                    </div>
-                  </div>
-                  <dl className="mt-4 grid gap-3 text-[13px] font-semibold text-slate-700">
-                    {place.description ? (
-                      <div className="flex items-start gap-2.5">
-                        <Icon name="eye" className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
-                        <div className="min-w-0">
-                          <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Description</dt>
-                          <dd className="mt-0.5 text-slate-800 line-clamp-2">{cleanString(place.description)}</dd>
-                        </div>
-                      </div>
+                    {canonicalPlaceLink && areaLink && areaBreadcrumb ? (
+                      <p className="mt-4 text-[13px] font-semibold leading-6 text-slate-600">
+                        Explore more from{' '}
+                        <InternalLink href={areaLink} className="text-[var(--accent)] underline underline-offset-2">
+                          {areaBreadcrumb.areaName}
+                        </InternalLink>{' '}
+                        or browse the full{' '}
+                        <InternalLink href="/places" className="text-[var(--accent)] underline underline-offset-2">
+                          places hub
+                        </InternalLink>.
+                      </p>
                     ) : null}
-                    <div className="flex items-start gap-2.5">
-                      <Icon name="category" className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
-                      <div className="min-w-0">
-                        <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Category</dt>
-                        <dd className="mt-0.5 text-slate-800">{categoryLabel}</dd>
-                        {(place.categories ?? []).length > 0 ? (
-                          <div className="mt-1.5 flex flex-wrap gap-1">
-                            {(place.categories ?? []).slice(0, 6).map((cat) => (
-                              <span key={cat.id} className="inline-flex items-center rounded-full border border-[rgba(148,163,184,0.14)] bg-white px-2 py-0.5 text-[9px] font-semibold leading-4 text-slate-500">{cat.name}</span>
-                            ))}
-                          </div>
-                        ) : null}
+                  </DetailSection>
+
+                  <CardSurface pad="default" tone="outlined" className="rounded-2xl">
+                    <div className="flex items-center gap-2.5">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--accent-wash)] text-[var(--accent-deep)]">
+                        <Icon name="sparkle" className="h-4 w-4" />
+                      </span>
+                      <div>
+                        <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Quick Facts</p>
+                        <h2 className="text-[15px] font-black text-slate-950">At a glance</h2>
                       </div>
                     </div>
-                    {(place.tags ?? []).length > 0 ? (
+                    <dl className="mt-4 grid gap-3 text-[13px] font-semibold text-slate-700">
                       <div className="flex items-start gap-2.5">
-                        <Icon name="sparkle" className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+                        <Icon name="category" className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
                         <div className="min-w-0">
-                          <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Tags</dt>
-                          <dd className="mt-1 flex flex-wrap gap-1">
-                            {(place.tags ?? []).slice(0, 8).map((tag) => (
-                              <span key={tag.id} className="inline-flex items-center rounded-full border border-[rgba(148,163,184,0.14)] bg-white px-2 py-0.5 text-[9px] font-semibold leading-4 text-slate-500">{tag.name}</span>
-                            ))}
-                          </dd>
+                          <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Category</dt>
+                          <dd className="mt-0.5 text-slate-800">{categoryLabel}</dd>
                         </div>
                       </div>
-                    ) : null}
-                    <div className="flex items-start gap-2.5">
-                      <Icon name="clock" className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
-                      <div className="min-w-0">
-                        <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Best Time</dt>
-                        <dd className="mt-0.5 text-slate-800">{cleanString(place.best_time_to_visit) || 'Check on site'}</dd>
+                      <div className="flex items-start gap-2.5">
+                        <Icon name="clock" className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+                        <div className="min-w-0">
+                          <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Best Time</dt>
+                          <dd className="mt-0.5 text-slate-800">{cleanString(place.best_time_to_visit) || 'Check on site'}</dd>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-start gap-2.5">
-                      <Icon name="budget" className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
-                      <div className="min-w-0">
-                        <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Budget</dt>
-                        <dd className="mt-0.5 text-slate-800">{budgetLabel}</dd>
+                      <div className="flex items-start gap-2.5">
+                        <Icon name="budget" className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+                        <div className="min-w-0">
+                          <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Budget</dt>
+                          <dd className="mt-0.5 text-slate-800">{budgetLabel}</dd>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-start gap-2.5">
-                      <Icon name="location" className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
-                      <div className="min-w-0">
-                        <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Area</dt>
-                        <dd className="mt-0.5 text-slate-800">{locationLabel}</dd>
-                      </div>
-                    </div>
-                  </dl>
-                </CardSurface>
+                    </dl>
+                  </CardSurface>
 
-                <CardSurface pad="loose" tone="outlined" className="hidden md:block rounded-2xl">
-                  <div className="flex items-center gap-2.5">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-50 text-amber-700">
-                      <Icon name="warning" className="h-4 w-4" />
-                    </span>
-                    <div>
-                      <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">Before You Go</p>
-                      <h2 className="text-[15px] font-black text-slate-950">Not ideal for</h2>
-                    </div>
-                  </div>
-                  <ul className="mt-4 space-y-2 text-[13px] font-semibold leading-5 text-slate-600">
-                    {(notIdealFor.length > 0 ? notIdealFor : ['Whole-day plans', 'Out-of-town plans', 'Plans that need a totally different activity']).map((item) => (
-                      <li key={item} className="flex items-start gap-2.5">
-                        <Icon name="warning" className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
-                        <span>{titleCase(item)}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardSurface>
-
-                <CardSurface pad="loose" tone="outlined" className="hidden md:block rounded-2xl">
-                  <div className="flex items-center gap-2.5">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--accent-wash)] text-[var(--accent-deep)]">
-                      <Icon name="location" className="h-4 w-4" />
-                    </span>
-                    <div>
-                      <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Neighborhood</p>
-                      <h2 className="text-[15px] font-black text-slate-950">Around Here</h2>
-                    </div>
-                  </div>
-                  <p className="mt-4 text-[13px] font-semibold leading-5 text-slate-600">{aroundHere}</p>
-                </CardSurface>
-
-                <div className="hidden md:block">
                   <DetailSection>
                     <SectionHeading icon="location" title="Location" />
                     <p className="mt-3 whitespace-pre-line text-[14px] font-semibold leading-6 text-slate-700">{addressLabel}</p>
@@ -2946,14 +2787,16 @@ function PlaceDetailView({
                         center={[place.coordinates.lat, place.coordinates.lng]}
                         zoom={16}
                         autoFitToPlaces={false}
-                        className="!h-[160px] !rounded-none !border-0 sm:!h-[180px] lg:!h-[240px] xl:!h-[280px]"
+                        className="!h-[180px] !rounded-none !border-0 sm:!h-[240px] lg:!h-[280px]"
                       />
                     </div>
                   </DetailSection>
+
+                  {renderCommunitySection()}
                 </div>
-              </Stack>
-            </DetailSidebar>
-          </DetailLayout>
+              ) : null}
+            </div>
+          </section>
         </PageContainer>
       </main>
 
@@ -3163,7 +3006,7 @@ function PlaceDetailView({
 
       {isContributionOpen ? (
         <div
-          className="fixed inset-0 z-[9998] flex items-end justify-center bg-slate-950/45 px-4 pb-4 sm:items-center sm:pb-0"
+          className="fixed inset-0 z-[9998] flex items-center justify-center bg-slate-950/45 px-5 py-8 sm:px-4 sm:py-0"
           role="dialog"
           aria-modal="true"
           aria-labelledby="contribute-photo-title"
@@ -3174,7 +3017,7 @@ function PlaceDetailView({
           }}
         >
           <div
-            className="w-full max-w-md rounded-2xl border border-[var(--line)] bg-white p-4 shadow-[0_24px_70px_rgba(15,23,42,0.25)]"
+            className="w-full max-w-[22rem] -translate-y-12 rounded-2xl border border-[var(--line)] bg-white p-4 shadow-[0_24px_70px_rgba(15,23,42,0.25)] sm:max-w-md sm:translate-y-0"
             onClick={(event) => event.stopPropagation()}
           >
             <h3 id="contribute-photo-title" className="text-[18px] font-black text-slate-950">
@@ -3233,22 +3076,24 @@ function PlaceDetailView({
               {contributionError ? <p className="text-[13px] font-bold text-red-600">{contributionError}</p> : null}
             </div>
 
-            <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <div className="mt-4 grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={() => setIsContributionOpen(false)}
                 disabled={isContributionSubmitting}
-                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--line)] bg-white px-4 text-[14px] font-extrabold text-slate-700 disabled:cursor-not-allowed disabled:opacity-70"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[var(--line)] bg-white px-4 text-[14px] font-extrabold text-slate-700 disabled:cursor-not-allowed disabled:opacity-70"
               >
+                <X className="h-4 w-4" strokeWidth={2.4} />
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={() => void handleSubmitContribution()}
                 disabled={isContributionSubmitting}
-                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--accent)] bg-[var(--accent)] px-4 text-[14px] font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-70"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[var(--accent)] bg-[var(--accent)] px-4 text-[14px] font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-70"
               >
-                {isContributionSubmitting ? 'Submitting...' : 'Submit for Review'}
+                <Check className="h-4 w-4" strokeWidth={2.4} />
+                {isContributionSubmitting ? 'Submitting...' : 'Submit'}
               </button>
             </div>
           </div>
@@ -3259,3 +3104,4 @@ function PlaceDetailView({
 }
 
 export default PlaceDetailView
+
