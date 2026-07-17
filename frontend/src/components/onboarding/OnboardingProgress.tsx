@@ -16,19 +16,17 @@ function OnboardingProgress({ step }: OnboardingProgressProps) {
           const isActive = itemStep === step
 
           return (
-            <span key={label} className="onboarding-stepper-item">
+            <span key={label} className="onboarding-stepper-item" aria-hidden="true">
               <span
-                className={`onboarding-stepper-dot ${
+                className={`onboarding-stepper-segment ${
                   isComplete ? 'is-complete' : isActive ? 'is-active' : 'is-upcoming'
                 }`}
-              >
-                {itemStep}
-              </span>
-              <span className={`onboarding-stepper-label ${isActive ? 'is-active' : ''}`}>{label}</span>
+              />
             </span>
           )
         })}
       </div>
+      <span className="sr-only">{stepLabels[step - 1]}</span>
     </div>
   )
 }

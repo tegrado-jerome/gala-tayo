@@ -1,4 +1,5 @@
 import OnboardingLayout from './OnboardingLayout'
+import { AppIcon } from '../AppIcon'
 
 type OnboardingWelcomeStepProps = {
   onNext: () => void
@@ -8,18 +9,20 @@ function OnboardingWelcomeStep({ onNext }: OnboardingWelcomeStepProps) {
   return (
     <OnboardingLayout
       step={1}
+      eyebrow="Profile setup"
       title="Welcome to GalaTayo"
-      description="Let's set up your profile so you can save places, create gala plans, submit places, upload photos, and join the GalaTayo community."
+      description="Set up your profile to save places, build gala plans, and explore Metro Manila your way."
       actions={
         <div className="col-span-2 flex w-full justify-end sm:w-auto">
-          <button type="button" onClick={onNext} className="onboarding-button onboarding-button-primary">
+          <button type="button" onClick={onNext} className="onboarding-button onboarding-button-primary gap-2">
             Get Started
+            <AppIcon name="arrowRight" size={16} className="shrink-0" />
           </button>
         </div>
       }
     >
       <p className="onboarding-note">
-        This takes about a minute. Your public profile is separate from private account details.
+        This only takes about a minute. Your public profile stays separate from your private account details.
       </p>
     </OnboardingLayout>
   )

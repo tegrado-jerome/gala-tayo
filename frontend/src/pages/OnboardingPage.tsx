@@ -16,7 +16,7 @@ import {
 } from '../services/onboardingApi'
 import { getOnboardingStatus } from '../utils/profileApi'
 import { avatarUploadErrorMessage, isValidAvatarFile, prepareAvatarUploadFile } from '../utils/avatarUpload'
-import { navigateToPath } from '../utils/navigation'
+import { replaceWithPath } from '../utils/navigation'
 import { trackOnboardingCompleted } from '../utils/analytics'
 
 type OnboardingPageProps = {
@@ -243,8 +243,8 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
   const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle')
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isCheckingStatus, setIsCheckingStatus] = useState(true)
   const [isDraftReady, setIsDraftReady] = useState(false)
+  const [isRedirectingHome, setIsRedirectingHome] = useState(false)
   const [statusError, setStatusError] = useState('')
   const valuesRef = useRef(values)
   valuesRef.current = values
@@ -262,11 +262,15 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
   }, [draftUserId, session])
 
   useEffect(() => {
+    if (isRedirectingHome) {
+      return
+    }
+
     saveLocalOnboardingDraft(draftUserId, values)
-  }, [draftUserId, values])
+  }, [draftUserId, isRedirectingHome, values])
 
   useEffect(() => {
-    if (!isDraftReady) {
+    if (isRedirectingHome || !isDraftReady) {
       return undefined
     }
 
@@ -275,20 +279,24 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
     }, 700)
 
     return () => window.clearTimeout(timer)
-  }, [isDraftReady, session, values])
+  }, [isDraftReady, isRedirectingHome, session, values])
 
   useEffect(() => {
+    if (isRedirectingHome) {
+      return undefined
+    }
+
     let isMounted = true
 
     const loadStatus = async () => {
       try {
-        setIsCheckingStatus(true)
         setStatusError('')
         const status = await getOnboardingStatus(session)
 
         if (isMounted && !status.needsOnboarding) {
+          setIsRedirectingHome(true)
           clearOnboardingDraft(session.user.id)
-          navigateToPath('/')
+          replaceWithPath('/home')
           return
         }
 
@@ -299,12 +307,11 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
         }
       } catch (error) {
         if (isMounted) {
-          setStatusError(error instanceof Error ? error.message : 'Failed to load onboarding status.')
+          setStatusError(error instanceof Error ? error.message : 'Failed to refresh your onboarding draft.')
         }
       } finally {
         if (isMounted) {
           setIsDraftReady(true)
-          setIsCheckingStatus(false)
         }
       }
     }
@@ -314,7 +321,7 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
     return () => {
       isMounted = false
     }
-  }, [session])
+  }, [isRedirectingHome, session])
 
   useEffect(() => {
     setErrors((currentErrors) => {
@@ -364,12 +371,16 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
   }, [normalizedUsername, session, usernameValidationError])
 
   useEffect(() => {
+    if (isRedirectingHome) {
+      return
+    }
+
     window.scrollTo({
       top: 0,
       left: 0,
       behavior: 'auto',
     })
-  }, [values.step])
+  }, [isRedirectingHome, values.step])
 
   const updateValues = (updates: Partial<OnboardingFormState>) => {
     setValues((currentValues) => {
@@ -483,12 +494,13 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
       setIsSubmitting(true)
       setErrors({})
       await completeOnboardingSetup({ ...values, username: normalizedUsername }, session)
+      setIsRedirectingHome(true)
       trackOnboardingCompleted({
         method: 'profile_setup',
       })
       clearOnboardingDraft(session.user.id)
+      replaceWithPath('/home')
       onComplete?.()
-      navigateToPath('/')
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Could not finish onboarding.'
 
@@ -500,31 +512,16 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
     }
   }
 
-  if (isCheckingStatus) {
+  const hasErrors = Object.values(errors).some((error) => Boolean(error))
+
+  if (isRedirectingHome) {
     return null
   }
 
-  if (statusError) {
-    return (
-      <main className="grid min-h-[100dvh] place-items-center bg-[var(--bg)] px-6 text-[var(--text)]">
-        <StateContainer className="flex justify-center">
-          <section className="w-full max-w-[420px] rounded-lg bg-white p-5 text-center shadow-[0_18px_42px_rgba(47,116,232,0.12)]">
-            <h1 className="text-2xl font-black text-slate-950">Onboarding problem</h1>
-            <p className="mt-3 text-sm font-semibold leading-6 text-red-700">{statusError}</p>
-          </section>
-        </StateContainer>
-      </main>
-    )
-  }
-
-  const hasErrors = Object.values(errors).some((error) => Boolean(error))
-
-  if (values.step === 1) {
-    return <OnboardingWelcomeStep onNext={() => goToStep(2)} />
-  }
+  let content = <OnboardingWelcomeStep onNext={() => goToStep(2)} />
 
   if (values.step === 2) {
-    return (
+    content = (
       <OnboardingPersonalInfoStep
         values={values}
         errors={errors}
@@ -534,10 +531,8 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
         onNext={nextStep}
       />
     )
-  }
-
-  if (values.step === 3) {
-    return (
+  } else if (values.step === 3) {
+    content = (
       <OnboardingPublicProfileStep
         values={values}
         errors={errors}
@@ -550,10 +545,8 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
         onNext={nextStep}
       />
     )
-  }
-
-  if (values.step === 4) {
-    return (
+  } else if (values.step === 4) {
+    content = (
       <OnboardingPrivacyStep
         values={values}
         errors={errors}
@@ -563,18 +556,33 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
         onNext={nextStep}
       />
     )
+  } else if (values.step === 5) {
+    content = (
+      <OnboardingAgreementStep
+        values={values}
+        errors={errors}
+        isSubmitting={isSubmitting}
+        disableNext={hasErrors}
+        onUpdate={updateValues}
+        onBack={previousStep}
+        onFinish={() => void finishSetup()}
+      />
+    )
   }
 
   return (
-    <OnboardingAgreementStep
-      values={values}
-      errors={errors}
-      isSubmitting={isSubmitting}
-      disableNext={hasErrors}
-      onUpdate={updateValues}
-      onBack={previousStep}
-      onFinish={() => void finishSetup()}
-    />
+    <>
+      {statusError ? (
+        <main className="pointer-events-none fixed inset-x-0 top-4 z-[80] px-4">
+          <StateContainer className="flex justify-center">
+            <section className="w-full max-w-[520px] rounded-2xl border border-amber-200 bg-amber-50/95 px-4 py-3 text-center shadow-[0_18px_42px_rgba(15,23,42,0.12)] backdrop-blur">
+              <p className="text-sm font-semibold leading-6 text-amber-900">{statusError}</p>
+            </section>
+          </StateContainer>
+        </main>
+      ) : null}
+      {content}
+    </>
   )
 }
 

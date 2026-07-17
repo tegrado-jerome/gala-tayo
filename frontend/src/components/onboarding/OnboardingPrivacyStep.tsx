@@ -1,3 +1,4 @@
+import { Globe2, Shield } from 'lucide-react'
 import OnboardingLayout from './OnboardingLayout'
 import type { OnboardingErrors, OnboardingFormState, ProfileVisibility } from './types'
 
@@ -10,16 +11,18 @@ type OnboardingPrivacyStepProps = {
   onNext: () => void
 }
 
-const options: Array<{ value: ProfileVisibility; title: string; description: string }> = [
+const options: Array<{ value: ProfileVisibility; title: string; description: string; icon: typeof Globe2 }> = [
   {
     value: 'public',
-    title: 'Public',
-    description: 'Other users can view your public profile, public gala plans, comments, reviews, and other public activity.',
+    title: 'Public profile',
+    description: 'Let other users view your public profile, shared activity, and community presence.',
+    icon: Globe2,
   },
   {
     value: 'private',
-    title: 'Private',
-    description: 'Only limited public information is shown. Your private gala plans and private profile details stay hidden.',
+    title: 'Private profile',
+    description: 'Keep your profile hidden while your private gala plans and account details stay protected.',
+    icon: Shield,
   },
 ]
 
@@ -27,15 +30,16 @@ function OnboardingPrivacyStep({ values, errors, disableNext, onUpdate, onBack, 
   return (
     <OnboardingLayout
       step={4}
-      title="Profile privacy"
-      description="Choose how your GalaTayo profile appears to the community."
+      eyebrow="Privacy"
+      title="Choose your privacy"
+      description="Decide whether your profile is visible to everyone or kept private."
       actions={
         <>
           <button type="button" onClick={onBack} className="onboarding-button onboarding-button-secondary">
             Back
           </button>
           <button type="button" onClick={onNext} disabled={disableNext} className="onboarding-button onboarding-button-primary disabled:cursor-not-allowed disabled:opacity-60">
-            Next
+            Continue
           </button>
         </>
       }
@@ -43,6 +47,7 @@ function OnboardingPrivacyStep({ values, errors, disableNext, onUpdate, onBack, 
       <div className="onboarding-form-grid">
         {options.map((option) => {
           const selected = values.profileVisibility === option.value
+          const Icon = option.icon
 
           return (
             <button
@@ -51,6 +56,9 @@ function OnboardingPrivacyStep({ values, errors, disableNext, onUpdate, onBack, 
               onClick={() => onUpdate({ profileVisibility: option.value })}
               className={`onboarding-choice ${selected ? 'is-selected' : ''}`}
             >
+              <span className="onboarding-choice-icon" aria-hidden="true">
+                <Icon className="h-5 w-5" strokeWidth={2.2} />
+              </span>
               <span className="block text-sm font-black text-slate-950 sm:text-base">{option.title}</span>
               <span className="mt-1.5 block text-xs font-semibold leading-5 text-[var(--muted)] sm:mt-2 sm:text-sm sm:leading-6">{option.description}</span>
             </button>

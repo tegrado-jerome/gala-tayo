@@ -1,5 +1,6 @@
 import OnboardingLayout from './OnboardingLayout'
 import type { OnboardingErrors, OnboardingFormState } from './types'
+import InternalLink from '../InternalLink'
 
 type OnboardingAgreementStepProps = {
   values: Pick<OnboardingFormState, 'acceptedTerms' | 'acceptedPrivacy'>
@@ -13,12 +14,14 @@ type OnboardingAgreementStepProps = {
 
 function OnboardingAgreementStep({ values, errors, isSubmitting, disableNext, onUpdate, onBack, onFinish }: OnboardingAgreementStepProps) {
   const accepted = values.acceptedTerms && values.acceptedPrivacy
+  const checkboxId = 'onboarding-accept-legal'
 
   return (
     <OnboardingLayout
       step={5}
-      title="Terms, privacy, and finish"
-      description="Review the essentials and finish your GalaTayo setup."
+      eyebrow="Final step"
+      title="You're almost done"
+      description="Agree to the terms and privacy policy to finish creating your GalaTayo profile."
       actions={
         <>
           <button type="button" onClick={onBack} disabled={isSubmitting} className="onboarding-button onboarding-button-secondary" >
@@ -31,24 +34,34 @@ function OnboardingAgreementStep({ values, errors, isSubmitting, disableNext, on
       }
     >
       <div className="onboarding-form-grid">
-        <label className={`onboarding-choice onboarding-choice-checkbox ${accepted ? 'is-selected' : ''}`}>
+        <div className={`onboarding-choice onboarding-choice-checkbox onboarding-field-wide ${accepted ? 'is-selected' : ''}`}>
           <input
+            id={checkboxId}
             type="checkbox"
             checked={accepted}
             onChange={(event) => onUpdate({ acceptedTerms: event.target.checked, acceptedPrivacy: event.target.checked })}
             className="mt-1 h-5 w-5 shrink-0 accent-[var(--accent)]"
           />
           <span className="text-sm font-bold leading-6 sm:text-[15px]">
-            I have read and agree to GalaTayo's{' '}
-            <a href="/terms" className="font-black text-[var(--accent-deep)] underline underline-offset-4">Terms of Service</a>
+            <label htmlFor={checkboxId} className="cursor-pointer">
+              I have read and agree to GalaTayo's{' '}
+            </label>
+            <InternalLink href="/terms" className="font-black text-[var(--accent-deep)] underline underline-offset-4">
+              Terms of Service
+            </InternalLink>
             {' '}and{' '}
-            <a href="/privacy" className="font-black text-[var(--accent-deep)] underline underline-offset-4">Privacy Policy</a>.
+            <InternalLink href="/privacy" className="font-black text-[var(--accent-deep)] underline underline-offset-4">
+              Privacy Policy
+            </InternalLink>
+            <label htmlFor={checkboxId} className="cursor-pointer">
+              .
+            </label>
           </span>
-        </label>
+        </div>
 
         {errors.form ? <p className="onboarding-error-panel">{errors.form}</p> : null}
 
-        <p className="text-center text-xs font-semibold leading-5 text-[var(--muted)]">
+        <p className="onboarding-age-note">
           By creating an account, you confirm that you are at least 13 years old.
         </p>
       </div>

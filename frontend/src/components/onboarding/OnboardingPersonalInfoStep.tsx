@@ -15,15 +15,16 @@ function OnboardingPersonalInfoStep({ values, errors, disableNext, onUpdate, onB
   return (
     <OnboardingLayout
       step={2}
-      title="Personal info"
-      description="Your full name helps complete your account profile. It is not shown publicly by default."
+      eyebrow="Personal details"
+      title="Tell us about you"
+      description="We use these details to complete your account setup and age checks."
       actions={
         <>
           <button type="button" onClick={onBack} className="onboarding-button onboarding-button-secondary">
             Back
           </button>
           <button type="button" onClick={onNext} disabled={disableNext} className="onboarding-button onboarding-button-primary disabled:cursor-not-allowed disabled:opacity-60">
-            Next
+            Continue
           </button>
         </>
       }
@@ -65,14 +66,14 @@ function OnboardingPersonalInfoStep({ values, errors, disableNext, onUpdate, onB
           />
           {errors.lastName ? <span className="onboarding-error">{errors.lastName}</span> : null}
         </label>
-        <label className="onboarding-field">
+        <label className="onboarding-field onboarding-field-wide">
           <span className="onboarding-label">Birthdate</span>
           <BirthdatePicker
             value={values.birthdate}
             onChange={(birthdate) => onUpdate({ birthdate })}
             minYear={1900}
             maxYear={new Date().getUTCFullYear()}
-            helperText="Required. Stored as YYYY-MM-DD."
+            helperText="Required. Stored as YYYY-MM-DD for your account."
             error={errors.birthdate}
           />
         </label>
