@@ -1,4 +1,5 @@
 import {
+  isAskAiUsageStatusExpired,
   normalizeAskAiUsageStatus,
   type AskAiUsageResponse,
   type AskAiUsageStatus,
@@ -120,7 +121,13 @@ export function readCachedAskAiUsage(cacheKey: AskAiUsageCacheKey): AskAiUsageSt
   }
 
   const cache = normalizeCacheRecord(readRawAskAiUsageCache())
-  return cache[cacheKey]
+  const cached = cache[cacheKey]
+
+  if (cached && isAskAiUsageStatusExpired(cached)) {
+    return null
+  }
+
+  return cached
 }
 
 export function writeCachedAskAiUsage(cacheKey: AskAiUsageCacheKey, usageStatus: AskAiUsageStatus | null) {
@@ -160,7 +167,8 @@ export function subscribeToCachedAskAiUsage(
 
   const emitCurrent = (cache?: Partial<AskAiUsageCacheRecord> | null) => {
     const normalizedCache = normalizeCacheRecord(cache ?? readRawAskAiUsageCache())
-    listener(normalizedCache[cacheKey])
+    const cached = normalizedCache[cacheKey]
+    listener(cached && isAskAiUsageStatusExpired(cached) ? null : cached)
   }
 
   const handleCustomEvent = (event: Event) => {
