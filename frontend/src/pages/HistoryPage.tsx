@@ -3,7 +3,8 @@ import AppHeader from '../components/AppHeader'
 import MinimalBackNav from '../components/MinimalBackNav'
 import GoogleSignInButton from '../components/GoogleSignInButton'
 import PageHeroHeader from '../components/PageHeroHeader'
-import { PageContainer, PageShell, CardSurface, EmptyState, Stack, ChibiIllustration } from '../components/layout/ResponsiveLayouts'
+import { PageContainer, PageShell, CardSurface, EmptyState, Stack } from '../components/layout/ResponsiveLayouts'
+import { BOTTOM_NAV_RESERVED_CLASS } from '../components/layout/Primitives'
 import ActivityPlaceCard from '../components/ActivityPlaceCard'
 import DestructiveConfirmModal from '../components/DestructiveConfirmModal'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
@@ -12,11 +13,12 @@ import { getSupabaseAccessToken } from '../supabase'
 import { getPlacePhoto } from '../utils/placePhoto'
 import { getApiUrl } from '../utils/apiClient'
 import { getPublicSiteUrl } from '../utils/site'
-import historyActiveChibi from '../assets/chibis/features/history/chibi-history-active-state.webp'
 
 const HISTORY_CACHE_PREFIX = 'galatayo:history:'
 const HISTORY_CACHE_TTL_MS = 5 * 60 * 1000
 const HISTORY_LOAD_MORE_BATCH_SIZE = 10
+const HISTORY_GRID_CLASSNAME =
+  'grid w-full grid-cols-1 items-start gap-3 md:grid-cols-2 md:gap-4 lg:grid-cols-3 xl:grid-cols-4'
 
 function getHistoryCacheKey(userId: string) {
   return `${HISTORY_CACHE_PREFIX}${userId}`
@@ -40,6 +42,14 @@ function readHistoryCache(userId: string): HistoryItem[] | null {
 function writeHistoryCache(userId: string, items: HistoryItem[]) {
   try {
     localStorage.setItem(getHistoryCacheKey(userId), JSON.stringify({ items, cachedAt: Date.now() }))
+  } catch {
+    /* ignore */
+  }
+}
+
+function clearHistoryCache(userId: string) {
+  try {
+    localStorage.removeItem(getHistoryCacheKey(userId))
   } catch {
     /* ignore */
   }
@@ -135,19 +145,6 @@ function getPlaceChips(place: HistoryPlace) {
     .map((value) => value.trim())
 
   return Array.from(new Set(chips)).slice(0, 3)
-}
-
-function HistoryChibi() {
-  return (
-    <div className="flex justify-center overflow-visible py-4 md:justify-end" aria-hidden="true">
-      <ChibiIllustration
-        src={historyActiveChibi}
-        alt=""
-        variant="feature"
-        className="!w-[clamp(240px,74vw,380px)] !max-h-[320px] sm:!w-[clamp(170px,20vw,280px)] sm:!max-h-[240px]"
-      />
-    </div>
-  )
 }
 
 function parseSupabaseTimestamp(value: string) {
@@ -290,9 +287,9 @@ function HistoryCard({
             onRemove()
           }}
           disabled={isRemoving}
-          className="inline-flex h-6 w-full items-center justify-center gap-1 rounded-md border border-red-200 bg-white text-[10px] font-black text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 sm:h-7 sm:text-xs"
+          className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 text-xs font-black text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          <TrashIcon className="h-3 w-3" />
+          <TrashIcon className="h-4 w-4" />
           {isRemoving ? 'Removing...' : 'Remove'}
         </button>
       }
@@ -439,7 +436,17 @@ function HistoryPage() {
       setHistoryUserId(currentUserId)
       setHistory((current) => {
         const nextHistory = current ?? displayHistory ?? []
-        return nextHistory.filter((item) => item.id !== itemId)
+        const nextItems = nextHistory.filter((item) => item.id !== itemId)
+
+        if (currentUserId) {
+          if (nextItems.length > 0) {
+            writeHistoryCache(currentUserId, nextItems)
+          } else {
+            clearHistoryCache(currentUserId)
+          }
+        }
+
+        return nextItems
       })
     } catch (error) {
       setErrorMessage(getHistoryErrorMessage(error, 'Unable to delete history item.'))
@@ -491,6 +498,7 @@ function HistoryPage() {
       setHistory([])
       setHistoryUserId(currentUserId)
       setVisibleHistoryCount(HISTORY_LOAD_MORE_BATCH_SIZE)
+      clearHistoryCache(currentUserId)
     } catch (error) {
       setErrorMessage(getHistoryErrorMessage(error, 'Unable to clear history. Please try again.'))
     } finally {
@@ -500,13 +508,13 @@ function HistoryPage() {
   }
 
   return (
-    <PageShell>
+    <PageShell reserveBottomNav={false}>
       <AppHeader showTaglishChip={false} />
 
-      <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-8">
+      <main className={`w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-8 ${BOTTOM_NAV_RESERVED_CLASS}`}>
         <PageContainer size="wide">
           <div className="mb-5">
-            <MinimalBackNav to="/" label="Home" preferHistory={false} />
+            <MinimalBackNav to="/home" label="Home" preferHistory={false} />
           </div>
 
           <DestructiveConfirmModal
@@ -546,7 +554,6 @@ function HistoryPage() {
                     </span>
                   </>
                 }
-                aside={<HistoryChibi />}
                 divider={false}
                 className="pb-0"
               />
@@ -567,7 +574,7 @@ function HistoryPage() {
                 <Stack gap="loose">
                   {historySections.map((section) => (
                     <section key={section.title}>
-                      <div className="flex items-center gap-3 px-1">
+                      <div className="flex flex-col gap-3 px-1 sm:flex-row sm:items-center sm:justify-between">
                         <p className="min-w-0 flex-1 text-lg font-black uppercase tracking-[0.2em] text-[var(--accent-deep)]">
                           {section.title}
                         </p>
@@ -576,14 +583,14 @@ function HistoryPage() {
                             type="button"
                             onClick={handleClearHistory}
                             disabled={isClearing}
-                            className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-white px-4 text-xs font-black text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="inline-flex h-9 w-fit shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-red-200 bg-white px-3 text-xs font-black text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 sm:px-3.5 sm:self-end"
                           >
                             <TrashIcon className="h-3.5 w-3.5" />
                             {isClearing ? 'Clearing...' : 'Clear history'}
                           </button>
                         ) : null}
                       </div>
-                      <div className="mt-3 grid w-full grid-cols-2 gap-2.5 sm:mt-4 sm:gap-4 xl:justify-start xl:[grid-template-columns:repeat(auto-fill,minmax(340px,340px))]">
+                      <div className={`mt-3 sm:mt-4 ${HISTORY_GRID_CLASSNAME}`}>
                         {section.items.map((item) => (
                           <HistoryCard
                             key={item.id}

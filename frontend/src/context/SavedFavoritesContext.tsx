@@ -290,78 +290,100 @@ function SavedFavoritesProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      const response = await fetch(getApiUrl('/favorites'), {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          placeId: normalizedPlaceId,
-          placeSlug: normalizedPlaceSlug || undefined,
-        }),
-      })
-
-      const data = (await response.json()) as FavoritesResponse
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to save favorite.')
-      }
-
       setSavedPlaceKeys((currentKeys) => {
         const nextKeys = new Set(currentKeys)
         nextKeys.add(normalizedPlaceId)
         if (normalizedPlaceSlug) {
           nextKeys.add(normalizedPlaceSlug)
         }
-        if (data.place?.id) {
-          nextKeys.add(normalizeKnownPlaceKey(data.place.id))
-        }
-        if (data.place?.slug) {
-          nextKeys.add(normalizeKnownPlaceKey(data.place.slug))
-        }
         return nextKeys
       })
 
-      if (data.favorites) {
-        const nextFavorites = dedupeFavoritesBySlug(data.favorites)
-        setFavorites(nextFavorites)
-        setSavedPlaceKeys(getSavedPlaceKeys(nextFavorites))
-        if (session?.user?.id) {
-          writeFavoritesResumeCache(session.user.id, nextFavorites)
+      try {
+        const response = await fetch(getApiUrl('/favorites'), {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            placeId: normalizedPlaceId,
+            placeSlug: normalizedPlaceSlug || undefined,
+          }),
+        })
+
+        const data = (await response.json()) as FavoritesResponse
+
+        if (!response.ok) {
+          throw new Error(data.message || 'Failed to save favorite.')
         }
-      } else if (data.place) {
-        setFavorites((currentFavorites) => {
-          if (currentFavorites.some((favorite) => favorite.place?.id && normalizeKnownPlaceKey(favorite.place.id) === normalizedPlaceId)) {
-            return currentFavorites
+
+        setSavedPlaceKeys((currentKeys) => {
+          const nextKeys = new Set(currentKeys)
+          nextKeys.add(normalizedPlaceId)
+          if (normalizedPlaceSlug) {
+            nextKeys.add(normalizedPlaceSlug)
           }
+          if (data.place?.id) {
+            nextKeys.add(normalizeKnownPlaceKey(data.place.id))
+          }
+          if (data.place?.slug) {
+            nextKeys.add(normalizeKnownPlaceKey(data.place.slug))
+          }
+          return nextKeys
+        })
 
-          const nextFavorites = dedupeFavoritesBySlug([
-            {
-              id: data.favorite?.id || `saved-${normalizedPlaceId}`,
-              created_at: data.favorite?.created_at || new Date().toISOString(),
-              place: data.place || null,
-            },
-            ...currentFavorites,
-          ])
-
+        if (data.favorites) {
+          const nextFavorites = dedupeFavoritesBySlug(data.favorites)
+          setFavorites(nextFavorites)
+          setSavedPlaceKeys(getSavedPlaceKeys(nextFavorites))
           if (session?.user?.id) {
             writeFavoritesResumeCache(session.user.id, nextFavorites)
           }
+        } else if (data.place) {
+          setFavorites((currentFavorites) => {
+            if (currentFavorites.some((favorite) => favorite.place?.id && normalizeKnownPlaceKey(favorite.place.id) === normalizedPlaceId)) {
+              return currentFavorites
+            }
 
-          return nextFavorites
+            const nextFavorites = dedupeFavoritesBySlug([
+              {
+                id: data.favorite?.id || `saved-${normalizedPlaceId}`,
+                created_at: data.favorite?.created_at || new Date().toISOString(),
+                place: data.place || null,
+              },
+              ...currentFavorites,
+            ])
+
+            if (session?.user?.id) {
+              writeFavoritesResumeCache(session.user.id, nextFavorites)
+            }
+
+            return nextFavorites
+          })
+        }
+
+        if (data.message !== 'Place already saved to favorites.') {
+          trackFavoriteAdded({
+            placeSlug: normalizedPlaceSlug || data.place?.slug || null,
+          })
+        }
+
+        return {
+          status: data.message === 'Place already saved to favorites.' ? 'already-saved' : 'saved',
+          message: data.message || 'Place saved to favorites.',
+        }
+      } catch (error) {
+        setSavedPlaceKeys((currentKeys) => {
+          const nextKeys = new Set(currentKeys)
+          nextKeys.delete(normalizedPlaceId)
+          if (normalizedPlaceSlug) {
+            nextKeys.delete(normalizedPlaceSlug)
+          }
+          return nextKeys
         })
-      }
 
-      if (data.message !== 'Place already saved to favorites.') {
-        trackFavoriteAdded({
-          placeSlug: normalizedPlaceSlug || data.place?.slug || null,
-        })
-      }
-
-      return {
-        status: data.message === 'Place already saved to favorites.' ? 'already-saved' : 'saved',
-        message: data.message || 'Place saved to favorites.',
+        throw error
       }
     }
 
@@ -375,25 +397,10 @@ function SavedFavoritesProvider({ children }: { children: ReactNode }) {
         throw new Error('Sign in to manage favorites.')
       }
 
-      const routeIdentifier = normalizedPlaceSlug || normalizedPlaceId
+      const routeIdentifier = normalizedPlaceId || normalizedPlaceSlug
 
-      const response = await fetch(getApiUrl(`/favorites/${encodeURIComponent(routeIdentifier)}`), {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          placeId: normalizedPlaceId,
-          placeSlug: normalizedPlaceSlug || undefined,
-        }),
-      })
-
-      const data = (await response.json()) as FavoritesResponse
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to remove favorite.')
-      }
+      const previousFavorites = favorites
+      const previousSavedPlaceKeys = savedPlaceKeys
 
       setSavedPlaceKeys((currentKeys) => {
         const nextKeys = new Set(currentKeys)
@@ -401,31 +408,74 @@ function SavedFavoritesProvider({ children }: { children: ReactNode }) {
         if (normalizedPlaceSlug) {
           nextKeys.delete(normalizedPlaceSlug)
         }
-        if (data.place?.id) {
-          nextKeys.delete(normalizeKnownPlaceKey(data.place.id))
-        }
-        if (data.place?.slug) {
-          nextKeys.delete(normalizeKnownPlaceKey(data.place.slug))
-        }
         return nextKeys
       })
       setFavorites((currentFavorites) =>
         currentFavorites.filter((favorite) => {
           const id = favorite.place?.id
-          return !id || normalizeKnownPlaceKey(id) !== normalizedPlaceId
+          const slug = favorite.place?.slug
+
+          if (id && normalizeKnownPlaceKey(id) === normalizedPlaceId) {
+            return false
+          }
+
+          if (slug && normalizedPlaceSlug && normalizeKnownPlaceKey(slug) === normalizedPlaceSlug) {
+            return false
+          }
+
+          return true
         })
       )
 
-      if (data.favorites) {
-        const nextFavorites = dedupeFavoritesBySlug(data.favorites)
-        setFavorites(nextFavorites)
-        setSavedPlaceKeys(getSavedPlaceKeys(nextFavorites))
-        if (session?.user?.id) {
-          writeFavoritesResumeCache(session.user.id, nextFavorites)
-        }
-      }
+      try {
+        const response = await fetch(getApiUrl(`/favorites/${encodeURIComponent(routeIdentifier)}`), {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            placeId: normalizedPlaceId,
+            placeSlug: normalizedPlaceSlug || undefined,
+          }),
+        })
 
-      return data.message || 'Favorite removed'
+        const data = (await response.json()) as FavoritesResponse
+
+        if (!response.ok) {
+          throw new Error(data.message || 'Failed to remove favorite.')
+        }
+
+        setSavedPlaceKeys((currentKeys) => {
+          const nextKeys = new Set(currentKeys)
+          nextKeys.delete(normalizedPlaceId)
+          if (normalizedPlaceSlug) {
+            nextKeys.delete(normalizedPlaceSlug)
+          }
+          if (data.place?.id) {
+            nextKeys.delete(normalizeKnownPlaceKey(data.place.id))
+          }
+          if (data.place?.slug) {
+            nextKeys.delete(normalizeKnownPlaceKey(data.place.slug))
+          }
+          return nextKeys
+        })
+
+        if (data.favorites) {
+          const nextFavorites = dedupeFavoritesBySlug(data.favorites)
+          setFavorites(nextFavorites)
+          setSavedPlaceKeys(getSavedPlaceKeys(nextFavorites))
+          if (session?.user?.id) {
+            writeFavoritesResumeCache(session.user.id, nextFavorites)
+          }
+        }
+
+        return data.message || 'Favorite removed'
+      } catch (error) {
+        setFavorites(previousFavorites)
+        setSavedPlaceKeys(previousSavedPlaceKeys)
+        throw error
+      }
     }
 
     const clearAllFavorites = async () => {

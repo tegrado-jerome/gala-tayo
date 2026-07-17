@@ -3,15 +3,18 @@ import AppHeader from '../components/AppHeader'
 import MinimalBackNav from '../components/MinimalBackNav'
 import GoogleSignInButton from '../components/GoogleSignInButton'
 import PageHeroHeader from '../components/PageHeroHeader'
-import { PageContainer, PageShell, CardSurface, EmptyState, Stack, ChibiIllustration } from '../components/layout/ResponsiveLayouts'
+import { PageContainer, PageShell, CardSurface, EmptyState, Stack } from '../components/layout/ResponsiveLayouts'
+import { BOTTOM_NAV_RESERVED_CLASS } from '../components/layout/Primitives'
 import ActivityPlaceCard from '../components/ActivityPlaceCard'
 import DestructiveConfirmModal from '../components/DestructiveConfirmModal'
 import { useSavedFavorites, type FavoritePlace } from '../context/SavedFavoritesContext'
 import { getPlacePhoto } from '../utils/placePhoto'
 import { getPublicSiteUrl } from '../utils/site'
-import favoritesActiveChibi from '../assets/chibis/features/favorites/chibi-favorites-active-state.webp'
+import { InlineSkeleton, ListingSkeleton } from '../components/loading/SkeletonStates'
 
 const FAVORITES_LOAD_MORE_BATCH_SIZE = 10
+const FAVORITES_GRID_CLASSNAME =
+  'grid w-full grid-cols-1 items-start gap-3 md:grid-cols-2 md:gap-4 lg:grid-cols-3 xl:grid-cols-4'
 
 function TrashIcon({ className = 'h-4 w-4' }: { className?: string }) {
   return (
@@ -44,19 +47,6 @@ function SearchIcon({ className = 'h-4 w-4' }: IconProps) {
       <circle cx="11" cy="11" r="6.5" />
       <path d="m16 16 4 4" />
     </svg>
-  )
-}
-
-function SavedChibi() {
-  return (
-    <div className="flex justify-center" aria-hidden="true">
-      <ChibiIllustration
-        src={favoritesActiveChibi}
-        alt=""
-        variant="feature"
-        className="!w-[clamp(240px,74vw,380px)] !max-h-[320px] sm:!w-[clamp(170px,20vw,280px)] sm:!max-h-[240px]"
-      />
-    </div>
   )
 }
 
@@ -129,9 +119,9 @@ function FavoriteCard({
             onRemove()
           }}
           disabled={isRemoving}
-          className="inline-flex h-6 w-full items-center justify-center gap-1 rounded-md border border-red-200 bg-white text-[10px] font-black text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 sm:h-7 sm:text-xs"
+          className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 text-xs font-black text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          <TrashIcon className="h-3 w-3" />
+          <TrashIcon className="h-4 w-4" />
           {isRemoving ? 'Removing...' : 'Remove'}
         </button>
       }
@@ -217,13 +207,13 @@ function FavoritesPage() {
   }
 
   return (
-    <PageShell>
+    <PageShell reserveBottomNav={false}>
       <AppHeader showTaglishChip={false} />
 
-      <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-8">
+      <main className={`w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-8 ${BOTTOM_NAV_RESERVED_CLASS}`}>
         <PageContainer size="wide">
           <div className="mb-5">
-            <MinimalBackNav to="/" label="Home" preferHistory={false} />
+            <MinimalBackNav to="/home" label="Home" preferHistory={false} />
           </div>
 
           <PageHeroHeader
@@ -236,15 +226,14 @@ function FavoritesPage() {
                 <span className="gala-count-pill">
                   {savedPlaces.length} saved place{savedPlaces.length === 1 ? '' : 's'}
                 </span>
-                <span className="gala-count-pill">
-                  {searchQuery.trim() ? `Filtering "${searchQuery.trim()}"` : 'Quick access'}
-                </span>
-              </>
-            }
-            aside={<SavedChibi />}
-            divider={false}
-            className="pb-0"
-          />
+                  <span className="gala-count-pill">
+                    {searchQuery.trim() ? `Filtering "${searchQuery.trim()}"` : 'Quick access'}
+                  </span>
+                </>
+              }
+              divider={false}
+              className="pb-0"
+            />
 
           <DestructiveConfirmModal
             isOpen={isClearAllDialogOpen}
@@ -258,7 +247,7 @@ function FavoritesPage() {
 
           {isSessionLoading ? (
             <CardSurface pad="default" className="mt-6">
-              <p className="text-sm text-[var(--muted)]">Checking account...</p>
+              <InlineSkeleton />
             </CardSurface>
           ) : null}
 
@@ -273,8 +262,8 @@ function FavoritesPage() {
           ) : null}
 
           {!isSessionLoading && session?.user ? (
-            <Stack gap="default">
-              <label className="relative block">
+            <Stack gap="tight">
+              <label className="relative block mt-2">
                 <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">
                   <SearchIcon className="h-5 w-5" />
                 </span>
@@ -286,15 +275,13 @@ function FavoritesPage() {
                 />
               </label>
 
-              <div className="min-h-5">
-                {isFavoritesLoading ? (
-                  <p className="text-sm text-[var(--muted)]">Refreshing your saved places...</p>
-                ) : favoritesError ? (
-                  <p className="text-sm font-medium text-red-600">{favoritesError}</p>
-                ) : null}
-              </div>
+              {isFavoritesLoading && savedPlaces.length === 0 ? (
+                <ListingSkeleton count={4} className="pt-1" />
+              ) : favoritesError ? (
+                <p className="pt-1 text-sm font-medium text-red-600">{favoritesError}</p>
+              ) : null}
 
-              {savedPlaces.length === 0 && !favoritesError ? (
+              {savedPlaces.length === 0 && !isFavoritesLoading && !favoritesError ? (
                 <EmptyState
                   title="Wala ka pang saved places."
                   description="Mag-search muna ng places para ma-save mo sila dito."
@@ -317,24 +304,24 @@ function FavoritesPage() {
 
               {filteredSavedPlaces.length > 0 ? (
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between px-1">
+                  <div className="flex flex-col gap-3 px-1 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-lg font-black uppercase tracking-[0.2em] text-[var(--accent-deep)]">Saved</p>
-                    <div className="flex items-center gap-3">
-                      <p className="text-xs font-semibold text-[var(--muted)]">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+                      <p className="text-xs font-semibold text-[var(--muted)] sm:text-right">
                         Showing {visibleSavedPlaces.length} of {filteredSavedPlaces.length} place{filteredSavedPlaces.length === 1 ? '' : 's'}
                       </p>
                       <button
                         type="button"
                         onClick={handleClearAll}
                         disabled={isClearingAll}
-                        className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-white px-4 text-xs font-black text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="inline-flex h-9 w-fit items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-red-200 bg-white px-3 text-xs font-black text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 sm:px-3.5 sm:self-end"
                       >
                         <TrashIcon className="h-3.5 w-3.5" />
                         {isClearingAll ? 'Removing...' : 'Remove all'}
                       </button>
                     </div>
                   </div>
-                  <div className="grid w-full grid-cols-2 gap-2.5 sm:gap-4 xl:justify-start xl:[grid-template-columns:repeat(auto-fill,minmax(340px,340px))]">
+                  <div className={FAVORITES_GRID_CLASSNAME}>
                     {visibleSavedPlaces.map((favorite) => (
                       <FavoriteCard
                         key={favorite.id}
