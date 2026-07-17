@@ -23,8 +23,8 @@ const welcomeAssets: WelcomeAsset[] = [
   },
 ]
 
-const WELCOME_LOADING_MIN_MS = 180
-const WELCOME_LOADING_MAX_MS = 3000
+const WELCOME_LOADING_MIN_MS = 2000
+const WELCOME_LOADING_MAX_MS = 8000
 
 function getWelcomeHeroSrc() {
   if (typeof window === 'undefined') {
@@ -130,9 +130,10 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
     return (
       <>
         <SeoHead
-          title="Welcome | GalaTayo"
-          description="GalaTayo loading welcome experience."
+          title="GalaTayo | Discover Metro Manila places"
+          description="GalaTayo helps you discover Metro Manila places, browse city pages, and plan your next gala."
           canonicalPath="/"
+          openGraphType="website"
         />
         <WelcomeLoader />
       </>
@@ -142,15 +143,27 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
   return (
     <>
       <SeoHead
-        title="Welcome | GalaTayo"
-        description="Discover Metro Manila gala ideas, places, and plans starting from one fast welcome screen."
+        title="GalaTayo | Discover Metro Manila places"
+        description="GalaTayo helps you discover Metro Manila places, browse city pages, and plan your next gala."
         canonicalPath="/"
+        openGraphType="website"
+        image={{
+          url: '/images/welcome/laptop-desktop.webp',
+          alt: 'Metro Manila welcome scene on GalaTayo',
+        }}
         jsonLd={[
           {
             '@context': 'https://schema.org',
             '@type': 'WebSite',
             name: 'GalaTayo',
             url: `${window.location.origin}/`,
+          },
+          {
+            '@context': 'https://schema.org',
+            '@type': 'Organization',
+            name: 'GalaTayo',
+            url: `${window.location.origin}/`,
+            logo: `${window.location.origin}/favicon.svg`,
           },
         ]}
       />
