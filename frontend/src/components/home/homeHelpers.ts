@@ -155,6 +155,7 @@ const searchRouteCachePrefix = 'galatayo:search-route:'
 const askAiRouteCacheKey = 'galatayo:ask-ai-route'
 const filtersCacheKey = 'galatayo:filters-cache'
 const SEARCH_RESULTS_PER_PAGE = 10
+const SEARCH_ROUTE_CACHE_TTL_MS = 30 * 60 * 1000
 const FILTERS_CACHE_TTL_MS = 24 * 60 * 60 * 1000
 
 type FiltersCache = {
@@ -223,6 +224,15 @@ function readSearchRouteCache(): SearchRouteCache | null {
 
     const parsedCache = JSON.parse(rawCache) as Partial<SearchRouteCache>
 
+    if (
+      typeof (parsedCache as { cachedAt?: unknown }).cachedAt !== 'number' ||
+      !Number.isFinite((parsedCache as { cachedAt?: number }).cachedAt) ||
+      Date.now() - (parsedCache as { cachedAt: number }).cachedAt > SEARCH_ROUTE_CACHE_TTL_MS
+    ) {
+      removePersistentStorage(getCurrentSearchRouteCacheKey())
+      return null
+    }
+
     if (!Array.isArray(parsedCache.searchResults)) {
       return null
     }
@@ -265,7 +275,10 @@ function readSearchRouteCache(): SearchRouteCache | null {
 
 function writeSearchRouteCache(cache: SearchRouteCache) {
   try {
-    writePersistentStorage(getCurrentSearchRouteCacheKey(), JSON.stringify(cache))
+    writePersistentStorage(getCurrentSearchRouteCacheKey(), JSON.stringify({
+      ...cache,
+      cachedAt: Date.now(),
+    }))
   } catch (error) {
     console.warn('Unable to cache search route:', error)
   }
@@ -889,6 +902,7 @@ export {
   askAiRouteCacheKey,
   filtersCacheKey,
   SEARCH_RESULTS_PER_PAGE,
+  SEARCH_ROUTE_CACHE_TTL_MS,
   FILTERS_CACHE_TTL_MS,
   fallbackCategories,
   fallbackGoodForOptions,
