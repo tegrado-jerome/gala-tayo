@@ -216,18 +216,7 @@ function HomePage({
   const hasRestoredInitialScrollRef = useRef(false)
   const shouldScrollSearchResultsToTopRef = useRef(false)
   const searchRequestVersion = useRef(0)
-  const lastAutoSearchSignatureRef = useRef<string | null>(
-    initialSearchState?.autoSearch && initialRouteCacheRef.current
-      ? JSON.stringify({
-          rawQuery: initialSearchState.rawQuery ?? '',
-          category: initialSearchState.categoryId ?? null,
-          area: initialSearchState.areaId ?? null,
-          goodFor: initialSearchState.goodFor ?? null,
-          budget: initialSearchState.budget ?? null,
-          page: initialRequestedPage,
-        })
-      : null
-  )
+  const lastAutoSearchSignatureRef = useRef<string | null>(null)
   const lastAutoSubmittedAskAiQuestionRef = useRef('')
   const desktopResultsScrollRef = useRef<HTMLElement | null>(null)
   const selectedCategoryName = useMemo(
@@ -666,8 +655,8 @@ function HomePage({
       setSearchTotalCount(responseTotalCount)
       setSearchTotalPages(responseTotalPages)
       setHasSearched(true)
-      setSelectedPlaceId(null)
-      setMobileResultsView('cards')
+      setSelectedPlaceId(suppressRefreshState ? selectedPlaceId : null)
+      setMobileResultsView(suppressRefreshState ? mobileResultsView : 'cards')
       trackSearchSubmitted({
         resultCount: mappedPlaces.length,
         page: responsePage,
@@ -681,19 +670,21 @@ function HomePage({
           searchResults: mappedPlaces,
           totalCount: responseTotalCount,
           totalPages: responseTotalPages,
-          selectedPlaceId: null,
+          selectedPlaceId: suppressRefreshState ? selectedPlaceId : null,
           currentPage: responsePage,
-          mobileResultsView: 'cards',
-          scrollY: 0,
-          desktopScrollTop: 0,
-          selectedPlaceViewportTop: null,
+          mobileResultsView: suppressRefreshState ? mobileResultsView : 'cards',
+          scrollY: suppressRefreshState ? window.scrollY : 0,
+          desktopScrollTop: suppressRefreshState ? (desktopResultsScrollRef.current?.scrollTop ?? 0) : 0,
+          selectedPlaceViewportTop: suppressRefreshState && selectedPlaceId ? getSearchPlaceViewportTop(selectedPlaceId) : null,
           pendingScrollRestore: false,
         })
       }
-      window.requestAnimationFrame(() => {
-        window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
-        desktopResultsScrollRef.current?.scrollTo({ top: 0, behavior: 'auto' })
-      })
+      if (!suppressRefreshState) {
+        window.requestAnimationFrame(() => {
+          window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+          desktopResultsScrollRef.current?.scrollTo({ top: 0, behavior: 'auto' })
+        })
+      }
     } catch (error) {
       if (searchRequestVersion.current !== requestVersion) {
         return
