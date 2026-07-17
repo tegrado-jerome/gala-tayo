@@ -1,5 +1,6 @@
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { METRO_MANILA_AREAS } from "../functions/filters";
+import { PUBLIC_PLACE_COLUMNS } from "../domain/places";
 import { createBaseSlug } from "./slug";
 
 type PlaceRow = Record<string, unknown>;
@@ -38,7 +39,7 @@ type ApprovedImageRow = {
   image_url?: unknown;
 };
 
-const SEO_PLACE_SELECT = "*";
+const SEO_PLACE_SELECT = PUBLIC_PLACE_COLUMNS;
 
 const AREA_NAME_OVERRIDES: Record<string, string> = {
   "las-pinas": "Las Pinas",
@@ -218,6 +219,7 @@ export async function getSeoPlaceSummaries(): Promise<SeoPlaceSummary[]> {
   const supabase = await getSupabaseAdminClient();
   const { data, error } = await (supabase.from("places") as any)
     .select(SEO_PLACE_SELECT)
+    .eq("status", "active")
     .order("name", { ascending: true, nullsFirst: false })
     .limit(1000);
 

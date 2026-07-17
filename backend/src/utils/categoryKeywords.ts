@@ -1,4 +1,15 @@
 export const CATEGORY_KEYWORDS: Record<string, string[]> = {
+  food: [
+    "food", "foods", "eat", "eating", "kain", "kainan", "restaurant",
+    "restaurants", "resto", "dining", "dine", "meal", "meals", "lunch",
+    "dinner", "breakfast", "brunch", "snack", "snacks", "food trip",
+    "foodtrip", "buffet", "samgyup", "samgyupsal", "hotpot", "ramen",
+    "pizza", "burger", "chicken", "filipino food", "japanese food",
+    "korean food", "chinese food", "street food", "fast food",
+    "casual dining", "where to eat", "saan kakain", "kakain", "gutom",
+    "pang kain", "pang dinner", "pang lunch", "dessert", "desserts",
+    "ice cream", "halo halo", "halo-halo", "matamis", "sweet cravings",
+  ],
   kainan: [
     "food", "foods", "eat", "eating", "kain", "kainan", "restaurant",
     "restaurants", "resto", "dining", "dine", "meal", "meals", "lunch",
@@ -24,6 +35,13 @@ export const CATEGORY_KEYWORDS: Record<string, string[]> = {
     "indoor", "indoor place", "malling", "window shopping", "food court",
     "department store", "cinema mall", "pang mall", "gala sa mall",
     "tambay sa mall",
+  ],
+  park: [
+    "park", "parks", "parke", "garden", "gardens", "green space",
+    "open space", "outdoor", "outside", "nature", "trees", "grass",
+    "picnic", "jog", "jogging", "walk", "walking", "stroll", "bike",
+    "biking", "fresh air", "playground", "public park", "pang picnic",
+    "pasyal sa park",
   ],
   parke: [
     "park", "parks", "parke", "garden", "gardens", "green space",
@@ -115,6 +133,16 @@ export const CATEGORY_KEYWORDS: Record<string, string[]> = {
     "cinema", "cinemas", "movie", "movies", "movie theater",
     "movie theatre", "film", "films", "imax", "screening", "watch movie",
     "manood sine", "sine", "movie date", "pang sine",
+  ],
+  hotel: [
+    "hotel", "hotels", "staycation", "resort", "overnight", "accommodation",
+    "room", "rooms", "suite", "suites", "vacation stay", "weekend stay",
+    "romantic staycation", "family staycation",
+  ],
+  stay: [
+    "hotel", "hotels", "staycation", "resort", "overnight", "accommodation",
+    "room", "rooms", "suite", "suites", "vacation stay", "weekend stay",
+    "romantic staycation", "family staycation",
   ],
 };
 

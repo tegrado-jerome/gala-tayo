@@ -12,6 +12,8 @@
     "clean": "rimraf dist",
     "prestart": "npm run clean && npm run build",
     "start": "func start",
+    "preseed:places": "npm run build --silent",
+    "seed:places": "node dist/scripts/seedGalatayoPlaces.js",
     "test": "npm run build --silent",
     "validate": "npm run build --silent"
   },

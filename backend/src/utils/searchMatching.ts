@@ -5,9 +5,12 @@ const stopWordSet = new Set(SEARCH_STOP_WORDS.map((word) => normalizeSearchText(
 export function normalizeSearchText(input: string): string {
   return input
     .toLowerCase()
-    .normalize("NFD")
+    .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[-_/.,!?()[\]{}'"`~:;]/g, " ")
+    .replace(/[’‘`´]/g, "'")
+    .replace(/&/g, " and ")
+    .replace(/[-_/.,!?()[\]{}"~:;]/g, " ")
+    .replace(/'/g, "")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -66,4 +69,19 @@ export function matchCategoryKeywords(query: string, categoryId: string): boolea
   const normalizedQuery = normalizeSearchText(query);
 
   return keywords.some((keyword) => hasKeywordMatch(normalizedQuery, keyword));
+}
+
+export function escapeSearchRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+export function includesNormalizedPhrase(text: string, phrase: string): boolean {
+  const normalizedText = normalizeSearchText(text);
+  const normalizedPhrase = normalizeSearchText(phrase);
+  if (!normalizedText || !normalizedPhrase) return false;
+  return new RegExp(`(^|\\s)${escapeSearchRegExp(normalizedPhrase)}($|\\s)`).test(normalizedText);
+}
+
+export function uniqueNormalizedTerms(values: string[]): string[] {
+  return Array.from(new Set(values.map((value) => normalizeSearchText(value)).filter(Boolean)));
 }

@@ -2,6 +2,7 @@ import { getMetroManilaLocationKeywordsForCity } from "../utils/metroManilaLocat
 import { getSearchTerms } from "../utils/searchMatching";
 import { findAreaById, findCategoryById, findGoodForById } from "./filters";
 import * as Helpers from "./searchHelpers";
+import { extractPlaceImageUrls } from "../utils/placeImageFallback";
 
 export { Helpers };
 
@@ -59,9 +60,11 @@ export function rowMatchesBudget(row: Helpers.PlaceRow, budget: Helpers.BudgetVa
   if (budgetMin === null) return false;
   switch (budget) {
     case "free": return budgetMin === 0;
+    case "under-300": return budgetMin <= 300;
     case "under-500": return budgetMin <= 500;
-    case "500-1000": return budgetMin >= 500 && budgetMin <= 1000;
-    case "1000-2000": return budgetMin >= 1000 && budgetMin <= 2000;
+    case "500-1000": return budgetMin <= 1000;
+    case "1000-2000": return budgetMin <= 2000;
+    case "1000-plus": return budgetMin >= 1000;
     case "2000-plus": return budgetMin >= 2000;
     default: return true;
   }
@@ -220,9 +223,11 @@ export function getMatchedTags(row: Helpers.PlaceRow, normalizedQuery: string): 
 export function getBudgetRangeForFilter(budget: Helpers.BudgetValue): { min: number; max: number } | null {
   switch (budget) {
     case "free": return { min: 0, max: 0 };
+    case "under-300": return { min: 0, max: 300 };
     case "under-500": return { min: 0, max: 500 };
-    case "500-1000": return { min: 500, max: 1000 };
-    case "1000-2000": return { min: 1000, max: 2000 };
+    case "500-1000": return { min: 0, max: 1000 };
+    case "1000-2000": return { min: 0, max: 2000 };
+    case "1000-plus": return { min: 1000, max: Number.POSITIVE_INFINITY };
     case "2000-plus": return { min: 2000, max: Number.POSITIVE_INFINITY };
     default: return null;
   }
@@ -231,9 +236,11 @@ export function getBudgetRangeForFilter(budget: Helpers.BudgetValue): { min: num
 export function getBudgetLabelTermsForFilter(budget: Helpers.BudgetValue): string[] {
   switch (budget) {
     case "free": return ["free", "libre", "walang entrance"];
+    case "under-300": return ["under 300", "below 300", "under php 300"];
     case "under-500": return ["under 500", "below 500", "under ₱500", "under php 500"];
     case "500-1000": return ["500 1000", "500 to 1000", "₱500 ₱1 000", "php 500 php 1000"];
     case "1000-2000": return ["1000 2000", "1000 to 2000", "₱1 000 ₱2 000", "php 1000 php 2000"];
+    case "1000-plus": return ["1000", "1000 plus", "php 1000", "premium"];
     case "2000-plus": return ["2000", "2000 plus", "₱2 000", "php 2000", "premium"];
     default: return [];
   }
@@ -304,6 +311,7 @@ export function mapPlaceRowToSearchResult(row: Helpers.PlaceRow, { normalizedQue
   const location = Helpers.getStringField(row, ["location"]) ?? (fallbackLocation || null);
   const categories = Helpers.getLinkedCategories(row);
   const tags = Helpers.getLinkedTagMetadata(row);
+  const fallbackImageUrls = extractPlaceImageUrls(row);
   return {
     id: String(row.id ?? row.slug ?? ""),
     slug: Helpers.getStringField(row, ["slug"]),
@@ -314,12 +322,14 @@ export function mapPlaceRowToSearchResult(row: Helpers.PlaceRow, { normalizedQue
     location,
     category: Helpers.getStringField(row, ["category"]),
     categories: categories.length > 0 ? categories : Helpers.getLinkedCategoryIds(row).map((cid) => ({ id: cid, name: cid })),
+    rating: Helpers.getNumberField(row, ["average_rating"]),
+    reviewCount: Helpers.getNumberField(row, ["review_count"]),
     latitude: Helpers.getNumberField(row, ["latitude", "lat"]),
     longitude: Helpers.getNumberField(row, ["longitude", "lng", "lon"]),
-    imageUrl: null,
-    thumbnailUrl: null,
+    imageUrl: fallbackImageUrls[0] ?? null,
+    thumbnailUrl: fallbackImageUrls[0] ?? null,
     imageAlt: Helpers.getStringField(row, ["name"]),
-    curatedImageUrls: [],
+    curatedImageUrls: fallbackImageUrls,
     address,
     budget: Helpers.getStringField(row, ["budget"]),
     budgetRange: Helpers.getStringField(row, ["budgetRange", "budget_range", "priceRange", "price_range"]),
@@ -328,25 +338,14 @@ export function mapPlaceRowToSearchResult(row: Helpers.PlaceRow, { normalizedQue
     best_time_to_visit: Helpers.getStringField(row, ["best_time_to_visit"]),
     visit_duration: Helpers.getStringField(row, ["visit_duration"]),
     good_for: Helpers.getStringArrayField(row, ["good_for"]),
-    not_ideal_for: Helpers.getStringArrayField(row, ["not_ideal_for"]),
-    crowd_level: Helpers.getStringField(row, ["crowd_level"]),
-    indoor_outdoor: Helpers.getStringField(row, ["indoor_outdoor"]),
-    weather_fit: Helpers.getStringField(row, ["weather_fit"]),
     parking_info: Helpers.getStringField(row, ["parking_info"]),
-    accessibility_notes: Helpers.getStringField(row, ["accessibility_notes"]),
-    decision_reason: Helpers.getStringField(row, ["decision_reason"]),
-    commute_friendly: typeof row.commute_friendly === "boolean" ? row.commute_friendly : null,
     commute_access: Helpers.getStringField(row, ["commute_access"]),
-    nearby_context: Helpers.getStringField(row, ["nearby_context"]),
-    budget_notes: Helpers.getStringField(row, ["budget_notes"]),
-    verification_status: Helpers.getStringField(row, ["verification_status"]),
-    verification_notes: Helpers.getStringField(row, ["verification_notes"]),
-    verification_sources: Helpers.getStringArrayField(row, ["verification_sources"]),
-    last_verified_at: Helpers.getStringField(row, ["last_verified_at"]),
-    website_url: Helpers.getStringField(row, ["website_url"]),
+    budget_note: Helpers.getStringField(row, ["budget_note"]),
+    budget_min: Helpers.getNumberField(row, ["budget_min"]),
+    price_level: Helpers.getNumberField(row, ["price_level"]),
     google_maps_url: Helpers.getStringField(row, ["google_maps_url"]),
     distanceKm: Helpers.roundDistanceKm(distanceKm ?? null),
-    tags,
+    tags: tags.length > 0 ? tags : Helpers.getStringArrayField(row, ["tags"]).map((tag) => ({ id: tag, name: tag, group: "semantic", strength: 3 })),
     matchedCategories: getMatchedCategories(row, categoryIds),
     matchedTags: getMatchedTags(row, normalizedQuery),
   };

@@ -3,6 +3,7 @@ import {
   getApprovedPlaceImages,
   getApprovedPlaceImagesByPlaceIds,
 } from "../services/placeImagesService";
+import { extractPlaceImageUrls } from "../utils/placeImageFallback";
 import {
   buildPlaceDetailCacheKey,
 } from "../utils/cacheKey";
@@ -11,6 +12,7 @@ import {
   getJsonCacheValue,
   setJsonCacheValue,
 } from "../services/redisCacheService";
+import { PUBLIC_PLACE_COLUMNS, normalizeFaqs } from "../domain/places";
 
 export type DetailCategoryMeta = {
   id: string;
@@ -28,6 +30,8 @@ export type PlaceDetail = {
   id: string;
   slug: string;
   name: string;
+  faqs?: { question: string; answer: string }[];
+  average_rating?: string | number | null;
   rating?: number | null;
   review_count?: number | null;
   location: string;
@@ -49,7 +53,10 @@ export type PlaceDetail = {
   commute_friendly?: boolean | null;
   commute_access?: string | null;
   nearby_context?: string | null;
-  budget_notes?: string | null;
+  budget_note?: string | null;
+  budget_min?: number | null;
+  price_level?: number | null;
+  status?: string | null;
   verification_status?: string | null;
   verification_notes?: string | null;
   verification_sources?: string[];
@@ -82,6 +89,30 @@ function getStringArray(value: unknown): string[] {
   return Array.isArray(value)
     ? value.filter((item): item is string => typeof item === "string" && item.trim() !== "")
     : [];
+}
+
+function getFaqArray(value: unknown): { question: string; answer: string }[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .map((item) => {
+      if (!item || typeof item !== "object" || Array.isArray(item)) {
+        return null;
+      }
+
+      const record = item as Record<string, unknown>;
+      const question = typeof record.question === "string" ? record.question.trim() : "";
+      const answer = typeof record.answer === "string" ? record.answer.trim() : "";
+
+      if (!question || !answer) {
+        return null;
+      }
+
+      return { question, answer };
+    })
+    .filter((item): item is { question: string; answer: string } => item !== null);
 }
 
 function getNullableString(value: unknown): string | null {
@@ -201,8 +232,8 @@ function mapPlaceRowToDetail(row: Record<string, unknown>): PlaceDetail {
     typeof row.description === "string" && row.description.trim()
       ? row.description.trim()
       : "";
-  const budgetNotes =
-    getNullableString(row.budget_notes) ??
+  const budgetNote =
+    getNullableString(row.budget_note) ??
     (getNullableNumber(row.budget_min) != null ? `Starting budget around PHP ${getNullableNumber(row.budget_min)}.` : null);
   const websiteUrl =
     getNullableString(row.website_url) ??
@@ -212,13 +243,16 @@ function mapPlaceRowToDetail(row: Record<string, unknown>): PlaceDetail {
   const googleMapsUrl = getNullableString(row.google_maps_url);
   const latitude = getNullableNumber(row.latitude) ?? 0;
   const longitude = getNullableNumber(row.longitude) ?? 0;
+  const fallbackImageUrls = extractPlaceImageUrls(row);
 
   return {
     id: String(row.id ?? ""),
     slug: getNullableString(row.slug) ?? "",
     name: getNullableString(row.name) ?? "Untitled place",
-    rating: getNullableNumber(row.rating),
-    review_count: null,
+    faqs: getFaqArray(row.faqs),
+    average_rating: getNullableString(row.average_rating),
+    rating: (getNullableNumber(row.review_count) ?? 0) > 0 ? getNullableNumber(row.average_rating) : null,
+    review_count: getNullableNumber(row.review_count) ?? 0,
     location,
     address,
     city,
@@ -238,7 +272,10 @@ function mapPlaceRowToDetail(row: Record<string, unknown>): PlaceDetail {
     commute_friendly: typeof row.commute_friendly === "boolean" ? row.commute_friendly : null,
     commute_access: getNullableString(row.commute_access),
     nearby_context: getNullableString(row.nearby_context),
-    budget_notes: budgetNotes,
+    budget_note: budgetNote,
+    budget_min: getNullableNumber(row.budget_min),
+    price_level: getNullableNumber(row.price_level),
+    status: getNullableString(row.status),
     verification_status: getNullableString(row.verification_status),
     verification_notes: getNullableString(row.verification_notes),
     verification_sources: getStringArray(row.verification_sources),
@@ -246,13 +283,13 @@ function mapPlaceRowToDetail(row: Record<string, unknown>): PlaceDetail {
     website_url: websiteUrl || null,
     google_maps_url: googleMapsUrl,
     category: getNullableString(row.category) ?? "Place",
-    entranceFee: budgetNotes ?? "Not specified",
+    entranceFee: budgetNote ?? "Not specified",
     openHours: "Not available",
     website: websiteUrl,
     latitude,
     longitude,
-    imageUrl: "",
-    curatedImageUrls: [],
+    imageUrl: fallbackImageUrls[0] ?? "",
+    curatedImageUrls: fallbackImageUrls,
     categories: getLinkedCategories(row),
     tags: getLinkedTags(row),
   };
@@ -353,7 +390,7 @@ function getLinkedTags(row: Record<string, unknown>): DetailTagMeta[] {
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const PLACE_DETAIL_COLUMNS = "*,place_categories(category_id,categories(id,name)),place_tags(strength,tags(id,name,tag_group))";
+const PLACE_DETAIL_COLUMNS = PUBLIC_PLACE_COLUMNS;
 const PLACE_DETAIL_CACHE_TTL_SECONDS = 60 * 15;
 
 function normalizePlaceLookupKey(value: string): string {
@@ -421,7 +458,8 @@ export async function findPlaceDetailsByIds(placeIds: string[]): Promise<Map<str
     const supabase = await getSupabaseAdminClient();
     const { data, error } = await (supabase.from("places") as any)
       .select(PLACE_DETAIL_COLUMNS)
-      .in("id", missingPlaceIds);
+      .in("id", missingPlaceIds)
+      .eq("status", "active");
 
     if (error) {
       throw error;
@@ -442,6 +480,7 @@ export async function findPlaceDetailsByIds(placeIds: string[]): Promise<Map<str
       const reviewSummary = reviewSummaries.get(detail.id);
       const images = imagesByPlaceId.get(detail.id) ?? [];
       const imageUrls = images.map((image) => image.image_url);
+      const resolvedImageUrls = imageUrls.length > 0 ? imageUrls : detail.curatedImageUrls;
 
       loadedDetailsById.set(detail.id, {
         ...detail,
@@ -450,8 +489,8 @@ export async function findPlaceDetailsByIds(placeIds: string[]): Promise<Map<str
           reviewSummary && reviewSummary.reviewCount > 0
             ? reviewSummary.reviewCount
             : null,
-        imageUrl: imageUrls[0] ?? "",
-        curatedImageUrls: imageUrls,
+        imageUrl: resolvedImageUrls[0] ?? "",
+        curatedImageUrls: resolvedImageUrls,
       });
     }
 
@@ -462,6 +501,85 @@ export async function findPlaceDetailsByIds(placeIds: string[]): Promise<Map<str
     return loadedDetailsById;
   } catch {
     return detailsById;
+  }
+}
+
+export async function findPlaceDetailsBySlugs(slugs: string[]): Promise<Map<string, PlaceDetail>> {
+  const uniqueSlugs = Array.from(
+    new Set(slugs.map((slug) => normalizePlaceLookupKey(slug)).filter(Boolean))
+  );
+
+  if (uniqueSlugs.length === 0) {
+    return new Map<string, PlaceDetail>();
+  }
+
+  const detailsBySlug = new Map<string, PlaceDetail>();
+  const missingSlugs: string[] = [];
+
+  for (const slug of uniqueSlugs) {
+    const cachedDetail = await readCachedPlaceDetail(slug);
+
+    if (cachedDetail) {
+      detailsBySlug.set(slug, cachedDetail);
+      continue;
+    }
+
+    missingSlugs.push(slug);
+  }
+
+  try {
+    if (missingSlugs.length === 0) {
+      return detailsBySlug;
+    }
+
+    const supabase = await getSupabaseAdminClient();
+    const { data, error } = await (supabase.from("places") as any)
+      .select(PLACE_DETAIL_COLUMNS)
+      .in("slug", missingSlugs)
+      .eq("status", "active");
+
+    if (error) {
+      throw error;
+    }
+
+    const rows = (data || []) as Array<Record<string, unknown>>;
+    const resolvedPlaceIds = rows
+      .map((row) => getNullableString(row.id))
+      .filter((placeId): placeId is string => Boolean(placeId));
+    const [reviewSummaries, imagesByPlaceId] = await Promise.all([
+      getPlaceReviewSummaries(resolvedPlaceIds),
+      getApprovedPlaceImagesByPlaceIds(resolvedPlaceIds),
+    ]);
+    const loadedDetailsBySlug = new Map<string, PlaceDetail>();
+
+    for (const row of rows) {
+      const detail = mapPlaceRowToDetail(row);
+      const reviewSummary = reviewSummaries.get(detail.id);
+      const images = imagesByPlaceId.get(detail.id) ?? [];
+      const imageUrls = images.map((image) => image.image_url);
+      const resolvedImageUrls = imageUrls.length > 0 ? imageUrls : detail.curatedImageUrls;
+      const resolvedDetail = {
+        ...detail,
+        rating: reviewSummary?.averageRating ?? detail.rating ?? null,
+        review_count:
+          reviewSummary && reviewSummary.reviewCount > 0
+            ? reviewSummary.reviewCount
+            : null,
+        imageUrl: resolvedImageUrls[0] ?? "",
+        curatedImageUrls: resolvedImageUrls,
+      };
+
+      loadedDetailsBySlug.set(detail.slug, resolvedDetail);
+      detailsBySlug.set(detail.slug, resolvedDetail);
+    }
+
+    await Promise.all(
+      Array.from(loadedDetailsBySlug.values()).map((detail) => writeCachedPlaceDetail(detail))
+    );
+
+    return detailsBySlug;
+  } catch {
+    return detailsBySlug;
   }
 }
 
@@ -485,6 +603,7 @@ export async function findPlaceDetailByIdOrSlug(id: string): Promise<PlaceDetail
       .from("places")
       .select(PLACE_DETAIL_COLUMNS)
       .eq("slug", trimmedId.toLowerCase())
+      .eq("status", "active")
       .limit(1)
       .maybeSingle();
 
@@ -493,12 +612,13 @@ export async function findPlaceDetailByIdOrSlug(id: string): Promise<PlaceDetail
       const reviewSummary = await getPlaceReviewSummary(detail.id);
       const images = await getApprovedPlaceImages(detail.id);
       const imageUrls = images.map((image) => image.image_url);
+      const resolvedImageUrls = imageUrls.length > 0 ? imageUrls : detail.curatedImageUrls;
       const resolvedDetail = {
         ...detail,
         rating: reviewSummary.averageRating ?? detail.rating ?? null,
         review_count: reviewSummary.reviewCount > 0 ? reviewSummary.reviewCount : null,
-        imageUrl: imageUrls[0] ?? "",
-        curatedImageUrls: imageUrls,
+        imageUrl: resolvedImageUrls[0] ?? "",
+        curatedImageUrls: resolvedImageUrls,
       };
       await writeCachedPlaceDetail(resolvedDetail);
       return resolvedDetail;
@@ -515,6 +635,7 @@ export async function findPlaceDetailByIdOrSlug(id: string): Promise<PlaceDetail
         .from("places")
         .select(PLACE_DETAIL_COLUMNS)
         .eq("id", trimmedId)
+        .eq("status", "active")
         .limit(1)
         .maybeSingle();
 
@@ -523,12 +644,13 @@ export async function findPlaceDetailByIdOrSlug(id: string): Promise<PlaceDetail
         const reviewSummary = await getPlaceReviewSummary(detail.id);
         const images = await getApprovedPlaceImages(detail.id);
         const imageUrls = images.map((image) => image.image_url);
+        const resolvedImageUrls = imageUrls.length > 0 ? imageUrls : detail.curatedImageUrls;
         const resolvedDetail = {
           ...detail,
           rating: reviewSummary.averageRating ?? detail.rating ?? null,
           review_count: reviewSummary.reviewCount > 0 ? reviewSummary.reviewCount : null,
-          imageUrl: imageUrls[0] ?? "",
-          curatedImageUrls: imageUrls,
+          imageUrl: resolvedImageUrls[0] ?? "",
+          curatedImageUrls: resolvedImageUrls,
         };
         await writeCachedPlaceDetail(resolvedDetail);
         return resolvedDetail;

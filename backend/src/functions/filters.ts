@@ -22,83 +22,64 @@ export type GoodForOption = {
 
 export const CATEGORIES: Category[] = [
   {
-    id: "kainan",
-    name: "Kainan",
-    description:
-      "Food trip places, restaurants, casual dining, and snack stops.",
-    searchTerms: ["restaurant", "food", "kainan", "casual dining", "food trip"],
+    id: "activity",
+    name: "Activity",
+    description: "Hands-on things to do, active plans, and experience-based gala spots.",
+    searchTerms: ["activity", "activities", "things to do", "fun", "experience", "games", "adventure", "entertainment", "barkada", "family activity", "indoor activity", "outdoor activity", "laro", "gala"],
   },
   {
     id: "cafe",
     name: "Cafe",
     description: "Coffee shops, cafes, tea spots, and cozy tambayan places.",
-    searchTerms: ["cafe", "coffee", "tea", "coffee shop", "tambayan"],
-  },
-  {
-    id: "mall",
-    name: "Mall",
-    description: "Shopping malls, lifestyle centers, and all-in-one gala spots.",
-    searchTerms: ["mall", "shopping mall", "lifestyle center", "malling"],
-  },
-  {
-    id: "parke",
-    name: "Parke",
-    description: "Parks, gardens, open spaces, and outdoor pasyalan.",
-    searchTerms: ["park", "garden", "outdoor", "open space", "pasyal"],
-  },
-  {
-    id: "museum",
-    name: "Museum",
-    description: "Museums, galleries, exhibits, and educational cultural spaces.",
-    searchTerms: ["museum", "gallery", "exhibit", "art", "history"],
-  },
-  {
-    id: "heritage",
-    name: "Heritage",
-    description: "Historic districts, heritage sites, and cultural landmarks.",
-    searchTerms: ["heritage", "historic", "cultural site", "old town", "landmark"],
-  },
-  {
-    id: "tourist",
-    name: "Tourist",
-    description: "Popular attractions, landmarks, and must-visit destination spots.",
-    searchTerms: ["tourist spot", "attraction", "landmark", "destination", "sightseeing"],
-  },
-  {
-    id: "nature",
-    name: "Nature",
-    description: "Nature parks, gardens, green escapes, and scenic outdoor spots.",
-    searchTerms: ["nature", "green space", "garden", "outdoor", "scenic"],
-  },
-  {
-    id: "activity",
-    name: "Activity",
-    description: "Hands-on things to do, active plans, and experience-based gala spots.",
-    searchTerms: ["activity", "things to do", "experience", "games", "fun activity"],
-  },
-  {
-    id: "stay",
-    name: "Stay",
-    description: "Hotels, staycations, and overnight-friendly places.",
-    searchTerms: ["stay", "hotel", "staycation", "overnight", "accommodation"],
-  },
-  {
-    id: "nightlife",
-    name: "Nightlife",
-    description: "Bars, clubs, live music spots, and late-night hangout places.",
-    searchTerms: ["bar", "club", "nightlife", "live music", "late night"],
-  },
-  {
-    id: "arcade",
-    name: "Arcade",
-    description: "Arcades, gaming lounges, and playful activity spots.",
-    searchTerms: ["arcade", "games", "gaming", "bowling", "billiards"],
+    searchTerms: ["cafe", "coffee", "coffee shop", "kape", "kapihan", "dessert", "pastry", "brunch", "study cafe", "tambay", "chill", "date", "merienda"],
   },
   {
     id: "cinema",
     name: "Cinema",
     description: "Movie theaters and film-watching venues.",
-    searchTerms: ["cinema", "movie theater", "films", "imax", "screening"],
+    searchTerms: ["cinema", "movie", "movies", "film", "sine", "pelikula", "screening", "movie date", "date night", "indoor", "rainy day"],
+  },
+  {
+    id: "food",
+    name: "Food",
+    description: "Food trip places, restaurants, casual dining, and snack stops.",
+    searchTerms: ["food", "restaurant", "restaurants", "food trip", "kainan", "pagkain", "dining", "lunch", "dinner", "brunch", "buffet", "street food", "date night", "family meal"],
+  },
+  {
+    id: "heritage",
+    name: "Heritage",
+    description: "Historic districts, heritage sites, and cultural landmarks.",
+    searchTerms: ["heritage", "history", "historical", "landmark", "culture", "cultural", "church", "monument", "old town", "museum", "kasaysayan", "makasaysayan", "simbahan", "tourist spot"],
+  },
+  {
+    id: "hotel",
+    name: "Hotel",
+    description: "Hotels, staycations, and overnight-friendly places.",
+    searchTerms: ["hotel", "hotels", "staycation", "resort", "overnight", "accommodation", "room", "vacation", "weekend stay", "family staycation", "romantic staycation"],
+  },
+  {
+    id: "mall",
+    name: "Mall",
+    description: "Shopping malls, lifestyle centers, and all-in-one gala spots.",
+    searchTerms: ["mall", "shopping", "shops", "shopping center", "retail", "food court", "department store", "grocery", "aircon", "indoor", "rainy day", "tambay", "bilihan"],
+  },
+  {
+    id: "museum",
+    name: "Museum",
+    description: "Museums, galleries, exhibits, and educational cultural spaces.",
+    searchTerms: ["museum", "museums", "gallery", "art", "exhibit", "exhibition", "culture", "history", "educational", "museo", "tourist spot", "family activity"],
+  },
+  {
+    id: "nightlife",
+    name: "Nightlife",
+    description: "Bars, clubs, live music spots, and late-night hangout places.",
+    searchTerms: ["nightlife", "bar", "bars", "club", "lounge", "drinks", "cocktails", "inuman", "night out", "late night", "live music", "rooftop", "party"],
+  },
+  {
+    id: "park",
+    name: "Park",
+    description: "Parks, gardens, open spaces, and outdoor pasyalan.",
+    searchTerms: ["park", "parks", "nature", "garden", "outdoor", "green space", "walking", "jogging", "picnic", "bike", "trail", "family", "free activity", "parke", "pasyalan"],
   },
 ];
 

@@ -20,6 +20,11 @@ export type SearchRequestBody = {
   userLocation?: unknown;
   radiusKm?: unknown;
   strictPlaceSearch?: unknown;
+  sort?: unknown;
+  tags?: unknown;
+  price_level?: unknown;
+  max_budget?: unknown;
+  min_budget?: unknown;
 };
 
 export type PlaceRow = Record<string, unknown>;
@@ -40,6 +45,8 @@ export type SearchPlaceResult = {
   location: string | null;
   category: string | null;
   categories: SearchCategoryMetadata[];
+  rating: number | null;
+  reviewCount: number | null;
   latitude: number | null;
   longitude: number | null;
   imageUrl: string | null;
@@ -54,22 +61,11 @@ export type SearchPlaceResult = {
   best_time_to_visit: string | null;
   visit_duration: string | null;
   good_for: string[];
-  not_ideal_for: string[];
-  crowd_level: string | null;
-  indoor_outdoor: string | null;
-  weather_fit: string | null;
   parking_info: string | null;
-  accessibility_notes: string | null;
-  decision_reason: string | null;
-  commute_friendly: boolean | null;
   commute_access: string | null;
-  nearby_context: string | null;
-  budget_notes: string | null;
-  verification_status: string | null;
-  verification_notes: string | null;
-  verification_sources: string[];
-  last_verified_at: string | null;
-  website_url: string | null;
+  budget_note: string | null;
+  budget_min: number | null;
+  price_level: number | null;
   google_maps_url: string | null;
   distanceKm: number | null;
   tags: SearchTagMetadata[];
@@ -118,9 +114,9 @@ export type SearchContext = {
 
 export type SearchResponseStatus = "ok" | "empty_query" | "too_vague" | "unsupported_location" | "no_results";
 
-export type BudgetValue = "any" | "free" | "under-500" | "500-1000" | "1000-2000" | "2000-plus";
+export type BudgetValue = "any" | "free" | "under-300" | "under-500" | "500-1000" | "1000-2000" | "1000-plus" | "2000-plus";
 
-export const VALID_BUDGET_VALUES: BudgetValue[] = ["any", "free", "under-500", "500-1000", "1000-2000", "2000-plus"];
+export const VALID_BUDGET_VALUES: BudgetValue[] = ["any", "free", "under-300", "under-500", "500-1000", "1000-2000", "1000-plus", "2000-plus"];
 
 export const DEFAULT_SEARCH_PAGE = 1;
 export const STRICT_SEARCH_LIMIT = 10;
@@ -129,18 +125,16 @@ export const TRENDING_HISTORY_LIMIT = 5000;
 export const SEARCH_CACHE_TTL_SECONDS = 60 * 5;
 
 export const CATEGORY_TO_DB_CATEGORIES: Record<string, string[]> = {
-  kainan: ["Kainan", "Restaurant", "Food"],
+  food: ["Food"],
   cafe: ["Cafe"],
   mall: ["Mall"],
-  parke: ["Parke", "Park"],
-  nature: ["Nature", "Parke", "Park", "Garden"],
+  park: ["Park"],
   museum: ["Museum"],
   heritage: ["Heritage"],
-  tourist: ["Tourist", "Heritage", "Museum", "Hangout"],
-  activity: ["Activity", "Arcade", "Cinema", "Games", "Hangout"],
-  stay: ["Stay", "Hotel", "Accommodation"],
-  nightlife: ["Nightlife", "Bar"],
-  cinema: ["Cinema", "Movie Theater"],
+  activity: ["Activity"],
+  hotel: ["Hotel"],
+  nightlife: ["Nightlife"],
+  cinema: ["Cinema"],
 };
 
 export const GOOD_FOR_TERMS: Record<string, string[]> = {
@@ -198,6 +192,12 @@ export function getFilterValue(
 ): unknown {
   if (Object.prototype.hasOwnProperty.call(filters, key)) return filters[key];
   return body[key];
+}
+
+export function getStringArrayValue(value: unknown): string[] {
+  if (Array.isArray(value)) return value.filter((item): item is string => typeof item === "string" && item.trim() !== "").map((item) => item.trim());
+  if (typeof value === "string" && value.trim()) return value.split(",").map((item) => item.trim()).filter(Boolean);
+  return [];
 }
 
 export function getBudgetFilter(value: unknown): BudgetValue {
@@ -340,15 +340,25 @@ export function normalizeComparableText(value: unknown): string {
 }
 
 export function getRowIdentityText(row: PlaceRow): string {
-  return normalizeComparableText([getStringField(row, ["name", "normalized_name", "slug"]), getStringArrayField(row, ["search_aliases"])]);
+  return normalizeComparableText([
+    getStringField(row, ["name", "slug"]),
+    getStringArrayField(row, ["search_terms"]),
+  ]);
 }
 
 export function getRowDiscoveryText(row: PlaceRow): string {
-  return normalizeComparableText([getStringField(row, ["category", "city", "area", "address", "searchable_text"]), getStringArrayField(row, ["search_keywords"]), row.categories, getLinkedCategoryIds(row), getLinkedCategoryNames(row)]);
+  return normalizeComparableText([
+    getStringField(row, ["category", "city", "area", "address"]),
+    getStringArrayField(row, ["search_terms"]),
+    row.categories,
+    getLinkedCategoryIds(row),
+    getLinkedCategoryNames(row),
+    getLinkedCategorySearchTerms(row),
+  ]);
 }
 
 export function getRowIntentText(row: PlaceRow): string {
-  return normalizeComparableText([getStringField(row, ["best_time_to_visit", "visit_duration", "crowd_level", "indoor_outdoor", "weather_fit", "commute_access"]), getStringArrayField(row, ["good_for"])]);
+  return normalizeComparableText([getStringField(row, ["best_time_to_visit", "visit_duration", "commute_access"]), getStringArrayField(row, ["good_for", "tags", "search_terms"])]);
 }
 
 export function getRowTagText(row: PlaceRow): string {
@@ -360,11 +370,11 @@ export function getRowPromptText(row: PlaceRow): string {
 }
 
 export function getRowSupportingText(row: PlaceRow): string {
-  return normalizeComparableText([getStringField(row, ["description", "nearby_context"])]);
+  return normalizeComparableText([getStringField(row, ["description"])]);
 }
 
 export function getRowLowPriorityText(row: PlaceRow): string {
-  return normalizeComparableText([getStringField(row, ["parking_info", "visit_duration"]), getStringArrayField(row, ["not_ideal_for"])]);
+  return normalizeComparableText([getStringField(row, ["parking_info", "visit_duration"])]);
 }
 
 export function countMatchedTerms(text: string, terms: string[]): number {
@@ -441,11 +451,19 @@ export function getStructuredLocationText(row: PlaceRow): string {
 }
 
 export function getStructuredCategoryText(row: PlaceRow): string {
-  return normalizeComparableText([getStringField(row, ["category"]), row.categories, getLinkedCategoryIds(row), getLinkedCategoryNames(row)]);
+  return normalizeComparableText([
+    getStringField(row, ["category"]),
+    row.categories,
+    getLinkedCategoryIds(row),
+    getLinkedCategoryNames(row),
+    getLinkedCategorySearchTerms(row),
+  ]);
 }
 
 export function getStructuredGoodForText(row: PlaceRow): string {
-  return normalizeComparableText([getStringArrayField(row, ["good_for", "search_keywords"]), getStringField(row, ["searchable_text"])]);
+  return normalizeComparableText([
+    getStringArrayField(row, ["good_for", "search_terms", "tags"]),
+  ]);
 }
 
 export function getIndoorOutdoorText(row: PlaceRow): string {
