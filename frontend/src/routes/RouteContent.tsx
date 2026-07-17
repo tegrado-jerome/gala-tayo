@@ -1,13 +1,16 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import type { ReactNode } from 'react'
+import galaTayoLogo from '../assets/brand/galatayo-logo.svg'
 import SeoHead from '../components/SeoHead'
 import MobileBottomNav from '../components/MobileBottomNav'
 import ProtectedFeatureGate from '../components/ProtectedFeatureGate'
+import { PageShellSkeleton } from '../components/loading/SkeletonStates'
 import SharedPlacePage from '../pages/SharedPlacePage'
 import PlacesSlugResolverPage from '../pages/PlacesSlugResolverPage'
 import HomeLandingPage from '../pages/HomeLandingPage'
 import HomePage from '../pages/HomePage'
+import WelcomePage from '../pages/WelcomePage'
 import SearchPage from '../pages/SearchPage'
 import LoginPage from '../pages/LoginPage'
 import FavoritesPage from '../pages/FavoritesPage'
@@ -74,7 +77,7 @@ function AdminAccessDenied({ message = 'Your account does not have admin access.
         <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
           <button
             type="button"
-            onClick={() => navigateToPath('/')}
+            onClick={() => navigateToPath('/home')}
             className="app-button app-button-primary app-button-md"
           >
             Go home
@@ -201,10 +204,27 @@ function InitialAuthLoader() {
   )
 }
 
+function RootEntryLoader() {
+  return (
+    <main className="welcome-loader">
+      <div className="welcome-loader__content">
+        <img
+          src={galaTayoLogo}
+          alt="GalaTayo logo"
+          className="welcome-loader__logo"
+          width={180}
+          height={58}
+        />
+      </div>
+    </main>
+  )
+}
+
 function matchRoute(inputs: RouteInputs) {
   const {
     session,
     hasResolvedInitialAuth,
+    hasResolvedProfile,
     pathname,
     search,
     isPasswordResetPath,
@@ -338,12 +358,20 @@ function matchRoute(inputs: RouteInputs) {
   }
 
   if (pathname === '/' || pathname === '') {
+    if (!hasResolvedInitialAuth || (session && !hasResolvedProfile)) {
+      return <RootEntryLoader />
+    }
+
+    return <WelcomePage navigationSource={navigationSource} />
+  }
+
+  if (pathname === '/home' || pathname === '/home/') {
     return (
       <>
         <SeoHead
           title="Home | GalaTayo"
           description="Discover places, plan gala ideas, and use AI-powered tools to find your next hangout, date, barkada, or family destination."
-          canonicalPath="/"
+          canonicalPath="/home"
           jsonLd={[
             {
               '@context': 'https://schema.org',
@@ -599,7 +627,7 @@ function matchRoute(inputs: RouteInputs) {
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <button
             type="button"
-            onClick={() => navigateToPath('/')}
+            onClick={() => navigateToPath('/home')}
             className="inline-flex h-11 items-center rounded-full bg-[#1E3A8A] px-6 text-sm font-bold text-white transition hover:bg-[#1E40AF]"
           >
             Go home
@@ -623,7 +651,7 @@ function BottomNavGate({ pathname }: { pathname: string }) {
   return <MobileBottomNav currentPath={pathname} />
 }
 
-function AppShell({ session, currentUser, currentProfile, adminMfa, hasResolvedInitialAuth, pathname, search, children }: {
+function AppShell({ session, currentUser, currentProfile, adminMfa, hasResolvedInitialAuth, pathname, search, showLogoutTransition, children }: {
   session: Session | null
   currentUser: CurrentUserResponse['user'] | null
   currentProfile: CurrentUserResponse['profile'] | null
@@ -634,6 +662,7 @@ function AppShell({ session, currentUser, currentProfile, adminMfa, hasResolvedI
   hasResolvedInitialAuth: boolean
   pathname: string
   search: string
+  showLogoutTransition: boolean
   children: ReactNode
 }) {
   const showMobileBottomNav = shouldShowMobileBottomNav(pathname)
@@ -664,11 +693,22 @@ function AppShell({ session, currentUser, currentProfile, adminMfa, hasResolvedI
                 {shouldApplyGenericNoindex ? (
                   <SeoHead title="GalaTayo" canonicalPath={pathname} robots="noindex,follow" />
                 ) : null}
-                <Suspense fallback={null}>
+                <Suspense
+                  fallback={
+                    <PageShellSkeleton />
+                  }
+                >
                   <div>
                     {children}
                   </div>
                 </Suspense>
+                {showLogoutTransition ? (
+                  <div className="gala-logout-overlay" aria-live="polite" aria-busy="true">
+                    <div className="gala-logout-card">
+                      <PageShellSkeleton className="max-h-[360px] overflow-hidden px-0 py-0" />
+                    </div>
+                  </div>
+                ) : null}
                 {showMobileBottomNav ? <BottomNavGate pathname={pathname} /> : null}
               </BottomNavProvider>
             </AskAiNotificationProvider>

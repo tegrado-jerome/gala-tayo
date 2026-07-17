@@ -51,6 +51,10 @@ export function isAdminPath(pathname: string) {
 }
 
 export function shouldShowMobileBottomNav(pathname: string) {
+  if (isPath(pathname, '/') || pathname === '' || isPath(pathname, '/home')) {
+    return false
+  }
+
   if (
     sharedRouteMatchers.some((matcher) => matcher(pathname))
   ) {

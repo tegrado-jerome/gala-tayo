@@ -34,7 +34,8 @@ type AreaLike = {
 }
 
 const exactLabels: Record<string, string> = {
-  '/': 'Home',
+  '/': 'Welcome',
+  '/home': 'Home',
   '/search': 'Search',
   '/places': 'Places',
   '/places/categories': 'Categories',
@@ -262,7 +263,7 @@ export function getCanonicalGalaPlanPath(pathname: string) {
   return null
 }
 
-export function getSoonFeatureRedirectPath(pathname: string): '/' | null {
+export function getSoonFeatureRedirectPath(pathname: string): '/home' | null {
   if (
     pathname.startsWith('/gala-plan') ||
     pathname.startsWith('/gala-plans') ||
@@ -270,7 +271,7 @@ export function getSoonFeatureRedirectPath(pathname: string): '/' | null {
     isPath(pathname, '/places/submit') ||
     isPath(pathname, '/places/new')
   ) {
-    return '/'
+    return '/home'
   }
 
   return null
@@ -324,11 +325,7 @@ export function getCanonicalSubmitPlacePath(pathname: string): '/submit-place' |
   return null
 }
 
-export function getCanonicalHomePath(pathname: string): '/' | null {
-  if (isPath(pathname, '/home')) {
-    return '/'
-  }
-
+export function getCanonicalHomePath(_pathname: string): '/' | null {
   return null
 }
 

@@ -1,11 +1,6 @@
 {
   "routes": [
     {
-      "route": "/home",
-      "redirect": "/",
-      "statusCode": 301
-    },
-    {
       "route": "/sitemap.xml",
       "rewrite": "/api/seo/sitemap.xml"
     },

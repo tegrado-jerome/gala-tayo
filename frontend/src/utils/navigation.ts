@@ -5,6 +5,17 @@ type NavigationSource = 'push' | 'replace' | 'pop'
 
 let pendingNavigationSource: NavigationSource | null = null
 
+function scrollViewportToTopInstant() {
+  window.scrollTo({
+    top: 0,
+    left: 0,
+    behavior: 'auto',
+  })
+
+  document.documentElement.scrollTop = 0
+  document.body.scrollTop = 0
+}
+
 function saveCurrentScrollPosition() {
   try {
     const currentState = getHistoryState()
@@ -56,7 +67,7 @@ function useBackNavigation() {
     if (state.previousPath || state.hasHistory) {
       window.history.back()
     } else {
-      window.location.href = '/'
+      window.location.href = '/home'
     }
   }, [state.hasHistory, state.previousPath])
 
@@ -104,11 +115,18 @@ function navigateToPath(path: string) {
   pendingNavigationSource = 'push'
   saveCurrentScrollPosition()
   runWithInstantScroll(() => {
+    scrollViewportToTopInstant()
     window.history.pushState(
       buildHistoryState(getCurrentPathWithSearch()),
       '',
       path
     )
+    scrollViewportToTopInstant()
+    window.requestAnimationFrame(() => {
+      runWithInstantScroll(() => {
+        scrollViewportToTopInstant()
+      })
+    })
     window.dispatchEvent(new PopStateEvent('popstate'))
   })
 }
@@ -121,17 +139,37 @@ function replaceWithPath(path: string) {
   pendingNavigationSource = 'replace'
   saveCurrentScrollPosition()
   runWithInstantScroll(() => {
+    scrollViewportToTopInstant()
     window.history.replaceState(
       buildHistoryState(getCurrentPathWithSearch()),
       '',
       path
     )
+    scrollViewportToTopInstant()
+    window.requestAnimationFrame(() => {
+      runWithInstantScroll(() => {
+        scrollViewportToTopInstant()
+      })
+    })
     window.dispatchEvent(new PopStateEvent('popstate'))
   })
 }
 
 function navigateToPlace(slug: string) {
   navigateToPath(`/places/${encodeURIComponent(slug)}`)
+}
+
+function navigateBackWithFallback(fallbackPath = '/home') {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  if (hasInAppBackHistory()) {
+    window.history.back()
+    return
+  }
+
+  navigateToPath(fallbackPath)
 }
 
 function navigateToCanonicalPlace({
@@ -165,10 +203,12 @@ function navigateToCanonicalPlace({
 
 export {
   consumePendingNavigationSource,
+  navigateBackWithFallback,
   useBackNavigation,
   navigateToCanonicalPlace,
   navigateToPath,
   navigateToPlace,
   replaceWithPath,
+  scrollViewportToTopInstant,
   writePlaceReturnState,
 }
