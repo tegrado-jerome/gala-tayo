@@ -1981,6 +1981,7 @@ function HomeLandingPage({
               <CarouselPositionIndicator
                 currentIndex={cityRailIndicator.currentIndex}
                 total={cityRailIndicator.total}
+                className="!-mt-1"
                 trackClassName="w-[118px]"
                 onSelect={cityRailIndicator.handleSelect}
                 variant="segmented"
@@ -2027,6 +2028,7 @@ function HomeLandingPage({
               <CarouselPositionIndicator
                 currentIndex={categoryRailIndicator.currentIndex}
                 total={categoryRailIndicator.total}
+                className="!-mt-1"
                 trackClassName="w-[118px]"
                 onSelect={categoryRailIndicator.handleSelect}
                 variant="segmented"
