@@ -115,6 +115,21 @@ export function readListingRouteCache(): ListingRouteCache | null {
   }
 }
 
+export function hasPendingListingRouteScrollRestore(pathnameWithSearch = `${window.location.pathname}${window.location.search}`) {
+  try {
+    const rawCache = readPersistentStorage(getListingRouteCacheKey(pathnameWithSearch))
+
+    if (!rawCache) {
+      return false
+    }
+
+    const parsedCache = JSON.parse(rawCache) as { pendingScrollRestore?: boolean }
+    return parsedCache.pendingScrollRestore === true
+  } catch {
+    return false
+  }
+}
+
 export function writeListingRouteCache(cache: Omit<ListingRouteCache, 'cachedAt'>) {
   writeListingRouteCacheForPath(`${window.location.pathname}${window.location.search}`, cache)
 }

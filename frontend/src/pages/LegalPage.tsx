@@ -268,7 +268,7 @@ function LegalPage({ type }: LegalPageProps) {
     ? 'Read GalaTayo terms covering accounts, content, place information, AI features, moderation, and service rules.'
     : 'Read the GalaTayo privacy policy covering account data, public content, AI feature usage, storage, and user rights.'
   const breadcrumbItems = [
-    { label: 'Home', href: '/', icon: <House className="h-3.5 w-3.5" /> },
+    { label: 'Home', href: '/home', icon: <House className="h-3.5 w-3.5" /> },
     { label: isTerms ? 'Terms' : 'Privacy', icon: <ShieldCheck className="h-3.5 w-3.5" /> },
   ]
   const quickFacts = [
@@ -300,7 +300,7 @@ function LegalPage({ type }: LegalPageProps) {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/` },
+        { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/home` },
         { '@type': 'ListItem', position: 2, name: isTerms ? 'Terms' : 'Privacy', item: `${getSiteOrigin()}${canonicalPath}` },
       ],
     },

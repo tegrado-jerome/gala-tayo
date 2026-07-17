@@ -1,12 +1,11 @@
 ﻿import { startTransition, useEffect, useMemo, useRef, useState } from 'react'
 import { memo, useLayoutEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { Bot } from 'lucide-react'
 import { AppIcon } from '../components/AppIcon'
 import { FeatureGuideModalTrigger, featureGuideContent } from '../components/FeatureGuideModal'
 import AskAiUsagePill from '../components/AskAiUsagePill'
+import CarouselPositionIndicator from '../components/CarouselPositionIndicator'
 import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
-import InternalLink from '../components/InternalLink'
 import MapView from '../components/MapView'
 import { MapResponsiveLayout } from '../components/layout/ResponsiveLayouts'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
@@ -40,6 +39,8 @@ import { getApiUrl } from '../utils/apiClient'
 import { buildAskAiRequestHeaders, getOrCreateAskAiGuestId } from '../utils/askAiIdentity'
 import { trackAskAiMapsUsed } from '../utils/analytics'
 import { useAskAiUsageAutoRefresh } from '../hooks/useAskAiUsageAutoRefresh'
+import { navigateBackWithFallback } from '../utils/navigation'
+import { PageShellSkeleton } from '../components/loading/SkeletonStates'
 import {
   type AskAiMapChipId,
   type AskAiMapsResponse,
@@ -74,9 +75,9 @@ import {
 
 function MinimalLoadingCard({ query }: { query: string }) {
   return (
-    <div className="w-full min-w-0 shrink rounded-[24px] border border-[rgba(83,146,241,0.18)] bg-white/96 p-4 shadow-[0_16px_36px_rgba(15,23,42,0.12)]">
+    <div className="w-full min-w-0 shrink rounded-[24px] border border-[rgba(var(--accent-rgb),0.18)] bg-white/96 p-4 shadow-[0_16px_36px_rgba(15,23,42,0.12)]">
       <div className="flex items-start gap-3">
-        <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px] bg-[linear-gradient(180deg,#eff6ff_0%,#dbeafe_100%)] text-[var(--accent-deep)]">
+        <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px] bg-[linear-gradient(180deg,var(--primary-soft)_0%,rgba(var(--accent-rgb),0.18)_100%)] text-[var(--accent-deep)]">
           <AppIcon name="askAi" className="h-5 w-5 motion-safe:animate-pulse" />
         </span>
         <div className="min-w-0 flex-1">
@@ -91,7 +92,7 @@ function MinimalLoadingCard({ query }: { query: string }) {
           <p className="mt-1 text-[12px] font-medium text-slate-500">Searching verified places for your prompt.</p>
           {query ? <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-700">“{query.trim()}”</p> : null}
           <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-100">
-            <div className="h-full w-2/3 rounded-full bg-[linear-gradient(90deg,#8bb8ff,#245dce)] motion-safe:animate-[gala-loading-slide_1.6s_ease-in-out_infinite]" />
+            <div className="h-full w-2/3 rounded-full bg-[linear-gradient(90deg,#dbeafe,#1e3a8a)] motion-safe:animate-[gala-loading-slide_1.6s_ease-in-out_infinite]" />
           </div>
         </div>
       </div>
@@ -204,13 +205,12 @@ const AskAiMapComposer = memo(function AskAiMapComposer({
             }
           }}
           disabled={!isSearching && (!canSubmit || (isLimitReached && isRegistered))}
-          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--accent-deep)] text-white shadow-[0_10px_20px_rgba(23,45,107,0.18)] transition hover:bg-[var(--accent)] disabled:opacity-60"
+          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--accent-deep)] text-white shadow-[0_10px_20px_rgba(24,128,111,0.18)] transition hover:bg-[var(--accent)] disabled:opacity-60"
           aria-label={isSearching ? 'Stop searching' : 'Submit ask ai map search'}
         >
           {isSearching ? (
             <svg className="h-[17px] w-[17px]" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="11" fill="#172A5A" />
-              <rect x="5.25" y="5.25" width="13.5" height="13.5" rx="2.5" fill="white" />
+              <rect x="6" y="6" width="12" height="12" rx="2.75" fill="white" />
             </svg>
           ) : (
             <AppIcon name="askAi" className="h-5 w-5" />
@@ -277,6 +277,7 @@ function AskAiMapPage() {
   const submitInFlightRef = useRef(false)
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(initialAskAiMapState?.selectedPlaceId ?? null)
   const [focusedPlaceId, setFocusedPlaceId] = useState<string | null>(initialAskAiMapState?.focusedPlaceId ?? null)
+  const [mobileActivePlaceIndex, setMobileActivePlaceIndex] = useState(0)
   const [selectedPlaceFocusSignal, setSelectedPlaceFocusSignal] = useState(0)
   const [isPlaceDetailOpen, setIsPlaceDetailOpen] = useState(false)
   const [isMapPinNoticeDismissed, setIsMapPinNoticeDismissed] = useState(false)
@@ -523,6 +524,47 @@ function AskAiMapPage() {
       setFocusedPlaceId(places[0]?.id ?? null)
     }
   }, [places, selectedPlaceId])
+
+  useEffect(() => {
+    const scroller = mobileCardScrollerRef.current
+    const cards = normalizedPlaces
+      .map((place) => mobileCardRefs.current.get(place.id) ?? null)
+      .filter((card): card is HTMLDivElement => Boolean(card))
+
+    if (!scroller || cards.length === 0) {
+      setMobileActivePlaceIndex(0)
+      return
+    }
+
+    const updateActiveIndex = () => {
+      const scrollerRect = scroller.getBoundingClientRect()
+      const viewportCenter = scrollerRect.left + scrollerRect.width / 2
+      let nextIndex = 0
+      let closestDistance = Number.POSITIVE_INFINITY
+
+      cards.forEach((card, index) => {
+        const cardRect = card.getBoundingClientRect()
+        const cardCenter = cardRect.left + cardRect.width / 2
+        const distance = Math.abs(cardCenter - viewportCenter)
+
+        if (distance < closestDistance) {
+          closestDistance = distance
+          nextIndex = index
+        }
+      })
+
+      setMobileActivePlaceIndex(nextIndex)
+    }
+
+    updateActiveIndex()
+    scroller.addEventListener('scroll', updateActiveIndex, { passive: true })
+    window.addEventListener('resize', updateActiveIndex)
+
+    return () => {
+      scroller.removeEventListener('scroll', updateActiveIndex)
+      window.removeEventListener('resize', updateActiveIndex)
+    }
+  }, [normalizedPlaces])
 
   useEffect(() => {
     if (!isPlaceDetailOpen) {
@@ -883,7 +925,11 @@ function AskAiMapPage() {
   }
 
   if (isSessionLoading) {
-    return <div className="gala-page-background min-h-screen" aria-hidden="true" />
+    return (
+      <main className="gala-page-background min-h-screen text-[var(--text)]">
+        <PageShellSkeleton />
+      </main>
+    )
   }
 
   return (
@@ -914,13 +960,14 @@ function AskAiMapPage() {
             />
 
             <div className="absolute right-4 top-5 z-[620]">
-              <InternalLink
-                href="/ask-ai"
-                aria-label="Back to Ask AI overview"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-sky-100 text-sky-700 ring-1 ring-inset ring-sky-200/70 shadow-[0_6px_18px_-8px_rgba(14,165,233,0.45)] transition hover:bg-sky-200/80 hover:text-sky-800"
+              <button
+                type="button"
+                onClick={() => navigateBackWithFallback('/home')}
+                aria-label="Go back"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[linear-gradient(135deg,#dbeafe,#bfdbfe)] text-[var(--accent-deep)] ring-1 ring-inset ring-[rgba(var(--accent-rgb),0.14)] shadow-[0_6px_18px_-8px_rgba(59,130,246,0.28)] transition hover:bg-[linear-gradient(135deg,#bfdbfe,#dbeafe)] hover:text-[var(--accent)]"
               >
-                <Bot className="h-6 w-6" strokeWidth={2} />
-              </InternalLink>
+                <AppIcon name="bot" className="h-6 w-6" strokeWidth={2} />
+              </button>
             </div>
 
             <div className="absolute left-4 top-5 z-[620] flex items-center gap-2">
@@ -973,7 +1020,7 @@ function AskAiMapPage() {
               </div>
             ) : null}
 
-            <section className="absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom,0px)+3.5rem)] z-[640] overflow-hidden sm:inset-x-4 sm:bottom-14 lg:inset-x-6 lg:bottom-16">
+            <section className="absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom,0px)+4.25rem)] z-[640] overflow-hidden sm:inset-x-4 sm:bottom-14 lg:inset-x-6 lg:bottom-16">
                 {errorMessage && !isSearching ? (
                   <div className="mb-3 rounded-[22px] border border-rose-100 bg-white px-4 py-3 text-sm font-medium text-rose-700 shadow-[0_12px_30px_rgba(15,23,42,0.10)] lg:mx-auto lg:max-w-[680px]">
                     {errorMessage}
@@ -981,7 +1028,7 @@ function AskAiMapPage() {
                 ) : null}
 
                 {!errorMessage && statusMessage && !isSearching ? (
-                  <div className="mb-3 rounded-[22px] border border-sky-100 bg-white px-4 py-3 text-sm font-medium text-slate-700 shadow-[0_12px_30px_rgba(15,23,42,0.10)] lg:mx-auto lg:max-w-[680px]">
+                  <div className="mb-3 rounded-[22px] border border-[rgba(47,184,160,0.14)] bg-white px-4 py-3 text-sm font-medium text-slate-700 shadow-[0_12px_30px_rgba(15,23,42,0.10)] lg:mx-auto lg:max-w-[680px]">
                     {statusMessage}
                   </div>
                 ) : null}
@@ -1047,12 +1094,12 @@ function AskAiMapPage() {
                           <div className="flex items-start gap-2.5">
                             <div className="flex shrink-0 items-center gap-2 pt-0.5">
                               <span className={`h-2.5 w-2.5 rounded-full transition ${
-                                isSelected ? 'bg-[var(--accent-deep)] shadow-[0_0_0_5px_rgba(37,99,235,0.12)]' : 'bg-slate-200'
+                                isSelected ? 'bg-[var(--accent-deep)] shadow-[0_0_0_5px_rgba(47,184,160,0.12)]' : 'bg-slate-200'
                               }`} />
                               <span className={`inline-flex h-7 min-w-7 items-center justify-center rounded-2xl px-2 text-[11px] font-black ${
                                 isSelected
-                                  ? 'bg-[#172A5A] text-white shadow-[0_8px_16px_rgba(23,42,90,0.24)]'
-                                  : 'bg-slate-100 text-[#172A5A]'
+                                  ? 'bg-[var(--accent-deep)] text-white shadow-[0_8px_16px_rgba(24,128,111,0.24)]'
+                                  : 'bg-slate-100 text-[var(--accent-deep)]'
                               }`}>
                                 {place.displayIndex}
                               </span>
@@ -1135,6 +1182,13 @@ function AskAiMapPage() {
                   }) : null}
                 </div>
 
+                <CarouselPositionIndicator
+                  currentIndex={mobileActivePlaceIndex}
+                  total={normalizedPlaces.length}
+                  label="Place"
+                  className="!-mt-3"
+                />
+
                 <AskAiMapComposer
                   key={query}
                   query={query}
@@ -1179,13 +1233,14 @@ function AskAiMapPage() {
             />
 
             <div className="absolute right-4 top-5 z-[620]">
-              <InternalLink
-                href="/ask-ai"
-                aria-label="Back to Ask AI overview"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-sky-100 text-sky-700 ring-1 ring-inset ring-sky-200/70 shadow-[0_6px_18px_-8px_rgba(14,165,233,0.45)] transition hover:bg-sky-200/80 hover:text-sky-800"
+              <button
+                type="button"
+                onClick={() => navigateBackWithFallback('/home')}
+                aria-label="Go back"
+                className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[linear-gradient(135deg,#dbeafe,#bfdbfe)] text-[var(--accent-deep)] ring-1 ring-inset ring-[rgba(var(--accent-rgb),0.14)] shadow-[0_6px_18px_-8px_rgba(59,130,246,0.28)] transition hover:bg-[linear-gradient(135deg,#bfdbfe,#dbeafe)] hover:text-[var(--accent)]"
               >
-                <Bot className="h-6 w-6" strokeWidth={2} />
-              </InternalLink>
+                <AppIcon name="bot" className="h-6 w-6" strokeWidth={2} />
+              </button>
             </div>
 
             <div className="absolute left-4 top-5 z-[620] flex items-center gap-2">
@@ -1291,16 +1346,16 @@ function AskAiMapPage() {
                       <div className="flex h-full flex-col">
                         <div className="flex items-start gap-2.5">
                           <div className="flex shrink-0 items-center gap-2 pt-0.5">
-                            <span className={`h-2.5 w-2.5 rounded-full transition ${
-                              isSelected ? 'bg-[var(--accent-deep)] shadow-[0_0_0_5px_rgba(37,99,235,0.12)]' : 'bg-slate-200'
-                            }`} />
-                            <span className={`inline-flex h-7 min-w-7 items-center justify-center rounded-2xl px-2 text-[11px] font-black ${
-                              isSelected
-                                ? 'bg-[#172A5A] text-white shadow-[0_8px_16px_rgba(23,42,90,0.24)]'
-                                : 'bg-slate-100 text-[#172A5A]'
-                            }`}>
-                              {place.displayIndex}
-                            </span>
+                              <span className={`h-2.5 w-2.5 rounded-full transition ${
+                                isSelected ? 'bg-[var(--accent-deep)] shadow-[0_0_0_5px_rgba(47,184,160,0.12)]' : 'bg-slate-200'
+                              }`} />
+                              <span className={`inline-flex h-7 min-w-7 items-center justify-center rounded-2xl px-2 text-[11px] font-black ${
+                                isSelected
+                                  ? 'bg-[var(--accent-deep)] text-white shadow-[0_8px_16px_rgba(24,128,111,0.24)]'
+                                  : 'bg-slate-100 text-[var(--accent-deep)]'
+                              }`}>
+                                {place.displayIndex}
+                              </span>
                           </div>
 
                           <div className="min-w-0 flex-1">
@@ -1441,8 +1496,8 @@ function AskAiMapPage() {
           </div>
 
           <div className="flex-1 overflow-y-auto px-5 pb-[calc(24px+env(safe-area-inset-bottom,0px))] [-webkit-overflow-scrolling:touch]">
-            <div className="rounded-[20px] border border-[rgba(23,42,90,0.10)] bg-[linear-gradient(180deg,rgba(248,250,252,0.98),rgba(255,255,255,0.94))] px-4 py-4">
-              <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#172A5A]">Why this fits</p>
+            <div className="rounded-[20px] border border-[rgba(47,184,160,0.10)] bg-[linear-gradient(180deg,rgba(248,250,252,0.98),rgba(255,255,255,0.94))] px-4 py-4">
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[var(--accent-deep)]">Why this fits</p>
               <p className="mt-2 text-sm leading-6 text-slate-700">
                 {selectedDisplayPlace.whyThisFits}
               </p>
@@ -1508,12 +1563,12 @@ function AskAiMapPage() {
 
                 {selectedDisplayPlace.isCoordinateVerified ? (
                   <div className="mt-2.5 flex items-center gap-2">
-                    <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100">
-                      <svg className="h-3 w-3 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--primary-soft)]">
+                      <svg className="h-3 w-3 text-[var(--accent-deep)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="20 6 9 17 4 12" />
                       </svg>
                     </span>
-                    <span className="text-[13px] font-semibold text-emerald-700">{selectedDisplayPlace.coordinateTrustLabel || 'Verified map location'}</span>
+                    <span className="text-[13px] font-semibold text-[var(--accent-deep)]">{selectedDisplayPlace.coordinateTrustLabel || 'Verified map location'}</span>
                   </div>
                 ) : null}
               </div>
@@ -1566,7 +1621,7 @@ function AskAiMapPage() {
                 href={selectedGoogleMapsUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#172A5A] px-4 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(23,42,90,0.22)] transition hover:bg-[#0F2147] active:scale-[0.98]"
+                className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[var(--accent-deep)] px-4 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(24,128,111,0.22)] transition hover:bg-[var(--accent)] active:scale-[0.98]"
               >
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />

@@ -21,6 +21,7 @@ import {
 } from '../utils/profileApi'
 import { navigateToPath } from '../utils/navigation'
 import { getMyUserReports } from '../utils/userReportsApi'
+import { FormSkeleton } from '../components/loading/SkeletonStates'
 
 type PublicProfilePageProps = {
   username: string
@@ -227,17 +228,17 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
       <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
         <PageContainer size="wide">
           <div className="mb-5">
-            <MinimalBackNav to="/" label="Home" preferHistory={false} />
+            <MinimalBackNav to="/home" label="Home" preferHistory={false} className="hidden sm:inline-flex" />
           </div>
 
-          {isLoading ? <p className="text-sm text-[var(--muted)]">Refreshing profile...</p> : null}
+          {isLoading && !profile ? <FormSkeleton rows={4} /> : null}
           {notFound ? (
             <CardSurface pad="loose" className="text-center">
               <h1 className="text-2xl font-black text-slate-950">Profile not found.</h1>
             </CardSurface>
           ) : errorMessage ? (
             <CardSurface pad="loose" className="text-center text-sm font-bold text-red-700">{errorMessage}</CardSurface>
-          ) : (
+          ) : isLoading && !profile ? null : (
             <Stack gap="loose">
               <CardSurface pad="loose" className="rounded-[32px]">
               <div className="flex flex-col gap-5 border-b border-[var(--line)] pb-5 sm:flex-row sm:items-end sm:justify-between">

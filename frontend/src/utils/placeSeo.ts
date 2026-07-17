@@ -18,6 +18,21 @@ export function buildPlaceDescription(place: PlaceDetailCardData, areaName: stri
 export function buildPlaceFaqSchema(place: PlaceDetailCardData) {
   const items: { '@type': 'Question'; name: string; acceptedAnswer: { '@type': 'Answer'; text: string } }[] = []
 
+  const explicitFaqs = (place.faqs ?? []).filter((faq) => faq.question.trim() && faq.answer.trim())
+  if (explicitFaqs.length > 0) {
+    return {
+      '@type': 'FAQPage',
+      mainEntity: explicitFaqs.map((faq) => ({
+        '@type': 'Question' as const,
+        name: faq.question,
+        acceptedAnswer: {
+          '@type': 'Answer' as const,
+          text: faq.answer,
+        },
+      })),
+    }
+  }
+
   const goodFor = place.good_for ?? []
   if (goodFor.length > 0) {
     items.push({

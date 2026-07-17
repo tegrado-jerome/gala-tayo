@@ -7,6 +7,7 @@ import { FormContainer, PageContainer, PageShell, CardSurface, Stack } from '../
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { getApiUrl } from '../utils/apiClient'
 import { getPublicSiteUrl } from '../utils/site'
+import { InlineSkeleton } from '../components/loading/SkeletonStates'
 
 const COMMENT_MAX_LENGTH = 500
 
@@ -149,7 +150,7 @@ function FeedbackPage() {
         <PageContainer size="wide">
           <Stack gap="default">
             <div className="mb-5">
-              <MinimalBackNav to="/" label="Home" preferHistory={false} />
+              <MinimalBackNav to="/home" label="Home" preferHistory={false} />
             </div>
 
             <section className="overflow-hidden">
@@ -176,7 +177,7 @@ function FeedbackPage() {
               </div>
             </section>
 
-        {isSessionLoading ? <p className="text-sm text-[var(--muted)]">Checking your account...</p> : null}
+        {isSessionLoading ? <InlineSkeleton /> : null}
 
         {!isSessionLoading && !session?.user ? (
           <CardSurface pad="loose">

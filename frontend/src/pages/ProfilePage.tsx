@@ -5,6 +5,7 @@ import AppHeader from '../components/AppHeader'
 import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
 import MinimalBackNav from '../components/MinimalBackNav'
 import { AppIcon } from '../components/AppIcon'
+import PageHeroHeader from '../components/PageHeroHeader'
 import ProfileAvatar from '../components/ProfileAvatar'
 import { PageContainer, PageShell, CardSurface } from '../components/layout/ResponsiveLayouts'
 import { useSystemMessage } from '../context/SystemMessageContext'
@@ -26,6 +27,7 @@ import {
 } from '../utils/profileApi'
 import { preloadAvatarImage } from '../utils/avatarImageCache'
 import { navigateToPath } from '../utils/navigation'
+import { FormSkeleton } from '../components/loading/SkeletonStates'
 
 type ProfilePageProps = {
   session: Session | null
@@ -343,10 +345,18 @@ function ProfilePage({ session }: ProfilePageProps) {
   const profileContent = (
     <>
       <div className="mb-5">
-        <MinimalBackNav to="/" label="Home" preferHistory={false} />
+        <MinimalBackNav to="/home" label="Home" preferHistory={false} className="hidden sm:inline-flex" />
       </div>
 
-      {isLoading ? <p className="text-sm text-[var(--muted)]">Refreshing your profile in the background...</p> : null}
+      <PageHeroHeader
+        eyebrow="Profile"
+        title="Your GalaTayo profile"
+        description="Update how you show up, manage privacy, and keep your account details in sync."
+        icon={<AppIcon name="profile" className="h-4 w-4" />}
+        className="pb-0"
+      />
+
+      {isLoading && !profile ? <FormSkeleton rows={5} className="mt-5" /> : null}
       {profile ? (
         <>
           <CardSurface pad="loose">

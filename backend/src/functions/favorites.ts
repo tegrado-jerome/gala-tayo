@@ -81,6 +81,15 @@ async function readFavoritePlaceIdentifier(
     placeSlug?: unknown;
     placeId?: unknown;
   } | null;
+  const placeId = getTrimmedString(body?.placeId);
+
+  if (placeId && UUID_PATTERN.test(placeId)) {
+    return {
+      value: placeId,
+      source: "placeId",
+    };
+  }
+
   const placeSlug = getTrimmedString(body?.placeSlug);
 
   if (placeSlug) {
@@ -89,8 +98,6 @@ async function readFavoritePlaceIdentifier(
       source: "placeSlug",
     };
   }
-
-  const placeId = getTrimmedString(body?.placeId);
 
   if (placeId) {
     return {
@@ -151,8 +158,8 @@ async function findPlaceForFavorite(
     address: detail.address ?? null,
     city: detail.city ?? null,
     area: detail.area ?? null,
-    budget_label: detail.budget_notes ?? null,
-    budget_notes: detail.budget_notes ?? null,
+    budget_label: detail.budget_note ?? null,
+    budget_notes: detail.budget_note ?? null,
     google_maps_url: detail.google_maps_url ?? null,
     latitude: detail.latitude ?? null,
     longitude: detail.longitude ?? null,
@@ -206,8 +213,8 @@ async function getUserFavorites(userId: string): Promise<{ favorites: Array<Favo
           address: detail.address ?? null,
           city: detail.city ?? null,
           area: detail.area ?? null,
-          budget_label: detail.budget_notes ?? null,
-          budget_notes: detail.budget_notes ?? null,
+          budget_label: detail.budget_note ?? null,
+          budget_notes: detail.budget_note ?? null,
           google_maps_url: detail.google_maps_url ?? null,
           latitude: detail.latitude ?? null,
           longitude: detail.longitude ?? null,
@@ -582,6 +589,13 @@ app.http("favoritesCreate", {
   handler: favoritesCreate,
 });
 
+app.http("favoritesDeleteAll", {
+  methods: ["DELETE"],
+  authLevel: "anonymous",
+  route: "favorites/all",
+  handler: favoritesDeleteAll,
+});
+
 app.http("favoritesDelete", {
   methods: ["DELETE"],
   authLevel: "anonymous",
@@ -594,11 +608,4 @@ app.http("favoritesDeleteByBody", {
   authLevel: "anonymous",
   route: "favorites",
   handler: favoritesDelete,
-});
-
-app.http("favoritesDeleteAll", {
-  methods: ["DELETE"],
-  authLevel: "anonymous",
-  route: "favorites/all",
-  handler: favoritesDeleteAll,
 });

@@ -9,6 +9,7 @@ import { formatLabelFromSlug } from '../utils/routes'
 import { getApiUrl } from '../utils/apiClient'
 import { trackPlaceViewed } from '../utils/analytics'
 import type { PlaceDetail, PlaceDetailCardData } from '../types/appTypes'
+import { cachePlaceDetail, readCachedPlaceDetail } from '../utils/placeDetailCache'
 
 export default function SharedPlacePage({
   slug,
@@ -23,21 +24,27 @@ export default function SharedPlacePage({
   expectedAreaSlug?: string | null
   redirectToCanonical?: boolean
 }) {
-  const [place, setPlace] = useState<PlaceDetailCardData | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const cachedPlaceDetail = useMemo(() => readCachedPlaceDetail(slug), [slug])
+  const [place, setPlace] = useState<PlaceDetailCardData | null>(
+    cachedPlaceDetail ? mapBackendPlaceToCardData(cachedPlaceDetail) : null
+  )
+  const [isLoading, setIsLoading] = useState(!cachedPlaceDetail)
   const [notFound, setNotFound] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const endpoint = useMemo(() => getApiUrl(`/places/${encodeURIComponent(slug)}`), [slug])
 
   useEffect(() => {
     const controller = new AbortController()
-    const endpoint = getApiUrl(`/places/${encodeURIComponent(slug)}`)
 
     const loadPlace = async () => {
       try {
-        setIsLoading(true)
         setNotFound(false)
         setErrorMessage(null)
-        setPlace(null)
+
+        if (!cachedPlaceDetail) {
+          setIsLoading(true)
+          setPlace(null)
+        }
 
         const response = await fetch(endpoint, {
           method: 'GET',
@@ -55,6 +62,7 @@ export default function SharedPlacePage({
         }
 
         const data = (await response.json()) as PlaceDetail
+        cachePlaceDetail(data)
         setPlace(mapBackendPlaceToCardData(data))
         setIsLoading(false)
       } catch (error) {
@@ -68,7 +76,7 @@ export default function SharedPlacePage({
     void loadPlace()
 
     return () => controller.abort()
-  }, [slug])
+  }, [cachedPlaceDetail, endpoint, slug])
 
   const areaMeta = place ? resolveAreaMeta(place) : null
   const canonicalPath = place && areaMeta
@@ -150,7 +158,7 @@ export default function SharedPlacePage({
             {
               '@type': 'BreadcrumbList',
               itemListElement: [
-                { '@type': 'ListItem', position: 1, name: 'Home', item: `${window.location.origin}/` },
+                { '@type': 'ListItem', position: 1, name: 'Home', item: `${window.location.origin}/home` },
                 { '@type': 'ListItem', position: 2, name: 'Places', item: `${window.location.origin}/places` },
                 ...(categoryBreadcrumbMeta
                   ? [

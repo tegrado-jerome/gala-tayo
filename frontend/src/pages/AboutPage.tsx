@@ -1,8 +1,7 @@
 import AppHeader from '../components/AppHeader'
 import MinimalBackNav from '../components/MinimalBackNav'
 import SeoHead from '../components/SeoHead'
-import { PageContainer, PageShell, ResponsiveGrid, CardSurface, ChibiIllustration } from '../components/layout/ResponsiveLayouts'
-import aboutChibi from '../assets/chibis/trust-pages/chibi-about.webp'
+import { PageContainer, PageShell, ResponsiveGrid, CardSurface } from '../components/layout/ResponsiveLayouts'
 import { getSiteOrigin } from '../utils/seo'
 
 const aboutHighlights = [
@@ -33,7 +32,7 @@ function AboutPage() {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/` },
+        { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/home` },
         { '@type': 'ListItem', position: 2, name: 'About', item: `${getSiteOrigin()}/about` },
       ],
     },
@@ -52,11 +51,11 @@ function AboutPage() {
       <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
         <PageContainer size="default">
           <div className="mb-5">
-            <MinimalBackNav to="/" label="Home" preferHistory={false} />
+            <MinimalBackNav to="/home" label="Home" preferHistory={false} />
           </div>
 
           <CardSurface pad="loose" className="shadow-[0_18px_42px_rgba(47,116,232,0.1)]">
-            <header className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+            <header className="grid gap-6">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">About</p>
                 <h1 className="mt-2 text-3xl font-black leading-tight text-slate-950 sm:text-4xl">About GalaTayo</h1>
@@ -64,10 +63,6 @@ function AboutPage() {
                   GalaTayo is a Metro Manila place discovery and planning app built to help people find hangout spots, browse public place pages,
                   and map out their next gala.
                 </p>
-              </div>
-
-              <div className="flex items-center justify-center">
-                <ChibiIllustration src={aboutChibi} alt="About GalaTayo illustration" variant="feature" priority />
               </div>
             </header>
 

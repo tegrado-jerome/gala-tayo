@@ -23,6 +23,7 @@ import {
   validateUsername,
 } from '../utils/profileApi'
 import { navigateToPath } from '../utils/navigation'
+import { FormSkeleton } from '../components/loading/SkeletonStates'
 
 type AccountSettingsPageProps = {
   session: Session
@@ -293,7 +294,7 @@ function SectionHeader({ title, description, icon }: SectionHeaderProps) {
   return (
     <div className="group rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-4 transition duration-200 hover:border-slate-300 hover:bg-white hover:shadow-[0_10px_30px_rgba(15,23,42,0.06)] sm:px-5">
       <div className="flex items-start gap-3">
-        <span className="inline-flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-white text-[#1877f2] ring-1 ring-slate-200 transition group-hover:scale-[1.02] group-hover:ring-[#bfdbfe]">
+        <span className="inline-flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-white text-[var(--accent-deep)] ring-1 ring-slate-200 transition group-hover:scale-[1.02] group-hover:ring-[rgba(var(--accent-rgb),0.22)]">
           {icon}
         </span>
         <div className="min-w-0">
@@ -645,10 +646,10 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
       <main className="w-full pb-20 pt-4 sm:pb-24 sm:pt-5 lg:py-8 lg:pb-28">
         <PageContainer size="wide">
           <div className="mb-5">
-            <MinimalBackNav to="/profile" label="Profile" preferHistory={false} />
+            <MinimalBackNav to="/profile" label="Profile" preferHistory={false} className="hidden sm:inline-flex" />
           </div>
 
-          {isLoading ? <p className="text-sm text-[var(--muted)]">Refreshing account settings in the background...</p> : null}
+          {isLoading && !(currentUser && profile) ? <FormSkeleton rows={6} /> : null}
           {currentUser && profile ? (
             <form onSubmit={handleSave} className="grid gap-6 lg:gap-8">
               <PageHeroHeader
@@ -703,7 +704,7 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
                       <button
                         type="button"
                         onClick={() => navigateToPath('/account-settings/change-password')}
-                        className="font-semibold text-[#1877f2] hover:underline"
+                        className="font-semibold text-[var(--accent)] hover:underline"
                       >
                         Change
                       </button>

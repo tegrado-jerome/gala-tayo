@@ -1,14 +1,50 @@
-import { ArrowRight, Building2, Compass, House, LayoutGrid, MapPinned } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { ArrowRight, Compass, House, LayoutGrid, MapPinned } from 'lucide-react'
 import AppHeader from '../components/AppHeader'
 import InternalLink from '../components/InternalLink'
 import Breadcrumb from '../components/Breadcrumb'
 import SeoHead from '../components/SeoHead'
 import { PageContainer, PageShell, ResponsiveGrid } from '../components/layout/ResponsiveLayouts'
 import { metroManilaAreas } from '../data/metroManilaAreas'
+import {
+  categoryOverviewRepresentativeSlug,
+  cityRepresentativePlaceSlugs,
+  getDiscoveryImageUrl,
+} from '../data/placeIndexVisuals'
+import type { PlaceDetail } from '../types/appTypes'
+import { fetchPlaceDetailsBatch } from '../utils/placeDetailCache'
 import { getSiteOrigin } from '../utils/seo'
 
 function PlacesIndexPage() {
-  const areaCards = [...metroManilaAreas].sort((left, right) => left.name.localeCompare(right.name))
+  const areaCards = useMemo(
+    () => [...metroManilaAreas].sort((left, right) => left.name.localeCompare(right.name)),
+    []
+  )
+  const representativeSlugs = useMemo(
+    () => [
+      categoryOverviewRepresentativeSlug,
+      ...areaCards.map((area) => cityRepresentativePlaceSlugs[area.slug]).filter(Boolean),
+    ],
+    [areaCards]
+  )
+  const [representativePlaces, setRepresentativePlaces] = useState<Record<string, PlaceDetail>>({})
+
+  useEffect(() => {
+    let isMounted = true
+    void fetchPlaceDetailsBatch(representativeSlugs).then((places) => {
+      if (!isMounted) {
+        return
+      }
+
+      setRepresentativePlaces(
+        Object.fromEntries(places.map((place) => [place.slug, place]))
+      )
+    })
+
+    return () => {
+      isMounted = false
+    }
+  }, [representativeSlugs])
 
   const jsonLd = [
     {
@@ -43,7 +79,7 @@ function PlacesIndexPage() {
         <Breadcrumb
           showBack
           items={[
-            { label: 'Home', href: '/', icon: <House className="h-3.5 w-3.5" /> },
+            { label: 'Home', href: '/home', icon: <House className="h-3.5 w-3.5" /> },
             { label: 'Places', icon: <MapPinned className="h-3.5 w-3.5" /> },
           ]}
         />
@@ -74,9 +110,10 @@ function PlacesIndexPage() {
           >
             <div className="flex items-center justify-between gap-3">
               <div className="flex min-w-0 items-center gap-3">
-                <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--surface-alt)] text-[#475569] transition group-hover:bg-[var(--accent-soft)] group-hover:text-[var(--accent)]">
-                  <LayoutGrid className="h-4 w-4" strokeWidth={1.9} />
-                </span>
+                <IndexCardPhoto
+                  imageUrl={getDiscoveryImageUrl(categoryOverviewRepresentativeSlug, representativePlaces[categoryOverviewRepresentativeSlug])}
+                  label="Categories"
+                />
                 <div className="min-w-0">
                   <p className="text-[1.05rem] font-black tracking-[-0.02em] text-[var(--text-main)]">Categories</p>
                   <div className="mt-1 flex items-center gap-1.5 text-[13px] text-[var(--muted)]">
@@ -108,9 +145,13 @@ function PlacesIndexPage() {
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-3">
-                    <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--surface-alt)] text-[#475569] transition group-hover:bg-[var(--accent-soft)] group-hover:text-[var(--accent)]">
-                      <Building2 className="h-4 w-4" strokeWidth={1.9} />
-                    </span>
+                    <IndexCardPhoto
+                      imageUrl={getDiscoveryImageUrl(
+                        cityRepresentativePlaceSlugs[area.slug],
+                        representativePlaces[cityRepresentativePlaceSlugs[area.slug]]
+                      )}
+                      label={area.name}
+                    />
                     <div className="min-w-0">
                       <p className="text-[1.05rem] font-black tracking-[-0.02em] text-[var(--text-main)]">{area.name}</p>
                       <div className="mt-1 flex items-center gap-1.5 text-[13px] text-[var(--muted)]">
@@ -130,6 +171,32 @@ function PlacesIndexPage() {
         </PageContainer>
       </main>
     </PageShell>
+  )
+}
+
+function IndexCardPhoto({ imageUrl, label }: { imageUrl: string | null; label: string }) {
+  const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null)
+  const shouldShowImage = Boolean(imageUrl) && failedImageUrl !== imageUrl
+
+  return (
+    <span className="relative inline-flex h-12 w-12 shrink-0 overflow-hidden rounded-2xl border border-[rgba(148,163,184,0.2)] bg-[linear-gradient(135deg,#eef6ff,#f8fafc)] shadow-[0_8px_18px_rgba(15,23,42,0.08)] transition group-hover:scale-[1.02]">
+      {shouldShowImage ? (
+        <img
+          src={imageUrl ?? undefined}
+          alt={label}
+          className="h-full w-full object-cover"
+          loading="eager"
+          decoding="async"
+          fetchPriority="high"
+          sizes="48px"
+          onError={() => setFailedImageUrl(imageUrl)}
+        />
+      ) : (
+        <span className="flex h-full w-full items-center justify-center text-sm font-black text-[var(--accent)]">
+          {label.charAt(0)}
+        </span>
+      )}
+    </span>
   )
 }
 

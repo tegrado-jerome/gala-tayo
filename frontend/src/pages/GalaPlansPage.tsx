@@ -25,6 +25,7 @@ import { navigateToPath } from '../utils/navigation'
 import { getCategoryIconName } from '../components/AppIcon'
 import { buildPrivateGalaPlanShareUrl, shareLink } from '../utils/share'
 import { getApiUrl } from '../utils/apiClient'
+import { InlineSkeleton } from '../components/loading/SkeletonStates'
 
 type Mode = 'list' | 'favorites' | 'new' | 'detail' | 'edit'
 
@@ -122,7 +123,7 @@ function EmptyPlansState({ favorites }: { favorites?: boolean }) {
             Create Gala Plan
           </button>
         ) : null}
-        <button type="button" onClick={() => navigateToPath(favorites ? '/' : '/gala-plans/favorites')} className="app-button app-button-secondary app-button-md">
+        <button type="button" onClick={() => navigateToPath(favorites ? '/home' : '/gala-plans/favorites')} className="app-button app-button-secondary app-button-md">
           {favorites ? 'Discover Places' : 'View Gala Plan Favorites'}
         </button>
       </div>
@@ -179,7 +180,7 @@ function PlanCard({
           <div className="flex flex-wrap items-center gap-2">
             <Badge>{plan.visibility}</Badge>
             {plan.is_active ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-white px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-emerald-700">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(var(--accent-rgb),0.18)] bg-white px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-[var(--accent-deep)]">
                 <AppIcon name="check" className="h-3.5 w-3.5" />
                 Active
               </span>
@@ -788,7 +789,7 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
   return (
     <form onSubmit={handleSubmit} className="grid gap-6 sm:gap-7 xl:gap-8">
       <PageContainer size="wide" className="grid gap-6 sm:gap-7 xl:gap-8">
-        {isLoading || isRefreshing ? <p className="text-sm text-[var(--muted)]">Refreshing your gala plan in the background...</p> : null}
+        {isLoading || isRefreshing ? <InlineSkeleton /> : null}
         <section className="grid gap-6 rounded-[28px] border border-[var(--line)] bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,255,0.9))] px-5 py-5 shadow-[var(--shadow-soft)] sm:px-6 sm:py-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start lg:gap-6 xl:px-7 xl:py-7">
           <div className="grid gap-5">
             <PageHeroHeader
@@ -865,7 +866,7 @@ function ListPage({ session, favorites = false }: { session?: Session | null; fa
     <>
       <PageContainer size="wide" className="grid gap-5 sm:gap-6">
         <div className="pt-2">
-          <MinimalBackNav to="/" label="Home" preferHistory={false} />
+          <MinimalBackNav to="/home" label="Home" preferHistory={false} />
         </div>
 
         <PageHeroHeader
@@ -896,7 +897,7 @@ function ListPage({ session, favorites = false }: { session?: Session | null; fa
           {!favorites ? <PlanStat label="Latest update" value={latestUpdate} /> : null}
         </div>
 
-        {isLoading || isRefreshing ? <p className="text-sm text-[var(--muted)]">Refreshing gala plans in the background...</p> : null}
+        {isLoading || isRefreshing ? <InlineSkeleton /> : null}
         {errorMessage ? <p className="rounded-lg bg-red-50 p-4 text-sm font-bold text-red-700">{errorMessage}</p> : null}
         {!errorMessage && plans.length === 0 ? <EmptyPlansState favorites={favorites} /> : null}
         <section className="grid gap-4 md:grid-cols-2 2xl:grid-cols-4">
@@ -968,14 +969,14 @@ function DetailPage({ planId, session }: { planId: string; session?: Session | n
   return (
     <PageContainer size="wide" className="grid gap-5">
       <div className="grid gap-5">
-        {isLoading || isRefreshing ? <p className="text-sm text-[var(--muted)]">Refreshing this gala plan in the background...</p> : null}
+        {isLoading || isRefreshing ? <InlineSkeleton /> : null}
         <section className="gala-card overflow-hidden">
         <div className="border-b border-[var(--line)] bg-white px-5 py-5 sm:px-6 sm:py-6">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 {plan.viewer_is_owner ? <Badge>{plan.visibility}</Badge> : null}
-                {plan.is_active ? <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-emerald-700"><AppIcon name="check" className="h-3.5 w-3.5" />Active</span> : null}
+                {plan.is_active ? <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-[rgba(var(--accent-rgb),0.18)] bg-[var(--primary-soft)] px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-[var(--accent-deep)]"><AppIcon name="check" className="h-3.5 w-3.5" />Active</span> : null}
               </div>
               <h1 className="gala-page-title mt-4">{plan.title}</h1>
               <p className="mt-3 text-sm font-black text-[var(--accent-deep)]">{plan.owner?.username ? `@${plan.owner.username}` : 'GalaTayo user'}</p>

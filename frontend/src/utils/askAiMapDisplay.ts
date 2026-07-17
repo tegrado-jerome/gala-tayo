@@ -362,8 +362,8 @@ export function getOpenStatusChip(display: AskAiMapDisplayPlace) {
     return {
       label: 'Open now' as const,
       tone: 'open' as const,
-      className: 'bg-emerald-50 text-emerald-700',
-      dotClassName: 'text-emerald-500',
+      className: 'bg-[var(--primary-soft)] text-[var(--accent-deep)]',
+      dotClassName: 'text-[var(--accent)]',
     }
   }
 

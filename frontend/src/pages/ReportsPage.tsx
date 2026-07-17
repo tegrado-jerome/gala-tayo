@@ -11,6 +11,7 @@ import { fetchMyCommentReports, type CommentReportReason, type CommentReportStat
 import { fetchMyPlaceReports, type MyPlaceReport, type PlaceReportReason, type PlaceReportStatus } from '../utils/placeReportsApi'
 import { navigateToPlace } from '../utils/navigation'
 import { getPublicSiteUrl } from '../utils/site'
+import { InlineSkeleton } from '../components/loading/SkeletonStates'
 
 const commentReasonLabels: Record<CommentReportReason, string> = {
   spam: 'Spam',
@@ -94,7 +95,7 @@ function redactSensitiveIdentifiers(value: string) {
 
 function getStatusClass(status: CommentReportStatus | PlaceReportStatus) {
   if (status === 'action_taken' || status === 'resolved') {
-    return 'border-emerald-200 bg-emerald-50 text-emerald-700'
+    return 'border-[rgba(var(--accent-rgb),0.18)] bg-[var(--primary-soft)] text-[var(--accent-deep)]'
   }
 
   if (status === 'dismissed') {
@@ -327,7 +328,7 @@ function PlaceReportCard({ report }: { report: MyPlaceReport }) {
         </p>
       ) : null}
       {report.moderatorNote ? (
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50/90 px-3 py-2.5 leading-6 text-slate-800">
+        <div className="rounded-2xl border border-[rgba(var(--accent-rgb),0.18)] bg-[rgba(var(--accent-rgb),0.06)] px-3 py-2.5 leading-6 text-slate-800">
           <span className="font-black text-slate-950">Moderator note:</span> {report.moderatorNote}
         </div>
       ) : null}
@@ -437,7 +438,7 @@ function ReportsPage() {
         <PageContainer size="default">
           <Stack gap="loose">
             <div className="mb-5">
-              <MinimalBackNav to="/" label="Home" preferHistory={false} />
+              <MinimalBackNav to="/home" label="Home" preferHistory={false} />
             </div>
 
             <PageHeroHeader
@@ -454,7 +455,7 @@ function ReportsPage() {
               }
             />
 
-            {isSessionLoading ? <p className="text-sm text-[var(--muted)]">Checking your account...</p> : null}
+            {isSessionLoading ? <InlineSkeleton /> : null}
 
             {!isSessionLoading && !session?.user ? (
               <CardSurface pad="loose">
@@ -466,9 +467,7 @@ function ReportsPage() {
               </CardSurface>
             ) : null}
 
-            {!isSessionLoading && session?.user && isTokenLoading ? (
-              <p className="text-sm text-[var(--muted)]">Refreshing your session...</p>
-            ) : null}
+            {!isSessionLoading && session?.user && isTokenLoading ? <InlineSkeleton /> : null}
 
             {!isSessionLoading && session?.user && !isTokenLoading && !accessToken ? (
               <CardSurface pad="loose">

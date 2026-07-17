@@ -283,14 +283,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
                 disabled={signUpCooldown.isCoolingDown || isResendingConfirmation}
                 className="app-button app-button-secondary app-button-md w-[240px] max-w-full disabled:cursor-not-allowed disabled:opacity-70"
               >
-                {isResendingConfirmation ? (
-                  <>
-                    <span className="inline-flex h-4.5 w-4.5 animate-spin rounded-full border-2 border-[var(--text-main)]/25 border-t-[var(--text-main)]" aria-hidden="true" />
-                    Sending...
-                  </>
-                ) : (
-                  resendLabel
-                )}
+                {isResendingConfirmation ? 'Sending...' : resendLabel}
               </button>
               <button
                 type="button"
@@ -338,7 +331,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
             />
             <div className="mt-3">
               {resetSuccess ? (
-                <div className="mb-4 rounded-[12px] border border-[rgba(5,150,105,0.18)] bg-[var(--success-soft)] px-4 py-3 text-[13px] leading-6 text-[var(--success)] shadow-sm">
+                <div className="mb-4 rounded-[12px] border border-[rgba(var(--accent-rgb),0.18)] bg-[var(--primary-soft)] px-4 py-3 text-[13px] leading-6 text-[var(--accent-deep)] shadow-sm">
                   Password updated. You can now sign in with your new password.
                 </div>
               ) : null}
@@ -348,6 +341,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
                   isGoogleLoading={isGoogleLoading}
                   onGoogleLoadingChange={handleGoogleLoadingChange}
                   onError={setError}
+                  nextPath={isCreateMode ? (nextPath ?? '/onboarding') : nextPath}
                 />
               ) : (
                 <div className="mx-auto w-full max-w-[360px] rounded-[14px] border border-[rgba(30,58,138,0.16)] bg-[var(--accent-wash)] px-4 py-3 text-center text-[13px] font-semibold leading-6 text-[var(--accent-deep)]">
@@ -365,7 +359,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
             ) : null}
 
             {resendMessage ? (
-              <p className="mb-4 rounded-[12px] border border-[rgba(5,150,105,0.18)] bg-[var(--success-soft)] px-4 py-3 text-center text-[13px] leading-6 text-[var(--success)] shadow-sm">
+              <p className="mb-4 rounded-[12px] border border-[rgba(var(--accent-rgb),0.18)] bg-[var(--primary-soft)] px-4 py-3 text-center text-[13px] leading-6 text-[var(--accent-deep)] shadow-sm">
                 {resendMessage}
               </p>
             ) : null}
@@ -487,17 +481,17 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
                 disabled={isSubmitDisabled}
                 className="app-button app-button-primary app-button-md mx-auto w-[240px] max-w-full disabled:cursor-not-allowed disabled:opacity-70 md:w-[220px] lg:w-[240px]"
               >
-                {isSubmitting ? (
-                  <>
-                    <span
-                      className="inline-flex h-4.5 w-4.5 animate-spin rounded-full border-2 border-white/35 border-t-white"
-                      aria-hidden="true"
-                    />
-                    {isCreateMode ? 'Creating account...' : isAdminSurface ? 'Checking access...' : 'Signing in...'}
-                  </>
-                ) : (
-                  <>{isCreateMode ? 'Create account' : isAdminSurface ? 'Sign in securely' : 'Sign in'}</>
-                )}
+                {isSubmitting
+                  ? isCreateMode
+                    ? 'Creating account...'
+                    : isAdminSurface
+                      ? 'Checking access...'
+                      : 'Signing in...'
+                  : isCreateMode
+                    ? 'Create account'
+                    : isAdminSurface
+                      ? 'Sign in securely'
+                      : 'Sign in'}
               </button>
             </form>
 

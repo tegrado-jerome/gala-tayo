@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { AppIcon } from '../components/AppIcon'
 import { FormContainer } from '../components/layout/ResponsiveLayouts'
+import { FormSkeleton } from '../components/loading/SkeletonStates'
 import { supabase } from '../supabase'
 import { navigateToPath } from '../utils/navigation'
 
@@ -103,19 +104,7 @@ function ResetPasswordPage() {
     return (
       <main className="gala-page-background relative flex min-h-screen min-h-[100dvh] items-center justify-center overflow-x-hidden px-4 py-6 text-[var(--text)] sm:px-6 sm:py-8">
         <FormContainer className="relative z-[2]">
-          <section className="mx-auto flex w-full max-w-[360px] items-center justify-center md:max-w-[420px] lg:max-w-[440px]">
-            <div className="w-full text-center">
-              <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-[1.2rem] border border-[var(--line)] bg-white shadow-sm">
-                <span className="inline-flex h-5 w-5 animate-spin rounded-full border-2 border-[var(--accent-soft)] border-t-[var(--accent-deep)]" aria-hidden="true" />
-              </div>
-              <div className="mt-5">
-                <h1 className="text-[1.6rem] font-semibold leading-[1.02] tracking-[-0.04em] text-slate-950 sm:text-[1.85rem]">Preparing reset</h1>
-                <p className="mx-auto mt-3 max-w-[280px] text-[13px] leading-6 text-slate-500 sm:text-[14px] sm:leading-7">
-                  We are checking your password reset session.
-                </p>
-              </div>
-            </div>
-          </section>
+          <FormSkeleton rows={3} className="mx-auto max-w-[440px]" />
         </FormContainer>
       </main>
     )
@@ -232,7 +221,7 @@ function ResetPasswordPage() {
                         Confirm password does not match.
                       </span>
                     ) : confirmNewPassword.length > 0 && confirmPasswordMatches ? (
-                      <span className="text-xs text-emerald-700">
+                      <span className="text-xs text-[var(--accent-deep)]">
                         Passwords match.
                       </span>
                     ) : null}
@@ -243,14 +232,7 @@ function ResetPasswordPage() {
                     disabled={isSubmitDisabled}
                     className="w-full inline-flex h-[2.75rem] items-center justify-center gap-2 rounded-[0.875rem] bg-[var(--accent)] px-5 text-[14px] font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[var(--accent-deep)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)] disabled:cursor-not-allowed disabled:opacity-70"
                   >
-                    {isSubmitting ? (
-                      <>
-                        <span className="inline-flex h-4.5 w-4.5 animate-spin rounded-full border-2 border-white/40 border-t-white" aria-hidden="true" />
-                        Resetting password...
-                      </>
-                    ) : (
-                      'Reset password'
-                    )}
+                    {isSubmitting ? 'Resetting password...' : 'Reset password'}
                   </button>
                 </form>
               </div>

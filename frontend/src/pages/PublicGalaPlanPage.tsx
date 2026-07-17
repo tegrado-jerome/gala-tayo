@@ -10,6 +10,7 @@ import { navigateToPath } from '../utils/navigation'
 import { formatGalaPlanDate, parseGalaPlanDescription } from '../utils/galaPlansApi'
 import { heartGalaPlan, unheartGalaPlan } from '../utils/galaPlanHeartsApi'
 import { shareGalaPlanLink } from '../utils/share'
+import { FormSkeleton } from '../components/loading/SkeletonStates'
 
 type PublicGalaPlanPageProps = {
   username: string
@@ -92,7 +93,7 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
       <AppHeader />
       <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
         <PageContainer size="narrow">
-          {isLoading ? <p className="text-sm text-[var(--muted)]">Refreshing gala plan...</p> : null}
+          {isLoading && !plan ? <FormSkeleton rows={4} /> : null}
           {notFound ? (
             <CardSurface pad="loose" className="text-center">
               <h1 className="text-xl font-black text-slate-950">Gala plan not found.</h1>
@@ -105,11 +106,11 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
             </CardSurface>
           ) : errorMessage ? (
             <CardSurface pad="loose" className="text-center text-sm font-bold text-red-700">{errorMessage}</CardSurface>
-          ) : (
+          ) : isLoading && !plan ? null : (
             <Stack gap="default">
               <section className="relative overflow-hidden py-1">
               <div className="pointer-events-none absolute -right-12 top-0 h-32 w-32 rounded-full bg-sky-100/80 blur-2xl" />
-              <div className="pointer-events-none absolute left-0 top-20 h-24 w-24 rounded-full bg-emerald-100/60 blur-2xl" />
+              <div className="pointer-events-none absolute left-0 top-20 h-24 w-24 rounded-full bg-[rgba(var(--accent-rgb),0.1)] blur-2xl" />
 
               <div className="relative">
                 <MinimalBackNav to={`/u/${encodeURIComponent(plan?.owner?.username || username)}`} className="mb-4 border-0 bg-transparent px-0 py-0 text-slate-500 shadow-none ring-0 hover:bg-transparent" />

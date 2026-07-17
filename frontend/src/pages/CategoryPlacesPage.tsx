@@ -4,11 +4,12 @@ import { AppIcon, getCategoryIconName } from '../components/AppIcon'
 import AppHeader from '../components/AppHeader'
 import Breadcrumb from '../components/Breadcrumb'
 import CompactPagination from '../components/CompactPagination'
+import PlaceListingSkeleton from '../components/PlaceListingSkeleton'
 import PlaceCard, { type PlaceCardData } from '../components/PlaceCard'
 import SeoHead from '../components/SeoHead'
 import { PageContainer, PageShell, ResponsiveGrid } from '../components/layout/ResponsiveLayouts'
 import { getPlaceCategoryLabel } from '../data/placeCategories'
-import { navigateToPath } from '../utils/navigation'
+import { navigateToPath, scrollViewportToTopInstant } from '../utils/navigation'
 import { getSiteOrigin } from '../utils/seo'
 import { getApiUrl } from '../utils/apiClient'
 import { consumePendingListingRouteCache, getListingPlaceViewportTop, readListingRouteCache, restoreListingRouteScroll, seedPendingListingRouteCache, writeListingRouteCache } from '../utils/listingRouteCache'
@@ -158,6 +159,14 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
     return params.toString() ? `/places/categories/${categorySlug}?${params.toString()}` : `/places/categories/${categorySlug}`
   }
 
+  useLayoutEffect(() => {
+    if (navigationSource === 'pop') {
+      return
+    }
+
+    scrollViewportToTopInstant()
+  }, [navigationSource, categorySlug, currentPage])
+
   useEffect(() => {
     if (skipInitialFetchRef.current) {
       skipInitialFetchRef.current = false
@@ -236,6 +245,7 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
   const totalPages = payload.totalPages
   const safePage = confirmedPage
   const isPageTransitionLoading = isLoading || isRefreshing
+  const shouldShowInitialSkeleton = isLoading && payload.items.length === 0 && !errorMessage
   const shouldShowEmptyState = !isPageTransitionLoading && places.length === 0 && !errorMessage
   const fetchPlacesForPage = async (page: number, signal?: AbortSignal) => {
     const response = await fetch(getSearchApiUrl(), {
@@ -313,7 +323,7 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
           '@context': 'https://schema.org',
           '@type': 'BreadcrumbList',
           itemListElement: [
-            { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/` },
+            { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/home` },
             { '@type': 'ListItem', position: 2, name: 'Places', item: `${getSiteOrigin()}/places` },
             { '@type': 'ListItem', position: 3, name: 'Categories', item: `${getSiteOrigin()}/places/categories` },
             { '@type': 'ListItem', position: 4, name: categoryLabel, item: `${getSiteOrigin()}/places/categories/${encodeURIComponent(categorySlug)}` },
@@ -348,7 +358,7 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
         <Breadcrumb
           showBack
           items={[
-            { label: 'Home', href: '/', icon: <House className="h-3.5 w-3.5" /> },
+            { label: 'Home', href: '/home', icon: <House className="h-3.5 w-3.5" /> },
             { label: 'Places', href: '/places', icon: <MapPin className="h-3.5 w-3.5" /> },
             { label: 'Categories', href: '/places/categories', icon: <LayoutGrid className="h-3.5 w-3.5" /> },
             { label: categoryLabel, icon: <AppIcon name={iconName} className="h-3.5 w-3.5" /> },
@@ -376,7 +386,12 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
 
         {!errorMessage ? (
           <>
-            {shouldShowEmptyState ? (
+            {shouldShowInitialSkeleton ? (
+              <PlaceListingSkeleton
+                cardCount={4}
+                helperText={`Finding ${categoryLabel.toLowerCase()} spots across Metro Manila.`}
+              />
+            ) : shouldShowEmptyState ? (
               <section className="mt-10 rounded-[28px] border border-[#e5e7eb] bg-white px-5 py-8 text-center shadow-sm sm:px-6">
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
                   <AppIcon name="compass" className="h-7 w-7" />
@@ -395,7 +410,7 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
                   </div>
                 </div>
                 <div className={`mt-4 transition ${isPageTransitionLoading ? 'pointer-events-none opacity-60' : 'opacity-100'}`}>
-                  <ResponsiveGrid desktopColumns={2} className="gap-4">
+                  <ResponsiveGrid className="gap-4">
                   {places.map((rawPlace) => {
                     const place = mapSeoPlaceToCard(rawPlace) as PlaceCardData
                     return (

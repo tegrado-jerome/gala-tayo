@@ -9,12 +9,23 @@ function formatMarkerRatingText(value: number | null | undefined) {
 }
 
 export function mapBackendPlaceToCardData(place: PlaceDetail): PlaceDetailCardData {
-  const parsedRating = place.average_rating != null ? parseFloat(String(place.average_rating)) : null
+  const parsedRating =
+    place.average_rating != null
+      ? parseFloat(String(place.average_rating))
+      : typeof place.rating === 'number' && Number.isFinite(place.rating)
+        ? place.rating
+        : null
 
   return {
     id: place.id,
     slug: place.slug,
     name: place.name,
+    faqs: Array.isArray(place.faqs)
+      ? place.faqs.filter(
+          (faq): faq is { question: string; answer: string } =>
+            Boolean(faq?.question?.trim()) && Boolean(faq?.answer?.trim())
+        )
+      : [],
     rating: parsedRating,
     ratingCount: place.review_count ?? null,
     markerRatingText: formatMarkerRatingText(parsedRating),

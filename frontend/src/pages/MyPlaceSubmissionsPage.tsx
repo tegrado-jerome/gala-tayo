@@ -4,6 +4,7 @@ import AppHeader from '../components/AppHeader'
 import MinimalBackNav from '../components/MinimalBackNav'
 import { PageContainer, PageShell, EmptyState, Stack } from '../components/layout/ResponsiveLayouts'
 import { getMyPlaceSubmissions, type PlaceSubmission } from '../utils/placeSubmissionsApi'
+import { AdminListSkeleton } from '../components/loading/SkeletonStates'
 
 function formatDate(value?: string | null) {
   if (!value) return ''
@@ -19,7 +20,7 @@ function formatDate(value?: string | null) {
 
 const statusStyles: Record<string, string> = {
   pending: 'bg-amber-50 text-amber-700 border-amber-200',
-  approved: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  approved: 'bg-[var(--primary-soft)] text-[var(--accent-deep)] border-[rgba(var(--accent-rgb),0.18)]',
   rejected: 'bg-rose-50 text-rose-700 border-rose-200',
 }
 
@@ -89,8 +90,9 @@ function MyPlaceSubmissionsPage({ session }: { session: Session }) {
 
         {errorMessage ? <p className="mt-4 text-sm font-bold text-red-600">{errorMessage}</p> : null}
 
-        {isLoading ? <p className="text-sm text-[var(--muted)]">Refreshing your submissions...</p> : null}
-        {submissions.length === 0 ? (
+        {isLoading && submissions.length === 0 ? (
+          <AdminListSkeleton count={2} className="mt-8" />
+        ) : submissions.length === 0 ? (
           <EmptyState
             title="No place submissions yet."
             description="Once you submit a place for review, it will show up here."
@@ -131,7 +133,7 @@ function MyPlaceSubmissionsPage({ session }: { session: Session }) {
                 <p className="mt-4 text-sm font-semibold leading-6 text-slate-800">{submission.description}</p>
 
                 {submission.status === 'approved' && submission.approvedPlaceId ? (
-                  <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
+                  <div className="mt-4 rounded-2xl border border-[rgba(var(--accent-rgb),0.18)] bg-[var(--primary-soft)] px-4 py-3 text-sm font-semibold text-[var(--accent-deep)]">
                     Approved and published.
                   </div>
                 ) : null}

@@ -6,6 +6,7 @@ import { getCurrentEmailConflict, getPostAuthRedirect, getRequestedNextPath } fr
 import { buildAuthPath } from '../services/authApi'
 import { navigateToPath } from '../utils/navigation'
 import { trackLoginCompleted, trackSignUpCompleted } from '../utils/analytics'
+import { FormSkeleton } from '../components/loading/SkeletonStates'
 
 async function waitForSession(): Promise<Session | null> {
   const {
@@ -130,11 +131,7 @@ function AuthCallbackPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[var(--panel)] px-6 text-black">
       <StateContainer>
-        <section className="w-full text-center">
-          <div className="mx-auto h-9 w-9 animate-spin rounded-full border-4 border-black/15 border-t-black" />
-          <h1 className="mt-6 text-3xl font-black">Finishing sign in</h1>
-          <p className="mt-3 text-sm font-semibold text-black/60">Checking your GalaTayo account...</p>
-        </section>
+        <FormSkeleton rows={3} className="mx-auto max-w-[420px]" />
       </StateContainer>
     </main>
   )

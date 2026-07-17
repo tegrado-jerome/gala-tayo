@@ -5,12 +5,13 @@ import AppHeader from '../components/AppHeader'
 import Breadcrumb from '../components/Breadcrumb'
 import CompactPagination from '../components/CompactPagination'
 import InternalLink from '../components/InternalLink'
+import PlaceListingSkeleton from '../components/PlaceListingSkeleton'
 import PlaceCard, { type PlaceCardData } from '../components/PlaceCard'
 import SeoHead from '../components/SeoHead'
 import { PageContainer, PageShell, ResponsiveGrid } from '../components/layout/ResponsiveLayouts'
 import { placeCategories } from '../data/placeCategories'
 import { metroManilaAreaNameBySlug } from '../data/metroManilaAreas'
-import { navigateToPath } from '../utils/navigation'
+import { navigateToPath, scrollViewportToTopInstant } from '../utils/navigation'
 import { formatLabelFromSlug, getSiteOrigin } from '../utils/seo'
 import { getApiUrl } from '../utils/apiClient'
 import { consumePendingListingRouteCache, getListingPlaceViewportTop, readListingRouteCache, restoreListingRouteScroll, seedPendingListingRouteCache, writeListingRouteCache } from '../utils/listingRouteCache'
@@ -197,6 +198,14 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
     })
   }, [activeCategory])
 
+  useLayoutEffect(() => {
+    if (navigationSource === 'pop') {
+      return
+    }
+
+    scrollViewportToTopInstant()
+  }, [navigationSource, areaSlug, activeCategory, currentPage])
+
   useEffect(() => {
     if (skipInitialFetchRef.current) {
       skipInitialFetchRef.current = false
@@ -276,6 +285,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
   const totalPages = payload.totalPages
   const safePage = confirmedPage
   const isPageTransitionLoading = isLoading || isRefreshing
+  const shouldShowInitialSkeleton = isLoading && payload.items.length === 0 && !errorMessage
   const shouldShowEmptyState = !isPageTransitionLoading && allPlaces.length === 0 && !errorMessage
   const activeFilterLabel = FILTER_OPTIONS.find((filter) => filter.value === activeCategory)?.label ?? 'All'
   const fetchPlacesForPage = async (page: number, category = activeCategory, signal?: AbortSignal) => {
@@ -388,7 +398,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
           '@context': 'https://schema.org',
           '@type': 'BreadcrumbList',
           itemListElement: [
-            { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/` },
+            { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/home` },
             { '@type': 'ListItem', position: 2, name: 'Places', item: `${getSiteOrigin()}/places` },
             { '@type': 'ListItem', position: 3, name: areaName, item: `${getSiteOrigin()}/places/${encodeURIComponent(areaSlug)}` },
           ],
@@ -422,7 +432,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
         <Breadcrumb
           showBack
           items={[
-            { label: 'Home', href: '/', icon: <House className="h-3.5 w-3.5" /> },
+            { label: 'Home', href: '/home', icon: <House className="h-3.5 w-3.5" /> },
             { label: 'Places', href: '/places', icon: <MapPin className="h-3.5 w-3.5" /> },
             { label: areaName, icon: <MapPin className="h-3.5 w-3.5" /> },
           ]}
@@ -444,48 +454,55 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
               <p className="mt-1 text-[13px] text-[var(--muted)]">Filters and results are arranged alphabetically.</p>
             </div>
           </div>
-          <div
-            ref={filterScrollerRef}
-            className="flex gap-2.5 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          >
-            {FILTER_OPTIONS.map((filter) => {
-              const params = new URLSearchParams()
-              if (filter.value !== 'all') {
-                params.set('category', filter.value)
-              }
-              const href = params.toString() ? `/places/${areaSlug}?${params.toString()}` : `/places/${areaSlug}`
-              const isActive = activeCategory === filter.value
-              const iconName = filter.value === 'all' ? null : getCategoryIconName(filter.label)
+          {shouldShowInitialSkeleton ? (
+            <PlaceListingSkeleton
+              showCategoryChips
+              helperText={`Loading places in ${areaName} and preparing categories for browsing.`}
+            />
+          ) : (
+            <div
+              ref={filterScrollerRef}
+              className="flex gap-2.5 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            >
+              {FILTER_OPTIONS.map((filter) => {
+                const params = new URLSearchParams()
+                if (filter.value !== 'all') {
+                  params.set('category', filter.value)
+                }
+                const href = params.toString() ? `/places/${areaSlug}?${params.toString()}` : `/places/${areaSlug}`
+                const isActive = activeCategory === filter.value
+                const iconName = filter.value === 'all' ? null : getCategoryIconName(filter.label)
 
-              return (
-                <InternalLink
-                  key={filter.value}
-                  ref={isActive ? activeFilterRef : null}
-                  href={href}
-                  onClick={(event) => {
-                    if (event.button !== 0 || event.metaKey || event.altKey || event.ctrlKey || event.shiftKey) {
-                      return
-                    }
+                return (
+                  <InternalLink
+                    key={filter.value}
+                    ref={isActive ? activeFilterRef : null}
+                    href={href}
+                    onClick={(event) => {
+                      if (event.button !== 0 || event.metaKey || event.altKey || event.ctrlKey || event.shiftKey) {
+                        return
+                      }
 
-                    event.preventDefault()
-                    void handleCategoryChange(filter.value)
-                  }}
-                  className={`inline-flex shrink-0 items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold transition ${
-                    isActive
-                      ? 'border-[#1e3a8a] bg-[#1e3a8a] text-white'
-                      : 'border-[#e5e7eb] bg-white text-slate-700 hover:border-[#bfdbfe] hover:bg-[var(--surface-alt)] hover:text-[var(--accent)]'
-                  }`}
-                >
-                  {iconName ? (
-                    <span className={`inline-flex h-7 w-7 items-center justify-center rounded-full ${isActive ? 'bg-white text-[var(--accent)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.35)]' : 'bg-[var(--surface-alt)] text-[#64748b]'}`}>
-                      <AppIcon name={iconName} className="h-4 w-4" />
-                    </span>
-                  ) : null}
-                  {filter.label}
-                </InternalLink>
-              )
-            })}
-          </div>
+                      event.preventDefault()
+                      void handleCategoryChange(filter.value)
+                    }}
+                    className={`inline-flex shrink-0 items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold transition ${
+                      isActive
+                        ? 'border-[#1e3a8a] bg-[#1e3a8a] text-white'
+                        : 'border-[#e5e7eb] bg-white text-slate-700 hover:border-[#bfdbfe] hover:bg-[var(--surface-alt)] hover:text-[var(--accent)]'
+                    }`}
+                  >
+                    {iconName ? (
+                      <span className={`inline-flex h-7 w-7 items-center justify-center rounded-full ${isActive ? 'bg-white text-[var(--accent)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.35)]' : 'bg-[var(--surface-alt)] text-[#64748b]'}`}>
+                        <AppIcon name={iconName} className="h-4 w-4" />
+                      </span>
+                    ) : null}
+                    {filter.label}
+                  </InternalLink>
+                )
+              })}
+            </div>
+          )}
         </section>
 
         {errorMessage ? (
@@ -497,7 +514,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
 
         {!errorMessage ? (
           <>
-            {shouldShowEmptyState ? (
+            {shouldShowInitialSkeleton ? null : shouldShowEmptyState ? (
               <section className="mt-10 rounded-[28px] border border-[#e5e7eb] bg-white px-5 py-8 text-center shadow-sm sm:px-6">
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
                   <AppIcon name="compass" className="h-7 w-7" />

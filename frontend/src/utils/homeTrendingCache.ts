@@ -1,25 +1,39 @@
-import type { PlaceCardData } from '../components/PlaceCard'
-
 const HOME_TRENDING_CACHE_KEY = 'galatayo:home-trending-cache'
 const HOME_TRENDING_CACHE_TTL_MS = 15 * 60 * 1000
 
+export type HomeTrendingCachePlace = {
+  id: string
+  slug?: string
+  name: string
+  category?: string | null
+  area: string
+  city?: string | null
+  localArea?: string | null
+  thumbnailUrl?: string | null
+  imageUrl?: string | null
+  curatedImageUrls?: string[]
+  rating?: number | null
+  reviewCount?: string
+  description?: string | null
+  reason?: string | null
+}
+
 type HomeTrendingCache = {
-  places: PlaceCardData[]
+  places: HomeTrendingCachePlace[]
   cachedAt: number
 }
 
-function isPlaceCardData(value: unknown): value is PlaceCardData {
+function isHomeTrendingCachePlace(value: unknown): value is HomeTrendingCachePlace {
   return (
     Boolean(value) &&
     typeof value === 'object' &&
-    typeof (value as PlaceCardData).id === 'string' &&
-    typeof (value as PlaceCardData).name === 'string' &&
-    typeof (value as PlaceCardData).category === 'string' &&
-    typeof (value as PlaceCardData).area === 'string'
+    typeof (value as HomeTrendingCachePlace).id === 'string' &&
+    typeof (value as HomeTrendingCachePlace).name === 'string' &&
+    typeof (value as HomeTrendingCachePlace).area === 'string'
   )
 }
 
-export function readHomeTrendingCache(): PlaceCardData[] | null {
+export function readHomeTrendingCache(): HomeTrendingCachePlace[] | null {
   try {
     const rawValue = window.localStorage.getItem(HOME_TRENDING_CACHE_KEY)
     if (!rawValue) {
@@ -38,13 +52,13 @@ export function readHomeTrendingCache(): PlaceCardData[] | null {
       return null
     }
 
-    return parsedValue.places.filter(isPlaceCardData)
+    return parsedValue.places.filter(isHomeTrendingCachePlace)
   } catch {
     return null
   }
 }
 
-export function writeHomeTrendingCache(places: PlaceCardData[]) {
+export function writeHomeTrendingCache(places: HomeTrendingCachePlace[]) {
   try {
     const payload: HomeTrendingCache = {
       places,

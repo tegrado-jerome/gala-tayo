@@ -9,7 +9,7 @@ import MinimalBackNav from '../components/MinimalBackNav'
 import MapView from '../components/MapView'
 import { navigateToPath } from '../utils/navigation'
 import { submitPlaceSubmission } from '../utils/placeSubmissionsApi'
-import protectedFeatureChibi from '../assets/chibis/shared-states/chibi-protected-feature.webp'
+import { InlineSkeleton } from '../components/loading/SkeletonStates'
 
 type PlaceDraft = {
   name: string
@@ -172,13 +172,6 @@ function PlaceSubmissionComingSoonBlock() {
         <MinimalBackNav onClick={() => window.history.back()} />
 
         <div className="flex flex-col items-center gap-5 px-2 py-6 text-center sm:px-4 sm:py-10">
-          <img
-            src={protectedFeatureChibi}
-            alt=""
-            className="h-64 w-64 shrink-0 max-w-none scale-[1.12] object-contain sm:h-72 sm:w-72 sm:scale-[1.18] lg:h-80 lg:w-80"
-            loading="lazy"
-          />
-
           <div className="max-w-2xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(83,146,241,0.18)] bg-[rgba(242,247,255,0.96)] px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--accent-deep)]">
               Soon
@@ -201,7 +194,7 @@ function PlaceSubmissionComingSoonBlock() {
             </button>
             <button
               type="button"
-              onClick={() => navigateToPath('/')}
+              onClick={() => navigateToPath('/home')}
               className="inline-flex items-center justify-center rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-100"
             >
               Go home
@@ -546,10 +539,10 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
                       <AppIcon name="nearMeFixed" className="h-3.5 w-3.5" />
                       {formatCoordinates(coordinates)}
                     </span>
-                    <span className="inline-flex items-center gap-1.5">
+                    <div className="inline-flex items-center gap-1.5">
                       <AppIcon name="compass" className="h-4 w-4 text-slate-400" />
-                      {isReverseGeocoding ? 'Refreshing nearby address...' : 'Tap map or drag the pin for the exact spot.'}
-                    </span>
+                      {isReverseGeocoding ? <InlineSkeleton /> : 'Tap map or drag the pin for the exact spot.'}
+                    </div>
                   </div>
                 </div>
               </FormSection>

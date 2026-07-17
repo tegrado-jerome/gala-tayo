@@ -89,7 +89,7 @@ function ForgotPasswordPage() {
                   If an account exists with that email, we sent password reset instructions.
                 </p>
                 {statusMessage ? (
-                  <p className="mt-4 rounded-[0.875rem] border border-emerald-200 bg-emerald-50 px-4 py-3 text-[13px] text-emerald-700 shadow-sm">
+                  <p className="mt-4 rounded-[0.875rem] border border-[rgba(var(--accent-rgb),0.18)] bg-[var(--primary-soft)] px-4 py-3 text-[13px] text-[var(--accent-deep)] shadow-sm">
                     {statusMessage}
                   </p>
                 ) : null}
@@ -100,14 +100,7 @@ function ForgotPasswordPage() {
                     disabled={resendCooldown.isCoolingDown || isResending}
                     className="inline-flex min-h-[2.75rem] items-center justify-center rounded-[0.875rem] border border-[var(--line)] bg-white px-6 text-[14px] font-semibold text-[var(--text-main)] transition hover:-translate-y-0.5 hover:border-[var(--accent-soft)] hover:text-[var(--accent-deep)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)] disabled:cursor-not-allowed disabled:opacity-70"
                   >
-                    {isResending ? (
-                      <>
-                        <span className="inline-flex h-4.5 w-4.5 animate-spin rounded-full border-2 border-[var(--text-main)]/25 border-t-[var(--text-main)]" aria-hidden="true" />
-                        Sending...
-                      </>
-                    ) : (
-                      resendLabel
-                    )}
+                    {isResending ? 'Sending...' : resendLabel}
                   </button>
                   <button
                     type="button"
@@ -166,14 +159,7 @@ function ForgotPasswordPage() {
                     disabled={isSubmitDisabled}
                     className="w-full inline-flex h-[2.75rem] items-center justify-center gap-2 rounded-[0.875rem] bg-[var(--accent)] px-5 text-[14px] font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[var(--accent-deep)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)] disabled:cursor-not-allowed disabled:opacity-70"
                   >
-                    {isSubmitting ? (
-                      <>
-                        <span className="inline-flex h-4.5 w-4.5 animate-spin rounded-full border-2 border-white/40 border-t-white" aria-hidden="true" />
-                        Sending...
-                      </>
-                    ) : (
-                      'Send reset link'
-                    )}
+                    {isSubmitting ? 'Sending...' : 'Send reset link'}
                   </button>
                 </form>
               </div>

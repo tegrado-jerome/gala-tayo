@@ -1,5 +1,5 @@
 import { type ReactNode, useEffect, useMemo, useState } from 'react'
-import { ArrowUpRight, LoaderCircle, Search, Users } from 'lucide-react'
+import { ArrowUpRight, Search, Users } from 'lucide-react'
 import AppHeader from '../components/AppHeader'
 import MinimalBackNav from '../components/MinimalBackNav'
 import ProfileAvatar from '../components/ProfileAvatar'
@@ -8,6 +8,7 @@ import { PageContainer } from '../components/layout/ResponsiveLayouts'
 import { getFollowing, getMyProfile, getProfileSuggestions, getPublicProfile, normalizeUsername, searchProfiles, type FollowListUser, type PublicProfile } from '../utils/profileApi'
 import { navigateToPath } from '../utils/navigation'
 import { supabase } from '../supabase'
+import { SkeletonLine } from '../components/loading/SkeletonStates'
 
 function formatCompactCount(value: number) {
   return new Intl.NumberFormat('en', { notation: 'compact' }).format(value)
@@ -399,7 +400,7 @@ function ProfileSearchPage() {
       <main className="gala-app-main">
         <PageContainer size="wide" className="grid gap-5 sm:gap-6">
           <div className="pt-2">
-            <MinimalBackNav to="/" label="Home" preferHistory={false} />
+            <MinimalBackNav to="/home" label="Home" preferHistory={false} className="hidden sm:inline-flex" />
           </div>
 
           <section className="gala-page-header">
@@ -433,7 +434,7 @@ function ProfileSearchPage() {
                       spellCheck={false}
                     />
                   </span>
-                  {isSearching ? <LoaderCircle className="h-5 w-5 animate-spin text-slate-400" /> : null}
+                  {isSearching ? <SkeletonLine className="h-3 w-12 shrink-0" /> : null}
                   {query ? (
                     <button
                       type="button"

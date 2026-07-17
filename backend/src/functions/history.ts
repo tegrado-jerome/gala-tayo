@@ -115,7 +115,7 @@ async function getUserHistory(userId: string, context: InvocationContext): Promi
           longitude: detail.longitude ?? null,
           google_maps_url: detail.google_maps_url ?? null,
           description: detail.description ?? null,
-          budget_label: detail.budget_notes ?? null,
+          budget_label: detail.budget_note ?? null,
           budget_min: null,
           photo_url: detail.imageUrl || null,
           photos: detail.curatedImageUrls ?? [],
