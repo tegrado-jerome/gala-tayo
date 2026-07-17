@@ -6,7 +6,8 @@ import { useSystemMessage } from '../../context/SystemMessageContext'
 import { useAdminAccess } from '../../hooks/useAdminAccess'
 import { getAdminPath } from '../../utils/adminRoutes'
 import { getApiUrl } from '../../utils/apiClient'
-import { AdminPageHeader, AdminRefreshButton } from './AdminUI'
+import { AdminAccessSkeleton, AdminContentSkeleton, AdminPageHeader, AdminRefreshButton } from './AdminUI'
+import { CardGridSkeleton } from '../../components/loading/SkeletonStates'
 
 type PendingPlaceImage = {
   id: string
@@ -283,7 +284,7 @@ function AdminPlaceImagesPage({ session }: { session: Session }) {
         <AppHeader />
         <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
           <StateContainer>
-            <p className="text-sm text-[var(--muted)]">Checking admin access...</p>
+            <AdminAccessSkeleton />
           </StateContainer>
         </main>
       </PageShell>
@@ -327,8 +328,9 @@ function AdminPlaceImagesPage({ session }: { session: Session }) {
           {errorMessage ? <p className="text-sm font-bold text-red-600">{errorMessage}</p> : null}
           </div>
 
-          {isLoading ? <p className="text-sm text-[var(--muted)]">Refreshing pending photos...</p> : null}
-          {pendingImages.length === 0 ? (
+          {isLoading && pendingImages.length === 0 ? (
+            <AdminContentSkeleton count={2} />
+          ) : pendingImages.length === 0 ? (
             <StateContainer>
               <p className="mt-6 rounded-lg border border-dashed border-[var(--line-strong)] bg-white px-4 py-6 text-sm font-bold text-slate-600">
                 No pending photo contributions.
@@ -422,9 +424,7 @@ function AdminPlaceImagesPage({ session }: { session: Session }) {
           </div>
 
           {isApprovedLoading ? (
-            <StateContainer>
-              <p className="mt-4 text-sm font-semibold text-slate-600">Loading approved images...</p>
-            </StateContainer>
+            <CardGridSkeleton count={3} className="mt-4" />
           ) : allApprovedImages.length === 0 ? (
             <StateContainer>
               <p className="mt-4 text-sm font-semibold text-slate-600">No approved images found.</p>

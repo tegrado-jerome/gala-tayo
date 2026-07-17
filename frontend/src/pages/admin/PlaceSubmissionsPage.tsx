@@ -11,7 +11,7 @@ import {
   rejectPlaceSubmission,
   type AdminPlaceSubmission,
 } from '../../utils/placeSubmissionsApi'
-import { AdminPageHeader, AdminRefreshButton } from './AdminUI'
+import { AdminAccessSkeleton, AdminContentSkeleton, AdminPageHeader, AdminRefreshButton } from './AdminUI'
 
 function formatDate(value?: string | null) {
   if (!value) return ''
@@ -118,7 +118,7 @@ function AdminPlaceSubmissionsPage({ session }: { session: Session }) {
         <AppHeader />
         <main className="mx-auto w-full max-w-3xl px-4 py-10">
           <StateContainer>
-            <p className="text-sm text-[var(--muted)]">Checking admin access...</p>
+            <AdminAccessSkeleton />
           </StateContainer>
         </main>
       </PageShell>
@@ -155,8 +155,9 @@ function AdminPlaceSubmissionsPage({ session }: { session: Session }) {
           {errorMessage ? <p className="text-sm font-bold text-red-600">{errorMessage}</p> : null}
           </div>
 
-          {isLoading ? <p className="text-sm text-[var(--muted)]">Refreshing place submissions...</p> : null}
-          {submissions.length === 0 ? (
+          {isLoading && submissions.length === 0 ? (
+            <AdminContentSkeleton />
+          ) : submissions.length === 0 ? (
             <StateContainer>
               <p className="mt-6 rounded-2xl border border-dashed border-[var(--line-strong)] bg-white px-4 py-6 text-sm font-bold text-slate-600">
                 No pending place submissions.

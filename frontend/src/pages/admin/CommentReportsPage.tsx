@@ -7,7 +7,7 @@ import { useSystemMessage } from '../../context/SystemMessageContext'
 import { useAdminAccess } from '../../hooks/useAdminAccess'
 import { getAdminPath } from '../../utils/adminRoutes'
 import { getAdminCommentReports, moderateAdminCommentReport, type AdminCommentReport } from '../../utils/adminCommentReportsApi'
-import { AdminPageHeader, AdminRefreshButton, AdminStatusFilters } from './AdminUI'
+import { AdminAccessSkeleton, AdminContentSkeleton, AdminPageHeader, AdminRefreshButton, AdminStatusFilters } from './AdminUI'
 
 const reasonLabels: Record<string, string> = {
   spam: 'Spam',
@@ -91,7 +91,7 @@ function AdminCommentReportsPage({ session }: { session: Session }) {
         <AppHeader />
         <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
           <StateContainer>
-            <p className="text-sm text-[var(--muted)]">Checking admin access...</p>
+            <AdminAccessSkeleton />
           </StateContainer>
         </main>
       </PageShell>
@@ -137,8 +137,9 @@ function AdminCommentReportsPage({ session }: { session: Session }) {
             {errorMessage ? <p className="text-sm font-bold text-red-600">{errorMessage}</p> : null}
           </div>
 
-          {isLoading ? <p className="text-sm text-[var(--muted)]">Refreshing comment reports...</p> : null}
-          {reports.length === 0 ? (
+          {isLoading && reports.length === 0 ? (
+            <AdminContentSkeleton />
+          ) : reports.length === 0 ? (
             <StateContainer>
               <p className="mt-6 rounded-2xl border border-dashed border-[#E5E7EB] bg-white px-4 py-6 text-sm font-bold text-slate-600">
                 No comment reports in this view.

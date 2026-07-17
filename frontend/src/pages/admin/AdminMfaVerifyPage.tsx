@@ -84,7 +84,7 @@ function AdminMfaVerifyPage({ factorId }: { factorId: string | null }) {
               ) : null}
 
               {successMessage ? (
-                <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+                <p className="rounded-xl border border-[rgba(var(--accent-rgb),0.18)] bg-[var(--primary-soft)] px-4 py-3 text-sm font-semibold text-[var(--accent-deep)]">
                   {successMessage}
                 </p>
               ) : null}

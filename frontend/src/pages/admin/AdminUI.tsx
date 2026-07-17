@@ -10,6 +10,7 @@ import {
   UserRound,
 } from 'lucide-react'
 import { cn } from '../../components/AppUI'
+import { AdminListSkeleton, CardGridSkeleton } from '../../components/loading/SkeletonStates'
 import { navigateToPath } from '../../utils/navigation'
 import { ADMIN_BASE_PATH, getAdminPath } from '../../utils/adminRoutes'
 
@@ -84,10 +85,23 @@ export function AdminRefreshButton({
       disabled={isLoading}
       className="admin-icon-button"
     >
-      <RefreshCw className={cn('h-4 w-4', isLoading && 'animate-spin')} />
+      <RefreshCw className="h-4 w-4" />
       <span>{isLoading ? 'Refreshing' : 'Refresh'}</span>
     </button>
   )
+}
+
+export function AdminAccessSkeleton() {
+  return (
+    <div className="grid gap-6" aria-busy="true" aria-live="polite">
+      <span className="sr-only">Checking admin access</span>
+      <CardGridSkeleton count={3} />
+    </div>
+  )
+}
+
+export function AdminContentSkeleton({ count = 3 }: { count?: number }) {
+  return <AdminListSkeleton count={count} className="mt-6" />
 }
 
 export function AdminStatusFilters<T extends string>({

@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import AppHeader from '../../components/AppHeader'
-import { PageContainer, PageShell, StateContainer } from '../../components/layout/ResponsiveLayouts'
+import { PageContainer, PageShell } from '../../components/layout/ResponsiveLayouts'
 import { supabase } from '../../supabase'
 import { refreshAdminMfaSession } from '../../utils/adminMfa'
 import { navigateToPath } from '../../utils/navigation'
 import { signOut } from '../../services/authApi'
 import { ADMIN_BASE_PATH } from '../../utils/adminRoutes'
+import { FormSkeleton } from '../../components/loading/SkeletonStates'
 
 type EnrollmentState = {
   factorId: string
@@ -121,10 +122,8 @@ function AdminMfaSetupPage({ session }: { session: Session }) {
       <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
         <PageContainer size="narrow">
           {isLoading ? (
-            <StateContainer>
-              <p className="text-sm text-[var(--muted)]">Preparing your admin MFA enrollment...</p>
-            </StateContainer>
-          ) : null}
+            <FormSkeleton rows={4} />
+          ) : (
           <section className="admin-card p-5 sm:p-6">
             <p className="admin-eyebrow">Admin Security</p>
             <h1 className="mt-2 text-2xl font-black text-slate-950">Set up your authenticator</h1>
@@ -168,7 +167,7 @@ function AdminMfaSetupPage({ session }: { session: Session }) {
                 ) : null}
 
                 {successMessage ? (
-                  <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+                  <p className="rounded-xl border border-[rgba(var(--accent-rgb),0.18)] bg-[var(--primary-soft)] px-4 py-3 text-sm font-semibold text-[var(--accent-deep)]">
                     {successMessage}
                   </p>
                 ) : null}
@@ -194,6 +193,7 @@ function AdminMfaSetupPage({ session }: { session: Session }) {
               </div>
             </div>
           </section>
+          )}
         </PageContainer>
       </main>
     </PageShell>

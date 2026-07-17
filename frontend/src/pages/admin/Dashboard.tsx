@@ -6,7 +6,7 @@ import { PageContainer, PageShell, StateContainer } from '../../components/layou
 import { useAdminAccess } from '../../hooks/useAdminAccess'
 import { navigateToPath } from '../../utils/navigation'
 import { ADMIN_BASE_PATH, getAdminPath } from '../../utils/adminRoutes'
-import { AdminPageHeader } from './AdminUI'
+import { AdminAccessSkeleton, AdminPageHeader } from './AdminUI'
 
 type DashboardSection = {
   title: string
@@ -63,7 +63,7 @@ function AdminDashboard({ session }: { session: Session }) {
         <AppHeader />
         <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
           <StateContainer>
-            <p className="text-sm text-[var(--muted)]">Checking admin access...</p>
+            <AdminAccessSkeleton />
           </StateContainer>
         </main>
       </PageShell>
@@ -121,7 +121,7 @@ function AdminDashboard({ session }: { session: Session }) {
             <div className="admin-action-row mt-4">
               <button
                 type="button"
-                onClick={() => navigateToPath('/')}
+                onClick={() => navigateToPath('/home')}
                 className="app-button app-button-ghost app-button-md admin-action-button"
               >
                 View public site
