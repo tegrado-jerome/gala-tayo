@@ -180,10 +180,10 @@ export function ChatSkeleton({ className = '' }: { className?: string }) {
 
 export function MapSearchSkeleton({ className = '' }: { className?: string }) {
   return (
-    <div className={cn('w-full min-w-0 rounded-[24px] border border-[rgba(47,184,160,0.18)] bg-white/96 p-4 shadow-[0_16px_36px_rgba(15,23,42,0.12)]', className)} aria-busy="true" aria-live="polite">
+    <div className={cn('w-full min-w-0 rounded-[24px] border border-[rgba(var(--accent-rgb),0.18)] bg-white/96 p-4 shadow-[0_16px_36px_rgba(15,23,42,0.12)]', className)} aria-busy="true" aria-live="polite">
       <span className="sr-only">Loading map results</span>
       <div className="flex items-start gap-3">
-        <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px] bg-[linear-gradient(180deg,#ecfdf5_0%,#d1fae5_100%)] text-[var(--accent-deep)]">
+        <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px] bg-[linear-gradient(180deg,rgba(var(--accent-rgb),0.04)_0%,rgba(var(--accent-rgb),0.10)_100%)] text-[var(--accent-deep)]">
           <AppIcon name="askAi" className="h-5 w-5" />
         </span>
         <div className="min-w-0 flex-1">

@@ -205,7 +205,7 @@ const AskAiMapComposer = memo(function AskAiMapComposer({
             }
           }}
           disabled={!isSearching && (!canSubmit || (isLimitReached && isRegistered))}
-          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--accent-deep)] text-white shadow-[0_10px_20px_rgba(24,128,111,0.18)] transition hover:bg-[var(--accent)] disabled:opacity-60"
+          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--accent-deep)] text-white shadow-[0_10px_20px_rgba(var(--accent-rgb),0.18)] transition hover:bg-[var(--accent)] disabled:opacity-60"
           aria-label={isSearching ? 'Stop searching' : 'Submit ask ai map search'}
         >
           {isSearching ? (
@@ -1028,7 +1028,7 @@ function AskAiMapPage() {
                 ) : null}
 
                 {!errorMessage && statusMessage && !isSearching ? (
-                  <div className="mb-3 rounded-[22px] border border-[rgba(47,184,160,0.14)] bg-white px-4 py-3 text-sm font-medium text-slate-700 shadow-[0_12px_30px_rgba(15,23,42,0.10)] lg:mx-auto lg:max-w-[680px]">
+                  <div className="mb-3 rounded-[22px] border border-[rgba(var(--accent-rgb),0.14)] bg-white px-4 py-3 text-sm font-medium text-slate-700 shadow-[0_12px_30px_rgba(15,23,42,0.10)] lg:mx-auto lg:max-w-[680px]">
                     {statusMessage}
                   </div>
                 ) : null}
@@ -1094,11 +1094,11 @@ function AskAiMapPage() {
                           <div className="flex items-start gap-2.5">
                             <div className="flex shrink-0 items-center gap-2 pt-0.5">
                               <span className={`h-2.5 w-2.5 rounded-full transition ${
-                                isSelected ? 'bg-[var(--accent-deep)] shadow-[0_0_0_5px_rgba(47,184,160,0.12)]' : 'bg-slate-200'
+                                isSelected ? 'bg-[var(--accent-deep)] shadow-[0_0_0_5px_rgba(var(--accent-rgb),0.12)]' : 'bg-slate-200'
                               }`} />
                               <span className={`inline-flex h-7 min-w-7 items-center justify-center rounded-2xl px-2 text-[11px] font-black ${
                                 isSelected
-                                  ? 'bg-[var(--accent-deep)] text-white shadow-[0_8px_16px_rgba(24,128,111,0.24)]'
+                                  ? 'bg-[var(--accent-deep)] text-white shadow-[0_8px_16px_rgba(var(--accent-rgb),0.24)]'
                                   : 'bg-slate-100 text-[var(--accent-deep)]'
                               }`}>
                                 {place.displayIndex}
@@ -1347,11 +1347,11 @@ function AskAiMapPage() {
                         <div className="flex items-start gap-2.5">
                           <div className="flex shrink-0 items-center gap-2 pt-0.5">
                               <span className={`h-2.5 w-2.5 rounded-full transition ${
-                                isSelected ? 'bg-[var(--accent-deep)] shadow-[0_0_0_5px_rgba(47,184,160,0.12)]' : 'bg-slate-200'
+                                isSelected ? 'bg-[var(--accent-deep)] shadow-[0_0_0_5px_rgba(var(--accent-rgb),0.12)]' : 'bg-slate-200'
                               }`} />
                               <span className={`inline-flex h-7 min-w-7 items-center justify-center rounded-2xl px-2 text-[11px] font-black ${
                                 isSelected
-                                  ? 'bg-[var(--accent-deep)] text-white shadow-[0_8px_16px_rgba(24,128,111,0.24)]'
+                                  ? 'bg-[var(--accent-deep)] text-white shadow-[0_8px_16px_rgba(var(--accent-rgb),0.24)]'
                                   : 'bg-slate-100 text-[var(--accent-deep)]'
                               }`}>
                                 {place.displayIndex}
@@ -1496,7 +1496,7 @@ function AskAiMapPage() {
           </div>
 
           <div className="flex-1 overflow-y-auto px-5 pb-[calc(24px+env(safe-area-inset-bottom,0px))] [-webkit-overflow-scrolling:touch]">
-            <div className="rounded-[20px] border border-[rgba(47,184,160,0.10)] bg-[linear-gradient(180deg,rgba(248,250,252,0.98),rgba(255,255,255,0.94))] px-4 py-4">
+            <div className="rounded-[20px] border border-[rgba(var(--accent-rgb),0.10)] bg-[linear-gradient(180deg,rgba(248,250,252,0.98),rgba(255,255,255,0.94))] px-4 py-4">
               <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[var(--accent-deep)]">Why this fits</p>
               <p className="mt-2 text-sm leading-6 text-slate-700">
                 {selectedDisplayPlace.whyThisFits}
@@ -1621,7 +1621,7 @@ function AskAiMapPage() {
                 href={selectedGoogleMapsUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[var(--accent-deep)] px-4 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(24,128,111,0.22)] transition hover:bg-[var(--accent)] active:scale-[0.98]"
+                className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[var(--accent-deep)] px-4 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(var(--accent-rgb),0.22)] transition hover:bg-[var(--accent)] active:scale-[0.98]"
               >
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
