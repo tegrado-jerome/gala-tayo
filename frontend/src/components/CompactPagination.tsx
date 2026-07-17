@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import UnifiedLoadingState from './UnifiedLoadingState'
 import InternalLink from './InternalLink'
+import { InlineSkeleton } from './loading/SkeletonStates'
 
 type CompactPaginationProps = {
   currentPage: number
@@ -196,7 +196,7 @@ function CompactPagination({
 
         {(isLoading || pendingPage !== null) && showLoadingMessage ? (
           <div className="w-full">
-            <UnifiedLoadingState variant="inline" message="Loading page..." className="justify-center text-center" />
+            <InlineSkeleton className="justify-center text-center" />
           </div>
         ) : null}
       </div>

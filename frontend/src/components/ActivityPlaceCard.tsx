@@ -64,25 +64,31 @@ export default function ActivityPlaceCard({
   const displayLocation = shortenText(location)
   const visibleChips = chips.slice(0, 3)
   const hiddenChipCount = Math.max(chips.length - visibleChips.length, 0)
-  const cardBodyClass = compactMobile ? 'flex min-h-0 flex-1 flex-col gap-1 p-2.5 sm:p-5' : 'flex min-h-0 flex-1 flex-col gap-2 p-4 sm:p-5'
+  const hasFooter = Boolean(footer)
+  const cardBodyClass = compactMobile ? 'flex min-h-0 flex-1 flex-col gap-1.5 p-2 sm:gap-2 sm:p-4' : 'flex min-h-0 flex-1 flex-col gap-2 p-4 sm:p-5'
   const metaRowsClass = compactMobile
-    ? 'grid min-h-0 gap-0.25 overflow-hidden text-[10px] font-semibold text-[var(--muted)] sm:gap-0.5 sm:text-xs'
-    : 'grid min-h-0 gap-0.5 overflow-hidden text-xs font-semibold text-[var(--muted)]'
+    ? 'grid min-h-0 gap-0.5 text-[10px] font-semibold text-[var(--muted)] sm:text-[11px]'
+    : 'grid min-h-0 gap-0.5 text-xs font-semibold text-[var(--muted)]'
   const chipsClass = compactMobile
-    ? 'hidden min-h-0 flex-wrap gap-1 overflow-hidden sm:flex'
-    : 'flex min-h-0 flex-wrap gap-1 overflow-hidden'
+    ? 'hidden min-h-0 flex-wrap gap-1 sm:flex'
+    : 'flex min-h-0 flex-wrap gap-1'
   const budgetClass = compactMobile
-    ? 'hidden line-clamp-1 text-[11px] font-bold text-slate-950 sm:block'
+    ? 'hidden line-clamp-1 text-[10px] font-bold text-slate-950 sm:block'
     : 'line-clamp-1 text-sm font-bold text-slate-950'
   const titleClass = compactMobile
-    ? 'mt-0.5 line-clamp-2 min-h-[2.6rem] text-[13px] font-black leading-tight text-slate-950 lg:text-lg'
+    ? 'mt-0.5 line-clamp-2 min-h-[2.3rem] text-[12px] font-black leading-tight text-slate-950 sm:text-[13px] lg:text-base'
     : 'mt-0.5 text-base font-black leading-snug text-slate-950 lg:text-lg'
+  const actionsClass = compactMobile
+    ? hasFooter
+      ? 'mt-auto grid shrink-0 grid-cols-2 gap-1.5 pt-3'
+      : 'mt-auto grid shrink-0 gap-2 pt-3'
+    : 'mt-auto grid shrink-0 gap-1.5 pt-2'
 
   return (
     <article
       className={[
-        'group flex w-full flex-col overflow-hidden rounded-xl border border-[var(--line)] bg-white shadow-[0_2px_8px_rgba(28,77,160,0.04)] transition-all hover:border-[var(--line-strong)] hover:shadow-[0_8px_24px_rgba(28,77,160,0.08)]',
-        compactMobile ? 'self-start h-auto' : 'h-full sm:h-[440px] lg:h-[460px]',
+        'group flex min-h-0 w-full flex-col overflow-hidden rounded-xl border border-[var(--line)] bg-white shadow-[0_2px_8px_rgba(28,77,160,0.04)] transition-all hover:border-[var(--line-strong)] hover:shadow-[0_8px_24px_rgba(28,77,160,0.08)]',
+        compactMobile ? 'h-auto min-h-full' : 'h-auto min-h-full sm:min-h-[420px] lg:min-h-[440px]',
       ].join(' ')}
     >
       <div className="relative shrink-0">
@@ -91,13 +97,13 @@ export default function ActivityPlaceCard({
             src={photoUrl}
             alt={photoAlt}
             className={compactMobile
-              ? 'h-24 w-full object-cover transition-transform duration-300 group-hover:scale-[1.02] sm:h-36 lg:h-40'
+              ? 'h-28 w-full object-cover transition-transform duration-300 group-hover:scale-[1.02] sm:h-36 lg:h-40'
               : 'h-36 w-full object-cover transition-transform duration-300 group-hover:scale-[1.02] sm:h-40 lg:h-44'}
             loading="lazy"
           />
         ) : (
           <div className={compactMobile
-            ? 'flex h-24 w-full items-center justify-center bg-[var(--chip)] text-[var(--accent-deep)] sm:h-36 lg:h-40'
+            ? 'flex h-28 w-full items-center justify-center bg-[var(--chip)] text-[var(--accent-deep)] sm:h-36 lg:h-40'
             : 'flex h-36 w-full items-center justify-center bg-[var(--chip)] text-[var(--accent-deep)] sm:h-40 lg:h-44'}>
             <PinIcon className="h-8 w-8" />
           </div>
@@ -149,12 +155,12 @@ export default function ActivityPlaceCard({
           {description}
         </p>
 
-        <div className={compactMobile ? 'mt-3 grid shrink-0 gap-1' : 'mt-auto grid shrink-0 gap-1.5 pt-2'}>
+        <div className={actionsClass}>
           <button
             type="button"
             onClick={handleAction}
             className={compactMobile
-              ? 'inline-flex h-7 w-full items-center justify-center rounded-lg border border-[var(--accent)] bg-white px-2.5 text-[10px] font-black text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)] sm:text-xs'
+              ? 'inline-flex h-10 w-full items-center justify-center rounded-lg border border-[var(--accent)] bg-white px-3 text-xs font-black text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)]'
               : 'inline-flex h-9 w-full items-center justify-center rounded-lg border border-[var(--accent)] bg-white px-4 text-xs font-black text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)]'}
           >
             {actionLabel}

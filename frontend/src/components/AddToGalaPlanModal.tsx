@@ -5,6 +5,7 @@ import { addPlaceToGalaPlan, listMyGalaPlans, type GalaPlanSummary } from '../ut
 import { navigateToPath } from '../utils/navigation'
 import { AppIcon } from './AppIcon'
 import { BottomSheet } from './layout/Primitives'
+import { SkeletonLine } from './loading/SkeletonStates'
 
 type AddToGalaPlanModalProps = {
   isOpen: boolean
@@ -110,7 +111,14 @@ function AddToGalaPlanModal({ isOpen, placeId, placeName, onClose }: AddToGalaPl
         </div>
 
         <div className="px-5 py-5">
-          {isLoading ? <p className="text-sm text-[var(--muted)]">Loading your gala plans...</p> : null}
+          {isLoading ? (
+            <div className="grid gap-3" aria-busy="true" aria-live="polite">
+              <span className="sr-only">Loading gala plans</span>
+              <SkeletonLine className="h-4 w-28" />
+              <SkeletonLine className="h-12 w-full rounded-lg" />
+              <SkeletonLine className="h-11 w-full rounded-lg" />
+            </div>
+          ) : null}
 
           {!isLoading && !errorMessage && plans.length === 0 ? (
             <div className="rounded-lg border border-[var(--line)] bg-[var(--chip)] p-4">
@@ -200,12 +208,7 @@ function AddToGalaPlanModal({ isOpen, placeId, placeName, onClose }: AddToGalaPl
                   disabled={isAdding}
                   className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-4 text-sm font-black text-white transition hover:bg-[var(--accent-deep)] disabled:cursor-not-allowed disabled:bg-slate-300"
                 >
-                  {isAdding ? (
-                    <>
-                      <AppIcon name="refresh" className="h-4 w-4 animate-spin" />
-                      Adding
-                    </>
-                  ) : (
+                  {isAdding ? 'Adding...' : (
                     <>
                       <AppIcon name="addToPlan" className="h-4 w-4" />
                       Add place
@@ -217,7 +220,7 @@ function AddToGalaPlanModal({ isOpen, placeId, placeName, onClose }: AddToGalaPl
           ) : null}
 
           {message ? (
-            <p className="mt-4 flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-2 text-sm font-bold text-emerald-700">
+            <p className="mt-4 flex items-center gap-2 rounded-lg bg-[var(--primary-soft)] px-3 py-2 text-sm font-bold text-[var(--accent-deep)]">
               <AppIcon name="check" className="h-4 w-4" />
               {message}
             </p>

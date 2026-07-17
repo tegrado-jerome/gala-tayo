@@ -6,7 +6,6 @@ type TapGalaPinGameProps = {
   onViewAnswer?: () => void
   onClose?: () => void
   className?: string
-  chibiImage?: string
 }
 
 type GameItemKind = 'pin' | 'bonus' | 'traffic'
@@ -191,7 +190,6 @@ export default function TapGalaPinGame({
   onViewAnswer,
   onClose,
   className = '',
-  chibiImage,
 }: TapGalaPinGameProps) {
   const [score, setScore] = useState(0)
   const [combo, setCombo] = useState(0)
@@ -431,12 +429,6 @@ export default function TapGalaPinGame({
               {burst.value}
             </span>
           ))}
-
-          {chibiImage ? (
-            <div className="absolute left-5 top-5 flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-white/76 backdrop-blur">
-              <img src={chibiImage} alt="" className="h-full w-full object-contain" loading="lazy" />
-            </div>
-          ) : null}
 
           <button
             type="button"

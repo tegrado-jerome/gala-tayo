@@ -24,6 +24,7 @@ type PlaceCardData = {
   displayIndex?: number
   slug?: string
   name: string
+  faqs?: { question: string; answer: string }[]
   category: string
   area: string
   address?: string | null
@@ -182,17 +183,6 @@ function getPlaceChips(place: PlaceCardData) {
     })
 }
 
-function getSearchResultLocation(place: PlaceCardData) {
-  const candidates = [
-    place.area,
-    place.address,
-    [place.localArea, place.city].filter(hasDisplayValue).join(', '),
-    place.city,
-  ]
-
-  return candidates.find((candidate) => hasDisplayValue(candidate))?.trim() ?? ''
-}
-
 function getPlaceHref(place: PlaceCardData, overrideHref?: string | null) {
   const trimmedOverrideHref = overrideHref?.trim()
 
@@ -218,6 +208,34 @@ function getPlaceHref(place: PlaceCardData, overrideHref?: string | null) {
   })
 }
 
+function formatCardRating(place: PlaceCardData) {
+  if (typeof place.rating === 'number' && Number.isFinite(place.rating) && place.rating > 0) {
+    return place.rating % 1 === 0 ? String(place.rating) : place.rating.toFixed(1)
+  }
+
+  if (typeof place.markerRatingText === 'string' && place.markerRatingText.trim()) {
+    return place.markerRatingText.trim()
+  }
+
+  return '0'
+}
+
+function formatCardReviewCount(place: PlaceCardData) {
+  if (typeof place.ratingCount === 'number' && Number.isFinite(place.ratingCount)) {
+    return Math.max(0, Math.floor(place.ratingCount))
+  }
+
+  if (typeof place.reviewCount === 'string') {
+    const parsedCount = Number.parseInt(place.reviewCount.replace(/[^0-9-]/g, ''), 10)
+
+    if (Number.isFinite(parsedCount)) {
+      return Math.max(0, parsedCount)
+    }
+  }
+
+  return 0
+}
+
 function PlaceCard({
   place,
   isSelected = false,
@@ -238,8 +256,8 @@ function PlaceCard({
   const { showSystemMessage } = useSystemMessage()
   const resolvedCuratedImageUrls = place.curatedImageUrls ?? getCuratedPlaceImages(place.name)
   const photoUrl =
-    place.imageUrl?.trim() ||
     place.thumbnailUrl?.trim() ||
+    place.imageUrl?.trim() ||
     place.curatedImageUrl?.trim() ||
     resolvedCuratedImageUrls[0]?.trim() ||
     null
@@ -249,14 +267,11 @@ function PlaceCard({
   const isSaved = [place.slug, normalizedNameSlug, place.id].some((slug) => isPlaceSaved(slug))
   const displayChips = getPlaceChips(place)
   const categoryIconName = getCategoryIconName(place.badge || place.category)
-  const compactLocation = getSearchResultLocation(place)
   const resolvedHref = getPlaceHref(place, href)
-  const mobileVisibleChips = displayChips.slice(0, 2)
-  const mobileHiddenChipCount = Math.max(displayChips.length - 2, 0)
-  const mobileChips =
-    mobileHiddenChipCount > 0 && mobileVisibleChips.length > 0
-      ? [mobileVisibleChips[0], { id: 'more', key: 'more', name: `+${mobileHiddenChipCount}` }]
-      : mobileVisibleChips
+  const searchCardSummary = place.description?.trim() || place.reason.trim()
+  const searchCardSubtitle = hasDisplayValue(place.badge) ? place.badge : place.category
+  const searchCardRatingText = formatCardRating(place)
+  const searchCardReviewCount = formatCardReviewCount(place)
   const normalizedBadge = place.badge.trim().toLowerCase()
   const normalizedCategory = place.category.trim().toLowerCase()
   const shouldShowCategory = hasDisplayValue(place.category) && normalizedCategory !== normalizedBadge
@@ -306,60 +321,49 @@ function PlaceCard({
   }
 
   const cardContent = searchResultCard ? (
-    <div className="grid min-h-[132px] grid-cols-[104px_minmax(0,1fr)] items-stretch gap-3.5 p-3 md:min-h-[172px] md:grid-cols-[140px_minmax(0,1fr)] md:gap-4">
-      {shouldShowPhoto ? (
-        <div className="relative h-full min-h-[132px] w-[104px] self-stretch overflow-hidden rounded-[20px] border border-[rgba(148,163,184,0.18)] bg-[linear-gradient(180deg,#f8fbff_0%,#eef4fb_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.5)] md:min-h-[172px] md:w-[140px]">
+    <div className="overflow-hidden">
+      <div className={`relative w-full overflow-hidden bg-[linear-gradient(180deg,var(--primary-soft)_0%,rgba(var(--accent-rgb),0.06)_100%)] ${compact ? 'aspect-[1.55]' : 'aspect-[1.38]'}`}>
+        {shouldShowPhoto ? (
           <img
             src={photoUrl ?? undefined}
             alt={photoAlt}
             className="absolute inset-0 h-full w-full object-cover object-center"
             loading="lazy"
+            decoding="async"
+            sizes={compact ? '100vw' : '(min-width: 1024px) 420px, 100vw'}
             onError={() => setFailedPhotoUrl(photoUrl)}
           />
-        </div>
-      ) : (
-        <div className="flex min-h-[132px] w-[104px] shrink-0 self-stretch items-center justify-center rounded-[20px] border border-[rgba(148,163,184,0.16)] bg-[linear-gradient(180deg,#f8fbff_0%,#f2f6fb_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] md:min-h-[172px] md:w-[140px]">
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-slate-400 shadow-[0_4px_12px_rgba(148,163,184,0.14)]">
-            <AppIcon name={categoryIconName} size="card" className="h-5 w-5" />
-          </span>
-        </div>
-      )}
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className={`flex items-center justify-center rounded-full bg-white/90 text-slate-400 shadow-[0_4px_12px_rgba(148,163,184,0.14)] ${compact ? 'h-10 w-10' : 'h-12 w-12'}`}>
+              <AppIcon name={categoryIconName} size="card" className={compact ? 'h-5 w-5' : 'h-6 w-6'} />
+            </span>
+          </div>
+        )}
 
-      <div className="relative flex min-h-[132px] min-w-0 flex-col justify-start pr-10">
-        <h2 className="line-clamp-2 text-[16px] font-black leading-5 tracking-[-0.02em] text-slate-950">
+        <div className={`absolute inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/92 font-bold tracking-[0.01em] text-slate-700 shadow-[0_8px_18px_rgba(15,23,42,0.12)] backdrop-blur-sm ${compact ? 'bottom-2.5 right-2.5 px-2 py-0.5 text-[9px]' : 'bottom-3 right-3 px-2.5 py-1 text-[10px]'}`}>
+          <AppIcon name="reviews" className="h-3.5 w-3.5 shrink-0 text-amber-500" />
+          <span>{searchCardRatingText}</span>
+          <span className="text-slate-300">·</span>
+          <span>{`Reviews (${searchCardReviewCount})`}</span>
+        </div>
+      </div>
+
+      <div className={`px-3.5 ${compact ? 'pb-3 pt-2' : 'pb-3.5 pt-2.5'}`}>
+        <h2 className={`line-clamp-2 pb-0.5 font-black leading-[1.15] tracking-[-0.03em] text-slate-950 ${compact ? 'text-[14px]' : 'text-[15px]'}`}>
           {place.name}
         </h2>
 
-        {hasDisplayValue(place.badge) ? (
-          <div className="mt-1.5">
-            <span className="inline-flex max-w-full items-center rounded-full bg-[#ebf3ff] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-[#2563eb]">
-              <span className="truncate">{place.badge}</span>
-            </span>
-          </div>
+        {searchCardSubtitle ? (
+          <p className={`mt-1 font-semibold tracking-[0.01em] text-[var(--accent-deep)]/80 ${compact ? 'text-[10px]' : 'text-[11px]'}`}>
+            {searchCardSubtitle}
+          </p>
         ) : null}
 
-        {compactLocation ? (
-          <div className="mt-2 flex items-start gap-1.5 text-[12px] leading-[1.35] text-slate-500">
-            <AppIcon name="place" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
-            <span className="line-clamp-2 min-w-0">{compactLocation}</span>
-          </div>
-        ) : null}
-
-        {mobileChips.length > 0 ? (
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {mobileChips.map((chip) => (
-              <span
-                key={`${chip.id}-${chip.name}`}
-                className={`inline-flex max-w-full min-w-0 items-center rounded-full px-2.5 py-1 text-[10px] font-semibold ${
-                  chip.key === 'more'
-                    ? 'bg-slate-100 text-slate-500'
-                    : 'border border-[rgba(148,163,184,0.16)] bg-slate-50 text-slate-600'
-                }`}
-              >
-                <span className="truncate">{chip.name}</span>
-              </span>
-            ))}
-          </div>
+        {searchCardSummary ? (
+          <p className={`mt-1.5 line-clamp-3 text-slate-600 ${compact ? 'text-[11px] leading-[1.35]' : 'text-[12px] leading-5'}`}>
+            {searchCardSummary}
+          </p>
         ) : null}
       </div>
     </div>
@@ -372,6 +376,8 @@ function PlaceCard({
             alt={photoAlt}
             className={`${mediaClassName} shrink-0 border border-[rgba(148,163,184,0.18)] object-cover shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] ${compact ? 'h-full min-h-[112px] self-stretch' : 'h-full self-stretch'}`}
             loading="lazy"
+            decoding="async"
+            sizes={compact ? '(min-width: 640px) 92px, 84px' : '112px'}
             onError={() => setFailedPhotoUrl(photoUrl)}
           />
         ) : (
@@ -390,23 +396,23 @@ function PlaceCard({
       <div className="relative min-w-0 flex flex-1 flex-col overflow-hidden">
         <div className={`flex items-start justify-between gap-2 ${compact ? 'pr-10' : ''}`}>
           <div className="min-w-0 flex-1">
-            <h2 className={`line-clamp-2 font-black leading-[1.08] tracking-[-0.03em] text-[#0f172a] ${compact ? 'text-[15px]' : 'text-[17px]'}`}>
+            <h2 className={`line-clamp-2 font-black leading-[1.08] tracking-[-0.03em] text-slate-950 ${compact ? 'text-[15px]' : 'text-[17px]'}`}>
               {place.name}
             </h2>
             <div className="mt-1.5 flex items-center gap-2">
-              <span className="rounded-full bg-[#ebf3ff] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-[#2563eb]">
+              <span className="rounded-full bg-[var(--accent-soft)] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-[var(--accent-deep)]">
                 {place.badge}
               </span>
               {shouldShowCategory ? (
-                <p className="line-clamp-1 text-[11px] font-medium text-[#64748b]">{place.category}</p>
+                <p className="line-clamp-1 text-[11px] font-medium text-slate-500">{place.category}</p>
               ) : null}
             </div>
           </div>
         </div>
 
         <div className={`min-w-0 overflow-hidden ${compact ? 'mt-1.5 space-y-1' : 'mt-2 space-y-1.5'}`}>
-          <div className="flex items-start gap-1.5 text-[11px] text-[#64748b]">
-            <AppIcon name="place" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#94a3b8]" />
+          <div className="flex items-start gap-1.5 text-[11px] text-slate-500">
+            <AppIcon name="place" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
             <span className={`leading-4 ${compact ? 'line-clamp-2' : 'line-clamp-2'}`}>{place.area}</span>
           </div>
 
@@ -415,7 +421,7 @@ function PlaceCard({
               {displayChips.map((chip, index) => (
                 <span
                   key={`${chip.id}-${chip.name}`}
-                  className={`inline-flex max-w-full min-w-0 rounded-full border border-[rgba(148,163,184,0.18)] bg-[#f8fbff] px-2.5 py-1 text-[10px] font-semibold text-[#475569] ${
+                  className={`inline-flex max-w-full min-w-0 rounded-full border border-[var(--accent-glow)] bg-[var(--primary-soft)] px-2.5 py-1 text-[10px] font-semibold text-slate-600 ${
                     compact
                       ? index >= 1 ? 'hidden' : 'inline-flex'
                       : index >= 2 ? 'hidden sm:inline-flex' : 'inline-flex'
@@ -429,7 +435,7 @@ function PlaceCard({
         </div>
 
         <div className={`min-w-0 ${compact ? 'mt-1.5' : 'mt-auto pt-2'}`}>
-          <div className="flex items-center gap-3 text-[11px] text-[#64748b]">
+          <div className="flex items-center gap-3 text-[11px] text-slate-500">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2 py-1">
               <span
                 className={`inline-block h-1.5 w-1.5 rounded-full ${
@@ -465,7 +471,7 @@ function PlaceCard({
           compact ? '' : 'hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(15,23,42,0.09)]'
         } ${
           isSelected
-            ? 'border-[rgba(37,99,235,0.72)] ring-2 ring-[rgba(59,130,246,0.14)]'
+            ? 'border-[var(--accent-glow)] ring-2 ring-[var(--accent-soft)]'
             : 'border-[rgba(148,163,184,0.22)]'
         } ${className}`}
       >
@@ -473,7 +479,7 @@ function PlaceCard({
           <InternalLink
             href={resolvedHref}
             onClick={handleActivate}
-            className="block h-full w-full outline-none focus-visible:ring-2 focus-visible:ring-[rgba(59,130,246,0.24)] focus-visible:ring-inset"
+            className="block h-full w-full outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-soft)] focus-visible:ring-inset"
           >
             {cardContent}
           </InternalLink>
@@ -495,11 +501,7 @@ function PlaceCard({
               : 'border-[rgba(148,163,184,0.22)] text-slate-400 hover:border-rose-200 hover:text-rose-600'
           }`}
         >
-          {isSaving ? (
-            <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-200 border-t-[var(--accent)]" />
-          ) : (
-            <AppIcon name="favorites" className={`h-4 w-4 ${isSaved ? 'fill-current text-rose-600' : ''}`} />
-          )}
+          <AppIcon name="favorites" className={`h-4 w-4 ${isSaved ? 'fill-current text-rose-600' : ''}`} />
         </button>
 
         {saveError ? (

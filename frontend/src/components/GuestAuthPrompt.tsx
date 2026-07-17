@@ -257,7 +257,7 @@ function GuestAuthPromptCard({
           ) : (
             <button
               type="button"
-              onClick={() => navigateToPath('/')}
+              onClick={() => navigateToPath('/home')}
               className="px-4 py-3 text-[13px] font-semibold text-[var(--muted)] transition hover:text-[var(--text-main)]"
             >
               Maybe later

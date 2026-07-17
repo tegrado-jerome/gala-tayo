@@ -11,9 +11,6 @@ import {
   promptBuilderSections,
 } from '../utils/promptBuilder'
 import { navigateToPath } from '../utils/navigation'
-import promptBuilderOutputChibi from '../assets/chibis/features/prompt-builder/chibi-prompt-builder-output.webp'
-import promptBuilderQuestionsChibi from '../assets/chibis/features/prompt-builder/chibi-prompt-builder-questions.webp'
-import { ChibiIllustration } from './layout/Primitives'
 
 type PromptBuilderModalProps = {
   isOpen: boolean
@@ -310,13 +307,7 @@ export default function PromptBuilderModal({
         ) : (
           <>
             <div className="prompt-hero mt-1 flex flex-col items-center gap-2 overflow-visible text-center lg:mt-2 lg:flex-row lg:items-center lg:justify-start lg:gap-8 lg:text-left">
-              <div className="flex min-w-0 flex-1 flex-col items-center gap-3 lg:flex-row lg:items-center lg:gap-6">
-                <ChibiIllustration
-                  src={promptBuilderOutputChibi}
-                  variant="feature"
-                  className="mx-auto !w-[clamp(200px,28vw,300px)] !max-h-[240px] lg:mx-0 lg:!w-[clamp(220px,20vw,320px)] lg:!max-h-[280px]"
-                />
-
+              <div className="flex min-w-0 flex-1 flex-col items-center gap-3 lg:items-start">
                 <div className="min-w-0 max-w-2xl lg:self-center">
                   <h1
                     id="prompt-builder-title"
@@ -376,7 +367,7 @@ export default function PromptBuilderModal({
                 <div className="preview-card p-1 sm:p-0.5">
                   <section>
                     <div className="flex items-start gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[rgba(16,185,129,0.1)] text-[rgb(16,185,129)]">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[rgba(var(--accent-rgb),0.1)] text-[var(--accent)]">
                         <RefreshIcon />
                       </div>
                       <div className="min-w-0">
@@ -394,7 +385,7 @@ export default function PromptBuilderModal({
                     <button
                       type="button"
                       onClick={handleSearchInGalaTayo}
-                      className="mt-3 inline-flex min-h-[46px] w-full items-center justify-center gap-2 rounded-[14px] bg-[rgb(16,185,129)] px-4 py-2.5 text-[13px] font-semibold text-white shadow-[0_10px_22px_rgba(16,185,129,0.2)] transition hover:bg-[rgb(5,150,105)]"
+                      className="mt-3 inline-flex min-h-[46px] w-full items-center justify-center gap-2 rounded-[14px] bg-[var(--accent)] px-4 py-2.5 text-[13px] font-semibold text-white shadow-[0_10px_22px_rgba(var(--accent-rgb),0.2)] transition hover:bg-[var(--accent-deep)]"
                     >
                       <SearchIcon />
                       <span>Search in GalaTayo</span>
@@ -505,13 +496,7 @@ export default function PromptBuilderModal({
         </div>
 
         <div className="prompt-hero lg:mt-2 lg:flex lg:items-center lg:justify-between lg:gap-8">
-          <div className="flex min-w-0 flex-1 flex-col items-center gap-3 text-center lg:flex-row lg:items-center lg:text-left">
-            <ChibiIllustration
-              src={promptBuilderQuestionsChibi}
-              variant="feature"
-              className="mx-auto !w-[clamp(190px,26vw,300px)] !max-h-[240px] lg:mx-0 lg:!w-[clamp(210px,18vw,280px)] lg:!max-h-[270px]"
-            />
-
+          <div className="flex min-w-0 flex-1 flex-col items-center gap-3 text-center lg:text-left">
             <div className="mt-0 flex flex-col items-center gap-2 px-1 text-center sm:px-2 lg:items-start lg:text-left lg:px-0">
               <div className="min-w-0">
                 <h1 id="prompt-builder-title" className="text-[1.45rem] font-black tracking-[-0.05em] text-slate-950 sm:text-[1.8rem] lg:text-[2rem]">
@@ -607,11 +592,7 @@ export default function PromptBuilderModal({
                 disabled={isGeneratingPrompt || !hasInput}
                 className="inline-flex min-h-[42px] w-full items-center justify-center gap-2 rounded-full bg-[var(--accent-deep)] px-4 py-2 text-[0.86rem] font-semibold tracking-[-0.01em] text-white shadow-[0_8px_18px_rgba(23,45,107,0.22)] transition hover:bg-[#0f1f4d] disabled:cursor-not-allowed disabled:bg-slate-500 lg:min-h-[44px] lg:text-[0.9rem]"
               >
-                {isGeneratingPrompt ? (
-                  <span className="h-4 w-4 animate-spin rounded-full border-[2.5px] border-white/40 border-t-white" aria-hidden="true" />
-                ) : (
-                  <GenerateIcon />
-                )}
+                <GenerateIcon />
                 <span>{isGeneratingPrompt ? 'Generating...' : 'Generate'}</span>
               </button>
             </div>

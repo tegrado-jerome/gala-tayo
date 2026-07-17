@@ -1,5 +1,5 @@
 import { forwardRef, type MouseEvent, type ReactNode } from 'react'
-import { navigateToPath } from '../utils/navigation'
+import { navigateToPath, scrollViewportToTopInstant } from '../utils/navigation'
 
 type InternalLinkProps = {
   href: string
@@ -31,6 +31,7 @@ const InternalLink = forwardRef<HTMLAnchorElement, InternalLinkProps>(function I
         }
 
         event.preventDefault()
+        scrollViewportToTopInstant()
         navigateToPath(href)
       }}
     >

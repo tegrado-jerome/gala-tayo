@@ -6,8 +6,6 @@ import { AppIcon, type AppIconName } from '../../AppIcon'
 import AskAiUsagePill from '../../AskAiUsagePill'
 import { FeatureGuideModalTrigger, featureGuideContent } from '../../FeatureGuideModal'
 import GoogleSignInButton from '../../GoogleSignInButton'
-import InternalLink from '../../InternalLink'
-import { ChibiIllustration } from '../../layout/ResponsiveLayouts'
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -18,14 +16,10 @@ import {
   SparkIcon,
 } from '../HomeIcons'
 import type { AskAiSource } from '../homeHelpers'
-import { navigateToPath } from '../../../utils/navigation'
+import { navigateBackWithFallback, navigateToPath } from '../../../utils/navigation'
 import { cancelAskAiRuntimeRequest, type ChatMessage } from '../../../utils/askAiRuntime'
 import { type AskAiUsageStatus } from '../../../utils/askAiUsage'
-import askAiErrorChibi from '../../../assets/chibis/core/ask-ai/chibi-ask-ai-error.webp'
-import askAiOutputChibi from '../../../assets/chibis/core/ask-ai/chibi-ask-ai-output.webp'
-import askAiStartChibi from '../../../assets/chibis/core/ask-ai/chibi-ask-ai-start.webp'
-import askAiThinkingChibi from '../../../assets/chibis/core/ask-ai/chibi-ask-ai-thinking.webp'
-import protectedFeatureChibi from '../../../assets/chibis/shared-states/chibi-protected-feature.webp'
+import { PageShellSkeleton } from '../../loading/SkeletonStates'
 
 function formatResetAtCompact(resetAt: string) {
   const resetDate = new Date(resetAt)
@@ -261,7 +255,7 @@ function AskAiStructuredSection({
   const paragraphBlocks = blocks.filter((block) => block.type === 'paragraph')
   const listBlocks = blocks.filter((block) => block.type !== 'paragraph')
   const containerClassName = isPrimary
-    ? 'border-[rgba(47,116,232,0.12)] bg-[linear-gradient(180deg,#ffffff_0%,#fafcff_100%)] shadow-[0_10px_24px_rgba(47,116,232,0.05)]'
+    ? 'border-[rgba(var(--accent-rgb),0.12)] bg-[linear-gradient(180deg,#ffffff_0%,#f5f8ff_100%)] shadow-[0_10px_24px_rgba(var(--accent-rgb),0.05)]'
     : 'border-[rgba(15,23,42,0.08)] bg-white shadow-[0_8px_20px_rgba(15,23,42,0.04)]'
 
   return (
@@ -269,7 +263,7 @@ function AskAiStructuredSection({
       className={`overflow-hidden rounded-3xl border px-4 py-4 sm:px-5 ${containerClassName}`}
     >
       <div className="flex items-center gap-2.5">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[rgba(47,116,232,0.08)] text-[var(--accent-deep)]">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[rgba(var(--accent-rgb),0.08)] text-[var(--accent-deep)]">
           <SectionIcon className="h-3.5 w-3.5" />
         </span>
         <div className="min-w-0">
@@ -371,14 +365,12 @@ function AskAiOutputStageLegacy({
   question,
   answer,
   sources,
-  chibiImage,
   onStartOver,
   className = '',
 }: {
   question: string
   answer: string
   sources: AskAiSource[]
-  chibiImage: string
   onStartOver: () => void
   className?: string
 }) {
@@ -406,12 +398,9 @@ function AskAiOutputStageLegacy({
         </div>
 
         <div className="flex flex-col items-center gap-5 lg:-mt-2">
-          <div className="relative flex items-end justify-center">
-            <ChibiIllustration src={chibiImage} variant="feature" />
-            <div className="absolute right-0 top-8 hidden rounded-3xl border border-[rgba(83,146,241,0.16)] bg-white px-5 py-4 text-center shadow-[0_12px_24px_rgba(15,23,42,0.045)] lg:block">
-              <p className="text-[1.1rem] font-black text-slate-900">Here\u2019s a practical</p>
-              <p className="mt-1 text-[1.1rem] font-black text-slate-900">gala plan for you.</p>
-            </div>
+          <div className="rounded-3xl border border-[rgba(83,146,241,0.16)] bg-white px-5 py-4 text-center shadow-[0_12px_24px_rgba(15,23,42,0.045)]">
+            <p className="text-[1.1rem] font-black text-slate-900">Here\u2019s a practical</p>
+            <p className="mt-1 text-[1.1rem] font-black text-slate-900">gala plan for you.</p>
           </div>
         </div>
         <div className="grid items-start gap-5 lg:mt-auto lg:grid-cols-[minmax(0,1fr)_360px] xl:grid-cols-[minmax(0,1fr)_400px]">
@@ -541,11 +530,9 @@ function AskAiOutputStageLegacy({
 
 function AskAiThinkingStageLegacy({
   question,
-  chibiImage,
   className = '',
 }: {
   question: string
-  chibiImage: string
   className?: string
 }) {
   const loadingMessageText = 'This may take a few seconds if current info is needed.'
@@ -573,11 +560,7 @@ function AskAiThinkingStageLegacy({
         </div>
 
         <div className="mt-8 flex flex-1 flex-col items-center justify-center text-center sm:mt-10 lg:mt-5">
-          <div className="flex items-center justify-center">
-              <ChibiIllustration src={chibiImage} variant="feature" />
-          </div>
-
-          <div className="relative -mt-3 w-full max-w-[370px] rounded-2xl border border-[rgba(20,35,58,0.34)] bg-white px-4 pb-4 pt-4 shadow-[0_12px_28px_rgba(15,23,42,0.045)] sm:max-w-[420px] sm:px-5 lg:max-w-[370px]">
+          <div className="relative w-full max-w-[370px] rounded-2xl border border-[rgba(20,35,58,0.34)] bg-white px-4 pb-4 pt-4 shadow-[0_12px_28px_rgba(15,23,42,0.045)] sm:max-w-[420px] sm:px-5 lg:max-w-[370px]">
             <span className="absolute left-1/2 top-0 h-4.5 w-4.5 -translate-x-1/2 -translate-y-1/2 rotate-45 border-l border-t border-[rgba(20,35,58,0.34)] bg-white" />
             <div className="relative flex flex-col items-center gap-2.5">
               <p className="text-[0.9rem] font-semibold uppercase tracking-[0.08em] text-slate-600 sm:text-[0.98rem] lg:text-[0.9rem]">
@@ -635,13 +618,6 @@ function AskAiPlaceholder({
     : false
   const [draftQuestion, setDraftQuestion] = useState(question)
   const questionTextareaRef = useRef<HTMLTextAreaElement | null>(null)
-  const chibiImage = answerError
-    ? askAiErrorChibi
-    : isSubmitting
-      ? askAiThinkingChibi
-      : answer
-        ? askAiOutputChibi
-        : askAiStartChibi
 
   useEffect(() => {
     setDraftQuestion(question)
@@ -676,7 +652,7 @@ function AskAiPlaceholder({
   }
 
   if (isSubmitting) {
-    return <AskAiThinkingStageNext question={draftQuestion} chibiImage={chibiImage} className={className} />
+    return <AskAiThinkingStageNext question={draftQuestion} className={className} />
   }
 
   if (answer) {
@@ -685,7 +661,6 @@ function AskAiPlaceholder({
         question={question}
         answer={answer}
         sources={sources}
-        chibiImage={chibiImage}
         onStartOver={onStartOver}
         className={className}
       />
@@ -735,8 +710,8 @@ function AskAiPlaceholder({
         <div className="mx-auto flex w-full max-w-[768px] flex-col gap-5">
           {/* AI greeting bubble */}
           <div className="flex items-start gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#e8f0fe,#d4e4fc)] text-sm shadow-[0_2px_8px_rgba(47,116,232,0.10)]">
-              <AppIcon name="info" className="h-4 w-4 text-[#2f74e8]" strokeWidth={2.2} />
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#dbeafe,#bfdbfe)] text-sm shadow-[0_2px_8px_rgba(var(--accent-rgb),0.10)]">
+              <AppIcon name="info" className="h-4 w-4 text-[var(--accent-deep)]" strokeWidth={2.2} />
             </div>
             <div className="min-w-0 max-w-[82%] rounded-2xl rounded-tl-[6px] border border-[rgba(15,23,42,0.06)] bg-white px-4 py-3 shadow-[0_2px_8px_rgba(15,23,42,0.03)]">
               <p className="text-[0.94rem] leading-relaxed text-slate-800">Hi! What kind of gala are you planning today?</p>
@@ -751,7 +726,7 @@ function AskAiPlaceholder({
                 type="button"
                 disabled={isLimitReached && isRegistered}
                 onClick={() => handleSubmit(chip.prompt)}
-                className="rounded-full border border-[rgba(47,116,232,0.16)] bg-[var(--accent-wash)] px-3.5 py-2 text-[0.82rem] font-semibold text-[var(--accent-deep)] transition hover:border-[var(--accent)] hover:bg-[rgba(var(--accent-rgb),0.18)] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-full border border-[rgba(var(--accent-rgb),0.16)] bg-[var(--accent-wash)] px-3.5 py-2 text-[0.82rem] font-semibold text-[var(--accent-deep)] transition hover:border-[var(--accent)] hover:bg-[rgba(var(--accent-rgb),0.18)] active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {chip.label}
               </button>
@@ -795,34 +770,7 @@ function AskAiGateLoadingState({
 }: {
   className?: string
 }) {
-  return (
-    <section className={`gala-page-background relative overflow-hidden px-4 py-4 sm:px-5 sm:py-5 lg:px-8 lg:py-7 ${className} min-h-[calc(100dvh-88px)]`}>
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-12 top-8 h-40 w-40 rounded-full bg-[rgba(160,201,255,0.22)] blur-3xl" />
-        <div className="absolute right-0 top-0 h-52 w-52 rounded-full bg-[rgba(192,202,255,0.2)] blur-3xl" />
-      </div>
-      <div className="relative mx-auto flex min-h-[calc(100dvh-144px)] w-full max-w-[min(1500px,calc(100vw-96px))] flex-col items-start">
-        <div className="flex w-full flex-1 items-center justify-center">
-          <div className="relative w-full max-w-[360px] overflow-hidden rounded-[32px] border border-[rgba(83,146,241,0.16)] bg-[linear-gradient(180deg,#ffffff,#f7fbff)] px-6 py-7 text-center shadow-[0_18px_42px_rgba(28,77,160,0.08)]">
-            <div className="pointer-events-none absolute inset-x-10 top-0 h-24 rounded-full bg-[radial-gradient(circle,rgba(160,201,255,0.22),transparent_72%)] blur-2xl" />
-            <div className="relative">
-              <div className="mx-auto flex h-[124px] w-[124px] items-center justify-center rounded-full bg-[linear-gradient(180deg,#f8fbff_0%,#edf5ff_100%)]">
-                <ChibiIllustration src={askAiThinkingChibi} variant="compact" priority />
-              </div>
-              <div className="mt-4 flex items-center justify-center gap-2" aria-hidden="true">
-                <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-[var(--accent)]" />
-                <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-[#7fb2ff]" style={{ animationDelay: '140ms' }} />
-                <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-[#9bd8d0]" style={{ animationDelay: '280ms' }} />
-              </div>
-              <p className="mt-4 text-[1.02rem] font-black tracking-[-0.02em] text-slate-900">
-                Preparing <span className="text-[var(--accent-deep)]">Ask AI</span>...
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
+  return <PageShellSkeleton className={className} />
 }
 
 void AskAiSignInRequired
@@ -844,8 +792,7 @@ function AskAiSignInRequired({
       <div className="relative mx-auto flex w-full max-w-5xl flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.82fr)] lg:items-center">
         {onBack ? <AskAiBackButton onClick={onBack} className="w-fit lg:col-span-2" /> : null}
         <div className="overflow-hidden rounded-[32px] border border-[rgba(83,146,241,0.16)] bg-white/88 p-5 shadow-[0_22px_60px_rgba(15,23,42,0.08)] sm:p-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
-            <ChibiIllustration src={protectedFeatureChibi} variant="feature" className="mx-auto lg:mx-0" />
+          <div className="flex flex-col gap-4">
             <div className="min-w-0">
               <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(83,146,241,0.18)] bg-[rgba(242,247,255,0.96)] px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--accent-deep)]">
                 <AppIcon name="info" className="h-4 w-4" strokeWidth={2.2} />
@@ -900,14 +847,12 @@ function AskAiOutputStageNextLegacy({
   question,
   answer,
   sources,
-  chibiImage,
   onStartOver,
   className = '',
 }: {
   question: string
   answer: string
   sources: AskAiSource[]
-  chibiImage: string
   onStartOver: () => void
   className?: string
 }) {
@@ -933,10 +878,6 @@ function AskAiOutputStageNextLegacy({
           <div className="mt-2.5 w-full rounded-2xl border border-[rgba(20,35,58,0.14)] bg-white/88 px-4 py-3.5">
             <p className="break-words text-[1rem] font-bold leading-7 tracking-[-0.01em] text-slate-950 [overflow-wrap:anywhere]">{question}</p>
           </div>
-        </div>
-
-        <div className="flex items-center justify-center">
-          <ChibiIllustration src={chibiImage} variant="empty" />
         </div>
 
         <div className="grid gap-4 border-t border-[rgba(20,35,58,0.08)] pt-4">
@@ -1065,14 +1006,12 @@ function AskAiOutputStageNext({
   question,
   answer,
   sources,
-  chibiImage,
   onStartOver,
   className = '',
 }: {
   question: string
   answer: string
   sources: AskAiSource[]
-  chibiImage: string
   onStartOver: () => void
   className?: string
 }) {
@@ -1089,15 +1028,15 @@ function AskAiOutputStageNext({
 
           {/* User message bubble */}
           <div className="flex justify-end">
-            <div className="min-w-0 max-w-[82%] rounded-2xl rounded-tr-[6px] bg-[var(--accent)] px-4 py-3 shadow-[0_4px_14px_rgba(47,116,232,0.16)]">
+            <div className="min-w-0 max-w-[82%] rounded-2xl rounded-tr-[6px] bg-[var(--accent)] px-4 py-3 shadow-[0_4px_14px_rgba(var(--accent-rgb),0.16)]">
               <p className="break-words text-[0.94rem] leading-relaxed text-white [overflow-wrap:anywhere]">{question}</p>
             </div>
           </div>
 
           {/* AI response bubble */}
           <div className="flex items-start gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#e8f0fe,#d4e4fc)] shadow-[0_2px_8px_rgba(47,116,232,0.10)]">
-              <ChibiIllustration src={chibiImage} alt="" variant="compact" />
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#dbeafe,#bfdbfe)] shadow-[0_2px_8px_rgba(var(--accent-rgb),0.10)]">
+              <Bot className="h-4 w-4 text-[var(--accent-deep)]" strokeWidth={2} />
             </div>
             <div className="min-w-0 w-full max-w-[88%] sm:max-w-[82%]">
               {displaySections.map((section, index) => (
@@ -1120,7 +1059,7 @@ function AskAiOutputStageNext({
                         href={source.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 rounded-full border border-[rgba(15,23,42,0.06)] bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600 transition hover:border-[rgba(47,116,232,0.18)] hover:bg-white hover:text-[var(--accent-deep)]"
+                        className="inline-flex items-center gap-1 rounded-full border border-[rgba(15,23,42,0.06)] bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600 transition hover:border-[rgba(var(--accent-rgb),0.18)] hover:bg-white hover:text-[var(--accent-deep)]"
                       >
                         {source.title.length > 28 ? `${source.title.slice(0, 28)}...` : source.title}
                         <ChevronRightIcon className="h-3 w-3 shrink-0" />
@@ -1152,7 +1091,7 @@ function AskAiOutputStageNext({
 function ThinkingLoadingBar({ className = '' }: { className?: string }) {
   return (
     <div className={`h-1.5 overflow-hidden rounded-full bg-slate-100 ${className}`}>
-      <div className="h-full w-2/3 rounded-full bg-[linear-gradient(90deg,#8bb8ff,#245dce)] motion-safe:animate-[gala-loading-slide_1.6s_ease-in-out_infinite]" />
+      <div className="h-full w-2/3 rounded-full bg-[linear-gradient(90deg,var(--accent),var(--accent-deep))] motion-safe:animate-[gala-loading-slide_1.6s_ease-in-out_infinite]" />
     </div>
   )
 }
@@ -1179,29 +1118,24 @@ function isChatbotUsageLimitReached(usageStatus: AskAiUsageStatus | null, isRegi
 
 function AskAiThinkingStageNext({
   question,
-  chibiImage,
   className = '',
 }: {
   question: string
-  chibiImage: string
   className?: string
 }) {
   return (
     <div className={`flex h-full min-h-0 w-full flex-col ${className}`}>
-      {/* Chat messages area */}
       <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-5 lg:px-8">
         <div className="mx-auto flex w-full max-w-[820px] flex-col gap-5 lg:max-w-[900px]">
-          {/* User message bubble */}
           <div className="flex justify-end">
-            <div className="min-w-0 max-w-[82%] rounded-2xl rounded-tr-[6px] bg-[var(--accent)] px-4 py-3 shadow-[0_4px_14px_rgba(47,116,232,0.16)]">
+            <div className="min-w-0 max-w-[82%] rounded-2xl rounded-tr-[6px] bg-[var(--accent)] px-4 py-3 shadow-[0_4px_14px_rgba(var(--accent-rgb),0.16)]">
               <p className="break-words text-[0.94rem] leading-relaxed text-white [overflow-wrap:anywhere]">{question}</p>
             </div>
           </div>
 
-          {/* AI thinking bubble */}
           <div className="flex items-start gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#e8f0fe,#d4e4fc)] shadow-[0_2px_8px_rgba(47,116,232,0.10)]">
-              <ChibiIllustration src={chibiImage} alt="" variant="compact" />
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#dbeafe,#bfdbfe)] shadow-[0_2px_8px_rgba(var(--accent-rgb),0.10)]">
+              <Bot className="h-4 w-4 text-[var(--accent-deep)]" strokeWidth={2} />
             </div>
             <div className="min-w-0 w-full max-w-[88%] rounded-2xl rounded-tl-[6px] border border-[rgba(15,23,42,0.06)] bg-white px-4 py-3.5 shadow-[0_2px_8px_rgba(15,23,42,0.03)] sm:max-w-[82%]">
               <div className="flex items-center gap-2">
@@ -1267,7 +1201,6 @@ function AskAiModePanel({
   const [draftQuestion, setDraftQuestion] = useState('')
   const draftQuestionRef = useRef('')
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
-
   useEffect(() => {
     draftQuestionRef.current = draftQuestion
   }, [draftQuestion])
@@ -1302,11 +1235,11 @@ function AskAiModePanel({
   }, [isLimitReached, isRegistered, isSubmitting, isUsagePending, onGuestUpgradePrompt, onSubmit, updateDraftQuestion])
 
   return (
-    <div className={`relative flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-[#f8fafc] ${className}`}>
+    <div className={`relative flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-[var(--bg)] ${className}`}>
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -top-32 left-1/2 h-[420px] w-[820px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.05),transparent_60%)] blur-3xl" />
-        <div className="absolute -top-20 left-1/4 h-[320px] w-[480px] rounded-full bg-[radial-gradient(circle,rgba(56,189,248,0.04),transparent_60%)] blur-3xl" />
-        <div className="absolute -top-16 right-1/4 h-[320px] w-[480px] rounded-full bg-[radial-gradient(circle,rgba(168,85,247,0.035),transparent_60%)] blur-3xl" />
+        <div className="absolute -top-32 left-1/2 h-[420px] w-[820px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(23,37,84,0.08),transparent_62%)] blur-3xl" />
+        <div className="absolute -top-20 left-1/4 h-[320px] w-[480px] rounded-full bg-[radial-gradient(circle,rgba(30,58,138,0.06),transparent_62%)] blur-3xl" />
+        <div className="absolute -top-16 right-1/4 h-[320px] w-[480px] rounded-full bg-[radial-gradient(circle,rgba(23,37,84,0.05),transparent_62%)] blur-3xl" />
       </div>
 
       <div className="relative shrink-0 mb-4 px-4 pt-5 sm:mb-5 sm:px-5 md:px-6 lg:px-8">
@@ -1321,18 +1254,19 @@ function AskAiModePanel({
               type="button"
               onClick={onStartOver}
               aria-label="New chat"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-white/80 text-slate-600 ring-1 ring-inset ring-slate-200/80 shadow-[0_6px_18px_-10px_rgba(15,23,42,0.2)] transition hover:bg-white hover:text-slate-800"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--panel)] text-slate-600 ring-1 ring-inset ring-[var(--line)] shadow-[var(--shadow-soft)] transition hover:text-[var(--accent-deep)]"
             >
               <AppIcon name="newChat" size={24} strokeWidth={2} />
             </button>
           )}
-          <InternalLink
-            href="/ask-ai"
-            aria-label="Back to Ask AI overview"
-            className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-sky-100 text-sky-700 ring-1 ring-inset ring-sky-200/70 shadow-[0_6px_18px_-8px_rgba(14,165,233,0.45)] transition hover:bg-sky-200/80 hover:text-sky-800"
+          <button
+            type="button"
+            onClick={() => navigateBackWithFallback('/home')}
+            aria-label="Go back"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[linear-gradient(135deg,#dbeafe,#bfdbfe)] text-[var(--accent-deep)] ring-1 ring-inset ring-[rgba(var(--accent-rgb),0.14)] shadow-[0_6px_18px_-8px_rgba(59,130,246,0.28)] transition hover:bg-[linear-gradient(135deg,#bfdbfe,#dbeafe)] hover:text-[var(--accent-deep)]"
           >
             <Bot className="h-6 w-6" strokeWidth={2} />
-          </InternalLink>
+          </button>
           </div>
         </div>
       </div>
@@ -1358,7 +1292,7 @@ function AskAiModePanel({
 
       <div className="relative shrink-0 px-4 pt-1 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] sm:px-5 md:px-6 lg:px-8">
         <div className="mx-auto w-full max-w-[920px]">
-          <div className="group/composer relative flex items-end gap-1.5 rounded-[24px] border border-slate-200/60 bg-[#f8fafc] p-1.5 shadow-none transition focus-within:border-slate-300/80">
+          <div className="group/composer relative flex items-end gap-1.5 rounded-[24px] border border-[var(--line)] bg-[var(--panel)] p-1.5 shadow-[var(--shadow-soft)] transition focus-within:border-[var(--line-strong)]">
             <textarea
               ref={textareaRef}
               value={draftQuestion}
@@ -1379,11 +1313,11 @@ function AskAiModePanel({
               onClick={() => (isSubmitting ? cancelAskAiRuntimeRequest() : handleSend())}
               disabled={!isSubmitting && (isUsagePending || (!draftQuestion.trim() && !isLimitReached) || (isLimitReached && isRegistered))}
               aria-label={isSubmitting ? 'Cancel request' : 'Send message'}
-              className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#172d6b] to-[#0f1f4a] text-white shadow-[0_4px_12px_-2px_rgba(23,45,107,0.4)] transition hover:from-[#1e3a82] hover:to-[#172d6b] hover:shadow-[0_6px_16px_-2px_rgba(23,45,107,0.5)] active:scale-95 disabled:cursor-not-allowed disabled:from-slate-200 disabled:to-slate-200 disabled:text-slate-400 disabled:shadow-none"
+              className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full bg-[var(--accent-deep)] text-white shadow-[0_8px_18px_rgba(23,37,84,0.24)] transition hover:bg-[var(--accent)] active:scale-95 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none"
             >
               {isSubmitting ? (
                 <svg className="h-4 w-4" viewBox="0 0 24 24">
-                  <circle cx="12" cy="12" r="11" fill="#0f1f4a" />
+                  <circle cx="12" cy="12" r="11" fill="#172554" />
                   <rect x="5.5" y="5.5" width="13" height="13" rx="2" fill="white" />
                 </svg>
               ) : (
@@ -1453,7 +1387,7 @@ const ChatMessageList = memo(function ChatMessageList({
           </div>
 
           <div className="mb-3 flex items-center gap-2 sm:mb-4">
-            <span className="rounded-full bg-[var(--accent-wash)] px-2.5 py-1 text-[10.5px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">
+            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10.5px] font-black uppercase tracking-[0.14em] text-slate-600">
               Picks
             </span>
             <p className="text-[12px] leading-relaxed text-slate-500 sm:text-[12.5px]">
@@ -1470,7 +1404,7 @@ const ChatMessageList = memo(function ChatMessageList({
               onClick={() => onSend(chip.prompt)}
               className="group flex w-full items-center gap-2.5 rounded-2xl border border-slate-200/70 bg-white/80 p-3 text-left shadow-[0_1px_2px_rgba(15,23,42,0.03)] backdrop-blur-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white hover:shadow-[0_8px_24px_-12px_rgba(15,23,42,0.12)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 sm:items-start sm:gap-3 sm:p-3.5"
             >
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 text-slate-500 ring-1 ring-inset ring-slate-200/70 transition group-hover:from-indigo-50 group-hover:to-blue-50 group-hover:text-indigo-600 group-hover:ring-indigo-100 sm:h-9 sm:w-9">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[var(--surface-alt)] text-slate-500 ring-1 ring-inset ring-[var(--line)] transition group-hover:bg-[var(--accent-soft)] group-hover:text-[var(--accent-deep)] sm:h-9 sm:w-9">
                 <AppIcon name={chip.icon} className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </div>
               <div className="min-w-0 flex-1">
@@ -1499,7 +1433,7 @@ const ChatMessageList = memo(function ChatMessageList({
         if (msg.role === 'user') {
           return (
             <div key={index} className="flex justify-end">
-              <div className="max-w-[85%] rounded-2xl rounded-tr-md border border-[#0f1f4a]/40 bg-gradient-to-br from-[#172d6b] to-[#0f1f4a] px-4 py-2.5 shadow-[0_4px_14px_-4px_rgba(23,45,107,0.35)]">
+              <div className="max-w-[85%] rounded-2xl rounded-tr-md border border-[rgba(23,37,84,0.2)] bg-[var(--accent-deep)] px-4 py-2.5 shadow-[0_8px_18px_rgba(23,37,84,0.22)]">
                 <p className="whitespace-pre-wrap break-words text-[14.5px] leading-relaxed text-white [overflow-wrap:anywhere]">{msg.content}</p>
               </div>
             </div>
@@ -1507,9 +1441,9 @@ const ChatMessageList = memo(function ChatMessageList({
         }
 
         return (
-          <div key={index} className="w-full min-w-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-white/70 p-4 shadow-[0_1px_2px_rgba(15,23,42,0.03)] backdrop-blur-sm">
+          <div key={index} className="w-full min-w-0 overflow-hidden rounded-2xl border border-[var(--line)] bg-[rgba(255,255,255,0.88)] p-4 shadow-[var(--shadow-soft)] backdrop-blur-sm">
             <div className="flex items-center gap-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-indigo-500 via-blue-500 to-cyan-400 shadow-[0_4px_10px_-2px_rgba(59,130,246,0.4)]">
+              <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[var(--accent-deep)] shadow-[0_8px_16px_rgba(23,37,84,0.18)]">
                 <AppIcon name="info" className="h-3 w-3 text-white" strokeWidth={2.2} />
               </div>
               <span className="text-[12px] font-semibold tracking-wide text-slate-500">Ask AI</span>
@@ -1537,7 +1471,7 @@ const ChatMessageList = memo(function ChatMessageList({
                     <em className="italic text-slate-800">{children}</em>
                   ),
                   a: ({ children, href }) => (
-                    <a href={href} target="_blank" rel="noopener noreferrer" className="text-indigo-600 underline decoration-indigo-200 underline-offset-2 transition hover:decoration-indigo-400">{children}</a>
+                    <a href={href} target="_blank" rel="noopener noreferrer" className="text-[var(--accent-deep)] underline decoration-[rgba(var(--accent-rgb),0.18)] underline-offset-2 transition hover:text-[var(--accent)] hover:decoration-[rgba(var(--accent-rgb),0.38)]">{children}</a>
                   ),
                   code: ({ children }) => (
                     <code className="rounded-md bg-slate-100 px-1.5 py-0.5 font-mono text-[13px] text-slate-800 whitespace-pre-wrap break-all">{children}</code>
@@ -1592,10 +1526,10 @@ const ChatMessageList = memo(function ChatMessageList({
                       href={source.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group inline-flex max-w-[200px] items-center gap-1 rounded-full border border-slate-200/80 bg-white px-2.5 py-1 text-[11.5px] font-medium text-slate-600 transition hover:border-indigo-200 hover:bg-indigo-50/60 hover:text-indigo-700"
+                      className="group inline-flex max-w-[200px] items-center gap-1 rounded-full border border-[var(--line)] bg-white px-2.5 py-1 text-[11.5px] font-medium text-slate-600 transition hover:border-[rgba(var(--accent-rgb),0.22)] hover:bg-[var(--accent-soft)] hover:text-[var(--accent-deep)]"
                     >
                       <span className="truncate">{source.title.length > 32 ? `${source.title.slice(0, 32)}\u2026` : source.title}</span>
-                      <ChevronRightIcon className="h-3 w-3 shrink-0 text-slate-400 transition group-hover:text-indigo-500" />
+                      <ChevronRightIcon className="h-3 w-3 shrink-0 text-slate-400 transition group-hover:text-[var(--accent)]" />
                     </a>
                   ))}
                 </div>
@@ -1606,11 +1540,11 @@ const ChatMessageList = memo(function ChatMessageList({
       })}
 
       {isSubmitting && !answer && (
-        <div className="w-full rounded-2xl border border-slate-200/80 bg-white/70 p-4 shadow-[0_1px_2px_rgba(15,23,42,0.03)] backdrop-blur-sm">
+        <div className="w-full rounded-2xl border border-[var(--line)] bg-[rgba(255,255,255,0.88)] p-4 shadow-[var(--shadow-soft)] backdrop-blur-sm">
           <div className="flex items-center gap-2">
-            <div className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-indigo-500 via-blue-500 to-cyan-400 shadow-[0_4px_10px_-2px_rgba(59,130,246,0.4)]">
-              <AppIcon name="info" className="h-3 w-3 text-white" strokeWidth={2.2} />
-            </div>
+              <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[var(--accent-deep)] shadow-[0_8px_16px_rgba(23,37,84,0.18)]">
+                <AppIcon name="info" className="h-3 w-3 text-white" strokeWidth={2.2} />
+              </div>
             <span className="text-[12px] font-semibold tracking-wide text-slate-500">Ask AI</span>
           </div>
           <div className="pl-8">
@@ -1662,7 +1596,7 @@ function AskAiUsageErrorContent({
       </div>
       <h2 className="text-[1.5rem] font-semibold tracking-[-0.02em] text-slate-900 sm:text-[1.7rem]">
         <span>Ask </span>
-        <span className="bg-gradient-to-r from-indigo-600 via-blue-600 to-cyan-500 bg-clip-text text-transparent">AI</span>
+        <span className="bg-gradient-to-r from-[var(--accent)] via-[var(--accent-deep)] to-[#0f172a] bg-clip-text text-transparent">AI</span>
         <span> is unavailable</span>
       </h2>
       <p className="mt-2 max-w-sm text-[14px] leading-relaxed text-slate-500">

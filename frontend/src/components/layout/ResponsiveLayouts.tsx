@@ -23,7 +23,6 @@ export {
   MapContent,
   MapSidebar,
   FloatComposer,
-  ChibiIllustration,
 } from './Primitives'
 
 type LegacyLayoutProps = {

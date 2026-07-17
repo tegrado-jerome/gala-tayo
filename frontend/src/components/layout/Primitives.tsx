@@ -5,10 +5,9 @@ import {
   type ReactNode,
 } from 'react'
 import { cn } from '../AppUI'
-import { useChibiImageSrc } from '../../utils/chibiImageCache'
 
-const BOTTOM_NAV_RESERVED_CLASS =
-  'pb-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] sm:pb-[calc(env(safe-area-inset-bottom,0px)+4.75rem)] lg:pb-0'
+export const BOTTOM_NAV_RESERVED_CLASS =
+  'pb-[calc(env(safe-area-inset-bottom,0px)+5rem)] sm:pb-[calc(env(safe-area-inset-bottom,0px)+5.25rem)] lg:pb-0'
 
 type PageShellTone = 'app' | 'surface' | 'plain'
 
@@ -47,8 +46,8 @@ export function PageShell({
 
 const SIZE_CLASSES = {
   narrow: 'w-full max-w-[480px] sm:max-w-[560px] md:max-w-[600px] lg:max-w-[640px]',
-  default: 'w-full max-w-[760px] sm:max-w-[820px] md:max-w-[980px] lg:max-w-[1140px] xl:max-w-[1240px] 2xl:max-w-[1360px]',
-  wide: 'w-full max-w-[960px] sm:max-w-[1080px] md:max-w-[1200px] lg:max-w-[1360px] xl:max-w-[1500px] 2xl:max-w-[1600px]',
+  default: 'w-full max-w-[430px] sm:max-w-[840px] md:max-w-[980px] lg:max-w-[1160px] xl:max-w-[1320px] 2xl:max-w-[1440px]',
+  wide: 'w-full max-w-[520px] sm:max-w-[960px] md:max-w-[1200px] lg:max-w-[1360px] xl:max-w-[1520px] 2xl:max-w-[1680px]',
   full: 'w-full max-w-none',
 } as const
 
@@ -193,7 +192,7 @@ export function CardSurface({
         ? 'border-[var(--line-strong)] bg-[var(--panel)] shadow-none'
         : tone === 'frosted'
           ? 'border-white/70 bg-white/80 shadow-[var(--shadow-soft)] backdrop-blur-md'
-          : 'gala-card'
+          : 'gala-card rounded-[24px]'
 
   return (
     <Component
@@ -552,49 +551,5 @@ export function FloatComposer({ children, className, maxWidthClass = 'lg:max-w-[
     <div className={cn('mx-auto w-full lg:max-w-full', maxWidthClass, className)}>
       {children}
     </div>
-  )
-}
-
-export type ChibiVariant = 'hero' | 'feature' | 'empty' | 'compact'
-
-export type ChibiIllustrationProps = {
-  src: string
-  variant?: ChibiVariant
-  alt?: string
-  className?: string
-  priority?: boolean
-  onError?: React.ReactEventHandler<HTMLImageElement>
-}
-
-const chibiBaseClass = 'gala-chibi block h-auto max-w-full object-contain shrink-0 select-none pointer-events-none'
-
-const chibiVariantClasses: Record<ChibiVariant, string> = {
-  hero: 'w-[clamp(220px,30vw,360px)] max-h-[34vh] md:max-h-[360px]',
-  feature: 'w-[clamp(170px,20vw,280px)] max-h-[240px] lg:max-h-[280px] xl:max-h-[300px]',
-  empty: 'w-[clamp(140px,14vw,210px)] max-h-[180px] lg:max-h-[210px] xl:max-h-[230px]',
-  compact: 'w-[clamp(96px,10vw,150px)] max-h-[130px] lg:max-h-[150px] xl:max-h-[160px]',
-}
-
-export function ChibiIllustration({
-  src,
-  variant = 'empty',
-  alt = '',
-  className,
-  priority = false,
-  onError,
-}: ChibiIllustrationProps) {
-  const isDecorative = !alt
-  const resolvedSrc = useChibiImageSrc(src)
-  return (
-    <img
-      src={resolvedSrc}
-      alt={isDecorative ? '' : alt}
-      aria-hidden={isDecorative || undefined}
-      className={cn(chibiVariantClasses[variant], chibiBaseClass, className)}
-      loading={priority ? 'eager' : 'lazy'}
-      fetchPriority={priority ? 'high' : 'auto'}
-      decoding={priority ? 'sync' : 'async'}
-      onError={onError}
-    />
   )
 }

@@ -17,6 +17,8 @@ export type FeatureGuideContent = {
 const viewedStoragePrefix = 'feature-guide-viewed:'
 
 type GuideTheme = {
+  triggerClassName: string
+  triggerIconClassName: string
   accentClassName: string
   badgeClassName: string
   bulletClassName: string
@@ -25,22 +27,28 @@ type GuideTheme = {
 
 const guideThemes: Record<FeatureGuideContent['id'], GuideTheme> = {
   search: {
-    accentClassName: 'text-emerald-700',
-    badgeClassName: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-    bulletClassName: 'bg-emerald-700',
-    sampleClassName: 'border-emerald-200 bg-emerald-50/40',
+    triggerClassName: 'border-[var(--line)] bg-[var(--panel)] text-[var(--muted)] shadow-sm',
+    triggerIconClassName: 'text-[var(--muted)] motion-safe:animate-[gala-info-breathe_1.6s_ease-in-out_infinite]',
+    accentClassName: 'text-[var(--text-main)]',
+    badgeClassName: 'border-[var(--line)] bg-[var(--surface-alt)] text-[var(--muted)]',
+    bulletClassName: 'bg-[var(--muted)]',
+    sampleClassName: 'border-[var(--line)] bg-[var(--surface-alt)]',
   },
   chatbot: {
-    accentClassName: 'text-emerald-700',
-    badgeClassName: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-    bulletClassName: 'bg-emerald-700',
-    sampleClassName: 'border-emerald-200 bg-emerald-50/40',
+    triggerClassName: 'border-[#f3d77a] bg-[#f7dc6f] text-white shadow-sm',
+    triggerIconClassName: 'text-white motion-safe:animate-[gala-info-breathe_1.6s_ease-in-out_infinite]',
+    accentClassName: 'text-[var(--text-main)]',
+    badgeClassName: 'border-[var(--line)] bg-[var(--surface-alt)] text-[var(--muted)]',
+    bulletClassName: 'bg-[var(--muted)]',
+    sampleClassName: 'border-[var(--line)] bg-[var(--surface-alt)]',
   },
   maps: {
-    accentClassName: 'text-emerald-700',
-    badgeClassName: 'border-emerald-200 bg-emerald-50 text-emerald-700',
-    bulletClassName: 'bg-emerald-700',
-    sampleClassName: 'border-emerald-200 bg-emerald-50/40',
+    triggerClassName: 'border-[#f3d77a] bg-[#f7dc6f] text-white shadow-sm',
+    triggerIconClassName: 'text-white motion-safe:animate-[gala-info-breathe_1.6s_ease-in-out_infinite]',
+    accentClassName: 'text-[var(--text-main)]',
+    badgeClassName: 'border-[var(--line)] bg-[var(--surface-alt)] text-[var(--muted)]',
+    bulletClassName: 'bg-[var(--muted)]',
+    sampleClassName: 'border-[var(--line)] bg-[var(--surface-alt)]',
   },
 }
 
@@ -60,7 +68,7 @@ function GuideBulletList({ items, bulletClassName }: { items: string[]; bulletCl
   return (
     <ul className="space-y-2">
       {items.map((item) => (
-        <li key={item} className="flex items-start gap-2 text-[14px] leading-6 text-slate-700">
+        <li key={item} className="flex items-start gap-2 text-[14px] leading-6 text-[var(--text-main)]">
           <span className={`mt-2 h-1.5 w-1.5 shrink-0 rounded-full ${bulletClassName}`} aria-hidden="true" />
           <span className="min-w-0 flex-1">{item}</span>
         </li>
@@ -127,16 +135,16 @@ export function FeatureGuideModalTrigger({
               aria-modal="true"
               aria-labelledby={titleId}
               aria-describedby={`${descriptionId} ${bestForId} ${samplesId}`}
-              className="w-full max-w-[416px] rounded-[24px] border border-emerald-200 bg-[linear-gradient(180deg,#f7fffb_0%,#ffffff_44%,#ffffff_100%)] p-5 shadow-[0_18px_50px_rgba(5,150,105,0.14)] sm:p-6"
+              className="app-modal w-full max-w-[416px] p-5 sm:p-6"
               onMouseDown={(event) => event.stopPropagation()}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${theme.badgeClassName}`}>
-                    <AppIcon name="info" className="h-3.5 w-3.5" strokeWidth={2.4} />
+                    <AppIcon name="info" className={`h-3.5 w-3.5 ${theme.triggerIconClassName}`} strokeWidth={2.4} />
                     <span>Gabay</span>
                   </div>
-                  <h2 id={titleId} className="mt-3 text-[21px] font-semibold tracking-[-0.03em] text-slate-900">
+                  <h2 id={titleId} className="mt-3 text-[21px] font-semibold tracking-[-0.03em] text-[var(--text-main)]">
                     {content.title}
                   </h2>
                 </div>
@@ -146,24 +154,24 @@ export function FeatureGuideModalTrigger({
                   type="button"
                   onClick={() => setIsOpen(false)}
                   aria-label="Close guide"
-                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 transition hover:border-slate-300 hover:text-slate-700"
+                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--panel)] text-[var(--muted)] transition hover:border-[var(--line-strong)] hover:text-[var(--text-main)]"
                 >
                   <X className="h-4 w-4" strokeWidth={2.5} />
                 </button>
               </div>
 
               <div className="mt-5 space-y-5">
-                <div className="border-l border-slate-200 pl-4">
+                <div className="border-l border-[var(--line)] pl-4">
                   <p id={descriptionId} className={`text-[15px] font-medium leading-7 ${theme.accentClassName}`}>
                     {content.intro}
                   </p>
-                  <p className="mt-1 text-[14px] leading-6 text-slate-600">
+                  <p className="mt-1 text-[14px] leading-6 text-[var(--muted)]">
                     {content.body}
                   </p>
                 </div>
 
-                <div className="border-t border-slate-100 pt-4">
-                  <p id={bestForId} className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                <div className="border-t border-[var(--line)] pt-4">
+                  <p id={bestForId} className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
                     {content.bestForTitle}
                   </p>
                   <div className="mt-3">
@@ -171,15 +179,15 @@ export function FeatureGuideModalTrigger({
                   </div>
                 </div>
 
-                <div className="border-t border-slate-100 pt-4">
-                  <p id={samplesId} className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+                <div className="border-t border-[var(--line)] pt-4">
+                  <p id={samplesId} className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--muted)]">
                     Mga puwedeng i-try
                   </p>
                   <div className="mt-3 grid gap-2">
                     {content.sampleInputs.map((sampleInput) => (
                       <div
                         key={sampleInput}
-                        className={`rounded-[14px] border px-3 py-2 text-[13px] leading-6 text-slate-700 ${theme.sampleClassName}`}
+                        className={`rounded-[14px] border px-3 py-2 text-[13px] leading-6 text-[var(--text-main)] ${theme.sampleClassName}`}
                       >
                         {sampleInput}
                       </div>
@@ -201,19 +209,19 @@ export function FeatureGuideModalTrigger({
         aria-label={triggerLabel ? `Open ${triggerLabel}` : `Open ${content.title}`}
         aria-haspopup="dialog"
         aria-expanded={isOpen}
-        className={`group inline-flex shrink-0 items-center justify-center rounded-full border border-emerald-100 bg-white text-slate-500 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-300 hover:text-emerald-700 focus-visible:ring-0 ${className} ${
+        className={`group inline-flex shrink-0 items-center justify-center rounded-full border shadow-sm transition hover:-translate-y-0.5 hover:border-[var(--line-strong)] hover:text-[var(--text-main)] focus-visible:ring-0 ${theme.triggerClassName} ${className} ${
           triggerLabel ? 'gap-2 px-3.5 py-2.5' : 'h-10 w-10'
         }`}
       >
         {triggerLabel ? (
           <>
-            <span className="text-[14px] font-black uppercase tracking-[0.16em] text-emerald-700">
+            <span className="text-[14px] font-black uppercase tracking-[0.16em] text-[var(--text-main)]">
               {triggerLabel}
             </span>
-            <AppIcon name="info" className={`relative z-10 h-4 w-4 ${theme.accentClassName}`} strokeWidth={2.35} />
+            <AppIcon name="info" className={`relative z-10 h-4 w-4 ${theme.triggerIconClassName}`} strokeWidth={2.35} />
           </>
         ) : (
-          <AppIcon name="info" className={`relative z-10 h-4 w-4 ${theme.accentClassName}`} strokeWidth={2.35} />
+          <AppIcon name="info" className={`relative z-10 h-4 w-4 ${theme.triggerIconClassName}`} strokeWidth={2.35} />
         )}
       </button>
 

@@ -21,7 +21,6 @@ type BreadcrumbProps = {
 }
 
 const ELLIPSIS = '\u2026'
-
 function Breadcrumb({
   items,
   className,
@@ -45,7 +44,7 @@ function Breadcrumb({
     : items
 
   return (
-    <nav aria-label="Breadcrumb" className={`text-sm${className ? ` ${className}` : ''}`}>
+    <nav aria-label="Breadcrumb" className={`hidden text-sm lg:block${className ? ` ${className}` : ''}`}>
       {showBack && (
         <div className="mb-3">
           <BackButton backTo={backTo} label={backLabel} preferHistory={preferHistory} />

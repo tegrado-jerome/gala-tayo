@@ -73,9 +73,6 @@ function GoogleSignInButton({ compact = false, className = '', redirectTo }: Goo
           compact ? 'h-9 w-9 p-2' : 'h-8 w-8 p-1.5'
         }`}
         >
-          {isSigningIn ? (
-            <span className="absolute inset-[-3px] animate-spin rounded-full border-2 border-transparent border-t-[var(--accent)] border-r-[var(--mint)]" aria-hidden="true" />
-          ) : null}
           <GoogleIcon />
         </span>
         {!isSigningIn && !compact ? (

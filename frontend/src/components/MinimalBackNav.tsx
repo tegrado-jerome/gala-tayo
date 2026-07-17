@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { navigateToPath } from '../utils/navigation'
 import { hasInAppBackHistory } from '../utils/routes'
 import { MINIMAL_NAV_LINK_CLASS } from './navigationStyles'
@@ -11,6 +12,8 @@ type MinimalBackNavProps = {
   preferHistory?: boolean
 }
 
+const DESKTOP_BREAKPOINT_QUERY = '(min-width: 1024px)'
+
 function MinimalBackNav({
   to,
   onClick,
@@ -19,7 +22,10 @@ function MinimalBackNav({
   ariaLabel,
   preferHistory = true,
 }: MinimalBackNavProps) {
+  const isDesktopViewport = useDesktopBackNavViewport()
   const accessibleLabel = ariaLabel ?? (typeof label === 'string' ? label : 'Back')
+
+  if (!isDesktopViewport) return null
 
   const handleClick = () => {
     if (onClick) {
@@ -42,7 +48,7 @@ function MinimalBackNav({
       return
     }
 
-    navigateToPath('/')
+    navigateToPath('/home')
   }
 
   return (
@@ -50,14 +56,36 @@ function MinimalBackNav({
       type="button"
       onClick={handleClick}
       aria-label={accessibleLabel}
-      className={
-        className ||
-        MINIMAL_NAV_LINK_CLASS
-      }
+      className={[MINIMAL_NAV_LINK_CLASS, className].filter(Boolean).join(' ')}
     >
       {label}
     </button>
   )
+}
+
+function useDesktopBackNavViewport() {
+  const [isDesktopViewport, setIsDesktopViewport] = useState(() => {
+    if (typeof window === 'undefined') return true
+    return window.matchMedia(DESKTOP_BREAKPOINT_QUERY).matches
+  })
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined
+
+    const mediaQuery = window.matchMedia(DESKTOP_BREAKPOINT_QUERY)
+    const updateViewportMatch = (event?: MediaQueryListEvent) => {
+      setIsDesktopViewport(event ? event.matches : mediaQuery.matches)
+    }
+
+    updateViewportMatch()
+    mediaQuery.addEventListener('change', updateViewportMatch)
+
+    return () => {
+      mediaQuery.removeEventListener('change', updateViewportMatch)
+    }
+  }, [])
+
+  return isDesktopViewport
 }
 
 export default MinimalBackNav
