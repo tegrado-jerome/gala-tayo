@@ -444,25 +444,6 @@ function getGroupedHomeIndicatorTotal(itemCount: number, groupSize: number) {
   return Math.min(5, Math.ceil(itemCount / groupSize))
 }
 
-function getGroupedHomeIndicatorIndex(
-  cardIndex: number,
-  itemCount: number,
-  groupSize: number,
-  isTabletUpViewport: boolean
-) {
-  const indicatorTotal = getGroupedHomeIndicatorTotal(itemCount, groupSize)
-
-  if (indicatorTotal <= 1) {
-    return 0
-  }
-
-  if (!isTabletUpViewport) {
-    return Math.min(indicatorTotal - 1, Math.max(0, cardIndex % 5))
-  }
-
-  return Math.min(indicatorTotal - 1, Math.max(0, Math.floor(cardIndex / groupSize)))
-}
-
 function getHomepageCitySlug(place: Pick<ShowcasePlace, 'city' | 'area' | 'localArea'>) {
   const normalizedCity = normalizeLocationKey(place.city)
 
@@ -1041,23 +1022,6 @@ function getRailItemTargetLeft(element: HTMLElement, item: HTMLElement) {
   return Math.min(maxScrollLeft, Math.max(0, targetLeft))
 }
 
-function getNearestRailItemIndex(element: HTMLElement, items: HTMLElement[]) {
-  if (items.length === 0) {
-    return -1
-  }
-
-  const currentScrollLeft = element.scrollLeft
-
-  return items.reduce((nearestIndex, item, index) => {
-    const itemLeft = getRailItemTargetLeft(element, item)
-    const nearestItemLeft = getRailItemTargetLeft(element, items[nearestIndex])
-
-    return Math.abs(itemLeft - currentScrollLeft) < Math.abs(nearestItemLeft - currentScrollLeft)
-      ? index
-      : nearestIndex
-  }, 0)
-}
-
 function HomeLandingPage({
   navigationSource = 'push',
 }: {
@@ -1090,6 +1054,7 @@ function HomeLandingPage({
   const categoryRailRef = useRef<HTMLDivElement | null>(null)
   const [activeHeroIndex, setActiveHeroIndex] = useState(0)
   const [activeHeroCardIndex, setActiveHeroCardIndex] = useState(0)
+  const [heroIndicatorProgress, setHeroIndicatorProgress] = useState(0)
   const [isTabletUpHomeViewport, setIsTabletUpHomeViewport] = useState(() => {
     if (typeof window === 'undefined') {
       return false
@@ -1490,29 +1455,26 @@ function HomeLandingPage({
     if (!carousel || cards.length === 0) {
       setActiveHeroCardIndex(0)
       setActiveHeroIndex(0)
+      setHeroIndicatorProgress(0)
       return
     }
 
+    const maxScrollLeft = Math.max(carousel.scrollWidth - carousel.clientWidth, 0)
+    const scrollProgress = maxScrollLeft > 0 ? carousel.scrollLeft / maxScrollLeft : 0
+    const progressCardIndex = scrollProgress * Math.max(visibleTopPickCarouselPlaces.length - 1, 0)
     const nextCardIndex = Math.min(
       visibleTopPickCarouselPlaces.length - 1,
-      Math.max(0, getNearestRailItemIndex(carousel, cards))
+      Math.max(0, Math.round(progressCardIndex))
     )
-    const maxScrollLeft = Math.max(carousel.scrollWidth - carousel.clientWidth, 0)
-    const nextIndex =
-      isTabletUpHomeViewport && maxScrollLeft > 0
-        ? Math.min(
-            indicatorTotal - 1,
-            Math.max(0, Math.round((carousel.scrollLeft / maxScrollLeft) * (indicatorTotal - 1)))
-          )
-        : getGroupedHomeIndicatorIndex(
-            nextCardIndex,
-            visibleTopPickCarouselPlaces.length,
-            indicatorGroupSize,
-            isTabletUpHomeViewport
-          )
+    const nextIndex = isTabletUpHomeViewport
+      ? scrollProgress * Math.max(indicatorTotal - 1, 0)
+      : Math.min(indicatorTotal - 1, Math.max(0, progressCardIndex % 5))
 
     setActiveHeroCardIndex((currentIndex) => (currentIndex === nextCardIndex ? currentIndex : nextCardIndex))
     setActiveHeroIndex((currentIndex) => (currentIndex === nextIndex ? currentIndex : nextIndex))
+    setHeroIndicatorProgress((currentProgress) => (
+      Math.abs(currentProgress - nextIndex) < 0.01 ? currentProgress : nextIndex
+    ))
   }, [isTabletUpHomeViewport, visibleTopPickCarouselPlaces.length])
 
   useEffect(() => {
@@ -1528,12 +1490,14 @@ function HomeLandingPage({
     if (shouldShowTopPickSkeletons) {
       setActiveHeroCardIndex(0)
       setActiveHeroIndex(0)
+      setHeroIndicatorProgress(0)
       return
     }
 
     if (!carousel || indicatorTotal <= 1) {
       setActiveHeroCardIndex(0)
       setActiveHeroIndex(0)
+      setHeroIndicatorProgress(0)
       return
     }
 
@@ -1585,6 +1549,7 @@ function HomeLandingPage({
     setActiveTopPicksTab(tab)
     setActiveHeroCardIndex(0)
     setActiveHeroIndex(0)
+    setHeroIndicatorProgress(0)
 
     requestAnimationFrame(() => {
       heroCarouselRef.current?.scrollTo({
@@ -1623,6 +1588,7 @@ function HomeLandingPage({
 
     setActiveHeroCardIndex(targetCardIndex)
     setActiveHeroIndex(safeDotIndex)
+    setHeroIndicatorProgress(safeDotIndex)
     carousel.scrollTo({
       left: getRailItemTargetLeft(carousel, targetCard),
       behavior: 'smooth',
@@ -1808,6 +1774,8 @@ function HomeLandingPage({
                   total={topPicksIndicatorTotal}
                   trackClassName="min-w-[118px] justify-center px-5"
                   onSelect={shouldShowTopPickSkeletons ? undefined : handleHeroIndicatorSelect}
+                  continuous
+                  progress={heroIndicatorProgress}
                   label={
                     activeTopPicksTab === 'all'
                       ? 'All places preview'

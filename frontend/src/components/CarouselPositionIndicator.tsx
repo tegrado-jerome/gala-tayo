@@ -7,6 +7,7 @@ type CarouselPositionIndicatorProps = {
   trackClassName?: string
   onSelect?: (index: number) => void
   continuous?: boolean
+  progress?: number
 }
 
 function CarouselPositionIndicator({
@@ -18,12 +19,14 @@ function CarouselPositionIndicator({
   trackClassName,
   onSelect,
   continuous = false,
+  progress,
 }: CarouselPositionIndicatorProps) {
   if (total <= 1) {
     return null
   }
 
   const safeCurrentIndex = Math.min(Math.max(currentIndex, 0), total - 1)
+  const safeDisplayIndex = Math.round(safeCurrentIndex)
   const visibleCount = maxVisible && maxVisible > 0 ? Math.min(maxVisible, total) : total
   const activeVisibleIndex =
     visibleCount > 1 && total > 1
@@ -31,13 +34,17 @@ function CarouselPositionIndicator({
       : 0
   const activeVisibleProgress =
     visibleCount > 1 && total > 1
-      ? Math.min(visibleCount - 1, Math.max(0, (safeCurrentIndex / (total - 1)) * (visibleCount - 1)))
+      ? Math.min(
+          visibleCount - 1,
+          Math.max(0, progress ?? (safeCurrentIndex / (total - 1)) * (visibleCount - 1))
+        )
       : 0
+  const activeProgressIndex = Math.round(activeVisibleProgress)
 
   return (
     <div
       className={`mt-4 flex items-center justify-center ${className ?? ''}`}
-      aria-label={`${label ?? 'Carousel'} item ${safeCurrentIndex + 1} of ${total}`}
+      aria-label={`${label ?? 'Carousel'} item ${safeDisplayIndex + 1} of ${total}`}
       role="status"
     >
       <div
@@ -50,8 +57,9 @@ function CarouselPositionIndicator({
             visibleCount > 1 && total > 1
               ? Math.min(total - 1, Math.max(0, Math.round((index / (visibleCount - 1)) * (total - 1))))
               : 0
-          const dotClassName = `block rounded-full transition-all duration-300 ease-out ${
-              !continuous && index === activeVisibleIndex
+          const isActive = index === (continuous ? activeProgressIndex : activeVisibleIndex)
+          const dotClassName = `block rounded-full transition-all duration-150 ease-out ${
+              isActive
                 ? 'h-2 w-5 bg-[var(--accent-deep)] shadow-[0_1px_6px_rgba(37,60,143,0.22)]'
                 : 'h-1.5 w-1.5 bg-slate-300/90'
             }`
@@ -80,15 +88,6 @@ function CarouselPositionIndicator({
             />
           )
         })}
-        {continuous ? (
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute left-2.5 top-1/2 block h-2 w-5 rounded-full bg-[var(--accent-deep)] shadow-[0_1px_6px_rgba(37,60,143,0.22)] transition-transform duration-300 ease-out"
-            style={{
-              transform: `translate(${activeVisibleProgress * 1.625}rem, -50%)`,
-            }}
-          />
-        ) : null}
       </div>
     </div>
   )
