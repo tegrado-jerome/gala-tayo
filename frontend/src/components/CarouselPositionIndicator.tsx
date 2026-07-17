@@ -44,20 +44,33 @@ function CarouselPositionIndicator({
     >
       {variant === 'segmented' ? (
         <div
-          className={`relative h-7 overflow-hidden rounded-full bg-slate-900/5 px-1.5 py-1.5 backdrop-blur-sm ${
+          className={`relative h-6 overflow-hidden rounded-full px-1.5 py-2 ${
             trackClassName ?? ''
           }`}
         >
-          <div className="absolute inset-x-1.5 top-1/2 h-2 -translate-y-1/2 overflow-hidden rounded-full bg-slate-200/80">
-            <span
-              aria-hidden="true"
-              className="block h-full origin-left rounded-full bg-[var(--accent-deep)] shadow-[0_1px_6px_rgba(37,60,143,0.2)] transition-transform duration-75 ease-linear will-change-transform"
-              style={{
-                transform: `scaleX(${segmentedFillRatio})`,
-              }}
-            />
+          <div className="pointer-events-none absolute inset-x-1.5 top-1/2 grid h-1.5 -translate-y-1/2 grid-flow-col auto-cols-fr gap-1">
+            {Array.from({ length: visibleCount }, (_, index) => {
+              const segmentStartRatio = index / visibleCount
+              const segmentEndRatio = (index + 1) / visibleCount
+              const segmentFillRatio = Math.min(
+                1,
+                Math.max(0, (segmentedFillRatio - segmentStartRatio) / (segmentEndRatio - segmentStartRatio))
+              )
+
+              return (
+                <span key={`segment-${index}`} className="overflow-hidden rounded-full bg-slate-200/80">
+                  <span
+                    aria-hidden="true"
+                    className="block h-full origin-left rounded-full bg-[var(--accent-deep)] transition-transform duration-75 ease-linear will-change-transform"
+                    style={{
+                      transform: `scaleX(${segmentFillRatio})`,
+                    }}
+                  />
+                </span>
+              )
+            })}
           </div>
-          <div className="relative z-10 grid h-full grid-flow-col auto-cols-fr gap-1">
+          <div className="relative z-20 grid h-full grid-flow-col auto-cols-fr gap-1">
             {Array.from({ length: visibleCount }, (_, index) => {
               const targetIndex =
                 visibleCount > 1 && total > 1
@@ -77,14 +90,10 @@ function CarouselPositionIndicator({
                     onSelect(targetIndex)
                   }}
                   aria-label={`Go to ${label ?? 'carousel'} segment ${index + 1}`}
-                  className="relative h-full min-w-5 rounded-full"
-                >
-                  <span className="absolute left-1/2 top-1/2 h-1 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/70 shadow-[0_0_0_1px_rgba(15,23,42,0.04)]" />
-                </button>
+                  className="h-full min-w-5 rounded-full"
+                />
               ) : (
-                <span key={index} className="relative h-full min-w-5 rounded-full">
-                  <span className="absolute left-1/2 top-1/2 h-1 w-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white/70 shadow-[0_0_0_1px_rgba(15,23,42,0.04)]" />
-                </span>
+                <span key={index} className="h-full min-w-5 rounded-full" />
               )
             })}
           </div>

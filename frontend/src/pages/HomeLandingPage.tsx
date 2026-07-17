@@ -29,6 +29,7 @@ import {
   restoreHomeLandingScroll,
   writeHomeLandingScrollCache,
 } from '../utils/homeLandingScrollCache'
+import { readHomeRouteCache, writeHomeRouteCache } from '../utils/homeRouteCache'
 import { getCanonicalPlacePath, resolveAreaMeta } from '../utils/routes'
 import { placeCategories } from '../data/placeCategories'
 import { fetchPlaceDetailsBatch, prefetchPlaceDetail } from '../utils/placeDetailCache'
@@ -444,6 +445,10 @@ function getGroupedHomeIndicatorTotal(itemCount: number, groupSize: number) {
   return Math.min(5, Math.ceil(itemCount / groupSize))
 }
 
+function getSegmentedRailIndicatorTotal(itemCount: number) {
+  return Math.min(5, itemCount)
+}
+
 function getHomepageCitySlug(place: Pick<ShowcasePlace, 'city' | 'area' | 'localArea'>) {
   const normalizedCity = normalizeLocationKey(place.city)
 
@@ -540,6 +545,7 @@ function HomeFeaturedCard({
     <div
       role="button"
       tabIndex={0}
+      data-home-trending-place-id={place.id}
       onTouchStart={() => {
         if (place.slug) {
           void prefetchPlaceDetail(place.slug)
@@ -1014,6 +1020,91 @@ function useHomeRailDragScroll<T extends HTMLElement>(
   }, [enabled, label, ref])
 }
 
+function useSegmentedRailIndicator<T extends HTMLElement>(
+  ref: RefObject<T | null>,
+  { enabled, itemCount }: { enabled: boolean; itemCount: number }
+) {
+  const indicatorTotal = getSegmentedRailIndicatorTotal(itemCount)
+  const [progressRatio, setProgressRatio] = useState(0)
+
+  const syncProgress = useCallback(() => {
+    const element = ref.current
+
+    if (!enabled || !element || indicatorTotal <= 1) {
+      setProgressRatio(0)
+      return
+    }
+
+    const maxScrollLeft = Math.max(element.scrollWidth - element.clientWidth, 0)
+    const nextProgressRatio = maxScrollLeft > 0
+      ? Math.min(1, Math.max(0, element.scrollLeft / maxScrollLeft))
+      : 0
+
+    setProgressRatio((currentProgressRatio) => (
+      Math.abs(currentProgressRatio - nextProgressRatio) < 0.002 ? currentProgressRatio : nextProgressRatio
+    ))
+  }, [enabled, indicatorTotal, ref])
+
+  useEffect(() => {
+    const element = ref.current
+    let frameId: number | null = null
+
+    if (!enabled || !element || indicatorTotal <= 1) {
+      setProgressRatio(0)
+      return
+    }
+
+    const scheduleSync = () => {
+      if (frameId !== null) {
+        return
+      }
+
+      frameId = window.requestAnimationFrame(() => {
+        frameId = null
+        syncProgress()
+      })
+    }
+
+    syncProgress()
+    element.addEventListener('scroll', scheduleSync, { passive: true })
+    window.addEventListener('resize', scheduleSync)
+
+    return () => {
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId)
+      }
+
+      element.removeEventListener('scroll', scheduleSync)
+      window.removeEventListener('resize', scheduleSync)
+    }
+  }, [enabled, indicatorTotal, ref, syncProgress])
+
+  const handleSelect = useCallback((index: number) => {
+    const element = ref.current
+
+    if (!element || indicatorTotal <= 1) {
+      return
+    }
+
+    const safeIndex = Math.min(indicatorTotal - 1, Math.max(0, index))
+    const nextProgressRatio = safeIndex / (indicatorTotal - 1)
+    const maxScrollLeft = Math.max(element.scrollWidth - element.clientWidth, 0)
+
+    setProgressRatio(nextProgressRatio)
+    element.scrollTo({
+      left: maxScrollLeft * nextProgressRatio,
+      behavior: 'smooth',
+    })
+  }, [indicatorTotal, ref])
+
+  return {
+    currentIndex: Math.round(progressRatio * Math.max(indicatorTotal - 1, 0)),
+    handleSelect,
+    progressRatio,
+    total: indicatorTotal,
+  }
+}
+
 function getRailItemTargetLeft(element: HTMLElement, item: HTMLElement) {
   const targetLeft =
     element.scrollLeft + item.getBoundingClientRect().left - element.getBoundingClientRect().left
@@ -1029,25 +1120,58 @@ function HomeLandingPage({
 }) {
   const { currentProfile, currentUser } = useAppUser()
   const guestAuth = useGuestAuthPrompt()
+  const initialHomeRouteCacheRef = useRef(readHomeRouteCache())
   const cachedTrendingPlacesRef = useRef<ShowcasePlace[] | null>(
-    readHomeTrendingCache()?.map(mapCachedPlaceToShowcasePlace) ?? null
+    initialHomeRouteCacheRef.current?.trendingPlaces.map(mapCachedPlaceToShowcasePlace) ??
+      readHomeTrendingCache()?.map(mapCachedPlaceToShowcasePlace) ??
+      null
   )
   const initialHomeLandingScrollCacheRef = useRef(
     navigationSource === 'pop' ? readHomeLandingScrollCache() : null
   )
   const hasRestoredHomeLandingScrollRef = useRef(false)
-  const [trendingPlaces, setTrendingPlaces] = useState<ShowcasePlace[]>(cachedTrendingPlacesRef.current ?? [])
-  const [homePlacesPool, setHomePlacesPool] = useState<ShowcasePlace[]>(cachedTrendingPlacesRef.current ?? [])
-  const [cityTilePlaceBySlug, setCityTilePlaceBySlug] = useState<Record<string, ShowcasePlace>>({})
-  const [activeTopPicksTab, setActiveTopPicksTab] = useState<'all' | 'popular' | 'recommended'>('all')
+  const [trendingPlaces, setTrendingPlaces] = useState<ShowcasePlace[]>(
+    initialHomeRouteCacheRef.current?.trendingPlaces.map(mapCachedPlaceToShowcasePlace) ??
+      cachedTrendingPlacesRef.current ??
+      []
+  )
+  const [homePlacesPool, setHomePlacesPool] = useState<ShowcasePlace[]>(
+    initialHomeRouteCacheRef.current?.homePlacesPool.map(mapCachedPlaceToShowcasePlace) ??
+      cachedTrendingPlacesRef.current ??
+      []
+  )
+  const [cityTilePlaceBySlug, setCityTilePlaceBySlug] = useState<Record<string, ShowcasePlace>>(
+    initialHomeRouteCacheRef.current?.cityTilePlaceBySlug ?? {}
+  )
+  const [activeTopPicksTab, setActiveTopPicksTab] = useState<'all' | 'popular' | 'recommended'>(
+    initialHomeRouteCacheRef.current?.activeTopPicksTab ?? 'all'
+  )
   const [isTrendingLoading, setIsTrendingLoading] = useState(false)
-  const [isTrendingLoaded, setIsTrendingLoaded] = useState(false)
+  const [isTrendingLoaded, setIsTrendingLoaded] = useState(
+    Boolean(initialHomeRouteCacheRef.current?.trendingPlaces.length || cachedTrendingPlacesRef.current?.length)
+  )
   const [trendingError, setTrendingError] = useState<string | null>(null)
-  const [areHomeCardsLoaded, setAreHomeCardsLoaded] = useState(false)
+  const [areHomeCardsLoaded, setAreHomeCardsLoaded] = useState(
+    Boolean(
+      cachedTrendingPlacesRef.current?.length ||
+      (
+        initialHomeRouteCacheRef.current &&
+        (
+          Object.keys(initialHomeRouteCacheRef.current.topPickPlaceBySlug).length > 0 ||
+          Object.keys(initialHomeRouteCacheRef.current.cityTilePlaceBySlug).length > 0 ||
+          Object.keys(initialHomeRouteCacheRef.current.categoryTilePlaceByLabel).length > 0
+        )
+      )
+    )
+  )
   const [selectedCityTileSlug, setSelectedCityTileSlug] = useState<string | null>(null)
   const [selectedCategoryTileLabel, setSelectedCategoryTileLabel] = useState<string | null>(null)
-  const [topPickPlaceBySlug, setTopPickPlaceBySlug] = useState<Record<string, ShowcasePlace>>({})
-  const [categoryTilePlaceByLabel, setCategoryTilePlaceByLabel] = useState<Record<string, ShowcasePlace>>({})
+  const [topPickPlaceBySlug, setTopPickPlaceBySlug] = useState<Record<string, ShowcasePlace>>(
+    initialHomeRouteCacheRef.current?.topPickPlaceBySlug ?? {}
+  )
+  const [categoryTilePlaceByLabel, setCategoryTilePlaceByLabel] = useState<Record<string, ShowcasePlace>>(
+    initialHomeRouteCacheRef.current?.categoryTilePlaceByLabel ?? {}
+  )
   const heroCarouselRef = useRef<HTMLDivElement | null>(null)
   const heroCardRefs = useRef<Array<HTMLDivElement | null>>([])
   const cityRailRef = useRef<HTMLDivElement | null>(null)
@@ -1149,6 +1273,29 @@ function HomeLandingPage({
   const shouldShowTopPickSkeletons = isTrendingLoading && !hasCachedTrendingPlaces && visibleTopPickCarouselPlaces.length === 0
   const isHomePageReady = isTrendingLoaded && areHomeCardsLoaded
 
+  useEffect(() => {
+    if (!isHomePageReady) {
+      return
+    }
+
+    writeHomeRouteCache({
+      trendingPlaces,
+      homePlacesPool,
+      cityTilePlaceBySlug,
+      topPickPlaceBySlug,
+      categoryTilePlaceByLabel,
+      activeTopPicksTab,
+    })
+  }, [
+    activeTopPicksTab,
+    categoryTilePlaceByLabel,
+    cityTilePlaceBySlug,
+    homePlacesPool,
+    isHomePageReady,
+    topPickPlaceBySlug,
+    trendingPlaces,
+  ])
+
   const liveCityPlaceBySlug = useMemo(() => {
     const nextMap = new Map<string, ShowcasePlace>()
 
@@ -1220,7 +1367,6 @@ function HomeLandingPage({
     async function loadTrendingPlaces() {
       try {
         setIsTrendingLoading(true)
-        setIsTrendingLoaded(false)
         setTrendingError(null)
 
         const headers = await getSearchRequestHeaders()
@@ -1304,7 +1450,9 @@ function HomeLandingPage({
 
     async function loadHomeCardPlaces() {
       try {
-        setAreHomeCardsLoaded(false)
+        if (!initialHomeRouteCacheRef.current && !cachedTrendingPlacesRef.current?.length) {
+          setAreHomeCardsLoaded(false)
+        }
 
         const topPickSlugs = [
           ...homePopularTopPickPlaces,
@@ -1601,6 +1749,14 @@ function HomeLandingPage({
         visibleTopPickCarouselPlaces.length,
         getHomeIndicatorGroupSize(isTabletUpHomeViewport)
       )
+  const cityRailIndicator = useSegmentedRailIndicator(cityRailRef, {
+    enabled: isHomePageReady,
+    itemCount: cityTiles.length,
+  })
+  const categoryRailIndicator = useSegmentedRailIndicator(categoryRailRef, {
+    enabled: isHomePageReady,
+    itemCount: categoryTiles.length,
+  })
 
   useHomeRailDragScroll(heroCarouselRef, { enabled: isHomePageReady, label: 'Top Picks' })
   useHomeRailDragScroll(cityRailRef, { enabled: isHomePageReady, label: 'Cities' })
@@ -1634,7 +1790,7 @@ function HomeLandingPage({
             <button
               type="button"
               onClick={() => navigateToPath('/search')}
-              className="mt-7 flex h-[56px] w-full items-center justify-between rounded-[20px] border border-slate-200/70 bg-transparent px-4 text-[var(--accent-deep)] transition hover:border-slate-300 hover:bg-slate-50/70"
+              className="mt-8 flex h-[56px] w-full items-center justify-between rounded-[20px] border border-slate-200/70 bg-transparent px-4 text-[var(--accent-deep)] transition hover:border-slate-300 hover:bg-slate-50/70"
             >
               <span className="flex min-w-0 items-center gap-2.5 text-[var(--accent-deep)]">
                 <Search className="h-[21px] w-[21px] shrink-0 text-[var(--accent-deep)]" strokeWidth={2} />
@@ -1643,7 +1799,7 @@ function HomeLandingPage({
               <SlidersHorizontal className="h-[21px] w-[21px] shrink-0 text-[var(--accent-deep)]" strokeWidth={2} />
             </button>
 
-            <section className="mt-7">
+            <section className="mt-9 md:mt-7">
               <div className="mb-2 flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">
                 <Sparkles className="h-3.5 w-3.5 text-[var(--accent)]" strokeWidth={2.2} />
                 <span>AI Features</span>
@@ -1679,7 +1835,7 @@ function HomeLandingPage({
             </section>
           </section>
 
-          <div className="mt-5 grid min-w-0 gap-4 md:mt-10 md:gap-10 lg:gap-12">
+          <div className="mt-8 grid min-w-0 gap-7 md:mt-10 md:gap-10 lg:gap-12">
             <section className="min-w-0 md:-mt-1">
               <div className="flex items-center justify-between gap-3">
                 <h2 className="text-[24px] font-bold tracking-[-0.04em] text-slate-950">Top Picks</h2>
@@ -1822,6 +1978,15 @@ function HomeLandingPage({
                   ))}
                 </div>
               </div>
+              <CarouselPositionIndicator
+                currentIndex={cityRailIndicator.currentIndex}
+                total={cityRailIndicator.total}
+                trackClassName="w-[118px]"
+                onSelect={cityRailIndicator.handleSelect}
+                variant="segmented"
+                progressRatio={cityRailIndicator.progressRatio}
+                label="Cities"
+              />
             </section>
 
             <section className="min-w-0">
@@ -1859,6 +2024,15 @@ function HomeLandingPage({
                   ))}
                 </div>
               </div>
+              <CarouselPositionIndicator
+                currentIndex={categoryRailIndicator.currentIndex}
+                total={categoryRailIndicator.total}
+                trackClassName="w-[118px]"
+                onSelect={categoryRailIndicator.handleSelect}
+                variant="segmented"
+                progressRatio={categoryRailIndicator.progressRatio}
+                label="Categories"
+              />
             </section>
           </div>
         </div>
