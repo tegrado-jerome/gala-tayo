@@ -616,9 +616,6 @@ function HistoryPage() {
                       </button>
                     </div>
                   ) : null}
-                  <CardSurface pad="default" tone="soft" className="text-sm font-semibold text-slate-700">
-                    <span className="font-black text-[var(--accent-deep)]">Tip:</span> Places you view will appear here for easy access. Save the ones you love to keep them in Favorites.
-                  </CardSurface>
                 </Stack>
               ) : null}
             </Stack>

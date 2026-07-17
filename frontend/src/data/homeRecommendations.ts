@@ -82,16 +82,16 @@ const homeRecommendedTopPickPlaces: HomeRecommendationPlace[] = [
 ]
 
 const homeAllTopPickPlaces: HomeRecommendationPlace[] = [
-  createRecommendationPlace({ name: 'The Mind Museum', city: 'Taguig' }),
-  createRecommendationPlace({ name: 'Art in Island', city: 'Quezon City' }),
-  createRecommendationPlace({ name: 'Greenbelt Park', city: 'Makati' }),
-  createRecommendationPlace({ name: 'Star City', city: 'Pasay' }),
-  createRecommendationPlace({ name: 'National Museum of Natural History', city: 'Manila' }),
-  createRecommendationPlace({ name: 'SM Megamall', city: 'Mandaluyong' }),
-  createRecommendationPlace({ name: 'Venice Grand Canal Mall', city: 'Taguig' }),
-  createRecommendationPlace({ name: 'Intramuros', city: 'Manila' }),
-  createRecommendationPlace({ name: 'Ayala Triangle Gardens', city: 'Makati' }),
-  createRecommendationPlace({ name: 'Bonifacio High Street', city: 'Taguig' }),
+  createRecommendationPlace({ name: 'Uptown Mall', city: 'Taguig', area: 'Uptown Bonifacio' }),
+  createRecommendationPlace({ name: 'BGC Arts Center', city: 'Taguig', area: 'Bonifacio Global City' }),
+  createRecommendationPlace({ name: 'Ayala Malls Manila Bay', city: 'Paranaque', area: 'Ayala Malls Manila Bay / Aseana City' }),
+  createRecommendationPlace({ name: 'Timezone Ayala Malls Manila Bay', city: 'Paranaque', area: 'Ayala Malls Manila Bay / Aseana City' }),
+  createRecommendationPlace({ name: 'Ortigas Cinemas Estancia', city: 'Pasig', area: 'Capitol Commons' }),
+  createRecommendationPlace({ name: 'The Podium', city: 'Mandaluyong', area: 'Ortigas Center' }),
+  createRecommendationPlace({ name: 'Solaire Resort North', city: 'Quezon City', area: 'Vertis North / North Avenue' }),
+  createRecommendationPlace({ name: 'The Fun Roof Poblacion', city: 'Makati', area: 'Poblacion' }),
+  createRecommendationPlace({ name: 'Hikiniku To Come BGC', city: 'Taguig', area: 'Uptown Bonifacio' }),
+  createRecommendationPlace({ name: 'Space Time Cube', city: 'Pasay', area: 'S Maison / MOA Complex' }),
 ]
 
 const homeFeaturedPlaces = homePopularTopPickPlaces

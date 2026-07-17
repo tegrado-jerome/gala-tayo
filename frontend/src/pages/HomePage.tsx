@@ -32,7 +32,7 @@ import {
 import { readHomeRouteCache, writeHomeRouteCache } from '../utils/homeRouteCache'
 import { getCanonicalPlacePath, resolveAreaMeta } from '../utils/routes'
 import { placeCategories } from '../data/placeCategories'
-import { fetchPlaceDetailsBatch, prefetchPlaceDetail } from '../utils/placeDetailCache'
+import { fetchPlaceDetailsBatch, prefetchPlaceDetail, readCachedPlaceDetail } from '../utils/placeDetailCache'
 import type { PlaceDetail } from '../types/appTypes'
 
 type BackendSearchPlace = {
@@ -103,6 +103,11 @@ const homeAiFeatures: HomeAiFeature[] = [
 ]
 
 const TABLET_HOME_RAIL_QUERY = '(min-width: 768px)'
+const homeTopPickRecommendationPlaces = [
+  ...homePopularTopPickPlaces,
+  ...homeRecommendedTopPickPlaces,
+  ...homeAllTopPickPlaces,
+]
 
 function parseCoordinate(value: number | string | null | undefined) {
   if (typeof value === 'number' && Number.isFinite(value)) {
@@ -1105,6 +1110,30 @@ function useSegmentedRailIndicator<T extends HTMLElement>(
   }
 }
 
+function buildCachedHomeTopPickPlaceBySlug() {
+  const nextEntries: Array<[string, ShowcasePlace]> = []
+  const seenSlugs = new Set<string>()
+
+  for (const recommendation of homeTopPickRecommendationPlaces) {
+    const normalizedSlug = (recommendation.slug ?? recommendation.id).trim().toLowerCase()
+
+    if (!normalizedSlug || seenSlugs.has(normalizedSlug)) {
+      continue
+    }
+
+    seenSlugs.add(normalizedSlug)
+
+    const cachedPlace = readCachedPlaceDetail(normalizedSlug)
+    const showcasePlace = cachedPlace ? mapPlaceDetailToShowcasePlace(cachedPlace) : null
+
+    if (showcasePlace) {
+      nextEntries.push([normalizedSlug, showcasePlace])
+    }
+  }
+
+  return Object.fromEntries(nextEntries)
+}
+
 function getRailItemTargetLeft(element: HTMLElement, item: HTMLElement) {
   const targetLeft =
     element.scrollLeft + item.getBoundingClientRect().left - element.getBoundingClientRect().left
@@ -1161,13 +1190,17 @@ function HomePage({
           Object.keys(initialHomeRouteCacheRef.current.cityTilePlaceBySlug).length > 0 ||
           Object.keys(initialHomeRouteCacheRef.current.categoryTilePlaceByLabel).length > 0
         )
-      )
+      ) ||
+      Object.keys(buildCachedHomeTopPickPlaceBySlug()).length > 0
     )
   )
   const [selectedCityTileSlug, setSelectedCityTileSlug] = useState<string | null>(null)
   const [selectedCategoryTileLabel, setSelectedCategoryTileLabel] = useState<string | null>(null)
   const [topPickPlaceBySlug, setTopPickPlaceBySlug] = useState<Record<string, ShowcasePlace>>(
-    initialHomeRouteCacheRef.current?.topPickPlaceBySlug ?? {}
+    {
+      ...buildCachedHomeTopPickPlaceBySlug(),
+      ...(initialHomeRouteCacheRef.current?.topPickPlaceBySlug ?? {}),
+    }
   )
   const [categoryTilePlaceByLabel, setCategoryTilePlaceByLabel] = useState<Record<string, ShowcasePlace>>(
     initialHomeRouteCacheRef.current?.categoryTilePlaceByLabel ?? {}
@@ -1454,11 +1487,7 @@ function HomePage({
           setAreHomeCardsLoaded(false)
         }
 
-        const topPickSlugs = [
-          ...homePopularTopPickPlaces,
-          ...homeRecommendedTopPickPlaces,
-          ...homeAllTopPickPlaces,
-        ]
+        const topPickSlugs = homeTopPickRecommendationPlaces
           .map((place) => place.slug?.trim().toLowerCase())
           .filter((slug): slug is string => Boolean(slug))
 
@@ -1493,16 +1522,17 @@ function HomePage({
           placeBySlug.set(showcasePlace.slug?.trim().toLowerCase() ?? showcasePlace.id.trim().toLowerCase(), showcasePlace)
         }
 
-        setTopPickPlaceBySlug(
-          Object.fromEntries(
+        setTopPickPlaceBySlug((currentValue) => ({
+          ...currentValue,
+          ...Object.fromEntries(
             topPickSlugs
               .map((slug) => {
                 const place = placeBySlug.get(slug)
                 return place ? ([slug, place] as const) : null
               })
               .filter((entry): entry is readonly [string, ShowcasePlace] => Boolean(entry))
-          )
-        )
+          ),
+        }))
 
         setCityTilePlaceBySlug(
           Object.fromEntries(
@@ -1548,13 +1578,10 @@ function HomePage({
       }
     }
 
-    const timeoutId = window.setTimeout(() => {
-      void loadHomeCardPlaces()
-    }, 700)
+    void loadHomeCardPlaces()
 
     return () => {
       isCancelled = true
-      window.clearTimeout(timeoutId)
     }
   }, [])
 

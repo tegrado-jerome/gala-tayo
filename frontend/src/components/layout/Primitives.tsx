@@ -7,7 +7,7 @@ import {
 import { cn } from '../AppUI'
 
 export const BOTTOM_NAV_RESERVED_CLASS =
-  'pb-[calc(env(safe-area-inset-bottom,0px)+5rem)] sm:pb-[calc(env(safe-area-inset-bottom,0px)+5.25rem)] lg:pb-0'
+  'pb-[calc(env(safe-area-inset-bottom,0px)+6rem)] sm:pb-[calc(env(safe-area-inset-bottom,0px)+6.25rem)] lg:pb-8'
 
 type PageShellTone = 'app' | 'surface' | 'plain'
 
