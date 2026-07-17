@@ -24,7 +24,7 @@ const welcomeAssets: WelcomeAsset[] = [
 ]
 
 const WELCOME_LOADING_MIN_MS = 180
-const WELCOME_LOADING_MAX_MS = 450
+const WELCOME_LOADING_MAX_MS = 3000
 
 function getWelcomeHeroSrc() {
   if (typeof window === 'undefined') {
@@ -56,6 +56,23 @@ function WelcomeLoader() {
       </div>
     </main>
   )
+}
+
+async function waitForImageReady(image: HTMLImageElement) {
+  if (!image.complete) {
+    await new Promise<void>((resolve) => {
+      image.onload = () => resolve()
+      image.onerror = () => resolve()
+    })
+  }
+
+  if (typeof image.decode === 'function') {
+    try {
+      await image.decode()
+    } catch {
+      // Fall back to revealing the page if decode fails after load.
+    }
+  }
 }
 
 type WelcomePageProps = {
@@ -97,13 +114,9 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
     const maxDelayTimeoutId = window.setTimeout(revealWhenAllowed, WELCOME_LOADING_MAX_MS)
 
     preloadImage.src = heroSrc
-
-    if (preloadImage.complete) {
+    void waitForImageReady(preloadImage).then(() => {
       completeWhenReady()
-    } else {
-      preloadImage.onload = completeWhenReady
-      preloadImage.onerror = completeWhenReady
-    }
+    })
 
     return () => {
       isCancelled = true

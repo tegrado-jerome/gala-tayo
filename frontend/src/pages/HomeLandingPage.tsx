@@ -1054,7 +1054,7 @@ function HomeLandingPage({
   const categoryRailRef = useRef<HTMLDivElement | null>(null)
   const [activeHeroIndex, setActiveHeroIndex] = useState(0)
   const [activeHeroCardIndex, setActiveHeroCardIndex] = useState(0)
-  const [heroIndicatorProgress, setHeroIndicatorProgress] = useState(0)
+  const [heroIndicatorProgressRatio, setHeroIndicatorProgressRatio] = useState(0)
   const [isTabletUpHomeViewport, setIsTabletUpHomeViewport] = useState(() => {
     if (typeof window === 'undefined') {
       return false
@@ -1455,25 +1455,25 @@ function HomeLandingPage({
     if (!carousel || cards.length === 0) {
       setActiveHeroCardIndex(0)
       setActiveHeroIndex(0)
-      setHeroIndicatorProgress(0)
+      setHeroIndicatorProgressRatio(0)
       return
     }
 
     const maxScrollLeft = Math.max(carousel.scrollWidth - carousel.clientWidth, 0)
-    const scrollProgress = maxScrollLeft > 0 ? carousel.scrollLeft / maxScrollLeft : 0
-    const progressCardIndex = scrollProgress * Math.max(visibleTopPickCarouselPlaces.length - 1, 0)
+    const progressRatio = maxScrollLeft > 0 ? Math.min(1, Math.max(0, carousel.scrollLeft / maxScrollLeft)) : 0
+    const progressCardIndex = progressRatio * Math.max(visibleTopPickCarouselPlaces.length - 1, 0)
     const nextCardIndex = Math.min(
       visibleTopPickCarouselPlaces.length - 1,
       Math.max(0, Math.round(progressCardIndex))
     )
     const nextIndex = isTabletUpHomeViewport
-      ? scrollProgress * Math.max(indicatorTotal - 1, 0)
-      : Math.min(indicatorTotal - 1, Math.max(0, progressCardIndex % 5))
+      ? Math.round(progressRatio * Math.max(indicatorTotal - 1, 0))
+      : Math.min(indicatorTotal - 1, Math.max(0, Math.round(progressCardIndex % 5)))
 
     setActiveHeroCardIndex((currentIndex) => (currentIndex === nextCardIndex ? currentIndex : nextCardIndex))
     setActiveHeroIndex((currentIndex) => (currentIndex === nextIndex ? currentIndex : nextIndex))
-    setHeroIndicatorProgress((currentProgress) => (
-      Math.abs(currentProgress - nextIndex) < 0.01 ? currentProgress : nextIndex
+    setHeroIndicatorProgressRatio((currentProgressRatio) => (
+      Math.abs(currentProgressRatio - progressRatio) < 0.002 ? currentProgressRatio : progressRatio
     ))
   }, [isTabletUpHomeViewport, visibleTopPickCarouselPlaces.length])
 
@@ -1490,14 +1490,14 @@ function HomeLandingPage({
     if (shouldShowTopPickSkeletons) {
       setActiveHeroCardIndex(0)
       setActiveHeroIndex(0)
-      setHeroIndicatorProgress(0)
+      setHeroIndicatorProgressRatio(0)
       return
     }
 
     if (!carousel || indicatorTotal <= 1) {
       setActiveHeroCardIndex(0)
       setActiveHeroIndex(0)
-      setHeroIndicatorProgress(0)
+      setHeroIndicatorProgressRatio(0)
       return
     }
 
@@ -1549,7 +1549,7 @@ function HomeLandingPage({
     setActiveTopPicksTab(tab)
     setActiveHeroCardIndex(0)
     setActiveHeroIndex(0)
-    setHeroIndicatorProgress(0)
+    setHeroIndicatorProgressRatio(0)
 
     requestAnimationFrame(() => {
       heroCarouselRef.current?.scrollTo({
@@ -1588,7 +1588,7 @@ function HomeLandingPage({
 
     setActiveHeroCardIndex(targetCardIndex)
     setActiveHeroIndex(safeDotIndex)
-    setHeroIndicatorProgress(safeDotIndex)
+    setHeroIndicatorProgressRatio(visibleDotCount > 1 ? safeDotIndex / (visibleDotCount - 1) : 0)
     carousel.scrollTo({
       left: getRailItemTargetLeft(carousel, targetCard),
       behavior: 'smooth',
@@ -1772,10 +1772,10 @@ function HomeLandingPage({
                 <CarouselPositionIndicator
                   currentIndex={activeHeroIndex}
                   total={topPicksIndicatorTotal}
-                  trackClassName="min-w-[118px] justify-center px-5"
+                  trackClassName="w-[118px]"
                   onSelect={shouldShowTopPickSkeletons ? undefined : handleHeroIndicatorSelect}
-                  continuous
-                  progress={heroIndicatorProgress}
+                  variant="segmented"
+                  progressRatio={heroIndicatorProgressRatio}
                   label={
                     activeTopPicksTab === 'all'
                       ? 'All places preview'
