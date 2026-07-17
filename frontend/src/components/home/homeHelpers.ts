@@ -105,7 +105,7 @@ type BackendSearchPlace = {
   commute_friendly?: boolean | null
   commute_access?: string | null
   nearby_context?: string | null
-  budget_notes?: string | null
+  budget_note?: string | null
   verification_status?: string | null
   verification_notes?: string | null
   verification_sources?: string[] | null
@@ -547,18 +547,16 @@ function updateSearchPageUrl({
 }
 
 const fallbackCategories = [
-  { id: 'kainan', name: 'Kainan' },
-  { id: 'cafe', name: 'Cafe' },
-  { id: 'mall', name: 'Mall' },
-  { id: 'parke', name: 'Parke' },
-  { id: 'nature', name: 'Nature' },
-  { id: 'museum', name: 'Museum' },
-  { id: 'heritage', name: 'Heritage' },
-  { id: 'tourist', name: 'Tourist' },
   { id: 'activity', name: 'Activity' },
+  { id: 'cafe', name: 'Cafe' },
   { id: 'cinema', name: 'Cinema' },
+  { id: 'food', name: 'Food' },
+  { id: 'heritage', name: 'Heritage' },
+  { id: 'hotel', name: 'Hotel' },
+  { id: 'mall', name: 'Mall' },
+  { id: 'museum', name: 'Museum' },
   { id: 'nightlife', name: 'Nightlife' },
-  { id: 'stay', name: 'Stay' },
+  { id: 'park', name: 'Park' },
 ]
 
 const fallbackGoodForOptions: GoodForChip[] = [
@@ -607,12 +605,12 @@ function pluralizeCategoryLabel(label: string) {
 
   if (normalized === 'cafe') return 'cafes'
   if (normalized === 'cinema') return 'cinemas'
+  if (normalized === 'food') return 'food places'
+  if (normalized === 'hotel') return 'hotels'
   if (normalized === 'nightlife') return 'nightlife places'
   if (normalized === 'heritage') return 'heritage places'
-  if (normalized === 'tourist') return 'tourist places'
   if (normalized === 'activity') return 'activity places'
-  if (normalized === 'stay') return 'stay places'
-  if (normalized === 'nature') return 'nature places'
+  if (normalized === 'park') return 'parks'
   if (normalized.endsWith('s')) return normalized
 
   return `${normalized}s`
@@ -848,7 +846,7 @@ function mapBackendPlaceToCard(place: BackendSearchPlace): PlaceCardData | null 
     commute_friendly: place.commute_friendly ?? null,
     commute_access: place.commute_access || null,
     nearby_context: place.nearby_context || null,
-    budget_notes: place.budget_notes || null,
+    budget_notes: place.budget_note || null,
     verification_status: place.verification_status || null,
     verification_notes: place.verification_notes || null,
     verification_sources: place.verification_sources ?? [],
@@ -856,7 +854,7 @@ function mapBackendPlaceToCard(place: BackendSearchPlace): PlaceCardData | null 
     website_url: place.website_url || null,
     googleMapsUrl: place.google_maps_url || null,
     distanceKm: typeof place.distanceKm === 'number' ? place.distanceKm : null,
-    entranceFee: place.budget_notes || place.budget || place.budgetRange || undefined,
+    entranceFee: place.budget_note || place.budget || place.budgetRange || undefined,
     website: place.website_url || undefined,
     coordinates: {
       lat,

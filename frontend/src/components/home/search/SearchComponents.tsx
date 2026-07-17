@@ -1,16 +1,315 @@
-import type { RefObject } from 'react'
-import { RotateCcw, House } from 'lucide-react'
+import type { ReactNode, RefObject } from 'react'
+import { Check, MapPin, Tags, Wallet, MapPinned, RotateCcw, House, Search, SlidersHorizontal, type LucideIcon } from 'lucide-react'
 import { AppIcon } from '../../AppIcon'
+import { cn } from '../../AppUI'
+import { InlineSkeleton, SkeletonLine } from '../../loading/SkeletonStates'
 import PlaceCard, { type PlaceCardData } from '../../PlaceCard'
 import Breadcrumb from '../../Breadcrumb'
 import CompactPagination from '../../CompactPagination'
 import MapView from '../../MapView'
-import { ChibiIllustration } from '../../layout/ResponsiveLayouts'
-import { PinIcon, BudgetIcon, SparkIcon, ChevronRightIcon } from '../HomeIcons'
+import { BOTTOM_NAV_RESERVED_CLASS } from '../../layout/Primitives'
+import { ChevronRightIcon } from '../HomeIcons'
 import { SEARCH_RESULTS_PER_PAGE, type MobileResultsViewMode, type BackendSearchStatus } from '../homeHelpers'
-import searchBeforeChibi from '../../../assets/chibis/core/search-places/chibi-search-places-before-active-state.webp'
-import searchLoadingChibi from '../../../assets/chibis/core/search-places/chibi-search-places-loading-state.webp'
-import searchSuccessChibi from '../../../assets/chibis/core/search-places/chibi-search-success.webp'
+import type { SearchBudgetValue } from '../../../utils/searchParams'
+
+function SearchLandingBar({
+  value,
+  placeholder = 'Discover a city',
+  onChange,
+  onSubmit,
+  onFilterClick,
+  footer,
+  disabled = false,
+  canSubmit = value.trim().length > 0,
+  inputId = 'search-page-input',
+  className = '',
+}: {
+  value: string
+  placeholder?: string
+  onChange: (value: string) => void
+  onSubmit: () => void
+  onFilterClick?: () => void
+  footer?: ReactNode
+  disabled?: boolean
+  canSubmit?: boolean
+  inputId?: string
+  className?: string
+}) {
+  return (
+    <div
+      className={`mt-7 flex w-full flex-col rounded-[20px] border border-slate-200/70 bg-transparent px-4 py-0 text-[var(--accent-deep)] transition hover:border-slate-300 hover:bg-slate-50/70 ${disabled ? 'pointer-events-none opacity-70' : ''} ${className}`}
+      onClick={() => {
+        if (!disabled) {
+          document.getElementById(inputId)?.focus()
+        }
+      }}
+    >
+      <div className="flex h-[56px] items-center justify-between gap-3">
+        <div className="flex min-w-0 flex-1 items-center gap-2.5 text-[var(--accent-deep)]">
+          <label htmlFor={inputId} className="sr-only">
+            Search places, cities, or categories
+          </label>
+          <Search className="h-[21px] w-[21px] shrink-0 text-[var(--accent-deep)]" strokeWidth={2} />
+          <input
+            id={inputId}
+            type="text"
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && canSubmit) {
+                event.preventDefault()
+                onSubmit()
+              }
+            }}
+            placeholder={placeholder}
+            disabled={disabled}
+            className="min-w-0 flex-1 bg-transparent text-[15px] font-medium text-slate-900 outline-none placeholder:font-medium placeholder:text-slate-500 disabled:cursor-not-allowed"
+          />
+        </div>
+
+        {onFilterClick ? (
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation()
+              onFilterClick()
+            }}
+            aria-label="Open filters"
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--accent-deep)] transition hover:bg-[var(--accent-soft)] disabled:cursor-not-allowed disabled:text-slate-300"
+          >
+            <SlidersHorizontal className="h-[20px] w-[20px]" strokeWidth={2} />
+          </button>
+        ) : null}
+      </div>
+
+      {footer ? <div className="mt-3">{footer}</div> : null}
+    </div>
+  )
+}
+
+type SearchFilterOption = {
+  value: string
+  label: string
+}
+
+function SearchFilterButtonGroup({
+  label,
+  value,
+  options,
+  emptyLabel,
+  icon: Icon,
+  onChange,
+}: {
+  label: string
+  value: string | null
+  options: SearchFilterOption[]
+  emptyLabel: string
+  icon: LucideIcon
+  onChange: (value: string | null) => void
+}) {
+  const selectedOption = options.find((option) => option.value === value) ?? null
+
+  return (
+    <div className="w-full">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <p className="flex min-w-0 items-center gap-2 text-xs font-semibold text-slate-500">
+          <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent-deep)]">
+            <Icon className="h-3.5 w-3.5" strokeWidth={2.25} />
+          </span>
+          <span className="min-w-0 truncate">
+            {selectedOption ? `Selected: ${selectedOption.label}` : `Choose a ${label.toLowerCase()}`}
+          </span>
+        </p>
+        {value ? (
+          <button
+            type="button"
+            onClick={() => onChange(null)}
+            className="text-[11px] font-bold text-[var(--accent-deep)] transition hover:opacity-75"
+          >
+            Clear
+          </button>
+        ) : (
+          <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">All options visible</span>
+        )}
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => onChange(null)}
+          className={`inline-flex min-h-10 items-center gap-2 rounded-full px-3.5 text-sm font-semibold transition ${
+            value === null
+              ? 'bg-[var(--accent-deep)] text-white shadow-[0_10px_18px_rgba(var(--accent-rgb),0.18)]'
+              : 'border border-[rgba(148,163,184,0.18)] bg-white text-slate-700 hover:border-[var(--accent-deep)] hover:text-[var(--accent-deep)]'
+          }`}
+        >
+          <Icon className="h-4 w-4 shrink-0" strokeWidth={2.25} />
+          {emptyLabel}
+        </button>
+
+        {options.map((option) => {
+          const selected = option.value === value
+
+          return (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => onChange(option.value)}
+              className={`inline-flex min-h-10 items-center gap-2 rounded-full px-3.5 text-sm font-semibold transition ${
+                selected
+                  ? 'bg-[rgba(var(--accent-rgb),0.1)] text-[var(--accent-deep)] ring-1 ring-[rgba(var(--accent-rgb),0.18)]'
+                  : 'border border-[rgba(148,163,184,0.18)] bg-white text-slate-700 hover:border-[rgba(var(--accent-rgb),0.28)] hover:bg-slate-50 hover:text-slate-950'
+              }`}
+              aria-pressed={selected}
+            >
+              <Icon className={`h-4 w-4 shrink-0 ${selected ? 'text-[var(--accent-deep)]' : 'text-slate-400'}`} strokeWidth={2.25} />
+              <span className="min-w-0 truncate">{option.label}</span>
+              {selected ? <Check className="h-4 w-4 shrink-0 text-[var(--accent)]" strokeWidth={2.5} /> : null}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function SearchFilterPanel({
+  cityLabel = 'City',
+  categoryLabel = 'Category',
+  budgetLabel = 'Budget',
+  selectedCity,
+  selectedCategory,
+  selectedBudget,
+  cityOptions,
+  categoryOptions,
+  budgetOptions,
+  onCityChange,
+  onCategoryChange,
+  onBudgetChange,
+  onClearAll,
+  onApplyFilters,
+  canApply = true,
+  showHeader = true,
+  showActions = true,
+  variant = 'card',
+  className = '',
+}: {
+  cityLabel?: string
+  categoryLabel?: string
+  budgetLabel?: string
+  selectedCity: string | null
+  selectedCategory: string | null
+  selectedBudget: SearchBudgetValue | null
+  cityOptions: Array<{ value: string; label: string }>
+  categoryOptions: Array<{ value: string; label: string }>
+  budgetOptions: Array<{ value: SearchBudgetValue; label: string }>
+  onCityChange: (value: string | null) => void
+  onCategoryChange: (value: string | null) => void
+  onBudgetChange: (value: SearchBudgetValue | null) => void
+  onClearAll?: () => void
+  onApplyFilters?: () => void
+  canApply?: boolean
+  showHeader?: boolean
+  showActions?: boolean
+  variant?: 'card' | 'bare'
+  className?: string
+}) {
+  const hasSelection = Boolean(selectedCity || selectedCategory || selectedBudget)
+  const selectedCount = [selectedCity, selectedCategory, selectedBudget].filter(Boolean).length
+  const applyLabel = `Apply Filters${selectedCount > 0 ? ` (${selectedCount})` : ''}`
+  const isBare = variant === 'bare'
+
+  const shellClassName =
+    isBare
+      ? cn('bg-transparent', className)
+      : cn(
+          'overflow-visible rounded-[30px] border border-[rgba(148,163,184,0.18)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(249,250,251,0.98)_100%)] p-4 shadow-[0_18px_48px_rgba(15,23,42,0.10)] backdrop-blur-xl sm:p-5',
+          className
+        )
+
+  return (
+    <div className={shellClassName}>
+      {showHeader ? (
+        <>
+          <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-slate-200/90" aria-hidden="true" />
+
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[var(--accent-deep)]/70">Filter by</p>
+              <h2 className="mt-1 text-[1.05rem] font-black tracking-[-0.03em] text-slate-950">Refine your search</h2>
+              <p className="mt-1 max-w-[30rem] text-sm leading-6 text-slate-500">
+                Pick a city, category, and budget. The sheet keeps everything compact and easy to scan.
+              </p>
+            </div>
+
+            {hasSelection && onClearAll ? (
+              <button
+                type="button"
+                onClick={onClearAll}
+                className="inline-flex shrink-0 items-center rounded-full border border-[rgba(148,163,184,0.18)] bg-white px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.12em] text-slate-500 transition hover:border-[var(--accent-deep)] hover:text-[var(--accent-deep)]"
+              >
+                Reset
+              </button>
+            ) : null}
+          </div>
+        </>
+      ) : null}
+
+      <div className="mt-5 space-y-4">
+        <SearchFilterButtonGroup
+          label={cityLabel}
+          value={selectedCity}
+          options={cityOptions}
+          emptyLabel="Any city"
+          icon={MapPin}
+          onChange={onCityChange}
+        />
+
+        <SearchFilterButtonGroup
+          label={categoryLabel}
+          value={selectedCategory}
+          options={categoryOptions}
+          emptyLabel="Any category"
+          icon={Tags}
+          onChange={onCategoryChange}
+        />
+
+        <SearchFilterButtonGroup
+          label={budgetLabel}
+          value={selectedBudget}
+          options={budgetOptions}
+          emptyLabel="Any budget"
+          icon={Wallet}
+          onChange={(nextValue) => onBudgetChange(nextValue as SearchBudgetValue | null)}
+        />
+      </div>
+
+      {showActions && (onApplyFilters || onClearAll) ? (
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          {onClearAll ? (
+            <button
+              type="button"
+              onClick={onClearAll}
+              className="inline-flex h-12 items-center justify-center rounded-2xl border border-[rgba(148,163,184,0.18)] bg-white px-4 text-sm font-bold text-slate-500 transition hover:border-[var(--accent-deep)] hover:text-[var(--accent-deep)]"
+            >
+              Reset All
+            </button>
+          ) : null}
+          {onApplyFilters ? (
+            <button
+              type="button"
+              onClick={onApplyFilters}
+              disabled={!canApply}
+              className={`inline-flex h-12 items-center justify-center rounded-2xl bg-[var(--accent)] px-4 text-sm font-bold text-white shadow-[0_14px_30px_rgba(var(--accent-rgb),0.18)] transition hover:bg-[var(--accent-deep)] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 ${onClearAll ? '' : 'sm:col-span-2'}`}
+            >
+              {applyLabel}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  )
+}
 
 function SearchEmptyState({
   hasSearched,
@@ -37,7 +336,7 @@ function SearchEmptyState({
             <button
               type="button"
               onClick={onSearchAgain}
-              className="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition hover:border-[var(--accent)] hover:text-[var(--accent-deep)]"
+              className="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-white px-5 text-sm font-semibold text-slate-700 shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition hover:border-[var(--accent-deep)] hover:text-[var(--accent-deep)]"
             >
               <RotateCcw className="h-4 w-4" />
               Search again
@@ -57,6 +356,10 @@ function SearchEmptyState({
         : status === 'empty_query' || status === 'too_vague'
           ? 'Try adding a place, city, or vibe.'
           : 'Try another city, category, vibe, or budget.')
+    const actionLabel =
+      status === 'no_results' || status === 'empty_query' || status === 'too_vague'
+        ? 'Back to search'
+        : 'Search again'
 
     return (
       <div className="flex min-h-[calc(100svh-220px)] w-full items-center justify-center px-4 py-8">
@@ -69,10 +372,10 @@ function SearchEmptyState({
             <button
               type="button"
               onClick={onSearchAgain}
-              className="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition hover:border-[var(--accent)] hover:text-[var(--accent-deep)]"
+              className="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-white px-5 text-sm font-semibold text-slate-700 shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition hover:border-[var(--accent-deep)] hover:text-[var(--accent-deep)]"
             >
               <RotateCcw className="h-4 w-4" />
-              Search again
+              {actionLabel}
             </button>
           ) : null}
         </div>
@@ -87,102 +390,59 @@ function SearchPageBreadcrumb({ className = '' }: { className?: string }) {
   return (
     <Breadcrumb
       showBack
+      backTo="/places"
       className={className}
       items={[
-        { label: 'Home', href: '/', icon: <House className="h-3.5 w-3.5" /> },
+        { label: 'Home', href: '/home', icon: <House className="h-3.5 w-3.5" /> },
+        { label: 'Places', href: '/places', icon: <MapPinned className="h-3.5 w-3.5" /> },
         { label: 'Search', icon: <AppIcon name="search" className="h-3.5 w-3.5" /> },
       ]}
     />
   )
 }
 
-function SkeletonLine({ className = '' }: { className?: string }) {
-  return (
-    <span
-      className={`block rounded-full bg-[linear-gradient(90deg,#eef2f7_0%,#dbe2ea_42%,#f4f7fa_78%)] bg-[length:220%_100%] motion-safe:animate-[gala-skeleton-shimmer_1.6s_ease-in-out_infinite] ${className}`}
-      aria-hidden="true"
-    />
-  )
-}
-
 function SearchLoadingCard({ compact = false }: { compact?: boolean }) {
-  if (compact) {
-    return (
-      <div className="rounded-xl border border-[var(--line-strong)] bg-white/86 p-3 shadow-[0_12px_28px_rgba(15,23,42,0.04)]">
-        <div className="grid grid-cols-[112px_minmax(0,1fr)] gap-4">
-          <div className="flex aspect-[1.18] items-center justify-center rounded-lg border border-slate-300 bg-slate-50 text-slate-400">
-            <svg viewBox="0 0 96 76" fill="none" stroke="currentColor" strokeWidth="2" className="h-20 w-24">
-              <rect x="5" y="5" width="86" height="66" rx="6" />
-              <path d="m6 60 27-28 23 23 15-17 20 22" />
-              <circle cx="58" cy="26" r="7" />
-            </svg>
-          </div>
-          <div className="min-w-0 pt-1">
-            <SkeletonLine className="h-4 w-[92%]" />
-            <SkeletonLine className="mt-4 h-3.5 w-[48%]" />
-            <div className="mt-5 flex items-center gap-3">
-              <PinIcon className="h-5 w-5 text-slate-400" />
-              <SkeletonLine className="h-3 w-[46%]" />
-              <span className="h-1 w-1 rounded-full bg-slate-300" />
-              <SkeletonLine className="h-3 w-[26%]" />
-            </div>
-            <SkeletonLine className="mt-5 h-3 w-[66%]" />
-          </div>
-        </div>
-        <div className="mt-4 rounded-lg border border-slate-300 bg-white px-4 py-3">
-          <SkeletonLine className="mx-auto h-3 w-[28%]" />
-        </div>
-      </div>
-    )
-  }
+  const contentPaddingClassName = compact ? 'px-3 pb-3 pt-2.5' : 'px-3.5 pb-3.5 pt-2.5'
+  const titleWidthClassName = compact ? 'w-[72%]' : 'w-[76%]'
+  const subtitleWidthClassName = compact ? 'w-[20%]' : 'w-[22%]'
+  const bodyLineWidths = compact ? ['w-[90%]', 'w-[84%]', 'w-[70%]'] : ['w-[92%]', 'w-[86%]', 'w-[72%]']
 
   return (
-    <div className="rounded-lg border border-[var(--line-strong)] bg-white/86 px-5 py-5 shadow-[0_14px_32px_rgba(15,23,42,0.035)]">
-      <div className="grid grid-cols-[176px_minmax(0,1fr)_148px] items-center gap-8">
-        <div className="h-[150px] rounded-lg bg-[linear-gradient(135deg,#eef2f7,#e2e8f0)]" />
-        <div className="min-w-0">
-          <div className="flex items-center gap-5">
-            <span className="h-12 w-12 rounded-full bg-[linear-gradient(135deg,#eef2f7,#dfe6ee)]" aria-hidden="true" />
-            <SkeletonLine className="h-4 w-[28%]" />
-          </div>
-          <SkeletonLine className="mt-6 h-5 w-[44%]" />
-          <SkeletonLine className="mt-7 h-3 w-[58%]" />
-          <SkeletonLine className="mt-4 h-3 w-[45%]" />
-          <div className="mt-6 flex flex-wrap items-center gap-4 text-slate-400">
-            <PinIcon className="h-5 w-5" />
-            <SkeletonLine className="h-3 w-20" />
-            <span className="h-1 w-1 rounded-full bg-slate-300" />
-            <BudgetIcon className="h-5 w-5 text-slate-400" />
-            <SkeletonLine className="h-3 w-16" />
-            <span className="h-1 w-1 rounded-full bg-slate-300" />
-            <SparkIcon className="h-5 w-5" />
-            <SkeletonLine className="h-3 w-16" />
+    <article className="relative overflow-hidden rounded-[26px] border border-[rgba(148,163,184,0.22)] bg-white shadow-[0_8px_22px_rgba(15,23,42,0.05)]">
+      <div className="relative aspect-[1.38] w-full overflow-hidden bg-[linear-gradient(180deg,var(--primary-soft)_0%,rgba(var(--accent-rgb),0.06)_100%)]">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.9),transparent_24%),radial-gradient(circle_at_80%_0%,var(--accent-soft),transparent_20%)]" aria-hidden="true" />
+
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/90 shadow-[0_4px_12px_rgba(148,163,184,0.14)]">
+            <span className="h-5 w-5 rounded-full border border-slate-300" aria-hidden="true" />
+          </span>
+        </div>
+
+        <div className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/92 px-2.5 py-1 shadow-[0_8px_18px_rgba(15,23,42,0.12)] backdrop-blur-sm">
+          <span className="h-3.5 w-3.5 rounded-full border border-[var(--accent-glow)]" aria-hidden="true" />
+          <SkeletonLine className="h-3 w-3" />
+          <span className="text-slate-300">·</span>
+          <SkeletonLine className="h-3 w-24" />
+        </div>
+      </div>
+
+      <div className={contentPaddingClassName}>
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <SkeletonLine className={`h-[18px] ${titleWidthClassName}`} />
+            <SkeletonLine className={`mt-2 h-3.5 ${subtitleWidthClassName}`} />
           </div>
         </div>
-        <div className="h-16 rounded-lg bg-[linear-gradient(135deg,#eef2f7,#e2e8f0)]" />
-      </div>
-    </div>
-  )
-}
 
-function ChibiPlaceholder({
-  className = '',
-  imageClassName = '',
-  src = searchLoadingChibi,
-}: {
-  className?: string
-  imageClassName?: string
-  src?: string
-}) {
-  return (
-    <div className={`relative mx-auto flex items-center justify-center ${className}`} aria-hidden="true">
-      <ChibiIllustration
-        src={src}
-        variant="hero"
-        priority
-        className={imageClassName}
-      />
-    </div>
+        <SkeletonLine className={`mt-3 h-3.5 ${bodyLineWidths[0]}`} />
+        <SkeletonLine className={`mt-2 h-3.5 ${bodyLineWidths[1]}`} />
+        <SkeletonLine className={`mt-2 h-3.5 ${bodyLineWidths[2]}`} />
+      </div>
+
+      <div className="absolute right-3 top-3 z-20 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/70 bg-white/92 shadow-[0_6px_14px_rgba(15,23,42,0.06)] backdrop-blur-sm">
+        <span className="h-4 w-4 rounded-full border border-[var(--accent-glow)]" aria-hidden="true" />
+      </div>
+    </article>
   )
 }
 
@@ -193,30 +453,30 @@ function SearchLoadingState({
   searchLabel: string
   mobileViewportCentered?: boolean
 }) {
-  const displayLabel = searchLabel.trim() || 'gala spots in Metro Manila'
+  void searchLabel
   const loadingShellClassName = mobileViewportCentered
-    ? 'fixed inset-x-0 top-16 bottom-[calc(env(safe-area-inset-bottom,0px)+4.75rem)] z-10 flex items-center justify-center px-5 py-6 sm:px-8 lg:px-12 lg:py-10'
-    : 'flex h-full min-h-0 w-full items-center justify-center px-5 py-6 sm:px-8 md:min-h-[calc(100svh-68px)] md:py-6 lg:px-12 lg:py-10'
+    ? 'fixed inset-x-0 top-16 bottom-[calc(env(safe-area-inset-bottom,0px)+4.75rem)] z-10 flex items-start justify-center overflow-y-auto px-5 py-6 sm:px-8 lg:px-12 lg:py-10'
+    : 'flex h-full min-h-0 w-full items-start justify-center overflow-y-auto px-5 py-6 sm:px-8 md:min-h-[calc(100svh-68px)] md:py-6 lg:px-12 lg:py-10'
 
   return (
-    <section className={loadingShellClassName}>
-      <div className="mx-auto flex w-full max-w-[600px] flex-col items-center gap-4 text-center">
-        <div>
-          <p className="text-[26px] font-extrabold leading-tight text-slate-800 sm:text-[30px] lg:text-[32px]">Searching for</p>
-          <h1 className="mt-3 text-[32px] font-black leading-tight text-slate-950 sm:text-[38px] lg:text-[38px]">
-            {displayLabel}
-          </h1>
+    <section className={loadingShellClassName} aria-busy="true" aria-live="polite">
+      <span className="sr-only">Loading search results</span>
+      <div className="mx-auto flex w-full max-w-[600px] flex-col gap-4">
+        <div className="rounded-[28px] border border-[rgba(148,163,184,0.18)] bg-white/90 px-5 py-5 text-left shadow-[0_10px_28px_rgba(15,23,42,0.04)]" aria-hidden="true">
+          <div className="flex items-center gap-3">
+            <SkeletonLine className="h-10 w-10 shrink-0 rounded-full" />
+            <div className="min-w-0">
+              <SkeletonLine className="h-3 w-20" />
+              <SkeletonLine className="mt-2 h-5 w-56 max-w-[62vw]" />
+            </div>
+          </div>
+          <SkeletonLine className="mt-4 h-3.5 w-full" />
+          <SkeletonLine className="mt-2 h-3.5 w-4/5" />
         </div>
-        <ChibiPlaceholder
-          className="mt-2"
-          imageClassName="!w-[clamp(300px,72vw,450px)] !max-h-[42vh] sm:!w-[clamp(260px,34vw,380px)] sm:!max-h-[34vh]"
-        />
-        <p className="mt-1 max-w-[360px] text-lg font-semibold leading-relaxed text-slate-600">
-          Finding gala spots around Metro Manila.
-        </p>
 
-        <div className="mt-2 grid w-full gap-4">
-          <SearchLoadingCard compact />
+        <div className="grid gap-3 sm:gap-4">
+          <SearchLoadingCard />
+          <SearchLoadingCard />
         </div>
       </div>
     </section>
@@ -243,8 +503,8 @@ function SearchResetButton({
   layout?: 'mobile' | 'desktop'
 }) {
   const className = layout === 'desktop'
-    ? 'inline-flex h-10 shrink-0 items-center gap-2 rounded-full border border-[var(--line)] bg-white px-3 text-sm font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-900'
-    : 'inline-flex h-10 shrink-0 items-center gap-2 rounded-full border border-[var(--line)] bg-white px-3 text-sm font-semibold text-slate-600 transition hover:border-slate-300 hover:text-slate-900'
+    ? 'inline-flex h-10 shrink-0 items-center gap-2 rounded-full border border-[var(--accent-glow)] bg-white px-3 text-sm font-semibold text-slate-600 transition hover:border-[var(--accent-deep)] hover:text-[var(--accent-deep)]'
+    : 'inline-flex h-10 shrink-0 items-center gap-2 rounded-full border border-[var(--accent-glow)] bg-white px-3 text-sm font-semibold text-slate-600 transition hover:border-[var(--accent-deep)] hover:text-[var(--accent-deep)]'
 
   return (
     <button
@@ -295,7 +555,7 @@ function ActiveSearchChips({
           key={chip.key}
           type="button"
           onClick={chip.onRemove}
-          className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white px-3 py-1.5 text-xs font-black text-slate-700 transition hover:border-[var(--accent)] hover:bg-[var(--accent-wash)] hover:text-[var(--accent-deep)]"
+        className="inline-flex items-center gap-2 rounded-full border border-[var(--accent-glow)] bg-white px-3 py-1.5 text-xs font-black text-slate-700 transition hover:border-[var(--accent-deep)] hover:bg-[var(--accent-soft)] hover:text-[var(--accent-deep)]"
         >
           <span>{chip.label}</span>
           <AppIcon name="clear" className="h-3 w-3" />
@@ -351,20 +611,7 @@ function MobileResultIntro({
           onRemoveGoodFor={onRemoveGoodFor}
           onRemoveBudget={onRemoveBudget}
         />
-        {isRefreshing ? (
-          <p className="mt-2 inline-flex rounded-full border border-[rgba(47,116,232,0.12)] bg-white/90 px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-[var(--accent-deep)]">
-            Refreshing results...
-          </p>
-        ) : null}
-        <div className="mt-3 flex h-48 justify-center overflow-hidden sm:h-68">
-          <img
-            src={searchSuccessChibi}
-            alt=""
-            className="gala-chibi h-full w-auto max-w-none shrink-0 scale-[1.05] object-contain sm:scale-[1.22]"
-            loading="eager"
-            aria-hidden="true"
-          />
-        </div>
+        {isRefreshing ? <InlineSkeleton className="mt-2" /> : null}
       </section>
     </>
   )
@@ -402,7 +649,7 @@ function SearchPagination({
       onPageChange={onPageChange}
       isLoading={isLoading}
       showLoadingMessage={showLoadingMessage}
-      className={compact ? 'max-w-[360px] self-center pt-2' : 'pt-2'}
+      className={compact ? 'mx-auto max-w-[360px] pt-2' : 'pt-2'}
     />
   )
 
@@ -459,7 +706,7 @@ function SearchPagination({
               aria-current={item === currentPage ? 'page' : undefined}
               className={`inline-flex h-8 min-w-8 items-center justify-center rounded-full px-2 text-sm font-black transition ${
                 item === currentPage
-                  ? 'bg-slate-950 text-white'
+                  ? 'bg-[var(--accent-deep)] text-white'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950'
               }`}
             >
@@ -479,7 +726,7 @@ function SearchPagination({
         </button>
       </div>
 
-      {isLoading ? <p className="text-[11px] font-semibold text-slate-400">Loading page...</p> : null}
+      {isLoading ? <InlineSkeleton className="justify-center" /> : null}
     </div>
   )
 }
@@ -492,14 +739,14 @@ function MobileResultsTabs({
   onViewChange: (view: MobileResultsViewMode) => void
 }) {
   const itemClass = (isSelected: boolean) =>
-    `inline-flex h-11 items-center justify-center gap-2 rounded-md text-sm font-black transition ${
+      `inline-flex h-11 items-center justify-center gap-2 rounded-md text-sm font-black transition ${
       isSelected
-        ? 'bg-slate-900 text-white shadow-[0_10px_20px_rgba(15,23,42,0.12)]'
-        : 'bg-white text-slate-950'
+      ? 'bg-[var(--accent)] text-white shadow-[0_10px_20px_rgba(var(--accent-rgb),0.16)]'
+      : 'bg-white text-slate-950'
     }`
 
   return (
-    <section className="mx-4 mt-4 grid grid-cols-2 rounded-md border border-[var(--line)] bg-white p-0.5">
+    <section className="mx-4 mt-4 grid grid-cols-2 rounded-md border border-[var(--accent-glow)] bg-white p-0.5">
       <button type="button" onClick={() => onViewChange('cards')} className={itemClass(selectedView === 'cards')}>
         <ListIcon className="h-4 w-4" />
         Cards
@@ -564,28 +811,25 @@ function MobileResultsView({
   onRemoveBudget: () => void
 }) {
   return (
-    <section className="mx-auto w-full max-w-[480px] md:max-w-[640px]">
-        <MobileResultIntro
-          heading={heading}
-          subheading={subheading}
-          cityLabel={cityLabel}
-          categoryLabel={categoryLabel}
-          goodForLabel={goodForLabel}
-          budgetLabel={budgetLabel}
-          isRefreshing={isRefreshing}
-          onClearSearch={onClearSearch}
-          onRemoveCity={onRemoveCity}
-          onRemoveCategory={onRemoveCategory}
-          onRemoveGoodFor={onRemoveGoodFor}
-          onRemoveBudget={onRemoveBudget}
-        />
+    <section className={`mx-auto w-full max-w-[430px] ${BOTTOM_NAV_RESERVED_CLASS}`}>
+      <MobileResultIntro
+        heading={heading}
+        subheading={subheading}
+        cityLabel={cityLabel}
+        categoryLabel={categoryLabel}
+        goodForLabel={goodForLabel}
+        budgetLabel={budgetLabel}
+        isRefreshing={isRefreshing}
+        onClearSearch={onClearSearch}
+        onRemoveCity={onRemoveCity}
+        onRemoveCategory={onRemoveCategory}
+        onRemoveGoodFor={onRemoveGoodFor}
+        onRemoveBudget={onRemoveBudget}
+      />
       <MobileResultsTabs selectedView={selectedView} onViewChange={onViewChange} />
 
       {selectedView === 'cards' ? (
-        <section
-          id="search-results-anchor"
-          className="grid gap-3 px-4 py-4 pb-[calc(env(safe-area-inset-bottom,0px)+4.5rem)]"
-        >
+        <section id="search-results-anchor" className="grid gap-3 px-4 py-4">
           <div className={`grid gap-3 transition ${isPageLoading ? 'pointer-events-none opacity-60' : 'opacity-100'}`}>
             {places.map((place) => (
               <PlaceCard
@@ -614,7 +858,7 @@ function MobileResultsView({
           />
         </section>
       ) : (
-        <section className="px-4 py-4 pb-[calc(env(safe-area-inset-bottom,0px)+4.5rem)]">
+        <section className="px-4 py-4">
           <div className="overflow-hidden rounded-lg border border-[var(--line)] bg-white">
             <MapView
               places={places}
@@ -666,6 +910,7 @@ function MobileResultsView({
 }
 
 function DesktopResultsView({
+  rawQuery,
   places,
   totalCount,
   currentPage,
@@ -680,15 +925,17 @@ function DesktopResultsView({
   isRefreshing,
   isPageLoading,
   scrollContainerRef,
+  onRawQueryChange,
+  onSubmitSearch,
   onSelectPlace,
   onPageChange,
   onViewDetails,
-  onClearSearch,
   onRemoveCity,
   onRemoveCategory,
   onRemoveGoodFor,
   onRemoveBudget,
 }: {
+  rawQuery: string
   places: PlaceCardData[]
   totalCount: number
   currentPage: number
@@ -703,57 +950,61 @@ function DesktopResultsView({
   isRefreshing: boolean
   isPageLoading: boolean
   scrollContainerRef: RefObject<HTMLElement | null>
+  onRawQueryChange: (query: string) => void
+  onSubmitSearch: () => void
   onSelectPlace: (placeId: string) => void
   onPageChange: (page: number) => void
   onViewDetails: (placeId: string) => void
-  onClearSearch: () => void
   onRemoveCity: () => void
   onRemoveCategory: () => void
   onRemoveGoodFor: () => void
   onRemoveBudget: () => void
 }) {
   return (
-    <section className="gala-page-background grid h-full min-h-0 select-none overflow-hidden lg:grid-cols-[minmax(380px,480px)_minmax(0,1fr)] xl:grid-cols-[minmax(440px,560px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(500px,620px)_minmax(0,1fr)]">
-      <aside ref={scrollContainerRef} className="h-full min-h-0 overflow-y-auto overscroll-contain border-r border-[var(--line)] px-6 py-6">
-        <SearchPageBreadcrumb className="mb-4" />
-        <div className="flex items-start justify-between gap-6">
-          <div>
-            <h1 className="text-3xl font-black leading-tight text-slate-950">{heading}</h1>
-            <p className="mt-1 text-xl font-semibold text-slate-800">{subheading}</p>
-            <ActiveSearchChips
-              cityLabel={cityLabel}
-              categoryLabel={categoryLabel}
-              goodForLabel={goodForLabel}
-              budgetLabel={budgetLabel}
-              onRemoveCity={onRemoveCity}
-              onRemoveCategory={onRemoveCategory}
-              onRemoveGoodFor={onRemoveGoodFor}
-              onRemoveBudget={onRemoveBudget}
-            />
-            {isRefreshing ? (
-              <p className="mt-2 inline-flex rounded-full border border-[rgba(47,116,232,0.12)] bg-white/90 px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-[var(--accent-deep)]">
-                Refreshing results...
-              </p>
-            ) : null}
-          </div>
-          <SearchResetButton onClick={onClearSearch} layout="desktop" />
-        </div>
+    <section className="gala-page-background grid h-full min-h-0 select-none overflow-hidden lg:h-[100dvh] lg:grid-cols-[minmax(340px,420px)_minmax(0,1fr)] xl:grid-cols-[minmax(360px,460px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(400px,520px)_minmax(0,1fr)]">
+      <aside
+        ref={scrollContainerRef}
+        className="flex h-full min-h-0 flex-col overflow-y-auto overscroll-contain border-r border-[var(--line)] px-5 py-5 lg:max-h-[100dvh] xl:px-6 xl:py-6"
+      >
+        <div className="shrink-0">
+          <SearchPageBreadcrumb className="mb-3" />
+          <SearchLandingBar
+            value={rawQuery}
+            onChange={onRawQueryChange}
+            onSubmit={onSubmitSearch}
+            placeholder="Search places, cities, or categories"
+            inputId="desktop-results-search-input"
+            className="!mt-0"
+          />
 
-        <div className="flex justify-center overflow-hidden">
-          <ChibiIllustration
-            src={searchSuccessChibi}
-            variant="feature"
-            className="!w-[clamp(210px,28vw,340px)] !max-h-[300px] sm:!w-[clamp(170px,20vw,280px)] sm:!max-h-[240px]"
+          <div className="mt-4 flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <h1 className="text-[1.65rem] font-black leading-tight tracking-[-0.04em] text-slate-950 xl:text-[1.9rem]">{heading}</h1>
+              <p className="mt-1 text-[0.98rem] font-semibold text-slate-800 xl:text-[1.05rem]">{subheading}</p>
+            </div>
+            {isRefreshing ? <InlineSkeleton className="shrink-0" /> : null}
+          </div>
+
+          <ActiveSearchChips
+            cityLabel={cityLabel}
+            categoryLabel={categoryLabel}
+            goodForLabel={goodForLabel}
+            budgetLabel={budgetLabel}
+            onRemoveCity={onRemoveCity}
+            onRemoveCategory={onRemoveCategory}
+            onRemoveGoodFor={onRemoveGoodFor}
+            onRemoveBudget={onRemoveBudget}
           />
         </div>
 
-        <div className="mt-6 w-full">
-          <div className={`grid grid-cols-1 gap-3 transition ${isPageLoading ? 'pointer-events-none opacity-60' : 'opacity-100'}`}>
+        <div className="mt-4 pr-1">
+          <div className={`grid grid-cols-1 gap-2.5 transition ${isPageLoading ? 'pointer-events-none opacity-60' : 'opacity-100'}`}>
             {places.map((place) => (
               <PlaceCard
                 key={place.id}
                 place={place}
                 isSelected={selectedPlaceId === place.id}
+                compact
                 searchResultCard
                 dataSearchPlaceId={place.id}
                 onSelect={onSelectPlace}
@@ -761,13 +1012,14 @@ function DesktopResultsView({
               />
             ))}
           </div>
-          <div className="mt-3">
+          <div className="pb-2 pt-4">
             <SearchPagination
               currentPage={currentPage}
               totalPages={totalPages}
               totalCount={totalCount}
               pageSize={SEARCH_RESULTS_PER_PAGE}
               isLoading={isPageLoading}
+              compact
               onPageChange={onPageChange}
             />
           </div>
@@ -794,6 +1046,8 @@ function GuidedSearchPage({
   isSearching,
   validationMessage,
   searchError,
+  canSubmit,
+  filters,
   onRawQueryChange,
   onClearSearch,
   onSubmitSearch,
@@ -803,6 +1057,8 @@ function GuidedSearchPage({
   isSearching: boolean
   validationMessage: string | null
   searchError: string | null
+  canSubmit?: boolean
+  filters?: ReactNode
   onRawQueryChange: (query: string) => void
   onClearSearch: () => void
   onSubmitSearch: () => void
@@ -810,16 +1066,12 @@ function GuidedSearchPage({
   const canClear = rawQuery.trim().length > 0
 
   return (
-    <section className="relative w-full overflow-hidden px-4 pb-6 pt-4 sm:px-6 lg:px-9 lg:pb-8 lg:pt-6">
+    <section className="relative w-full overflow-hidden px-4 pb-6 pt-8 sm:px-6 sm:pt-10 lg:px-9 lg:pb-8 lg:pt-12">
       <div className="relative mx-auto flex w-full max-w-[820px] flex-col items-center text-center">
-        <div className="mb-3 w-full sm:mb-4">
+        <div className="mb-4 w-full sm:mb-5">
           <SearchPageBreadcrumb />
         </div>
-        <div className="relative flex w-full justify-center pt-2">
-          <ChibiIllustration src={searchBeforeChibi} variant="hero" priority />
-        </div>
-
-        <div className="-mt-4 max-w-[560px]">
+        <div className="max-w-[560px]">
           <h1 className="text-[2rem] font-black leading-[1.02] tracking-[-0.04em] text-slate-950 sm:text-[2.5rem]">
             Saan tayo gagala today?
           </h1>
@@ -829,9 +1081,6 @@ function GuidedSearchPage({
         </div>
 
         <section className="relative mt-5 w-full overflow-hidden rounded-[28px] border border-slate-200 bg-white px-4 py-4 text-left shadow-sm sm:px-5 sm:py-5">
-          <div className="pointer-events-none absolute inset-0">
-            <div className="absolute inset-x-0 top-0 h-px bg-slate-100" />
-          </div>
           <div className="relative">
             <p className="text-[0.72rem] font-semibold uppercase tracking-[0.16em] text-slate-500">Search places</p>
 
@@ -854,18 +1103,20 @@ function GuidedSearchPage({
                 />
               </div>
 
-                <button
+              <button
                   type="button"
                   onClick={onSubmitSearch}
-                  disabled={isSearching}
+                  disabled={isSearching || !canSubmit}
                   aria-label="Search places"
-                  className="flex h-12 w-12 shrink-0 items-center justify-center self-end rounded-xl border border-[var(--accent)] bg-[var(--accent)] text-white transition hover:bg-[var(--accent-deep)] disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-200 disabled:text-slate-400 sm:h-14 sm:w-14"
+               className="flex h-12 w-12 shrink-0 items-center justify-center self-end rounded-xl border border-[var(--accent)] bg-[var(--accent)] text-white transition hover:bg-[var(--accent-deep)] disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-200 disabled:text-slate-400 sm:h-14 sm:w-14"
                 >
                 <AppIcon name="search" className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </button>
             </div>
 
             <p className="mt-4 text-sm font-medium text-slate-600">{searchSentence}</p>
+
+            {filters ? <div className="mt-4">{filters}</div> : null}
 
             <div className="mt-4 flex items-center justify-end gap-3">
               {canClear ? (
@@ -889,16 +1140,17 @@ function GuidedSearchPage({
 }
 
 export {
+  SearchLandingBar,
   SearchEmptyState,
   SearchPageBreadcrumb,
   SkeletonLine,
   SearchLoadingCard,
-  ChibiPlaceholder,
   SearchLoadingState,
   ListIcon,
   MapOutlineIcon,
   ClearIcon,
   SearchResetButton,
+  SearchFilterPanel,
   ActiveSearchChips,
   MobileResultIntro,
   SearchPagination,

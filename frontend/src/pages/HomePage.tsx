@@ -3,6 +3,7 @@ import type { PlaceCardData } from '../components/PlaceCard'
 import AppHeader from '../components/AppHeader'
 import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
 import PromptBuilderModal from '../components/PromptBuilderModal'
+import { BOTTOM_NAV_RESERVED_CLASS } from '../components/layout/Primitives'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { navigateToPath, writePlaceReturnState } from '../utils/navigation'
 import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
@@ -69,12 +70,19 @@ import {
 } from '../components/home/homeHelpers'
 
 import {
+  SearchLandingBar,
   SearchLoadingState,
+  SearchLoadingCard,
+  MobileResultsTabs,
   GuidedSearchPage,
   MobileResultsView,
   DesktopResultsView,
   SearchEmptyState,
+  SearchPagination,
+  SearchFilterPanel,
 } from '../components/home/search/SearchComponents'
+import PlaceCard from '../components/PlaceCard'
+import MapView from '../components/MapView'
 
 import {
   AskAiModePanel,
@@ -119,13 +127,13 @@ function HomePage({
       !normalizedInitialAskAiQuestion ||
       initialAskAiState?.question === normalizedInitialAskAiQuestion
     )
-  const supportsSearchRouteCache = initialMode === 'places' && isSearchResultsRoute() && navigationSource === 'pop'
+  const shouldUseSearchRouteCache = initialMode === 'places' && isSearchResultsRoute()
   const initialRequestedPage =
     typeof initialSearchState?.page === 'number' && Number.isFinite(initialSearchState.page) && initialSearchState.page > 0
       ? Math.floor(initialSearchState.page)
       : 1
   const initialRouteCacheRef = useRef<SearchRouteCache | null>(
-    supportsSearchRouteCache ? readSearchRouteCache() : null
+    shouldUseSearchRouteCache ? readSearchRouteCache() : null
   )
   const initialRouteCache = initialRouteCacheRef.current
   const [selectedMode, setSelectedMode] = useState<SearchMode>(initialMode)
@@ -187,7 +195,7 @@ function HomePage({
     initialRouteCache?.mobileResultsView ?? 'cards'
   )
   const [isInitialSearching, setIsInitialSearching] = useState(
-    Boolean(initialSearchState?.autoSearch && supportsSearchRouteCache && !initialRouteCache)
+    Boolean(initialSearchState?.autoSearch && shouldUseSearchRouteCache && !initialRouteCache)
   )
   const [isRefreshingSearch, setIsRefreshingSearch] = useState(false)
   const [isPageLoading, setIsPageLoading] = useState(false)
@@ -258,63 +266,49 @@ function HomePage({
       }),
     [rawQuery, searchTotalCount, selectedAreaName, selectedBudgetLabel, selectedCategoryName, selectedGoodForName]
   )
+  const canSubmitSearch = Boolean(rawQuery.trim() || selectedCategory || selectedArea || selectedGoodFor || selectedBudget)
+  const searchFilterPanel = selectedMode !== 'ask-ai' ? (
+    <SearchFilterPanel
+      cityLabel="City"
+      categoryLabel="Category"
+      budgetLabel="Budget"
+      selectedCity={selectedArea}
+      selectedCategory={selectedCategory}
+      selectedBudget={selectedBudget}
+      cityOptions={areas.filter((area) => area.id !== 'all').map((area) => ({ value: area.id, label: area.name }))}
+      categoryOptions={categories.map((category) => ({ value: category.id, label: category.name }))}
+      budgetOptions={budgetOptions.map((budget) => ({ value: budget.value, label: budget.label }))}
+      onCityChange={(value) => {
+        submitResultFilterChange({ area: value, page: 1 })
+      }}
+      onCategoryChange={(value) => {
+        submitResultFilterChange({ category: value, page: 1 })
+      }}
+      onBudgetChange={(value) => {
+        submitResultFilterChange({ budget: value, page: 1 })
+      }}
+      onClearAll={() => {
+        submitResultFilterChange({
+          category: null,
+          area: null,
+          goodFor: null,
+          budget: null,
+          page: 1,
+        })
+      }}
+    />
+  ) : null
+  const shouldShowSearchFiltersPanel = selectedMode !== 'ask-ai' && !hasSearched && !initialSearchState?.autoSearch
   const visiblePlaces = hasSearched ? searchResults : []
   const totalResults = searchTotalCount
   const totalPages = Math.max(1, searchTotalPages)
   const safeCurrentPage = Math.min(Math.max(currentPage, 1), totalPages)
   const selectedPlace = selectedPlaceId ? visiblePlaces.find((place) => place.id === selectedPlaceId) ?? null : null
   const shouldShowGuidedSearch = selectedMode === 'places' && !hasSearched && !initialSearchState?.autoSearch
+  const shouldUseMinimalSearchLayout = Boolean(initialSearchState?.autoSearch)
   const isRegisteredUser = Boolean(session?.user)
   const isSearching = isInitialSearching || isRefreshingSearch
   const shouldShowSearchLoadingState = selectedMode === 'places' && isInitialSearching
-  const buildFilterOnlyQuery = ({
-    category,
-    area,
-    goodFor,
-    budget,
-  }: {
-    category: string | null
-    area: string | null
-    goodFor: SearchGoodForValue | null
-    budget: BudgetValue | null
-  }) => {
-    const categoryLabel = category ? categories.find((entry) => entry.id === category)?.name ?? null : null
-    const areaName = area ? areas.find((entry) => entry.id === area)?.name ?? null : null
-    const goodForLabel = goodFor ? fallbackGoodForOptions.find((entry) => entry.id === goodFor)?.name ?? null : null
-    const budgetLabel = budget ? budgetOptions.find((entry) => entry.value === budget)?.label ?? null : null
-
-    return normalizeSearchText(
-      buildFilterSearchText({
-        rawQuery: '',
-        categoryLabel,
-        areaName,
-        goodForLabel,
-        budgetLabel,
-      })
-    )
-  }
-  const hasIndependentTypedQuery = ({
-    query,
-    category,
-    area,
-    goodFor,
-    budget,
-  }: {
-    query: string
-    category: string | null
-    area: string | null
-    goodFor: SearchGoodForValue | null
-    budget: BudgetValue | null
-  }) => {
-    const normalizedQuery = normalizeSearchText(query)
-
-    if (!normalizedQuery) {
-      return false
-    }
-
-    const filterOnlyQuery = buildFilterOnlyQuery({ category, area, goodFor, budget })
-    return !filterOnlyQuery || normalizedQuery !== filterOnlyQuery
-  }
   const clearFilterChip = (key: 'category' | 'city' | 'good_for' | 'budget') => {
     const nextState = {
       category: key === 'category' ? null : selectedCategory,
@@ -344,41 +338,6 @@ function HomePage({
       budget: selectedBudget,
       page: 1,
       ...nextState,
-    }
-    const categoryLabel = mergedState.category
-      ? categories.find((category) => category.id === mergedState.category)?.name ?? null
-      : null
-    const areaName = mergedState.area ? areas.find((area) => area.id === mergedState.area)?.name ?? null : null
-    const goodForLabel = mergedState.goodFor
-      ? fallbackGoodForOptions.find((option) => option.id === mergedState.goodFor)?.name ?? null
-      : null
-    const budgetLabel = mergedState.budget
-      ? budgetOptions.find((budget) => budget.value === mergedState.budget)?.label ?? null
-      : null
-    const hasFilterUpdate =
-      Object.prototype.hasOwnProperty.call(nextState, 'category') ||
-      Object.prototype.hasOwnProperty.call(nextState, 'area') ||
-      Object.prototype.hasOwnProperty.call(nextState, 'goodFor') ||
-      Object.prototype.hasOwnProperty.call(nextState, 'budget')
-
-    if (hasFilterUpdate) {
-      const shouldPreserveQuery = hasIndependentTypedQuery({
-        query: rawQuery,
-        category: selectedCategory,
-        area: selectedArea,
-        goodFor: selectedGoodFor,
-        budget: selectedBudget,
-      })
-
-      mergedState.rawQuery = shouldPreserveQuery
-        ? normalizeSearchText(rawQuery)
-        : buildFilterSearchText({
-            rawQuery: '',
-            categoryLabel,
-            areaName,
-            goodForLabel,
-            budgetLabel,
-          })
     }
 
     if (!mergedState.rawQuery && !mergedState.category && !mergedState.area && !mergedState.goodFor && !mergedState.budget) {
@@ -596,6 +555,7 @@ function HomePage({
 
     const requestVersion = searchRequestVersion.current + 1
     searchRequestVersion.current = requestVersion
+    const isFreshSearch = !suppressRefreshState
     const searchPayload = {
       query: nextRawQuery,
       page: nextPage,
@@ -617,6 +577,16 @@ function HomePage({
     })
 
     try {
+      if (isFreshSearch) {
+        setSearchResults([])
+        setSearchTotalCount(0)
+        setSearchTotalPages(1)
+        setSelectedPlaceId(null)
+        setCurrentPage(1)
+        setMobileResultsView('cards')
+        setHasSearched(false)
+      }
+
       if (suppressRefreshState) {
         setIsPageLoading(true)
       } else {
@@ -703,7 +673,7 @@ function HomePage({
         page: responsePage,
         filterCount: [nextCategory, nextArea, nextGoodFor, nextBudget].filter(Boolean).length,
       })
-      if (supportsSearchRouteCache) {
+      if (shouldUseSearchRouteCache) {
         writeSearchRouteCache({
           lastSearchQuery: nextRawQuery,
           activeSearchLabel: nextRawQuery || 'filtered GalaTayo places',
@@ -788,7 +758,7 @@ function HomePage({
   ])
 
   useLayoutEffect(() => {
-    if (!supportsSearchRouteCache || !initialRouteCache?.pendingScrollRestore || hasRestoredInitialScrollRef.current) {
+    if (navigationSource !== 'pop' || !initialRouteCache?.pendingScrollRestore || hasRestoredInitialScrollRef.current) {
       return
     }
 
@@ -800,7 +770,7 @@ function HomePage({
       ...initialRouteCache,
       pendingScrollRestore: false,
     })
-  }, [initialRouteCache, supportsSearchRouteCache])
+  }, [initialRouteCache, navigationSource])
 
   useLayoutEffect(() => {
     if (!shouldScrollSearchResultsToTopRef.current || isPageLoading || !hasSearched) {
@@ -1105,9 +1075,172 @@ function HomePage({
     return () => controller.abort()
   }, [])
 
+  if (shouldUseMinimalSearchLayout) {
     return (
-      <div className={`${selectedMode === 'ask-ai' ? 'h-[100dvh] overflow-hidden overscroll-none' : 'min-h-screen'} bg-[var(--bg)] text-[var(--text)]`}>
+      <div className="gala-page-background min-h-screen overflow-x-hidden text-[var(--text)]">
+        <main className="w-full">
+          {visiblePlaces.length > 0 ? (
+            <>
+              <div className={`mx-auto w-full px-4 pt-[max(12px,env(safe-area-inset-top))] sm:px-6 sm:pt-6 lg:hidden ${BOTTOM_NAV_RESERVED_CLASS}`}>
+                <section className="mx-auto w-full max-w-[430px]">
+                  <SearchLandingBar
+                    value={rawQuery}
+                    onChange={handleRawQueryChange}
+                    onSubmit={() => void handleSearch()}
+                    disabled={isSearching}
+                    canSubmit={canSubmitSearch}
+                    placeholder="Discover a city"
+                    className="!mt-5"
+                  />
+
+                  <MobileResultsTabs selectedView={mobileResultsView} onViewChange={setMobileResultsView} />
+
+                  {shouldShowSearchLoadingState ? (
+                    <div className="mt-4 grid gap-3">
+                      <SearchLoadingCard compact />
+                      <SearchLoadingCard compact />
+                    </div>
+                  ) : mobileResultsView === 'cards' ? (
+                    <div className="mt-4 grid gap-3">
+                      <div className={`grid gap-3 transition ${isPageLoading ? 'pointer-events-none opacity-60' : 'opacity-100'}`}>
+                        {visiblePlaces.map((place) => (
+                          <PlaceCard
+                            key={place.id}
+                            place={place}
+                            isSelected={selectedPlaceId === place.id}
+                            searchResultCard
+                            dataSearchPlaceId={place.id}
+                            onSelect={handleMapPlaceSelect}
+                            onOpen={handlePlaceSelect}
+                          />
+                        ))}
+                      </div>
+                      <div className="pt-1">
+                        <SearchPagination
+                          currentPage={safeCurrentPage}
+                          totalPages={totalPages}
+                          totalCount={totalResults}
+                          pageSize={SEARCH_RESULTS_PER_PAGE}
+                          isLoading={isPageLoading}
+                          compact
+                          onPageChange={handlePageChange}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-4 grid gap-4">
+                      <section className="overflow-hidden rounded-[22px] border border-[var(--line)] bg-white shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
+                        <MapView
+                          places={visiblePlaces}
+                          selectedPlaceId={selectedPlaceId}
+                          onPlaceSelect={handleMapPlaceSelect}
+                          onPlaceOpen={handlePlaceSelect}
+                          autoFitToPlaces
+                          className="!h-[360px] !rounded-none !border-0"
+                        />
+                      </section>
+
+                      {selectedPlace ? (
+                        <PlaceCard
+                          place={selectedPlace}
+                          compact
+                          searchResultCard
+                          isSelected
+                          onSelect={handleMapPlaceSelect}
+                          onOpen={handlePlaceSelect}
+                        />
+                      ) : null}
+
+                      <button
+                        type="button"
+                        onClick={() => setMobileResultsView('cards')}
+                        className="inline-flex items-center gap-2 self-start text-sm font-black text-slate-700"
+                      >
+                        Back to places
+                      </button>
+
+                      <SearchPagination
+                        currentPage={safeCurrentPage}
+                        totalPages={totalPages}
+                        totalCount={totalResults}
+                        pageSize={SEARCH_RESULTS_PER_PAGE}
+                        isLoading={isPageLoading}
+                        compact
+                        onPageChange={handlePageChange}
+                      />
+                    </div>
+                  )}
+                </section>
+              </div>
+
+              <div className="hidden lg:block">
+                <DesktopResultsView
+                  rawQuery={rawQuery}
+                  places={visiblePlaces}
+                  totalCount={totalResults}
+                  currentPage={safeCurrentPage}
+                  totalPages={totalPages}
+                  selectedPlaceId={selectedPlaceId}
+                  heading={searchResultSummary.heading}
+                  subheading={searchResultSummary.subheading || 'in GalaTayo'}
+                  cityLabel={selectedAreaName}
+                  categoryLabel={selectedCategoryName}
+                  goodForLabel={selectedGoodForName}
+                  budgetLabel={selectedBudgetLabel}
+                  isRefreshing={isRefreshingSearch}
+                  isPageLoading={isPageLoading}
+                  scrollContainerRef={desktopResultsScrollRef}
+                  onRawQueryChange={handleRawQueryChange}
+                  onSubmitSearch={() => void handleSearch()}
+                  onSelectPlace={handleMapPlaceSelect}
+                  onPageChange={handlePageChange}
+                  onViewDetails={handlePlaceSelect}
+                  onRemoveCity={() => clearFilterChip('city')}
+                  onRemoveCategory={() => clearFilterChip('category')}
+                  onRemoveGoodFor={() => clearFilterChip('good_for')}
+                  onRemoveBudget={() => clearFilterChip('budget')}
+                />
+              </div>
+            </>
+          ) : (
+            <div className={`mx-auto w-full px-4 pt-[max(12px,env(safe-area-inset-top))] sm:px-6 sm:pt-6 lg:px-8 ${BOTTOM_NAV_RESERVED_CLASS}`}>
+              <section className="mx-auto w-full max-w-[430px] lg:max-w-[640px] xl:max-w-[720px]">
+                <SearchLandingBar
+                  value={rawQuery}
+                  onChange={handleRawQueryChange}
+                  onSubmit={() => void handleSearch()}
+                  disabled={isSearching}
+                  canSubmit={canSubmitSearch}
+                  placeholder="Discover a city"
+                  className="!mt-5"
+                />
+
+                {shouldShowSearchLoadingState ? (
+                  <div className="mt-4 grid gap-3">
+                    <SearchLoadingCard compact />
+                    <SearchLoadingCard compact />
+                  </div>
+                ) : (
+                  <SearchEmptyState
+                    hasSearched={hasSearched}
+                    status={searchStatus}
+                    message={searchFeedbackMessage}
+                    error={searchError}
+                    onSearchAgain={handleSearchAgain}
+                  />
+                )}
+              </section>
+            </div>
+          )}
+        </main>
+      </div>
+    )
+  }
+
+    return (
+      <div className={`${selectedMode === 'ask-ai' ? 'h-[100dvh] overflow-hidden overscroll-none' : 'min-h-screen lg:h-[100dvh] lg:overflow-hidden'} bg-[var(--bg)] text-[var(--text)]`}>
         <GuestAuthPrompt variant="ask-ai" mode="modal" isOpen={promptLogin} onClose={() => setPromptLogin(false)} />
+        {shouldShowSearchFiltersPanel ? searchFilterPanel : null}
 
       <div className={`gala-page-background overflow-x-hidden lg:hidden ${selectedMode === 'ask-ai' ? 'flex h-[100dvh] flex-col overflow-hidden overscroll-none' : 'flex min-h-screen flex-col'}`}>
           {selectedMode !== 'ask-ai' && <AppHeader signInLabel="Mag-sign in" minimal />}
@@ -1133,6 +1266,8 @@ function HomePage({
                 isSearching={isSearching}
                 validationMessage={searchValidationMessage}
                 searchError={searchError}
+                canSubmit={canSubmitSearch}
+                
                 onRawQueryChange={handleRawQueryChange}
                 onClearSearch={handleClearSearch}
                 onSubmitSearch={() => void handleSearch()}
@@ -1221,7 +1356,7 @@ function HomePage({
                 ? 'flex h-full min-h-0 flex-col overflow-hidden'
                 : shouldShowGuidedSearch
                   ? 'min-h-0 overflow-hidden'
-                  : 'grid h-full min-h-0 overflow-hidden grid-rows-[auto_minmax(0,1fr)]'
+                  : 'grid h-full min-h-0 overflow-hidden grid-rows-[minmax(0,1fr)]'
             }
           >
             {isPromptBuilderOpen ? (
@@ -1244,6 +1379,8 @@ function HomePage({
                 isSearching={isSearching}
                 validationMessage={searchValidationMessage}
                 searchError={searchError}
+                canSubmit={canSubmitSearch}
+                
                 onRawQueryChange={handleRawQueryChange}
                 onClearSearch={handleClearSearch}
                 onSubmitSearch={() => void handleSearch()}
@@ -1253,6 +1390,7 @@ function HomePage({
                 {selectedMode === 'places' ? (
                   visiblePlaces.length > 0 ? (
                     <DesktopResultsView
+                      rawQuery={rawQuery}
                       places={visiblePlaces}
                       totalCount={totalResults}
                       currentPage={safeCurrentPage}
@@ -1267,10 +1405,11 @@ function HomePage({
                       isRefreshing={isRefreshingSearch}
                       isPageLoading={isPageLoading}
                       scrollContainerRef={desktopResultsScrollRef}
+                      onRawQueryChange={handleRawQueryChange}
+                      onSubmitSearch={() => void handleSearch()}
                       onSelectPlace={handleMapPlaceSelect}
                       onPageChange={handlePageChange}
                       onViewDetails={handlePlaceSelect}
-                      onClearSearch={handleClearSearch}
                       onRemoveCity={() => clearFilterChip('city')}
                       onRemoveCategory={() => clearFilterChip('category')}
                       onRemoveGoodFor={() => clearFilterChip('good_for')}
