@@ -166,6 +166,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
   const currentPage = Math.max(Number(searchParams.get('page') || '1') || 1, 1)
   const [confirmedPage, setConfirmedPage] = useState(() => routeCache?.page ?? currentPage)
   const hasQueryVariant = activeCategory !== 'all' || currentPage > 1
+  const shouldIndexAreaPage = !hasQueryVariant && !errorMessage && payload.total > 0
   const getPagePath = (page: number, category = activeCategory) => {
     const params = new URLSearchParams()
     if (category !== 'all') {
@@ -386,6 +387,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
   }, [allPlaces, isPageTransitionLoading, selectedPlaceId])
 
   const jsonLd = !errorMessage
+    && shouldIndexAreaPage
     ? [
         {
           '@context': 'https://schema.org',
@@ -398,7 +400,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
           '@context': 'https://schema.org',
           '@type': 'BreadcrumbList',
           itemListElement: [
-            { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/home` },
+            { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/` },
             { '@type': 'ListItem', position: 2, name: 'Places', item: `${getSiteOrigin()}/places` },
             { '@type': 'ListItem', position: 3, name: areaName, item: `${getSiteOrigin()}/places/${encodeURIComponent(areaSlug)}` },
           ],
@@ -419,10 +421,10 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
   return (
     <PageShell>
       <SeoHead
-        title={`${areaName} | GalaTayo`}
+        title={`${areaName} Places | GalaTayo`}
         description={`Browse places in ${areaName} on GalaTayo and filter them by category in alphabetical order.`}
         canonicalPath={`/places/${encodeURIComponent(areaSlug)}`}
-        robots={hasQueryVariant ? 'noindex,follow' : 'index,follow'}
+        robots={shouldIndexAreaPage ? 'index,follow' : 'noindex,follow'}
         jsonLd={jsonLd}
       />
       <AppHeader minimal />
@@ -432,7 +434,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
         <Breadcrumb
           showBack
           items={[
-            { label: 'Home', href: '/home', icon: <House className="h-3.5 w-3.5" /> },
+            { label: 'Home', href: '/', icon: <House className="h-3.5 w-3.5" /> },
             { label: 'Places', href: '/places', icon: <MapPin className="h-3.5 w-3.5" /> },
             { label: areaName, icon: <MapPin className="h-3.5 w-3.5" /> },
           ]}

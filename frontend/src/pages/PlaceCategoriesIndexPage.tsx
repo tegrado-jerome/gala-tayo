@@ -43,7 +43,7 @@ function PlaceCategoriesIndexPage() {
     {
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
-      name: 'Categories | GalaTayo',
+      name: 'Place Categories | GalaTayo',
       description: 'Browse place categories across Metro Manila and open alphabetical category pages on GalaTayo.',
       url: `${getSiteOrigin()}/places/categories`,
     },
@@ -56,12 +56,22 @@ function PlaceCategoriesIndexPage() {
         { '@type': 'ListItem', position: 3, name: 'Categories', item: `${getSiteOrigin()}/places/categories` },
       ],
     },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'ItemList',
+      itemListElement: categoryCards.map((category, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        name: category.label,
+        url: `${getSiteOrigin()}/places/categories/${encodeURIComponent(category.value)}`,
+      })),
+    },
   ]
 
   return (
     <PageShell>
       <SeoHead
-        title="Categories | GalaTayo"
+        title="Place Categories | GalaTayo"
         description="Browse place categories across Metro Manila and open alphabetical category pages on GalaTayo."
         canonicalPath="/places/categories"
         jsonLd={jsonLd}
@@ -73,7 +83,7 @@ function PlaceCategoriesIndexPage() {
         <Breadcrumb
           showBack
           items={[
-            { label: 'Home', href: '/home', icon: <House className="h-3.5 w-3.5" /> },
+            { label: 'Home', href: '/', icon: <House className="h-3.5 w-3.5" /> },
             { label: 'Places', href: '/places', icon: <MapPin className="h-3.5 w-3.5" /> },
             { label: 'Categories', icon: <LayoutGrid className="h-3.5 w-3.5" /> },
           ]}

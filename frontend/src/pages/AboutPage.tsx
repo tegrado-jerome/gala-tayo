@@ -24,7 +24,7 @@ function AboutPage() {
     {
       '@context': 'https://schema.org',
       '@type': 'AboutPage',
-      name: 'About | GalaTayo',
+      name: 'About GalaTayo | Metro Manila place discovery',
       description: 'Learn about GalaTayo and how it helps people discover places, plan gala ideas, and explore Metro Manila.',
       url: `${getSiteOrigin()}/about`,
     },
@@ -32,7 +32,7 @@ function AboutPage() {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/home` },
+        { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/` },
         { '@type': 'ListItem', position: 2, name: 'About', item: `${getSiteOrigin()}/about` },
       ],
     },
@@ -41,7 +41,7 @@ function AboutPage() {
   return (
     <PageShell>
       <SeoHead
-        title="About | GalaTayo"
+        title="About GalaTayo | Metro Manila place discovery"
         description="Learn about GalaTayo and how it helps people discover places, plan gala ideas, and explore Metro Manila."
         canonicalPath="/about"
         jsonLd={jsonLd}

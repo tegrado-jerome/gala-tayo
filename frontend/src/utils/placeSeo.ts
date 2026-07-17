@@ -10,9 +10,9 @@ export function buildPlaceDescription(place: PlaceDetailCardData, areaName: stri
   }
   if (place.description?.trim()) {
     const shortDesc = place.description.replace(/<[^>]*>/g, '').slice(0, 120).replace(/\s+\S*$/, '')
-    if (shortDesc.length > 20) parts.push(shortDesc + '.')
+    if (shortDesc.length > 20) parts.push(`${shortDesc}.`)
   }
-  return parts.join(' ') + ' See location, photos, reviews, and add to your gala plan.'
+  return `${parts.join(' ')} See location, photos, reviews, and add to your gala plan.`
 }
 
 export function buildPlaceFaqSchema(place: PlaceDetailCardData) {
@@ -38,12 +38,22 @@ export function buildPlaceFaqSchema(place: PlaceDetailCardData) {
     items.push({
       '@type': 'Question',
       name: `Is ${place.name} good for a date?`,
-      acceptedAnswer: { '@type': 'Answer', text: goodFor.some((g) => /date|romantic|night/i.test(g)) ? `Yes, it is great for ${goodFor.filter((g) => /date|romantic|night/i.test(g)).join(', ')}.` : `It works best for ${goodFor.join(', ')}.` },
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: goodFor.some((g) => /date|romantic|night/i.test(g))
+          ? `Yes, it is great for ${goodFor.filter((g) => /date|romantic|night/i.test(g)).join(', ')}.`
+          : `It works best for ${goodFor.join(', ')}.`,
+      },
     })
     items.push({
       '@type': 'Question',
       name: `Is ${place.name} family-friendly?`,
-      acceptedAnswer: { '@type': 'Answer', text: goodFor.some((g) => /family|kid|children/i.test(g)) ? 'Yes, it is recommended for family trips.' : 'It is more suited for other vibes like ' + goodFor.join(', ') + '.' },
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: goodFor.some((g) => /family|kid|children/i.test(g))
+          ? 'Yes, it is recommended for family trips.'
+          : `It is more suited for other vibes like ${goodFor.join(', ')}.`,
+      },
     })
   }
 
@@ -67,7 +77,10 @@ export function buildPlaceFaqSchema(place: PlaceDetailCardData) {
     items.push({
       '@type': 'Question',
       name: `Is ${place.name} indoor or outdoor?`,
-      acceptedAnswer: { '@type': 'Answer', text: `${place.indoor_outdoor}.${place.weather_fit?.trim() ? ' It is ' + place.weather_fit + '.' : ''}` },
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: `${place.indoor_outdoor}.${place.weather_fit?.trim() ? ` It is ${place.weather_fit}.` : ''}`,
+      },
     })
   }
 

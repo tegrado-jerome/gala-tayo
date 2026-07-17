@@ -220,10 +220,10 @@ export default function SharedPlacePage({
   return (
     <>
       <SeoHead
-        title={place ? `${place.name} | GalaTayo` : 'Place Details | GalaTayo'}
+        title={place ? `${place.name} in ${areaMeta?.name || 'Metro Manila'} | GalaTayo` : 'Place Details | GalaTayo'}
         description={place ? buildPlaceDescription(place, areaMeta?.name || 'Metro Manila') : 'Discover place details on GalaTayo.'}
         canonicalPath={canonicalPath ?? undefined}
-        openGraphType="article"
+        openGraphType="website"
         image={
           place?.imageUrl || place?.thumbnailUrl || place?.curatedImageUrls?.[0]
             ? { url: place.imageUrl || place.thumbnailUrl || place.curatedImageUrls?.[0] || '', alt: place.name }

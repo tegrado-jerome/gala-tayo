@@ -65,6 +65,9 @@ Frontend build variables for Azure Static Web Apps:
 - `VITE_SUPABASE_ANON_KEY`
 - `VITE_SITE_URL`
 - `VITE_API_BASE_URL`
+- `VITE_GA_MEASUREMENT_ID` when GA4 should load
+- `VITE_GOOGLE_SITE_VERIFICATION` when Search Console verification is configured
+- `VITE_BING_SITE_VERIFICATION` when Bing Webmaster verification is configured
 
 Azure Function App settings:
 
