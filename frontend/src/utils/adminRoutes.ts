@@ -1,6 +1,14 @@
 const DEFAULT_ADMIN_BASE_PATH = '/ops-7f3c9b2e'
 const LEGACY_ADMIN_BASE_PATH = '/admin'
 
+function getAdminBasePathEnv() {
+  const meta = import.meta as ImportMeta & {
+    env?: Record<string, string | undefined>
+  }
+
+  return meta.env?.VITE_ADMIN_BASE_PATH
+}
+
 function normalizeBasePath(value: string | null | undefined) {
   const trimmed = value?.trim()
 
@@ -12,7 +20,7 @@ function normalizeBasePath(value: string | null | undefined) {
   return normalized.replace(/\/+$/g, '') || DEFAULT_ADMIN_BASE_PATH
 }
 
-export const ADMIN_BASE_PATH = normalizeBasePath(import.meta.env.VITE_ADMIN_BASE_PATH as string | undefined)
+export const ADMIN_BASE_PATH = normalizeBasePath(getAdminBasePathEnv())
 
 export const ADMIN_MFA_SETUP_PATH = `${ADMIN_BASE_PATH}/mfa/setup`
 export const ADMIN_MFA_VERIFY_PATH = `${ADMIN_BASE_PATH}/mfa/verify`
@@ -42,4 +50,3 @@ export function getLegacyAdminRedirectPath(pathname: string) {
 export function getAdminSectionPath(section: string) {
   return getAdminPath(section)
 }
-
