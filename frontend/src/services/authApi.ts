@@ -3,8 +3,19 @@ import { supabase } from '../supabase'
 import { getOnboardingStatus } from '../utils/profileApi'
 import { apiFetch, getApiUrl } from '../utils/apiClient'
 import { getPublicSiteOrigin } from '../utils/site'
+import {
+  LOGOUT_TRANSITION_DURATION_MS,
+  endLogoutTransition,
+  startLogoutTransition,
+} from '../utils/logoutTransition'
 
 export type AuthRedirectTarget = string
+
+type SignOutOptions = {
+  scope?: 'global' | 'local' | 'others'
+  animate?: boolean
+  onBeforeTransitionEnd?: () => void | Promise<void>
+}
 
 const adminPasswordSessionKey = 'galatayo_admin_password_session'
 
@@ -81,13 +92,74 @@ export async function signInWithEmailPassword(email: string, password: string) {
   return data.session
 }
 
-export async function signOut() {
-  const { error } = await supabase.auth.signOut()
+export async function signOut({
+  scope = 'global',
+  animate = true,
+  onBeforeTransitionEnd,
+}: SignOutOptions = {}) {
+  const transitionStartedAt = animate ? startLogoutTransition() : null
+
+  const { error } = await supabase.auth.signOut({ scope })
   window.sessionStorage.removeItem(adminPasswordSessionKey)
 
   if (error) {
+    if (transitionStartedAt) {
+      endLogoutTransition()
+    }
     throw error
   }
+
+  await waitForSignedOutState()
+
+  if (transitionStartedAt) {
+    if (onBeforeTransitionEnd) {
+      await onBeforeTransitionEnd()
+    }
+
+    const elapsedMs = Date.now() - transitionStartedAt
+    const remainingMs = Math.max(LOGOUT_TRANSITION_DURATION_MS - elapsedMs, 0)
+
+    if (remainingMs > 0) {
+      await new Promise((resolve) => window.setTimeout(resolve, remainingMs))
+    }
+
+    await new Promise<void>((resolve) => {
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => resolve())
+      })
+    })
+
+    endLogoutTransition()
+  }
+}
+
+async function waitForSignedOutState() {
+  const {
+    data: { session: currentSession },
+  } = await supabase.auth.getSession()
+
+  if (!currentSession) {
+    return
+  }
+
+  await new Promise<void>((resolve) => {
+    const timeoutId = window.setTimeout(() => {
+      subscription.unsubscribe()
+      resolve()
+    }, 2500)
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      if (event !== 'SIGNED_OUT' && nextSession) {
+        return
+      }
+
+      window.clearTimeout(timeoutId)
+      subscription.unsubscribe()
+      resolve()
+    })
+  })
 }
 
 export function markAdminPasswordSession(userId: string) {
@@ -190,7 +262,7 @@ export async function getPostAuthRedirect(session: Session, search: string = win
     return '/onboarding'
   }
 
-  return resolvePostAuthPath('/', search)
+  return resolvePostAuthPath('/home', search)
 }
 
 export function sanitizeNextPath(value: string | null | undefined) {

@@ -7,6 +7,8 @@ import { useCanonicalRedirects } from './hooks/useCanonicalRedirects'
 import { matchRoute, AppShell } from './routes/RouteContent'
 import { consumePendingNavigationSource, navigateToPath, replaceWithPath } from './utils/navigation'
 import { initializeAnalytics, trackPageView } from './utils/analytics'
+import { hasPendingListingRouteScrollRestore } from './utils/listingRouteCache'
+import { getPendingLogoutTransitionStart, LOGOUT_TRANSITION_DURATION_MS, LOGOUT_TRANSITION_EVENT, type LogoutTransitionDetail } from './utils/logoutTransition'
 
 function App() {
   const {
@@ -29,8 +31,15 @@ function App() {
   }))
   const [navigationSource, setNavigationSource] = useState<'push' | 'replace' | 'pop'>('push')
   const [restoredScrollY, setRestoredScrollY] = useState<number | null>(null)
+  const [logoutTransitionStartedAt, setLogoutTransitionStartedAt] = useState<number | null>(() => (
+    typeof window === 'undefined' ? null : getPendingLogoutTransitionStart()
+  ))
 
   const { pathname, search } = locationState
+  const isOnboardingAllowedPath =
+    isPath(pathname, '/onboarding') ||
+    isPath(pathname, '/terms') ||
+    isPath(pathname, '/privacy')
   const legacyAdminRedirectPath = useMemo(() => getLegacyAdminRedirectPath(pathname), [pathname])
   const isPasswordResetPath = isPath(pathname, '/reset-password') || isPath(pathname, '/auth/reset-password')
   const routeNeedsBlockingAuth = isProtectedAccountPath(pathname) || isPath(pathname, '/onboarding') || isPath(pathname, '/auth/callback') || isPasswordResetPath
@@ -57,6 +66,53 @@ function App() {
     initializeAnalytics()
   }, [])
 
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined
+    }
+
+    const handleLogoutTransition = (event: Event) => {
+      const customEvent = event as CustomEvent<LogoutTransitionDetail>
+
+      if (customEvent.detail.phase === 'start') {
+        setLogoutTransitionStartedAt(customEvent.detail.startedAt)
+        return
+      }
+
+      setLogoutTransitionStartedAt(null)
+    }
+
+    window.addEventListener(LOGOUT_TRANSITION_EVENT, handleLogoutTransition)
+
+    return () => {
+      window.removeEventListener(LOGOUT_TRANSITION_EVENT, handleLogoutTransition)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (logoutTransitionStartedAt === null) {
+      return undefined
+    }
+
+    const remainingMs = Math.max(
+      LOGOUT_TRANSITION_DURATION_MS - (Date.now() - logoutTransitionStartedAt),
+      0,
+    )
+
+    if (remainingMs === 0) {
+      setLogoutTransitionStartedAt(null)
+      return undefined
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setLogoutTransitionStartedAt(null)
+    }, remainingMs)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
+  }, [logoutTransitionStartedAt])
+
   function runWithInstantScroll(callback: () => void) {
     const html = document.documentElement
     const body = document.body
@@ -74,6 +130,13 @@ function App() {
 
   useLayoutEffect(() => {
     if (navigationSource === 'pop') {
+      if (hasPendingListingRouteScrollRestore(`${pathname}${search}`)) {
+        if (restoredScrollY !== null) {
+          setRestoredScrollY(null)
+        }
+        return
+      }
+
       if (restoredScrollY !== null) {
         const targetScrollY = Math.max(restoredScrollY, 0)
         const maxRetries = 6
@@ -150,7 +213,7 @@ function App() {
     })
   }, [pathname, search])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!hasResolvedInitialAuth) {
       return
     }
@@ -170,15 +233,15 @@ function App() {
       return
     }
 
-    if (needsOnboarding && !isPath(pathname, '/onboarding')) {
+    if (needsOnboarding && !isOnboardingAllowedPath) {
       navigateToPath('/onboarding')
       return
     }
 
     if (!needsOnboarding && isPath(pathname, '/onboarding')) {
-      navigateToPath('/')
+      navigateToPath('/home')
     }
-  }, [hasResolvedInitialAuth, hasResolvedProfile, isPasswordResetPath, needsOnboarding, pathname, session])
+  }, [hasResolvedInitialAuth, hasResolvedProfile, isOnboardingAllowedPath, isPasswordResetPath, needsOnboarding, pathname, session])
 
   const canonicalPlacePath = useMemo(() => parseCanonicalPlacePath(pathname), [pathname])
   const categoryPageSlug = useMemo(() => parseCategoryPagePath(pathname), [pathname])
@@ -192,8 +255,8 @@ function App() {
   const soonFeatureRedirectPath = useMemo(() => getSoonFeatureRedirectPath(pathname), [pathname])
 
   useEffect(() => {
-    if (soonFeatureRedirectPath && pathname !== '/') {
-      replaceWithPath('/')
+    if (soonFeatureRedirectPath && pathname !== soonFeatureRedirectPath) {
+      replaceWithPath(soonFeatureRedirectPath)
     }
   }, [pathname, soonFeatureRedirectPath])
 
@@ -234,6 +297,8 @@ function App() {
     onProfileRefreshKeyUpdate: () => setProfileRefreshKey((v) => v + 1),
   })
 
+  const showLogoutTransition = logoutTransitionStartedAt !== null
+
   return (
     <AppShell
       session={session}
@@ -246,6 +311,7 @@ function App() {
       hasResolvedInitialAuth={hasResolvedInitialAuth}
       pathname={pathname}
       search={search}
+      showLogoutTransition={showLogoutTransition}
     >
       {content}
     </AppShell>
