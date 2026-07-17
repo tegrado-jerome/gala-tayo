@@ -733,6 +733,10 @@ function SearchHub({
     const shouldRefreshInPlace =
       hasSearched || searchResults.length > 0 || Boolean(lastSearchQuery.trim()) || Boolean(activeSearchLabel.trim())
 
+    if (shouldRefreshInPlace && navigationSource === 'pop') {
+      return
+    }
+
     void handleSearch(nextAutoSearch, shouldRefreshInPlace)
   }, [
     activeSearchLabel,
@@ -745,6 +749,7 @@ function SearchHub({
     initialSearchState?.goodFor,
     initialSearchState?.rawQuery,
     lastSearchQuery,
+    navigationSource,
     searchResults.length,
   ])
 
