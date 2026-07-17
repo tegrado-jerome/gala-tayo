@@ -1,1447 +1,2052 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import type { PlaceCardData } from '../components/PlaceCard'
-import AppHeader from '../components/AppHeader'
-import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
-import PromptBuilderModal from '../components/PromptBuilderModal'
-import { BOTTOM_NAV_RESERVED_CLASS } from '../components/layout/Primitives'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent, type RefObject } from 'react'
+import { Bot, ChevronRight, Heart, Home, MapPin, Search, SlidersHorizontal, Sparkles, Star, User } from 'lucide-react'
+import { useAppUser } from '../context/AppUserContext'
+import UserMenu from '../components/UserMenu'
+import { AppSkeleton } from '../components/AppUI'
+import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
+import MobileBottomNav from '../components/MobileBottomNav'
+import CarouselPositionIndicator from '../components/CarouselPositionIndicator'
+import { PageShell } from '../components/layout/ResponsiveLayouts'
+import {
+  homeAllTopPickPlaces,
+  homeCategoryRecommendations,
+  homeCityRecommendations,
+  homePopularTopPickPlaces,
+  homeRecommendedTopPickPlaces,
+} from '../data/homeRecommendations'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
-import { navigateToPath, writePlaceReturnState } from '../utils/navigation'
-import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
-import { useAskAiUsageAutoRefresh } from '../hooks/useAskAiUsageAutoRefresh'
-import {
-  getAskAiRuntimeState,
-  hasActiveAskAiRuntimeState,
-  resetAskAiRuntimeState,
-  resumeAskAiRuntimeJob,
-  seedAskAiRuntimeState,
-  submitAskAiRuntimeRequest,
-  subscribeToAskAiRuntime,
-} from '../utils/askAiRuntime'
-import type { ChatMessage } from '../utils/askAiRuntime'
+import { supabase } from '../supabase'
+import { navigateToPath } from '../utils/navigation'
 import { getApiUrl } from '../utils/apiClient'
-import { getAskAiUsageStatusFromResponse, isAskAiUsageStatusExpired, type AskAiUsageResponse, type AskAiUsageStatus } from '../utils/askAiUsage'
-import { readCachedAskAiUsage, subscribeToCachedAskAiUsage, writeCachedAskAiUsage, writeCachedAskAiUsageFromResponse } from '../utils/askAiUsageCache'
-import { buildAskAiRequestHeaders, getOrCreateAskAiGuestId } from '../utils/askAiIdentity'
 import {
-  trackAskAiChatbotUsed,
-  trackSearchResultSelected,
-  trackSearchSubmitted,
-} from '../utils/analytics'
-import type { SearchGoodForValue } from '../utils/searchParams'
-
+  readHomeTrendingCache,
+  writeHomeTrendingCache,
+  type HomeTrendingCachePlace,
+} from '../utils/homeTrendingCache'
 import {
-  type BackendCategory,
-  type BackendArea,
-  type CategoryChip,
-  type AreaChip,
-  type BudgetValue,
-  type SearchMode,
-  type AskAiSource,
-  type HomePageProps,
-  type BackendSearchPlace,
-  type BackendSearchStatus,
-  type SearchRouteCache,
-  type AskAiRouteCache,
-  type FiltersCache,
-  type MobileResultsViewMode,
-  SEARCH_RESULTS_PER_PAGE,
-  fallbackCategories,
-  fallbackGoodForOptions,
-  fallbackAreas,
-  budgetOptions,
-  clearAllSearchRouteCaches,
-  readSearchRouteCache,
-  writeSearchRouteCache,
-  readAskAiRouteCache,
-  writeAskAiRouteCache,
-  clearAskAiRouteCache,
-  readFiltersCache,
-  writeFiltersCache,
-  getSearchPlaceViewportTop,
-  restoreSearchRouteScroll,
-  isSearchResultsRoute,
-  updateSearchPageUrl,
-  normalizeSearchText,
-  buildSearchSentence,
-  buildSearchResultSummary,
-  buildFilterSearchText,
-  getSearchRequestHeaders,
-  mapBackendPlaceToCard,
-} from '../components/home/homeHelpers'
+  clearHomeScrollCache,
+  readHomeScrollCache,
+  restoreHomeScroll,
+  writeHomeScrollCache,
+} from '../utils/homeScrollCache'
+import { readHomeRouteCache, writeHomeRouteCache } from '../utils/homeRouteCache'
+import { getCanonicalPlacePath, resolveAreaMeta } from '../utils/routes'
+import { placeCategories } from '../data/placeCategories'
+import { fetchPlaceDetailsBatch, prefetchPlaceDetail } from '../utils/placeDetailCache'
+import type { PlaceDetail } from '../types/appTypes'
 
-import {
-  SearchLandingBar,
-  SearchLoadingState,
-  SearchLoadingCard,
-  MobileResultsTabs,
-  GuidedSearchPage,
-  MobileResultsView,
-  DesktopResultsView,
-  SearchEmptyState,
-  SearchPagination,
-  SearchFilterPanel,
-} from '../components/home/search/SearchComponents'
-import PlaceCard from '../components/PlaceCard'
-import MapView from '../components/MapView'
+type BackendSearchPlace = {
+  id?: string | null
+  slug?: string | null
+  name?: string | null
+  description?: string | null
+  area?: string | null
+  city?: string | null
+  location?: string | null
+  category?: string | null
+  latitude?: number | string | null
+  longitude?: number | string | null
+  thumbnailUrl?: string | null
+  imageUrl?: string | null
+  curatedImageUrls?: string[] | null
+  address?: string | null
+  rating?: number | string | null
+  reviewCount?: number | string | null
+  reason?: string | null
+}
 
-import {
-  AskAiModePanel,
-} from '../components/home/ask-ai/AskAiComponents'
+type ShowcasePlace = {
+  id: string
+  slug?: string
+  name: string
+  category?: string | null
+  area: string
+  city?: string | null
+  localArea?: string | null
+  thumbnailUrl?: string | null
+  imageUrl?: string | null
+  curatedImageUrls?: string[]
+  rating?: number | null
+  reviewCount?: string
+  description?: string | null
+  reason?: string | null
+}
 
-function isAskAiChatbotDailyLimitMessage(message: string | null) {
-  if (!message) {
-    return false
+type HomeTileRecommendation = {
+  label: string
+  slug?: string
+  href: string
+  active: boolean
+  place: ShowcasePlace | null
+}
+
+type HomeAiFeature = {
+  title: string
+  description: string
+  href: string
+  icon: typeof Bot
+}
+
+const homeAiFeatures: HomeAiFeature[] = [
+  {
+    title: 'AI Chatbot',
+    description: 'Ask for gala ideas',
+    href: '/ask-ai/chatbot',
+    icon: Bot,
+  },
+  {
+    title: 'AI Maps',
+    description: 'Find places with AI',
+    href: '/ask-ai/maps',
+    icon: Sparkles,
+  },
+]
+
+const TABLET_HOME_RAIL_QUERY = '(min-width: 768px)'
+
+function parseCoordinate(value: number | string | null | undefined) {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value
   }
 
-  const normalized = message.trim().toLowerCase()
-  return (
-    normalized === 'you have reached your chatbot ai daily limit.' ||
-    normalized === 'daily_ai_limit_reached'
+  if (typeof value === 'string') {
+    const parsedValue = Number(value)
+    if (Number.isFinite(parsedValue)) {
+      return parsedValue
+    }
+  }
+
+  return null
+}
+
+function normalizeLocationKey(value: string | null | undefined) {
+  return value
+    ?.normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    ?? ''
+}
+
+function normalizePlaceMatchKey(value: string | null | undefined) {
+  return value
+    ?.normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    ?? ''
+}
+
+function formatRatingText(value: number | string | null | undefined) {
+  if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
+    return value.toFixed(1)
+  }
+
+  if (typeof value === 'string') {
+    const trimmedValue = value.trim()
+    if (!trimmedValue) {
+      return null
+    }
+
+    const numericValue = Number(trimmedValue)
+    return Number.isFinite(numericValue) && numericValue > 0 ? numericValue.toFixed(1) : trimmedValue
+  }
+
+  return null
+}
+
+async function getSearchRequestHeaders(): Promise<Record<string, string>> {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  }
+
+  if (session?.access_token) {
+    headers.Authorization = `Bearer ${session.access_token}`
+  }
+
+  return headers
+}
+
+function mapBackendPlaceToShowcasePlace(place: BackendSearchPlace): ShowcasePlace | null {
+  const lat = parseCoordinate(place.latitude)
+  const lng = parseCoordinate(place.longitude)
+  const name = place.name?.trim()
+
+  if (!name || lat === null || lng === null) {
+    return null
+  }
+
+  return {
+    id: String(place.id || place.slug || name),
+    slug: place.slug || undefined,
+    name,
+    category: place.category || null,
+    area: place.location || place.address || place.city || place.area || 'Metro Manila',
+    city: place.city || null,
+    localArea: place.area || null,
+    thumbnailUrl: place.thumbnailUrl || null,
+    imageUrl: place.imageUrl || null,
+    curatedImageUrls: Array.isArray(place.curatedImageUrls)
+      ? place.curatedImageUrls.filter((item): item is string => Boolean(item?.trim()))
+      : [],
+    rating: typeof place.rating === 'number' ? place.rating : parseCoordinate(place.rating),
+    reviewCount:
+      place.reviewCount === null || place.reviewCount === undefined ? undefined : String(place.reviewCount),
+    description: place.description || null,
+    reason: place.reason || place.description || null,
+  }
+}
+
+function mapCachedPlaceToShowcasePlace(place: HomeTrendingCachePlace): ShowcasePlace {
+  return {
+    id: place.id,
+    slug: place.slug,
+    name: place.name,
+    category: place.category ?? null,
+    area: place.area,
+    city: place.city ?? null,
+    localArea: place.localArea ?? null,
+    thumbnailUrl: place.thumbnailUrl ?? null,
+    imageUrl: place.imageUrl ?? null,
+    curatedImageUrls: Array.isArray(place.curatedImageUrls) ? place.curatedImageUrls : [],
+    rating: place.rating ?? null,
+    reviewCount: place.reviewCount,
+    description: place.description ?? null,
+    reason: place.reason ?? null,
+  }
+}
+
+function mapPlaceDetailToShowcasePlace(place: PlaceDetail): ShowcasePlace | null {
+  const lat = parseCoordinate(place.latitude)
+  const lng = parseCoordinate(place.longitude)
+  const name = place.name?.trim()
+
+  if (!name || lat === null || lng === null) {
+    return null
+  }
+
+  return {
+    id: place.id,
+    slug: place.slug,
+    name,
+    category: place.category || null,
+    area: place.area || place.address || place.city || 'Metro Manila',
+    city: place.city || null,
+    localArea: place.area || null,
+    thumbnailUrl: place.thumbnailUrl || place.imageUrl || null,
+    imageUrl: place.imageUrl || place.thumbnailUrl || null,
+    curatedImageUrls: Array.isArray(place.curatedImageUrls)
+      ? place.curatedImageUrls.filter((item): item is string => Boolean(item?.trim()))
+      : [],
+    rating:
+      typeof place.average_rating === 'number'
+        ? place.average_rating
+        : parseCoordinate(place.average_rating),
+    reviewCount:
+      place.review_count === null || place.review_count === undefined ? undefined : String(place.review_count),
+    description: place.description || null,
+    reason: place.description || null,
+  }
+}
+
+function hasShowcaseImage(place: Pick<ShowcasePlace, 'thumbnailUrl' | 'imageUrl' | 'curatedImageUrls'>) {
+  return Boolean(
+    place.thumbnailUrl?.trim() ||
+    place.imageUrl?.trim() ||
+    place.curatedImageUrls?.some((imageUrl) => Boolean(imageUrl?.trim()))
   )
 }
 
-function HomePage({
-  initialMode = 'places',
-  initialPromptBuilderOpen = false,
-  initialSearchState,
-  initialAskAiQuestion = '',
-  navigationSource = 'push',
-}: HomePageProps) {
-  const initialFiltersCacheRef = useRef<FiltersCache | null>(readFiltersCache())
-  const initialAskAiRuntimeStateRef = useRef(
-    initialMode === 'ask-ai' && hasActiveAskAiRuntimeState()
-      ? getAskAiRuntimeState()
-      : null
+function mergeRecommendedPlaceWithLivePlace(
+  fallbackPlace: ShowcasePlace,
+  livePlace: ShowcasePlace | undefined
+) {
+  if (!livePlace) {
+    return fallbackPlace
+  }
+
+  return {
+    ...fallbackPlace,
+    ...livePlace,
+    thumbnailUrl: livePlace.thumbnailUrl?.trim() || livePlace.imageUrl?.trim() || fallbackPlace.thumbnailUrl || null,
+    imageUrl: livePlace.imageUrl?.trim() || fallbackPlace.imageUrl || null,
+    curatedImageUrls: hasShowcaseImage(livePlace)
+      ? livePlace.curatedImageUrls ?? []
+      : fallbackPlace.curatedImageUrls ?? [],
+  }
+}
+
+function getPlaceImage(place: ShowcasePlace) {
+  return (
+    place.thumbnailUrl?.trim() ||
+    place.imageUrl?.trim() ||
+    place.curatedImageUrls?.[0]?.trim() ||
+    null
   )
-  const initialAskAiRouteCacheRef = useRef<AskAiRouteCache | null>(
-    initialMode === 'ask-ai' ? readAskAiRouteCache() : null
-  )
-  const initialAskAiRuntimeState = initialAskAiRuntimeStateRef.current
-  const initialAskAiRouteCache = initialAskAiRouteCacheRef.current
-  const initialAskAiState = initialAskAiRuntimeState ?? initialAskAiRouteCache
-  const normalizedInitialAskAiQuestion = normalizeSearchText(initialAskAiQuestion)
-  const shouldUseCachedAskAiState =
-    initialMode === 'ask-ai' &&
-    Boolean(initialAskAiState) &&
-    (
-      !normalizedInitialAskAiQuestion ||
-      initialAskAiState?.question === normalizedInitialAskAiQuestion
-    )
-  const shouldUseSearchRouteCache = initialMode === 'places' && isSearchResultsRoute()
-  const initialRequestedPage =
-    typeof initialSearchState?.page === 'number' && Number.isFinite(initialSearchState.page) && initialSearchState.page > 0
-      ? Math.floor(initialSearchState.page)
-      : 1
-  const initialRouteCacheRef = useRef<SearchRouteCache | null>(
-    shouldUseSearchRouteCache ? readSearchRouteCache() : null
-  )
-  const initialRouteCache = initialRouteCacheRef.current
-  const [selectedMode, setSelectedMode] = useState<SearchMode>(initialMode)
-  const { session, isSessionLoading } = useSavedFavorites()
-  const [askAiUsageStatus, setAskAiUsageStatus] = useState<AskAiUsageStatus | null>(
-    readCachedAskAiUsage('chatbotAi') ??
-      (shouldUseCachedAskAiState ? initialAskAiState?.usageStatus ?? null : null)
-  )
-  const [isAskAiUsageLoading, setIsAskAiUsageLoading] = useState(false)
-  const [askAiUsageError, setAskAiUsageError] = useState<string | null>(null)
-  const [askAiUsageRefreshSignal, setAskAiUsageRefreshSignal] = useState(
-    isAskAiUsageStatusExpired(readCachedAskAiUsage('chatbotAi')) ? 1 : 0
-  )
-  const [askAiQuestion, setAskAiQuestion] = useState(
-    shouldUseCachedAskAiState
-      ? initialAskAiState?.question ?? ''
-      : initialAskAiQuestion
-  )
-  const [askAiAnswer, setAskAiAnswer] = useState(
-    shouldUseCachedAskAiState
-      ? initialAskAiState?.answer ?? ''
-      : ''
-  )
-  const [askAiSources, setAskAiSources] = useState<AskAiSource[]>(
-    shouldUseCachedAskAiState
-      ? initialAskAiState?.sources ?? []
-      : []
-  )
-  const [isAskAiSubmitting, setIsAskAiSubmitting] = useState(
-    shouldUseCachedAskAiState
-      ? initialAskAiState?.isSubmitting === true
-      : false
-  )
-  const [askAiAnswerError, setAskAiAnswerError] = useState<string | null>(
-    shouldUseCachedAskAiState
-      ? initialAskAiState?.answerError ?? null
-      : null
-  )
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(
-    shouldUseCachedAskAiState
-      ? initialAskAiState?.messages ?? []
-      : []
-  )
-  const [isPromptBuilderOpen, setIsPromptBuilderOpen] = useState(initialPromptBuilderOpen)
-  const [categories, setCategories] = useState(initialFiltersCacheRef.current?.categories ?? fallbackCategories)
-  const [areas, setAreas] = useState<AreaChip[]>(initialFiltersCacheRef.current?.areas ?? fallbackAreas)
-  const [rawQuery, setRawQuery] = useState(normalizeSearchText(initialSearchState?.rawQuery ?? ''))
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(initialSearchState?.categoryId ?? null)
-  const [selectedArea, setSelectedArea] = useState<string | null>(initialSearchState?.areaId ?? null)
-  const [selectedGoodFor, setSelectedGoodFor] = useState<SearchGoodForValue | null>(initialSearchState?.goodFor ?? null)
-  const [selectedBudget, setSelectedBudget] = useState<BudgetValue | null>(initialSearchState?.budget ?? null)
-  const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(
-    initialRouteCache?.pendingScrollRestore ? initialRouteCache.selectedPlaceId : null
-  )
-  const [currentPage, setCurrentPage] = useState(
-    initialSearchState?.autoSearch ? initialRequestedPage : (initialRouteCache?.currentPage ?? 1)
-  )
-  const [mobileResultsView, setMobileResultsView] = useState<MobileResultsViewMode>(
-    initialRouteCache?.mobileResultsView ?? 'cards'
-  )
-  const [isInitialSearching, setIsInitialSearching] = useState(
-    Boolean(initialSearchState?.autoSearch && shouldUseSearchRouteCache && !initialRouteCache)
-  )
-  const [isRefreshingSearch, setIsRefreshingSearch] = useState(false)
-  const [isPageLoading, setIsPageLoading] = useState(false)
-  const [searchError, setSearchError] = useState<string | null>(null)
-  const [searchValidationMessage, setSearchValidationMessage] = useState<string | null>(null)
-  const [searchStatus, setSearchStatus] = useState<BackendSearchStatus | null>(null)
-  const [searchFeedbackMessage, setSearchFeedbackMessage] = useState<string | null>(null)
-  const [promptLogin, setPromptLogin] = useState(false)
-  const [lastSearchQuery, setLastSearchQuery] = useState(initialRouteCache?.lastSearchQuery ?? '')
-  const [activeSearchLabel, setActiveSearchLabel] = useState(
-    initialRouteCache?.activeSearchLabel ?? initialRouteCache?.lastSearchQuery ?? ''
-  )
-  const [searchId, setSearchId] = useState<string | null>(initialRouteCache?.searchId ?? null)
-  const [searchResults, setSearchResults] = useState<PlaceCardData[]>(initialRouteCache?.searchResults ?? [])
-  const [searchTotalCount, setSearchTotalCount] = useState(initialRouteCache?.totalCount ?? initialRouteCache?.searchResults.length ?? 0)
-  const [searchTotalPages, setSearchTotalPages] = useState(initialRouteCache?.totalPages ?? 1)
-  const [hasSearched, setHasSearched] = useState(Boolean(initialRouteCache))
-  const hasRestoredInitialScrollRef = useRef(false)
-  const shouldScrollSearchResultsToTopRef = useRef(false)
-  const searchRequestVersion = useRef(0)
-  const lastAutoSearchSignatureRef = useRef<string | null>(null)
-  const lastAutoSubmittedAskAiQuestionRef = useRef('')
-  const desktopResultsScrollRef = useRef<HTMLElement | null>(null)
-  const selectedCategoryName = useMemo(
-    () =>
-      selectedCategory
-        ? categories.find((category) => category.id === selectedCategory)?.name ?? null
-        : null,
-    [categories, selectedCategory]
-  )
-  const selectedAreaName = useMemo(
-    () => (selectedArea ? areas.find((area) => area.id === selectedArea)?.name ?? null : null),
-    [areas, selectedArea]
-  )
-  const selectedBudgetLabel = useMemo(
-    () => (selectedBudget ? budgetOptions.find((budget) => budget.value === selectedBudget)?.label ?? null : null),
-    [selectedBudget]
-  )
-  const selectedGoodForName = useMemo(
-    () => (selectedGoodFor ? fallbackGoodForOptions.find((option) => option.id === selectedGoodFor)?.name ?? null : null),
-    [selectedGoodFor]
-  )
-  const searchSentence = buildSearchSentence({
-    categoryLabel: selectedCategoryName,
-    areaName: selectedAreaName,
-    budgetLabel: selectedBudgetLabel,
+}
+
+function getPlaceRatingText(place: ShowcasePlace) {
+  return formatRatingText(place.rating)
+}
+
+function getPlaceLocationText(place: ShowcasePlace) {
+  return place.area?.trim() || place.city?.trim() || 'Metro Manila'
+}
+
+function buildPlaceHref(place: ShowcasePlace) {
+  if (!place.slug) {
+    return null
+  }
+
+  const areaMeta = resolveAreaMeta({
+    city: place.city,
+    area: place.area,
+    localArea: place.localArea,
   })
-  const searchResultSummary = useMemo(
-    () =>
-      buildSearchResultSummary({
-        count: searchTotalCount,
-        rawQuery,
-        categoryLabel: selectedCategoryName,
-        areaName: selectedAreaName,
-        goodForLabel: selectedGoodForName,
-        budgetLabel: selectedBudgetLabel,
-      }),
-    [rawQuery, searchTotalCount, selectedAreaName, selectedBudgetLabel, selectedCategoryName, selectedGoodForName]
+
+  return getCanonicalPlacePath({
+    areaSlug: areaMeta.slug,
+    placeSlug: place.slug,
+  })
+}
+
+const homepageCategoryRouteAliases: Record<string, string> = {
+  arcade: 'activity',
+  cafe: 'cafe',
+  church: 'heritage',
+  cinema: 'cinema',
+  food: 'food',
+  group: 'activity',
+  heritage: 'heritage',
+  hotel: 'hotel',
+  mall: 'mall',
+  museum: 'museum',
+  nightlife: 'nightlife',
+  park: 'park',
+  tourist: 'tourist',
+  zoo: 'tourist',
+}
+
+function normalizeCategoryLabel(value: string) {
+  return value.trim().toLowerCase()
+}
+
+function toCategoryRouteSlug(value: string) {
+  return normalizeCategoryLabel(value).replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+}
+
+function resolveHomepageCategoryRouteId(label: string) {
+  const normalizedLabel = normalizeCategoryLabel(label)
+  const aliasedCategory = homepageCategoryRouteAliases[normalizedLabel]
+
+  if (aliasedCategory) {
+    return aliasedCategory
+  }
+
+  const exactCategory = placeCategories.find(
+    (category) => normalizeCategoryLabel(category.label) === normalizedLabel
   )
-  const canSubmitSearch = Boolean(rawQuery.trim() || selectedCategory || selectedArea || selectedGoodFor || selectedBudget)
-  const searchFilterPanel = selectedMode !== 'ask-ai' ? (
-    <SearchFilterPanel
-      cityLabel="City"
-      categoryLabel="Category"
-      budgetLabel="Budget"
-      selectedCity={selectedArea}
-      selectedCategory={selectedCategory}
-      selectedBudget={selectedBudget}
-      cityOptions={areas.filter((area) => area.id !== 'all').map((area) => ({ value: area.id, label: area.name }))}
-      categoryOptions={categories.map((category) => ({ value: category.id, label: category.name }))}
-      budgetOptions={budgetOptions.map((budget) => ({ value: budget.value, label: budget.label }))}
-      onCityChange={(value) => {
-        submitResultFilterChange({ area: value, page: 1 })
-      }}
-      onCategoryChange={(value) => {
-        submitResultFilterChange({ category: value, page: 1 })
-      }}
-      onBudgetChange={(value) => {
-        submitResultFilterChange({ budget: value, page: 1 })
-      }}
-      onClearAll={() => {
-        submitResultFilterChange({
-          category: null,
-          area: null,
-          goodFor: null,
-          budget: null,
-          page: 1,
-        })
-      }}
-    />
-  ) : null
-  const shouldShowSearchFiltersPanel = selectedMode !== 'ask-ai' && !hasSearched && !initialSearchState?.autoSearch
-  const visiblePlaces = hasSearched ? searchResults : []
-  const totalResults = searchTotalCount
-  const totalPages = Math.max(1, searchTotalPages)
-  const safeCurrentPage = Math.min(Math.max(currentPage, 1), totalPages)
-  const selectedPlace = selectedPlaceId ? visiblePlaces.find((place) => place.id === selectedPlaceId) ?? null : null
-  const shouldShowGuidedSearch = selectedMode === 'places' && !hasSearched && !initialSearchState?.autoSearch
-  const shouldUseMinimalSearchLayout = Boolean(initialSearchState?.autoSearch)
-  const isRegisteredUser = Boolean(session?.user)
-  const isSearching = isInitialSearching || isRefreshingSearch
-  const shouldShowSearchLoadingState = selectedMode === 'places' && isInitialSearching
-  const clearFilterChip = (key: 'category' | 'city' | 'good_for' | 'budget') => {
-    const nextState = {
-      category: key === 'category' ? null : selectedCategory,
-      area: key === 'city' ? null : selectedArea,
-      goodFor: key === 'good_for' ? null : selectedGoodFor,
-      budget: key === 'budget' ? null : selectedBudget,
-      page: 1,
-    }
 
-    submitResultFilterChange(nextState)
+  return exactCategory?.value ?? null
+}
+
+function getHomepageCategoryCandidates(place: ShowcasePlace) {
+  const candidates = new Set<string>()
+  const normalizedCategory = normalizeCategoryLabel(place.category || '')
+
+  if (!normalizedCategory) {
+    return candidates
   }
-  const submitResultFilterChange = (
-    nextState: Partial<{
-      rawQuery: string
-      category: string | null
-      area: string | null
-      goodFor: SearchGoodForValue | null
-      budget: BudgetValue | null
-      page: number
-    }>
-  ) => {
-    const mergedState = {
-      rawQuery,
-      category: selectedCategory,
-      area: selectedArea,
-      goodFor: selectedGoodFor,
-      budget: selectedBudget,
-      page: 1,
-      ...nextState,
-    }
 
-    if (!mergedState.rawQuery && !mergedState.category && !mergedState.area && !mergedState.goodFor && !mergedState.budget) {
-      handleClearSearch()
+  if (normalizedCategory === 'restaurant' || normalizedCategory === 'food') {
+    candidates.add('food')
+  }
+  if (normalizedCategory === 'park') {
+    candidates.add('park')
+  }
+  if (normalizedCategory === 'hotel' || normalizedCategory === 'accommodation') {
+    candidates.add('hotel')
+  }
+  if (normalizedCategory === 'bar') {
+    candidates.add('nightlife')
+  }
+  if (normalizedCategory === 'arcade') {
+    candidates.add('activity')
+  }
+
+  const mappedCategoryId = resolveHomepageCategoryRouteId(place.category || '')
+  if (mappedCategoryId) {
+    candidates.add(mappedCategoryId)
+  }
+
+  return candidates
+}
+
+function buildCityHref(citySlug: string) {
+  return `/places/${encodeURIComponent(citySlug)}`
+}
+
+const homepageCityTilePlaceSlugOverrides: Record<string, string> = {
+  caloocan: 'caloocan-city-peoples-park',
+  'las-pinas': 'st-joseph-parish-bamboo-organ-church',
+  makati: 'glorietta',
+  malabon: 'malabon-zoo-aquarium-and-botanical-garden',
+  mandaluyong: 'sm-megamall',
+  manila: 'intramuros',
+  marikina: 'marikina-river-park',
+  muntinlupa: 'festival-mall-alabang',
+  navotas: 'navotas-centennial-park',
+  paranaque: 'okada-manila',
+  pasay: 'sm-mall-of-asia',
+  pasig: 'ace-water-spa-pasig',
+  'quezon-city': 'art-in-island',
+  'san-juan': 'greenhills-mall-greenhills-shopping-center',
+  taguig: 'the-mind-museum',
+  valenzuela: 'sm-city-valenzuela',
+}
+
+function getHomepageCityTileLabel(label: string) {
+  if (label === 'Las PiÃ±as') {
+    return 'Las Piñas'
+  }
+
+  if (label === 'ParaÃ±aque') {
+    return 'Parañaque'
+  }
+
+  return label
+}
+
+function buildCategoryHref(label: string) {
+  const resolvedCategoryId = resolveHomepageCategoryRouteId(label) ?? toCategoryRouteSlug(label)
+  return `/places/categories/${encodeURIComponent(resolvedCategoryId)}`
+}
+
+function getGreetingName(currentProfile: ReturnType<typeof useAppUser>['currentProfile'], currentUser: ReturnType<typeof useAppUser>['currentUser']) {
+  const profileName = currentProfile?.displayName?.trim() || currentProfile?.username?.trim() || ''
+  const userName = [currentUser?.firstName, currentUser?.lastName].filter(Boolean).join(' ').trim()
+
+  return profileName || userName || 'Guest'
+}
+
+function getHomeIndicatorGroupSize(isTabletUpViewport: boolean) {
+  return isTabletUpViewport ? 2 : 1
+}
+
+function getGroupedHomeIndicatorTotal(itemCount: number, groupSize: number) {
+  return Math.min(5, Math.ceil(itemCount / groupSize))
+}
+
+function getSegmentedRailIndicatorTotal(itemCount: number) {
+  return Math.min(5, itemCount)
+}
+
+function getHomepageCitySlug(place: Pick<ShowcasePlace, 'city' | 'area' | 'localArea'>) {
+  const normalizedCity = normalizeLocationKey(place.city)
+
+  if (normalizedCity) {
+    const cityMeta = resolveAreaMeta({
+      city: place.city,
+      area: place.city,
+      localArea: place.city,
+    })
+
+    if (cityMeta.slug) {
+      return cityMeta.slug
+    }
+  }
+
+  return resolveAreaMeta({
+    city: place.city,
+    area: place.area,
+    localArea: place.localArea,
+  }).slug
+}
+
+function HomeFeaturedCard({
+  place,
+  index,
+  onGuestFavorite,
+}: {
+  place: ShowcasePlace
+  index: number
+  onGuestFavorite: () => void
+}) {
+  const href = buildPlaceHref(place)
+  const imageUrl = getPlaceImage(place)
+  const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null)
+  const shouldShowImage = Boolean(imageUrl) && failedImageUrl !== imageUrl
+  const locationText = getPlaceLocationText(place)
+  const ratingText = getPlaceRatingText(place)
+  const { isPlaceSaved, saveFavorite, removeFavorite } = useSavedFavorites()
+  const [isSaving, setIsSaving] = useState(false)
+  const normalizedPlaceId = place.id.trim()
+  const isSaved = [place.slug, normalizedPlaceId].some((slugOrId) => isPlaceSaved(slugOrId))
+
+  const handleOpen = (event: MouseEvent<HTMLDivElement>) => {
+    if (href) {
+      if (place.slug) {
+        void prefetchPlaceDetail(place.slug)
+      }
+
+      writeHomeScrollCache({
+        scrollY: window.scrollY,
+        selectedPlaceId: place.id,
+        selectedPlaceViewportTop: event.currentTarget.getBoundingClientRect().top,
+        pendingScrollRestore: true,
+      })
+      navigateToPath(href)
       return
     }
 
-    void handleSearch(mergedState)
-  }
-  const handleRetryAskAiUsage = () => {
-    setAskAiUsageRefreshSignal((signal) => signal + 1)
-  }
-  const handleRawQueryChange = (query: string) => {
-    setRawQuery(query)
-    if (searchValidationMessage) {
-      setSearchValidationMessage(null)
-    }
-    if (searchError) {
-      setSearchError(null)
-    }
-  }
-
-  const handleAskAiSubmit = async (questionOverride?: string) => {
-    const question = normalizeSearchText(questionOverride ?? askAiQuestion)
-
-    const guestId = session?.access_token ? null : getOrCreateAskAiGuestId()
-
-    if (!question || isAskAiSubmitting || (!session?.access_token && !guestId)) {
-      return
-    }
-
-    setAskAiQuestion(question)
-
-    const updatedMessages: ChatMessage[] = [
-      ...chatMessages,
-      { role: 'user' as const, content: question },
-    ]
-    setChatMessages(updatedMessages)
-
-    await submitAskAiRuntimeRequest({
-      question,
-      accessToken: session?.access_token ?? null,
-      guestId,
-      messages: updatedMessages,
-    })
-  }
-
-  const handleStartOverAskAi = () => {
-    resetAskAiRuntimeState({
-      usageStatus: askAiUsageStatus,
-    })
-    setAskAiQuestion('')
-    setAskAiAnswer('')
-    setAskAiSources([])
-    setAskAiAnswerError(null)
-    setAskAiUsageError(null)
-    setChatMessages([])
-
-    if (!askAiUsageStatus && session?.access_token) {
-      setAskAiUsageRefreshSignal((current) => current + 1)
-    }
-
-    clearAskAiRouteCache()
-  }
-
-  const resetSearchState = () => {
-    clearAllSearchRouteCaches()
-
-    searchRequestVersion.current += 1
-    setRawQuery('')
-    setSelectedCategory(null)
-    setSelectedArea(null)
-    setSelectedGoodFor(null)
-    setSelectedBudget(null)
-    setIsInitialSearching(false)
-    setIsRefreshingSearch(false)
-    setIsPageLoading(false)
-    setSearchError(null)
-    setSearchValidationMessage(null)
-    setPromptLogin(false)
-    setLastSearchQuery('')
-    setActiveSearchLabel('')
-    setSearchId(null)
-    setSearchResults([])
-    setSearchTotalCount(0)
-    setSearchTotalPages(1)
-    setHasSearched(false)
-    setSelectedPlaceId(null)
-    setCurrentPage(1)
-    setMobileResultsView('cards')
-  }
-
-  const handleClearSearch = () => {
-    resetSearchState()
     navigateToPath('/search')
   }
 
-  const handleSearchAgain = () => {
-    handleClearSearch()
-  }
-
-  const handlePlaceSelect = (placeId: string) => {
-    const place = visiblePlaces.find((visiblePlace) => visiblePlace.id === placeId)
-    const canonicalPlaceSlug = place?.slug?.trim()
-
-    setSelectedPlaceId(placeId)
-    if (canonicalPlaceSlug) {
-      const searchUrl = `${window.location.pathname}${window.location.search}`
-      const label = rawQuery?.trim() || activeSearchLabel?.replace(/^Showing\s+/, '')?.trim() || ''
-      const returnLabel = label || 'search results'
-      trackSearchResultSelected({
-        placeSlug: canonicalPlaceSlug,
-        areaSlug: place?.area?.trim() ?? null,
-        categorySlug: place?.category?.trim() ?? null,
-      })
-      writePlaceReturnState(canonicalPlaceSlug, {
-        source: 'search',
-        returnTo: searchUrl,
-        returnLabel,
-      })
-
-      writeSearchRouteCache({
-        lastSearchQuery,
-        activeSearchLabel,
-        searchId,
-        searchResults,
-        totalCount: searchTotalCount,
-        totalPages: searchTotalPages,
-        selectedPlaceId: placeId,
-        currentPage: safeCurrentPage,
-        mobileResultsView,
-        scrollY: window.scrollY,
-        desktopScrollTop: desktopResultsScrollRef.current?.scrollTop ?? 0,
-        selectedPlaceViewportTop: getSearchPlaceViewportTop(placeId),
-        pendingScrollRestore: true,
-      })
-    }
-  }
-
-  useEffect(() => {
-    if (!hasSearched) {
-      if (currentPage !== 1) {
-        setCurrentPage(1)
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      if (place.slug) {
+        void prefetchPlaceDetail(place.slug)
       }
-      return
+      navigateToPath(href ?? '/search')
     }
-
-    if (currentPage !== safeCurrentPage) {
-      setCurrentPage(safeCurrentPage)
-      return
-    }
-
-    if (selectedPlaceId && !visiblePlaces.some((place) => place.id === selectedPlaceId)) {
-      setSelectedPlaceId(null)
-    }
-  }, [currentPage, hasSearched, safeCurrentPage, selectedPlaceId, visiblePlaces])
-
-  const handleMapPlaceSelect = (placeId: string) => {
-    setSelectedPlaceId(placeId)
   }
 
-  const handlePageChange = (page: number) => {
-    const nextPage = Math.min(Math.max(page, 1), totalPages)
-
-    if (nextPage === safeCurrentPage) {
-      return
-    }
-
-    shouldScrollSearchResultsToTopRef.current = true
-    void handleSearch({ page: nextPage }, true)
-  }
-
-  const handleSearch = async (
-    nextState?: Partial<{
-      rawQuery: string
-      category: string | null
-      area: string | null
-      goodFor: SearchGoodForValue | null
-      budget: BudgetValue | null
-      page: number
-    }>,
-    suppressRefreshState = false,
-  ) => {
-    let nextRawQuery = normalizeSearchText(nextState?.rawQuery ?? rawQuery)
-    const nextCategory = nextState?.category ?? selectedCategory
-    const nextArea = nextState?.area ?? selectedArea
-    const nextGoodFor = nextState?.goodFor ?? selectedGoodFor
-    const nextBudget = nextState?.budget ?? selectedBudget
-    const nextCategoryLabel = nextCategory
-      ? categories.find((category) => category.id === nextCategory)?.name ?? null
-      : null
-    const nextAreaName = nextArea ? areas.find((area) => area.id === nextArea)?.name ?? null : null
-    const nextGoodForLabel = nextGoodFor
-      ? fallbackGoodForOptions.find((option) => option.id === nextGoodFor)?.name ?? null
-      : null
-    const nextBudgetLabel = nextBudget ? budgetOptions.find((budget) => budget.value === nextBudget)?.label ?? null : null
-
-    if (!nextRawQuery && (nextCategory || nextArea || nextGoodFor || nextBudget)) {
-      nextRawQuery = buildFilterSearchText({
-        rawQuery: '',
-        categoryLabel: nextCategoryLabel,
-        areaName: nextAreaName,
-        goodForLabel: nextGoodForLabel,
-        budgetLabel: nextBudgetLabel,
-      })
-    }
-    const nextPage = nextState?.page ?? 1
-    const hasCriteria = Boolean(nextRawQuery || nextCategory || nextArea || nextGoodFor || nextBudget)
-
-    if (!hasCriteria) {
-      setSearchValidationMessage('Type a vibe or choose filters first.')
-      setSearchError(null)
-      return
-    }
-
-    const requestVersion = searchRequestVersion.current + 1
-    searchRequestVersion.current = requestVersion
-    const isFreshSearch = !suppressRefreshState
-    const searchPayload = {
-      query: nextRawQuery,
-      page: nextPage,
-      limit: SEARCH_RESULTS_PER_PAGE,
-      filters: {
-        category: nextCategory,
-        city: nextArea,
-        good_for: nextGoodFor,
-        budget: nextBudget,
-      },
-    }
-    updateSearchPageUrl({
-      query: nextRawQuery,
-      categoryValue: nextCategory,
-      areaId: nextArea,
-      goodFor: nextGoodFor,
-      budget: nextBudget,
-      page: nextPage,
-    })
+  const handleToggleFavorite = async (event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation()
 
     try {
-      if (isFreshSearch) {
-        setSearchResults([])
-        setSearchTotalCount(0)
-        setSearchTotalPages(1)
-        setSelectedPlaceId(null)
-        setCurrentPage(1)
-        setMobileResultsView('cards')
-        setHasSearched(false)
-      }
+      setIsSaving(true)
 
-      if (suppressRefreshState) {
-        setIsPageLoading(true)
-      } else {
-        setIsInitialSearching(true)
-      }
-      setSearchValidationMessage(null)
-      setSearchError(null)
-      setSearchStatus(null)
-      setSearchFeedbackMessage(null)
-      setPromptLogin(false)
-      setActiveSearchLabel(nextRawQuery || 'filtered GalaTayo places')
-
-      const response = await fetch(getApiUrl('/search'), {
-        method: 'POST',
-        headers: await getSearchRequestHeaders(),
-        body: JSON.stringify(searchPayload),
-      })
-
-      const data = (await response.json()) as {
-        message?: string
-        error?: string
-        searchId?: string
-        searchStatus?: BackendSearchStatus
-        searchFeedbackMessage?: string | null
-        promptLogin?: boolean
-        page?: number
-        limit?: number
-        totalCount?: number
-        totalPages?: number
-        places?: BackendSearchPlace[]
-        geminiResponse?: string
-        result?: {
-          page?: number
-          limit?: number
-          totalCount?: number
-          totalPages?: number
-          geminiResponse?: string
-          places?: BackendSearchPlace[]
-        }
-      }
-
-      if (searchRequestVersion.current !== requestVersion) {
+      if (isSaved) {
+        await removeFavorite(normalizedPlaceId, place.slug)
         return
       }
 
-      if (data.promptLogin) {
-        shouldScrollSearchResultsToTopRef.current = false
-        setPromptLogin(true)
-        return
-      }
+      const result = await saveFavorite(normalizedPlaceId, place.slug)
 
-      if (!response.ok) {
-        throw new Error(data.error || data.message || 'Search failed.')
+      if (result.status === 'guest') {
+        onGuestFavorite()
       }
-
-      setSelectedMode('places')
-      setLastSearchQuery(nextRawQuery)
-      setSearchId(data.searchId ?? null)
-      setSearchStatus(data.searchStatus ?? null)
-      setSearchFeedbackMessage(data.searchFeedbackMessage ?? null)
-      const backendPlaces = data.places ?? data.result?.places ?? []
-      const responsePage = data.page ?? data.result?.page ?? nextPage
-      const responseTotalCount = data.totalCount ?? data.result?.totalCount ?? backendPlaces.length
-      const responseTotalPages =
-        data.totalPages ?? data.result?.totalPages ?? Math.max(1, Math.ceil(responseTotalCount / SEARCH_RESULTS_PER_PAGE))
-      setRawQuery(nextRawQuery)
-      setSelectedCategory(nextCategory)
-      setSelectedArea(nextArea)
-      setSelectedGoodFor(nextGoodFor)
-      setSelectedBudget(nextBudget)
-      setCurrentPage(responsePage)
-      const mappedPlaces = backendPlaces
-        .map(mapBackendPlaceToCard)
-        .filter((place): place is PlaceCardData => Boolean(place))
-
-      setSearchResults(mappedPlaces)
-      setSearchTotalCount(responseTotalCount)
-      setSearchTotalPages(responseTotalPages)
-      setHasSearched(true)
-      setSelectedPlaceId(suppressRefreshState ? selectedPlaceId : null)
-      setMobileResultsView(suppressRefreshState ? mobileResultsView : 'cards')
-      trackSearchSubmitted({
-        resultCount: mappedPlaces.length,
-        page: responsePage,
-        filterCount: [nextCategory, nextArea, nextGoodFor, nextBudget].filter(Boolean).length,
-      })
-      if (shouldUseSearchRouteCache) {
-        writeSearchRouteCache({
-          lastSearchQuery: nextRawQuery,
-          activeSearchLabel: nextRawQuery || 'filtered GalaTayo places',
-          searchId: data.searchId ?? null,
-          searchResults: mappedPlaces,
-          totalCount: responseTotalCount,
-          totalPages: responseTotalPages,
-          selectedPlaceId: suppressRefreshState ? selectedPlaceId : null,
-          currentPage: responsePage,
-          mobileResultsView: suppressRefreshState ? mobileResultsView : 'cards',
-          scrollY: suppressRefreshState ? window.scrollY : 0,
-          desktopScrollTop: suppressRefreshState ? (desktopResultsScrollRef.current?.scrollTop ?? 0) : 0,
-          selectedPlaceViewportTop: suppressRefreshState && selectedPlaceId ? getSearchPlaceViewportTop(selectedPlaceId) : null,
-          pendingScrollRestore: false,
-        })
-      }
-      if (!suppressRefreshState) {
-        window.requestAnimationFrame(() => {
-          window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
-          desktopResultsScrollRef.current?.scrollTo({ top: 0, behavior: 'auto' })
-        })
-      }
-    } catch (error) {
-      if (searchRequestVersion.current !== requestVersion) {
-        return
-      }
-
-      shouldScrollSearchResultsToTopRef.current = false
-      const message = error instanceof Error && !error.message.startsWith('Failed to execute \'json\'')
-        ? error.message
-        : 'Search failed.'
-      setSearchError(message)
-      setSearchStatus(null)
-      setSearchFeedbackMessage(null)
-      setHasSearched(true)
-      console.error('Search request failed:', error)
     } finally {
-      if (searchRequestVersion.current === requestVersion) {
-        setIsInitialSearching(false)
-        setIsRefreshingSearch(false)
-        setIsPageLoading(false)
-      }
+      setIsSaving(false)
     }
   }
 
-  useEffect(() => {
-    if (!initialSearchState?.autoSearch) {
-      lastAutoSearchSignatureRef.current = null
-      return
-    }
-
-    const nextAutoSearch = {
-      rawQuery: initialSearchState.rawQuery ?? '',
-      category: initialSearchState.categoryId ?? null,
-      area: initialSearchState.areaId ?? null,
-      goodFor: initialSearchState.goodFor ?? null,
-      budget: initialSearchState.budget ?? null,
-      page: initialRequestedPage,
-    }
-    const nextSignature = JSON.stringify(nextAutoSearch)
-
-    if (lastAutoSearchSignatureRef.current === nextSignature) {
-      return
-    }
-
-    lastAutoSearchSignatureRef.current = nextSignature
-
-    const shouldRefreshInPlace =
-      hasSearched || searchResults.length > 0 || Boolean(lastSearchQuery.trim()) || Boolean(activeSearchLabel.trim())
-
-    void handleSearch(nextAutoSearch, shouldRefreshInPlace)
-  }, [
-    activeSearchLabel,
-    hasSearched,
-    initialRequestedPage,
-    initialSearchState?.areaId,
-    initialSearchState?.autoSearch,
-    initialSearchState?.budget,
-    initialSearchState?.categoryId,
-    initialSearchState?.goodFor,
-    initialSearchState?.rawQuery,
-    lastSearchQuery,
-    searchResults.length,
-  ])
-
-  useLayoutEffect(() => {
-    if (navigationSource !== 'pop' || !initialRouteCache?.pendingScrollRestore || hasRestoredInitialScrollRef.current) {
-      return
-    }
-
-    hasRestoredInitialScrollRef.current = true
-
-    restoreSearchRouteScroll(initialRouteCache, desktopResultsScrollRef)
-
-    writeSearchRouteCache({
-      ...initialRouteCache,
-      pendingScrollRestore: false,
-    })
-  }, [initialRouteCache, navigationSource])
-
-  useLayoutEffect(() => {
-    if (!shouldScrollSearchResultsToTopRef.current || isPageLoading || !hasSearched) {
-      return
-    }
-
-    shouldScrollSearchResultsToTopRef.current = false
-
-    window.requestAnimationFrame(() => {
-      window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
-      desktopResultsScrollRef.current?.scrollTo({ top: 0, behavior: 'auto' })
-    })
-  }, [hasSearched, isPageLoading, searchResults.length, safeCurrentPage])
-
-  useEffect(() => {
-    if (initialMode !== 'ask-ai') {
-      return
-    }
-
-    seedAskAiRuntimeState({
-      question: initialAskAiState?.question ?? '',
-      answer: initialAskAiState?.answer ?? '',
-      sources: initialAskAiState?.sources ?? [],
-      answerError: initialAskAiState?.answerError ?? null,
-      usageStatus: readCachedAskAiUsage('chatbotAi') ?? initialAskAiState?.usageStatus ?? null,
-      isSubmitting: initialAskAiState?.isSubmitting === true,
-      messages: initialAskAiState?.messages ?? [],
-      jobId: initialAskAiState?.jobId ?? null,
-      jobStatus: initialAskAiState?.jobStatus ?? null,
-    })
-
-    return subscribeToAskAiRuntime((runtimeState) => {
-      setAskAiQuestion(runtimeState.question)
-      setAskAiAnswer(runtimeState.answer)
-      setAskAiSources(runtimeState.sources)
-      setAskAiAnswerError(runtimeState.answerError)
-      setAskAiUsageStatus((currentUsageStatus) => runtimeState.usageStatus ?? currentUsageStatus)
-      setIsAskAiSubmitting(runtimeState.isSubmitting)
-
-      if (runtimeState.answer && runtimeState.jobStatus === 'completed') {
-        trackAskAiChatbotUsed({
-          answerLength: runtimeState.answer.length,
-        })
-        setChatMessages((prev) => {
-          const lastMessage = prev[prev.length - 1]
-          if (lastMessage?.role === 'assistant' && lastMessage.content === runtimeState.answer) {
-            return prev
-          }
-          if (lastMessage?.role === 'assistant') {
-            return [...prev.slice(0, -1), { role: 'assistant' as const, content: runtimeState.answer }]
-          }
-          return [...prev, { role: 'assistant' as const, content: runtimeState.answer }]
-        })
-      }
-    })
-  }, [initialAskAiRuntimeState, initialAskAiState, initialMode])
-
-  useEffect(() => {
-    if (initialMode !== 'ask-ai') {
-      return
-    }
-
-    const question = normalizeSearchText(initialAskAiQuestion)
-    if (!question || lastAutoSubmittedAskAiQuestionRef.current === question) {
-      return
-    }
-
-    const runtimeState = getAskAiRuntimeState()
-    const hasActiveRequestForQuestion =
-      question &&
-      runtimeState.question === question &&
-      runtimeState.isSubmitting
-    const hasCachedResultForQuestion =
-      question &&
-      runtimeState.question === question &&
-      Boolean(runtimeState.answer || runtimeState.answerError || runtimeState.sources.length)
-
-    if (hasActiveRequestForQuestion || hasCachedResultForQuestion) {
-      lastAutoSubmittedAskAiQuestionRef.current = question
-      return
-    }
-
-    if (isSessionLoading || (!session?.access_token && !getOrCreateAskAiGuestId())) {
-      return
-    }
-
-    lastAutoSubmittedAskAiQuestionRef.current = question
-    void handleAskAiSubmit(question)
-  }, [handleAskAiSubmit, initialAskAiQuestion, initialMode, isSessionLoading, session?.access_token])
-
-  useEffect(() => {
-    if (initialMode !== 'ask-ai') {
-      return
-    }
-
-    const normalizedQuestion = normalizeSearchText(askAiQuestion)
-
-    if (!normalizedQuestion && !askAiAnswer && !askAiSources.length && !askAiAnswerError) {
-      clearAskAiRouteCache()
-      return
-    }
-
-    const runtimeState = getAskAiRuntimeState()
-
-    writeAskAiRouteCache({
-      question: normalizedQuestion,
-      answer: askAiAnswer,
-      sources: askAiSources,
-      answerError: askAiAnswerError,
-      usageStatus: askAiUsageStatus,
-      isSubmitting: isAskAiSubmitting,
-      messages: chatMessages,
-      jobId: runtimeState.jobId,
-      jobStatus: runtimeState.jobStatus,
-    })
-  }, [askAiAnswer, askAiAnswerError, askAiQuestion, askAiSources, askAiUsageStatus, initialMode, isAskAiSubmitting, chatMessages])
-
-  useEffect(() => {
-    if (initialMode !== 'ask-ai' || !session?.access_token) {
-      return
-    }
-
-    void resumeAskAiRuntimeJob({
-      accessToken: session.access_token,
-    })
-  }, [initialMode, session?.access_token])
-
-  useEffect(() => {
-    writeCachedAskAiUsage('chatbotAi', askAiUsageStatus)
-  }, [askAiUsageStatus])
-
-  useEffect(() => {
-    return subscribeToCachedAskAiUsage('chatbotAi', (usageStatus) => {
-      setAskAiUsageStatus((currentUsageStatus) => {
-        if (
-          currentUsageStatus?.usageType === usageStatus?.usageType &&
-          currentUsageStatus?.allowed === usageStatus?.allowed &&
-          currentUsageStatus?.limit === usageStatus?.limit &&
-          currentUsageStatus?.used === usageStatus?.used &&
-          currentUsageStatus?.remaining === usageStatus?.remaining &&
-          currentUsageStatus?.resetAt === usageStatus?.resetAt &&
-          currentUsageStatus?.message === usageStatus?.message
-        ) {
-          return currentUsageStatus
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      data-home-trending-place-id={place.id}
+      onTouchStart={() => {
+        if (place.slug) {
+          void prefetchPlaceDetail(place.slug)
         }
+      }}
+      onClick={handleOpen}
+      onKeyDown={handleKeyDown}
+      className="block text-left outline-none"
+      style={{ animationDelay: `${index * 90}ms` }}
+    >
+      <div className="relative overflow-hidden rounded-[24px] bg-slate-100 ring-1 ring-slate-200">
+        <div className="relative aspect-[1.28] w-full">
+          {shouldShowImage ? (
+            <img
+              src={imageUrl ?? undefined}
+              alt={place.name}
+              className="h-full w-full object-cover"
+              draggable={false}
+              loading={index === 0 ? 'eager' : 'lazy'}
+              decoding="async"
+              fetchPriority={index === 0 ? 'high' : 'auto'}
+              sizes="(min-width: 1280px) 360px, (min-width: 1024px) 344px, (min-width: 768px) 320px, 84vw"
+              onError={() => setFailedImageUrl(imageUrl)}
+            />
+          ) : (
+            <div className="absolute inset-0 bg-[linear-gradient(145deg,#cbd5e1_0%,#94a3b8_52%,#64748b_100%)]" />
+          )}
 
-        return usageStatus
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0)_0%,rgba(255,255,255,0)_40%,rgba(15,23,42,0.14)_60%,rgba(15,23,42,0.82)_100%)]" />
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-[linear-gradient(180deg,rgba(15,23,42,0)_0%,rgba(15,23,42,0.18)_35%,rgba(15,23,42,0.6)_100%)]" />
+
+          <button
+            type="button"
+            onClick={handleToggleFavorite}
+            disabled={isSaving}
+            aria-label={isSaved ? `Remove ${place.name} from favorites` : `Save ${place.name} to favorites`}
+            data-drag-scroll-ignore="true"
+            className={`absolute right-2.5 top-2.5 flex h-[28px] w-[28px] items-center justify-center rounded-full border border-white/75 bg-white/92 shadow-[0_4px_10px_rgba(15,23,42,0.06)] ${
+              isSaved ? 'text-rose-500' : 'text-slate-500'
+            }`}
+          >
+            <Heart className={`h-3.5 w-3.5 ${isSaved ? 'fill-current' : ''}`} strokeWidth={2.2} />
+          </button>
+
+          <div className="absolute inset-x-0 bottom-0 p-4">
+            <div className="text-white">
+              <p className="line-clamp-1 pr-12 text-[17px] font-black leading-tight tracking-[-0.03em]">
+                {place.name}
+              </p>
+              <div className="mt-1.5 flex items-center gap-2 text-[10.5px] text-white/84">
+                <span className="inline-flex min-w-0 flex-1 items-center gap-1.5 pr-2">
+                  <MapPin className="h-3 w-3 shrink-0" strokeWidth={2.2} />
+                  <span className="truncate">{locationText}</span>
+                </span>
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[rgba(15,23,42,0.36)] px-2.5 py-1 font-semibold text-white">
+                  <Star className="h-3.5 w-3.5 fill-current text-amber-300" strokeWidth={1.8} />
+                  {ratingText || 'New'}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function HomeFeaturedCardSkeleton({ index }: { index: number }) {
+  return (
+    <div
+      className="w-[clamp(17rem,84vw,21.5rem)] shrink-0 snap-center md:w-[320px] lg:w-[344px] xl:w-[360px]"
+      style={{ animationDelay: `${index * 80}ms` }}
+      aria-hidden="true"
+    >
+      <div className="relative overflow-hidden rounded-[24px] bg-white ring-1 ring-slate-200 shadow-[0_16px_30px_rgba(15,23,42,0.05)]">
+        <div className="relative aspect-[1.28] w-full">
+          <AppSkeleton className="absolute inset-0 rounded-[24px]" />
+          <div className="absolute inset-x-0 bottom-0 p-4">
+            <AppSkeleton className="h-5 w-2/3 rounded-full bg-white/35" />
+            <div className="mt-2 flex items-center gap-2">
+              <AppSkeleton className="h-3.5 w-28 rounded-full bg-white/30" />
+              <AppSkeleton className="h-6 w-14 rounded-full bg-white/30" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function HomePageSkeleton() {
+  return (
+    <PageShell tone="plain">
+      <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
+        <div className="mx-auto flex min-h-screen w-full max-w-[1320px] flex-col px-4 pb-[calc(env(safe-area-inset-bottom,0px)+6.5rem)] pt-[max(18px,env(safe-area-inset-top))] sm:px-5 sm:pb-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] md:px-6 md:pb-[calc(env(safe-area-inset-bottom,0px)+5rem)] md:pt-10 lg:px-8 lg:pb-[calc(env(safe-area-inset-bottom,0px)+4.5rem)]">
+          <section className="min-w-0 pt-2 md:pt-0" aria-hidden="true">
+            <AppSkeleton className="h-4 w-28 rounded-full" />
+            <div className="mt-3 flex items-center justify-between gap-4">
+              <AppSkeleton className="h-7 w-44 rounded-full" />
+              <AppSkeleton className="h-10 w-10 rounded-full" />
+            </div>
+            <AppSkeleton className="mt-3 h-4 w-64 rounded-full" />
+            <AppSkeleton className="mt-6 h-14 w-full rounded-[20px]" />
+
+            <div className="mt-7">
+              <AppSkeleton className="mb-3 h-4 w-24 rounded-full" />
+              <div className="grid grid-cols-2 gap-3">
+                <AppSkeleton className="h-[76px] rounded-[18px]" />
+                <AppSkeleton className="h-[76px] rounded-[18px]" />
+              </div>
+            </div>
+          </section>
+
+          <div className="mt-5 grid min-w-0 gap-4 md:mt-10 md:gap-10 lg:gap-12" aria-hidden="true">
+            <section className="min-w-0 md:-mt-1">
+              <div className="flex items-center justify-between gap-3">
+                <AppSkeleton className="h-8 w-36 rounded-full" />
+                <AppSkeleton className="h-5 w-16 rounded-full" />
+              </div>
+              <div className="mt-2 flex gap-3">
+                <AppSkeleton className="h-5 w-10 rounded-full" />
+                <AppSkeleton className="h-5 w-16 rounded-full" />
+                <AppSkeleton className="h-5 w-28 rounded-full" />
+              </div>
+              <div className="-mx-4 mt-3 px-4">
+                <div className="flex gap-4 overflow-hidden">
+                  {Array.from({ length: 3 }).map((_, index) => (
+                    <HomeFeaturedCardSkeleton key={`home-page-skeleton-card-${index}`} index={index} />
+                  ))}
+                </div>
+              </div>
+              <div className="mt-4 flex justify-center">
+                <AppSkeleton className="h-3 w-28 rounded-full" />
+              </div>
+            </section>
+
+            <section className="min-w-0">
+              <div className="flex items-center justify-between gap-3">
+                <AppSkeleton className="h-7 w-24 rounded-full" />
+                <AppSkeleton className="h-5 w-16 rounded-full" />
+              </div>
+              <div className="mt-3 flex gap-3 overflow-hidden">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <div key={`home-city-skeleton-${index}`} className="flex w-[clamp(4.75rem,22vw,7.5rem)] shrink-0 flex-col items-center gap-2 px-1 py-1.5 md:w-[120px] lg:w-[132px]">
+                    <AppSkeleton className="h-[clamp(4rem,18vw,5.75rem)] w-[clamp(4rem,18vw,5.75rem)] rounded-[16px] md:h-[84px] md:w-[84px] lg:h-[92px] lg:w-[92px]" />
+                    <AppSkeleton className="h-4 w-16 rounded-full" />
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="min-w-0">
+              <div className="flex items-center justify-between gap-3">
+                <AppSkeleton className="h-7 w-32 rounded-full" />
+                <AppSkeleton className="h-5 w-16 rounded-full" />
+              </div>
+              <div className="mt-3 flex gap-3 overflow-hidden">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <div key={`home-category-skeleton-${index}`} className="flex w-[clamp(4.75rem,22vw,7.5rem)] shrink-0 flex-col items-center gap-2 px-1 py-1.5 md:w-[120px] lg:w-[132px]">
+                    <AppSkeleton className="h-[clamp(4rem,18vw,5.75rem)] w-[clamp(4rem,18vw,5.75rem)] rounded-[16px] md:h-[84px] md:w-[84px] lg:h-[92px] lg:w-[92px]" />
+                    <AppSkeleton className="h-4 w-20 rounded-full" />
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+        </div>
+      </main>
+
+      <div className="md:hidden" aria-hidden="true">
+        <MobileBottomNav currentPath="/home" />
+      </div>
+    </PageShell>
+  )
+}
+
+function HomeCategoryTile({
+  label,
+  place,
+  active = false,
+  isLoading = false,
+  onClick,
+}: {
+  label: string
+  place: ShowcasePlace | null
+  active?: boolean
+  isLoading?: boolean
+  onClick: () => void
+}) {
+  void isLoading
+  const imageUrl = place ? getPlaceImage(place) : null
+  const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null)
+  const shouldShowImage = Boolean(imageUrl) && failedImageUrl !== imageUrl
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex w-[clamp(4.75rem,22vw,7.5rem)] shrink-0 snap-center flex-col items-center gap-2 rounded-[18px] px-1 py-1.5 text-center transition md:w-[120px] md:rounded-[22px] md:px-2 md:py-2 lg:w-[132px] ${
+        active ? 'bg-[rgba(30,58,138,0.08)]' : 'bg-transparent'
+      }`}
+    >
+      <div
+        className={`h-[clamp(4rem,18vw,5.75rem)] w-[clamp(4rem,18vw,5.75rem)] overflow-hidden rounded-[16px] border bg-slate-100 transition md:h-[84px] md:w-[84px] lg:h-[92px] lg:w-[92px] ${
+          active ? 'border-[rgba(30,58,138,0.34)] shadow-[0_8px_20px_rgba(15,23,42,0.06)] ring-1 ring-[rgba(30,58,138,0.14)]' : 'border-[rgba(148,163,184,0.18)]'
+        }`}
+      >
+        {shouldShowImage ? (
+          <div className="relative h-full w-full">
+            <img
+              src={imageUrl ?? undefined}
+              alt={label}
+              className="h-full w-full object-cover"
+              draggable={false}
+              loading="lazy"
+              decoding="async"
+              fetchPriority="auto"
+              sizes="(min-width: 1024px) 92px, (min-width: 768px) 84px, 22vw"
+              onError={() => setFailedImageUrl(imageUrl)}
+            />
+          </div>
+        ) : (
+          <AppSkeleton className="h-full w-full rounded-none bg-[linear-gradient(145deg,#e2e8f0_0%,#cbd5e1_100%)]" />
+        )}
+      </div>
+      <span className={`w-full truncate text-[12.5px] font-medium md:text-[14px] ${active ? 'text-[var(--accent-deep)]' : 'text-slate-500'}`}>{label}</span>
+    </button>
+  )
+}
+
+function useHomeRailDragScroll<T extends HTMLElement>(
+  ref: RefObject<T | null>,
+  { enabled, label }: { enabled: boolean; label: string }
+) {
+  useEffect(() => {
+    if (!enabled) {
+      return
+    }
+
+    const element = ref.current
+
+    if (!element) {
+      return
+    }
+
+    let isMouseDown = false
+    let startX = 0
+    let startScrollLeft = 0
+    let isDragging = false
+    let suppressClick = false
+    const desktopRailQuery = window.matchMedia('(min-width: 1024px) and (hover: hover) and (pointer: fine)')
+    const initialScrollSnapType = element.style.scrollSnapType
+    const initialUserSelect = document.body.style.userSelect
+    const interactiveSelector =
+      'input, select, textarea, summary, [contenteditable="true"], [data-drag-scroll-ignore="true"]'
+    const DRAG_CLICK_THRESHOLD_PX = 5
+
+    const shouldDebug = () => {
+      if (!import.meta.env.DEV) {
+        return false
+      }
+
+      try {
+        return window.localStorage.getItem('galatayo:debug-home-rails') === '1'
+      } catch {
+        return false
+      }
+    }
+
+    const getTargetLabel = (target: EventTarget | null) => {
+      if (!(target instanceof Element)) {
+        return 'unknown'
+      }
+
+      const tagName = target.tagName.toLowerCase()
+      const role = target.getAttribute('role')
+      const railItem = target.closest('[data-rail-item]') ? ' rail-item' : ''
+      return `${tagName}${role ? `[role="${role}"]` : ''}${railItem}`
+    }
+
+    const debugLog = (eventName: string, event: Event, extra: Record<string, unknown> = {}) => {
+      if (!shouldDebug()) {
+        return
+      }
+
+      const pointerEvent = typeof PointerEvent !== 'undefined' && event instanceof PointerEvent ? event : null
+      const mouseEvent = event instanceof globalThis.MouseEvent ? event : null
+      const touchEvent = typeof TouchEvent !== 'undefined' && event instanceof TouchEvent ? event : null
+      const firstTouch = touchEvent?.touches[0] ?? touchEvent?.changedTouches[0] ?? null
+
+      console.debug('[GalaTayo home rail]', {
+        rail: label,
+        event: eventName,
+        target: getTargetLabel(event.target),
+        pointerType: pointerEvent?.pointerType ?? (mouseEvent ? 'mouse' : touchEvent ? 'touch-event' : undefined),
+        clientX: mouseEvent?.clientX ?? firstTouch?.clientX,
+        clientY: mouseEvent?.clientY ?? firstTouch?.clientY,
+        scrollLeft: element.scrollLeft,
+        scrollWidth: element.scrollWidth,
+        clientWidth: element.clientWidth,
+        touchAction: window.getComputedStyle(element).touchAction,
+        isMouseDown,
+        isDragging,
+        suppressClick,
+        desktop: desktopRailQuery.matches,
+        ...extra,
       })
-    })
-  }, [])
-
-  useEffect(() => {
-    if (!askAiUsageStatus?.allowed) {
-      return
     }
 
-    setAskAiAnswerError((currentValue) =>
-      isAskAiChatbotDailyLimitMessage(currentValue) ? null : currentValue
-    )
-  }, [askAiUsageStatus?.allowed])
-
-  useAskAiUsageAutoRefresh({
-    enabled: selectedMode === 'ask-ai' && !isSessionLoading,
-    onRefresh: () => {
-      setAskAiUsageRefreshSignal((prev) => prev + 1)
-    },
-  })
-
-  useEffect(() => {
-    if (selectedMode !== 'ask-ai') {
-      return
+    const restoreInteractionStyles = () => {
+      document.body.style.userSelect = initialUserSelect
+      element.style.scrollSnapType = initialScrollSnapType
+      element.classList.remove('cursor-grabbing')
     }
 
-    lockBodyScroll()
+    const resetState = () => {
+      isMouseDown = false
+      startX = 0
+      startScrollLeft = 0
+      isDragging = false
+    }
+
+    const removeWindowMouseDragListeners = () => {
+      document.removeEventListener('mousemove', onMouseMove, true)
+      document.removeEventListener('mouseup', finishMouseDrag, true)
+      window.removeEventListener('blur', cancelMouseDrag)
+    }
+
+    const canStartFromTarget = (target: EventTarget | null) => {
+      return !(target instanceof Element && target.closest(interactiveSelector))
+    }
+
+    const hasHorizontalOverflow = () => element.scrollWidth > element.clientWidth
+
+    const onWheel = (event: WheelEvent) => {
+      if (!desktopRailQuery.matches || !hasHorizontalOverflow()) {
+        return
+      }
+
+      const dominantDelta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY
+
+      if (Math.abs(dominantDelta) < 1) {
+        return
+      }
+
+      const maxScrollLeft = Math.max(element.scrollWidth - element.clientWidth, 0)
+      const nextScrollLeft = Math.min(maxScrollLeft, Math.max(0, element.scrollLeft + dominantDelta))
+
+      if (nextScrollLeft === element.scrollLeft) {
+        return
+      }
+
+      event.preventDefault()
+      element.scrollLeft = nextScrollLeft
+    }
+
+    const onMouseDown = (event: globalThis.MouseEvent) => {
+      const target = event.target
+
+      if (
+        isMouseDown ||
+        !desktopRailQuery.matches ||
+        event.button !== 0 ||
+        !canStartFromTarget(target) ||
+        !hasHorizontalOverflow()
+      ) {
+        debugLog('mousedown ignored', event, {
+          desktop: desktopRailQuery.matches,
+          canStartTarget: canStartFromTarget(target),
+          hasOverflow: hasHorizontalOverflow(),
+        })
+        return
+      }
+
+      isMouseDown = true
+      startX = event.clientX
+      startScrollLeft = element.scrollLeft
+      isDragging = false
+      suppressClick = false
+      event.preventDefault()
+      element.style.scrollSnapType = 'none'
+      document.body.style.userSelect = 'none'
+      element.classList.add('cursor-grabbing')
+      document.addEventListener('mousemove', onMouseMove, { capture: true, passive: false })
+      document.addEventListener('mouseup', finishMouseDrag, true)
+      window.addEventListener('blur', cancelMouseDrag)
+      debugLog('mousedown start', event)
+    }
+
+    const onMouseMove = (event: globalThis.MouseEvent) => {
+      if (!isMouseDown) {
+        return
+      }
+
+      const deltaX = event.clientX - startX
+
+      if (Math.abs(deltaX) >= DRAG_CLICK_THRESHOLD_PX) {
+        isDragging = true
+        suppressClick = true
+      }
+
+      event.preventDefault()
+      element.scrollLeft = startScrollLeft - deltaX
+      debugLog('mousemove', event)
+    }
+
+    const finishMouseDrag = (event: globalThis.MouseEvent) => {
+      if (!isMouseDown) {
+        return
+      }
+
+      suppressClick = isDragging
+      debugLog('mouseup', event)
+      restoreInteractionStyles()
+      removeWindowMouseDragListeners()
+      resetState()
+      window.setTimeout(() => {
+        suppressClick = false
+      }, 250)
+    }
+
+    const cancelMouseDrag = () => {
+      if (!isMouseDown) {
+        return
+      }
+
+      restoreInteractionStyles()
+      removeWindowMouseDragListeners()
+      resetState()
+      suppressClick = false
+    }
+    if (desktopRailQuery.matches) {
+      element.classList.add('cursor-grab')
+    }
+
+    const onClickCapture = (event: globalThis.MouseEvent) => {
+      debugLog('click', event)
+
+      if (!suppressClick) {
+        return
+      }
+
+      event.preventDefault()
+      event.stopPropagation()
+      suppressClick = false
+    }
+
+    const onDragStart = (event: DragEvent) => {
+      const target = event.target
+      if (target instanceof Element && target.closest(interactiveSelector)) {
+        return
+      }
+
+      event.preventDefault()
+    }
+
+    element.addEventListener('mousedown', onMouseDown, true)
+    element.addEventListener('click', onClickCapture, true)
+    element.addEventListener('dragstart', onDragStart)
+    element.addEventListener('wheel', onWheel, { passive: false })
 
     return () => {
-      unlockBodyScroll()
+      restoreInteractionStyles()
+      removeWindowMouseDragListeners()
+      element.classList.remove('cursor-grab')
+      element.style.scrollSnapType = initialScrollSnapType
+      element.removeEventListener('mousedown', onMouseDown, true)
+      element.removeEventListener('click', onClickCapture, true)
+      element.removeEventListener('dragstart', onDragStart)
+      element.removeEventListener('wheel', onWheel)
     }
-  }, [selectedMode])
+  }, [enabled, label, ref])
+}
 
-  useEffect(() => {
-    if (selectedMode !== 'ask-ai' || isSessionLoading) {
+function useSegmentedRailIndicator<T extends HTMLElement>(
+  ref: RefObject<T | null>,
+  { enabled, itemCount }: { enabled: boolean; itemCount: number }
+) {
+  const indicatorTotal = getSegmentedRailIndicatorTotal(itemCount)
+  const [progressRatio, setProgressRatio] = useState(0)
+
+  const syncProgress = useCallback(() => {
+    const element = ref.current
+
+    if (!enabled || !element || indicatorTotal <= 1) {
+      setProgressRatio(0)
       return
     }
 
-    const controller = new AbortController()
-    const usageEndpoint = getApiUrl('/ask-ai/usage/check')
-    const guestId = session?.access_token ? null : getOrCreateAskAiGuestId()
+    const maxScrollLeft = Math.max(element.scrollWidth - element.clientWidth, 0)
+    const nextProgressRatio = maxScrollLeft > 0
+      ? Math.min(1, Math.max(0, element.scrollLeft / maxScrollLeft))
+      : 0
 
-    const loadAskAiUsage = async () => {
-      try {
-        setIsAskAiUsageLoading(true)
-        setAskAiUsageError(null)
+    setProgressRatio((currentProgressRatio) => (
+      Math.abs(currentProgressRatio - nextProgressRatio) < 0.002 ? currentProgressRatio : nextProgressRatio
+    ))
+  }, [enabled, indicatorTotal, ref])
 
-        if (!session?.access_token && !guestId) {
-          throw new Error('Missing Ask AI guest identifier.')
+  useEffect(() => {
+    const element = ref.current
+    let frameId: number | null = null
+
+    if (!enabled || !element || indicatorTotal <= 1) {
+      setProgressRatio(0)
+      return
+    }
+
+    const scheduleSync = () => {
+      if (frameId !== null) {
+        return
+      }
+
+      frameId = window.requestAnimationFrame(() => {
+        frameId = null
+        syncProgress()
+      })
+    }
+
+    syncProgress()
+    element.addEventListener('scroll', scheduleSync, { passive: true })
+    window.addEventListener('resize', scheduleSync)
+
+    return () => {
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId)
+      }
+
+      element.removeEventListener('scroll', scheduleSync)
+      window.removeEventListener('resize', scheduleSync)
+    }
+  }, [enabled, indicatorTotal, ref, syncProgress])
+
+  const handleSelect = useCallback((index: number) => {
+    const element = ref.current
+
+    if (!element || indicatorTotal <= 1) {
+      return
+    }
+
+    const safeIndex = Math.min(indicatorTotal - 1, Math.max(0, index))
+    const nextProgressRatio = safeIndex / (indicatorTotal - 1)
+    const maxScrollLeft = Math.max(element.scrollWidth - element.clientWidth, 0)
+
+    setProgressRatio(nextProgressRatio)
+    element.scrollTo({
+      left: maxScrollLeft * nextProgressRatio,
+      behavior: 'smooth',
+    })
+  }, [indicatorTotal, ref])
+
+  return {
+    currentIndex: Math.round(progressRatio * Math.max(indicatorTotal - 1, 0)),
+    handleSelect,
+    progressRatio,
+    total: indicatorTotal,
+  }
+}
+
+function getRailItemTargetLeft(element: HTMLElement, item: HTMLElement) {
+  const targetLeft =
+    element.scrollLeft + item.getBoundingClientRect().left - element.getBoundingClientRect().left
+  const maxScrollLeft = Math.max(element.scrollWidth - element.clientWidth, 0)
+
+  return Math.min(maxScrollLeft, Math.max(0, targetLeft))
+}
+
+function HomePage({
+  navigationSource = 'push',
+}: {
+  navigationSource?: 'push' | 'replace' | 'pop'
+}) {
+  const { currentProfile, currentUser } = useAppUser()
+  const guestAuth = useGuestAuthPrompt()
+  const initialHomeRouteCacheRef = useRef(readHomeRouteCache())
+  const cachedTrendingPlacesRef = useRef<ShowcasePlace[] | null>(
+    initialHomeRouteCacheRef.current?.trendingPlaces.map(mapCachedPlaceToShowcasePlace) ??
+      readHomeTrendingCache()?.map(mapCachedPlaceToShowcasePlace) ??
+      null
+  )
+  const initialHomeScrollCacheRef = useRef(
+    navigationSource === 'pop' ? readHomeScrollCache() : null
+  )
+  const hasRestoredHomeScrollRef = useRef(false)
+  const [trendingPlaces, setTrendingPlaces] = useState<ShowcasePlace[]>(
+    initialHomeRouteCacheRef.current?.trendingPlaces.map(mapCachedPlaceToShowcasePlace) ??
+      cachedTrendingPlacesRef.current ??
+      []
+  )
+  const [homePlacesPool, setHomePlacesPool] = useState<ShowcasePlace[]>(
+    initialHomeRouteCacheRef.current?.homePlacesPool.map(mapCachedPlaceToShowcasePlace) ??
+      cachedTrendingPlacesRef.current ??
+      []
+  )
+  const [cityTilePlaceBySlug, setCityTilePlaceBySlug] = useState<Record<string, ShowcasePlace>>(
+    initialHomeRouteCacheRef.current?.cityTilePlaceBySlug ?? {}
+  )
+  const [activeTopPicksTab, setActiveTopPicksTab] = useState<'all' | 'popular' | 'recommended'>(
+    initialHomeRouteCacheRef.current?.activeTopPicksTab ?? 'all'
+  )
+  const [isTrendingLoading, setIsTrendingLoading] = useState(false)
+  const [isTrendingLoaded, setIsTrendingLoaded] = useState(
+    Boolean(initialHomeRouteCacheRef.current?.trendingPlaces.length || cachedTrendingPlacesRef.current?.length)
+  )
+  const [trendingError, setTrendingError] = useState<string | null>(null)
+  const [areHomeCardsLoaded, setAreHomeCardsLoaded] = useState(
+    Boolean(
+      cachedTrendingPlacesRef.current?.length ||
+      (
+        initialHomeRouteCacheRef.current &&
+        (
+          Object.keys(initialHomeRouteCacheRef.current.topPickPlaceBySlug).length > 0 ||
+          Object.keys(initialHomeRouteCacheRef.current.cityTilePlaceBySlug).length > 0 ||
+          Object.keys(initialHomeRouteCacheRef.current.categoryTilePlaceByLabel).length > 0
+        )
+      )
+    )
+  )
+  const [selectedCityTileSlug, setSelectedCityTileSlug] = useState<string | null>(null)
+  const [selectedCategoryTileLabel, setSelectedCategoryTileLabel] = useState<string | null>(null)
+  const [topPickPlaceBySlug, setTopPickPlaceBySlug] = useState<Record<string, ShowcasePlace>>(
+    initialHomeRouteCacheRef.current?.topPickPlaceBySlug ?? {}
+  )
+  const [categoryTilePlaceByLabel, setCategoryTilePlaceByLabel] = useState<Record<string, ShowcasePlace>>(
+    initialHomeRouteCacheRef.current?.categoryTilePlaceByLabel ?? {}
+  )
+  const heroCarouselRef = useRef<HTMLDivElement | null>(null)
+  const heroCardRefs = useRef<Array<HTMLDivElement | null>>([])
+  const cityRailRef = useRef<HTMLDivElement | null>(null)
+  const categoryRailRef = useRef<HTMLDivElement | null>(null)
+  const [activeHeroIndex, setActiveHeroIndex] = useState(0)
+  const [activeHeroCardIndex, setActiveHeroCardIndex] = useState(0)
+  const [heroIndicatorProgressRatio, setHeroIndicatorProgressRatio] = useState(0)
+  const [isTabletUpHomeViewport, setIsTabletUpHomeViewport] = useState(() => {
+    if (typeof window === 'undefined') {
+      return false
+    }
+
+    return window.matchMedia(TABLET_HOME_RAIL_QUERY).matches
+  })
+  const greetingName = useMemo(
+    () => getGreetingName(currentProfile, currentUser),
+    [currentProfile, currentUser]
+  )
+
+  const heroPlaces = useMemo(() => {
+    return homePopularTopPickPlaces
+  }, [])
+
+  const imageRichHomePlacesPool = useMemo(
+    () => homePlacesPool.filter((place) => hasShowcaseImage(place)),
+    [homePlacesPool]
+  )
+
+  const livePlaceBySlug = useMemo(() => {
+    const nextMap = new Map<string, ShowcasePlace>()
+
+    for (const place of imageRichHomePlacesPool) {
+      const normalizedSlug = (place.slug ?? place.id).trim().toLowerCase()
+
+      if (!normalizedSlug || nextMap.has(normalizedSlug)) {
+        continue
+      }
+
+      nextMap.set(normalizedSlug, place)
+    }
+
+    return nextMap
+  }, [imageRichHomePlacesPool])
+
+  const livePlaceByName = useMemo(() => {
+    const nextMap = new Map<string, ShowcasePlace>()
+
+    for (const place of imageRichHomePlacesPool) {
+      const normalizedName = normalizePlaceMatchKey(place.name)
+
+      if (!normalizedName || nextMap.has(normalizedName)) {
+        continue
+      }
+
+      nextMap.set(normalizedName, place)
+    }
+
+    return nextMap
+  }, [imageRichHomePlacesPool])
+
+  const mergeTopPickPlaceWithLivePlace = (place: ShowcasePlace) => {
+    const normalizedRecommendationSlug = (place.slug ?? place.id).trim().toLowerCase()
+    const exactTopPickLivePlace = topPickPlaceBySlug[normalizedRecommendationSlug]
+    const exactLivePlace = livePlaceBySlug.get(normalizedRecommendationSlug)
+    const sameNameLivePlace = livePlaceByName.get(normalizePlaceMatchKey(place.name))
+
+    return mergeRecommendedPlaceWithLivePlace(place, exactTopPickLivePlace ?? exactLivePlace ?? sameNameLivePlace)
+  }
+
+  const recommendedTopPickPlaces = useMemo(() => {
+    return homeRecommendedTopPickPlaces.map(mergeTopPickPlaceWithLivePlace)
+  }, [livePlaceByName, livePlaceBySlug, topPickPlaceBySlug])
+
+  const allTopPickPlaces = useMemo(() => {
+    return homeAllTopPickPlaces.map(mergeTopPickPlaceWithLivePlace)
+  }, [livePlaceByName, livePlaceBySlug, topPickPlaceBySlug])
+
+  const popularTopPickPlaces = useMemo(() => {
+    return homePopularTopPickPlaces.map(mergeTopPickPlaceWithLivePlace)
+  }, [livePlaceByName, livePlaceBySlug, topPickPlaceBySlug])
+
+  const visibleTopPickCarouselPlaces = useMemo(() => {
+    if (activeTopPicksTab === 'all') {
+      return allTopPickPlaces
+    }
+
+    if (activeTopPicksTab === 'popular') {
+      return popularTopPickPlaces
+    }
+
+    if (activeTopPicksTab === 'recommended') {
+      return recommendedTopPickPlaces
+    }
+
+    return heroPlaces
+  }, [activeTopPicksTab, allTopPickPlaces, heroPlaces, popularTopPickPlaces, recommendedTopPickPlaces])
+
+  const hasCachedTrendingPlaces = trendingPlaces.length > 0
+  const shouldShowTopPickSkeletons = isTrendingLoading && !hasCachedTrendingPlaces && visibleTopPickCarouselPlaces.length === 0
+  const isHomePageReady = isTrendingLoaded && areHomeCardsLoaded
+
+  useEffect(() => {
+    if (!isHomePageReady) {
+      return
+    }
+
+    writeHomeRouteCache({
+      trendingPlaces,
+      homePlacesPool,
+      cityTilePlaceBySlug,
+      topPickPlaceBySlug,
+      categoryTilePlaceByLabel,
+      activeTopPicksTab,
+    })
+  }, [
+    activeTopPicksTab,
+    categoryTilePlaceByLabel,
+    cityTilePlaceBySlug,
+    homePlacesPool,
+    isHomePageReady,
+    topPickPlaceBySlug,
+    trendingPlaces,
+  ])
+
+  const liveCityPlaceBySlug = useMemo(() => {
+    const nextMap = new Map<string, ShowcasePlace>()
+
+    for (const place of imageRichHomePlacesPool) {
+      const areaSlug = getHomepageCitySlug(place)
+
+      if (!nextMap.has(areaSlug)) {
+        nextMap.set(areaSlug, place)
+      }
+    }
+
+    return nextMap
+  }, [imageRichHomePlacesPool])
+
+  const liveCategoryPlaceById = useMemo(() => {
+    const nextMap = new Map<string, ShowcasePlace>()
+
+    for (const place of imageRichHomePlacesPool) {
+      for (const candidate of getHomepageCategoryCandidates(place)) {
+        if (!nextMap.has(candidate)) {
+          nextMap.set(candidate, place)
         }
+      }
+    }
 
-        const response = await fetch(usageEndpoint, {
-          method: 'GET',
-          headers: buildAskAiRequestHeaders(session?.access_token ?? null),
+    return nextMap
+  }, [imageRichHomePlacesPool])
+
+  const cityTiles = useMemo<HomeTileRecommendation[]>(() => {
+    return homeCityRecommendations.map((tile) => {
+      const citySlug = getHomepageCitySlug(tile.place)
+      const normalizedRecommendationSlug = (tile.place.slug ?? tile.place.id).trim().toLowerCase()
+      const cityTileOverride = cityTilePlaceBySlug[citySlug]
+      const exactRecommendedLivePlace = livePlaceBySlug.get(normalizedRecommendationSlug)
+      const sameCityLivePlace = liveCityPlaceBySlug.get(citySlug)
+
+      return {
+        label: getHomepageCityTileLabel(tile.label),
+        slug: citySlug,
+        href: buildCityHref(citySlug),
+        active: selectedCityTileSlug === citySlug,
+        place: mergeRecommendedPlaceWithLivePlace(tile.place, cityTileOverride ?? exactRecommendedLivePlace ?? sameCityLivePlace),
+      }
+    })
+  }, [cityTilePlaceBySlug, liveCityPlaceBySlug, livePlaceBySlug, selectedCityTileSlug])
+
+  const categoryTiles = useMemo<HomeTileRecommendation[]>(() => {
+    return homeCategoryRecommendations.map((tile) => {
+      const normalizedRecommendationSlug = (tile.place.slug ?? tile.place.id).trim().toLowerCase()
+      const exactCategoryTilePlace = categoryTilePlaceByLabel[tile.label]
+      const exactRecommendedLivePlace = livePlaceBySlug.get(normalizedRecommendationSlug)
+
+      return {
+        label: tile.label,
+        href: buildCategoryHref(tile.label),
+        active: selectedCategoryTileLabel === tile.label,
+        place:
+          exactCategoryTilePlace ??
+          exactRecommendedLivePlace ??
+          liveCategoryPlaceById.get(resolveHomepageCategoryRouteId(tile.label) ?? '') ??
+          tile.place,
+      }
+    })
+  }, [categoryTilePlaceByLabel, liveCategoryPlaceById, livePlaceBySlug, selectedCategoryTileLabel])
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    async function loadTrendingPlaces() {
+      try {
+        setIsTrendingLoading(true)
+        setTrendingError(null)
+
+        const headers = await getSearchRequestHeaders()
+        const showcasePlaces: ShowcasePlace[] = []
+        const seenPlaceKeys = new Set<string>()
+        const response = await fetch(getApiUrl('/search'), {
+          method: 'POST',
+          headers,
           signal: controller.signal,
+          body: JSON.stringify({
+            query: '',
+            filters: {
+              category: null,
+              area: null,
+              budget: null,
+            },
+            exploreAll: true,
+            page: 1,
+            limit: 20,
+          }),
         })
 
-        const data = (await response.json()) as AskAiUsageResponse
+        const data = (await response.json()) as {
+          message?: string
+          error?: string
+          places?: BackendSearchPlace[]
+          result?: {
+            places?: BackendSearchPlace[]
+          }
+        }
 
         if (!response.ok) {
-          throw new Error(data.message || data.error || 'Failed to check Ask AI usage.')
+          throw new Error(data.error || data.message || 'Failed to load places.')
         }
 
-        writeCachedAskAiUsageFromResponse(data)
+        const pagePlaces = (data.places ?? data.result?.places ?? [])
+          .map(mapBackendPlaceToShowcasePlace)
+          .filter((place): place is ShowcasePlace => Boolean(place))
 
-        const usageStatus = getAskAiUsageStatusFromResponse(data, ['chatbotAi'])
+        for (const place of pagePlaces) {
+          const dedupeKey = (place.slug ?? place.id).trim().toLowerCase()
+          if (seenPlaceKeys.has(dedupeKey)) {
+            continue
+          }
 
-        if (!usageStatus) {
-          throw new Error('Ask AI usage response was incomplete.')
+          seenPlaceKeys.add(dedupeKey)
+          showcasePlaces.push(place)
         }
 
-        setAskAiUsageStatus(usageStatus)
+        setHomePlacesPool(showcasePlaces)
+        setCityTilePlaceBySlug({})
+
+        setTrendingPlaces(showcasePlaces)
+        writeHomeTrendingCache(showcasePlaces)
+        cachedTrendingPlacesRef.current = showcasePlaces
       } catch (error) {
         if ((error as Error).name === 'AbortError') {
           return
         }
 
-        const message = error instanceof Error ? error.message : 'Failed to check Ask AI usage.'
-        setAskAiUsageError(message)
+        if (!cachedTrendingPlacesRef.current) {
+          setTrendingError(error instanceof Error ? error.message : 'Failed to load places.')
+        }
       } finally {
         if (!controller.signal.aborted) {
-          setIsAskAiUsageLoading(false)
+          setIsTrendingLoading(false)
+          setIsTrendingLoaded(true)
         }
       }
     }
 
-    void loadAskAiUsage()
+    void loadTrendingPlaces()
 
-    return () => controller.abort()
-  }, [askAiUsageRefreshSignal, isSessionLoading, selectedMode, session?.access_token])
-
-  useEffect(() => {
-    const controller = new AbortController()
-    const filtersEndpoint = getApiUrl('/filters')
-
-    const loadFilters = async () => {
-      try {
-        const response = await fetch(filtersEndpoint, {
-          method: 'GET',
-          signal: controller.signal,
-        })
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch filters.')
-        }
-
-        const data = (await response.json()) as {
-          categories?: BackendCategory[]
-          areas?: BackendArea[]
-        }
-
-        const mappedCategories: CategoryChip[] =
-          data.categories && data.categories.length > 0
-            ? data.categories.map((category) => ({
-                id: category.id,
-                name: category.name,
-              }))
-            : categories
-        const mappedAreas: AreaChip[] =
-          data.areas && data.areas.length > 0
-            ? data.areas.map((area) => ({
-                id: area.id,
-                name: area.name,
-                type: area.type,
-              }))
-            : areas
-
-        if (data.categories && data.categories.length > 0) {
-          setCategories(mappedCategories)
-        }
-
-        if (data.areas && data.areas.length > 0) {
-          setAreas(mappedAreas)
-        }
-
-        if (
-          (data.categories && data.categories.length > 0) ||
-          (data.areas && data.areas.length > 0)
-        ) {
-          writeFiltersCache({
-            categories: mappedCategories,
-            areas: mappedAreas,
-            cachedAt: Date.now(),
-          })
-        }
-      } catch (error) {
-        if ((error as Error).name !== 'AbortError') {
-          console.error('Using fallback filters:', error)
-        }
-      }
+    return () => {
+      controller.abort()
     }
-
-    void loadFilters()
-
-    return () => controller.abort()
   }, [])
 
-  if (shouldUseMinimalSearchLayout) {
-    return (
-      <div className="gala-page-background min-h-screen overflow-x-hidden text-[var(--text)]">
-        <main className="w-full">
-          {visiblePlaces.length > 0 ? (
-            <>
-              <div className={`mx-auto w-full px-4 pt-[max(12px,env(safe-area-inset-top))] sm:px-6 sm:pt-6 lg:hidden ${BOTTOM_NAV_RESERVED_CLASS}`}>
-                <section className="mx-auto w-full max-w-[430px]">
-                  <SearchLandingBar
-                    value={rawQuery}
-                    onChange={handleRawQueryChange}
-                    onSubmit={() => void handleSearch()}
-                    disabled={isSearching}
-                    canSubmit={canSubmitSearch}
-                    placeholder="Discover a city"
-                    className="!mt-5"
-                  />
+  useEffect(() => {
+    let isCancelled = false
 
-                  <MobileResultsTabs selectedView={mobileResultsView} onViewChange={setMobileResultsView} />
+    async function loadHomeCardPlaces() {
+      try {
+        if (!initialHomeRouteCacheRef.current && !cachedTrendingPlacesRef.current?.length) {
+          setAreHomeCardsLoaded(false)
+        }
 
-                  {shouldShowSearchLoadingState ? (
-                    <div className="mt-4 grid gap-3">
-                      <SearchLoadingCard compact />
-                      <SearchLoadingCard compact />
-                    </div>
-                  ) : mobileResultsView === 'cards' ? (
-                    <div className="mt-4 grid gap-3">
-                      <div className={`grid gap-3 transition ${isPageLoading ? 'pointer-events-none opacity-60' : 'opacity-100'}`}>
-                        {visiblePlaces.map((place) => (
-                          <PlaceCard
-                            key={place.id}
-                            place={place}
-                            isSelected={selectedPlaceId === place.id}
-                            searchResultCard
-                            dataSearchPlaceId={place.id}
-                            onSelect={handleMapPlaceSelect}
-                            onOpen={handlePlaceSelect}
-                          />
-                        ))}
-                      </div>
-                      <div className="pt-1">
-                        <SearchPagination
-                          currentPage={safeCurrentPage}
-                          totalPages={totalPages}
-                          totalCount={totalResults}
-                          pageSize={SEARCH_RESULTS_PER_PAGE}
-                          isLoading={isPageLoading}
-                          compact
-                          onPageChange={handlePageChange}
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="mt-4 grid gap-4">
-                      <section className="overflow-hidden rounded-[22px] border border-[var(--line)] bg-white shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
-                        <MapView
-                          places={visiblePlaces}
-                          selectedPlaceId={selectedPlaceId}
-                          onPlaceSelect={handleMapPlaceSelect}
-                          onPlaceOpen={handlePlaceSelect}
-                          autoFitToPlaces
-                          className="!h-[360px] !rounded-none !border-0"
-                        />
-                      </section>
+        const topPickSlugs = [
+          ...homePopularTopPickPlaces,
+          ...homeRecommendedTopPickPlaces,
+          ...homeAllTopPickPlaces,
+        ]
+          .map((place) => place.slug?.trim().toLowerCase())
+          .filter((slug): slug is string => Boolean(slug))
 
-                      {selectedPlace ? (
-                        <PlaceCard
-                          place={selectedPlace}
-                          compact
-                          searchResultCard
-                          isSelected
-                          onSelect={handleMapPlaceSelect}
-                          onOpen={handlePlaceSelect}
-                        />
-                      ) : null}
+        const cityTileSlugs = homeCityRecommendations
+          .map((tile) => {
+            const citySlug = getHomepageCitySlug(tile.place)
+            return homepageCityTilePlaceSlugOverrides[citySlug] ??
+              tile.place.slug?.trim().toLowerCase() ??
+              null
+          })
+          .filter((slug): slug is string => Boolean(slug))
 
-                      <button
-                        type="button"
-                        onClick={() => setMobileResultsView('cards')}
-                        className="inline-flex items-center gap-2 self-start text-sm font-black text-slate-700"
-                      >
-                        Back to places
-                      </button>
+        const categoryTileSlugs = homeCategoryRecommendations
+          .map((tile) => tile.place.slug?.trim().toLowerCase() ?? null)
+          .filter((slug): slug is string => Boolean(slug))
 
-                      <SearchPagination
-                        currentPage={safeCurrentPage}
-                        totalPages={totalPages}
-                        totalCount={totalResults}
-                        pageSize={SEARCH_RESULTS_PER_PAGE}
-                        isLoading={isPageLoading}
-                        compact
-                        onPageChange={handlePageChange}
-                      />
-                    </div>
-                  )}
-                </section>
-              </div>
+        const allSlugs = Array.from(new Set([...topPickSlugs, ...cityTileSlugs, ...categoryTileSlugs]))
+        const places = await fetchPlaceDetailsBatch(allSlugs)
 
-              <div className="hidden lg:block">
-                <DesktopResultsView
-                  rawQuery={rawQuery}
-                  places={visiblePlaces}
-                  totalCount={totalResults}
-                  currentPage={safeCurrentPage}
-                  totalPages={totalPages}
-                  selectedPlaceId={selectedPlaceId}
-                  heading={searchResultSummary.heading}
-                  subheading={searchResultSummary.subheading || 'in GalaTayo'}
-                  cityLabel={selectedAreaName}
-                  categoryLabel={selectedCategoryName}
-                  goodForLabel={selectedGoodForName}
-                  budgetLabel={selectedBudgetLabel}
-                  isRefreshing={isRefreshingSearch}
-                  isPageLoading={isPageLoading}
-                  scrollContainerRef={desktopResultsScrollRef}
-                  onRawQueryChange={handleRawQueryChange}
-                  onSubmitSearch={() => void handleSearch()}
-                  onSelectPlace={handleMapPlaceSelect}
-                  onPageChange={handlePageChange}
-                  onViewDetails={handlePlaceSelect}
-                  onRemoveCity={() => clearFilterChip('city')}
-                  onRemoveCategory={() => clearFilterChip('category')}
-                  onRemoveGoodFor={() => clearFilterChip('good_for')}
-                  onRemoveBudget={() => clearFilterChip('budget')}
-                />
-              </div>
-            </>
-          ) : (
-            <div className={`mx-auto w-full px-4 pt-[max(12px,env(safe-area-inset-top))] sm:px-6 sm:pt-6 lg:px-8 ${BOTTOM_NAV_RESERVED_CLASS}`}>
-              <section className="mx-auto w-full max-w-[430px] lg:max-w-[640px] xl:max-w-[720px]">
-                <SearchLandingBar
-                  value={rawQuery}
-                  onChange={handleRawQueryChange}
-                  onSubmit={() => void handleSearch()}
-                  disabled={isSearching}
-                  canSubmit={canSubmitSearch}
-                  placeholder="Discover a city"
-                  className="!mt-5"
-                />
+        if (isCancelled) {
+          return
+        }
 
-                {shouldShowSearchLoadingState ? (
-                  <div className="mt-4 grid gap-3">
-                    <SearchLoadingCard compact />
-                    <SearchLoadingCard compact />
-                  </div>
-                ) : (
-                  <SearchEmptyState
-                    hasSearched={hasSearched}
-                    status={searchStatus}
-                    message={searchFeedbackMessage}
-                    error={searchError}
-                    onSearchAgain={handleSearchAgain}
-                  />
-                )}
-              </section>
-            </div>
-          )}
-        </main>
-      </div>
+        const placeBySlug = new Map<string, ShowcasePlace>()
+
+        for (const place of places) {
+          const showcasePlace = mapPlaceDetailToShowcasePlace(place)
+          if (!showcasePlace) {
+            continue
+          }
+
+          placeBySlug.set(showcasePlace.slug?.trim().toLowerCase() ?? showcasePlace.id.trim().toLowerCase(), showcasePlace)
+        }
+
+        setTopPickPlaceBySlug(
+          Object.fromEntries(
+            topPickSlugs
+              .map((slug) => {
+                const place = placeBySlug.get(slug)
+                return place ? ([slug, place] as const) : null
+              })
+              .filter((entry): entry is readonly [string, ShowcasePlace] => Boolean(entry))
+          )
+        )
+
+        setCityTilePlaceBySlug(
+          Object.fromEntries(
+            homeCityRecommendations
+              .map((tile) => {
+                const citySlug = getHomepageCitySlug(tile.place)
+                const placeSlug =
+                  homepageCityTilePlaceSlugOverrides[citySlug] ??
+                  tile.place.slug?.trim().toLowerCase() ??
+                  null
+
+                if (!placeSlug) {
+                  return null
+                }
+
+                const place = placeBySlug.get(placeSlug)
+                return place ? ([citySlug, place] as const) : null
+              })
+              .filter((entry): entry is readonly [string, ShowcasePlace] => Boolean(entry))
+          )
+        )
+
+        setCategoryTilePlaceByLabel(
+          Object.fromEntries(
+            homeCategoryRecommendations
+              .map((tile) => {
+                const placeSlug = tile.place.slug?.trim().toLowerCase() ?? null
+
+                if (!placeSlug) {
+                  return null
+                }
+
+                const place = placeBySlug.get(placeSlug)
+                return place ? ([tile.label, place] as const) : null
+              })
+              .filter((entry): entry is readonly [string, ShowcasePlace] => Boolean(entry))
+          )
+        )
+      } finally {
+        if (!isCancelled) {
+          setAreHomeCardsLoaded(true)
+        }
+      }
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      void loadHomeCardPlaces()
+    }, 700)
+
+    return () => {
+      isCancelled = true
+      window.clearTimeout(timeoutId)
+    }
+  }, [])
+
+  useLayoutEffect(() => {
+    const homeScrollCache = initialHomeScrollCacheRef.current
+
+    if (navigationSource !== 'pop' || !homeScrollCache?.pendingScrollRestore || hasRestoredHomeScrollRef.current) {
+      return
+    }
+
+    hasRestoredHomeScrollRef.current = true
+    restoreHomeScroll({
+      scrollY: homeScrollCache.scrollY,
+      selectedPlaceId: homeScrollCache.selectedPlaceId,
+      selectedPlaceViewportTop: homeScrollCache.selectedPlaceViewportTop,
+    })
+
+    clearHomeScrollCache()
+  }, [navigationSource])
+
+  useLayoutEffect(() => {
+    heroCardRefs.current.length = visibleTopPickCarouselPlaces.length
+  }, [activeTopPicksTab, visibleTopPickCarouselPlaces.length])
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(TABLET_HOME_RAIL_QUERY)
+
+    const syncViewport = () => {
+      setIsTabletUpHomeViewport(mediaQuery.matches)
+    }
+
+    syncViewport()
+    mediaQuery.addEventListener('change', syncViewport)
+
+    return () => {
+      mediaQuery.removeEventListener('change', syncViewport)
+    }
+  }, [])
+
+  const syncHeroCarouselIndicator = useCallback(() => {
+    const carousel = heroCarouselRef.current
+    const cards = heroCardRefs.current.filter((card): card is HTMLDivElement => Boolean(card))
+    const indicatorGroupSize = getHomeIndicatorGroupSize(isTabletUpHomeViewport)
+    const indicatorTotal = getGroupedHomeIndicatorTotal(visibleTopPickCarouselPlaces.length, indicatorGroupSize)
+
+    if (!carousel || cards.length === 0) {
+      setActiveHeroCardIndex(0)
+      setActiveHeroIndex(0)
+      setHeroIndicatorProgressRatio(0)
+      return
+    }
+
+    const maxScrollLeft = Math.max(carousel.scrollWidth - carousel.clientWidth, 0)
+    const progressRatio = maxScrollLeft > 0 ? Math.min(1, Math.max(0, carousel.scrollLeft / maxScrollLeft)) : 0
+    const progressCardIndex = progressRatio * Math.max(visibleTopPickCarouselPlaces.length - 1, 0)
+    const nextCardIndex = Math.min(
+      visibleTopPickCarouselPlaces.length - 1,
+      Math.max(0, Math.round(progressCardIndex))
     )
+    const nextIndex = isTabletUpHomeViewport
+      ? Math.round(progressRatio * Math.max(indicatorTotal - 1, 0))
+      : Math.min(indicatorTotal - 1, Math.max(0, Math.round(progressCardIndex % 5)))
+
+    setActiveHeroCardIndex((currentIndex) => (currentIndex === nextCardIndex ? currentIndex : nextCardIndex))
+    setActiveHeroIndex((currentIndex) => (currentIndex === nextIndex ? currentIndex : nextIndex))
+    setHeroIndicatorProgressRatio((currentProgressRatio) => (
+      Math.abs(currentProgressRatio - progressRatio) < 0.002 ? currentProgressRatio : progressRatio
+    ))
+  }, [isTabletUpHomeViewport, visibleTopPickCarouselPlaces.length])
+
+  useEffect(() => {
+    const carousel = heroCarouselRef.current
+    let frameId: number | null = null
+    const indicatorTotal = shouldShowTopPickSkeletons
+      ? 3
+      : getGroupedHomeIndicatorTotal(
+          visibleTopPickCarouselPlaces.length,
+          getHomeIndicatorGroupSize(isTabletUpHomeViewport)
+        )
+
+    if (shouldShowTopPickSkeletons) {
+      setActiveHeroCardIndex(0)
+      setActiveHeroIndex(0)
+      setHeroIndicatorProgressRatio(0)
+      return
+    }
+
+    if (!carousel || indicatorTotal <= 1) {
+      setActiveHeroCardIndex(0)
+      setActiveHeroIndex(0)
+      setHeroIndicatorProgressRatio(0)
+      return
+    }
+
+    const updateActiveIndex = () => {
+      syncHeroCarouselIndicator()
+    }
+
+    const scheduleActiveIndexUpdate = () => {
+      if (frameId !== null) {
+        return
+      }
+
+      frameId = window.requestAnimationFrame(() => {
+        frameId = null
+        updateActiveIndex()
+      })
+    }
+
+    updateActiveIndex()
+    const timeoutId = window.setTimeout(updateActiveIndex, 120)
+    carousel.addEventListener('scroll', scheduleActiveIndexUpdate, { passive: true })
+    window.addEventListener('resize', scheduleActiveIndexUpdate)
+
+    return () => {
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId)
+      }
+      window.clearTimeout(timeoutId)
+      carousel.removeEventListener('scroll', scheduleActiveIndexUpdate)
+      window.removeEventListener('resize', scheduleActiveIndexUpdate)
+    }
+  }, [
+    activeTopPicksTab,
+    isHomePageReady,
+    isTabletUpHomeViewport,
+    shouldShowTopPickSkeletons,
+    syncHeroCarouselIndicator,
+    visibleTopPickCarouselPlaces.length,
+  ])
+
+  const openAllCities = () => {
+    navigateToPath('/places')
   }
 
-    return (
-      <div className={`${selectedMode === 'ask-ai' ? 'h-[100dvh] overflow-hidden overscroll-none' : 'min-h-screen lg:h-[100dvh] lg:overflow-hidden'} bg-[var(--bg)] text-[var(--text)]`}>
-        <GuestAuthPrompt variant="ask-ai" mode="modal" isOpen={promptLogin} onClose={() => setPromptLogin(false)} />
-        {shouldShowSearchFiltersPanel ? searchFilterPanel : null}
+  const openAllCategories = () => {
+    navigateToPath('/places/categories')
+  }
 
-      <div className={`gala-page-background overflow-x-hidden lg:hidden ${selectedMode === 'ask-ai' ? 'flex h-[100dvh] flex-col overflow-hidden overscroll-none' : 'flex min-h-screen flex-col'}`}>
-          {selectedMode !== 'ask-ai' && <AppHeader signInLabel="Mag-sign in" minimal />}
+  const handleTopPicksTabChange = (tab: 'all' | 'popular' | 'recommended') => {
+    setActiveTopPicksTab(tab)
+    setActiveHeroCardIndex(0)
+    setActiveHeroIndex(0)
+    setHeroIndicatorProgressRatio(0)
 
-          <main className={`overflow-x-hidden ${isPromptBuilderOpen ? 'flex min-h-[100dvh] flex-col overflow-hidden pb-0' : selectedMode === 'ask-ai' ? 'flex flex-1 min-h-0 flex-col overflow-hidden overscroll-none' : 'flex-1 min-h-0 pb-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] sm:pb-[calc(env(safe-area-inset-bottom,0px)+4.75rem)]'}`}>
-            {isPromptBuilderOpen ? (
-              <PromptBuilderModal
-                isOpen={isPromptBuilderOpen}
-                initialState={null}
-                onClose={() => {
-                  setIsPromptBuilderOpen(false)
-                  if (initialPromptBuilderOpen) {
-                    navigateToPath('/search')
-                  }
-                }}
-              />
-            ) : shouldShowSearchLoadingState ? (
-              <SearchLoadingState searchLabel={activeSearchLabel} mobileViewportCentered />
-            ) : shouldShowGuidedSearch ? (
-              <GuidedSearchPage
-                rawQuery={rawQuery}
-                searchSentence={searchSentence}
-                isSearching={isSearching}
-                validationMessage={searchValidationMessage}
-                searchError={searchError}
-                canSubmit={canSubmitSearch}
-                
-                onRawQueryChange={handleRawQueryChange}
-                onClearSearch={handleClearSearch}
-                onSubmitSearch={() => void handleSearch()}
-              />
-            ) : (
-              <>
-                {selectedMode === 'places' ? (
-                  visiblePlaces.length > 0 ? (
-                    <MobileResultsView
-                      places={visiblePlaces}
-                      totalCount={totalResults}
-                      currentPage={safeCurrentPage}
-                      totalPages={totalPages}
-                      selectedPlace={selectedPlace}
-                      selectedPlaceId={selectedPlaceId}
-                      heading={searchResultSummary.heading}
-                      subheading={searchResultSummary.subheading || 'in GalaTayo'}
-                      cityLabel={selectedAreaName}
-                      categoryLabel={selectedCategoryName}
-                      goodForLabel={selectedGoodForName}
-                      budgetLabel={selectedBudgetLabel}
-                      isRefreshing={isRefreshingSearch}
-                      isPageLoading={isPageLoading}
-                      selectedView={mobileResultsView}
-                      onViewChange={setMobileResultsView}
-                      onPageChange={handlePageChange}
-                      onSelectPlace={handleMapPlaceSelect}
-                      onViewDetails={handlePlaceSelect}
-                      onClearSearch={handleClearSearch}
-                      onRemoveCity={() => clearFilterChip('city')}
-                      onRemoveCategory={() => clearFilterChip('category')}
-                      onRemoveGoodFor={() => clearFilterChip('good_for')}
-                      onRemoveBudget={() => clearFilterChip('budget')}
-                    />
-                  ) : (
-                    <section className="px-4 py-4">
-                      <SearchEmptyState
-                        hasSearched={hasSearched}
-                        status={searchStatus}
-                        message={searchFeedbackMessage}
-                        error={searchError}
-                        onSearchAgain={handleSearchAgain}
-                      />
-                    </section>
+    requestAnimationFrame(() => {
+      heroCarouselRef.current?.scrollTo({
+        left: 0,
+        behavior: 'smooth',
+      })
+    })
+  }
+
+  const handleHeroIndicatorSelect = (index: number) => {
+    const carousel = heroCarouselRef.current
+    const cards = heroCardRefs.current.filter((card): card is HTMLDivElement => Boolean(card))
+    const indicatorGroupSize = getHomeIndicatorGroupSize(isTabletUpHomeViewport)
+    const visibleDotCount = getGroupedHomeIndicatorTotal(cards.length, indicatorGroupSize)
+
+    if (!carousel || visibleDotCount <= 0 || cards.length === 0) {
+      setActiveHeroCardIndex(0)
+      setActiveHeroIndex(0)
+      return
+    }
+
+    const safeDotIndex = Math.min(visibleDotCount - 1, Math.max(0, index))
+    const currentBatchStart = isTabletUpHomeViewport
+      ? 0
+      : Math.floor(activeHeroCardIndex / 5) * 5
+    const targetCardIndex = isTabletUpHomeViewport
+      ? Math.min(cards.length - 1, safeDotIndex * indicatorGroupSize)
+      : Math.min(cards.length - 1, currentBatchStart + safeDotIndex)
+    const targetCard = cards[targetCardIndex]
+
+    if (!targetCard) {
+      setActiveHeroCardIndex(0)
+      setActiveHeroIndex(0)
+      return
+    }
+
+    setActiveHeroCardIndex(targetCardIndex)
+    setActiveHeroIndex(safeDotIndex)
+    setHeroIndicatorProgressRatio(visibleDotCount > 1 ? safeDotIndex / (visibleDotCount - 1) : 0)
+    carousel.scrollTo({
+      left: getRailItemTargetLeft(carousel, targetCard),
+      behavior: 'smooth',
+    })
+  }
+
+  const topPicksIndicatorTotal = shouldShowTopPickSkeletons
+    ? 3
+    : getGroupedHomeIndicatorTotal(
+        visibleTopPickCarouselPlaces.length,
+        getHomeIndicatorGroupSize(isTabletUpHomeViewport)
+      )
+  const cityRailIndicator = useSegmentedRailIndicator(cityRailRef, {
+    enabled: isHomePageReady,
+    itemCount: cityTiles.length,
+  })
+  const categoryRailIndicator = useSegmentedRailIndicator(categoryRailRef, {
+    enabled: isHomePageReady,
+    itemCount: categoryTiles.length,
+  })
+
+  useHomeRailDragScroll(heroCarouselRef, { enabled: isHomePageReady, label: 'Top Picks' })
+  useHomeRailDragScroll(cityRailRef, { enabled: isHomePageReady, label: 'Cities' })
+  useHomeRailDragScroll(categoryRailRef, { enabled: isHomePageReady, label: 'Categories' })
+
+  if (!isHomePageReady) {
+    return <HomePageSkeleton />
+  }
+
+  return (
+    <PageShell tone="plain">
+      <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
+        <div className="mx-auto flex min-h-screen w-full max-w-[1320px] flex-col px-4 pb-[calc(env(safe-area-inset-bottom,0px)+6.5rem)] pt-[max(18px,env(safe-area-inset-top))] sm:px-5 sm:pb-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] md:px-6 md:pb-[calc(env(safe-area-inset-bottom,0px)+5rem)] md:pt-10 lg:px-8 lg:pb-[calc(env(safe-area-inset-bottom,0px)+4.5rem)]">
+          <section className="min-w-0 pt-2 md:pt-0">
+            <div className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">
+              <Home className="h-4 w-4 text-[var(--accent)]" strokeWidth={2} />
+              <span>Welcome back</span>
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <p className="min-w-0 flex-1 truncate text-[18px] font-medium leading-tight text-[var(--text-main)] sm:text-[18px]">
+                Hi, <span className="inline-flex items-center gap-1.5 font-bold">{greetingName}<User className="h-4 w-4 shrink-0 text-[var(--accent-deep)]" strokeWidth={2.2} /></span>
+              </p>
+
+              <UserMenu user={currentUser} profile={currentProfile} compact />
+            </div>
+
+            <p className="mt-2 max-w-[22rem] text-[13px] leading-6 text-slate-500">
+              Curated spots, cities, and categories in one clean view.
+            </p>
+
+            <button
+              type="button"
+              onClick={() => navigateToPath('/search')}
+              className="mt-8 flex h-[56px] w-full items-center justify-between rounded-[20px] border border-slate-200/70 bg-transparent px-4 text-[var(--accent-deep)] transition hover:border-slate-300 hover:bg-slate-50/70"
+            >
+              <span className="flex min-w-0 items-center gap-2.5 text-[var(--accent-deep)]">
+                <Search className="h-[21px] w-[21px] shrink-0 text-[var(--accent-deep)]" strokeWidth={2} />
+                <span className="truncate text-[15px] font-medium text-slate-500">Discover a city</span>
+              </span>
+              <SlidersHorizontal className="h-[21px] w-[21px] shrink-0 text-[var(--accent-deep)]" strokeWidth={2} />
+            </button>
+
+            <section className="mt-9 md:mt-7">
+              <div className="mb-2 flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">
+                <Sparkles className="h-3.5 w-3.5 text-[var(--accent)]" strokeWidth={2.2} />
+                <span>AI Features</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                {homeAiFeatures.map((feature) => {
+                  const Icon = feature.icon
+
+                  return (
+                    <button
+                      key={feature.href}
+                      type="button"
+                      onClick={() => navigateToPath(feature.href)}
+                      className="flex min-w-0 items-center gap-3 rounded-[18px] border border-slate-200/80 bg-white/75 px-3.5 py-3 text-left shadow-[0_10px_24px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white"
+                    >
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--accent-wash)] text-[var(--accent-deep)]">
+                        <Icon className="h-4.5 w-4.5" strokeWidth={2.2} />
+                      </span>
+
+                      <span className="min-w-0">
+                        <span className="block truncate text-[14px] font-bold tracking-[-0.02em] text-slate-950">
+                          {feature.title}
+                        </span>
+                        <span className="block truncate text-[12px] text-slate-500">
+                          {feature.description}
+                        </span>
+                      </span>
+                    </button>
                   )
-                ) : (
-                  <AskAiModePanel
-                    isRegistered={isRegisteredUser}
-                    isSessionLoading={isSessionLoading}
-                    usageStatus={askAiUsageStatus}
-                    isUsageLoading={isAskAiUsageLoading}
-                    usageError={askAiUsageError}
-                    answer={askAiAnswer}
-                    sources={askAiSources}
-                    isSubmitting={isAskAiSubmitting}
-                    answerError={askAiAnswerError}
-                    messages={chatMessages}
-                    onRetryUsage={handleRetryAskAiUsage}
-                    onSubmit={(questionOverride) => void handleAskAiSubmit(questionOverride)}
-                    onStartOver={handleStartOverAskAi}
-                    onGuestUpgradePrompt={() => setPromptLogin(true)}
-                    className="h-full"
-                  />
-                )}
-              </>
-            )}
-          </main>
-        </div>
+                })}
+              </div>
+            </section>
+          </section>
 
-        <div
-          className={`hidden w-full lg:grid ${
-            isPromptBuilderOpen
-              ? 'h-[100dvh] overflow-hidden grid-rows-[auto_minmax(0,1fr)]'
-              : selectedMode === 'ask-ai'
-                ? 'h-[100dvh] overflow-hidden grid-rows-[minmax(0,1fr)]'
-              : 'h-[100dvh] overflow-hidden lg:grid-rows-[auto_minmax(0,1fr)_auto]'
-          }`}
-        >
-          {selectedMode !== 'ask-ai' && <AppHeader minimal />}
+          <div className="mt-8 grid min-w-0 gap-7 md:mt-10 md:gap-10 lg:gap-12">
+            <section className="min-w-0 md:-mt-1">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-[24px] font-bold tracking-[-0.04em] text-slate-950">Top Picks</h2>
+                <div className="flex items-center gap-3">
+                  {activeTopPicksTab === 'all' ? (
+                    <button
+                      type="button"
+                      onClick={() => navigateToPath('/places')}
+                      className="mt-1 inline-flex items-center gap-1 text-[14px] font-medium text-slate-400 transition hover:text-slate-700"
+                    >
+                      See all
+                      <ChevronRight className="h-4 w-4" strokeWidth={2.2} />
+                    </button>
+                  ) : null}
+                </div>
+              </div>
 
-          <div
-            className={
-              isPromptBuilderOpen
-                ? 'flex h-full min-h-0 flex-col overflow-hidden'
-              : selectedMode === 'ask-ai'
-                ? 'flex h-full min-h-0 flex-col overflow-hidden'
-                : shouldShowGuidedSearch
-                  ? 'min-h-0 overflow-hidden'
-                  : 'grid h-full min-h-0 overflow-hidden grid-rows-[minmax(0,1fr)]'
-            }
-          >
-            {isPromptBuilderOpen ? (
-              <PromptBuilderModal
-                isOpen={isPromptBuilderOpen}
-                initialState={null}
-                onClose={() => {
-                  setIsPromptBuilderOpen(false)
-                  if (initialPromptBuilderOpen) {
-                    navigateToPath('/search')
+              <div className="mt-1.5 flex items-center gap-3 overflow-x-auto text-[14px]">
+                <button
+                  type="button"
+                  onClick={() => handleTopPicksTabChange('all')}
+                  className={`shrink-0 transition hover:text-[var(--accent-deep)] ${
+                    activeTopPicksTab === 'all' ? 'font-semibold text-[var(--accent-deep)]' : 'font-medium text-slate-400'
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleTopPicksTabChange('popular')}
+                  className={`shrink-0 transition hover:text-[var(--accent-deep)] ${
+                    activeTopPicksTab === 'popular' ? 'font-semibold text-[var(--accent-deep)]' : 'font-medium text-slate-400'
+                  }`}
+                >
+                  Popular
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleTopPicksTabChange('recommended')}
+                  className={`shrink-0 transition hover:text-[var(--accent-deep)] ${
+                    activeTopPicksTab === 'recommended' ? 'font-semibold text-[var(--accent-deep)]' : 'font-medium text-slate-400'
+                  }`}
+                >
+                  Recommended
+                </button>
+              </div>
+
+              <div className="-mx-4 mt-3">
+                <div
+                  ref={heroCarouselRef}
+                  className={`w-full min-w-0 px-4 pb-1 ${
+                    shouldShowTopPickSkeletons
+                      ? 'overflow-hidden'
+                      : 'home-drag-rail hide-scrollbar overflow-x-auto overflow-y-hidden [scrollbar-width:none] [-ms-overflow-style:none] [overscroll-behavior-x:contain] [-webkit-overflow-scrolling:touch] max-lg:snap-x max-lg:snap-proximity lg:snap-none select-none [&::-webkit-scrollbar]:hidden'
+                  }`}
+                >
+                  <div
+                    className={`flex min-w-max gap-4 transition-opacity duration-300 ${
+                      isTrendingLoading && visibleTopPickCarouselPlaces.length > 0 ? 'opacity-90' : 'opacity-100'
+                    }`}
+                  >
+                    {shouldShowTopPickSkeletons ? (
+                      Array.from({ length: 3 }).map((_, index) => (
+                        <HomeFeaturedCardSkeleton key={`home-featured-skeleton-${index}`} index={index} />
+                      ))
+                    ) : trendingError && visibleTopPickCarouselPlaces.length === 0 ? (
+                      <p className="col-span-2 rounded-[20px] bg-white px-4 py-4 text-sm text-red-500 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
+                        {trendingError}
+                      </p>
+                    ) : (
+                      visibleTopPickCarouselPlaces.map((place, index) => (
+                        <div
+                          key={`${activeTopPicksTab}-${place.id}-${index}`}
+                          ref={(node) => {
+                            heroCardRefs.current[index] = node
+                          }}
+                          data-rail-item
+                          className="w-[clamp(17rem,84vw,21.5rem)] shrink-0 snap-center md:w-[320px] lg:w-[344px] xl:w-[360px]"
+                        >
+                          <HomeFeaturedCard
+                            place={place}
+                            index={index}
+                            onGuestFavorite={() => guestAuth.open('favorite')}
+                          />
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+                <CarouselPositionIndicator
+                  currentIndex={activeHeroIndex}
+                  total={topPicksIndicatorTotal}
+                  trackClassName="w-[118px]"
+                  onSelect={shouldShowTopPickSkeletons ? undefined : handleHeroIndicatorSelect}
+                  variant="segmented"
+                  progressRatio={heroIndicatorProgressRatio}
+                  label={
+                    activeTopPicksTab === 'all'
+                      ? 'All places preview'
+                      : activeTopPicksTab === 'recommended'
+                        ? 'Recommended places'
+                        : 'Featured places'
                   }
-                }}
-              />
-            ) : shouldShowSearchLoadingState ? (
-              <SearchLoadingState searchLabel={activeSearchLabel} />
-            ) : shouldShowGuidedSearch ? (
-              <GuidedSearchPage
-                rawQuery={rawQuery}
-                searchSentence={searchSentence}
-                isSearching={isSearching}
-                validationMessage={searchValidationMessage}
-                searchError={searchError}
-                canSubmit={canSubmitSearch}
-                
-                onRawQueryChange={handleRawQueryChange}
-                onClearSearch={handleClearSearch}
-                onSubmitSearch={() => void handleSearch()}
-              />
-            ) : (
-              <>
-                {selectedMode === 'places' ? (
-                  visiblePlaces.length > 0 ? (
-                    <DesktopResultsView
-                      rawQuery={rawQuery}
-                      places={visiblePlaces}
-                      totalCount={totalResults}
-                      currentPage={safeCurrentPage}
-                      totalPages={totalPages}
-                      selectedPlaceId={selectedPlaceId}
-                      heading={searchResultSummary.heading}
-                      subheading={searchResultSummary.subheading || 'in GalaTayo'}
-                      cityLabel={selectedAreaName}
-                      categoryLabel={selectedCategoryName}
-                      goodForLabel={selectedGoodForName}
-                      budgetLabel={selectedBudgetLabel}
-                      isRefreshing={isRefreshingSearch}
-                      isPageLoading={isPageLoading}
-                      scrollContainerRef={desktopResultsScrollRef}
-                      onRawQueryChange={handleRawQueryChange}
-                      onSubmitSearch={() => void handleSearch()}
-                      onSelectPlace={handleMapPlaceSelect}
-                      onPageChange={handlePageChange}
-                      onViewDetails={handlePlaceSelect}
-                      onRemoveCity={() => clearFilterChip('city')}
-                      onRemoveCategory={() => clearFilterChip('category')}
-                      onRemoveGoodFor={() => clearFilterChip('good_for')}
-                      onRemoveBudget={() => clearFilterChip('budget')}
-                    />
-                  ) : (
-                    <section className="px-8 py-8">
-                      <SearchEmptyState
-                        hasSearched={hasSearched}
-                        status={searchStatus}
-                        message={searchFeedbackMessage}
-                        error={searchError}
-                        onSearchAgain={handleSearchAgain}
+                />
+              </div>
+            </section>
+
+            <section className="min-w-0">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-[22px] font-bold tracking-[-0.04em] text-slate-950">Cities</h2>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={openAllCities}
+                    className="mt-1 inline-flex items-center gap-1 text-[14px] font-medium text-slate-400 transition hover:text-slate-700"
+                  >
+                    See all
+                    <ChevronRight className="h-4 w-4" strokeWidth={2.2} />
+                  </button>
+                </div>
+              </div>
+
+              <div
+                ref={cityRailRef}
+                className="home-drag-rail hide-scrollbar -mx-1 mt-3 overflow-x-auto overflow-y-hidden px-1 pb-2 pr-2 [scrollbar-width:none] [-ms-overflow-style:none] [overscroll-behavior-x:contain] [-webkit-overflow-scrolling:touch] max-lg:snap-x max-lg:snap-proximity lg:snap-none select-none [&::-webkit-scrollbar]:hidden"
+              >
+                <div className="flex min-w-max gap-2.5 md:gap-3 lg:gap-4">
+                  {cityTiles.map((tile) => (
+                    <div key={tile.slug} data-rail-item className="shrink-0 snap-center">
+                      <HomeCategoryTile
+                        label={tile.label}
+                        place={tile.place}
+                        active={tile.active}
+                        onClick={() => {
+                          setSelectedCityTileSlug(tile.slug ?? null)
+                          navigateToPath(tile.href)
+                        }}
                       />
-                    </section>
-                  )
-                ) : (
-                  <AskAiModePanel
-                    isRegistered={isRegisteredUser}
-                    isSessionLoading={isSessionLoading}
-                    usageStatus={askAiUsageStatus}
-                    isUsageLoading={isAskAiUsageLoading}
-                    usageError={askAiUsageError}
-                    answer={askAiAnswer}
-                    sources={askAiSources}
-                    isSubmitting={isAskAiSubmitting}
-                    answerError={askAiAnswerError}
-                    messages={chatMessages}
-                    onRetryUsage={handleRetryAskAiUsage}
-                    onSubmit={(questionOverride) => void handleAskAiSubmit(questionOverride)}
-                    onStartOver={handleStartOverAskAi}
-                    onGuestUpgradePrompt={() => setPromptLogin(true)}
-                    className="h-full"
-                  />
-                )}
-              </>
-            )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <CarouselPositionIndicator
+                currentIndex={cityRailIndicator.currentIndex}
+                total={cityRailIndicator.total}
+                className="!-mt-1"
+                trackClassName="w-[118px]"
+                onSelect={cityRailIndicator.handleSelect}
+                variant="segmented"
+                progressRatio={cityRailIndicator.progressRatio}
+                label="Cities"
+              />
+            </section>
+
+            <section className="min-w-0">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-[22px] font-bold tracking-[-0.04em] text-slate-950">Categories</h2>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={openAllCategories}
+                    className="mt-1 inline-flex items-center gap-1 text-[14px] font-medium text-slate-400 transition hover:text-slate-700"
+                  >
+                    See all
+                    <ChevronRight className="h-4 w-4" strokeWidth={2.2} />
+                  </button>
+                </div>
+              </div>
+
+              <div
+                ref={categoryRailRef}
+                className="home-drag-rail hide-scrollbar -mx-1 mt-3 overflow-x-auto overflow-y-hidden px-1 pb-2 pr-2 [scrollbar-width:none] [-ms-overflow-style:none] [overscroll-behavior-x:contain] [-webkit-overflow-scrolling:touch] max-lg:snap-x max-lg:snap-proximity lg:snap-none select-none [&::-webkit-scrollbar]:hidden"
+              >
+                <div className="flex min-w-max gap-2.5 md:gap-3 lg:gap-4">
+                  {categoryTiles.map((tile) => (
+                    <div key={tile.label} data-rail-item className="shrink-0 snap-center">
+                      <HomeCategoryTile
+                        label={tile.label}
+                        place={tile.place}
+                        active={tile.active}
+                        onClick={() => {
+                          setSelectedCategoryTileLabel(tile.label)
+                          navigateToPath(tile.href)
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <CarouselPositionIndicator
+                currentIndex={categoryRailIndicator.currentIndex}
+                total={categoryRailIndicator.total}
+                className="!-mt-1"
+                trackClassName="w-[118px]"
+                onSelect={categoryRailIndicator.handleSelect}
+                variant="segmented"
+                progressRatio={categoryRailIndicator.progressRatio}
+                label="Categories"
+              />
+            </section>
           </div>
         </div>
+      </main>
+
+      <div className="md:hidden">
+        <MobileBottomNav currentPath="/home" />
       </div>
-    )
-  }
+      {guestAuth.promptElement}
+    </PageShell>
+  )
+}
 
 export default HomePage

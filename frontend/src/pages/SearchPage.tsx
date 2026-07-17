@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Search, SlidersHorizontal, X } from 'lucide-react'
-import HomePage from './HomePage'
+import SearchHub from './SearchHub'
 import { AppIcon } from '../components/AppIcon'
 import PageHeroHeader from '../components/PageHeroHeader'
 import { SearchFilterPanel, SearchPageBreadcrumb } from '../components/home/search/SearchComponents'
@@ -223,7 +223,7 @@ function SearchPage({
 
   if (shouldShowResults) {
     return (
-      <HomePage
+      <SearchHub
         initialSearchState={{
           rawQuery: initialQuery,
           categoryId: initialCategory,

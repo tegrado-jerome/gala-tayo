@@ -1,7 +1,7 @@
-const HOME_LANDING_SCROLL_CACHE_KEY = 'galatayo:home-landing-scroll'
-const HOME_LANDING_SCROLL_CACHE_TTL_MS = 30 * 60 * 1000
+const HOME_SCROLL_CACHE_KEY = 'galatayo:home-landing-scroll'
+const HOME_SCROLL_CACHE_TTL_MS = 30 * 60 * 1000
 
-type HomeLandingScrollCache = {
+type HomeScrollCache = {
   scrollY: number
   selectedPlaceId: string | null
   selectedPlaceViewportTop: number | null
@@ -55,7 +55,7 @@ function removePersistentStorage(key: string) {
   }
 }
 
-function getHomeLandingScrollSelector(placeId: string) {
+function getHomeScrollSelector(placeId: string) {
   const escapedPlaceId = typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
     ? CSS.escape(placeId)
     : placeId.replace(/["\\]/g, '\\$&')
@@ -78,22 +78,22 @@ function runWithInstantScroll(callback: () => void) {
   body.style.scrollBehavior = previousBodyScrollBehavior
 }
 
-export function readHomeLandingScrollCache(): HomeLandingScrollCache | null {
+export function readHomeScrollCache(): HomeScrollCache | null {
   try {
-    const rawCache = readPersistentStorage(HOME_LANDING_SCROLL_CACHE_KEY)
+    const rawCache = readPersistentStorage(HOME_SCROLL_CACHE_KEY)
 
     if (!rawCache) {
       return null
     }
 
-    const parsedCache = JSON.parse(rawCache) as Partial<HomeLandingScrollCache>
+    const parsedCache = JSON.parse(rawCache) as Partial<HomeScrollCache>
 
     if (
       typeof parsedCache.cachedAt !== 'number' ||
       !Number.isFinite(parsedCache.cachedAt) ||
-      Date.now() - parsedCache.cachedAt > HOME_LANDING_SCROLL_CACHE_TTL_MS
+      Date.now() - parsedCache.cachedAt > HOME_SCROLL_CACHE_TTL_MS
     ) {
-      removePersistentStorage(HOME_LANDING_SCROLL_CACHE_KEY)
+      removePersistentStorage(HOME_SCROLL_CACHE_KEY)
       return null
     }
 
@@ -112,9 +112,9 @@ export function readHomeLandingScrollCache(): HomeLandingScrollCache | null {
   }
 }
 
-export function writeHomeLandingScrollCache(cache: Omit<HomeLandingScrollCache, 'cachedAt'>) {
+export function writeHomeScrollCache(cache: Omit<HomeScrollCache, 'cachedAt'>) {
   try {
-    writePersistentStorage(HOME_LANDING_SCROLL_CACHE_KEY, JSON.stringify({
+    writePersistentStorage(HOME_SCROLL_CACHE_KEY, JSON.stringify({
       ...cache,
       cachedAt: Date.now(),
     }))
@@ -123,16 +123,16 @@ export function writeHomeLandingScrollCache(cache: Omit<HomeLandingScrollCache, 
   }
 }
 
-export function clearHomeLandingScrollCache() {
+export function clearHomeScrollCache() {
   try {
-    removePersistentStorage(HOME_LANDING_SCROLL_CACHE_KEY)
+    removePersistentStorage(HOME_SCROLL_CACHE_KEY)
   } catch {
     // Storage can be unavailable in private browsing or restricted webviews.
   }
 }
 
-export function restoreHomeLandingScroll(
-  cache: Pick<HomeLandingScrollCache, 'scrollY' | 'selectedPlaceId' | 'selectedPlaceViewportTop'>,
+export function restoreHomeScroll(
+  cache: Pick<HomeScrollCache, 'scrollY' | 'selectedPlaceId' | 'selectedPlaceViewportTop'>,
   maxRetries = 4,
 ) {
   const targetScrollY = Math.max(cache.scrollY, 0)
@@ -148,7 +148,7 @@ export function restoreHomeLandingScroll(
       })
 
       if (targetPlaceId && targetPlaceViewportTop !== null) {
-        const targetCard = document.querySelector<HTMLElement>(getHomeLandingScrollSelector(targetPlaceId))
+        const targetCard = document.querySelector<HTMLElement>(getHomeScrollSelector(targetPlaceId))
 
         if (targetCard) {
           const cardViewportTop = targetCard.getBoundingClientRect().top

@@ -3,8 +3,8 @@ import SeoHead from '../components/SeoHead'
 import ProtectedFeatureGate from '../components/ProtectedFeatureGate'
 import SharedPlacePage from '../pages/SharedPlacePage'
 import PlacesSlugResolverPage from '../pages/PlacesSlugResolverPage'
-import HomeLandingPage from '../pages/HomeLandingPage'
 import HomePage from '../pages/HomePage'
+import SearchHub from '../pages/SearchHub'
 import WelcomePage from '../pages/WelcomePage'
 import SearchPage from '../pages/SearchPage'
 import LoginPage from '../pages/LoginPage'
@@ -149,7 +149,7 @@ export function renderRouteDescriptor(descriptor: RouteDescriptor, inputs: Route
               },
             ]}
           />
-          <HomeLandingPage navigationSource={navigationSource} />
+          <HomePage navigationSource={navigationSource} />
         </>
       )
     case 'search':
@@ -170,7 +170,7 @@ export function renderRouteDescriptor(descriptor: RouteDescriptor, inputs: Route
       return (
         <>
           <SeoHead title="AI Chatbot | GalaTayo" description="Ask AI chatbot mode on GalaTayo." canonicalPath="/ask-ai/chatbot" robots="noindex,follow" />
-          <HomePage key={`ask-ai:${search || 'root'}`} initialMode="ask-ai" initialAskAiQuestion={descriptor.initialAskAiQuestion} navigationSource={navigationSource} />
+          <SearchHub key={`ask-ai:${search || 'root'}`} initialMode="ask-ai" initialAskAiQuestion={descriptor.initialAskAiQuestion} navigationSource={navigationSource} />
         </>
       )
     case 'ask-ai-maps':
@@ -184,7 +184,7 @@ export function renderRouteDescriptor(descriptor: RouteDescriptor, inputs: Route
       return (
         <>
           <SeoHead title="Prompt Builder | GalaTayo" description="Prompt builder on GalaTayo." canonicalPath="/ask-ai/prompt-builder" robots="noindex,follow" />
-          <HomePage initialPromptBuilderOpen navigationSource={navigationSource} />
+          <SearchHub initialPromptBuilderOpen navigationSource={navigationSource} />
         </>
       )
     case 'places-index':
