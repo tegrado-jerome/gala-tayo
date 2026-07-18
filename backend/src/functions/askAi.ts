@@ -11,9 +11,16 @@ import {
 } from "../services/askAiUsageService";
 import {
   GroqChatProviderError,
+  type GroqConversationMessage,
   generateFromGroq,
   sanitizeChatbotAnswer,
 } from "../services/groqChatProvider";
+import {
+  getAskAiRequestId,
+  isAskAiRequestCancelledError,
+  markAskAiRequestUsageRefunded,
+  registerAskAiRequest,
+} from "../utils/askAiCancellation";
 import { resolveAskAiActor, type AskAiActor } from "../utils/askAiActor";
 
 type AskAiRequestBody = {
@@ -21,6 +28,10 @@ type AskAiRequestBody = {
   placeSlug?: unknown;
   conversationHistory?: unknown;
 };
+
+const MAX_CONVERSATION_HISTORY_MESSAGES = 8;
+const MAX_USER_HISTORY_CONTENT_LENGTH = 2000;
+const MAX_ASSISTANT_HISTORY_CONTENT_LENGTH = 1200;
 
 async function getRequestBody(request: HttpRequest): Promise<AskAiRequestBody> {
   try {
@@ -34,6 +45,56 @@ async function getRequestBody(request: HttpRequest): Promise<AskAiRequestBody> {
 
 function getStringField(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function trimHistoryContent(role: "user" | "assistant", content: string): string {
+  const maxLength =
+    role === "assistant"
+      ? MAX_ASSISTANT_HISTORY_CONTENT_LENGTH
+      : MAX_USER_HISTORY_CONTENT_LENGTH;
+
+  return content.length > maxLength ? `${content.slice(0, maxLength)}...` : content;
+}
+
+function getConversationHistory(value: unknown): GroqConversationMessage[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .flatMap<GroqConversationMessage>((item) => {
+      if (!item || typeof item !== "object") {
+        return [];
+      }
+
+      const candidate = item as Record<string, unknown>;
+      const role = candidate.role;
+      const content = getStringField(candidate.content);
+
+      if ((role !== "user" && role !== "assistant") || !content) {
+        return [];
+      }
+
+      return [{
+        role,
+        content: trimHistoryContent(role, content),
+      }];
+    })
+    .slice(-MAX_CONVERSATION_HISTORY_MESSAGES);
+}
+
+function withoutDuplicatedLatestUserMessage(
+  conversationHistory: GroqConversationMessage[],
+  message: string
+): GroqConversationMessage[] {
+  const lastMessage = conversationHistory.at(-1);
+  const comparableLatestUserMessage = trimHistoryContent("user", message);
+
+  if (lastMessage?.role === "user" && lastMessage.content === comparableLatestUserMessage) {
+    return conversationHistory.slice(0, -1);
+  }
+
+  return conversationHistory;
 }
 
 const JSON_HEADERS = {
@@ -82,9 +143,10 @@ export async function postAskAiChatbot(
   request: HttpRequest,
   context: InvocationContext
 ): Promise<HttpResponseInit> {
-  const requestId = randomUUID();
+  const requestId = getAskAiRequestId(request, randomUUID());
   let quotaConsumedUserId: string | null = null;
   let resolvedActor: AskAiActor | null = null;
+  let unregisterCancellation: (() => void) | null = null;
 
   try {
     context.log(`[AskAI Chatbot] REQUEST STARTED requestId=${requestId}`);
@@ -94,6 +156,10 @@ export async function postAskAiChatbot(
     const message =
       getStringField(body.question) ??
       getStringField((body as Record<string, unknown>).message);
+    const conversationHistory = withoutDuplicatedLatestUserMessage(
+      getConversationHistory(body.conversationHistory),
+      message ?? ""
+    );
 
     if (!message) {
       return {
@@ -144,10 +210,18 @@ export async function postAskAiChatbot(
       `[AskAI Chatbot] provider=groq requestId=${requestId} MODEL REQUEST STARTED questionLength=${message.length}`
     );
 
+    const cancellation = registerAskAiRequest(requestId, {
+      actor: resolvedActor!,
+      usageType: "chatbot_ai",
+    });
+    unregisterCancellation = cancellation.unregister;
+
     const answer = sanitizeChatbotAnswer(
       await generateFromGroq({
         message,
+        conversationHistory,
         requestId,
+        signal: cancellation.signal,
       })
     );
 
@@ -176,7 +250,7 @@ export async function postAskAiChatbot(
       },
     };
   } catch (error) {
-    if (quotaConsumedUserId) {
+    if (quotaConsumedUserId && markAskAiRequestUsageRefunded(requestId)) {
       context.log("[AskAI Chatbot] refunding usage after provider failure.");
       await refundAskAiUsageForActor({
         actor: resolvedActor ?? { kind: "guest", id: quotaConsumedUserId },
@@ -215,18 +289,26 @@ export async function postAskAiChatbot(
     }
 
     if (
-      error instanceof Error &&
-      (error.name === "AbortError" || error.name === "TimeoutError")
+      isAskAiRequestCancelledError(error) ||
+      (error instanceof Error &&
+        (error.name === "AbortError" || error.name === "TimeoutError"))
     ) {
+      const isCancelled = isAskAiRequestCancelledError(error);
       return {
-        status: 504,
+        status: isCancelled ? 499 : 504,
         headers: JSON_HEADERS,
         jsonBody: {
           ok: false,
-          error: "The AI model had a temporary issue. Please try again in a moment.",
-          errorCode: "AI_PROVIDER_TEMPORARY_ERROR",
+          error: isCancelled
+            ? "Ask AI request was cancelled."
+            : "The AI model had a temporary issue. Please try again in a moment.",
+          errorCode: isCancelled
+            ? "ASK_AI_REQUEST_CANCELLED"
+            : "AI_PROVIDER_TEMPORARY_ERROR",
           userMessage:
-            "The AI model had a temporary issue. Please try again in a moment.",
+            isCancelled
+              ? "Ask AI request was cancelled."
+              : "The AI model had a temporary issue. Please try again in a moment.",
           requestId,
         },
       };
@@ -306,6 +388,8 @@ export async function postAskAiChatbot(
         requestId,
       },
     };
+  } finally {
+    unregisterCancellation?.();
   }
 }
 

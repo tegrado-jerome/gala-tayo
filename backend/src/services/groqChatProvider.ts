@@ -1,5 +1,10 @@
 import { getSecret } from "../config/keyVault";
 import { KEY_VAULT_SECRET_NAMES } from "../config/secretNames";
+import {
+  buildAbortSignal,
+  isAskAiRequestCancelledError,
+  throwIfAskAiRequestCancelled,
+} from "../utils/askAiCancellation";
 
 const GROQ_BASE_URL = "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_PRIMARY_MODEL = "openai/gpt-oss-20b";
@@ -108,14 +113,21 @@ Simple but cute idea: bring a small handwritten note or surprise snack. Hindi ka
 
 Never format this kind of answer as a table.`;
 
+export type GroqConversationMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
+
 type GroqMessage = {
-  role: "system" | "user";
+  role: "system" | "user" | "assistant";
   content: string;
 };
 
 type GroqRequestParams = {
   message: string;
+  conversationHistory?: GroqConversationMessage[];
   requestId: string;
+  signal?: AbortSignal;
 };
 
 export class GroqChatProviderError extends Error {
@@ -205,11 +217,14 @@ async function resolveGroqApiKey(): Promise<string> {
 async function callGroq(
   model: string,
   messages: GroqMessage[],
-  requestId: string
+  requestId: string,
+  signal?: AbortSignal
 ): Promise<{ answer: string; finishReason: string | null }> {
   const startedAt = Date.now();
   const apiKey = await resolveGroqApiKey();
-  const abortSignal = AbortSignal.timeout(GROQ_TIMEOUT_MS);
+  throwIfAskAiRequestCancelled(signal);
+  const timeoutSignal = AbortSignal.timeout(GROQ_TIMEOUT_MS);
+  const abortSignal = buildAbortSignal([timeoutSignal, signal]);
 
   let response: Response;
 
@@ -230,6 +245,10 @@ async function callGroq(
       signal: abortSignal,
     });
   } catch (error) {
+    if (signal?.aborted || isAskAiRequestCancelledError(error)) {
+      throwIfAskAiRequestCancelled(signal);
+    }
+
     if (isAbortError(error)) {
       throw new GroqChatProviderError(
         504,
@@ -323,13 +342,16 @@ async function callGroq(
 
 export async function generateFromGroq({
   message,
+  conversationHistory = [],
   requestId,
+  signal,
 }: GroqRequestParams): Promise<string> {
   const messages: GroqMessage[] = [
     {
       role: "system",
       content: GROQ_CHATBOT_SYSTEM_PROMPT_TAGLISH,
     },
+    ...conversationHistory,
     {
       role: "user",
       content: message,
@@ -337,7 +359,7 @@ export async function generateFromGroq({
   ];
 
   try {
-    const primaryResult = await callGroq(GROQ_PRIMARY_MODEL, messages, requestId);
+    const primaryResult = await callGroq(GROQ_PRIMARY_MODEL, messages, requestId, signal);
     const cleanedPrimaryAnswer = cleanIncompleteEnding(primaryResult.answer);
 
     return sanitizeChatbotAnswer(
@@ -348,6 +370,10 @@ export async function generateFromGroq({
         : cleanedPrimaryAnswer
     );
   } catch (primaryError) {
+    if (signal?.aborted || isAskAiRequestCancelledError(primaryError)) {
+      throwIfAskAiRequestCancelled(signal);
+    }
+
     const primaryStatus =
       primaryError instanceof GroqChatProviderError
         ? primaryError.status
@@ -368,7 +394,8 @@ export async function generateFromGroq({
       const fallbackResult = await callGroq(
         GROQ_FALLBACK_MODEL,
         messages,
-        requestId
+        requestId,
+        signal
       );
       const cleanedFallbackAnswer = cleanIncompleteEnding(fallbackResult.answer);
 
@@ -380,6 +407,10 @@ export async function generateFromGroq({
           : cleanedFallbackAnswer
       );
     } catch (fallbackError) {
+      if (signal?.aborted || isAskAiRequestCancelledError(fallbackError)) {
+        throwIfAskAiRequestCancelled(signal);
+      }
+
       const fallbackStatus =
         fallbackError instanceof GroqChatProviderError
           ? fallbackError.status

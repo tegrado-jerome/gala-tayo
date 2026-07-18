@@ -1,5 +1,6 @@
 import { getSecret } from "../config/keyVault";
 import { KEY_VAULT_SECRET_NAMES } from "../config/secretNames";
+import { buildAbortSignal, throwIfAskAiRequestCancelled } from "../utils/askAiCancellation";
 
 export type NormalizedAskAiMapQuery = {
   isMapIntent: boolean;
@@ -614,7 +615,10 @@ export function shouldNormalizeAskAiMapPrompt(rawPrompt: string): boolean {
   return shouldNormalizePrompt(rawPrompt);
 }
 
-export async function normalizeAskAiMapQuery(rawPrompt: string): Promise<NormalizedAskAiMapQuery> {
+export async function normalizeAskAiMapQuery(
+  rawPrompt: string,
+  signal?: AbortSignal
+): Promise<NormalizedAskAiMapQuery> {
   const cleanedPrompt = normalizeText(rawPrompt);
   if (!cleanedPrompt) {
     return {
@@ -630,6 +634,8 @@ export async function normalizeAskAiMapQuery(rawPrompt: string): Promise<Normali
   }
 
   const apiKey = await resolveGroqApiKey();
+  throwIfAskAiRequestCancelled(signal);
+  const abortSignal = buildAbortSignal([AbortSignal.timeout(GROQ_TIMEOUT_MS), signal]);
   const response = await fetch(GROQ_URL, {
     method: "POST",
     headers: {
@@ -646,7 +652,7 @@ export async function normalizeAskAiMapQuery(rawPrompt: string): Promise<Normali
       max_completion_tokens: GROQ_MAX_TOKENS,
       stream: false,
     }),
-    signal: AbortSignal.timeout(GROQ_TIMEOUT_MS),
+    signal: abortSignal,
   });
 
   if (!response.ok) {

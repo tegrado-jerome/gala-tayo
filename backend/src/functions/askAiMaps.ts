@@ -29,14 +29,19 @@ import {
   uniqueQueries,
 } from "./askAiMaps/askAiMapsHelpers";
 import { resolveAskAiActor } from "../utils/askAiActor";
+import {
+  getAskAiRequestId,
+  isAskAiRequestCancelledError,
+  markAskAiRequestUsageRefunded,
+  registerAskAiRequest,
+} from "../utils/askAiCancellation";
 
 function logAskAiMaps(context: InvocationContext, message: string) {
   context.log(message);
 }
 
 function getRequestId(request: HttpRequest): string {
-  const headerRequestId = request.headers.get("x-request-id")?.trim();
-  return headerRequestId || randomUUID();
+  return getAskAiRequestId(request, randomUUID());
 }
 
 function isGuestIdentityError(message: string): boolean {
@@ -56,6 +61,7 @@ export async function askAiMapsRequest(
     startedAt,
     query,
   };
+  let unregisterCancellation: (() => void) | null = null;
 
   try {
     const actor = await resolveAskAiActor(request);
@@ -107,6 +113,12 @@ export async function askAiMapsRequest(
       `[Ask AI Maps] quota consumed: remaining=${aiUsage.remaining} actorId=${actor.id} actorKind=${actor.kind}`
     );
 
+    const cancellation = registerAskAiRequest(requestId, {
+      actor,
+      usageType: "ask_ai_maps",
+    });
+    unregisterCancellation = cancellation.unregister;
+
     const shouldNormalize = shouldNormalizeAskAiMapPrompt(query);
     let normalizedQuery:
       | Awaited<ReturnType<typeof normalizeAskAiMapQuery>>
@@ -114,11 +126,15 @@ export async function askAiMapsRequest(
 
     if (shouldNormalize) {
       try {
-        normalizedQuery = await normalizeAskAiMapQuery(query);
+        normalizedQuery = await normalizeAskAiMapQuery(query, cancellation.signal);
         if (!normalizedQuery.coreSearchQuery) {
           normalizedQuery = null;
         }
       } catch (error) {
+        if (isAskAiRequestCancelledError(error)) {
+          throw error;
+        }
+
         context.log(
           `[Ask AI Maps][${requestId}] normalization skipped: ${error instanceof Error ? error.message : String(error)}`
         );
@@ -169,6 +185,7 @@ export async function askAiMapsRequest(
               nearMe: getBooleanField(body.nearMe),
               openNow: getBooleanField(body.openNow),
               userLocation: getUserLocation(body.userLocation),
+              signal: cancellation.signal,
             },
             {
               log: (message: string) =>
@@ -245,8 +262,10 @@ export async function askAiMapsRequest(
         },
       };
     } catch (error) {
-      context.log("[Ask AI Usage] refunding map usage after provider failure.");
-      await refundAskAiUsageForActor({ actor, usageType: "ask_ai_maps" });
+      if (markAskAiRequestUsageRefunded(requestId)) {
+        context.log("[Ask AI Usage] refunding map usage after provider failure.");
+        await refundAskAiUsageForActor({ actor, usageType: "ask_ai_maps" });
+      }
       logAskAiMapsError(context, error, requestLogContext);
 
       return handleAskAiMapsError(error, requestLogContext, aiUsage);
@@ -271,6 +290,8 @@ export async function askAiMapsRequest(
     }
 
     return handleAskAiMapsError(error, requestLogContext);
+  } finally {
+    unregisterCancellation?.();
   }
 }
 

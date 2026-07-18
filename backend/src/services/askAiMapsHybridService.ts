@@ -2,6 +2,11 @@ import { GoogleGenAI } from "@google/genai";
 import { getSecret } from "../config/keyVault";
 import { KEY_VAULT_SECRET_NAMES } from "../config/secretNames";
 import type { NormalizedAskAiMapQuery } from "./askAiMapQueryNormalizer";
+import {
+  buildAbortSignal,
+  isAskAiRequestCancelledError,
+  throwIfAskAiRequestCancelled,
+} from "../utils/askAiCancellation";
 
 export class AskAiMapsServiceError extends Error {
   status: number;
@@ -45,6 +50,7 @@ export type AskAiMapsSearchParams = {
     latitude: number;
     longitude: number;
   } | null;
+  signal?: AbortSignal;
 };
 
 type AskAiMapsLogger = {
@@ -1131,7 +1137,12 @@ async function getGeoapifyApiKey(): Promise<string> {
   return apiKey;
 }
 
-async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  message: string,
+  signal?: AbortSignal
+): Promise<T> {
   let timeoutId: NodeJS.Timeout | null = null;
   const timeoutPromise = new Promise<T>((_, reject) => {
     timeoutId = setTimeout(() => {
@@ -1143,8 +1154,14 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: s
       );
     }, timeoutMs);
   });
+  const abortPromise = new Promise<T>((_, reject) => {
+    signal?.addEventListener("abort", () => {
+      reject(signal.reason);
+    }, { once: true });
+  });
   try {
-    return await Promise.race([promise, timeoutPromise]);
+    throwIfAskAiRequestCancelled(signal);
+    return await Promise.race([promise, timeoutPromise, abortPromise]);
   } finally {
     if (timeoutId) {
       clearTimeout(timeoutId);
@@ -1152,14 +1169,14 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: s
   }
 }
 
-async function fetchJson<T>(url: URL, timeoutMs: number): Promise<T> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+async function fetchJson<T>(url: URL, timeoutMs: number, signal?: AbortSignal): Promise<T> {
+  const timeoutSignal = AbortSignal.timeout(timeoutMs);
+  const abortSignal = buildAbortSignal([timeoutSignal, signal]);
   try {
     const response = await fetch(url, {
       method: "GET",
       headers: { Accept: "application/json" },
-      signal: controller.signal,
+      signal: abortSignal,
     });
     if (!response.ok) {
       throw new AskAiMapsServiceError(`Provider request failed with status ${response.status}.`, 502, {
@@ -1169,8 +1186,12 @@ async function fetchJson<T>(url: URL, timeoutMs: number): Promise<T> {
       });
     }
     return (await response.json()) as T;
-  } finally {
-    clearTimeout(timeoutId);
+  } catch (error) {
+    if (signal?.aborted || isAskAiRequestCancelledError(error)) {
+      throwIfAskAiRequestCancelled(signal);
+    }
+
+    throw error;
   }
 }
 
@@ -1208,7 +1229,10 @@ function getAreaRadiusMeters(args: { bbox?: GeoapifyResolvedArea["bbox"]; provin
   return args.provinceLevel ? 90000 : 20000;
 }
 
-async function resolveSearchAreaWithGeoapify(intent: AskAiMapIntent): Promise<GeoapifyResolvedArea | null> {
+async function resolveSearchAreaWithGeoapify(
+  intent: AskAiMapIntent,
+  signal?: AbortSignal
+): Promise<GeoapifyResolvedArea | null> {
   if (intent.nearMe && intent.userLocation) {
     return {
       label: "near you",
@@ -1231,7 +1255,7 @@ async function resolveSearchAreaWithGeoapify(intent: AskAiMapIntent): Promise<Ge
   url.searchParams.set("text", buildAreaResolutionText(intent.searchAreaText));
   url.searchParams.set("limit", "1");
   url.searchParams.set("apiKey", apiKey);
-  const payload = await fetchJson<{ features?: GeoapifyGeocodeFeature[] }>(url, GEOAPIFY_TIMEOUT_MS);
+  const payload = await fetchJson<{ features?: GeoapifyGeocodeFeature[] }>(url, GEOAPIFY_TIMEOUT_MS, signal);
   const feature = Array.isArray(payload.features) ? payload.features[0] : null;
   const properties = feature?.properties ?? {};
   const latitude = Number(properties.lat);
@@ -1309,7 +1333,8 @@ function buildGeminiPrompt(intent: AskAiMapIntent): string {
 
 async function callGeminiMapsGrounding(
   intent: AskAiMapIntent,
-  logger?: AskAiMapsLogger
+  logger?: AskAiMapsLogger,
+  signal?: AbortSignal
 ): Promise<{ candidates: GeminiCandidate[]; suggestedSearches: string[]; invalidJson: boolean }> {
   logger?.log(
     `[AskAiMaps] gemini_called=${true} gemini_model=${GEMINI_MODEL} grounding_enabled=${true}`
@@ -1317,6 +1342,7 @@ async function callGeminiMapsGrounding(
   try {
     const apiKey = await getGeminiApiKey();
     const ai = new GoogleGenAI({ apiKey });
+    throwIfAskAiRequestCancelled(signal);
     const response = await withTimeout(
       ai.models.generateContent({
         model: `models/${GEMINI_MODEL}`,
@@ -1325,10 +1351,12 @@ async function callGeminiMapsGrounding(
           temperature: 0,
           maxOutputTokens: 2000,
           tools: [{ googleMaps: {} }],
+          abortSignal: signal,
         },
       }),
       GEMINI_TIMEOUT_MS,
-      "Gemini timed out."
+      "Gemini timed out.",
+      signal
     );
 
     const candidates: GeminiCandidate[] = [];
@@ -1868,7 +1896,7 @@ function buildGeminiTrustedPlace(args: {
   geoapifyPlaceId?: string | null;
   coordinateDebug?: AskAiMapGroundedPlace["coordinateDebug"];
 }): AskAiMapGroundedPlace | null {
-  const hasCoordinates = args.coordinates !== null && args.coordinateConfidence !== "none";
+  const hasCoordinates = args.coordinates !== null && args.coordinateConfidence === "high";
   const displayCategory = args.candidate.categoryHint ?? getDisplayCategoryForIntent(args.intent);
   const whyThisFits =
     args.candidate.whyThisFits ??
@@ -1876,17 +1904,17 @@ function buildGeminiTrustedPlace(args: {
 
   const isGeoapifyCoord = args.coordinateSource === "geoapify_coordinate_fill";
   const isGeminiFallback = args.coordinateSource === "gemini_coordinate_fallback";
-  const isCardOnly = args.coordinateSource === "none" || args.coordinateConfidence === "none";
+  const isCardOnly = args.coordinateSource === "none" || args.coordinateConfidence !== "high";
 
   const coordinateStatus: AskAiMapGroundedPlace["coordinateStatus"] =
-    isGeoapifyCoord ? "geoapify_coordinate_fill"
+    isGeoapifyCoord && !isCardOnly ? "geoapify_coordinate_fill"
     : isGeminiFallback ? "gemini_coordinate_fallback"
     : "missing_coordinates";
 
-  const hasPin = hasCoordinates && !isCardOnly;
+  const hasPin = hasCoordinates && isGeoapifyCoord && !isCardOnly;
   const coordConfidence: CoordinateConfidence = isCardOnly ? "none"
     : isGeoapifyCoord ? args.coordinateConfidence
-    : isGeminiFallback ? "medium"
+    : isGeminiFallback ? "none"
     : "none";
 
   const coordSource: "geoapify" | "gemini_fallback" = isGeoapifyCoord ? "geoapify" : "gemini_fallback";
@@ -1939,7 +1967,7 @@ function buildGeminiTrustedPlace(args: {
       nameMatched: true,
       locationMatched: hasPin,
       categoryMatched: true,
-      coordinateVerified: isGeoapifyCoord || isGeminiFallback,
+      coordinateVerified: isGeoapifyCoord,
     },
     matchScore: Number((82 + args.categoryScore * 10 + (args.confidence === "high" ? 8 : 0)).toFixed(1)),
     distanceKm: args.distanceKm,
@@ -1960,7 +1988,7 @@ function buildGeminiTrustedPlace(args: {
     rawCategory: args.candidate.categoryHint ?? displayCategory,
   };
 
-  if (hasCoordinates && args.coordinates) {
+  if (hasPin && args.coordinates) {
     base.lat = args.coordinates.latitude;
     base.lng = args.coordinates.longitude;
     base.latitude = args.coordinates.latitude;
@@ -2256,7 +2284,7 @@ async function verifyCandidateWithGeoapify(
     geoapifyPlaceId?: string | null,
     coordinateDebug?: AskAiMapGroundedPlace["coordinateDebug"]
   ): VerificationResult => {
-    const distanceKm = coordinates
+    const distanceKm = coordinates && coordinateSource === "geoapify_coordinate_fill"
       ? Number(getDistanceKm(area.center, coordinates).toFixed(2))
       : null;
 
@@ -2988,6 +3016,20 @@ async function searchGeoapifyStrictFallback(intent: AskAiMapIntent, area: Geoapi
         continue;
       }
 
+      const resultTypes = getGeoapifyFeatureResultType(feature);
+      const coordinateConfidence = scoreCoordinateConfidence({
+        placeName: intent.rawQuery,
+        geoapifyFeatureName: name,
+        geoapifyLocationText: address,
+        targetCity: intent.city ?? area.city,
+        targetProvince: intent.province ?? area.province,
+        targetAreaLabel: area.label,
+        isNamedResult: resultTypes.isNamedResult,
+        isAddressResult: resultTypes.isAddressResult,
+        isRoadResult: resultTypes.isRoadResult,
+        isCityResult: resultTypes.isCityResult,
+      });
+      const hasPin = coordinateConfidence === "high";
       const tier = classifyResultTier(intent, name, [], null);
       geocodePlaces.push({
         id: `geoapify:${normalizeText(feature.properties?.place_id) ?? slugify(name)}`,
@@ -2996,15 +3038,15 @@ async function searchGeoapifyStrictFallback(intent: AskAiMapIntent, area: Geoapi
         whyThisFits: "Nakita ito as a mapped commercial/place result near the search area, pero limited ang available details from the map source.",
         category: "Mapped place",
         address,
-        lat: coords.latitude,
-        lng: coords.longitude,
-        latitude: coords.latitude,
-        longitude: coords.longitude,
-        hasPin: true,
-        coordinateStatus: "geoapify_coordinate_fill",
-        coordinateConfidence: "medium",
+        lat: hasPin ? coords.latitude : null,
+        lng: hasPin ? coords.longitude : null,
+        latitude: hasPin ? coords.latitude : null,
+        longitude: hasPin ? coords.longitude : null,
+        hasPin,
+        coordinateStatus: hasPin ? "geoapify_coordinate_fill" : "missing_coordinates",
+        coordinateConfidence: hasPin ? "high" : "none",
         matchConfidence: tier === "exact" ? "high" : "medium",
-        coordinates: {
+        coordinates: hasPin ? {
           lat: coords.latitude,
           lng: coords.longitude,
           latitude: coords.latitude,
@@ -3012,8 +3054,8 @@ async function searchGeoapifyStrictFallback(intent: AskAiMapIntent, area: Geoapi
           source: "geoapify" as const,
           trusted: true as const,
           verified: true as const,
-          confidence: "medium" as const,
-        },
+          confidence: "high" as const,
+        } : null,
         rating: null,
         reviewCount: null,
         openingHoursSummary: null,
@@ -3033,12 +3075,12 @@ async function searchGeoapifyStrictFallback(intent: AskAiMapIntent, area: Geoapi
         },
         verification: {
           nameMatched: true,
-          locationMatched: true,
+          locationMatched: hasPin,
           categoryMatched: true,
-          coordinateVerified: true,
+          coordinateVerified: hasPin,
         },
         matchScore: 66,
-        distanceKm: Number(getDistanceKm(area.center, coords).toFixed(2)),
+        distanceKm: hasPin ? Number(getDistanceKm(area.center, coords).toFixed(2)) : null,
         exactMatch: tier === "exact",
         mediumMatch: tier !== "exact",
         isFallback: true,
@@ -3113,7 +3155,7 @@ async function searchGeoapifyStrictFallback(intent: AskAiMapIntent, area: Geoapi
         longitude,
         hasPin: true,
         coordinateStatus: "geoapify_coordinate_fill" as const,
-        coordinateConfidence: "medium" as const,
+        coordinateConfidence: "high" as const,
         matchConfidence: tier === "exact" ? "high" as const : "medium" as const,
         coordinates: {
           lat: latitude,
@@ -3123,7 +3165,7 @@ async function searchGeoapifyStrictFallback(intent: AskAiMapIntent, area: Geoapi
           source: "geoapify" as const,
           trusted: true as const,
           verified: true as const,
-          confidence: "medium" as const,
+          confidence: "high" as const,
         },
         rating: null,
         reviewCount: null,
@@ -3230,7 +3272,7 @@ async function searchGeoapifyBroadFallback(intent: AskAiMapIntent, area: Geoapif
         longitude,
         hasPin: true,
         coordinateStatus: "geoapify_coordinate_fill" as const,
-        coordinateConfidence: "medium" as const,
+        coordinateConfidence: "high" as const,
         matchConfidence: "medium" as const,
         coordinates: {
           lat: latitude,
@@ -3240,7 +3282,7 @@ async function searchGeoapifyBroadFallback(intent: AskAiMapIntent, area: Geoapif
           source: "geoapify" as const,
           trusted: true as const,
           verified: true as const,
-          confidence: "medium" as const,
+          confidence: "high" as const,
         },
         rating: null,
         reviewCount: null,
@@ -3413,6 +3455,7 @@ export async function searchAskAiMaps(
   const startedAt = Date.now();
   const rawQuery = normalizeText(params.query);
   const searchQuery = normalizeText(params.searchQuery ?? params.query);
+  const signal = params.signal;
 
   if (!rawQuery) {
     throw new AskAiMapsServiceError("Query is required.", 400, {
@@ -3429,7 +3472,8 @@ export async function searchAskAiMaps(
     });
   }
 
-  const area = await resolveSearchAreaWithGeoapify(intent);
+  throwIfAskAiRequestCancelled(signal);
+  const area = await resolveSearchAreaWithGeoapify(intent, signal);
   if (!area) {
     logStructured(logger, "missing_area", {
       rawQuery,
@@ -3466,7 +3510,7 @@ export async function searchAskAiMaps(
 
   try {
     const geminiStartedAt = Date.now();
-    const { candidates, suggestedSearches: geminiSuggested } = await callGeminiMapsGrounding(intent, logger);
+    const { candidates, suggestedSearches: geminiSuggested } = await callGeminiMapsGrounding(intent, logger, signal);
     logger?.log(`[AskAI Maps Timing] gemini_duration_ms=${Date.now() - geminiStartedAt} gemini_candidates=${candidates.length}`);
 
     geminiGroundedCount = candidates.length;
@@ -3492,6 +3536,10 @@ export async function searchAskAiMaps(
       verifiedGeminiPlaces = rankVerifiedPlaces(dedupePlaces(accepted), intent);
     }
   } catch (geminiError) {
+    if (isAskAiRequestCancelledError(geminiError) || signal?.aborted) {
+      throwIfAskAiRequestCancelled(signal);
+    }
+
     logger?.log(
       `[AskAiMaps] gemini_grounding_failed: ${geminiError instanceof Error ? geminiError.message : String(geminiError)}`
     );
@@ -3504,6 +3552,7 @@ export async function searchAskAiMaps(
     finalPlaces = verifiedGeminiPlaces;
     mode = "gemini_grounding_primary_geoapify_coordinates";
   } else {
+    throwIfAskAiRequestCancelled(signal);
     let geoapifyPlaces = await searchGeoapifyStrictFallback(intent, area);
     if (geoapifyPlaces.length < counts.min && isProvinceLevelArea(intent.searchAreaText ?? "")) {
       const expandedAreas = await resolveExpandedAreasForSearch(intent);
