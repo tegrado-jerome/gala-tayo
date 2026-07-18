@@ -208,8 +208,9 @@ function SearchHub({
   const [searchTotalPages, setSearchTotalPages] = useState(initialRouteCache?.totalPages ?? 1)
   const [hasSearched, setHasSearched] = useState(Boolean(initialRouteCache))
   const hasRestoredInitialScrollRef = useRef(false)
-  const shouldScrollSearchResultsToTopRef = useRef(false)
   const searchRequestVersion = useRef(0)
+  const searchRequestStartTimeRef = useRef(0)
+  const MIN_SEARCH_LOADING_MS = 400
   const lastAutoSearchSignatureRef = useRef<string | null>(null)
   const lastAutoSubmittedAskAiQuestionRef = useRef('')
   const desktopResultsScrollRef = useRef<HTMLElement | null>(null)
@@ -490,8 +491,7 @@ function SearchHub({
       return
     }
 
-    shouldScrollSearchResultsToTopRef.current = true
-    void handleSearch({ page: nextPage }, true)
+    void handleSearch({ page: nextPage })
   }
 
   const handleSearch = async (
@@ -503,7 +503,6 @@ function SearchHub({
       budget: BudgetValue | null
       page: number
     }>,
-    suppressRefreshState = false,
   ) => {
     let nextRawQuery = normalizeSearchText(nextState?.rawQuery ?? rawQuery)
     const nextCategory = nextState?.category ?? selectedCategory
@@ -539,7 +538,7 @@ function SearchHub({
 
     const requestVersion = searchRequestVersion.current + 1
     searchRequestVersion.current = requestVersion
-    const isFreshSearch = !suppressRefreshState
+    searchRequestStartTimeRef.current = Date.now()
 
     lastAutoSearchSignatureRef.current = JSON.stringify({
       rawQuery: nextRawQuery,
@@ -571,21 +570,15 @@ function SearchHub({
     })
 
     try {
-      if (isFreshSearch) {
-        setSearchResults([])
-        setSearchTotalCount(0)
-        setSearchTotalPages(1)
-        setSelectedPlaceId(null)
-        setCurrentPage(1)
-        setMobileResultsView('cards')
-        setHasSearched(false)
-      }
-
-      if (suppressRefreshState) {
-        setIsPageLoading(true)
-      } else {
-        setIsInitialSearching(true)
-      }
+      setSearchResults([])
+      setSearchTotalCount(0)
+      setSearchTotalPages(1)
+      setSelectedPlaceId(null)
+      setCurrentPage(1)
+      setMobileResultsView('cards')
+      setHasSearched(false)
+      setIsInitialSearching(true)
+      setIsPageLoading(false)
       setSearchValidationMessage(null)
       setSearchError(null)
       setSearchStatus(null)
@@ -622,12 +615,16 @@ function SearchHub({
         }
       }
 
+      const elapsed = Date.now() - searchRequestStartTimeRef.current
+      if (elapsed < MIN_SEARCH_LOADING_MS) {
+        await new Promise((r) => setTimeout(r, MIN_SEARCH_LOADING_MS - elapsed))
+      }
+
       if (searchRequestVersion.current !== requestVersion) {
         return
       }
 
       if (data.promptLogin) {
-        shouldScrollSearchResultsToTopRef.current = false
         setPromptLogin(true)
         return
       }
@@ -660,8 +657,8 @@ function SearchHub({
       setSearchTotalCount(responseTotalCount)
       setSearchTotalPages(responseTotalPages)
       setHasSearched(true)
-      setSelectedPlaceId(suppressRefreshState ? selectedPlaceId : null)
-      setMobileResultsView(suppressRefreshState ? mobileResultsView : 'cards')
+      setSelectedPlaceId(null)
+      setMobileResultsView('cards')
       trackSearchSubmitted({
         resultCount: mappedPlaces.length,
         page: responsePage,
@@ -675,27 +672,29 @@ function SearchHub({
           searchResults: mappedPlaces,
           totalCount: responseTotalCount,
           totalPages: responseTotalPages,
-          selectedPlaceId: suppressRefreshState ? selectedPlaceId : null,
+          selectedPlaceId: null,
           currentPage: responsePage,
-          mobileResultsView: suppressRefreshState ? mobileResultsView : 'cards',
-          scrollY: suppressRefreshState ? window.scrollY : 0,
-          desktopScrollTop: suppressRefreshState ? (desktopResultsScrollRef.current?.scrollTop ?? 0) : 0,
-          selectedPlaceViewportTop: suppressRefreshState && selectedPlaceId ? getSearchPlaceViewportTop(selectedPlaceId) : null,
+          mobileResultsView: 'cards',
+          scrollY: 0,
+          desktopScrollTop: 0,
+          selectedPlaceViewportTop: null,
           pendingScrollRestore: false,
         })
       }
-      if (!suppressRefreshState) {
-        window.requestAnimationFrame(() => {
-          window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
-          desktopResultsScrollRef.current?.scrollTo({ top: 0, behavior: 'auto' })
-        })
-      }
+      window.requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+        desktopResultsScrollRef.current?.scrollTo({ top: 0, behavior: 'auto' })
+      })
     } catch (error) {
+      const elapsed = Date.now() - searchRequestStartTimeRef.current
+      if (elapsed < MIN_SEARCH_LOADING_MS) {
+        await new Promise((r) => setTimeout(r, MIN_SEARCH_LOADING_MS - elapsed))
+      }
+
       if (searchRequestVersion.current !== requestVersion) {
         return
       }
 
-      shouldScrollSearchResultsToTopRef.current = false
       const message = error instanceof Error && !error.message.startsWith('Failed to execute \'json\'')
         ? error.message
         : 'Search failed.'
@@ -707,8 +706,6 @@ function SearchHub({
     } finally {
       if (searchRequestVersion.current === requestVersion) {
         setIsInitialSearching(false)
-        setIsRefreshingSearch(false)
-        setIsPageLoading(false)
       }
     }
   }
@@ -728,36 +725,13 @@ function SearchHub({
       page: initialRequestedPage,
     }
     const nextSignature = JSON.stringify(nextAutoSearch)
-    const nextCriteriaSignature = JSON.stringify({
-      rawQuery: nextAutoSearch.rawQuery,
-      category: nextAutoSearch.category,
-      area: nextAutoSearch.area,
-      goodFor: nextAutoSearch.goodFor,
-      budget: nextAutoSearch.budget,
-    })
-    const displayedCriteriaSignature = JSON.stringify({
-      rawQuery,
-      category: selectedCategory,
-      area: selectedArea,
-      goodFor: selectedGoodFor,
-      budget: selectedBudget,
-    })
-
     if (lastAutoSearchSignatureRef.current === nextSignature) {
       return
     }
 
     lastAutoSearchSignatureRef.current = nextSignature
 
-    const hasDisplayedSearch =
-      hasSearched || searchResults.length > 0 || Boolean(lastSearchQuery.trim()) || Boolean(activeSearchLabel.trim())
-    const shouldRefreshInPlace = hasDisplayedSearch && nextCriteriaSignature === displayedCriteriaSignature
-
-    if (shouldRefreshInPlace && navigationSource === 'pop') {
-      return
-    }
-
-    void handleSearch(nextAutoSearch, shouldRefreshInPlace)
+    void handleSearch(nextAutoSearch)
   }, [
     activeSearchLabel,
     hasSearched,
@@ -792,19 +766,6 @@ function SearchHub({
       pendingScrollRestore: false,
     })
   }, [initialRouteCache, navigationSource])
-
-  useLayoutEffect(() => {
-    if (!shouldScrollSearchResultsToTopRef.current || isPageLoading || !hasSearched) {
-      return
-    }
-
-    shouldScrollSearchResultsToTopRef.current = false
-
-    window.requestAnimationFrame(() => {
-      window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
-      desktopResultsScrollRef.current?.scrollTo({ top: 0, behavior: 'auto' })
-    })
-  }, [hasSearched, isPageLoading, searchResults.length, safeCurrentPage])
 
   useEffect(() => {
     if (initialMode !== 'ask-ai') {

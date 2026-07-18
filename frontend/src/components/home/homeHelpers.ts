@@ -112,6 +112,8 @@ type BackendSearchPlace = {
   website_url?: string | null
   google_maps_url?: string | null
   distanceKm?: number | null
+  score?: number
+  search_terms?: string[] | null
 }
 
 type BackendSearchStatus = 'ok' | 'empty_query' | 'too_vague' | 'unsupported_location' | 'no_results'
@@ -132,6 +134,7 @@ type SearchRouteCache = {
   desktopScrollTop: number
   selectedPlaceViewportTop: number | null
   pendingScrollRestore: boolean
+  cachedAt: number
 }
 
 type AskAiRouteCache = {
@@ -271,7 +274,7 @@ function readSearchRouteCache(): SearchRouteCache | null {
   }
 }
 
-function writeSearchRouteCache(cache: SearchRouteCache) {
+function writeSearchRouteCache(cache: Omit<SearchRouteCache, 'cachedAt'>) {
   try {
     writePersistentStorage(getCurrentSearchRouteCacheKey(), JSON.stringify({
       ...cache,

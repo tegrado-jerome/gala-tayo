@@ -133,36 +133,53 @@ const RELATED_CATEGORY_GROUPS: Record<string, string[]> = {
   Park: ["Activity"],
 };
 
-const CATEGORY_GROUP_COMPETITORS: Record<string, string[]> = {
-  Mall: ["Cafe", "Food", "Hotel", "Nightlife"],
-  Cafe: ["Activity", "Cinema", "Hotel", "Mall", "Museum", "Nightlife", "Park"],
-  Hotel: ["Activity", "Cafe", "Cinema", "Food", "Mall", "Museum", "Nightlife", "Park"],
-};
+const CATEGORY_GROUP_COMPETITORS: Record<string, string[]> = {};
 
 const MALL_CONTEXT_TERMS = [
+  "alabang town center",
+  "araneta center",
+  "araneta city",
   "ayala center",
   "ayala malls",
+  "blue bay walk",
+  "bonifacio high street",
+  "century city",
   "circuit makati",
+  "commercenter",
   "eastwood",
+  "estancia",
+  "evia",
   "festival mall",
+  "gateway mall",
   "glorietta",
   "greenbelt",
   "greenhills",
+  "landmark makati",
+  "makati central square",
   "mall of asia",
   "market market",
   "megamall",
-  "power plant mall",
+  "molito",
+  "newport",
+  "parqal",
+  "power plant",
   "robinsons",
+  "robinsons place",
+  "robinsons mall",
+  "rockwell",
+  "santolan town plaza",
   "shangri la plaza",
   "sm aura",
   "sm city",
   "sm mall",
   "sm north",
   "the 30th",
+  "tiendesitas",
   "trinoma",
   "uptown",
   "venice grand canal",
   "vista mall",
+  "westgate",
 ];
 
 const BUDGET_QUERY_TERMS = new Set([
@@ -393,10 +410,6 @@ function placeMatchesCategoryGroup(place: NormalizedPlace, category: string): bo
 
   if (actualCategory && (RELATED_CATEGORY_GROUPS[category] ?? []).includes(actualCategory)) {
     return placeHasCategoryGroupEvidence(place, category);
-  }
-
-  if (actualCategory && (CATEGORY_GROUP_COMPETITORS[category] ?? []).includes(actualCategory)) {
-    return false;
   }
 
   return placeHasCategoryGroupEvidence(place, category);

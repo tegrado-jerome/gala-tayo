@@ -1,5 +1,5 @@
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
-import { getJsonCacheValue, setJsonCacheValue } from "../services/redisCacheService";
+import { getJsonCacheValue, setJsonCacheValue, deleteJsonCacheValue } from "../services/redisCacheService";
 
 export type PlaceFaq = {
   question: string;
@@ -97,6 +97,30 @@ export const PUBLIC_PLACE_COLUMNS = [
 
 const ACTIVE_PLACES_CACHE_KEY = "places:active:normalized:v2";
 const ACTIVE_PLACES_CACHE_TTL_SECONDS = 60 * 10;
+const ACTIVE_PLACES_DEPLOY_VERSION_KEY = "places:active:deploy-version";
+
+function getDeployVersion(): string {
+  return process.env.GALATAYO_DEPLOY_VERSION?.trim() || "local";
+}
+
+let deployVersionChecked = false;
+
+export async function clearActivePlacesCache(): Promise<void> {
+  deployVersionChecked = false;
+  await deleteJsonCacheValue(ACTIVE_PLACES_CACHE_KEY);
+  await deleteJsonCacheValue(ACTIVE_PLACES_DEPLOY_VERSION_KEY);
+}
+
+async function checkDeployVersion(): Promise<void> {
+  if (deployVersionChecked) return;
+  const currentVersion = getDeployVersion();
+  const cachedVersion = await getJsonCacheValue<string>(ACTIVE_PLACES_DEPLOY_VERSION_KEY);
+  if (cachedVersion !== currentVersion) {
+    await deleteJsonCacheValue(ACTIVE_PLACES_CACHE_KEY);
+    await setJsonCacheValue(ACTIVE_PLACES_DEPLOY_VERSION_KEY, currentVersion, { ttlSeconds: 86400 });
+  }
+  deployVersionChecked = true;
+}
 
 function nullableString(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null;
@@ -179,6 +203,7 @@ export function normalizePlaceRecord(row: Record<string, unknown>, warn?: (messa
 }
 
 export async function getActiveNormalizedPlaces(): Promise<NormalizedPlace[]> {
+  await checkDeployVersion();
   const cachedPlaces = await getJsonCacheValue<NormalizedPlace[]>(ACTIVE_PLACES_CACHE_KEY);
   if (cachedPlaces) return cachedPlaces;
 

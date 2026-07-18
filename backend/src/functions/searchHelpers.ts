@@ -68,6 +68,8 @@ export type SearchPlaceResult = {
   price_level: number | null;
   google_maps_url: string | null;
   distanceKm: number | null;
+  score: number;
+  search_terms: string[];
   tags: SearchTagMetadata[];
   matchedCategories: SearchCategoryMetadata[];
   matchedTags: SearchTagMetadata[];

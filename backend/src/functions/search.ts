@@ -10,8 +10,7 @@ import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { getJsonCacheValue, setJsonCacheValue } from "../services/redisCacheService";
 import { checkEndpointRateLimit } from "../utils/redisRateLimit";
 import { generateSearchCacheKey } from "../utils/cacheKey";
-import { normalizeSearchText, inferCategoryIdsFromQuery } from "../utils/searchMatching";
-import { inferMetroManilaLocationsFromQuery } from "../utils/metroManilaLocations";
+import { normalizeSearchText } from "../utils/searchMatching";
 import { validateMetroManilaSearchQuery, type SearchValidationStatus } from "../utils/searchQueryValidation";
 import { findAreaById, findCategoryById, findGoodForById } from "./filters";
 import {
@@ -38,10 +37,7 @@ import {
   getNearbySearchContext,
   getRowDistanceKm,
 } from "./searchHelpers";
-import {
-  mapPlaceRowToSearchResult,
-  inferGoodForIdsFromQuery,
-} from "./searchScoring";
+import { mapPlaceRowToSearchResult } from "./searchScoring";
 import { getActiveNormalizedPlaces } from "../domain/places";
 import { getExactLocationLabelForIntent, interpretPlaceSearchQuery, rankPlaces, type PlaceSearchFilters } from "../domain/placeSearch";
 
@@ -199,42 +195,22 @@ function logSearchAnalyticsEvent(context: InvocationContext, { searchId, status,
 }
 
 export async function findSearchPlaces({
-  normalizedQuery, categoryIds, areaIds, goodForIds, budget,
-  selectedIndoorOutdoor, selectedWeatherFit, requirePromptMatch,
-  nearbySearch, prioritizeTrending, strictPlaceSearch,
-  explicitFilters, sort,
+  normalizedQuery, nearbySearch, explicitFilters, sort,
 }: {
-  normalizedQuery: string; categoryIds: string[]; areaIds: string[]; goodForIds: string[]; budget: BudgetValue;
-  selectedIndoorOutdoor: string | null; selectedWeatherFit: string | null; requirePromptMatch: boolean;
-  nearbySearch: NearbySearchContext | null; prioritizeTrending: boolean; strictPlaceSearch: boolean;
-  explicitFilters: PlaceSearchFilters; sort?: string | null;
+  normalizedQuery: string; nearbySearch: NearbySearchContext | null; explicitFilters: PlaceSearchFilters; sort?: string | null;
 }): Promise<SearchPlaceResult[]> {
-  void categoryIds;
-  void areaIds;
-  void goodForIds;
-  void budget;
-  void selectedIndoorOutdoor;
-  void selectedWeatherFit;
-  void requirePromptMatch;
-  void prioritizeTrending;
-  void strictPlaceSearch;
-
   const rankedRows = rankPlaces(await getActiveNormalizedPlaces(), normalizedQuery, explicitFilters)
     .map(({ place, score }) => {
       const row = place as unknown as PlaceRow;
-      return {
-        row,
-        score,
-        distanceKm: nearbySearch ? getRowDistanceKm(row, nearbySearch.userLocation) : null,
-      };
+      return { row, score, distanceKm: nearbySearch ? getRowDistanceKm(row, nearbySearch.userLocation) : null };
     });
 
   const hasNearbyMatches = nearbySearch
-    ? rankedRows.some(({ distanceKm }: { distanceKm: number | null }) => distanceKm !== null && distanceKm <= nearbySearch.radiusKm)
+    ? rankedRows.some(({ distanceKm }) => distanceKm !== null && distanceKm <= nearbySearch.radiusKm)
     : false;
 
   return rankedRows
-    .sort((left: typeof rankedRows[0], right: typeof rankedRows[0]) => {
+    .sort((left, right) => {
       if (nearbySearch && hasNearbyMatches) {
         const leftIsNearby = left.distanceKm !== null && left.distanceKm <= nearbySearch.radiusKm;
         const rightIsNearby = right.distanceKm !== null && right.distanceKm <= nearbySearch.radiusKm;
@@ -254,8 +230,8 @@ export async function findSearchPlaces({
       }
       return String(left.row.name ?? "").localeCompare(String(right.row.name ?? ""));
     })
-    .map(({ row, distanceKm }: { row: PlaceRow; distanceKm: number | null }) =>
-      mapPlaceRowToSearchResult(row, { normalizedQuery, categoryIds, distanceKm })
+    .map(({ row, distanceKm, score }) =>
+      mapPlaceRowToSearchResult(row, { normalizedQuery, categoryIds: [], distanceKm, score })
     );
 }
 
@@ -283,22 +259,15 @@ export async function search(
     const weatherFitFilter = getOptionalFilterId(getFilterValue(body, filters, "weather_fit")) ?? null;
     const strictPlaceSearch = body.strictPlaceSearch === true;
     const page = getPositiveInteger(body.page, DEFAULT_SEARCH_PAGE, { min: 1 });
-    const limit = Math.min(getPositiveInteger(body.limit, STRICT_SEARCH_LIMIT, { min: 1 }), 20);
+    const limit = Math.min(getPositiveInteger(body.limit, STRICT_SEARCH_LIMIT, { min: 1 }), 50);
     const shouldExploreAll = body.exploreAll === true;
     const normalizedQuery = normalizeSearchText(query);
     const nearbySearch = getNearbySearchContext(body);
     const selectedCategory = findCategoryById(categoryId);
     const selectedArea = findAreaById(areaId);
     const selectedGoodFor = findGoodForById(goodForId);
-    const inferredCategoryIds = inferCategoryIdsFromQuery(normalizedQuery);
-    const inferredLocations = inferMetroManilaLocationsFromQuery(normalizedQuery);
-    const inferredGoodForIds = inferGoodForIdsFromQuery(normalizedQuery);
-    const discoveryCategoryIds = categoryId !== "all" ? [categoryId] : inferredCategoryIds;
-    const discoveryAreaIds = areaId !== "all" ? [areaId] : inferredLocations.cityIds.slice(0, 1);
-    const discoveryGoodForIds = goodForId !== "all" ? [goodForId] : inferredGoodForIds;
     const hasSelectedFilters = categoryId !== "all" || areaId !== "all" || goodForId !== "all" || budget !== "any" || Boolean(indoorOutdoorFilter) || Boolean(weatherFitFilter);
     const hasNearbySearch = Boolean(nearbySearch);
-    const shouldRequirePromptMatch = !hasSelectedFilters && !hasNearbySearch && Boolean(normalizedQuery) && discoveryCategoryIds.length === 0 && discoveryAreaIds.length === 0 && discoveryGoodForIds.length === 0;
     const isBroadDiscoverySearch = shouldExploreAll && !normalizedQuery && categoryId === "all" && areaId === "all" && goodForId === "all" && budget === "any";
     const queryValidation = validateMetroManilaSearchQuery({ query, hasSelectedFilters, hasNearbySearch, hasExplicitAreaFilter: areaId !== "all", allowBroadDiscovery: isBroadDiscoverySearch });
 
@@ -337,10 +306,8 @@ export async function search(
     }
 
     const places = await findSearchPlaces({
-      normalizedQuery, categoryIds: discoveryCategoryIds, areaIds: discoveryAreaIds, goodForIds: discoveryGoodForIds, budget,
-      selectedIndoorOutdoor: indoorOutdoorFilter, selectedWeatherFit: weatherFitFilter,
-      requirePromptMatch: isBroadDiscoverySearch ? false : shouldRequirePromptMatch,
-      nearbySearch, prioritizeTrending: isBroadDiscoverySearch, strictPlaceSearch,
+      normalizedQuery,
+      nearbySearch,
       sort,
       explicitFilters: {
         category: categoryId,
