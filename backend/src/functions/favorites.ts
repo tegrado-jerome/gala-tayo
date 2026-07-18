@@ -1,7 +1,8 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { findPlaceDetailByIdOrSlug, findPlaceDetailsByIds } from "../data/placeDetails";
-import { AuthenticatedUser, validateJwt } from "../utils/auth";
+import { getAuthenticatedUser, unauthorized, type AuthenticatedUser, validateJwt } from "../utils/auth";
+import { checkEndpointRateLimit } from "../utils/redisRateLimit";
 
 type Favorite = {
   id: string;
@@ -37,28 +38,7 @@ type FavoritePlaceIdentifier = {
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i;
-function unauthorized(message: string): HttpResponseInit {
-  return {
-    status: 401,
-    jsonBody: {
-      message,
-    },
-  };
-}
 
-async function getAuthenticatedUser(request: HttpRequest): Promise<AuthenticatedUser | null> {
-  const authHeader = request.headers.get("authorization");
-
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return null;
-  }
-
-  try {
-    return await validateJwt(request);
-  } catch {
-    return null;
-  }
-}
 
 function getTrimmedString(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null;
@@ -173,9 +153,10 @@ async function getUserFavorites(userId: string): Promise<{ favorites: Array<Favo
   const favoritesTable = supabaseAdmin.from("favorites") as any;
 
   const { data: favorites, error: favoritesError } = await favoritesTable
-    .select("id, user_id, place_id, created_at")
+      .select("id, user_id, place_id, created_at")
     .eq("user_id", userId)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(100);
 
   if (favoritesError) {
     return {
@@ -249,6 +230,9 @@ export async function favoritesList(
   context: InvocationContext
 ): Promise<HttpResponseInit> {
   try {
+    const rateCheck = await checkEndpointRateLimit(request, "favorites-list", 30, 60);
+    if (!rateCheck.allowed && rateCheck.response) return rateCheck.response;
+
     const user = await getAuthenticatedUser(request);
 
     if (!user?.id) {
@@ -290,6 +274,9 @@ export async function favoritesCreate(
   context: InvocationContext
 ): Promise<HttpResponseInit> {
   try {
+    const rateCheck = await checkEndpointRateLimit(request, "favorites-create", 20, 60);
+    if (!rateCheck.allowed && rateCheck.response) return rateCheck.response;
+
     const user = await getAuthenticatedUser(request);
 
     if (!user?.id) {
@@ -442,6 +429,9 @@ export async function favoritesDelete(
   context: InvocationContext
 ): Promise<HttpResponseInit> {
   try {
+    const rateCheck = await checkEndpointRateLimit(request, "favorites-delete", 20, 60);
+    if (!rateCheck.allowed && rateCheck.response) return rateCheck.response;
+
     const user = await getAuthenticatedUser(request);
 
     if (!user?.id) {
@@ -534,6 +524,9 @@ export async function favoritesDeleteAll(
   context: InvocationContext
 ): Promise<HttpResponseInit> {
   try {
+    const rateCheck = await checkEndpointRateLimit(request, "favorites-delete-all", 5, 60);
+    if (!rateCheck.allowed && rateCheck.response) return rateCheck.response;
+
     const user = await getAuthenticatedUser(request);
 
     if (!user?.id) {

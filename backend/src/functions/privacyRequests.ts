@@ -1,8 +1,8 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
-import { validateJwt } from "../utils/auth";
+import { getAuthenticatedUser, isAdminUser, unauthorized, badRequest, validateJwt } from "../utils/auth";
 import { logAdminAction } from "../utils/adminAudit";
-import { badRequest, getAuthenticatedUser, isAdminUser, unauthorized } from "./placeCommentHelpers";
+import { checkEndpointRateLimit } from "../utils/redisRateLimit";
 
 const PRIVACY_REQUEST_TYPES = [
   "access",
@@ -125,6 +125,9 @@ export async function privacyRequestsMe(request: HttpRequest, context: Invocatio
       };
     }
 
+    const rateCheck = await checkEndpointRateLimit(request, "privacy-requests-create", 5, 60);
+    if (!rateCheck.allowed && rateCheck.response) return rateCheck.response;
+
     const body = (await request.json().catch(() => null)) as { requestType?: unknown; request_type?: unknown; details?: unknown } | null;
     if (!body) return badRequest("Invalid JSON body.");
 
@@ -164,6 +167,9 @@ export async function privacyRequestsMe(request: HttpRequest, context: Invocatio
 
 export async function accountDeletionRequestMe(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
   try {
+    const rateCheck = await checkEndpointRateLimit(request, "account-deletion-request", 3, 60);
+    if (!rateCheck.allowed && rateCheck.response) return rateCheck.response;
+
     const user = await validateJwt(request);
     const body = (await request.json().catch(() => ({}))) as { reason?: unknown } | null;
     const reason = getCleanText(body?.reason, DETAILS_MAX_LENGTH);

@@ -1,10 +1,8 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { checkEndpointRateLimit } from "../utils/redisRateLimit";
+import { getAuthenticatedUser, unauthorized, badRequest } from "../utils/auth";
 import {
-  unauthorized,
-  badRequest,
-  getAuthenticatedUser,
   getCommentId,
   readCleanBody,
   readCleanCreateComment,
@@ -40,7 +38,8 @@ export async function placeCommentsList(
     const { data, error } = await commentsTable
       .select(COMMENT_COLUMNS)
       .eq("place_id", placeId)
-      .eq("status", "visible");
+      .eq("status", "visible")
+      .limit(100);
 
     if (error) {
       context.error("Failed to fetch place comments:", error);

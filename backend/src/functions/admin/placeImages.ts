@@ -5,7 +5,7 @@ import {
   getApprovedPlaceImagesFresh,
   invalidateApprovedPlaceImagesCache,
 } from "../../services/placeImagesService";
-import { AuthenticatedUser, validateJwt } from "../../utils/auth";
+import { getAuthenticatedUser, isAdminUser, requireAdmin, type AuthenticatedUser } from "../../utils/auth";
 import { deleteR2Object } from "../../utils/r2ImageStorage";
 import { invalidatePlaceDetailCache } from "../../data/placeDetails";
 import { logAdminAction } from "../../utils/adminAudit";
@@ -56,48 +56,6 @@ function response(status: number, message: string): HttpResponseInit {
     status,
     jsonBody: { message },
   };
-}
-
-async function getAuthenticatedUser(request: HttpRequest): Promise<AuthenticatedUser | null> {
-  const authHeader = request.headers.get("authorization");
-
-  if (!authHeader?.startsWith("Bearer ")) {
-    return null;
-  }
-
-  try {
-    return await validateJwt(request);
-  } catch {
-    return null;
-  }
-}
-
-async function isAdminUser(userId: string) {
-  const supabase = await getSupabaseAdminClient();
-  const { data, error } = await (supabase.from("users") as any)
-    .select("role")
-    .eq("id", userId)
-    .maybeSingle();
-
-  if (error) {
-    return false;
-  }
-
-  return ((data as UserRow | null)?.role || "").trim().toLowerCase() === "admin";
-}
-
-async function requireAdmin(request: HttpRequest): Promise<{ user?: AuthenticatedUser; response?: HttpResponseInit }> {
-  const user = await getAuthenticatedUser(request);
-
-  if (!user?.id) {
-    return { response: response(401, "Missing or invalid Authorization header.") };
-  }
-
-  if (!(await isAdminUser(user.id))) {
-    return { response: response(403, "Admin access required.") };
-  }
-
-  return { user };
 }
 
 async function getPlace(placeId: string): Promise<PlaceRow | null> {

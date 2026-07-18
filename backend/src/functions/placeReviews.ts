@@ -1,6 +1,6 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
-import { AuthenticatedUser, validateJwt } from "../utils/auth";
+import { AuthenticatedUser, getAuthenticatedUser, unauthorized, badRequest, validateJwt } from "../utils/auth";
 import { getPlaceIdentifier, isPlaceUuid, resolvePlaceId } from "../utils/placeIdentity";
 import { checkEndpointRateLimit } from "../utils/redisRateLimit";
 
@@ -30,43 +30,11 @@ type ReviewRequestBody = {
 const REVIEW_COLUMNS = "id, place_id, submitted_by, rating, comment, created_at, updated_at";
 const COMMENT_MAX_LENGTH = 1000;
 
-function unauthorized(message: string): HttpResponseInit {
-  return {
-    status: 401,
-    jsonBody: {
-      message,
-    },
-  };
-}
-
-function badRequest(message: string): HttpResponseInit {
-  return {
-    status: 400,
-    jsonBody: {
-      message,
-    },
-  };
-}
-
 function logDatabaseError(context: InvocationContext, message: string, error: unknown) {
   context.error(message, error);
 
   if (process.env.NODE_ENV !== "production") {
     console.error(message, error);
-  }
-}
-
-async function getAuthenticatedUser(request: HttpRequest): Promise<AuthenticatedUser | null> {
-  const authHeader = request.headers.get("authorization");
-
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return null;
-  }
-
-  try {
-    return await validateJwt(request);
-  } catch {
-    return null;
   }
 }
 
@@ -161,7 +129,8 @@ export async function placeReviewsList(
     const { data, error } = await reviewsTable
       .select(REVIEW_COLUMNS)
       .eq("place_id", placeId)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(50);
 
     if (error) {
       context.error("Failed to fetch place reviews:", error);
@@ -205,6 +174,9 @@ export async function placeReviewsUpsert(
   context: InvocationContext
 ): Promise<HttpResponseInit> {
   try {
+    const rateCheck = await checkEndpointRateLimit(request, "place-reviews-upsert", 10, 60);
+    if (!rateCheck.allowed && rateCheck.response) return rateCheck.response;
+
     const placeIdentifier = getPlaceIdentifier(request);
 
     if (!placeIdentifier) {
@@ -325,6 +297,9 @@ export async function placeReviewsDelete(
   context: InvocationContext
 ): Promise<HttpResponseInit> {
   try {
+    const rateCheck = await checkEndpointRateLimit(request, "place-reviews-delete", 10, 60);
+    if (!rateCheck.allowed && rateCheck.response) return rateCheck.response;
+
     const placeIdentifier = getPlaceIdentifier(request);
 
     if (!placeIdentifier) {

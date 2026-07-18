@@ -1,6 +1,6 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
-import { AuthenticatedUser, validateJwt } from "../utils/auth";
+import { getAuthenticatedUser, isAdminUser, requireAdmin, unauthorized, forbidden, badRequest, type AuthenticatedUser } from "../utils/auth";
 import { checkEndpointRateLimit } from "../utils/redisRateLimit";
 import { isPlaceUuid } from "../utils/placeIdentity";
 
@@ -53,10 +53,6 @@ type PlaceImageRow = {
   image_url: string | null;
 };
 
-type UserRoleRow = {
-  role: string | null;
-};
-
 type ProfileRow = {
   user_id: string;
   username: string | null;
@@ -79,66 +75,6 @@ const PLACE_REPORT_REASONS = [
 const PLACE_REPORT_STATUSES = ["pending", "reviewing", "resolved", "dismissed"] as const;
 const PLACE_REPORT_DETAILS_MAX_LENGTH = 1000;
 const PLACE_REPORT_NOTE_MAX_LENGTH = 1000;
-
-function unauthorized(message: string): HttpResponseInit {
-  return {
-    status: 401,
-    jsonBody: { message },
-  };
-}
-
-function forbidden(message: string): HttpResponseInit {
-  return {
-    status: 403,
-    jsonBody: { message },
-  };
-}
-
-function badRequest(message: string): HttpResponseInit {
-  return {
-    status: 400,
-    jsonBody: { message },
-  };
-}
-
-async function getAuthenticatedUser(request: HttpRequest): Promise<AuthenticatedUser | null> {
-  const authHeader = request.headers.get("authorization");
-
-  if (!authHeader?.startsWith("Bearer ")) {
-    return null;
-  }
-
-  try {
-    return await validateJwt(request);
-  } catch {
-    return null;
-  }
-}
-
-async function isAdminUser(userId: string): Promise<boolean> {
-  const supabaseAdmin = await getSupabaseAdminClient();
-  const { data, error } = await supabaseAdmin.from("users").select("role").eq("id", userId).maybeSingle();
-
-  if (error) {
-    return false;
-  }
-
-  return ((data as UserRoleRow | null)?.role || "").toLowerCase() === "admin";
-}
-
-async function requireAdmin(request: HttpRequest): Promise<{ user?: AuthenticatedUser; response?: HttpResponseInit }> {
-  const user = await getAuthenticatedUser(request);
-
-  if (!user?.id) {
-    return { response: unauthorized("Missing or invalid Authorization header.") };
-  }
-
-  if (!(await isAdminUser(user.id))) {
-    return { response: forbidden("Admin access required.") };
-  }
-
-  return { user };
-}
 
 async function getPlace(placeId: string): Promise<PlaceRow | null> {
   const supabaseAdmin = await getSupabaseAdminClient();
@@ -385,7 +321,8 @@ export async function myPlaceReportsList(
     const { data: reportData, error: reportsError } = await reportsTable
       .select("id, place_id, reported_image_id, reason, details, status, moderator_note, resolved_by, resolved_at, created_at")
       .eq("reported_by", user.id)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(100);
 
     if (reportsError) {
       context.error("Failed to fetch user place reports:", reportsError);
@@ -470,7 +407,7 @@ export async function adminPlaceReportsList(
       query = query.eq("status", statusQuery);
     }
 
-    const { data: reportData, error: reportsError } = await query;
+    const { data: reportData, error: reportsError } = await query.limit(100);
 
     if (reportsError) {
       context.error("Failed to fetch admin place reports:", reportsError);

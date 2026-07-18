@@ -1,7 +1,7 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { findPlaceDetailsByIds } from "../data/placeDetails";
-import { AuthenticatedUser, validateJwt } from "../utils/auth";
+import { getAuthenticatedUser, unauthorized, type AuthenticatedUser } from "../utils/auth";
 import { checkEndpointRateLimit } from "../utils/redisRateLimit";
 
 type HistoryRow = {
@@ -31,22 +31,7 @@ type HistoryPlace = {
   photos: string[] | null;
 };
 
-function unauthorized(message: string): HttpResponseInit {
-  return {
-    status: 401,
-    jsonBody: { message },
-  };
-}
 
-async function getAuthenticatedUser(request: HttpRequest): Promise<AuthenticatedUser | null> {
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) return null;
-  try {
-    return await validateJwt(request);
-  } catch {
-    return null;
-  }
-}
 
 function toSupabaseErrorDetails(error: unknown) {
   const supabaseError = error as {
@@ -74,7 +59,8 @@ async function getUserHistory(userId: string, context: InvocationContext): Promi
     .select("id, user_id, type, query, place_id, created_at")
     .eq("user_id", userId)
     .eq("type", "place_view")
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .limit(100);
 
   if (historyError) {
     context.error("Supabase history query failed.", toSupabaseErrorDetails(historyError));

@@ -1,6 +1,6 @@
 import { HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
-import { AuthenticatedUser, validateJwt } from "../utils/auth";
+import { AuthenticatedUser, getAuthenticatedUser, isAdminUser, unauthorized, badRequest, validateJwt } from "../utils/auth";
 import { getPlaceIdentifier, isPlaceUuid, resolvePlaceId } from "../utils/placeIdentity";
 
 export type PlaceCommentRow = {
@@ -77,10 +77,6 @@ export type AdminCommentReportRow = {
   status: ReportStatus;
 };
 
-export type AdminUserRoleRow = {
-  role: string | null;
-};
-
 export type CommentAuthorProfileRow = {
   user_id: string;
   username: string | null;
@@ -89,49 +85,11 @@ export type CommentAuthorProfileRow = {
   provider_avatar_url: string | null;
 };
 
-export function unauthorized(message: string): HttpResponseInit {
-  return {
-    status: 401,
-    jsonBody: { message },
-  };
-}
-
-export function badRequest(message: string): HttpResponseInit {
-  return {
-    status: 400,
-    jsonBody: { message },
-  };
-}
-
 export function logDatabaseError(context: InvocationContext, message: string, error: unknown) {
   context.error(message, error);
   if (process.env.NODE_ENV !== "production") {
     console.error(message, error);
   }
-}
-
-export async function getAuthenticatedUser(request: HttpRequest): Promise<AuthenticatedUser | null> {
-  const authHeader = request.headers.get("authorization");
-  if (!authHeader || !authHeader.startsWith("Bearer ")) return null;
-  try {
-    return await validateJwt(request);
-  } catch {
-    return null;
-  }
-}
-
-export async function isAdminUser(userId: string): Promise<boolean> {
-  const supabaseAdmin = await getSupabaseAdminClient();
-  const { data, error } = await supabaseAdmin
-    .from("users")
-    .select("role")
-    .eq("id", userId)
-    .maybeSingle();
-
-  if (error) return false;
-
-  const user = data as AdminUserRoleRow | null;
-  return (user?.role || "").trim().toLowerCase() === "admin";
 }
 
 export function getCommentId(request: HttpRequest): string | null {

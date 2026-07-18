@@ -1,6 +1,6 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
-import { AuthenticatedUser, validateJwt } from "../utils/auth";
+import { getAuthenticatedUser, isAdminUser, requireAdmin, unauthorized, forbidden, badRequest, type AuthenticatedUser } from "../utils/auth";
 import { checkEndpointRateLimit } from "../utils/redisRateLimit";
 import { isPlaceUuid } from "../utils/placeIdentity";
 import { logAdminAction } from "../utils/adminAudit";
@@ -33,10 +33,6 @@ type UpdateUserReportBody = {
   status?: unknown;
   moderator_note?: unknown;
   moderatorNote?: unknown;
-};
-
-type UserRoleRow = {
-  role: string | null;
 };
 
 type UserRow = {
@@ -76,66 +72,6 @@ const USER_REPORT_REASONS = [
 const USER_REPORT_STATUSES = ["pending", "dismissed", "action_taken"] as const;
 const REPORT_DETAILS_MAX_LENGTH = 500;
 const MODERATOR_NOTE_MAX_LENGTH = 1000;
-
-function unauthorized(message: string): HttpResponseInit {
-  return {
-    status: 401,
-    jsonBody: { message },
-  };
-}
-
-function forbidden(message: string): HttpResponseInit {
-  return {
-    status: 403,
-    jsonBody: { message },
-  };
-}
-
-function badRequest(message: string): HttpResponseInit {
-  return {
-    status: 400,
-    jsonBody: { message },
-  };
-}
-
-async function getAuthenticatedUser(request: HttpRequest): Promise<AuthenticatedUser | null> {
-  const authHeader = request.headers.get("authorization");
-
-  if (!authHeader?.startsWith("Bearer ")) {
-    return null;
-  }
-
-  try {
-    return await validateJwt(request);
-  } catch {
-    return null;
-  }
-}
-
-async function isAdminUser(userId: string): Promise<boolean> {
-  const supabaseAdmin = await getSupabaseAdminClient();
-  const { data, error } = await supabaseAdmin.from("users").select("role").eq("id", userId).maybeSingle();
-
-  if (error) {
-    return false;
-  }
-
-  return ((data as UserRoleRow | null)?.role || "").toLowerCase() === "admin";
-}
-
-async function requireAdmin(request: HttpRequest): Promise<{ user?: AuthenticatedUser; response?: HttpResponseInit }> {
-  const user = await getAuthenticatedUser(request);
-
-  if (!user?.id) {
-    return { response: unauthorized("Missing or invalid Authorization header.") };
-  }
-
-  if (!(await isAdminUser(user.id))) {
-    return { response: forbidden("Admin access required.") };
-  }
-
-  return { user };
-}
 
 async function readCleanUserReport(
   request: HttpRequest
@@ -357,7 +293,8 @@ export async function myUserReportsList(
     const { data, error } = await (supabaseAdmin.from("user_reports") as any)
       .select("id, reported_user_id, reason, status, created_at")
       .eq("reporter_user_id", user.id)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(100);
 
     if (error) {
       context.error("Failed to fetch current user reports:", error);
@@ -418,7 +355,7 @@ export async function adminUserReportsList(
       query = query.eq("status", statusQuery);
     }
 
-    const { data: reportData, error: reportsError } = await query;
+    const { data: reportData, error: reportsError } = await query.limit(100);
 
     if (reportsError) {
       context.error("Failed to fetch admin user reports:", reportsError);

@@ -256,12 +256,18 @@ export async function canViewProfile(viewerId: string | null | undefined, profil
 
 export async function canSeeFollowers(viewerId: string | null | undefined, targetProfile: SocialProfile) {
   if (viewerId === targetProfile.user_id) return true;
-  return targetProfile.is_public;
+  const visibility = targetProfile.show_followers ?? "everyone";
+  if (visibility === "everyone") return true;
+  if (visibility === "followers") return isAcceptedFollower(viewerId, targetProfile.user_id);
+  return false;
 }
 
 export async function canSeeFollowing(viewerId: string | null | undefined, targetProfile: SocialProfile) {
   if (viewerId === targetProfile.user_id) return true;
-  return targetProfile.is_public;
+  const visibility = targetProfile.show_following ?? "everyone";
+  if (visibility === "everyone") return true;
+  if (visibility === "followers") return isAcceptedFollower(viewerId, targetProfile.user_id);
+  return false;
 }
 
 export async function canViewGalaPlan(viewerId: string | null | undefined, galaPlan: SocialGalaPlan) {

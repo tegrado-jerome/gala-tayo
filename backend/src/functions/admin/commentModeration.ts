@@ -1,11 +1,8 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getSupabaseAdminClient } from "../../config/supabaseAdmin";
 import { isPlaceUuid } from "../../utils/placeIdentity";
+import { getAuthenticatedUser, isAdminUser, unauthorized, badRequest } from "../../utils/auth";
 import {
-  unauthorized,
-  badRequest,
-  getAuthenticatedUser,
-  isAdminUser,
   readCleanCommentReportModerationAction,
   getCommentPreview,
   type PlaceCommentRow,
