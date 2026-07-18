@@ -1,5 +1,6 @@
 import type { NormalizedPlace } from "./places";
 import { FINAL_PLACE_CATEGORIES } from "./places";
+import { CATEGORY_KEYWORDS } from "../utils/categoryKeywords";
 import { getSearchTerms, includesNormalizedPhrase, normalizeSearchText, uniqueNormalizedTerms } from "../utils/searchMatching";
 
 export type PlaceSearchIntent = {
@@ -39,16 +40,16 @@ type BudgetConstraints = {
 };
 
 const CATEGORY_ALIASES: Record<string, string[]> = {
-  Activity: ["activity", "activities", "things to do", "laro", "games", "arcade", "bowling", "sports"],
-  Cafe: ["cafe", "coffee", "coffee shop", "kapihan", "kape"],
-  Cinema: ["cinema", "movie", "movies", "sine", "pelikula"],
-  Food: ["food", "restaurant", "resto", "kainan", "pagkain", "food trip", "saan kakain"],
-  Heritage: ["heritage", "history", "historical", "kasaysayan", "old church", "monument"],
-  Hotel: ["hotel", "hotels", "staycation", "accommodation", "matutuluyan", "overnight stay"],
-  Mall: ["mall", "shopping", "shopping center", "food court"],
-  Museum: ["museum", "museo", "exhibit", "gallery", "educational trip"],
-  Nightlife: ["nightlife", "bar", "drinks", "inuman", "club", "late night"],
-  Park: ["park", "parke", "garden", "green space", "picnic"],
+  Activity: ["activity", "activities", "things to do", "laro", "games", "arcade", "bowling", "sports", ...(CATEGORY_KEYWORDS.activity ?? []), ...(CATEGORY_KEYWORDS.arcade ?? [])],
+  Cafe: ["cafe", "coffee", "coffee shop", "kapihan", "kape", ...(CATEGORY_KEYWORDS.cafe ?? [])],
+  Cinema: ["cinema", "movie", "movies", "sine", "pelikula", ...(CATEGORY_KEYWORDS.cinema ?? [])],
+  Food: ["food", "restaurant", "resto", "kainan", "pagkain", "food trip", "saan kakain", ...(CATEGORY_KEYWORDS.food ?? []), ...(CATEGORY_KEYWORDS.kainan ?? [])],
+  Heritage: ["heritage", "history", "historical", "kasaysayan", "old church", "monument", ...(CATEGORY_KEYWORDS.heritage ?? [])],
+  Hotel: ["hotel", "hotels", "staycation", "accommodation", "matutuluyan", "overnight stay", ...(CATEGORY_KEYWORDS.hotel ?? []), ...(CATEGORY_KEYWORDS.stay ?? [])],
+  Mall: ["mall", "shopping", "shopping center", "food court", ...(CATEGORY_KEYWORDS.mall ?? [])],
+  Museum: ["museum", "museo", "exhibit", "gallery", "educational trip", ...(CATEGORY_KEYWORDS.museum ?? [])],
+  Nightlife: ["nightlife", "bar", "drinks", "inuman", "club", "late night", ...(CATEGORY_KEYWORDS.nightlife ?? [])],
+  Park: ["park", "parke", "garden", "green space", "picnic", ...(CATEGORY_KEYWORDS.park ?? []), ...(CATEGORY_KEYWORDS.parke ?? [])],
 };
 
 const CITY_ALIASES: Record<string, string[]> = {
@@ -93,6 +94,8 @@ const INTENT_ALIASES: Record<string, string[]> = {
   staycation: ["staycation", "overnight", "hotel"],
   pool: ["pool", "swimming pool"],
   study: ["study", "work", "laptop", "quiet"],
+  chill: ["chill", "relax", "relaxing", "unwind", "tambay", "tambayan", "cozy", "vibe"],
+  tourist: ["tourist", "tourist spot", "sightseeing", "landmark", "attraction", "pasyalan", "galaan", "saan pupunta"],
   free: ["free", "libre", "libreng", "walang bayad"],
 };
 
@@ -108,6 +111,40 @@ const GOOD_FOR_FILTERS: Record<string, string[]> = {
   "photo-spot": ["Photo Spot", "Content Shoot"],
   relaxing: ["Relaxing", "Chill", "Quiet Time"],
 };
+
+const BUDGET_QUERY_TERMS = new Set([
+  "budget",
+  "php",
+  "p",
+  "peso",
+  "pesos",
+  "per",
+  "head",
+  "person",
+  "each",
+  "under",
+  "below",
+  "less",
+  "than",
+  "hanggang",
+  "mga",
+  "max",
+  "maximum",
+  "within",
+  "around",
+  "about",
+  "at",
+  "least",
+  "minimum",
+  "min",
+  "over",
+  "above",
+  "starting",
+  "starts",
+  "premium",
+  "luxury",
+  "upscale",
+]);
 
 function matchesAny(text: string, phrases: string[]): boolean {
   return phrases.some((phrase) => includesNormalizedPhrase(text, phrase));
@@ -145,13 +182,35 @@ function detectAllFromDictionary(normalizedQuery: string, dictionary: Record<str
     .map(([key]) => key);
 }
 
+function parseBudgetAmount(rawAmount: string, suffix = ""): number | null {
+  const normalizedAmount = rawAmount.replace(/,/g, "").trim();
+  const parsedAmount = Number(normalizedAmount);
+  if (!Number.isFinite(parsedAmount) || parsedAmount < 0) return null;
+  const multiplier = normalizeSearchText(suffix) === "k" ? 1000 : 1;
+  return Math.round(parsedAmount * multiplier);
+}
+
+function getBudgetAmountPattern(): string {
+  return String.raw`(?:php|p|₱|peso|pesos)?\s*(\d{1,5}(?:,\d{3})?|\d+(?:\.\d+)?)\s*(k)?`;
+}
+
 function detectBudget(normalizedQuery: string): { maxBudget: number | null; minBudget: number | null; free: boolean } {
   const free = matchesAny(normalizedQuery, INTENT_ALIASES.free);
-  const underMatch = normalizedQuery.match(/\b(?:under|below|less than|hanggang|mga under)\s*(?:php|p|peso|pesos)?\s*(\d{2,5})\b/);
-  const overMatch = normalizedQuery.match(/\b(?:over|above|at least|minimum|min)\s*(?:php|p|peso|pesos)?\s*(\d{2,5})\b/);
+  const amountPattern = getBudgetAmountPattern();
+  const underMatch = normalizedQuery.match(new RegExp(String.raw`\b(?:under|below|less than|hanggang|mga under|max|maximum|budget|around|about|mga|within)\s*${amountPattern}\b`));
+  const overMatch = normalizedQuery.match(new RegExp(String.raw`\b(?:over|above|at least|minimum|min|starting at|starts at)\s*${amountPattern}\b`));
+  const rangeMatch = normalizedQuery.match(new RegExp(String.raw`\b${amountPattern}\s*(?:(?:to|and|through)\s*)?${amountPattern}\b`));
+  const amountWithCurrencyMatch = normalizedQuery.match(new RegExp(String.raw`(?:php|p|₱|peso|pesos)\s*(\d{1,5}(?:,\d{3})?|\d+(?:\.\d+)?)\s*(k)?\b`));
+  const standaloneAmountMatch = normalizedQuery.match(/\b(\d{2,5}(?:,\d{3})?|\d+(?:\.\d+)?)\s*(k)?\s*(?:per head|per person|each|budget|php|peso|pesos)?\b/);
+  const premium = matchesAny(normalizedQuery, ["premium", "luxury", "high end", "high-end", "upscale"]);
+  const underAmount = underMatch ? parseBudgetAmount(underMatch[1], underMatch[2] ?? "") : null;
+  const overAmount = overMatch ? parseBudgetAmount(overMatch[1], overMatch[2] ?? "") : null;
+  const rangeMaxAmount = rangeMatch ? parseBudgetAmount(rangeMatch[3], rangeMatch[4] ?? "") : null;
+  const currencyAmount = amountWithCurrencyMatch ? parseBudgetAmount(amountWithCurrencyMatch[1], amountWithCurrencyMatch[2] ?? "") : null;
+  const standaloneAmount = standaloneAmountMatch ? parseBudgetAmount(standaloneAmountMatch[1], standaloneAmountMatch[2] ?? "") : null;
   return {
-    maxBudget: free ? 0 : underMatch ? Number(underMatch[1]) : null,
-    minBudget: overMatch ? Number(overMatch[1]) : null,
+    maxBudget: free ? 0 : overAmount !== null ? null : underAmount ?? rangeMaxAmount ?? currencyAmount ?? standaloneAmount,
+    minBudget: overAmount ?? (premium ? 2000 : null),
     free,
   };
 }
@@ -193,6 +252,16 @@ function tokenMatchesText(tokens: string[], text: string): number {
   return tokens.filter((token) => includesNormalizedPhrase(text, token)).length;
 }
 
+function isBudgetQueryToken(token: string): boolean {
+  if (BUDGET_QUERY_TERMS.has(token)) return true;
+  return /^\d+(?:\.\d+)?k?$/.test(token);
+}
+
+function getNonBudgetQueryTokens(intent: PlaceSearchIntent): string[] {
+  if (intent.maxBudget === null && intent.minBudget === null && !intent.free) return intent.tokens;
+  return intent.tokens.filter((token) => !isBudgetQueryToken(token));
+}
+
 function budgetMatches(place: NormalizedPlace, maxBudget: number | null, minBudget: number | null, free = false): boolean {
   if (maxBudget === null && minBudget === null && !free) return true;
   if (place.budget_min === null) return false;
@@ -218,10 +287,12 @@ function resolveBudgetConstraints(filters: PlaceSearchFilters, intent: PlaceSear
           ? 500
           : filters.budget === "500-1000"
             ? 1000
-            : null);
+            : filters.budget === "1000-2000"
+              ? 2000
+              : null);
   const explicitMinBudget =
     filters.minBudget ??
-    (filters.budget === "1000-plus" || filters.budget === "1000-2000"
+    (filters.budget === "1000-plus"
       ? 1000
       : filters.budget === "2000-plus"
         ? 2000
@@ -255,6 +326,20 @@ function tagMatchCount(place: NormalizedPlace, tags: string[]): number {
   return tags.filter((tag) => normalizedTags.has(normalizeSearchText(tag))).length;
 }
 
+function placeMatchesIdentityQuery(place: NormalizedPlace, query: string): boolean {
+  if (!query) return false;
+  const name = normalizeSearchText(place.name);
+  const slug = normalizeSearchText(place.slug);
+  const searchTerms = normalizedPlaceSearchTerms(place);
+  return (
+    name === query ||
+    name.startsWith(query) ||
+    includesNormalizedPhrase(name, query) ||
+    slug === query ||
+    searchTerms.some((term) => term === query || term.startsWith(query) || includesNormalizedPhrase(term, query))
+  );
+}
+
 export function placeMatchesExplicitFilters(place: NormalizedPlace, filters: PlaceSearchFilters): boolean {
   const intent = interpretPlaceSearchQuery("");
   return placeMatchesEffectiveFilters(place, filters, intent);
@@ -267,10 +352,11 @@ function placeMatchesEffectiveFilters(place: NormalizedPlace, filters: PlaceSear
   const effectiveCity = explicitCity ?? (explicitArea ? null : intent.city);
   const effectiveArea = explicitArea ?? (explicitCity ? null : intent.area ? normalizeSearchText(intent.area) : null);
   const budgetConstraints = resolveBudgetConstraints(filters, intent);
+  const hasStrongIdentityMatch = placeMatchesIdentityQuery(place, intent.normalizedQuery);
 
   if (category && normalizeSearchText(place.category) !== normalizeSearchText(category)) return false;
-  if (effectiveCity && normalizeSearchText(place.city ?? "") !== normalizeSearchText(effectiveCity)) return false;
-  if (effectiveArea && !matchesAny(placeText(place, ["area", "city", "search_terms"]), [effectiveArea])) return false;
+  if (effectiveCity && normalizeSearchText(place.city ?? "") !== normalizeSearchText(effectiveCity) && !(hasStrongIdentityMatch && !explicitCity)) return false;
+  if (effectiveArea && !matchesAny(placeText(place, ["area", "city", "search_terms"]), [effectiveArea]) && !(hasStrongIdentityMatch && !explicitArea)) return false;
   if (!budgetMatches(place, budgetConstraints.maxBudget, budgetConstraints.minBudget, budgetConstraints.free)) return false;
   if (filters.priceLevel !== null && filters.priceLevel !== undefined && place.price_level !== filters.priceLevel) return false;
   if (!placeMatchesGoodFor(place, filters.goodFor)) return false;
@@ -344,11 +430,67 @@ export function scorePlaceForQuery(place: NormalizedPlace, intent: PlaceSearchIn
   return score;
 }
 
+function placeHasMeaningfulQueryMatch(place: NormalizedPlace, intent: PlaceSearchIntent): boolean {
+  const query = intent.normalizedQuery;
+  if (!query) return true;
+
+  const name = normalizeSearchText(place.name);
+  const slug = normalizeSearchText(place.slug);
+  const category = normalizeSearchText(place.category);
+  const city = normalizeSearchText(place.city ?? "");
+  const area = normalizeSearchText(place.area ?? "");
+  const description = normalizeSearchText(place.description ?? "");
+  const goodForText = placeText(place, ["good_for"]);
+  const tagText = placeText(place, ["tags"]);
+  const searchTerms = normalizedPlaceSearchTerms(place);
+  const searchText = searchTerms.join(" ");
+  const locationText = `${city} ${area} ${searchText}`;
+  const nonBudgetTokens = getNonBudgetQueryTokens(intent);
+  const hasBudgetOnlyQuery = (intent.maxBudget !== null || intent.minBudget !== null || intent.free) && nonBudgetTokens.length === 0;
+  const queryIsCategoryOnly = intent.category
+    ? [intent.category, ...(CATEGORY_ALIASES[intent.category] ?? [])].some((term) => normalizeSearchText(term) === query)
+    : false;
+  const queryIsCityOnly = intent.city
+    ? [intent.city, ...(CITY_ALIASES[intent.city] ?? [])].some((term) => normalizeSearchText(term) === query)
+    : false;
+  const queryIsAreaOnly = intent.area
+    ? [intent.area, ...(AREA_ALIASES[intent.area] ?? [])].some((term) => normalizeSearchText(term) === query)
+    : false;
+  const allTokensMatch = nonBudgetTokens.length > 0 && nonBudgetTokens.every((token) =>
+    includesNormalizedPhrase(`${name} ${category} ${locationText} ${goodForText} ${tagText} ${description}`, token)
+  );
+
+  if (hasBudgetOnlyQuery) return true;
+  if (name === query || name.startsWith(query) || includesNormalizedPhrase(name, query)) return true;
+  if (slug === query) return true;
+  if (searchTerms.some((term) => term === query || term.startsWith(query) || includesNormalizedPhrase(term, query))) return true;
+  if (allTokensMatch) return true;
+  if (includesNormalizedPhrase(description, query)) return true;
+
+  if (intent.category && category === normalizeSearchText(intent.category) && queryIsCategoryOnly) return true;
+  if (intent.city && city === normalizeSearchText(intent.city) && queryIsCityOnly) return true;
+  if (intent.area && matchesAny(locationText, [intent.area, ...(AREA_ALIASES[intent.area] ?? [])]) && queryIsAreaOnly) return true;
+  if (intent.free && place.budget_min === 0) return true;
+
+  const intentTerms = uniqueNormalizedTerms([
+    ...intent.intents,
+    ...intent.intents.flatMap((key) => INTENT_ALIASES[key] ?? []),
+  ]);
+  return intentTerms.some((term) => matchesAny(`${goodForText} ${tagText} ${searchText}`, [term]));
+}
+
+function placePassesRelevanceGate(place: NormalizedPlace, intent: PlaceSearchIntent, score: number): boolean {
+  if (!intent.normalizedQuery) return true;
+  if (score <= 0) return false;
+  return placeHasMeaningfulQueryMatch(place, intent);
+}
+
 export function rankPlaces(places: NormalizedPlace[], query: string, filters: PlaceSearchFilters = {}): RankedPlace[] {
   const intent = interpretPlaceSearchQuery(query);
   return places
     .filter((place) => place.status === "active")
     .filter((place) => placeMatchesEffectiveFilters(place, filters, intent))
     .map((place) => ({ place, score: scorePlaceForQuery(place, intent, filters) }))
+    .filter(({ place, score }) => placePassesRelevanceGate(place, intent, score))
     .sort((left, right) => right.score - left.score || left.place.name.localeCompare(right.place.name));
 }
