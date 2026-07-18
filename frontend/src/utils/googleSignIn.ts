@@ -42,7 +42,7 @@ export function initializeGoogleClient(
 ): void {
   if (gsiInitialized) return
 
-  window.google.accounts.id.initialize({
+  window.google!.accounts.id.initialize({
     client_id: clientId,
     callback,
     cancel_on_tap_outside: false,
@@ -52,7 +52,7 @@ export function initializeGoogleClient(
 }
 
 export function renderGoogleButton(element: HTMLElement, config?: GoogleRenderButtonConfig): void {
-  window.google.accounts.id.renderButton(element, {
+  window.google!.accounts.id.renderButton(element, {
     type: 'standard',
     shape: 'rectangular',
     size: 'large',
