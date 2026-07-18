@@ -6,6 +6,8 @@ function sanitizeCachePart(value: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
+const SEARCH_CACHE_VERSION = "v2";
+
 export function generateSearchCacheKey(
   normalizedQuery: string,
   categoryId = "all",
@@ -22,10 +24,10 @@ export function generateSearchCacheKey(
   const sanitizedLanguage = sanitizeCachePart(language) || "taglish";
 
   if (!sanitizedQuery) {
-    return `search:${sanitizedCategory}:${sanitizedArea}:${sanitizedGoodFor}:${sanitizedBudget}:${sanitizedLanguage}`;
+    return `search:${SEARCH_CACHE_VERSION}:${sanitizedCategory}:${sanitizedArea}:${sanitizedGoodFor}:${sanitizedBudget}:${sanitizedLanguage}`;
   }
 
-  return `search:${sanitizedQuery}:${sanitizedCategory}:${sanitizedArea}:${sanitizedGoodFor}:${sanitizedBudget}:${sanitizedLanguage}`;
+  return `search:${SEARCH_CACHE_VERSION}:${sanitizedQuery}:${sanitizedCategory}:${sanitizedArea}:${sanitizedGoodFor}:${sanitizedBudget}:${sanitizedLanguage}`;
 }
 
 const CACHE_VERSION = "v1";

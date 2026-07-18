@@ -52,6 +52,19 @@ const CATEGORY_ALIASES: Record<string, string[]> = {
   Park: ["park", "parke", "garden", "green space", "picnic", ...(CATEGORY_KEYWORDS.park ?? []), ...(CATEGORY_KEYWORDS.parke ?? [])],
 };
 
+const CATEGORY_INTENT_ALIASES: Record<string, string[]> = {
+  Activity: ["activity", "activities", "things to do", "arcade", "arcades", "bowling", "billiards", "karaoke", "ktv", "game", "games", "gaming", "sports", "laro", "pang laro"],
+  Cafe: ["cafe", "cafes", "coffee", "coffee shop", "coffeeshop", "kapihan", "kape", "espresso", "latte", "tambay cafe", "study cafe", "work cafe"],
+  Cinema: ["cinema", "cinemas", "movie", "movies", "movie theater", "movie theatre", "sine", "pelikula", "imax"],
+  Food: ["food", "foods", "food trip", "foodtrip", "restaurant", "restaurants", "resto", "kainan", "pagkain", "dining", "kain", "saan kakain", "where to eat"],
+  Heritage: ["heritage", "historical", "historic", "history", "monument", "monuments", "old church", "heritage site", "historical site", "church", "chapel", "cathedral", "basilica", "shrine"],
+  Hotel: ["hotel", "hotels", "staycation", "resort", "overnight", "accommodation", "room", "rooms", "suite", "suites"],
+  Mall: ["mall", "malls", "shopping mall", "shopping malls", "shopping center", "shopping centre", "commercial center", "town center", "lifestyle mall", "malling", "gala sa mall", "tambay sa mall"],
+  Museum: ["museum", "museums", "museo", "gallery", "galleries", "art gallery", "exhibit", "exhibition", "science museum", "art museum", "history museum"],
+  Nightlife: ["nightlife", "night life", "bar", "bars", "pub", "club", "clubs", "drinks", "cocktails", "beer", "wine", "inuman", "inom", "night out", "rooftop bar", "speakeasy"],
+  Park: ["park", "parks", "parke", "garden", "gardens", "green space", "public park", "picnic", "pasyal sa park", "pang picnic"],
+};
+
 const CITY_ALIASES: Record<string, string[]> = {
   Caloocan: ["caloocan", "caloocan city"],
   "Las Pinas": ["las pinas", "las pinas city", "las piñas", "las piñas city"],
@@ -218,7 +231,7 @@ function detectBudget(normalizedQuery: string): { maxBudget: number | null; minB
 export function interpretPlaceSearchQuery(query: string): PlaceSearchIntent {
   const normalizedQuery = normalizeSearchText(query);
   const budget = detectBudget(normalizedQuery);
-  const category = detectFromDictionary(normalizedQuery, CATEGORY_ALIASES);
+  const category = detectFromDictionary(normalizedQuery, CATEGORY_INTENT_ALIASES);
   const city = detectFromDictionary(normalizedQuery, CITY_ALIASES);
   const area = detectFromDictionary(normalizedQuery, AREA_ALIASES);
   return {
@@ -346,7 +359,7 @@ export function placeMatchesExplicitFilters(place: NormalizedPlace, filters: Pla
 }
 
 function placeMatchesEffectiveFilters(place: NormalizedPlace, filters: PlaceSearchFilters, intent: PlaceSearchIntent): boolean {
-  const category = canonicalCategory(filters.category);
+  const category = canonicalCategory(filters.category) ?? intent.category;
   const explicitCity = canonicalCity(filters.city);
   const explicitArea = filters.area && filters.area !== "all" ? normalizeSearchText(filters.area) : null;
   const effectiveCity = explicitCity ?? (explicitArea ? null : intent.city);
