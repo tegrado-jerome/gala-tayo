@@ -17,6 +17,7 @@ export function getRouteState(pathname: string) {
     isOnboardingAllowedPath:
       isPath(pathname, '/') ||
       isPath(pathname, '/onboarding') ||
+      isPath(pathname, '/auth/callback') ||
       isPath(pathname, '/terms') ||
       isPath(pathname, '/privacy'),
     canonicalPlacePath: parseCanonicalPlacePath(pathname),

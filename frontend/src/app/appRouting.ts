@@ -3,6 +3,8 @@ type ResolveAuthNavigationTargetArgs = {
   isPasswordResetPath: boolean
   session: unknown
   hasResolvedProfile: boolean
+  needsOnboarding: boolean
+  isOnboardingAllowedPath: boolean
   pathname: string
 }
 
@@ -11,6 +13,9 @@ export function resolveAuthNavigationTarget({
   isPasswordResetPath,
   session,
   hasResolvedProfile,
+  needsOnboarding,
+  isOnboardingAllowedPath,
+  pathname,
 }: ResolveAuthNavigationTargetArgs) {
   if (!hasResolvedInitialAuth || isPasswordResetPath) {
     return null
@@ -18,6 +23,10 @@ export function resolveAuthNavigationTarget({
 
   if (session && !hasResolvedProfile) {
     return null
+  }
+
+  if (session && hasResolvedProfile && needsOnboarding && !isOnboardingAllowedPath && pathname !== '/auth/callback') {
+    return '/onboarding'
   }
 
   return null

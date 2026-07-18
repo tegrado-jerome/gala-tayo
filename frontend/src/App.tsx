@@ -46,6 +46,7 @@ function App() {
     publicProfileUsername,
     editGalaPlanId,
     ownedGalaPlanId,
+    isOnboardingAllowedPath,
     soonFeatureRedirectPath,
   } = useMemo(() => getRouteState(pathname), [pathname])
   const legacyAdminRedirectPath = useMemo(() => getLegacyAdminRedirectPath(pathname), [pathname])
@@ -78,13 +79,15 @@ function App() {
       isPasswordResetPath,
       session,
       hasResolvedProfile,
+      needsOnboarding,
+      isOnboardingAllowedPath,
       pathname,
     })
 
     if (redirectTarget) {
       navigateToPath(redirectTarget)
     }
-  }, [hasResolvedInitialAuth, hasResolvedProfile, isPasswordResetPath, pathname, session])
+  }, [hasResolvedInitialAuth, hasResolvedProfile, isOnboardingAllowedPath, isPasswordResetPath, needsOnboarding, pathname, session])
 
   useEffect(() => {
     if (soonFeatureRedirectPath && pathname !== soonFeatureRedirectPath) {

@@ -72,11 +72,6 @@ function OnboardingAccessGate({
       return
     }
 
-    if (!hasSignupOnboardingAccess(session.user.id)) {
-      replaceWithPath('/home')
-      return
-    }
-
     let isMounted = true
 
     void getOnboardingStatus(session)
@@ -87,6 +82,11 @@ function OnboardingAccessGate({
 
         if (status.completed) {
           clearSignupOnboardingAccess(session.user.id)
+          replaceWithPath('/home')
+          return
+        }
+
+        if (!status.needsOnboarding && !hasSignupOnboardingAccess(session.user.id)) {
           replaceWithPath('/home')
           return
         }
