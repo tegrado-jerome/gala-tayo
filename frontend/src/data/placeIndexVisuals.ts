@@ -1,7 +1,7 @@
 import type { PlaceDetail } from '../types/appTypes'
+import { R2_PUBLIC_BASE_URL } from './r2Config'
 
 const categoryOverviewRepresentativeSlug = 'national-museum-of-natural-history'
-const placeImageBasePath = '/images/places'
 
 const cityRepresentativePlaceSlugs: Record<string, string> = {
   caloocan: 'caloocan-city-peoples-park',
@@ -86,8 +86,8 @@ function getStaticPlaceImageUrlForSlug(placeSlug?: string | null) {
     return null
   }
 
-  const imageSlug = placeImageSlugAliases[normalizedSlug]
-  return imageSlug ? `${placeImageBasePath}/${imageSlug}/${imageSlug}-thumb.webp` : null
+  const imageSlug = placeImageSlugAliases[normalizedSlug] || normalizedSlug
+  return `${R2_PUBLIC_BASE_URL}/places/${imageSlug}/${imageSlug}-1.webp`
 }
 
 function getPlaceDetailImageUrl(place?: PlaceDetail | null) {

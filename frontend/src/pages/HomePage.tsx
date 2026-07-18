@@ -38,7 +38,7 @@ import {
   readCachedPlaceDetail,
   type CityImageResolution,
 } from '../utils/placeDetailCache'
-import { getStaticPlaceImageUrlForSlug } from '../data/placeIndexVisuals'
+
 import type { PlaceDetail } from '../types/appTypes'
 
 type BackendSearchPlace = {
@@ -315,6 +315,8 @@ function mergeRecommendedPlaceWithLivePlace(
       : fallbackCuratedImageUrls,
   }
 }
+
+import { getStaticPlaceImageUrlForSlug } from '../data/placeIndexVisuals'
 
 function getHomeTileImageCandidates(
   place: ShowcasePlace | null,
@@ -2128,7 +2130,6 @@ function HomePage({
                         place={tile.place}
                         active={tile.active}
                         isLoading={!areHomeCardsLoaded}
-                        includeStaticPlaceFallback={false}
                         onClick={() => {
                           setSelectedCityTileSlug(tile.slug ?? null)
                           navigateToPath(tile.href)
