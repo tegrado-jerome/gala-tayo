@@ -41,7 +41,7 @@ const variantConfigs: Record<GuestAuthVariant, VariantConfig> = {
   'ask-ai': {
     icon: 'askAi',
     label: 'AI PLANNING',
-    title: 'You have reached your Ask AI limit',
+    title: 'You have reached your GalaTayo AI limit',
     description: 'Create an account to unlock 20 chatbot asks and 10 map searches per day, plus save your planning history.',
     benefits: [
       '20 AI chatbot asks daily',

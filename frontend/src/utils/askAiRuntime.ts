@@ -115,6 +115,7 @@ const emptyAskAiRuntimeState: AskAiRuntimeState = {
 
 let askAiRuntimeState: AskAiRuntimeState = emptyAskAiRuntimeState
 let askAiAbortController: AbortController | null = null
+let activeAskAiRequestId: string | null = null
 let askAiRequestVersion = 0
 const listeners = new Set<AskAiRuntimeListener>()
 
@@ -311,6 +312,27 @@ function hasMeaningfulAskAiRuntimeState(state: AskAiRuntimeState) {
   )
 }
 
+function createAskAiRequestId() {
+  return typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`
+}
+
+function notifyAskAiRequestCancelled(requestId: string | null) {
+  if (!requestId) return
+
+  void fetch(getApiUrl('/ask-ai/cancel'), {
+    method: 'POST',
+    cache: 'no-store',
+    keepalive: true,
+    headers: {
+      'Content-Type': 'application/json',
+      'x-request-id': requestId,
+    },
+    body: JSON.stringify({ requestId, usageType: 'chatbot_ai' }),
+  }).catch(() => undefined)
+}
+
 export function getAskAiRuntimeState() {
   return askAiRuntimeState
 }
@@ -346,8 +368,10 @@ export function seedAskAiRuntimeState(state: Partial<AskAiRuntimeState>) {
 }
 
 export function cancelAskAiRuntimeRequest() {
+  notifyAskAiRequestCancelled(activeAskAiRequestId)
   askAiAbortController?.abort()
   askAiAbortController = null
+  activeAskAiRequestId = null
   askAiRequestVersion += 1
   updateAskAiRuntimeState((state) => ({
     ...state,
@@ -381,6 +405,8 @@ export function resetAskAiRuntimeState({
 } = {}) {
   askAiAbortController?.abort()
   askAiAbortController = null
+  notifyAskAiRequestCancelled(activeAskAiRequestId)
+  activeAskAiRequestId = null
   askAiRequestVersion += 1
   setAskAiRuntimeState({
     ...emptyAskAiRuntimeState,
@@ -405,6 +431,8 @@ export async function submitAskAiRuntimeRequest({
   askAiAbortController?.abort()
   const abortController = new AbortController()
   askAiAbortController = abortController
+  const requestId = createAskAiRequestId()
+  activeAskAiRequestId = requestId
 
   const conversationHistory = buildConversationContext(messages)
 
@@ -433,7 +461,10 @@ export async function submitAskAiRuntimeRequest({
     const response = await fetch(chatbotEndpoint, {
       method: 'POST',
       cache: 'no-store',
-      headers: buildAskAiRequestHeaders(accessToken ?? null),
+      headers: {
+        ...buildAskAiRequestHeaders(accessToken ?? null),
+        'x-request-id': requestId,
+      },
       body: JSON.stringify({ question, conversationHistory }),
       signal: abortController.signal,
     })
@@ -536,6 +567,9 @@ export async function submitAskAiRuntimeRequest({
       messages,
     }))
   } finally {
-    askAiAbortController = null
+    if (askAiAbortController === abortController) {
+      askAiAbortController = null
+      activeAskAiRequestId = null
+    }
   }
 }

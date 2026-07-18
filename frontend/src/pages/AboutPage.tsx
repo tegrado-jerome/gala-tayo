@@ -15,7 +15,7 @@ const aboutHighlights = [
   },
   {
     title: 'Use AI-powered help',
-    body: 'Ask AI features can help you narrow down ideas, while place pages stay focused on clear location and planning details.',
+    body: 'GalaTayo AI features can help you narrow down ideas, while place pages stay focused on clear location and planning details.',
   },
 ]
 

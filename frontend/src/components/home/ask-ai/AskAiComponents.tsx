@@ -483,7 +483,7 @@ function AskAiOutputStageLegacy({
                 <AppIcon name="info" className="h-6 w-6 text-white" strokeWidth={2.2} />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-white/72">Reset Ask AI</p>
+                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-white/72">Reset GalaTayo AI</p>
                 <p className="mt-1 text-base font-black text-white">Start over</p>
                 <p className="mt-1 text-xs leading-5 text-white/78">
                   Clear this answer and ask a brand new question.
@@ -547,7 +547,7 @@ function AskAiThinkingStageLegacy({
 
       <div className="relative mx-auto flex min-h-[calc(100dvh-144px)] w-full max-w-[min(1500px,calc(100vw-96px))] flex-col">
         <h1 className="mt-6 text-[3.1rem] font-black leading-none tracking-[-0.055em] text-slate-950 sm:text-[4rem] lg:mt-8 lg:text-[4.5rem]">
-          Ask AI
+          GalaTayo AI
         </h1>
 
         <div className="mt-7 lg:mt-8">
@@ -564,7 +564,7 @@ function AskAiThinkingStageLegacy({
             <span className="absolute left-1/2 top-0 h-4.5 w-4.5 -translate-x-1/2 -translate-y-1/2 rotate-45 border-l border-t border-[rgba(20,35,58,0.34)] bg-white" />
             <div className="relative flex flex-col items-center gap-2.5">
               <p className="text-[0.9rem] font-semibold uppercase tracking-[0.08em] text-slate-600 sm:text-[0.98rem] lg:text-[0.9rem]">
-                Ask AI is responding...
+                GalaTayo AI is responding...
               </p>
             </div>
           </div>
@@ -688,7 +688,7 @@ function AskAiPlaceholder({
             <ChevronLeftIcon className="h-5 w-5" />
           </button>
           <div className="min-w-0">
-            <h1 className="text-[1.05rem] font-bold leading-tight text-slate-900 sm:text-[1.15rem]">Ask AI</h1>
+            <h1 className="text-[1.05rem] font-bold leading-tight text-slate-900 sm:text-[1.15rem]">GalaTayo AI</h1>
             <p className="text-[0.78rem] leading-tight text-[var(--muted)]">Plan your gala.</p>
           </div>
           <AskAiUsagePill label="Chatbot AI" usageStatus={usageStatus} className="ml-auto shrink-0" />
@@ -745,9 +745,7 @@ function AskAiPlaceholder({
           </div>
 
           {isLimitReached && !isSubmitting && (
-            <div className="mx-10 rounded-2xl border border-[rgba(239,68,68,0.14)] bg-red-50/60 px-4 py-3">
-              <p className="text-[0.84rem] font-semibold text-red-700">You&apos;ve used all your Ask AI asks for today. Come back tomorrow!</p>
-            </div>
+            <ChatbotLimitWarning />
           )}
 
         </div>
@@ -764,6 +762,23 @@ function AskAiPlaceholder({
 }
 
 void AskAiPlaceholder
+
+function ChatbotLimitWarning({ className = '' }: { className?: string }) {
+  return (
+    <div className={`${className} flex w-full justify-center px-1`}>
+      <div className="inline-flex w-fit max-w-full items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-left shadow-[0_10px_24px_rgba(127,29,29,0.10)]">
+        <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-700 ring-1 ring-inset ring-red-200">
+          <AppIcon name="bot" className="h-4 w-4" strokeWidth={2.2} />
+        </span>
+        <div className="min-w-0">
+          <p className="text-[0.84rem] font-bold leading-relaxed text-red-800">
+            Na-consume mo na ang Chatbot AI usage mo ngayong araw.
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 function AskAiGateLoadingState({
   className = '',
@@ -796,13 +811,13 @@ function AskAiSignInRequired({
             <div className="min-w-0">
               <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(83,146,241,0.18)] bg-[rgba(242,247,255,0.96)] px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--accent-deep)]">
                 <AppIcon name="info" className="h-4 w-4" strokeWidth={2.2} />
-                Ask AI
+                GalaTayo AI
               </div>
               <p className="mt-3 text-3xl font-black leading-tight text-slate-950 sm:text-[2.5rem]">
-                Sign in to unlock <span className="text-[var(--accent-deep)]">Ask AI</span>.
+                Sign in to unlock <span className="text-[var(--accent-deep)]">GalaTayo AI</span>.
               </p>
               <p className="mt-3 max-w-xl text-sm leading-relaxed text-[var(--muted)] sm:text-[15px]">
-                <span className="font-semibold text-[var(--accent-deep)]">Ask AI</span> is reserved for <span className="font-semibold text-slate-800">GalaTayo members</span>.
+                <span className="font-semibold text-[var(--accent-deep)]">GalaTayo AI</span> is reserved for <span className="font-semibold text-slate-800">GalaTayo members</span>.
               </p>
               <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold text-slate-700">
                 <span className="rounded-full border border-[rgba(83,146,241,0.16)] bg-[rgba(247,251,255,0.96)] px-3 py-1.5">
@@ -828,7 +843,7 @@ function AskAiSignInRequired({
             <div>
               <p className="text-sm font-black text-slate-950">Not signed in yet?</p>
               <p className="mt-1 text-xs leading-relaxed text-[var(--muted)]">
-                You can browse the rest of GalaTayo without logging in, and come back here when you are ready to use Ask AI.
+                You can browse the rest of GalaTayo without logging in, and come back here when you are ready to use GalaTayo AI.
               </p>
             </div>
           </div>
@@ -965,7 +980,7 @@ function AskAiOutputStageNextLegacy({
               className="group flex items-center justify-between gap-3 rounded-[20px] border border-[rgba(15,23,42,0.08)] bg-[linear-gradient(135deg,#0f172a,#1d4ed8)] px-4 py-4 text-left shadow-[0_18px_42px_rgba(29,78,216,0.22)] transition hover:-translate-y-[1px] hover:shadow-[0_22px_48px_rgba(29,78,216,0.28)]"
             >
               <div className="min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/72">Reset Ask AI</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/72">Reset GalaTayo AI</p>
                 <p className="mt-1 text-sm font-black text-white">Start over</p>
                 <p className="mt-1 text-xs leading-5 text-white/78">Ask a new question or rewrite this one.</p>
               </div>
@@ -1146,7 +1161,7 @@ function AskAiThinkingStageNext({
                   <span className="h-1.5 w-1.5 rounded-full bg-current motion-safe:animate-bounce [animation-delay:240ms]" />
                 </span>
               </div>
-              <p className="mt-1 text-[12px] font-medium text-slate-500">Shaping your Ask AI reply.</p>
+              <p className="mt-1 text-[12px] font-medium text-slate-500">Shaping your GalaTayo AI reply.</p>
               <ThinkingLoadingBar className="mt-3" />
             </div>
           </div>
@@ -1303,7 +1318,7 @@ function AskAiModePanel({
                   handleSend()
                 }
               }}
-              placeholder="Message Ask AI..."
+              placeholder="Message GalaTayo AI..."
               rows={1}
               disabled={isSubmitting || isUsagePending || (isLimitReached && isRegistered)}
               className="ask-ai-composer-input min-h-[40px] max-h-[120px] flex-1 resize-none overflow-y-auto bg-transparent px-3 py-2 text-[15px] leading-relaxed text-slate-800 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed disabled:text-slate-300"
@@ -1416,11 +1431,7 @@ const ChatMessageList = memo(function ChatMessageList({
           </div>
 
           {isRegistered && isLimitReached && !isSubmitting && (
-            <div className="mt-5 w-full max-w-[820px] lg:max-w-[900px]">
-              <div className="rounded-2xl border border-red-200/60 bg-red-50/80 px-4 py-3 text-center">
-                <p className="text-[13px] font-medium text-red-700">Naubos na asks mo today. Balik bukas.</p>
-              </div>
-            </div>
+            <ChatbotLimitWarning className="mt-5" />
           )}
         </div>
       </div>
@@ -1446,7 +1457,7 @@ const ChatMessageList = memo(function ChatMessageList({
               <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[var(--accent-deep)] shadow-[0_8px_16px_rgba(23,37,84,0.18)]">
                 <AppIcon name="info" className="h-3 w-3 text-white" strokeWidth={2.2} />
               </div>
-              <span className="text-[12px] font-semibold tracking-wide text-slate-500">Ask AI</span>
+              <span className="text-[12px] font-semibold tracking-wide text-slate-500">GalaTayo AI</span>
             </div>
             <div className="pl-8">
               <ReactMarkdown
@@ -1545,7 +1556,7 @@ const ChatMessageList = memo(function ChatMessageList({
               <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[var(--accent-deep)] shadow-[0_8px_16px_rgba(23,37,84,0.18)]">
                 <AppIcon name="info" className="h-3 w-3 text-white" strokeWidth={2.2} />
               </div>
-            <span className="text-[12px] font-semibold tracking-wide text-slate-500">Ask AI</span>
+            <span className="text-[12px] font-semibold tracking-wide text-slate-500">GalaTayo AI</span>
           </div>
           <div className="pl-8">
             <div className="flex items-center gap-2">
@@ -1558,22 +1569,20 @@ const ChatMessageList = memo(function ChatMessageList({
                 <span className="h-1.5 w-1.5 rounded-full bg-current motion-safe:animate-bounce [animation-delay:240ms]" />
               </span>
             </div>
-            <p className="mt-1 text-[12px] font-medium text-slate-500">Shaping your Ask AI reply.</p>
+            <p className="mt-1 text-[12px] font-medium text-slate-500">Shaping your GalaTayo AI reply.</p>
             <ThinkingLoadingBar className="mt-3" />
           </div>
         </div>
       )}
 
       {answerError && !isSubmitting && messages.length > 0 && !isChatbotDailyLimitMessage(answerError) && (
-        <div className="rounded-2xl border border-red-200/60 bg-red-50/80 px-4 py-3">
-          <p className="text-[13px] text-red-700">{answerError}</p>
+        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 shadow-[0_8px_18px_rgba(127,29,29,0.08)]">
+          <p className="text-[13px] text-red-800">{answerError}</p>
         </div>
       )}
 
       {isRegistered && isLimitReached && !isSubmitting && messages.length > 0 && (
-        <div className="rounded-2xl border border-red-200/60 bg-red-50/80 px-4 py-3">
-          <p className="text-[13px] font-medium text-red-700">You&apos;ve used all your Ask AI asks for today. Come back tomorrow!</p>
-        </div>
+        <ChatbotLimitWarning />
       )}
     </div>
   )
@@ -1595,12 +1604,12 @@ function AskAiUsageErrorContent({
         </div>
       </div>
       <h2 className="text-[1.5rem] font-semibold tracking-[-0.02em] text-slate-900 sm:text-[1.7rem]">
-        <span>Ask </span>
+        <span>GalaTayo </span>
         <span className="bg-gradient-to-r from-[var(--accent)] via-[var(--accent-deep)] to-[#0f172a] bg-clip-text text-transparent">AI</span>
         <span> is unavailable</span>
       </h2>
       <p className="mt-2 max-w-sm text-[14px] leading-relaxed text-slate-500">
-        {usageError ?? 'Try checking your daily Ask AI status again.'}
+        {usageError ?? 'Try checking your daily GalaTayo AI status again.'}
       </p>
       <div className="mt-6 flex items-center gap-2.5">
         <button

@@ -43,7 +43,7 @@ function MobileBottomNav({ currentPath }: MobileBottomNavProps) {
   const navItems: NavItem[] = [
     { label: 'Home', href: '/home', icon: Home, isActive: isHomeActive },
     { label: 'Search', href: '/search', icon: Search, isActive: isSearchActive },
-    { label: 'Ask AI', href: '/ask-ai', icon: Sparkles, isActive: isAskAiActive },
+    { label: 'GalaTayo AI', href: '/ask-ai', icon: Sparkles, isActive: isAskAiActive },
     {
       label: 'Profile',
       href: '/profile',
