@@ -38,6 +38,7 @@ import CategoryPlacesPage from '../pages/CategoryPlacesPage'
 import { buildAuthPath, clearSignupOnboardingAccess, hasSignupOnboardingAccess } from '../services/authApi'
 import { getOnboardingStatus } from '../utils/profileApi'
 import { navigateToPath, replaceWithPath } from '../utils/navigation'
+import { getPublicSiteOrigin } from '../utils/site'
 import { AdminRouteGate } from './AdminRouteGate'
 import { InitialAuthLoader, NotFoundPage, RootEntryLoader } from './RouteViewHelpers'
 import type { RouteDescriptor, RouteInputs } from './routeResolver'
@@ -214,14 +215,14 @@ export function renderRouteDescriptor(descriptor: RouteDescriptor, inputs: Route
                 '@context': 'https://schema.org',
                 '@type': 'WebSite',
                 name: 'GalaTayo',
-                url: `${window.location.origin}/`,
+                url: `${getPublicSiteOrigin()}/`,
               },
               {
                 '@context': 'https://schema.org',
                 '@type': 'Organization',
                 name: 'GalaTayo',
-                url: `${window.location.origin}/`,
-                logo: `${window.location.origin}/favicon.svg`,
+                url: `${getPublicSiteOrigin()}/`,
+                logo: `${getPublicSiteOrigin()}/favicon.svg`,
               },
             ]}
           />

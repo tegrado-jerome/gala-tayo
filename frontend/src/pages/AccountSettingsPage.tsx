@@ -761,6 +761,7 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
                         <span className="text-sm font-semibold text-slate-800">Last Name</span>
                         <input value={lastName} onChange={(event) => setLastName(event.target.value)} className={sharedInputClassName} />
                       </label>
+                      <div className="hidden sm:block" aria-hidden="true" />
                       <label className="grid gap-2">
                         <span className="flex items-center gap-2 text-sm font-semibold text-slate-800">
                           Birthdate
@@ -772,7 +773,6 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
                             setBirthdate(nextBirthdate)
                             saveBirthdate(nextBirthdate)
                           }}
-                          helperText="Optional, and stored in YYYY-MM-DD format."
                           error={birthdateError}
                         />
                       </label>

@@ -400,7 +400,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
           '@context': 'https://schema.org',
           '@type': 'BreadcrumbList',
           itemListElement: [
-            { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/` },
+            { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/home` },
             { '@type': 'ListItem', position: 2, name: 'Places', item: `${getSiteOrigin()}/places` },
             { '@type': 'ListItem', position: 3, name: areaName, item: `${getSiteOrigin()}/places/${encodeURIComponent(areaSlug)}` },
           ],
@@ -434,7 +434,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
         <Breadcrumb
           showBack
           items={[
-            { label: 'Home', href: '/', icon: <House className="h-3.5 w-3.5" /> },
+            { label: 'Home', href: '/home', icon: <House className="h-3.5 w-3.5" /> },
             { label: 'Places', href: '/places', icon: <MapPin className="h-3.5 w-3.5" /> },
             { label: areaName, icon: <MapPin className="h-3.5 w-3.5" /> },
           ]}

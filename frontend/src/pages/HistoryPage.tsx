@@ -564,8 +564,8 @@ function HistoryPage() {
 
               {!errorMessage && displayHistory !== null && visibleHistory.length === 0 ? (
                 <EmptyState
-                  title="No viewed places yet."
-                  description="Start exploring places and they'll appear here."
+                  title="Wala ka pang viewed places."
+                  description="Mag-explore ng places at lalabas sila dito."
                   variant="plain"
                 />
               ) : null}

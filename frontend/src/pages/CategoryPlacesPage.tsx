@@ -325,7 +325,7 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
           '@context': 'https://schema.org',
           '@type': 'BreadcrumbList',
           itemListElement: [
-            { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/` },
+            { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/home` },
             { '@type': 'ListItem', position: 2, name: 'Places', item: `${getSiteOrigin()}/places` },
             { '@type': 'ListItem', position: 3, name: 'Categories', item: `${getSiteOrigin()}/places/categories` },
             { '@type': 'ListItem', position: 4, name: categoryLabel, item: `${getSiteOrigin()}/places/categories/${encodeURIComponent(categorySlug)}` },
@@ -360,7 +360,7 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
         <Breadcrumb
           showBack
           items={[
-            { label: 'Home', href: '/', icon: <House className="h-3.5 w-3.5" /> },
+            { label: 'Home', href: '/home', icon: <House className="h-3.5 w-3.5" /> },
             { label: 'Places', href: '/places', icon: <MapPin className="h-3.5 w-3.5" /> },
             { label: 'Categories', href: '/places/categories', icon: <LayoutGrid className="h-3.5 w-3.5" /> },
             { label: categoryLabel, icon: <AppIcon name={iconName} className="h-3.5 w-3.5" /> },

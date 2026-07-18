@@ -320,7 +320,7 @@ function LegalPage({ type }: LegalPageProps) {
           <div className="mx-auto w-full max-w-[1080px]">
             <Breadcrumb
               showBack
-              backTo="/"
+              backTo="/home"
               preferHistory
               className="mb-5 sm:mb-6"
               items={breadcrumbItems}

@@ -51,7 +51,7 @@ function PlaceCategoriesIndexPage() {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/` },
+        { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/home` },
         { '@type': 'ListItem', position: 2, name: 'Places', item: `${getSiteOrigin()}/places` },
         { '@type': 'ListItem', position: 3, name: 'Categories', item: `${getSiteOrigin()}/places/categories` },
       ],
@@ -83,7 +83,7 @@ function PlaceCategoriesIndexPage() {
         <Breadcrumb
           showBack
           items={[
-            { label: 'Home', href: '/', icon: <House className="h-3.5 w-3.5" /> },
+            { label: 'Home', href: '/home', icon: <House className="h-3.5 w-3.5" /> },
             { label: 'Places', href: '/places', icon: <MapPin className="h-3.5 w-3.5" /> },
             { label: 'Categories', icon: <LayoutGrid className="h-3.5 w-3.5" /> },
           ]}

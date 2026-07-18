@@ -437,21 +437,21 @@ function buildCityHref(citySlug: string) {
 
 const homepageCityTilePlaceSlugOverrides: Record<string, string> = {
   caloocan: 'caloocan-city-peoples-park',
-  'las-pinas': 'st-joseph-parish-bamboo-organ-church',
+  'las-pinas': 'sm-southmall',
   makati: 'glorietta',
   malabon: 'malabon-zoo-aquarium-and-botanical-garden',
-  mandaluyong: 'sm-megamall',
+  mandaluyong: 'shangri-la-plaza',
   manila: 'intramuros',
-  marikina: 'marikina-river-park',
+  marikina: 'kapitan-moy-cultural-center',
   muntinlupa: 'festival-mall-alabang',
-  navotas: 'navotas-centennial-park',
+  navotas: 'navotas-citywalk-and-amphitheater',
   paranaque: 'okada-manila',
   pasay: 'sm-mall-of-asia',
   pasig: 'ace-water-spa-pasig',
   'quezon-city': 'art-in-island',
   'san-juan': 'greenhills-mall-greenhills-shopping-center',
-  taguig: 'the-mind-museum',
-  valenzuela: 'sm-city-valenzuela',
+  taguig: 'bonifacio-high-street',
+  valenzuela: 'museo-valenzuela',
 }
 
 function getHomepageCityTileLabel(label: string) {
@@ -1243,16 +1243,13 @@ function HomePage({
   const [trendingError, setTrendingError] = useState<string | null>(null)
   const [areHomeCardsLoaded, setAreHomeCardsLoaded] = useState(
     Boolean(
-      cachedTrendingPlacesRef.current?.length ||
       (
         initialHomeRouteCacheRef.current &&
         (
-          Object.keys(initialHomeRouteCacheRef.current.topPickPlaceBySlug).length > 0 ||
-          Object.keys(initialHomeRouteCacheRef.current.cityTilePlaceBySlug).length > 0 ||
+          Object.keys(initialHomeRouteCacheRef.current.cityTilePlaceBySlug).length > 0 &&
           Object.keys(initialHomeRouteCacheRef.current.categoryTilePlaceByLabel).length > 0
         )
-      ) ||
-      Object.keys(buildCachedHomeTopPickPlaceBySlug()).length > 0
+      )
     )
   )
   const [selectedCityTileSlug, setSelectedCityTileSlug] = useState<string | null>(null)
@@ -1446,11 +1443,12 @@ function HomePage({
         label: tile.label,
         href: buildCategoryHref(tile.label),
         active: selectedCategoryTileLabel === tile.label,
-        place:
-          exactCategoryTilePlace ??
-          exactRecommendedLivePlace ??
-          liveCategoryPlaceById.get(resolveHomepageCategoryRouteId(tile.label) ?? '') ??
+        place: mergeRecommendedPlaceWithLivePlace(
           tile.place,
+          exactCategoryTilePlace ??
+            exactRecommendedLivePlace ??
+            liveCategoryPlaceById.get(resolveHomepageCategoryRouteId(tile.label) ?? '')
+        ),
       }
     })
   }, [categoryTilePlaceByLabel, liveCategoryPlaceById, livePlaceBySlug, selectedCategoryTileLabel])

@@ -134,6 +134,7 @@ function FavoritesPage() {
   const [removingIds, setRemovingIds] = useState<Set<string>>(new Set())
   const [isClearingAll, setIsClearingAll] = useState(false)
   const [isClearAllDialogOpen, setIsClearAllDialogOpen] = useState(false)
+  const [clearAllError, setClearAllError] = useState('')
   const [visibleFavoritesCount, setVisibleFavoritesCount] = useState(FAVORITES_LOAD_MORE_BATCH_SIZE)
   const {
     session,
@@ -193,12 +194,13 @@ function FavoritesPage() {
       return
     }
 
-    setIsClearingAll(true)
-
     try {
+      setIsClearingAll(true)
+      setClearAllError('')
       await clearAllFavorites()
-    } catch {
-      // Keep the page responsive; the inline error area already covers failures from the data layer.
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to clear favorites. Please try again.'
+      setClearAllError(message)
     } finally {
       setIsClearingAll(false)
       setIsClearAllDialogOpen(false)
@@ -275,6 +277,10 @@ function FavoritesPage() {
                 />
               </label>
 
+              {clearAllError ? (
+                <p className="pt-1 text-sm font-medium text-red-600">{clearAllError}</p>
+              ) : null}
+
               {isFavoritesLoading && savedPlaces.length === 0 ? (
                 <ListingSkeleton count={4} className="pt-1" />
               ) : favoritesError ? (
@@ -290,16 +296,9 @@ function FavoritesPage() {
               ) : null}
 
               {savedPlaces.length > 0 && filteredSavedPlaces.length === 0 ? (
-                <CardSurface tone="outlined" pad="loose" className="text-center">
-                  <p className="text-sm font-black text-slate-950">No saved places match that search.</p>
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery('')}
-                    className="mt-3 inline-flex h-10 items-center justify-center rounded-lg border border-[var(--accent)] bg-white px-4 py-2 text-sm font-black text-[var(--accent-deep)]"
-                  >
-                    Clear search
-                  </button>
-                </CardSurface>
+                <div className="flex items-center justify-center py-16 sm:py-24">
+                  <p className="text-center text-sm font-black text-slate-950">No saved places match that search.</p>
+                </div>
               ) : null}
 
               {filteredSavedPlaces.length > 0 ? (

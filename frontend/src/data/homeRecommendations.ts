@@ -115,21 +115,21 @@ const homeFeaturedPlaces = homePopularTopPickPlaces
 
 const homeCityRecommendations: HomeRecommendationTile[] = [
   { label: 'Caloocan', place: createRecommendationPlace({ name: 'Caloocan City People’s Park', city: 'Caloocan' }) },
-  { label: 'Las Piñas', place: createRecommendationPlace({ name: 'St. Joseph Parish Bamboo Organ Church', city: 'Las Piñas' }) },
+  { label: 'Las Piñas', place: createRecommendationPlace({ name: 'SM Southmall', city: 'Las Piñas' }) },
   { label: 'Makati', place: createRecommendationPlace({ name: 'Glorietta', city: 'Makati' }) },
   { label: 'Malabon', place: createRecommendationPlace({ name: 'Malabon Zoo, Aquarium and Botanical Garden', city: 'Malabon' }) },
-  { label: 'Mandaluyong', place: createRecommendationPlace({ name: 'SM Megamall', city: 'Mandaluyong' }) },
+  { label: 'Mandaluyong', place: createRecommendationPlace({ name: 'Shangri-La Plaza', city: 'Mandaluyong' }) },
   { label: 'Manila', place: createRecommendationPlace({ name: 'Intramuros', city: 'Manila' }) },
-  { label: 'Marikina', place: createRecommendationPlace({ name: 'Marikina River Park', city: 'Marikina' }) },
+  { label: 'Marikina', place: createRecommendationPlace({ name: 'Kapitan Moy Cultural Center', city: 'Marikina' }) },
   { label: 'Muntinlupa', place: createRecommendationPlace({ name: 'Festival Mall Alabang', city: 'Muntinlupa' }) },
-  { label: 'Navotas', place: createRecommendationPlace({ name: 'Navotas Centennial Park', city: 'Navotas' }) },
+  { label: 'Navotas', place: createRecommendationPlace({ name: 'Navotas Citywalk and Amphitheater', city: 'Navotas' }) },
   { label: 'Parañaque', place: createRecommendationPlace({ name: 'Okada Manila', city: 'Parañaque' }) },
   { label: 'Pasay', place: createRecommendationPlace({ name: 'SM Mall of Asia', city: 'Pasay' }) },
   { label: 'Pasig', place: createRecommendationPlace({ name: 'Ace Water Spa Pasig', city: 'Pasig' }) },
   { label: 'Quezon City', place: createRecommendationPlace({ name: 'Art in Island', city: 'Quezon City' }) },
   { label: 'San Juan', place: createRecommendationPlace({ name: 'Greenhills Mall / Greenhills Shopping Center', city: 'San Juan' }) },
-  { label: 'Taguig', place: createRecommendationPlace({ name: 'The Mind Museum', city: 'Taguig' }) },
-  { label: 'Valenzuela', place: createRecommendationPlace({ name: 'SM City Valenzuela', city: 'Valenzuela' }) },
+  { label: 'Taguig', place: createRecommendationPlace({ name: 'Bonifacio High Street', city: 'Taguig' }) },
+  { label: 'Valenzuela', place: createRecommendationPlace({ name: 'Museo Valenzuela', city: 'Valenzuela' }) },
 ]
 
 const homeCategoryRecommendations: HomeRecommendationTile[] = [

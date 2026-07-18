@@ -197,6 +197,8 @@ const categoryIconByKey = {
   nightlife: 'categoryNightlife',
   parke: 'categoryParke',
   stay: 'categoryStay',
+  hotel: 'categoryStay',
+  food: 'categoryKainan',
   tourist: 'categoryTourist',
 } as const satisfies Record<string, keyof typeof appIcons>
 

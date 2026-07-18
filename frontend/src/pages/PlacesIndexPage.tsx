@@ -58,7 +58,7 @@ function PlacesIndexPage() {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/` },
+        { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/home` },
         { '@type': 'ListItem', position: 2, name: 'Places', item: `${getSiteOrigin()}/places` },
       ],
     },
@@ -97,7 +97,7 @@ function PlacesIndexPage() {
         <Breadcrumb
           showBack
           items={[
-            { label: 'Home', href: '/', icon: <House className="h-3.5 w-3.5" /> },
+            { label: 'Home', href: '/home', icon: <House className="h-3.5 w-3.5" /> },
             { label: 'Places', icon: <MapPinned className="h-3.5 w-3.5" /> },
           ]}
         />

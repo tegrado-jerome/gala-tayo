@@ -1,6 +1,7 @@
 import { metroManilaAreas, metroManilaAreaNameBySlug } from '../data/metroManilaAreas'
 import { getPlaceCategoryLabel } from '../data/placeCategories'
 import { ADMIN_BASE_PATH, ADMIN_MFA_SETUP_PATH, ADMIN_MFA_VERIFY_PATH } from './adminRoutes'
+import { getPublicSiteOrigin } from './site'
 
 const searchRouteCachePrefix = 'galatayo:search-route:'
 const knownAreaSlugs = new Set<string>(metroManilaAreas.map((area) => area.slug))
@@ -344,9 +345,9 @@ export function getCategoryBreadcrumbMeta(listingLink: string | null, listingLab
   const categorySlug = decodeURIComponent(categoryMatch[1]).toLowerCase()
   return {
     parentName: 'Categories',
-    parentItem: `${window.location.origin}/places/categories`,
+    parentItem: `${getPublicSiteOrigin()}/places/categories`,
     childName: listingLabel ? formatLabelFromSlug(listingLabel) : getPlaceCategoryLabel(categorySlug),
-    childItem: `${window.location.origin}/places/categories/${encodeURIComponent(categorySlug)}`,
+    childItem: `${getPublicSiteOrigin()}/places/categories/${encodeURIComponent(categorySlug)}`,
   }
 }
 

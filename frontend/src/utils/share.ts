@@ -1,4 +1,5 @@
 import { getCanonicalPlacePath, resolveAreaMeta } from './seo'
+import { getPublicSiteOrigin } from './site'
 
 type ShareLinkOptions = {
   url: string
@@ -13,10 +14,6 @@ type ShareablePlace = {
   localArea?: string | null
 }
 
-function getOrigin() {
-  return window.location.origin
-}
-
 function getPlaceSlug(place: ShareablePlace) {
   const slug = place.slug?.trim()
 
@@ -29,15 +26,15 @@ function getPlaceSlug(place: ShareablePlace) {
 
 export function buildPlaceShareUrl(place: ShareablePlace) {
   const areaMeta = resolveAreaMeta(place)
-  return `${getOrigin()}${getCanonicalPlacePath({ areaSlug: areaMeta.slug, placeSlug: getPlaceSlug(place) })}`
+  return `${getPublicSiteOrigin()}${getCanonicalPlacePath({ areaSlug: areaMeta.slug, placeSlug: getPlaceSlug(place) })}`
 }
 
 export function buildPublicGalaPlanShareUrl(username: string, slug: string) {
-  return `${getOrigin()}/u/${encodeURIComponent(username)}/plans/${encodeURIComponent(slug)}`
+  return `${getPublicSiteOrigin()}/u/${encodeURIComponent(username)}/plans/${encodeURIComponent(slug)}`
 }
 
 export function buildPrivateGalaPlanShareUrl(planId: string) {
-  return `${getOrigin()}/gala-plans/${encodeURIComponent(planId)}`
+  return `${getPublicSiteOrigin()}/gala-plans/${encodeURIComponent(planId)}`
 }
 
 async function copyTextToClipboard(text: string) {

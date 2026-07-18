@@ -8,6 +8,7 @@ import { mapBackendPlaceToCardData } from '../utils/placeMapping'
 import { formatLabelFromSlug } from '../utils/routes'
 import { getApiUrl } from '../utils/apiClient'
 import { trackPlaceViewed } from '../utils/analytics'
+import { getPublicSiteOrigin } from '../utils/site'
 import type { PlaceDetail, PlaceDetailCardData } from '../types/appTypes'
 import { cachePlaceDetail, readCachedPlaceDetail } from '../utils/placeDetailCache'
 
@@ -158,17 +159,17 @@ export default function SharedPlacePage({
             {
               '@type': 'BreadcrumbList',
               itemListElement: [
-                { '@type': 'ListItem', position: 1, name: 'Home', item: `${window.location.origin}/home` },
-                { '@type': 'ListItem', position: 2, name: 'Places', item: `${window.location.origin}/places` },
+                { '@type': 'ListItem', position: 1, name: 'Home', item: `${getPublicSiteOrigin()}/home` },
+                { '@type': 'ListItem', position: 2, name: 'Places', item: `${getPublicSiteOrigin()}/places` },
                 ...(categoryBreadcrumbMeta
                   ? [
                       { '@type': 'ListItem', position: 3, name: categoryBreadcrumbMeta.parentName, item: categoryBreadcrumbMeta.parentItem },
                       { '@type': 'ListItem', position: 4, name: categoryBreadcrumbMeta.childName, item: categoryBreadcrumbMeta.childItem },
-                      { '@type': 'ListItem', position: 5, name: place.name, item: `${window.location.origin}${canonicalPath}` },
+                      { '@type': 'ListItem', position: 5, name: place.name, item: `${getPublicSiteOrigin()}${canonicalPath}` },
                     ]
                   : [
-                      { '@type': 'ListItem', position: 3, name: areaMeta.name, item: `${window.location.origin}/places/${encodeURIComponent(areaMeta.slug)}` },
-                      { '@type': 'ListItem', position: 4, name: place.name, item: `${window.location.origin}${canonicalPath}` },
+                      { '@type': 'ListItem', position: 3, name: areaMeta.name, item: `${getPublicSiteOrigin()}/places/${encodeURIComponent(areaMeta.slug)}` },
+                      { '@type': 'ListItem', position: 4, name: place.name, item: `${getPublicSiteOrigin()}${canonicalPath}` },
                     ]),
               ],
             },
@@ -176,7 +177,7 @@ export default function SharedPlacePage({
               '@type': getStructuredPlaceType(place.category),
               name: place.name,
               description: buildPlaceDescription(place, areaMeta.name || 'Metro Manila'),
-              url: `${window.location.origin}${canonicalPath}`,
+              url: `${getPublicSiteOrigin()}${canonicalPath}`,
               address: {
                 '@type': 'PostalAddress',
                 addressLocality: place.city || areaMeta.name,

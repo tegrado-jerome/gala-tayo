@@ -363,12 +363,6 @@ button:disabled {
   box-shadow: var(--focus-ring);
 }
 
-.auth-form-input:focus,
-.auth-form-input:focus-visible {
-  outline: none;
-  box-shadow: none !important;
-}
-
 .ask-ai-composer-input:focus,
 .ask-ai-composer-input:focus-visible {
   outline: none;
@@ -901,27 +895,80 @@ button:disabled {
 
 .profile-summary-stat,
 .profile-summary-stat-note {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
   color: var(--muted);
   font-weight: 600;
   transition: color var(--motion-base) var(--ease-soft);
+}
+
+.profile-summary-stat-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profile-summary-stat > span:first-child {
+  color: var(--primary-dark);
+  font-weight: 700;
+  margin-right: 6px;
 }
 
 .profile-summary-stat:not(:disabled):hover {
   color: var(--text-main);
 }
 
-.profile-summary-stat > span:first-child {
-  color: var(--text-main);
-  font-size: 18px;
-  font-weight: 700;
-}
-
 .profile-summary-stat-disabled {
   cursor: default;
   color: var(--text-light);
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .profile-page-container {
+    width: min(100%, 820px);
+    padding-right: clamp(1.25rem, 4vw, 2rem);
+    padding-left: clamp(1.25rem, 4vw, 2rem);
+  }
+
+  .profile-page-container .profile-summary-card {
+    width: 100%;
+  }
+
+  .profile-page-container .profile-summary-header {
+    align-items: flex-start;
+    gap: 18px;
+  }
+
+  .profile-page-container .profile-summary-identity {
+    align-items: flex-start;
+    flex: 1 1 auto;
+  }
+
+  .profile-page-container .profile-summary-actions {
+    width: 10rem;
+    flex: 0 0 auto;
+    margin-left: auto;
+    justify-content: flex-end;
+  }
+
+  .profile-page-container .profile-summary-actions .app-button {
+    width: 10rem;
+    justify-content: center;
+    white-space: nowrap;
+  }
+
+  .profile-page-container .profile-summary-stats {
+    display: grid;
+    grid-template-columns: repeat(2, max-content) minmax(0, 1fr);
+    gap: 14px 24px;
+    align-items: center;
+  }
+
+  .profile-page-container .profile-summary-stat-note {
+    min-width: 0;
+  }
+
+  .profile-page-container .profile-summary-stat-note:last-child {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (min-width: 640px) {
@@ -1345,13 +1392,13 @@ button:disabled {
 
 .gala-date-trigger {
   display: flex;
-  min-height: 44px;
+  min-height: 58px;
   width: 100%;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   border: 1px solid rgba(var(--accent-rgb), 0.14);
-  border-radius: var(--radius-lg);
+  border-radius: 18px;
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(249, 250, 251, 0.98));
   padding: 0 16px;
@@ -1359,12 +1406,6 @@ button:disabled {
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.9) inset,
     0 10px 30px rgba(15, 23, 42, 0.04);
-}
-
-@media (min-width: 1024px) {
-  .gala-date-trigger {
-    min-height: 46px;
-  }
 }
 
 .gala-date-trigger:hover {
@@ -1482,14 +1523,12 @@ button:disabled {
 }
 
 .gala-date-year-menu {
-  position: absolute;
-  left: 50%;
-  top: calc(100% + 6px);
-  z-index: 2;
+  position: fixed;
+  z-index: 7200;
   width: 4.8rem;
   max-height: calc(10 * 28px);
   overflow-y: auto;
-  transform: translateX(-50%);
+  overscroll-behavior: contain;
   border: 1px solid rgba(148, 163, 184, 0.18);
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.98);
@@ -1667,9 +1706,7 @@ button:disabled {
   }
 
   .gala-date-year-menu {
-    left: auto;
-    right: 0;
-    transform: none;
+    max-height: min(14rem, calc(100dvh - 24px));
   }
 }
 
@@ -4229,6 +4266,57 @@ body.feature-guide-open nav[aria-label="Primary"] {
 
   .onboarding-form-grid {
     gap: 16px;
+  }
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .onboarding-frame {
+    width: min(100%, 680px);
+    align-self: stretch;
+    min-height: calc(100dvh - max(40px, env(safe-area-inset-top)));
+  }
+
+  .onboarding-shell {
+    min-height: 100%;
+    gap: 24px;
+  }
+
+  .onboarding-stage {
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+  }
+
+  .onboarding-main {
+    width: 100%;
+    max-width: min(100%, 38rem);
+    min-height: 100%;
+    margin: 0 auto;
+  }
+
+  .onboarding-title-group {
+    max-width: 100%;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .onboarding-description,
+  .onboarding-note {
+    margin-right: auto;
+    margin-left: auto;
+    text-align: center;
+  }
+
+  .onboarding-content {
+    justify-content: center;
+  }
+
+  .onboarding-actions {
+    justify-content: center;
+  }
+
+  .onboarding-actions > * {
+    min-width: 156px;
   }
 }
 

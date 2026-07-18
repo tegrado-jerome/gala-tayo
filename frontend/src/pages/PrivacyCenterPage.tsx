@@ -363,8 +363,8 @@ function PrivacyCenterPage({ session }: { session: Session }) {
               icon={<ShieldCheck className="h-4 w-4" strokeWidth={2.2} />}
               badges={
                 <>
-                  <span className="rounded-lg border border-[var(--line)] bg-white px-3 py-1.5">Protected page</span>
-                  <span className="rounded-lg border border-[var(--line)] bg-white px-3 py-1.5">Philippines privacy baseline</span>
+                  <span className="rounded-lg border border-[var(--line)] bg-white px-3 py-1.5">Your private space</span>
+                  <span className="rounded-lg border border-[var(--line)] bg-white px-3 py-1.5">Standard privacy</span>
                 </>
               }
             />

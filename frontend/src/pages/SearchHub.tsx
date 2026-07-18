@@ -126,7 +126,7 @@ function SearchHub({
       !normalizedInitialAskAiQuestion ||
       initialAskAiState?.question === normalizedInitialAskAiQuestion
     )
-  const shouldUseSearchRouteCache = initialMode === 'places' && isSearchResultsRoute()
+  const shouldUseSearchRouteCache = initialMode === 'places' && isSearchResultsRoute() && navigationSource === 'pop'
   const initialRequestedPage =
     typeof initialSearchState?.page === 'number' && Number.isFinite(initialSearchState.page) && initialSearchState.page > 0
       ? Math.floor(initialSearchState.page)
@@ -728,6 +728,20 @@ function SearchHub({
       page: initialRequestedPage,
     }
     const nextSignature = JSON.stringify(nextAutoSearch)
+    const nextCriteriaSignature = JSON.stringify({
+      rawQuery: nextAutoSearch.rawQuery,
+      category: nextAutoSearch.category,
+      area: nextAutoSearch.area,
+      goodFor: nextAutoSearch.goodFor,
+      budget: nextAutoSearch.budget,
+    })
+    const displayedCriteriaSignature = JSON.stringify({
+      rawQuery,
+      category: selectedCategory,
+      area: selectedArea,
+      goodFor: selectedGoodFor,
+      budget: selectedBudget,
+    })
 
     if (lastAutoSearchSignatureRef.current === nextSignature) {
       return
@@ -735,8 +749,9 @@ function SearchHub({
 
     lastAutoSearchSignatureRef.current = nextSignature
 
-    const shouldRefreshInPlace =
+    const hasDisplayedSearch =
       hasSearched || searchResults.length > 0 || Boolean(lastSearchQuery.trim()) || Boolean(activeSearchLabel.trim())
+    const shouldRefreshInPlace = hasDisplayedSearch && nextCriteriaSignature === displayedCriteriaSignature
 
     if (shouldRefreshInPlace && navigationSource === 'pop') {
       return
@@ -755,7 +770,12 @@ function SearchHub({
     initialSearchState?.rawQuery,
     lastSearchQuery,
     navigationSource,
+    rawQuery,
     searchResults.length,
+    selectedArea,
+    selectedBudget,
+    selectedCategory,
+    selectedGoodFor,
   ])
 
   useLayoutEffect(() => {

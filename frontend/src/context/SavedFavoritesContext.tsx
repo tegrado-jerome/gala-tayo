@@ -485,7 +485,7 @@ function SavedFavoritesProvider({ children }: { children: ReactNode }) {
         throw new Error('Sign in to manage favorites.')
       }
 
-      const response = await fetch(getApiUrl('/favorites/all'), {
+      const response = await fetch(getApiUrl('/favorites'), {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
