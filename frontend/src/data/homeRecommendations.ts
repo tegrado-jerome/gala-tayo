@@ -25,6 +25,8 @@ type RecommendationPlaceInput = {
   name: string
   city: string
   area?: string
+  imageUrl?: string | null
+  curatedImageUrls?: string[]
   description?: string | null
   reason?: string | null
 }
@@ -33,11 +35,26 @@ function createRecommendationPlace({
   name,
   city,
   area = city,
+  imageUrl: imageUrlOverride = null,
+  curatedImageUrls = [],
   description = null,
   reason = null,
 }: RecommendationPlaceInput): HomeRecommendationPlace {
   const slug = normalizePlaceSlug(name)
-  const imageUrl = getStaticPlaceImageUrlForSlug(slug)
+  const staticImageUrl = getStaticPlaceImageUrlForSlug(slug)
+  const imageUrl = imageUrlOverride?.trim() || staticImageUrl
+  const resolvedCuratedImageUrls = [
+    ...curatedImageUrls,
+    ...(imageUrl ? [imageUrl] : []),
+  ].reduce<string[]>((uniqueImageUrls, candidate) => {
+    const trimmedCandidate = candidate?.trim()
+
+    if (trimmedCandidate && !uniqueImageUrls.includes(trimmedCandidate)) {
+      uniqueImageUrls.push(trimmedCandidate)
+    }
+
+    return uniqueImageUrls
+  }, [])
 
   return {
     id: slug,
@@ -47,7 +64,7 @@ function createRecommendationPlace({
     city,
     localArea: area,
     imageUrl,
-    curatedImageUrls: imageUrl ? [imageUrl] : [],
+    curatedImageUrls: resolvedCuratedImageUrls,
     rating: null,
     reviewCount: undefined,
     description,

@@ -285,8 +285,18 @@ function mergeRecommendedPlaceWithLivePlace(
   return {
     ...fallbackPlace,
     ...livePlace,
-    thumbnailUrl: livePlace.thumbnailUrl?.trim() || livePlace.imageUrl?.trim() || fallbackPlace.thumbnailUrl || null,
-    imageUrl: livePlace.imageUrl?.trim() || fallbackPlace.imageUrl || null,
+    thumbnailUrl:
+      livePlace.thumbnailUrl?.trim() ||
+      livePlace.imageUrl?.trim() ||
+      liveCuratedImageUrls.find((imageUrl) => Boolean(imageUrl?.trim()))?.trim() ||
+      fallbackPlace.thumbnailUrl ||
+      null,
+    imageUrl:
+      livePlace.imageUrl?.trim() ||
+      livePlace.thumbnailUrl?.trim() ||
+      liveCuratedImageUrls.find((imageUrl) => Boolean(imageUrl?.trim()))?.trim() ||
+      fallbackPlace.imageUrl ||
+      null,
     curatedImageUrls: hasShowcaseImage(livePlace)
       ? [...liveCuratedImageUrls, ...fallbackCuratedImageUrls].reduce<string[]>((uniqueImageUrls, imageUrl) => {
           const trimmedImageUrl = imageUrl?.trim()

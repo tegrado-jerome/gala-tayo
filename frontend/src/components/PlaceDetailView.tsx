@@ -243,7 +243,7 @@ function PlacePhoto({
                       </button>
                     ) : null}
                     {priceBadgeLabel ? (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[rgba(21,128,61,0.95)] px-3 py-1.5 text-[12px] font-black text-white shadow-[0_12px_22px_rgba(21,128,61,0.28)]">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#1B2A4A] px-3 py-1.5 text-[12px] font-black text-white">
                         <Wallet className="h-3.5 w-3.5" />
                         {priceBadgeLabel}
                       </span>
@@ -349,13 +349,13 @@ function PlacePhoto({
                     </button>
                   ) : null}
                   {priceBadgeLabel ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[rgba(21,128,61,0.95)] px-3 py-1.5 text-[12px] font-black text-white shadow-[0_12px_22px_rgba(21,128,61,0.28)]">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#1B2A4A] px-3 py-1.5 text-[12px] font-black text-white">
                       <Wallet className="h-3.5 w-3.5" />
                       {priceBadgeLabel}
                     </span>
                   ) : null}
                   <span className="rounded-full bg-black/45 px-3 py-1 text-[12px] font-black text-white backdrop-blur-sm">
-                    {safeIndex + 1} / {photos.length}
+{safeIndex + 1} / {imageUrls.length}
                   </span>
                 </div>
               </div>
@@ -434,11 +434,11 @@ function PlacePhoto({
 
                 <div className="absolute inset-x-5 top-5 flex items-start justify-between gap-3">
                   <span className="rounded-full bg-black/45 px-3 py-1 text-[12px] font-black text-white backdrop-blur-sm">
-                    {safeIndex + 1} / {photos.length}
+{safeIndex + 1} / {imageUrls.length}
                   </span>
                   <div className="flex max-w-[70%] flex-wrap items-center justify-end gap-2">
                     {priceBadgeLabel ? (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[rgba(21,128,61,0.95)] px-3 py-1.5 text-[12px] font-black text-white shadow-[0_12px_22px_rgba(21,128,61,0.28)]">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#1B2A4A] px-3 py-1.5 text-[12px] font-black text-white">
                         <Wallet className="h-3.5 w-3.5" />
                         {priceBadgeLabel}
                       </span>
@@ -942,13 +942,15 @@ function PlaceDetailView({
   const { isPlaceSaved, saveFavorite, removeFavorite } = useSavedFavorites()
   const { showSystemMessage } = useSystemMessage()
 
-  const galleryPhotos = uniqueList([
+  const placeOwnPhotos = uniqueList([
     place.imageUrl,
     place.thumbnailUrl,
     place.curatedImageUrl,
     ...(place.curatedImageUrls ?? []),
-    ...getCuratedPlaceImages(place.name),
-  ]).slice(0, 3)
+  ])
+  const galleryPhotos = placeOwnPhotos.length > 0
+    ? placeOwnPhotos.slice(0, 3)
+    : getCuratedPlaceImages(place.name).slice(0, 3)
   const galleryStateKey = `${place.id}:${galleryPhotos.join('|')}`
   const [activeGalleryState, setActiveGalleryState] = useState({ key: galleryStateKey, index: 0 })
   const activeGalleryIndex =
@@ -2713,11 +2715,11 @@ function PlaceDetailView({
                   onClick={() => setIsDetailsExpanded((current) => !current)}
                   className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white px-4 py-2 text-[13px] font-black text-slate-800 transition hover:border-[var(--accent)] hover:text-[var(--accent-deep)]"
                 >
+                  {isDetailsExpanded ? 'Show less details' : 'Show more details'}
                   <Icon
                     name="chevronDown"
                     className={`h-4 w-4 transition-transform ${isDetailsExpanded ? 'rotate-180' : ''}`}
                   />
-                  {isDetailsExpanded ? 'Show less details' : 'Show more details'}
                 </button>
               </div>
 
