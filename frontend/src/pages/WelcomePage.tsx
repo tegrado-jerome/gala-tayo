@@ -183,7 +183,7 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
             '@context': 'https://schema.org',
             '@type': 'WebSite',
             name: 'GalaTayo',
-            url: `${getPublicSiteOrigin()}/`,
+            url: 'https://galatayo.app/',
           },
           {
             '@context': 'https://schema.org',
