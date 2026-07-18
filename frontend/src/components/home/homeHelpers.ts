@@ -267,6 +267,10 @@ function readSearchRouteCache(): SearchRouteCache | null {
           ? parsedCache.selectedPlaceViewportTop
           : null,
       pendingScrollRestore: parsedCache.pendingScrollRestore === true,
+      cachedAt:
+        typeof parsedCache.cachedAt === 'number' && Number.isFinite(parsedCache.cachedAt) && parsedCache.cachedAt > 0
+          ? parsedCache.cachedAt
+          : 0,
     }
   } catch (error) {
     console.warn('Unable to restore cached search route:', error)
