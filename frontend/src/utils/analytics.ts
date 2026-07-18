@@ -55,12 +55,26 @@ type AuthCompletedParams = {
 type AnalyticsWindow = Window & {
   dataLayer?: Array<unknown>
   gtag?: (...args: unknown[]) => void
+  __galatayoAnalyticsDiagnostics?: AnalyticsDiagnostics
 }
 
 const MEASUREMENT_ID = String(import.meta.env.VITE_GA_MEASUREMENT_ID || '').trim()
 const GA_SCRIPT_ID = 'galatayo-ga4-script'
+const DISABLED_ANALYTICS_PROMISE = Promise.resolve()
 
-let analyticsScriptPromise: Promise<void> | null = null
+type AnalyticsDiagnosticsEntry = {
+  command: string
+  eventName?: string
+  measurementId?: string
+}
+
+type AnalyticsDiagnostics = {
+  enabled: boolean
+  queue: AnalyticsDiagnosticsEntry[]
+  hasConfigBeforePageView: boolean
+}
+
+let analyticsInitializationPromise: Promise<void> | null = null
 let lastPageViewSignature = ''
 
 function canUseAnalytics() {
@@ -87,22 +101,92 @@ function pushGtagEvent(...args: unknown[]) {
   analyticsWindow.dataLayer.push(args)
 }
 
-function ensureScriptLoaded() {
-  if (!canUseAnalytics()) {
-    return Promise.resolve()
+function hasStoredAnalyticsDebugFlag() {
+  try {
+    return window.localStorage.getItem('galatayo_analytics_debug') === '1'
+  } catch {
+    return false
+  }
+}
+
+function getAnalyticsDiagnostics(analyticsWindow: AnalyticsWindow) {
+  const searchParams = new URLSearchParams(window.location.search)
+  const hasDebugFlag = searchParams.has('analytics_debug') || hasStoredAnalyticsDebugFlag()
+
+  if (!hasDebugFlag) {
+    return null
   }
 
+  const diagnostics =
+    analyticsWindow.__galatayoAnalyticsDiagnostics ||
+    ({
+      enabled: true,
+      queue: [],
+      hasConfigBeforePageView: false,
+    } satisfies AnalyticsDiagnostics)
+
+  diagnostics.enabled = true
+  analyticsWindow.__galatayoAnalyticsDiagnostics = diagnostics
+
+  return diagnostics
+}
+
+function recordAnalyticsDiagnostics(args: unknown[]) {
   const analyticsWindow = getAnalyticsWindow()
+  const diagnostics = getAnalyticsDiagnostics(analyticsWindow)
 
-  if (analyticsWindow.gtag && analyticsWindow.dataLayer && document.getElementById(GA_SCRIPT_ID)) {
-    return Promise.resolve()
+  if (!diagnostics) {
+    return
   }
 
-  if (analyticsScriptPromise) {
-    return analyticsScriptPromise
+  const [command, firstParam, secondParam] = args
+
+  if (command !== 'config' && command !== 'event') {
+    return
   }
 
-  analyticsScriptPromise = new Promise<void>((resolve, reject) => {
+  const entry: AnalyticsDiagnosticsEntry = {
+    command: String(command),
+  }
+
+  if (command === 'config' && typeof firstParam === 'string') {
+    entry.measurementId = firstParam
+  }
+
+  if (command === 'event' && typeof firstParam === 'string') {
+    entry.eventName = firstParam
+  }
+
+  if (command === 'event' && firstParam === 'page_view' && secondParam && typeof secondParam === 'object' && 'send_to' in secondParam) {
+    const params = secondParam as { send_to?: unknown }
+
+    if (typeof params.send_to === 'string') {
+      entry.measurementId = params.send_to
+    }
+  }
+
+  diagnostics.queue.push(entry)
+
+  const configIndex = diagnostics.queue.findIndex(
+    (queuedEntry) => queuedEntry.command === 'config' && queuedEntry.measurementId === MEASUREMENT_ID,
+  )
+  const pageViewIndex = diagnostics.queue.findIndex(
+    (queuedEntry) =>
+      queuedEntry.command === 'event' &&
+      queuedEntry.eventName === 'page_view' &&
+      queuedEntry.measurementId === MEASUREMENT_ID,
+  )
+
+  diagnostics.hasConfigBeforePageView = configIndex >= 0 && pageViewIndex > configIndex
+
+  console.debug('[analytics]', {
+    queued: entry,
+    hasConfigBeforePageView: diagnostics.hasConfigBeforePageView,
+  })
+}
+
+function loadAnalyticsScript(): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
     if (document.getElementById(GA_SCRIPT_ID)) {
       resolve()
       return
@@ -116,40 +200,66 @@ function ensureScriptLoaded() {
     script.onerror = () => reject(new Error('GA4 script failed to load.'))
     document.head.appendChild(script)
   })
+}
 
-  const analyticsWindowWithData = analyticsWindow
-  analyticsWindowWithData.dataLayer = analyticsWindowWithData.dataLayer || []
-  analyticsWindowWithData.gtag =
-    analyticsWindowWithData.gtag ||
+function initializeAnalytics(): Promise<void> {
+  if (!canUseAnalytics()) {
+    return DISABLED_ANALYTICS_PROMISE
+  }
+
+  if (analyticsInitializationPromise) {
+    return analyticsInitializationPromise
+  }
+
+  const analyticsWindow = getAnalyticsWindow()
+  analyticsWindow.dataLayer = analyticsWindow.dataLayer || []
+  analyticsWindow.gtag =
+    analyticsWindow.gtag ||
     function gtagShim(...args: unknown[]) {
       pushGtagEvent(...args)
     }
 
-  analyticsWindowWithData.gtag('js', new Date())
-  analyticsWindowWithData.gtag('config', MEASUREMENT_ID, {
+  const queueGtag = (...args: unknown[]) => {
+    analyticsWindow.gtag?.(...args)
+    recordAnalyticsDiagnostics(args)
+  }
+
+  queueGtag('js', new Date())
+  queueGtag('config', MEASUREMENT_ID, {
     send_page_view: false,
     anonymize_ip: true,
   })
 
-  return analyticsScriptPromise
+  analyticsInitializationPromise = loadAnalyticsScript()
+
+  return analyticsInitializationPromise
 }
 
-function initializeAnalytics() {
-  void ensureScriptLoaded().catch(() => undefined)
+async function ensureAnalyticsReady(): Promise<boolean> {
+  try {
+    await initializeAnalytics()
+    return true
+  } catch {
+    return false
+  }
 }
 
-function trackEvent(eventName: string, params: AnalyticsEventParams = {}) {
+async function trackEvent(eventName: string, params: AnalyticsEventParams = {}): Promise<void> {
   if (!canUseAnalytics()) {
     return
   }
 
-  initializeAnalytics()
+  const analyticsReady = await ensureAnalyticsReady()
+
+  if (!analyticsReady) {
+    return
+  }
 
   const analyticsWindow = getAnalyticsWindow()
   analyticsWindow.gtag?.('event', eventName, params)
 }
 
-function trackPageView({ pathname, title }: PageViewParams) {
+async function trackPageView({ pathname, title }: PageViewParams): Promise<void> {
   if (!canUseAnalytics()) {
     return
   }
@@ -162,15 +272,31 @@ function trackPageView({ pathname, title }: PageViewParams) {
     return
   }
 
-  lastPageViewSignature = signature
-  initializeAnalytics()
+  const analyticsReady = await ensureAnalyticsReady()
+
+  if (!analyticsReady) {
+    return
+  }
+
+  if (signature === lastPageViewSignature) {
+    return
+  }
 
   const analyticsWindow = getAnalyticsWindow()
   analyticsWindow.gtag?.('event', 'page_view', {
+    send_to: MEASUREMENT_ID,
     page_path: safePathname,
     page_title: safeTitle,
     page_location: getSafePageLocation(safePathname),
   })
+  recordAnalyticsDiagnostics([
+    'event',
+    'page_view',
+    {
+      send_to: MEASUREMENT_ID,
+    },
+  ])
+  lastPageViewSignature = signature
 }
 
 function trackSearchSubmitted({ resultCount, page = null, filterCount = null }: SearchSubmittedParams) {

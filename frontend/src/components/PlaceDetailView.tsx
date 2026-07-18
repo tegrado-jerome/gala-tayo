@@ -583,10 +583,10 @@ function PlacePhoto({
 
 const commentReportReasons: Array<{ value: CommentReportReason; label: string }> = [
   { value: 'spam', label: 'Spam' },
-  { value: 'harassment', label: 'Hate or abusive content' },
-  { value: 'inappropriate', label: 'Inappropriate content' },
-  { value: 'false_info', label: 'False or misleading' },
-  { value: 'personal_info', label: 'Personal information shared' },
+  { value: 'harassment', label: 'Abuse' },
+  { value: 'inappropriate', label: 'Inappropriate' },
+  { value: 'false_info', label: 'Misleading' },
+  { value: 'personal_info', label: 'Privacy' },
   { value: 'other', label: 'Other' },
 ]
 const placeConcernReasons: Array<{ value: PlaceReportReason; label: string }> = [
@@ -762,22 +762,6 @@ function markCommentDeletedById(comments: PlaceComment[], commentId: string, del
     local_post_state: undefined,
     local_error_message: null,
   }))
-}
-
-function findCommentById(comments: PlaceComment[], commentId: string): PlaceComment | null {
-  for (const comment of comments) {
-    if (comment.id === commentId) {
-      return comment
-    }
-
-    const replyMatch = findCommentById(comment.replies, commentId)
-
-    if (replyMatch) {
-      return replyMatch
-    }
-  }
-
-  return null
 }
 
 const EMPTY_PLACE_DETAIL = {
@@ -2061,7 +2045,6 @@ function PlaceDetailView({
     'Reachable by local routes, short walks, or ride-hailing depending on where you are coming from.'
   const parkingText = cleanString(place.parking_info) || 'Parking depends on time and crowd, so plan ahead if bringing a car.'
   const visibleCommentCount = countThreadComments(comments)
-  const reportingComment = reportingCommentId ? findCommentById(comments, reportingCommentId) : null
 
   const renderComment = (comment: PlaceComment, isReply = false): ReactNode => {
     const isDeleted = isCommentDeleted(comment)
@@ -2306,7 +2289,7 @@ function PlaceDetailView({
                     </button>
                   </>
                 ) : null}
-                {!isDeleted && !isOwner ? (
+                {!isDeleted && !isOwner && currentUserId ? (
                   isReportedByCurrentUser ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 text-slate-500">
                       <Flag className="h-3.5 w-3.5" strokeWidth={2.2} />
@@ -2836,27 +2819,22 @@ function PlaceDetailView({
 
       {reportingCommentId ? (
         <div
-          className="fixed inset-0 z-[9998] flex items-end justify-center bg-slate-950/45 px-4 pb-4 sm:items-center sm:pb-0"
+          className="fixed inset-0 z-[9998] flex items-center justify-center bg-slate-950/45 px-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="report-comment-title"
           onClick={closeReportCommentModal}
         >
           <div
-            className="w-full max-w-md rounded-2xl border border-[var(--line)] bg-white p-4 shadow-[0_24px_70px_rgba(15,23,42,0.25)]"
+            className="w-full max-w-sm rounded-2xl border border-[var(--line)] bg-white p-3 shadow-[0_24px_70px_rgba(15,23,42,0.25)]"
             onClick={(event) => event.stopPropagation()}
           >
             <h3 id="report-comment-title" className="text-[18px] font-black text-slate-950">
-              Report comment
+              <strong>Report comment</strong>
             </h3>
-            <p className="mt-1 text-[14px] font-semibold text-slate-700">Why are you reporting this comment?</p>
-            {reportingComment ? (
-              <p className="mt-3 rounded-xl bg-slate-50 px-3 py-2 text-[13px] font-semibold leading-5 text-slate-500">
-                "{reportingComment.comment.slice(0, 140)}{reportingComment.comment.length > 140 ? '…' : ''}"
-              </p>
-            ) : null}
+            <p className="mt-1 text-[13px] font-semibold text-slate-700">Why are you reporting this comment?</p>
 
-            <div className="mt-4 grid gap-2">
+            <div className="mt-3 grid grid-cols-2 gap-1.5">
               {commentReportReasons.map((reason) => (
                 <button
                   key={reason.value}
@@ -2866,11 +2844,11 @@ function PlaceDetailView({
                     setReportError('')
                   }}
                   disabled={isReportSubmitting}
-                  className={`min-h-11 rounded-xl border px-3 text-left text-[14px] font-extrabold transition disabled:cursor-not-allowed disabled:opacity-70 ${
+                  className={`min-h-11 rounded-xl border px-3 text-left text-[14px] font-extrabold transition ${
                     reportReason === reason.value
                       ? 'border-[var(--accent)] bg-[var(--accent-wash)] text-[var(--accent-deep)]'
                       : 'border-[var(--line)] bg-white text-slate-800 hover:border-[var(--accent)]'
-                  }`}
+                  } disabled:cursor-not-allowed disabled:opacity-70`}
                   aria-pressed={reportReason === reason.value}
                 >
                   {reason.label}
@@ -2878,43 +2856,44 @@ function PlaceDetailView({
               ))}
             </div>
 
-            <label className="mt-4 block">
-              <span className="flex items-center gap-2 text-[13px] font-black text-slate-800">
-                Add more details
+            <label className="mt-3 block">
+              <span className="flex items-center gap-2 text-[12px] font-black text-slate-800">
+                Extra details
                 <span className="optional-label">Optional</span>
               </span>
               <textarea
                 value={reportDetails}
                 onChange={(event) => setReportDetails(event.target.value.slice(0, 500))}
                 disabled={isReportSubmitting}
-                maxLength={500}
-                rows={4}
+                rows={3}
                 placeholder="Add any context that helps us review this."
-                className="mt-2 w-full resize-none rounded-xl border border-[var(--line)] bg-white px-3 py-2 text-[14px] font-semibold leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-wash)] disabled:cursor-not-allowed disabled:opacity-70"
+                className="mt-1.5 w-full resize-none rounded-xl border border-[var(--line)] bg-white px-3 py-1.5 text-[13px] font-semibold leading-5 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-wash)]"
               />
-              <span className="mt-1 block text-right text-[12px] font-bold text-slate-500">{reportDetails.length}/500</span>
+              <span className="mt-1 block text-right text-[11px] font-bold text-slate-500">{reportDetails.length}/500</span>
             </label>
 
-            <div className="mt-3 min-h-5">
-              {reportError ? <p className="text-[13px] font-bold text-red-600">{reportError}</p> : null}
+            <div className="mt-2 min-h-0">
+              {reportError ? <p className="text-[12px] font-bold text-red-600">{reportError}</p> : null}
             </div>
 
-            <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <div className="mt-3 grid grid-cols-2 gap-1.5">
               <button
                 type="button"
                 onClick={closeReportCommentModal}
                 disabled={isReportSubmitting}
-                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--line)] bg-white px-4 text-[14px] font-extrabold text-slate-700 disabled:cursor-not-allowed disabled:opacity-70"
+                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-[var(--line)] bg-white px-3 text-[13px] font-extrabold text-slate-700"
               >
+                <AppIcon name="clear" className="h-4 w-4" />
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={() => void handleReportComment(reportingCommentId)}
                 disabled={isReportSubmitting || !reportReason}
-                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--accent)] bg-[var(--accent)] px-4 text-[14px] font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-70"
+                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-red-600 bg-red-600 px-3 text-[13px] font-extrabold text-white disabled:opacity-50"
               >
-                {isReportSubmitting ? 'Reporting...' : 'Submit report'}
+                <AppIcon name="reports" className="h-4 w-4" />
+                {isReportSubmitting ? 'Submitting...' : 'Submit report'}
               </button>
             </div>
           </div>
