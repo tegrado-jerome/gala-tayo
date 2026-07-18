@@ -150,7 +150,7 @@ export function useAuthOrchestration() {
         setProfileError('')
         const data = await getOnboardingStatus(activeSession)
 
-        if (!isMounted || sessionRef.current !== activeSession) {
+        if (!isMounted) {
           return
         }
 
@@ -196,7 +196,7 @@ export function useAuthOrchestration() {
         setIsCurrentProfileLoading(true)
         const data = await getCurrentUser(activeSession)
 
-        if (isMounted && sessionRef.current === activeSession) {
+        if (isMounted) {
           setCurrentUser(data.user)
           setCurrentProfile(data.profile)
         }
@@ -239,7 +239,7 @@ export function useAuthOrchestration() {
         setIsAdminMfaLoading(true)
         const status = await getAdminMfaStatus(activeSession)
 
-        if (isMounted && sessionRef.current === activeSession) {
+        if (isMounted) {
           setAdminMfaStatus(status)
         }
       } catch {
