@@ -2,6 +2,7 @@ import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/fu
 import { CATEGORIES } from "./filters";
 import { checkEndpointRateLimit } from "../utils/redisRateLimit";
 import { getSeoAreaPage, getSeoAreaSummaries, getSeoPlaceSummaries } from "../utils/seoPlaces";
+import { getSiteUrl } from "../utils/siteUrl";
 
 type SitemapEntry = {
   path: string;
@@ -21,28 +22,6 @@ type AreaCount = {
   placeCount: number;
   latestUpdatedAt: string | null;
 };
-
-function getSiteUrl(request: HttpRequest): string {
-  const configuredSiteUrl = process.env.SITE_URL || process.env.PUBLIC_SITE_URL;
-
-  if (configuredSiteUrl && configuredSiteUrl.trim()) {
-    return configuredSiteUrl.trim().replace(/\/+$/, "");
-  }
-
-  const forwardedProto = request.headers.get("x-forwarded-proto") || "https";
-  const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "localhost:4173";
-  const requestOrigin = new URL(request.url).origin;
-
-  if (!host || host === "localhost:4173") {
-    return requestOrigin.replace(/\/+$/, "");
-  }
-
-  if (host.includes(":")) {
-    return `${forwardedProto}://${host}`.replace(/\/+$/, "");
-  }
-
-  return `${forwardedProto}://${host}`.replace(/\/+$/, "") || requestOrigin.replace(/\/+$/, "");
-}
 
 function xmlEscape(value: string): string {
   return value
