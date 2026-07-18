@@ -42,7 +42,7 @@ const placeImageSlugAliases: Record<string, string> = {
   'ayala-triangle-gardens': 'ayala-triangle-gardens',
   'binondo-chinatown': 'binondo-chinatown',
   'bonifacio-high-street': 'bonifacio-high-street',
-  'caloocan-city-peoples-park': 'caloocan-city-peoples-park',
+  'caloocan-city-people-s-park': 'caloocan-city-peoples-park',
   commune: 'commune',
   'eastwood-city': 'eastwood-city',
   'festival-mall-alabang': 'festival-mall-alabang',
