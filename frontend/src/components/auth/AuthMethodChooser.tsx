@@ -1,5 +1,4 @@
-import { useEffect, useRef } from 'react'
-import { loadGoogleIdentityServices, handleGoogleCredential } from '../../utils/googleSignIn'
+import { signInWithGoogle } from '../../services/authApi'
 import { getRequestedNextPath } from '../../services/authApi'
 
 type AuthMethodChooserProps = {
@@ -9,8 +8,6 @@ type AuthMethodChooserProps = {
   nextPath?: string | null
   flow?: 'signup'
 }
-
-const GOOGLE_CLIENT_ID = String(import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim()
 
 function GoogleMark() {
   return (
@@ -35,51 +32,28 @@ function GoogleMark() {
   )
 }
 
-function AuthMethodChooser({ isGoogleLoading: _isGoogleLoading, onGoogleLoadingChange, onError, nextPath, flow }: AuthMethodChooserProps) {
-  const optionsRef = useRef({ nextPath, flow })
-  const callbacksRef = useRef({ onGoogleLoadingChange, onError })
-
-  optionsRef.current = { nextPath, flow }
-  callbacksRef.current = { onGoogleLoadingChange, onError }
-
-  useEffect(() => {
-    if (!GOOGLE_CLIENT_ID) return
-
-    loadGoogleIdentityServices().then(() => {
-      window.google!.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: async (response) => {
-          callbacksRef.current.onGoogleLoadingChange(true)
-          try {
-            const { nextPath: np, flow: f } = optionsRef.current
-            await handleGoogleCredential(response.credential, {
-              nextPath: np ?? getRequestedNextPath(),
-              flow: f,
-            })
-          } catch (error) {
-            callbacksRef.current.onError(error instanceof Error ? error.message : 'Google sign-in failed. Please try again.')
-          } finally {
-            callbacksRef.current.onGoogleLoadingChange(false)
-          }
-        },
-        cancel_on_tap_outside: false,
-      })
-    })
-  }, [])
-
-  const handleGoogleSignIn = () => {
-    window.google!.accounts.id.prompt()
+function AuthMethodChooser({ isGoogleLoading, onGoogleLoadingChange, onError, nextPath, flow }: AuthMethodChooserProps) {
+  const handleGoogleSignIn = async () => {
+    try {
+      onGoogleLoadingChange(true)
+      onError('')
+      await signInWithGoogle(nextPath ?? getRequestedNextPath(), flow)
+    } catch (error) {
+      onError(error instanceof Error ? error.message : 'Google sign-in failed. Please try again.')
+      onGoogleLoadingChange(false)
+    }
   }
 
   return (
     <div className="grid gap-4">
       <button
         type="button"
-        onClick={handleGoogleSignIn}
+        onClick={() => void handleGoogleSignIn()}
+        disabled={isGoogleLoading}
         className="mx-auto inline-flex h-12 w-full max-w-[360px] items-center justify-center gap-3 rounded-[12px] border border-[var(--line)] bg-white px-6 text-[14px] font-semibold text-[var(--text-main)] shadow-[0_10px_24px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-[rgba(37,99,235,0.25)] hover:bg-[var(--bg)] focus:outline-none focus:ring-4 focus:ring-[rgba(37,99,235,0.12)] disabled:cursor-not-allowed disabled:opacity-70 lg:w-[240px]"
       >
         <GoogleMark />
-        Continue with Google
+        {isGoogleLoading ? 'Opening Google...' : 'Continue with Google'}
       </button>
     </div>
   )

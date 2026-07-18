@@ -1,13 +1,12 @@
-import { useEffect, useRef, useState } from 'react'
-import { loadGoogleIdentityServices, handleGoogleCredential, getNextPathFromRedirectUrl } from '../utils/googleSignIn'
+import { useState } from 'react'
+import { supabase } from '../supabase'
+import { getAuthCallbackUrl } from '../services/authApi'
 
 type GoogleSignInButtonProps = {
   compact?: boolean
   className?: string
   redirectTo?: string
 }
-
-const GOOGLE_CLIENT_ID = String(import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim()
 
 function GoogleIcon() {
   return (
@@ -35,43 +34,35 @@ function GoogleIcon() {
 function GoogleSignInButton({ compact = false, className = '', redirectTo }: GoogleSignInButtonProps) {
   const [isSigningIn, setIsSigningIn] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
-  const redirectToRef = useRef(redirectTo)
+  const targetRedirectTo = redirectTo ?? getAuthCallbackUrl()
 
-  redirectToRef.current = redirectTo
+  const handleSignIn = async () => {
+    try {
+      setIsSigningIn(true)
+      setErrorMessage('')
 
-  useEffect(() => {
-    if (!GOOGLE_CLIENT_ID) return
-
-    loadGoogleIdentityServices().then(() => {
-      window.google!.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: async (response) => {
-          try {
-            const nextPath = redirectToRef.current
-              ? getNextPathFromRedirectUrl(redirectToRef.current)
-              : null
-            await handleGoogleCredential(response.credential, { nextPath })
-          } catch (error) {
-            setErrorMessage(error instanceof Error ? error.message : 'Google sign-in failed. Try again.')
-          }
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: targetRedirectTo,
         },
-        cancel_on_tap_outside: false,
       })
-    })
-  }, [])
 
-  const handleSignIn = () => {
-    setIsSigningIn(true)
-    setErrorMessage('')
-    window.google!.accounts.id.prompt()
-    setTimeout(() => setIsSigningIn(false), 3000)
+      if (error) {
+        throw error
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Google sign-in failed. Try again.'
+      setErrorMessage(message)
+      setIsSigningIn(false)
+    }
   }
 
   return (
     <div className={`relative ${className}`}>
       <button
         type="button"
-        onClick={handleSignIn}
+        onClick={() => void handleSignIn()}
         disabled={isSigningIn}
         aria-busy={isSigningIn}
         className={`group inline-flex items-center justify-center rounded-lg border border-[var(--line-strong)] bg-white font-semibold text-slate-800 transition duration-200 hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)] disabled:cursor-not-allowed disabled:opacity-70 ${
