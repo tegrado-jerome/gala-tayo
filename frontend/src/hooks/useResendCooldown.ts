@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 
-const STORAGE_PREFIX = 'gala-tayo:auth-resend-cooldown:'
+const STORAGE_PREFIX = 'galatayo:auth-resend-cooldown:'
 
 function getStorageKey(key: string) {
   return `${STORAGE_PREFIX}${key}`

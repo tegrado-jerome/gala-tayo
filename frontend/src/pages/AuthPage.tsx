@@ -88,7 +88,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
 
   const isCreateMode = mode === 'create_account'
   const isAdminSurface = surface === 'admin'
-  const nextPath = getRequestedNextPath()
+  const nextPath = useMemo(() => getRequestedNextPath(), [])
   const resetSuccess = new URLSearchParams(window.location.search).get('reset') === 'success'
   const normalizedEmail = useMemo(() => email.trim().toLowerCase(), [email])
   const signUpCooldown = useResendCooldown(isCreateMode && normalizedEmail ? `signup:${normalizedEmail}` : null, resendCooldownMs)
@@ -110,7 +110,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
   const isSubmitDisabled = isSubmitting || isGoogleLoading || (isCreateMode ? !isCreateFormValid : !isLoginFormValid)
 
   useEffect(() => {
-    if (!isCreateMode || !session) {
+    if (!session) {
       return
     }
 
@@ -193,15 +193,10 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
 
       const session = await signInWithEmailPassword(normalizedEmail, password)
 
-      if (!session) {
-        throw new Error('Please confirm your email before signing in.')
-      }
-
       if (isAdminSurface) {
         const currentUser = await getCurrentUser(session)
 
         if (!isAdminRole(currentUser.user.role)) {
-          await signOut().catch(() => undefined)
           throw new Error('This email does not have admin access.')
         }
 

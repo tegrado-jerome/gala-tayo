@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useMemo, useState, type FormEvent } from 'react'
 import { AppIcon } from '../components/AppIcon'
 import { FormContainer } from '../components/layout/ResponsiveLayouts'
 import { sendPasswordResetEmail } from '../services/authApi'
@@ -15,8 +15,10 @@ function ForgotPasswordPage() {
   const [error, setError] = useState('')
   const [statusMessage, setStatusMessage] = useState('')
   const [isResending, setIsResending] = useState(false)
-  const normalizedEmail = email.trim().toLowerCase()
-  const resendCooldown = useResendCooldown(normalizedEmail ? `recovery:${normalizedEmail}` : null, resendCooldownMs)
+  const [submittedEmail, setSubmittedEmail] = useState('')
+  const normalizedEmail = useMemo(() => email.trim().toLowerCase(), [email])
+  const cooldownEmail = submittedEmail || (isSent ? normalizedEmail : '')
+  const resendCooldown = useResendCooldown(cooldownEmail ? `recovery:${cooldownEmail}` : null, resendCooldownMs)
 
   const isEmailValid = emailPattern.test(normalizedEmail)
   const isSubmitDisabled = isSubmitting || !isEmailValid
@@ -39,6 +41,7 @@ function ForgotPasswordPage() {
       setError('')
       setStatusMessage('')
       await sendPasswordResetEmail(normalizedEmail)
+      setSubmittedEmail(normalizedEmail)
       setIsSent(true)
       resendCooldown.startCooldown()
     } catch (caughtError) {

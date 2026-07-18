@@ -4,6 +4,16 @@ import type { CurrentUserResponse } from './profileApi'
 const APP_RESUME_CACHE_KEY = 'galatayo:app-resume'
 const APP_RESUME_CACHE_TTL_MS = 30 * 60 * 1000
 
+function isValidProfile(value: unknown): value is CurrentUserResponse['profile'] {
+  if (!value || typeof value !== 'object') return false
+  const profile = value as Record<string, unknown>
+  return (
+    typeof profile.user_id === 'string' ||
+    typeof profile.username === 'string' ||
+    typeof profile.displayName === 'string'
+  )
+}
+
 export function readAppResumeCache(): AppResumeCache | null {
   try {
     const rawCache = window.localStorage.getItem(APP_RESUME_CACHE_KEY)
@@ -26,10 +36,7 @@ export function readAppResumeCache(): AppResumeCache | null {
     return {
       userId: typeof parsedCache.userId === 'string' ? parsedCache.userId : null,
       needsOnboarding: parsedCache.needsOnboarding === true,
-      currentProfile:
-        parsedCache.currentProfile && typeof parsedCache.currentProfile === 'object'
-          ? parsedCache.currentProfile as CurrentUserResponse['profile']
-          : null,
+      currentProfile: isValidProfile(parsedCache.currentProfile) ? parsedCache.currentProfile : null,
       cachedAt: parsedCache.cachedAt,
     }
   } catch {

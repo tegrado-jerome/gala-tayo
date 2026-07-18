@@ -25,7 +25,7 @@ export async function validateJwt(request: HttpRequest): Promise<AuthenticatedUs
   const { data, error } = await supabase.auth.getUser(token);
 
   if (error || !data.user) {
-    throw new Error("Invalid or expired token.");
+    throw new Error("Authorization failed: Invalid or expired token.");
   }
 
   return {

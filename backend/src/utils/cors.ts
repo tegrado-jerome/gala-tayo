@@ -21,7 +21,6 @@ export function buildCorsHeaders(origin?: string | null): Record<string, string>
     "Access-Control-Allow-Origin": resolveOrigin(origin ?? null),
     "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, x-request-id, x-trace-id",
-    "Access-Control-Allow-Credentials": "true",
     "Access-Control-Max-Age": "86400",
   };
 }

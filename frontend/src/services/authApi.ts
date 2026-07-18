@@ -317,15 +317,19 @@ export function sanitizeNextPath(value: string | null | undefined) {
     return null
   }
 
-  if (!value.startsWith('/')) {
-    return null
-  }
-
-  if (value.startsWith('//')) {
-    return null
-  }
-
   const normalizedValue = value.trim()
+
+  if (!normalizedValue.startsWith('/')) {
+    return null
+  }
+
+  if (normalizedValue.startsWith('//')) {
+    return null
+  }
+
+  if (normalizedValue.includes('/../') || normalizedValue.includes('/..') || normalizedValue === '..') {
+    return null
+  }
 
   if (
     normalizedValue === '/login' ||

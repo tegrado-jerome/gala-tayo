@@ -297,6 +297,9 @@ export function renderRouteDescriptor(descriptor: RouteDescriptor, inputs: Route
     case 'public-profile':
       return <PublicProfilePage username={descriptor.username} />
     case 'profile':
+      if (!session) {
+        return <ProtectedFeatureGate pathname={pathname} search={search} />
+      }
       return <ProfilePage session={session} />
     case 'account-settings':
       if (!session) {
@@ -314,10 +317,19 @@ export function renderRouteDescriptor(descriptor: RouteDescriptor, inputs: Route
       }
       return <ChangePasswordPage />
     case 'favorites':
+      if (!session) {
+        return <LoginPage />
+      }
       return <FavoritesPage />
     case 'history':
+      if (!session) {
+        return <LoginPage />
+      }
       return <HistoryPage />
     case 'feedback':
+      if (!session) {
+        return <LoginPage />
+      }
       return <FeedbackPage />
     case 'gala-plans-list':
       if (!session) {
@@ -340,8 +352,14 @@ export function renderRouteDescriptor(descriptor: RouteDescriptor, inputs: Route
       }
       return <GalaPlansPage mode="edit" planId={descriptor.planId} session={session} />
     case 'gala-plans-detail':
+      if (!session) {
+        return <LoginPage />
+      }
       return <GalaPlansPage mode="detail" planId={descriptor.planId} session={session} />
     case 'reports':
+      if (!session) {
+        return <LoginPage />
+      }
       return <ReportsPage />
     case 'my-submissions':
       if (!session) {

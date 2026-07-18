@@ -86,11 +86,7 @@ function ResetPasswordPage() {
         throw updateError
       }
 
-      const { error: signOutError } = await supabase.auth.signOut({ scope: 'local' })
-
-      if (signOutError) {
-        throw signOutError
-      }
+      await supabase.auth.signOut({ scope: 'local' }).catch(() => {})
 
       navigateToPath('/login?reset=success')
     } catch (caughtError) {

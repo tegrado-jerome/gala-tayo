@@ -40,7 +40,7 @@ export function useAuthOrchestration() {
         clearEmptyHashFragment()
 
         if (data.session && isSessionExpired(data.session)) {
-          supabase.auth.signOut()
+          supabase.auth.signOut().catch(() => {})
           sessionRef.current = null
           setSession(null)
           setCurrentUser(null)
@@ -150,7 +150,7 @@ export function useAuthOrchestration() {
         setProfileError('')
         const data = await getOnboardingStatus(activeSession)
 
-        if (!isMounted) {
+        if (!isMounted || sessionRef.current !== activeSession) {
           return
         }
 
@@ -196,7 +196,7 @@ export function useAuthOrchestration() {
         setIsCurrentProfileLoading(true)
         const data = await getCurrentUser(activeSession)
 
-        if (isMounted) {
+        if (isMounted && sessionRef.current === activeSession) {
           setCurrentUser(data.user)
           setCurrentProfile(data.profile)
         }
@@ -239,7 +239,7 @@ export function useAuthOrchestration() {
         setIsAdminMfaLoading(true)
         const status = await getAdminMfaStatus(activeSession)
 
-        if (isMounted) {
+        if (isMounted && sessionRef.current === activeSession) {
           setAdminMfaStatus(status)
         }
       } catch {

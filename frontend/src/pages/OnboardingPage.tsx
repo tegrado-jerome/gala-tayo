@@ -14,7 +14,7 @@ import {
   uploadProfileAvatar,
 } from '../services/onboardingApi'
 import { clearSignupOnboardingAccess } from '../services/authApi'
-import { getCurrentUser, getMyProfile, getOnboardingStatus } from '../utils/profileApi'
+import { getOnboardingStatus, validateUsername } from '../utils/profileApi'
 import { avatarUploadErrorMessage, isValidAvatarFile, prepareAvatarUploadFile } from '../utils/avatarUpload'
 import { replaceWithPath } from '../utils/navigation'
 import { trackOnboardingCompleted } from '../utils/analytics'
@@ -64,28 +64,12 @@ function splitName(fullName: string) {
   }
 }
 
-function validateUsername(username: string) {
+function validateUsernameLocally(username: string) {
   if (!username) {
     return 'You need to enter a username.'
   }
 
-  if (!usernamePattern.test(username)) {
-    return 'Your username must be 3-30 lowercase letters, numbers, underscores, or dots only.'
-  }
-
-  if (username.startsWith('.')) {
-    return 'Your username cannot start with a dot.'
-  }
-
-  if (username.endsWith('.')) {
-    return 'Your username cannot end with a dot.'
-  }
-
-  if (username.includes('..')) {
-    return 'Your username cannot contain consecutive dots.'
-  }
-
-  return ''
+  return validateUsername(username) || ''
 }
 
 function trimError(value: string, label: string, maxLength = 80) {
@@ -262,7 +246,7 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
   valuesRef.current = values
 
   const normalizedUsername = useMemo(() => values.username.trim().toLowerCase().replace(/^@+/, ''), [values.username])
-  const usernameValidationError = useMemo(() => validateUsername(normalizedUsername), [normalizedUsername])
+  const usernameValidationError = useMemo(() => validateUsernameLocally(normalizedUsername), [normalizedUsername])
 
   useEffect(() => {
     if (draftUserId !== session.user.id) {
@@ -278,7 +262,11 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
       return
     }
 
-    saveLocalOnboardingDraft(draftUserId, values)
+    const timer = window.setTimeout(() => {
+      saveLocalOnboardingDraft(draftUserId, values)
+    }, 200)
+
+    return () => window.clearTimeout(timer)
   }, [draftUserId, isRedirectingHome, values])
 
   useEffect(() => {
@@ -313,29 +301,6 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
           return
         }
 
-        if (isMounted && status.completed && status.policyAcceptance?.required) {
-          const [accountData, profileData] = await Promise.all([getCurrentUser(session), getMyProfile(session)])
-          const existingUser = accountData.user
-          const existingProfile = profileData.profile
-
-          setValues((currentValues) => ({
-            ...currentValues,
-            step: 4,
-            firstName: existingUser.firstName ?? currentValues.firstName,
-            middleName: existingUser.middleName ?? '',
-            lastName: existingUser.lastName ?? currentValues.lastName,
-            birthdate: existingUser.birthdate ?? currentValues.birthdate,
-            displayName: accountData.profile?.displayName ?? currentValues.displayName,
-            username: existingProfile?.username ?? accountData.profile?.username ?? currentValues.username,
-            avatarUrl: existingProfile?.avatar_url ?? accountData.profile?.avatarUrl ?? currentValues.avatarUrl,
-            profileVisibility: existingProfile?.is_public === false ? 'private' : 'public',
-            acceptedTerms: false,
-            acceptedPrivacy: false,
-          }))
-          setIsDraftReady(true)
-          return
-        }
-
         const draft = await getOnboardingDraft(session).catch(() => null)
 
         if (isMounted && draft?.draft) {
@@ -357,7 +322,7 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
     return () => {
       isMounted = false
     }
-  }, [isRedirectingHome, session])
+  }, [isRedirectingHome, session.user.id])
 
   useEffect(() => {
     if (values.step !== 2) {

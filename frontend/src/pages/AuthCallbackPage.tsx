@@ -22,7 +22,7 @@ async function waitForSession(): Promise<Session | null> {
     const timeoutId = window.setTimeout(() => {
       subscription.unsubscribe()
       resolve(null)
-    }, 2500)
+    }, 10000)
 
     const {
       data: { subscription },
@@ -39,6 +39,7 @@ async function waitForSession(): Promise<Session | null> {
 }
 
 function AuthCallbackPage() {
+  const [retryCount, setRetryCount] = useState(0)
   const [errorMessage, setErrorMessage] = useState('')
 
   useEffect(() => {
@@ -69,7 +70,7 @@ function AuthCallbackPage() {
         const emailConflict = await getCurrentEmailConflict(session)
 
         if (emailConflict.conflict) {
-          await supabase.auth.signOut({ scope: 'local' })
+          await supabase.auth.signOut({ scope: 'global' })
           throw new Error('This email already has a GalaTayo account. Please log in using the original method for that account.')
         }
 
@@ -108,7 +109,7 @@ function AuthCallbackPage() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [retryCount])
 
   if (errorMessage) {
     return (
@@ -117,13 +118,25 @@ function AuthCallbackPage() {
           <section className="w-full max-w-[420px] text-center">
             <h1 className="text-3xl font-black">Sign-in problem</h1>
             <p className="mt-4 text-sm font-semibold leading-6 text-black/65">{errorMessage}</p>
-            <button
-              type="button"
-              onClick={() => navigateToPath(buildAuthPath('/login', window.location.search ? new URLSearchParams(window.location.search).get('next') : null))}
-              className="mt-8 h-12 rounded-lg bg-black px-5 text-sm font-black text-white transition hover:bg-black/85"
-            >
-              Back to login
-            </button>
+            <div className="mt-8 flex flex-col items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setErrorMessage('')
+                  setRetryCount((current) => current + 1)
+                }}
+                className="h-12 w-[220px] rounded-lg bg-black px-5 text-sm font-black text-white transition hover:bg-black/85"
+              >
+                Try again
+              </button>
+              <button
+                type="button"
+                onClick={() => navigateToPath(buildAuthPath('/login', window.location.search ? new URLSearchParams(window.location.search).get('next') : null))}
+                className="text-sm font-semibold text-black/50 underline underline-offset-2 transition hover:text-black/80"
+              >
+                Back to login
+              </button>
+            </div>
           </section>
         </StateContainer>
       </main>

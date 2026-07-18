@@ -49,6 +49,11 @@ function getClientOrigin(value: unknown): string | null {
       return null;
     }
 
+    const configuredOrigin = getConfiguredSiteUrl();
+    if (configuredOrigin && parsedUrl.origin.replace(/\/+$/, "") !== configuredOrigin.replace(/\/+$/, "")) {
+      return null;
+    }
+
     return parsedUrl.origin.replace(/\/+$/, "");
   } catch {
     return null;
@@ -59,20 +64,20 @@ async function checkAuthResendCooldown(email: string, resendType: AuthResendType
   const client = await getRedisClient();
 
   if (!client) {
-    return { allowed: true, retryAfterMs: 0 };
+    return { allowed: false, retryAfterMs: AUTH_RESEND_COOLDOWN_MS };
   }
 
   const cooldownKey = `auth-resend:${resendType}:${email}`;
-  const existing = await client.get<number>(cooldownKey);
+  const setResult = await client.set(cooldownKey, Date.now(), {
+    ex: Math.ceil(AUTH_RESEND_COOLDOWN_MS / 1000),
+    nx: true,
+  });
 
-  if (existing) {
-    const elapsed = Date.now() - existing;
-    if (elapsed < AUTH_RESEND_COOLDOWN_MS) {
-      return { allowed: false, retryAfterMs: AUTH_RESEND_COOLDOWN_MS - elapsed };
-    }
+  if (setResult === null) {
+    const ttl = await client.ttl(cooldownKey);
+    return { allowed: false, retryAfterMs: Math.max(ttl * 1000, 0) };
   }
 
-  await client.set(cooldownKey, Date.now(), { ex: Math.ceil(AUTH_RESEND_COOLDOWN_MS / 1000) });
   return { allowed: true, retryAfterMs: 0 };
 }
 

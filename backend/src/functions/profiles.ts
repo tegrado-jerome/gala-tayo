@@ -534,8 +534,14 @@ export async function onboardingComplete(
     const username = normalizeUsername(body.username);
     const usernameError = validateUsername(username);
     const avatarUrl = getTrimmedString(pickBodyValue(body, "avatar_url", "avatarUrl"), "avatar_url", 500, false);
+    if (avatarUrl.value && !avatarUrl.value.startsWith("https://")) {
+      avatarUrl.error = "Avatar URL must use HTTPS.";
+    }
     const avatarStorageKey = getTrimmedString(body.avatar_storage_key, "avatar_storage_key", 500, false);
     const providerAvatarUrl = getTrimmedString(pickBodyValue(body, "provider_avatar_url", "providerAvatarUrl"), "provider_avatar_url", 500, false);
+    if (providerAvatarUrl.value && !providerAvatarUrl.value.startsWith("https://")) {
+      providerAvatarUrl.error = "Provider avatar URL must use HTTPS.";
+    }
     const profileVisibility = pickBodyValue(body, "profile_visibility");
     const acceptedTerms = pickBodyValue(body, "accepted_terms", "acceptedTerms");
     const acceptedPrivacy = pickBodyValue(body, "accepted_privacy", "acceptedPrivacy");
