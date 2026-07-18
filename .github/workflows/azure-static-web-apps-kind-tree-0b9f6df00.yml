@@ -44,6 +44,7 @@ jobs:
         working-directory: frontend
         env:
           VITE_API_BASE_URL: "https://galatayo-api-cvawfwgrg6akdmem.southeastasia-01.azurewebsites.net/api"
+          VITE_GA_MEASUREMENT_ID: ${{ secrets.VITE_GA_MEASUREMENT_ID }}
         run: |
           npm ci
           npm run validate

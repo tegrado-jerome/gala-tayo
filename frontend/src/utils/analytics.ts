@@ -64,7 +64,7 @@ let analyticsScriptPromise: Promise<void> | null = null
 let lastPageViewSignature = ''
 
 function canUseAnalytics() {
-  return Boolean(MEASUREMENT_ID) && typeof window !== 'undefined' && typeof document !== 'undefined'
+  return import.meta.env.PROD && Boolean(MEASUREMENT_ID) && typeof window !== 'undefined' && typeof document !== 'undefined'
 }
 
 function getAnalyticsWindow() {
