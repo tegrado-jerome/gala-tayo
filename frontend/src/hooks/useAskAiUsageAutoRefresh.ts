@@ -36,8 +36,10 @@ export function useAskAiUsageAutoRefresh({
       }
     }
 
-    const handlePageShow = () => {
-      triggerRefresh()
+    const handlePageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        triggerRefresh()
+      }
     }
 
     const intervalId = window.setInterval(triggerRefresh, intervalMs)

@@ -163,7 +163,7 @@ function SearchHub({
   )
   const [askAiAnswerError, setAskAiAnswerError] = useState<string | null>(
     shouldUseCachedAskAiState
-      ? initialAskAiState?.answerError ?? null
+      ? (initialAskAiState?.answerError && isAskAiChatbotDailyLimitMessage(initialAskAiState.answerError) ? null : initialAskAiState?.answerError ?? null)
       : null
   )
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>(
@@ -772,17 +772,18 @@ function SearchHub({
       return
     }
 
-    seedAskAiRuntimeState({
-      question: initialAskAiState?.question ?? '',
-      answer: initialAskAiState?.answer ?? '',
-      sources: initialAskAiState?.sources ?? [],
-      answerError: initialAskAiState?.answerError ?? null,
-      usageStatus: null,
-      isSubmitting: initialAskAiState?.isSubmitting === true,
-      messages: initialAskAiState?.messages ?? [],
-      jobId: initialAskAiState?.jobId ?? null,
-      jobStatus: initialAskAiState?.jobStatus ?? null,
-    })
+      const initialAnswerError = initialAskAiState?.answerError ?? null
+      seedAskAiRuntimeState({
+        question: initialAskAiState?.question ?? '',
+        answer: initialAskAiState?.answer ?? '',
+        sources: initialAskAiState?.sources ?? [],
+        answerError: initialAnswerError && isAskAiChatbotDailyLimitMessage(initialAnswerError) ? null : initialAnswerError,
+        usageStatus: null,
+        isSubmitting: initialAskAiState?.isSubmitting === true,
+        messages: initialAskAiState?.messages ?? [],
+        jobId: initialAskAiState?.jobId ?? null,
+        jobStatus: initialAskAiState?.jobStatus ?? null,
+      })
 
     let hasReceivedInitialRuntimeState = false
 

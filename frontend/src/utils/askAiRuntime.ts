@@ -335,6 +335,12 @@ export function subscribeToAskAiRuntime(listener: AskAiRuntimeListener) {
 
 export function seedAskAiRuntimeState(state: Partial<AskAiRuntimeState>) {
   if (hasMeaningfulAskAiRuntimeState(askAiRuntimeState)) {
+    if ('usageStatus' in state) {
+      setAskAiRuntimeState({
+        ...askAiRuntimeState,
+        usageStatus: state.usageStatus ?? null,
+      })
+    }
     return
   }
 

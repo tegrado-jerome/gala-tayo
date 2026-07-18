@@ -274,8 +274,16 @@ function AskAiMapPage() {
     Boolean(initialAskAiMapState?.answerText?.trim()) ||
     (initialAskAiMapState?.sources?.length ?? 0) > 0
   ))
-  const [errorMessage, setErrorMessage] = useState(initialAskAiMapState?.errorMessage ?? '')
-  const [statusMessage, setStatusMessage] = useState(initialAskAiMapState?.statusMessage ?? '')
+  const [errorMessage, setErrorMessage] = useState(
+    initialAskAiMapState?.errorMessage && isDailyAskAiLimitMessage(initialAskAiMapState.errorMessage)
+      ? ''
+      : (initialAskAiMapState?.errorMessage ?? '')
+  )
+  const [statusMessage, setStatusMessage] = useState(
+    initialAskAiMapState?.statusMessage && isDailyAskAiLimitMessage(initialAskAiMapState.statusMessage)
+      ? ''
+      : (initialAskAiMapState?.statusMessage ?? '')
+  )
   const [answerText, setAnswerText] = useState(initialAskAiMapState?.answerText ?? '')
   const [places, setPlaces] = useState<AskAiMapPlace[]>(initialAskAiMapState?.places ?? [])
   const [sources, setSources] = useState<AskAiMapSource[]>(initialAskAiMapState?.sources ?? [])
@@ -375,13 +383,15 @@ function AskAiMapPage() {
   })
 
   useEffect(() => {
+    const initialError = initialAskAiMapState?.errorMessage ?? ''
+    const initialStatus = initialAskAiMapState?.statusMessage ?? ''
     seedAskAiMapRuntimeState({
       query: initialAskAiMapState?.query ?? '',
       selectedChipIds: initialAskAiMapState?.selectedChipIds ?? [],
       userLocation: initialAskAiMapState?.userLocation ?? null,
       isSearching: initialAskAiMapState?.isSearching === true,
-      errorMessage: initialAskAiMapState?.errorMessage ?? '',
-      statusMessage: initialAskAiMapState?.statusMessage ?? '',
+      errorMessage: initialError && isDailyAskAiLimitMessage(initialError) ? '' : initialError,
+      statusMessage: initialStatus && isDailyAskAiLimitMessage(initialStatus) ? '' : initialStatus,
       answerText: initialAskAiMapState?.answerText ?? '',
       places: initialAskAiMapState?.places ?? [],
       sources: initialAskAiMapState?.sources ?? [],
