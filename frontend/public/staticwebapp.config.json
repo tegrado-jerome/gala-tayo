@@ -1,14 +1,6 @@
 {
   "routes": [
     {
-      "route": "/sitemap.xml",
-      "rewrite": "/api/seo/sitemap.xml"
-    },
-    {
-      "route": "/robots.txt",
-      "rewrite": "/api/seo/robots.txt"
-    },
-    {
       "route": "/images/*",
       "cacheControl": "public, max-age=31536000, immutable"
     },

@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/fetch-seo-files.mjs",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "validate": "npm run lint -- --quiet && npm run build",
