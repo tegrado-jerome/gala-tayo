@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Search, SlidersHorizontal, X } from 'lucide-react'
+import { Coffee, Flame, Heart, Info, Search, SlidersHorizontal, X } from 'lucide-react'
 import SearchHub from './SearchHub'
 import { AppIcon } from '../components/AppIcon'
 import PageHeroHeader from '../components/PageHeroHeader'
@@ -142,7 +142,7 @@ function SearchPage({
 }: {
   navigationSource?: 'push' | 'replace' | 'pop'
 }) {
-  const searchSuggestions = ['Coffee shops in Makati', 'Beach resorts in Boracay', 'Things to do in Baguio']
+
   const routeSearchState = readSearchUrlState(window.location.search)
   const initialQuery = routeSearchState.q
   const initialPage = routeSearchState.page
@@ -355,19 +355,32 @@ function SearchPage({
             <Search className="h-4 w-4 shrink-0" />
             {activeTypedQuery.length > 0 ? 'Search places' : 'Apply filters'}
           </button>
-          <div className="mt-3 text-center">
-            <p className="mb-2 text-xs font-bold text-slate-400">Popular:</p>
+          <div className="mt-5 text-center">
+            <p className="mb-3 flex items-center justify-center gap-1.5 text-sm font-bold text-slate-500">
+              <Info className="h-3.5 w-3.5 shrink-0 text-slate-500" strokeWidth={2.6} />
+              <span>Search a famous place in Metro Manila</span>
+            </p>
+            <p className="gala-shared-suggestion-label mt-4 mb-2 flex items-center justify-center gap-1.5 text-xs font-bold text-slate-400">
+              <Flame className="h-3.5 w-3.5 text-orange-400" />
+              Popular
+            </p>
             <div className="flex flex-wrap justify-center gap-2">
-              {searchSuggestions.map((suggestion) => (
-                <button
-                  key={suggestion}
-                  type="button"
-                  onClick={() => setDraftQuery(suggestion)}
-                  className="inline-flex min-h-8 items-center rounded-full border border-[rgba(148,163,184,0.22)] bg-white/60 px-3.5 text-xs font-semibold text-slate-500 shadow-[0_6px_14px_rgba(15,23,42,0.03)] transition hover:border-[rgba(var(--accent-rgb),0.24)] hover:bg-white hover:text-[var(--accent-deep)]"
-                >
-                  {suggestion}
-                </button>
-              ))}
+              <button
+                type="button"
+                onClick={() => setDraftQuery('date in Parañaque')}
+                className="gala-shared-suggestion-chip inline-flex min-h-8 items-center gap-1.5 rounded-full border border-[rgba(148,163,184,0.22)] bg-white/60 px-3.5 text-xs font-semibold text-slate-500 shadow-[0_6px_14px_rgba(15,23,42,0.03)] transition hover:border-[rgba(var(--accent-rgb),0.24)] hover:bg-white hover:text-[var(--accent-deep)]"
+              >
+                <Heart className="h-3 w-3 shrink-0 text-rose-400" />
+                date in Parañaque
+              </button>
+              <button
+                type="button"
+                onClick={() => setDraftQuery('coffee shops in Makati')}
+                className="gala-shared-suggestion-chip inline-flex min-h-8 items-center gap-1.5 rounded-full border border-[rgba(148,163,184,0.22)] bg-white/60 px-3.5 text-xs font-semibold text-slate-500 shadow-[0_6px_14px_rgba(15,23,42,0.03)] transition hover:border-[rgba(var(--accent-rgb),0.24)] hover:bg-white hover:text-[var(--accent-deep)]"
+              >
+                <Coffee className="h-3 w-3 shrink-0 text-stone-700" />
+                coffee shops in Makati
+              </button>
             </div>
           </div>
         </section>

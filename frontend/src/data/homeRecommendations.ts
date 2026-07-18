@@ -82,15 +82,15 @@ const homeRecommendedTopPickPlaces: HomeRecommendationPlace[] = [
 ]
 
 const homeAllTopPickPlaces: HomeRecommendationPlace[] = [
-  createRecommendationPlace({ name: 'Uptown Mall', city: 'Taguig', area: 'Uptown Bonifacio' }),
-  createRecommendationPlace({ name: 'BGC Arts Center', city: 'Taguig', area: 'Bonifacio Global City' }),
+  createRecommendationPlace({ name: 'Bonifacio High Street', city: 'Taguig', area: 'Bonifacio Global City' }),
+  createRecommendationPlace({ name: 'National Museum of Fine Arts', city: 'Manila', area: 'Luneta / Rizal Park' }),
   createRecommendationPlace({ name: 'Ayala Malls Manila Bay', city: 'Paranaque', area: 'Ayala Malls Manila Bay / Aseana City' }),
-  createRecommendationPlace({ name: 'Timezone Ayala Malls Manila Bay', city: 'Paranaque', area: 'Ayala Malls Manila Bay / Aseana City' }),
+  createRecommendationPlace({ name: 'Venice Grand Canal Mall', city: 'Taguig', area: 'McKinley' }),
   createRecommendationPlace({ name: 'Ortigas Cinemas Estancia', city: 'Pasig', area: 'Capitol Commons' }),
   createRecommendationPlace({ name: 'The Podium', city: 'Mandaluyong', area: 'Ortigas Center' }),
-  createRecommendationPlace({ name: 'Solaire Resort North', city: 'Quezon City', area: 'Vertis North / North Avenue' }),
+  createRecommendationPlace({ name: 'Art in Island', city: 'Quezon City', area: 'Katipunan' }),
   createRecommendationPlace({ name: 'The Fun Roof Poblacion', city: 'Makati', area: 'Poblacion' }),
-  createRecommendationPlace({ name: 'Hikiniku To Come BGC', city: 'Taguig', area: 'Uptown Bonifacio' }),
+  createRecommendationPlace({ name: 'Fort Santiago', city: 'Manila', area: 'Intramuros' }),
   createRecommendationPlace({ name: 'Space Time Cube', city: 'Pasay', area: 'S Maison / MOA Complex' }),
 ]
 

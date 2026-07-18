@@ -2967,6 +2967,61 @@ body.feature-guide-open nav[aria-label="Primary"] {
   border: 0;
 }
 
+@keyframes gala-subtle-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 6px 14px rgba(15, 23, 42, 0.03);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 6px 18px rgba(var(--accent-rgb), 0.08);
+  }
+}
+
+.gala-subtle-pulse {
+  animation: gala-subtle-pulse 3s ease-in-out infinite;
+  transform-origin: center;
+}
+
+@keyframes gala-shared-suggestion-pulse {
+  0%, 100% {
+    border-color: rgba(148, 163, 184, 0.2);
+    background-color: rgba(255, 255, 255, 0.62);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.025);
+    color: rgb(100, 116, 139);
+  }
+  50% {
+    border-color: rgba(var(--accent-rgb), 0.28);
+    background-color: rgba(var(--accent-rgb), 0.045);
+    box-shadow: 0 7px 18px rgba(var(--accent-rgb), 0.08);
+    color: var(--accent-deep);
+  }
+}
+
+@keyframes gala-shared-suggestion-label-pulse {
+  0%, 100% {
+    color: rgb(148, 163, 184);
+  }
+  50% {
+    color: var(--accent-deep);
+  }
+}
+
+.gala-shared-suggestion-chip,
+.gala-shared-suggestion-label {
+  animation-duration: 3.2s;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+}
+
+.gala-shared-suggestion-chip {
+  animation-name: gala-shared-suggestion-pulse;
+}
+
+.gala-shared-suggestion-label {
+  animation-name: gala-shared-suggestion-label-pulse;
+}
+
 .gt-map-moving .gt-map-pin-badge,
 .gt-map-dragging .gt-map-pin-badge {
   transition: none;

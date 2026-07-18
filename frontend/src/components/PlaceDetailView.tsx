@@ -30,7 +30,7 @@ import { ActionButton } from './place-detail/ActionButton'
 import { GoodForList } from './place-detail/GoodForList'
 import { TransportColumn } from './place-detail/TransportColumn'
 import { DetailSection } from './place-detail/DetailSection'
-import { cleanString, titleCase, uniqueList, formatPriceLevel, isAcceptedContributionImage, parseJsonResponse } from './place-detail/helpers'
+import { cleanString, titleCase, uniqueList, isAcceptedContributionImage, parseJsonResponse } from './place-detail/helpers'
 import type { PlaceDetailViewProps, PlaceReview, PlaceReviewsResponse, PlaceComment, PlaceCommentsResponse, PlaceImageContributionResponse, PlaceDetailCommunityCache } from './place-detail/types'
 import Breadcrumb from './Breadcrumb'
 import { House, LayoutGrid, MapPin, Search } from 'lucide-react'
@@ -958,8 +958,6 @@ function PlaceDetailView({
   const approvedImageCount = galleryPhotos.length
   const budgetLabel = (() => {
     const parts: string[] = []
-    const priceSymbol = formatPriceLevel(place.price_level)
-    if (priceSymbol) parts.push(priceSymbol)
     if (place.budget_min != null) parts.push(`From ₱${Number(place.budget_min).toLocaleString()}`)
     const note = cleanString(place.budget_notes)
     if (note) parts.push(note)

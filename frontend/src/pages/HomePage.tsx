@@ -279,24 +279,26 @@ function mergeRecommendedPlaceWithLivePlace(
     return fallbackPlace
   }
 
+  const fallbackCuratedImageUrls = fallbackPlace.curatedImageUrls ?? []
+  const liveCuratedImageUrls = livePlace.curatedImageUrls ?? []
+
   return {
     ...fallbackPlace,
     ...livePlace,
     thumbnailUrl: livePlace.thumbnailUrl?.trim() || livePlace.imageUrl?.trim() || fallbackPlace.thumbnailUrl || null,
     imageUrl: livePlace.imageUrl?.trim() || fallbackPlace.imageUrl || null,
     curatedImageUrls: hasShowcaseImage(livePlace)
-      ? livePlace.curatedImageUrls ?? []
-      : fallbackPlace.curatedImageUrls ?? [],
-  }
-}
+      ? [...liveCuratedImageUrls, ...fallbackCuratedImageUrls].reduce<string[]>((uniqueImageUrls, imageUrl) => {
+          const trimmedImageUrl = imageUrl?.trim()
 
-function getPlaceImage(place: ShowcasePlace) {
-  return (
-    place.thumbnailUrl?.trim() ||
-    place.imageUrl?.trim() ||
-    place.curatedImageUrls?.[0]?.trim() ||
-    null
-  )
+          if (trimmedImageUrl && !uniqueImageUrls.includes(trimmedImageUrl)) {
+            uniqueImageUrls.push(trimmedImageUrl)
+          }
+
+          return uniqueImageUrls
+        }, [])
+      : fallbackCuratedImageUrls,
+  }
 }
 
 function getHomeTileImageCandidates(place: ShowcasePlace | null) {
@@ -510,15 +512,22 @@ function HomeFeaturedCard({
   onGuestFavorite: () => void
 }) {
   const href = buildPlaceHref(place)
-  const imageUrl = getPlaceImage(place)
-  const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null)
-  const shouldShowImage = Boolean(imageUrl) && failedImageUrl !== imageUrl
+  const imageCandidates = useMemo(() => getHomeTileImageCandidates(place), [place])
+  const [failedImageUrls, setFailedImageUrls] = useState<string[]>([])
+  const imageUrl = imageCandidates.find((candidate) => !failedImageUrls.includes(candidate)) ?? null
+  const shouldShowImage = Boolean(imageUrl)
   const locationText = getPlaceLocationText(place)
   const ratingText = getPlaceRatingText(place)
   const { isPlaceSaved, saveFavorite, removeFavorite } = useSavedFavorites()
   const [isSaving, setIsSaving] = useState(false)
   const normalizedPlaceId = place.id.trim()
   const isSaved = [place.slug, normalizedPlaceId].some((slugOrId) => isPlaceSaved(slugOrId))
+
+  useEffect(() => {
+    setFailedImageUrls((currentValue) =>
+      currentValue.filter((failedImageUrl) => imageCandidates.includes(failedImageUrl))
+    )
+  }, [imageCandidates])
 
   const handleOpen = (event: MouseEvent<HTMLDivElement>) => {
     if (href) {
@@ -597,7 +606,13 @@ function HomeFeaturedCard({
               decoding="async"
               fetchPriority={index === 0 ? 'high' : 'auto'}
               sizes="(min-width: 1280px) 360px, (min-width: 1024px) 344px, (min-width: 768px) 320px, 84vw"
-              onError={() => setFailedImageUrl(imageUrl)}
+              onError={() => {
+                if (imageUrl) {
+                  setFailedImageUrls((currentValue) =>
+                    currentValue.includes(imageUrl) ? currentValue : [...currentValue, imageUrl]
+                  )
+                }
+              }}
             />
           ) : (
             <div className="absolute inset-0 bg-[linear-gradient(145deg,#cbd5e1_0%,#94a3b8_52%,#64748b_100%)]" />
@@ -1302,26 +1317,26 @@ function HomePage({
     return nextMap
   }, [imageRichHomePlacesPool])
 
-  const mergeTopPickPlaceWithLivePlace = (place: ShowcasePlace) => {
+  const mergeTopPickPlaceWithLivePlace = useCallback((place: ShowcasePlace) => {
     const normalizedRecommendationSlug = (place.slug ?? place.id).trim().toLowerCase()
     const exactTopPickLivePlace = topPickPlaceBySlug[normalizedRecommendationSlug]
     const exactLivePlace = livePlaceBySlug.get(normalizedRecommendationSlug)
     const sameNameLivePlace = livePlaceByName.get(normalizePlaceMatchKey(place.name))
 
     return mergeRecommendedPlaceWithLivePlace(place, exactTopPickLivePlace ?? exactLivePlace ?? sameNameLivePlace)
-  }
+  }, [livePlaceByName, livePlaceBySlug, topPickPlaceBySlug])
 
   const recommendedTopPickPlaces = useMemo(() => {
     return homeRecommendedTopPickPlaces.map(mergeTopPickPlaceWithLivePlace)
-  }, [livePlaceByName, livePlaceBySlug, topPickPlaceBySlug])
+  }, [mergeTopPickPlaceWithLivePlace])
 
   const allTopPickPlaces = useMemo(() => {
     return homeAllTopPickPlaces.map(mergeTopPickPlaceWithLivePlace)
-  }, [livePlaceByName, livePlaceBySlug, topPickPlaceBySlug])
+  }, [mergeTopPickPlaceWithLivePlace])
 
   const popularTopPickPlaces = useMemo(() => {
     return homePopularTopPickPlaces.map(mergeTopPickPlaceWithLivePlace)
-  }, [livePlaceByName, livePlaceBySlug, topPickPlaceBySlug])
+  }, [mergeTopPickPlaceWithLivePlace])
 
   const visibleTopPickCarouselPlaces = useMemo(() => {
     if (activeTopPicksTab === 'all') {
@@ -1434,6 +1449,12 @@ function HomePage({
   useEffect(() => {
     const imageUrls = new Set<string>()
 
+    for (const place of visibleTopPickCarouselPlaces) {
+      for (const imageUrl of getHomeTileImageCandidates(place)) {
+        imageUrls.add(imageUrl)
+      }
+    }
+
     for (const tile of [...cityTiles, ...categoryTiles]) {
       for (const imageUrl of getHomeTileImageCandidates(tile.place)) {
         imageUrls.add(imageUrl)
@@ -1453,7 +1474,7 @@ function HomePage({
         image.onerror = null
       }
     }
-  }, [categoryTiles, cityTiles])
+  }, [categoryTiles, cityTiles, visibleTopPickCarouselPlaces])
 
   useEffect(() => {
     const controller = new AbortController()

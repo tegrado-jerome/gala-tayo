@@ -3,7 +3,6 @@ import { supabase } from '../../supabase'
 import { normalizeTypedSearchText, buildSearchPath, type SearchBudgetValue, type SearchGoodForValue } from '../../utils/searchParams'
 import type { PlaceCardData, PlaceCategoryMeta, PlaceTagMeta } from '../PlaceCard'
 import type { ChatMessage, AskAiJobStatus } from '../../utils/askAiRuntime'
-import type { AskAiUsageStatus } from '../../utils/askAiUsage'
 
 type BackendCategory = {
   id: string
@@ -140,7 +139,6 @@ type AskAiRouteCache = {
   answer: string
   sources: AskAiSource[]
   answerError: string | null
-  usageStatus: AskAiUsageStatus | null
   isSubmitting: boolean
   messages: ChatMessage[]
   jobId: string | null
@@ -305,24 +303,12 @@ function readAskAiRouteCache(): AskAiRouteCache | null {
       : []
     const answerError = typeof parsedCache.answerError === 'string' ? parsedCache.answerError : null
     const isSubmitting = parsedCache.isSubmitting === true
-    const usageStatus =
-      parsedCache.usageStatus &&
-      typeof parsedCache.usageStatus === 'object' &&
-      typeof (parsedCache.usageStatus as AskAiUsageStatus).usageType === 'string' &&
-      typeof (parsedCache.usageStatus as AskAiUsageStatus).allowed === 'boolean' &&
-      typeof (parsedCache.usageStatus as AskAiUsageStatus).limit === 'number' &&
-      typeof (parsedCache.usageStatus as AskAiUsageStatus).used === 'number' &&
-      typeof (parsedCache.usageStatus as AskAiUsageStatus).remaining === 'number' &&
-      typeof (parsedCache.usageStatus as AskAiUsageStatus).resetAt === 'string'
-        ? parsedCache.usageStatus as AskAiUsageStatus
-        : null
 
     return {
       question,
       answer,
       sources,
       answerError,
-      usageStatus,
       isSubmitting,
       jobId: typeof parsedCache.jobId === 'string' ? parsedCache.jobId : null,
       jobStatus:
@@ -603,10 +589,10 @@ const fallbackAreas: AreaChip[] = [
 
 const budgetOptions: BudgetOption[] = [
   { value: 'free', label: 'Free' },
-  { value: 'under-500', label: 'Under ₱500' },
-  { value: '500-1000', label: '₱500-₱1,000' },
-  { value: '1000-2000', label: '₱1,000-₱2,000' },
-  { value: '2000-plus', label: '₱2,000+' },
+  { value: 'under-500', label: 'Up to ₱500' },
+  { value: '500-1000', label: 'Up to ₱1,000' },
+  { value: '1000-2000', label: 'Up to ₱2,000' },
+  { value: '2000-plus', label: 'Premium ₱2,000+' },
 ]
 
 function normalizeSearchText(value: string) {
@@ -645,7 +631,7 @@ function buildSearchSentence({
     return `Showing ${categoryPart}${areaPart}`
   }
 
-  return `Showing ${categoryPart}${areaPart} around ${budgetLabel.toLowerCase()}`
+  return `Showing ${categoryPart}${areaPart} within ${budgetLabel.toLowerCase()}`
 }
 
 function pluralizeGoodForLabel(label: string) {

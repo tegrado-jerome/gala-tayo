@@ -366,6 +366,7 @@ function SearchHub({
       guestId,
       messages: updatedMessages,
     })
+    setAskAiUsageRefreshSignal((signal) => signal + 1)
   }
 
   const handleStartOverAskAi = () => {
@@ -802,12 +803,17 @@ function SearchHub({
       jobStatus: initialAskAiState?.jobStatus ?? null,
     })
 
+    let hasReceivedInitialRuntimeState = false
+
     return subscribeToAskAiRuntime((runtimeState) => {
       setAskAiQuestion(runtimeState.question)
       setAskAiAnswer(runtimeState.answer)
       setAskAiSources(runtimeState.sources)
       setAskAiAnswerError(runtimeState.answerError)
-      setAskAiUsageStatus((currentUsageStatus) => runtimeState.usageStatus ?? currentUsageStatus)
+      if (hasReceivedInitialRuntimeState && runtimeState.usageStatus) {
+        setAskAiUsageStatus(runtimeState.usageStatus)
+      }
+      hasReceivedInitialRuntimeState = true
       setIsAskAiSubmitting(runtimeState.isSubmitting)
 
       if (runtimeState.answer && runtimeState.jobStatus === 'completed') {
@@ -880,13 +886,12 @@ function SearchHub({
       answer: askAiAnswer,
       sources: askAiSources,
       answerError: askAiAnswerError,
-      usageStatus: askAiUsageStatus,
       isSubmitting: isAskAiSubmitting,
       messages: chatMessages,
       jobId: runtimeState.jobId,
       jobStatus: runtimeState.jobStatus,
     })
-  }, [askAiAnswer, askAiAnswerError, askAiQuestion, askAiSources, askAiUsageStatus, initialMode, isAskAiSubmitting, chatMessages])
+  }, [askAiAnswer, askAiAnswerError, askAiQuestion, askAiSources, initialMode, isAskAiSubmitting, chatMessages])
 
   useEffect(() => {
     if (initialMode !== 'ask-ai' || !session?.access_token) {

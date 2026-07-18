@@ -4,7 +4,6 @@ import {
   failAskAiTask,
   registerAskAiTask,
 } from './askAiTaskStore'
-import { readCachedAskAiUsage, writeCachedAskAiUsage } from './askAiUsageCache'
 import { getApiUrl } from './apiClient'
 import { buildAskAiRequestHeaders, getOrCreateAskAiGuestId } from './askAiIdentity'
 
@@ -261,21 +260,6 @@ function getAskAiUsageStatus(value: unknown): AskAiUsageStatus | null {
   return normalizeAskAiUsageStatus(envelope.askAi) ?? normalizeAskAiUsageStatus(envelope.chatbotAi)
 }
 
-function incrementCachedAskAiUsage(): AskAiUsageStatus | null {
-  const cached = readCachedAskAiUsage('chatbotAi')
-  if (!cached) return null
-
-  const nextUsed = cached.used + 1
-  const nextRemaining = Math.max(cached.remaining - 1, 0)
-
-  return {
-    ...cached,
-    used: nextUsed,
-    remaining: nextRemaining,
-    allowed: nextUsed < cached.limit,
-  }
-}
-
 function normalizeAskAiErrorMessage(message: unknown): string | null {
   if (typeof message !== 'string') {
     return null
@@ -499,10 +483,7 @@ export async function submitAskAiRuntimeRequest({
     const finalAnswer = sanitizeChatbotAnswer(data.answer ?? '')
     const finalSources = getAskAiSourceList(data.sources)
 
-    const responseUsage = getAskAiUsageStatus(data.usage)
-    const usageStatus = responseUsage ?? incrementCachedAskAiUsage()
-
-    writeCachedAskAiUsage('chatbotAi', usageStatus)
+    const usageStatus = getAskAiUsageStatus(data.usage)
 
     completeAskAiTask('chatbot', { answer: finalAnswer, sources: finalSources })
 
@@ -552,8 +533,6 @@ export async function submitAskAiRuntimeRequest({
         })
 
     const updatedUsageStatus = getAskAiUsageStatus(errorBody?.usage) ?? askAiRuntimeState.usageStatus
-
-    writeCachedAskAiUsage('chatbotAi', updatedUsageStatus)
 
     failAskAiTask('chatbot', errorMessage)
 
