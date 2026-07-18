@@ -5,7 +5,7 @@ import MinimalBackNav from '../components/MinimalBackNav'
 import ProfileAvatar from '../components/ProfileAvatar'
 import UnifiedLoadingState from '../components/UnifiedLoadingState'
 import { PageContainer } from '../components/layout/ResponsiveLayouts'
-import { getFollowing, getMyProfile, getProfileSuggestions, getPublicProfile, normalizeUsername, searchProfiles, type FollowListUser, type PublicProfile } from '../utils/profileApi'
+import { getFollowing, getMyProfile, getProfileSuggestions, normalizeUsername, searchProfiles, type FollowListUser, type PublicProfile } from '../utils/profileApi'
 import { navigateToPath } from '../utils/navigation'
 import { supabase } from '../supabase'
 import { SkeletonLine } from '../components/loading/SkeletonStates'
@@ -185,19 +185,13 @@ function ProfileSearchPage() {
   const [errorMessage, setErrorMessage] = useState('')
   const [suggestionsErrorMessage, setSuggestionsErrorMessage] = useState('')
   const [followingErrorMessage, setFollowingErrorMessage] = useState('')
-  const [profileCountOverrides, setProfileCountOverrides] = useState<Record<string, Pick<PublicProfile, 'followers_count' | 'following_count'>>>({})
+
   const normalizedQuery = useMemo(() => normalizeUsername(query), [query])
   const isShowingSearchResults = normalizedQuery.length >= 2
   const followingUsernames = useMemo(() => new Set(followingProfiles.map((profile) => profile.username)), [followingProfiles])
   const visibleSuggestionPool = suggestions.filter((profile) => !followingUsernames.has(profile.username))
-  const visibleResults = results.map((profile) => ({
-    ...profile,
-    ...profileCountOverrides[profile.username],
-  }))
-  const visibleSuggestions = visibleSuggestionPool.map((profile) => ({
-    ...profile,
-    ...profileCountOverrides[profile.username],
-  }))
+  const visibleResults = results
+  const visibleSuggestions = visibleSuggestionPool
   const hasStatusMessage =
     (normalizedQuery.length > 0 && normalizedQuery.length < 2) ||
     Boolean(errorMessage) ||
@@ -336,61 +330,6 @@ function ProfileSearchPage() {
       window.clearTimeout(timeoutId)
     }
   }, [normalizedQuery])
-
-  useEffect(() => {
-    const visibleProfiles = isShowingSearchResults ? results : visibleSuggestionPool
-    const usernamesToHydrate = visibleProfiles
-      .map((profile) => profile.username)
-      .filter((username) => username && !profileCountOverrides[username])
-
-    if (usernamesToHydrate.length === 0) {
-      return
-    }
-
-    let isMounted = true
-
-    const loadAccurateCounts = async () => {
-      const settledProfiles = await Promise.allSettled(
-        usernamesToHydrate.map(async (username) => {
-          const data = await getPublicProfile(username)
-
-          return {
-            username,
-            followers_count: data.profile.followers_count,
-            following_count: data.profile.following_count,
-          }
-        }),
-      )
-
-      if (!isMounted) {
-        return
-      }
-
-      const nextOverrides = settledProfiles.reduce<Record<string, Pick<PublicProfile, 'followers_count' | 'following_count'>>>((accumulator, result) => {
-        if (result.status === 'fulfilled') {
-          accumulator[result.value.username] = {
-            followers_count: result.value.followers_count,
-            following_count: result.value.following_count,
-          }
-        }
-
-        return accumulator
-      }, {})
-
-      if (Object.keys(nextOverrides).length > 0) {
-        setProfileCountOverrides((currentValue) => ({
-          ...currentValue,
-          ...nextOverrides,
-        }))
-      }
-    }
-
-    void loadAccurateCounts()
-
-    return () => {
-      isMounted = false
-    }
-  }, [isShowingSearchResults, profileCountOverrides, results, visibleSuggestionPool])
 
   const summaryCount = isShowingSearchResults ? visibleResults.length : visibleSuggestions.length
 
@@ -563,7 +502,7 @@ function ProfileSearchPage() {
                     title="Suggested for you"
                     description="New people to discover, excluding profiles you already follow."
                     trailing={
-                      !isLoadingSuggestions && !suggestionsErrorMessage && visibleSuggestions.length > 0 ? (
+                      !isLoadingSuggestions && !isLoadingFollowing && !suggestionsErrorMessage && visibleSuggestions.length > 0 ? (
                         <span className="rounded-full bg-white px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-slate-500">
                           {visibleSuggestions.length} profiles
                         </span>
@@ -572,7 +511,7 @@ function ProfileSearchPage() {
                   />
 
                   <div className="mt-4 grid gap-3">
-                    {isLoadingSuggestions ? (
+                    {isLoadingSuggestions || isLoadingFollowing ? (
                       <UnifiedLoadingState
                         variant="inline"
                         title="Preparing suggestions..."
@@ -582,15 +521,17 @@ function ProfileSearchPage() {
 
                     {suggestionsErrorMessage ? <SectionMessage tone="error">{suggestionsErrorMessage}</SectionMessage> : null}
 
-                    {!isLoadingSuggestions && !suggestionsErrorMessage && visibleSuggestions.length === 0 ? (
+                    {!isLoadingSuggestions && !isLoadingFollowing && !suggestionsErrorMessage && visibleSuggestions.length === 0 ? (
                       <SectionMessage>No suggested users yet.</SectionMessage>
                     ) : null}
 
-                    <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
-                      {visibleSuggestions.map((profile) => (
-                        <ProfileResultCard key={profile.user_id} profile={profile} currentUserId={currentUserId} />
-                      ))}
-                    </div>
+                    {!isLoadingSuggestions && !isLoadingFollowing && visibleSuggestions.length > 0 ? (
+                      <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
+                        {visibleSuggestions.map((profile) => (
+                          <ProfileResultCard key={profile.user_id} profile={profile} currentUserId={currentUserId} />
+                        ))}
+                      </div>
+                    ) : null}
                   </div>
                 </section>
               </div>
