@@ -169,8 +169,8 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
   return (
     <>
       <SeoHead
-        title="GalaTayo | Discover Metro Manila places"
-        description="Discover Metro Manila places by city, category, budget, and vibe. Get AI-powered recommendations and plan your next gala with GalaTayo."
+        title="GalaTayo - Discover places in Metro Manila"
+        description="Discover places across Metro Manila by city, category, budget, and vibe. Get AI-powered recommendations and plan your next gala."
         robots="index,follow,max-image-preview:none,max-snippet:-1,max-video-preview:-1"
         canonicalPath="/"
         openGraphType="website"
