@@ -6,7 +6,6 @@ import {
   markAdminPasswordSession,
   resendSignUpConfirmationEmail,
   signInWithEmailPassword,
-  signOut,
   signUpWithEmailPassword,
 } from '../services/authApi'
 import { buildAuthPath, getRequestedNextPath } from '../services/authApi'

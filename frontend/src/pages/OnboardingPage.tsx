@@ -25,7 +25,6 @@ type OnboardingPageProps = {
 }
 
 const MINIMUM_AGE = 13
-const usernamePattern = /^[a-z0-9_.]{3,30}$/
 const draftStorageVersion = 1
 
 type StoredOnboardingDraft = {
