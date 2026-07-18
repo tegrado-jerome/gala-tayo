@@ -8,10 +8,11 @@ import MapView from './MapView'
 import ReportUserModal from './ReportUserModal'
 import PlaceImageNotice from './PlaceImageNotice'
 import { PageContainer, PageShell, CardSurface } from './layout/ResponsiveLayouts'
-import { Check, Flag, ImagePlus, MessageCircle, MoreHorizontal, Pencil, Reply, Trash2, X } from 'lucide-react'
+import { Check, Flag, ImagePlus, MessageCircle, MoreHorizontal, Pencil, Reply, Trash2, Wallet, X } from 'lucide-react'
 import { getCuratedPlaceImages, normalizePlaceSlug } from '../data/curatedPlaceImages'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { useSystemMessage } from '../context/SystemMessageContext'
+import { useAppUser } from '../context/AppUserContext'
 import { getSupabaseAccessToken, getSupabaseSession, hasSessionUserChanged, shouldPropagateSessionChange, supabase } from '../supabase'
 import { buildPlaceShareUrl, shareLink } from '../utils/share'
 import { getDirectionsUrl, openDirectionsUrl } from '../utils/directions'
@@ -32,7 +33,7 @@ import { DetailSection } from './place-detail/DetailSection'
 import { cleanString, titleCase, uniqueList, formatPriceLevel, isAcceptedContributionImage, parseJsonResponse } from './place-detail/helpers'
 import type { PlaceDetailViewProps, PlaceReview, PlaceReviewsResponse, PlaceComment, PlaceCommentsResponse, PlaceImageContributionResponse, PlaceDetailCommunityCache } from './place-detail/types'
 import Breadcrumb from './Breadcrumb'
-import { LayoutGrid, MapPin, Search } from 'lucide-react'
+import { House, LayoutGrid, MapPin, Search } from 'lucide-react'
 import { getCategoryIconName } from './AppIcon'
 
 
@@ -242,7 +243,8 @@ function PlacePhoto({
                       </button>
                     ) : null}
                     {priceBadgeLabel ? (
-                      <span className="inline-flex items-center rounded-full bg-[rgba(21,128,61,0.95)] px-3 py-1.5 text-[12px] font-black text-white shadow-[0_12px_22px_rgba(21,128,61,0.28)]">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[rgba(21,128,61,0.95)] px-3 py-1.5 text-[12px] font-black text-white shadow-[0_12px_22px_rgba(21,128,61,0.28)]">
+                        <Wallet className="h-3.5 w-3.5" />
                         {priceBadgeLabel}
                       </span>
                     ) : null}
@@ -347,7 +349,8 @@ function PlacePhoto({
                     </button>
                   ) : null}
                   {priceBadgeLabel ? (
-                    <span className="inline-flex items-center rounded-full bg-[rgba(21,128,61,0.95)] px-3 py-1.5 text-[12px] font-black text-white shadow-[0_12px_22px_rgba(21,128,61,0.28)]">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[rgba(21,128,61,0.95)] px-3 py-1.5 text-[12px] font-black text-white shadow-[0_12px_22px_rgba(21,128,61,0.28)]">
+                      <Wallet className="h-3.5 w-3.5" />
                       {priceBadgeLabel}
                     </span>
                   ) : null}
@@ -435,7 +438,8 @@ function PlacePhoto({
                   </span>
                   <div className="flex max-w-[70%] flex-wrap items-center justify-end gap-2">
                     {priceBadgeLabel ? (
-                      <span className="inline-flex items-center rounded-full bg-[rgba(21,128,61,0.95)] px-3 py-1.5 text-[12px] font-black text-white shadow-[0_12px_22px_rgba(21,128,61,0.28)]">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[rgba(21,128,61,0.95)] px-3 py-1.5 text-[12px] font-black text-white shadow-[0_12px_22px_rgba(21,128,61,0.28)]">
+                        <Wallet className="h-3.5 w-3.5" />
                         {priceBadgeLabel}
                       </span>
                     ) : null}
@@ -849,6 +853,7 @@ function PlaceDetailView({
   categoryBreadcrumb = null,
 }: PlaceDetailViewProps) {
   const place = inputPlace ?? EMPTY_PLACE_DETAIL
+  const { currentProfile, session: appSession } = useAppUser()
   const ReviewSkeleton = () => (
     <div className="mt-4 grid gap-3" aria-hidden="true">
       <div className="app-skeleton app-skeleton--soft h-5 w-40 rounded-full" />
@@ -896,8 +901,12 @@ function PlaceDetailView({
   const [reviewCount, setReviewCount] = useState(initialCommunityCache?.reviewCount ?? place.ratingCount ?? 0)
   const [currentUserReview, setCurrentUserReview] = useState<PlaceReview | null>(null)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
-  const [currentUserAvatarUrl, setCurrentUserAvatarUrl] = useState<string | null>(null)
-  const [currentUserAvatarFallbackName, setCurrentUserAvatarFallbackName] = useState('GalaTayo member')
+  const [currentUserAvatarUrl, setCurrentUserAvatarUrl] = useState<string | null>(
+    () => cleanString(currentProfile?.avatarUrl) || cleanString(currentProfile?.providerAvatarUrl) || null,
+  )
+  const [currentUserAvatarFallbackName, setCurrentUserAvatarFallbackName] = useState(
+    () => cleanString(currentProfile?.username) || cleanString(currentProfile?.displayName) || 'GalaTayo member',
+  )
   const [reviewRating, setReviewRating] = useState(0)
   const [isReviewSubmitting, setIsReviewSubmitting] = useState(false)
   const [isReviewDeleting, setIsReviewDeleting] = useState(false)
@@ -984,7 +993,7 @@ function PlaceDetailView({
           {
             label: returnLabel,
             href: returnHref,
-            icon: returnHref.startsWith('/search') ? <Search className="h-3.5 w-3.5" /> : <MapPin className="h-3.5 w-3.5" />,
+            icon: returnHref.startsWith('/search') ? <Search className="h-3.5 w-3.5" /> : returnLabel === 'Home' ? <House className="h-3.5 w-3.5" /> : <MapPin className="h-3.5 w-3.5" />,
           },
           { label: place.name, icon: <MapPin className="h-3.5 w-3.5" /> },
         ]
@@ -1080,7 +1089,6 @@ function PlaceDetailView({
     const nextSession = session ?? (await getSupabaseSession())
     const nextUser = nextSession?.user ?? null
     const metadata = (nextUser?.user_metadata ?? {}) as Record<string, unknown>
-    const metadataAvatarUrl = getAuthMetadataString(metadata, ['avatar_url', 'picture'])
     const metadataDisplayName =
       getAuthMetadataString(metadata, ['display_name', 'full_name', 'name', 'preferred_username']) ||
       cleanString(nextUser?.email?.split('@')[0]) ||
@@ -1095,7 +1103,6 @@ function PlaceDetailView({
     }
 
     setCurrentUserAvatarFallbackName((currentName) => currentName || metadataDisplayName)
-    setCurrentUserAvatarUrl((currentAvatarUrl) => metadataAvatarUrl || currentAvatarUrl || null)
 
     try {
       const result = await getMyProfile(nextSession)
@@ -1103,15 +1110,31 @@ function PlaceDetailView({
       const resolvedAvatarUrl =
         cleanString(profile?.avatar_url) ||
         cleanString(profile?.provider_avatar_url) ||
-        metadataAvatarUrl
+        null
 
       setCurrentUserAvatarUrl((currentAvatarUrl) => resolvedAvatarUrl || currentAvatarUrl || null)
       setCurrentUserAvatarFallbackName(cleanString(profile?.username) || metadataDisplayName)
     } catch {
-      setCurrentUserAvatarUrl((currentAvatarUrl) => metadataAvatarUrl || currentAvatarUrl || null)
       setCurrentUserAvatarFallbackName((currentName) => currentName || metadataDisplayName)
     }
   }, [])
+
+  useEffect(() => {
+    if (!currentProfile && !appSession?.user?.id) {
+      setCurrentUserAvatarUrl(null)
+      setCurrentUserAvatarFallbackName('Guest')
+      return
+    }
+
+    if (!currentProfile) {
+      return
+    }
+
+    setCurrentUserAvatarUrl(cleanString(currentProfile.avatarUrl) || cleanString(currentProfile.providerAvatarUrl) || null)
+    setCurrentUserAvatarFallbackName(
+      cleanString(currentProfile.username) || cleanString(currentProfile.displayName) || 'GalaTayo member',
+    )
+  }, [appSession?.user?.id, currentProfile])
 
   useEffect(() => {
     setAverageRating(place.rating ?? null)
@@ -1747,7 +1770,10 @@ function PlaceDetailView({
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ body }),
+        body: JSON.stringify({
+          placeId,
+          comment: body,
+        }),
       })
       const responseText = await response.text()
       const result = parseJsonResponse<{ message?: string; comment?: PlaceComment }>(responseText)
@@ -2213,7 +2239,7 @@ function PlaceDetailView({
                     onChange={(event) => setEditCommentBody(event.target.value)}
                     rows={3}
                     disabled={isMutating}
-                    className="w-full resize-none rounded-xl border border-[var(--line)] bg-white px-3 py-2.5 text-[14px] font-semibold text-slate-800 outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[rgba(47,116,232,0.14)] disabled:cursor-not-allowed disabled:opacity-70"
+                    className="comment-composer-input w-full resize-none rounded-xl bg-white px-3 py-2.5 text-[14px] font-semibold text-slate-800 outline-none transition disabled:cursor-not-allowed disabled:opacity-70"
                   />
                   <div className="mt-2 flex flex-wrap gap-2">
                     <button
@@ -2329,14 +2355,14 @@ function PlaceDetailView({
         </div>
 
         {replyingToCommentId === comment.id ? (
-          <div className="ml-8 mt-2.5 rounded-[16px] border border-slate-200/80 bg-slate-50 px-3 py-3 sm:ml-9">
+          <div className="ml-8 mt-2.5 rounded-[16px] bg-slate-50 px-3 py-3 sm:ml-9">
             <textarea
               value={replyBody}
               onChange={(event) => setReplyBody(event.target.value)}
               rows={2}
               disabled={isMutating}
               placeholder="Add a reply..."
-              className="w-full resize-none rounded-xl border border-[var(--line)] bg-white px-3 py-2.5 text-[14px] font-semibold text-slate-800 outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[rgba(47,116,232,0.14)] disabled:cursor-not-allowed disabled:opacity-70"
+              className="comment-composer-input w-full resize-none rounded-xl bg-white px-3 py-2.5 text-[14px] font-semibold text-slate-800 outline-none transition disabled:cursor-not-allowed disabled:opacity-70"
             />
             <div className="mt-2 flex flex-wrap gap-2">
               <button
@@ -2512,7 +2538,7 @@ function PlaceDetailView({
                 <div className="mt-4 flex items-start gap-3">
                   <MemberAvatar displayName={currentUserAvatarFallbackName} avatarUrl={currentUserAvatarUrl} compact />
                   <div className="min-w-0 flex-1">
-                    <div className="rounded-[14px] border border-[var(--line)] bg-white px-3 py-2.5 transition focus-within:border-[var(--accent)] focus-within:ring-2 focus-within:ring-[rgba(47,116,232,0.14)]">
+                    <div className="rounded-[14px] bg-white px-3 py-2.5 transition">
                       <textarea
                         value={commentBody}
                         onChange={(event) => setCommentBody(event.target.value)}
@@ -2521,7 +2547,7 @@ function PlaceDetailView({
                         rows={2}
                         disabled={isCommentSubmitting}
                         placeholder="Write a quick comment..."
-                        className={`w-full resize-none border-0 bg-transparent px-0 py-0 text-[14px] font-semibold text-slate-800 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed disabled:opacity-70 ${
+                        className={`comment-composer-input w-full resize-none border-0 bg-transparent px-0 py-0 text-[14px] font-semibold text-slate-800 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed disabled:opacity-70 ${
                           isCommentComposerFocused || commentBody.trim() ? 'h-[80px]' : 'h-[48px]'
                         }`}
                       />
@@ -2598,7 +2624,7 @@ function PlaceDetailView({
               }))
             }
             onSelect={(index) => setActiveGalleryState({ key: galleryStateKey, index })}
-            showAddPhotoAction={isCommunityPlaceReady && approvedImageCount < 3}
+            showAddPhotoAction={approvedImageCount < 3}
             onContribute={handleOpenContribution}
             priceBadgeLabel={priceBadgeLabel}
           />
@@ -2769,7 +2795,7 @@ function PlaceDetailView({
                   </DetailSection>
 
                   <DetailSection>
-                    <SectionHeading icon="book" title="FAQs" preserveCase />
+                    <SectionHeading icon="book" title="FREQUENTLY ASKED QUESTIONS" preserveCase />
                     <div className="mt-4 space-y-4">
                       {faqItems.map((item) => (
                         <div key={item.question}>
@@ -2913,7 +2939,7 @@ function PlaceDetailView({
 
       {isPlaceConcernOpen ? (
         <div
-          className="fixed inset-0 z-[9998] flex items-end justify-center bg-slate-950/45 px-4 pb-4 sm:items-center sm:pb-0"
+          className="fixed inset-0 z-[9998] flex items-center justify-center bg-slate-950/45 px-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="report-place-concern-title"
@@ -2925,17 +2951,17 @@ function PlaceDetailView({
           }}
         >
           <div
-            className="w-full max-w-md rounded-2xl border border-[var(--line)] bg-white p-4 shadow-[0_24px_70px_rgba(15,23,42,0.25)]"
+            className="w-full max-w-sm rounded-2xl border border-[var(--line)] bg-white p-3 shadow-[0_24px_70px_rgba(15,23,42,0.25)]"
             onClick={(event) => event.stopPropagation()}
           >
             <h3 id="report-place-concern-title" className="text-[18px] font-black text-slate-950">
-              Report place concern
+              <strong>Report place concern</strong>
             </h3>
-            <p className="mt-1 text-[14px] font-semibold text-slate-700">
+            <p className="mt-1 text-[13px] font-semibold text-slate-700">
               Send this place report directly to GalaTayo for review.
             </p>
 
-            <div className="mt-4 grid gap-2">
+            <div className="mt-3 grid grid-cols-2 gap-1.5">
               {placeConcernReasons.map((reason) => (
                 <button
                   key={reason.value}
@@ -2957,8 +2983,8 @@ function PlaceDetailView({
               ))}
             </div>
 
-            <label className="mt-4 block">
-              <span className="flex items-center gap-2 text-[13px] font-black text-slate-800">
+            <label className="mt-3 block">
+              <span className="flex items-center gap-2 text-[12px] font-black text-slate-800">
                 Extra details
                 <span className="optional-label">Optional</span>
               </span>
@@ -2966,18 +2992,18 @@ function PlaceDetailView({
                 value={placeConcernDetails}
                 onChange={(event) => setPlaceConcernDetails(event.target.value.slice(0, 1000))}
                 disabled={isPlaceConcernSubmitting}
-                rows={4}
+                rows={3}
                 placeholder="Tell us what looks wrong or what should be reviewed."
-                className="mt-2 w-full resize-none rounded-xl border border-[var(--line)] bg-white px-3 py-2 text-[14px] font-semibold leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-wash)]"
+                className="mt-1.5 w-full resize-none rounded-xl border border-[var(--line)] bg-white px-3 py-1.5 text-[13px] font-semibold leading-5 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-wash)]"
               />
-              <span className="mt-1 block text-right text-[12px] font-bold text-slate-500">{placeConcernDetails.length}/1000</span>
+              <span className="mt-1 block text-right text-[11px] font-bold text-slate-500">{placeConcernDetails.length}/1000</span>
             </label>
 
-            <div className="mt-3 min-h-5">
-              {placeConcernError ? <p className="text-[13px] font-bold text-red-600">{placeConcernError}</p> : null}
+            <div className="mt-2 min-h-0">
+              {placeConcernError ? <p className="text-[12px] font-bold text-red-600">{placeConcernError}</p> : null}
             </div>
 
-            <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <div className="mt-3 grid grid-cols-2 gap-1.5">
               <button
                 type="button"
                 onClick={() => {
@@ -2987,16 +3013,18 @@ function PlaceDetailView({
                   }
                 }}
                 disabled={isPlaceConcernSubmitting}
-                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--line)] bg-white px-4 text-[14px] font-extrabold text-slate-700"
+                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-[var(--line)] bg-white px-3 text-[13px] font-extrabold text-slate-700"
               >
+                <AppIcon name="clear" className="h-4 w-4" />
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={() => void handleSubmitPlaceConcern()}
                 disabled={isPlaceConcernSubmitting || !placeConcernReason}
-                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-[var(--accent)] bg-[var(--accent)] px-4 text-[14px] font-extrabold text-white"
+                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-red-600 bg-red-600 px-3 text-[13px] font-extrabold text-white disabled:opacity-50"
               >
+                <AppIcon name="reports" className="h-4 w-4" />
                 {isPlaceConcernSubmitting ? 'Submitting...' : 'Submit report'}
               </button>
             </div>

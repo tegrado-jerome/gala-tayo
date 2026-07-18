@@ -354,7 +354,7 @@ export default function PromptBuilderModal({
                   className="mt-3 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[14px] border border-[rgba(15,23,42,0.08)] bg-slate-100 px-4 py-2.5 text-[13px] font-semibold text-slate-700 transition hover:bg-slate-200"
                 >
                   <BotIcon />
-                  <span>Back to Ask AI</span>
+                  <span>Back to GalaTayo AI</span>
                 </button>
               </section>
 
@@ -503,7 +503,7 @@ export default function PromptBuilderModal({
                   Prompt Builder
                 </h1>
                 <p className="mt-1 text-[12px] leading-relaxed text-slate-600 sm:text-[13px] lg:text-[14px]">
-                  Build a stronger gala prompt without using Ask AI credits.
+                  Build a stronger gala prompt without using GalaTayo AI credits.
                 </p>
               </div>
             </div>

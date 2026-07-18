@@ -141,7 +141,6 @@ const profileVisibilityOptions: PrivacyOption[] = [
   },
 ]
 
-
 type PrivacySelectProps = {
   label: string
   value: string
@@ -419,7 +418,10 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
         }
         setErrorMessage('')
 
-        const [accountData, profileData] = await Promise.all([getCurrentUser(session), getMyProfile(session)])
+        const [accountData, profileData] = await Promise.all([
+          getCurrentUser(session),
+          getMyProfile(session),
+        ])
 
         if (!isMounted) {
           return

@@ -6,6 +6,7 @@ type AuthMethodChooserProps = {
   onGoogleLoadingChange: (isLoading: boolean) => void
   onError: (message: string) => void
   nextPath?: string | null
+  flow?: 'signup'
 }
 
 function GoogleMark() {
@@ -31,12 +32,12 @@ function GoogleMark() {
   )
 }
 
-function AuthMethodChooser({ isGoogleLoading, onGoogleLoadingChange, onError, nextPath }: AuthMethodChooserProps) {
+function AuthMethodChooser({ isGoogleLoading, onGoogleLoadingChange, onError, nextPath, flow }: AuthMethodChooserProps) {
   const handleGoogleSignIn = async () => {
     try {
       onGoogleLoadingChange(true)
       onError('')
-      await signInWithGoogle(nextPath ?? getRequestedNextPath())
+      await signInWithGoogle(nextPath ?? getRequestedNextPath(), flow)
     } catch (error) {
       onError(error instanceof Error ? error.message : 'Google sign-in failed. Please try again.')
       onGoogleLoadingChange(false)

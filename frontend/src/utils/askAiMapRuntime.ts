@@ -1,3 +1,5 @@
+import { getApiUrl } from './apiClient'
+
 export type AskAiMapOptionalDetails = {
   categoryText?: string
   ratingText?: string
@@ -194,6 +196,21 @@ export function getLatestAskAiMapRequestId() {
   return latestAskAiMapRequestId
 }
 
+function notifyAskAiMapRequestCancelled(requestId: string) {
+  if (!requestId) return
+
+  void fetch(getApiUrl('/ask-ai/cancel'), {
+    method: 'POST',
+    cache: 'no-store',
+    keepalive: true,
+    headers: {
+      'Content-Type': 'application/json',
+      'x-request-id': requestId,
+    },
+    body: JSON.stringify({ requestId, usageType: 'ask_ai_maps' }),
+  }).catch(() => undefined)
+}
+
 export function incrementAskAiMapRequestVersion() {
   askAiMapRequestVersion += 1
   latestAskAiMapRequestId = `${Date.now()}-${askAiMapRequestVersion}`
@@ -206,6 +223,7 @@ export function getAskAiMapRequestVersion() {
 
 export function cancelAskAiMapRequest() {
   askAiMapRequestCancelled = true
+  notifyAskAiMapRequestCancelled(latestAskAiMapRequestId)
   askAiMapAbortController?.abort()
   askAiMapAbortController = null
   if (askAiMapTimeoutId !== null) {
@@ -220,6 +238,7 @@ export function cancelAskAiMapRequest() {
 }
 
 export function resetAskAiMapRuntimeState() {
+  notifyAskAiMapRequestCancelled(latestAskAiMapRequestId)
   askAiMapAbortController?.abort()
   askAiMapAbortController = null
   if (askAiMapTimeoutId !== null) {

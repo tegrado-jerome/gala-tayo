@@ -351,39 +351,40 @@ function ProfilePage({ session }: ProfilePageProps) {
       <PageHeroHeader
         eyebrow="Profile"
         title="Your GalaTayo profile"
-        description="Update how you show up, manage privacy, and keep your account details in sync."
+        description="Update how you show up and keep your account details in sync."
         icon={<AppIcon name="profile" className="h-4 w-4" />}
-        className="pb-0"
+        className="pb-1"
+        divider={false}
       />
 
       {isLoading && !profile ? <FormSkeleton rows={5} className="mt-5" /> : null}
       {profile ? (
         <>
-          <CardSurface pad="loose">
-            <div className="flex flex-col gap-5 border-b border-[var(--line)] pb-5 sm:flex-row sm:items-end sm:justify-between">
-              <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-end">
-                <div>
+          <CardSurface pad="loose" className="profile-summary-card">
+            <div className="profile-summary-header">
+              <div className="profile-summary-identity">
+                <div className="shrink-0">
                   <ProfileAvatar profile={profile} size="lg" />
                 </div>
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--chip)] px-3 py-1 text-[var(--accent-deep)]">
+                <div className="profile-summary-copy">
+                  <div className="profile-summary-meta">
+                    <span className="profile-summary-chip">
                       <AppIcon name={profile.is_public ? 'eye' : 'lock'} className="h-3.5 w-3.5" />
                       {profile.is_public ? 'Public profile' : 'Private profile'}
                     </span>
-                    <span>Default plans: {planVisibilityLabel[defaultPlanVisibility]}</span>
+                    <span className="profile-summary-state">Default plans: {planVisibilityLabel[defaultPlanVisibility]}</span>
                   </div>
-                  <h1 className="mt-3 truncate text-3xl font-black tracking-[-0.04em] text-slate-950 sm:text-4xl">
+                  <h1 className="profile-summary-title">
                     @{profile.username}
                   </h1>
-                  <p className="mt-2 max-w-2xl text-sm font-semibold leading-7 text-slate-600">
+                  <p className="profile-summary-bio">
                     {profile.bio || 'Give your profile a short intro so people know your vibe before they follow.'}
                   </p>
                 </div>
               </div>
 
               {profile.username ? (
-                <div className="flex flex-wrap gap-2">
+                <div className="profile-summary-actions">
                   <button
                     type="button"
                     onClick={() => navigateToPath(isGuestProfile ? '/login' : '/find-friends')}
@@ -406,20 +407,20 @@ function ProfilePage({ session }: ProfilePageProps) {
               ) : null}
             </div>
 
-            <div className="flex flex-wrap gap-x-8 gap-y-3 pt-4 text-sm">
-              <button type="button" onClick={() => void openList('followers')} className="inline-flex items-center gap-2 font-semibold text-slate-600 transition hover:text-slate-950">
-                <span className="text-lg font-black text-slate-950">{profile.followers_count ?? 0}</span>
+            <div className="profile-summary-stats">
+              <button type="button" onClick={() => void openList('followers')} className="profile-summary-stat">
+                <span>{profile.followers_count ?? 0}</span>
                 <span>Followers</span>
               </button>
-              <button type="button" onClick={() => void openList('following')} className="inline-flex items-center gap-2 font-semibold text-slate-600 transition hover:text-slate-950">
-                <span className="text-lg font-black text-slate-950">{profile.following_count ?? 0}</span>
+              <button type="button" onClick={() => void openList('following')} className="profile-summary-stat">
+                <span>{profile.following_count ?? 0}</span>
                 <span>Following</span>
               </button>
-              <span className="inline-flex items-center gap-2 font-semibold text-slate-600">
+              <span className="profile-summary-stat-note">
                 <AppIcon name={profile.is_public ? 'eye' : 'lock'} className="h-4 w-4 text-slate-400" />
                 {profile.is_public ? 'Follower and following lists are visible system-wide' : 'Follower and following names stay hidden system-wide'}
               </span>
-              <span className="inline-flex items-center gap-2 font-semibold text-slate-600">
+              <span className="profile-summary-stat-note">
                 <AppIcon name="profile" className="h-4 w-4 text-slate-400" />
                 {followRequests.length} pending requests
               </span>

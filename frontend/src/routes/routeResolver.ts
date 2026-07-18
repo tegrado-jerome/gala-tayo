@@ -72,6 +72,7 @@ export type RouteDescriptor =
   | { kind: 'public-profile'; username: string }
   | { kind: 'profile' }
   | { kind: 'account-settings' }
+  | { kind: 'privacy-center' }
   | { kind: 'change-password' }
   | { kind: 'favorites' }
   | { kind: 'history' }
@@ -294,6 +295,10 @@ export function resolveRouteDescriptor(inputs: RouteInputs): RouteDescriptor {
     isPath(pathname, '/account')
   ) {
     return { kind: 'account-settings' }
+  }
+
+  if (isPath(pathname, '/privacy-center')) {
+    return { kind: 'privacy-center' }
   }
 
   if (

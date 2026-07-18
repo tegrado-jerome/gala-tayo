@@ -35,16 +35,16 @@ const guideThemes: Record<FeatureGuideContent['id'], GuideTheme> = {
     sampleClassName: 'border-[var(--line)] bg-[var(--surface-alt)]',
   },
   chatbot: {
-    triggerClassName: 'border-[var(--line)] bg-[var(--panel)] text-[var(--muted)] shadow-sm',
-    triggerIconClassName: 'text-[var(--muted)]',
+    triggerClassName: 'border-amber-300 bg-amber-400 text-white shadow-sm gt-solid-bulb-pulse hover:border-amber-500 hover:bg-amber-500 hover:text-white',
+    triggerIconClassName: 'text-white',
     accentClassName: 'text-[var(--accent)]',
     badgeClassName: 'border-[var(--line)] bg-[var(--surface-alt)] text-[var(--muted)]',
     bulletClassName: 'bg-[var(--muted)]',
     sampleClassName: 'border-[var(--line)] bg-[var(--surface-alt)]',
   },
   maps: {
-    triggerClassName: 'border-[var(--line)] bg-[var(--panel)] text-[var(--muted)] shadow-sm',
-    triggerIconClassName: 'text-[var(--muted)]',
+    triggerClassName: 'border-amber-300 bg-amber-400 text-white shadow-sm gt-solid-bulb-pulse hover:border-amber-500 hover:bg-amber-500 hover:text-white',
+    triggerIconClassName: 'text-white',
     accentClassName: 'text-[var(--accent)]',
     badgeClassName: 'border-[var(--line)] bg-[var(--surface-alt)] text-[var(--muted)]',
     bulletClassName: 'bg-[var(--muted)]',
@@ -135,7 +135,7 @@ export function FeatureGuideModalTrigger({
               aria-modal="true"
               aria-labelledby={titleId}
               aria-describedby={`${descriptionId} ${bestForId} ${samplesId}`}
-              className="app-modal w-full max-w-[380px] p-5 sm:p-6"
+              className="app-modal w-full max-w-[340px] p-4 sm:max-w-[380px] sm:p-6"
               onMouseDown={(event) => event.stopPropagation()}
             >
               <div className="flex items-start justify-between gap-3">

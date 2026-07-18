@@ -236,11 +236,22 @@ export function toDisplayPlace(place: AskAiMapPlace, _query: string): AskAiMapDi
   const coordinateSource =
     coordinateRecord?.source ??
     (typeof placeRecord.coordinateSource === 'string' ? placeRecord.coordinateSource : undefined)
+  const coordinateConfidence =
+    coordinateRecord?.confidence === 'high' ||
+    place.coordinateConfidence === 'high'
+      ? 'high'
+      : coordinateRecord?.confidence === 'medium' ||
+          place.coordinateConfidence === 'medium'
+        ? 'medium'
+        : null
   const isCoordinateVerified =
-    place.coordinateStatus === 'geoapify_coordinate_fill' ||
-    coordinateRecord?.verified === true ||
-    coordinateRecord?.trusted === true ||
-    isTrustedCoordinateSource(coordinateSource)
+    coordinateConfidence === 'high' &&
+    (
+      place.coordinateStatus === 'geoapify_coordinate_fill' ||
+      ((coordinateRecord?.verified === true || coordinateRecord?.trusted === true) &&
+        isTrustedCoordinateSource(coordinateSource)) ||
+      isTrustedCoordinateSource(coordinateSource)
+    )
 
   const allRawFields = [
     details.categoryText,

@@ -78,6 +78,19 @@ function getCurrentPathWithSearch() {
   return `${window.location.pathname}${window.location.search}`
 }
 
+function hasEmptyHashFragment() {
+  return window.location.hash === '#' || (!window.location.hash && window.location.href.endsWith('#'))
+}
+
+function clearEmptyHashFragment() {
+  if (!hasEmptyHashFragment()) {
+    return false
+  }
+
+  window.history.replaceState(window.history.state, '', getCurrentPathWithSearch())
+  return true
+}
+
 function runWithInstantScroll(callback: () => void) {
   const html = document.documentElement
   const body = document.body
@@ -109,6 +122,7 @@ function consumePendingNavigationSource() {
 
 function navigateToPath(path: string) {
   if (getCurrentPathWithSearch() === path) {
+    clearEmptyHashFragment()
     return
   }
 
@@ -133,6 +147,7 @@ function navigateToPath(path: string) {
 
 function replaceWithPath(path: string) {
   if (getCurrentPathWithSearch() === path) {
+    clearEmptyHashFragment()
     return
   }
 
@@ -203,6 +218,7 @@ function navigateToCanonicalPlace({
 
 export {
   consumePendingNavigationSource,
+  clearEmptyHashFragment,
   navigateBackWithFallback,
   useBackNavigation,
   navigateToCanonicalPlace,

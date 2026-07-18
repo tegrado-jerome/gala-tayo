@@ -29,7 +29,7 @@ const termsSections: LegalSection[] = [
   {
     title: '2. Account Registration',
     body: [
-      'Users may need an account to access certain features, such as saving places, creating gala plans, posting comments, writing reviews, following users, submitting places, uploading photos, or using Ask AI features.',
+      'Users may need an account to access certain features, such as saving places, creating gala plans, posting comments, writing reviews, following users, submitting places, uploading photos, or using GalaTayo AI features.',
       'When creating or using an account, you agree to provide accurate information and keep your account secure. You are responsible for activity under your account.',
       'You must be at least 13 years old to create an account or use GalaTayo. If you are under 13, you may not create an account or use the system.',
       'GalaTayo may use third-party authentication providers, such as Google Sign-In, if enabled in the system.',
@@ -78,7 +78,7 @@ const termsSections: LegalSection[] = [
     title: '8. Third-Party Place Images',
     body: [
       'GalaTayo may display place-related images from third-party or publicly available sources to support place discovery and viewing. GalaTayo does not claim ownership over third-party images unless expressly stated.',
-      `Rights owners may contact ${contactEmail} for review. GalaTayo may remove, replace, or update images as appropriate.`,
+      `Rights owners may contact ${contactEmail} for review and takedown requests. Please include the image or content URL, proof or explanation of your concern, and your preferred contact details. GalaTayo may remove, replace, restrict, or update images as appropriate.`,
     ],
   },
   {
@@ -93,6 +93,7 @@ const termsSections: LegalSection[] = [
     body: [
       'Users may report content, comments, reviews, profiles, places, photos, or other activity that appears to violate these Terms. GalaTayo may review reports and take action when needed.',
       'Actions may include hiding content, removing content, limiting features, rejecting submitted places, removing uploaded photos, suspending accounts, or keeping moderation records for safety, abuse prevention, accountability, and system integrity.',
+      `For copyright claims, defamatory content, privacy-invasive posts, incorrect place information, or safety-sensitive concerns, contact ${contactEmail} with enough detail for review. GalaTayo may preserve relevant records while reviewing the concern or complying with applicable law.`,
     ],
   },
   {
@@ -109,7 +110,7 @@ const termsSections: LegalSection[] = [
     ],
   },
   {
-    title: '13. Ask AI and Live Search Features',
+    title: '13. GalaTayo AI and Live Search Features',
     body: [
       'AI-generated answers may be incomplete, outdated, inaccurate, or based on limited information. AI responses should not be treated as professional, legal, medical, financial, safety, or emergency guidance.',
       'Users should verify important information before relying on AI-generated responses.',
@@ -145,14 +146,18 @@ const termsSections: LegalSection[] = [
   },
   {
     title: '19. Limitation of Responsibility',
-    body: ['GalaTayo is provided on an “as is” and “as available” basis. To the extent allowed by law, GalaTayo is not responsible for losses, inconvenience, harm, or damages caused by reliance on inaccurate information, third-party content, user content, uploaded photos, AI responses, map errors, route issues, service interruptions, or user-generated content.'],
+    body: ['GalaTayo is provided on an "as is" and "as available" basis. To the extent allowed by law, GalaTayo is not responsible for losses, inconvenience, harm, or damages caused by reliance on inaccurate information, third-party content, user content, uploaded photos, AI responses, map errors, route issues, service interruptions, or user-generated content. Nothing in these Terms limits rights or remedies that cannot be waived under applicable Philippines law.'],
   },
   {
-    title: '20. Updates to These Terms',
+    title: '20. Governing Law and Venue',
+    body: ['These Terms are intended to be interpreted under the laws of the Republic of the Philippines, subject to any mandatory law that applies to a user or dispute. If a formal dispute is filed, venue should be in the proper courts or agencies in the Philippines unless applicable law requires otherwise.'],
+  },
+  {
+    title: '21. Updates to These Terms',
     body: ['GalaTayo may update these Terms from time to time. If major changes are made, users may be notified through the system, email, or another reasonable method. Continued use of GalaTayo after changes means you agree to the updated Terms.'],
   },
   {
-    title: '21. Contact',
+    title: '22. Contact',
     body: [`For questions, reports, rights concerns, privacy concerns, or image/content concerns, contact GalaTayo Support / Privacy Contact at ${contactEmail}.`],
   },
 ]
@@ -167,7 +172,7 @@ const privacySections: LegalSection[] = [
   },
   {
     title: '2. Personal Data We May Collect',
-    body: ['GalaTayo may collect account information, profile information, onboarding and policy acceptance records, app activity, user-submitted places, uploaded photos, Ask AI and Live Search activity, technical and security information, and location-related information depending on the features you use.'],
+    body: ['GalaTayo may collect account information, profile information, onboarding and policy acceptance records, app activity, user-submitted places, uploaded photos, GalaTayo AI and Live Search activity, technical and security information, and location-related information depending on the features you use.'],
     bullets: [
       'Account data may include user ID, email, login provider, account creation date, session-related information, account status, and onboarding status.',
       'Profile data may include first name, middle name, last name, display name, username, avatar URL, bio, visibility settings, follower/following settings, and timestamps.',
@@ -203,7 +208,7 @@ const privacySections: LegalSection[] = [
   },
   {
     title: '9. AI Feature Privacy',
-    body: ['If Ask AI or Live Search is used, prompts and related context may be processed to generate responses. Users should avoid submitting sensitive personal information, passwords, private documents, financial details, medical information, or information about other people into AI prompts.'],
+    body: ['If GalaTayo AI or Live Search is used, prompts and related context may be processed to generate responses. Users should avoid submitting sensitive personal information, passwords, private documents, financial details, medical information, or information about other people into AI prompts.'],
   },
   {
     title: '10. Service Emails',

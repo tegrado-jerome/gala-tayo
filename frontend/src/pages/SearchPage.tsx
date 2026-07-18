@@ -35,7 +35,7 @@ function SearchPageLandingBar({
 
   return (
     <div
-      className="mt-7 flex h-[56px] w-full items-center justify-between rounded-[20px] border border-slate-200/70 bg-transparent px-4 text-[var(--accent-deep)] transition hover:border-slate-300 hover:bg-slate-50/70"
+      className="mt-7 flex h-14 w-full items-center justify-between rounded-[20px] border border-slate-200/70 bg-transparent px-4 text-[var(--accent-deep)] transition hover:border-slate-300 hover:bg-slate-50/70"
       onClick={() => inputRef.current?.focus()}
     >
       <span className="flex min-w-0 flex-1 items-center gap-2.5 text-[var(--accent-deep)]">
@@ -142,6 +142,7 @@ function SearchPage({
 }: {
   navigationSource?: 'push' | 'replace' | 'pop'
 }) {
+  const searchSuggestions = ['Coffee shops in Makati', 'Beach resorts in Boracay', 'Things to do in Baguio']
   const routeSearchState = readSearchUrlState(window.location.search)
   const initialQuery = routeSearchState.q
   const initialPage = routeSearchState.page
@@ -246,7 +247,7 @@ function SearchPage({
           <PageHeroHeader
             eyebrow="Search"
             title="Find your next gala spot"
-            description="Search places, cities, or categories and fine-tune results with filters."
+            description="Search places, cities, or categories and fine-tune results."
             icon={<Search className="h-4 w-4" />}
             className="pb-0"
             centered
@@ -354,9 +355,21 @@ function SearchPage({
             <Search className="h-4 w-4 shrink-0" />
             {activeTypedQuery.length > 0 ? 'Search places' : 'Apply filters'}
           </button>
-          <p className="mt-2 text-center text-xs font-medium text-slate-500">
-            You can search with filters only, text only, or both together.
-          </p>
+          <div className="mt-3 text-center">
+            <p className="mb-2 text-xs font-bold text-slate-400">Popular:</p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {searchSuggestions.map((suggestion) => (
+                <button
+                  key={suggestion}
+                  type="button"
+                  onClick={() => setDraftQuery(suggestion)}
+                  className="inline-flex min-h-8 items-center rounded-full border border-[rgba(148,163,184,0.22)] bg-white/60 px-3.5 text-xs font-semibold text-slate-500 shadow-[0_6px_14px_rgba(15,23,42,0.03)] transition hover:border-[rgba(var(--accent-rgb),0.24)] hover:bg-white hover:text-[var(--accent-deep)]"
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          </div>
         </section>
       </main>
     </div>

@@ -19,8 +19,7 @@ import {
 } from '../utils/askAiRuntime'
 import type { ChatMessage } from '../utils/askAiRuntime'
 import { getApiUrl } from '../utils/apiClient'
-import { getAskAiUsageStatusFromResponse, isAskAiUsageStatusExpired, type AskAiUsageResponse, type AskAiUsageStatus } from '../utils/askAiUsage'
-import { readCachedAskAiUsage, subscribeToCachedAskAiUsage, writeCachedAskAiUsage, writeCachedAskAiUsageFromResponse } from '../utils/askAiUsageCache'
+import { getAskAiUsageStatusFromResponse, type AskAiUsageResponse, type AskAiUsageStatus } from '../utils/askAiUsage'
 import { buildAskAiRequestHeaders, getOrCreateAskAiGuestId } from '../utils/askAiIdentity'
 import {
   trackAskAiChatbotUsed,
@@ -138,15 +137,10 @@ function SearchHub({
   const initialRouteCache = initialRouteCacheRef.current
   const [selectedMode, setSelectedMode] = useState<SearchMode>(initialMode)
   const { session, isSessionLoading } = useSavedFavorites()
-  const [askAiUsageStatus, setAskAiUsageStatus] = useState<AskAiUsageStatus | null>(
-    readCachedAskAiUsage('chatbotAi') ??
-      (shouldUseCachedAskAiState ? initialAskAiState?.usageStatus ?? null : null)
-  )
+  const [askAiUsageStatus, setAskAiUsageStatus] = useState<AskAiUsageStatus | null>(null)
   const [isAskAiUsageLoading, setIsAskAiUsageLoading] = useState(false)
   const [askAiUsageError, setAskAiUsageError] = useState<string | null>(null)
-  const [askAiUsageRefreshSignal, setAskAiUsageRefreshSignal] = useState(
-    isAskAiUsageStatusExpired(readCachedAskAiUsage('chatbotAi')) ? 1 : 0
-  )
+  const [askAiUsageRefreshSignal, setAskAiUsageRefreshSignal] = useState(0)
   const [askAiQuestion, setAskAiQuestion] = useState(
     shouldUseCachedAskAiState
       ? initialAskAiState?.question ?? ''
@@ -801,7 +795,7 @@ function SearchHub({
       answer: initialAskAiState?.answer ?? '',
       sources: initialAskAiState?.sources ?? [],
       answerError: initialAskAiState?.answerError ?? null,
-      usageStatus: readCachedAskAiUsage('chatbotAi') ?? initialAskAiState?.usageStatus ?? null,
+      usageStatus: null,
       isSubmitting: initialAskAiState?.isSubmitting === true,
       messages: initialAskAiState?.messages ?? [],
       jobId: initialAskAiState?.jobId ?? null,
@@ -905,30 +899,6 @@ function SearchHub({
   }, [initialMode, session?.access_token])
 
   useEffect(() => {
-    writeCachedAskAiUsage('chatbotAi', askAiUsageStatus)
-  }, [askAiUsageStatus])
-
-  useEffect(() => {
-    return subscribeToCachedAskAiUsage('chatbotAi', (usageStatus) => {
-      setAskAiUsageStatus((currentUsageStatus) => {
-        if (
-          currentUsageStatus?.usageType === usageStatus?.usageType &&
-          currentUsageStatus?.allowed === usageStatus?.allowed &&
-          currentUsageStatus?.limit === usageStatus?.limit &&
-          currentUsageStatus?.used === usageStatus?.used &&
-          currentUsageStatus?.remaining === usageStatus?.remaining &&
-          currentUsageStatus?.resetAt === usageStatus?.resetAt &&
-          currentUsageStatus?.message === usageStatus?.message
-        ) {
-          return currentUsageStatus
-        }
-
-        return usageStatus
-      })
-    })
-  }, [])
-
-  useEffect(() => {
     if (!askAiUsageStatus?.allowed) {
       return
     }
@@ -977,6 +947,7 @@ function SearchHub({
 
         const response = await fetch(usageEndpoint, {
           method: 'GET',
+          cache: 'no-store',
           headers: buildAskAiRequestHeaders(session?.access_token ?? null),
           signal: controller.signal,
         })
@@ -986,8 +957,6 @@ function SearchHub({
         if (!response.ok) {
           throw new Error(data.message || data.error || 'Failed to check Ask AI usage.')
         }
-
-        writeCachedAskAiUsageFromResponse(data)
 
         const usageStatus = getAskAiUsageStatusFromResponse(data, ['chatbotAi'])
 

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent, type RefObject } from 'react'
-import { Bot, ChevronRight, Heart, Home, MapPin, Search, SlidersHorizontal, Sparkles, Star, User } from 'lucide-react'
+import { Bot, ChevronRight, Flame, Heart, Home, LayoutGrid, MapPin, Search, SlidersHorizontal, Sparkles, Star } from 'lucide-react'
 import { useAppUser } from '../context/AppUserContext'
 import UserMenu from '../components/UserMenu'
 import { AppSkeleton } from '../components/AppUI'
@@ -33,6 +33,7 @@ import { readHomeRouteCache, writeHomeRouteCache } from '../utils/homeRouteCache
 import { getCanonicalPlacePath, resolveAreaMeta } from '../utils/routes'
 import { placeCategories } from '../data/placeCategories'
 import { fetchPlaceDetailsBatch, prefetchPlaceDetail, readCachedPlaceDetail } from '../utils/placeDetailCache'
+import { getStaticPlaceImageUrlForSlug } from '../data/placeIndexVisuals'
 import type { PlaceDetail } from '../types/appTypes'
 
 type BackendSearchPlace = {
@@ -296,6 +297,29 @@ function getPlaceImage(place: ShowcasePlace) {
     place.curatedImageUrls?.[0]?.trim() ||
     null
   )
+}
+
+function getHomeTileImageCandidates(place: ShowcasePlace | null) {
+  if (!place) {
+    return []
+  }
+
+  const candidates = [
+    place.thumbnailUrl,
+    place.imageUrl,
+    ...(place.curatedImageUrls ?? []),
+    getStaticPlaceImageUrlForSlug(place.slug ?? place.id),
+  ]
+
+  return candidates.reduce<string[]>((uniqueCandidates, candidate) => {
+    const imageUrl = candidate?.trim()
+
+    if (imageUrl && !uniqueCandidates.includes(imageUrl)) {
+      uniqueCandidates.push(imageUrl)
+    }
+
+    return uniqueCandidates
+  }, [])
 }
 
 function getPlaceRatingText(place: ShowcasePlace) {
@@ -741,9 +765,16 @@ function HomeCategoryTile({
   onClick: () => void
 }) {
   void isLoading
-  const imageUrl = place ? getPlaceImage(place) : null
-  const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null)
-  const shouldShowImage = Boolean(imageUrl) && failedImageUrl !== imageUrl
+  const imageCandidates = useMemo(() => getHomeTileImageCandidates(place), [place])
+  const [failedImageUrls, setFailedImageUrls] = useState<string[]>([])
+  const imageUrl = imageCandidates.find((candidate) => !failedImageUrls.includes(candidate)) ?? null
+  const shouldShowImage = Boolean(imageUrl)
+
+  useEffect(() => {
+    setFailedImageUrls((currentValue) =>
+      currentValue.filter((failedImageUrl) => imageCandidates.includes(failedImageUrl))
+    )
+  }, [imageCandidates])
 
   return (
     <button
@@ -765,11 +796,17 @@ function HomeCategoryTile({
               alt={label}
               className="h-full w-full object-cover"
               draggable={false}
-              loading="lazy"
+              loading="eager"
               decoding="async"
-              fetchPriority="auto"
+              fetchPriority="high"
               sizes="(min-width: 1024px) 92px, (min-width: 768px) 84px, 22vw"
-              onError={() => setFailedImageUrl(imageUrl)}
+              onError={() => {
+                if (imageUrl) {
+                  setFailedImageUrls((currentValue) =>
+                    currentValue.includes(imageUrl) ? currentValue : [...currentValue, imageUrl]
+                  )
+                }
+              }}
             />
           </div>
         ) : (
@@ -1395,6 +1432,30 @@ function HomePage({
   }, [categoryTilePlaceByLabel, liveCategoryPlaceById, livePlaceBySlug, selectedCategoryTileLabel])
 
   useEffect(() => {
+    const imageUrls = new Set<string>()
+
+    for (const tile of [...cityTiles, ...categoryTiles]) {
+      for (const imageUrl of getHomeTileImageCandidates(tile.place)) {
+        imageUrls.add(imageUrl)
+      }
+    }
+
+    const preloadedImages = Array.from(imageUrls).map((imageUrl) => {
+      const image = new Image()
+      image.decoding = 'async'
+      image.src = imageUrl
+      return image
+    })
+
+    return () => {
+      for (const image of preloadedImages) {
+        image.onload = null
+        image.onerror = null
+      }
+    }
+  }, [categoryTiles, cityTiles])
+
+  useEffect(() => {
     const controller = new AbortController()
 
     async function loadTrendingPlaces() {
@@ -1805,7 +1866,7 @@ function HomePage({
             </div>
             <div className="flex items-center justify-between gap-4">
               <p className="min-w-0 flex-1 truncate text-[18px] font-medium leading-tight text-[var(--text-main)] sm:text-[18px]">
-                Hi, <span className="inline-flex items-center gap-1.5 font-bold">{greetingName}<User className="h-4 w-4 shrink-0 text-[var(--accent-deep)]" strokeWidth={2.2} /></span>
+                Hi, <span className="font-bold">{greetingName}!</span>
               </p>
 
               <UserMenu user={currentUser} profile={currentProfile} compact />
@@ -1866,7 +1927,12 @@ function HomePage({
           <div className="mt-8 grid min-w-0 gap-7 md:mt-10 md:gap-10 lg:gap-12">
             <section className="min-w-0 md:-mt-1">
               <div className="flex items-center justify-between gap-3">
-                <h2 className="text-[24px] font-bold tracking-[-0.04em] text-slate-950">Top Picks</h2>
+                <h2 className="home-top-picks-heading inline-flex items-center gap-2 text-[24px] font-bold tracking-[-0.04em] text-slate-950">
+                  <span className="home-top-picks-flame" aria-hidden="true">
+                    <Flame className="h-5 w-5" strokeWidth={2.2} />
+                  </span>
+                  <span className="home-top-picks-title">Top Picks</span>
+                </h2>
                 <div className="flex items-center gap-3">
                   {activeTopPicksTab === 'all' ? (
                     <button
@@ -1973,7 +2039,7 @@ function HomePage({
 
             <section className="min-w-0">
               <div className="flex items-center justify-between gap-3">
-                <h2 className="text-[22px] font-bold tracking-[-0.04em] text-slate-950">Cities</h2>
+                <h2 className="inline-flex items-center gap-2 text-[22px] font-bold tracking-[-0.04em] text-slate-950"><MapPin className="h-5 w-5" strokeWidth={2.2} />Cities</h2>
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
@@ -2020,7 +2086,7 @@ function HomePage({
 
             <section className="min-w-0">
               <div className="flex items-center justify-between gap-3">
-                <h2 className="text-[22px] font-bold tracking-[-0.04em] text-slate-950">Categories</h2>
+                <h2 className="inline-flex items-center gap-2 text-[22px] font-bold tracking-[-0.04em] text-slate-950"><LayoutGrid className="h-5 w-5" strokeWidth={2.2} />Categories</h2>
                 <div className="flex items-center gap-3">
                   <button
                     type="button"

@@ -18,7 +18,7 @@ function BottomNavGate({ pathname }: { pathname: string }) {
   return <MobileBottomNav currentPath={pathname} />
 }
 
-export function AppShell({ session, currentUser, currentProfile, adminMfa, hasResolvedInitialAuth, pathname, search, showLogoutTransition, children }: {
+export function AppShell({ session, currentUser, currentProfile, adminMfa, hasResolvedInitialAuth, pathname, search, showLogoutTransition, isLogoutTransitionExiting, children }: {
   session: Session | null
   currentUser: CurrentUserResponse['user'] | null
   currentProfile: CurrentUserResponse['profile'] | null
@@ -30,6 +30,7 @@ export function AppShell({ session, currentUser, currentProfile, adminMfa, hasRe
   pathname: string
   search: string
   showLogoutTransition: boolean
+  isLogoutTransitionExiting: boolean
   children: ReactNode
 }) {
   const { showMobileBottomNav, shouldApplyGenericNoindex } = getAppShellState(pathname, search)
@@ -53,9 +54,11 @@ export function AppShell({ session, currentUser, currentProfile, adminMfa, hasRe
                 <div>{children}</div>
               </Suspense>
               {showLogoutTransition ? (
-                <div className="gala-logout-overlay" aria-live="polite" aria-busy="true">
+                <div className={`gala-logout-overlay ${isLogoutTransitionExiting ? 'exit' : 'enter'}`} aria-live="polite" aria-busy="true">
                   <div className="gala-logout-card">
                     <PageShellSkeleton className="max-h-[360px] overflow-hidden px-0 py-0" />
+                    <p className="gala-logout-title">Logging out</p>
+                    <p className="gala-logout-message">Switching to Guest mode...</p>
                   </div>
                 </div>
               ) : null}

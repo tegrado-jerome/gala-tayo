@@ -69,7 +69,7 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
   const avatarUrl = effectiveUser ? getAvatarUrl(effectiveProfile) : ''
   const resolvedAvatarSrc = useAvatarImageSrc(avatarUrl)
   const shouldShowAvatar = Boolean(effectiveUser && avatarUrl && failedAvatarUrl !== avatarUrl)
-  const displayName = effectiveUser ? getDisplayName(effectiveUser, effectiveProfile) : 'Welcome to GalaTayo'
+  const displayName = effectiveUser ? getDisplayName(effectiveUser, effectiveProfile) : 'Guest'
   const initials = effectiveUser ? getInitials(effectiveUser, effectiveProfile) : 'GT'
   const useDesktopPopover = compact && isDesktopMenu
 
@@ -178,6 +178,10 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
           await new Promise((resolve) => window.setTimeout(resolve, MENU_CLOSE_DURATION_MS))
         },
       })
+
+      setIsSigningOut(false)
+      setSigningOutUser(null)
+      setSigningOutProfile(null)
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Sign out failed. Try again.')
       setIsSigningOut(false)
@@ -202,8 +206,10 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
     'pointer-events-none group flex w-full items-center gap-4 rounded-xl px-3 py-3 text-left text-[15px] font-medium text-slate-400 opacity-90'
   const soonMenuIconClass =
     'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-slate-400 ring-1 ring-slate-200'
-  const submenuItemClass =
-    'group flex w-full items-center gap-4 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
+  const helpMenuItemClass =
+    'group flex w-full items-center gap-4 rounded-xl px-3 py-3 text-left text-[15px] font-medium text-slate-800 transition hover:bg-slate-50 focus:outline-none'
+  const helpSubmenuItemClass =
+    'group flex w-full items-center gap-4 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none'
   const submenuIconClass =
     'flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white text-[var(--accent)] ring-1 ring-slate-200 transition group-hover:bg-[var(--accent-wash)]'
   const panelShellClass = useDesktopPopover
@@ -379,10 +385,15 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
                     <span className="flex-1">Account Settings</span>
                     <AppIcon name="chevronRight" className="h-4 w-4 text-slate-500" />
                   </button>
+                  <button type="button" onClick={() => closeAndNavigate('/privacy-center')} className={menuItemClass} role="menuitem">
+                    <span className={menuIconClass}><AppIcon name="reports" size="ui" /></span>
+                    <span className="flex-1">Privacy Center</span>
+                    <AppIcon name="chevronRight" className="h-4 w-4 text-slate-500" />
+                  </button>
                   <button
                     type="button"
                     onClick={() => setIsHelpOpen((currentValue) => !currentValue)}
-                    className={menuItemClass}
+                    className={helpMenuItemClass}
                     role="menuitem"
                     aria-expanded={isHelpOpen}
                     aria-controls="drawer-help-feedback"
@@ -393,12 +404,12 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
                   </button>
                   {isHelpOpen ? (
                     <div id="drawer-help-feedback" className={helpGroupClass} role="group" aria-label="Help and feedback links">
-                      <button type="button" onClick={() => closeAndNavigate('/feedback')} className={submenuItemClass} role="menuitem">
+                      <button type="button" onClick={() => closeAndNavigate('/feedback')} className={helpSubmenuItemClass} role="menuitem">
                         <span className={submenuIconClass}><AppIcon name="send" size={16} /></span>
                         <span className="flex-1">Send feedback</span>
                         <AppIcon name="chevronRight" className="h-4 w-4 text-slate-400" />
                       </button>
-                      <button type="button" onClick={() => closeAndNavigate('/reports')} className={submenuItemClass} role="menuitem">
+                      <button type="button" onClick={() => closeAndNavigate('/reports')} className={helpSubmenuItemClass} role="menuitem">
                         <span className={submenuIconClass}><AppIcon name="reports" size={16} /></span>
                         <span className="flex-1">My reports</span>
                         <AppIcon name="chevronRight" className="h-4 w-4 text-slate-400" />
@@ -424,7 +435,7 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
                 <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 text-slate-700 ring-1 ring-slate-300">
                   <AppIcon name="profile" size="emptyLg" />
                 </span>
-                <p className={`${useDesktopPopover ? 'mt-5' : 'mt-8'} text-xl font-semibold text-slate-950`}>Welcome to GalaTayo</p>
+                <p className={`${useDesktopPopover ? 'mt-5' : 'mt-8'} text-xl font-semibold text-slate-950`}>Guest</p>
                 <p className="mx-auto mt-2 max-w-[260px] text-sm leading-6 text-slate-500">
                   Log in or sign up to save favorites and keep your gala history.
                 </p>
@@ -531,31 +542,36 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
                   <span className="flex-1">Account Settings</span>
                   <AppIcon name="chevronRight" className="h-4 w-4 text-slate-500" />
                 </button>
+                <button type="button" onClick={() => closeAndNavigate('/privacy-center')} className={menuItemClass} role="menuitem">
+                  <span className={menuIconClass}><AppIcon name="reports" size="ui" /></span>
+                  <span className="flex-1">Privacy Center</span>
+                  <AppIcon name="chevronRight" className="h-4 w-4 text-slate-500" />
+                </button>
                 <button
                   type="button"
-                  onClick={() => setIsHelpOpen((currentValue) => !currentValue)}
-                  className={menuItemClass}
-                  role="menuitem"
-                  aria-expanded={isHelpOpen}
-                  aria-controls="drawer-help-feedback"
-                >
-                  <span className={menuIconClass}><AppIcon name="comments" size="ui" /></span>
-                  <span className="flex-1">Help & Feedback</span>
-                  <AppIcon name="chevronDown" className={`h-4 w-4 text-slate-500 transition ${isHelpOpen ? 'rotate-180' : ''}`} />
-                </button>
-                {isHelpOpen ? (
-                  <div id="drawer-help-feedback" className={helpGroupClass} role="group" aria-label="Help and feedback links">
-                    <button type="button" onClick={() => closeAndNavigate('/feedback')} className={submenuItemClass} role="menuitem">
-                      <span className={submenuIconClass}><AppIcon name="send" size={16} /></span>
-                      <span className="flex-1">Send feedback</span>
-                      <AppIcon name="chevronRight" className="h-4 w-4 text-slate-400" />
-                    </button>
-                    <button type="button" onClick={() => closeAndNavigate('/reports')} className={submenuItemClass} role="menuitem">
-                      <span className={submenuIconClass}><AppIcon name="reports" size={16} /></span>
-                      <span className="flex-1">My reports</span>
-                      <AppIcon name="chevronRight" className="h-4 w-4 text-slate-400" />
-                    </button>
-                  </div>
+                    onClick={() => setIsHelpOpen((currentValue) => !currentValue)}
+                    className={helpMenuItemClass}
+                    role="menuitem"
+                    aria-expanded={isHelpOpen}
+                    aria-controls="drawer-help-feedback"
+                  >
+                    <span className={menuIconClass}><AppIcon name="comments" size="ui" /></span>
+                    <span className="flex-1">Help & Feedback</span>
+                    <AppIcon name="chevronDown" className={`h-4 w-4 text-slate-500 transition ${isHelpOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {isHelpOpen ? (
+                    <div id="drawer-help-feedback" className={helpGroupClass} role="group" aria-label="Help and feedback links">
+                      <button type="button" onClick={() => closeAndNavigate('/feedback')} className={helpSubmenuItemClass} role="menuitem">
+                        <span className={submenuIconClass}><AppIcon name="send" size={16} /></span>
+                        <span className="flex-1">Send feedback</span>
+                        <AppIcon name="chevronRight" className="h-4 w-4 text-slate-400" />
+                      </button>
+                      <button type="button" onClick={() => closeAndNavigate('/reports')} className={helpSubmenuItemClass} role="menuitem">
+                        <span className={submenuIconClass}><AppIcon name="reports" size={16} /></span>
+                        <span className="flex-1">My reports</span>
+                        <AppIcon name="chevronRight" className="h-4 w-4 text-slate-400" />
+                      </button>
+                    </div>
                 ) : null}
                 <button
                   type="button"
@@ -576,7 +592,7 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
               <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 text-slate-700 ring-1 ring-slate-300">
                 <AppIcon name="profile" size="emptyLg" />
               </span>
-              <p className="mt-5 text-xl font-semibold text-slate-950">Welcome to GalaTayo</p>
+              <p className="mt-5 text-xl font-semibold text-slate-950">Guest</p>
               <p className="mx-auto mt-2 max-w-[260px] text-sm leading-6 text-slate-500">
                 Log in or sign up to save favorites and keep your gala history.
               </p>
