@@ -69,13 +69,6 @@ function writeCache(userId: string, cache: ProfilePageCache) {
   }
 }
 
-const planVisibilityLabel: Record<Profile['default_gala_plan_visibility'], string> = {
-  private: 'Private',
-  followers: 'Followers only',
-  public: 'Public',
-  unlisted: 'Unlisted',
-}
-
 let memCache: { profile: Profile; followRequests: FollowRequest[] } | null = null
 let memCachedUserId: string | null = null
 
@@ -370,9 +363,8 @@ function ProfilePage({ session }: ProfilePageProps) {
                   <div className="profile-summary-meta">
                     <span className="profile-summary-chip">
                       <AppIcon name={profile.is_public ? 'eye' : 'lock'} className="h-3.5 w-3.5" />
-                      {profile.is_public ? 'Public profile' : 'Private profile'}
                     </span>
-                    <span className="profile-summary-state">{planVisibilityLabel[defaultPlanVisibility]}</span>
+                    <span className="profile-summary-state">{profile.is_public ? 'Public' : 'Private'}</span>
                   </div>
                   <h1 className="profile-summary-title">
                     @{profile.username}
@@ -646,7 +638,7 @@ function ProfilePage({ session }: ProfilePageProps) {
               <button type="button" onClick={() => setListUsers(null)} className="h-9 rounded-full border border-[var(--line)] px-3 text-sm font-black">Close</button>
             </div>
             {listUsers.length === 0 ? <p className="mt-4 text-sm font-bold text-[var(--muted)]">No users yet.</p> : null}
-            <div className="mt-4 grid gap-2">
+            <div className="mt-4 grid gap-2 max-h-[20rem] overflow-y-auto pr-1">
               {listUsers.map((user) => (
                 <button
                   key={user.user_id}
@@ -681,7 +673,7 @@ function ProfilePage({ session }: ProfilePageProps) {
           <AppHeader />
           <main className="relative flex min-h-0 flex-1 overflow-hidden px-4 pb-12 pt-4 text-[var(--text)] sm:px-6 sm:pb-14 sm:pt-5 lg:py-10">
             <div className="pointer-events-none absolute inset-0 select-none overflow-hidden blur-[3px] opacity-40">
-              <PageContainer size="wide">{profileContent}</PageContainer>
+              <PageContainer size="wide" className="profile-page-container">{profileContent}</PageContainer>
             </div>
 
             <div className="relative z-20 flex w-full items-center justify-center">
@@ -695,7 +687,7 @@ function ProfilePage({ session }: ProfilePageProps) {
         <PageShell>
           <AppHeader />
           <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
-            <PageContainer size="wide">{profileContent}</PageContainer>
+            <PageContainer size="wide" className="profile-page-container">{profileContent}</PageContainer>
           </main>
         </PageShell>
       )}
