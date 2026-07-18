@@ -32,7 +32,12 @@ import {
 import { readHomeRouteCache, writeHomeRouteCache } from '../utils/homeRouteCache'
 import { getCanonicalPlacePath, resolveAreaMeta } from '../utils/routes'
 import { placeCategories } from '../data/placeCategories'
-import { fetchPlaceDetailsBatch, prefetchPlaceDetail, readCachedPlaceDetail } from '../utils/placeDetailCache'
+import {
+  fetchHomePlaceDetailsBatch,
+  prefetchPlaceDetail,
+  readCachedPlaceDetail,
+  type CityImageResolution,
+} from '../utils/placeDetailCache'
 import { getStaticPlaceImageUrlForSlug } from '../data/placeIndexVisuals'
 import type { PlaceDetail } from '../types/appTypes'
 
@@ -311,7 +316,10 @@ function mergeRecommendedPlaceWithLivePlace(
   }
 }
 
-function getHomeTileImageCandidates(place: ShowcasePlace | null) {
+function getHomeTileImageCandidates(
+  place: ShowcasePlace | null,
+  { includeStaticPlaceFallback = true }: { includeStaticPlaceFallback?: boolean } = {}
+) {
   if (!place) {
     return []
   }
@@ -320,7 +328,7 @@ function getHomeTileImageCandidates(place: ShowcasePlace | null) {
     place.thumbnailUrl,
     place.imageUrl,
     ...(place.curatedImageUrls ?? []),
-    getStaticPlaceImageUrlForSlug(place.slug ?? place.id),
+    includeStaticPlaceFallback ? getStaticPlaceImageUrlForSlug(place.slug ?? place.id) : null,
   ]
 
   return candidates.reduce<string[]>((uniqueCandidates, candidate) => {
@@ -433,6 +441,23 @@ function getHomepageCategoryCandidates(place: ShowcasePlace) {
 
 function buildCityHref(citySlug: string) {
   return `/places/${encodeURIComponent(citySlug)}`
+}
+
+function logHomeCityImageAudit(resolutions: CityImageResolution[]) {
+  if (!import.meta.env.DEV || resolutions.length === 0) {
+    return
+  }
+
+  console.info(
+    '[home-city-images]',
+    resolutions.map((resolution) => ({
+      citySlug: resolution.citySlug,
+      selectedPlaceSlug: resolution.place?.slug ?? null,
+      selectedImageUrl: resolution.imageUrl,
+      source: resolution.source,
+      warning: resolution.source === 'missing' ? 'No approved R2 image found for this city.' : null,
+    }))
+  )
 }
 
 const homepageCityTilePlaceSlugOverrides: Record<string, string> = {
@@ -781,15 +806,20 @@ function HomeCategoryTile({
   place,
   active = false,
   isLoading = false,
+  includeStaticPlaceFallback = true,
   onClick,
 }: {
   label: string
   place: ShowcasePlace | null
   active?: boolean
   isLoading?: boolean
+  includeStaticPlaceFallback?: boolean
   onClick: () => void
 }) {
-  const imageCandidates = useMemo(() => getHomeTileImageCandidates(place), [place])
+  const imageCandidates = useMemo(
+    () => getHomeTileImageCandidates(place, { includeStaticPlaceFallback }),
+    [includeStaticPlaceFallback, place]
+  )
   const [failedImageUrls, setFailedImageUrls] = useState<string[]>([])
   const imageUrl = imageCandidates.find((candidate) => !failedImageUrls.includes(candidate)) ?? null
   const shouldShowImage = Boolean(imageUrl)
@@ -1593,8 +1623,22 @@ function HomePage({
           .map((tile) => tile.place.slug?.trim().toLowerCase() ?? null)
           .filter((slug): slug is string => Boolean(slug))
 
+        const cityImageRequests = homeCityRecommendations.map((tile) => {
+          const citySlug = getHomepageCitySlug(tile.place)
+          return {
+            citySlug,
+            cityName: tile.place.city,
+            representativeSlug:
+              homepageCityTilePlaceSlugOverrides[citySlug] ??
+              tile.place.slug?.trim().toLowerCase() ??
+              null,
+          }
+        })
         const allSlugs = Array.from(new Set([...topPickSlugs, ...cityTileSlugs, ...categoryTileSlugs]))
-        const places = await fetchPlaceDetailsBatch(allSlugs)
+        const { places, cityImageResolutions } = await fetchHomePlaceDetailsBatch({
+          slugs: allSlugs,
+          cityImageRequests,
+        })
 
         if (isCancelled) {
           return
@@ -1623,22 +1667,14 @@ function HomePage({
           ),
         }))
 
+        logHomeCityImageAudit(cityImageResolutions)
+
         setCityTilePlaceBySlug(
           Object.fromEntries(
-            homeCityRecommendations
-              .map((tile) => {
-                const citySlug = getHomepageCitySlug(tile.place)
-                const placeSlug =
-                  homepageCityTilePlaceSlugOverrides[citySlug] ??
-                  tile.place.slug?.trim().toLowerCase() ??
-                  null
-
-                if (!placeSlug) {
-                  return null
-                }
-
-                const place = placeBySlug.get(placeSlug)
-                return place ? ([citySlug, place] as const) : null
+            cityImageResolutions
+              .map((resolution) => {
+                const place = resolution.place ? mapPlaceDetailToShowcasePlace(resolution.place) : null
+                return place && hasShowcaseImage(place) ? ([resolution.citySlug, place] as const) : null
               })
               .filter((entry): entry is readonly [string, ShowcasePlace] => Boolean(entry))
           )
@@ -2092,6 +2128,7 @@ function HomePage({
                         place={tile.place}
                         active={tile.active}
                         isLoading={!areHomeCardsLoaded}
+                        includeStaticPlaceFallback={false}
                         onClick={() => {
                           setSelectedCityTileSlug(tile.slug ?? null)
                           navigateToPath(tile.href)

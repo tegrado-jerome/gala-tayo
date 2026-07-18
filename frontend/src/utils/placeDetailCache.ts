@@ -1,6 +1,20 @@
 import { apiFetch } from './apiClient'
 import type { PlaceDetail } from '../types/appTypes'
 
+type CityImageRequest = {
+  citySlug: string
+  cityName?: string | null
+  representativeSlug?: string | null
+}
+
+type CityImageResolution = {
+  citySlug: string
+  representativeSlug: string | null
+  source: 'representative' | 'same-city-fallback' | 'missing'
+  imageUrl: string | null
+  place: PlaceDetail | null
+}
+
 const memoryCache = new Map<string, PlaceDetail>()
 const inflightRequests = new Map<string, Promise<PlaceDetail | null>>()
 const sessionStoragePrefix = 'galatayo:place-detail:'
@@ -132,9 +146,67 @@ async function fetchPlaceDetailsBatch(slugs: string[]): Promise<PlaceDetail[]> {
   return places
 }
 
+async function fetchHomePlaceDetailsBatch({
+  slugs,
+  cityImageRequests,
+}: {
+  slugs: string[]
+  cityImageRequests: CityImageRequest[]
+}): Promise<{ places: PlaceDetail[]; cityImageResolutions: CityImageResolution[] }> {
+  const normalizedSlugs = Array.from(
+    new Set(slugs.map((slug) => normalizeSlug(slug)).filter(Boolean))
+  )
+
+  const response = await apiFetch('/places/batch-details', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      slugs: normalizedSlugs,
+      cityImageRequests,
+    }),
+  })
+
+  if (!response.ok) {
+    return { places: [], cityImageResolutions: [] }
+  }
+
+  const data = (await response.json()) as {
+    places?: PlaceDetail[]
+    cityImageResolutions?: CityImageResolution[]
+  }
+
+  const places = Array.isArray(data.places) ? data.places : []
+  for (const place of places) {
+    cachePlaceDetail(place)
+  }
+
+  const cityImageResolutions = Array.isArray(data.cityImageResolutions)
+    ? data.cityImageResolutions.filter((resolution): resolution is CityImageResolution => (
+        Boolean(resolution) &&
+        typeof resolution === 'object' &&
+        typeof resolution.citySlug === 'string' &&
+        (resolution.source === 'representative' ||
+          resolution.source === 'same-city-fallback' ||
+          resolution.source === 'missing')
+      ))
+    : []
+
+  for (const resolution of cityImageResolutions) {
+    if (resolution.place) {
+      cachePlaceDetail(resolution.place)
+    }
+  }
+
+  return { places, cityImageResolutions }
+}
+
 export {
   cachePlaceDetail,
   fetchPlaceDetailsBatch,
+  fetchHomePlaceDetailsBatch,
   prefetchPlaceDetail,
   readCachedPlaceDetail,
 }
+export type { CityImageRequest, CityImageResolution }

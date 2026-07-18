@@ -75,6 +75,20 @@ export type PlaceDetail = {
   tags?: DetailTagMeta[];
 };
 
+export type CityImageRequest = {
+  citySlug: string;
+  cityName?: string | null;
+  representativeSlug?: string | null;
+};
+
+export type CityImageResolution = {
+  citySlug: string;
+  representativeSlug: string | null;
+  source: "representative" | "same-city-fallback" | "missing";
+  imageUrl: string | null;
+  place: PlaceDetail | null;
+};
+
 export function findPlaceDetailById(id: string): PlaceDetail | null {
   const trimmedId = id.trim().toLowerCase();
 
@@ -397,6 +411,60 @@ function normalizePlaceLookupKey(value: string): string {
   return value.trim().toLowerCase();
 }
 
+const CITY_SUFFIX_NORMALIZED_KEYS = new Set([
+  "caloocan",
+  "las-pinas",
+  "makati",
+  "malabon",
+  "mandaluyong",
+  "manila",
+  "marikina",
+  "muntinlupa",
+  "navotas",
+  "paranaque",
+  "pasay",
+  "pasig",
+  "taguig",
+  "valenzuela",
+]);
+
+function normalizeCityImageKey(value: string | null | undefined): string {
+  const normalized = value
+    ?.replace(/ÃƒÂ±/g, "n")
+    .replace(/Ã±/g, "n")
+    .replace(/ñ/g, "n")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") ?? "";
+
+  if (normalized.endsWith("-city")) {
+    const withoutCity = normalized.replace(/-city$/, "");
+    if (CITY_SUFFIX_NORMALIZED_KEYS.has(withoutCity)) {
+      return withoutCity;
+    }
+  }
+
+  return normalized;
+}
+
+function getDetailImageUrls(detail: Pick<PlaceDetail, "imageUrl" | "curatedImageUrls">): string[] {
+  const seen = new Set<string>();
+  const urls: string[] = [];
+
+  for (const candidate of [detail.imageUrl, ...(detail.curatedImageUrls ?? [])]) {
+    const imageUrl = candidate?.trim();
+    if (imageUrl && !seen.has(imageUrl)) {
+      seen.add(imageUrl);
+      urls.push(imageUrl);
+    }
+  }
+
+  return urls;
+}
+
 async function readCachedPlaceDetail(lookupKey: string): Promise<PlaceDetail | null> {
   const cachedDetail = await getJsonCacheValue<PlaceDetail>(buildPlaceDetailCacheKey(lookupKey));
   return cachedDetail ?? null;
@@ -581,6 +649,146 @@ export async function findPlaceDetailsBySlugs(slugs: string[]): Promise<Map<stri
   } catch {
     return detailsBySlug;
   }
+}
+
+export async function resolveCityImageDetails(
+  requests: CityImageRequest[]
+): Promise<Map<string, CityImageResolution>> {
+  const normalizedRequests = requests
+    .map((request) => {
+      const citySlug = normalizeCityImageKey(request.citySlug);
+      const cityNameKey = normalizeCityImageKey(request.cityName);
+      const representativeSlug = request.representativeSlug?.trim().toLowerCase() || null;
+
+      if (!citySlug) {
+        return null;
+      }
+
+      return {
+        citySlug,
+        cityKeys: new Set([citySlug, cityNameKey].filter(Boolean)),
+        representativeSlug,
+      };
+    })
+    .filter((request): request is {
+      citySlug: string;
+      cityKeys: Set<string>;
+      representativeSlug: string | null;
+    } => request !== null);
+
+  const resolutions = new Map<string, CityImageResolution>();
+
+  if (normalizedRequests.length === 0) {
+    return resolutions;
+  }
+
+  const representativeSlugs = normalizedRequests
+    .map((request) => request.representativeSlug)
+    .filter((slug): slug is string => Boolean(slug));
+  const representativeDetailsBySlug = await findPlaceDetailsBySlugs(representativeSlugs);
+  const unresolvedRequests = normalizedRequests.filter((request) => {
+    const representativeDetail = request.representativeSlug
+      ? representativeDetailsBySlug.get(request.representativeSlug)
+      : null;
+
+    if (!representativeDetail || getDetailImageUrls(representativeDetail).length === 0) {
+      return true;
+    }
+
+    resolutions.set(request.citySlug, {
+      citySlug: request.citySlug,
+      representativeSlug: request.representativeSlug,
+      source: "representative",
+      imageUrl: getDetailImageUrls(representativeDetail)[0] ?? null,
+      place: representativeDetail,
+    });
+
+    return false;
+  });
+
+  if (unresolvedRequests.length === 0) {
+    return resolutions;
+  }
+
+  try {
+    const requestedCityKeys = new Set(unresolvedRequests.flatMap((request) => Array.from(request.cityKeys)));
+    const supabase = await getSupabaseAdminClient();
+    const { data, error } = await (supabase.from("places") as any)
+      .select(PLACE_DETAIL_COLUMNS)
+      .eq("status", "active")
+      .order("name", { ascending: true, nullsFirst: false })
+      .limit(1000);
+
+    if (error) {
+      throw error;
+    }
+
+    const rows = ((data || []) as Array<Record<string, unknown>>).filter((row) => {
+      const rowCityKey = normalizeCityImageKey(getNullableString(row.city));
+      return rowCityKey && requestedCityKeys.has(rowCityKey);
+    });
+    const resolvedPlaceIds = rows
+      .map((row) => getNullableString(row.id))
+      .filter((placeId): placeId is string => Boolean(placeId));
+    const imagesByPlaceId = await getApprovedPlaceImagesByPlaceIds(resolvedPlaceIds);
+    const imageBackedDetailsByCityKey = new Map<string, PlaceDetail[]>();
+
+    for (const row of rows) {
+      const detail = mapPlaceRowToDetail(row);
+      const images = imagesByPlaceId.get(detail.id) ?? [];
+      const imageUrls = images.map((image) => image.image_url).filter(Boolean);
+
+      if (imageUrls.length === 0) {
+        continue;
+      }
+
+      const rowCityKey = normalizeCityImageKey(detail.city);
+      const details = imageBackedDetailsByCityKey.get(rowCityKey) ?? [];
+      const resolvedDetail = {
+        ...detail,
+        imageUrl: imageUrls[0] ?? "",
+        curatedImageUrls: imageUrls,
+      };
+
+      details.push(resolvedDetail);
+      imageBackedDetailsByCityKey.set(rowCityKey, details);
+    }
+
+    for (const request of unresolvedRequests) {
+      const fallbackPlace = Array.from(request.cityKeys)
+        .flatMap((cityKey) => imageBackedDetailsByCityKey.get(cityKey) ?? [])
+        .find((place) => getDetailImageUrls(place).length > 0) ?? null;
+
+      resolutions.set(request.citySlug, {
+        citySlug: request.citySlug,
+        representativeSlug: request.representativeSlug,
+        source: fallbackPlace ? "same-city-fallback" : "missing",
+        imageUrl: fallbackPlace ? getDetailImageUrls(fallbackPlace)[0] ?? null : null,
+        place: fallbackPlace,
+      });
+    }
+
+    await Promise.all(
+      Array.from(resolutions.values())
+        .map((resolution) => resolution.place)
+        .filter((place): place is PlaceDetail => Boolean(place))
+        .map((place) => writeCachedPlaceDetail(place))
+    );
+  } catch {
+    for (const request of unresolvedRequests) {
+      if (!resolutions.has(request.citySlug)) {
+        resolutions.set(request.citySlug, {
+          citySlug: request.citySlug,
+          representativeSlug: request.representativeSlug,
+          source: "missing",
+          imageUrl: null,
+          place: null,
+        });
+      }
+    }
+  }
+
+  return resolutions;
 }
 
 export async function findPlaceDetailByIdOrSlug(id: string): Promise<PlaceDetail | null> {

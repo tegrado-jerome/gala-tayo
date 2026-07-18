@@ -14,11 +14,12 @@ export type ApprovedPlaceImage = {
   place_id: string;
   image_url: string;
   storage_key: string | null;
+  is_primary?: boolean | null;
   sort_order: number | null;
   created_at: string;
 };
 
-const APPROVED_IMAGE_COLUMNS = "id, place_id, image_url, storage_key, sort_order, created_at";
+const APPROVED_IMAGE_COLUMNS = "id, place_id, image_url, storage_key, is_primary, sort_order, created_at";
 const APPROVED_IMAGE_CACHE_TTL_SECONDS = 60 * 60 * 6;
 const APPROVED_IMAGE_COUNT_CACHE_TTL_SECONDS = 60 * 60 * 6;
 
@@ -54,6 +55,7 @@ async function fetchApprovedPlaceImagesFromDatabase(placeId: string): Promise<Ap
     .select(APPROVED_IMAGE_COLUMNS)
     .eq("place_id", placeId)
     .eq("status", "approved")
+    .order("is_primary", { ascending: false, nullsFirst: false })
     .order("sort_order", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: true })
     .limit(3);
@@ -137,6 +139,7 @@ export async function getApprovedPlaceImagesByPlaceIds(
     .select(APPROVED_IMAGE_COLUMNS)
     .in("place_id", missedPlaceIds)
     .eq("status", "approved")
+    .order("is_primary", { ascending: false, nullsFirst: false })
     .order("sort_order", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: true });
 
