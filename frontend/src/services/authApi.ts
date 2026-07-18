@@ -47,17 +47,12 @@ export function getAuthCallbackUrl(nextPath?: string | null, flow?: 'signup' | '
   return queryString ? `${callbackBase}?${queryString}` : callbackBase
 }
 
-export async function signInWithGoogle(nextPath?: string | null, flow?: 'signup') {
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: getAuthCallbackUrl(nextPath, flow),
-    },
-  })
+function getGoogleClientId() {
+  return String(import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim()
+}
 
-  if (error) {
-    throw error
-  }
+export function hasGoogleClientId() {
+  return getGoogleClientId().length > 0
 }
 
 export async function signUpWithEmailPassword(email: string, password: string, nextPath?: string | null) {
