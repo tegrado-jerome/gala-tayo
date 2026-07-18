@@ -25,7 +25,7 @@ type SeoConfig = {
 }
 
 const DEFAULT_TITLE = 'GalaTayo'
-const DEFAULT_DESCRIPTION = 'Discover gala spots around Metro Manila with place search, AI help, and shareable place pages.'
+const DEFAULT_DESCRIPTION = 'Discover Metro Manila places by city, category, budget, and vibe. Get AI-powered recommendations and plan your next gala with GalaTayo.'
 const DEFAULT_OG_IMAGE = galaTayoLogo
 const DEFAULT_LOCALE = 'en_PH'
 
