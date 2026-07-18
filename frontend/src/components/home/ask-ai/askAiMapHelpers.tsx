@@ -67,8 +67,8 @@ export type AskAiMapsResponse = {
 }
 
 export const DAILY_ASK_AI_LIMIT_MESSAGES = [
-  'Daily Ask AI limit reached.',
-  'You have reached your Ask AI Maps daily limit.',
+  'Daily GalaTayo AI limit reached.',
+  'You have reached your GalaTayo AI Maps daily limit.',
 ]
 export const ASK_AI_MAPS_REQUEST_TIMEOUT_MS = 120_000
 
@@ -107,10 +107,10 @@ export function isAbortError(error: unknown) {
 
 export function getAskAiMapsRequestErrorMessage(error: unknown) {
   if (isAbortError(error)) {
-    return 'Ask AI Maps hit the 120-second limit before finishing. Try again in a moment or narrow the search a bit.'
+    return 'GalaTayo AI Maps hit the 120-second limit before finishing. Try again in a moment or narrow the search a bit.'
   }
 
-  return error instanceof Error ? error.message : 'Ask AI Maps could not load places right now.'
+  return error instanceof Error ? error.message : 'GalaTayo AI Maps could not load places right now.'
 }
 
 export function extractStructuredAnswerText(value: string) {
@@ -682,6 +682,7 @@ export function hasVerifiedCoordinates(
     coordinates?: unknown
     coordinateStatus?: unknown
     coordinateSource?: unknown
+    coordinateConfidence?: unknown
     hasPin?: unknown
   } & Record<string, unknown>,
   normalizedCoordinates: NormalizedCoordinates | null,
@@ -701,16 +702,28 @@ export function hasVerifiedCoordinates(
       : typeof place.coordinateSource === 'string'
         ? (place.coordinateSource as NormalizedCoordinates['source'])
         : normalizedCoordinates.source
+  const confidence =
+    coordinateRecord?.confidence === 'high' ||
+    place.coordinateConfidence === 'high'
+      ? 'high'
+      : coordinateRecord?.confidence === 'medium' ||
+          place.coordinateConfidence === 'medium'
+        ? 'medium'
+        : null
+
+  if (confidence !== 'high') {
+    return false
+  }
 
   if (explicitStatus === 'missing_coordinates' || explicitStatus === 'unverified') {
     return false
   }
 
-  if (explicitStatus === 'verified') {
+  if (explicitStatus === 'verified' && isTrustedCoordinateSource(source)) {
     return true
   }
 
-  if (coordinateRecord?.verified === true || coordinateRecord?.trusted === true) {
+  if ((coordinateRecord?.verified === true || coordinateRecord?.trusted === true) && isTrustedCoordinateSource(source)) {
     return true
   }
 
@@ -979,10 +992,6 @@ export function mapPlaceToMapCard(place: AskAiMapNormalizedPlace): PlaceCardData
   const displayReason = place.reason
   const addressText = getDisplayAddress(place)
   const openStatus = formatOpenStatus(place)
-  const coordinateRecord =
-    place.coordinates && typeof place.coordinates === 'object' && !Array.isArray(place.coordinates)
-      ? place.coordinates
-      : null
   const pinCoordinates = place.mapCoordinates && typeof place.mapCoordinates === 'object' ? place.mapCoordinates : null
   const distanceText = getDisplayDistance(place)
 
@@ -1000,12 +1009,12 @@ export function mapPlaceToMapCard(place: AskAiMapNormalizedPlace): PlaceCardData
     description: displayReason,
     badge: distanceText || getDisplayCategory(place),
     googleMapsUrl: getMapsHref(place),
-    hasPin: place.hasPin ?? Boolean(pinCoordinates),
+    hasPin: Boolean(pinCoordinates),
     coordinates: pinCoordinates as unknown as PlaceCardData['coordinates'],
-    latitude: pinCoordinates?.latitude ?? place.latitude ?? coordinateRecord?.latitude ?? null,
-    longitude: pinCoordinates?.longitude ?? place.longitude ?? coordinateRecord?.longitude ?? null,
-    lat: pinCoordinates?.lat ?? place.latitude ?? coordinateRecord?.lat ?? null,
-    lng: pinCoordinates?.lng ?? place.longitude ?? coordinateRecord?.lng ?? null,
+    latitude: pinCoordinates?.latitude ?? null,
+    longitude: pinCoordinates?.longitude ?? null,
+    lat: pinCoordinates?.lat ?? null,
+    lng: pinCoordinates?.lng ?? null,
   }
 }
 

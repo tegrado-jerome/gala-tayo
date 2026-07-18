@@ -1,6 +1,7 @@
 import type { HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import type { AskAiUsageResult } from "../../services/askAiUsageService";
 import { AskAiMapsServiceError } from "../../services/askAiMapsHybridService";
+import { isAskAiRequestCancelledError } from "../../utils/askAiCancellation";
 
 const ASK_AI_MAPS_REQUEST_ID_HEADER = "x-ask-ai-maps-request-id";
 const NO_STORE_HEADERS = {
@@ -111,6 +112,22 @@ export function handleAskAiMapsError(
   aiUsage?: AskAiUsageResult
 ): HttpResponseInit {
   const message = error instanceof Error ? error.message : "Unknown error";
+
+  if (isAskAiRequestCancelledError(error)) {
+    return {
+      status: 499,
+      headers: buildResponseHeaders(meta.requestId),
+      jsonBody: {
+        ok: false,
+        error: "ASK_AI_REQUEST_CANCELLED",
+        message: "Ask AI Maps request was cancelled.",
+        requestId: meta.requestId,
+        places: [],
+        sources: [],
+        ...buildAiUsagePayload(aiUsage),
+      },
+    };
+  }
 
   if (isAuthError(message)) {
     return {

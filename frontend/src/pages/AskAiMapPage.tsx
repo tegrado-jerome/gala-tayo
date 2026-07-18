@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom'
 import { AppIcon } from '../components/AppIcon'
 import { FeatureGuideModalTrigger, featureGuideContent } from '../components/FeatureGuideModal'
 import AskAiUsagePill from '../components/AskAiUsagePill'
-import CarouselPositionIndicator from '../components/CarouselPositionIndicator'
+
 import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
 import MapView from '../components/MapView'
 import { MapResponsiveLayout } from '../components/layout/ResponsiveLayouts'
@@ -31,8 +31,7 @@ import {
   formatReviewCount,
   type AskAiMapDisplayPlace,
 } from '../utils/askAiMapDisplay'
-import { getAskAiUsageStatusFromResponse, isAskAiUsageStatusExpired, normalizeAskAiUsageStatus, type AskAiUsageResponse, type AskAiUsageStatus } from '../utils/askAiUsage'
-import { readCachedAskAiUsage, subscribeToCachedAskAiUsage, writeCachedAskAiUsage } from '../utils/askAiUsageCache'
+import { getAskAiUsageStatusFromResponse, normalizeAskAiUsageStatus, type AskAiUsageResponse, type AskAiUsageStatus } from '../utils/askAiUsage'
 import { registerAskAiTask, completeAskAiTask, failAskAiTask } from '../utils/askAiTaskStore'
 import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
 import { getApiUrl } from '../utils/apiClient'
@@ -78,7 +77,7 @@ function MinimalLoadingCard({ query }: { query: string }) {
     <div className="w-full min-w-0 shrink rounded-[24px] border border-[rgba(var(--accent-rgb),0.18)] bg-white/96 p-4 shadow-[0_16px_36px_rgba(15,23,42,0.12)]">
       <div className="flex items-start gap-3">
         <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px] bg-[linear-gradient(180deg,var(--primary-soft)_0%,rgba(var(--accent-rgb),0.18)_100%)] text-[var(--accent-deep)]">
-          <AppIcon name="askAi" className="h-5 w-5 motion-safe:animate-pulse" />
+          <AppIcon name="askAi" className="h-5 w-5 gt-solid-bulb-pulse" />
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
@@ -111,7 +110,7 @@ function MapPinNotice({ onDismiss }: { onDismiss: () => void }) {
         </svg>
       </div>
       <p className="min-w-0 flex-1">
-        Some results do not have a map pin yet to keep this on free services. Open place details for the Google Maps link.
+        Some recommendations do not show pins because their exact coordinates could not be verified. Open place details for the Google Maps link.
       </p>
       <button
         type="button"
@@ -125,12 +124,30 @@ function MapPinNotice({ onDismiss }: { onDismiss: () => void }) {
   )
 }
 
+function AskAiMapLimitWarning({ className = 'mt-3' }: { className?: string }) {
+  return (
+    <div className={`${className} flex w-full justify-center px-1`}>
+      <div className="inline-flex w-fit max-w-full items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-left shadow-[0_10px_24px_rgba(127,29,29,0.10)]">
+        <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-700 ring-1 ring-inset ring-red-200">
+          <AppIcon name="map" className="h-4 w-4" strokeWidth={2.2} />
+        </span>
+        <div className="min-w-0">
+          <p className="text-[0.84rem] font-bold leading-relaxed text-red-800">
+            Na-consume mo na ang Maps AI usage mo ngayong araw.
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 const AskAiMapComposer = memo(function AskAiMapComposer({
   query,
   selectedChipIds,
   isSearching,
   isRegistered,
   usageStatus,
+  hideLimitWarning = false,
   onSubmit,
   onCancel,
   onGuestUpgradePrompt,
@@ -140,6 +157,7 @@ const AskAiMapComposer = memo(function AskAiMapComposer({
   isSearching: boolean
   isRegistered: boolean
   usageStatus: AskAiUsageStatus | null
+  hideLimitWarning?: boolean
   onSubmit: (queryOverride?: string) => void
   onCancel: () => void
   onGuestUpgradePrompt: () => void
@@ -218,13 +236,7 @@ const AskAiMapComposer = memo(function AskAiMapComposer({
         </button>
       </div>
 
-      {isRegistered && isLimitReached && !isSearching ? (
-        <div className="mt-3 lg:mx-auto lg:max-w-[680px]">
-          <div className="rounded-2xl border border-[rgba(239,68,68,0.14)] bg-red-50/60 px-4 py-3">
-            <p className="text-[0.84rem] font-semibold text-red-700">You&apos;ve used all your Ask AI asks for today. Come back tomorrow!</p>
-          </div>
-        </div>
-      ) : null}
+      {isRegistered && isLimitReached && !isSearching && !hideLimitWarning ? <AskAiMapLimitWarning /> : null}
     </>
   )
 })
@@ -267,17 +279,13 @@ function AskAiMapPage() {
   const [answerText, setAnswerText] = useState(initialAskAiMapState?.answerText ?? '')
   const [places, setPlaces] = useState<AskAiMapPlace[]>(initialAskAiMapState?.places ?? [])
   const [sources, setSources] = useState<AskAiMapSource[]>(initialAskAiMapState?.sources ?? [])
-  const [askAiMapsUsageStatus, setAskAiMapsUsageStatus] = useState<AskAiUsageStatus | null>(
-    readCachedAskAiUsage('askAiMaps')
-  )
+  const [askAiMapsUsageStatus, setAskAiMapsUsageStatus] = useState<AskAiUsageStatus | null>(null)
   const [isGuestUpgradePromptOpen, setIsGuestUpgradePromptOpen] = useState(false)
-  const [askAiMapsRefreshSignal, setAskAiMapsRefreshSignal] = useState(
-    isAskAiUsageStatusExpired(readCachedAskAiUsage('askAiMaps')) ? 1 : 0
-  )
+  const [askAiMapsRefreshSignal, setAskAiMapsRefreshSignal] = useState(0)
   const submitInFlightRef = useRef(false)
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(initialAskAiMapState?.selectedPlaceId ?? null)
   const [focusedPlaceId, setFocusedPlaceId] = useState<string | null>(initialAskAiMapState?.focusedPlaceId ?? null)
-  const [mobileActivePlaceIndex, setMobileActivePlaceIndex] = useState(0)
+  const [_mobileActivePlaceIndex, setMobileActivePlaceIndex] = useState(0)
   const [selectedPlaceFocusSignal, setSelectedPlaceFocusSignal] = useState(0)
   const [isPlaceDetailOpen, setIsPlaceDetailOpen] = useState(false)
   const [isMapPinNoticeDismissed, setIsMapPinNoticeDismissed] = useState(false)
@@ -292,6 +300,7 @@ function AskAiMapPage() {
 
     const response = await fetch(usageEndpoint, {
       method: 'GET',
+      cache: 'no-store',
       headers: buildAskAiRequestHeaders(accessToken ?? null),
       signal,
     })
@@ -308,34 +317,9 @@ function AskAiMapPage() {
       throw new Error('Ask AI usage response was incomplete.')
     }
 
-    writeCachedAskAiUsage('askAiMaps', usageStatus)
     setAskAiMapsUsageStatus(usageStatus)
     return usageStatus
   }
-
-  useEffect(() => {
-    writeCachedAskAiUsage('askAiMaps', askAiMapsUsageStatus)
-  }, [askAiMapsUsageStatus])
-
-  useEffect(() => {
-    return subscribeToCachedAskAiUsage('askAiMaps', (usageStatus) => {
-      setAskAiMapsUsageStatus((currentUsageStatus) => {
-        if (
-          currentUsageStatus?.usageType === usageStatus?.usageType &&
-          currentUsageStatus?.allowed === usageStatus?.allowed &&
-          currentUsageStatus?.limit === usageStatus?.limit &&
-          currentUsageStatus?.used === usageStatus?.used &&
-          currentUsageStatus?.remaining === usageStatus?.remaining &&
-          currentUsageStatus?.resetAt === usageStatus?.resetAt &&
-          currentUsageStatus?.message === usageStatus?.message
-        ) {
-          return currentUsageStatus
-        }
-
-        return usageStatus
-      })
-    })
-  }, [])
 
   useEffect(() => {
     if (!askAiMapsUsageStatus?.allowed) {
@@ -509,6 +493,10 @@ function AskAiMapPage() {
   const shouldShowPermissionPrompt =
     permissionState === 'prompt' || permissionState === 'requesting' || permissionState === 'denied'
   const shouldShowMapPinNotice = !isSearching && hasMissingMapPins && !isMapPinNoticeDismissed
+  const shouldShowLimitWarning =
+    isRegistered &&
+    !isSearching &&
+    Boolean(askAiMapsUsageStatus && (!askAiMapsUsageStatus.allowed || askAiMapsUsageStatus.remaining <= 0))
   const showDesktopResultsSidebar =
     hasSearched ||
     isSearching ||
@@ -1020,7 +1008,9 @@ function AskAiMapPage() {
               </div>
             ) : null}
 
-            <section className="absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom,0px)+4.25rem)] z-[640] overflow-hidden sm:inset-x-4 sm:bottom-14 lg:inset-x-6 lg:bottom-16">
+            <section className="absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom,0px)+2.25rem)] z-[640] overflow-hidden sm:inset-x-4 sm:bottom-8 lg:inset-x-6 lg:bottom-16">
+                {shouldShowLimitWarning ? <AskAiMapLimitWarning className="mb-3" /> : null}
+
                 {errorMessage && !isSearching ? (
                   <div className="mb-3 rounded-[22px] border border-rose-100 bg-white px-4 py-3 text-sm font-medium text-rose-700 shadow-[0_12px_30px_rgba(15,23,42,0.10)] lg:mx-auto lg:max-w-[680px]">
                     {errorMessage}
@@ -1047,7 +1037,7 @@ function AskAiMapPage() {
 
                 <div
                   ref={mobileCardScrollerRef}
-                  className="flex w-full snap-x snap-mandatory gap-3 overflow-x-auto overflow-y-hidden pb-4 pl-1 pr-4 [scrollbar-width:none] [-ms-overflow-style:none] [-webkit-overflow-scrolling:touch] scroll-smooth [&::-webkit-scrollbar]:hidden lg:justify-center"
+                  className="flex max-h-[34dvh] w-full snap-x snap-mandatory items-end gap-3 overflow-x-auto overflow-y-hidden pb-4 pl-1 pr-4 [scrollbar-width:none] [-ms-overflow-style:none] [-webkit-overflow-scrolling:touch] scroll-smooth [&::-webkit-scrollbar]:hidden lg:justify-center"
                 >
                   {isSearching ? <MinimalLoadingCard query={query} /> : null}
 
@@ -1084,8 +1074,8 @@ function AskAiMapPage() {
                         }}
                         className={`relative w-[82vw] max-w-[340px] sm:max-w-[360px] lg:max-w-[400px] min-h-[168px] snap-center shrink-0 rounded-[24px] border bg-white px-4 py-3.5 cursor-pointer transition-all duration-200 ${
                           isSelected
-                            ? 'scale-[1.01] border-transparent shadow-[0_22px_52px_rgba(15,23,42,0.22)]'
-                            : 'border-slate-100/90 shadow-[0_14px_38px_rgba(15,23,42,0.10)] hover:border-slate-200 hover:shadow-[0_18px_42px_rgba(15,23,42,0.14)]'
+                            ? 'scale-[1.01] border-[rgba(var(--accent-rgb),0.28)]'
+                            : 'border-slate-100/90 hover:border-slate-200'
                         }`}
                         onMouseEnter={() => setFocusedPlaceId(place.id)}
                         onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
@@ -1182,12 +1172,7 @@ function AskAiMapPage() {
                   }) : null}
                 </div>
 
-                <CarouselPositionIndicator
-                  currentIndex={mobileActivePlaceIndex}
-                  total={normalizedPlaces.length}
-                  label="Place"
-                  className="!-mt-3"
-                />
+                <div className="mt-3" />
 
                 <AskAiMapComposer
                   key={query}
@@ -1196,6 +1181,7 @@ function AskAiMapPage() {
                   isSearching={isSearching}
                   isRegistered={isRegistered}
                   usageStatus={askAiMapsUsageStatus}
+                  hideLimitWarning
                   onSubmit={(queryOverride) => {
                     void handleEnterSearch(queryOverride)
                   }}
@@ -1248,8 +1234,10 @@ function AskAiMapPage() {
               <FeatureGuideModalTrigger content={featureGuideContent.maps} />
             </div>
 
-            <div className="absolute inset-x-0 bottom-0 z-[620] px-4 pb-2 pt-6">
+            <div className="absolute inset-x-0 bottom-[calc(env(safe-area-inset-bottom,0px)+2.25rem)] z-[620] px-4 pt-6 md:bottom-8 lg:bottom-10">
               <div className="mx-auto w-full max-w-[680px]">
+                {shouldShowLimitWarning ? <AskAiMapLimitWarning className="mb-3" /> : null}
+
                 <AskAiMapComposer
                   key={`${query}:desktop`}
                   query={query}
@@ -1257,6 +1245,7 @@ function AskAiMapPage() {
                   isSearching={isSearching}
                   isRegistered={isRegistered}
                   usageStatus={askAiMapsUsageStatus}
+                  hideLimitWarning
                   onSubmit={(queryOverride) => {
                     void handleEnterSearch(queryOverride)
                   }}
@@ -1276,7 +1265,7 @@ function AskAiMapPage() {
             <div className="shrink-0 border-b border-[var(--line)] px-4 py-4 md:px-3 md:py-3 lg:px-4 lg:py-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">Ask AI Maps</p>
+                  <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">GalaTayo AI Maps</p>
                   <h1 className="mt-1 min-w-0 truncate text-[20px] font-black tracking-[-0.03em] text-slate-950 md:text-[18px] lg:text-[22px]">
                     {query.trim() || 'Map results'}
                   </h1>
@@ -1337,8 +1326,8 @@ function AskAiMapPage() {
                       }}
                       className={`relative min-h-[160px] w-full snap-center rounded-[24px] border bg-white px-4 py-3.5 text-left cursor-pointer transition-all duration-200 ${
                         isSelected
-                          ? 'scale-[1.01] border-transparent shadow-[0_22px_52px_rgba(15,23,42,0.22)]'
-                          : 'border-slate-100/90 shadow-[0_14px_38px_rgba(15,23,42,0.10)] hover:border-slate-200 hover:shadow-[0_18px_42px_rgba(15,23,42,0.14)]'
+                          ? 'scale-[1.01] border-[rgba(var(--accent-rgb),0.28)]'
+                          : 'border-slate-100/90 hover:border-slate-200'
                       }`}
                       onMouseEnter={() => setFocusedPlaceId(place.id)}
                       onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}

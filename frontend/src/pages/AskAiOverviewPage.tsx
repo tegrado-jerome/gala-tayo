@@ -63,7 +63,7 @@ function AskAiOverviewPage() {
                 showBack
                 items={[
                   { label: 'Home', href: '/home', icon: <House className="h-3.5 w-3.5" /> },
-                  { label: 'Ask AI', icon: <AppIcon name="askAi" className="h-3.5 w-3.5" /> },
+                  { label: 'GalaTayo AI', icon: <AppIcon name="askAi" className="h-3.5 w-3.5" /> },
                 ]}
               />
             </div>
@@ -71,7 +71,7 @@ function AskAiOverviewPage() {
             <section className="flex w-full max-w-[40rem] flex-col items-start md:max-w-[48rem] lg:max-w-[56rem]">
               <div className="inline-flex items-center gap-1.5 text-[10.5px] font-black uppercase tracking-[0.16em] text-[var(--accent-deep)] sm:text-[11px]">
                 <AppIcon name="askAi" className="h-3.5 w-3.5" />
-                <span>Ask AI</span>
+                <span>GalaTayo AI</span>
               </div>
 
               <h1 className="mt-2 text-[2rem] font-black leading-[1.02] tracking-[-0.05em] text-slate-950 sm:text-[2.35rem] lg:text-[2.55rem]">

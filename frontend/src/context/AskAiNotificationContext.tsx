@@ -26,8 +26,8 @@ type AskAiNotification = {
 type AskAiNotificationContextValue = Record<PropertyKey, never>
 
 const ASK_AI_ERROR_MESSAGES: Record<string, string> = {
-  chatbot: 'Ask AI Chatbot had trouble finishing. Please try again.',
-  maps: 'Ask AI Maps had trouble finishing. Please try again.',
+  chatbot: 'GalaTayo AI Chatbot had trouble finishing. Please try again.',
+  maps: 'GalaTayo AI Maps had trouble finishing. Please try again.',
 }
 
 const ERROR_DISMISS_MS = 3000
