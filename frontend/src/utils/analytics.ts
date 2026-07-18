@@ -1,10 +1,7 @@
-import { getSiteOrigin } from './seo'
-
 type AnalyticsEventParams = Record<string, string | number | boolean | undefined | null>
 
 type PageViewParams = {
-  pathname: string
-  title?: string | null
+  pathname?: string
 }
 
 type SearchSubmittedParams = {
@@ -53,26 +50,13 @@ type AuthCompletedParams = {
 }
 
 type AnalyticsWindow = Window & {
-  dataLayer?: Array<unknown>
+  dataLayer?: Array<IArguments>
   gtag?: (...args: unknown[]) => void
-  __galatayoAnalyticsDiagnostics?: AnalyticsDiagnostics
 }
 
 const MEASUREMENT_ID = String(import.meta.env.VITE_GA_MEASUREMENT_ID || '').trim()
 const GA_SCRIPT_ID = 'galatayo-ga4-script'
 const DISABLED_ANALYTICS_PROMISE = Promise.resolve()
-
-type AnalyticsDiagnosticsEntry = {
-  command: string
-  eventName?: string
-  measurementId?: string
-}
-
-type AnalyticsDiagnostics = {
-  enabled: boolean
-  queue: AnalyticsDiagnosticsEntry[]
-  hasConfigBeforePageView: boolean
-}
 
 let analyticsInitializationPromise: Promise<void> | null = null
 let lastPageViewSignature = ''
@@ -87,102 +71,6 @@ function getAnalyticsWindow() {
 
 function getSafePathname(pathname: string) {
   return pathname.split(/[?#]/, 1)[0] || '/'
-}
-
-function getSafePageLocation(pathname: string) {
-  const origin = getSiteOrigin()
-  const safePathname = getSafePathname(pathname)
-  return `${origin}${safePathname}`
-}
-
-function pushGtagEvent(...args: unknown[]) {
-  const analyticsWindow = getAnalyticsWindow()
-  analyticsWindow.dataLayer = analyticsWindow.dataLayer || []
-  analyticsWindow.dataLayer.push(args)
-}
-
-function hasStoredAnalyticsDebugFlag() {
-  try {
-    return window.localStorage.getItem('galatayo_analytics_debug') === '1'
-  } catch {
-    return false
-  }
-}
-
-function getAnalyticsDiagnostics(analyticsWindow: AnalyticsWindow) {
-  const searchParams = new URLSearchParams(window.location.search)
-  const hasDebugFlag = searchParams.has('analytics_debug') || hasStoredAnalyticsDebugFlag()
-
-  if (!hasDebugFlag) {
-    return null
-  }
-
-  const diagnostics =
-    analyticsWindow.__galatayoAnalyticsDiagnostics ||
-    ({
-      enabled: true,
-      queue: [],
-      hasConfigBeforePageView: false,
-    } satisfies AnalyticsDiagnostics)
-
-  diagnostics.enabled = true
-  analyticsWindow.__galatayoAnalyticsDiagnostics = diagnostics
-
-  return diagnostics
-}
-
-function recordAnalyticsDiagnostics(args: unknown[]) {
-  const analyticsWindow = getAnalyticsWindow()
-  const diagnostics = getAnalyticsDiagnostics(analyticsWindow)
-
-  if (!diagnostics) {
-    return
-  }
-
-  const [command, firstParam, secondParam] = args
-
-  if (command !== 'config' && command !== 'event') {
-    return
-  }
-
-  const entry: AnalyticsDiagnosticsEntry = {
-    command: String(command),
-  }
-
-  if (command === 'config' && typeof firstParam === 'string') {
-    entry.measurementId = firstParam
-  }
-
-  if (command === 'event' && typeof firstParam === 'string') {
-    entry.eventName = firstParam
-  }
-
-  if (command === 'event' && firstParam === 'page_view' && secondParam && typeof secondParam === 'object' && 'send_to' in secondParam) {
-    const params = secondParam as { send_to?: unknown }
-
-    if (typeof params.send_to === 'string') {
-      entry.measurementId = params.send_to
-    }
-  }
-
-  diagnostics.queue.push(entry)
-
-  const configIndex = diagnostics.queue.findIndex(
-    (queuedEntry) => queuedEntry.command === 'config' && queuedEntry.measurementId === MEASUREMENT_ID,
-  )
-  const pageViewIndex = diagnostics.queue.findIndex(
-    (queuedEntry) =>
-      queuedEntry.command === 'event' &&
-      queuedEntry.eventName === 'page_view' &&
-      queuedEntry.measurementId === MEASUREMENT_ID,
-  )
-
-  diagnostics.hasConfigBeforePageView = configIndex >= 0 && pageViewIndex > configIndex
-
-  console.debug('[analytics]', {
-    queued: entry,
-    hasConfigBeforePageView: diagnostics.hasConfigBeforePageView,
-  })
 }
 
 function loadAnalyticsScript(): Promise<void> {
@@ -213,21 +101,14 @@ function initializeAnalytics(): Promise<void> {
 
   const analyticsWindow = getAnalyticsWindow()
   analyticsWindow.dataLayer = analyticsWindow.dataLayer || []
-  analyticsWindow.gtag =
-    analyticsWindow.gtag ||
-    function gtagShim(...args: unknown[]) {
-      pushGtagEvent(...args)
-    }
-
-  const queueGtag = (...args: unknown[]) => {
-    analyticsWindow.gtag?.(...args)
-    recordAnalyticsDiagnostics(args)
+  analyticsWindow.gtag = function () {
+    // eslint-disable-next-line prefer-rest-params
+    analyticsWindow.dataLayer!.push(arguments)
   }
 
-  queueGtag('js', new Date())
-  queueGtag('config', MEASUREMENT_ID, {
+  analyticsWindow.gtag('js', new Date())
+  analyticsWindow.gtag('config', MEASUREMENT_ID, {
     send_page_view: false,
-    anonymize_ip: true,
   })
 
   analyticsInitializationPromise = loadAnalyticsScript()
@@ -259,14 +140,14 @@ async function trackEvent(eventName: string, params: AnalyticsEventParams = {}):
   analyticsWindow.gtag?.('event', eventName, params)
 }
 
-async function trackPageView({ pathname, title }: PageViewParams): Promise<void> {
+async function trackPageView({ pathname }: PageViewParams): Promise<void> {
   if (!canUseAnalytics()) {
     return
   }
 
-  const safePathname = getSafePathname(pathname)
-  const safeTitle = title?.trim() || document.title || 'GalaTayo'
-  const signature = `${safePathname}::${safeTitle}`
+  const requestedPath = getSafePathname(pathname || window.location.pathname)
+  const requestedSearch = window.location.search
+  const signature = `${requestedPath}${requestedSearch}`
 
   if (signature === lastPageViewSignature) {
     return
@@ -285,17 +166,10 @@ async function trackPageView({ pathname, title }: PageViewParams): Promise<void>
   const analyticsWindow = getAnalyticsWindow()
   analyticsWindow.gtag?.('event', 'page_view', {
     send_to: MEASUREMENT_ID,
-    page_path: safePathname,
-    page_title: safeTitle,
-    page_location: getSafePageLocation(safePathname),
+    page_title: document.title,
+    page_location: window.location.href,
+    page_path: window.location.pathname + window.location.search,
   })
-  recordAnalyticsDiagnostics([
-    'event',
-    'page_view',
-    {
-      send_to: MEASUREMENT_ID,
-    },
-  ])
   lastPageViewSignature = signature
 }
 

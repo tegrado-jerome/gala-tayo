@@ -69,7 +69,6 @@ function App() {
   useEffect(() => {
     trackPageView({
       pathname,
-      title: document.title,
     })
   }, [pathname, search])
 
