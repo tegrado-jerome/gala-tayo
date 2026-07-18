@@ -4,11 +4,11 @@ type OnboardingProgressProps = {
   step: OnboardingStep
 }
 
-const stepLabels = ['Welcome', 'Personal', 'Profile', 'Privacy', 'Finish']
+const stepLabels = ['Personal', 'Profile', 'Privacy', 'Finish']
 
 function OnboardingProgress({ step }: OnboardingProgressProps) {
   return (
-    <div className="onboarding-stepper" aria-label={`Step ${step} of 5`}>
+    <div className="onboarding-stepper" aria-label={`Step ${step} of ${stepLabels.length}`}>
       <div className="onboarding-stepper-track">
         {stepLabels.map((label, index) => {
           const itemStep = index + 1

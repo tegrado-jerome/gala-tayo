@@ -29,7 +29,7 @@ const options: Array<{ value: ProfileVisibility; title: string; description: str
 function OnboardingPrivacyStep({ values, errors, disableNext, onUpdate, onBack, onNext }: OnboardingPrivacyStepProps) {
   return (
     <OnboardingLayout
-      step={4}
+      step={3}
       eyebrow="Privacy"
       title="Choose your privacy"
       description="Decide whether your profile is visible to everyone or kept private."

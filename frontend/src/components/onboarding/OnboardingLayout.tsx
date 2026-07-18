@@ -2,6 +2,8 @@ import type { ReactNode } from 'react'
 import OnboardingProgress from './OnboardingProgress'
 import type { OnboardingStep } from './types'
 
+const onboardingStepCount = 4
+
 type OnboardingLayoutProps = {
   step: OnboardingStep
   title: string
@@ -19,7 +21,7 @@ function OnboardingLayout({ step, title, description, eyebrow, children, actions
           <div className="onboarding-header">
             <div className="onboarding-header-top">
               <OnboardingProgress step={step} />
-              <p className="onboarding-step-caption">Step {step} of 5</p>
+              <p className="onboarding-step-caption">Step {step} of {onboardingStepCount}</p>
             </div>
           </div>
 

@@ -18,7 +18,7 @@ function OnboardingAgreementStep({ values, errors, isSubmitting, disableNext, on
 
   return (
     <OnboardingLayout
-      step={5}
+      step={4}
       eyebrow="Final step"
       title="You're almost done"
       description="Agree to the terms and privacy policy to finish creating your GalaTayo profile."

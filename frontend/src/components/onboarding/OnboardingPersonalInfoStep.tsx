@@ -7,26 +7,22 @@ type OnboardingPersonalInfoStepProps = {
   errors: OnboardingErrors
   disableNext: boolean
   onUpdate: (updates: Partial<OnboardingFormState>) => void
-  onBack: () => void
   onNext: () => void
 }
 
-function OnboardingPersonalInfoStep({ values, errors, disableNext, onUpdate, onBack, onNext }: OnboardingPersonalInfoStepProps) {
+function OnboardingPersonalInfoStep({ values, errors, disableNext, onUpdate, onNext }: OnboardingPersonalInfoStepProps) {
   return (
     <OnboardingLayout
-      step={2}
+      step={1}
       eyebrow="Personal details"
       title="Tell us about you"
       description="We use these details to complete your account setup and age checks."
       actions={
-        <>
-          <button type="button" onClick={onBack} className="onboarding-button onboarding-button-secondary">
-            Back
-          </button>
+        <div className="col-span-2 flex w-full justify-end sm:w-auto">
           <button type="button" onClick={onNext} disabled={disableNext} className="onboarding-button onboarding-button-primary disabled:cursor-not-allowed disabled:opacity-60">
             Continue
           </button>
-        </>
+        </div>
       }
     >
       <div className="onboarding-form-grid">
@@ -73,7 +69,6 @@ function OnboardingPersonalInfoStep({ values, errors, disableNext, onUpdate, onB
             onChange={(birthdate) => onUpdate({ birthdate })}
             minYear={1900}
             maxYear={new Date().getUTCFullYear()}
-            helperText="Required. Stored as YYYY-MM-DD for your account."
             error={errors.birthdate}
           />
         </label>

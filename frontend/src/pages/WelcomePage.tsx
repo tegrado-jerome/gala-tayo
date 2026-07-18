@@ -4,6 +4,7 @@ import galaTayoLogo from '../assets/brand/galatayo-logo.svg'
 import SeoHead from '../components/SeoHead'
 import { navigateToPath } from '../utils/navigation'
 import type { NavigationSource } from '../utils/navigationLoading'
+import { getPublicSiteOrigin } from '../utils/site'
 
 type WelcomeAsset = {
   src: string
@@ -181,14 +182,14 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
             '@context': 'https://schema.org',
             '@type': 'WebSite',
             name: 'GalaTayo',
-            url: `${window.location.origin}/`,
+            url: `${getPublicSiteOrigin()}/`,
           },
           {
             '@context': 'https://schema.org',
             '@type': 'Organization',
             name: 'GalaTayo',
-            url: `${window.location.origin}/`,
-            logo: `${window.location.origin}/favicon.svg`,
+            url: `${getPublicSiteOrigin()}/`,
+            logo: `${getPublicSiteOrigin()}/favicon.svg`,
           },
         ]}
       />

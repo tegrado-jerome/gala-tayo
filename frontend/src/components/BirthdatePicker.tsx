@@ -88,10 +88,18 @@ function BirthdatePicker({ value, onChange, helperText, error, minYear = 1900, m
   const yearMenuRef = useRef<HTMLDivElement | null>(null)
   const dialogTitleId = useId()
   const selectedDate = useMemo(() => parseBirthdate(value), [value])
-  const today = useMemo(() => startOfUtcMonth(new Date()), [])
-  const resolvedMaxYear = maxYear ?? today.getUTCFullYear()
+  const currentDate = useMemo(() => {
+    const now = new Date()
+    return new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()))
+  }, [])
+  const today = useMemo(() => startOfUtcMonth(currentDate), [currentDate])
+  const resolvedMaxYear = maxYear ?? currentDate.getUTCFullYear()
   const minDate = useMemo(() => new Date(Date.UTC(minYear, 0, 1)), [minYear])
-  const maxDate = useMemo(() => new Date(Date.UTC(resolvedMaxYear, 11, 31)), [resolvedMaxYear])
+  const maxDate = useMemo(() => {
+    const maxYearEnd = new Date(Date.UTC(resolvedMaxYear, 11, 31))
+    return maxYearEnd > currentDate ? currentDate : maxYearEnd
+  }, [currentDate, resolvedMaxYear])
+  const maxMonth = useMemo(() => startOfUtcMonth(maxDate), [maxDate])
   const calendarDays = useMemo(() => buildCalendarDays(visibleMonth), [visibleMonth])
   const yearOptions = useMemo(() => Array.from({ length: resolvedMaxYear - minYear + 1 }, (_, index) => resolvedMaxYear - index), [minYear, resolvedMaxYear])
 
@@ -157,30 +165,48 @@ function BirthdatePicker({ value, onChange, helperText, error, minYear = 1900, m
       const rect = yearButtonRef.current.getBoundingClientRect()
       const viewportPadding = 12
       const gap = 8
-      const menuWidth = Math.max(96, Math.min(112, rect.width + 16))
+      const menuWidth = Math.max(96, Math.min(120, rect.width + 24))
       const spaceBelow = window.innerHeight - rect.bottom - gap - viewportPadding
       const spaceAbove = rect.top - gap - viewportPadding
       const shouldOpenUpward = spaceBelow < 280 && spaceAbove > spaceBelow
+      const preferredLeft = rect.left + rect.width / 2 - menuWidth / 2
+      const maxLeft = window.innerWidth - viewportPadding - menuWidth
+      const left = Math.min(Math.max(viewportPadding, preferredLeft), Math.max(viewportPadding, maxLeft))
 
       setYearMenuStyle({
         position: 'fixed',
-        left: Math.max(viewportPadding, rect.left + rect.width / 2 - menuWidth / 2),
+        left,
         top: shouldOpenUpward ? undefined : rect.bottom + gap,
         bottom: shouldOpenUpward ? window.innerHeight - rect.top + gap : undefined,
         width: menuWidth,
         maxHeight: Math.min(280, Math.max(160, shouldOpenUpward ? spaceAbove : spaceBelow)),
         visibility: 'visible',
-        zIndex: 7050,
+        zIndex: 7200,
       })
     }
 
     updateYearMenuPosition()
     window.addEventListener('resize', updateYearMenuPosition)
+    window.addEventListener('scroll', updateYearMenuPosition, true)
 
     return () => {
       window.removeEventListener('resize', updateYearMenuPosition)
+      window.removeEventListener('scroll', updateYearMenuPosition, true)
     }
   }, [isYearMenuOpen])
+
+  useEffect(() => {
+    if (!isYearMenuOpen) {
+      return
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      const selectedOption = yearMenuRef.current?.querySelector<HTMLButtonElement>('.gala-date-year-option.is-selected')
+      selectedOption?.scrollIntoView({ block: 'center' })
+    })
+
+    return () => window.cancelAnimationFrame(frameId)
+  }, [isYearMenuOpen, visibleMonth])
 
   const openCalendar = () => {
     setVisibleMonth(startOfUtcMonth(selectedDate ?? new Date()))
@@ -211,7 +237,7 @@ function BirthdatePicker({ value, onChange, helperText, error, minYear = 1900, m
   }
 
   const canGoPrev = visibleMonth.getUTCFullYear() > minYear || visibleMonth.getUTCMonth() > 0
-  const canGoNext = visibleMonth.getUTCFullYear() < resolvedMaxYear || visibleMonth.getUTCMonth() < 11
+  const canGoNext = visibleMonth < maxMonth
 
   const goPrevMonth = () => {
     if (!canGoPrev) return

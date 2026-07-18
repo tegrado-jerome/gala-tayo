@@ -56,7 +56,7 @@ function OnboardingPublicProfileStep({
 
   return (
     <OnboardingLayout
-      step={3}
+      step={2}
       eyebrow="Public profile"
       title="Build your profile"
       description="Choose how your name appears and pick a username people can recognize."

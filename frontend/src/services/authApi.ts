@@ -359,9 +359,5 @@ export function buildAuthPath(target: '/login' | '/signup', nextPath?: string | 
 export function resolvePostAuthPath(fallbackPath: string, search: string = window.location.search) {
   const requestedNextPath = getRequestedNextPath(search)
 
-  if (requestedNextPath === '/onboarding' || requestedNextPath === '/onboarding/') {
-    return fallbackPath
-  }
-
   return requestedNextPath ?? fallbackPath
 }

@@ -251,9 +251,8 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
     : isCreateMode
     ? 'Set up your GalaTayo account and start planning your next gala.'
     : 'Continue planning your next gala.'
-  const authShellClassName = isCreateMode
-    ? 'mx-auto grid w-full max-w-[1240px] items-start md:min-h-[100dvh] md:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] md:items-center lg:max-w-[1320px]'
-    : 'mx-auto grid w-full max-w-[1240px] items-start md:min-h-[100dvh] md:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] md:items-center lg:max-w-[1320px]'
+  const authShellClassName =
+    'mx-auto grid min-h-[100dvh] w-full max-w-[680px] content-center items-center py-8 md:py-10 lg:max-w-[1240px] lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:py-0 xl:max-w-[1320px]'
   if (isConfirmationPending) {
     const resendLabel = signUpCooldown.isCoolingDown
       ? `Resend in ${formatCooldownDuration(signUpCooldown.remainingMs)}`
@@ -302,12 +301,12 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
   return (
     <main className="gala-page-background min-h-screen min-h-[100dvh] text-[var(--text)]">
       <div className={authShellClassName}>
-        <section className="flex flex-col items-center justify-start px-4 pb-2 pt-12 text-center md:items-start md:px-10 md:py-8 md:text-left lg:px-16 lg:py-10">
-          <div className="flex w-full max-w-[560px] flex-col items-center gap-4 md:items-center">
+        <section className="flex flex-col items-center justify-center px-4 pb-5 pt-0 text-center sm:px-6 md:px-8 lg:items-start lg:px-16 lg:py-10 lg:text-left">
+          <div className="flex w-full max-w-[560px] flex-col items-center gap-4 lg:items-start">
             <img
               src={galaTayoLogo}
               alt="GalaTayo"
-              className="mb-2 h-auto w-[160px] sm:w-[180px] md:hidden"
+              className="mb-2 h-auto w-[160px] sm:w-[180px] lg:hidden"
               loading="eager"
             />
             <div className="max-w-[31rem]">
@@ -321,12 +320,12 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
           </div>
         </section>
 
-        <section className="flex items-start justify-center px-4 pb-8 pt-0 md:px-8 md:pb-10 md:pt-0 lg:px-12 lg:pb-12">
-          <div className="w-full max-w-[620px] px-0 py-0 lg:max-w-[680px]">
+        <section className="flex items-center justify-center px-4 pb-0 pt-0 sm:px-6 md:px-8 lg:px-12 lg:py-10">
+          <div className="w-full max-w-[460px] px-0 py-0 md:max-w-[500px] lg:max-w-[560px]">
             <img
               src={galaTayoLogo}
               alt="GalaTayo"
-              className="mx-auto mb-4 hidden h-auto w-[180px] sm:w-[190px] md:block lg:w-[210px]"
+              className="mx-auto mb-4 hidden h-auto w-[180px] sm:w-[190px] lg:block lg:w-[210px]"
               loading="eager"
             />
             <div className="mt-3">
@@ -480,7 +479,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
               <button
                 type="submit"
                 disabled={isSubmitDisabled}
-                className="app-button app-button-primary app-button-md mx-auto w-[240px] max-w-full disabled:cursor-not-allowed disabled:opacity-70 md:w-[220px] lg:w-[240px]"
+                className="app-button app-button-primary app-button-md mx-auto w-full max-w-[360px] disabled:cursor-not-allowed disabled:opacity-70 lg:w-[240px]"
               >
                 {isSubmitting
                   ? isCreateMode

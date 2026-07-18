@@ -4,7 +4,6 @@ import OnboardingAgreementStep from '../components/onboarding/OnboardingAgreemen
 import OnboardingPersonalInfoStep from '../components/onboarding/OnboardingPersonalInfoStep'
 import OnboardingPrivacyStep from '../components/onboarding/OnboardingPrivacyStep'
 import OnboardingPublicProfileStep from '../components/onboarding/OnboardingPublicProfileStep'
-import OnboardingWelcomeStep from '../components/onboarding/OnboardingWelcomeStep'
 import { StateContainer } from '../components/layout/ResponsiveLayouts'
 import type { OnboardingErrors, OnboardingFormState, OnboardingStep } from '../components/onboarding/types'
 import {
@@ -150,7 +149,19 @@ function getDraftStorageKey(userId: string) {
 }
 
 function isValidStep(value: unknown): value is OnboardingStep {
-  return value === 1 || value === 2 || value === 3 || value === 4 || value === 5
+  return value === 1 || value === 2 || value === 3 || value === 4
+}
+
+function normalizeStep(value: unknown, fallbackStep: OnboardingStep): OnboardingStep {
+  if (isValidStep(value)) {
+    return value
+  }
+
+  if (value === 5) {
+    return 4
+  }
+
+  return fallbackStep
 }
 
 function createInitialValues(session: Session): OnboardingFormState {
@@ -206,7 +217,7 @@ function normalizeDraftValues(values: Partial<OnboardingFormState> | null | unde
   return {
     ...fallbackValues,
     ...values,
-    step: isValidStep(values.step) ? values.step : fallbackValues.step,
+    step: normalizeStep(values.step, fallbackValues.step),
     profileVisibility: normalizedProfileVisibility,
     showFollowers: shouldShowFollowLists,
     showFollowing: shouldShowFollowLists,
@@ -309,7 +320,7 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
 
           setValues((currentValues) => ({
             ...currentValues,
-            step: 5,
+            step: 4,
             firstName: existingUser.firstName ?? currentValues.firstName,
             middleName: existingUser.middleName ?? '',
             lastName: existingUser.lastName ?? currentValues.lastName,
@@ -349,6 +360,19 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
   }, [isRedirectingHome, session])
 
   useEffect(() => {
+    if (values.step !== 2) {
+      setUsernameStatus('idle')
+      setErrors((currentErrors) => {
+        if (!currentErrors.username) {
+          return currentErrors
+        }
+
+        const { username: _username, ...rest } = currentErrors
+        return rest as OnboardingErrors
+      })
+      return undefined
+    }
+
     setErrors((currentErrors) => {
       if (!usernameValidationError) {
         const { username: _username, ...rest } = currentErrors
@@ -393,7 +417,7 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
       isMounted = false
       window.clearTimeout(timer)
     }
-  }, [normalizedUsername, session, usernameValidationError])
+  }, [normalizedUsername, session, usernameValidationError, values.step])
 
   useEffect(() => {
     if (isRedirectingHome) {
@@ -436,7 +460,7 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
   const validateStep = (step: OnboardingStep) => {
     const nextErrors: OnboardingErrors = {}
 
-    if (step === 2) {
+    if (step === 1) {
       nextErrors.firstName = trimError(values.firstName, 'First Name')
       nextErrors.lastName = trimError(values.lastName, 'Last Name')
       nextErrors.birthdate = validateBirthdate(values.birthdate)
@@ -446,7 +470,7 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
       }
     }
 
-    if (step === 3) {
+    if (step === 2) {
       nextErrors.displayName = trimError(values.displayName, 'Display Name')
       nextErrors.username = usernameValidationError || errors.username
 
@@ -459,11 +483,11 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
       }
     }
 
-    if (step === 4 && values.profileVisibility !== 'public' && values.profileVisibility !== 'private') {
+    if (step === 3 && values.profileVisibility !== 'public' && values.profileVisibility !== 'private') {
       nextErrors.profileVisibility = 'Please select whether you want a Public or Private profile.'
     }
 
-    if (step === 5 && (!values.acceptedTerms || !values.acceptedPrivacy)) {
+    if (step === 4 && (!values.acceptedTerms || !values.acceptedPrivacy)) {
       nextErrors.form = 'You need to agree to both the Terms of Service and Privacy Policy to continue.'
     }
 
@@ -479,7 +503,7 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
       return
     }
 
-    goToStep(Math.min(5, currentValues.step + 1) as OnboardingStep)
+    goToStep(Math.min(4, currentValues.step + 1) as OnboardingStep)
   }
 
   const previousStep = () => {
@@ -511,7 +535,7 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
   }
 
   const finishSetup = async () => {
-    if (!validateStep(5)) {
+    if (!validateStep(4)) {
       return
     }
 
@@ -538,57 +562,62 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
     }
   }
 
-  const hasErrors = Object.values(errors).some((error) => Boolean(error))
+  const currentStepErrorKeys: Array<keyof OnboardingErrors> =
+    values.step === 1
+      ? ['firstName', 'middleName', 'lastName', 'birthdate']
+      : values.step === 2
+        ? ['displayName', 'username', 'avatar']
+        : values.step === 3
+          ? ['profileVisibility']
+          : ['form']
+  const hasCurrentStepErrors = currentStepErrorKeys.some((key) => Boolean(errors[key]))
 
   if (isRedirectingHome) {
     return null
   }
 
-  let content = <OnboardingWelcomeStep onNext={() => goToStep(2)} />
+  let content = (
+    <OnboardingPersonalInfoStep
+      values={values}
+      errors={errors}
+      disableNext={hasCurrentStepErrors}
+      onUpdate={updateValues}
+      onNext={nextStep}
+    />
+  )
 
   if (values.step === 2) {
-    content = (
-      <OnboardingPersonalInfoStep
-        values={values}
-        errors={errors}
-        disableNext={hasErrors}
-        onUpdate={updateValues}
-        onBack={previousStep}
-        onNext={nextStep}
-      />
-    )
-  } else if (values.step === 3) {
     content = (
       <OnboardingPublicProfileStep
         values={values}
         errors={errors}
         usernameStatus={usernameStatus}
         isUploadingAvatar={isUploadingAvatar}
-        disableNext={hasErrors}
+        disableNext={hasCurrentStepErrors}
         onUpdate={updateValues}
         onAvatarSelected={handleAvatarSelected}
         onBack={previousStep}
         onNext={nextStep}
       />
     )
-  } else if (values.step === 4) {
+  } else if (values.step === 3) {
     content = (
       <OnboardingPrivacyStep
         values={values}
         errors={errors}
-        disableNext={hasErrors}
+        disableNext={hasCurrentStepErrors}
         onUpdate={updateValues}
         onBack={previousStep}
         onNext={nextStep}
       />
     )
-  } else if (values.step === 5) {
+  } else if (values.step === 4) {
     content = (
       <OnboardingAgreementStep
         values={values}
         errors={errors}
         isSubmitting={isSubmitting}
-        disableNext={hasErrors}
+        disableNext={hasCurrentStepErrors}
         onUpdate={updateValues}
         onBack={previousStep}
         onFinish={() => void finishSetup()}
