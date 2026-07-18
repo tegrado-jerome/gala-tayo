@@ -3,13 +3,15 @@ import type { FormEvent } from 'react'
 import AppHeader from '../components/AppHeader'
 import { AppIcon } from '../components/AppIcon'
 import MinimalBackNav from '../components/MinimalBackNav'
-import { PageContainer, PageShell, CardSurface, Stack } from '../components/layout/ResponsiveLayouts'
+import { PageContainer, PageShell, Stack } from '../components/layout/ResponsiveLayouts'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { updateAccountPassword } from '../services/authApi'
 
 function ChangePasswordPage() {
   const [newPassword, setNewPassword] = useState('')
   const [confirmNewPassword, setConfirmNewPassword] = useState('')
+  const [isNewPasswordVisible, setIsNewPasswordVisible] = useState(false)
+  const [isConfirmNewPasswordVisible, setIsConfirmNewPasswordVisible] = useState(false)
   const [isSavingPassword, setIsSavingPassword] = useState(false)
   const [securityError, setSecurityError] = useState('')
   const { showSystemMessage } = useSystemMessage()
@@ -33,6 +35,8 @@ function ChangePasswordPage() {
       await updateAccountPassword(newPassword)
       setNewPassword('')
       setConfirmNewPassword('')
+      setIsNewPasswordVisible(false)
+      setIsConfirmNewPasswordVisible(false)
       showSystemMessage({
         title: 'Password Updated!',
         description: 'Your account password was updated successfully.',
@@ -51,7 +55,7 @@ function ChangePasswordPage() {
         <PageContainer size="narrow">
           <Stack gap="default">
             <MinimalBackNav to="/account-settings" label="Back to account settings" />
-            <CardSurface pad="loose">
+            <section className="px-0 py-2 sm:py-4">
               <div className="border-b border-slate-100 pb-6">
                 <div className="flex items-start gap-4">
                   <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-700">
@@ -78,26 +82,48 @@ function ChangePasswordPage() {
                 <Stack gap="default">
                   <label className="grid gap-2">
                     <span className="text-sm font-black text-slate-900">New Password</span>
-                    <input
-                      type="password"
-                      value={newPassword}
-                      onChange={(event) => setNewPassword(event.target.value)}
-                      minLength={8}
-                      autoComplete="new-password"
-                      className="gala-field px-4"
-                    />
+                    <span className="flex h-12 items-center gap-3 rounded-full border border-[var(--line)] bg-white px-4 shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)] transition focus-within:border-[#2563eb]">
+                      <input
+                        type={isNewPasswordVisible ? 'text' : 'password'}
+                        value={newPassword}
+                        onChange={(event) => setNewPassword(event.target.value)}
+                        minLength={8}
+                        autoComplete="new-password"
+                        className="auth-form-input h-full w-full min-w-0 bg-transparent text-sm font-semibold text-slate-900 outline-none placeholder:font-normal placeholder:text-slate-400"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setIsNewPasswordVisible((current) => !current)}
+                        className="inline-flex h-8 w-8 flex-none items-center justify-center rounded-full text-[var(--muted)] transition hover:bg-[var(--bg)] hover:text-[var(--accent-deep)] focus:outline-none focus:ring-4 focus:ring-[rgba(37,99,235,0.12)]"
+                        aria-label={isNewPasswordVisible ? 'Hide password' : 'Show password'}
+                        aria-pressed={isNewPasswordVisible}
+                      >
+                        <AppIcon name={isNewPasswordVisible ? 'eyeOff' : 'eye'} className="h-4 w-4" />
+                      </button>
+                    </span>
                   </label>
 
                   <label className="grid gap-2">
                     <span className="text-sm font-black text-slate-900">Confirm New Password</span>
-                    <input
-                      type="password"
-                      value={confirmNewPassword}
-                      onChange={(event) => setConfirmNewPassword(event.target.value)}
-                      minLength={8}
-                      autoComplete="new-password"
-                      className="gala-field px-4"
-                    />
+                    <span className="flex h-12 items-center gap-3 rounded-full border border-[var(--line)] bg-white px-4 shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)] transition focus-within:border-[#2563eb]">
+                      <input
+                        type={isConfirmNewPasswordVisible ? 'text' : 'password'}
+                        value={confirmNewPassword}
+                        onChange={(event) => setConfirmNewPassword(event.target.value)}
+                        minLength={8}
+                        autoComplete="new-password"
+                        className="auth-form-input h-full w-full min-w-0 bg-transparent text-sm font-semibold text-slate-900 outline-none placeholder:font-normal placeholder:text-slate-400"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setIsConfirmNewPasswordVisible((current) => !current)}
+                        className="inline-flex h-8 w-8 flex-none items-center justify-center rounded-full text-[var(--muted)] transition hover:bg-[var(--bg)] hover:text-[var(--accent-deep)] focus:outline-none focus:ring-4 focus:ring-[rgba(37,99,235,0.12)]"
+                        aria-label={isConfirmNewPasswordVisible ? 'Hide password' : 'Show password'}
+                        aria-pressed={isConfirmNewPasswordVisible}
+                      >
+                        <AppIcon name={isConfirmNewPasswordVisible ? 'eyeOff' : 'eye'} className="h-4 w-4" />
+                      </button>
+                    </span>
                   </label>
                 </Stack>
 
@@ -114,7 +140,7 @@ function ChangePasswordPage() {
                   </button>
                 </div>
               </form>
-            </CardSurface>
+            </section>
           </Stack>
         </PageContainer>
       </main>

@@ -162,7 +162,7 @@ function ResetPasswordPage() {
                       <AppIcon name="lock" className="h-3.5 w-3.5 text-[var(--accent-deep)]" />
                       New Password
                     </span>
-                    <span className="flex h-[2.85rem] items-center gap-3 rounded-[1.2rem] border border-[var(--line)] bg-white px-3.5 shadow-sm transition focus-within:-translate-y-0.5 focus-within:border-[var(--accent)] focus-within:bg-white focus-within:ring-4 focus-within:ring-[var(--accent-soft)]">
+                    <span className="flex h-[2.85rem] items-center gap-3 rounded-[1.2rem] border border-[var(--line)] bg-white px-3.5 shadow-sm transition focus-within:border-[var(--accent)] focus-within:bg-white">
                       <input
                         type={isPasswordVisible ? 'text' : 'password'}
                         value={newPassword}
@@ -171,7 +171,7 @@ function ResetPasswordPage() {
                         minLength={minPasswordLength}
                         autoComplete="new-password"
                         placeholder="Enter new password"
-                        className="h-full w-full min-w-0 bg-transparent text-[14px] font-medium text-[var(--text)] outline-none placeholder:font-normal placeholder:text-slate-400"
+                        className="auth-form-input h-full w-full min-w-0 bg-transparent text-[14px] font-medium text-[var(--text)] outline-none placeholder:font-normal placeholder:text-slate-400"
                       />
                       <button
                         type="button"
@@ -195,7 +195,7 @@ function ResetPasswordPage() {
                       <AppIcon name="lock" className="h-3.5 w-3.5 text-[var(--accent-deep)]" />
                       Confirm New Password
                     </span>
-                    <span className={`flex h-[2.85rem] items-center gap-3 rounded-[1.2rem] border px-3.5 shadow-sm transition focus-within:-translate-y-0.5 focus-within:ring-4 ${confirmPasswordHasMismatch ? 'border-red-300 bg-white focus-within:border-red-400 focus-within:ring-red-100' : 'border-[var(--line)] bg-white focus-within:border-[var(--accent)] focus-within:bg-white focus-within:ring-[var(--accent-soft)]'}`}>
+                    <span className={`flex h-[2.85rem] items-center gap-3 rounded-[1.2rem] border px-3.5 shadow-sm transition ${confirmPasswordHasMismatch ? 'border-red-300 bg-white focus-within:border-red-400' : 'border-[var(--line)] bg-white focus-within:border-[var(--accent)] focus-within:bg-white'}`}>
                       <input
                         type={isConfirmPasswordVisible ? 'text' : 'password'}
                         value={confirmNewPassword}
@@ -204,7 +204,7 @@ function ResetPasswordPage() {
                         minLength={minPasswordLength}
                         autoComplete="new-password"
                         placeholder="Confirm new password"
-                        className="h-full w-full min-w-0 bg-transparent text-[14px] font-medium text-[var(--text)] outline-none placeholder:font-normal placeholder:text-slate-400"
+                        className="auth-form-input h-full w-full min-w-0 bg-transparent text-[14px] font-medium text-[var(--text)] outline-none placeholder:font-normal placeholder:text-slate-400"
                       />
                       <button
                         type="button"

@@ -251,9 +251,8 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
     : isCreateMode
     ? 'Set up your GalaTayo account and start planning your next gala.'
     : 'Continue planning your next gala.'
-  const authShellClassName = isCreateMode
-    ? 'mx-auto grid w-full max-w-[1240px] items-start md:ml-[clamp(6rem,8vw,8rem)] md:mr-auto md:min-h-[100dvh] md:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] md:items-center lg:ml-[clamp(7rem,9vw,9rem)] lg:max-w-[1320px]'
-    : 'mx-auto grid w-full max-w-[1240px] items-start md:ml-[clamp(4rem,6vw,6rem)] md:mr-auto md:min-h-[100dvh] md:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] md:items-center lg:ml-[clamp(5rem,7vw,7rem)] lg:max-w-[1320px]'
+  const authShellClassName =
+    'mx-auto grid w-full max-w-[1240px] items-start md:min-h-[100dvh] md:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] md:items-center lg:max-w-[1320px]'
   if (isConfirmationPending) {
     const resendLabel = signUpCooldown.isCoolingDown
       ? `Resend in ${formatCooldownDuration(signUpCooldown.remainingMs)}`
@@ -321,7 +320,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
           </div>
         </section>
 
-        <section className="flex items-start justify-center px-4 pb-8 pt-0 md:px-8 md:pb-10 md:pt-0 lg:px-12 lg:pb-12">
+        <section className="flex items-start justify-center px-4 pb-8 pt-0 md:px-8 md:py-8 lg:px-12 lg:py-10">
           <div className="w-full max-w-[620px] px-0 py-0 lg:max-w-[680px]">
             <img
               src={galaTayoLogo}
@@ -378,8 +377,8 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
                   Email
                 </span>
                 <span
-                  className={`flex h-12 items-center rounded-[12px] border bg-white px-3.5 shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)] transition focus-within:-translate-y-0.5 focus-within:border-[#2563eb] focus-within:shadow-[inset_0_1px_2px_rgba(15,23,42,0.08),0_0_0_4px_rgba(37,99,235,0.12)] ${
-                    emailIsInvalid ? 'border-red-300 focus-within:border-red-400 focus-within:shadow-[inset_0_1px_2px_rgba(15,23,42,0.08),0_0_0_4px_rgba(220,38,38,0.1)]' : 'border-[var(--line)]'
+                  className={`flex h-12 items-center rounded-[12px] border bg-white px-3.5 shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)] transition focus-within:border-[#2563eb] ${
+                    emailIsInvalid ? 'border-red-300 focus-within:border-red-400' : 'border-[var(--line)]'
                   }`}
                 >
                   <input
@@ -389,7 +388,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
                     required
                     autoComplete="email"
                     placeholder="Enter your email"
-                    className="h-full w-full bg-transparent text-[14px] font-medium text-[var(--text-main)] outline-none placeholder:font-normal placeholder:text-slate-400"
+                    className="auth-form-input h-full w-full bg-transparent text-[14px] font-medium text-[var(--text-main)] outline-none placeholder:font-normal placeholder:text-slate-400"
                   />
                 </span>
               </label>
@@ -400,8 +399,8 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
                   Password
                 </span>
                 <span
-                  className={`flex h-12 items-center gap-3 rounded-[12px] border bg-white px-3.5 shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)] transition focus-within:-translate-y-0.5 focus-within:border-[#2563eb] focus-within:shadow-[inset_0_1px_2px_rgba(15,23,42,0.08),0_0_0_4px_rgba(37,99,235,0.12)] ${
-                    passwordIsInvalid ? 'border-red-300 focus-within:border-red-400 focus-within:shadow-[inset_0_1px_2px_rgba(15,23,42,0.08),0_0_0_4px_rgba(220,38,38,0.1)]' : 'border-[var(--line)]'
+                  className={`flex h-12 items-center gap-3 rounded-[12px] border bg-white px-3.5 shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)] transition focus-within:border-[#2563eb] ${
+                    passwordIsInvalid ? 'border-red-300 focus-within:border-red-400' : 'border-[var(--line)]'
                   }`}
                 >
                   <input
@@ -412,7 +411,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
                     minLength={isCreateMode ? minPasswordLength : undefined}
                     autoComplete={isCreateMode ? 'new-password' : 'current-password'}
                     placeholder="Enter your password"
-                    className="h-full w-full min-w-0 bg-transparent text-[14px] font-medium text-[var(--text-main)] outline-none placeholder:font-normal placeholder:text-slate-400"
+                    className="auth-form-input h-full w-full min-w-0 bg-transparent text-[14px] font-medium text-[var(--text-main)] outline-none placeholder:font-normal placeholder:text-slate-400"
                   />
                   <button
                     type="button"
@@ -446,8 +445,8 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
                     Confirm Password
                   </span>
                   <span
-                    className={`flex h-12 items-center gap-3 rounded-[12px] border bg-white px-3.5 shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)] transition focus-within:-translate-y-0.5 focus-within:border-[#2563eb] focus-within:shadow-[inset_0_1px_2px_rgba(15,23,42,0.08),0_0_0_4px_rgba(37,99,235,0.12)] ${
-                      confirmPasswordHasMismatch ? 'border-red-300 focus-within:border-red-400 focus-within:shadow-[inset_0_1px_2px_rgba(15,23,42,0.08),0_0_0_4px_rgba(220,38,38,0.1)]' : 'border-[var(--line)]'
+                    className={`flex h-12 items-center gap-3 rounded-[12px] border bg-white px-3.5 shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)] transition focus-within:border-[#2563eb] ${
+                      confirmPasswordHasMismatch ? 'border-red-300 focus-within:border-red-400' : 'border-[var(--line)]'
                     }`}
                   >
                     <input
@@ -459,7 +458,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
                       minLength={minPasswordLength}
                       autoComplete="new-password"
                       placeholder="Confirm your password"
-                      className="h-full w-full min-w-0 bg-transparent text-[14px] font-medium text-[var(--text-main)] outline-none placeholder:font-normal placeholder:text-slate-400"
+                      className="auth-form-input h-full w-full min-w-0 bg-transparent text-[14px] font-medium text-[var(--text-main)] outline-none placeholder:font-normal placeholder:text-slate-400"
                     />
                     <button
                       type="button"

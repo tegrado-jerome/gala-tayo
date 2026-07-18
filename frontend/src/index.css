@@ -363,6 +363,12 @@ button:disabled {
   box-shadow: var(--focus-ring);
 }
 
+.auth-form-input:focus,
+.auth-form-input:focus-visible {
+  outline: none;
+  box-shadow: none !important;
+}
+
 .ask-ai-composer-input:focus,
 .ask-ai-composer-input:focus-visible {
   outline: none;
@@ -1339,13 +1345,13 @@ button:disabled {
 
 .gala-date-trigger {
   display: flex;
-  min-height: 58px;
+  min-height: 44px;
   width: 100%;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   border: 1px solid rgba(var(--accent-rgb), 0.14);
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(249, 250, 251, 0.98));
   padding: 0 16px;
@@ -1353,6 +1359,12 @@ button:disabled {
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.9) inset,
     0 10px 30px rgba(15, 23, 42, 0.04);
+}
+
+@media (min-width: 1024px) {
+  .gala-date-trigger {
+    min-height: 46px;
+  }
 }
 
 .gala-date-trigger:hover {

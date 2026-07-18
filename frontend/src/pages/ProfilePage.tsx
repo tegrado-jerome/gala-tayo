@@ -372,7 +372,7 @@ function ProfilePage({ session }: ProfilePageProps) {
                       <AppIcon name={profile.is_public ? 'eye' : 'lock'} className="h-3.5 w-3.5" />
                       {profile.is_public ? 'Public profile' : 'Private profile'}
                     </span>
-                    <span className="profile-summary-state">Default plans: {planVisibilityLabel[defaultPlanVisibility]}</span>
+                    <span className="profile-summary-state">{planVisibilityLabel[defaultPlanVisibility]}</span>
                   </div>
                   <h1 className="profile-summary-title">
                     @{profile.username}

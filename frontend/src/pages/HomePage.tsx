@@ -789,7 +789,6 @@ function HomeCategoryTile({
   isLoading?: boolean
   onClick: () => void
 }) {
-  void isLoading
   const imageCandidates = useMemo(() => getHomeTileImageCandidates(place), [place])
   const [failedImageUrls, setFailedImageUrls] = useState<string[]>([])
   const imageUrl = imageCandidates.find((candidate) => !failedImageUrls.includes(candidate)) ?? null
@@ -814,7 +813,7 @@ function HomeCategoryTile({
           active ? 'border-[rgba(30,58,138,0.34)] shadow-[0_8px_20px_rgba(15,23,42,0.06)] ring-1 ring-[rgba(30,58,138,0.14)]' : 'border-[rgba(148,163,184,0.18)]'
         }`}
       >
-        {shouldShowImage ? (
+        {!isLoading && shouldShowImage ? (
           <div className="relative h-full w-full">
             <img
               src={imageUrl ?? undefined}
@@ -2094,6 +2093,7 @@ function HomePage({
                         label={tile.label}
                         place={tile.place}
                         active={tile.active}
+                        isLoading={!areHomeCardsLoaded}
                         onClick={() => {
                           setSelectedCityTileSlug(tile.slug ?? null)
                           navigateToPath(tile.href)
@@ -2141,6 +2141,7 @@ function HomePage({
                         label={tile.label}
                         place={tile.place}
                         active={tile.active}
+                        isLoading={!areHomeCardsLoaded}
                         onClick={() => {
                           setSelectedCategoryTileLabel(tile.label)
                           navigateToPath(tile.href)
