@@ -332,6 +332,7 @@ function ProfileSearchPage() {
   }, [normalizedQuery])
 
   const summaryCount = isShowingSearchResults ? visibleResults.length : visibleSuggestions.length
+  const isSummaryLoading = isShowingSearchResults ? isSearching : isLoadingSuggestions || isLoadingFollowing
 
   return (
     <div className="gala-app-page pb-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] sm:pb-[calc(env(safe-area-inset-bottom,0px)+4.75rem)] lg:pb-0">
@@ -392,10 +393,10 @@ function ProfileSearchPage() {
                 <div className="rounded-[24px] border border-transparent bg-transparent p-0 shadow-none">
                   <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-500">Search view</p>
                   <p className="mt-3 text-3xl font-black tracking-[-0.04em] text-slate-950">
-                    {summaryCount}
+                    {isSummaryLoading ? '...' : summaryCount}
                   </p>
                   <p className="mt-1 text-sm font-semibold leading-6 text-slate-600">
-                    {summaryCount === 1 ? 'Profile currently visible.' : 'Profiles currently visible.'}
+                    {isSummaryLoading ? 'Loading...' : summaryCount === 1 ? 'Profile currently visible.' : 'Profiles currently visible.'}
                   </p>
                 </div>
                 <div className="rounded-[24px] border border-transparent bg-transparent p-0 shadow-none">
