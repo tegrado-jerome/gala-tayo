@@ -140,6 +140,9 @@ export type CurrentUserResponse = {
     privacyAcceptedAt: string | null
     termsVersion: string | null
     privacyVersion: string | null
+    needsPolicyAcceptance?: boolean
+    requiredTermsVersion?: string
+    requiredPrivacyVersion?: string
     defaultGalaPlanVisibility: 'private' | 'followers_only' | 'public'
     followersVisibility: 'private' | 'followers_only' | 'public'
     followingVisibility: 'private' | 'followers_only' | 'public'
@@ -171,6 +174,13 @@ export type UpdateCurrentUserPayload = {
 export type OnboardingStatusResponse = {
   completed: boolean
   needsOnboarding: boolean
+  policyAcceptance?: {
+    required: boolean
+    termsVersion: string
+    privacyVersion: string
+    currentTermsVersion: string | null
+    currentPrivacyVersion: string | null
+  }
   profile: {
     username: string | null
     displayName: string | null
@@ -200,6 +210,34 @@ export type OnboardingCompleteRequest = {
   isPublic?: boolean
   acceptedTerms: boolean
   acceptedPrivacy: boolean
+}
+
+export type PrivacyRequestType = 'access' | 'correction' | 'deletion' | 'blocking' | 'objection' | 'portability' | 'withdraw_consent'
+export type PrivacyRequestStatus = 'pending' | 'in_review' | 'resolved' | 'rejected' | 'cancelled'
+
+export type PrivacyRequest = {
+  id: string
+  userId: string
+  requestType: PrivacyRequestType
+  details: string | null
+  status: PrivacyRequestStatus
+  resolvedBy: string | null
+  resolvedAt: string | null
+  moderatorNote: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export type AccountDeletionRequest = {
+  id: string
+  userId: string
+  reason: string | null
+  status: PrivacyRequestStatus
+  resolvedBy: string | null
+  resolvedAt: string | null
+  moderatorNote: string | null
+  createdAt: string
+  updatedAt: string
 }
 
 export const reservedUsernames = new Set([
@@ -547,4 +585,48 @@ export async function respondToFollowRequest(id: string, action: 'accept' | 'rej
     headers: { Authorization: `Bearer ${token}` },
   })
   return readJsonResponse<{ request: { id: string; status: 'accepted' | 'rejected' } }>(response)
+}
+
+export async function getMyPrivacyRequests(session?: Session | null) {
+  const token = await getAccessToken(session)
+  if (!token) throw new Error('Sign in is required.')
+
+  const response = await apiFetch('/me/privacy-requests', {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+
+  return readJsonResponse<{ requests: PrivacyRequest[] }>(response)
+}
+
+export async function submitPrivacyRequest(payload: { requestType: PrivacyRequestType; details?: string | null }, session?: Session | null) {
+  const token = await getAccessToken(session)
+  if (!token) throw new Error('Sign in is required.')
+
+  const response = await apiFetch('/me/privacy-requests', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
+
+  return readJsonResponse<{ message: string; request: PrivacyRequest }>(response)
+}
+
+export async function submitAccountDeletionRequest(payload: { reason?: string | null }, session?: Session | null) {
+  const token = await getAccessToken(session)
+  if (!token) throw new Error('Sign in is required.')
+
+  const response = await apiFetch('/me/account-deletion-request', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
+
+  return readJsonResponse<{ message: string; request: AccountDeletionRequest }>(response)
 }

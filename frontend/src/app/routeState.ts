@@ -15,6 +15,7 @@ import {
 export function getRouteState(pathname: string) {
   return {
     isOnboardingAllowedPath:
+      isPath(pathname, '/') ||
       isPath(pathname, '/onboarding') ||
       isPath(pathname, '/terms') ||
       isPath(pathname, '/privacy'),

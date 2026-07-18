@@ -1,6 +1,5 @@
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../supabase'
-import { getOnboardingStatus } from '../utils/profileApi'
 import { apiFetch, getApiUrl } from '../utils/apiClient'
 import { getPublicSiteOrigin } from '../utils/site'
 import {
@@ -18,10 +17,17 @@ type SignOutOptions = {
 }
 
 const adminPasswordSessionKey = 'galatayo_admin_password_session'
+const signupOnboardingAccessKey = 'galatayo:signup-onboarding-access'
+const signupOnboardingAccessTtlMs = 30 * 60 * 1000
 
 type AdminPasswordSession = {
   userId: string
   markedAt: number
+}
+
+type SignupOnboardingAccess = {
+  userId: string
+  expiresAt: number
 }
 
 export function getAuthCallbackUrl(nextPath?: string | null, flow?: 'signup' | 'recovery') {
@@ -41,11 +47,11 @@ export function getAuthCallbackUrl(nextPath?: string | null, flow?: 'signup' | '
   return queryString ? `${callbackBase}?${queryString}` : callbackBase
 }
 
-export async function signInWithGoogle(nextPath?: string | null) {
+export async function signInWithGoogle(nextPath?: string | null, flow?: 'signup') {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: getAuthCallbackUrl(nextPath),
+      redirectTo: getAuthCallbackUrl(nextPath, flow),
     },
   })
 
@@ -101,6 +107,7 @@ export async function signOut({
 
   const { error } = await supabase.auth.signOut({ scope })
   window.sessionStorage.removeItem(adminPasswordSessionKey)
+  clearSignupOnboardingAccess()
 
   if (error) {
     if (transitionStartedAt) {
@@ -187,6 +194,51 @@ export function hasAdminPasswordSession(userId: string) {
   }
 }
 
+export function markSignupOnboardingAccess(userId: string) {
+  try {
+    window.sessionStorage.setItem(
+      signupOnboardingAccessKey,
+      JSON.stringify({
+        userId,
+        expiresAt: Date.now() + signupOnboardingAccessTtlMs,
+      } satisfies SignupOnboardingAccess),
+    )
+  } catch {
+    // sessionStorage may be unavailable, ignore
+  }
+}
+
+export function hasSignupOnboardingAccess(userId: string) {
+  try {
+    const rawValue = window.sessionStorage.getItem(signupOnboardingAccessKey)
+
+    if (!rawValue) {
+      return false
+    }
+
+    const parsed = JSON.parse(rawValue) as Partial<SignupOnboardingAccess>
+
+    if (parsed.userId !== userId || typeof parsed.expiresAt !== 'number' || parsed.expiresAt <= Date.now()) {
+      window.sessionStorage.removeItem(signupOnboardingAccessKey)
+      return false
+    }
+
+    return true
+  } catch {
+    return false
+  }
+}
+
+export function clearSignupOnboardingAccess(userId?: string | null) {
+  try {
+    if (!userId || hasSignupOnboardingAccess(userId)) {
+      window.sessionStorage.removeItem(signupOnboardingAccessKey)
+    }
+  } catch {
+    // sessionStorage may be unavailable, ignore
+  }
+}
+
 export async function getCurrentEmailConflict(session: Session) {
   const response = await fetch(getApiUrl('/auth/email-conflict'), {
     method: 'GET',
@@ -256,12 +308,7 @@ export async function updateAccountPassword(password: string) {
   return data.user
 }
 
-export async function getPostAuthRedirect(session: Session, search: string = window.location.search): Promise<AuthRedirectTarget> {
-  const status = await getOnboardingStatus(session)
-  if (status.needsOnboarding) {
-    return '/onboarding'
-  }
-
+export async function getPostAuthRedirect(_session: Session, search: string = window.location.search): Promise<AuthRedirectTarget> {
   return resolvePostAuthPath('/home', search)
 }
 
@@ -310,5 +357,11 @@ export function buildAuthPath(target: '/login' | '/signup', nextPath?: string | 
 }
 
 export function resolvePostAuthPath(fallbackPath: string, search: string = window.location.search) {
-  return getRequestedNextPath(search) ?? fallbackPath
+  const requestedNextPath = getRequestedNextPath(search)
+
+  if (requestedNextPath === '/onboarding' || requestedNextPath === '/onboarding/') {
+    return fallbackPath
+  }
+
+  return requestedNextPath ?? fallbackPath
 }

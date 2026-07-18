@@ -45,6 +45,7 @@ import {
   getOptionalAuthenticatedUser,
   needsOnboarding,
   hasCompletedOnboarding,
+  hasAcceptedCurrentPolicies,
   mapAccountUser,
   mapPublicProfile,
   toNullableNumber,
@@ -363,6 +364,7 @@ export async function onboardingStatus(
       getOrCreateProfile(authUser.id, providerAvatarUrl),
     ]);
     const completed = hasCompletedOnboarding(profile, accountUser);
+    const policiesCurrent = hasAcceptedCurrentPolicies(accountUser);
 
     if (completed && !profile.onboarding_completed_at) {
       const now = new Date().toISOString();
@@ -374,7 +376,14 @@ export async function onboardingStatus(
         status: 200,
         jsonBody: {
           completed: true,
-          needsOnboarding: false,
+          needsOnboarding: !policiesCurrent,
+          policyAcceptance: {
+            required: !policiesCurrent,
+            termsVersion: TERMS_VERSION,
+            privacyVersion: PRIVACY_VERSION,
+            currentTermsVersion: accountUser.terms_version,
+            currentPrivacyVersion: accountUser.privacy_version,
+          },
           profile: {
             username: updatedProfile.username,
             displayName: updatedProfile.display_name,
@@ -389,7 +398,14 @@ export async function onboardingStatus(
       status: 200,
       jsonBody: {
         completed,
-        needsOnboarding: !completed,
+        needsOnboarding: !completed || !policiesCurrent,
+        policyAcceptance: {
+          required: !policiesCurrent,
+          termsVersion: TERMS_VERSION,
+          privacyVersion: PRIVACY_VERSION,
+          currentTermsVersion: accountUser.terms_version,
+          currentPrivacyVersion: accountUser.privacy_version,
+        },
         profile: profile
           ? {
               username: profile.username,

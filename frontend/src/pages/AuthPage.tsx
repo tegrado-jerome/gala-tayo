@@ -342,6 +342,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
                   onGoogleLoadingChange={handleGoogleLoadingChange}
                   onError={setError}
                   nextPath={isCreateMode ? (nextPath ?? '/onboarding') : nextPath}
+                  flow={isCreateMode ? 'signup' : undefined}
                 />
               ) : (
                 <div className="mx-auto w-full max-w-[360px] rounded-[14px] border border-[rgba(30,58,138,0.16)] bg-[var(--accent-wash)] px-4 py-3 text-center text-[13px] font-semibold leading-6 text-[var(--accent-deep)]">

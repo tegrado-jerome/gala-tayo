@@ -14,7 +14,8 @@ import {
   saveOnboardingDraft as saveRemoteOnboardingDraft,
   uploadProfileAvatar,
 } from '../services/onboardingApi'
-import { getOnboardingStatus } from '../utils/profileApi'
+import { clearSignupOnboardingAccess } from '../services/authApi'
+import { getCurrentUser, getMyProfile, getOnboardingStatus } from '../utils/profileApi'
 import { avatarUploadErrorMessage, isValidAvatarFile, prepareAvatarUploadFile } from '../utils/avatarUpload'
 import { replaceWithPath } from '../utils/navigation'
 import { trackOnboardingCompleted } from '../utils/analytics'
@@ -294,9 +295,33 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
         const status = await getOnboardingStatus(session)
 
         if (isMounted && !status.needsOnboarding) {
+          clearSignupOnboardingAccess(session.user.id)
           setIsRedirectingHome(true)
           clearOnboardingDraft(session.user.id)
           replaceWithPath('/home')
+          return
+        }
+
+        if (isMounted && status.completed && status.policyAcceptance?.required) {
+          const [accountData, profileData] = await Promise.all([getCurrentUser(session), getMyProfile(session)])
+          const existingUser = accountData.user
+          const existingProfile = profileData.profile
+
+          setValues((currentValues) => ({
+            ...currentValues,
+            step: 5,
+            firstName: existingUser.firstName ?? currentValues.firstName,
+            middleName: existingUser.middleName ?? '',
+            lastName: existingUser.lastName ?? currentValues.lastName,
+            birthdate: existingUser.birthdate ?? currentValues.birthdate,
+            displayName: accountData.profile?.displayName ?? currentValues.displayName,
+            username: existingProfile?.username ?? accountData.profile?.username ?? currentValues.username,
+            avatarUrl: existingProfile?.avatar_url ?? accountData.profile?.avatarUrl ?? currentValues.avatarUrl,
+            profileVisibility: existingProfile?.is_public === false ? 'private' : 'public',
+            acceptedTerms: false,
+            acceptedPrivacy: false,
+          }))
+          setIsDraftReady(true)
           return
         }
 
@@ -494,6 +519,7 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
       setIsSubmitting(true)
       setErrors({})
       await completeOnboardingSetup({ ...values, username: normalizedUsername }, session)
+      clearSignupOnboardingAccess(session.user.id)
       setIsRedirectingHome(true)
       trackOnboardingCompleted({
         method: 'profile_setup',

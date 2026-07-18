@@ -5,6 +5,7 @@ import { preloadAvatarImage } from '../utils/avatarImageCache'
 import { getCurrentUser, getOnboardingStatus, type CurrentUserResponse } from '../utils/profileApi'
 import { getAdminMfaStatus, type AdminMfaStatus } from '../utils/adminMfa'
 import { clearAppResumeCache, readAppResumeCache, writeAppResumeCache } from '../utils/appResumeCache'
+import { clearEmptyHashFragment } from '../utils/navigation'
 
 function isSessionExpired(session: Session | null): boolean {
   if (!session) return false
@@ -16,8 +17,8 @@ export function useAuthOrchestration() {
   const [initialResumeCache] = useState(() => readAppResumeCache())
   const [session, setSession] = useState<Session | null>(null)
   const [hasResolvedInitialAuth, setHasResolvedInitialAuth] = useState(false)
-  const [needsOnboarding, setNeedsOnboarding] = useState(initialResumeCache?.needsOnboarding ?? false)
-  const [hasResolvedProfile, setHasResolvedProfile] = useState(Boolean(initialResumeCache))
+  const [needsOnboarding, setNeedsOnboarding] = useState(false)
+  const [hasResolvedProfile, setHasResolvedProfile] = useState(initialResumeCache?.needsOnboarding === false)
   const [isInitialProfileLoading, setIsInitialProfileLoading] = useState(false)
   const [currentUser, setCurrentUser] = useState<CurrentUserResponse['user'] | null>(null)
   const [currentProfile, setCurrentProfile] = useState<CurrentUserResponse['profile'] | null>(initialResumeCache?.currentProfile ?? null)
@@ -36,11 +37,29 @@ export function useAuthOrchestration() {
 
     supabase.auth.getSession().then(({ data }) => {
       if (isMounted) {
+        clearEmptyHashFragment()
+
         if (data.session && isSessionExpired(data.session)) {
           supabase.auth.signOut()
           sessionRef.current = null
           setSession(null)
+          setCurrentUser(null)
+          setCurrentProfile(null)
+          setNeedsOnboarding(false)
+          setHasResolvedProfile(true)
+          clearAppResumeCache()
         } else {
+          if (data.session && initialResumeCache?.userId !== data.session.user.id) {
+            setCurrentProfile(null)
+            setNeedsOnboarding(false)
+            setHasResolvedProfile(false)
+            clearAppResumeCache()
+          } else if (!data.session) {
+            setCurrentProfile(null)
+            setNeedsOnboarding(false)
+            setHasResolvedProfile(true)
+            clearAppResumeCache()
+          }
           sessionRef.current = data.session
           setSession(data.session)
         }
@@ -57,12 +76,27 @@ export function useAuthOrchestration() {
       const didUserIdentityChange = previousUserId !== nextUserId
 
       sessionRef.current = nextSession
+      clearEmptyHashFragment()
       setSession(nextSession)
       setHasResolvedInitialAuth(true)
       const hasCompletedInitialAuth = hasCompletedInitialAuthRef.current
       hasCompletedInitialAuthRef.current = true
 
-      if (didUserIdentityChange && hasCompletedInitialAuth) {
+      if (event === 'SIGNED_OUT' || !nextSession) {
+        setCurrentUser(null)
+        setCurrentProfile(null)
+        setNeedsOnboarding(false)
+        setHasResolvedProfile(true)
+        setProfileError('')
+        setIsInitialProfileLoading(false)
+        setIsCurrentProfileLoading(false)
+        setIsRefreshingSession(false)
+        setAdminMfaStatus(null)
+        setIsAdminMfaLoading(false)
+        clearAppResumeCache()
+      }
+
+      if (nextSession && didUserIdentityChange && hasCompletedInitialAuth) {
         setHasResolvedProfile(false)
       }
 
@@ -81,7 +115,7 @@ export function useAuthOrchestration() {
       isMounted = false
       subscription.unsubscribe()
     }
-  }, [])
+  }, [initialResumeCache])
 
   useEffect(() => {
     if (!hasResolvedInitialAuth) {
@@ -92,6 +126,7 @@ export function useAuthOrchestration() {
 
     if (!activeSession) {
       setCurrentUser(null)
+      setCurrentProfile(null)
       setNeedsOnboarding(false)
       setHasResolvedProfile(true)
       setProfileError('')

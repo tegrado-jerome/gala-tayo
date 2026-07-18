@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { ArrowRight } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import galaTayoLogo from '../assets/brand/galatayo-logo.svg'
 import SeoHead from '../components/SeoHead'
 import { navigateToPath } from '../utils/navigation'
-import { shouldBlockOnNavigationEntry, type NavigationSource } from '../utils/navigationLoading'
+import type { NavigationSource } from '../utils/navigationLoading'
 
 type WelcomeAsset = {
   src: string
@@ -42,9 +43,24 @@ function getWelcomeHeroSrc() {
   return '/images/welcome/laptop-desktop.webp'
 }
 
+function waitForDuration(durationMs: number, timeoutIds?: number[]) {
+  return new Promise<void>((resolve) => {
+    const timeoutId = window.setTimeout(resolve, durationMs)
+    timeoutIds?.push(timeoutId)
+  })
+}
+
+function waitForNextPaint() {
+  return new Promise<void>((resolve) => {
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => resolve())
+    })
+  })
+}
+
 function WelcomeLoader() {
   return (
-    <main className="welcome-loader">
+    <div className="welcome-loader" aria-label="Loading welcome screen" aria-live="polite">
       <div className="welcome-loader__content">
         <img
           src={galaTayoLogo}
@@ -54,15 +70,18 @@ function WelcomeLoader() {
           height={58}
         />
       </div>
-    </main>
+    </div>
   )
 }
 
 async function waitForImageReady(image: HTMLImageElement) {
-  if (!image.complete) {
-    await new Promise<void>((resolve) => {
-      image.onload = () => resolve()
-      image.onerror = () => resolve()
+  if (!image.complete || image.naturalWidth === 0) {
+    await new Promise<void>((resolve, reject) => {
+      const handleLoad = () => resolve()
+      const handleError = () => reject(new Error('Welcome image failed to load.'))
+
+      image.addEventListener('load', handleLoad, { once: true })
+      image.addEventListener('error', handleError, { once: true })
     })
   }
 
@@ -73,6 +92,8 @@ async function waitForImageReady(image: HTMLImageElement) {
       // Fall back to revealing the page if decode fails after load.
     }
   }
+
+  await waitForNextPaint()
 }
 
 type WelcomePageProps = {
@@ -80,65 +101,69 @@ type WelcomePageProps = {
 }
 
 function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
-  const shouldBlockOnEntry = shouldBlockOnNavigationEntry(navigationSource)
-  const [isReady, setIsReady] = useState(() => !shouldBlockOnEntry)
-  const heroSrc = useMemo(() => getWelcomeHeroSrc(), [])
+  const imageRef = useRef<HTMLImageElement | null>(null)
+  const hasRevealedRef = useRef(false)
+  const [heroSrc, setHeroSrc] = useState(() => getWelcomeHeroSrc())
+  const [isReady, setIsReady] = useState(false)
 
   useEffect(() => {
-    if (!shouldBlockOnEntry) {
-      setIsReady(true)
-      return
-    }
+    let animationFrameId = 0
 
-    let isCancelled = false
-    const startedAt = window.performance.now()
-    const preloadImage = new Image()
-    let hasCompleted = false
-
-    const revealWhenAllowed = () => {
-      if (isCancelled || hasCompleted) {
+    const updateHeroSrc = () => {
+      if (hasRevealedRef.current) {
         return
       }
 
-      hasCompleted = true
-      setIsReady(true)
+      window.cancelAnimationFrame(animationFrameId)
+      animationFrameId = window.requestAnimationFrame(() => {
+        setHeroSrc(getWelcomeHeroSrc())
+      })
     }
 
-    const completeWhenReady = () => {
-      const elapsed = window.performance.now() - startedAt
-      const remainingDelay = Math.max(WELCOME_LOADING_MIN_MS - elapsed, 0)
+    window.addEventListener('resize', updateHeroSrc)
+    window.addEventListener('orientationchange', updateHeroSrc)
 
-      window.setTimeout(revealWhenAllowed, remainingDelay)
+    return () => {
+      window.cancelAnimationFrame(animationFrameId)
+      window.removeEventListener('resize', updateHeroSrc)
+      window.removeEventListener('orientationchange', updateHeroSrc)
+    }
+  }, [])
+
+  useEffect(() => {
+    let isCancelled = false
+    const timeoutIds: number[] = []
+    const image = imageRef.current
+
+    if (!image) {
+      return
     }
 
-    const maxDelayTimeoutId = window.setTimeout(revealWhenAllowed, WELCOME_LOADING_MAX_MS)
+    setIsReady(false)
 
-    preloadImage.src = heroSrc
-    void waitForImageReady(preloadImage).then(() => {
-      completeWhenReady()
-    })
+    const revealWhenAllowed = () => {
+      if (!isCancelled) {
+        hasRevealedRef.current = true
+        setIsReady(true)
+      }
+    }
+
+    const imageReadyPromise = waitForImageReady(image).catch(
+      () => new Promise<never>(() => {})
+    )
+    const minimumDelayPromise = waitForDuration(WELCOME_LOADING_MIN_MS, timeoutIds)
+    const readyAfterMinimumPromise = Promise.all([imageReadyPromise, minimumDelayPromise])
+
+    void Promise.race([
+      readyAfterMinimumPromise,
+      waitForDuration(WELCOME_LOADING_MAX_MS, timeoutIds),
+    ]).then(revealWhenAllowed)
 
     return () => {
       isCancelled = true
-      window.clearTimeout(maxDelayTimeoutId)
-      preloadImage.onload = null
-      preloadImage.onerror = null
+      timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId))
     }
-  }, [heroSrc, shouldBlockOnEntry])
-
-  if (!isReady) {
-    return (
-      <>
-        <SeoHead
-          title="GalaTayo | Discover Metro Manila places"
-          description="GalaTayo helps you discover Metro Manila places, browse city pages, and plan your next gala."
-          canonicalPath="/"
-          openGraphType="website"
-        />
-        <WelcomeLoader />
-      </>
-    )
-  }
+  }, [heroSrc])
 
   return (
     <>
@@ -167,12 +192,17 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
           },
         ]}
       />
-      <main className="welcome-page">
+      <main
+        className={`welcome-page${isReady ? ' is-ready' : ' is-loading'}`}
+        aria-busy={!isReady}
+        data-navigation-source={navigationSource}
+      >
         <picture className="welcome-page__media">
           {welcomeAssets.map((asset) => (
             <source key={asset.src} srcSet={asset.src} media={asset.media} type="image/webp" />
           ))}
           <img
+            ref={imageRef}
             src={heroSrc}
             alt="Two people looking over the city skyline at sunset."
             className="welcome-page__image"
@@ -186,19 +216,22 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
         </picture>
 
         <div className="welcome-page__overlay" />
-        <section className="welcome-page__content">
-          <h1 className="welcome-page__title">Plan your next gala.</h1>
+        <section className="welcome-page__content" aria-hidden={!isReady}>
+          <h1 className="welcome-page__title">Your next gala starts here.</h1>
           <p className="welcome-page__description">
-            Browse spots and build a plan fast.
+            Discover places and build your next plan with ease.
           </p>
           <button
             type="button"
             onClick={() => navigateToPath('/home')}
             className="welcome-page__button"
+            disabled={!isReady}
           >
-            Tara na!
+            <span className="welcome-page__button-label">Start exploring</span>
+            <ArrowRight className="welcome-page__button-icon" aria-hidden="true" strokeWidth={2.6} />
           </button>
         </section>
+        {!isReady && <WelcomeLoader />}
       </main>
     </>
   )

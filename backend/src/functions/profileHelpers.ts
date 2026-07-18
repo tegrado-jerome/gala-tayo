@@ -167,12 +167,24 @@ export function hasCompletedOnboarding(profile: ProfileRow | null, accountUser?:
   return Boolean(profile.username && profile.display_name && accountUser.first_name && accountUser.last_name && accountUser.birthdate && accountUser.terms_accepted_at && accountUser.privacy_accepted_at);
 }
 
+export function hasAcceptedCurrentPolicies(accountUser: AccountUserRow | null | undefined) {
+  return Boolean(
+    accountUser?.terms_accepted_at &&
+    accountUser?.privacy_accepted_at &&
+    accountUser.terms_version === TERMS_VERSION &&
+    accountUser.privacy_version === PRIVACY_VERSION
+  );
+}
+
 export function mapAccountUser(row: AccountUserRow) {
   return {
     id: row.id, email: row.email, firstName: row.first_name, middleName: row.middle_name, lastName: row.last_name,
     birthdate: row.birthdate, role: row.role ?? "member", lastSeenAt: row.last_seen_at,
     termsAcceptedAt: row.terms_accepted_at, privacyAcceptedAt: row.privacy_accepted_at,
     termsVersion: row.terms_version, privacyVersion: row.privacy_version,
+    needsPolicyAcceptance: !hasAcceptedCurrentPolicies(row),
+    requiredTermsVersion: TERMS_VERSION,
+    requiredPrivacyVersion: PRIVACY_VERSION,
     defaultGalaPlanVisibility: row.default_gala_plan_visibility ?? "private",
     followersVisibility: row.followers_visibility ?? "public",
     followingVisibility: row.following_visibility ?? "public",

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../supabase'
 import { StateContainer } from '../components/layout/ResponsiveLayouts'
-import { getCurrentEmailConflict, getPostAuthRedirect, getRequestedNextPath } from '../services/authApi'
+import { getCurrentEmailConflict, getPostAuthRedirect, getRequestedNextPath, markSignupOnboardingAccess } from '../services/authApi'
 import { buildAuthPath } from '../services/authApi'
 import { navigateToPath } from '../utils/navigation'
 import { trackLoginCompleted, trackSignUpCompleted } from '../utils/analytics'
@@ -80,6 +80,7 @@ function AuthCallbackPage() {
           trackSignUpCompleted({
             source: 'signup',
           })
+          markSignupOnboardingAccess(session.user.id)
           if (isMounted) {
             navigateToPath('/onboarding')
           }

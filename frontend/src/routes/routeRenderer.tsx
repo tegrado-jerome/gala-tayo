@@ -1,4 +1,5 @@
-import { lazy } from 'react'
+import { lazy, useEffect, useState } from 'react'
+import type { Session } from '@supabase/supabase-js'
 import SeoHead from '../components/SeoHead'
 import ProtectedFeatureGate from '../components/ProtectedFeatureGate'
 import SharedPlacePage from '../pages/SharedPlacePage'
@@ -18,6 +19,7 @@ import AuthCallbackPage from '../pages/AuthCallbackPage'
 import OnboardingPage from '../pages/OnboardingPage'
 import ProfilePage from '../pages/ProfilePage'
 import AccountSettingsPage from '../pages/AccountSettingsPage'
+import PrivacyCenterPage from '../pages/PrivacyCenterPage'
 import ChangePasswordPage from '../pages/ChangePasswordPage'
 import ForgotPasswordPage from '../pages/ForgotPasswordPage'
 import ResetPasswordPage from '../pages/ResetPasswordPage'
@@ -33,7 +35,9 @@ import AskAiOverviewPage from '../pages/AskAiOverviewPage'
 import PlacesIndexPage from '../pages/PlacesIndexPage'
 import PlaceCategoriesIndexPage from '../pages/PlaceCategoriesIndexPage'
 import CategoryPlacesPage from '../pages/CategoryPlacesPage'
-import { navigateToPath } from '../utils/navigation'
+import { buildAuthPath, clearSignupOnboardingAccess, hasSignupOnboardingAccess } from '../services/authApi'
+import { getOnboardingStatus } from '../utils/profileApi'
+import { navigateToPath, replaceWithPath } from '../utils/navigation'
 import { AdminRouteGate } from './AdminRouteGate'
 import { InitialAuthLoader, NotFoundPage, RootEntryLoader } from './RouteViewHelpers'
 import type { RouteDescriptor, RouteInputs } from './routeResolver'
@@ -46,6 +50,75 @@ const AdminPlaceReportsPage = lazy(() => import('../pages/admin/PlaceReportsPage
 const AdminCommentReportsPage = lazy(() => import('../pages/admin/CommentReportsPage'))
 const AdminMfaSetupPage = lazy(() => import('../pages/admin/AdminMfaSetupPage'))
 const AdminMfaVerifyPage = lazy(() => import('../pages/admin/AdminMfaVerifyPage'))
+
+function OnboardingAccessGate({
+  session,
+  hasResolvedInitialAuth,
+  onComplete,
+}: {
+  session: Session | null
+  hasResolvedInitialAuth: boolean
+  onComplete: () => void
+}) {
+  const [isAllowed, setIsAllowed] = useState(false)
+
+  useEffect(() => {
+    if (!hasResolvedInitialAuth) {
+      return
+    }
+
+    if (!session) {
+      replaceWithPath(buildAuthPath('/signup', '/onboarding'))
+      return
+    }
+
+    if (!hasSignupOnboardingAccess(session.user.id)) {
+      replaceWithPath('/home')
+      return
+    }
+
+    let isMounted = true
+
+    void getOnboardingStatus(session)
+      .then((status) => {
+        if (!isMounted) {
+          return
+        }
+
+        if (status.completed) {
+          clearSignupOnboardingAccess(session.user.id)
+          replaceWithPath('/home')
+          return
+        }
+
+        setIsAllowed(true)
+      })
+      .catch(() => {
+        if (isMounted) {
+          clearSignupOnboardingAccess(session.user.id)
+          replaceWithPath('/home')
+        }
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [hasResolvedInitialAuth, session])
+
+  if (!hasResolvedInitialAuth) {
+    return <InitialAuthLoader />
+  }
+
+  if (!session) {
+    return <InitialAuthLoader />
+  }
+
+  if (!isAllowed) {
+    return <InitialAuthLoader />
+  }
+
+  return <OnboardingPage session={session} onComplete={onComplete} />
+}
 
 export function renderRouteDescriptor(descriptor: RouteDescriptor, inputs: RouteInputs) {
   const { session, search, pathname, navigationSource, isAdminMfaLoading, adminMfaStatus } = inputs
@@ -61,10 +134,13 @@ export function renderRouteDescriptor(descriptor: RouteDescriptor, inputs: Route
     case 'initial-auth-loader':
       return <InitialAuthLoader />
     case 'onboarding':
-      if (!session) {
-        return <LoginPage />
-      }
-      return <OnboardingPage session={session} onComplete={inputs.onProfileRefreshKeyUpdate} />
+      return (
+        <OnboardingAccessGate
+          session={session}
+          hasResolvedInitialAuth={inputs.hasResolvedInitialAuth}
+          onComplete={inputs.onProfileRefreshKeyUpdate}
+        />
+      )
     case 'legal':
       return <LegalPage type={descriptor.page} />
     case 'place-submission':
@@ -162,21 +238,21 @@ export function renderRouteDescriptor(descriptor: RouteDescriptor, inputs: Route
     case 'ask-ai-overview':
       return (
         <>
-          <SeoHead title="Ask AI | GalaTayo" description="Choose how you want GalaTayo AI to help you." canonicalPath="/ask-ai" robots="noindex,follow" />
+          <SeoHead title="GalaTayo AI | GalaTayo" description="Choose how you want GalaTayo AI to help you." canonicalPath="/ask-ai" robots="noindex,follow" />
           <AskAiOverviewPage />
         </>
       )
     case 'ask-ai-chatbot':
       return (
         <>
-          <SeoHead title="AI Chatbot | GalaTayo" description="Ask AI chatbot mode on GalaTayo." canonicalPath="/ask-ai/chatbot" robots="noindex,follow" />
+          <SeoHead title="AI Chatbot | GalaTayo" description="GalaTayo AI chatbot mode on GalaTayo." canonicalPath="/ask-ai/chatbot" robots="noindex,follow" />
           <SearchHub key={`ask-ai:${search || 'root'}`} initialMode="ask-ai" initialAskAiQuestion={descriptor.initialAskAiQuestion} navigationSource={navigationSource} />
         </>
       )
     case 'ask-ai-maps':
       return (
         <>
-          <SeoHead title="AI Maps | GalaTayo" description="Ask AI maps mode on GalaTayo." canonicalPath="/ask-ai/maps" robots="noindex,follow" />
+          <SeoHead title="AI Maps | GalaTayo" description="GalaTayo AI maps mode on GalaTayo." canonicalPath="/ask-ai/maps" robots="noindex,follow" />
           <AskAiMapPage />
         </>
       )
@@ -233,6 +309,11 @@ export function renderRouteDescriptor(descriptor: RouteDescriptor, inputs: Route
         return <LoginPage />
       }
       return <AccountSettingsPage session={session} />
+    case 'privacy-center':
+      if (!session) {
+        return <LoginPage />
+      }
+      return <PrivacyCenterPage session={session} />
     case 'change-password':
       if (!session) {
         return <LoginPage />
