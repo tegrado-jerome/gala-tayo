@@ -35,7 +35,7 @@ import AskAiOverviewPage from '../pages/AskAiOverviewPage'
 import PlacesIndexPage from '../pages/PlacesIndexPage'
 import PlaceCategoriesIndexPage from '../pages/PlaceCategoriesIndexPage'
 import CategoryPlacesPage from '../pages/CategoryPlacesPage'
-import { buildAuthPath, clearSignupOnboardingAccess, hasSignupOnboardingAccess } from '../services/authApi'
+import { buildAuthPath } from '../services/authApi'
 import { getOnboardingStatus } from '../utils/profileApi'
 import { navigateToPath, replaceWithPath } from '../utils/navigation'
 import { getPublicSiteOrigin } from '../utils/site'
@@ -81,13 +81,7 @@ function OnboardingAccessGate({
           return
         }
 
-        if (status.completed) {
-          clearSignupOnboardingAccess(session.user.id)
-          replaceWithPath('/home')
-          return
-        }
-
-        if (!status.needsOnboarding && !hasSignupOnboardingAccess(session.user.id)) {
+        if (!status.needsOnboarding) {
           replaceWithPath('/home')
           return
         }
@@ -96,7 +90,6 @@ function OnboardingAccessGate({
       })
       .catch(() => {
         if (isMounted) {
-          clearSignupOnboardingAccess(session.user.id)
           replaceWithPath('/home')
         }
       })

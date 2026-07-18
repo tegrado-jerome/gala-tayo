@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../supabase'
 import { StateContainer } from '../components/layout/ResponsiveLayouts'
-import { getCurrentEmailConflict, getPostAuthRedirect, getRequestedNextPath, markSignupOnboardingAccess } from '../services/authApi'
+import { getCurrentEmailConflict, getPostAuthRedirect } from '../services/authApi'
+import { getOnboardingStatus } from '../utils/profileApi'
 import { buildAuthPath } from '../services/authApi'
 import { navigateToPath } from '../utils/navigation'
 import { trackLoginCompleted, trackSignUpCompleted } from '../utils/analytics'
@@ -72,15 +73,15 @@ function AuthCallbackPage() {
           throw new Error('This email already has a GalaTayo account. Please log in using the original method for that account.')
         }
 
-        const params = new URLSearchParams(window.location.search)
-        const requestedNextPath = getRequestedNextPath(window.location.search)
-        const authFlow = params.get('flow')
+        const { needsOnboarding, completed } = await getOnboardingStatus(session)
 
-        if (authFlow === 'signup' || requestedNextPath === '/onboarding') {
-          trackSignUpCompleted({
-            source: 'signup',
-          })
-          markSignupOnboardingAccess(session.user.id)
+        if (needsOnboarding) {
+          if (!completed) {
+            trackSignUpCompleted({
+              source: 'signup',
+            })
+          }
+
           if (isMounted) {
             navigateToPath('/onboarding')
           }
