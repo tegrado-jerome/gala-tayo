@@ -1,7 +1,8 @@
 const LOGOUT_TRANSITION_EVENT = 'galatayo:logout-transition'
 const LOGOUT_TRANSITION_STORAGE_KEY = 'galatayo:logout-transition'
 
-const LOGOUT_TRANSITION_DURATION_MS = 700
+const LOGOUT_TRANSITION_DURATION_MS = 900
+const LOGOUT_TRANSITION_EXIT_MS = 220
 const LOGOUT_TRANSITION_STALE_MS = 5000
 
 type LogoutTransitionDetail =
@@ -76,6 +77,8 @@ function getPendingLogoutTransitionStart() {
 export {
   LOGOUT_TRANSITION_DURATION_MS,
   LOGOUT_TRANSITION_EVENT,
+  LOGOUT_TRANSITION_EXIT_MS,
+  LOGOUT_TRANSITION_STALE_MS,
   endLogoutTransition,
   getPendingLogoutTransitionStart,
   startLogoutTransition,

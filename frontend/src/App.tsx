@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { isPath } from './utils/routes'
 import { isProtectedAccountPath } from './utils/routeGuards'
 import { getLegacyAdminRedirectPath } from './utils/adminRoutes'
@@ -29,10 +29,14 @@ function App() {
   } = useAuthOrchestration()
 
   const { pathname, search, navigationSource, restoredScrollY, setRestoredScrollY } = useAppLocationState()
-  const showLogoutTransition = useLogoutTransitionState()
+  const logoutTransition = useLogoutTransitionState()
+  const showLogoutTransition = logoutTransition.isVisible
+  const lastAccountViewRef = useRef({
+    currentUser,
+    currentProfile,
+  })
 
   const {
-    isOnboardingAllowedPath,
     canonicalPlacePath,
     categoryPageSlug,
     areaPageSlug,
@@ -74,15 +78,13 @@ function App() {
       isPasswordResetPath,
       session,
       hasResolvedProfile,
-      needsOnboarding,
       pathname,
-      isOnboardingAllowedPath,
     })
 
     if (redirectTarget) {
       navigateToPath(redirectTarget)
     }
-  }, [hasResolvedInitialAuth, hasResolvedProfile, isOnboardingAllowedPath, isPasswordResetPath, needsOnboarding, pathname, session])
+  }, [hasResolvedInitialAuth, hasResolvedProfile, isPasswordResetPath, pathname, session])
 
   useEffect(() => {
     if (soonFeatureRedirectPath && pathname !== soonFeatureRedirectPath) {
@@ -97,6 +99,26 @@ function App() {
 
     replaceWithPath(legacyAdminRedirectPath)
   }, [legacyAdminRedirectPath])
+
+  useEffect(() => {
+    if (session) {
+      lastAccountViewRef.current = {
+        currentUser,
+        currentProfile,
+      }
+      return
+    }
+
+    if (!showLogoutTransition) {
+      lastAccountViewRef.current = {
+        currentUser: null,
+        currentProfile: null,
+      }
+    }
+  }, [currentProfile, currentUser, session, showLogoutTransition])
+
+  const effectiveCurrentUser = session ? currentUser : showLogoutTransition ? lastAccountViewRef.current.currentUser : null
+  const effectiveCurrentProfile = session ? currentProfile : showLogoutTransition ? lastAccountViewRef.current.currentProfile : null
 
   const content = matchRoute({
     session,
@@ -119,8 +141,8 @@ function App() {
     publicProfileUsername,
     editGalaPlanId,
     ownedGalaPlanId,
-    currentUser,
-    currentProfile,
+    currentUser: effectiveCurrentUser,
+    currentProfile: effectiveCurrentProfile,
     isAdminMfaLoading,
     adminMfaStatus,
     navigationSource,
@@ -130,8 +152,8 @@ function App() {
   return (
     <AppShell
       session={session}
-      currentUser={currentUser}
-      currentProfile={currentProfile}
+      currentUser={effectiveCurrentUser}
+      currentProfile={effectiveCurrentProfile}
       adminMfa={{
         isLoading: isAdminMfaLoading,
         status: adminMfaStatus,
@@ -140,6 +162,7 @@ function App() {
       pathname={pathname}
       search={search}
       showLogoutTransition={showLogoutTransition}
+      isLogoutTransitionExiting={logoutTransition.isExiting}
     >
       {content}
     </AppShell>

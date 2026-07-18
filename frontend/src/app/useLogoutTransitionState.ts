@@ -1,14 +1,25 @@
 import { useEffect, useState } from 'react'
 import {
   getPendingLogoutTransitionStart,
-  LOGOUT_TRANSITION_DURATION_MS,
   LOGOUT_TRANSITION_EVENT,
+  LOGOUT_TRANSITION_EXIT_MS,
+  LOGOUT_TRANSITION_STALE_MS,
   type LogoutTransitionDetail,
 } from '../utils/logoutTransition'
 
+type LogoutTransitionState = {
+  isVisible: boolean
+  isExiting: boolean
+}
+
 export function useLogoutTransitionState() {
-  const [logoutTransitionStartedAt, setLogoutTransitionStartedAt] = useState<number | null>(() => (
-    typeof window === 'undefined' ? null : getPendingLogoutTransitionStart()
+  const [logoutTransitionState, setLogoutTransitionState] = useState<{
+    startedAt: number | null
+    isExiting: boolean
+  }>(() => (
+    typeof window === 'undefined'
+      ? { startedAt: null, isExiting: false }
+      : { startedAt: getPendingLogoutTransitionStart(), isExiting: false }
   ))
 
   useEffect(() => {
@@ -20,11 +31,18 @@ export function useLogoutTransitionState() {
       const customEvent = event as CustomEvent<LogoutTransitionDetail>
 
       if (customEvent.detail.phase === 'start') {
-        setLogoutTransitionStartedAt(customEvent.detail.startedAt)
+        setLogoutTransitionState({
+          startedAt: customEvent.detail.startedAt,
+          isExiting: false,
+        })
         return
       }
 
-      setLogoutTransitionStartedAt(null)
+      setLogoutTransitionState((currentState) => (
+        currentState.startedAt === null
+          ? currentState
+          : { ...currentState, isExiting: true }
+      ))
     }
 
     window.addEventListener(LOGOUT_TRANSITION_EVENT, handleLogoutTransition)
@@ -35,28 +53,40 @@ export function useLogoutTransitionState() {
   }, [])
 
   useEffect(() => {
-    if (logoutTransitionStartedAt === null) {
+    if (logoutTransitionState.startedAt === null) {
       return undefined
     }
 
-    const remainingMs = Math.max(
-      LOGOUT_TRANSITION_DURATION_MS - (Date.now() - logoutTransitionStartedAt),
-      0,
+    if (logoutTransitionState.isExiting) {
+      const timeoutId = window.setTimeout(() => {
+        setLogoutTransitionState({ startedAt: null, isExiting: false })
+      }, LOGOUT_TRANSITION_EXIT_MS)
+
+      return () => {
+        window.clearTimeout(timeoutId)
+      }
+    }
+
+    const staleMs = Math.max(
+      LOGOUT_TRANSITION_STALE_MS - (Date.now() - logoutTransitionState.startedAt),
+      LOGOUT_TRANSITION_EXIT_MS,
     )
 
-    if (remainingMs === 0) {
-      setLogoutTransitionStartedAt(null)
-      return undefined
-    }
-
     const timeoutId = window.setTimeout(() => {
-      setLogoutTransitionStartedAt(null)
-    }, remainingMs)
+      setLogoutTransitionState((currentState) => (
+        currentState.startedAt === null
+          ? currentState
+          : { ...currentState, isExiting: true }
+      ))
+    }, staleMs)
 
     return () => {
       window.clearTimeout(timeoutId)
     }
-  }, [logoutTransitionStartedAt])
+  }, [logoutTransitionState])
 
-  return logoutTransitionStartedAt !== null
+  return {
+    isVisible: logoutTransitionState.startedAt !== null,
+    isExiting: logoutTransitionState.isExiting,
+  } satisfies LogoutTransitionState
 }
