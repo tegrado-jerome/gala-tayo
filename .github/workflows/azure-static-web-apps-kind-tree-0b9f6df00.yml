@@ -46,6 +46,7 @@ jobs:
           VITE_API_BASE_URL: "https://galatayo-api-cvawfwgrg6akdmem.southeastasia-01.azurewebsites.net/api"
           VITE_SITE_URL: "https://galatayo.app"
           VITE_GA_MEASUREMENT_ID: ${{ secrets.VITE_GA_MEASUREMENT_ID }}
+          VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
         run: |
           npm ci
           npm run validate
@@ -61,6 +62,7 @@ jobs:
           VITE_GOOGLE_SITE_VERIFICATION: ${{ secrets.VITE_GOOGLE_SITE_VERIFICATION }}
           VITE_BING_SITE_VERIFICATION: ${{ secrets.VITE_BING_SITE_VERIFICATION }}
           VITE_ADMIN_BASE_PATH: ${{ secrets.VITE_ADMIN_BASE_PATH }}
+          VITE_GOOGLE_CLIENT_ID: ${{ secrets.VITE_GOOGLE_CLIENT_ID }}
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_KIND_TREE_0B9F6DF00 }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
