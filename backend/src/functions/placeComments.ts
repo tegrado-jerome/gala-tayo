@@ -39,7 +39,8 @@ export async function placeCommentsList(
     const commentsTable = supabaseAdmin.from("place_comments") as any;
     const { data, error } = await commentsTable
       .select(COMMENT_COLUMNS)
-      .eq("place_id", placeId);
+      .eq("place_id", placeId)
+      .eq("status", "visible");
 
     if (error) {
       context.error("Failed to fetch place comments:", error);
@@ -163,6 +164,10 @@ export async function placeCommentRepliesCreate(
     }
 
     if (!parentComment) return badRequest("Parent comment not found.");
+
+    if (parentComment.place_id !== placeId) {
+      return badRequest("Parent comment does not belong to this place.");
+    }
 
     if (parentComment.parent_comment_id) {
       return badRequest("Cannot reply to a reply.");
@@ -310,7 +315,7 @@ export async function placeCommentsDelete(
 
     const now = new Date().toISOString();
     const { error: deleteError } = await commentsTable
-      .update({ status: "deleted", deleted_at: now, updated_at: now })
+      .update({ deleted_at: now, updated_at: now })
       .eq("id", commentId);
 
     if (deleteError) {
