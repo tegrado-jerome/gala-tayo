@@ -45,7 +45,7 @@ import {
   getOptionalAuthenticatedUser,
   needsOnboarding,
   hasCompletedOnboarding,
-  hasAcceptedCurrentPolicies,
+  hasAcceptablePolicyAgreement,
   mapAccountUser,
   mapPublicProfile,
   toNullableNumber,
@@ -295,7 +295,7 @@ export async function currentUserMe(
       return {
         status: 200,
         jsonBody: {
-          user: mapAccountUser(accountUser),
+          user: mapAccountUser(accountUser, profile),
           profile: mapPublicProfile(profile),
           onboarding: {
             completed,
@@ -317,7 +317,7 @@ export async function currentUserMe(
       return {
         status: 200,
         jsonBody: {
-          user: mapAccountUser(accountUser),
+          user: mapAccountUser(accountUser, updatedProfile),
           profile: mapPublicProfile(updatedProfile),
           onboarding: {
             completed: true,
@@ -329,7 +329,7 @@ export async function currentUserMe(
     return {
       status: 200,
       jsonBody: {
-        user: mapAccountUser(accountUser),
+        user: mapAccountUser(accountUser, profile),
         profile: mapPublicProfile(profile),
         onboarding: {
           completed,
@@ -364,21 +364,22 @@ export async function onboardingStatus(
       getOrCreateProfile(authUser.id, providerAvatarUrl),
     ]);
     const completed = hasCompletedOnboarding(profile, accountUser);
-    const policiesCurrent = hasAcceptedCurrentPolicies(accountUser);
+    const hasPolicyAgreement = hasAcceptablePolicyAgreement(accountUser, profile);
 
     if (completed && !profile.onboarding_completed_at) {
       const now = new Date().toISOString();
       const updatedProfile = await saveProfile(authUser.id, {
         onboarding_completed_at: now,
       });
+      const hasUpdatedPolicyAgreement = hasAcceptablePolicyAgreement(accountUser, updatedProfile);
 
       return {
         status: 200,
         jsonBody: {
           completed: true,
-          needsOnboarding: !policiesCurrent,
+          needsOnboarding: !hasUpdatedPolicyAgreement,
           policyAcceptance: {
-            required: !policiesCurrent,
+            required: !hasUpdatedPolicyAgreement,
             termsVersion: TERMS_VERSION,
             privacyVersion: PRIVACY_VERSION,
             currentTermsVersion: accountUser.terms_version,
@@ -398,9 +399,9 @@ export async function onboardingStatus(
       status: 200,
       jsonBody: {
         completed,
-        needsOnboarding: !completed || !policiesCurrent,
+        needsOnboarding: !completed || !hasPolicyAgreement,
         policyAcceptance: {
-          required: !policiesCurrent,
+          required: !hasPolicyAgreement,
           termsVersion: TERMS_VERSION,
           privacyVersion: PRIVACY_VERSION,
           currentTermsVersion: accountUser.terms_version,
@@ -679,7 +680,7 @@ export async function onboardingComplete(
     return {
       status: 200,
       jsonBody: {
-        user: mapAccountUser(updatedUser as AccountUserRow),
+        user: mapAccountUser(updatedUser as AccountUserRow, updatedProfile as ProfileRow),
         profile: mapPublicProfile(updatedProfile as ProfileRow),
         onboarding: {
           completed: true,

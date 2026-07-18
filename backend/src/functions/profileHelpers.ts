@@ -167,22 +167,24 @@ export function hasCompletedOnboarding(profile: ProfileRow | null, accountUser?:
   return Boolean(profile.username && profile.display_name && accountUser.first_name && accountUser.last_name && accountUser.birthdate && accountUser.terms_accepted_at && accountUser.privacy_accepted_at);
 }
 
-export function hasAcceptedCurrentPolicies(accountUser: AccountUserRow | null | undefined) {
+export function hasAcceptedPolicies(accountUser: AccountUserRow | null | undefined) {
   return Boolean(
     accountUser?.terms_accepted_at &&
-    accountUser?.privacy_accepted_at &&
-    accountUser.terms_version === TERMS_VERSION &&
-    accountUser.privacy_version === PRIVACY_VERSION
+    accountUser?.privacy_accepted_at
   );
 }
 
-export function mapAccountUser(row: AccountUserRow) {
+export function hasAcceptablePolicyAgreement(accountUser: AccountUserRow | null | undefined, profile?: ProfileRow | null) {
+  return hasAcceptedPolicies(accountUser) || Boolean(profile?.onboarding_completed_at);
+}
+
+export function mapAccountUser(row: AccountUserRow, profile?: ProfileRow | null) {
   return {
     id: row.id, email: row.email, firstName: row.first_name, middleName: row.middle_name, lastName: row.last_name,
     birthdate: row.birthdate, role: row.role ?? "member", lastSeenAt: row.last_seen_at,
     termsAcceptedAt: row.terms_accepted_at, privacyAcceptedAt: row.privacy_accepted_at,
     termsVersion: row.terms_version, privacyVersion: row.privacy_version,
-    needsPolicyAcceptance: !hasAcceptedCurrentPolicies(row),
+    needsPolicyAcceptance: !hasAcceptablePolicyAgreement(row, profile),
     requiredTermsVersion: TERMS_VERSION,
     requiredPrivacyVersion: PRIVACY_VERSION,
     defaultGalaPlanVisibility: row.default_gala_plan_visibility ?? "private",

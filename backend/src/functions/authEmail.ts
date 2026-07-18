@@ -3,6 +3,7 @@ import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { getRedisClient } from "../services/redisCacheService";
 import { validateJwt } from "../utils/auth";
 import { checkEndpointRateLimit } from "../utils/redisRateLimit";
+import { getConfiguredSiteUrl, getSiteUrl } from "../utils/siteUrl";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const AUTH_RESEND_COOLDOWN_MS = 2 * 60 * 1000;
@@ -35,23 +36,6 @@ function sanitizeNextPath(value: unknown) {
   }
 
   return trimmedValue;
-}
-
-function getSiteUrl(request: HttpRequest): string {
-  const configuredSiteUrl = process.env.SITE_URL || process.env.PUBLIC_SITE_URL;
-
-  if (configuredSiteUrl && configuredSiteUrl.trim()) {
-    return configuredSiteUrl.trim().replace(/\/+$/, "");
-  }
-
-  const forwardedProto = request.headers.get("x-forwarded-proto") || "https";
-  const host = request.headers.get("x-forwarded-host") || request.headers.get("host") || "localhost:4173";
-
-  if (!host || host === "localhost:4173" || host.includes(":")) {
-    return "https://galatayo.app";
-  }
-
-  return `${forwardedProto}://${host}`.replace(/\/+$/, "");
 }
 
 function getClientOrigin(value: unknown): string | null {
@@ -168,7 +152,7 @@ async function resendAuthEmail(
     }
 
     const supabase = await getSupabaseAdminClient();
-    const siteUrl = getClientOrigin(body.clientOrigin) ?? getSiteUrl(request);
+    const siteUrl = getConfiguredSiteUrl() ?? getClientOrigin(body.clientOrigin) ?? getSiteUrl(request);
     const sanitizedNextPath = sanitizeNextPath(body.nextPath) ?? (resendType === "signup" ? "/onboarding" : null);
 
     const error =

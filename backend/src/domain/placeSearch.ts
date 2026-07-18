@@ -125,6 +125,46 @@ const GOOD_FOR_FILTERS: Record<string, string[]> = {
   relaxing: ["Relaxing", "Chill", "Quiet Time"],
 };
 
+const RELATED_CATEGORY_GROUPS: Record<string, string[]> = {
+  Food: ["Cafe", "Nightlife"],
+  Heritage: ["Museum"],
+  Mall: ["Activity", "Cinema", "Park"],
+  Museum: ["Heritage"],
+  Park: ["Activity"],
+};
+
+const CATEGORY_GROUP_COMPETITORS: Record<string, string[]> = {
+  Mall: ["Cafe", "Food", "Hotel", "Nightlife"],
+  Cafe: ["Activity", "Cinema", "Hotel", "Mall", "Museum", "Nightlife", "Park"],
+  Hotel: ["Activity", "Cafe", "Cinema", "Food", "Mall", "Museum", "Nightlife", "Park"],
+};
+
+const MALL_CONTEXT_TERMS = [
+  "ayala center",
+  "ayala malls",
+  "circuit makati",
+  "eastwood",
+  "festival mall",
+  "glorietta",
+  "greenbelt",
+  "greenhills",
+  "mall of asia",
+  "market market",
+  "megamall",
+  "power plant mall",
+  "robinsons",
+  "shangri la plaza",
+  "sm aura",
+  "sm city",
+  "sm mall",
+  "sm north",
+  "the 30th",
+  "trinoma",
+  "uptown",
+  "venice grand canal",
+  "vista mall",
+];
+
 const BUDGET_QUERY_TERMS = new Set([
   "budget",
   "php",
@@ -333,6 +373,35 @@ function placeMatchesGoodFor(place: NormalizedPlace, goodFor: string | null | un
   return terms.some((term) => includesNormalizedPhrase(text, term));
 }
 
+function placeCategory(place: NormalizedPlace): string | null {
+  return canonicalCategory(place.category) ?? null;
+}
+
+function placeHasCategoryGroupEvidence(place: NormalizedPlace, category: string): boolean {
+  const terms = [
+    category,
+    ...(CATEGORY_INTENT_ALIASES[category] ?? []),
+    ...(category === "Mall" ? MALL_CONTEXT_TERMS : []),
+  ];
+  const text = placeText(place, ["name", "slug", "area", "search_terms", "tags"]);
+  return matchesAny(text, terms);
+}
+
+function placeMatchesCategoryGroup(place: NormalizedPlace, category: string): boolean {
+  const actualCategory = placeCategory(place);
+  if (actualCategory === category) return true;
+
+  if (actualCategory && (RELATED_CATEGORY_GROUPS[category] ?? []).includes(actualCategory)) {
+    return placeHasCategoryGroupEvidence(place, category);
+  }
+
+  if (actualCategory && (CATEGORY_GROUP_COMPETITORS[category] ?? []).includes(actualCategory)) {
+    return false;
+  }
+
+  return placeHasCategoryGroupEvidence(place, category);
+}
+
 function tagMatchCount(place: NormalizedPlace, tags: string[]): number {
   if (tags.length === 0) return 0;
   const normalizedTags = new Set(place.tags.map((tag) => normalizeSearchText(tag)));
@@ -359,7 +428,7 @@ export function placeMatchesExplicitFilters(place: NormalizedPlace, filters: Pla
 }
 
 function placeMatchesEffectiveFilters(place: NormalizedPlace, filters: PlaceSearchFilters, intent: PlaceSearchIntent): boolean {
-  const category = canonicalCategory(filters.category) ?? intent.category;
+  const effectiveCategory = canonicalCategory(filters.category) ?? intent.category;
   const explicitCity = canonicalCity(filters.city);
   const explicitArea = filters.area && filters.area !== "all" ? normalizeSearchText(filters.area) : null;
   const effectiveCity = explicitCity ?? (explicitArea ? null : intent.city);
@@ -367,7 +436,7 @@ function placeMatchesEffectiveFilters(place: NormalizedPlace, filters: PlaceSear
   const budgetConstraints = resolveBudgetConstraints(filters, intent);
   const hasStrongIdentityMatch = placeMatchesIdentityQuery(place, intent.normalizedQuery);
 
-  if (category && normalizeSearchText(place.category) !== normalizeSearchText(category)) return false;
+  if (effectiveCategory && !placeMatchesCategoryGroup(place, effectiveCategory)) return false;
   if (effectiveCity && normalizeSearchText(place.city ?? "") !== normalizeSearchText(effectiveCity) && !(hasStrongIdentityMatch && !explicitCity)) return false;
   if (effectiveArea && !matchesAny(placeText(place, ["area", "city", "search_terms"]), [effectiveArea]) && !(hasStrongIdentityMatch && !explicitArea)) return false;
   if (!budgetMatches(place, budgetConstraints.maxBudget, budgetConstraints.minBudget, budgetConstraints.free)) return false;
@@ -411,7 +480,7 @@ export function scorePlaceForQuery(place: NormalizedPlace, intent: PlaceSearchIn
   const effectiveCity = explicitCity ?? (explicitArea ? null : intent.city);
   const effectiveArea = explicitArea ?? (explicitCity ? null : intent.area);
   const budgetConstraints = resolveBudgetConstraints(filters, intent);
-  if (effectiveCategory && category === normalizeSearchText(effectiveCategory)) score += 30;
+  if (effectiveCategory && category === normalizeSearchText(effectiveCategory)) score += 60;
   if (effectiveCity && city === normalizeSearchText(effectiveCity)) score += 35;
   if (effectiveArea && matchesAny(`${area} ${searchText}`, [effectiveArea, ...(AREA_ALIASES[effectiveArea] ?? [])])) score += 35;
 
@@ -479,6 +548,7 @@ function placeHasMeaningfulQueryMatch(place: NormalizedPlace, intent: PlaceSearc
   if (searchTerms.some((term) => term === query || term.startsWith(query) || includesNormalizedPhrase(term, query))) return true;
   if (allTokensMatch) return true;
   if (includesNormalizedPhrase(description, query)) return true;
+  if (intent.category && placeMatchesCategoryGroup(place, intent.category)) return true;
 
   if (intent.category && category === normalizeSearchText(intent.category) && queryIsCategoryOnly) return true;
   if (intent.city && city === normalizeSearchText(intent.city) && queryIsCityOnly) return true;

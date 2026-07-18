@@ -44,6 +44,7 @@ jobs:
         working-directory: frontend
         env:
           VITE_API_BASE_URL: "https://galatayo-api-cvawfwgrg6akdmem.southeastasia-01.azurewebsites.net/api"
+          VITE_SITE_URL: "https://galatayo.app"
           VITE_GA_MEASUREMENT_ID: ${{ secrets.VITE_GA_MEASUREMENT_ID }}
         run: |
           npm ci
@@ -55,7 +56,7 @@ jobs:
           VITE_API_BASE_URL: "https://galatayo-api-cvawfwgrg6akdmem.southeastasia-01.azurewebsites.net/api"
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-          VITE_SITE_URL: ${{ secrets.VITE_SITE_URL }}
+          VITE_SITE_URL: "https://galatayo.app"
           VITE_GA_MEASUREMENT_ID: ${{ secrets.VITE_GA_MEASUREMENT_ID }}
           VITE_GOOGLE_SITE_VERIFICATION: ${{ secrets.VITE_GOOGLE_SITE_VERIFICATION }}
           VITE_BING_SITE_VERIFICATION: ${{ secrets.VITE_BING_SITE_VERIFICATION }}

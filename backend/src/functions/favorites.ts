@@ -592,7 +592,7 @@ app.http("favoritesCreate", {
 app.http("favoritesDeleteAll", {
   methods: ["DELETE"],
   authLevel: "anonymous",
-  route: "favorites/all",
+  route: "favorites",
   handler: favoritesDeleteAll,
 });
 
@@ -600,12 +600,5 @@ app.http("favoritesDelete", {
   methods: ["DELETE"],
   authLevel: "anonymous",
   route: "favorites/{placeSlug}",
-  handler: favoritesDelete,
-});
-
-app.http("favoritesDeleteByBody", {
-  methods: ["DELETE"],
-  authLevel: "anonymous",
-  route: "favorites",
   handler: favoritesDelete,
 });

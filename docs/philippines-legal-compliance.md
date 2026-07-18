@@ -62,8 +62,8 @@ This document supports GalaTayo as a public free app for users primarily in the 
 
 - Run `backend/sql/legal_compliance_requests.sql` in Supabase before enabling the new privacy request UI in production.
 - Confirm RLS policies match the production access model. Backend admin endpoints use the service-role client and admin-role checks.
-- Increment `TERMS_VERSION` and `PRIVACY_VERSION` in `backend/src/functions/profileHelpers.ts` whenever legal text materially changes.
-- After version increments, existing users are routed to reaccept the latest Terms and Privacy Policy.
+- Increment `TERMS_VERSION` and `PRIVACY_VERSION` in `backend/src/functions/profileHelpers.ts` whenever legal text materially changes so future acceptances record the current versions.
+- Existing users with a prior agreement are not routed back through onboarding after version increments.
 
 ## Reference Links
 
