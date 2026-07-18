@@ -17,7 +17,7 @@ type AuthMethodChooserProps = {
 
 const GOOGLE_CLIENT_ID = String(import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim()
 
-function AuthMethodChooser({ isGoogleLoading, onGoogleLoadingChange, onError, nextPath, flow }: AuthMethodChooserProps) {
+function AuthMethodChooser({ isGoogleLoading: _isGoogleLoading, onGoogleLoadingChange, onError, nextPath, flow }: AuthMethodChooserProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const buttonRenderedRef = useRef(false)
 
