@@ -215,7 +215,8 @@ export async function seoPlaces(request: HttpRequest, context: InvocationContext
     }
   }
 
-  const [areas, places] = await Promise.all([getSeoAreaSummaries(), getSeoPlaceSummaries()])
+  const places = await getSeoPlaceSummaries()
+  const areas = await getSeoAreaSummaries(places)
 
   return {
     status: 200,
@@ -258,7 +259,12 @@ export async function sitemapXml(request: HttpRequest, context: InvocationContex
   context.log("Generating sitemap.xml.")
 
   const siteUrl = getSiteUrl(request)
-  const [areas, places] = await Promise.all([getSeoAreaSummaries(), getSeoPlaceSummaries()])
+  const places = await getSeoPlaceSummaries({
+    onImageLoadError: (error) => {
+      context.warn("Failed to load approved place images for sitemap; continuing without image entries.", error)
+    },
+  })
+  const areas = await getSeoAreaSummaries(places)
   const urls = buildSitemapEntries({ areas, places })
 
   const body = [

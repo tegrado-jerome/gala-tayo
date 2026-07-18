@@ -39,7 +39,13 @@ type ApprovedImageRow = {
   image_url?: unknown;
 };
 
+type SeoPlaceSummaryOptions = {
+  onImageLoadError?: (error: unknown) => void;
+};
+
 const SEO_PLACE_SELECT = PUBLIC_PLACE_COLUMNS;
+const APPROVED_IMAGE_LOOKUP_BATCH_SIZE = 100;
+const MAX_APPROVED_IMAGES_PER_PLACE = 3;
 
 const AREA_NAME_OVERRIDES: Record<string, string> = {
   "las-pinas": "Las Pinas",
@@ -152,33 +158,40 @@ function isPublicPlace(row: PlaceRow): boolean {
 }
 
 async function getApprovedImageLookup(placeIds: string[]): Promise<Map<string, string>> {
-  if (placeIds.length === 0) {
+  const uniquePlaceIds = Array.from(new Set(placeIds.map((placeId) => placeId.trim()).filter(Boolean)));
+
+  if (uniquePlaceIds.length === 0) {
     return new Map<string, string>();
   }
 
   const supabase = await getSupabaseAdminClient();
-  const { data, error } = await (supabase.from("place_images") as any)
-    .select("place_id,image_url,sort_order,created_at")
-    .in("place_id", placeIds)
-    .eq("status", "approved")
-    .order("sort_order", { ascending: true, nullsFirst: false })
-    .order("created_at", { ascending: true });
-
-  if (error) {
-    throw new Error("Failed to load approved place images.");
-  }
-
   const imagesByPlaceId = new Map<string, string>();
 
-  for (const row of (data ?? []) as ApprovedImageRow[]) {
-    const placeId = cleanString(row.place_id);
-    const imageUrl = cleanString(row.image_url);
+  for (let index = 0; index < uniquePlaceIds.length; index += APPROVED_IMAGE_LOOKUP_BATCH_SIZE) {
+    const batchPlaceIds = uniquePlaceIds.slice(index, index + APPROVED_IMAGE_LOOKUP_BATCH_SIZE);
+    const { data, error } = await (supabase.from("place_images") as any)
+      .select("place_id,image_url,sort_order,created_at")
+      .in("place_id", batchPlaceIds)
+      .eq("status", "approved")
+      .not("image_url", "is", null)
+      .order("sort_order", { ascending: true, nullsFirst: false })
+      .order("created_at", { ascending: true })
+      .limit(batchPlaceIds.length * MAX_APPROVED_IMAGES_PER_PLACE);
 
-    if (!placeId || !imageUrl || imagesByPlaceId.has(placeId)) {
-      continue;
+    if (error) {
+      throw error;
     }
 
-    imagesByPlaceId.set(placeId, imageUrl);
+    for (const row of (data ?? []) as ApprovedImageRow[]) {
+      const placeId = cleanString(row.place_id);
+      const imageUrl = cleanString(row.image_url);
+
+      if (!placeId || !imageUrl || imagesByPlaceId.has(placeId)) {
+        continue;
+      }
+
+      imagesByPlaceId.set(placeId, imageUrl);
+    }
   }
 
   return imagesByPlaceId;
@@ -215,7 +228,7 @@ function mapPlaceRowToSeoSummary(row: PlaceRow, imageUrl: string | null): SeoPla
   };
 }
 
-export async function getSeoPlaceSummaries(): Promise<SeoPlaceSummary[]> {
+export async function getSeoPlaceSummaries(options: SeoPlaceSummaryOptions = {}): Promise<SeoPlaceSummary[]> {
   const supabase = await getSupabaseAdminClient();
   const { data, error } = await (supabase.from("places") as any)
     .select(SEO_PLACE_SELECT)
@@ -231,7 +244,17 @@ export async function getSeoPlaceSummaries(): Promise<SeoPlaceSummary[]> {
   const placeIds = placeRows
     .map((row) => cleanString(row.id))
     .filter((value): value is string => Boolean(value));
-  const imageLookup = await getApprovedImageLookup(placeIds);
+  let imageLookup = new Map<string, string>();
+
+  try {
+    imageLookup = await getApprovedImageLookup(placeIds);
+  } catch (imageError) {
+    if (!options.onImageLoadError) {
+      throw imageError;
+    }
+
+    options.onImageLoadError(imageError);
+  }
 
   return placeRows
     .map((row) => mapPlaceRowToSeoSummary(row, imageLookup.get(String(row.id)) ?? null))
@@ -239,8 +262,8 @@ export async function getSeoPlaceSummaries(): Promise<SeoPlaceSummary[]> {
     .sort((left, right) => left.name.localeCompare(right.name));
 }
 
-export async function getSeoAreaSummaries(): Promise<SeoAreaSummary[]> {
-  const places = await getSeoPlaceSummaries();
+export async function getSeoAreaSummaries(places?: SeoPlaceSummary[]): Promise<SeoAreaSummary[]> {
+  const resolvedPlaces = places ?? (await getSeoPlaceSummaries());
   const counts = new Map<string, SeoAreaSummary>();
 
   for (const area of METRO_MANILA_AREAS) {
@@ -256,7 +279,7 @@ export async function getSeoAreaSummaries(): Promise<SeoAreaSummary[]> {
     });
   }
 
-  for (const place of places) {
+  for (const place of resolvedPlaces) {
     const existing = counts.get(place.areaSlug);
 
     if (existing) {
