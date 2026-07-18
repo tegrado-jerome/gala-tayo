@@ -96,7 +96,6 @@ function FavoriteCard({
   const chips = getPlaceChips(place)
   const location = getPlaceLocation(place)
   const category = getPlaceCategory(place)
-  const budgetLabel = place.budget_label?.trim() || 'Check details'
   const photoUrl = getPlacePhoto(place)
 
   return (
@@ -105,7 +104,6 @@ function FavoriteCard({
       categoryLabel={chips.slice(0, 2).join(' / ')}
       location={location}
       chips={chips}
-      budgetLabel={budgetLabel}
       description={`Saved ${category.toLowerCase()} spot in ${location}. Open the details for hours, budget notes, and planning info.`}
       photoUrl={photoUrl}
       placeSlug={placeSlug}

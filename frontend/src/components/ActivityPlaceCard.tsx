@@ -1,5 +1,5 @@
 import type { ElementType, ReactNode } from 'react'
-import { Wallet } from 'lucide-react'
+
 import { navigateToPlace } from '../utils/navigation'
 
 type IconProps = {
@@ -11,7 +11,6 @@ type ActivityPlaceCardProps = {
   categoryLabel: string
   location: string
   chips: string[]
-  budgetLabel: string
   description: string
   photoUrl?: string | null
   placeSlug: string
@@ -50,7 +49,6 @@ export default function ActivityPlaceCard({
   categoryLabel,
   location,
   chips,
-  budgetLabel,
   description,
   photoUrl,
   placeSlug,
@@ -73,9 +71,6 @@ export default function ActivityPlaceCard({
   const chipsClass = compactMobile
     ? 'hidden min-h-0 flex-wrap gap-1 sm:flex'
     : 'flex min-h-0 flex-wrap gap-1'
-  const budgetClass = compactMobile
-    ? 'hidden items-center gap-1 text-[10px] font-bold text-slate-950 sm:flex'
-    : 'flex items-center gap-1 text-sm font-bold text-slate-950'
   const titleClass = compactMobile
     ? 'mt-0.5 line-clamp-2 min-h-[2.3rem] text-[12px] font-black leading-tight text-slate-950 sm:text-[13px] lg:text-base'
     : 'mt-0.5 text-base font-black leading-snug text-slate-950 lg:text-lg'
@@ -147,11 +142,6 @@ export default function ActivityPlaceCard({
             </span>
           ) : null}
         </div>
-
-        <p className={budgetClass}>
-          <Wallet className="h-3.5 w-3.5 shrink-0 text-slate-500" />
-          Budget: <span className="font-normal text-slate-700">{budgetLabel}</span>
-        </p>
 
         <p className={compactMobile ? 'line-clamp-2 text-[11px] leading-relaxed text-slate-600' : 'line-clamp-2 text-xs leading-relaxed text-slate-600'}>
           {description}

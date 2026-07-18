@@ -258,7 +258,6 @@ function HistoryCard({
   const placeSlug = place.slug as string
   const location = getPlaceLocation(place)
   const chips = getPlaceChips(place)
-  const budgetLabel = place.budget_label?.trim() || 'Check details'
   const photoUrl = getPlacePhoto(place)
 
   return (
@@ -267,7 +266,6 @@ function HistoryCard({
       categoryLabel={chips.slice(0, 2).join(' / ')}
       location={location}
       chips={chips}
-      budgetLabel={budgetLabel}
       description={place.description?.trim() || `Recently viewed ${getPlaceCategory(place).toLowerCase()} spot in ${location}.`}
       photoUrl={photoUrl}
       placeSlug={placeSlug}
