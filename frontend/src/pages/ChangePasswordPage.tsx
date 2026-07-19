@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import AppHeader from '../components/AppHeader'
 import { AppIcon } from '../components/AppIcon'
+import PasswordStrengthBar from '../components/auth/PasswordStrengthBar'
 import MinimalBackNav from '../components/MinimalBackNav'
 import { PageContainer, PageShell, Stack } from '../components/layout/ResponsiveLayouts'
 import { useSystemMessage } from '../context/SystemMessageContext'
+import { getPasswordStrength } from '../utils/passwordStrength'
 import { updateAccountPassword } from '../services/authApi'
 
 function ChangePasswordPage() {
@@ -15,12 +17,13 @@ function ChangePasswordPage() {
   const [isSavingPassword, setIsSavingPassword] = useState(false)
   const [securityError, setSecurityError] = useState('')
   const { showSystemMessage } = useSystemMessage()
+  const passwordStrength = useMemo(() => getPasswordStrength(newPassword), [newPassword])
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
-    if (newPassword.length < 8) {
-      setSecurityError('Use a stronger password with at least 8 characters.')
+    if (!passwordStrength.meetsComplexity) {
+      setSecurityError('Use a stronger password with uppercase, lowercase, digit, and special character.')
       return
     }
 
@@ -101,6 +104,7 @@ function ChangePasswordPage() {
                         <AppIcon name={isNewPasswordVisible ? 'eyeOff' : 'eye'} className="h-4 w-4" />
                       </button>
                     </span>
+                    <PasswordStrengthBar password={newPassword} />
                   </label>
 
                   <label className="grid gap-2">
@@ -130,7 +134,7 @@ function ChangePasswordPage() {
                 {securityError ? <p className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">{securityError}</p> : null}
 
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <p className="text-xs font-semibold text-slate-500">Minimum 8 characters.</p>
+                  <p className="text-xs font-semibold text-slate-500">Must have uppercase, lowercase, digit, and special character.</p>
                   <button
                     type="submit"
                     disabled={isSavingPassword || !newPassword || !confirmNewPassword}

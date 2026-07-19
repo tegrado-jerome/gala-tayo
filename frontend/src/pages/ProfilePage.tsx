@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import AppHeader from '../components/AppHeader'
+import PasswordStrengthBar from '../components/auth/PasswordStrengthBar'
 import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
 import MinimalBackNav from '../components/MinimalBackNav'
 import { AppIcon } from '../components/AppIcon'
@@ -10,6 +11,7 @@ import ProfileAvatar from '../components/ProfileAvatar'
 import { PageContainer, PageShell, CardSurface } from '../components/layout/ResponsiveLayouts'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { useAppUser } from '../context/AppUserContext'
+import { getPasswordStrength } from '../utils/passwordStrength'
 import { updateAccountPassword } from '../services/authApi'
 import {
   getDisplayAvatar,
@@ -148,6 +150,7 @@ function ProfilePage({ session }: ProfilePageProps) {
   const [securityError, setSecurityError] = useState('')
   const [isSavingPassword, setIsSavingPassword] = useState(false)
   const { showSystemMessage } = useSystemMessage()
+  const passwordStrength = useMemo(() => getPasswordStrength(newPassword), [newPassword])
 
   const normalizedUsername = useMemo(() => normalizeUsername(usernameInput), [usernameInput])
   const usernameError = normalizedUsername ? validateUsername(normalizedUsername) : 'Username is required.'
@@ -308,8 +311,8 @@ function ProfilePage({ session }: ProfilePageProps) {
   }
 
   const handleUpdatePassword = async () => {
-    if (newPassword.length < 8) {
-      setSecurityError('Use a stronger password with at least 8 characters.')
+    if (!passwordStrength.meetsComplexity) {
+      setSecurityError('Use a stronger password with uppercase, lowercase, digit, and special character.')
       return
     }
 
@@ -544,6 +547,7 @@ function ProfilePage({ session }: ProfilePageProps) {
                       autoComplete="new-password"
                       className="h-12 rounded-2xl border border-[var(--line-strong)] bg-white px-4 text-sm font-semibold outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]"
                     />
+                    <PasswordStrengthBar password={newPassword} />
                   </label>
                   <label className="grid gap-2">
                     <span className="text-sm font-black text-slate-900">Confirm Password</span>

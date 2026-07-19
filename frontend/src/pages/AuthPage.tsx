@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { AppIcon } from '../components/AppIcon'
 import AuthMethodChooser from '../components/auth/AuthMethodChooser'
+import PasswordStrengthBar from '../components/auth/PasswordStrengthBar'
 import {
   getPostAuthRedirect,
   markAdminPasswordSession,
@@ -11,6 +12,7 @@ import {
 import { buildAuthPath, getRequestedNextPath } from '../services/authApi'
 import { navigateToPath } from '../utils/navigation'
 import { getCurrentUser, isAdminRole } from '../utils/profileApi'
+import { getPasswordStrength } from '../utils/passwordStrength'
 import galaTayoLogo from '../assets/brand/galatayo-logo.svg'
 import { formatCooldownDuration, useResendCooldown } from '../hooks/useResendCooldown'
 import { useAppUser } from '../context/AppUserContext'
@@ -30,7 +32,7 @@ function getFriendlyAuthError(error: unknown, mode: AuthMode) {
     message === 'Enter a valid email address.' ||
     message === 'Password is required.' ||
     message === 'Passwords do not match.' ||
-    message === 'Use a stronger password with at least 8 characters.'
+    message === 'Use a stronger password with uppercase, lowercase, digit, and special character.'
   ) {
     return message
   }
@@ -54,7 +56,7 @@ function getFriendlyAuthError(error: unknown, mode: AuthMode) {
 
   if (lowerMessage.includes('weak password') || lowerMessage.includes('password')) {
     return mode === 'create_account'
-      ? 'Use a stronger password with at least 8 characters.'
+      ? 'Use a stronger password with uppercase, lowercase, digit, and special character.'
       : 'The email or password is incorrect.'
   }
 
@@ -93,13 +95,13 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
   const signUpCooldown = useResendCooldown(isCreateMode && normalizedEmail ? `signup:${normalizedEmail}` : null, resendCooldownMs)
   const isEmailValid = emailPattern.test(normalizedEmail)
   const emailFormatIsValid = !normalizedEmail || isEmailValid
-  const passwordMeetsLength = password.length >= minPasswordLength
+  const passwordStrength = useMemo(() => getPasswordStrength(password), [password])
   const emailIsInvalid = isCreateMode && !emailFormatIsValid
-  const passwordIsInvalid = isCreateMode && password.length > 0 && !passwordMeetsLength
+  const passwordIsInvalid = isCreateMode && password.length > 0 && !passwordStrength.meetsComplexity
   const confirmPasswordHasMismatch = isCreateMode && confirmPassword.length > 0 && password !== confirmPassword
   const isCreateFormValid =
     isEmailValid &&
-    passwordMeetsLength &&
+    passwordStrength.meetsComplexity &&
     confirmPassword.length >= minPasswordLength &&
     password === confirmPassword
   const isLoginFormValid = isEmailValid && password.length > 0
@@ -161,8 +163,8 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
       throw new Error('Password is required.')
     }
 
-    if (isCreateMode && password.length < minPasswordLength) {
-      throw new Error('Use a stronger password with at least 8 characters.')
+    if (isCreateMode && !getPasswordStrength(password).meetsComplexity) {
+      throw new Error('Use a stronger password with uppercase, lowercase, digit, and special character.')
     }
 
     if (isCreateMode && password !== confirmPassword) {
@@ -417,9 +419,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
                     <AppIcon name={isPasswordVisible ? 'eyeOff' : 'eye'} className="h-4 w-4" />
                   </button>
                 </span>
-                {isCreateMode && password.length > 0 && !passwordMeetsLength ? (
-                  <span className="text-xs text-red-600">Use at least 8 characters.</span>
-                ) : null}
+                {isCreateMode ? <PasswordStrengthBar password={password} /> : null}
               </label>
 
               {allowForgotPassword ? (

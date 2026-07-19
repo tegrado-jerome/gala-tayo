@@ -1,8 +1,10 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { AppIcon } from '../components/AppIcon'
+import PasswordStrengthBar from '../components/auth/PasswordStrengthBar'
 import { FormContainer } from '../components/layout/ResponsiveLayouts'
 import { FormSkeleton } from '../components/loading/SkeletonStates'
 import { supabase } from '../supabase'
+import { getPasswordStrength } from '../utils/passwordStrength'
 import { navigateToPath } from '../utils/navigation'
 
 const minPasswordLength = 8
@@ -16,6 +18,7 @@ function ResetPasswordPage() {
   const [error, setError] = useState('')
   const [isPasswordVisible, setIsPasswordVisible] = useState(false)
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false)
+  const passwordStrength = useMemo(() => getPasswordStrength(newPassword), [newPassword])
 
   useEffect(() => {
     let isMounted = true
@@ -52,10 +55,9 @@ function ResetPasswordPage() {
     }
   }, [])
 
-  const passwordMeetsLength = newPassword.length >= minPasswordLength
   const confirmPasswordMatches = confirmNewPassword.length === 0 || newPassword === confirmNewPassword
   const confirmPasswordHasMismatch = confirmNewPassword.length > 0 && newPassword !== confirmNewPassword
-  const isFormValid = Boolean(newPassword.trim()) && passwordMeetsLength && newPassword === confirmNewPassword
+  const isFormValid = Boolean(newPassword.trim()) && passwordStrength.meetsComplexity && newPassword === confirmNewPassword
   const isSubmitDisabled = isSubmitting || !isFormValid
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -66,8 +68,8 @@ function ResetPasswordPage() {
       return
     }
 
-    if (newPassword.length < minPasswordLength) {
-      setError(`Use a stronger password with at least ${minPasswordLength} characters.`)
+    if (!passwordStrength.meetsComplexity) {
+      setError('Use a stronger password with uppercase, lowercase, digit, and special character.')
       return
     }
 
@@ -179,11 +181,7 @@ function ResetPasswordPage() {
                         <AppIcon name={isPasswordVisible ? 'eyeOff' : 'eye'} className="h-4 w-4" />
                       </button>
                     </span>
-                    {newPassword.length > 0 && !passwordMeetsLength ? (
-                      <span className="text-xs text-red-600">
-                        Use at least {minPasswordLength} characters.
-                      </span>
-                    ) : null}
+                    <PasswordStrengthBar password={newPassword} />
                   </label>
 
                   <label className="grid gap-2 text-[13px] font-medium text-[var(--text)]">
