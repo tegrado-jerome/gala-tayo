@@ -63,7 +63,7 @@ function SearchLandingBar({
             }}
             placeholder={placeholder}
             disabled={disabled}
-            className="min-w-0 flex-1 bg-transparent text-[15px] font-medium text-slate-900 outline-none placeholder:font-medium placeholder:text-slate-500 disabled:cursor-not-allowed"
+            className="search-landing-input min-w-0 flex-1 bg-transparent text-[15px] font-medium text-slate-900 outline-none placeholder:font-medium placeholder:text-slate-500 disabled:cursor-not-allowed"
           />
         </div>
 

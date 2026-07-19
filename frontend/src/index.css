@@ -369,6 +369,12 @@ button:disabled {
   box-shadow: none !important;
 }
 
+.search-landing-input:focus,
+.search-landing-input:focus-visible {
+  outline: none;
+  box-shadow: none !important;
+}
+
 .comment-composer-input:focus,
 .comment-composer-input:focus-visible {
   outline: none;
