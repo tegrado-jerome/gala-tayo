@@ -15,25 +15,25 @@ function ToolCard({ href, title, description, icon }: ToolCardProps) {
   return (
     <InternalLink
       href={href}
-      className="group flex items-center gap-3 rounded-[22px] border border-[var(--line)] bg-white px-4 py-4 text-left shadow-[0_10px_24px_rgba(15,23,42,0.04)] transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_16px_30px_rgba(15,23,42,0.06)] sm:gap-3.5 sm:px-5 sm:py-4"
+      className="group flex items-center gap-3 rounded-[22px] border border-[var(--line)] bg-white px-4 py-4 text-left shadow-[0_10px_24px_rgba(15,23,42,0.04)] transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_16px_30px_rgba(15,23,42,0.06)] sm:gap-3.5 sm:px-5 sm:py-4 md:gap-3 md:px-4 md:py-3.5"
     >
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-50 text-[var(--accent-deep)] ring-1 ring-inset ring-slate-200/80 transition-colors duration-300 group-hover:bg-[var(--accent-wash)] group-hover:ring-[rgba(47,116,232,0.16)]">
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-50 text-[var(--accent-deep)] ring-1 ring-inset ring-slate-200/80 transition-colors duration-300 group-hover:bg-[var(--accent-wash)] group-hover:ring-[rgba(47,116,232,0.16)] md:h-10 md:w-10">
         <AppIcon
           name={icon}
-          className="h-5 w-5 sm:h-[1.15rem] sm:w-[1.15rem]"
+          className="h-5 w-5 sm:h-[1.15rem] sm:w-[1.15rem] md:h-5 md:w-5"
         />
       </span>
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-1.5">
-          <p className="truncate text-[0.96rem] font-bold tracking-[-0.02em] text-slate-950 sm:text-[1.02rem]">
+          <p className="truncate text-[0.96rem] font-bold tracking-[-0.02em] text-slate-950 sm:text-[1.02rem] md:text-[0.96rem]">
             {title}
           </p>
           <span className="inline-flex items-center rounded-full bg-[var(--accent-wash)] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.08em] text-[var(--accent-deep)]">
             AI
           </span>
         </div>
-        <p className="mt-1 text-[12.5px] leading-5 text-slate-500 sm:text-[13px]">
+        <p className="mt-1 text-[12.5px] leading-5 text-slate-500 sm:text-[13px] md:text-[12.5px]">
           {description}
         </p>
       </div>
