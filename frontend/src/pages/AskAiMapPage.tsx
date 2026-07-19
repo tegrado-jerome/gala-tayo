@@ -82,11 +82,6 @@ function MinimalLoadingCard({ query }: { query: string }) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <p className="text-sm font-black tracking-[-0.02em] text-slate-950">Thinking</p>
-            <span className="inline-flex items-center gap-1 text-[var(--accent-deep)]">
-              <span className="h-1.5 w-1.5 rounded-full bg-current motion-safe:animate-bounce" />
-              <span className="h-1.5 w-1.5 rounded-full bg-current motion-safe:animate-bounce [animation-delay:120ms]" />
-              <span className="h-1.5 w-1.5 rounded-full bg-current motion-safe:animate-bounce [animation-delay:240ms]" />
-            </span>
           </div>
           <p className="mt-1 text-[12px] font-medium text-slate-500">Searching verified places for your prompt.</p>
           {query ? <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-700">“{query.trim()}”</p> : null}
@@ -615,7 +610,7 @@ function AskAiMapPage() {
 
     const selectedContainer = visibleTarget?.container
     const mobileCardScroller = mobileCardScrollerRef.current
-    const isMobileViewport = window.matchMedia('(max-width: 767px)').matches
+    const isMobileViewport = window.matchMedia('(max-width: 1023px)').matches
 
     if (isMobileViewport && selectedContainer && selectedContainer === mobileCardScroller && selectedContainer.getClientRects().length > 0) {
       window.requestAnimationFrame(() => {
@@ -938,7 +933,7 @@ function AskAiMapPage() {
       isOpen={isGuestUpgradePromptOpen}
       onClose={() => setIsGuestUpgradePromptOpen(false)}
     />
-    <main className="gala-page-background h-[100dvh] overflow-hidden overscroll-none text-[var(--text)] md:hidden lg:hidden">
+     <main className="gala-page-background h-[100dvh] overflow-hidden overscroll-none text-[var(--text)] lg:hidden">
       <div className="h-full w-full">
         <section className="relative h-full overflow-hidden bg-transparent p-0">
           <div className="relative h-full">
@@ -1034,7 +1029,7 @@ function AskAiMapPage() {
                 ) : null}
 
                 {sources.length > 0 && !isSearching ? (
-                  <div className="mb-3 hidden rounded-[20px] bg-white px-4 py-2.5 text-[12px] font-medium text-slate-500 shadow-[0_8px_20px_rgba(15,23,42,0.06)] sm:block lg:mx-auto lg:max-w-[680px]">
+                  <div className="mb-3 hidden rounded-[20px] bg-white px-4 py-2.5 text-[12px] font-medium text-slate-500 shadow-[0_8px_20px_rgba(15,23,42,0.06)] lg:block lg:mx-auto lg:max-w-[680px]">
                     {sources.length} verified source{sources.length === 1 ? '' : 's'}
                   </div>
                 ) : null}
@@ -1060,9 +1055,7 @@ function AskAiMapPage() {
                     const hoursSummary = display.openingHoursSummary || ''
                     const ratingText = display.ratingText || (typeof place.rating === 'number' ? place.rating.toFixed(1) : '')
                     const reviewCountText = display.reviewCountText || formatReviewCount(place.reviewCount)
-                    const previewText = display.whyThisFits.length > 110
-                      ? `${display.whyThisFits.slice(0, 107).trimEnd()}...`
-                      : display.whyThisFits
+                    const previewText = display.whyThisFits
 
                     return (
                       <div
@@ -1082,15 +1075,15 @@ function AskAiMapPage() {
                             selectPlace(place.id)
                           }
                         }}
-                        className={`relative w-[82vw] max-w-[340px] sm:max-w-[360px] lg:max-w-[400px] min-h-[168px] snap-center shrink-0 rounded-[24px] border bg-white px-4 py-3.5 cursor-pointer transition-all duration-200 ${
-                          isSelected
-                            ? 'scale-[1.01] border-[rgba(var(--accent-rgb),0.28)]'
-                            : 'border-slate-100/90 hover:border-slate-200'
-                        }`}
-                        onMouseEnter={() => setFocusedPlaceId(place.id)}
-                        onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
-                      >
-                        <div className="flex h-full flex-col">
+className={`relative w-[82vw] max-w-[340px] sm:max-w-[360px] lg:max-w-[400px] min-h-[168px] snap-center shrink-0 rounded-[24px] border bg-white px-4 py-3.5 cursor-pointer transition-all duration-200 ${
+  isSelected
+    ? 'scale-[1.01] border-[rgba(var(--accent-rgb),0.28)]'
+    : 'border-slate-100/90 hover:border-slate-200'
+}`}
+onMouseEnter={() => setFocusedPlaceId(place.id)}
+onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
+>
+  <div className="flex h-full flex-col">
                           <div className="flex items-start gap-2.5">
                             <div className="flex shrink-0 items-center gap-2 pt-0.5">
                               <span className={`h-2.5 w-2.5 rounded-full transition ${
@@ -1107,7 +1100,7 @@ function AskAiMapPage() {
 
                             <div className="min-w-0 flex-1">
                               <div className="flex items-start gap-2">
-                                <h3 className="min-w-0 flex-1 text-[15px] font-extrabold leading-[1.2] tracking-[-0.02em] text-slate-950 line-clamp-2">
+                                <h3 className="min-w-0 flex-1 text-[15px] font-extrabold leading-[1.2] tracking-[-0.02em] text-slate-950 line-clamp-1">
                                   {display.title}
                                 </h3>
                                 <div className="flex shrink-0 flex-col items-end gap-1">
@@ -1206,7 +1199,7 @@ function AskAiMapPage() {
         </section>
       </div>
     </main>
-    <main className="fixed inset-0 hidden overflow-hidden overscroll-none bg-white text-[var(--text)] md:block">
+    <main className="fixed inset-0 hidden overflow-hidden overscroll-none bg-white text-[var(--text)] lg:block">
       <MapResponsiveLayout
         sidebarVisible={showDesktopResultsSidebar}
         className="h-full w-full gap-0 px-0 py-0"
@@ -1312,9 +1305,7 @@ function AskAiMapPage() {
                   const hoursSummary = display.openingHoursSummary || ''
                   const ratingText = display.ratingText || (typeof place.rating === 'number' ? place.rating.toFixed(1) : '')
                   const reviewCountText = display.reviewCountText || formatReviewCount(place.reviewCount)
-                  const previewText = display.whyThisFits.length > 110
-                    ? `${display.whyThisFits.slice(0, 107).trimEnd()}...`
-                    : display.whyThisFits
+                  const previewText = display.whyThisFits
 
                   return (
                     <div
@@ -1334,15 +1325,15 @@ function AskAiMapPage() {
                           selectPlace(place.id)
                         }
                       }}
-                      className={`relative min-h-[160px] w-full snap-center rounded-[24px] border bg-white px-4 py-3.5 text-left cursor-pointer transition-all duration-200 ${
-                        isSelected
-                          ? 'scale-[1.01] border-[rgba(var(--accent-rgb),0.28)]'
-                          : 'border-slate-100/90 hover:border-slate-200'
-                      }`}
-                      onMouseEnter={() => setFocusedPlaceId(place.id)}
-                      onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
-                    >
-                      <div className="flex h-full flex-col">
+className={`relative min-h-[160px] w-full snap-center rounded-[24px] border bg-white px-4 py-3.5 text-left cursor-pointer transition-all duration-200 ${
+  isSelected
+    ? 'scale-[1.01] border-[rgba(var(--accent-rgb),0.28)]'
+    : 'border-slate-100/90 hover:border-slate-200'
+}`}
+onMouseEnter={() => setFocusedPlaceId(place.id)}
+onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
+>
+  <div className="flex h-full flex-col">
                         <div className="flex items-start gap-2.5">
                           <div className="flex shrink-0 items-center gap-2 pt-0.5">
                               <span className={`h-2.5 w-2.5 rounded-full transition ${
@@ -1359,7 +1350,7 @@ function AskAiMapPage() {
 
                           <div className="min-w-0 flex-1">
                             <div className="flex items-start gap-2">
-                              <h3 className="min-w-0 flex-1 text-[15px] font-extrabold leading-[1.2] tracking-[-0.02em] text-slate-950 line-clamp-2">
+                              <h3 className="min-w-0 flex-1 text-[15px] font-extrabold leading-[1.2] tracking-[-0.02em] text-slate-950 line-clamp-1">
                                 {display.title}
                               </h3>
                               <div className="flex shrink-0 flex-col items-end gap-1">
