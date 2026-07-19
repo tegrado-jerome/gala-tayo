@@ -23,6 +23,7 @@ function readStoredConsent(): ConsentState {
       return stored
     }
   } catch {
+    // Ignore - localStorage may not be available
   }
   return 'undecided'
 }
@@ -47,6 +48,7 @@ function CookieConsentProvider({ children }: { children: ReactNode }) {
     try {
       localStorage.setItem(STORAGE_KEY, 'accepted')
     } catch {
+      // Ignore - localStorage may not be available
     }
     reinitializeAnalytics()
     trackPageView({})
@@ -57,6 +59,7 @@ function CookieConsentProvider({ children }: { children: ReactNode }) {
     try {
       localStorage.setItem(STORAGE_KEY, 'rejected')
     } catch {
+      // Ignore - localStorage may not be available
     }
   }, [])
 
