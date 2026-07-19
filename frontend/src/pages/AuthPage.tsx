@@ -473,7 +473,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
               <button
                 type="submit"
                 disabled={isSubmitDisabled}
-                className="app-button app-button-primary app-button-md mx-auto w-full max-w-[360px] disabled:cursor-not-allowed disabled:opacity-70 lg:w-[240px]"
+                className="app-button app-button-primary app-button-md mx-auto w-full disabled:cursor-not-allowed disabled:opacity-70"
               >
                 {isSubmitting
                   ? isCreateMode
