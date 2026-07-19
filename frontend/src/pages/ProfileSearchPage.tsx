@@ -378,14 +378,14 @@ function ProfileSearchPage() {
                         <button
                           type="button"
                           onClick={() => setQuery('')}
-                          className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center justify-center h-6 w-6 rounded-full hover:bg-slate-100 transition"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full hover:bg-slate-100 transition"
                         >
                           <X className="h-4 w-4 text-slate-400" />
                         </button>
                       ) : null}
                     </span>
                   </span>
-                  {isSearching ? <SkeletonLine className="h-3 w-12 shrink-0" /> : null}
+                  {isSearching ? <SkeletonLine className="h-3 w-12 shrink-0 invisible" /> : null}
                 </label>
 
                 <p className="gala-section-description mt-3">{helperCopy}</p>
