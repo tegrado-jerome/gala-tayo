@@ -336,6 +336,12 @@ function SearchHub({
   }
   const handleRawQueryChange = (query: string) => {
     setRawQuery(query)
+    if (query.trim()) {
+      setSelectedCategory(null)
+      setSelectedArea(null)
+      setSelectedGoodFor(null)
+      setSelectedBudget(null)
+    }
     if (searchValidationMessage) {
       setSearchValidationMessage(null)
     }
@@ -504,11 +510,12 @@ function SearchHub({
       page: number
     }>,
   ) => {
-    let nextRawQuery = normalizeSearchText(nextState?.rawQuery ?? rawQuery)
+    const nextRawQuery = normalizeSearchText(nextState?.rawQuery ?? rawQuery)
     const nextCategory = nextState?.category ?? selectedCategory
     const nextArea = nextState?.area ?? selectedArea
     const nextGoodFor = nextState?.goodFor ?? selectedGoodFor
     const nextBudget = nextState?.budget ?? selectedBudget
+
     const nextCategoryLabel = nextCategory
       ? categories.find((category) => category.id === nextCategory)?.name ?? null
       : null
@@ -518,15 +525,14 @@ function SearchHub({
       : null
     const nextBudgetLabel = nextBudget ? budgetOptions.find((budget) => budget.value === nextBudget)?.label ?? null : null
 
-    if (!nextRawQuery && (nextCategory || nextArea || nextGoodFor || nextBudget)) {
-      nextRawQuery = buildFilterSearchText({
-        rawQuery: '',
-        categoryLabel: nextCategoryLabel,
-        areaName: nextAreaName,
-        goodForLabel: nextGoodForLabel,
-        budgetLabel: nextBudgetLabel,
-      })
-    }
+    const filterSearchLabel = buildFilterSearchText({
+      rawQuery: '',
+      categoryLabel: nextCategoryLabel,
+      areaName: nextAreaName,
+      goodForLabel: nextGoodForLabel,
+      budgetLabel: nextBudgetLabel,
+    })
+    const nextSearchLabel = nextRawQuery || filterSearchLabel || 'filtered GalaTayo places'
     const nextPage = nextState?.page ?? 1
     const hasCriteria = Boolean(nextRawQuery || nextCategory || nextArea || nextGoodFor || nextBudget)
 
@@ -570,11 +576,16 @@ function SearchHub({
     })
 
     try {
+      setRawQuery(nextRawQuery)
+      setSelectedCategory(nextCategory)
+      setSelectedArea(nextArea)
+      setSelectedGoodFor(nextGoodFor)
+      setSelectedBudget(nextBudget)
       setSearchResults([])
       setSearchTotalCount(0)
       setSearchTotalPages(1)
       setSelectedPlaceId(null)
-      setCurrentPage(1)
+      setCurrentPage(nextPage)
       setMobileResultsView('cards')
       setHasSearched(false)
       setIsInitialSearching(true)
@@ -584,7 +595,7 @@ function SearchHub({
       setSearchStatus(null)
       setSearchFeedbackMessage(null)
       setPromptLogin(false)
-      setActiveSearchLabel(nextRawQuery || 'filtered GalaTayo places')
+      setActiveSearchLabel(nextSearchLabel)
 
       const response = await fetch(getApiUrl('/search'), {
         method: 'POST',
@@ -643,11 +654,6 @@ function SearchHub({
       const responseTotalCount = data.totalCount ?? data.result?.totalCount ?? backendPlaces.length
       const responseTotalPages =
         data.totalPages ?? data.result?.totalPages ?? Math.max(1, Math.ceil(responseTotalCount / SEARCH_RESULTS_PER_PAGE))
-      setRawQuery(nextRawQuery)
-      setSelectedCategory(nextCategory)
-      setSelectedArea(nextArea)
-      setSelectedGoodFor(nextGoodFor)
-      setSelectedBudget(nextBudget)
       setCurrentPage(responsePage)
       const mappedPlaces = backendPlaces
         .map(mapBackendPlaceToCard)
@@ -667,7 +673,7 @@ function SearchHub({
       if (shouldUseSearchRouteCache) {
         writeSearchRouteCache({
           lastSearchQuery: nextRawQuery,
-          activeSearchLabel: nextRawQuery || 'filtered GalaTayo places',
+          activeSearchLabel: nextSearchLabel,
           searchId: data.searchId ?? null,
           searchResults: mappedPlaces,
           totalCount: responseTotalCount,

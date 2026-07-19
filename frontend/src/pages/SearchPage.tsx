@@ -199,12 +199,14 @@ function SearchPage({
       return
     }
 
+    const isFilterSearch = Boolean(selectedCategory || selectedCity || selectedBudget)
+
     navigateToPath(
       buildSearchPath({
-        q: activeTypedQuery,
-        category: selectedCategory,
-        city: selectedCity,
-        budget: selectedBudget,
+        q: isFilterSearch ? '' : activeTypedQuery,
+        category: isFilterSearch ? selectedCategory : null,
+        city: isFilterSearch ? selectedCity : null,
+        budget: isFilterSearch ? selectedBudget : null,
         page: 1,
       })
     )
@@ -221,6 +223,26 @@ function SearchPage({
   const handleClearCity = () => setSelectedCity(null)
   const handleClearCategory = () => setSelectedCategory(null)
   const handleClearBudget = () => setSelectedBudget(null)
+  const handleDraftQueryChange = (value: string) => {
+    setDraftQuery(value)
+    if (value.trim()) {
+      setSelectedCity(null)
+      setSelectedCategory(null)
+      setSelectedBudget(null)
+    }
+  }
+  const handleCityChange = (value: string | null) => {
+    setSelectedCity(value)
+    if (value) setDraftQuery('')
+  }
+  const handleCategoryChange = (value: string | null) => {
+    setSelectedCategory(value)
+    if (value) setDraftQuery('')
+  }
+  const handleBudgetChange = (value: SearchBudgetValue | null) => {
+    setSelectedBudget(value)
+    if (value) setDraftQuery('')
+  }
 
   if (shouldShowResults) {
     return (
@@ -256,7 +278,7 @@ function SearchPage({
           />
           <SearchPageLandingBar
             value={rawQuery}
-            onChange={setDraftQuery}
+            onChange={handleDraftQueryChange}
             onSubmit={handleSearch}
             placeholder="Discover a city"
             canSubmit={canSearch}
@@ -299,9 +321,9 @@ function SearchPage({
                   cityOptions={fallbackAreas.filter((area) => area.id !== 'all').map((area) => ({ value: area.id, label: area.name }))}
                   categoryOptions={fallbackCategories.map((category) => ({ value: category.id, label: category.name }))}
                   budgetOptions={budgetOptions.map((budget) => ({ value: budget.value, label: budget.label }))}
-                  onCityChange={setSelectedCity}
-                  onCategoryChange={setSelectedCategory}
-                  onBudgetChange={setSelectedBudget}
+                  onCityChange={handleCityChange}
+                  onCategoryChange={handleCategoryChange}
+                  onBudgetChange={handleBudgetChange}
                   showHeader={false}
                   showActions={false}
                   className="min-h-0 flex-1 overflow-y-auto border-0 bg-transparent px-4 py-4 shadow-none sm:px-5"

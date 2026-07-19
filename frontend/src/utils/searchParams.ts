@@ -26,12 +26,16 @@ export function readSearchUrlState(search: string): SearchUrlState {
   const budgetValue = normalizeSlugParam(params.get('budget'))
   const pageValue = Number(params.get('page') ?? '1')
 
+  const goodFor = goodForValue && validGoodForValues.has(goodForValue as SearchGoodForValue) ? (goodForValue as SearchGoodForValue) : null
+  const budget = budgetValue && validBudgetValues.has(budgetValue as SearchBudgetValue) ? (budgetValue as SearchBudgetValue) : null
+  const hasFilters = Boolean(category || city || goodFor || budget)
+
   return {
-    q,
+    q: hasFilters ? '' : q,
     category,
     city,
-    goodFor: goodForValue && validGoodForValues.has(goodForValue as SearchGoodForValue) ? (goodForValue as SearchGoodForValue) : null,
-    budget: budgetValue && validBudgetValues.has(budgetValue as SearchBudgetValue) ? (budgetValue as SearchBudgetValue) : null,
+    goodFor,
+    budget,
     page: Number.isFinite(pageValue) && pageValue > 0 ? Math.floor(pageValue) : 1,
   }
 }
@@ -54,14 +58,16 @@ export function buildSearchPath(
   const goodFor = normalizeSlugParam(state.goodFor ?? null)
   const budget = normalizeSlugParam(state.budget ?? null)
   const page = typeof state.page === 'number' && Number.isFinite(state.page) && state.page > 0 ? Math.floor(state.page) : 1
-  const hasCriteria = Boolean(q || category || city || goodFor || budget)
+  const hasFilters = Boolean(category || city || goodFor || budget)
+  const searchQuery = hasFilters ? '' : q
+  const hasCriteria = Boolean(searchQuery || hasFilters)
 
   if (!hasCriteria) {
     return '/search'
   }
 
   const params = new URLSearchParams()
-  if (q) params.set('q', q)
+  if (searchQuery) params.set('q', searchQuery)
   if (city) params.set('city', city)
   if (category) params.set('category', category)
   if (goodFor) params.set('good_for', goodFor)
