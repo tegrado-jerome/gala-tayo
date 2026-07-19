@@ -385,7 +385,7 @@ function ProfileSearchPage() {
                       ) : null}
                     </span>
                   </span>
-                  {isSearching ? <SkeletonLine className="h-3 w-12 shrink-0 invisible" /> : null}
+                  <SkeletonLine className={`h-3 w-12 shrink-0 ${isSearching ? '' : 'invisible'}`} />
                 </label>
 
                 <p className="gala-section-description mt-3">{helperCopy}</p>
