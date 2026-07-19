@@ -336,8 +336,8 @@ function PlacePhoto({
               <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-slate-950/55 via-slate-950/18 to-transparent" />
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-slate-950/82 via-slate-950/32 to-transparent" />
 
-              <div className="absolute inset-x-4 top-4 z-10 flex items-start justify-end sm:inset-x-5 sm:top-5">
-                <div className="ml-auto flex max-w-full flex-wrap items-center justify-end gap-2">
+              <div className="absolute inset-x-4 top-4 z-10 flex flex-col items-end gap-2 sm:inset-x-5 sm:top-5">
+                <div className="ml-auto flex max-w-full items-center justify-end gap-2">
                   {showAddPhotoAction ? (
                     <button
                       type="button"
@@ -348,16 +348,16 @@ function PlacePhoto({
                       Add photo
                     </button>
                   ) : null}
-                  {priceBadgeLabel ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#1B2A4A] px-3 py-1.5 text-[12px] font-black text-white">
-                      <Wallet className="h-3.5 w-3.5" />
-                      {priceBadgeLabel}
-                    </span>
-                  ) : null}
                   <span className="rounded-full bg-black/45 px-3 py-1 text-[12px] font-black text-white backdrop-blur-sm">
 {safeIndex + 1} / {imageUrls.length}
                   </span>
                 </div>
+                {priceBadgeLabel ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#1B2A4A] px-3 py-1.5 text-[12px] font-black text-white">
+                    <Wallet className="h-3.5 w-3.5" />
+                    {priceBadgeLabel}
+                  </span>
+                ) : null}
               </div>
 
               <div className="absolute inset-x-0 bottom-0 hidden overflow-x-auto px-4 pb-4 pt-8 sm:block sm:px-5 sm:pb-5">
