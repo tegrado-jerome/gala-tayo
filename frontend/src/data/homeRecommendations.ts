@@ -99,10 +99,10 @@ const homeRecommendedTopPickPlaces: HomeRecommendationPlace[] = [
 ]
 
 const homeAllTopPickPlaces: HomeRecommendationPlace[] = [
-  createRecommendationPlace({ name: 'Bonifacio High Street', city: 'Taguig', area: 'Bonifacio Global City' }),
   createRecommendationPlace({ name: 'National Museum of Fine Arts', city: 'Manila', area: 'Luneta / Rizal Park' }),
   createRecommendationPlace({ name: 'Ayala Malls Manila Bay', city: 'Paranaque', area: 'Ayala Malls Manila Bay / Aseana City' }),
   createRecommendationPlace({ name: 'Venice Grand Canal Mall', city: 'Taguig', area: 'McKinley' }),
+  createRecommendationPlace({ name: 'Bonifacio High Street', city: 'Taguig', area: 'Bonifacio Global City' }),
   createRecommendationPlace({ name: 'Ortigas Cinemas Estancia', city: 'Pasig', area: 'Capitol Commons' }),
   createRecommendationPlace({ name: 'The Podium', city: 'Mandaluyong', area: 'Ortigas Center' }),
   createRecommendationPlace({ name: 'Art in Island', city: 'Quezon City', area: 'Katipunan' }),
