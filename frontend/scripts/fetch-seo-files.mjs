@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 
@@ -75,15 +75,38 @@ async function fetchRequiredFile(baseUrl, file) {
 }
 
 async function main() {
-  const baseUrl = getBackendBaseUrl();
   const publicDir = path.resolve("public");
 
   await mkdir(publicDir, { recursive: true });
 
+  let baseUrl;
+  try {
+    baseUrl = getBackendBaseUrl();
+  } catch {
+    baseUrl = null;
+  }
+
   for (const file of requiredFiles) {
-    const content = await fetchRequiredFile(baseUrl, file);
-    await writeFile(path.join(publicDir, file.outputFile), content, "utf8");
-    console.log(`Fetched ${file.outputFile} from backend SEO endpoint.`);
+    const outputPath = path.join(publicDir, file.outputFile);
+
+    if (baseUrl) {
+      try {
+        const content = await fetchRequiredFile(baseUrl, file);
+        await writeFile(outputPath, content, "utf8");
+        console.log(`Fetched ${file.outputFile} from backend SEO endpoint.`);
+        continue;
+      } catch (error) {
+        console.log(`Warning: ${error instanceof Error ? error.message : String(error)}.`);
+      }
+    }
+
+    try {
+      const existing = await readFile(outputPath, "utf8");
+      console.log(`Using existing ${file.outputFile}.`);
+      await writeFile(outputPath, existing.endsWith("\n") ? existing : `${existing}\n`, "utf8");
+    } catch {
+      throw new Error(`No existing ${file.outputFile} found and could not fetch from backend.`);
+    }
   }
 }
 
