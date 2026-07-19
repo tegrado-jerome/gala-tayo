@@ -2582,7 +2582,7 @@ function PlaceDetailView({
     <PageShell tone="surface">
       <AppHeader />
 
-      <main className="w-full pb-36 pt-0 sm:pb-12 sm:pt-0">
+      <main className="w-full pb-36 pt-0 sm:pb-12 sm:pt-0 md:pt-6">
         <PageContainer size="wide">
           <Breadcrumb
             showBack

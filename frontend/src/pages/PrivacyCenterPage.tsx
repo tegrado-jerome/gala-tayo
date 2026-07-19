@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { FormEvent, ReactNode } from 'react'
+import type { FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { AlertTriangle, Check, CheckCircle2, ChevronDown, Clock3, ExternalLink, FileText, Mail, ShieldCheck, Trash2, XCircle } from 'lucide-react'
+import { Check, CheckCircle2, ChevronDown, Clock3, Mail, ShieldCheck, Trash2, XCircle } from 'lucide-react'
 import AppHeader from '../components/AppHeader'
 import MinimalBackNav from '../components/MinimalBackNav'
 import PageHeroHeader from '../components/PageHeroHeader'
 import SeoHead from '../components/SeoHead'
-import { CardSurface, PageContainer, PageShell, ResponsiveGrid, Section, Stack } from '../components/layout/ResponsiveLayouts'
+import { PageShell } from '../components/layout/ResponsiveLayouts'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import {
   getMyPrivacyRequests,
@@ -87,21 +87,34 @@ function formatDateTime(value: string | null | undefined) {
   })
 }
 
-function SummaryCard({ icon, title, value, description, action }: { icon: ReactNode; title: string; value: string; description: string; action?: ReactNode }) {
+function PrivacySupportSection({ activeRequestCount, latestRequest }: { activeRequestCount: number; latestRequest: PrivacyRequest | null }) {
   return (
-    <article className="rounded-xl border border-[var(--line)] bg-white px-4 py-4 shadow-sm">
-      <div className="flex items-start gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--accent-wash)] text-[var(--accent)] ring-1 ring-[rgba(var(--accent-rgb),0.18)]">
-          {icon}
+    <section className="border-t border-[var(--line)] pt-6">
+      <div className="flex items-start gap-3 sm:gap-4">
+        <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-[var(--accent)] sm:h-11 sm:w-11">
+          <ShieldCheck className="h-5 w-5" strokeWidth={2.25} />
         </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">{title}</p>
-          <p className="mt-1 text-lg font-black text-slate-950">{value}</p>
-          <p className="mt-1 text-sm font-medium leading-6 text-slate-600">{description}</p>
-          {action ? <div className="mt-3">{action}</div> : null}
+        <div className="min-w-0">
+          <h2 className="text-xl font-black text-slate-950">Privacy Support</h2>
+          <p className="mt-1 max-w-2xl text-sm font-medium leading-6 text-slate-600">
+            {activeRequestCount > 0
+              ? `${activeRequestCount} active request${activeRequestCount === 1 ? '' : 's'}${latestRequest ? `, latest is ${privacyRequestLabels[latestRequest.requestType]}.` : '.'}`
+              : 'Submit a data-rights request or reach the privacy contact.'}
+          </p>
         </div>
       </div>
-    </article>
+
+      <div className="mt-4 flex flex-col items-start gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="inline-flex max-w-full items-center gap-2 rounded-xl border border-[var(--line)] bg-slate-50 px-3 py-2.5">
+          <Mail className="h-4 w-4 shrink-0 text-slate-500" strokeWidth={2.2} />
+          <span className="min-w-0 truncate text-sm font-semibold text-slate-700">{contactEmail}</span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" onClick={() => navigateToPath('/terms')} className="app-button app-button-pill">Terms</button>
+          <button type="button" onClick={() => navigateToPath('/privacy')} className="app-button app-button-pill">Privacy</button>
+        </div>
+      </div>
+    </section>
   )
 }
 
@@ -254,6 +267,7 @@ function PrivacyCenterPage({ session }: { session: Session }) {
   const [deletionReason, setDeletionReason] = useState('')
   const [deletionRequestError, setDeletionRequestError] = useState('')
   const [isSubmittingDeletionRequest, setIsSubmittingDeletionRequest] = useState(false)
+  const [isDeletionExpanded, setIsDeletionExpanded] = useState(false)
 
   useEffect(() => {
     let isMounted = true
@@ -333,6 +347,7 @@ function PrivacyCenterPage({ session }: { session: Session }) {
       )
 
       setDeletionReason('')
+      setIsDeletionExpanded(false)
       showSystemMessage({
         title: 'Deletion Request Submitted',
         description: result.message,
@@ -349,183 +364,157 @@ function PrivacyCenterPage({ session }: { session: Session }) {
       <SeoHead title="Privacy Center | GalaTayo" description="Manage GalaTayo privacy requests and account deletion requests." canonicalPath="/privacy-center" robots="noindex,follow" />
       <AppHeader showTaglishChip={false} />
 
-      <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-8">
-        <PageContainer size="wide">
-          <Stack gap="loose">
-            <div className="mb-2">
-              <MinimalBackNav to="/account-settings" label="Account Settings" preferHistory />
-            </div>
+      <main className="w-full pt-8 sm:pt-5 lg:py-8">
+        <div className="mx-auto w-full max-w-[820px] px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col gap-6 sm:gap-7">
+
+            <MinimalBackNav to="/account-settings" label="Account Settings" preferHistory />
 
             <PageHeroHeader
               eyebrow="Account Privacy"
               title="Privacy Center"
-              description="Submit data-rights requests, review recent request activity, and start account deletion review from one protected place."
+              description="Submit privacy requests, check recent activity, and reach the privacy contact from one protected place."
               icon={<ShieldCheck className="h-4 w-4" strokeWidth={2.2} />}
-              badges={
-                <>
-                  <span className="rounded-lg border border-[var(--line)] bg-white px-3 py-1.5">Your private space</span>
-                  <span className="rounded-lg border border-[var(--line)] bg-white px-3 py-1.5">Standard privacy</span>
-                </>
-              }
+              divider={false}
             />
 
-            <ResponsiveGrid cols={4} gap="default" minCardWidth={220}>
-              <SummaryCard
-                icon={<FileText className="h-5 w-5" strokeWidth={2.2} />}
-                title="Data requests"
-                value={`${activeRequestCount} active`}
-                description={latestRequest ? `Latest: ${privacyRequestLabels[latestRequest.requestType]}` : 'No active request yet.'}
-              />
-              <SummaryCard
-                icon={<Trash2 className="h-5 w-5" strokeWidth={2.2} />}
-                title="Deletion"
-                value="Reviewed"
-                description="Account deletion requests are checked for privacy, security, abuse, and retention needs."
-              />
-              <SummaryCard
-                icon={<ExternalLink className="h-5 w-5" strokeWidth={2.2} />}
-                title="Policies"
-                value="Terms & Privacy"
-                description="Read the public legal pages any time."
-                action={
-                  <div className="flex flex-wrap gap-2">
-                    <button type="button" onClick={() => navigateToPath('/terms')} className="app-button app-button-secondary app-button-sm">Terms</button>
-                    <button type="button" onClick={() => navigateToPath('/privacy')} className="app-button app-button-secondary app-button-sm">Privacy</button>
-                  </div>
-                }
-              />
-              <SummaryCard
-                icon={<Mail className="h-5 w-5" strokeWidth={2.2} />}
-                title="Contact"
-                value="Privacy email"
-                description={contactEmail}
-              />
-            </ResponsiveGrid>
+            <PrivacySupportSection activeRequestCount={activeRequestCount} latestRequest={latestRequest} />
 
-            <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(320px,420px)] lg:items-start">
-              <Section gap="default" as="section">
-                <CardSurface pad="loose" tone="outlined" className="rounded-2xl">
-                  <div className="flex items-start gap-3">
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--accent-wash)] text-[var(--accent)] ring-1 ring-[rgba(var(--accent-rgb),0.18)]">
-                      <FileText className="h-5 w-5" strokeWidth={2.2} />
-                    </span>
-                    <div className="min-w-0">
-                      <h2 className="text-xl font-black text-slate-950">New Privacy Request</h2>
-                      <p className="mt-1 text-sm font-medium leading-6 text-slate-600">{selectedRequestOption.description}</p>
-                    </div>
-                  </div>
-
-                  <form onSubmit={handleSubmitPrivacyRequest} className="mt-6 grid gap-4">
-                    <RequestTypeSelect value={privacyRequestType} onChange={setPrivacyRequestType} />
-
-                    <label className="grid gap-2">
-                      <span className="flex items-center gap-2 text-sm font-semibold text-slate-800">
-                        Details
-                        <span className="optional-label">Optional</span>
-                      </span>
-                      <textarea
-                        value={privacyRequestDetails}
-                        onChange={(event) => setPrivacyRequestDetails(event.target.value)}
-                        maxLength={1000}
-                        className="min-h-36 resize-none rounded-xl border border-slate-300 bg-white px-3 py-3 text-sm font-medium leading-6 text-slate-900 outline-none transition focus:border-[#1877f2] focus:ring-4 focus:ring-[#e7f3ff]"
-                        placeholder="Tell us what data, content, or privacy concern this request is about."
-                      />
-                      <span className="text-right text-xs font-bold text-slate-500">{privacyRequestDetails.length}/1000</span>
-                    </label>
-
-                    {privacyRequestError ? <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{privacyRequestError}</p> : null}
-
-                    <div className="flex justify-end">
-                      <button type="submit" disabled={isSubmittingPrivacyRequest} className="app-button app-button-primary app-button-md px-5">
-                        {isSubmittingPrivacyRequest ? 'Submitting...' : 'Submit request'}
-                      </button>
-                    </div>
-                  </form>
-                </CardSurface>
-              </Section>
-
-              <Section gap="default" as="section">
-                <CardSurface pad="loose" tone="outlined" className="rounded-2xl">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h2 className="text-xl font-black text-slate-950">Recent Requests</h2>
-                      <p className="mt-1 text-sm font-medium leading-6 text-slate-600">Status history from your latest privacy requests.</p>
-                    </div>
-                    <span className="rounded-lg border border-[var(--line)] bg-white px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-slate-500">
-                      {privacyRequests.length}
-                    </span>
-                  </div>
-
-                  <div className="mt-5 grid gap-3">
-                    {isLoading ? <FormSkeleton rows={4} /> : null}
-                    {loadError ? <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{loadError}</p> : null}
-                    {!isLoading && !loadError && privacyRequests.length === 0 ? (
-                      <p className="rounded-xl border border-dashed border-slate-300 bg-white px-4 py-5 text-sm font-semibold text-slate-500">
-                        No privacy requests yet.
-                      </p>
-                    ) : null}
-                    {!isLoading && !loadError ? privacyRequests.slice(0, 8).map((request) => (
-                      <article key={request.id} className="rounded-xl border border-[var(--line)] bg-white px-4 py-4">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-black text-slate-950">{privacyRequestLabels[request.requestType]}</p>
-                            <p className="mt-1 text-xs font-semibold text-slate-500">{formatDateTime(request.createdAt)}</p>
-                          </div>
-                          <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-black ${statusClassName(request.status)}`}>
-                            {statusIcon(request.status)}
-                            <span>{requestStatusLabels[request.status]}</span>
-                          </span>
-                        </div>
-                        {request.details ? <p className="mt-3 line-clamp-2 text-sm font-medium leading-6 text-slate-600">{request.details}</p> : null}
-                        {request.moderatorNote ? <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs font-semibold leading-5 text-slate-600">{request.moderatorNote}</p> : null}
-                      </article>
-                    )) : null}
-                  </div>
-                </CardSurface>
-              </Section>
-            </div>
-
-            <Section gap="default" as="section">
-              <CardSurface pad="loose" tone="outlined" className="rounded-2xl border-red-200 bg-red-50/70">
-                <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-                  <div className="flex min-w-0 items-start gap-3">
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-red-200 bg-white text-red-600">
-                      <AlertTriangle className="h-5 w-5" strokeWidth={2.2} />
-                    </span>
-                    <div className="min-w-0">
-                      <h2 className="text-xl font-black text-red-950">Delete Account</h2>
-                      <p className="mt-1 max-w-3xl text-sm font-semibold leading-6 text-red-900">
-                        Send a deletion request for review before account data is removed, detached, or anonymized according to retention rules.
-                      </p>
-                    </div>
-                  </div>
-
-                  <form onSubmit={handleSubmitDeletionRequest} className="grid w-full gap-3 lg:max-w-[460px]">
-                    <label className="grid gap-2">
-                      <span className="flex items-center gap-2 text-sm font-semibold text-red-900">
-                        Reason
-                        <span className="optional-label">Optional</span>
-                      </span>
-                      <textarea
-                        value={deletionReason}
-                        onChange={(event) => setDeletionReason(event.target.value)}
-                        maxLength={1000}
-                        className="min-h-28 resize-none rounded-xl border border-red-200 bg-white px-3 py-3 text-sm font-medium leading-6 text-slate-900 outline-none transition focus:border-red-400 focus:ring-4 focus:ring-red-100"
-                        placeholder="Add context for the deletion request."
-                      />
-                    </label>
-                    {deletionRequestError ? <p className="text-sm font-semibold text-red-700">{deletionRequestError}</p> : null}
-                    <div className="flex justify-end">
-                      <button type="submit" disabled={isSubmittingDeletionRequest} className="inline-flex items-center justify-center rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-black text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60">
-                        {isSubmittingDeletionRequest ? 'Submitting...' : 'Request account deletion'}
-                      </button>
-                    </div>
-                  </form>
+            <section className="border-t border-[var(--line)] pt-6">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-xl font-black text-slate-950">Recent Requests</h2>
+                  <p className="mt-1 text-sm font-medium leading-6 text-slate-600">Latest request status.</p>
                 </div>
-              </CardSurface>
-            </Section>
-          </Stack>
-        </PageContainer>
+                <span className="rounded-full border border-[var(--line)] bg-white px-3 py-1 text-xs font-black text-slate-500">
+                  {privacyRequests.length}
+                </span>
+              </div>
+
+              <div className="mt-4 grid gap-3">
+                {isLoading ? <FormSkeleton rows={4} /> : null}
+                {loadError ? <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{loadError}</p> : null}
+                {!isLoading && !loadError && privacyRequests.length === 0 ? (
+                  <p className="rounded-xl border border-dashed border-slate-300 bg-white px-4 py-5 text-sm font-semibold text-slate-500">
+                    No privacy requests yet.
+                  </p>
+                ) : null}
+                {!isLoading && !loadError ? privacyRequests.slice(0, 8).map((request) => (
+                  <article key={request.id} className="border-b border-[var(--line)] pb-4 last:border-b-0 last:pb-0">
+                    <div className="grid gap-2 sm:flex sm:items-start sm:justify-between sm:gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-black leading-5 text-slate-950">{privacyRequestLabels[request.requestType]}</p>
+                        <p className="mt-1 text-xs font-semibold text-slate-500">{formatDateTime(request.createdAt)}</p>
+                      </div>
+                      <span className={`inline-flex w-fit shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-black ${statusClassName(request.status)}`}>
+                        {statusIcon(request.status)}
+                        <span>{requestStatusLabels[request.status]}</span>
+                      </span>
+                    </div>
+                    {request.details ? <p className="mt-3 line-clamp-2 text-sm font-medium leading-6 text-slate-600">{request.details}</p> : null}
+                    {request.moderatorNote ? <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs font-semibold leading-5 text-slate-600">{request.moderatorNote}</p> : null}
+                  </article>
+                )) : null}
+              </div>
+            </section>
+
+            <section className="border-t border-[var(--line)] pt-6">
+              <h2 className="text-xl font-black text-slate-950">New Privacy Request</h2>
+              <p className="mt-1 text-sm font-medium leading-6 text-slate-600">{selectedRequestOption.description}</p>
+
+              <form onSubmit={handleSubmitPrivacyRequest} className="mt-4 grid gap-4">
+                <RequestTypeSelect value={privacyRequestType} onChange={setPrivacyRequestType} />
+
+                <label className="grid gap-2">
+                  <span className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+                    Details
+                    <span className="optional-label">Optional</span>
+                  </span>
+                  <textarea
+                    value={privacyRequestDetails}
+                    onChange={(event) => setPrivacyRequestDetails(event.target.value)}
+                    maxLength={1000}
+                    className="min-h-28 resize-none rounded-xl border border-slate-300 bg-white px-3 py-3 text-sm font-medium leading-6 text-slate-900 outline-none transition focus:border-[#1877f2] focus:ring-4 focus:ring-[#e7f3ff]"
+                    placeholder="Tell us what data, content, or privacy concern this request is about."
+                  />
+                  <span className="text-right text-xs font-bold text-slate-500">{privacyRequestDetails.length}/1000</span>
+                </label>
+
+                {privacyRequestError ? <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{privacyRequestError}</p> : null}
+
+                <div className="flex justify-end">
+                  <button type="submit" disabled={isSubmittingPrivacyRequest} className="app-button app-button-primary app-button-md px-5">
+                    {isSubmittingPrivacyRequest ? 'Submitting...' : 'Submit request'}
+                  </button>
+                </div>
+              </form>
+            </section>
+
+            <section className="border-t border-red-200 pt-6">
+              <div className="grid gap-3 sm:flex sm:items-start sm:justify-between">
+                <div className="flex min-w-0 items-start gap-3">
+                  <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-700">
+                    <Trash2 className="h-5 w-5" strokeWidth={2.2} />
+                  </span>
+                  <div className="min-w-0">
+                    <h2 className="text-lg font-black text-slate-950">Delete Account</h2>
+                    <p className="mt-1 text-sm font-medium leading-6 text-slate-600">
+                      Request a review before account data is removed, detached, or anonymized.
+                    </p>
+                  </div>
+                </div>
+                {!isDeletionExpanded ? (
+                  <button
+                    type="button"
+                    onClick={() => setIsDeletionExpanded(true)}
+                    className="inline-flex w-fit items-center justify-center whitespace-nowrap rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-black leading-none text-red-700 transition hover:bg-red-100"
+                  >
+                    Request deletion
+                  </button>
+                ) : null}
+              </div>
+
+              {isDeletionExpanded ? (
+                <form onSubmit={handleSubmitDeletionRequest} className="mt-4 grid w-full gap-3 border-t border-red-100 pt-4">
+                  <label className="grid gap-2">
+                    <span className="flex items-center gap-2 text-sm font-semibold text-slate-800">
+                      Reason
+                      <span className="optional-label">Optional</span>
+                    </span>
+                    <textarea
+                      value={deletionReason}
+                      onChange={(event) => setDeletionReason(event.target.value)}
+                      maxLength={1000}
+                      className="min-h-20 resize-none rounded-xl border border-red-200 bg-white px-3 py-3 text-sm font-medium leading-6 text-slate-900 outline-none transition focus:border-red-400 focus:ring-4 focus:ring-red-100"
+                      placeholder="Add context for the deletion request."
+                    />
+                  </label>
+                  {deletionRequestError ? <p className="text-sm font-semibold text-red-700">{deletionRequestError}</p> : null}
+                  <div className="grid gap-2 sm:flex sm:justify-end">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsDeletionExpanded(false)
+                        setDeletionRequestError('')
+                      }}
+                      className="app-button app-button-secondary app-button-md order-2 w-full sm:order-1 sm:w-auto"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmittingDeletionRequest}
+                      className="order-1 inline-flex w-full items-center justify-center rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-black text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60 sm:order-2 sm:w-auto"
+                    >
+                      {isSubmittingDeletionRequest ? 'Submitting...' : 'Request account deletion'}
+                    </button>
+                  </div>
+                </form>
+              ) : null}
+            </section>
+
+          </div>
+        </div>
       </main>
     </PageShell>
   )
