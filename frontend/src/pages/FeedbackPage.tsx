@@ -103,12 +103,6 @@ function FeedbackPage() {
 
     const cleanComment = comment.trim()
 
-    if (!cleanComment) {
-      setErrorMessage('Please tell us a little more.')
-      setStatusMessage('')
-      return
-    }
-
     try {
       setIsSubmitting(true)
       setErrorMessage('')
@@ -122,7 +116,7 @@ function FeedbackPage() {
         },
         body: JSON.stringify({
           rating,
-          comment: cleanComment,
+          comment: cleanComment || null,
         }),
       })
 
@@ -204,10 +198,10 @@ function FeedbackPage() {
                           key={option.value}
                           type="button"
                           onClick={() => setRating(option.value)}
-                          className={`flex min-w-0 flex-col items-center justify-center gap-1 rounded-none border-0 bg-transparent px-0 py-1 text-center font-black transition active:scale-[0.98] ${
+                          className={`flex min-w-0 flex-col items-center justify-center gap-1 rounded-xl border-0 px-1 py-1 text-center font-black transition active:scale-[0.98] ${
                             isSelected
-                              ? 'text-[var(--accent-deep)]'
-                              : 'text-slate-700 hover:text-[var(--accent-deep)]'
+                              ? 'bg-[var(--accent-soft)] text-[var(--accent-deep)]'
+                              : 'bg-transparent text-slate-700 hover:bg-[var(--accent-soft)] hover:text-[var(--accent-deep)]'
                           }`}
                           aria-label={`Rate ${option.label}`}
                         >
