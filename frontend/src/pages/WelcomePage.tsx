@@ -190,7 +190,7 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
             '@type': 'Organization',
             name: 'GalaTayo',
             url: `${getPublicSiteOrigin()}/`,
-            logo: `${getPublicSiteOrigin()}/favicon.svg`,
+            logo: `${getPublicSiteOrigin()}/favicon.png`,
           },
         ]}
       />
