@@ -1965,25 +1965,6 @@ function PlaceDetailView({
     setReportingUser({ id: userId, username, displayName })
   }
 
-  const handleReviewSignIn = async () => {
-    try {
-      setReviewError('')
-
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin,
-        },
-      })
-
-      if (error) {
-        throw error
-      }
-    } catch (error) {
-      setReviewError(error instanceof Error ? error.message : 'Login failed. Please try again.')
-    }
-  }
-
   const handleOpenPlaceConcern = () => {
     if (!currentUserId) {
       guestAuth.open('report-place')
