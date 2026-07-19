@@ -15,10 +15,8 @@ function ForgotPasswordPage() {
   const [error, setError] = useState('')
   const [statusMessage, setStatusMessage] = useState('')
   const [isResending, setIsResending] = useState(false)
-  const [submittedEmail, setSubmittedEmail] = useState('')
   const normalizedEmail = useMemo(() => email.trim().toLowerCase(), [email])
-  const cooldownEmail = submittedEmail || (isSent ? normalizedEmail : '')
-  const resendCooldown = useResendCooldown(cooldownEmail ? `recovery:${cooldownEmail}` : null, resendCooldownMs)
+  const resendCooldown = useResendCooldown(normalizedEmail ? `recovery:${normalizedEmail}` : null, resendCooldownMs)
 
   const isEmailValid = emailPattern.test(normalizedEmail)
   const isSubmitDisabled = isSubmitting || !isEmailValid
@@ -41,7 +39,6 @@ function ForgotPasswordPage() {
       setError('')
       setStatusMessage('')
       await sendPasswordResetEmail(normalizedEmail)
-      setSubmittedEmail(normalizedEmail)
       setIsSent(true)
       resendCooldown.startCooldown()
     } catch (caughtError) {
@@ -79,44 +76,42 @@ function ForgotPasswordPage() {
       : 'Resend reset email'
 
     return (
-      <main className="gala-page-background relative flex min-h-screen min-h-[100dvh] items-center justify-center overflow-x-hidden px-4 py-6 text-[var(--text)] sm:px-6 sm:py-8">
-        <FormContainer className="relative z-[2]">
-          <section className="mx-auto flex w-full max-w-[360px] items-center justify-center md:max-w-[420px] lg:max-w-[440px]">
-            <div className="w-full text-center">
-              <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-[1.2rem] border border-[var(--line)] bg-white shadow-sm">
-                <AppIcon name="email" className="h-5 w-5 text-[var(--accent-deep)]" />
-              </div>
-              <div className="mt-5">
-                <h1 className="text-[1.6rem] font-semibold leading-[1.02] tracking-[-0.04em] text-slate-950 sm:text-[1.85rem]">Check your email</h1>
-                <p className="mx-auto mt-3 max-w-[280px] text-[13px] leading-6 text-slate-500 sm:text-[14px] sm:leading-7">
-                  If an account exists with that email, we sent password reset instructions.
-                </p>
-                {statusMessage ? (
-                  <p className="mt-4 rounded-[0.875rem] border border-[rgba(var(--accent-rgb),0.18)] bg-[var(--primary-soft)] px-4 py-3 text-[13px] text-[var(--accent-deep)] shadow-sm">
-                    {statusMessage}
-                  </p>
-                ) : null}
-                <div className="mt-6 flex flex-col items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => void handleResendResetEmail()}
-                    disabled={resendCooldown.isCoolingDown || isResending}
-                    className="inline-flex min-h-[2.75rem] items-center justify-center rounded-[0.875rem] border border-[var(--line)] bg-white px-6 text-[14px] font-semibold text-[var(--text-main)] transition hover:-translate-y-0.5 hover:border-[var(--accent-soft)] hover:text-[var(--accent-deep)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)] disabled:cursor-not-allowed disabled:opacity-70"
-                  >
-                    {isResending ? 'Sending...' : resendLabel}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => navigateToPath('/login')}
-                    className="inline-flex min-h-[2.75rem] items-center justify-center rounded-[0.875rem] bg-[var(--accent)] px-6 text-[14px] font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[var(--accent-deep)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)]"
-                  >
-                    Back to login
-                  </button>
-                </div>
-              </div>
+      <main className="gala-page-background min-h-screen min-h-[100dvh] px-4 py-6 text-[var(--text)] sm:px-6 sm:py-8">
+        <section className="mx-auto flex min-h-[100dvh] w-full max-w-[560px] items-center justify-center">
+          <div className="w-full px-6 py-8 text-center sm:px-8 sm:py-10">
+            <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--line)] bg-[var(--bg)]">
+              <AppIcon name="email" className="h-5 w-5 text-[var(--accent)]" />
             </div>
-          </section>
-        </FormContainer>
+            <h1 className="mt-5 text-[1.65rem] font-extrabold leading-[1.02] tracking-[-0.05em] text-[var(--text-main)] sm:text-[1.9rem]">
+              Check your email
+            </h1>
+            <p className="mx-auto mt-3 max-w-[280px] text-[14px] leading-6 text-[var(--muted)]">
+              If an account exists with that email, we sent password reset instructions.
+            </p>
+            {statusMessage ? (
+              <p className="mx-auto mt-4 max-w-[280px] rounded-[12px] border border-[rgba(var(--accent-rgb),0.18)] bg-[var(--primary-soft)] px-4 py-3 text-[13px] leading-6 text-[var(--accent-deep)] shadow-sm">
+                {statusMessage}
+              </p>
+            ) : null}
+            <div className="mt-6 flex flex-col items-center gap-3">
+              <button
+                type="button"
+                onClick={() => void handleResendResetEmail()}
+                disabled={resendCooldown.isCoolingDown || isResending}
+                className="app-button app-button-secondary app-button-md w-[240px] max-w-full disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {isResending ? 'Sending...' : resendLabel}
+              </button>
+              <button
+                type="button"
+                onClick={() => navigateToPath('/login')}
+                className="app-button app-button-primary app-button-md w-[240px] max-w-full"
+              >
+                Back to login
+              </button>
+            </div>
+          </div>
+        </section>
       </main>
     )
   }
