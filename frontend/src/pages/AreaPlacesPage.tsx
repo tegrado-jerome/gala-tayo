@@ -322,40 +322,6 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
       }
     }
   }
-  const handleCategoryChange = async (category: string) => {
-    const nextCategory = normalizeValue(category) || 'all'
-    const nextPath = getPagePath(1, nextCategory)
-
-    if (nextCategory === activeCategory) {
-      return
-    }
-
-    setIsLoading(false)
-    setIsRefreshing(true)
-    setErrorMessage(null)
-
-    try {
-      const data = await fetchPlacesForPage(1, nextCategory)
-
-      seedPendingListingRouteCache(nextPath, {
-        items: data.items,
-        total: data.total,
-        page: data.page,
-        pageSize: data.pageSize,
-        totalPages: data.totalPages,
-        scrollY: 0,
-        selectedPlaceId: null,
-        selectedPlaceViewportTop: null,
-        pendingScrollRestore: false,
-      })
-
-      navigateToPath(nextPath)
-    } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'Failed to load area page.')
-      setIsRefreshing(false)
-    }
-  }
-
   useEffect(() => {
     if (!isPageTransitionLoading && selectedPlaceId && !allPlaces.some((place) => place.id === selectedPlaceId)) {
       setSelectedPlaceId(null)
