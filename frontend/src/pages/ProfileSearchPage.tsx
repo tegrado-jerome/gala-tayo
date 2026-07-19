@@ -1,5 +1,5 @@
 import { type ReactNode, useEffect, useMemo, useState } from 'react'
-import { ArrowUpRight, Search, Users } from 'lucide-react'
+import { ArrowUpRight, Search, Users, X } from 'lucide-react'
 import AppHeader from '../components/AppHeader'
 import MinimalBackNav from '../components/MinimalBackNav'
 import ProfileAvatar from '../components/ProfileAvatar'
@@ -365,25 +365,27 @@ function ProfileSearchPage() {
                     <span className="block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
                       Search username
                     </span>
-                    <input
-                      value={query}
-                      onChange={(event) => setQuery(event.target.value.toLowerCase())}
-                      className="gala-field border-0 bg-transparent pl-2 text-[1.05rem] font-black text-slate-950 outline-none placeholder:font-bold placeholder:text-slate-400 sm:pl-2 sm:text-[1.15rem]"
-                      placeholder="@username"
-                      autoCapitalize="none"
-                      spellCheck={false}
-                    />
+                    <span className="relative block">
+                      <input
+                        value={query}
+                        onChange={(event) => setQuery(event.target.value.toLowerCase())}
+                        className="gala-field border-0 bg-transparent pl-2 pr-8 text-[1.05rem] font-black text-slate-950 outline-none placeholder:font-bold placeholder:text-slate-400 sm:pl-2 sm:text-[1.15rem]"
+                        placeholder="@username"
+                        autoCapitalize="none"
+                        spellCheck={false}
+                      />
+                      {query ? (
+                        <button
+                          type="button"
+                          onClick={() => setQuery('')}
+                          className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center justify-center h-6 w-6 rounded-full hover:bg-slate-100 transition"
+                        >
+                          <X className="h-4 w-4 text-slate-400" />
+                        </button>
+                      ) : null}
+                    </span>
                   </span>
                   {isSearching ? <SkeletonLine className="h-3 w-12 shrink-0" /> : null}
-                  {query ? (
-                    <button
-                      type="button"
-                      onClick={() => setQuery('')}
-                      className="inline-flex h-11 shrink-0 translate-y-1 items-center self-center rounded-full bg-[#0f1f4d] px-4 text-[10px] font-black uppercase tracking-[0.14em] text-white transition hover:bg-[#091633]"
-                    >
-                      Clear
-                    </button>
-                  ) : null}
                 </label>
 
                 <p className="gala-section-description mt-3">{helperCopy}</p>
