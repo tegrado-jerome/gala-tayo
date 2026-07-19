@@ -163,7 +163,14 @@ export async function placeImageContributionCreate(
       return response(409, "This place already has 3 approved images.");
     }
 
-    const formData = await request.formData();
+    let formData: FormData;
+    try {
+      formData = await request.formData();
+    } catch (parseError) {
+      context.error("Failed to parse multipart form data:", parseError);
+      return response(400, "Could not read the uploaded file. Ensure the form data is valid.");
+    }
+
     const file = formData.get("image") || formData.get("photo");
 
     if (!file || typeof file !== "object" || typeof (file as any).size !== "number" || typeof (file as any).type !== "string") {
@@ -251,11 +258,15 @@ export async function placeImageContributionCreate(
 
     context.error("POST /api/places/{placeId}/images/contributions failed:", error);
 
+    const errorMessage = error instanceof Error
+      ? error.message
+      : typeof error === "object" && error !== null
+        ? String((error as any).message ?? JSON.stringify(error))
+        : String(error ?? "Failed to submit photo.");
+
     return {
       status: error instanceof Error && error.message.includes("Image conversion") ? 501 : 500,
-      jsonBody: {
-        message: error instanceof Error ? error.message : "Failed to submit photo.",
-      },
+      jsonBody: { message: errorMessage },
     };
   }
 }

@@ -34,6 +34,7 @@ export type PlaceDetail = {
   imageUrl?: string | null
   thumbnailUrl?: string | null
   curatedImageUrls?: string[] | null
+  approvedImageCount?: number
   categories?: { id: string; name: string }[]
   tags?: { id: string; name: string; group: string; strength: number }[]
 }

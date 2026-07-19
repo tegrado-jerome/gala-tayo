@@ -71,6 +71,7 @@ export type PlaceDetail = {
   longitude: number;
   imageUrl: string;
   curatedImageUrls: string[];
+  approvedImageCount: number;
   categories?: DetailCategoryMeta[];
   tags?: DetailTagMeta[];
 };
@@ -304,6 +305,7 @@ function mapPlaceRowToDetail(row: Record<string, unknown>): PlaceDetail {
     longitude,
     imageUrl: fallbackImageUrls[0] ?? "",
     curatedImageUrls: fallbackImageUrls,
+    approvedImageCount: 0,
     categories: getLinkedCategories(row),
     tags: getLinkedTags(row),
   };
@@ -827,6 +829,7 @@ export async function findPlaceDetailByIdOrSlug(id: string): Promise<PlaceDetail
         review_count: reviewSummary.reviewCount > 0 ? reviewSummary.reviewCount : null,
         imageUrl: resolvedImageUrls[0] ?? "",
         curatedImageUrls: resolvedImageUrls,
+        approvedImageCount: imageUrls.length,
       };
       await writeCachedPlaceDetail(resolvedDetail);
       return resolvedDetail;
@@ -859,6 +862,7 @@ export async function findPlaceDetailByIdOrSlug(id: string): Promise<PlaceDetail
           review_count: reviewSummary.reviewCount > 0 ? reviewSummary.reviewCount : null,
           imageUrl: resolvedImageUrls[0] ?? "",
           curatedImageUrls: resolvedImageUrls,
+          approvedImageCount: imageUrls.length,
         };
         await writeCachedPlaceDetail(resolvedDetail);
         return resolvedDetail;
