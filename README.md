@@ -74,7 +74,13 @@ Azure Function App settings:
 - `FUNCTIONS_WORKER_RUNTIME=node`
 - `AzureWebJobsStorage`
 - `KEY_VAULT_URL`
+- `SCM_DO_BUILD_DURING_DEPLOYMENT=true`
+- `ENABLE_ORYX_BUILD=true`
 - `SITE_URL` or `PUBLIC_SITE_URL` for explicit canonical URLs in SEO endpoints
+
+When deploying the backend Function App from Windows with VS Code or Azure Functions Core Tools,
+use remote build/app-service build. The backend `.funcignore` excludes local `node_modules` so Azure
+installs Linux-native production dependencies such as `sharp` during deployment.
 
 Azure Key Vault secret names used by the current backend code:
 

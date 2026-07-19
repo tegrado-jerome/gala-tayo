@@ -168,8 +168,10 @@ export async function deleteR2Object(storageKey: string | null | undefined) {
 function loadSharp() {
   try {
     return require("sharp");
-  } catch {
-    throw new Error("Image conversion is not configured. Install the backend sharp dependency.");
+  } catch (error) {
+    throw new Error("Image conversion is not configured. Install the backend sharp dependency.", {
+      cause: error,
+    });
   }
 }
 
