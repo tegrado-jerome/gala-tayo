@@ -99,6 +99,7 @@ const homeRecommendedTopPickPlaces: HomeRecommendationPlace[] = [
 ]
 
 const homeAllTopPickPlaces: HomeRecommendationPlace[] = [
+  createRecommendationPlace({ name: 'Space Time Cube', city: 'Pasay', area: 'S Maison / MOA Complex' }),
   createRecommendationPlace({ name: 'National Museum of Fine Arts', city: 'Manila', area: 'Luneta / Rizal Park' }),
   createRecommendationPlace({ name: 'Ayala Malls Manila Bay', city: 'Paranaque', area: 'Ayala Malls Manila Bay / Aseana City' }),
   createRecommendationPlace({ name: 'Venice Grand Canal Mall', city: 'Taguig', area: 'McKinley' }),
@@ -108,7 +109,6 @@ const homeAllTopPickPlaces: HomeRecommendationPlace[] = [
   createRecommendationPlace({ name: 'Art in Island', city: 'Quezon City', area: 'Katipunan' }),
   createRecommendationPlace({ name: 'The Fun Roof Poblacion', city: 'Makati', area: 'Poblacion' }),
   createRecommendationPlace({ name: 'Fort Santiago', city: 'Manila', area: 'Intramuros' }),
-  createRecommendationPlace({ name: 'Space Time Cube', city: 'Pasay', area: 'S Maison / MOA Complex' }),
 ]
 
 const homeFeaturedPlaces = homePopularTopPickPlaces
