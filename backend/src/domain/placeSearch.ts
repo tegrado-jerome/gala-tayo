@@ -341,6 +341,42 @@ function budgetMatches(place: NormalizedPlace, maxBudget: number | null, minBudg
   return true;
 }
 
+function hasBudgetPreference(budget: BudgetConstraints): boolean {
+  return budget.maxBudget !== null || budget.minBudget !== null || budget.free;
+}
+
+function scoreBudgetPreferenceFit(place: NormalizedPlace, budget: BudgetConstraints): number {
+  if (!hasBudgetPreference(budget)) return 0;
+  const budgetMin = place.budget_min;
+  if (budgetMin === null) return 0;
+
+  if (budget.free) {
+    if (budgetMin === 0) return 38;
+    if (budgetMin <= 300) return 26;
+    if (budgetMin <= 500) return 18;
+    return 6;
+  }
+
+  if (budget.maxBudget !== null) {
+    const target = budget.maxBudget;
+    if (budgetMin <= target) return 36;
+    if (budgetMin <= target * 1.5) return 25;
+    if (budgetMin <= target * 2) return 16;
+    return 5;
+  }
+
+  if (budget.minBudget !== null) {
+    const target = budget.minBudget;
+    if (budgetMin >= target) return 36;
+    if (budgetMin >= target * 0.75) return 28;
+    if (budgetMin >= target * 0.5) return 22;
+    if (budgetMin >= target * 0.25) return 16;
+    return 10;
+  }
+
+  return 0;
+}
+
 function resolveBudgetConstraints(filters: PlaceSearchFilters, intent: PlaceSearchIntent): BudgetConstraints {
   const hasExplicitBudget =
     (filters.budget !== undefined && filters.budget !== null && filters.budget !== "any") ||
@@ -452,7 +488,6 @@ function placeMatchesEffectiveFilters(place: NormalizedPlace, filters: PlaceSear
   if (effectiveCategory && !placeMatchesCategoryGroup(place, effectiveCategory)) return false;
   if (effectiveCity && normalizeSearchText(place.city ?? "") !== normalizeSearchText(effectiveCity) && !(hasStrongIdentityMatch && !explicitCity)) return false;
   if (effectiveArea && !matchesAny(placeText(place, ["area", "city", "search_terms"]), [effectiveArea]) && !(hasStrongIdentityMatch && !explicitArea)) return false;
-  if (!budgetMatches(place, budgetConstraints.maxBudget, budgetConstraints.minBudget, budgetConstraints.free)) return false;
   if (filters.priceLevel !== null && filters.priceLevel !== undefined && place.price_level !== filters.priceLevel) return false;
   if (!placeMatchesGoodFor(place, filters.goodFor)) return false;
   if ((filters.tags ?? []).length > 0 && tagMatchCount(place, filters.tags ?? []) === 0) return false;
@@ -504,9 +539,7 @@ export function scorePlaceForQuery(place: NormalizedPlace, intent: PlaceSearchIn
   ]);
   if (intentTerms.some((term) => matchesAny(goodForText, [term]))) score += 25;
   if (intentTerms.some((term) => matchesAny(tagText, [term]))) score += 25;
-  if (budgetMatches(place, budgetConstraints.maxBudget, budgetConstraints.minBudget, budgetConstraints.free)) {
-    score += budgetConstraints.maxBudget !== null || budgetConstraints.minBudget !== null || budgetConstraints.free ? 20 : 0;
-  }
+  score += scoreBudgetPreferenceFit(place, budgetConstraints);
   if (intent.priceLevel !== null && place.price_level === intent.priceLevel) score += 10;
 
   const selectedTags = filters.tags ?? [];
