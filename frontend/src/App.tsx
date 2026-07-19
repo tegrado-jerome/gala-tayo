@@ -171,7 +171,7 @@ function App() {
       >
         {content}
       </AppShell>
-      <CookieConsentBanner />
+      <CookieConsentBanner pathname={pathname} />
     </CookieConsentProvider>
   )
 }

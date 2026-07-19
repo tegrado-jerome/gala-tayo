@@ -2,10 +2,14 @@ import { AppButton } from './AppUI'
 import { AppIcon } from './AppIcon'
 import { useCookieConsent } from '../context/CookieConsentContext'
 
-export function CookieConsentBanner() {
+export function CookieConsentBanner({ pathname }: { pathname?: string }) {
   const { consent, acceptCookies, rejectCookies } = useCookieConsent()
 
   if (consent !== 'undecided') {
+    return null
+  }
+
+  if (pathname && pathname !== '/home') {
     return null
   }
 
