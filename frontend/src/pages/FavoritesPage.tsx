@@ -66,7 +66,7 @@ function getPlaceChips(place: FavoritePlace) {
     .filter((value): value is string => Boolean(value?.trim()))
     .map((value) => value.trim())
 
-  return Array.from(new Set(chips)).slice(0, 4)
+  return Array.from(new Set(chips)).slice(0, 3)
 }
 
 function getPlaceSearchText(place: FavoritePlace) {
@@ -95,7 +95,6 @@ function FavoriteCard({
   const placeSlug = place.slug?.trim() || place.id
   const chips = getPlaceChips(place)
   const location = getPlaceLocation(place)
-  const category = getPlaceCategory(place)
   const photoUrl = getPlacePhoto(place)
 
   return (
@@ -104,7 +103,6 @@ function FavoriteCard({
       categoryLabel={chips.slice(0, 2).join(' / ')}
       location={location}
       chips={chips}
-      description={`Saved ${category.toLowerCase()} spot in ${location}. Open the details for hours, budget notes, and planning info.`}
       photoUrl={photoUrl}
       placeSlug={placeSlug}
       photoAlt={place.name || 'Saved place'}

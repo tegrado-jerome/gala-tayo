@@ -1,27 +1,18 @@
-import type { ElementType, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 import { navigateToPlace } from '../utils/navigation'
-
-type IconProps = {
-  className?: string
-}
 
 type ActivityPlaceCardProps = {
   title: string
   categoryLabel: string
   location: string
   chips: string[]
-  description: string
   photoUrl?: string | null
   placeSlug: string
   photoAlt: string
   actionLabel?: string
   onAction?: () => void
   compactMobile?: boolean
-  secondaryRows?: Array<{
-    icon: ElementType<IconProps>
-    label: string
-  }>
   footer?: ReactNode
 }
 
@@ -35,7 +26,7 @@ function shortenText(value: string, maxLength = 72) {
   return `${normalizedValue.slice(0, Math.max(0, maxLength - 3)).trimEnd()}...`
 }
 
-function PinIcon({ className = 'h-4 w-4' }: IconProps) {
+function PinIcon({ className = 'h-4 w-4' }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className} aria-hidden="true">
       <path d="M12 21s6-5.7 6-11a6 6 0 1 0-12 0c0 5.3 6 11 6 11Z" />
@@ -49,14 +40,12 @@ export default function ActivityPlaceCard({
   categoryLabel,
   location,
   chips,
-  description,
   photoUrl,
   placeSlug,
   photoAlt,
   actionLabel = 'View Details',
   onAction,
   compactMobile = false,
-  secondaryRows = [],
   footer,
 }: ActivityPlaceCardProps) {
   const handleAction = onAction ?? (() => navigateToPlace(placeSlug))
@@ -64,16 +53,14 @@ export default function ActivityPlaceCard({
   const visibleChips = chips.slice(0, 3)
   const hiddenChipCount = Math.max(chips.length - visibleChips.length, 0)
   const hasFooter = Boolean(footer)
-  const cardBodyClass = compactMobile ? 'flex min-h-0 flex-1 flex-col gap-1.5 p-2 sm:gap-2 sm:p-4' : 'flex min-h-0 flex-1 flex-col gap-2 p-4 sm:p-5'
-  const metaRowsClass = compactMobile
-    ? 'grid min-h-0 gap-0.5 text-[10px] font-semibold text-[var(--muted)] sm:text-[11px]'
-    : 'grid min-h-0 gap-0.5 text-xs font-semibold text-[var(--muted)]'
-  const chipsClass = compactMobile
-    ? 'hidden min-h-0 flex-wrap gap-1 sm:flex'
-    : 'flex min-h-0 flex-wrap gap-1'
+  const cardBodyClass = compactMobile ? 'flex min-h-0 flex-1 flex-col gap-0 p-2 sm:p-4' : 'flex min-h-0 flex-1 flex-col gap-2 p-4 sm:p-5'
+  const chipsClass = 'flex min-h-0 flex-wrap gap-1'
+  const metasClass = compactMobile
+    ? 'text-[10px] font-semibold text-[var(--muted)] sm:text-[11px]'
+    : 'text-xs font-semibold text-[var(--muted)]'
   const titleClass = compactMobile
-    ? 'mt-0.5 line-clamp-2 min-h-[2.3rem] text-[12px] font-black leading-tight text-slate-950 sm:text-[13px] lg:text-base'
-    : 'mt-0.5 text-base font-black leading-snug text-slate-950 lg:text-lg'
+    ? 'line-clamp-2 text-[12px] font-black leading-tight text-slate-950 sm:text-[13px] lg:text-base'
+    : 'text-base font-black leading-snug text-slate-950 lg:text-lg'
   const actionsClass = compactMobile
     ? hasFooter
       ? 'mt-auto grid shrink-0 grid-cols-2 gap-1.5 pt-3'
@@ -107,24 +94,17 @@ export default function ActivityPlaceCard({
       </div>
 
       <div className={cardBodyClass}>
-        <div className="min-w-0 shrink-0">
+        <div className="shrink-0">
           <p className={compactMobile ? 'text-[10px] font-semibold text-[var(--muted)]' : 'text-xs font-semibold text-[var(--muted)]'}>{categoryLabel}</p>
           <h2 className={titleClass}>
             {title}
           </h2>
-        </div>
-
-        <div className={metaRowsClass}>
-          <p className="flex items-center gap-1">
-            <PinIcon className="h-3.5 w-3.5 shrink-0" />
-            <span className="min-w-0 flex-1 truncate" title={location}>{displayLocation}</span>
+          <p className={metasClass}>
+            <span className="flex items-center gap-1">
+              <PinIcon className="h-3.5 w-3.5 shrink-0" />
+              <span className="min-w-0 flex-1 truncate" title={location}>{displayLocation}</span>
+            </span>
           </p>
-          {secondaryRows.map((row, index) => (
-            <p key={`${row.label}-${index}`} className="flex items-center gap-1">
-              <row.icon className="h-3.5 w-3.5 shrink-0" />
-              <span className="min-w-0 flex-1 truncate" title={row.label}>{row.label}</span>
-            </p>
-          ))}
         </div>
 
         <div className={chipsClass}>
@@ -142,10 +122,6 @@ export default function ActivityPlaceCard({
             </span>
           ) : null}
         </div>
-
-        <p className={compactMobile ? 'line-clamp-2 text-[11px] leading-relaxed text-slate-600' : 'line-clamp-2 text-xs leading-relaxed text-slate-600'}>
-          {description}
-        </p>
 
         <div className={actionsClass}>
           <button

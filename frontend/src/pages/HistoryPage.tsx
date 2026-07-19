@@ -171,13 +171,6 @@ function getManilaDateKey(date: Date) {
   return `${year}-${month}-${day}`
 }
 
-function getManilaYear(date: Date) {
-  return new Intl.DateTimeFormat('en', {
-    timeZone: 'Asia/Manila',
-    year: 'numeric',
-  }).format(date)
-}
-
 function getHistorySectionTitle(value: string) {
   const viewedAt = parseSupabaseTimestamp(value)
 
@@ -206,45 +199,6 @@ function getHistorySectionTitle(value: string) {
   return 'Older'
 }
 
-function formatViewedAt(value: string) {
-  const viewedAt = parseSupabaseTimestamp(value)
-
-  if (!viewedAt) {
-    return 'Viewed recently'
-  }
-
-  const now = new Date()
-  const elapsedSeconds = Math.max(0, Math.round((now.getTime() - viewedAt.getTime()) / 1000))
-
-  if (elapsedSeconds < 60) {
-    return 'Viewed just now'
-  }
-
-  if (elapsedSeconds < 3600) {
-    const minutes = Math.max(1, Math.round(elapsedSeconds / 60))
-    return `Viewed ${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`
-  }
-
-  if (elapsedSeconds < 86400) {
-    const hours = Math.max(1, Math.round(elapsedSeconds / 3600))
-    return `Viewed ${hours} ${hours === 1 ? 'hour' : 'hours'} ago`
-  }
-
-  const yesterday = new Date(now)
-  yesterday.setDate(now.getDate() - 1)
-
-  if (getManilaDateKey(viewedAt) === getManilaDateKey(yesterday)) {
-    return 'Viewed yesterday'
-  }
-
-  return `Viewed ${viewedAt.toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-    timeZone: 'Asia/Manila',
-    year: getManilaYear(viewedAt) === getManilaYear(now) ? undefined : 'numeric',
-  })}`
-}
-
 function HistoryCard({
   item,
   onRemove,
@@ -266,17 +220,10 @@ function HistoryCard({
       categoryLabel={chips.slice(0, 2).join(' / ')}
       location={location}
       chips={chips}
-      description={place.description?.trim() || `Recently viewed ${getPlaceCategory(place).toLowerCase()} spot in ${location}.`}
       photoUrl={photoUrl}
       placeSlug={placeSlug}
       photoAlt={place.name || 'Viewed place'}
       compactMobile
-      secondaryRows={[
-        {
-          icon: ClockIcon,
-          label: formatViewedAt(item.created_at),
-        },
-      ]}
       footer={
         <button
           type="button"
