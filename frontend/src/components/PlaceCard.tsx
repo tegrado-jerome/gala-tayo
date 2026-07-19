@@ -84,6 +84,7 @@ type PlaceCardData = {
     lat: number | string | null
     lng: number | string | null
   }
+  approvedImageCount?: number
 }
 
 type PlaceCardProps = {

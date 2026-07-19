@@ -827,6 +827,7 @@ const EMPTY_PLACE_DETAIL = {
     lat: null,
     lng: null,
   },
+  approvedImageCount: 0,
 }
 
 function PlaceDetailView({
