@@ -144,7 +144,7 @@ function ForgotPasswordPage() {
                       <AppIcon name="email" className="h-3.5 w-3.5 text-[var(--accent-deep)]" />
                       Email
                     </span>
-                    <span className="flex h-[2.85rem] items-center rounded-[1.2rem] border border-[var(--line)] bg-white px-3.5 shadow-sm transition focus-within:-translate-y-0.5 focus-within:border-[var(--accent)] focus-within:bg-white focus-within:ring-4 focus-within:ring-[var(--accent-soft)]">
+                    <span className="flex h-[2.85rem] items-center rounded-[1.2rem] border border-[var(--line)] bg-white px-3.5 shadow-sm transition">
                       <input
                         type="email"
                         value={email}
@@ -152,7 +152,7 @@ function ForgotPasswordPage() {
                         required
                         autoComplete="email"
                         placeholder="Enter your email"
-                        className="h-full w-full bg-transparent text-[14px] font-medium text-[var(--text)] outline-none placeholder:font-normal placeholder:text-slate-400"
+                        className="h-full w-full bg-transparent text-[14px] font-medium text-[var(--text)] outline-none focus-visible:!shadow-none placeholder:font-normal placeholder:text-slate-400"
                       />
                     </span>
                   </label>
