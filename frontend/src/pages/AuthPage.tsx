@@ -202,12 +202,15 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
         }
 
         markAdminPasswordSession(session.user.id)
-        navigateToPath('/admin')
+        navigateToPath('/mfa/verify?next=/admin')
         return
       }
 
-      const redirectTo = await getPostAuthRedirect(session, window.location.search)
-      navigateToPath(redirectTo)
+      const postAuthRedirect = await getPostAuthRedirect(session, window.location.search)
+      const mfaVerifyPath = postAuthRedirect !== '/home'
+        ? `/mfa/verify?next=${encodeURIComponent(postAuthRedirect)}`
+        : '/mfa/verify'
+      navigateToPath(mfaVerifyPath)
     } catch (caughtError) {
       setError(getFriendlyAuthError(caughtError, mode))
     } finally {

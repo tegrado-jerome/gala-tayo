@@ -51,6 +51,7 @@ const AdminPlaceReportsPage = lazy(() => import('../pages/admin/PlaceReportsPage
 const AdminCommentReportsPage = lazy(() => import('../pages/admin/CommentReportsPage'))
 const AdminMfaSetupPage = lazy(() => import('../pages/admin/AdminMfaSetupPage'))
 const AdminMfaVerifyPage = lazy(() => import('../pages/admin/AdminMfaVerifyPage'))
+const MfaVerifyPage = lazy(() => import('../pages/MfaVerifyPage'))
 
 function OnboardingAccessGate({
   session,
@@ -139,6 +140,13 @@ export function renderRouteDescriptor(descriptor: RouteDescriptor, inputs: Route
       return <LegalPage type={descriptor.page} />
     case 'place-submission':
       return <PlaceSubmissionPage session={session} />
+    case 'user-mfa-verify':
+      if (!session) {
+        return <AuthPage mode="sign_in" />
+      }
+      return (
+        <MfaVerifyPage session={session} />
+      )
     case 'admin-auth':
       return <AuthPage mode="sign_in" surface="admin" />
     case 'admin-setup':

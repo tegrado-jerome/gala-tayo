@@ -1,6 +1,7 @@
 import type { Session } from '@supabase/supabase-js'
 import type { CurrentUserResponse } from '../utils/profileApi'
 import type { AdminMfaStatus } from '../utils/adminMfa'
+import type { UserMfaStatus } from '../utils/userMfa'
 import { ADMIN_BASE_PATH, ADMIN_MFA_SETUP_PATH, ADMIN_MFA_VERIFY_PATH, getAdminPath } from '../utils/adminRoutes'
 import { isAdminPath, isProtectedAccountPath } from '../utils/routeGuards'
 import { isPath } from '../utils/routes'
@@ -31,6 +32,8 @@ export type RouteInputs = {
   currentProfile: CurrentUserResponse['profile'] | null
   isAdminMfaLoading: boolean
   adminMfaStatus: AdminMfaStatus | null
+  isUserMfaLoading: boolean
+  userMfaStatus: UserMfaStatus | null
   navigationSource: NavigationSource
   onProfileRefreshKeyUpdate: () => void
 }
@@ -49,6 +52,7 @@ export type RouteDescriptor =
   | { kind: 'admin-place-submissions' }
   | { kind: 'admin-place-reports' }
   | { kind: 'admin-comment-reports' }
+  | { kind: 'user-mfa-verify' }
   | { kind: 'protected-feature-gate' }
   | { kind: 'root-entry' }
   | { kind: 'home' }
@@ -174,12 +178,30 @@ export function resolveRouteDescriptor(inputs: RouteInputs): RouteDescriptor {
     }
   }
 
+  if (isPath(pathname, '/mfa/verify')) {
+    if (!session) {
+      return { kind: 'protected-feature-gate' }
+    }
+    return { kind: 'user-mfa-verify' }
+  }
+
   if (
     !session &&
     isProtectedAccountPath(pathname) &&
     !(isPath(pathname, '/profile') || isPath(pathname, '/me'))
   ) {
     return { kind: 'protected-feature-gate' }
+  }
+
+  if (
+    session &&
+    userMfaStatus?.needsMfa
+  ) {
+    return { kind: 'user-mfa-verify' }
+  }
+
+  if (session && isUserMfaLoading && userMfaStatus === null && !isPath(pathname, '/auth/callback') && !isPasswordResetPath) {
+    return { kind: 'initial-auth-loader' }
   }
 
   if (pathname === '/' || pathname === '') {

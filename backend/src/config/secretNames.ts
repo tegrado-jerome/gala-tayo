@@ -11,4 +11,5 @@ export const KEY_VAULT_SECRET_NAMES = {
   UPSTASH_REDIS_REST_TOKEN: "upstash-redis-rest-token",
   R2_ACCESS_KEY_ID: "r2-access-key-id",
   R2_SECRET_ACCESS_KEY: "r2-secret-access-key",
+  BREVO_API_KEY: "brevo-api-key",
 } as const;

@@ -26,6 +26,8 @@ function App() {
     currentProfile,
     isAdminMfaLoading,
     adminMfaStatus,
+    isUserMfaLoading,
+    userMfaStatus,
     profileError,
     setProfileRefreshKey,
   } = useAuthOrchestration()
@@ -149,6 +151,8 @@ function App() {
     currentProfile: effectiveCurrentProfile,
     isAdminMfaLoading,
     adminMfaStatus,
+    isUserMfaLoading,
+    userMfaStatus,
     navigationSource,
     onProfileRefreshKeyUpdate: () => setProfileRefreshKey((v) => v + 1),
   })

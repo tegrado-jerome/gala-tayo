@@ -4,6 +4,7 @@ import { supabase } from '../supabase'
 import { preloadAvatarImage } from '../utils/avatarImageCache'
 import { getCurrentUser, getOnboardingStatus, type CurrentUserResponse } from '../utils/profileApi'
 import { getAdminMfaStatus, type AdminMfaStatus } from '../utils/adminMfa'
+import { getUserMfaStatus, type UserMfaStatus } from '../utils/userMfa'
 import { clearAppResumeCache, readAppResumeCache, writeAppResumeCache } from '../utils/appResumeCache'
 import { clearEmptyHashFragment } from '../utils/navigation'
 
@@ -26,6 +27,8 @@ export function useAuthOrchestration() {
   const [, setIsRefreshingSession] = useState(false)
   const [isAdminMfaLoading, setIsAdminMfaLoading] = useState(false)
   const [adminMfaStatus, setAdminMfaStatus] = useState<AdminMfaStatus | null>(null)
+  const [isUserMfaLoading, setIsUserMfaLoading] = useState(false)
+  const [userMfaStatus, setUserMfaStatus] = useState<UserMfaStatus | null>(null)
   const [profileError, setProfileError] = useState('')
   const [profileRefreshKey, setProfileRefreshKey] = useState(0)
   const sessionRef = useRef<Session | null>(null)
@@ -93,6 +96,8 @@ export function useAuthOrchestration() {
         setIsRefreshingSession(false)
         setAdminMfaStatus(null)
         setIsAdminMfaLoading(false)
+        setUserMfaStatus(null)
+        setIsUserMfaLoading(false)
         clearAppResumeCache()
       }
 
@@ -134,6 +139,8 @@ export function useAuthOrchestration() {
       setIsRefreshingSession(false)
       setAdminMfaStatus(null)
       setIsAdminMfaLoading(false)
+      setUserMfaStatus(null)
+      setIsUserMfaLoading(false)
       return undefined
     }
 
@@ -262,6 +269,47 @@ export function useAuthOrchestration() {
 
   useEffect(() => {
     if (!hasResolvedInitialAuth) {
+      return undefined
+    }
+
+    const activeSession = sessionRef.current
+
+    if (!activeSession) {
+      setUserMfaStatus(null)
+      setIsUserMfaLoading(false)
+      return undefined
+    }
+
+    let isMounted = true
+
+    const loadUserMfa = async () => {
+      try {
+        setIsUserMfaLoading(true)
+        const status = await getUserMfaStatus(activeSession)
+
+        if (isMounted) {
+          setUserMfaStatus(status)
+        }
+      } catch {
+        if (isMounted) {
+          setUserMfaStatus(null)
+        }
+      } finally {
+        if (isMounted) {
+          setIsUserMfaLoading(false)
+        }
+      }
+    }
+
+    void loadUserMfa()
+
+    return () => {
+      isMounted = false
+    }
+  }, [hasResolvedInitialAuth, profileRefreshKey, userId])
+
+  useEffect(() => {
+    if (!hasResolvedInitialAuth) {
       return
     }
 
@@ -303,6 +351,8 @@ export function useAuthOrchestration() {
     currentProfile,
     isAdminMfaLoading,
     adminMfaStatus,
+    isUserMfaLoading,
+    userMfaStatus,
     profileError,
     profileRefreshKey,
     setProfileRefreshKey,
