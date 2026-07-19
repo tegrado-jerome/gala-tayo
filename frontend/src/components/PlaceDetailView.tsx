@@ -941,7 +941,7 @@ function PlaceDetailView({
     activeGalleryState.key === galleryStateKey
       ? Math.min(activeGalleryState.index, Math.max(galleryPhotos.length - 1, 0))
       : 0
-  const approvedImageCount = galleryPhotos.length
+  const approvedImageCount = place.approvedImageCount ?? 0
   const budgetLabel = (() => {
     const parts: string[] = []
     if (place.budget_min != null) parts.push(`From ₱${Number(place.budget_min).toLocaleString()}`)
@@ -1387,7 +1387,7 @@ function PlaceDetailView({
     }
 
     if (!currentUserId) {
-      void handleReviewSignIn()
+      guestAuth.open('contribute-photo')
       return
     }
 

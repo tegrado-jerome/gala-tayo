@@ -371,8 +371,8 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
                   Email
                 </span>
                 <span
-                  className={`flex h-12 items-center rounded-[12px] border bg-white px-3.5 shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)] transition focus-within:-translate-y-0.5 focus-within:border-[#2563eb] focus-within:shadow-[inset_0_1px_2px_rgba(15,23,42,0.08),0_0_0_4px_rgba(37,99,235,0.12)] ${
-                    emailIsInvalid ? 'border-red-300 focus-within:border-red-400 focus-within:shadow-[inset_0_1px_2px_rgba(15,23,42,0.08),0_0_0_4px_rgba(220,38,38,0.1)]' : 'border-[var(--line)]'
+                  className={`flex h-12 items-center rounded-[12px] border bg-white px-3.5 shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)] transition ${
+                    emailIsInvalid ? 'border-red-300' : 'border-[var(--line)]'
                   }`}
                 >
                   <input
@@ -382,7 +382,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
                     required
                     autoComplete="email"
                     placeholder="Enter your email"
-                    className="h-full w-full bg-transparent text-[14px] font-medium text-[var(--text-main)] outline-none placeholder:font-normal placeholder:text-slate-400"
+                    className="h-full w-full bg-transparent text-[14px] font-medium text-[var(--text-main)] outline-none focus-visible:!shadow-none placeholder:font-normal placeholder:text-slate-400"
                   />
                 </span>
               </label>
@@ -393,8 +393,8 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
                   Password
                 </span>
                 <span
-                  className={`flex h-12 items-center gap-3 rounded-[12px] border bg-white px-3.5 shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)] transition focus-within:-translate-y-0.5 focus-within:border-[#2563eb] focus-within:shadow-[inset_0_1px_2px_rgba(15,23,42,0.08),0_0_0_4px_rgba(37,99,235,0.12)] ${
-                    passwordIsInvalid ? 'border-red-300 focus-within:border-red-400 focus-within:shadow-[inset_0_1px_2px_rgba(15,23,42,0.08),0_0_0_4px_rgba(220,38,38,0.1)]' : 'border-[var(--line)]'
+                  className={`flex h-12 items-center gap-3 rounded-[12px] border bg-white px-3.5 shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)] transition ${
+                    passwordIsInvalid ? 'border-red-300' : 'border-[var(--line)]'
                   }`}
                 >
                   <input
@@ -405,7 +405,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
                     minLength={isCreateMode ? minPasswordLength : undefined}
                     autoComplete={isCreateMode ? 'new-password' : 'current-password'}
                     placeholder="Enter your password"
-                    className="h-full w-full min-w-0 bg-transparent text-[14px] font-medium text-[var(--text-main)] outline-none placeholder:font-normal placeholder:text-slate-400"
+                    className="h-full w-full min-w-0 bg-transparent text-[14px] font-medium text-[var(--text-main)] outline-none focus-visible:!shadow-none placeholder:font-normal placeholder:text-slate-400"
                   />
                   <button
                     type="button"
@@ -439,8 +439,8 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
                     Confirm Password
                   </span>
                   <span
-                    className={`flex h-12 items-center gap-3 rounded-[12px] border bg-white px-3.5 shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)] transition focus-within:-translate-y-0.5 focus-within:border-[#2563eb] focus-within:shadow-[inset_0_1px_2px_rgba(15,23,42,0.08),0_0_0_4px_rgba(37,99,235,0.12)] ${
-                      confirmPasswordHasMismatch ? 'border-red-300 focus-within:border-red-400 focus-within:shadow-[inset_0_1px_2px_rgba(15,23,42,0.08),0_0_0_4px_rgba(220,38,38,0.1)]' : 'border-[var(--line)]'
+                    className={`flex h-12 items-center gap-3 rounded-[12px] border bg-white px-3.5 shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)] transition ${
+                      confirmPasswordHasMismatch ? 'border-red-300' : 'border-[var(--line)]'
                     }`}
                   >
                     <input
@@ -452,7 +452,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
                       minLength={minPasswordLength}
                       autoComplete="new-password"
                       placeholder="Confirm your password"
-                      className="h-full w-full min-w-0 bg-transparent text-[14px] font-medium text-[var(--text-main)] outline-none placeholder:font-normal placeholder:text-slate-400"
+                      className="h-full w-full min-w-0 bg-transparent text-[14px] font-medium text-[var(--text-main)] outline-none focus-visible:!shadow-none placeholder:font-normal placeholder:text-slate-400"
                     />
                     <button
                       type="button"

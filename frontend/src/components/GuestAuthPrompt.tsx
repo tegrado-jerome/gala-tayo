@@ -17,6 +17,7 @@ export type GuestAuthVariant =
   | 'report-comment'
   | 'report-user'
   | 'community'
+  | 'contribute-photo'
 
 export type GuestAuthDisplayMode = 'modal' | 'inline-card' | 'page-state'
 
@@ -159,6 +160,18 @@ const variantConfigs: Record<GuestAuthVariant, VariantConfig> = {
       'Help improve recommendations',
     ],
     benefitIcons: ['reviews', 'comments', 'users'],
+  },
+  'contribute-photo': {
+    icon: 'photo',
+    label: 'PHOTO CONTRIBUTION',
+    title: 'Log in to contribute a photo',
+    description: 'Sign in to share your photos of this place and help other gala-goers see more of it.',
+    benefits: [
+      'Share your travel photos',
+      'Help the community discover spots',
+      'Get attribution for your photos',
+    ],
+    benefitIcons: ['photo', 'users', 'profile'],
   },
 }
 

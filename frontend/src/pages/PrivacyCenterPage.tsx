@@ -467,7 +467,7 @@ function PrivacyCenterPage({ session }: { session: Session }) {
                   <button
                     type="button"
                     onClick={() => setIsDeletionExpanded(true)}
-                    className="inline-flex w-fit items-center justify-center whitespace-nowrap rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-black leading-none text-red-700 transition hover:bg-red-100"
+                    className="inline-flex min-h-11 w-fit items-center justify-center whitespace-nowrap rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-black leading-none text-red-700 transition hover:bg-red-100"
                   >
                     Request deletion
                   </button>

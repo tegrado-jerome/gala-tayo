@@ -1013,24 +1013,26 @@ button:disabled {
 }
 
 .app-button-pill {
-  min-height: 34px;
-  border-color: rgba(148, 163, 184, 0.28);
-  border-radius: 999px;
-  background: rgba(248, 250, 252, 0.82);
-  padding-inline: 14px;
+  min-height: 38px;
+  border-color: rgba(148, 163, 184, 0.36);
+  border-radius: 12px;
+  background: #ffffff;
+  padding-inline: 16px;
   color: #1e293b;
   font-size: 13px;
   font-weight: 800;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.86);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 .app-button-pill:hover {
   border-color: rgba(var(--accent-rgb), 0.28);
-  background: rgba(var(--accent-rgb), 0.06);
+  background: rgba(var(--accent-rgb), 0.05);
   color: var(--accent-deep);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    0 8px 18px rgba(15, 23, 42, 0.06);
+    0 8px 18px rgba(15, 23, 42, 0.07);
 }
 
 .app-header-login-button {
