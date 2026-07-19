@@ -88,7 +88,7 @@ const homePopularTopPickPlaces: HomeRecommendationPlace[] = [
 const homeRecommendedTopPickPlaces: HomeRecommendationPlace[] = [
   createRecommendationPlace({ name: 'Intramuros', city: 'Manila' }),
   createRecommendationPlace({ name: 'Fort Santiago', city: 'Manila' }),
-  createRecommendationPlace({ name: 'Rizal Park', city: 'Manila', area: 'Luneta / Rizal Park' }),
+  createRecommendationPlace({ name: 'Rizal Park Luneta Park', city: 'Manila', area: 'Luneta / Rizal Park' }),
   createRecommendationPlace({ name: 'Manila Ocean Park', city: 'Manila' }),
   createRecommendationPlace({ name: 'Binondo Chinatown', city: 'Manila' }),
   createRecommendationPlace({ name: 'Quiapo Church', city: 'Manila' }),
