@@ -1,11 +1,9 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { House, MapPin } from 'lucide-react'
-import { AppIcon, getCategoryIconName } from '../components/AppIcon'
+import { AppIcon } from '../components/AppIcon'
 import AppHeader from '../components/AppHeader'
 import Breadcrumb from '../components/Breadcrumb'
 import CompactPagination from '../components/CompactPagination'
-import InternalLink from '../components/InternalLink'
-import PlaceListingSkeleton from '../components/PlaceListingSkeleton'
 import PlaceCard, { type PlaceCardData } from '../components/PlaceCard'
 import SeoHead from '../components/SeoHead'
 import { PageContainer, PageShell, ResponsiveGrid } from '../components/layout/ResponsiveLayouts'
@@ -156,8 +154,6 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(
     navigationSource === 'pop' && routeCache?.pendingScrollRestore ? routeCache.selectedPlaceId : null,
   )
-  const filterScrollerRef = useRef<HTMLDivElement | null>(null)
-  const activeFilterRef = useRef<HTMLAnchorElement | null>(null)
   const hasRestoredInitialScrollRef = useRef(false)
   const skipInitialFetchRef = useRef(Boolean(routeCache) && navigationSource !== 'pop')
   const areaName = metroManilaAreaNameBySlug.get(areaSlug) || formatLabelFromSlug(areaSlug)
@@ -178,26 +174,6 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
 
     return params.toString() ? `/places/${areaSlug}?${params.toString()}` : `/places/${areaSlug}`
   }
-
-  useLayoutEffect(() => {
-    const scroller = filterScrollerRef.current
-    const activeChip = activeFilterRef.current
-
-    if (!scroller || !activeChip) {
-      return
-    }
-
-    if (activeCategory === 'all') {
-      scroller.scrollTo({ left: 0, behavior: 'auto' })
-      return
-    }
-
-    activeChip.scrollIntoView({
-      block: 'nearest',
-      inline: 'center',
-      behavior: 'auto',
-    })
-  }, [activeCategory])
 
   useLayoutEffect(() => {
     if (navigationSource === 'pop') {
@@ -445,66 +421,8 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
             {areaName}
           </h1>
           <p className="mt-3 max-w-[36rem] text-[15px] leading-7 text-[var(--muted)]">
-            Open a category filter or browse everything in one clean alphabetical list.
+            Browse everything in one clean alphabetical list.
           </p>
-        </section>
-
-        <section className="mt-6">
-          <div className="mb-3 flex items-end justify-between gap-3">
-            <div>
-              <h2 className="text-[1.05rem] font-black tracking-[-0.02em] text-slate-950">Browse by category</h2>
-              <p className="mt-1 text-[13px] text-[var(--muted)]">Filters and results are arranged alphabetically.</p>
-            </div>
-          </div>
-          {shouldShowInitialSkeleton ? (
-            <PlaceListingSkeleton
-              showCategoryChips
-              helperText={`Loading places in ${areaName} and preparing categories for browsing.`}
-            />
-          ) : (
-            <div
-              ref={filterScrollerRef}
-              className="flex gap-2.5 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-            >
-              {FILTER_OPTIONS.map((filter) => {
-                const params = new URLSearchParams()
-                if (filter.value !== 'all') {
-                  params.set('category', filter.value)
-                }
-                const href = params.toString() ? `/places/${areaSlug}?${params.toString()}` : `/places/${areaSlug}`
-                const isActive = activeCategory === filter.value
-                const iconName = filter.value === 'all' ? null : getCategoryIconName(filter.label)
-
-                return (
-                  <InternalLink
-                    key={filter.value}
-                    ref={isActive ? activeFilterRef : null}
-                    href={href}
-                    onClick={(event) => {
-                      if (event.button !== 0 || event.metaKey || event.altKey || event.ctrlKey || event.shiftKey) {
-                        return
-                      }
-
-                      event.preventDefault()
-                      void handleCategoryChange(filter.value)
-                    }}
-                    className={`inline-flex shrink-0 items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold transition ${
-                      isActive
-                        ? 'border-[#1e3a8a] bg-[#1e3a8a] text-white'
-                        : 'border-[#e5e7eb] bg-white text-slate-700 hover:border-[#bfdbfe] hover:bg-[var(--surface-alt)] hover:text-[var(--accent)]'
-                    }`}
-                  >
-                    {iconName ? (
-                      <span className={`inline-flex h-7 w-7 items-center justify-center rounded-full ${isActive ? 'bg-white text-[var(--accent)] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.35)]' : 'bg-[var(--surface-alt)] text-[#64748b]'}`}>
-                        <AppIcon name={iconName} className="h-4 w-4" />
-                      </span>
-                    ) : null}
-                    {filter.label}
-                  </InternalLink>
-                )
-              })}
-            </div>
-          )}
         </section>
 
         {errorMessage ? (
