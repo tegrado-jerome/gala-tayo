@@ -304,13 +304,7 @@ body.feature-guide-open {
 }
 
 .home-drag-rail {
-  touch-action: pan-x;
-}
-
-@media (min-width: 1024px) {
-  .home-drag-rail {
-    touch-action: auto;
-  }
+  /* touch actions handled natively by the browser */
 }
 
 @media (prefers-reduced-motion: reduce) {

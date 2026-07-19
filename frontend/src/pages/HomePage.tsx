@@ -2052,7 +2052,7 @@ function HomePage({
                   className={`w-full min-w-0 px-4 pb-1 ${
                     shouldShowTopPickSkeletons
                       ? 'overflow-hidden'
-                      : 'home-drag-rail hide-scrollbar overflow-x-auto overflow-y-hidden [scrollbar-width:none] [-ms-overflow-style:none] [overscroll-behavior-x:contain] [-webkit-overflow-scrolling:touch] max-lg:snap-x max-lg:snap-proximity lg:snap-none select-none [&::-webkit-scrollbar]:hidden'
+                      : 'home-drag-rail hide-scrollbar overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [overscroll-behavior-x:contain] [-webkit-overflow-scrolling:touch] max-lg:snap-x max-lg:snap-proximity lg:snap-none select-none [&::-webkit-scrollbar]:hidden'
                   }`}
                 >
                   <div
@@ -2123,7 +2123,7 @@ function HomePage({
 
               <div
                 ref={cityRailRef}
-                className="home-drag-rail hide-scrollbar -mx-1 mt-3 overflow-x-auto overflow-y-hidden px-1 pb-2 pr-2 [scrollbar-width:none] [-ms-overflow-style:none] [overscroll-behavior-x:contain] [-webkit-overflow-scrolling:touch] max-lg:snap-x max-lg:snap-proximity lg:snap-none select-none [&::-webkit-scrollbar]:hidden"
+                className="home-drag-rail hide-scrollbar -mx-1 mt-3 overflow-x-auto px-1 pb-2 pr-2 [scrollbar-width:none] [-ms-overflow-style:none] [overscroll-behavior-x:contain] [-webkit-overflow-scrolling:touch] max-lg:snap-x max-lg:snap-proximity lg:snap-none select-none [&::-webkit-scrollbar]:hidden"
               >
                 <div className="flex min-w-max gap-2.5 md:gap-3 lg:gap-4">
                   {cityTiles.map((tile) => (
@@ -2171,7 +2171,7 @@ function HomePage({
 
               <div
                 ref={categoryRailRef}
-                className="home-drag-rail hide-scrollbar -mx-1 mt-3 overflow-x-auto overflow-y-hidden px-1 pb-2 pr-2 [scrollbar-width:none] [-ms-overflow-style:none] [overscroll-behavior-x:contain] [-webkit-overflow-scrolling:touch] max-lg:snap-x max-lg:snap-proximity lg:snap-none select-none [&::-webkit-scrollbar]:hidden"
+                className="home-drag-rail hide-scrollbar -mx-1 mt-3 overflow-x-auto px-1 pb-2 pr-2 [scrollbar-width:none] [-ms-overflow-style:none] [overscroll-behavior-x:contain] [-webkit-overflow-scrolling:touch] max-lg:snap-x max-lg:snap-proximity lg:snap-none select-none [&::-webkit-scrollbar]:hidden"
               >
                 <div className="flex min-w-max gap-2.5 md:gap-3 lg:gap-4">
                   {categoryTiles.map((tile) => (
