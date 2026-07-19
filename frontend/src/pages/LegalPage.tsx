@@ -346,23 +346,11 @@ function LegalPage({ type }: LegalPageProps) {
                         <span className="inline-flex items-center rounded-full bg-[var(--accent-soft)] px-3 py-1.5 text-[12px] font-bold text-[var(--accent)]">
                           Account rules
                         </span>
-                        <span className="inline-flex items-center rounded-full bg-[var(--surface-alt)] px-3 py-1.5 text-[12px] font-bold text-slate-700">
-                          Content & moderation
-                        </span>
-                        <span className="inline-flex items-center rounded-full bg-[var(--surface-alt)] px-3 py-1.5 text-[12px] font-bold text-slate-700">
-                          Service use
-                        </span>
                       </>
                     ) : (
                       <>
                         <span className="inline-flex items-center rounded-full bg-[var(--accent-soft)] px-3 py-1.5 text-[12px] font-bold text-[var(--accent)]">
                           Data handling
-                        </span>
-                        <span className="inline-flex items-center rounded-full bg-[var(--surface-alt)] px-3 py-1.5 text-[12px] font-bold text-slate-700">
-                          User rights
-                        </span>
-                        <span className="inline-flex items-center rounded-full bg-[var(--surface-alt)] px-3 py-1.5 text-[12px] font-bold text-slate-700">
-                          Third-party processors
                         </span>
                       </>
                     )}
