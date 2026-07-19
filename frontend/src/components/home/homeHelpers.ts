@@ -1,6 +1,7 @@
 import type { RefObject } from 'react'
 import { supabase } from '../../supabase'
 import { normalizeTypedSearchText, buildSearchPath, type SearchBudgetValue, type SearchGoodForValue } from '../../utils/searchParams'
+import { navigateToPath } from '../../utils/navigation'
 import type { PlaceCardData, PlaceCategoryMeta, PlaceTagMeta } from '../PlaceCard'
 import type { ChatMessage, AskAiJobStatus } from '../../utils/askAiRuntime'
 
@@ -547,9 +548,7 @@ function updateSearchPageUrl({
     budget,
     page,
   })
-  if (`${window.location.pathname}${window.location.search}` !== nextUrl) {
-    window.history.pushState(window.history.state, '', nextUrl)
-  }
+  navigateToPath(nextUrl)
 }
 
 const fallbackCategories = [

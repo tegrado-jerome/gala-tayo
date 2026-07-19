@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Coffee, Flame, Heart, Info, Search, SlidersHorizontal, X } from 'lucide-react'
 import SearchHub from './SearchHub'
 import { AppIcon } from '../components/AppIcon'
@@ -193,6 +193,18 @@ function SearchPage({
   useEffect(() => {
     return () => setHidden(false)
   }, [setHidden])
+
+  useLayoutEffect(() => {
+    if (shouldShowResults) {
+      return
+    }
+
+    setDraftQuery('')
+    setSelectedCity(null)
+    setSelectedCategory(null)
+    setSelectedBudget(null)
+    setIsFilterPanelOpen(false)
+  }, [shouldShowResults])
 
   const handleSearch = () => {
     if (!canSearch) {
