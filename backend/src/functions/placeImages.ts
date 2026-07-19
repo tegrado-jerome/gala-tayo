@@ -193,22 +193,14 @@ export async function placeImageContributionCreate(
     const inputBuffer = Buffer.from(await imageFile.arrayBuffer());
 
     const detectedFormat = await detectImageFormat(inputBuffer);
+    const mimeToFormat: Record<string, string> = { "image/jpeg": "jpeg", "image/png": "png", "image/webp": "webp" };
+    const effectiveFormat = detectedFormat || mimeToFormat[normalizedMimeType] || null;
 
-    if (!detectedFormat || !["jpeg", "png", "webp"].includes(detectedFormat)) {
+    if (!effectiveFormat || !["jpeg", "png", "webp"].includes(effectiveFormat)) {
       return response(400, "Image must be a JPEG, PNG, or WebP file.");
     }
 
-    let webpBuffer: Buffer;
-
-    try {
-      webpBuffer = await convertImageToWebp(inputBuffer);
-    } catch (conversionError) {
-      if (isUnsupportedImageError(conversionError)) {
-        return response(400, "Image must be a JPEG, PNG, or WebP file.");
-      }
-
-      throw conversionError;
-    }
+    const webpBuffer = await convertImageToWebp(inputBuffer);
 
     const storageKey = `places/${normalizeStorageSlug(place.slug)}/${randomUUID()}.webp`;
     uploadedStorageKey = storageKey;

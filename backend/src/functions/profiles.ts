@@ -756,7 +756,11 @@ export async function profileAvatarUpload(
     const isSvg = inputBuffer.subarray(0, 512).toString("utf8").toLowerCase().includes("<svg");
     const isGif = inputBuffer.length >= 6 && inputBuffer.subarray(0, 3).toString("ascii") === "GIF";
 
-    if (!detectedAvatarFormat || !["jpeg", "png", "webp"].includes(detectedAvatarFormat) || isSvg || isGif) {
+    const mimeToFormat: Record<string, string> = { "image/jpeg": "jpeg", "image/png": "png", "image/webp": "webp" };
+    const fallbackFormat = mimeToFormat[file.type] || null;
+    const effectiveFormat = detectedAvatarFormat || fallbackFormat;
+
+    if (!effectiveFormat || !["jpeg", "png", "webp"].includes(effectiveFormat) || isSvg || isGif) {
       return {
         status: 400,
         jsonBody: {

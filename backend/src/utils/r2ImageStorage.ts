@@ -135,6 +135,8 @@ export async function uploadThumbnailToR2(
   options?: { cacheControl?: string }
 ): Promise<string> {
   const sharp = loadSharp();
+  if (!sharp) return uploadWebpToR2(key.replace(/\.webp$/i, "_thumb.webp"), input, options);
+
   const thumbBody = await sharp(input, {
     animated: false,
     failOn: "error",
@@ -167,16 +169,22 @@ export async function deleteR2Object(storageKey: string | null | undefined) {
 
 function loadSharp() {
   try {
-    return require("sharp");
+    const mod = require("sharp");
+    if (typeof mod !== "function") {
+      console.error("Sharp loaded but is not a function, skipping image processing");
+      return null;
+    }
+    return mod;
   } catch (error) {
-    throw new Error("Image conversion is not configured. Install the backend sharp dependency.", {
-      cause: error,
-    });
+    console.error("Sharp unavailable, skipping image processing:", error instanceof Error ? error.message : String(error));
+    return null;
   }
 }
 
 export async function detectImageFormat(input: Buffer) {
   const sharp = loadSharp();
+  if (!sharp) return null;
+
   const metadata = await sharp(input, {
     animated: false,
     failOn: "error",
@@ -188,6 +196,7 @@ export async function detectImageFormat(input: Buffer) {
 
 export async function convertImageToWebp(input: Buffer, options?: { resizeAvatar?: boolean }) {
   const sharp = loadSharp();
+  if (!sharp) return input;
 
   const pipeline = sharp(input, {
     animated: false,
