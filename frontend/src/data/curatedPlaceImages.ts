@@ -44,6 +44,11 @@ const curatedPlaceImages = {
     '/images/places/rizal-park/rizal-park-2.webp',
     '/images/places/rizal-park/rizal-park-3.webp',
   ],
+  'rizal-park-luneta-park': [
+    '/images/places/rizal-park/rizal-park-1.webp',
+    '/images/places/rizal-park/rizal-park-2.webp',
+    '/images/places/rizal-park/rizal-park-3.webp',
+  ],
   'san-agustin-church': [
     '/images/places/san-agustin-church/san-agustin-church-1.webp',
     '/images/places/san-agustin-church/san-agustin-church-2.webp',

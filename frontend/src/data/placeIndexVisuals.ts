@@ -64,7 +64,7 @@ const placeImageSlugAliases: Record<string, string> = {
   'inapuyan-resto-grill-pateros': 'inapuyan-resto-grill-pateros',
   'pateros-town-plaza': 'pateros-town-plaza',
   'quiapo-church': 'quiapo-church',
-  'rizal-park-luneta-park': 'rizal-park',
+  'rizal-park-luneta-park': 'rizal-park-luneta-park',
   'shangri-la-plaza': 'shangri-la-plaza',
   'sm-city-valenzuela': 'sm-city-valenzuela',
   'sm-mall-of-asia': 'sm-mall-of-asia',
