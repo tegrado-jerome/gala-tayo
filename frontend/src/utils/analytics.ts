@@ -54,6 +54,7 @@ type AnalyticsWindow = Window & {
   gtag?: (...args: unknown[]) => void
 }
 
+const CONSENT_STORAGE_KEY = 'galatayo-cookie-consent'
 const MEASUREMENT_ID = String(import.meta.env.VITE_GA_MEASUREMENT_ID || '').trim()
 const GA_SCRIPT_ID = 'galatayo-ga4-script'
 const DISABLED_ANALYTICS_PROMISE = Promise.resolve()
@@ -61,8 +62,16 @@ const DISABLED_ANALYTICS_PROMISE = Promise.resolve()
 let analyticsInitializationPromise: Promise<void> | null = null
 let lastPageViewSignature = ''
 
+function getStoredConsent(): string | null {
+  try {
+    return localStorage.getItem(CONSENT_STORAGE_KEY)
+  } catch {
+    return null
+  }
+}
+
 function canUseAnalytics() {
-  return import.meta.env.PROD && Boolean(MEASUREMENT_ID) && typeof window !== 'undefined' && typeof document !== 'undefined'
+  return import.meta.env.PROD && Boolean(MEASUREMENT_ID) && typeof window !== 'undefined' && typeof document !== 'undefined' && getStoredConsent() === 'accepted'
 }
 
 function getAnalyticsWindow() {
@@ -114,6 +123,12 @@ function initializeAnalytics(): Promise<void> {
   analyticsInitializationPromise = loadAnalyticsScript()
 
   return analyticsInitializationPromise
+}
+
+function reinitializeAnalytics() {
+  analyticsInitializationPromise = null
+  lastPageViewSignature = ''
+  return initializeAnalytics()
 }
 
 async function ensureAnalyticsReady(): Promise<boolean> {
@@ -257,6 +272,7 @@ function trackOnboardingCompleted({ source = 'onboarding', method }: AuthComplet
 
 export {
   initializeAnalytics,
+  reinitializeAnalytics,
   trackAskAiChatbotUsed,
   trackAskAiMapsUsed,
   trackEvent,

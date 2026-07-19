@@ -7,6 +7,8 @@ import { useCanonicalRedirects } from './hooks/useCanonicalRedirects'
 import { matchRoute, AppShell } from './routes/RouteContent'
 import { navigateToPath, replaceWithPath } from './utils/navigation'
 import { initializeAnalytics, trackPageView } from './utils/analytics'
+import { CookieConsentProvider } from './context/CookieConsentContext'
+import { CookieConsentBanner } from './components/CookieConsentBanner'
 import { getRouteState } from './app/routeState'
 import { resolveAuthNavigationTarget } from './app/appRouting'
 import { useAppLocationState } from './app/useAppLocationState'
@@ -152,22 +154,25 @@ function App() {
   })
 
   return (
-    <AppShell
-      session={session}
-      currentUser={effectiveCurrentUser}
-      currentProfile={effectiveCurrentProfile}
-      adminMfa={{
-        isLoading: isAdminMfaLoading,
-        status: adminMfaStatus,
-      }}
-      hasResolvedInitialAuth={hasResolvedInitialAuth}
-      pathname={pathname}
-      search={search}
-      showLogoutTransition={showLogoutTransition}
-      isLogoutTransitionExiting={logoutTransition.isExiting}
-    >
-      {content}
-    </AppShell>
+    <CookieConsentProvider>
+      <AppShell
+        session={session}
+        currentUser={effectiveCurrentUser}
+        currentProfile={effectiveCurrentProfile}
+        adminMfa={{
+          isLoading: isAdminMfaLoading,
+          status: adminMfaStatus,
+        }}
+        hasResolvedInitialAuth={hasResolvedInitialAuth}
+        pathname={pathname}
+        search={search}
+        showLogoutTransition={showLogoutTransition}
+        isLogoutTransitionExiting={logoutTransition.isExiting}
+      >
+        {content}
+      </AppShell>
+      <CookieConsentBanner />
+    </CookieConsentProvider>
   )
 }
 
