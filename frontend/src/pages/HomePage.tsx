@@ -30,6 +30,7 @@ import {
   writeHomeScrollCache,
 } from '../utils/homeScrollCache'
 import { readHomeRouteCache, writeHomeRouteCache } from '../utils/homeRouteCache'
+import { useHomeImageSrc } from '../utils/homeImageCache'
 import { getCanonicalPlacePath, resolveAreaMeta } from '../utils/routes'
 import { placeCategories } from '../data/placeCategories'
 import {
@@ -553,6 +554,7 @@ function HomeFeaturedCard({
   const [failedImageUrls, setFailedImageUrls] = useState<string[]>([])
   const imageUrl = imageCandidates.find((candidate) => !failedImageUrls.includes(candidate)) ?? null
   const shouldShowImage = Boolean(imageUrl)
+  const resolvedSrc = useHomeImageSrc(imageUrl)
   const locationText = getPlaceLocationText(place)
   const ratingText = getPlaceRatingText(place)
   const { isPlaceSaved, saveFavorite, removeFavorite } = useSavedFavorites()
@@ -635,7 +637,7 @@ function HomeFeaturedCard({
         <div className="relative aspect-[1.28] w-full">
           {shouldShowImage ? (
             <img
-              src={imageUrl ?? undefined}
+              src={resolvedSrc || undefined}
               alt={place.name}
               className="h-full w-full object-cover"
               draggable={false}
@@ -825,6 +827,7 @@ function HomeCategoryTile({
   const [failedImageUrls, setFailedImageUrls] = useState<string[]>([])
   const imageUrl = imageCandidates.find((candidate) => !failedImageUrls.includes(candidate)) ?? null
   const shouldShowImage = Boolean(imageUrl)
+  const resolvedSrc = useHomeImageSrc(imageUrl)
 
   useEffect(() => {
     setFailedImageUrls((currentValue) =>
@@ -848,7 +851,7 @@ function HomeCategoryTile({
         {!isLoading && shouldShowImage ? (
           <div className="relative h-full w-full">
             <img
-              src={imageUrl ?? undefined}
+              src={resolvedSrc || undefined}
               alt={label}
               className="h-full w-full object-cover"
               draggable={false}
