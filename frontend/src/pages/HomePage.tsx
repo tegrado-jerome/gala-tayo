@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent, type RefObject } from 'react'
-import { Bot, ChevronRight, Flame, Heart, Home, LayoutGrid, MapPin, Search, SlidersHorizontal, Sparkles, Star } from 'lucide-react'
+import { Bot, ChevronRight, Compass, Flame, Heart, LayoutGrid, MapPin, Search, SlidersHorizontal, Sparkles, Star } from 'lucide-react'
 import { useAppUser } from '../context/AppUserContext'
 import UserMenu from '../components/UserMenu'
 import { AppSkeleton } from '../components/AppUI'
@@ -796,7 +796,7 @@ function HomePageSkeleton() {
         </div>
       </main>
 
-      <div className="md:hidden" aria-hidden="true">
+      <div className="lg:hidden" aria-hidden="true">
         <MobileBottomNav currentPath="/home" />
       </div>
     </PageShell>
@@ -1927,8 +1927,8 @@ function HomePage({
         <div className="mx-auto flex min-h-screen w-full max-w-[1320px] flex-col px-4 pb-[calc(env(safe-area-inset-bottom,0px)+6.5rem)] pt-[max(18px,env(safe-area-inset-top))] sm:px-5 sm:pb-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] md:px-6 md:pb-[calc(env(safe-area-inset-bottom,0px)+5rem)] md:pt-10 lg:px-8 lg:pb-[calc(env(safe-area-inset-bottom,0px)+4.5rem)]">
           <section className="min-w-0 pt-2 md:pt-0">
             <div className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">
-              <Home className="h-4 w-4 text-[var(--accent)]" strokeWidth={2} />
-              <span>Welcome back</span>
+              <Compass className="h-4 w-4 text-[var(--accent)]" strokeWidth={2} />
+              <span>DISCOVER</span>
             </div>
             <div className="flex items-center justify-between gap-4">
               <p className="min-w-0 flex-1 truncate text-[18px] font-medium leading-tight text-[var(--text-main)] sm:text-[18px]">
@@ -2202,7 +2202,7 @@ function HomePage({
         </div>
       </main>
 
-      <div className="md:hidden">
+      <div className="lg:hidden">
         <MobileBottomNav currentPath="/home" />
       </div>
       {guestAuth.promptElement}
