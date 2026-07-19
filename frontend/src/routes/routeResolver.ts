@@ -107,6 +107,8 @@ export function resolveRouteDescriptor(inputs: RouteInputs): RouteDescriptor {
     publicProfileUsername,
     editGalaPlanId,
     ownedGalaPlanId,
+    userMfaStatus,
+    isUserMfaLoading,
   } = inputs
 
   const adminHomePath = ADMIN_BASE_PATH
