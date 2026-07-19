@@ -69,7 +69,7 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
   const avatarUrl = effectiveUser ? getAvatarUrl(effectiveProfile) : ''
   const resolvedAvatarSrc = useAvatarImageSrc(avatarUrl)
   const shouldShowAvatar = Boolean(effectiveUser && avatarUrl && failedAvatarUrl !== avatarUrl)
-  const displayName = effectiveUser ? getDisplayName(effectiveUser, effectiveProfile) : 'Guest'
+  const displayName = effectiveUser ? getDisplayName(effectiveUser, effectiveProfile) : 'Guest User'
   const initials = effectiveUser ? getInitials(effectiveUser, effectiveProfile) : 'GT'
   const useDesktopPopover = compact && isDesktopMenu
 
@@ -435,7 +435,7 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
                 <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 text-slate-700 ring-1 ring-slate-300">
                   <AppIcon name="profile" size="emptyLg" />
                 </span>
-                <p className={`${useDesktopPopover ? 'mt-5' : 'mt-8'} text-xl font-semibold text-slate-950`}>Guest</p>
+                <p className={`${useDesktopPopover ? 'mt-5' : 'mt-8'} text-xl font-semibold text-slate-950`}>Guest User</p>
                 <p className="mx-auto mt-2 max-w-[260px] text-sm leading-6 text-slate-500">
                   Log in or sign up to save favorites and keep your gala history.
                 </p>
@@ -592,7 +592,7 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
               <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 text-slate-700 ring-1 ring-slate-300">
                 <AppIcon name="profile" size="emptyLg" />
               </span>
-              <p className="mt-5 text-xl font-semibold text-slate-950">Guest</p>
+<p className="mt-5 text-xl font-semibold text-slate-950">Guest User</p>
               <p className="mx-auto mt-2 max-w-[260px] text-sm leading-6 text-slate-500">
                 Log in or sign up to save favorites and keep your gala history.
               </p>

@@ -502,7 +502,7 @@ function getGreetingName(currentProfile: ReturnType<typeof useAppUser>['currentP
   const profileName = currentProfile?.displayName?.trim() || currentProfile?.username?.trim() || ''
   const userName = [currentUser?.firstName, currentUser?.lastName].filter(Boolean).join(' ').trim()
 
-  return profileName || userName || 'Guest'
+  return profileName || userName || 'Guest User'
 }
 
 function getHomeIndicatorGroupSize(isTabletUpViewport: boolean) {

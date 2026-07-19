@@ -1107,7 +1107,7 @@ function PlaceDetailView({
   useEffect(() => {
     if (!currentProfile && !appSession?.user?.id) {
       setCurrentUserAvatarUrl(null)
-      setCurrentUserAvatarFallbackName('Guest')
+      setCurrentUserAvatarFallbackName('Guest User')
       return
     }
 
