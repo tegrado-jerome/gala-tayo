@@ -1155,11 +1155,6 @@ function AskAiThinkingStageNext({
             <div className="min-w-0 w-full max-w-[88%] rounded-2xl rounded-tl-[6px] border border-[rgba(15,23,42,0.06)] bg-white px-4 py-3.5 shadow-[0_2px_8px_rgba(15,23,42,0.03)] sm:max-w-[82%]">
               <div className="flex items-center gap-2">
                 <p className="text-[0.78rem] font-semibold tracking-[-0.02em] text-slate-950">Thinking</p>
-                <span className="inline-flex items-center gap-1 text-[var(--accent-deep)]">
-                  <span className="h-1.5 w-1.5 rounded-full bg-current motion-safe:animate-bounce" />
-                  <span className="h-1.5 w-1.5 rounded-full bg-current motion-safe:animate-bounce [animation-delay:120ms]" />
-                  <span className="h-1.5 w-1.5 rounded-full bg-current motion-safe:animate-bounce [animation-delay:240ms]" />
-                </span>
               </div>
               <p className="mt-1 text-[12px] font-medium text-slate-500">Shaping your GalaTayo AI reply.</p>
               <ThinkingLoadingBar className="mt-3" />
@@ -1562,11 +1557,6 @@ const ChatMessageList = memo(function ChatMessageList({
             <div className="flex items-center gap-2">
               <span className="text-[11.5px] font-semibold uppercase tracking-[0.08em] text-slate-700">
                 Thinking
-              </span>
-              <span className="inline-flex items-center gap-1 text-[var(--accent-deep)]">
-                <span className="h-1.5 w-1.5 rounded-full bg-current motion-safe:animate-bounce" />
-                <span className="h-1.5 w-1.5 rounded-full bg-current motion-safe:animate-bounce [animation-delay:120ms]" />
-                <span className="h-1.5 w-1.5 rounded-full bg-current motion-safe:animate-bounce [animation-delay:240ms]" />
               </span>
             </div>
             <p className="mt-1 text-[12px] font-medium text-slate-500">Shaping your GalaTayo AI reply.</p>
