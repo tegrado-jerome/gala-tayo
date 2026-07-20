@@ -54,6 +54,7 @@ const exactLabels: Record<string, string> = {
   '/account-settings': 'Account Settings',
   '/privacy-center': 'Privacy Center',
   '/settings/change-password': 'Change password',
+
   '/account-settings/change-password': 'Change password',
   '/favorites': 'Favorites',
   '/history': 'History',

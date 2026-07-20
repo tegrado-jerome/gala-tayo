@@ -27,6 +27,7 @@ export function isProtectedAccountPath(pathname: string) {
     '/account',
     '/settings',
     '/settings/change-password',
+    '/settings/security',
     '/account-settings',
     '/account-settings/change-password',
     '/privacy-center',

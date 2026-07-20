@@ -197,7 +197,8 @@ export function resolveRouteDescriptor(inputs: RouteInputs): RouteDescriptor {
 
   if (
     session &&
-    userMfaStatus?.needsMfa
+    userMfaStatus?.needsMfa &&
+    !isPath(pathname, '/mfa/verify')
   ) {
     return { kind: 'user-mfa-verify' }
   }

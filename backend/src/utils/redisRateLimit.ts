@@ -15,7 +15,7 @@ export async function checkRedisRateLimit(
   const client = await getRedisClient();
 
   if (!client) {
-    return { allowed: false, remaining: 0, limit: maxRequests, resetAt: new Date(Date.now() + windowSeconds * 1000).toISOString() };
+    return { allowed: true, remaining: maxRequests, limit: maxRequests, resetAt: new Date(Date.now() + windowSeconds * 1000).toISOString() };
   }
 
   const now = Date.now();
@@ -36,7 +36,7 @@ export async function checkRedisRateLimit(
 
     return { allowed, remaining, limit: maxRequests, resetAt };
   } catch {
-    return { allowed: false, remaining: 0, limit: maxRequests, resetAt: new Date(Date.now() + windowSeconds * 1000).toISOString() };
+    return { allowed: true, remaining: maxRequests, limit: maxRequests, resetAt: new Date(Date.now() + windowSeconds * 1000).toISOString() };
   }
 }
 

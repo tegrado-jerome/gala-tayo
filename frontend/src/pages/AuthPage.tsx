@@ -16,6 +16,7 @@ import { getPasswordStrength } from '../utils/passwordStrength'
 import galaTayoLogo from '../assets/brand/galatayo-logo.svg'
 import { formatCooldownDuration, useResendCooldown } from '../hooks/useResendCooldown'
 import { useAppUser } from '../context/AppUserContext'
+import { getUserMfaStatus } from '../utils/userMfa'
 
 type AuthMode = 'sign_in' | 'create_account'
 
@@ -119,10 +120,15 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
 
     const redirectSignedInUser = async () => {
       try {
+        const mfaStatus = await getUserMfaStatus(session)
         const redirectTo = await getPostAuthRedirect(session, window.location.search)
 
         if (isMounted) {
-          navigateToPath(redirectTo)
+          if (mfaStatus.needsMfa) {
+            navigateToPath(`/mfa/verify?next=${encodeURIComponent(redirectTo)}`)
+          } else {
+            navigateToPath(redirectTo)
+          }
         }
       } catch (caughtError) {
         if (isMounted) {
@@ -206,11 +212,17 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
         return
       }
 
-      const postAuthRedirect = await getPostAuthRedirect(session, window.location.search)
-      const mfaVerifyPath = postAuthRedirect !== '/home'
-        ? `/mfa/verify?next=${encodeURIComponent(postAuthRedirect)}`
-        : '/mfa/verify'
-      navigateToPath(mfaVerifyPath)
+      const mfaStatus = await getUserMfaStatus(session)
+      if (mfaStatus.needsMfa) {
+        const postAuthRedirect = await getPostAuthRedirect(session, window.location.search)
+        const mfaVerifyPath = postAuthRedirect !== '/home'
+          ? `/mfa/verify?next=${encodeURIComponent(postAuthRedirect)}`
+          : '/mfa/verify'
+        navigateToPath(mfaVerifyPath)
+      } else {
+        const postAuthRedirect = await getPostAuthRedirect(session, window.location.search)
+        navigateToPath(postAuthRedirect)
+      }
     } catch (caughtError) {
       setError(getFriendlyAuthError(caughtError, mode))
     } finally {

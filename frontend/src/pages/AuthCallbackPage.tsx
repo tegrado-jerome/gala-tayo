@@ -4,6 +4,7 @@ import { supabase } from '../supabase'
 import { StateContainer } from '../components/layout/ResponsiveLayouts'
 import { getCurrentEmailConflict, getPostAuthRedirect } from '../services/authApi'
 import { getOnboardingStatus } from '../utils/profileApi'
+import { getUserMfaStatus } from '../utils/userMfa'
 import { buildAuthPath } from '../services/authApi'
 import { navigateToPath } from '../utils/navigation'
 import { trackLoginCompleted, trackSignUpCompleted } from '../utils/analytics'
@@ -95,7 +96,12 @@ function AuthCallbackPage() {
         })
 
         if (isMounted) {
-          navigateToPath(redirectTo)
+          const mfaStatus = await getUserMfaStatus(session)
+          if (mfaStatus.needsMfa) {
+            navigateToPath(`/mfa/verify?next=${encodeURIComponent(redirectTo)}`)
+          } else {
+            navigateToPath(redirectTo)
+          }
         }
       } catch (error) {
         if (isMounted) {
