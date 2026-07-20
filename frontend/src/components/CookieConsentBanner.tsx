@@ -7,21 +7,20 @@ export function CookieConsentBanner({ pathname }: { pathname?: string }) {
   const { consent, acceptCookies, rejectCookies } = useCookieConsent()
   const [showDetails, setShowDetails] = useState(false)
 
-  if (consent !== 'undecided') {
-    return null
-  }
-
-  if (pathname && pathname !== '/home') {
-    return null
-  }
+  const isVisible = consent === 'undecided' && (!pathname || pathname === '/home')
 
   useEffect(() => {
+    if (!isVisible) return
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => {
       document.body.style.overflow = prev
     }
-  }, [])
+  }, [isVisible])
+
+  if (!isVisible) {
+    return null
+  }
 
   return (
     <div className="fixed inset-0 z-[99999]">
