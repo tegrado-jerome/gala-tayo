@@ -11,10 +11,13 @@ export function CookieConsentBanner({ pathname }: { pathname?: string }) {
 
   useEffect(() => {
     if (!isVisible) return
-    const prev = document.body.style.overflow
+    const prevBody = document.body.style.overflow
+    const prevHtml = document.documentElement.style.overflow
     document.body.style.overflow = 'hidden'
+    document.documentElement.style.overflow = 'hidden'
     return () => {
-      document.body.style.overflow = prev
+      document.body.style.overflow = prevBody
+      document.documentElement.style.overflow = prevHtml
     }
   }, [isVisible])
 
@@ -23,7 +26,7 @@ export function CookieConsentBanner({ pathname }: { pathname?: string }) {
   }
 
   return (
-    <div className="fixed inset-0 z-[99999]">
+    <div className="fixed inset-0 z-[99999] overscroll-contain touch-none">
       <div className="absolute inset-0 bg-slate-950/30 backdrop-blur-sm" />
       <div className="relative flex h-full w-full items-center justify-center p-4">
         <div className="gala-modal-card w-full max-w-[360px] overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-5 shadow-[var(--shadow-strong)]">
@@ -51,9 +54,11 @@ export function CookieConsentBanner({ pathname }: { pathname?: string }) {
           </div>
           <div className="mt-4 grid grid-cols-2 gap-2">
             <AppButton variant="secondary" size="sm" onClick={rejectCookies}>
+              <AppIcon name="clear" className="h-3.5 w-3.5" />
               Reject
             </AppButton>
             <AppButton variant="primary" size="sm" onClick={acceptCookies}>
+              <AppIcon name="check" className="h-3.5 w-3.5" />
               Accept
             </AppButton>
           </div>
