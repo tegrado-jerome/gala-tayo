@@ -38,7 +38,7 @@ export function CookieConsentBanner({ pathname }: { pathname?: string }) {
             </p>
             <button
               onClick={() => setShowDetails((v) => !v)}
-              className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-[var(--accent-deep)] underline underline-offset-2 hover:no-regular"
+              className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-[var(--accent-deep)] underline underline-offset-2 hover:no-underline"
             >
               {showDetails ? 'Hide details' : 'Learn more'}
               <AppIcon name={showDetails ? 'chevronDown' : 'chevronRight'} className="h-3 w-3" />
