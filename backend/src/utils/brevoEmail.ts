@@ -59,6 +59,10 @@ export async function sendOtpEmail(
             <tr>
               <td align="center" style="padding:46px 34px 42px; background:#ffffff; border:1px solid #e5e7eb; border-radius:28px;">
 
+                 <div style="display:none;font-size:1px;color:#f8f7f4;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">
+                   Verify your login to GalaTayo.
+                 </div>
+
                  <img
                   src="https://pub-1cd8f9f5d9c94e76a4a823843bd23169.r2.dev/brand/galatayo-logo.png"
                   alt="GalaTayo"
