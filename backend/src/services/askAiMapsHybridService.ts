@@ -898,6 +898,7 @@ function extractSearchAreaText(rawQuery: string): string | null {
   const patterns = [
     /\b(?:in|sa|around|within|near)\s+([a-zA-Z0-9 .,'-]+)$/i,
     /\b(?:in|sa|around|within|near)\s+([a-zA-Z0-9 .,'-]+?)(?:\s+\b(?:for|na|pang|with)\b|$)/i,
+    /,\s*([a-zA-Z0-9 .,'-]+?)(?:\s*,\s*Philippines)?$/i,
   ];
   for (const pattern of patterns) {
     const match = normalized.match(pattern);

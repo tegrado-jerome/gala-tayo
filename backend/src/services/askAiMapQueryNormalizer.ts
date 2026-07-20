@@ -611,8 +611,8 @@ function shouldNormalizePrompt(rawPrompt: string): boolean {
   return wordCount > 6 || normalized.length > 40;
 }
 
-export function shouldNormalizeAskAiMapPrompt(rawPrompt: string): boolean {
-  return shouldNormalizePrompt(rawPrompt);
+export function shouldNormalizeAskAiMapPrompt(_rawPrompt: string): boolean {
+  return true;
 }
 
 export async function normalizeAskAiMapQuery(
