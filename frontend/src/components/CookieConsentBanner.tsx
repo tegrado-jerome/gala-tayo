@@ -27,32 +27,29 @@ export function CookieConsentBanner({ pathname }: { pathname?: string }) {
 
   return (
     <div className="fixed inset-0 z-[99999] overscroll-contain touch-none">
-      <div className="absolute inset-0 bg-slate-950/30 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-slate-950/25 backdrop-blur-md" />
       <div className="relative flex h-full w-full items-center justify-center p-4">
-        <div className="gala-modal-card w-full max-w-[360px] overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-5 shadow-[var(--shadow-strong)]">
-          <div className="flex items-start gap-3">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--primary-soft)] text-[var(--accent-deep)]">
-              <AppIcon name="notice" className="h-4 w-4" />
-            </span>
-            <div className="min-w-0">
-              <p className="text-sm leading-5 text-slate-600">
-                We use cookies to improve GalaTayo.
-                <button
-                  onClick={() => setShowDetails((v) => !v)}
-                  className="ml-1 inline-flex items-center gap-0.5 font-medium text-[var(--accent-deep)] underline underline-offset-2 hover:no-underline"
-                >
-                  Learn more
-                  <AppIcon name={showDetails ? 'chevronDown' : 'chevronRight'} className="h-3 w-3" />
-                </button>
+        <div className="w-full max-w-[340px] overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--panel)] px-6 pb-5 pt-7 shadow-[var(--shadow-strong)]">
+          <div className="flex flex-col items-center text-center">
+            <span className="text-3xl">🍪</span>
+            <h2 className="mt-3 text-base font-semibold text-slate-900">This website uses cookies</h2>
+            <p className="mt-1.5 text-sm leading-5 text-slate-500">
+              We use analytics cookies to improve GalaTayo.
+            </p>
+            <button
+              onClick={() => setShowDetails((v) => !v)}
+              className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-[var(--accent-deep)] underline underline-offset-2 hover:no-regular"
+            >
+              {showDetails ? 'Hide details' : 'Learn more'}
+              <AppIcon name={showDetails ? 'chevronDown' : 'chevronRight'} className="h-3 w-3" />
+            </button>
+            {showDetails && (
+              <p className="mt-2 text-xs leading-4 text-slate-400">
+                No tracking for advertising. Change preference anytime in Privacy Center.
               </p>
-              {showDetails && (
-                <p className="mt-1.5 text-xs leading-4 text-slate-500">
-                  GalaTayo uses analytics cookies to understand how you interact with our platform. No tracking for advertising. Change preference anytime in Privacy Center.
-                </p>
-              )}
-            </div>
+            )}
           </div>
-          <div className="mt-4 grid grid-cols-2 gap-2">
+          <div className="mt-6 grid grid-cols-2 gap-2.5">
             <AppButton variant="secondary" size="sm" onClick={rejectCookies}>
               <AppIcon name="clear" className="h-3.5 w-3.5" />
               Reject
