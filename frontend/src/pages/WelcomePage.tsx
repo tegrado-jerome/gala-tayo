@@ -25,23 +25,37 @@ const welcomeAssets: WelcomeAsset[] = [
   },
 ]
 
+const welcomeFallbackAssets: WelcomeAsset[] = [
+  {
+    src: '/images/welcome/mobile.png',
+    media: '(max-width: 639px)',
+  },
+  {
+    src: '/images/welcome/tablet.png',
+    media: '(max-width: 1023px)',
+  },
+  {
+    src: '/images/welcome/laptop-desktop.png',
+  },
+]
+
 const WELCOME_LOADING_MIN_MS = 2000
 const WELCOME_LOADING_MAX_MS = 8000
 
 function getWelcomeHeroSrc() {
   if (typeof window === 'undefined') {
-    return '/images/welcome/laptop-desktop.webp'
+    return '/images/welcome/laptop-desktop.png'
   }
 
   if (window.innerWidth <= 639) {
-    return '/images/welcome/mobile.webp'
+    return '/images/welcome/mobile.png'
   }
 
   if (window.innerWidth <= 1023) {
-    return '/images/welcome/tablet.webp'
+    return '/images/welcome/tablet.png'
   }
 
-  return '/images/welcome/laptop-desktop.webp'
+  return '/images/welcome/laptop-desktop.png'
 }
 
 function waitForDuration(durationMs: number, timeoutIds?: number[]) {
@@ -202,6 +216,9 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
         <picture className="welcome-page__media">
           {welcomeAssets.map((asset) => (
             <source key={asset.src} srcSet={asset.src} media={asset.media} type="image/webp" />
+          ))}
+          {welcomeFallbackAssets.map((asset) => (
+            <source key={asset.src} srcSet={asset.src} media={asset.media} />
           ))}
           <img
             ref={imageRef}

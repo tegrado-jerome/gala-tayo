@@ -1,35 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 
-const imageCache = new Map<string, string>()
-const imageLoaders = new Map<string, Promise<string>>()
-
-function isCacheableUrl(url: string) {
-  return Boolean(url.trim()) && !url.startsWith('data:') && !url.startsWith('blob:')
-}
-
-async function loadImage(url: string) {
-  const response = await fetch(url, { mode: 'cors', credentials: 'omit' })
-
-  if (!response.ok) {
-    throw new Error(`Failed to load image: ${response.status}`)
-  }
-
-  const blob = await response.blob()
-  const objectUrl = URL.createObjectURL(blob)
-  imageCache.set(url, objectUrl)
-  return objectUrl
-}
+const preloadedUrls = new Set<string>()
+const imageLoaders = new Map<string, Promise<void>>()
 
 export function preloadHomeImage(url: string | null | undefined) {
   const normalizedUrl = url?.trim() || ''
 
-  if (!normalizedUrl || !isCacheableUrl(normalizedUrl)) {
-    return Promise.resolve(normalizedUrl)
+  if (!normalizedUrl || normalizedUrl.startsWith('data:') || normalizedUrl.startsWith('blob:')) {
+    return Promise.resolve()
   }
 
-  const cachedUrl = imageCache.get(normalizedUrl)
-  if (cachedUrl) {
-    return Promise.resolve(cachedUrl)
+  if (preloadedUrls.has(normalizedUrl)) {
+    return Promise.resolve()
   }
 
   const existingLoader = imageLoaders.get(normalizedUrl)
@@ -37,8 +19,17 @@ export function preloadHomeImage(url: string | null | undefined) {
     return existingLoader
   }
 
-  const loader = loadImage(normalizedUrl)
-    .catch(() => normalizedUrl)
+  const loader = fetch(normalizedUrl, { mode: 'cors', credentials: 'omit' })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`Failed to load image: ${response.status}`)
+      }
+      return response.blob()
+    })
+    .then(() => {
+      preloadedUrls.add(normalizedUrl)
+    })
+    .catch(() => {})
     .finally(() => {
       imageLoaders.delete(normalizedUrl)
     })
@@ -49,37 +40,12 @@ export function preloadHomeImage(url: string | null | undefined) {
 
 export function useHomeImageSrc(url: string | null | undefined) {
   const normalizedUrl = url?.trim() || ''
-  const [resolvedSrc, setResolvedSrc] = useState(() => {
-    if (!normalizedUrl) return ''
-    const cached = imageCache.get(normalizedUrl)
-    return cached ?? normalizedUrl
-  })
 
   useEffect(() => {
-    if (!normalizedUrl) {
-      setResolvedSrc('')
-      return
-    }
-
-    const cached = imageCache.get(normalizedUrl)
-    if (cached) {
-      setResolvedSrc(cached)
-      return
-    }
-
-    setResolvedSrc(normalizedUrl)
-
-    let isMounted = true
-    void preloadHomeImage(normalizedUrl).then((nextSrc) => {
-      if (isMounted && nextSrc) {
-        setResolvedSrc(nextSrc)
-      }
-    })
-
-    return () => {
-      isMounted = false
+    if (normalizedUrl && !normalizedUrl.startsWith('data:') && !normalizedUrl.startsWith('blob:')) {
+      void preloadHomeImage(normalizedUrl)
     }
   }, [normalizedUrl])
 
-  return resolvedSrc
+  return normalizedUrl
 }

@@ -251,27 +251,18 @@ function PlacePhoto({
                   </div>
                 </div>
 
-                <div className="flex h-full items-center justify-center px-6 py-8 text-center sm:px-8 sm:py-10">
-                  <div className="flex max-w-[340px] flex-col items-center gap-4 rounded-[28px] border border-white/45 bg-white/72 px-5 py-6 shadow-[0_18px_44px_rgba(15,23,42,0.08)] backdrop-blur-sm">
+                <div className="relative z-10 flex h-full items-center justify-center px-6 py-8 text-center sm:px-8 sm:py-10">
+                  <div className="flex max-w-[340px] flex-col items-center gap-4 px-5 py-6">
                     <span className="flex h-14 w-14 items-center justify-center rounded-full border border-[rgba(96,165,250,0.22)] bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(239,246,255,0.92))] shadow-[0_16px_40px_rgba(37,99,235,0.12)]">
                       <Icon name="photo" className="h-7 w-7 text-[var(--accent-deep)]" />
                     </span>
                     <div className="space-y-1">
-                      <p className="text-[17px] font-black tracking-[-0.02em] text-slate-950">No place photos yet</p>
-                      <p className="text-[13px] font-semibold leading-5 text-slate-600">
+                      <p className="text-[17px] font-black tracking-[-0.02em] text-[#111827]">No place photos yet</p>
+                      <p className="text-[13px] font-semibold leading-5 text-[#475569]">
                       Be the first to add a photo for this spot.
                       </p>
                     </div>
-                    <div className="flex flex-wrap items-center justify-center gap-2">
-                      <span className="rounded-full border border-[rgba(148,163,184,0.22)] bg-white px-3 py-1 text-[11px] font-bold text-slate-600">
-                        Community contributed
-                      </span>
-                      {showAddPhotoAction ? (
-                        <span className="rounded-full border border-[rgba(96,165,250,0.22)] bg-[rgba(239,246,255,0.9)] px-3 py-1 text-[11px] font-black text-[var(--accent-deep)]">
-                          Add the first one
-                        </span>
-                      ) : null}
-                    </div>
+
                   </div>
                 </div>
 
