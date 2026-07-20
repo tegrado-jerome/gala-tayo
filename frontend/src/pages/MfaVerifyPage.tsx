@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { LogOut } from 'lucide-react'
+import { LogOut, CheckCircle2 } from 'lucide-react'
 import AppHeader from '../components/AppHeader'
 import { PageContainer, PageShell } from '../components/layout/ResponsiveLayouts'
 import { sendMfaEmailCode, verifyMfaEmailCode } from '../utils/userMfa'
@@ -64,6 +64,12 @@ function MfaVerifyPage({ session }: { session: Session }) {
       }
     }
   }, [])
+
+  useEffect(() => {
+    if (!successMessage) return
+    const timer = setTimeout(() => setSuccessMessage(''), 5000)
+    return () => clearTimeout(timer)
+  }, [successMessage])
 
   useEffect(() => {
     if (hasAutoSentRef.current) {
@@ -274,7 +280,8 @@ function MfaVerifyPage({ session }: { session: Session }) {
               ) : null}
 
               {successMessage && !errorMessage ? (
-                <p className="mt-4 w-full rounded-xl border border-[rgba(var(--accent-rgb),0.18)] bg-[var(--primary-soft)] px-4 py-3 text-sm font-semibold text-[var(--accent-deep)]">
+                <p className="mt-4 flex items-center gap-2 text-sm font-semibold text-[var(--accent-deep)]">
+                  <CheckCircle2 className="h-4 w-4" strokeWidth={2.5} />
                   {successMessage}
                 </p>
               ) : null}
