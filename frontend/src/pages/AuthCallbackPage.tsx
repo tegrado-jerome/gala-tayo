@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../supabase'
-import { StateContainer } from '../components/layout/ResponsiveLayouts'
 import { getCurrentEmailConflict, getPostAuthRedirect } from '../services/authApi'
 import { getOnboardingStatus } from '../utils/profileApi'
 import { getUserMfaStatus } from '../utils/userMfa'
 import { buildAuthPath } from '../services/authApi'
 import { navigateToPath } from '../utils/navigation'
 import { trackLoginCompleted, trackSignUpCompleted } from '../utils/analytics'
-import { FormSkeleton } from '../components/loading/SkeletonStates'
+import galaTayoLogo from '../assets/brand/galatayo-logo.svg'
 
 async function waitForSession(): Promise<Session | null> {
   const {
@@ -149,9 +148,11 @@ function AuthCallbackPage() {
 
   return (
     <main className="flex h-dvh items-center justify-center bg-[var(--panel)] px-6 text-black">
-      <StateContainer>
-        <FormSkeleton rows={3} className="mx-auto max-w-[420px]" />
-      </StateContainer>
+      <div className="flex flex-col items-center gap-4 text-center">
+        <img src={galaTayoLogo} alt="GalaTayo" className="h-auto w-[180px]" loading="eager" />
+        <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-500" />
+        <p className="text-sm font-semibold text-slate-500">Signing in...</p>
+      </div>
     </main>
   )
 }
