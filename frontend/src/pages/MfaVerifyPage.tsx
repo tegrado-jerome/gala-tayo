@@ -24,6 +24,7 @@ function MfaVerifyPage({ session }: { session: Session }) {
   const [devOtp, setDevOtp] = useState('')
   const hasAutoSentRef = useRef(false)
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
+  const verifyButtonRef = useRef<HTMLButtonElement | null>(null)
 
   const nextPath = useMemo(() => {
     const params = new URLSearchParams(window.location.search)
@@ -140,6 +141,8 @@ function MfaVerifyPage({ session }: { session: Session }) {
       focusInput(index - 1)
     } else if (event.key === 'ArrowRight' && index < OTP_LENGTH - 1) {
       focusInput(index + 1)
+    } else if (event.key === 'Enter' && codeComplete && !isVerifying) {
+      verifyButtonRef.current?.click()
     }
   }
 
@@ -262,7 +265,6 @@ function MfaVerifyPage({ session }: { session: Session }) {
                     ref={(el) => { inputRefs.current[index] = el }}
                     type="text"
                     inputMode="numeric"
-                    autoComplete={index === 0 ? 'one-time-code' : undefined}
                     maxLength={1}
                     value={digit}
                     onChange={(event) => handleDigitChange(index, event.target.value)}
@@ -300,6 +302,7 @@ function MfaVerifyPage({ session }: { session: Session }) {
 
               <div className="mt-6 w-full">
                 <button
+                  ref={verifyButtonRef}
                   type="button"
                   onClick={() => void handleVerify()}
                   disabled={!codeComplete || isVerifying}
