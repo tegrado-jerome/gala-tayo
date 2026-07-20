@@ -1,43 +1,69 @@
+import { useState } from 'react'
 import { AppButton } from './AppUI'
 import { AppIcon } from './AppIcon'
 import { useCookieConsent } from '../context/CookieConsentContext'
 
-export function CookieConsentBanner({ pathname }: { pathname?: string }) {
+export function CookieConsentBanner() {
   const { consent, acceptCookies, rejectCookies } = useCookieConsent()
+  const [showDetails, setShowDetails] = useState(false)
 
   if (consent !== 'undecided') {
     return null
   }
 
-  if (pathname && pathname !== '/home') {
-    return null
-  }
-
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[9999] border-t border-[rgba(var(--accent-rgb),0.12)] bg-white px-4 py-4 shadow-lg sm:px-6">
-      <div className="mx-auto flex max-w-6xl flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div
+      className="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-950/45 px-3 py-6 sm:px-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Cookie consent"
+    >
+      <div className="gala-modal-card w-full max-w-[440px] overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-6 shadow-[var(--shadow-strong)] sm:p-8">
         <div className="flex items-start gap-3">
-          <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--primary-soft)] text-[var(--accent-deep)]">
-            <AppIcon name="notice" className="h-4 w-4" />
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--primary-soft)] text-[var(--accent-deep)]">
+            <AppIcon name="notice" className="h-5 w-5" />
           </span>
-          <div className="text-sm leading-5 text-slate-600">
-            <span className="font-medium text-slate-900">We use cookies</span>
-            {' '}to help us improve GalaTayo with analytics. You can accept or reject at any time.
-            <br />
-            <a
-              href="/privacy"
-              className="mt-0.5 inline-flex items-center gap-1 text-xs font-medium text-[var(--accent-deep)] underline underline-offset-2 hover:no-underline"
-            >
-              Learn more
-              <AppIcon name="share" className="h-3 w-3" />
-            </a>
+          <div className="min-w-0">
+            <h2 className="text-base font-semibold text-slate-900 sm:text-lg">We value your privacy</h2>
+            <p className="mt-1 text-sm leading-5 text-slate-600">
+              We use cookies and similar technologies to help us improve GalaTayo with analytics.
+              Please choose your preference below.
+            </p>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-2 self-end sm:self-auto">
-          <AppButton variant="secondary" size="sm" onClick={rejectCookies}>
+
+        <button
+          onClick={() => setShowDetails((v) => !v)}
+          className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-[var(--accent-deep)] hover:underline"
+        >
+          {showDetails ? 'Hide details' : 'Learn more'}
+          <AppIcon
+            name={showDetails ? 'chevronDown' : 'chevronRight'}
+            className="h-3 w-3"
+          />
+        </button>
+
+        {showDetails && (
+          <div className="mt-2 rounded-lg bg-slate-50 p-3 text-xs leading-5 text-slate-600">
+            <p>
+              GalaTayo uses analytics cookies to understand how you interact with our platform,
+              helping us improve your experience. We do not use tracking cookies for advertising purposes.
+              You can change your preference at any time from the Privacy Center in your account settings.
+            </p>
+            <a
+              href="/privacy"
+              className="mt-1 inline-block font-medium text-[var(--accent-deep)] underline hover:no-underline"
+            >
+              Read our full Privacy Policy
+            </a>
+          </div>
+        )}
+
+        <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end">
+          <AppButton variant="secondary" onClick={rejectCookies}>
             Reject All
           </AppButton>
-          <AppButton variant="primary" size="sm" onClick={acceptCookies}>
+          <AppButton variant="primary" onClick={acceptCookies}>
             Accept All
           </AppButton>
         </div>
