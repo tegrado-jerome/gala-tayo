@@ -12,6 +12,7 @@ export function setDeviceToken(token: string): void {
   try {
     localStorage.setItem(DEVICE_TOKEN_KEY, token)
   } catch {
+    // ignore
   }
 }
 
@@ -19,5 +20,6 @@ export function clearDeviceToken(): void {
   try {
     localStorage.removeItem(DEVICE_TOKEN_KEY)
   } catch {
+    // ignore
   }
 }
