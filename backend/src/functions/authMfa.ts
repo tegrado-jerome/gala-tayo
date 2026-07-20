@@ -33,10 +33,8 @@ function extractSessionIdFromToken(token: string): string | null {
 
 function maskEmail(email: string): string {
   const atIndex = email.indexOf("@");
-  if (atIndex <= 2) return email;
-  const shown = email.slice(0, 2);
-  const asteriskCount = Math.min(atIndex - 2, 4);
-  return `${shown}${'*'.repeat(asteriskCount)}${email.slice(atIndex)}`;
+  if (atIndex <= 0) return email;
+  return `${email[0]}***${email.slice(atIndex)}`;
 }
 
 export async function sendMfaEmailCode(
