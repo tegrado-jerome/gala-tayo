@@ -36,6 +36,7 @@ export type RouteInputs = {
   userMfaStatus: UserMfaStatus | null
   navigationSource: NavigationSource
   onProfileRefreshKeyUpdate: () => void
+  onMfaVerified?: () => void
 }
 
 export type RouteDescriptor =
@@ -198,12 +199,14 @@ export function resolveRouteDescriptor(inputs: RouteInputs): RouteDescriptor {
   if (
     session &&
     userMfaStatus?.needsMfa &&
-    !isPath(pathname, '/mfa/verify')
+    !isPath(pathname, '/mfa/verify') &&
+    !isPath(pathname, '/login') &&
+    !isPath(pathname, '/signup')
   ) {
     return { kind: 'user-mfa-verify' }
   }
 
-  if (session && isUserMfaLoading && userMfaStatus === null && !isPath(pathname, '/auth/callback') && !isPasswordResetPath) {
+  if (session && isUserMfaLoading && userMfaStatus === null && !isPath(pathname, '/auth/callback') && !isPasswordResetPath && !isPath(pathname, '/login') && !isPath(pathname, '/signup') && !isPath(pathname, '/mfa/verify')) {
     return { kind: 'initial-auth-loader' }
   }
 

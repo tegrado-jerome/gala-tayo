@@ -30,6 +30,7 @@ function App() {
     userMfaStatus,
     profileError,
     setProfileRefreshKey,
+    markMfaVerified,
   } = useAuthOrchestration()
 
   const { pathname, search, navigationSource, restoredScrollY, setRestoredScrollY } = useAppLocationState()
@@ -155,6 +156,7 @@ function App() {
     userMfaStatus,
     navigationSource,
     onProfileRefreshKeyUpdate: () => setProfileRefreshKey((v) => v + 1),
+    onMfaVerified: markMfaVerified,
   })
 
   return (

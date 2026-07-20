@@ -6,12 +6,14 @@ import {
   getPostAuthRedirect,
   markAdminPasswordSession,
   resendSignUpConfirmationEmail,
+  setRememberMePreference,
   signInWithEmailPassword,
   signUpWithEmailPassword,
 } from '../services/authApi'
 import { buildAuthPath, getRequestedNextPath } from '../services/authApi'
 import { navigateToPath } from '../utils/navigation'
 import { getCurrentUser, isAdminRole } from '../utils/profileApi'
+import { PageShell } from '../components/layout/ResponsiveLayouts'
 import { getPasswordStrength } from '../utils/passwordStrength'
 import galaTayoLogo from '../assets/brand/galatayo-logo.svg'
 import { formatCooldownDuration, useResendCooldown } from '../hooks/useResendCooldown'
@@ -84,6 +86,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
   const [error, setError] = useState('')
   const [resendMessage, setResendMessage] = useState('')
   const [isResendingConfirmation, setIsResendingConfirmation] = useState(false)
+  const [rememberMe, setRememberMe] = useState(true)
   const [isPasswordVisible, setIsPasswordVisible] = useState(false)
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false)
   const [confirmPasswordTouched, setConfirmPasswordTouched] = useState(false)
@@ -198,6 +201,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
         return
       }
 
+      setRememberMePreference(rememberMe)
       const session = await signInWithEmailPassword(normalizedEmail, password)
 
       if (isAdminSurface) {
@@ -270,89 +274,93 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
       : 'Resend confirmation email'
 
     return (
-      <main className="gala-page-background min-h-screen min-h-[100dvh] px-4 py-6 text-[var(--text)] sm:px-6 sm:py-8">
-        <section className="mx-auto flex min-h-[100dvh] w-full max-w-[560px] items-center justify-center">
-          <div className="w-full px-6 py-8 text-center sm:px-8 sm:py-10">
-            <img src={galaTayoLogo} alt="GalaTayo" className="mx-auto h-auto w-[160px] sm:w-[180px]" loading="eager" />
-            <div className="mx-auto mt-6 inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--line)] bg-[var(--bg)]">
-              <AppIcon name="email" className="h-5 w-5 text-[var(--accent)]" />
+      <PageShell reserveBottomNav={false}>
+        <main className="gala-page-background min-h-screen min-h-[100dvh] px-4 py-6 text-[var(--text)] sm:px-6 sm:py-8">
+          <section className="mx-auto flex min-h-[100dvh] w-full max-w-[560px] items-center justify-center">
+            <div className="w-full px-6 py-8 text-center sm:px-8 sm:py-10">
+              <img src={galaTayoLogo} alt="GalaTayo" className="mx-auto h-auto w-[160px] sm:w-[180px]" loading="eager" />
+              <div className="mx-auto mt-6 inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-[var(--line)] bg-[var(--bg)]">
+                <AppIcon name="email" className="h-5 w-5 text-[var(--accent)]" />
+              </div>
+              <h1 className="mt-5 text-[1.65rem] font-extrabold leading-[1.02] tracking-[-0.05em] text-[var(--text-main)] sm:text-[1.9rem]">
+                Check your email
+              </h1>
+              <p className="mx-auto mt-3 max-w-[280px] text-[14px] leading-6 text-[var(--muted)]">
+                Check your email to confirm your GalaTayo account.
+              </p>
+              <p className="mx-auto mt-3 max-w-[300px] text-[14px] leading-6 text-[var(--muted)]">
+                After confirming, return to GalaTayo with your email and password.
+              </p>
+              <div className="mt-6 flex flex-col items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => void handleResendConfirmationEmail()}
+                  disabled={signUpCooldown.isCoolingDown || isResendingConfirmation}
+                  className="app-button app-button-secondary app-button-md w-[240px] max-w-full disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {isResendingConfirmation ? 'Sending...' : resendLabel}
+                </button>
+                <button
+                  type="button"
+                  onClick={resetFormState}
+                  className="app-button app-button-primary app-button-md w-[240px] max-w-full"
+                >
+                  Continue
+                </button>
+              </div>
             </div>
-            <h1 className="mt-5 text-[1.65rem] font-extrabold leading-[1.02] tracking-[-0.05em] text-[var(--text-main)] sm:text-[1.9rem]">
-              Check your email
-            </h1>
-            <p className="mx-auto mt-3 max-w-[280px] text-[14px] leading-6 text-[var(--muted)]">
-              Check your email to confirm your GalaTayo account.
-            </p>
-            <p className="mx-auto mt-3 max-w-[300px] text-[14px] leading-6 text-[var(--muted)]">
-              After confirming, return to GalaTayo with your email and password.
-            </p>
-            <div className="mt-6 flex flex-col items-center gap-3">
-              <button
-                type="button"
-                onClick={() => void handleResendConfirmationEmail()}
-                disabled={signUpCooldown.isCoolingDown || isResendingConfirmation}
-                className="app-button app-button-secondary app-button-md w-[240px] max-w-full disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                {isResendingConfirmation ? 'Sending...' : resendLabel}
-              </button>
-              <button
-                type="button"
-                onClick={resetFormState}
-                className="app-button app-button-primary app-button-md w-[240px] max-w-full"
-              >
-                Continue
-              </button>
-            </div>
-          </div>
-        </section>
-      </main>
+          </section>
+        </main>
+      </PageShell>
     )
   }
 
   return (
-    <main className="gala-page-background min-h-screen min-h-[100dvh] text-[var(--text)]">
-      <div className={authShellClassName}>
-        <section className="flex flex-col items-center justify-center px-4 pb-5 pt-0 text-center sm:px-6 md:px-8 lg:items-start lg:px-16 lg:py-10 lg:text-left">
-          <div className="flex w-full max-w-[560px] flex-col items-center gap-4 lg:items-start">
-            <img
-              src={galaTayoLogo}
-              alt="GalaTayo"
-              className="mb-2 h-auto w-[160px] sm:w-[180px] lg:hidden"
-              loading="eager"
-            />
-            <div className="max-w-[31rem]">
-              <h1 className="text-[2rem] font-extrabold leading-[0.98] tracking-[-0.055em] text-[var(--text-main)] sm:text-[2.5rem] lg:text-[3.4rem]">
-                {cardTitle}
-              </h1>
-              <p className="mt-2 max-w-[28rem] text-[15px] leading-7 text-[var(--muted)] sm:text-[16px] lg:text-[17px]">
-                {cardDescription}
-              </p>
+    <PageShell reserveBottomNav={false}>
+      <main className="gala-page-background min-h-screen min-h-[100dvh] text-[var(--text)]">
+        <div className={authShellClassName}>
+          <section className="flex flex-col items-center justify-center px-4 pb-5 pt-0 text-center sm:px-6 md:px-8 lg:items-start lg:px-16 lg:py-10 lg:text-left">
+            <div className="flex w-full max-w-[560px] flex-col items-center gap-4 lg:items-start">
+              <img
+                src={galaTayoLogo}
+                alt="GalaTayo"
+                className="mb-2 h-auto w-[160px] sm:w-[180px] lg:hidden"
+                loading="eager"
+              />
+              <div className="max-w-[31rem]">
+                <h1 className="text-[2rem] font-extrabold leading-[0.98] tracking-[-0.055em] text-[var(--text-main)] sm:text-[2.5rem] lg:text-[3.4rem]">
+                  {cardTitle}
+                </h1>
+                <p className="mt-2 max-w-[28rem] text-[15px] leading-7 text-[var(--muted)] sm:text-[16px] lg:text-[17px]">
+                  {cardDescription}
+                </p>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <section className="flex items-center justify-center px-4 pb-0 pt-0 sm:px-6 md:px-8 lg:px-12 lg:py-10">
-          <div className="w-full max-w-[460px] px-0 py-0 md:max-w-[500px] lg:max-w-[560px]">
-            <img
-              src={galaTayoLogo}
-              alt="GalaTayo"
-              className="mx-auto mb-4 hidden h-auto w-[180px] sm:w-[190px] lg:block lg:w-[210px]"
-              loading="eager"
-            />
-            <div className="mt-3">
-              {resetSuccess ? (
-                <div className="mb-4 rounded-[12px] border border-[rgba(var(--accent-rgb),0.18)] bg-[var(--primary-soft)] px-4 py-3 text-[13px] leading-6 text-[var(--accent-deep)] shadow-sm">
-                  Password updated. You can now sign in with your new password.
-                </div>
-              ) : null}
+          <section className="flex items-center justify-center px-4 pb-0 pt-0 sm:px-6 md:px-8 lg:px-12 lg:py-10">
+            <div className="w-full max-w-[460px] px-0 py-0 md:max-w-[500px] lg:max-w-[560px]">
+              <img
+                src={galaTayoLogo}
+                alt="GalaTayo"
+                className="mx-auto mb-4 hidden h-auto w-[180px] sm:w-[190px] lg:block lg:w-[210px]"
+                loading="eager"
+              />
+              <div className="mt-3">
+                {resetSuccess ? (
+                  <div className="mb-4 rounded-[12px] border border-[rgba(var(--accent-rgb),0.18)] bg-[var(--primary-soft)] px-4 py-3 text-[13px] leading-6 text-[var(--accent-deep)] shadow-sm">
+                    Password updated. You can now sign in with your new password.{/* new password */}
+                  </div>
+                ) : null}
 
-              {allowGoogle ? (
+                {allowGoogle ? (
                 <AuthMethodChooser
                   isGoogleLoading={isGoogleLoading}
                   onGoogleLoadingChange={handleGoogleLoadingChange}
                   onError={setError}
                   nextPath={isCreateMode ? (nextPath ?? '/onboarding') : nextPath}
                   flow={isCreateMode ? 'signup' : undefined}
+                  rememberMe={rememberMe}
                 />
               ) : (
                 <div className="mx-auto w-full max-w-[360px] rounded-[14px] border border-[rgba(30,58,138,0.16)] bg-[var(--accent-wash)] px-4 py-3 text-center text-[13px] font-semibold leading-6 text-[var(--accent-deep)]">
@@ -485,6 +493,18 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
                 </label>
               ) : null}
 
+              {!isCreateMode ? (
+                <label className="flex cursor-pointer items-center gap-2 text-[13px] font-semibold text-[var(--muted)] hover:text-[var(--text-main)]">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(event) => setRememberMe(event.target.checked)}
+                    className="h-4 w-4 rounded border-[var(--line)] text-[var(--accent)] focus:ring-[var(--accent)]"
+                  />
+                  Remember me
+                </label>
+              ) : null}
+
               <button
                 type="submit"
                 disabled={isSubmitDisabled}
@@ -548,6 +568,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
         </section>
       </div>
     </main>
+    </PageShell>
   )
 }
 

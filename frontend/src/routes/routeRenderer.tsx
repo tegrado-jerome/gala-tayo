@@ -51,7 +51,7 @@ const AdminPlaceReportsPage = lazy(() => import('../pages/admin/PlaceReportsPage
 const AdminCommentReportsPage = lazy(() => import('../pages/admin/CommentReportsPage'))
 const AdminMfaSetupPage = lazy(() => import('../pages/admin/AdminMfaSetupPage'))
 const AdminMfaVerifyPage = lazy(() => import('../pages/admin/AdminMfaVerifyPage'))
-const MfaVerifyPage = lazy(() => import('../pages/MfaVerifyPage'))
+import MfaVerifyPage from '../pages/MfaVerifyPage'
 
 function OnboardingAccessGate({
   session,
@@ -145,7 +145,7 @@ export function renderRouteDescriptor(descriptor: RouteDescriptor, inputs: Route
         return <AuthPage mode="sign_in" />
       }
       return (
-        <MfaVerifyPage session={session} />
+        <MfaVerifyPage session={session} onMfaVerified={inputs.onMfaVerified} />
       )
     case 'admin-auth':
       return <AuthPage mode="sign_in" surface="admin" />

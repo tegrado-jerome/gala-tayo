@@ -3,14 +3,9 @@ import galaTayoLogo from '../assets/brand/galatayo-logo.svg'
 export function InitialAuthLoader() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-white px-6 text-center">
-      <div className="flex flex-col items-center gap-4">
-        <div className="h-10 w-44 animate-pulse rounded-full bg-slate-100" />
-        <div className="h-4 w-64 animate-pulse rounded-full bg-slate-100" />
-        <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-48 w-full animate-pulse rounded-2xl bg-slate-100" />
-          ))}
-        </div>
+      <div className="flex flex-col items-center gap-3">
+        <div className="h-8 w-32 animate-pulse rounded-full bg-slate-100" />
+        <div className="h-3 w-48 animate-pulse rounded-full bg-slate-100" />
       </div>
     </main>
   )

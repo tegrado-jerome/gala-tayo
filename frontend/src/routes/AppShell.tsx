@@ -51,7 +51,7 @@ export function AppShell({ session, currentUser, currentProfile, adminMfa, hasRe
                 <SeoHead title="GalaTayo" canonicalPath={pathname} robots="noindex,follow" />
               ) : null}
               <Suspense fallback={<PageShellSkeleton />}>
-                <div>{children}</div>
+                <div className="flex min-h-[100dvh] flex-col">{children}</div>
               </Suspense>
               {showLogoutTransition ? (
                 <div className={`gala-logout-overlay ${isLogoutTransitionExiting ? 'exit' : 'enter'}`} aria-live="polite" aria-busy="true">

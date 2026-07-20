@@ -7,15 +7,15 @@ import { sendMfaEmailCode, verifyMfaEmailCode } from '../utils/userMfa'
 import { setDeviceToken } from '../utils/mfaDevice'
 import { navigateToPath } from '../utils/navigation'
 import { signOut } from '../services/authApi'
-import { FormSkeleton } from '../components/loading/SkeletonStates'
+
 import galaTayoLogo from '../assets/brand/galatayo-logo.svg'
 
 const OTP_LENGTH = 6
 
-function MfaVerifyPage({ session }: { session: Session }) {
+function MfaVerifyPage({ session, onMfaVerified }: { session: Session; onMfaVerified?: () => void }) {
   const [maskedEmail, setMaskedEmail] = useState('')
   const [digits, setDigits] = useState<string[]>(Array(OTP_LENGTH).fill(''))
-  const [isSendingCode, setIsSendingCode] = useState(false)
+  const [isSendingCode, setIsSendingCode] = useState(true)
   const [isVerifying, setIsVerifying] = useState(false)
   const [cooldownSeconds, setCooldownSeconds] = useState(0)
   const [errorMessage, setErrorMessage] = useState('')
@@ -205,9 +205,10 @@ function MfaVerifyPage({ session }: { session: Session }) {
         setDeviceToken(result.deviceToken)
       }
       setSuccessMessage('Verification successful.')
-      window.setTimeout(() => {
+      setTimeout(() => {
+        onMfaVerified?.()
         navigateToPath(nextPath)
-      }, 200)
+      }, 1000)
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Invalid or expired code.')
     } finally {
@@ -233,11 +234,6 @@ function MfaVerifyPage({ session }: { session: Session }) {
       <AppHeader />
       <main className="flex flex-1 w-full items-center justify-center px-4 sm:px-6">
         <PageContainer size="narrow">
-          {isSendingCode && !maskedEmail ? (
-            <div className="flex min-h-[360px] items-center justify-center">
-              <FormSkeleton rows={3} />
-            </div>
-          ) : (
             <div className="mx-auto flex w-full max-w-[420px] flex-col items-center text-center">
               <img
                 src={galaTayoLogo}
@@ -252,87 +248,95 @@ function MfaVerifyPage({ session }: { session: Session }) {
                 <span className="font-bold text-slate-800">{maskedEmail || 'your email'}</span>
               </p>
 
-              {devOtp && import.meta.env.DEV ? (
-                <p className="mt-3 w-full rounded-xl border border-yellow-200 bg-yellow-50 px-4 py-2 text-sm font-bold text-yellow-800">
-                  DEV MODE — OTP: <span className="tracking-[0.3em]">{devOtp}</span>
-                </p>
-              ) : null}
+              {isSendingCode && !maskedEmail ? (
+                <div className="mt-8 flex items-center gap-2 text-sm font-semibold text-slate-400">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-500" />
+                  Sending code...
+                </div>
+              ) : (
+                <>
+                  {devOtp && import.meta.env.DEV ? (
+                    <p className="mt-3 w-full rounded-xl border border-yellow-200 bg-yellow-50 px-4 py-2 text-sm font-bold text-yellow-800">
+                      DEV MODE — OTP: <span className="tracking-[0.3em]">{devOtp}</span>
+                    </p>
+                  ) : null}
 
-              <div className="mt-8 flex w-full items-center justify-center gap-2.5 sm:gap-3">
-                {digits.map((digit, index) => (
-                  <input
-                    key={index}
-                    ref={(el) => { inputRefs.current[index] = el }}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={digit}
-                    onChange={(event) => handleDigitChange(index, event.target.value)}
-                    onKeyDown={(event) => handleKeyDown(index, event)}
-                    onPaste={index === 0 ? handlePaste : undefined}
-                    className="h-14 w-12 rounded-xl border border-[var(--line)] bg-white text-center text-2xl font-black text-slate-900 shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)] outline-none transition focus:border-[var(--accent)] focus:shadow-[var(--focus-ring)] sm:h-16 sm:w-14 sm:text-[28px]"
-                  />
-                ))}
-              </div>
+                  <div className="mt-8 flex w-full items-center justify-center gap-2.5 sm:gap-3">
+                    {digits.map((digit, index) => (
+                      <input
+                        key={index}
+                        ref={(el) => { inputRefs.current[index] = el }}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={1}
+                        value={digit}
+                        onChange={(event) => handleDigitChange(index, event.target.value)}
+                        onKeyDown={(event) => handleKeyDown(index, event)}
+                        onPaste={index === 0 ? handlePaste : undefined}
+                        className="h-14 w-12 rounded-xl border border-[var(--line)] bg-white text-center text-2xl font-black text-slate-900 shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)] outline-none transition focus:border-[var(--accent)] focus:shadow-[var(--focus-ring)] sm:h-16 sm:w-14 sm:text-[28px]"
+                      />
+                    ))}
+                  </div>
 
-              {errorMessage ? (
-                <p className="mt-4 w-full rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
-                  {errorMessage}
-                </p>
-              ) : null}
+                  {errorMessage ? (
+                    <p className="mt-4 w-full rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+                      {errorMessage}
+                    </p>
+                  ) : null}
 
-              {successMessage && !errorMessage ? (
-                <p className="mt-4 flex items-center gap-2 text-sm font-semibold text-[var(--accent-deep)]">
-                  <CheckCircle2 className="h-4 w-4" strokeWidth={2.5} />
-                  {successMessage}
-                </p>
-              ) : null}
+                  {successMessage && !errorMessage ? (
+                    <p className="mt-4 flex items-center gap-2 text-sm font-semibold text-[var(--accent-deep)]">
+                      <CheckCircle2 className="h-4 w-4" strokeWidth={2.5} />
+                      {successMessage}
+                    </p>
+                  ) : null}
 
-              <div className="mt-5 text-sm font-semibold leading-6 text-slate-500">
-                <p>Didn&#39;t receive the code?</p>
-                <button
-                  type="button"
-                  onClick={() => void handleSendCode()}
-                  disabled={isSendingCode || cooldownSeconds > 0}
-                  className="font-semibold text-[var(--accent)] underline hover:text-[var(--accent-deep)] disabled:text-slate-300 disabled:no-underline"
-                >
-                  {resendText}
-                </button>
-              </div>
+                  <div className="mt-5 text-sm font-semibold leading-6 text-slate-500">
+                    <p>Didn&#39;t receive the code?</p>
+                    <button
+                      type="button"
+                      onClick={() => void handleSendCode()}
+                      disabled={isSendingCode || cooldownSeconds > 0}
+                      className="font-semibold text-[var(--accent)] underline hover:text-[var(--accent-deep)] disabled:text-slate-300 disabled:no-underline"
+                    >
+                      {resendText}
+                    </button>
+                  </div>
 
-              <div className="mt-6 w-full">
-                <button
-                  ref={verifyButtonRef}
-                  type="button"
-                  onClick={() => void handleVerify()}
-                  disabled={!codeComplete || isVerifying}
-                  className="app-button app-button-primary app-button-md w-full"
-                >
-                  {isVerifying ? 'Verifying...' : 'Verify OTP'}
-                </button>
-              </div>
+                  <div className="mt-6 w-full">
+                    <button
+                      ref={verifyButtonRef}
+                      type="button"
+                      onClick={() => void handleVerify()}
+                      disabled={!codeComplete || isVerifying}
+                      className="app-button app-button-primary app-button-md w-full"
+                    >
+                      {isVerifying ? 'Verifying...' : 'Verify OTP'}
+                    </button>
+                  </div>
 
-              <label className="mt-5 flex cursor-pointer items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-800">
-                <input
-                  type="checkbox"
-                  checked={trustDevice}
-                  onChange={(event) => setTrustDevice(event.target.checked)}
-                  className="h-4 w-4 rounded border-[var(--line)] text-[var(--accent)] focus:ring-[var(--accent)]"
-                />
-                Remember this device
-              </label>
+                  <label className="mt-5 flex cursor-pointer items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-800">
+                    <input
+                      type="checkbox"
+                      checked={trustDevice}
+                      onChange={(event) => setTrustDevice(event.target.checked)}
+                      className="h-4 w-4 rounded border-[var(--line)] text-[var(--accent)] focus:ring-[var(--accent)]"
+                    />
+                    Remember this device
+                  </label>
 
-              <button
-                type="button"
-                onClick={() => void handleCancel()}
-                disabled={isVerifying}
-                className="mt-6 flex items-center gap-1.5 text-sm font-semibold text-red-500 hover:text-red-700"
-              >
-                <LogOut className="h-4 w-4" strokeWidth={2} />
-                Cancel
-              </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleCancel()}
+                    disabled={isVerifying}
+                    className="mt-6 flex items-center gap-1.5 text-sm font-semibold text-red-500 hover:text-red-700"
+                  >
+                    <LogOut className="h-4 w-4" strokeWidth={2} />
+                    Cancel
+                  </button>
+                </>
+              )}
             </div>
-          )}
         </PageContainer>
       </main>
     </PageShell>

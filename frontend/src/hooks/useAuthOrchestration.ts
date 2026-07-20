@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js'
 import { supabase } from '../supabase'
 import { preloadAvatarImage } from '../utils/avatarImageCache'
@@ -340,6 +340,11 @@ export function useAuthOrchestration() {
     void preloadAvatarImage(avatarUrl)
   }, [currentProfile?.avatarUrl, currentProfile?.providerAvatarUrl])
 
+  const markMfaVerified = useCallback(() => {
+    setUserMfaStatus({ needsMfa: false })
+    setIsUserMfaLoading(false)
+  }, [])
+
   return {
     session,
     userId,
@@ -357,5 +362,6 @@ export function useAuthOrchestration() {
     profileRefreshKey,
     setProfileRefreshKey,
     sessionRef,
+    markMfaVerified,
   }
 }

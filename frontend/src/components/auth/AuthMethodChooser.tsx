@@ -1,4 +1,4 @@
-import { signInWithGoogle } from '../../services/authApi'
+import { setRememberMePreference, signInWithGoogle } from '../../services/authApi'
 import { getRequestedNextPath } from '../../services/authApi'
 
 type AuthMethodChooserProps = {
@@ -7,6 +7,7 @@ type AuthMethodChooserProps = {
   onError: (message: string) => void
   nextPath?: string | null
   flow?: 'signup'
+  rememberMe?: boolean
 }
 
 function GoogleMark() {
@@ -32,11 +33,12 @@ function GoogleMark() {
   )
 }
 
-function AuthMethodChooser({ isGoogleLoading, onGoogleLoadingChange, onError, nextPath, flow }: AuthMethodChooserProps) {
+function AuthMethodChooser({ isGoogleLoading, onGoogleLoadingChange, onError, nextPath, flow, rememberMe }: AuthMethodChooserProps) {
   const handleGoogleSignIn = async () => {
     try {
       onGoogleLoadingChange(true)
       onError('')
+      setRememberMePreference(rememberMe ?? true)
       await signInWithGoogle(nextPath ?? getRequestedNextPath(), flow)
     } catch (error) {
       onError(error instanceof Error ? error.message : 'Google sign-in failed. Please try again.')

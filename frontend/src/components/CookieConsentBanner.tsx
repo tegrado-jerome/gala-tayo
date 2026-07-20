@@ -7,7 +7,7 @@ export function CookieConsentBanner({ pathname }: { pathname?: string }) {
   const { consent, acceptCookies, rejectCookies } = useCookieConsent()
   const [showDetails, setShowDetails] = useState(false)
 
-  const isVisible = consent === 'undecided' && (!pathname || pathname === '/home')
+  const isVisible = consent === 'undecided' && pathname !== '/'
 
   useEffect(() => {
     if (!isVisible) return

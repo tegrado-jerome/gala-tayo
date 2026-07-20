@@ -19,6 +19,7 @@ type SignOutOptions = {
 const adminPasswordSessionKey = 'galatayo_admin_password_session'
 const signupOnboardingAccessKey = 'galatayo:signup-onboarding-access'
 const signupOnboardingAccessTtlMs = 30 * 60 * 1000
+const rememberMeKey = 'galatayo:remember-me'
 
 type AdminPasswordSession = {
   userId: string
@@ -108,6 +109,7 @@ export async function signOut({
   const { error } = await supabase.auth.signOut({ scope })
   window.sessionStorage.removeItem(adminPasswordSessionKey)
   clearSignupOnboardingAccess()
+  clearRememberMePreference()
 
   if (error) {
     if (transitionStartedAt) {
@@ -167,6 +169,22 @@ async function waitForSignedOutState() {
       resolve()
     })
   })
+}
+
+export function setRememberMePreference(remember: boolean) {
+  try {
+    window.sessionStorage.setItem(rememberMeKey, remember ? 'true' : 'false')
+  } catch {
+    // sessionStorage may be unavailable
+  }
+}
+
+export function clearRememberMePreference() {
+  try {
+    window.sessionStorage.removeItem(rememberMeKey)
+  } catch {
+    // ignore
+  }
 }
 
 export function markAdminPasswordSession(userId: string) {
