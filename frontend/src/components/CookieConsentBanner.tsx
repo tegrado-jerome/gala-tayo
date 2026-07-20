@@ -45,7 +45,7 @@ export function CookieConsentBanner({ pathname }: { pathname?: string }) {
             </button>
             {showDetails && (
               <p className="mt-2 text-xs leading-4 text-slate-400">
-                No tracking for advertising. Change preference anytime in Privacy Center.
+                This only helps us understand how you use the site. No personal data is shared.
               </p>
             )}
           </div>
