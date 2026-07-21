@@ -64,7 +64,7 @@ export async function sendOtpEmail(
                  </div>
 
                  <img
-                  src="https://pub-1cd8f9f5d9c94e76a4a823843bd23169.r2.dev/brand/galatayo-logo.png"
+                  src="https://media.galatayo.app/brand/galatayo-logo.png"
                   alt="GalaTayo"
                   width="220"
                   style="display:block; width:220px; max-width:82%; height:auto; margin:0 auto 36px; border:0;"
