@@ -1,6 +1,7 @@
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { METRO_MANILA_AREAS } from "../functions/filters";
 import { PUBLIC_PLACE_COLUMNS } from "../domain/places";
+import { buildImageUrl } from "./r2UrlResolver";
 import { createBaseSlug } from "./slug";
 
 type PlaceRow = Record<string, unknown>;
@@ -36,7 +37,7 @@ export type SeoAreaPage = {
 
 type ApprovedImageRow = {
   place_id?: unknown;
-  image_url?: unknown;
+  storage_key?: unknown;
 };
 
 type SeoPlaceSummaryOptions = {
@@ -170,10 +171,10 @@ async function getApprovedImageLookup(placeIds: string[]): Promise<Map<string, s
   for (let index = 0; index < uniquePlaceIds.length; index += APPROVED_IMAGE_LOOKUP_BATCH_SIZE) {
     const batchPlaceIds = uniquePlaceIds.slice(index, index + APPROVED_IMAGE_LOOKUP_BATCH_SIZE);
     const { data, error } = await (supabase.from("place_images") as any)
-      .select("place_id,image_url,sort_order,created_at")
+      .select("place_id,storage_key,sort_order,created_at")
       .in("place_id", batchPlaceIds)
       .eq("status", "approved")
-      .not("image_url", "is", null)
+      .not("storage_key", "is", null)
       .order("sort_order", { ascending: true, nullsFirst: false })
       .order("created_at", { ascending: true })
       .limit(batchPlaceIds.length * MAX_APPROVED_IMAGES_PER_PLACE);
@@ -184,7 +185,8 @@ async function getApprovedImageLookup(placeIds: string[]): Promise<Map<string, s
 
     for (const row of (data ?? []) as ApprovedImageRow[]) {
       const placeId = cleanString(row.place_id);
-      const imageUrl = cleanString(row.image_url);
+      const storageKey = cleanString(row.storage_key);
+      const imageUrl = storageKey ? buildImageUrl(storageKey) : null;
 
       if (!placeId || !imageUrl || imagesByPlaceId.has(placeId)) {
         continue;

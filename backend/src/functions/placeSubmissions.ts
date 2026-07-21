@@ -5,6 +5,7 @@ import { generateUniqueSlug } from "../services/placeService";
 import { AuthenticatedUser, validateJwt } from "../utils/auth";
 import { checkEndpointRateLimit } from "../utils/redisRateLimit";
 import { convertImageToWebp, deleteR2Object, uploadThumbnailToR2, uploadWebpToR2 } from "../utils/r2ImageStorage";
+import { buildImageUrl } from "../utils/r2UrlResolver";
 import { logAdminAction } from "../utils/adminAudit";
 
 type UserRow = {
@@ -71,7 +72,6 @@ type PlaceSubmissionImageRow = {
   id: string;
   submission_id: string;
   submitted_by: string;
-  image_url: string | null;
   storage_key: string | null;
   sort_order: number;
   created_at: string;
@@ -93,7 +93,7 @@ const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/jpg", "image/png", "im
 const PLACE_SUBMISSION_COLUMNS =
   "id, submitted_by, approved_place_id, name, category, address, city, area, latitude, longitude, description, best_time_to_visit, visit_duration, budget_min, good_for, not_ideal_for, crowd_level, indoor_outdoor, weather_fit, parking_info, commute_access, nearby_context, website_url, google_maps_url, status, rejection_reason, admin_note, reviewed_by, reviewed_at, created_at, updated_at";
 const PLACE_SUBMISSION_IMAGE_COLUMNS =
-  "id, submission_id, submitted_by, image_url, storage_key, sort_order, created_at, updated_at";
+  "id, submission_id, submitted_by, storage_key, sort_order, created_at, updated_at";
 
 function response(status: number, message: string, jsonBody?: Record<string, unknown>): HttpResponseInit {
   return {
@@ -241,7 +241,7 @@ function buildGoogleMapsUrl(name: string, address: string) {
 function mapSubmissionImage(row: PlaceSubmissionImageRow) {
   return {
     id: row.id,
-    imageUrl: row.image_url,
+    imageUrl: buildImageUrl(row.storage_key),
     storageKey: row.storage_key,
     sortOrder: row.sort_order,
     createdAt: row.created_at,
@@ -495,7 +495,7 @@ export async function createPlaceSubmission(
     const submissionId = randomUUID();
     const submissionSlug = normalizeStorageSlug(`${name}-${city}`);
     const now = new Date().toISOString();
-    const uploadedImages: Array<{ imageUrl: string; storageKey: string; sortOrder: number }> = [];
+    const uploadedImages: Array<{ storageKey: string; sortOrder: number }> = [];
 
     for (const [index, imageFile] of imageFiles.entries()) {
       if (!ALLOWED_IMAGE_TYPES.has(imageFile.type)) {
@@ -514,12 +514,11 @@ export async function createPlaceSubmission(
 
       const webpBuffer = await convertImageToWebp(inputBuffer);
       const storageKey = `place-submissions/${submissionSlug}/${submissionId}/${index + 1}-${randomUUID()}.webp`;
-      const imageUrl = await uploadWebpToR2(storageKey, webpBuffer);
+      await uploadWebpToR2(storageKey, webpBuffer);
       await uploadThumbnailToR2(storageKey, webpBuffer);
 
       uploadedKeys.push(storageKey);
       uploadedImages.push({
-        imageUrl,
         storageKey,
         sortOrder: index,
       });
@@ -564,7 +563,6 @@ export async function createPlaceSubmission(
         uploadedImages.map((image) => ({
           submission_id: submissionId,
           submitted_by: user.id,
-          image_url: image.imageUrl,
           storage_key: image.storageKey,
           sort_order: image.sortOrder,
           updated_at: now,
@@ -755,7 +753,7 @@ export async function approvePlaceSubmission(
     }
 
     const imagesBySubmissionId = await loadSubmissionImages([submission.id]);
-    const images = (imagesBySubmissionId.get(submission.id) ?? []).filter((image) => Boolean(image.image_url));
+    const images = (imagesBySubmissionId.get(submission.id) ?? []).filter((image) => Boolean(image.storage_key));
 
     if (images.length < MIN_SUBMISSION_IMAGES || images.length > MAX_SUBMISSION_IMAGES) {
       return response(409, "The submission must still have 1 to 3 photos before approval.");
@@ -804,7 +802,6 @@ export async function approvePlaceSubmission(
       images.slice(0, MAX_SUBMISSION_IMAGES).map((image, index) => ({
         place_id: place.id,
         uploaded_by: submission.submitted_by,
-        image_url: image.image_url,
         storage_key: image.storage_key,
         status: "approved",
         sort_order: index,
@@ -908,7 +905,6 @@ export async function rejectPlaceSubmission(
     const supabase = await getSupabaseAdminClient();
     const { error: imageUpdateError } = await (supabase.from("place_submission_images") as any)
       .update({
-        image_url: null,
         storage_key: null,
         updated_at: now,
       })

@@ -4,6 +4,7 @@ import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { validateJwt } from "../utils/auth";
 import { checkEndpointRateLimit } from "../utils/redisRateLimit";
 import { convertImageToWebp, deleteR2Object, detectImageFormat, uploadThumbnailToR2, uploadWebpToR2 } from "../utils/r2ImageStorage";
+import { buildImageUrl } from "../utils/r2UrlResolver";
 import {
   meProfile as meProfileSocial,
   publicGalaPlanSocial,
@@ -1418,7 +1419,7 @@ export async function publicGalaPlan(
                 budget_min: toNullableNumber(place?.budget_min),
                 latitude: toNullableNumber(place?.latitude),
                 longitude: toNullableNumber(place?.longitude),
-                ...(place?.image_url !== undefined ? { image_url: place.image_url } : {}),
+                ...(place?.storage_key ? { image_url: buildImageUrl(place.storage_key) } : {}),
               },
             };
           }),

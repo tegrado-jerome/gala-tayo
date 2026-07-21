@@ -4,6 +4,7 @@ import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { countApprovedPlaceImages, getApprovedPlaceImages } from "../services/placeImagesService";
 import { getAuthenticatedUser, type AuthenticatedUser } from "../utils/auth";
 import { checkEndpointRateLimit } from "../utils/redisRateLimit";
+import { buildImageUrl } from "../utils/r2UrlResolver";
 import { convertImageToWebp, deleteR2Object, detectImageFormat, uploadThumbnailToR2, uploadWebpToR2 } from "../utils/r2ImageStorage";
 
 type PlaceRow = {
@@ -16,7 +17,6 @@ type PlaceImageRow = {
   id: string;
   place_id: string;
   uploaded_by: string | null;
-  image_url: string | null;
   storage_key: string | null;
   status: "pending" | "approved" | "rejected" | string;
   source_url: string | null;
@@ -38,7 +38,7 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp"]);
 const ALLOWED_IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp"];
 const PLACE_IMAGE_COLUMNS =
-  "id, place_id, uploaded_by, image_url, storage_key, status, source_url, contributor_note, rejection_reason, sort_order, created_at, updated_at";
+  "id, place_id, uploaded_by, storage_key, status, source_url, contributor_note, rejection_reason, sort_order, created_at, updated_at";
 
 function response(status: number, message: string): HttpResponseInit {
   return {
@@ -102,7 +102,7 @@ function mapImage(row: PlaceImageRow) {
     id: row.id,
     placeId: row.place_id,
     uploadedBy: row.uploaded_by,
-    imageUrl: row.image_url,
+    imageUrl: buildImageUrl(row.storage_key),
     storageKey: row.storage_key,
     status: row.status,
     sourceUrl: row.source_url,
@@ -204,7 +204,7 @@ export async function placeImageContributionCreate(
 
     const storageKey = `places/${normalizeStorageSlug(place.slug)}/${randomUUID()}.webp`;
     uploadedStorageKey = storageKey;
-    const imageUrl = await uploadWebpToR2(storageKey, webpBuffer);
+    await uploadWebpToR2(storageKey, webpBuffer);
     await uploadThumbnailToR2(storageKey, webpBuffer);
     const now = new Date().toISOString();
     const sourceUrl = getCleanText(formData.get("source_url") || formData.get("sourceUrl"), 500);
@@ -214,7 +214,6 @@ export async function placeImageContributionCreate(
       .insert({
         place_id: place.id,
         uploaded_by: user.id,
-        image_url: imageUrl,
         storage_key: storageKey,
         status: "pending",
         source_url: sourceUrl,

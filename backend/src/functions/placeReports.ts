@@ -2,6 +2,7 @@ import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/fu
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { getAuthenticatedUser, isAdminUser, requireAdmin, unauthorized, forbidden, badRequest, type AuthenticatedUser } from "../utils/auth";
 import { checkEndpointRateLimit } from "../utils/redisRateLimit";
+import { buildImageUrl } from "../utils/r2UrlResolver";
 import { isPlaceUuid } from "../utils/placeIdentity";
 
 type PlaceReportReason =
@@ -50,7 +51,7 @@ type PlaceRow = {
 type PlaceImageRow = {
   id: string;
   place_id: string;
-  image_url: string | null;
+  storage_key: string | null;
 };
 
 type ProfileRow = {
@@ -90,7 +91,7 @@ async function getPlace(placeId: string): Promise<PlaceRow | null> {
 async function getReportedImage(placeId: string, reportedImageId: string): Promise<PlaceImageRow | null> {
   const supabaseAdmin = await getSupabaseAdminClient();
   const { data, error } = await (supabaseAdmin.from("place_images") as any)
-    .select("id, place_id, image_url")
+    .select("id, place_id, storage_key")
     .eq("id", reportedImageId)
     .eq("place_id", placeId)
     .maybeSingle();
@@ -210,7 +211,7 @@ function mapUserPlaceReport(
     image: image
       ? {
           id: image.id,
-          imageUrl: image.image_url,
+          imageUrl: buildImageUrl(image.storage_key),
         }
       : null,
   };
@@ -352,7 +353,7 @@ export async function myPlaceReportsList(
 
     if (imageIds.length > 0) {
       const { data: imageData, error: imagesError } = await (supabaseAdmin.from("place_images") as any)
-        .select("id, place_id, image_url")
+        .select("id, place_id, storage_key")
         .in("id", imageIds);
 
       if (imagesError) {
@@ -441,7 +442,7 @@ export async function adminPlaceReportsList(
 
     if (imageIds.length > 0) {
       const { data: imageData, error: imagesError } = await (supabaseAdmin.from("place_images") as any)
-        .select("id, place_id, image_url")
+        .select("id, place_id, storage_key")
         .in("id", imageIds);
       if (imagesError) {
         context.error("Failed to fetch images for admin place reports:", imagesError);
@@ -507,7 +508,7 @@ export async function adminPlaceReportsList(
             image: image
               ? {
                   id: image.id,
-                  imageUrl: image.image_url,
+                  imageUrl: buildImageUrl(image.storage_key),
                 }
               : null,
             reporter: {

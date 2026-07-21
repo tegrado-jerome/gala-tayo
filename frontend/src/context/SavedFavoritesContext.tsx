@@ -173,6 +173,10 @@ function SavedFavoritesProvider({ children }: { children: ReactNode }) {
         setSession(data.session)
         setIsSessionLoading(false)
       }
+    }).catch(() => {
+      if (isMounted) {
+        setIsSessionLoading(false)
+      }
     })
 
     const {

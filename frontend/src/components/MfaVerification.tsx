@@ -278,7 +278,7 @@ function MfaVerification({ session, nextPath: nextPathProp, onSuccess }: MfaVeri
       ) : null}
 
       {successMessage && !errorMessage ? (
-        <p className="mt-4 flex items-center gap-2 text-sm font-semibold text-[var(--accent-deep)]">
+        <p className="mt-4 flex items-center gap-2 text-sm font-semibold text-green-600">
           <CheckCircle2 className="h-4 w-4" strokeWidth={2.5} />
           {successMessage}
         </p>

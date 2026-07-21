@@ -1,7 +1,6 @@
 type PlaceImageRecord = Record<string, unknown>;
 
 const DIRECT_IMAGE_KEYS = [
-  "image_url",
   "imageUrl",
   "photo_url",
   "photoUrl",

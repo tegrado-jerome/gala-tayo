@@ -8,6 +8,7 @@ import {
 import { getAuthenticatedUser, isAdminUser, requireAdmin, type AuthenticatedUser } from "../../utils/auth";
 import { deleteR2Object } from "../../utils/r2ImageStorage";
 import { invalidatePlaceDetailCache } from "../../data/placeDetails";
+import { buildImageUrl } from "../../utils/r2UrlResolver";
 import { logAdminAction } from "../../utils/adminAudit";
 
 type PlaceRow = {
@@ -20,7 +21,6 @@ type PlaceImageRow = {
   id: string;
   place_id: string;
   uploaded_by: string | null;
-  image_url: string | null;
   storage_key: string | null;
   status: "pending" | "approved" | "rejected" | string;
   source_url: string | null;
@@ -49,7 +49,7 @@ type UserRow = {
 
 const MAX_APPROVED_IMAGES = 3;
 const PLACE_IMAGE_COLUMNS =
-  "id, place_id, uploaded_by, image_url, storage_key, status, source_url, contributor_note, rejection_reason, sort_order, created_at, updated_at";
+  "id, place_id, uploaded_by, storage_key, status, source_url, contributor_note, rejection_reason, sort_order, created_at, updated_at";
 
 function response(status: number, message: string): HttpResponseInit {
   return {
@@ -102,7 +102,7 @@ function mapImage(row: PlaceImageRow) {
     id: row.id,
     placeId: row.place_id,
     uploadedBy: row.uploaded_by,
-    imageUrl: row.image_url,
+    imageUrl: buildImageUrl(row.storage_key),
     storageKey: row.storage_key,
     status: row.status,
     sourceUrl: row.source_url,
@@ -191,7 +191,7 @@ export async function adminPendingPlaceImages(
 
           return {
             id: row.id,
-            imageUrl: row.image_url,
+            imageUrl: buildImageUrl(row.storage_key),
             storageKey: row.storage_key,
             placeId: row.place_id,
             placeName: place?.name ?? "Unknown place",
@@ -279,7 +279,7 @@ export async function adminApprovedPlaceImagesAll(
       throw error;
     }
 
-    const rows = ((data || []) as PlaceImageRow[]).filter((row) => Boolean(row.image_url));
+    const rows = ((data || []) as PlaceImageRow[]).filter((row) => Boolean(row.storage_key));
     const placesById = await getPlacesByIds(rows.map((row) => row.place_id));
     const filteredRows = query
       ? rows.filter((row) => {
@@ -287,13 +287,13 @@ export async function adminApprovedPlaceImagesAll(
           const placeName = place?.name?.toLowerCase() ?? "";
           const placeSlug = place?.slug?.toLowerCase() ?? "";
           const placeId = row.place_id.toLowerCase();
-          const imageUrl = row.image_url?.toLowerCase() ?? "";
+          const storageKey = row.storage_key?.toLowerCase() ?? "";
 
           return (
             placeName.includes(query) ||
             placeSlug.includes(query) ||
             placeId.includes(query) ||
-            imageUrl.includes(query)
+            storageKey.includes(query)
           );
         })
       : rows;
@@ -306,7 +306,7 @@ export async function adminApprovedPlaceImagesAll(
           placeId: row.place_id,
           placeName: placesById.get(row.place_id)?.name ?? "Unknown place",
           placeSlug: placesById.get(row.place_id)?.slug ?? "",
-          imageUrl: row.image_url,
+          imageUrl: buildImageUrl(row.storage_key),
           storageKey: row.storage_key,
           sortOrder: row.sort_order,
           createdAt: row.created_at,
@@ -443,7 +443,6 @@ export async function adminPlaceImageReject(
     const { data: updatedData, error: updateError } = await (supabase.from("place_images") as any)
       .update({
         status: "rejected",
-        image_url: null,
         storage_key: null,
         rejection_reason: rejectionReason,
         reviewed_by: admin.user?.id,

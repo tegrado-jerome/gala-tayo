@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { Coffee, Flame, Heart, Info, Search, SlidersHorizontal, X } from 'lucide-react'
+import { Search, SlidersHorizontal, X } from 'lucide-react'
 import SearchHub from './SearchHub'
 import { AppIcon } from '../components/AppIcon'
 import PageHeroHeader from '../components/PageHeroHeader'
@@ -10,6 +10,7 @@ import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
 import { navigateToPath } from '../utils/navigation'
 import { buildSearchPath, hasActiveSearchCriteria, normalizeTypedSearchText, readSearchUrlState } from '../utils/searchParams'
 import { budgetOptions, fallbackAreas, fallbackCategories } from '../components/home/homeHelpers'
+import { FeatureGuideModalTrigger, featureGuideContent } from '../components/FeatureGuideModal'
 import type { SearchBudgetValue } from '../utils/searchParams'
 
 function SearchPageLandingBar({
@@ -390,32 +391,26 @@ function SearchPage({
             {activeTypedQuery.length > 0 ? 'Search places' : 'Apply filters'}
           </button>
           <div className="mt-5 text-center">
-            <p className="mb-3 flex items-center justify-center gap-1.5 text-sm font-bold text-slate-500">
-              <Info className="h-3.5 w-3.5 shrink-0 text-slate-500" strokeWidth={2.6} />
-              <span>Search a famous place in Metro Manila</span>
-            </p>
-            <p className="gala-shared-suggestion-label mt-4 mb-2 flex items-center justify-center gap-1.5 text-xs font-bold text-slate-400">
-              <Flame className="h-3.5 w-3.5 text-orange-400" />
-              Popular
-            </p>
-            <div className="flex flex-wrap justify-center gap-2">
-              <button
-                type="button"
-                onClick={() => setDraftQuery('date in Parañaque')}
-                className="gala-shared-suggestion-chip inline-flex min-h-8 items-center gap-1.5 rounded-full border border-[rgba(148,163,184,0.22)] bg-white/60 px-3.5 text-xs font-semibold text-slate-500 shadow-[0_6px_14px_rgba(15,23,42,0.03)] transition hover:border-[rgba(var(--accent-rgb),0.24)] hover:bg-white hover:text-[var(--accent-deep)]"
-              >
-                <Heart className="h-3 w-3 shrink-0 text-rose-400" />
-                date in Parañaque
-              </button>
-              <button
-                type="button"
-                onClick={() => setDraftQuery('coffee shops in Makati')}
-                className="gala-shared-suggestion-chip inline-flex min-h-8 items-center gap-1.5 rounded-full border border-[rgba(148,163,184,0.22)] bg-white/60 px-3.5 text-xs font-semibold text-slate-500 shadow-[0_6px_14px_rgba(15,23,42,0.03)] transition hover:border-[rgba(var(--accent-rgb),0.24)] hover:bg-white hover:text-[var(--accent-deep)]"
-              >
-                <Coffee className="h-3 w-3 shrink-0 text-stone-700" />
-                coffee shops in Makati
-              </button>
-            </div>
+            <FeatureGuideModalTrigger
+              content={featureGuideContent.search}
+              triggerLabel="Need help searching?"
+              className="!inline-flex !gap-1 !rounded-none !border-none !bg-transparent !px-0 !py-0 !text-xs !font-normal !text-amber-500 hover:!text-amber-600 !normal-case !tracking-normal !min-h-0 !animate-none !shadow-none !no-underline hover:!translate-y-0 [&_svg]:!text-amber-500"
+              onSampleClick={(sample) => {
+                const namePrefix = 'By place name — '
+                const locationPrefix = 'By location — '
+                const categoryPrefix = 'By category — '
+                if (sample.startsWith(namePrefix)) {
+                  const q = sample.slice(namePrefix.length)
+                  navigateToPath(buildSearchPath({ q, page: 1 }))
+                } else if (sample.startsWith(locationPrefix)) {
+                  const loc = sample.slice(locationPrefix.length).toLowerCase()
+                  navigateToPath(buildSearchPath({ city: loc, page: 1 }))
+                } else if (sample.startsWith(categoryPrefix)) {
+                  const cat = sample.slice(categoryPrefix.length).toLowerCase()
+                  navigateToPath(buildSearchPath({ category: cat, page: 1 }))
+                }
+              }}
+            />
           </div>
         </section>
       </main>

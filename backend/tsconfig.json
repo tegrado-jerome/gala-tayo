@@ -9,5 +9,6 @@
     "strict": false,
     "esModuleInterop": true,
     "skipLibCheck": true
-  }
+  },
+  "exclude": ["src/**/*.test.ts", "node_modules", "dist"]
 }

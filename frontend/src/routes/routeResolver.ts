@@ -206,7 +206,7 @@ export function resolveRouteDescriptor(inputs: RouteInputs): RouteDescriptor {
     return { kind: 'user-mfa-verify' }
   }
 
-  if (session && isUserMfaLoading && userMfaStatus === null && !isPath(pathname, '/auth/callback') && !isPasswordResetPath && !isPath(pathname, '/login') && !isPath(pathname, '/signup') && !isPath(pathname, '/mfa/verify')) {
+  if (session && isUserMfaLoading && userMfaStatus === null && !isPath(pathname, '/auth/callback') && !isPasswordResetPath && !isPath(pathname, '/login') && !isPath(pathname, '/signup') && !isPath(pathname, '/mfa/verify') && !isPath(pathname, '/ask-ai') && !isPath(pathname, '/ask-ai/chatbot') && !isPath(pathname, '/ask-ai/text') && !isPath(pathname, '/ask-ai/maps') && !isPath(pathname, '/ask-ai/map') && !isPath(pathname, '/ask-ai/prompt-builder') && !isPath(pathname, '/prompt-builder')) {
     return { kind: 'initial-auth-loader' }
   }
 

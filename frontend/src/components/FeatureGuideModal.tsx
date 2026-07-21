@@ -1,8 +1,19 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { X } from 'lucide-react'
-import { AppIcon } from './AppIcon'
+import { Info, X } from 'lucide-react'
 import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
+
+export type FeatureGuideItem = {
+  icon: string
+  label: string
+}
+
+export type FeatureGuideSection = {
+  title: string
+  subtitle: string
+  icon: string
+  items: FeatureGuideItem[]
+}
 
 export type FeatureGuideContent = {
   id: 'search' | 'chatbot' | 'maps'
@@ -12,6 +23,7 @@ export type FeatureGuideContent = {
   bestForTitle: string
   bestFor: string[]
   sampleInputs: string[]
+  sections?: FeatureGuideSection[]
 }
 
 const viewedStoragePrefix = 'feature-guide-viewed:'
@@ -24,8 +36,8 @@ type GuideTheme = {
 
 const guideThemes: Record<FeatureGuideContent['id'], GuideTheme> = {
   search: {
-    triggerClassName: 'border-[var(--line)] bg-[var(--panel)] text-[var(--muted)] shadow-sm',
-    triggerIconClassName: 'text-[var(--muted)]',
+    triggerClassName: 'border-amber-300 bg-amber-400 text-white shadow-sm gt-solid-bulb-pulse hover:border-amber-500 hover:bg-amber-500 hover:text-white',
+    triggerIconClassName: 'text-white',
     bulletClassName: 'bg-slate-400',
   },
   chatbot: {
@@ -69,17 +81,18 @@ export function FeatureGuideModalTrigger({
   content,
   triggerLabel,
   className = '',
+  onSampleClick,
 }: {
   content: FeatureGuideContent
   triggerLabel?: string
   className?: string
+  onSampleClick?: (sample: string) => void
 }) {
   const [isOpen, setIsOpen] = useState(false)
+  const [expandedSection, setExpandedSection] = useState<string | null>(null)
   const theme = guideThemes[content.id]
   const titleId = useId()
   const descriptionId = useId()
-  const bestForId = useId()
-  const samplesId = useId()
   const closeButtonRef = useRef<HTMLButtonElement | null>(null)
 
   useEffect(() => {
@@ -87,6 +100,7 @@ export function FeatureGuideModalTrigger({
       return
     }
 
+    setExpandedSection(null)
     document.body.classList.add('feature-guide-open')
     lockBodyScroll()
     markGuideViewed(content.id)
@@ -111,6 +125,11 @@ export function FeatureGuideModalTrigger({
     }
   }, [content.id, isOpen])
 
+  const handleItemClick = (sectionTitle: string, itemLabel: string) => {
+    setIsOpen(false)
+    onSampleClick?.(`${sectionTitle} — ${itemLabel}`)
+  }
+
   const modal =
     isOpen && typeof document !== 'undefined'
       ? createPortal(
@@ -122,7 +141,7 @@ export function FeatureGuideModalTrigger({
               role="dialog"
               aria-modal="true"
               aria-labelledby={titleId}
-              aria-describedby={`${descriptionId} ${bestForId} ${samplesId}`}
+              aria-describedby={descriptionId}
               className="app-modal feature-guide-modal w-full max-w-[320px] rounded-2xl border border-amber-300/80 bg-amber-50 p-4 text-slate-600 shadow-[0_18px_44px_rgba(245,158,11,0.20)] sm:max-w-[360px] sm:p-5"
               onMouseDown={(event) => event.stopPropagation()}
             >
@@ -148,39 +167,91 @@ export function FeatureGuideModalTrigger({
               </div>
 
               <div className="mt-4 space-y-4">
-                <div>
-                  <p id={descriptionId} className="text-[14px] font-semibold leading-6 text-slate-700">
-                    {content.intro}
-                  </p>
-                  <p className="mt-1 text-[13px] leading-5 text-slate-500">
-                    {content.body}
-                  </p>
-                </div>
+                <p id={descriptionId} className="text-[14px] font-semibold leading-6 text-slate-700">
+                  {content.intro}
+                </p>
 
-                <div>
-                  <p id={bestForId} className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
-                    {content.bestForTitle}
-                  </p>
-                  <div className="mt-2">
-                    <GuideBulletList items={content.bestFor} bulletClassName={theme.bulletClassName} />
+                {content.sections ? (
+                  <div className="space-y-1">
+                    {content.sections.map((section) => {
+                      const isExpanded = expandedSection === section.title
+                      return (
+                        <div key={section.title} className="rounded-xl border border-amber-300/50 bg-white/70 overflow-hidden">
+                            <button
+                              type="button"
+                              onClick={() => setExpandedSection(isExpanded ? null : section.title)}
+                              className="flex w-full items-center gap-3 px-3 py-3 text-left transition hover:bg-amber-50"
+                            >
+                              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-sm">
+                                {section.icon}
+                              </span>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-[13px] font-semibold text-slate-700">
+                                  {section.title}
+                                </p>
+                                <p className="text-[11px] text-slate-400">
+                                  {section.subtitle}
+                                </p>
+                              </div>
+                              <span className="text-slate-300 text-lg shrink-0 leading-none">
+                                {isExpanded ? '▾' : '▸'}
+                              </span>
+                          </button>
+                          {isExpanded && (
+                            <div className="border-t border-amber-300/30 px-3 py-2 space-y-1">
+                              {section.items.map((item) => (
+                                <button
+                                  key={item.label}
+                                  type="button"
+                                  onClick={() => handleItemClick(section.title, item.label)}
+                                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[12px] leading-5 text-slate-600 transition hover:bg-amber-100 hover:text-slate-800"
+                                >
+                                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-50 text-xs">
+                                    {item.icon}
+                                  </span>
+                                  <span>{item.label}</span>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
                   </div>
-                </div>
+                ) : (
+                  <>
+                    <p className="text-[13px] leading-5 text-slate-500">
+                      {content.body}
+                    </p>
 
-                <div>
-                  <p id={samplesId} className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
-                    Try
-                  </p>
-                  <div className="mt-2 grid gap-2">
-                    {content.sampleInputs.map((sampleInput) => (
-                      <div
-                        key={sampleInput}
-                        className="rounded-xl border border-amber-300/60 bg-amber-100/55 px-3 py-2 text-[12px] leading-5 text-slate-600"
-                      >
-                        <span>{sampleInput}</span>
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+                        {content.bestForTitle}
+                      </p>
+                      <div className="mt-2">
+                        <GuideBulletList items={content.bestFor} bulletClassName={theme.bulletClassName} />
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    </div>
+
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+                        Try
+                      </p>
+                      <div className="mt-2 grid gap-2">
+                        {content.sampleInputs.map((sampleInput) => (
+                          <button
+                            key={sampleInput}
+                            type="button"
+                            onClick={() => onSampleClick ? handleItemClick(content.title, sampleInput) : undefined}
+                            className="rounded-xl border border-amber-300/60 bg-amber-100/55 px-3 py-2 text-left text-[12px] leading-5 text-slate-600 transition hover:bg-amber-200/70"
+                          >
+                            <span>{sampleInput}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </section>
           </div>,
@@ -202,13 +273,13 @@ export function FeatureGuideModalTrigger({
       >
         {triggerLabel ? (
           <>
-            <span className="text-[14px] font-black uppercase tracking-[0.12em] text-[var(--text-main)]">
+            <Info className={`relative z-10 h-4 w-4 ${theme.triggerIconClassName}`} strokeWidth={2.35} />
+            <span className="text-[14px] font-medium">
               {triggerLabel}
             </span>
-            <AppIcon name="info" className={`relative z-10 h-4 w-4 ${theme.triggerIconClassName}`} strokeWidth={2.35} />
           </>
         ) : (
-          <AppIcon name="info" className={`relative z-10 h-4 w-4 ${theme.triggerIconClassName}`} strokeWidth={2.35} />
+          <Info className={`relative z-10 h-4 w-4 ${theme.triggerIconClassName}`} strokeWidth={2.35} />
         )}
       </button>
 
@@ -220,12 +291,50 @@ export function FeatureGuideModalTrigger({
 export const featureGuideContent = {
   search: {
     id: 'search',
-    title: 'Search guide',
-    intro: 'Find places fast.',
-    body: 'Type a place, area, or vibe.',
-    bestForTitle: 'Best for',
-    bestFor: ['Specific places', 'Metro Manila ideas', 'Quick options'],
-    sampleInputs: ['"malls sa Taguig"', '"cafes sa Makati"', '"date spots in QC"'],
+    title: 'Search places',
+    intro: 'Tap a section below to see examples, then tap any example to search instantly.',
+    body: '',
+    bestForTitle: '',
+    bestFor: [],
+    sampleInputs: [],
+    sections: [
+      {
+        title: 'By place name',
+        subtitle: 'Find a specific place',
+        icon: '🔍',
+        items: [
+          { icon: '🏪', label: 'The Coffee Bean' },
+          { icon: '🏪', label: 'Greenbelt' },
+          { icon: '🏪', label: 'Ayala Triangle Gardens' },
+          { icon: '🏪', label: 'SM Mall of Asia' },
+          { icon: '🏪', label: 'Intramuros' },
+        ],
+      },
+      {
+        title: 'By location',
+        subtitle: 'Browse by city',
+        icon: '📍',
+        items: [
+          { icon: '📍', label: 'Makati' },
+          { icon: '📍', label: 'Taguig' },
+          { icon: '📍', label: 'Quezon City' },
+          { icon: '📍', label: 'Manila' },
+          { icon: '📍', label: 'Pasay' },
+        ],
+      },
+      {
+        title: 'By category',
+        subtitle: 'Browse by type',
+        icon: '🏷️',
+        items: [
+          { icon: '☕', label: 'Cafe' },
+          { icon: '🍽️', label: 'Food' },
+          { icon: '🌳', label: 'Park' },
+          { icon: '🖼️', label: 'Museum' },
+          { icon: '🛍️', label: 'Mall' },
+        ],
+      },
+    ],
   },
   chatbot: {
     id: 'chatbot',

@@ -8,23 +8,31 @@ import {
   getJsonCacheValue,
   setJsonCacheValue,
 } from "./redisCacheService";
+import { buildImageUrl } from "../utils/r2UrlResolver";
 
 export type ApprovedPlaceImage = {
   id: string;
   place_id: string;
-  image_url: string;
   storage_key: string | null;
   is_primary?: boolean | null;
   sort_order: number | null;
   created_at: string;
+  image_url: string | null;
 };
 
-const APPROVED_IMAGE_COLUMNS = "id, place_id, image_url, storage_key, is_primary, sort_order, created_at";
+const APPROVED_IMAGE_COLUMNS = "id, place_id, storage_key, is_primary, sort_order, created_at";
 const APPROVED_IMAGE_CACHE_TTL_SECONDS = 60 * 60 * 6;
 const APPROVED_IMAGE_COUNT_CACHE_TTL_SECONDS = 60 * 60 * 6;
 
 function normalizePlaceId(placeId: string): string {
   return placeId.trim();
+}
+
+function deriveImageUrl(image: ApprovedPlaceImage): ApprovedPlaceImage {
+  return {
+    ...image,
+    image_url: buildImageUrl(image.storage_key),
+  };
 }
 
 async function getCachedApprovedPlaceImages(placeId: string): Promise<ApprovedPlaceImage[] | null> {
@@ -35,7 +43,7 @@ async function getCachedApprovedPlaceImages(placeId: string): Promise<ApprovedPl
     return null;
   }
 
-  return cachedImages.filter((image) => Boolean(image.image_url));
+  return cachedImages.filter((image) => Boolean(image.storage_key)).map(deriveImageUrl);
 }
 
 async function setCachedApprovedPlaceImages(
@@ -64,7 +72,9 @@ async function fetchApprovedPlaceImagesFromDatabase(placeId: string): Promise<Ap
     throw error;
   }
 
-  return ((data || []) as ApprovedPlaceImage[]).filter((image) => Boolean(image.image_url));
+  return ((data || []) as ApprovedPlaceImage[])
+    .filter((image) => Boolean(image.storage_key))
+    .map(deriveImageUrl);
 }
 
 export async function invalidateApprovedPlaceImagesCache(placeId: string): Promise<void> {
@@ -148,7 +158,7 @@ export async function getApprovedPlaceImagesByPlaceIds(
   }
 
   for (const image of (data || []) as ApprovedPlaceImage[]) {
-    if (!image.image_url) {
+    if (!image.storage_key) {
       continue;
     }
 
@@ -158,7 +168,8 @@ export async function getApprovedPlaceImagesByPlaceIds(
       continue;
     }
 
-    existingImages.push(image);
+    const derived = deriveImageUrl(image);
+    existingImages.push(derived);
     imagesByPlaceId.set(image.place_id, existingImages);
   }
 

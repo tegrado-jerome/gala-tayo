@@ -37,7 +37,7 @@ export type GalaPlanItemRow = {
   id: string; plan_id: string; place_id: string; day_number: number | null;
   sort_order: number | null; time_label: string | null; notes: string | null;
   estimated_minutes: number | null;
-  places?: (PlacePreviewRow & { address?: string | null; budget_min?: number | string | null; latitude?: number | string | null; longitude?: number | string | null; image_url?: string | null }) | null;
+  places?: (PlacePreviewRow & { address?: string | null; budget_min?: number | string | null; latitude?: number | string | null; longitude?: number | string | null; storage_key?: string | null }) | null;
 };
 
 export const PROFILE_COLUMNS = "user_id, username, display_name, avatar_url, avatar_storage_key, provider_avatar_url, bio, is_public, onboarding_completed_at, created_at, updated_at";

@@ -742,7 +742,7 @@ function HomePageSkeleton() {
             </div>
           </section>
 
-          <div className="mt-5 grid min-w-0 gap-4 md:mt-10 md:gap-10 lg:gap-12" aria-hidden="true">
+          <div className="mt-5 flex min-w-0 flex-1 flex-col justify-evenly gap-4 md:mt-10 md:gap-10 lg:gap-12" aria-hidden="true">
             <section className="min-w-0 md:-mt-1">
               <div className="flex items-center justify-between gap-3">
                 <AppSkeleton className="h-8 w-36 rounded-full" />
@@ -771,7 +771,7 @@ function HomePageSkeleton() {
                 <AppSkeleton className="h-5 w-16 rounded-full" />
               </div>
               <div className="mt-3 flex gap-3 overflow-hidden">
-                {Array.from({ length: 4 }).map((_, index) => (
+                {Array.from({ length: 8 }).map((_, index) => (
                   <div key={`home-city-skeleton-${index}`} className="flex w-[clamp(4.75rem,22vw,7.5rem)] shrink-0 flex-col items-center gap-2 px-1 py-1.5 md:w-[120px] lg:w-[132px]">
                     <AppSkeleton className="h-[clamp(4rem,18vw,5.75rem)] w-[clamp(4rem,18vw,5.75rem)] rounded-[16px] md:h-[84px] md:w-[84px] lg:h-[92px] lg:w-[92px]" />
                     <AppSkeleton className="h-4 w-16 rounded-full" />
@@ -786,7 +786,7 @@ function HomePageSkeleton() {
                 <AppSkeleton className="h-5 w-16 rounded-full" />
               </div>
               <div className="mt-3 flex gap-3 overflow-hidden">
-                {Array.from({ length: 4 }).map((_, index) => (
+                {Array.from({ length: 8 }).map((_, index) => (
                   <div key={`home-category-skeleton-${index}`} className="flex w-[clamp(4.75rem,22vw,7.5rem)] shrink-0 flex-col items-center gap-2 px-1 py-1.5 md:w-[120px] lg:w-[132px]">
                     <AppSkeleton className="h-[clamp(4rem,18vw,5.75rem)] w-[clamp(4rem,18vw,5.75rem)] rounded-[16px] md:h-[84px] md:w-[84px] lg:h-[92px] lg:w-[92px]" />
                     <AppSkeleton className="h-4 w-20 rounded-full" />

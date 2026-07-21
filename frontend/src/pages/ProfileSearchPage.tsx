@@ -1,5 +1,5 @@
-import { type ReactNode, useEffect, useMemo, useState } from 'react'
-import { ArrowUpRight, Search, Users, X } from 'lucide-react'
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
+import { ArrowUpRight, Loader2, Search, Users, X } from 'lucide-react'
 import AppHeader from '../components/AppHeader'
 import MinimalBackNav from '../components/MinimalBackNav'
 import ProfileAvatar from '../components/ProfileAvatar'
@@ -8,7 +8,6 @@ import { PageContainer } from '../components/layout/ResponsiveLayouts'
 import { getFollowing, getMyProfile, getProfileSuggestions, normalizeUsername, searchProfiles, type FollowListUser, type PublicProfile } from '../utils/profileApi'
 import { navigateToPath } from '../utils/navigation'
 import { supabase } from '../supabase'
-import { SkeletonLine } from '../components/loading/SkeletonStates'
 
 function formatCompactCount(value: number) {
   return new Intl.NumberFormat('en', { notation: 'compact' }).format(value)
@@ -331,6 +330,19 @@ function ProfileSearchPage() {
     }
   }, [normalizedQuery])
 
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === '/' && inputRef.current !== document.activeElement) {
+        e.preventDefault()
+        inputRef.current?.focus()
+      }
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [])
+
   const summaryCount = isShowingSearchResults ? visibleResults.length : visibleSuggestions.length
   const isSummaryLoading = isShowingSearchResults ? isSearching : isLoadingSuggestions || isLoadingFollowing
 
@@ -357,36 +369,32 @@ function ProfileSearchPage() {
                   Search usernames, open profiles fast, and browse suggested people in a familiar social layout.
                 </p>
 
-                <label className="gala-field mt-5 flex items-center gap-3 bg-white px-4 py-3">
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-[var(--chip)] text-slate-500">
-                    <Search className="h-5 w-5" />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">
-                      Search username
-                    </span>
-                    <span className="relative block">
-                      <input
-                        value={query}
-                        onChange={(event) => setQuery(event.target.value.toLowerCase())}
-                        className="gala-field border-0 bg-transparent pl-2 pr-8 text-[1.05rem] font-black text-slate-950 outline-none placeholder:font-bold placeholder:text-slate-400 sm:pl-2 sm:text-[1.15rem]"
-                        placeholder="@username"
-                        autoCapitalize="none"
-                        spellCheck={false}
-                      />
-                      {query ? (
-                        <button
-                          type="button"
-                          onClick={() => setQuery('')}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full hover:bg-slate-100 transition"
-                        >
-                          <X className="h-4 w-4 text-slate-400" />
-                        </button>
-                      ) : null}
-                    </span>
-                  </span>
-                  <SkeletonLine className={`h-3 w-12 shrink-0 ${isSearching ? '' : 'invisible'}`} />
-                </label>
+                <div className="relative mt-5">
+                  <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                  <input
+                    ref={inputRef}
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value.toLowerCase())}
+                    placeholder="Search by @username..."
+                    className="w-full rounded-xl border-0 bg-white/80 py-3.5 pl-11 pr-11 text-[1.05rem] font-semibold text-slate-900 outline-none ring-1 ring-slate-200 transition-all placeholder:font-medium placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-[var(--accent)] sm:text-[1.15rem]"
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    autoFocus
+                  />
+                  {isSearching && normalizedQuery.length >= 2 ? (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <Loader2 className="h-5 w-5 animate-spin text-[var(--accent)]" />
+                    </div>
+                  ) : query ? (
+                    <button
+                      type="button"
+                      onClick={() => setQuery('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full hover:bg-slate-100 transition"
+                    >
+                      <X className="h-4 w-4 text-slate-400" />
+                    </button>
+                  ) : null}
+                </div>
 
                 <p className="gala-section-description mt-3">{helperCopy}</p>
               </div>

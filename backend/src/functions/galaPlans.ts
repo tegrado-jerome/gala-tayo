@@ -1,5 +1,6 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
+import { buildImageUrl } from "../utils/r2UrlResolver";
 import { createSlug, getCurrentUser, getOptionalCurrentUser } from "../utils/social";
 
 type PlanVisibility = "private" | "public";
@@ -39,7 +40,7 @@ type PlaceRow = {
   budget_min?: number | string | null;
   latitude?: number | string | null;
   longitude?: number | string | null;
-  image_url?: string | null;
+  storage_key?: string | null;
 };
 
 type ItemRow = {
@@ -171,7 +172,7 @@ function mapPlace(place: PlaceRow | null | undefined, fallbackPlaceId: string) {
     budget_min: toNullableNumber(place?.budget_min),
     latitude: toNullableNumber(place?.latitude),
     longitude: toNullableNumber(place?.longitude),
-    image_url: place?.image_url ?? null,
+    image_url: place?.storage_key ? buildImageUrl(place.storage_key) : null,
   };
 }
 
