@@ -1,10 +1,10 @@
 import { ArrowRight } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
-import galaTayoLogo from '../assets/brand/galatayo-logo.svg'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import SeoHead from '../components/SeoHead'
 import { navigateToPath } from '../utils/navigation'
 import type { NavigationSource } from '../utils/navigationLoading'
 import { getPublicSiteOrigin } from '../utils/site'
+import galaTayoLogo from '../assets/brand/galatayo-logo.svg'
 
 type WelcomeAsset = {
   src: string
@@ -73,22 +73,6 @@ function waitForNextPaint() {
   })
 }
 
-function WelcomeLoader() {
-  return (
-    <div className="welcome-loader" aria-label="Loading welcome screen" aria-live="polite">
-      <div className="welcome-loader__content">
-        <img
-          src={galaTayoLogo}
-          alt="GalaTayo logo"
-          className="welcome-loader__logo"
-          width={180}
-          height={58}
-        />
-      </div>
-    </div>
-  )
-}
-
 async function waitForImageReady(image: HTMLImageElement) {
   if (!image.complete || image.naturalWidth === 0) {
     await new Promise<void>((resolve, reject) => {
@@ -111,15 +95,85 @@ async function waitForImageReady(image: HTMLImageElement) {
   await waitForNextPaint()
 }
 
+function WelcomeLoader() {
+  return (
+    <div className="welcome-loader" aria-label="Loading welcome screen" aria-live="polite">
+      <div className="welcome-loader__content">
+        <img
+          src={galaTayoLogo}
+          alt="GalaTayo logo"
+          className="welcome-loader__logo"
+          width={180}
+          height={58}
+        />
+      </div>
+    </div>
+  )
+}
+
 type WelcomePageProps = {
   navigationSource?: NavigationSource
 }
 
 function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
-  const imageRef = useRef<HTMLImageElement | null>(null)
-  const hasRevealedRef = useRef(false)
   const [heroSrc, setHeroSrc] = useState(() => getWelcomeHeroSrc())
   const [isReady, setIsReady] = useState(false)
+  const hasRevealedRef = useRef(false)
+
+  useLayoutEffect(() => {
+    if (typeof document === 'undefined') {
+      return undefined
+    }
+
+    const root = document.documentElement
+    const body = document.body
+    const themeColorMeta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
+
+    const previousTheme = root.dataset.theme
+    const previousThemePreference = root.dataset.themePreference
+    const previousBodyTheme = body.dataset.theme
+    const previousColorScheme = root.style.colorScheme
+    const previousThemeColor = themeColorMeta?.getAttribute('content')
+
+    root.dataset.theme = 'light'
+    root.dataset.themePreference = 'light'
+    root.style.colorScheme = 'light'
+    body.dataset.theme = 'light'
+
+    if (themeColorMeta) {
+      themeColorMeta.setAttribute('content', '#1E3A8A')
+    }
+
+    return () => {
+      if (previousTheme) {
+        root.dataset.theme = previousTheme
+      } else {
+        root.removeAttribute('data-theme')
+      }
+
+      if (previousThemePreference) {
+        root.dataset.themePreference = previousThemePreference
+      } else {
+        root.removeAttribute('data-theme-preference')
+      }
+
+      if (previousBodyTheme) {
+        body.dataset.theme = previousBodyTheme
+      } else {
+        body.removeAttribute('data-theme')
+      }
+
+      root.style.colorScheme = previousColorScheme
+
+      if (themeColorMeta) {
+        if (previousThemeColor) {
+          themeColorMeta.setAttribute('content', previousThemeColor)
+        } else {
+          themeColorMeta.removeAttribute('content')
+        }
+      }
+    }
+  }, [])
 
   useEffect(() => {
     let animationFrameId = 0
@@ -148,11 +202,8 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
   useEffect(() => {
     let isCancelled = false
     const timeoutIds: number[] = []
-    const image = imageRef.current
-
-    if (!image) {
-      return
-    }
+    const image = new Image()
+    image.src = heroSrc
 
     setIsReady(false)
 
@@ -213,7 +264,7 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
         aria-busy={!isReady}
         data-navigation-source={navigationSource}
       >
-        <picture className="welcome-page__media">
+        <picture className="welcome-page__media" aria-hidden="true">
           {welcomeAssets.map((asset) => (
             <source key={asset.src} srcSet={asset.src} media={asset.media} type="image/webp" />
           ))}
@@ -221,7 +272,6 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
             <source key={asset.src} srcSet={asset.src} media={asset.media} />
           ))}
           <img
-            ref={imageRef}
             src={heroSrc}
             alt="Two people looking over the city skyline at sunset."
             className="welcome-page__image"

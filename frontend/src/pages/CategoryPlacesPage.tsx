@@ -4,7 +4,6 @@ import { AppIcon, getCategoryIconName } from '../components/AppIcon'
 import AppHeader from '../components/AppHeader'
 import Breadcrumb from '../components/Breadcrumb'
 import CompactPagination from '../components/CompactPagination'
-import PlaceListingSkeleton from '../components/PlaceListingSkeleton'
 import PlaceCard, { type PlaceCardData } from '../components/PlaceCard'
 import SeoHead from '../components/SeoHead'
 import { PageContainer, PageShell, ResponsiveGrid } from '../components/layout/ResponsiveLayouts'
@@ -388,12 +387,7 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
 
         {!errorMessage ? (
           <>
-            {shouldShowInitialSkeleton ? (
-              <PlaceListingSkeleton
-                cardCount={4}
-                helperText={`Finding ${categoryLabel.toLowerCase()} spots across Metro Manila.`}
-              />
-            ) : shouldShowEmptyState ? (
+            {shouldShowInitialSkeleton ? null : shouldShowEmptyState ? (
               <section className="mt-10 rounded-[28px] border border-[#e5e7eb] bg-white px-5 py-8 text-center shadow-sm sm:px-6">
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
                   <AppIcon name="compass" className="h-7 w-7" />
@@ -408,7 +402,7 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
                 <div className="flex items-end justify-between gap-3">
                   <div>
                     <h2 className="text-[1.35rem] font-black tracking-[-0.03em] text-slate-950">{categoryLabel} places</h2>
-                    <p className="mt-1 text-[13px] leading-6 text-[var(--muted)]">Listed alphabetically across Metro Manila.</p>
+                    <p className="mt-1 text-[13px] leading-6 text-[var(--muted)]">Browse spots across Metro Manila that match this category.</p>
                   </div>
                 </div>
                 <div className={`mt-4 transition ${isPageTransitionLoading ? 'pointer-events-none opacity-60' : 'opacity-100'}`}>

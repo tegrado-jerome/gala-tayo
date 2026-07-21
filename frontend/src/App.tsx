@@ -8,12 +8,14 @@ import { matchRoute, AppShell } from './routes/RouteContent'
 import { navigateToPath, replaceWithPath } from './utils/navigation'
 import { initializeAnalytics, trackPageView } from './utils/analytics'
 import { CookieConsentProvider } from './context/CookieConsentContext'
+import { ThemeProvider } from './context/ThemeContext'
 import { CookieConsentBanner } from './components/CookieConsentBanner'
 import { getRouteState } from './app/routeState'
 import { resolveAuthNavigationTarget } from './app/appRouting'
 import { useAppLocationState } from './app/useAppLocationState'
 import { useAppScrollRestoration } from './app/useAppScrollRestoration'
 import { useLogoutTransitionState } from './app/useLogoutTransitionState'
+import { hasSignupOnboardingAccess as hasStoredSignupOnboardingAccess } from './services/authApi'
 
 function App() {
   const {
@@ -57,6 +59,7 @@ function App() {
   const legacyAdminRedirectPath = useMemo(() => getLegacyAdminRedirectPath(pathname), [pathname])
   const isPasswordResetPath = isPath(pathname, '/reset-password') || isPath(pathname, '/auth/reset-password')
   const routeNeedsBlockingAuth = isProtectedAccountPath(pathname) || isPath(pathname, '/onboarding') || isPath(pathname, '/auth/callback') || isPasswordResetPath
+  const hasSignupOnboardingAccess = session ? hasStoredSignupOnboardingAccess() : false
 
   useEffect(() => {
     initializeAnalytics()
@@ -148,6 +151,7 @@ function App() {
     publicProfileUsername,
     editGalaPlanId,
     ownedGalaPlanId,
+    hasSignupOnboardingAccess,
     currentUser: effectiveCurrentUser,
     currentProfile: effectiveCurrentProfile,
     isAdminMfaLoading,
@@ -160,25 +164,27 @@ function App() {
   })
 
   return (
-    <CookieConsentProvider>
-      <AppShell
-        session={session}
-        currentUser={effectiveCurrentUser}
-        currentProfile={effectiveCurrentProfile}
-        adminMfa={{
-          isLoading: isAdminMfaLoading,
-          status: adminMfaStatus,
-        }}
-        hasResolvedInitialAuth={hasResolvedInitialAuth}
-        pathname={pathname}
-        search={search}
-        showLogoutTransition={showLogoutTransition}
-        isLogoutTransitionExiting={logoutTransition.isExiting}
-      >
-        {content}
-      </AppShell>
-      <CookieConsentBanner pathname={pathname} />
-    </CookieConsentProvider>
+    <ThemeProvider>
+      <CookieConsentProvider>
+        <AppShell
+          session={session}
+          currentUser={effectiveCurrentUser}
+          currentProfile={effectiveCurrentProfile}
+          adminMfa={{
+            isLoading: isAdminMfaLoading,
+            status: adminMfaStatus,
+          }}
+          hasResolvedInitialAuth={hasResolvedInitialAuth}
+          pathname={pathname}
+          search={search}
+          showLogoutTransition={showLogoutTransition}
+          isLogoutTransitionExiting={logoutTransition.isExiting}
+        >
+          {content}
+        </AppShell>
+        <CookieConsentBanner pathname={pathname} />
+      </CookieConsentProvider>
+    </ThemeProvider>
   )
 }
 

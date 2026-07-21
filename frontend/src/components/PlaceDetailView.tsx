@@ -11,6 +11,7 @@ import { PageContainer, PageShell, CardSurface } from './layout/ResponsiveLayout
 import { Check, Flag, ImagePlus, MessageCircle, MoreHorizontal, Pencil, Reply, Trash2, Wallet, X } from 'lucide-react'
 import { getCuratedPlaceImages, normalizePlaceSlug } from '../data/curatedPlaceImages'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
+import { useTheme } from '../context/ThemeContext'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { useAppUser } from '../context/AppUserContext'
 import { getSupabaseAccessToken, getSupabaseSession, hasSessionUserChanged, shouldPropagateSessionChange, supabase } from '../supabase'
@@ -921,7 +922,10 @@ function PlaceDetailView({
   const [isDetailsExpanded, setIsDetailsExpanded] = useState(false)
   const commentMenuRef = useRef<HTMLDivElement | null>(null)
   const { isPlaceSaved, saveFavorite, removeFavorite } = useSavedFavorites()
+  const { resolvedTheme } = useTheme()
   const { showSystemMessage } = useSystemMessage()
+  const isDarkTheme = resolvedTheme === 'dark'
+  const darkActionTextClass = isDarkTheme ? '!text-[#0f172a]' : ''
 
   const placeOwnPhotos = uniqueList([
     place.imageUrl,
@@ -2076,7 +2080,7 @@ function PlaceDetailView({
 
           <div className="min-w-0 flex-1">
             <div
-              className={`w-full min-w-0 rounded-[16px] border px-3 py-2.5 ${
+              className={`place-detail-comment-card w-full min-w-0 rounded-[16px] border px-3 py-2.5 ${
                 isFailed
                   ? 'border-red-200 bg-red-50/70'
                   : isDeleted
@@ -2321,7 +2325,7 @@ function PlaceDetailView({
         </div>
 
         {replyingToCommentId === comment.id ? (
-          <div className="ml-8 mt-2.5 rounded-[16px] bg-slate-50 px-3 py-3 sm:ml-9">
+          <div className="place-detail-comment-reply ml-8 mt-2.5 rounded-[16px] bg-slate-50 px-3 py-3 sm:ml-9">
             <textarea
               value={replyBody}
               onChange={(event) => setReplyBody(event.target.value)}
@@ -2367,7 +2371,7 @@ function PlaceDetailView({
     !isCommunityPlaceReady ? (
       <DetailSection>
         <SectionHeading icon="sparkle" title="Community" />
-        <div className="mt-5 rounded-3xl border border-slate-200/80 bg-slate-50/55 p-4 sm:p-5">
+        <div className="place-detail-comments mt-5 rounded-3xl border border-slate-200/80 bg-slate-50/55 p-4 sm:p-5">
           <ReviewSkeleton />
           <div className="mt-5 border-t border-[var(--line)] pt-5">
             <CommentSkeleton />
@@ -2479,7 +2483,7 @@ function PlaceDetailView({
           </div>
 
           <div className="mt-5 border-t border-[var(--line)] pt-5">
-            <div className="rounded-3xl border border-slate-200/80 bg-slate-50/55 p-4 sm:p-5">
+            <div className="place-detail-comments mt-5 rounded-3xl border border-slate-200/80 bg-slate-50/55 p-4 sm:p-5">
               <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200/80 pb-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2.5">
@@ -2504,7 +2508,7 @@ function PlaceDetailView({
                 <div className="mt-4 flex items-start gap-3">
                   <MemberAvatar displayName={currentUserAvatarFallbackName} avatarUrl={currentUserAvatarUrl} compact />
                   <div className="min-w-0 flex-1">
-                    <div className="rounded-[14px] bg-white px-3 py-2.5 transition">
+                    <div className="place-detail-comments-composer rounded-[14px] bg-white px-3 py-2.5 transition">
                       <textarea
                         value={commentBody}
                         onChange={(event) => setCommentBody(event.target.value)}
@@ -2542,7 +2546,7 @@ function PlaceDetailView({
               {isCommentsLoading ? (
                 <CommentSkeleton />
               ) : visibleCommentCount === 0 ? (
-                <div className="mt-5 flex flex-col items-center rounded-[20px] border border-dashed border-[var(--line-strong)] bg-slate-50 px-6 py-8 text-center">
+                <div className="place-detail-comments-empty mt-5 flex flex-col items-center rounded-[20px] border border-dashed border-[var(--line-strong)] bg-slate-50 px-6 py-8 text-center">
                   <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[var(--accent-wash)] text-[var(--accent-deep)]">
                     <MessageCircle className="h-5 w-5" strokeWidth={2.2} />
                   </span>
@@ -2623,12 +2627,22 @@ function PlaceDetailView({
                           ? '!border-rose-200 !bg-[linear-gradient(180deg,rgba(255,241,242,0.98),rgba(255,228,230,0.92))] !text-rose-700 !shadow-[0_12px_24px_rgba(244,63,94,0.12)] hover:!border-rose-300 hover:!bg-[linear-gradient(180deg,rgba(255,235,238,0.98),rgba(254,226,226,0.96))] hover:!text-rose-700'
                           : ''
                       }
-                      iconClassName={isSaved ? 'h-4 w-4 !fill-current !text-rose-600' : 'h-4 w-4'}
-                      childrenClassName={isSaved ? '!text-rose-700' : ''}
+                      iconClassName={
+                        isSaved
+                          ? 'h-4 w-4 !fill-current !text-rose-600'
+                          : `h-4 w-4 ${darkActionTextClass}`
+                      }
+                      childrenClassName={isSaved ? '!text-rose-700' : darkActionTextClass}
                     >
                       {isSaving ? 'Saving' : 'Favorite'}
                     </ActionButton>
-                    <ActionButton icon="share" onClick={handleSharePlace}>
+                    <ActionButton
+                      icon="share"
+                      onClick={handleSharePlace}
+                      className={darkActionTextClass}
+                      iconClassName={`h-4 w-4 ${darkActionTextClass}`}
+                      childrenClassName={darkActionTextClass}
+                    >
                       Share
                     </ActionButton>
                     <ActionButton

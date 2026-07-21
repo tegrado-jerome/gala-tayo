@@ -266,16 +266,16 @@ function BirthdatePicker({ value, onChange, helperText, error, minYear = 1900, m
             <CalendarDays className="h-4.5 w-4.5" strokeWidth={2.2} />
           </span>
           <span className="min-w-0">
-            <span className={`block truncate text-left text-sm font-semibold ${selectedDate ? 'text-slate-950' : 'text-slate-400'}`}>
+            <span className={`block truncate text-left text-sm font-semibold ${selectedDate ? 'text-[var(--text-main)]' : 'text-[var(--text-disabled)]'}`}>
               {selectedDate ? new Intl.DateTimeFormat(undefined, { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' }).format(selectedDate) : 'Select birthdate'}
             </span>
-            <span className="block truncate text-left text-xs text-slate-500">
+            <span className="block truncate text-left text-xs text-[var(--muted)]">
               {selectedDate ? 'Stored as YYYY-MM-DD' : 'Optional birthdate for your account'}
             </span>
           </span>
         </span>
         <span className="flex items-center gap-2">
-          <ChevronDown className={`gala-date-chevron h-4 w-4 shrink-0 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} strokeWidth={2.25} />
+          <ChevronDown className={`gala-date-chevron h-4 w-4 shrink-0 text-[var(--text-disabled)] transition-transform ${isOpen ? 'rotate-180' : ''}`} strokeWidth={2.25} />
         </span>
       </button>
 
@@ -294,7 +294,7 @@ function BirthdatePicker({ value, onChange, helperText, error, minYear = 1900, m
                     <p id={dialogTitleId} className="text-[11px] font-black uppercase tracking-[0.18em] text-[var(--accent)]">
                       Birthdate
                     </p>
-                    <p className="mt-1 text-xs font-semibold text-slate-500">
+                    <p className="mt-1 text-xs font-semibold text-[var(--muted)]">
                       {selectedDate ? 'Edit your stored birthdate.' : 'Pick a birthdate.'}
                     </p>
                   </div>
@@ -312,7 +312,7 @@ function BirthdatePicker({ value, onChange, helperText, error, minYear = 1900, m
                   </button>
 
                   <div className="gala-date-month-label">
-                    <span className="block text-sm font-black tracking-[-0.03em] text-slate-950">
+                    <span className="block text-sm font-black tracking-[-0.03em] text-[var(--text-main)]">
                       {new Intl.DateTimeFormat(undefined, { month: 'long', timeZone: 'UTC' }).format(visibleMonth)}
                     </span>
                     <div className="gala-date-year-wrap">
@@ -389,7 +389,7 @@ function BirthdatePicker({ value, onChange, helperText, error, minYear = 1900, m
                 </div>
 
                 <div className="gala-date-popover-footer">
-                  <span className="text-xs font-semibold text-slate-500">
+                  <span className="text-xs font-semibold text-[var(--muted)]">
                     {selectedDate ? `Selected: ${new Intl.DateTimeFormat(undefined, { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' }).format(selectedDate)}` : 'Choose a birthdate for age checks and reminders.'}
                   </span>
                 </div>
@@ -428,7 +428,7 @@ function BirthdatePicker({ value, onChange, helperText, error, minYear = 1900, m
           )
         : null}
 
-      {helperText ? <p className="text-xs font-semibold text-slate-500">{helperText}</p> : null}
+      {helperText ? <p className="text-xs font-semibold text-[var(--muted)]">{helperText}</p> : null}
       {error ? <p className="text-xs font-semibold text-red-600">{error}</p> : null}
     </div>
   )

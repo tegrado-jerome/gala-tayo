@@ -208,7 +208,7 @@ function FavoritesPage() {
     <PageShell reserveBottomNav={false}>
       <AppHeader showTaglishChip={false} />
 
-      <main className={`w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-8 ${BOTTOM_NAV_RESERVED_CLASS}`}>
+      <main className={`favorites-page w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-8 ${BOTTOM_NAV_RESERVED_CLASS}`}>
         <PageContainer size="wide">
           <div className="mb-5">
             <MinimalBackNav to="/home" label="Home" preferHistory={false} />
@@ -309,7 +309,7 @@ function FavoritesPage() {
                         type="button"
                         onClick={handleClearAll}
                         disabled={isClearingAll}
-                        className="inline-flex h-9 w-fit items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-red-200 bg-white px-3 text-xs font-black text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 sm:px-3.5 sm:self-end"
+                        className="favorites-history-destructive-button inline-flex h-9 w-fit items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-red-200 bg-white px-3 text-xs font-black text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 sm:px-3.5 sm:self-end"
                       >
                         <TrashIcon className="h-3.5 w-3.5" />
                         {isClearingAll ? 'Removing...' : 'Remove all'}
@@ -331,7 +331,7 @@ function FavoritesPage() {
                       <button
                         type="button"
                         onClick={() => setVisibleFavoritesCount((current) => current + FAVORITES_LOAD_MORE_BATCH_SIZE)}
-                        className="inline-flex h-10 items-center justify-center rounded-lg border border-[var(--accent)] bg-white px-5 text-sm font-black text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)]"
+                        className="favorites-history-load-more-button inline-flex h-10 items-center justify-center rounded-lg border border-[var(--accent)] bg-white px-5 text-sm font-black text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)]"
                       >
                         Load {FAVORITES_LOAD_MORE_BATCH_SIZE} more
                       </button>

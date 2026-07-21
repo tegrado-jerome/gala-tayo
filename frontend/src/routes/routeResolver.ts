@@ -28,6 +28,7 @@ export type RouteInputs = {
   publicProfileUsername: string | null
   editGalaPlanId: string | null
   ownedGalaPlanId: string | null
+  hasSignupOnboardingAccess: boolean
   currentUser: CurrentUserResponse['user'] | null
   currentProfile: CurrentUserResponse['profile'] | null
   isAdminMfaLoading: boolean
@@ -108,6 +109,7 @@ export function resolveRouteDescriptor(inputs: RouteInputs): RouteDescriptor {
     publicProfileUsername,
     editGalaPlanId,
     ownedGalaPlanId,
+    hasSignupOnboardingAccess,
     userMfaStatus,
     isUserMfaLoading,
   } = inputs
@@ -200,8 +202,11 @@ export function resolveRouteDescriptor(inputs: RouteInputs): RouteDescriptor {
     session &&
     userMfaStatus?.needsMfa &&
     !isPath(pathname, '/mfa/verify') &&
+    !isPath(pathname, '/auth/callback') &&
+    !isPath(pathname, '/onboarding') &&
     !isPath(pathname, '/login') &&
-    !isPath(pathname, '/signup')
+    !isPath(pathname, '/signup') &&
+    !hasSignupOnboardingAccess
   ) {
     return { kind: 'user-mfa-verify' }
   }

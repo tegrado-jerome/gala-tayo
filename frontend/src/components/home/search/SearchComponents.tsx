@@ -37,7 +37,7 @@ function SearchLandingBar({
 }) {
   return (
     <div
-      className={`mt-7 flex w-full flex-col rounded-[20px] border border-slate-200/70 bg-transparent px-4 py-0 text-[var(--accent-deep)] transition hover:border-slate-300 hover:bg-slate-50/70 ${disabled ? 'pointer-events-none opacity-70' : ''} ${className}`}
+      className={`search-landing-bar mt-7 flex w-full flex-col rounded-[20px] border border-slate-200/70 bg-transparent px-4 py-0 text-[var(--accent-deep)] transition hover:border-slate-300 hover:bg-slate-50/70 ${disabled ? 'pointer-events-none opacity-70' : ''} ${className}`}
       onClick={() => {
         if (!disabled) {
           document.getElementById(inputId)?.focus()
@@ -49,7 +49,7 @@ function SearchLandingBar({
           <label htmlFor={inputId} className="sr-only">
             Search places, cities, or categories
           </label>
-          <Search className="h-[21px] w-[21px] shrink-0 text-[var(--accent-deep)]" strokeWidth={2} />
+          <Search className="search-landing-bar__icon h-[21px] w-[21px] shrink-0 text-[var(--accent-deep)]" strokeWidth={2} />
           <input
             id={inputId}
             type="text"
@@ -77,7 +77,7 @@ function SearchLandingBar({
             aria-label="Open filters"
             className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--accent-deep)] transition hover:bg-[var(--accent-soft)] disabled:cursor-not-allowed disabled:text-slate-300"
           >
-            <SlidersHorizontal className="h-[20px] w-[20px]" strokeWidth={2} />
+            <SlidersHorizontal className="search-landing-bar__icon h-[20px] w-[20px]" strokeWidth={2} />
           </button>
         ) : null}
       </div>
@@ -110,10 +110,10 @@ function SearchFilterButtonGroup({
   const selectedOption = options.find((option) => option.value === value) ?? null
 
   return (
-    <div className="w-full">
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <p className="flex min-w-0 items-center gap-2 text-xs font-semibold text-slate-500">
-          <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent-deep)]">
+    <div className="search-filters-group w-full">
+      <div className="search-filters-group__header mb-2 flex items-center justify-between gap-3">
+        <p className="search-filters-group__label flex min-w-0 items-center gap-2 text-xs font-semibold text-slate-500">
+          <span className="search-filters-group__icon inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent-deep)]">
             <Icon className="h-3.5 w-3.5" strokeWidth={2.25} />
           </span>
           <span className="min-w-0 truncate">
@@ -124,20 +124,21 @@ function SearchFilterButtonGroup({
           <button
             type="button"
             onClick={() => onChange(null)}
-            className="text-[11px] font-bold text-[var(--accent-deep)] transition hover:opacity-75"
+            className="search-filters-group__clear text-[11px] font-bold text-[var(--accent-deep)] transition hover:opacity-75"
           >
             Clear
           </button>
         ) : (
-          <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">All options visible</span>
+          <span className="search-filters-group__hint text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">All options visible</span>
         )}
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="search-filters-group__options flex flex-wrap gap-2">
         <button
           type="button"
           onClick={() => onChange(null)}
-          className={`inline-flex min-h-10 items-center gap-2 rounded-full px-3.5 text-sm font-semibold transition ${
+          aria-pressed={value === null}
+          className={`search-filters-group__option search-filters-group__option--empty inline-flex min-h-10 items-center gap-2 rounded-full px-3.5 text-sm font-semibold transition ${
             value === null
               ? 'bg-[var(--accent-deep)] text-white shadow-[0_10px_18px_rgba(var(--accent-rgb),0.18)]'
               : 'border border-[rgba(148,163,184,0.18)] bg-white text-slate-700 hover:border-[var(--accent-deep)] hover:text-[var(--accent-deep)]'
@@ -155,7 +156,7 @@ function SearchFilterButtonGroup({
               key={option.value}
               type="button"
               onClick={() => onChange(option.value)}
-              className={`inline-flex min-h-10 items-center gap-2 rounded-full px-3.5 text-sm font-semibold transition ${
+              className={`search-filters-group__option inline-flex min-h-10 items-center gap-2 rounded-full px-3.5 text-sm font-semibold transition ${
                 selected
                   ? 'bg-[rgba(var(--accent-rgb),0.1)] text-[var(--accent-deep)] ring-1 ring-[rgba(var(--accent-rgb),0.18)]'
                   : 'border border-[rgba(148,163,184,0.18)] bg-white text-slate-700 hover:border-[rgba(var(--accent-rgb),0.28)] hover:bg-slate-50 hover:text-slate-950'
@@ -221,9 +222,9 @@ function SearchFilterPanel({
 
   const shellClassName =
     isBare
-      ? cn('bg-transparent', className)
+      ? cn('search-filters-panel search-filters-panel--bare bg-transparent', className)
       : cn(
-          'overflow-visible rounded-[30px] border border-[rgba(148,163,184,0.18)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(249,250,251,0.98)_100%)] p-4 shadow-[0_18px_48px_rgba(15,23,42,0.10)] backdrop-blur-xl sm:p-5',
+          'search-filters-panel overflow-visible rounded-[30px] border border-[rgba(148,163,184,0.18)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(249,250,251,0.98)_100%)] p-4 shadow-[0_18px_48px_rgba(15,23,42,0.10)] backdrop-blur-xl sm:p-5',
           className
         )
 
@@ -231,13 +232,13 @@ function SearchFilterPanel({
     <div className={shellClassName}>
       {showHeader ? (
         <>
-          <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-slate-200/90" aria-hidden="true" />
+          <div className="search-filters-panel__handle mx-auto mb-4 h-1.5 w-12 rounded-full bg-slate-200/90" aria-hidden="true" />
 
-          <div className="flex items-start justify-between gap-4">
+          <div className="search-filters-panel__header flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[var(--accent-deep)]/70">Filter by</p>
-              <h2 className="mt-1 text-[1.05rem] font-black tracking-[-0.03em] text-slate-950">Refine your search</h2>
-              <p className="mt-1 max-w-[30rem] text-sm leading-6 text-slate-500">
+              <p className="search-filters-panel__eyebrow text-[11px] font-black uppercase tracking-[0.2em] text-[var(--accent-deep)]/70">Filter by</p>
+              <h2 className="search-filters-panel__title mt-1 text-[1.05rem] font-black tracking-[-0.03em] text-slate-950">Refine your search</h2>
+              <p className="search-filters-panel__description mt-1 max-w-[30rem] text-sm leading-6 text-slate-500">
                 Pick a city, category, and budget. The sheet keeps everything compact and easy to scan.
               </p>
             </div>
@@ -246,7 +247,7 @@ function SearchFilterPanel({
               <button
                 type="button"
                 onClick={onClearAll}
-                className="inline-flex shrink-0 items-center rounded-full border border-[rgba(148,163,184,0.18)] bg-white px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.12em] text-slate-500 transition hover:border-[var(--accent-deep)] hover:text-[var(--accent-deep)]"
+                className="search-filters-panel__reset inline-flex shrink-0 items-center rounded-full border border-[rgba(148,163,184,0.18)] bg-white px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.12em] text-slate-500 transition hover:border-[var(--accent-deep)] hover:text-[var(--accent-deep)]"
               >
                 Reset
               </button>
@@ -290,7 +291,7 @@ function SearchFilterPanel({
             <button
               type="button"
               onClick={onClearAll}
-              className="inline-flex h-12 items-center justify-center rounded-2xl border border-[rgba(148,163,184,0.18)] bg-white px-4 text-sm font-bold text-slate-500 transition hover:border-[var(--accent-deep)] hover:text-[var(--accent-deep)]"
+              className="search-filters-panel__reset-all inline-flex h-12 items-center justify-center rounded-2xl border border-[rgba(148,163,184,0.18)] bg-white px-4 text-sm font-bold text-slate-500 transition hover:border-[var(--accent-deep)] hover:text-[var(--accent-deep)]"
             >
               Reset All
             </button>
@@ -300,7 +301,7 @@ function SearchFilterPanel({
               type="button"
               onClick={onApplyFilters}
               disabled={!canApply}
-              className={`inline-flex h-12 items-center justify-center rounded-2xl bg-[var(--accent)] px-4 text-sm font-bold text-white shadow-[0_14px_30px_rgba(var(--accent-rgb),0.18)] transition hover:bg-[var(--accent-deep)] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 ${onClearAll ? '' : 'sm:col-span-2'}`}
+              className={`search-filters-panel__apply inline-flex h-12 items-center justify-center rounded-2xl bg-[var(--accent)] px-4 text-sm font-bold text-white shadow-[0_14px_30px_rgba(var(--accent-rgb),0.18)] transition hover:bg-[var(--accent-deep)] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 ${onClearAll ? '' : 'sm:col-span-2'}`}
             >
               {applyLabel}
             </button>
@@ -408,17 +409,17 @@ function SearchLoadingCard({ compact = false }: { compact?: boolean }) {
   const bodyLineWidths = compact ? ['w-[90%]', 'w-[84%]', 'w-[70%]'] : ['w-[92%]', 'w-[86%]', 'w-[72%]']
 
   return (
-    <article className="relative overflow-hidden rounded-[26px] border border-[rgba(148,163,184,0.22)] bg-white shadow-[0_8px_22px_rgba(15,23,42,0.05)]">
-      <div className="relative aspect-[1.38] w-full overflow-hidden bg-[linear-gradient(180deg,var(--primary-soft)_0%,rgba(var(--accent-rgb),0.06)_100%)]">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.9),transparent_24%),radial-gradient(circle_at_80%_0%,var(--accent-soft),transparent_20%)]" aria-hidden="true" />
+    <article className="search-loading-card relative overflow-hidden rounded-[26px] border border-[rgba(148,163,184,0.22)] bg-white shadow-[0_8px_22px_rgba(15,23,42,0.05)]">
+      <div className="search-loading-card__hero relative aspect-[1.38] w-full overflow-hidden bg-[linear-gradient(180deg,var(--primary-soft)_0%,rgba(var(--accent-rgb),0.06)_100%)]">
+        <div className="search-loading-card__glow absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.9),transparent_24%),radial-gradient(circle_at_80%_0%,var(--accent-soft),transparent_20%)]" aria-hidden="true" />
 
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/90 shadow-[0_4px_12px_rgba(148,163,184,0.14)]">
+          <span className="search-loading-card__center-badge flex h-12 w-12 items-center justify-center rounded-full bg-white/90 shadow-[0_4px_12px_rgba(148,163,184,0.14)]">
             <span className="h-5 w-5 rounded-full border border-slate-300" aria-hidden="true" />
           </span>
         </div>
 
-        <div className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/92 px-2.5 py-1 shadow-[0_8px_18px_rgba(15,23,42,0.12)] backdrop-blur-sm">
+        <div className="search-loading-card__pill absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/92 px-2.5 py-1 shadow-[0_8px_18px_rgba(15,23,42,0.12)] backdrop-blur-sm">
           <span className="h-3.5 w-3.5 rounded-full border border-[var(--accent-glow)]" aria-hidden="true" />
           <SkeletonLine className="h-3 w-3" />
           <span className="text-slate-300">·</span>
@@ -439,7 +440,7 @@ function SearchLoadingCard({ compact = false }: { compact?: boolean }) {
         <SkeletonLine className={`mt-2 h-3.5 ${bodyLineWidths[2]}`} />
       </div>
 
-      <div className="absolute right-3 top-3 z-20 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/70 bg-white/92 shadow-[0_6px_14px_rgba(15,23,42,0.06)] backdrop-blur-sm">
+      <div className="search-loading-card__corner absolute right-3 top-3 z-20 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/70 bg-white/92 shadow-[0_6px_14px_rgba(15,23,42,0.06)] backdrop-blur-sm">
         <span className="h-4 w-4 rounded-full border border-[var(--accent-glow)]" aria-hidden="true" />
       </div>
     </article>
@@ -459,10 +460,10 @@ function SearchLoadingState({
     : 'flex h-full min-h-0 w-full items-start justify-center overflow-y-auto px-5 py-6 sm:px-8 md:min-h-[calc(100svh-68px)] md:py-6 lg:px-12 lg:py-10'
 
   return (
-    <section className={loadingShellClassName} aria-busy="true" aria-live="polite">
+    <section className={`search-loading-state ${loadingShellClassName}`} aria-busy="true" aria-live="polite">
       <span className="sr-only">Loading search results</span>
       <div className="mx-auto flex w-full max-w-[600px] flex-col gap-4">
-        <div className="rounded-[28px] border border-[rgba(148,163,184,0.18)] bg-white/90 px-5 py-5 text-left shadow-[0_10px_28px_rgba(15,23,42,0.04)]" aria-hidden="true">
+        <div className="search-loading-state__header rounded-[28px] border border-[rgba(148,163,184,0.18)] bg-white/90 px-5 py-5 text-left shadow-[0_10px_28px_rgba(15,23,42,0.04)]" aria-hidden="true">
           <div className="flex items-center gap-3">
             <SkeletonLine className="h-10 w-10 shrink-0 rounded-full" />
             <div className="min-w-0">

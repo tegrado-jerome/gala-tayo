@@ -27,7 +27,7 @@ export function CookieConsentBanner({ pathname }: { pathname?: string }) {
 
   return (
     <div className="fixed inset-0 z-[99999] overscroll-contain touch-none">
-      <div className="absolute inset-0 bg-slate-950/25 backdrop-blur-md" />
+      <div className="absolute inset-0 backdrop-blur-md" style={{ background: 'var(--backdrop)' }} />
       <div className="relative flex h-full w-full items-center justify-center p-4">
         <div className="w-full max-w-[340px] overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--panel)] px-6 pb-5 pt-7 shadow-[var(--shadow-strong)]">
           <div className="flex flex-col items-center text-center">

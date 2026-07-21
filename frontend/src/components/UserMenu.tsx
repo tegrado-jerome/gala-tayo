@@ -5,7 +5,6 @@ import { signOut } from '../services/authApi'
 import { useAvatarImageSrc } from '../utils/avatarImageCache'
 import type { CurrentUserResponse } from '../utils/profileApi'
 import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
-
 type AccountUser = {
   email: string | null
 }
@@ -199,28 +198,28 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
   }
 
   const menuItemClass =
-    'group flex w-full items-center gap-4 rounded-xl px-3 py-3 text-left text-[15px] font-medium text-slate-800 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
+    'group flex w-full items-center gap-4 rounded-xl px-3 py-3 text-left text-[15px] font-medium text-[var(--text-strong)] transition hover:bg-[var(--hover-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
   const menuIconClass =
-    'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-[var(--accent)] ring-1 ring-slate-200 transition group-hover:bg-[var(--accent-wash)]'
+    'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--panel)] text-[var(--accent)] ring-1 ring-[var(--line)] transition group-hover:bg-[var(--accent-wash)]'
   const soonMenuItemClass =
-    'pointer-events-none group flex w-full items-center gap-4 rounded-xl px-3 py-3 text-left text-[15px] font-medium text-slate-400 opacity-90'
+    'pointer-events-none group flex w-full items-center gap-4 rounded-xl px-3 py-3 text-left text-[15px] font-medium text-[var(--text-disabled)] opacity-90'
   const soonMenuIconClass =
-    'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-slate-400 ring-1 ring-slate-200'
+    'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--panel)] text-[var(--text-disabled)] ring-1 ring-[var(--line)]'
   const helpMenuItemClass =
-    'group flex w-full items-center gap-4 rounded-xl px-3 py-3 text-left text-[15px] font-medium text-slate-800 transition hover:bg-slate-50 focus:outline-none'
+    'group flex w-full items-center gap-4 rounded-xl px-3 py-3 text-left text-[15px] font-medium text-[var(--text-strong)] transition hover:bg-[var(--hover-surface)] focus:outline-none'
   const helpSubmenuItemClass =
-    'group flex w-full items-center gap-4 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none'
+    'group flex w-full items-center gap-4 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[var(--text-strong)] transition hover:bg-[var(--hover-surface)] focus:outline-none'
   const submenuIconClass =
-    'flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white text-[var(--accent)] ring-1 ring-slate-200 transition group-hover:bg-[var(--accent-wash)]'
+    'flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[var(--panel)] text-[var(--accent)] ring-1 ring-[var(--line)] transition group-hover:bg-[var(--accent-wash)]'
   const panelShellClass = useDesktopPopover
-    ? 'gala-menu-popover absolute right-0 top-full z-[7100] mt-3 flex w-[340px] max-w-[min(340px,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-[28px] border border-slate-200/90 bg-white shadow-[0_28px_80px_rgba(15,23,42,0.18)] backdrop-blur'
+    ? 'gala-menu-popover absolute right-0 top-full z-[7100] mt-3 flex w-[340px] max-w-[min(340px,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-[28px] border border-[var(--line)] bg-[var(--surface-overlay)] shadow-[var(--shadow-strong)] backdrop-blur-xl'
     : (compact
-        ? 'gala-menu-drawer fixed inset-y-0 right-0 z-[7100] flex w-[300px] max-w-[82vw] flex-col overflow-hidden rounded-l-[24px] border-l border-[var(--line)] bg-white shadow-xl'
-        : 'gala-menu-drawer fixed inset-y-0 right-0 z-[7100] flex w-[380px] max-w-[36vw] flex-col overflow-hidden rounded-l-[24px] border-l border-[var(--line)] bg-white shadow-xl') +
+        ? 'gala-menu-drawer fixed inset-y-0 right-0 z-[7100] flex w-[300px] max-w-[82vw] flex-col overflow-hidden rounded-l-[24px] border-l border-[var(--line)] bg-[var(--surface-overlay)] shadow-[var(--shadow-strong)]'
+        : 'gala-menu-drawer fixed inset-y-0 right-0 z-[7100] flex w-[380px] max-w-[36vw] flex-col overflow-hidden rounded-l-[24px] border-l border-[var(--line)] bg-[var(--surface-overlay)] shadow-[var(--shadow-strong)]') +
       ` ${closing ? 'exit' : 'enter'}`
   const userHeaderClass = useDesktopPopover
-    ? 'relative mx-4 mt-4 block rounded-[22px] border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] px-5 pb-5 pt-4 text-left transition hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
-    : 'relative mx-5 mt-12 block border-b border-slate-200 pb-5 text-center transition hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
+    ? 'relative mx-4 mt-4 block rounded-[22px] border border-[var(--line)] bg-[linear-gradient(180deg,var(--panel)_0%,var(--surface-alt)_100%)] px-5 pb-5 pt-4 text-left transition hover:border-[var(--line-strong)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
+    : 'relative mx-5 mt-12 block border-b border-[var(--line)] pb-5 text-center transition hover:border-[var(--line-strong)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
   const navClass = useDesktopPopover
     ? 'relative px-3 pb-3 pt-3'
     : 'relative flex-1 overflow-y-auto px-4 py-4'
@@ -258,8 +257,8 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
         }}
         className={
           compact
-            ? 'relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-transparent text-slate-900 transition hover:bg-slate-100/70 focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
-            : 'inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-[15px] font-medium text-slate-900 transition hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
+            ? 'relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-transparent text-[var(--text-main)] transition hover:bg-[var(--hover-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
+            : 'inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--line)] bg-[var(--surface-elevated)] px-4 text-[15px] font-medium text-[var(--text-main)] transition hover:border-[var(--line-strong)] hover:bg-[var(--hover-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
         }
         aria-expanded={isOpen}
         aria-haspopup="menu"
@@ -270,13 +269,13 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
             <span className={`flex h-full w-full items-center justify-center overflow-hidden rounded-full ${effectiveUser ? 'text-slate-700' : 'text-slate-800'}`}>
               {accountButtonAvatar}
             </span>
-            <span className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[var(--bg)] shadow-sm ${effectiveUser ? 'bg-[#22c55e]' : 'bg-slate-300'}`} aria-hidden="true">
+            <span className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[var(--bg)] shadow-sm ${effectiveUser ? 'bg-[#22c55e]' : 'bg-[var(--line-strong)]'}`} aria-hidden="true">
               {effectiveUser ? <span className="absolute inset-0 animate-ping rounded-full bg-[rgba(34,197,94,0.4)]" /> : null}
             </span>
           </>
         ) : effectiveUser ? (
           <>
-            <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-slate-100 text-slate-700 ring-1 ring-slate-200">
+            <span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-[var(--bg-soft)] text-[var(--text-strong)] ring-1 ring-[var(--line)]">
               {accountButtonAvatar}
             </span>
             <span>Profile</span>
@@ -293,7 +292,8 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
         <>
           <button
             type="button"
-            className={`gala-menu-backdrop fixed inset-0 z-[7090] bg-slate-950/25 ${closing ? 'exit' : 'enter'}`}
+            className={`gala-menu-backdrop fixed inset-0 z-[7090] ${closing ? 'exit' : 'enter'}`}
+            style={{ background: 'var(--backdrop)' }}
             aria-label="Close account menu"
             onClick={close}
           />
@@ -302,17 +302,17 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
             className={panelShellClass}
             role="menu"
           >
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-white" />
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[var(--surface-overlay)]" />
             <button
               type="button"
               onClick={close}
-              className="absolute right-4 top-4 z-10 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition hover:bg-slate-50 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]"
+              className="absolute right-4 top-4 z-10 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--surface-elevated)] text-[var(--muted)] shadow-[var(--shadow-soft)] transition hover:bg-[var(--hover-surface)] hover:text-[var(--text-main)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]"
               aria-label="Close account menu"
             >
               <AppIcon name="clear" size="ui" />
             </button>
 
-            <span className="relative mx-auto mt-3 h-1 w-10 rounded-full bg-slate-300" aria-hidden="true" />
+            <span className="relative mx-auto mt-3 h-1 w-10 rounded-full bg-[var(--line-strong)]" aria-hidden="true" />
 
             {effectiveUser ? (
               <>
@@ -587,7 +587,7 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
                 </button>
               </nav>
             </>
-          ) : (
+            ) : (
             <div className={guestPanelClass}>
               <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 text-slate-700 ring-1 ring-slate-300">
                 <AppIcon name="profile" size="emptyLg" />

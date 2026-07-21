@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import AppHeader from '../components/AppHeader'
+import { AppSkeleton } from '../components/AppUI'
 import PasswordStrengthBar from '../components/auth/PasswordStrengthBar'
 import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
 import MinimalBackNav from '../components/MinimalBackNav'
@@ -29,7 +30,7 @@ import {
 } from '../utils/profileApi'
 import { preloadAvatarImage } from '../utils/avatarImageCache'
 import { navigateToPath } from '../utils/navigation'
-import { FormSkeleton } from '../components/loading/SkeletonStates'
+import { FormSkeleton, SkeletonLine } from '../components/loading/SkeletonStates'
 
 type ProfilePageProps = {
   session: Session | null
@@ -74,21 +75,87 @@ function writeCache(userId: string, cache: ProfilePageCache) {
 let memCache: { profile: Profile; followRequests: FollowRequest[] } | null = null
 let memCachedUserId: string | null = null
 
-const guestProfile: Profile = {
-  user_id: 'guest',
-  username: 'guest',
-  avatar_url: null,
-  provider_avatar_url: null,
-  bio: null,
-  is_public: true,
-  show_followers: 'everyone',
-  show_following: 'everyone',
-  default_gala_plan_visibility: 'private',
-  followers_count: 0,
-  following_count: 0,
-  onboarding_completed_at: null,
-  created_at: '',
-  updated_at: '',
+function GuestProfileSkeleton() {
+  return (
+    <div aria-hidden="true" className="guest-profile-skeleton">
+      <div className="guest-profile-skeleton-pill mb-5 inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white/80 px-4 py-2">
+        <AppSkeleton className="h-3.5 w-3.5 rounded-full" />
+        <SkeletonLine className="h-3.5 w-16" />
+      </div>
+
+      <section className="pb-1">
+        <SkeletonLine className="h-3 w-14" />
+        <SkeletonLine className="mt-3 h-9 w-72 max-w-[85%]" />
+        <SkeletonLine className="mt-3 h-4 w-[26rem] max-w-full" />
+      </section>
+
+      <CardSurface pad="loose" className="guest-profile-skeleton-card profile-summary-card mt-5">
+        <div className="profile-summary-header">
+          <div className="profile-summary-identity">
+            <AppSkeleton className="h-20 w-20 shrink-0 rounded-full" />
+            <div className="profile-summary-copy min-w-0 flex-1">
+              <div className="profile-summary-meta">
+                <AppSkeleton className="h-8 w-24 rounded-full" />
+                <SkeletonLine className="h-3.5 w-12" />
+              </div>
+              <SkeletonLine className="mt-3 h-11 w-48 max-w-[80%]" />
+              <SkeletonLine className="mt-3 h-4 w-20" />
+              <SkeletonLine className="mt-4 h-4 w-full max-w-[34rem]" />
+              <SkeletonLine className="mt-2 h-4 w-5/6 max-w-[28rem]" />
+            </div>
+          </div>
+
+          <div className="profile-summary-actions">
+            <AppSkeleton className="h-11 w-32 rounded-[16px]" />
+            <AppSkeleton className="h-11 w-32 rounded-[16px]" />
+          </div>
+        </div>
+
+        <div className="profile-summary-stats">
+          <div className="profile-summary-stat">
+            <SkeletonLine className="h-4 w-24" />
+          </div>
+          <div className="profile-summary-stat">
+            <SkeletonLine className="h-4 w-24" />
+          </div>
+          <div className="profile-summary-stat-note">
+            <AppSkeleton className="h-4 w-4 rounded-full" />
+            <SkeletonLine className="h-4 w-64 max-w-[60vw]" />
+          </div>
+          <div className="profile-summary-stat-note">
+            <AppSkeleton className="h-4 w-4 rounded-full" />
+            <SkeletonLine className="h-4 w-28" />
+          </div>
+        </div>
+      </CardSurface>
+
+      <section className="guest-profile-skeleton-section mt-8">
+        <div className="guest-profile-skeleton-section-header flex flex-col gap-3 border-b border-[var(--line)] pb-5 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <SkeletonLine className="h-3 w-12" />
+            <SkeletonLine className="mt-3 h-7 w-44 max-w-[80%]" />
+            <SkeletonLine className="mt-3 h-4 w-72 max-w-full" />
+          </div>
+          <AppSkeleton className="h-8 w-24 rounded-full" />
+        </div>
+
+        <div className="guest-profile-skeleton-list divide-y divide-[var(--line)] pt-3">
+          {Array.from({ length: 2 }).map((_, index) => (
+            <article key={`guest-profile-request-skeleton-${index}`} className="flex items-center justify-between gap-3 py-4">
+              <div className="min-w-0 flex-1">
+                <SkeletonLine className="h-4 w-32 max-w-[70%]" />
+                <SkeletonLine className="mt-2 h-3.5 w-52 max-w-full" />
+              </div>
+              <div className="flex gap-2">
+                <AppSkeleton className="h-9 w-20 rounded-lg" />
+                <AppSkeleton className="h-9 w-20 rounded-full" />
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+    </div>
+  )
 }
 
 function ProfilePage({ session }: ProfilePageProps) {
@@ -109,7 +176,7 @@ function ProfilePage({ session }: ProfilePageProps) {
   }, [session?.user?.id])
 
   const [profile, setProfile] = useState<Profile | null>(() => {
-    if (!session?.user?.id) return guestProfile
+    if (!session?.user?.id) return null
     if (cachedAtRender?.profile) return cachedAtRender.profile
     if (currentProfile) {
       return {
@@ -158,7 +225,7 @@ function ProfilePage({ session }: ProfilePageProps) {
 
   useEffect(() => {
     if (!session?.user?.id) {
-      setProfile(guestProfile)
+      setProfile(null)
       setFollowRequests([])
       setIsLoading(false)
       setErrorMessage('')
@@ -676,8 +743,10 @@ function ProfilePage({ session }: ProfilePageProps) {
         <PageShell tone="surface" reserveBottomNav={false}>
           <AppHeader />
           <main className="relative flex min-h-0 flex-1 overflow-hidden px-4 pb-12 pt-4 text-[var(--text)] sm:px-6 sm:pb-14 sm:pt-5 lg:py-10">
-            <div className="pointer-events-none absolute inset-0 select-none overflow-hidden blur-[3px] opacity-40">
-              <PageContainer size="wide" className="profile-page-container">{profileContent}</PageContainer>
+            <div className="guest-profile-skeleton-backdrop pointer-events-none absolute inset-0 select-none overflow-hidden">
+              <div className="mx-auto w-full max-w-6xl profile-page-container">
+                <GuestProfileSkeleton />
+              </div>
             </div>
 
             <div className="relative z-20 flex w-full items-center justify-center">

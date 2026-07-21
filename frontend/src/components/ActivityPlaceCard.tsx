@@ -127,9 +127,12 @@ export default function ActivityPlaceCard({
           <button
             type="button"
             onClick={handleAction}
-            className={compactMobile
-              ? 'inline-flex h-10 w-full items-center justify-center rounded-lg border border-[var(--accent)] bg-white px-3 text-xs font-black text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)]'
-              : 'inline-flex h-9 w-full items-center justify-center rounded-lg border border-[var(--accent)] bg-white px-4 text-xs font-black text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)]'}
+            className={[
+              'activity-place-card__action-button',
+              compactMobile
+                ? 'inline-flex h-10 w-full items-center justify-center rounded-lg border border-[var(--accent)] bg-white px-3 text-xs font-black text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)]'
+                : 'inline-flex h-9 w-full items-center justify-center rounded-lg border border-[var(--accent)] bg-white px-4 text-xs font-black text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)]',
+            ].join(' ')}
           >
             {actionLabel}
           </button>

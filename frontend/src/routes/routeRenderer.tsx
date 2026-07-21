@@ -305,9 +305,6 @@ export function renderRouteDescriptor(descriptor: RouteDescriptor, inputs: Route
     case 'public-profile':
       return <PublicProfilePage username={descriptor.username} />
     case 'profile':
-      if (!session) {
-        return <ProtectedFeatureGate pathname={pathname} search={search} />
-      }
       return <ProfilePage session={session} />
     case 'account-settings':
       if (!session) {

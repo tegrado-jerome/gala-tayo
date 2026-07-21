@@ -1,3 +1,5 @@
+import { normalizeImageUrl } from "./r2UrlResolver";
+
 type PlaceImageRecord = Record<string, unknown>;
 
 const DIRECT_IMAGE_KEYS = [
@@ -15,13 +17,13 @@ function pushImageUrl(candidate: unknown, seen: Set<string>, results: string[]) 
     return;
   }
 
-  const trimmed = candidate.trim();
-  if (!trimmed || seen.has(trimmed)) {
+  const normalizedUrl = normalizeImageUrl(candidate);
+  if (!normalizedUrl || seen.has(normalizedUrl)) {
     return;
   }
 
-  seen.add(trimmed);
-  results.push(trimmed);
+  seen.add(normalizedUrl);
+  results.push(normalizedUrl);
 }
 
 function collectNestedImageUrls(value: unknown, seen: Set<string>, results: string[]) {

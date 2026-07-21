@@ -291,14 +291,14 @@ type SectionHeaderProps = {
 
 function SectionHeader({ title, description, icon }: SectionHeaderProps) {
   return (
-    <div className="group rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-4 transition duration-200 hover:border-slate-300 hover:bg-white hover:shadow-[0_10px_30px_rgba(15,23,42,0.06)] sm:px-5">
+    <div className="account-settings-section-header group rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-4 transition duration-200 hover:border-slate-300 hover:bg-white hover:shadow-[0_10px_30px_rgba(15,23,42,0.06)] sm:px-5">
       <div className="flex items-start gap-3">
-        <span className="inline-flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-white text-[var(--accent-deep)] ring-1 ring-slate-200 transition group-hover:scale-[1.02] group-hover:ring-[rgba(var(--accent-rgb),0.22)]">
+        <span className="account-settings-section-icon inline-flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-white text-[var(--accent-deep)] ring-1 ring-slate-200 transition group-hover:scale-[1.02] group-hover:ring-[rgba(var(--accent-rgb),0.22)]">
           {icon}
         </span>
         <div className="min-w-0">
-          <h2 className="text-lg font-bold text-slate-900">{title}</h2>
-          <p className="mt-1 text-sm text-slate-500">{description}</p>
+          <h2 className="account-settings-section-title text-lg font-bold text-slate-900">{title}</h2>
+          <p className="account-settings-section-description mt-1 text-sm text-slate-500">{description}</p>
         </div>
       </div>
     </div>
@@ -646,7 +646,7 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
     <PageShell>
       <AppHeader />
       <main className="w-full pb-20 pt-4 sm:pb-24 sm:pt-5 lg:py-8 lg:pb-28">
-        <PageContainer size="wide">
+        <PageContainer size="wide" className="account-settings-page">
           <div className="mb-5">
             <MinimalBackNav to="/profile" label="Profile" preferHistory={false} className="hidden sm:inline-flex" />
           </div>

@@ -48,8 +48,8 @@ function PageHeroHeader({
     <section className={`gala-page-header ${divider ? '' : 'gala-page-header--no-divider'} ${className}`.trim()}>
       <div className={centeredClassName}>
         <div className={contentClassName}>
-          <div className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">
-            {icon ? <span className="text-[var(--accent)]">{icon}</span> : null}
+          <div className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--home-eyebrow)]">
+            {icon ? <span className="text-[var(--home-eyebrow-icon)]">{icon}</span> : null}
             <span>{eyebrow}</span>
           </div>
           <h1 className="gala-page-title">{title}</h1>

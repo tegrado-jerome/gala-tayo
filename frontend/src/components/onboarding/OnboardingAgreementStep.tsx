@@ -46,11 +46,17 @@ function OnboardingAgreementStep({ values, errors, isSubmitting, disableNext, on
             <label htmlFor={checkboxId} className="cursor-pointer">
               I have read and agree to GalaTayo's{' '}
             </label>
-            <InternalLink href="/terms" className="font-black text-[var(--accent-deep)] underline underline-offset-4">
+            <InternalLink
+              href="/terms"
+              className="font-black text-[var(--onboarding-link)] underline underline-offset-4 transition hover:text-[var(--onboarding-link-hover)]"
+            >
               Terms of Service
             </InternalLink>
             {' '}and{' '}
-            <InternalLink href="/privacy" className="font-black text-[var(--accent-deep)] underline underline-offset-4">
+            <InternalLink
+              href="/privacy"
+              className="font-black text-[var(--onboarding-link)] underline underline-offset-4 transition hover:text-[var(--onboarding-link-hover)]"
+            >
               Privacy Policy
             </InternalLink>
             <label htmlFor={checkboxId} className="cursor-pointer">

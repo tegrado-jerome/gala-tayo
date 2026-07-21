@@ -5,6 +5,7 @@ import { AppIcon } from '../components/AppIcon'
 import PageHeroHeader from '../components/PageHeroHeader'
 import { SearchFilterPanel, SearchPageBreadcrumb } from '../components/home/search/SearchComponents'
 import { useBottomNav } from '../context/BottomNavContext'
+import { useTheme } from '../context/ThemeContext'
 import { BOTTOM_NAV_RESERVED_CLASS } from '../components/layout/Primitives'
 import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
 import { navigateToPath } from '../utils/navigation'
@@ -36,11 +37,11 @@ function SearchPageLandingBar({
 
   return (
     <div
-      className="mt-7 flex h-14 w-full items-center justify-between rounded-[20px] border border-slate-200/70 bg-transparent px-4 text-[var(--accent-deep)] transition hover:border-slate-300 hover:bg-slate-50/70"
+      className="search-landing-bar mt-7 flex h-14 w-full items-center justify-between rounded-[20px] border border-slate-200/70 bg-transparent px-4 text-[var(--accent-deep)] transition hover:border-slate-300 hover:bg-slate-50/70"
       onClick={() => inputRef.current?.focus()}
     >
       <span className="flex min-w-0 flex-1 items-center gap-2.5 text-[var(--accent-deep)]">
-        <Search className="h-[21px] w-[21px] shrink-0 text-[var(--accent-deep)]" strokeWidth={2} />
+        <Search className="search-landing-bar__icon h-[21px] w-[21px] shrink-0 text-[var(--accent-deep)]" strokeWidth={2} />
         <label htmlFor="search-page-input" className="sr-only">
           Search places, cities, or categories
         </label>
@@ -77,7 +78,7 @@ function SearchPageLandingBar({
               : 'text-[var(--accent-deep)] hover:bg-slate-100/80 hover:text-[var(--accent)]'
           } disabled:text-slate-300`}
         >
-          <SlidersHorizontal className="h-[21px] w-[21px]" strokeWidth={2} />
+          <SlidersHorizontal className="search-landing-bar__icon h-[21px] w-[21px]" strokeWidth={2} />
         </button>
       ) : null}
     </div>
@@ -119,7 +120,7 @@ function SearchActiveFilterChips({
             key={chip.key}
             type="button"
             onClick={chip.onClear}
-            className="inline-flex items-center gap-2 rounded-full border border-[rgba(30,58,138,0.14)] bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-[0_6px_16px_rgba(15,23,42,0.04)] transition hover:border-[var(--accent-deep)] hover:text-[var(--accent-deep)]"
+            className="search-active-filter-chip inline-flex items-center gap-2 rounded-full border border-[rgba(30,58,138,0.14)] bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-[0_6px_16px_rgba(15,23,42,0.04)] transition hover:border-[var(--accent-deep)] hover:text-[var(--accent-deep)]"
           >
             <span>{chip.label}</span>
             <AppIcon name="clear" className="h-3.5 w-3.5" />
@@ -130,7 +131,7 @@ function SearchActiveFilterChips({
       <button
         type="button"
         onClick={onClearAll}
-        className="inline-flex w-fit items-center gap-2 rounded-full border border-[rgba(148,163,184,0.24)] bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-500 transition hover:border-[var(--accent-deep)] hover:text-[var(--accent-deep)]"
+        className="search-active-filter-chip search-active-filter-chip--clear-all inline-flex w-fit items-center gap-2 rounded-full border border-[rgba(148,163,184,0.24)] bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-500 transition hover:border-[var(--accent-deep)] hover:text-[var(--accent-deep)]"
       >
         Clear all filters
       </button>
@@ -143,7 +144,6 @@ function SearchPage({
 }: {
   navigationSource?: 'push' | 'replace' | 'pop'
 }) {
-
   const routeSearchState = readSearchUrlState(window.location.search)
   const initialQuery = routeSearchState.q
   const initialPage = routeSearchState.page
@@ -161,6 +161,7 @@ function SearchPage({
   const rawQuery = shouldShowResults ? initialQuery : draftQuery
   const activeTypedQuery = normalizeTypedSearchText(rawQuery)
   const { setHidden } = useBottomNav()
+  const { resolvedTheme } = useTheme()
 
   const categoryLabel = useMemo(
     () =>
@@ -301,14 +302,14 @@ function SearchPage({
           />
           {isFilterPanelOpen ? (
             <div
-              className="fixed inset-0 z-[7000] flex items-stretch justify-center bg-slate-950/30 px-0 pt-0 backdrop-blur-[2px] sm:items-center sm:px-4 sm:py-6"
+              className="search-filters-modal fixed inset-0 z-[7000] flex items-stretch justify-center bg-slate-950/30 px-0 pt-0 backdrop-blur-[2px] sm:items-center sm:px-4 sm:py-6"
               onClick={() => setIsFilterPanelOpen(false)}
             >
               <div
-                className="flex h-[100dvh] w-full max-w-none flex-col overflow-hidden bg-white sm:h-auto sm:max-h-[min(92dvh,920px)] sm:max-w-[820px] sm:rounded-[30px] sm:border sm:border-[rgba(148,163,184,0.18)] sm:shadow-[0_20px_60px_rgba(15,23,42,0.22)]"
+                className="search-filters-modal__sheet flex h-[100dvh] w-full max-w-none flex-col overflow-hidden bg-white sm:h-auto sm:max-h-[min(92dvh,920px)] sm:max-w-[820px] sm:rounded-[30px] sm:border sm:border-[rgba(148,163,184,0.18)] sm:shadow-[0_20px_60px_rgba(15,23,42,0.22)]"
                 onClick={(event) => event.stopPropagation()}
               >
-                <div className="flex items-start justify-between gap-4 border-b border-[rgba(148,163,184,0.16)] px-4 py-4 sm:px-5">
+                <div className="search-filters-modal__header flex items-start justify-between gap-4 border-b border-[rgba(148,163,184,0.16)] px-4 py-4 sm:px-5">
                   <div className="min-w-0">
                     <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-500">Filters</p>
                     <h2 className="mt-1 text-[1.05rem] font-black tracking-[-0.03em] text-slate-950">Refine your search</h2>
@@ -318,7 +319,7 @@ function SearchPage({
                     type="button"
                     onClick={() => setIsFilterPanelOpen(false)}
                     aria-label="Close filters"
-                    className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[rgba(148,163,184,0.18)] bg-white text-slate-500 transition hover:border-[rgba(100,116,139,0.34)] hover:text-slate-900"
+                    className="search-filters-modal__close inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[rgba(148,163,184,0.18)] bg-white text-slate-500 transition hover:border-[rgba(100,116,139,0.34)] hover:text-slate-900"
                   >
                     <X className="h-5 w-5" />
                   </button>
@@ -342,7 +343,7 @@ function SearchPage({
                   className="min-h-0 flex-1 overflow-y-auto border-0 bg-transparent px-4 py-4 shadow-none sm:px-5"
                 />
 
-                <div className="border-t border-[rgba(148,163,184,0.16)] bg-white px-4 py-4 sm:px-5">
+                <div className="search-filters-modal__footer border-t border-[rgba(148,163,184,0.16)] bg-white px-4 py-4 sm:px-5">
                   <div className="grid gap-3 sm:grid-cols-2">
                     <button
                       type="button"
@@ -350,7 +351,7 @@ function SearchPage({
                         handleClearAll()
                         setIsFilterPanelOpen(false)
                       }}
-                      className="inline-flex h-12 items-center justify-center rounded-2xl border border-[rgba(148,163,184,0.18)] bg-white px-4 text-sm font-bold text-slate-500 transition hover:border-[var(--accent-deep)] hover:text-[var(--accent-deep)]"
+                      className="search-filters-modal__reset inline-flex h-12 items-center justify-center rounded-2xl border border-[rgba(148,163,184,0.18)] bg-white px-4 text-sm font-bold text-slate-500 transition hover:border-[var(--accent-deep)] hover:text-[var(--accent-deep)]"
                     >
                       Reset All
                     </button>
@@ -361,7 +362,7 @@ function SearchPage({
                         handleSearch()
                       }}
                       disabled={!canSearch}
-                      className="inline-flex h-12 items-center justify-center rounded-2xl bg-[var(--accent)] px-4 text-sm font-bold text-white shadow-[0_14px_30px_rgba(var(--accent-rgb),0.18)] transition hover:bg-[var(--accent-deep)] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
+                      className="search-filters-modal__apply inline-flex h-12 items-center justify-center rounded-2xl bg-[var(--accent)] px-4 text-sm font-bold text-white shadow-[0_14px_30px_rgba(var(--accent-rgb),0.18)] transition hover:bg-[var(--accent-deep)] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
                     >
                       Apply Filters{hasActiveFilters ? ` (${[selectedCity, selectedCategory, selectedBudget].filter(Boolean).length})` : ''}
                     </button>
@@ -394,7 +395,8 @@ function SearchPage({
             <FeatureGuideModalTrigger
               content={featureGuideContent.search}
               triggerLabel="Need help searching?"
-              className="!inline-flex !gap-1 !rounded-none !border-none !bg-transparent !px-0 !py-0 !text-xs !font-normal !text-amber-500 hover:!text-amber-600 !normal-case !tracking-normal !min-h-0 !animate-none !shadow-none !no-underline hover:!translate-y-0 [&_svg]:!text-amber-500"
+              className="feature-guide-search-trigger !inline-flex !gap-1 !rounded-none !border-none !bg-transparent !px-0 !py-0 !text-xs !font-normal !text-amber-500 hover:!text-amber-600 !normal-case !tracking-normal !min-h-0 !animate-none !shadow-none !no-underline hover:!translate-y-0"
+              triggerIconClassName={resolvedTheme === 'dark' ? 'text-[var(--text-main)]' : 'text-amber-500'}
               onSampleClick={(sample) => {
                 const namePrefix = 'By place name — '
                 const locationPrefix = 'By location — '

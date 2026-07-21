@@ -78,7 +78,7 @@ function OnboardingPublicProfileStep({
               {values.avatarUrl ? <img src={values.avatarUrl} alt="" className="h-full w-full object-cover" /> : previewName.charAt(0).toUpperCase()}
             </span>
             <span className="min-w-0">
-              <span className="block truncate text-[15px] font-black text-slate-950 sm:text-lg">{previewName}</span>
+              <span className="block truncate text-[15px] font-black text-[var(--text-main)] sm:text-lg">{previewName}</span>
               <span className="block truncate text-xs font-bold text-[var(--accent-deep)] sm:text-sm">@{previewUsername}</span>
             </span>
           </div>
@@ -131,7 +131,7 @@ function OnboardingPublicProfileStep({
               <input
                 value={values.username}
                 onChange={(event) => onUpdate({ username: event.target.value.toLowerCase().replace(/^@+/, '') })}
-                className="min-w-0 flex-1 border-0 bg-transparent px-1 text-[13px] font-black text-slate-950 outline-none sm:text-sm"
+                className="min-w-0 flex-1 border-0 bg-transparent px-1 text-[13px] font-black text-[var(--text-main)] outline-none sm:text-sm"
                 autoCapitalize="none"
                 autoComplete="username"
                 spellCheck={false}

@@ -293,7 +293,7 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
         const status = await getOnboardingStatus(session)
 
         if (isMounted && !status.needsOnboarding) {
-          clearSignupOnboardingAccess(session.user.id)
+          clearSignupOnboardingAccess()
           setIsRedirectingHome(true)
           clearOnboardingDraft(session.user.id)
           replaceWithPath('/home')
@@ -507,7 +507,6 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
       setIsSubmitting(true)
       setErrors({})
       await completeOnboardingSetup({ ...values, username: normalizedUsername }, session)
-      clearSignupOnboardingAccess(session.user.id)
       setIsRedirectingHome(true)
       trackOnboardingCompleted({
         method: 'profile_setup',

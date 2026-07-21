@@ -5,6 +5,7 @@ import PasswordStrengthBar from '../components/auth/PasswordStrengthBar'
 import {
   getPostAuthRedirect,
   markAdminPasswordSession,
+  markSignupOnboardingAccess,
   resendSignUpConfirmationEmail,
   setRememberMePreference,
   signInWithEmailPassword,
@@ -123,6 +124,15 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
 
     const redirectSignedInUser = async () => {
       try {
+        if (isCreateMode) {
+          markSignupOnboardingAccess()
+
+          if (isMounted) {
+            navigateToPath('/onboarding')
+          }
+          return
+        }
+
         const mfaStatus = await getUserMfaStatus(session)
         const redirectTo = await getPostAuthRedirect(session, window.location.search)
 
@@ -191,6 +201,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
       setIsSubmitting(true)
 
       if (isCreateMode) {
+        markSignupOnboardingAccess()
         await signUpWithEmailPassword(normalizedEmail, password, nextPath)
 
         setEmail(normalizedEmail)
@@ -384,7 +395,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
             ) : null}
 
             {error ? (
-              <p className="mb-4 rounded-[12px] border border-red-200 bg-red-50 px-4 py-3 text-center text-[13px] leading-6 text-red-700 shadow-sm">
+              <p className="mb-4 rounded-[12px] border border-[var(--danger-border)] bg-[var(--danger-soft)] px-4 py-3 text-center text-[13px] leading-6 text-[var(--danger)] shadow-sm">
                 {error}
               </p>
             ) : null}
@@ -396,7 +407,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
                   Email
                 </span>
                 <span
-                  className={`flex h-12 items-center rounded-[12px] border bg-white px-3.5 shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)] transition ${
+                  className={`flex h-12 items-center rounded-[12px] border bg-[var(--panel)] px-3.5 shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)] transition ${
                     emailIsInvalid ? 'border-red-300' : 'border-[var(--line)]'
                   }`}
                 >
@@ -418,7 +429,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
                   Password
                 </span>
                 <span
-                  className={`flex h-12 items-center gap-3 rounded-[12px] border bg-white px-3.5 shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)] transition ${
+                  className={`flex h-12 items-center gap-3 rounded-[12px] border bg-[var(--panel)] px-3.5 shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)] transition ${
                     passwordIsInvalid ? 'border-red-300' : 'border-[var(--line)]'
                   }`}
                 >
@@ -462,7 +473,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
                     Confirm Password
                   </span>
                   <span
-                    className={`flex h-12 items-center gap-3 rounded-[12px] border bg-white px-3.5 shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)] transition ${
+                    className={`flex h-12 items-center gap-3 rounded-[12px] border bg-[var(--panel)] px-3.5 shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)] transition ${
                       confirmPasswordHasMismatch ? 'border-red-300' : 'border-[var(--line)]'
                     }`}
                   >
@@ -547,7 +558,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
             ) : null}
 
             {error ? (
-              <p className="mt-4 rounded-[12px] border border-red-200 bg-red-50 px-4 py-3 text-[13px] text-red-700 shadow-sm">
+              <p className="mt-4 rounded-[12px] border border-[var(--danger-border)] bg-[var(--danger-soft)] px-4 py-3 text-[13px] text-[var(--danger)] shadow-sm">
                 {error}
               </p>
             ) : null}

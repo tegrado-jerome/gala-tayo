@@ -44,7 +44,7 @@ function PlaceCategoriesIndexPage() {
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
       name: 'Place Categories | GalaTayo',
-      description: 'Browse place categories across Metro Manila and open alphabetical category pages on GalaTayo.',
+      description: 'Browse place categories across Metro Manila and open category pages on GalaTayo.',
       url: `${getSiteOrigin()}/places/categories`,
     },
     {
@@ -72,7 +72,7 @@ function PlaceCategoriesIndexPage() {
     <PageShell>
       <SeoHead
         title="Place Categories | GalaTayo"
-        description="Browse place categories across Metro Manila and open alphabetical category pages on GalaTayo."
+        description="Browse place categories across Metro Manila and open category pages on GalaTayo."
         canonicalPath="/places/categories"
         jsonLd={jsonLd}
       />
@@ -103,7 +103,7 @@ function PlaceCategoriesIndexPage() {
               Browse place categories
             </h1>
             <p className="mt-3 text-[15px] leading-7 text-[var(--muted)]">
-              Open a category to see all matching places from every city in one alphabetical list.
+              Open a category to see all matching places from every city.
             </p>
           </div>
         </section>

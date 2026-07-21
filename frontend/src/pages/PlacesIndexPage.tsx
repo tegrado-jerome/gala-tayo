@@ -1,16 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowRight, Compass, House, LayoutGrid, MapPinned } from 'lucide-react'
+import { ArrowRight, Compass, House, MapPinned } from 'lucide-react'
 import AppHeader from '../components/AppHeader'
 import InternalLink from '../components/InternalLink'
 import Breadcrumb from '../components/Breadcrumb'
 import SeoHead from '../components/SeoHead'
 import { PageContainer, PageShell, ResponsiveGrid } from '../components/layout/ResponsiveLayouts'
 import { metroManilaAreas } from '../data/metroManilaAreas'
-import {
-  categoryOverviewRepresentativeSlug,
-  cityRepresentativePlaceSlugs,
-  getDiscoveryImageUrl,
-} from '../data/placeIndexVisuals'
+import { cityRepresentativePlaceSlugs, getDiscoveryImageUrl } from '../data/placeIndexVisuals'
 import type { PlaceDetail } from '../types/appTypes'
 import { fetchPlaceDetailsBatch } from '../utils/placeDetailCache'
 import { getSiteOrigin } from '../utils/seo'
@@ -22,7 +18,6 @@ function PlacesIndexPage() {
   )
   const representativeSlugs = useMemo(
     () => [
-      categoryOverviewRepresentativeSlug,
       ...areaCards.map((area) => cityRepresentativePlaceSlugs[area.slug]).filter(Boolean),
     ],
     [areaCards]
@@ -66,15 +61,9 @@ function PlacesIndexPage() {
       '@context': 'https://schema.org',
       '@type': 'ItemList',
       itemListElement: [
-        {
-          '@type': 'ListItem',
-          position: 1,
-          name: 'Categories',
-          url: `${getSiteOrigin()}/places/categories`,
-        },
         ...areaCards.map((area, index) => ({
           '@type': 'ListItem',
-          position: index + 2,
+          position: index + 1,
           name: area.name,
           url: `${getSiteOrigin()}/places/${encodeURIComponent(area.slug)}`,
         })),
@@ -120,32 +109,6 @@ function PlacesIndexPage() {
             </p>
           </div>
         </section>
-
-        <ResponsiveGrid className="mt-8 gap-3">
-          <InternalLink
-            href="/places/categories"
-            className="group block rounded-3xl border border-[#E5E7EB] bg-white px-4 py-4 shadow-[0_8px_24px_rgba(17,24,39,0.04)] transition hover:-translate-y-0.5 hover:border-[#DBEAFE] hover:shadow-[0_14px_32px_rgba(30,58,138,0.08)]"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-3">
-                <IndexCardPhoto
-                  imageUrl={getDiscoveryImageUrl(categoryOverviewRepresentativeSlug, representativePlaces[categoryOverviewRepresentativeSlug])}
-                  label="Categories"
-                />
-                <div className="min-w-0">
-                  <p className="text-[1.05rem] font-black tracking-[-0.02em] text-[var(--text-main)]">Categories</p>
-                  <div className="mt-1 flex items-center gap-1.5 text-[13px] text-[var(--muted)]">
-                    <LayoutGrid className="h-3.5 w-3.5 shrink-0 text-[#94A3B8]" strokeWidth={1.9} />
-                    <span className="truncate">Browse place categories</span>
-                  </div>
-                </div>
-              </div>
-              <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--surface-alt)] text-[#64748B] transition group-hover:bg-[var(--accent-soft)] group-hover:text-[var(--accent)]">
-                <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.2} />
-              </span>
-            </div>
-          </InternalLink>
-        </ResponsiveGrid>
 
         <section className="mt-8">
           <div className="flex items-end justify-between gap-3">

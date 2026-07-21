@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '../supabase'
-import { getCurrentEmailConflict, getPostAuthRedirect } from '../services/authApi'
+import { getCurrentEmailConflict, getPostAuthRedirect, markSignupOnboardingAccess } from '../services/authApi'
 import { getOnboardingStatus } from '../utils/profileApi'
 import { getUserMfaStatus } from '../utils/userMfa'
 import { buildAuthPath } from '../services/authApi'
@@ -47,6 +47,8 @@ function AuthCallbackPage() {
 
     const finishAuth = async () => {
       try {
+        const flow = new URLSearchParams(window.location.search).get('flow')
+        const isSignupFlow = flow === 'signup'
         const code = new URLSearchParams(window.location.search).get('code')
 
         if (code) {
@@ -72,6 +74,23 @@ function AuthCallbackPage() {
         if (emailConflict.conflict) {
           await supabase.auth.signOut({ scope: 'global' })
           throw new Error('This email already has a GalaTayo account. Please log in using the original method for that account.')
+        }
+
+        if (isSignupFlow) {
+          markSignupOnboardingAccess()
+
+          const { completed } = await getOnboardingStatus(session)
+
+          if (!completed) {
+            trackSignUpCompleted({
+              source: 'signup',
+            })
+          }
+
+          if (isMounted) {
+            navigateToPath('/onboarding')
+          }
+          return
         }
 
         const { needsOnboarding, completed } = await getOnboardingStatus(session)

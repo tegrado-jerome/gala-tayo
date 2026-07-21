@@ -114,12 +114,12 @@ function ResetPasswordPage() {
         <FormContainer className="relative z-[2]">
           <section className="mx-auto flex w-full max-w-[360px] items-center justify-center md:max-w-[420px] lg:max-w-[440px]">
             <div className="w-full text-center">
-              <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-[1.2rem] border border-[var(--line)] bg-white shadow-sm">
+              <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-[1.2rem] border border-[var(--line)] bg-[var(--panel)] shadow-sm">
                 <AppIcon name="warning" className="h-5 w-5 text-[var(--warning)]" />
               </div>
               <div className="mt-5">
-                <h1 className="text-[1.6rem] font-semibold leading-[1.02] tracking-[-0.04em] text-slate-950 sm:text-[1.85rem]">Invalid or expired link</h1>
-                <p className="mx-auto mt-3 max-w-[280px] text-[13px] leading-6 text-slate-500 sm:text-[14px] sm:leading-7">
+                <h1 className="text-[1.6rem] font-semibold leading-[1.02] tracking-[-0.04em] text-[var(--text-main)] sm:text-[1.85rem]">Invalid or expired link</h1>
+                <p className="mx-auto mt-3 max-w-[280px] text-[13px] leading-6 text-[var(--muted)] sm:text-[14px] sm:leading-7">
                   This password reset link is no longer valid. Please request a new one.
                 </p>
                 <button
@@ -160,7 +160,7 @@ function ResetPasswordPage() {
                       <AppIcon name="lock" className="h-3.5 w-3.5 text-[var(--accent-deep)]" />
                       New Password
                     </span>
-                    <span className="flex h-[2.85rem] items-center gap-3 rounded-[1.2rem] border border-[var(--line)] bg-white px-3.5 shadow-sm transition focus-within:border-[var(--accent)] focus-within:bg-white">
+                    <span className="flex h-[2.85rem] items-center gap-3 rounded-[1.2rem] border border-[var(--line)] bg-[var(--panel)] px-3.5 shadow-sm transition focus-within:border-[var(--accent)] focus-within:bg-[var(--panel)]">
                       <input
                         type={isPasswordVisible ? 'text' : 'password'}
                         value={newPassword}
@@ -169,7 +169,7 @@ function ResetPasswordPage() {
                         minLength={minPasswordLength}
                         autoComplete="new-password"
                         placeholder="Enter new password"
-                        className="auth-form-input h-full w-full min-w-0 bg-transparent text-[14px] font-medium text-[var(--text)] outline-none placeholder:font-normal placeholder:text-slate-400"
+                        className="auth-form-input h-full w-full min-w-0 bg-transparent text-[14px] font-medium text-[var(--text)] outline-none placeholder:font-normal placeholder:text-[var(--text-disabled)]"
                       />
                       <button
                         type="button"
@@ -189,7 +189,7 @@ function ResetPasswordPage() {
                       <AppIcon name="lock" className="h-3.5 w-3.5 text-[var(--accent-deep)]" />
                       Confirm New Password
                     </span>
-                    <span className={`flex h-[2.85rem] items-center gap-3 rounded-[1.2rem] border px-3.5 shadow-sm transition ${confirmPasswordHasMismatch ? 'border-red-300 bg-white focus-within:border-red-400' : 'border-[var(--line)] bg-white focus-within:border-[var(--accent)] focus-within:bg-white'}`}>
+                    <span className={`flex h-[2.85rem] items-center gap-3 rounded-[1.2rem] border px-3.5 shadow-sm transition ${confirmPasswordHasMismatch ? 'border-red-300 bg-[var(--panel)] focus-within:border-red-400' : 'border-[var(--line)] bg-[var(--panel)] focus-within:border-[var(--accent)] focus-within:bg-[var(--panel)]'}`}>
                       <input
                         type={isConfirmPasswordVisible ? 'text' : 'password'}
                         value={confirmNewPassword}
@@ -198,7 +198,7 @@ function ResetPasswordPage() {
                         minLength={minPasswordLength}
                         autoComplete="new-password"
                         placeholder="Confirm new password"
-                        className="auth-form-input h-full w-full min-w-0 bg-transparent text-[14px] font-medium text-[var(--text)] outline-none placeholder:font-normal placeholder:text-slate-400"
+                        className="auth-form-input h-full w-full min-w-0 bg-transparent text-[14px] font-medium text-[var(--text)] outline-none placeholder:font-normal placeholder:text-[var(--text-disabled)]"
                       />
                       <button
                         type="button"
@@ -231,7 +231,7 @@ function ResetPasswordPage() {
                 </form>
               </div>
 
-              {error ? <p className="mt-3 rounded-[0.875rem] border border-red-200 bg-red-50 px-4 py-3 text-[13px] text-red-700 shadow-sm">{error}</p> : null}
+              {error ? <p className="mt-3 rounded-[0.875rem] border border-[var(--danger-border)] bg-[var(--danger-soft)] px-4 py-3 text-[13px] text-[var(--danger)] shadow-sm">{error}</p> : null}
             </div>
           </div>
         </section>

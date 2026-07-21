@@ -27,7 +27,6 @@ type AdminPasswordSession = {
 }
 
 type SignupOnboardingAccess = {
-  userId: string
   expiresAt: number
 }
 
@@ -212,12 +211,11 @@ export function hasAdminPasswordSession(userId: string) {
   }
 }
 
-export function markSignupOnboardingAccess(userId: string) {
+export function markSignupOnboardingAccess() {
   try {
     window.sessionStorage.setItem(
       signupOnboardingAccessKey,
       JSON.stringify({
-        userId,
         expiresAt: Date.now() + signupOnboardingAccessTtlMs,
       } satisfies SignupOnboardingAccess),
     )
@@ -226,7 +224,7 @@ export function markSignupOnboardingAccess(userId: string) {
   }
 }
 
-export function hasSignupOnboardingAccess(userId: string) {
+export function hasSignupOnboardingAccess() {
   try {
     const rawValue = window.sessionStorage.getItem(signupOnboardingAccessKey)
 
@@ -236,7 +234,7 @@ export function hasSignupOnboardingAccess(userId: string) {
 
     const parsed = JSON.parse(rawValue) as Partial<SignupOnboardingAccess>
 
-    if (parsed.userId !== userId || typeof parsed.expiresAt !== 'number' || parsed.expiresAt <= Date.now()) {
+    if (typeof parsed.expiresAt !== 'number' || parsed.expiresAt <= Date.now()) {
       window.sessionStorage.removeItem(signupOnboardingAccessKey)
       return false
     }
@@ -247,11 +245,9 @@ export function hasSignupOnboardingAccess(userId: string) {
   }
 }
 
-export function clearSignupOnboardingAccess(userId?: string | null) {
+export function clearSignupOnboardingAccess() {
   try {
-    if (!userId || hasSignupOnboardingAccess(userId)) {
-      window.sessionStorage.removeItem(signupOnboardingAccessKey)
-    }
+    window.sessionStorage.removeItem(signupOnboardingAccessKey)
   } catch {
     // sessionStorage may be unavailable, ignore
   }

@@ -18,6 +18,23 @@
     <meta name="twitter:description" content="Discover places across Metro Manila by city, category, budget, and vibe. Get AI-powered recommendations and plan your next gala." />
     <meta name="twitter:card" content="summary_large_image" />
     <title>GalaTayo - Discover places in Metro Manila</title>
+    <script>
+      (function () {
+        try {
+          var isWelcomeRoute = window.location.pathname === '/' || window.location.pathname === '';
+          var storedPreference = localStorage.getItem('galatayo:theme-preference');
+          var resolvedTheme = isWelcomeRoute ? 'light' : (storedPreference === 'dark' ? 'dark' : 'light');
+          var preference = isWelcomeRoute ? 'light' : (storedPreference === 'dark' ? 'dark' : 'light');
+          document.documentElement.dataset.theme = resolvedTheme;
+          document.documentElement.dataset.themePreference = preference;
+          document.documentElement.style.colorScheme = resolvedTheme;
+        } catch (error) {
+          document.documentElement.dataset.theme = 'light';
+          document.documentElement.dataset.themePreference = 'light';
+          document.documentElement.style.colorScheme = 'light';
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

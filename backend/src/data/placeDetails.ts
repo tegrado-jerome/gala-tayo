@@ -4,6 +4,7 @@ import {
   getApprovedPlaceImagesByPlaceIds,
 } from "../services/placeImagesService";
 import { extractPlaceImageUrls } from "../utils/placeImageFallback";
+import { normalizeImageUrls } from "../utils/r2UrlResolver";
 import {
   buildPlaceDetailCacheKey,
 } from "../utils/cacheKey";
@@ -453,27 +454,26 @@ function normalizeCityImageKey(value: string | null | undefined): string {
 }
 
 function getDetailImageUrls(detail: Pick<PlaceDetail, "imageUrl" | "curatedImageUrls">): string[] {
-  const seen = new Set<string>();
-  const urls: string[] = [];
+  return normalizeImageUrls([detail.imageUrl, ...(detail.curatedImageUrls ?? [])]);
+}
 
-  for (const candidate of [detail.imageUrl, ...(detail.curatedImageUrls ?? [])]) {
-    const imageUrl = candidate?.trim();
-    if (imageUrl && !seen.has(imageUrl)) {
-      seen.add(imageUrl);
-      urls.push(imageUrl);
-    }
-  }
+function normalizePlaceDetailImages(detail: PlaceDetail): PlaceDetail {
+  const normalizedImageUrls = getDetailImageUrls(detail);
 
-  return urls;
+  return {
+    ...detail,
+    imageUrl: normalizedImageUrls[0] ?? "",
+    curatedImageUrls: normalizedImageUrls,
+  };
 }
 
 async function readCachedPlaceDetail(lookupKey: string): Promise<PlaceDetail | null> {
   const cachedDetail = await getJsonCacheValue<PlaceDetail>(buildPlaceDetailCacheKey(lookupKey));
-  return cachedDetail ?? null;
+  return cachedDetail ? normalizePlaceDetailImages(cachedDetail) : null;
 }
 
 async function writeCachedPlaceDetail(detail: PlaceDetail): Promise<void> {
-  const cachePayload = detail;
+  const cachePayload = normalizePlaceDetailImages(detail);
   await Promise.all([
     setJsonCacheValue(buildPlaceDetailCacheKey(detail.id), cachePayload, {
       ttlSeconds: PLACE_DETAIL_CACHE_TTL_SECONDS,
@@ -549,10 +549,10 @@ export async function findPlaceDetailsByIds(placeIds: string[]): Promise<Map<str
       const detail = mapPlaceRowToDetail(row);
       const reviewSummary = reviewSummaries.get(detail.id);
       const images = imagesByPlaceId.get(detail.id) ?? [];
-      const imageUrls = images.map((image) => image.image_url);
-      const resolvedImageUrls = imageUrls.length > 0 ? imageUrls : detail.curatedImageUrls;
+      const imageUrls = normalizeImageUrls(images.map((image) => image.image_url));
+      const resolvedImageUrls = imageUrls.length > 0 ? imageUrls : getDetailImageUrls(detail);
 
-      loadedDetailsById.set(detail.id, {
+      loadedDetailsById.set(detail.id, normalizePlaceDetailImages({
         ...detail,
         rating: reviewSummary?.averageRating ?? detail.rating ?? null,
         review_count:
@@ -561,7 +561,7 @@ export async function findPlaceDetailsByIds(placeIds: string[]): Promise<Map<str
             : null,
         imageUrl: resolvedImageUrls[0] ?? "",
         curatedImageUrls: resolvedImageUrls,
-      });
+      }));
     }
 
     await Promise.all(
@@ -626,9 +626,9 @@ export async function findPlaceDetailsBySlugs(slugs: string[]): Promise<Map<stri
       const detail = mapPlaceRowToDetail(row);
       const reviewSummary = reviewSummaries.get(detail.id);
       const images = imagesByPlaceId.get(detail.id) ?? [];
-      const imageUrls = images.map((image) => image.image_url);
-      const resolvedImageUrls = imageUrls.length > 0 ? imageUrls : detail.curatedImageUrls;
-      const resolvedDetail = {
+      const imageUrls = normalizeImageUrls(images.map((image) => image.image_url));
+      const resolvedImageUrls = imageUrls.length > 0 ? imageUrls : getDetailImageUrls(detail);
+      const resolvedDetail = normalizePlaceDetailImages({
         ...detail,
         rating: reviewSummary?.averageRating ?? detail.rating ?? null,
         review_count:
@@ -637,7 +637,7 @@ export async function findPlaceDetailsBySlugs(slugs: string[]): Promise<Map<stri
             : null,
         imageUrl: resolvedImageUrls[0] ?? "",
         curatedImageUrls: resolvedImageUrls,
-      };
+      });
 
       loadedDetailsBySlug.set(detail.slug, resolvedDetail);
       detailsBySlug.set(detail.slug, resolvedDetail);
@@ -738,7 +738,7 @@ export async function resolveCityImageDetails(
     for (const row of rows) {
       const detail = mapPlaceRowToDetail(row);
       const images = imagesByPlaceId.get(detail.id) ?? [];
-      const imageUrls = images.map((image) => image.image_url).filter(Boolean);
+      const imageUrls = normalizeImageUrls(images.map((image) => image.image_url));
 
       if (imageUrls.length === 0) {
         continue;
@@ -746,11 +746,11 @@ export async function resolveCityImageDetails(
 
       const rowCityKey = normalizeCityImageKey(detail.city);
       const details = imageBackedDetailsByCityKey.get(rowCityKey) ?? [];
-      const resolvedDetail = {
+      const resolvedDetail = normalizePlaceDetailImages({
         ...detail,
         imageUrl: imageUrls[0] ?? "",
         curatedImageUrls: imageUrls,
-      };
+      });
 
       details.push(resolvedDetail);
       imageBackedDetailsByCityKey.set(rowCityKey, details);
@@ -821,16 +821,16 @@ export async function findPlaceDetailByIdOrSlug(id: string): Promise<PlaceDetail
       const detail = mapPlaceRowToDetail(slugData as Record<string, unknown>);
       const reviewSummary = await getPlaceReviewSummary(detail.id);
       const images = await getApprovedPlaceImages(detail.id);
-      const imageUrls = images.map((image) => image.image_url);
-      const resolvedImageUrls = imageUrls.length > 0 ? imageUrls : detail.curatedImageUrls;
-      const resolvedDetail = {
+      const imageUrls = normalizeImageUrls(images.map((image) => image.image_url));
+      const resolvedImageUrls = imageUrls.length > 0 ? imageUrls : getDetailImageUrls(detail);
+      const resolvedDetail = normalizePlaceDetailImages({
         ...detail,
         rating: reviewSummary.averageRating ?? detail.rating ?? null,
         review_count: reviewSummary.reviewCount > 0 ? reviewSummary.reviewCount : null,
         imageUrl: resolvedImageUrls[0] ?? "",
         curatedImageUrls: resolvedImageUrls,
         approvedImageCount: imageUrls.length,
-      };
+      });
       await writeCachedPlaceDetail(resolvedDetail);
       return resolvedDetail;
     }
@@ -854,16 +854,16 @@ export async function findPlaceDetailByIdOrSlug(id: string): Promise<PlaceDetail
         const detail = mapPlaceRowToDetail(idData as Record<string, unknown>);
         const reviewSummary = await getPlaceReviewSummary(detail.id);
         const images = await getApprovedPlaceImages(detail.id);
-        const imageUrls = images.map((image) => image.image_url);
-        const resolvedImageUrls = imageUrls.length > 0 ? imageUrls : detail.curatedImageUrls;
-        const resolvedDetail = {
+        const imageUrls = normalizeImageUrls(images.map((image) => image.image_url));
+        const resolvedImageUrls = imageUrls.length > 0 ? imageUrls : getDetailImageUrls(detail);
+        const resolvedDetail = normalizePlaceDetailImages({
           ...detail,
           rating: reviewSummary.averageRating ?? detail.rating ?? null,
           review_count: reviewSummary.reviewCount > 0 ? reviewSummary.reviewCount : null,
           imageUrl: resolvedImageUrls[0] ?? "",
           curatedImageUrls: resolvedImageUrls,
           approvedImageCount: imageUrls.length,
-        };
+        });
         await writeCachedPlaceDetail(resolvedDetail);
         return resolvedDetail;
       }

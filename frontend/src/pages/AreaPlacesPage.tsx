@@ -387,7 +387,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
             {areaName}
           </h1>
           <p className="mt-3 max-w-[36rem] text-[15px] leading-7 text-[var(--muted)]">
-            Browse everything in one clean alphabetical list.
+            Browse featured spots, then open the full list whenever you want more options.
           </p>
         </section>
 
@@ -418,7 +418,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
                       {activeCategory === 'all' ? 'All places' : `${activeFilterLabel} places`}
                     </h2>
                     <p className="mt-1 text-[13px] leading-6 text-[var(--muted)]">
-                      Listed from A to Z for easier browsing in {areaName}.
+                      See the city’s parks, cafes, landmarks, and local favorites in one place.
                     </p>
                   </div>
                 </div>

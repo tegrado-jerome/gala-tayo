@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent, type RefObject } from 'react'
-import { Bot, ChevronRight, Compass, Flame, Heart, LayoutGrid, MapPin, Search, SlidersHorizontal, Sparkles, Star } from 'lucide-react'
+import { Bot, ChevronRight, Compass, Flame, Heart, LayoutGrid, MapPin, Moon, Search, SlidersHorizontal, Sparkles, Star, SunMedium } from 'lucide-react'
 import { useAppUser } from '../context/AppUserContext'
+import { useTheme } from '../context/ThemeContext'
 import UserMenu from '../components/UserMenu'
 import { AppSkeleton } from '../components/AppUI'
 import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
@@ -115,6 +116,28 @@ const homeTopPickRecommendationPlaces = [
   ...homeRecommendedTopPickPlaces,
   ...homeAllTopPickPlaces,
 ]
+
+function HomeThemeToggleButton() {
+  const { resolvedTheme, setThemePreference } = useTheme()
+
+  const nextThemePreference = resolvedTheme === 'dark' ? 'light' : 'dark'
+  const label = `Switch to ${nextThemePreference} mode`
+  const Icon = resolvedTheme === 'dark' ? SunMedium : Moon
+
+  return (
+    <button
+      type="button"
+      onClick={() => setThemePreference(nextThemePreference)}
+      aria-label={label}
+      title={label}
+      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--surface-overlay)] text-[var(--text-main)] shadow-[var(--shadow-soft)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:border-[var(--line-strong)] hover:bg-[var(--surface-elevated)] focus-visible:ring-2 focus-visible:ring-[var(--accent-soft)] active:translate-y-0"
+    >
+      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
+        <Icon className="h-[18px] w-[18px]" strokeWidth={2.2} />
+      </span>
+    </button>
+  )
+}
 
 function parseCoordinate(value: number | string | null | undefined) {
   if (typeof value === 'number' && Number.isFinite(value)) {
@@ -703,14 +726,14 @@ function HomeFeaturedCardSkeleton({ index }: { index: number }) {
       style={{ animationDelay: `${index * 80}ms` }}
       aria-hidden="true"
     >
-      <div className="relative overflow-hidden rounded-[24px] bg-white ring-1 ring-slate-200 shadow-[0_16px_30px_rgba(15,23,42,0.05)]">
+      <div className="relative overflow-hidden rounded-[24px] bg-[var(--home-featured-skeleton-surface)] ring-1 ring-[var(--home-featured-skeleton-ring)] shadow-[var(--shadow-soft)]">
         <div className="relative aspect-[1.28] w-full">
-          <AppSkeleton className="absolute inset-0 rounded-[24px]" />
+          <AppSkeleton className="home-skeleton absolute inset-0 rounded-[24px]" />
           <div className="absolute inset-x-0 bottom-0 p-4">
-            <AppSkeleton className="h-5 w-2/3 rounded-full bg-white/35" />
+            <AppSkeleton className="home-skeleton-soft h-5 w-2/3 rounded-full" style={{ background: 'var(--home-featured-skeleton-title)' }} />
             <div className="mt-2 flex items-center gap-2">
-              <AppSkeleton className="h-3.5 w-28 rounded-full bg-white/30" />
-              <AppSkeleton className="h-6 w-14 rounded-full bg-white/30" />
+              <AppSkeleton className="home-skeleton-soft h-3.5 w-28 rounded-full" style={{ background: 'var(--home-featured-skeleton-meta)' }} />
+              <AppSkeleton className="home-skeleton-soft h-6 w-14 rounded-full" style={{ background: 'var(--home-featured-skeleton-meta)' }} />
             </div>
           </div>
         </div>
@@ -725,19 +748,22 @@ function HomePageSkeleton() {
       <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
         <div className="mx-auto flex min-h-screen w-full max-w-[1320px] flex-col px-4 pb-[calc(env(safe-area-inset-bottom,0px)+6.5rem)] pt-[max(18px,env(safe-area-inset-top))] sm:px-5 sm:pb-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] md:px-6 md:pb-[calc(env(safe-area-inset-bottom,0px)+5rem)] md:pt-10 lg:px-8 lg:pb-[calc(env(safe-area-inset-bottom,0px)+4.5rem)]">
           <section className="min-w-0 pt-2 md:pt-0" aria-hidden="true">
-            <AppSkeleton className="h-4 w-28 rounded-full" />
+            <AppSkeleton className="home-skeleton-soft h-4 w-28 rounded-full" />
             <div className="mt-3 flex items-center justify-between gap-4">
-              <AppSkeleton className="h-7 w-44 rounded-full" />
-              <AppSkeleton className="h-10 w-10 rounded-full" />
+              <AppSkeleton className="home-skeleton h-7 w-44 rounded-full" />
+              <div className="flex items-center gap-1.5">
+                <AppSkeleton className="home-skeleton h-9 w-9 rounded-full" />
+                <AppSkeleton className="home-skeleton h-10 w-10 rounded-full" />
+              </div>
             </div>
-            <AppSkeleton className="mt-3 h-4 w-64 rounded-full" />
-            <AppSkeleton className="mt-6 h-14 w-full rounded-[20px]" />
+            <AppSkeleton className="home-skeleton-soft mt-3 h-4 w-64 rounded-full" />
+            <AppSkeleton className="home-skeleton home-skeleton-surface mt-6 h-14 w-full rounded-[20px]" />
 
             <div className="mt-7">
-              <AppSkeleton className="mb-3 h-4 w-24 rounded-full" />
+              <AppSkeleton className="home-skeleton-soft mb-3 h-4 w-24 rounded-full" />
               <div className="grid grid-cols-2 gap-3">
-                <AppSkeleton className="h-[76px] rounded-[18px]" />
-                <AppSkeleton className="h-[76px] rounded-[18px]" />
+                <AppSkeleton className="home-skeleton home-skeleton-surface h-[76px] rounded-[18px]" />
+                <AppSkeleton className="home-skeleton home-skeleton-surface h-[76px] rounded-[18px]" />
               </div>
             </div>
           </section>
@@ -745,13 +771,13 @@ function HomePageSkeleton() {
           <div className="mt-5 flex min-w-0 flex-1 flex-col justify-evenly gap-4 md:mt-10 md:gap-10 lg:gap-12" aria-hidden="true">
             <section className="min-w-0 md:-mt-1">
               <div className="flex items-center justify-between gap-3">
-                <AppSkeleton className="h-8 w-36 rounded-full" />
-                <AppSkeleton className="h-5 w-16 rounded-full" />
+                <AppSkeleton className="home-skeleton h-8 w-36 rounded-full" />
+                <AppSkeleton className="home-skeleton-soft h-5 w-16 rounded-full" />
               </div>
               <div className="mt-2 flex gap-3">
-                <AppSkeleton className="h-5 w-10 rounded-full" />
-                <AppSkeleton className="h-5 w-16 rounded-full" />
-                <AppSkeleton className="h-5 w-28 rounded-full" />
+                <AppSkeleton className="home-skeleton-soft h-5 w-10 rounded-full" />
+                <AppSkeleton className="home-skeleton-soft h-5 w-16 rounded-full" />
+                <AppSkeleton className="home-skeleton-soft h-5 w-28 rounded-full" />
               </div>
               <div className="-mx-4 mt-3 px-4">
                 <div className="flex gap-4 overflow-hidden">
@@ -761,20 +787,20 @@ function HomePageSkeleton() {
                 </div>
               </div>
               <div className="mt-4 flex justify-center">
-                <AppSkeleton className="h-3 w-28 rounded-full" />
+                <AppSkeleton className="home-skeleton-soft h-3 w-28 rounded-full" />
               </div>
             </section>
 
             <section className="min-w-0">
               <div className="flex items-center justify-between gap-3">
-                <AppSkeleton className="h-7 w-24 rounded-full" />
-                <AppSkeleton className="h-5 w-16 rounded-full" />
+                <AppSkeleton className="home-skeleton h-7 w-24 rounded-full" />
+                <AppSkeleton className="home-skeleton-soft h-5 w-16 rounded-full" />
               </div>
               <div className="mt-3 flex gap-3 overflow-hidden">
                 {Array.from({ length: 8 }).map((_, index) => (
                   <div key={`home-city-skeleton-${index}`} className="flex w-[clamp(4.75rem,22vw,7.5rem)] shrink-0 flex-col items-center gap-2 px-1 py-1.5 md:w-[120px] lg:w-[132px]">
-                    <AppSkeleton className="h-[clamp(4rem,18vw,5.75rem)] w-[clamp(4rem,18vw,5.75rem)] rounded-[16px] md:h-[84px] md:w-[84px] lg:h-[92px] lg:w-[92px]" />
-                    <AppSkeleton className="h-4 w-16 rounded-full" />
+                    <AppSkeleton className="home-skeleton home-skeleton-surface h-[clamp(4rem,18vw,5.75rem)] w-[clamp(4rem,18vw,5.75rem)] rounded-[16px] md:h-[84px] md:w-[84px] lg:h-[92px] lg:w-[92px]" />
+                    <AppSkeleton className="home-skeleton-soft h-4 w-16 rounded-full" />
                   </div>
                 ))}
               </div>
@@ -782,14 +808,14 @@ function HomePageSkeleton() {
 
             <section className="min-w-0">
               <div className="flex items-center justify-between gap-3">
-                <AppSkeleton className="h-7 w-32 rounded-full" />
-                <AppSkeleton className="h-5 w-16 rounded-full" />
+                <AppSkeleton className="home-skeleton h-7 w-32 rounded-full" />
+                <AppSkeleton className="home-skeleton-soft h-5 w-16 rounded-full" />
               </div>
               <div className="mt-3 flex gap-3 overflow-hidden">
                 {Array.from({ length: 8 }).map((_, index) => (
                   <div key={`home-category-skeleton-${index}`} className="flex w-[clamp(4.75rem,22vw,7.5rem)] shrink-0 flex-col items-center gap-2 px-1 py-1.5 md:w-[120px] lg:w-[132px]">
-                    <AppSkeleton className="h-[clamp(4rem,18vw,5.75rem)] w-[clamp(4rem,18vw,5.75rem)] rounded-[16px] md:h-[84px] md:w-[84px] lg:h-[92px] lg:w-[92px]" />
-                    <AppSkeleton className="h-4 w-20 rounded-full" />
+                    <AppSkeleton className="home-skeleton home-skeleton-surface h-[clamp(4rem,18vw,5.75rem)] w-[clamp(4rem,18vw,5.75rem)] rounded-[16px] md:h-[84px] md:w-[84px] lg:h-[92px] lg:w-[92px]" />
+                    <AppSkeleton className="home-skeleton-soft h-4 w-20 rounded-full" />
                   </div>
                 ))}
               </div>
@@ -840,13 +866,14 @@ function HomeCategoryTile({
       type="button"
       onClick={onClick}
       className={`flex w-[clamp(4.75rem,22vw,7.5rem)] shrink-0 snap-center flex-col items-center gap-2 rounded-[18px] px-1 py-1.5 text-center transition md:w-[120px] md:rounded-[22px] md:px-2 md:py-2 lg:w-[132px] ${
-        active ? 'bg-[rgba(30,58,138,0.08)]' : 'bg-transparent'
+        active ? 'bg-[var(--home-tile-active-bg)]' : 'bg-transparent'
       }`}
     >
       <div
-        className={`h-[clamp(4rem,18vw,5.75rem)] w-[clamp(4rem,18vw,5.75rem)] overflow-hidden rounded-[16px] border bg-slate-100 transition md:h-[84px] md:w-[84px] lg:h-[92px] lg:w-[92px] ${
-          active ? 'border-[rgba(30,58,138,0.34)] shadow-[0_8px_20px_rgba(15,23,42,0.06)] ring-1 ring-[rgba(30,58,138,0.14)]' : 'border-[rgba(148,163,184,0.18)]'
+        className={`h-[clamp(4rem,18vw,5.75rem)] w-[clamp(4rem,18vw,5.75rem)] overflow-hidden rounded-[16px] border transition md:h-[84px] md:w-[84px] lg:h-[92px] lg:w-[92px] ${
+          active ? 'border-[var(--home-tile-active-border)] shadow-[var(--home-tile-shadow)] ring-1 ring-[var(--home-tile-active-ring)]' : 'border-[var(--home-tile-border)]'
         }`}
+        style={{ background: 'var(--home-tile-surface)' }}
       >
         {!isLoading && shouldShowImage ? (
           <div className="relative h-full w-full">
@@ -872,7 +899,7 @@ function HomeCategoryTile({
           <AppSkeleton className="h-full w-full rounded-none bg-[linear-gradient(145deg,#e2e8f0_0%,#cbd5e1_100%)]" />
         )}
       </div>
-      <span className={`w-full truncate text-[12.5px] font-medium md:text-[14px] ${active ? 'text-[var(--accent-deep)]' : 'text-slate-500'}`}>{label}</span>
+      <span className={`w-full truncate text-[12.5px] font-medium md:text-[14px] ${active ? 'text-[var(--home-tile-label-active)]' : 'text-[var(--home-tile-label)]'}`}>{label}</span>
     </button>
   )
 }
@@ -1929,8 +1956,8 @@ function HomePage({
       <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
         <div className="mx-auto flex min-h-screen w-full max-w-[1320px] flex-col px-4 pb-[calc(env(safe-area-inset-bottom,0px)+6.5rem)] pt-[max(18px,env(safe-area-inset-top))] sm:px-5 sm:pb-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] md:px-6 md:pb-[calc(env(safe-area-inset-bottom,0px)+5rem)] md:pt-10 lg:px-8 lg:pb-[calc(env(safe-area-inset-bottom,0px)+4.5rem)]">
           <section className="min-w-0 pt-2 md:pt-0">
-            <div className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">
-              <Compass className="h-4 w-4 text-[var(--accent)]" strokeWidth={2} />
+            <div className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em]" style={{ color: 'var(--home-eyebrow)' }}>
+              <Compass className="h-4 w-4" style={{ color: 'var(--home-eyebrow-icon)' }} strokeWidth={2} />
               <span>DISCOVER</span>
             </div>
             <div className="flex items-center justify-between gap-4">
@@ -1938,28 +1965,31 @@ function HomePage({
                 Hi, <span className="font-bold">{greetingName}!</span>
               </p>
 
-              <UserMenu user={currentUser} profile={currentProfile} compact />
+              <div className="flex items-center gap-1.5">
+                <HomeThemeToggleButton />
+                <UserMenu user={currentUser} profile={currentProfile} compact />
+              </div>
             </div>
 
-            <p className="mt-2 max-w-[22rem] text-[13px] leading-6 text-slate-500">
+            <p className="mt-2 max-w-[22rem] text-[13px] leading-6" style={{ color: 'var(--home-copy)' }}>
               Curated spots, cities, and categories in one clean view.
             </p>
 
             <button
               type="button"
               onClick={() => navigateToPath('/search')}
-              className="mt-8 flex h-[56px] w-full items-center justify-between rounded-[20px] border border-slate-200/70 bg-transparent px-4 text-[var(--accent-deep)] transition hover:border-slate-300 hover:bg-slate-50/70"
+              className="home-search-button mt-8 flex h-[56px] w-full items-center justify-between rounded-[20px] border px-4 transition"
             >
-              <span className="flex min-w-0 items-center gap-2.5 text-[var(--accent-deep)]">
-                <Search className="h-[21px] w-[21px] shrink-0 text-[var(--accent-deep)]" strokeWidth={2} />
-                <span className="truncate text-[15px] font-medium text-slate-500">Discover a city</span>
+              <span className="flex min-w-0 items-center gap-2.5" style={{ color: 'var(--home-search-text)' }}>
+                <Search className="h-[21px] w-[21px] shrink-0" style={{ color: 'var(--home-eyebrow-icon)' }} strokeWidth={2} />
+                <span className="truncate text-[15px] font-medium" style={{ color: 'var(--home-search-placeholder)' }}>Discover a city</span>
               </span>
-              <SlidersHorizontal className="h-[21px] w-[21px] shrink-0 text-[var(--accent-deep)]" strokeWidth={2} />
+              <SlidersHorizontal className="h-[21px] w-[21px] shrink-0" style={{ color: 'var(--home-eyebrow-icon)' }} strokeWidth={2} />
             </button>
 
             <section className="mt-9 md:mt-7">
-              <div className="mb-2 flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">
-                <Sparkles className="h-3.5 w-3.5 text-[var(--accent)]" strokeWidth={2.2} />
+              <div className="mb-2 flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em]" style={{ color: 'var(--home-eyebrow)' }}>
+                <Sparkles className="h-3.5 w-3.5" style={{ color: 'var(--home-eyebrow-icon)' }} strokeWidth={2.2} />
                 <span>AI Features</span>
               </div>
 
@@ -1972,17 +2002,17 @@ function HomePage({
                       key={feature.href}
                       type="button"
                       onClick={() => navigateToPath(feature.href)}
-                      className="flex min-w-0 items-center gap-3 rounded-[18px] border border-slate-200/80 bg-white/75 px-3.5 py-3 text-left shadow-[0_10px_24px_rgba(15,23,42,0.04)] transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white"
+                      className="home-ai-card flex min-w-0 items-center gap-3 rounded-[18px] border px-3.5 py-3 text-left transition hover:-translate-y-0.5"
                     >
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--accent-wash)] text-[var(--accent-deep)]">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl" style={{ background: 'var(--home-ai-icon-bg)', color: 'var(--home-ai-icon-text)' }}>
                         <Icon className="h-4.5 w-4.5" strokeWidth={2.2} />
                       </span>
 
                       <span className="min-w-0">
-                        <span className="block truncate text-[14px] font-bold tracking-[-0.02em] text-slate-950">
+                        <span className="block truncate text-[14px] font-bold tracking-[-0.02em]" style={{ color: 'var(--home-ai-title)' }}>
                           {feature.title}
                         </span>
-                        <span className="block truncate text-[12px] text-slate-500">
+                        <span className="block truncate text-[12px]" style={{ color: 'var(--home-ai-description)' }}>
                           {feature.description}
                         </span>
                       </span>
@@ -2007,7 +2037,8 @@ function HomePage({
                     <button
                       type="button"
                       onClick={() => navigateToPath('/places')}
-                      className="mt-1 inline-flex items-center gap-1 text-[14px] font-medium text-slate-400 transition hover:text-slate-700"
+                      className="mt-1 inline-flex items-center gap-1 text-[14px] font-medium transition"
+                      style={{ color: 'var(--home-link)' }}
                     >
                       See all
                       <ChevronRight className="h-4 w-4" strokeWidth={2.2} />
@@ -2021,7 +2052,7 @@ function HomePage({
                   type="button"
                   onClick={() => handleTopPicksTabChange('all')}
                   className={`shrink-0 transition hover:text-[var(--accent-deep)] ${
-                    activeTopPicksTab === 'all' ? 'font-semibold text-[var(--accent-deep)]' : 'font-medium text-slate-400'
+                    activeTopPicksTab === 'all' ? 'font-semibold text-[var(--home-tab-active)]' : 'font-medium text-[var(--home-tab-inactive)]'
                   }`}
                 >
                   All
@@ -2030,7 +2061,7 @@ function HomePage({
                   type="button"
                   onClick={() => handleTopPicksTabChange('popular')}
                   className={`shrink-0 transition hover:text-[var(--accent-deep)] ${
-                    activeTopPicksTab === 'popular' ? 'font-semibold text-[var(--accent-deep)]' : 'font-medium text-slate-400'
+                    activeTopPicksTab === 'popular' ? 'font-semibold text-[var(--home-tab-active)]' : 'font-medium text-[var(--home-tab-inactive)]'
                   }`}
                 >
                   Popular
@@ -2039,7 +2070,7 @@ function HomePage({
                   type="button"
                   onClick={() => handleTopPicksTabChange('recommended')}
                   className={`shrink-0 transition hover:text-[var(--accent-deep)] ${
-                    activeTopPicksTab === 'recommended' ? 'font-semibold text-[var(--accent-deep)]' : 'font-medium text-slate-400'
+                    activeTopPicksTab === 'recommended' ? 'font-semibold text-[var(--home-tab-active)]' : 'font-medium text-[var(--home-tab-inactive)]'
                   }`}
                 >
                   Recommended
@@ -2065,7 +2096,7 @@ function HomePage({
                         <HomeFeaturedCardSkeleton key={`home-featured-skeleton-${index}`} index={index} />
                       ))
                     ) : trendingError && visibleTopPickCarouselPlaces.length === 0 ? (
-                      <p className="col-span-2 rounded-[20px] bg-white px-4 py-4 text-sm text-red-500 shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
+                      <p className="col-span-2 rounded-[20px] bg-white px-4 py-4 text-sm text-red-500 shadow-[0_10px_24px_rgba(15,23,42,0.05)]" style={{ boxShadow: 'var(--shadow-soft)' }}>
                         {trendingError}
                       </p>
                     ) : (
@@ -2108,12 +2139,13 @@ function HomePage({
 
             <section className="min-w-0">
               <div className="flex items-center justify-between gap-3">
-                <h2 className="inline-flex items-center gap-2 text-[22px] font-bold tracking-[-0.04em] text-slate-950"><MapPin className="h-5 w-5" strokeWidth={2.2} />Cities</h2>
+                <h2 className="inline-flex items-center gap-2 text-[22px] font-bold tracking-[-0.04em]" style={{ color: 'var(--home-heading)' }}><MapPin className="h-5 w-5" style={{ color: 'var(--home-heading)' }} strokeWidth={2.2} />Cities</h2>
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
                     onClick={openAllCities}
-                    className="mt-1 inline-flex items-center gap-1 text-[14px] font-medium text-slate-400 transition hover:text-slate-700"
+                    className="mt-1 inline-flex items-center gap-1 text-[14px] font-medium transition"
+                    style={{ color: 'var(--home-link)' }}
                   >
                     See all
                     <ChevronRight className="h-4 w-4" strokeWidth={2.2} />
@@ -2156,12 +2188,13 @@ function HomePage({
 
             <section className="min-w-0">
               <div className="flex items-center justify-between gap-3">
-                <h2 className="inline-flex items-center gap-2 text-[22px] font-bold tracking-[-0.04em] text-slate-950"><LayoutGrid className="h-5 w-5" strokeWidth={2.2} />Categories</h2>
+                <h2 className="inline-flex items-center gap-2 text-[22px] font-bold tracking-[-0.04em]" style={{ color: 'var(--home-heading)' }}><LayoutGrid className="h-5 w-5" style={{ color: 'var(--home-heading)' }} strokeWidth={2.2} />Categories</h2>
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
                     onClick={openAllCategories}
-                    className="mt-1 inline-flex items-center gap-1 text-[14px] font-medium text-slate-400 transition hover:text-slate-700"
+                    className="mt-1 inline-flex items-center gap-1 text-[14px] font-medium transition"
+                    style={{ color: 'var(--home-link)' }}
                   >
                     See all
                     <ChevronRight className="h-4 w-4" strokeWidth={2.2} />

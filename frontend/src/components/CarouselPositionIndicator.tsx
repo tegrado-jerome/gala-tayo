@@ -58,10 +58,10 @@ function CarouselPositionIndicator({
               )
 
               return (
-                <span key={`segment-${index}`} className="overflow-hidden rounded-full bg-slate-200/80">
+                <span key={`segment-${index}`} className="overflow-hidden rounded-full" style={{ background: 'var(--indicator-segment-bg)' }}>
                   <span
                     aria-hidden="true"
-                    className="block h-full origin-left rounded-full bg-[var(--accent-deep)] transition-transform duration-75 ease-linear will-change-transform"
+                    className="block h-full origin-left rounded-full bg-[var(--indicator-active-bg)] transition-transform duration-75 ease-linear will-change-transform"
                     style={{
                       transform: `scaleX(${segmentFillRatio})`,
                     }}
@@ -100,9 +100,10 @@ function CarouselPositionIndicator({
         </div>
       ) : (
       <div
-        className={`relative inline-flex items-center gap-1.5 rounded-full bg-slate-900/5 px-2.5 py-1.5 backdrop-blur-sm ${
+        className={`relative inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 backdrop-blur-sm ${
           trackClassName ?? ''
         }`}
+        style={{ background: 'var(--indicator-track-bg)' }}
       >
         {Array.from({ length: visibleCount }, (_, index) => {
           const targetIndex =
@@ -112,8 +113,8 @@ function CarouselPositionIndicator({
           const isActive = index === activeVisibleIndex
           const dotClassName = `block rounded-full transition-all duration-150 ease-out ${
               isActive
-                ? 'h-2 w-5 bg-[var(--accent-deep)] shadow-[0_1px_6px_rgba(37,60,143,0.22)]'
-                : 'h-1.5 w-1.5 bg-slate-300/90'
+                ? 'h-2 w-5 bg-[var(--indicator-active-bg)]'
+                : 'h-1.5 w-1.5'
             }`
 
           return onSelect ? (
@@ -131,12 +132,13 @@ function CarouselPositionIndicator({
               aria-label={`Go to ${label ?? 'carousel'} item ${targetIndex + 1}`}
               className="flex h-5 min-w-5 touch-manipulation items-center justify-center rounded-full"
             >
-              <span className={dotClassName} />
+              <span className={dotClassName} style={isActive ? { boxShadow: 'var(--indicator-active-shadow)' } : { background: 'var(--indicator-dot-bg)' }} />
             </button>
           ) : (
             <span
               key={index}
               className={dotClassName}
+              style={isActive ? { boxShadow: 'var(--indicator-active-shadow)' } : { background: 'var(--indicator-dot-bg)' }}
             />
           )
         })}

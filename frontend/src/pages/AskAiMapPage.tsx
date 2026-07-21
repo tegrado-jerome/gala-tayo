@@ -40,6 +40,7 @@ import { trackAskAiMapsUsed } from '../utils/analytics'
 import { useAskAiUsageAutoRefresh } from '../hooks/useAskAiUsageAutoRefresh'
 import { navigateBackWithFallback } from '../utils/navigation'
 import { PageShellSkeleton } from '../components/loading/SkeletonStates'
+import { useTheme } from '../context/ThemeContext'
 import {
   type AskAiMapChipId,
   type AskAiMapsResponse,
@@ -237,6 +238,8 @@ const AskAiMapComposer = memo(function AskAiMapComposer({
 })
 
 function AskAiMapPage() {
+  const { resolvedTheme } = useTheme()
+  const isDarkMode = resolvedTheme === 'dark'
   const initialAskAiMapRuntimeStateRef = useRef(
     hasActiveAskAiMapRuntimeState() ? getAskAiMapRuntimeState() : null
   )
@@ -292,6 +295,45 @@ function AskAiMapPage() {
   const [selectedPlaceFocusSignal, setSelectedPlaceFocusSignal] = useState(0)
   const [isPlaceDetailOpen, setIsPlaceDetailOpen] = useState(false)
   const [isMapPinNoticeDismissed, setIsMapPinNoticeDismissed] = useState(false)
+  const placeIndexBadgeClassName = isDarkMode
+    ? 'inline-flex h-7 min-w-7 items-center justify-center rounded-2xl px-2 text-[11px] font-black bg-[linear-gradient(180deg,#1e3a8a_0%,#0f172a_100%)] text-white'
+    : 'inline-flex h-7 min-w-7 items-center justify-center rounded-2xl px-2 text-[11px] font-black bg-slate-100 text-[var(--accent-deep)]'
+  const viewDetailsButtonClassName = isDarkMode
+    ? 'inline-flex shrink-0 items-center gap-1 rounded-full border border-[rgba(96,165,250,0.16)] bg-[#0f1726] px-3 py-1.5 text-[11px] font-semibold text-[#dbeafe] transition hover:bg-[#14233a] active:scale-95'
+    : 'inline-flex shrink-0 items-center gap-1 rounded-full border border-[var(--accent)]/16 bg-[var(--accent-wash)] px-3 py-1.5 text-[11px] font-semibold text-[var(--accent-deep)] transition hover:bg-[var(--accent)]/15 active:scale-95'
+  const placeDetailSectionClassName = isDarkMode
+    ? 'flex w-full max-h-[82dvh] flex-col overflow-hidden rounded-t-[28px] bg-[#0f1726] text-[#eef4ff] shadow-[0_-18px_48px_rgba(2,8,23,0.42)] md:max-w-[520px] md:max-h-[88dvh] md:rounded-[28px] md:shadow-[0_26px_60px_rgba(2,8,23,0.44)] lg:max-w-[580px] lg:max-h-[88dvh] lg:rounded-[28px] lg:shadow-[0_26px_60px_rgba(2,8,23,0.44)]'
+    : 'flex w-full max-h-[82dvh] flex-col overflow-hidden rounded-t-[28px] bg-white shadow-[0_-18px_48px_rgba(15,23,42,0.22)] md:max-w-[520px] md:max-h-[88dvh] md:rounded-[28px] md:shadow-[0_26px_60px_rgba(15,23,42,0.24)] lg:max-w-[580px] lg:max-h-[88dvh] lg:rounded-[28px] lg:shadow-[0_26px_60px_rgba(15,23,42,0.24)]'
+  const placeDetailHandleClassName = isDarkMode ? 'h-1.5 w-14 rounded-full bg-[#20314a]' : 'h-1.5 w-14 rounded-full bg-slate-200'
+  const placeDetailTitleClassName = isDarkMode ? 'text-[22px] font-black tracking-[-0.03em] text-[#f3f7ff]' : 'text-[22px] font-black tracking-[-0.03em] text-slate-950'
+  const placeDetailCategoryClassName = isDarkMode ? 'mt-2 inline-block rounded-full bg-[#142235] px-3 py-1 text-[11px] font-semibold text-[#9cb0c9] border border-[#223348]' : 'mt-2 inline-block rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-600'
+  const placeDetailMetaTextClassName = isDarkMode ? 'inline-flex items-center gap-1 font-semibold text-[#d4dfef]' : 'inline-flex items-center gap-1 font-semibold text-slate-700'
+  const placeDetailMutedTextClassName = isDarkMode ? 'font-medium text-[#9cb0c9]' : 'font-medium text-slate-500'
+  const placeDetailCloseButtonClassName = isDarkMode
+    ? 'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#223348] bg-[#101b2c] text-[#9cb0c9] transition hover:border-[#35516d] hover:text-[#eef4ff]'
+    : 'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 transition hover:border-slate-300 hover:text-slate-600'
+  const placeDetailFitPanelClassName = isDarkMode
+    ? 'rounded-[20px] border border-[#24354b] bg-[#101b2c] px-4 py-4'
+    : 'rounded-[20px] border border-[rgba(var(--accent-rgb),0.10)] bg-[linear-gradient(180deg,rgba(248,250,252,0.98),rgba(255,255,255,0.94))] px-4 py-4'
+  const placeDetailPanelClassName = isDarkMode
+    ? 'mt-3 rounded-[20px] bg-[#101b2c] px-4 py-4 border border-[#223348]'
+    : 'mt-3 rounded-[20px] bg-slate-50 px-4 py-4'
+  const placeDetailSectionLabelClassName = isDarkMode ? 'text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#7f94b1]' : 'text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-500'
+  const placeDetailBodyTextClassName = isDarkMode ? 'text-sm leading-6 text-[#dbe6f7]' : 'text-sm leading-6 text-slate-700'
+  const placeDetailListTextClassName = isDarkMode ? 'flex items-center gap-2 text-[13px] leading-6 text-[#dbe6f7]' : 'flex items-center gap-2 text-[13px] leading-6 text-slate-700'
+  const placeDetailBulletClassName = isDarkMode ? 'h-1 w-1 shrink-0 rounded-full bg-[#536681]' : 'h-1 w-1 shrink-0 rounded-full bg-slate-300'
+  const placeDetailCloseMapsButtonClassName = isDarkMode
+    ? 'mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[linear-gradient(180deg,#1e3a8a_0%,#172554_100%)] px-4 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(2,8,23,0.26)] transition hover:bg-[linear-gradient(180deg,#23409a_0%,#1e3a8a_100%)] active:scale-[0.98]'
+    : 'mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[var(--accent-deep)] px-4 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(var(--accent-rgb),0.22)] transition hover:bg-[var(--accent)] active:scale-[0.98]'
+  const placeDetailUnavailableButtonClassName = isDarkMode
+    ? 'mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-[#223348] bg-[#101b2c] px-4 text-sm font-semibold text-[#9cb0c9]'
+    : 'mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-400'
+  const activePlaceCardBorderClassName = isDarkMode
+    ? 'scale-[1.01] border border-white/90'
+    : 'scale-[1.01] border-[rgba(var(--accent-rgb),0.28)]'
+  const inactivePlaceCardBorderClassName = isDarkMode
+    ? 'border border-[#223348] hover:border-[#35516d]'
+    : 'border-slate-100/90 hover:border-slate-200'
 
   async function refreshAskAiMapsUsage(accessToken?: string | null, signal?: AbortSignal) {
     const usageEndpoint = getApiUrl('/ask-ai/usage/check?type=ask_ai_maps')
@@ -1077,8 +1119,8 @@ function AskAiMapPage() {
                         }}
 className={`relative w-[82vw] max-w-[340px] sm:max-w-[360px] lg:max-w-[400px] min-h-[168px] snap-center shrink-0 rounded-[24px] border bg-white px-4 py-3.5 cursor-pointer transition-all duration-200 ${
   isSelected
-    ? 'scale-[1.01] border-[rgba(var(--accent-rgb),0.28)]'
-    : 'border-slate-100/90 hover:border-slate-200'
+    ? activePlaceCardBorderClassName
+    : inactivePlaceCardBorderClassName
 }`}
 onMouseEnter={() => setFocusedPlaceId(place.id)}
 onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
@@ -1087,13 +1129,16 @@ onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
                           <div className="flex items-start gap-2.5">
                             <div className="flex shrink-0 items-center gap-2 pt-0.5">
                               <span className={`h-2.5 w-2.5 rounded-full transition ${
-                                isSelected ? 'bg-[var(--accent-deep)] shadow-[0_0_0_5px_rgba(var(--accent-rgb),0.12)]' : 'bg-slate-200'
-                              }`} />
-                              <span className={`inline-flex h-7 min-w-7 items-center justify-center rounded-2xl px-2 text-[11px] font-black ${
                                 isSelected
-                                  ? 'bg-[var(--accent-deep)] text-white shadow-[0_8px_16px_rgba(var(--accent-rgb),0.24)]'
-                                  : 'bg-slate-100 text-[var(--accent-deep)]'
-                              }`}>
+                                  ? 'bg-current text-slate-950 shadow-[0_0_0_5px_rgba(var(--accent-rgb),0.12)]'
+                                  : isDarkMode
+                                    ? 'bg-[#1e3a8a]'
+                                    : 'bg-slate-200'
+                              }`} />
+                              <span className={isSelected
+                                ? 'inline-flex h-7 min-w-7 items-center justify-center rounded-2xl px-2 text-[11px] font-black bg-[var(--accent-deep)] text-white shadow-[0_8px_16px_rgba(var(--accent-rgb),0.24)]'
+                                : placeIndexBadgeClassName
+                              }>
                                 {place.displayIndex}
                               </span>
                             </div>
@@ -1160,7 +1205,7 @@ onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
                                   event.preventDefault()
                                   openPlaceDetails(place.id)
                                 }}
-                                className="inline-flex shrink-0 items-center gap-1 rounded-full border border-[var(--accent)]/16 bg-[var(--accent-wash)] px-3 py-1.5 text-[11px] font-semibold text-[var(--accent-deep)] transition hover:bg-[var(--accent)]/15 active:scale-95"
+                                className={viewDetailsButtonClassName}
                               >
                                 <span>View details</span>
                                 <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -1327,8 +1372,8 @@ onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
                       }}
 className={`relative min-h-[160px] w-full snap-center rounded-[24px] border bg-white px-4 py-3.5 text-left cursor-pointer transition-all duration-200 ${
   isSelected
-    ? 'scale-[1.01] border-[rgba(var(--accent-rgb),0.28)]'
-    : 'border-slate-100/90 hover:border-slate-200'
+    ? activePlaceCardBorderClassName
+    : inactivePlaceCardBorderClassName
 }`}
 onMouseEnter={() => setFocusedPlaceId(place.id)}
 onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
@@ -1337,13 +1382,16 @@ onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
                         <div className="flex items-start gap-2.5">
                           <div className="flex shrink-0 items-center gap-2 pt-0.5">
                               <span className={`h-2.5 w-2.5 rounded-full transition ${
-                                isSelected ? 'bg-[var(--accent-deep)] shadow-[0_0_0_5px_rgba(var(--accent-rgb),0.12)]' : 'bg-slate-200'
-                              }`} />
-                              <span className={`inline-flex h-7 min-w-7 items-center justify-center rounded-2xl px-2 text-[11px] font-black ${
                                 isSelected
-                                  ? 'bg-[var(--accent-deep)] text-white shadow-[0_8px_16px_rgba(var(--accent-rgb),0.24)]'
-                                  : 'bg-slate-100 text-[var(--accent-deep)]'
-                              }`}>
+                                  ? 'bg-current text-slate-950 shadow-[0_0_0_5px_rgba(var(--accent-rgb),0.12)]'
+                                  : isDarkMode
+                                    ? 'bg-[#1e3a8a]'
+                                    : 'bg-slate-200'
+                              }`} />
+                              <span className={isSelected
+                                ? 'inline-flex h-7 min-w-7 items-center justify-center rounded-2xl px-2 text-[11px] font-black bg-[var(--accent-deep)] text-white shadow-[0_8px_16px_rgba(var(--accent-rgb),0.24)]'
+                                : placeIndexBadgeClassName
+                              }>
                                 {place.displayIndex}
                               </span>
                           </div>
@@ -1409,7 +1457,7 @@ onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
                               event.preventDefault()
                               openPlaceDetails(place.id)
                             }}
-                            className="inline-flex shrink-0 items-center gap-1 rounded-full border border-[var(--accent)]/16 bg-[var(--accent-wash)] px-3 py-1.5 text-[11px] font-semibold text-[var(--accent-deep)] transition hover:bg-[var(--accent)]/15 active:scale-95"
+                            className={viewDetailsButtonClassName}
                           >
                             <span>View details</span>
                             <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -1438,30 +1486,30 @@ onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
         />
         <div className="absolute inset-x-0 bottom-0 flex items-end md:inset-0 md:items-center md:justify-center md:p-3 lg:inset-0 lg:items-center lg:justify-center lg:p-4">
         <section
-          className="flex w-full max-h-[82dvh] flex-col overflow-hidden rounded-t-[28px] bg-white shadow-[0_-18px_48px_rgba(15,23,42,0.22)] md:max-w-[520px] md:max-h-[88dvh] md:rounded-[28px] md:shadow-[0_26px_60px_rgba(15,23,42,0.24)] lg:max-w-[580px] lg:max-h-[88dvh] lg:rounded-[28px] lg:shadow-[0_26px_60px_rgba(15,23,42,0.24)]"
+          className={placeDetailSectionClassName}
           aria-modal="true"
           role="dialog"
           aria-label={`${selectedDisplayPlace.title} details`}
         >
           <div className="flex justify-center px-4 pt-3">
-            <span className="h-1.5 w-14 rounded-full bg-slate-200" />
+            <span className={placeDetailHandleClassName} />
           </div>
 
           <div className="flex shrink-0 items-start justify-between gap-4 px-5 pb-3 pt-3">
             <div className="min-w-0 flex-1">
-              <h2 className="text-[22px] font-black tracking-[-0.03em] text-slate-950">
+              <h2 className={placeDetailTitleClassName}>
                 {selectedDisplayPlace.title}
               </h2>
 
               {selectedDisplayPlace.category !== 'Place' ? (
-                <span className="mt-2 inline-block rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-600">
+                <span className={placeDetailCategoryClassName}>
                   {selectedDisplayPlace.category}
                 </span>
               ) : null}
 
               <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
                 {selectedDisplayPlace.ratingText ? (
-                  <span className="inline-flex items-center gap-1 font-semibold text-slate-700">
+                  <span className={placeDetailMetaTextClassName}>
                     <span className="text-amber-500">{'\u2605'}</span>
                     <span>{selectedDisplayPlace.ratingText}</span>
                   </span>
@@ -1469,7 +1517,7 @@ onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
                 {selectedDisplayPlace.reviewCountText ? (
                   <>
                     {getMetaDot(Boolean(selectedDisplayPlace.ratingText))}
-                    <span className="font-medium text-slate-500">{selectedDisplayPlace.reviewCountText}</span>
+                    <span className={placeDetailMutedTextClassName}>{selectedDisplayPlace.reviewCountText}</span>
                   </>
                 ) : null}
               </div>
@@ -1478,7 +1526,7 @@ onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
             <button
               type="button"
               onClick={() => setIsPlaceDetailOpen(false)}
-              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 transition hover:border-slate-300 hover:text-slate-600"
+              className={placeDetailCloseButtonClassName}
               aria-label="Close place details"
             >
               <AppIcon name="clear" className="h-4 w-4" />
@@ -1486,9 +1534,9 @@ onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
           </div>
 
           <div className="flex-1 overflow-y-auto px-5 pb-[calc(24px+env(safe-area-inset-bottom,0px))] [-webkit-overflow-scrolling:touch]">
-            <div className="rounded-[20px] border border-[rgba(var(--accent-rgb),0.10)] bg-[linear-gradient(180deg,rgba(248,250,252,0.98),rgba(255,255,255,0.94))] px-4 py-4">
-              <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-[var(--accent-deep)]">Why this fits</p>
-              <p className="mt-2 text-sm leading-6 text-slate-700">
+            <div className={placeDetailFitPanelClassName}>
+              <p className={placeDetailSectionLabelClassName}>Why this fits</p>
+              <p className={`mt-2 ${placeDetailBodyTextClassName}`}>
                 {selectedDisplayPlace.whyThisFits}
               </p>
             </div>
@@ -1497,19 +1545,19 @@ onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
               selectedDisplayPlace.hoursLines.length > 0 ||
               selectedDisplayPlace.phoneText ||
               selectedDisplayPlace.isCoordinateVerified) ? (
-              <div className="mt-3 rounded-[20px] bg-slate-50 px-4 py-4">
-                <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-500">Info</p>
+              <div className={placeDetailPanelClassName}>
+                <p className={placeDetailSectionLabelClassName}>Info</p>
 
                 {selectedDisplayPlace.address !== 'Address not available' ? (
-                  <div className="mt-2.5 flex items-start gap-2 text-sm text-slate-700">
-                    <AppIcon name="place" className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
+                  <div className={`mt-2.5 flex items-start gap-2 text-sm ${isDarkMode ? 'text-[#dbe6f7]' : 'text-slate-700'}`}>
+                    <AppIcon name="place" className={`mt-0.5 h-4 w-4 shrink-0 ${isDarkMode ? 'text-[#7f94b1]' : 'text-slate-400'}`} />
                     <span className="leading-6">{selectedDisplayPlace.address}</span>
                   </div>
                 ) : null}
 
                 {selectedDisplayPlace.hoursLines.length > 0 ? (
-                  <div className="mt-2.5 flex items-start gap-2 text-sm text-slate-700">
-                    <svg className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <div className={`mt-2.5 flex items-start gap-2 text-sm ${isDarkMode ? 'text-[#dbe6f7]' : 'text-slate-700'}`}>
+                    <svg className={`mt-0.5 h-4 w-4 shrink-0 ${isDarkMode ? 'text-[#7f94b1]' : 'text-slate-400'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="10" />
                       <polyline points="12 6 12 12 16 14" />
                     </svg>
@@ -1520,8 +1568,8 @@ onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
                     </div>
                   </div>
                 ) : selectedDisplayPlace.openingHoursSummary ? (
-                  <div className="mt-2.5 flex items-start gap-2 text-sm text-slate-700">
-                    <svg className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <div className={`mt-2.5 flex items-start gap-2 text-sm ${isDarkMode ? 'text-[#dbe6f7]' : 'text-slate-700'}`}>
+                    <svg className={`mt-0.5 h-4 w-4 shrink-0 ${isDarkMode ? 'text-[#7f94b1]' : 'text-slate-400'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="12" cy="12" r="10" />
                       <polyline points="12 6 12 12 16 14" />
                     </svg>
@@ -1543,8 +1591,8 @@ onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
                 })()}
 
                 {selectedDisplayPlace.phoneText ? (
-                  <div className="mt-2.5 flex items-start gap-2 text-sm text-slate-700">
-                    <svg className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <div className={`mt-2.5 flex items-start gap-2 text-sm ${isDarkMode ? 'text-[#dbe6f7]' : 'text-slate-700'}`}>
+                    <svg className={`mt-0.5 h-4 w-4 shrink-0 ${isDarkMode ? 'text-[#7f94b1]' : 'text-slate-400'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
                     </svg>
                     <span className="leading-6">{selectedDisplayPlace.phoneText}</span>
@@ -1553,7 +1601,7 @@ onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
 
                 {selectedDisplayPlace.isCoordinateVerified ? (
                   <div className="mt-2.5 flex items-center gap-2">
-                    <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--primary-soft)]">
+                    <span className={isDarkMode ? 'inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#1e3a8a]/20' : 'inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--primary-soft)]'}>
                       <svg className="h-3 w-3 text-[var(--accent-deep)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="20 6 9 17 4 12" />
                       </svg>
@@ -1565,12 +1613,12 @@ onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
             ) : null}
 
             {selectedDisplayPlace.nearbyItems.length > 0 ? (
-              <div className="mt-3 rounded-[20px] bg-slate-50 px-4 py-4">
-                <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-500">Nearby</p>
+              <div className={placeDetailPanelClassName}>
+                <p className={placeDetailSectionLabelClassName}>Nearby</p>
                 <ul className="mt-2 space-y-1.5">
                   {selectedDisplayPlace.nearbyItems.map((item) => (
-                    <li key={item} className="flex items-center gap-2 text-[13px] leading-6 text-slate-700">
-                      <span className="h-1 w-1 shrink-0 rounded-full bg-slate-300" />
+                    <li key={item} className={placeDetailListTextClassName}>
+                      <span className={placeDetailBulletClassName} />
                       {item}
                     </li>
                   ))}
@@ -1579,12 +1627,12 @@ onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
             ) : null}
 
             {selectedDisplayPlace.parkingItems.length > 0 ? (
-              <div className="mt-3 rounded-[20px] bg-slate-50 px-4 py-4">
-                <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-500">Parking</p>
+              <div className={placeDetailPanelClassName}>
+                <p className={placeDetailSectionLabelClassName}>Parking</p>
                 <ul className="mt-2 space-y-1.5">
                   {selectedDisplayPlace.parkingItems.map((item) => (
-                    <li key={item} className="flex items-center gap-2 text-[13px] leading-6 text-slate-700">
-                      <span className="h-1 w-1 shrink-0 rounded-full bg-slate-300" />
+                    <li key={item} className={placeDetailListTextClassName}>
+                      <span className={placeDetailBulletClassName} />
                       {item}
                     </li>
                   ))}
@@ -1593,12 +1641,12 @@ onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
             ) : null}
 
             {selectedDisplayPlace.accessibilityItems.length > 0 ? (
-              <div className="mt-3 rounded-[20px] bg-slate-50 px-4 py-4">
-                <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-slate-500">Accessibility</p>
+              <div className={placeDetailPanelClassName}>
+                <p className={placeDetailSectionLabelClassName}>Accessibility</p>
                 <ul className="mt-2 space-y-1.5">
                   {selectedDisplayPlace.accessibilityItems.map((item) => (
-                    <li key={item} className="flex items-center gap-2 text-[13px] leading-6 text-slate-700">
-                      <span className="h-1 w-1 shrink-0 rounded-full bg-slate-300" />
+                    <li key={item} className={placeDetailListTextClassName}>
+                      <span className={placeDetailBulletClassName} />
                       {item}
                     </li>
                   ))}
@@ -1611,7 +1659,7 @@ onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
                 href={selectedGoogleMapsUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[var(--accent-deep)] px-4 text-sm font-semibold text-white shadow-[0_10px_20px_rgba(var(--accent-rgb),0.22)] transition hover:bg-[var(--accent)] active:scale-[0.98]"
+                className={placeDetailCloseMapsButtonClassName}
               >
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
@@ -1620,7 +1668,7 @@ onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
                 <span>Open in Google Maps</span>
               </a>
             ) : (
-              <div className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-400">
+              <div className={placeDetailUnavailableButtonClassName}>
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                   <circle cx="12" cy="10" r="3" />

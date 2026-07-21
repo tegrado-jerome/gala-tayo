@@ -20,6 +20,7 @@ import { navigateBackWithFallback, navigateToPath } from '../../../utils/navigat
 import { cancelAskAiRuntimeRequest, type ChatMessage } from '../../../utils/askAiRuntime'
 import { type AskAiUsageStatus } from '../../../utils/askAiUsage'
 import { PageShellSkeleton } from '../../loading/SkeletonStates'
+import { useTheme } from '../../../context/ThemeContext'
 
 function formatResetAtCompact(resetAt: string) {
   const resetDate = new Date(resetAt)
@@ -77,10 +78,12 @@ function getAskAiDisplayLines(answer: string) {
 }
 
 function AskAiAnswerBody({ answer }: { answer: string }) {
+  const { resolvedTheme } = useTheme()
+  const isDarkMode = resolvedTheme === 'dark'
   const lines = getAskAiDisplayLines(answer)
 
   return (
-    <div className="grid gap-2 text-[0.95rem] leading-7 text-slate-800">
+    <div className={`grid gap-2 text-[0.95rem] leading-7 ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>
       {lines.map((line, index) => {
         const key = `${index}-${line}`
 
@@ -90,7 +93,7 @@ function AskAiAnswerBody({ answer }: { answer: string }) {
 
         if (/^[A-Z][A-Za-z /]+(?: .+)?:$/.test(line)) {
           return (
-            <p key={key} className={index === 0 ? 'font-semibold text-slate-950' : 'pt-2 font-semibold text-slate-950'}>
+            <p key={key} className={index === 0 ? 'font-semibold' : 'pt-2 font-semibold'}>
               {line}
             </p>
           )
@@ -1104,8 +1107,11 @@ function AskAiOutputStageNext({
 }
 
 function ThinkingLoadingBar({ className = '' }: { className?: string }) {
+  const { resolvedTheme } = useTheme()
+  const isDarkMode = resolvedTheme === 'dark'
+
   return (
-    <div className={`h-1.5 overflow-hidden rounded-full bg-slate-100 ${className}`}>
+    <div className={`h-1.5 overflow-hidden rounded-full ${isDarkMode ? 'bg-slate-700/80' : 'bg-slate-100'} ${className}`}>
       <div className="h-full w-2/3 rounded-full bg-[linear-gradient(90deg,var(--accent),var(--accent-deep))] motion-safe:animate-[gala-loading-slide_1.6s_ease-in-out_infinite]" />
     </div>
   )
@@ -1138,6 +1144,9 @@ function AskAiThinkingStageNext({
   question: string
   className?: string
 }) {
+  const { resolvedTheme } = useTheme()
+  const isDarkMode = resolvedTheme === 'dark'
+
   return (
     <div className={`flex h-full min-h-0 w-full flex-col ${className}`}>
       <div className="flex-1 overflow-y-auto px-4 py-5 sm:px-5 lg:px-8">
@@ -1149,14 +1158,30 @@ function AskAiThinkingStageNext({
           </div>
 
           <div className="flex items-start gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#dbeafe,#bfdbfe)] shadow-[0_2px_8px_rgba(var(--accent-rgb),0.10)]">
+            <div
+              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full shadow-[0_2px_8px_rgba(var(--accent-rgb),0.10)] ${
+                isDarkMode
+                  ? 'bg-[linear-gradient(135deg,rgba(30,58,138,0.38),rgba(59,130,246,0.26))]'
+                  : 'bg-[linear-gradient(135deg,#dbeafe,#bfdbfe)]'
+              }`}
+            >
               <Bot className="h-4 w-4 text-[var(--accent-deep)]" strokeWidth={2} />
             </div>
-            <div className="min-w-0 w-full max-w-[88%] rounded-2xl rounded-tl-[6px] border border-[rgba(15,23,42,0.06)] bg-white px-4 py-3.5 shadow-[0_2px_8px_rgba(15,23,42,0.03)] sm:max-w-[82%]">
+            <div
+              className={`min-w-0 w-full max-w-[88%] rounded-2xl rounded-tl-[6px] px-4 py-3.5 sm:max-w-[82%] ${
+                isDarkMode
+                  ? 'border border-[rgba(96,165,250,0.16)] bg-[rgba(15,23,42,0.76)] shadow-[0_12px_30px_rgba(2,8,23,0.32)]'
+                  : 'border border-[rgba(15,23,42,0.06)] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.03)]'
+              }`}
+            >
               <div className="flex items-center gap-2">
-                <p className="text-[0.78rem] font-semibold tracking-[-0.02em] text-slate-950">Thinking</p>
+                <p className={`text-[0.78rem] font-semibold tracking-[-0.02em] ${isDarkMode ? 'text-slate-100' : 'text-slate-950'}`}>
+                  Thinking
+                </p>
               </div>
-              <p className="mt-1 text-[12px] font-medium text-slate-500">Shaping your GalaTayo AI reply.</p>
+              <p className={`mt-1 text-[12px] font-medium ${isDarkMode ? 'text-slate-300' : 'text-slate-500'}`}>
+                Shaping your GalaTayo AI reply.
+              </p>
               <ThinkingLoadingBar className="mt-3" />
             </div>
           </div>
@@ -1369,6 +1394,15 @@ const ChatMessageList = memo(function ChatMessageList({
   onSend: (text?: string) => void
   onRetryUsage: () => void
 }) {
+  const { resolvedTheme } = useTheme()
+  const isDarkMode = resolvedTheme === 'dark'
+  const answerCardClassName = isDarkMode
+    ? 'w-full min-w-0 overflow-hidden rounded-2xl border border-[rgba(96,165,250,0.16)] bg-[rgba(15,23,42,0.76)] p-4 shadow-[0_12px_30px_rgba(2,8,23,0.32)] backdrop-blur-sm'
+    : 'w-full min-w-0 overflow-hidden rounded-2xl border border-[var(--line)] bg-[rgba(255,255,255,0.88)] p-4 shadow-[var(--shadow-soft)] backdrop-blur-sm'
+  const responseTextClassName = isDarkMode ? 'text-slate-200' : 'text-slate-800'
+  const responseStrongClassName = isDarkMode ? 'text-slate-50' : 'text-slate-900'
+  const responseMutedClassName = isDarkMode ? 'text-slate-400' : 'text-slate-500'
+
   if (!isSessionLoading && usageError) {
     return (
       <AskAiUsageErrorContent
@@ -1447,95 +1481,155 @@ const ChatMessageList = memo(function ChatMessageList({
         }
 
         return (
-          <div key={index} className="w-full min-w-0 overflow-hidden rounded-2xl border border-[var(--line)] bg-[rgba(255,255,255,0.88)] p-4 shadow-[var(--shadow-soft)] backdrop-blur-sm">
+          <div key={index} className={answerCardClassName}>
             <div className="flex items-center gap-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[var(--accent-deep)] shadow-[0_8px_16px_rgba(23,37,84,0.18)]">
+              <div
+                className={`flex h-6 w-6 items-center justify-center rounded-md shadow-[0_8px_16px_rgba(23,37,84,0.18)] ${
+                  isDarkMode ? 'bg-[rgba(96,165,250,0.2)]' : 'bg-[var(--accent-deep)]'
+                }`}
+              >
                 <AppIcon name="info" className="h-3 w-3 text-white" strokeWidth={2.2} />
               </div>
-              <span className="text-[12px] font-semibold tracking-wide text-slate-500">GalaTayo AI</span>
+              <span className={`text-[12px] font-semibold tracking-wide ${responseMutedClassName}`}>GalaTayo AI</span>
             </div>
             <div className="pl-8">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
                   p: ({ children }) => (
-                    <p className="mb-3 last:mb-0 whitespace-pre-wrap text-[15px] leading-[1.7] text-slate-800 break-words [overflow-wrap:anywhere]">{children}</p>
+                    <p className={`mb-3 last:mb-0 whitespace-pre-wrap text-[15px] leading-[1.7] break-words [overflow-wrap:anywhere] ${responseTextClassName}`}>
+                      {children}
+                    </p>
                   ),
                   strong: ({ children }) => (
-                    <strong className="font-semibold text-slate-900 break-words">{children}</strong>
+                    <strong className={`break-words font-semibold ${responseStrongClassName}`}>{children}</strong>
                   ),
                   ul: ({ children }) => (
-                    <ul className="my-3 list-disc space-y-1.5 pl-5 text-[15px] leading-[1.7] text-slate-800 marker:text-slate-400">{children}</ul>
+                    <ul
+                      className={`my-3 list-disc space-y-1.5 pl-5 text-[15px] leading-[1.7] ${
+                        isDarkMode ? 'text-slate-200 marker:text-slate-500' : 'text-slate-800 marker:text-slate-400'
+                      }`}
+                    >
+                      {children}
+                    </ul>
                   ),
                   ol: ({ children }) => (
-                    <ol className="my-3 list-decimal space-y-1.5 pl-5 text-[15px] leading-[1.7] text-slate-800 marker:text-slate-400">{children}</ol>
+                    <ol
+                      className={`my-3 list-decimal space-y-1.5 pl-5 text-[15px] leading-[1.7] ${
+                        isDarkMode ? 'text-slate-200 marker:text-slate-500' : 'text-slate-800 marker:text-slate-400'
+                      }`}
+                    >
+                      {children}
+                    </ol>
                   ),
                   li: ({ children }) => (
-                    <li className="leading-[1.7] text-slate-800 break-words [overflow-wrap:anywhere]">{children}</li>
+                    <li className={`leading-[1.7] break-words [overflow-wrap:anywhere] ${responseTextClassName}`}>{children}</li>
                   ),
                   em: ({ children }) => (
-                    <em className="italic text-slate-800">{children}</em>
+                    <em className={`italic ${responseTextClassName}`}>{children}</em>
                   ),
                   a: ({ children, href }) => (
                     <a href={href} target="_blank" rel="noopener noreferrer" className="text-[var(--accent-deep)] underline decoration-[rgba(var(--accent-rgb),0.18)] underline-offset-2 transition hover:text-[var(--accent)] hover:decoration-[rgba(var(--accent-rgb),0.38)]">{children}</a>
                   ),
                   code: ({ children }) => (
-                    <code className="rounded-md bg-slate-100 px-1.5 py-0.5 font-mono text-[13px] text-slate-800 whitespace-pre-wrap break-all">{children}</code>
+                    <code
+                      className={`whitespace-pre-wrap break-all rounded-md px-1.5 py-0.5 font-mono text-[13px] ${
+                        isDarkMode ? 'bg-slate-800 text-slate-100' : 'bg-slate-100 text-slate-800'
+                      }`}
+                    >
+                      {children}
+                    </code>
                   ),
                   pre: ({ children }) => (
-                    <pre className="my-3 overflow-x-auto rounded-xl bg-slate-100 p-3 text-[13px] leading-relaxed text-slate-800">{children}</pre>
+                    <pre
+                      className={`my-3 overflow-x-auto rounded-xl p-3 text-[13px] leading-relaxed ${
+                        isDarkMode ? 'bg-slate-900 text-slate-100' : 'bg-slate-100 text-slate-800'
+                      }`}
+                    >
+                      {children}
+                    </pre>
                   ),
                   h1: ({ children }) => (
-                    <h1 className="mb-2 mt-4 text-[20px] font-semibold tracking-[-0.01em] text-slate-900 first:mt-0">{children}</h1>
+                    <h1 className={`mb-2 mt-4 text-[20px] font-semibold tracking-[-0.01em] first:mt-0 ${responseStrongClassName}`}>
+                      {children}
+                    </h1>
                   ),
                   h2: ({ children }) => (
-                    <h2 className="mb-2 mt-4 text-[17px] font-semibold tracking-[-0.01em] text-slate-900 first:mt-0">{children}</h2>
+                    <h2 className={`mb-2 mt-4 text-[17px] font-semibold tracking-[-0.01em] first:mt-0 ${responseStrongClassName}`}>
+                      {children}
+                    </h2>
                   ),
                   h3: ({ children }) => (
-                    <h3 className="mb-1.5 mt-3 text-[15px] font-semibold text-slate-900 first:mt-0">{children}</h3>
+                    <h3 className={`mb-1.5 mt-3 text-[15px] font-semibold first:mt-0 ${responseStrongClassName}`}>{children}</h3>
                   ),
                   blockquote: ({ children }) => (
-                    <blockquote className="my-3 border-l-2 border-slate-200 pl-4 italic text-slate-600">{children}</blockquote>
+                    <blockquote
+                      className={`my-3 border-l-2 pl-4 italic ${
+                        isDarkMode ? 'border-slate-700 text-slate-300' : 'border-slate-200 text-slate-600'
+                      }`}
+                    >
+                      {children}
+                    </blockquote>
                   ),
                   table: ({ children }) => (
                     <div className="my-3 max-w-full overflow-x-auto">
-                      <table className="min-w-max border-collapse text-[14px] leading-[1.6] text-slate-800">
+                      <table className={`min-w-max border-collapse text-[14px] leading-[1.6] ${responseTextClassName}`}>
                         {children}
                       </table>
                     </div>
                   ),
                   thead: ({ children }) => (
-                    <thead className="bg-slate-50 text-slate-600">{children}</thead>
+                    <thead className={isDarkMode ? 'bg-slate-800 text-slate-300' : 'bg-slate-50 text-slate-600'}>{children}</thead>
                   ),
                   tbody: ({ children }) => (
-                    <tbody className="divide-y divide-slate-200">{children}</tbody>
+                    <tbody className={isDarkMode ? 'divide-y divide-slate-700' : 'divide-y divide-slate-200'}>{children}</tbody>
                   ),
                   tr: ({ children }) => (
-                    <tr className="border-b border-slate-200 last:border-b-0">{children}</tr>
+                    <tr className={isDarkMode ? 'border-b border-slate-700 last:border-b-0' : 'border-b border-slate-200 last:border-b-0'}>
+                      {children}
+                    </tr>
                   ),
                   th: ({ children }) => (
-                    <th className="whitespace-nowrap border border-slate-200 px-3 py-2 text-left font-semibold text-slate-700">{children}</th>
+                    <th
+                      className={`whitespace-nowrap border px-3 py-2 text-left font-semibold ${
+                        isDarkMode ? 'border-slate-700 text-slate-200' : 'border-slate-200 text-slate-700'
+                      }`}
+                    >
+                      {children}
+                    </th>
                   ),
                   td: ({ children }) => (
-                    <td className="border border-slate-200 px-3 py-2 align-top text-slate-800">{children}</td>
+                    <td
+                      className={`border px-3 py-2 align-top ${
+                        isDarkMode ? 'border-slate-700 text-slate-200' : 'border-slate-200 text-slate-800'
+                      }`}
+                    >
+                      {children}
+                    </td>
                   ),
                 }}
               >
                 {msg.content}
               </ReactMarkdown>
               {sources.length > 0 && (
-                <div className="mt-4 flex flex-wrap items-center gap-1.5 border-t border-slate-200/70 pt-3">
-                  <span className="mr-1 text-[10.5px] font-semibold uppercase tracking-[0.1em] text-slate-400">Sources</span>
+                <div className={`mt-4 flex flex-wrap items-center gap-1.5 pt-3 ${isDarkMode ? 'border-t border-slate-700/80' : 'border-t border-slate-200/70'}`}>
+                  <span className={`mr-1 text-[10.5px] font-semibold uppercase tracking-[0.1em] ${responseMutedClassName}`}>
+                    Sources
+                  </span>
                   {sources.map((source) => (
                     <a
                       key={source.url}
                       href={source.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group inline-flex max-w-[200px] items-center gap-1 rounded-full border border-[var(--line)] bg-white px-2.5 py-1 text-[11.5px] font-medium text-slate-600 transition hover:border-[rgba(var(--accent-rgb),0.22)] hover:bg-[var(--accent-soft)] hover:text-[var(--accent-deep)]"
+                      className={`group inline-flex max-w-[200px] items-center gap-1 rounded-full px-2.5 py-1 text-[11.5px] font-medium transition ${
+                        isDarkMode
+                          ? 'border border-slate-700 bg-slate-900/80 text-slate-300 hover:border-[rgba(var(--accent-rgb),0.3)] hover:bg-[rgba(var(--accent-rgb),0.12)] hover:text-slate-100'
+                          : 'border border-[var(--line)] bg-white text-slate-600 hover:border-[rgba(var(--accent-rgb),0.22)] hover:bg-[var(--accent-soft)] hover:text-[var(--accent-deep)]'
+                      }`}
                     >
                       <span className="truncate">{source.title.length > 32 ? `${source.title.slice(0, 32)}\u2026` : source.title}</span>
-                      <ChevronRightIcon className="h-3 w-3 shrink-0 text-slate-400 transition group-hover:text-[var(--accent)]" />
+                      <ChevronRightIcon className={`h-3 w-3 shrink-0 transition ${isDarkMode ? 'text-slate-500 group-hover:text-slate-200' : 'text-slate-400 group-hover:text-[var(--accent)]'}`} />
                     </a>
                   ))}
                 </div>
@@ -1546,20 +1640,32 @@ const ChatMessageList = memo(function ChatMessageList({
       })}
 
       {isSubmitting && !answer && (
-        <div className="w-full rounded-2xl border border-[var(--line)] bg-[rgba(255,255,255,0.88)] p-4 shadow-[var(--shadow-soft)] backdrop-blur-sm">
+        <div
+          className={`w-full rounded-2xl p-4 backdrop-blur-sm ${
+            isDarkMode
+              ? 'border border-[rgba(96,165,250,0.16)] bg-[rgba(15,23,42,0.76)] shadow-[0_12px_30px_rgba(2,8,23,0.32)]'
+              : 'border border-[var(--line)] bg-[rgba(255,255,255,0.88)] shadow-[var(--shadow-soft)]'
+          }`}
+        >
           <div className="flex items-center gap-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded-md bg-[var(--accent-deep)] shadow-[0_8px_16px_rgba(23,37,84,0.18)]">
-                <AppIcon name="info" className="h-3 w-3 text-white" strokeWidth={2.2} />
-              </div>
-            <span className="text-[12px] font-semibold tracking-wide text-slate-500">GalaTayo AI</span>
+            <div
+              className={`flex h-6 w-6 items-center justify-center rounded-md shadow-[0_8px_16px_rgba(23,37,84,0.18)] ${
+                isDarkMode ? 'bg-[rgba(96,165,250,0.2)]' : 'bg-[var(--accent-deep)]'
+              }`}
+            >
+              <AppIcon name="info" className="h-3 w-3 text-white" strokeWidth={2.2} />
+            </div>
+            <span className={`text-[12px] font-semibold tracking-wide ${responseMutedClassName}`}>GalaTayo AI</span>
           </div>
           <div className="pl-8">
             <div className="flex items-center gap-2">
-              <span className="text-[11.5px] font-semibold uppercase tracking-[0.08em] text-slate-700">
+              <span className={`text-[11.5px] font-semibold uppercase tracking-[0.08em] ${isDarkMode ? 'text-slate-100' : 'text-slate-700'}`}>
                 Thinking
               </span>
             </div>
-            <p className="mt-1 text-[12px] font-medium text-slate-500">Shaping your GalaTayo AI reply.</p>
+            <p className={`mt-1 text-[12px] font-medium ${isDarkMode ? 'text-slate-300' : 'text-slate-500'}`}>
+              Shaping your GalaTayo AI reply.
+            </p>
             <ThinkingLoadingBar className="mt-3" />
           </div>
         </div>
