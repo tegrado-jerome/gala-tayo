@@ -877,8 +877,9 @@ function PlaceDetailView({
   const [contributionNote, setContributionNote] = useState('')
   const [isContributionSubmitting, setIsContributionSubmitting] = useState(false)
   const [contributionError, setContributionError] = useState('')
-  const [averageRating, setAverageRating] = useState<number | null>(initialCommunityCache?.averageRating ?? place.rating ?? null)
-  const [reviewCount, setReviewCount] = useState(initialCommunityCache?.reviewCount ?? place.ratingCount ?? 0)
+  const [averageRating, setAverageRating] = useState<number | null>(initialCommunityCache?.averageRating ?? null)
+  const [reviewCount, setReviewCount] = useState(initialCommunityCache?.reviewCount ?? 0)
+  const [hasLoadedReviewSummary, setHasLoadedReviewSummary] = useState(Boolean(initialCommunityCache))
   const [currentUserReview, setCurrentUserReview] = useState<PlaceReview | null>(null)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [currentUserAvatarUrl, setCurrentUserAvatarUrl] = useState<string | null>(
@@ -1032,8 +1033,14 @@ function PlaceDetailView({
 
   const isSaved = [place.id, place.slug, normalizedNameSlug].some((slugOrId) => isPlaceSaved(slugOrId))
   const hasCurrentUserReview = Boolean(currentUserReview)
-  const headlineRating = averageRating ?? place.rating ?? null
-  const headlineReviewCount = reviewCount > 0 ? reviewCount : place.ratingCount ?? 0
+  const headlineRating =
+    hasLoadedReviewSummary && reviewCount > 0 && averageRating !== null
+      ? averageRating
+      : null
+  const headlineReviewCount =
+    hasLoadedReviewSummary && reviewCount > 0
+      ? reviewCount
+      : 0
 
   useLayoutEffect(() => {
     window.scrollTo({
@@ -1050,11 +1057,12 @@ function PlaceDetailView({
   useEffect(() => {
     const cachedCommunityState = readPlaceDetailCommunityCache(place.id)
 
-    setAverageRating(cachedCommunityState?.averageRating ?? place.rating ?? null)
-    setReviewCount(cachedCommunityState?.reviewCount ?? place.ratingCount ?? 0)
+    setAverageRating(cachedCommunityState?.averageRating ?? null)
+    setReviewCount(cachedCommunityState?.reviewCount ?? 0)
+    setHasLoadedReviewSummary(Boolean(cachedCommunityState) || !isCommunityPlaceReady)
     setComments(cachedCommunityState?.comments ?? [])
     setIsCommentsLoading(!cachedCommunityState)
-  }, [place.id, place.rating, place.ratingCount])
+  }, [isCommunityPlaceReady, place.id])
 
   useEffect(() => {
     writePlaceDetailCommunityCache(place.id, {
@@ -1116,11 +1124,6 @@ function PlaceDetailView({
     )
   }, [appSession?.user?.id, currentProfile])
 
-  useEffect(() => {
-    setAverageRating(place.rating ?? null)
-    setReviewCount(place.ratingCount ?? 0)
-  }, [place.id, place.rating, place.ratingCount])
-
   const fetchPlaceReviews = useCallback(
     async (signal?: AbortSignal) => {
       try {
@@ -1130,10 +1133,11 @@ function PlaceDetailView({
         const token = await getSupabaseAccessToken(session)
 
         if (!isCommunityPlaceReady) {
-          setAverageRating(place.rating ?? null)
-          setReviewCount(place.ratingCount ?? 0)
+          setAverageRating(null)
+          setReviewCount(0)
           setCurrentUserReview(null)
           setReviewRating(0)
+          setHasLoadedReviewSummary(true)
           return
         }
 
@@ -1152,6 +1156,7 @@ function PlaceDetailView({
         const nextCurrentUserReview = result?.current_member_review ?? null
         setAverageRating(result?.average_rating ?? null)
         setReviewCount(result?.review_count ?? 0)
+        setHasLoadedReviewSummary(true)
         setCurrentUserReview(nextCurrentUserReview)
         setReviewRating(nextCurrentUserReview?.rating ?? 0)
         setIsReviewEditing(false)
@@ -1164,11 +1169,12 @@ function PlaceDetailView({
         })
       } catch (error) {
         if ((error as Error).name !== 'AbortError') {
+          setHasLoadedReviewSummary(true)
           setReviewError(error instanceof Error ? error.message : 'Unable to load reviews.')
         }
       }
     },
-    [isCommunityPlaceReady, place.rating, place.ratingCount, placeId],
+    [isCommunityPlaceReady, placeId],
   )
 
   const fetchPlaceComments = useCallback(
