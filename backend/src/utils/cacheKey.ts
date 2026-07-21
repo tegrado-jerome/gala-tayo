@@ -6,7 +6,7 @@ function sanitizeCachePart(value: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-const SEARCH_CACHE_VERSION = "v4";
+const SEARCH_CACHE_VERSION = "v5";
 
 export function generateSearchCacheKey(
   normalizedQuery: string,
@@ -30,7 +30,7 @@ export function generateSearchCacheKey(
   return `search:${SEARCH_CACHE_VERSION}:${sanitizedQuery}:${sanitizedCategory}:${sanitizedArea}:${sanitizedGoodFor}:${sanitizedBudget}:${sanitizedLanguage}`;
 }
 
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2";
 
 export function buildPlaceDetailCacheKey(placeIdOrSlug: string): string {
   return `${CACHE_VERSION}:place-detail:${sanitizeCachePart(placeIdOrSlug)}`;

@@ -353,11 +353,11 @@ function SearchEmptyState({
       message ||
       (status === 'unsupported_location'
         ? 'We currently support Metro Manila only.'
-        : status === 'empty_query' || status === 'too_vague'
-          ? 'Try adding a place, city, or vibe.'
-          : 'Try another city, category, vibe, or budget.')
+        : status === 'empty_query'
+          ? 'Try adding a place, category, or location.'
+          : 'Try another category, location, or budget.')
     const actionLabel =
-      status === 'no_results' || status === 'empty_query' || status === 'too_vague'
+      status === 'no_results' || status === 'empty_query'
         ? 'Back to search'
         : 'Search again'
 

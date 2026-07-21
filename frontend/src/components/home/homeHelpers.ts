@@ -117,7 +117,7 @@ type BackendSearchPlace = {
   search_terms?: string[] | null
 }
 
-type BackendSearchStatus = 'ok' | 'empty_query' | 'too_vague' | 'unsupported_location' | 'no_results'
+type BackendSearchStatus = 'ok' | 'empty_query' | 'unsupported_location' | 'no_results'
 
 type MobileResultsViewMode = 'cards' | 'map'
 

@@ -114,7 +114,7 @@ export type SearchContext = {
   createdAt: string;
 };
 
-export type SearchResponseStatus = "ok" | "empty_query" | "too_vague" | "unsupported_location" | "no_results";
+export type SearchResponseStatus = "ok" | "empty_query" | "unsupported_location" | "no_results";
 
 export type BudgetValue = "any" | "free" | "under-300" | "under-500" | "500-1000" | "1000-2000" | "1000-plus" | "2000-plus";
 

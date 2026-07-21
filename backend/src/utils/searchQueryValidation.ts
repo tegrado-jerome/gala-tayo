@@ -1,11 +1,5 @@
 import { inferMetroManilaLocationsFromQuery } from "./metroManilaLocations";
-import { getSearchTerms, inferCategoryIdsFromQuery, normalizeSearchText } from "./searchMatching";
-
-const SUPPORTED_SCOPE_KEYWORDS = [
-  "metro manila",
-  "ncr",
-  "national capital region",
-];
+import { normalizeSearchText } from "./searchMatching";
 
 const UNSUPPORTED_LOCATION_KEYWORDS = [
   "cavite",
@@ -38,18 +32,9 @@ const UNSUPPORTED_LOCATION_KEYWORDS = [
   "olongapo",
 ];
 
-const GOOD_FOR_TERMS: Record<string, string[]> = {
-  date: ["date", "dates", "romantic", "couple", "anniversary"],
-  barkada: ["barkada", "barkadas", "friends", "group", "hangout"],
-  family: ["family", "kids", "child friendly", "all ages"],
-  study: ["study", "student", "quiet", "work friendly", "wifi"],
-  chill: ["chill", "relax", "tambayan", "low key"],
-};
-
 export type SearchValidationStatus =
   | "ok"
   | "empty_query"
-  | "too_vague"
   | "unsupported_location";
 
 export type SearchValidationResult = {
@@ -58,8 +43,6 @@ export type SearchValidationResult = {
   normalizedQuery: string;
   supportedLocationNames: string[];
   unsupportedLocationKeywords: string[];
-  hasSupportedLocationContext: boolean;
-  hasIntentSignals: boolean;
 };
 
 function escapeRegExp(value: string): string {
@@ -78,18 +61,6 @@ function hasPhraseMatch(normalizedInput: string, phrase: string): boolean {
   );
 }
 
-function inferGoodForIdsFromQuery(normalizedQuery: string): string[] {
-  if (!normalizedQuery) {
-    return [];
-  }
-
-  return Object.entries(GOOD_FOR_TERMS)
-    .filter(([goodForId, terms]) =>
-      [goodForId, ...terms].some((term) => hasPhraseMatch(normalizedQuery, term))
-    )
-    .map(([goodForId]) => goodForId);
-}
-
 function getUnsupportedLocationKeywords(normalizedQuery: string): string[] {
   const matches = new Set<string>();
 
@@ -102,37 +73,20 @@ function getUnsupportedLocationKeywords(normalizedQuery: string): string[] {
   return [...matches];
 }
 
-function mentionsSupportedScope(normalizedQuery: string): boolean {
-  return SUPPORTED_SCOPE_KEYWORDS.some((keyword) =>
-    hasPhraseMatch(normalizedQuery, keyword)
-  );
-}
-
 export function validateMetroManilaSearchQuery({
   query,
   hasSelectedFilters,
   hasNearbySearch,
-  hasExplicitAreaFilter,
   allowBroadDiscovery,
 }: {
   query: string;
   hasSelectedFilters: boolean;
   hasNearbySearch: boolean;
-  hasExplicitAreaFilter: boolean;
   allowBroadDiscovery: boolean;
 }): SearchValidationResult {
   const normalizedQuery = normalizeSearchText(query);
   const supportedLocations = inferMetroManilaLocationsFromQuery(normalizedQuery);
   const unsupportedLocationKeywords = getUnsupportedLocationKeywords(normalizedQuery);
-  const inferredCategoryIds = inferCategoryIdsFromQuery(normalizedQuery);
-  const inferredGoodForIds = inferGoodForIdsFromQuery(normalizedQuery);
-  const searchableTerms = getSearchTerms(normalizedQuery);
-  const hasIntentSignals =
-    inferredCategoryIds.length > 0 || inferredGoodForIds.length > 0;
-  const hasSupportedLocationContext =
-    hasExplicitAreaFilter ||
-    supportedLocations.cityIds.length > 0 ||
-    mentionsSupportedScope(normalizedQuery);
   if (allowBroadDiscovery) {
     return {
       status: "ok",
@@ -140,20 +94,16 @@ export function validateMetroManilaSearchQuery({
       normalizedQuery,
       supportedLocationNames: supportedLocations.cityNames,
       unsupportedLocationKeywords,
-      hasSupportedLocationContext,
-      hasIntentSignals,
     };
   }
 
   if (!normalizedQuery && !hasSelectedFilters && !hasNearbySearch) {
     return {
       status: "empty_query",
-      message: "Try adding a place, city, or vibe.",
+      message: "Try adding a place, category, or location.",
       normalizedQuery,
       supportedLocationNames: supportedLocations.cityNames,
       unsupportedLocationKeywords,
-      hasSupportedLocationContext,
-      hasIntentSignals,
     };
   }
 
@@ -164,8 +114,6 @@ export function validateMetroManilaSearchQuery({
       normalizedQuery,
       supportedLocationNames: supportedLocations.cityNames,
       unsupportedLocationKeywords,
-      hasSupportedLocationContext,
-      hasIntentSignals,
     };
   }
 
@@ -176,8 +124,6 @@ export function validateMetroManilaSearchQuery({
       normalizedQuery,
       supportedLocationNames: supportedLocations.cityNames,
       unsupportedLocationKeywords,
-      hasSupportedLocationContext,
-      hasIntentSignals,
     };
   }
 
@@ -188,26 +134,6 @@ export function validateMetroManilaSearchQuery({
       normalizedQuery,
       supportedLocationNames: supportedLocations.cityNames,
       unsupportedLocationKeywords,
-      hasSupportedLocationContext,
-      hasIntentSignals,
-    };
-  }
-
-  const isIntentOnlyQuery = hasIntentSignals && searchableTerms.length < 2;
-  const isVeryShortNameQuery =
-    !hasIntentSignals &&
-    searchableTerms.length === 1 &&
-    searchableTerms[0].length < 5;
-
-  if (!hasSupportedLocationContext && (isIntentOnlyQuery || isVeryShortNameQuery)) {
-    return {
-      status: "too_vague",
-      message: "Try adding a place, city, or vibe.",
-      normalizedQuery,
-      supportedLocationNames: supportedLocations.cityNames,
-      unsupportedLocationKeywords,
-      hasSupportedLocationContext,
-      hasIntentSignals,
     };
   }
 
@@ -217,7 +143,5 @@ export function validateMetroManilaSearchQuery({
     normalizedQuery,
     supportedLocationNames: supportedLocations.cityNames,
     unsupportedLocationKeywords,
-    hasSupportedLocationContext,
-    hasIntentSignals,
   };
 }
