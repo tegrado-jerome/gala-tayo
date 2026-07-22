@@ -24,8 +24,12 @@ function loadLocalSettings(): void {
 async function resolveSupabaseConfig(): Promise<{ url: string; key: string } | null> {
   loadLocalSettings();
 
-  const envUrl = process.env.SUPABASE_URL?.trim();
-  const envKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  const envUrl =
+    process.env.SUPABASE_URL?.trim() ||
+    process.env.VITE_SUPABASE_URL?.trim();
+  const envKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ||
+    process.env.VITE_SUPABASE_ANON_KEY?.trim();
 
   if (envUrl && envKey) {
     return { url: envUrl, key: envKey };
