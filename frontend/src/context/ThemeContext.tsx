@@ -1,22 +1,32 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useLayoutEffect,
   useMemo,
   useState,
   type PropsWithChildren,
 } from 'react'
+import { isForcedLightThemePath } from '../utils/themeRoutes'
 
 export type ThemePreference = 'light' | 'dark'
 export type ResolvedTheme = 'light' | 'dark'
 
 const THEME_STORAGE_KEY = 'galatayo:theme-preference'
+const THEME_SWITCHING_ATTRIBUTE = 'themeSwitching'
+
+let themeSwitchingFrame: number | null = null
+let themeSwitchingTimeout: number | null = null
 
 type ThemeContextValue = {
   themePreference: ThemePreference
   resolvedTheme: ResolvedTheme
   setThemePreference: (preference: ThemePreference) => void
 }
+
+type ThemeProviderProps = PropsWithChildren<{
+  pathname: string
+}>
 
 const ThemeContext = createContext<ThemeContextValue | null>(null)
 
@@ -37,9 +47,52 @@ function readStoredThemePreference(): ThemePreference {
   return 'light'
 }
 
-export function ThemeProvider({ children }: PropsWithChildren) {
+function clearThemeSwitchingSchedule() {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  if (themeSwitchingFrame !== null) {
+    window.cancelAnimationFrame(themeSwitchingFrame)
+    themeSwitchingFrame = null
+  }
+
+  if (themeSwitchingTimeout !== null) {
+    window.clearTimeout(themeSwitchingTimeout)
+    themeSwitchingTimeout = null
+  }
+}
+
+function beginThemeSwitching() {
+  if (typeof document === 'undefined') {
+    return
+  }
+
+  clearThemeSwitchingSchedule()
+  document.documentElement.dataset[THEME_SWITCHING_ATTRIBUTE] = 'true'
+}
+
+function endThemeSwitchingAfterCommit() {
+  if (typeof document === 'undefined' || typeof window === 'undefined') {
+    return
+  }
+
+  clearThemeSwitchingSchedule()
+
+  themeSwitchingFrame = window.requestAnimationFrame(() => {
+    themeSwitchingFrame = window.requestAnimationFrame(() => {
+      themeSwitchingFrame = null
+      themeSwitchingTimeout = window.setTimeout(() => {
+        themeSwitchingTimeout = null
+        delete document.documentElement.dataset[THEME_SWITCHING_ATTRIBUTE]
+      }, 60)
+    })
+  })
+}
+
+export function ThemeProvider({ children, pathname }: ThemeProviderProps) {
   const [themePreference, setThemePreferenceState] = useState<ThemePreference>(() => readStoredThemePreference())
-  const resolvedTheme: ResolvedTheme = themePreference
+  const resolvedTheme: ResolvedTheme = isForcedLightThemePath(pathname) ? 'light' : themePreference
 
   useLayoutEffect(() => {
     if (typeof document === 'undefined') {
@@ -57,16 +110,24 @@ export function ThemeProvider({ children }: PropsWithChildren) {
     if (themeColorMeta) {
       themeColorMeta.setAttribute('content', resolvedTheme === 'dark' ? '#08111d' : '#1E3A8A')
     }
+
+    if (root.dataset[THEME_SWITCHING_ATTRIBUTE] === 'true') {
+      endThemeSwitchingAfterCommit()
+    }
   }, [resolvedTheme, themePreference])
 
-  const setThemePreference = (preference: ThemePreference) => {
+  const setThemePreference = useCallback((preference: ThemePreference) => {
+    if (preference !== themePreference) {
+      beginThemeSwitching()
+    }
+
     setThemePreferenceState(preference)
     try {
       window.localStorage.setItem(THEME_STORAGE_KEY, preference)
     } catch {
       // localStorage may be unavailable, ignore
     }
-  }
+  }, [themePreference])
 
   const value = useMemo(
     () => ({
@@ -74,7 +135,7 @@ export function ThemeProvider({ children }: PropsWithChildren) {
       resolvedTheme,
       setThemePreference,
     }),
-    [resolvedTheme, themePreference],
+    [resolvedTheme, setThemePreference, themePreference],
   )
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>

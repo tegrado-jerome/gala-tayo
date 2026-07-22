@@ -164,7 +164,7 @@ function App() {
   })
 
   return (
-    <ThemeProvider>
+    <ThemeProvider pathname={pathname}>
       <CookieConsentProvider>
         <AppShell
           session={session}

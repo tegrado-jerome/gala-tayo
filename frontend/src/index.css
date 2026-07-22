@@ -636,6 +636,15 @@ button:disabled {
   transform-origin: center;
 }
 
+html[data-theme-switching="true"],
+html[data-theme-switching="true"] body,
+html[data-theme-switching="true"] #root,
+html[data-theme-switching="true"] #root *,
+html[data-theme-switching="true"] #root *::before,
+html[data-theme-switching="true"] #root *::after {
+  transition: none !important;
+}
+
 :where(.gala-app-page, .gala-page-shell, .gala-page-background) a {
   transition:
     color var(--motion-base) var(--ease-soft),

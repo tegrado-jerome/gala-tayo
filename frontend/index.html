@@ -29,11 +29,19 @@
     </style>
     <script>
       (function () {
+        function normalizeThemeRoutePath(pathname) {
+          return pathname.replace(/\/+$/, '') || '/';
+        }
+
+        function isForcedLightThemePath(pathname) {
+          return normalizeThemeRoutePath(pathname) === '/';
+        }
+
         try {
-          var isWelcomeRoute = window.location.pathname === '/' || window.location.pathname === '';
+          var isForcedLightRoute = isForcedLightThemePath(window.location.pathname || '/');
           var storedPreference = localStorage.getItem('galatayo:theme-preference');
-          var resolvedTheme = isWelcomeRoute ? 'light' : (storedPreference === 'dark' ? 'dark' : 'light');
-          var preference = isWelcomeRoute ? 'light' : (storedPreference === 'dark' ? 'dark' : 'light');
+          var preference = storedPreference === 'dark' ? 'dark' : 'light';
+          var resolvedTheme = isForcedLightRoute ? 'light' : preference;
           document.documentElement.dataset.theme = resolvedTheme;
           document.documentElement.dataset.themePreference = preference;
           document.documentElement.style.colorScheme = resolvedTheme;
