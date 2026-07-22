@@ -40,9 +40,8 @@ function getSources(useWebp: boolean): WelcomeAsset[] {
 }
 
 const WELCOME_LOADING_MIN_MS = 2000
-const WELCOME_LOADING_MAX_MS = 8000
+const WELCOME_LOADING_MAX_MS = 5000
 const WELCOME_LOADING_BACK_NAV_MIN_MS = 500
-const WELCOME_LOADING_REDUCED_MOTION_MIN_MS = 500
 
 function getWelcomeHeroSrc() {
   if (typeof window === 'undefined') {
@@ -135,14 +134,6 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
 
   const loadingMinMs = useMemo(() => {
     if (navigationSource === 'pop') return WELCOME_LOADING_BACK_NAV_MIN_MS
-
-    if (
-      typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    ) {
-      return WELCOME_LOADING_REDUCED_MOTION_MIN_MS
-    }
-
     return WELCOME_LOADING_MIN_MS
   }, [navigationSource])
 
@@ -170,7 +161,7 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
       window.removeEventListener('resize', updateHeroSrc)
       window.removeEventListener('orientationchange', updateHeroSrc)
     }
-  }, [])
+  }, [useWebp])
 
   useEffect(() => {
     let isCancelled = false
@@ -204,9 +195,10 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
     }
   }, [preloadSrc, loadingMinMs])
 
-  useEffect(() => {
-    preloadHomePageImages()
-  }, [])
+  const handleStartExploring = () => {
+    navigateToPath('/home')
+    window.setTimeout(preloadHomePageImages, 0)
+  }
 
   return (
     <>
@@ -265,7 +257,7 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
           </p>
           <button
             type="button"
-            onClick={() => navigateToPath('/home')}
+            onClick={handleStartExploring}
             className="welcome-page__button"
             disabled={!isReady}
           >

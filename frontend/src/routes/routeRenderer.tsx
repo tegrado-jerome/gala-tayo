@@ -1,40 +1,7 @@
-import { lazy, useEffect, useState } from 'react'
+import { Suspense, lazy, useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import SeoHead from '../components/SeoHead'
-import ProtectedFeatureGate from '../components/ProtectedFeatureGate'
-import SharedPlacePage from '../pages/SharedPlacePage'
-import PlacesSlugResolverPage from '../pages/PlacesSlugResolverPage'
-import HomePage from '../pages/HomePage'
-import SearchHub from '../pages/SearchHub'
 import WelcomePage from '../pages/WelcomePage'
-import SearchPage from '../pages/SearchPage'
-import LoginPage from '../pages/LoginPage'
-import FavoritesPage from '../pages/FavoritesPage'
-import HistoryPage from '../pages/HistoryPage'
-import FeedbackPage from '../pages/FeedbackPage'
-import GalaPlansPage from '../pages/GalaPlansPage'
-import ReportsPage from '../pages/ReportsPage'
-import AuthPage from '../pages/AuthPage'
-import AuthCallbackPage from '../pages/AuthCallbackPage'
-import OnboardingPage from '../pages/OnboardingPage'
-import ProfilePage from '../pages/ProfilePage'
-import AccountSettingsPage from '../pages/AccountSettingsPage'
-import PrivacyCenterPage from '../pages/PrivacyCenterPage'
-import ChangePasswordPage from '../pages/ChangePasswordPage'
-import ForgotPasswordPage from '../pages/ForgotPasswordPage'
-import ResetPasswordPage from '../pages/ResetPasswordPage'
-import PublicProfilePage from '../pages/PublicProfilePage'
-import ProfileSearchPage from '../pages/ProfileSearchPage'
-import PublicGalaPlanPage from '../pages/PublicGalaPlanPage'
-import LegalPage from '../pages/LegalPage'
-import AboutPage from '../pages/AboutPage'
-import PlaceSubmissionPage from '../pages/PlaceSubmissionPage'
-import MyPlaceSubmissionsPage from '../pages/MyPlaceSubmissionsPage'
-import AskAiMapPage from '../pages/AskAiMapPage'
-import AskAiOverviewPage from '../pages/AskAiOverviewPage'
-import PlacesIndexPage from '../pages/PlacesIndexPage'
-import PlaceCategoriesIndexPage from '../pages/PlaceCategoriesIndexPage'
-import CategoryPlacesPage from '../pages/CategoryPlacesPage'
 import { buildAuthPath } from '../services/authApi'
 import { getOnboardingStatus } from '../utils/profileApi'
 import { navigateToPath, replaceWithPath } from '../utils/navigation'
@@ -43,6 +10,40 @@ import { AdminRouteGate } from './AdminRouteGate'
 import { InitialAuthLoader, NotFoundPage } from './RouteViewHelpers'
 import type { RouteDescriptor, RouteInputs } from './routeResolver'
 
+const ProtectedFeatureGate = lazy(() => import('../components/ProtectedFeatureGate'))
+const SharedPlacePage = lazy(() => import('../pages/SharedPlacePage'))
+const PlacesSlugResolverPage = lazy(() => import('../pages/PlacesSlugResolverPage'))
+const HomePage = lazy(() => import('../pages/HomePage'))
+const SearchHub = lazy(() => import('../pages/SearchHub'))
+const SearchPage = lazy(() => import('../pages/SearchPage'))
+const LoginPage = lazy(() => import('../pages/LoginPage'))
+const FavoritesPage = lazy(() => import('../pages/FavoritesPage'))
+const HistoryPage = lazy(() => import('../pages/HistoryPage'))
+const FeedbackPage = lazy(() => import('../pages/FeedbackPage'))
+const GalaPlansPage = lazy(() => import('../pages/GalaPlansPage'))
+const ReportsPage = lazy(() => import('../pages/ReportsPage'))
+const AuthPage = lazy(() => import('../pages/AuthPage'))
+const AuthCallbackPage = lazy(() => import('../pages/AuthCallbackPage'))
+const OnboardingPage = lazy(() => import('../pages/OnboardingPage'))
+const ProfilePage = lazy(() => import('../pages/ProfilePage'))
+const AccountSettingsPage = lazy(() => import('../pages/AccountSettingsPage'))
+const PrivacyCenterPage = lazy(() => import('../pages/PrivacyCenterPage'))
+const ChangePasswordPage = lazy(() => import('../pages/ChangePasswordPage'))
+const ForgotPasswordPage = lazy(() => import('../pages/ForgotPasswordPage'))
+const ResetPasswordPage = lazy(() => import('../pages/ResetPasswordPage'))
+const PublicProfilePage = lazy(() => import('../pages/PublicProfilePage'))
+const ProfileSearchPage = lazy(() => import('../pages/ProfileSearchPage'))
+const PublicGalaPlanPage = lazy(() => import('../pages/PublicGalaPlanPage'))
+const LegalPage = lazy(() => import('../pages/LegalPage'))
+const AboutPage = lazy(() => import('../pages/AboutPage'))
+const PlaceSubmissionPage = lazy(() => import('../pages/PlaceSubmissionPage'))
+const MyPlaceSubmissionsPage = lazy(() => import('../pages/MyPlaceSubmissionsPage'))
+const AskAiMapPage = lazy(() => import('../pages/AskAiMapPage'))
+const AskAiOverviewPage = lazy(() => import('../pages/AskAiOverviewPage'))
+const PlacesIndexPage = lazy(() => import('../pages/PlacesIndexPage'))
+const PlaceCategoriesIndexPage = lazy(() => import('../pages/PlaceCategoriesIndexPage'))
+const CategoryPlacesPage = lazy(() => import('../pages/CategoryPlacesPage'))
+const MfaVerifyPage = lazy(() => import('../pages/MfaVerifyPage'))
 const AdminDashboard = lazy(() => import('../pages/admin/Dashboard'))
 const AdminPlaceImagesPage = lazy(() => import('../pages/admin/PlaceImagesPage'))
 const AdminPlaceSubmissionsPage = lazy(() => import('../pages/admin/PlaceSubmissionsPage'))
@@ -51,7 +52,6 @@ const AdminPlaceReportsPage = lazy(() => import('../pages/admin/PlaceReportsPage
 const AdminCommentReportsPage = lazy(() => import('../pages/admin/CommentReportsPage'))
 const AdminMfaSetupPage = lazy(() => import('../pages/admin/AdminMfaSetupPage'))
 const AdminMfaVerifyPage = lazy(() => import('../pages/admin/AdminMfaVerifyPage'))
-import MfaVerifyPage from '../pages/MfaVerifyPage'
 
 function OnboardingAccessGate({
   session,
@@ -115,7 +115,7 @@ function OnboardingAccessGate({
   return <OnboardingPage session={session} onComplete={onComplete} />
 }
 
-export function renderRouteDescriptor(descriptor: RouteDescriptor, inputs: RouteInputs) {
+function renderRouteContent(descriptor: RouteDescriptor, inputs: RouteInputs) {
   const { session, search, pathname, navigationSource, isAdminMfaLoading, adminMfaStatus } = inputs
   const adminGateProps = {
     pathname,
@@ -376,4 +376,12 @@ export function renderRouteDescriptor(descriptor: RouteDescriptor, inputs: Route
         </>
       )
   }
+}
+
+export function renderRouteDescriptor(descriptor: RouteDescriptor, inputs: RouteInputs) {
+  return (
+    <Suspense fallback={<InitialAuthLoader />}>
+      {renderRouteContent(descriptor, inputs)}
+    </Suspense>
+  )
 }
