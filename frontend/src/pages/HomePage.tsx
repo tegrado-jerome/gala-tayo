@@ -16,52 +16,17 @@ import {
   homeRecommendedTopPickPlaces,
 } from '../data/homeRecommendations'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
-import { supabase } from '../supabase'
 import { navigateToPath } from '../utils/navigation'
-import { getApiUrl } from '../utils/apiClient'
-import {
-  readHomeTrendingCache,
-  writeHomeTrendingCache,
-  type HomeTrendingCachePlace,
-} from '../utils/homeTrendingCache'
 import {
   clearHomeScrollCache,
   readHomeScrollCache,
   restoreHomeScroll,
   writeHomeScrollCache,
 } from '../utils/homeScrollCache'
-import { readHomeRouteCache, writeHomeRouteCache } from '../utils/homeRouteCache'
 import { useHomeImageSrc } from '../utils/homeImageCache'
 import { getCanonicalPlacePath, resolveAreaMeta } from '../utils/routes'
 import { placeCategories } from '../data/placeCategories'
-import {
-  fetchHomePlaceDetailsBatch,
-  prefetchPlaceDetail,
-  readCachedPlaceDetail,
-  type CityImageResolution,
-} from '../utils/placeDetailCache'
-
-import type { PlaceDetail } from '../types/appTypes'
-
-type BackendSearchPlace = {
-  id?: string | null
-  slug?: string | null
-  name?: string | null
-  description?: string | null
-  area?: string | null
-  city?: string | null
-  location?: string | null
-  category?: string | null
-  latitude?: number | string | null
-  longitude?: number | string | null
-  thumbnailUrl?: string | null
-  imageUrl?: string | null
-  curatedImageUrls?: string[] | null
-  address?: string | null
-  rating?: number | string | null
-  reviewCount?: number | string | null
-  reason?: string | null
-}
+import { prefetchPlaceDetail } from '../utils/placeDetailCache'
 
 type ShowcasePlace = {
   id: string
@@ -111,12 +76,6 @@ const homeAiFeatures: HomeAiFeature[] = [
 ]
 
 const TABLET_HOME_RAIL_QUERY = '(min-width: 768px)'
-const homeTopPickRecommendationPlaces = [
-  ...homePopularTopPickPlaces,
-  ...homeRecommendedTopPickPlaces,
-  ...homeAllTopPickPlaces,
-]
-
 function HomeThemeToggleButton() {
   const { resolvedTheme, setThemePreference } = useTheme()
 
@@ -139,33 +98,7 @@ function HomeThemeToggleButton() {
   )
 }
 
-function parseCoordinate(value: number | string | null | undefined) {
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    return value
-  }
-
-  if (typeof value === 'string') {
-    const parsedValue = Number(value)
-    if (Number.isFinite(parsedValue)) {
-      return parsedValue
-    }
-  }
-
-  return null
-}
-
 function normalizeLocationKey(value: string | null | undefined) {
-  return value
-    ?.normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/&/g, ' and ')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    ?? ''
-}
-
-function normalizePlaceMatchKey(value: string | null | undefined) {
   return value
     ?.normalize('NFKD')
     .replace(/[\u0300-\u036f]/g, '')
@@ -192,152 +125,6 @@ function formatRatingText(value: number | string | null | undefined) {
   }
 
   return null
-}
-
-async function getSearchRequestHeaders(): Promise<Record<string, string>> {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  }
-
-  if (session?.access_token) {
-    headers.Authorization = `Bearer ${session.access_token}`
-  }
-
-  return headers
-}
-
-function mapBackendPlaceToShowcasePlace(place: BackendSearchPlace): ShowcasePlace | null {
-  const lat = parseCoordinate(place.latitude)
-  const lng = parseCoordinate(place.longitude)
-  const name = place.name?.trim()
-
-  if (!name || lat === null || lng === null) {
-    return null
-  }
-
-  return {
-    id: String(place.id || place.slug || name),
-    slug: place.slug || undefined,
-    name,
-    category: place.category || null,
-    area: place.location || place.address || place.city || place.area || 'Metro Manila',
-    city: place.city || null,
-    localArea: place.area || null,
-    thumbnailUrl: place.thumbnailUrl || null,
-    imageUrl: place.imageUrl || null,
-    curatedImageUrls: Array.isArray(place.curatedImageUrls)
-      ? place.curatedImageUrls.filter((item): item is string => Boolean(item?.trim()))
-      : [],
-    rating: typeof place.rating === 'number' ? place.rating : parseCoordinate(place.rating),
-    reviewCount:
-      place.reviewCount === null || place.reviewCount === undefined ? undefined : String(place.reviewCount),
-    description: place.description || null,
-    reason: place.reason || place.description || null,
-  }
-}
-
-function mapCachedPlaceToShowcasePlace(place: HomeTrendingCachePlace): ShowcasePlace {
-  return {
-    id: place.id,
-    slug: place.slug,
-    name: place.name,
-    category: place.category ?? null,
-    area: place.area,
-    city: place.city ?? null,
-    localArea: place.localArea ?? null,
-    thumbnailUrl: place.thumbnailUrl ?? null,
-    imageUrl: place.imageUrl ?? null,
-    curatedImageUrls: Array.isArray(place.curatedImageUrls) ? place.curatedImageUrls : [],
-    rating: place.rating ?? null,
-    reviewCount: place.reviewCount,
-    description: place.description ?? null,
-    reason: place.reason ?? null,
-  }
-}
-
-function mapPlaceDetailToShowcasePlace(place: PlaceDetail): ShowcasePlace | null {
-  const lat = parseCoordinate(place.latitude)
-  const lng = parseCoordinate(place.longitude)
-  const name = place.name?.trim()
-
-  if (!name || lat === null || lng === null) {
-    return null
-  }
-
-  return {
-    id: place.id,
-    slug: place.slug,
-    name,
-    category: place.category || null,
-    area: place.area || place.address || place.city || 'Metro Manila',
-    city: place.city || null,
-    localArea: place.area || null,
-    thumbnailUrl: place.thumbnailUrl || place.imageUrl || null,
-    imageUrl: place.imageUrl || place.thumbnailUrl || null,
-    curatedImageUrls: Array.isArray(place.curatedImageUrls)
-      ? place.curatedImageUrls.filter((item): item is string => Boolean(item?.trim()))
-      : [],
-    rating:
-      typeof place.average_rating === 'number'
-        ? place.average_rating
-        : parseCoordinate(place.average_rating),
-    reviewCount:
-      place.review_count === null || place.review_count === undefined ? undefined : String(place.review_count),
-    description: place.description || null,
-    reason: place.description || null,
-  }
-}
-
-function hasShowcaseImage(place: Pick<ShowcasePlace, 'thumbnailUrl' | 'imageUrl' | 'curatedImageUrls'>) {
-  return Boolean(
-    place.thumbnailUrl?.trim() ||
-    place.imageUrl?.trim() ||
-    place.curatedImageUrls?.some((imageUrl) => Boolean(imageUrl?.trim()))
-  )
-}
-
-function mergeRecommendedPlaceWithLivePlace(
-  fallbackPlace: ShowcasePlace,
-  livePlace: ShowcasePlace | undefined
-) {
-  if (!livePlace) {
-    return fallbackPlace
-  }
-
-  const fallbackCuratedImageUrls = fallbackPlace.curatedImageUrls ?? []
-  const liveCuratedImageUrls = livePlace.curatedImageUrls ?? []
-
-  return {
-    ...fallbackPlace,
-    ...livePlace,
-    thumbnailUrl:
-      livePlace.thumbnailUrl?.trim() ||
-      livePlace.imageUrl?.trim() ||
-      liveCuratedImageUrls.find((imageUrl) => Boolean(imageUrl?.trim()))?.trim() ||
-      fallbackPlace.thumbnailUrl ||
-      null,
-    imageUrl:
-      livePlace.imageUrl?.trim() ||
-      livePlace.thumbnailUrl?.trim() ||
-      liveCuratedImageUrls.find((imageUrl) => Boolean(imageUrl?.trim()))?.trim() ||
-      fallbackPlace.imageUrl ||
-      null,
-    curatedImageUrls: hasShowcaseImage(livePlace)
-      ? [...liveCuratedImageUrls, ...fallbackCuratedImageUrls].reduce<string[]>((uniqueImageUrls, imageUrl) => {
-          const trimmedImageUrl = imageUrl?.trim()
-
-          if (trimmedImageUrl && !uniqueImageUrls.includes(trimmedImageUrl)) {
-            uniqueImageUrls.push(trimmedImageUrl)
-          }
-
-          return uniqueImageUrls
-        }, [])
-      : fallbackCuratedImageUrls,
-  }
 }
 
 import { getStaticPlaceImageUrlForSlug } from '../data/placeIndexVisuals'
@@ -433,76 +220,8 @@ function resolveHomepageCategoryRouteId(label: string) {
   return exactCategory?.value ?? null
 }
 
-function getHomepageCategoryCandidates(place: ShowcasePlace) {
-  const candidates = new Set<string>()
-  const normalizedCategory = normalizeCategoryLabel(place.category || '')
-
-  if (!normalizedCategory) {
-    return candidates
-  }
-
-  if (normalizedCategory === 'restaurant' || normalizedCategory === 'food') {
-    candidates.add('food')
-  }
-  if (normalizedCategory === 'park') {
-    candidates.add('park')
-  }
-  if (normalizedCategory === 'hotel' || normalizedCategory === 'accommodation') {
-    candidates.add('hotel')
-  }
-  if (normalizedCategory === 'bar') {
-    candidates.add('nightlife')
-  }
-  if (normalizedCategory === 'arcade') {
-    candidates.add('activity')
-  }
-
-  const mappedCategoryId = resolveHomepageCategoryRouteId(place.category || '')
-  if (mappedCategoryId) {
-    candidates.add(mappedCategoryId)
-  }
-
-  return candidates
-}
-
 function buildCityHref(citySlug: string) {
   return `/places/${encodeURIComponent(citySlug)}`
-}
-
-function logHomeCityImageAudit(resolutions: CityImageResolution[]) {
-  if (!import.meta.env.DEV || resolutions.length === 0) {
-    return
-  }
-
-  console.info(
-    '[home-city-images]',
-    resolutions.map((resolution) => ({
-      citySlug: resolution.citySlug,
-      selectedPlaceSlug: resolution.place?.slug ?? null,
-      selectedImageUrl: resolution.imageUrl,
-      source: resolution.source,
-      warning: resolution.source === 'missing' ? 'No approved R2 image found for this city.' : null,
-    }))
-  )
-}
-
-const homepageCityTilePlaceSlugOverrides: Record<string, string> = {
-  caloocan: 'caloocan-city-peoples-park',
-  'las-pinas': 'sm-southmall',
-  makati: 'glorietta',
-  malabon: 'malabon-zoo-aquarium-and-botanical-garden',
-  mandaluyong: 'shangri-la-plaza',
-  manila: 'intramuros',
-  marikina: 'kapitan-moy-cultural-center',
-  muntinlupa: 'festival-mall-alabang',
-  navotas: 'navotas-citywalk-and-amphitheater',
-  paranaque: 'okada-manila',
-  pasay: 'sm-mall-of-asia',
-  pasig: 'ace-water-spa-pasig',
-  'quezon-city': 'art-in-island',
-  'san-juan': 'greenhills-mall-greenhills-shopping-center',
-  taguig: 'bonifacio-high-street',
-  valenzuela: 'museo-valenzuela',
 }
 
 function getHomepageCityTileLabel(label: string) {
@@ -884,9 +603,9 @@ function HomeCategoryTile({
               alt={label}
               className="h-full w-full object-cover"
               draggable={false}
-              loading="eager"
+              loading={index < 4 ? 'eager' : 'lazy'}
               decoding="async"
-              fetchPriority={index < 4 ? 'high' : 'low'}
+              fetchPriority={index < 2 ? 'auto' : 'low'}
               sizes="(min-width: 1024px) 92px, (min-width: 768px) 84px, 22vw"
               onError={() => {
                 if (imageUrl) {
@@ -1235,30 +954,6 @@ function useSegmentedRailIndicator<T extends HTMLElement>(
   }
 }
 
-function buildCachedHomeTopPickPlaceBySlug() {
-  const nextEntries: Array<[string, ShowcasePlace]> = []
-  const seenSlugs = new Set<string>()
-
-  for (const recommendation of homeTopPickRecommendationPlaces) {
-    const normalizedSlug = (recommendation.slug ?? recommendation.id).trim().toLowerCase()
-
-    if (!normalizedSlug || seenSlugs.has(normalizedSlug)) {
-      continue
-    }
-
-    seenSlugs.add(normalizedSlug)
-
-    const cachedPlace = readCachedPlaceDetail(normalizedSlug)
-    const showcasePlace = cachedPlace ? mapPlaceDetailToShowcasePlace(cachedPlace) : null
-
-    if (showcasePlace) {
-      nextEntries.push([normalizedSlug, showcasePlace])
-    }
-  }
-
-  return Object.fromEntries(nextEntries)
-}
-
 function getRailItemTargetLeft(element: HTMLElement, item: HTMLElement) {
   const targetLeft =
     element.scrollLeft + item.getBoundingClientRect().left - element.getBoundingClientRect().left
@@ -1274,59 +969,15 @@ function HomePage({
 }) {
   const { currentProfile, currentUser } = useAppUser()
   const guestAuth = useGuestAuthPrompt()
-  const initialHomeRouteCacheRef = useRef(readHomeRouteCache())
-  const cachedTrendingPlacesRef = useRef<ShowcasePlace[] | null>(
-    initialHomeRouteCacheRef.current?.trendingPlaces.map(mapCachedPlaceToShowcasePlace) ??
-      readHomeTrendingCache()?.map(mapCachedPlaceToShowcasePlace) ??
-      null
-  )
   const initialHomeScrollCacheRef = useRef(
     navigationSource === 'pop' ? readHomeScrollCache() : null
   )
   const hasRestoredHomeScrollRef = useRef(false)
-  const [trendingPlaces, setTrendingPlaces] = useState<ShowcasePlace[]>(
-    initialHomeRouteCacheRef.current?.trendingPlaces.map(mapCachedPlaceToShowcasePlace) ??
-      cachedTrendingPlacesRef.current ??
-      []
-  )
-  const [homePlacesPool, setHomePlacesPool] = useState<ShowcasePlace[]>(
-    initialHomeRouteCacheRef.current?.homePlacesPool.map(mapCachedPlaceToShowcasePlace) ??
-      cachedTrendingPlacesRef.current ??
-      []
-  )
-  const [cityTilePlaceBySlug, setCityTilePlaceBySlug] = useState<Record<string, ShowcasePlace>>(
-    initialHomeRouteCacheRef.current?.cityTilePlaceBySlug ?? {}
-  )
   const [activeTopPicksTab, setActiveTopPicksTab] = useState<'all' | 'popular' | 'recommended'>(
-    initialHomeRouteCacheRef.current?.activeTopPicksTab ?? 'all'
-  )
-  const [isTrendingLoading, setIsTrendingLoading] = useState(false)
-  const [isTrendingLoaded, setIsTrendingLoaded] = useState(
-    Boolean(initialHomeRouteCacheRef.current?.trendingPlaces.length || cachedTrendingPlacesRef.current?.length)
-  )
-  const [trendingError, setTrendingError] = useState<string | null>(null)
-  const [areHomeCardsLoaded, setAreHomeCardsLoaded] = useState(
-    Boolean(
-      (
-        initialHomeRouteCacheRef.current &&
-        (
-          Object.keys(initialHomeRouteCacheRef.current.cityTilePlaceBySlug).length > 0 &&
-          Object.keys(initialHomeRouteCacheRef.current.categoryTilePlaceByLabel).length > 0
-        )
-      )
-    )
+    'all'
   )
   const [selectedCityTileSlug, setSelectedCityTileSlug] = useState<string | null>(null)
   const [selectedCategoryTileLabel, setSelectedCategoryTileLabel] = useState<string | null>(null)
-  const [topPickPlaceBySlug, setTopPickPlaceBySlug] = useState<Record<string, ShowcasePlace>>(
-    {
-      ...buildCachedHomeTopPickPlaceBySlug(),
-      ...(initialHomeRouteCacheRef.current?.topPickPlaceBySlug ?? {}),
-    }
-  )
-  const [categoryTilePlaceByLabel, setCategoryTilePlaceByLabel] = useState<Record<string, ShowcasePlace>>(
-    initialHomeRouteCacheRef.current?.categoryTilePlaceByLabel ?? {}
-  )
   const heroCarouselRef = useRef<HTMLDivElement | null>(null)
   const heroCardRefs = useRef<Array<HTMLDivElement | null>>([])
   const cityRailRef = useRef<HTMLDivElement | null>(null)
@@ -1350,63 +1001,17 @@ function HomePage({
     return homePopularTopPickPlaces
   }, [])
 
-  const imageRichHomePlacesPool = useMemo(
-    () => homePlacesPool.filter((place) => hasShowcaseImage(place)),
-    [homePlacesPool]
-  )
-
-  const livePlaceBySlug = useMemo(() => {
-    const nextMap = new Map<string, ShowcasePlace>()
-
-    for (const place of imageRichHomePlacesPool) {
-      const normalizedSlug = (place.slug ?? place.id).trim().toLowerCase()
-
-      if (!normalizedSlug || nextMap.has(normalizedSlug)) {
-        continue
-      }
-
-      nextMap.set(normalizedSlug, place)
-    }
-
-    return nextMap
-  }, [imageRichHomePlacesPool])
-
-  const livePlaceByName = useMemo(() => {
-    const nextMap = new Map<string, ShowcasePlace>()
-
-    for (const place of imageRichHomePlacesPool) {
-      const normalizedName = normalizePlaceMatchKey(place.name)
-
-      if (!normalizedName || nextMap.has(normalizedName)) {
-        continue
-      }
-
-      nextMap.set(normalizedName, place)
-    }
-
-    return nextMap
-  }, [imageRichHomePlacesPool])
-
-  const mergeTopPickPlaceWithLivePlace = useCallback((place: ShowcasePlace) => {
-    const normalizedRecommendationSlug = (place.slug ?? place.id).trim().toLowerCase()
-    const exactTopPickLivePlace = topPickPlaceBySlug[normalizedRecommendationSlug]
-    const exactLivePlace = livePlaceBySlug.get(normalizedRecommendationSlug)
-    const sameNameLivePlace = livePlaceByName.get(normalizePlaceMatchKey(place.name))
-
-    return mergeRecommendedPlaceWithLivePlace(place, exactTopPickLivePlace ?? exactLivePlace ?? sameNameLivePlace)
-  }, [livePlaceByName, livePlaceBySlug, topPickPlaceBySlug])
-
   const recommendedTopPickPlaces = useMemo(() => {
-    return homeRecommendedTopPickPlaces.map(mergeTopPickPlaceWithLivePlace)
-  }, [mergeTopPickPlaceWithLivePlace])
+    return homeRecommendedTopPickPlaces
+  }, [])
 
   const allTopPickPlaces = useMemo(() => {
-    return homeAllTopPickPlaces.map(mergeTopPickPlaceWithLivePlace)
-  }, [mergeTopPickPlaceWithLivePlace])
+    return homeAllTopPickPlaces
+  }, [])
 
   const popularTopPickPlaces = useMemo(() => {
-    return homePopularTopPickPlaces.map(mergeTopPickPlaceWithLivePlace)
-  }, [mergeTopPickPlaceWithLivePlace])
+    return homePopularTopPickPlaces
+  }, [])
 
   const visibleTopPickCarouselPlaces = useMemo(() => {
     if (activeTopPicksTab === 'all') {
@@ -1424,325 +1029,33 @@ function HomePage({
     return heroPlaces
   }, [activeTopPicksTab, allTopPickPlaces, heroPlaces, popularTopPickPlaces, recommendedTopPickPlaces])
 
-  const hasCachedTrendingPlaces = trendingPlaces.length > 0
-  const shouldShowTopPickSkeletons = isTrendingLoading && !hasCachedTrendingPlaces && visibleTopPickCarouselPlaces.length === 0
-  const isHomePageReady = isTrendingLoaded && areHomeCardsLoaded
-
-  useEffect(() => {
-    if (!isHomePageReady) {
-      return
-    }
-
-    writeHomeRouteCache({
-      trendingPlaces,
-      homePlacesPool,
-      cityTilePlaceBySlug,
-      topPickPlaceBySlug,
-      categoryTilePlaceByLabel,
-      activeTopPicksTab,
-    })
-  }, [
-    activeTopPicksTab,
-    categoryTilePlaceByLabel,
-    cityTilePlaceBySlug,
-    homePlacesPool,
-    isHomePageReady,
-    topPickPlaceBySlug,
-    trendingPlaces,
-  ])
-
-  const liveCityPlaceBySlug = useMemo(() => {
-    const nextMap = new Map<string, ShowcasePlace>()
-
-    for (const place of imageRichHomePlacesPool) {
-      const areaSlug = getHomepageCitySlug(place)
-
-      if (!nextMap.has(areaSlug)) {
-        nextMap.set(areaSlug, place)
-      }
-    }
-
-    return nextMap
-  }, [imageRichHomePlacesPool])
-
-  const liveCategoryPlaceById = useMemo(() => {
-    const nextMap = new Map<string, ShowcasePlace>()
-
-    for (const place of imageRichHomePlacesPool) {
-      for (const candidate of getHomepageCategoryCandidates(place)) {
-        if (!nextMap.has(candidate)) {
-          nextMap.set(candidate, place)
-        }
-      }
-    }
-
-    return nextMap
-  }, [imageRichHomePlacesPool])
+  const shouldShowTopPickSkeletons = false
+  const isHomePageReady = true
 
   const cityTiles = useMemo<HomeTileRecommendation[]>(() => {
     return homeCityRecommendations.map((tile) => {
       const citySlug = getHomepageCitySlug(tile.place)
-      const normalizedRecommendationSlug = (tile.place.slug ?? tile.place.id).trim().toLowerCase()
-      const cityTileOverride = cityTilePlaceBySlug[citySlug]
-      const exactRecommendedLivePlace = livePlaceBySlug.get(normalizedRecommendationSlug)
-      const sameCityLivePlace = liveCityPlaceBySlug.get(citySlug)
 
       return {
         label: getHomepageCityTileLabel(tile.label),
         slug: citySlug,
         href: buildCityHref(citySlug),
         active: selectedCityTileSlug === citySlug,
-        place: mergeRecommendedPlaceWithLivePlace(tile.place, cityTileOverride ?? exactRecommendedLivePlace ?? sameCityLivePlace),
+        place: tile.place,
       }
     })
-  }, [cityTilePlaceBySlug, liveCityPlaceBySlug, livePlaceBySlug, selectedCityTileSlug])
+  }, [selectedCityTileSlug])
 
   const categoryTiles = useMemo<HomeTileRecommendation[]>(() => {
     return homeCategoryRecommendations.map((tile) => {
-      const normalizedRecommendationSlug = (tile.place.slug ?? tile.place.id).trim().toLowerCase()
-      const exactCategoryTilePlace = categoryTilePlaceByLabel[tile.label]
-      const exactRecommendedLivePlace = livePlaceBySlug.get(normalizedRecommendationSlug)
-
       return {
         label: tile.label,
         href: buildCategoryHref(tile.label),
         active: selectedCategoryTileLabel === tile.label,
-        place: mergeRecommendedPlaceWithLivePlace(
-          tile.place,
-          exactCategoryTilePlace ??
-            exactRecommendedLivePlace ??
-            liveCategoryPlaceById.get(resolveHomepageCategoryRouteId(tile.label) ?? '')
-        ),
+        place: tile.place,
       }
     })
-  }, [categoryTilePlaceByLabel, liveCategoryPlaceById, livePlaceBySlug, selectedCategoryTileLabel])
-
-  useEffect(() => {
-    const imageUrls = new Set<string>()
-
-    for (const place of visibleTopPickCarouselPlaces) {
-      for (const imageUrl of getHomeTileImageCandidates(place)) {
-        imageUrls.add(imageUrl)
-      }
-    }
-
-    for (const tile of [...cityTiles, ...categoryTiles]) {
-      for (const imageUrl of getHomeTileImageCandidates(tile.place)) {
-        imageUrls.add(imageUrl)
-      }
-    }
-
-    const preloadedImages = Array.from(imageUrls).map((imageUrl) => {
-      const image = new Image()
-      image.decoding = 'async'
-      image.src = imageUrl
-      return image
-    })
-
-    return () => {
-      for (const image of preloadedImages) {
-        image.onload = null
-        image.onerror = null
-      }
-    }
-  }, [categoryTiles, cityTiles, visibleTopPickCarouselPlaces])
-
-  useEffect(() => {
-    const controller = new AbortController()
-
-    async function loadTrendingPlaces() {
-      try {
-        setIsTrendingLoading(true)
-        setTrendingError(null)
-
-        const headers = await getSearchRequestHeaders()
-        const showcasePlaces: ShowcasePlace[] = []
-        const seenPlaceKeys = new Set<string>()
-        const response = await fetch(getApiUrl('/search'), {
-          method: 'POST',
-          headers,
-          signal: controller.signal,
-          body: JSON.stringify({
-            query: '',
-            filters: {
-              category: null,
-              area: null,
-              budget: null,
-            },
-            exploreAll: true,
-            page: 1,
-            limit: 20,
-          }),
-        })
-
-        const data = (await response.json()) as {
-          message?: string
-          error?: string
-          places?: BackendSearchPlace[]
-          result?: {
-            places?: BackendSearchPlace[]
-          }
-        }
-
-        if (!response.ok) {
-          throw new Error(data.error || data.message || 'Failed to load places.')
-        }
-
-        const pagePlaces = (data.places ?? data.result?.places ?? [])
-          .map(mapBackendPlaceToShowcasePlace)
-          .filter((place): place is ShowcasePlace => Boolean(place))
-
-        for (const place of pagePlaces) {
-          const dedupeKey = (place.slug ?? place.id).trim().toLowerCase()
-          if (seenPlaceKeys.has(dedupeKey)) {
-            continue
-          }
-
-          seenPlaceKeys.add(dedupeKey)
-          showcasePlaces.push(place)
-        }
-
-        setHomePlacesPool(showcasePlaces)
-        setCityTilePlaceBySlug({})
-
-        setTrendingPlaces(showcasePlaces)
-        writeHomeTrendingCache(showcasePlaces)
-        cachedTrendingPlacesRef.current = showcasePlaces
-      } catch (error) {
-        if ((error as Error).name === 'AbortError') {
-          return
-        }
-
-        if (!cachedTrendingPlacesRef.current) {
-          setTrendingError(error instanceof Error ? error.message : 'Failed to load places.')
-        }
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsTrendingLoading(false)
-          setIsTrendingLoaded(true)
-        }
-      }
-    }
-
-    void loadTrendingPlaces()
-
-    return () => {
-      controller.abort()
-    }
-  }, [])
-
-  useEffect(() => {
-    let isCancelled = false
-
-    async function loadHomeCardPlaces() {
-      try {
-        if (!initialHomeRouteCacheRef.current && !cachedTrendingPlacesRef.current?.length) {
-          setAreHomeCardsLoaded(false)
-        }
-
-        const topPickSlugs = homeTopPickRecommendationPlaces
-          .map((place) => place.slug?.trim().toLowerCase())
-          .filter((slug): slug is string => Boolean(slug))
-
-        const cityTileSlugs = homeCityRecommendations
-          .map((tile) => {
-            const citySlug = getHomepageCitySlug(tile.place)
-            return homepageCityTilePlaceSlugOverrides[citySlug] ??
-              tile.place.slug?.trim().toLowerCase() ??
-              null
-          })
-          .filter((slug): slug is string => Boolean(slug))
-
-        const categoryTileSlugs = homeCategoryRecommendations
-          .map((tile) => tile.place.slug?.trim().toLowerCase() ?? null)
-          .filter((slug): slug is string => Boolean(slug))
-
-        const cityImageRequests = homeCityRecommendations.map((tile) => {
-          const citySlug = getHomepageCitySlug(tile.place)
-          return {
-            citySlug,
-            cityName: tile.place.city,
-            representativeSlug:
-              homepageCityTilePlaceSlugOverrides[citySlug] ??
-              tile.place.slug?.trim().toLowerCase() ??
-              null,
-          }
-        })
-        const allSlugs = Array.from(new Set([...topPickSlugs, ...cityTileSlugs, ...categoryTileSlugs]))
-        const { places, cityImageResolutions } = await fetchHomePlaceDetailsBatch({
-          slugs: allSlugs,
-          cityImageRequests,
-        })
-
-        if (isCancelled) {
-          return
-        }
-
-        const placeBySlug = new Map<string, ShowcasePlace>()
-
-        for (const place of places) {
-          const showcasePlace = mapPlaceDetailToShowcasePlace(place)
-          if (!showcasePlace) {
-            continue
-          }
-
-          placeBySlug.set(showcasePlace.slug?.trim().toLowerCase() ?? showcasePlace.id.trim().toLowerCase(), showcasePlace)
-        }
-
-        setTopPickPlaceBySlug((currentValue) => ({
-          ...currentValue,
-          ...Object.fromEntries(
-            topPickSlugs
-              .map((slug) => {
-                const place = placeBySlug.get(slug)
-                return place ? ([slug, place] as const) : null
-              })
-              .filter((entry): entry is readonly [string, ShowcasePlace] => Boolean(entry))
-          ),
-        }))
-
-        logHomeCityImageAudit(cityImageResolutions)
-
-        setCityTilePlaceBySlug(
-          Object.fromEntries(
-            cityImageResolutions
-              .map((resolution) => {
-                const place = resolution.place ? mapPlaceDetailToShowcasePlace(resolution.place) : null
-                return place && hasShowcaseImage(place) ? ([resolution.citySlug, place] as const) : null
-              })
-              .filter((entry): entry is readonly [string, ShowcasePlace] => Boolean(entry))
-          )
-        )
-
-        setCategoryTilePlaceByLabel(
-          Object.fromEntries(
-            homeCategoryRecommendations
-              .map((tile) => {
-                const placeSlug = tile.place.slug?.trim().toLowerCase() ?? null
-
-                if (!placeSlug) {
-                  return null
-                }
-
-                const place = placeBySlug.get(placeSlug)
-                return place ? ([tile.label, place] as const) : null
-              })
-              .filter((entry): entry is readonly [string, ShowcasePlace] => Boolean(entry))
-          )
-        )
-      } finally {
-        if (!isCancelled) {
-          setAreHomeCardsLoaded(true)
-        }
-      }
-    }
-
-    void loadHomeCardPlaces()
-
-    return () => {
-      isCancelled = true
-    }
-  }, [])
+  }, [selectedCategoryTileLabel])
 
   useLayoutEffect(() => {
     const homeScrollCache = initialHomeScrollCacheRef.current
@@ -2089,18 +1402,12 @@ function HomePage({
                   }`}
                 >
                   <div
-                    className={`flex min-w-max gap-4 transition-opacity duration-300 ${
-                      isTrendingLoading && visibleTopPickCarouselPlaces.length > 0 ? 'opacity-90' : 'opacity-100'
-                    }`}
+                    className="flex min-w-max gap-4 transition-opacity duration-300 opacity-100"
                   >
                     {shouldShowTopPickSkeletons ? (
                       Array.from({ length: 3 }).map((_, index) => (
                         <HomeFeaturedCardSkeleton key={`home-featured-skeleton-${index}`} index={index} />
                       ))
-                    ) : trendingError && visibleTopPickCarouselPlaces.length === 0 ? (
-                      <p className="col-span-2 rounded-[20px] bg-white px-4 py-4 text-sm text-red-500 shadow-[0_10px_24px_rgba(15,23,42,0.05)]" style={{ boxShadow: 'var(--shadow-soft)' }}>
-                        {trendingError}
-                      </p>
                     ) : (
                       visibleTopPickCarouselPlaces.map((place, index) => (
                         <div
@@ -2166,7 +1473,7 @@ function HomePage({
                         label={tile.label}
                         place={tile.place}
                         active={tile.active}
-                        isLoading={!areHomeCardsLoaded}
+                        isLoading={false}
                         index={index}
                         onClick={() => {
                           setSelectedCityTileSlug(tile.slug ?? null)
@@ -2216,7 +1523,7 @@ function HomePage({
                         label={tile.label}
                         place={tile.place}
                         active={tile.active}
-                        isLoading={!areHomeCardsLoaded}
+                        isLoading={false}
                         index={index}
                         onClick={() => {
                           setSelectedCategoryTileLabel(tile.label)

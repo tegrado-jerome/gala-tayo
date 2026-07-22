@@ -1,7 +1,8 @@
-import { homeAllTopPickPlaces, homeCityRecommendations, homeCategoryRecommendations } from '../data/homeRecommendations'
-import type { HomeRecommendationPlace, HomeRecommendationTile } from '../data/homeRecommendations'
+import { homeAllTopPickPlaces } from '../data/homeRecommendations'
+import type { HomeRecommendationPlace } from '../data/homeRecommendations'
 
 const preloadedHomeUrls = new Set<string>()
+const CRITICAL_HOME_IMAGE_COUNT = 3
 
 function collectPlaceImageUrls(place: HomeRecommendationPlace): string[] {
   const urls: string[] = []
@@ -21,25 +22,10 @@ function collectPlaceImageUrls(place: HomeRecommendationPlace): string[] {
   return urls
 }
 
-function collectTileImageUrls(tiles: HomeRecommendationTile[]): string[] {
+function getCriticalStaticHomeImageUrls(): string[] {
   const urls: string[] = []
 
-  for (const tile of tiles) {
-    const collected = collectPlaceImageUrls(tile.place)
-    for (const url of collected) {
-      if (!urls.includes(url)) {
-        urls.push(url)
-      }
-    }
-  }
-
-  return urls
-}
-
-function getAllStaticHomeImageUrls(): string[] {
-  const urls: string[] = []
-
-  for (const place of homeAllTopPickPlaces) {
+  for (const place of homeAllTopPickPlaces.slice(0, CRITICAL_HOME_IMAGE_COUNT)) {
     const collected = collectPlaceImageUrls(place)
     for (const url of collected) {
       if (!urls.includes(url)) {
@@ -48,25 +34,11 @@ function getAllStaticHomeImageUrls(): string[] {
     }
   }
 
-  const cityUrls = collectTileImageUrls(homeCityRecommendations)
-  for (const url of cityUrls) {
-    if (!urls.includes(url)) {
-      urls.push(url)
-    }
-  }
-
-  const categoryUrls = collectTileImageUrls(homeCategoryRecommendations)
-  for (const url of categoryUrls) {
-    if (!urls.includes(url)) {
-      urls.push(url)
-    }
-  }
-
   return urls
 }
 
 export function preloadHomePageImages(): void {
-  const urls = getAllStaticHomeImageUrls()
+  const urls = getCriticalStaticHomeImageUrls()
 
   for (const url of urls) {
     if (!url || preloadedHomeUrls.has(url)) {
@@ -79,12 +51,12 @@ export function preloadHomePageImages(): void {
     link.rel = 'preload'
     link.as = 'image'
     link.href = url
-    link.fetchPriority = 'low'
+    link.fetchPriority = 'high'
     document.head.appendChild(link)
 
     const img = new Image()
     img.decoding = 'async'
-    img.fetchPriority = 'low'
+    img.fetchPriority = 'high'
     img.src = url
   }
 }
