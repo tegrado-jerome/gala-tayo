@@ -557,6 +557,7 @@ function HomeCategoryTile({
   isLoading = false,
   includeStaticPlaceFallback = true,
   index = 0,
+  eagerImageCount = 4,
   onClick,
 }: {
   label: string
@@ -565,6 +566,7 @@ function HomeCategoryTile({
   isLoading?: boolean
   includeStaticPlaceFallback?: boolean
   index?: number
+  eagerImageCount?: number
   onClick: () => void
 }) {
   const imageCandidates = useMemo(
@@ -603,9 +605,9 @@ function HomeCategoryTile({
               alt={label}
               className="h-full w-full object-cover"
               draggable={false}
-              loading={index < 4 ? 'eager' : 'lazy'}
+              loading={index < eagerImageCount ? 'eager' : 'lazy'}
               decoding="async"
-              fetchPriority={index < 2 ? 'auto' : 'low'}
+              fetchPriority={index < 4 ? 'auto' : 'low'}
               sizes="(min-width: 1024px) 92px, (min-width: 768px) 84px, 22vw"
               onError={() => {
                 if (imageUrl) {
@@ -1475,6 +1477,7 @@ function HomePage({
                         active={tile.active}
                         isLoading={false}
                         index={index}
+                        eagerImageCount={8}
                         onClick={() => {
                           setSelectedCityTileSlug(tile.slug ?? null)
                           navigateToPath(tile.href)
@@ -1525,6 +1528,7 @@ function HomePage({
                         active={tile.active}
                         isLoading={false}
                         index={index}
+                        eagerImageCount={homeCategoryRecommendations.length}
                         onClick={() => {
                           setSelectedCategoryTileLabel(tile.label)
                           navigateToPath(tile.href)
