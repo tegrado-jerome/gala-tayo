@@ -40,7 +40,6 @@ function getSources(useWebp: boolean): WelcomeAsset[] {
 }
 
 const WELCOME_LOADING_MIN_MS = 2000
-const WELCOME_LOADING_MAX_MS = 5000
 const WELCOME_LOADING_BACK_NAV_MIN_MS = 500
 
 function getWelcomeHeroSrc() {
@@ -65,6 +64,10 @@ function getPreloadSrc(useWebp: boolean) {
   if (window.innerWidth <= 639) return `/images/welcome/mobile.${ext}`
   if (window.innerWidth <= 1023) return `/images/welcome/tablet.${ext}`
   return `/images/welcome/laptop-desktop.${ext}`
+}
+
+function getPngFallbackSrc(src: string) {
+  return src.endsWith('.webp') ? src.replace(/\.webp$/, '.png') : src
 }
 
 function waitForDuration(durationMs: number, timeoutIds?: number[]) {
@@ -104,13 +107,33 @@ async function waitForImageReady(image: HTMLImageElement) {
   await waitForNextPaint()
 }
 
+async function waitForWelcomeHeroReady(src: string) {
+  const image = new Image()
+  image.src = src
+
+  try {
+    await waitForImageReady(image)
+    return
+  } catch (error) {
+    const fallbackSrc = getPngFallbackSrc(src)
+    if (fallbackSrc === src) {
+      throw error
+    }
+
+    const fallbackImage = new Image()
+    fallbackImage.src = fallbackSrc
+    await waitForImageReady(fallbackImage)
+  }
+}
+
 function WelcomeLoader() {
   return (
     <div className="welcome-loader" aria-label="Loading welcome screen" aria-live="polite">
-      <div className="welcome-loader__content">
+      <span className="sr-only">Loading welcome screen</span>
+      <div className="welcome-loader__content" aria-hidden="true">
         <img
           src={galaTayoLogo}
-          alt="GalaTayo logo"
+          alt=""
           className="welcome-loader__logo"
           width={180}
           height={58}
@@ -166,8 +189,6 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
   useEffect(() => {
     let isCancelled = false
     const timeoutIds: number[] = []
-    const image = new Image()
-    image.src = preloadSrc
 
     setIsReady(false)
 
@@ -178,16 +199,11 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
       }
     }
 
-    const imageReadyPromise = waitForImageReady(image).catch(
-      () => waitForDuration(500)
-    )
+    const imageReadyPromise = waitForWelcomeHeroReady(preloadSrc)
     const minimumDelayPromise = waitForDuration(loadingMinMs, timeoutIds)
-    const readyAfterMinimumPromise = Promise.all([imageReadyPromise, minimumDelayPromise])
-
-    void Promise.race([
-      readyAfterMinimumPromise,
-      waitForDuration(WELCOME_LOADING_MAX_MS, timeoutIds),
-    ]).then(revealWhenAllowed)
+    void Promise.all([imageReadyPromise, minimumDelayPromise])
+      .then(revealWhenAllowed)
+      .catch(() => {})
 
     return () => {
       isCancelled = true

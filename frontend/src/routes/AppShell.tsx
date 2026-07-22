@@ -3,6 +3,7 @@ import type { Session } from '@supabase/supabase-js'
 import SeoHead from '../components/SeoHead'
 import MobileBottomNav from '../components/MobileBottomNav'
 import { PageShellSkeleton } from '../components/loading/SkeletonStates'
+import { AppIcon } from '../components/AppIcon'
 import { AppUserProvider } from '../context/AppUserContext'
 import { SavedFavoritesProvider } from '../context/SavedFavoritesContext'
 import { SystemMessageProvider } from '../context/SystemMessageContext'
@@ -56,9 +57,33 @@ export function AppShell({ session, currentUser, currentProfile, adminMfa, hasRe
               {showLogoutTransition ? (
                 <div className={`gala-logout-overlay ${isLogoutTransitionExiting ? 'exit' : 'enter'}`} aria-live="polite" aria-busy="true">
                   <div className="gala-logout-card">
-                    <PageShellSkeleton className="max-h-[360px] overflow-hidden px-0 py-0" />
-                    <p className="gala-logout-title">Logging out</p>
-                    <p className="gala-logout-message">Switching to Guest mode...</p>
+                    <div className="gala-logout-status">
+                      <span className="gala-logout-icon" aria-hidden="true">
+                        <AppIcon name="logOut" className="h-5 w-5" />
+                      </span>
+                      <div className="gala-logout-copy">
+                        <p className="gala-logout-title">Logging out</p>
+                        <p className="gala-logout-message">Switching to Guest mode...</p>
+                      </div>
+                    </div>
+                    <div className="gala-logout-progress" aria-hidden="true">
+                      <span />
+                    </div>
+                    <div className="gala-logout-preview" aria-hidden="true">
+                      <div className="gala-logout-preview-main">
+                        <span className="gala-logout-preview-chip">
+                          <AppIcon name="sparkles" className="h-3.5 w-3.5" />
+                          Guest mode
+                        </span>
+                        <span className="gala-logout-preview-line gala-logout-preview-line-wide" />
+                        <span className="gala-logout-preview-line" />
+                      </div>
+                      <div className="gala-logout-preview-side">
+                        <span />
+                        <span />
+                        <span />
+                      </div>
+                    </div>
                   </div>
                 </div>
               ) : null}
