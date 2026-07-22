@@ -1,9 +1,8 @@
 import { getSecret } from "../config/keyVault";
 import { KEY_VAULT_SECRET_NAMES } from "../config/secretNames";
+import { EMAIL_BRANDING } from "../config/emailBranding";
 
 const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
-const SENDER_EMAIL = "officialgalatayo@gmail.com";
-const SENDER_NAME = "GalaTayo";
 
 let apiKeyPromise: Promise<string | null> | null = null;
 
@@ -40,8 +39,12 @@ export async function sendOtpEmail(
     },
     body: JSON.stringify({
       sender: {
-        name: SENDER_NAME,
-        email: SENDER_EMAIL,
+        name: EMAIL_BRANDING.fromName,
+        email: EMAIL_BRANDING.fromAddress,
+      },
+      replyTo: {
+        name: EMAIL_BRANDING.replyToName,
+        email: EMAIL_BRANDING.replyToAddress,
       },
       to: [{ email: toEmail }],
       subject: `Your GalaTayo verification code is ${otpCode}`,
@@ -63,8 +66,8 @@ export async function sendOtpEmail(
                    Verify your login to GalaTayo.
                  </div>
 
-                 <img
-                  src="https://media.galatayo.app/brand/galatayo-logo.png"
+                  <img
+                   src="${EMAIL_BRANDING.logoUrl}"
                   alt="GalaTayo"
                   width="220"
                   style="display:block; width:220px; max-width:82%; height:auto; margin:0 auto 36px; border:0;"

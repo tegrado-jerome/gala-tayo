@@ -933,6 +933,7 @@ function SearchHub({
       try {
         setIsAskAiUsageLoading(true)
         setAskAiUsageError(null)
+        setAskAiUsageStatus(null)
 
         if (!session?.access_token && !guestId) {
           throw new Error('Missing Ask AI guest identifier.')

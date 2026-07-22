@@ -37,7 +37,7 @@ function SearchLandingBar({
 }) {
   return (
     <div
-      className={`search-landing-bar mt-7 flex w-full flex-col rounded-[20px] border border-slate-200/70 bg-transparent px-4 py-0 text-[var(--accent-deep)] transition hover:border-slate-300 hover:bg-slate-50/70 ${disabled ? 'pointer-events-none opacity-70' : ''} ${className}`}
+      className={`search-landing-bar mt-7 flex w-full flex-col rounded-[20px] border border-[var(--home-search-border)] bg-[var(--home-search-bg)] px-4 py-0 text-[var(--home-search-text)] transition hover:border-[var(--home-search-hover-border)] hover:bg-[var(--home-search-hover-bg)] ${disabled ? 'pointer-events-none opacity-70' : ''} ${className}`}
       onClick={() => {
         if (!disabled) {
           document.getElementById(inputId)?.focus()
@@ -45,11 +45,11 @@ function SearchLandingBar({
       }}
     >
       <div className="flex h-[56px] items-center justify-between gap-3">
-        <div className="flex min-w-0 flex-1 items-center gap-2.5 text-[var(--accent-deep)]">
+        <div className="flex min-w-0 flex-1 items-center gap-2.5 text-[var(--home-search-text)]">
           <label htmlFor={inputId} className="sr-only">
             Search places, cities, or categories
           </label>
-          <Search className="search-landing-bar__icon h-[21px] w-[21px] shrink-0 text-[var(--accent-deep)]" strokeWidth={2} />
+          <Search className="search-landing-bar__icon h-[21px] w-[21px] shrink-0 text-[var(--home-search-text)]" strokeWidth={2} />
           <input
             id={inputId}
             type="text"
@@ -63,7 +63,7 @@ function SearchLandingBar({
             }}
             placeholder={placeholder}
             disabled={disabled}
-            className="search-landing-input min-w-0 flex-1 bg-transparent text-[15px] font-medium text-slate-900 outline-none placeholder:font-medium placeholder:text-slate-500 disabled:cursor-not-allowed"
+            className="search-landing-input min-w-0 flex-1 bg-transparent text-[15px] font-medium text-[var(--home-search-text)] outline-none placeholder:font-medium placeholder:text-[var(--home-search-placeholder)] disabled:cursor-not-allowed"
           />
         </div>
 
@@ -75,7 +75,7 @@ function SearchLandingBar({
               onFilterClick()
             }}
             aria-label="Open filters"
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--accent-deep)] transition hover:bg-[var(--accent-soft)] disabled:cursor-not-allowed disabled:text-slate-300"
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--home-search-text)] transition hover:bg-[var(--home-search-hover-bg)] disabled:cursor-not-allowed disabled:text-slate-300"
           >
             <SlidersHorizontal className="search-landing-bar__icon h-[20px] w-[20px]" strokeWidth={2} />
           </button>

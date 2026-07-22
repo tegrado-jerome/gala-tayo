@@ -284,7 +284,7 @@ function LegalPage({ type }: LegalPageProps) {
     },
     {
       label: 'Updated',
-      value: 'July 11, 2026',
+      value: 'July 22, 2026',
       icon: <FileText className="h-4 w-4" />,
     },
     {
@@ -315,7 +315,7 @@ function LegalPage({ type }: LegalPageProps) {
     <PageShell>
       <SeoHead title={seoTitle} description={seoDescription} canonicalPath={canonicalPath} jsonLd={jsonLd} />
       <AppHeader />
-      <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:pb-16 lg:pt-8">
+      <main className="legal-page w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:pb-16 lg:pt-8">
         <PageContainer size="wide" className="px-4 sm:px-6 lg:px-8">
           <div className="mx-auto w-full max-w-[1080px]">
             <Breadcrumb
@@ -326,18 +326,18 @@ function LegalPage({ type }: LegalPageProps) {
               items={breadcrumbItems}
             />
 
-            <section className="relative overflow-hidden rounded-[32px] border border-[rgba(30,58,138,0.12)] bg-[linear-gradient(135deg,rgba(255,255,255,0.72),rgba(243,244,246,0.92))] px-5 py-6 shadow-[0_18px_42px_rgba(17,24,39,0.06)] backdrop-blur-sm sm:px-7 sm:py-8 lg:px-10 lg:py-10">
+            <section className="legal-page__hero relative overflow-hidden rounded-[32px] border border-[rgba(30,58,138,0.12)] bg-[linear-gradient(135deg,rgba(255,255,255,0.72),rgba(243,244,246,0.92))] px-5 py-6 shadow-[0_18px_42px_rgba(17,24,39,0.06)] backdrop-blur-sm sm:px-7 sm:py-8 lg:px-10 lg:py-10">
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(30,58,138,0.4)] to-transparent" />
               <div className="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.8fr)] lg:items-start">
                 <div className="min-w-0">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(30,58,138,0.12)] bg-white/70 px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)] shadow-[0_8px_22px_rgba(17,24,39,0.04)]">
+                  <div className="legal-page__badge inline-flex items-center gap-2 rounded-full border border-[rgba(30,58,138,0.12)] bg-white/70 px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)] shadow-[0_8px_22px_rgba(17,24,39,0.04)]">
                     <ShieldCheck className="h-3.5 w-3.5 text-[var(--accent)]" />
                     <span>{isTerms ? 'Terms of Service' : 'Privacy Policy'}</span>
                   </div>
-                  <h1 className="mt-4 text-3xl font-black leading-tight tracking-[-0.04em] text-slate-950 sm:text-4xl lg:text-5xl">
+                  <h1 className="legal-page__title mt-4 text-3xl font-black leading-tight tracking-[-0.04em] text-slate-950 sm:text-4xl lg:text-5xl">
                     {title}
                   </h1>
-                  <p className="mt-4 max-w-3xl text-sm font-semibold leading-7 text-slate-700 sm:text-[15px]">
+                  <p className="legal-page__intro mt-4 max-w-3xl text-sm font-semibold leading-7 text-slate-700 sm:text-[15px]">
                     {intro}
                   </p>
                   <div className="mt-6 flex flex-wrap gap-2">
@@ -359,13 +359,20 @@ function LegalPage({ type }: LegalPageProps) {
 
                 <aside className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
                   {quickFacts.map((fact) => (
-                    <div key={fact.label} className="flex items-start gap-3 rounded-2xl bg-white/35 px-3 py-2.5">
-                      <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
+                    <div
+                      key={fact.label}
+                      className="legal-page__fact flex items-start gap-3 rounded-2xl bg-white/35 px-3 py-2.5 sm:max-lg:gap-2 sm:max-lg:px-2 sm:max-lg:py-1.5"
+                    >
+                      <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)] sm:max-lg:h-7 sm:max-lg:w-7">
                         {fact.icon}
                       </span>
                       <div className="min-w-0">
-                        <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">{fact.label}</p>
-                        <p className="mt-1 break-words text-sm font-bold leading-6 text-slate-900">{fact.value}</p>
+                        <p className="legal-page__fact-label text-[11px] font-black uppercase tracking-[0.14em] text-slate-500 sm:max-lg:text-[9px] sm:max-lg:leading-[1.05]">
+                          {fact.label}
+                        </p>
+                        <p className="legal-page__fact-value mt-0.5 break-words text-sm font-bold leading-6 text-slate-900 sm:max-lg:line-clamp-2 sm:max-lg:text-[11px] sm:max-lg:leading-4.5">
+                          {fact.value}
+                        </p>
                       </div>
                     </div>
                   ))}
@@ -373,7 +380,7 @@ function LegalPage({ type }: LegalPageProps) {
               </div>
             </section>
 
-            <article className="mt-6 sm:mt-7 lg:mt-8">
+            <article className="legal-page__article mt-6 sm:mt-7 lg:mt-8">
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {[
                   {
@@ -391,9 +398,9 @@ function LegalPage({ type }: LegalPageProps) {
                     body: `Questions, rights requests, or content concerns can be sent to ${contactEmail}.`,
                   },
                 ].map((card) => (
-                  <div key={card.title} className="space-y-2">
-                    <h2 className="text-base font-black tracking-[-0.02em] text-slate-950">{card.title}</h2>
-                    <p className="text-sm font-semibold leading-6 text-slate-700">{card.body}</p>
+                  <div key={card.title} className="legal-page__summary-card space-y-2">
+                    <h2 className="legal-page__summary-title text-base font-black tracking-[-0.02em] text-slate-950">{card.title}</h2>
+                    <p className="legal-page__summary-body text-sm font-semibold leading-6 text-slate-700">{card.body}</p>
                   </div>
                 ))}
               </div>
@@ -402,19 +409,19 @@ function LegalPage({ type }: LegalPageProps) {
                 {sections.map((section, index) => (
                   <section
                     key={section.title}
-                    className={index === 0 ? 'pt-0' : 'border-t border-slate-200/70 pt-7 sm:pt-8'}
+                    className={`legal-page__section ${index === 0 ? 'pt-0' : 'border-t border-slate-200/70 pt-7 sm:pt-8'}`}
                   >
-                    <h2 className="text-lg font-black tracking-[-0.02em] text-slate-950 sm:text-[1.2rem]">
+                    <h2 className="legal-page__section-title text-lg font-black tracking-[-0.02em] text-slate-950 sm:text-[1.2rem]">
                       {section.title}
                     </h2>
                     <div className="mt-3 grid gap-3 sm:gap-4">
                       {section.body.map((paragraph) => (
-                        <p key={paragraph} className="text-sm font-semibold leading-7 text-slate-700 sm:text-[15px]">
+                        <p key={paragraph} className="legal-page__section-body text-sm font-semibold leading-7 text-slate-700 sm:text-[15px]">
                           {paragraph}
                         </p>
                       ))}
                       {section.bullets ? (
-                        <ul className="grid gap-2 pl-5 text-sm font-semibold leading-7 text-slate-700 sm:text-[15px]">
+                        <ul className="legal-page__section-bullets grid gap-2 pl-5 text-sm font-semibold leading-7 text-slate-700 sm:text-[15px]">
                           {section.bullets.map((item) => (
                             <li key={item} className="list-disc">
                               {item}

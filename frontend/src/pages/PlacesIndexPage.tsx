@@ -92,7 +92,7 @@ function PlacesIndexPage() {
         />
 
         <section className="mt-5">
-          <div className="flex items-center gap-2.5 text-[var(--accent)]">
+          <div className="places-index-metro-manila flex items-center gap-2.5 text-[var(--accent)]">
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
               <Compass className="h-4 w-4" strokeWidth={2} />
             </span>

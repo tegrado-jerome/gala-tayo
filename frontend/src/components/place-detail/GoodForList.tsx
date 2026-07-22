@@ -21,14 +21,14 @@ function titleCase(value: string) {
     .join(' ')
 }
 
-export function GoodForList({ values }: { values: string[] }) {
+export function GoodForList({ values, iconClassName = '' }: { values: string[]; iconClassName?: string }) {
   const items = (values.length > 0 ? values : ['Coffee hangouts', 'Food trips', 'Casual dates', 'Barkada catch-ups', 'Study breaks']).slice(0, 5)
 
   return (
     <ul className="grid gap-2 text-[14px] font-semibold leading-5 text-slate-700">
       {items.map((item, index) => (
         <li key={item} className="flex items-center gap-3">
-          <Icon name={pickGoodForIcon(item, index)} className="h-5 w-5 shrink-0 text-slate-500" />
+          <Icon name={pickGoodForIcon(item, index)} className={`h-5 w-5 shrink-0 text-slate-500 ${iconClassName}`.trim()} />
           <span>{titleCase(item)}</span>
         </li>
       ))}

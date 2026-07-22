@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { AppIcon } from '../components/AppIcon'
+import { useTheme } from './ThemeContext'
 import { getTasks, subscribeToAskAiTasks, type AskAiTask } from '../utils/askAiTaskStore'
 
 function sendBrowserNotification(description: string) {
@@ -58,6 +59,8 @@ function isOnFeaturePage(feature: string): boolean {
 const AskAiNotificationContext = createContext<AskAiNotificationContextValue | null>(null)
 
 function AskAiNotificationProvider({ children }: { children: ReactNode }) {
+  const { resolvedTheme } = useTheme()
+  const isDarkMode = resolvedTheme === 'dark'
   const [notifications, setNotifications] = useState<AskAiNotification[]>([])
   const timersRef = useRef<Map<string, number>>(new Map())
   const seenCompletedRef = useRef<Set<string>>(new Set())
@@ -195,16 +198,26 @@ function AskAiNotificationProvider({ children }: { children: ReactNode }) {
           {notifications.map((notification) => (
             <div
               key={notification.id}
-              className={`pointer-events-auto w-full max-w-[420px] rounded-2xl border bg-white px-4 py-3 text-slate-900 shadow-lg motion-safe:animate-[gala-game-invite-pop_280ms_cubic-bezier(0.16,1,0.3,1)_both] ${toneBorders[notification.tone]}`}
+              className={`pointer-events-auto w-full max-w-[420px] rounded-2xl border px-4 py-3 shadow-lg motion-safe:animate-[gala-game-invite-pop_280ms_cubic-bezier(0.16,1,0.3,1)_both] ${
+                isDarkMode
+                  ? 'border-[rgba(248,113,113,0.18)] bg-[rgba(15,23,42,0.82)] text-slate-100'
+                  : `bg-white text-slate-900 ${toneBorders[notification.tone]}`
+              }`}
               aria-live="polite"
               role="status"
             >
               <div className="flex items-start gap-2.5">
-                <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${toneBackgrounds[notification.tone]} ${toneTextColors[notification.tone]}`}>
+                <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${
+                  isDarkMode
+                    ? 'bg-[rgba(127,29,29,0.44)] text-rose-200'
+                    : `${toneBackgrounds[notification.tone]} ${toneTextColors[notification.tone]}`
+                }`}>
                   <AppIcon name={toneIcons[notification.tone] as never} className="h-4 w-4" strokeWidth={2.25} />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs leading-5 font-medium text-slate-600">{notification.description}</p>
+                  <p className={`text-xs leading-5 font-medium ${isDarkMode ? 'text-rose-100' : 'text-slate-600'}`}>
+                    {notification.description}
+                  </p>
                 </div>
                 <button
                   type="button"
@@ -212,7 +225,11 @@ function AskAiNotificationProvider({ children }: { children: ReactNode }) {
                     event.stopPropagation()
                     removeNotification(notification.id)
                   }}
-                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full transition ${
+                    isDarkMode
+                      ? 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                      : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'
+                  }`}
                   aria-label="Dismiss"
                 >
                   <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-3.5 w-3.5">

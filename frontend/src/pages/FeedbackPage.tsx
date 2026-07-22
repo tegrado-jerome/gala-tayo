@@ -150,8 +150,8 @@ function FeedbackPage() {
             <section className="overflow-hidden">
               <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-center">
                 <div className="space-y-2 sm:space-y-3">
-                  <p className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">
-                    <span className="text-[var(--accent)]">
+                  <p className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--home-eyebrow)]">
+                    <span className="text-[var(--home-eyebrow-icon)]">
                       <AppIcon name="comments" className="h-4 w-4" />
                     </span>
                     <span>Help &amp; Feedback</span>

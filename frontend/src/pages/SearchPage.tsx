@@ -37,11 +37,11 @@ function SearchPageLandingBar({
 
   return (
     <div
-      className="search-landing-bar mt-7 flex h-14 w-full items-center justify-between rounded-[20px] border border-slate-200/70 bg-transparent px-4 text-[var(--accent-deep)] transition hover:border-slate-300 hover:bg-slate-50/70"
+      className="search-landing-bar mt-7 flex h-14 w-full items-center justify-between rounded-[20px] border border-[var(--home-search-border)] bg-[var(--home-search-bg)] px-4 text-[var(--home-search-text)] transition hover:border-[var(--home-search-hover-border)] hover:bg-[var(--home-search-hover-bg)]"
       onClick={() => inputRef.current?.focus()}
     >
-      <span className="flex min-w-0 flex-1 items-center gap-2.5 text-[var(--accent-deep)]">
-        <Search className="search-landing-bar__icon h-[21px] w-[21px] shrink-0 text-[var(--accent-deep)]" strokeWidth={2} />
+      <span className="flex min-w-0 flex-1 items-center gap-2.5 text-[var(--home-search-text)]">
+        <Search className="search-landing-bar__icon h-[21px] w-[21px] shrink-0 text-[var(--home-search-text)]" strokeWidth={2} />
         <label htmlFor="search-page-input" className="sr-only">
           Search places, cities, or categories
         </label>
@@ -58,7 +58,7 @@ function SearchPageLandingBar({
             }
           }}
           placeholder={placeholder}
-          className="search-landing-input min-w-0 flex-1 bg-transparent text-[15px] font-medium text-slate-900 outline-none placeholder:font-medium placeholder:text-slate-500 disabled:cursor-not-allowed"
+          className="search-landing-input min-w-0 flex-1 bg-transparent text-[15px] font-medium text-[var(--home-search-text)] outline-none placeholder:font-medium placeholder:text-[var(--home-search-placeholder)] disabled:cursor-not-allowed"
         />
       </span>
 
@@ -74,8 +74,8 @@ function SearchPageLandingBar({
           aria-pressed={filtersOpen}
           className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition disabled:cursor-not-allowed ${
             filtersOpen || hasActiveFilters
-              ? 'bg-[rgba(30,58,138,0.08)] text-[var(--accent-deep)]'
-              : 'text-[var(--accent-deep)] hover:bg-slate-100/80 hover:text-[var(--accent)]'
+              ? 'bg-[var(--home-search-hover-bg)] text-[var(--home-search-text)]'
+              : 'text-[var(--home-search-text)] hover:bg-[var(--home-search-hover-bg)] hover:text-[var(--home-search-text)]'
           } disabled:text-slate-300`}
         >
           <SlidersHorizontal className="search-landing-bar__icon h-[21px] w-[21px]" strokeWidth={2} />

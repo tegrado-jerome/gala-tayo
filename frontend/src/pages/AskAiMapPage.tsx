@@ -74,11 +74,17 @@ import {
 } from '../components/home/ask-ai/askAiMapHelpers'
 
 function MinimalLoadingCard({ query }: { query: string }) {
+  const { resolvedTheme } = useTheme()
+  const isDarkMode = resolvedTheme === 'dark'
+
   return (
     <div className="w-full min-w-0 shrink rounded-[24px] border border-[rgba(var(--accent-rgb),0.18)] bg-white/96 p-4 shadow-[0_16px_36px_rgba(15,23,42,0.12)]">
       <div className="flex items-start gap-3">
         <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px] bg-[linear-gradient(180deg,var(--primary-soft)_0%,rgba(var(--accent-rgb),0.18)_100%)] text-[var(--accent-deep)]">
-          <AppIcon name="askAi" className="h-5 w-5 gt-solid-bulb-pulse" />
+          <AppIcon
+            name="askAi"
+            className={`h-5 w-5 gt-solid-bulb-pulse ${isDarkMode ? 'text-slate-100' : 'text-[var(--accent-deep)]'}`}
+          />
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
@@ -121,14 +127,25 @@ function MapPinNotice({ onDismiss }: { onDismiss: () => void }) {
 }
 
 function AskAiMapLimitWarning({ className = 'mt-3' }: { className?: string }) {
+  const { resolvedTheme } = useTheme()
+  const isDarkMode = resolvedTheme === 'dark'
+
   return (
     <div className={`${className} flex w-full justify-center px-1`}>
-      <div className="inline-flex w-fit max-w-full items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-left shadow-[0_10px_24px_rgba(127,29,29,0.10)]">
-        <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-700 ring-1 ring-inset ring-red-200">
+      <div className={`inline-flex w-fit max-w-full items-start gap-3 rounded-2xl px-4 py-3 text-left shadow-[0_10px_24px_rgba(127,29,29,0.10)] ${
+        isDarkMode
+          ? 'border border-[rgba(248,113,113,0.18)] bg-[rgba(15,23,42,0.82)]'
+          : 'border border-red-200 bg-red-50'
+      }`}>
+        <span className={`mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full ring-1 ring-inset ${
+          isDarkMode
+            ? 'bg-[rgba(127,29,29,0.44)] text-rose-200 ring-[rgba(248,113,113,0.18)]'
+            : 'bg-red-100 text-red-700 ring-red-200'
+        }`}>
           <AppIcon name="map" className="h-4 w-4" strokeWidth={2.2} />
         </span>
         <div className="min-w-0">
-          <p className="text-[0.84rem] font-bold leading-relaxed text-red-800">
+          <p className={`text-[0.84rem] font-bold leading-relaxed ${isDarkMode ? 'text-rose-100' : 'text-red-800'}`}>
             Na-consume mo na ang Maps AI usage mo ngayong araw.
           </p>
         </div>
@@ -342,6 +359,8 @@ function AskAiMapPage() {
     if (!accessToken && !guestId) {
       throw new Error('Missing Ask AI guest identifier.')
     }
+
+    setAskAiMapsUsageStatus(null)
 
     const response = await fetch(usageEndpoint, {
       method: 'GET',
@@ -1027,7 +1046,11 @@ function AskAiMapPage() {
                     </div>
                   </div>
 
-                  {permissionError ? <p className="mt-4 text-sm font-medium text-rose-600">{permissionError}</p> : null}
+                  {permissionError ? (
+                    <p className={`mt-4 text-sm font-medium ${isDarkMode ? 'text-rose-200' : 'text-rose-600'}`}>
+                      {permissionError}
+                    </p>
+                  ) : null}
 
                   <div className="mt-5 flex gap-3">
                     <button
@@ -1059,7 +1082,11 @@ function AskAiMapPage() {
                 {shouldShowLimitWarning ? <AskAiMapLimitWarning className="mb-3" /> : null}
 
                 {errorMessage && !isSearching ? (
-                  <div className="mb-3 rounded-[22px] border border-rose-100 bg-white px-4 py-3 text-sm font-medium text-rose-700 shadow-[0_12px_30px_rgba(15,23,42,0.10)] lg:mx-auto lg:max-w-[680px]">
+                  <div className={`mb-3 rounded-[22px] px-4 py-3 text-sm font-medium shadow-[0_12px_30px_rgba(15,23,42,0.10)] lg:mx-auto lg:max-w-[680px] ${
+                    isDarkMode
+                      ? 'border border-[rgba(248,113,113,0.18)] bg-[rgba(15,23,42,0.82)] text-rose-100'
+                      : 'border border-rose-100 bg-white text-rose-700'
+                  }`}>
                     {errorMessage}
                   </div>
                 ) : null}
@@ -1313,7 +1340,7 @@ onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
             <div className="shrink-0 border-b border-[var(--line)] px-4 py-4 md:px-3 md:py-3 lg:px-4 lg:py-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">GalaTayo AI Maps</p>
+                  <p className="text-[11px] font-black uppercase tracking-[0.14em] text-[var(--home-eyebrow)]">GalaTayo AI Maps</p>
                   <h1 className="mt-1 min-w-0 truncate text-[20px] font-black tracking-[-0.03em] text-slate-950 md:text-[18px] lg:text-[22px]">
                     {query.trim() || 'Map results'}
                   </h1>
@@ -1326,7 +1353,11 @@ onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
                 </div>
               </div>
               {statusMessage ? <p className="mt-2 text-sm font-medium text-slate-600">{statusMessage}</p> : null}
-              {errorMessage ? <p className="mt-2 text-sm font-medium text-rose-600">{errorMessage}</p> : null}
+              {errorMessage ? (
+                <p className={`mt-2 text-sm font-medium ${isDarkMode ? 'text-rose-200' : 'text-rose-600'}`}>
+                  {errorMessage}
+                </p>
+              ) : null}
               {shouldShowMapPinNotice ? (
                 <div className="mt-3">
                   <MapPinNotice onDismiss={() => setIsMapPinNoticeDismissed(true)} />

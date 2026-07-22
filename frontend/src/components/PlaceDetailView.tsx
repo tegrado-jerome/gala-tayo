@@ -2370,7 +2370,12 @@ function PlaceDetailView({
   const renderCommunitySection = () =>
     !isCommunityPlaceReady ? (
       <DetailSection>
-        <SectionHeading icon="sparkle" title="Community" />
+        <SectionHeading
+          icon="sparkle"
+          title="Community"
+          badgeClassName="place-detail-section-heading--alt"
+          iconClassName="place-detail-section-heading--alt-icon"
+        />
         <div className="place-detail-comments mt-5 rounded-3xl border border-slate-200/80 bg-slate-50/55 p-4 sm:p-5">
           <ReviewSkeleton />
           <div className="mt-5 border-t border-[var(--line)] pt-5">
@@ -2380,7 +2385,12 @@ function PlaceDetailView({
       </DetailSection>
     ) : (
       <DetailSection>
-        <SectionHeading icon="sparkle" title="Community" />
+        <SectionHeading
+          icon="sparkle"
+          title="Community"
+          badgeClassName="place-detail-section-heading--alt"
+          iconClassName="place-detail-section-heading--alt-icon"
+        />
         <div className="mt-5">
           <div>
             <h3 className="text-[20px] font-black text-slate-950">Rate this place</h3>
@@ -2685,7 +2695,12 @@ function PlaceDetailView({
               </div>
 
               <DetailSection>
-                <SectionHeading icon="eye" title="Quick Take" />
+                <SectionHeading
+                  icon="eye"
+                  title="Quick Take"
+                  badgeClassName="place-detail-section-heading--alt"
+                  iconClassName="place-detail-section-heading--alt-icon"
+                />
                 <p className="mt-3 text-[14px] font-semibold leading-6 text-slate-700">{quickTake}</p>
               </DetailSection>
 
@@ -2706,16 +2721,21 @@ function PlaceDetailView({
               {isDetailsExpanded ? (
                 <div className="grid gap-4 lg:gap-5">
                   <DetailSection>
-                    <SectionHeading icon="fire" title="Best For" />
+                    <SectionHeading
+                      icon="fire"
+                      title="Best For"
+                      badgeClassName="place-detail-section-heading--alt"
+                      iconClassName="place-detail-section-heading--alt-icon"
+                    />
                     <div className="mt-3">
-                      <GoodForList values={goodFor} />
+                      <GoodForList values={goodFor} iconClassName="place-detail-section-heading--alt-icon" />
                     </div>
                   </DetailSection>
 
                   <CardSurface pad="default" tone="outlined" className="rounded-2xl">
                     <div className="flex items-center gap-2.5">
-                      <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--accent-wash)] text-[var(--accent-deep)]">
-                        <Icon name="sparkle" className="h-4 w-4" />
+                      <span className="place-detail-section-heading__badge place-detail-section-heading--alt flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--accent-wash)] text-[var(--accent-deep)]">
+                        <Icon name="sparkle" className="place-detail-section-heading__icon place-detail-section-heading--alt-icon h-4 w-4" />
                       </span>
                       <div>
                         <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Quick Facts</p>
@@ -2724,21 +2744,21 @@ function PlaceDetailView({
                     </div>
                     <dl className="mt-4 grid gap-3 text-[13px] font-semibold text-slate-700">
                       <div className="flex items-start gap-2.5">
-                        <Icon name="category" className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+                        <Icon name="category" className="place-detail-section-heading--alt-icon mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
                         <div className="min-w-0">
                           <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Category</dt>
                           <dd className="mt-0.5 text-slate-800">{categoryLabel}</dd>
                         </div>
                       </div>
                       <div className="flex items-start gap-2.5">
-                        <Icon name="clock" className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+                        <Icon name="clock" className="place-detail-section-heading--alt-icon mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
                         <div className="min-w-0">
                           <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Best Time</dt>
                           <dd className="mt-0.5 text-slate-800">{cleanString(place.best_time_to_visit) || 'Check on site'}</dd>
                         </div>
                       </div>
                       <div className="flex items-start gap-2.5">
-                        <Icon name="budget" className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+                        <Icon name="budget" className="place-detail-section-heading--alt-icon mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
                         <div className="min-w-0">
                           <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Budget</dt>
                           <dd className="mt-0.5 text-slate-800">{budgetLabel}</dd>
@@ -2748,7 +2768,12 @@ function PlaceDetailView({
                   </CardSurface>
 
                   <DetailSection>
-                    <SectionHeading icon="location" title="Location" />
+                    <SectionHeading
+                      icon="location"
+                      title="Location"
+                      badgeClassName="place-detail-section-heading--alt"
+                      iconClassName="place-detail-section-heading--alt-icon"
+                    />
                     <p className="mt-3 whitespace-pre-line text-[14px] font-semibold leading-6 text-slate-700">{addressLabel}</p>
                     <div className="mt-4 overflow-hidden rounded-xl border border-[var(--line)] bg-slate-50">
                       <MapView
@@ -2763,19 +2788,30 @@ function PlaceDetailView({
                   </DetailSection>
 
                   <DetailSection>
-                    <SectionHeading icon="bus" title="How To Get There" />
+                    <SectionHeading
+                      icon="bus"
+                      title="How To Get There"
+                      badgeClassName="place-detail-section-heading--alt"
+                      iconClassName="place-detail-section-heading--alt-icon"
+                    />
                     <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
-                      <TransportColumn icon="bus" title="Commute">
+                      <TransportColumn icon="bus" title="Commute" iconClassName="place-detail-section-heading--alt-icon">
                         {commuteText}
                       </TransportColumn>
-                      <TransportColumn icon="car" title="Parking">
+                      <TransportColumn icon="car" title="Parking" iconClassName="place-detail-section-heading--alt-icon">
                         {parkingText}
                       </TransportColumn>
                     </div>
                   </DetailSection>
 
                   <DetailSection>
-                    <SectionHeading icon="book" title="FREQUENTLY ASKED QUESTIONS" preserveCase />
+                    <SectionHeading
+                      icon="book"
+                      title="FREQUENTLY ASKED QUESTIONS"
+                      preserveCase
+                      badgeClassName="place-detail-section-heading--alt"
+                      iconClassName="place-detail-section-heading--alt-icon"
+                    />
                     <div className="mt-4 space-y-4">
                       {faqItems.map((item) => (
                         <div key={item.question}>

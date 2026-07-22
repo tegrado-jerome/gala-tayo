@@ -130,10 +130,10 @@ function HomeThemeToggleButton() {
       onClick={() => setThemePreference(nextThemePreference)}
       aria-label={label}
       title={label}
-      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--surface-overlay)] text-[var(--text-main)] shadow-[var(--shadow-soft)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:border-[var(--line-strong)] hover:bg-[var(--surface-elevated)] focus-visible:ring-2 focus-visible:ring-[var(--accent-soft)] active:translate-y-0"
+      className="inline-flex h-8 w-8 shrink-0 -translate-x-1 -translate-y-0.5 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--surface-overlay)] text-[var(--text-main)] shadow-[var(--shadow-soft)] backdrop-blur-xl transition hover:-translate-y-1 hover:border-[var(--line-strong)] hover:bg-[var(--surface-elevated)] focus-visible:ring-2 focus-visible:ring-[var(--accent-soft)] active:translate-y-0"
     >
-      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
-        <Icon className="h-[18px] w-[18px]" strokeWidth={2.2} />
+      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
+        <Icon className="h-4 w-4" strokeWidth={2.2} />
       </span>
     </button>
   )

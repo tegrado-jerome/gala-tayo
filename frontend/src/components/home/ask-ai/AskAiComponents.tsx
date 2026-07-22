@@ -614,6 +614,8 @@ function AskAiPlaceholder({
   className?: string
 }) {
   void isUsageLoading
+  const { resolvedTheme } = useTheme()
+  const isDarkMode = resolvedTheme === 'dark'
   const isUsagePending = !usageStatus
   void isUsagePending
   const isLimitReached = usageStatus
@@ -756,8 +758,10 @@ function AskAiPlaceholder({
 
       {/* Hidden state keeper */}
       {answerError ? (
-        <div className="shrink-0 border-t border-red-100 bg-red-50/50 px-4 py-2.5 text-center">
-          <p className="text-[0.82rem] text-red-600">{answerError}</p>
+        <div className={`shrink-0 border-t px-4 py-2.5 text-center ${
+          isDarkMode ? 'border-[rgba(248,113,113,0.14)] bg-[rgba(15,23,42,0.66)]' : 'border-red-100 bg-red-50/50'
+        }`}>
+          <p className={`text-[0.82rem] ${isDarkMode ? 'text-rose-200' : 'text-red-600'}`}>{answerError}</p>
         </div>
       ) : null}
     </div>
@@ -767,14 +771,25 @@ function AskAiPlaceholder({
 void AskAiPlaceholder
 
 function ChatbotLimitWarning({ className = '' }: { className?: string }) {
+  const { resolvedTheme } = useTheme()
+  const isDarkMode = resolvedTheme === 'dark'
+
   return (
     <div className={`${className} flex w-full justify-center px-1`}>
-      <div className="inline-flex w-fit max-w-full items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-left shadow-[0_10px_24px_rgba(127,29,29,0.10)]">
-        <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-700 ring-1 ring-inset ring-red-200">
+      <div className={`inline-flex w-fit max-w-full items-start gap-3 rounded-2xl px-4 py-3 text-left shadow-[0_10px_24px_rgba(127,29,29,0.10)] ${
+        isDarkMode
+          ? 'border border-[rgba(248,113,113,0.18)] bg-[rgba(15,23,42,0.82)]'
+          : 'border border-red-200 bg-red-50'
+      }`}>
+        <span className={`mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full ring-1 ring-inset ${
+          isDarkMode
+            ? 'bg-[rgba(127,29,29,0.44)] text-rose-200 ring-[rgba(248,113,113,0.18)]'
+            : 'bg-red-100 text-red-700 ring-red-200'
+        }`}>
           <AppIcon name="bot" className="h-4 w-4" strokeWidth={2.2} />
         </span>
         <div className="min-w-0">
-          <p className="text-[0.84rem] font-bold leading-relaxed text-red-800">
+          <p className={`text-[0.84rem] font-bold leading-relaxed ${isDarkMode ? 'text-rose-100' : 'text-red-800'}`}>
             Na-consume mo na ang Chatbot AI usage mo ngayong araw.
           </p>
         </div>
@@ -1112,7 +1127,11 @@ function ThinkingLoadingBar({ className = '' }: { className?: string }) {
 
   return (
     <div className={`h-1.5 overflow-hidden rounded-full ${isDarkMode ? 'bg-slate-700/80' : 'bg-slate-100'} ${className}`}>
-      <div className="h-full w-2/3 rounded-full bg-[linear-gradient(90deg,var(--accent),var(--accent-deep))] motion-safe:animate-[gala-loading-slide_1.6s_ease-in-out_infinite]" />
+      <div
+        className={`h-full w-2/3 rounded-full motion-safe:animate-[gala-loading-slide_1.6s_ease-in-out_infinite] ${
+          isDarkMode ? 'bg-slate-200' : 'bg-[linear-gradient(90deg,var(--accent),var(--accent-deep))]'
+        }`}
+      />
     </div>
   )
 }
@@ -1672,8 +1691,12 @@ const ChatMessageList = memo(function ChatMessageList({
       )}
 
       {answerError && !isSubmitting && messages.length > 0 && !isChatbotDailyLimitMessage(answerError) && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 shadow-[0_8px_18px_rgba(127,29,29,0.08)]">
-          <p className="text-[13px] text-red-800">{answerError}</p>
+        <div className={`rounded-2xl px-4 py-3 shadow-[0_8px_18px_rgba(127,29,29,0.08)] ${
+          isDarkMode
+            ? 'border border-[rgba(248,113,113,0.18)] bg-[rgba(15,23,42,0.78)]'
+            : 'border border-red-200 bg-red-50'
+        }`}>
+          <p className={`text-[13px] ${isDarkMode ? 'text-rose-200' : 'text-red-800'}`}>{answerError}</p>
         </div>
       )}
 

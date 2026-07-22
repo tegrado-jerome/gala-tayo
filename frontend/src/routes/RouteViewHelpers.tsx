@@ -1,27 +1,9 @@
-import galaTayoLogo from '../assets/brand/galatayo-logo.svg'
-
 export function InitialAuthLoader() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-white px-6 text-center">
       <div className="flex flex-col items-center gap-3">
         <div className="h-8 w-32 animate-pulse rounded-full bg-slate-100" />
         <div className="h-3 w-48 animate-pulse rounded-full bg-slate-100" />
-      </div>
-    </main>
-  )
-}
-
-export function RootEntryLoader() {
-  return (
-    <main className="welcome-loader">
-      <div className="welcome-loader__content">
-        <img
-          src={galaTayoLogo}
-          alt="GalaTayo logo"
-          className="welcome-loader__logo"
-          width={180}
-          height={58}
-        />
       </div>
     </main>
   )

@@ -40,7 +40,7 @@ import { getOnboardingStatus } from '../utils/profileApi'
 import { navigateToPath, replaceWithPath } from '../utils/navigation'
 import { getPublicSiteOrigin } from '../utils/site'
 import { AdminRouteGate } from './AdminRouteGate'
-import { InitialAuthLoader, NotFoundPage, RootEntryLoader } from './RouteViewHelpers'
+import { InitialAuthLoader, NotFoundPage } from './RouteViewHelpers'
 import type { RouteDescriptor, RouteInputs } from './routeResolver'
 
 const AdminDashboard = lazy(() => import('../pages/admin/Dashboard'))
@@ -200,9 +200,6 @@ export function renderRouteDescriptor(descriptor: RouteDescriptor, inputs: Route
     case 'protected-feature-gate':
       return <ProtectedFeatureGate pathname={pathname} search={search} />
     case 'root-entry':
-      if (!inputs.hasResolvedInitialAuth || (session && !inputs.hasResolvedProfile)) {
-        return <RootEntryLoader />
-      }
       return <WelcomePage navigationSource={navigationSource} />
     case 'home':
       return (

@@ -6,15 +6,17 @@ export function TransportColumn({
   icon,
   title,
   children,
+  iconClassName = '',
 }: {
   icon: IconName
   title: string
   children: ReactNode
+  iconClassName?: string
 }) {
   return (
     <div>
       <div className="flex items-start gap-2.5">
-        <Icon name={icon} className="mt-1 h-4 w-4 shrink-0 text-[var(--accent-deep)]" />
+        <Icon name={icon} className={`mt-1 h-4 w-4 shrink-0 text-[var(--accent-deep)] ${iconClassName}`.trim()} />
         <div>
           <span className="text-[12px] font-black text-slate-800">{title}: </span>
           <span className="text-[13px] font-semibold leading-5 text-slate-600">{children}</span>

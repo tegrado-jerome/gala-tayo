@@ -358,8 +358,8 @@ function ProfileSearchPage() {
           <section className="gala-page-header">
             <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-end">
               <div className="max-w-[620px]">
-                <div className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">
-                  <Users className="h-4 w-4 text-[var(--accent)]" />
+                <div className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--home-eyebrow)]">
+                  <Users className="h-4 w-4 text-[var(--home-eyebrow-icon)]" />
                   Find Friends
                 </div>
                 <h1 className="gala-page-title">

@@ -1,5 +1,5 @@
 import { ArrowRight } from 'lucide-react'
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import SeoHead from '../components/SeoHead'
 import { navigateToPath } from '../utils/navigation'
 import type { NavigationSource } from '../utils/navigationLoading'
@@ -41,6 +41,8 @@ const welcomeFallbackAssets: WelcomeAsset[] = [
 
 const WELCOME_LOADING_MIN_MS = 2000
 const WELCOME_LOADING_MAX_MS = 8000
+const WELCOME_LOADING_BACK_NAV_MIN_MS = 500
+const WELCOME_LOADING_REDUCED_MOTION_MIN_MS = 500
 
 function getWelcomeHeroSrc() {
   if (typeof window === 'undefined') {
@@ -120,60 +122,18 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
   const [isReady, setIsReady] = useState(false)
   const hasRevealedRef = useRef(false)
 
-  useLayoutEffect(() => {
-    if (typeof document === 'undefined') {
-      return undefined
+  const loadingMinMs = useMemo(() => {
+    if (navigationSource === 'pop') return WELCOME_LOADING_BACK_NAV_MIN_MS
+
+    if (
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
+      return WELCOME_LOADING_REDUCED_MOTION_MIN_MS
     }
 
-    const root = document.documentElement
-    const body = document.body
-    const themeColorMeta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')
-
-    const previousTheme = root.dataset.theme
-    const previousThemePreference = root.dataset.themePreference
-    const previousBodyTheme = body.dataset.theme
-    const previousColorScheme = root.style.colorScheme
-    const previousThemeColor = themeColorMeta?.getAttribute('content')
-
-    root.dataset.theme = 'light'
-    root.dataset.themePreference = 'light'
-    root.style.colorScheme = 'light'
-    body.dataset.theme = 'light'
-
-    if (themeColorMeta) {
-      themeColorMeta.setAttribute('content', '#1E3A8A')
-    }
-
-    return () => {
-      if (previousTheme) {
-        root.dataset.theme = previousTheme
-      } else {
-        root.removeAttribute('data-theme')
-      }
-
-      if (previousThemePreference) {
-        root.dataset.themePreference = previousThemePreference
-      } else {
-        root.removeAttribute('data-theme-preference')
-      }
-
-      if (previousBodyTheme) {
-        body.dataset.theme = previousBodyTheme
-      } else {
-        body.removeAttribute('data-theme')
-      }
-
-      root.style.colorScheme = previousColorScheme
-
-      if (themeColorMeta) {
-        if (previousThemeColor) {
-          themeColorMeta.setAttribute('content', previousThemeColor)
-        } else {
-          themeColorMeta.removeAttribute('content')
-        }
-      }
-    }
-  }, [])
+    return WELCOME_LOADING_MIN_MS
+  }, [navigationSource])
 
   useEffect(() => {
     let animationFrameId = 0
@@ -185,7 +145,10 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
 
       window.cancelAnimationFrame(animationFrameId)
       animationFrameId = window.requestAnimationFrame(() => {
-        setHeroSrc(getWelcomeHeroSrc())
+        setHeroSrc((prev) => {
+          const next = getWelcomeHeroSrc()
+          return prev === next ? prev : next
+        })
       })
     }
 
@@ -215,9 +178,9 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
     }
 
     const imageReadyPromise = waitForImageReady(image).catch(
-      () => new Promise<never>(() => {})
+      () => waitForDuration(500)
     )
-    const minimumDelayPromise = waitForDuration(WELCOME_LOADING_MIN_MS, timeoutIds)
+    const minimumDelayPromise = waitForDuration(loadingMinMs, timeoutIds)
     const readyAfterMinimumPromise = Promise.all([imageReadyPromise, minimumDelayPromise])
 
     void Promise.race([
@@ -229,7 +192,7 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
       isCancelled = true
       timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId))
     }
-  }, [heroSrc])
+  }, [heroSrc, loadingMinMs])
 
   return (
     <>
