@@ -1,6 +1,7 @@
 import { readFileSync } from "fs";
 import { join } from "path";
 import { createClient } from "@supabase/supabase-js";
+import WebSocket from "ws";
 import { getSecret } from "./keyVault";
 import { KEY_VAULT_SECRET_NAMES } from "./secretNames";
 
@@ -59,6 +60,9 @@ export async function getSupabaseAdminClient() {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
+    },
+    realtime: {
+      transport: WebSocket,
     },
   });
 
