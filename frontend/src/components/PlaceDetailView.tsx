@@ -106,11 +106,33 @@ function getAuthMetadataString(metadata: Record<string, unknown> | undefined, ke
 }
 
 function buildPriceBadgeLabel(
-  budgetMin: number | null | undefined,
+  budgetMin: number | string | null | undefined,
   priceLevel: number | null | undefined,
+  budgetNote?: string | null,
+  category?: string | null,
+  placeName?: string | null,
 ) {
-  if (budgetMin != null && Number.isFinite(budgetMin)) {
-    return `Starting from ₱${new Intl.NumberFormat('en-US').format(Math.max(0, Math.floor(budgetMin)))}`
+  const parsedBudgetMin = typeof budgetMin === 'number' ? budgetMin : Number(budgetMin)
+  if (Number.isFinite(parsedBudgetMin)) {
+    return `Starting from ₱${new Intl.NumberFormat('en-US').format(Math.max(0, Math.floor(parsedBudgetMin)))}`
+  }
+
+  const cleanedBudgetNote = cleanString(budgetNote)
+  if (cleanedBudgetNote) {
+    const amountMatch = cleanedBudgetNote.match(/(?:₱|PHP\s*)\s*([0-9][0-9,]*)/i)
+    const parsedAmount = amountMatch ? Number(amountMatch[1].replace(/,/g, '')) : NaN
+    if (Number.isFinite(parsedAmount)) {
+      return `Starting from ₱${new Intl.NumberFormat('en-US').format(Math.max(0, Math.floor(parsedAmount)))}`
+    }
+
+    const searchableText = [placeName, category, cleanedBudgetNote].filter(Boolean).join(' ').toLowerCase()
+    const isFlexibleTicketedVenue =
+      /\b(activity|arena|stadium|theater|theatre|cinema|concert|show|event|ticket|booking|venue)\b/.test(searchableText) ||
+      /\b(flexible budget|latest (menu|ticket|booking) price|ticketed event)\b/.test(searchableText)
+
+    if (isFlexibleTicketedVenue) {
+      return 'Starting from: varies'
+    }
   }
 
   if (priceLevel == null || !Number.isFinite(priceLevel)) {
@@ -959,7 +981,7 @@ function PlaceDetailView({
   const categoryLabel = cleanString(place.category) || 'Place'
   const locationLabel = cleanString(place.localArea) || cleanString(place.area) || cleanString(place.city) || 'Metro Manila'
   const goodFor = uniqueList(place.good_for ?? [])
-  const priceBadgeLabel = buildPriceBadgeLabel(place.budget_min, place.price_level)
+  const priceBadgeLabel = buildPriceBadgeLabel(place.budget_min, place.price_level, place.budget_notes, place.category, place.name)
   const directionsUrl = getDirectionsUrl(place)
   const normalizedNameSlug = normalizePlaceSlug(place.name)
   const placeId = cleanString(place.id)
