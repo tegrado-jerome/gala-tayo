@@ -184,6 +184,16 @@ function budgetFilterFromValue(value: string | null | undefined): BudgetFilter |
   return BUDGET_MAP[normalizedValue] ?? null;
 }
 
+function cityMatches(placeCity: string | null | undefined, city: string | null): boolean {
+  if (!city) return true;
+
+  const normalizedPlaceCity = normalizeSearchText(placeCity ?? "");
+  if (!normalizedPlaceCity) return false;
+
+  const cityAliases = [city, ...(CITY_DICTIONARY[city] ?? [])];
+  return cityAliases.some((alias) => normalizeSearchText(alias) === normalizedPlaceCity);
+}
+
 function hasBudgetKeyword(query: string): boolean {
   const normalizedQuery = normalizeSearchText(query);
   return (
@@ -317,7 +327,7 @@ export function filterPlaceByFilters(
     return false;
   }
 
-  if (location && normalizeSearchText(place.city ?? "") !== normalizeSearchText(location)) {
+  if (!cityMatches(place.city, location)) {
     return false;
   }
 

@@ -8,7 +8,7 @@ import PlaceCard, { type PlaceCardData } from '../components/PlaceCard'
 import SeoHead from '../components/SeoHead'
 import { PageContainer, PageShell, ResponsiveGrid } from '../components/layout/ResponsiveLayouts'
 import { placeCategories } from '../data/placeCategories'
-import { metroManilaAreaNameBySlug } from '../data/metroManilaAreas'
+import { getAreaLabelBySlug, getAreaSearchFilterBySlug, normalizeAreaSlug } from '../data/metroManilaAreas'
 import { navigateToPath, scrollViewportToTopInstant } from '../utils/navigation'
 import { formatLabelFromSlug, getSiteOrigin } from '../utils/seo'
 import { getApiUrl } from '../utils/apiClient'
@@ -133,6 +133,7 @@ async function readAreaPlacesResponse(response: Response): Promise<AreaPlacesRes
 }
 
 function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: AreaPlacesPageProps) {
+  const normalizedAreaSlug = normalizeAreaSlug(areaSlug) || areaSlug.toLowerCase()
   const [routeCache] = useState(() => {
     const currentPath = `${window.location.pathname}${window.location.search}`
     return navigationSource === 'pop' ? readListingRouteCache() : consumePendingListingRouteCache(currentPath)
@@ -156,7 +157,8 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
   )
   const hasRestoredInitialScrollRef = useRef(false)
   const skipInitialFetchRef = useRef(Boolean(routeCache) && navigationSource !== 'pop')
-  const areaName = metroManilaAreaNameBySlug.get(areaSlug) || formatLabelFromSlug(areaSlug)
+  const areaName = getAreaLabelBySlug(normalizedAreaSlug) || formatLabelFromSlug(normalizedAreaSlug)
+  const areaSearchFilter = getAreaSearchFilterBySlug(normalizedAreaSlug) || normalizedAreaSlug
   const searchParams = useMemo(() => new URLSearchParams(search), [search])
   const activeCategory = normalizeValue(searchParams.get('category')) || 'all'
   const currentPage = Math.max(Number(searchParams.get('page') || '1') || 1, 1)
@@ -172,7 +174,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
       params.set('page', String(page))
     }
 
-    return params.toString() ? `/places/${areaSlug}?${params.toString()}` : `/places/${areaSlug}`
+    return params.toString() ? `/places/${normalizedAreaSlug}?${params.toString()}` : `/places/${normalizedAreaSlug}`
   }
 
   useLayoutEffect(() => {
@@ -208,7 +210,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
             query: '',
             page: currentPage,
             filters: {
-              city: areaSlug,
+              city: areaSearchFilter,
               category: activeCategory,
             },
           }),
@@ -239,7 +241,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
     void loadPage()
 
     return () => controller.abort()
-  }, [activeCategory, areaSlug, currentPage])
+  }, [activeCategory, areaSearchFilter, currentPage])
 
   useLayoutEffect(() => {
     if (navigationSource !== 'pop' || !routeCache?.pendingScrollRestore || hasRestoredInitialScrollRef.current) {
@@ -276,7 +278,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
         query: '',
         page,
         filters: {
-          city: areaSlug,
+          city: areaSearchFilter,
           category,
         },
       }),
@@ -336,7 +338,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
           '@type': 'CollectionPage',
           name: `${areaName} | GalaTayo`,
           description: `Browse places in ${areaName} on GalaTayo and filter them by category in alphabetical order.`,
-          url: `${getSiteOrigin()}/places/${encodeURIComponent(areaSlug)}`,
+          url: `${getSiteOrigin()}/places/${encodeURIComponent(normalizedAreaSlug)}`,
         },
         {
           '@context': 'https://schema.org',
@@ -344,7 +346,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
           itemListElement: [
             { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/home` },
             { '@type': 'ListItem', position: 2, name: 'Places', item: `${getSiteOrigin()}/places` },
-            { '@type': 'ListItem', position: 3, name: areaName, item: `${getSiteOrigin()}/places/${encodeURIComponent(areaSlug)}` },
+            { '@type': 'ListItem', position: 3, name: areaName, item: `${getSiteOrigin()}/places/${encodeURIComponent(normalizedAreaSlug)}` },
           ],
         },
         {
@@ -365,7 +367,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
       <SeoHead
         title={`${areaName} Places | GalaTayo`}
         description={`Browse places in ${areaName} on GalaTayo and filter them by category in alphabetical order.`}
-        canonicalPath={`/places/${encodeURIComponent(areaSlug)}`}
+        canonicalPath={`/places/${encodeURIComponent(normalizedAreaSlug)}`}
         robots={shouldIndexAreaPage ? 'index,follow' : 'noindex,follow'}
         jsonLd={jsonLd}
       />

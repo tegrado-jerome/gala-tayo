@@ -1,10 +1,10 @@
-import { metroManilaAreas, metroManilaAreaNameBySlug } from '../data/metroManilaAreas'
+import { metroManilaAreaNameBySlug, metroManilaAreaSlugByAlias, normalizeAreaSlug } from '../data/metroManilaAreas'
 import { getPlaceCategoryLabel } from '../data/placeCategories'
 import { ADMIN_BASE_PATH, ADMIN_MFA_SETUP_PATH, ADMIN_MFA_VERIFY_PATH } from './adminRoutes'
 import { getPublicSiteOrigin } from './site'
 
 const searchRouteCachePrefix = 'galatayo:search-route:'
-const knownAreaSlugs = new Set<string>(metroManilaAreas.map((area) => area.slug))
+const knownAreaSlugs = new Set<string>(metroManilaAreaSlugByAlias.keys())
 
 type RoutePattern = {
   pattern: RegExp
@@ -126,9 +126,22 @@ export function resolveAreaMeta(areaLike: AreaLike) {
     .filter(Boolean)
 
   for (const candidate of candidates) {
-    const match = [...metroManilaAreaNameBySlug.entries()].find(([, name]) => normalizeText(name) === normalizeText(candidate))
-    if (match) {
-      return { slug: match[0], name: match[1] }
+    const normalizedCandidate = normalizeText(candidate)
+    const slugMatch = [...metroManilaAreaSlugByAlias.entries()].find(([slugAlias]) => normalizeText(slugAlias) === normalizedCandidate)
+    if (slugMatch) {
+      const canonicalSlug = slugMatch[1]
+      return { slug: canonicalSlug, name: metroManilaAreaNameBySlug.get(canonicalSlug) || candidate }
+    }
+
+    const nameMatch = [...metroManilaAreaNameBySlug.entries()].find(([slug, name]) => {
+      if (slug !== normalizeAreaSlug(slug)) {
+        return false
+      }
+
+      return normalizeText(name) === normalizedCandidate || normalizeText(`${name} City`) === normalizedCandidate
+    })
+    if (nameMatch) {
+      return { slug: nameMatch[0], name: nameMatch[1] }
     }
   }
 
@@ -147,7 +160,7 @@ export function parseCanonicalPlacePath(pathname: string): { areaSlug: string; p
   const match = pathname.match(/^\/places\/([^/]+)\/([^/]+)\/?$/i)
   return match
     ? {
-        areaSlug: decodeURIComponent(match[1]).toLowerCase(),
+        areaSlug: normalizeAreaSlug(decodeURIComponent(match[1])) || decodeURIComponent(match[1]).toLowerCase(),
         placeSlug: decodeURIComponent(match[2]),
       }
     : null
@@ -204,7 +217,7 @@ export function parseEditGalaPlanPath(pathname: string): string | null {
 
 export function parseAreaPagePath(pathname: string): string | null {
   const match = pathname.match(/^\/places\/([^/]+)\/?$/i)
-  return match ? decodeURIComponent(match[1]).toLowerCase() : null
+  return match ? normalizeAreaSlug(decodeURIComponent(match[1])) : null
 }
 
 export function parseCategoryPagePath(pathname: string): string | null {

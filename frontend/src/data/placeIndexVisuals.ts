@@ -16,11 +16,13 @@ const cityRepresentativePlaceSlugs: Record<string, string> = {
   paranaque: 'okada-manila',
   pasay: 'sm-mall-of-asia',
   pasig: 'ace-water-spa-pasig',
+  'pasig-city': 'ace-water-spa-pasig',
   pateros: 'inapuyan-resto-grill-pateros',
   'quezon-city': 'art-in-island',
   'san-juan': 'greenhills-mall-greenhills-shopping-center',
   taguig: 'bonifacio-high-street',
   valenzuela: 'museo-valenzuela',
+  'valenzuela-city': 'museo-valenzuela',
 }
 
 const categoryRepresentativePlaceSlugs: Record<string, string> = {
