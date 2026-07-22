@@ -2858,6 +2858,144 @@ function buildWhyThisFits(place: AskAiMapGroundedPlace, intent: AskAiMapIntent):
   return buildWhyThisFitsFallback(whyThisFitsInput);
 }
 
+const WHY_THIS_FITS_GROQ_MODEL = "openai/gpt-oss-120b";
+const WHY_THIS_FITS_GROQ_FALLBACK_MODEL = "llama-3.3-70b-versatile";
+const WHY_THIS_FITS_GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+const WHY_THIS_FITS_GROQ_TIMEOUT_MS = 10_000;
+
+async function resolveGroqApiKey(): Promise<string> {
+  const envApiKey = normalizeText(process.env.GROQ_API_KEY);
+  if (envApiKey) return envApiKey;
+
+  const secretValue = normalizeText(await getSecret(KEY_VAULT_SECRET_NAMES.GROQ_API_KEY));
+  if (secretValue) return secretValue;
+
+  throw new AskAiMapsServiceError("Groq API key is not configured.", 500, {
+    code: "ASK_AI_MAPS_CONFIG_ERROR",
+    stage: "resolve_groq_key",
+  });
+}
+
+type GroqWhyThisFitsMessage = {
+  role: "system" | "user";
+  content: string;
+};
+
+async function generateWhyThisFitsBatch(
+  places: AskAiMapGroundedPlace[],
+  intent: AskAiMapIntent,
+  signal?: AbortSignal,
+): Promise<Record<string, string> | null> {
+  if (places.length === 0) return null;
+
+  try {
+    const apiKey = await resolveGroqApiKey();
+    throwIfAskAiRequestCancelled(signal);
+    const abortSignal = buildAbortSignal([AbortSignal.timeout(WHY_THIS_FITS_GROQ_TIMEOUT_MS), signal]);
+
+    const placesList = places
+      .map(
+        (place, i) =>
+          `${i + 1}. "${place.name}" | Category: ${place.displayCategory ?? place.category ?? "N/A"} | Address: ${place.address ?? "N/A"}${place.rating != null ? ` | Rating: ${place.rating}` : ""}${place.reviewCount != null ? ` | Reviews: ${place.reviewCount}` : ""}`,
+      )
+      .join("\n");
+
+    const userPrompt = [
+      `User query: "${intent.rawQuery}"`,
+      `Search area: ${intent.searchAreaText ?? "N/A"}`,
+      intent.galaIntents.length > 0 ? `User preferences: ${intent.galaIntents.join(", ")}` : "",
+      "",
+      "For each place, write a 2-3 sentence Taglish explanation that focuses on the unique experience, vibe, and standout features of the place and why it specifically fits the user's query and preferences. Do NOT repeat the place name, rating, review count, address, or category. Use 1-2 relevant emojis per explanation. Avoid em dashes.",
+      "",
+      "Places:",
+      placesList,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    const modelsToTry = [WHY_THIS_FITS_GROQ_MODEL, WHY_THIS_FITS_GROQ_FALLBACK_MODEL];
+    let lastStatus = 0;
+
+    for (const model of modelsToTry) {
+      throwIfAskAiRequestCancelled(signal);
+
+      const response = await fetch(WHY_THIS_FITS_GROQ_URL, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            {
+              role: "system",
+              content:
+                'Return strict JSON only. No markdown. No code fences. Format: {"explanations": {"0": "explanation for place 0", "1": "explanation for place 1", ...}}',
+            },
+            {
+              role: "user",
+              content: userPrompt,
+            },
+          ] satisfies GroqWhyThisFitsMessage[],
+          temperature: 0,
+          stream: false,
+        }),
+        signal: abortSignal,
+      });
+
+      if (response.ok) {
+        const data = (await response.json().catch(() => null)) as
+          | { choices?: Array<{ message?: { content?: string } }> }
+          | null;
+        const answer = normalizeText(data?.choices?.[0]?.message?.content ?? "");
+        if (!answer) return null;
+
+        const cleaned = answer.replace(/^```(?:json)?\s*\n?|\n?```$/gi, "").trim();
+        const parsed = JSON.parse(cleaned) as {
+          explanations?: Record<string, string> | Array<{ text?: string; explanation?: string } | string>;
+        };
+
+        if (Array.isArray(parsed?.explanations)) {
+          const result: Record<string, string> = {};
+          for (let i = 0; i < parsed.explanations.length; i++) {
+            const item = parsed.explanations[i];
+            const text = typeof item === "string" ? item : (item?.text ?? item?.explanation ?? "");
+            if (normalizeText(text)) result[String(i)] = normalizeText(text)!;
+          }
+          if (Object.keys(result).length > 0) return result;
+        } else if (parsed?.explanations && typeof parsed.explanations === "object") {
+          return parsed.explanations as Record<string, string>;
+        }
+
+        return null;
+      }
+
+      lastStatus = response.status;
+
+      if (response.status !== 429) {
+        console.warn(`[AskAiMaps] Groq why-this-fits request failed with status ${response.status} on model ${model}`);
+        return null;
+      }
+
+      console.warn(
+        `[AskAiMaps] Groq why-this-fits rate limited (429) on ${model}, retrying fallback...`,
+      );
+    }
+
+    console.warn(`[AskAiMaps] Groq why-this-fits all models failed, last status ${lastStatus}`);
+    return null;
+  } catch (error) {
+    if (signal?.aborted || isAskAiRequestCancelledError(error)) {
+      throwIfAskAiRequestCancelled(signal);
+    }
+    console.warn(
+      `[AskAiMaps] Groq why-this-fits generation failed: ${error instanceof Error ? error.message : String(error)}`,
+    );
+    return null;
+  }
+}
+
 function buildSuggestedSearches(intent: AskAiMapIntent, searchArea: string | null): string[] {
   const area = searchArea ?? intent.searchAreaText ?? "that area";
   if (intent.categoryIntent === "mall") {
@@ -3357,7 +3495,7 @@ function buildSources(places: AskAiMapGroundedPlace[]): AskAiMapsSource[] {
   return sources;
 }
 
-function buildAskAiMapResponse(args: {
+async function buildAskAiMapResponse(args: {
   mode: AskAiMapsSearchResult["mode"];
   intent: AskAiMapIntent;
   searchArea: string | null;
@@ -3372,7 +3510,8 @@ function buildAskAiMapResponse(args: {
   latencyMs: number;
   modelUsed: string;
   explanationSource: "gemini_maps_grounding" | "backend_template";
-}): AskAiMapsSearchResult {
+  signal?: AbortSignal;
+}): Promise<AskAiMapsSearchResult> {
   const counts = getTargetCounts(args.intent);
   const pinCount = args.places.filter((place) => place.hasPin).length;
   const resultMeta: AskAiMapsResultMeta = {
@@ -3399,8 +3538,18 @@ function buildAskAiMapResponse(args: {
       : `${args.intent.categoryIntent.replace(/_/g, " ")}${args.places.length === 1 ? "" : "s"}`;
   const areaLabel = args.searchArea ?? args.intent.searchAreaText ?? "the selected area";
 
-  const places = args.places.slice(0, counts.max).map((place) => {
-    const whyThisFits = buildWhyThisFits(place, args.intent);
+  const groqExplanations = await generateWhyThisFitsBatch(
+    args.places.slice(0, counts.max),
+    args.intent,
+    args.signal,
+  );
+
+  const places = args.places.slice(0, counts.max).map((place, index) => {
+    const groqExplanation = groqExplanations?.[String(index)] ?? null;
+    const whyThisFits =
+      groqExplanation && normalizeText(groqExplanation)
+        ? normalizeText(groqExplanation)!
+        : buildWhyThisFits(place, args.intent);
     return {
       ...place,
       whyThisFits,
@@ -3637,5 +3786,6 @@ export async function searchAskAiMaps(
     explanationSource:
       mode === "gemini_grounding_primary_geoapify_coordinates"
         ? "gemini_maps_grounding" : "backend_template",
+    signal,
   });
 }

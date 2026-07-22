@@ -4,40 +4,40 @@ import SeoHead from '../components/SeoHead'
 import { navigateToPath } from '../utils/navigation'
 import type { NavigationSource } from '../utils/navigationLoading'
 import { getPublicSiteOrigin } from '../utils/site'
+import { preloadHomePageImages } from '../utils/homePreloader'
 import galaTayoLogo from '../assets/brand/galatayo-logo.svg'
 
 type WelcomeAsset = {
   src: string
   media?: string
+  type?: string
 }
 
-const welcomeAssets: WelcomeAsset[] = [
-  {
-    src: '/images/welcome/mobile.webp',
-    media: '(max-width: 639px)',
-  },
-  {
-    src: '/images/welcome/tablet.webp',
-    media: '(max-width: 1023px)',
-  },
-  {
-    src: '/images/welcome/laptop-desktop.webp',
-  },
-]
+function supportsWebp(): boolean {
+  if (typeof document === 'undefined') return false
+  const canvas = document.createElement('canvas')
+  if (canvas.getContext?.('2d')) {
+    return canvas.toDataURL('image/webp').startsWith('data:image/webp')
+  }
+  return false
+}
 
-const welcomeFallbackAssets: WelcomeAsset[] = [
-  {
-    src: '/images/welcome/mobile.png',
-    media: '(max-width: 639px)',
-  },
-  {
-    src: '/images/welcome/tablet.png',
-    media: '(max-width: 1023px)',
-  },
-  {
-    src: '/images/welcome/laptop-desktop.png',
-  },
-]
+function getSources(useWebp: boolean): WelcomeAsset[] {
+  const sources: WelcomeAsset[] = []
+  if (useWebp) {
+    sources.push(
+      { src: '/images/welcome/mobile.webp', media: '(max-width: 639px)', type: 'image/webp' },
+      { src: '/images/welcome/tablet.webp', media: '(max-width: 1023px)', type: 'image/webp' },
+      { src: '/images/welcome/laptop-desktop.webp', type: 'image/webp' },
+    )
+  }
+  sources.push(
+    { src: '/images/welcome/mobile.png', media: '(max-width: 639px)' },
+    { src: '/images/welcome/tablet.png', media: '(max-width: 1023px)' },
+    { src: '/images/welcome/laptop-desktop.png' },
+  )
+  return sources
+}
 
 const WELCOME_LOADING_MIN_MS = 2000
 const WELCOME_LOADING_MAX_MS = 8000
@@ -58,6 +58,14 @@ function getWelcomeHeroSrc() {
   }
 
   return '/images/welcome/laptop-desktop.png'
+}
+
+function getPreloadSrc(useWebp: boolean) {
+  const ext = useWebp ? 'webp' : 'png'
+  if (typeof window === 'undefined') return `/images/welcome/laptop-desktop.${ext}`
+  if (window.innerWidth <= 639) return `/images/welcome/mobile.${ext}`
+  if (window.innerWidth <= 1023) return `/images/welcome/tablet.${ext}`
+  return `/images/welcome/laptop-desktop.${ext}`
 }
 
 function waitForDuration(durationMs: number, timeoutIds?: number[]) {
@@ -118,9 +126,12 @@ type WelcomePageProps = {
 }
 
 function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
+  const [useWebp] = useState(() => supportsWebp())
   const [heroSrc, setHeroSrc] = useState(() => getWelcomeHeroSrc())
+  const [preloadSrc, setPreloadSrc] = useState(() => getPreloadSrc(useWebp))
   const [isReady, setIsReady] = useState(false)
   const hasRevealedRef = useRef(false)
+  const activeSources = useMemo(() => getSources(useWebp), [useWebp])
 
   const loadingMinMs = useMemo(() => {
     if (navigationSource === 'pop') return WELCOME_LOADING_BACK_NAV_MIN_MS
@@ -145,10 +156,9 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
 
       window.cancelAnimationFrame(animationFrameId)
       animationFrameId = window.requestAnimationFrame(() => {
-        setHeroSrc((prev) => {
-          const next = getWelcomeHeroSrc()
-          return prev === next ? prev : next
-        })
+        const next = getWelcomeHeroSrc()
+        setHeroSrc((prev) => (prev === next ? prev : next))
+        setPreloadSrc(getPreloadSrc(useWebp))
       })
     }
 
@@ -166,7 +176,7 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
     let isCancelled = false
     const timeoutIds: number[] = []
     const image = new Image()
-    image.src = heroSrc
+    image.src = preloadSrc
 
     setIsReady(false)
 
@@ -192,7 +202,11 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
       isCancelled = true
       timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId))
     }
-  }, [heroSrc, loadingMinMs])
+  }, [preloadSrc, loadingMinMs])
+
+  useEffect(() => {
+    preloadHomePageImages()
+  }, [])
 
   return (
     <>
@@ -228,11 +242,8 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
         data-navigation-source={navigationSource}
       >
         <picture className="welcome-page__media" aria-hidden="true">
-          {welcomeAssets.map((asset) => (
-            <source key={asset.src} srcSet={asset.src} media={asset.media} type="image/webp" />
-          ))}
-          {welcomeFallbackAssets.map((asset) => (
-            <source key={asset.src} srcSet={asset.src} media={asset.media} />
+          {activeSources.map((asset) => (
+            <source key={asset.src} srcSet={asset.src} media={asset.media} type={asset.type} />
           ))}
           <img
             src={heroSrc}
@@ -241,7 +252,6 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
             width={1440}
             height={2560}
             loading="eager"
-            decoding="async"
             fetchPriority="high"
             sizes="100vw"
           />

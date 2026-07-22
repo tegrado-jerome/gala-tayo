@@ -664,9 +664,9 @@ function HomeFeaturedCard({
               alt={place.name}
               className="h-full w-full object-cover"
               draggable={false}
-              loading={index === 0 ? 'eager' : 'lazy'}
+              loading={index < 4 ? 'eager' : 'lazy'}
               decoding="async"
-              fetchPriority={index === 0 ? 'high' : 'auto'}
+              fetchPriority={index < 2 ? 'high' : 'auto'}
               sizes="(min-width: 1280px) 360px, (min-width: 1024px) 344px, (min-width: 768px) 320px, 84vw"
               onError={() => {
                 if (imageUrl) {
@@ -837,6 +837,7 @@ function HomeCategoryTile({
   active = false,
   isLoading = false,
   includeStaticPlaceFallback = true,
+  index = 0,
   onClick,
 }: {
   label: string
@@ -844,6 +845,7 @@ function HomeCategoryTile({
   active?: boolean
   isLoading?: boolean
   includeStaticPlaceFallback?: boolean
+  index?: number
   onClick: () => void
 }) {
   const imageCandidates = useMemo(
@@ -884,7 +886,7 @@ function HomeCategoryTile({
               draggable={false}
               loading="eager"
               decoding="async"
-              fetchPriority="high"
+              fetchPriority={index < 4 ? 'high' : 'low'}
               sizes="(min-width: 1024px) 92px, (min-width: 768px) 84px, 22vw"
               onError={() => {
                 if (imageUrl) {
@@ -2158,13 +2160,14 @@ function HomePage({
                 className="home-drag-rail hide-scrollbar -mx-1 mt-3 overflow-x-auto px-1 pb-2 pr-2 [scrollbar-width:none] [-ms-overflow-style:none] [overscroll-behavior-x:contain] [-webkit-overflow-scrolling:touch] max-lg:snap-x max-lg:snap-proximity lg:snap-none select-none [&::-webkit-scrollbar]:hidden"
               >
                 <div className="flex min-w-max gap-2.5 md:gap-3 lg:gap-4">
-                  {cityTiles.map((tile) => (
+                  {cityTiles.map((tile, index) => (
                     <div key={tile.slug} data-rail-item className="shrink-0 snap-center">
                       <HomeCategoryTile
                         label={tile.label}
                         place={tile.place}
                         active={tile.active}
                         isLoading={!areHomeCardsLoaded}
+                        index={index}
                         onClick={() => {
                           setSelectedCityTileSlug(tile.slug ?? null)
                           navigateToPath(tile.href)
@@ -2207,13 +2210,14 @@ function HomePage({
                 className="home-drag-rail hide-scrollbar -mx-1 mt-3 overflow-x-auto px-1 pb-2 pr-2 [scrollbar-width:none] [-ms-overflow-style:none] [overscroll-behavior-x:contain] [-webkit-overflow-scrolling:touch] max-lg:snap-x max-lg:snap-proximity lg:snap-none select-none [&::-webkit-scrollbar]:hidden"
               >
                 <div className="flex min-w-max gap-2.5 md:gap-3 lg:gap-4">
-                  {categoryTiles.map((tile) => (
+                  {categoryTiles.map((tile, index) => (
                     <div key={tile.label} data-rail-item className="shrink-0 snap-center">
                       <HomeCategoryTile
                         label={tile.label}
                         place={tile.place}
                         active={tile.active}
                         isLoading={!areHomeCardsLoaded}
+                        index={index}
                         onClick={() => {
                           setSelectedCategoryTileLabel(tile.label)
                           navigateToPath(tile.href)

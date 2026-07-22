@@ -395,8 +395,8 @@ function SearchPage({
             <FeatureGuideModalTrigger
               content={featureGuideContent.search}
               triggerLabel="Need help searching?"
-              className="feature-guide-search-trigger !inline-flex !gap-1 !rounded-none !border-none !bg-transparent !px-0 !py-0 !text-xs !font-normal !text-amber-500 hover:!text-amber-600 !normal-case !tracking-normal !min-h-0 !animate-none !shadow-none !no-underline hover:!translate-y-0"
-              triggerIconClassName={resolvedTheme === 'dark' ? 'text-[var(--text-main)]' : 'text-amber-500'}
+              className="feature-guide-search-trigger feature-guide-search-trigger--shimmer !inline-flex !gap-1 !rounded-none !border-none !bg-transparent !px-0 !py-0 !text-xs !font-normal !normal-case !tracking-normal !min-h-0 !animate-none !shadow-none !no-underline hover:!translate-y-0"
+              triggerIconClassName={resolvedTheme === 'dark' ? 'text-[var(--text-main)]' : 'text-[#172554]'}
               onSampleClick={(sample) => {
                 const namePrefix = 'By place name — '
                 const locationPrefix = 'By location — '

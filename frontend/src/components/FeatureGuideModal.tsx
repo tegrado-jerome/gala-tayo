@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
-import { Info, X } from 'lucide-react'
+import { Lightbulb, X } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
 
@@ -37,12 +37,14 @@ type GuideTheme = {
   badgeClassName: string
   titleClassName: string
   introClassName: string
+  headerDividerClassName: string
   sectionClassName: string
   sectionButtonClassName: string
   sectionIconClassName: string
   sectionTitleClassName: string
   sectionSubtitleClassName: string
   sectionChevronClassName: string
+  sectionDividerClassName: string
   itemClassName: string
   itemIconClassName: string
   sampleClassName: string
@@ -50,22 +52,24 @@ type GuideTheme = {
 
 const guideThemes: Record<FeatureGuideContent['id'], GuideTheme> = {
   search: {
-    triggerClassName: 'border-amber-300 bg-amber-400 text-white shadow-sm gt-solid-bulb-pulse hover:border-amber-500 hover:bg-amber-500 hover:text-white',
+    triggerClassName: 'border-[var(--primary-dark)] bg-[var(--primary-dark)] text-white shadow-sm gt-solid-bulb-pulse hover:border-[var(--primary)] hover:bg-[var(--primary)] hover:text-white',
     triggerIconClassName: 'text-white',
-    bulletClassName: 'bg-slate-400',
-    modalClassName: 'border border-amber-300/80 bg-amber-50 text-slate-600 shadow-[0_18px_44px_rgba(245,158,11,0.20)]',
-    badgeClassName: 'bg-amber-400 text-white shadow-sm',
-    titleClassName: 'text-slate-700',
-    introClassName: 'text-slate-700',
-    sectionClassName: 'border border-amber-300/50 bg-white/70',
-    sectionButtonClassName: 'hover:bg-amber-50',
-    sectionIconClassName: 'bg-amber-100 text-slate-700',
-    sectionTitleClassName: 'text-slate-700',
-    sectionSubtitleClassName: 'text-slate-400',
-    sectionChevronClassName: 'text-slate-300',
-    itemClassName: 'text-slate-600 hover:bg-amber-100 hover:text-slate-800',
-    itemIconClassName: 'bg-amber-50',
-    sampleClassName: 'border border-amber-300/60 bg-amber-100/55 text-slate-600 hover:bg-amber-200/70',
+    bulletClassName: 'bg-[var(--primary-dark)]',
+    modalClassName: 'feature-guide-modal--navy border border-[var(--primary-dark)]/80 bg-blue-50 text-[var(--text-strong)] shadow-[0_18px_44px_rgba(23,37,84,0.18)]',
+    badgeClassName: 'bg-[var(--primary-dark)] text-white shadow-sm',
+    titleClassName: 'text-[var(--primary-dark)]',
+    introClassName: 'text-[var(--text-strong)]',
+    headerDividerClassName: 'border-[var(--primary-dark)]/60',
+    sectionClassName: 'border border-[var(--primary-dark)]/50 bg-white/70',
+    sectionButtonClassName: 'hover:bg-blue-50',
+    sectionIconClassName: 'bg-blue-100 text-[var(--primary-dark)]',
+    sectionTitleClassName: 'text-[var(--primary-dark)]',
+    sectionSubtitleClassName: 'text-[var(--text-muted)]',
+    sectionChevronClassName: 'text-[var(--text-light)]',
+    sectionDividerClassName: 'border-[var(--primary-dark)]/30',
+    itemClassName: 'text-[var(--text-strong)] hover:bg-blue-100 hover:text-[var(--primary-dark)]',
+    itemIconClassName: 'bg-blue-50',
+    sampleClassName: 'border border-[var(--primary-dark)]/60 bg-blue-50/80 text-[var(--text-strong)] hover:bg-blue-100/80',
   },
   chatbot: {
     triggerClassName: 'border-amber-300 bg-amber-400 text-white shadow-sm gt-solid-bulb-pulse hover:border-amber-500 hover:bg-amber-500 hover:text-white',
@@ -75,12 +79,14 @@ const guideThemes: Record<FeatureGuideContent['id'], GuideTheme> = {
     badgeClassName: 'bg-amber-400 text-white shadow-sm',
     titleClassName: 'text-slate-700',
     introClassName: 'text-slate-700',
+    headerDividerClassName: 'border-amber-300/60',
     sectionClassName: 'border border-amber-300/50 bg-white/70',
     sectionButtonClassName: 'hover:bg-amber-50',
     sectionIconClassName: 'bg-amber-100 text-slate-700',
     sectionTitleClassName: 'text-slate-700',
     sectionSubtitleClassName: 'text-slate-400',
     sectionChevronClassName: 'text-slate-300',
+    sectionDividerClassName: 'border-amber-300/30',
     itemClassName: 'text-slate-600 hover:bg-amber-100 hover:text-slate-800',
     itemIconClassName: 'bg-amber-50',
     sampleClassName: 'border border-amber-300/60 bg-amber-100/55 text-slate-600 hover:bg-amber-200/70',
@@ -93,12 +99,14 @@ const guideThemes: Record<FeatureGuideContent['id'], GuideTheme> = {
     badgeClassName: 'bg-amber-400 text-white shadow-sm',
     titleClassName: 'text-slate-700',
     introClassName: 'text-slate-700',
+    headerDividerClassName: 'border-amber-300/60',
     sectionClassName: 'border border-amber-300/50 bg-white/70',
     sectionButtonClassName: 'hover:bg-amber-50',
     sectionIconClassName: 'bg-amber-100 text-slate-700',
     sectionTitleClassName: 'text-slate-700',
     sectionSubtitleClassName: 'text-slate-400',
     sectionChevronClassName: 'text-slate-300',
+    sectionDividerClassName: 'border-amber-300/30',
     itemClassName: 'text-slate-600 hover:bg-amber-100 hover:text-slate-800',
     itemIconClassName: 'bg-amber-50',
     sampleClassName: 'border border-amber-300/60 bg-amber-100/55 text-slate-600 hover:bg-amber-200/70',
@@ -113,12 +121,14 @@ const searchDarkGuideTheme: GuideTheme = {
   badgeClassName: 'bg-[var(--accent)] text-white shadow-sm',
   titleClassName: 'text-[var(--text-main)]',
   introClassName: 'text-[var(--text-strong)]',
+  headerDividerClassName: 'border-[rgba(96,165,250,0.16)]',
   sectionClassName: 'border border-[rgba(96,165,250,0.18)] bg-[rgba(15,23,42,0.76)]',
   sectionButtonClassName: 'hover:bg-[rgba(96,165,250,0.08)]',
   sectionIconClassName: 'bg-[rgba(96,165,250,0.14)] text-[var(--accent)]',
   sectionTitleClassName: 'text-[var(--text-main)]',
   sectionSubtitleClassName: 'text-[var(--text-muted)]',
   sectionChevronClassName: 'text-[var(--text-light)]',
+  sectionDividerClassName: 'border-[rgba(96,165,250,0.12)]',
   itemClassName: 'text-[var(--text-strong)] hover:bg-[rgba(96,165,250,0.08)] hover:text-[var(--text-main)]',
   itemIconClassName: 'bg-[rgba(96,165,250,0.12)]',
   sampleClassName: 'border border-[rgba(96,165,250,0.16)] bg-[rgba(15,23,42,0.88)] text-[var(--text-strong)] hover:border-[rgba(96,165,250,0.28)] hover:bg-[rgba(96,165,250,0.08)] hover:text-[var(--text-main)]',
@@ -223,9 +233,7 @@ export function FeatureGuideModalTrigger({
               onMouseDown={(event) => event.stopPropagation()}
             >
               <div
-                className={`flex items-start justify-between gap-3 border-b pb-3 ${
-                  resolvedTheme === 'dark' ? 'border-[rgba(96,165,250,0.16)]' : 'border-amber-300/60'
-                }`}
+                className={`flex items-start justify-between gap-3 border-b pb-3 ${theme.headerDividerClassName}`}
               >
                 <div className="min-w-0">
                   <div className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] ${theme.badgeClassName}`}>
@@ -280,9 +288,7 @@ export function FeatureGuideModalTrigger({
                           </button>
                           {isExpanded ? (
                             <div
-                              className={`space-y-1 border-t px-3 py-2 ${
-                                resolvedTheme === 'dark' ? 'border-[rgba(96,165,250,0.12)]' : 'border-amber-300/30'
-                              }`}
+                              className={`space-y-1 border-t px-3 py-2 ${theme.sectionDividerClassName}`}
                             >
                               {section.items.map((item) => (
                                 <button
@@ -358,13 +364,13 @@ export function FeatureGuideModalTrigger({
       >
         {triggerLabel ? (
           <>
-            <Info className={`relative z-10 h-4 w-4 ${triggerIconClassName ?? theme.triggerIconClassName}`} strokeWidth={2.35} />
+            <Lightbulb className={`relative z-10 h-4 w-4 ${triggerIconClassName ?? theme.triggerIconClassName}`} strokeWidth={2.35} />
             <span className="text-[14px] font-medium" style={triggerLabelStyle}>
               {triggerLabel}
             </span>
           </>
         ) : (
-          <Info className={`relative z-10 h-4 w-4 ${theme.triggerIconClassName}`} strokeWidth={2.35} />
+          <Lightbulb className={`relative z-10 h-4 w-4 ${theme.triggerIconClassName}`} strokeWidth={2.35} />
         )}
       </button>
 

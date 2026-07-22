@@ -1,51 +1,30 @@
-import { useEffect } from 'react'
-
 const preloadedUrls = new Set<string>()
-const imageLoaders = new Map<string, Promise<void>>()
 
 export function preloadHomeImage(url: string | null | undefined) {
   const normalizedUrl = url?.trim() || ''
 
   if (!normalizedUrl || normalizedUrl.startsWith('data:') || normalizedUrl.startsWith('blob:')) {
-    return Promise.resolve()
+    return
   }
 
   if (preloadedUrls.has(normalizedUrl)) {
-    return Promise.resolve()
+    return
   }
 
-  const existingLoader = imageLoaders.get(normalizedUrl)
-  if (existingLoader) {
-    return existingLoader
-  }
+  preloadedUrls.add(normalizedUrl)
 
-  const loader = fetch(normalizedUrl, { mode: 'cors', credentials: 'omit' })
-    .then((response) => {
-      if (!response.ok) {
-        throw new Error(`Failed to load image: ${response.status}`)
-      }
-      return response.blob()
-    })
-    .then(() => {
-      preloadedUrls.add(normalizedUrl)
-    })
-    .catch(() => {})
-    .finally(() => {
-      imageLoaders.delete(normalizedUrl)
-    })
+  const link = document.createElement('link')
+  link.rel = 'preload'
+  link.as = 'image'
+  link.href = normalizedUrl
+  document.head.appendChild(link)
 
-  imageLoaders.set(normalizedUrl, loader)
-  return loader
+  const img = new Image()
+  img.decoding = 'async'
+  img.fetchPriority = 'high'
+  img.src = normalizedUrl
 }
 
 export function useHomeImageSrc(url: string | null | undefined) {
-  const normalizedUrl = url?.trim() || ''
-
-  useEffect(() => {
-    if (normalizedUrl && !normalizedUrl.startsWith('data:') && !normalizedUrl.startsWith('blob:')) {
-      void preloadHomeImage(normalizedUrl)
-    }
-  }, [normalizedUrl])
-
-  return normalizedUrl
+  return url?.trim() || ''
 }
