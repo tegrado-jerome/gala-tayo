@@ -1,6 +1,7 @@
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
-import { METRO_MANILA_AREAS } from "../functions/filters";
+import { CATEGORIES, METRO_MANILA_AREAS } from "../functions/filters";
 import { PUBLIC_PLACE_COLUMNS } from "../domain/places";
+import { deleteJsonCacheValue, getJsonCacheValue, setJsonCacheValue } from "../services/redisCacheService";
 import { buildImageUrl } from "./r2UrlResolver";
 import { createBaseSlug } from "./slug";
 
@@ -35,6 +36,14 @@ export type SeoAreaPage = {
   places: SeoPlaceSummary[];
 };
 
+export type SeoListingPage = {
+  items: SeoPlaceSummary[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+};
+
 type ApprovedImageRow = {
   place_id?: unknown;
   storage_key?: unknown;
@@ -45,8 +54,26 @@ type SeoPlaceSummaryOptions = {
 };
 
 const SEO_PLACE_SELECT = PUBLIC_PLACE_COLUMNS;
+const SEO_LISTING_PLACE_SELECT = [
+  "id",
+  "name",
+  "slug",
+  "category",
+  "address",
+  "city",
+  "area",
+  "description",
+  "good_for",
+  "budget_min",
+  "status",
+  "updated_at",
+].join(",");
 const APPROVED_IMAGE_LOOKUP_BATCH_SIZE = 100;
 const MAX_APPROVED_IMAGES_PER_PLACE = 3;
+const SEO_PLACE_SUMMARIES_CACHE_KEY = "seo:places:summaries:v2";
+const SEO_PLACE_SUMMARIES_CACHE_TTL_SECONDS = 60 * 10;
+const SEO_LISTING_PAGE_CACHE_PREFIX = "seo:listings:v1";
+const SEO_LISTING_PAGE_CACHE_TTL_SECONDS = 60 * 10;
 
 const AREA_NAME_OVERRIDES: Record<string, string> = {
   "las-pinas": "Las Pinas",
@@ -108,6 +135,67 @@ function buildAreaLookup() {
 }
 
 const areaLookup = buildAreaLookup();
+
+function sanitizeCachePart(value: string | null | undefined): string {
+  return (value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "") || "all";
+}
+
+function getCategoryLabel(categoryId: string | null): string | null {
+  if (!categoryId || categoryId === "all") {
+    return null;
+  }
+
+  return CATEGORIES.find((category) => category.id === categoryId)?.name ?? categoryId;
+}
+
+function getAreaNamesForQuery(areaSlug: string | null): string[] {
+  if (!areaSlug) {
+    return [];
+  }
+
+  const area = METRO_MANILA_AREAS.find((candidate) => candidate.id === areaSlug);
+  const areaMeta = areaLookup.get(normalizeText(areaSlug));
+  return Array.from(new Set([
+    areaSlug,
+    area?.name,
+    AREA_NAME_OVERRIDES[areaSlug],
+    areaMeta?.name,
+  ]
+    .map((value) => cleanString(value))
+    .filter((value): value is string => Boolean(value))));
+}
+
+function escapePostgrestString(value: string): string {
+  return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+}
+
+function buildLocationOrFilter(areaNames: string[]): string | null {
+  if (areaNames.length === 0) {
+    return null;
+  }
+
+  const values = areaNames.map((value) => `"${escapePostgrestString(value)}"`).join(",");
+  return `city.in.(${values}),area.in.(${values})`;
+}
+
+function buildSeoListingPageCacheKey(args: {
+  areaSlug: string | null;
+  category: string | null;
+  page: number;
+  pageSize: number;
+}) {
+  return [
+    SEO_LISTING_PAGE_CACHE_PREFIX,
+    `area:${sanitizeCachePart(args.areaSlug)}`,
+    `category:${sanitizeCachePart(args.category)}`,
+    `page:${args.page}`,
+    `pageSize:${args.pageSize}`,
+  ].join(":");
+}
 
 function resolveAreaSlug(city: string | null, area: string | null): { slug: string; name: string } {
   const candidates = [city, area]
@@ -231,6 +319,11 @@ function mapPlaceRowToSeoSummary(row: PlaceRow, imageUrl: string | null): SeoPla
 }
 
 export async function getSeoPlaceSummaries(options: SeoPlaceSummaryOptions = {}): Promise<SeoPlaceSummary[]> {
+  const cachedPlaces = await getJsonCacheValue<SeoPlaceSummary[]>(SEO_PLACE_SUMMARIES_CACHE_KEY);
+  if (cachedPlaces) {
+    return cachedPlaces;
+  }
+
   const supabase = await getSupabaseAdminClient();
   const { data, error } = await (supabase.from("places") as any)
     .select(SEO_PLACE_SELECT)
@@ -247,6 +340,7 @@ export async function getSeoPlaceSummaries(options: SeoPlaceSummaryOptions = {})
     .map((row) => cleanString(row.id))
     .filter((value): value is string => Boolean(value));
   let imageLookup = new Map<string, string>();
+  let shouldCachePlaces = true;
 
   try {
     imageLookup = await getApprovedImageLookup(placeIds);
@@ -255,13 +349,24 @@ export async function getSeoPlaceSummaries(options: SeoPlaceSummaryOptions = {})
       throw imageError;
     }
 
+    shouldCachePlaces = false;
     options.onImageLoadError(imageError);
   }
 
-  return placeRows
+  const places = placeRows
     .map((row) => mapPlaceRowToSeoSummary(row, imageLookup.get(String(row.id)) ?? null))
     .filter((place): place is SeoPlaceSummary => Boolean(place))
     .sort((left, right) => left.name.localeCompare(right.name));
+
+  if (shouldCachePlaces) {
+    await setJsonCacheValue(SEO_PLACE_SUMMARIES_CACHE_KEY, places, { ttlSeconds: SEO_PLACE_SUMMARIES_CACHE_TTL_SECONDS });
+  }
+
+  return places;
+}
+
+export async function clearSeoPlaceSummariesCache(): Promise<void> {
+  await deleteJsonCacheValue(SEO_PLACE_SUMMARIES_CACHE_KEY);
 }
 
 export async function getSeoAreaSummaries(places?: SeoPlaceSummary[]): Promise<SeoAreaSummary[]> {
@@ -323,4 +428,89 @@ export async function getSeoAreaPage(areaSlug: string): Promise<SeoAreaPage | nu
     },
     places,
   };
+}
+
+export async function getSeoListingPage({
+  areaSlug,
+  category,
+  page,
+  pageSize,
+}: {
+  areaSlug?: string | null;
+  category?: string | null;
+  page: number;
+  pageSize: number;
+}): Promise<SeoListingPage> {
+  const normalizedAreaSlug = cleanString(areaSlug)?.toLowerCase() ?? null;
+  const normalizedCategory = cleanString(category)?.toLowerCase() ?? null;
+  const safePageSize = Math.min(Math.max(Math.floor(pageSize), 1), 50);
+  const safeRequestedPage = Math.max(Math.floor(page), 1);
+  const cacheKey = buildSeoListingPageCacheKey({
+    areaSlug: normalizedAreaSlug,
+    category: normalizedCategory,
+    page: safeRequestedPage,
+    pageSize: safePageSize,
+  });
+  const cachedPage = await getJsonCacheValue<SeoListingPage>(cacheKey);
+  if (cachedPage) {
+    return cachedPage;
+  }
+
+  const supabase = await getSupabaseAdminClient();
+  const categoryLabel = getCategoryLabel(normalizedCategory);
+  const locationOrFilter = buildLocationOrFilter(getAreaNamesForQuery(normalizedAreaSlug));
+
+  const buildListingQuery = () => {
+    let query = (supabase.from("places") as any)
+      .select(SEO_LISTING_PLACE_SELECT, { count: "exact" })
+      .eq("status", "active");
+
+    if (categoryLabel) {
+      query = query.eq("category", categoryLabel);
+    }
+
+    if (locationOrFilter) {
+      query = query.or(locationOrFilter);
+    }
+
+    return query;
+  }
+
+  const countResult = await buildListingQuery().limit(1);
+  if (countResult.error) {
+    throw new Error("Failed to load listing places.");
+  }
+
+  const total = countResult.count ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / safePageSize));
+  const safePage = Math.min(safeRequestedPage, totalPages);
+  const startIndex = (safePage - 1) * safePageSize;
+  const endIndex = startIndex + safePageSize - 1;
+  const { data, error } = await buildListingQuery()
+    .order("name", { ascending: true, nullsFirst: false })
+    .range(startIndex, endIndex);
+
+  if (error) {
+    throw new Error("Failed to load listing places.");
+  }
+
+  const placeRows = ((data ?? []) as PlaceRow[]).filter(isPublicPlace);
+  const placeIds = placeRows
+    .map((row) => cleanString(row.id))
+    .filter((value): value is string => Boolean(value));
+  const imageLookup = await getApprovedImageLookup(placeIds);
+  const items = placeRows
+    .map((row) => mapPlaceRowToSeoSummary(row, imageLookup.get(String(row.id)) ?? null))
+    .filter((place): place is SeoPlaceSummary => Boolean(place));
+
+  const payload = {
+    items,
+    total,
+    page: safePage,
+    pageSize: safePageSize,
+    totalPages,
+  };
+
+  await setJsonCacheValue(cacheKey, payload, { ttlSeconds: SEO_LISTING_PAGE_CACHE_TTL_SECONDS });
+  return payload;
 }

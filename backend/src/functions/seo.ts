@@ -1,7 +1,7 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { CATEGORIES } from "./filters";
 import { checkEndpointRateLimit } from "../utils/redisRateLimit";
-import { getSeoAreaPage, getSeoAreaSummaries, getSeoPlaceSummaries } from "../utils/seoPlaces";
+import { getSeoAreaPage, getSeoAreaSummaries, getSeoListingPage, getSeoPlaceSummaries } from "../utils/seoPlaces";
 import { getSiteUrl } from "../utils/siteUrl";
 
 type SitemapEntry = {
@@ -56,6 +56,15 @@ function pickLatestTimestamp(current: string | null, candidate: string | null): 
   }
 
   return Date.parse(candidate) > Date.parse(current) ? candidate : current;
+}
+
+function getPositiveQueryInteger(value: string | null, fallback: number, max: number): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 1) {
+    return fallback;
+  }
+
+  return Math.min(Math.floor(parsed), max);
 }
 
 function buildCategoryLookup() {
@@ -229,6 +238,35 @@ export async function seoArea(request: HttpRequest, context: InvocationContext):
   }
 }
 
+export async function seoListings(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+  const rateCheck = await checkEndpointRateLimit(request, "seo-listings", 60, 60)
+  if (!rateCheck.allowed && rateCheck.response) {
+    return rateCheck.response
+  }
+
+  const areaSlug = request.query.get("area")?.trim().toLowerCase() ?? null
+  const category = request.query.get("category")?.trim().toLowerCase() ?? null
+  const page = getPositiveQueryInteger(request.query.get("page"), 1, 1000)
+  const pageSize = getPositiveQueryInteger(request.query.get("pageSize"), 12, 50)
+
+  context.log("Loading SEO listing payload.", { areaSlug, category, page, pageSize })
+
+  const payload = await getSeoListingPage({
+    areaSlug,
+    category,
+    page,
+    pageSize,
+  })
+
+  return {
+    status: 200,
+    headers: {
+      "Cache-Control": "public, max-age=120, stale-while-revalidate=600",
+    },
+    jsonBody: payload,
+  }
+}
+
 export async function sitemapXml(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
   const rateCheck = await checkEndpointRateLimit(request, "sitemap", 10, 60)
   if (!rateCheck.allowed && rateCheck.response) {
@@ -339,6 +377,13 @@ app.http("seoArea", {
   authLevel: "anonymous",
   route: "seo/areas/{areaSlug}",
   handler: seoArea,
+})
+
+app.http("seoListings", {
+  methods: ["GET"],
+  authLevel: "anonymous",
+  route: "seo/listings",
+  handler: seoListings,
 })
 
 app.http("sitemapXml", {

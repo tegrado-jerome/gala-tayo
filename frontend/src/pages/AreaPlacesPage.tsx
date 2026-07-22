@@ -8,12 +8,11 @@ import PlaceCard, { type PlaceCardData } from '../components/PlaceCard'
 import SeoHead from '../components/SeoHead'
 import { PageContainer, PageShell, ResponsiveGrid } from '../components/layout/ResponsiveLayouts'
 import { placeCategories } from '../data/placeCategories'
-import { getAreaLabelBySlug, getAreaSearchFilterBySlug, normalizeAreaSlug } from '../data/metroManilaAreas'
+import { getAreaLabelBySlug, normalizeAreaSlug } from '../data/metroManilaAreas'
 import { navigateToPath, scrollViewportToTopInstant } from '../utils/navigation'
 import { formatLabelFromSlug, getSiteOrigin } from '../utils/seo'
-import { getApiUrl } from '../utils/apiClient'
 import { consumePendingListingRouteCache, getListingPlaceViewportTop, readListingRouteCache, restoreListingRouteScroll, seedPendingListingRouteCache, writeListingRouteCache } from '../utils/listingRouteCache'
-import { mapSeoPlaceToCard, type SeoPlaceSummary } from '../utils/seoApi'
+import { getSeoListingPage, mapSeoPlaceToCard, type SeoPlaceSummary } from '../utils/seoApi'
 
 type AreaPlacesPageProps = {
   areaSlug: string
@@ -54,84 +53,6 @@ function sortPlacesAlphabetically(places: SeoPlaceSummary[]) {
   return [...places].sort((left, right) => left.name.localeCompare(right.name))
 }
 
-function getAreaSearchApiUrl() {
-  return getApiUrl('/search')
-}
-
-async function readAreaPlacesResponse(response: Response): Promise<AreaPlacesResponse> {
-  const contentType = response.headers.get('content-type') || ''
-  const rawBody = await response.text()
-
-  if (!rawBody.trim()) {
-    if (!response.ok) {
-      throw new Error('We could not load places for this area right now.')
-    }
-
-    return {
-      items: [],
-      total: 0,
-      page: 1,
-      pageSize: PAGE_SIZE,
-      totalPages: 1,
-    }
-  }
-
-  if (!contentType.includes('application/json')) {
-    throw new Error('The area places request returned an unexpected response. Please make sure the backend API is running.')
-  }
-
-  let data: Record<string, unknown>
-
-  try {
-    data = JSON.parse(rawBody) as Record<string, unknown>
-  } catch {
-    throw new Error('The area places request returned invalid JSON.')
-  }
-
-  if (!response.ok) {
-    throw new Error(
-      (typeof data.error === 'string' && data.error) ||
-      (typeof data.message === 'string' && data.message) ||
-      'We could not load places for this area right now.'
-    )
-  }
-
-  const items = Array.isArray(data.places)
-    ? data.places as SeoPlaceSummary[]
-    : Array.isArray((data.result as { places?: unknown } | undefined)?.places)
-      ? ((data.result as { places: SeoPlaceSummary[] }).places ?? [])
-      : []
-  const total = typeof data.totalCount === 'number'
-    ? data.totalCount
-    : typeof (data.result as { totalCount?: unknown } | undefined)?.totalCount === 'number'
-      ? Number((data.result as { totalCount?: number }).totalCount)
-      : items.length
-  const page = typeof data.page === 'number'
-    ? data.page
-    : typeof (data.result as { page?: unknown } | undefined)?.page === 'number'
-      ? Number((data.result as { page?: number }).page)
-      : 1
-  const pageSize = typeof data.pageSize === 'number'
-    ? data.pageSize
-    : typeof (data.result as { pageSize?: unknown } | undefined)?.pageSize === 'number'
-      ? Number((data.result as { pageSize?: number }).pageSize)
-      : PAGE_SIZE
-  const totalPages = typeof data.totalPages === 'number'
-    ? data.totalPages
-    : typeof (data.result as { totalPages?: unknown } | undefined)?.totalPages === 'number'
-      ? Number((data.result as { totalPages?: number }).totalPages)
-      : Math.max(1, Math.ceil(total / pageSize))
-
-  return {
-    items,
-    total,
-    page,
-    pageSize,
-    totalPages,
-    message: typeof data.message === 'string' ? data.message : undefined,
-  }
-}
-
 function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: AreaPlacesPageProps) {
   const normalizedAreaSlug = normalizeAreaSlug(areaSlug) || areaSlug.toLowerCase()
   const [routeCache] = useState(() => {
@@ -158,7 +79,6 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
   const hasRestoredInitialScrollRef = useRef(false)
   const skipInitialFetchRef = useRef(Boolean(routeCache) && navigationSource !== 'pop')
   const areaName = getAreaLabelBySlug(normalizedAreaSlug) || formatLabelFromSlug(normalizedAreaSlug)
-  const areaSearchFilter = getAreaSearchFilterBySlug(normalizedAreaSlug) || normalizedAreaSlug
   const searchParams = useMemo(() => new URLSearchParams(search), [search])
   const activeCategory = normalizeValue(searchParams.get('category')) || 'all'
   const currentPage = Math.max(Number(searchParams.get('page') || '1') || 1, 1)
@@ -200,22 +120,13 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
         setIsLoading(shouldShowLoadingUi)
         setIsRefreshing(shouldShowLoadingUi ? false : navigationSource !== 'pop' && hasVisibleCachedResults)
         setErrorMessage(null)
-        const response = await fetch(getAreaSearchApiUrl(), {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+        const data = await getSeoListingPage({
+          areaSlug: normalizedAreaSlug,
+          category: activeCategory,
+          page: currentPage,
+          pageSize: PAGE_SIZE,
           signal: controller.signal,
-          body: JSON.stringify({
-            query: '',
-            page: currentPage,
-            filters: {
-              city: areaSearchFilter,
-              category: activeCategory,
-            },
-          }),
         })
-        const data = await readAreaPlacesResponse(response)
 
         if (controller.signal.aborted) {
           return
@@ -241,7 +152,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
     void loadPage()
 
     return () => controller.abort()
-  }, [activeCategory, areaSearchFilter, currentPage])
+  }, [activeCategory, currentPage, normalizedAreaSlug])
 
   useLayoutEffect(() => {
     if (navigationSource !== 'pop' || !routeCache?.pendingScrollRestore || hasRestoredInitialScrollRef.current) {
@@ -268,23 +179,13 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
   const shouldShowEmptyState = !isPageTransitionLoading && allPlaces.length === 0 && !errorMessage
   const activeFilterLabel = FILTER_OPTIONS.find((filter) => filter.value === activeCategory)?.label ?? 'All'
   const fetchPlacesForPage = async (page: number, category = activeCategory, signal?: AbortSignal) => {
-    const response = await fetch(getAreaSearchApiUrl(), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    return getSeoListingPage({
+      areaSlug: normalizedAreaSlug,
+      category,
+      page,
+      pageSize: PAGE_SIZE,
       signal,
-      body: JSON.stringify({
-        query: '',
-        page,
-        filters: {
-          city: areaSearchFilter,
-          category,
-        },
-      }),
     })
-
-    return readAreaPlacesResponse(response)
   }
   const handlePageChange = async (page: number) => {
     const nextPage = Math.min(Math.max(page, 1), totalPages)

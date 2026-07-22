@@ -50,6 +50,15 @@ npm run lint -- --quiet
 
 `npm run build` for the frontend requires the platform-native Tailwind oxide package to load successfully from `node_modules`.
 
+Static place listing payloads:
+
+```bash
+cd backend
+npm run generate:static-listings
+```
+
+Run this before deploying the frontend so `/places/{city}` and `/places/categories/{category}` can render from CDN-hosted JSON first, with the API kept as fallback.
+
 ## Security Notes
 
 - Public email existence checks must not disclose whether an account exists.

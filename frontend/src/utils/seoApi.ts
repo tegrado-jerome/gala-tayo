@@ -35,6 +35,14 @@ type SeoAreaPageResponse = {
   places: SeoPlaceSummary[]
 }
 
+type SeoListingPageResponse = {
+  items: SeoPlaceSummary[]
+  total: number
+  page: number
+  pageSize: number
+  totalPages: number
+}
+
 function mapSeoPlaceToCard(place: SeoPlaceSummary): PlaceCardData {
   return {
     id: place.id,
@@ -105,5 +113,88 @@ async function getSeoAreaPage(areaSlug: string) {
   return readJsonResponse<SeoAreaPageResponse>(response)
 }
 
-export { getSeoAreaPage, getSeoPlaces, mapSeoPlaceToCard }
-export type { SeoAreaPageResponse, SeoAreaSummary, SeoPlaceSummary, SeoPlacesResponse }
+async function getSeoListingPage({
+  areaSlug,
+  category,
+  page,
+  pageSize,
+  signal,
+}: {
+  areaSlug?: string | null
+  category?: string | null
+  page: number
+  pageSize: number
+  signal?: AbortSignal
+}) {
+  const staticPayload = await getStaticSeoListingPage({ areaSlug, category, page, pageSize, signal })
+  if (staticPayload) {
+    return staticPayload
+  }
+
+  const params = new URLSearchParams()
+  if (areaSlug) params.set('area', areaSlug)
+  if (category && category !== 'all') params.set('category', category)
+  params.set('page', String(page))
+  params.set('pageSize', String(pageSize))
+
+  const response = await apiFetch(`/seo/listings?${params.toString()}`, {
+    method: 'GET',
+    signal,
+  })
+
+  return readJsonResponse<SeoListingPageResponse>(response)
+}
+
+function normalizeStaticPart(value: string | null | undefined) {
+  return (value || 'all')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'all'
+}
+
+async function getStaticSeoListingPage({
+  areaSlug,
+  category,
+  page,
+  pageSize,
+  signal,
+}: {
+  areaSlug?: string | null
+  category?: string | null
+  page: number
+  pageSize: number
+  signal?: AbortSignal
+}): Promise<SeoListingPageResponse | null> {
+  const areaPart = normalizeStaticPart(areaSlug)
+  const categoryPart = normalizeStaticPart(category)
+  const safePage = Math.max(Math.floor(page), 1)
+  const safePageSize = Math.max(Math.floor(pageSize), 1)
+  const staticUrl = `/data/place-listings/area-${areaPart}/category-${categoryPart}/page-${safePage}-size-${safePageSize}.json`
+
+  try {
+    const response = await fetch(staticUrl, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+      },
+      signal,
+      cache: 'force-cache',
+    })
+
+    if (!response.ok || !(response.headers.get('content-type') || '').includes('application/json')) {
+      return null
+    }
+
+    return readJsonResponse<SeoListingPageResponse>(response)
+  } catch (error) {
+    if ((error as Error).name === 'AbortError') {
+      throw error
+    }
+
+    return null
+  }
+}
+
+export { getSeoAreaPage, getSeoListingPage, getSeoPlaces, mapSeoPlaceToCard }
+export type { SeoAreaPageResponse, SeoAreaSummary, SeoListingPageResponse, SeoPlaceSummary, SeoPlacesResponse }

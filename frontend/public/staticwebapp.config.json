@@ -11,12 +11,17 @@
     {
       "route": "/assets/*",
       "cacheControl": "public, max-age=31536000, immutable"
+    },
+    {
+      "route": "/data/place-listings/*",
+      "cacheControl": "public, max-age=86400, stale-while-revalidate=604800"
     }
   ],
   "navigationFallback": {
     "rewrite": "/index.html",
     "exclude": [
       "/api/*",
+      "/data/*",
       "/images/*",
       "/sitemap.xml",
       "/robots.txt"

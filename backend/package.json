@@ -15,6 +15,7 @@
     "preseed:places": "npm run build --silent",
     "seed:places": "node dist/scripts/seedGalatayoPlaces.js",
     "seed:researched-content": "npx tsx src/seed/updateResearchedPlaceContent.ts",
+    "generate:static-listings": "npx tsx scripts/generateStaticPlaceListings.ts",
     "db:normalize-cities": "npx tsx scripts/normalizeCityNames.ts",
     "deploy": "npm run build && npm prune --production && func azure functionapp publish galatayo-api && npm install",
     "test": "npm run build --silent",

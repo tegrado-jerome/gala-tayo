@@ -10,9 +10,8 @@ import { PageContainer, PageShell, ResponsiveGrid } from '../components/layout/R
 import { getPlaceCategoryLabel } from '../data/placeCategories'
 import { navigateToPath, scrollViewportToTopInstant } from '../utils/navigation'
 import { getSiteOrigin } from '../utils/seo'
-import { getApiUrl } from '../utils/apiClient'
 import { consumePendingListingRouteCache, getListingPlaceViewportTop, readListingRouteCache, restoreListingRouteScroll, seedPendingListingRouteCache, writeListingRouteCache } from '../utils/listingRouteCache'
-import { mapSeoPlaceToCard, type SeoPlaceSummary } from '../utils/seoApi'
+import { getSeoListingPage, mapSeoPlaceToCard, type SeoPlaceSummary } from '../utils/seoApi'
 
 type CategoryPlacesPageProps = {
   categorySlug: string
@@ -38,85 +37,8 @@ const EMPTY_CATEGORY_PLACES_RESPONSE: CategoryPlacesResponse = {
   totalPages: 1,
 }
 
-function getSearchApiUrl() {
-  return getApiUrl('/search')
-}
-
 function sortPlacesAlphabetically(places: SeoPlaceSummary[]) {
   return [...places].sort((left, right) => left.name.localeCompare(right.name))
-}
-
-async function readCategoryPlacesResponse(response: Response): Promise<CategoryPlacesResponse> {
-  const contentType = response.headers.get('content-type') || ''
-  const rawBody = await response.text()
-
-  if (!rawBody.trim()) {
-    if (!response.ok) {
-      throw new Error('We could not load places for this category right now.')
-    }
-
-    return {
-      items: [],
-      total: 0,
-      page: 1,
-      pageSize: PAGE_SIZE,
-      totalPages: 1,
-    }
-  }
-
-  if (!contentType.includes('application/json')) {
-    throw new Error('The category places request returned an unexpected response. Please make sure the backend API is running.')
-  }
-
-  let data: Record<string, unknown>
-
-  try {
-    data = JSON.parse(rawBody) as Record<string, unknown>
-  } catch {
-    throw new Error('The category places request returned invalid JSON.')
-  }
-
-  if (!response.ok) {
-    throw new Error(
-      (typeof data.error === 'string' && data.error) ||
-      (typeof data.message === 'string' && data.message) ||
-      'We could not load places for this category right now.'
-    )
-  }
-
-  const items = Array.isArray(data.places)
-    ? data.places as SeoPlaceSummary[]
-    : Array.isArray((data.result as { places?: unknown } | undefined)?.places)
-      ? ((data.result as { places: SeoPlaceSummary[] }).places ?? [])
-      : []
-  const total = typeof data.totalCount === 'number'
-    ? data.totalCount
-    : typeof (data.result as { totalCount?: unknown } | undefined)?.totalCount === 'number'
-      ? Number((data.result as { totalCount?: number }).totalCount)
-      : items.length
-  const page = typeof data.page === 'number'
-    ? data.page
-    : typeof (data.result as { page?: unknown } | undefined)?.page === 'number'
-      ? Number((data.result as { page?: number }).page)
-      : 1
-  const pageSize = typeof data.pageSize === 'number'
-    ? data.pageSize
-    : typeof (data.result as { pageSize?: unknown } | undefined)?.pageSize === 'number'
-      ? Number((data.result as { pageSize?: number }).pageSize)
-      : PAGE_SIZE
-  const totalPages = typeof data.totalPages === 'number'
-    ? data.totalPages
-    : typeof (data.result as { totalPages?: unknown } | undefined)?.totalPages === 'number'
-      ? Number((data.result as { totalPages?: number }).totalPages)
-      : Math.max(1, Math.ceil(total / pageSize))
-
-  return {
-    items,
-    total,
-    page,
-    pageSize,
-    totalPages,
-  }
 }
 
 function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'push' }: CategoryPlacesPageProps) {
@@ -182,21 +104,12 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
         setIsLoading(shouldShowLoadingUi)
         setIsRefreshing(shouldShowLoadingUi ? false : navigationSource !== 'pop' && hasVisibleCachedResults)
         setErrorMessage(null)
-        const response = await fetch(getSearchApiUrl(), {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+        const data = await getSeoListingPage({
+          category: categorySlug,
+          page: currentPage,
+          pageSize: PAGE_SIZE,
           signal: controller.signal,
-          body: JSON.stringify({
-            query: '',
-            page: currentPage,
-            filters: {
-              category: categorySlug,
-            },
-          }),
         })
-        const data = await readCategoryPlacesResponse(response)
 
         if (controller.signal.aborted) {
           return
@@ -248,22 +161,12 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
   const shouldShowInitialSkeleton = isLoading && payload.items.length === 0 && !errorMessage
   const shouldShowEmptyState = !isPageTransitionLoading && places.length === 0 && !errorMessage
   const fetchPlacesForPage = async (page: number, signal?: AbortSignal) => {
-    const response = await fetch(getSearchApiUrl(), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    return getSeoListingPage({
+      category: categorySlug,
+      page,
+      pageSize: PAGE_SIZE,
       signal,
-      body: JSON.stringify({
-        query: '',
-        page,
-        filters: {
-          category: categorySlug,
-        },
-      }),
     })
-
-    return readCategoryPlacesResponse(response)
   }
   const handlePageChange = async (page: number) => {
     const nextPage = Math.min(Math.max(page, 1), totalPages)

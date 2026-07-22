@@ -1,6 +1,7 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getRedisClient } from "../services/redisCacheService";
 import { clearActivePlacesCache } from "../domain/places";
+import { clearSeoPlaceSummariesCache } from "../utils/seoPlaces";
 
 const ADMIN_KEY_ENV_VAR = "GALATAYO_ADMIN_KEY";
 
@@ -24,10 +25,25 @@ async function cacheClear(request: HttpRequest, context: InvocationContext): Pro
   try {
     await clearActivePlacesCache();
     clearedKeys.push("places:active:normalized:v2 (via clearActivePlacesCache)");
+    await clearSeoPlaceSummariesCache();
+    clearedKeys.push("seo:places:summaries:v2 (via clearSeoPlaceSummariesCache)");
 
     let cursor: string | number = "0";
     do {
       const result = await client.scan(cursor, { match: "search:v4:*", count: 100 });
+      cursor = result[0];
+      const keys = result[1] as string[];
+      if (keys.length > 0) {
+        for (const key of keys) {
+          await client.del(key);
+          clearedKeys.push(key);
+        }
+      }
+    } while (cursor !== "0" && cursor !== 0);
+
+    cursor = "0";
+    do {
+      const result = await client.scan(cursor, { match: "seo:listings:v1:*", count: 100 });
       cursor = result[0];
       const keys = result[1] as string[];
       if (keys.length > 0) {
