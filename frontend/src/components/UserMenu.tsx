@@ -257,7 +257,7 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
         }}
         className={
           compact
-            ? 'relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-transparent text-[var(--text-main)] transition hover:bg-[var(--hover-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
+            ? 'relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--surface-elevated)] text-[var(--text-main)] shadow-sm transition hover:border-[var(--line-strong)] hover:bg-[var(--hover-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
             : 'inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--line)] bg-[var(--surface-elevated)] px-4 text-[15px] font-medium text-[var(--text-main)] transition hover:border-[var(--line-strong)] hover:bg-[var(--hover-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
         }
         aria-expanded={isOpen}
@@ -266,10 +266,10 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
       >
         {compact ? (
           <>
-            <span className={`flex h-full w-full items-center justify-center overflow-hidden rounded-full ${effectiveUser ? 'text-slate-700' : 'text-slate-800'}`}>
+            <span className="flex h-full w-full items-center justify-center overflow-hidden rounded-full text-[var(--text-main)]">
               {accountButtonAvatar}
             </span>
-            <span className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[var(--bg)] shadow-sm ${effectiveUser ? 'bg-[#22c55e]' : 'bg-[var(--line-strong)]'}`} aria-hidden="true">
+            <span className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[var(--bg)] shadow-sm ${effectiveUser ? 'bg-[#22c55e]' : 'bg-[var(--line-strong)]'}`} aria-hidden="true">
               {effectiveUser ? <span className="absolute inset-0 animate-ping rounded-full bg-[rgba(34,197,94,0.4)]" /> : null}
             </span>
           </>
