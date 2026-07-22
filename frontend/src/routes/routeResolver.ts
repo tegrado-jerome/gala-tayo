@@ -36,7 +36,7 @@ export type RouteInputs = {
   isUserMfaLoading: boolean
   userMfaStatus: UserMfaStatus | null
   navigationSource: NavigationSource
-  onProfileRefreshKeyUpdate: () => void
+  onProfileRefreshKeyUpdate: (account?: CurrentUserResponse) => void
   onMfaVerified?: () => void
 }
 
@@ -110,8 +110,6 @@ export function resolveRouteDescriptor(inputs: RouteInputs): RouteDescriptor {
     editGalaPlanId,
     ownedGalaPlanId,
     hasSignupOnboardingAccess,
-    userMfaStatus,
-    isUserMfaLoading,
   } = inputs
 
   const adminHomePath = ADMIN_BASE_PATH
@@ -198,24 +196,11 @@ export function resolveRouteDescriptor(inputs: RouteInputs): RouteDescriptor {
     return { kind: 'protected-feature-gate' }
   }
 
-  if (
-    session &&
-    userMfaStatus?.needsMfa &&
-    !isPath(pathname, '/mfa/verify') &&
-    !isPath(pathname, '/auth/callback') &&
-    !isPath(pathname, '/onboarding') &&
-    !isPath(pathname, '/login') &&
-    !isPath(pathname, '/signup') &&
-    !hasSignupOnboardingAccess
-  ) {
-    return { kind: 'user-mfa-verify' }
-  }
-
-  if (session && isUserMfaLoading && userMfaStatus === null && !isPath(pathname, '/auth/callback') && !isPasswordResetPath && !isPath(pathname, '/login') && !isPath(pathname, '/signup') && !isPath(pathname, '/mfa/verify') && !isPath(pathname, '/ask-ai') && !isPath(pathname, '/ask-ai/chatbot') && !isPath(pathname, '/ask-ai/text') && !isPath(pathname, '/ask-ai/maps') && !isPath(pathname, '/ask-ai/map') && !isPath(pathname, '/ask-ai/prompt-builder') && !isPath(pathname, '/prompt-builder')) {
-    return { kind: 'initial-auth-loader' }
-  }
-
   if (pathname === '/' || pathname === '') {
+    if (!hasResolvedInitialAuth || session || hasSignupOnboardingAccess) {
+      return { kind: 'initial-auth-loader' }
+    }
+
     return { kind: 'root-entry' }
   }
 

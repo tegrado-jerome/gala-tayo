@@ -14,6 +14,27 @@ function isSessionExpired(session: Session | null): boolean {
   return session.expires_at * 1000 <= Date.now()
 }
 
+async function getRecoverableInitialSession() {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+
+  if (!isSessionExpired(session)) {
+    return session
+  }
+
+  const {
+    data: { session: refreshedSession },
+    error,
+  } = await supabase.auth.refreshSession()
+
+  if (error) {
+    return null
+  }
+
+  return refreshedSession
+}
+
 export function useAuthOrchestration() {
   const [initialResumeCache] = useState(() => readAppResumeCache())
   const [session, setSession] = useState<Session | null>(null)
@@ -33,17 +54,17 @@ export function useAuthOrchestration() {
   const [profileRefreshKey, setProfileRefreshKey] = useState(0)
   const sessionRef = useRef<Session | null>(null)
   const hasCompletedInitialAuthRef = useRef(false)
+  const skipNextUserMfaLoadRef = useRef(false)
   const userId = session?.user?.id ?? null
 
   useEffect(() => {
     let isMounted = true
 
-    supabase.auth.getSession().then(({ data }) => {
+    getRecoverableInitialSession().then((resolvedSession) => {
       if (isMounted) {
         clearEmptyHashFragment()
 
-        if (data.session && isSessionExpired(data.session)) {
-          supabase.auth.signOut().catch(() => {})
+        if (!resolvedSession) {
           sessionRef.current = null
           setSession(null)
           setCurrentUser(null)
@@ -52,19 +73,14 @@ export function useAuthOrchestration() {
           setHasResolvedProfile(true)
           clearAppResumeCache()
         } else {
-          if (data.session && initialResumeCache?.userId !== data.session.user.id) {
+          if (initialResumeCache?.userId !== resolvedSession.user.id) {
             setCurrentProfile(null)
             setNeedsOnboarding(false)
             setHasResolvedProfile(false)
             clearAppResumeCache()
-          } else if (!data.session) {
-            setCurrentProfile(null)
-            setNeedsOnboarding(false)
-            setHasResolvedProfile(true)
-            clearAppResumeCache()
           }
-          sessionRef.current = data.session
-          setSession(data.session)
+          sessionRef.current = resolvedSession
+          setSession(resolvedSession)
         }
         setHasResolvedInitialAuth(true)
         hasCompletedInitialAuthRef.current = true
@@ -275,6 +291,7 @@ export function useAuthOrchestration() {
     const activeSession = sessionRef.current
 
     if (!activeSession) {
+      skipNextUserMfaLoadRef.current = false
       setUserMfaStatus(null)
       setIsUserMfaLoading(false)
       return undefined
@@ -283,6 +300,13 @@ export function useAuthOrchestration() {
     let isMounted = true
 
     const loadUserMfa = async () => {
+      if (skipNextUserMfaLoadRef.current) {
+        skipNextUserMfaLoadRef.current = false
+        setUserMfaStatus({ needsMfa: false })
+        setIsUserMfaLoading(false)
+        return
+      }
+
       try {
         setIsUserMfaLoading(true)
         const status = await getUserMfaStatus(activeSession)
@@ -345,6 +369,19 @@ export function useAuthOrchestration() {
     setIsUserMfaLoading(false)
   }, [])
 
+  const markOnboardingComplete = useCallback((account?: CurrentUserResponse) => {
+    skipNextUserMfaLoadRef.current = true
+    setNeedsOnboarding(false)
+    setHasResolvedProfile(true)
+    if (account) {
+      setCurrentUser(account.user)
+      setCurrentProfile(account.profile)
+    }
+    setUserMfaStatus({ needsMfa: false })
+    setIsUserMfaLoading(false)
+    setProfileRefreshKey((currentValue) => currentValue + 1)
+  }, [])
+
   return {
     session,
     userId,
@@ -363,5 +400,6 @@ export function useAuthOrchestration() {
     setProfileRefreshKey,
     sessionRef,
     markMfaVerified,
+    markOnboardingComplete,
   }
 }

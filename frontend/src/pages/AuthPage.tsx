@@ -12,7 +12,7 @@ import {
   signUpWithEmailPassword,
 } from '../services/authApi'
 import { buildAuthPath, getRequestedNextPath } from '../services/authApi'
-import { navigateToPath } from '../utils/navigation'
+import { navigateToPath, replaceWithPath } from '../utils/navigation'
 import { getCurrentUser, isAdminRole } from '../utils/profileApi'
 import { PageShell } from '../components/layout/ResponsiveLayouts'
 import { getPasswordStrength } from '../utils/passwordStrength'
@@ -26,6 +26,22 @@ type AuthMode = 'sign_in' | 'create_account'
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const minPasswordLength = 8
 const resendCooldownMs = 2 * 60 * 1000
+
+async function preloadAuthTargetPath(path: string) {
+  if (path.startsWith('/mfa/verify')) {
+    await import('./MfaVerifyPage')
+    return
+  }
+
+  if (path === '/home' || path.startsWith('/home?')) {
+    await import('./HomePage')
+    return
+  }
+
+  if (path === '/onboarding' || path.startsWith('/onboarding?')) {
+    await import('./OnboardingPage')
+  }
+}
 
 function getFriendlyAuthError(error: unknown, mode: AuthMode) {
   const message = error instanceof Error ? error.message : ''
@@ -128,7 +144,8 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
           markSignupOnboardingAccess()
 
           if (isMounted) {
-            navigateToPath('/onboarding')
+            await preloadAuthTargetPath('/onboarding')
+            replaceWithPath('/onboarding')
           }
           return
         }
@@ -138,8 +155,11 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
 
         if (isMounted) {
           if (mfaStatus.needsMfa) {
-            navigateToPath(`/mfa/verify?next=${encodeURIComponent(redirectTo)}`)
+            const mfaVerifyPath = `/mfa/verify?next=${encodeURIComponent(redirectTo)}`
+            await preloadAuthTargetPath(mfaVerifyPath)
+            navigateToPath(mfaVerifyPath)
           } else {
+            await preloadAuthTargetPath(redirectTo)
             navigateToPath(redirectTo)
           }
         }
@@ -201,8 +221,15 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
       setIsSubmitting(true)
 
       if (isCreateMode) {
+        setRememberMePreference(true)
         markSignupOnboardingAccess()
-        await signUpWithEmailPassword(normalizedEmail, password, nextPath)
+        const signUpData = await signUpWithEmailPassword(normalizedEmail, password, nextPath)
+
+        if (signUpData.session) {
+          await preloadAuthTargetPath('/onboarding')
+          replaceWithPath('/onboarding')
+          return
+        }
 
         setEmail(normalizedEmail)
         setPassword('')
@@ -233,9 +260,11 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
         const mfaVerifyPath = postAuthRedirect !== '/home'
           ? `/mfa/verify?next=${encodeURIComponent(postAuthRedirect)}`
           : '/mfa/verify'
+        await preloadAuthTargetPath(mfaVerifyPath)
         navigateToPath(mfaVerifyPath)
       } else {
         const postAuthRedirect = await getPostAuthRedirect(session, window.location.search)
+        await preloadAuthTargetPath(postAuthRedirect)
         navigateToPath(postAuthRedirect)
       }
     } catch (caughtError) {

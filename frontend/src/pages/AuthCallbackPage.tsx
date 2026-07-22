@@ -5,9 +5,8 @@ import { getCurrentEmailConflict, getPostAuthRedirect, markSignupOnboardingAcces
 import { getOnboardingStatus } from '../utils/profileApi'
 import { getUserMfaStatus } from '../utils/userMfa'
 import { buildAuthPath } from '../services/authApi'
-import { navigateToPath } from '../utils/navigation'
+import { navigateToPath, replaceWithPath } from '../utils/navigation'
 import { trackLoginCompleted, trackSignUpCompleted } from '../utils/analytics'
-import galaTayoLogo from '../assets/brand/galatayo-logo.svg'
 
 async function waitForSession(): Promise<Session | null> {
   const {
@@ -69,28 +68,31 @@ function AuthCallbackPage() {
           throw new Error('We could not finish signing you in.')
         }
 
+        if (isSignupFlow) {
+          markSignupOnboardingAccess()
+
+          if (isMounted) {
+            replaceWithPath('/onboarding')
+          }
+
+          void getOnboardingStatus(session)
+            .then(({ completed }) => {
+              if (!completed) {
+                trackSignUpCompleted({
+                  source: 'signup',
+                })
+              }
+            })
+            .catch(() => undefined)
+
+          return
+        }
+
         const emailConflict = await getCurrentEmailConflict(session)
 
         if (emailConflict.conflict) {
           await supabase.auth.signOut({ scope: 'global' })
           throw new Error('This email already has a GalaTayo account. Please log in using the original method for that account.')
-        }
-
-        if (isSignupFlow) {
-          markSignupOnboardingAccess()
-
-          const { completed } = await getOnboardingStatus(session)
-
-          if (!completed) {
-            trackSignUpCompleted({
-              source: 'signup',
-            })
-          }
-
-          if (isMounted) {
-            navigateToPath('/onboarding')
-          }
-          return
         }
 
         const { needsOnboarding, completed } = await getOnboardingStatus(session)
@@ -103,7 +105,7 @@ function AuthCallbackPage() {
           }
 
           if (isMounted) {
-            navigateToPath('/onboarding')
+            replaceWithPath('/onboarding')
           }
           return
         }
@@ -116,9 +118,9 @@ function AuthCallbackPage() {
         if (isMounted) {
           const mfaStatus = await getUserMfaStatus(session)
           if (mfaStatus.needsMfa) {
-            navigateToPath(`/mfa/verify?next=${encodeURIComponent(redirectTo)}`)
+            replaceWithPath(`/mfa/verify?next=${encodeURIComponent(redirectTo)}`)
           } else {
-            navigateToPath(redirectTo)
+            replaceWithPath(redirectTo)
           }
         }
       } catch (error) {
@@ -165,15 +167,7 @@ function AuthCallbackPage() {
     )
   }
 
-  return (
-    <main className="flex h-dvh items-center justify-center bg-[var(--panel)] px-6 text-black">
-      <div className="flex flex-col items-center gap-4 text-center">
-        <img src={galaTayoLogo} alt="GalaTayo" className="h-auto w-[180px]" loading="eager" />
-        <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-300 border-t-slate-500" />
-        <p className="text-sm font-semibold text-slate-500">Signing in...</p>
-      </div>
-    </main>
-  )
+  return null
 }
 
 export default AuthCallbackPage

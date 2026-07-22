@@ -56,13 +56,15 @@ const AdminMfaVerifyPage = lazy(() => import('../pages/admin/AdminMfaVerifyPage'
 function OnboardingAccessGate({
   session,
   hasResolvedInitialAuth,
+  hasSignupOnboardingAccess,
   onComplete,
 }: {
   session: Session | null
   hasResolvedInitialAuth: boolean
+  hasSignupOnboardingAccess: boolean
   onComplete: () => void
 }) {
-  const [isAllowed, setIsAllowed] = useState(false)
+  const [isAllowed, setIsAllowed] = useState(() => Boolean(session && hasSignupOnboardingAccess))
 
   useEffect(() => {
     if (!hasResolvedInitialAuth) {
@@ -71,6 +73,11 @@ function OnboardingAccessGate({
 
     if (!session) {
       replaceWithPath(buildAuthPath('/signup', '/onboarding'))
+      return
+    }
+
+    if (hasSignupOnboardingAccess) {
+      setIsAllowed(true)
       return
     }
 
@@ -98,7 +105,7 @@ function OnboardingAccessGate({
     return () => {
       isMounted = false
     }
-  }, [hasResolvedInitialAuth, session])
+  }, [hasResolvedInitialAuth, hasSignupOnboardingAccess, session])
 
   if (!hasResolvedInitialAuth) {
     return <InitialAuthLoader />
@@ -133,6 +140,7 @@ function renderRouteContent(descriptor: RouteDescriptor, inputs: RouteInputs) {
         <OnboardingAccessGate
           session={session}
           hasResolvedInitialAuth={inputs.hasResolvedInitialAuth}
+          hasSignupOnboardingAccess={inputs.hasSignupOnboardingAccess}
           onComplete={inputs.onProfileRefreshKeyUpdate}
         />
       )
@@ -379,8 +387,17 @@ function renderRouteContent(descriptor: RouteDescriptor, inputs: RouteInputs) {
 }
 
 export function renderRouteDescriptor(descriptor: RouteDescriptor, inputs: RouteInputs) {
+  const isAuthSuccessTransition =
+    inputs.session &&
+    (inputs.navigationSource === 'push' || inputs.navigationSource === 'replace') &&
+    (
+      inputs.pathname === '/mfa/verify' ||
+      inputs.pathname === '/home' ||
+      (inputs.pathname === '/onboarding' && inputs.hasSignupOnboardingAccess)
+    )
+
   return (
-    <Suspense fallback={<InitialAuthLoader />}>
+    <Suspense fallback={isAuthSuccessTransition ? null : <InitialAuthLoader />}>
       {renderRouteContent(descriptor, inputs)}
     </Suspense>
   )

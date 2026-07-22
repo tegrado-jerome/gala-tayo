@@ -31,8 +31,8 @@ function App() {
     isUserMfaLoading,
     userMfaStatus,
     profileError,
-    setProfileRefreshKey,
     markMfaVerified,
+    markOnboardingComplete,
   } = useAuthOrchestration()
 
   const { pathname, search, navigationSource, restoredScrollY, setRestoredScrollY } = useAppLocationState()
@@ -59,7 +59,7 @@ function App() {
   const legacyAdminRedirectPath = useMemo(() => getLegacyAdminRedirectPath(pathname), [pathname])
   const isPasswordResetPath = isPath(pathname, '/reset-password') || isPath(pathname, '/auth/reset-password')
   const routeNeedsBlockingAuth = isProtectedAccountPath(pathname) || isPath(pathname, '/onboarding') || isPath(pathname, '/auth/callback') || isPasswordResetPath
-  const hasSignupOnboardingAccess = session ? hasStoredSignupOnboardingAccess() : false
+  const hasSignupOnboardingAccess = hasStoredSignupOnboardingAccess()
 
   useEffect(() => {
     initializeAnalytics()
@@ -159,7 +159,7 @@ function App() {
     isUserMfaLoading,
     userMfaStatus,
     navigationSource,
-    onProfileRefreshKeyUpdate: () => setProfileRefreshKey((v) => v + 1),
+    onProfileRefreshKeyUpdate: markOnboardingComplete,
     onMfaVerified: markMfaVerified,
   })
 

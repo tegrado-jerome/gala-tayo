@@ -63,7 +63,7 @@ export function shouldShowMobileBottomNav(pathname: string) {
     return false
   }
 
-  if (isPath(pathname, '/login') || isPath(pathname, '/signup') || isPath(pathname, '/onboarding') || isPath(pathname, '/forgot-password') || isPath(pathname, '/reset-password') || isPath(pathname, '/auth/reset-password') || isPath(pathname, '/mfa/verify')) {
+  if (isPath(pathname, '/login') || isPath(pathname, '/signup') || isPath(pathname, '/onboarding') || isPath(pathname, '/forgot-password') || isPath(pathname, '/reset-password') || isPath(pathname, '/auth/reset-password') || isPath(pathname, '/auth/callback') || isPath(pathname, '/mfa/verify')) {
     return false
   }
 

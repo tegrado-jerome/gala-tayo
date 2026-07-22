@@ -4,7 +4,7 @@ import { LogOut, CheckCircle2 } from 'lucide-react'
 import { sendMfaEmailCode, verifyMfaEmailCode } from '../utils/userMfa'
 import { setDeviceToken } from '../utils/mfaDevice'
 import { navigateToPath } from '../utils/navigation'
-import { signOut } from '../services/authApi'
+import { getRequestedNextPath, signOut } from '../services/authApi'
 import galaTayoLogo from '../assets/brand/galatayo-logo.svg'
 
 const OTP_LENGTH = 6
@@ -31,9 +31,7 @@ function MfaVerification({ session, nextPath: nextPathProp, onSuccess }: MfaVeri
 
   const nextPath = useMemo(() => {
     if (nextPathProp) return nextPathProp
-    const params = new URLSearchParams(window.location.search)
-    const next = params.get('next')
-    return next && next.startsWith('/') ? next : '/home'
+    return getRequestedNextPath() ?? '/home'
   }, [nextPathProp])
 
   const code = digits.join('')

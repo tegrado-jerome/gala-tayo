@@ -14,14 +14,15 @@ import {
   uploadProfileAvatar,
 } from '../services/onboardingApi'
 import { clearSignupOnboardingAccess } from '../services/authApi'
-import { getOnboardingStatus, validateUsername } from '../utils/profileApi'
+import { getCurrentUser, getOnboardingStatus, validateUsername, type CurrentUserResponse } from '../utils/profileApi'
 import { avatarUploadErrorMessage, isValidAvatarFile, prepareAvatarUploadFile } from '../utils/avatarUpload'
+import { preloadAvatarImage } from '../utils/avatarImageCache'
 import { replaceWithPath } from '../utils/navigation'
 import { trackOnboardingCompleted } from '../utils/analytics'
 
 type OnboardingPageProps = {
   session: Session
-  onComplete?: () => void
+  onComplete?: (account?: CurrentUserResponse) => void
 }
 
 const MINIMUM_AGE = 13
@@ -231,6 +232,19 @@ function clearOnboardingDraft(userId: string) {
   }
 }
 
+function clearSignupOnboardingAccessAfterHomeRedirect() {
+  window.setTimeout(() => {
+    clearSignupOnboardingAccess()
+  }, 1000)
+}
+
+async function loadCompletedAccountForHome(session: Session) {
+  const account = await getCurrentUser(session)
+  const avatarUrl = account.profile?.avatarUrl ?? account.profile?.providerAvatarUrl ?? null
+  await preloadAvatarImage(avatarUrl)
+  return account
+}
+
 function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
   const [draftUserId, setDraftUserId] = useState(session.user.id)
   const [values, setValues] = useState<OnboardingFormState>(() => createInitialValues(session))
@@ -293,10 +307,12 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
         const status = await getOnboardingStatus(session)
 
         if (isMounted && !status.needsOnboarding) {
-          clearSignupOnboardingAccess()
-          setIsRedirectingHome(true)
+          const account = await loadCompletedAccountForHome(session)
           clearOnboardingDraft(session.user.id)
+          onComplete?.(account)
           replaceWithPath('/home')
+          clearSignupOnboardingAccessAfterHomeRedirect()
+          setIsRedirectingHome(true)
           return
         }
 
@@ -321,7 +337,7 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
     return () => {
       isMounted = false
     }
-  }, [isRedirectingHome, session.user.id])
+  }, [isRedirectingHome, onComplete, session.user.id])
 
   useEffect(() => {
     if (values.step !== 2) {
@@ -507,13 +523,15 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
       setIsSubmitting(true)
       setErrors({})
       await completeOnboardingSetup({ ...values, username: normalizedUsername }, session)
-      setIsRedirectingHome(true)
+      const account = await loadCompletedAccountForHome(session)
       trackOnboardingCompleted({
         method: 'profile_setup',
       })
       clearOnboardingDraft(session.user.id)
+      onComplete?.(account)
       replaceWithPath('/home')
-      onComplete?.()
+      clearSignupOnboardingAccessAfterHomeRedirect()
+      setIsRedirectingHome(true)
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Could not finish onboarding.'
 

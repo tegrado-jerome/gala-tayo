@@ -1,10 +1,7 @@
 export function InitialAuthLoader() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-white px-6 text-center">
-      <div className="flex flex-col items-center gap-3">
-        <div className="h-8 w-32 animate-pulse rounded-full bg-slate-100" />
-        <div className="h-3 w-48 animate-pulse rounded-full bg-slate-100" />
-      </div>
+    <main className="initial-auth-transition" aria-busy="true" aria-live="polite">
+      <span className="sr-only">Loading GalaTayo</span>
     </main>
   )
 }

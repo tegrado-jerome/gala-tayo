@@ -346,6 +346,7 @@ export function sanitizeNextPath(value: string | null | undefined) {
   }
 
   if (
+    normalizedValue === '/' ||
     normalizedValue === '/login' ||
     normalizedValue === '/login/' ||
     normalizedValue === '/signup' ||
