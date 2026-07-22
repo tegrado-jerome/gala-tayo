@@ -1,7 +1,8 @@
 import { memo, startTransition, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { Bot, RotateCcw } from 'lucide-react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faArrowRotateLeft, faRobot } from '@fortawesome/free-solid-svg-icons'
 import { AppIcon, type AppIconName } from '../../AppIcon'
 import AskAiUsagePill from '../../AskAiUsagePill'
 import { FeatureGuideModalTrigger, featureGuideContent } from '../../FeatureGuideModal'
@@ -382,7 +383,7 @@ function AskAiOutputStageLegacy({
 
   return (
     <section
-      className={`gala-page-background relative overflow-hidden px-4 py-4 text-[var(--text)] sm:px-5 sm:py-5 lg:px-8 lg:py-7 ${className} min-h-[calc(100dvh-88px)]`}
+      className={`gala-page-background relative overflow-hidden px-4 py-4 text-[var(--text)] sm:px-5 sm:py-5 lg:px-8 lg:py-7 ${className} min-h-[calc(var(--ask-ai-viewport-height,100dvh)-88px)]`}
     >
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -left-12 top-8 h-40 w-40 rounded-full bg-[rgba(160,201,255,0.24)] blur-3xl" />
@@ -390,7 +391,7 @@ function AskAiOutputStageLegacy({
         <div className="absolute bottom-0 right-1/3 h-36 w-36 rounded-full bg-[rgba(201,235,255,0.24)] blur-3xl" />
       </div>
 
-      <div className="relative mx-auto flex min-h-[calc(100dvh-144px)] w-full max-w-[min(1500px,calc(100vw-96px))] flex-col gap-5 lg:gap-7">
+      <div className="relative mx-auto flex min-h-[calc(var(--ask-ai-viewport-height,100dvh)-144px)] w-full max-w-[min(1500px,calc(100vw-96px))] flex-col gap-5 lg:gap-7">
         <div>
           <p className="text-[0.9rem] font-black uppercase tracking-[0.12em] text-slate-500">Your question</p>
           <div className="mt-2.5 inline-block max-w-full rounded-[16px] border border-[rgba(20,35,58,0.22)] bg-white/96 px-4 py-3.5 shadow-[0_12px_26px_rgba(15,23,42,0.045),inset_0_1px_0_rgba(255,255,255,0.9)] sm:px-5 sm:py-4 lg:max-w-[980px] xl:max-w-[1120px]">
@@ -541,14 +542,14 @@ function AskAiThinkingStageLegacy({
   const loadingMessageText = 'This may take a few seconds if current info is needed.'
 
   return (
-    <section className={`gala-page-background relative overflow-hidden px-4 py-4 text-[var(--text)] sm:px-5 sm:py-5 lg:px-8 lg:py-7 ${className} min-h-[calc(100dvh-88px)]`}>
+    <section className={`gala-page-background relative overflow-hidden px-4 py-4 text-[var(--text)] sm:px-5 sm:py-5 lg:px-8 lg:py-7 ${className} min-h-[calc(var(--ask-ai-viewport-height,100dvh)-88px)]`}>
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -left-12 top-8 h-40 w-40 rounded-full bg-[rgba(160,201,255,0.24)] blur-3xl" />
         <div className="absolute right-0 top-0 h-52 w-52 rounded-full bg-[rgba(192,202,255,0.22)] blur-3xl" />
         <div className="absolute bottom-0 right-1/3 h-36 w-36 rounded-full bg-[rgba(201,235,255,0.24)] blur-3xl" />
       </div>
 
-      <div className="relative mx-auto flex min-h-[calc(100dvh-144px)] w-full max-w-[min(1500px,calc(100vw-96px))] flex-col">
+      <div className="relative mx-auto flex min-h-[calc(var(--ask-ai-viewport-height,100dvh)-144px)] w-full max-w-[min(1500px,calc(100vw-96px))] flex-col">
         <h1 className="mt-6 text-[3.1rem] font-black leading-none tracking-[-0.055em] text-slate-950 sm:text-[4rem] lg:mt-8 lg:text-[4.5rem]">
           GalaTayo AI
         </h1>
@@ -898,14 +899,14 @@ function AskAiOutputStageNextLegacy({
   const tipLine = paragraphs[2] ?? 'Add your area, budget, or vibe so GalaTayo can make the next answer more specific.'
 
   return (
-    <section className={`gala-page-background relative overflow-hidden px-5 py-5 text-[var(--text)] ${className} min-h-[calc(100dvh-88px)]`}>
+    <section className={`gala-page-background relative overflow-hidden px-5 py-5 text-[var(--text)] ${className} min-h-[calc(var(--ask-ai-viewport-height,100dvh)-88px)]`}>
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -left-12 top-8 h-40 w-40 rounded-full bg-[rgba(160,201,255,0.24)] blur-3xl" />
         <div className="absolute right-0 top-0 h-52 w-52 rounded-full bg-[rgba(192,202,255,0.22)] blur-3xl" />
         <div className="absolute bottom-0 right-1/3 h-36 w-36 rounded-full bg-[rgba(201,235,255,0.24)] blur-3xl" />
       </div>
 
-      <div className="relative mx-auto flex min-h-[calc(100dvh-128px)] w-full max-w-[820px] flex-col gap-5 lg:max-w-[900px]">
+      <div className="relative mx-auto flex min-h-[calc(var(--ask-ai-viewport-height,100dvh)-128px)] w-full max-w-[820px] flex-col gap-5 lg:max-w-[900px]">
         <div>
           <p className="text-[0.9rem] font-black uppercase tracking-[0.12em] text-slate-500">Your question</p>
           <div className="mt-2.5 w-full rounded-2xl border border-[rgba(20,35,58,0.14)] bg-white/88 px-4 py-3.5">
@@ -1069,7 +1070,7 @@ function AskAiOutputStageNext({
           {/* AI response bubble */}
           <div className="flex items-start gap-2.5">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#dbeafe,#bfdbfe)] shadow-[0_2px_8px_rgba(var(--accent-rgb),0.10)]">
-              <Bot className="h-4 w-4 text-[var(--accent-deep)]" strokeWidth={2} />
+              <FontAwesomeIcon icon={faRobot} className="h-4 w-4 text-[var(--accent-deep)]" />
             </div>
             <div className="min-w-0 w-full max-w-[88%] sm:max-w-[82%]">
               {displaySections.map((section, index) => (
@@ -1109,7 +1110,7 @@ function AskAiOutputStageNext({
                   onClick={onStartOver}
                   className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(15,23,42,0.08)] bg-white px-3 py-2 text-[0.78rem] font-semibold text-slate-500 transition hover:border-[rgba(15,23,42,0.16)] hover:text-slate-700"
                 >
-                  <RotateCcw className="h-3.5 w-3.5" />
+                  <FontAwesomeIcon icon={faArrowRotateLeft} className="h-3.5 w-3.5" />
                   Start over
                 </button>
               </div>
@@ -1184,7 +1185,7 @@ function AskAiThinkingStageNext({
                   : 'bg-[linear-gradient(135deg,#dbeafe,#bfdbfe)]'
               }`}
             >
-              <Bot className="h-4 w-4 text-[var(--accent-deep)]" strokeWidth={2} />
+              <FontAwesomeIcon icon={faRobot} className="h-4 w-4 text-[var(--accent-deep)]" />
             </div>
             <div
               className={`min-w-0 w-full max-w-[88%] rounded-2xl rounded-tl-[6px] px-4 py-3.5 sm:max-w-[82%] ${
@@ -1319,7 +1320,7 @@ function AskAiModePanel({
             aria-label="Go back"
             className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[linear-gradient(135deg,#dbeafe,#bfdbfe)] text-[var(--accent-deep)] ring-1 ring-inset ring-[rgba(var(--accent-rgb),0.14)] shadow-[0_6px_18px_-8px_rgba(59,130,246,0.28)] transition hover:bg-[linear-gradient(135deg,#bfdbfe,#dbeafe)] hover:text-[var(--accent-deep)]"
           >
-            <Bot className="h-6 w-6" strokeWidth={2} />
+            <FontAwesomeIcon icon={faRobot} className="h-6 w-6" />
           </button>
           </div>
         </div>
@@ -1433,7 +1434,7 @@ const ChatMessageList = memo(function ChatMessageList({
 
   if (messages.length === 0 && !isSubmitting && !answer) {
     const promptChips: Array<{ id: string; label: string; description: string; prompt: string; icon: AppIconName }> = [
-      { id: 'date', label: 'Date', description: 'Cozy date ideas.', prompt: 'Plan a date gala', icon: 'sparkles' },
+      { id: 'date', label: 'Date', description: 'Cozy date ideas.', prompt: 'Plan a date gala', icon: 'calendarDays' },
       { id: 'food', label: 'Food', description: 'Sulit food spots.', prompt: 'Plan a food trip', icon: 'cafe' },
       { id: 'itinerary', label: 'Itinerary', description: 'Morning to night.', prompt: 'Create a quick itinerary', icon: 'galaPlan' },
       { id: 'budget', label: 'Budget', description: 'Low-cost picks.', prompt: 'Suggest budget-friendly places to visit', icon: 'wallet' },

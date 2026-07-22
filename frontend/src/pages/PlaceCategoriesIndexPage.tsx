@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowRight, Compass, House, LayoutGrid, MapPin, Tags } from 'lucide-react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faArrowRight, faCompass, faHouse, faLocationDot, faTableCellsLarge, faTag } from '@fortawesome/free-solid-svg-icons'
 import AppHeader from '../components/AppHeader'
 import InternalLink from '../components/InternalLink'
 import Breadcrumb from '../components/Breadcrumb'
@@ -83,16 +84,16 @@ function PlaceCategoriesIndexPage() {
         <Breadcrumb
           showBack
           items={[
-            { label: 'Home', href: '/home', icon: <House className="h-3.5 w-3.5" /> },
-            { label: 'Places', href: '/places', icon: <MapPin className="h-3.5 w-3.5" /> },
-            { label: 'Categories', icon: <LayoutGrid className="h-3.5 w-3.5" /> },
+            { label: 'Home', href: '/home', icon: <FontAwesomeIcon icon={faHouse} className="h-3.5 w-3.5" /> },
+            { label: 'Places', href: '/places', icon: <FontAwesomeIcon icon={faLocationDot} className="h-3.5 w-3.5" /> },
+            { label: 'Categories', icon: <FontAwesomeIcon icon={faTableCellsLarge} className="h-3.5 w-3.5" /> },
           ]}
         />
 
         <section className="mt-5">
           <div className="place-categories-index-metro-manila flex items-center gap-2.5 text-[var(--accent)]">
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
-              <Compass className="h-4 w-4" strokeWidth={2} />
+              <FontAwesomeIcon icon={faCompass} className="h-4 w-4" />
             </span>
             <span className="inline-flex rounded-full border border-[#DBEAFE] bg-[var(--surface-alt)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--accent)]">
               Metro Manila
@@ -116,7 +117,7 @@ function PlaceCategoriesIndexPage() {
             </div>
           </div>
           <ResponsiveGrid className="mt-4 gap-3">
-            {categoryCards.map((category) => (
+            {categoryCards.map((category, index) => (
               <InternalLink
                 key={category.value}
                 href={`/places/categories/${category.value}`}
@@ -130,17 +131,18 @@ function PlaceCategoriesIndexPage() {
                         representativePlaces[categoryRepresentativePlaceSlugs[category.value]]
                       )}
                       label={category.label}
+                      priority={index < 4}
                     />
                     <div className="min-w-0">
                       <p className="text-[1.05rem] font-black tracking-[-0.02em] text-[var(--text-main)]">{category.label}</p>
                       <div className="mt-1 flex items-center gap-1.5 text-[13px] text-[var(--muted)]">
-                        <Tags className="h-3.5 w-3.5 shrink-0 text-[#94A3B8]" strokeWidth={1.9} />
+                        <FontAwesomeIcon icon={faTag} className="h-3.5 w-3.5 shrink-0 text-[#94A3B8]" />
                         <span className="truncate">Open {category.label.toLowerCase()} places</span>
                       </div>
                     </div>
                   </div>
                   <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--surface-alt)] text-[#64748B] transition group-hover:bg-[var(--accent-soft)] group-hover:text-[var(--accent)]">
-                    <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.2} />
+                    <FontAwesomeIcon icon={faArrowRight} className="h-3.5 w-3.5" />
                   </span>
                 </div>
               </InternalLink>
@@ -153,7 +155,7 @@ function PlaceCategoriesIndexPage() {
   )
 }
 
-function IndexCardPhoto({ imageUrl, label }: { imageUrl: string | null; label: string }) {
+function IndexCardPhoto({ imageUrl, label, priority = false }: { imageUrl: string | null; label: string; priority?: boolean }) {
   const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null)
   const shouldShowImage = Boolean(imageUrl) && failedImageUrl !== imageUrl
 
@@ -164,9 +166,9 @@ function IndexCardPhoto({ imageUrl, label }: { imageUrl: string | null; label: s
           src={imageUrl ?? undefined}
           alt={label}
           className="h-full w-full object-cover"
-          loading="eager"
+          loading={priority ? 'eager' : 'lazy'}
           decoding="async"
-          fetchPriority="high"
+          fetchPriority={priority ? 'auto' : 'low'}
           sizes="48px"
           onError={() => setFailedImageUrl(imageUrl)}
         />

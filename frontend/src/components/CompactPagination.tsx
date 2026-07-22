@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 import InternalLink from './InternalLink'
 import { InlineSkeleton } from './loading/SkeletonStates'
 
@@ -144,7 +145,7 @@ function CompactPagination({
             {currentPage > 1 ? (
               renderPageControl(
                 previousPage,
-                <ChevronLeft className="h-3.5 w-3.5" strokeWidth={2.6} />,
+                <FontAwesomeIcon icon={faChevronLeft} className="h-3.5 w-3.5" />,
                 'Previous page',
                 arrowChipClass,
               )
@@ -153,7 +154,7 @@ function CompactPagination({
               aria-hidden="true"
               className={`${arrowChipClass} pointer-events-none text-slate-300 hover:text-slate-300`}
             >
-              <ChevronLeft className="h-3.5 w-3.5" strokeWidth={2.6} />
+              <FontAwesomeIcon icon={faChevronLeft} className="h-3.5 w-3.5" />
             </span>
           )}
 
@@ -171,7 +172,7 @@ function CompactPagination({
             {currentPage < totalPages ? (
               renderPageControl(
                 nextPage,
-                <ChevronRight className="h-3.5 w-3.5" strokeWidth={2.6} />,
+                <FontAwesomeIcon icon={faChevronRight} className="h-3.5 w-3.5" />,
                 'Next page',
                 arrowChipClass,
               )
@@ -180,7 +181,7 @@ function CompactPagination({
                 aria-hidden="true"
                 className={`${arrowChipClass} pointer-events-none text-slate-300 hover:text-slate-300`}
               >
-                <ChevronRight className="h-3.5 w-3.5" strokeWidth={2.6} />
+                <FontAwesomeIcon icon={faChevronRight} className="h-3.5 w-3.5" />
               </span>
             )}
           </div>

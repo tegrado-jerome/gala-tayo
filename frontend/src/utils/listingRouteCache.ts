@@ -155,15 +155,7 @@ export function seedPendingListingRouteCache(pathnameWithSearch: string, cache: 
   }))
 }
 
-export function consumePendingListingRouteCache(pathnameWithSearch: string): ListingRouteCache | null {
-  const rawCache = pendingListingRouteCacheByPath.get(pathnameWithSearch)
-
-  if (!rawCache) {
-    return null
-  }
-
-  pendingListingRouteCacheByPath.delete(pathnameWithSearch)
-
+function parsePendingCache(rawCache: string): ListingRouteCache | null {
   try {
     const parsedCache = JSON.parse(rawCache) as Partial<ListingRouteCache>
 
@@ -189,6 +181,28 @@ export function consumePendingListingRouteCache(pathnameWithSearch: string): Lis
   } catch {
     return null
   }
+}
+
+export function peekPendingListingRouteCache(pathnameWithSearch: string): ListingRouteCache | null {
+  const rawCache = pendingListingRouteCacheByPath.get(pathnameWithSearch)
+
+  if (!rawCache) {
+    return null
+  }
+
+  return parsePendingCache(rawCache)
+}
+
+export function consumePendingListingRouteCache(pathnameWithSearch: string): ListingRouteCache | null {
+  const rawCache = pendingListingRouteCacheByPath.get(pathnameWithSearch)
+
+  if (!rawCache) {
+    return null
+  }
+
+  pendingListingRouteCacheByPath.delete(pathnameWithSearch)
+
+  return parsePendingCache(rawCache)
 }
 
 export function restoreListingRouteScroll(

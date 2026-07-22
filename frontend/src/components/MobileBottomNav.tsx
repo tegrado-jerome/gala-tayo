@@ -1,10 +1,12 @@
-import { Home, Search, Sparkles, UserRound, type LucideIcon } from 'lucide-react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCircleUser, faHandSparkles, faHouse, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { navigateToPath } from '../utils/navigation'
 
 type NavItem = {
   label: string
   href: string
-  icon: LucideIcon
+  icon: IconDefinition
   isActive: boolean
 }
 
@@ -41,13 +43,13 @@ function MobileBottomNav({ currentPath }: MobileBottomNavProps) {
     currentPath === '/signup/'
 
   const navItems: NavItem[] = [
-    { label: 'Home', href: '/home', icon: Home, isActive: isHomeActive },
-    { label: 'Search', href: '/search', icon: Search, isActive: isSearchActive },
-    { label: 'GalaTayo AI', href: '/ask-ai', icon: Sparkles, isActive: isAskAiActive },
+    { label: 'Home', href: '/home', icon: faHouse, isActive: isHomeActive },
+    { label: 'Search', href: '/search', icon: faMagnifyingGlass, isActive: isSearchActive },
+    { label: 'GalaTayo AI', href: '/ask-ai', icon: faHandSparkles, isActive: isAskAiActive },
     {
       label: 'Profile',
       href: '/profile',
-      icon: UserRound,
+      icon: faCircleUser,
       isActive: isProfileActive,
     },
   ]
@@ -78,10 +80,9 @@ function MobileBottomNav({ currentPath }: MobileBottomNavProps) {
                 className="absolute bottom-[3px] h-0.5 w-6 rounded-full bg-[var(--nav-shell-icon-active)]"
               />
             ) : null}
-            <item.icon
+            <FontAwesomeIcon
+              icon={item.icon}
               className={`relative z-10 h-[20px] w-[20px] ${item.isActive ? 'text-[var(--nav-shell-icon-active)]' : 'text-[var(--nav-shell-icon)]'}`}
-              strokeWidth={item.isActive ? 2.4 : 2.1}
-              fill="none"
             />
           </button>
         ))}

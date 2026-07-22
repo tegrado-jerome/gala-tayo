@@ -2707,7 +2707,7 @@ html[data-theme-switching="true"] #root *::after {
   flex: 0 0 2rem;
   align-items: center;
   justify-content: center;
-  margin-left: -0.25rem;
+  margin-left: -1.5rem;
   border: 1px solid rgba(203, 213, 225, 0.86);
   border-radius: 999px;
   background: #ffffff;

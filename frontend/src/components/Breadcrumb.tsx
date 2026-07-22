@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import { ChevronRight } from 'lucide-react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronRight } from '@fortawesome/free-solid-svg-icons'
 import InternalLink from './InternalLink'
 import { useBackNavigation } from '../utils/navigation'
 import { navigateToPath } from '../utils/navigation'
@@ -120,7 +121,7 @@ function BreadcrumbItemEl({ item, showChevron }: { item: BreadcrumbItem; showChe
   return (
     <li className={`flex items-center gap-1.5 ${isCurrent ? 'min-w-0' : 'shrink-0'}`}>
       {showChevron && (
-        <ChevronRight className="h-3.5 w-3.5 flex-shrink-0 text-slate-300" strokeWidth={2} />
+        <FontAwesomeIcon icon={faChevronRight} className="h-3.5 w-3.5 flex-shrink-0 text-slate-300" />
       )}
       {isEllipsis ? (
         <span className="text-sm text-slate-400 px-0.5" aria-hidden="true">{ELLIPSIS}</span>

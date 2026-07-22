@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ChangeEvent, FormEvent, ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { Check, ChevronDown, Globe2, Shield, UserRound } from 'lucide-react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCheck, faChevronDown, faCircleUser, faGlobe, faShield } from '@fortawesome/free-solid-svg-icons'
 import AppHeader from '../components/AppHeader'
 import BirthdatePicker from '../components/BirthdatePicker'
 import PageHeroHeader from '../components/PageHeroHeader'
@@ -240,7 +241,7 @@ function PrivacySelect({ label, value, onChange, options, helperText, id }: Priv
               <span className="block truncate text-left text-xs text-slate-500">{selectedOption.description}</span>
             </span>
           </span>
-          <ChevronDown className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} strokeWidth={2.25} />
+          <FontAwesomeIcon icon={faChevronDown} className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </button>
 
         {isOpen ? (
@@ -270,7 +271,7 @@ function PrivacySelect({ label, value, onChange, options, helperText, id }: Priv
                     <span className="block text-sm font-semibold text-slate-900">{option.label}</span>
                     <span className="block text-xs text-slate-500">{option.description}</span>
                   </span>
-                  {selected ? <Check className="h-4 w-4 text-[var(--accent)]" strokeWidth={2.5} /> : null}
+                  {selected ? <FontAwesomeIcon icon={faCheck} className="h-4 w-4 text-[var(--accent)]" /> : null}
                 </button>
               )
             })}
@@ -659,11 +660,11 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
                 eyebrow="Account Settings"
                 title="Manage your profile and privacy"
                 description="Update your personal details, public profile, and default visibility settings in one place."
-                icon={<UserRound className="h-4 w-4" strokeWidth={2.2} />}
+                icon={<FontAwesomeIcon icon={faCircleUser} className="h-4 w-4" />}
                 badges={
                   <div className="account-settings-hero-meta">
                     <span className="account-settings-hero-chip">
-                      <Globe2 className="h-3.5 w-3.5" strokeWidth={2.2} />
+                      <FontAwesomeIcon icon={faGlobe} className="h-3.5 w-3.5" />
                       <span>{profile.is_public ? 'Public profile' : 'Private profile'}</span>
                     </span>
                     <span className="account-settings-hero-divider" aria-hidden="true" />
@@ -721,7 +722,7 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
                   <SectionHeader
                     title="Profile"
                     description="Basic info people recognize across GalaTayo."
-                    icon={<UserRound className="h-5 w-5" strokeWidth={2.2} />}
+                    icon={<FontAwesomeIcon icon={faCircleUser} className="h-5 w-5" />}
                   />
                   <div className="mt-5">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -788,7 +789,7 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
                   <SectionHeader
                     title="Public Details"
                     description="This is the information shown when people open your public profile."
-                    icon={<Globe2 className="h-5 w-5" strokeWidth={2.2} />}
+                    icon={<FontAwesomeIcon icon={faGlobe} className="h-5 w-5" />}
                   />
                   <div className="mt-5 grid gap-4">
                     <label className="grid gap-2">
@@ -828,7 +829,7 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
                   <SectionHeader
                     title="Privacy"
                     description="Keep these defaults simple and easy to scan."
-                    icon={<Shield className="h-5 w-5" strokeWidth={2.2} />}
+                    icon={<FontAwesomeIcon icon={faShield} className="h-5 w-5" />}
                   />
                   <div className="mt-5 grid w-full min-w-0 gap-4">
                     <PrivacySelect

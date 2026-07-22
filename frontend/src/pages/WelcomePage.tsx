@@ -1,11 +1,10 @@
-import { ArrowRight } from 'lucide-react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faArrowRight } from '@fortawesome/free-solid-svg-icons'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import SeoHead from '../components/SeoHead'
 import { navigateToPath } from '../utils/navigation'
 import type { NavigationSource } from '../utils/navigationLoading'
 import { getPublicSiteOrigin } from '../utils/site'
-import { preloadHomePageImages } from '../utils/homePreloader'
-import galaTayoLogo from '../assets/brand/galatayo-logo.svg'
 
 type WelcomeAsset = {
   src: string
@@ -42,20 +41,21 @@ function getSources(useWebp: boolean): WelcomeAsset[] {
 const WELCOME_LOADING_MIN_MS = 2000
 const WELCOME_LOADING_BACK_NAV_MIN_MS = 500
 
-function getWelcomeHeroSrc() {
+function getWelcomeHeroSrc(useWebp: boolean) {
+  const ext = useWebp ? 'webp' : 'png'
   if (typeof window === 'undefined') {
-    return '/images/welcome/laptop-desktop.png'
+    return `/images/welcome/laptop-desktop.${ext}`
   }
 
   if (window.innerWidth <= 639) {
-    return '/images/welcome/mobile.png'
+    return `/images/welcome/mobile.${ext}`
   }
 
   if (window.innerWidth <= 1023) {
-    return '/images/welcome/tablet.png'
+    return `/images/welcome/tablet.${ext}`
   }
 
-  return '/images/welcome/laptop-desktop.png'
+  return `/images/welcome/laptop-desktop.${ext}`
 }
 
 function getPreloadSrc(useWebp: boolean) {
@@ -131,13 +131,18 @@ function WelcomeLoader() {
     <div className="welcome-loader" aria-label="Loading welcome screen" aria-live="polite">
       <span className="sr-only">Loading welcome screen</span>
       <div className="welcome-loader__content" aria-hidden="true">
-        <img
-          src={galaTayoLogo}
-          alt=""
-          className="welcome-loader__logo"
-          width={180}
-          height={58}
-        />
+        <picture>
+          <source srcSet="/images/brand/galatayo-logo-loader.webp" type="image/webp" />
+          <img
+            src="/images/brand/galatayo-logo-loader.png"
+            alt=""
+            className="welcome-loader__logo"
+            width={420}
+            height={180}
+            fetchPriority="high"
+            decoding="async"
+          />
+        </picture>
       </div>
     </div>
   )
@@ -149,7 +154,7 @@ type WelcomePageProps = {
 
 function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
   const [useWebp] = useState(() => supportsWebp())
-  const [heroSrc, setHeroSrc] = useState(() => getWelcomeHeroSrc())
+  const [heroSrc, setHeroSrc] = useState(() => getWelcomeHeroSrc(useWebp))
   const [preloadSrc, setPreloadSrc] = useState(() => getPreloadSrc(useWebp))
   const [isReady, setIsReady] = useState(false)
   const hasRevealedRef = useRef(false)
@@ -161,6 +166,15 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
   }, [navigationSource])
 
   useEffect(() => {
+    const criticalLoader = document.getElementById('critical-welcome-loader')
+    if (!criticalLoader) {
+      return
+    }
+
+    criticalLoader.classList.toggle('is-hidden', isReady)
+  }, [isReady])
+
+  useEffect(() => {
     let animationFrameId = 0
 
     const updateHeroSrc = () => {
@@ -170,7 +184,7 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
 
       window.cancelAnimationFrame(animationFrameId)
       animationFrameId = window.requestAnimationFrame(() => {
-        const next = getWelcomeHeroSrc()
+        const next = getWelcomeHeroSrc(useWebp)
         setHeroSrc((prev) => (prev === next ? prev : next))
         setPreloadSrc(getPreloadSrc(useWebp))
       })
@@ -201,6 +215,7 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
 
     const imageReadyPromise = waitForWelcomeHeroReady(preloadSrc)
     const minimumDelayPromise = waitForDuration(loadingMinMs, timeoutIds)
+
     void Promise.all([imageReadyPromise, minimumDelayPromise])
       .then(revealWhenAllowed)
       .catch(() => {})
@@ -213,7 +228,6 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
 
   const handleStartExploring = () => {
     navigateToPath('/home')
-    window.setTimeout(preloadHomePageImages, 0)
   }
 
   return (
@@ -278,7 +292,7 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
             disabled={!isReady}
           >
             <span className="welcome-page__button-label">Start exploring</span>
-            <ArrowRight className="welcome-page__button-icon" aria-hidden="true" strokeWidth={2.6} />
+            <FontAwesomeIcon icon={faArrowRight} className="welcome-page__button-icon" aria-hidden="true" />
           </button>
         </section>
         {!isReady && <WelcomeLoader />}

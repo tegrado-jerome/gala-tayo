@@ -6,6 +6,7 @@ export type PlaceSearchMode = "browse" | "name_match";
 export type PlaceSearchFilters = {
   category?: string | null;
   city?: string | null;
+  good_for?: string | null;
   budget?: string | null;
 };
 
@@ -22,6 +23,7 @@ type BudgetFilter = {
 type SearchSignals = {
   category: string | null;
   city: string | null;
+  good_for: string | null;
   budget: BudgetFilter | null;
 };
 
@@ -77,6 +79,14 @@ const CITY_DICTIONARY: Record<string, string[]> = {
   "San Juan": ["san juan", "san juan city"],
   Taguig: ["bgc", "bonifacio global city", "taguig", "taguig city"],
   Valenzuela: ["valenzuela", "valenzuela city"],
+};
+
+const GOOD_FOR_NAMES: Record<string, string[]> = {
+  date: ["date", "dates", "romantic", "couple", "anniversary"],
+  barkada: ["barkada", "barkadas", "friends", "group", "hangout"],
+  family: ["family", "kids", "child friendly", "all ages"],
+  study: ["study", "student", "quiet", "work friendly", "wifi"],
+  chill: ["chill", "relax", "tambayan", "low key"],
 };
 
 const BUDGET_MAP: Record<string, BudgetFilter> = {
@@ -178,6 +188,19 @@ function canonicalCity(value: string | null | undefined): string | null {
   return null;
 }
 
+function canonicalGoodFor(value: string | null | undefined): string | null {
+  const normalizedValue = normalizeSearchText(value ?? "");
+  if (!normalizedValue || normalizedValue === "all") return null;
+
+  for (const [id, aliases] of Object.entries(GOOD_FOR_NAMES)) {
+    if ([id, ...aliases].some((alias) => normalizeSearchText(alias) === normalizedValue)) {
+      return id;
+    }
+  }
+
+  return null;
+}
+
 function budgetFilterFromValue(value: string | null | undefined): BudgetFilter | null {
   const normalizedValue = normalizeSearchText(value ?? "").replace(/\s+/g, "-");
   if (!normalizedValue || normalizedValue === "any") return null;
@@ -264,6 +287,10 @@ export function detectBudgetFromQuery(query: string): BudgetFilter | null {
   return { min: null, max: budgetNumber };
 }
 
+export function detectGoodForFromQuery(query: string): string | null {
+  return detectFromDictionary(stripFillerWords(query), GOOD_FOR_NAMES);
+}
+
 export function determineSearchMode(query: string): PlaceSearchMode {
   const signals = getQuerySignals(query);
   const normalizedQuery = normalizeSearchText(query);
@@ -289,6 +316,7 @@ function getExplicitFilters(filters: PlaceSearchFilters): SearchSignals {
   return {
     category: canonicalCategory(filters.category),
     city: canonicalCity(filters.city),
+    good_for: canonicalGoodFor(filters.good_for),
     budget: budgetFilterFromValue(filters.budget),
   };
 }
@@ -297,6 +325,7 @@ function getQuerySignals(query: string): SearchSignals {
   return {
     category: detectCategoryFromQuery(query),
     city: detectCityFromQuery(query),
+    good_for: detectGoodForFromQuery(query),
     budget: detectBudgetFromQuery(query),
   };
 }
@@ -305,6 +334,7 @@ function mergeSignals(primary: SearchSignals, secondary: SearchSignals): SearchS
   return {
     category: primary.category ?? secondary.category,
     city: primary.city ?? secondary.city,
+    good_for: primary.good_for ?? secondary.good_for,
     budget: primary.budget ?? secondary.budget,
   };
 }
@@ -322,12 +352,17 @@ export function filterPlaceByFilters(
   category: string | null,
   location: string | null,
   budget: BudgetFilter | null,
+  goodFor: string | null,
 ): boolean {
   if (category && normalizeSearchText(place.category) !== normalizeSearchText(category)) {
     return false;
   }
 
   if (!cityMatches(place.city, location)) {
+    return false;
+  }
+
+  if (goodFor && !place.good_for.some((gf) => normalizeSearchText(gf) === normalizeSearchText(goodFor))) {
     return false;
   }
 
@@ -396,7 +431,7 @@ export function rankPlaces(places: NormalizedPlace[], query: string, filters: Pl
   if (!normalizedQuery) {
     return sortAlphabetically(
       activePlaces
-        .filter((place) => filterPlaceByFilters(place, explicitSignals.category, explicitSignals.city, explicitSignals.budget))
+        .filter((place) => filterPlaceByFilters(place, explicitSignals.category, explicitSignals.city, explicitSignals.budget, explicitSignals.good_for))
         .map((place) => ({ place, score: 0 })),
     );
   }
@@ -408,7 +443,7 @@ export function rankPlaces(places: NormalizedPlace[], query: string, filters: Pl
   if (searchMode === "browse") {
     return sortAlphabetically(
       activePlaces
-        .filter((place) => filterPlaceByFilters(place, effectiveSignals.category, effectiveSignals.city, effectiveSignals.budget))
+        .filter((place) => filterPlaceByFilters(place, effectiveSignals.category, effectiveSignals.city, effectiveSignals.budget, effectiveSignals.good_for))
         .map((place) => ({ place, score: 0 })),
     );
   }

@@ -1,4 +1,6 @@
-import { Globe2, Shield } from 'lucide-react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faGlobe, faShield } from '@fortawesome/free-solid-svg-icons'
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import OnboardingLayout from './OnboardingLayout'
 import type { OnboardingErrors, OnboardingFormState, ProfileVisibility } from './types'
 
@@ -11,18 +13,18 @@ type OnboardingPrivacyStepProps = {
   onNext: () => void
 }
 
-const options: Array<{ value: ProfileVisibility; title: string; description: string; icon: typeof Globe2 }> = [
+const options: Array<{ value: ProfileVisibility; title: string; description: string; icon: IconDefinition }> = [
   {
     value: 'public',
     title: 'Public profile',
     description: 'Let other users view your public profile, shared activity, and community presence.',
-    icon: Globe2,
+    icon: faGlobe,
   },
   {
     value: 'private',
     title: 'Private profile',
     description: 'Keep your profile hidden while your private gala plans and account details stay protected.',
-    icon: Shield,
+    icon: faShield,
   },
 ]
 
@@ -57,7 +59,7 @@ function OnboardingPrivacyStep({ values, errors, disableNext, onUpdate, onBack, 
               className={`onboarding-choice ${selected ? 'is-selected' : ''}`}
             >
               <span className="onboarding-choice-icon" aria-hidden="true">
-                <Icon className="h-5 w-5" strokeWidth={2.2} />
+                <FontAwesomeIcon icon={Icon} className="h-5 w-5" />
               </span>
               <span className="block text-sm font-black text-[var(--text-main)] sm:text-base">{option.title}</span>
               <span className="mt-1.5 block text-xs font-semibold leading-5 text-[var(--muted)] sm:mt-2 sm:text-sm sm:leading-6">{option.description}</span>

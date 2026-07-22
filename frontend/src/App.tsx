@@ -18,6 +18,7 @@ import { useLogoutTransitionState } from './app/useLogoutTransitionState'
 import { hasSignupOnboardingAccess as hasStoredSignupOnboardingAccess } from './services/authApi'
 
 function App() {
+  const { pathname, search, navigationSource, restoredScrollY, setRestoredScrollY } = useAppLocationState()
   const {
     session,
     hasResolvedInitialAuth,
@@ -33,9 +34,7 @@ function App() {
     profileError,
     markMfaVerified,
     markOnboardingComplete,
-  } = useAuthOrchestration()
-
-  const { pathname, search, navigationSource, restoredScrollY, setRestoredScrollY } = useAppLocationState()
+  } = useAuthOrchestration({ pathname })
   const logoutTransition = useLogoutTransitionState()
   const showLogoutTransition = logoutTransition.isVisible
   const lastAccountViewRef = useRef({

@@ -275,7 +275,7 @@ function renderRouteContent(descriptor: RouteDescriptor, inputs: RouteInputs) {
     case 'place-categories-index':
       return <PlaceCategoriesIndexPage />
     case 'category-places':
-      return <CategoryPlacesPage key={`${descriptor.categorySlug}${search}`} categorySlug={descriptor.categorySlug} search={search} navigationSource={navigationSource} />
+      return <CategoryPlacesPage key={descriptor.categorySlug} categorySlug={descriptor.categorySlug} search={search} navigationSource={navigationSource} />
     case 'shared-place':
       if (descriptor.expectedAreaSlug) {
         return (
@@ -290,7 +290,7 @@ function renderRouteContent(descriptor: RouteDescriptor, inputs: RouteInputs) {
       if (descriptor.redirectToCanonical) {
         return <SharedPlacePage slug={descriptor.slug} currentPathname={pathname} currentSearch={search} redirectToCanonical />
       }
-      return <PlacesSlugResolverPage key={`${descriptor.slug}${search}`} slug={descriptor.slug} currentPathname={pathname} search={search} navigationSource={navigationSource} />
+      return <PlacesSlugResolverPage key={descriptor.slug} slug={descriptor.slug} currentPathname={pathname} search={search} navigationSource={navigationSource} />
     case 'login':
       return <AuthPage mode="sign_in" />
     case 'signup':

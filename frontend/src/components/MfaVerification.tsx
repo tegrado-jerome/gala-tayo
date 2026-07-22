@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { LogOut, CheckCircle2 } from 'lucide-react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faRightFromBracket, faCircleCheck } from '@fortawesome/free-solid-svg-icons'
 import { sendMfaEmailCode, verifyMfaEmailCode } from '../utils/userMfa'
 import { setDeviceToken } from '../utils/mfaDevice'
 import { navigateToPath } from '../utils/navigation'
@@ -277,7 +278,7 @@ function MfaVerification({ session, nextPath: nextPathProp, onSuccess }: MfaVeri
 
       {successMessage && !errorMessage ? (
         <p className="mt-4 flex items-center gap-2 text-sm font-semibold text-green-600">
-          <CheckCircle2 className="h-4 w-4" strokeWidth={2.5} />
+          <FontAwesomeIcon icon={faCircleCheck} className="h-4 w-4" />
           {successMessage}
         </p>
       ) : null}
@@ -322,7 +323,7 @@ function MfaVerification({ session, nextPath: nextPathProp, onSuccess }: MfaVeri
         disabled={isVerifying}
         className="mt-6 flex items-center gap-1.5 text-sm font-semibold text-red-500 hover:text-red-700"
       >
-        <LogOut className="h-4 w-4" strokeWidth={2} />
+        <FontAwesomeIcon icon={faRightFromBracket} className="h-4 w-4" />
         Cancel
       </button>
     </div>

@@ -7,6 +7,7 @@ import { getAdminMfaStatus, type AdminMfaStatus } from '../utils/adminMfa'
 import { getUserMfaStatus, type UserMfaStatus } from '../utils/userMfa'
 import { clearAppResumeCache, readAppResumeCache, writeAppResumeCache } from '../utils/appResumeCache'
 import { clearEmptyHashFragment } from '../utils/navigation'
+import { isAdminPath } from '../utils/routeGuards'
 
 function isSessionExpired(session: Session | null): boolean {
   if (!session) return false
@@ -35,7 +36,7 @@ async function getRecoverableInitialSession() {
   return refreshedSession
 }
 
-export function useAuthOrchestration() {
+export function useAuthOrchestration({ pathname }: { pathname: string }) {
   const [initialResumeCache] = useState(() => readAppResumeCache())
   const [session, setSession] = useState<Session | null>(null)
   const [hasResolvedInitialAuth, setHasResolvedInitialAuth] = useState(false)
@@ -139,7 +140,13 @@ export function useAuthOrchestration() {
   }, [initialResumeCache])
 
   useEffect(() => {
-    if (!hasResolvedInitialAuth) {
+    const shouldLoadAdminMfa = isAdminPath(pathname)
+
+    if (!hasResolvedInitialAuth || !shouldLoadAdminMfa) {
+      if (!shouldLoadAdminMfa) {
+        setAdminMfaStatus(null)
+        setIsAdminMfaLoading(false)
+      }
       return undefined
     }
 
@@ -240,7 +247,7 @@ export function useAuthOrchestration() {
     return () => {
       isMounted = false
     }
-  }, [hasResolvedInitialAuth, profileRefreshKey, userId])
+  }, [hasResolvedInitialAuth, pathname, profileRefreshKey, userId])
 
   useEffect(() => {
     if (!hasResolvedInitialAuth) {

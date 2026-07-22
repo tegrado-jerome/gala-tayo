@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
-import { Lightbulb, X } from 'lucide-react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faLightbulb, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { useTheme } from '../context/ThemeContext'
 import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
 
@@ -251,7 +252,7 @@ export function FeatureGuideModalTrigger({
                   aria-label="Close guide"
                   className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[var(--text-light)] transition hover:bg-[rgba(96,165,250,0.08)] hover:text-[var(--text-main)]"
                 >
-                  <X className="h-4 w-4" strokeWidth={2.5} />
+                  <FontAwesomeIcon icon={faXmark} className="h-4 w-4" />
                 </button>
               </div>
 
@@ -364,13 +365,13 @@ export function FeatureGuideModalTrigger({
       >
         {triggerLabel ? (
           <>
-            <Lightbulb className={`relative z-10 h-4 w-4 ${triggerIconClassName ?? theme.triggerIconClassName}`} strokeWidth={2.35} />
+            <FontAwesomeIcon icon={faLightbulb} className={`relative z-10 h-4 w-4 ${triggerIconClassName ?? theme.triggerIconClassName}`} />
             <span className="text-[14px] font-medium" style={triggerLabelStyle}>
               {triggerLabel}
             </span>
           </>
         ) : (
-          <Lightbulb className={`relative z-10 h-4 w-4 ${theme.triggerIconClassName}`} strokeWidth={2.35} />
+          <FontAwesomeIcon icon={faLightbulb} className={`relative z-10 h-4 w-4 ${theme.triggerIconClassName}`} />
         )}
       </button>
 

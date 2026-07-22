@@ -8,7 +8,8 @@ import MapView from './MapView'
 import ReportUserModal from './ReportUserModal'
 import PlaceImageNotice from './PlaceImageNotice'
 import { PageContainer, PageShell, CardSurface } from './layout/ResponsiveLayouts'
-import { Check, Flag, ImagePlus, MessageCircle, MoreHorizontal, Pencil, Reply, Trash2, Wallet, X } from 'lucide-react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCamera, faCheck, faComment, faEllipsis, faFlag, faPen, faReply, faTrash, faWallet, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { getCuratedPlaceImages, normalizePlaceSlug } from '../data/curatedPlaceImages'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { useTheme } from '../context/ThemeContext'
@@ -34,7 +35,7 @@ import { DetailSection } from './place-detail/DetailSection'
 import { cleanString, titleCase, uniqueList, isAcceptedContributionImage, parseJsonResponse } from './place-detail/helpers'
 import type { PlaceDetailViewProps, PlaceReview, PlaceReviewsResponse, PlaceComment, PlaceCommentsResponse, PlaceImageContributionResponse, PlaceDetailCommunityCache } from './place-detail/types'
 import Breadcrumb from './Breadcrumb'
-import { House, LayoutGrid, MapPin, Search } from 'lucide-react'
+import { faHouse, faLocationDot, faMagnifyingGlass, faTableCellsLarge } from '@fortawesome/free-solid-svg-icons'
 import { getCategoryIconName } from './AppIcon'
 
 
@@ -114,15 +115,15 @@ function buildPriceBadgeLabel(
 ) {
   const parsedBudgetMin = typeof budgetMin === 'number' ? budgetMin : Number(budgetMin)
   if (Number.isFinite(parsedBudgetMin)) {
-    return `Starting from ₱${new Intl.NumberFormat('en-US').format(Math.max(0, Math.floor(parsedBudgetMin)))}`
+    return `Starting from \u20b1${new Intl.NumberFormat('en-US').format(Math.max(0, Math.floor(parsedBudgetMin)))}`
   }
 
   const cleanedBudgetNote = cleanString(budgetNote)
   if (cleanedBudgetNote) {
-    const amountMatch = cleanedBudgetNote.match(/(?:₱|PHP\s*)\s*([0-9][0-9,]*)/i)
+    const amountMatch = cleanedBudgetNote.match(/(?:\u20b1|PHP\s*)\s*([0-9][0-9,]*)/i)
     const parsedAmount = amountMatch ? Number(amountMatch[1].replace(/,/g, '')) : NaN
     if (Number.isFinite(parsedAmount)) {
-      return `Starting from ₱${new Intl.NumberFormat('en-US').format(Math.max(0, Math.floor(parsedAmount)))}`
+      return `Starting from \u20b1${new Intl.NumberFormat('en-US').format(Math.max(0, Math.floor(parsedAmount)))}`
     }
 
     const searchableText = [placeName, category, cleanedBudgetNote].filter(Boolean).join(' ').toLowerCase()
@@ -257,7 +258,7 @@ function PlacePhoto({
                   <div className="flex items-center justify-between gap-2">
                     {priceBadgeLabel ? (
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-[#1B2A4A] px-3 py-1.5 text-[12px] font-black text-white">
-                        <Wallet className="h-3.5 w-3.5" />
+                        <FontAwesomeIcon icon={faWallet} className="h-3.5 w-3.5" />
                         {priceBadgeLabel}
                       </span>
                     ) : null}
@@ -267,7 +268,7 @@ function PlacePhoto({
                         onClick={onContribute}
                         className="inline-flex items-center gap-1.5 rounded-full border border-white/28 bg-[rgba(15,23,42,0.34)] px-3 py-1.5 text-[11px] font-black text-white shadow-[0_10px_24px_rgba(15,23,42,0.12)] backdrop-blur-md transition hover:bg-[rgba(15,23,42,0.46)] sm:px-3.5 sm:py-2 sm:text-[12px]"
                       >
-                        <ImagePlus className="h-4 w-4" strokeWidth={2.2} />
+                        <FontAwesomeIcon icon={faCamera} className="h-4 w-4" />
                         Add photo
                       </button>
                     ) : null}
@@ -307,10 +308,11 @@ function PlacePhoto({
                               : `Empty photo slot ${index + 1} of ${placeName}`
                           }
                         >
-                          <ImagePlus
+                          <FontAwesomeIcon
+                            icon={faCamera}
                             className={`h-5 w-5 ${shouldUseAddTile ? 'text-white/95 drop-shadow-[0_6px_16px_rgba(15,23,42,0.2)]' : 'text-white/45'}`}
-                            strokeWidth={2.1}
                           />
+
                         </button>
                       )
                     })}
@@ -354,7 +356,7 @@ function PlacePhoto({
                 <div className="flex items-center justify-between gap-2">
                   {priceBadgeLabel ? (
                     <span className="inline-flex items-center gap-1.5 rounded-full bg-[#1B2A4A] px-3 py-1.5 text-[12px] font-black text-white">
-                      <Wallet className="h-3.5 w-3.5" />
+                      <FontAwesomeIcon icon={faWallet} className="h-3.5 w-3.5" />
                       {priceBadgeLabel}
                     </span>
                   ) : null}
@@ -365,7 +367,7 @@ function PlacePhoto({
                         onClick={onContribute}
                         className="inline-flex items-center gap-1.5 rounded-full border border-white/28 bg-[rgba(15,23,42,0.34)] px-3 py-1.5 text-[11px] font-black text-white shadow-[0_10px_24px_rgba(15,23,42,0.12)] backdrop-blur-sm transition hover:bg-[rgba(15,23,42,0.46)] sm:px-3.5 sm:py-2 sm:text-[12px]"
                       >
-                        <ImagePlus className="h-4 w-4" strokeWidth={2.2} />
+                        <FontAwesomeIcon icon={faCamera} className="h-4 w-4" />
                         Add photo
                       </button>
                     ) : null}
@@ -423,7 +425,7 @@ function PlacePhoto({
                               : `Empty photo slot ${index + 1} of ${placeName}`
                           }
                       >
-                        <ImagePlus className="h-5 w-5" strokeWidth={2.2} />
+                        <FontAwesomeIcon icon={faCamera} className="h-5 w-5" />
                       </button>
                     )
                   })}
@@ -452,7 +454,7 @@ function PlacePhoto({
                   <div className="flex items-center justify-between gap-2">
                     {priceBadgeLabel ? (
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-[#1B2A4A] px-3 py-1.5 text-[12px] font-black text-white">
-                        <Wallet className="h-3.5 w-3.5" />
+                        <FontAwesomeIcon icon={faWallet} className="h-3.5 w-3.5" />
                         {priceBadgeLabel}
                       </span>
                     ) : null}
@@ -463,8 +465,8 @@ function PlacePhoto({
                           onClick={onContribute}
                           className="inline-flex items-center gap-1.5 rounded-full border border-white/28 bg-[rgba(15,23,42,0.34)] px-3.5 py-2 text-[12px] font-black text-white shadow-[0_10px_24px_rgba(15,23,42,0.12)] backdrop-blur-sm transition hover:bg-[rgba(15,23,42,0.46)]"
                         >
-                          <ImagePlus className="h-4 w-4" strokeWidth={2.2} />
-                          Add photo
+                          <FontAwesomeIcon icon={faCamera} className="h-4 w-4" />
+                        Add photo
                         </button>
                       ) : null}
                       <span className="rounded-full bg-black/45 px-3 py-1 text-[12px] font-black text-white backdrop-blur-sm">
@@ -520,7 +522,7 @@ function PlacePhoto({
                             : `Empty photo slot ${index + 1} of ${placeName}`
                         }
                       >
-                        <ImagePlus className="h-5 w-5" strokeWidth={2.2} />
+                        <FontAwesomeIcon icon={faCamera} className="h-5 w-5" />
                       </button>
                     )
                   })}
@@ -573,10 +575,11 @@ function PlacePhoto({
                   }
                 >
                   <span className="flex flex-col items-center gap-2 px-4 text-center">
-                    <ImagePlus
+                    <FontAwesomeIcon
+                      icon={faCamera}
                       className={`h-6 w-6 ${shouldUseAddTile ? 'text-white/95 drop-shadow-[0_6px_16px_rgba(0,0,0,0.35)]' : 'text-white/40'}`}
-                      strokeWidth={2.1}
                     />
+
                     {shouldUseAddTile ? (
                       <span className="text-[13px] font-black tracking-[-0.01em] text-white/95">Add photo</span>
                     ) : (
@@ -967,7 +970,7 @@ function PlaceDetailView({
   const approvedImageCount = place.approvedImageCount ?? 0
   const budgetLabel = (() => {
     const parts: string[] = []
-    if (place.budget_min != null) parts.push(`From ₱${Number(place.budget_min).toLocaleString()}`)
+    if (place.budget_min != null) parts.push(`From \u20b1${Number(place.budget_min).toLocaleString()}`)
     const note = cleanString(place.budget_notes)
     if (note) parts.push(note)
     return parts.join(' · ') || 'Not available'
@@ -991,25 +994,25 @@ function PlaceDetailView({
   const areaLink = areaBreadcrumb ? `/places/${encodeURIComponent(areaBreadcrumb.areaSlug)}` : null
   const breadcrumbItems = categoryBreadcrumb
     ? [
-        { label: categoryBreadcrumb.parentName, href: new URL(categoryBreadcrumb.parentItem).pathname, icon: <LayoutGrid className="h-3.5 w-3.5" /> },
+        { label: categoryBreadcrumb.parentName, href: new URL(categoryBreadcrumb.parentItem).pathname, icon: <FontAwesomeIcon icon={faTableCellsLarge} className="h-3.5 w-3.5" /> },
         { label: categoryBreadcrumb.childName, href: new URL(categoryBreadcrumb.childItem).pathname, icon: <AppIcon name={getCategoryIconName(categoryBreadcrumb.childName)} className="h-3.5 w-3.5" /> },
-        { label: place.name, icon: <MapPin className="h-3.5 w-3.5" /> },
+        { label: place.name, icon: <FontAwesomeIcon icon={faLocationDot} className="h-3.5 w-3.5" /> },
       ]
     : returnHref && returnLabel
       ? [
           {
             label: returnLabel,
             href: returnHref,
-            icon: returnHref.startsWith('/search') ? <Search className="h-3.5 w-3.5" /> : returnLabel === 'Home' ? <House className="h-3.5 w-3.5" /> : <MapPin className="h-3.5 w-3.5" />,
+            icon: returnHref.startsWith('/search') ? <FontAwesomeIcon icon={faMagnifyingGlass} className="h-3.5 w-3.5" /> : returnLabel === 'Home' ? <FontAwesomeIcon icon={faHouse} className="h-3.5 w-3.5" /> : <FontAwesomeIcon icon={faLocationDot} className="h-3.5 w-3.5" />,
           },
-          { label: place.name, icon: <MapPin className="h-3.5 w-3.5" /> },
+          { label: place.name, icon: <FontAwesomeIcon icon={faLocationDot} className="h-3.5 w-3.5" /> },
         ]
       : [
-          { label: 'Places', href: '/places', icon: <MapPin className="h-3.5 w-3.5" /> },
+          { label: 'Places', href: '/places', icon: <FontAwesomeIcon icon={faLocationDot} className="h-3.5 w-3.5" /> },
           ...(areaBreadcrumb
-            ? [{ label: areaBreadcrumb.areaName, href: areaLink!, icon: <MapPin className="h-3.5 w-3.5" /> }]
+            ? [{ label: areaBreadcrumb.areaName, href: areaLink!, icon: <FontAwesomeIcon icon={faLocationDot} className="h-3.5 w-3.5" /> }]
             : []),
-          { label: place.name, icon: <MapPin className="h-3.5 w-3.5" /> },
+          { label: place.name, icon: <FontAwesomeIcon icon={faLocationDot} className="h-3.5 w-3.5" /> },
         ]
   const canonicalPlaceLink = areaBreadcrumb ? `/places/${encodeURIComponent(areaBreadcrumb.areaSlug)}/${encodeURIComponent(placeSlug)}` : null
   const placeFaqs =
@@ -2150,7 +2153,7 @@ function PlaceDetailView({
                       onClick={() => setOpenCommentMenuId((currentId) => (currentId === comment.id ? null : comment.id))}
                       className="inline-flex h-7 w-7 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-200/70 hover:text-slate-600"
                     >
-                      <MoreHorizontal className="h-4 w-4" strokeWidth={2.2} />
+                      <FontAwesomeIcon icon={faEllipsis} className="h-4 w-4" />
                     </button>
 
                     {isMenuOpen ? (
@@ -2171,7 +2174,7 @@ function PlaceDetailView({
                               }}
                               className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-bold text-slate-700 transition hover:bg-slate-50 hover:text-slate-950"
                             >
-                              <Pencil className="h-3.5 w-3.5" strokeWidth={2.2} />
+                              <FontAwesomeIcon icon={faPen} className="h-3.5 w-3.5" />
                               Edit comment
                             </button>
                             <button
@@ -2184,7 +2187,7 @@ function PlaceDetailView({
                               disabled={isMutating}
                               className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-bold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70"
                             >
-                              <Trash2 className="h-3.5 w-3.5" strokeWidth={2.2} />
+                              <FontAwesomeIcon icon={faTrash} className="h-3.5 w-3.5" />
                               {isMutating ? 'Deleting...' : 'Delete comment'}
                             </button>
                           </>
@@ -2203,7 +2206,7 @@ function PlaceDetailView({
                               disabled={isReportedByCurrentUser || isReportSubmitting}
                               className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-bold text-slate-700 transition hover:bg-slate-50 hover:text-slate-950 disabled:cursor-not-allowed disabled:text-slate-400"
                             >
-                              <Flag className="h-3.5 w-3.5" strokeWidth={2.2} />
+                              <FontAwesomeIcon icon={faFlag} className="h-3.5 w-3.5" />
                               {isReportedByCurrentUser ? 'Already reported' : isReportSubmitting && reportingCommentId === comment.id ? 'Reporting...' : 'Report comment'}
                             </button>
                             <button
@@ -2277,7 +2280,7 @@ function PlaceDetailView({
                     disabled={isMutating}
                     className="inline-flex items-center gap-1 text-slate-500 transition hover:text-[var(--accent-deep)] disabled:cursor-not-allowed disabled:opacity-70"
                   >
-                    <Reply className="h-3.5 w-3.5" strokeWidth={2.2} />
+                    <FontAwesomeIcon icon={faReply} className="h-3.5 w-3.5" />
                     Reply
                   </button>
                 ) : null}
@@ -2293,7 +2296,7 @@ function PlaceDetailView({
                       disabled={isMutating}
                       className="inline-flex items-center gap-1 text-slate-500 transition hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
                     >
-                      <Pencil className="h-3.5 w-3.5" strokeWidth={2.2} />
+                      <FontAwesomeIcon icon={faPen} className="h-3.5 w-3.5" />
                       Edit
                     </button>
                   </>
@@ -2301,7 +2304,7 @@ function PlaceDetailView({
                 {!isDeleted && !isOwner && currentUserId ? (
                   isReportedByCurrentUser ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 text-slate-500">
-                      <Flag className="h-3.5 w-3.5" strokeWidth={2.2} />
+                      <FontAwesomeIcon icon={faFlag} className="h-3.5 w-3.5" />
                       Reported
                     </span>
                   ) : (
@@ -2316,7 +2319,7 @@ function PlaceDetailView({
                       disabled={isReportSubmitting && reportingCommentId === comment.id}
                       className="inline-flex items-center gap-1 text-slate-500 transition hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
                     >
-                      <Flag className="h-3.5 w-3.5" strokeWidth={2.2} />
+                      <FontAwesomeIcon icon={faFlag} className="h-3.5 w-3.5" />
                       {isReportSubmitting && reportingCommentId === comment.id ? 'Reporting...' : 'Report'}
                     </button>
                   )
@@ -2520,7 +2523,7 @@ function PlaceDetailView({
                 <div className="min-w-0">
                   <div className="flex items-center gap-2.5">
                     <span className="inline-flex h-8 w-8 items-center justify-center rounded-2xl bg-[var(--accent-wash)] text-[var(--accent-deep)]">
-                      <MessageCircle className="h-4 w-4" strokeWidth={2.2} />
+                      <FontAwesomeIcon icon={faComment} className="h-4 w-4" />
                     </span>
                     <div>
                       <h3 className="text-[18px] font-black text-slate-950">Comments</h3>
@@ -2580,7 +2583,7 @@ function PlaceDetailView({
               ) : visibleCommentCount === 0 ? (
                 <div className="place-detail-comments-empty mt-5 flex flex-col items-center rounded-[20px] border border-dashed border-[var(--line-strong)] bg-slate-50 px-6 py-8 text-center">
                   <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[var(--accent-wash)] text-[var(--accent-deep)]">
-                    <MessageCircle className="h-5 w-5" strokeWidth={2.2} />
+                    <FontAwesomeIcon icon={faComment} className="h-5 w-5" />
                   </span>
                   <p className="mt-3 text-[16px] font-black text-slate-900">No comments yet</p>
                   <p className="mt-1 max-w-[26rem] text-[13px] font-semibold leading-5 text-slate-500">
@@ -3145,7 +3148,7 @@ function PlaceDetailView({
                 disabled={isContributionSubmitting}
                 className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[var(--line)] bg-white px-4 text-[14px] font-extrabold text-slate-700 disabled:cursor-not-allowed disabled:opacity-70"
               >
-                <X className="h-4 w-4" strokeWidth={2.4} />
+                <FontAwesomeIcon icon={faXmark} className="h-4 w-4" />
                 Cancel
               </button>
               <button
@@ -3154,7 +3157,7 @@ function PlaceDetailView({
                 disabled={isContributionSubmitting}
                 className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[var(--accent)] bg-[var(--accent)] px-4 text-[14px] font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-70"
               >
-                <Check className="h-4 w-4" strokeWidth={2.4} />
+                <FontAwesomeIcon icon={faCheck} className="h-4 w-4" />
                 {isContributionSubmitting ? 'Submitting...' : 'Submit'}
               </button>
             </div>

@@ -38,6 +38,8 @@ export function Icon({
     globe: 'tourist',
     warning: 'warning',
     sparkle: 'askAi',
+    circleInfo: 'circleInfo',
+    userGroup: 'users',
   }
 
   return <AppIcon name={iconMap[name]} className={className} size={size} strokeWidth={strokeWidth} />

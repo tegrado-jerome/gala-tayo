@@ -1,16 +1,18 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { House, LayoutGrid, MapPin } from 'lucide-react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faHouse, faLocationDot, faTableCellsLarge } from '@fortawesome/free-solid-svg-icons'
 import { AppIcon, getCategoryIconName } from '../components/AppIcon'
 import AppHeader from '../components/AppHeader'
 import Breadcrumb from '../components/Breadcrumb'
 import CompactPagination from '../components/CompactPagination'
 import PlaceCard, { type PlaceCardData } from '../components/PlaceCard'
+import PlaceListingSkeleton from '../components/PlaceListingSkeleton'
 import SeoHead from '../components/SeoHead'
 import { PageContainer, PageShell, ResponsiveGrid } from '../components/layout/ResponsiveLayouts'
 import { getPlaceCategoryLabel } from '../data/placeCategories'
 import { navigateToPath, scrollViewportToTopInstant } from '../utils/navigation'
 import { getSiteOrigin } from '../utils/seo'
-import { consumePendingListingRouteCache, getListingPlaceViewportTop, readListingRouteCache, restoreListingRouteScroll, seedPendingListingRouteCache, writeListingRouteCache } from '../utils/listingRouteCache'
+import { getListingPlaceViewportTop, peekPendingListingRouteCache, readListingRouteCache, restoreListingRouteScroll, writeListingRouteCache } from '../utils/listingRouteCache'
 import { getSeoListingPage, mapSeoPlaceToCard, type SeoPlaceSummary } from '../utils/seoApi'
 
 type CategoryPlacesPageProps = {
@@ -44,7 +46,7 @@ function sortPlacesAlphabetically(places: SeoPlaceSummary[]) {
 function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'push' }: CategoryPlacesPageProps) {
   const [routeCache] = useState(() => {
     const currentPath = `${window.location.pathname}${window.location.search}`
-    return navigationSource === 'pop' ? readListingRouteCache() : consumePendingListingRouteCache(currentPath)
+    return navigationSource === 'pop' ? readListingRouteCache() : peekPendingListingRouteCache(currentPath)
   })
   const [payload, setPayload] = useState<CategoryPlacesResponse>(() =>
     routeCache
@@ -65,6 +67,7 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
   )
   const hasRestoredInitialScrollRef = useRef(false)
   const skipInitialFetchRef = useRef(Boolean(routeCache) && navigationSource !== 'pop')
+  const pageDataReadyRef = useRef<number | null>(null)
   const categoryLabel = getPlaceCategoryLabel(categorySlug)
   const iconName = getCategoryIconName(categoryLabel)
   const searchParams = useMemo(() => new URLSearchParams(search), [search])
@@ -92,6 +95,11 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
   useEffect(() => {
     if (skipInitialFetchRef.current) {
       skipInitialFetchRef.current = false
+      return
+    }
+
+    if (pageDataReadyRef.current === currentPage) {
+      pageDataReadyRef.current = null
       return
     }
 
@@ -138,21 +146,23 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
   }, [categorySlug, currentPage])
 
   useLayoutEffect(() => {
-    if (navigationSource !== 'pop' || !routeCache?.pendingScrollRestore || hasRestoredInitialScrollRef.current) {
+    if (navigationSource !== 'pop' || hasRestoredInitialScrollRef.current) {
       return
     }
 
-    if (!selectedPlaceId) {
+    const popCache = readListingRouteCache()
+    if (!popCache?.pendingScrollRestore || !popCache.selectedPlaceId) {
       return
     }
 
     hasRestoredInitialScrollRef.current = true
-    restoreListingRouteScroll(routeCache)
+    setSelectedPlaceId(popCache.selectedPlaceId)
+    restoreListingRouteScroll(popCache)
     writeListingRouteCache({
-      ...routeCache,
+      ...popCache,
       pendingScrollRestore: false,
     })
-  }, [isLoading, isRefreshing, navigationSource, routeCache, selectedPlaceId])
+  }, [navigationSource])
 
   const places = useMemo(() => sortPlacesAlphabetically(payload.items), [payload.items])
   const totalPages = payload.totalPages
@@ -170,13 +180,11 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
   }
   const handlePageChange = async (page: number) => {
     const nextPage = Math.min(Math.max(page, 1), totalPages)
-    let didNavigate = false
 
     if (nextPage === confirmedPage || nextPage === currentPage) {
       return
     }
 
-    setIsLoading(false)
     setIsRefreshing(true)
     setErrorMessage(null)
 
@@ -184,26 +192,21 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
       const data = await fetchPlacesForPage(nextPage)
       const targetPath = getPagePath(nextPage)
 
-      seedPendingListingRouteCache(targetPath, {
+      setPayload({
         items: data.items,
         total: data.total,
         page: data.page,
         pageSize: data.pageSize,
         totalPages: data.totalPages,
-        scrollY: 0,
-        selectedPlaceId: null,
-        selectedPlaceViewportTop: null,
-        pendingScrollRestore: false,
       })
+      setConfirmedPage(data.page || nextPage)
+      pageDataReadyRef.current = nextPage
 
       navigateToPath(targetPath)
-      didNavigate = true
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Failed to load category page.')
     } finally {
-      if (!didNavigate) {
-        setIsRefreshing(false)
-      }
+      setIsRefreshing(false)
     }
   }
 
@@ -262,9 +265,9 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
         <Breadcrumb
           showBack
           items={[
-            { label: 'Home', href: '/home', icon: <House className="h-3.5 w-3.5" /> },
-            { label: 'Places', href: '/places', icon: <MapPin className="h-3.5 w-3.5" /> },
-            { label: 'Categories', href: '/places/categories', icon: <LayoutGrid className="h-3.5 w-3.5" /> },
+            { label: 'Home', href: '/home', icon: <FontAwesomeIcon icon={faHouse} className="h-3.5 w-3.5" /> },
+            { label: 'Places', href: '/places', icon: <FontAwesomeIcon icon={faLocationDot} className="h-3.5 w-3.5" /> },
+            { label: 'Categories', href: '/places/categories', icon: <FontAwesomeIcon icon={faTableCellsLarge} className="h-3.5 w-3.5" /> },
             { label: categoryLabel, icon: <AppIcon name={iconName} className="h-3.5 w-3.5" /> },
           ]}
         />
@@ -290,7 +293,12 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
 
         {!errorMessage ? (
           <>
-            {shouldShowInitialSkeleton ? null : shouldShowEmptyState ? (
+            {shouldShowInitialSkeleton ? (
+              <PlaceListingSkeleton
+                cardCount={PAGE_SIZE}
+                helperText={`Loading ${categoryLabel.toLowerCase()} places.`}
+              />
+            ) : shouldShowEmptyState ? (
               <section className="mt-10 rounded-[28px] border border-[#e5e7eb] bg-white px-5 py-8 text-center shadow-sm sm:px-6">
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
                   <AppIcon name="compass" className="h-7 w-7" />

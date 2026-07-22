@@ -1,4 +1,5 @@
-import { House } from 'lucide-react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faHouse } from '@fortawesome/free-solid-svg-icons'
 import InternalLink from '../components/InternalLink'
 import Breadcrumb from '../components/Breadcrumb'
 import { PageContainer, PageShell } from '../components/layout/ResponsiveLayouts'
@@ -99,7 +100,7 @@ function AskAiOverviewPage() {
               <Breadcrumb
                 showBack
                 items={[
-                  { label: 'Home', href: '/home', icon: <House className="h-3.5 w-3.5" /> },
+                  { label: 'Home', href: '/home', icon: <FontAwesomeIcon icon={faHouse} className="h-3.5 w-3.5" /> },
                   { label: 'GalaTayo AI', icon: <AppIcon name="askAi" className="h-3.5 w-3.5" /> },
                 ]}
               />

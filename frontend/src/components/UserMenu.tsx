@@ -257,7 +257,7 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
         }}
         className={
           compact
-            ? 'relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--surface-elevated)] text-[var(--text-main)] shadow-sm transition hover:border-[var(--line-strong)] hover:bg-[var(--hover-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
+            ? 'relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-[var(--line)] bg-[var(--surface-elevated)] text-[var(--text-main)] shadow-sm transition hover:border-[var(--line-strong)] hover:bg-[var(--hover-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)] -mt-0.5'
             : 'inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--line)] bg-[var(--surface-elevated)] px-4 text-[15px] font-medium text-[var(--text-main)] transition hover:border-[var(--line-strong)] hover:bg-[var(--hover-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
         }
         aria-expanded={isOpen}
@@ -432,8 +432,8 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
               </>
             ) : (
               <div className={guestPanelClass}>
-                <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 text-slate-700 ring-1 ring-slate-300">
-                  <AppIcon name="profile" size="emptyLg" />
+                <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 text-slate-700 ring-1 ring-slate-300 text-4xl">
+                  <AppIcon name="profile" />
                 </span>
                 <p className={`${useDesktopPopover ? 'mt-5' : 'mt-8'} text-xl font-semibold text-slate-950`}>Guest User</p>
                 <p className="mx-auto mt-2 max-w-[260px] text-sm leading-6 text-slate-500">
@@ -589,10 +589,10 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
             </>
             ) : (
             <div className={guestPanelClass}>
-              <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 text-slate-700 ring-1 ring-slate-300">
-                <AppIcon name="profile" size="emptyLg" />
-              </span>
-<p className="mt-5 text-xl font-semibold text-slate-950">Guest User</p>
+              <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 text-slate-700 ring-1 ring-slate-300 text-4xl">
+                <AppIcon name="profile" />
+                </span>
+                <p className="mt-5 text-xl font-semibold text-slate-950">Guest User</p>
               <p className="mx-auto mt-2 max-w-[260px] text-sm leading-6 text-slate-500">
                 Log in or sign up to save favorites and keep your gala history.
               </p>

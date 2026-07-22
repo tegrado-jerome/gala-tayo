@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { Search, SlidersHorizontal, X } from 'lucide-react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faMagnifyingGlass, faSliders, faXmark } from '@fortawesome/free-solid-svg-icons'
 import SearchHub from './SearchHub'
 import { AppIcon } from '../components/AppIcon'
 import PageHeroHeader from '../components/PageHeroHeader'
@@ -41,7 +42,7 @@ function SearchPageLandingBar({
       onClick={() => inputRef.current?.focus()}
     >
       <span className="flex min-w-0 flex-1 items-center gap-2.5 text-[var(--home-search-text)]">
-        <Search className="search-landing-bar__icon h-[21px] w-[21px] shrink-0 text-[var(--home-search-text)]" strokeWidth={2} />
+        <FontAwesomeIcon icon={faMagnifyingGlass} className="search-landing-bar__icon h-[21px] w-[21px] shrink-0 text-[var(--home-search-text)]" />
         <label htmlFor="search-page-input" className="sr-only">
           Search places, cities, or categories
         </label>
@@ -78,7 +79,7 @@ function SearchPageLandingBar({
               : 'text-[var(--home-search-text)] hover:bg-[var(--home-search-hover-bg)] hover:text-[var(--home-search-text)]'
           } disabled:text-slate-300`}
         >
-          <SlidersHorizontal className="search-landing-bar__icon h-[21px] w-[21px]" strokeWidth={2} />
+          <FontAwesomeIcon icon={faSliders} className="search-landing-bar__icon h-[21px] w-[21px]" />
         </button>
       ) : null}
     </div>
@@ -220,6 +221,7 @@ function SearchPage({
         q: isFilterSearch ? '' : activeTypedQuery,
         category: isFilterSearch ? selectedCategory : null,
         city: isFilterSearch ? selectedCity : null,
+        goodFor: isFilterSearch ? null : null,
         budget: isFilterSearch ? selectedBudget : null,
         page: 1,
       })
@@ -284,7 +286,7 @@ function SearchPage({
             eyebrow="Search"
             title="Find your next gala spot"
             description="Search places, cities, or categories and fine-tune results."
-            icon={<Search className="h-4 w-4" />}
+            icon={<FontAwesomeIcon icon={faMagnifyingGlass} className="h-4 w-4" />}
             className="pb-0"
             centered
             centeredAt="md"
@@ -321,7 +323,7 @@ function SearchPage({
                     aria-label="Close filters"
                     className="search-filters-modal__close inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[rgba(148,163,184,0.18)] bg-white text-slate-500 transition hover:border-[rgba(100,116,139,0.34)] hover:text-slate-900"
                   >
-                    <X className="h-5 w-5" />
+                    <FontAwesomeIcon icon={faXmark} className="h-5 w-5" />
                   </button>
                 </div>
 
@@ -388,7 +390,7 @@ function SearchPage({
             disabled={!canSearch}
             className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--accent)] px-5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(var(--accent-rgb),0.18)] transition hover:bg-[var(--accent-deep)] active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
           >
-            <Search className="h-4 w-4 shrink-0" />
+            <FontAwesomeIcon icon={faMagnifyingGlass} className="h-4 w-4 shrink-0" />
             {activeTypedQuery.length > 0 ? 'Search places' : 'Apply filters'}
           </button>
           <div className="mt-5 text-center">

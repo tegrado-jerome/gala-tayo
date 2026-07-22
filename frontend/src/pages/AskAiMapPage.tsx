@@ -206,7 +206,7 @@ const AskAiMapComposer = memo(function AskAiMapComposer({
 
   return (
     <>
-      <div className="flex flex-row items-end gap-2 rounded-[22px] border border-white/86 bg-white px-3 py-2.5 shadow-[0_10px_24px_rgba(15,23,42,0.08)] sm:gap-3 lg:mx-auto lg:max-w-[680px]">
+      <div className="flex flex-row items-end gap-2 rounded-[22px] border border-white/86 bg-white px-3 pt-1.5 pb-2.5 shadow-[0_10px_24px_rgba(15,23,42,0.08)] sm:gap-3 lg:mx-auto lg:max-w-[680px]">
         <textarea
           ref={queryInputRef}
           value={draftQuery}
@@ -224,7 +224,7 @@ const AskAiMapComposer = memo(function AskAiMapComposer({
           }}
           placeholder="Discover places in an interactive map..."
           rows={1}
-          className="ask-ai-composer-input min-h-[48px] w-full min-w-0 flex-1 resize-none overflow-y-auto bg-transparent px-0.5 pb-2 pt-3 text-[14px] font-medium leading-relaxed text-slate-900 outline-none placeholder:whitespace-nowrap placeholder:overflow-hidden placeholder:text-ellipsis placeholder:font-medium placeholder:text-slate-400 sm:min-h-0 sm:text-base"
+          className="ask-ai-composer-input min-h-[48px] w-full min-w-0 flex-1 resize-none overflow-y-auto bg-transparent px-0.5 pb-2 pt-4 text-[14px] font-normal leading-relaxed text-slate-900 outline-none placeholder:whitespace-nowrap placeholder:overflow-hidden placeholder:text-ellipsis placeholder:font-normal placeholder:text-slate-400 sm:min-h-0 sm:text-base"
         />
         <button
           type="button"
@@ -994,7 +994,7 @@ function AskAiMapPage() {
       isOpen={isGuestUpgradePromptOpen}
       onClose={() => setIsGuestUpgradePromptOpen(false)}
     />
-     <main className="gala-page-background h-[100dvh] overflow-hidden overscroll-none text-[var(--text)] lg:hidden">
+     <main className="gala-page-background h-[var(--ask-ai-viewport-height,100dvh)] overflow-hidden overscroll-none text-[var(--text)] lg:hidden">
       <div className="h-full w-full">
         <section className="relative h-full overflow-hidden bg-transparent p-0">
           <div className="relative h-full">

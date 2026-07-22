@@ -29,7 +29,6 @@ export function readSearchUrlState(search: string): SearchUrlState {
   const goodFor = goodForValue && validGoodForValues.has(goodForValue as SearchGoodForValue) ? (goodForValue as SearchGoodForValue) : null
   const budget = budgetValue && validBudgetValues.has(budgetValue as SearchBudgetValue) ? (budgetValue as SearchBudgetValue) : null
   const hasFilters = Boolean(category || city || goodFor || budget)
-
   return {
     q: hasFilters ? '' : q,
     category,

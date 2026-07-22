@@ -1,5 +1,17 @@
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import type { ReactNode, RefObject } from 'react'
-import { Check, MapPin, Tags, Wallet, MapPinned, RotateCcw, House, Search, SlidersHorizontal, type LucideIcon } from 'lucide-react'
+import {
+  faArrowRotateLeft,
+  faCheck,
+  faFilter,
+  faHouse,
+  faLocationDot,
+  faMagnifyingGlass,
+  faMapPin,
+  faTag,
+  faWallet,
+} from '@fortawesome/free-solid-svg-icons'
 import { AppIcon } from '../../AppIcon'
 import { cn } from '../../AppUI'
 import { InlineSkeleton, SkeletonLine } from '../../loading/SkeletonStates'
@@ -49,7 +61,7 @@ function SearchLandingBar({
           <label htmlFor={inputId} className="sr-only">
             Search places, cities, or categories
           </label>
-          <Search className="search-landing-bar__icon h-[21px] w-[21px] shrink-0 text-[var(--home-search-text)]" strokeWidth={2} />
+          <FontAwesomeIcon icon={faMagnifyingGlass} className="search-landing-bar__icon h-[21px] w-[21px] shrink-0 text-[var(--home-search-text)]" />
           <input
             id={inputId}
             type="text"
@@ -77,7 +89,7 @@ function SearchLandingBar({
             aria-label="Open filters"
             className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--home-search-text)] transition hover:bg-[var(--home-search-hover-bg)] disabled:cursor-not-allowed disabled:text-slate-300"
           >
-            <SlidersHorizontal className="search-landing-bar__icon h-[20px] w-[20px]" strokeWidth={2} />
+            <FontAwesomeIcon icon={faFilter} className="search-landing-bar__icon h-[20px] w-[20px]" />
           </button>
         ) : null}
       </div>
@@ -104,7 +116,7 @@ function SearchFilterButtonGroup({
   value: string | null
   options: SearchFilterOption[]
   emptyLabel: string
-  icon: LucideIcon
+  icon: IconDefinition
   onChange: (value: string | null) => void
 }) {
   const selectedOption = options.find((option) => option.value === value) ?? null
@@ -113,8 +125,8 @@ function SearchFilterButtonGroup({
     <div className="search-filters-group w-full">
       <div className="search-filters-group__header mb-2 flex items-center justify-between gap-3">
         <p className="search-filters-group__label flex min-w-0 items-center gap-2 text-xs font-semibold text-slate-500">
-          <span className="search-filters-group__icon inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent-deep)]">
-            <Icon className="h-3.5 w-3.5" strokeWidth={2.25} />
+            <span className="search-filters-group__icon inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent-deep)]">
+            <FontAwesomeIcon icon={Icon} className="h-3.5 w-3.5" />
           </span>
           <span className="min-w-0 truncate">
             {selectedOption ? `Selected: ${selectedOption.label}` : `Choose a ${label.toLowerCase()}`}
@@ -144,7 +156,7 @@ function SearchFilterButtonGroup({
               : 'border border-[rgba(148,163,184,0.18)] bg-white text-slate-700 hover:border-[var(--accent-deep)] hover:text-[var(--accent-deep)]'
           }`}
         >
-          <Icon className="h-4 w-4 shrink-0" strokeWidth={2.25} />
+          <FontAwesomeIcon icon={Icon} className="h-4 w-4 shrink-0" />
           {emptyLabel}
         </button>
 
@@ -163,9 +175,9 @@ function SearchFilterButtonGroup({
               }`}
               aria-pressed={selected}
             >
-              <Icon className={`h-4 w-4 shrink-0 ${selected ? 'text-[var(--accent-deep)]' : 'text-slate-400'}`} strokeWidth={2.25} />
+              <FontAwesomeIcon icon={Icon} className={`h-4 w-4 shrink-0 ${selected ? 'text-[var(--accent-deep)]' : 'text-slate-400'}`} />
               <span className="min-w-0 truncate">{option.label}</span>
-              {selected ? <Check className="h-4 w-4 shrink-0 text-[var(--accent)]" strokeWidth={2.5} /> : null}
+              {selected ? <FontAwesomeIcon icon={faCheck} className="h-4 w-4 shrink-0 text-[var(--accent)]" /> : null}
             </button>
           )
         })}
@@ -256,13 +268,13 @@ function SearchFilterPanel({
         </>
       ) : null}
 
-      <div className="mt-5 space-y-4">
+      <div className={`${showHeader ? 'mt-5' : 'mt-0'} space-y-4`}>
         <SearchFilterButtonGroup
           label={cityLabel}
           value={selectedCity}
           options={cityOptions}
           emptyLabel="Any city"
-          icon={MapPin}
+          icon={faLocationDot}
           onChange={onCityChange}
         />
 
@@ -271,7 +283,7 @@ function SearchFilterPanel({
           value={selectedCategory}
           options={categoryOptions}
           emptyLabel="Any category"
-          icon={Tags}
+          icon={faTag}
           onChange={onCategoryChange}
         />
 
@@ -280,7 +292,7 @@ function SearchFilterPanel({
           value={selectedBudget}
           options={budgetOptions}
           emptyLabel="Any budget"
-          icon={Wallet}
+          icon={faWallet}
           onChange={(nextValue) => onBudgetChange(nextValue as SearchBudgetValue | null)}
         />
       </div>
@@ -339,7 +351,7 @@ function SearchEmptyState({
               onClick={onSearchAgain}
               className="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-white px-5 text-sm font-semibold text-slate-700 shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition hover:border-[var(--accent-deep)] hover:text-[var(--accent-deep)]"
             >
-              <RotateCcw className="h-4 w-4" />
+              <FontAwesomeIcon icon={faArrowRotateLeft} className="h-4 w-4" />
               Search again
             </button>
           ) : null}
@@ -375,7 +387,7 @@ function SearchEmptyState({
               onClick={onSearchAgain}
               className="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-white px-5 text-sm font-semibold text-slate-700 shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition hover:border-[var(--accent-deep)] hover:text-[var(--accent-deep)]"
             >
-              <RotateCcw className="h-4 w-4" />
+              <FontAwesomeIcon icon={faArrowRotateLeft} className="h-4 w-4" />
               {actionLabel}
             </button>
           ) : null}
@@ -394,8 +406,8 @@ function SearchPageBreadcrumb({ className = '' }: { className?: string }) {
       backTo="/places"
       className={className}
       items={[
-        { label: 'Home', href: '/home', icon: <House className="h-3.5 w-3.5" /> },
-        { label: 'Places', href: '/places', icon: <MapPinned className="h-3.5 w-3.5" /> },
+        { label: 'Home', href: '/home', icon: <FontAwesomeIcon icon={faHouse} className="h-3.5 w-3.5" /> },
+        { label: 'Places', href: '/places', icon: <FontAwesomeIcon icon={faMapPin} className="h-3.5 w-3.5" /> },
         { label: 'Search', icon: <AppIcon name="search" className="h-3.5 w-3.5" /> },
       ]}
     />

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ChevronRight } from 'lucide-react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faChevronRight } from '@fortawesome/free-solid-svg-icons'
 import AppHeader from '../components/AppHeader'
 import { AppIcon } from '../components/AppIcon'
 import MinimalBackNav from '../components/MinimalBackNav'
@@ -145,7 +146,7 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
                       <span className="block truncate text-sm font-black text-slate-950">{plan?.owner ? getDisplayName(plan.owner) : `@${username}`}</span>
                       <span className="mt-0.5 inline-flex max-w-full items-center gap-1 truncate text-xs font-black text-[var(--accent-deep)]">
                         <span className="truncate">@{plan?.owner?.username || username}</span>
-                        <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" strokeWidth={2.2} />
+                        <FontAwesomeIcon icon={faChevronRight} className="h-3.5 w-3.5 shrink-0 text-slate-400" />
                       </span>
                       <span className="mt-1 block text-xs font-semibold text-slate-500">{formatGalaPlanDate(plan?.description)}</span>
                     </span>

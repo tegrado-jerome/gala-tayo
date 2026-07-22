@@ -1,14 +1,15 @@
 import type { ReactNode } from 'react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
-  Flag,
-  Home,
-  Image,
-  LayoutDashboard,
-  MessageSquare,
-  RefreshCw,
-  Shield,
-  UserRound,
-} from 'lucide-react'
+  faArrowRotateRight,
+  faCircleUser,
+  faCommentDots,
+  faFlag,
+  faHouse,
+  faImage,
+  faShield,
+  faTableColumns,
+} from '@fortawesome/free-solid-svg-icons'
 import { cn } from '../../components/AppUI'
 import { AdminListSkeleton, CardGridSkeleton } from '../../components/loading/SkeletonStates'
 import { navigateToPath } from '../../utils/navigation'
@@ -21,12 +22,12 @@ type AdminNavItem = {
 }
 
 export const adminNavItems: AdminNavItem[] = [
-  { label: 'Dashboard', path: ADMIN_BASE_PATH, icon: <LayoutDashboard className="h-4 w-4" /> },
-  { label: 'Submissions', path: getAdminPath('place-submissions'), icon: <Home className="h-4 w-4" /> },
-  { label: 'Photos', path: getAdminPath('place-images'), icon: <Image className="h-4 w-4" /> },
-  { label: 'Places', path: getAdminPath('place-reports'), icon: <Flag className="h-4 w-4" /> },
-  { label: 'Comments', path: getAdminPath('comment-reports'), icon: <MessageSquare className="h-4 w-4" /> },
-  { label: 'Users', path: getAdminPath('user-reports'), icon: <UserRound className="h-4 w-4" /> },
+  { label: 'Dashboard', path: ADMIN_BASE_PATH, icon: <FontAwesomeIcon icon={faTableColumns} className="h-4 w-4" /> },
+  { label: 'Submissions', path: getAdminPath('place-submissions'), icon: <FontAwesomeIcon icon={faHouse} className="h-4 w-4" /> },
+  { label: 'Photos', path: getAdminPath('place-images'), icon: <FontAwesomeIcon icon={faImage} className="h-4 w-4" /> },
+  { label: 'Places', path: getAdminPath('place-reports'), icon: <FontAwesomeIcon icon={faFlag} className="h-4 w-4" /> },
+  { label: 'Comments', path: getAdminPath('comment-reports'), icon: <FontAwesomeIcon icon={faCommentDots} className="h-4 w-4" /> },
+  { label: 'Users', path: getAdminPath('user-reports'), icon: <FontAwesomeIcon icon={faCircleUser} className="h-4 w-4" /> },
 ]
 
 type AdminPageHeaderProps = {
@@ -41,7 +42,7 @@ export function AdminPageHeader({ title, description, activePath, actions }: Adm
     <div className="admin-page-header">
       <div className="min-w-0">
         <p className="admin-eyebrow">
-          <Shield className="h-3.5 w-3.5" />
+          <FontAwesomeIcon icon={faShield} className="h-3.5 w-3.5" />
           Admin
         </p>
         <h1 className="admin-title">{title}</h1>
@@ -85,7 +86,7 @@ export function AdminRefreshButton({
       disabled={isLoading}
       className="admin-icon-button"
     >
-      <RefreshCw className="h-4 w-4" />
+      <FontAwesomeIcon icon={faArrowRotateRight} className="h-4 w-4" />
       <span>{isLoading ? 'Refreshing' : 'Refresh'}</span>
     </button>
   )

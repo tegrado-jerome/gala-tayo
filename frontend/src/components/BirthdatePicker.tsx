@@ -1,7 +1,8 @@
 import { createPortal } from 'react-dom'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
-import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCalendar, faChevronDown, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
 import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
 
 type BirthdatePickerProps = {
@@ -263,7 +264,7 @@ function BirthdatePicker({ value, onChange, helperText, error, minYear = 1900, m
       >
         <span className="flex min-w-0 items-center gap-3">
           <span className="gala-date-icon">
-            <CalendarDays className="h-4.5 w-4.5" strokeWidth={2.2} />
+            <FontAwesomeIcon icon={faCalendar} className="h-4.5 w-4.5" />
           </span>
           <span className="min-w-0">
             <span className={`block truncate text-left text-sm font-semibold ${selectedDate ? 'text-[var(--text-main)]' : 'text-[var(--text-disabled)]'}`}>
@@ -275,7 +276,7 @@ function BirthdatePicker({ value, onChange, helperText, error, minYear = 1900, m
           </span>
         </span>
         <span className="flex items-center gap-2">
-          <ChevronDown className={`gala-date-chevron h-4 w-4 shrink-0 text-[var(--text-disabled)] transition-transform ${isOpen ? 'rotate-180' : ''}`} strokeWidth={2.25} />
+          <FontAwesomeIcon icon={faChevronDown} className={`gala-date-chevron h-4 w-4 shrink-0 text-[var(--text-disabled)] transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </span>
       </button>
 
@@ -308,7 +309,7 @@ function BirthdatePicker({ value, onChange, helperText, error, minYear = 1900, m
                     className="gala-date-nav-button"
                     aria-label="Previous month"
                   >
-                    <ChevronLeft className="h-4 w-4" strokeWidth={2.4} />
+                    <FontAwesomeIcon icon={faChevronLeft} className="h-4 w-4" />
                   </button>
 
                   <div className="gala-date-month-label">
@@ -325,7 +326,7 @@ function BirthdatePicker({ value, onChange, helperText, error, minYear = 1900, m
                         aria-expanded={isYearMenuOpen}
                       >
                         <span>{visibleMonth.getUTCFullYear()}</span>
-                        <ChevronDown className={`h-3.5 w-3.5 transition-transform ${isYearMenuOpen ? 'rotate-180' : ''}`} strokeWidth={2.4} />
+                        <FontAwesomeIcon icon={faChevronDown} className={`h-3.5 w-3.5 transition-transform ${isYearMenuOpen ? 'rotate-180' : ''}`} />
                       </button>
                     </div>
                   </div>
@@ -337,7 +338,7 @@ function BirthdatePicker({ value, onChange, helperText, error, minYear = 1900, m
                     className="gala-date-nav-button"
                     aria-label="Next month"
                   >
-                    <ChevronRight className="h-4 w-4" strokeWidth={2.4} />
+                    <FontAwesomeIcon icon={faChevronRight} className="h-4 w-4" />
                   </button>
                 </div>
 

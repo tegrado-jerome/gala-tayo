@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { Flag, Home, Image, MessageSquare, UserRound } from 'lucide-react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCircleUser, faCommentDots, faFlag, faHouse, faImage } from '@fortawesome/free-solid-svg-icons'
 import AppHeader from '../../components/AppHeader'
 import { PageContainer, PageShell, StateContainer } from '../../components/layout/ResponsiveLayouts'
 import { useAdminAccess } from '../../hooks/useAdminAccess'
@@ -21,35 +22,35 @@ const sections: DashboardSection[] = [
     title: 'Place submissions',
     description: 'Review pending user-submitted places',
     path: getAdminPath('place-submissions'),
-    icon: <Home className="h-5 w-5" />,
+    icon: <FontAwesomeIcon icon={faHouse} className="h-5 w-5" />,
     color: 'border-l-[#1E3A8A]',
   },
   {
     title: 'Photo review',
     description: 'Approve or reject contributed place photos',
     path: getAdminPath('place-images'),
-    icon: <Image className="h-5 w-5" />,
+    icon: <FontAwesomeIcon icon={faImage} className="h-5 w-5" />,
     color: 'border-l-[#059669]',
   },
   {
     title: 'Place reports',
     description: 'Review reports against place listings',
     path: getAdminPath('place-reports'),
-    icon: <Flag className="h-5 w-5" />,
+    icon: <FontAwesomeIcon icon={faFlag} className="h-5 w-5" />,
     color: 'border-l-[#D97706]',
   },
   {
     title: 'Comment reports',
     description: 'Review reports against comments',
     path: getAdminPath('comment-reports'),
-    icon: <MessageSquare className="h-5 w-5" />,
+    icon: <FontAwesomeIcon icon={faCommentDots} className="h-5 w-5" />,
     color: 'border-l-[#7C3AED]',
   },
   {
     title: 'User reports',
     description: 'Review reports against user accounts',
     path: getAdminPath('user-reports'),
-    icon: <UserRound className="h-5 w-5" />,
+    icon: <FontAwesomeIcon icon={faCircleUser} className="h-5 w-5" />,
     color: 'border-l-[#DC2626]',
   },
 ]

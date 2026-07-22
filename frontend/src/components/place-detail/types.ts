@@ -92,6 +92,8 @@ export type IconName =
   | 'globe'
   | 'warning'
   | 'sparkle'
+  | 'circleInfo'
+  | 'userGroup'
 
 export type PlaceDetailCommunityCache = {
   averageRating: number | null

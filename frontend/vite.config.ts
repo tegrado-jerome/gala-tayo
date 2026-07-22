@@ -7,6 +7,25 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) {
+            if (id.includes('/src/pages/admin/')) return 'admin'
+            if (id.includes('/src/pages/AskAiMapPage') || id.includes('/src/components/MapView') || id.includes('/src/utils/askAiMap')) return 'ai-maps'
+            return undefined
+          }
+
+          if (id.includes('@supabase/supabase-js') || id.includes('@supabase/')) return 'supabase'
+          if (id.includes('leaflet') || id.includes('react-leaflet')) return 'maps'
+          if (id.includes('react-markdown') || id.includes('remark-gfm') || id.includes('micromark') || id.includes('unified')) return 'markdown'
+          if (id.includes('@fortawesome')) return 'icons'
+          return undefined
+        },
+      },
+    },
+  },
   server: {
     proxy: {
       '/api': {

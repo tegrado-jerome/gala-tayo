@@ -11,7 +11,7 @@ import { getJsonCacheValue, setJsonCacheValue } from "../services/redisCacheServ
 import { checkEndpointRateLimit } from "../utils/redisRateLimit";
 import { generateSearchCacheKey } from "../utils/cacheKey";
 import { validateMetroManilaSearchQuery, type SearchValidationStatus } from "../utils/searchQueryValidation";
-import { findAreaById, findCategoryById } from "./filters";
+import { findAreaById, findCategoryById, findGoodForById } from "./filters";
 import {
   type SearchRequestBody,
   type PlaceRow,
@@ -110,15 +110,15 @@ function normalizeSearchFilter(value: string, emptyValue: string): string | null
 }
 
 function buildSearchContext({
-  searchId, query, categoryId, areaId, budget, userType, createdAt,
+  searchId, query, categoryId, areaId, goodForId, budget, userType, createdAt,
 }: {
-  searchId: string; query: string; categoryId: string; areaId: string; budget: BudgetValue; userType: SearchContext["userType"]; createdAt: string;
+  searchId: string; query: string; categoryId: string; areaId: string; goodForId: string; budget: BudgetValue; userType: SearchContext["userType"]; createdAt: string;
 }): SearchContext {
   return {
     searchId, query,
     category: normalizeSearchFilter(categoryId, "all"),
     area: normalizeSearchFilter(areaId, "all"),
-    good_for: null,
+    good_for: normalizeSearchFilter(goodForId, "all"),
     budget: normalizeSearchFilter(budget, "any"),
     language: "taglish", userType, createdAt,
   };
@@ -240,6 +240,7 @@ export async function search(
     const query = getSearchQuery(body);
     const categoryId = getOptionalFilterId(getFilterValue(body, filters, "category")) ?? "all";
     const areaId = getOptionalFilterId(getFilterValue(body, filters, "city") ?? getFilterValue(body, filters, "area")) ?? "all";
+    const goodForId = getOptionalFilterId(getFilterValue(body, filters, "good_for")) ?? "all";
     const budget = getBudgetFilter(getFilterValue(body, filters, "budget"));
     const page = getPositiveInteger(body.page, DEFAULT_SEARCH_PAGE, { min: 1 });
     const limit = Math.min(getPositiveInteger(body.limit, STRICT_SEARCH_LIMIT, { min: 1 }), 50);
@@ -247,18 +248,21 @@ export async function search(
     const nearbySearch = getNearbySearchContext(body);
     const selectedCategory = findCategoryById(categoryId);
     const selectedArea = findAreaById(areaId);
-    const hasSelectedFilters = categoryId !== "all" || areaId !== "all" || budget !== "any";
+    const selectedGoodFor = findGoodForById(goodForId);
+    const hasSelectedFilters = categoryId !== "all" || areaId !== "all" || goodForId !== "all" || budget !== "any";
     const hasNearbySearch = Boolean(nearbySearch);
     const isBroadDiscoverySearch = false;
     const queryValidation = validateMetroManilaSearchQuery({ query, hasSelectedFilters, hasNearbySearch, allowBroadDiscovery: isBroadDiscoverySearch });
 
     if (categoryId !== "all" && !selectedCategory) return { status: 400, jsonBody: { message: "Invalid category filter." } };
     if (areaId !== "all" && !selectedArea) return { status: 400, jsonBody: { message: "Invalid area filter." } };
+    if (goodForId !== "all" && !selectedGoodFor) return { status: 400, jsonBody: { message: "Invalid good_for filter." } };
 
-    const effectiveCategoryId = normalizedQuery ? "all" : categoryId;
-    const effectiveAreaId = normalizedQuery ? "all" : areaId;
-    const effectiveBudget = normalizedQuery ? "any" : budget;
-    const cacheKey = generateSearchCacheKey(normalizedQuery, effectiveCategoryId, effectiveAreaId, "all", effectiveBudget);
+    const effectiveCategoryId = categoryId;
+    const effectiveAreaId = areaId;
+    const effectiveGoodFor = goodForId;
+    const effectiveBudget = budget;
+    const cacheKey = generateSearchCacheKey(normalizedQuery, effectiveCategoryId, effectiveAreaId, effectiveGoodFor, effectiveBudget);
     const canUseSharedCache = !nearbySearch;
     const responseCacheKey = buildSearchResponseCacheKey({ baseKey: cacheKey, page, limit });
     const userContext = await resolveUserContext(request);
@@ -269,6 +273,7 @@ export async function search(
       query,
       categoryId: effectiveCategoryId,
       areaId: effectiveAreaId,
+      goodForId: effectiveGoodFor,
       budget: effectiveBudget,
       userType,
       createdAt: new Date().toISOString(),
@@ -294,7 +299,7 @@ export async function search(
         query,
         areaId: effectiveAreaId,
         categoryId: effectiveCategoryId,
-        goodForId: "all",
+        goodForId: effectiveGoodFor,
         budget: effectiveBudget,
         unsupportedLocations: queryValidation.unsupportedLocationKeywords,
       });
@@ -311,6 +316,7 @@ export async function search(
       explicitFilters: {
         category: effectiveCategoryId,
         city: effectiveAreaId,
+        good_for: effectiveGoodFor,
         budget: effectiveBudget,
       },
     });
@@ -345,7 +351,7 @@ export async function search(
       query,
       areaId: effectiveAreaId,
       categoryId: effectiveCategoryId,
-      goodForId: "all",
+      goodForId: effectiveGoodFor,
       budget: effectiveBudget,
       totalCount,
     });

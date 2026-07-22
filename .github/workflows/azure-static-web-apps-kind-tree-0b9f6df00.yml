@@ -40,6 +40,13 @@ jobs:
         run: |
           npm ci
           npm run validate
+      - name: Generate static place listings
+        working-directory: backend
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          R2_PUBLIC_BASE_URL: ${{ secrets.R2_PUBLIC_BASE_URL }}
+        run: npm run generate:static-listings
       - name: Validate frontend
         working-directory: frontend
         env:

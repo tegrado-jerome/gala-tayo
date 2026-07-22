@@ -1,5 +1,6 @@
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowUpRight, Loader2, Search, Users, X } from 'lucide-react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faArrowUpRightFromSquare, faCircleNotch, faMagnifyingGlass, faUsers, faXmark } from '@fortawesome/free-solid-svg-icons'
 import AppHeader from '../components/AppHeader'
 import MinimalBackNav from '../components/MinimalBackNav'
 import ProfileAvatar from '../components/ProfileAvatar'
@@ -64,7 +65,7 @@ function ProfileResultCard({
           <span className="flex shrink-0 flex-col items-end gap-2">
             <span className="flex items-center gap-1 rounded-full bg-[var(--accent)] px-2.5 py-1.5 text-[8px] font-black uppercase tracking-[0.14em] text-white transition group-hover:bg-[var(--accent-deep)] sm:px-3 sm:text-[9px]">
               View
-              <ArrowUpRight className="h-3 w-3" />
+              <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="h-3 w-3" />
             </span>
           </span>
         </span>
@@ -98,7 +99,7 @@ function ProfileResultCard({
       </span>
       <span className="flex shrink-0 items-center self-center gap-1 rounded-full bg-[var(--accent)] px-2.5 py-2 text-[9px] font-black uppercase tracking-[0.14em] text-white transition group-hover:bg-[var(--accent-deep)] sm:px-3 sm:text-[10px]">
         View
-        <ArrowUpRight className="h-3.5 w-3.5" />
+        <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="h-3.5 w-3.5" />
       </span>
     </button>
   )
@@ -359,7 +360,7 @@ function ProfileSearchPage() {
             <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-end">
               <div className="max-w-[620px]">
                 <div className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--home-eyebrow)]">
-                  <Users className="h-4 w-4 text-[var(--home-eyebrow-icon)]" />
+                  <FontAwesomeIcon icon={faUsers} className="h-4 w-4 text-[var(--home-eyebrow-icon)]" />
                   Find Friends
                 </div>
                 <h1 className="gala-page-title">
@@ -370,7 +371,7 @@ function ProfileSearchPage() {
                 </p>
 
                 <div className="relative mt-5">
-                  <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+                  <FontAwesomeIcon icon={faMagnifyingGlass} className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
                   <input
                     ref={inputRef}
                     value={query}
@@ -383,7 +384,7 @@ function ProfileSearchPage() {
                   />
                   {isSearching && normalizedQuery.length >= 2 ? (
                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                      <Loader2 className="h-5 w-5 animate-spin text-[var(--accent)]" />
+                      <FontAwesomeIcon icon={faCircleNotch} className="h-5 w-5 animate-spin text-[var(--accent)]" />
                     </div>
                   ) : query ? (
                     <button
@@ -391,7 +392,7 @@ function ProfileSearchPage() {
                       onClick={() => setQuery('')}
                       className="absolute right-3 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full hover:bg-slate-100 transition"
                     >
-                      <X className="h-4 w-4 text-slate-400" />
+                      <FontAwesomeIcon icon={faXmark} className="h-4 w-4 text-slate-400" />
                     </button>
                   ) : null}
                 </div>

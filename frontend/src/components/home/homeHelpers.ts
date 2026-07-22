@@ -598,7 +598,7 @@ const budgetOptions: BudgetOption[] = [
   { value: 'under-500', label: 'Up to ₱500' },
   { value: '500-1000', label: 'Up to ₱1,000' },
   { value: '1000-2000', label: 'Up to ₱2,000' },
-  { value: '2000-plus', label: 'Premium ₱2,000+' },
+  { value: '2000-plus', label: '₱2,000+' },
 ]
 
 function normalizeSearchText(value: string) {

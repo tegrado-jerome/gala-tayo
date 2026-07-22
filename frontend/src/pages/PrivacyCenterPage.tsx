@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { Check, CheckCircle2, ChevronDown, Clock3, Mail, ShieldCheck, Trash2, XCircle } from 'lucide-react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCheck, faChevronDown, faCircleCheck, faCircleXmark, faClock, faEnvelope, faShield, faTrash } from '@fortawesome/free-solid-svg-icons'
 import AppHeader from '../components/AppHeader'
 import MinimalBackNav from '../components/MinimalBackNav'
 import PageHeroHeader from '../components/PageHeroHeader'
@@ -59,14 +60,14 @@ function statusClassName(status: PrivacyRequestStatus) {
 
 function statusIcon(status: PrivacyRequestStatus) {
   if (status === 'resolved') {
-    return <CheckCircle2 className="h-4 w-4" strokeWidth={2.2} />
+    return <FontAwesomeIcon icon={faCircleCheck} className="h-4 w-4" />
   }
 
   if (status === 'rejected' || status === 'cancelled') {
-    return <XCircle className="h-4 w-4" strokeWidth={2.2} />
+    return <FontAwesomeIcon icon={faCircleXmark} className="h-4 w-4" />
   }
 
-  return <Clock3 className="h-4 w-4" strokeWidth={2.2} />
+    return <FontAwesomeIcon icon={faClock} className="h-4 w-4" />
 }
 
 function formatDateTime(value: string | null | undefined) {
@@ -92,7 +93,7 @@ function PrivacySupportSection({ activeRequestCount, latestRequest }: { activeRe
     <section className="border-t border-[var(--line)] pt-6">
       <div className="flex items-start gap-3 sm:gap-4">
         <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-[var(--accent)] sm:h-11 sm:w-11">
-          <ShieldCheck className="h-5 w-5" strokeWidth={2.25} />
+          <FontAwesomeIcon icon={faShield} className="h-5 w-5" />
         </span>
         <div className="min-w-0">
           <h2 className="text-xl font-black text-slate-950">Privacy Support</h2>
@@ -106,7 +107,7 @@ function PrivacySupportSection({ activeRequestCount, latestRequest }: { activeRe
 
       <div className="mt-4 flex flex-col items-start gap-2 sm:flex-row sm:flex-wrap sm:items-center">
         <div className="inline-flex max-w-full items-center gap-2 rounded-xl border border-[var(--line)] bg-slate-50 px-3 py-2.5">
-          <Mail className="h-4 w-4 shrink-0 text-slate-500" strokeWidth={2.2} />
+          <FontAwesomeIcon icon={faEnvelope} className="h-4 w-4 shrink-0 text-slate-500" />
           <span className="min-w-0 truncate text-sm font-semibold text-slate-700">{contactEmail}</span>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -214,7 +215,7 @@ function RequestTypeSelect({
               <span className="block truncate text-left text-xs text-slate-500">{selectedOption.description}</span>
             </span>
           </span>
-          <ChevronDown className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} strokeWidth={2.25} />
+          <FontAwesomeIcon icon={faChevronDown} className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </button>
 
         {isOpen ? (
@@ -244,7 +245,7 @@ function RequestTypeSelect({
                     <span className="block text-sm font-semibold text-slate-900">{option.label}</span>
                     <span className="block text-xs text-slate-500">{option.description}</span>
                   </span>
-                  {selected ? <Check className="h-4 w-4 text-[var(--accent)]" strokeWidth={2.5} /> : null}
+                  {selected ? <FontAwesomeIcon icon={faCheck} className="h-4 w-4 text-[var(--accent)]" /> : null}
                 </button>
               )
             })}
@@ -374,7 +375,7 @@ function PrivacyCenterPage({ session }: { session: Session }) {
               eyebrow="Account Privacy"
               title="Privacy Center"
               description="Submit privacy requests, check recent activity, and reach the privacy contact from one protected place."
-              icon={<ShieldCheck className="h-4 w-4" strokeWidth={2.2} />}
+              icon={<FontAwesomeIcon icon={faShield} className="h-4 w-4" />}
               divider={false}
             />
 
@@ -454,7 +455,7 @@ function PrivacyCenterPage({ session }: { session: Session }) {
               <div className="grid gap-3 sm:flex sm:items-start sm:justify-between">
                 <div className="flex min-w-0 items-start gap-3">
                   <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-700">
-                    <Trash2 className="h-5 w-5" strokeWidth={2.2} />
+                    <FontAwesomeIcon icon={faTrash} className="h-5 w-5" />
                   </span>
                   <div className="min-w-0">
                     <h2 className="text-lg font-black text-slate-950">Delete Account</h2>

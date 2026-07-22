@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent, type RefObject } from 'react'
-import { Bot, ChevronRight, Compass, Flame, Heart, LayoutGrid, MapPin, Moon, Search, SlidersHorizontal, Sparkles, Star, SunMedium } from 'lucide-react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
+import { faChevronRight, faCompass, faFire, faHandSparkles, faHeart, faLocationDot, faMagnifyingGlass, faMoon, faRobot, faSliders, faStar, faSun, faTableCellsLarge } from '@fortawesome/free-solid-svg-icons'
+import { faHeart as faHeartRegular } from '@fortawesome/free-regular-svg-icons'
 import { useAppUser } from '../context/AppUserContext'
 import { useTheme } from '../context/ThemeContext'
 import UserMenu from '../components/UserMenu'
@@ -57,7 +60,7 @@ type HomeAiFeature = {
   title: string
   description: string
   href: string
-  icon: typeof Bot
+  icon: IconDefinition
 }
 
 const homeAiFeatures: HomeAiFeature[] = [
@@ -65,13 +68,13 @@ const homeAiFeatures: HomeAiFeature[] = [
     title: 'AI Chatbot',
     description: 'Ask for gala ideas',
     href: '/ask-ai/chatbot',
-    icon: Bot,
+    icon: faRobot,
   },
   {
     title: 'AI Maps',
     description: 'Find places with AI',
     href: '/ask-ai/maps',
-    icon: Sparkles,
+    icon: faHandSparkles,
   },
 ]
 
@@ -81,7 +84,7 @@ function HomeThemeToggleButton() {
 
   const nextThemePreference = resolvedTheme === 'dark' ? 'light' : 'dark'
   const label = `Switch to ${nextThemePreference} mode`
-  const Icon = resolvedTheme === 'dark' ? SunMedium : Moon
+  const Icon = resolvedTheme === 'dark' ? faSun : faMoon
 
   return (
     <button
@@ -91,7 +94,7 @@ function HomeThemeToggleButton() {
       className="home-theme-toggle-button"
     >
       <span className="home-theme-toggle-button__icon">
-        <Icon className="h-4 w-4" strokeWidth={2.2} />
+        <FontAwesomeIcon icon={Icon} className="h-4 w-4" />
       </span>
     </button>
   )
@@ -382,9 +385,9 @@ function HomeFeaturedCard({
               alt={place.name}
               className="h-full w-full object-cover"
               draggable={false}
-              loading={index < 4 ? 'eager' : 'lazy'}
+              loading={index === 0 ? 'eager' : 'lazy'}
               decoding="async"
-              fetchPriority={index < 2 ? 'high' : 'auto'}
+              fetchPriority={index === 0 ? 'high' : 'low'}
               sizes="(min-width: 1280px) 360px, (min-width: 1024px) 344px, (min-width: 768px) 320px, 84vw"
               onError={() => {
                 if (imageUrl) {
@@ -411,7 +414,7 @@ function HomeFeaturedCard({
               isSaved ? 'text-rose-500' : 'text-slate-500'
             }`}
           >
-            <Heart className={`h-3.5 w-3.5 ${isSaved ? 'fill-current' : ''}`} strokeWidth={2.2} />
+            <FontAwesomeIcon icon={isSaved ? faHeart : faHeartRegular} className={`h-3.5 w-3.5`} />
           </button>
 
           <div className="absolute inset-x-0 bottom-0 p-4">
@@ -421,11 +424,11 @@ function HomeFeaturedCard({
               </p>
               <div className="mt-1.5 flex items-center gap-2 text-[10.5px] text-white/84">
                 <span className="inline-flex min-w-0 flex-1 items-center gap-1.5 pr-2">
-                  <MapPin className="h-3 w-3 shrink-0" strokeWidth={2.2} />
+                  <FontAwesomeIcon icon={faLocationDot} className="h-3 w-3 shrink-0" />
                   <span className="truncate">{locationText}</span>
                 </span>
                 <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[rgba(15,23,42,0.36)] px-2.5 py-1 font-semibold text-white">
-                  <Star className="h-3.5 w-3.5 fill-current text-amber-300" strokeWidth={1.8} />
+                  <FontAwesomeIcon icon={faStar} className="h-3.5 w-3.5 text-amber-300" />
                   {ratingText || 'New'}
                 </span>
               </div>
@@ -606,7 +609,7 @@ function HomeCategoryTile({
               draggable={false}
               loading={index < eagerImageCount ? 'eager' : 'lazy'}
               decoding="async"
-              fetchPriority={index < 4 ? 'auto' : 'low'}
+              fetchPriority={index === 0 && eagerImageCount > 0 ? 'auto' : 'low'}
               sizes="(min-width: 1024px) 92px, (min-width: 768px) 84px, 22vw"
               onError={() => {
                 if (imageUrl) {
@@ -1273,7 +1276,7 @@ function HomePage({
         <div className="mx-auto flex min-h-screen w-full max-w-[1320px] flex-col px-4 pb-[calc(env(safe-area-inset-bottom,0px)+6.5rem)] pt-[max(18px,env(safe-area-inset-top))] sm:px-5 sm:pb-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] md:px-6 md:pb-[calc(env(safe-area-inset-bottom,0px)+5rem)] md:pt-10 lg:px-8 lg:pb-[calc(env(safe-area-inset-bottom,0px)+4.5rem)]">
           <section className="min-w-0 pt-2 md:pt-0">
             <div className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em]" style={{ color: 'var(--home-eyebrow)' }}>
-              <Compass className="h-4 w-4" style={{ color: 'var(--home-eyebrow-icon)' }} strokeWidth={2} />
+              <FontAwesomeIcon icon={faCompass} className="h-4 w-4" style={{ color: 'var(--home-eyebrow-icon)' }} />
               <span>DISCOVER</span>
             </div>
             <div className="flex items-center justify-between gap-4">
@@ -1297,15 +1300,15 @@ function HomePage({
               className="home-search-button mt-8 flex h-[56px] w-full items-center justify-between rounded-[20px] border px-4 transition"
             >
               <span className="flex min-w-0 items-center gap-2.5" style={{ color: 'var(--home-search-text)' }}>
-                <Search className="h-[21px] w-[21px] shrink-0" style={{ color: 'var(--home-eyebrow-icon)' }} strokeWidth={2} />
+                <FontAwesomeIcon icon={faMagnifyingGlass} className="h-[21px] w-[21px] shrink-0" style={{ color: 'var(--home-eyebrow-icon)' }} />
                 <span className="truncate text-[15px] font-medium" style={{ color: 'var(--home-search-placeholder)' }}>Discover a city</span>
               </span>
-              <SlidersHorizontal className="h-[21px] w-[21px] shrink-0" style={{ color: 'var(--home-eyebrow-icon)' }} strokeWidth={2} />
+              <FontAwesomeIcon icon={faSliders} className="h-[21px] w-[21px] shrink-0" style={{ color: 'var(--home-eyebrow-icon)' }} />
             </button>
 
             <section className="mt-9 md:mt-7">
               <div className="mb-2 flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em]" style={{ color: 'var(--home-eyebrow)' }}>
-                <Sparkles className="h-3.5 w-3.5" style={{ color: 'var(--home-eyebrow-icon)' }} strokeWidth={2.2} />
+                <FontAwesomeIcon icon={faHandSparkles} className="h-3.5 w-3.5" style={{ color: 'var(--home-eyebrow-icon)' }} />
                 <span>AI Features</span>
               </div>
 
@@ -1321,7 +1324,7 @@ function HomePage({
                       className="home-ai-card flex min-w-0 items-center gap-3 rounded-[18px] border px-3.5 py-3 text-left transition hover:-translate-y-0.5"
                     >
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl" style={{ background: 'var(--home-ai-icon-bg)', color: 'var(--home-ai-icon-text)' }}>
-                        <Icon className="h-4.5 w-4.5" strokeWidth={2.2} />
+                        <FontAwesomeIcon icon={Icon} className="h-4.5 w-4.5" />
                       </span>
 
                       <span className="min-w-0">
@@ -1344,7 +1347,7 @@ function HomePage({
               <div className="flex items-center justify-between gap-3">
                 <h2 className="home-top-picks-heading inline-flex items-center gap-2 text-[24px] font-bold tracking-[-0.04em] text-slate-950">
                   <span className="home-top-picks-flame" aria-hidden="true">
-                    <Flame className="h-5 w-5" strokeWidth={2.2} />
+                    <FontAwesomeIcon icon={faFire} className="h-5 w-5" />
                   </span>
                   <span className="home-top-picks-title">Top Picks</span>
                 </h2>
@@ -1357,7 +1360,7 @@ function HomePage({
                       style={{ color: 'var(--home-link)' }}
                     >
                       See all
-                      <ChevronRight className="h-4 w-4" strokeWidth={2.2} />
+                      <FontAwesomeIcon icon={faChevronRight} className="h-4 w-4" />
                     </button>
                   ) : null}
                 </div>
@@ -1449,7 +1452,7 @@ function HomePage({
 
             <section className="min-w-0">
               <div className="flex items-center justify-between gap-3">
-                <h2 className="inline-flex items-center gap-2 text-[22px] font-bold tracking-[-0.04em]" style={{ color: 'var(--home-heading)' }}><MapPin className="h-5 w-5" style={{ color: 'var(--home-heading)' }} strokeWidth={2.2} />Cities</h2>
+                <h2 className="inline-flex items-center gap-2 text-[22px] font-bold tracking-[-0.04em]" style={{ color: 'var(--home-heading)' }}><FontAwesomeIcon icon={faLocationDot} className="h-5 w-5" style={{ color: 'var(--home-heading)' }} />Cities</h2>
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
@@ -1458,7 +1461,7 @@ function HomePage({
                     style={{ color: 'var(--home-link)' }}
                   >
                     See all
-                    <ChevronRight className="h-4 w-4" strokeWidth={2.2} />
+                    <FontAwesomeIcon icon={faChevronRight} className="h-4 w-4" />
                   </button>
                 </div>
               </div>
@@ -1476,7 +1479,7 @@ function HomePage({
                         active={tile.active}
                         isLoading={false}
                         index={index}
-                        eagerImageCount={8}
+                        eagerImageCount={3}
                         onClick={() => {
                           setSelectedCityTileSlug(tile.slug ?? null)
                           navigateToPath(tile.href)
@@ -1500,7 +1503,7 @@ function HomePage({
 
             <section className="min-w-0">
               <div className="flex items-center justify-between gap-3">
-                <h2 className="inline-flex items-center gap-2 text-[22px] font-bold tracking-[-0.04em]" style={{ color: 'var(--home-heading)' }}><LayoutGrid className="h-5 w-5" style={{ color: 'var(--home-heading)' }} strokeWidth={2.2} />Categories</h2>
+                <h2 className="inline-flex items-center gap-2 text-[22px] font-bold tracking-[-0.04em]" style={{ color: 'var(--home-heading)' }}><FontAwesomeIcon icon={faTableCellsLarge} className="h-5 w-5" style={{ color: 'var(--home-heading)' }} />Categories</h2>
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
@@ -1509,7 +1512,7 @@ function HomePage({
                     style={{ color: 'var(--home-link)' }}
                   >
                     See all
-                    <ChevronRight className="h-4 w-4" strokeWidth={2.2} />
+                    <FontAwesomeIcon icon={faChevronRight} className="h-4 w-4" />
                   </button>
                 </div>
               </div>
@@ -1527,7 +1530,7 @@ function HomePage({
                         active={tile.active}
                         isLoading={false}
                         index={index}
-                        eagerImageCount={homeCategoryRecommendations.length}
+                        eagerImageCount={2}
                         onClick={() => {
                           setSelectedCategoryTileLabel(tile.label)
                           navigateToPath(tile.href)
