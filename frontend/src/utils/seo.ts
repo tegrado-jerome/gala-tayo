@@ -17,6 +17,14 @@ type SeoConfig = {
   openGraphType?: 'website' | 'article'
   image?: OpenGraphImage | null
   jsonLd?: Record<string, unknown> | Array<Record<string, unknown>> | null
+  preloadLinks?: Array<{
+    href: string
+    as?: 'image' | 'style' | 'script' | 'font' | 'fetch'
+    type?: string | null
+    crossOrigin?: 'anonymous' | 'use-credentials' | null
+    fetchPriority?: 'high' | 'low' | 'auto' | null
+  }> | null
+  preconnectOrigins?: string[] | null
   verification?: {
     google?: string | null
     bing?: string | null
@@ -75,6 +83,18 @@ function removeBySelector(selector: string) {
   document.head.querySelectorAll(selector).forEach((element) => element.remove())
 }
 
+function normalizeUniqueStrings(values: Array<string | null | undefined>) {
+  return values.reduce<string[]>((uniqueValues, value) => {
+    const normalizedValue = value?.trim()
+
+    if (normalizedValue && !uniqueValues.includes(normalizedValue)) {
+      uniqueValues.push(normalizedValue)
+    }
+
+    return uniqueValues
+  }, [])
+}
+
 function getConfiguredVerificationTags() {
   const googleVerification = String(import.meta.env.VITE_GOOGLE_SITE_VERIFICATION || '').trim()
   const bingVerification = String(import.meta.env.VITE_BING_SITE_VERIFICATION || '').trim()
@@ -102,6 +122,8 @@ function applySeo(config: SeoConfig) {
   const imageAlt = config.image?.alt?.trim() || title
   const locale = config.locale?.trim() || DEFAULT_LOCALE
   const verification = config.verification ?? getConfiguredVerificationTags()
+  const preloadLinks = config.preloadLinks ?? []
+  const preconnectOrigins = normalizeUniqueStrings(config.preconnectOrigins ?? [])
 
   document.title = title
   updateOrCreateMeta('meta[name="description"]', { name: 'description', content: description })
@@ -121,7 +143,48 @@ function applySeo(config: SeoConfig) {
   updateOrCreateMeta('meta[name="twitter:image"]', { name: 'twitter:image', content: imageUrl })
 
   removeBySelector('script[data-galatayo-seo-jsonld="true"]')
+  removeBySelector('link[data-galatayo-seo-preconnect="true"], link[data-galatayo-seo-preload="true"]')
   removeBySelector('meta[name="google-site-verification"], meta[name="bing-site-verification"], meta[name="msvalidate.01"]')
+
+  preconnectOrigins.forEach((origin) => {
+    const link = document.createElement('link')
+    link.rel = 'preconnect'
+    link.href = origin
+    link.setAttribute('data-galatayo-seo-preconnect', 'true')
+    link.crossOrigin = 'anonymous'
+    document.head.appendChild(link)
+  })
+
+  preloadLinks.forEach((preloadLink) => {
+    const normalizedHref = preloadLink.href?.trim()
+
+    if (!normalizedHref) {
+      return
+    }
+
+    const link = document.createElement('link')
+    link.rel = 'preload'
+    link.href = normalizedHref
+    link.setAttribute('data-galatayo-seo-preload', 'true')
+
+    if (preloadLink.as) {
+      link.as = preloadLink.as
+    }
+
+    if (preloadLink.type) {
+      link.type = preloadLink.type
+    }
+
+    if (preloadLink.crossOrigin) {
+      link.crossOrigin = preloadLink.crossOrigin
+    }
+
+    if (preloadLink.fetchPriority) {
+      link.setAttribute('fetchpriority', preloadLink.fetchPriority)
+    }
+
+    document.head.appendChild(link)
+  })
 
   if (verification) {
     if (verification.google) {

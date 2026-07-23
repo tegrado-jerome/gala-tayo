@@ -7,12 +7,14 @@ export function SectionHeading({
   preserveCase = false,
   badgeClassName = '',
   iconClassName = '',
+  titleClassName = '',
 }: {
   icon: IconName
   title: string
   preserveCase?: boolean
   badgeClassName?: string
   iconClassName?: string
+  titleClassName?: string
 }) {
   return (
     <div className="flex items-center gap-2.5">
@@ -21,7 +23,7 @@ export function SectionHeading({
       >
         <Icon name={icon} className={`place-detail-section-heading__icon h-4 w-4 ${iconClassName}`.trim()} />
       </span>
-      <h2 className={`text-[13px] font-black tracking-[0.08em] text-slate-700 ${preserveCase ? '' : 'uppercase'}`}>{title}</h2>
+      <h2 className={`text-[13px] font-black tracking-[0.08em] text-slate-700 ${preserveCase ? '' : 'uppercase'} ${titleClassName}`.trim()}>{title}</h2>
     </div>
   )
 }

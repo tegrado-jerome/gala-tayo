@@ -2152,8 +2152,17 @@ async function fillSinglePlaceCoords(
 
   const uniqueQueries = uniqueStrings(queries, 5);
   const PER_QUERY_TIMEOUT_MS = 2000;
-  const MAX_TOTAL_TIME_MS = 4000;
+  const MAX_TOTAL_TIME_MS = 5000;
   const startTime = Date.now();
+
+  const candidates: Array<{
+    coordinates: { latitude: number; longitude: number };
+    geoapifyPlaceId: string | null;
+    confidence: "high" | "medium";
+    nameOverlap: number;
+    distanceKm: number;
+    query: string;
+  }> = [];
 
   for (const query of uniqueQueries) {
     if (Date.now() - startTime > MAX_TOTAL_TIME_MS) {
@@ -2164,7 +2173,7 @@ async function fillSinglePlaceCoords(
 
     try {
       const geocodeFeatures = await withTimeout(
-        geoapifyGeocodeSearch(query, 3),
+        geoapifyGeocodeSearch(query, 5),
         PER_QUERY_TIMEOUT_MS,
         "Geoapify query timed out"
       );
@@ -2195,18 +2204,46 @@ async function fillSinglePlaceCoords(
           continue;
         }
 
-        return {
+        const nameOverlap = nameSimilarity(normalizeKey(candidate.name), normalizeKey(featureName ?? ""));
+        const distanceKm = getDistanceKm(
+          coords,
+          area.center,
+        );
+
+        candidates.push({
           coordinates: coords,
           geoapifyPlaceId,
-          confidence,
-          queriesTried,
-          selectedQuery: query,
-          source: "geoapify",
-        };
+          confidence: confidence as "high" | "medium",
+          nameOverlap,
+          distanceKm,
+          query,
+        });
       }
     } catch {
       continue;
     }
+  }
+
+  if (candidates.length > 0) {
+    candidates.sort((a, b) => {
+      if (a.confidence !== b.confidence) {
+        return a.confidence === "high" ? -1 : 1;
+      }
+      if (a.nameOverlap !== b.nameOverlap) {
+        return b.nameOverlap - a.nameOverlap;
+      }
+      return a.distanceKm - b.distanceKm;
+    });
+
+    const best = candidates[0];
+    return {
+      coordinates: best.coordinates,
+      geoapifyPlaceId: best.geoapifyPlaceId,
+      confidence: best.confidence,
+      queriesTried,
+      selectedQuery: best.query,
+      source: "geoapify",
+    };
   }
 
   return {
@@ -3168,8 +3205,8 @@ async function searchGeoapifyStrictFallback(intent: AskAiMapIntent, area: Geoapi
         isRoadResult: resultTypes.isRoadResult,
         isCityResult: resultTypes.isCityResult,
       });
-      const hasPin = coordinateConfidence === "high";
       const tier = classifyResultTier(intent, name, [], null);
+      const hasPin = coordinateConfidence === "high" && (tier === "exact" || tier === "strong_related");
       geocodePlaces.push({
         id: `geoapify:${normalizeText(feature.properties?.place_id) ?? slugify(name)}`,
         name,
@@ -3281,6 +3318,7 @@ async function searchGeoapifyStrictFallback(intent: AskAiMapIntent, area: Geoapi
       }
 
       const categoryLabel = toCategoryLabel(categories, "Mapped place");
+      const hasPin = tier === "exact";
       return {
         id: `geoapify:${normalizeText(properties.place_id) ?? slugify(name)}`,
         name,
@@ -3288,15 +3326,15 @@ async function searchGeoapifyStrictFallback(intent: AskAiMapIntent, area: Geoapi
         whyThisFits: "Nakita ito as a mapped commercial/place result near the search area, pero limited ang available details from the map source.",
         category: categoryLabel,
         address,
-        lat: latitude,
-        lng: longitude,
-        latitude,
-        longitude,
-        hasPin: true,
-        coordinateStatus: "geoapify_coordinate_fill" as const,
-        coordinateConfidence: "high" as const,
+        lat: hasPin ? latitude : null,
+        lng: hasPin ? longitude : null,
+        latitude: hasPin ? latitude : null,
+        longitude: hasPin ? longitude : null,
+        hasPin,
+        coordinateStatus: hasPin ? "geoapify_coordinate_fill" as const : "missing_coordinates" as const,
+        coordinateConfidence: hasPin ? "high" as const : "none" as const,
         matchConfidence: tier === "exact" ? "high" as const : "medium" as const,
-        coordinates: {
+        coordinates: hasPin ? {
           lat: latitude,
           lng: longitude,
           latitude,
@@ -3305,7 +3343,7 @@ async function searchGeoapifyStrictFallback(intent: AskAiMapIntent, area: Geoapi
           trusted: true as const,
           verified: true as const,
           confidence: "high" as const,
-        },
+        } : null,
         rating: null,
         reviewCount: null,
         openingHoursSummary: null,
@@ -3335,7 +3373,7 @@ async function searchGeoapifyStrictFallback(intent: AskAiMapIntent, area: Geoapi
             : tier === "strong_related"
               ? 78
               : 62,
-        distanceKm: Number(getDistanceKm(area.center, { latitude, longitude }).toFixed(2)),
+        distanceKm: hasPin ? Number(getDistanceKm(area.center, { latitude, longitude }).toFixed(2)) : null,
         exactMatch: tier === "exact",
         mediumMatch: tier !== "exact",
         isFallback: true,
@@ -3405,24 +3443,15 @@ async function searchGeoapifyBroadFallback(intent: AskAiMapIntent, area: Geoapif
         whyThisFits: "Nakita ito as a mapped commercial/place result near the search area, pero limited ang available details from the map source.",
         category: toCategoryLabel(categories, "Mapped place"),
         address,
-        lat: latitude,
-        lng: longitude,
-        latitude,
-        longitude,
-        hasPin: true,
-        coordinateStatus: "geoapify_coordinate_fill" as const,
-        coordinateConfidence: "high" as const,
+        lat: null,
+        lng: null,
+        latitude: null,
+        longitude: null,
+        hasPin: false,
+        coordinateStatus: "missing_coordinates" as const,
+        coordinateConfidence: "none" as const,
         matchConfidence: "medium" as const,
-        coordinates: {
-          lat: latitude,
-          lng: longitude,
-          latitude,
-          longitude,
-          source: "geoapify" as const,
-          trusted: true as const,
-          verified: true as const,
-          confidence: "high" as const,
-        },
+        coordinates: null,
         rating: null,
         reviewCount: null,
         openingHoursSummary: null,
@@ -3447,7 +3476,7 @@ async function searchGeoapifyBroadFallback(intent: AskAiMapIntent, area: Geoapif
           coordinateVerified: true,
         },
         matchScore: 54,
-        distanceKm: Number(getDistanceKm(area.center, { latitude, longitude }).toFixed(2)),
+        distanceKm: null,
         exactMatch: false,
         mediumMatch: true,
         isFallback: true,

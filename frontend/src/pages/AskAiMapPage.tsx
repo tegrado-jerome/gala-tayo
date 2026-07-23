@@ -38,6 +38,7 @@ import { getApiUrl } from '../utils/apiClient'
 import { buildAskAiRequestHeaders, getOrCreateAskAiGuestId } from '../utils/askAiIdentity'
 import { trackAskAiMapsUsed } from '../utils/analytics'
 import { useAskAiUsageAutoRefresh } from '../hooks/useAskAiUsageAutoRefresh'
+import { useAskAiViewportHeightSync } from '../hooks/useAskAiViewportHeightSync'
 import { navigateBackWithFallback } from '../utils/navigation'
 import { PageShellSkeleton } from '../components/loading/SkeletonStates'
 import { useTheme } from '../context/ThemeContext'
@@ -269,6 +270,7 @@ function AskAiMapPage() {
   const initialAskAiMapRouteCache = initialAskAiMapRouteCacheRef.current
   const initialAskAiMapState = initialAskAiMapRuntimeState ?? initialAskAiMapRouteCache
   const { session, isSessionLoading } = useSavedFavorites()
+  useAskAiViewportHeightSync()
   const isRegistered = Boolean(session?.user)
   const [query, setQuery] = useState(initialAskAiMapState?.query ?? '')
   const [selectedChipIds, setSelectedChipIds] = useState<AskAiMapChipId[]>(
@@ -993,6 +995,7 @@ function AskAiMapPage() {
       mode="modal"
       isOpen={isGuestUpgradePromptOpen}
       onClose={() => setIsGuestUpgradePromptOpen(false)}
+      className="gala-auth-prompt--protected-feature gala-auth-prompt--protected-feature-accent"
     />
      <main className="gala-page-background h-[var(--ask-ai-viewport-height,100dvh)] overflow-hidden overscroll-none text-[var(--text)] lg:hidden">
       <div className="h-full w-full">
@@ -1113,7 +1116,7 @@ function AskAiMapPage() {
                   ref={mobileCardScrollerRef}
                   className="flex max-h-[34dvh] w-full snap-x snap-mandatory items-end gap-3 overflow-x-auto overflow-y-hidden pb-4 pl-1 pr-4 [scrollbar-width:none] [-ms-overflow-style:none] [-webkit-overflow-scrolling:touch] scroll-smooth [&::-webkit-scrollbar]:hidden lg:justify-center"
                 >
-                  {isSearching ? <MinimalLoadingCard query={query} /> : null}
+                  {isSearching && !isGuestUpgradePromptOpen ? <MinimalLoadingCard query={query} /> : null}
 
                   {!isSearching ? normalizedPlaces.map((place, index) => {
                     const display = displayPlaces[index]
@@ -1370,7 +1373,7 @@ onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
               className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 md:px-3 md:py-3 lg:px-4 lg:py-4"
             >
               <div className="grid gap-3 md:gap-2 lg:gap-3">
-                {isSearching ? <MinimalLoadingCard query={query} /> : null}
+                {isSearching && !isGuestUpgradePromptOpen ? <MinimalLoadingCard query={query} /> : null}
 
                 {!isSearching ? normalizedPlaces.map((place, index) => {
                   const display = displayPlaces[index]

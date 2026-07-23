@@ -2395,12 +2395,13 @@ function PlaceDetailView({
   const renderCommunitySection = () =>
     !isCommunityPlaceReady ? (
       <DetailSection>
-        <SectionHeading
-          icon="sparkle"
-          title="Community"
-          badgeClassName="place-detail-section-heading--alt"
-          iconClassName="place-detail-section-heading--alt-icon"
-        />
+                    <SectionHeading
+                      icon="sparkle"
+                      title="Community"
+                      badgeClassName="place-detail-section-heading--alt"
+                      iconClassName="place-detail-section-heading--alt-icon"
+                      titleClassName="place-detail-community-heading-title"
+                    />
         <div className="place-detail-comments mt-5 rounded-3xl border border-slate-200/80 bg-slate-50/55 p-4 sm:p-5">
           <ReviewSkeleton />
           <div className="mt-5 border-t border-[var(--line)] pt-5">
@@ -2415,6 +2416,7 @@ function PlaceDetailView({
           title="Community"
           badgeClassName="place-detail-section-heading--alt"
           iconClassName="place-detail-section-heading--alt-icon"
+          titleClassName="place-detail-community-heading-title"
         />
         <div className="mt-5">
           <div>
@@ -2522,11 +2524,11 @@ function PlaceDetailView({
               <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200/80 pb-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2.5">
-                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-2xl bg-[var(--accent-wash)] text-[var(--accent-deep)]">
+                    <span className="place-detail-comments-icon inline-flex h-8 w-8 items-center justify-center rounded-2xl bg-[var(--accent-wash)] text-[var(--accent-deep)]">
                       <FontAwesomeIcon icon={faComment} className="h-4 w-4" />
                     </span>
                     <div>
-                      <h3 className="text-[18px] font-black text-slate-950">Comments</h3>
+                      <h3 className="place-detail-comments-title text-[18px] font-black text-slate-950">Comments</h3>
                       <p className="mt-0.5 text-[13px] font-semibold text-slate-500">
                         {isCommentsLoading
                           ? 'Loading comments...'
@@ -2574,7 +2576,11 @@ function PlaceDetailView({
                 </div>
               ) : (
                 <div className="mt-4">
-                  <GuestAuthPrompt variant="community" mode="inline-card" />
+                  <GuestAuthPrompt
+                    variant="community"
+                    mode="inline-card"
+                    className="gala-auth-prompt--protected-feature"
+                  />
                 </div>
               )}
 
@@ -2582,7 +2588,7 @@ function PlaceDetailView({
                 <CommentSkeleton />
               ) : visibleCommentCount === 0 ? (
                 <div className="place-detail-comments-empty mt-5 flex flex-col items-center rounded-[20px] border border-dashed border-[var(--line-strong)] bg-slate-50 px-6 py-8 text-center">
-                  <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-[var(--accent-wash)] text-[var(--accent-deep)]">
+                  <span className="place-detail-comments-empty-icon inline-flex h-12 w-12 items-center justify-center rounded-full bg-[var(--accent-wash)] text-[var(--accent-deep)]">
                     <FontAwesomeIcon icon={faComment} className="h-5 w-5" />
                   </span>
                   <p className="mt-3 text-[16px] font-black text-slate-900">No comments yet</p>
@@ -2848,11 +2854,11 @@ function PlaceDetailView({
                     {canonicalPlaceLink && areaLink && areaBreadcrumb ? (
                       <p className="mt-4 text-[13px] font-semibold leading-6 text-slate-600">
                         Explore more from{' '}
-                        <InternalLink href={areaLink} className="text-[var(--accent)] underline underline-offset-2">
+                        <InternalLink href={areaLink} className="place-detail-more-links text-[var(--accent)] underline underline-offset-2">
                           {areaBreadcrumb.areaName}
                         </InternalLink>{' '}
                         or browse the full{' '}
-                        <InternalLink href="/places" className="text-[var(--accent)] underline underline-offset-2">
+                        <InternalLink href="/places" className="place-detail-more-links text-[var(--accent)] underline underline-offset-2">
                           places hub
                         </InternalLink>.
                       </p>
@@ -3169,4 +3175,3 @@ function PlaceDetailView({
 }
 
 export default PlaceDetailView
-

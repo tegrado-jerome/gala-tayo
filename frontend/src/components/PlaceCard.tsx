@@ -1,6 +1,7 @@
-import { useState, type MouseEvent } from 'react'
-import { AppIcon, getCategoryIconName } from './AppIcon'
-import { getCuratedPlaceImages, normalizePlaceSlug } from '../data/curatedPlaceImages'
+import { useEffect, useState, type MouseEvent } from 'react'
+import { AppIcon } from './AppIcon'
+import { AppSkeleton } from './AppUI'
+import { normalizePlaceSlug } from '../data/curatedPlaceImages'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { useGuestAuthPrompt } from './GuestAuthPrompt'
@@ -92,6 +93,7 @@ type PlaceCardProps = {
   isSelected?: boolean
   compact?: boolean
   searchResultCard?: boolean
+  imagePriority?: boolean
   className?: string
   footerNote?: string | null
   onOpen?: (placeId: string) => void
@@ -242,6 +244,7 @@ function PlaceCard({
   isSelected = false,
   compact = false,
   searchResultCard = false,
+  imagePriority = false,
   className = '',
   footerNote = null,
   onOpen,
@@ -251,23 +254,16 @@ function PlaceCard({
 }: PlaceCardProps) {
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
-  const [failedPhotoUrl, setFailedPhotoUrl] = useState<string | null>(null)
+  const [isPhotoLoaded, setIsPhotoLoaded] = useState(false)
   const guestAuth = useGuestAuthPrompt()
   const { isPlaceSaved, saveFavorite, removeFavorite } = useSavedFavorites()
   const { showSystemMessage } = useSystemMessage()
-  const resolvedCuratedImageUrls = place.curatedImageUrls ?? getCuratedPlaceImages(place.name)
-  const photoUrl =
-    place.thumbnailUrl?.trim() ||
-    place.imageUrl?.trim() ||
-    place.curatedImageUrl?.trim() ||
-    resolvedCuratedImageUrls[0]?.trim() ||
-    null
+  const photoUrl = place.thumbnailUrl?.trim() || place.imageUrl?.trim() || null
   const photoAlt = place.imageAlt?.trim() || place.name
   const normalizedNameSlug = normalizePlaceSlug(place.name)
   const placeId = place.id.trim()
   const isSaved = [place.slug, normalizedNameSlug, place.id].some((slug) => isPlaceSaved(slug))
   const displayChips = getPlaceChips(place)
-  const categoryIconName = getCategoryIconName(place.badge || place.category)
   const resolvedHref = getPlaceHref(place, href)
   const searchCardSummary = place.description?.trim() || place.reason.trim()
   const searchCardSubtitle = hasDisplayValue(place.badge) ? place.badge : place.category
@@ -279,7 +275,11 @@ function PlaceCard({
   const mediaClassName = compact ? 'w-[84px] rounded-[20px] sm:w-[92px]' : 'w-[112px] rounded-[18px]'
   const cardBodyClassName = compact ? 'py-3' : 'min-h-[136px] p-3'
   const shouldRenderMedia = Boolean(photoUrl) || !compact
-  const shouldShowPhoto = Boolean(photoUrl) && failedPhotoUrl !== photoUrl
+  const shouldShowPhoto = Boolean(photoUrl) && isPhotoLoaded
+
+  useEffect(() => {
+    setIsPhotoLoaded(false)
+  }, [photoUrl])
   const handleActivate = (event: MouseEvent<HTMLAnchorElement>) => {
     if (event.button !== 0 || event.metaKey || event.altKey || event.ctrlKey || event.shiftKey) {
       return
@@ -324,23 +324,31 @@ function PlaceCard({
   const cardContent = searchResultCard ? (
     <div className="overflow-hidden">
       <div className={`relative w-full overflow-hidden bg-[linear-gradient(180deg,var(--primary-soft)_0%,rgba(var(--accent-rgb),0.06)_100%)] ${compact ? 'aspect-[1.55]' : 'aspect-[1.38]'}`}>
-        {shouldShowPhoto ? (
+        {!shouldShowPhoto ? (
+          <div className="absolute inset-0">
+            <AppSkeleton className="h-full w-full rounded-none bg-[linear-gradient(135deg,rgba(219,234,254,0.8),rgba(248,250,252,0.95))]" />
+          </div>
+        ) : null}
+
+        {photoUrl ? (
           <img
             src={photoUrl ?? undefined}
             alt={photoAlt}
-            className="absolute inset-0 h-full w-full object-cover object-center"
-            loading="lazy"
+            className={`absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-300 ${shouldShowPhoto ? 'opacity-100' : 'opacity-0'}`}
+            loading={imagePriority ? 'eager' : 'lazy'}
             decoding="async"
+            fetchPriority={imagePriority ? 'high' : 'low'}
             sizes={compact ? '100vw' : '(min-width: 1024px) 420px, 100vw'}
-            onError={() => setFailedPhotoUrl(photoUrl)}
+            onLoad={() => setIsPhotoLoaded(true)}
+            onError={() => setIsPhotoLoaded(false)}
           />
-        ) : (
+        ) : null}
+
+        {!photoUrl ? (
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className={`flex items-center justify-center rounded-full bg-white/90 text-slate-400 shadow-[0_4px_12px_rgba(148,163,184,0.14)] ${compact ? 'h-10 w-10' : 'h-12 w-12'}`}>
-              <AppIcon name={categoryIconName} size="card" className={compact ? 'h-5 w-5' : 'h-6 w-6'} />
-            </span>
+            <AppSkeleton className={`h-full w-full rounded-none bg-[linear-gradient(135deg,rgba(219,234,254,0.8),rgba(248,250,252,0.95))]`} />
           </div>
-        )}
+        ) : null}
 
         <div className={`absolute inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/92 font-bold tracking-[0.01em] text-slate-700 shadow-[0_8px_18px_rgba(15,23,42,0.12)] backdrop-blur-sm ${compact ? 'bottom-2.5 right-2.5 px-2 py-0.5 text-[9px]' : 'bottom-3 right-3 px-2.5 py-1 text-[10px]'}`}>
           <AppIcon name="reviews" className="h-3.5 w-3.5 shrink-0 text-amber-500" />
@@ -371,25 +379,26 @@ function PlaceCard({
   ) : (
     <div className={`flex gap-3 px-3 ${compact ? 'items-stretch' : 'items-stretch'} ${cardBodyClassName}`}>
       {shouldRenderMedia ? (
-        shouldShowPhoto ? (
-          <img
-            src={photoUrl ?? undefined}
-            alt={photoAlt}
-            className={`${mediaClassName} shrink-0 border border-[rgba(148,163,184,0.18)] object-cover shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] ${compact ? 'h-full min-h-[112px] self-stretch' : 'h-full self-stretch'}`}
-            loading="lazy"
-            decoding="async"
-            sizes={compact ? '(min-width: 640px) 92px, 84px' : '112px'}
-            onError={() => setFailedPhotoUrl(photoUrl)}
-          />
+        photoUrl ? (
+          <div className={`${mediaClassName} relative shrink-0 overflow-hidden border border-[rgba(148,163,184,0.18)] shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] ${compact ? 'h-full min-h-[112px] self-stretch' : 'h-full self-stretch'}`}>
+            {!isPhotoLoaded ? (
+              <AppSkeleton className="absolute inset-0 h-full w-full rounded-none bg-[linear-gradient(135deg,rgba(219,234,254,0.8),rgba(248,250,252,0.95))]" />
+            ) : null}
+            <img
+              src={photoUrl}
+              alt={photoAlt}
+              className={`h-full w-full object-cover transition-opacity duration-300 ${isPhotoLoaded ? 'opacity-100' : 'opacity-0'}`}
+              loading={imagePriority ? 'eager' : 'lazy'}
+              decoding="async"
+              fetchPriority={imagePriority ? 'high' : 'low'}
+              sizes={compact ? '(min-width: 640px) 92px, 84px' : '112px'}
+              onLoad={() => setIsPhotoLoaded(true)}
+              onError={() => setIsPhotoLoaded(false)}
+            />
+          </div>
         ) : (
-          <div className={`${mediaClassName} flex shrink-0 flex-col items-center justify-center gap-1.5 border border-dashed border-[rgba(148,163,184,0.32)] bg-[linear-gradient(180deg,#f8fbff,#eef4fb)] px-2 text-center text-slate-400 ${compact ? 'h-full min-h-[112px] self-stretch' : 'h-full self-stretch'}`}>
-            <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[rgba(148,163,184,0.22)] bg-white text-slate-400 shadow-[0_4px_12px_rgba(148,163,184,0.14)]">
-              <AppIcon name="emptyPhoto" size="card" />
-            </span>
-            <span className="line-clamp-2 text-[10px] font-semibold leading-tight text-slate-700">
-              {place.name}
-            </span>
-            <span className="text-[10px] font-medium leading-tight text-slate-500">No photo</span>
+          <div className={`${mediaClassName} relative shrink-0 overflow-hidden border border-[rgba(148,163,184,0.18)] ${compact ? 'h-full min-h-[112px] self-stretch' : 'h-full self-stretch'}`}>
+            <AppSkeleton className="absolute inset-0 h-full w-full rounded-none bg-[linear-gradient(135deg,rgba(219,234,254,0.8),rgba(248,250,252,0.95))]" />
           </div>
         )
       ) : null}

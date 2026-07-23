@@ -27,10 +27,12 @@ import {
   restoreHomeScroll,
   writeHomeScrollCache,
 } from '../utils/homeScrollCache'
-import { useHomeImageSrc } from '../utils/homeImageCache'
+import { preloadHomeImage, useHomeImageSrc } from '../utils/homeImageCache'
 import { getCanonicalPlacePath, resolveAreaMeta } from '../utils/routes'
 import { placeCategories } from '../data/placeCategories'
+import SeoHead from '../components/SeoHead'
 import { prefetchPlaceDetail } from '../utils/placeDetailCache'
+import { R2_PUBLIC_BASE_URL } from '../data/r2Config'
 
 type ShowcasePlace = {
   id: string
@@ -156,6 +158,31 @@ function getHomeTileImageCandidates(
 
     return uniqueCandidates
   }, [])
+}
+
+function getHomeImagePreloadUrls() {
+  const places = [
+    ...homePopularTopPickPlaces,
+    ...homeRecommendedTopPickPlaces,
+    ...homeAllTopPickPlaces,
+    ...homeCityRecommendations.map((tile) => tile.place),
+    ...homeCategoryRecommendations.map((tile) => tile.place),
+  ]
+
+  return places.reduce<string[]>((uniqueUrls, place) => {
+    for (const imageUrl of getHomeTileImageCandidates(place)) {
+      if (!uniqueUrls.includes(imageUrl)) {
+        uniqueUrls.push(imageUrl)
+      }
+    }
+
+    return uniqueUrls
+  }, [])
+}
+
+function getHomePriorityImageUrls() {
+  const parkTile = homeCategoryRecommendations.find((tile) => tile.label === 'Park')?.place ?? null
+  return getHomeTileImageCandidates(parkTile)
 }
 
 function getPlaceRatingText(place: ShowcasePlace) {
@@ -401,9 +428,9 @@ function HomeFeaturedCard({
               alt={place.name}
               className="h-full w-full object-cover"
               draggable={false}
-              loading={index === 0 ? 'eager' : 'lazy'}
+              loading="eager"
               decoding="async"
-              fetchPriority={index === 0 ? 'high' : 'low'}
+              fetchPriority="high"
               sizes="(min-width: 1280px) 360px, (min-width: 1024px) 344px, (min-width: 768px) 320px, 84vw"
               onError={() => {
                 if (imageUrl) {
@@ -574,8 +601,6 @@ function HomeCategoryTile({
   active = false,
   isLoading = false,
   includeStaticPlaceFallback = true,
-  index = 0,
-  eagerImageCount = 4,
   onClick,
 }: {
   label: string
@@ -583,8 +608,6 @@ function HomeCategoryTile({
   active?: boolean
   isLoading?: boolean
   includeStaticPlaceFallback?: boolean
-  index?: number
-  eagerImageCount?: number
   onClick: () => void
 }) {
   const imageCandidates = useMemo(
@@ -623,9 +646,9 @@ function HomeCategoryTile({
               alt={label}
               className="h-full w-full object-cover"
               draggable={false}
-              loading={index < eagerImageCount ? 'eager' : 'lazy'}
+              loading="eager"
               decoding="async"
-              fetchPriority={index === 0 && eagerImageCount > 0 ? 'auto' : 'low'}
+              fetchPriority="high"
               sizes="(min-width: 1024px) 92px, (min-width: 768px) 84px, 22vw"
               onError={() => {
                 if (imageUrl) {
@@ -1075,6 +1098,23 @@ function HomePage() {
       }
     })
   }, [selectedCategoryTileLabel])
+  const homePriorityImageUrls = useMemo(() => getHomePriorityImageUrls(), [])
+  const homeImagePreloadUrls = useMemo(() => getHomeImagePreloadUrls(), [])
+  const homeImagePreconnectOrigins = useMemo(() => [new URL(R2_PUBLIC_BASE_URL).origin], [])
+  const homeSeoConfig = useMemo(() => ({
+    title: 'Home | GalaTayo',
+    description: 'Discover Metro Manila places by city, category, budget, and vibe.',
+    canonicalPath: '/home',
+    preloadLinks: [
+      ...homePriorityImageUrls,
+      ...homeImagePreloadUrls,
+    ].filter((href, index, all) => all.indexOf(href) === index).map((href) => ({
+        href,
+        as: 'image' as const,
+        fetchPriority: 'high' as const,
+    })),
+    preconnectOrigins: homeImagePreconnectOrigins,
+  }), [homeImagePreconnectOrigins, homeImagePreloadUrls, homePriorityImageUrls])
 
   useLayoutEffect(() => {
     const homeScrollCache = initialHomeScrollCacheRef.current
@@ -1112,6 +1152,16 @@ function HomePage() {
   useLayoutEffect(() => {
     heroCardRefs.current.length = visibleTopPickCarouselPlaces.length
   }, [activeTopPicksTab, visibleTopPickCarouselPlaces.length])
+
+  useLayoutEffect(() => {
+    for (const imageUrl of homePriorityImageUrls) {
+      preloadHomeImage(imageUrl)
+    }
+
+    for (const imageUrl of homeImagePreloadUrls) {
+      preloadHomeImage(imageUrl)
+    }
+  }, [homeImagePreloadUrls, homePriorityImageUrls])
 
   useEffect(() => {
     const mediaQuery = window.matchMedia(TABLET_HOME_RAIL_QUERY)
@@ -1332,6 +1382,7 @@ function HomePage() {
 
   return (
     <PageShell tone="plain">
+      <SeoHead {...homeSeoConfig} />
       <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
         <div className="mx-auto flex min-h-screen w-full max-w-[1320px] flex-col px-4 pb-[calc(env(safe-area-inset-bottom,0px)+6.5rem)] pt-[max(18px,env(safe-area-inset-top))] sm:px-5 sm:pb-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] md:px-6 md:pb-[calc(env(safe-area-inset-bottom,0px)+5rem)] md:pt-10 lg:px-8 lg:pb-[calc(env(safe-area-inset-bottom,0px)+4.5rem)]">
           <section className="min-w-0 pt-2 md:pt-0">
@@ -1545,15 +1596,13 @@ function HomePage() {
                 className="home-drag-rail hide-scrollbar -mx-1 mt-3 overflow-x-auto px-1 pb-2 pr-2 [scrollbar-width:none] [-ms-overflow-style:none] [overscroll-behavior-x:contain] [-webkit-overflow-scrolling:touch] max-lg:snap-x max-lg:snap-proximity lg:snap-none select-none [&::-webkit-scrollbar]:hidden"
               >
                 <div className="flex min-w-max gap-2.5 md:gap-3 lg:gap-4">
-                  {cityTiles.map((tile, index) => (
+                  {cityTiles.map((tile) => (
                     <div key={tile.slug} data-rail-item className="shrink-0 snap-center">
                       <HomeCategoryTile
                         label={tile.label}
                         place={tile.place}
                         active={tile.active}
                         isLoading={false}
-                        index={index}
-                        eagerImageCount={3}
                         onClick={() => {
                           setSelectedCityTileSlug(tile.slug ?? null)
                           saveHomePageState()
@@ -1597,15 +1646,13 @@ function HomePage() {
                 className="home-drag-rail hide-scrollbar -mx-1 mt-3 overflow-x-auto px-1 pb-2 pr-2 [scrollbar-width:none] [-ms-overflow-style:none] [overscroll-behavior-x:contain] [-webkit-overflow-scrolling:touch] max-lg:snap-x max-lg:snap-proximity lg:snap-none select-none [&::-webkit-scrollbar]:hidden"
               >
                 <div className="flex min-w-max gap-2.5 md:gap-3 lg:gap-4">
-                  {categoryTiles.map((tile, index) => (
+                  {categoryTiles.map((tile) => (
                     <div key={tile.label} data-rail-item className="shrink-0 snap-center">
                       <HomeCategoryTile
                         label={tile.label}
                         place={tile.place}
                         active={tile.active}
                         isLoading={false}
-                        index={index}
-                        eagerImageCount={2}
                         onClick={() => {
                           setSelectedCategoryTileLabel(tile.label)
                           saveHomePageState()

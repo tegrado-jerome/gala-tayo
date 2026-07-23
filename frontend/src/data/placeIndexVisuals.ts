@@ -1,5 +1,6 @@
 import type { PlaceDetail } from '../types/appTypes'
 import { R2_PUBLIC_BASE_URL } from './r2Config'
+import { resolvePlaceImageCandidates } from '../utils/placeImageCandidates'
 
 const categoryOverviewRepresentativeSlug = 'national-museum-of-natural-history'
 
@@ -97,22 +98,29 @@ function getPlaceDetailImageUrl(place?: PlaceDetail | null) {
     return null
   }
 
-  return (
-    place.thumbnailUrl?.trim() ||
-    place.imageUrl?.trim() ||
-    place.curatedImageUrls?.find((photo) => typeof photo === 'string' && photo.trim())?.trim() ||
-    null
-  )
+  return resolvePlaceImageCandidates(place)[0] ?? null
+}
+
+function getDiscoveryImageCandidates(placeSlug?: string | null, place?: PlaceDetail | null) {
+  const candidates = place ? resolvePlaceImageCandidates(place) : []
+  const staticImageUrl = getStaticPlaceImageUrlForSlug(placeSlug)
+
+  if (staticImageUrl) {
+    candidates.push(staticImageUrl)
+  }
+
+  return candidates
 }
 
 function getDiscoveryImageUrl(placeSlug?: string | null, place?: PlaceDetail | null) {
-  return getPlaceDetailImageUrl(place) || getStaticPlaceImageUrlForSlug(placeSlug)
+  return getDiscoveryImageCandidates(placeSlug, place)[0] ?? null
 }
 
 export {
   categoryOverviewRepresentativeSlug,
   categoryRepresentativePlaceSlugs,
   cityRepresentativePlaceSlugs,
+  getDiscoveryImageCandidates,
   getDiscoveryImageUrl,
   getPlaceDetailImageUrl,
   getStaticPlaceImageUrlForSlug,

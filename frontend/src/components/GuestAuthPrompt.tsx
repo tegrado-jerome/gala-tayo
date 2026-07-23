@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { AppIcon, type AppIconName } from './AppIcon'
-import { CenteredModal } from './layout/Primitives'
 import { buildAuthPath } from '../services/authApi'
 import { navigateToPath } from '../utils/navigation'
 import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
@@ -188,15 +187,20 @@ function GuestAuthPromptCard({
 }) {
   const config = variantConfigs[variant]
   const currentPath = `${window.location.pathname}${window.location.search}`
+  const modalWidthClass = mode === 'modal' ? 'mx-auto w-full max-w-[360px] sm:max-w-[400px] lg:max-w-[420px]' : ''
+  const isDarkMode =
+    typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'dark'
+  const useAccentIconTint = className?.includes('gala-auth-prompt--protected-feature-accent') && isDarkMode
+  const accentIconStyle = useAccentIconTint ? { color: '#9fc2ff' } : undefined
 
   const card = (
     <section
-      className={`gala-auth-prompt overflow-hidden rounded-[24px] border border-[var(--line)] bg-white shadow-[0_12px_38px_rgba(15,23,42,0.07)] ${mode === 'inline-card' ? 'mx-auto w-full max-w-[480px]' : ''} ${className}`}
+      className={`gala-auth-prompt overflow-hidden rounded-[24px] border border-[var(--line)] bg-white shadow-[0_12px_38px_rgba(15,23,42,0.07)] ${modalWidthClass} ${mode === 'inline-card' ? 'mx-auto w-full max-w-[480px]' : ''} ${className}`}
     >
       <div className="px-5 pt-5 pb-3 sm:px-6 sm:pt-6">
         <div className="flex items-start gap-3.5">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px] bg-[var(--accent-soft)] text-[var(--accent-deep)]">
-            <AppIcon name={config.icon} className="h-5 w-5" />
+          <span className="gala-auth-prompt__icon-badge flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px] bg-[var(--accent-soft)] text-[var(--accent-deep)]">
+            <AppIcon name={config.icon} className="gala-auth-prompt__icon h-5 w-5" style={accentIconStyle} />
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--accent)]">
@@ -232,7 +236,8 @@ function GuestAuthPromptCard({
               >
                 <AppIcon
                   name={config.benefitIcons[index] ?? 'check'}
-                  className="h-3.5 w-3.5 shrink-0 text-[var(--accent)]"
+                  className="gala-auth-prompt__benefit-icon h-3.5 w-3.5 shrink-0 text-[var(--accent)]"
+                  style={accentIconStyle}
                 />
                 {benefit}
               </li>
@@ -288,10 +293,12 @@ function GuestAuthPromptModal({
   variant,
   isOpen,
   onClose,
+  className,
 }: {
   variant: GuestAuthVariant
   isOpen: boolean
   onClose: () => void
+  className?: string
 }) {
   useEffect(() => {
     if (!isOpen) {
@@ -319,16 +326,17 @@ function GuestAuthPromptModal({
   }
 
   return createPortal(
-    <CenteredModal
-      isOpen={isOpen}
-      onClose={onClose}
-      maxWidth="sm"
-      ariaLabel="Sign in required"
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Sign in required"
+      className={`fixed inset-0 z-[7000] flex items-center justify-center bg-slate-950/45 px-3 py-6 sm:px-4 ${className ?? ''}`}
+      onClick={onClose}
     >
-      <div role="dialog" aria-modal="true" className="w-full">
-        <GuestAuthPromptCard variant={variant} mode="modal" onClose={onClose} />
+      <div className="w-full" onClick={(event) => event.stopPropagation()}>
+        <GuestAuthPromptCard variant={variant} mode="modal" onClose={onClose} className={className} />
       </div>
-    </CenteredModal>,
+    </div>,
     document.body,
   )
 }
@@ -403,6 +411,7 @@ export function GuestAuthPrompt(props: GuestAuthPromptProps) {
       variant={variant}
       isOpen={isOpen ?? false}
       onClose={onClose ?? (() => {})}
+      className={className}
     />
   )
 }

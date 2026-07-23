@@ -751,7 +751,11 @@ function ProfilePage({ session }: ProfilePageProps) {
 
             <div className="relative z-20 flex w-full items-center justify-center">
               <div className="w-full max-w-[420px] lg:max-w-[440px] xl:max-w-[460px] 2xl:max-w-[480px]">
-                <GuestAuthPrompt variant="profile" mode="inline-card" />
+                <GuestAuthPrompt
+                  variant="profile"
+                  mode="inline-card"
+                  className="gala-auth-prompt--protected-feature gala-auth-prompt--protected-feature-accent"
+                />
               </div>
             </div>
           </main>

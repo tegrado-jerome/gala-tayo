@@ -8,6 +8,7 @@ import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { navigateToPath, writePlaceReturnState } from '../utils/navigation'
 import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
 import { useAskAiUsageAutoRefresh } from '../hooks/useAskAiUsageAutoRefresh'
+import { useAskAiViewportHeightSync } from '../hooks/useAskAiViewportHeightSync'
 import {
   getAskAiRuntimeState,
   hasActiveAskAiRuntimeState,
@@ -137,6 +138,7 @@ function SearchHub({
   const initialRouteCache = initialRouteCacheRef.current
   const [selectedMode, setSelectedMode] = useState<SearchMode>(initialMode)
   const { session, isSessionLoading } = useSavedFavorites()
+  useAskAiViewportHeightSync()
   const [askAiUsageStatus, setAskAiUsageStatus] = useState<AskAiUsageStatus | null>(null)
   const [isAskAiUsageLoading, setIsAskAiUsageLoading] = useState(false)
   const [askAiUsageError, setAskAiUsageError] = useState<string | null>(null)
@@ -1208,7 +1210,13 @@ function SearchHub({
 
     return (
       <div className={`${selectedMode === 'ask-ai' ? 'h-[var(--ask-ai-viewport-height,100dvh)] overflow-hidden overscroll-none' : 'min-h-screen lg:h-[100dvh] lg:overflow-hidden'} bg-[var(--bg)] text-[var(--text)]`}>
-        <GuestAuthPrompt variant="ask-ai" mode="modal" isOpen={promptLogin} onClose={() => setPromptLogin(false)} />
+        <GuestAuthPrompt
+          variant="ask-ai"
+          mode="modal"
+          isOpen={promptLogin}
+          onClose={() => setPromptLogin(false)}
+          className="gala-auth-prompt--protected-feature gala-auth-prompt--protected-feature-accent"
+        />
         {shouldShowSearchFiltersPanel ? searchFilterPanel : null}
 
       <div className={`gala-page-background overflow-x-hidden lg:hidden ${selectedMode === 'ask-ai' ? 'flex h-[var(--ask-ai-viewport-height,100dvh)] flex-col overflow-hidden overscroll-none' : 'flex min-h-screen flex-col'}`}>
@@ -1309,10 +1317,10 @@ function SearchHub({
         <div
           className={`hidden w-full lg:grid ${
             isPromptBuilderOpen
-              ? 'h-[100dvh] overflow-hidden grid-rows-[auto_minmax(0,1fr)]'
+              ? 'h-[var(--ask-ai-viewport-height,100dvh)] overflow-hidden grid-rows-[auto_minmax(0,1fr)]'
               : selectedMode === 'ask-ai'
-                ? 'h-[100dvh] overflow-hidden grid-rows-[minmax(0,1fr)]'
-              : 'h-[100dvh] overflow-hidden lg:grid-rows-[auto_minmax(0,1fr)_auto]'
+                ? 'h-[var(--ask-ai-viewport-height,100dvh)] overflow-hidden grid-rows-[minmax(0,1fr)]'
+              : 'h-[var(--ask-ai-viewport-height,100dvh)] overflow-hidden lg:grid-rows-[auto_minmax(0,1fr)_auto]'
           }`}
         >
           {selectedMode !== 'ask-ai' && <AppHeader minimal />}

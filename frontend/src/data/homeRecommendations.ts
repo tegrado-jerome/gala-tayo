@@ -77,7 +77,16 @@ const homePopularTopPickPlaces: HomeRecommendationPlace[] = [
   createRecommendationPlace({ name: 'Art in Island', city: 'Quezon City' }),
   createRecommendationPlace({ name: 'National Museum of Natural History', city: 'Manila' }),
   createRecommendationPlace({ name: 'Star City', city: 'Pasay' }),
-  createRecommendationPlace({ name: 'Greenbelt Park', city: 'Makati' }),
+  createRecommendationPlace({
+    name: 'Greenbelt Park',
+    city: 'Makati',
+    imageUrl: '/images/places/rizal-park/rizal-park-1.webp',
+    curatedImageUrls: [
+      '/images/places/rizal-park/rizal-park-1.webp',
+      '/images/places/rizal-park/rizal-park-2.webp',
+      '/images/places/rizal-park/rizal-park-3.webp',
+    ],
+  }),
   createRecommendationPlace({ name: 'SM Megamall', city: 'Mandaluyong' }),
   createRecommendationPlace({ name: 'Venice Grand Canal Mall', city: 'Taguig' }),
   createRecommendationPlace({ name: 'Intramuros', city: 'Manila' }),
@@ -142,7 +151,19 @@ const homeCategoryRecommendations: HomeRecommendationTile[] = [
   { label: 'Mall', place: createRecommendationPlace({ name: 'SM Megamall', city: 'Mandaluyong' }) },
   { label: 'Museum', place: createRecommendationPlace({ name: 'National Museum of Natural History', city: 'Manila' }) },
   { label: 'Nightlife', place: createRecommendationPlace({ name: 'Z Hostel Rooftop', city: 'Makati' }) },
-  { label: 'Park', place: createRecommendationPlace({ name: 'Greenbelt Park', city: 'Makati' }) },
+  {
+    label: 'Park',
+    place: createRecommendationPlace({
+      name: 'Greenbelt Park',
+      city: 'Makati',
+      imageUrl: '/images/places/rizal-park/rizal-park-1.webp',
+      curatedImageUrls: [
+        '/images/places/rizal-park/rizal-park-1.webp',
+        '/images/places/rizal-park/rizal-park-2.webp',
+        '/images/places/rizal-park/rizal-park-3.webp',
+      ],
+    }),
+  },
 ]
 
 export {

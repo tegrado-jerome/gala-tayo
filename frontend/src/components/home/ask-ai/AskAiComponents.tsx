@@ -1267,6 +1267,22 @@ function AskAiModePanel({
     el.style.height = `${Math.min(el.scrollHeight, 120)}px`
   }, [draftQuestion])
 
+  useEffect(() => {
+    const el = textareaRef.current
+    if (!el) return
+
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.attributeName === 'disabled' && !el.disabled) {
+          el.focus()
+        }
+      }
+    })
+
+    observer.observe(el, { attributes: true })
+    return () => observer.disconnect()
+  }, [])
+
   const updateDraftQuestion = useCallback((nextQuestion: string) => {
     draftQuestionRef.current = nextQuestion
     setDraftQuestion(nextQuestion)

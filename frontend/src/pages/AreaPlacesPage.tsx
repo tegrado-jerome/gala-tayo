@@ -14,7 +14,10 @@ import { getAreaLabelBySlug, normalizeAreaSlug } from '../data/metroManilaAreas'
 import { navigateToPath, scrollViewportToTopInstant } from '../utils/navigation'
 import { formatLabelFromSlug, getSiteOrigin } from '../utils/seo'
 import { getListingPlaceViewportTop, peekPendingListingRouteCache, readListingRouteCache, restoreListingRouteScroll, writeListingRouteCache } from '../utils/listingRouteCache'
+import { fetchPlaceDetailsBatch } from '../utils/placeDetailCache'
+import { preloadListingImageUrls } from '../utils/listingImagePreloader'
 import { getSeoListingPage, mapSeoPlaceToCard, type SeoPlaceSummary } from '../utils/seoApi'
+import type { PlaceDetail } from '../types/appTypes'
 
 type AreaPlacesPageProps = {
   areaSlug: string
@@ -78,6 +81,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(
     navigationSource === 'pop' && routeCache?.pendingScrollRestore ? routeCache.selectedPlaceId : null,
   )
+  const [placeDetailsBySlug, setPlaceDetailsBySlug] = useState<Record<string, PlaceDetail>>({})
   const hasRestoredInitialScrollRef = useRef(false)
   const skipInitialFetchRef = useRef(Boolean(routeCache) && navigationSource !== 'pop')
   const pageDataReadyRef = useRef<number | null>(null)
@@ -162,6 +166,35 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
     return () => controller.abort()
   }, [activeCategory, currentPage, normalizedAreaSlug])
 
+  useEffect(() => {
+    const slugs = Array.from(new Set(payload.items.map((item) => item.slug).filter(Boolean)))
+
+    if (slugs.length === 0) {
+      setPlaceDetailsBySlug({})
+      return
+    }
+
+    let isActive = true
+
+    void fetchPlaceDetailsBatch(slugs).then((details) => {
+      if (!isActive) {
+        return
+      }
+
+      setPlaceDetailsBySlug(
+        Object.fromEntries(details.map((detail) => [detail.slug, detail]))
+      )
+    }).catch(() => {
+      if (isActive) {
+        setPlaceDetailsBySlug({})
+      }
+    })
+
+    return () => {
+      isActive = false
+    }
+  }, [payload.items])
+
   useLayoutEffect(() => {
     if (navigationSource !== 'pop' || hasRestoredInitialScrollRef.current) {
       return
@@ -182,6 +215,19 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
   }, [navigationSource])
 
   const allPlaces = useMemo(() => sortPlacesAlphabetically(payload.items), [payload.items])
+
+  useEffect(() => {
+    const criticalImageUrls = allPlaces
+      .slice(0, 4)
+      .map((place) => {
+        const livePlace = placeDetailsBySlug[place.slug]
+        return livePlace?.thumbnailUrl?.trim() || livePlace?.imageUrl?.trim() || null
+      })
+      .filter((imageUrl): imageUrl is string => Boolean(imageUrl))
+
+    preloadListingImageUrls(criticalImageUrls)
+  }, [allPlaces, placeDetailsBySlug])
+
   const totalPages = payload.totalPages
   const safePage = confirmedPage
   const isPageTransitionLoading = isLoading || isRefreshing
@@ -335,14 +381,29 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
                 </div>
                 <div className={`mt-4 transition ${isPageTransitionLoading ? 'pointer-events-none opacity-60' : 'opacity-100'}`}>
                   <ResponsiveGrid className="gap-4">
-                  {allPlaces.map((rawPlace) => {
+                  {allPlaces.map((rawPlace, index) => {
                     const place = mapSeoPlaceToCard(rawPlace) as PlaceCardData
+                    const basePlace = {
+                      ...place,
+                      imageUrl: null,
+                      curatedImageUrls: [],
+                    }
+                    const livePlace = placeDetailsBySlug[rawPlace.slug]
+                    const resolvedPlace = livePlace
+                      ? {
+                          ...basePlace,
+                          thumbnailUrl: livePlace.thumbnailUrl ?? null,
+                          imageUrl: livePlace.imageUrl ?? null,
+                          curatedImageUrls: livePlace.curatedImageUrls ?? [],
+                        }
+                      : basePlace
                     return (
                       <div key={rawPlace.id}>
                         <PlaceCard
-                          place={place}
+                          place={resolvedPlace}
                           isSelected={selectedPlaceId === rawPlace.id}
                           searchResultCard
+                          imagePriority={index < 4}
                           onSelect={() => setSelectedPlaceId(rawPlace.id)}
                           dataSearchPlaceId={rawPlace.id}
                           onOpen={() => {

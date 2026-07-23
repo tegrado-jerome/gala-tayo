@@ -1,4 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import type { FontAwesomeIconProps } from '@fortawesome/react-fontawesome'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import type { ComponentProps, ReactNode } from 'react'
 import {
@@ -212,7 +213,7 @@ export type AppIconProps = {
   name: AppIconName
   size?: AppIconSize
   className?: string
-  style?: Record<string, unknown>
+  style?: FontAwesomeIconProps['style']
   'aria-hidden'?: boolean | 'true' | 'false'
   'aria-label'?: string
   onClick?: () => void
@@ -273,6 +274,6 @@ export function AppIcon({
   }
 
   return (
-    <FontAwesomeIcon icon={iconEntry} className={rest.className} />
+    <FontAwesomeIcon icon={iconEntry} {...rest} />
   )
 }

@@ -19,6 +19,7 @@ import { getPasswordStrength } from '../utils/passwordStrength'
 import galaTayoLogo from '../assets/brand/galatayo-logo.svg'
 import { formatCooldownDuration, useResendCooldown } from '../hooks/useResendCooldown'
 import { useAppUser } from '../context/AppUserContext'
+import { useTheme } from '../context/ThemeContext'
 import { getUserMfaStatus } from '../utils/userMfa'
 
 type AuthMode = 'sign_in' | 'create_account'
@@ -94,6 +95,7 @@ type AuthPageProps = {
 
 function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
   const { session } = useAppUser()
+  const { resolvedTheme } = useTheme()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -130,6 +132,14 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
   const allowSignupLink = !isAdminSurface
   const allowForgotPassword = !isCreateMode
   const isSubmitDisabled = isSubmitting || isGoogleLoading || (isCreateMode ? !isCreateFormValid : !isLoginFormValid)
+  const authSwitchLinkClassName =
+    resolvedTheme === 'dark'
+      ? 'min-h-10 font-semibold text-[#6f86a8] underline underline-offset-2 transition hover:text-[#8aa0c1] focus:outline-none focus:ring-4 focus:ring-[rgba(37,99,235,0.12)]'
+      : 'min-h-10 font-semibold text-[var(--accent-deep)] underline underline-offset-2 transition hover:text-[#2563eb] focus:outline-none focus:ring-4 focus:ring-[rgba(37,99,235,0.12)]'
+  const authLegalLinkClassName =
+    resolvedTheme === 'dark'
+      ? 'font-semibold text-[#6f86a8] underline underline-offset-2 transition hover:text-[#8aa0c1] focus:outline-none focus:ring-4 focus:ring-[rgba(37,99,235,0.12)]'
+      : 'font-semibold text-[var(--accent-deep)] underline underline-offset-2 transition hover:text-[#2563eb] focus:outline-none focus:ring-4 focus:ring-[rgba(37,99,235,0.12)]'
 
   useEffect(() => {
     if (!session) {
@@ -570,7 +580,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
                 <button
                   type="button"
                   onClick={() => navigateToPath('/terms')}
-                  className="font-semibold text-[var(--accent-deep)] underline underline-offset-2 focus:outline-none focus:ring-4 focus:ring-[rgba(37,99,235,0.12)]"
+                  className={authLegalLinkClassName}
                 >
                   Terms
                 </button>{' '}
@@ -578,7 +588,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
                 <button
                   type="button"
                   onClick={() => navigateToPath('/privacy')}
-                  className="font-semibold text-[var(--accent-deep)] underline underline-offset-2 focus:outline-none focus:ring-4 focus:ring-[rgba(37,99,235,0.12)]"
+                  className={authLegalLinkClassName}
                 >
                   Privacy Policy
                 </button>
@@ -598,7 +608,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
                 <button
                   type="button"
                   onClick={() => navigateToPath(buildAuthPath(isCreateMode ? '/login' : '/signup', nextPath))}
-                  className="min-h-10 font-semibold text-[var(--accent-deep)] underline underline-offset-2 transition hover:text-[#2563eb] focus:outline-none focus:ring-4 focus:ring-[rgba(37,99,235,0.12)]"
+                  className={authSwitchLinkClassName}
                 >
                   {isCreateMode ? 'Log in' : 'Create account'}
                 </button>

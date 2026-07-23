@@ -285,7 +285,7 @@ function ProtectedFeatureGate({ pathname }: ProtectedFeatureGateProps) {
             <GuestAuthPrompt
               variant={authVariant}
               mode="inline-card"
-              className="shadow-[0_20px_60px_rgba(15,23,42,0.08)]"
+              className="gala-auth-prompt--protected-feature gala-auth-prompt--protected-feature-accent shadow-[0_20px_60px_rgba(15,23,42,0.08)]"
             />
           </div>
         </main>
@@ -300,9 +300,13 @@ function ProtectedFeatureGate({ pathname }: ProtectedFeatureGateProps) {
           <AskAiOverviewPage />
         </div>
 
-        <div className="absolute inset-0 flex items-center justify-center overflow-hidden px-4 py-6">
-          <div className="w-full max-w-[420px] lg:max-w-[440px] xl:max-w-[460px] 2xl:max-w-[480px]">
-            <GuestAuthPrompt variant={authVariant} mode="inline-card" />
+          <div className="absolute inset-0 flex items-center justify-center overflow-hidden px-4 py-6">
+            <div className="w-full max-w-[420px] lg:max-w-[440px] xl:max-w-[460px] 2xl:max-w-[480px]">
+            <GuestAuthPrompt
+              variant={authVariant}
+              mode="inline-card"
+              className="gala-auth-prompt--protected-feature gala-auth-prompt--protected-feature-accent"
+            />
           </div>
         </div>
       </div>
@@ -401,7 +405,11 @@ function ProtectedFeatureGate({ pathname }: ProtectedFeatureGateProps) {
 
           <div className="absolute inset-0 z-20 flex items-center justify-center p-4 sm:p-6">
             <div className="w-full max-w-[420px]">
-              <GuestAuthPrompt variant={authVariant} mode="inline-card" />
+              <GuestAuthPrompt
+                variant={authVariant}
+                mode="inline-card"
+                className="gala-auth-prompt--protected-feature gala-auth-prompt--protected-feature-accent"
+              />
             </div>
           </div>
         </div>

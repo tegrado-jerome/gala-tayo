@@ -7,7 +7,7 @@ import Breadcrumb from '../components/Breadcrumb'
 import SeoHead from '../components/SeoHead'
 import { PageContainer, PageShell, ResponsiveGrid } from '../components/layout/ResponsiveLayouts'
 import { metroManilaAreas } from '../data/metroManilaAreas'
-import { cityRepresentativePlaceSlugs, getDiscoveryImageUrl } from '../data/placeIndexVisuals'
+import { cityRepresentativePlaceSlugs, getDiscoveryImageCandidates } from '../data/placeIndexVisuals'
 import type { PlaceDetail } from '../types/appTypes'
 import { fetchPlaceDetailsBatch } from '../utils/placeDetailCache'
 import { getSiteOrigin } from '../utils/seo'
@@ -128,7 +128,7 @@ function PlacesIndexPage() {
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-3">
                     <IndexCardPhoto
-                      imageUrl={getDiscoveryImageUrl(
+                      imageUrls={getDiscoveryImageCandidates(
                         cityRepresentativePlaceSlugs[area.slug],
                         representativePlaces[cityRepresentativePlaceSlugs[area.slug]]
                       )}
@@ -157,9 +157,15 @@ function PlacesIndexPage() {
   )
 }
 
-function IndexCardPhoto({ imageUrl, label, priority = false }: { imageUrl: string | null; label: string; priority?: boolean }) {
-  const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null)
-  const shouldShowImage = Boolean(imageUrl) && failedImageUrl !== imageUrl
+function IndexCardPhoto({ imageUrls, label, priority = false }: { imageUrls: string[]; label: string; priority?: boolean }) {
+  const [imageIndex, setImageIndex] = useState(0)
+  const imageSourceKey = imageUrls.join('|')
+  const imageUrl = imageUrls[imageIndex] ?? null
+  const shouldShowImage = Boolean(imageUrl)
+
+  useEffect(() => {
+    setImageIndex(0)
+  }, [imageSourceKey])
 
   return (
     <span className="relative inline-flex h-12 w-12 shrink-0 overflow-hidden rounded-2xl border border-[rgba(148,163,184,0.2)] bg-[linear-gradient(135deg,#eef6ff,#f8fafc)] shadow-[0_8px_18px_rgba(15,23,42,0.08)] transition group-hover:scale-[1.02]">
@@ -172,7 +178,9 @@ function IndexCardPhoto({ imageUrl, label, priority = false }: { imageUrl: strin
           decoding="async"
           fetchPriority={priority ? 'auto' : 'low'}
           sizes="48px"
-          onError={() => setFailedImageUrl(imageUrl)}
+          onError={() => {
+            setImageIndex((currentIndex) => Math.min(currentIndex + 1, imageUrls.length))
+          }}
         />
       ) : (
         <span className="flex h-full w-full items-center justify-center text-sm font-black text-[var(--accent)]">

@@ -2544,6 +2544,18 @@ html[data-theme-switching="true"] #root *::after {
   color: #b7c8e4;
 }
 
+:root[data-theme="dark"] .gala-auth-prompt--protected-feature .gala-auth-prompt__icon-badge,
+:root[data-theme="dark"] .gala-auth-prompt--protected-feature .gala-auth-prompt__icon,
+:root[data-theme="dark"] .gala-auth-prompt--protected-feature .gala-auth-prompt__benefit-icon {
+  color: var(--home-eyebrow-icon) !important;
+}
+
+:root[data-theme="dark"] .gala-auth-prompt--protected-feature-accent .gala-auth-prompt__icon-badge,
+:root[data-theme="dark"] .gala-auth-prompt--protected-feature-accent .gala-auth-prompt__icon,
+:root[data-theme="dark"] .gala-auth-prompt--protected-feature-accent .gala-auth-prompt__benefit-icon {
+  color: #9fc2ff !important;
+}
+
 .app-tone-neutral {
   border-color: var(--line);
   background: var(--panel);
@@ -3575,6 +3587,37 @@ div[class*="border-white"] {
 
 :root[data-theme="dark"] .place-detail-section-heading--alt .place-detail-section-heading__icon {
   color: var(--text-main) !important;
+}
+
+:root[data-theme="dark"] .place-detail-community-heading-title,
+:root[data-theme="dark"] .place-detail-comments-title {
+  color: #eef4ff !important;
+  text-shadow: 0 1px 0 rgba(2, 8, 23, 0.28);
+}
+
+:root[data-theme="dark"] .place-detail-comments .place-detail-section-heading__badge {
+  background: rgba(18, 32, 53, 0.98) !important;
+  color: #9fb9ef !important;
+}
+
+:root[data-theme="dark"] .place-detail-comments .place-detail-section-heading__icon {
+  color: #9fb9ef !important;
+}
+
+:root[data-theme="dark"] .place-detail-comments-icon,
+:root[data-theme="dark"] .place-detail-comments-empty-icon {
+  background: rgba(18, 32, 53, 0.98) !important;
+  color: #9fb9ef !important;
+}
+
+:root[data-theme="dark"] .place-detail-more-links {
+  color: #93b7ff !important;
+  text-decoration-color: rgba(147, 183, 255, 0.58) !important;
+}
+
+:root[data-theme="dark"] .place-detail-more-links:hover {
+  color: #dbe7ff !important;
+  text-decoration-color: rgba(219, 231, 255, 0.82) !important;
 }
 
 :root[data-theme="dark"] .place-detail-section-heading--alt-icon {
