@@ -19,16 +19,23 @@ export function getAskAiViewportHeight() {
   }
 
   const layoutViewportHeight = window.innerHeight
-  const visualViewportHeight = window.visualViewport?.height ?? 0
+  const visualViewport = window.visualViewport
+  const visualViewportHeight = visualViewport?.height ?? 0
   const activeElement = typeof document === 'undefined' ? null : document.activeElement
   const keyboardLikelyOpen =
     visualViewportHeight > 0 &&
     layoutViewportHeight - visualViewportHeight >= MOBILE_KEYBOARD_HEIGHT_THRESHOLD &&
     isTextEntryElement(activeElement)
 
+  // Use the visible viewport when available so mobile browser chrome does not
+  // inflate the Ask AI canvas and push the composer upward on real devices.
   const viewportHeight = keyboardLikelyOpen
     ? visualViewportHeight
-    : Math.max(layoutViewportHeight, visualViewportHeight)
+    : (
+        visualViewportHeight > 0
+          ? visualViewportHeight
+          : layoutViewportHeight
+      )
 
   return Math.max(0, Math.round(viewportHeight))
 }
