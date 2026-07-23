@@ -2396,7 +2396,7 @@ function PlaceDetailView({
     !isCommunityPlaceReady ? (
       <DetailSection>
                     <SectionHeading
-                      icon="sparkle"
+                      icon="userGroup"
                       title="Community"
                       badgeClassName="place-detail-section-heading--alt"
                       iconClassName="place-detail-section-heading--alt-icon"
@@ -2412,7 +2412,7 @@ function PlaceDetailView({
     ) : (
       <DetailSection>
         <SectionHeading
-          icon="sparkle"
+          icon="userGroup"
           title="Community"
           badgeClassName="place-detail-section-heading--alt"
           iconClassName="place-detail-section-heading--alt-icon"
@@ -2766,7 +2766,7 @@ function PlaceDetailView({
                   <CardSurface pad="default" tone="outlined" className="rounded-2xl">
                     <div className="flex items-center gap-2.5">
                       <span className="place-detail-section-heading__badge place-detail-section-heading--alt flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--accent-wash)] text-[var(--accent-deep)]">
-                        <Icon name="sparkle" className="place-detail-section-heading__icon place-detail-section-heading--alt-icon h-4 w-4" />
+                        <Icon name="book" className="place-detail-section-heading__icon place-detail-section-heading--alt-icon h-4 w-4" />
                       </span>
                       <div>
                         <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Quick Facts</p>
