@@ -213,10 +213,15 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
       }
     }
 
+    const FORCE_REVEAL_MS = 8000
+
     const imageReadyPromise = waitForWelcomeHeroReady(preloadSrc)
     const minimumDelayPromise = waitForDuration(loadingMinMs, timeoutIds)
 
-    void Promise.all([imageReadyPromise, minimumDelayPromise])
+    void Promise.race([
+      Promise.all([imageReadyPromise, minimumDelayPromise]),
+      waitForDuration(FORCE_REVEAL_MS, timeoutIds),
+    ])
       .then(revealWhenAllowed)
       .catch(() => {})
 

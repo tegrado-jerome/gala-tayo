@@ -200,17 +200,17 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
   const menuItemClass =
     'group flex w-full items-center gap-4 rounded-xl px-3 py-3 text-left text-[15px] font-medium text-[var(--text-strong)] transition hover:bg-[var(--hover-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
   const menuIconClass =
-    'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--panel)] text-[var(--accent)] ring-1 ring-[var(--line)] transition group-hover:bg-[var(--accent-wash)]'
+    'user-menu-nav-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--panel)] text-[var(--accent)] ring-1 ring-[var(--line)] transition group-hover:bg-[var(--accent-wash)]'
   const soonMenuItemClass =
     'pointer-events-none group flex w-full items-center gap-4 rounded-xl px-3 py-3 text-left text-[15px] font-medium text-[var(--text-disabled)] opacity-90'
   const soonMenuIconClass =
-    'flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--panel)] text-[var(--text-disabled)] ring-1 ring-[var(--line)]'
+    'user-menu-nav-icon user-menu-nav-icon--soon flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--panel)] text-[var(--text-disabled)] ring-1 ring-[var(--line)]'
   const helpMenuItemClass =
     'group flex w-full items-center gap-4 rounded-xl px-3 py-3 text-left text-[15px] font-medium text-[var(--text-strong)] transition hover:bg-[var(--hover-surface)] focus:outline-none'
   const helpSubmenuItemClass =
     'group flex w-full items-center gap-4 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[var(--text-strong)] transition hover:bg-[var(--hover-surface)] focus:outline-none'
   const submenuIconClass =
-    'flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[var(--panel)] text-[var(--accent)] ring-1 ring-[var(--line)] transition group-hover:bg-[var(--accent-wash)]'
+    'user-menu-nav-icon user-menu-nav-icon--submenu flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[var(--panel)] text-[var(--accent)] ring-1 ring-[var(--line)] transition group-hover:bg-[var(--accent-wash)]'
   const panelShellClass = useDesktopPopover
     ? 'gala-menu-popover absolute right-0 top-full z-[7100] mt-3 flex w-[340px] max-w-[min(340px,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-[28px] border border-[var(--line)] bg-[var(--surface-overlay)] shadow-[var(--shadow-strong)] backdrop-blur-xl'
     : (compact
@@ -340,7 +340,7 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
                   <div className={useDesktopPopover ? 'mt-3 min-w-0' : undefined}>
                     <p className={`max-w-full truncate font-semibold text-slate-950 ${useDesktopPopover ? 'text-[17px]' : 'mt-3 text-lg'}`}>{displayName}</p>
                     {effectiveUser.email ? <p className="max-w-full truncate text-sm text-slate-600">{effectiveUser.email}</p> : null}
-                    <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--accent)]">
+                    <span className="user-menu-view-profile mt-2 inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--accent)]">
                       View profile
                       <AppIcon name="chevronRight" className="h-3.5 w-3.5" />
                     </span>
@@ -497,7 +497,7 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
                 <div className="mt-3 min-w-0">
                   <p className="max-w-full truncate text-[17px] font-semibold text-slate-950">{displayName}</p>
                   {effectiveUser.email ? <p className="max-w-full truncate text-sm text-slate-600">{effectiveUser.email}</p> : null}
-                  <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--accent)]">
+                  <span className="user-menu-view-profile mt-2 inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--accent)]">
                     View profile
                     <AppIcon name="chevronRight" className="h-3.5 w-3.5" />
                   </span>

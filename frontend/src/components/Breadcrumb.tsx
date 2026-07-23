@@ -136,7 +136,7 @@ function BreadcrumbItemEl({ item, showChevron }: { item: BreadcrumbItem; showChe
       ) : (
         <span
           aria-current="page"
-          className="flex min-w-0 items-center gap-1.5 font-semibold text-[var(--accent)]"
+          className="breadcrumb-current flex min-w-0 items-center gap-1.5 font-semibold"
         >
           {item.icon && <span className="shrink-0">{item.icon}</span>}
           <span className="truncate min-w-0">{item.label}</span>

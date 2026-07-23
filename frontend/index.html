@@ -35,8 +35,17 @@
     </script>
     <style>
       html, body, #root {
-        background: #f8fafc;
         min-height: 100vh;
+      }
+
+      html, body, #root {
+        background: #f8fafc;
+      }
+
+      html[data-theme="dark"],
+      html[data-theme="dark"] body,
+      html[data-theme="dark"] #root {
+        background: #08111d;
       }
 
       .critical-app-loader {
