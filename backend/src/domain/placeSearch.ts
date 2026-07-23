@@ -1,8 +1,6 @@
 import type { NormalizedPlace } from "./places";
 import { FINAL_PLACE_CATEGORIES } from "./places";
 
-export type PlaceSearchMode = "browse" | "name_match";
-
 export type PlaceSearchFilters = {
   category?: string | null;
   city?: string | null;
@@ -26,27 +24,6 @@ type SearchSignals = {
   good_for: string | null;
   budget: BudgetFilter | null;
 };
-
-const FILLER_WORDS = new Set([
-  "a",
-  "ang",
-  "at",
-  "for",
-  "from",
-  "in",
-  "lang",
-  "malapit",
-  "mga",
-  "na",
-  "near",
-  "ng",
-  "please",
-  "po",
-  "sa",
-  "the",
-  "to",
-  "yung",
-]);
 
 const CATEGORY_NAMES: Record<string, string[]> = {
   Activity: ["activity", "activities", "arcade", "bowling", "games", "karaoke", "ktv", "sports"],
@@ -110,10 +87,6 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-function unique(values: Array<string | null | undefined>): string[] {
-  return [...new Set(values.filter((value): value is string => Boolean(value)))];
-}
-
 export function normalizeSearchText(value: string): string {
   return value
     .normalize("NFD")
@@ -140,25 +113,6 @@ function detectFromDictionary(query: string, dictionary: Record<string, string[]
   }
 
   return null;
-}
-
-function removeMatchedPhrases(query: string, phrases: string[]): string {
-  let nextQuery = ` ${normalizeSearchText(query)} `;
-
-  for (const phrase of phrases) {
-    const normalizedPhrase = normalizeSearchText(phrase);
-    if (!normalizedPhrase) continue;
-    nextQuery = nextQuery.replace(new RegExp(`(^|\\s)${escapeRegExp(normalizedPhrase)}(?=\\s|$)`, "g"), " ");
-  }
-
-  return nextQuery.replace(/\s+/g, " ").trim();
-}
-
-function stripFillerWords(query: string): string {
-  return normalizeSearchText(query)
-    .split(" ")
-    .filter((token) => token && !FILLER_WORDS.has(token))
-    .join(" ");
 }
 
 function canonicalCategory(value: string | null | undefined): string | null {
@@ -217,46 +171,12 @@ function cityMatches(placeCity: string | null | undefined, city: string | null):
   return cityAliases.some((alias) => normalizeSearchText(alias) === normalizedPlaceCity);
 }
 
-function hasBudgetKeyword(query: string): boolean {
-  const normalizedQuery = normalizeSearchText(query);
-  return (
-    BUDGET_KEYWORDS.free.some((keyword) => includesWholePhrase(normalizedQuery, keyword)) ||
-    BUDGET_KEYWORDS.max.some((keyword) => includesWholePhrase(normalizedQuery, keyword)) ||
-    /(?:^|\s)(?:p|php|peso|pesos)\s*\d{1,5}(?:,\d{3})?(?:\.\d+)?(?:\s|$)/.test(normalizedQuery) ||
-    /(?:^|\s)\d{1,5}(?:,\d{3})?(?:\.\d+)?\s*(?:p|php|peso|pesos)(?:\s|$)/.test(normalizedQuery)
-  );
-}
-
-function stripBrowseKeywords(query: string, signals: SearchSignals): string {
-  const phrases = unique([
-    signals.category,
-    signals.city,
-    ...(signals.category ? CATEGORY_NAMES[signals.category] ?? [] : []),
-    ...(signals.city ? CITY_DICTIONARY[signals.city] ?? [] : []),
-    ...BUDGET_KEYWORDS.free,
-    ...BUDGET_KEYWORDS.max,
-    ...BUDGET_KEYWORDS.currency,
-  ]);
-
-  const withoutKeywords = removeMatchedPhrases(query, phrases);
-  return stripFillerWords(
-    withoutKeywords
-      .split(" ")
-      .filter((token) => {
-        if (!/^\d+$/.test(token)) return true;
-        const value = Number(token);
-        return !Number.isFinite(value) || value < 20 || value > 99999;
-      })
-      .join(" "),
-  );
-}
-
 export function detectCategoryFromQuery(query: string): string | null {
-  return detectFromDictionary(stripFillerWords(query), CATEGORY_NAMES);
+  return detectFromDictionary(query, CATEGORY_NAMES);
 }
 
 export function detectCityFromQuery(query: string): string | null {
-  return detectFromDictionary(stripFillerWords(query), CITY_DICTIONARY);
+  return detectFromDictionary(query, CITY_DICTIONARY);
 }
 
 export function detectBudgetFromQuery(query: string): BudgetFilter | null {
@@ -288,28 +208,7 @@ export function detectBudgetFromQuery(query: string): BudgetFilter | null {
 }
 
 export function detectGoodForFromQuery(query: string): string | null {
-  return detectFromDictionary(stripFillerWords(query), GOOD_FOR_NAMES);
-}
-
-export function determineSearchMode(query: string): PlaceSearchMode {
-  const signals = getQuerySignals(query);
-  const normalizedQuery = normalizeSearchText(query);
-
-  if (!signals.category && !signals.city && !signals.budget) {
-    return "name_match";
-  }
-
-  const remainder = stripBrowseKeywords(normalizedQuery, signals);
-  const isPureBudgetQuery =
-    Boolean(signals.budget) &&
-    normalizedQuery.split(" ").length === 1 &&
-    /^\d{2,5}$/.test(normalizedQuery);
-
-  if (!remainder || isPureBudgetQuery || (signals.budget && hasBudgetKeyword(normalizedQuery))) {
-    return "browse";
-  }
-
-  return "name_match";
+  return detectFromDictionary(query, GOOD_FOR_NAMES);
 }
 
 function getExplicitFilters(filters: PlaceSearchFilters): SearchSignals {
@@ -328,6 +227,10 @@ function getQuerySignals(query: string): SearchSignals {
     good_for: detectGoodForFromQuery(query),
     budget: detectBudgetFromQuery(query),
   };
+}
+
+function emptySignals(): SearchSignals {
+  return { category: null, city: null, good_for: null, budget: null };
 }
 
 function mergeSignals(primary: SearchSignals, secondary: SearchSignals): SearchSignals {
@@ -369,17 +272,6 @@ export function filterPlaceByFilters(
   return budgetMatches(place.budget_min, budget);
 }
 
-function getNameMatchQuery(query: string): string {
-  return normalizeSearchText(query)
-    .split(" ")
-    .filter((token) => {
-      if (!/^\d+$/.test(token)) return true;
-      const value = Number(token);
-      return !Number.isFinite(value) || value >= 20 || value > 99999;
-    })
-    .join(" ");
-}
-
 function scoreCandidateText(candidate: string, query: string, { exact, startsWith, contains }: { exact: number; startsWith: number; contains: number }): number {
   if (!candidate || !query) return 0;
   if (candidate === query) return exact;
@@ -389,7 +281,7 @@ function scoreCandidateText(candidate: string, query: string, { exact, startsWit
 }
 
 export function scorePlaceNameMatch(place: NormalizedPlace, query: string): number {
-  const cleanedQuery = getNameMatchQuery(query);
+  const cleanedQuery = normalizeSearchText(query);
   if (!cleanedQuery) return 0;
 
   const tokens = cleanedQuery.split(" ").filter(Boolean);
@@ -419,37 +311,35 @@ export function getExactLocationLabelForIntent(query: string): string | null {
   return detectCityFromQuery(query);
 }
 
-function sortAlphabetically(places: RankedPlace[]): RankedPlace[] {
-  return places.sort((left, right) => left.place.name.localeCompare(right.place.name));
-}
-
 export function rankPlaces(places: NormalizedPlace[], query: string, filters: PlaceSearchFilters = {}): RankedPlace[] {
   const activePlaces = places.filter((place) => place.status === "active");
   const normalizedQuery = normalizeSearchText(query);
   const explicitSignals = getExplicitFilters(filters);
 
-  if (!normalizedQuery) {
-    return sortAlphabetically(
-      activePlaces
-        .filter((place) => filterPlaceByFilters(place, explicitSignals.category, explicitSignals.city, explicitSignals.budget, explicitSignals.good_for))
-        .map((place) => ({ place, score: 0 })),
-    );
-  }
+  const querySignals = normalizedQuery ? getQuerySignals(normalizedQuery) : null;
+  const effectiveSignals = mergeSignals(explicitSignals, querySignals ?? emptySignals());
 
-  const searchMode = determineSearchMode(normalizedQuery);
-  const querySignals = getQuerySignals(normalizedQuery);
-  const effectiveSignals = mergeSignals(querySignals, explicitSignals);
-
-  if (searchMode === "browse") {
-    return sortAlphabetically(
-      activePlaces
-        .filter((place) => filterPlaceByFilters(place, effectiveSignals.category, effectiveSignals.city, effectiveSignals.budget, effectiveSignals.good_for))
-        .map((place) => ({ place, score: 0 })),
-    );
-  }
+  const hasAnySignal = Boolean(effectiveSignals.category || effectiveSignals.city || effectiveSignals.budget || effectiveSignals.good_for);
 
   return activePlaces
-    .map((place) => ({ place, score: scorePlaceNameMatch(place, normalizedQuery) }))
-    .filter(({ score }) => score > 0)
-    .sort((left, right) => right.score - left.score || left.place.name.localeCompare(right.place.name));
+    .map((place) => {
+      if (!filterPlaceByFilters(place, effectiveSignals.category, effectiveSignals.city, effectiveSignals.budget, effectiveSignals.good_for)) {
+        return null;
+      }
+
+      let score = 0;
+      if (normalizedQuery) {
+        score = scorePlaceNameMatch(place, normalizedQuery);
+        if (score === 0 && !hasAnySignal) {
+          return null;
+        }
+      }
+
+      return { place, score };
+    })
+    .filter((r): r is RankedPlace => r !== null)
+    .sort((left, right) => {
+      if (right.score !== left.score) return right.score - left.score;
+      return left.place.name.localeCompare(right.place.name);
+    });
 }
