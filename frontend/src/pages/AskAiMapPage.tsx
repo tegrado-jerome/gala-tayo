@@ -997,7 +997,7 @@ function AskAiMapPage() {
       onClose={() => setIsGuestUpgradePromptOpen(false)}
       className="gala-auth-prompt--protected-feature gala-auth-prompt--protected-feature-accent"
     />
-     <main className="gala-page-background h-[var(--ask-ai-viewport-height,100dvh)] overflow-hidden overscroll-none text-[var(--text)] lg:hidden">
+     <main className="gala-page-background h-[var(--ask-ai-viewport-height,100svh)] overflow-hidden overscroll-none text-[var(--text)] lg:hidden">
       <div className="h-full w-full">
         <section className="relative h-full overflow-hidden bg-transparent p-0">
           <div className="relative h-full">

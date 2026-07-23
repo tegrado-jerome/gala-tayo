@@ -1209,7 +1209,7 @@ function SearchHub({
   }
 
     return (
-      <div className={`${selectedMode === 'ask-ai' ? 'h-[var(--ask-ai-viewport-height,100dvh)] overflow-hidden overscroll-none' : 'min-h-screen lg:h-[100dvh] lg:overflow-hidden'} bg-[var(--bg)] text-[var(--text)]`}>
+      <div className={`${selectedMode === 'ask-ai' ? 'h-[var(--ask-ai-viewport-height,100svh)] overflow-hidden overscroll-none' : 'min-h-screen lg:h-[100dvh] lg:overflow-hidden'} bg-[var(--bg)] text-[var(--text)]`}>
         <GuestAuthPrompt
           variant="ask-ai"
           mode="modal"
@@ -1219,7 +1219,7 @@ function SearchHub({
         />
         {shouldShowSearchFiltersPanel ? searchFilterPanel : null}
 
-      <div className={`gala-page-background overflow-x-hidden lg:hidden ${selectedMode === 'ask-ai' ? 'flex h-[var(--ask-ai-viewport-height,100dvh)] flex-col overflow-hidden overscroll-none' : 'flex min-h-screen flex-col'}`}>
+      <div className={`gala-page-background overflow-x-hidden lg:hidden ${selectedMode === 'ask-ai' ? 'flex h-[var(--ask-ai-viewport-height,100svh)] flex-col overflow-hidden overscroll-none' : 'flex min-h-screen flex-col'}`}>
           {selectedMode !== 'ask-ai' && <AppHeader signInLabel="Mag-sign in" minimal />}
 
           <main className={`overflow-x-hidden ${isPromptBuilderOpen ? 'flex min-h-[100dvh] flex-col overflow-hidden pb-0' : selectedMode === 'ask-ai' ? 'flex flex-1 min-h-0 flex-col overflow-hidden overscroll-none' : 'flex-1 min-h-0 pb-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] sm:pb-[calc(env(safe-area-inset-bottom,0px)+4.75rem)]'}`}>
@@ -1317,10 +1317,10 @@ function SearchHub({
         <div
           className={`hidden w-full lg:grid ${
             isPromptBuilderOpen
-              ? 'h-[var(--ask-ai-viewport-height,100dvh)] overflow-hidden grid-rows-[auto_minmax(0,1fr)]'
+              ? 'h-[var(--ask-ai-viewport-height,100svh)] overflow-hidden grid-rows-[auto_minmax(0,1fr)]'
               : selectedMode === 'ask-ai'
-                ? 'h-[var(--ask-ai-viewport-height,100dvh)] overflow-hidden grid-rows-[minmax(0,1fr)]'
-              : 'h-[var(--ask-ai-viewport-height,100dvh)] overflow-hidden lg:grid-rows-[auto_minmax(0,1fr)_auto]'
+                ? 'h-[var(--ask-ai-viewport-height,100svh)] overflow-hidden grid-rows-[minmax(0,1fr)]'
+              : 'h-[var(--ask-ai-viewport-height,100svh)] overflow-hidden lg:grid-rows-[auto_minmax(0,1fr)_auto]'
           }`}
         >
           {selectedMode !== 'ask-ai' && <AppHeader minimal />}

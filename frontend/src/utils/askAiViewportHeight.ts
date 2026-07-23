@@ -1,11 +1,35 @@
 export const ASK_AI_VIEWPORT_HEIGHT_VAR = '--ask-ai-viewport-height'
+const MOBILE_KEYBOARD_HEIGHT_THRESHOLD = 160
+
+function isTextEntryElement(element: Element | null) {
+  return (
+    element instanceof HTMLTextAreaElement ||
+    (
+      element instanceof HTMLInputElement &&
+      !['button', 'checkbox', 'color', 'file', 'hidden', 'image', 'radio', 'range', 'reset', 'submit'].includes(element.type)
+    ) ||
+    element instanceof HTMLSelectElement ||
+    (element instanceof HTMLElement && element.isContentEditable)
+  )
+}
 
 export function getAskAiViewportHeight() {
   if (typeof window === 'undefined') {
     return 0
   }
 
-  const viewportHeight = window.visualViewport?.height ?? window.innerHeight
+  const layoutViewportHeight = window.innerHeight
+  const visualViewportHeight = window.visualViewport?.height ?? 0
+  const activeElement = typeof document === 'undefined' ? null : document.activeElement
+  const keyboardLikelyOpen =
+    visualViewportHeight > 0 &&
+    layoutViewportHeight - visualViewportHeight >= MOBILE_KEYBOARD_HEIGHT_THRESHOLD &&
+    isTextEntryElement(activeElement)
+
+  const viewportHeight = keyboardLikelyOpen
+    ? visualViewportHeight
+    : Math.max(layoutViewportHeight, visualViewportHeight)
+
   return Math.max(0, Math.round(viewportHeight))
 }
 
@@ -37,6 +61,8 @@ export function startAskAiViewportHeightSync() {
     })
   }
 
+  // Apply once immediately so the first mobile render does not momentarily fall back to 100dvh.
+  applyAskAiViewportHeight()
   syncViewportHeight()
 
   window.addEventListener('resize', syncViewportHeight, { passive: true })

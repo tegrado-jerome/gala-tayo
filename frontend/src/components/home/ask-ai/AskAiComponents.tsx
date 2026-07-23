@@ -383,7 +383,7 @@ function AskAiOutputStageLegacy({
 
   return (
     <section
-      className={`gala-page-background relative overflow-hidden px-4 py-4 text-[var(--text)] sm:px-5 sm:py-5 lg:px-8 lg:py-7 ${className} min-h-[calc(var(--ask-ai-viewport-height,100dvh)-88px)]`}
+      className={`gala-page-background relative overflow-hidden px-4 py-4 text-[var(--text)] sm:px-5 sm:py-5 lg:px-8 lg:py-7 ${className} min-h-[calc(var(--ask-ai-viewport-height,100svh)-88px)]`}
     >
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -left-12 top-8 h-40 w-40 rounded-full bg-[rgba(160,201,255,0.24)] blur-3xl" />
@@ -391,7 +391,7 @@ function AskAiOutputStageLegacy({
         <div className="absolute bottom-0 right-1/3 h-36 w-36 rounded-full bg-[rgba(201,235,255,0.24)] blur-3xl" />
       </div>
 
-      <div className="relative mx-auto flex min-h-[calc(var(--ask-ai-viewport-height,100dvh)-144px)] w-full max-w-[min(1500px,calc(100vw-96px))] flex-col gap-5 lg:gap-7">
+      <div className="relative mx-auto flex min-h-[calc(var(--ask-ai-viewport-height,100svh)-144px)] w-full max-w-[min(1500px,calc(100vw-96px))] flex-col gap-5 lg:gap-7">
         <div>
           <p className="text-[0.9rem] font-black uppercase tracking-[0.12em] text-slate-500">Your question</p>
           <div className="mt-2.5 inline-block max-w-full rounded-[16px] border border-[rgba(20,35,58,0.22)] bg-white/96 px-4 py-3.5 shadow-[0_12px_26px_rgba(15,23,42,0.045),inset_0_1px_0_rgba(255,255,255,0.9)] sm:px-5 sm:py-4 lg:max-w-[980px] xl:max-w-[1120px]">
@@ -542,14 +542,14 @@ function AskAiThinkingStageLegacy({
   const loadingMessageText = 'This may take a few seconds if current info is needed.'
 
   return (
-    <section className={`gala-page-background relative overflow-hidden px-4 py-4 text-[var(--text)] sm:px-5 sm:py-5 lg:px-8 lg:py-7 ${className} min-h-[calc(var(--ask-ai-viewport-height,100dvh)-88px)]`}>
+    <section className={`gala-page-background relative overflow-hidden px-4 py-4 text-[var(--text)] sm:px-5 sm:py-5 lg:px-8 lg:py-7 ${className} min-h-[calc(var(--ask-ai-viewport-height,100svh)-88px)]`}>
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -left-12 top-8 h-40 w-40 rounded-full bg-[rgba(160,201,255,0.24)] blur-3xl" />
         <div className="absolute right-0 top-0 h-52 w-52 rounded-full bg-[rgba(192,202,255,0.22)] blur-3xl" />
         <div className="absolute bottom-0 right-1/3 h-36 w-36 rounded-full bg-[rgba(201,235,255,0.24)] blur-3xl" />
       </div>
 
-      <div className="relative mx-auto flex min-h-[calc(var(--ask-ai-viewport-height,100dvh)-144px)] w-full max-w-[min(1500px,calc(100vw-96px))] flex-col">
+      <div className="relative mx-auto flex min-h-[calc(var(--ask-ai-viewport-height,100svh)-144px)] w-full max-w-[min(1500px,calc(100vw-96px))] flex-col">
         <h1 className="mt-6 text-[3.1rem] font-black leading-none tracking-[-0.055em] text-slate-950 sm:text-[4rem] lg:mt-8 lg:text-[4.5rem]">
           GalaTayo AI
         </h1>
@@ -899,14 +899,14 @@ function AskAiOutputStageNextLegacy({
   const tipLine = paragraphs[2] ?? 'Add your area, budget, or vibe so GalaTayo can make the next answer more specific.'
 
   return (
-    <section className={`gala-page-background relative overflow-hidden px-5 py-5 text-[var(--text)] ${className} min-h-[calc(var(--ask-ai-viewport-height,100dvh)-88px)]`}>
+    <section className={`gala-page-background relative overflow-hidden px-5 py-5 text-[var(--text)] ${className} min-h-[calc(var(--ask-ai-viewport-height,100svh)-88px)]`}>
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -left-12 top-8 h-40 w-40 rounded-full bg-[rgba(160,201,255,0.24)] blur-3xl" />
         <div className="absolute right-0 top-0 h-52 w-52 rounded-full bg-[rgba(192,202,255,0.22)] blur-3xl" />
         <div className="absolute bottom-0 right-1/3 h-36 w-36 rounded-full bg-[rgba(201,235,255,0.24)] blur-3xl" />
       </div>
 
-      <div className="relative mx-auto flex min-h-[calc(var(--ask-ai-viewport-height,100dvh)-128px)] w-full max-w-[820px] flex-col gap-5 lg:max-w-[900px]">
+      <div className="relative mx-auto flex min-h-[calc(var(--ask-ai-viewport-height,100svh)-128px)] w-full max-w-[820px] flex-col gap-5 lg:max-w-[900px]">
         <div>
           <p className="text-[0.9rem] font-black uppercase tracking-[0.12em] text-slate-500">Your question</p>
           <div className="mt-2.5 w-full rounded-2xl border border-[rgba(20,35,58,0.14)] bg-white/88 px-4 py-3.5">
@@ -1253,6 +1253,10 @@ function AskAiModePanel({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [answer, isSubmitting, messages])
 
+  useLayoutEffect(() => {
+    textareaRef.current?.focus()
+  })
+
   const [draftQuestion, setDraftQuestion] = useState('')
   const draftQuestionRef = useRef('')
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
@@ -1266,22 +1270,6 @@ function AskAiModePanel({
     el.style.height = 'auto'
     el.style.height = `${Math.min(el.scrollHeight, 120)}px`
   }, [draftQuestion])
-
-  useEffect(() => {
-    const el = textareaRef.current
-    if (!el) return
-
-    const observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        if (mutation.attributeName === 'disabled' && !el.disabled) {
-          el.focus()
-        }
-      }
-    })
-
-    observer.observe(el, { attributes: true })
-    return () => observer.disconnect()
-  }, [])
 
   const updateDraftQuestion = useCallback((nextQuestion: string) => {
     draftQuestionRef.current = nextQuestion
@@ -1303,6 +1291,7 @@ function AskAiModePanel({
 
     updateDraftQuestion('')
     onSubmit(finalQuestion)
+    textareaRef.current?.focus()
   }, [isLimitReached, isRegistered, isSubmitting, isUsagePending, onGuestUpgradePrompt, onSubmit, updateDraftQuestion])
 
   return (
@@ -1363,7 +1352,7 @@ function AskAiModePanel({
 
       <div className="relative shrink-0 px-4 pt-1 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] sm:px-5 md:px-6 lg:px-8">
         <div className="mx-auto w-full max-w-[920px]">
-          <div className="group/composer relative flex items-end gap-1.5 rounded-[24px] border border-[var(--line)] bg-[var(--panel)] p-1.5 shadow-[var(--shadow-soft)] transition focus-within:border-[var(--line-strong)]">
+          <div className="group/composer relative flex items-end gap-1.5 rounded-[24px] border border-[var(--line)] bg-[var(--panel)] p-1.5 shadow-[var(--shadow-soft)] focus-within:border-[var(--line-strong)]">
             <textarea
               ref={textareaRef}
               value={draftQuestion}
@@ -1374,9 +1363,12 @@ function AskAiModePanel({
                   handleSend()
                 }
               }}
+              onBlur={() => {
+                textareaRef.current?.focus()
+              }}
               placeholder="Message GalaTayo AI..."
               rows={1}
-              disabled={isSubmitting || isUsagePending || (isLimitReached && isRegistered)}
+              disabled={isUsagePending || (isLimitReached && isRegistered)}
               className="ask-ai-composer-input min-h-[40px] max-h-[120px] flex-1 resize-none overflow-y-auto bg-transparent px-3 py-2 text-[15px] leading-relaxed text-slate-800 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed disabled:text-slate-300"
             />
             <button
@@ -1457,7 +1449,7 @@ const ChatMessageList = memo(function ChatMessageList({
     ]
 
     return (
-      <div className="flex w-full flex-1 items-center justify-center px-4 py-6 sm:px-5">
+      <div className="flex w-full flex-1 items-start px-4 pb-6 pt-3 sm:px-5 sm:pb-8 sm:pt-4 lg:items-center lg:justify-center lg:py-6">
         <div className="mx-auto flex w-full max-w-[820px] flex-col items-center text-center lg:max-w-[900px]">
           <div className="mb-4 flex w-full flex-col items-center gap-1.5 sm:mb-5">
             <h1 className="text-[1.3rem] font-semibold leading-tight tracking-[-0.02em] text-slate-900 sm:text-[1.9rem]">Ano ang plano today?</h1>
