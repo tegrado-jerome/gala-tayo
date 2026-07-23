@@ -383,7 +383,7 @@ function AskAiOutputStageLegacy({
 
   return (
     <section
-      className={`gala-page-background relative overflow-hidden px-4 py-4 text-[var(--text)] sm:px-5 sm:py-5 lg:px-8 lg:py-7 ${className} min-h-[calc(var(--ask-ai-viewport-height,100dvh)-88px)]`}
+      className={`gala-page-background relative overflow-hidden px-4 py-4 text-[var(--text)] sm:px-5 sm:py-5 lg:px-8 lg:py-7 ${className} min-h-[calc(var(--ask-ai-viewport-height,100svh)-88px)]`}
     >
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -left-12 top-8 h-40 w-40 rounded-full bg-[rgba(160,201,255,0.24)] blur-3xl" />
@@ -391,7 +391,7 @@ function AskAiOutputStageLegacy({
         <div className="absolute bottom-0 right-1/3 h-36 w-36 rounded-full bg-[rgba(201,235,255,0.24)] blur-3xl" />
       </div>
 
-      <div className="relative mx-auto flex min-h-[calc(var(--ask-ai-viewport-height,100dvh)-144px)] w-full max-w-[min(1500px,calc(100vw-96px))] flex-col gap-5 lg:gap-7">
+      <div className="relative mx-auto flex min-h-[calc(var(--ask-ai-viewport-height,100svh)-144px)] w-full max-w-[min(1500px,calc(100vw-96px))] flex-col gap-5 lg:gap-7">
         <div>
           <p className="text-[0.9rem] font-black uppercase tracking-[0.12em] text-slate-500">Your question</p>
           <div className="mt-2.5 inline-block max-w-full rounded-[16px] border border-[rgba(20,35,58,0.22)] bg-white/96 px-4 py-3.5 shadow-[0_12px_26px_rgba(15,23,42,0.045),inset_0_1px_0_rgba(255,255,255,0.9)] sm:px-5 sm:py-4 lg:max-w-[980px] xl:max-w-[1120px]">
@@ -542,14 +542,14 @@ function AskAiThinkingStageLegacy({
   const loadingMessageText = 'This may take a few seconds if current info is needed.'
 
   return (
-    <section className={`gala-page-background relative overflow-hidden px-4 py-4 text-[var(--text)] sm:px-5 sm:py-5 lg:px-8 lg:py-7 ${className} min-h-[calc(var(--ask-ai-viewport-height,100dvh)-88px)]`}>
+    <section className={`gala-page-background relative overflow-hidden px-4 py-4 text-[var(--text)] sm:px-5 sm:py-5 lg:px-8 lg:py-7 ${className} min-h-[calc(var(--ask-ai-viewport-height,100svh)-88px)]`}>
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -left-12 top-8 h-40 w-40 rounded-full bg-[rgba(160,201,255,0.24)] blur-3xl" />
         <div className="absolute right-0 top-0 h-52 w-52 rounded-full bg-[rgba(192,202,255,0.22)] blur-3xl" />
         <div className="absolute bottom-0 right-1/3 h-36 w-36 rounded-full bg-[rgba(201,235,255,0.24)] blur-3xl" />
       </div>
 
-      <div className="relative mx-auto flex min-h-[calc(var(--ask-ai-viewport-height,100dvh)-144px)] w-full max-w-[min(1500px,calc(100vw-96px))] flex-col">
+      <div className="relative mx-auto flex min-h-[calc(var(--ask-ai-viewport-height,100svh)-144px)] w-full max-w-[min(1500px,calc(100vw-96px))] flex-col">
         <h1 className="mt-6 text-[3.1rem] font-black leading-none tracking-[-0.055em] text-slate-950 sm:text-[4rem] lg:mt-8 lg:text-[4.5rem]">
           GalaTayo AI
         </h1>
@@ -899,14 +899,14 @@ function AskAiOutputStageNextLegacy({
   const tipLine = paragraphs[2] ?? 'Add your area, budget, or vibe so GalaTayo can make the next answer more specific.'
 
   return (
-    <section className={`gala-page-background relative overflow-hidden px-5 py-5 text-[var(--text)] ${className} min-h-[calc(var(--ask-ai-viewport-height,100dvh)-88px)]`}>
+    <section className={`gala-page-background relative overflow-hidden px-5 py-5 text-[var(--text)] ${className} min-h-[calc(var(--ask-ai-viewport-height,100svh)-88px)]`}>
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -left-12 top-8 h-40 w-40 rounded-full bg-[rgba(160,201,255,0.24)] blur-3xl" />
         <div className="absolute right-0 top-0 h-52 w-52 rounded-full bg-[rgba(192,202,255,0.22)] blur-3xl" />
         <div className="absolute bottom-0 right-1/3 h-36 w-36 rounded-full bg-[rgba(201,235,255,0.24)] blur-3xl" />
       </div>
 
-      <div className="relative mx-auto flex min-h-[calc(var(--ask-ai-viewport-height,100dvh)-128px)] w-full max-w-[820px] flex-col gap-5 lg:max-w-[900px]">
+      <div className="relative mx-auto flex min-h-[calc(var(--ask-ai-viewport-height,100svh)-128px)] w-full max-w-[820px] flex-col gap-5 lg:max-w-[900px]">
         <div>
           <p className="text-[0.9rem] font-black uppercase tracking-[0.12em] text-slate-500">Your question</p>
           <div className="mt-2.5 w-full rounded-2xl border border-[rgba(20,35,58,0.14)] bg-white/88 px-4 py-3.5">
