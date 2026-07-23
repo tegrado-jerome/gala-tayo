@@ -20,6 +20,7 @@ import {
 } from '../data/homeRecommendations'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { navigateToPath } from '../utils/navigation'
+import type { NavigationSource } from '../app/useAppLocationState'
 import {
   clearHomeScrollCache,
   readHomeScrollCache,
@@ -1005,13 +1006,15 @@ function getRailItemTargetLeft(element: HTMLElement, item: HTMLElement) {
   return Math.min(maxScrollLeft, Math.max(0, targetLeft))
 }
 
-function HomePage() {
+function HomePage({ navigationSource }: { navigationSource: NavigationSource }) {
   const { currentProfile, currentUser } = useAppUser()
   const guestAuth = useGuestAuthPrompt()
   const initialHomeScrollCacheRef = useRef(readHomeScrollCache())
   const hasRestoredHomeScrollRef = useRef(false)
   const [activeTopPicksTab, setActiveTopPicksTab] = useState<'all' | 'popular' | 'recommended'>(
-    initialHomeScrollCacheRef.current?.activeTab ?? 'all'
+    navigationSource === 'pop'
+      ? (initialHomeScrollCacheRef.current?.activeTab ?? 'all')
+      : 'all'
   )
   const topPicksScrollLeftByTabRef = useRef<{ all: number; popular: number; recommended: number }>({
     all: 0,
@@ -1117,6 +1120,11 @@ function HomePage() {
   }), [homeImagePreconnectOrigins, homeImagePreloadUrls, homePriorityImageUrls])
 
   useLayoutEffect(() => {
+    if (navigationSource !== 'pop') {
+      clearHomeScrollCache()
+      return
+    }
+
     const homeScrollCache = initialHomeScrollCacheRef.current
 
     if (!homeScrollCache?.pendingScrollRestore || hasRestoredHomeScrollRef.current) {
@@ -1147,7 +1155,7 @@ function HomePage() {
     )
 
     clearHomeScrollCache()
-  }, [activeTopPicksTab])
+  }, [activeTopPicksTab, navigationSource])
 
   useLayoutEffect(() => {
     heroCardRefs.current.length = visibleTopPickCarouselPlaces.length

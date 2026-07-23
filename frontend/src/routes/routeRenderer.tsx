@@ -232,7 +232,7 @@ function renderRouteContent(descriptor: RouteDescriptor, inputs: RouteInputs) {
               },
             ]}
           />
-          <HomePage />
+          <HomePage navigationSource={navigationSource} />
         </>
       )
     case 'search':
