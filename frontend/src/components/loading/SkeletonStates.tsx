@@ -58,6 +58,42 @@ export function PageShellSkeleton({ className = '' }: { className?: string }) {
   )
 }
 
+export function HistorySkeleton({ count = 4, className = '' }: CountProps & { className?: string }) {
+  return (
+    <div
+      className={cn('grid w-full grid-cols-1 items-start gap-3 md:grid-cols-2 md:gap-4 lg:grid-cols-3 xl:grid-cols-4', className)}
+      aria-busy="true"
+      aria-live="polite"
+    >
+      <span className="sr-only">Loading history</span>
+      {Array.from({ length: count }).map((_, index) => (
+        <article key={`history-skeleton-${index}`} className="flex min-h-0 w-full flex-col overflow-hidden rounded-xl border border-[var(--line)] bg-white shadow-[0_2px_8px_rgba(28,77,160,0.04)]">
+          <AppSkeleton className="h-28 w-full rounded-none sm:h-36 lg:h-40" />
+          <div className="flex min-h-0 flex-1 flex-col gap-0 p-2 sm:p-4">
+            <div className="shrink-0">
+              <SkeletonLine className="h-3 w-16" />
+              <SkeletonLine className="mt-2 h-3.5 w-3/4" />
+              <SkeletonLine className="mt-1 h-3.5 w-1/2" />
+              <div className="mt-2 flex items-center gap-1">
+                <AppSkeleton className="h-3.5 w-3.5 shrink-0 rounded-full" />
+                <SkeletonLine className="h-3 w-24" />
+              </div>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-1">
+              <AppSkeleton className="h-5 w-16 rounded-md" />
+              <AppSkeleton className="h-5 w-20 rounded-md" />
+            </div>
+            <div className="mt-auto grid shrink-0 grid-cols-2 gap-1.5 pt-3">
+              <AppSkeleton className="h-10 w-full rounded-lg" />
+              <AppSkeleton className="h-10 w-full rounded-lg" />
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+  )
+}
+
 export function FormSkeleton({ rows = 5, className = '' }: FormSkeletonProps) {
   return (
     <section className={cn('w-full rounded-[28px] border border-[var(--line)] bg-white p-5 shadow-sm', className)} aria-busy="true" aria-live="polite">

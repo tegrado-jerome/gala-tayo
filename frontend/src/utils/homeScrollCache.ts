@@ -7,6 +7,14 @@ type HomeScrollCache = {
   selectedPlaceViewportTop: number | null
   pendingScrollRestore: boolean
   cachedAt: number
+  activeTab: 'all' | 'popular' | 'recommended'
+  topPicksScrollLeftByTab: {
+    all: number
+    popular: number
+    recommended: number
+  }
+  citiesScrollLeft: number
+  categoriesScrollLeft: number
 }
 
 function readPersistentStorage(key: string) {
@@ -97,6 +105,8 @@ export function readHomeScrollCache(): HomeScrollCache | null {
       return null
     }
 
+    const rawTopPicksScroll = parsedCache.topPicksScrollLeftByTab
+
     return {
       scrollY: typeof parsedCache.scrollY === 'number' && Number.isFinite(parsedCache.scrollY) ? parsedCache.scrollY : 0,
       selectedPlaceId: typeof parsedCache.selectedPlaceId === 'string' ? parsedCache.selectedPlaceId : null,
@@ -106,6 +116,21 @@ export function readHomeScrollCache(): HomeScrollCache | null {
           : null,
       pendingScrollRestore: parsedCache.pendingScrollRestore === true,
       cachedAt: parsedCache.cachedAt,
+      activeTab:
+        parsedCache.activeTab === 'all' || parsedCache.activeTab === 'popular' || parsedCache.activeTab === 'recommended'
+          ? parsedCache.activeTab
+          : 'all',
+      topPicksScrollLeftByTab: {
+        all: rawTopPicksScroll?.all ?? 0,
+        popular: rawTopPicksScroll?.popular ?? 0,
+        recommended: rawTopPicksScroll?.recommended ?? 0,
+      },
+      citiesScrollLeft: typeof parsedCache.citiesScrollLeft === 'number' && Number.isFinite(parsedCache.citiesScrollLeft)
+        ? parsedCache.citiesScrollLeft
+        : 0,
+      categoriesScrollLeft: typeof parsedCache.categoriesScrollLeft === 'number' && Number.isFinite(parsedCache.categoriesScrollLeft)
+        ? parsedCache.categoriesScrollLeft
+        : 0,
     }
   } catch {
     return null
@@ -128,6 +153,43 @@ export function clearHomeScrollCache() {
     removePersistentStorage(HOME_SCROLL_CACHE_KEY)
   } catch {
     // Storage can be unavailable in private browsing or restricted webviews.
+  }
+}
+
+export function restoreHomeHorizontalScrolls(
+  cache: Pick<HomeScrollCache, 'topPicksScrollLeftByTab' | 'citiesScrollLeft' | 'categoriesScrollLeft'>,
+  activeTab: 'all' | 'popular' | 'recommended',
+  refs: {
+    heroCarousel: HTMLElement | null
+    cityRail: HTMLElement | null
+    categoryRail: HTMLElement | null
+  },
+  maxRetries = 4,
+) {
+  const topPicksScroll = cache.topPicksScrollLeftByTab?.[activeTab] ?? 0
+  const citiesScroll = cache.citiesScrollLeft ?? 0
+  const categoriesScroll = cache.categoriesScrollLeft ?? 0
+
+  const restore = () => {
+    if (topPicksScroll > 0 && refs.heroCarousel) {
+      refs.heroCarousel.scrollLeft = topPicksScroll
+    }
+    if (citiesScroll > 0 && refs.cityRail) {
+      refs.cityRail.scrollLeft = citiesScroll
+    }
+    if (categoriesScroll > 0 && refs.categoryRail) {
+      refs.categoryRail.scrollLeft = categoriesScroll
+    }
+  }
+
+  restore()
+
+  for (let index = 0; index < maxRetries; index += 1) {
+    const frameCount = index + 1
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(restore)
+    })
+    window.setTimeout(restore, 120 * frameCount)
   }
 }
 

@@ -198,10 +198,12 @@ function SavedFavoritesProvider({ children }: { children: ReactNode }) {
     if (!session?.user?.id) {
       setFavorites([])
       setSavedPlaceKeys(new Set())
-      setIsFavoritesLoading(false)
       setFavoritesError('')
       return undefined
     }
+
+    setIsFavoritesLoading(true)
+    setFavoritesError('')
 
     const cachedFavorites = readFavoritesResumeCache(session.user.id)
     if (cachedFavorites) {
@@ -220,7 +222,6 @@ function SavedFavoritesProvider({ children }: { children: ReactNode }) {
           throw new Error('Sign in is required.')
         }
 
-        setIsFavoritesLoading(favorites.length === 0)
         setFavoritesError('')
 
         const response = await fetch(getApiUrl('/favorites'), {

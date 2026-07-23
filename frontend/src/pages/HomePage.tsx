@@ -23,6 +23,7 @@ import { navigateToPath } from '../utils/navigation'
 import {
   clearHomeScrollCache,
   readHomeScrollCache,
+  restoreHomeHorizontalScrolls,
   restoreHomeScroll,
   writeHomeScrollCache,
 } from '../utils/homeScrollCache'
@@ -288,10 +289,12 @@ function HomeFeaturedCard({
   place,
   index,
   onGuestFavorite,
+  onNavigateFromHome,
 }: {
   place: ShowcasePlace
   index: number
   onGuestFavorite: () => void
+  onNavigateFromHome?: (place: ShowcasePlace, viewportTop: number, href: string | null) => void
 }) {
   const href = buildPlaceHref(place)
   const imageCandidates = useMemo(() => getHomeTileImageCandidates(place), [place])
@@ -313,6 +316,11 @@ function HomeFeaturedCard({
   }, [imageCandidates])
 
   const handleOpen = (event: MouseEvent<HTMLDivElement>) => {
+    if (onNavigateFromHome) {
+      onNavigateFromHome(place, event.currentTarget.getBoundingClientRect().top, href)
+      return
+    }
+
     if (href) {
       if (place.slug) {
         void prefetchPlaceDetail(place.slug)
@@ -323,6 +331,10 @@ function HomeFeaturedCard({
         selectedPlaceId: place.id,
         selectedPlaceViewportTop: event.currentTarget.getBoundingClientRect().top,
         pendingScrollRestore: true,
+        activeTab: 'all',
+        topPicksScrollLeftByTab: { all: 0, popular: 0, recommended: 0 },
+        citiesScrollLeft: 0,
+        categoriesScrollLeft: 0,
       })
       navigateToPath(href)
       return
@@ -334,6 +346,10 @@ function HomeFeaturedCard({
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault()
+      if (onNavigateFromHome) {
+        onNavigateFromHome(place, event.currentTarget.getBoundingClientRect().top, href)
+        return
+      }
       if (place.slug) {
         void prefetchPlaceDetail(place.slug)
       }
@@ -966,20 +982,19 @@ function getRailItemTargetLeft(element: HTMLElement, item: HTMLElement) {
   return Math.min(maxScrollLeft, Math.max(0, targetLeft))
 }
 
-function HomePage({
-  navigationSource = 'push',
-}: {
-  navigationSource?: 'push' | 'replace' | 'pop'
-}) {
+function HomePage() {
   const { currentProfile, currentUser } = useAppUser()
   const guestAuth = useGuestAuthPrompt()
-  const initialHomeScrollCacheRef = useRef(
-    navigationSource === 'pop' ? readHomeScrollCache() : null
-  )
+  const initialHomeScrollCacheRef = useRef(readHomeScrollCache())
   const hasRestoredHomeScrollRef = useRef(false)
   const [activeTopPicksTab, setActiveTopPicksTab] = useState<'all' | 'popular' | 'recommended'>(
-    'all'
+    initialHomeScrollCacheRef.current?.activeTab ?? 'all'
   )
+  const topPicksScrollLeftByTabRef = useRef<{ all: number; popular: number; recommended: number }>({
+    all: 0,
+    popular: 0,
+    recommended: 0,
+  })
   const [selectedCityTileSlug, setSelectedCityTileSlug] = useState<string | null>(null)
   const [selectedCategoryTileLabel, setSelectedCategoryTileLabel] = useState<string | null>(null)
   const heroCarouselRef = useRef<HTMLDivElement | null>(null)
@@ -1064,7 +1079,7 @@ function HomePage({
   useLayoutEffect(() => {
     const homeScrollCache = initialHomeScrollCacheRef.current
 
-    if (navigationSource !== 'pop' || !homeScrollCache?.pendingScrollRestore || hasRestoredHomeScrollRef.current) {
+    if (!homeScrollCache?.pendingScrollRestore || hasRestoredHomeScrollRef.current) {
       return
     }
 
@@ -1075,8 +1090,24 @@ function HomePage({
       selectedPlaceViewportTop: homeScrollCache.selectedPlaceViewportTop,
     })
 
+    topPicksScrollLeftByTabRef.current = {
+      all: homeScrollCache.topPicksScrollLeftByTab?.all ?? 0,
+      popular: homeScrollCache.topPicksScrollLeftByTab?.popular ?? 0,
+      recommended: homeScrollCache.topPicksScrollLeftByTab?.recommended ?? 0,
+    }
+
+    restoreHomeHorizontalScrolls(
+      homeScrollCache,
+      activeTopPicksTab,
+      {
+        heroCarousel: heroCarouselRef.current,
+        cityRail: cityRailRef.current,
+        categoryRail: categoryRailRef.current,
+      }
+    )
+
     clearHomeScrollCache()
-  }, [navigationSource])
+  }, [activeTopPicksTab])
 
   useLayoutEffect(() => {
     heroCardRefs.current.length = visibleTopPickCarouselPlaces.length
@@ -1190,14 +1221,20 @@ function HomePage({
   ])
 
   const openAllCities = () => {
+    saveHomePageState()
     navigateToPath('/places')
   }
 
   const openAllCategories = () => {
+    saveHomePageState()
     navigateToPath('/places/categories')
   }
 
   const handleTopPicksTabChange = (tab: 'all' | 'popular' | 'recommended') => {
+    if (heroCarouselRef.current) {
+      topPicksScrollLeftByTabRef.current[activeTopPicksTab] = heroCarouselRef.current.scrollLeft
+    }
+
     setActiveTopPicksTab(tab)
     setActiveHeroCardIndex(0)
     setActiveHeroIndex(0)
@@ -1206,8 +1243,31 @@ function HomePage({
     requestAnimationFrame(() => {
       heroCarouselRef.current?.scrollTo({
         left: 0,
-        behavior: 'smooth',
+        behavior: 'auto',
       })
+    })
+  }
+
+  const saveHomePageState = (overrides?: { selectedPlaceId?: string; selectedPlaceViewportTop?: number | null }) => {
+    const heroCarousel = heroCarouselRef.current
+
+    if (heroCarousel) {
+      topPicksScrollLeftByTabRef.current[activeTopPicksTab] = heroCarousel.scrollLeft
+    }
+
+    writeHomeScrollCache({
+      scrollY: window.scrollY,
+      selectedPlaceId: overrides?.selectedPlaceId ?? null,
+      selectedPlaceViewportTop: overrides?.selectedPlaceViewportTop ?? null,
+      pendingScrollRestore: true,
+      activeTab: activeTopPicksTab,
+      topPicksScrollLeftByTab: {
+        all: topPicksScrollLeftByTabRef.current.all,
+        popular: topPicksScrollLeftByTabRef.current.popular,
+        recommended: topPicksScrollLeftByTabRef.current.recommended,
+      },
+      citiesScrollLeft: cityRailRef.current?.scrollLeft ?? 0,
+      categoriesScrollLeft: categoryRailRef.current?.scrollLeft ?? 0,
     })
   }
 
@@ -1296,7 +1356,7 @@ function HomePage({
 
             <button
               type="button"
-              onClick={() => navigateToPath('/search')}
+              onClick={() => { saveHomePageState(); navigateToPath('/search') }}
               className="home-search-button mt-8 flex h-[56px] w-full items-center justify-between rounded-[20px] border px-4 transition"
             >
               <span className="flex min-w-0 items-center gap-2.5" style={{ color: 'var(--home-search-text)' }}>
@@ -1320,7 +1380,7 @@ function HomePage({
                     <button
                       key={feature.href}
                       type="button"
-                      onClick={() => navigateToPath(feature.href)}
+                      onClick={() => { saveHomePageState(); navigateToPath(feature.href) }}
                       className="home-ai-card flex min-w-0 items-center gap-3 rounded-[18px] border px-3.5 py-3 text-left transition hover:-translate-y-0.5"
                     >
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl" style={{ background: 'var(--home-ai-icon-bg)', color: 'var(--home-ai-icon-text)' }}>
@@ -1355,7 +1415,7 @@ function HomePage({
                   {activeTopPicksTab === 'all' ? (
                     <button
                       type="button"
-                      onClick={() => navigateToPath('/places')}
+                      onClick={() => { saveHomePageState(); navigateToPath('/places') }}
                       className="mt-1 inline-flex items-center gap-1 text-[14px] font-medium transition"
                       style={{ color: 'var(--home-link)' }}
                     >
@@ -1426,6 +1486,20 @@ function HomePage({
                             place={place}
                             index={index}
                             onGuestFavorite={() => guestAuth.open('favorite')}
+                            onNavigateFromHome={(clickedPlace, viewportTop, href) => {
+                              if (clickedPlace.slug) {
+                                void prefetchPlaceDetail(clickedPlace.slug)
+                              }
+                              saveHomePageState({
+                                selectedPlaceId: clickedPlace.id,
+                                selectedPlaceViewportTop: viewportTop,
+                              })
+                              if (href) {
+                                navigateToPath(href)
+                              } else {
+                                navigateToPath('/search')
+                              }
+                            }}
                           />
                         </div>
                       ))
@@ -1482,6 +1556,7 @@ function HomePage({
                         eagerImageCount={3}
                         onClick={() => {
                           setSelectedCityTileSlug(tile.slug ?? null)
+                          saveHomePageState()
                           navigateToPath(tile.href)
                         }}
                       />
@@ -1533,6 +1608,7 @@ function HomePage({
                         eagerImageCount={2}
                         onClick={() => {
                           setSelectedCategoryTileLabel(tile.label)
+                          saveHomePageState()
                           navigateToPath(tile.href)
                         }}
                       />

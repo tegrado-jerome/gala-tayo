@@ -9,6 +9,8 @@ import { formatLabelFromSlug } from '../utils/routes'
 import { getApiUrl } from '../utils/apiClient'
 import { trackPlaceViewed } from '../utils/analytics'
 import { getPublicSiteOrigin } from '../utils/site'
+import { getSupabaseAccessToken, getSupabaseSession } from '../supabase'
+import { clearHistoryCache } from '../utils/historyCache'
 import type { PlaceDetail, PlaceDetailCardData } from '../types/appTypes'
 import { cachePlaceDetail, readCachedPlaceDetail } from '../utils/placeDetailCache'
 
@@ -141,6 +143,31 @@ export default function SharedPlacePage({
       areaSlug: areaMeta.slug,
       category: place.category,
     })
+
+    const recordHistory = async () => {
+      try {
+        const session = await getSupabaseSession()
+        const token = await getSupabaseAccessToken(session)
+        if (!token) return
+
+        await fetch(getApiUrl('/history/place-view'), {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ placeSlug: place.slug }),
+        })
+
+        if (session?.user?.id) {
+          clearHistoryCache(session.user.id)
+        }
+      } catch {
+        /* silently fail — history recording is non-critical */
+      }
+    }
+
+    void recordHistory()
   }, [areaMeta, canonicalPath, place])
 
   if (isLoading) {

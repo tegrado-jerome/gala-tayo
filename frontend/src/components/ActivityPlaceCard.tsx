@@ -111,13 +111,13 @@ export default function ActivityPlaceCard({
           {visibleChips.map((chip) => (
             <span
               key={`${placeSlug}-${chip}`}
-              className="rounded-md border border-[var(--line)] bg-[var(--chip)] px-2 py-0.5 text-[11px] font-bold text-[var(--accent-deep)]"
+              className="activity-place-card__chip rounded-md border border-[var(--line)] bg-[var(--chip)] px-2 py-0.5 text-[11px] font-bold text-[var(--accent-deep)]"
             >
               {chip}
             </span>
           ))}
           {hiddenChipCount > 0 ? (
-            <span className="rounded-md border border-[var(--line)] bg-[var(--chip)] px-2 py-0.5 text-[11px] font-bold text-[var(--accent-deep)]">
+            <span className="activity-place-card__chip activity-place-card__chip--more rounded-md border border-[var(--line)] bg-[var(--chip)] px-2 py-0.5 text-[11px] font-bold text-[var(--accent-deep)]">
               +{hiddenChipCount}
             </span>
           ) : null}

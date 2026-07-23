@@ -300,7 +300,7 @@ function FavoritesPage() {
               {filteredSavedPlaces.length > 0 ? (
                 <div className="space-y-3">
                   <div className="flex flex-col gap-3 px-1 sm:flex-row sm:items-center sm:justify-between">
-                    <p className="text-lg font-black uppercase tracking-[0.2em] text-[var(--accent-deep)]">Saved</p>
+                    <p className="favorites-history-section-title text-lg font-black uppercase tracking-[0.2em] text-[var(--accent-deep)]">Saved</p>
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                       <p className="text-xs font-semibold text-[var(--muted)] sm:text-right">
                         Showing {visibleSavedPlaces.length} of {filteredSavedPlaces.length} place{filteredSavedPlaces.length === 1 ? '' : 's'}
@@ -333,7 +333,7 @@ function FavoritesPage() {
                         onClick={() => setVisibleFavoritesCount((current) => current + FAVORITES_LOAD_MORE_BATCH_SIZE)}
                         className="favorites-history-load-more-button inline-flex h-10 items-center justify-center rounded-lg border border-[var(--accent)] bg-white px-5 text-sm font-black text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)]"
                       >
-                        Load {FAVORITES_LOAD_MORE_BATCH_SIZE} more
+                        Load more
                       </button>
                     </div>
                   ) : null}

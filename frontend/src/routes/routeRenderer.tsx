@@ -2,6 +2,8 @@ import { Suspense, lazy, useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import SeoHead from '../components/SeoHead'
 import WelcomePage from '../pages/WelcomePage'
+import FavoritesPage from '../pages/FavoritesPage'
+import HistoryPage from '../pages/HistoryPage'
 import { buildAuthPath } from '../services/authApi'
 import { getOnboardingStatus } from '../utils/profileApi'
 import { navigateToPath, replaceWithPath } from '../utils/navigation'
@@ -17,8 +19,6 @@ const HomePage = lazy(() => import('../pages/HomePage'))
 const SearchHub = lazy(() => import('../pages/SearchHub'))
 const SearchPage = lazy(() => import('../pages/SearchPage'))
 const LoginPage = lazy(() => import('../pages/LoginPage'))
-const FavoritesPage = lazy(() => import('../pages/FavoritesPage'))
-const HistoryPage = lazy(() => import('../pages/HistoryPage'))
 const FeedbackPage = lazy(() => import('../pages/FeedbackPage'))
 const GalaPlansPage = lazy(() => import('../pages/GalaPlansPage'))
 const ReportsPage = lazy(() => import('../pages/ReportsPage'))
@@ -232,7 +232,7 @@ function renderRouteContent(descriptor: RouteDescriptor, inputs: RouteInputs) {
               },
             ]}
           />
-          <HomePage navigationSource={navigationSource} />
+          <HomePage />
         </>
       )
     case 'search':
@@ -327,14 +327,8 @@ function renderRouteContent(descriptor: RouteDescriptor, inputs: RouteInputs) {
       }
       return <ChangePasswordPage />
     case 'favorites':
-      if (!session) {
-        return <LoginPage />
-      }
       return <FavoritesPage />
     case 'history':
-      if (!session) {
-        return <LoginPage />
-      }
       return <HistoryPage />
     case 'feedback':
       if (!session) {

@@ -13,6 +13,7 @@ import { getSupabaseAccessToken } from '../supabase'
 import { getPlacePhoto } from '../utils/placePhoto'
 import { getApiUrl } from '../utils/apiClient'
 import { getPublicSiteUrl } from '../utils/site'
+import { HistorySkeleton } from '../components/loading/SkeletonStates'
 
 const HISTORY_CACHE_PREFIX = 'galatayo:history:'
 const HISTORY_CACHE_TTL_MS = 5 * 60 * 1000
@@ -248,7 +249,7 @@ function HistoryPage() {
   const cachedHistory = currentUserId ? readHistoryCache(currentUserId) : null
   const [history, setHistory] = useState<HistoryItem[] | null>(null)
   const [historyUserId, setHistoryUserId] = useState<string | null>(null)
-  const [isHistoryLoading, setIsHistoryLoading] = useState(false)
+  const [isHistoryLoading, setIsHistoryLoading] = useState(true)
   const [visibleHistoryCount, setVisibleHistoryCount] = useState(HISTORY_LOAD_MORE_BATCH_SIZE)
   const [isClearing, setIsClearing] = useState(false)
   const [isClearHistoryDialogOpen, setIsClearHistoryDialogOpen] = useState(false)
@@ -259,32 +260,24 @@ function HistoryPage() {
   const { setHidden } = useBottomNav()
 
   useEffect(() => {
-    setHidden(Boolean(currentUserId) && displayHistory === null && !errorMessage)
+    setHidden(Boolean(currentUserId) && displayHistory === null && !errorMessage && isSessionLoading)
     return () => setHidden(false)
-  }, [currentUserId, displayHistory, errorMessage, setHidden])
+  }, [currentUserId, displayHistory, errorMessage, isSessionLoading, setHidden])
 
   useEffect(() => {
     if (!currentUserId) {
       setHistory(null)
       setHistoryUserId(null)
-      setIsHistoryLoading(false)
       setErrorMessage('')
       return
     }
 
     const controller = new AbortController()
 
-    const cachedItems = readHistoryCache(currentUserId)
-
-    if (cachedItems?.length) {
-      setHistory(cachedItems)
-      setHistoryUserId(currentUserId)
-    } else {
-      setHistory(null)
-      setHistoryUserId(null)
-    }
-
+    setHistory(null)
+    setHistoryUserId(null)
     setIsHistoryLoading(true)
+    setErrorMessage('')
 
     const loadHistory = async () => {
       try {
@@ -293,8 +286,6 @@ function HistoryPage() {
         if (!token) {
           throw new Error('Sign in to view your history.')
         }
-
-        setErrorMessage('')
 
         const response = await fetch(getApiUrl('/history'), {
           method: 'GET',
@@ -316,7 +307,13 @@ function HistoryPage() {
         writeHistoryCache(currentUserId, items)
       } catch (error) {
         if ((error as Error).name !== 'AbortError') {
-          setErrorMessage(getHistoryErrorMessage(error, 'Unable to load history. Please try again.'))
+          const cachedItems = readHistoryCache(currentUserId)
+          if (cachedItems?.length) {
+            setHistory(cachedItems)
+            setHistoryUserId(currentUserId)
+          } else {
+            setErrorMessage(getHistoryErrorMessage(error, 'Unable to load history. Please try again.'))
+          }
         }
       } finally {
         setIsHistoryLoading(false)
@@ -482,6 +479,10 @@ function HistoryPage() {
             </CardSurface>
           ) : null}
 
+          {(currentUserId || isSessionLoading) && isHistoryLoading && !displayHistory && !errorMessage ? (
+            <HistorySkeleton count={8} className="mt-6" />
+          ) : null}
+
           {!shouldShowBlankHistoryArea && currentUserId && (displayHistory !== null || errorMessage) ? (
             <Stack gap="default">
               <PageHeroHeader
@@ -520,7 +521,7 @@ function HistoryPage() {
                   {historySections.map((section) => (
                     <section key={section.title}>
                       <div className="flex flex-col gap-3 px-1 sm:flex-row sm:items-center sm:justify-between">
-                        <p className="min-w-0 flex-1 text-lg font-black uppercase tracking-[0.2em] text-[var(--accent-deep)]">
+                        <p className="favorites-history-section-title min-w-0 flex-1 text-lg font-black uppercase tracking-[0.2em] text-[var(--accent-deep)]">
                           {section.title}
                         </p>
                         {section.title === historySections[0]?.title && canClearHistory ? (
