@@ -72,7 +72,7 @@ function AskAiOverviewPage() {
   const { resolvedTheme } = useTheme()
   const isDarkMode = resolvedTheme === 'dark'
   const pageShellClassName = isDarkMode
-    ? 'bg-[radial-gradient(circle_at_top,rgba(30,58,138,0.16),transparent_42%),linear-gradient(180deg,#08111d_0%,#0b1524_100%)] text-[#eef4ff]'
+    ? 'bg-[linear-gradient(180deg,#08111d_0%,#0b1524_100%)] text-[#eef4ff]'
     : 'bg-[var(--bg)] text-[var(--text)]'
   const eyebrowClassName = isDarkMode
     ? 'inline-flex items-center gap-1.5 text-[10.5px] font-black uppercase tracking-[0.16em] text-[#89aefb] sm:text-[11px]'

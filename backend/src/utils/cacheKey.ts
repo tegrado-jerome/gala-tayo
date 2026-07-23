@@ -6,7 +6,7 @@ function sanitizeCachePart(value: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-const SEARCH_CACHE_VERSION = "v5";
+const SEARCH_CACHE_VERSION = "v6";
 
 export function generateSearchCacheKey(
   normalizedQuery: string,
