@@ -395,7 +395,7 @@ export const featureGuideContent = {
         subtitle: 'Find a specific place',
         icon: '🔍',
         items: [
-          { icon: '🏪', label: 'The Coffee Bean' },
+          { icon: '🏪', label: 'Mind Museum' },
           { icon: '🏪', label: 'Greenbelt' },
           { icon: '🏪', label: 'Ayala Triangle Gardens' },
           { icon: '🏪', label: 'SM Mall of Asia' },
