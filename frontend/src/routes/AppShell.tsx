@@ -35,6 +35,9 @@ export function AppShell({ session, currentUser, currentProfile, adminMfa, hasRe
   children: ReactNode
 }) {
   const { showMobileBottomNav, shouldApplyGenericNoindex } = getAppShellState(pathname, search)
+  const appShellHeightClass = pathname.startsWith('/ask-ai')
+    ? 'min-h-[var(--ask-ai-viewport-height,100svh)]'
+    : 'min-h-[100dvh]'
 
   return (
     <AppUserProvider
@@ -52,7 +55,7 @@ export function AppShell({ session, currentUser, currentProfile, adminMfa, hasRe
                 <SeoHead title="GalaTayo" canonicalPath={pathname} robots="noindex,follow" />
               ) : null}
               <Suspense fallback={<PageShellSkeleton />}>
-                <div className="flex min-h-[100dvh] flex-col">{children}</div>
+                <div className={`flex ${appShellHeightClass} flex-col`}>{children}</div>
               </Suspense>
               {showLogoutTransition ? (
                 <div className={`gala-logout-overlay ${isLogoutTransitionExiting ? 'exit' : 'enter'}`} aria-live="polite" aria-busy="true">

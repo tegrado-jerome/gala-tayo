@@ -1327,7 +1327,7 @@ function AskAiModePanel({
       </div>
 
       <div className="relative flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 sm:px-5 md:px-6 lg:px-8">
-        <div className="flex min-h-full w-full flex-col gap-4 py-5 sm:py-6">
+        <div className="flex min-h-full w-full flex-col gap-4 py-4 sm:py-5">
           <ChatMessageList
             isSessionLoading={isSessionLoading}
             isRegistered={isRegistered}
@@ -1345,7 +1345,7 @@ function AskAiModePanel({
         </div>
       </div>
 
-      <div className="relative shrink-0 px-4 pt-1 pb-[calc(env(safe-area-inset-bottom,0px)+0.75rem)] sm:px-5 md:px-6 lg:px-8">
+      <div className="relative shrink-0 px-4 pb-[max(env(safe-area-inset-bottom,0px),0.35rem)] pt-2 sm:px-5 md:px-6 lg:px-8">
         <div className="mx-auto w-full max-w-[920px]">
           <div className="group/composer relative flex items-end gap-1.5 rounded-[24px] border border-[var(--line)] bg-[var(--panel)] p-1.5 shadow-[var(--shadow-soft)] transition focus-within:border-[var(--line-strong)]">
             <textarea
@@ -1380,7 +1380,7 @@ function AskAiModePanel({
               )}
             </button>
           </div>
-          <p className="mt-2 text-center text-[10.5px] text-slate-400">
+          <p className="mt-1.5 text-center text-[10px] text-slate-400">
             GalaTayo AI can make mistakes. Check important info.
           </p>
         </div>
@@ -1441,7 +1441,7 @@ const ChatMessageList = memo(function ChatMessageList({
     ]
 
     return (
-      <div className="flex w-full flex-1 items-center justify-center px-4 py-6 sm:px-5">
+      <div className="flex w-full flex-1 items-end justify-center px-0 pb-2 pt-2 sm:pb-3 sm:pt-3">
         <div className="mx-auto flex w-full max-w-[820px] flex-col items-center text-center lg:max-w-[900px]">
           <div className="mb-4 flex w-full flex-col items-center gap-1.5 sm:mb-5">
             <h1 className="text-[1.3rem] font-semibold leading-tight tracking-[-0.02em] text-slate-900 sm:text-[1.9rem]">Ano ang plano today?</h1>
