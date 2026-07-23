@@ -80,6 +80,7 @@ import {
   SearchEmptyState,
   SearchPagination,
   SearchFilterPanel,
+  ActiveSearchChips,
 } from '../components/home/search/SearchComponents'
 import PlaceCard from '../components/PlaceCard'
 import MapView from '../components/MapView'
@@ -1062,6 +1063,17 @@ function SearchHub({
                     canSubmit={canSubmitSearch}
                     placeholder="Discover a city"
                     className="!mt-5"
+                  />
+
+                  <ActiveSearchChips
+                    cityLabel={selectedAreaName}
+                    categoryLabel={selectedCategoryName}
+                    goodForLabel={selectedGoodForName}
+                    budgetLabel={selectedBudgetLabel}
+                    onRemoveCity={() => clearFilterChip('city')}
+                    onRemoveCategory={() => clearFilterChip('category')}
+                    onRemoveGoodFor={() => clearFilterChip('good_for')}
+                    onRemoveBudget={() => clearFilterChip('budget')}
                   />
 
                   <MobileResultsTabs selectedView={mobileResultsView} onViewChange={setMobileResultsView} />
