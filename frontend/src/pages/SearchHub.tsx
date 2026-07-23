@@ -920,6 +920,9 @@ function SearchHub({
       return
     }
 
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+    document.documentElement.scrollTop = 0
+    document.body.scrollTop = 0
     lockBodyScroll()
 
     return () => {
@@ -1225,7 +1228,7 @@ function SearchHub({
   }
 
     return (
-      <div className={`${selectedMode === 'ask-ai' ? 'h-[var(--ask-ai-viewport-height,100svh)] overflow-hidden overscroll-none' : 'min-h-screen lg:h-[100dvh] lg:overflow-hidden'} bg-[var(--bg)] text-[var(--text)]`}>
+      <div className={`${selectedMode === 'ask-ai' ? 'fixed inset-0 h-[var(--ask-ai-viewport-height,100svh)] w-full overflow-hidden overscroll-none xl:relative xl:inset-auto' : 'min-h-screen lg:h-[100dvh] lg:overflow-hidden'} bg-[var(--bg)] text-[var(--text)]`}>
         <GuestAuthPrompt
           variant="ask-ai"
           mode="modal"
@@ -1235,7 +1238,7 @@ function SearchHub({
         />
         {shouldShowSearchFiltersPanel ? searchFilterPanel : null}
 
-      <div className={`gala-page-background overflow-x-hidden lg:hidden ${selectedMode === 'ask-ai' ? 'flex h-[var(--ask-ai-viewport-height,100svh)] flex-col overflow-hidden overscroll-none' : 'flex min-h-screen flex-col'}`}>
+      <div className={`gala-page-background overflow-x-hidden lg:hidden ${selectedMode === 'ask-ai' ? 'flex h-full flex-col overflow-hidden overscroll-none' : 'flex min-h-screen flex-col'}`}>
           {selectedMode !== 'ask-ai' && <AppHeader signInLabel="Mag-sign in" minimal />}
 
           <main className={`overflow-x-hidden ${isPromptBuilderOpen ? 'flex min-h-[100dvh] flex-col overflow-hidden pb-0' : selectedMode === 'ask-ai' ? 'flex flex-1 min-h-0 flex-col overflow-hidden overscroll-none' : 'flex-1 min-h-0 pb-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] sm:pb-[calc(env(safe-area-inset-bottom,0px)+4.75rem)]'}`}>

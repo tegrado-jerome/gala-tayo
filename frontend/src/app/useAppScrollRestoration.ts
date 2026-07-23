@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect } from 'react'
 import { hasPendingListingRouteScrollRestore } from '../utils/listingRouteCache'
-import { shouldSkipTopScrollRestore } from '../utils/routes'
+import { isPath, shouldSkipTopScrollRestore } from '../utils/routes'
 import type { NavigationSource } from './useAppLocationState'
 
 function runWithInstantScroll(callback: () => void) {
@@ -38,6 +38,28 @@ export function useAppScrollRestoration({
   }, [])
 
   useLayoutEffect(() => {
+    if (
+      isPath(pathname, '/ask-ai/chatbot') ||
+      isPath(pathname, '/ask-ai/text') ||
+      isPath(pathname, '/ask-ai/maps') ||
+      isPath(pathname, '/ask-ai/map')
+    ) {
+      runWithInstantScroll(() => {
+        window.scrollTo({
+          top: 0,
+          left: 0,
+          behavior: 'auto',
+        })
+        document.documentElement.scrollTop = 0
+        document.body.scrollTop = 0
+      })
+
+      if (restoredScrollY !== null) {
+        setRestoredScrollY(null)
+      }
+      return
+    }
+
     if (navigationSource === 'pop') {
       if (hasPendingListingRouteScrollRestore(`${pathname}${search}`)) {
         if (restoredScrollY !== null) {

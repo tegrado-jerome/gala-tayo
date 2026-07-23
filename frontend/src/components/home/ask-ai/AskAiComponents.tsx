@@ -1248,9 +1248,18 @@ function AskAiModePanel({
   const isUsagePending = !usageStatus
   const isLimitReached = isChatbotUsageLimitReached(usageStatus, isRegistered)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
+  const messageScrollRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const scrollContainer = messageScrollRef.current
+    if (!scrollContainer) {
+      return
+    }
+
+    scrollContainer.scrollTo({
+      top: scrollContainer.scrollHeight,
+      behavior: 'smooth',
+    })
   }, [answer, isSubmitting, messages])
 
   const [draftQuestion, setDraftQuestion] = useState('')
@@ -1326,7 +1335,7 @@ function AskAiModePanel({
         </div>
       </div>
 
-      <div className="relative flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 sm:px-5 md:px-6 lg:px-8">
+      <div ref={messageScrollRef} className="relative flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 [overflow-anchor:none] sm:px-5 md:px-6 lg:px-8">
         <div className="flex min-h-full w-full flex-col gap-4 py-4 sm:py-5">
           <ChatMessageList
             isSessionLoading={isSessionLoading}
