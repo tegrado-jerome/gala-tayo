@@ -26,16 +26,16 @@ type SearchSignals = {
 };
 
 const CATEGORY_NAMES: Record<string, string[]> = {
-  Activity: ["activity", "activities", "arcade", "bowling", "games", "karaoke", "ktv", "sports"],
+  Activity: ["activity", "activities", "arcade", "arcades", "bowling", "games", "karaoke", "ktv", "sports"],
   Cafe: ["cafe", "cafes", "coffee", "coffee shop", "coffeeshop", "tea shop", "milk tea"],
   Cinema: ["cinema", "cinemas", "movie", "movies", "pelikula", "sine", "theater", "theatre"],
   Food: ["eat", "food", "kainan", "pagkain", "restaurant", "restaurants", "resto"],
-  Heritage: ["church", "heritage", "historic", "historical", "history", "landmark", "monument"],
-  Hotel: ["accommodation", "hotel", "hotels", "overnight", "resort", "staycation"],
+  Heritage: ["church", "churches", "heritage", "historic", "historical", "history", "landmark", "landmarks", "monument", "monuments"],
+  Hotel: ["accommodation", "accommodations", "hotel", "hotels", "overnight", "resort", "resorts", "staycation"],
   Mall: ["mall", "malls", "shopping", "shopping center", "shopping centre"],
-  Museum: ["art gallery", "exhibit", "gallery", "museum", "museo"],
-  Nightlife: ["bar", "bars", "club", "clubs", "drinks", "nightlife", "pub"],
-  Park: ["garden", "park", "parks", "parke", "picnic"],
+  Museum: ["art gallery", "exhibit", "gallery", "museum", "museums", "museo"],
+  Nightlife: ["bar", "bars", "club", "clubs", "drinks", "nightlife", "pub", "pubs"],
+  Park: ["garden", "park", "parks", "parke", "picnic", "picnics"],
 };
 
 const CITY_DICTIONARY: Record<string, string[]> = {
@@ -73,13 +73,13 @@ const BUDGET_MAP: Record<string, BudgetFilter> = {
   "under-500": { min: null, max: 500 },
   "500-1000": { min: null, max: 1000 },
   "1000-2000": { min: null, max: 2000 },
-  "1000-plus": { min: 1000, max: null },
-  "2000-plus": { min: 2000, max: null },
+  "1000-plus": { min: null, max: 1000 },
+  "2000-plus": { min: null, max: 2000 },
 };
 
 const BUDGET_KEYWORDS = {
   free: ["free", "libre", "libreng", "walang bayad"],
-  max: ["below", "budget", "for", "hanggang", "less than", "max", "maximum", "under", "within"],
+  max: ["below", "budget", "for", "hanggang", "less than", "max", "maximum", "plus", "under", "up to", "within"],
   currency: ["p", "peso", "pesos", "php"],
 };
 
@@ -122,12 +122,29 @@ function buildKnownWords(): Set<string> {
   return words;
 }
 
+function matchesKnownWordAfterStemming(token: string): boolean {
+  if (token.endsWith("ies") && token.length > 4) {
+    if (KNOWN_WORDS.has(token.slice(0, -3) + "y")) return true;
+  }
+  if (token.endsWith("es") && token.length > 4) {
+    if (KNOWN_WORDS.has(token.slice(0, -2))) return true;
+  }
+  if (token.endsWith("s") && token.length > 3) {
+    if (KNOWN_WORDS.has(token.slice(0, -1))) return true;
+  }
+  return false;
+}
+
 function getSpecificTokens(normalizedQuery: string): string[] {
   if (!normalizedQuery) return [];
   return normalizedQuery
     .split(" ")
     .filter(Boolean)
-    .filter((t) => !KNOWN_WORDS.has(t) && !/^\d+(,\d{3})*(\.\d+)?$/.test(t));
+    .filter((t) => {
+      if (KNOWN_WORDS.has(t)) return false;
+      if (/^\d+(,\d{3})*(\.\d+)?$/.test(t)) return false;
+      return !matchesKnownWordAfterStemming(t);
+    });
 }
 
 function hasSpecificKeyword(normalizedQuery: string): boolean {
@@ -248,14 +265,28 @@ export function detectBudgetFromQuery(query: string): BudgetFilter | null {
     return { min: null, max: Number(suffixCurrencyMatch[1].replace(/,/g, "")) };
   }
 
+  const rangeMatch = normalizedQuery.match(/(?:^|\s)(\d{1,5}(?:,\d{3})?(?:\.\d+)?)\s*(?:to|-)\s*(\d{1,5}(?:,\d{3})?(?:\.\d+)?)(?:\s|$)/);
+  if (rangeMatch) {
+    const min = Number(rangeMatch[1].replace(/,/g, ""));
+    const max = Number(rangeMatch[2].replace(/,/g, ""));
+    if (min >= 20 && min <= 99999 && max >= 20 && max <= 99999) {
+      return { min, max };
+    }
+  }
+
+  const hasBudgetKeyword = BUDGET_KEYWORDS.max.some((keyword) =>
+    includesWholePhrase(normalizedQuery, keyword),
+  );
+  if (!hasBudgetKeyword) return null;
+
   const numbers = [...normalizedQuery.matchAll(/(?:^|\s)(\d{1,5}(?:,\d{3})?(?:\.\d+)?)(?=\s|$)/g)]
     .map((match) => Number(match[1].replace(/,/g, "")))
     .filter((value) => Number.isFinite(value));
 
-  const budgetNumber = numbers.find((value) => value >= 20 && value <= 99999) ?? null;
-  if (budgetNumber === null) return null;
+  const validNumbers = numbers.filter((value) => value >= 20 && value <= 99999);
+  if (validNumbers.length === 0) return null;
 
-  return { min: null, max: budgetNumber };
+  return { min: null, max: validNumbers[0] };
 }
 
 export function detectGoodForFromQuery(query: string): string | null {
@@ -418,10 +449,10 @@ export function rankPlaces(places: NormalizedPlace[], query: string, filters: Pl
 
         if (querySignals && queryHasSpecificKeyword) {
           if (querySignals.category && normalizeSearchText(place.category) === normalizeSearchText(querySignals.category)) {
-            score += 25;
+            score += 15;
           }
           if (querySignals.city && place.city && normalizeSearchText(place.city) === normalizeSearchText(querySignals.city)) {
-            score += 20;
+            score += 10;
           }
           if (querySignals.good_for && place.good_for.some((gf) => normalizeSearchText(gf) === normalizeSearchText(querySignals.good_for!))) {
             score += 10;
@@ -439,9 +470,15 @@ export function rankPlaces(places: NormalizedPlace[], query: string, filters: Pl
             place.area ? normalizeSearchText(place.area) : "",
           ].filter(Boolean).join(" ");
 
-          const matchesAnySpecificToken = specificTokens.some((st) => placeTextFields.includes(st));
-          if (!matchesAnySpecificToken) {
-            return null;
+          const longSpecificTokens = specificTokens.filter((st) => st.length > 2);
+          if (longSpecificTokens.length > 0) {
+            if (!longSpecificTokens.some((st) => placeTextFields.includes(st))) {
+              return null;
+            }
+          } else {
+            if (!specificTokens.some((st) => placeTextFields.includes(st))) {
+              return null;
+            }
           }
         }
 

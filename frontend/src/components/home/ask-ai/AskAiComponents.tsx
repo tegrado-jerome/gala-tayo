@@ -1445,12 +1445,12 @@ const ChatMessageList = memo(function ChatMessageList({
     const promptChips: Array<{ id: string; label: string; description: string; prompt: string; icon: AppIconName }> = [
       { id: 'date', label: 'Date', description: 'Cozy date ideas.', prompt: 'Plan a date gala', icon: 'calendarDays' },
       { id: 'food', label: 'Food', description: 'Sulit food spots.', prompt: 'Plan a food trip', icon: 'cafe' },
-      { id: 'itinerary', label: 'Itinerary', description: 'Morning to night.', prompt: 'Create a quick itinerary', icon: 'galaPlan' },
+      { id: 'itinerary', label: 'Itinerary', description: 'Plan it out.', prompt: 'Create a quick itinerary', icon: 'galaPlan' },
       { id: 'budget', label: 'Budget', description: 'Low-cost picks.', prompt: 'Suggest budget-friendly places to visit', icon: 'wallet' },
     ]
 
     return (
-      <div className="flex w-full flex-1 items-end justify-center px-0 pb-2 pt-2 sm:pb-3 sm:pt-3">
+      <div className="flex w-full flex-1 items-center justify-center px-0 pb-2 pt-2 sm:pb-3 sm:pt-3">
         <div className="mx-auto flex w-full max-w-[820px] flex-col items-center text-center lg:max-w-[900px]">
           <div className="mb-4 flex w-full flex-col items-center gap-1.5 sm:mb-5">
             <h1 className="text-[1.3rem] font-semibold leading-tight tracking-[-0.02em] text-slate-900 sm:text-[1.9rem]">Ano ang plano today?</h1>
@@ -1468,7 +1468,7 @@ const ChatMessageList = memo(function ChatMessageList({
             </p>
           </div>
 
-          <div className="grid w-full grid-cols-1 gap-2 sm:gap-2.5">
+          <div className="grid w-full grid-cols-2 gap-2 sm:gap-2.5">
           {promptChips.map((chip) => (
             <button
               key={chip.id}
