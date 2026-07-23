@@ -13,7 +13,7 @@ import { getPlaceCategoryLabel } from '../data/placeCategories'
 import { navigateToPath, scrollViewportToTopInstant } from '../utils/navigation'
 import { getSiteOrigin } from '../utils/seo'
 import { getListingPlaceViewportTop, peekPendingListingRouteCache, readListingRouteCache, restoreListingRouteScroll, writeListingRouteCache } from '../utils/listingRouteCache'
-import { fetchPlaceDetailsBatch } from '../utils/placeDetailCache'
+import { fetchPlaceDetailsBatch, readCachedPlaceDetail } from '../utils/placeDetailCache'
 import { preloadListingImageUrls } from '../utils/listingImagePreloader'
 import { getSeoListingPage, mapSeoPlaceToCard, type SeoPlaceSummary } from '../utils/seoApi'
 import type { PlaceDetail } from '../types/appTypes'
@@ -68,7 +68,20 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(
     navigationSource === 'pop' && routeCache?.pendingScrollRestore ? routeCache.selectedPlaceId : null,
   )
-  const [placeDetailsBySlug, setPlaceDetailsBySlug] = useState<Record<string, PlaceDetail>>({})
+  const [placeDetailsBySlug, setPlaceDetailsBySlug] = useState<Record<string, PlaceDetail>>(
+    () => {
+      if (navigationSource === 'pop' && routeCache) {
+        const slugs = (routeCache.items as SeoPlaceSummary[]).map((s) => s.slug).filter(Boolean)
+        const cached: Record<string, PlaceDetail> = {}
+        for (const slug of slugs) {
+          const detail = readCachedPlaceDetail(slug)
+          if (detail) cached[detail.slug] = detail
+        }
+        return cached
+      }
+      return {}
+    }
+  )
   const hasRestoredInitialScrollRef = useRef(false)
   const skipInitialFetchRef = useRef(Boolean(routeCache) && navigationSource !== 'pop')
   const pageDataReadyRef = useRef<number | null>(null)

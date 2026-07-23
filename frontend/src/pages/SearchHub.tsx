@@ -725,6 +725,10 @@ function SearchHub({
       return
     }
 
+    if (shouldUseSearchRouteCache && initialRouteCache?.pendingScrollRestore) {
+      return
+    }
+
     const nextAutoSearch = {
       rawQuery: initialSearchState.rawQuery ?? '',
       category: initialSearchState.categoryId ?? null,

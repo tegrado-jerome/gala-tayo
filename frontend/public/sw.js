@@ -1,5 +1,6 @@
 const CACHE_NAME = 'galatayo-media-v1'
 const MEDIA_DOMAIN = 'media.galatayo.app'
+const IMAGE_EXT = /\.(webp|jpg|jpeg|png|gif|svg|avif)(\?.*)?$/i
 
 self.addEventListener('install', (event) => {
   self.skipWaiting()
@@ -19,8 +20,10 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url)
+  const isMediaDomain = url.hostname === MEDIA_DOMAIN
+  const isImageRequest = IMAGE_EXT.test(url.pathname)
 
-  if (url.hostname !== MEDIA_DOMAIN) {
+  if (!isMediaDomain && !isImageRequest) {
     return
   }
 

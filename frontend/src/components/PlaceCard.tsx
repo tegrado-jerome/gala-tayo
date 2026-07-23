@@ -102,6 +102,8 @@ type PlaceCardProps = {
   href?: string | null
 }
 
+const loadedCardImageUrls = new Set<string>()
+
 function getReadableChipName(value: string) {
   return value
     .split(/[-_\s]+/)
@@ -252,14 +254,14 @@ function PlaceCard({
   dataSearchPlaceId,
   href,
 }: PlaceCardProps) {
+  const photoUrl = place.thumbnailUrl?.trim() || place.imageUrl?.trim() || null
+  const photoAlt = place.imageAlt?.trim() || place.name
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
-  const [isPhotoLoaded, setIsPhotoLoaded] = useState(false)
+  const [isPhotoLoaded, setIsPhotoLoaded] = useState(() => photoUrl ? loadedCardImageUrls.has(photoUrl) : false)
   const guestAuth = useGuestAuthPrompt()
   const { isPlaceSaved, saveFavorite, removeFavorite } = useSavedFavorites()
   const { showSystemMessage } = useSystemMessage()
-  const photoUrl = place.thumbnailUrl?.trim() || place.imageUrl?.trim() || null
-  const photoAlt = place.imageAlt?.trim() || place.name
   const normalizedNameSlug = normalizePlaceSlug(place.name)
   const placeId = place.id.trim()
   const isSaved = [place.slug, normalizedNameSlug, place.id].some((slug) => isPlaceSaved(slug))
@@ -278,7 +280,11 @@ function PlaceCard({
   const shouldShowPhoto = Boolean(photoUrl) && isPhotoLoaded
 
   useEffect(() => {
-    setIsPhotoLoaded(false)
+    if (photoUrl && loadedCardImageUrls.has(photoUrl)) {
+      setIsPhotoLoaded(true)
+    } else {
+      setIsPhotoLoaded(false)
+    }
   }, [photoUrl])
   const handleActivate = (event: MouseEvent<HTMLAnchorElement>) => {
     if (event.button !== 0 || event.metaKey || event.altKey || event.ctrlKey || event.shiftKey) {
@@ -339,7 +345,10 @@ function PlaceCard({
             decoding="async"
             fetchPriority={imagePriority ? 'high' : 'low'}
             sizes={compact ? '100vw' : '(min-width: 1024px) 420px, 100vw'}
-            onLoad={() => setIsPhotoLoaded(true)}
+            onLoad={() => {
+              if (photoUrl) loadedCardImageUrls.add(photoUrl)
+              setIsPhotoLoaded(true)
+            }}
             onError={() => setIsPhotoLoaded(false)}
           />
         ) : null}
@@ -364,7 +373,7 @@ function PlaceCard({
         </h2>
 
         {searchCardSubtitle ? (
-          <p className={`mt-1 font-semibold tracking-[0.01em] text-[var(--accent-deep)]/80 ${compact ? 'text-[10px]' : 'text-[11px]'}`}>
+          <p className={`mt-1 font-bold tracking-[0.01em] text-[var(--accent-deep)]/80 ${compact ? 'text-[10px]' : 'text-[11px]'}`}>
             {searchCardSubtitle}
           </p>
         ) : null}
@@ -392,7 +401,10 @@ function PlaceCard({
               decoding="async"
               fetchPriority={imagePriority ? 'high' : 'low'}
               sizes={compact ? '(min-width: 640px) 92px, 84px' : '112px'}
-              onLoad={() => setIsPhotoLoaded(true)}
+              onLoad={() => {
+                if (photoUrl) loadedCardImageUrls.add(photoUrl)
+                setIsPhotoLoaded(true)
+              }}
               onError={() => setIsPhotoLoaded(false)}
             />
           </div>
