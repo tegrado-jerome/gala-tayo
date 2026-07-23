@@ -434,6 +434,7 @@ export async function submitAskAiRuntimeRequest({
     answer: '',
     sources: [],
     answerError: null,
+    usageStatus: null,
     isSubmitting: true,
     messages,
     jobId: null,

@@ -6,6 +6,7 @@ import {
   InvocationContext,
 } from "@azure/functions";
 import {
+  checkAskAiUsageForActorType,
   consumeAskAiUsageForActor,
   refundAskAiUsageForActor,
 } from "../services/askAiUsageService";
@@ -176,6 +177,54 @@ export async function postAskAiChatbot(
     const aiUsage = await consumeAskAiUsageForActor(resolvedActor!, "chatbot_ai");
 
     if (!aiUsage.allowed) {
+      const doubleCheck = await checkAskAiUsageForActorType(resolvedActor!, "chatbot_ai").catch(() => null);
+
+      if (doubleCheck && doubleCheck.allowed && doubleCheck.remaining > 0) {
+        context.warn(
+          `[AskAI Chatbot] RPC quota block overridden: requestCount=${doubleCheck.requestCount} remaining=${doubleCheck.remaining} actorId=${resolvedActor!.id} actorKind=${resolvedActor!.kind}`
+        );
+        const correctedAiUsage = aiUsage;
+        correctedAiUsage.allowed = true;
+        correctedAiUsage.remaining = doubleCheck.remaining;
+        correctedAiUsage.requestCount = doubleCheck.requestCount;
+        context.log(
+          `[AskAI Chatbot] quota overridden: remaining=${correctedAiUsage.remaining} actorId=${resolvedActor!.id} actorKind=${resolvedActor!.kind}`
+        );
+        quotaConsumedUserId = resolvedActor!.id;
+        const cancellation = registerAskAiRequest(requestId, {
+          actor: resolvedActor!,
+          usageType: "chatbot_ai",
+        });
+        unregisterCancellation = cancellation.unregister;
+        const answer = sanitizeChatbotAnswer(
+          await generateFromGroq({
+            message,
+            conversationHistory,
+            requestId,
+            signal: cancellation.signal,
+          })
+        );
+        context.log(`[AskAI Chatbot] REQUEST COMPLETED requestId=${requestId}`);
+        return {
+          status: 200,
+          headers: JSON_HEADERS,
+          jsonBody: {
+            ok: true,
+            answer,
+            sources: [],
+            usage: {
+              allowed: correctedAiUsage.allowed,
+              usageType: correctedAiUsage.usageType,
+              dailyLimit: correctedAiUsage.dailyLimit,
+              requestCount: correctedAiUsage.requestCount,
+              remaining: correctedAiUsage.remaining,
+              resetsAt: correctedAiUsage.resetsAt,
+            },
+            requestId,
+          },
+        };
+      }
+
       context.log(
         `[AskAI Chatbot] quota blocked: usageType=chatbot_ai remaining=0 actorId=${resolvedActor!.id} actorKind=${resolvedActor!.kind}`
       );

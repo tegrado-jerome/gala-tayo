@@ -6,6 +6,7 @@ import {
 } from "@azure/functions";
 import { randomUUID } from "crypto";
 import {
+  checkAskAiUsageForActorType,
   consumeAskAiUsageForActor,
   refundAskAiUsageForActor,
 } from "../services/askAiUsageService";
@@ -84,30 +85,41 @@ export async function askAiMapsRequest(
     const aiUsage = await consumeAskAiUsageForActor(actor, "ask_ai_maps");
 
     if (!aiUsage.allowed) {
-      context.log(
-        `[Ask AI Maps] quota blocked: usageType=ask_ai_maps remaining=0 actorId=${actor.id} actorKind=${actor.kind}`
-      );
+      const doubleCheck = await checkAskAiUsageForActorType(actor, "ask_ai_maps").catch(() => null);
 
-      return {
-        status: 429,
-        headers: buildResponseHeaders(requestId),
-        jsonBody: {
-          ok: false,
-          error: "daily_ai_limit_reached",
-          message: "You have reached your Ask AI Maps daily limit.",
-          usage: {
-            allowed: aiUsage.allowed,
-            usageType: aiUsage.usageType,
-            dailyLimit: aiUsage.dailyLimit,
-            requestCount: aiUsage.requestCount,
-            remaining: aiUsage.remaining,
-            resetsAt: aiUsage.resetsAt,
+      if (doubleCheck && doubleCheck.allowed && doubleCheck.remaining > 0) {
+        context.warn(
+          `[Ask AI Maps] RPC quota block overridden: requestCount=${doubleCheck.requestCount} remaining=${doubleCheck.remaining} actorId=${actor.id} actorKind=${actor.kind}`
+        );
+        aiUsage.allowed = true;
+        aiUsage.remaining = doubleCheck.remaining;
+        aiUsage.requestCount = doubleCheck.requestCount;
+      } else {
+        context.log(
+          `[Ask AI Maps] quota blocked: usageType=ask_ai_maps remaining=0 actorId=${actor.id} actorKind=${actor.kind}`
+        );
+
+        return {
+          status: 429,
+          headers: buildResponseHeaders(requestId),
+          jsonBody: {
+            ok: false,
+            error: "daily_ai_limit_reached",
+            message: "You have reached your Ask AI Maps daily limit.",
+            usage: {
+              allowed: aiUsage.allowed,
+              usageType: aiUsage.usageType,
+              dailyLimit: aiUsage.dailyLimit,
+              requestCount: aiUsage.requestCount,
+              remaining: aiUsage.remaining,
+              resetsAt: aiUsage.resetsAt,
+            },
+            requestId,
+            places: [],
+            sources: [],
           },
-          requestId,
-          places: [],
-          sources: [],
-        },
-      };
+        };
+      }
     }
     context.log(
       `[Ask AI Maps] quota consumed: remaining=${aiUsage.remaining} actorId=${actor.id} actorKind=${actor.kind}`
