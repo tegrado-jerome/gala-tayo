@@ -257,6 +257,8 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
   const [statusError, setStatusError] = useState('')
   const valuesRef = useRef(values)
   valuesRef.current = values
+  const sessionRef = useRef(session)
+  sessionRef.current = session
 
   const normalizedUsername = useMemo(() => values.username.trim().toLowerCase().replace(/^@+/, ''), [values.username])
   const usernameValidationError = useMemo(() => validateUsernameLocally(normalizedUsername), [normalizedUsername])
@@ -371,7 +373,7 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
     const timer = window.setTimeout(() => {
       setUsernameStatus('checking')
 
-      void checkUsernameAvailable(normalizedUsername, session)
+      void checkUsernameAvailable(normalizedUsername, sessionRef.current)
         .then((result) => {
           if (!isMounted) {
             return
@@ -397,7 +399,7 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
       isMounted = false
       window.clearTimeout(timer)
     }
-  }, [normalizedUsername, session, usernameValidationError, values.step])
+  }, [normalizedUsername, usernameValidationError, values.step])
 
   useEffect(() => {
     if (isRedirectingHome) {

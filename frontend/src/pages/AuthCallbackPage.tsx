@@ -7,6 +7,7 @@ import { getUserMfaStatus } from '../utils/userMfa'
 import { buildAuthPath } from '../services/authApi'
 import { navigateToPath, replaceWithPath } from '../utils/navigation'
 import { trackLoginCompleted, trackSignUpCompleted } from '../utils/analytics'
+import { PageShell } from '../components/layout/ResponsiveLayouts'
 
 async function waitForSession(): Promise<Session | null> {
   const {
@@ -139,35 +140,39 @@ function AuthCallbackPage() {
 
   if (errorMessage) {
     return (
-      <main className="fixed inset-0 flex items-center justify-center bg-[var(--panel)] px-6 text-black">
-        <section className="flex w-full max-w-[420px] flex-col items-center text-center">
-          <h1 className="text-3xl font-black">Sign-in problem</h1>
-          <p className="mt-4 text-sm font-semibold leading-6 text-black/65">{errorMessage}</p>
-          <div className="mt-8 flex flex-col items-center gap-3">
-            <button
-              type="button"
-              onClick={() => {
-                setErrorMessage('')
-                setRetryCount((current) => current + 1)
-              }}
-              className="h-12 w-[220px] rounded-lg bg-black px-5 text-sm font-black text-white transition hover:bg-black/85"
-            >
-              Try again
-            </button>
-            <button
-              type="button"
-              onClick={() => navigateToPath(buildAuthPath('/login', window.location.search ? new URLSearchParams(window.location.search).get('next') : null))}
-              className="text-sm font-semibold text-black/50 underline underline-offset-2 transition hover:text-black/80"
-            >
-              Back to login
-            </button>
+      <PageShell reserveBottomNav={false}>
+        <main className="gala-page-background min-h-screen min-h-[100dvh] text-[var(--text)]">
+          <div className="flex min-h-[100dvh] items-center justify-center px-6">
+            <section className="flex w-full max-w-[420px] flex-col items-center text-center">
+              <h1 className="text-3xl font-black">Sign-in problem</h1>
+              <p className="mt-4 text-sm font-semibold leading-6 text-[var(--text-muted)]">{errorMessage}</p>
+              <div className="mt-8 flex flex-col items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setErrorMessage('')
+                    setRetryCount((current) => current + 1)
+                  }}
+                  className="app-button app-button-primary app-button-md w-[220px]"
+                >
+                  Try again
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigateToPath(buildAuthPath('/login', window.location.search ? new URLSearchParams(window.location.search).get('next') : null))}
+                  className="text-sm font-semibold text-[var(--text-muted)] underline underline-offset-2 transition hover:text-[var(--text)]"
+                >
+                  Back to login
+                </button>
+              </div>
+            </section>
           </div>
-        </section>
-      </main>
+        </main>
+      </PageShell>
     )
   }
 
-  return null
+  return <PageShell reserveBottomNav={false} />
 }
 
 export default AuthCallbackPage
