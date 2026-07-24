@@ -5,7 +5,8 @@ import { countApprovedPlaceImages, getApprovedPlaceImages } from "../services/pl
 import { getAuthenticatedUser, type AuthenticatedUser } from "../utils/auth";
 import { checkEndpointRateLimit } from "../utils/redisRateLimit";
 import { buildImageUrl } from "../utils/r2UrlResolver";
-import { convertImageToWebp, deleteR2Object, detectImageFormat, uploadThumbnailToR2, uploadWebpToR2 } from "../utils/r2ImageStorage";
+import { convertImageToWebp, deleteR2Object, uploadThumbnailToR2, uploadWebpToR2 } from "../utils/r2ImageStorage";
+import { getEffectiveImageFormat, isAcceptedImageFormat } from "../utils/imageValidation";
 
 type PlaceRow = {
   id: string;
@@ -192,11 +193,9 @@ export async function placeImageContributionCreate(
 
     const inputBuffer = Buffer.from(await imageFile.arrayBuffer());
 
-    const detectedFormat = await detectImageFormat(inputBuffer);
-    const mimeToFormat: Record<string, string> = { "image/jpeg": "jpeg", "image/png": "png", "image/webp": "webp" };
-    const effectiveFormat = detectedFormat || mimeToFormat[normalizedMimeType] || null;
+    const effectiveFormat = await getEffectiveImageFormat(inputBuffer, imageFile.type, fileName);
 
-    if (!effectiveFormat || !["jpeg", "png", "webp"].includes(effectiveFormat)) {
+    if (!isAcceptedImageFormat(effectiveFormat)) {
       return response(400, "Image must be a JPEG, PNG, or WebP file.");
     }
 

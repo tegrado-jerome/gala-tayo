@@ -5,6 +5,7 @@ import { generateUniqueSlug } from "../services/placeService";
 import { AuthenticatedUser, validateJwt } from "../utils/auth";
 import { checkEndpointRateLimit } from "../utils/redisRateLimit";
 import { convertImageToWebp, deleteR2Object, uploadThumbnailToR2, uploadWebpToR2 } from "../utils/r2ImageStorage";
+import { getEffectiveImageFormat, isAcceptedImageFormat, isDangerousImage } from "../utils/imageValidation";
 import { buildImageUrl } from "../utils/r2UrlResolver";
 import { logAdminAction } from "../utils/adminAudit";
 
@@ -175,13 +176,6 @@ function normalizeDuplicateCheckText(value: string) {
     .toLowerCase()
     .replace(/\s+/g, " ")
     .replace(/[^\p{L}\p{N}\s]/gu, "");
-}
-
-function isDangerousImage(buffer: Buffer) {
-  const head = buffer.subarray(0, 512).toString("utf8").toLowerCase();
-  const isSvg = head.includes("<svg");
-  const isGif = buffer.length >= 6 && buffer.subarray(0, 3).toString("ascii") === "GIF";
-  return isSvg || isGif;
 }
 
 function hasAllowedImageExtension(fileName: string) {
@@ -521,6 +515,12 @@ export async function createPlaceSubmission(
       const inputBuffer = Buffer.from(await imageFile.arrayBuffer());
 
       if (isDangerousImage(inputBuffer)) {
+        return response(400, "All photos must be JPEG, PNG, or WebP.");
+      }
+
+      const effectiveFormat = await getEffectiveImageFormat(inputBuffer, imageFile.type, imageFile.name);
+
+      if (!isAcceptedImageFormat(effectiveFormat)) {
         return response(400, "All photos must be JPEG, PNG, or WebP.");
       }
 

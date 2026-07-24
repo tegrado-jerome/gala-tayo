@@ -3,7 +3,8 @@ import { randomUUID } from "crypto";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { validateJwt } from "../utils/auth";
 import { checkEndpointRateLimit } from "../utils/redisRateLimit";
-import { convertImageToWebp, deleteR2Object, detectImageFormat, uploadThumbnailToR2, uploadWebpToR2 } from "../utils/r2ImageStorage";
+import { convertImageToWebp, deleteR2Object, uploadThumbnailToR2, uploadWebpToR2 } from "../utils/r2ImageStorage";
+import { getEffectiveImageFormat, isAcceptedImageFormat, isDangerousImage } from "../utils/imageValidation";
 import { buildImageUrl } from "../utils/r2UrlResolver";
 import {
   meProfile as meProfileSocial,
@@ -753,15 +754,19 @@ export async function profileAvatarUpload(
     }
 
     const inputBuffer = Buffer.from(await file.arrayBuffer());
-    const detectedAvatarFormat = await detectImageFormat(inputBuffer);
-    const isSvg = inputBuffer.subarray(0, 512).toString("utf8").toLowerCase().includes("<svg");
-    const isGif = inputBuffer.length >= 6 && inputBuffer.subarray(0, 3).toString("ascii") === "GIF";
 
-    const mimeToFormat: Record<string, string> = { "image/jpeg": "jpeg", "image/png": "png", "image/webp": "webp" };
-    const fallbackFormat = mimeToFormat[file.type] || null;
-    const effectiveFormat = detectedAvatarFormat || fallbackFormat;
+    if (isDangerousImage(inputBuffer)) {
+      return {
+        status: 400,
+        jsonBody: {
+          message: "Avatar must be a JPEG, PNG, or WebP image.",
+        },
+      };
+    }
 
-    if (!effectiveFormat || !["jpeg", "png", "webp"].includes(effectiveFormat) || isSvg || isGif) {
+    const effectiveFormat = await getEffectiveImageFormat(inputBuffer, file.type, file.name);
+
+    if (!isAcceptedImageFormat(effectiveFormat)) {
       return {
         status: 400,
         jsonBody: {
