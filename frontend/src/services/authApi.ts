@@ -18,6 +18,7 @@ type SignOutOptions = {
 
 const adminPasswordSessionKey = 'galatayo_admin_password_session'
 const signupOnboardingAccessKey = 'galatayo:signup-onboarding-access'
+const SIGNUP_ONBOARDING_ACCESS_TTL_MS = 30 * 60 * 1000
 
 const rememberMeKey = 'galatayo:remember-me'
 
@@ -216,7 +217,7 @@ export function markSignupOnboardingAccess() {
     window.sessionStorage.setItem(
       signupOnboardingAccessKey,
       JSON.stringify({
-        expiresAt: Date.now(),
+        expiresAt: Date.now() + SIGNUP_ONBOARDING_ACCESS_TTL_MS,
       } satisfies SignupOnboardingAccess),
     )
   } catch {
@@ -234,7 +235,16 @@ export function hasSignupOnboardingAccess() {
 
     const parsed = JSON.parse(rawValue) as Partial<SignupOnboardingAccess>
 
-    return typeof parsed.expiresAt === 'number'
+    if (typeof parsed.expiresAt !== 'number' || Number.isNaN(parsed.expiresAt)) {
+      return false
+    }
+
+    if (Date.now() > parsed.expiresAt) {
+      window.sessionStorage.removeItem(signupOnboardingAccessKey)
+      return false
+    }
+
+    return true
   } catch {
     return false
   }

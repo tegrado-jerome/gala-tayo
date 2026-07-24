@@ -9,10 +9,18 @@ import { clearAppResumeCache, readAppResumeCache, writeAppResumeCache } from '..
 import { clearEmptyHashFragment } from '../utils/navigation'
 import { isAdminPath } from '../utils/routeGuards'
 
+const INITIAL_AUTH_TIMEOUT_MS = 6000
+
 function isSessionExpired(session: Session | null): boolean {
   if (!session) return false
   if (!session.expires_at) return false
   return session.expires_at * 1000 <= Date.now()
+}
+
+function createTimeoutPromise<T>(ms: number, value: T): Promise<T> {
+  return new Promise((resolve) => {
+    window.setTimeout(() => resolve(value), ms)
+  })
 }
 
 async function getRecoverableInitialSession() {
@@ -61,7 +69,10 @@ export function useAuthOrchestration({ pathname }: { pathname: string }) {
   useEffect(() => {
     let isMounted = true
 
-    getRecoverableInitialSession().then((resolvedSession) => {
+    Promise.race([
+      getRecoverableInitialSession().catch(() => null as Session | null),
+      createTimeoutPromise(INITIAL_AUTH_TIMEOUT_MS, null as Session | null),
+    ]).then((resolvedSession) => {
       if (isMounted) {
         clearEmptyHashFragment()
 

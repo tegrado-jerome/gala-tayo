@@ -109,7 +109,6 @@ export function resolveRouteDescriptor(inputs: RouteInputs): RouteDescriptor {
     publicProfileUsername,
     editGalaPlanId,
     ownedGalaPlanId,
-    hasSignupOnboardingAccess,
   } = inputs
 
   const adminHomePath = ADMIN_BASE_PATH
@@ -197,10 +196,6 @@ export function resolveRouteDescriptor(inputs: RouteInputs): RouteDescriptor {
   }
 
   if (pathname === '/' || pathname === '') {
-    if (!hasResolvedInitialAuth || session || hasSignupOnboardingAccess) {
-      return { kind: 'initial-auth-loader' }
-    }
-
     return { kind: 'root-entry' }
   }
 

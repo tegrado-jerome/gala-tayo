@@ -29,9 +29,5 @@ export function resolveAuthNavigationTarget({
     return '/onboarding'
   }
 
-  if (session && hasResolvedProfile && !needsOnboarding && (pathname === '/' || pathname === '')) {
-    return '/home'
-  }
-
   return null
 }
