@@ -1,10 +1,6 @@
 {
   "routes": [
     {
-      "route": "/favicon.ico",
-      "rewrite": "/favicon.png"
-    },
-    {
       "route": "/images/*",
       "cacheControl": "public, max-age=31536000, immutable"
     },
