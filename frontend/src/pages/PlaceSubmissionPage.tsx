@@ -334,13 +334,13 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
     void applyReverseGeocode(nextCoordinates)
   }
 
-  const handlePhotoSelection = (event: ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoSelection = async (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? [])
     const validFiles: File[] = []
     const invalidFiles: File[] = []
 
     for (const file of files.slice(0, 3)) {
-      if (isValidImageFile(file)) {
+      if (await isValidImageFile(file)) {
         validFiles.push(file)
       } else {
         invalidFiles.push(file)

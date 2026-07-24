@@ -52,61 +52,182 @@ function getMimeTypeFromExtension(fileName: string): string {
   }
 }
 
-export function isValidImageFile(file: File): boolean {
-  const normalizedType = file.type.trim().toLowerCase()
-  const normalizedName = file.name.trim().toLowerCase()
-  const hasValidMimeType = ACCEPTED_IMAGE_TYPES.includes(
-    normalizedType as (typeof ACCEPTED_IMAGE_TYPES)[number],
-  )
-  const hasValidExtension = ACCEPTED_IMAGE_EXTENSIONS.some((extension) =>
-    normalizedName.endsWith(extension),
-  )
+function readFileBytes(file: File, length: number): Promise<Uint8Array> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
 
-  return (hasValidMimeType || hasValidExtension) && file.size <= MAX_UPLOAD_BYTES
+    reader.onload = () => {
+      const result = reader.result
+      if (result instanceof ArrayBuffer) {
+        resolve(new Uint8Array(result))
+      } else {
+        reject(new Error('Could not read file bytes.'))
+      }
+    }
+
+    reader.onerror = () => {
+      reject(new Error('Could not read file bytes.'))
+    }
+
+    reader.readAsArrayBuffer(file.slice(0, length))
+  })
 }
 
-export function normalizeImageMimeType(file: File): File {
-  const normalizedType = file.type.trim().toLowerCase()
+function bytesToString(bytes: Uint8Array): string {
+  return Array.from(bytes)
+    .map((byte) => String.fromCharCode(byte))
+    .join('')
+}
 
-  if (ACCEPTED_IMAGE_TYPES.includes(normalizedType as (typeof ACCEPTED_IMAGE_TYPES)[number])) {
+export async function detectImageFormatFromFile(
+  file: File,
+): Promise<'jpeg' | 'png' | 'webp' | 'heic' | null> {
+  try {
+    const bytes = await readFileBytes(file, 32)
+    return detectImageFormatFromBytes(bytes)
+  } catch {
+    return null
+  }
+}
+
+export function detectImageFormatFromBytes(
+  bytes: Uint8Array,
+): 'jpeg' | 'png' | 'webp' | 'heic' | null {
+  if (bytes.length < 12) {
+    return null
+  }
+
+  // JPEG: starts with FF D8 FF
+  if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
+    return 'jpeg'
+  }
+
+  // PNG: starts with 89 50 4E 47 0D 0A 1A 0A
+  if (
+    bytes[0] === 0x89 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x4e &&
+    bytes[3] === 0x47 &&
+    bytes[4] === 0x0d &&
+    bytes[5] === 0x0a &&
+    bytes[6] === 0x1a &&
+    bytes[7] === 0x0a
+  ) {
+    return 'png'
+  }
+
+  // WebP: "RIFF" at 0, then "WEBP" at 8
+  const header = bytesToString(bytes.subarray(0, 12))
+  if (header.startsWith('RIFF') && header.slice(8, 12) === 'WEBP') {
+    return 'webp'
+  }
+
+  // HEIC/HEIF: ISO Base Media File Format with ftyp box at offset 4
+  // The brand is at offset 8-11
+  const ftypHeader = bytesToString(bytes.subarray(4, 8))
+  if (ftypHeader === 'ftyp') {
+    const majorBrand = bytesToString(bytes.subarray(8, 12))
+    const heicBrands = ['heic', 'heix', 'hevc', 'hevx', 'mif1', 'msf1']
+    if (heicBrands.includes(majorBrand)) {
+      return 'heic'
+    }
+  }
+
+  return null
+}
+
+function hasValidMimeType(file: File): boolean {
+  const normalizedType = file.type.trim().toLowerCase()
+  return ACCEPTED_IMAGE_TYPES.includes(
+    normalizedType as (typeof ACCEPTED_IMAGE_TYPES)[number],
+  )
+}
+
+function hasValidExtension(file: File): boolean {
+  const normalizedName = file.name.trim().toLowerCase()
+  return ACCEPTED_IMAGE_EXTENSIONS.some((extension) =>
+    normalizedName.endsWith(extension),
+  )
+}
+
+export async function isValidImageFile(file: File): Promise<boolean> {
+  if (file.size > MAX_UPLOAD_BYTES) {
+    return false
+  }
+
+  if (hasValidMimeType(file) || hasValidExtension(file)) {
+    return true
+  }
+
+  const detectedFormat = await detectImageFormatFromFile(file)
+  return detectedFormat !== null
+}
+
+export async function normalizeImageMimeType(file: File): Promise<File> {
+  if (hasValidMimeType(file)) {
     return file
   }
 
   const inferredMimeType = getMimeTypeFromExtension(file.name)
+  if (inferredMimeType) {
+    return new File([file], file.name, {
+      type: inferredMimeType,
+      lastModified: file.lastModified,
+    })
+  }
 
-  if (!inferredMimeType) {
+  const detectedFormat = await detectImageFormatFromFile(file)
+  const mimeTypeMap: Record<string, string> = {
+    jpeg: 'image/jpeg',
+    png: 'image/png',
+    webp: 'image/webp',
+    heic: 'image/heic',
+  }
+
+  const detectedMimeType = detectedFormat ? mimeTypeMap[detectedFormat] : null
+  if (!detectedMimeType) {
     return file
   }
 
   return new File([file], file.name, {
-    type: inferredMimeType,
+    type: detectedMimeType,
     lastModified: file.lastModified,
   })
 }
 
-function isHeicFile(file: File): boolean {
+export async function isHeicFile(file: File): Promise<boolean> {
   const normalizedType = file.type.trim().toLowerCase()
   const normalizedName = file.name.trim().toLowerCase()
 
-  return (
+  if (
     normalizedType === 'image/heic' ||
     normalizedType === 'image/heif' ||
     normalizedName.endsWith('.heic') ||
     normalizedName.endsWith('.heif')
-  )
+  ) {
+    return true
+  }
+
+  const detectedFormat = await detectImageFormatFromFile(file)
+  return detectedFormat === 'heic'
 }
 
-function isStandardWebImage(file: File): boolean {
+export async function isStandardWebImage(file: File): Promise<boolean> {
   const normalizedType = file.type.trim().toLowerCase()
   const normalizedName = file.name.trim().toLowerCase()
 
   const standardTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
   const standardExtensions = ['.jpg', '.jpeg', '.png', '.webp']
 
-  return (
+  if (
     standardTypes.includes(normalizedType) ||
     standardExtensions.some((extension) => normalizedName.endsWith(extension))
-  )
+  ) {
+    return true
+  }
+
+  const detectedFormat = await detectImageFormatFromFile(file)
+  return detectedFormat === 'jpeg' || detectedFormat === 'png' || detectedFormat === 'webp'
 }
 
 async function decodeHeicToBlob(file: File): Promise<Blob> {
@@ -121,7 +242,7 @@ async function decodeHeicToBlob(file: File): Promise<Blob> {
 }
 
 async function ensureDecodedImageBlob(file: File): Promise<Blob> {
-  if (isHeicFile(file)) {
+  if (await isHeicFile(file)) {
     return decodeHeicToBlob(file)
   }
 
@@ -252,9 +373,9 @@ export async function prepareImageForUpload(
   file: File,
   options: PrepareImageOptions = {},
 ): Promise<File> {
-  const normalizedFile = normalizeImageMimeType(file)
+  const normalizedFile = await normalizeImageMimeType(file)
 
-  if (!isValidImageFile(normalizedFile)) {
+  if (!(await isValidImageFile(normalizedFile))) {
     if (normalizedFile.size > MAX_UPLOAD_BYTES) {
       throw new Error('This photo is too large. Please choose one under 5MB.')
     }
@@ -264,7 +385,7 @@ export async function prepareImageForUpload(
 
   // For standard web images (JPEG/PNG/WebP), send the original file as-is.
   // Browser-specific decoding issues are avoided; the backend (Sharp) handles conversion.
-  if (isStandardWebImage(normalizedFile)) {
+  if (await isStandardWebImage(normalizedFile)) {
     return normalizedFile
   }
 

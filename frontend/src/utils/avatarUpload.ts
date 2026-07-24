@@ -18,11 +18,11 @@ export const avatarUploadAccept = [
   ...ACCEPTED_IMAGE_EXTENSIONS,
 ].join(',')
 
-export function isValidAvatarFile(file: File): boolean {
+export async function isValidAvatarFile(file: File): Promise<boolean> {
   return isValidImageFile(file)
 }
 
-export function normalizeAvatarFile(file: File): File {
+export async function normalizeAvatarFile(file: File): Promise<File> {
   return normalizeImageMimeType(file)
 }
 

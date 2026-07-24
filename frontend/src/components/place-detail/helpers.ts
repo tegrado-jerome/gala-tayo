@@ -33,7 +33,7 @@ export function formatPriceLevel(level: number | null | undefined): string {
 
 import { IMAGE_UPLOAD_ERROR_MESSAGE, isValidImageFile } from '../../utils/imageUpload'
 
-export function isAcceptedContributionImage(file: File) {
+export async function isAcceptedContributionImage(file: File): Promise<boolean> {
   return isValidImageFile(file)
 }
 

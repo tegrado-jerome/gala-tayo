@@ -569,7 +569,7 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
       return
     }
 
-    if (!isValidAvatarFile(file)) {
+    if (!(await isValidAvatarFile(file))) {
       setAvatarError(avatarUploadErrorMessage)
       return
     }

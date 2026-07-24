@@ -1489,7 +1489,7 @@ function PlaceDetailView({
       return
     }
 
-    if (!isAcceptedContributionImage(contributionFile)) {
+    if (!(await isAcceptedContributionImage(contributionFile))) {
       setContributionError(contributionImageErrorMessage)
       return
     }

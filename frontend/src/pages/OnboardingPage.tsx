@@ -493,7 +493,7 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
   }
 
   const handleAvatarSelected = async (file: File) => {
-    if (!isValidAvatarFile(file)) {
+    if (!(await isValidAvatarFile(file))) {
       setErrors((currentErrors) => ({
         ...currentErrors,
         avatar: avatarUploadErrorMessage,
