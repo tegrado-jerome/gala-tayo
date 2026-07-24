@@ -24,6 +24,7 @@ import { getMyUserReports } from '../utils/userReportsApi'
 import { getMyProfile } from '../utils/profileApi'
 import { getApiUrl } from '../utils/apiClient'
 import { navigateToPath } from '../utils/navigation'
+import { preparePlaceImageUploadFile } from '../utils/imageUpload'
 import { trackPlaceReportSubmitted, trackPlaceShared } from '../utils/analytics'
 import { Icon } from './place-detail/Icon'
 import { MemberAvatar } from './place-detail/MemberAvatar'
@@ -32,7 +33,7 @@ import { ActionButton } from './place-detail/ActionButton'
 import { GoodForList } from './place-detail/GoodForList'
 import { TransportColumn } from './place-detail/TransportColumn'
 import { DetailSection } from './place-detail/DetailSection'
-import { cleanString, titleCase, uniqueList, isAcceptedContributionImage, parseJsonResponse } from './place-detail/helpers'
+import { cleanString, titleCase, uniqueList, isAcceptedContributionImage, contributionImageErrorMessage, parseJsonResponse } from './place-detail/helpers'
 import type { PlaceDetailViewProps, PlaceReview, PlaceReviewsResponse, PlaceComment, PlaceCommentsResponse, PlaceImageContributionResponse, PlaceDetailCommunityCache } from './place-detail/types'
 import Breadcrumb from './Breadcrumb'
 import { faHouse, faLocationDot, faMagnifyingGlass, faTableCellsLarge } from '@fortawesome/free-solid-svg-icons'
@@ -1488,8 +1489,8 @@ function PlaceDetailView({
       return
     }
 
-    if (!isAcceptedContributionImage(contributionFile) || contributionFile.size > 5 * 1024 * 1024) {
-      setContributionError('Use a JPEG, PNG, or WebP image up to 5MB.')
+    if (!isAcceptedContributionImage(contributionFile)) {
+      setContributionError(contributionImageErrorMessage)
       return
     }
 
@@ -1504,8 +1505,10 @@ function PlaceDetailView({
         throw new Error('Sign in as a member to contribute a photo.')
       }
 
+      const preparedFile = await preparePlaceImageUploadFile(contributionFile)
+
       const body = new FormData()
-      body.append('image', contributionFile)
+      body.append('image', preparedFile)
 
       if (contributionSourceUrl.trim()) {
         body.append('source_url', contributionSourceUrl.trim())
@@ -3152,7 +3155,7 @@ function PlaceDetailView({
               <span className="text-[13px] font-black text-slate-800">Image file</span>
               <input
                 type="file"
-                accept="image/jpeg,image/jpg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+                accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif"
                 disabled={isContributionSubmitting}
                 onChange={(event) => {
                   setContributionFile(event.target.files?.[0] ?? null)

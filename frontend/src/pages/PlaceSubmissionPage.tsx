@@ -9,6 +9,11 @@ import MinimalBackNav from '../components/MinimalBackNav'
 import MapView from '../components/MapView'
 import { navigateToPath } from '../utils/navigation'
 import { submitPlaceSubmission } from '../utils/placeSubmissionsApi'
+import {
+  IMAGE_UPLOAD_ERROR_MESSAGE,
+  isValidImageFile,
+  preparePlaceSubmissionImageFile,
+} from '../utils/imageUpload'
 import { InlineSkeleton } from '../components/loading/SkeletonStates'
 
 type PlaceDraft = {
@@ -331,9 +336,24 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
 
   const handlePhotoSelection = (event: ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files ?? [])
-    const trimmed = files.slice(0, 3)
-    setSelectedPhotos(trimmed)
-    setErrorMessage('')
+    const validFiles: File[] = []
+    const invalidFiles: File[] = []
+
+    for (const file of files.slice(0, 3)) {
+      if (isValidImageFile(file)) {
+        validFiles.push(file)
+      } else {
+        invalidFiles.push(file)
+      }
+    }
+
+    setSelectedPhotos(validFiles)
+
+    if (invalidFiles.length > 0) {
+      setErrorMessage(IMAGE_UPLOAD_ERROR_MESSAGE)
+    } else {
+      setErrorMessage('')
+    }
   }
 
   const removePhotoAt = (index: number) => {
@@ -361,6 +381,10 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
       setIsSubmitting(true)
       setErrorMessage('')
 
+      const preparedPhotos = await Promise.all(
+        selectedPhotos.map((photo) => preparePlaceSubmissionImageFile(photo)),
+      )
+
       const formData = new FormData()
       formData.append('name', draft.name.trim())
       formData.append('category', draft.category)
@@ -383,7 +407,7 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
       formData.append('latitude', String(coordinates[0]))
       formData.append('longitude', String(coordinates[1]))
 
-      for (const photo of selectedPhotos) {
+      for (const photo of preparedPhotos) {
         formData.append('images', photo)
       }
 
@@ -784,7 +808,7 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
                   <label className="block">
                     <input
                       type="file"
-                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif"
                       multiple
                       onChange={handlePhotoSelection}
                       className="w-full text-sm font-semibold text-slate-700 file:mr-4 file:h-10 file:rounded-lg file:border-0 file:bg-[var(--accent)] file:px-4 file:text-sm file:font-black file:text-white"

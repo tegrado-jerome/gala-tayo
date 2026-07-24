@@ -31,19 +31,13 @@ export function formatPriceLevel(level: number | null | undefined): string {
   return symbols[Math.min(Math.max(Math.floor(level), 0), 4)] || ''
 }
 
+import { IMAGE_UPLOAD_ERROR_MESSAGE, isValidImageFile } from '../../utils/imageUpload'
+
 export function isAcceptedContributionImage(file: File) {
-  const CONTRIBUTION_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp']
-  const CONTRIBUTION_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
-
-  const normalizedType = file.type.trim().toLowerCase()
-
-  if (CONTRIBUTION_IMAGE_TYPES.includes(normalizedType)) {
-    return true
-  }
-
-  const normalizedName = file.name.trim().toLowerCase()
-  return CONTRIBUTION_IMAGE_EXTENSIONS.some((extension) => normalizedName.endsWith(extension))
+  return isValidImageFile(file)
 }
+
+export { IMAGE_UPLOAD_ERROR_MESSAGE as contributionImageErrorMessage }
 
 export function parseJsonResponse<T>(text: string): T | null {
   if (!text.trim()) {
