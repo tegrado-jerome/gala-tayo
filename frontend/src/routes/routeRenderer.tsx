@@ -277,6 +277,9 @@ function renderRouteContent(descriptor: RouteDescriptor, inputs: RouteInputs) {
     case 'category-places':
       return <CategoryPlacesPage key={descriptor.categorySlug} categorySlug={descriptor.categorySlug} search={search} navigationSource={navigationSource} />
     case 'shared-place':
+      // Preload the map chunk so the Leaflet bundle is already cached when the
+      // place detail Location section renders.
+      void import('../components/MapView')
       if (descriptor.expectedAreaSlug) {
         return (
           <SharedPlacePage

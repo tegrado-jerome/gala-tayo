@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+﻿import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import AppHeader from './AppHeader'
 import { AppIcon } from './AppIcon'
 import { GuestAuthPrompt, useGuestAuthPrompt } from './GuestAuthPrompt'
@@ -864,6 +864,35 @@ const EMPTY_PLACE_DETAIL = {
   approvedImageCount: 0,
 }
 
+function MapViewMemo({
+  place,
+  zoom,
+  autoFitToPlaces,
+  className,
+}: {
+  place: NonNullable<PlaceDetailViewProps['place']>
+  zoom: number
+  autoFitToPlaces: boolean
+  className: string
+}) {
+  const places = useMemo(() => [place], [place])
+  const center = useMemo(
+    () => [place.coordinates.lat, place.coordinates.lng] as [number | string | null, number | string | null],
+    [place.coordinates.lat, place.coordinates.lng],
+  )
+
+  return (
+    <MapView
+      places={places}
+      selectedPlaceId={place.id}
+      center={center}
+      zoom={zoom}
+      autoFitToPlaces={autoFitToPlaces}
+      className={className}
+    />
+  )
+}
+
 function PlaceDetailView({
   place: inputPlace,
   areaBreadcrumb = null,
@@ -958,6 +987,12 @@ function PlaceDetailView({
   const [isPlaceConcernSubmitting, setIsPlaceConcernSubmitting] = useState(false)
   const [isReportSubmitting, setIsReportSubmitting] = useState(false)
   const [isDetailsExpanded, setIsDetailsExpanded] = useState(false)
+  const [isDesktop, setIsDesktop] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 1024)
+  useEffect(() => {
+    const update = () => setIsDesktop(window.innerWidth >= 1024)
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [])
   const commentMenuRef = useRef<HTMLDivElement | null>(null)
   const { isPlaceSaved, saveFavorite, removeFavorite } = useSavedFavorites()
   const { resolvedTheme } = useTheme()
@@ -2820,14 +2855,16 @@ function PlaceDetailView({
                     />
                     <p className="mt-3 whitespace-pre-line text-[14px] font-semibold leading-6 text-slate-700">{addressLabel}</p>
                     <div className="mt-4 overflow-hidden rounded-xl border border-[var(--line)] bg-slate-50">
-                      <MapView
-                        places={[place]}
-                        selectedPlaceId={place.id}
-                        center={[place.coordinates.lat, place.coordinates.lng]}
-                        zoom={16}
-                        autoFitToPlaces={false}
-                        className="!h-[180px] !rounded-none !border-0 sm:!h-[240px] lg:!h-[280px]"
-                      />
+                      {isDetailsExpanded || isDesktop ? (
+                        <MapViewMemo
+                          place={place}
+                          zoom={16}
+                          autoFitToPlaces={false}
+                          className="!h-[180px] !rounded-none !border-0 sm:!h-[240px] lg:!h-[280px]"
+                        />
+                      ) : (
+                        <div className="h-[180px] sm:h-[240px] lg:h-[280px]" />
+                      )}
                     </div>
                   </DetailSection>
 
