@@ -96,6 +96,19 @@ function isHeicFile(file: File): boolean {
   )
 }
 
+function isStandardWebImage(file: File): boolean {
+  const normalizedType = file.type.trim().toLowerCase()
+  const normalizedName = file.name.trim().toLowerCase()
+
+  const standardTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+  const standardExtensions = ['.jpg', '.jpeg', '.png', '.webp']
+
+  return (
+    standardTypes.includes(normalizedType) ||
+    standardExtensions.some((extension) => normalizedName.endsWith(extension))
+  )
+}
+
 async function decodeHeicToBlob(file: File): Promise<Blob> {
   const heic2any = await import('heic2any')
   const result = await heic2any.default({
@@ -187,21 +200,11 @@ export type PrepareImageOptions = {
   fileName?: string
 }
 
-export async function prepareImageForUpload(
+async function convertImageWithCanvas(
   file: File,
   options: PrepareImageOptions = {},
 ): Promise<File> {
-  const normalizedFile = normalizeImageMimeType(file)
-
-  if (!isValidImageFile(normalizedFile)) {
-    if (normalizedFile.size > MAX_UPLOAD_BYTES) {
-      throw new Error('This photo is too large. Please choose one under 5MB.')
-    }
-
-    throw new Error(IMAGE_UPLOAD_ERROR_MESSAGE)
-  }
-
-  const decodedBlob = await ensureDecodedImageBlob(normalizedFile)
+  const decodedBlob = await ensureDecodedImageBlob(file)
   const image = await loadImageFromBlob(decodedBlob)
 
   const maxDimension = options.maxDimension ?? DEFAULT_MAX_IMAGE_DIMENSION
@@ -243,6 +246,35 @@ export async function prepareImageForUpload(
     type: outputType,
     lastModified: file.lastModified,
   })
+}
+
+export async function prepareImageForUpload(
+  file: File,
+  options: PrepareImageOptions = {},
+): Promise<File> {
+  const normalizedFile = normalizeImageMimeType(file)
+
+  if (!isValidImageFile(normalizedFile)) {
+    if (normalizedFile.size > MAX_UPLOAD_BYTES) {
+      throw new Error('This photo is too large. Please choose one under 5MB.')
+    }
+
+    throw new Error(IMAGE_UPLOAD_ERROR_MESSAGE)
+  }
+
+  // For standard web images (JPEG/PNG/WebP), send the original file as-is.
+  // Browser-specific decoding issues are avoided; the backend (Sharp) handles conversion.
+  if (isStandardWebImage(normalizedFile)) {
+    return normalizedFile
+  }
+
+  // For HEIC/HEIF, attempt client-side decode. If it fails for any reason,
+  // fall back to sending the original file so the backend can attempt conversion.
+  try {
+    return await convertImageWithCanvas(normalizedFile, options)
+  } catch {
+    return normalizedFile
+  }
 }
 
 export async function prepareAvatarUploadFile(file: File): Promise<File> {
