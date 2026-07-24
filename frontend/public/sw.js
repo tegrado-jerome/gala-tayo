@@ -1,24 +1,19 @@
-const APP_CACHE = 'galatayo-app-v1'
-const MEDIA_CACHE = 'galatayo-media-v1'
+const APP_CACHE = 'galatayo-app-v2'
+const MEDIA_CACHE = 'galatayo-media-v2'
 const MEDIA_DOMAIN = 'media.galatayo.app'
 const IMAGE_EXT = /\.(webp|jpg|jpeg|png|gif|svg|avif)(\?.*)?$/i
-const WELCOME_ASSETS = [
+const MAX_MEDIA_CACHE_ENTRIES = 50
+
+const PRECACHE_ASSETS = [
   '/',
   '/images/brand/galatayo-logo-loader.webp',
-  '/images/brand/galatayo-logo-loader.png',
-  '/images/welcome/mobile.webp',
-  '/images/welcome/mobile.png',
-  '/images/welcome/tablet.webp',
-  '/images/welcome/tablet.png',
-  '/images/welcome/laptop-desktop.webp',
-  '/images/welcome/laptop-desktop.png',
 ]
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(APP_CACHE).then((cache) => {
       return Promise.allSettled(
-        WELCOME_ASSETS.map((asset) =>
+        PRECACHE_ASSETS.map((asset) =>
           fetch(asset, { cache: 'reload' }).then((res) => {
             if (res.ok) cache.put(asset, res)
           }).catch(() => {})
@@ -36,7 +31,10 @@ self.addEventListener('activate', (event) => {
           .filter((n) => n !== APP_CACHE && n !== MEDIA_CACHE)
           .map((n) => caches.delete(n))
       )
-    })
+    }).then(() => self.clients.claim())
+  )
+  event.waitUntil(
+    self.registration.navigationPreload?.enable()
   )
 })
 
@@ -45,21 +43,11 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url)
 
   if (request.mode === 'navigate') {
-    event.respondWith(
-      caches.open(APP_CACHE).then((cache) =>
-        cache.match('/').then((cached) => {
-          const fetchPromise = fetch(request).then((res) => {
-            if (res.ok) cache.put('/', res.clone())
-            return res
-          }).catch(() => cached)
-          return cached || fetchPromise
-        })
-      )
-    )
+    event.respondWith(handleNavigation(event))
     return
   }
 
-  if (url.origin === self.location.origin && WELCOME_ASSETS.includes(url.pathname)) {
+  if (url.origin === self.location.origin && PRECACHE_ASSETS.includes(url.pathname)) {
     event.respondWith(
       caches.open(APP_CACHE).then((cache) =>
         cache.match(request).then((cached) =>
@@ -83,9 +71,10 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.open(MEDIA_CACHE).then((cache) =>
       cache.match(request).then((cachedResponse) => {
-        const fetchPromise = fetch(request).then((networkResponse) => {
+        const fetchPromise = fetch(request).then(async (networkResponse) => {
           if (networkResponse.ok) {
-            cache.put(request, networkResponse.clone())
+            await cache.put(request, networkResponse.clone())
+            await trimMediaCache(cache)
           }
           return networkResponse
         }).catch(() => cachedResponse)
@@ -94,3 +83,33 @@ self.addEventListener('fetch', (event) => {
     )
   )
 })
+
+async function handleNavigation(event) {
+  const cache = await caches.open(APP_CACHE)
+  const cachedResponse = await cache.match('/')
+
+  if (event.preloadResponse) {
+    const preloadResponse = await event.preloadResponse.catch(() => null)
+    if (preloadResponse && preloadResponse.status === 200 && preloadResponse.headers.get('Content-Type')?.includes('text/html')) {
+      cache.put('/', preloadResponse.clone())
+      return preloadResponse
+    }
+  }
+
+  try {
+    const networkResponse = await fetch(event.request)
+    if (networkResponse.ok && networkResponse.headers.get('Content-Type')?.includes('text/html')) {
+      cache.put('/', networkResponse.clone())
+    }
+    return networkResponse
+  } catch {
+    return cachedResponse || new Response('Offline', { status: 503 })
+  }
+}
+
+async function trimMediaCache(cache) {
+  const requests = await cache.keys()
+  if (requests.length <= MAX_MEDIA_CACHE_ENTRIES) return
+  const toDelete = requests.slice(0, requests.length - MAX_MEDIA_CACHE_ENTRIES)
+  await Promise.all(toDelete.map((req) => cache.delete(req)))
+}

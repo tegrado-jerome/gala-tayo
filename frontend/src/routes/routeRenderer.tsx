@@ -2,8 +2,6 @@ import { Suspense, lazy, useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import SeoHead from '../components/SeoHead'
 import WelcomePage from '../pages/WelcomePage'
-import FavoritesPage from '../pages/FavoritesPage'
-import HistoryPage from '../pages/HistoryPage'
 import { buildAuthPath } from '../services/authApi'
 import { getOnboardingStatus } from '../utils/profileApi'
 import { navigateToPath, replaceWithPath } from '../utils/navigation'
@@ -16,6 +14,8 @@ const ProtectedFeatureGate = lazy(() => import('../components/ProtectedFeatureGa
 const SharedPlacePage = lazy(() => import('../pages/SharedPlacePage'))
 const PlacesSlugResolverPage = lazy(() => import('../pages/PlacesSlugResolverPage'))
 const HomePage = lazy(() => import('../pages/HomePage'))
+const FavoritesPage = lazy(() => import('../pages/FavoritesPage'))
+const HistoryPage = lazy(() => import('../pages/HistoryPage'))
 const SearchHub = lazy(() => import('../pages/SearchHub'))
 const SearchPage = lazy(() => import('../pages/SearchPage'))
 const LoginPage = lazy(() => import('../pages/LoginPage'))

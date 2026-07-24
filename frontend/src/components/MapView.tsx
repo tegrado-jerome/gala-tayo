@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react'
 import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import type { PlaceCardData } from './PlaceCard'

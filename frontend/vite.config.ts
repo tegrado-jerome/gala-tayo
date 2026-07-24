@@ -1,11 +1,27 @@
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+
+function removeAdminAiMapsModulepreload(): Plugin {
+  return {
+    name: 'remove-admin-ai-maps-modulepreload',
+    transformIndexHtml(html) {
+      return html.replace(
+        /<link rel="modulepreload"[^>]*href="\/assets\/admin-[^"]*"[^>]*>/g,
+        '',
+      ).replace(
+        /<link rel="modulepreload"[^>]*href="\/assets\/ai-maps-[^"]*"[^>]*>/g,
+        '',
+      )
+    },
+  }
+}
 
 export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    removeAdminAiMapsModulepreload(),
   ],
   build: {
     rollupOptions: {
