@@ -132,7 +132,7 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
     <PageShell>
       <AppHeader />
       <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
-        <PageContainer size="wide">
+        <PageContainer size="wide" className="profile-page-container">
           <div className="mb-5">
             <MinimalBackNav to="/home" label="Home" preferHistory={false} className="hidden sm:inline-flex" />
           </div>

@@ -1636,11 +1636,11 @@ onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
                 {selectedDisplayPlace.isCoordinateVerified ? (
                   <div className="mt-2.5 flex items-center gap-2">
                     <span className={isDarkMode ? 'inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#1e3a8a]/20' : 'inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--primary-soft)]'}>
-                      <svg className="h-3 w-3 text-[var(--accent-deep)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <svg className={`h-3 w-3 ${isDarkMode ? 'text-[#9fbeff]' : 'text-[var(--accent-deep)]'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="20 6 9 17 4 12" />
                       </svg>
                     </span>
-                    <span className="text-[13px] font-semibold text-[var(--accent-deep)]">{selectedDisplayPlace.coordinateTrustLabel || 'Verified map location'}</span>
+                    <span className={`text-[13px] font-semibold ${isDarkMode ? 'text-[#9fbeff]' : 'text-[var(--accent-deep)]'}`}>{selectedDisplayPlace.coordinateTrustLabel || 'Verified map location'}</span>
                   </div>
                 ) : null}
               </div>
