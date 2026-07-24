@@ -17,6 +17,13 @@ import { useAppScrollRestoration } from './app/useAppScrollRestoration'
 import { useLogoutTransitionState } from './app/useLogoutTransitionState'
 import { hasSignupOnboardingAccess as hasStoredSignupOnboardingAccess } from './services/authApi'
 
+function hideCriticalWelcomeLoader() {
+  const loader = document.getElementById('critical-welcome-loader')
+  if (loader) {
+    loader.classList.add('is-hidden')
+  }
+}
+
 function App() {
   const { pathname, search, navigationSource, restoredScrollY, setRestoredScrollY } = useAppLocationState()
   const {
@@ -32,6 +39,7 @@ function App() {
     isUserMfaLoading,
     userMfaStatus,
     profileError,
+    refreshProfile,
     markMfaVerified,
     markOnboardingComplete,
   } = useAuthOrchestration({ pathname })
@@ -94,6 +102,16 @@ function App() {
       navigateToPath(redirectTarget)
     }
   }, [hasResolvedInitialAuth, hasResolvedProfile, isOnboardingAllowedPath, isPasswordResetPath, needsOnboarding, pathname, session])
+
+  useLayoutEffect(() => {
+    const isRootPath = pathname === '/' || pathname === ''
+
+    if (!isRootPath || !session || !hasResolvedInitialAuth) {
+      return
+    }
+
+    hideCriticalWelcomeLoader()
+  }, [pathname, session, hasResolvedInitialAuth])
 
   useEffect(() => {
     if (soonFeatureRedirectPath && pathname !== soonFeatureRedirectPath) {
@@ -161,6 +179,27 @@ function App() {
     onProfileRefreshKeyUpdate: markOnboardingComplete,
     onMfaVerified: markMfaVerified,
   })
+
+  const isProfileLoadError = session && hasResolvedInitialAuth && !hasResolvedProfile && Boolean(profileError)
+
+  if (isProfileLoadError) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-6 text-center text-slate-900">
+        <div className="max-w-sm rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <p className="mb-4 text-sm leading-relaxed text-slate-700">
+            {profileError || 'We could not load your account. Please check your connection and try again.'}
+          </p>
+          <button
+            type="button"
+            onClick={refreshProfile}
+            className="inline-flex items-center justify-center rounded-full bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-800"
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <ThemeProvider pathname={pathname}>

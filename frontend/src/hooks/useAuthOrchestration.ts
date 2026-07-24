@@ -224,16 +224,20 @@ export function useAuthOrchestration({ pathname }: { pathname: string }) {
     const loadCurrentProfile = async () => {
       try {
         setIsCurrentProfileLoading(true)
+        setProfileError('')
         const data = await getCurrentUser(activeSession)
 
         if (isMounted) {
           setCurrentUser(data.user)
           setCurrentProfile(data.profile)
+          setHasResolvedProfile(true)
+          setNeedsOnboarding(!data.onboarding.completed || Boolean(data.user.needsPolicyAcceptance))
         }
-      } catch {
+      } catch (error) {
         if (isMounted) {
           setCurrentUser(null)
           setCurrentProfile(null)
+          setProfileError(error instanceof Error ? error.message : 'Failed to load your profile. Please try again.')
         }
       } finally {
         if (isMounted) {
@@ -376,6 +380,13 @@ export function useAuthOrchestration({ pathname }: { pathname: string }) {
     setIsUserMfaLoading(false)
   }, [])
 
+  const refreshProfile = useCallback(() => {
+    setProfileError('')
+    setHasResolvedProfile(false)
+    setNeedsOnboarding(false)
+    setProfileRefreshKey((currentValue) => currentValue + 1)
+  }, [])
+
   const markOnboardingComplete = useCallback((account?: CurrentUserResponse) => {
     skipNextUserMfaLoadRef.current = true
     setNeedsOnboarding(false)
@@ -407,6 +418,7 @@ export function useAuthOrchestration({ pathname }: { pathname: string }) {
     setProfileRefreshKey,
     sessionRef,
     markMfaVerified,
+    refreshProfile,
     markOnboardingComplete,
   }
 }

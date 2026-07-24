@@ -167,11 +167,23 @@ function PlacePhoto({
 }) {
   const swipeStartX = useRef<number | null>(null)
   const [brokenPhotoUrls, setBrokenPhotoUrls] = useState<Set<string>>(new Set())
+  const [isMdUp, setIsMdUp] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return window.matchMedia('(min-width: 768px)').matches
+  })
   const photoSourceKey = uniqueList(imageUrls).join('|')
 
   useEffect(() => {
     setBrokenPhotoUrls(new Set())
   }, [photoSourceKey])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const mediaQuery = window.matchMedia('(min-width: 768px)')
+    const handleChange = () => setIsMdUp(mediaQuery.matches)
+    mediaQuery.addEventListener('change', handleChange)
+    return () => mediaQuery.removeEventListener('change', handleChange)
+  }, [])
 
   const photos = uniqueList(imageUrls)
     .filter((photo) => !brokenPhotoUrls.has(photo))
@@ -331,7 +343,7 @@ function PlacePhoto({
   return (
     <div className="grid gap-2.5 sm:gap-3">
       <div className="-mx-4 w-[calc(100%+2rem)] max-w-[calc(100%+2rem)] sm:mx-0 sm:w-full sm:max-w-none md:mx-auto md:max-w-5xl lg:max-w-[88rem]">
-        <div className="md:hidden">
+        {!isMdUp ? (
           <div className={mobileFrameClassName}>
             <div className="relative isolate overflow-hidden">
               <div
@@ -433,9 +445,9 @@ function PlacePhoto({
               </div>
             </div>
           </div>
-        </div>
+        ) : (
 
-        <div className="hidden md:grid md:grid-cols-[minmax(0,1.32fr)_minmax(17rem,0.82fr)] md:gap-4 lg:grid-cols-[minmax(0,1.62fr)_minmax(21rem,0.78fr)] lg:gap-5">
+        <div className="grid md:grid-cols-[minmax(0,1.32fr)_minmax(17rem,0.82fr)] md:gap-4 lg:grid-cols-[minmax(0,1.62fr)_minmax(21rem,0.78fr)] lg:gap-5">
           <div className={`${desktopGlassFrameClassName} h-full`}>
             <div className="relative isolate h-full overflow-hidden">
               <div className="relative h-full min-h-[23.5rem] overflow-hidden bg-[rgba(15,23,42,0.08)] lg:min-h-[28rem]">
@@ -594,6 +606,7 @@ function PlacePhoto({
             })}
           </div>
         </div>
+        )}
       </div>
       <PlaceImageNotice />
     </div>

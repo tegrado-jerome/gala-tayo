@@ -161,16 +161,15 @@ function getHomeTileImageCandidates(
   }, [])
 }
 
-function getHomeImagePreloadUrls() {
-  const places = [
-    ...homePopularTopPickPlaces,
-    ...homeRecommendedTopPickPlaces,
-    ...homeAllTopPickPlaces,
-    ...homeCityRecommendations.map((tile) => tile.place),
-    ...homeCategoryRecommendations.map((tile) => tile.place),
-  ]
+function getHomeImagePreloadUrls(activeTab: 'all' | 'popular' | 'recommended' = 'all') {
+  const topPickPlaces =
+    activeTab === 'popular'
+      ? homePopularTopPickPlaces.slice(0, 3)
+      : activeTab === 'recommended'
+        ? homeRecommendedTopPickPlaces.slice(0, 3)
+        : homeAllTopPickPlaces.slice(0, 3)
 
-  return places.reduce<string[]>((uniqueUrls, place) => {
+  return topPickPlaces.reduce<string[]>((uniqueUrls, place) => {
     for (const imageUrl of getHomeTileImageCandidates(place)) {
       if (!uniqueUrls.includes(imageUrl)) {
         uniqueUrls.push(imageUrl)
@@ -179,11 +178,6 @@ function getHomeImagePreloadUrls() {
 
     return uniqueUrls
   }, [])
-}
-
-function getHomePriorityImageUrls() {
-  const parkTile = homeCategoryRecommendations.find((tile) => tile.label === 'Park')?.place ?? null
-  return getHomeTileImageCandidates(parkTile)
 }
 
 function getPlaceRatingText(place: ShowcasePlace) {
@@ -429,9 +423,9 @@ function HomeFeaturedCard({
               alt={place.name}
               className="h-full w-full object-cover"
               draggable={false}
-              loading="eager"
+              loading={index < 3 ? 'eager' : 'lazy'}
               decoding="async"
-              fetchPriority="high"
+              fetchPriority={index < 3 ? 'high' : 'low'}
               sizes="(min-width: 1280px) 360px, (min-width: 1024px) 344px, (min-width: 768px) 320px, 84vw"
               onError={() => {
                 if (imageUrl) {
@@ -647,9 +641,9 @@ function HomeCategoryTile({
               alt={label}
               className="h-full w-full object-cover"
               draggable={false}
-              loading="eager"
+              loading="lazy"
               decoding="async"
-              fetchPriority="high"
+              fetchPriority="low"
               sizes="(min-width: 1024px) 92px, (min-width: 768px) 84px, 22vw"
               onError={() => {
                 if (imageUrl) {
@@ -1101,23 +1095,19 @@ function HomePage({ navigationSource }: { navigationSource: NavigationSource }) 
       }
     })
   }, [selectedCategoryTileLabel])
-  const homePriorityImageUrls = useMemo(() => getHomePriorityImageUrls(), [])
-  const homeImagePreloadUrls = useMemo(() => getHomeImagePreloadUrls(), [])
+  const homeImagePreloadUrls = useMemo(() => getHomeImagePreloadUrls(activeTopPicksTab), [activeTopPicksTab])
   const homeImagePreconnectOrigins = useMemo(() => [new URL(R2_PUBLIC_BASE_URL).origin], [])
   const homeSeoConfig = useMemo(() => ({
     title: 'Home | GalaTayo',
     description: 'Discover Metro Manila places by city, category, budget, and vibe.',
     canonicalPath: '/home',
-    preloadLinks: [
-      ...homePriorityImageUrls,
-      ...homeImagePreloadUrls,
-    ].filter((href, index, all) => all.indexOf(href) === index).map((href) => ({
+    preloadLinks: homeImagePreloadUrls.map((href) => ({
         href,
         as: 'image' as const,
         fetchPriority: 'high' as const,
     })),
     preconnectOrigins: homeImagePreconnectOrigins,
-  }), [homeImagePreconnectOrigins, homeImagePreloadUrls, homePriorityImageUrls])
+  }), [homeImagePreconnectOrigins, homeImagePreloadUrls])
 
   useLayoutEffect(() => {
     if (navigationSource !== 'pop') {
@@ -1162,14 +1152,10 @@ function HomePage({ navigationSource }: { navigationSource: NavigationSource }) 
   }, [activeTopPicksTab, visibleTopPickCarouselPlaces.length])
 
   useLayoutEffect(() => {
-    for (const imageUrl of homePriorityImageUrls) {
-      preloadHomeImage(imageUrl)
-    }
-
     for (const imageUrl of homeImagePreloadUrls) {
       preloadHomeImage(imageUrl)
     }
-  }, [homeImagePreloadUrls, homePriorityImageUrls])
+  }, [homeImagePreloadUrls])
 
   useEffect(() => {
     const mediaQuery = window.matchMedia(TABLET_HOME_RAIL_QUERY)

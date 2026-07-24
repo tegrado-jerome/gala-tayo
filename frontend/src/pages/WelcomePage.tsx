@@ -58,72 +58,11 @@ function getWelcomeHeroSrc(useWebp: boolean) {
   return `/images/welcome/laptop-desktop.${ext}`
 }
 
-function getPreloadSrc(useWebp: boolean) {
-  const ext = useWebp ? 'webp' : 'png'
-  if (typeof window === 'undefined') return `/images/welcome/laptop-desktop.${ext}`
-  if (window.innerWidth <= 639) return `/images/welcome/mobile.${ext}`
-  if (window.innerWidth <= 1023) return `/images/welcome/tablet.${ext}`
-  return `/images/welcome/laptop-desktop.${ext}`
-}
-
-function getPngFallbackSrc(src: string) {
-  return src.endsWith('.webp') ? src.replace(/\.webp$/, '.png') : src
-}
-
 function waitForDuration(durationMs: number, timeoutIds?: number[]) {
   return new Promise<void>((resolve) => {
     const timeoutId = window.setTimeout(resolve, durationMs)
     timeoutIds?.push(timeoutId)
   })
-}
-
-function waitForNextPaint() {
-  return new Promise<void>((resolve) => {
-    window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => resolve())
-    })
-  })
-}
-
-async function waitForImageReady(image: HTMLImageElement) {
-  if (!image.complete || image.naturalWidth === 0) {
-    await new Promise<void>((resolve, reject) => {
-      const handleLoad = () => resolve()
-      const handleError = () => reject(new Error('Welcome image failed to load.'))
-
-      image.addEventListener('load', handleLoad, { once: true })
-      image.addEventListener('error', handleError, { once: true })
-    })
-  }
-
-  if (typeof image.decode === 'function') {
-    try {
-      await image.decode()
-    } catch {
-      // Fall back to revealing the page if decode fails after load.
-    }
-  }
-
-  await waitForNextPaint()
-}
-
-async function waitForWelcomeHeroReady(src: string) {
-  const image = new Image()
-  image.src = src
-
-  try {
-    await waitForImageReady(image)
-    return
-  } catch (error) {
-    const fallbackSrc = getPngFallbackSrc(src)
-    if (fallbackSrc === src) {
-      throw error
-    }
-
-    const fallbackImage = new Image()
-    fallbackImage.src = fallbackSrc
-    await waitForImageReady(fallbackImage)
-  }
 }
 
 function WelcomeLoader() {
@@ -155,7 +94,6 @@ type WelcomePageProps = {
 function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
   const [useWebp] = useState(() => supportsWebp())
   const [heroSrc, setHeroSrc] = useState(() => getWelcomeHeroSrc(useWebp))
-  const [preloadSrc, setPreloadSrc] = useState(() => getPreloadSrc(useWebp))
   const [isReady, setIsReady] = useState(false)
   const hasRevealedRef = useRef(false)
   const activeSources = useMemo(() => getSources(useWebp), [useWebp])
@@ -186,7 +124,6 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
       animationFrameId = window.requestAnimationFrame(() => {
         const next = getWelcomeHeroSrc(useWebp)
         setHeroSrc((prev) => (prev === next ? prev : next))
-        setPreloadSrc(getPreloadSrc(useWebp))
       })
     }
 
@@ -213,23 +150,13 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
       }
     }
 
-    const FORCE_REVEAL_MS = 8000
-
-    const imageReadyPromise = waitForWelcomeHeroReady(preloadSrc)
-    const minimumDelayPromise = waitForDuration(loadingMinMs, timeoutIds)
-
-    void Promise.race([
-      Promise.all([imageReadyPromise, minimumDelayPromise]),
-      waitForDuration(FORCE_REVEAL_MS, timeoutIds),
-    ])
-      .then(revealWhenAllowed)
-      .catch(() => {})
+    waitForDuration(loadingMinMs, timeoutIds).then(revealWhenAllowed)
 
     return () => {
       isCancelled = true
       timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId))
     }
-  }, [preloadSrc, loadingMinMs])
+  }, [loadingMinMs])
 
   const handleStartExploring = () => {
     navigateToPath('/home')

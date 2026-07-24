@@ -18,11 +18,6 @@ export function preloadHomeImage(url: string | null | undefined) {
   link.as = 'image'
   link.href = normalizedUrl
   document.head.appendChild(link)
-
-  const img = new Image()
-  img.decoding = 'async'
-  img.fetchPriority = 'high'
-  img.src = normalizedUrl
 }
 
 export function useHomeImageSrc(url: string | null | undefined) {
