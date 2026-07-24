@@ -558,7 +558,7 @@ function HistoryPage() {
                         onClick={() => setVisibleHistoryCount((current) => current + HISTORY_LOAD_MORE_BATCH_SIZE)}
                         className="favorites-history-load-more-button inline-flex h-10 items-center justify-center rounded-lg border border-[var(--accent)] bg-white px-5 text-sm font-black text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)]"
                       >
-                        Load {HISTORY_LOAD_MORE_BATCH_SIZE} more
+                        Load more...
                       </button>
                     </div>
                   ) : null}
