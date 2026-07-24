@@ -2735,7 +2735,7 @@ function PlaceDetailView({
                 <p className="mt-3 text-[14px] font-semibold leading-6 text-slate-700">{quickTake}</p>
               </DetailSection>
 
-              <div className="flex justify-start">
+              <div className="flex justify-start lg:hidden">
                 <button
                   type="button"
                   onClick={() => setIsDetailsExpanded((current) => !current)}
@@ -2749,7 +2749,7 @@ function PlaceDetailView({
                 </button>
               </div>
 
-              {isDetailsExpanded ? (
+              <div className={`${isDetailsExpanded ? '' : 'hidden'} lg:block`}>
                 <div className="grid gap-4 lg:gap-5">
                   <DetailSection>
                     <SectionHeading
@@ -2867,7 +2867,7 @@ function PlaceDetailView({
 
                   {renderCommunitySection()}
                 </div>
-              ) : null}
+              </div>
             </div>
           </section>
         </PageContainer>
