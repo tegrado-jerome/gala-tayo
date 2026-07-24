@@ -4,8 +4,8 @@ import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { generateUniqueSlug } from "../services/placeService";
 import { AuthenticatedUser, validateJwt } from "../utils/auth";
 import { checkEndpointRateLimit } from "../utils/redisRateLimit";
-import { convertImageToWebp, deleteR2Object, uploadThumbnailToR2, uploadWebpToR2 } from "../utils/r2ImageStorage";
-import { getEffectiveImageFormat, isAcceptedImageFormat, isDangerousImage } from "../utils/imageValidation";
+import { convertImageToWebp, deleteR2Object, detectImageFormat, uploadThumbnailToR2, uploadWebpToR2 } from "../utils/r2ImageStorage";
+import { getEffectiveImageFormat, isAcceptedImageFormat, isDangerousImage, detectImageFormatFromBytes } from "../utils/imageValidation";
 import { buildImageUrl } from "../utils/r2UrlResolver";
 import { logAdminAction } from "../utils/adminAudit";
 
@@ -513,6 +513,15 @@ export async function createPlaceSubmission(
       }
 
       const inputBuffer = Buffer.from(await imageFile.arrayBuffer());
+
+      context.log("Place submission image received:", {
+        fileName: imageFile.name,
+        fileType: imageFile.type,
+        fileSize: imageFile.size,
+        detectedBySharp: await detectImageFormat(inputBuffer),
+        detectedByMagicBytes: detectImageFormatFromBytes(inputBuffer),
+        effectiveFormat: await getEffectiveImageFormat(inputBuffer, imageFile.type, imageFile.name),
+      });
 
       if (isDangerousImage(inputBuffer)) {
         return response(400, "All photos must be JPEG, PNG, or WebP.");

@@ -5,8 +5,8 @@ import { countApprovedPlaceImages, getApprovedPlaceImages } from "../services/pl
 import { getAuthenticatedUser, type AuthenticatedUser } from "../utils/auth";
 import { checkEndpointRateLimit } from "../utils/redisRateLimit";
 import { buildImageUrl } from "../utils/r2UrlResolver";
-import { convertImageToWebp, deleteR2Object, uploadThumbnailToR2, uploadWebpToR2 } from "../utils/r2ImageStorage";
-import { getEffectiveImageFormat, isAcceptedImageFormat } from "../utils/imageValidation";
+import { convertImageToWebp, deleteR2Object, detectImageFormat, uploadThumbnailToR2, uploadWebpToR2 } from "../utils/r2ImageStorage";
+import { getEffectiveImageFormat, isAcceptedImageFormat, detectImageFormatFromBytes } from "../utils/imageValidation";
 
 type PlaceRow = {
   id: string;
@@ -192,6 +192,15 @@ export async function placeImageContributionCreate(
     }
 
     const inputBuffer = Buffer.from(await imageFile.arrayBuffer());
+
+    context.log("Place image contribution received:", {
+      fileName: imageFile.name,
+      fileType: imageFile.type,
+      fileSize: imageFile.size,
+      detectedBySharp: await detectImageFormat(inputBuffer),
+      detectedByMagicBytes: detectImageFormatFromBytes(inputBuffer),
+      effectiveFormat: await getEffectiveImageFormat(inputBuffer, imageFile.type, fileName),
+    });
 
     const effectiveFormat = await getEffectiveImageFormat(inputBuffer, imageFile.type, fileName);
 

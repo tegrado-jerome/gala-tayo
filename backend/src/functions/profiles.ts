@@ -3,8 +3,8 @@ import { randomUUID } from "crypto";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { validateJwt } from "../utils/auth";
 import { checkEndpointRateLimit } from "../utils/redisRateLimit";
-import { convertImageToWebp, deleteR2Object, uploadThumbnailToR2, uploadWebpToR2 } from "../utils/r2ImageStorage";
-import { getEffectiveImageFormat, isAcceptedImageFormat, isDangerousImage } from "../utils/imageValidation";
+import { convertImageToWebp, deleteR2Object, detectImageFormat, uploadThumbnailToR2, uploadWebpToR2 } from "../utils/r2ImageStorage";
+import { getEffectiveImageFormat, isAcceptedImageFormat, isDangerousImage, detectImageFormatFromBytes } from "../utils/imageValidation";
 import { buildImageUrl } from "../utils/r2UrlResolver";
 import {
   meProfile as meProfileSocial,
@@ -754,6 +754,15 @@ export async function profileAvatarUpload(
     }
 
     const inputBuffer = Buffer.from(await file.arrayBuffer());
+
+    context.log("Avatar upload received:", {
+      fileName: file.name,
+      fileType: file.type,
+      fileSize: file.size,
+      detectedBySharp: await detectImageFormat(inputBuffer),
+      detectedByMagicBytes: detectImageFormatFromBytes(inputBuffer),
+      effectiveFormat: await getEffectiveImageFormat(inputBuffer, file.type, file.name),
+    });
 
     if (isDangerousImage(inputBuffer)) {
       return {
