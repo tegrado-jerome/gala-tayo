@@ -143,5 +143,23 @@
     </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      (function () {
+        var maxFallbackMs = 10000;
+        function hideLoader() {
+          var loader = document.getElementById('critical-welcome-loader');
+          if (loader && !loader.classList.contains('is-hidden')) {
+            loader.classList.add('is-hidden');
+          }
+        }
+        if (document.readyState === 'complete') {
+          window.setTimeout(hideLoader, maxFallbackMs);
+        } else {
+          window.addEventListener('load', function () {
+            window.setTimeout(hideLoader, maxFallbackMs);
+          });
+        }
+      })();
+    </script>
   </body>
 </html>

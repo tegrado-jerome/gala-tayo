@@ -58,13 +58,6 @@ function getWelcomeHeroSrc(useWebp: boolean) {
   return `/images/welcome/laptop-desktop.${ext}`
 }
 
-function waitForDuration(durationMs: number, timeoutIds?: number[]) {
-  return new Promise<void>((resolve) => {
-    const timeoutId = window.setTimeout(resolve, durationMs)
-    timeoutIds?.push(timeoutId)
-  })
-}
-
 function WelcomeLoader() {
   return (
     <div className="welcome-loader" aria-label="Loading welcome screen" aria-live="polite">
@@ -95,7 +88,10 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
   const [useWebp] = useState(() => supportsWebp())
   const [heroSrc, setHeroSrc] = useState(() => getWelcomeHeroSrc(useWebp))
   const [isReady, setIsReady] = useState(false)
+  const [timeReady, setTimeReady] = useState(false)
+  const [imageReady, setImageReady] = useState(false)
   const hasRevealedRef = useRef(false)
+  const heroImgRef = useRef<HTMLImageElement>(null)
   const activeSources = useMemo(() => getSources(useWebp), [useWebp])
 
   const loadingMinMs = useMemo(() => {
@@ -138,25 +134,44 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
   }, [useWebp])
 
   useEffect(() => {
-    let isCancelled = false
-    const timeoutIds: number[] = []
+    if (hasRevealedRef.current) {
+      return
+    }
 
     setIsReady(false)
+    setTimeReady(false)
 
-    const revealWhenAllowed = () => {
-      if (!isCancelled) {
-        hasRevealedRef.current = true
-        setIsReady(true)
-      }
-    }
-
-    waitForDuration(loadingMinMs, timeoutIds).then(revealWhenAllowed)
+    const timeoutId = window.setTimeout(() => {
+      setTimeReady(true)
+    }, loadingMinMs)
 
     return () => {
-      isCancelled = true
-      timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId))
+      window.clearTimeout(timeoutId)
     }
   }, [loadingMinMs])
+
+  useEffect(() => {
+    if (hasRevealedRef.current) {
+      return
+    }
+
+    setImageReady(false)
+  }, [heroSrc])
+
+  useEffect(() => {
+    if (heroImgRef.current?.complete) {
+      setImageReady(true)
+    }
+  }, [heroSrc])
+
+  useEffect(() => {
+    if (!timeReady || !imageReady || hasRevealedRef.current) {
+      return
+    }
+
+    hasRevealedRef.current = true
+    setIsReady(true)
+  }, [timeReady, imageReady])
 
   const handleStartExploring = () => {
     navigateToPath('/home')
@@ -200,6 +215,7 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
             <source key={asset.src} srcSet={asset.src} media={asset.media} type={asset.type} />
           ))}
           <img
+            ref={heroImgRef}
             src={heroSrc}
             alt="Two people looking over the city skyline at sunset."
             className="welcome-page__image"
@@ -208,6 +224,8 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
             loading="eager"
             fetchPriority="high"
             sizes="100vw"
+            onLoad={() => setImageReady(true)}
+            onError={() => setImageReady(true)}
           />
         </picture>
 

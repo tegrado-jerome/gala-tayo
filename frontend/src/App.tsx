@@ -17,13 +17,6 @@ import { useAppScrollRestoration } from './app/useAppScrollRestoration'
 import { useLogoutTransitionState } from './app/useLogoutTransitionState'
 import { hasSignupOnboardingAccess as hasStoredSignupOnboardingAccess } from './services/authApi'
 
-function hideCriticalWelcomeLoader() {
-  const loader = document.getElementById('critical-welcome-loader')
-  if (loader) {
-    loader.classList.add('is-hidden')
-  }
-}
-
 function App() {
   const { pathname, search, navigationSource, restoredScrollY, setRestoredScrollY } = useAppLocationState()
   const {
@@ -102,16 +95,6 @@ function App() {
       navigateToPath(redirectTarget)
     }
   }, [hasResolvedInitialAuth, hasResolvedProfile, isOnboardingAllowedPath, isPasswordResetPath, needsOnboarding, pathname, session])
-
-  useLayoutEffect(() => {
-    const isRootPath = pathname === '/' || pathname === ''
-
-    if (!isRootPath || !session || !hasResolvedInitialAuth) {
-      return
-    }
-
-    hideCriticalWelcomeLoader()
-  }, [pathname, session, hasResolvedInitialAuth])
 
   useEffect(() => {
     if (soonFeatureRedirectPath && pathname !== soonFeatureRedirectPath) {
