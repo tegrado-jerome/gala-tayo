@@ -140,7 +140,7 @@ export async function uploadThumbnailToR2(
   const thumbBody = await sharp(input, {
     animated: false,
     failOn: "error",
-    limitInputPixels: 25_000_000,
+    limitInputPixels: 100_000_000,
   })
     .rotate()
     .resize(200, 200, { fit: "cover", position: "center" })
@@ -188,7 +188,7 @@ export async function detectImageFormat(input: Buffer) {
   const metadata = await sharp(input, {
     animated: false,
     failOn: "error",
-    limitInputPixels: 25_000_000,
+    limitInputPixels: 100_000_000,
   }).metadata();
 
   return metadata.format ?? null;
@@ -201,7 +201,7 @@ export async function convertImageToWebp(input: Buffer, options?: { resizeAvatar
   const pipeline = sharp(input, {
     animated: false,
     failOn: "error",
-    limitInputPixels: 25_000_000,
+    limitInputPixels: 100_000_000,
   }).rotate();
 
   if (options?.resizeAvatar) {

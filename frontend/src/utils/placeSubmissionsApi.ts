@@ -64,13 +64,17 @@ async function readJsonResponse<T>(response: Response): Promise<T> {
 }
 
 export async function submitPlaceSubmission(formData: FormData, session: Session) {
-  const response = await apiFetch('/place-submissions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${session.access_token}`,
+  const response = await apiFetch(
+    '/place-submissions',
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: formData,
     },
-    body: formData,
-  })
+    60000,
+  )
 
   return readJsonResponse<{ message: string; submission: { id: string; status: string; name: string; city: string; images: PlaceSubmissionImage[] } }>(response)
 }

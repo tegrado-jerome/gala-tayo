@@ -90,6 +90,7 @@ const MAX_SUBMISSION_IMAGES = 3;
 const MIN_SUBMISSION_IMAGES = 1;
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp"]);
+const ALLOWED_IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp"];
 const PLACE_SUBMISSION_COLUMNS =
   "id, submitted_by, approved_place_id, name, category, address, city, area, latitude, longitude, description, best_time_to_visit, visit_duration, budget_min, good_for, not_ideal_for, crowd_level, indoor_outdoor, weather_fit, parking_info, commute_access, nearby_context, website_url, google_maps_url, status, rejection_reason, admin_note, reviewed_by, reviewed_at, created_at, updated_at";
 const PLACE_SUBMISSION_IMAGE_COLUMNS =
@@ -181,6 +182,11 @@ function isDangerousImage(buffer: Buffer) {
   const isSvg = head.includes("<svg");
   const isGif = buffer.length >= 6 && buffer.subarray(0, 3).toString("ascii") === "GIF";
   return isSvg || isGif;
+}
+
+function hasAllowedImageExtension(fileName: string) {
+  const normalizedName = fileName.trim().toLowerCase();
+  return ALLOWED_IMAGE_EXTENSIONS.some((extension) => normalizedName.endsWith(extension));
 }
 
 function getNullableNumber(value: unknown) {
@@ -498,7 +504,13 @@ export async function createPlaceSubmission(
     const uploadedImages: Array<{ storageKey: string; sortOrder: number }> = [];
 
     for (const [index, imageFile] of imageFiles.entries()) {
-      if (!ALLOWED_IMAGE_TYPES.has(imageFile.type)) {
+      const normalizedMimeType = String(imageFile.type || "").trim().toLowerCase();
+
+      if (
+        normalizedMimeType &&
+        !ALLOWED_IMAGE_TYPES.has(normalizedMimeType) &&
+        !hasAllowedImageExtension(imageFile.name)
+      ) {
         return response(400, "All photos must be JPEG, PNG, or WebP.");
       }
 
