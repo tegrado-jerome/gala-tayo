@@ -1390,7 +1390,7 @@ function AskAiModePanel({
             </button>
           </div>
           <p className="mt-1.5 text-center text-[10px] text-slate-400">
-            GalaTayo AI can make mistakes. Check important info.
+            Gawa ng AI ang sagot na ito. Ikaw ang bahalang magsuri kung ito ay tama.
           </p>
         </div>
       </div>
