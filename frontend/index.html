@@ -7,6 +7,8 @@
         var p = (location.pathname.replace(/\/+$/, '') || '/');
         if (p === '/') {
           document.documentElement.dataset.initialRoute = 'welcome';
+          window.__galatayoWelcomeStart = Date.now();
+          window.__galatayoWelcomeStartUsed = false;
         } else {
           document.documentElement.dataset.suppressLoader = 'true';
         }
@@ -150,20 +152,46 @@
     <script type="module" src="/src/main.tsx"></script>
     <script>
       (function () {
-        var maxFallbackMs = 10000;
+        var isWelcome = (location.pathname.replace(/\/+$/, '') || '/') === '/';
+        if (!isWelcome) return;
+
+        var MIN_WELCOME_MS = 2000;
+        var MAX_FALLBACK_MS = 10000;
+        var start = window.__galatayoWelcomeStart || Date.now();
+        var isReady = false;
+        var intervalId = 0;
+        var fallbackId = 0;
+
         function hideLoader() {
           var loader = document.getElementById('critical-welcome-loader');
           if (loader && !loader.classList.contains('is-hidden')) {
             loader.classList.add('is-hidden');
           }
         }
-        if (document.readyState === 'complete') {
-          window.setTimeout(hideLoader, maxFallbackMs);
-        } else {
-          window.addEventListener('load', function () {
-            window.setTimeout(hideLoader, maxFallbackMs);
-          });
+
+        function canHideLoader() {
+          return isReady && (Date.now() - start >= MIN_WELCOME_MS);
         }
+
+        function tryHideLoader() {
+          if (canHideLoader()) {
+            window.clearInterval(intervalId);
+            window.clearTimeout(fallbackId);
+            hideLoader();
+          }
+        }
+
+        window.__galatayoSetWelcomeReady = function () {
+          isReady = true;
+          tryHideLoader();
+        };
+
+        intervalId = window.setInterval(tryHideLoader, 50);
+
+        fallbackId = window.setTimeout(function () {
+          window.clearInterval(intervalId);
+          hideLoader();
+        }, MAX_FALLBACK_MS);
       })();
     </script>
   </body>

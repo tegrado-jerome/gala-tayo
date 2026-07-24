@@ -14,3 +14,9 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv
 }
+
+interface Window {
+  __galatayoWelcomeStart?: number
+  __galatayoWelcomeStartUsed?: boolean
+  __galatayoSetWelcomeReady?: () => void
+}

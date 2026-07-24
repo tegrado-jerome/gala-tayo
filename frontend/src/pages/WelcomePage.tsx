@@ -39,7 +39,18 @@ function getSources(useWebp: boolean): WelcomeAsset[] {
 }
 
 const WELCOME_LOADING_MIN_MS = 2000
-const WELCOME_LOADING_BACK_NAV_MIN_MS = 500
+
+let initialWelcomeStartConsumed = false
+
+function consumeInitialWelcomeStart(): number {
+  const w = window as unknown as Record<string, unknown>
+  if (!initialWelcomeStartConsumed && w.__galatayoWelcomeStart && w.__galatayoWelcomeStartUsed === false) {
+    initialWelcomeStartConsumed = true
+    w.__galatayoWelcomeStartUsed = true
+    return w.__galatayoWelcomeStart as number
+  }
+  return Date.now()
+}
 
 function getWelcomeHeroSrc(useWebp: boolean) {
   const ext = useWebp ? 'webp' : 'png'
@@ -93,19 +104,14 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
   const hasRevealedRef = useRef(false)
   const heroImgRef = useRef<HTMLImageElement>(null)
   const activeSources = useMemo(() => getSources(useWebp), [useWebp])
-
-  const loadingMinMs = useMemo(() => {
-    if (navigationSource === 'pop') return WELCOME_LOADING_BACK_NAV_MIN_MS
-    return WELCOME_LOADING_MIN_MS
-  }, [navigationSource])
+  const startTimeRef = useRef(consumeInitialWelcomeStart())
 
   useEffect(() => {
-    const criticalLoader = document.getElementById('critical-welcome-loader')
-    if (!criticalLoader) {
-      return
+    if (!isReady) return
+    const w = window as unknown as Record<string, (() => void) | undefined>
+    if (typeof w.__galatayoSetWelcomeReady === 'function') {
+      w.__galatayoSetWelcomeReady()
     }
-
-    criticalLoader.classList.toggle('is-hidden', isReady)
   }, [isReady])
 
   useEffect(() => {
@@ -141,14 +147,16 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
     setIsReady(false)
     setTimeReady(false)
 
+    const elapsedMs = Date.now() - startTimeRef.current
+    const remainingMs = Math.max(0, WELCOME_LOADING_MIN_MS - elapsedMs)
     const timeoutId = window.setTimeout(() => {
       setTimeReady(true)
-    }, loadingMinMs)
+    }, remainingMs)
 
     return () => {
       window.clearTimeout(timeoutId)
     }
-  }, [loadingMinMs])
+  }, [startTimeRef])
 
   useEffect(() => {
     if (hasRevealedRef.current) {
@@ -159,8 +167,21 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
   }, [heroSrc])
 
   useEffect(() => {
-    if (heroImgRef.current?.complete) {
-      setImageReady(true)
+    if (hasRevealedRef.current) {
+      return
+    }
+
+    const img = heroImgRef.current
+    if (!img) {
+      return
+    }
+
+    if (img.complete) {
+      if (typeof img.decode === 'function') {
+        img.decode().then(() => setImageReady(true)).catch(() => setImageReady(true))
+      } else {
+        setImageReady(true)
+      }
     }
   }, [heroSrc])
 
@@ -224,7 +245,14 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
             loading="eager"
             fetchPriority="high"
             sizes="100vw"
-            onLoad={() => setImageReady(true)}
+            onLoad={() => {
+              const img = heroImgRef.current
+              if (img && typeof img.decode === 'function') {
+                img.decode().then(() => setImageReady(true)).catch(() => setImageReady(true))
+              } else {
+                setImageReady(true)
+              }
+            }}
             onError={() => setImageReady(true)}
           />
         </picture>
