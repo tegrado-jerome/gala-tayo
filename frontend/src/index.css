@@ -2,7 +2,7 @@
 
 :root {
   color-scheme: light;
-  --font-sans: "Gilroy", "Nunito Sans", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans: "Gilroy";
   --bg-main: #f8fafc;
   --bg-soft: #f1f5f9;
   --card: #ffffff;
