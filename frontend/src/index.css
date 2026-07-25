@@ -48,6 +48,7 @@
   --home-link-hover: var(--text-strong);
   --home-tab-active: var(--accent-deep);
   --home-tab-inactive: var(--text-light);
+  --home-tab-hover: var(--accent-deep);
   --home-search-border: rgba(226, 232, 240, 0.7);
   --home-search-bg: transparent;
   --home-search-text: var(--accent-deep);
@@ -209,6 +210,7 @@
   --home-link-hover: #dbe8ff;
   --home-tab-active: #adc6ff;
   --home-tab-inactive: #7f94b1;
+  --home-tab-hover: var(--text-main);
   --home-search-border: rgba(148, 163, 184, 0.28);
   --home-search-bg: rgba(15, 26, 43, 0.52);
   --home-search-text: #c9d8f2;
