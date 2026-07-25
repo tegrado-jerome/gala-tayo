@@ -94,11 +94,46 @@ export function normalizeImageMimeType(
   return trimmed;
 }
 
-export function isDangerousImage(buffer: Buffer): boolean {
+function isBinaryImageFormat(buffer: Buffer): boolean {
+  // JPEG: FF D8 FF
+  if (buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
+    return true;
+  }
+
+  // PNG: 89 50 4E 47
+  if (buffer.length >= 4 && buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47) {
+    return true;
+  }
+
+  // WebP: RIFF...WEBP
+  if (buffer.length >= 12) {
+    const header = buffer.subarray(0, 12).toString("ascii").toLowerCase();
+    if (header.startsWith("riff") && header.slice(8, 12) === "webp") {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function hasSvgSignature(buffer: Buffer): boolean {
   const head = buffer.subarray(0, 512).toString("utf8").toLowerCase();
-  const isSvg = head.includes("<svg");
-  const isGif =
-    buffer.length >= 6 && buffer.subarray(0, 3).toString("ascii") === "GIF";
+  return head.includes("<svg") || head.includes("<!doctype svg");
+}
+
+export function isDangerousImage(buffer: Buffer): boolean {
+  if (buffer.length < 6) {
+    return false;
+  }
+
+  // GIF: starts with GIF87a or GIF89a
+  const gifHeader = buffer.subarray(0, 6).toString("ascii").toLowerCase();
+  const isGif = gifHeader === "gif87a" || gifHeader === "gif89a";
+
+  // SVG: only check for text-based documents. Binary images (JPEG/PNG/WebP) may
+  // contain text chunks that coincidentally include "<svg", so we skip them.
+  const isSvg = !isBinaryImageFormat(buffer) && hasSvgSignature(buffer);
+
   return isSvg || isGif;
 }
 

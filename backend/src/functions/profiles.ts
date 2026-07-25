@@ -765,6 +765,11 @@ export async function profileAvatarUpload(
     });
 
     if (isDangerousImage(inputBuffer)) {
+      context.log("Avatar upload rejected: detected as dangerous image (SVG or GIF).", {
+        fileName: file.name,
+        fileType: file.type,
+        firstBytes: inputBuffer.subarray(0, 8).toString("hex"),
+      });
       return {
         status: 400,
         jsonBody: {
@@ -776,6 +781,13 @@ export async function profileAvatarUpload(
     const effectiveFormat = await getEffectiveImageFormat(inputBuffer, file.type, file.name);
 
     if (!isAcceptedImageFormat(effectiveFormat)) {
+      context.log("Avatar upload rejected: format not accepted.", {
+        fileName: file.name,
+        fileType: file.type,
+        detectedBySharp: await detectImageFormat(inputBuffer),
+        detectedByMagicBytes: detectImageFormatFromBytes(inputBuffer),
+        effectiveFormat,
+      });
       return {
         status: 400,
         jsonBody: {
