@@ -1569,7 +1569,10 @@ onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
 
           <div className="flex-1 overflow-y-auto px-5 pb-[calc(24px+env(safe-area-inset-bottom,0px))] [-webkit-overflow-scrolling:touch]">
             <div className={placeDetailFitPanelClassName}>
-              <p className={placeDetailSectionLabelClassName}>Why this fits</p>
+              <p className={`${placeDetailSectionLabelClassName} flex items-center gap-1.5`}>
+                <AppIcon name="place" className="h-4 w-4 shrink-0" />
+                <span>PLACE NOTES</span>
+              </p>
               <p className={`mt-2 ${placeDetailBodyTextClassName}`}>
                 {selectedDisplayPlace.whyThisFits}
               </p>

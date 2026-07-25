@@ -283,11 +283,15 @@ function detectUserPreference(text: string): string | null {
   const normalized = normalizeKey(text);
   if (!normalized) return null;
 
-  if (phraseLooksLike(normalized, "aesthetic")) return "aesthetic";
-  if (phraseLooksLike(normalized, "date")) return "date";
-  if (phraseLooksLike(normalized, "chill") || phraseLooksLike(normalized, "tambay") || phraseLooksLike(normalized, "hangout") || phraseLooksLike(normalized, "hang out")) return "chill";
-  if (phraseLooksLike(normalized, "family friendly") || phraseLooksLike(normalized, "family")) return "family-friendly";
-  return null;
+  const preferences: string[] = [];
+  if (phraseLooksLike(normalized, "aesthetic")) preferences.push("aesthetic");
+  if (phraseLooksLike(normalized, "date")) preferences.push("date");
+  if (phraseLooksLike(normalized, "chill") || phraseLooksLike(normalized, "tambay") || phraseLooksLike(normalized, "hangout") || phraseLooksLike(normalized, "hang out")) preferences.push("chill");
+  if (phraseLooksLike(normalized, "family friendly") || phraseLooksLike(normalized, "family")) preferences.push("family-friendly");
+  if (/\b(highly rated|well rated|mataas rating|maganda rating|maraming reviews?|many reviews?|still highly rated)\b/i.test(normalized)) preferences.push("highly-rated");
+  if (/\b(walkable|walking distance|lakarin|kayang lakarin|short walk|nearby|malapit)\b/i.test(normalized)) preferences.push("walkable");
+  if (/\b(sulit|worth it|value for money)\b/i.test(normalized)) preferences.push("sulit");
+  return preferences.length > 0 ? uniqueStrings(preferences, 5).join(", ") : null;
 }
 
 function detectPlaceType(text: string): string | null {

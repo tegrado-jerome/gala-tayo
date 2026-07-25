@@ -885,6 +885,8 @@ function detectGalaIntents(normalizedQuery: string, categoryIntent: CategoryInte
     /\bstudy\b|\bwifi\b/.test(normalizedQuery) ? "study" : null,
     /\brainy_day\b/.test(normalizedQuery) ? "rainy_day" : null,
     /\bbudget\b/.test(normalizedQuery) ? "budget" : null,
+    /\b(highly rated|well rated|top rated|mataas rating|maganda rating|many reviews|maraming reviews)\b/.test(normalizedQuery) ? "highly-rated" : null,
+    /\b(walkable|walking distance|lakarin|kayang lakarin|short walk|nearby|malapit)\b/.test(normalizedQuery) ? "walkable" : null,
     /\baesthetic\b/.test(normalizedQuery) ? "aesthetic" : null,
     /\bindoor\b|\baircon\b/.test(normalizedQuery) ? "indoor" : null,
     /\boutdoor\b/.test(normalizedQuery) ? "outdoor" : null,
@@ -2443,17 +2445,90 @@ type WhyThisFitsInput = {
   placeName: string;
   placeType: string;
   foodActivityIntent: string;
+  queryFocus: string;
+  constraintSummary: string[];
   budgetAmount: number | null;
   budgetIntent: AskAiMapIntent["budgetIntent"];
+  wantsBudget: boolean;
+  wantsHighRating: boolean;
+  wantsWalkable: boolean;
+  wantsNearby: boolean;
+  wantsOpenNow: boolean;
   matchMode: WhyThisFitsMatchMode;
 };
 
+type AskAiMapPromptConstraints = {
+  queryFocus: string;
+  constraints: string[];
+  wantsBudget: boolean;
+  wantsHighRating: boolean;
+  wantsWalkable: boolean;
+  wantsNearby: boolean;
+  wantsOpenNow: boolean;
+};
+
+function hasExplicitBudgetIntentValue(value: AskAiMapIntent["budgetIntent"]): boolean {
+  return value === "free" || value === "low_cost" || value === "free_or_low_cost";
+}
+
 function hasBudgetMention(intent: Pick<AskAiMapIntent, "budgetAmount" | "budgetIntent" | "budgetPerPerson">): boolean {
   return (
-    Boolean(intent.budgetIntent && intent.budgetIntent !== "unknown") ||
-    typeof intent.budgetAmount === "number" ||
-    Boolean(intent.budgetPerPerson)
+    hasExplicitBudgetIntentValue(intent.budgetIntent) ||
+    typeof intent.budgetAmount === "number"
   );
+}
+
+function hasBudgetTermInText(text: string): boolean {
+  return /\b(mura|murang|budget|tipid|affordable|cheap|di mahal|hindi mahal|student budget|sulit|promo|promos|libre|free|walang pera|wlang pera)\b/i.test(text);
+}
+
+function hasExplicitBudgetAmountInText(text: string): boolean {
+  return /(?:₱|php|peso|pesos)\s*\d{2,5}\b|\b\d{2,5}\s*(?:php|pesos?|per head|per person|per tao)\b|\b(?:under|below|max|maximum|less than|hanggang)\s*(?:₱|php)?\s*\d{2,5}\b/i.test(text);
+}
+
+function detectPromptConstraints(intent: AskAiMapIntent): AskAiMapPromptConstraints {
+  const rawPrompt = normalizeText(intent.rawQuery) ?? "";
+  const normalizedPrompt = normalizeKey(`${intent.rawQuery} ${intent.normalizedQuery} ${intent.galaIntents.join(" ")}`);
+  const budgetText = `${intent.rawQuery} ${intent.normalizedQuery}`;
+  const normalizedQueryOnly = normalizeKey(intent.normalizedQuery || intent.rawQuery);
+  const wantsBudget =
+    hasBudgetTermInText(budgetText) ||
+    hasExplicitBudgetAmountInText(budgetText) ||
+    (hasExplicitBudgetIntentValue(intent.budgetIntent) && hasBudgetTermInText(rawPrompt));
+  const wantsHighRating = /\b(highly rated|well rated|top rated|mataas rating|maganda rating|maraming review|maraming reviews|many reviews|good reviews|best|recommended)\b/i.test(normalizedPrompt);
+  const wantsWalkable = /\b(walkable|walking distance|kayang lakarin|lakarin|short walk|by foot|on foot)\b/i.test(normalizedPrompt);
+  const wantsNearby = wantsWalkable || /\b(near|nearby|malapit|around|within|close to)\b/i.test(normalizedPrompt);
+  const wantsOpenNow = /\b(open now|bukas ngayon|currently open|open pa)\b/i.test(normalizedPrompt);
+  const activityMatches = [
+    rawPrompt.match(/\b(?:eat|eating|kain|kumain|food|craving|places to eat)\s+([a-zA-Z][a-zA-Z0-9 '&-]{2,40})/i)?.[1],
+    rawPrompt.match(/\b(?:for|pang|para sa)\s+([a-zA-Z][a-zA-Z0-9 '&-]{2,40})/i)?.[1],
+  ]
+    .map((value) => normalizeText(value))
+    .filter((value): value is string => Boolean(value));
+  const explicitFocus =
+    activityMatches.find((value) => !/\b(budget|mura|highly rated|near|nearby|walk|lakarin|open|now|lang|pero|still|here)\b/i.test(value)) ??
+    intent.normalizedQuery.match(/^(.*?)(?:\s+\b(?:in|near|around|within|sa)\b|$)/i)?.[1] ??
+    normalizedQueryOnly;
+  const queryFocus =
+    normalizeText(explicitFocus)?.replace(/\s+/g, " ").slice(0, 80) ||
+    getFoodOrActivityIntentLabel(intent);
+
+  return {
+    queryFocus,
+    constraints: uniqueStrings([
+      queryFocus ? `intent=${queryFocus}` : null,
+      wantsBudget ? "budget-aware" : null,
+      wantsHighRating ? "highly-rated" : null,
+      wantsWalkable ? "walkable" : wantsNearby ? "nearby" : null,
+      wantsOpenNow ? "open-now" : null,
+      ...intent.galaIntents,
+    ], 8),
+    wantsBudget,
+    wantsHighRating,
+    wantsWalkable,
+    wantsNearby,
+    wantsOpenNow,
+  };
 }
 
 function getFoodOrActivityIntentLabel(intent: AskAiMapIntent): string {
@@ -2575,17 +2650,25 @@ function inferWhyThisFitsBudgetTier(
 }
 
 function buildWhyThisFitsInput(place: AskAiMapGroundedPlace, intent: AskAiMapIntent): WhyThisFitsInput {
+  const promptConstraints = detectPromptConstraints(intent);
   return {
     originalUserPrompt: normalizeText(intent.rawQuery) ?? "",
     normalizedUserIntent: normalizeText(intent.normalizedQuery) ?? normalizeText(intent.rawQuery) ?? "",
     placeName: normalizeText(place.name) ?? "This place",
     placeType: getPlaceTypeLabel(intent),
     foodActivityIntent: getFoodOrActivityIntentLabel(intent),
+    queryFocus: promptConstraints.queryFocus,
+    constraintSummary: promptConstraints.constraints,
     budgetAmount:
       typeof intent.budgetAmount === "number" && Number.isFinite(intent.budgetAmount)
         ? Math.round(intent.budgetAmount)
         : null,
     budgetIntent: intent.budgetIntent ?? "unknown",
+    wantsBudget: promptConstraints.wantsBudget,
+    wantsHighRating: promptConstraints.wantsHighRating,
+    wantsWalkable: promptConstraints.wantsWalkable,
+    wantsNearby: promptConstraints.wantsNearby,
+    wantsOpenNow: promptConstraints.wantsOpenNow,
     matchMode: classifyWhyThisFitsMatchMode(place, intent),
   };
 }
@@ -2649,6 +2732,197 @@ function buildWhyThisFitsFromInput(input: WhyThisFitsInput): string {
     : `Possible option ito if open ka sa ${relatedLabel}, not strictly ${input.foodActivityIntent} lang.`;
 }
 
+function formatWhyThisFitsDistance(distanceKm: number): string {
+  if (distanceKm < 1) {
+    return `${Math.round(distanceKm * 1000)}m`;
+  }
+  return `${distanceKm.toFixed(1)}km`;
+}
+
+function getWhyThisFitsEmoji(intent: AskAiMapIntent): string {
+  switch (intent.categoryIntent) {
+    case "mall":
+      return " 🛍️";
+    case "restaurant":
+    case "samgyup":
+      return " 🍽️";
+    case "cafe":
+      return " ☕";
+    case "park":
+      return " 🌿";
+    case "cinema":
+      return " 🎬";
+    case "museum":
+      return " 🖼️";
+    case "hotel":
+    case "resort":
+      return " 🧳";
+    case "bar":
+    case "karaoke":
+      return " 🎤";
+    case "activity":
+    case "tourist_spot":
+      return " ✨";
+    default:
+      return " 📍";
+  }
+}
+
+function appendWhyThisFitsEmoji(text: string, intent: AskAiMapIntent): string {
+  const cleaned = normalizeWhitespace(text);
+  if (!cleaned) {
+    return "";
+  }
+  if (/\p{Extended_Pictographic}/u.test(cleaned)) {
+    return cleaned;
+  }
+  return `${cleaned}${getWhyThisFitsEmoji(intent)}`;
+}
+
+function getShortPlaceArea(place: AskAiMapGroundedPlace): string | null {
+  const address = normalizeText(place.address ?? place.optionalDetails?.addressText);
+  if (!address) {
+    return null;
+  }
+
+  const parts = address
+    .split(",")
+    .map((part) => normalizeText(part))
+    .filter((part): part is string => Boolean(part));
+
+  const usefulParts = parts.filter((part) => !/^philippines$/i.test(part));
+  if (usefulParts.length >= 2) {
+    return usefulParts.slice(-2).join(", ");
+  }
+  return usefulParts[0] ?? null;
+}
+
+function getPlaceSpecificEvidenceSentence(place: AskAiMapGroundedPlace): string {
+  const category = normalizeText(place.displayCategory ?? place.category ?? place.optionalDetails?.categoryText);
+  const area = getShortPlaceArea(place);
+  const details = uniqueStrings([category, area], 2);
+
+  if (details.length >= 2) {
+    return `Mapped siya as ${details[0]} around ${details[1]}, so connected siya sa hinahanap mong area.`;
+  }
+
+  if (details.length === 1) {
+    return `Mapped siya as ${details[0]}, so relevant siya as a shortlist result.`;
+  }
+
+  return "May usable map result siya, pero limited ang extra details.";
+}
+
+function getRatingEvidenceSentence(place: AskAiMapGroundedPlace, input: WhyThisFitsInput): string | null {
+  if (!input.wantsHighRating) {
+    return null;
+  }
+
+  const hasRating = typeof place.rating === "number" && Number.isFinite(place.rating);
+  const hasReviews = typeof place.reviewCount === "number" && Number.isFinite(place.reviewCount) && place.reviewCount > 0;
+
+  if (hasRating && hasReviews) {
+    return `Rating-wise, promising siya sa Maps with ${place.rating!.toFixed(1)} stars and ${Math.round(place.reviewCount!)} reviews.`;
+  }
+
+  if (hasRating) {
+    return `Rating-wise, may ${place.rating!.toFixed(1)} stars siya sa Maps, pero check reviews pa rin bago pumunta.`;
+  }
+
+  return "Rating-wise, hindi malinaw sa available map data, so treat it as shortlist option muna.";
+}
+
+function getAccessEvidenceSentence(place: AskAiMapGroundedPlace, input: WhyThisFitsInput): string | null {
+  if (!input.wantsWalkable && !input.wantsNearby) {
+    return null;
+  }
+
+  const distanceKm = typeof place.distanceKm === "number" && Number.isFinite(place.distanceKm)
+    ? place.distanceKm
+    : null;
+
+  if (input.wantsWalkable) {
+    if (distanceKm !== null && distanceKm <= 1.2) {
+      return `Access-wise, mukhang walkable siya at around ${formatWhyThisFitsDistance(distanceKm)} from the search area, pero check actual route and crossings.`;
+    }
+
+    if (distanceKm !== null) {
+      return `Access-wise, around ${formatWhyThisFitsDistance(distanceKm)} siya from the search area, so check if kaya lakarin or mas okay ang short ride.`;
+    }
+
+    return "Access-wise, near siya sa requested search area, pero check map directions muna kung kayang lakarin.";
+  }
+
+  if (distanceKm !== null) {
+    return `Location-wise, relevant siya sa nearby search mo at around ${formatWhyThisFitsDistance(distanceKm)} from the search area.`;
+  }
+
+  return "Location-wise, relevant siya sa requested search area based on the map result.";
+}
+
+function getBudgetEvidenceSentence(input: WhyThisFitsInput): string | null {
+  if (!input.wantsBudget) {
+    return null;
+  }
+
+  const budgetLabel = typeof input.budgetAmount === "number" ? `PHP ${input.budgetAmount}` : "budget";
+  return `Budget-wise, possible ${budgetLabel} shortlist siya, pero check current prices or promos since wala tayong verified live menu/rate.`;
+}
+
+function getOpenNowEvidenceSentence(place: AskAiMapGroundedPlace, input: WhyThisFitsInput): string | null {
+  if (!input.wantsOpenNow) {
+    return null;
+  }
+
+  const hoursText =
+    normalizeText(place.openingHoursSummary) ??
+    normalizeText(place.optionalDetails?.openingHoursSummary) ??
+    normalizeText(place.optionalDetails?.hoursText);
+
+  return hoursText
+    ? `Schedule-wise, may map hours info na "${hoursText}", pero verify pa rin before leaving.`
+    : "Schedule-wise, check current hours muna since live open status is not clearly verified here.";
+}
+
+function getGeneralEvidenceSentence(place: AskAiMapGroundedPlace, input: WhyThisFitsInput): string | null {
+  if (input.wantsBudget || input.wantsWalkable || input.wantsNearby || input.wantsOpenNow || input.wantsHighRating) {
+    return null;
+  }
+
+  if (typeof place.rating === "number" && Number.isFinite(place.rating)) {
+    const reviews =
+      typeof place.reviewCount === "number" && Number.isFinite(place.reviewCount) && place.reviewCount > 0
+        ? ` with ${Math.round(place.reviewCount)} reviews`
+        : "";
+    return `May visible Maps rating din siya na ${place.rating.toFixed(1)}${reviews}, useful pang-compare sa ibang options.`;
+  }
+
+  if (typeof place.distanceKm === "number" && Number.isFinite(place.distanceKm)) {
+    return `Distance-wise, around ${formatWhyThisFitsDistance(place.distanceKm)} siya from the search area, useful for comparing nearby options.`;
+  }
+
+  return "Good siyang i-check beside the other results para makita mo which one fits your exact lakad better.";
+}
+
+function buildGroundedWhyThisFits(place: AskAiMapGroundedPlace, intent: AskAiMapIntent): string {
+  const input = buildWhyThisFitsInput(place, intent);
+  const placeSpecificEvidence = getPlaceSpecificEvidenceSentence(place);
+  const directText =
+    input.matchMode === "direct"
+      ? `Pasok siya sa ${input.queryFocus || input.foodActivityIntent} search mo based on the map result. ${placeSpecificEvidence}`
+      : `Related option siya for ${input.queryFocus || input.foodActivityIntent}, so okay siyang i-check kung flexible ka sa exact place type. ${placeSpecificEvidence}`;
+  const prioritySentences = uniqueStrings([
+    directText,
+    getBudgetEvidenceSentence(input),
+    getAccessEvidenceSentence(place, input),
+    getOpenNowEvidenceSentence(place, input),
+    getRatingEvidenceSentence(place, input),
+    getGeneralEvidenceSentence(place, input),
+  ], 4);
+
+  return appendWhyThisFitsEmoji(prioritySentences.slice(0, 3).join(" "), intent);
+}
+
 function sentenceLooksLikeMetadata(sentence: string, place: AskAiMapGroundedPlace): boolean {
   const normalizedSentence = normalizeKey(sentence);
   if (!normalizedSentence) {
@@ -2672,14 +2946,13 @@ function sentenceLooksLikeMetadata(sentence: string, place: AskAiMapGroundedPlac
     .filter((value): value is string => Boolean(value));
 
   const directMetadataPatterns = [
-    /\b(?:address|formatted address|opening hours|hours?|rating|review count|reviews?|coordinates?|latitude|longitude|place id|cid|google maps|maps grounding|open now|closed now)\b/i,
+    /\b(?:formatted address|coordinates?|latitude|longitude|place id|cid|google maps uri|maps grounding)\b/i,
+    /^(?:address|opening hours|hours?|rating|review count|reviews?|open now|closed now)\s*:/i,
     /\b(?:Metro Manila, Philippines|Philippines|Manila|Makati|Pasay|Paranaque|Parañaque|Pasig|Taguig|Quezon City)\b/i,
     /\b\d{1,2}:\d{2}\s*(?:AM|PM)\b/i,
     /\b(?:AM|PM)\b/i,
     /,\s*\d{4}\b/,
     /\b\d{4}\s+(?:Metro Manila|Philippines)\b/i,
-    /\b\d+(?:\.\d+)?\s*(?:stars?|rating)\b/i,
-    /\b\d+(?:,\d{3})?\s*reviews?\b/i,
     /@-?\d+(?:\.\d+)?,-?\d+(?:\.\d+)?/,
     /https?:\/\/\S+/i,
   ];
@@ -2701,7 +2974,43 @@ function sentenceLooksLikeMetadata(sentence: string, place: AskAiMapGroundedPlac
   return false;
 }
 
-function sanitizeWhyThisFits(text: string, place: AskAiMapGroundedPlace): string {
+function hasUnsupportedExperienceClaims(text: string, place: AskAiMapGroundedPlace): boolean {
+  const normalizedText = normalizeKey(text);
+  if (!normalizedText) {
+    return true;
+  }
+
+  const evidenceText = normalizeKey(
+    [
+      place.name,
+      place.category,
+      place.displayCategory,
+      place.rawCategory,
+      place.address,
+      place.openingHoursSummary,
+      place.optionalDetails?.categoryText,
+      place.optionalDetails?.addressText,
+      place.optionalDetails?.hoursText,
+      ...(place.optionalDetails?.reviewSignals ?? []),
+      ...(place.relevanceSignals ?? []),
+    ].filter(Boolean).join(" ")
+  );
+
+  const unsupportedPatterns: Array<{ pattern: RegExp; evidence: RegExp }> = [
+    { pattern: /\b(rich broth|creamy broth|savory broth|authentic broth|masarap na broth|mapapa umay|noodle texture)\b/i, evidence: /\b(broth|noodle texture|review)\b/i },
+    { pattern: /\b(generous toppings|loaded toppings|malaki serving|big servings|sulit serving|portion)\b/i, evidence: /\b(topping|serving|portion|review)\b/i },
+    { pattern: /\b(cozy seating|cozy seats|modern interior|open kitchen|japanese decor|lively atmosphere|open dining|instagrammable interior|aesthetic interior)\b/i, evidence: /\b(cozy|interior|decor|atmosphere|dining|aesthetic|review)\b/i },
+    { pattern: /\b(student budget|presyo na kaya ng student|mababa ang presyo|hindi mahal|cheap menu|affordable menu)\b/i, evidence: /\b(menu|price|promo|budget|affordable|cheap|mura)\b/i },
+  ];
+
+  return unsupportedPatterns.some(({ pattern, evidence }) => pattern.test(text) && !evidence.test(evidenceText));
+}
+
+function mentionsBudgetOrPrice(text: string): boolean {
+  return /\b(budget|price|prices|pricing|presyo|mura|murang|cheap|affordable|promo|promos|rate|rates|student budget|low-cost|low cost|tipid|sulit)\b/i.test(text);
+}
+
+function sanitizeWhyThisFits(text: string, place: AskAiMapGroundedPlace, intent: AskAiMapIntent): string {
   const normalized = normalizeWhitespace(text);
   if (!normalized) {
     return "";
@@ -2723,7 +3032,16 @@ function sanitizeWhyThisFits(text: string, place: AskAiMapGroundedPlace): string
     return "";
   }
 
-  return cleaned;
+  if (hasUnsupportedExperienceClaims(cleaned, place)) {
+    return "";
+  }
+
+  const promptConstraints = detectPromptConstraints(intent);
+  if (!promptConstraints.wantsBudget && mentionsBudgetOrPrice(cleaned)) {
+    return "";
+  }
+
+  return appendWhyThisFitsEmoji(cleaned, intent);
 }
 
 function buildWhyThisFitsFallback(input: WhyThisFitsInput): string {
@@ -2884,15 +3202,7 @@ function buildBudgetExplanationSuffix(intent: AskAiMapIntent): string {
 }
 
 function buildWhyThisFits(place: AskAiMapGroundedPlace, intent: AskAiMapIntent): string {
-  const whyThisFitsInput = buildWhyThisFitsInput(place, intent);
-  const generatedWhyThisFits = buildWhyThisFitsFromInput(whyThisFitsInput);
-  const sanitizedWhyThisFits = sanitizeWhyThisFits(generatedWhyThisFits, place);
-
-  if (sanitizedWhyThisFits) {
-    return sanitizedWhyThisFits;
-  }
-
-  return buildWhyThisFitsFallback(whyThisFitsInput);
+  return buildGroundedWhyThisFits(place, intent);
 }
 
 const WHY_THIS_FITS_GROQ_MODEL = "openai/gpt-oss-120b";
@@ -2932,17 +3242,36 @@ async function generateWhyThisFitsBatch(
 
     const placesList = places
       .map(
-        (place, i) =>
-          `${i + 1}. "${place.name}" | Category: ${place.displayCategory ?? place.category ?? "N/A"} | Address: ${place.address ?? "N/A"}${place.rating != null ? ` | Rating: ${place.rating}` : ""}${place.reviewCount != null ? ` | Reviews: ${place.reviewCount}` : ""}`,
+        (place, i) => {
+          const input = buildWhyThisFitsInput(place, intent);
+          const facts = [
+            `Category: ${place.displayCategory ?? place.category ?? "N/A"}`,
+            `Address: ${place.address ?? "N/A"}`,
+            place.distanceKm != null ? `Distance from search area: ${formatWhyThisFitsDistance(place.distanceKm)}` : "Distance from search area: N/A",
+            place.rating != null ? `Rating: ${place.rating}` : "Rating: N/A",
+            place.reviewCount != null ? `Reviews: ${place.reviewCount}` : "Reviews: N/A",
+            `Hours: ${place.openingHoursSummary ?? place.optionalDetails?.openingHoursSummary ?? place.optionalDetails?.hoursText ?? "N/A"}`,
+            `Match: ${place.matchConfidence ?? "medium"}`,
+            `Prompt constraints: ${input.constraintSummary.join(", ") || "general relevance"}`,
+          ];
+          return `${i + 1}. "${place.name}" | ${facts.join(" | ")}`;
+        },
       )
       .join("\n");
+    const promptConstraints = detectPromptConstraints(intent);
 
     const userPrompt = [
       `User query: "${intent.rawQuery}"`,
       `Search area: ${intent.searchAreaText ?? "N/A"}`,
-      intent.galaIntents.length > 0 ? `User preferences: ${intent.galaIntents.join(", ")}` : "",
+      `Detected intent focus: ${promptConstraints.queryFocus}`,
+      `Detected constraints: ${promptConstraints.constraints.join(", ") || "general relevance"}`,
       "",
-      "For each place, write a 2-3 sentence Taglish explanation that focuses on the unique experience, vibe, and standout features of the place and why it specifically fits the user's query and preferences. Do NOT repeat the place name, rating, review count, address, or category. Use 1-2 relevant emojis per explanation. Avoid em dashes.",
+      "For each place, write a short 2-3 sentence Taglish explanation that answers why this place fits the user's actual intent and constraints.",
+      "Use only the facts listed for each place. Mention rating/reviews only when provided. Mention distance, nearby, or walkability only when distance is provided; if the user asked for walkable and distance is missing, say to check map directions first.",
+      "Mention budget, prices, promos, affordability, tipid, or sulit only when Detected constraints includes budget-aware. For budget requests, say it is a possible budget shortlist and tell the user to check current prices/promos because live menu/rate data is not verified.",
+      "Do not invent food quality, broth, toppings, serving size, menu prices, student budget, interiors, decor, seating, atmosphere, opening status, or exact walking route unless those facts are listed.",
+      "Make each explanation place-specific using the listed category, short area/address clue, distance, rating/reviews, hours, or match signal. Avoid copy-paste wording across places.",
+      "Add 1 relevant emoji at the end. Do not repeat the place name, full address, category label, or raw metadata. No markdown. Avoid em dashes.",
       "",
       "Places:",
       placesList,
@@ -3575,9 +3904,13 @@ async function buildAskAiMapResponse(args: {
 
   const places = args.places.slice(0, counts.max).map((place, index) => {
     const groqExplanation = groqExplanations?.[String(index)] ?? null;
-    const whyThisFits =
+    const sanitizedGroqExplanation =
       groqExplanation && normalizeText(groqExplanation)
-        ? normalizeText(groqExplanation)!
+        ? sanitizeWhyThisFits(groqExplanation, place, args.intent)
+        : "";
+    const whyThisFits =
+      sanitizedGroqExplanation
+        ? sanitizedGroqExplanation
         : buildWhyThisFits(place, args.intent);
     return {
       ...place,
