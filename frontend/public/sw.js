@@ -1,5 +1,5 @@
-const APP_CACHE = 'galatayo-app-v2'
-const MEDIA_CACHE = 'galatayo-media-v2'
+const APP_CACHE = 'galatayo-app-v3'
+const MEDIA_CACHE = 'galatayo-media-v3'
 const MEDIA_DOMAIN = 'media.galatayo.app'
 const IMAGE_EXT = /\.(webp|jpg|jpeg|png|gif|svg|avif)(\?.*)?$/i
 const MAX_MEDIA_CACHE_ENTRIES = 50

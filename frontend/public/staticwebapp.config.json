@@ -11,6 +11,18 @@
     {
       "route": "/data/place-listings/*",
       "cacheControl": "public, max-age=86400, stale-while-revalidate=604800"
+    },
+    {
+      "route": "/index.html",
+      "cacheControl": "no-cache, no-store, must-revalidate"
+    },
+    {
+      "route": "/sw.js",
+      "cacheControl": "no-cache, no-store, must-revalidate"
+    },
+    {
+      "route": "/",
+      "cacheControl": "no-cache, no-store, must-revalidate"
     }
   ],
   "navigationFallback": {

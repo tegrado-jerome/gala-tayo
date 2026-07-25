@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent, type RefObject } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
-import { faChevronRight, faCompass, faFire, faHandSparkles, faHeart, faLocationDot, faMagnifyingGlass, faRobot, faSliders, faStar, faSun, faTableCellsLarge } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faCompass, faFire, faHandSparkles, faHeart, faLocationDot, faMagnifyingGlass, faRobot, faSliders, faStar, faTableCellsLarge } from '@fortawesome/free-solid-svg-icons'
 import { faHeart as faHeartRegular } from '@fortawesome/free-regular-svg-icons'
 import { Sun, Moon } from 'lucide-react'
 import { useAppUser } from '../context/AppUserContext'

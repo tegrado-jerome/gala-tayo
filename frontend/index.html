@@ -188,10 +188,21 @@
 
         intervalId = window.setInterval(tryHideLoader, 50);
 
-        fallbackId = window.setTimeout(function () {
+        function forceHideLoader() {
           window.clearInterval(intervalId);
+          window.clearTimeout(fallbackId);
           hideLoader();
-        }, MAX_FALLBACK_MS);
+        }
+
+        fallbackId = window.setTimeout(forceHideLoader, MAX_FALLBACK_MS);
+
+        if (document.readyState === 'complete') {
+          window.setTimeout(forceHideLoader, MAX_FALLBACK_MS);
+        } else {
+          window.addEventListener('load', function () {
+            window.setTimeout(forceHideLoader, MAX_FALLBACK_MS);
+          });
+        }
       })();
     </script>
   </body>
