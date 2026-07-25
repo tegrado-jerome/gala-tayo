@@ -37,119 +37,9 @@ const MAX_ASSISTANT_HISTORY_CONTENT_LENGTH = 1200;
 const ASK_AI_SCOPE_REJECTION_MESSAGE =
   "GalaTayo AI will not answer this question because it does not align with the purpose of GalaTayo.";
 
-const ASK_AI_HARMFUL_SCOPE_PATTERNS = [
-  /\bhack(?:ing)?\b/i,
-  /\bexploit(?:s|ed|ing)?\b/i,
-  /\bbypass(?:ing|ed)?\b/i,
-  /\bunauthori[sz]ed\b/i,
-  /\bauth(?:entication)?\b/i,
-  /\blogin\b/i,
-  /\bpassword\b/i,
-  /\bpasscode\b/i,
-  /\btoken\b/i,
-  /\bsecret\b/i,
-  /\bapi\s*key\b/i,
-  /\bsql\s*injection\b/i,
-  /\bxss\b/i,
-  /\bcsrf\b/i,
-  /\bmalware\b/i,
-  /\bvirus\b/i,
-  /\bphishing\b/i,
-  /\bkeylogger\b/i,
-  /\bransomware\b/i,
-  /\bsteal\b/i,
-];
-
-const ASK_AI_ALLOWED_SCOPE_PATTERNS = [
-  /\bgala(?:tayo)?\b/i,
-  /\blakad\b/i,
-  /\bouting\b/i,
-  /\bhangout\b/i,
-  /\bdate(?:\s+idea(?:s)?)?\b/i,
-  /\bfood\s*trip\b/i,
-  /\bcafe\s*hopp(?:ing|er|ers)?\b/i,
-  /\bitinerar(?:y|ies)\b/i,
-  /\btravel\b/i,
-  /\btrip\b/i,
-  /\btour\b/i,
-  /\bexplor(?:e|ing|ation)\b/i,
-  /\bvisit(?:ing)?\b/i,
-  /\bplan(?:s|ning|ned)?\b/i,
-  /\brecommend(?:ation|ations)?\b/i,
-  /\bsuggest(?:ion|ions)?\b/i,
-  /\bwhere\s+to\s+go\b/i,
-  /\bwhat\s+to\s+do\b/i,
-  /\bbudget(?:-friendly)?\b/i,
-  /\bcommute\b/i,
-  /\bdirections?\b/i,
-  /\broute\b/i,
-  /\bparking\b/i,
-  /\bmap(?:s)?\b/i,
-  /\bplace(?:s)?\b/i,
-  /\bspot(?:s)?\b/i,
-  /\barea(?:s)?\b/i,
-  /\bcit(?:y|ies)\b/i,
-  /\blocation(?:s)?\b/i,
-  /\bmetro\s+manila\b/i,
-  /\bphilipp(?:ine|ines)\b/i,
-  /\bph\b/i,
-  /\bbgc\b/i,
-  /\btaguig\b/i,
-  /\bcaloocan\b/i,
-  /\blas\s*pinas\b/i,
-  /\bmakati\b/i,
-  /\bmalabon\b/i,
-  /\bmandaluyong\b/i,
-  /\bmanila\b/i,
-  /\bmarikina\b/i,
-  /\bmuntinlupa\b/i,
-  /\bnavotas\b/i,
-  /\bparanaque\b/i,
-  /\bpasay\b/i,
-  /\bpasig\b/i,
-  /\bquezon\s+city\b/i,
-  /\bsan\s+juan\b/i,
-  /\bvalenzuela\b/i,
-  /\bpateros\b/i,
-];
-
-const ASK_AI_NEUTRAL_SCOPE_PATTERNS = [
-  /^\s*(?:hi|hello|hey|yo|sup|kumusta|kamusta)\b[.!?,\s]*$/i,
-  /^\s*(?:good\s+morning|good\s+afternoon|good\s+evening)\b[.!?,\s]*$/i,
-  /^\s*(?:how\s+are\s+you|how\s+are\s+you\??|what\s+can\s+you\s+do|can\s+you\s+help|help(?:\s+me)?|thanks|thank\s+you|ok|okay|test)\b[.!?,\s]*$/i,
-];
-
-function normalizeScopeText(value: string): string {
-  return value
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s-]+/gu, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function isAskAiWithinScope(message: string): boolean {
-  const normalizedMessage = normalizeScopeText(message);
-
-  if (!normalizedMessage) {
-    return false;
-  }
-
-  if (ASK_AI_NEUTRAL_SCOPE_PATTERNS.some((pattern) => pattern.test(normalizedMessage))) {
-    return true;
-  }
-
-  return ASK_AI_ALLOWED_SCOPE_PATTERNS.some((pattern) => pattern.test(normalizedMessage));
-}
-
-function isClearlyDisallowedAskAiPrompt(message: string): boolean {
-  const normalizedMessage = normalizeScopeText(message);
-
-  if (!normalizedMessage) {
-    return false;
-  }
-
-  return ASK_AI_HARMFUL_SCOPE_PATTERNS.some((pattern) => pattern.test(normalizedMessage));
-}
+type AskAiPromptGuardResult = {
+  accepted: boolean;
+};
 
 async function shouldAcceptAskAiPrompt({
   message,
@@ -159,11 +49,7 @@ async function shouldAcceptAskAiPrompt({
   message: string;
   requestId: string;
   context: InvocationContext;
-}): Promise<boolean> {
-  if (isClearlyDisallowedAskAiPrompt(message)) {
-    return false;
-  }
-
+}): Promise<AskAiPromptGuardResult> {
   try {
     const decision = await classifyAskAiPromptWithGroq({
       message,
@@ -171,24 +57,32 @@ async function shouldAcceptAskAiPrompt({
     });
 
     context.log(
-      `[AskAI Chatbot] prompt-guard decision requestId=${requestId} accepted=${decision.accepted} label=${decision.label} confidence=${decision.confidence ?? "n/a"} reason=${decision.reason}`
+      `[AskAI Chatbot] prompt-guard decision requestId=${requestId} accepted=${decision.accepted} label=${decision.label} mixedIntent=${decision.mixedIntent} secondaryIntentPresent=${decision.secondaryIntentPresent} confidence=${decision.confidence ?? "n/a"} reason=${decision.reason}`
     );
 
     if (
-      !decision.accepted &&
-      (decision.label === "harmful" || decision.label === "deceptive") &&
-      (decision.confidence === null || decision.confidence >= 0.85)
+      decision.mixedIntent ||
+      decision.secondaryIntentPresent ||
+      decision.label === "unrelated" ||
+      decision.label === "deceptive" ||
+      decision.label === "harmful"
     ) {
-      return false;
+      return {
+        accepted: false,
+      };
     }
 
-    return true;
+    return {
+      accepted: true,
+    };
   } catch (error) {
     const reason = error instanceof Error ? error.message : "Unknown error";
     context.warn(
-      `[AskAI Chatbot] prompt-guard unavailable requestId=${requestId} reason=${reason}`
+      `[AskAI Chatbot] prompt-guard unavailable requestId=${requestId} reason=${reason}; rejecting by default`
     );
-    return true;
+    return {
+      accepted: false,
+    };
   }
 }
 
@@ -341,7 +235,13 @@ export async function postAskAiChatbot(
       };
     }
 
-    if (!(await shouldAcceptAskAiPrompt({ message, requestId, context }))) {
+    const promptGuard = await shouldAcceptAskAiPrompt({
+      message,
+      requestId,
+      context,
+    });
+
+    if (!promptGuard.accepted) {
       context.log(
         `[AskAI Chatbot] scope rejected requestId=${requestId} actorId=${resolvedActor!.id} actorKind=${resolvedActor!.kind}`
       );
@@ -627,3 +527,4 @@ app.http("askAiChatbot", {
   route: "ask-ai/chatbot",
   handler: postAskAiChatbot,
 });
+

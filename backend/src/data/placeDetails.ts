@@ -497,7 +497,7 @@ export async function invalidatePlaceDetailCache(
   await Promise.all(keys.map((key) => deleteJsonCacheValue(key)));
 }
 
-export async function findPlaceDetailsByIds(placeIds: string[]): Promise<Map<string, PlaceDetail>> {
+export async function findPlaceDetailsByIds(placeIds: string[], options?: { forceRefresh?: boolean }): Promise<Map<string, PlaceDetail>> {
   const uniquePlaceIds = Array.from(
     new Set(placeIds.map((placeId) => placeId.trim()).filter(Boolean))
   );
@@ -510,11 +510,13 @@ export async function findPlaceDetailsByIds(placeIds: string[]): Promise<Map<str
   const missingPlaceIds: string[] = [];
 
   for (const placeId of uniquePlaceIds) {
-    const cachedDetail = await readCachedPlaceDetail(placeId);
+    if (!options?.forceRefresh) {
+      const cachedDetail = await readCachedPlaceDetail(placeId);
 
-    if (cachedDetail) {
-      detailsById.set(placeId, cachedDetail);
-      continue;
+      if (cachedDetail) {
+        detailsById.set(placeId, cachedDetail);
+        continue;
+      }
     }
 
     missingPlaceIds.push(placeId);
@@ -574,7 +576,7 @@ export async function findPlaceDetailsByIds(placeIds: string[]): Promise<Map<str
   }
 }
 
-export async function findPlaceDetailsBySlugs(slugs: string[]): Promise<Map<string, PlaceDetail>> {
+export async function findPlaceDetailsBySlugs(slugs: string[], options?: { forceRefresh?: boolean }): Promise<Map<string, PlaceDetail>> {
   const uniqueSlugs = Array.from(
     new Set(slugs.map((slug) => normalizePlaceLookupKey(slug)).filter(Boolean))
   );
@@ -587,11 +589,13 @@ export async function findPlaceDetailsBySlugs(slugs: string[]): Promise<Map<stri
   const missingSlugs: string[] = [];
 
   for (const slug of uniqueSlugs) {
-    const cachedDetail = await readCachedPlaceDetail(slug);
+    if (!options?.forceRefresh) {
+      const cachedDetail = await readCachedPlaceDetail(slug);
 
-    if (cachedDetail) {
-      detailsBySlug.set(slug, cachedDetail);
-      continue;
+      if (cachedDetail) {
+        detailsBySlug.set(slug, cachedDetail);
+        continue;
+      }
     }
 
     missingSlugs.push(slug);

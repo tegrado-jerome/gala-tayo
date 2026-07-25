@@ -55,6 +55,8 @@ export async function placeDetailsBatch(
     return rateCheck.response;
   }
 
+  const refresh = request.query.get("refresh") === "true" || request.query.get("refresh") === "1";
+
   let body: PlaceDetailsBatchRequest;
 
   try {
@@ -86,7 +88,7 @@ export async function placeDetailsBatch(
   }
 
   const [detailsBySlug, cityImageResolutions] = await Promise.all([
-    findPlaceDetailsBySlugs(slugs),
+    findPlaceDetailsBySlugs(slugs, { forceRefresh: refresh }),
     resolveCityImageDetails(cityImageRequests),
   ]);
   const places = slugs

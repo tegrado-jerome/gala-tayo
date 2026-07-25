@@ -1111,13 +1111,15 @@ function PlaceDetailView({
 
   const isSaved = [place.id, place.slug, normalizedNameSlug].some((slugOrId) => isPlaceSaved(slugOrId))
   const hasCurrentUserReview = Boolean(currentUserReview)
-  const headlineRating =
-    hasLoadedReviewSummary && reviewCount > 0 && averageRating !== null
-      ? averageRating
-      : null
-  const headlineReviewCount =
-    hasLoadedReviewSummary && reviewCount > 0
-      ? reviewCount
+  const headlineRating = hasLoadedReviewSummary
+    ? averageRating ?? 0
+    : typeof place.rating === 'number' && Number.isFinite(place.rating)
+      ? Math.max(0, place.rating)
+      : 0
+  const headlineReviewCount = hasLoadedReviewSummary
+    ? reviewCount
+    : typeof place.ratingCount === 'number' && Number.isFinite(place.ratingCount)
+      ? Math.max(0, Math.floor(place.ratingCount))
       : 0
 
   useLayoutEffect(() => {
@@ -2472,10 +2474,21 @@ function PlaceDetailView({
         <div className="mt-5">
           <div>
             <h3 className="text-[20px] font-black text-slate-950">Rate this place</h3>
+            <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[14px] font-semibold text-slate-600">
+              <span className="text-[15px] font-black text-slate-950">
+                {(reviewCount > 0 && averageRating !== null ? averageRating : 0).toFixed(1)}
+              </span>
+              <StarsDisplay rating={reviewCount > 0 && averageRating !== null ? Math.round(averageRating) : 0} compact />
+              <span className="text-slate-500">
+                {reviewCount > 0
+                  ? `(${formatRatingCount(reviewCount)} ${reviewCount === 1 ? 'rating' : 'ratings'})`
+                  : '(0 ratings)'}
+              </span>
+            </div>
             <p className="mt-1 text-[14px] font-semibold text-slate-600">
               {reviewCount > 0 && averageRating !== null
                 ? `Rated ${averageRating.toFixed(1)} by ${reviewCount} ${reviewCount === 1 ? 'person' : 'people'}.`
-                : 'No ratings yet. Be the first to help others decide.'}
+                : '0 ratings yet. Be the first to help others decide.'}
             </p>
 
             {currentUserId && (!hasCurrentUserReview || isReviewEditing) ? (
@@ -2696,17 +2709,13 @@ function PlaceDetailView({
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div className="min-w-0">
                   <h1 className="min-w-0 text-[26px] font-black leading-tight text-slate-950 sm:text-[32px]">{place.name}</h1>
-                  {headlineRating !== null ? (
-                    <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[14px] font-semibold text-slate-600">
-                      <span className="text-[15px] font-black text-slate-950">{headlineRating.toFixed(1)}</span>
-                      <StarsDisplay rating={Math.round(headlineRating)} compact />
-                      {headlineReviewCount > 0 ? (
-                        <span className="text-slate-500">({formatRatingCount(headlineReviewCount)})</span>
-                      ) : (
-                        <span className="text-slate-500">Rating available</span>
-                      )}
-                    </div>
-                  ) : null}
+                  <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[14px] font-semibold text-slate-600">
+                    <span className="text-[15px] font-black text-slate-950">{headlineRating.toFixed(1)}</span>
+                    <StarsDisplay rating={Math.round(headlineRating)} compact />
+                    <span className="text-slate-500">
+                      ({formatRatingCount(headlineReviewCount)} {headlineReviewCount === 1 ? 'rating' : 'ratings'})
+                    </span>
+                  </div>
 
                   <div className="mt-3 grid w-full max-w-[28rem] grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-2.5 md:mt-4 md:gap-2.5 lg:flex lg:max-w-none lg:gap-2.5">
                     <ActionButton

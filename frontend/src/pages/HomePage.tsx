@@ -33,7 +33,7 @@ import { preloadHomeImage, useHomeImageSrc } from '../utils/homeImageCache'
 import { getCanonicalPlacePath, resolveAreaMeta } from '../utils/routes'
 import { placeCategories } from '../data/placeCategories'
 import SeoHead from '../components/SeoHead'
-import { prefetchPlaceDetail } from '../utils/placeDetailCache'
+import { fetchHomePlaceDetailsBatch, prefetchPlaceDetail, readCachedPlaceDetail } from '../utils/placeDetailCache'
 import { R2_PUBLIC_BASE_URL } from '../data/r2Config'
 
 type ShowcasePlace = {
@@ -117,24 +117,97 @@ function normalizeLocationKey(value: string | null | undefined) {
 }
 
 function formatRatingText(value: number | string | null | undefined) {
-  if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
-    return value.toFixed(1)
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value > 0 ? value.toFixed(1) : '0'
   }
 
   if (typeof value === 'string') {
     const trimmedValue = value.trim()
     if (!trimmedValue) {
-      return null
+      return '0'
     }
 
     const numericValue = Number(trimmedValue)
-    return Number.isFinite(numericValue) && numericValue > 0 ? numericValue.toFixed(1) : trimmedValue
+    if (Number.isFinite(numericValue)) {
+      return numericValue > 0 ? numericValue.toFixed(1) : '0'
+    }
+
+    return trimmedValue
   }
 
-  return null
+  return '0'
+}
+
+function getRatingValue(value: number | string | null | undefined) {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return Math.max(0, value)
+  }
+
+  if (typeof value === 'string') {
+    const parsedValue = Number(value.trim())
+    return Number.isFinite(parsedValue) ? Math.max(0, parsedValue) : 0
+  }
+
+  return 0
+}
+
+function getPlaceDetailRatingValue(place: {
+  rating?: number | null
+}) {
+  if (typeof place.rating === 'number' && Number.isFinite(place.rating)) {
+    return Math.max(0, place.rating)
+  }
+
+  return 0
+}
+
+function mergeHomePlacesWithRatings<T extends { slug: string; rating?: number | null; reviewCount?: string }>(
+  places: T[],
+  ratingsBySlug: Record<string, { rating: number | null; reviewCount: number | null }>
+) {
+  return places.map((place) => {
+    const ratingSummary = ratingsBySlug[place.slug]
+
+    if (!ratingSummary) {
+      return place
+    }
+
+    return {
+      ...place,
+      rating: ratingSummary.rating,
+      reviewCount:
+        ratingSummary.reviewCount !== null
+          ? String(ratingSummary.reviewCount)
+          : place.reviewCount,
+    }
+  })
+}
+
+function RatingStars({ value }: { value: number }) {
+  const filledStars = Math.max(0, Math.min(5, Math.round(value)))
+
+  return (
+    <span className="inline-flex items-center gap-0.5" aria-label={`${value.toFixed(1)} out of 5 stars`}>
+      {[1, 2, 3, 4, 5].map((starIndex) => (
+        <FontAwesomeIcon
+          key={starIndex}
+          icon={faStar}
+          className={`h-3 w-3 ${starIndex <= filledStars ? 'text-amber-300' : 'text-white/40'}`}
+        />
+      ))}
+    </span>
+  )
 }
 
 import { getStaticPlaceImageUrlForSlug } from '../data/placeIndexVisuals'
+
+const homeTopPickPlaceSlugs = Array.from(
+  new Set(
+    [...homeAllTopPickPlaces, ...homePopularTopPickPlaces, ...homeRecommendedTopPickPlaces].map(
+      (place) => place.slug
+    )
+  )
+)
 
 function getHomeTileImageCandidates(
   place: ShowcasePlace | null,
@@ -327,6 +400,7 @@ function HomeFeaturedCard({
   const resolvedSrc = useHomeImageSrc(imageUrl)
   const locationText = getPlaceLocationText(place)
   const ratingText = getPlaceRatingText(place)
+  const ratingValue = getRatingValue(place.rating)
   const { isPlaceSaved, saveFavorite, removeFavorite } = useSavedFavorites()
   const [isSaving, setIsSaving] = useState(false)
   const normalizedPlaceId = place.id.trim()
@@ -467,8 +541,8 @@ function HomeFeaturedCard({
                   <span className="truncate">{locationText}</span>
                 </span>
                 <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[rgba(15,23,42,0.36)] px-2.5 py-1 font-semibold text-white">
-                  <FontAwesomeIcon icon={faStar} className="h-3.5 w-3.5 text-amber-300" />
-                  {ratingText || 'New'}
+                  <RatingStars value={ratingValue} />
+                  {ratingText}
                 </span>
               </div>
             </div>
@@ -1018,6 +1092,22 @@ function HomePage({ navigationSource }: { navigationSource: NavigationSource }) 
   })
   const [selectedCityTileSlug, setSelectedCityTileSlug] = useState<string | null>(null)
   const [selectedCategoryTileLabel, setSelectedCategoryTileLabel] = useState<string | null>(null)
+  const [homeTopPickRatingsBySlug, setHomeTopPickRatingsBySlug] = useState<Record<string, { rating: number | null; reviewCount: number | null }>>(() => {
+    return homeTopPickPlaceSlugs.reduce<Record<string, { rating: number | null; reviewCount: number | null }>>((accumulator, slug) => {
+      const cachedPlace = readCachedPlaceDetail(slug)
+
+      if (cachedPlace) {
+        accumulator[slug] = {
+          rating: getPlaceDetailRatingValue(cachedPlace),
+          reviewCount: typeof cachedPlace.review_count === 'number' && Number.isFinite(cachedPlace.review_count)
+            ? Math.max(0, Math.floor(cachedPlace.review_count))
+            : null,
+        }
+      }
+
+      return accumulator
+    }, {})
+  })
   const heroCarouselRef = useRef<HTMLDivElement | null>(null)
   const heroCardRefs = useRef<Array<HTMLDivElement | null>>([])
   const cityRailRef = useRef<HTMLDivElement | null>(null)
@@ -1038,19 +1128,53 @@ function HomePage({ navigationSource }: { navigationSource: NavigationSource }) 
   )
 
   const heroPlaces = useMemo(() => {
-    return homePopularTopPickPlaces
-  }, [])
+    return mergeHomePlacesWithRatings(homePopularTopPickPlaces, homeTopPickRatingsBySlug)
+  }, [homeTopPickRatingsBySlug])
 
   const recommendedTopPickPlaces = useMemo(() => {
-    return homeRecommendedTopPickPlaces
-  }, [])
+    return mergeHomePlacesWithRatings(homeRecommendedTopPickPlaces, homeTopPickRatingsBySlug)
+  }, [homeTopPickRatingsBySlug])
 
   const allTopPickPlaces = useMemo(() => {
-    return homeAllTopPickPlaces
-  }, [])
+    return mergeHomePlacesWithRatings(homeAllTopPickPlaces, homeTopPickRatingsBySlug)
+  }, [homeTopPickRatingsBySlug])
 
   const popularTopPickPlaces = useMemo(() => {
-    return homePopularTopPickPlaces
+    return mergeHomePlacesWithRatings(homePopularTopPickPlaces, homeTopPickRatingsBySlug)
+  }, [homeTopPickRatingsBySlug])
+
+  useEffect(() => {
+    let isActive = true
+
+    void fetchHomePlaceDetailsBatch({
+      slugs: homeTopPickPlaceSlugs,
+      cityImageRequests: [],
+      refresh: true,
+    }).then(({ places }) => {
+      if (!isActive || places.length === 0) {
+        return
+      }
+
+      setHomeTopPickRatingsBySlug((currentRatings) => {
+        const nextRatings = { ...currentRatings }
+
+        for (const place of places) {
+          nextRatings[place.slug] = {
+            rating: getPlaceDetailRatingValue(place),
+            reviewCount:
+              typeof place.review_count === 'number' && Number.isFinite(place.review_count)
+                ? Math.max(0, Math.floor(place.review_count))
+                : null,
+          }
+        }
+
+        return nextRatings
+      })
+    })
+
+    return () => {
+      isActive = false
+    }
   }, [])
 
   const visibleTopPickCarouselPlaces = useMemo(() => {

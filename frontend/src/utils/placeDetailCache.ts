@@ -149,15 +149,17 @@ async function fetchPlaceDetailsBatch(slugs: string[]): Promise<PlaceDetail[]> {
 async function fetchHomePlaceDetailsBatch({
   slugs,
   cityImageRequests,
+  refresh = false,
 }: {
   slugs: string[]
   cityImageRequests: CityImageRequest[]
+  refresh?: boolean
 }): Promise<{ places: PlaceDetail[]; cityImageResolutions: CityImageResolution[] }> {
   const normalizedSlugs = Array.from(
     new Set(slugs.map((slug) => normalizeSlug(slug)).filter(Boolean))
   )
 
-  const response = await apiFetch('/places/batch-details', {
+  const response = await apiFetch(`/places/batch-details${refresh ? '?refresh=1' : ''}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

@@ -1,5 +1,6 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
+import { invalidatePlaceDetailCache } from "../data/placeDetails";
 import { AuthenticatedUser, getAuthenticatedUser, unauthorized, badRequest, validateJwt } from "../utils/auth";
 import { getPlaceIdentifier, isPlaceUuid, resolvePlaceId } from "../utils/placeIdentity";
 import { checkEndpointRateLimit } from "../utils/redisRateLimit";
@@ -273,6 +274,8 @@ export async function placeReviewsUpsert(
       };
     }
 
+    await invalidatePlaceDetailCache(placeId);
+
     return {
       status: 200,
       jsonBody: {
@@ -347,6 +350,8 @@ export async function placeReviewsDelete(
         },
       };
     }
+
+    await invalidatePlaceDetailCache(placeId);
 
     const deletedReviews = (data || []) as PlaceReview[];
 
