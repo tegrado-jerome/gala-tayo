@@ -13,6 +13,7 @@ import {
 import {
   GroqChatProviderError,
   type GroqConversationMessage,
+  classifyAskAiPromptWithGroq,
   generateFromGroq,
   sanitizeChatbotAnswer,
 } from "../services/groqChatProvider";
@@ -133,15 +134,62 @@ function isAskAiWithinScope(message: string): boolean {
     return false;
   }
 
-  if (ASK_AI_HARMFUL_SCOPE_PATTERNS.some((pattern) => pattern.test(normalizedMessage))) {
-    return false;
-  }
-
   if (ASK_AI_NEUTRAL_SCOPE_PATTERNS.some((pattern) => pattern.test(normalizedMessage))) {
     return true;
   }
 
   return ASK_AI_ALLOWED_SCOPE_PATTERNS.some((pattern) => pattern.test(normalizedMessage));
+}
+
+function isClearlyDisallowedAskAiPrompt(message: string): boolean {
+  const normalizedMessage = normalizeScopeText(message);
+
+  if (!normalizedMessage) {
+    return false;
+  }
+
+  return ASK_AI_HARMFUL_SCOPE_PATTERNS.some((pattern) => pattern.test(normalizedMessage));
+}
+
+async function shouldAcceptAskAiPrompt({
+  message,
+  requestId,
+  context,
+}: {
+  message: string;
+  requestId: string;
+  context: InvocationContext;
+}): Promise<boolean> {
+  if (isClearlyDisallowedAskAiPrompt(message)) {
+    return false;
+  }
+
+  try {
+    const decision = await classifyAskAiPromptWithGroq({
+      message,
+      requestId,
+    });
+
+    context.log(
+      `[AskAI Chatbot] prompt-guard decision requestId=${requestId} accepted=${decision.accepted} label=${decision.label} confidence=${decision.confidence ?? "n/a"} reason=${decision.reason}`
+    );
+
+    if (
+      !decision.accepted &&
+      (decision.label === "harmful" || decision.label === "deceptive") &&
+      (decision.confidence === null || decision.confidence >= 0.85)
+    ) {
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : "Unknown error";
+    context.warn(
+      `[AskAI Chatbot] prompt-guard unavailable requestId=${requestId} reason=${reason}`
+    );
+    return true;
+  }
 }
 
 function buildScopeRejectionResponse(requestId: string): HttpResponseInit {
@@ -293,7 +341,7 @@ export async function postAskAiChatbot(
       };
     }
 
-    if (!isAskAiWithinScope(message)) {
+    if (!(await shouldAcceptAskAiPrompt({ message, requestId, context }))) {
       context.log(
         `[AskAI Chatbot] scope rejected requestId=${requestId} actorId=${resolvedActor!.id} actorKind=${resolvedActor!.kind}`
       );
