@@ -134,8 +134,8 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
   const isSubmitDisabled = isSubmitting || isGoogleLoading || (isCreateMode ? !isCreateFormValid : !isLoginFormValid)
   const authSwitchLinkClassName =
     resolvedTheme === 'dark'
-      ? 'min-h-10 font-semibold text-[#6f86a8] underline underline-offset-2 transition hover:text-[#8aa0c1] focus:outline-none focus:ring-4 focus:ring-[rgba(37,99,235,0.12)]'
-      : 'min-h-10 font-semibold text-[var(--accent-deep)] underline underline-offset-2 transition hover:text-[#2563eb] focus:outline-none focus:ring-4 focus:ring-[rgba(37,99,235,0.12)]'
+      ? 'min-h-10 font-semibold text-[#6f86a8] underline underline-offset-2 transition hover:text-[#8aa0c1] focus:outline-none focus:ring-0 focus-visible:!shadow-none'
+      : 'min-h-10 font-semibold text-[var(--accent-deep)] underline underline-offset-2 transition hover:text-[#2563eb] focus:outline-none focus:ring-0 focus-visible:!shadow-none'
   const authLegalLinkClassName =
     resolvedTheme === 'dark'
       ? 'font-semibold text-[#6f86a8] underline underline-offset-2 transition hover:text-[#8aa0c1] focus:outline-none focus:ring-4 focus:ring-[rgba(37,99,235,0.12)]'
