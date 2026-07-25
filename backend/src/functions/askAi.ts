@@ -12,6 +12,7 @@ import {
 } from "../services/askAiUsageService";
 import {
   GroqChatProviderError,
+  type AskAiPromptGuardDecision,
   type GroqConversationMessage,
   classifyAskAiPromptWithGroq,
   generateFromGroq,
@@ -41,158 +42,39 @@ type AskAiPromptGuardResult = {
   accepted: boolean;
 };
 
-type AskAiDeterministicGuardResult = AskAiPromptGuardResult & {
-  reason: string;
-};
-
-const ASK_AI_OBVIOUS_INVALID_ACTION_PATTERNS = [
-  /\b(?:what(?:'s| is)|solve|calculate|compute)\b[\s\S]{0,80}\d+\s*(?:\+|-|\*|\/|x)\s*\d+/i,
-  /\b\d+\s*(?:\+|-|\*|\/|x)\s*\d+\b/i,
-  /\b(?:recipe|resipe|cook|bake|lutuin|iluto)\b/i,
-  /\b(?:credentials?|passwords?|passcodes?|tokens?|api\s*keys?|secrets?|private\s+keys?)\b/i,
-  /\b(?:code|program|debug|sql|javascript|typescript|python|html|css)\b/i,
-  /\b(?:essay|poem|song|cover\s+letter|resume|email)\b/i,
-  /\b(?:when|what\s+date|kailan|kelan)\b[\s\S]{0,80}\b(?:birth|born|birthday|pinanganak|kaarawan)\b/i,
-  /\b(?:birth|born|birthday|pinanganak|kaarawan)\b[\s\S]{0,80}\b(?:rizal|jose\s+rizal)\b/i,
-];
-
-const ASK_AI_OBVIOUS_HARMFUL_ACTION_PATTERNS = [
-  /\b(?:jailbreak|prompt\s*inject|ignore\s+(?:your|previous|system)\s+instructions?)\b/i,
-  /\b(?:hack|exploit|bypass|malware|virus|phishing|keylogger|ransomware|steal)\b/i,
-];
-
-const ASK_AI_CLEAR_GALATAYO_ACTION_PATTERNS = [
-  /\b(?:where|saan)\b[\s\S]{0,100}\b(?:museum|park|mall|cafe|restaurant|place|spot|destination|ayala|bgc|makati)\b/i,
-  /\b(?:directions?|route|commute|parking|map|navigate|pumunta|puntahan|papunta)\b/i,
-  /\b(?:plan|planning|itinerary|budget|schedule|nearby|food\s*trip|date|hangout|lakad|gala)\b/i,
-];
-
-const ASK_AI_TASK_SHAPE_PATTERN =
-  /\b(?:what|when|where|who|why|how|which|saan|kailan|kelan|sino|bakit|paano|make|write|create|give|show|tell|answer|gawan|gumawa|explain|solve|calculate|compute|list|summarize)\b/i;
-
-const ASK_AI_CONVERSATIONAL_FILLER_TOKENS = new Set([
-  "ah",
-  "alright",
-  "gets",
-  "get",
-  "got",
-  "hello",
-  "hey",
-  "hi",
-  "hmm",
-  "i",
-  "it",
-  "itt",
-  "lang",
-  "na",
-  "naman",
-  "nice",
-  "now",
-  "okay",
-  "ok",
-  "oki",
-  "po",
-  "sige",
-  "sure",
-  "thanks",
-  "thank",
-  "uh",
-  "um",
-  "yeah",
-  "yep",
-  "yes",
-  "you",
-]);
-
-function normalizeScopeText(value: string): string {
+export function normalizeAskAiPromptForGuard(value: string): string {
   return value
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}\s+\-*/]+/gu, " ")
+    .normalize("NFKC")
+    .replace(/([!?.,])\1{2,}/g, "$1$1")
+    .replace(/([a-z])\1{3,}/gi, "$1$1")
     .replace(/\s+/g, " ")
     .trim();
 }
 
-function normalizeScopeToken(value: string): string {
-  return value.replace(/([a-z])\1{2,}/gi, "$1$1");
-}
+export function evaluateAskAiPromptGuardDecision(
+  decision: AskAiPromptGuardDecision
+): AskAiPromptGuardResult {
+  const hasInvalidActions = decision.invalidActions.length > 0;
+  const hasRejectedAction = decision.actions.some((action) => !action.isAllowed);
 
-function getScopeTokens(normalizedMessage: string): string[] {
-  return normalizedMessage
-    .split(" ")
-    .map(normalizeScopeToken)
-    .filter(Boolean);
-}
-
-function isLikelyHarmlessConversationalFiller(
-  normalizedMessage: string,
-  originalMessage: string
-): boolean {
-  const tokens = getScopeTokens(normalizedMessage);
-
-  if (tokens.length === 0 || tokens.length > 8) {
-    return false;
-  }
-
-  if (/[?]/.test(originalMessage) || ASK_AI_TASK_SHAPE_PATTERN.test(normalizedMessage)) {
-    return false;
-  }
-
-  return tokens.every((token) =>
-    ASK_AI_CONVERSATIONAL_FILLER_TOKENS.has(token) ||
-    (token.length <= 3 && /^[a-z]+$/i.test(token))
-  );
-}
-
-function getDeterministicAskAiPromptDecision(
-  message: string
-): AskAiDeterministicGuardResult | null {
-  const normalizedMessage = normalizeScopeText(message);
-
-  if (!normalizedMessage) {
-    return null;
-  }
-
-  const hasInvalidAction = ASK_AI_OBVIOUS_INVALID_ACTION_PATTERNS.some((pattern) =>
-    pattern.test(message)
-  );
-  const hasHarmfulAction = ASK_AI_OBVIOUS_HARMFUL_ACTION_PATTERNS.some((pattern) =>
-    pattern.test(message)
-  );
-  const hasGalaTayoAction = ASK_AI_CLEAR_GALATAYO_ACTION_PATTERNS.some((pattern) =>
-    pattern.test(message)
-  );
-
-  if (hasHarmfulAction) {
+  if (
+    !decision.accepted ||
+    hasInvalidActions ||
+    hasRejectedAction ||
+    decision.mixedIntent ||
+    decision.secondaryIntentPresent ||
+    decision.label === "unrelated" ||
+    decision.label === "deceptive" ||
+    decision.label === "harmful"
+  ) {
     return {
       accepted: false,
-      reason: "obvious harmful or jailbreak-like action",
     };
   }
 
-  if (hasInvalidAction) {
-    return {
-      accepted: false,
-      reason: hasGalaTayoAction
-        ? "obvious mixed prompt with unrelated action"
-        : "obvious unrelated action",
-    };
-  }
-
-  if (hasGalaTayoAction) {
-    return {
-      accepted: true,
-      reason: "obvious single GalaTayo planning or location action",
-    };
-  }
-
-  if (isLikelyHarmlessConversationalFiller(normalizedMessage, message)) {
-    return {
-      accepted: true,
-      reason: "harmless conversational filler without requested action",
-    };
-  }
-
-  return null;
+  return {
+    accepted: true,
+  };
 }
 
 async function shouldAcceptAskAiPrompt({
@@ -204,43 +86,18 @@ async function shouldAcceptAskAiPrompt({
   requestId: string;
   context: InvocationContext;
 }): Promise<AskAiPromptGuardResult> {
-  const deterministicDecision = getDeterministicAskAiPromptDecision(message);
-
-  if (deterministicDecision) {
-    context.log(
-      `[AskAI Chatbot] deterministic prompt-guard decision requestId=${requestId} accepted=${deterministicDecision.accepted} reason=${deterministicDecision.reason}`
-    );
-    return {
-      accepted: deterministicDecision.accepted,
-    };
-  }
-
   try {
+    const normalizedMessage = normalizeAskAiPromptForGuard(message);
     const decision = await classifyAskAiPromptWithGroq({
-      message,
+      message: normalizedMessage,
       requestId,
     });
 
     context.log(
-      `[AskAI Chatbot] prompt-guard decision requestId=${requestId} accepted=${decision.accepted} label=${decision.label} mixedIntent=${decision.mixedIntent} secondaryIntentPresent=${decision.secondaryIntentPresent} confidence=${decision.confidence ?? "n/a"} reason=${decision.reason}`
+      `[AskAI Chatbot] prompt-guard decision requestId=${requestId} accepted=${decision.accepted} label=${decision.label} fillerOnly=${decision.fillerOnly} actions=${decision.actions.length} invalidActions=${decision.invalidActions.length} mixedIntent=${decision.mixedIntent} secondaryIntentPresent=${decision.secondaryIntentPresent} confidence=${decision.confidence ?? "n/a"} reason=${decision.reason}`
     );
 
-    if (
-      !decision.accepted ||
-      decision.mixedIntent ||
-      decision.secondaryIntentPresent ||
-      decision.label === "unrelated" ||
-      decision.label === "deceptive" ||
-      decision.label === "harmful"
-    ) {
-      return {
-        accepted: false,
-      };
-    }
-
-    return {
-      accepted: true,
-    };
+    return evaluateAskAiPromptGuardDecision(decision);
   } catch (error) {
     const reason = error instanceof Error ? error.message : "Unknown error";
     context.warn(
