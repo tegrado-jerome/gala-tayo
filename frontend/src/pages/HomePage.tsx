@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent, type RefObject } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
-import { faChevronRight, faCompass, faFire, faHandSparkles, faHeart, faLocationDot, faMagnifyingGlass, faMoon, faRobot, faSliders, faStar, faSun, faTableCellsLarge } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faCompass, faFire, faHandSparkles, faHeart, faLocationDot, faMagnifyingGlass, faRobot, faSliders, faStar, faSun, faTableCellsLarge } from '@fortawesome/free-solid-svg-icons'
 import { faHeart as faHeartRegular } from '@fortawesome/free-regular-svg-icons'
+import { Sun, Moon } from 'lucide-react'
 import { useAppUser } from '../context/AppUserContext'
 import { useTheme } from '../context/ThemeContext'
 import UserMenu from '../components/UserMenu'
@@ -88,7 +89,7 @@ function HomeThemeToggleButton() {
 
   const nextThemePreference = resolvedTheme === 'dark' ? 'light' : 'dark'
   const label = `Switch to ${nextThemePreference} mode`
-  const Icon = resolvedTheme === 'dark' ? faSun : faMoon
+  const Icon = resolvedTheme === 'dark' ? Sun : Moon
 
   return (
     <button
@@ -98,7 +99,7 @@ function HomeThemeToggleButton() {
       className="home-theme-toggle-button"
     >
       <span className="home-theme-toggle-button__icon">
-        <FontAwesomeIcon icon={Icon} className="h-4 w-4" />
+        <Icon className="h-4 w-4" />
       </span>
     </button>
   )
@@ -1475,7 +1476,7 @@ function HomePage({ navigationSource }: { navigationSource: NavigationSource }) 
                 <button
                   type="button"
                   onClick={() => handleTopPicksTabChange('all')}
-                  className={`shrink-0 transition hover:text-[var(--accent-deep)] ${
+                  className={`shrink-0 transition hover:text-[var(--home-tab-hover)] ${
                     activeTopPicksTab === 'all' ? 'font-semibold text-[var(--home-tab-active)]' : 'font-medium text-[var(--home-tab-inactive)]'
                   }`}
                 >
@@ -1484,7 +1485,7 @@ function HomePage({ navigationSource }: { navigationSource: NavigationSource }) 
                 <button
                   type="button"
                   onClick={() => handleTopPicksTabChange('popular')}
-                  className={`shrink-0 transition hover:text-[var(--accent-deep)] ${
+                  className={`shrink-0 transition hover:text-[var(--home-tab-hover)] ${
                     activeTopPicksTab === 'popular' ? 'font-semibold text-[var(--home-tab-active)]' : 'font-medium text-[var(--home-tab-inactive)]'
                   }`}
                 >
@@ -1493,7 +1494,7 @@ function HomePage({ navigationSource }: { navigationSource: NavigationSource }) 
                 <button
                   type="button"
                   onClick={() => handleTopPicksTabChange('recommended')}
-                  className={`shrink-0 transition hover:text-[var(--accent-deep)] ${
+                  className={`shrink-0 transition hover:text-[var(--home-tab-hover)] ${
                     activeTopPicksTab === 'recommended' ? 'font-semibold text-[var(--home-tab-active)]' : 'font-medium text-[var(--home-tab-inactive)]'
                   }`}
                 >
