@@ -15,6 +15,7 @@ import {
   clearGroqModelCooldownsForTest,
   generateFromGroq,
   parsePromptGuardDecision,
+  sanitizeGeneratedChatbotAnswer,
 } from "../services/groqChatProvider";
 
 function action(
@@ -301,6 +302,7 @@ describe("Ask AI prompt guard Groq retry handling", () => {
       requests: Array<{
         model?: string;
         messages?: Array<{ role?: string; content?: string }>;
+        max_completion_tokens?: number;
       }>
     ) => Promise<void>,
     options: { expectedCalls?: number } = {}
@@ -309,6 +311,7 @@ describe("Ask AI prompt guard Groq retry handling", () => {
     const requests: Array<{
       model?: string;
       messages?: Array<{ role?: string; content?: string }>;
+      max_completion_tokens?: number;
     }> = [];
     process.env.GROQ_API_KEY = "test-groq-key";
     clearGroqModelCooldownsForTest();
@@ -487,6 +490,45 @@ describe("Ask AI prompt guard Groq retry handling", () => {
   });
 });
 
+describe("Ask AI chatbot answer sanitization", () => {
+  it("removes leaked reasoning preamble and preserves the actual answer", () => {
+    const answer = sanitizeGeneratedChatbotAnswer(`Here's a thinking process:
+
+Analyze User Input:
+The user specified Paranaque after asking for gay bars.
+
+Check Constraints:
+Must answer in Taglish.
+
+Gets! Kung Paranaque area ang target, try checking GalaTayo Maps, recent reviews, and nightlife/event pages. Search mo terms like "gay bar Paranaque", "queer bar Paranaque", or "drag night Paranaque" para mas updated.
+
+Anong vibe ba hanap mo, chill bar or party scene?`);
+
+    assert.doesNotMatch(answer, /thinking process/i);
+    assert.doesNotMatch(answer, /Analyze User Input/i);
+    assert.match(answer, /Gets! Kung Paranaque area/);
+    assert.match(answer, /GalaTayo Maps/);
+  });
+
+  it("returns the safe fallback when leaked reasoning has no useful answer", () => {
+    const answer = sanitizeGeneratedChatbotAnswer(`Here's a thinking process:
+
+Analyze User Input:
+The user is asking for a place.
+
+Check Constraints:
+Must be Taglish.
+
+Formulate Response:
+Need a concise answer.`);
+
+    assert.equal(
+      answer,
+      "Ask AI could not answer that right now. Please try again."
+    );
+  });
+});
+
 describe("Ask AI chatbot generation scope", () => {
   const originalFetch = globalThis.fetch;
   const originalApiKey = process.env.GROQ_API_KEY;
@@ -504,19 +546,25 @@ describe("Ask AI chatbot generation scope", () => {
       requests: Array<{
         model?: string;
         messages?: Array<{ role?: string; content?: string }>;
+        max_completion_tokens?: number;
       }>
     ) => Promise<void>,
-    options: { expectedCalls?: number; models?: string } = {}
+    options: { expectedCalls?: number; models?: string; useDefaultModels?: boolean } = {}
   ): Promise<void> {
     let callCount = 0;
     const requests: Array<{
       model?: string;
       messages?: Array<{ role?: string; content?: string }>;
+      max_completion_tokens?: number;
     }> = [];
 
     process.env.GROQ_API_KEY = "test-groq-key";
-    process.env.ASK_AI_GROQ_CHAT_MODELS =
-      options.models ?? "test-primary,test-fallback,test-final";
+    if (options.useDefaultModels) {
+      delete process.env.ASK_AI_GROQ_CHAT_MODELS;
+    } else {
+      process.env.ASK_AI_GROQ_CHAT_MODELS =
+        options.models ?? "test-primary,test-fallback,test-final";
+    }
     clearGroqModelCooldownsForTest();
     globalThis.fetch = (async (_input, init) => {
       requests.push(JSON.parse(String(init?.body ?? "{}")));
@@ -633,7 +681,7 @@ describe("Ask AI chatbot generation scope", () => {
     }
   });
 
-  it("instructs generation to allow neutral nightlife while rejecting sexualized or harmful intent", async () => {
+  it("instructs generation to treat sexuality terms by intent, not as a fixed standard", async () => {
     process.env.GROQ_API_KEY = "test-groq-key";
     clearGroqModelCooldownsForTest();
 
@@ -669,20 +717,17 @@ describe("Ask AI chatbot generation scope", () => {
       const systemPrompt = requestBody?.messages?.[0]?.content ?? "";
 
       assert.match(answer, /nightlife districts/);
-      assert.match(systemPrompt, /Neutral nightlife venue requests are allowed/);
-      assert.match(systemPrompt, /gay bars, queer bars, LGBTQ\+ bars/);
-      assert.match(systemPrompt, /Reject sexualized, explicit, 18\+/);
-      assert.match(systemPrompt, /violent, exploitative, or malicious requests/);
-      assert.match(systemPrompt, /Critical behavior for nightlife place requests/);
-      assert.match(systemPrompt, /do not give a fixed default list of areas/i);
-      assert.match(systemPrompt, /use GalaTayo Maps\/current pins/i);
-      assert.match(systemPrompt, /search terms like gay bar, queer bar, LGBTQ bar, nightlife/i);
-      assert.match(systemPrompt, /End with an optional city\/area refinement question/i);
+      assert.match(systemPrompt, /gay bar, queer bar, LGBTQ\+ bar, bar for gay people/);
+      assert.match(systemPrompt, /normal venue or nightlife categories/);
+      assert.match(systemPrompt, /Reject only when the request is sexualized, explicit, 18\+/);
+      assert.match(systemPrompt, /violent, exploitative, malicious/);
+      assert.match(systemPrompt, /specific person's sexuality or gender identity/);
+      assert.match(systemPrompt, /Do not mention safety or policy unless the user asks/i);
       assert.match(
         systemPrompt,
         /do not reply with only a location follow-up/i
       );
-      assert.match(systemPrompt, /non-fixed practical guidance/);
+      assert.doesNotMatch(systemPrompt, /Critical behavior for nightlife place requests/);
       assert.doesNotMatch(systemPrompt, /Poblacion|Malate|Tomas Morato|BGC\/Taguig|Arnaiz/i);
     } finally {
       globalThis.fetch = originalFetch;
@@ -696,41 +741,60 @@ describe("Ask AI chatbot generation scope", () => {
   });
 
   it("uses the second chat model after the primary is rate limited", async () => {
-    await withMockedChatGroq(
-      [
-        {
-          status: 429,
-          error: "Rate limit reached. Please try again in 5m19.68s.",
-        },
-        {
-          content: "Fallback answer from second model.",
-        },
-      ],
-      async (requests) => {
-        const answer = await generateFromGroq({
-          message: "Plan a cafe gala in Makati",
-          requestId: "test-request",
-        });
+    const originalConsoleLog = console.log;
+    const logs: string[] = [];
+    console.log = ((...args: unknown[]) => {
+      logs.push(args.map(String).join(" "));
+    }) as typeof console.log;
 
-        assert.equal(answer, "Fallback answer from second model.");
-        assert.deepEqual(
-          requests.map((request) => request.model),
-          ["test-primary", "test-fallback"]
-        );
-        assert.equal(
-          requests[1]?.messages?.[0]?.content,
-          requests[0]?.messages?.[0]?.content
-        );
-        assert.match(
-          requests[1]?.messages?.[0]?.content ?? "",
-          /Critical behavior for nightlife place requests/
-        );
-        assert.match(
-          requests[1]?.messages?.[0]?.content ?? "",
-          /do not reply with only a location question/i
-        );
-      }
-    );
+    try {
+      await withMockedChatGroq(
+        [
+          {
+            status: 429,
+            error: "Rate limit reached. Please try again in 5m19.68s.",
+          },
+          {
+            content: "Fallback answer from second model.",
+          },
+        ],
+        async (requests) => {
+          const answer = await generateFromGroq({
+            message: "Plan a cafe gala in Makati",
+            requestId: "test-request",
+          });
+
+          assert.equal(answer, "Fallback answer from second model.");
+          assert.deepEqual(
+            requests.map((request) => request.model),
+            ["test-primary", "test-fallback"]
+          );
+          assert.equal(
+            requests[1]?.messages?.[0]?.content,
+            requests[0]?.messages?.[0]?.content
+          );
+          assert.match(
+            requests[1]?.messages?.[0]?.content ?? "",
+            /normal venue or nightlife categories/
+          );
+          assert.match(
+            requests[1]?.messages?.[0]?.content ?? "",
+            /Do not mention safety or policy unless the user asks/i
+          );
+          assert.equal(requests[1]?.max_completion_tokens, 700);
+        }
+      );
+
+      assert.equal(
+        logs.some((line) =>
+          line.includes("model=test-fallback") &&
+          line.includes("status=success")
+        ),
+        true
+      );
+    } finally {
+      console.log = originalConsoleLog;
+    }
   });
 
   it("uses the third chat model after two rate limits", async () => {
@@ -760,6 +824,68 @@ describe("Ask AI chatbot generation scope", () => {
           ["test-primary", "test-fallback", "test-final"]
         );
       }
+    );
+  });
+
+  it("does not include qwen in the default chat model rotation", async () => {
+    await withMockedChatGroq(
+      [
+        {
+          status: 429,
+          error: "Rate limit reached. Please try again in 1s.",
+        },
+      ],
+      async (requests) => {
+        await assert.rejects(
+          () =>
+            generateFromGroq({
+              message: "Plan a bar night",
+              requestId: "test-request",
+            }),
+          GroqChatProviderError
+        );
+
+        assert.deepEqual(
+          requests.map((request) => request.model),
+          [
+            "openai/gpt-oss-20b",
+            "llama-3.1-8b-instant",
+            "openai/gpt-oss-120b",
+          ]
+        );
+        assert.equal(
+          requests.some((request) => request.model === "qwen/qwen3.6-27b"),
+          false
+        );
+      },
+      { expectedCalls: 3, useDefaultModels: true }
+    );
+  });
+
+  it("still supports custom chat model lists from configuration", async () => {
+    await withMockedChatGroq(
+      [
+        {
+          status: 429,
+          error: "Rate limit reached. Please try again in 1s.",
+        },
+        {
+          content: "Custom fallback answer.",
+        },
+      ],
+      async (requests) => {
+        const answer = await generateFromGroq({
+          message: "Plan a nightlife gala",
+          requestId: "test-request",
+        });
+
+        assert.equal(answer, "Custom fallback answer.");
+        assert.deepEqual(
+          requests.map((request) => request.model),
+          ["custom-primary", "qwen/qwen3.6-27b"]
+        );
+      },
+      { models: "custom-primary,qwen/qwen3.6-27b", expectedCalls: 2 }
     );
   });
 

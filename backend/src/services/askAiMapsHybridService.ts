@@ -8,6 +8,8 @@ import {
   throwIfAskAiRequestCancelled,
 } from "../utils/askAiCancellation";
 
+let GoogleGenAIForMaps = GoogleGenAI;
+
 export class AskAiMapsServiceError extends Error {
   status: number;
   code: string;
@@ -318,7 +320,15 @@ type VerificationResult = {
   place?: AskAiMapGroundedPlace;
 };
 
-const GEMINI_MODEL = "gemini-3.1-flash-lite";
+const ASK_AI_MAPS_DEFAULT_GEMINI_MODELS = [
+  "gemini-2.5-flash-lite",
+  "gemini-2.5-flash",
+];
+const ASK_AI_MAPS_DEFAULT_GROQ_WHY_MODELS = [
+  "openai/gpt-oss-120b",
+  "openai/gpt-oss-20b",
+  "qwen/qwen3.6-27b",
+];
 const GEOAPIFY_GEOCODE_ENDPOINT = "https://api.geoapify.com/v1/geocode/search";
 const GEOAPIFY_PLACES_ENDPOINT = "https://api.geoapify.com/v2/places";
 const GEMINI_TIMEOUT_MS = 45_000;
@@ -712,6 +722,14 @@ function uniqueStrings(values: Array<string | null | undefined>, limit = 12): st
     }
   }
   return result;
+}
+
+function getConfiguredModelList(envName: string, defaultModels: string[]): string[] {
+  const configured = normalizeText(process.env[envName])
+    ?.split(",")
+    .map((item) => normalizeText(item)) ?? [];
+  const models = uniqueStrings(configured, Number.MAX_SAFE_INTEGER);
+  return models.length > 0 ? models : defaultModels;
 }
 
 function parseJsonObject<T>(value: string): T | null {
@@ -1334,202 +1352,276 @@ function buildGeminiPrompt(intent: AskAiMapIntent): string {
   return lines.join("\n");
 }
 
+type GeminiMapsGroundingResult = {
+  candidates: GeminiCandidate[];
+  suggestedSearches: string[];
+  invalidJson: boolean;
+  modelUsed: string | null;
+};
+
+function getProviderStatusFromError(error: unknown): number | null {
+  if (error instanceof AskAiMapsServiceError && typeof error.providerStatus === "number") {
+    return error.providerStatus;
+  }
+  if (error && typeof error === "object") {
+    const record = error as Record<string, unknown>;
+    const status = record.status ?? record.statusCode ?? record.code;
+    if (typeof status === "number" && Number.isFinite(status)) {
+      return Math.round(status);
+    }
+    if (typeof status === "string") {
+      const parsed = Number(status);
+      if (Number.isFinite(parsed)) {
+        return Math.round(parsed);
+      }
+    }
+  }
+  return null;
+}
+
+function shouldRotateGeminiModel(error: unknown): boolean {
+  const status = getProviderStatusFromError(error);
+  return (
+    status === null ||
+    status === 429 ||
+    status >= 500 ||
+    (error instanceof AskAiMapsServiceError && error.code === "ASK_AI_MAPS_TIMEOUT")
+  );
+}
+
+async function callGeminiMapsGroundingWithModel(
+  intent: AskAiMapIntent,
+  model: string,
+  logger?: AskAiMapsLogger,
+  signal?: AbortSignal
+): Promise<GeminiMapsGroundingResult> {
+  logger?.log(
+    `[AskAiMaps] gemini_called=${true} gemini_model=${model} grounding_enabled=${true}`
+  );
+  const apiKey = await getGeminiApiKey();
+  const ai = new GoogleGenAIForMaps({ apiKey });
+  throwIfAskAiRequestCancelled(signal);
+  const response = await withTimeout(
+    ai.models.generateContent({
+      model: `models/${model}`,
+      contents: buildGeminiPrompt(intent),
+      config: {
+        temperature: 0,
+        maxOutputTokens: 2000,
+        tools: [{ googleMaps: {} }],
+        abortSignal: signal,
+      },
+    }),
+    GEMINI_TIMEOUT_MS,
+    `Gemini timed out on ${model}.`,
+    signal
+  );
+
+  const candidates: GeminiCandidate[] = [];
+
+  const responseAny = response as unknown as Record<string, unknown>;
+  const responseCandidates = Array.isArray(responseAny.candidates) ? responseAny.candidates : [];
+
+  const groundingChunks: Array<{ web?: { uri?: string; title?: string } }> = [];
+  let textCandidateMap = new Map<string, Record<string, unknown>>();
+
+  if (responseCandidates.length > 0) {
+    const firstCandidate = responseCandidates[0] as Record<string, unknown>;
+    const groundingMetadata = firstCandidate.groundingMetadata as Record<string, unknown> | undefined;
+    const chunks = Array.isArray(groundingMetadata?.groundingChunks) ? groundingMetadata!.groundingChunks as Array<Record<string, unknown>> : [];
+    const supports = Array.isArray(groundingMetadata?.groundingSupports) ? groundingMetadata!.groundingSupports as Array<Record<string, unknown>> : [];
+
+    logger?.log(`[AskAiMaps] gemini_model=${model} gemini_grounding_chunks=${chunks.length} grounding_supports=${supports.length}`);
+
+    for (const chunk of chunks) {
+      const web = chunk.web as { uri?: string; title?: string } | undefined;
+      if (web) {
+        groundingChunks.push({ web });
+      }
+    }
+  }
+
+  const rawText = normalizeText((response as { text?: string }).text) ?? "";
+  logger?.log(`[AskAiMaps] gemini_model=${model} gemini_raw_text_length=${rawText.length}`);
+  const parsed = rawText ? parseJsonObject<GeminiMapsResponse>(rawText) : null;
+  const invalidJson = Boolean(rawText && !parsed);
+
+  if (parsed) {
+    const rawPlaces = Array.isArray(parsed.places)
+      ? parsed.places
+      : Array.isArray(parsed.candidates)
+        ? parsed.candidates
+        : Array.isArray(parsed.results)
+          ? parsed.results
+          : Array.isArray(parsed.recommendations)
+            ? parsed.recommendations
+            : [];
+
+    for (const item of rawPlaces) {
+      const record = item as Record<string, unknown>;
+      const name =
+        normalizeText(record.name) ??
+        normalizeText(record.title) ??
+        normalizeText(record.googleMapsTitle);
+      if (name) {
+        textCandidateMap.set(normalizeKey(name), record);
+      }
+    }
+
+    logger?.log(`[AskAiMaps] gemini_model=${model} gemini_text_places_parsed=${textCandidateMap.size}`);
+  }
+
+  const seenUris = new Set<string>();
+  const mapsChunks: Array<{ uri: string; title: string }> = [];
+
+  for (const chunk of groundingChunks) {
+    const uri = chunk.web?.uri;
+    const title = normalizeText(chunk.web?.title);
+    if (uri && uri.includes("google.com/maps") && !seenUris.has(uri)) {
+      seenUris.add(uri);
+      mapsChunks.push({ uri, title: title ?? "" });
+    }
+  }
+
+  logger?.log(`[AskAiMaps] gemini_model=${model} gemini_maps_grounding_uris=${mapsChunks.length}`);
+
+  for (const chunk of mapsChunks) {
+    const coords = extractCoordinatesFromGoogleMapsUrl(chunk.uri);
+    const placeId = extractPlaceIdFromMapsUri(chunk.uri);
+    const textDetails = textCandidateMap.get(normalizeKey(chunk.title)) as Record<string, unknown> | undefined;
+
+    const name = chunk.title || extractPlaceNameFromUri(chunk.uri) || "Google Maps Place";
+
+    candidates.push({
+      name,
+      googleMapsTitle: chunk.title || null,
+      googleMapsUri: chunk.uri,
+      googlePlaceId: placeId,
+      addressHint: textDetails ? (normalizeText(textDetails.address) ?? normalizeText(textDetails.addressHint)) : null,
+      cityHint: textDetails ? (normalizeText(textDetails.city) ?? normalizeText(textDetails.cityHint)) : null,
+      provinceHint: textDetails ? (normalizeText(textDetails.province) ?? normalizeText(textDetails.provinceHint)) : null,
+      categoryHint: textDetails ? (normalizeText(textDetails.category) ?? normalizeText(textDetails.categoryHint)) : null,
+      rating: textDetails && typeof textDetails.rating === "number" && Number.isFinite(textDetails.rating) ? textDetails.rating : null,
+      reviewCount: textDetails && typeof textDetails.reviewCount === "number" && Number.isFinite(textDetails.reviewCount) ? Math.round(textDetails.reviewCount) : null,
+      openingHoursSummary: textDetails ? normalizeText(textDetails.openingHoursSummary) : null,
+      reviewSignals: textDetails && Array.isArray(textDetails.reviewSignals)
+        ? uniqueStrings((textDetails.reviewSignals as unknown[]).map((v) => normalizeText(v)), 5)
+        : [],
+      reasonSignals: textDetails && Array.isArray(textDetails.reasonSignals)
+        ? uniqueStrings((textDetails.reasonSignals as unknown[]).map((v) => normalizeText(v)), 5)
+        : [],
+      whyThisFits: textDetails
+        ? (normalizeText(textDetails.whyThisFits) ?? normalizeText(textDetails.why_this_fits) ?? normalizeText(textDetails.reason))
+        : null,
+      groundingCoordinates: coords,
+    });
+  }
+
+  if (candidates.length === 0 && textCandidateMap.size > 0) {
+    logger?.log(`[AskAiMaps] gemini_model=${model} gemini_no_grounding_uris_falling_back_to_text`);
+    const sortedNames = Array.from(textCandidateMap.keys()).sort();
+    for (const key of sortedNames.slice(0, MAX_CANDIDATES)) {
+      const record = textCandidateMap.get(key);
+      if (!record) continue;
+
+      const name =
+        normalizeText(record.name) ??
+        normalizeText(record.title) ??
+        normalizeText(record.googleMapsTitle);
+      if (!name) continue;
+
+      candidates.push({
+        name,
+        googleMapsTitle:
+          normalizeText(record.googleMapsTitle) ??
+          normalizeText(record.google_maps_title) ??
+          normalizeText(record.title),
+        googleMapsUri:
+          normalizeText(record.googleMapsUri) ??
+          normalizeText(record.google_maps_uri) ??
+          normalizeText(record.googleMapsUrl) ??
+          normalizeText(record.url),
+        googlePlaceId:
+          normalizeText(record.googlePlaceId) ??
+          normalizeText(record.google_place_id) ??
+          normalizeText(record.placeId),
+        addressHint: normalizeText(record.address) ?? normalizeText(record.addressHint),
+        cityHint: normalizeText(record.city) ?? normalizeText(record.cityHint),
+        provinceHint: normalizeText(record.province) ?? normalizeText(record.provinceHint),
+        categoryHint: normalizeText(record.category) ?? normalizeText(record.categoryHint),
+        rating: typeof record.rating === "number" && Number.isFinite(record.rating) ? record.rating : null,
+        reviewCount: typeof record.reviewCount === "number" && Number.isFinite(record.reviewCount) ? Math.round(record.reviewCount) : null,
+        openingHoursSummary: normalizeText(record.openingHoursSummary),
+        reviewSignals: [],
+        reasonSignals: [],
+        whyThisFits:
+          normalizeText(record.whyThisFits) ??
+          normalizeText(record.why_this_fits) ??
+          normalizeText(record.reason),
+        groundingCoordinates:
+          extractCandidateCoordinates(record) ??
+          extractCoordinatesFromGoogleMapsUrl(
+            normalizeText(record.googleMapsUri) ??
+              normalizeText(record.google_maps_uri) ??
+              normalizeText(record.googleMapsUrl) ??
+              normalizeText(record.url)
+          ),
+      });
+    }
+  }
+
+  candidates.length = Math.min(candidates.length, MAX_CANDIDATES);
+  logger?.log(`[AskAiMaps] gemini_model=${model} gemini_candidates_final=${candidates.length} invalid_json=${invalidJson}`);
+
+  const suggestedSearches: string[] = [];
+  if (parsed) {
+    const parsedSearches = Array.isArray(parsed.suggestedSearches)
+      ? parsed.suggestedSearches
+      : [];
+    suggestedSearches.push(...uniqueStrings(parsedSearches.map((value) => normalizeText(value)), 5));
+  }
+
+  return { candidates, suggestedSearches, invalidJson, modelUsed: model };
+}
+
 async function callGeminiMapsGrounding(
   intent: AskAiMapIntent,
   logger?: AskAiMapsLogger,
   signal?: AbortSignal
-): Promise<{ candidates: GeminiCandidate[]; suggestedSearches: string[]; invalidJson: boolean }> {
-  logger?.log(
-    `[AskAiMaps] gemini_called=${true} gemini_model=${GEMINI_MODEL} grounding_enabled=${true}`
-  );
-  try {
-    const apiKey = await getGeminiApiKey();
-    const ai = new GoogleGenAI({ apiKey });
-    throwIfAskAiRequestCancelled(signal);
-    const response = await withTimeout(
-      ai.models.generateContent({
-        model: `models/${GEMINI_MODEL}`,
-        contents: buildGeminiPrompt(intent),
-        config: {
-          temperature: 0,
-          maxOutputTokens: 2000,
-          tools: [{ googleMaps: {} }],
-          abortSignal: signal,
-        },
-      }),
-      GEMINI_TIMEOUT_MS,
-      "Gemini timed out.",
-      signal
-    );
+): Promise<GeminiMapsGroundingResult> {
+  const modelsToTry = getConfiguredModelList("ASK_AI_MAPS_GEMINI_MODELS", ASK_AI_MAPS_DEFAULT_GEMINI_MODELS);
+  logger?.log(`[AskAiMaps] gemini_models_configured=${modelsToTry.join(",")}`);
 
-    const candidates: GeminiCandidate[] = [];
-
-    const responseAny = response as unknown as Record<string, unknown>;
-    const responseCandidates = Array.isArray(responseAny.candidates) ? responseAny.candidates : [];
-
-    const groundingChunks: Array<{ web?: { uri?: string; title?: string } }> = [];
-    let textCandidateMap = new Map<string, Record<string, unknown>>();
-
-    if (responseCandidates.length > 0) {
-      const firstCandidate = responseCandidates[0] as Record<string, unknown>;
-      const groundingMetadata = firstCandidate.groundingMetadata as Record<string, unknown> | undefined;
-      const chunks = Array.isArray(groundingMetadata?.groundingChunks) ? groundingMetadata!.groundingChunks as Array<Record<string, unknown>> : [];
-      const supports = Array.isArray(groundingMetadata?.groundingSupports) ? groundingMetadata!.groundingSupports as Array<Record<string, unknown>> : [];
-
-      logger?.log(`[AskAiMaps] gemini_grounding_chunks=${chunks.length} grounding_supports=${supports.length}`);
-
-      for (const chunk of chunks) {
-        const web = chunk.web as { uri?: string; title?: string } | undefined;
-        if (web) {
-          groundingChunks.push({ web });
-        }
+  for (let index = 0; index < modelsToTry.length; index++) {
+    const model = modelsToTry[index];
+    try {
+      const result = await callGeminiMapsGroundingWithModel(intent, model, logger, signal);
+      if (result.invalidJson) {
+        logger?.log(`[AskAiMaps] gemini_model=${model} fallbackReason=invalid-json`);
+        continue;
       }
-    }
-
-    const rawText = normalizeText((response as { text?: string }).text) ?? "";
-    logger?.log(`[AskAiMaps] gemini_raw_text_length=${rawText.length}`);
-    const parsed = rawText ? parseJsonObject<GeminiMapsResponse>(rawText) : null;
-
-    if (parsed) {
-      const rawPlaces = Array.isArray(parsed.places)
-        ? parsed.places
-        : Array.isArray(parsed.candidates)
-          ? parsed.candidates
-          : Array.isArray(parsed.results)
-            ? parsed.results
-            : Array.isArray(parsed.recommendations)
-              ? parsed.recommendations
-              : [];
-
-      for (const item of rawPlaces) {
-        const record = item as Record<string, unknown>;
-        const name =
-          normalizeText(record.name) ??
-          normalizeText(record.title) ??
-          normalizeText(record.googleMapsTitle);
-        if (name) {
-          textCandidateMap.set(normalizeKey(name), record);
-        }
+      if (result.candidates.length === 0) {
+        logger?.log(`[AskAiMaps] gemini_model=${model} fallbackReason=empty-candidates`);
+        continue;
+      }
+      logger?.log(`[AskAiMaps] gemini_model=${model} status=success`);
+      return result;
+    } catch (error) {
+      if (signal?.aborted || isAskAiRequestCancelledError(error)) {
+        throwIfAskAiRequestCancelled(signal);
       }
 
-      logger?.log(`[AskAiMaps] gemini_text_places_parsed=${textCandidateMap.size}`);
-    }
+      const reason = error instanceof Error ? error.message : String(error);
+      logger?.log(`[AskAiMaps] gemini_model=${model} fallbackReason=provider-error error=${reason}`);
 
-    const seenUris = new Set<string>();
-    const mapsChunks: Array<{ uri: string; title: string }> = [];
-
-    for (const chunk of groundingChunks) {
-      const uri = chunk.web?.uri;
-      const title = normalizeText(chunk.web?.title);
-      if (uri && uri.includes("google.com/maps") && !seenUris.has(uri)) {
-        seenUris.add(uri);
-        mapsChunks.push({ uri, title: title ?? "" });
+      if (index === modelsToTry.length - 1 || !shouldRotateGeminiModel(error)) {
+        break;
       }
     }
-
-    logger?.log(`[AskAiMaps] gemini_maps_grounding_uris=${mapsChunks.length}`);
-
-    for (const chunk of mapsChunks) {
-      const coords = extractCoordinatesFromGoogleMapsUrl(chunk.uri);
-      const placeId = extractPlaceIdFromMapsUri(chunk.uri);
-      const textDetails = textCandidateMap.get(normalizeKey(chunk.title)) as Record<string, unknown> | undefined;
-
-      const name = chunk.title || extractPlaceNameFromUri(chunk.uri) || "Google Maps Place";
-
-      candidates.push({
-        name,
-        googleMapsTitle: chunk.title || null,
-        googleMapsUri: chunk.uri,
-        googlePlaceId: placeId,
-        addressHint: textDetails ? (normalizeText(textDetails.address) ?? normalizeText(textDetails.addressHint)) : null,
-        cityHint: textDetails ? (normalizeText(textDetails.city) ?? normalizeText(textDetails.cityHint)) : null,
-        provinceHint: textDetails ? (normalizeText(textDetails.province) ?? normalizeText(textDetails.provinceHint)) : null,
-        categoryHint: textDetails ? (normalizeText(textDetails.category) ?? normalizeText(textDetails.categoryHint)) : null,
-        rating: textDetails && typeof textDetails.rating === "number" && Number.isFinite(textDetails.rating) ? textDetails.rating : null,
-        reviewCount: textDetails && typeof textDetails.reviewCount === "number" && Number.isFinite(textDetails.reviewCount) ? Math.round(textDetails.reviewCount) : null,
-        openingHoursSummary: textDetails ? normalizeText(textDetails.openingHoursSummary) : null,
-        reviewSignals: textDetails && Array.isArray(textDetails.reviewSignals)
-          ? uniqueStrings((textDetails.reviewSignals as unknown[]).map((v) => normalizeText(v)), 5)
-          : [],
-        reasonSignals: textDetails && Array.isArray(textDetails.reasonSignals)
-          ? uniqueStrings((textDetails.reasonSignals as unknown[]).map((v) => normalizeText(v)), 5)
-          : [],
-        whyThisFits: textDetails
-          ? (normalizeText(textDetails.whyThisFits) ?? normalizeText(textDetails.why_this_fits) ?? normalizeText(textDetails.reason))
-          : null,
-        groundingCoordinates: coords,
-      });
-    }
-
-    if (candidates.length === 0 && textCandidateMap.size > 0) {
-      logger?.log("[AskAiMaps] gemini_no_grounding_uris_falling_back_to_text");
-      const sortedNames = Array.from(textCandidateMap.keys()).sort();
-      for (const key of sortedNames.slice(0, MAX_CANDIDATES)) {
-        const record = textCandidateMap.get(key);
-        if (!record) continue;
-
-        const name =
-          normalizeText(record.name) ??
-          normalizeText(record.title) ??
-          normalizeText(record.googleMapsTitle);
-        if (!name) continue;
-
-        candidates.push({
-          name,
-          googleMapsTitle:
-            normalizeText(record.googleMapsTitle) ??
-            normalizeText(record.google_maps_title) ??
-            normalizeText(record.title),
-          googleMapsUri:
-            normalizeText(record.googleMapsUri) ??
-            normalizeText(record.google_maps_uri) ??
-            normalizeText(record.googleMapsUrl) ??
-            normalizeText(record.url),
-          googlePlaceId:
-            normalizeText(record.googlePlaceId) ??
-            normalizeText(record.google_place_id) ??
-            normalizeText(record.placeId),
-          addressHint: normalizeText(record.address) ?? normalizeText(record.addressHint),
-          cityHint: normalizeText(record.city) ?? normalizeText(record.cityHint),
-          provinceHint: normalizeText(record.province) ?? normalizeText(record.provinceHint),
-          categoryHint: normalizeText(record.category) ?? normalizeText(record.categoryHint),
-          rating: typeof record.rating === "number" && Number.isFinite(record.rating) ? record.rating : null,
-          reviewCount: typeof record.reviewCount === "number" && Number.isFinite(record.reviewCount) ? Math.round(record.reviewCount) : null,
-          openingHoursSummary: normalizeText(record.openingHoursSummary),
-          reviewSignals: [],
-          reasonSignals: [],
-          whyThisFits:
-            normalizeText(record.whyThisFits) ??
-            normalizeText(record.why_this_fits) ??
-            normalizeText(record.reason),
-          groundingCoordinates:
-            extractCandidateCoordinates(record) ??
-            extractCoordinatesFromGoogleMapsUrl(
-              normalizeText(record.googleMapsUri) ??
-                normalizeText(record.google_maps_uri) ??
-                normalizeText(record.googleMapsUrl) ??
-                normalizeText(record.url)
-            ),
-        });
-      }
-    }
-
-    candidates.length = Math.min(candidates.length, MAX_CANDIDATES);
-    logger?.log(`[AskAiMaps] gemini_candidates_final=${candidates.length}`);
-
-    const suggestedSearches: string[] = [];
-    if (parsed) {
-      const parsedSearches = Array.isArray(parsed.suggestedSearches)
-        ? parsed.suggestedSearches
-        : [];
-      suggestedSearches.push(...uniqueStrings(parsedSearches.map((value) => normalizeText(value)), 5));
-    }
-
-    return { candidates, suggestedSearches, invalidJson: false };
-  } catch (error) {
-    logger?.log(`[AskAiMaps] gemini_error=${error instanceof Error ? error.message : String(error)}`);
-    return { candidates: [], suggestedSearches: [], invalidJson: false };
   }
+
+  logger?.log("[AskAiMaps] gemini_all_models_failed_or_empty");
+  return { candidates: [], suggestedSearches: [], invalidJson: false, modelUsed: null };
 }
 
 function normalizeCategories(value: unknown): string[] {
@@ -3205,8 +3297,6 @@ function buildWhyThisFits(place: AskAiMapGroundedPlace, intent: AskAiMapIntent):
   return buildGroundedWhyThisFits(place, intent);
 }
 
-const WHY_THIS_FITS_GROQ_MODEL = "openai/gpt-oss-120b";
-const WHY_THIS_FITS_GROQ_FALLBACK_MODEL = "llama-3.3-70b-versatile";
 const WHY_THIS_FITS_GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const WHY_THIS_FITS_GROQ_TIMEOUT_MS = 10_000;
 
@@ -3228,6 +3318,39 @@ type GroqWhyThisFitsMessage = {
   content: string;
 };
 
+function parseGroqWhyThisFitsResponse(
+  answer: string,
+  places: AskAiMapGroundedPlace[],
+  intent: AskAiMapIntent
+): Record<string, string> | null {
+  const cleaned = answer.replace(/^```(?:json)?\s*\n?|\n?```$/gi, "").trim();
+  const parsed = parseJsonObject<{
+    explanations?: Record<string, string> | Array<{ text?: string; explanation?: string } | string>;
+  }>(cleaned);
+  const result: Record<string, string> = {};
+
+  if (Array.isArray(parsed?.explanations)) {
+    for (let i = 0; i < parsed.explanations.length; i++) {
+      const item = parsed.explanations[i];
+      const text = typeof item === "string" ? item : (item?.text ?? item?.explanation ?? "");
+      const normalized = normalizeText(text);
+      if (!normalized) continue;
+      const sanitized = places[i] ? sanitizeWhyThisFits(normalized, places[i], intent) : "";
+      if (sanitized) result[String(i)] = sanitized;
+    }
+  } else if (parsed?.explanations && typeof parsed.explanations === "object") {
+    for (const [key, value] of Object.entries(parsed.explanations)) {
+      const index = Number(key);
+      const normalized = normalizeText(value);
+      if (!Number.isInteger(index) || !places[index] || !normalized) continue;
+      const sanitized = sanitizeWhyThisFits(normalized, places[index], intent);
+      if (sanitized) result[String(index)] = sanitized;
+    }
+  }
+
+  return Object.keys(result).length > 0 ? result : null;
+}
+
 async function generateWhyThisFitsBatch(
   places: AskAiMapGroundedPlace[],
   intent: AskAiMapIntent,
@@ -3238,7 +3361,6 @@ async function generateWhyThisFitsBatch(
   try {
     const apiKey = await resolveGroqApiKey();
     throwIfAskAiRequestCancelled(signal);
-    const abortSignal = buildAbortSignal([AbortSignal.timeout(WHY_THIS_FITS_GROQ_TIMEOUT_MS), signal]);
 
     const placesList = places
       .map(
@@ -3279,77 +3401,79 @@ async function generateWhyThisFitsBatch(
       .filter(Boolean)
       .join("\n");
 
-    const modelsToTry = [WHY_THIS_FITS_GROQ_MODEL, WHY_THIS_FITS_GROQ_FALLBACK_MODEL];
-    let lastStatus = 0;
+    const modelsToTry = getConfiguredModelList("ASK_AI_MAPS_GROQ_WHY_MODELS", ASK_AI_MAPS_DEFAULT_GROQ_WHY_MODELS);
+    console.log(`[AskAiMaps] Groq why-this-fits models configured: ${modelsToTry.join(",")}`);
+    let lastFailure = "none";
 
     for (const model of modelsToTry) {
       throwIfAskAiRequestCancelled(signal);
 
-      const response = await fetch(WHY_THIS_FITS_GROQ_URL, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model,
-          messages: [
-            {
-              role: "system",
-              content:
-                'Return strict JSON only. No markdown. No code fences. Format: {"explanations": {"0": "explanation for place 0", "1": "explanation for place 1", ...}}',
-            },
-            {
-              role: "user",
-              content: userPrompt,
-            },
-          ] satisfies GroqWhyThisFitsMessage[],
-          temperature: 0,
-          stream: false,
-        }),
-        signal: abortSignal,
-      });
+      try {
+        const abortSignal = buildAbortSignal([AbortSignal.timeout(WHY_THIS_FITS_GROQ_TIMEOUT_MS), signal]);
+        const response = await fetch(WHY_THIS_FITS_GROQ_URL, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model,
+            messages: [
+              {
+                role: "system",
+                content:
+                  'Return strict JSON only. No markdown. No code fences. Format: {"explanations": {"0": "explanation for place 0", "1": "explanation for place 1", ...}}',
+              },
+              {
+                role: "user",
+                content: userPrompt,
+              },
+            ] satisfies GroqWhyThisFitsMessage[],
+            temperature: 0,
+            stream: false,
+          }),
+          signal: abortSignal,
+        });
 
-      if (response.ok) {
+        if (!response.ok) {
+          lastFailure = `status-${response.status}`;
+          if (response.status === 429 || response.status === 403 || response.status >= 500) {
+            console.warn(`[AskAiMaps] Groq why-this-fits model=${model} fallbackReason=${lastFailure}`);
+            continue;
+          }
+
+          console.warn(`[AskAiMaps] Groq why-this-fits request failed with status ${response.status} on model ${model}`);
+          return null;
+        }
+
         const data = (await response.json().catch(() => null)) as
           | { choices?: Array<{ message?: { content?: string } }> }
           | null;
         const answer = normalizeText(data?.choices?.[0]?.message?.content ?? "");
-        if (!answer) return null;
-
-        const cleaned = answer.replace(/^```(?:json)?\s*\n?|\n?```$/gi, "").trim();
-        const parsed = JSON.parse(cleaned) as {
-          explanations?: Record<string, string> | Array<{ text?: string; explanation?: string } | string>;
-        };
-
-        if (Array.isArray(parsed?.explanations)) {
-          const result: Record<string, string> = {};
-          for (let i = 0; i < parsed.explanations.length; i++) {
-            const item = parsed.explanations[i];
-            const text = typeof item === "string" ? item : (item?.text ?? item?.explanation ?? "");
-            if (normalizeText(text)) result[String(i)] = normalizeText(text)!;
-          }
-          if (Object.keys(result).length > 0) return result;
-        } else if (parsed?.explanations && typeof parsed.explanations === "object") {
-          return parsed.explanations as Record<string, string>;
+        if (!answer) {
+          lastFailure = "empty-response";
+          console.warn(`[AskAiMaps] Groq why-this-fits model=${model} fallbackReason=${lastFailure}`);
+          continue;
         }
 
-        return null;
+        const parsed = parseGroqWhyThisFitsResponse(answer, places, intent);
+        if (parsed) {
+          console.log(`[AskAiMaps] Groq why-this-fits model=${model} status=success`);
+          return parsed;
+        }
+
+        lastFailure = "invalid-or-unusable-json";
+        console.warn(`[AskAiMaps] Groq why-this-fits model=${model} fallbackReason=${lastFailure}`);
+      } catch (error) {
+        if (signal?.aborted || isAskAiRequestCancelledError(error)) {
+          throwIfAskAiRequestCancelled(signal);
+        }
+        lastFailure = error instanceof Error ? error.message : String(error);
+        console.warn(`[AskAiMaps] Groq why-this-fits model=${model} fallbackReason=exception error=${lastFailure}`);
       }
-
-      lastStatus = response.status;
-
-      if (response.status !== 429) {
-        console.warn(`[AskAiMaps] Groq why-this-fits request failed with status ${response.status} on model ${model}`);
-        return null;
-      }
-
-      console.warn(
-        `[AskAiMaps] Groq why-this-fits rate limited (429) on ${model}, retrying fallback...`,
-      );
     }
 
-    console.warn(`[AskAiMaps] Groq why-this-fits all models failed, last status ${lastStatus}`);
+    console.warn(`[AskAiMaps] Groq why-this-fits all models failed, lastFailure=${lastFailure}`);
     return null;
   } catch (error) {
     if (signal?.aborted || isAskAiRequestCancelledError(error)) {
@@ -4018,15 +4142,17 @@ export async function searchAskAiMaps(
   let verifiedGeminiPlaces: AskAiMapGroundedPlace[] = [];
   let geminiGroundedCount = 0;
   let geminiSuggestedSearches: string[] = [];
+  let geminiModelUsed: string | null = null;
   let geoapifyFallbackCount = 0;
 
   try {
     const geminiStartedAt = Date.now();
-    const { candidates, suggestedSearches: geminiSuggested } = await callGeminiMapsGrounding(intent, logger, signal);
+    const { candidates, suggestedSearches: geminiSuggested, modelUsed } = await callGeminiMapsGrounding(intent, logger, signal);
     logger?.log(`[AskAI Maps Timing] gemini_duration_ms=${Date.now() - geminiStartedAt} gemini_candidates=${candidates.length}`);
 
     geminiGroundedCount = candidates.length;
     geminiSuggestedSearches = geminiSuggested;
+    geminiModelUsed = modelUsed;
 
     if (candidates.length > 0) {
       let fillCache: Map<string, GeoapifyCoordinateFillResult> = new Map();
@@ -4144,10 +4270,19 @@ export async function searchAskAiMaps(
     suggestedSearches,
     sources,
     latencyMs: totalDuration,
-    modelUsed: `models/${GEMINI_MODEL}`,
+    modelUsed: geminiModelUsed ? `models/${geminiModelUsed}` : `models/${getConfiguredModelList("ASK_AI_MAPS_GEMINI_MODELS", ASK_AI_MAPS_DEFAULT_GEMINI_MODELS)[0]}`,
     explanationSource:
       mode === "gemini_grounding_primary_geoapify_coordinates"
         ? "gemini_maps_grounding" : "backend_template",
     signal,
   });
 }
+
+export const askAiMapsModelFallbacksForTest = {
+  getConfiguredModelList,
+  callGeminiMapsGrounding,
+  generateWhyThisFitsBatch,
+  setGoogleGenAIConstructor(value: typeof GoogleGenAI | null) {
+    GoogleGenAIForMaps = value ?? GoogleGenAI;
+  },
+};

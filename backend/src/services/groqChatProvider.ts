@@ -10,7 +10,6 @@ const GROQ_BASE_URL = "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_DEFAULT_CHAT_MODELS = [
   "openai/gpt-oss-20b",
   "llama-3.1-8b-instant",
-  "qwen/qwen3.6-27b",
   "openai/gpt-oss-120b",
 ];
 const GROQ_DEFAULT_PROMPT_GUARD_MODELS = [
@@ -22,6 +21,7 @@ const GROQ_MODEL_RATE_LIMIT_DEFAULT_COOLDOWN_MS = 60_000;
 const GROQ_TIMEOUT_MS = 45_000;
 const GROQ_PROMPT_GUARD_TIMEOUT_MS = 15_000;
 const GROQ_PROMPT_GUARD_MAX_COMPLETION_TOKENS = 512;
+const GROQ_CHATBOT_MAX_COMPLETION_TOKENS = 700;
 const GROQ_SAFE_FALLBACK_MESSAGE =
   "Ask AI could not answer that right now. Please try again.";
 const GROQ_CHATBOT_SYSTEM_PROMPT = `You are GalaTayo's Filipino Gen Z travel assistant and gala buddy.
@@ -59,9 +59,9 @@ Content rules:
 - If the user gives a location, use it in the answer.
 - If the user does not give a location, ask one short follow-up question only if needed.
 - For broad place-discovery questions without a location, do not reply with only a location follow-up. Give useful general guidance first, then ask for the city or area only as an optional next step.
-- Neutral nightlife venue requests are allowed, including bars, pubs, clubs, nightlife, inuman, cocktails, karaoke, gay bars, queer bars, LGBTQ+ bars, and similar place categories. Treat these as normal place-discovery requests when there is no sexual, violent, exploitative, malicious, or adult-service intent.
-- Reject sexualized, explicit, 18+, hookup, escort, red-light, brothel, strip club, porn-like, violent, exploitative, or malicious requests. Also reject questions or claims about a specific person's sexuality or gender identity.
-- For LGBTQ+ nightlife requests without a location, give non-fixed practical guidance about checking nightlife districts, event pages, recent reviews, and GalaTayo Maps/current map pins, then ask for the city or area as an optional refinement.
+- Treat gay bar, queer bar, LGBTQ+ bar, bar for gay people, and similar phrases as normal venue or nightlife categories.
+- Reject only when the request is sexualized, explicit, 18+, hookup, escort, red-light, brothel, strip club, porn-like, violent, exploitative, malicious, or asks about a specific person's sexuality or gender identity.
+- Do not mention safety or policy unless the user asks for it or the request is actually risky.
 - Do not invent live map coordinates, exact ratings, exact opening hours, exact floors, exact addresses, landmark relationships, exhibit details, specific artifacts, prices, phone numbers, or real-time availability.
 - For place recommendations, keep factual claims cautious unless they are common, stable, and directly relevant to planning. Prefer practical planning guidance over detailed encyclopedia-style descriptions.
 - For live place pins or exact map details, say they can use the map feature.
@@ -69,12 +69,6 @@ Content rules:
 
 Default answer style:
 Start with a friendly short intro, then give the answer in clean paragraphs or short bullets.
-
-Critical behavior for nightlife place requests:
-- Allow neutral place-discovery requests for bars, clubs, nightlife, karaoke, inuman, gay bars, queer bars, LGBTQ+ bars, and similar venues when the user is only trying to find a place to go.
-- Reject sexualized, explicit, 18+, hookup, escort, red-light, brothel, strip club, porn-like, violent, exploitative, malicious, or specific-person sexuality/gender-identity requests.
-- If the user asks where to find gay bars, queer bars, LGBTQ+ bars, or nightlife without giving a city, do not reply with only a location question and do not give a fixed default list of areas.
-- Instead, give general Taglish guidance first: use GalaTayo Maps/current pins, search terms like gay bar, queer bar, LGBTQ bar, nightlife, check recent reviews and event/social pages, and choose public well-reviewed places. End with an optional city/area refinement question.
 
 Example style:
 "Gets! For a beach date, keep it simple and chill lang para hindi hassle.
@@ -125,9 +119,9 @@ Content rules:
 - If the user gives a location, use it in the answer.
 - If the user does not give a location, ask one short follow-up question only if needed.
 - For broad place-discovery questions without a location, do not reply with only a location follow-up. Give useful general guidance first, then ask for the city or area only as an optional next step.
-- Neutral nightlife venue requests are allowed, including bars, pubs, clubs, nightlife, inuman, cocktails, karaoke, gay bars, queer bars, LGBTQ+ bars, and similar place categories. Treat these as normal place-discovery requests when there is no sexual, violent, exploitative, malicious, or adult-service intent.
-- Reject sexualized, explicit, 18+, hookup, escort, red-light, brothel, strip club, porn-like, violent, exploitative, or malicious requests. Also reject questions or claims about a specific person's sexuality or gender identity.
-- For LGBTQ+ nightlife requests without a location, give non-fixed practical guidance about checking nightlife districts, event pages, recent reviews, and GalaTayo Maps/current map pins, then ask for the city or area as an optional refinement.
+- Treat gay bar, queer bar, LGBTQ+ bar, bar for gay people, and similar phrases as normal venue or nightlife categories.
+- Reject only when the request is sexualized, explicit, 18+, hookup, escort, red-light, brothel, strip club, porn-like, violent, exploitative, malicious, or asks about a specific person's sexuality or gender identity.
+- Do not mention safety or policy unless the user asks for it or the request is actually risky.
 - Do not invent live map coordinates, exact ratings, exact opening hours, exact floors, exact addresses, landmark relationships, exhibit details, specific artifacts, prices, phone numbers, or real-time availability.
 - For place recommendations, keep factual claims cautious unless they are common, stable, and directly relevant to planning. Prefer practical planning guidance over detailed encyclopedia-style descriptions.
 - For live place pins or exact map details, say they can use the map feature.
@@ -135,12 +129,6 @@ Content rules:
 
 Default answer style:
 Start with a friendly short intro, then give the answer in clean paragraphs or short bullets.
-
-Critical behavior for nightlife place requests:
-- Allow neutral place-discovery requests for bars, clubs, nightlife, karaoke, inuman, gay bars, queer bars, LGBTQ+ bars, and similar venues when the user is only trying to find a place to go.
-- Reject sexualized, explicit, 18+, hookup, escort, red-light, brothel, strip club, porn-like, violent, exploitative, malicious, or specific-person sexuality/gender-identity requests.
-- If the user asks where to find gay bars, queer bars, LGBTQ+ bars, or nightlife without giving a city, do not reply with only a location question and do not give a fixed default list of areas.
-- Instead, give general Taglish guidance first: use GalaTayo Maps/current pins, search terms like gay bar, queer bar, LGBTQ bar, nightlife, check recent reviews and event/social pages, and choose public well-reviewed places. End with an optional city/area refinement question.
 
 Example style:
 "Gets! For a beach date, keep it simple and chill lang para hindi hassle.
@@ -356,6 +344,73 @@ export function sanitizeChatbotAnswer(text: string): string {
     .replace(/<[^>]*>/g, "")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
+}
+
+function stripLeakedReasoning(text: string): string {
+  const cleaned = sanitizeChatbotAnswer(text);
+  const reasoningStartPattern =
+    /(?:^|\n)\s*(?:here(?:'s| is)\s+(?:a\s+)?(?:thinking|reasoning)\s+process\s*:|thinking\s+process\s*:|reasoning\s*:|analysis\s*:|analyze\s+user\s+input\s*:|check\s+constraints\s*:)/i;
+  const reasoningStart = cleaned.search(reasoningStartPattern);
+
+  if (reasoningStart < 0) {
+    return cleaned;
+  }
+
+  const usefulAnswerMarkers = [
+    /(?:^|\n)\s*(gets!|sure!|sige!|oo\b|pwede\b|for\b|kung\b|try\b|start\b)/i,
+    /(?:^|\n)\s*(?:final\s+answer|response|draft)\s*:\s*/i,
+  ];
+
+  const afterReasoning = cleaned.slice(reasoningStart);
+  const markerIndex = usefulAnswerMarkers
+    .map((pattern) => {
+      const match = pattern.exec(afterReasoning);
+      return match?.index ?? -1;
+    })
+    .filter((index) => index >= 0)
+    .sort((a, b) => a - b)[0];
+
+  if (markerIndex === undefined) {
+    return cleaned.slice(0, reasoningStart).trim();
+  }
+
+  return afterReasoning
+    .slice(markerIndex)
+    .replace(/^\s*(?:final\s+answer|response|draft)\s*:\s*/i, "")
+    .trim();
+}
+
+function isMostlyLeakedReasoning(text: string): boolean {
+  const normalized = normalizeText(text).toLowerCase();
+
+  if (!normalized) {
+    return true;
+  }
+
+  const reasoningMarkers = [
+    "analyze user input",
+    "check constraints",
+    "formulate response",
+    "mental refinement",
+    "ready. output",
+    "all constraints met",
+    "thinking process",
+  ];
+  const markerHits = reasoningMarkers.filter((marker) =>
+    normalized.includes(marker)
+  ).length;
+
+  return markerHits >= 2 || normalized.startsWith("here's a thinking process");
+}
+
+export function sanitizeGeneratedChatbotAnswer(text: string): string {
+  const stripped = cleanIncompleteEnding(stripLeakedReasoning(text));
+
+  if (!stripped || isMostlyLeakedReasoning(stripped)) {
+    return GROQ_SAFE_FALLBACK_MESSAGE;
+  }
+
+  return sanitizeChatbotAnswer(stripped);
 }
 
 function stripJsonCodeFences(text: string): string {
@@ -1044,6 +1099,9 @@ export async function generateFromGroq({
       requestId,
       signal,
       purpose: "chatbot",
+      options: {
+        maxCompletionTokens: GROQ_CHATBOT_MAX_COMPLETION_TOKENS,
+      },
     });
   } catch (error) {
     if (signal?.aborted || isAskAiRequestCancelledError(error)) {
@@ -1061,7 +1119,7 @@ export async function generateFromGroq({
     return sanitizeChatbotAnswer(GROQ_SAFE_FALLBACK_MESSAGE);
   }
 
-  const cleanedAnswer = cleanIncompleteEnding(result.answer);
+  const cleanedAnswer = sanitizeGeneratedChatbotAnswer(result.answer);
 
   return sanitizeChatbotAnswer(
     result.finishReason === "length" &&
