@@ -36,6 +36,10 @@ import {
   markAskAiRequestUsageRefunded,
   registerAskAiRequest,
 } from "../utils/askAiCancellation";
+import {
+  ASK_AI_SCOPE_REJECTION_MESSAGE,
+  evaluateAskAiStrictPgGuard,
+} from "./askAiStrictPgGuard";
 
 function logAskAiMaps(context: InvocationContext, message: string) {
   context.log(message);
@@ -47,6 +51,45 @@ function getRequestId(request: HttpRequest): string {
 
 function isGuestIdentityError(message: string): boolean {
   return message === "Missing Ask AI guest identifier.";
+}
+
+function buildStrictPgMapsRejectionResponse({
+  requestId,
+  query,
+  startedAt,
+}: {
+  requestId: string;
+  query: string;
+  startedAt: number;
+}): HttpResponseInit {
+  return {
+    status: 200,
+    headers: buildResponseHeaders(requestId),
+    jsonBody: {
+      ok: true,
+      requestId,
+      mode: "no_verified_results",
+      query,
+      searchArea: null,
+      answerText: ASK_AI_SCOPE_REJECTION_MESSAGE,
+      summary: ASK_AI_SCOPE_REJECTION_MESSAGE,
+      resultMeta: {
+        queryType: "unknown",
+        targetMinResults: 0,
+        targetMaxResults: 0,
+        returnedCount: 0,
+        pinCount: 0,
+        resultCountReason: "Adult/sexual safety policy blocked this explicit or sensitive-identity request.",
+      },
+      places: [],
+      suggestedSearches: [],
+      sources: [],
+      modelUsed: null,
+      explanationSource: null,
+      message: ASK_AI_SCOPE_REJECTION_MESSAGE,
+      latencyMs: Date.now() - startedAt,
+    },
+  };
 }
 
 export async function askAiMapsRequest(
@@ -80,6 +123,19 @@ export async function askAiMapsRequest(
           sources: [],
         },
       };
+    }
+
+    const strictPgGuard = evaluateAskAiStrictPgGuard(query);
+
+    if (!strictPgGuard.accepted) {
+      context.log(
+        `[Ask AI Maps] strict-pg rejected requestId=${requestId} actorId=${actor.id} actorKind=${actor.kind} pattern=${strictPgGuard.blockedPattern ?? "n/a"}`
+      );
+      return buildStrictPgMapsRejectionResponse({
+        requestId,
+        query,
+        startedAt,
+      });
     }
 
     const aiUsage = await consumeAskAiUsageForActor(actor, "ask_ai_maps");

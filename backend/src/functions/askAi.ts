@@ -25,6 +25,11 @@ import {
   registerAskAiRequest,
 } from "../utils/askAiCancellation";
 import { resolveAskAiActor, type AskAiActor } from "../utils/askAiActor";
+import {
+  ASK_AI_SCOPE_REJECTION_MESSAGE,
+  evaluateAskAiStrictPgGuard,
+  normalizeAskAiPromptForStrictPgGuard,
+} from "./askAiStrictPgGuard";
 
 type AskAiRequestBody = {
   question?: unknown;
@@ -35,20 +40,12 @@ type AskAiRequestBody = {
 const MAX_CONVERSATION_HISTORY_MESSAGES = 8;
 const MAX_USER_HISTORY_CONTENT_LENGTH = 2000;
 const MAX_ASSISTANT_HISTORY_CONTENT_LENGTH = 1200;
-const ASK_AI_SCOPE_REJECTION_MESSAGE =
-  "GalaTayo AI will not answer this question because it does not align with the purpose of GalaTayo.";
-
 type AskAiPromptGuardResult = {
   accepted: boolean;
 };
 
 export function normalizeAskAiPromptForGuard(value: string): string {
-  return value
-    .normalize("NFKC")
-    .replace(/([!?.,])\1{2,}/g, "$1$1")
-    .replace(/([a-z])\1{3,}/gi, "$1$1")
-    .replace(/\s+/g, " ")
-    .trim();
+  return normalizeAskAiPromptForStrictPgGuard(value);
 }
 
 export function evaluateAskAiPromptGuardDecision(
@@ -256,6 +253,15 @@ export async function postAskAiChatbot(
           requestId,
         },
       };
+    }
+
+    const strictPgGuard = evaluateAskAiStrictPgGuard(message);
+
+    if (!strictPgGuard.accepted) {
+      context.log(
+        `[AskAI Chatbot] strict-pg rejected requestId=${requestId} actorId=${resolvedActor!.id} actorKind=${resolvedActor!.kind} pattern=${strictPgGuard.blockedPattern ?? "n/a"}`
+      );
+      return buildScopeRejectionResponse(requestId);
     }
 
     const promptGuard = await shouldAcceptAskAiPrompt({

@@ -4,6 +4,7 @@ import {
   evaluateAskAiPromptGuardDecision,
   normalizeAskAiPromptForGuard,
 } from "./askAi";
+import { evaluateAskAiStrictPgGuard } from "./askAiStrictPgGuard";
 import type {
   AskAiPromptGuardAction,
   AskAiPromptGuardDecision,
@@ -43,6 +44,42 @@ function decision(
     ...overrides,
   };
 }
+
+describe("Ask AI strict PG guard", () => {
+  const rejectedPrompts = [
+    "is jerome gay",
+    "adult hookup spots in makati",
+    "escort services in manila",
+    "strip club near me",
+    "red light district places",
+  ];
+
+  for (const prompt of rejectedPrompts) {
+    it(`rejects ${prompt}`, () => {
+      const result = evaluateAskAiStrictPgGuard(prompt);
+
+      assert.equal(result.accepted, false);
+    });
+  }
+
+  const acceptedPrompts = [
+    "gay bar in manila",
+    "gay bar for jerome",
+    "bar crawl in manila",
+    "clubs near bgc",
+    "karaoke night in qc",
+    "cocktail bar for barkada in makati",
+    "cafe for jerome in manila",
+  ];
+
+  for (const prompt of acceptedPrompts) {
+    it(`allows ${prompt}`, () => {
+      const result = evaluateAskAiStrictPgGuard(prompt);
+
+      assert.equal(result.accepted, true);
+    });
+  }
+});
 
 describe("Ask AI prompt guard decision evaluation", () => {
   it("allows very short filler-only prompts", () => {
