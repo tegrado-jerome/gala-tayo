@@ -708,8 +708,8 @@ function AskAiPlaceholder({
                 <FeatureGuideModalTrigger content={featureGuideContent.chatbot} className="h-10 w-10" />
               </div>
             </div>
-            <p className={`pl-2 text-[10px] leading-tight ${isDarkMode ? 'text-slate-200' : 'text-slate-500'}`}>
-              Free daily usage resets every day.
+            <p className={`pl-2 text-[10px] leading-tight md:text-[11px] lg:text-[12px] ${isDarkMode ? 'text-slate-200' : 'text-slate-500'}`}>
+              Usage resets every day.
             </p>
           </div>
           <div className="flex items-center gap-1.5">
@@ -1337,8 +1337,8 @@ function AskAiModePanel({
                     <FeatureGuideModalTrigger content={featureGuideContent.chatbot} className="h-10 w-10" />
                   </div>
                 </div>
-                <p className={`pl-2 text-[10px] leading-tight ${isDarkMode ? 'text-slate-200' : 'text-slate-500'}`}>
-                  Free daily usage resets every day.
+                <p className={`pl-2 text-[10px] leading-tight md:text-[11px] lg:text-[12px] ${isDarkMode ? 'text-slate-200' : 'text-slate-500'}`}>
+                  Usage resets every day.
                 </p>
               </div>
             </div>

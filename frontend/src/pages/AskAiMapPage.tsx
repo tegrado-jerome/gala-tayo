@@ -1404,8 +1404,8 @@ onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
                         {normalizedPlaces.length} places
                       </span>
                     </div>
-                    <p className="mt-1 text-[10px] leading-tight text-slate-400">
-                      Free daily usage resets every day.
+                    <p className="mt-1 text-[10px] leading-tight md:text-[11px] lg:text-[12px] text-slate-400">
+                      Usage resets every day.
                     </p>
                   </div>
                 </div>
