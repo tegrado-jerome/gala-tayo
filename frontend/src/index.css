@@ -4308,7 +4308,7 @@ body.feature-guide-open nav[aria-label="Primary"] {
 }
 
 .galatayo-leaflet-map.ask-ai-map-view .leaflet-top.leaflet-left {
-  margin-top: 82px;
+  margin-top: 110px;
 }
 
 .galatayo-leaflet-map .leaflet-control-zoom a {
@@ -4695,6 +4695,10 @@ body.feature-guide-open nav[aria-label="Primary"] {
 }
 
 @media (max-width: 640px) {
+  .galatayo-leaflet-map.ask-ai-map-view .leaflet-top.leaflet-left {
+    margin-top: 122px;
+  }
+
   .galatayo-leaflet-map .leaflet-control-zoom {
     margin-top: 12px;
     margin-left: 12px;

@@ -7,9 +7,18 @@ import {
 } from "../utils/askAiCancellation";
 
 const GROQ_BASE_URL = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_PRIMARY_MODEL = "openai/gpt-oss-20b";
-const GROQ_FALLBACK_MODEL = "llama-3.1-8b-instant";
-const GROQ_PROMPT_GUARD_MODEL = GROQ_FALLBACK_MODEL;
+const GROQ_DEFAULT_CHAT_MODELS = [
+  "openai/gpt-oss-20b",
+  "llama-3.1-8b-instant",
+  "qwen/qwen3.6-27b",
+  "openai/gpt-oss-120b",
+];
+const GROQ_DEFAULT_PROMPT_GUARD_MODELS = [
+  "llama-3.1-8b-instant",
+  "meta-llama/llama-prompt-guard-2-86m",
+  "meta-llama/llama-prompt-guard-2-22m",
+];
+const GROQ_MODEL_RATE_LIMIT_DEFAULT_COOLDOWN_MS = 60_000;
 const GROQ_TIMEOUT_MS = 45_000;
 const GROQ_PROMPT_GUARD_TIMEOUT_MS = 15_000;
 const GROQ_PROMPT_GUARD_MAX_COMPLETION_TOKENS = 512;
@@ -49,6 +58,10 @@ Content rules:
 - If the user asks for suggestions, give practical options.
 - If the user gives a location, use it in the answer.
 - If the user does not give a location, ask one short follow-up question only if needed.
+- For broad place-discovery questions without a location, do not reply with only a location follow-up. Give useful general guidance first, then ask for the city or area only as an optional next step.
+- Neutral nightlife venue requests are allowed, including bars, pubs, clubs, nightlife, inuman, cocktails, karaoke, gay bars, queer bars, LGBTQ+ bars, and similar place categories. Treat these as normal place-discovery requests when there is no sexual, violent, exploitative, malicious, or adult-service intent.
+- Reject sexualized, explicit, 18+, hookup, escort, red-light, brothel, strip club, porn-like, violent, exploitative, or malicious requests. Also reject questions or claims about a specific person's sexuality or gender identity.
+- For LGBTQ+ nightlife requests without a location, give non-fixed practical guidance about checking nightlife districts, event pages, recent reviews, and GalaTayo Maps/current map pins, then ask for the city or area as an optional refinement.
 - Do not invent live map coordinates, exact ratings, exact opening hours, exact floors, exact addresses, landmark relationships, exhibit details, specific artifacts, prices, phone numbers, or real-time availability.
 - For place recommendations, keep factual claims cautious unless they are common, stable, and directly relevant to planning. Prefer practical planning guidance over detailed encyclopedia-style descriptions.
 - For live place pins or exact map details, say they can use the map feature.
@@ -56,6 +69,12 @@ Content rules:
 
 Default answer style:
 Start with a friendly short intro, then give the answer in clean paragraphs or short bullets.
+
+Critical behavior for nightlife place requests:
+- Allow neutral place-discovery requests for bars, clubs, nightlife, karaoke, inuman, gay bars, queer bars, LGBTQ+ bars, and similar venues when the user is only trying to find a place to go.
+- Reject sexualized, explicit, 18+, hookup, escort, red-light, brothel, strip club, porn-like, violent, exploitative, malicious, or specific-person sexuality/gender-identity requests.
+- If the user asks where to find gay bars, queer bars, LGBTQ+ bars, or nightlife without giving a city, do not reply with only a location question and do not give a fixed default list of areas.
+- Instead, give general Taglish guidance first: use GalaTayo Maps/current pins, search terms like gay bar, queer bar, LGBTQ bar, nightlife, check recent reviews and event/social pages, and choose public well-reviewed places. End with an optional city/area refinement question.
 
 Example style:
 "Gets! For a beach date, keep it simple and chill lang para hindi hassle.
@@ -105,6 +124,10 @@ Content rules:
 - If the user asks for suggestions, give practical options.
 - If the user gives a location, use it in the answer.
 - If the user does not give a location, ask one short follow-up question only if needed.
+- For broad place-discovery questions without a location, do not reply with only a location follow-up. Give useful general guidance first, then ask for the city or area only as an optional next step.
+- Neutral nightlife venue requests are allowed, including bars, pubs, clubs, nightlife, inuman, cocktails, karaoke, gay bars, queer bars, LGBTQ+ bars, and similar place categories. Treat these as normal place-discovery requests when there is no sexual, violent, exploitative, malicious, or adult-service intent.
+- Reject sexualized, explicit, 18+, hookup, escort, red-light, brothel, strip club, porn-like, violent, exploitative, or malicious requests. Also reject questions or claims about a specific person's sexuality or gender identity.
+- For LGBTQ+ nightlife requests without a location, give non-fixed practical guidance about checking nightlife districts, event pages, recent reviews, and GalaTayo Maps/current map pins, then ask for the city or area as an optional refinement.
 - Do not invent live map coordinates, exact ratings, exact opening hours, exact floors, exact addresses, landmark relationships, exhibit details, specific artifacts, prices, phone numbers, or real-time availability.
 - For place recommendations, keep factual claims cautious unless they are common, stable, and directly relevant to planning. Prefer practical planning guidance over detailed encyclopedia-style descriptions.
 - For live place pins or exact map details, say they can use the map feature.
@@ -112,6 +135,12 @@ Content rules:
 
 Default answer style:
 Start with a friendly short intro, then give the answer in clean paragraphs or short bullets.
+
+Critical behavior for nightlife place requests:
+- Allow neutral place-discovery requests for bars, clubs, nightlife, karaoke, inuman, gay bars, queer bars, LGBTQ+ bars, and similar venues when the user is only trying to find a place to go.
+- Reject sexualized, explicit, 18+, hookup, escort, red-light, brothel, strip club, porn-like, violent, exploitative, malicious, or specific-person sexuality/gender-identity requests.
+- If the user asks where to find gay bars, queer bars, LGBTQ+ bars, or nightlife without giving a city, do not reply with only a location question and do not give a fixed default list of areas.
+- Instead, give general Taglish guidance first: use GalaTayo Maps/current pins, search terms like gay bar, queer bar, LGBTQ bar, nightlife, check recent reviews and event/social pages, and choose public well-reviewed places. End with an optional city/area refinement question.
 
 Example style:
 "Gets! For a beach date, keep it simple and chill lang para hindi hassle.
@@ -199,23 +228,127 @@ export class GroqChatProviderError extends Error {
   status: number;
   errorCode: string;
   userMessage: string;
+  model?: string;
+  cooldownMs?: number;
 
   constructor(
     status: number,
     errorCode: string,
     userMessage: string,
-    message?: string
+    message?: string,
+    details?: {
+      model?: string;
+      cooldownMs?: number;
+    }
   ) {
     super(message ?? userMessage);
     this.name = "GroqChatProviderError";
     this.status = status;
     this.errorCode = errorCode;
     this.userMessage = userMessage;
+    this.model = details?.model;
+    this.cooldownMs = details?.cooldownMs;
   }
 }
 
+const groqModelCooldownUntil = new Map<string, number>();
+
 function normalizeText(value: string | undefined | null): string {
   return typeof value === "string" ? value.trim() : "";
+}
+
+function uniqueStrings(values: string[]): string[] {
+  return Array.from(new Set(values.map(normalizeText).filter(Boolean)));
+}
+
+function getConfiguredGroqModels(
+  envName: string,
+  defaultModels: string[]
+): string[] {
+  const configuredModels = uniqueStrings(
+    normalizeText(process.env[envName])
+      .split(",")
+      .map((item) => item.trim())
+  );
+
+  return configuredModels.length > 0 ? configuredModels : defaultModels;
+}
+
+function parseGroqDurationMs(value: string | null | undefined): number | null {
+  const text = normalizeText(value).toLowerCase();
+  if (!text) return null;
+
+  const numericSeconds = Number(text);
+  if (Number.isFinite(numericSeconds) && numericSeconds >= 0) {
+    return Math.ceil(numericSeconds * 1000);
+  }
+
+  const dateMs = Date.parse(text);
+  if (Number.isFinite(dateMs)) {
+    return Math.max(0, dateMs - Date.now());
+  }
+
+  const durationPattern = /(\d+(?:\.\d+)?)\s*(ms|milliseconds?|s|sec|secs|seconds?|m|mins?|minutes?|h|hrs?|hours?)/gi;
+  let totalMs = 0;
+  let matched = false;
+  let match: RegExpExecArray | null;
+
+  while ((match = durationPattern.exec(text))) {
+    const amount = Number(match[1]);
+    const unit = match[2];
+    if (!Number.isFinite(amount)) continue;
+
+    matched = true;
+    if (unit.startsWith("ms") || unit.startsWith("millisecond")) {
+      totalMs += amount;
+    } else if (unit.startsWith("s") || unit.startsWith("sec")) {
+      totalMs += amount * 1000;
+    } else if (unit.startsWith("m") || unit.startsWith("min")) {
+      totalMs += amount * 60_000;
+    } else if (unit.startsWith("h") || unit.startsWith("hr") || unit.startsWith("hour")) {
+      totalMs += amount * 3_600_000;
+    }
+  }
+
+  return matched ? Math.ceil(totalMs) : null;
+}
+
+function parseGroqRetryAfterMs(response: Response, errorMessage: string): number {
+  return (
+    parseGroqDurationMs(response.headers.get("retry-after")) ??
+    parseGroqDurationMs(response.headers.get("x-ratelimit-reset-tokens")) ??
+    parseGroqDurationMs(response.headers.get("x-ratelimit-reset-requests")) ??
+    parseGroqDurationMs(errorMessage.match(/try again in ([^.]+(?:\.\d+)?s?)/i)?.[1]) ??
+    GROQ_MODEL_RATE_LIMIT_DEFAULT_COOLDOWN_MS
+  );
+}
+
+function getGroqModelCooldownMs(model: string, now = Date.now()): number {
+  const cooldownUntil = groqModelCooldownUntil.get(model);
+
+  if (!cooldownUntil) return 0;
+
+  const remainingMs = cooldownUntil - now;
+  if (remainingMs <= 0) {
+    groqModelCooldownUntil.delete(model);
+    return 0;
+  }
+
+  return remainingMs;
+}
+
+function markGroqModelCooldown(
+  model: string,
+  response: Response,
+  errorMessage: string
+): number {
+  const cooldownMs = Math.max(1, parseGroqRetryAfterMs(response, errorMessage));
+  groqModelCooldownUntil.set(model, Date.now() + cooldownMs);
+  return cooldownMs;
+}
+
+export function clearGroqModelCooldownsForTest(): void {
+  groqModelCooldownUntil.clear();
 }
 
 export function sanitizeChatbotAnswer(text: string): string {
@@ -545,9 +678,12 @@ async function runPromptGuardClassificationAttempt({
   responseFormat: GroqResponseFormat;
   attempt: string;
 }): Promise<PromptGuardParseResult> {
-  const result = await callGroq(
-    GROQ_PROMPT_GUARD_MODEL,
-    [
+  const result = await callGroqWithModelRotation({
+    models: getConfiguredGroqModels(
+      "ASK_AI_GROQ_PROMPT_GUARD_MODELS",
+      GROQ_DEFAULT_PROMPT_GUARD_MODELS
+    ),
+    messages: [
       {
         role: "system",
         content: systemPrompt,
@@ -559,13 +695,14 @@ async function runPromptGuardClassificationAttempt({
     ],
     requestId,
     signal,
-    {
+    purpose: "prompt-guard",
+    options: {
       temperature: 0,
       maxCompletionTokens: GROQ_PROMPT_GUARD_MAX_COMPLETION_TOKENS,
       timeoutMs: GROQ_PROMPT_GUARD_TIMEOUT_MS,
       responseFormat,
-    }
-  );
+    },
+  });
 
   const parsed = parsePromptGuardDecisionResult(result.answer);
 
@@ -626,7 +763,8 @@ async function callGroq(
         504,
         "AI_PROVIDER_TEMPORARY_ERROR",
         "The AI model had a temporary issue. Please try again in a moment.",
-        "Groq request timed out."
+        "Groq request timed out.",
+        { model }
       );
     }
 
@@ -634,7 +772,8 @@ async function callGroq(
       503,
       "AI_PROVIDER_TEMPORARY_ERROR",
       "The AI model had a temporary issue. Please try again in a moment.",
-      error instanceof Error ? error.message : "Groq request failed."
+      error instanceof Error ? error.message : "Groq request failed.",
+      { model }
     );
   }
 
@@ -652,11 +791,13 @@ async function callGroq(
     );
 
     if (response.status === 429) {
+      const cooldownMs = markGroqModelCooldown(model, response, errorMessage);
       throw new GroqChatProviderError(
         429,
         "AI_PROVIDER_RATE_LIMITED",
         "Ask AI is busy right now. Please try again in a moment.",
-        errorMessage
+        errorMessage,
+        { model, cooldownMs }
       );
     }
 
@@ -664,7 +805,8 @@ async function callGroq(
       response.status || 502,
       "AI_PROVIDER_TEMPORARY_ERROR",
       "The AI model had a temporary issue. Please try again in a moment.",
-      errorMessage
+      errorMessage,
+      { model }
     );
   }
 
@@ -702,7 +844,8 @@ async function callGroq(
       502,
       "AI_PROVIDER_TEMPORARY_ERROR",
       "The AI model had a temporary issue. Please try again in a moment.",
-      "Groq returned empty response."
+      "Groq returned empty response.",
+      { model }
     );
   }
 
@@ -710,6 +853,115 @@ async function callGroq(
     answer,
     finishReason,
   };
+}
+
+async function callGroqWithModelRotation({
+  models,
+  messages,
+  requestId,
+  signal,
+  options,
+  purpose,
+}: {
+  models: string[];
+  messages: GroqMessage[];
+  requestId: string;
+  signal?: AbortSignal;
+  options?: GroqCallOptions;
+  purpose: "chatbot" | "prompt-guard";
+}): Promise<{ answer: string; finishReason: string | null; model: string }> {
+  const modelList = uniqueStrings(models);
+  let lastProviderError: GroqChatProviderError | null = null;
+  let lastError: unknown = null;
+  let skippedModelCount = 0;
+  let shortestCooldownMs = Number.POSITIVE_INFINITY;
+
+  for (let attemptIndex = 0; attemptIndex < modelList.length; attemptIndex++) {
+    const model = modelList[attemptIndex];
+    throwIfAskAiRequestCancelled(signal);
+
+    const cooldownMs = getGroqModelCooldownMs(model);
+    if (cooldownMs > 0) {
+      skippedModelCount++;
+      shortestCooldownMs = Math.min(shortestCooldownMs, cooldownMs);
+      console.warn(
+        `[AskAI Chatbot][requestId=${requestId}] provider=groq purpose=${purpose} model=${model} attemptIndex=${attemptIndex} fallbackReason=model-cooldown cooldownMs=${cooldownMs}`
+      );
+      continue;
+    }
+
+    try {
+      const result = await callGroq(model, messages, requestId, signal, options);
+      console.log(
+        `[AskAI Chatbot][requestId=${requestId}] provider=groq purpose=${purpose} model=${model} attemptIndex=${attemptIndex} status=success finishReason=${result.finishReason ?? "unknown"}`
+      );
+      return {
+        ...result,
+        model,
+      };
+    } catch (error) {
+      if (signal?.aborted || isAskAiRequestCancelledError(error)) {
+        throwIfAskAiRequestCancelled(signal);
+      }
+
+      lastError = error;
+      const providerError = error instanceof GroqChatProviderError ? error : null;
+      if (providerError) {
+        lastProviderError = providerError;
+      }
+
+      const status = providerError?.status ?? "unknown";
+      const cooldownMs = providerError?.cooldownMs ?? 0;
+      const fallbackReason =
+        providerError?.errorCode === "AI_PROVIDER_CONFIGURATION_ERROR"
+          ? "configuration-error"
+          : providerError?.status === 429
+            ? "rate-limit"
+            : "temporary-error";
+
+      const logMethod = attemptIndex === modelList.length - 1 ? console.error : console.warn;
+      logMethod(
+        `[AskAI Chatbot][requestId=${requestId}] provider=groq purpose=${purpose} model=${model} attemptIndex=${attemptIndex} fallbackReason=${fallbackReason} status=${status} cooldownMs=${cooldownMs}`
+      );
+
+      if (providerError?.errorCode === "AI_PROVIDER_CONFIGURATION_ERROR") {
+        throw providerError;
+      }
+    }
+  }
+
+  if (
+    lastProviderError?.status === 429 ||
+    (skippedModelCount === modelList.length && Number.isFinite(shortestCooldownMs))
+  ) {
+    throw (
+      lastProviderError ??
+      new GroqChatProviderError(
+        429,
+        "AI_PROVIDER_RATE_LIMITED",
+        "Ask AI is busy right now. Please try again in a moment.",
+        "All configured Groq models are cooling down after rate limits.",
+        {
+          cooldownMs: Math.ceil(shortestCooldownMs),
+        }
+      )
+    );
+  }
+
+  if (lastProviderError) {
+    throw lastProviderError;
+  }
+
+  if (lastError) {
+    throw lastError;
+  }
+
+  throw new GroqChatProviderError(
+    503,
+    "AI_PROVIDER_TEMPORARY_ERROR",
+    "The AI model had a temporary issue. Please try again in a moment.",
+    "No configured Groq models were available."
+  );
 }
 
 export async function classifyAskAiPromptWithGroq({
@@ -780,90 +1032,42 @@ export async function generateFromGroq({
     }
   );
 
-  try {
-    const primaryResult = await callGroq(GROQ_PRIMARY_MODEL, messages, requestId, signal);
-    const cleanedPrimaryAnswer = cleanIncompleteEnding(primaryResult.answer);
+  let result: { answer: string; finishReason: string | null; model: string };
 
-    return sanitizeChatbotAnswer(
-      primaryResult.finishReason === "length" &&
-        cleanedPrimaryAnswer &&
-        !/[.!?]$/.test(cleanedPrimaryAnswer)
-        ? `${cleanedPrimaryAnswer}\n\nI can continue this plan if you want more details.`
-        : cleanedPrimaryAnswer
-    );
-  } catch (primaryError) {
-    if (signal?.aborted || isAskAiRequestCancelledError(primaryError)) {
+  try {
+    result = await callGroqWithModelRotation({
+      models: getConfiguredGroqModels(
+        "ASK_AI_GROQ_CHAT_MODELS",
+        GROQ_DEFAULT_CHAT_MODELS
+      ),
+      messages,
+      requestId,
+      signal,
+      purpose: "chatbot",
+    });
+  } catch (error) {
+    if (signal?.aborted || isAskAiRequestCancelledError(error)) {
       throwIfAskAiRequestCancelled(signal);
     }
 
-    const primaryStatus =
-      primaryError instanceof GroqChatProviderError
-        ? primaryError.status
-        : null;
-
-    console.warn(
-      `[AskAI Chatbot][requestId=${requestId}] provider=groq model=${GROQ_PRIMARY_MODEL} primary-failed status=${primaryStatus ?? "unknown"}`
-    );
-
     if (
-      primaryError instanceof GroqChatProviderError &&
-      primaryError.errorCode === "AI_PROVIDER_CONFIGURATION_ERROR"
+      error instanceof GroqChatProviderError &&
+      (error.status === 429 ||
+        error.errorCode === "AI_PROVIDER_CONFIGURATION_ERROR")
     ) {
-      throw primaryError;
+      throw error;
     }
 
-    try {
-      const fallbackResult = await callGroq(
-        GROQ_FALLBACK_MODEL,
-        messages,
-        requestId,
-        signal
-      );
-      const cleanedFallbackAnswer = cleanIncompleteEnding(fallbackResult.answer);
-
-      return sanitizeChatbotAnswer(
-        fallbackResult.finishReason === "length" &&
-          cleanedFallbackAnswer &&
-          !/[.!?]$/.test(cleanedFallbackAnswer)
-          ? `${cleanedFallbackAnswer}\n\nI can continue this plan if you want more details.`
-          : cleanedFallbackAnswer
-      );
-    } catch (fallbackError) {
-      if (signal?.aborted || isAskAiRequestCancelledError(fallbackError)) {
-        throwIfAskAiRequestCancelled(signal);
-      }
-
-      const fallbackStatus =
-        fallbackError instanceof GroqChatProviderError
-          ? fallbackError.status
-          : null;
-
-      console.error(
-        `[AskAI Chatbot][requestId=${requestId}] provider=groq model=${GROQ_FALLBACK_MODEL} fallback-failed status=${fallbackStatus ?? "unknown"}`
-      );
-
-      if (
-        primaryError instanceof GroqChatProviderError &&
-        primaryError.status === 429
-      ) {
-        throw primaryError;
-      }
-
-      if (
-        fallbackError instanceof GroqChatProviderError &&
-        fallbackError.status === 429
-      ) {
-        throw fallbackError;
-      }
-
-      if (
-        fallbackError instanceof GroqChatProviderError &&
-        fallbackError.errorCode === "AI_PROVIDER_CONFIGURATION_ERROR"
-      ) {
-        throw fallbackError;
-      }
-
-      return sanitizeChatbotAnswer(GROQ_SAFE_FALLBACK_MESSAGE);
-    }
+    return sanitizeChatbotAnswer(GROQ_SAFE_FALLBACK_MESSAGE);
   }
+
+  const cleanedAnswer = cleanIncompleteEnding(result.answer);
+
+  return sanitizeChatbotAnswer(
+    result.finishReason === "length" &&
+      cleanedAnswer &&
+      !/[.!?]$/.test(cleanedAnswer)
+      ? `${cleanedAnswer}\n\nI can continue this plan if you want more details.`
+      : cleanedAnswer
+  );
 }

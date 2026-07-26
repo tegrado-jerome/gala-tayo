@@ -1016,20 +1016,44 @@ function AskAiMapPage() {
               onPlaceSelect={selectPlace}
             />
 
-            <div className="absolute right-4 top-5 z-[620]">
+            <div className="absolute right-4 top-5 z-[620] hidden sm:block">
               <button
                 type="button"
                 onClick={() => navigateBackWithFallback('/home')}
                 aria-label="Go back"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[linear-gradient(135deg,#dbeafe,#bfdbfe)] text-[var(--accent-deep)] ring-1 ring-inset ring-[rgba(var(--accent-rgb),0.14)] shadow-[0_6px_18px_-8px_rgba(59,130,246,0.28)] transition hover:bg-[linear-gradient(135deg,#bfdbfe,#dbeafe)] hover:text-[var(--accent)]"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[linear-gradient(135deg,#dbeafe,#bfdbfe)] text-[var(--accent-deep)] ring-1 ring-inset ring-[rgba(var(--accent-rgb),0.14)] shadow-[0_6px_18px_-8px_rgba(59,130,246,0.28)] transition hover:bg-[linear-gradient(135deg,#bfdbfe,#dbeafe)] hover:text-[var(--accent)]"
               >
-                <AppIcon name="bot" className="h-6 w-6" strokeWidth={2} />
+                <AppIcon name="bot" className="h-5 w-5" strokeWidth={2} />
               </button>
             </div>
 
-            <div className="absolute left-4 top-5 z-[620] flex items-center gap-2">
-              <AskAiUsagePill label="Maps AI" usageStatus={askAiMapsUsageStatus} />
-              <FeatureGuideModalTrigger content={featureGuideContent.maps} />
+            <div className="absolute left-4 top-5 z-[620] max-w-[calc(100vw-6.75rem)] sm:max-w-[21rem]">
+              <div className="flex flex-col items-start gap-1.5">
+                <div className="flex items-center gap-1.5">
+                  <AskAiUsagePill
+                    label="Maps AI"
+                    usageStatus={askAiMapsUsageStatus}
+                    className="shrink-0"
+                  />
+                  <div className="hidden md:flex">
+                    <FeatureGuideModalTrigger content={featureGuideContent.maps} className="h-10 w-10" />
+                  </div>
+                </div>
+                <span
+                  className={`pl-2 text-[10px] font-medium leading-tight whitespace-nowrap ${
+                    isDarkMode
+                      ? 'text-slate-50 [text-shadow:0_1px_2px_rgba(2,6,23,0.95),0_0_10px_rgba(2,6,23,0.55)]'
+                      : 'text-slate-700 [text-shadow:0_1px_2px_rgba(255,255,255,0.95),0_0_10px_rgba(255,255,255,0.7)]'
+                  }`}
+                >
+                  Free daily usage resets daily
+                </span>
+              </div>
+            </div>
+            <div className="absolute right-4 top-5 z-[620] sm:right-16 md:block">
+              <div className="md:hidden">
+                <FeatureGuideModalTrigger content={featureGuideContent.maps} className="h-10 w-10" />
+              </div>
             </div>
 
             {isSearching ? null : null}
@@ -1296,20 +1320,44 @@ onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
               onPlaceSelect={selectPlace}
             />
 
-            <div className="absolute right-4 top-5 z-[620]">
+            <div className="absolute right-4 top-5 z-[620] hidden sm:block">
               <button
                 type="button"
                 onClick={() => navigateBackWithFallback('/home')}
                 aria-label="Go back"
-                className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[linear-gradient(135deg,#dbeafe,#bfdbfe)] text-[var(--accent-deep)] ring-1 ring-inset ring-[rgba(var(--accent-rgb),0.14)] shadow-[0_6px_18px_-8px_rgba(59,130,246,0.28)] transition hover:bg-[linear-gradient(135deg,#bfdbfe,#dbeafe)] hover:text-[var(--accent)]"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[linear-gradient(135deg,#dbeafe,#bfdbfe)] text-[var(--accent-deep)] ring-1 ring-inset ring-[rgba(var(--accent-rgb),0.14)] shadow-[0_6px_18px_-8px_rgba(59,130,246,0.28)] transition hover:bg-[linear-gradient(135deg,#bfdbfe,#dbeafe)] hover:text-[var(--accent)]"
               >
-                <AppIcon name="bot" className="h-6 w-6" strokeWidth={2} />
+                <AppIcon name="bot" className="h-5 w-5" strokeWidth={2} />
               </button>
             </div>
 
-            <div className="absolute left-4 top-5 z-[620] flex items-center gap-2">
-              <AskAiUsagePill label="Maps AI" usageStatus={askAiMapsUsageStatus} />
-              <FeatureGuideModalTrigger content={featureGuideContent.maps} />
+            <div className="absolute left-4 top-5 z-[620] max-w-[calc(100vw-6.75rem)] sm:max-w-[21rem]">
+              <div className="flex flex-col items-start gap-1.5">
+                <div className="flex items-center gap-1.5">
+                  <AskAiUsagePill
+                    label="Maps AI"
+                    usageStatus={askAiMapsUsageStatus}
+                    className="shrink-0"
+                  />
+                  <div className="hidden md:flex">
+                    <FeatureGuideModalTrigger content={featureGuideContent.maps} className="h-10 w-10" />
+                  </div>
+                </div>
+                <span
+                  className={`pl-2 text-[10px] font-medium leading-tight whitespace-nowrap ${
+                    isDarkMode
+                      ? 'text-slate-50 [text-shadow:0_1px_2px_rgba(2,6,23,0.95),0_0_10px_rgba(2,6,23,0.55)]'
+                      : 'text-slate-700 [text-shadow:0_1px_2px_rgba(255,255,255,0.95),0_0_10px_rgba(255,255,255,0.7)]'
+                  }`}
+                >
+                  Free daily usage resets daily
+                </span>
+              </div>
+            </div>
+            <div className="absolute right-4 top-5 z-[620] sm:right-16 md:block">
+              <div className="md:hidden">
+                <FeatureGuideModalTrigger content={featureGuideContent.maps} className="h-10 w-10" />
+              </div>
             </div>
 
             <div className="absolute inset-x-0 bottom-[calc(env(safe-area-inset-bottom,0px)+2.25rem)] z-[620] px-4 pt-6 md:bottom-8 lg:bottom-10">
@@ -1348,11 +1396,18 @@ onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
                     {query.trim() || 'Map results'}
                   </h1>
                 </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  <AskAiUsagePill label="Maps AI" usageStatus={askAiMapsUsageStatus} />
-                  <span className="shrink-0 rounded-full bg-slate-100 px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-slate-600">
-                    {normalizedPlaces.length} places
-                  </span>
+                <div className="flex shrink-0 items-center">
+                  <div className="rounded-2xl border border-slate-200/80 bg-white/92 px-3 py-2 shadow-[0_10px_24px_-18px_rgba(15,23,42,0.24)]">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <AskAiUsagePill label="Maps AI" usageStatus={askAiMapsUsageStatus} />
+                      <span className="shrink-0 rounded-full bg-slate-100 px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-slate-600">
+                        {normalizedPlaces.length} places
+                      </span>
+                    </div>
+                    <p className="mt-1 text-[10px] leading-tight text-slate-400">
+                      Free daily usage resets every day.
+                    </p>
+                  </div>
                 </div>
               </div>
               {statusMessage ? <p className="mt-2 text-sm font-medium text-slate-600">{statusMessage}</p> : null}

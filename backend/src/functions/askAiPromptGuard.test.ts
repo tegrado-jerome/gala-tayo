@@ -12,6 +12,7 @@ import type {
 import {
   GroqChatProviderError,
   classifyAskAiPromptWithGroq,
+  clearGroqModelCooldownsForTest,
   generateFromGroq,
   parsePromptGuardDecision,
 } from "../services/groqChatProvider";
@@ -290,12 +291,29 @@ describe("Ask AI prompt guard Groq retry handling", () => {
   const originalApiKey = process.env.GROQ_API_KEY;
 
   async function withMockedGroq(
-    responses: Array<{ status?: number; content?: string; error?: string }>,
-    callback: () => Promise<void>
+    responses: Array<{
+      status?: number;
+      content?: string;
+      error?: string;
+      headers?: HeadersInit;
+    }>,
+    callback: (
+      requests: Array<{
+        model?: string;
+        messages?: Array<{ role?: string; content?: string }>;
+      }>
+    ) => Promise<void>,
+    options: { expectedCalls?: number } = {}
   ): Promise<void> {
     let callCount = 0;
+    const requests: Array<{
+      model?: string;
+      messages?: Array<{ role?: string; content?: string }>;
+    }> = [];
     process.env.GROQ_API_KEY = "test-groq-key";
-    globalThis.fetch = (async () => {
+    clearGroqModelCooldownsForTest();
+    globalThis.fetch = (async (_input, init) => {
+      requests.push(JSON.parse(String(init?.body ?? "{}")));
       const response = responses[callCount++] ?? responses.at(-1);
 
       if (!response) {
@@ -305,7 +323,7 @@ describe("Ask AI prompt guard Groq retry handling", () => {
       if (response.status && response.status >= 400) {
         return new Response(
           JSON.stringify({ error: { message: response.error ?? "mock error" } }),
-          { status: response.status }
+          { status: response.status, headers: response.headers }
         );
       }
 
@@ -320,15 +338,16 @@ describe("Ask AI prompt guard Groq retry handling", () => {
             },
           ],
         }),
-        { status: 200 }
+        { status: 200, headers: response.headers }
       );
     }) as typeof fetch;
 
     try {
-      await callback();
-      assert.equal(callCount, responses.length);
+      await callback(requests);
+      assert.equal(callCount, options.expectedCalls ?? responses.length);
     } finally {
       globalThis.fetch = originalFetch;
+      clearGroqModelCooldownsForTest();
       if (originalApiKey === undefined) {
         delete process.env.GROQ_API_KEY;
       } else {
@@ -418,7 +437,7 @@ describe("Ask AI prompt guard Groq retry handling", () => {
     );
   });
 
-  it("does not retry provider rate limits", async () => {
+  it("retries prompt guard rate limits across guard models and fails closed", async () => {
     await withMockedGroq(
       [
         {
@@ -435,7 +454,8 @@ describe("Ask AI prompt guard Groq retry handling", () => {
             }),
           GroqChatProviderError
         );
-      }
+      },
+      { expectedCalls: 3 }
     );
   });
 
@@ -470,9 +490,91 @@ describe("Ask AI prompt guard Groq retry handling", () => {
 describe("Ask AI chatbot generation scope", () => {
   const originalFetch = globalThis.fetch;
   const originalApiKey = process.env.GROQ_API_KEY;
+  const originalChatModels = process.env.ASK_AI_GROQ_CHAT_MODELS;
+  const originalKeyVaultUrl = process.env.KEY_VAULT_URL;
+
+  async function withMockedChatGroq(
+    responses: Array<{
+      status?: number;
+      content?: string;
+      error?: string;
+      headers?: HeadersInit;
+    }>,
+    callback: (
+      requests: Array<{
+        model?: string;
+        messages?: Array<{ role?: string; content?: string }>;
+      }>
+    ) => Promise<void>,
+    options: { expectedCalls?: number; models?: string } = {}
+  ): Promise<void> {
+    let callCount = 0;
+    const requests: Array<{
+      model?: string;
+      messages?: Array<{ role?: string; content?: string }>;
+    }> = [];
+
+    process.env.GROQ_API_KEY = "test-groq-key";
+    process.env.ASK_AI_GROQ_CHAT_MODELS =
+      options.models ?? "test-primary,test-fallback,test-final";
+    clearGroqModelCooldownsForTest();
+    globalThis.fetch = (async (_input, init) => {
+      requests.push(JSON.parse(String(init?.body ?? "{}")));
+      const response = responses[callCount++] ?? responses.at(-1);
+
+      if (!response) {
+        throw new Error("Missing mocked Groq response.");
+      }
+
+      if (response.status && response.status >= 400) {
+        return new Response(
+          JSON.stringify({ error: { message: response.error ?? "mock error" } }),
+          { status: response.status, headers: response.headers }
+        );
+      }
+
+      return new Response(
+        JSON.stringify({
+          choices: [
+            {
+              message: {
+                content: response.content ?? "",
+              },
+              finish_reason: "stop",
+            },
+          ],
+        }),
+        { status: 200, headers: response.headers }
+      );
+    }) as typeof fetch;
+
+    try {
+      await callback(requests);
+      assert.equal(callCount, options.expectedCalls ?? responses.length);
+    } finally {
+      globalThis.fetch = originalFetch;
+      clearGroqModelCooldownsForTest();
+      if (originalApiKey === undefined) {
+        delete process.env.GROQ_API_KEY;
+      } else {
+        process.env.GROQ_API_KEY = originalApiKey;
+      }
+      if (originalChatModels === undefined) {
+        delete process.env.ASK_AI_GROQ_CHAT_MODELS;
+      } else {
+        process.env.ASK_AI_GROQ_CHAT_MODELS = originalChatModels;
+      }
+      if (originalKeyVaultUrl === undefined) {
+        delete process.env.KEY_VAULT_URL;
+      } else {
+        process.env.KEY_VAULT_URL = originalKeyVaultUrl;
+      }
+    }
+  }
 
   it("sends a valid latest prompt to generation even when prior history is unrelated", async () => {
     process.env.GROQ_API_KEY = "test-groq-key";
+    clearGroqModelCooldownsForTest();
 
     let requestBody: {
       messages?: Array<{ role?: string; content?: string }>;
@@ -522,10 +624,270 @@ describe("Ask AI chatbot generation scope", () => {
       );
     } finally {
       globalThis.fetch = originalFetch;
+      clearGroqModelCooldownsForTest();
       if (originalApiKey === undefined) {
         delete process.env.GROQ_API_KEY;
       } else {
         process.env.GROQ_API_KEY = originalApiKey;
+      }
+    }
+  });
+
+  it("instructs generation to allow neutral nightlife while rejecting sexualized or harmful intent", async () => {
+    process.env.GROQ_API_KEY = "test-groq-key";
+    clearGroqModelCooldownsForTest();
+
+    let requestBody: {
+      messages?: Array<{ role?: string; content?: string }>;
+    } | null = null;
+
+    globalThis.fetch = (async (_input, init) => {
+      requestBody = JSON.parse(String(init?.body));
+
+      return new Response(
+        JSON.stringify({
+          choices: [
+            {
+              message: {
+                content:
+                  "Usually sa nightlife districts, event pages, recent reviews, or GalaTayo Maps ka makakahanap.",
+              },
+              finish_reason: "stop",
+            },
+          ],
+        }),
+        { status: 200 }
+      );
+    }) as typeof fetch;
+
+    try {
+      const answer = await generateFromGroq({
+        message: "saan makakahanap ng gay bar",
+        requestId: "test-request",
+      });
+
+      const systemPrompt = requestBody?.messages?.[0]?.content ?? "";
+
+      assert.match(answer, /nightlife districts/);
+      assert.match(systemPrompt, /Neutral nightlife venue requests are allowed/);
+      assert.match(systemPrompt, /gay bars, queer bars, LGBTQ\+ bars/);
+      assert.match(systemPrompt, /Reject sexualized, explicit, 18\+/);
+      assert.match(systemPrompt, /violent, exploitative, or malicious requests/);
+      assert.match(systemPrompt, /Critical behavior for nightlife place requests/);
+      assert.match(systemPrompt, /do not give a fixed default list of areas/i);
+      assert.match(systemPrompt, /use GalaTayo Maps\/current pins/i);
+      assert.match(systemPrompt, /search terms like gay bar, queer bar, LGBTQ bar, nightlife/i);
+      assert.match(systemPrompt, /End with an optional city\/area refinement question/i);
+      assert.match(
+        systemPrompt,
+        /do not reply with only a location follow-up/i
+      );
+      assert.match(systemPrompt, /non-fixed practical guidance/);
+      assert.doesNotMatch(systemPrompt, /Poblacion|Malate|Tomas Morato|BGC\/Taguig|Arnaiz/i);
+    } finally {
+      globalThis.fetch = originalFetch;
+      clearGroqModelCooldownsForTest();
+      if (originalApiKey === undefined) {
+        delete process.env.GROQ_API_KEY;
+      } else {
+        process.env.GROQ_API_KEY = originalApiKey;
+      }
+    }
+  });
+
+  it("uses the second chat model after the primary is rate limited", async () => {
+    await withMockedChatGroq(
+      [
+        {
+          status: 429,
+          error: "Rate limit reached. Please try again in 5m19.68s.",
+        },
+        {
+          content: "Fallback answer from second model.",
+        },
+      ],
+      async (requests) => {
+        const answer = await generateFromGroq({
+          message: "Plan a cafe gala in Makati",
+          requestId: "test-request",
+        });
+
+        assert.equal(answer, "Fallback answer from second model.");
+        assert.deepEqual(
+          requests.map((request) => request.model),
+          ["test-primary", "test-fallback"]
+        );
+        assert.equal(
+          requests[1]?.messages?.[0]?.content,
+          requests[0]?.messages?.[0]?.content
+        );
+        assert.match(
+          requests[1]?.messages?.[0]?.content ?? "",
+          /Critical behavior for nightlife place requests/
+        );
+        assert.match(
+          requests[1]?.messages?.[0]?.content ?? "",
+          /do not reply with only a location question/i
+        );
+      }
+    );
+  });
+
+  it("uses the third chat model after two rate limits", async () => {
+    await withMockedChatGroq(
+      [
+        {
+          status: 429,
+          error: "Rate limit reached. Please try again in 10s.",
+        },
+        {
+          status: 429,
+          error: "Rate limit reached. Please try again in 10s.",
+        },
+        {
+          content: "Third model answer.",
+        },
+      ],
+      async (requests) => {
+        const answer = await generateFromGroq({
+          message: "Plan a museum date",
+          requestId: "test-request",
+        });
+
+        assert.equal(answer, "Third model answer.");
+        assert.deepEqual(
+          requests.map((request) => request.model),
+          ["test-primary", "test-fallback", "test-final"]
+        );
+      }
+    );
+  });
+
+  it("skips a cooling chat model on the next request", async () => {
+    await withMockedChatGroq(
+      [
+        {
+          status: 429,
+          error: "Rate limit reached. Please try again in 10s.",
+        },
+        {
+          content: "First fallback answer.",
+        },
+        {
+          content: "Skipped primary answer.",
+        },
+      ],
+      async (requests) => {
+        const firstAnswer = await generateFromGroq({
+          message: "Plan a BGC dinner",
+          requestId: "test-request-1",
+        });
+        const secondAnswer = await generateFromGroq({
+          message: "Plan a QC dinner",
+          requestId: "test-request-2",
+        });
+
+        assert.equal(firstAnswer, "First fallback answer.");
+        assert.equal(secondAnswer, "Skipped primary answer.");
+        assert.deepEqual(
+          requests.map((request) => request.model),
+          ["test-primary", "test-fallback", "test-fallback"]
+        );
+      }
+    );
+  });
+
+  it("returns rate limited when all chat models are rate limited", async () => {
+    await withMockedChatGroq(
+      [
+        {
+          status: 429,
+          error: "Rate limit reached. Please try again in 5s.",
+        },
+      ],
+      async () => {
+        await assert.rejects(
+          () =>
+            generateFromGroq({
+              message: "Plan a Tagaytay day trip",
+              requestId: "test-request",
+            }),
+          (error: unknown) =>
+            error instanceof GroqChatProviderError &&
+            error.errorCode === "AI_PROVIDER_RATE_LIMITED"
+        );
+      },
+      { expectedCalls: 3 }
+    );
+  });
+
+  it("rotates on non-rate-limit temporary errors", async () => {
+    await withMockedChatGroq(
+      [
+        {
+          status: 503,
+          error: "provider unavailable",
+        },
+        {
+          content: "Recovered on fallback.",
+        },
+      ],
+      async (requests) => {
+        const answer = await generateFromGroq({
+          message: "Plan an Intramuros walk",
+          requestId: "test-request",
+        });
+
+        assert.equal(answer, "Recovered on fallback.");
+        assert.deepEqual(
+          requests.map((request) => request.model),
+          ["test-primary", "test-fallback"]
+        );
+      }
+    );
+  });
+
+  it("does not rotate when the Groq API key is missing", async () => {
+    delete process.env.GROQ_API_KEY;
+    delete process.env.KEY_VAULT_URL;
+    process.env.ASK_AI_GROQ_CHAT_MODELS = "test-primary,test-fallback";
+    clearGroqModelCooldownsForTest();
+
+    let callCount = 0;
+    globalThis.fetch = (async () => {
+      callCount++;
+      throw new Error("fetch should not be called");
+    }) as typeof fetch;
+
+    try {
+      await assert.rejects(
+        () =>
+          generateFromGroq({
+            message: "Plan a gala",
+            requestId: "test-request",
+          }),
+        (error: unknown) =>
+          error instanceof GroqChatProviderError &&
+          error.errorCode === "AI_PROVIDER_CONFIGURATION_ERROR"
+      );
+      assert.equal(callCount, 0);
+    } finally {
+      globalThis.fetch = originalFetch;
+      clearGroqModelCooldownsForTest();
+      if (originalApiKey === undefined) {
+        delete process.env.GROQ_API_KEY;
+      } else {
+        process.env.GROQ_API_KEY = originalApiKey;
+      }
+      if (originalChatModels === undefined) {
+        delete process.env.ASK_AI_GROQ_CHAT_MODELS;
+      } else {
+        process.env.ASK_AI_GROQ_CHAT_MODELS = originalChatModels;
+      }
+      if (originalKeyVaultUrl === undefined) {
+        delete process.env.KEY_VAULT_URL;
+      } else {
+        process.env.KEY_VAULT_URL = originalKeyVaultUrl;
       }
     }
   });

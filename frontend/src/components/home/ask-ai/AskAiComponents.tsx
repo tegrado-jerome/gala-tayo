@@ -684,7 +684,7 @@ function AskAiPlaceholder({
     <div className={`flex flex-col h-full ${className}`}>
       {/* Chat header */}
       <div className="shrink-0 border-b border-[var(--line)] bg-white px-4 py-3 sm:px-5">
-        <div className="mx-auto flex w-full max-w-[768px] items-center gap-3">
+        <div className="mx-auto flex w-full max-w-[768px] flex-wrap items-start gap-2.5 sm:gap-3">
           <button
             type="button"
             onClick={onSwitchToPlaces}
@@ -697,16 +697,34 @@ function AskAiPlaceholder({
             <h1 className="text-[1.05rem] font-bold leading-tight text-slate-900 sm:text-[1.15rem]">GalaTayo AI</h1>
             <p className="text-[0.78rem] leading-tight text-[var(--muted)]">Plan your gala.</p>
           </div>
-          <AskAiUsagePill label="Chatbot AI" usageStatus={usageStatus} className="ml-auto shrink-0" />
-          <div className="flex items-center gap-2">
+          <div className="ml-auto flex min-w-0 flex-col items-end gap-1">
+            <div className="flex items-center gap-1.5">
+              <AskAiUsagePill
+                label="Chatbot AI"
+                usageStatus={usageStatus}
+                className="shrink-0"
+              />
+              <div className="hidden md:flex">
+                <FeatureGuideModalTrigger content={featureGuideContent.chatbot} className="h-10 w-10" />
+              </div>
+            </div>
+            <p className={`pl-2 text-[10px] leading-tight ${isDarkMode ? 'text-slate-200' : 'text-slate-500'}`}>
+              Free daily usage resets every day.
+            </p>
+          </div>
+          <div className="flex items-center gap-1.5">
             <button
               type="button"
-              onClick={() => navigateToPath('/ask-ai/maps')}
-              className="rounded-full border border-[var(--line)] px-3 py-1.5 text-[11px] font-semibold text-slate-500 transition hover:border-[var(--accent)] hover:text-[var(--accent-deep)] sm:inline-flex items-center gap-1"
+              onClick={onStartOver}
+              aria-label="New chat"
+              className="inline-flex h-10 items-center gap-1 rounded-full border border-[rgba(var(--accent-rgb),0.14)] bg-[linear-gradient(135deg,#eef4ff,#dbeafe)] px-3 py-1.5 text-[10px] font-semibold text-[var(--accent-deep)] shadow-[0_6px_18px_-10px_rgba(59,130,246,0.25)] transition hover:border-[rgba(var(--accent-rgb),0.24)] hover:bg-[linear-gradient(135deg,#dbeafe,#bfdbfe)]"
             >
-              <AppIcon name="map" className="h-3 w-3" />
-              <span className="hidden sm:inline">Map</span>
+              <AppIcon name="newChat" className="h-3 w-3 sm:h-3.5 sm:w-3.5" strokeWidth={2.2} />
+              <span>New</span>
             </button>
+            <div className="md:hidden">
+              <FeatureGuideModalTrigger content={featureGuideContent.chatbot} className="h-10 w-10" />
+            </div>
           </div>
         </div>
       </div>
@@ -750,9 +768,9 @@ function AskAiPlaceholder({
             </button>
           </div>
 
-          {isLimitReached && !isSubmitting && (
+          {isLimitReached && !isSubmitting ? (
             <ChatbotLimitWarning />
-          )}
+          ) : null}
 
         </div>
       </div>
@@ -1245,6 +1263,8 @@ function AskAiModePanel({
   className?: string
 }) {
   void isUsageLoading
+  const { resolvedTheme } = useTheme()
+  const isDarkMode = resolvedTheme === 'dark'
   const isUsagePending = !usageStatus
   const isLimitReached = isChatbotUsageLimitReached(usageStatus, isRegistered)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
@@ -1307,30 +1327,43 @@ function AskAiModePanel({
       </div>
 
       <div className="relative shrink-0 mb-4 px-4 pt-5 sm:mb-5 sm:px-5 md:px-6 lg:px-8">
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <AskAiUsagePill label="Chatbot AI" usageStatus={usageStatus} className="shrink-0" />
-            <FeatureGuideModalTrigger content={featureGuideContent.chatbot} />
-          </div>
-          <div className="flex items-center gap-2">
-          {messages.length > 0 && (
-            <button
-              type="button"
-              onClick={onStartOver}
-              aria-label="New chat"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[var(--panel)] text-slate-600 ring-1 ring-inset ring-[var(--line)] shadow-[var(--shadow-soft)] transition hover:text-[var(--accent-deep)]"
-            >
-              <AppIcon name="newChat" size={24} strokeWidth={2} />
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={() => navigateBackWithFallback('/home')}
-            aria-label="Go back"
-            className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-[linear-gradient(135deg,#dbeafe,#bfdbfe)] text-[var(--accent-deep)] ring-1 ring-inset ring-[rgba(var(--accent-rgb),0.14)] shadow-[0_6px_18px_-8px_rgba(59,130,246,0.28)] transition hover:bg-[linear-gradient(135deg,#bfdbfe,#dbeafe)] hover:text-[var(--accent-deep)]"
-          >
-            <FontAwesomeIcon icon={faRobot} className="h-6 w-6" />
-          </button>
+        <div className="flex flex-col gap-2 sm:gap-2.5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="inline-flex max-w-full flex-col items-start gap-1">
+                <div className="flex items-center gap-1.5">
+                  <AskAiUsagePill label="Chatbot AI" usageStatus={usageStatus} className="shrink-0" />
+                  <div className="hidden md:flex">
+                    <FeatureGuideModalTrigger content={featureGuideContent.chatbot} className="h-10 w-10" />
+                  </div>
+                </div>
+                <p className={`pl-2 text-[10px] leading-tight ${isDarkMode ? 'text-slate-200' : 'text-slate-500'}`}>
+                  Free daily usage resets every day.
+                </p>
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-1.5">
+              <button
+                type="button"
+                onClick={onStartOver}
+                aria-label="New chat"
+                className="inline-flex h-10 items-center gap-1 rounded-xl bg-[var(--panel)] px-3 text-slate-600 ring-1 ring-inset ring-[var(--line)] shadow-[var(--shadow-soft)] transition hover:text-[var(--accent-deep)]"
+              >
+                <AppIcon name="newChat" size={16} strokeWidth={2} />
+                <span className="text-[10px] font-semibold">New</span>
+              </button>
+              <div className="md:hidden">
+                <FeatureGuideModalTrigger content={featureGuideContent.chatbot} className="h-10 w-10" />
+              </div>
+              <button
+                type="button"
+                onClick={() => navigateBackWithFallback('/home')}
+                aria-label="Go back"
+                className="hidden h-10 w-10 items-center justify-center rounded-xl bg-[linear-gradient(135deg,#dbeafe,#bfdbfe)] text-[var(--accent-deep)] ring-1 ring-inset ring-[rgba(var(--accent-rgb),0.14)] shadow-[0_6px_18px_-8px_rgba(59,130,246,0.28)] transition hover:bg-[linear-gradient(135deg,#bfdbfe,#dbeafe)] hover:text-[var(--accent-deep)] sm:inline-flex"
+              >
+                <FontAwesomeIcon icon={faRobot} className="h-5 w-5" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
