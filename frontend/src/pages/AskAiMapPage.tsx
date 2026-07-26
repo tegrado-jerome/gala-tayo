@@ -1040,7 +1040,7 @@ function AskAiMapPage() {
                   </div>
                 </div>
                 <p
-                  className={`mt-1.5 inline-flex max-w-full items-center rounded-none border px-2.5 py-1 text-[10px] leading-none whitespace-nowrap shadow-[0_8px_20px_-14px_rgba(15,23,42,0.55)] backdrop-blur-md md:mt-2 md:text-[11px] lg:mt-2.5 lg:text-[12px] ${
+                  className={`mt-1.5 ml-1 inline-flex max-w-full items-center rounded-none border px-2.5 py-1 text-[10px] leading-none whitespace-nowrap shadow-[0_8px_20px_-14px_rgba(15,23,42,0.55)] backdrop-blur-md md:mt-2 md:ml-1.5 md:text-[11px] lg:mt-2.5 lg:ml-2 lg:text-[12px] ${
                     isDarkMode
                       ? 'border-white/10 bg-slate-950/70 text-slate-100'
                       : 'border-white/70 bg-white/80 text-slate-700'
@@ -1344,7 +1344,7 @@ onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
                   </div>
                 </div>
                 <p
-                  className={`mt-1.5 inline-flex max-w-full items-center rounded-none border px-2.5 py-1 text-[10px] leading-none whitespace-nowrap shadow-[0_8px_20px_-14px_rgba(15,23,42,0.55)] backdrop-blur-md md:mt-2 md:text-[11px] lg:mt-2.5 lg:text-[12px] ${
+                  className={`mt-1.5 ml-1 inline-flex max-w-full items-center rounded-none border px-2.5 py-1 text-[10px] leading-none whitespace-nowrap shadow-[0_8px_20px_-14px_rgba(15,23,42,0.55)] backdrop-blur-md md:mt-2 md:ml-1.5 md:text-[11px] lg:mt-2.5 lg:ml-2 lg:text-[12px] ${
                     isDarkMode
                       ? 'border-white/10 bg-slate-950/70 text-slate-100'
                       : 'border-white/70 bg-white/80 text-slate-700'
