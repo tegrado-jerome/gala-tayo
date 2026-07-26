@@ -1039,15 +1039,15 @@ function AskAiMapPage() {
                     <FeatureGuideModalTrigger content={featureGuideContent.maps} className="h-10 w-10" />
                   </div>
                 </div>
-                <span
-                  className={`pl-2 text-[10px] font-medium leading-tight whitespace-nowrap ${
+                <p
+                  className={`mt-1.5 inline-flex max-w-full items-center rounded-none border px-2.5 py-1 text-[10px] leading-none whitespace-nowrap shadow-[0_8px_20px_-14px_rgba(15,23,42,0.55)] backdrop-blur-md md:mt-2 md:text-[11px] lg:mt-2.5 lg:text-[12px] ${
                     isDarkMode
-                      ? 'text-slate-50 [text-shadow:0_1px_2px_rgba(2,6,23,0.95),0_0_10px_rgba(2,6,23,0.55)]'
-                      : 'text-slate-700 [text-shadow:0_1px_2px_rgba(255,255,255,0.95),0_0_10px_rgba(255,255,255,0.7)]'
+                      ? 'border-white/10 bg-slate-950/70 text-slate-100'
+                      : 'border-white/70 bg-white/80 text-slate-700'
                   }`}
                 >
-                  Free daily usage resets daily
-                </span>
+                  Usage resets every day.
+                </p>
               </div>
             </div>
             <div className="absolute right-4 top-5 z-[620] sm:right-16 md:block">
@@ -1343,15 +1343,15 @@ onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
                     <FeatureGuideModalTrigger content={featureGuideContent.maps} className="h-10 w-10" />
                   </div>
                 </div>
-                <span
-                  className={`pl-2 text-[10px] font-medium leading-tight whitespace-nowrap ${
+                <p
+                  className={`mt-1.5 inline-flex max-w-full items-center rounded-none border px-2.5 py-1 text-[10px] leading-none whitespace-nowrap shadow-[0_8px_20px_-14px_rgba(15,23,42,0.55)] backdrop-blur-md md:mt-2 md:text-[11px] lg:mt-2.5 lg:text-[12px] ${
                     isDarkMode
-                      ? 'text-slate-50 [text-shadow:0_1px_2px_rgba(2,6,23,0.95),0_0_10px_rgba(2,6,23,0.55)]'
-                      : 'text-slate-700 [text-shadow:0_1px_2px_rgba(255,255,255,0.95),0_0_10px_rgba(255,255,255,0.7)]'
+                      ? 'border-white/10 bg-slate-950/70 text-slate-100'
+                      : 'border-white/70 bg-white/80 text-slate-700'
                   }`}
                 >
-                  Free daily usage resets daily
-                </span>
+                  Usage resets every day.
+                </p>
               </div>
             </div>
             <div className="absolute right-4 top-5 z-[620] sm:right-16 md:block">
