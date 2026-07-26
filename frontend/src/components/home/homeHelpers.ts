@@ -147,6 +147,7 @@ type AskAiRouteCache = {
   messages: ChatMessage[]
   jobId: string | null
   jobStatus: AskAiJobStatus | null
+  cachedAt?: number
 }
 
 type IconProps = {
@@ -158,6 +159,7 @@ const askAiRouteCacheKey = 'galatayo:ask-ai-route'
 const filtersCacheKey = 'galatayo:filters-cache'
 const SEARCH_RESULTS_PER_PAGE = 10
 const SEARCH_ROUTE_CACHE_TTL_MS = 30 * 60 * 1000
+const ASK_AI_ROUTE_CACHE_TTL_MS = 30 * 60 * 1000
 const FILTERS_CACHE_TTL_MS = 24 * 60 * 60 * 1000
 
 type FiltersCache = {
@@ -299,6 +301,16 @@ function readAskAiRouteCache(): AskAiRouteCache | null {
     }
 
     const parsedCache = JSON.parse(rawCache) as Partial<AskAiRouteCache>
+
+    if (
+      typeof parsedCache.cachedAt !== 'number' ||
+      !Number.isFinite(parsedCache.cachedAt) ||
+      Date.now() - parsedCache.cachedAt > ASK_AI_ROUTE_CACHE_TTL_MS
+    ) {
+      removePersistentStorage(askAiRouteCacheKey)
+      return null
+    }
+
     const question = typeof parsedCache.question === 'string' ? parsedCache.question : ''
     const answer = typeof parsedCache.answer === 'string' ? parsedCache.answer : ''
     const sources = Array.isArray(parsedCache.sources)
@@ -345,7 +357,10 @@ function readAskAiRouteCache(): AskAiRouteCache | null {
 
 function writeAskAiRouteCache(cache: AskAiRouteCache) {
   try {
-    writePersistentStorage(askAiRouteCacheKey, JSON.stringify(cache))
+    writePersistentStorage(askAiRouteCacheKey, JSON.stringify({
+      ...cache,
+      cachedAt: Date.now(),
+    }))
   } catch (error) {
     console.warn('Unable to cache Ask AI state:', error)
   }
@@ -895,6 +910,7 @@ export {
   filtersCacheKey,
   SEARCH_RESULTS_PER_PAGE,
   SEARCH_ROUTE_CACHE_TTL_MS,
+  ASK_AI_ROUTE_CACHE_TTL_MS,
   FILTERS_CACHE_TTL_MS,
   fallbackCategories,
   fallbackGoodForOptions,

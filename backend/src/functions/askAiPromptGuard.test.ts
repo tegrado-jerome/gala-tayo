@@ -11,6 +11,7 @@ import type {
 import {
   GroqChatProviderError,
   classifyAskAiPromptWithGroq,
+  generateFromGroq,
   parsePromptGuardDecision,
 } from "../services/groqChatProvider";
 
@@ -426,5 +427,69 @@ describe("Ask AI prompt guard Groq retry handling", () => {
         );
       }
     );
+  });
+});
+
+describe("Ask AI chatbot generation scope", () => {
+  const originalFetch = globalThis.fetch;
+  const originalApiKey = process.env.GROQ_API_KEY;
+
+  it("sends a valid latest prompt to generation even when prior history is unrelated", async () => {
+    process.env.GROQ_API_KEY = "test-groq-key";
+
+    let requestBody: {
+      messages?: Array<{ role?: string; content?: string }>;
+    } | null = null;
+
+    globalThis.fetch = (async (_input, init) => {
+      requestBody = JSON.parse(String(init?.body));
+
+      return new Response(
+        JSON.stringify({
+          choices: [
+            {
+              message: {
+                content: "Gets! For Ayala Museum, plan a simple museum gala.",
+              },
+              finish_reason: "stop",
+            },
+          ],
+        }),
+        { status: 200 }
+      );
+    }) as typeof fetch;
+
+    try {
+      const answer = await generateFromGroq({
+        message: "Plan a quick Ayala Museum gala",
+        conversationHistory: [
+          { role: "user", content: "What is 1+1?" },
+          {
+            role: "assistant",
+            content:
+              "GalaTayo AI will not answer this question because it does not align with the purpose of GalaTayo.",
+          },
+        ],
+        requestId: "test-request",
+      });
+
+      assert.match(answer, /Ayala Museum/);
+      assert.equal(requestBody?.messages?.at(-1)?.role, "user");
+      assert.equal(
+        requestBody?.messages?.at(-1)?.content,
+        "Plan a quick Ayala Museum gala"
+      );
+      assert.match(
+        requestBody?.messages?.[0]?.content ?? "",
+        /old unrelated or rejected turns must not make a valid latest message invalid/
+      );
+    } finally {
+      globalThis.fetch = originalFetch;
+      if (originalApiKey === undefined) {
+        delete process.env.GROQ_API_KEY;
+      } else {
+        process.env.GROQ_API_KEY = originalApiKey;
+      }
+    }
   });
 });
