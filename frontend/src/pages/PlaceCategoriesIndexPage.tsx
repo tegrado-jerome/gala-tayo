@@ -11,6 +11,7 @@ import { categoryRepresentativePlaceSlugs, getDiscoveryImageCandidates } from '.
 import type { PlaceDetail } from '../types/appTypes'
 import { fetchPlaceDetailsBatch } from '../utils/placeDetailCache'
 import { getSiteOrigin } from '../utils/seo'
+import { BRAND_NAME, PRODUCT_NAME } from '../utils/seoLandingPages'
 
 function PlaceCategoriesIndexPage() {
   const categoryCards = useMemo(
@@ -44,8 +45,8 @@ function PlaceCategoriesIndexPage() {
     {
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
-      name: 'Place Categories | GalaTayo',
-      description: 'Browse place categories across Metro Manila and open category pages on GalaTayo.',
+      name: `Metro Manila Place Categories | ${BRAND_NAME}`,
+      description: `${PRODUCT_NAME} groups Metro Manila places by category so search engines and visitors can explore food, cafes, parks, museums, and more.`,
       url: `${getSiteOrigin()}/places/categories`,
     },
     {
@@ -72,8 +73,8 @@ function PlaceCategoriesIndexPage() {
   return (
     <PageShell>
       <SeoHead
-        title="Place Categories | GalaTayo"
-        description="Browse place categories across Metro Manila and open category pages on GalaTayo."
+        title={`Metro Manila Place Categories and Guides | ${BRAND_NAME}`}
+        description={`${PRODUCT_NAME} helps you browse Metro Manila place categories like cafes, food, parks, museums, and nightlife with search-friendly category pages.`}
         canonicalPath="/places/categories"
         jsonLd={jsonLd}
       />
@@ -101,10 +102,10 @@ function PlaceCategoriesIndexPage() {
           </div>
           <div className="mt-4 max-w-[42rem]">
             <h1 className="text-[2rem] font-black leading-tight tracking-[-0.04em] text-[var(--text-main)] sm:text-[2.4rem]">
-              Browse place categories
+              Browse Metro Manila place categories
             </h1>
             <p className="mt-3 text-[15px] leading-7 text-[var(--muted)]">
-              Open a category to see all matching places from every city.
+              Open a category to explore matching places from across Metro Manila and jump into more specific local guides.
             </p>
           </div>
         </section>

@@ -17,6 +17,7 @@
     "seed:researched-content": "npx tsx src/seed/updateResearchedPlaceContent.ts",
     "generate:static-listings": "npx tsx scripts/generateStaticPlaceListings.ts",
     "db:normalize-cities": "npx tsx scripts/normalizeCityNames.ts",
+    "seed:place-feedback": "npx tsx seed/seed-place-feedback.ts",
     "deploy": "npm run build && npm prune --production && func azure functionapp publish galatayo-api && npm install",
     "test": "npm run build --silent",
     "validate": "npm run build --silent"

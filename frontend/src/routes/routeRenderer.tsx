@@ -7,6 +7,7 @@ import { buildAuthPath } from '../services/authApi'
 import { getOnboardingStatus } from '../utils/profileApi'
 import { navigateToPath, replaceWithPath } from '../utils/navigation'
 import { getPublicSiteOrigin } from '../utils/site'
+import { BRAND_NAME, PRODUCT_NAME } from '../utils/seoLandingPages'
 import { AdminRouteGate } from './AdminRouteGate'
 import { InitialAuthLoader, NotFoundPage } from './RouteViewHelpers'
 import type { RouteDescriptor, RouteInputs } from './routeResolver'
@@ -43,6 +44,7 @@ const AskAiOverviewPage = lazy(() => import('../pages/AskAiOverviewPage'))
 const PlacesIndexPage = lazy(() => import('../pages/PlacesIndexPage'))
 const PlaceCategoriesIndexPage = lazy(() => import('../pages/PlaceCategoriesIndexPage'))
 const CategoryPlacesPage = lazy(() => import('../pages/CategoryPlacesPage'))
+const SeoLandingPage = lazy(() => import('../pages/SeoLandingPage'))
 const MfaVerifyPage = lazy(() => import('../pages/MfaVerifyPage'))
 const AdminDashboard = lazy(() => import('../pages/admin/Dashboard'))
 const AdminPlaceImagesPage = lazy(() => import('../pages/admin/PlaceImagesPage'))
@@ -213,20 +215,25 @@ function renderRouteContent(descriptor: RouteDescriptor, inputs: RouteInputs) {
       return (
         <>
           <SeoHead
-            title="Home | GalaTayo"
-            description="Discover places, plan gala ideas, and use AI-powered tools to find your next hangout, date, barkada, or family destination."
+            title={`Metro Manila Places, Date Spots, and Gala Ideas | ${BRAND_NAME}`}
+            description={`${PRODUCT_NAME} by ${BRAND_NAME} helps you discover Metro Manila places, date spots, barkada hangouts, family-friendly plans, and searchable local recommendations.`}
             canonicalPath="/home"
             jsonLd={[
               {
                 '@context': 'https://schema.org',
                 '@type': 'WebSite',
-                name: 'GalaTayo',
+                name: PRODUCT_NAME,
                 url: `${getPublicSiteOrigin()}/`,
+                potentialAction: {
+                  '@type': 'SearchAction',
+                  target: `${getPublicSiteOrigin()}/search?q={search_term_string}`,
+                  'query-input': 'required name=search_term_string',
+                },
               },
               {
                 '@context': 'https://schema.org',
                 '@type': 'Organization',
-                name: 'GalaTayo',
+                name: BRAND_NAME,
                 url: `${getPublicSiteOrigin()}/`,
                 logo: `${getPublicSiteOrigin()}/favicon.png`,
               },
@@ -274,6 +281,8 @@ function renderRouteContent(descriptor: RouteDescriptor, inputs: RouteInputs) {
       return <PlacesIndexPage />
     case 'place-categories-index':
       return <PlaceCategoriesIndexPage />
+    case 'seo-landing':
+      return <SeoLandingPage slug={descriptor.slug} navigationSource={navigationSource} />
     case 'category-places':
       return <CategoryPlacesPage key={descriptor.categorySlug} categorySlug={descriptor.categorySlug} search={search} navigationSource={navigationSource} />
     case 'shared-place':

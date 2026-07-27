@@ -185,6 +185,7 @@ function buildLocationOrFilter(areaNames: string[]): string | null {
 function buildSeoListingPageCacheKey(args: {
   areaSlug: string | null;
   category: string | null;
+  goodFor: string | null;
   page: number;
   pageSize: number;
 }) {
@@ -192,6 +193,7 @@ function buildSeoListingPageCacheKey(args: {
     SEO_LISTING_PAGE_CACHE_PREFIX,
     `area:${sanitizeCachePart(args.areaSlug)}`,
     `category:${sanitizeCachePart(args.category)}`,
+    `goodFor:${sanitizeCachePart(args.goodFor)}`,
     `page:${args.page}`,
     `pageSize:${args.pageSize}`,
   ].join(":");
@@ -433,21 +435,25 @@ export async function getSeoAreaPage(areaSlug: string): Promise<SeoAreaPage | nu
 export async function getSeoListingPage({
   areaSlug,
   category,
+  goodFor,
   page,
   pageSize,
 }: {
   areaSlug?: string | null;
   category?: string | null;
+  goodFor?: string | null;
   page: number;
   pageSize: number;
 }): Promise<SeoListingPage> {
   const normalizedAreaSlug = cleanString(areaSlug)?.toLowerCase() ?? null;
   const normalizedCategory = cleanString(category)?.toLowerCase() ?? null;
+  const normalizedGoodFor = cleanString(goodFor)?.toLowerCase() ?? null;
   const safePageSize = Math.min(Math.max(Math.floor(pageSize), 1), 50);
   const safeRequestedPage = Math.max(Math.floor(page), 1);
   const cacheKey = buildSeoListingPageCacheKey({
     areaSlug: normalizedAreaSlug,
     category: normalizedCategory,
+    goodFor: normalizedGoodFor,
     page: safeRequestedPage,
     pageSize: safePageSize,
   });
@@ -471,6 +477,10 @@ export async function getSeoListingPage({
 
     if (locationOrFilter) {
       query = query.or(locationOrFilter);
+    }
+
+    if (normalizedGoodFor) {
+      query = query.contains("good_for", [normalizedGoodFor]);
     }
 
     return query;

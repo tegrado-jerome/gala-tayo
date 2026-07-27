@@ -9,6 +9,8 @@ export const CATEGORY_KEYWORDS: Record<string, string[]> = {
     "casual dining", "where to eat", "saan kakain", "kakain", "gutom",
     "pang kain", "pang dinner", "pang lunch", "dessert", "desserts",
     "ice cream", "halo halo", "halo-halo", "matamis", "sweet cravings",
+    "affordable eats", "budget eats", "cheap eats", "birthday dinner",
+    "anniversary dinner", "late night food", "food crawl",
   ],
   kainan: [
     "food", "foods", "eat", "eating", "kain", "kainan", "restaurant",
@@ -27,7 +29,8 @@ export const CATEGORY_KEYWORDS: Record<string, string[]> = {
     "matcha", "tea", "milktea", "milk tea", "pastry", "pastries",
     "brunch cafe", "study cafe", "work cafe", "quiet cafe", "coffee date",
     "tambay cafe", "pang kape", "mag kape", "mag-kape", "caffeine",
-    "cake shop", "bakery", "bakeshop",
+    "cake shop", "bakery", "bakeshop", "cafe with wifi", "study cafe with wifi",
+    "late night cafe", "aesthetic cafe", "solo cafe", "coffee date",
   ],
   mall: [
     "mall", "malls", "shopping mall", "commercial center", "town center",
@@ -41,7 +44,7 @@ export const CATEGORY_KEYWORDS: Record<string, string[]> = {
     "open space", "outdoor", "outside", "nature", "trees", "grass",
     "picnic", "jog", "jogging", "walk", "walking", "stroll", "bike",
     "biking", "fresh air", "playground", "public park", "pang picnic",
-    "pasyal sa park",
+    "pasyal sa park", "sunset spot", "outdoor date", "family park",
   ],
   parke: [
     "park", "parks", "parke", "garden", "gardens", "green space",
@@ -56,6 +59,7 @@ export const CATEGORY_KEYWORDS: Record<string, string[]> = {
     "interactive museum", "educational", "learn", "learning", "field trip",
     "school trip", "educational trip", "culture", "art", "artworks",
     "paintings", "installations", "pang museum", "pang educational",
+    "date museum", "solo museum", "weekend museum",
   ],
   heritage: [
     "heritage", "historical", "history", "historic", "old place",
@@ -71,7 +75,7 @@ export const CATEGORY_KEYWORDS: Record<string, string[]> = {
     "must visit", "must-see", "famous place", "popular place", "iconic",
     "instagrammable", "photo spot", "picture spot", "picture taking",
     "pasyalan", "galaan", "day tour", "tourist destination", "where to go",
-    "saan pupunta", "visit",
+    "saan pupunta", "visit", "things to do", "what to do", "gala ideas",
   ],
   date: [
     "date", "dates", "dating", "jowa", "jojowain", "couple", "couples",
@@ -80,7 +84,7 @@ export const CATEGORY_KEYWORDS: Record<string, string[]> = {
     "coffee date", "movie date", "walk date", "stroll date", "chill date",
     "date night", "pang date", "pang-date", "pang jowa", "pang couple",
     "with girlfriend", "with boyfriend", "with partner", "gf", "bf", "love",
-    "lovey dovey",
+    "lovey dovey", "anniversary date", "romantic place", "date spot",
   ],
   barkada: [
     "barkada", "friends", "friend", "tropa", "troops", "group", "squad",
@@ -98,7 +102,7 @@ export const CATEGORY_KEYWORDS: Record<string, string[]> = {
     "lolo", "lola", "grandparents", "with family", "with parents",
     "with kids", "family friendly", "kid friendly", "child friendly",
     "pang family", "pang pamilya", "pamilya", "family day",
-    "family bonding", "safe for kids",
+    "family bonding", "safe for kids", "birthday with family",
   ],
   study: [
     "study", "studying", "review", "reviewing", "schoolwork", "assignment",
@@ -115,19 +119,19 @@ export const CATEGORY_KEYWORDS: Record<string, string[]> = {
     "slow day", "stroll", "walk", "lakad", "pasyal", "gala", "hangout",
     "hang out", "vibe", "good vibes", "aesthetic", "nice vibe",
     "chill vibes", "not crowded", "less crowded", "pang chill",
-    "pang tambay",
+    "pang tambay", "tambayan sa", "chill spot", "hangout spot",
   ],
   nightlife: [
     "nightlife", "night life", "bar", "bars", "pub", "club", "clubs",
     "drinks", "cocktails", "beer", "wine", "party", "partying", "inuman",
     "inom", "chillnuman", "night out", "late night", "live music", "dj",
     "rooftop bar", "speakeasy", "hangout at night", "pang gabi", "gabi",
-    "after work drinks",
+    "after work drinks", "late night", "open late", "night out spot",
   ],
   arcade: [
     "arcade", "arcades", "games", "gaming", "game", "video games",
     "play", "bowling", "billiards", "karaoke", "ktv", "activity place",
-    "fun games", "pang laro", "laro", "game night",
+    "fun games", "pang laro", "laro", "game night", "team bonding",
   ],
   cinema: [
     "cinema", "cinemas", "movie", "movies", "movie theater",
@@ -137,7 +141,7 @@ export const CATEGORY_KEYWORDS: Record<string, string[]> = {
   hotel: [
     "hotel", "hotels", "staycation", "resort", "overnight", "accommodation",
     "room", "rooms", "suite", "suites", "vacation stay", "weekend stay",
-    "romantic staycation", "family staycation",
+    "romantic staycation", "family staycation", "anniversary staycation",
   ],
   stay: [
     "hotel", "hotels", "staycation", "resort", "overnight", "accommodation",

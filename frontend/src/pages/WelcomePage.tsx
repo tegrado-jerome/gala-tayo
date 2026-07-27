@@ -5,6 +5,7 @@ import SeoHead from '../components/SeoHead'
 import { navigateToPath } from '../utils/navigation'
 import type { NavigationSource } from '../utils/navigationLoading'
 import { getPublicSiteOrigin } from '../utils/site'
+import { BRAND_NAME, PRODUCT_NAME } from '../utils/seoLandingPages'
 
 type WelcomeAsset = {
   src: string
@@ -201,8 +202,8 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
   return (
     <>
       <SeoHead
-        title="GalaTayo - Discover places in Metro Manila"
-        description="Discover places across Metro Manila by city, category, budget, and vibe. Get AI-powered recommendations and plan your next gala."
+        title={`Discover Metro Manila Places and Gala Ideas | ${BRAND_NAME}`}
+        description={`${PRODUCT_NAME} by ${BRAND_NAME} helps you discover Metro Manila places by city, category, budget, and vibe with AI-ready local recommendations.`}
         robots="index,follow,max-image-preview:none,max-snippet:-1,max-video-preview:-1"
         canonicalPath="/"
         openGraphType="website"
@@ -214,13 +215,18 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
           {
             '@context': 'https://schema.org',
             '@type': 'WebSite',
-            name: 'GalaTayo',
-            url: 'https://galatayo.app/',
+            name: PRODUCT_NAME,
+            url: `${getPublicSiteOrigin()}/`,
+            potentialAction: {
+              '@type': 'SearchAction',
+              target: `${getPublicSiteOrigin()}/search?q={search_term_string}`,
+              'query-input': 'required name=search_term_string',
+            },
           },
           {
             '@context': 'https://schema.org',
             '@type': 'Organization',
-            name: 'GalaTayo',
+            name: BRAND_NAME,
             url: `${getPublicSiteOrigin()}/`,
             logo: `${getPublicSiteOrigin()}/favicon.png`,
           },
@@ -259,9 +265,9 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
 
         <div className="welcome-page__overlay" />
         <section className="welcome-page__content" aria-hidden={!isReady}>
-          <h1 className="welcome-page__title">Your next gala starts here.</h1>
+          <h1 className="welcome-page__title">Your next Metro Manila gala starts here.</h1>
           <p className="welcome-page__description">
-            Discover places and build your next plan with ease.
+            Discover places, date spots, cafes, and local ideas with Gala Tayo.
           </p>
           <button
             type="button"

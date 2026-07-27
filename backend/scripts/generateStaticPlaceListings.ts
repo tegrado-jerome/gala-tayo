@@ -2,6 +2,7 @@ import { mkdir, rm, writeFile } from "fs/promises";
 import path from "path";
 import { CATEGORIES, METRO_MANILA_AREAS } from "../src/functions/filters";
 import { getSeoListingPage, type SeoListingPage } from "../src/utils/seoPlaces";
+import { SEO_LANDING_TARGETS } from "../src/utils/seoLandingPages";
 
 const AREA_PAGE_SIZE = 10;
 const CATEGORY_PAGE_SIZE = 12;
@@ -10,6 +11,7 @@ const OUTPUT_DIR = path.resolve(__dirname, "../../frontend/public/data/place-lis
 type ListingTarget = {
   areaSlug: string | null;
   category: string | null;
+  goodFor: string | null;
   pageSize: number;
 };
 
@@ -26,6 +28,7 @@ function getListingPath(target: ListingTarget, page: number) {
     OUTPUT_DIR,
     `area-${normalizeStaticPart(target.areaSlug)}`,
     `category-${normalizeStaticPart(target.category)}`,
+    `good-for-${normalizeStaticPart(target.goodFor)}`,
     `page-${page}-size-${target.pageSize}.json`,
   );
 }
@@ -40,6 +43,7 @@ async function generateTarget(target: ListingTarget) {
   const firstPage = await getSeoListingPage({
     areaSlug: target.areaSlug,
     category: target.category,
+    goodFor: target.goodFor,
     page: 1,
     pageSize: target.pageSize,
   });
@@ -50,6 +54,7 @@ async function generateTarget(target: ListingTarget) {
     const payload = await getSeoListingPage({
       areaSlug: target.areaSlug,
       category: target.category,
+      goodFor: target.goodFor,
       page,
       pageSize: target.pageSize,
     });
@@ -63,11 +68,17 @@ async function main() {
   const areas = METRO_MANILA_AREAS.filter((area) => area.id !== "all").map((area) => area.id);
   const categories = CATEGORIES.map((category) => category.id);
   const targets: ListingTarget[] = [
-    ...areas.map((areaSlug) => ({ areaSlug, category: null, pageSize: AREA_PAGE_SIZE })),
-    ...categories.map((category) => ({ areaSlug: null, category, pageSize: CATEGORY_PAGE_SIZE })),
+    ...areas.map((areaSlug) => ({ areaSlug, category: null, goodFor: null, pageSize: AREA_PAGE_SIZE })),
+    ...categories.map((category) => ({ areaSlug: null, category, goodFor: null, pageSize: CATEGORY_PAGE_SIZE })),
     ...areas.flatMap((areaSlug) =>
-      categories.map((category) => ({ areaSlug, category, pageSize: AREA_PAGE_SIZE })),
+      categories.map((category) => ({ areaSlug, category, goodFor: null, pageSize: AREA_PAGE_SIZE })),
     ),
+    ...SEO_LANDING_TARGETS.map((target) => ({
+      areaSlug: target.areaSlug ?? null,
+      category: target.category ?? null,
+      goodFor: target.goodFor ?? null,
+      pageSize: AREA_PAGE_SIZE,
+    })),
   ];
   const manifest: Array<ListingTarget & { totalPages: number }> = [];
 

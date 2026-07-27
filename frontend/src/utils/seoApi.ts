@@ -116,17 +116,19 @@ async function getSeoAreaPage(areaSlug: string) {
 async function getSeoListingPage({
   areaSlug,
   category,
+  goodFor,
   page,
   pageSize,
   signal,
 }: {
   areaSlug?: string | null
   category?: string | null
+  goodFor?: string | null
   page: number
   pageSize: number
   signal?: AbortSignal
 }) {
-  const staticPayload = await getStaticSeoListingPage({ areaSlug, category, page, pageSize, signal })
+  const staticPayload = await getStaticSeoListingPage({ areaSlug, category, goodFor, page, pageSize, signal })
   if (staticPayload) {
     return staticPayload
   }
@@ -134,6 +136,7 @@ async function getSeoListingPage({
   const params = new URLSearchParams()
   if (areaSlug) params.set('area', areaSlug)
   if (category && category !== 'all') params.set('category', category)
+  if (goodFor && goodFor !== 'all') params.set('goodFor', goodFor)
   params.set('page', String(page))
   params.set('pageSize', String(pageSize))
 
@@ -156,21 +159,24 @@ function normalizeStaticPart(value: string | null | undefined) {
 async function getStaticSeoListingPage({
   areaSlug,
   category,
+  goodFor,
   page,
   pageSize,
   signal,
 }: {
   areaSlug?: string | null
   category?: string | null
+  goodFor?: string | null
   page: number
   pageSize: number
   signal?: AbortSignal
 }): Promise<SeoListingPageResponse | null> {
   const areaPart = normalizeStaticPart(areaSlug)
   const categoryPart = normalizeStaticPart(category)
+  const goodForPart = normalizeStaticPart(goodFor)
   const safePage = Math.max(Math.floor(page), 1)
   const safePageSize = Math.max(Math.floor(pageSize), 1)
-  const staticUrl = `/data/place-listings/area-${areaPart}/category-${categoryPart}/page-${safePage}-size-${safePageSize}.json`
+  const staticUrl = `/data/place-listings/area-${areaPart}/category-${categoryPart}/good-for-${goodForPart}/page-${safePage}-size-${safePageSize}.json`
 
   try {
     const response = await fetch(staticUrl, {

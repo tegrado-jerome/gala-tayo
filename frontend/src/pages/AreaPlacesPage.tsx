@@ -17,6 +17,7 @@ import { getListingPlaceViewportTop, peekPendingListingRouteCache, readListingRo
 import { fetchPlaceDetailsBatch, readCachedPlaceDetail } from '../utils/placeDetailCache'
 import { preloadListingImageUrls } from '../utils/listingImagePreloader'
 import { getSeoListingPage, mapSeoPlaceToCard, type SeoPlaceSummary } from '../utils/seoApi'
+import { BRAND_NAME, PRODUCT_NAME, SEO_LANDING_TARGETS } from '../utils/seoLandingPages'
 import type { PlaceDetail } from '../types/appTypes'
 
 type AreaPlacesPageProps = {
@@ -299,8 +300,8 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
         {
           '@context': 'https://schema.org',
           '@type': 'CollectionPage',
-          name: `${areaName} | GalaTayo`,
-          description: `Browse places in ${areaName} on GalaTayo and filter them by category in alphabetical order.`,
+          name: `${areaName} Places | ${BRAND_NAME}`,
+          description: `${PRODUCT_NAME} helps you browse places in ${areaName}, compare categories, and discover local gala ideas with city-based SEO pages.`,
           url: `${getSiteOrigin()}/places/${encodeURIComponent(normalizedAreaSlug)}`,
         },
         {
@@ -328,8 +329,8 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
   return (
     <PageShell>
       <SeoHead
-        title={`${areaName} Places | GalaTayo`}
-        description={`Browse places in ${areaName} on GalaTayo and filter them by category in alphabetical order.`}
+        title={`Places in ${areaName} and Local Gala Ideas | ${BRAND_NAME}`}
+        description={`${PRODUCT_NAME} helps you discover places in ${areaName}, from cafes and food spots to parks, museums, and date ideas across Metro Manila.`}
         canonicalPath={`/places/${encodeURIComponent(normalizedAreaSlug)}`}
         robots={shouldIndexAreaPage ? 'index,follow' : 'noindex,follow'}
         jsonLd={jsonLd}
@@ -349,10 +350,10 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
 
         <section className="mt-5 pb-2">
           <h1 className="text-[2.15rem] font-black leading-[0.95] tracking-[-0.045em] text-slate-950 sm:text-[2.6rem]">
-            {areaName}
+            Places in {areaName}
           </h1>
           <p className="mt-3 max-w-[36rem] text-[15px] leading-7 text-[var(--muted)]">
-            Browse featured spots, then open the full list whenever you want more options.
+            Explore search-friendly local picks in {areaName}, then open each place page for budget, commute, and planning details.
           </p>
         </section>
 
@@ -439,6 +440,24 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
                   })}
                   </ResponsiveGrid>
                 </div>
+
+                {SEO_LANDING_TARGETS.some((target) => target.areaSlug === normalizedAreaSlug) ? (
+                  <div className="mt-6 rounded-[24px] border border-[#E5E7EB] bg-white px-5 py-5 shadow-[0_6px_20px_rgba(17,24,39,0.03)]">
+                    <h3 className="text-sm font-semibold text-slate-950">Popular search-style guides for {areaName}</h3>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {SEO_LANDING_TARGETS.filter((target) => target.areaSlug === normalizedAreaSlug).slice(0, 4).map((target) => (
+                        <button
+                          key={target.slug}
+                          type="button"
+                          onClick={() => navigateToPath(`/guides/${target.slug}`)}
+                          className="rounded-full border border-[#DBEAFE] bg-[#F8FBFF] px-3 py-1.5 text-xs font-semibold text-[var(--accent)] transition hover:border-[var(--accent)]"
+                        >
+                          {target.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
               </section>
             )}
 

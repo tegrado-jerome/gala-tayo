@@ -3,6 +3,7 @@ import { CATEGORIES } from "./filters";
 import { checkEndpointRateLimit } from "../utils/redisRateLimit";
 import { getSeoAreaPage, getSeoAreaSummaries, getSeoListingPage, getSeoPlaceSummaries } from "../utils/seoPlaces";
 import { getSiteUrl } from "../utils/siteUrl";
+import { SEO_LANDING_TARGETS } from "../utils/seoLandingPages";
 
 type SitemapEntry = {
   path: string;
@@ -145,6 +146,11 @@ function buildSitemapEntries(args: {
     { path: "/about", priority: "0.6", changefreq: "monthly" },
     { path: "/privacy", priority: "0.4", changefreq: "yearly" },
     { path: "/terms", priority: "0.4", changefreq: "yearly" },
+    ...SEO_LANDING_TARGETS.map((target) => ({
+      path: target.path,
+      priority: "0.8",
+      changefreq: "weekly",
+    })),
   ]
 
   const areaEntries: SitemapEntry[] = areas
@@ -246,14 +252,16 @@ export async function seoListings(request: HttpRequest, context: InvocationConte
 
   const areaSlug = request.query.get("area")?.trim().toLowerCase() ?? null
   const category = request.query.get("category")?.trim().toLowerCase() ?? null
+  const goodFor = request.query.get("goodFor")?.trim().toLowerCase() ?? null
   const page = getPositiveQueryInteger(request.query.get("page"), 1, 1000)
   const pageSize = getPositiveQueryInteger(request.query.get("pageSize"), 12, 50)
 
-  context.log("Loading SEO listing payload.", { areaSlug, category, page, pageSize })
+  context.log("Loading SEO listing payload.", { areaSlug, category, goodFor, page, pageSize })
 
   const payload = await getSeoListingPage({
     areaSlug,
     category,
+    goodFor,
     page,
     pageSize,
   })

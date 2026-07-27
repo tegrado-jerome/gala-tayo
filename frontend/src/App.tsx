@@ -46,6 +46,7 @@ function App() {
   const {
     canonicalPlacePath,
     categoryPageSlug,
+    landingPageSlug,
     areaPageSlug,
     legacyPlaceSlug,
     legacyPublicGalaPlanPath,
@@ -144,6 +145,7 @@ function App() {
     soonFeatureRedirectPath,
     canonicalPlacePath,
     categoryPageSlug,
+    landingPageSlug,
     areaPageSlug,
     legacyPlaceSlug,
     legacyPublicGalaPlanPath,

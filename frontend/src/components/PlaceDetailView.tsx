@@ -1000,6 +1000,42 @@ function PlaceDetailView({
   const { showSystemMessage } = useSystemMessage()
   const isDarkTheme = resolvedTheme === 'dark'
   const darkActionTextClass = isDarkTheme ? '!text-[#0f172a]' : ''
+  const commentSectionSurfaceClassName = isDarkTheme
+    ? '!border-[#28405f] !bg-[linear-gradient(180deg,rgba(10,18,32,0.99),rgba(8,14,26,0.97))] !shadow-[0_20px_44px_rgba(2,8,23,0.24)]'
+    : 'border-slate-200/80 bg-slate-50/55'
+  const commentComposerSurfaceClassName = isDarkTheme
+    ? '!border !border-[#28405f] !bg-[linear-gradient(180deg,rgba(15,26,44,0.98),rgba(12,21,36,0.98))] !shadow-[inset_0_1px_0_rgba(148,163,184,0.05)]'
+    : 'bg-white'
+  const commentReplySurfaceClassName = isDarkTheme
+    ? '!border !border-[#28405f] !bg-[linear-gradient(180deg,rgba(15,26,44,0.98),rgba(12,21,36,0.98))]'
+    : 'bg-slate-50'
+  const commentCardSurfaceClassName = isDarkTheme
+    ? '!border-[#2c4d73] !bg-[linear-gradient(180deg,rgba(17,29,49,0.98),rgba(13,23,39,0.98))] !shadow-[0_12px_28px_rgba(2,8,23,0.2),inset_0_1px_0_rgba(148,163,184,0.05)]'
+    : 'border-slate-200/80 bg-slate-50/80'
+  const commentCardFailedClassName = isDarkTheme
+    ? '!border-[#7a3141] !bg-[linear-gradient(180deg,rgba(46,16,28,0.96),rgba(28,12,22,0.96))]'
+    : 'border-red-200 bg-red-50/70'
+  const commentCardDeletedClassName = isDarkTheme
+    ? '!border-[#2c4d73] !bg-[#101c2f]/95'
+    : 'border-slate-200/70 bg-slate-100/90'
+  const commentTextPrimaryClassName = isDarkTheme ? 'text-[#f4f8ff]' : 'text-slate-950'
+  const commentTextSecondaryClassName = isDarkTheme ? 'text-[#c8d6e8]' : 'text-slate-500'
+  const commentTextMutedClassName = isDarkTheme ? 'text-[#91a7c3]' : 'text-slate-400'
+  const commentTextBodyClassName = isDarkTheme ? 'text-[#d7e2f2]' : 'text-slate-700'
+  const commentBadgeSurfaceClassName = isDarkTheme ? '!bg-[rgba(96,165,250,0.16)]' : 'bg-[var(--accent-wash)]'
+  const commentBadgeTextClassName = isDarkTheme ? 'text-[#bfdbfe]' : 'text-[var(--accent-deep)]'
+  const commentMenuButtonClassName = isDarkTheme
+    ? 'inline-flex h-7 w-7 items-center justify-center rounded-full text-[#9cb0c9] transition hover:!bg-[#1a2b44] hover:!text-[#dbeafe]'
+    : 'inline-flex h-7 w-7 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-200/70 hover:text-slate-600'
+  const commentMenuClassName = isDarkTheme
+    ? 'absolute right-0 top-8 z-20 min-w-[11rem] overflow-hidden rounded-xl border border-[#28405f] !bg-[#0f1b2d] py-1 shadow-[0_16px_34px_rgba(2,8,23,0.36)]'
+    : 'absolute right-0 top-8 z-20 min-w-[11rem] overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-[0_12px_28px_rgba(15,23,42,0.12)]'
+  const commentMenuItemClassName = isDarkTheme
+    ? 'flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-bold text-[#d7e2f2] transition hover:!bg-[#17263b] hover:!text-[#f4f8ff] disabled:cursor-not-allowed disabled:text-[#7f94b1]'
+    : 'flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-bold text-slate-700 transition hover:bg-slate-50 hover:text-slate-950 disabled:cursor-not-allowed disabled:text-slate-400'
+  const commentMenuItemDangerClassName = isDarkTheme
+    ? 'flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-bold text-[#fda4a4] transition hover:!bg-[#301521] hover:!text-[#fecaca] disabled:cursor-not-allowed disabled:opacity-70'
+    : 'flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-bold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70'
 
   const placeOwnPhotos = uniqueList([
     place.imageUrl,
@@ -2160,10 +2196,10 @@ function PlaceDetailView({
             <div
               className={`place-detail-comment-card w-full min-w-0 rounded-[16px] border px-3 py-2.5 ${
                 isFailed
-                  ? 'border-red-200 bg-red-50/70'
+                  ? commentCardFailedClassName
                   : isDeleted
-                    ? 'border-slate-200/70 bg-slate-100/90'
-                    : 'border-slate-200/80 bg-slate-50/80'
+                    ? commentCardDeletedClassName
+                    : commentCardSurfaceClassName
               }`}
             >
               <div className="flex items-start gap-2">
@@ -2173,24 +2209,24 @@ function PlaceDetailView({
                       <button
                         type="button"
                         onClick={handleOpenCommentProfile}
-                        className="block min-w-0 truncate text-[14px] font-black text-slate-950 transition hover:opacity-80"
+                        className={`block min-w-0 truncate text-[14px] font-black transition hover:opacity-80 ${commentTextPrimaryClassName}`}
                       >
                         {displayName}
                       </button>
                     ) : (
-                      <span className="block min-w-0 truncate text-[14px] font-black text-slate-950">{displayName}</span>
+                      <span className={`block min-w-0 truncate text-[14px] font-black ${commentTextPrimaryClassName}`}>{displayName}</span>
                     )}
                     {isOwner ? (
-                      <span className="inline-flex items-center rounded-full bg-[var(--accent-wash)] px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-[var(--accent-deep)]">
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] ${commentBadgeSurfaceClassName} ${commentBadgeTextClassName}`}>
                         You
                       </span>
                     ) : null}
-                    <span className="text-[11px] font-semibold text-slate-500">
+                    <span className={`text-[11px] font-semibold ${commentTextSecondaryClassName}`}>
                       {formatReviewDate(comment.updated_at || comment.created_at)}
-                      {isEdited ? <span className="ml-1 text-slate-400">edited</span> : null}
+                      {isEdited ? <span className={`ml-1 ${commentTextMutedClassName}`}>edited</span> : null}
                     </span>
                     {isPending ? (
-                      <span className="inline-flex items-center rounded-full bg-[var(--accent-wash)] px-2 py-0.5 text-[10px] font-black text-[var(--accent-deep)]">
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black ${commentBadgeSurfaceClassName} ${commentBadgeTextClassName}`}>
                         Posting...
                       </span>
                     ) : null}
@@ -2204,7 +2240,7 @@ function PlaceDetailView({
                       aria-haspopup="menu"
                       aria-expanded={isMenuOpen}
                       onClick={() => setOpenCommentMenuId((currentId) => (currentId === comment.id ? null : comment.id))}
-                      className="inline-flex h-7 w-7 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-200/70 hover:text-slate-600"
+                      className={commentMenuButtonClassName}
                     >
                       <FontAwesomeIcon icon={faEllipsis} className="h-4 w-4" />
                     </button>
@@ -2212,7 +2248,7 @@ function PlaceDetailView({
                     {isMenuOpen ? (
                       <div
                         role="menu"
-                        className="absolute right-0 top-8 z-20 min-w-[11rem] overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-[0_12px_28px_rgba(15,23,42,0.12)]"
+                        className={commentMenuClassName}
                       >
                     {isOwner ? (
                           <>
@@ -2225,7 +2261,7 @@ function PlaceDetailView({
                                 setCommentError('')
                                 setOpenCommentMenuId(null)
                               }}
-                              className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-bold text-slate-700 transition hover:bg-slate-50 hover:text-slate-950"
+                              className={commentMenuItemClassName}
                             >
                               <FontAwesomeIcon icon={faPen} className="h-3.5 w-3.5" />
                               Edit comment
@@ -2238,7 +2274,7 @@ function PlaceDetailView({
                                 void handleDeleteComment(comment.id)
                               }}
                               disabled={isMutating}
-                              className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-bold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70"
+                              className={commentMenuItemDangerClassName}
                             >
                               <FontAwesomeIcon icon={faTrash} className="h-3.5 w-3.5" />
                               {isMutating ? 'Deleting...' : 'Delete comment'}
@@ -2257,7 +2293,7 @@ function PlaceDetailView({
                                 setOpenCommentMenuId(null)
                               }}
                               disabled={isReportedByCurrentUser || isReportSubmitting}
-                              className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-bold text-slate-700 transition hover:bg-slate-50 hover:text-slate-950 disabled:cursor-not-allowed disabled:text-slate-400"
+                              className={commentMenuItemClassName}
                             >
                               <FontAwesomeIcon icon={faFlag} className="h-3.5 w-3.5" />
                               {isReportedByCurrentUser ? 'Already reported' : isReportSubmitting && reportingCommentId === comment.id ? 'Reporting...' : 'Report comment'}
@@ -2267,7 +2303,7 @@ function PlaceDetailView({
                               role="menuitem"
                               onClick={() => handleOpenUserReport(comment.user_id, comment.member_username, displayName)}
                               disabled={reportedUserIds.has(comment.user_id)}
-                              className="flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-bold text-slate-700 transition hover:bg-slate-50 hover:text-slate-950 disabled:cursor-not-allowed disabled:text-slate-400"
+                              className={commentMenuItemClassName}
                             >
                               <AppIcon name="profile" className="h-3.5 w-3.5" />
                               {reportedUserIds.has(comment.user_id) ? 'Already reported user' : 'Report user'}
@@ -2287,7 +2323,9 @@ function PlaceDetailView({
                     onChange={(event) => setEditCommentBody(event.target.value)}
                     rows={3}
                     disabled={isMutating}
-                    className="comment-composer-input w-full resize-none rounded-xl bg-white px-3 py-2.5 text-[14px] font-semibold text-slate-800 outline-none transition disabled:cursor-not-allowed disabled:opacity-70"
+                    className={`comment-composer-input w-full resize-none rounded-xl px-3 py-2.5 text-[14px] font-semibold outline-none transition disabled:cursor-not-allowed disabled:opacity-70 ${
+                      isDarkTheme ? 'bg-transparent text-[#e8f0fb]' : 'bg-white text-slate-800'
+                    }`}
                   />
                   <div className="mt-2 flex flex-wrap gap-2">
                     <button
@@ -2312,7 +2350,7 @@ function PlaceDetailView({
                   </div>
                 </div>
               ) : (
-                <p className={`mt-1.5 whitespace-pre-line break-words text-[14px] font-semibold leading-[1.45] ${isDeleted ? 'italic text-slate-400' : 'text-slate-700'}`}>{comment.comment}</p>
+                <p className={`mt-1.5 whitespace-pre-line break-words text-[14px] font-semibold leading-[1.45] ${isDeleted ? `italic ${commentTextMutedClassName}` : commentTextBodyClassName}`}>{comment.comment}</p>
               )}
 
               {isFailed && comment.local_error_message ? (
@@ -2403,14 +2441,16 @@ function PlaceDetailView({
         </div>
 
         {replyingToCommentId === comment.id ? (
-          <div className="place-detail-comment-reply ml-8 mt-2.5 rounded-[16px] bg-slate-50 px-3 py-3 sm:ml-9">
+          <div className={`place-detail-comment-reply ml-8 mt-2.5 rounded-[16px] px-3 py-3 sm:ml-9 ${commentReplySurfaceClassName}`}>
             <textarea
               value={replyBody}
               onChange={(event) => setReplyBody(event.target.value)}
               rows={2}
               disabled={isMutating}
               placeholder="Add a reply..."
-              className="comment-composer-input w-full resize-none rounded-xl bg-white px-3 py-2.5 text-[14px] font-semibold text-slate-800 outline-none transition disabled:cursor-not-allowed disabled:opacity-70"
+              className={`comment-composer-input w-full resize-none rounded-xl px-3 py-2.5 text-[14px] font-semibold outline-none transition disabled:cursor-not-allowed disabled:opacity-70 ${
+                isDarkTheme ? 'bg-transparent text-[#e8f0fb]' : 'bg-white text-slate-800'
+              }`}
             />
             <div className="mt-2 flex flex-wrap gap-2">
               <button
@@ -2428,7 +2468,11 @@ function PlaceDetailView({
                   setReplyBody('')
                 }}
                 disabled={isMutating}
-                className="rounded-full border border-[var(--line)] bg-white px-4 py-2 text-[12px] font-extrabold text-slate-700 disabled:cursor-not-allowed disabled:opacity-70"
+                className={`rounded-full border px-4 py-2 text-[12px] font-extrabold disabled:cursor-not-allowed disabled:opacity-70 ${
+                  isDarkTheme
+                    ? 'border-[#28405f] bg-[#0f1b2d] text-[#d7e2f2]'
+                    : 'border-[var(--line)] bg-white text-slate-700'
+                }`}
               >
                 Cancel
               </button>
@@ -2455,7 +2499,7 @@ function PlaceDetailView({
                       iconClassName="place-detail-section-heading--alt-icon"
                       titleClassName="place-detail-community-heading-title"
                     />
-        <div className="place-detail-comments mt-5 rounded-3xl border border-slate-200/80 bg-slate-50/55 p-4 sm:p-5">
+        <div className={`place-detail-comments mt-5 rounded-3xl border p-4 sm:p-5 ${commentSectionSurfaceClassName}`}>
           <ReviewSkeleton />
           <div className="mt-5 border-t border-[var(--line)] pt-5">
             <CommentSkeleton />
@@ -2584,16 +2628,16 @@ function PlaceDetailView({
           </div>
 
           <div className="mt-5 border-t border-[var(--line)] pt-5">
-            <div className="place-detail-comments mt-5 rounded-3xl border border-slate-200/80 bg-slate-50/55 p-4 sm:p-5">
+            <div className={`place-detail-comments mt-5 rounded-3xl border p-4 sm:p-5 ${commentSectionSurfaceClassName}`}>
               <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200/80 pb-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2.5">
-                    <span className="place-detail-comments-icon inline-flex h-8 w-8 items-center justify-center rounded-2xl bg-[var(--accent-wash)] text-[var(--accent-deep)]">
+                    <span className={`place-detail-comments-icon inline-flex h-8 w-8 items-center justify-center rounded-2xl ${commentBadgeSurfaceClassName} ${commentBadgeTextClassName}`}>
                       <FontAwesomeIcon icon={faComment} className="h-4 w-4" />
                     </span>
                     <div>
-                      <h3 className="place-detail-comments-title text-[18px] font-black text-slate-950">Comments</h3>
-                      <p className="mt-0.5 text-[13px] font-semibold text-slate-500">
+                      <h3 className={`place-detail-comments-title text-[18px] font-black ${commentTextPrimaryClassName}`}>Comments</h3>
+                      <p className={`mt-0.5 text-[13px] font-semibold ${commentTextSecondaryClassName}`}>
                         {isCommentsLoading
                           ? 'Loading comments...'
                           : visibleCommentCount === 0
@@ -2609,7 +2653,7 @@ function PlaceDetailView({
                 <div className="mt-4 flex items-start gap-3">
                   <MemberAvatar displayName={currentUserAvatarFallbackName} avatarUrl={currentUserAvatarUrl} compact />
                   <div className="min-w-0 flex-1">
-                    <div className="place-detail-comments-composer rounded-[14px] bg-white px-3 py-2.5 transition">
+                    <div className={`place-detail-comments-composer rounded-[14px] px-3 py-2.5 transition ${commentComposerSurfaceClassName}`}>
                       <textarea
                         value={commentBody}
                         onChange={(event) => setCommentBody(event.target.value)}
@@ -2618,9 +2662,9 @@ function PlaceDetailView({
                         rows={2}
                         disabled={isCommentSubmitting}
                         placeholder="Write a quick comment..."
-                        className={`comment-composer-input w-full resize-none border-0 bg-transparent px-0 py-0 text-[14px] font-semibold text-slate-800 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed disabled:opacity-70 ${
+                        className={`comment-composer-input w-full resize-none border-0 bg-transparent px-0 py-0 text-[14px] font-semibold outline-none placeholder:text-slate-400 disabled:cursor-not-allowed disabled:opacity-70 ${
                           isCommentComposerFocused || commentBody.trim() ? 'h-[80px]' : 'h-[48px]'
-                        }`}
+                        } ${isDarkTheme ? 'text-[#e8f0fb] placeholder:text-[#7f94b1]' : 'text-slate-800'}`}
                       />
                       <div className="mt-2 flex justify-end">
                         <button
@@ -2651,12 +2695,12 @@ function PlaceDetailView({
               {isCommentsLoading ? (
                 <CommentSkeleton />
               ) : visibleCommentCount === 0 ? (
-                <div className="place-detail-comments-empty mt-5 flex flex-col items-center rounded-[20px] border border-dashed border-[var(--line-strong)] bg-slate-50 px-6 py-8 text-center">
-                  <span className="place-detail-comments-empty-icon inline-flex h-12 w-12 items-center justify-center rounded-full bg-[var(--accent-wash)] text-[var(--accent-deep)]">
+                <div className={`place-detail-comments-empty mt-5 flex flex-col items-center rounded-[20px] border border-dashed px-6 py-8 text-center ${isDarkTheme ? 'border-[#28405f] bg-[#0d1727]' : 'border-[var(--line-strong)] bg-slate-50'}`}>
+                  <span className={`place-detail-comments-empty-icon inline-flex h-12 w-12 items-center justify-center rounded-full ${commentBadgeSurfaceClassName} ${commentBadgeTextClassName}`}>
                     <FontAwesomeIcon icon={faComment} className="h-5 w-5" />
                   </span>
-                  <p className="mt-3 text-[16px] font-black text-slate-900">No comments yet</p>
-                  <p className="mt-1 max-w-[26rem] text-[13px] font-semibold leading-5 text-slate-500">
+                  <p className={`mt-3 text-[16px] font-black ${commentTextPrimaryClassName}`}>No comments yet</p>
+                  <p className={`mt-1 max-w-[26rem] text-[13px] font-semibold leading-5 ${commentTextSecondaryClassName}`}>
                     Be the first to share something about this place.
                   </p>
                 </div>

@@ -13,6 +13,7 @@ import { getSupabaseAccessToken, getSupabaseSession } from '../supabase'
 import { clearHistoryCache } from '../utils/historyCache'
 import type { PlaceDetail, PlaceDetailCardData } from '../types/appTypes'
 import { cachePlaceDetail, readCachedPlaceDetail } from '../utils/placeDetailCache'
+import { BRAND_NAME, PRODUCT_NAME } from '../utils/seoLandingPages'
 
 export default function SharedPlacePage({
   slug,
@@ -248,8 +249,8 @@ export default function SharedPlacePage({
   return (
     <>
       <SeoHead
-        title={place ? `${place.name} in ${areaMeta?.name || 'Metro Manila'} | GalaTayo` : 'Place Details | GalaTayo'}
-        description={place ? buildPlaceDescription(place, areaMeta?.name || 'Metro Manila') : 'Discover place details on GalaTayo.'}
+        title={place ? `${place.name} in ${areaMeta?.name || 'Metro Manila'} | ${BRAND_NAME}` : `Place Details | ${PRODUCT_NAME}`}
+        description={place ? buildPlaceDescription(place, areaMeta?.name || 'Metro Manila') : `Discover searchable place details, FAQs, and planning info on ${PRODUCT_NAME}.`}
         canonicalPath={canonicalPath ?? undefined}
         openGraphType="website"
         image={

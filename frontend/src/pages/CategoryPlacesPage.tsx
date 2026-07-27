@@ -16,6 +16,7 @@ import { getListingPlaceViewportTop, peekPendingListingRouteCache, readListingRo
 import { fetchPlaceDetailsBatch, readCachedPlaceDetail } from '../utils/placeDetailCache'
 import { preloadListingImageUrls } from '../utils/listingImagePreloader'
 import { getSeoListingPage, mapSeoPlaceToCard, type SeoPlaceSummary } from '../utils/seoApi'
+import { BRAND_NAME, PRODUCT_NAME, SEO_LANDING_TARGETS } from '../utils/seoLandingPages'
 import type { PlaceDetail } from '../types/appTypes'
 
 type CategoryPlacesPageProps = {
@@ -281,8 +282,8 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
         {
           '@context': 'https://schema.org',
           '@type': 'CollectionPage',
-          name: `${categoryLabel} | GalaTayo`,
-          description: `Browse ${categoryLabel.toLowerCase()} places across Metro Manila on GalaTayo.`,
+          name: `${categoryLabel} Places | ${BRAND_NAME}`,
+          description: `${PRODUCT_NAME} helps you browse ${categoryLabel.toLowerCase()} places across Metro Manila with category SEO pages and place-level discovery details.`,
           url: `${getSiteOrigin()}/places/categories/${encodeURIComponent(categorySlug)}`,
         },
         {
@@ -311,8 +312,8 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
   return (
     <PageShell>
       <SeoHead
-        title={`${categoryLabel} Places | GalaTayo`}
-        description={`Browse ${categoryLabel.toLowerCase()} places across Metro Manila on GalaTayo.`}
+        title={`${categoryLabel} Places in Metro Manila | ${BRAND_NAME}`}
+        description={`${PRODUCT_NAME} helps you explore ${categoryLabel.toLowerCase()} places across Metro Manila, compare local options, and open detailed place pages for planning.`}
         canonicalPath={`/places/categories/${encodeURIComponent(categorySlug)}`}
         robots={shouldIndexCategoryPage ? 'index,follow' : 'noindex,follow'}
         jsonLd={jsonLd}
@@ -336,10 +337,10 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
             <AppIcon name={iconName} className="h-5 w-5" />
           </div>
           <h1 className="mt-4 text-[2.15rem] font-black leading-[0.95] tracking-[-0.045em] text-slate-950 sm:text-[2.6rem]">
-            {categoryLabel} places
+            {categoryLabel} places in Metro Manila
           </h1>
           <p className="mt-3 max-w-[40rem] text-[15px] leading-7 text-[var(--muted)]">
-            Explore handpicked {categoryLabel.toLowerCase()} spots and find your next stop.
+            Explore search-friendly {categoryLabel.toLowerCase()} recommendations and jump into local pages for more specific gala ideas.
           </p>
         </section>
 
@@ -422,6 +423,23 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
                   })}
                   </ResponsiveGrid>
                 </div>
+                {SEO_LANDING_TARGETS.some((target) => target.category === categorySlug) ? (
+                  <div className="mt-6 rounded-[24px] border border-[#E5E7EB] bg-white px-5 py-5 shadow-[0_6px_20px_rgba(17,24,39,0.03)]">
+                    <h3 className="text-sm font-semibold text-slate-950">Related search-style guides</h3>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {SEO_LANDING_TARGETS.filter((target) => target.category === categorySlug).slice(0, 4).map((target) => (
+                        <button
+                          key={target.slug}
+                          type="button"
+                          onClick={() => navigateToPath(`/guides/${target.slug}`)}
+                          className="rounded-full border border-[#DBEAFE] bg-[#F8FBFF] px-3 py-1.5 text-xs font-semibold text-[var(--accent)] transition hover:border-[var(--accent)]"
+                        >
+                          {target.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
               </section>
             )}
 

@@ -2,6 +2,7 @@ import { metroManilaAreaNameBySlug, metroManilaAreaSlugByAlias, normalizeAreaSlu
 import { getPlaceCategoryLabel } from '../data/placeCategories'
 import { ADMIN_BASE_PATH, ADMIN_MFA_SETUP_PATH, ADMIN_MFA_VERIFY_PATH } from './adminRoutes'
 import { getPublicSiteOrigin } from './site'
+import { getLandingTargetBySlug } from './seoLandingPages'
 
 const searchRouteCachePrefix = 'galatayo:search-route:'
 const knownAreaSlugs = new Set<string>(metroManilaAreaSlugByAlias.keys())
@@ -45,6 +46,7 @@ const exactLabels: Record<string, string> = {
   '/forgot-password': 'Forgot password',
   '/onboarding': 'Onboarding',
   '/about': 'About',
+  '/guides': 'Guides',
   '/terms': 'Terms',
   '/privacy': 'Privacy',
   '/profile': 'Profile',
@@ -83,6 +85,7 @@ const routePatterns: RoutePattern[] = [
   { pattern: /^\/places\/([^/]+)\/([^/]+)$/, getLabel: ([, , slug]) => formatLabelFromSlug(decodeURIComponent(slug)) },
   { pattern: /^\/places\/([^/]+)$/, getLabel: ([, slug]) => formatLabelFromSlug(decodeURIComponent(slug)) },
   { pattern: /^\/places\/categories\/([^/]+)$/, getLabel: ([, slug]) => formatLabelFromSlug(decodeURIComponent(slug)) },
+  { pattern: /^\/guides\/([^/]+)$/, getLabel: ([, slug]) => getLandingTargetBySlug(decodeURIComponent(slug))?.label ?? formatLabelFromSlug(decodeURIComponent(slug)) },
   { pattern: /^\/gala-plans\/([^/]+)$/, getLabel: ([, id]) => id === 'new' || id === 'create' ? '' : 'Gala Plan' },
   { pattern: /^\/gala-plans\/([^/]+)\/edit$/, getLabel: () => 'Edit Gala Plan' },
   { pattern: /^\/u\/([^/]+)$/, getLabel: ([, username]) => `@${username}` },
@@ -222,6 +225,11 @@ export function parseAreaPagePath(pathname: string): string | null {
 
 export function parseCategoryPagePath(pathname: string): string | null {
   const match = pathname.match(/^\/places\/categories\/([^/]+)\/?$/i)
+  return match ? decodeURIComponent(match[1]).toLowerCase() : null
+}
+
+export function parseLandingPagePath(pathname: string): string | null {
+  const match = pathname.match(/^\/guides\/([^/]+)\/?$/i)
   return match ? decodeURIComponent(match[1]).toLowerCase() : null
 }
 

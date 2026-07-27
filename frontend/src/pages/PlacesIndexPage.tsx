@@ -11,6 +11,7 @@ import { cityRepresentativePlaceSlugs, getDiscoveryImageCandidates } from '../da
 import type { PlaceDetail } from '../types/appTypes'
 import { fetchPlaceDetailsBatch } from '../utils/placeDetailCache'
 import { getSiteOrigin } from '../utils/seo'
+import { BRAND_NAME, PRODUCT_NAME } from '../utils/seoLandingPages'
 
 function PlacesIndexPage() {
   const areaCards = useMemo(
@@ -46,8 +47,8 @@ function PlacesIndexPage() {
     {
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
-      name: 'Metro Manila Places | GalaTayo',
-      description: 'Browse Metro Manila cities and jump straight into area pages on GalaTayo.',
+      name: `Metro Manila Places | ${BRAND_NAME}`,
+      description: `${PRODUCT_NAME} organizes Metro Manila cities so you can browse local places, neighborhood discovery pages, and search-friendly gala ideas faster.`,
       url: `${getSiteOrigin()}/places`,
     },
     {
@@ -75,8 +76,8 @@ function PlacesIndexPage() {
   return (
     <PageShell>
       <SeoHead
-        title="Metro Manila Places | GalaTayo"
-        description="Browse Metro Manila cities and jump straight into area pages on GalaTayo."
+        title={`Metro Manila Cities and Places to Visit | ${BRAND_NAME}`}
+        description={`${PRODUCT_NAME} lets you browse Metro Manila cities, local place pages, and city-based gala ideas from one search-friendly directory.`}
         canonicalPath="/places"
         jsonLd={jsonLd}
       />
@@ -103,10 +104,10 @@ function PlacesIndexPage() {
           </div>
           <div className="mt-4 max-w-[42rem]">
             <h1 className="text-[2rem] font-black leading-tight tracking-[-0.04em] text-[var(--text-main)] sm:text-[2.4rem]">
-              Places to visit
+              Metro Manila places to visit
             </h1>
             <p className="mt-3 text-[15px] leading-7 text-[var(--muted)]">
-              Pick a city first, then head into its area page to browse places there.
+              Pick a city first, then head into its area page to browse cafes, food spots, parks, museums, and more.
             </p>
           </div>
         </section>

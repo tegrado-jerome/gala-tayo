@@ -21,6 +21,7 @@ export type RouteInputs = {
   soonFeatureRedirectPath: string | null
   canonicalPlacePath: { areaSlug: string; placeSlug: string } | null
   categoryPageSlug: string | null
+  landingPageSlug: string | null
   areaPageSlug: string | null
   legacyPlaceSlug: string | null
   legacyPublicGalaPlanPath: { username: string; slug: string } | null
@@ -65,6 +66,7 @@ export type RouteDescriptor =
   | { kind: 'prompt-builder' }
   | { kind: 'places-index' }
   | { kind: 'place-categories-index' }
+  | { kind: 'seo-landing'; slug: string }
   | { kind: 'category-places'; categorySlug: string }
   | { kind: 'shared-place'; slug: string; expectedAreaSlug?: string; redirectToCanonical?: boolean }
   | { kind: 'login' }
@@ -102,6 +104,7 @@ export function resolveRouteDescriptor(inputs: RouteInputs): RouteDescriptor {
     isPasswordResetPath,
     canonicalPlacePath,
     categoryPageSlug,
+    landingPageSlug,
     areaPageSlug,
     legacyPlaceSlug,
     legacyPublicGalaPlanPath,
@@ -236,6 +239,10 @@ export function resolveRouteDescriptor(inputs: RouteInputs): RouteDescriptor {
 
   if (categoryPageSlug) {
     return { kind: 'category-places', categorySlug: categoryPageSlug }
+  }
+
+  if (landingPageSlug) {
+    return { kind: 'seo-landing', slug: landingPageSlug }
   }
 
   if (canonicalPlacePath) {

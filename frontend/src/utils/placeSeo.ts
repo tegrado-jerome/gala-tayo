@@ -15,14 +15,18 @@ function joinWithAnd(values: string[]) {
 }
 
 export function buildPlaceDescription(place: PlaceDetailCardData, areaName: string) {
-  const parts: string[] = [`Explore ${place.name} in ${areaName}.`]
+  const parts: string[] = [`Discover ${place.name} in ${areaName} with ${place.category || 'local place'} details from Gala Tayo.`]
 
   if (place.good_for && place.good_for.length > 0) {
-    parts.push(`Best for ${place.good_for.slice(0, 3).join(', ')}.`)
+    parts.push(`Best for ${place.good_for.slice(0, 3).join(', ')} plans.`)
   }
 
   if (place.budget_min != null) {
     parts.push(`Budget starts at PHP ${place.budget_min}.`)
+  }
+
+  if (place.best_time_to_visit?.trim()) {
+    parts.push(`Best time to visit: ${place.best_time_to_visit.trim()}.`)
   }
 
   const practicalNotes: string[] = []
@@ -41,7 +45,7 @@ export function buildPlaceDescription(place: PlaceDetailCardData, areaName: stri
     if (shortDesc.length > 20) parts.push(`${shortDesc}.`)
   }
 
-  return `${parts.join(' ')} See location, photos, FAQs, and community notes below.`
+  return `${parts.join(' ')} See location, photos, FAQs, commute notes, parking details, and community context below.`
 }
 
 export function buildPlaceFaqSchema(place: PlaceDetailCardData) {
@@ -63,6 +67,20 @@ export function buildPlaceFaqSchema(place: PlaceDetailCardData) {
   }
 
   const goodFor = place.good_for ?? []
+  if (place.description?.trim()) {
+    const summaryText = place.description.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()
+    if (summaryText) {
+      items.push({
+        '@type': 'Question',
+        name: `What is ${place.name} known for?`,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: summaryText.length > 220 ? `${summaryText.slice(0, 220).replace(/\s+\S*$/, '')}.` : summaryText,
+        },
+      })
+    }
+  }
+
   if (goodFor.length > 0) {
     items.push({
       '@type': 'Question',
@@ -82,6 +100,14 @@ export function buildPlaceFaqSchema(place: PlaceDetailCardData) {
         text: goodFor.some((g) => /family|kid|children/i.test(g))
           ? 'Yes, it is recommended for family trips.'
           : `It is more suited for other vibes like ${goodFor.join(', ')}.`,
+      },
+    })
+    items.push({
+      '@type': 'Question',
+      name: `Who is ${place.name} best for?`,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: `${place.name} is best for ${goodFor.join(', ')} plans.`,
       },
     })
   }
