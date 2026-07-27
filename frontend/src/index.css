@@ -5091,18 +5091,18 @@ body.feature-guide-open nav[aria-label="Primary"] {
 
 .welcome-page__title {
   margin: 0;
-  max-width: 9.2em;
+  max-width: 10.5em;
   font-size: clamp(2.375rem, 11vw, 2.75rem);
   line-height: 0.98;
   font-weight: 900;
   letter-spacing: 0;
   color: #ffffff;
-  text-wrap: balance;
   text-shadow: 0 2px 18px rgba(0, 0, 0, 0.2);
 }
 
 .welcome-page__title-line {
-  display: inline;
+  display: block;
+  white-space: nowrap;
 }
 
 .welcome-page__description {
@@ -5227,7 +5227,7 @@ body.feature-guide-open nav[aria-label="Primary"] {
   }
 
   .welcome-page__title {
-    max-width: 9.4em;
+    max-width: 10.5em;
     font-size: clamp(3.25rem, 7.4vw, 4rem);
     line-height: 0.96;
   }
@@ -5270,7 +5270,7 @@ body.feature-guide-open nav[aria-label="Primary"] {
   }
 
   .welcome-page__title {
-    max-width: 11.2em;
+    max-width: 10.5em;
     font-size: clamp(4rem, 5vw, 4.7rem);
     line-height: 0.96;
   }
@@ -5299,7 +5299,7 @@ body.feature-guide-open nav[aria-label="Primary"] {
   }
 
   .welcome-page__title {
-    max-width: 11.2em;
+    max-width: 10.5em;
     font-size: clamp(4.75rem, 4.9vw, 5.5rem);
     line-height: 0.95;
   }
