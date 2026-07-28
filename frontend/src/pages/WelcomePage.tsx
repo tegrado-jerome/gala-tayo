@@ -265,14 +265,16 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
 
         <div className="welcome-page__overlay" />
         <section className="welcome-page__content" aria-hidden={!isReady}>
-          <h1 className="welcome-page__title">
-            <span className="welcome-page__title-line">Your next</span>
-            <span className="welcome-page__title-line">Metro Manila</span>
-            <span className="welcome-page__title-line">gala starts here.</span>
-          </h1>
-          <p className="welcome-page__description">
-            Discover places, date spots, cafes, and local ideas with Gala Tayo.
-          </p>
+          <div className="welcome-page__copy">
+            <h1 className="welcome-page__title">
+              <span className="welcome-page__title-line">Your next</span>
+              <span className="welcome-page__title-line">Metro Manila</span>
+              <span className="welcome-page__title-line">gala starts here.</span>
+            </h1>
+            <p className="welcome-page__description">
+              Discover places, date spots, cafes, and local ideas with Gala Tayo.
+            </p>
+          </div>
           <button
             type="button"
             onClick={handleStartExploring}
