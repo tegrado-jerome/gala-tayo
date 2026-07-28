@@ -5093,7 +5093,7 @@ body.feature-guide-open nav[aria-label="Primary"] {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  transform: translateY(-212px);
+  transform: translateY(-244px);
 }
 
 .welcome-page__title {
@@ -5255,7 +5255,7 @@ body.feature-guide-open nav[aria-label="Primary"] {
 
 @media (min-width: 640px) and (max-width: 1023px) {
   .welcome-page__copy {
-    transform: translateY(-212px);
+    transform: translateY(-300px);
   }
 }
 
