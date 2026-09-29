@@ -140,7 +140,7 @@ function getMarkerTone(kind: GameItemKind) {
   }
 
   return {
-    button: 'bg-white text-[#2563eb]',
+    button: 'bg-white text-[var(--primary)]',
     ring: 'border-[rgba(37,99,235,0.34)]',
     ringSoft: 'border-[rgba(37,99,235,0.18)]',
     label: 'Tap',
@@ -350,7 +350,7 @@ export default function TapGalaPinGame({
 
       <div className="relative z-10 flex shrink-0 items-start justify-between gap-4 px-5 pb-2 pt-[max(18px,env(safe-area-inset-top))] sm:px-7 lg:px-8">
         <div className="min-w-0">
-          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#2563eb]">Mini game</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[var(--primary)]">Mini game</p>
           <h3 className="mt-1 text-[1.55rem] font-black leading-none text-slate-950 sm:text-[1.9rem]">Pin Rush</h3>
           <p className="mt-2 max-w-[34rem] text-sm leading-6 text-slate-600">Chain pins, grab stars, and unlock tiny gala charms while AI finishes.</p>
         </div>
@@ -358,7 +358,7 @@ export default function TapGalaPinGame({
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-10 shrink-0 items-center justify-center rounded-full bg-white/70 px-4 text-sm font-black text-slate-700 backdrop-blur transition hover:bg-white hover:text-[#2563eb]"
+            className="inline-flex h-10 shrink-0 items-center justify-center rounded-full bg-white/70 px-4 text-sm font-black text-slate-700 backdrop-blur transition hover:bg-white hover:text-[var(--primary)]"
           >
             Close
           </button>
@@ -392,7 +392,7 @@ export default function TapGalaPinGame({
           </div>
           <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/70">
             <div
-              className="h-full rounded-full bg-[linear-gradient(90deg,#2563eb,#5ed6c7,#ffcc4d)] transition-all duration-300"
+              className="h-full rounded-full bg-[linear-gradient(90deg,var(--primary),#5ed6c7,#ffcc4d)] transition-all duration-300"
               style={{ width: `${Math.max(8, feverValue)}%` }}
             />
           </div>
@@ -408,9 +408,9 @@ export default function TapGalaPinGame({
         <div className="absolute inset-x-6 top-[17%] h-[11px] rounded-full bg-[linear-gradient(90deg,transparent,rgba(37,99,235,0.42),rgba(255,111,157,0.22),transparent)] animate-[gala-lane-glide_5s_ease-in-out_infinite]" />
         <div className="absolute inset-x-5 top-[43%] h-[13px] rounded-full bg-[linear-gradient(90deg,transparent,rgba(255,196,87,0.5),rgba(94,214,199,0.34),transparent)] animate-[gala-lane-glide_5.8s_ease-in-out_infinite]" />
         <div className="absolute inset-x-8 top-[69%] h-[10px] rounded-full bg-[linear-gradient(90deg,transparent,rgba(124,179,255,0.44),rgba(255,158,186,0.24),transparent)] animate-[gala-lane-glide_6.2s_ease-in-out_infinite]" />
-        <div className="absolute left-[16%] top-0 h-full w-[10px] bg-[linear-gradient(180deg,transparent,rgba(15,23,42,0.08),transparent)]" />
-        <div className="absolute left-[55%] top-0 h-full w-[12px] bg-[linear-gradient(180deg,transparent,rgba(15,23,42,0.07),transparent)]" />
-        <div className="absolute left-[82%] top-0 h-full w-[10px] bg-[linear-gradient(180deg,transparent,rgba(15,23,42,0.07),transparent)]" />
+        <div className="absolute left-[16%] top-0 h-full w-[10px] bg-[linear-gradient(180deg,transparent,rgba(27,26,23,0.08),transparent)]" />
+        <div className="absolute left-[55%] top-0 h-full w-[12px] bg-[linear-gradient(180deg,transparent,rgba(27,26,23,0.07),transparent)]" />
+        <div className="absolute left-[82%] top-0 h-full w-[10px] bg-[linear-gradient(180deg,transparent,rgba(27,26,23,0.07),transparent)]" />
         <div className="absolute left-[11%] top-[24%] h-3 w-3 rounded-full bg-white/86" />
         <div className="absolute left-[31%] top-[54%] h-2.5 w-2.5 rounded-full bg-[#5ed6c7]" />
         <div className="absolute left-[47%] top-[76%] h-2.5 w-2.5 rounded-full bg-[#ffcc4d]" />

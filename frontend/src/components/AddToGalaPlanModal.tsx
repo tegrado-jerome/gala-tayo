@@ -146,8 +146,8 @@ function AddToGalaPlanModal({ isOpen, placeId, placeName, onClose }: AddToGalaPl
           ) : null}
 
           {plans.length > 0 ? (
-            <div className="grid gap-4">
-              <div className="grid gap-2">
+            <div className="grid grid-cols-[minmax(0,1fr)] gap-4">
+              <div className="grid grid-cols-[minmax(0,1fr)] gap-2">
                 <span className="text-sm font-black text-slate-800">Choose plan</span>
                 <div className="relative">
                   <button
@@ -163,7 +163,7 @@ function AddToGalaPlanModal({ isOpen, placeId, placeName, onClose }: AddToGalaPl
                   </button>
                   {isPlanListOpen ? (
                     <div
-                      className="absolute left-0 right-0 top-[calc(100%+0.35rem)] z-10 max-h-56 overflow-y-auto rounded-lg border border-[var(--line)] bg-white p-1 shadow-[0_18px_40px_rgba(15,23,42,0.16)]"
+                      className="absolute left-0 right-0 top-[calc(100%+0.35rem)] z-10 max-h-56 overflow-y-auto rounded-lg border border-[var(--line)] bg-white p-1 shadow-[0_18px_40px_rgba(27,26,23,0.16)]"
                       role="listbox"
                     >
                       {plans.map((plan) => {
@@ -206,7 +206,7 @@ function AddToGalaPlanModal({ isOpen, placeId, placeName, onClose }: AddToGalaPl
                   type="button"
                   onClick={() => void handleAdd()}
                   disabled={isAdding}
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-4 text-sm font-black text-white transition hover:bg-[var(--accent-deep)] disabled:cursor-not-allowed disabled:bg-slate-300"
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-4 text-sm font-black text-white transition hover:bg-[var(--accent-deep)] disabled:cursor-not-allowed disabled:bg-[var(--bg-soft)]"
                 >
                   {isAdding ? 'Adding...' : (
                     <>

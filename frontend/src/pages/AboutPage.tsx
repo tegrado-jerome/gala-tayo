@@ -1,5 +1,5 @@
 import AppHeader from '../components/AppHeader'
-import MinimalBackNav from '../components/MinimalBackNav'
+import MinimalBackNav from '../components/navigation/MinimalBackNav'
 import SeoHead from '../components/SeoHead'
 import { PageContainer, PageShell, ResponsiveGrid, CardSurface } from '../components/layout/ResponsiveLayouts'
 import { getSiteOrigin } from '../utils/seo'

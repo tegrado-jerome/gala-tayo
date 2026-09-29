@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent, type RefObject } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
-import { faChevronRight, faCompass, faFire, faHandSparkles, faHeart, faLocationDot, faMagnifyingGlass, faRobot, faSliders, faStar, faTableCellsLarge } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faFire, faHeart, faLocationDot, faMagnifyingGlass, faSliders, faStar, faTableCellsLarge } from '@fortawesome/free-solid-svg-icons'
 import { faHeart as faHeartRegular } from '@fortawesome/free-regular-svg-icons'
 import { Sun, Moon } from 'lucide-react'
 import { useAppUser } from '../context/AppUserContext'
@@ -9,7 +8,11 @@ import { useTheme } from '../context/ThemeContext'
 import UserMenu from '../components/UserMenu'
 import { AppSkeleton } from '../components/AppUI'
 import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
-import MobileBottomNav from '../components/MobileBottomNav'
+import MobileBottomNav from '../components/navigation/MobileBottomNav'
+import NextGalaCard from '../components/home/NextGalaCard'
+import PlanWithAiCard from '../components/home/PlanWithAiCard'
+import RainyDayBanner from '../components/home/RainyDayBanner'
+import { useManilaWeather } from '../hooks/useManilaWeather'
 import CarouselPositionIndicator from '../components/CarouselPositionIndicator'
 import { PageShell } from '../components/layout/ResponsiveLayouts'
 import {
@@ -61,29 +64,14 @@ type HomeTileRecommendation = {
   place: ShowcasePlace | null
 }
 
-type HomeAiFeature = {
-  title: string
-  description: string
-  href: string
-  icon: IconDefinition
+const TABLET_HOME_RAIL_QUERY = '(min-width: 768px)'
+function getTimeGreeting(hour = new Date().getHours()) {
+  if (hour < 5 || hour >= 18) return 'Magandang gabi'
+  if (hour < 11) return 'Magandang umaga'
+  if (hour < 13) return 'Magandang tanghali'
+  return 'Magandang hapon'
 }
 
-const homeAiFeatures: HomeAiFeature[] = [
-  {
-    title: 'AI Chatbot',
-    description: 'Ask for gala ideas',
-    href: '/ask-ai/chatbot',
-    icon: faRobot,
-  },
-  {
-    title: 'AI Maps',
-    description: 'Find places with AI',
-    href: '/ask-ai/maps',
-    icon: faHandSparkles,
-  },
-]
-
-const TABLET_HOME_RAIL_QUERY = '(min-width: 768px)'
 function HomeThemeToggleButton() {
   const { resolvedTheme, setThemePreference } = useTheme()
 
@@ -514,8 +502,8 @@ function HomeFeaturedCard({
             <div className="absolute inset-0 bg-[linear-gradient(145deg,#cbd5e1_0%,#94a3b8_52%,#64748b_100%)]" />
           )}
 
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0)_0%,rgba(255,255,255,0)_40%,rgba(15,23,42,0.14)_60%,rgba(15,23,42,0.82)_100%)]" />
-          <div className="absolute inset-x-0 bottom-0 h-24 bg-[linear-gradient(180deg,rgba(15,23,42,0)_0%,rgba(15,23,42,0.18)_35%,rgba(15,23,42,0.6)_100%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0)_0%,rgba(255,255,255,0)_40%,rgba(27,26,23,0.14)_60%,rgba(27,26,23,0.82)_100%)]" />
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-[linear-gradient(180deg,rgba(27,26,23,0)_0%,rgba(27,26,23,0.18)_35%,rgba(27,26,23,0.6)_100%)]" />
 
           <button
             type="button"
@@ -523,7 +511,7 @@ function HomeFeaturedCard({
             disabled={isSaving}
             aria-label={isSaved ? `Remove ${place.name} from favorites` : `Save ${place.name} to favorites`}
             data-drag-scroll-ignore="true"
-            className={`absolute right-2.5 top-2.5 flex h-[28px] w-[28px] items-center justify-center rounded-full border border-white/75 bg-white/92 shadow-[0_4px_10px_rgba(15,23,42,0.06)] ${
+            className={`absolute right-2.5 top-2.5 flex h-[28px] w-[28px] items-center justify-center rounded-full border border-white/75 bg-white/92 shadow-[0_4px_10px_rgba(27,26,23,0.06)] ${
               isSaved ? 'text-rose-500' : 'text-slate-500'
             }`}
           >
@@ -540,7 +528,7 @@ function HomeFeaturedCard({
                   <FontAwesomeIcon icon={faLocationDot} className="h-3 w-3 shrink-0" />
                   <span className="truncate">{locationText}</span>
                 </span>
-                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[rgba(15,23,42,0.36)] px-2.5 py-1 font-semibold text-white">
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[rgba(27,26,23,0.36)] px-2.5 py-1 font-semibold text-white">
                   <RatingStars value={ratingValue} />
                   {ratingText}
                 </span>
@@ -1078,6 +1066,7 @@ function getRailItemTargetLeft(element: HTMLElement, item: HTMLElement) {
 function HomePage({ navigationSource }: { navigationSource: NavigationSource }) {
   const { currentProfile, currentUser } = useAppUser()
   const guestAuth = useGuestAuthPrompt()
+  const weather = useManilaWeather()
   const initialHomeScrollCacheRef = useRef(readHomeScrollCache())
   const hasRestoredHomeScrollRef = useRef(false)
   const [activeTopPicksTab, setActiveTopPicksTab] = useState<'all' | 'popular' | 'recommended'>(
@@ -1505,71 +1494,59 @@ function HomePage({ navigationSource }: { navigationSource: NavigationSource }) 
       <main className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
         <div className="mx-auto flex min-h-screen w-full max-w-[1320px] flex-col px-4 pb-[calc(env(safe-area-inset-bottom,0px)+6.5rem)] pt-[max(18px,env(safe-area-inset-top))] sm:px-5 sm:pb-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] md:px-6 md:pb-[calc(env(safe-area-inset-bottom,0px)+5rem)] md:pt-10 lg:px-8 lg:pb-[calc(env(safe-area-inset-bottom,0px)+4.5rem)]">
           <section className="min-w-0 pt-2 md:pt-0">
-            <div className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em]" style={{ color: 'var(--home-eyebrow)' }}>
-              <FontAwesomeIcon icon={faCompass} className="h-4 w-4" style={{ color: 'var(--home-eyebrow-icon)' }} />
-              <span>DISCOVER</span>
-            </div>
             <div className="flex items-center justify-between gap-4">
-              <p className="min-w-0 flex-1 truncate text-[18px] font-medium leading-tight text-[var(--text-main)] sm:text-[18px]">
-                Hi, <span className="font-bold">{greetingName}!</span>
+              <p className="min-w-0 truncate text-[14px] text-[var(--text-muted)]">
+                {getTimeGreeting()}, <span className="font-semibold text-[var(--text-main)]">{greetingName}</span>
+                {weather ? <span className="font-data hidden text-[12px] sm:inline"> · {weather.temperature}°C {weather.label.toLowerCase()}</span> : null}
               </p>
-
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 lg:hidden">
                 <HomeThemeToggleButton />
                 <UserMenu user={currentUser} profile={currentProfile} compact />
               </div>
             </div>
 
-            <p className="mt-2 max-w-[22rem] text-[13px] leading-6" style={{ color: 'var(--home-copy)' }}>
-              Curated spots, cities, and categories in one clean view.
-            </p>
+            <h1 className="mt-1 text-[34px] font-medium leading-[1.05] text-[var(--text-main)] sm:text-[40px] lg:text-[48px]">
+              Saan tayo <em className="text-[var(--primary)]">gagala</em>?
+            </h1>
 
             <button
               type="button"
               onClick={() => { saveHomePageState(); navigateToPath('/search') }}
-              className="home-search-button mt-8 flex h-[56px] w-full items-center justify-between rounded-[20px] border px-4 transition"
+              className="home-search-button mt-5 flex h-[52px] w-full items-center justify-between rounded-[16px] border px-4 transition lg:max-w-[640px]"
             >
               <span className="flex min-w-0 items-center gap-2.5" style={{ color: 'var(--home-search-text)' }}>
-                <FontAwesomeIcon icon={faMagnifyingGlass} className="h-[21px] w-[21px] shrink-0" style={{ color: 'var(--home-eyebrow-icon)' }} />
-                <span className="truncate text-[15px] font-medium" style={{ color: 'var(--home-search-placeholder)' }}>Discover a city</span>
+                <FontAwesomeIcon icon={faMagnifyingGlass} className="h-[18px] w-[18px] shrink-0" style={{ color: 'var(--home-eyebrow-icon)' }} />
+                <span className="truncate text-[15px]" style={{ color: 'var(--home-search-placeholder)' }}>Places, cities, vibes…</span>
               </span>
-              <FontAwesomeIcon icon={faSliders} className="h-[21px] w-[21px] shrink-0" style={{ color: 'var(--home-eyebrow-icon)' }} />
+              <FontAwesomeIcon icon={faSliders} className="h-[18px] w-[18px] shrink-0" style={{ color: 'var(--home-eyebrow-icon)' }} />
             </button>
 
-            <section className="mt-9 md:mt-7">
-              <div className="mb-2 flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em]" style={{ color: 'var(--home-eyebrow)' }}>
-                <FontAwesomeIcon icon={faHandSparkles} className="h-3.5 w-3.5" style={{ color: 'var(--home-eyebrow-icon)' }} />
-                <span>AI Features</span>
+            {weather?.isRaining ? (
+              <div className="mt-6 lg:max-w-[640px]">
+                <RainyDayBanner weather={weather} />
               </div>
+            ) : null}
 
-              <div className="grid grid-cols-2 gap-3">
-                {homeAiFeatures.map((feature) => {
-                  const Icon = feature.icon
-
-                  return (
-                    <button
-                      key={feature.href}
-                      type="button"
-                      onClick={() => { saveHomePageState(); navigateToPath(feature.href) }}
-                      className="home-ai-card flex min-w-0 items-center gap-3 rounded-[18px] border px-3.5 py-3 text-left transition hover:-translate-y-0.5"
-                    >
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl" style={{ background: 'var(--home-ai-icon-bg)', color: 'var(--home-ai-icon-text)' }}>
-                        <FontAwesomeIcon icon={Icon} className="h-4.5 w-4.5" />
-                      </span>
-
-                      <span className="min-w-0">
-                        <span className="block truncate text-[14px] font-bold tracking-[-0.02em]" style={{ color: 'var(--home-ai-title)' }}>
-                          {feature.title}
-                        </span>
-                        <span className="block truncate text-[12px]" style={{ color: 'var(--home-ai-description)' }}>
-                          {feature.description}
-                        </span>
-                      </span>
-                    </button>
-                  )
-                })}
+            <div className="mt-7 grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-6">
+              <div className="min-w-0">
+                <div className="mb-2.5 flex items-center justify-between gap-3">
+                  <h2 className="font-data text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">
+                    Your next gala
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() => { saveHomePageState(); navigateToPath('/gala-plans') }}
+                    className="text-[13px] font-medium text-[var(--text-muted)] transition-colors hover:text-[var(--text-main)]"
+                  >
+                    All plans
+                  </button>
+                </div>
+                <NextGalaCard />
               </div>
-            </section>
+              <div className="min-w-0 lg:pt-[34px]">
+                <PlanWithAiCard />
+              </div>
+            </div>
           </section>
 
           <div className="mt-8 grid min-w-0 gap-7 md:mt-10 md:gap-10 lg:gap-12">

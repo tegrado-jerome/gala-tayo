@@ -4,26 +4,10 @@ import AppHeader from '../components/AppHeader'
 import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
 import PromptBuilderModal from '../components/PromptBuilderModal'
 import { BOTTOM_NAV_RESERVED_CLASS } from '../components/layout/Primitives'
-import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { navigateToPath, writePlaceReturnState } from '../utils/navigation'
-import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
-import { useAskAiUsageAutoRefresh } from '../hooks/useAskAiUsageAutoRefresh'
 import { useAskAiViewportHeightSync } from '../hooks/useAskAiViewportHeightSync'
-import {
-  getAskAiRuntimeState,
-  hasActiveAskAiRuntimeState,
-  resetAskAiRuntimeState,
-  resumeAskAiRuntimeJob,
-  seedAskAiRuntimeState,
-  submitAskAiRuntimeRequest,
-  subscribeToAskAiRuntime,
-} from '../utils/askAiRuntime'
-import type { ChatMessage } from '../utils/askAiRuntime'
 import { getApiUrl } from '../utils/apiClient'
-import { getAskAiUsageStatusFromResponse, type AskAiUsageResponse, type AskAiUsageStatus } from '../utils/askAiUsage'
-import { buildAskAiRequestHeaders, getOrCreateAskAiGuestId } from '../utils/askAiIdentity'
 import {
-  trackAskAiChatbotUsed,
   trackSearchResultSelected,
   trackSearchSubmitted,
 } from '../utils/analytics'
@@ -35,13 +19,10 @@ import {
   type CategoryChip,
   type AreaChip,
   type BudgetValue,
-  type SearchMode,
-  type AskAiSource,
   type HomePageProps,
   type BackendSearchPlace,
   type BackendSearchStatus,
   type SearchRouteCache,
-  type AskAiRouteCache,
   type FiltersCache,
   type MobileResultsViewMode,
   SEARCH_RESULTS_PER_PAGE,
@@ -52,9 +33,6 @@ import {
   clearAllSearchRouteCaches,
   readSearchRouteCache,
   writeSearchRouteCache,
-  readAskAiRouteCache,
-  writeAskAiRouteCache,
-  clearAskAiRouteCache,
   readFiltersCache,
   writeFiltersCache,
   getSearchPlaceViewportTop,
@@ -85,50 +63,13 @@ import {
 import PlaceCard from '../components/PlaceCard'
 import MapView from '../components/MapView'
 
-import {
-  AskAiModePanel,
-} from '../components/home/ask-ai/AskAiComponents'
-
-function isAskAiChatbotDailyLimitMessage(message: string | null) {
-  if (!message) {
-    return false
-  }
-
-  const normalized = message.trim().toLowerCase()
-  return (
-    normalized === 'you have reached your chatbot ai daily limit.' ||
-    normalized === 'daily_ai_limit_reached'
-  )
-}
-
 function SearchHub({
-  initialMode = 'places',
   initialPromptBuilderOpen = false,
   initialSearchState,
-  initialAskAiQuestion = '',
   navigationSource = 'push',
 }: HomePageProps) {
   const initialFiltersCacheRef = useRef<FiltersCache | null>(readFiltersCache())
-  const initialAskAiRuntimeStateRef = useRef(
-    initialMode === 'ask-ai' && hasActiveAskAiRuntimeState()
-      ? getAskAiRuntimeState()
-      : null
-  )
-  const initialAskAiRouteCacheRef = useRef<AskAiRouteCache | null>(
-    initialMode === 'ask-ai' ? readAskAiRouteCache() : null
-  )
-  const initialAskAiRuntimeState = initialAskAiRuntimeStateRef.current
-  const initialAskAiRouteCache = initialAskAiRouteCacheRef.current
-  const initialAskAiState = initialAskAiRuntimeState ?? initialAskAiRouteCache
-  const normalizedInitialAskAiQuestion = normalizeSearchText(initialAskAiQuestion)
-  const shouldUseCachedAskAiState =
-    initialMode === 'ask-ai' &&
-    Boolean(initialAskAiState) &&
-    (
-      !normalizedInitialAskAiQuestion ||
-      initialAskAiState?.question === normalizedInitialAskAiQuestion
-    )
-  const shouldUseSearchRouteCache = initialMode === 'places' && isSearchResultsRoute() && navigationSource === 'pop'
+  const shouldUseSearchRouteCache = isSearchResultsRoute() && navigationSource === 'pop'
   const initialRequestedPage =
     typeof initialSearchState?.page === 'number' && Number.isFinite(initialSearchState.page) && initialSearchState.page > 0
       ? Math.floor(initialSearchState.page)
@@ -137,43 +78,7 @@ function SearchHub({
     shouldUseSearchRouteCache ? readSearchRouteCache() : null
   )
   const initialRouteCache = initialRouteCacheRef.current
-  const [selectedMode, setSelectedMode] = useState<SearchMode>(initialMode)
-  const { session, isSessionLoading } = useSavedFavorites()
   useAskAiViewportHeightSync()
-  const [askAiUsageStatus, setAskAiUsageStatus] = useState<AskAiUsageStatus | null>(null)
-  const [isAskAiUsageLoading, setIsAskAiUsageLoading] = useState(false)
-  const [askAiUsageError, setAskAiUsageError] = useState<string | null>(null)
-  const [askAiUsageRefreshSignal, setAskAiUsageRefreshSignal] = useState(0)
-  const [askAiQuestion, setAskAiQuestion] = useState(
-    shouldUseCachedAskAiState
-      ? initialAskAiState?.question ?? ''
-      : initialAskAiQuestion
-  )
-  const [askAiAnswer, setAskAiAnswer] = useState(
-    shouldUseCachedAskAiState
-      ? initialAskAiState?.answer ?? ''
-      : ''
-  )
-  const [askAiSources, setAskAiSources] = useState<AskAiSource[]>(
-    shouldUseCachedAskAiState
-      ? initialAskAiState?.sources ?? []
-      : []
-  )
-  const [isAskAiSubmitting, setIsAskAiSubmitting] = useState(
-    shouldUseCachedAskAiState
-      ? initialAskAiState?.isSubmitting === true
-      : false
-  )
-  const [askAiAnswerError, setAskAiAnswerError] = useState<string | null>(
-    shouldUseCachedAskAiState
-      ? (initialAskAiState?.answerError && isAskAiChatbotDailyLimitMessage(initialAskAiState.answerError) ? null : initialAskAiState?.answerError ?? null)
-      : null
-  )
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>(
-    shouldUseCachedAskAiState
-      ? initialAskAiState?.messages ?? []
-      : []
-  )
   const [isPromptBuilderOpen, setIsPromptBuilderOpen] = useState(initialPromptBuilderOpen)
   const [categories, setCategories] = useState(initialFiltersCacheRef.current?.categories ?? fallbackCategories)
   const [areas, setAreas] = useState<AreaChip[]>(initialFiltersCacheRef.current?.areas ?? fallbackAreas)
@@ -215,7 +120,6 @@ function SearchHub({
   const searchRequestStartTimeRef = useRef(0)
   const MIN_SEARCH_LOADING_MS = 400
   const lastAutoSearchSignatureRef = useRef<string | null>(null)
-  const lastAutoSubmittedAskAiQuestionRef = useRef('')
   const desktopResultsScrollRef = useRef<HTMLElement | null>(null)
   const selectedCategoryName = useMemo(
     () =>
@@ -254,7 +158,7 @@ function SearchHub({
     [rawQuery, searchTotalCount, selectedAreaName, selectedBudgetLabel, selectedCategoryName, selectedGoodForName]
   )
   const canSubmitSearch = Boolean(rawQuery.trim() || selectedCategory || selectedArea || selectedGoodFor || selectedBudget)
-  const searchFilterPanel = selectedMode !== 'ask-ai' ? (
+  const searchFilterPanel = (
     <SearchFilterPanel
       cityLabel="City"
       categoryLabel="Category"
@@ -284,18 +188,17 @@ function SearchHub({
         })
       }}
     />
-  ) : null
-  const shouldShowSearchFiltersPanel = selectedMode !== 'ask-ai' && !hasSearched && !initialSearchState?.autoSearch
+  )
+  const shouldShowSearchFiltersPanel = !hasSearched && !initialSearchState?.autoSearch
   const visiblePlaces = hasSearched ? searchResults : []
   const totalResults = searchTotalCount
   const totalPages = Math.max(1, searchTotalPages)
   const safeCurrentPage = Math.min(Math.max(currentPage, 1), totalPages)
   const selectedPlace = selectedPlaceId ? visiblePlaces.find((place) => place.id === selectedPlaceId) ?? null : null
-  const shouldShowGuidedSearch = selectedMode === 'places' && !hasSearched && !initialSearchState?.autoSearch
+  const shouldShowGuidedSearch = !hasSearched && !initialSearchState?.autoSearch
   const shouldUseMinimalSearchLayout = Boolean(initialSearchState?.autoSearch)
-  const isRegisteredUser = Boolean(session?.user)
   const isSearching = isInitialSearching || isRefreshingSearch
-  const shouldShowSearchLoadingState = selectedMode === 'places' && isInitialSearching
+  const shouldShowSearchLoadingState = isInitialSearching
   const clearFilterChip = (key: 'category' | 'city' | 'good_for' | 'budget') => {
     const nextState = {
       category: key === 'category' ? null : selectedCategory,
@@ -334,9 +237,6 @@ function SearchHub({
 
     void handleSearch(mergedState)
   }
-  const handleRetryAskAiUsage = () => {
-    setAskAiUsageRefreshSignal((signal) => signal + 1)
-  }
   const handleRawQueryChange = (query: string) => {
     setRawQuery(query)
     if (query.trim()) {
@@ -351,50 +251,6 @@ function SearchHub({
     if (searchError) {
       setSearchError(null)
     }
-  }
-
-  const handleAskAiSubmit = async (questionOverride?: string) => {
-    const question = normalizeSearchText(questionOverride ?? askAiQuestion)
-
-    const guestId = session?.access_token ? null : getOrCreateAskAiGuestId()
-
-    if (!question || isAskAiSubmitting || (!session?.access_token && !guestId)) {
-      return
-    }
-
-    setAskAiQuestion(question)
-
-    const updatedMessages: ChatMessage[] = [
-      ...chatMessages,
-      { role: 'user' as const, content: question },
-    ]
-    setChatMessages(updatedMessages)
-
-    await submitAskAiRuntimeRequest({
-      question,
-      accessToken: session?.access_token ?? null,
-      guestId,
-      messages: updatedMessages,
-    })
-    setAskAiUsageRefreshSignal((signal) => signal + 1)
-  }
-
-  const handleStartOverAskAi = () => {
-    resetAskAiRuntimeState({
-      usageStatus: askAiUsageStatus,
-    })
-    setAskAiQuestion('')
-    setAskAiAnswer('')
-    setAskAiSources([])
-    setAskAiAnswerError(null)
-    setAskAiUsageError(null)
-    setChatMessages([])
-
-    if (!askAiUsageStatus && session?.access_token) {
-      setAskAiUsageRefreshSignal((current) => current + 1)
-    }
-
-    clearAskAiRouteCache()
   }
 
   const resetSearchState = () => {
@@ -647,7 +503,6 @@ function SearchHub({
         throw new Error(data.error || data.message || 'Search failed.')
       }
 
-      setSelectedMode('places')
       setLastSearchQuery(nextRawQuery)
       setSearchId(data.searchId ?? null)
       setSearchStatus(data.searchStatus ?? null)
@@ -781,214 +636,6 @@ function SearchHub({
   }, [initialRouteCache, navigationSource])
 
   useEffect(() => {
-    if (initialMode !== 'ask-ai') {
-      return
-    }
-
-      const initialAnswerError = initialAskAiState?.answerError ?? null
-      seedAskAiRuntimeState({
-        question: initialAskAiState?.question ?? '',
-        answer: initialAskAiState?.answer ?? '',
-        sources: initialAskAiState?.sources ?? [],
-        answerError: initialAnswerError && isAskAiChatbotDailyLimitMessage(initialAnswerError) ? null : initialAnswerError,
-        usageStatus: null,
-        isSubmitting: initialAskAiState?.isSubmitting === true,
-        messages: initialAskAiState?.messages ?? [],
-        jobId: initialAskAiState?.jobId ?? null,
-        jobStatus: initialAskAiState?.jobStatus ?? null,
-      })
-
-    let hasReceivedInitialRuntimeState = false
-
-    return subscribeToAskAiRuntime((runtimeState) => {
-      setAskAiQuestion(runtimeState.question)
-      setAskAiAnswer(runtimeState.answer)
-      setAskAiSources(runtimeState.sources)
-      setAskAiAnswerError(runtimeState.answerError)
-      if (hasReceivedInitialRuntimeState && runtimeState.usageStatus) {
-        setAskAiUsageStatus(runtimeState.usageStatus)
-      }
-      hasReceivedInitialRuntimeState = true
-      setIsAskAiSubmitting(runtimeState.isSubmitting)
-
-      if (runtimeState.answer && runtimeState.jobStatus === 'completed') {
-        trackAskAiChatbotUsed({
-          answerLength: runtimeState.answer.length,
-        })
-        setChatMessages((prev) => {
-          const lastMessage = prev[prev.length - 1]
-          if (lastMessage?.role === 'assistant' && lastMessage.content === runtimeState.answer) {
-            return prev
-          }
-          if (lastMessage?.role === 'assistant') {
-            return [...prev.slice(0, -1), { role: 'assistant' as const, content: runtimeState.answer }]
-          }
-          return [...prev, { role: 'assistant' as const, content: runtimeState.answer }]
-        })
-      }
-    })
-  }, [initialAskAiRuntimeState, initialAskAiState, initialMode])
-
-  useEffect(() => {
-    if (initialMode !== 'ask-ai') {
-      return
-    }
-
-    const question = normalizeSearchText(initialAskAiQuestion)
-    if (!question || lastAutoSubmittedAskAiQuestionRef.current === question) {
-      return
-    }
-
-    const runtimeState = getAskAiRuntimeState()
-    const hasActiveRequestForQuestion =
-      question &&
-      runtimeState.question === question &&
-      runtimeState.isSubmitting
-    const hasCachedResultForQuestion =
-      question &&
-      runtimeState.question === question &&
-      Boolean(runtimeState.answer || runtimeState.answerError || runtimeState.sources.length)
-
-    if (hasActiveRequestForQuestion || hasCachedResultForQuestion) {
-      lastAutoSubmittedAskAiQuestionRef.current = question
-      return
-    }
-
-    if (isSessionLoading || (!session?.access_token && !getOrCreateAskAiGuestId())) {
-      return
-    }
-
-    lastAutoSubmittedAskAiQuestionRef.current = question
-    void handleAskAiSubmit(question)
-  }, [handleAskAiSubmit, initialAskAiQuestion, initialMode, isSessionLoading, session?.access_token])
-
-  useEffect(() => {
-    if (initialMode !== 'ask-ai') {
-      return
-    }
-
-    const normalizedQuestion = normalizeSearchText(askAiQuestion)
-
-    if (!normalizedQuestion && !askAiAnswer && !askAiSources.length && !askAiAnswerError) {
-      clearAskAiRouteCache()
-      return
-    }
-
-    const runtimeState = getAskAiRuntimeState()
-
-    writeAskAiRouteCache({
-      question: normalizedQuestion,
-      answer: askAiAnswer,
-      sources: askAiSources,
-      answerError: askAiAnswerError,
-      isSubmitting: isAskAiSubmitting,
-      messages: chatMessages,
-      jobId: runtimeState.jobId,
-      jobStatus: runtimeState.jobStatus,
-    })
-  }, [askAiAnswer, askAiAnswerError, askAiQuestion, askAiSources, initialMode, isAskAiSubmitting, chatMessages])
-
-  useEffect(() => {
-    if (initialMode !== 'ask-ai' || !session?.access_token) {
-      return
-    }
-
-    void resumeAskAiRuntimeJob({
-      accessToken: session.access_token,
-    })
-  }, [initialMode, session?.access_token])
-
-  useEffect(() => {
-    if (!askAiUsageStatus?.allowed) {
-      return
-    }
-
-    setAskAiAnswerError((currentValue) =>
-      isAskAiChatbotDailyLimitMessage(currentValue) ? null : currentValue
-    )
-  }, [askAiUsageStatus?.allowed])
-
-  useAskAiUsageAutoRefresh({
-    enabled: selectedMode === 'ask-ai' && !isSessionLoading,
-    onRefresh: () => {
-      setAskAiUsageRefreshSignal((prev) => prev + 1)
-    },
-  })
-
-  useEffect(() => {
-    if (selectedMode !== 'ask-ai') {
-      return
-    }
-
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
-    document.documentElement.scrollTop = 0
-    document.body.scrollTop = 0
-    lockBodyScroll()
-
-    return () => {
-      unlockBodyScroll()
-    }
-  }, [selectedMode])
-
-  useEffect(() => {
-    if (selectedMode !== 'ask-ai' || isSessionLoading) {
-      return
-    }
-
-    const controller = new AbortController()
-    const usageEndpoint = getApiUrl('/ask-ai/usage/check')
-    const guestId = session?.access_token ? null : getOrCreateAskAiGuestId()
-
-    const loadAskAiUsage = async () => {
-      try {
-        setIsAskAiUsageLoading(true)
-        setAskAiUsageError(null)
-        setAskAiUsageStatus(null)
-
-        if (!session?.access_token && !guestId) {
-          throw new Error('Missing Ask AI guest identifier.')
-        }
-
-        const response = await fetch(usageEndpoint, {
-          method: 'GET',
-          cache: 'no-store',
-          headers: buildAskAiRequestHeaders(session?.access_token ?? null),
-          signal: controller.signal,
-        })
-
-        const data = (await response.json()) as AskAiUsageResponse
-
-        if (!response.ok) {
-          throw new Error(data.message || data.error || 'Failed to check Ask AI usage.')
-        }
-
-        const usageStatus = getAskAiUsageStatusFromResponse(data, ['chatbotAi'])
-
-        if (!usageStatus) {
-          throw new Error('Ask AI usage response was incomplete.')
-        }
-
-        setAskAiUsageStatus(usageStatus)
-      } catch (error) {
-        if ((error as Error).name === 'AbortError') {
-          return
-        }
-
-        const message = error instanceof Error ? error.message : 'Failed to check Ask AI usage.'
-        setAskAiUsageError(message)
-      } finally {
-        if (!controller.signal.aborted) {
-          setIsAskAiUsageLoading(false)
-        }
-      }
-    }
-
-    void loadAskAiUsage()
-
-    return () => controller.abort()
-  }, [askAiUsageRefreshSignal, isSessionLoading, selectedMode, session?.access_token])
-
-  useEffect(() => {
     const controller = new AbortController()
     const filtersEndpoint = getApiUrl('/filters')
 
@@ -1119,7 +766,7 @@ function SearchHub({
                     </div>
                   ) : (
                     <div className="mt-4 grid gap-4">
-                      <section className="overflow-hidden rounded-[22px] border border-[var(--line)] bg-white shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
+                      <section className="overflow-hidden rounded-[22px] border border-[var(--line)] bg-white shadow-[0_10px_24px_rgba(27,26,23,0.05)]">
                         <MapView
                           places={visiblePlaces}
                           selectedPlaceId={selectedPlaceId}
@@ -1228,7 +875,7 @@ function SearchHub({
   }
 
     return (
-      <div className={`${selectedMode === 'ask-ai' ? 'fixed inset-0 h-[var(--ask-ai-viewport-height,100svh)] w-full overflow-hidden overscroll-none xl:relative xl:inset-auto' : 'min-h-screen lg:h-[100dvh] lg:overflow-hidden'} bg-[var(--bg)] text-[var(--text)]`}>
+      <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] lg:h-[calc(100dvh-var(--site-header-h))] lg:overflow-hidden">
         <GuestAuthPrompt
           variant="ask-ai"
           mode="modal"
@@ -1238,10 +885,10 @@ function SearchHub({
         />
         {shouldShowSearchFiltersPanel ? searchFilterPanel : null}
 
-      <div className={`gala-page-background overflow-x-hidden lg:hidden ${selectedMode === 'ask-ai' ? 'flex h-full flex-col overflow-hidden overscroll-none' : 'flex min-h-screen flex-col'}`}>
-          {selectedMode !== 'ask-ai' && <AppHeader signInLabel="Mag-sign in" minimal />}
+      <div className="gala-page-background flex min-h-screen flex-col overflow-x-hidden lg:hidden">
+          <AppHeader signInLabel="Mag-sign in" minimal />
 
-          <main className={`overflow-x-hidden ${isPromptBuilderOpen ? 'flex min-h-[100dvh] flex-col overflow-hidden pb-0' : selectedMode === 'ask-ai' ? 'flex flex-1 min-h-0 flex-col overflow-hidden overscroll-none' : 'flex-1 min-h-0 pb-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] sm:pb-[calc(env(safe-area-inset-bottom,0px)+4.75rem)]'}`}>
+          <main className={`overflow-x-hidden ${isPromptBuilderOpen ? 'flex min-h-[100dvh] flex-col overflow-hidden pb-0' : 'flex-1 min-h-0 pb-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] sm:pb-[calc(env(safe-area-inset-bottom,0px)+4.75rem)]'}`}>
             {isPromptBuilderOpen ? (
               <PromptBuilderModal
                 isOpen={isPromptBuilderOpen}
@@ -1269,8 +916,6 @@ function SearchHub({
                 onSubmitSearch={() => void handleSearch()}
               />
             ) : (
-              <>
-                {selectedMode === 'places' ? (
                   visiblePlaces.length > 0 ? (
                     <MobileResultsView
                       places={visiblePlaces}
@@ -1309,26 +954,6 @@ function SearchHub({
                       />
                     </section>
                   )
-                ) : (
-                  <AskAiModePanel
-                    isRegistered={isRegisteredUser}
-                    isSessionLoading={isSessionLoading}
-                    usageStatus={askAiUsageStatus}
-                    isUsageLoading={isAskAiUsageLoading}
-                    usageError={askAiUsageError}
-                    answer={askAiAnswer}
-                    sources={askAiSources}
-                    isSubmitting={isAskAiSubmitting}
-                    answerError={askAiAnswerError}
-                    messages={chatMessages}
-                    onRetryUsage={handleRetryAskAiUsage}
-                    onSubmit={(questionOverride) => void handleAskAiSubmit(questionOverride)}
-                    onStartOver={handleStartOverAskAi}
-                    onGuestUpgradePrompt={() => setPromptLogin(true)}
-                    className="h-full"
-                  />
-                )}
-              </>
             )}
           </main>
         </div>
@@ -1336,19 +961,15 @@ function SearchHub({
         <div
           className={`hidden w-full lg:grid ${
             isPromptBuilderOpen
-              ? 'h-[var(--ask-ai-viewport-height,100svh)] overflow-hidden grid-rows-[auto_minmax(0,1fr)]'
-              : selectedMode === 'ask-ai'
-                ? 'h-[var(--ask-ai-viewport-height,100svh)] overflow-hidden grid-rows-[minmax(0,1fr)]'
-              : 'h-[var(--ask-ai-viewport-height,100svh)] overflow-hidden lg:grid-rows-[auto_minmax(0,1fr)_auto]'
+              ? 'h-[calc(var(--ask-ai-viewport-height,100svh)-var(--site-header-h))] overflow-hidden grid-rows-[auto_minmax(0,1fr)]'
+              : 'h-[calc(var(--ask-ai-viewport-height,100svh)-var(--site-header-h))] overflow-hidden lg:grid-rows-[auto_minmax(0,1fr)_auto]'
           }`}
         >
-          {selectedMode !== 'ask-ai' && <AppHeader minimal />}
+          <AppHeader minimal />
 
           <div
             className={
               isPromptBuilderOpen
-                ? 'flex h-full min-h-0 flex-col overflow-hidden'
-              : selectedMode === 'ask-ai'
                 ? 'flex h-full min-h-0 flex-col overflow-hidden'
                 : shouldShowGuidedSearch
                   ? 'min-h-0 overflow-hidden'
@@ -1382,8 +1003,6 @@ function SearchHub({
                 onSubmitSearch={() => void handleSearch()}
               />
             ) : (
-              <>
-                {selectedMode === 'places' ? (
                   visiblePlaces.length > 0 ? (
                     <DesktopResultsView
                       rawQuery={rawQuery}
@@ -1422,26 +1041,6 @@ function SearchHub({
                       />
                     </section>
                   )
-                ) : (
-                  <AskAiModePanel
-                    isRegistered={isRegisteredUser}
-                    isSessionLoading={isSessionLoading}
-                    usageStatus={askAiUsageStatus}
-                    isUsageLoading={isAskAiUsageLoading}
-                    usageError={askAiUsageError}
-                    answer={askAiAnswer}
-                    sources={askAiSources}
-                    isSubmitting={isAskAiSubmitting}
-                    answerError={askAiAnswerError}
-                    messages={chatMessages}
-                    onRetryUsage={handleRetryAskAiUsage}
-                    onSubmit={(questionOverride) => void handleAskAiSubmit(questionOverride)}
-                    onStartOver={handleStartOverAskAi}
-                    onGuestUpgradePrompt={() => setPromptLogin(true)}
-                    className="h-full"
-                  />
-                )}
-              </>
             )}
           </div>
         </div>

@@ -1,6 +1,6 @@
 import { Children, useEffect, useMemo, useState, type ReactNode } from 'react'
 import AppHeader from '../components/AppHeader'
-import MinimalBackNav from '../components/MinimalBackNav'
+import MinimalBackNav from '../components/navigation/MinimalBackNav'
 import { AppIcon } from '../components/AppIcon'
 import GoogleSignInButton from '../components/GoogleSignInButton'
 import PageHeroHeader from '../components/PageHeroHeader'

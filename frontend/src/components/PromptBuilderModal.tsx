@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { AppIcon } from './AppIcon'
-import MinimalBackNav from './MinimalBackNav'
+import MinimalBackNav from './navigation/MinimalBackNav'
 import type { PromptBuilderFieldId, PromptBuilderState } from '../utils/promptBuilder'
 import {
   buildPromptBuilderOutputs,
@@ -101,7 +101,7 @@ function ExternalLinkBadge({ label }: { label: string }) {
   }
 
   return (
-    <span className="relative inline-flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[rgba(15,23,42,0.1)] bg-white">
+    <span className="relative inline-flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[rgba(27,26,23,0.1)] bg-white">
       <span className="text-[9px] font-bold tracking-[0.04em] text-slate-500">
         {label.slice(0, 2).toUpperCase()}
       </span>
@@ -294,7 +294,7 @@ export default function PromptBuilderModal({
         </div>
 
         {isGeneratingPrompt ? (
-          <div className="mt-4 rounded-2xl border border-[rgba(15,23,42,0.08)] bg-white px-4 py-5 shadow-[0_8px_24px_rgba(15,23,42,0.03)] sm:px-5 sm:py-6">
+          <div className="mt-4 rounded-2xl border border-[rgba(27,26,23,0.08)] bg-white px-4 py-5 shadow-[0_8px_24px_rgba(27,26,23,0.03)] sm:px-5 sm:py-6">
             <div className="animate-pulse space-y-3">
               <div className="h-6 w-40 rounded-full bg-slate-200" />
               <div className="h-4 w-64 rounded-full bg-slate-200" />
@@ -335,7 +335,7 @@ export default function PromptBuilderModal({
                   </div>
                 </div>
 
-                <pre className="mt-3 max-h-[180px] overflow-auto whitespace-pre-wrap break-words rounded-[14px] border border-[rgba(15,23,42,0.1)] bg-[linear-gradient(180deg,#fcfdff,#f7f9fc)] p-3 text-[13px] leading-relaxed text-slate-800 sm:text-[14px] lg:max-h-[240px]">
+                <pre className="mt-3 max-h-[180px] overflow-auto whitespace-pre-wrap break-words rounded-[14px] border border-[rgba(27,26,23,0.1)] bg-[linear-gradient(180deg,#fcfdff,#f7f9fc)] p-3 text-[13px] leading-relaxed text-slate-800 sm:text-[14px] lg:max-h-[240px]">
                   {aiPrompt}
                 </pre>
                 <button
@@ -351,7 +351,7 @@ export default function PromptBuilderModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="mt-3 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[14px] border border-[rgba(15,23,42,0.08)] bg-slate-100 px-4 py-2.5 text-[13px] font-semibold text-slate-700 transition hover:bg-slate-200"
+                  className="mt-3 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[14px] border border-[rgba(27,26,23,0.08)] bg-slate-100 px-4 py-2.5 text-[13px] font-semibold text-slate-700 transition hover:bg-slate-200"
                 >
                   <BotIcon />
                   <span>Back to GalaTayo AI</span>
@@ -360,7 +360,7 @@ export default function PromptBuilderModal({
 
               <div
                 aria-hidden="true"
-                className="my-4 h-px w-full bg-[rgba(15,23,42,0.08)] lg:hidden"
+                className="my-4 h-px w-full bg-[rgba(27,26,23,0.08)] lg:hidden"
               />
 
               <aside className="prompt-preview-panel">
@@ -378,7 +378,7 @@ export default function PromptBuilderModal({
                       </div>
                     </div>
 
-                    <div className="mt-3 rounded-[14px] border border-[rgba(15,23,42,0.1)] bg-[linear-gradient(180deg,#fbfdff,#f7fbff)] px-3 py-3 text-[13px] leading-relaxed text-slate-800 sm:text-[14px]">
+                    <div className="mt-3 rounded-[14px] border border-[rgba(27,26,23,0.1)] bg-[linear-gradient(180deg,#fbfdff,#f7fbff)] px-3 py-3 text-[13px] leading-relaxed text-slate-800 sm:text-[14px]">
                       {galaTayoSearchPhrase}
                     </div>
 
@@ -392,7 +392,7 @@ export default function PromptBuilderModal({
                     </button>
                   </section>
 
-                  <div className="my-4 border-t border-[rgba(15,23,42,0.08)]" />
+                  <div className="my-4 border-t border-[rgba(27,26,23,0.08)]" />
 
                   <section>
                     <h3 className="text-[0.96rem] font-bold text-slate-950">Use this in another AI</h3>
@@ -407,7 +407,7 @@ export default function PromptBuilderModal({
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label={`Open ${link.label} in a new tab`}
-                          className="inline-flex items-center justify-center gap-2 rounded-[14px] border border-[rgba(15,23,42,0.1)] bg-white px-2.5 py-2.5 text-[12px] font-medium text-slate-900 transition hover:border-[rgba(15,23,42,0.22)] hover:bg-slate-50"
+                          className="inline-flex items-center justify-center gap-2 rounded-[14px] border border-[rgba(27,26,23,0.1)] bg-white px-2.5 py-2.5 text-[12px] font-medium text-slate-900 transition hover:border-[rgba(27,26,23,0.22)] hover:bg-slate-50"
                         >
                           <ExternalLinkBadge label={link.label} />
                           <span>{link.label}</span>
@@ -416,7 +416,7 @@ export default function PromptBuilderModal({
                     </div>
                   </section>
 
-                  <div className="my-4 border-t border-[rgba(15,23,42,0.08)]" />
+                  <div className="my-4 border-t border-[rgba(27,26,23,0.08)]" />
 
                   <section>
                     <div className="flex items-start gap-3">
@@ -454,7 +454,7 @@ export default function PromptBuilderModal({
                           target="_blank"
                           rel="noopener noreferrer"
                           aria-label={`Open ${link.label} in a new tab`}
-                          className="inline-flex items-center justify-center gap-2 rounded-[14px] border border-[rgba(15,23,42,0.1)] bg-white px-2.5 py-2.5 text-[12px] font-medium text-slate-900 transition hover:border-[rgba(15,23,42,0.22)] hover:bg-slate-50"
+                          className="inline-flex items-center justify-center gap-2 rounded-[14px] border border-[rgba(27,26,23,0.1)] bg-white px-2.5 py-2.5 text-[12px] font-medium text-slate-900 transition hover:border-[rgba(27,26,23,0.22)] hover:bg-slate-50"
                         >
                           <ExternalLinkBadge label={link.label} />
                           <span>{link.label}</span>
@@ -515,11 +515,11 @@ export default function PromptBuilderModal({
             {questionSections.map((section, index) => (
               <section
                 key={section.id}
-                className="prompt-step-card min-w-0 rounded-2xl border border-[rgba(15,23,42,0.1)] bg-white p-3 shadow-[0_8px_22px_rgba(15,23,42,0.03)] sm:p-4 lg:p-5"
+                className="prompt-step-card min-w-0 rounded-2xl border border-[rgba(27,26,23,0.1)] bg-white p-3 shadow-[0_8px_22px_rgba(27,26,23,0.03)] sm:p-4 lg:p-5"
               >
                 <div className="step-header flex min-w-0 items-center justify-between gap-2.5">
                   <div className="step-title-group flex min-w-0 items-center gap-2.5">
-                    <span className="step-number inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-[rgba(15,23,42,0.12)] bg-slate-50 text-[13px] font-bold text-slate-900 sm:h-8 sm:w-8 sm:text-[14px] lg:h-9 lg:w-9 lg:text-[15px]">
+                    <span className="step-number inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-[rgba(27,26,23,0.12)] bg-slate-50 text-[13px] font-bold text-slate-900 sm:h-8 sm:w-8 sm:text-[14px] lg:h-9 lg:w-9 lg:text-[15px]">
                       {index + 1}
                     </span>
                     <div className="min-w-0">
@@ -548,7 +548,7 @@ export default function PromptBuilderModal({
                         className={`prompt-chip max-w-full rounded-[999px] border px-2.5 py-1 text-[11px] transition sm:px-3 sm:text-[12px] lg:px-3.5 lg:py-1.5 lg:text-[13px] ${
                           isSelected
                             ? 'selected border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]'
-                            : 'border-[rgba(15,23,42,0.12)] bg-white text-slate-700 hover:border-slate-400'
+                            : 'border-[rgba(27,26,23,0.12)] bg-white text-slate-700 hover:border-slate-400'
                         }`}
                       >
                         <span className="block max-w-full truncate">{chip}</span>
@@ -556,7 +556,7 @@ export default function PromptBuilderModal({
                     )
                   })}
 
-                  <span className="inline-flex max-w-full rounded-[999px] border border-dashed border-[rgba(15,23,42,0.12)] px-2.5 py-1 text-[11px] text-slate-400 sm:px-3 sm:text-[12px] lg:px-3.5 lg:py-1.5 lg:text-[13px]">
+                  <span className="inline-flex max-w-full rounded-[999px] border border-dashed border-[rgba(27,26,23,0.12)] px-2.5 py-1 text-[11px] text-slate-400 sm:px-3 sm:text-[12px] lg:px-3.5 lg:py-1.5 lg:text-[13px]">
                     <span className="block max-w-full truncate">{`${section.customLabel}...`}</span>
                   </span>
                 </div>
@@ -570,7 +570,7 @@ export default function PromptBuilderModal({
                   value={state.custom[section.id]}
                   onChange={(event) => handleCustomChange(section.id, event.target.value)}
                   placeholder={section.placeholder}
-                  className="prompt-custom-input mt-2 block min-h-[38px] w-full min-w-0 max-w-full rounded-xl border border-[rgba(15,23,42,0.12)] bg-[rgba(248,250,252,0.9)] px-3 py-2 text-[13px] text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-300 focus:ring-2 focus:ring-slate-200 sm:text-[14px] lg:min-h-[44px] lg:text-[15px]"
+                  className="prompt-custom-input mt-2 block min-h-[38px] w-full min-w-0 max-w-full rounded-xl border border-[rgba(27,26,23,0.12)] bg-[rgba(248,250,252,0.9)] px-3 py-2 text-[13px] text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-300 focus:ring-2 focus:ring-slate-200 sm:text-[14px] lg:min-h-[44px] lg:text-[15px]"
                 />
               </section>
             ))}
@@ -580,7 +580,7 @@ export default function PromptBuilderModal({
                 type="button"
                 onClick={handleReset}
                 disabled={!showClearAll || isGeneratingPrompt}
-                className="inline-flex min-h-[42px] w-full items-center justify-center gap-2 rounded-full border border-[rgba(15,23,42,0.12)] bg-white px-4 py-2 text-[0.84rem] font-semibold text-slate-700 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition hover:border-[rgba(15,23,42,0.2)] hover:bg-slate-50 disabled:cursor-not-allowed disabled:border-[rgba(15,23,42,0.08)] disabled:bg-slate-50 disabled:text-slate-400 lg:min-h-[44px] lg:text-[0.88rem]"
+                className="inline-flex min-h-[42px] w-full items-center justify-center gap-2 rounded-full border border-[rgba(27,26,23,0.12)] bg-white px-4 py-2 text-[0.84rem] font-semibold text-slate-700 shadow-[0_1px_2px_rgba(27,26,23,0.04)] transition hover:border-[rgba(27,26,23,0.2)] hover:bg-slate-50 disabled:cursor-not-allowed disabled:border-[rgba(27,26,23,0.08)] disabled:bg-[var(--bg-soft)] disabled:text-[var(--text-disabled)] lg:min-h-[44px] lg:text-[0.88rem]"
               >
                 <TrashIcon />
                 <span>Clear all</span>
@@ -590,7 +590,7 @@ export default function PromptBuilderModal({
                 type="button"
                 onClick={handleGeneratePrompt}
                 disabled={isGeneratingPrompt || !hasInput}
-                className="inline-flex min-h-[42px] w-full items-center justify-center gap-2 rounded-full bg-[var(--accent-deep)] px-4 py-2 text-[0.86rem] font-semibold tracking-[-0.01em] text-white shadow-[0_8px_18px_rgba(23,45,107,0.22)] transition hover:bg-[#0f1f4d] disabled:cursor-not-allowed disabled:bg-slate-500 lg:min-h-[44px] lg:text-[0.9rem]"
+                className="inline-flex min-h-[42px] w-full items-center justify-center gap-2 rounded-full bg-[var(--accent-deep)] px-4 py-2 text-[0.86rem] font-semibold tracking-[-0.01em] text-white shadow-[0_8px_18px_rgba(23,45,107,0.22)] transition hover:bg-[#0f1f4d] disabled:cursor-not-allowed disabled:bg-[var(--bg-soft)]0 lg:min-h-[44px] lg:text-[0.9rem]"
               >
                 <GenerateIcon />
                 <span>{isGeneratingPrompt ? 'Generating...' : 'Generate'}</span>
@@ -599,7 +599,7 @@ export default function PromptBuilderModal({
           </div>
 
           <aside className="hidden lg:flex lg:flex-col lg:gap-4 lg:sticky lg:top-6 lg:self-start">
-            <div className="rounded-2xl border border-[rgba(15,23,42,0.08)] bg-white p-5 shadow-[0_8px_22px_rgba(15,23,42,0.03)]">
+            <div className="rounded-2xl border border-[rgba(27,26,23,0.08)] bg-white p-5 shadow-[0_8px_22px_rgba(27,26,23,0.03)]">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[rgba(47,116,232,0.1)] text-[var(--accent-deep)]">
                   <SparkleIcon />

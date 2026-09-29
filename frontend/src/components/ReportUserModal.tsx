@@ -101,7 +101,7 @@ function ReportUserModal({
       <BottomSheet
         isOpen={isOpen}
         onClose={closeIfIdle}
-        sheetClassName="max-w-[380px] rounded-[24px] border border-[#E5E7EB] bg-[#FFFFFF] p-4 shadow-[0_24px_70px_rgba(15,23,42,0.16)] sm:p-4.5"
+        sheetClassName="max-w-[380px] rounded-[24px] border border-[#E5E7EB] bg-[#FFFFFF] p-4 shadow-[0_24px_70px_rgba(27,26,23,0.16)] sm:p-4.5"
         ariaLabel="Report user"
       >
         <div
@@ -136,7 +136,7 @@ function ReportUserModal({
               disabled={isSubmitting}
               className={`min-h-10 rounded-[16px] border px-3.5 py-2.5 text-left text-[13px] font-bold transition disabled:cursor-not-allowed disabled:opacity-70 ${
                 reason === option.value
-                  ? 'border-[#1E3A8A] bg-[var(--accent-soft)] text-[var(--accent)]'
+                  ? 'border-[var(--primary)] bg-[var(--accent-soft)] text-[var(--accent)]'
                   : 'border-[#E5E7EB] bg-[#FFFFFF] text-[var(--text-main)] hover:border-[#CBD5E1]'
               }`}
               aria-pressed={reason === option.value}
@@ -155,7 +155,7 @@ function ReportUserModal({
             maxLength={500}
             rows={3}
             placeholder="Add details to help us review this report."
-            className="mt-1.5 w-full resize-none rounded-[16px] border border-[#E5E7EB] bg-[#FFFFFF] px-3.5 py-3 text-[13px] font-medium leading-5 text-[var(--text-main)] outline-none transition placeholder:text-[#9CA3AF] focus:border-[#1E3A8A] focus:ring-2 focus:ring-[#DBEAFE] disabled:cursor-not-allowed disabled:opacity-70"
+            className="mt-1.5 w-full resize-none rounded-[16px] border border-[#E5E7EB] bg-[#FFFFFF] px-3.5 py-3 text-[13px] font-medium leading-5 text-[var(--text-main)] outline-none transition placeholder:text-[#9CA3AF] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-soft)] disabled:cursor-not-allowed disabled:opacity-70"
           />
           <span className="mt-1 block text-right text-[11px] font-bold text-[var(--muted)]">{details.length}/500</span>
         </label>
@@ -177,7 +177,7 @@ function ReportUserModal({
             type="button"
             onClick={() => void handleSubmit()}
             disabled={isSubmitting || !reason}
-            className="inline-flex min-h-10 flex-1 sm:flex-none items-center justify-center rounded-full border border-[#1E3A8A] bg-[#1E3A8A] px-4 text-[13px] font-black text-white disabled:cursor-not-allowed disabled:opacity-70"
+            className="inline-flex min-h-10 flex-1 sm:flex-none items-center justify-center rounded-full border border-[var(--primary)] bg-[var(--primary)] px-4 text-[13px] font-black text-white disabled:cursor-not-allowed disabled:opacity-70"
           >
             {isSubmitting ? 'Submitting...' : 'Submit'}
           </button>

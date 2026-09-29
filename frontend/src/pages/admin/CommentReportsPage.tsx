@@ -33,7 +33,7 @@ function formatDate(value?: string | null) {
 }
 
 function getStatusClass(status: string) {
-  if (status === 'action_taken') return 'border-[#DBEAFE] bg-[var(--accent-soft)] text-[var(--accent)]'
+  if (status === 'action_taken') return 'border-[var(--primary-soft)] bg-[var(--accent-soft)] text-[var(--accent)]'
   if (status === 'dismissed') return 'border-[#E5E7EB] bg-slate-100 text-slate-700'
   return 'border-amber-200 bg-amber-50 text-amber-700'
 }
@@ -258,7 +258,7 @@ function AdminCommentReportsPage({ session }: { session: Session }) {
                       type="button"
                       onClick={() => void handleModerate(report.id, 'take_action')}
                       disabled={Boolean(mutatingId)}
-                      className="admin-action-button border border-[#1E3A8A] bg-[#1E3A8A] text-white disabled:cursor-not-allowed disabled:opacity-70"
+                      className="admin-action-button border border-[var(--primary)] bg-[var(--primary)] text-white disabled:cursor-not-allowed disabled:opacity-70"
                     >
                       {mutatingId === report.id ? 'Working...' : 'Take action & hide comment'}
                     </button>

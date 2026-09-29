@@ -74,7 +74,7 @@ export function evaluateAskAiPromptGuardDecision(
   };
 }
 
-async function shouldAcceptAskAiPrompt({
+export async function shouldAcceptAskAiPrompt({
   message,
   requestId,
   context,

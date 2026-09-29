@@ -84,7 +84,7 @@ function GoogleSignInButton({ compact = false, className = '', redirectTo }: Goo
       </button>
 
       {errorMessage ? (
-        <p className="absolute right-0 top-[calc(100%+6px)] z-20 w-[220px] rounded-lg border border-red-200 bg-white px-3 py-2 text-xs text-red-600 shadow-[0_12px_26px_rgba(15,23,42,0.12)]">
+        <p className="absolute right-0 top-[calc(100%+6px)] z-20 w-[220px] rounded-lg border border-red-200 bg-white px-3 py-2 text-xs text-red-600 shadow-[0_12px_26px_rgba(27,26,23,0.12)]">
           {errorMessage}
         </p>
       ) : null}

@@ -6,6 +6,7 @@ import HomePage from '../pages/HomePage'
 import { buildAuthPath } from '../services/authApi'
 import { getOnboardingStatus } from '../utils/profileApi'
 import { navigateToPath, replaceWithPath } from '../utils/navigation'
+import { openFloatingChat } from '../utils/floatingChat'
 import { getPublicSiteOrigin } from '../utils/site'
 import { BRAND_NAME, PRODUCT_NAME } from '../utils/seoLandingPages'
 import { AdminRouteGate } from './AdminRouteGate'
@@ -40,6 +41,8 @@ const AboutPage = lazy(() => import('../pages/AboutPage'))
 const PlaceSubmissionPage = lazy(() => import('../pages/PlaceSubmissionPage'))
 const MyPlaceSubmissionsPage = lazy(() => import('../pages/MyPlaceSubmissionsPage'))
 const AskAiMapPage = lazy(() => import('../pages/AskAiMapPage'))
+const PlanWithAiPage = lazy(() => import('../pages/PlanWithAiPage'))
+const PassportPage = lazy(() => import('../pages/PassportPage'))
 const AskAiOverviewPage = lazy(() => import('../pages/AskAiOverviewPage'))
 const PlacesIndexPage = lazy(() => import('../pages/PlacesIndexPage'))
 const PlaceCategoriesIndexPage = lazy(() => import('../pages/PlaceCategoriesIndexPage'))
@@ -54,6 +57,15 @@ const AdminPlaceReportsPage = lazy(() => import('../pages/admin/PlaceReportsPage
 const AdminCommentReportsPage = lazy(() => import('../pages/admin/CommentReportsPage'))
 const AdminMfaSetupPage = lazy(() => import('../pages/admin/AdminMfaSetupPage'))
 const AdminMfaVerifyPage = lazy(() => import('../pages/admin/AdminMfaVerifyPage'))
+
+function ChatbotRouteRedirect({ initialQuestion }: { initialQuestion: string }) {
+  useEffect(() => {
+    openFloatingChat(initialQuestion)
+    replaceWithPath('/home')
+  }, [initialQuestion])
+
+  return null
+}
 
 function OnboardingAccessGate({
   session,
@@ -257,17 +269,29 @@ function renderRouteContent(descriptor: RouteDescriptor, inputs: RouteInputs) {
         </>
       )
     case 'ask-ai-chatbot':
-      return (
-        <>
-          <SeoHead title="AI Chatbot | GalaTayo" description="GalaTayo AI chatbot mode on GalaTayo." canonicalPath="/ask-ai/chatbot" robots="noindex,follow" />
-          <SearchHub key={`ask-ai:${search || 'root'}`} initialMode="ask-ai" initialAskAiQuestion={descriptor.initialAskAiQuestion} navigationSource={navigationSource} />
-        </>
-      )
+      return <ChatbotRouteRedirect initialQuestion={descriptor.initialAskAiQuestion} />
     case 'ask-ai-maps':
       return (
         <>
           <SeoHead title="AI Maps | GalaTayo" description="GalaTayo AI maps mode on GalaTayo." canonicalPath="/ask-ai/maps" robots="noindex,follow" />
           <AskAiMapPage />
+        </>
+      )
+    case 'passport':
+      if (!session) {
+        return <LoginPage />
+      }
+      return (
+        <>
+          <SeoHead title="Pasyal Passport | GalaTayo" description="Your Metro Manila city stamps and weekly gala streak." canonicalPath="/passport" robots="noindex,follow" />
+          <PassportPage session={session} />
+        </>
+      )
+    case 'plan-with-ai':
+      return (
+        <>
+          <SeoHead title="Plan with AI | GalaTayo" description="Describe your gala in one sentence and get a full-day Metro Manila plan." canonicalPath="/plan-with-ai" robots="noindex,follow" />
+          <PlanWithAiPage initialPrompt={descriptor.initialPrompt} />
         </>
       )
     case 'prompt-builder':

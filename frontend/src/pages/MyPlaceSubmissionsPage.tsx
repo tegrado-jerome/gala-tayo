@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import AppHeader from '../components/AppHeader'
-import MinimalBackNav from '../components/MinimalBackNav'
+import MinimalBackNav from '../components/navigation/MinimalBackNav'
 import { PageContainer, PageShell, EmptyState, Stack } from '../components/layout/ResponsiveLayouts'
 import { getMyPlaceSubmissions, type PlaceSubmission } from '../utils/placeSubmissionsApi'
 import { AdminListSkeleton } from '../components/loading/SkeletonStates'

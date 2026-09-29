@@ -5,7 +5,7 @@ import AppHeader from '../components/AppHeader'
 import { AppSkeleton } from '../components/AppUI'
 import PasswordStrengthBar from '../components/auth/PasswordStrengthBar'
 import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
-import MinimalBackNav from '../components/MinimalBackNav'
+import MinimalBackNav from '../components/navigation/MinimalBackNav'
 import { AppIcon } from '../components/AppIcon'
 import PageHeroHeader from '../components/PageHeroHeader'
 import ProfileAvatar from '../components/ProfileAvatar'
@@ -455,6 +455,12 @@ function ProfilePage({ session }: ProfilePageProps) {
                     <AppIcon name="users" className="h-4 w-4" />
                     {isGuestProfile ? 'Log in' : 'Find friends'}
                   </button>
+                  {!isGuestProfile ? (
+                    <button type="button" onClick={() => navigateToPath('/passport')} className="app-button app-button-secondary app-button-md">
+                      <AppIcon name="tourist" className="h-4 w-4" />
+                      Passport
+                    </button>
+                  ) : null}
                   <button
                     type="button"
                     onClick={() =>

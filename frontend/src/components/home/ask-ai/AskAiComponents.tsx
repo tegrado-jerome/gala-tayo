@@ -260,7 +260,7 @@ function AskAiStructuredSection({
   const listBlocks = blocks.filter((block) => block.type !== 'paragraph')
   const containerClassName = isPrimary
     ? 'border-[rgba(var(--accent-rgb),0.12)] bg-[linear-gradient(180deg,#ffffff_0%,#f5f8ff_100%)] shadow-[0_10px_24px_rgba(var(--accent-rgb),0.05)]'
-    : 'border-[rgba(15,23,42,0.08)] bg-white shadow-[0_8px_20px_rgba(15,23,42,0.04)]'
+    : 'border-[rgba(27,26,23,0.08)] bg-white shadow-[0_8px_20px_rgba(27,26,23,0.04)]'
 
   return (
     <article
@@ -394,7 +394,7 @@ function AskAiOutputStageLegacy({
       <div className="relative mx-auto flex min-h-[calc(var(--ask-ai-viewport-height,100svh)-144px)] w-full max-w-[min(1500px,calc(100vw-96px))] flex-col gap-5 lg:gap-7">
         <div>
           <p className="text-[0.9rem] font-black uppercase tracking-[0.12em] text-slate-500">Your question</p>
-          <div className="mt-2.5 inline-block max-w-full rounded-[16px] border border-[rgba(20,35,58,0.22)] bg-white/96 px-4 py-3.5 shadow-[0_12px_26px_rgba(15,23,42,0.045),inset_0_1px_0_rgba(255,255,255,0.9)] sm:px-5 sm:py-4 lg:max-w-[980px] xl:max-w-[1120px]">
+          <div className="mt-2.5 inline-block max-w-full rounded-[16px] border border-[rgba(20,35,58,0.22)] bg-white/96 px-4 py-3.5 shadow-[0_12px_26px_rgba(27,26,23,0.045),inset_0_1px_0_rgba(255,255,255,0.9)] sm:px-5 sm:py-4 lg:max-w-[980px] xl:max-w-[1120px]">
             <p className="break-words text-[1.08rem] font-bold leading-7 tracking-[-0.01em] text-slate-950 [overflow-wrap:anywhere] sm:text-[1.18rem] sm:leading-8 lg:text-[1.12rem]">
               {question}
             </p>
@@ -402,13 +402,13 @@ function AskAiOutputStageLegacy({
         </div>
 
         <div className="flex flex-col items-center gap-5 lg:-mt-2">
-          <div className="rounded-3xl border border-[rgba(83,146,241,0.16)] bg-white px-5 py-4 text-center shadow-[0_12px_24px_rgba(15,23,42,0.045)]">
+          <div className="rounded-3xl border border-[rgba(83,146,241,0.16)] bg-white px-5 py-4 text-center shadow-[0_12px_24px_rgba(27,26,23,0.045)]">
             <p className="text-[1.1rem] font-black text-slate-900">Here\u2019s a practical</p>
             <p className="mt-1 text-[1.1rem] font-black text-slate-900">gala plan for you.</p>
           </div>
         </div>
         <div className="grid items-start gap-5 lg:mt-auto lg:grid-cols-[minmax(0,1fr)_360px] xl:grid-cols-[minmax(0,1fr)_400px]">
-          <div className="w-full rounded-3xl border border-[rgba(83,146,241,0.16)] bg-white px-4 py-4 shadow-[0_16px_34px_rgba(15,23,42,0.05)] sm:px-6 sm:py-6">
+          <div className="w-full rounded-3xl border border-[rgba(83,146,241,0.16)] bg-white px-4 py-4 shadow-[0_16px_34px_rgba(27,26,23,0.05)] sm:px-6 sm:py-6">
             <div className="grid gap-0">
               <div className="grid gap-3 border-b border-dashed border-[rgba(83,146,241,0.16)] py-4 first:pt-0">
                 <div className="flex items-start gap-3">
@@ -481,7 +481,7 @@ function AskAiOutputStageLegacy({
             <button
               type="button"
               onClick={onStartOver}
-              className="group relative flex items-center gap-3 overflow-hidden rounded-[24px] border border-[rgba(15,23,42,0.08)] bg-[linear-gradient(135deg,#0f172a,#1d4ed8)] px-4 py-4 text-left shadow-[0_18px_42px_rgba(29,78,216,0.24)] transition hover:-translate-y-[1px] hover:shadow-[0_24px_52px_rgba(29,78,216,0.28)]"
+              className="group relative flex items-center gap-3 overflow-hidden rounded-[24px] border border-[rgba(27,26,23,0.08)] bg-[linear-gradient(135deg,#1b1a17,var(--primary))] px-4 py-4 text-left shadow-[0_18px_42px_rgba(29,78,216,0.24)] transition hover:-translate-y-[1px] hover:shadow-[0_24px_52px_rgba(29,78,216,0.28)]"
             >
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/14 text-white ring-1 ring-white/16">
                 <AppIcon name="info" className="h-6 w-6 text-white" strokeWidth={2.2} />
@@ -500,7 +500,7 @@ function AskAiOutputStageLegacy({
         </div>
 
         {sources.length > 0 ? (
-          <div className="rounded-[28px] border border-[rgba(83,146,241,0.16)] bg-white px-4 py-4 shadow-[0_14px_32px_rgba(15,23,42,0.045)] sm:px-5 sm:py-5">
+          <div className="rounded-[28px] border border-[rgba(83,146,241,0.16)] bg-white px-4 py-4 shadow-[0_14px_32px_rgba(27,26,23,0.045)] sm:px-5 sm:py-5">
             <div className="flex items-center gap-2">
               <p className="text-[1.05rem] font-black text-slate-950">Sources</p>
               <span className="rounded-full bg-[var(--accent-wash)] px-2 py-1 text-[11px] font-black text-[var(--accent-deep)]">
@@ -556,7 +556,7 @@ function AskAiThinkingStageLegacy({
 
         <div className="mt-7 lg:mt-8">
           <p className="text-[0.9rem] font-black uppercase tracking-[0.12em] text-slate-500">Your question</p>
-          <div className="mt-2.5 inline-block max-w-full rounded-[16px] border border-[rgba(20,35,58,0.22)] bg-white/96 px-4 py-3.5 shadow-[0_12px_26px_rgba(15,23,42,0.045),inset_0_1px_0_rgba(255,255,255,0.9)] sm:px-5 sm:py-4 lg:max-w-[980px] xl:max-w-[1120px]">
+          <div className="mt-2.5 inline-block max-w-full rounded-[16px] border border-[rgba(20,35,58,0.22)] bg-white/96 px-4 py-3.5 shadow-[0_12px_26px_rgba(27,26,23,0.045),inset_0_1px_0_rgba(255,255,255,0.9)] sm:px-5 sm:py-4 lg:max-w-[980px] xl:max-w-[1120px]">
             <p className="break-words text-[1.08rem] font-bold leading-7 tracking-[-0.01em] text-slate-950 [overflow-wrap:anywhere] sm:text-[1.18rem] sm:leading-8 lg:text-[1.12rem]">
               {question}
             </p>
@@ -564,7 +564,7 @@ function AskAiThinkingStageLegacy({
         </div>
 
         <div className="mt-8 flex flex-1 flex-col items-center justify-center text-center sm:mt-10 lg:mt-5">
-          <div className="relative w-full max-w-[370px] rounded-2xl border border-[rgba(20,35,58,0.34)] bg-white px-4 pb-4 pt-4 shadow-[0_12px_28px_rgba(15,23,42,0.045)] sm:max-w-[420px] sm:px-5 lg:max-w-[370px]">
+          <div className="relative w-full max-w-[370px] rounded-2xl border border-[rgba(20,35,58,0.34)] bg-white px-4 pb-4 pt-4 shadow-[0_12px_28px_rgba(27,26,23,0.045)] sm:max-w-[420px] sm:px-5 lg:max-w-[370px]">
             <span className="absolute left-1/2 top-0 h-4.5 w-4.5 -translate-x-1/2 -translate-y-1/2 rotate-45 border-l border-t border-[rgba(20,35,58,0.34)] bg-white" />
             <div className="relative flex flex-col items-center gap-2.5">
               <p className="text-[0.9rem] font-semibold uppercase tracking-[0.08em] text-slate-600 sm:text-[0.98rem] lg:text-[0.9rem]">
@@ -717,7 +717,7 @@ function AskAiPlaceholder({
               type="button"
               onClick={onStartOver}
               aria-label="New chat"
-              className="inline-flex h-10 items-center gap-1 rounded-full border border-[rgba(var(--accent-rgb),0.14)] bg-[linear-gradient(135deg,#eef4ff,#dbeafe)] px-3 py-1.5 text-[10px] font-semibold text-[var(--accent-deep)] shadow-[0_6px_18px_-10px_rgba(59,130,246,0.25)] transition hover:border-[rgba(var(--accent-rgb),0.24)] hover:bg-[linear-gradient(135deg,#dbeafe,#bfdbfe)]"
+              className="inline-flex h-10 items-center gap-1 rounded-full border border-[rgba(var(--accent-rgb),0.14)] bg-[linear-gradient(135deg,#eef4ff,var(--primary-soft))] px-3 py-1.5 text-[10px] font-semibold text-[var(--accent-deep)] shadow-[0_6px_18px_-10px_rgba(var(--accent-rgb),0.25)] transition hover:border-[rgba(var(--accent-rgb),0.24)] hover:bg-[linear-gradient(135deg,var(--primary-soft),var(--primary-soft))]"
             >
               <AppIcon name="newChat" className="h-3 w-3 sm:h-3.5 sm:w-3.5" strokeWidth={2.2} />
               <span>New</span>
@@ -734,10 +734,10 @@ function AskAiPlaceholder({
         <div className="mx-auto flex w-full max-w-[768px] flex-col gap-5">
           {/* AI greeting bubble */}
           <div className="flex items-start gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#dbeafe,#bfdbfe)] text-sm shadow-[0_2px_8px_rgba(var(--accent-rgb),0.10)]">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--primary-soft),var(--primary-soft))] text-sm shadow-[0_2px_8px_rgba(var(--accent-rgb),0.10)]">
               <AppIcon name="info" className="h-4 w-4 text-[var(--accent-deep)]" strokeWidth={2.2} />
             </div>
-            <div className="min-w-0 max-w-[82%] rounded-2xl rounded-tl-[6px] border border-[rgba(15,23,42,0.06)] bg-white px-4 py-3 shadow-[0_2px_8px_rgba(15,23,42,0.03)]">
+            <div className="min-w-0 max-w-[82%] rounded-2xl rounded-tl-[6px] border border-[rgba(27,26,23,0.06)] bg-white px-4 py-3 shadow-[0_2px_8px_rgba(27,26,23,0.03)]">
               <p className="text-[0.94rem] leading-relaxed text-slate-800">Hi! What kind of gala are you planning today?</p>
             </div>
           </div>
@@ -759,7 +759,7 @@ function AskAiPlaceholder({
               type="button"
               disabled={isLimitReached && isRegistered}
               onClick={() => navigateToPath('/ask-ai/maps')}
-              className="rounded-full border border-[rgba(15,23,42,0.08)] bg-slate-50 px-3.5 py-2 text-[0.82rem] font-semibold text-slate-600 transition hover:border-[rgba(15,23,42,0.16)] hover:bg-white sm:hidden"
+              className="rounded-full border border-[rgba(27,26,23,0.08)] bg-slate-50 px-3.5 py-2 text-[0.82rem] font-semibold text-slate-600 transition hover:border-[rgba(27,26,23,0.16)] hover:bg-white sm:hidden"
             >
               <span className="inline-flex items-center gap-1">
                 <AppIcon name="map" className="h-3.5 w-3.5" />
@@ -778,7 +778,7 @@ function AskAiPlaceholder({
       {/* Hidden state keeper */}
       {answerError ? (
         <div className={`shrink-0 border-t px-4 py-2.5 text-center ${
-          isDarkMode ? 'border-[rgba(248,113,113,0.14)] bg-[rgba(15,23,42,0.66)]' : 'border-red-100 bg-red-50/50'
+          isDarkMode ? 'border-[rgba(248,113,113,0.14)] bg-[rgba(27,26,23,0.66)]' : 'border-red-100 bg-red-50/50'
         }`}>
           <p className={`text-[0.82rem] ${isDarkMode ? 'text-rose-200' : 'text-red-600'}`}>{answerError}</p>
         </div>
@@ -797,7 +797,7 @@ function ChatbotLimitWarning({ className = '' }: { className?: string }) {
     <div className={`${className} flex w-full justify-center px-1`}>
       <div className={`inline-flex w-fit max-w-full items-start gap-3 rounded-2xl px-4 py-3 text-left shadow-[0_10px_24px_rgba(127,29,29,0.10)] ${
         isDarkMode
-          ? 'border border-[rgba(248,113,113,0.18)] bg-[rgba(15,23,42,0.82)]'
+          ? 'border border-[rgba(248,113,113,0.18)] bg-[rgba(27,26,23,0.82)]'
           : 'border border-red-200 bg-red-50'
       }`}>
         <span className={`mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full ring-1 ring-inset ${
@@ -843,7 +843,7 @@ function AskAiSignInRequired({
 
       <div className="relative mx-auto flex w-full max-w-5xl flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.82fr)] lg:items-center">
         {onBack ? <AskAiBackButton onClick={onBack} className="w-fit lg:col-span-2" /> : null}
-        <div className="overflow-hidden rounded-[32px] border border-[rgba(83,146,241,0.16)] bg-white/88 p-5 shadow-[0_22px_60px_rgba(15,23,42,0.08)] sm:p-6">
+        <div className="overflow-hidden rounded-[32px] border border-[rgba(83,146,241,0.16)] bg-white/88 p-5 shadow-[0_22px_60px_rgba(27,26,23,0.08)] sm:p-6">
           <div className="flex flex-col gap-4">
             <div className="min-w-0">
               <div className="inline-flex items-center gap-2 rounded-full border border-[rgba(83,146,241,0.18)] bg-[rgba(242,247,255,0.96)] px-3 py-1 text-[11px] font-extrabold uppercase tracking-[0.08em] text-[var(--accent-deep)]">
@@ -872,7 +872,7 @@ function AskAiSignInRequired({
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-[32px] border border-[rgba(191,205,255,0.22)] bg-[linear-gradient(180deg,rgba(248,250,255,0.96),rgba(241,246,255,0.94))] p-5 shadow-[0_18px_42px_rgba(15,23,42,0.06)] sm:p-6">
+        <div className="overflow-hidden rounded-[32px] border border-[rgba(191,205,255,0.22)] bg-[var(--card)] p-5 shadow-[0_18px_42px_rgba(27,26,23,0.06)] sm:p-6">
           <div className="flex items-start gap-3">
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[rgba(123,146,255,0.12)] text-[#4969c8]">
               <BuildingIcon className="h-5 w-5" />
@@ -1014,7 +1014,7 @@ function AskAiOutputStageNextLegacy({
             <button
               type="button"
               onClick={onStartOver}
-              className="group flex items-center justify-between gap-3 rounded-[20px] border border-[rgba(15,23,42,0.08)] bg-[linear-gradient(135deg,#0f172a,#1d4ed8)] px-4 py-4 text-left shadow-[0_18px_42px_rgba(29,78,216,0.22)] transition hover:-translate-y-[1px] hover:shadow-[0_22px_48px_rgba(29,78,216,0.28)]"
+              className="group flex items-center justify-between gap-3 rounded-[20px] border border-[rgba(27,26,23,0.08)] bg-[linear-gradient(135deg,#1b1a17,var(--primary))] px-4 py-4 text-left shadow-[0_18px_42px_rgba(29,78,216,0.22)] transition hover:-translate-y-[1px] hover:shadow-[0_22px_48px_rgba(29,78,216,0.28)]"
             >
               <div className="min-w-0">
                 <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/72">Reset GalaTayo AI</p>
@@ -1087,7 +1087,7 @@ function AskAiOutputStageNext({
 
           {/* AI response bubble */}
           <div className="flex items-start gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,#dbeafe,#bfdbfe)] shadow-[0_2px_8px_rgba(var(--accent-rgb),0.10)]">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--primary-soft),var(--primary-soft))] shadow-[0_2px_8px_rgba(var(--accent-rgb),0.10)]">
               <FontAwesomeIcon icon={faRobot} className="h-4 w-4 text-[var(--accent-deep)]" />
             </div>
             <div className="min-w-0 w-full max-w-[88%] sm:max-w-[82%]">
@@ -1102,7 +1102,7 @@ function AskAiOutputStageNext({
               ))}
 
               {sources.length > 0 && (
-                <div className="mt-3 rounded-2xl border border-[rgba(15,23,42,0.06)] bg-white/70 px-4 py-3">
+                <div className="mt-3 rounded-2xl border border-[rgba(27,26,23,0.06)] bg-white/70 px-4 py-3">
                   <p className="text-[0.7rem] font-black uppercase tracking-[0.1em] text-slate-400">Sources</p>
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {sources.map((source) => (
@@ -1111,7 +1111,7 @@ function AskAiOutputStageNext({
                         href={source.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 rounded-full border border-[rgba(15,23,42,0.06)] bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600 transition hover:border-[rgba(var(--accent-rgb),0.18)] hover:bg-white hover:text-[var(--accent-deep)]"
+                        className="inline-flex items-center gap-1 rounded-full border border-[rgba(27,26,23,0.06)] bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600 transition hover:border-[rgba(var(--accent-rgb),0.18)] hover:bg-white hover:text-[var(--accent-deep)]"
                       >
                         {source.title.length > 28 ? `${source.title.slice(0, 28)}...` : source.title}
                         <ChevronRightIcon className="h-3 w-3 shrink-0" />
@@ -1126,7 +1126,7 @@ function AskAiOutputStageNext({
                 <button
                   type="button"
                   onClick={onStartOver}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(15,23,42,0.08)] bg-white px-3 py-2 text-[0.78rem] font-semibold text-slate-500 transition hover:border-[rgba(15,23,42,0.16)] hover:text-slate-700"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(27,26,23,0.08)] bg-white px-3 py-2 text-[0.78rem] font-semibold text-slate-500 transition hover:border-[rgba(27,26,23,0.16)] hover:text-slate-700"
                 >
                   <FontAwesomeIcon icon={faArrowRotateLeft} className="h-3.5 w-3.5" />
                   Start over
@@ -1199,8 +1199,8 @@ function AskAiThinkingStageNext({
             <div
               className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full shadow-[0_2px_8px_rgba(var(--accent-rgb),0.10)] ${
                 isDarkMode
-                  ? 'bg-[linear-gradient(135deg,rgba(30,58,138,0.38),rgba(59,130,246,0.26))]'
-                  : 'bg-[linear-gradient(135deg,#dbeafe,#bfdbfe)]'
+                  ? 'bg-[linear-gradient(135deg,rgba(var(--accent-rgb),0.38),rgba(var(--accent-rgb),0.26))]'
+                  : 'bg-[linear-gradient(135deg,var(--primary-soft),var(--primary-soft))]'
               }`}
             >
               <FontAwesomeIcon icon={faRobot} className="h-4 w-4 text-[var(--accent-deep)]" />
@@ -1208,8 +1208,8 @@ function AskAiThinkingStageNext({
             <div
               className={`min-w-0 w-full max-w-[88%] rounded-2xl rounded-tl-[6px] px-4 py-3.5 sm:max-w-[82%] ${
                 isDarkMode
-                  ? 'border border-[rgba(96,165,250,0.16)] bg-[rgba(15,23,42,0.76)] shadow-[0_12px_30px_rgba(2,8,23,0.32)]'
-                  : 'border border-[rgba(15,23,42,0.06)] bg-white shadow-[0_2px_8px_rgba(15,23,42,0.03)]'
+                  ? 'border border-[rgba(var(--accent-rgb),0.16)] bg-[rgba(27,26,23,0.76)] shadow-[0_12px_30px_rgba(0,0,0,0.32)]'
+                  : 'border border-[rgba(27,26,23,0.06)] bg-white shadow-[0_2px_8px_rgba(27,26,23,0.03)]'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -1244,6 +1244,8 @@ function AskAiModePanel({
   onSubmit,
   onStartOver,
   onGuestUpgradePrompt,
+  onClose,
+  onShowOnMap,
   className = '',
 }: {
   isRegistered: boolean
@@ -1260,9 +1262,19 @@ function AskAiModePanel({
   onSubmit: (questionOverride?: string) => void
   onStartOver: () => void
   onGuestUpgradePrompt: () => void
+  onClose?: () => void
+  onShowOnMap?: (question: string) => void
   className?: string
 }) {
   void isUsageLoading
+  const isEmbedded = Boolean(onClose)
+  const gutterClassName = isEmbedded ? 'px-4' : 'px-4 sm:px-5 md:px-6 lg:px-8'
+  const lastUserQuestion = [...messages].reverse().find((message) => message.role === 'user')?.content ?? ''
+  const canShowOnMap =
+    Boolean(onShowOnMap) &&
+    Boolean(lastUserQuestion) &&
+    !isSubmitting &&
+    messages[messages.length - 1]?.role === 'assistant'
   const { resolvedTheme } = useTheme()
   const isDarkMode = resolvedTheme === 'dark'
   const isUsagePending = !usageStatus
@@ -1322,11 +1334,11 @@ function AskAiModePanel({
     <div className={`relative flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-[var(--bg)] ${className}`}>
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-32 left-1/2 h-[420px] w-[820px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(23,37,84,0.08),transparent_62%)] blur-3xl" />
-        <div className="absolute -top-20 left-1/4 h-[320px] w-[480px] rounded-full bg-[radial-gradient(circle,rgba(30,58,138,0.06),transparent_62%)] blur-3xl" />
+        <div className="absolute -top-20 left-1/4 h-[320px] w-[480px] rounded-full bg-[radial-gradient(circle,rgba(var(--accent-rgb),0.06),transparent_62%)] blur-3xl" />
         <div className="absolute -top-16 right-1/4 h-[320px] w-[480px] rounded-full bg-[radial-gradient(circle,rgba(23,37,84,0.05),transparent_62%)] blur-3xl" />
       </div>
 
-      <div className="relative shrink-0 mb-4 px-4 pt-5 sm:mb-5 sm:px-5 md:px-6 lg:px-8">
+      <div className={`relative shrink-0 ${isEmbedded ? 'mb-2 pt-4' : 'mb-4 pt-5 sm:mb-5'} ${gutterClassName}`}>
         <div className="flex flex-col gap-2 sm:gap-2.5">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
@@ -1355,20 +1367,31 @@ function AskAiModePanel({
               <div className="md:hidden">
                 <FeatureGuideModalTrigger content={featureGuideContent.chatbot} className="h-10 w-10" />
               </div>
-              <button
-                type="button"
-                onClick={() => navigateBackWithFallback('/home')}
-                aria-label="Go back"
-                className="hidden h-10 w-10 items-center justify-center rounded-xl bg-[linear-gradient(135deg,#dbeafe,#bfdbfe)] text-[var(--accent-deep)] ring-1 ring-inset ring-[rgba(var(--accent-rgb),0.14)] shadow-[0_6px_18px_-8px_rgba(59,130,246,0.28)] transition hover:bg-[linear-gradient(135deg,#bfdbfe,#dbeafe)] hover:text-[var(--accent-deep)] sm:inline-flex"
-              >
-                <FontAwesomeIcon icon={faRobot} className="h-5 w-5" />
-              </button>
+              {onClose ? (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  aria-label="Close chat"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--panel)] text-slate-600 ring-1 ring-inset ring-[var(--line)] shadow-[var(--shadow-soft)] transition hover:text-[var(--accent-deep)]"
+                >
+                  <AppIcon name="clear" size={18} strokeWidth={2.25} />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => navigateBackWithFallback('/home')}
+                  aria-label="Go back"
+                  className="hidden h-10 w-10 items-center justify-center rounded-xl bg-[linear-gradient(135deg,var(--primary-soft),var(--primary-soft))] text-[var(--accent-deep)] ring-1 ring-inset ring-[rgba(var(--accent-rgb),0.14)] shadow-[0_6px_18px_-8px_rgba(var(--accent-rgb),0.28)] transition hover:bg-[linear-gradient(135deg,var(--primary-soft),var(--primary-soft))] hover:text-[var(--accent-deep)] sm:inline-flex"
+                >
+                  <FontAwesomeIcon icon={faRobot} className="h-5 w-5" />
+                </button>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      <div ref={messageScrollRef} className="relative flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 [overflow-anchor:none] sm:px-5 md:px-6 lg:px-8">
+      <div ref={messageScrollRef} className={`relative flex-1 min-h-0 overflow-y-auto overscroll-contain [overflow-anchor:none] ${gutterClassName}`}>
         <div className="flex min-h-full w-full flex-col gap-4 py-4 sm:py-5">
           <ChatMessageList
             isSessionLoading={isSessionLoading}
@@ -1383,11 +1406,21 @@ function AskAiModePanel({
             onSend={handleSend}
             onRetryUsage={onRetryUsage}
           />
+          {canShowOnMap ? (
+            <button
+              type="button"
+              onClick={() => onShowOnMap?.(lastUserQuestion)}
+              className="inline-flex items-center gap-1.5 self-start rounded-full bg-[var(--accent-wash)] px-3 py-1.5 text-[12px] font-semibold text-[var(--accent-deep)] transition hover:bg-[rgba(var(--accent-rgb),0.16)]"
+            >
+              <AppIcon name="map" className="h-3.5 w-3.5" />
+              Show on map
+            </button>
+          ) : null}
           <div ref={messagesEndRef} />
         </div>
       </div>
 
-      <div className="relative shrink-0 px-4 pb-[max(env(safe-area-inset-bottom,0px),0.35rem)] pt-2 sm:px-5 md:px-6 lg:px-8">
+      <div className={`relative shrink-0 pb-[max(env(safe-area-inset-bottom,0px),0.35rem)] pt-2 ${gutterClassName}`}>
         <div className="mx-auto w-full max-w-[920px]">
           <div className="group/composer relative flex items-end gap-1.5 rounded-[24px] border border-[var(--line)] bg-[var(--panel)] p-1.5 shadow-[var(--shadow-soft)] transition focus-within:border-[var(--line-strong)]">
             <textarea
@@ -1403,18 +1436,18 @@ function AskAiModePanel({
               placeholder="Message GalaTayo AI..."
               rows={1}
               disabled={isSubmitting || isUsagePending || (isLimitReached && isRegistered)}
-              className="ask-ai-composer-input min-h-[40px] max-h-[120px] flex-1 resize-none overflow-y-auto bg-transparent px-3 py-2 text-[15px] leading-relaxed text-slate-800 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed disabled:text-slate-300"
+              className="ask-ai-composer-input min-h-[40px] max-h-[120px] flex-1 resize-none overflow-y-auto bg-transparent px-3 py-2 text-[15px] leading-relaxed text-slate-800 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed disabled:text-[var(--text-disabled)]"
             />
             <button
               type="button"
               onClick={() => (isSubmitting ? cancelAskAiRuntimeRequest() : handleSend())}
               disabled={!isSubmitting && (isUsagePending || (!draftQuestion.trim() && !isLimitReached) || (isLimitReached && isRegistered))}
               aria-label={isSubmitting ? 'Cancel request' : 'Send message'}
-              className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full bg-[var(--accent-deep)] text-white shadow-[0_8px_18px_rgba(23,37,84,0.24)] transition hover:bg-[var(--accent)] active:scale-95 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none"
+              className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full bg-[var(--accent-deep)] text-white shadow-[0_8px_18px_rgba(23,37,84,0.24)] transition hover:bg-[var(--accent)] active:scale-95 disabled:cursor-not-allowed disabled:bg-[var(--bg-soft)] disabled:text-[var(--text-disabled)] disabled:shadow-none"
             >
               {isSubmitting ? (
                 <svg className="h-4 w-4" viewBox="0 0 24 24">
-                  <circle cx="12" cy="12" r="11" fill="#172554" />
+                  <circle cx="12" cy="12" r="11" className="fill-[var(--primary-dark)]" />
                   <rect x="5.5" y="5.5" width="13" height="13" rx="2" fill="white" />
                 </svg>
               ) : (
@@ -1459,7 +1492,7 @@ const ChatMessageList = memo(function ChatMessageList({
   const { resolvedTheme } = useTheme()
   const isDarkMode = resolvedTheme === 'dark'
   const answerCardClassName = isDarkMode
-    ? 'w-full min-w-0 overflow-hidden rounded-2xl border border-[rgba(96,165,250,0.16)] bg-[rgba(15,23,42,0.76)] p-4 shadow-[0_12px_30px_rgba(2,8,23,0.32)] backdrop-blur-sm'
+    ? 'w-full min-w-0 overflow-hidden rounded-2xl border border-[rgba(var(--accent-rgb),0.16)] bg-[rgba(27,26,23,0.76)] p-4 shadow-[0_12px_30px_rgba(0,0,0,0.32)] backdrop-blur-sm'
     : 'w-full min-w-0 overflow-hidden rounded-2xl border border-[var(--line)] bg-[rgba(255,255,255,0.88)] p-4 shadow-[var(--shadow-soft)] backdrop-blur-sm'
   const responseTextClassName = isDarkMode ? 'text-slate-200' : 'text-slate-800'
   const responseStrongClassName = isDarkMode ? 'text-slate-50' : 'text-slate-900'
@@ -1508,7 +1541,7 @@ const ChatMessageList = memo(function ChatMessageList({
               type="button"
               disabled={isLimitReached && isRegistered}
               onClick={() => onSend(chip.prompt)}
-              className="group flex w-full items-center gap-2.5 rounded-2xl border border-slate-200/70 bg-white/80 p-3 text-left shadow-[0_1px_2px_rgba(15,23,42,0.03)] backdrop-blur-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white hover:shadow-[0_8px_24px_-12px_rgba(15,23,42,0.12)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 sm:items-start sm:gap-3 sm:p-3.5"
+              className="group flex w-full items-center gap-2.5 rounded-2xl border border-slate-200/70 bg-white/80 p-3 text-left shadow-[0_1px_2px_rgba(27,26,23,0.03)] backdrop-blur-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:bg-white hover:shadow-[0_8px_24px_-12px_rgba(27,26,23,0.12)] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 sm:items-start sm:gap-3 sm:p-3.5"
             >
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[var(--surface-alt)] text-slate-500 ring-1 ring-inset ring-[var(--line)] transition group-hover:bg-[var(--accent-soft)] group-hover:text-[var(--accent-deep)] sm:h-9 sm:w-9">
                 <AppIcon name={chip.icon} className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -1547,7 +1580,7 @@ const ChatMessageList = memo(function ChatMessageList({
             <div className="flex items-center gap-2">
               <div
                 className={`flex h-6 w-6 items-center justify-center rounded-md shadow-[0_8px_16px_rgba(23,37,84,0.18)] ${
-                  isDarkMode ? 'bg-[rgba(96,165,250,0.2)]' : 'bg-[var(--accent-deep)]'
+                  isDarkMode ? 'bg-[rgba(var(--accent-rgb),0.2)]' : 'bg-[var(--accent-deep)]'
                 }`}
               >
                 <AppIcon name="info" className="h-3 w-3 text-white" strokeWidth={2.2} />
@@ -1705,14 +1738,14 @@ const ChatMessageList = memo(function ChatMessageList({
         <div
           className={`w-full rounded-2xl p-4 backdrop-blur-sm ${
             isDarkMode
-              ? 'border border-[rgba(96,165,250,0.16)] bg-[rgba(15,23,42,0.76)] shadow-[0_12px_30px_rgba(2,8,23,0.32)]'
+              ? 'border border-[rgba(var(--accent-rgb),0.16)] bg-[rgba(27,26,23,0.76)] shadow-[0_12px_30px_rgba(0,0,0,0.32)]'
               : 'border border-[var(--line)] bg-[rgba(255,255,255,0.88)] shadow-[var(--shadow-soft)]'
           }`}
         >
           <div className="flex items-center gap-2">
             <div
               className={`flex h-6 w-6 items-center justify-center rounded-md shadow-[0_8px_16px_rgba(23,37,84,0.18)] ${
-                isDarkMode ? 'bg-[rgba(96,165,250,0.2)]' : 'bg-[var(--accent-deep)]'
+                isDarkMode ? 'bg-[rgba(var(--accent-rgb),0.2)]' : 'bg-[var(--accent-deep)]'
               }`}
             >
               <AppIcon name="info" className="h-3 w-3 text-white" strokeWidth={2.2} />
@@ -1736,7 +1769,7 @@ const ChatMessageList = memo(function ChatMessageList({
       {answerError && !isSubmitting && messages.length > 0 && !isChatbotDailyLimitMessage(answerError) && (
         <div className={`rounded-2xl px-4 py-3 shadow-[0_8px_18px_rgba(127,29,29,0.08)] ${
           isDarkMode
-            ? 'border border-[rgba(248,113,113,0.18)] bg-[rgba(15,23,42,0.78)]'
+            ? 'border border-[rgba(248,113,113,0.18)] bg-[rgba(27,26,23,0.78)]'
             : 'border border-red-200 bg-red-50'
         }`}>
           <p className={`text-[13px] ${isDarkMode ? 'text-rose-200' : 'text-red-800'}`}>{answerError}</p>
@@ -1767,7 +1800,7 @@ function AskAiUsageErrorContent({
       </div>
       <h2 className="text-[1.5rem] font-semibold tracking-[-0.02em] text-slate-900 sm:text-[1.7rem]">
         <span>GalaTayo </span>
-        <span className="bg-gradient-to-r from-[var(--accent)] via-[var(--accent-deep)] to-[#0f172a] bg-clip-text text-transparent">AI</span>
+        <span className="bg-gradient-to-r from-[var(--accent)] via-[var(--accent-deep)] to-[#1b1a17] bg-clip-text text-transparent">AI</span>
         <span> is unavailable</span>
       </h2>
       <p className="mt-2 max-w-sm text-[14px] leading-relaxed text-slate-500">
@@ -1777,7 +1810,7 @@ function AskAiUsageErrorContent({
         <button
           type="button"
           onClick={onRetryUsage}
-          className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-br from-slate-900 to-slate-700 px-4 py-2 text-[13px] font-semibold text-white shadow-[0_4px_12px_-2px_rgba(15,23,42,0.3)] transition hover:from-slate-800 hover:to-slate-700"
+          className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-br from-slate-900 to-slate-700 px-4 py-2 text-[13px] font-semibold text-white shadow-[0_4px_12px_-2px_rgba(27,26,23,0.3)] transition hover:from-slate-800 hover:to-slate-700"
         >
           Retry
         </button>

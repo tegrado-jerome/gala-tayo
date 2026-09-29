@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronRight } from '@fortawesome/free-solid-svg-icons'
-import InternalLink from './InternalLink'
-import { useBackNavigation } from '../utils/navigation'
-import { navigateToPath } from '../utils/navigation'
+import InternalLink from '../InternalLink'
+import { useBackNavigation } from '../../utils/navigation'
+import { navigateToPath } from '../../utils/navigation'
 import { MINIMAL_BREADCRUMB_LINK_CLASS, MINIMAL_NAV_LINK_CLASS } from './navigationStyles'
 
 type BreadcrumbItem = {

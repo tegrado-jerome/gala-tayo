@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import AppHeader from '../components/AppHeader'
-import MinimalBackNav from '../components/MinimalBackNav'
+import MinimalBackNav from '../components/navigation/MinimalBackNav'
 import GoogleSignInButton from '../components/GoogleSignInButton'
 import PageHeroHeader from '../components/PageHeroHeader'
 import { PageContainer, PageShell, CardSurface, EmptyState, Stack } from '../components/layout/ResponsiveLayouts'

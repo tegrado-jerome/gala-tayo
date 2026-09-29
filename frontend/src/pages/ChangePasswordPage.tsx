@@ -3,7 +3,7 @@ import type { FormEvent } from 'react'
 import AppHeader from '../components/AppHeader'
 import { AppIcon } from '../components/AppIcon'
 import PasswordStrengthBar from '../components/auth/PasswordStrengthBar'
-import MinimalBackNav from '../components/MinimalBackNav'
+import MinimalBackNav from '../components/navigation/MinimalBackNav'
 import { PageContainer, PageShell, Stack } from '../components/layout/ResponsiveLayouts'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { getPasswordStrength } from '../utils/passwordStrength'
@@ -85,7 +85,7 @@ function ChangePasswordPage() {
                 <Stack gap="default">
                   <label className="grid gap-2">
                     <span className="text-sm font-black text-slate-900">New Password</span>
-                    <span className="flex h-12 items-center gap-3 rounded-full border border-[var(--line)] bg-white px-4 shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)] transition focus-within:border-[#2563eb]">
+                    <span className="flex h-12 items-center gap-3 rounded-full border border-[var(--line)] bg-white px-4 shadow-[inset_0_1px_2px_rgba(27,26,23,0.03)] transition focus-within:border-[var(--primary)]">
                       <input
                         type={isNewPasswordVisible ? 'text' : 'password'}
                         value={newPassword}
@@ -109,7 +109,7 @@ function ChangePasswordPage() {
 
                   <label className="grid gap-2">
                     <span className="text-sm font-black text-slate-900">Confirm New Password</span>
-                    <span className="flex h-12 items-center gap-3 rounded-full border border-[var(--line)] bg-white px-4 shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)] transition focus-within:border-[#2563eb]">
+                    <span className="flex h-12 items-center gap-3 rounded-full border border-[var(--line)] bg-white px-4 shadow-[inset_0_1px_2px_rgba(27,26,23,0.03)] transition focus-within:border-[var(--primary)]">
                       <input
                         type={isConfirmNewPasswordVisible ? 'text' : 'password'}
                         value={confirmNewPassword}

@@ -1,5 +1,4 @@
 import {
-  getSoonFeatureRedirectPath,
   isPath,
   parseAreaPagePath,
   parseCanonicalPlacePath,
@@ -30,6 +29,5 @@ export function getRouteState(pathname: string) {
     publicProfileUsername: parsePublicProfileUsername(pathname),
     editGalaPlanId: parseEditGalaPlanPath(pathname),
     ownedGalaPlanId: parseOwnedGalaPlanPath(pathname),
-    soonFeatureRedirectPath: getSoonFeatureRedirectPath(pathname),
   }
 }

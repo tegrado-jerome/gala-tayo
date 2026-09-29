@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHouse, faLocationDot, faTableCellsLarge } from '@fortawesome/free-solid-svg-icons'
 import { AppIcon, getCategoryIconName } from '../components/AppIcon'
 import AppHeader from '../components/AppHeader'
-import Breadcrumb from '../components/Breadcrumb'
+import Breadcrumb from '../components/navigation/Breadcrumb'
 import CompactPagination from '../components/CompactPagination'
 import PlaceCard, { type PlaceCardData } from '../components/PlaceCard'
 import PlaceListingSkeleton from '../components/PlaceListingSkeleton'
@@ -432,7 +432,7 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
                           key={target.slug}
                           type="button"
                           onClick={() => navigateToPath(`/guides/${target.slug}`)}
-                          className="rounded-full border border-[#DBEAFE] bg-[#F8FBFF] px-3 py-1.5 text-xs font-semibold text-[var(--accent)] transition hover:border-[var(--accent)]"
+                          className="rounded-full border border-[var(--primary-soft)] bg-[#F8FBFF] px-3 py-1.5 text-xs font-semibold text-[var(--accent)] transition hover:border-[var(--accent)]"
                         >
                           {target.label}
                         </button>

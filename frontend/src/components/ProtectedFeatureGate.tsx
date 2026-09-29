@@ -216,36 +216,36 @@ function ProfilePreviewBackdrop() {
 
       <div className="absolute inset-x-0 top-5 bottom-20 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto flex h-full w-full max-w-[440px] flex-col md:max-w-[620px] lg:max-w-[760px] xl:max-w-[860px]">
-          <div className="flex-1 rounded-[32px] bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(245,248,253,0.94))] blur-[7px] saturate-[0.76] md:rounded-[36px] lg:rounded-[40px]">
+          <div className="flex-1 rounded-[32px] bg-[var(--card)] blur-[7px] saturate-[0.76] md:rounded-[36px] lg:rounded-[40px]">
             <div className="px-4 pt-5 sm:px-5 sm:pt-6">
-              <div className="rounded-[28px] bg-white/95 px-4 py-4 shadow-[0_18px_44px_rgba(15,23,42,0.04)] md:px-5 md:py-5 lg:px-6 lg:py-6">
+              <div className="rounded-[28px] bg-white/95 px-4 py-4 shadow-[0_18px_44px_rgba(27,26,23,0.04)] md:px-5 md:py-5 lg:px-6 lg:py-6">
                 <div className="flex items-center gap-4 md:gap-5 lg:gap-6">
                   <div className="h-20 w-20 shrink-0 rounded-full bg-[linear-gradient(135deg,rgba(191,219,254,0.9),rgba(226,232,240,0.98))] md:h-24 md:w-24 lg:h-28 lg:w-28" />
                   <div className="min-w-0 flex-1">
-                    <div className="h-3.5 w-24 rounded-full bg-[rgba(30,58,138,0.16)] md:w-28 lg:w-32" />
-                    <div className="mt-3 h-5 w-36 rounded-full bg-[rgba(15,23,42,0.12)] md:w-44 lg:w-56" />
-                    <div className="mt-3 h-4 w-48 rounded-full bg-[rgba(15,23,42,0.08)] md:w-64 lg:w-80" />
+                    <div className="h-3.5 w-24 rounded-full bg-[rgba(var(--accent-rgb),0.16)] md:w-28 lg:w-32" />
+                    <div className="mt-3 h-5 w-36 rounded-full bg-[rgba(27,26,23,0.12)] md:w-44 lg:w-56" />
+                    <div className="mt-3 h-4 w-48 rounded-full bg-[rgba(27,26,23,0.08)] md:w-64 lg:w-80" />
                     <div className="mt-5 flex gap-4 md:mt-6 lg:gap-5">
-                      <div className="h-4 w-20 rounded-full bg-[rgba(15,23,42,0.1)] md:w-24 lg:w-28" />
-                      <div className="h-4 w-20 rounded-full bg-[rgba(15,23,42,0.1)] md:w-24 lg:w-28" />
+                      <div className="h-4 w-20 rounded-full bg-[rgba(27,26,23,0.1)] md:w-24 lg:w-28" />
+                      <div className="h-4 w-20 rounded-full bg-[rgba(27,26,23,0.1)] md:w-24 lg:w-28" />
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-4 rounded-[30px] bg-white/95 px-4 py-4 shadow-[0_18px_44px_rgba(15,23,42,0.04)] md:mt-5 md:px-5 md:py-5 lg:mt-6 lg:px-6 lg:py-6">
+              <div className="mt-4 rounded-[30px] bg-white/95 px-4 py-4 shadow-[0_18px_44px_rgba(27,26,23,0.04)] md:mt-5 md:px-5 md:py-5 lg:mt-6 lg:px-6 lg:py-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="h-3 w-20 rounded-full bg-[rgba(30,58,138,0.16)] md:w-24 lg:w-28" />
-                    <div className="mt-2 h-5 w-28 rounded-full bg-[rgba(15,23,42,0.12)] md:w-36 lg:w-44" />
+                    <div className="h-3 w-20 rounded-full bg-[rgba(var(--accent-rgb),0.16)] md:w-24 lg:w-28" />
+                    <div className="mt-2 h-5 w-28 rounded-full bg-[rgba(27,26,23,0.12)] md:w-36 lg:w-44" />
                   </div>
                   <div className="h-10 w-10 rounded-[14px] bg-[var(--surface-alt)] md:h-11 md:w-11 lg:h-12 lg:w-12" />
                 </div>
                 <div className="mt-4 aspect-square rounded-[28px] bg-[linear-gradient(135deg,rgba(226,232,240,0.9),rgba(255,255,255,0.98))] md:mt-5 lg:mt-6" />
                 <div className="mt-4 grid grid-cols-3 gap-3 md:mt-5 md:gap-4 lg:mt-6 lg:gap-5">
-                  <div className="h-14 rounded-[20px] bg-[rgba(30,58,138,0.08)] md:h-16 lg:h-20" />
-                  <div className="h-14 rounded-[20px] bg-[rgba(15,23,42,0.06)] md:h-16 lg:h-20" />
-                  <div className="h-14 rounded-[20px] bg-[rgba(15,23,42,0.06)] md:h-16 lg:h-20" />
+                  <div className="h-14 rounded-[20px] bg-[rgba(var(--accent-rgb),0.08)] md:h-16 lg:h-20" />
+                  <div className="h-14 rounded-[20px] bg-[rgba(27,26,23,0.06)] md:h-16 lg:h-20" />
+                  <div className="h-14 rounded-[20px] bg-[rgba(27,26,23,0.06)] md:h-16 lg:h-20" />
                 </div>
               </div>
             </div>
@@ -285,7 +285,7 @@ function ProtectedFeatureGate({ pathname }: ProtectedFeatureGateProps) {
             <GuestAuthPrompt
               variant={authVariant}
               mode="inline-card"
-              className="gala-auth-prompt--protected-feature gala-auth-prompt--protected-feature-accent shadow-[0_20px_60px_rgba(15,23,42,0.08)]"
+              className="gala-auth-prompt--protected-feature gala-auth-prompt--protected-feature-accent shadow-[0_20px_60px_rgba(27,26,23,0.08)]"
             />
           </div>
         </main>
@@ -319,7 +319,7 @@ function ProtectedFeatureGate({ pathname }: ProtectedFeatureGateProps) {
       <div className="pointer-events-none absolute left-1/2 top-24 h-52 w-52 -translate-x-1/2 rounded-full bg-[var(--primary-soft)] opacity-70 blur-3xl" />
 
       <section className="relative mx-auto flex w-full max-w-6xl flex-col gap-6 lg:max-w-[72rem] xl:max-w-[80rem] 2xl:max-w-[88rem]">
-        <div className="flex items-center justify-between rounded-[24px] border border-[var(--line)] bg-white/88 px-4 py-3 shadow-[0_18px_40px_rgba(15,23,42,0.06)]">
+        <div className="flex items-center justify-between rounded-[24px] border border-[var(--line)] bg-white/88 px-4 py-3 shadow-[0_18px_40px_rgba(27,26,23,0.06)]">
           <div className="flex items-center gap-3">
             <span className="flex h-11 w-11 items-center justify-center rounded-[16px] bg-[var(--accent-soft)] text-[var(--accent-deep)]">
               <AppIcon name={preview.icon} className="h-5 w-5" />
@@ -334,12 +334,12 @@ function ProtectedFeatureGate({ pathname }: ProtectedFeatureGateProps) {
           </span>
         </div>
 
-        <div className="relative overflow-hidden rounded-[32px] border border-[var(--line)] bg-white/92 shadow-[0_28px_90px_rgba(15,23,42,0.1)]">
+        <div className="relative overflow-hidden rounded-[32px] border border-[var(--line)] bg-white/92 shadow-[0_28px_90px_rgba(27,26,23,0.1)]">
           <div className="pointer-events-none absolute inset-0 z-10 bg-[linear-gradient(180deg,rgba(248,247,244,0.1),rgba(248,247,244,0.72))]" />
           <div className="gala-protected-preview-frost pointer-events-none absolute inset-0 z-10" />
 
           <div className="grid gap-5 p-5 blur-[2px] saturate-[0.88] sm:p-7 lg:grid-cols-[minmax(0,1.15fr)_minmax(280px,0.85fr)] lg:items-start xl:grid-cols-[minmax(0,1.08fr)_minmax(300px,0.92fr)] 2xl:grid-cols-[minmax(0,1.02fr)_minmax(320px,0.98fr)]">
-            <section className="rounded-[28px] border border-[var(--line)] bg-[linear-gradient(180deg,#ffffff,rgba(248,250,252,0.94))] p-5 shadow-[0_18px_44px_rgba(15,23,42,0.06)]">
+            <section className="rounded-[28px] border border-[var(--line)] bg-[linear-gradient(180deg,#ffffff,rgba(248,250,252,0.94))] p-5 shadow-[0_18px_44px_rgba(27,26,23,0.06)]">
               <div className="flex flex-wrap items-center gap-2">
                 {preview.chips.map((chip) => (
                   <span key={chip} className="rounded-full border border-[var(--line)] bg-[var(--chip)] px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--accent-deep)]">
@@ -356,7 +356,7 @@ function ProtectedFeatureGate({ pathname }: ProtectedFeatureGateProps) {
                     {preview.description}
                   </p>
                 </div>
-                <div className="rounded-[24px] border border-[rgba(30,58,138,0.14)] bg-[var(--primary-soft)] px-5 py-4">
+                <div className="rounded-[24px] border border-[rgba(var(--accent-rgb),0.14)] bg-[var(--primary-soft)] px-5 py-4">
                   <p className="text-3xl font-black text-[var(--accent-deep)]">{preview.stat}</p>
                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">{preview.statLabel}</p>
                 </div>
@@ -364,7 +364,7 @@ function ProtectedFeatureGate({ pathname }: ProtectedFeatureGateProps) {
 
               <div className="mt-6 grid gap-3 sm:grid-cols-2">
                 {preview.cards.map((card) => (
-                  <article key={card.title} className="rounded-3xl border border-[var(--line)] bg-white px-4 py-4 shadow-[0_12px_30px_rgba(15,23,42,0.04)]">
+                  <article key={card.title} className="rounded-3xl border border-[var(--line)] bg-white px-4 py-4 shadow-[0_12px_30px_rgba(27,26,23,0.04)]">
                     <div className="h-28 rounded-2xl bg-[linear-gradient(135deg,rgba(219,234,254,0.85),rgba(255,255,255,0.95))]" />
                     <p className="mt-4 text-xs font-bold uppercase tracking-[0.16em] text-[var(--accent)]">{card.meta}</p>
                     <h2 className="mt-2 text-base font-black text-[var(--text-main)]">{card.title}</h2>
@@ -375,7 +375,7 @@ function ProtectedFeatureGate({ pathname }: ProtectedFeatureGateProps) {
             </section>
 
             <aside className="grid gap-4">
-              <section className="rounded-[28px] border border-[var(--line)] bg-white p-5 shadow-[0_18px_44px_rgba(15,23,42,0.06)]">
+              <section className="rounded-[28px] border border-[var(--line)] bg-white p-5 shadow-[0_18px_44px_rgba(27,26,23,0.06)]">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <span className="flex h-10 w-10 items-center justify-center rounded-[14px] bg-[var(--chip)] text-[var(--accent-deep)]">
@@ -393,7 +393,7 @@ function ProtectedFeatureGate({ pathname }: ProtectedFeatureGateProps) {
                   {[1, 2, 3].map((item) => (
                     <div key={item} className="rounded-[20px] border border-[var(--line)] bg-[var(--surface-alt)] p-4">
                       <div className="h-3 w-20 rounded-full bg-[var(--line)]" />
-                      <div className="mt-3 h-5 w-3/4 rounded-full bg-[rgba(30,58,138,0.14)]" />
+                      <div className="mt-3 h-5 w-3/4 rounded-full bg-[rgba(var(--accent-rgb),0.14)]" />
                       <div className="mt-3 h-3 w-full rounded-full bg-[var(--line)]" />
                       <div className="mt-2 h-3 w-2/3 rounded-full bg-[var(--line)]" />
                     </div>

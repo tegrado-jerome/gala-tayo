@@ -2,6 +2,7 @@ import type { Session } from '@supabase/supabase-js'
 import { getSupabaseAccessToken } from '../supabase'
 import { getApiUrl } from './apiClient'
 import type { PublicGalaPlanPreviewPlace } from './profileApi'
+import { buildAskAiRequestHeaders } from './askAiIdentity'
 
 export type GalaPlanVisibility = 'private' | 'public'
 export type GalaPlanStatus = 'active' | 'deleted' | string
@@ -281,4 +282,51 @@ export function formatGalaPlanDate(description: string | null | undefined) {
     day: 'numeric',
     year: 'numeric',
   }).format(new Date(`${parsed.date}T00:00:00`))
+}
+
+export type GalaPlanPlace = GalaPlanDetail['items'][number]['place']
+
+export type GalaPlanAiDraft = {
+  title: string
+  summary: string
+  date: string | null
+  group_size: number
+  stops: Array<{
+    place_id: string
+    time: string
+    minutes: number
+    note: string
+    place: GalaPlanPlace
+  }>
+}
+
+export class GalaPlanAiError extends Error {
+  status: number
+  code?: string
+
+  constructor(message: string, status: number, code?: string) {
+    super(message)
+    this.status = status
+    this.code = code
+  }
+}
+
+export async function draftGalaPlanWithAi(prompt: string, session?: Session | null) {
+  const response = await fetch(getApiUrl('/gala-plans/ai-draft'), {
+    method: 'POST',
+    headers: buildAskAiRequestHeaders(session?.access_token ?? null),
+    body: JSON.stringify({ prompt }),
+  })
+  const data = (await response.json().catch(() => ({}))) as {
+    draft?: GalaPlanAiDraft
+    usage?: { remaining: number; dailyLimit: number }
+    message?: string
+    code?: string
+  }
+
+  if (!response.ok || !data.draft) {
+    throw new GalaPlanAiError(data.message || 'Plan with AI failed. Try again.', response.status, data.code)
+  }
+
+  return { draft: data.draft, usage: data.usage ?? null }
 }

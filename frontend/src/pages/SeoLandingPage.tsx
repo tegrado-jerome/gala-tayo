@@ -3,7 +3,7 @@ import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowRight, faCompass, faHouse, faLocationDot, faTag } from '@fortawesome/free-solid-svg-icons'
 import AppHeader from '../components/AppHeader'
-import Breadcrumb from '../components/Breadcrumb'
+import Breadcrumb from '../components/navigation/Breadcrumb'
 import InternalLink from '../components/InternalLink'
 import PlaceCard, { type PlaceCardData } from '../components/PlaceCard'
 import PlaceListingSkeleton from '../components/PlaceListingSkeleton'
@@ -186,7 +186,7 @@ export default function SeoLandingPage({
           />
 
           <section className="mt-5 rounded-[28px] border border-[#E5E7EB] bg-white px-5 py-6 shadow-[0_8px_24px_rgba(17,24,39,0.04)] sm:px-7">
-            <span className="inline-flex items-center rounded-full border border-[#DBEAFE] bg-[var(--accent-soft)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--accent)]">
+            <span className="inline-flex items-center rounded-full border border-[var(--primary-soft)] bg-[var(--accent-soft)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--accent)]">
               {BRAND_NAME} Guide
             </span>
             <h1 className="mt-4 text-[2rem] font-black leading-[0.95] tracking-[-0.045em] text-slate-950 sm:text-[2.6rem]">
@@ -269,7 +269,7 @@ export default function SeoLandingPage({
                   <InternalLink
                     key={relatedTarget.slug}
                     href={`/guides/${relatedTarget.slug}`}
-                    className="group flex items-center justify-between rounded-2xl border border-[#E5E7EB] px-4 py-4 transition hover:border-[#DBEAFE] hover:bg-[#F8FBFF]"
+                    className="group flex items-center justify-between rounded-2xl border border-[#E5E7EB] px-4 py-4 transition hover:border-[var(--primary-soft)] hover:bg-[#F8FBFF]"
                   >
                     <div>
                       <p className="text-sm font-semibold text-slate-950">{relatedTarget.label}</p>

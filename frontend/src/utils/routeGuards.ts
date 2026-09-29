@@ -9,6 +9,7 @@ const sharedRouteMatchers = [
 export function isProtectedAccountPath(pathname: string) {
   const isExactProtectedPath = [
     '/favorites',
+    '/passport',
     '/feedback',
     '/gala-plan',
     '/gala-plan/new',
@@ -52,6 +53,23 @@ export function isAdminPath(pathname: string) {
   return isSecretAdminPath(pathname)
 }
 
+const siteHeaderHiddenPaths = [
+  '/',
+  '/login',
+  '/signup',
+  '/auth',
+  '/auth/callback',
+  '/onboarding',
+  '/forgot-password',
+  '/reset-password',
+  '/auth/reset-password',
+  '/mfa/verify',
+]
+
+export function shouldShowSiteHeader(pathname: string) {
+  return !isAdminPath(pathname) && !siteHeaderHiddenPaths.some((path) => isPath(pathname, path))
+}
+
 export function shouldShowMobileBottomNav(pathname: string) {
   if (isPath(pathname, '/') || pathname === '' || isPath(pathname, '/home')) {
     return false
@@ -71,12 +89,7 @@ export function shouldShowMobileBottomNav(pathname: string) {
     return false
   }
 
-  if (
-    isPath(pathname, '/ask-ai/chatbot') ||
-    isPath(pathname, '/ask-ai/text') ||
-    isPath(pathname, '/ask-ai/maps') ||
-    isPath(pathname, '/ask-ai/map')
-  ) {
+  if (isPath(pathname, '/ask-ai/chatbot') || isPath(pathname, '/ask-ai/text')) {
     return false
   }
 

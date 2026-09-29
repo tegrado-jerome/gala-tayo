@@ -2,28 +2,22 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import AppHeader from '../components/AppHeader'
+import PlanDetail from '../components/gala-plan/PlanDetail'
+import PlanList from '../components/gala-plan/PlanList'
 import { AppIcon } from '../components/AppIcon'
-import MinimalBackNav from '../components/MinimalBackNav'
+import MinimalBackNav from '../components/navigation/MinimalBackNav'
 import PageHeroHeader from '../components/PageHeroHeader'
 import {
   createGalaPlan,
-  deleteGalaPlan,
   getGalaPlan,
-  listFavoriteGalaPlans,
-  listMyGalaPlans,
-  toggleGalaPlanHeart,
   updateGalaPlan,
-  type GalaPlanDetail,
   type GalaPlanItemPayload,
-  type GalaPlanSummary,
   type GalaPlanVisibility,
 } from '../utils/galaPlansApi'
 import { PageContainer, PageShell } from '../components/layout/ResponsiveLayouts'
 import { parseGalaPlanDescription } from '../utils/galaPlansApi'
 import { navigateToPath } from '../utils/navigation'
 import { getCategoryIconName } from '../components/AppIcon'
-import { buildPrivateGalaPlanShareUrl, shareLink } from '../utils/share'
 import { getApiUrl } from '../utils/apiClient'
 import { InlineSkeleton } from '../components/loading/SkeletonStates'
 
@@ -56,11 +50,6 @@ const TIME_PERIODS = ['AM', 'PM'] as const
 
 type TimePeriod = (typeof TIME_PERIODS)[number]
 
-function formatDate(value: string | null | undefined) {
-  if (!value) return ''
-  return new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(value))
-}
-
 function cleanPlanDescription(value: string | null | undefined) {
   return parseGalaPlanDescription(value).description
 }
@@ -82,159 +71,6 @@ function buildTimeLabel(time: string, period: TimePeriod | '') {
   const trimmedTime = time.trim()
   if (!trimmedTime) return ''
   return period ? `${trimmedTime} ${period}` : trimmedTime
-}
-
-function getVisibilityIconName(visibility: GalaPlanVisibility) {
-  return visibility === 'private' ? 'lock' : 'galaPlan'
-}
-
-function Badge({ children }: { children: string }) {
-  return (
-    <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-slate-700">
-      <AppIcon name={getVisibilityIconName(children as GalaPlanVisibility)} className="h-3.5 w-3.5" />
-      {children}
-    </span>
-  )
-}
-
-function PlanStat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-baseline gap-2">
-      <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">{label}</p>
-      <p className="text-sm font-black text-slate-950">{value}</p>
-    </div>
-  )
-}
-
-function EmptyPlansState({ favorites }: { favorites?: boolean }) {
-  return (
-    <section className="gala-empty-state">
-      <h2 className="text-xl font-black text-slate-950">
-        {favorites ? 'No gala plan favorites yet.' : 'Start your first gala plan.'}
-      </h2>
-      <p className="mt-2 max-w-xl text-sm font-semibold leading-6 text-slate-600">
-        {favorites
-          ? 'Public gala plans you heart will show here for quick access.'
-          : 'Build a simple route, keep it private, and share it when it is ready.'}
-      </p>
-      <div className="mt-4 flex flex-wrap gap-2">
-        {!favorites ? (
-          <button type="button" onClick={() => navigateToPath('/gala-plans/new')} className="app-button app-button-primary app-button-md">
-            Create Gala Plan
-          </button>
-        ) : null}
-        <button type="button" onClick={() => navigateToPath(favorites ? '/home' : '/gala-plans/favorites')} className="app-button app-button-secondary app-button-md">
-          {favorites ? 'Discover Places' : 'View Gala Plan Favorites'}
-        </button>
-      </div>
-    </section>
-  )
-}
-
-function PlanCard({
-  plan,
-  showOwner = false,
-  onDeleted,
-}: {
-  plan: GalaPlanSummary
-  showOwner?: boolean
-  onDeleted?: (planId: string) => void
-}) {
-  const openPlan = () => navigateToPath(`/gala-plans/${encodeURIComponent(plan.id)}`)
-  const placeCount = plan.place_count ?? plan.places_count
-  const heartCount = plan.heart_count ?? plan.hearts_count
-  const description = cleanPlanDescription(plan.description)
-  const visiblePreviewPlaces = plan.preview_places.slice(0, 2)
-  const hiddenPreviewPlaceCount = Math.max(plan.preview_places.length - visiblePreviewPlaces.length, 0)
-  const metaItems = [
-    {
-      key: 'stops',
-      icon: 'place' as const,
-      value: `${placeCount} stop${placeCount === 1 ? '' : 's'}`,
-    },
-    {
-      key: 'updated',
-      icon: 'history' as const,
-      value: formatDate(plan.updated_at),
-    },
-    ...(plan.visibility === 'public'
-      ? [{
-          key: 'hearts',
-          icon: 'favorites' as const,
-          value: `${heartCount} heart${heartCount === 1 ? '' : 's'}`,
-        }]
-      : []),
-  ]
-
-  return (
-    <article className="group gala-card flex h-full flex-col p-4 transition hover:border-[var(--line-strong)] sm:p-5">
-      <div className="mb-4 h-1.5 w-14 rounded-full bg-[var(--accent)]" />
-      <div className="min-w-0 flex-1">
-        <div className="mb-3 flex flex-wrap items-center gap-2">
-          {showOwner && plan.owner ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-slate-600">
-              <AppIcon name="profile" className="h-3.5 w-3.5" />
-              @{plan.owner.username || 'galatayo-user'}
-            </span>
-          ) : null}
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge>{plan.visibility}</Badge>
-            {plan.is_active ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(var(--accent-rgb),0.18)] bg-white px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-[var(--accent-deep)]">
-                <AppIcon name="check" className="h-3.5 w-3.5" />
-                Active
-              </span>
-            ) : null}
-          </div>
-        </div>
-        <button type="button" onClick={openPlan} className="text-left text-lg font-black leading-tight text-slate-950 transition group-hover:text-slate-700 sm:text-xl">
-          {plan.title}
-        </button>
-        <p className="mt-2 line-clamp-2 text-sm font-semibold leading-6 text-slate-600">{description || 'No description yet.'}</p>
-      </div>
-      <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-200 pt-4 text-sm font-black text-slate-700">
-        {metaItems.map((item) => (
-          <span key={item.key} className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1.5">
-            <AppIcon name={item.icon} className="h-3.5 w-3.5 text-slate-400" />
-            {item.value}
-          </span>
-        ))}
-      </div>
-      {visiblePreviewPlaces.length > 0 ? (
-        <div className="mt-4 flex flex-wrap gap-2">
-          {visiblePreviewPlaces.map((place) => (
-            <span key={`${plan.id}-${place.id}`} className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700">
-              <AppIcon name="place" className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-              <span className="truncate">{place.name}</span>
-            </span>
-          ))}
-          {hiddenPreviewPlaceCount > 0 ? (
-            <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-black text-slate-600">
-              +{hiddenPreviewPlaceCount} more
-            </span>
-          ) : null}
-        </div>
-      ) : null}
-      <div className="mt-5 flex flex-wrap gap-2">
-        <button type="button" onClick={openPlan} className="app-button app-button-primary app-button-md">
-          <AppIcon name="arrowRight" className="h-4 w-4" />
-          View Plan
-        </button>
-        {plan.viewer_is_owner ? (
-          <>
-            <button type="button" onClick={() => navigateToPath(`/gala-plans/${encodeURIComponent(plan.id)}/edit`)} className="app-button app-button-secondary app-button-md">
-              <AppIcon name="settings" className="h-4 w-4" />
-              Edit
-            </button>
-            <button type="button" onClick={async () => { await deleteGalaPlan(plan.id); onDeleted?.(plan.id) }} className="app-button app-button-danger app-button-md">
-              <AppIcon name="trash" className="h-4 w-4" />
-              Delete
-            </button>
-          </>
-        ) : null}
-      </div>
-    </article>
-  )
 }
 
 function VisibilitySelector({ value, onChange }: { value: GalaPlanVisibility; onChange: (value: GalaPlanVisibility) => void }) {
@@ -482,7 +318,7 @@ function ItineraryBuilder({
             <button type="button" onClick={() => void searchPlaces(1, true)} disabled={isSearching} className="app-button app-button-primary app-button-md">{isSearching ? 'Searching...' : 'Search'}</button>
 
             {isSearchModalOpen ? (
-              <div className="absolute left-0 right-0 top-[calc(100%+0.75rem)] z-20 overflow-hidden rounded-[24px] border border-[var(--line)] bg-white shadow-[0_24px_60px_rgba(15,23,42,0.18)] sm:left-0 sm:right-auto sm:w-[min(760px,calc(100vw-2rem))]">
+              <div className="absolute left-0 right-0 top-[calc(100%+0.75rem)] z-20 overflow-hidden rounded-[24px] border border-[var(--line)] bg-white shadow-[0_24px_60px_rgba(27,26,23,0.18)] sm:left-0 sm:right-auto sm:w-[min(760px,calc(100vw-2rem))]">
                 <div className="flex items-start justify-between gap-3 border-b border-[var(--line)] px-4 py-3">
                   <div className="min-w-0">
                     <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[var(--accent-deep)]">Search Suggestions</p>
@@ -790,7 +626,7 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
     <form onSubmit={handleSubmit} className="grid gap-6 sm:gap-7 xl:gap-8">
       <PageContainer size="wide" className="grid gap-6 sm:gap-7 xl:gap-8">
         {isLoading || isRefreshing ? <InlineSkeleton /> : null}
-        <section className="grid gap-6 rounded-[28px] border border-[var(--line)] bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,255,0.9))] px-5 py-5 shadow-[var(--shadow-soft)] sm:px-6 sm:py-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start lg:gap-6 xl:px-7 xl:py-7">
+        <section className="grid gap-6 rounded-[28px] border border-[var(--line)] bg-[var(--card)] px-5 py-5 shadow-[var(--shadow-soft)] sm:px-6 sm:py-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start lg:gap-6 xl:px-7 xl:py-7">
           <div className="grid gap-5">
             <PageHeroHeader
               eyebrow="Gala Plans"
@@ -807,7 +643,7 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
             </div>
           </div>
 
-          <aside className="grid gap-3 rounded-[24px] border border-[var(--line)] bg-white p-4 shadow-[0_14px_30px_rgba(15,23,42,0.04)] sm:p-5 lg:sticky lg:top-24">
+          <aside className="grid gap-3 rounded-[24px] border border-[var(--line)] bg-white p-4 shadow-[0_14px_30px_rgba(27,26,23,0.04)] sm:p-5 lg:sticky lg:top-24">
             <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[var(--accent-deep)]">Plan At A Glance</p>
             <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
               <div className="rounded-2xl bg-[var(--accent-wash)] px-4 py-3">
@@ -833,242 +669,36 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
     </form>
   )
 }
-function ListPage({ session, favorites = false }: { session?: Session | null; favorites?: boolean }) {
-  const [plans, setPlans] = useState<GalaPlanSummary[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const [errorMessage, setErrorMessage] = useState('')
-
-  useEffect(() => {
-    const loadPlans = async () => {
-      try {
-        if (plans.length > 0) {
-          setIsRefreshing(true)
-        } else {
-          setIsLoading(true)
-        }
-        setErrorMessage('')
-        const data = favorites ? await listFavoriteGalaPlans(session) : await listMyGalaPlans(session)
-        setPlans(data.plans)
-      } catch (error) {
-        setErrorMessage(error instanceof Error ? error.message : 'Failed to load gala plan.')
-      } finally {
-        setIsLoading(false)
-        setIsRefreshing(false)
-      }
-    }
-    void loadPlans()
-  }, [favorites, session?.user?.id])
-
-  const latestUpdate = plans[0]?.updated_at ? formatDate(plans[0].updated_at) : favorites ? 'No gala plan favorites yet' : 'No gala plan yet'
-
-  return (
-    <>
-      <PageContainer size="wide" className="grid gap-5 sm:gap-6">
-        <div className="pt-2">
-          <MinimalBackNav to="/home" label="Home" preferHistory={false} />
-        </div>
-
-        <PageHeroHeader
-          eyebrow="Gala Plans"
-          title={favorites ? 'Gala plan favorites' : 'My gala plans'}
-          description={favorites ? 'Public gala plans you hearted and saved for quick access.' : 'Keep your routes clear, compact, and easy to edit.'}
-          icon={<AppIcon name="galaPlan" className="h-4 w-4" />}
-          badges={
-            <>
-              <span className="gala-count-pill">
-                {plans.length} {favorites ? 'saved plan' : 'plan'}{plans.length === 1 ? '' : 's'}
-              </span>
-              <span className="gala-count-pill">
-                {favorites ? 'Community picks' : `Latest update ${latestUpdate}`}
-              </span>
-            </>
-          }
-          aside={
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
-              <button type="button" onClick={() => navigateToPath(favorites ? '/gala-plans' : '/gala-plans/favorites')} className="app-button app-button-secondary app-button-md">{favorites ? 'My Gala Plan' : 'Gala Plan Favorites'}</button>
-              {!favorites ? <button type="button" onClick={() => navigateToPath('/gala-plans/new')} className="app-button app-button-primary app-button-md">Create Gala Plan</button> : null}
-            </div>
-          }
-        />
-
-        <div className="flex flex-wrap gap-x-5 gap-y-2">
-          <PlanStat label={favorites ? 'Saved plans' : 'Total plans'} value={String(plans.length)} />
-          {!favorites ? <PlanStat label="Latest update" value={latestUpdate} /> : null}
-        </div>
-
-        {isLoading || isRefreshing ? <InlineSkeleton /> : null}
-        {errorMessage ? <p className="rounded-lg bg-red-50 p-4 text-sm font-bold text-red-700">{errorMessage}</p> : null}
-        {!errorMessage && plans.length === 0 ? <EmptyPlansState favorites={favorites} /> : null}
-        <section className="grid gap-4 md:grid-cols-2 2xl:grid-cols-4">
-          {plans.map((plan) => <PlanCard key={plan.id} plan={plan} showOwner={favorites} onDeleted={(planId) => setPlans((current) => current.filter((currentPlan) => currentPlan.id !== planId))} />)}
-        </section>
-      </PageContainer>
-    </>
-  )
-}
-
-function DetailPage({ planId, session }: { planId: string; session?: Session | null }) {
-  const [plan, setPlan] = useState<GalaPlanDetail | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const [errorMessage, setErrorMessage] = useState('')
-  const [notice, setNotice] = useState('')
-  useEffect(() => {
-    const loadPlan = async () => {
-      try {
-        if (plan) {
-          setIsRefreshing(true)
-        } else {
-          setIsLoading(true)
-        }
-        setErrorMessage('')
-        const data = await getGalaPlan(planId, session)
-        setPlan(data.plan)
-      } catch (error) {
-        setErrorMessage(error instanceof Error ? error.message : 'Gala plan unavailable.')
-      } finally {
-        setIsLoading(false)
-        setIsRefreshing(false)
-      }
-    }
-    void loadPlan()
-  }, [planId, session?.user?.id])
-
-  const groupedItems = useMemo(() => {
-    const groups = new Map<number, GalaPlanDetail['items']>()
-    for (const item of plan?.items || []) {
-      const dayItems = groups.get(item.day_number) || []
-      dayItems.push(item)
-      groups.set(item.day_number, dayItems)
-    }
-    return Array.from(groups.entries()).sort(([first], [second]) => first - second)
-  }, [plan])
-
-  const sharePlan = async () => {
-    if (!plan) return
-    await shareLink({
-      url: buildPrivateGalaPlanShareUrl(plan.id),
-      title: plan.title,
-      text: plan.title,
-    })
-  }
-
-  const toggleHeart = async () => {
-    if (!plan) return
-    try {
-      const data = await toggleGalaPlanHeart(plan.id, session)
-      setPlan({ ...plan, viewer_has_hearted: data.viewer_has_hearted, heart_count: data.heart_count, hearts_count: data.hearts_count })
-    } catch (error) {
-      setNotice(error instanceof Error ? error.message : 'Failed to update heart.')
-    }
-  }
-
-  if (!plan) return <p className="rounded-lg border border-[var(--line)] bg-white p-5 text-sm font-bold text-red-700">{errorMessage || 'Gala plan unavailable.'}</p>
-
-  return (
-    <PageContainer size="wide" className="grid gap-5">
-      <div className="grid gap-5">
-        {isLoading || isRefreshing ? <InlineSkeleton /> : null}
-        <section className="gala-card overflow-hidden">
-        <div className="border-b border-[var(--line)] bg-white px-5 py-5 sm:px-6 sm:py-6">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                {plan.viewer_is_owner ? <Badge>{plan.visibility}</Badge> : null}
-                {plan.is_active ? <span className="inline-flex w-fit items-center gap-1.5 rounded-full border border-[rgba(var(--accent-rgb),0.18)] bg-[var(--primary-soft)] px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-[var(--accent-deep)]"><AppIcon name="check" className="h-3.5 w-3.5" />Active</span> : null}
-              </div>
-              <h1 className="gala-page-title mt-4">{plan.title}</h1>
-              <p className="mt-3 text-sm font-black text-[var(--accent-deep)]">{plan.owner?.username ? `@${plan.owner.username}` : 'GalaTayo user'}</p>
-              {cleanPlanDescription(plan.description) ? <p className="mt-4 max-w-3xl text-sm font-semibold leading-6 text-slate-700">{cleanPlanDescription(plan.description)}</p> : null}
-            </div>
-            <div className="grid w-full gap-3 sm:w-auto sm:min-w-[220px]">
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-1">
-                <div className="rounded-lg border border-[var(--line)] bg-white p-3">
-                  <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">Places</p>
-                  <p className="mt-1 text-xl font-black text-slate-950">{plan.place_count}</p>
-                </div>
-                <div className="rounded-lg border border-[var(--line)] bg-white p-3">
-                  <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">Updated</p>
-                  <p className="mt-1 text-sm font-black text-slate-950">{formatDate(plan.updated_at)}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="border-t border-slate-100 px-5 py-4 sm:px-6">
-          <div className="grid gap-4">
-            <div className="flex flex-wrap gap-2">
-              {!plan.viewer_is_owner && plan.visibility === 'public' && plan.is_active ? <button type="button" onClick={() => void toggleHeart()} className="inline-flex h-11 items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-4 text-sm font-black text-rose-700 transition hover:bg-rose-100"><AppIcon name="favorites" className="h-4 w-4" />{plan.viewer_has_hearted ? 'Hearted' : 'Heart'} · {plan.heart_count}</button> : <span className="inline-flex h-11 items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 text-sm font-black text-slate-700"><AppIcon name="favorites" className="h-4 w-4 text-slate-500" />{plan.heart_count} hearts</span>}
-              <button type="button" onClick={() => void sharePlan()} className="inline-flex h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-black text-slate-800 transition hover:border-slate-300 hover:bg-slate-50"><AppIcon name="copy" className="h-4 w-4" />Copy Link</button>
-              {plan.viewer_is_owner ? (
-                <>
-                  <button type="button" onClick={() => navigateToPath(`/gala-plans/${encodeURIComponent(plan.id)}/edit`)} className="inline-flex h-11 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-black text-slate-800 transition hover:border-slate-300 hover:bg-slate-50"><AppIcon name="settings" className="h-4 w-4" />Edit</button>
-                  <button type="button" onClick={async () => { await deleteGalaPlan(plan.id, session); navigateToPath('/gala-plans') }} className="inline-flex h-11 items-center gap-2 rounded-full border border-red-200 bg-red-50 px-4 text-sm font-black text-red-700 transition hover:bg-red-100"><AppIcon name="trash" className="h-4 w-4" />Delete</button>
-                </>
-              ) : null}
-            </div>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl bg-slate-50 p-3">
-                <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">Created</p>
-                <p className="mt-1 text-sm font-black text-slate-950">{formatDate(plan.created_at)}</p>
-              </div>
-              <div className="rounded-2xl bg-slate-50 p-3">
-                <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">Stops</p>
-                <p className="mt-1 text-sm font-black text-slate-950">{plan.place_count} {plan.place_count === 1 ? 'place' : 'places'}</p>
-              </div>
-              <div className="rounded-2xl bg-slate-50 p-3">
-                <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">Status</p>
-                <p className="mt-1 text-sm font-black text-slate-950">{plan.is_active ? 'Ready to share' : 'Draft plan'}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        {notice ? <p className="mx-5 mb-5 rounded-2xl bg-amber-50 px-4 py-3 text-sm font-bold text-amber-800 sm:mx-6 sm:mb-6">{notice}</p> : null}
-        </section>
-
-        <section className="grid gap-4">
-        {groupedItems.length === 0 ? <p className="rounded-lg border border-[var(--line)] bg-white p-4 text-sm font-semibold text-[var(--muted)]">This gala plan has no places yet.</p> : groupedItems.map(([dayNumber, items]) => (
-          <div key={dayNumber} className="grid gap-3">
-            <div className="flex items-center gap-3">
-              <span className="inline-flex h-9 items-center rounded-lg bg-[var(--accent)] px-4 text-sm font-black text-white">Day {dayNumber}</span>
-              <div className="h-px flex-1 bg-slate-200" />
-            </div>
-            {items.map((item) => (
-              <article key={item.id} className="gala-card p-4 sm:p-5">
-                <div className="flex gap-4">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-sm font-black text-slate-700">{item.sort_order}</span>
-                  <div className="min-w-0 flex-1">
-                    <button type="button" onClick={() => navigateToPath(`/places/${encodeURIComponent(item.place.slug)}`)} className="text-left text-lg font-black leading-tight text-slate-950 transition hover:text-[var(--accent-deep)]">{item.place.name}</button>
-                    <p className="mt-1 text-sm font-bold text-[var(--muted)]">{[item.place.city || item.place.area, item.place.category].filter(Boolean).join(' · ') || 'GalaTayo place'}</p>
-                    <div className="mt-3 flex flex-wrap gap-2 text-xs font-black text-slate-700">
-                      {item.time_label ? <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1 ring-1 ring-[var(--line)]"><AppIcon name="history" className="h-3.5 w-3.5 text-slate-500" />{item.time_label}</span> : null}
-                      {item.estimated_minutes ? <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2.5 py-1 ring-1 ring-[var(--line)]"><AppIcon name="galaPlan" className="h-3.5 w-3.5 text-slate-500" />{item.estimated_minutes} min</span> : null}
-                    </div>
-                    {item.notes ? <p className="mt-3 text-sm font-semibold leading-6 text-slate-700">{item.notes}</p> : null}
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-        ))}
-        </section>
-      </div>
-    </PageContainer>
-  )
-}
-
 function GalaPlansPage({ mode = 'list', planId = null, session = null }: GalaPlansPageProps) {
+  if (mode === 'list' || mode === 'favorites') {
+    return (
+      <PageShell>
+        <main>
+          <PlanList session={session} favorites={mode === 'favorites'} />
+        </main>
+      </PageShell>
+    )
+  }
+
+  if (mode === 'detail' && planId) {
+    return (
+      <PageShell>
+        <main>
+          <div className="mx-auto w-full max-w-[1180px] px-4 pt-5 sm:px-6 lg:px-8">
+            <MinimalBackNav to="/gala-plans" label="Plans" />
+          </div>
+          <PlanDetail planId={planId} session={session} />
+        </main>
+      </PageShell>
+    )
+  }
+
   return (
     <PageShell>
-      <AppHeader fixed />
       <main className="gala-app-main">
-        {mode !== 'list' && mode !== 'favorites' ? <MinimalBackNav to="/gala-plans" /> : null}
-        {mode === 'list' ? <ListPage session={session} /> : null}
-        {mode === 'favorites' ? <ListPage session={session} favorites /> : null}
+        <MinimalBackNav to="/gala-plans" />
         {mode === 'new' ? <PlanForm session={session} /> : null}
         {mode === 'edit' && planId ? <PlanForm session={session} planId={planId} /> : null}
-        {mode === 'detail' && planId ? <DetailPage planId={planId} session={session} /> : null}
       </main>
     </PageShell>
   )

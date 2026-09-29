@@ -265,7 +265,7 @@ function MfaVerification({ session, nextPath: nextPathProp, onSuccess }: MfaVeri
             onChange={(event) => handleDigitChange(index, event.target.value)}
             onKeyDown={(event) => handleKeyDown(index, event)}
             onPaste={index === 0 ? handlePaste : undefined}
-            className="h-14 w-12 rounded-xl border border-[var(--line)] bg-white text-center text-2xl font-black text-slate-900 shadow-[inset_0_1px_2px_rgba(15,23,42,0.03)] outline-none transition focus:border-[var(--accent)] focus:shadow-[var(--focus-ring)] sm:h-16 sm:w-14 sm:text-[28px]"
+            className="h-14 w-12 rounded-xl border border-[var(--line)] bg-white text-center text-2xl font-black text-slate-900 shadow-[inset_0_1px_2px_rgba(27,26,23,0.03)] outline-none transition focus:border-[var(--accent)] focus:shadow-[var(--focus-ring)] sm:h-16 sm:w-14 sm:text-[28px]"
           />
         ))}
       </div>
@@ -289,7 +289,7 @@ function MfaVerification({ session, nextPath: nextPathProp, onSuccess }: MfaVeri
           type="button"
           onClick={() => void handleSendCode()}
           disabled={isSendingCode || cooldownSeconds > 0}
-          className="font-semibold text-[var(--accent)] underline hover:text-[var(--accent-deep)] disabled:text-slate-300 disabled:no-underline"
+          className="font-semibold text-[var(--accent)] underline hover:text-[var(--accent-deep)] disabled:text-[var(--text-disabled)] disabled:no-underline"
         >
           {resendText}
         </button>

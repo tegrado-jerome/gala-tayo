@@ -166,9 +166,9 @@ export function ListingSkeleton({ count = 3, className = '' }: CountProps & { cl
     <div className={cn('grid gap-4 md:grid-cols-2 xl:grid-cols-3', className)} aria-busy="true" aria-live="polite">
       <span className="sr-only">Loading listings</span>
       {Array.from({ length: count }).map((_, index) => (
-        <article key={`listing-skeleton-${index}`} className="relative overflow-hidden rounded-[26px] border border-[rgba(148,163,184,0.22)] bg-white shadow-[0_8px_22px_rgba(15,23,42,0.05)]">
+        <article key={`listing-skeleton-${index}`} className="relative overflow-hidden rounded-[26px] border border-[rgba(148,163,184,0.22)] bg-white shadow-[0_8px_22px_rgba(27,26,23,0.05)]">
           <div className="relative aspect-[1.38] w-full overflow-hidden bg-[linear-gradient(180deg,var(--primary-soft)_0%,rgba(var(--accent-rgb),0.06)_100%)]">
-            <div className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/92 px-2.5 py-1 shadow-[0_8px_18px_rgba(15,23,42,0.12)]">
+            <div className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/92 px-2.5 py-1 shadow-[0_8px_18px_rgba(27,26,23,0.12)]">
               <AppSkeleton className="h-3.5 w-3.5 rounded-full" />
               <SkeletonLine className="h-3 w-24" />
             </div>
@@ -201,7 +201,7 @@ export function ChatSkeleton({ className = '' }: { className?: string }) {
           </div>
           <div className="flex items-start gap-2.5">
             <AppSkeleton className="h-8 w-8 shrink-0 rounded-full" />
-            <div className="min-w-0 w-full max-w-[88%] rounded-2xl rounded-tl-[6px] border border-[rgba(15,23,42,0.06)] bg-white px-4 py-3.5 shadow-[0_2px_8px_rgba(15,23,42,0.03)] sm:max-w-[82%]">
+            <div className="min-w-0 w-full max-w-[88%] rounded-2xl rounded-tl-[6px] border border-[rgba(27,26,23,0.06)] bg-white px-4 py-3.5 shadow-[0_2px_8px_rgba(27,26,23,0.03)] sm:max-w-[82%]">
               <SkeletonLine className="h-4 w-24" />
               <SkeletonLine className="mt-3 h-3.5 w-full" />
               <SkeletonLine className="mt-2 h-3.5 w-5/6" />
@@ -216,7 +216,7 @@ export function ChatSkeleton({ className = '' }: { className?: string }) {
 
 export function MapSearchSkeleton({ className = '' }: { className?: string }) {
   return (
-    <div className={cn('w-full min-w-0 rounded-[24px] border border-[rgba(var(--accent-rgb),0.18)] bg-white/96 p-4 shadow-[0_16px_36px_rgba(15,23,42,0.12)]', className)} aria-busy="true" aria-live="polite">
+    <div className={cn('w-full min-w-0 rounded-[24px] border border-[rgba(var(--accent-rgb),0.18)] bg-white/96 p-4 shadow-[0_16px_36px_rgba(27,26,23,0.12)]', className)} aria-busy="true" aria-live="polite">
       <span className="sr-only">Loading map results</span>
       <div className="flex items-start gap-3">
         <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px] bg-[linear-gradient(180deg,rgba(var(--accent-rgb),0.04)_0%,rgba(var(--accent-rgb),0.10)_100%)] text-[var(--accent-deep)]">

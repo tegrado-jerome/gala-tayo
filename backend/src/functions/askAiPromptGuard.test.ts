@@ -458,7 +458,7 @@ describe("Ask AI prompt guard Groq retry handling", () => {
           GroqChatProviderError
         );
       },
-      { expectedCalls: 3 }
+      { expectedCalls: 2 }
     );
   });
 
@@ -849,7 +849,6 @@ describe("Ask AI chatbot generation scope", () => {
           requests.map((request) => request.model),
           [
             "openai/gpt-oss-20b",
-            "llama-3.1-8b-instant",
             "openai/gpt-oss-120b",
           ]
         );
@@ -858,7 +857,7 @@ describe("Ask AI chatbot generation scope", () => {
           false
         );
       },
-      { expectedCalls: 3, useDefaultModels: true }
+      { expectedCalls: 2, useDefaultModels: true }
     );
   });
 

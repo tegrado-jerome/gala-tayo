@@ -55,7 +55,6 @@ function App() {
     editGalaPlanId,
     ownedGalaPlanId,
     isOnboardingAllowedPath,
-    soonFeatureRedirectPath,
   } = useMemo(() => getRouteState(pathname), [pathname])
   const legacyAdminRedirectPath = useMemo(() => getLegacyAdminRedirectPath(pathname), [pathname])
   const isPasswordResetPath = isPath(pathname, '/reset-password') || isPath(pathname, '/auth/reset-password')
@@ -98,12 +97,6 @@ function App() {
   }, [hasResolvedInitialAuth, hasResolvedProfile, isOnboardingAllowedPath, isPasswordResetPath, needsOnboarding, pathname, session])
 
   useEffect(() => {
-    if (soonFeatureRedirectPath && pathname !== soonFeatureRedirectPath) {
-      replaceWithPath(soonFeatureRedirectPath)
-    }
-  }, [pathname, soonFeatureRedirectPath])
-
-  useEffect(() => {
     if (!legacyAdminRedirectPath) {
       return
     }
@@ -142,7 +135,6 @@ function App() {
     search,
     isPasswordResetPath,
     routeNeedsBlockingAuth,
-    soonFeatureRedirectPath,
     canonicalPlacePath,
     categoryPageSlug,
     landingPageSlug,
