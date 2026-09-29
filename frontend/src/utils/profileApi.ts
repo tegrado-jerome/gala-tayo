@@ -40,7 +40,9 @@ export type PublicGalaPlanPreviewPlace = {
   name: string
   slug: string
   city: string | null
+  area?: string | null
   category: string | null
+  image_url?: string | null
 }
 
 export type PublicGalaPlanSummary = {

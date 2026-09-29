@@ -363,13 +363,11 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
                     <span className="flex-1">Find Friends</span>
                     <AppIcon name="chevronRight" className="h-4 w-4 text-slate-500" />
                   </button>
-                  <div className={soonMenuItemClass} role="menuitem" aria-disabled="true" title="Coming soon">
-                    <span className={soonMenuIconClass}><AppIcon name="galaPlan" size="ui" /></span>
+                  <button type="button" onClick={() => closeAndNavigate('/gala-plans')} className={menuItemClass} role="menuitem">
+                    <span className={menuIconClass}><AppIcon name="galaPlan" size="ui" /></span>
                     <span className="flex-1">Gala Plans</span>
-                    <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
-                      Soon
-                    </span>
-                  </div>
+                    <AppIcon name="chevronRight" className="h-4 w-4 text-slate-500" />
+                  </button>
                   <div className={soonMenuItemClass} role="menuitem" aria-disabled="true" title="Coming soon">
                     <span className={soonMenuIconClass}><AppIcon name="place" size="ui" /></span>
                     <span className="flex-1">Submit Place</span>
@@ -520,13 +518,11 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
                   <span className="flex-1">Find Friends</span>
                   <AppIcon name="chevronRight" className="h-4 w-4 text-slate-500" />
                 </button>
-                <div className={soonMenuItemClass} role="menuitem" aria-disabled="true" title="Coming soon">
-                  <span className={soonMenuIconClass}><AppIcon name="galaPlan" size="ui" /></span>
+                <button type="button" onClick={() => closeAndNavigate('/gala-plans')} className={menuItemClass} role="menuitem">
+                  <span className={menuIconClass}><AppIcon name="galaPlan" size="ui" /></span>
                   <span className="flex-1">Gala Plans</span>
-                  <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
-                    Soon
-                  </span>
-                </div>
+                  <AppIcon name="chevronRight" className="h-4 w-4 text-slate-500" />
+                </button>
                 <div className={soonMenuItemClass} role="menuitem" aria-disabled="true" title="Coming soon">
                   <span className={soonMenuIconClass}><AppIcon name="place" size="ui" /></span>
                   <span className="flex-1">Submit Place</span>

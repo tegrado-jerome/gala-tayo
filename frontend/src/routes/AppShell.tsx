@@ -1,7 +1,9 @@
 import { Suspense, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import SeoHead from '../components/SeoHead'
-import MobileBottomNav from '../components/MobileBottomNav'
+import MobileBottomNav from '../components/navigation/MobileBottomNav'
+import SiteHeader from '../components/navigation/SiteHeader'
+import { shouldShowSiteHeader } from '../utils/routeGuards'
 import FloatingChat from '../components/FloatingChat'
 import { PageShellSkeleton } from '../components/loading/SkeletonStates'
 import { AppIcon } from '../components/AppIcon'
@@ -55,6 +57,7 @@ export function AppShell({ session, currentUser, currentProfile, adminMfa, hasRe
               {shouldApplyGenericNoindex ? (
                 <SeoHead title="GalaTayo" canonicalPath={pathname} robots="noindex,follow" />
               ) : null}
+              {shouldShowSiteHeader(pathname) ? <SiteHeader pathname={pathname} /> : null}
               <Suspense fallback={<PageShellSkeleton />}>
                 <div className={`flex ${appShellHeightClass} flex-col`}>{children}</div>
               </Suspense>

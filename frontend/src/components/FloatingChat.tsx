@@ -16,6 +16,7 @@ const HIDDEN_PATHS = [
   '/',
   '/ask-ai/maps',
   '/ask-ai/map',
+  '/plan-with-ai',
   '/login',
   '/signup',
   '/auth',
@@ -65,7 +66,7 @@ function FloatingChatPanel({ initialQuestion }: { initialQuestion: string }) {
       <div
         role="dialog"
         aria-label="GalaTayo AI chat"
-        className="fixed inset-0 z-[7000] h-[100dvh] overflow-hidden bg-[var(--bg)] sm:inset-auto sm:bottom-[calc(env(safe-area-inset-bottom,0px)*2+10rem)] sm:right-4 sm:h-[min(640px,calc(100dvh-12rem))] sm:w-[400px] sm:rounded-[24px] sm:border sm:border-[var(--line)] sm:shadow-[0_24px_60px_rgba(15,23,42,0.22)] lg:bottom-24 lg:right-6 lg:h-[min(640px,calc(100dvh-8rem))]"
+        className="fixed inset-0 z-[7000] h-[100dvh] overflow-hidden bg-[var(--bg)] sm:inset-auto sm:bottom-[calc(env(safe-area-inset-bottom,0px)+9rem)] sm:right-4 sm:h-[min(640px,calc(100dvh-12rem))] sm:w-[400px] sm:rounded-[24px] sm:border sm:border-[var(--line)] sm:shadow-[0_24px_60px_rgba(27, 26, 23, 0.22)] lg:bottom-24 lg:right-6 lg:h-[min(640px,calc(100dvh-8rem))]"
       >
         <AskAiModePanel
           {...panelProps}
@@ -106,11 +107,11 @@ function FloatingChat({ pathname }: { pathname: string }) {
         aria-label={isOpen ? 'Close GalaTayo AI chat' : 'Open GalaTayo AI chat'}
         aria-expanded={isOpen}
         title="GalaTayo AI"
-        className={`fixed right-4 z-[6500] h-14 w-14 items-center justify-center rounded-full bg-[var(--accent)] text-white shadow-[0_12px_28px_rgba(30,58,138,0.38)] transition hover:scale-105 hover:bg-[var(--accent-deep)] active:scale-95 lg:bottom-6 lg:right-6 ${
+        className={`fixed right-4 z-[6500] h-14 w-14 items-center justify-center rounded-full bg-[var(--accent)] text-white shadow-[0_12px_28px_rgba(var(--accent-rgb), 0.38)] transition hover:scale-105 hover:bg-[var(--accent-deep)] active:scale-95 lg:bottom-6 lg:right-6 ${
           isOpen ? 'hidden sm:flex' : 'flex'
         } ${
           hasBottomNav
-            ? 'bottom-[calc(env(safe-area-inset-bottom,0px)*2+5.75rem)]'
+            ? 'bottom-[calc(env(safe-area-inset-bottom,0px)+4.75rem)]'
             : 'bottom-[calc(env(safe-area-inset-bottom,0px)+1rem)]'
         }`}
       >

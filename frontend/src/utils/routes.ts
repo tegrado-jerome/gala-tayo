@@ -289,8 +289,6 @@ export function getCanonicalGalaPlanPath(pathname: string) {
 
 export function getSoonFeatureRedirectPath(pathname: string): '/home' | null {
   if (
-    pathname.startsWith('/gala-plan') ||
-    pathname.startsWith('/gala-plans') ||
     isPath(pathname, '/submit-place') ||
     isPath(pathname, '/places/submit') ||
     isPath(pathname, '/places/new')

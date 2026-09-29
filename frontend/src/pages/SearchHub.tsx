@@ -766,7 +766,7 @@ function SearchHub({
                     </div>
                   ) : (
                     <div className="mt-4 grid gap-4">
-                      <section className="overflow-hidden rounded-[22px] border border-[var(--line)] bg-white shadow-[0_10px_24px_rgba(15,23,42,0.05)]">
+                      <section className="overflow-hidden rounded-[22px] border border-[var(--line)] bg-white shadow-[0_10px_24px_rgba(27, 26, 23, 0.05)]">
                         <MapView
                           places={visiblePlaces}
                           selectedPlaceId={selectedPlaceId}
@@ -875,7 +875,7 @@ function SearchHub({
   }
 
     return (
-      <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] lg:h-[100dvh] lg:overflow-hidden">
+      <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] lg:h-[calc(100dvh-var(--site-header-h))] lg:overflow-hidden">
         <GuestAuthPrompt
           variant="ask-ai"
           mode="modal"
@@ -961,8 +961,8 @@ function SearchHub({
         <div
           className={`hidden w-full lg:grid ${
             isPromptBuilderOpen
-              ? 'h-[var(--ask-ai-viewport-height,100svh)] overflow-hidden grid-rows-[auto_minmax(0,1fr)]'
-              : 'h-[var(--ask-ai-viewport-height,100svh)] overflow-hidden lg:grid-rows-[auto_minmax(0,1fr)_auto]'
+              ? 'h-[calc(var(--ask-ai-viewport-height,100svh)-var(--site-header-h))] overflow-hidden grid-rows-[auto_minmax(0,1fr)]'
+              : 'h-[calc(var(--ask-ai-viewport-height,100svh)-var(--site-header-h))] overflow-hidden lg:grid-rows-[auto_minmax(0,1fr)_auto]'
           }`}
         >
           <AppHeader minimal />

@@ -1,6 +1,7 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { buildImageUrl } from "../utils/r2UrlResolver";
+import { getApprovedPlaceImagesByPlaceIds } from "../services/placeImagesService";
 import { createSlug, getCurrentUser, getOptionalCurrentUser } from "../utils/social";
 
 type PlanVisibility = "private" | "public";
@@ -60,8 +61,8 @@ type ItemRow = {
 const PLAN_COLUMNS =
   "id, user_id, title, slug, description, visibility, status, published_at, created_at, updated_at, hearts_count";
 const ITEM_COLUMNS =
-  "id, plan_id, place_id, day_number, sort_order, time_label, notes, estimated_minutes, created_at, updated_at, places(id, name, slug, category, city, address, budget_min, latitude, longitude)";
-const PREVIEW_ITEM_COLUMNS = "id, plan_id, place_id, day_number, sort_order, places(id, name, slug, city, category)";
+  "id, plan_id, place_id, day_number, sort_order, time_label, notes, estimated_minutes, created_at, updated_at, places(id, name, slug, category, city, area, address, budget_min, latitude, longitude)";
+const PREVIEW_ITEM_COLUMNS = "id, plan_id, place_id, day_number, sort_order, places(id, name, slug, city, area, category)";
 const PLAN_VISIBILITIES = new Set<PlanVisibility>(["private", "public"]);
 const ACTIVE_STATUS = "active";
 const DELETED_STATUS = "deleted";
@@ -156,7 +157,9 @@ function mapPreviewPlace(item: ItemRow) {
     name: place.name,
     slug: place.slug,
     city: place.city ?? null,
+    area: place.area ?? null,
     category: place.category ?? null,
+    image_url: place.storage_key ? buildImageUrl(place.storage_key) : null,
   };
 }
 
@@ -273,6 +276,22 @@ async function getHeartedPlanIds(userId: string | null | undefined, planIds: str
   return new Set(((data || []) as Array<{ gala_plan_id: string }>).map((row) => row.gala_plan_id));
 }
 
+// Plan items join `places`, which has no image column; the primary image lives in `place_images`.
+async function attachPlaceImages(items: ItemRow[]): Promise<ItemRow[]> {
+  const placeIds = items.map((item) => item.places?.id).filter((id): id is string => Boolean(id));
+  if (placeIds.length === 0) return items;
+
+  try {
+    const imagesByPlaceId = await getApprovedPlaceImagesByPlaceIds(placeIds);
+    return items.map((item) => {
+      const storageKey = item.places ? imagesByPlaceId.get(item.places.id)?.[0]?.storage_key : null;
+      return storageKey && item.places ? { ...item, places: { ...item.places, storage_key: storageKey } } : item;
+    });
+  } catch {
+    return items;
+  }
+}
+
 async function getPlanItems(planIds: string[], previewOnly = false) {
   if (planIds.length === 0) return new Map<string, ItemRow[]>();
   const supabase = await getSupabaseAdminClient();
@@ -283,8 +302,9 @@ async function getPlanItems(planIds: string[], previewOnly = false) {
     .order("sort_order", { ascending: true });
   if (error) throw error;
 
+  const rows = await attachPlaceImages((data || []) as ItemRow[]);
   const byPlanId = new Map<string, ItemRow[]>();
-  for (const item of (data || []) as ItemRow[]) {
+  for (const item of rows) {
     const items = byPlanId.get(item.plan_id) || [];
     items.push(item);
     byPlanId.set(item.plan_id, items);
@@ -734,7 +754,8 @@ export async function addGalaPlanItem(request: HttpRequest, context: InvocationC
       .select(ITEM_COLUMNS)
       .single();
     if (error) throw error;
-    return { status: 201, jsonBody: { item: mapPlanDetail(plan, [data as ItemRow], false, user.id).items[0] } };
+    const [item] = await attachPlaceImages([data as ItemRow]);
+    return { status: 201, jsonBody: { item: mapPlanDetail(plan, [item], false, user.id).items[0] } };
   } catch (error) {
     if (isAuthError(error)) return unauthorized();
     context.error("POST /api/gala-plans/{id}/items failed:", error);
