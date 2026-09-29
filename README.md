@@ -59,6 +59,25 @@ npm run generate:static-listings
 
 Run this before deploying the frontend so `/places/{city}` and `/places/categories/{category}` can render from CDN-hosted JSON first, with the API kept as fallback.
 
+## Database Migrations
+
+SQL migrations live in `supabase/migrations/`. Apply new files in order in the Supabase SQL editor (or with the Supabase CLI) before deploying the backend that uses them.
+
+- `20260930120000_gala_plan_barkada.sql` adds Gala Plan members (RSVP, paid), polls, poll options and votes. Until it is applied, `GET /api/gala-plans/{id}/barkada` returns `{ "available": false }` and the Barkada tab stays hidden.
+
+## Free Services Used By The App
+
+- Groq (existing key) powers the chatbot and `POST /api/gala-plans/ai-draft` (Plan with AI).
+- Open-Meteo (no key) gives Metro Manila weather for the rainy-day Home banner; `api.open-meteo.com` is allowed in the CSP.
+- Travel legs and per-person budgets on plans are estimated in the browser from place coordinates and "from" prices; no routing API is called.
+
+## Tests
+
+```bash
+cd backend
+npm run test:unit
+```
+
 ## Security Notes
 
 - Public email existence checks must not disclose whether an account exists.
