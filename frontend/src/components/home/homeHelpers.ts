@@ -41,7 +41,6 @@ type BudgetOption = {
   label: string
 }
 
-type SearchMode = 'places' | 'ask-ai'
 
 type AskAiSource = {
   title: string
@@ -59,10 +58,8 @@ type HomePageInitialSearchState = {
 }
 
 type HomePageProps = {
-  initialMode?: SearchMode
   initialPromptBuilderOpen?: boolean
   initialSearchState?: HomePageInitialSearchState
-  initialAskAiQuestion?: string
   navigationSource?: 'push' | 'replace' | 'pop'
 }
 
@@ -891,7 +888,6 @@ export type {
   GoodForChip,
   BudgetValue,
   BudgetOption,
-  SearchMode,
   AskAiSource,
   HomePageInitialSearchState,
   HomePageProps,

@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { AppIcon } from '../components/AppIcon'
 import { useTheme } from './ThemeContext'
 import { getTasks, subscribeToAskAiTasks, type AskAiTask } from '../utils/askAiTaskStore'
+import { isFloatingChatOpen } from '../utils/floatingChat'
 
 function sendBrowserNotification(description: string) {
   if (!('Notification' in window)) return
@@ -51,7 +52,7 @@ const toneTextColors: Record<AskAiNotificationTone, string> = {
 
 function isOnFeaturePage(feature: string): boolean {
   const pathname = window.location.pathname.replace(/\/$/, '') || '/'
-  if (feature === 'chatbot') return pathname === '/ask-ai/chatbot'
+  if (feature === 'chatbot') return isFloatingChatOpen()
   if (feature === 'maps') return pathname === '/ask-ai/maps'
   return false
 }

@@ -2,6 +2,7 @@ import { Suspense, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import SeoHead from '../components/SeoHead'
 import MobileBottomNav from '../components/MobileBottomNav'
+import FloatingChat from '../components/FloatingChat'
 import { PageShellSkeleton } from '../components/loading/SkeletonStates'
 import { AppIcon } from '../components/AppIcon'
 import { AppUserProvider } from '../context/AppUserContext'
@@ -91,6 +92,7 @@ export function AppShell({ session, currentUser, currentProfile, adminMfa, hasRe
                 </div>
               ) : null}
               {showMobileBottomNav ? <BottomNavGate pathname={pathname} /> : null}
+              <FloatingChat pathname={pathname} />
             </BottomNavProvider>
           </AskAiNotificationProvider>
         </SavedFavoritesProvider>

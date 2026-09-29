@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCircleUser, faHandSparkles, faHouse, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
+import { faCircleUser, faHouse, faMagnifyingGlass, faMap } from '@fortawesome/free-solid-svg-icons'
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import { navigateToPath } from '../utils/navigation'
 
@@ -21,10 +21,11 @@ function MobileBottomNav({ currentPath }: MobileBottomNavProps) {
     currentPath === '/' ||
     currentPath === ''
   const isSearchActive = currentPath === '/search' || currentPath === '/search/'
-  const isAskAiActive =
-    currentPath === '/ask-ai' ||
-    currentPath === '/ask-ai/' ||
-    currentPath.startsWith('/ask-ai/')
+  const isMapActive =
+    currentPath === '/ask-ai/maps' ||
+    currentPath === '/ask-ai/maps/' ||
+    currentPath === '/ask-ai/map' ||
+    currentPath === '/ask-ai/map/'
   const isProfileActive =
     currentPath === '/profile' ||
     currentPath === '/profile/' ||
@@ -45,7 +46,7 @@ function MobileBottomNav({ currentPath }: MobileBottomNavProps) {
   const navItems: NavItem[] = [
     { label: 'Home', href: '/home', icon: faHouse, isActive: isHomeActive },
     { label: 'Search', href: '/search', icon: faMagnifyingGlass, isActive: isSearchActive },
-    { label: 'GalaTayo AI', href: '/ask-ai', icon: faHandSparkles, isActive: isAskAiActive },
+    { label: 'AI Map', href: '/ask-ai/maps', icon: faMap, isActive: isMapActive },
     {
       label: 'Profile',
       href: '/profile',

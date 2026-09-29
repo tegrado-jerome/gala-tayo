@@ -71,12 +71,7 @@ export function shouldShowMobileBottomNav(pathname: string) {
     return false
   }
 
-  if (
-    isPath(pathname, '/ask-ai/chatbot') ||
-    isPath(pathname, '/ask-ai/text') ||
-    isPath(pathname, '/ask-ai/maps') ||
-    isPath(pathname, '/ask-ai/map')
-  ) {
+  if (isPath(pathname, '/ask-ai/chatbot') || isPath(pathname, '/ask-ai/text')) {
     return false
   }
 

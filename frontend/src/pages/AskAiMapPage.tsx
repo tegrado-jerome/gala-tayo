@@ -39,7 +39,7 @@ import { buildAskAiRequestHeaders, getOrCreateAskAiGuestId } from '../utils/askA
 import { trackAskAiMapsUsed } from '../utils/analytics'
 import { useAskAiUsageAutoRefresh } from '../hooks/useAskAiUsageAutoRefresh'
 import { useAskAiViewportHeightSync } from '../hooks/useAskAiViewportHeightSync'
-import { navigateBackWithFallback } from '../utils/navigation'
+import { navigateBackWithFallback, replaceWithPath } from '../utils/navigation'
 import { PageShellSkeleton } from '../components/loading/SkeletonStates'
 import { useTheme } from '../context/ThemeContext'
 import {
@@ -980,6 +980,18 @@ function AskAiMapPage() {
     await handleSubmit({ queryOverride })
   }
 
+  const chatQueryRef = useRef(new URLSearchParams(window.location.search).get('q')?.trim() ?? '')
+  useEffect(() => {
+    const chatQuery = chatQueryRef.current
+    if (!chatQuery || isSessionLoading) {
+      return
+    }
+
+    chatQueryRef.current = ''
+    replaceWithPath('/ask-ai/maps')
+    void handleEnterSearch(chatQuery)
+  }, [isSessionLoading])
+
   if (isSessionLoading) {
     return (
       <main className="gala-page-background min-h-screen text-[var(--text)]">
@@ -1016,31 +1028,32 @@ function AskAiMapPage() {
               onPlaceSelect={selectPlace}
             />
 
-            <div className="absolute right-4 top-5 z-[620] hidden sm:block">
-              <button
-                type="button"
-                onClick={() => navigateBackWithFallback('/home')}
-                aria-label="Go back"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[linear-gradient(135deg,#dbeafe,#bfdbfe)] text-[var(--accent-deep)] ring-1 ring-inset ring-[rgba(var(--accent-rgb),0.14)] shadow-[0_6px_18px_-8px_rgba(59,130,246,0.28)] transition hover:bg-[linear-gradient(135deg,#bfdbfe,#dbeafe)] hover:text-[var(--accent)]"
-              >
-                <AppIcon name="bot" className="h-5 w-5" strokeWidth={2} />
-              </button>
-            </div>
-
-            <div className="absolute left-4 top-5 z-[620] max-w-[calc(100vw-6.75rem)] sm:max-w-[21rem]">
-              <div className="flex flex-col items-start gap-1.5">
-                <div className="flex items-center gap-1.5">
-                  <AskAiUsagePill
-                    label="Maps AI"
-                    usageStatus={askAiMapsUsageStatus}
-                    className="shrink-0"
-                  />
-                  <div className="hidden md:flex">
-                    <FeatureGuideModalTrigger content={featureGuideContent.maps} className="h-10 w-10" />
-                  </div>
-                </div>
+            <div className="absolute inset-x-3 top-[calc(env(safe-area-inset-top,0px)+0.75rem)] z-[640] flex flex-col gap-2 sm:inset-x-4">
+              <AskAiMapComposer
+                key={query}
+                query={query}
+                selectedChipIds={selectedChipIds}
+                isSearching={isSearching}
+                isRegistered={isRegistered}
+                usageStatus={askAiMapsUsageStatus}
+                hideLimitWarning
+                onSubmit={(queryOverride) => {
+                  void handleEnterSearch(queryOverride)
+                }}
+                onCancel={() => {
+                  setIsSearching(false)
+                  cancelAskAiMapRequest()
+                }}
+                onGuestUpgradePrompt={() => setIsGuestUpgradePromptOpen(true)}
+              />
+              <div className="flex items-center gap-2">
+                <AskAiUsagePill
+                  label="Maps AI"
+                  usageStatus={askAiMapsUsageStatus}
+                  className="shrink-0"
+                />
                 <p
-                  className={`mt-1.5 ml-1 inline-flex max-w-full items-center rounded-none border px-2.5 py-1 text-[10px] leading-none whitespace-nowrap shadow-[0_8px_20px_-14px_rgba(15,23,42,0.55)] backdrop-blur-md md:mt-2 md:ml-1.5 md:text-[11px] lg:mt-2.5 lg:ml-2 lg:text-[12px] ${
+                  className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] leading-none whitespace-nowrap backdrop-blur-md ${
                     isDarkMode
                       ? 'border-white/10 bg-slate-950/70 text-slate-100'
                       : 'border-white/70 bg-white/80 text-slate-700'
@@ -1048,11 +1061,9 @@ function AskAiMapPage() {
                 >
                   Usage resets every day.
                 </p>
-              </div>
-            </div>
-            <div className="absolute right-4 top-5 z-[620] sm:right-16 md:block">
-              <div className="md:hidden">
-                <FeatureGuideModalTrigger content={featureGuideContent.maps} className="h-10 w-10" />
+                <div className="ml-auto">
+                  <FeatureGuideModalTrigger content={featureGuideContent.maps} className="h-10 w-10" />
+                </div>
               </div>
             </div>
 
@@ -1105,7 +1116,7 @@ function AskAiMapPage() {
               </div>
             ) : null}
 
-            <section className="absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom,0px)+2.25rem)] z-[640] overflow-hidden sm:inset-x-4 sm:bottom-8 lg:inset-x-6 lg:bottom-16">
+            <section className="absolute inset-x-3 bottom-[calc(env(safe-area-inset-bottom,0px)*2+5.5rem)] z-[640] overflow-hidden sm:inset-x-4">
                 {shouldShowLimitWarning ? <AskAiMapLimitWarning className="mb-3" /> : null}
 
                 {errorMessage && !isSearching ? (
@@ -1274,25 +1285,6 @@ onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
                   }) : null}
                 </div>
 
-                <div className="mt-3" />
-
-                <AskAiMapComposer
-                  key={query}
-                  query={query}
-                  selectedChipIds={selectedChipIds}
-                  isSearching={isSearching}
-                  isRegistered={isRegistered}
-                  usageStatus={askAiMapsUsageStatus}
-                  hideLimitWarning
-                  onSubmit={(queryOverride) => {
-                    void handleEnterSearch(queryOverride)
-                  }}
-                  onCancel={() => {
-                    setIsSearching(false)
-                    cancelAskAiMapRequest()
-                  }}
-                  onGuestUpgradePrompt={() => setIsGuestUpgradePromptOpen(true)}
-                />
               </section>
           </div>
         </section>
@@ -1327,7 +1319,7 @@ onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
                 aria-label="Go back"
                 className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[linear-gradient(135deg,#dbeafe,#bfdbfe)] text-[var(--accent-deep)] ring-1 ring-inset ring-[rgba(var(--accent-rgb),0.14)] shadow-[0_6px_18px_-8px_rgba(59,130,246,0.28)] transition hover:bg-[linear-gradient(135deg,#bfdbfe,#dbeafe)] hover:text-[var(--accent)]"
               >
-                <AppIcon name="bot" className="h-5 w-5" strokeWidth={2} />
+                <AppIcon name="home" className="h-5 w-5" strokeWidth={2} />
               </button>
             </div>
 

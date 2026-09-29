@@ -1244,6 +1244,8 @@ function AskAiModePanel({
   onSubmit,
   onStartOver,
   onGuestUpgradePrompt,
+  onClose,
+  onShowOnMap,
   className = '',
 }: {
   isRegistered: boolean
@@ -1260,9 +1262,19 @@ function AskAiModePanel({
   onSubmit: (questionOverride?: string) => void
   onStartOver: () => void
   onGuestUpgradePrompt: () => void
+  onClose?: () => void
+  onShowOnMap?: (question: string) => void
   className?: string
 }) {
   void isUsageLoading
+  const isEmbedded = Boolean(onClose)
+  const gutterClassName = isEmbedded ? 'px-4' : 'px-4 sm:px-5 md:px-6 lg:px-8'
+  const lastUserQuestion = [...messages].reverse().find((message) => message.role === 'user')?.content ?? ''
+  const canShowOnMap =
+    Boolean(onShowOnMap) &&
+    Boolean(lastUserQuestion) &&
+    !isSubmitting &&
+    messages[messages.length - 1]?.role === 'assistant'
   const { resolvedTheme } = useTheme()
   const isDarkMode = resolvedTheme === 'dark'
   const isUsagePending = !usageStatus
@@ -1326,7 +1338,7 @@ function AskAiModePanel({
         <div className="absolute -top-16 right-1/4 h-[320px] w-[480px] rounded-full bg-[radial-gradient(circle,rgba(23,37,84,0.05),transparent_62%)] blur-3xl" />
       </div>
 
-      <div className="relative shrink-0 mb-4 px-4 pt-5 sm:mb-5 sm:px-5 md:px-6 lg:px-8">
+      <div className={`relative shrink-0 ${isEmbedded ? 'mb-2 pt-4' : 'mb-4 pt-5 sm:mb-5'} ${gutterClassName}`}>
         <div className="flex flex-col gap-2 sm:gap-2.5">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 flex-1">
@@ -1355,20 +1367,31 @@ function AskAiModePanel({
               <div className="md:hidden">
                 <FeatureGuideModalTrigger content={featureGuideContent.chatbot} className="h-10 w-10" />
               </div>
-              <button
-                type="button"
-                onClick={() => navigateBackWithFallback('/home')}
-                aria-label="Go back"
-                className="hidden h-10 w-10 items-center justify-center rounded-xl bg-[linear-gradient(135deg,#dbeafe,#bfdbfe)] text-[var(--accent-deep)] ring-1 ring-inset ring-[rgba(var(--accent-rgb),0.14)] shadow-[0_6px_18px_-8px_rgba(59,130,246,0.28)] transition hover:bg-[linear-gradient(135deg,#bfdbfe,#dbeafe)] hover:text-[var(--accent-deep)] sm:inline-flex"
-              >
-                <FontAwesomeIcon icon={faRobot} className="h-5 w-5" />
-              </button>
+              {onClose ? (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  aria-label="Close chat"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--panel)] text-slate-600 ring-1 ring-inset ring-[var(--line)] shadow-[var(--shadow-soft)] transition hover:text-[var(--accent-deep)]"
+                >
+                  <AppIcon name="clear" size={18} strokeWidth={2.25} />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => navigateBackWithFallback('/home')}
+                  aria-label="Go back"
+                  className="hidden h-10 w-10 items-center justify-center rounded-xl bg-[linear-gradient(135deg,#dbeafe,#bfdbfe)] text-[var(--accent-deep)] ring-1 ring-inset ring-[rgba(var(--accent-rgb),0.14)] shadow-[0_6px_18px_-8px_rgba(59,130,246,0.28)] transition hover:bg-[linear-gradient(135deg,#bfdbfe,#dbeafe)] hover:text-[var(--accent-deep)] sm:inline-flex"
+                >
+                  <FontAwesomeIcon icon={faRobot} className="h-5 w-5" />
+                </button>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      <div ref={messageScrollRef} className="relative flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 [overflow-anchor:none] sm:px-5 md:px-6 lg:px-8">
+      <div ref={messageScrollRef} className={`relative flex-1 min-h-0 overflow-y-auto overscroll-contain [overflow-anchor:none] ${gutterClassName}`}>
         <div className="flex min-h-full w-full flex-col gap-4 py-4 sm:py-5">
           <ChatMessageList
             isSessionLoading={isSessionLoading}
@@ -1383,11 +1406,21 @@ function AskAiModePanel({
             onSend={handleSend}
             onRetryUsage={onRetryUsage}
           />
+          {canShowOnMap ? (
+            <button
+              type="button"
+              onClick={() => onShowOnMap?.(lastUserQuestion)}
+              className="inline-flex items-center gap-1.5 self-start rounded-full bg-[var(--accent-wash)] px-3 py-1.5 text-[12px] font-semibold text-[var(--accent-deep)] transition hover:bg-[rgba(var(--accent-rgb),0.16)]"
+            >
+              <AppIcon name="map" className="h-3.5 w-3.5" />
+              Show on map
+            </button>
+          ) : null}
           <div ref={messagesEndRef} />
         </div>
       </div>
 
-      <div className="relative shrink-0 px-4 pb-[max(env(safe-area-inset-bottom,0px),0.35rem)] pt-2 sm:px-5 md:px-6 lg:px-8">
+      <div className={`relative shrink-0 pb-[max(env(safe-area-inset-bottom,0px),0.35rem)] pt-2 ${gutterClassName}`}>
         <div className="mx-auto w-full max-w-[920px]">
           <div className="group/composer relative flex items-end gap-1.5 rounded-[24px] border border-[var(--line)] bg-[var(--panel)] p-1.5 shadow-[var(--shadow-soft)] transition focus-within:border-[var(--line-strong)]">
             <textarea

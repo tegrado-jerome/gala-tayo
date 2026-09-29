@@ -6,6 +6,7 @@ import HomePage from '../pages/HomePage'
 import { buildAuthPath } from '../services/authApi'
 import { getOnboardingStatus } from '../utils/profileApi'
 import { navigateToPath, replaceWithPath } from '../utils/navigation'
+import { openFloatingChat } from '../utils/floatingChat'
 import { getPublicSiteOrigin } from '../utils/site'
 import { BRAND_NAME, PRODUCT_NAME } from '../utils/seoLandingPages'
 import { AdminRouteGate } from './AdminRouteGate'
@@ -54,6 +55,15 @@ const AdminPlaceReportsPage = lazy(() => import('../pages/admin/PlaceReportsPage
 const AdminCommentReportsPage = lazy(() => import('../pages/admin/CommentReportsPage'))
 const AdminMfaSetupPage = lazy(() => import('../pages/admin/AdminMfaSetupPage'))
 const AdminMfaVerifyPage = lazy(() => import('../pages/admin/AdminMfaVerifyPage'))
+
+function ChatbotRouteRedirect({ initialQuestion }: { initialQuestion: string }) {
+  useEffect(() => {
+    openFloatingChat(initialQuestion)
+    replaceWithPath('/home')
+  }, [initialQuestion])
+
+  return null
+}
 
 function OnboardingAccessGate({
   session,
@@ -257,12 +267,7 @@ function renderRouteContent(descriptor: RouteDescriptor, inputs: RouteInputs) {
         </>
       )
     case 'ask-ai-chatbot':
-      return (
-        <>
-          <SeoHead title="AI Chatbot | GalaTayo" description="GalaTayo AI chatbot mode on GalaTayo." canonicalPath="/ask-ai/chatbot" robots="noindex,follow" />
-          <SearchHub key={`ask-ai:${search || 'root'}`} initialMode="ask-ai" initialAskAiQuestion={descriptor.initialAskAiQuestion} navigationSource={navigationSource} />
-        </>
-      )
+      return <ChatbotRouteRedirect initialQuestion={descriptor.initialAskAiQuestion} />
     case 'ask-ai-maps':
       return (
         <>

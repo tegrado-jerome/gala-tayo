@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type MouseEvent, type RefObject } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
-import { faChevronRight, faCompass, faFire, faHandSparkles, faHeart, faLocationDot, faMagnifyingGlass, faRobot, faSliders, faStar, faTableCellsLarge } from '@fortawesome/free-solid-svg-icons'
+import { faChevronRight, faCompass, faFire, faHeart, faLocationDot, faMagnifyingGlass, faMap, faSliders, faStar, faTableCellsLarge } from '@fortawesome/free-solid-svg-icons'
 import { faHeart as faHeartRegular } from '@fortawesome/free-regular-svg-icons'
 import { Sun, Moon } from 'lucide-react'
 import { useAppUser } from '../context/AppUserContext'
@@ -60,28 +59,6 @@ type HomeTileRecommendation = {
   active: boolean
   place: ShowcasePlace | null
 }
-
-type HomeAiFeature = {
-  title: string
-  description: string
-  href: string
-  icon: IconDefinition
-}
-
-const homeAiFeatures: HomeAiFeature[] = [
-  {
-    title: 'AI Chatbot',
-    description: 'Ask for gala ideas',
-    href: '/ask-ai/chatbot',
-    icon: faRobot,
-  },
-  {
-    title: 'AI Maps',
-    description: 'Find places with AI',
-    href: '/ask-ai/maps',
-    icon: faHandSparkles,
-  },
-]
 
 const TABLET_HOME_RAIL_QUERY = '(min-width: 768px)'
 function HomeThemeToggleButton() {
@@ -1514,9 +1491,20 @@ function HomePage({ navigationSource }: { navigationSource: NavigationSource }) 
                 Hi, <span className="font-bold">{greetingName}!</span>
               </p>
 
-              <div className="flex items-center gap-1.5">
-                <HomeThemeToggleButton />
-                <UserMenu user={currentUser} profile={currentProfile} compact />
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => { saveHomePageState(); navigateToPath('/ask-ai/maps') }}
+                  className="home-search-button mr-6 hidden h-9 items-center gap-2 rounded-full border px-4 text-[13px] font-semibold transition lg:inline-flex"
+                  style={{ color: 'var(--home-ai-title)' }}
+                >
+                  <FontAwesomeIcon icon={faMap} className="h-3.5 w-3.5" style={{ color: 'var(--home-eyebrow-icon)' }} />
+                  AI Map
+                </button>
+                <div className="flex items-center gap-1.5">
+                  <HomeThemeToggleButton />
+                  <UserMenu user={currentUser} profile={currentProfile} compact />
+                </div>
               </div>
             </div>
 
@@ -1536,40 +1524,6 @@ function HomePage({ navigationSource }: { navigationSource: NavigationSource }) 
               <FontAwesomeIcon icon={faSliders} className="h-[21px] w-[21px] shrink-0" style={{ color: 'var(--home-eyebrow-icon)' }} />
             </button>
 
-            <section className="mt-9 md:mt-7">
-              <div className="mb-2 flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em]" style={{ color: 'var(--home-eyebrow)' }}>
-                <FontAwesomeIcon icon={faHandSparkles} className="h-3.5 w-3.5" style={{ color: 'var(--home-eyebrow-icon)' }} />
-                <span>AI Features</span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                {homeAiFeatures.map((feature) => {
-                  const Icon = feature.icon
-
-                  return (
-                    <button
-                      key={feature.href}
-                      type="button"
-                      onClick={() => { saveHomePageState(); navigateToPath(feature.href) }}
-                      className="home-ai-card flex min-w-0 items-center gap-3 rounded-[18px] border px-3.5 py-3 text-left transition hover:-translate-y-0.5"
-                    >
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl" style={{ background: 'var(--home-ai-icon-bg)', color: 'var(--home-ai-icon-text)' }}>
-                        <FontAwesomeIcon icon={Icon} className="h-4.5 w-4.5" />
-                      </span>
-
-                      <span className="min-w-0">
-                        <span className="block truncate text-[14px] font-bold tracking-[-0.02em]" style={{ color: 'var(--home-ai-title)' }}>
-                          {feature.title}
-                        </span>
-                        <span className="block truncate text-[12px]" style={{ color: 'var(--home-ai-description)' }}>
-                          {feature.description}
-                        </span>
-                      </span>
-                    </button>
-                  )
-                })}
-              </div>
-            </section>
           </section>
 
           <div className="mt-8 grid min-w-0 gap-7 md:mt-10 md:gap-10 lg:gap-12">
