@@ -287,18 +287,6 @@ export function getCanonicalGalaPlanPath(pathname: string) {
   return null
 }
 
-export function getSoonFeatureRedirectPath(pathname: string): '/home' | null {
-  if (
-    isPath(pathname, '/submit-place') ||
-    isPath(pathname, '/places/submit') ||
-    isPath(pathname, '/places/new')
-  ) {
-    return '/home'
-  }
-
-  return null
-}
-
 export function getCanonicalForgotPasswordPath(pathname: string): '/forgot-password' | null {
   if (isPath(pathname, '/forgot') || isPath(pathname, '/forgot-password') || isPath(pathname, '/auth/forgot-password')) {
     return '/forgot-password'
