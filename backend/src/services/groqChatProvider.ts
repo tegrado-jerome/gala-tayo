@@ -1127,3 +1127,35 @@ export async function generateFromGroq({
       : cleanedAnswer
   );
 }
+
+export async function generateJsonFromGroq({
+  systemPrompt,
+  userMessage,
+  requestId,
+  signal,
+  maxCompletionTokens = 1800,
+}: {
+  systemPrompt: string;
+  userMessage: string;
+  requestId: string;
+  signal?: AbortSignal;
+  maxCompletionTokens?: number;
+}): Promise<string> {
+  const result = await callGroqWithModelRotation({
+    models: getConfiguredGroqModels("ASK_AI_GROQ_CHAT_MODELS", GROQ_DEFAULT_CHAT_MODELS),
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userMessage },
+    ],
+    requestId,
+    signal,
+    purpose: "chatbot",
+    options: {
+      temperature: 0.4,
+      maxCompletionTokens,
+      responseFormat: { type: "json_object" },
+    },
+  });
+
+  return result.answer;
+}

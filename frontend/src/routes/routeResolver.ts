@@ -86,6 +86,7 @@ export type RouteDescriptor =
   | { kind: 'history' }
   | { kind: 'feedback' }
   | { kind: 'gala-plans-list' }
+  | { kind: 'plan-with-ai'; initialPrompt: string }
   | { kind: 'gala-plans-new' }
   | { kind: 'gala-plans-favorites' }
   | { kind: 'gala-plans-edit'; planId: string }
@@ -219,6 +220,10 @@ export function resolveRouteDescriptor(inputs: RouteInputs): RouteDescriptor {
       kind: 'ask-ai-chatbot',
       initialAskAiQuestion: new URLSearchParams(search).get('q') ?? '',
     }
+  }
+
+  if (isPath(pathname, '/plan-with-ai')) {
+    return { kind: 'plan-with-ai', initialPrompt: new URLSearchParams(search).get('q') ?? '' }
   }
 
   if (isPath(pathname, '/ask-ai/maps')) {

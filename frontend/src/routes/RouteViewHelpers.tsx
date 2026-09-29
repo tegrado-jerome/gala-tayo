@@ -22,7 +22,7 @@ export function NotFoundPage({
         <button
           type="button"
           onClick={onGoHome}
-          className="inline-flex h-11 items-center rounded-full bg-[#1E3A8A] px-6 text-sm font-bold text-white transition hover:bg-[#1E40AF]"
+          className="inline-flex h-11 items-center rounded-full bg-[var(--primary)] px-6 text-sm font-bold text-white transition hover:bg-[var(--primary-dark)]"
         >
           Go home
         </button>

@@ -41,6 +41,7 @@ const AboutPage = lazy(() => import('../pages/AboutPage'))
 const PlaceSubmissionPage = lazy(() => import('../pages/PlaceSubmissionPage'))
 const MyPlaceSubmissionsPage = lazy(() => import('../pages/MyPlaceSubmissionsPage'))
 const AskAiMapPage = lazy(() => import('../pages/AskAiMapPage'))
+const PlanWithAiPage = lazy(() => import('../pages/PlanWithAiPage'))
 const AskAiOverviewPage = lazy(() => import('../pages/AskAiOverviewPage'))
 const PlacesIndexPage = lazy(() => import('../pages/PlacesIndexPage'))
 const PlaceCategoriesIndexPage = lazy(() => import('../pages/PlaceCategoriesIndexPage'))
@@ -273,6 +274,13 @@ function renderRouteContent(descriptor: RouteDescriptor, inputs: RouteInputs) {
         <>
           <SeoHead title="AI Maps | GalaTayo" description="GalaTayo AI maps mode on GalaTayo." canonicalPath="/ask-ai/maps" robots="noindex,follow" />
           <AskAiMapPage />
+        </>
+      )
+    case 'plan-with-ai':
+      return (
+        <>
+          <SeoHead title="Plan with AI | GalaTayo" description="Describe your gala in one sentence and get a full-day Metro Manila plan." canonicalPath="/plan-with-ai" robots="noindex,follow" />
+          <PlanWithAiPage initialPrompt={descriptor.initialPrompt} />
         </>
       )
     case 'prompt-builder':
