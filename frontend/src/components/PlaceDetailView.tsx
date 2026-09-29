@@ -270,7 +270,7 @@ function PlacePhoto({
                 <div className="absolute inset-x-4 top-4 z-10 sm:inset-x-5 sm:top-5">
                   <div className="flex items-center justify-between gap-2">
                     {priceBadgeLabel ? (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#1B2A4A] px-3 py-1.5 text-[12px] font-black text-white">
+                      <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[rgba(27,26,23,0.72)] px-3 py-1.5 text-[12px] font-semibold text-white backdrop-blur-sm">
                         <FontAwesomeIcon icon={faWallet} className="h-3.5 w-3.5" />
                         {priceBadgeLabel}
                       </span>
@@ -279,10 +279,11 @@ function PlacePhoto({
                       <button
                         type="button"
                         onClick={onContribute}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-white/28 bg-[rgba(27,26,23,0.34)] px-3 py-1.5 text-[11px] font-black text-white shadow-[0_10px_24px_rgba(27,26,23,0.12)] backdrop-blur-md transition hover:bg-[rgba(27,26,23,0.46)] sm:px-3.5 sm:py-2 sm:text-[12px]"
+                        aria-label="Add photo"
+                        className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-white/28 bg-[rgba(27,26,23,0.34)] px-3 py-1.5 text-[11px] font-black text-white shadow-[0_10px_24px_rgba(27,26,23,0.12)] backdrop-blur-md transition hover:bg-[rgba(27,26,23,0.46)] sm:px-3.5 sm:py-2 sm:text-[12px]"
                       >
                         <FontAwesomeIcon icon={faCamera} className="h-4 w-4" />
-                        Add photo
+                        <span className="hidden min-[380px]:inline">Add photo</span>
                       </button>
                     ) : null}
                   </div>
@@ -368,7 +369,7 @@ function PlacePhoto({
               <div className="absolute inset-x-4 top-4 z-10 sm:inset-x-5 sm:top-5">
                 <div className="flex items-center justify-between gap-2">
                   {priceBadgeLabel ? (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#1B2A4A] px-3 py-1.5 text-[12px] font-black text-white">
+                    <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[rgba(27,26,23,0.72)] px-3 py-1.5 text-[12px] font-semibold text-white backdrop-blur-sm">
                       <FontAwesomeIcon icon={faWallet} className="h-3.5 w-3.5" />
                       {priceBadgeLabel}
                     </span>
@@ -378,13 +379,14 @@ function PlacePhoto({
                       <button
                         type="button"
                         onClick={onContribute}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-white/28 bg-[rgba(27,26,23,0.34)] px-3 py-1.5 text-[11px] font-black text-white shadow-[0_10px_24px_rgba(27,26,23,0.12)] backdrop-blur-sm transition hover:bg-[rgba(27,26,23,0.46)] sm:px-3.5 sm:py-2 sm:text-[12px]"
+                        aria-label="Add photo"
+                        className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-white/28 bg-[rgba(27,26,23,0.34)] px-3 py-1.5 text-[11px] font-black text-white shadow-[0_10px_24px_rgba(27,26,23,0.12)] backdrop-blur-sm transition hover:bg-[rgba(27,26,23,0.46)] sm:px-3.5 sm:py-2 sm:text-[12px]"
                       >
                         <FontAwesomeIcon icon={faCamera} className="h-4 w-4" />
-                        Add photo
+                        <span className="hidden min-[380px]:inline">Add photo</span>
                       </button>
                     ) : null}
-                    <span className="rounded-full bg-black/45 px-3 py-1 text-[12px] font-black text-white backdrop-blur-sm">
+                    <span className="whitespace-nowrap rounded-full bg-black/45 px-3 py-1 text-[12px] font-black text-white backdrop-blur-sm">
 {safeIndex + 1} / {imageUrls.length}
                     </span>
                   </div>
@@ -466,7 +468,7 @@ function PlacePhoto({
                 <div className="absolute inset-x-5 top-5 z-10 sm:inset-x-5 sm:top-5">
                   <div className="flex items-center justify-between gap-2">
                     {priceBadgeLabel ? (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#1B2A4A] px-3 py-1.5 text-[12px] font-black text-white">
+                      <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[rgba(27,26,23,0.72)] px-3 py-1.5 text-[12px] font-semibold text-white backdrop-blur-sm">
                         <FontAwesomeIcon icon={faWallet} className="h-3.5 w-3.5" />
                         {priceBadgeLabel}
                       </span>
@@ -482,7 +484,7 @@ function PlacePhoto({
                         Add photo
                         </button>
                       ) : null}
-                      <span className="rounded-full bg-black/45 px-3 py-1 text-[12px] font-black text-white backdrop-blur-sm">
+                      <span className="whitespace-nowrap rounded-full bg-black/45 px-3 py-1 text-[12px] font-black text-white backdrop-blur-sm">
 {safeIndex + 1} / {imageUrls.length}
                       </span>
                     </div>
@@ -999,7 +1001,6 @@ function PlaceDetailView({
   const { resolvedTheme } = useTheme()
   const { showSystemMessage } = useSystemMessage()
   const isDarkTheme = resolvedTheme === 'dark'
-  const darkActionTextClass = isDarkTheme ? '!text-[#1b1a17]' : ''
   const commentSectionSurfaceClassName = isDarkTheme
     ? '!border-[#28405f] !bg-[linear-gradient(180deg,rgba(10,18,32,0.99),rgba(8,14,26,0.97))] !shadow-[0_20px_44px_rgba(0,0,0,0.24)]'
     : 'border-slate-200/80 bg-slate-50/55'
@@ -2140,6 +2141,13 @@ function PlaceDetailView({
   }
 
   const openDirections = () => openDirectionsUrl(directionsUrl)
+  const handleAddToPlan = () => {
+    if (!appSession) {
+      guestAuth.open('add-plan')
+      return
+    }
+    setIsAddToPlanOpen(true)
+  }
   const quickTake = cleanString(place.description) || cleanString(place.reason) || 'No quick take available yet.'
   const commuteText =
     cleanString(place.commute_access) ||
@@ -2761,45 +2769,22 @@ function PlaceDetailView({
                     </span>
                   </div>
 
-                  <div className="mt-3 grid w-full max-w-[28rem] grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-2.5 md:mt-4 md:gap-2.5 lg:flex lg:max-w-none lg:gap-2.5">
-                    <ActionButton
-                      icon="save"
-                      onClick={handleSavePlace}
-                      disabled={isSaving}
-                      active={isSaved}
-                      className={
-                        isSaved
-                          ? '!border-rose-200 !bg-[linear-gradient(180deg,rgba(255,241,242,0.98),rgba(255,228,230,0.92))] !text-rose-700 !shadow-[0_12px_24px_rgba(244,63,94,0.12)] hover:!border-rose-300 hover:!bg-[linear-gradient(180deg,rgba(255,235,238,0.98),rgba(254,226,226,0.96))] hover:!text-rose-700'
-                          : ''
-                      }
-                      iconClassName={
-                        isSaved
-                          ? 'h-4 w-4 !fill-current !text-rose-600'
-                          : `h-4 w-4 ${darkActionTextClass}`
-                      }
-                      childrenClassName={isSaved ? '!text-rose-700' : darkActionTextClass}
+                  <div className="mt-3 grid w-full max-w-[28rem] grid-cols-2 gap-2 min-[360px]:grid-cols-3 sm:gap-2.5 md:mt-4 lg:flex lg:max-w-none">
+                    <button
+                      type="button"
+                      onClick={handleAddToPlan}
+                      className="col-span-2 inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[var(--primary)] min-[360px]:col-span-3 px-5 text-[14px] font-semibold text-white transition-opacity hover:opacity-95 lg:flex-[1.4]"
                     >
-                      {isSaving ? 'Saving' : 'Favorite'}
+                      <span aria-hidden="true" className="text-[18px] leading-none">+</span>
+                      Add to Gala Plan
+                    </button>
+                    <ActionButton icon="save" onClick={handleSavePlace} disabled={isSaving} active={isSaved}>
+                      {isSaving ? 'Saving' : isSaved ? 'Saved' : 'Save'}
                     </ActionButton>
-                    <ActionButton
-                      icon="share"
-                      onClick={handleSharePlace}
-                      className={darkActionTextClass}
-                      iconClassName={`h-4 w-4 ${darkActionTextClass}`}
-                      childrenClassName={darkActionTextClass}
-                    >
+                    <ActionButton icon="share" onClick={handleSharePlace}>
                       Share
                     </ActionButton>
-                    <ActionButton
-                      icon="directions"
-                      onClick={openDirections}
-                      disabled={!directionsUrl}
-                      className="col-span-2 sm:col-span-1 !border-0 !border-transparent !bg-none !bg-[#F4D35E] !text-black !shadow-none opacity-100 hover:!border-0 hover:!border-transparent hover:!bg-none hover:!bg-[#E9C94F] hover:!text-black hover:!shadow-none disabled:!border-0 disabled:!border-transparent disabled:!bg-none disabled:!bg-[#F4D35E] disabled:!text-black disabled:!shadow-none disabled:opacity-100"
-                      iconClassName="h-[18px] w-[18px] !text-black"
-                      childrenClassName="!text-black"
-                      iconSize={18}
-                      iconStrokeWidth={2.15}
-                    >
+                    <ActionButton icon="directions" onClick={openDirections} disabled={!directionsUrl} className="col-span-2 min-[360px]:col-span-1">
                       Directions
                     </ActionButton>
                   </div>

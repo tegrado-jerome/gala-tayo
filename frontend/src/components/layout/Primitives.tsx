@@ -4,6 +4,7 @@ import {
   type PropsWithChildren,
   type ReactNode,
 } from 'react'
+import { createPortal } from 'react-dom'
 import { cn } from '../AppUI'
 
 export const BOTTOM_NAV_RESERVED_CLASS =
@@ -394,7 +395,8 @@ export function BottomSheet({
     return null
   }
 
-  return (
+  // Portal to <body> so the overlay stacks above the app shell (bottom nav, chat bubble).
+  return createPortal(
     <div
       className={cn(
         'fixed inset-0 z-[7000] flex items-end justify-center bg-slate-950/45 px-3 pb-3 sm:items-center sm:px-4 sm:pb-0',
@@ -418,7 +420,9 @@ export function BottomSheet({
       >
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
+
   )
 }
 
@@ -453,7 +457,8 @@ export function CenteredModal({
     return null
   }
 
-  return (
+  // Portal to <body> so the overlay stacks above the app shell (bottom nav, chat bubble).
+  return createPortal(
     <div
       className={cn(
         'fixed inset-0 z-[7000] flex items-center justify-center bg-slate-950/45 px-3 py-6 sm:px-4',
@@ -474,7 +479,9 @@ export function CenteredModal({
       >
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
+
   )
 }
 

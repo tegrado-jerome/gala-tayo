@@ -146,8 +146,8 @@ function AddToGalaPlanModal({ isOpen, placeId, placeName, onClose }: AddToGalaPl
           ) : null}
 
           {plans.length > 0 ? (
-            <div className="grid gap-4">
-              <div className="grid gap-2">
+            <div className="grid grid-cols-[minmax(0,1fr)] gap-4">
+              <div className="grid grid-cols-[minmax(0,1fr)] gap-2">
                 <span className="text-sm font-black text-slate-800">Choose plan</span>
                 <div className="relative">
                   <button
