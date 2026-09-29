@@ -60,7 +60,7 @@ export default function DestructiveConfirmModal({
       }}
       ariaLabel={title}
       maxWidth="sm"
-      panelClassName="overflow-hidden border border-[rgba(220,38,38,0.14)] bg-white shadow-[0_24px_60px_rgba(15,23,42,0.16)]"
+      panelClassName="overflow-hidden border border-[rgba(220,38,38,0.14)] bg-white shadow-[0_24px_60px_rgba(27, 26, 23, 0.16)]"
     >
       <div className="relative bg-white text-slate-900">
         <div className="px-5 pb-4 pt-5 sm:px-6 sm:pb-5 sm:pt-6">

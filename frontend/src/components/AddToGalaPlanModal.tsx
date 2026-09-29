@@ -163,7 +163,7 @@ function AddToGalaPlanModal({ isOpen, placeId, placeName, onClose }: AddToGalaPl
                   </button>
                   {isPlanListOpen ? (
                     <div
-                      className="absolute left-0 right-0 top-[calc(100%+0.35rem)] z-10 max-h-56 overflow-y-auto rounded-lg border border-[var(--line)] bg-white p-1 shadow-[0_18px_40px_rgba(15,23,42,0.16)]"
+                      className="absolute left-0 right-0 top-[calc(100%+0.35rem)] z-10 max-h-56 overflow-y-auto rounded-lg border border-[var(--line)] bg-white p-1 shadow-[0_18px_40px_rgba(27, 26, 23, 0.16)]"
                       role="listbox"
                     >
                       {plans.map((plan) => {

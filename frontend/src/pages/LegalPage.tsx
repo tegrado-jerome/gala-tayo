@@ -1,5 +1,5 @@
 import AppHeader from '../components/AppHeader'
-import Breadcrumb from '../components/Breadcrumb'
+import Breadcrumb from '../components/navigation/Breadcrumb'
 import { PageContainer, PageShell } from '../components/layout/ResponsiveLayouts'
 import SeoHead from '../components/SeoHead'
 import { getSiteOrigin } from '../utils/seo'
@@ -327,11 +327,11 @@ function LegalPage({ type }: LegalPageProps) {
               items={breadcrumbItems}
             />
 
-            <section className="legal-page__hero relative overflow-hidden rounded-[32px] border border-[rgba(30,58,138,0.12)] bg-[linear-gradient(135deg,rgba(255,255,255,0.72),rgba(243,244,246,0.92))] px-5 py-6 shadow-[0_18px_42px_rgba(17,24,39,0.06)] backdrop-blur-sm sm:px-7 sm:py-8 lg:px-10 lg:py-10">
-              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(30,58,138,0.4)] to-transparent" />
+            <section className="legal-page__hero relative overflow-hidden rounded-[32px] border border-[rgba(var(--accent-rgb), 0.12)] bg-[linear-gradient(135deg,rgba(255,255,255,0.72),rgba(243,244,246,0.92))] px-5 py-6 shadow-[0_18px_42px_rgba(17,24,39,0.06)] backdrop-blur-sm sm:px-7 sm:py-8 lg:px-10 lg:py-10">
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(var(--accent-rgb), 0.4)] to-transparent" />
               <div className="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.8fr)] lg:items-start">
                 <div className="min-w-0">
-                  <div className="legal-page__badge inline-flex items-center gap-2 rounded-full border border-[rgba(30,58,138,0.12)] bg-white/70 px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)] shadow-[0_8px_22px_rgba(17,24,39,0.04)]">
+                  <div className="legal-page__badge inline-flex items-center gap-2 rounded-full border border-[rgba(var(--accent-rgb), 0.12)] bg-white/70 px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)] shadow-[0_8px_22px_rgba(17,24,39,0.04)]">
                     <FontAwesomeIcon icon={faShield} className="h-3.5 w-3.5 text-[var(--accent)]" />
                     <span>{isTerms ? 'Terms of Service' : 'Privacy Policy'}</span>
                   </div>

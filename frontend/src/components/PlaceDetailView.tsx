@@ -35,7 +35,7 @@ import { TransportColumn } from './place-detail/TransportColumn'
 import { DetailSection } from './place-detail/DetailSection'
 import { cleanString, titleCase, uniqueList, isAcceptedContributionImage, contributionImageErrorMessage, parseJsonResponse } from './place-detail/helpers'
 import type { PlaceDetailViewProps, PlaceReview, PlaceReviewsResponse, PlaceComment, PlaceCommentsResponse, PlaceImageContributionResponse, PlaceDetailCommunityCache } from './place-detail/types'
-import Breadcrumb from './Breadcrumb'
+import Breadcrumb from './navigation/Breadcrumb'
 import { faHouse, faLocationDot, faMagnifyingGlass, faTableCellsLarge } from '@fortawesome/free-solid-svg-icons'
 import { getCategoryIconName } from './AppIcon'
 
@@ -201,9 +201,9 @@ function PlacePhoto({
     .filter((index) => index !== safeIndex)
     .slice(0, 2)
   const mobileFrameClassName =
-    'relative overflow-hidden bg-transparent shadow-none sm:rounded-[28px] sm:border sm:border-[rgba(148,163,184,0.22)] sm:bg-[linear-gradient(180deg,#f7f9ff_0%,#eef3fb_44%,#e6ebf5_100%)] sm:shadow-[0_18px_44px_rgba(15,23,42,0.08)] md:border-white/14 md:bg-[rgba(15,23,42,0.12)] md:backdrop-blur-2xl'
+    'relative overflow-hidden bg-transparent shadow-none sm:rounded-[28px] sm:border sm:border-[rgba(148,163,184,0.22)] sm:bg-[linear-gradient(180deg,#f7f9ff_0%,#eef3fb_44%,#e6ebf5_100%)] sm:shadow-[0_18px_44px_rgba(27, 26, 23, 0.08)] md:border-white/14 md:bg-[rgba(27, 26, 23, 0.12)] md:backdrop-blur-2xl'
   const desktopGlassFrameClassName =
-    'relative overflow-hidden border border-white/14 bg-[rgba(15,23,42,0.12)] shadow-[0_18px_44px_rgba(15,23,42,0.08)] backdrop-blur-2xl md:rounded-[28px]'
+    'relative overflow-hidden border border-white/14 bg-[rgba(27, 26, 23, 0.12)] shadow-[0_18px_44px_rgba(27, 26, 23, 0.08)] backdrop-blur-2xl md:rounded-[28px]'
   const heroAspectClassName = 'aspect-[4/3] sm:aspect-[17/10] md:aspect-[1.75/1] lg:aspect-[1.95/1]'
   const emptyAddTileClassName =
     'border-2 border-dotted border-white/22 bg-[linear-gradient(180deg,rgba(0,0,0,0.74),rgba(12,12,12,0.62))] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_18px_34px_rgba(0,0,0,0.28)] backdrop-blur-2xl transition hover:border-white/32 hover:bg-[linear-gradient(180deg,rgba(0,0,0,0.82),rgba(10,10,10,0.7))]'
@@ -279,7 +279,7 @@ function PlacePhoto({
                       <button
                         type="button"
                         onClick={onContribute}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-white/28 bg-[rgba(15,23,42,0.34)] px-3 py-1.5 text-[11px] font-black text-white shadow-[0_10px_24px_rgba(15,23,42,0.12)] backdrop-blur-md transition hover:bg-[rgba(15,23,42,0.46)] sm:px-3.5 sm:py-2 sm:text-[12px]"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-white/28 bg-[rgba(27, 26, 23, 0.34)] px-3 py-1.5 text-[11px] font-black text-white shadow-[0_10px_24px_rgba(27, 26, 23, 0.12)] backdrop-blur-md transition hover:bg-[rgba(27, 26, 23, 0.46)] sm:px-3.5 sm:py-2 sm:text-[12px]"
                       >
                         <FontAwesomeIcon icon={faCamera} className="h-4 w-4" />
                         Add photo
@@ -290,7 +290,7 @@ function PlacePhoto({
 
                 <div className="relative z-10 flex h-full items-center justify-center px-6 py-8 text-center sm:px-8 sm:py-10">
                   <div className="flex max-w-[340px] flex-col items-center gap-4 px-5 py-6">
-                    <span className="flex h-14 w-14 items-center justify-center rounded-full border border-[rgba(96,165,250,0.22)] bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(239,246,255,0.92))] shadow-[0_16px_40px_rgba(37,99,235,0.12)]">
+                    <span className="flex h-14 w-14 items-center justify-center rounded-full border border-[rgba(var(--accent-rgb), 0.22)] bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(239,246,255,0.92))] shadow-[0_16px_40px_rgba(37,99,235,0.12)]">
                       <Icon name="photo" className="h-7 w-7 text-[var(--accent-deep)]" />
                     </span>
                     <div className="space-y-1">
@@ -314,7 +314,7 @@ function PlacePhoto({
                           type="button"
                           onClick={shouldUseAddTile ? onContribute : undefined}
                           disabled={!shouldUseAddTile}
-                          className={`flex h-16 w-16 items-center justify-center rounded-2xl border shadow-[0_12px_24px_rgba(15,23,42,0.18)] transition ${shouldUseAddTile ? emptyAddTileClassName : emptySlotClassName}`}
+                          className={`flex h-16 w-16 items-center justify-center rounded-2xl border shadow-[0_12px_24px_rgba(27, 26, 23, 0.18)] transition ${shouldUseAddTile ? emptyAddTileClassName : emptySlotClassName}`}
                           aria-label={
                             shouldUseAddTile
                               ? `Add a photo for ${placeName}`
@@ -323,7 +323,7 @@ function PlacePhoto({
                         >
                           <FontAwesomeIcon
                             icon={faCamera}
-                            className={`h-5 w-5 ${shouldUseAddTile ? 'text-white/95 drop-shadow-[0_6px_16px_rgba(15,23,42,0.2)]' : 'text-white/45'}`}
+                            className={`h-5 w-5 ${shouldUseAddTile ? 'text-white/95 drop-shadow-[0_6px_16px_rgba(27, 26, 23, 0.2)]' : 'text-white/45'}`}
                           />
 
                         </button>
@@ -352,7 +352,7 @@ function PlacePhoto({
                 onTouchEnd={handleTouchEnd}
                 className={`${heroAspectClassName} h-full w-full bg-neutral-100`}
               >
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.24),rgba(15,23,42,0.06)_42%,rgba(15,23,42,0.18)_100%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.24),rgba(27, 26, 23, 0.06)_42%,rgba(27, 26, 23, 0.18)_100%)]" />
                 <img
                   src={activePhoto}
                   alt={placeName}
@@ -378,7 +378,7 @@ function PlacePhoto({
                       <button
                         type="button"
                         onClick={onContribute}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-white/28 bg-[rgba(15,23,42,0.34)] px-3 py-1.5 text-[11px] font-black text-white shadow-[0_10px_24px_rgba(15,23,42,0.12)] backdrop-blur-sm transition hover:bg-[rgba(15,23,42,0.46)] sm:px-3.5 sm:py-2 sm:text-[12px]"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-white/28 bg-[rgba(27, 26, 23, 0.34)] px-3 py-1.5 text-[11px] font-black text-white shadow-[0_10px_24px_rgba(27, 26, 23, 0.12)] backdrop-blur-sm transition hover:bg-[rgba(27, 26, 23, 0.46)] sm:px-3.5 sm:py-2 sm:text-[12px]"
                       >
                         <FontAwesomeIcon icon={faCamera} className="h-4 w-4" />
                         Add photo
@@ -402,8 +402,8 @@ function PlacePhoto({
                           onClick={() => onSelect?.(index)}
                           className={`relative overflow-hidden rounded-2xl border transition ${
                             index === safeIndex
-                              ? 'border-white shadow-[0_14px_30px_rgba(15,23,42,0.28)] ring-2 ring-white/90'
-                              : 'border-white/35 shadow-[0_12px_24px_rgba(15,23,42,0.22)]'
+                              ? 'border-white shadow-[0_14px_30px_rgba(27, 26, 23, 0.28)] ring-2 ring-white/90'
+                              : 'border-white/35 shadow-[0_12px_24px_rgba(27, 26, 23, 0.22)]'
                           }`}
                           aria-label={`Show photo ${index + 1} of ${placeName}`}
                           aria-pressed={index === safeIndex}
@@ -451,8 +451,8 @@ function PlacePhoto({
         <div className="grid md:grid-cols-[minmax(0,1.32fr)_minmax(17rem,0.82fr)] md:gap-4 lg:grid-cols-[minmax(0,1.62fr)_minmax(21rem,0.78fr)] lg:gap-5">
           <div className={`${desktopGlassFrameClassName} h-full`}>
             <div className="relative isolate h-full overflow-hidden">
-              <div className="relative h-full min-h-[23.5rem] overflow-hidden bg-[rgba(15,23,42,0.08)] lg:min-h-[28rem]">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.12),rgba(15,23,42,0.04)_42%,rgba(15,23,42,0.16)_100%)]" />
+              <div className="relative h-full min-h-[23.5rem] overflow-hidden bg-[rgba(27, 26, 23, 0.08)] lg:min-h-[28rem]">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.12),rgba(27, 26, 23, 0.04)_42%,rgba(27, 26, 23, 0.16)_100%)]" />
                 <img
                   src={activePhoto}
                   alt={placeName}
@@ -476,7 +476,7 @@ function PlacePhoto({
                         <button
                           type="button"
                           onClick={onContribute}
-                          className="inline-flex items-center gap-1.5 rounded-full border border-white/28 bg-[rgba(15,23,42,0.34)] px-3.5 py-2 text-[12px] font-black text-white shadow-[0_10px_24px_rgba(15,23,42,0.12)] backdrop-blur-sm transition hover:bg-[rgba(15,23,42,0.46)]"
+                          className="inline-flex items-center gap-1.5 rounded-full border border-white/28 bg-[rgba(27, 26, 23, 0.34)] px-3.5 py-2 text-[12px] font-black text-white shadow-[0_10px_24px_rgba(27, 26, 23, 0.12)] backdrop-blur-sm transition hover:bg-[rgba(27, 26, 23, 0.46)]"
                         >
                           <FontAwesomeIcon icon={faCamera} className="h-4 w-4" />
                         Add photo
@@ -499,8 +499,8 @@ function PlacePhoto({
                           onClick={() => onSelect?.(index)}
                           className={`relative overflow-hidden rounded-2xl border transition ${
                             index === safeIndex
-                              ? 'border-white shadow-[0_14px_30px_rgba(15,23,42,0.28)] ring-2 ring-white/90'
-                              : 'border-white/35 shadow-[0_12px_24px_rgba(15,23,42,0.22)]'
+                              ? 'border-white shadow-[0_14px_30px_rgba(27, 26, 23, 0.28)] ring-2 ring-white/90'
+                              : 'border-white/35 shadow-[0_12px_24px_rgba(27, 26, 23, 0.22)]'
                           }`}
                           aria-label={`Show photo ${index + 1} of ${placeName}`}
                           aria-pressed={index === safeIndex}
@@ -524,10 +524,10 @@ function PlacePhoto({
                         type="button"
                         onClick={shouldUseAddTile ? onContribute : undefined}
                         disabled={!shouldUseAddTile}
-                        className={`flex h-16 w-16 items-center justify-center rounded-2xl border text-white backdrop-blur-sm shadow-[0_12px_24px_rgba(15,23,42,0.18)] transition ${
+                        className={`flex h-16 w-16 items-center justify-center rounded-2xl border text-white backdrop-blur-sm shadow-[0_12px_24px_rgba(27, 26, 23, 0.18)] transition ${
                           shouldUseAddTile
-                            ? 'border-dashed border-white/24 bg-[linear-gradient(180deg,rgba(30,41,59,0.9),rgba(15,23,42,0.78))] text-white hover:border-white/32 hover:bg-[linear-gradient(180deg,rgba(51,65,85,0.92),rgba(15,23,42,0.82))]'
-                            : 'cursor-default border-white/14 bg-[rgba(15,23,42,0.28)] text-white/35'
+                            ? 'border-dashed border-white/24 bg-[linear-gradient(180deg,rgba(30,41,59,0.9),rgba(27, 26, 23, 0.78))] text-white hover:border-white/32 hover:bg-[linear-gradient(180deg,rgba(51,65,85,0.92),rgba(27, 26, 23, 0.82))]'
+                            : 'cursor-default border-white/14 bg-[rgba(27, 26, 23, 0.28)] text-white/35'
                         }`}
                         aria-label={
                           shouldUseAddTile
@@ -999,9 +999,9 @@ function PlaceDetailView({
   const { resolvedTheme } = useTheme()
   const { showSystemMessage } = useSystemMessage()
   const isDarkTheme = resolvedTheme === 'dark'
-  const darkActionTextClass = isDarkTheme ? '!text-[#0f172a]' : ''
+  const darkActionTextClass = isDarkTheme ? '!text-[#1b1a17]' : ''
   const commentSectionSurfaceClassName = isDarkTheme
-    ? '!border-[#28405f] !bg-[linear-gradient(180deg,rgba(10,18,32,0.99),rgba(8,14,26,0.97))] !shadow-[0_20px_44px_rgba(2,8,23,0.24)]'
+    ? '!border-[#28405f] !bg-[linear-gradient(180deg,rgba(10,18,32,0.99),rgba(8,14,26,0.97))] !shadow-[0_20px_44px_rgba(0, 0, 0, 0.24)]'
     : 'border-slate-200/80 bg-slate-50/55'
   const commentComposerSurfaceClassName = isDarkTheme
     ? '!border !border-[#28405f] !bg-[linear-gradient(180deg,rgba(15,26,44,0.98),rgba(12,21,36,0.98))] !shadow-[inset_0_1px_0_rgba(148,163,184,0.05)]'
@@ -1010,7 +1010,7 @@ function PlaceDetailView({
     ? '!border !border-[#28405f] !bg-[linear-gradient(180deg,rgba(15,26,44,0.98),rgba(12,21,36,0.98))]'
     : 'bg-slate-50'
   const commentCardSurfaceClassName = isDarkTheme
-    ? '!border-[#2c4d73] !bg-[linear-gradient(180deg,rgba(17,29,49,0.98),rgba(13,23,39,0.98))] !shadow-[0_12px_28px_rgba(2,8,23,0.2),inset_0_1px_0_rgba(148,163,184,0.05)]'
+    ? '!border-[#2c4d73] !bg-[linear-gradient(180deg,rgba(17,29,49,0.98),rgba(13,23,39,0.98))] !shadow-[0_12px_28px_rgba(0, 0, 0, 0.2),inset_0_1px_0_rgba(148,163,184,0.05)]'
     : 'border-slate-200/80 bg-slate-50/80'
   const commentCardFailedClassName = isDarkTheme
     ? '!border-[#7a3141] !bg-[linear-gradient(180deg,rgba(46,16,28,0.96),rgba(28,12,22,0.96))]'
@@ -1022,14 +1022,14 @@ function PlaceDetailView({
   const commentTextSecondaryClassName = isDarkTheme ? 'text-[#c8d6e8]' : 'text-slate-500'
   const commentTextMutedClassName = isDarkTheme ? 'text-[#91a7c3]' : 'text-slate-400'
   const commentTextBodyClassName = isDarkTheme ? 'text-[#d7e2f2]' : 'text-slate-700'
-  const commentBadgeSurfaceClassName = isDarkTheme ? '!bg-[rgba(96,165,250,0.16)]' : 'bg-[var(--accent-wash)]'
-  const commentBadgeTextClassName = isDarkTheme ? 'text-[#bfdbfe]' : 'text-[var(--accent-deep)]'
+  const commentBadgeSurfaceClassName = isDarkTheme ? '!bg-[rgba(var(--accent-rgb), 0.16)]' : 'bg-[var(--accent-wash)]'
+  const commentBadgeTextClassName = isDarkTheme ? 'text-[var(--primary-soft)]' : 'text-[var(--accent-deep)]'
   const commentMenuButtonClassName = isDarkTheme
-    ? 'inline-flex h-7 w-7 items-center justify-center rounded-full text-[#9cb0c9] transition hover:!bg-[#1a2b44] hover:!text-[#dbeafe]'
+    ? 'inline-flex h-7 w-7 items-center justify-center rounded-full text-[#9cb0c9] transition hover:!bg-[#1a2b44] hover:!text-[var(--primary-soft)]'
     : 'inline-flex h-7 w-7 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-200/70 hover:text-slate-600'
   const commentMenuClassName = isDarkTheme
-    ? 'absolute right-0 top-8 z-20 min-w-[11rem] overflow-hidden rounded-xl border border-[#28405f] !bg-[#0f1b2d] py-1 shadow-[0_16px_34px_rgba(2,8,23,0.36)]'
-    : 'absolute right-0 top-8 z-20 min-w-[11rem] overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-[0_12px_28px_rgba(15,23,42,0.12)]'
+    ? 'absolute right-0 top-8 z-20 min-w-[11rem] overflow-hidden rounded-xl border border-[#28405f] !bg-[#0f1b2d] py-1 shadow-[0_16px_34px_rgba(0, 0, 0, 0.36)]'
+    : 'absolute right-0 top-8 z-20 min-w-[11rem] overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-[0_12px_28px_rgba(27, 26, 23, 0.12)]'
   const commentMenuItemClassName = isDarkTheme
     ? 'flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-bold text-[#d7e2f2] transition hover:!bg-[#17263b] hover:!text-[#f4f8ff] disabled:cursor-not-allowed disabled:text-[#7f94b1]'
     : 'flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-bold text-slate-700 transition hover:bg-slate-50 hover:text-slate-950 disabled:cursor-not-allowed disabled:text-slate-400'
@@ -2996,7 +2996,7 @@ function PlaceDetailView({
           onClick={closeReportCommentModal}
         >
           <div
-            className="w-full max-w-sm rounded-2xl border border-[var(--line)] bg-white p-3 shadow-[0_24px_70px_rgba(15,23,42,0.25)]"
+            className="w-full max-w-sm rounded-2xl border border-[var(--line)] bg-white p-3 shadow-[0_24px_70px_rgba(27, 26, 23, 0.25)]"
             onClick={(event) => event.stopPropagation()}
           >
             <h3 id="report-comment-title" className="text-[18px] font-black text-slate-950">
@@ -3100,7 +3100,7 @@ function PlaceDetailView({
           }}
         >
           <div
-            className="w-full max-w-sm rounded-2xl border border-[var(--line)] bg-white p-3 shadow-[0_24px_70px_rgba(15,23,42,0.25)]"
+            className="w-full max-w-sm rounded-2xl border border-[var(--line)] bg-white p-3 shadow-[0_24px_70px_rgba(27, 26, 23, 0.25)]"
             onClick={(event) => event.stopPropagation()}
           >
             <h3 id="report-place-concern-title" className="text-[18px] font-black text-slate-950">
@@ -3194,7 +3194,7 @@ function PlaceDetailView({
           }}
         >
           <div
-            className="w-full max-w-[22rem] -translate-y-12 rounded-2xl border border-[var(--line)] bg-white p-4 shadow-[0_24px_70px_rgba(15,23,42,0.25)] sm:max-w-md sm:translate-y-0"
+            className="w-full max-w-[22rem] -translate-y-12 rounded-2xl border border-[var(--line)] bg-white p-4 shadow-[0_24px_70px_rgba(27, 26, 23, 0.25)] sm:max-w-md sm:translate-y-0"
             onClick={(event) => event.stopPropagation()}
           >
             <h3 id="contribute-photo-title" className="text-[18px] font-black text-slate-950">

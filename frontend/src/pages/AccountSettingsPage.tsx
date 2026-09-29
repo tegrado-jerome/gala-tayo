@@ -6,7 +6,7 @@ import { faCheck, faChevronDown, faCircleUser, faGlobe, faShield } from '@fortaw
 import AppHeader from '../components/AppHeader'
 import BirthdatePicker from '../components/BirthdatePicker'
 import PageHeroHeader from '../components/PageHeroHeader'
-import MinimalBackNav from '../components/MinimalBackNav'
+import MinimalBackNav from '../components/navigation/MinimalBackNav'
 import ProfileAvatar from '../components/ProfileAvatar'
 import { PageContainer, PageShell, ResponsiveGrid, CardSurface, Stack, Section } from '../components/layout/ResponsiveLayouts'
 import { useAppUser } from '../context/AppUserContext'
@@ -292,7 +292,7 @@ type SectionHeaderProps = {
 
 function SectionHeader({ title, description, icon }: SectionHeaderProps) {
   return (
-    <div className="account-settings-section-header group rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-4 transition duration-200 hover:border-slate-300 hover:bg-white hover:shadow-[0_10px_30px_rgba(15,23,42,0.06)] sm:px-5">
+    <div className="account-settings-section-header group rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-4 transition duration-200 hover:border-slate-300 hover:bg-white hover:shadow-[0_10px_30px_rgba(27, 26, 23, 0.06)] sm:px-5">
       <div className="flex items-start gap-3">
         <span className="account-settings-section-icon inline-flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-white text-[var(--accent-deep)] ring-1 ring-slate-200 transition group-hover:scale-[1.02] group-hover:ring-[rgba(var(--accent-rgb),0.22)]">
           {icon}

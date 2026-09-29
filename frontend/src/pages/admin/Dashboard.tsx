@@ -23,7 +23,7 @@ const sections: DashboardSection[] = [
     description: 'Review pending user-submitted places',
     path: getAdminPath('place-submissions'),
     icon: <FontAwesomeIcon icon={faHouse} className="h-5 w-5" />,
-    color: 'border-l-[#1E3A8A]',
+    color: 'border-l-[var(--primary)]',
   },
   {
     title: 'Photo review',

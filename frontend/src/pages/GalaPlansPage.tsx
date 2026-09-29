@@ -4,7 +4,7 @@ import type { FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import AppHeader from '../components/AppHeader'
 import { AppIcon } from '../components/AppIcon'
-import MinimalBackNav from '../components/MinimalBackNav'
+import MinimalBackNav from '../components/navigation/MinimalBackNav'
 import PageHeroHeader from '../components/PageHeroHeader'
 import {
   createGalaPlan,
@@ -482,7 +482,7 @@ function ItineraryBuilder({
             <button type="button" onClick={() => void searchPlaces(1, true)} disabled={isSearching} className="app-button app-button-primary app-button-md">{isSearching ? 'Searching...' : 'Search'}</button>
 
             {isSearchModalOpen ? (
-              <div className="absolute left-0 right-0 top-[calc(100%+0.75rem)] z-20 overflow-hidden rounded-[24px] border border-[var(--line)] bg-white shadow-[0_24px_60px_rgba(15,23,42,0.18)] sm:left-0 sm:right-auto sm:w-[min(760px,calc(100vw-2rem))]">
+              <div className="absolute left-0 right-0 top-[calc(100%+0.75rem)] z-20 overflow-hidden rounded-[24px] border border-[var(--line)] bg-white shadow-[0_24px_60px_rgba(27, 26, 23, 0.18)] sm:left-0 sm:right-auto sm:w-[min(760px,calc(100vw-2rem))]">
                 <div className="flex items-start justify-between gap-3 border-b border-[var(--line)] px-4 py-3">
                   <div className="min-w-0">
                     <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[var(--accent-deep)]">Search Suggestions</p>
@@ -807,7 +807,7 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
             </div>
           </div>
 
-          <aside className="grid gap-3 rounded-[24px] border border-[var(--line)] bg-white p-4 shadow-[0_14px_30px_rgba(15,23,42,0.04)] sm:p-5 lg:sticky lg:top-24">
+          <aside className="grid gap-3 rounded-[24px] border border-[var(--line)] bg-white p-4 shadow-[0_14px_30px_rgba(27, 26, 23, 0.04)] sm:p-5 lg:sticky lg:top-24">
             <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[var(--accent-deep)]">Plan At A Glance</p>
             <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
               <div className="rounded-2xl bg-[var(--accent-wash)] px-4 py-3">

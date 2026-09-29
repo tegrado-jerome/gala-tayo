@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { navigateToPath } from '../utils/navigation'
-import { hasInAppBackHistory } from '../utils/routes'
+import { navigateToPath } from '../../utils/navigation'
+import { hasInAppBackHistory } from '../../utils/routes'
 import { MINIMAL_NAV_LINK_CLASS } from './navigationStyles'
 
 type MinimalBackNavProps = {

@@ -118,21 +118,21 @@ const searchDarkGuideTheme: GuideTheme = {
   triggerClassName: 'border-[var(--accent)] bg-[var(--accent)] text-white shadow-sm gt-solid-bulb-pulse hover:border-[var(--accent-deep)] hover:bg-[var(--accent-deep)] hover:text-white',
   triggerIconClassName: 'text-white',
   bulletClassName: 'bg-[var(--accent)]',
-  modalClassName: 'border border-[rgba(96,165,250,0.26)] bg-[linear-gradient(180deg,rgba(11,18,33,0.98)_0%,rgba(15,23,42,0.98)_100%)] text-[var(--text-main)] shadow-[0_24px_60px_rgba(2,6,23,0.55)]',
+  modalClassName: 'border border-[rgba(var(--accent-rgb), 0.26)] bg-[linear-gradient(180deg,rgba(11,18,33,0.98)_0%,rgba(27, 26, 23, 0.98)_100%)] text-[var(--text-main)] shadow-[0_24px_60px_rgba(2,6,23,0.55)]',
   badgeClassName: 'bg-[var(--accent)] text-white shadow-sm',
   titleClassName: 'text-[var(--text-main)]',
   introClassName: 'text-[var(--text-strong)]',
-  headerDividerClassName: 'border-[rgba(96,165,250,0.16)]',
-  sectionClassName: 'border border-[rgba(96,165,250,0.18)] bg-[rgba(15,23,42,0.76)]',
-  sectionButtonClassName: 'hover:bg-[rgba(96,165,250,0.08)]',
-  sectionIconClassName: 'bg-[rgba(96,165,250,0.14)] text-[var(--accent)]',
+  headerDividerClassName: 'border-[rgba(var(--accent-rgb), 0.16)]',
+  sectionClassName: 'border border-[rgba(var(--accent-rgb), 0.18)] bg-[rgba(27, 26, 23, 0.76)]',
+  sectionButtonClassName: 'hover:bg-[rgba(var(--accent-rgb), 0.08)]',
+  sectionIconClassName: 'bg-[rgba(var(--accent-rgb), 0.14)] text-[var(--accent)]',
   sectionTitleClassName: 'text-[var(--text-main)]',
   sectionSubtitleClassName: 'text-[var(--text-muted)]',
   sectionChevronClassName: 'text-[var(--text-light)]',
-  sectionDividerClassName: 'border-[rgba(96,165,250,0.12)]',
-  itemClassName: 'text-[var(--text-strong)] hover:bg-[rgba(96,165,250,0.08)] hover:text-[var(--text-main)]',
-  itemIconClassName: 'bg-[rgba(96,165,250,0.12)]',
-  sampleClassName: 'border border-[rgba(96,165,250,0.16)] bg-[rgba(15,23,42,0.88)] text-[var(--text-strong)] hover:border-[rgba(96,165,250,0.28)] hover:bg-[rgba(96,165,250,0.08)] hover:text-[var(--text-main)]',
+  sectionDividerClassName: 'border-[rgba(var(--accent-rgb), 0.12)]',
+  itemClassName: 'text-[var(--text-strong)] hover:bg-[rgba(var(--accent-rgb), 0.08)] hover:text-[var(--text-main)]',
+  itemIconClassName: 'bg-[rgba(var(--accent-rgb), 0.12)]',
+  sampleClassName: 'border border-[rgba(var(--accent-rgb), 0.16)] bg-[rgba(27, 26, 23, 0.88)] text-[var(--text-strong)] hover:border-[rgba(var(--accent-rgb), 0.28)] hover:bg-[rgba(var(--accent-rgb), 0.08)] hover:text-[var(--text-main)]',
 }
 
 function markGuideViewed(id: FeatureGuideContent['id']) {
@@ -250,7 +250,7 @@ export function FeatureGuideModalTrigger({
                   type="button"
                   onClick={() => setIsOpen(false)}
                   aria-label="Close guide"
-                  className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[var(--text-light)] transition hover:bg-[rgba(96,165,250,0.08)] hover:text-[var(--text-main)]"
+                  className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[var(--text-light)] transition hover:bg-[rgba(var(--accent-rgb), 0.08)] hover:text-[var(--text-main)]"
                 >
                   <FontAwesomeIcon icon={faXmark} className="h-4 w-4" />
                 </button>

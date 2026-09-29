@@ -201,7 +201,7 @@ function AskAiNotificationProvider({ children }: { children: ReactNode }) {
               key={notification.id}
               className={`pointer-events-auto w-full max-w-[420px] rounded-2xl border px-4 py-3 shadow-lg motion-safe:animate-[gala-game-invite-pop_280ms_cubic-bezier(0.16,1,0.3,1)_both] ${
                 isDarkMode
-                  ? 'border-[rgba(248,113,113,0.18)] bg-[rgba(15,23,42,0.82)] text-slate-100'
+                  ? 'border-[rgba(248,113,113,0.18)] bg-[rgba(27, 26, 23, 0.82)] text-slate-100'
                   : `bg-white text-slate-900 ${toneBorders[notification.tone]}`
               }`}
               aria-live="polite"

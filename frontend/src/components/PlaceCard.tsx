@@ -359,7 +359,7 @@ function PlaceCard({
           </div>
         ) : null}
 
-        <div className={`absolute inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/92 font-bold tracking-[0.01em] text-slate-700 shadow-[0_8px_18px_rgba(15,23,42,0.12)] backdrop-blur-sm ${compact ? 'bottom-2.5 right-2.5 px-2 py-0.5 text-[9px]' : 'bottom-3 right-3 px-2.5 py-1 text-[10px]'}`}>
+        <div className={`absolute inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/92 font-bold tracking-[0.01em] text-slate-700 shadow-[0_8px_18px_rgba(27, 26, 23, 0.12)] backdrop-blur-sm ${compact ? 'bottom-2.5 right-2.5 px-2 py-0.5 text-[9px]' : 'bottom-3 right-3 px-2.5 py-1 text-[10px]'}`}>
           <AppIcon name="reviews" className="h-3.5 w-3.5 shrink-0 text-amber-500" />
           <span>{searchCardRatingText}</span>
           <span className="text-slate-300">·</span>
@@ -489,8 +489,8 @@ function PlaceCard({
           }
         }}
         onFocus={() => onSelect?.(place.id)}
-        className={`relative overflow-hidden rounded-[26px] border ${searchResultCard ? 'bg-white shadow-[0_8px_22px_rgba(15,23,42,0.05)]' : 'bg-[linear-gradient(180deg,#ffffff_0%,#fcfdff_100%)] shadow-[0_12px_28px_rgba(15,23,42,0.06)]'} transition ${
-          compact ? '' : 'hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(15,23,42,0.09)]'
+        className={`relative overflow-hidden rounded-[26px] border ${searchResultCard ? 'bg-white shadow-[0_8px_22px_rgba(27, 26, 23, 0.05)]' : 'bg-[linear-gradient(180deg,#ffffff_0%,#fcfdff_100%)] shadow-[0_12px_28px_rgba(27, 26, 23, 0.06)]'} transition ${
+          compact ? '' : 'hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(27, 26, 23, 0.09)]'
         } ${
           isSelected
             ? 'border-[var(--accent-glow)] ring-2 ring-[var(--accent-soft)]'

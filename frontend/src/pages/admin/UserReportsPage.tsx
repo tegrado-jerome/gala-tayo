@@ -43,7 +43,7 @@ function formatDate(value?: string | null) {
 
 function getStatusClass(status: UserReportStatus) {
   if (status === 'action_taken') {
-    return 'border-[#DBEAFE] bg-[var(--accent-soft)] text-[var(--accent)]'
+    return 'border-[var(--primary-soft)] bg-[var(--accent-soft)] text-[var(--accent)]'
   }
 
   if (status === 'dismissed') {
@@ -261,7 +261,7 @@ function AdminUserReportsPage({ session }: { session: Session }) {
                         value={moderatorNotes[report.id] ?? ''}
                         onChange={(event) => setModeratorNotes((current) => ({ ...current, [report.id]: event.target.value.slice(0, 1000) }))}
                         rows={3}
-                        className="mt-2 w-full rounded-2xl border border-[#E5E7EB] bg-white px-4 py-3 text-sm font-medium text-slate-900 outline-none transition focus:border-[#1E3A8A]"
+                        className="mt-2 w-full rounded-2xl border border-[#E5E7EB] bg-white px-4 py-3 text-sm font-medium text-slate-900 outline-none transition focus:border-[var(--primary)]"
                       />
                     </label>
 
@@ -278,7 +278,7 @@ function AdminUserReportsPage({ session }: { session: Session }) {
                       type="button"
                       onClick={() => void handleUpdate(report.id, 'action_taken')}
                       disabled={Boolean(mutatingId)}
-                      className="admin-action-button border border-[#1E3A8A] bg-[#1E3A8A] text-white disabled:cursor-not-allowed disabled:opacity-70"
+                      className="admin-action-button border border-[var(--primary)] bg-[var(--primary)] text-white disabled:cursor-not-allowed disabled:opacity-70"
                     >
                       Mark action taken
                     </button>
