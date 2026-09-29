@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { NormalizedPlace } from "../domain/places";
-import { parseDraft, selectCandidates } from "./galaPlanDraftPlanner";
+import { parseDraft, resolvePromptDate, selectCandidates } from "./galaPlanDraftPlanner";
 
 function place(overrides: Partial<NormalizedPlace>): NormalizedPlace {
   return {
@@ -81,5 +81,19 @@ describe("parseDraft", () => {
   it("rejects invalid JSON and plans with fewer than two stops", () => {
     assert.equal(parseDraft("not json", ids), null);
     assert.equal(parseDraft(JSON.stringify({ stops: [{ place_id: "a" }] }), ids), null);
+  });
+});
+
+describe("resolvePromptDate", () => {
+  // 2026-09-30 is a Wednesday.
+  it("resolves English and Tagalog day words", () => {
+    assert.equal(resolvePromptDate("Chill Sunday sa Manila", "2026-09-30"), "2026-10-04");
+    assert.equal(resolvePromptDate("Sabado night out", "2026-09-30"), "2026-10-03");
+    assert.equal(resolvePromptDate("gala bukas", "2026-09-30"), "2026-10-01");
+    assert.equal(resolvePromptDate("Wednesday lunch", "2026-09-30"), "2026-09-30");
+  });
+
+  it("returns null when no day is named", () => {
+    assert.equal(resolvePromptDate("Date sa BGC", "2026-09-30"), null);
   });
 });

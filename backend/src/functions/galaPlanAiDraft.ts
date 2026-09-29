@@ -4,7 +4,7 @@ import { getActiveNormalizedPlaces } from "../domain/places";
 import { consumeAskAiUsageForActor, refundAskAiUsageForActor } from "../services/askAiUsageService";
 import { generateJsonFromGroq } from "../services/groqChatProvider";
 import { getApprovedPlaceImagesByPlaceIds } from "../services/placeImagesService";
-import { buildSystemPrompt, buildUserMessage, manilaToday, parseDraft, selectCandidates } from "../services/galaPlanDraftPlanner";
+import { buildSystemPrompt, buildUserMessage, manilaToday, parseDraft, resolvePromptDate, selectCandidates } from "../services/galaPlanDraftPlanner";
 import { resolveAskAiActor, type AskAiActor } from "../utils/askAiActor";
 import { buildImageUrl } from "../utils/r2UrlResolver";
 import { shouldAcceptAskAiPrompt } from "./askAi";
@@ -75,6 +75,8 @@ export async function postGalaPlanAiDraft(request: HttpRequest, context: Invocat
       if (!parsed) throw new Error("AI returned an unusable plan.");
       return parsed;
     });
+
+    draft.date = resolvePromptDate(prompt, manilaToday().iso) ?? draft.date;
 
     const images = await getApprovedPlaceImagesByPlaceIds(draft.stops.map((stop) => stop.place_id)).catch(() => new Map());
     const stops = draft.stops.map((stop) => {

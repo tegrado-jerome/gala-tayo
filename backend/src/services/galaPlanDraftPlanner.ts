@@ -169,3 +169,32 @@ export function parseDraft(raw: string, candidateIds: Set<string>): DraftRespons
     stops,
   };
 }
+
+const WEEKDAY_WORDS: Array<[RegExp, number]> = [
+  [/\b(sunday|linggo)\b/, 0],
+  [/\b(monday|lunes)\b/, 1],
+  [/\b(tuesday|martes)\b/, 2],
+  [/\b(wednesday|miyerkules)\b/, 3],
+  [/\b(thursday|huwebes)\b/, 4],
+  [/\b(friday|biyernes)\b/, 5],
+  [/\b(saturday|sabado)\b/, 6],
+];
+
+// Resolve day words in the prompt to a date so plans don't depend on the model's calendar math.
+// Returns null when the prompt names no day.
+export function resolvePromptDate(prompt: string, todayIso: string): string | null {
+  const text = prompt.toLowerCase();
+  const today = new Date(`${todayIso}T00:00:00Z`);
+  const addDays = (days: number) => {
+    const date = new Date(today);
+    date.setUTCDate(date.getUTCDate() + days);
+    return date.toISOString().slice(0, 10);
+  };
+
+  if (/\b(today|ngayon|mamaya)\b/.test(text)) return todayIso;
+  if (/\b(tomorrow|bukas)\b/.test(text)) return addDays(1);
+  const match = WEEKDAY_WORDS.find(([pattern]) => pattern.test(text));
+  if (!match) return null;
+  const difference = (match[1] - today.getUTCDay() + 7) % 7;
+  return addDays(difference === 0 ? 0 : difference);
+}
