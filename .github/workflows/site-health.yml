@@ -1,0 +1,29 @@
+name: Site health check
+
+on:
+  schedule:
+    - cron: "0 22 * * *" # 6:00 AM Philippine time
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/health
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Playwright
+        working-directory: .github/health
+        run: |
+          npm install --no-save --no-package-lock playwright@1
+          npx playwright install --with-deps chromium
+
+      - name: Check live site
+        working-directory: .github/health
+        run: node check.mjs
