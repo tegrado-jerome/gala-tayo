@@ -22,7 +22,7 @@ type SeoLandingMetadata = {
   faqs: Array<{ question: string; answer: string }>
 }
 
-const BRAND_NAME = 'Gala Tayo'
+const BRAND_NAME = 'GalaTayo'
 const PRODUCT_NAME = 'GalaTayo'
 
 const SEO_LANDING_TARGETS: SeoLandingTarget[] = [
@@ -31,7 +31,7 @@ const SEO_LANDING_TARGETS: SeoLandingTarget[] = [
     areaSlug: 'makati',
     category: 'cafe',
     label: 'Best Cafes in Makati',
-    keywords: ['best cafes in makati', 'coffee shops in makati', 'makati cafe guide', 'Gala Tayo cafes'],
+    keywords: ['best cafes in makati', 'coffee shops in makati', 'makati cafe guide', 'GalaTayo cafes'],
   },
   {
     slug: 'restaurants-in-quezon-city',
@@ -45,7 +45,7 @@ const SEO_LANDING_TARGETS: SeoLandingTarget[] = [
     areaSlug: 'manila',
     category: 'museum',
     label: 'Museums in Manila',
-    keywords: ['museums in manila', 'art galleries in manila', 'cultural places in manila', 'Gala Tayo museum guide'],
+    keywords: ['museums in manila', 'art galleries in manila', 'cultural places in manila', 'GalaTayo museum guide'],
   },
   {
     slug: 'parks-in-pasig',
@@ -60,7 +60,7 @@ const SEO_LANDING_TARGETS: SeoLandingTarget[] = [
     goodFor: 'date',
     displayAreaName: 'BGC',
     label: 'Date Spots in BGC',
-    keywords: ['date spots in bgc', 'romantic places in bgc', 'bgc date ideas', 'Gala Tayo date guide'],
+    keywords: ['date spots in bgc', 'romantic places in bgc', 'bgc date ideas', 'GalaTayo date guide'],
   },
   {
     slug: 'family-friendly-places-in-quezon-city',
@@ -75,7 +75,7 @@ const SEO_LANDING_TARGETS: SeoLandingTarget[] = [
     category: 'cafe',
     goodFor: 'study',
     label: 'Study Cafes in Manila',
-    keywords: ['study cafes in manila', 'quiet cafes in manila', 'cafes with wifi in manila', 'Gala Tayo study cafes'],
+    keywords: ['study cafes in manila', 'quiet cafes in manila', 'cafes with wifi in manila', 'GalaTayo study cafes'],
   },
   {
     slug: 'chill-spots-in-taguig',
@@ -90,7 +90,7 @@ const SEO_LANDING_TARGETS: SeoLandingTarget[] = [
     category: 'food',
     displayAreaName: 'BGC',
     label: 'Kainan sa BGC',
-    keywords: ['kainan sa bgc', 'restaurants in bgc', 'food trip in bgc', 'Gala Tayo BGC food'],
+    keywords: ['kainan sa bgc', 'restaurants in bgc', 'food trip in bgc', 'GalaTayo BGC food'],
   },
   {
     slug: 'tambayan-sa-makati',
@@ -105,7 +105,7 @@ const SEO_LANDING_TARGETS: SeoLandingTarget[] = [
     goodFor: 'date',
     displayAreaName: 'QC',
     label: 'Saan Mag Date sa QC',
-    keywords: ['saan mag date sa qc', 'date places in quezon city', 'qc date spots', 'Gala Tayo QC date guide'],
+    keywords: ['saan mag date sa qc', 'date places in quezon city', 'qc date spots', 'GalaTayo QC date guide'],
   },
   {
     slug: 'things-to-do-in-makati',
@@ -118,7 +118,7 @@ const SEO_LANDING_TARGETS: SeoLandingTarget[] = [
     slug: 'date-places-in-metro-manila',
     goodFor: 'date',
     label: 'Date Places in Metro Manila',
-    keywords: ['date places in metro manila', 'metro manila date spots', 'romantic places in metro manila', 'Gala Tayo date ideas'],
+    keywords: ['date places in metro manila', 'metro manila date spots', 'romantic places in metro manila', 'GalaTayo date ideas'],
   },
   {
     slug: 'study-cafes-in-metro-manila',
@@ -139,7 +139,7 @@ const SEO_LANDING_TARGETS: SeoLandingTarget[] = [
     areaSlug: 'manila',
     category: 'heritage',
     label: 'Heritage Sites in Manila',
-    keywords: ['heritage sites in manila', 'historical places in manila', 'intramuros guide', 'manila landmarks', 'Gala Tayo heritage guide'],
+    keywords: ['heritage sites in manila', 'historical places in manila', 'intramuros guide', 'manila landmarks', 'GalaTayo heritage guide'],
   },
   {
     slug: 'cheap-eats-in-manila',
@@ -153,7 +153,7 @@ const SEO_LANDING_TARGETS: SeoLandingTarget[] = [
     areaSlug: 'pasig',
     category: 'mall',
     label: 'Mall Shopping in Pasig',
-    keywords: ['malls in pasig', 'shopping in pasig', 'pasig lifestyle centers', 'pasig shopping guide', 'Gala Tayo mall guide'],
+    keywords: ['malls in pasig', 'shopping in pasig', 'pasig lifestyle centers', 'pasig shopping guide', 'GalaTayo mall guide'],
   },
   {
     slug: 'cinemas-in-quezon-city',
@@ -167,7 +167,7 @@ const SEO_LANDING_TARGETS: SeoLandingTarget[] = [
     areaSlug: 'taguig',
     category: 'hotel',
     label: 'Hotels and Staycations in Taguig',
-    keywords: ['hotels in taguig', 'staycation in bgc', 'taguig accommodation', 'bgc hotel guide', 'Gala Tayo staycation guide'],
+    keywords: ['hotels in taguig', 'staycation in bgc', 'taguig accommodation', 'bgc hotel guide', 'GalaTayo staycation guide'],
   },
   {
     slug: 'barkada-hangouts-in-makati',
@@ -181,7 +181,7 @@ const SEO_LANDING_TARGETS: SeoLandingTarget[] = [
     areaSlug: 'manila',
     goodFor: 'family',
     label: 'Family Outing in Manila',
-    keywords: ['family outing in manila', 'family places in manila', 'kids friendly manila', 'manila family day ideas', 'Gala Tayo family guide'],
+    keywords: ['family outing in manila', 'family places in manila', 'kids friendly manila', 'manila family day ideas', 'GalaTayo family guide'],
   },
 ]
 

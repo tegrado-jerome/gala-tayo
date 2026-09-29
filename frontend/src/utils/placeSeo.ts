@@ -15,7 +15,7 @@ function joinWithAnd(values: string[]) {
 }
 
 export function buildPlaceDescription(place: PlaceDetailCardData, areaName: string) {
-  const parts: string[] = [`Discover ${place.name} in ${areaName} with ${place.category || 'local place'} details from Gala Tayo.`]
+  const parts: string[] = [`Discover ${place.name} in ${areaName} with ${place.category || 'local place'} details from GalaTayo.`]
 
   if (place.good_for && place.good_for.length > 0) {
     parts.push(`Best for ${place.good_for.slice(0, 3).join(', ')} plans.`)

@@ -49,6 +49,14 @@ jobs:
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
           R2_PUBLIC_BASE_URL: ${{ secrets.R2_PUBLIC_BASE_URL }}
         run: npm run generate:static-listings
+      - name: Refresh sitemap
+        working-directory: frontend
+        run: |
+          if curl -sf --max-time 120 "https://galatayo-api-cvawfwgrg6akdmem.southeastasia-01.azurewebsites.net/api/seo/sitemap.xml" -o sitemap.tmp && grep -q "<urlset" sitemap.tmp; then
+            mv sitemap.tmp public/sitemap.xml
+          else
+            echo "::warning::Sitemap refresh failed; keeping committed sitemap.xml"
+          fi
       - name: Validate frontend
         working-directory: frontend
         env:
