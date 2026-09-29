@@ -37,8 +37,11 @@ function SiteHeader({ pathname }: { pathname: string }) {
       style={{ background: 'var(--header-bg)' }}
     >
       <div className="mx-auto flex h-16 w-full max-w-[1320px] items-center gap-6 px-8">
-        <InternalLink href="/home" className="font-display text-[22px] font-semibold text-[var(--text-main)]">
-          GalaTayo<span className="text-[var(--primary)]">.</span>
+        <InternalLink href="/home" ariaLabel="GalaTayo home" className="font-display inline-flex items-center gap-2 text-[22px] font-semibold text-[var(--text-main)]">
+          <img src="/images/brand/galatayo-mark.svg" alt="" width="26" height="26" className="h-[26px] w-[26px]" />
+          <span>
+            GalaTayo<span className="text-[var(--primary)]">.</span>
+          </span>
         </InternalLink>
 
         <nav aria-label="Primary" className="flex items-center gap-1">

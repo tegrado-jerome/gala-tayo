@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="GalaTayo">
+  <path d="M32 3C18.7 3 8.5 13.2 8.5 26.5 8.5 42.6 32 61 32 61s23.5-18.4 23.5-34.5C55.5 13.2 45.3 3 32 3Z" fill="#d6451b"/>
+  <path d="M20.5 30.5a11.5 11.5 0 0 1 23 0Z" fill="#fff8ee"/>
+  <rect x="17" y="33.5" width="30" height="3.2" rx="1.6" fill="#fff8ee"/>
+  <rect x="22" y="39.5" width="20" height="3.2" rx="1.6" fill="#fff8ee" opacity=".85"/>
+  <rect x="27" y="45.5" width="10" height="3.2" rx="1.6" fill="#fff8ee" opacity=".7"/>
+</svg>
