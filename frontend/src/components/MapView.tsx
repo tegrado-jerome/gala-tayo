@@ -852,6 +852,7 @@ function MapView({
             <TileLayer
               attribution="&copy; OpenStreetMap contributors"
               url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+              referrerPolicy="strict-origin-when-cross-origin"
             />
           </>
         ) : (
@@ -874,6 +875,7 @@ function MapView({
             <TileLayer
               attribution="&copy; OpenStreetMap contributors"
               url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+              referrerPolicy="strict-origin-when-cross-origin"
             />
             <MarkerLayer
               validPlaces={clusteredPlaces}
