@@ -47,6 +47,11 @@ function isValidIsoDate(value: string | null | undefined): value is string {
   return Boolean(value && !Number.isNaN(Date.parse(value)));
 }
 
+// Database timestamps have no timezone, which Google rejects in <lastmod>; a plain date is always valid.
+function lastmodTag(value: string | null | undefined): string | null {
+  return value && /^\d{4}-\d{2}-\d{2}/.test(value) ? `    <lastmod>${value.slice(0, 10)}</lastmod>` : null;
+}
+
 function pickLatestTimestamp(current: string | null, candidate: string | null): string | null {
   if (!isValidIsoDate(candidate)) {
     return current;
@@ -299,7 +304,7 @@ export async function sitemapXml(request: HttpRequest, context: InvocationContex
       [
         "  <url>",
         `    <loc>${xmlEscape(`${siteUrl}${url.path}`)}</loc>`,
-        url.lastmod ? `    <lastmod>${xmlEscape(url.lastmod)}</lastmod>` : null,
+        lastmodTag(url.lastmod),
         `    <changefreq>${url.changefreq}</changefreq>`,
         `    <priority>${url.priority}</priority>`,
         "  </url>",
