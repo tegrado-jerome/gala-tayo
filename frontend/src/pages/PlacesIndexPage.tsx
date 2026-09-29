@@ -48,7 +48,7 @@ function PlacesIndexPage() {
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
       name: `Metro Manila Places | ${BRAND_NAME}`,
-      description: `${PRODUCT_NAME} organizes Metro Manila cities so you can browse local places, neighborhood discovery pages, and search-friendly gala ideas faster.`,
+      description: `${PRODUCT_NAME} organizes Metro Manila cities so you can browse local places and gala ideas city by city.`,
       url: `${getSiteOrigin()}/places`,
     },
     {
@@ -77,7 +77,7 @@ function PlacesIndexPage() {
     <PageShell>
       <SeoHead
         title={`Metro Manila Cities and Places to Visit | ${BRAND_NAME}`}
-        description={`${PRODUCT_NAME} lets you browse Metro Manila cities, local place pages, and city-based gala ideas from one search-friendly directory.`}
+        description={`${PRODUCT_NAME} lets you browse Metro Manila cities, local place pages, and city-based gala ideas in one directory.`}
         canonicalPath="/places"
         jsonLd={jsonLd}
       />

@@ -301,7 +301,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
           '@context': 'https://schema.org',
           '@type': 'CollectionPage',
           name: `${areaName} Places | ${BRAND_NAME}`,
-          description: `${PRODUCT_NAME} helps you browse places in ${areaName}, compare categories, and discover local gala ideas with city-based SEO pages.`,
+          description: `${PRODUCT_NAME} helps you browse places in ${areaName}, compare categories, and find local gala ideas.`,
           url: `${getSiteOrigin()}/places/${encodeURIComponent(normalizedAreaSlug)}`,
         },
         {
@@ -353,7 +353,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
             Places in {areaName}
           </h1>
           <p className="mt-3 max-w-[36rem] text-[15px] leading-7 text-[var(--muted)]">
-            Explore search-friendly local picks in {areaName}, then open each place page for budget, commute, and planning details.
+            Browse local picks in {areaName}, then open each place page for budget, commute, and planning details.
           </p>
         </section>
 

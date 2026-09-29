@@ -46,7 +46,7 @@ function PlaceCategoriesIndexPage() {
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
       name: `Metro Manila Place Categories | ${BRAND_NAME}`,
-      description: `${PRODUCT_NAME} groups Metro Manila places by category so search engines and visitors can explore food, cafes, parks, museums, and more.`,
+      description: `${PRODUCT_NAME} groups Metro Manila places by category: food, cafes, parks, museums, and more.`,
       url: `${getSiteOrigin()}/places/categories`,
     },
     {
@@ -74,7 +74,7 @@ function PlaceCategoriesIndexPage() {
     <PageShell>
       <SeoHead
         title={`Metro Manila Place Categories and Guides | ${BRAND_NAME}`}
-        description={`${PRODUCT_NAME} helps you browse Metro Manila place categories like cafes, food, parks, museums, and nightlife with search-friendly category pages.`}
+        description={`${PRODUCT_NAME} helps you browse Metro Manila place categories like cafes, food, parks, museums, and nightlife.`}
         canonicalPath="/places/categories"
         jsonLd={jsonLd}
       />

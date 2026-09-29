@@ -216,7 +216,7 @@ function renderRouteContent(descriptor: RouteDescriptor, inputs: RouteInputs) {
         <>
           <SeoHead
             title={`Metro Manila Places, Date Spots, and Gala Ideas | ${BRAND_NAME}`}
-            description={`${PRODUCT_NAME} by ${BRAND_NAME} helps you discover Metro Manila places, date spots, barkada hangouts, family-friendly plans, and searchable local recommendations.`}
+            description={`${BRAND_NAME} helps you discover Metro Manila places, date spots, barkada hangouts, family-friendly plans, and searchable local recommendations.`}
             canonicalPath="/home"
             jsonLd={[
               {

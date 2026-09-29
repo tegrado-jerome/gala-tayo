@@ -203,7 +203,7 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
     <>
       <SeoHead
         title={`Discover Metro Manila Places and Gala Ideas | ${BRAND_NAME}`}
-        description={`${PRODUCT_NAME} by ${BRAND_NAME} helps you discover Metro Manila places by city, category, budget, and vibe with AI-ready local recommendations.`}
+        description={`${BRAND_NAME} helps you discover Metro Manila places by city, category, budget, and vibe, with AI help to plan your next gala.`}
         robots="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"
         canonicalPath="/"
         openGraphType="website"
