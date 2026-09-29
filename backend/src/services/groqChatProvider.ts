@@ -9,13 +9,11 @@ import {
 const GROQ_BASE_URL = "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_DEFAULT_CHAT_MODELS = [
   "openai/gpt-oss-20b",
-  "llama-3.1-8b-instant",
   "openai/gpt-oss-120b",
 ];
 const GROQ_DEFAULT_PROMPT_GUARD_MODELS = [
-  "llama-3.1-8b-instant",
-  "meta-llama/llama-prompt-guard-2-86m",
-  "meta-llama/llama-prompt-guard-2-22m",
+  "openai/gpt-oss-20b",
+  "openai/gpt-oss-120b",
 ];
 const GROQ_MODEL_RATE_LIMIT_DEFAULT_COOLDOWN_MS = 60_000;
 const GROQ_TIMEOUT_MS = 45_000;

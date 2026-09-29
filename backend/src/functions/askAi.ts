@@ -98,11 +98,9 @@ async function shouldAcceptAskAiPrompt({
   } catch (error) {
     const reason = error instanceof Error ? error.message : "Unknown error";
     context.warn(
-      `[AskAI Chatbot] prompt-guard unavailable requestId=${requestId} reason=${reason}; rejecting by default`
+      `[AskAI Chatbot] prompt-guard unavailable requestId=${requestId} reason=${reason}`
     );
-    return {
-      accepted: false,
-    };
+    throw error;
   }
 }
 

@@ -54,9 +54,12 @@ export async function getRedisClient(): Promise<Redis | null> {
           return null;
         }
 
+        // The cache is optional, so fail fast instead of the SDK's default
+        // five retries with exponential backoff (~4s per call when Redis is down).
         return new Redis({
           url: config.url,
           token: config.token,
+          retry: { retries: 1, backoff: () => 100 },
         });
       })
       .catch(() => null);

@@ -40,7 +40,7 @@ type ParsedNormalizerResponse = Partial<NormalizedAskAiMapQuery> & {
 };
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_MODEL = "llama-3.1-8b-instant";
+const GROQ_MODEL = "openai/gpt-oss-20b";
 const GROQ_TIMEOUT_MS = Number(process.env.ASK_AI_MAP_NORMALIZER_TIMEOUT_MS || 8000);
 const GROQ_MAX_TOKENS = Number(process.env.ASK_AI_MAP_NORMALIZER_MAX_TOKENS || 220);
 
