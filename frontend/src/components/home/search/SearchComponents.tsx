@@ -236,7 +236,7 @@ function SearchFilterPanel({
     isBare
       ? cn('search-filters-panel search-filters-panel--bare bg-transparent', className)
       : cn(
-          'search-filters-panel overflow-visible rounded-[30px] border border-[rgba(148,163,184,0.18)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(249,250,251,0.98)_100%)] p-4 shadow-[0_18px_48px_rgba(27, 26, 23, 0.10)] backdrop-blur-xl sm:p-5',
+          'search-filters-panel overflow-visible rounded-[30px] border border-[rgba(148,163,184,0.18)] bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(249,250,251,0.98)_100%)] p-4 shadow-[0_18px_48px_rgba(27,26,23,0.10)] backdrop-blur-xl sm:p-5',
           className
         )
 
@@ -349,7 +349,7 @@ function SearchEmptyState({
             <button
               type="button"
               onClick={onSearchAgain}
-              className="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-white px-5 text-sm font-semibold text-slate-700 shadow-[0_8px_24px_rgba(27, 26, 23, 0.06)] transition hover:border-[var(--accent-deep)] hover:text-[var(--accent-deep)]"
+              className="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-white px-5 text-sm font-semibold text-slate-700 shadow-[0_8px_24px_rgba(27,26,23,0.06)] transition hover:border-[var(--accent-deep)] hover:text-[var(--accent-deep)]"
             >
               <FontAwesomeIcon icon={faArrowRotateLeft} className="h-4 w-4" />
               Search again
@@ -385,7 +385,7 @@ function SearchEmptyState({
             <button
               type="button"
               onClick={onSearchAgain}
-              className="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-white px-5 text-sm font-semibold text-slate-700 shadow-[0_8px_24px_rgba(27, 26, 23, 0.06)] transition hover:border-[var(--accent-deep)] hover:text-[var(--accent-deep)]"
+              className="mt-5 inline-flex h-10 items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-white px-5 text-sm font-semibold text-slate-700 shadow-[0_8px_24px_rgba(27,26,23,0.06)] transition hover:border-[var(--accent-deep)] hover:text-[var(--accent-deep)]"
             >
               <FontAwesomeIcon icon={faArrowRotateLeft} className="h-4 w-4" />
               {actionLabel}
@@ -421,7 +421,7 @@ function SearchLoadingCard({ compact = false }: { compact?: boolean }) {
   const bodyLineWidths = compact ? ['w-[90%]', 'w-[84%]', 'w-[70%]'] : ['w-[92%]', 'w-[86%]', 'w-[72%]']
 
   return (
-    <article className="search-loading-card relative overflow-hidden rounded-[26px] border border-[rgba(148,163,184,0.22)] bg-white shadow-[0_8px_22px_rgba(27, 26, 23, 0.05)]">
+    <article className="search-loading-card relative overflow-hidden rounded-[26px] border border-[rgba(148,163,184,0.22)] bg-white shadow-[0_8px_22px_rgba(27,26,23,0.05)]">
       <div className="search-loading-card__hero relative aspect-[1.38] w-full overflow-hidden bg-[linear-gradient(180deg,var(--primary-soft)_0%,rgba(var(--accent-rgb),0.06)_100%)]">
         <div className="search-loading-card__glow absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.9),transparent_24%),radial-gradient(circle_at_80%_0%,var(--accent-soft),transparent_20%)]" aria-hidden="true" />
 
@@ -431,7 +431,7 @@ function SearchLoadingCard({ compact = false }: { compact?: boolean }) {
           </span>
         </div>
 
-        <div className="search-loading-card__pill absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/92 px-2.5 py-1 shadow-[0_8px_18px_rgba(27, 26, 23, 0.12)] backdrop-blur-sm">
+        <div className="search-loading-card__pill absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/92 px-2.5 py-1 shadow-[0_8px_18px_rgba(27,26,23,0.12)] backdrop-blur-sm">
           <span className="h-3.5 w-3.5 rounded-full border border-[var(--accent-glow)]" aria-hidden="true" />
           <SkeletonLine className="h-3 w-3" />
           <span className="text-slate-300">·</span>
@@ -452,7 +452,7 @@ function SearchLoadingCard({ compact = false }: { compact?: boolean }) {
         <SkeletonLine className={`mt-2 h-3.5 ${bodyLineWidths[2]}`} />
       </div>
 
-      <div className="search-loading-card__corner absolute right-3 top-3 z-20 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/70 bg-white/92 shadow-[0_6px_14px_rgba(27, 26, 23, 0.06)] backdrop-blur-sm">
+      <div className="search-loading-card__corner absolute right-3 top-3 z-20 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/70 bg-white/92 shadow-[0_6px_14px_rgba(27,26,23,0.06)] backdrop-blur-sm">
         <span className="h-4 w-4 rounded-full border border-[var(--accent-glow)]" aria-hidden="true" />
       </div>
     </article>
@@ -475,7 +475,7 @@ function SearchLoadingState({
     <section className={`search-loading-state ${loadingShellClassName}`} aria-busy="true" aria-live="polite">
       <span className="sr-only">Loading search results</span>
       <div className="mx-auto flex w-full max-w-[600px] flex-col gap-4">
-        <div className="search-loading-state__header rounded-[28px] border border-[rgba(148,163,184,0.18)] bg-white/90 px-5 py-5 text-left shadow-[0_10px_28px_rgba(27, 26, 23, 0.04)]" aria-hidden="true">
+        <div className="search-loading-state__header rounded-[28px] border border-[rgba(148,163,184,0.18)] bg-white/90 px-5 py-5 text-left shadow-[0_10px_28px_rgba(27,26,23,0.04)]" aria-hidden="true">
           <div className="flex items-center gap-3">
             <SkeletonLine className="h-10 w-10 shrink-0 rounded-full" />
             <div className="min-w-0">

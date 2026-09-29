@@ -195,7 +195,7 @@ function GuestAuthPromptCard({
 
   const card = (
     <section
-      className={`gala-auth-prompt overflow-hidden rounded-[24px] border border-[var(--line)] bg-white shadow-[0_12px_38px_rgba(27, 26, 23, 0.07)] ${modalWidthClass} ${mode === 'inline-card' ? 'mx-auto w-full max-w-[480px]' : ''} ${className}`}
+      className={`gala-auth-prompt overflow-hidden rounded-[24px] border border-[var(--line)] bg-white shadow-[0_12px_38px_rgba(27,26,23,0.07)] ${modalWidthClass} ${mode === 'inline-card' ? 'mx-auto w-full max-w-[480px]' : ''} ${className}`}
     >
       <div className="px-5 pt-5 pb-3 sm:px-6 sm:pt-6">
         <div className="flex items-start gap-3.5">

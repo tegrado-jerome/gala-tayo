@@ -124,7 +124,7 @@ function PlacesIndexPage() {
               <InternalLink
                 key={area.slug}
                 href={`/places/${area.slug}`}
-                className="group block rounded-3xl border border-[#E5E7EB] bg-white px-4 py-4 shadow-[0_8px_24px_rgba(17,24,39,0.04)] transition hover:-translate-y-0.5 hover:border-[var(--primary-soft)] hover:shadow-[0_14px_32px_rgba(var(--accent-rgb), 0.08)]"
+                className="group block rounded-3xl border border-[#E5E7EB] bg-white px-4 py-4 shadow-[0_8px_24px_rgba(17,24,39,0.04)] transition hover:-translate-y-0.5 hover:border-[var(--primary-soft)] hover:shadow-[0_14px_32px_rgba(var(--accent-rgb),0.08)]"
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-3">
@@ -169,7 +169,7 @@ function IndexCardPhoto({ imageUrls, label, priority = false }: { imageUrls: str
   }, [imageSourceKey])
 
   return (
-    <span className="relative inline-flex h-12 w-12 shrink-0 overflow-hidden rounded-2xl border border-[rgba(148,163,184,0.2)] bg-[linear-gradient(135deg,#eef6ff,#f8fafc)] shadow-[0_8px_18px_rgba(27, 26, 23, 0.08)] transition group-hover:scale-[1.02]">
+    <span className="relative inline-flex h-12 w-12 shrink-0 overflow-hidden rounded-2xl border border-[rgba(148,163,184,0.2)] bg-[linear-gradient(135deg,#eef6ff,#f8fafc)] shadow-[0_8px_18px_rgba(27,26,23,0.08)] transition group-hover:scale-[1.02]">
       {shouldShowImage ? (
         <img
           src={imageUrl ?? undefined}

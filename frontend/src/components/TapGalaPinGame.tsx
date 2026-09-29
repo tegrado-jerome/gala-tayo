@@ -408,9 +408,9 @@ export default function TapGalaPinGame({
         <div className="absolute inset-x-6 top-[17%] h-[11px] rounded-full bg-[linear-gradient(90deg,transparent,rgba(37,99,235,0.42),rgba(255,111,157,0.22),transparent)] animate-[gala-lane-glide_5s_ease-in-out_infinite]" />
         <div className="absolute inset-x-5 top-[43%] h-[13px] rounded-full bg-[linear-gradient(90deg,transparent,rgba(255,196,87,0.5),rgba(94,214,199,0.34),transparent)] animate-[gala-lane-glide_5.8s_ease-in-out_infinite]" />
         <div className="absolute inset-x-8 top-[69%] h-[10px] rounded-full bg-[linear-gradient(90deg,transparent,rgba(124,179,255,0.44),rgba(255,158,186,0.24),transparent)] animate-[gala-lane-glide_6.2s_ease-in-out_infinite]" />
-        <div className="absolute left-[16%] top-0 h-full w-[10px] bg-[linear-gradient(180deg,transparent,rgba(27, 26, 23, 0.08),transparent)]" />
-        <div className="absolute left-[55%] top-0 h-full w-[12px] bg-[linear-gradient(180deg,transparent,rgba(27, 26, 23, 0.07),transparent)]" />
-        <div className="absolute left-[82%] top-0 h-full w-[10px] bg-[linear-gradient(180deg,transparent,rgba(27, 26, 23, 0.07),transparent)]" />
+        <div className="absolute left-[16%] top-0 h-full w-[10px] bg-[linear-gradient(180deg,transparent,rgba(27,26,23,0.08),transparent)]" />
+        <div className="absolute left-[55%] top-0 h-full w-[12px] bg-[linear-gradient(180deg,transparent,rgba(27,26,23,0.07),transparent)]" />
+        <div className="absolute left-[82%] top-0 h-full w-[10px] bg-[linear-gradient(180deg,transparent,rgba(27,26,23,0.07),transparent)]" />
         <div className="absolute left-[11%] top-[24%] h-3 w-3 rounded-full bg-white/86" />
         <div className="absolute left-[31%] top-[54%] h-2.5 w-2.5 rounded-full bg-[#5ed6c7]" />
         <div className="absolute left-[47%] top-[76%] h-2.5 w-2.5 rounded-full bg-[#ffcc4d]" />

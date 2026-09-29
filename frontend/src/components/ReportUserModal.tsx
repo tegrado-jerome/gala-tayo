@@ -101,7 +101,7 @@ function ReportUserModal({
       <BottomSheet
         isOpen={isOpen}
         onClose={closeIfIdle}
-        sheetClassName="max-w-[380px] rounded-[24px] border border-[#E5E7EB] bg-[#FFFFFF] p-4 shadow-[0_24px_70px_rgba(27, 26, 23, 0.16)] sm:p-4.5"
+        sheetClassName="max-w-[380px] rounded-[24px] border border-[#E5E7EB] bg-[#FFFFFF] p-4 shadow-[0_24px_70px_rgba(27,26,23,0.16)] sm:p-4.5"
         ariaLabel="Report user"
       >
         <div

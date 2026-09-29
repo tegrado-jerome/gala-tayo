@@ -613,7 +613,7 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
       {statusError ? (
         <main className="pointer-events-none fixed inset-x-0 top-4 z-[80] px-4">
           <StateContainer className="flex justify-center">
-            <section className="w-full max-w-[520px] rounded-2xl border border-amber-200 bg-amber-50/95 px-4 py-3 text-center shadow-[0_18px_42px_rgba(27, 26, 23, 0.12)] backdrop-blur">
+            <section className="w-full max-w-[520px] rounded-2xl border border-amber-200 bg-amber-50/95 px-4 py-3 text-center shadow-[0_18px_42px_rgba(27,26,23,0.12)] backdrop-blur">
               <p className="text-sm font-semibold leading-6 text-amber-900">{statusError}</p>
             </section>
           </StateContainer>

@@ -500,8 +500,8 @@ function HomeFeaturedCard({
             <div className="absolute inset-0 bg-[linear-gradient(145deg,#cbd5e1_0%,#94a3b8_52%,#64748b_100%)]" />
           )}
 
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0)_0%,rgba(255,255,255,0)_40%,rgba(27, 26, 23, 0.14)_60%,rgba(27, 26, 23, 0.82)_100%)]" />
-          <div className="absolute inset-x-0 bottom-0 h-24 bg-[linear-gradient(180deg,rgba(27, 26, 23, 0)_0%,rgba(27, 26, 23, 0.18)_35%,rgba(27, 26, 23, 0.6)_100%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0)_0%,rgba(255,255,255,0)_40%,rgba(27,26,23,0.14)_60%,rgba(27,26,23,0.82)_100%)]" />
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-[linear-gradient(180deg,rgba(27,26,23,0)_0%,rgba(27,26,23,0.18)_35%,rgba(27,26,23,0.6)_100%)]" />
 
           <button
             type="button"
@@ -509,7 +509,7 @@ function HomeFeaturedCard({
             disabled={isSaving}
             aria-label={isSaved ? `Remove ${place.name} from favorites` : `Save ${place.name} to favorites`}
             data-drag-scroll-ignore="true"
-            className={`absolute right-2.5 top-2.5 flex h-[28px] w-[28px] items-center justify-center rounded-full border border-white/75 bg-white/92 shadow-[0_4px_10px_rgba(27, 26, 23, 0.06)] ${
+            className={`absolute right-2.5 top-2.5 flex h-[28px] w-[28px] items-center justify-center rounded-full border border-white/75 bg-white/92 shadow-[0_4px_10px_rgba(27,26,23,0.06)] ${
               isSaved ? 'text-rose-500' : 'text-slate-500'
             }`}
           >
@@ -526,7 +526,7 @@ function HomeFeaturedCard({
                   <FontAwesomeIcon icon={faLocationDot} className="h-3 w-3 shrink-0" />
                   <span className="truncate">{locationText}</span>
                 </span>
-                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[rgba(27, 26, 23, 0.36)] px-2.5 py-1 font-semibold text-white">
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[rgba(27,26,23,0.36)] px-2.5 py-1 font-semibold text-white">
                   <RatingStars value={ratingValue} />
                   {ratingText}
                 </span>

@@ -85,7 +85,7 @@ function ChangePasswordPage() {
                 <Stack gap="default">
                   <label className="grid gap-2">
                     <span className="text-sm font-black text-slate-900">New Password</span>
-                    <span className="flex h-12 items-center gap-3 rounded-full border border-[var(--line)] bg-white px-4 shadow-[inset_0_1px_2px_rgba(27, 26, 23, 0.03)] transition focus-within:border-[var(--primary)]">
+                    <span className="flex h-12 items-center gap-3 rounded-full border border-[var(--line)] bg-white px-4 shadow-[inset_0_1px_2px_rgba(27,26,23,0.03)] transition focus-within:border-[var(--primary)]">
                       <input
                         type={isNewPasswordVisible ? 'text' : 'password'}
                         value={newPassword}
@@ -109,7 +109,7 @@ function ChangePasswordPage() {
 
                   <label className="grid gap-2">
                     <span className="text-sm font-black text-slate-900">Confirm New Password</span>
-                    <span className="flex h-12 items-center gap-3 rounded-full border border-[var(--line)] bg-white px-4 shadow-[inset_0_1px_2px_rgba(27, 26, 23, 0.03)] transition focus-within:border-[var(--primary)]">
+                    <span className="flex h-12 items-center gap-3 rounded-full border border-[var(--line)] bg-white px-4 shadow-[inset_0_1px_2px_rgba(27,26,23,0.03)] transition focus-within:border-[var(--primary)]">
                       <input
                         type={isConfirmNewPasswordVisible ? 'text' : 'password'}
                         value={confirmNewPassword}

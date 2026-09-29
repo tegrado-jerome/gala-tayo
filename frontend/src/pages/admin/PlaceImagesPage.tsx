@@ -565,7 +565,7 @@ function AdminPlaceImagesPage({ session }: { session: Session }) {
           }}
         >
           <div
-            className="w-full max-w-md rounded-2xl border border-[var(--line)] bg-white p-4 shadow-[0_24px_70px_rgba(27, 26, 23, 0.25)]"
+            className="w-full max-w-md rounded-2xl border border-[var(--line)] bg-white p-4 shadow-[0_24px_70px_rgba(27,26,23,0.25)]"
             onClick={(event) => event.stopPropagation()}
           >
             <h2 id="delete-approved-photo-title" className="text-lg font-black text-slate-950">

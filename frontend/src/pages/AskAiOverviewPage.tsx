@@ -16,10 +16,10 @@ type ToolCardProps = {
 
 function ToolCard({ href, title, description, icon, isDarkMode }: ToolCardProps) {
   const cardClassName = isDarkMode
-    ? 'group flex items-center gap-3 rounded-[22px] border border-[rgba(148,163,184,0.16)] bg-[rgba(27, 26, 23, 0.8)] px-4 py-4 text-left shadow-[0_10px_24px_rgba(0, 0, 0, 0.28)] transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-[rgba(var(--accent-rgb), 0.28)] hover:shadow-[0_16px_30px_rgba(0, 0, 0, 0.34)] sm:gap-3.5 sm:px-5 sm:py-4 md:gap-3 md:px-4 md:py-3.5'
-    : 'group flex items-center gap-3 rounded-[22px] border border-[var(--line)] bg-white px-4 py-4 text-left shadow-[0_10px_24px_rgba(27, 26, 23, 0.04)] transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_16px_30px_rgba(27, 26, 23, 0.06)] sm:gap-3.5 sm:px-5 sm:py-4 md:gap-3 md:px-4 md:py-3.5'
+    ? 'group flex items-center gap-3 rounded-[22px] border border-[rgba(148,163,184,0.16)] bg-[rgba(27,26,23,0.8)] px-4 py-4 text-left shadow-[0_10px_24px_rgba(0,0,0,0.28)] transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-[rgba(var(--accent-rgb),0.28)] hover:shadow-[0_16px_30px_rgba(0,0,0,0.34)] sm:gap-3.5 sm:px-5 sm:py-4 md:gap-3 md:px-4 md:py-3.5'
+    : 'group flex items-center gap-3 rounded-[22px] border border-[var(--line)] bg-white px-4 py-4 text-left shadow-[0_10px_24px_rgba(27,26,23,0.04)] transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_16px_30px_rgba(27,26,23,0.06)] sm:gap-3.5 sm:px-5 sm:py-4 md:gap-3 md:px-4 md:py-3.5'
   const iconWrapClassName = isDarkMode
-    ? 'flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[rgba(var(--accent-rgb), 0.18)] text-[var(--primary-dark)] ring-1 ring-inset ring-[rgba(var(--accent-rgb), 0.14)] transition-colors duration-300 group-hover:bg-[rgba(var(--accent-rgb), 0.28)] group-hover:ring-[rgba(var(--accent-rgb), 0.22)] md:h-10 md:w-10'
+    ? 'flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[rgba(var(--accent-rgb),0.18)] text-[var(--primary-dark)] ring-1 ring-inset ring-[rgba(var(--accent-rgb),0.14)] transition-colors duration-300 group-hover:bg-[rgba(var(--accent-rgb),0.28)] group-hover:ring-[rgba(var(--accent-rgb),0.22)] md:h-10 md:w-10'
     : 'flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-50 text-[var(--accent-deep)] ring-1 ring-inset ring-slate-200/80 transition-colors duration-300 group-hover:bg-[var(--accent-wash)] group-hover:ring-[rgba(47,116,232,0.16)] md:h-10 md:w-10'
   const titleClassName = isDarkMode
     ? 'truncate text-[0.96rem] font-bold tracking-[-0.02em] text-[#f3f7ff] sm:text-[1.02rem] md:text-[0.96rem]'
@@ -48,7 +48,7 @@ function ToolCard({ href, title, description, icon, isDarkMode }: ToolCardProps)
           <p className={titleClassName}>
             {title}
           </p>
-          <span className={isDarkMode ? 'inline-flex items-center rounded-full bg-[rgba(var(--accent-rgb), 0.22)] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.08em] text-[var(--primary-dark)]' : 'inline-flex items-center rounded-full bg-[var(--accent-wash)] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.08em] text-[var(--accent-deep)]'}>
+          <span className={isDarkMode ? 'inline-flex items-center rounded-full bg-[rgba(var(--accent-rgb),0.22)] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.08em] text-[var(--primary-dark)]' : 'inline-flex items-center rounded-full bg-[var(--accent-wash)] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.08em] text-[var(--accent-deep)]'}>
             AI
           </span>
         </div>
@@ -84,7 +84,7 @@ function AskAiOverviewPage() {
     ? 'mt-3 max-w-[32rem] text-[14.5px] leading-7 text-[#9cb0c9] sm:text-[15px]'
     : 'mt-3 max-w-[32rem] text-[14.5px] leading-7 text-[var(--muted)] sm:text-[15px]'
   const pillClassName = isDarkMode
-    ? 'inline-flex items-center rounded-full bg-[rgba(var(--accent-rgb), 0.22)] px-2.5 py-1 text-[10.5px] font-black uppercase tracking-[0.14em] text-[var(--primary-dark)]'
+    ? 'inline-flex items-center rounded-full bg-[rgba(var(--accent-rgb),0.22)] px-2.5 py-1 text-[10.5px] font-black uppercase tracking-[0.14em] text-[var(--primary-dark)]'
     : 'inline-flex items-center rounded-full bg-[var(--accent-wash)] px-2.5 py-1 text-[10.5px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]'
   const dividerClassName = isDarkMode ? 'h-px flex-1 bg-[rgba(148,163,184,0.16)]' : 'h-px flex-1 bg-[var(--line)]'
 

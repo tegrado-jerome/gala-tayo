@@ -413,7 +413,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
                   rememberMe={rememberMe}
                 />
               ) : (
-                <div className="mx-auto w-full max-w-[360px] rounded-[14px] border border-[rgba(var(--accent-rgb), 0.16)] bg-[var(--accent-wash)] px-4 py-3 text-center text-[13px] font-semibold leading-6 text-[var(--accent-deep)]">
+                <div className="mx-auto w-full max-w-[360px] rounded-[14px] border border-[rgba(var(--accent-rgb),0.16)] bg-[var(--accent-wash)] px-4 py-3 text-center text-[13px] font-semibold leading-6 text-[var(--accent-deep)]">
                   Admin access uses email and password only. Account creation is disabled here.
                 </div>
               )}
@@ -446,7 +446,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
                   Email
                 </span>
                 <span
-                  className={`flex h-12 items-center rounded-[12px] border bg-[var(--panel)] px-3.5 shadow-[inset_0_1px_2px_rgba(27, 26, 23, 0.03)] transition ${
+                  className={`flex h-12 items-center rounded-[12px] border bg-[var(--panel)] px-3.5 shadow-[inset_0_1px_2px_rgba(27,26,23,0.03)] transition ${
                     emailIsInvalid ? 'border-red-300' : 'border-[var(--line)]'
                   }`}
                 >
@@ -468,7 +468,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
                   Password
                 </span>
                 <span
-                  className={`flex h-12 items-center gap-3 rounded-[12px] border bg-[var(--panel)] px-3.5 shadow-[inset_0_1px_2px_rgba(27, 26, 23, 0.03)] transition ${
+                  className={`flex h-12 items-center gap-3 rounded-[12px] border bg-[var(--panel)] px-3.5 shadow-[inset_0_1px_2px_rgba(27,26,23,0.03)] transition ${
                     passwordIsInvalid ? 'border-red-300' : 'border-[var(--line)]'
                   }`}
                 >
@@ -512,7 +512,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
                     Confirm Password
                   </span>
                   <span
-                    className={`flex h-12 items-center gap-3 rounded-[12px] border bg-[var(--panel)] px-3.5 shadow-[inset_0_1px_2px_rgba(27, 26, 23, 0.03)] transition ${
+                    className={`flex h-12 items-center gap-3 rounded-[12px] border bg-[var(--panel)] px-3.5 shadow-[inset_0_1px_2px_rgba(27,26,23,0.03)] transition ${
                       confirmPasswordHasMismatch ? 'border-red-300' : 'border-[var(--line)]'
                     }`}
                   >

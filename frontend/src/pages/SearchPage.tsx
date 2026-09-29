@@ -121,7 +121,7 @@ function SearchActiveFilterChips({
             key={chip.key}
             type="button"
             onClick={chip.onClear}
-            className="search-active-filter-chip inline-flex items-center gap-2 rounded-full border border-[rgba(var(--accent-rgb), 0.14)] bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-[0_6px_16px_rgba(27, 26, 23, 0.04)] transition hover:border-[var(--accent-deep)] hover:text-[var(--accent-deep)]"
+            className="search-active-filter-chip inline-flex items-center gap-2 rounded-full border border-[rgba(var(--accent-rgb),0.14)] bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-[0_6px_16px_rgba(27,26,23,0.04)] transition hover:border-[var(--accent-deep)] hover:text-[var(--accent-deep)]"
           >
             <span>{chip.label}</span>
             <AppIcon name="clear" className="h-3.5 w-3.5" />
@@ -308,7 +308,7 @@ function SearchPage({
               onClick={() => setIsFilterPanelOpen(false)}
             >
               <div
-                className="search-filters-modal__sheet flex h-[100dvh] w-full max-w-none flex-col overflow-hidden bg-white sm:h-auto sm:max-h-[min(92dvh,920px)] sm:max-w-[820px] sm:rounded-[30px] sm:border sm:border-[rgba(148,163,184,0.18)] sm:shadow-[0_20px_60px_rgba(27, 26, 23, 0.22)]"
+                className="search-filters-modal__sheet flex h-[100dvh] w-full max-w-none flex-col overflow-hidden bg-white sm:h-auto sm:max-h-[min(92dvh,920px)] sm:max-w-[820px] sm:rounded-[30px] sm:border sm:border-[rgba(148,163,184,0.18)] sm:shadow-[0_20px_60px_rgba(27,26,23,0.22)]"
                 onClick={(event) => event.stopPropagation()}
               >
                 <div className="search-filters-modal__header flex items-start justify-between gap-4 border-b border-[rgba(148,163,184,0.16)] px-4 py-4 sm:px-5">

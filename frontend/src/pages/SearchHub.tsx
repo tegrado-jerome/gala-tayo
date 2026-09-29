@@ -766,7 +766,7 @@ function SearchHub({
                     </div>
                   ) : (
                     <div className="mt-4 grid gap-4">
-                      <section className="overflow-hidden rounded-[22px] border border-[var(--line)] bg-white shadow-[0_10px_24px_rgba(27, 26, 23, 0.05)]">
+                      <section className="overflow-hidden rounded-[22px] border border-[var(--line)] bg-white shadow-[0_10px_24px_rgba(27,26,23,0.05)]">
                         <MapView
                           places={visiblePlaces}
                           selectedPlaceId={selectedPlaceId}
