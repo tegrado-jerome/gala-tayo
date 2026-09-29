@@ -204,7 +204,7 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
       <SeoHead
         title={`Discover Metro Manila Places and Gala Ideas | ${BRAND_NAME}`}
         description={`${PRODUCT_NAME} by ${BRAND_NAME} helps you discover Metro Manila places by city, category, budget, and vibe with AI-ready local recommendations.`}
-        robots="index,follow,max-image-preview:none,max-snippet:-1,max-video-preview:-1"
+        robots="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"
         canonicalPath="/"
         openGraphType="website"
         image={{
@@ -272,7 +272,7 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
               <span className="welcome-page__title-line">gala starts here.</span>
             </h1>
             <p className="welcome-page__description">
-              Discover places, date spots, cafes, and local ideas with Gala Tayo.
+              Discover places, date spots, cafes, and local ideas with GalaTayo.
             </p>
           </div>
           <button
