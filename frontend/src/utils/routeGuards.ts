@@ -9,6 +9,7 @@ const sharedRouteMatchers = [
 export function isProtectedAccountPath(pathname: string) {
   const isExactProtectedPath = [
     '/favorites',
+    '/passport',
     '/feedback',
     '/gala-plan',
     '/gala-plan/new',

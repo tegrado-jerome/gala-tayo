@@ -42,6 +42,7 @@ const PlaceSubmissionPage = lazy(() => import('../pages/PlaceSubmissionPage'))
 const MyPlaceSubmissionsPage = lazy(() => import('../pages/MyPlaceSubmissionsPage'))
 const AskAiMapPage = lazy(() => import('../pages/AskAiMapPage'))
 const PlanWithAiPage = lazy(() => import('../pages/PlanWithAiPage'))
+const PassportPage = lazy(() => import('../pages/PassportPage'))
 const AskAiOverviewPage = lazy(() => import('../pages/AskAiOverviewPage'))
 const PlacesIndexPage = lazy(() => import('../pages/PlacesIndexPage'))
 const PlaceCategoriesIndexPage = lazy(() => import('../pages/PlaceCategoriesIndexPage'))
@@ -274,6 +275,16 @@ function renderRouteContent(descriptor: RouteDescriptor, inputs: RouteInputs) {
         <>
           <SeoHead title="AI Maps | GalaTayo" description="GalaTayo AI maps mode on GalaTayo." canonicalPath="/ask-ai/maps" robots="noindex,follow" />
           <AskAiMapPage />
+        </>
+      )
+    case 'passport':
+      if (!session) {
+        return <LoginPage />
+      }
+      return (
+        <>
+          <SeoHead title="Pasyal Passport | GalaTayo" description="Your Metro Manila city stamps and weekly gala streak." canonicalPath="/passport" robots="noindex,follow" />
+          <PassportPage session={session} />
         </>
       )
     case 'plan-with-ai':

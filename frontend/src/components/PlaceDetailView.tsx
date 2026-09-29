@@ -30,6 +30,8 @@ import { Icon } from './place-detail/Icon'
 import { MemberAvatar } from './place-detail/MemberAvatar'
 import { SectionHeading } from './place-detail/SectionHeading'
 import { ActionButton } from './place-detail/ActionButton'
+import SulitMeter from './place-detail/SulitMeter'
+import CheckInButton from './place-detail/CheckInButton'
 import { GoodForList } from './place-detail/GoodForList'
 import { TransportColumn } from './place-detail/TransportColumn'
 import { DetailSection } from './place-detail/DetailSection'
@@ -2807,6 +2809,14 @@ function PlaceDetailView({
                   <span className="min-w-0 leading-5">{budgetLabel}</span>
                 </span>
               </div>
+
+              {place.budget_min != null ? (
+                <div>
+                  <SulitMeter pesos={place.budget_min} />
+                </div>
+              ) : null}
+
+              <CheckInButton placeId={place.id} placeName={place.name} session={appSession} onGuest={() => guestAuth.open('community')} />
 
               <div className="-mt-1">
                 {shareError ? <p className="text-[12px] font-bold text-red-600">{shareError}</p> : null}

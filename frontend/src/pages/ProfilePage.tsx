@@ -455,6 +455,12 @@ function ProfilePage({ session }: ProfilePageProps) {
                     <AppIcon name="users" className="h-4 w-4" />
                     {isGuestProfile ? 'Log in' : 'Find friends'}
                   </button>
+                  {!isGuestProfile ? (
+                    <button type="button" onClick={() => navigateToPath('/passport')} className="app-button app-button-secondary app-button-md">
+                      <AppIcon name="tourist" className="h-4 w-4" />
+                      Passport
+                    </button>
+                  ) : null}
                   <button
                     type="button"
                     onClick={() =>

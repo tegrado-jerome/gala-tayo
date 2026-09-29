@@ -6190,3 +6190,27 @@ body.feature-guide-open nav[aria-label="Primary"] {
   color: var(--text-main) !important;
 }
 
+
+/* Pasyal Passport city stamps: filled postage stamp when collected, dashed slot when not. */
+.passport-stamp {
+  border-radius: 10px;
+  transition: transform var(--motion-slow) var(--ease-pop);
+}
+
+.passport-stamp[data-collected="true"] {
+  background: var(--primary);
+  outline: 2px dashed rgba(255, 253, 248, 0.7);
+  outline-offset: -8px;
+  box-shadow: 0 10px 22px rgba(var(--accent-rgb), 0.24);
+}
+
+.passport-stamp[data-collected="false"] {
+  border: 2px dashed var(--line-strong);
+  background: var(--bg-soft);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .passport-stamp {
+    transition: none;
+  }
+}

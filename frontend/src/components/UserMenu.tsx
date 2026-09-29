@@ -201,10 +201,6 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
     'group flex w-full items-center gap-4 rounded-xl px-3 py-3 text-left text-[15px] font-medium text-[var(--text-strong)] transition hover:bg-[var(--hover-surface)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-soft)]'
   const menuIconClass =
     'user-menu-nav-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--panel)] text-[var(--accent)] ring-1 ring-[var(--line)] transition group-hover:bg-[var(--accent-wash)]'
-  const soonMenuItemClass =
-    'pointer-events-none group flex w-full items-center gap-4 rounded-xl px-3 py-3 text-left text-[15px] font-medium text-[var(--text-disabled)] opacity-90'
-  const soonMenuIconClass =
-    'user-menu-nav-icon user-menu-nav-icon--soon flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--panel)] text-[var(--text-disabled)] ring-1 ring-[var(--line)]'
   const helpMenuItemClass =
     'group flex w-full items-center gap-4 rounded-xl px-3 py-3 text-left text-[15px] font-medium text-[var(--text-strong)] transition hover:bg-[var(--hover-surface)] focus:outline-none'
   const helpSubmenuItemClass =
@@ -368,13 +364,16 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
                     <span className="flex-1">Gala Plans</span>
                     <AppIcon name="chevronRight" className="h-4 w-4 text-slate-500" />
                   </button>
-                  <div className={soonMenuItemClass} role="menuitem" aria-disabled="true" title="Coming soon">
-                    <span className={soonMenuIconClass}><AppIcon name="place" size="ui" /></span>
-                    <span className="flex-1">Submit Place</span>
-                    <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
-                      Soon
-                    </span>
-                  </div>
+                  <button type="button" onClick={() => closeAndNavigate('/passport')} className={menuItemClass} role="menuitem">
+                    <span className={menuIconClass}><AppIcon name="tourist" size="ui" /></span>
+                    <span className="flex-1">Pasyal Passport</span>
+                    <AppIcon name="chevronRight" className="h-4 w-4 text-slate-500" />
+                  </button>
+                  <button type="button" onClick={() => closeAndNavigate('/submit-place')} className={menuItemClass} role="menuitem">
+                    <span className={menuIconClass}><AppIcon name="place" size="ui" /></span>
+                    <span className="flex-1">Submit a Place</span>
+                    <AppIcon name="chevronRight" className="h-4 w-4 text-slate-500" />
+                  </button>
 
                   <div className="my-3 border-t border-slate-200" />
 
@@ -523,13 +522,16 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
                   <span className="flex-1">Gala Plans</span>
                   <AppIcon name="chevronRight" className="h-4 w-4 text-slate-500" />
                 </button>
-                <div className={soonMenuItemClass} role="menuitem" aria-disabled="true" title="Coming soon">
-                  <span className={soonMenuIconClass}><AppIcon name="place" size="ui" /></span>
-                  <span className="flex-1">Submit Place</span>
-                  <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">
-                    Soon
-                  </span>
-                </div>
+                <button type="button" onClick={() => closeAndNavigate('/passport')} className={menuItemClass} role="menuitem">
+                  <span className={menuIconClass}><AppIcon name="tourist" size="ui" /></span>
+                  <span className="flex-1">Pasyal Passport</span>
+                  <AppIcon name="chevronRight" className="h-4 w-4 text-slate-500" />
+                </button>
+                <button type="button" onClick={() => closeAndNavigate('/submit-place')} className={menuItemClass} role="menuitem">
+                  <span className={menuIconClass}><AppIcon name="place" size="ui" /></span>
+                  <span className="flex-1">Submit a Place</span>
+                  <AppIcon name="chevronRight" className="h-4 w-4 text-slate-500" />
+                </button>
 
                 <div className="my-3 border-t border-slate-200" />
 
