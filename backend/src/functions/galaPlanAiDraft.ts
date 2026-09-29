@@ -12,6 +12,18 @@ import { ASK_AI_SCOPE_REJECTION_MESSAGE, evaluateAskAiStrictPgGuard } from "./as
 
 const JSON_HEADERS = { "Content-Type": "application/json", "Cache-Control": "no-store" };
 const MAX_PROMPT_LENGTH = 400;
+const RETRY_DELAY_MS = 1500;
+
+// Groq's free tier occasionally rate-limits or returns malformed JSON; one short retry absorbs most of it.
+async function withOneRetry<T>(task: () => Promise<T>): Promise<T> {
+  try {
+    return await task();
+  } catch {
+    await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
+    return task();
+  }
+}
+
 async function getPrompt(request: HttpRequest) {
   try {
     const body = (await request.json()) as { prompt?: unknown };
@@ -38,7 +50,10 @@ export async function postGalaPlanAiDraft(request: HttpRequest, context: Invocat
       return { status: 400, headers: JSON_HEADERS, jsonBody: { message: `Describe your gala in 3 to ${MAX_PROMPT_LENGTH} characters.` } };
     }
 
-    if (!evaluateAskAiStrictPgGuard(prompt).accepted || !(await shouldAcceptAskAiPrompt({ message: prompt, requestId, context })).accepted) {
+    const isAccepted =
+      evaluateAskAiStrictPgGuard(prompt).accepted &&
+      (await withOneRetry(() => shouldAcceptAskAiPrompt({ message: prompt, requestId, context }))).accepted;
+    if (!isAccepted) {
       return { status: 422, headers: JSON_HEADERS, jsonBody: { message: ASK_AI_SCOPE_REJECTION_MESSAGE } };
     }
 
@@ -50,15 +65,16 @@ export async function postGalaPlanAiDraft(request: HttpRequest, context: Invocat
 
     const candidates = selectCandidates(await getActiveNormalizedPlaces(), prompt);
     const candidatesById = new Map(candidates.map((place) => [place.id, place]));
-    const raw = await generateJsonFromGroq({
-      systemPrompt: buildSystemPrompt(manilaToday()),
-      userMessage: buildUserMessage(prompt, candidates),
-      requestId,
+    const draft = await withOneRetry(async () => {
+      const raw = await generateJsonFromGroq({
+        systemPrompt: buildSystemPrompt(manilaToday()),
+        userMessage: buildUserMessage(prompt, candidates),
+        requestId,
+      });
+      const parsed = parseDraft(raw, new Set(candidatesById.keys()));
+      if (!parsed) throw new Error("AI returned an unusable plan.");
+      return parsed;
     });
-    const draft = parseDraft(raw, new Set(candidatesById.keys()));
-    if (!draft) {
-      throw new Error("AI returned an unusable plan.");
-    }
 
     const images = await getApprovedPlaceImagesByPlaceIds(draft.stops.map((stop) => stop.place_id)).catch(() => new Map());
     const stops = draft.stops.map((stop) => {
