@@ -205,7 +205,7 @@ export default function SeoLandingPage({
               <div>
                 <h2 className="text-[1.35rem] font-black tracking-[-0.03em] text-slate-950">Recommended places</h2>
                 <p className="mt-1 text-[13px] leading-6 text-[var(--muted)]">
-                  Search-friendly picks from {PRODUCT_NAME} that match this guide&apos;s local intent.
+                  Picks from {PRODUCT_NAME} that fit this guide.
                 </p>
               </div>
             </div>

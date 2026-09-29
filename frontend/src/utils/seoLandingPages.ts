@@ -239,7 +239,7 @@ function buildLandingMetadata(target: SeoLandingTarget): SeoLandingMetadata {
   const scopedAreaName = target.areaSlug ? areaName : 'Metro Manila'
   const canonicalPath = getLandingPath(target.slug)
 
-  let summary = `Explore ${h1.toLowerCase()} with ${BRAND_NAME} and ${PRODUCT_NAME}.`
+  let summary = `Explore ${h1.toLowerCase()} on ${BRAND_NAME}.`
   let intro = `Browse curated ${categoryPhrase} and practical place details for ${audiencePhrase} in ${scopedAreaName}.`
 
   if (categoryLabel && goodForLabel) {
@@ -250,12 +250,12 @@ function buildLandingMetadata(target: SeoLandingTarget): SeoLandingMetadata {
     summary = `${PRODUCT_NAME} organizes ${categoryLabel.toLowerCase()} places in ${scopedAreaName} for faster local discovery and planning.`
   } else if (goodForLabel && target.areaSlug) {
     intro = `Find places around ${scopedAreaName} that work well for ${goodForLabel} plans, from chill hangouts to more structured gala ideas.`
-    summary = `${BRAND_NAME} surfaces ${goodForLabel}-friendly places in ${scopedAreaName} with planning details that are useful for search and AI answers.`
+    summary = `${BRAND_NAME} surfaces ${goodForLabel}-friendly places in ${scopedAreaName} with budget, timing and location details for planning.`
   }
 
   return {
     title: `${h1} | ${BRAND_NAME}`,
-    description: `${h1} on ${PRODUCT_NAME}. ${intro} Discover Metro Manila recommendations, FAQs, and searchable place summaries.`,
+    description: `${h1} on ${PRODUCT_NAME}. ${intro}`,
     h1,
     intro,
     summary,
@@ -276,7 +276,7 @@ function buildLandingMetadata(target: SeoLandingTarget): SeoLandingMetadata {
       },
       {
         question: `Is ${h1} updated regularly?`,
-        answer: `${PRODUCT_NAME} refreshes this guide as new approved places are added and existing place details are updated, so the recommendations stay relevant for search and AI-powered discovery.`,
+        answer: `${PRODUCT_NAME} refreshes this guide as new approved places are added and existing place details are updated, so the picks stay current.`,
       },
     ],
   }

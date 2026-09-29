@@ -283,7 +283,7 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
           '@context': 'https://schema.org',
           '@type': 'CollectionPage',
           name: `${categoryLabel} Places | ${BRAND_NAME}`,
-          description: `${PRODUCT_NAME} helps you browse ${categoryLabel.toLowerCase()} places across Metro Manila with category SEO pages and place-level discovery details.`,
+          description: `${PRODUCT_NAME} helps you browse ${categoryLabel.toLowerCase()} places across Metro Manila and open a page for each one with budget, best time to visit and location.`,
           url: `${getSiteOrigin()}/places/categories/${encodeURIComponent(categorySlug)}`,
         },
         {
@@ -340,7 +340,7 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
             {categoryLabel} places in Metro Manila
           </h1>
           <p className="mt-3 max-w-[40rem] text-[15px] leading-7 text-[var(--muted)]">
-            Explore search-friendly {categoryLabel.toLowerCase()} recommendations and jump into local pages for more specific gala ideas.
+            Browse {categoryLabel.toLowerCase()} picks and open each place page for budget, timing and location.
           </p>
         </section>
 
