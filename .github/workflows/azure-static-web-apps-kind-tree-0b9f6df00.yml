@@ -57,18 +57,9 @@ jobs:
           else
             echo "::warning::Sitemap refresh failed; keeping committed sitemap.xml"
           fi
-      - name: Validate frontend
+      # Built here instead of by the deploy action so the prerender step can use the runner's Chrome.
+      - name: Build and prerender frontend
         working-directory: frontend
-        env:
-          VITE_API_BASE_URL: "https://galatayo-api-cvawfwgrg6akdmem.southeastasia-01.azurewebsites.net/api"
-          VITE_SITE_URL: "https://galatayo.app"
-          VITE_GA_MEASUREMENT_ID: ${{ secrets.VITE_GA_MEASUREMENT_ID }}
-        run: |
-          npm ci
-          npm run validate
-      - name: Build And Deploy
-        id: builddeploy
-        uses: Azure/static-web-apps-deploy@v1
         env:
           VITE_API_BASE_URL: "https://galatayo-api-cvawfwgrg6akdmem.southeastasia-01.azurewebsites.net/api"
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
@@ -78,13 +69,21 @@ jobs:
           VITE_GOOGLE_SITE_VERIFICATION: ${{ secrets.VITE_GOOGLE_SITE_VERIFICATION }}
           VITE_BING_SITE_VERIFICATION: ${{ secrets.VITE_BING_SITE_VERIFICATION }}
           VITE_ADMIN_BASE_PATH: ${{ secrets.VITE_ADMIN_BASE_PATH }}
+        run: |
+          npm ci
+          npm run validate
+          npm run prerender
+      - name: Deploy
+        id: builddeploy
+        uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_KIND_TREE_0B9F6DF00 }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
-          app_location: "frontend"
+          app_location: "frontend/dist"
           api_location: ""
-          output_location: "dist"
+          output_location: ""
+          skip_app_build: true
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'

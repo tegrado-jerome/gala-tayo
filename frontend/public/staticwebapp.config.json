@@ -1,4 +1,5 @@
 {
+  "trailingSlash": "never",
   "routes": [
     {
       "route": "/images/*",
@@ -26,7 +27,7 @@
     }
   ],
   "navigationFallback": {
-    "rewrite": "/index.html",
+    "rewrite": "/app-shell.html",
     "exclude": [
       "/api/*",
       "/assets/*",
