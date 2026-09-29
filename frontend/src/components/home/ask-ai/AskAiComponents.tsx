@@ -872,7 +872,7 @@ function AskAiSignInRequired({
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-[32px] border border-[rgba(191,205,255,0.22)] bg-[linear-gradient(180deg,rgba(248,250,255,0.96),rgba(241,246,255,0.94))] p-5 shadow-[0_18px_42px_rgba(27,26,23,0.06)] sm:p-6">
+        <div className="overflow-hidden rounded-[32px] border border-[rgba(191,205,255,0.22)] bg-[var(--card)] p-5 shadow-[0_18px_42px_rgba(27,26,23,0.06)] sm:p-6">
           <div className="flex items-start gap-3">
             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[rgba(123,146,255,0.12)] text-[#4969c8]">
               <BuildingIcon className="h-5 w-5" />

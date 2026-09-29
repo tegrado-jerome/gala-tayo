@@ -327,7 +327,7 @@ function LegalPage({ type }: LegalPageProps) {
               items={breadcrumbItems}
             />
 
-            <section className="legal-page__hero relative overflow-hidden rounded-[32px] border border-[rgba(var(--accent-rgb),0.12)] bg-[linear-gradient(135deg,rgba(255,255,255,0.72),rgba(243,244,246,0.92))] px-5 py-6 shadow-[0_18px_42px_rgba(17,24,39,0.06)] backdrop-blur-sm sm:px-7 sm:py-8 lg:px-10 lg:py-10">
+            <section className="legal-page__hero relative overflow-hidden rounded-[32px] border border-[rgba(var(--accent-rgb),0.12)] bg-[var(--card)] px-5 py-6 shadow-[0_18px_42px_rgba(17,24,39,0.06)] backdrop-blur-sm sm:px-7 sm:py-8 lg:px-10 lg:py-10">
               <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(var(--accent-rgb),0.4)] to-transparent" />
               <div className="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.8fr)] lg:items-start">
                 <div className="min-w-0">

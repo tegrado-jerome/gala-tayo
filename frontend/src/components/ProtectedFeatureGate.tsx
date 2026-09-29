@@ -216,7 +216,7 @@ function ProfilePreviewBackdrop() {
 
       <div className="absolute inset-x-0 top-5 bottom-20 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto flex h-full w-full max-w-[440px] flex-col md:max-w-[620px] lg:max-w-[760px] xl:max-w-[860px]">
-          <div className="flex-1 rounded-[32px] bg-[linear-gradient(180deg,rgba(255,255,255,0.9),rgba(245,248,253,0.94))] blur-[7px] saturate-[0.76] md:rounded-[36px] lg:rounded-[40px]">
+          <div className="flex-1 rounded-[32px] bg-[var(--card)] blur-[7px] saturate-[0.76] md:rounded-[36px] lg:rounded-[40px]">
             <div className="px-4 pt-5 sm:px-5 sm:pt-6">
               <div className="rounded-[28px] bg-white/95 px-4 py-4 shadow-[0_18px_44px_rgba(27,26,23,0.04)] md:px-5 md:py-5 lg:px-6 lg:py-6">
                 <div className="flex items-center gap-4 md:gap-5 lg:gap-6">

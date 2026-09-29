@@ -626,7 +626,7 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
     <form onSubmit={handleSubmit} className="grid gap-6 sm:gap-7 xl:gap-8">
       <PageContainer size="wide" className="grid gap-6 sm:gap-7 xl:gap-8">
         {isLoading || isRefreshing ? <InlineSkeleton /> : null}
-        <section className="grid gap-6 rounded-[28px] border border-[var(--line)] bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(248,250,255,0.9))] px-5 py-5 shadow-[var(--shadow-soft)] sm:px-6 sm:py-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start lg:gap-6 xl:px-7 xl:py-7">
+        <section className="grid gap-6 rounded-[28px] border border-[var(--line)] bg-[var(--card)] px-5 py-5 shadow-[var(--shadow-soft)] sm:px-6 sm:py-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start lg:gap-6 xl:px-7 xl:py-7">
           <div className="grid gap-5">
             <PageHeroHeader
               eyebrow="Gala Plans"

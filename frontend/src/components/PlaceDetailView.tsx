@@ -291,7 +291,7 @@ function PlacePhoto({
 
                 <div className="relative z-10 flex h-full items-center justify-center px-6 py-8 text-center sm:px-8 sm:py-10">
                   <div className="flex max-w-[340px] flex-col items-center gap-4 px-5 py-6">
-                    <span className="flex h-14 w-14 items-center justify-center rounded-full border border-[rgba(var(--accent-rgb),0.22)] bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(239,246,255,0.92))] shadow-[0_16px_40px_rgba(37,99,235,0.12)]">
+                    <span className="flex h-14 w-14 items-center justify-center rounded-full border border-[rgba(var(--accent-rgb),0.22)] bg-[var(--card)] shadow-[0_16px_40px_rgba(37,99,235,0.12)]">
                       <Icon name="photo" className="h-7 w-7 text-[var(--accent-deep)]" />
                     </span>
                     <div className="space-y-1">

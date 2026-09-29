@@ -333,7 +333,7 @@ function AskAiMapPage() {
     : 'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-400 transition hover:border-slate-300 hover:text-slate-600'
   const placeDetailFitPanelClassName = isDarkMode
     ? 'rounded-[20px] border border-[#24354b] bg-[#101b2c] px-4 py-4'
-    : 'rounded-[20px] border border-[rgba(var(--accent-rgb),0.10)] bg-[linear-gradient(180deg,rgba(248,250,252,0.98),rgba(255,255,255,0.94))] px-4 py-4'
+    : 'rounded-[20px] border border-[rgba(var(--accent-rgb),0.10)] bg-[var(--card)] px-4 py-4'
   const placeDetailPanelClassName = isDarkMode
     ? 'mt-3 rounded-[20px] bg-[#101b2c] px-4 py-4 border border-[#223348]'
     : 'mt-3 rounded-[20px] bg-slate-50 px-4 py-4'
