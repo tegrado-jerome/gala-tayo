@@ -7,7 +7,7 @@ import { createSlug, getCurrentUser, getOptionalCurrentUser } from "../utils/soc
 type PlanVisibility = "private" | "public";
 type PlanStatus = "active" | "deleted";
 
-type ProfileRow = {
+export type ProfileRow = {
   user_id: string;
   username: string | null;
   display_name?: string | null;
@@ -16,7 +16,7 @@ type ProfileRow = {
   bio: string | null;
 };
 
-type PlanRow = {
+export type PlanRow = {
   id: string;
   user_id: string;
   title: string;
@@ -118,11 +118,11 @@ function toNullableNumber(value: unknown) {
   return null;
 }
 
-function isUuid(value: string) {
+export function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
-function isActive(plan: PlanRow) {
+export function isActive(plan: PlanRow) {
   return (plan.status ?? ACTIVE_STATUS) === ACTIVE_STATUS;
 }
 
@@ -137,7 +137,7 @@ function sortItems(first: ItemRow, second: ItemRow) {
   return (first.sort_order ?? 0) - (second.sort_order ?? 0);
 }
 
-function mapOwner(profile: ProfileRow | null | undefined) {
+export function mapOwner(profile: ProfileRow | null | undefined) {
   if (!profile) return null;
   return {
     user_id: profile.user_id,
@@ -312,7 +312,7 @@ async function getPlanItems(planIds: string[], previewOnly = false) {
   return byPlanId;
 }
 
-async function getProfilesByUserIds(userIds: string[]) {
+export async function getProfilesByUserIds(userIds: string[]) {
   const uniqueUserIds = Array.from(new Set(userIds.filter(Boolean)));
   const profilesByUserId = new Map<string, ProfileRow>();
   if (uniqueUserIds.length === 0) return profilesByUserId;
@@ -329,7 +329,7 @@ async function getProfilesByUserIds(userIds: string[]) {
   return profilesByUserId;
 }
 
-async function getPlanById(planId: string) {
+export async function getPlanById(planId: string) {
   const supabase = await getSupabaseAdminClient();
   const { data, error } = await (supabase.from("gala_plans") as any)
     .select(PLAN_COLUMNS)

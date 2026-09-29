@@ -328,12 +328,14 @@ html {
   }
 }
 
-h1,
-h2,
-.font-display {
-  font-family: var(--font-display);
-  font-optical-sizing: auto;
-  letter-spacing: -0.02em;
+@layer base {
+  h1,
+  h2,
+  .font-display {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    letter-spacing: -0.02em;
+  }
 }
 
 .font-data {
@@ -400,27 +402,29 @@ body.feature-guide-open {
   font-family: var(--font-sans);
 }
 
-:is(.gala-page-shell, .gala-page-background) h1 {
-  font-size: var(--type-page-title);
-  line-height: 1.1;
-  font-weight: var(--weight-title);
-  letter-spacing: -0.03em;
-  color: var(--text-main);
-}
+@layer base {
+  :is(.gala-page-shell, .gala-page-background) h1 {
+    font-size: var(--type-page-title);
+    line-height: 1.1;
+    font-weight: var(--weight-title);
+    letter-spacing: -0.03em;
+    color: var(--text-main);
+  }
 
-:is(.gala-page-shell, .gala-page-background) h2 {
-  font-size: var(--type-section-title);
-  line-height: 1.2;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  color: var(--text-main);
-}
+  :is(.gala-page-shell, .gala-page-background) h2 {
+    font-size: var(--type-section-title);
+    line-height: 1.2;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text-main);
+  }
 
-:is(.gala-page-shell, .gala-page-background) h3 {
-  font-size: var(--type-card-title);
-  line-height: 1.35;
-  font-weight: 600;
-  color: var(--text-main);
+  :is(.gala-page-shell, .gala-page-background) h3 {
+    font-size: var(--type-card-title);
+    line-height: 1.35;
+    font-weight: 600;
+    color: var(--text-main);
+  }
 }
 
 :is(.gala-page-shell, .gala-page-background) p,
