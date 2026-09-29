@@ -87,7 +87,7 @@ function SearchLandingBar({
               onFilterClick()
             }}
             aria-label="Open filters"
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--home-search-text)] transition hover:bg-[var(--home-search-hover-bg)] disabled:cursor-not-allowed disabled:text-slate-300"
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[var(--home-search-text)] transition hover:bg-[var(--home-search-hover-bg)] disabled:cursor-not-allowed disabled:text-[var(--text-disabled)]"
           >
             <FontAwesomeIcon icon={faFilter} className="search-landing-bar__icon h-[20px] w-[20px]" />
           </button>
@@ -313,7 +313,7 @@ function SearchFilterPanel({
               type="button"
               onClick={onApplyFilters}
               disabled={!canApply}
-              className={`search-filters-panel__apply inline-flex h-12 items-center justify-center rounded-2xl bg-[var(--accent)] px-4 text-sm font-bold text-white shadow-[0_14px_30px_rgba(var(--accent-rgb),0.18)] transition hover:bg-[var(--accent-deep)] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 ${onClearAll ? '' : 'sm:col-span-2'}`}
+              className={`search-filters-panel__apply inline-flex h-12 items-center justify-center rounded-2xl bg-[var(--accent)] px-4 text-sm font-bold text-white shadow-[0_14px_30px_rgba(var(--accent-rgb),0.18)] transition hover:bg-[var(--accent-deep)] disabled:cursor-not-allowed disabled:bg-[var(--bg-soft)] disabled:text-[var(--text-disabled)] ${onClearAll ? '' : 'sm:col-span-2'}`}
             >
               {applyLabel}
             </button>
@@ -1121,7 +1121,7 @@ function GuidedSearchPage({
                   onClick={onSubmitSearch}
                   disabled={isSearching || !canSubmit}
                   aria-label="Search places"
-               className="flex h-12 w-12 shrink-0 items-center justify-center self-end rounded-xl border border-[var(--accent)] bg-[var(--accent)] text-white transition hover:bg-[var(--accent-deep)] disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-200 disabled:text-slate-400 sm:h-14 sm:w-14"
+               className="flex h-12 w-12 shrink-0 items-center justify-center self-end rounded-xl border border-[var(--accent)] bg-[var(--accent)] text-white transition hover:bg-[var(--accent-deep)] disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-[var(--bg-soft)] disabled:text-[var(--text-disabled)] sm:h-14 sm:w-14"
                 >
                 <AppIcon name="search" className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </button>

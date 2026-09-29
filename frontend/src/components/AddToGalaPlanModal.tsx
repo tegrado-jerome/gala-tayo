@@ -206,7 +206,7 @@ function AddToGalaPlanModal({ isOpen, placeId, placeName, onClose }: AddToGalaPl
                   type="button"
                   onClick={() => void handleAdd()}
                   disabled={isAdding}
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-4 text-sm font-black text-white transition hover:bg-[var(--accent-deep)] disabled:cursor-not-allowed disabled:bg-slate-300"
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-[var(--accent)] px-4 text-sm font-black text-white transition hover:bg-[var(--accent-deep)] disabled:cursor-not-allowed disabled:bg-[var(--bg-soft)]"
                 >
                   {isAdding ? 'Adding...' : (
                     <>

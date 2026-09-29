@@ -11,6 +11,8 @@ import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
 import MobileBottomNav from '../components/navigation/MobileBottomNav'
 import NextGalaCard from '../components/home/NextGalaCard'
 import PlanWithAiCard from '../components/home/PlanWithAiCard'
+import RainyDayBanner from '../components/home/RainyDayBanner'
+import { useManilaWeather } from '../hooks/useManilaWeather'
 import CarouselPositionIndicator from '../components/CarouselPositionIndicator'
 import { PageShell } from '../components/layout/ResponsiveLayouts'
 import {
@@ -1064,6 +1066,7 @@ function getRailItemTargetLeft(element: HTMLElement, item: HTMLElement) {
 function HomePage({ navigationSource }: { navigationSource: NavigationSource }) {
   const { currentProfile, currentUser } = useAppUser()
   const guestAuth = useGuestAuthPrompt()
+  const weather = useManilaWeather()
   const initialHomeScrollCacheRef = useRef(readHomeScrollCache())
   const hasRestoredHomeScrollRef = useRef(false)
   const [activeTopPicksTab, setActiveTopPicksTab] = useState<'all' | 'popular' | 'recommended'>(
@@ -1494,6 +1497,7 @@ function HomePage({ navigationSource }: { navigationSource: NavigationSource }) 
             <div className="flex items-center justify-between gap-4">
               <p className="min-w-0 truncate text-[14px] text-[var(--text-muted)]">
                 {getTimeGreeting()}, <span className="font-semibold text-[var(--text-main)]">{greetingName}</span>
+                {weather ? <span className="font-data hidden text-[12px] sm:inline"> · {weather.temperature}°C {weather.label.toLowerCase()}</span> : null}
               </p>
               <div className="flex items-center gap-1.5 lg:hidden">
                 <HomeThemeToggleButton />
@@ -1516,6 +1520,12 @@ function HomePage({ navigationSource }: { navigationSource: NavigationSource }) 
               </span>
               <FontAwesomeIcon icon={faSliders} className="h-[18px] w-[18px] shrink-0" style={{ color: 'var(--home-eyebrow-icon)' }} />
             </button>
+
+            {weather?.isRaining ? (
+              <div className="mt-6 lg:max-w-[640px]">
+                <RainyDayBanner weather={weather} />
+              </div>
+            ) : null}
 
             <div className="mt-7 grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-6">
               <div className="min-w-0">

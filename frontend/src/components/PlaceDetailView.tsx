@@ -1033,7 +1033,7 @@ function PlaceDetailView({
     : 'absolute right-0 top-8 z-20 min-w-[11rem] overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-[0_12px_28px_rgba(27,26,23,0.12)]'
   const commentMenuItemClassName = isDarkTheme
     ? 'flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-bold text-[#d7e2f2] transition hover:!bg-[#17263b] hover:!text-[#f4f8ff] disabled:cursor-not-allowed disabled:text-[#7f94b1]'
-    : 'flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-bold text-slate-700 transition hover:bg-slate-50 hover:text-slate-950 disabled:cursor-not-allowed disabled:text-slate-400'
+    : 'flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-bold text-slate-700 transition hover:bg-slate-50 hover:text-slate-950 disabled:cursor-not-allowed disabled:text-[var(--text-disabled)]'
   const commentMenuItemDangerClassName = isDarkTheme
     ? 'flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-bold text-[#fda4a4] transition hover:!bg-[#301521] hover:!text-[#fecaca] disabled:cursor-not-allowed disabled:opacity-70'
     : 'flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-bold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70'
@@ -2567,7 +2567,7 @@ function PlaceDetailView({
                     type="button"
                     onClick={() => void handleSubmitReview()}
                     disabled={isReviewSubmitting || isReviewDeleting || reviewRating < 1}
-                    className="inline-flex min-h-10 items-center justify-center rounded-xl border border-[var(--accent)] bg-[var(--accent)] px-4 text-[13px] font-extrabold text-white shadow-[0_12px_24px_rgba(47,116,232,0.2)] transition hover:-translate-y-[1px] disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none disabled:opacity-100"
+                    className="inline-flex min-h-10 items-center justify-center rounded-xl border border-[var(--accent)] bg-[var(--accent)] px-4 text-[13px] font-extrabold text-white shadow-[0_12px_24px_rgba(47,116,232,0.2)] transition hover:-translate-y-[1px] disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-[var(--bg-soft)] disabled:text-slate-500 disabled:shadow-none disabled:opacity-100"
                   >
                     {isReviewSubmitting ? 'Saving...' : 'Save rating'}
                   </button>
@@ -2679,7 +2679,7 @@ function PlaceDetailView({
                           type="button"
                           onClick={() => void handleSubmitComment()}
                           disabled={isCommentSubmitting || !commentBody.trim()}
-                          className="rounded-lg border border-[var(--accent)] bg-[var(--accent)] px-4 py-2 text-[12px] font-extrabold text-white disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-200 disabled:text-slate-500 disabled:opacity-100"
+                          className="rounded-lg border border-[var(--accent)] bg-[var(--accent)] px-4 py-2 text-[12px] font-extrabold text-white disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-[var(--bg-soft)] disabled:text-slate-500 disabled:opacity-100"
                         >
                           {isCommentSubmitting ? 'Posting...' : 'Comment'}
                         </button>

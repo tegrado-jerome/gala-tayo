@@ -289,7 +289,7 @@ function MfaVerification({ session, nextPath: nextPathProp, onSuccess }: MfaVeri
           type="button"
           onClick={() => void handleSendCode()}
           disabled={isSendingCode || cooldownSeconds > 0}
-          className="font-semibold text-[var(--accent)] underline hover:text-[var(--accent-deep)] disabled:text-slate-300 disabled:no-underline"
+          className="font-semibold text-[var(--accent)] underline hover:text-[var(--accent-deep)] disabled:text-[var(--text-disabled)] disabled:no-underline"
         >
           {resendText}
         </button>

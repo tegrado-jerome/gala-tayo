@@ -1436,14 +1436,14 @@ function AskAiModePanel({
               placeholder="Message GalaTayo AI..."
               rows={1}
               disabled={isSubmitting || isUsagePending || (isLimitReached && isRegistered)}
-              className="ask-ai-composer-input min-h-[40px] max-h-[120px] flex-1 resize-none overflow-y-auto bg-transparent px-3 py-2 text-[15px] leading-relaxed text-slate-800 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed disabled:text-slate-300"
+              className="ask-ai-composer-input min-h-[40px] max-h-[120px] flex-1 resize-none overflow-y-auto bg-transparent px-3 py-2 text-[15px] leading-relaxed text-slate-800 outline-none placeholder:text-slate-400 disabled:cursor-not-allowed disabled:text-[var(--text-disabled)]"
             />
             <button
               type="button"
               onClick={() => (isSubmitting ? cancelAskAiRuntimeRequest() : handleSend())}
               disabled={!isSubmitting && (isUsagePending || (!draftQuestion.trim() && !isLimitReached) || (isLimitReached && isRegistered))}
               aria-label={isSubmitting ? 'Cancel request' : 'Send message'}
-              className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full bg-[var(--accent-deep)] text-white shadow-[0_8px_18px_rgba(23,37,84,0.24)] transition hover:bg-[var(--accent)] active:scale-95 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none"
+              className="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-full bg-[var(--accent-deep)] text-white shadow-[0_8px_18px_rgba(23,37,84,0.24)] transition hover:bg-[var(--accent)] active:scale-95 disabled:cursor-not-allowed disabled:bg-[var(--bg-soft)] disabled:text-[var(--text-disabled)] disabled:shadow-none"
             >
               {isSubmitting ? (
                 <svg className="h-4 w-4" viewBox="0 0 24 24">

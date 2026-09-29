@@ -580,7 +580,7 @@ export default function PromptBuilderModal({
                 type="button"
                 onClick={handleReset}
                 disabled={!showClearAll || isGeneratingPrompt}
-                className="inline-flex min-h-[42px] w-full items-center justify-center gap-2 rounded-full border border-[rgba(27,26,23,0.12)] bg-white px-4 py-2 text-[0.84rem] font-semibold text-slate-700 shadow-[0_1px_2px_rgba(27,26,23,0.04)] transition hover:border-[rgba(27,26,23,0.2)] hover:bg-slate-50 disabled:cursor-not-allowed disabled:border-[rgba(27,26,23,0.08)] disabled:bg-slate-50 disabled:text-slate-400 lg:min-h-[44px] lg:text-[0.88rem]"
+                className="inline-flex min-h-[42px] w-full items-center justify-center gap-2 rounded-full border border-[rgba(27,26,23,0.12)] bg-white px-4 py-2 text-[0.84rem] font-semibold text-slate-700 shadow-[0_1px_2px_rgba(27,26,23,0.04)] transition hover:border-[rgba(27,26,23,0.2)] hover:bg-slate-50 disabled:cursor-not-allowed disabled:border-[rgba(27,26,23,0.08)] disabled:bg-[var(--bg-soft)] disabled:text-[var(--text-disabled)] lg:min-h-[44px] lg:text-[0.88rem]"
               >
                 <TrashIcon />
                 <span>Clear all</span>
@@ -590,7 +590,7 @@ export default function PromptBuilderModal({
                 type="button"
                 onClick={handleGeneratePrompt}
                 disabled={isGeneratingPrompt || !hasInput}
-                className="inline-flex min-h-[42px] w-full items-center justify-center gap-2 rounded-full bg-[var(--accent-deep)] px-4 py-2 text-[0.86rem] font-semibold tracking-[-0.01em] text-white shadow-[0_8px_18px_rgba(23,45,107,0.22)] transition hover:bg-[#0f1f4d] disabled:cursor-not-allowed disabled:bg-slate-500 lg:min-h-[44px] lg:text-[0.9rem]"
+                className="inline-flex min-h-[42px] w-full items-center justify-center gap-2 rounded-full bg-[var(--accent-deep)] px-4 py-2 text-[0.86rem] font-semibold tracking-[-0.01em] text-white shadow-[0_8px_18px_rgba(23,45,107,0.22)] transition hover:bg-[#0f1f4d] disabled:cursor-not-allowed disabled:bg-[var(--bg-soft)]0 lg:min-h-[44px] lg:text-[0.9rem]"
               >
                 <GenerateIcon />
                 <span>{isGeneratingPrompt ? 'Generating...' : 'Generate'}</span>
