@@ -106,6 +106,13 @@ Azure Function App settings:
 - `ENABLE_ORYX_BUILD=true`
 - `SITE_URL` or `PUBLIC_SITE_URL` for explicit canonical URLs in SEO endpoints
 
+## CI/CD
+
+- `.github/workflows/azure-static-web-apps-*.yml` builds, tests and deploys the frontend on every push to `main` and builds a preview for each pull request. Production deploys queue instead of cancelling each other; only outdated PR previews are cancelled.
+- `.github/workflows/backend-deploy.yml` deploys the Function App on pushes to `main` that touch `backend/` (or on manual run). It builds on a Windows runner with Node 22 to match the Windows Consumption host, runs unit tests, and signs in to Azure with OIDC (`AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID` secrets for the `galatayo-github-deploy` app registration, which only has Website Contributor on `galatayo-api`). A health check runs after each deploy.
+
+Manual deploys are still possible:
+
 When deploying the backend Function App from Windows with VS Code or Azure Functions Core Tools,
 use remote build/app-service build. The backend `.funcignore` excludes local `node_modules` so Azure
 installs Linux-native production dependencies such as `sharp` during deployment.

@@ -13,9 +13,10 @@ permissions:
   contents: read
   pull-requests: write
 
+# Production deploys queue so back-to-back merges all ship; only superseded PR previews are cancelled.
 concurrency:
   group: azure-static-web-apps-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build_and_deploy_job:
@@ -40,6 +41,7 @@ jobs:
         run: |
           npm ci
           npm run validate
+          npm run test:unit
       - name: Generate static place listings
         working-directory: backend
         env:
