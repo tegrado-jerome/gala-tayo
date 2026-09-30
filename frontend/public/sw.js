@@ -1,4 +1,4 @@
-const APP_CACHE = 'galatayo-app-v4'
+const APP_CACHE = 'galatayo-app-v5'
 const MEDIA_CACHE = 'galatayo-media-v3'
 const MEDIA_DOMAIN = 'media.galatayo.app'
 const IMAGE_EXT = /\.(webp|jpg|jpeg|png|gif|svg|avif)(\?.*)?$/i

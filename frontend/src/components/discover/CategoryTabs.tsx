@@ -5,11 +5,12 @@ import {
   faBed,
   faBuildingColumns,
   faChurch,
-  faCompass,
   faFilm,
   faMartiniGlassCitrus,
   faMugHot,
   faPersonRunning,
+  faSliders,
+  faStar,
   faTree,
   faUtensils,
 } from '@fortawesome/free-solid-svg-icons'
@@ -30,41 +31,52 @@ const categoryIcons: Record<string, IconDefinition> = {
 }
 
 const tabs = [
-  { value: 'all', label: 'Lahat', href: '/places', icon: faCompass },
+  { value: 'all', label: 'For you', href: '/places', icon: faStar },
   ...placeCategories.map((category) => ({
     value: category.value,
     label: category.label,
     href: `/places/categories/${category.value}`,
-    icon: categoryIcons[category.value] ?? faCompass,
+    icon: categoryIcons[category.value] ?? faStar,
   })),
 ]
 
-// Airbnb-style icon tabs: icon over a small label, the active one underlined.
-function CategoryTabs({ active = 'all' }: { active?: string }) {
+// Category bar under the hero: icon over label, active item underlined in green.
+function CategoryTabs({ active = 'all', showFilters = false }: { active?: string; showFilters?: boolean }) {
   return (
-    <nav aria-label="Browse by category" className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0 [&::-webkit-scrollbar]:hidden">
-      <ul className="flex min-w-max items-stretch gap-6 sm:gap-8 lg:min-w-0 lg:justify-between">
-        {tabs.map((tab) => {
-          const isActive = tab.value === active
-          return (
-            <li key={tab.value}>
-              <InternalLink
-                href={tab.href}
-                aria-current={isActive ? 'page' : undefined}
-                className={`group flex h-full flex-col items-center gap-2 border-b-2 pb-3 pt-1 text-[12px] font-semibold transition-colors ${
-                  isActive
-                    ? 'border-[var(--text-main)] text-[var(--text-main)]'
-                    : 'border-transparent text-[var(--text-muted)] hover:border-[var(--line-strong)] hover:text-[var(--text-main)]'
-                }`}
-              >
-                <FontAwesomeIcon icon={tab.icon} className={`h-[22px] w-[22px] transition-transform group-hover:-translate-y-0.5 ${isActive ? 'text-[var(--primary)]' : ''}`} />
-                <span className="whitespace-nowrap">{tab.label}</span>
-              </InternalLink>
-            </li>
-          )
-        })}
-      </ul>
-    </nav>
+    <div className="flex items-center gap-6 border-b border-[var(--line)]">
+      <nav aria-label="Browse by category" className="-mx-4 min-w-0 flex-1 overflow-x-auto px-4 [scrollbar-width:none] sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0 [&::-webkit-scrollbar]:hidden">
+        <ul className="flex min-w-max items-stretch gap-7 sm:gap-10">
+          {tabs.map((tab) => {
+            const isActive = tab.value === active
+            return (
+              <li key={tab.value}>
+                <InternalLink
+                  href={tab.href}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`group flex h-[84px] flex-col items-center justify-center gap-2 border-b-[2.5px] pt-1 text-[12px] font-semibold transition-colors sm:h-[96px] sm:text-[13px] ${
+                    isActive
+                      ? 'border-[var(--primary)] text-[var(--text-main)]'
+                      : 'border-transparent text-[var(--text-muted)] hover:border-[var(--line-strong)] hover:text-[var(--text-main)]'
+                  }`}
+                >
+                  <FontAwesomeIcon icon={tab.icon} className={`h-[22px] w-[22px] sm:h-6 sm:w-6 ${isActive ? 'text-[var(--primary)]' : ''}`} />
+                  <span className="whitespace-nowrap">{tab.label}</span>
+                </InternalLink>
+              </li>
+            )
+          })}
+        </ul>
+      </nav>
+      {showFilters ? (
+        <InternalLink
+          href="/search"
+          className="hidden shrink-0 items-center gap-2 rounded-xl border border-[var(--line-strong)] px-4 py-3 text-[14px] font-bold text-[var(--text-main)] hover:border-[var(--text-main)] lg:inline-flex"
+        >
+          <FontAwesomeIcon icon={faSliders} className="h-4 w-4" />
+          Filters
+        </InternalLink>
+      ) : null}
+    </div>
   )
 }
 

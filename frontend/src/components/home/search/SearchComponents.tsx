@@ -629,7 +629,7 @@ function MobileResultIntro({
       <section className="px-4 pb-4 pt-5">
         <SearchPageBreadcrumb className="mb-3" />
         <div className="flex items-start justify-between gap-3">
-          <h1 className="min-w-0 flex-1 text-[24px] font-medium leading-tight text-[var(--text-main)]">{heading}</h1>
+          <h1 className="min-w-0 flex-1 text-[24px] font-extrabold leading-tight tracking-[-0.02em] text-[var(--text-main)]">{heading}</h1>
           <SearchResetButton onClick={onClearSearch} />
         </div>
         <p className="mt-1 text-[14px] text-[var(--text-muted)]">{subheading}</p>
@@ -772,7 +772,7 @@ function MobileResultsTabs({
 }) {
   const itemClass = (isSelected: boolean) =>
     `inline-flex h-10 items-center justify-center gap-2 rounded-full text-[14px] font-semibold transition-colors ${
-      isSelected ? 'bg-[var(--text-main)] text-[var(--bg)]' : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
+      isSelected ? 'bg-[var(--primary)] text-white' : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
     }`
 
   return (
@@ -929,7 +929,7 @@ function MobileResultsView({
       <button
         type="button"
         onClick={() => onViewChange(selectedView === 'cards' ? 'map' : 'cards')}
-        className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+5.25rem)] left-1/2 z-[5500] inline-flex h-12 -translate-x-1/2 items-center gap-2 rounded-full bg-[var(--ink)] px-5 text-[14px] font-semibold text-[var(--bg)] shadow-[0_8px_24px_rgba(0,0,0,0.24)] transition-transform hover:scale-105 lg:hidden"
+        className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+5.25rem)] left-1/2 z-[5500] inline-flex h-12 -translate-x-1/2 items-center gap-2 rounded-full bg-[var(--primary)] px-5 text-[14px] font-bold text-white shadow-[0_10px_24px_-6px_rgba(var(--accent-rgb),0.7)] transition-transform hover:scale-105 lg:hidden"
       >
         {selectedView === 'cards' ? <MapOutlineIcon className="h-4 w-4" /> : <ListIcon className="h-4 w-4" />}
         {selectedView === 'cards' ? 'Map' : 'List'}
@@ -1013,7 +1013,7 @@ function DesktopResultsView({
 
         <div className="mt-6 flex items-end justify-between gap-4">
           <div className="min-w-0">
-            <h1 className="text-[26px] font-medium leading-tight text-[var(--text-main)]">{heading}</h1>
+            <h1 className="text-[28px] font-extrabold leading-tight tracking-[-0.02em] text-[var(--text-main)]">{heading}</h1>
             <p className="mt-1 text-[14px] text-[var(--text-muted)]">{subheading}</p>
           </div>
           {isRefreshing ? <InlineSkeleton className="shrink-0" /> : null}

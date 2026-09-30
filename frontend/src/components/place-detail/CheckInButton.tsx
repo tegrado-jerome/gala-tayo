@@ -60,7 +60,7 @@ function CheckInButton({
         </p>
       </div>
       {status.kind === 'done' ? (
-        <InternalLink href="/passport" className="inline-flex h-10 items-center rounded-full bg-[var(--ink)] px-4 text-[13px] font-semibold text-[var(--bg)]">
+        <InternalLink href="/passport" className="inline-flex h-10 items-center rounded-full bg-[var(--primary)] px-4 text-[13px] font-bold text-white">
           View passport
         </InternalLink>
       ) : (
@@ -68,9 +68,9 @@ function CheckInButton({
           type="button"
           onClick={() => void checkIn()}
           disabled={status.kind === 'working'}
-          className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--ink)] px-4 text-[13px] font-semibold text-[var(--bg)] disabled:opacity-60"
+          className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--primary)] px-4 text-[13px] font-bold text-white disabled:opacity-60"
         >
-          <FontAwesomeIcon icon={faStamp} className="h-3.5 w-3.5 text-[var(--primary)]" />
+          <FontAwesomeIcon icon={faStamp} className="h-3.5 w-3.5 text-white" />
           {status.kind === 'working' ? 'Checking…' : 'Check in'}
         </button>
       )}

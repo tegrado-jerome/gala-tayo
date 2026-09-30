@@ -17,10 +17,10 @@ function PlanWithAiCard() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-[20px] bg-[var(--ink)] p-4 text-[var(--bg)] sm:p-5"
+      className="rounded-[20px] bg-[linear-gradient(150deg,#04583a_0%,#067647_55%,#0b8f5a_100%)] p-4 text-white sm:p-5"
     >
       <div className="flex items-center justify-between gap-3">
-        <span className="font-data inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.12em] text-[var(--primary)]">
+        <span className="font-data inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.12em] text-[#7be0ae]">
           <FontAwesomeIcon icon={faWandMagicSparkles} className="h-3 w-3" />
           Plan with AI
         </span>
@@ -36,12 +36,12 @@ function PlanWithAiCard() {
           value={prompt}
           onChange={(event) => setPrompt(event.target.value)}
           placeholder={`“${examplePrompt}…”`}
-          className="font-display min-w-0 flex-1 bg-transparent text-[17px] italic text-[var(--bg)] outline-none placeholder:text-[var(--bg)] placeholder:opacity-55"
+          className="font-display min-w-0 flex-1 bg-transparent text-[17px] italic text-white outline-none placeholder:text-white placeholder:opacity-70"
         />
         <button
           type="submit"
           aria-label="Build my gala plan"
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[var(--primary)] text-white transition-transform hover:scale-105 active:scale-95"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#ffffff] text-[#067647] transition-transform hover:scale-105 active:scale-95"
         >
           <FontAwesomeIcon icon={faArrowRight} className="h-4 w-4" />
         </button>

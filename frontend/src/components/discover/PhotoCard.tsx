@@ -70,7 +70,6 @@ function PhotoCard({ place, onGuestFavorite, badge, priority = false, onOpen, on
   const placeId = place.id.trim()
   const isSaved = [place.slug, placeId].some((key) => isPlaceSaved(key))
   const href = getPlaceHref(place)
-  const location = [place.localArea || place.area || place.city, place.category].filter(Boolean).join(' · ')
   const price = formatPrice(place.budgetMin)
 
   const prefetch = () => {
@@ -94,6 +93,11 @@ function PhotoCard({ place, onGuestFavorite, badge, priority = false, onOpen, on
     }
   }
 
+  const isFree = place.budgetMin != null && place.budgetMin <= 0
+  const badgeLabel = badge ?? (isFree ? 'Libre' : null)
+  const isSellerBadge = badgeLabel != null && badgeLabel !== 'Libre'
+  const areaText = place.localArea || place.area || place.city
+
   return (
     <article
       className="group relative min-w-0"
@@ -107,7 +111,7 @@ function PhotoCard({ place, onGuestFavorite, badge, priority = false, onOpen, on
       <InternalLink
         href={href}
         ariaLabel={place.name}
-        className="block rounded-[20px] outline-offset-4"
+        className="block rounded-[14px] outline-offset-4"
         onClick={(event) => {
           onOpen?.()
           if (onActivate) {
@@ -117,8 +121,8 @@ function PhotoCard({ place, onGuestFavorite, badge, priority = false, onOpen, on
         }}
       >
         <div
-          className={`relative aspect-square overflow-hidden rounded-[20px] bg-[var(--bg-soft)] ${
-            isSelected ? 'ring-2 ring-[var(--text-main)] ring-offset-2 ring-offset-[var(--bg)]' : ''
+          className={`relative aspect-[3/2] overflow-hidden rounded-[14px] bg-[var(--bg-soft)] ${
+            isSelected ? 'ring-2 ring-[var(--primary)] ring-offset-2 ring-offset-[var(--bg)]' : ''
           }`}
         >
           {imageUrl ? (
@@ -129,27 +133,40 @@ function PhotoCard({ place, onGuestFavorite, badge, priority = false, onOpen, on
               decoding="async"
               fetchPriority={priority ? 'high' : 'low'}
               onError={() => setFailed((current) => [...current, imageUrl])}
-              className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+              className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
             />
           ) : null}
-          {badge ? (
-            <span className="absolute left-3 top-3 rounded-full bg-[rgba(255,253,248,0.94)] px-2.5 py-1 text-[12px] font-semibold text-[#1b1a17] shadow-[0_2px_8px_rgba(0,0,0,0.12)]">
-              {badge}
+          {badgeLabel ? (
+            <span
+              className={`absolute left-3 top-3 rounded-md px-2 py-1 text-[12px] font-bold ${
+                isSellerBadge ? 'bg-[#067647] text-white' : 'bg-[#e6f6ee] text-[#067647]'
+              }`}
+            >
+              {badgeLabel}
             </span>
           ) : null}
         </div>
-        <div className="mt-2.5 min-w-0 px-0.5">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="min-w-0 truncate text-[15px] font-semibold leading-5 text-[var(--text-main)]">{place.name}</h3>
+        <div className="mt-3 min-w-0">
+          <p className="flex min-w-0 items-center gap-1.5 text-[13px] font-medium text-[var(--text-muted)]">
             {place.rating ? (
-              <span className="inline-flex shrink-0 items-center gap-1 text-[13px] text-[var(--text-main)]">
+              <span className="inline-flex shrink-0 items-center gap-1 font-bold text-[var(--primary)]">
                 <FontAwesomeIcon icon={faStar} className="h-3 w-3" />
                 {place.rating.toFixed(1)}
               </span>
             ) : null}
-          </div>
-          {location ? <p className="truncate text-[14px] leading-5 text-[var(--text-muted)]">{location}</p> : null}
-          {price ? <p className="text-[14px] leading-5 text-[var(--text-main)]"><span className="font-semibold">{price}</span>{price !== 'Libre' ? ' / tao' : ''}</p> : null}
+            {place.rating && areaText ? <span aria-hidden="true">·</span> : null}
+            {areaText ? <span className="truncate">{areaText}</span> : null}
+          </p>
+          <h3 className="mt-1 line-clamp-2 text-[17px] font-bold leading-[1.3] tracking-[-0.01em] text-[var(--text-main)]">{place.name}</h3>
+          {place.category ? <p className="mt-1 truncate text-[14px] text-[var(--text-strong)]">{place.category}</p> : null}
+          {price ? (
+            <div className="mt-2.5">
+              <span className="block text-[12px] text-[var(--text-muted)]">{isFree ? 'Entrance' : 'from'}</span>
+              <span className={`text-[17px] font-extrabold ${isFree ? 'text-[var(--primary)]' : 'text-[var(--text-main)]'}`}>
+                {isFree ? 'Libre' : price.replace(/^from /, '')}
+              </span>
+            </div>
+          ) : null}
         </div>
       </InternalLink>
       <button
@@ -157,12 +174,9 @@ function PhotoCard({ place, onGuestFavorite, badge, priority = false, onOpen, on
         onClick={(event) => void toggleSave(event)}
         aria-pressed={isSaved}
         aria-label={isSaved ? `Remove ${place.name} from saved` : `Save ${place.name}`}
-        className="absolute right-2.5 top-2.5 flex h-9 w-9 items-center justify-center rounded-full transition-transform hover:scale-110 active:scale-95"
+        className="absolute right-3 top-3 flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[rgba(255,255,255,0.95)] text-[#101828] shadow-[0_2px_8px_rgba(0,0,0,0.15)] transition-transform hover:scale-110 active:scale-95"
       >
-        <FontAwesomeIcon
-          icon={isSaved ? faHeart : faHeartOutline}
-          className={`h-[20px] w-[20px] drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)] ${isSaved ? 'text-[var(--primary)]' : 'text-white'}`}
-        />
+        <FontAwesomeIcon icon={isSaved ? faHeart : faHeartOutline} className={`h-4 w-4 ${isSaved ? 'text-[#067647]' : ''}`} />
       </button>
     </article>
   )

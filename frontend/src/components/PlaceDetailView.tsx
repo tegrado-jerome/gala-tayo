@@ -2754,9 +2754,9 @@ function PlaceDetailView({
           <section className="pb-6 pt-6 lg:pt-8">
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div className="min-w-0">
-                <h1 className="min-w-0 text-[26px] font-medium leading-tight text-[var(--text-main)] sm:text-[32px]">{place.name}</h1>
+                <h1 className="min-w-0 text-[26px] font-extrabold leading-tight tracking-[-0.025em] text-[var(--text-main)] sm:text-[34px]">{place.name}</h1>
                 <p className="mt-1.5 flex flex-wrap items-center gap-x-1.5 text-[15px] text-[var(--text-main)]">
-                  <span className="font-semibold">★ {headlineRating.toFixed(1)}</span>
+                  <span className="font-bold text-[var(--primary)]">★ {headlineRating.toFixed(1)}</span>
                   <span className="text-[var(--text-muted)]">
                     · {formatRatingCount(headlineReviewCount)} {headlineReviewCount === 1 ? 'rating' : 'ratings'} · {categoryLabel} · {locationLabel}
                   </span>
