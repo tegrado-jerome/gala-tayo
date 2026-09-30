@@ -20,10 +20,10 @@ function RainyDayBanner({ weather }: { weather: ManilaWeather }) {
         </span>
         <div className="min-w-0">
           <p className="font-display text-[20px] leading-tight text-[var(--text-main)]">
-            Umuulan? <em className="text-[var(--primary-dark)]">Indoor picks muna.</em>
+            Rainy today? Try indoor spots.
           </p>
           <p className="font-data mt-0.5 text-[12px] text-[var(--text-strong)]">
-            {weather.label} sa Metro Manila · {weather.temperature}°C
+            {weather.label} in Metro Manila · {weather.temperature}°C
           </p>
         </div>
       </div>
@@ -38,7 +38,7 @@ function RainyDayBanner({ weather }: { weather: ManilaWeather }) {
           </InternalLink>
         ))}
         <InternalLink
-          href={`/plan-with-ai?q=${encodeURIComponent('Rainy day indoor gala, museum tapos cafe')}`}
+          href={`/plan-with-ai?q=${encodeURIComponent('Rainy day indoors, a museum then a cafe')}`}
           className="inline-flex h-9 items-center rounded-full bg-[var(--ink)] px-3.5 text-[13px] font-medium text-[var(--bg)]"
         >
           Plan a rainy day

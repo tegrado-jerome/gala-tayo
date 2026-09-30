@@ -179,6 +179,29 @@ export default function SharedPlacePage({
     return null
   }
 
+  // Optional schema.org fields; each is only added when the place has the data.
+  function buildPlaceSchemaExtras(detail: NonNullable<typeof place>) {
+    const latitude = Number(detail.latitude ?? detail.coordinates?.lat)
+    const longitude = Number(detail.longitude ?? detail.coordinates?.lng)
+    const rating = Number(detail.rating)
+    const reviewCount = Number(detail.ratingCount ?? String(detail.reviewCount ?? "").replace(/D/g, ""))
+    const budget = detail.budget_min == null ? null : Number(detail.budget_min)
+    return {
+      ...(Number.isFinite(latitude) && Number.isFinite(longitude) && (latitude !== 0 || longitude !== 0)
+        ? { geo: { '@type': 'GeoCoordinates', latitude, longitude } }
+        : {}),
+      ...(rating > 0 && reviewCount > 0
+        ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: Number(rating.toFixed(1)), reviewCount, bestRating: 5, worstRating: 1 } }
+        : {}),
+      ...(budget != null && Number.isFinite(budget)
+        ? budget <= 0
+          ? { isAccessibleForFree: true }
+          : { priceRange: `From PHP ${Math.round(budget)}` }
+        : {}),
+      ...(detail.googleMapsUrl ? { hasMap: detail.googleMapsUrl } : {}),
+    }
+  }
+
   const placeJsonLd =
     place && areaMeta && canonicalPath
       ? {
@@ -214,6 +237,7 @@ export default function SharedPlacePage({
                 addressCountry: 'PH',
               },
               image: place.imageUrl || place.curatedImageUrls?.[0] || undefined,
+              ...buildPlaceSchemaExtras(place),
             },
             ...(buildPlaceFaqSchema(place) ? [buildPlaceFaqSchema(place)!] : []),
           ],

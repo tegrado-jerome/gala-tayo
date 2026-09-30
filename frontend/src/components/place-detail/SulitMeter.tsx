@@ -1,10 +1,10 @@
 // "Sulit" = good value. Levels follow typical Metro Manila per-person spend for a gala stop.
 const LEVELS = [
-  { max: 0, label: 'Libre!' },
-  { max: 250, label: 'Super sulit' },
-  { max: 600, label: 'Sulit' },
-  { max: 1200, label: 'Sakto lang' },
-  { max: 2500, label: 'Medyo pricey' },
+  { max: 0, label: 'Free' },
+  { max: 250, label: 'Great value' },
+  { max: 600, label: 'Good value' },
+  { max: 1200, label: 'Fair' },
+  { max: 2500, label: 'Pricey' },
   { max: Number.POSITIVE_INFINITY, label: 'Splurge' },
 ]
 
@@ -18,7 +18,7 @@ function SulitMeter({ pesos, compact = false }: { pesos: number | null | undefin
 
   const amount = Math.max(0, Math.round(Number(pesos)))
   const { index, label } = getSulitLevel(amount)
-  // Libre (index 0) fills nothing; each level after that adds one ₱ out of five.
+  // Free (index 0) fills nothing; each level after that adds one ₱ out of five.
   const filled = index
 
   return (
@@ -27,7 +27,7 @@ function SulitMeter({ pesos, compact = false }: { pesos: number | null | undefin
       role="img"
       aria-label={`Sulit Meter: ${label}, about ₱${amount.toLocaleString('en-PH')} per person`}
     >
-      <span className="font-data text-[10px] uppercase tracking-[0.1em] text-[var(--text-muted)]">Sulit</span>
+      <span className="font-data text-[10px] uppercase tracking-[0.1em] text-[var(--text-muted)]">Value</span>
       <span className="flex items-center gap-0.5" aria-hidden="true">
         {Array.from({ length: 5 }, (_, position) => (
           <span
@@ -43,7 +43,7 @@ function SulitMeter({ pesos, compact = false }: { pesos: number | null | undefin
       <span className="text-[12px] font-semibold text-[var(--text-main)]">{label}</span>
       {!compact ? (
         <span className="font-data text-[12px] text-[var(--text-muted)]">
-          {amount === 0 ? 'free entry' : `~₱${amount.toLocaleString('en-PH')}/tao`}
+          {amount === 0 ? 'free entry' : `~₱${amount.toLocaleString('en-PH')} per person`}
         </span>
       ) : null}
     </div>

@@ -5,7 +5,10 @@ import { AppIcon, getCategoryIconName } from '../components/AppIcon'
 import AppHeader from '../components/AppHeader'
 import Breadcrumb from '../components/navigation/Breadcrumb'
 import CompactPagination from '../components/CompactPagination'
-import PlaceCard, { type PlaceCardData } from '../components/PlaceCard'
+import type { PlaceCardData } from '../components/PlaceCard'
+import PhotoCard from '../components/discover/PhotoCard'
+import { toPhotoCardPlace } from '../components/home/search/SearchComponents'
+import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
 import PlaceListingSkeleton from '../components/PlaceListingSkeleton'
 import SeoHead from '../components/SeoHead'
 import { PageContainer, PageShell, ResponsiveGrid } from '../components/layout/ResponsiveLayouts'
@@ -48,6 +51,7 @@ function sortPlacesAlphabetically(places: SeoPlaceSummary[]) {
 }
 
 function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'push' }: CategoryPlacesPageProps) {
+  const listingGuestAuth = useGuestAuthPrompt()
   const [routeCache] = useState(() => {
     const currentPath = `${window.location.pathname}${window.location.search}`
     return navigationSource === 'pop' ? readListingRouteCache() : peekPendingListingRouteCache(currentPath)
@@ -377,7 +381,7 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
                   </div>
                 </div>
                 <div className={`mt-4 transition ${isPageTransitionLoading ? 'pointer-events-none opacity-60' : 'opacity-100'}`}>
-                  <ResponsiveGrid className="gap-4">
+                  <ResponsiveGrid className="gap-x-5 gap-y-9">
                   {places.map((rawPlace, index) => {
                     const place = mapSeoPlaceToCard(rawPlace) as PlaceCardData
                     const basePlace = {
@@ -396,13 +400,12 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
                       : basePlace
                     return (
                       <div key={rawPlace.id}>
-                        <PlaceCard
-                          place={resolvedPlace}
+                        <PhotoCard
+                          place={toPhotoCardPlace(resolvedPlace)}
                           isSelected={selectedPlaceId === rawPlace.id}
-                          searchResultCard
-                          imagePriority={index < 4}
-                          onSelect={() => setSelectedPlaceId(rawPlace.id)}
-                          dataSearchPlaceId={rawPlace.id}
+                          priority={index < 4}
+                          badge={resolvedPlace.budget_min === 0 ? 'Free' : null}
+                          onGuestFavorite={() => listingGuestAuth.open('favorite')}
                           onOpen={() => {
                             setSelectedPlaceId(rawPlace.id)
                             writeListingRouteCache({
@@ -459,6 +462,7 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
         ) : null}
         </PageContainer>
       </main>
+      {listingGuestAuth.promptElement}
     </PageShell>
   )
 }

@@ -19,9 +19,9 @@ import { navigateToPath, replaceWithPath } from '../utils/navigation'
 type Status = 'idle' | 'building' | 'ready' | 'saving' | 'error'
 
 const examplePrompts = [
-  'Chill Sunday sa Manila, 4 kami, ₱800 each, may sunset',
-  'Date sa BGC, ₱2k total, dinner tapos sine',
-  'Rainy day indoor gala sa Makati, museum + cafe',
+  'Relaxed Sunday in Manila for 4, ₱800 each, ending at sunset',
+  'Dinner and a movie in BGC for two, ₱2,000 budget',
+  'Rainy day in Makati: a museum, then a cafe',
 ]
 
 function toTimelineStops(draft: GalaPlanAiDraft): TimelineStop[] {
@@ -37,7 +37,7 @@ function toTimelineStops(draft: GalaPlanAiDraft): TimelineStop[] {
 function BuildingState() {
   return (
     <div className="space-y-3" aria-live="polite">
-      <p className="font-display text-[20px] italic text-[var(--text-main)]">Binubuo ang gala mo…</p>
+      <p className="font-display text-[20px] italic text-[var(--text-main)]">Building your plan…</p>
       {[0, 1, 2].map((index) => (
         <div key={index} className="flex gap-3.5">
           <span className="mt-3 h-8 w-8 shrink-0 animate-pulse rounded-full bg-[var(--primary-soft)]" />
@@ -163,7 +163,7 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
             Plan with AI
           </p>
           <h1 className="mt-1.5 text-[30px] font-medium leading-[1.1] text-[var(--text-main)] sm:text-[38px]">
-            Isang sentence, <em className="text-[var(--primary)]">buong araw</em> na gala.
+            Plan a full day in one sentence
           </h1>
         </header>
 
@@ -182,7 +182,7 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
               }}
               maxLength={400}
               rows={2}
-              placeholder="Saan, kailan, ilan kayo, magkano?"
+              placeholder="Where, when, how many people, what budget?"
               className="font-display min-h-[52px] flex-1 resize-none bg-transparent py-2 text-[17px] italic leading-snug text-[var(--bg)] outline-none placeholder:text-[var(--bg)] placeholder:opacity-50"
             />
             <button
@@ -240,7 +240,7 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
                 {draft.summary ? <p className="mt-4 text-[14px] leading-6 text-[var(--text-strong)]">{draft.summary}</p> : null}
 
                 <div className="mt-4 flex items-center gap-3">
-                  <span className="text-[13px] text-[var(--text-muted)]">Ilan kayo?</span>
+                  <span className="text-[13px] text-[var(--text-muted)]">Group size</span>
                   <div className="flex items-center rounded-full border border-[var(--line)]">
                     <button type="button" aria-label="Fewer people" onClick={() => setGroupSize((size) => Math.max(1, size - 1))} className="flex h-9 w-9 items-center justify-center text-[var(--text-strong)]">
                       <FontAwesomeIcon icon={faMinus} className="h-3 w-3" />

@@ -41,7 +41,7 @@ function CheckInButton({
       setStatus({
         kind: 'done',
         message: result.new_stamp_city
-          ? `Bagong stamp: ${result.new_stamp_city}! Streak: ${result.streak_weeks} ${result.streak_weeks === 1 ? 'week' : 'weeks'}.`
+          ? `New stamp: ${result.new_stamp_city}. Streak: ${result.streak_weeks} ${result.streak_weeks === 1 ? 'week' : 'weeks'}.`
           : `Checked in at ${placeName}. Streak: ${result.streak_weeks} ${result.streak_weeks === 1 ? 'week' : 'weeks'}.`,
       })
     } catch (error) {
@@ -52,7 +52,7 @@ function CheckInButton({
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[16px] border border-dashed border-[var(--line-strong)] px-4 py-3">
       <div className="min-w-0 flex-1">
-        <p className="text-[14px] font-semibold text-[var(--text-main)]">Nandito ka?</p>
+        <p className="text-[14px] font-semibold text-[var(--text-main)]">Here now?</p>
         <p className="text-[12px] text-[var(--text-muted)]" aria-live="polite">
           {status.kind === 'done' || status.kind === 'error'
             ? status.message
@@ -60,7 +60,7 @@ function CheckInButton({
         </p>
       </div>
       {status.kind === 'done' ? (
-        <InternalLink href="/passport" className="inline-flex h-10 items-center rounded-full bg-[var(--ink)] px-4 text-[13px] font-semibold text-[var(--bg)]">
+        <InternalLink href="/passport" className="inline-flex h-10 items-center rounded-full bg-[var(--primary)] px-4 text-[13px] font-bold text-white">
           View passport
         </InternalLink>
       ) : (
@@ -68,9 +68,9 @@ function CheckInButton({
           type="button"
           onClick={() => void checkIn()}
           disabled={status.kind === 'working'}
-          className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--ink)] px-4 text-[13px] font-semibold text-[var(--bg)] disabled:opacity-60"
+          className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--primary)] px-4 text-[13px] font-bold text-white disabled:opacity-60"
         >
-          <FontAwesomeIcon icon={faStamp} className="h-3.5 w-3.5 text-[var(--primary)]" />
+          <FontAwesomeIcon icon={faStamp} className="h-3.5 w-3.5 text-white" />
           {status.kind === 'working' ? 'Checking…' : 'Check in'}
         </button>
       )}

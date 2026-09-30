@@ -7,7 +7,7 @@ import InternalLink from './InternalLink'
 import MapView from './MapView'
 import ReportUserModal from './ReportUserModal'
 import PlaceImageNotice from './PlaceImageNotice'
-import { PageContainer, PageShell, CardSurface } from './layout/ResponsiveLayouts'
+import { PageContainer, PageShell } from './layout/ResponsiveLayouts'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCamera, faCheck, faComment, faEllipsis, faFlag, faPen, faReply, faTrash, faWallet, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { getCuratedPlaceImages, normalizePlaceSlug } from '../data/curatedPlaceImages'
@@ -29,7 +29,6 @@ import { trackPlaceReportSubmitted, trackPlaceShared } from '../utils/analytics'
 import { Icon } from './place-detail/Icon'
 import { MemberAvatar } from './place-detail/MemberAvatar'
 import { SectionHeading } from './place-detail/SectionHeading'
-import { ActionButton } from './place-detail/ActionButton'
 import SulitMeter from './place-detail/SulitMeter'
 import CheckInButton from './place-detail/CheckInButton'
 import { GoodForList } from './place-detail/GoodForList'
@@ -117,16 +116,19 @@ function buildPriceBadgeLabel(
   placeName?: string | null,
 ) {
   const parsedBudgetMin = typeof budgetMin === 'number' ? budgetMin : Number(budgetMin)
+  if (Number.isFinite(parsedBudgetMin) && parsedBudgetMin <= 0) {
+    return 'Free entry'
+  }
   if (Number.isFinite(parsedBudgetMin)) {
-    return `Starting from \u20b1${new Intl.NumberFormat('en-US').format(Math.max(0, Math.floor(parsedBudgetMin)))}`
+    return `Starting from ₱${new Intl.NumberFormat('en-US').format(Math.max(0, Math.floor(parsedBudgetMin)))}`
   }
 
   const cleanedBudgetNote = cleanString(budgetNote)
   if (cleanedBudgetNote) {
-    const amountMatch = cleanedBudgetNote.match(/(?:\u20b1|PHP\s*)\s*([0-9][0-9,]*)/i)
+    const amountMatch = cleanedBudgetNote.match(/(?:₱|PHP\s*)\s*([0-9][0-9,]*)/i)
     const parsedAmount = amountMatch ? Number(amountMatch[1].replace(/,/g, '')) : NaN
     if (Number.isFinite(parsedAmount)) {
-      return `Starting from \u20b1${new Intl.NumberFormat('en-US').format(Math.max(0, Math.floor(parsedAmount)))}`
+      return `Starting from ₱${new Intl.NumberFormat('en-US').format(Math.max(0, Math.floor(parsedAmount)))}`
     }
 
     const searchableText = [placeName, category, cleanedBudgetNote].filter(Boolean).join(' ').toLowerCase()
@@ -452,7 +454,7 @@ function PlacePhoto({
           </div>
         ) : (
 
-        <div className="grid md:grid-cols-[minmax(0,1.32fr)_minmax(17rem,0.82fr)] md:gap-4 lg:grid-cols-[minmax(0,1.62fr)_minmax(21rem,0.78fr)] lg:gap-5">
+        <div className={photos.length > 1 ? 'grid md:grid-cols-[minmax(0,1.32fr)_minmax(17rem,0.82fr)] md:gap-4 lg:grid-cols-[minmax(0,1.62fr)_minmax(21rem,0.78fr)] lg:gap-5' : 'grid'}>
           <div className={`${desktopGlassFrameClassName} h-full`}>
             <div className="relative isolate h-full overflow-hidden">
               <div className="relative h-full min-h-[23.5rem] overflow-hidden bg-[rgba(27,26,23,0.08)] lg:min-h-[28rem]">
@@ -548,6 +550,7 @@ function PlacePhoto({
             </div>
           </div>
 
+          {photos.length > 1 ? (
           <div className="grid min-h-[23.5rem] grid-rows-2 gap-4 lg:min-h-[28rem] lg:gap-5">
             {[0, 1].map((slotIndex) => {
               const photoIndex = sidePhotoIndexes[slotIndex]
@@ -610,6 +613,7 @@ function PlacePhoto({
               )
             })}
           </div>
+          ) : null}
         </div>
         )}
       </div>
@@ -991,13 +995,6 @@ function PlaceDetailView({
   const [placeConcernError, setPlaceConcernError] = useState('')
   const [isPlaceConcernSubmitting, setIsPlaceConcernSubmitting] = useState(false)
   const [isReportSubmitting, setIsReportSubmitting] = useState(false)
-  const [isDetailsExpanded, setIsDetailsExpanded] = useState(false)
-  const [isDesktop, setIsDesktop] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 1024)
-  useEffect(() => {
-    const update = () => setIsDesktop(window.innerWidth >= 1024)
-    window.addEventListener('resize', update)
-    return () => window.removeEventListener('resize', update)
-  }, [])
   const commentMenuRef = useRef<HTMLDivElement | null>(null)
   const { isPlaceSaved, saveFavorite, removeFavorite } = useSavedFavorites()
   const { resolvedTheme } = useTheme()
@@ -1058,7 +1055,7 @@ function PlaceDetailView({
   const approvedImageCount = place.approvedImageCount ?? 0
   const budgetLabel = (() => {
     const parts: string[] = []
-    if (place.budget_min != null) parts.push(`From \u20b1${Number(place.budget_min).toLocaleString()}`)
+    if (place.budget_min != null) parts.push(`From ₱${Number(place.budget_min).toLocaleString()}`)
     const note = cleanString(place.budget_notes)
     if (note) parts.push(note)
     return parts.join(' · ') || 'Not available'
@@ -1167,10 +1164,6 @@ function PlaceDetailView({
       left: 0,
       behavior: 'auto',
     })
-  }, [place.id])
-
-  useEffect(() => {
-    setIsDetailsExpanded(false)
   }, [place.id])
 
   useEffect(() => {
@@ -2728,7 +2721,7 @@ function PlaceDetailView({
     <PageShell tone="surface">
       <AppHeader />
 
-      <main className="w-full pb-36 pt-0 sm:pb-12 sm:pt-0 md:pt-6">
+      <main className="w-full pb-44 pt-0 lg:pb-16 lg:pt-6">
         <PageContainer size="wide">
           <Breadcrumb
             showBack
@@ -2758,222 +2751,213 @@ function PlaceDetailView({
             priceBadgeLabel={priceBadgeLabel}
           />
 
-          <section className="py-3 lg:py-4">
-            <div className="flex flex-col gap-3 lg:gap-4">
-              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                <div className="min-w-0">
-                  <h1 className="min-w-0 text-[26px] font-black leading-tight text-slate-950 sm:text-[32px]">{place.name}</h1>
-                  <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[14px] font-semibold text-slate-600">
-                    <span className="text-[15px] font-black text-slate-950">{headlineRating.toFixed(1)}</span>
-                    <StarsDisplay rating={Math.round(headlineRating)} compact />
-                    <span className="text-slate-500">
-                      ({formatRatingCount(headlineReviewCount)} {headlineReviewCount === 1 ? 'rating' : 'ratings'})
-                    </span>
-                  </div>
-
-                  <div className="mt-3 grid w-full max-w-[28rem] grid-cols-2 gap-2 min-[360px]:grid-cols-3 sm:gap-2.5 md:mt-4 lg:flex lg:max-w-none">
-                    <button
-                      type="button"
-                      onClick={handleAddToPlan}
-                      className="col-span-2 inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-[var(--primary)] min-[360px]:col-span-3 px-5 text-[14px] font-semibold text-white transition-opacity hover:opacity-95 lg:flex-[1.4]"
-                    >
-                      <span aria-hidden="true" className="text-[18px] leading-none">+</span>
-                      Add to Gala Plan
-                    </button>
-                    <ActionButton icon="save" onClick={handleSavePlace} disabled={isSaving} active={isSaved}>
-                      {isSaving ? 'Saving' : isSaved ? 'Saved' : 'Save'}
-                    </ActionButton>
-                    <ActionButton icon="share" onClick={handleSharePlace}>
-                      Share
-                    </ActionButton>
-                    <ActionButton icon="directions" onClick={openDirections} disabled={!directionsUrl} className="col-span-2 min-[360px]:col-span-1">
-                      Directions
-                    </ActionButton>
-                  </div>
-                </div>
+          <section className="pb-6 pt-6 lg:pt-8">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div className="min-w-0">
+                <h1 className="min-w-0 text-[26px] font-extrabold leading-tight tracking-[-0.025em] text-[var(--text-main)] sm:text-[34px]">{place.name}</h1>
+                <p className="mt-1.5 flex flex-wrap items-center gap-x-1.5 text-[15px] text-[var(--text-main)]">
+                  <span className="font-bold text-[var(--primary)]">★ {headlineRating.toFixed(1)}</span>
+                  <span className="text-[var(--text-muted)]">
+                    · {formatRatingCount(headlineReviewCount)} {headlineReviewCount === 1 ? 'rating' : 'ratings'} · {categoryLabel} · {locationLabel}
+                  </span>
+                </p>
               </div>
-
-              <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-                <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-600">
-                  <Icon name="category" className="h-4 w-4 shrink-0 text-slate-500" />
-                  {categoryLabel}
-                </span>
-                <span className="text-slate-300">·</span>
-                <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-slate-600">
-                  <Icon name="location" className="h-4 w-4 shrink-0 text-slate-500" />
-                  {locationLabel}
-                </span>
-                <span className="text-slate-300">·</span>
-                <span className="inline-flex items-start gap-1.5 text-[13px] font-semibold text-slate-600">
-                  <Icon name="budget" className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
-                  <span className="min-w-0 leading-5">{budgetLabel}</span>
-                </span>
-              </div>
-
-              {place.budget_min != null ? (
-                <div>
-                  <SulitMeter pesos={place.budget_min} />
-                </div>
-              ) : null}
-
-              <CheckInButton placeId={place.id} placeName={place.name} session={appSession} onGuest={() => guestAuth.open('community')} />
-
-              <div className="-mt-1">
-                {shareError ? <p className="text-[12px] font-bold text-red-600">{shareError}</p> : null}
-                {saveError ? <p className="text-[12px] font-bold text-red-600">{saveError}</p> : null}
-                {contributionError && !isContributionOpen ? <p className="text-[12px] font-bold text-red-600">{contributionError}</p> : null}
-              </div>
-
-              <DetailSection>
-                <SectionHeading
-                  icon="eye"
-                  title="Quick Take"
-                  badgeClassName="place-detail-section-heading--alt"
-                  iconClassName="place-detail-section-heading--alt-icon"
-                />
-                <p className="mt-3 text-[14px] font-semibold leading-6 text-slate-700">{quickTake}</p>
-              </DetailSection>
-
-              <div className="flex justify-start lg:hidden">
-                <button
-                  type="button"
-                  onClick={() => setIsDetailsExpanded((current) => !current)}
-                  className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white px-4 py-2 text-[13px] font-black text-slate-800 transition hover:border-[var(--accent)] hover:text-[var(--accent-deep)]"
-                >
-                  {isDetailsExpanded ? 'Show less details' : 'Show more details'}
-                  <Icon
-                    name="chevronDown"
-                    className={`h-4 w-4 transition-transform ${isDetailsExpanded ? 'rotate-180' : ''}`}
-                  />
+              <div className="hidden gap-1 sm:flex">
+                <button type="button" onClick={handleSharePlace} className="inline-flex h-9 items-center gap-2 rounded-lg px-3 text-[14px] font-semibold text-[var(--text-main)] underline underline-offset-2 hover:bg-[var(--hover-surface-strong)]">
+                  <Icon name="share" className="h-4 w-4" />
+                  Share
+                </button>
+                <button type="button" onClick={handleSavePlace} disabled={isSaving} aria-pressed={isSaved} className="inline-flex h-9 items-center gap-2 rounded-lg px-3 text-[14px] font-semibold text-[var(--text-main)] underline underline-offset-2 hover:bg-[var(--hover-surface-strong)]">
+                  <Icon name="save" className={`h-4 w-4 ${isSaved ? 'fill-current text-[var(--primary)]' : ''}`} />
+                  {isSaved ? 'Saved' : 'Save'}
                 </button>
               </div>
+            </div>
+            <div className="mt-2">
+              {shareError ? <p className="text-[12px] font-bold text-red-600">{shareError}</p> : null}
+              {saveError ? <p className="text-[12px] font-bold text-red-600">{saveError}</p> : null}
+              {contributionError && !isContributionOpen ? <p className="text-[12px] font-bold text-red-600">{contributionError}</p> : null}
+            </div>
 
-              <div className={`${isDetailsExpanded ? '' : 'hidden'} lg:block`}>
-                <div className="grid gap-4 lg:gap-5">
-                  <DetailSection>
-                    <SectionHeading
-                      icon="fire"
-                      title="Best For"
-                      badgeClassName="place-detail-section-heading--alt"
-                      iconClassName="place-detail-section-heading--alt-icon"
-                    />
-                    <div className="mt-3">
-                      <GoodForList values={goodFor} iconClassName="place-detail-section-heading--alt-icon" />
-                    </div>
-                  </DetailSection>
+            <div className="mt-6 lg:hidden">
+              <CheckInButton placeId={place.id} placeName={place.name} session={appSession} onGuest={() => guestAuth.open('community')} />
+            </div>
 
-                  <CardSurface pad="default" tone="outlined" className="rounded-2xl">
-                    <div className="flex items-center gap-2.5">
-                      <span className="place-detail-section-heading__badge place-detail-section-heading--alt flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--accent-wash)] text-[var(--accent-deep)]">
-                        <Icon name="book" className="place-detail-section-heading__icon place-detail-section-heading--alt-icon h-4 w-4" />
-                      </span>
-                      <div>
-                        <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Quick Facts</p>
-                        <h2 className="text-[15px] font-black text-slate-950">At a glance</h2>
-                      </div>
-                    </div>
-                    <dl className="mt-4 grid gap-3 text-[13px] font-semibold text-slate-700">
-                      <div className="flex items-start gap-2.5">
-                        <Icon name="category" className="place-detail-section-heading--alt-icon mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
-                        <div className="min-w-0">
-                          <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Category</dt>
-                          <dd className="mt-0.5 text-slate-800">{categoryLabel}</dd>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-2.5">
-                        <Icon name="clock" className="place-detail-section-heading--alt-icon mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
-                        <div className="min-w-0">
-                          <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Best Time</dt>
-                          <dd className="mt-0.5 text-slate-800">{cleanString(place.best_time_to_visit) || 'Check on site'}</dd>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-2.5">
-                        <Icon name="budget" className="place-detail-section-heading--alt-icon mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
-                        <div className="min-w-0">
-                          <dt className="text-[10px] font-black uppercase tracking-[0.14em] text-slate-400">Budget</dt>
-                          <dd className="mt-0.5 text-slate-800">{budgetLabel}</dd>
-                        </div>
-                      </div>
-                    </dl>
-                  </CardSurface>
-
-                  <DetailSection>
-                    <SectionHeading
-                      icon="location"
-                      title="Location"
-                      badgeClassName="place-detail-section-heading--alt"
-                      iconClassName="place-detail-section-heading--alt-icon"
-                    />
-                    <p className="mt-3 whitespace-pre-line text-[14px] font-semibold leading-6 text-slate-700">{addressLabel}</p>
-                    <div className="mt-4 overflow-hidden rounded-xl border border-[var(--line)] bg-slate-50">
-                      {isDetailsExpanded || isDesktop ? (
-                        <MapViewMemo
-                          place={place}
-                          zoom={16}
-                          autoFitToPlaces={false}
-                          className="!h-[180px] !rounded-none !border-0 sm:!h-[240px] lg:!h-[280px]"
-                        />
-                      ) : (
-                        <div className="h-[180px] sm:h-[240px] lg:h-[280px]" />
-                      )}
-                    </div>
-                  </DetailSection>
-
-                  <DetailSection>
-                    <SectionHeading
-                      icon="bus"
-                      title="How To Get There"
-                      badgeClassName="place-detail-section-heading--alt"
-                      iconClassName="place-detail-section-heading--alt-icon"
-                    />
-                    <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
-                      <TransportColumn icon="bus" title="Commute" iconClassName="place-detail-section-heading--alt-icon">
-                        {commuteText}
-                      </TransportColumn>
-                      <TransportColumn icon="car" title="Parking" iconClassName="place-detail-section-heading--alt-icon">
-                        {parkingText}
-                      </TransportColumn>
-                    </div>
-                  </DetailSection>
-
-                  <DetailSection>
-                    <SectionHeading
-                      icon="book"
-                      title="FREQUENTLY ASKED QUESTIONS"
-                      preserveCase
-                      badgeClassName="place-detail-section-heading--alt"
-                      iconClassName="place-detail-section-heading--alt-icon"
-                    />
-                    <div className="mt-4 space-y-4">
-                      {faqItems.map((item) => (
-                        <div key={item.question}>
-                          <h3 className="text-[15px] font-black text-slate-900">{item.question}</h3>
-                          <p className="mt-1 text-[14px] font-semibold leading-6 text-slate-700">{item.answer}</p>
-                        </div>
-                      ))}
-                    </div>
-                    {canonicalPlaceLink && areaLink && areaBreadcrumb ? (
-                      <p className="mt-4 text-[13px] font-semibold leading-6 text-slate-600">
-                        Explore more from{' '}
-                        <InternalLink href={areaLink} className="place-detail-more-links text-[var(--accent)] underline underline-offset-2">
-                          {areaBreadcrumb.areaName}
-                        </InternalLink>{' '}
-                        or browse the full{' '}
-                        <InternalLink href="/places" className="place-detail-more-links text-[var(--accent)] underline underline-offset-2">
-                          places hub
-                        </InternalLink>.
-                      </p>
-                    ) : null}
-                  </DetailSection>
-
-                  {renderCommunitySection()}
+            <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-20">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-3 border-b border-[var(--line)] pb-8">
+                  {place.budget_min != null ? <SulitMeter pesos={place.budget_min} /> : null}
+                  <span className="text-[15px] text-[var(--text-muted)]">{budgetLabel}</span>
                 </div>
+
+                <DetailSection>
+                  <SectionHeading
+                    icon="eye"
+                    title="Quick Take"
+                    badgeClassName="place-detail-section-heading--alt"
+                    iconClassName="place-detail-section-heading--alt-icon"
+                  />
+                  <p className="mt-4 text-[16px] leading-7 text-[var(--text-strong)]">{quickTake}</p>
+                </DetailSection>
+
+                <DetailSection>
+                  <SectionHeading
+                    icon="fire"
+                    title="Best For"
+                    badgeClassName="place-detail-section-heading--alt"
+                    iconClassName="place-detail-section-heading--alt-icon"
+                  />
+                  <div className="mt-6">
+                    <GoodForList values={goodFor} iconClassName="place-detail-section-heading--alt-icon" />
+                  </div>
+                </DetailSection>
+
+                <DetailSection>
+                  <SectionHeading icon="book" title="At a glance" />
+                  <dl className="mt-6 grid gap-5 sm:grid-cols-3">
+                    <div>
+                      <dt className="text-[14px] text-[var(--text-muted)]">Category</dt>
+                      <dd className="mt-1 text-[16px] font-semibold text-[var(--text-main)]">{categoryLabel}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-[14px] text-[var(--text-muted)]">Best time</dt>
+                      <dd className="mt-1 text-[16px] font-semibold text-[var(--text-main)]">{cleanString(place.best_time_to_visit) || 'Check on site'}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-[14px] text-[var(--text-muted)]">Budget</dt>
+                      <dd className="mt-1 text-[16px] font-semibold text-[var(--text-main)]">{budgetLabel}</dd>
+                    </div>
+                  </dl>
+                </DetailSection>
+
+                <DetailSection>
+                  <SectionHeading
+                    icon="location"
+                    title="Where you’ll be"
+                    badgeClassName="place-detail-section-heading--alt"
+                    iconClassName="place-detail-section-heading--alt-icon"
+                  />
+                  <p className="mt-4 whitespace-pre-line text-[16px] leading-6 text-[var(--text-strong)]">{addressLabel}</p>
+                  <div className="mt-6 overflow-hidden rounded-[20px] border border-[var(--line)] bg-[var(--bg-soft)]">
+                    <MapViewMemo
+                      place={place}
+                      zoom={16}
+                      autoFitToPlaces={false}
+                      className="!h-[260px] !rounded-none !border-0 sm:!h-[360px]"
+                    />
+                  </div>
+                </DetailSection>
+
+                <DetailSection>
+                  <SectionHeading
+                    icon="bus"
+                    title="How To Get There"
+                    badgeClassName="place-detail-section-heading--alt"
+                    iconClassName="place-detail-section-heading--alt-icon"
+                  />
+                  <div className="mt-6 grid gap-6 sm:grid-cols-2">
+                    <TransportColumn icon="bus" title="Commute" iconClassName="place-detail-section-heading--alt-icon">
+                      {commuteText}
+                    </TransportColumn>
+                    <TransportColumn icon="car" title="Parking" iconClassName="place-detail-section-heading--alt-icon">
+                      {parkingText}
+                    </TransportColumn>
+                  </div>
+                </DetailSection>
+
+                <DetailSection>
+                  <SectionHeading
+                    icon="book"
+                    title="FREQUENTLY ASKED QUESTIONS"
+                    preserveCase
+                    badgeClassName="place-detail-section-heading--alt"
+                    iconClassName="place-detail-section-heading--alt-icon"
+                  />
+                  <div className="mt-6 space-y-6">
+                    {faqItems.map((item) => (
+                      <div key={item.question}>
+                        <h3 className="text-[16px] font-semibold text-[var(--text-main)]">{item.question}</h3>
+                        <p className="mt-1 text-[15px] leading-6 text-[var(--text-muted)]">{item.answer}</p>
+                      </div>
+                    ))}
+                  </div>
+                  {canonicalPlaceLink && areaLink && areaBreadcrumb ? (
+                    <p className="mt-4 text-[13px] font-semibold leading-6 text-slate-600">
+                      Explore more from{' '}
+                      <InternalLink href={areaLink} className="place-detail-more-links text-[var(--accent)] underline underline-offset-2">
+                        {areaBreadcrumb.areaName}
+                      </InternalLink>{' '}
+                      or browse the full{' '}
+                      <InternalLink href="/places" className="place-detail-more-links text-[var(--accent)] underline underline-offset-2">
+                        places hub
+                      </InternalLink>.
+                    </p>
+                  ) : null}
+                </DetailSection>
+
+                {renderCommunitySection()}
               </div>
+
+              <aside className="hidden lg:block">
+                <div className="sticky top-[calc(var(--site-header-h)+2rem)] rounded-[20px] border border-[var(--line)] bg-[var(--card)] p-6 shadow-[0_6px_16px_rgba(27,26,23,0.12)]">
+                  <p className="text-[22px] text-[var(--text-main)]">
+                    {place.budget_min == null ? (
+                      <span className="font-semibold">Check price on site</span>
+                    ) : Number(place.budget_min) <= 0 ? (
+                      <span className="font-semibold">Free entry</span>
+                    ) : (
+                      <>
+                        <span className="font-semibold">₱{Number(place.budget_min).toLocaleString('en-PH')}</span>
+                        <span className="text-[16px] text-[var(--text-muted)]"> per person</span>
+                      </>
+                    )}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleAddToPlan}
+                    className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[var(--primary)] text-[16px] font-semibold text-white transition-opacity hover:opacity-95"
+                  >
+                    Add to Gala Plan
+                  </button>
+                  <button
+                    type="button"
+                    onClick={openDirections}
+                    disabled={!directionsUrl}
+                    className="mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-[var(--text-main)] text-[16px] font-semibold text-[var(--text-main)] transition-colors hover:bg-[var(--hover-surface-strong)] disabled:opacity-40"
+                  >
+                    <Icon name="directions" className="h-4 w-4" />
+                    Directions
+                  </button>
+                  <p className="mt-4 text-center text-[13px] text-[var(--text-muted)]">Free to plan. Share it with your barkada.</p>
+                  <div className="mt-5 border-t border-[var(--line)] pt-5">
+                    <CheckInButton placeId={place.id} placeName={place.name} session={appSession} onGuest={() => guestAuth.open('community')} />
+                  </div>
+                </div>
+              </aside>
             </div>
           </section>
         </PageContainer>
       </main>
 
+
+      <div className="fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom,0px)+4rem)] z-[5500] border-t border-[var(--line)] bg-[var(--surface-overlay)] px-4 py-3 backdrop-blur-xl lg:hidden">
+        <div className="mx-auto flex max-w-[720px] items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[15px] font-semibold text-[var(--text-main)]">
+              {place.budget_min == null ? 'Price on site' : Number(place.budget_min) <= 0 ? 'Free entry' : `₱${Number(place.budget_min).toLocaleString('en-PH')} per person`}
+            </p>
+            <button type="button" onClick={openDirections} disabled={!directionsUrl} className="text-[13px] font-semibold text-[var(--text-main)] underline underline-offset-2 disabled:opacity-40">
+              Directions
+            </button>
+          </div>
+          <button type="button" onClick={handleSavePlace} disabled={isSaving} aria-pressed={isSaved} aria-label={isSaved ? 'Saved' : 'Save'} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[var(--line)] text-[var(--text-main)]">
+            <Icon name="save" className={`h-5 w-5 ${isSaved ? 'fill-current text-[var(--primary)]' : ''}`} />
+          </button>
+          <button type="button" onClick={handleAddToPlan} className="inline-flex h-12 shrink-0 items-center rounded-xl bg-[var(--primary)] px-5 text-[15px] font-semibold text-white">
+            Add to plan
+          </button>
+        </div>
+      </div>
       {guestAuth.promptElement}
       <AddToGalaPlanModal
         isOpen={isAddToPlanOpen}

@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faRobot, faXmark } from '@fortawesome/free-solid-svg-icons'
+import { faWandMagicSparkles, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { AskAiModePanel } from './home/ask-ai/AskAiComponents'
 import { GuestAuthPrompt } from './GuestAuthPrompt'
 import { useBottomNav } from '../context/BottomNavContext'
@@ -9,7 +9,7 @@ import { closeFloatingChat, openFloatingChat, useFloatingChat } from '../utils/f
 import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
 import { navigateToPath } from '../utils/navigation'
 import { isAdminPath } from '../utils/adminRoutes'
-import { isPath } from '../utils/routes'
+import { isPath, parseCanonicalPlacePath } from '../utils/routes'
 import { shouldShowMobileBottomNav } from '../utils/routeGuards'
 
 const HIDDEN_PATHS = [
@@ -87,6 +87,8 @@ function FloatingChat({ pathname }: { pathname: string }) {
   const { hidden: isBottomNavHidden } = useBottomNav()
   const isHidden = isAdminPath(pathname) || HIDDEN_PATHS.some((path) => isPath(pathname, path))
   const hasBottomNav = !isBottomNavHidden && (isPath(pathname, '/home') || shouldShowMobileBottomNav(pathname))
+  // Place pages add a sticky action bar above the nav on phones; lift the bubble over it.
+  const hasPlaceActionBar = Boolean(parseCanonicalPlacePath(pathname))
 
   useEffect(() => {
     if (isHidden) {
@@ -107,15 +109,18 @@ function FloatingChat({ pathname }: { pathname: string }) {
         aria-label={isOpen ? 'Close GalaTayo AI chat' : 'Open GalaTayo AI chat'}
         aria-expanded={isOpen}
         title="GalaTayo AI"
-        className={`fixed right-4 z-[6500] h-14 w-14 items-center justify-center rounded-full bg-[var(--accent)] text-white shadow-[0_12px_28px_rgba(var(--accent-rgb),0.38)] transition hover:scale-105 hover:bg-[var(--accent-deep)] active:scale-95 lg:bottom-6 lg:right-6 ${
+        className={`fixed right-4 z-[6500] h-14 w-14 items-center justify-center gap-2.5 rounded-full bg-[var(--primary)] text-white shadow-[0_12px_28px_-8px_rgba(var(--accent-rgb),0.6)] transition hover:scale-[1.03] hover:bg-[var(--primary-dark)] active:scale-95 lg:bottom-8 lg:right-8 lg:h-[60px] lg:w-auto lg:px-6 lg:pl-5 ${
           isOpen ? 'hidden sm:flex' : 'flex'
         } ${
-          hasBottomNav
+          hasPlaceActionBar
+            ? 'bottom-[calc(env(safe-area-inset-bottom,0px)+9.5rem)]'
+            : hasBottomNav
             ? 'bottom-[calc(env(safe-area-inset-bottom,0px)+4.75rem)]'
             : 'bottom-[calc(env(safe-area-inset-bottom,0px)+1rem)]'
         }`}
       >
-        <FontAwesomeIcon icon={isOpen ? faXmark : faRobot} className="h-6 w-6" />
+        <FontAwesomeIcon icon={isOpen ? faXmark : faWandMagicSparkles} className="h-6 w-6" />
+        <span className="hidden text-[16px] font-bold lg:inline">{isOpen ? 'Close' : 'Ask GalaTayo AI'}</span>
       </button>
     </>
   )

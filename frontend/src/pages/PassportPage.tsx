@@ -39,7 +39,7 @@ function PassportPage({ session }: { session: Session }) {
         <header className="mt-4">
           <p className="font-data text-[11px] uppercase tracking-[0.14em] text-[var(--primary)]">Pasyal Passport</p>
           <h1 className="mt-1 text-[32px] font-medium leading-[1.05] text-[var(--text-main)] sm:text-[40px]">
-            Ilang <em className="text-[var(--primary)]">lungsod</em> na ang napuntahan mo?
+            Your city stamps
           </h1>
           <p className="mt-2 max-w-[60ch] text-[15px] leading-6 text-[var(--text-strong)]">
             Check in on a place page when you're there to collect that city's stamp. Keep a gala every week to grow your streak.

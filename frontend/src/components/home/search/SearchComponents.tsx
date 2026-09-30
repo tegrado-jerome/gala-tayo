@@ -15,14 +15,33 @@ import {
 import { AppIcon } from '../../AppIcon'
 import { cn } from '../../AppUI'
 import { InlineSkeleton, SkeletonLine } from '../../loading/SkeletonStates'
-import PlaceCard, { type PlaceCardData } from '../../PlaceCard'
+import type { PlaceCardData } from '../../PlaceCard'
+import PhotoCard, { type PhotoCardPlace } from '../../discover/PhotoCard'
+import { useGuestAuthPrompt } from '../../GuestAuthPrompt'
 import Breadcrumb from '../../navigation/Breadcrumb'
 import CompactPagination from '../../CompactPagination'
 import MapView from '../../MapView'
 import { BOTTOM_NAV_RESERVED_CLASS } from '../../layout/Primitives'
-import { ChevronRightIcon } from '../HomeIcons'
 import { SEARCH_RESULTS_PER_PAGE, type MobileResultsViewMode, type BackendSearchStatus } from '../homeHelpers'
 import type { SearchBudgetValue } from '../../../utils/searchParams'
+
+
+export function toPhotoCardPlace(place: PlaceCardData): PhotoCardPlace {
+  return {
+    id: place.id,
+    slug: place.slug,
+    name: place.name,
+    category: place.category,
+    area: place.area,
+    city: place.city,
+    localArea: place.localArea,
+    imageUrl: place.imageUrl,
+    thumbnailUrl: place.thumbnailUrl,
+    curatedImageUrls: place.curatedImageUrls,
+    rating: typeof place.rating === 'number' && place.rating > 0 ? place.rating : null,
+    budgetMin: place.budget_min ?? null,
+  }
+}
 
 function SearchLandingBar({
   value,
@@ -610,10 +629,10 @@ function MobileResultIntro({
       <section className="px-4 pb-4 pt-5">
         <SearchPageBreadcrumb className="mb-3" />
         <div className="flex items-start justify-between gap-3">
-          <h1 className="min-w-0 flex-1 text-2xl font-black leading-tight text-slate-950">{heading}</h1>
+          <h1 className="min-w-0 flex-1 text-[24px] font-extrabold leading-tight tracking-[-0.02em] text-[var(--text-main)]">{heading}</h1>
           <SearchResetButton onClick={onClearSearch} />
         </div>
-        <p className="mt-1 text-lg font-semibold leading-tight text-slate-800">{subheading}</p>
+        <p className="mt-1 text-[14px] text-[var(--text-muted)]">{subheading}</p>
         <ActiveSearchChips
           cityLabel={cityLabel}
           categoryLabel={categoryLabel}
@@ -752,17 +771,15 @@ function MobileResultsTabs({
   onViewChange: (view: MobileResultsViewMode) => void
 }) {
   const itemClass = (isSelected: boolean) =>
-      `inline-flex h-11 items-center justify-center gap-2 rounded-md text-sm font-black transition ${
-      isSelected
-      ? 'bg-[var(--accent)] text-white shadow-[0_10px_20px_rgba(var(--accent-rgb),0.16)]'
-      : 'bg-white text-slate-950'
+    `inline-flex h-10 items-center justify-center gap-2 rounded-full text-[14px] font-semibold transition-colors ${
+      isSelected ? 'bg-[var(--primary)] text-white' : 'text-[var(--text-muted)] hover:text-[var(--text-main)]'
     }`
 
   return (
-    <section className="mx-4 mt-4 grid grid-cols-2 rounded-md border border-[var(--accent-glow)] bg-white p-0.5">
+    <section className="mx-4 mt-4 grid grid-cols-2 rounded-full border border-[var(--line)] p-1">
       <button type="button" onClick={() => onViewChange('cards')} className={itemClass(selectedView === 'cards')}>
         <ListIcon className="h-4 w-4" />
-        Cards
+        List
       </button>
       <button type="button" onClick={() => onViewChange('map')} className={itemClass(selectedView === 'map')}>
         <MapOutlineIcon className="h-4 w-4" />
@@ -823,8 +840,12 @@ function MobileResultsView({
   onRemoveGoodFor: () => void
   onRemoveBudget: () => void
 }) {
+  const guestAuth = useGuestAuthPrompt()
+  const cardPlaces = places.map(toPhotoCardPlace)
+
   return (
-    <section className={`mx-auto w-full max-w-[430px] ${BOTTOM_NAV_RESERVED_CLASS}`}>
+    <section className={`mx-auto w-full max-w-[720px] ${BOTTOM_NAV_RESERVED_CLASS}`}>
+      {guestAuth.promptElement}
       <MobileResultIntro
         heading={heading}
         subheading={subheading}
@@ -839,73 +860,59 @@ function MobileResultsView({
         onRemoveGoodFor={onRemoveGoodFor}
         onRemoveBudget={onRemoveBudget}
       />
-      <MobileResultsTabs selectedView={selectedView} onViewChange={onViewChange} />
 
       {selectedView === 'cards' ? (
-        <section id="search-results-anchor" className="grid gap-3 px-4 py-4">
-          <div className={`grid gap-3 transition ${isPageLoading ? 'pointer-events-none opacity-60' : 'opacity-100'}`}>
-            {places.map((place) => (
-              <PlaceCard
+        <section id="search-results-anchor" className="px-4 pb-6">
+          <div className={`grid gap-x-4 gap-y-8 transition sm:grid-cols-2 ${isPageLoading ? 'pointer-events-none opacity-60' : 'opacity-100'}`}>
+            {cardPlaces.map((place, index) => (
+              <PhotoCard
                 key={place.id}
                 place={place}
+                priority={index < 2}
+                badge={place.budgetMin === 0 ? 'Free' : null}
                 isSelected={selectedPlaceId === place.id}
-                compact
-                searchResultCard
-                dataSearchPlaceId={place.id}
-                onSelect={onSelectPlace}
-                onOpen={onViewDetails}
+                onGuestFavorite={() => guestAuth.open('favorite')}
+                onActivate={onViewDetails}
               />
             ))}
           </div>
-          <p className="text-center text-xs font-semibold text-slate-500">
-            Switch to Map to see your selected place.
-          </p>
-          <SearchPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalCount={totalCount}
-            pageSize={SEARCH_RESULTS_PER_PAGE}
-            isLoading={isPageLoading}
-            compact
-            onPageChange={onPageChange}
-          />
+          <div className="mt-8">
+            <SearchPagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalCount={totalCount}
+              pageSize={SEARCH_RESULTS_PER_PAGE}
+              isLoading={isPageLoading}
+              compact
+              onPageChange={onPageChange}
+            />
+          </div>
         </section>
       ) : (
-        <section className="px-4 py-4">
-          <div className="overflow-hidden rounded-lg border border-[var(--line)] bg-white">
+        <section className="px-4 pb-6">
+          <div className="overflow-hidden rounded-[20px] border border-[var(--line)]">
             <MapView
               places={places}
               selectedPlaceId={selectedPlaceId}
               onPlaceSelect={onSelectPlace}
               onPlaceOpen={onViewDetails}
               autoFitToPlaces
-              className="!h-[360px] !rounded-none !border-0"
+              className="!h-[58dvh] !rounded-none !border-0"
             />
           </div>
-
           {selectedPlace ? (
-            <section className="mt-4">
-              <h2 className="mb-2 text-base font-black text-slate-950">Selected place</h2>
-              <PlaceCard
-                place={selectedPlace}
-                compact
-                searchResultCard
+            <div className="mt-4 max-w-[340px]">
+              <PhotoCard
+                place={toPhotoCardPlace(selectedPlace)}
                 isSelected
-                onSelect={onSelectPlace}
-                onOpen={onViewDetails}
+                onGuestFavorite={() => guestAuth.open('favorite')}
+                onActivate={onViewDetails}
               />
-            </section>
-          ) : null}
-
-          <button
-            type="button"
-            onClick={() => onViewChange('cards')}
-            className="mt-5 inline-flex items-center gap-2 text-sm font-black text-slate-700"
-          >
-            <ChevronRightIcon className="h-4 w-4 rotate-180" />
-            Back to cards
-          </button>
-          <div className="mt-4">
+            </div>
+          ) : (
+            <p className="mt-4 text-[14px] text-[var(--text-muted)]">Tap a pin to preview a place.</p>
+          )}
+          <div className="mt-6">
             <SearchPagination
               currentPage={currentPage}
               totalPages={totalPages}
@@ -918,6 +925,15 @@ function MobileResultsView({
           </div>
         </section>
       )}
+
+      <button
+        type="button"
+        onClick={() => onViewChange(selectedView === 'cards' ? 'map' : 'cards')}
+        className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+5.25rem)] left-1/2 z-[5500] inline-flex h-12 -translate-x-1/2 items-center gap-2 rounded-full bg-[var(--primary)] px-5 text-[14px] font-bold text-white shadow-[0_10px_24px_-6px_rgba(var(--accent-rgb),0.7)] transition-transform hover:scale-105 lg:hidden"
+      >
+        {selectedView === 'cards' ? <MapOutlineIcon className="h-4 w-4" /> : <ListIcon className="h-4 w-4" />}
+        {selectedView === 'cards' ? 'Map' : 'List'}
+      </button>
     </section>
   )
 }
@@ -973,14 +989,18 @@ function DesktopResultsView({
   onRemoveGoodFor: () => void
   onRemoveBudget: () => void
 }) {
+  const guestAuth = useGuestAuthPrompt()
+  const cardPlaces = places.map(toPhotoCardPlace)
+
   return (
-    <section className="gala-page-background grid h-full min-h-0 select-none overflow-hidden lg:h-[calc(100dvh-var(--site-header-h))] lg:grid-cols-[minmax(340px,420px)_minmax(0,1fr)] xl:grid-cols-[minmax(360px,460px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(400px,520px)_minmax(0,1fr)]">
+    <section className="grid h-full min-h-0 overflow-hidden bg-[var(--bg)] lg:h-[calc(100dvh-var(--site-header-h))] lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
+      {guestAuth.promptElement}
       <aside
         ref={scrollContainerRef}
-        className="flex h-full min-h-0 flex-col overflow-y-auto overscroll-contain border-r border-[var(--line)] px-5 py-5 lg:max-h-[calc(100dvh-var(--site-header-h))] xl:px-6 xl:py-6"
+        className="h-full min-h-0 overflow-y-auto overscroll-contain px-6 pb-10 pt-5 xl:px-10"
       >
-        <div className="shrink-0">
-          <SearchPageBreadcrumb className="mb-3" />
+        <SearchPageBreadcrumb className="mb-3" />
+        <div className="max-w-[560px]">
           <SearchLandingBar
             value={rawQuery}
             onChange={onRawQueryChange}
@@ -989,65 +1009,65 @@ function DesktopResultsView({
             inputId="desktop-results-search-input"
             className="!mt-0"
           />
-
-          <div className="mt-4 flex items-start justify-between gap-4">
-            <div className="min-w-0">
-              <h1 className="text-[1.65rem] font-black leading-tight tracking-[-0.04em] text-slate-950 xl:text-[1.9rem]">{heading}</h1>
-              <p className="mt-1 text-[0.98rem] font-semibold text-slate-800 xl:text-[1.05rem]">{subheading}</p>
-            </div>
-            {isRefreshing ? <InlineSkeleton className="shrink-0" /> : null}
-          </div>
-
-          <ActiveSearchChips
-            cityLabel={cityLabel}
-            categoryLabel={categoryLabel}
-            goodForLabel={goodForLabel}
-            budgetLabel={budgetLabel}
-            onRemoveCity={onRemoveCity}
-            onRemoveCategory={onRemoveCategory}
-            onRemoveGoodFor={onRemoveGoodFor}
-            onRemoveBudget={onRemoveBudget}
-          />
         </div>
 
-        <div className="mt-4 pr-1">
-          <div className={`grid grid-cols-1 gap-2.5 transition ${isPageLoading ? 'pointer-events-none opacity-60' : 'opacity-100'}`}>
-            {places.map((place) => (
-              <PlaceCard
-                key={place.id}
-                place={place}
-                isSelected={selectedPlaceId === place.id}
-                compact
-                searchResultCard
-                dataSearchPlaceId={place.id}
-                onSelect={onSelectPlace}
-                onOpen={onViewDetails}
-              />
-            ))}
+        <div className="mt-6 flex items-end justify-between gap-4">
+          <div className="min-w-0">
+            <h1 className="text-[28px] font-extrabold leading-tight tracking-[-0.02em] text-[var(--text-main)]">{heading}</h1>
+            <p className="mt-1 text-[14px] text-[var(--text-muted)]">{subheading}</p>
           </div>
-          <div className="pb-2 pt-4">
-            <SearchPagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              totalCount={totalCount}
-              pageSize={SEARCH_RESULTS_PER_PAGE}
-              isLoading={isPageLoading}
-              compact
-              onPageChange={onPageChange}
+          {isRefreshing ? <InlineSkeleton className="shrink-0" /> : null}
+        </div>
+
+        <ActiveSearchChips
+          cityLabel={cityLabel}
+          categoryLabel={categoryLabel}
+          goodForLabel={goodForLabel}
+          budgetLabel={budgetLabel}
+          onRemoveCity={onRemoveCity}
+          onRemoveCategory={onRemoveCategory}
+          onRemoveGoodFor={onRemoveGoodFor}
+          onRemoveBudget={onRemoveBudget}
+        />
+
+        <div className={`mt-6 grid grid-cols-2 gap-x-5 gap-y-9 transition 2xl:grid-cols-3 ${isPageLoading ? 'pointer-events-none opacity-60' : 'opacity-100'}`}>
+          {cardPlaces.map((place, index) => (
+            <PhotoCard
+              key={place.id}
+              place={place}
+              priority={index < 4}
+              badge={place.budgetMin === 0 ? 'Free' : null}
+              isSelected={selectedPlaceId === place.id}
+              onHover={() => onSelectPlace(place.id)}
+              onGuestFavorite={() => guestAuth.open('favorite')}
+              onActivate={onViewDetails}
             />
-          </div>
+          ))}
+        </div>
+        <div className="pt-10">
+          <SearchPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalCount={totalCount}
+            pageSize={SEARCH_RESULTS_PER_PAGE}
+            isLoading={isPageLoading}
+            compact
+            onPageChange={onPageChange}
+          />
         </div>
       </aside>
 
-      <section className="relative hidden min-h-0 overflow-hidden bg-white lg:block">
-        <MapView
-          places={places}
-          selectedPlaceId={selectedPlaceId}
-          onPlaceSelect={onSelectPlace}
-          onPlaceOpen={onViewDetails}
-          autoFitToPlaces
-          className="!h-full !rounded-none !border-0"
-        />
+      <section className="relative hidden min-h-0 overflow-hidden p-4 pl-0 lg:block">
+        <div className="h-full overflow-hidden rounded-[20px] border border-[var(--line)]">
+          <MapView
+            places={places}
+            selectedPlaceId={selectedPlaceId}
+            onPlaceSelect={onSelectPlace}
+            onPlaceOpen={onViewDetails}
+            autoFitToPlaces
+            className="!h-full !rounded-none !border-0"
+          />
+        </div>
       </section>
     </section>
   )

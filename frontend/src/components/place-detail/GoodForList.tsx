@@ -25,10 +25,10 @@ export function GoodForList({ values, iconClassName = '' }: { values: string[]; 
   const items = (values.length > 0 ? values : ['Coffee hangouts', 'Food trips', 'Casual dates', 'Barkada catch-ups', 'Study breaks']).slice(0, 5)
 
   return (
-    <ul className="grid gap-2 text-[14px] font-semibold leading-5 text-slate-700">
+    <ul className="grid gap-4 text-[16px] leading-6 text-[var(--text-main)] sm:grid-cols-2">
       {items.map((item, index) => (
-        <li key={item} className="flex items-center gap-3">
-          <Icon name={pickGoodForIcon(item, index)} className={`h-5 w-5 shrink-0 text-slate-500 ${iconClassName}`.trim()} />
+        <li key={item} className="flex items-center gap-4">
+          <Icon name={pickGoodForIcon(item, index)} className={`h-6 w-6 shrink-0 text-[var(--text-main)] ${iconClassName}`.trim()} />
           <span>{titleCase(item)}</span>
         </li>
       ))}

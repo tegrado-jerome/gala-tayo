@@ -47,7 +47,7 @@ function PlanList({ session, favorites = false }: { session?: Session | null; fa
         <div>
           <p className="font-data text-[11px] uppercase tracking-[0.14em] text-[var(--primary)]">Gala plans</p>
           <h1 className="mt-1 text-[32px] font-medium leading-[1.05] text-[var(--text-main)] sm:text-[40px]">
-            {favorites ? 'Hearted plans' : <>Mga <em className="text-[var(--primary)]">gala</em> mo</>}
+            {favorites ? 'Hearted plans' : 'Your plans'}
           </h1>
         </div>
         {!favorites ? (
@@ -85,7 +85,7 @@ function PlanList({ session, favorites = false }: { session?: Session | null; fa
         {state.status === 'ready' && plans.length === 0 ? (
           <div className="rounded-[20px] border border-dashed border-[var(--line-strong)] p-8 text-center">
             <p className="font-display text-[22px] text-[var(--text-main)]">
-              {favorites ? 'No hearted plans yet.' : <>Wala pang plano. <em className="text-[var(--primary)]">Tara!</em></>}
+              {favorites ? 'No hearted plans yet.' : 'No plans yet'}
             </p>
             <p className="mt-2 text-[14px] text-[var(--text-muted)]">
               {favorites ? 'Heart public plans from friends to keep them here.' : 'Start from one sentence with AI, or add places yourself.'}

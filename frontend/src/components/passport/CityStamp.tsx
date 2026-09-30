@@ -57,7 +57,7 @@ function CityStamp({ stamp }: { stamp: CityStampData }) {
             stamp.collected ? 'text-[var(--bg)] opacity-85' : 'text-[var(--text-disabled)]'
           }`}
         >
-          {stamp.collected ? `${stamp.places} ${stamp.places === 1 ? 'spot' : 'spots'}` : 'Tara?'}
+          {stamp.collected ? `${stamp.places} ${stamp.places === 1 ? 'spot' : 'spots'}` : 'Not yet'}
         </span>
       </div>
       <span className={`text-center text-[12px] font-medium ${stamp.collected ? 'text-[var(--text-main)]' : 'text-[var(--text-muted)]'}`}>

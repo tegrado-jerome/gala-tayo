@@ -11,12 +11,12 @@ function EmptyPlanCard({ isGuest }: { isGuest: boolean }) {
   return (
     <InternalLink href="/gala-plans/new" className={planCardClassName}>
       <p className="font-display text-[20px] leading-tight text-[var(--text-main)]">
-        Wala pang plano? <em className="text-[var(--primary)]">Tara, gawa tayo.</em>
+        No upcoming plans
       </p>
       <p className="mt-1.5 text-[13px] leading-5 text-[var(--text-muted)]">
         {isGuest
-          ? 'Sign in to save stops, set a date, and share the plan with your barkada.'
-          : 'Pick a few spots, set a date, and share one link with your barkada.'}
+          ? 'Sign in to save stops, set a date, and share the plan with friends.'
+          : 'Pick a few spots, set a date, and share one link with friends.'}
       </p>
       <span className="mt-3 inline-flex h-9 items-center rounded-full bg-[var(--primary)] px-4 text-[13px] font-semibold text-white">
         Start a gala plan

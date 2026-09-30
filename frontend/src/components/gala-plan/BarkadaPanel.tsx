@@ -14,9 +14,9 @@ import type { GalaPlanDetail } from '../../utils/galaPlansApi'
 type ReadyBarkada = Extract<GalaPlanBarkada, { available: true }>
 
 const rsvpOptions: Array<{ value: GalaPlanRsvp; label: string }> = [
-  { value: 'going', label: 'Game ako' },
-  { value: 'maybe', label: 'Baka' },
-  { value: 'no', label: 'Pass' },
+  { value: 'going', label: 'Going' },
+  { value: 'maybe', label: 'Maybe' },
+  { value: 'no', label: "Can't go" },
 ]
 
 const rsvpLabel: Record<GalaPlanRsvp, string> = { going: 'Going', maybe: 'Maybe', no: "Can't" }
@@ -29,7 +29,7 @@ type BarkadaPanelProps = {
 }
 
 function PollComposer({ plan, session, onChange }: Omit<BarkadaPanelProps, 'barkada'>) {
-  const [question, setQuestion] = useState('Saan tayo kakain?')
+  const [question, setQuestion] = useState('Where should we eat?')
   const [options, setOptions] = useState(['', ''])
   const [error, setError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
@@ -124,7 +124,7 @@ function BarkadaPanel({ plan, barkada, session, onChange }: BarkadaPanelProps) {
     <div className="grid gap-6">
       {!isOwner ? (
         <section>
-          <h3 className="font-data text-[11px] uppercase tracking-[0.12em] text-[var(--text-muted)]">Sasama ka ba?</h3>
+          <h3 className="font-data text-[11px] uppercase tracking-[0.12em] text-[var(--text-muted)]">Are you going?</h3>
           <div className="mt-2 flex gap-2" role="radiogroup" aria-label="Your RSVP">
             {rsvpOptions.map((option) => {
               const isSelected = barkada.viewer_rsvp === option.value
@@ -178,7 +178,7 @@ function BarkadaPanel({ plan, barkada, session, onChange }: BarkadaPanelProps) {
       </section>
 
       <section className="grid gap-3">
-        <h3 className="font-data text-[11px] uppercase tracking-[0.12em] text-[var(--text-muted)]">Botohan</h3>
+        <h3 className="font-data text-[11px] uppercase tracking-[0.12em] text-[var(--text-muted)]">Polls</h3>
         {barkada.polls.length === 0 && !isOwner ? (
           <p className="text-[14px] text-[var(--text-muted)]">No polls yet.</p>
         ) : null}
