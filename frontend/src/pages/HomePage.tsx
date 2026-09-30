@@ -29,6 +29,7 @@ import { getStaticPlaceImageUrlForSlug } from '../data/placeIndexVisuals'
 import { R2_PUBLIC_BASE_URL } from '../data/r2Config'
 import { useListingRail } from '../hooks/useListingRail'
 import { useManilaWeather } from '../hooks/useManilaWeather'
+import { useHeroParallax } from '../hooks/useParallax'
 import { navigateToPath } from '../utils/navigation'
 import { fetchHomePlaceDetailsBatch } from '../utils/placeDetailCache'
 import { resolveAreaMeta } from '../utils/routes'
@@ -48,7 +49,7 @@ const topPickTabs: Array<{ id: TopPicksTab; label: string; places: HomeRecommend
 const topPickSlugs = Array.from(new Set(topPickTabs.flatMap((tab) => tab.places.map((place) => place.slug))))
 
 const trendingSearches = [
-  { label: 'Libre museums', href: buildSearchPath({ category: 'museum', budget: 'free', page: 1 }) },
+  { label: 'Free museums', href: buildSearchPath({ category: 'museum', budget: 'free', page: 1 }) },
   { label: 'Rooftop bars in Makati', href: buildSearchPath({ category: 'nightlife', city: 'makati', page: 1 }) },
   { label: 'Kid-friendly weekend', href: buildSearchPath({ goodFor: 'family', page: 1 }) },
   { label: 'Date night', href: buildSearchPath({ goodFor: 'date', page: 1 }) },
@@ -57,23 +58,17 @@ const trendingSearches = [
 const heroFields = [
   { label: 'Where', hint: 'All of Metro Manila' },
   { label: 'What', hint: 'Museums, food, parks…' },
-  { label: 'Budget', hint: 'Libre · ₱ · ₱₱ · ₱₱₱' },
+  { label: 'Budget', hint: 'Free · ₱ · ₱₱ · ₱₱₱' },
   { label: 'Good for', hint: 'Barkada, date, family' },
 ]
 
 const listingRails = [
-  { key: 'museum', title: 'Museums worth the trip', subtitle: 'Libre and paid galleries across the metro', category: 'museum', href: '/places/categories/museum' },
-  { key: 'manila', title: 'Pasyalan sa Manila', subtitle: 'Heritage walks, parks and food trips', areaSlug: 'manila', href: '/places/manila' },
-  { key: 'cafe', title: 'Kape muna', subtitle: 'Cafes locals keep coming back to', category: 'cafe', href: '/places/categories/cafe' },
-  { key: 'nightlife', title: 'After dark', subtitle: 'Rooftops, bars and late-night spots', category: 'nightlife', href: '/places/categories/nightlife' },
+  { key: 'museum', title: 'Museums', subtitle: 'Free and paid galleries across Metro Manila', category: 'museum', href: '/places/categories/museum' },
+  { key: 'manila', title: 'Things to do in Manila', subtitle: 'Heritage sites, parks and food spots', areaSlug: 'manila', href: '/places/manila' },
+  { key: 'cafe', title: 'Cafés', subtitle: 'Popular cafés across the metro', category: 'cafe', href: '/places/categories/cafe' },
+  { key: 'nightlife', title: 'Nightlife', subtitle: 'Rooftops, bars and late-night spots', category: 'nightlife', href: '/places/categories/nightlife' },
 ]
 
-function getTimeGreeting(hour = new Date().getHours()) {
-  if (hour < 5 || hour >= 18) return 'Magandang gabi'
-  if (hour < 11) return 'Magandang umaga'
-  if (hour < 13) return 'Magandang tanghali'
-  return 'Magandang hapon'
-}
 
 function RailSkeleton() {
   return (
@@ -236,6 +231,7 @@ function HomePage({ navigationSource }: { navigationSource: NavigationSource }) 
   const [activeTab, setActiveTab] = useState<TopPicksTab>('all')
   const [detailsBySlug, setDetailsBySlug] = useState<Record<string, Partial<PhotoCardPlace>>>({})
   const openGuestFavorite = () => guestAuth.open('favorite')
+  const heroRef = useHeroParallax<HTMLElement>()
 
   // Ratings, real ids (for saving) and prices come from the batch endpoint; cards render before it answers.
   useEffect(() => {
@@ -284,10 +280,10 @@ function HomePage({ navigationSource }: { navigationSource: NavigationSource }) 
     <PageShell tone="plain">
       <SeoHead {...seoConfig} />
       <main className="min-h-screen bg-[var(--bg)] pb-[calc(env(safe-area-inset-bottom,0px)+6rem)] text-[var(--text)] lg:pb-24">
-        <section className="relative isolate h-[400px] overflow-hidden text-white sm:h-[460px] lg:h-[600px]">
+        <section ref={heroRef} className="hero-3d relative isolate h-[400px] overflow-hidden text-white sm:h-[460px] lg:h-[600px]">
           <picture>
             <source media="(min-width: 768px)" srcSet={HERO_IMAGE_DESKTOP} />
-            <img src={HERO_IMAGE_PHONE} alt="" fetchPriority="high" decoding="async" className="absolute inset-0 -z-10 h-full w-full object-cover object-[center_40%]" />
+            <img src={HERO_IMAGE_PHONE} alt="" fetchPriority="high" decoding="async" className="hero-3d__photo absolute inset-0 -z-10 h-full w-full object-cover object-[center_40%]" />
           </picture>
           <div
             aria-hidden="true"
@@ -296,19 +292,18 @@ function HomePage({ navigationSource }: { navigationSource: NavigationSource }) 
           />
           <PhoneHeroBar />
           <div className="absolute inset-x-4 bottom-5 sm:inset-x-6 lg:inset-x-0 lg:bottom-[70px]">
-            <div className="mx-auto w-full max-w-[1440px] lg:px-8 xl:px-[120px]">
+            <div className="hero-3d__copy mx-auto w-full max-w-[1440px] lg:px-8 xl:px-[120px]">
               <p className="text-[13px] font-semibold opacity-90 sm:text-[15px]">
-                {getTimeGreeting()}
-                {greetingName ? `, ${greetingName}` : ''}
-                {weather ? ` · ${weather.temperature}°C ${weather.label.toLowerCase()} sa Manila` : ''}
+                {greetingName ? `Hi, ${greetingName}` : 'Metro Manila'}
+                {weather ? ` · ${weather.temperature}°C, ${weather.label.toLowerCase()}` : ''}
               </p>
-              <h1 className="mt-1 text-[34px] font-extrabold leading-[1.04] tracking-[-0.035em] [text-shadow:0_2px_24px_rgba(0,0,0,.25)] sm:text-[52px] lg:text-[76px]">
+              <h1 className="hero-3d__title mt-1 text-[34px] font-extrabold leading-[1.04] tracking-[-0.035em] [text-shadow:0_2px_24px_rgba(0,0,0,.25)] sm:text-[52px] lg:text-[76px]">
                 Discover Metro Manila
               </h1>
               <p className="mt-2 max-w-[720px] text-[14px] font-medium opacity-95 sm:mt-3.5 sm:text-[20px]">
-                Libre spots, food trips and weekend gala plans, rated by locals across 17 cities.
+                Museums, food spots, parks and nightlife across 17 cities, with prices and local reviews.
               </p>
-              <div className="mt-4 sm:mt-7">
+              <div className="hero-3d__search mt-4 sm:mt-7">
                 <HeroSearch />
               </div>
               <div className="mt-4 hidden flex-wrap items-center gap-2.5 text-[14px] md:flex">

@@ -869,7 +869,7 @@ function MobileResultsView({
                 key={place.id}
                 place={place}
                 priority={index < 2}
-                badge={place.budgetMin === 0 ? 'Libre' : null}
+                badge={place.budgetMin === 0 ? 'Free' : null}
                 isSelected={selectedPlaceId === place.id}
                 onGuestFavorite={() => guestAuth.open('favorite')}
                 onActivate={onViewDetails}
@@ -1036,7 +1036,7 @@ function DesktopResultsView({
               key={place.id}
               place={place}
               priority={index < 4}
-              badge={place.budgetMin === 0 ? 'Libre' : null}
+              badge={place.budgetMin === 0 ? 'Free' : null}
               isSelected={selectedPlaceId === place.id}
               onHover={() => onSelectPlace(place.id)}
               onGuestFavorite={() => guestAuth.open('favorite')}

@@ -80,7 +80,7 @@ export async function postPlaceCheckin(request: HttpRequest, context: Invocation
         return { status: 400, jsonBody: { message: "Turn on location so we can confirm you're here." } };
       }
       if (!isNearPlace({ lat, lng }, { lat: place.latitude, lng: place.longitude })) {
-        return { status: 422, jsonBody: { code: "TOO_FAR", message: `Mukhang wala ka pa sa ${place.name}. Check in when you're there.` } };
+        return { status: 422, jsonBody: { code: "TOO_FAR", message: `You don't seem to be at ${place.name} yet. Check in when you arrive.` } };
       }
     }
 

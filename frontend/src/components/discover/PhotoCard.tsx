@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHeart, faStar } from '@fortawesome/free-solid-svg-icons'
 import { faHeart as faHeartOutline } from '@fortawesome/free-regular-svg-icons'
 import InternalLink from '../InternalLink'
+import { useTilt } from '../../hooks/useParallax'
 import { useSavedFavorites } from '../../context/SavedFavoritesContext'
 import { getStaticPlaceImageUrlForSlug } from '../../data/placeIndexVisuals'
 import { prefetchPlaceDetail } from '../../utils/placeDetailCache'
@@ -45,7 +46,7 @@ function getImageCandidates(place: PhotoCardPlace) {
 
 function formatPrice(budgetMin: number | null | undefined) {
   if (budgetMin == null) return null
-  return budgetMin <= 0 ? 'Libre' : `from ₱${Math.round(budgetMin).toLocaleString('en-PH')}`
+  return budgetMin <= 0 ? 'Free' : `from ₱${Math.round(budgetMin).toLocaleString('en-PH')}`
 }
 
 type PhotoCardProps = {
@@ -94,8 +95,9 @@ function PhotoCard({ place, onGuestFavorite, badge, priority = false, onOpen, on
   }
 
   const isFree = place.budgetMin != null && place.budgetMin <= 0
-  const badgeLabel = badge ?? (isFree ? 'Libre' : null)
-  const isSellerBadge = badgeLabel != null && badgeLabel !== 'Libre'
+  const tilt = useTilt<HTMLDivElement>()
+  const badgeLabel = badge ?? (isFree ? 'Free' : null)
+  const isSellerBadge = badgeLabel != null && badgeLabel !== 'Free'
   const areaText = place.localArea || place.area || place.city
 
   return (
@@ -121,7 +123,9 @@ function PhotoCard({ place, onGuestFavorite, badge, priority = false, onOpen, on
         }}
       >
         <div
-          className={`relative aspect-[3/2] overflow-hidden rounded-[14px] bg-[var(--bg-soft)] ${
+          onPointerMove={tilt.onPointerMove}
+          onPointerLeave={tilt.onPointerLeave}
+          className={`tilt-card relative aspect-[3/2] overflow-hidden rounded-[14px] bg-[var(--bg-soft)] ${
             isSelected ? 'ring-2 ring-[var(--primary)] ring-offset-2 ring-offset-[var(--bg)]' : ''
           }`}
         >
@@ -136,6 +140,7 @@ function PhotoCard({ place, onGuestFavorite, badge, priority = false, onOpen, on
               className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
             />
           ) : null}
+          <span aria-hidden="true" className="tilt-card__glare" />
           {badgeLabel ? (
             <span
               className={`absolute left-3 top-3 rounded-md px-2 py-1 text-[12px] font-bold ${
@@ -163,7 +168,7 @@ function PhotoCard({ place, onGuestFavorite, badge, priority = false, onOpen, on
             <div className="mt-2.5">
               <span className="block text-[12px] text-[var(--text-muted)]">{isFree ? 'Entrance' : 'from'}</span>
               <span className={`text-[17px] font-extrabold ${isFree ? 'text-[var(--primary)]' : 'text-[var(--text-main)]'}`}>
-                {isFree ? 'Libre' : price.replace(/^from /, '')}
+                {isFree ? 'Free' : price.replace(/^from /, '')}
               </span>
             </div>
           ) : null}

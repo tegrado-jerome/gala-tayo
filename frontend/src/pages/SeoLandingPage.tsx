@@ -245,7 +245,7 @@ export default function SeoLandingPage({
                       key={rawPlace.id}
                       place={toPhotoCardPlace(resolvedPlace)}
                       priority={index < 4}
-                      badge={resolvedPlace.budget_min === 0 ? 'Libre' : null}
+                      badge={resolvedPlace.budget_min === 0 ? 'Free' : null}
                       onGuestFavorite={() => listingGuestAuth.open('favorite')}
                     />
                   )

@@ -421,7 +421,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
                           place={toPhotoCardPlace(resolvedPlace)}
                           isSelected={selectedPlaceId === rawPlace.id}
                           priority={index < 4}
-                          badge={resolvedPlace.budget_min === 0 ? 'Libre' : null}
+                          badge={resolvedPlace.budget_min === 0 ? 'Free' : null}
                           onGuestFavorite={() => listingGuestAuth.open('favorite')}
                           onOpen={() => {
                             setSelectedPlaceId(rawPlace.id)

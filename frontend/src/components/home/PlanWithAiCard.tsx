@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faArrowRight, faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons'
 import { navigateToPath } from '../../utils/navigation'
 
-const examplePrompt = 'Date sa BGC, ₱2k total, dinner tapos sine'
+const examplePrompt = 'Dinner and a movie in BGC for two, ₱2,000 budget'
 
 function PlanWithAiCard() {
   const [prompt, setPrompt] = useState('')
@@ -24,7 +24,7 @@ function PlanWithAiCard() {
           <FontAwesomeIcon icon={faWandMagicSparkles} className="h-3 w-3" />
           Plan with AI
         </span>
-        <span className="text-[11px] opacity-60">One sentence → full day</span>
+        <span className="text-[11px] opacity-60">Describe your day, get a full plan</span>
       </div>
 
       <label htmlFor="home-plan-with-ai" className="sr-only">

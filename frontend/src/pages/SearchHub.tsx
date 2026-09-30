@@ -748,7 +748,7 @@ function SearchHub({
                               key={place.id}
                               place={cardPlace}
                               priority={index < 2}
-                              badge={cardPlace.budgetMin === 0 ? 'Libre' : null}
+                              badge={cardPlace.budgetMin === 0 ? 'Free' : null}
                               isSelected={selectedPlaceId === place.id}
                               onGuestFavorite={() => setPromptLogin(true)}
                               onActivate={handlePlaceSelect}

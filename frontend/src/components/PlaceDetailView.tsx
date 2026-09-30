@@ -117,7 +117,7 @@ function buildPriceBadgeLabel(
 ) {
   const parsedBudgetMin = typeof budgetMin === 'number' ? budgetMin : Number(budgetMin)
   if (Number.isFinite(parsedBudgetMin) && parsedBudgetMin <= 0) {
-    return 'Libre'
+    return 'Free entry'
   }
   if (Number.isFinite(parsedBudgetMin)) {
     return `Starting from ₱${new Intl.NumberFormat('en-US').format(Math.max(0, Math.floor(parsedBudgetMin)))}`
@@ -2904,11 +2904,11 @@ function PlaceDetailView({
                     {place.budget_min == null ? (
                       <span className="font-semibold">Check price on site</span>
                     ) : Number(place.budget_min) <= 0 ? (
-                      <span className="font-semibold">Libre</span>
+                      <span className="font-semibold">Free entry</span>
                     ) : (
                       <>
                         <span className="font-semibold">₱{Number(place.budget_min).toLocaleString('en-PH')}</span>
-                        <span className="text-[16px] text-[var(--text-muted)]"> / tao</span>
+                        <span className="text-[16px] text-[var(--text-muted)]"> per person</span>
                       </>
                     )}
                   </p>
@@ -2944,7 +2944,7 @@ function PlaceDetailView({
         <div className="mx-auto flex max-w-[720px] items-center gap-3">
           <div className="min-w-0 flex-1">
             <p className="truncate text-[15px] font-semibold text-[var(--text-main)]">
-              {place.budget_min == null ? 'Price on site' : Number(place.budget_min) <= 0 ? 'Libre' : `₱${Number(place.budget_min).toLocaleString('en-PH')} / tao`}
+              {place.budget_min == null ? 'Price on site' : Number(place.budget_min) <= 0 ? 'Free entry' : `₱${Number(place.budget_min).toLocaleString('en-PH')} per person`}
             </p>
             <button type="button" onClick={openDirections} disabled={!directionsUrl} className="text-[13px] font-semibold text-[var(--text-main)] underline underline-offset-2 disabled:opacity-40">
               Directions

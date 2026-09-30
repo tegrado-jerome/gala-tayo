@@ -43,7 +43,7 @@ function BudgetPanel({ plan, barkada, session, onBarkadaChange }: BudgetPanelPro
 
       {goingMembers.length <= 1 ? (
         <div className="flex items-center gap-3">
-          <span className="text-[14px] text-[var(--text-strong)]">Ilan kayo?</span>
+          <span className="text-[14px] text-[var(--text-strong)]">Group size</span>
           <div className="flex items-center rounded-full border border-[var(--line)]">
             <button type="button" aria-label="Fewer people" onClick={() => setManualSize((size) => Math.max(1, size - 1))} className="flex h-9 w-9 items-center justify-center text-[var(--text-strong)]">
               <FontAwesomeIcon icon={faMinus} className="h-3 w-3" />
@@ -79,7 +79,7 @@ function BudgetPanel({ plan, barkada, session, onBarkadaChange }: BudgetPanelPro
 
       {goingMembers.length > 1 ? (
         <section>
-          <h3 className="font-data text-[11px] uppercase tracking-[0.12em] text-[var(--text-muted)]">Hatian</h3>
+          <h3 className="font-data text-[11px] uppercase tracking-[0.12em] text-[var(--text-muted)]">Split</h3>
           <ul className="mt-2 grid gap-2 sm:grid-cols-2">
             {goingMembers.map((member) => (
               <li key={member.user_id} className="flex items-center gap-3 rounded-[14px] border border-[var(--line)] bg-[var(--card)] px-3.5 py-2.5">

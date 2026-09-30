@@ -41,7 +41,7 @@ function CheckInButton({
       setStatus({
         kind: 'done',
         message: result.new_stamp_city
-          ? `Bagong stamp: ${result.new_stamp_city}! Streak: ${result.streak_weeks} ${result.streak_weeks === 1 ? 'week' : 'weeks'}.`
+          ? `New stamp: ${result.new_stamp_city}. Streak: ${result.streak_weeks} ${result.streak_weeks === 1 ? 'week' : 'weeks'}.`
           : `Checked in at ${placeName}. Streak: ${result.streak_weeks} ${result.streak_weeks === 1 ? 'week' : 'weeks'}.`,
       })
     } catch (error) {
@@ -52,7 +52,7 @@ function CheckInButton({
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[16px] border border-dashed border-[var(--line-strong)] px-4 py-3">
       <div className="min-w-0 flex-1">
-        <p className="text-[14px] font-semibold text-[var(--text-main)]">Nandito ka?</p>
+        <p className="text-[14px] font-semibold text-[var(--text-main)]">Here now?</p>
         <p className="text-[12px] text-[var(--text-muted)]" aria-live="polite">
           {status.kind === 'done' || status.kind === 'error'
             ? status.message

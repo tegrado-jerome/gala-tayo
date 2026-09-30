@@ -6217,3 +6217,75 @@ body.feature-guide-open nav[aria-label="Primary"] {
     transition: none;
   }
 }
+
+/* Fake-3D parallax hero (Home). Variables come from useHeroParallax. */
+.hero-3d {
+  --scroll: 0;
+  --mx: 0;
+  --my: 0;
+  perspective: 1200px;
+}
+
+.hero-3d__photo {
+  transform:
+    translate3d(calc(var(--mx) * -18px), calc(var(--scroll) * 180px + var(--my) * -12px), 0)
+    scale(calc(1.12 + var(--scroll) * 0.08));
+  transition: transform 120ms linear;
+  will-change: transform;
+}
+
+.hero-3d__copy {
+  transform-style: preserve-3d;
+  transform:
+    translate3d(calc(var(--mx) * 10px), calc(var(--scroll) * 90px), 0)
+    rotateX(calc(var(--my) * -3deg))
+    rotateY(calc(var(--mx) * 4deg));
+  opacity: calc(1 - var(--scroll) * 2.2);
+  transition: transform 160ms ease-out;
+}
+
+.hero-3d__title {
+  transform: translateZ(40px);
+}
+
+.hero-3d__search {
+  transform: translateZ(70px);
+}
+
+/* Hover tilt with a soft glare (PhotoCard). Variables come from useTilt. */
+.tilt-card {
+  --rx: 0deg;
+  --ry: 0deg;
+  --gx: 50%;
+  --gy: 50%;
+  transform: perspective(900px) rotateX(var(--rx)) rotateY(var(--ry));
+  transform-style: preserve-3d;
+  transition: transform 350ms cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 350ms ease;
+}
+
+.tilt-card[data-tilting='true'] {
+  transition: transform 80ms linear, box-shadow 350ms ease;
+  box-shadow: 0 22px 40px -18px rgba(16, 24, 40, 0.45);
+}
+
+.tilt-card__glare {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: radial-gradient(circle at var(--gx) var(--gy), rgba(255, 255, 255, 0.35), transparent 55%);
+  transition: opacity 300ms ease;
+}
+
+.tilt-card[data-tilting='true'] .tilt-card__glare {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-3d__photo,
+  .hero-3d__copy,
+  .tilt-card {
+    transform: none !important;
+    transition: none !important;
+  }
+}
