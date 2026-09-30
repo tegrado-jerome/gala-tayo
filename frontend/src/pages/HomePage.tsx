@@ -362,7 +362,6 @@ function HomePage({ navigationSource }: { navigationSource: NavigationSource }) 
                   key={`${activeTab}-${place.slug}`}
                   place={place}
                   priority={index < 2}
-                  badge={index < 2 && activeTab === 'all' ? 'Best seller' : null}
                   onGuestFavorite={openGuestFavorite}
                 />
               ))}

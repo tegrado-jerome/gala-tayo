@@ -24,6 +24,8 @@ export type PhotoCardPlace = {
   budgetMin?: number | null
 }
 
+const TOP_RATED_MIN = 4.7
+
 export function getPlaceHref(place: PhotoCardPlace) {
   if (!place.slug) return '/search'
   const areaMeta = resolveAreaMeta({ city: place.city, area: place.area, localArea: place.localArea })
@@ -96,8 +98,10 @@ function PhotoCard({ place, onGuestFavorite, badge, priority = false, onOpen, on
 
   const isFree = place.budgetMin != null && place.budgetMin <= 0
   const tilt = useTilt<HTMLDivElement>()
-  const badgeLabel = badge ?? (isFree ? 'Free' : null)
-  const isSellerBadge = badgeLabel != null && badgeLabel !== 'Free'
+  // Same idea as GetYourGuide/Klook "Top rated": only shown when the rating earns it.
+  const isTopRated = (place.rating ?? 0) >= TOP_RATED_MIN
+  const badgeLabel = badge ?? (isFree ? 'Free' : isTopRated ? 'Top rated' : null)
+  const isStrongBadge = badgeLabel != null && badgeLabel !== 'Free'
   const areaText = place.localArea || place.area || place.city
 
   return (
@@ -144,7 +148,7 @@ function PhotoCard({ place, onGuestFavorite, badge, priority = false, onOpen, on
           {badgeLabel ? (
             <span
               className={`absolute left-3 top-3 rounded-md px-2 py-1 text-[12px] font-bold ${
-                isSellerBadge ? 'bg-[#067647] text-white' : 'bg-[#e6f6ee] text-[#067647]'
+                isStrongBadge ? 'bg-[#067647] text-white' : 'bg-[#e6f6ee] text-[#067647]'
               }`}
             >
               {badgeLabel}
