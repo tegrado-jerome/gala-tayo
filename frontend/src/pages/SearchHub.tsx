@@ -1,3 +1,4 @@
+import PhotoCard from '../components/discover/PhotoCard'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { PlaceCardData } from '../components/PlaceCard'
 import AppHeader from '../components/AppHeader'
@@ -52,6 +53,7 @@ import {
   SearchLoadingState,
   SearchLoadingCard,
   MobileResultsTabs,
+  toPhotoCardPlace,
   GuidedSearchPage,
   MobileResultsView,
   DesktopResultsView,
@@ -60,7 +62,6 @@ import {
   SearchFilterPanel,
   ActiveSearchChips,
 } from '../components/home/search/SearchComponents'
-import PlaceCard from '../components/PlaceCard'
 import MapView from '../components/MapView'
 
 function SearchHub({
@@ -739,18 +740,21 @@ function SearchHub({
                     </div>
                   ) : mobileResultsView === 'cards' ? (
                     <div className="mt-4 grid gap-3">
-                      <div className={`grid gap-3 transition ${isPageLoading ? 'pointer-events-none opacity-60' : 'opacity-100'}`}>
-                        {visiblePlaces.map((place) => (
-                          <PlaceCard
-                            key={place.id}
-                            place={place}
-                            isSelected={selectedPlaceId === place.id}
-                            searchResultCard
-                            dataSearchPlaceId={place.id}
-                            onSelect={handleMapPlaceSelect}
-                            onOpen={handlePlaceSelect}
-                          />
-                        ))}
+                      <div className={`grid gap-x-4 gap-y-8 transition sm:grid-cols-2 ${isPageLoading ? 'pointer-events-none opacity-60' : 'opacity-100'}`}>
+                        {visiblePlaces.map((place, index) => {
+                          const cardPlace = toPhotoCardPlace(place)
+                          return (
+                            <PhotoCard
+                              key={place.id}
+                              place={cardPlace}
+                              priority={index < 2}
+                              badge={cardPlace.budgetMin === 0 ? 'Libre' : null}
+                              isSelected={selectedPlaceId === place.id}
+                              onGuestFavorite={() => setPromptLogin(true)}
+                              onActivate={() => handlePlaceSelect(place.id)}
+                            />
+                          )
+                        })}
                       </div>
                       <div className="pt-1">
                         <SearchPagination
@@ -778,14 +782,14 @@ function SearchHub({
                       </section>
 
                       {selectedPlace ? (
-                        <PlaceCard
-                          place={selectedPlace}
-                          compact
-                          searchResultCard
-                          isSelected
-                          onSelect={handleMapPlaceSelect}
-                          onOpen={handlePlaceSelect}
-                        />
+                        <div className="max-w-[340px]">
+                          <PhotoCard
+                            place={toPhotoCardPlace(selectedPlace)}
+                            isSelected
+                            onGuestFavorite={() => setPromptLogin(true)}
+                            onActivate={() => handlePlaceSelect(selectedPlace.id)}
+                          />
+                        </div>
                       ) : null}
 
                       <button

@@ -3,14 +3,14 @@
 :root {
   color-scheme: light;
   --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --bg-main: #f5f0e7;
-  --bg-soft: #efe8dc;
-  --card: #fffdf8;
-  --panel: #fffdf8;
-  --surface-alt: #f8f4ec;
-  --surface-elevated: rgba(255, 253, 248, 0.94);
-  --surface-overlay: rgba(255, 253, 248, 0.98);
-  --surface-ghost: rgba(255, 253, 248, 0.82);
+  --bg-main: #fbfaf7;
+  --bg-soft: #f3f1ec;
+  --card: #ffffff;
+  --panel: #ffffff;
+  --surface-alt: #f7f5f1;
+  --surface-elevated: rgba(255, 255, 255, 0.96);
+  --surface-overlay: rgba(255, 255, 255, 0.98);
+  --surface-ghost: rgba(255, 255, 255, 0.86);
   --primary: #d6451b;
   --primary-dark: #a8330f;
   --primary-soft: #fbe3d8;
@@ -20,24 +20,24 @@
   --text-light: #9a948a;
   --text-disabled: #b3ac9f;
   --text-inverse: #ffffff;
-  --border: #e4dccd;
-  --border-strong: #d3c8b5;
+  --border: #ebe7df;
+  --border-strong: #d8d2c6;
   --success: #2f7a4f;
   --success-soft: #e6f2ea;
   --danger: #dc2626;
   --danger-soft: #fef2f2;
   --warning: #d97706;
   --warning-soft: #fff7ed;
-  --hover-surface: #f8f4ec;
-  --hover-surface-strong: #efe8dc;
+  --hover-surface: #f7f5f1;
+  --hover-surface-strong: #f1eee8;
   --selected-surface: rgba(var(--accent-rgb), 0.14);
   --pressed-surface: rgba(var(--accent-rgb), 0.2);
   --input-disabled-bg: rgba(239, 232, 220, 0.9);
   --danger-border: rgba(220, 38, 38, 0.2);
   --warning-border: rgba(217, 119, 6, 0.24);
   --backdrop: rgba(27, 26, 23, 0.32);
-  --nav-shell-bg: rgba(255, 253, 248, 0.94);
-  --nav-shell-border: #e4dccd;
+  --nav-shell-bg: rgba(255, 255, 255, 0.96);
+  --nav-shell-border: #ebe7df;
   --nav-shell-icon: #8a8378;
   --nav-shell-icon-active: var(--primary);
   --home-eyebrow: var(--accent-deep);
@@ -97,7 +97,7 @@
   --ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
   --accent-rgb: 214, 69, 27;
   --bg: var(--bg-main);
-  --chip: #f8f4ec;
+  --chip: #f7f5f1;
   --text: var(--text-main);
   --muted: var(--text-muted);
   --line: var(--border);
@@ -107,7 +107,7 @@
   --accent-soft: rgba(var(--accent-rgb), 0.12);
   --accent-wash: rgba(var(--accent-rgb), 0.1);
   --accent-glow: rgba(var(--accent-rgb), 0.22);
-  --header-bg: rgba(245, 240, 231, 0.96);
+  --header-bg: rgba(251, 250, 247, 0.94);
   --header-glow: none;
   --radius-sm: 0.875rem;
   --radius-md: 1rem;
@@ -330,7 +330,6 @@ html {
 
 @layer base {
   h1,
-  h2,
   .font-display {
     font-family: var(--font-display);
     font-optical-sizing: auto;
