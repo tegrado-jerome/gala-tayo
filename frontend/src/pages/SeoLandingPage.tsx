@@ -5,7 +5,10 @@ import { faArrowRight, faCompass, faHouse, faLocationDot, faTag } from '@fortawe
 import AppHeader from '../components/AppHeader'
 import Breadcrumb from '../components/navigation/Breadcrumb'
 import InternalLink from '../components/InternalLink'
-import PlaceCard, { type PlaceCardData } from '../components/PlaceCard'
+import type { PlaceCardData } from '../components/PlaceCard'
+import PhotoCard from '../components/discover/PhotoCard'
+import { toPhotoCardPlace } from '../components/home/search/SearchComponents'
+import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
 import PlaceListingSkeleton from '../components/PlaceListingSkeleton'
 import SeoHead from '../components/SeoHead'
 import { PageContainer, PageShell, ResponsiveGrid } from '../components/layout/ResponsiveLayouts'
@@ -38,6 +41,7 @@ export default function SeoLandingPage({
   slug: string
   navigationSource?: 'push' | 'replace' | 'pop'
 }) {
+  const listingGuestAuth = useGuestAuthPrompt()
   const target = useMemo(() => getLandingTargetBySlug(slug), [slug])
   const metadata = useMemo(() => (target ? buildLandingMetadata(target) : null), [target])
   const [items, setItems] = useState<SeoPlaceSummary[]>([])
@@ -223,7 +227,7 @@ export default function SeoLandingPage({
                 <p className="mt-1 text-sm leading-6 text-[var(--muted)]">We&apos;ll keep this guide updated as more approved places are added.</p>
               </section>
             ) : (
-              <ResponsiveGrid className="mt-4 gap-4">
+              <ResponsiveGrid className="mt-4 gap-x-5 gap-y-9">
                 {items.map((rawPlace, index) => {
                   const place = mapSeoPlaceToCard(rawPlace) as PlaceCardData
                   const livePlace = placeDetailsBySlug[rawPlace.slug]
@@ -237,11 +241,12 @@ export default function SeoLandingPage({
                     : place
 
                   return (
-                    <PlaceCard
+                    <PhotoCard
                       key={rawPlace.id}
-                      place={resolvedPlace}
-                      searchResultCard
-                      imagePriority={index < 4}
+                      place={toPhotoCardPlace(resolvedPlace)}
+                      priority={index < 4}
+                      badge={resolvedPlace.budget_min === 0 ? 'Libre' : null}
+                      onGuestFavorite={() => listingGuestAuth.open('favorite')}
                     />
                   )
                 })}
@@ -285,6 +290,7 @@ export default function SeoLandingPage({
           </section>
         </PageContainer>
       </main>
+      {listingGuestAuth.promptElement}
     </PageShell>
   )
 }

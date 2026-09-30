@@ -55,7 +55,7 @@ type PhotoCardProps = {
   priority?: boolean
   onOpen?: () => void
   // When set, clicking the card calls this instead of following the link (search keeps its own navigation state).
-  onActivate?: () => void
+  onActivate?: (placeId: string) => void
   onHover?: () => void
   isSelected?: boolean
 }
@@ -112,7 +112,7 @@ function PhotoCard({ place, onGuestFavorite, badge, priority = false, onOpen, on
           onOpen?.()
           if (onActivate) {
             event.preventDefault()
-            onActivate()
+            onActivate(place.id)
           }
         }}
       >

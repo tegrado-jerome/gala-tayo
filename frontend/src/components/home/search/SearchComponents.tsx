@@ -872,7 +872,7 @@ function MobileResultsView({
                 badge={place.budgetMin === 0 ? 'Libre' : null}
                 isSelected={selectedPlaceId === place.id}
                 onGuestFavorite={() => guestAuth.open('favorite')}
-                onActivate={() => onViewDetails(place.id)}
+                onActivate={onViewDetails}
               />
             ))}
           </div>
@@ -906,7 +906,7 @@ function MobileResultsView({
                 place={toPhotoCardPlace(selectedPlace)}
                 isSelected
                 onGuestFavorite={() => guestAuth.open('favorite')}
-                onActivate={() => onViewDetails(selectedPlace.id)}
+                onActivate={onViewDetails}
               />
             </div>
           ) : (
@@ -1040,7 +1040,7 @@ function DesktopResultsView({
               isSelected={selectedPlaceId === place.id}
               onHover={() => onSelectPlace(place.id)}
               onGuestFavorite={() => guestAuth.open('favorite')}
-              onActivate={() => onViewDetails(place.id)}
+              onActivate={onViewDetails}
             />
           ))}
         </div>

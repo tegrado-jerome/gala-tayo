@@ -16,10 +16,10 @@ export function TransportColumn({
   return (
     <div>
       <div className="flex items-start gap-2.5">
-        <Icon name={icon} className={`mt-1 h-4 w-4 shrink-0 text-[var(--accent-deep)] ${iconClassName}`.trim()} />
+        <Icon name={icon} className={`mt-0.5 h-5 w-5 shrink-0 text-[var(--text-main)] ${iconClassName}`.trim()} />
         <div>
-          <span className="text-[12px] font-black text-slate-800">{title}: </span>
-          <span className="text-[13px] font-semibold leading-5 text-slate-600">{children}</span>
+          <p className="text-[16px] font-semibold text-[var(--text-main)]">{title}</p>
+          <p className="mt-0.5 text-[15px] leading-6 text-[var(--text-muted)]">{children}</p>
         </div>
       </div>
     </div>

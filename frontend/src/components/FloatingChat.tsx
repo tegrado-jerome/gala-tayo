@@ -9,7 +9,7 @@ import { closeFloatingChat, openFloatingChat, useFloatingChat } from '../utils/f
 import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
 import { navigateToPath } from '../utils/navigation'
 import { isAdminPath } from '../utils/adminRoutes'
-import { isPath } from '../utils/routes'
+import { isPath, parseCanonicalPlacePath } from '../utils/routes'
 import { shouldShowMobileBottomNav } from '../utils/routeGuards'
 
 const HIDDEN_PATHS = [
@@ -87,6 +87,8 @@ function FloatingChat({ pathname }: { pathname: string }) {
   const { hidden: isBottomNavHidden } = useBottomNav()
   const isHidden = isAdminPath(pathname) || HIDDEN_PATHS.some((path) => isPath(pathname, path))
   const hasBottomNav = !isBottomNavHidden && (isPath(pathname, '/home') || shouldShowMobileBottomNav(pathname))
+  // Place pages add a sticky action bar above the nav on phones; lift the bubble over it.
+  const hasPlaceActionBar = Boolean(parseCanonicalPlacePath(pathname))
 
   useEffect(() => {
     if (isHidden) {
@@ -110,7 +112,9 @@ function FloatingChat({ pathname }: { pathname: string }) {
         className={`fixed right-4 z-[6500] h-14 w-14 items-center justify-center rounded-full bg-[var(--accent)] text-white shadow-[0_12px_28px_rgba(var(--accent-rgb),0.38)] transition hover:scale-105 hover:bg-[var(--accent-deep)] active:scale-95 lg:bottom-6 lg:right-6 ${
           isOpen ? 'hidden sm:flex' : 'flex'
         } ${
-          hasBottomNav
+          hasPlaceActionBar
+            ? 'bottom-[calc(env(safe-area-inset-bottom,0px)+9.5rem)]'
+            : hasBottomNav
             ? 'bottom-[calc(env(safe-area-inset-bottom,0px)+4.75rem)]'
             : 'bottom-[calc(env(safe-area-inset-bottom,0px)+1rem)]'
         }`}

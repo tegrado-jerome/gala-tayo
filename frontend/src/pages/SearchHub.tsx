@@ -751,7 +751,7 @@ function SearchHub({
                               badge={cardPlace.budgetMin === 0 ? 'Libre' : null}
                               isSelected={selectedPlaceId === place.id}
                               onGuestFavorite={() => setPromptLogin(true)}
-                              onActivate={() => handlePlaceSelect(place.id)}
+                              onActivate={handlePlaceSelect}
                             />
                           )
                         })}
@@ -787,7 +787,7 @@ function SearchHub({
                             place={toPhotoCardPlace(selectedPlace)}
                             isSelected
                             onGuestFavorite={() => setPromptLogin(true)}
-                            onActivate={() => handlePlaceSelect(selectedPlace.id)}
+                            onActivate={handlePlaceSelect}
                           />
                         </div>
                       ) : null}
