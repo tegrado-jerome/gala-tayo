@@ -1,0 +1,42 @@
+name: SEO daily trends
+
+# Saves Google Trends searches in the Philippines that relate to going out in Metro Manila.
+# The weekly guides job uses them to pick fresh topics first.
+on:
+  schedule:
+    - cron: "0 23 * * *" # 7:00 AM Philippine time
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: seo-data
+  cancel-in-progress: false
+
+jobs:
+  trends:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Collect trends
+        working-directory: frontend
+        run: node scripts/seo/trends.mjs
+
+      - name: Commit
+        run: |
+          if git diff --quiet -- frontend/scripts/seo/data; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add frontend/scripts/seo/data
+          git commit -m "chore(seo): save daily trends"
+          git pull --rebase
+          git push
