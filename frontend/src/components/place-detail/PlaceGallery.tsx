@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode, type UIEvent } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type ReactNode, type UIEvent } from 'react'
 import { Camera } from '@phosphor-icons/react/dist/csr/Camera'
 import { CaretLeft } from '@phosphor-icons/react/dist/csr/CaretLeft'
 import { DotsNine } from '@phosphor-icons/react/dist/csr/DotsNine'
@@ -10,9 +10,21 @@ import { uniqueList } from './helpers'
 import { resizedMediaUrl } from '../../data/r2Config'
 
 const IMAGE_SOURCE_NOTE = 'Images come from third-party sources.'
+const DESKTOP_QUERY = '(min-width: 1024px)'
+
+function subscribeDesktop(onChange: () => void) {
+  const query = window.matchMedia(DESKTOP_QUERY)
+  query.addEventListener('change', onChange)
+  return () => query.removeEventListener('change', onChange)
+}
+
+/** Only one gallery is mounted, so the hidden one never downloads photos. */
+export function useIsDesktopGallery() {
+  return useSyncExternalStore(subscribeDesktop, () => window.matchMedia(DESKTOP_QUERY).matches, () => true)
+}
 
 /** Every usable photo, with broken URLs dropped once they fail to load. */
-export function usePhotoList(imageUrls: string[]) {
+export function usePhotoList(imageUrls: Array<string | null | undefined>) {
   const [brokenPhotoUrls, setBrokenPhotoUrls] = useState<Set<string>>(new Set())
   const photoSourceKey = uniqueList(imageUrls).join('|')
 
@@ -90,17 +102,28 @@ type GalleryProps = {
 /** Phone: full-width swipeable photos with a "1 / N" counter and round buttons over them. */
 export function PhoneGallery({ photos, placeName, onBroken, onOpen, showAddPhotoAction, onContribute, topBar }: GalleryProps & { topBar: ReactNode }) {
   const [activeIndex, setActiveIndex] = useState(0)
+  const trackRef = useRef<HTMLDivElement>(null)
   const safeIndex = Math.min(activeIndex, Math.max(photos.length - 1, 0))
+  const leadPhoto = photos[0]
+
+  // When more photos arrive the browser keeps the already-visible slide in view, which can land on the last one.
+  useLayoutEffect(() => {
+    if (trackRef.current) trackRef.current.scrollLeft = 0
+    setActiveIndex(0)
+  }, [leadPhoto])
 
   const handleScroll = (event: UIEvent<HTMLDivElement>) => {
     const track = event.currentTarget
     if (track.clientWidth > 0) setActiveIndex(Math.round(track.scrollLeft / track.clientWidth))
   }
+  // Photos load one swipe ahead, so the first photo has the connection to itself.
+  const [furthestIndex, setFurthestIndex] = useState(0)
+  if (safeIndex > furthestIndex) setFurthestIndex(safeIndex)
 
   return (
     <div className="pd-hero lg:hidden">
       {photos.length > 0 ? (
-        <div className="pd-hero-track" onScroll={handleScroll} aria-roledescription="carousel" aria-label={`Photos of ${placeName}`}>
+        <div ref={trackRef} className="pd-hero-track" onScroll={handleScroll} aria-roledescription="carousel" aria-label={`Photos of ${placeName}`}>
           {photos.map((photo, index) => (
             <button
               key={photo}
@@ -109,13 +132,16 @@ export function PhoneGallery({ photos, placeName, onBroken, onOpen, showAddPhoto
               onClick={() => onOpen(index)}
               aria-label={`Open photo ${index + 1} of ${photos.length}`}
             >
-              <img
-                src={resizedMediaUrl(photo, 'hero')}
-                alt={index === 0 ? placeName : `${placeName}, photo ${index + 1} of ${photos.length}`}
-                loading={index === 0 ? 'eager' : 'lazy'}
-                fetchPriority={index === 0 ? 'high' : undefined}
-                onError={() => onBroken(photo)}
-              />
+              {index <= furthestIndex + 1 ? (
+                <img
+                  src={resizedMediaUrl(photo, 'hero')}
+                  alt={index === 0 ? placeName : `${placeName}, photo ${index + 1} of ${photos.length}`}
+                  loading={index === 0 ? 'eager' : 'lazy'}
+                  fetchPriority={index === 0 ? 'high' : 'low'}
+                  decoding={index === 0 ? 'sync' : 'async'}
+                  onError={() => onBroken(photo)}
+                />
+              ) : null}
             </button>
           ))}
         </div>
@@ -183,7 +209,7 @@ export function DesktopGallery({
           aria-label={`Open photo ${index + 1} of ${photos.length}`}
         >
           <img
-            src={resizedMediaUrl(photo, 'hero')}
+            src={resizedMediaUrl(photo, index === 0 ? 'hero' : 'card')}
             alt={index === 0 ? placeName : ''}
             loading={index === 0 ? 'eager' : 'lazy'}
             fetchPriority={index === 0 ? 'high' : undefined}

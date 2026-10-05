@@ -91,9 +91,14 @@
 .m-rank-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 12px; list-style: none; padding: 0; margin: 0; }
 @media (min-width: 768px) { .m-rank-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (min-width: 1024px) { .m-rank-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 32px 24px; } }
-.m-rank { position: relative; min-width: 0; container-type: inline-size; }
-.m-rank-n { position: absolute; z-index: 2; left: 10px; top: calc(100cqw - 40px); display: grid; place-items: center; min-width: 30px; height: 30px; padding: 0 8px; border-radius: var(--r-pill); background: var(--ink); color: var(--on-ink); font: 700 13px/1 var(--font-display); box-shadow: 0 0 0 2px var(--surface); pointer-events: none; }
-.m-rank-desc { margin-top: 6px; font-size: 13px; line-height: 1.45; color: var(--ink-2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.m-rank { position: relative; min-width: 0; display: flex; flex-direction: column; }
+/* Cards in one row share a height; the blurb under them is always two lines tall. */
+.m-rank > div, .m-rank > div > div { flex: 1 1 auto; display: flex; flex-direction: column; }
+.m-rank .g-pc { flex: 1 1 auto; }
+/* Rank sits on the photo's top-left corner, clear of the title; a rain-safe flag moves beside it. */
+.m-rank-n { position: absolute; z-index: 2; left: 10px; top: 10px; display: grid; place-items: center; min-width: 30px; height: 30px; padding: 0 8px; border-radius: var(--r-pill); background: var(--ink); color: var(--on-ink); font: 700 13px/1 var(--font-display); box-shadow: var(--sh-1); pointer-events: none; }
+.m-rank .g-pc-flag { left: 48px; }
+.m-rank-desc { margin-top: 6px; min-height: calc(2 * 1.45em); font-size: 13px; line-height: 1.45; color: var(--ink-2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .m-faq { border-top: 1px solid var(--line-2); }
 .m-faq details { border-bottom: 1px solid var(--line-2); }
 .m-faq summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 56px; padding: 14px 0; list-style: none; cursor: pointer; font: 600 16px/1.35 var(--font-display); }
@@ -160,6 +165,8 @@
 .m-toc::-webkit-scrollbar { display: none; }
 .m-toc a { flex: 0 0 auto; display: inline-flex; align-items: center; min-height: 36px; padding: 0 12px; border-radius: var(--r-pill); border: 1px solid var(--line); color: var(--ink); font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap; }
 .m-toc a:hover { border-color: var(--ink); }
+.m-toc a { position: relative; }
+.m-toc a::after { content: ''; position: absolute; inset: -4px 0; }
 .m-legal section { scroll-margin-top: 128px; }
 .m-rate { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
 .m-rate button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 84px; min-width: 0; padding: 0 2px; border: 1px solid var(--line); border-radius: var(--r-3); background: var(--surface); color: var(--ink-2); font: 600 12px/1.2 var(--font-body); cursor: pointer; transition: border-color var(--t-fast), background var(--t-fast); }

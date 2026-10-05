@@ -174,6 +174,8 @@ body {
 .g-btn-text { background: none; height: auto; min-height: 44px; padding: 0 4px; color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
 .g-btn-danger { background: var(--bad-soft); color: var(--bad); }
 .g-btn-sm { height: 36px; padding: 0 14px; font-size: 13px; }
+.g-btn-sm { position: relative; }
+.g-btn-sm::before { content: ''; position: absolute; inset: -4px 0; }
 .g-btn-lg { height: 52px; padding: 0 24px; font-size: 16px; }
 .g-btn-block { width: 100%; }
 .g-btn-icon { width: 44px; padding: 0; }
@@ -210,15 +212,17 @@ textarea.g-input { height: auto; min-height: 96px; padding: 12px 14px; resize: v
 
 /* ---------- Chips, tags ---------- */
 .g-chip {
-  display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; flex: 0 0 auto;
+  position: relative; display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; flex: 0 0 auto;
   border-radius: var(--r-pill); border: 1px solid var(--line); background: var(--surface); color: var(--ink);
   font: 500 13px/1 var(--font-body); white-space: nowrap; cursor: pointer;
   transition: border-color var(--t) var(--ease-g), background var(--t) var(--ease-g), color var(--t) var(--ease-g);
 }
 .g-chip:hover { border-color: var(--ink); }
+/* 44px tap target while the chip stays visually compact */
+.g-chip::after { content: ''; position: absolute; inset: -4px 0; }
 .g-chip[aria-pressed='true'], .g-chip.is-on { background: var(--ink); border-color: var(--ink); color: var(--on-ink); }
 .g-chip svg { width: 14px; height: 14px; }
-.g-chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; margin-inline: -16px; padding-inline: 16px; }
+.g-chips { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-block: 4px; margin-block: -4px; margin-inline: -16px; padding-inline: 16px; }
 .g-chips::-webkit-scrollbar { display: none; }
 @media (min-width: 768px) { .g-chips { flex-wrap: wrap; overflow: visible; margin-inline: 0; padding-inline: 0; } }
 .g-tag {
@@ -359,6 +363,7 @@ body.has-action-bar .g-page { padding-bottom: calc(96px + env(safe-area-inset-bo
 .g-pc-img img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--t-slow) var(--ease-g); }
 .g-pc:hover .g-pc-img img { transform: scale(1.03); }
 .g-pc-save { position: absolute; top: 10px; right: 10px; width: 36px; height: 36px; border-radius: 50%; border: 0; background: color-mix(in srgb, var(--surface) 92%, transparent); color: var(--ink); display: grid; place-items: center; cursor: pointer; }
+.g-pc-save::before { content: ''; position: absolute; inset: -4px; border-radius: 50%; }
 .g-pc-save[aria-pressed='true'] { color: var(--tara); }
 .g-pc-save[aria-pressed='true'] svg { fill: currentColor; }
 .g-pc-flag { position: absolute; top: 10px; left: 10px; }
