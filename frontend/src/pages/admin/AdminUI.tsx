@@ -1,5 +1,13 @@
 import type { ReactNode } from 'react'
-import { ArrowUpRight, Flag, Image, LayoutDashboard, MapPinPlus, MessageSquare, RotateCw, UserRound, type LucideIcon } from 'lucide-react'
+import type { Icon as PhosphorIcon } from '@phosphor-icons/react'
+import { ArrowUpRight } from '@phosphor-icons/react/dist/csr/ArrowUpRight'
+import { Flag } from '@phosphor-icons/react/dist/csr/Flag'
+import { Image } from '@phosphor-icons/react/dist/csr/Image'
+import { SquaresFour as LayoutDashboard } from '@phosphor-icons/react/dist/csr/SquaresFour'
+import { MapPinPlus } from '@phosphor-icons/react/dist/csr/MapPinPlus'
+import { ChatCenteredText as MessageSquare } from '@phosphor-icons/react/dist/csr/ChatCenteredText'
+import { ArrowClockwise as RotateCw } from '@phosphor-icons/react/dist/csr/ArrowClockwise'
+import { User as UserRound } from '@phosphor-icons/react/dist/csr/User'
 import { Avatar, Button, Chip, Chips, Panel, Skeleton, Tag, cx } from '../../components/ui'
 import { useAvatarImageSrc } from '../../utils/avatarImageCache'
 import { navigateToPath } from '../../utils/navigation'
@@ -9,7 +17,7 @@ import './admin.css'
 type AdminNavItem = {
   label: string
   path: string
-  icon: LucideIcon
+  icon: PhosphorIcon
 }
 
 const adminNavItems: AdminNavItem[] = [

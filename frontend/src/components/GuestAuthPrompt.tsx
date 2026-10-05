@@ -1,6 +1,18 @@
 import { useEffect, useId, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { CalendarPlus, Camera, Check, Flag, Heart, MessageCircle, ShieldAlert, Sparkles, Star, UserRound, Users, X, type LucideIcon } from 'lucide-react'
+import type { Icon as PhosphorIcon } from '@phosphor-icons/react'
+import { CalendarPlus } from '@phosphor-icons/react/dist/csr/CalendarPlus'
+import { Camera } from '@phosphor-icons/react/dist/csr/Camera'
+import { Check } from '@phosphor-icons/react/dist/csr/Check'
+import { Flag } from '@phosphor-icons/react/dist/csr/Flag'
+import { Heart } from '@phosphor-icons/react/dist/csr/Heart'
+import { ChatCircle as MessageCircle } from '@phosphor-icons/react/dist/csr/ChatCircle'
+import { ShieldWarning as ShieldAlert } from '@phosphor-icons/react/dist/csr/ShieldWarning'
+import { Sparkle as Sparkles } from '@phosphor-icons/react/dist/csr/Sparkle'
+import { Star } from '@phosphor-icons/react/dist/csr/Star'
+import { User as UserRound } from '@phosphor-icons/react/dist/csr/User'
+import { UsersThree as Users } from '@phosphor-icons/react/dist/csr/UsersThree'
+import { X } from '@phosphor-icons/react/dist/csr/X'
 import { buildAuthPath } from '../services/authApi'
 import { navigateToPath } from '../utils/navigation'
 import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
@@ -34,7 +46,7 @@ export type GuestAuthPromptProps = {
 }
 
 type VariantConfig = {
-  icon: LucideIcon
+  icon: PhosphorIcon
   label: string
   title: string
   description: string

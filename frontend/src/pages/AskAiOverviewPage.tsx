@@ -1,8 +1,11 @@
-import type { LucideIcon } from 'lucide-react'
-import { ChevronRight, Map as MapIcon, MessageCircle, Sparkles } from 'lucide-react'
+import type { Icon as PhosphorIcon } from '@phosphor-icons/react'
+import { CaretRight as ChevronRight } from '@phosphor-icons/react/dist/csr/CaretRight'
+import { MapTrifold as MapIcon } from '@phosphor-icons/react/dist/csr/MapTrifold'
+import { ChatCircle as MessageCircle } from '@phosphor-icons/react/dist/csr/ChatCircle'
+import { Sparkle as Sparkles } from '@phosphor-icons/react/dist/csr/Sparkle'
 import { Page, Row } from '../components/ui'
 
-const tools: Array<{ href: string; title: string; description: string; icon: LucideIcon }> = [
+const tools: Array<{ href: string; title: string; description: string; icon: PhosphorIcon }> = [
   { href: '/plan-with-ai', title: 'Plan with AI', description: 'One sentence in, a full-day draft out.', icon: Sparkles },
   { href: '/ask-ai/chatbot', title: 'Ask AI chat', description: 'Ask gala questions and get ideas.', icon: MessageCircle },
   { href: '/ask-ai/maps', title: 'AI map', description: 'Find places on a map, by vibe.', icon: MapIcon },

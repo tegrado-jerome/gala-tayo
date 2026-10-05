@@ -1,5 +1,5 @@
 import { useMemo, useState, type MouseEvent } from 'react'
-import { Heart } from 'lucide-react'
+import { Heart } from '@phosphor-icons/react/dist/csr/Heart'
 import InternalLink from '../InternalLink'
 import { toTitleCase } from '../PlaceCard'
 import { MasonryCard, Tag } from '../ui'
@@ -169,7 +169,7 @@ function PhotoCard({ place, onGuestFavorite, badge, priority = false, onOpen, on
         aria-pressed={isSaved}
         aria-label={isSaved ? `Remove ${place.name} from saved` : `Save ${place.name}`}
       >
-        <Heart className="g-ic" />
+        <Heart className="g-ic" weight={isSaved ? 'fill' : 'regular'} />
       </button>
     </article>
   )

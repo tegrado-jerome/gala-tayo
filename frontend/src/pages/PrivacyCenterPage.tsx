@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { ChevronRight } from 'lucide-react'
+import { CaretRight as ChevronRight } from '@phosphor-icons/react/dist/csr/CaretRight'
 import MinimalBackNav from '../components/navigation/MinimalBackNav'
 import SeoHead from '../components/SeoHead'
 import { Button, Empty, Page, Skeleton, Tag } from '../components/ui'

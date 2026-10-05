@@ -1,5 +1,5 @@
 import { useState, type CSSProperties } from 'react'
-import { MapPin } from 'lucide-react'
+import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
 import { categoryIcons } from './CategoryTabs'
 
 function categoryKey(category?: string | null) {

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
-import { ChevronLeft } from 'lucide-react'
+import { CaretLeft as ChevronLeft } from '@phosphor-icons/react/dist/csr/CaretLeft'
 import { AuthNotice } from '../components/auth/AuthCard'
 import PasswordField from '../components/auth/PasswordField'
 import PasswordStrengthBar from '../components/auth/PasswordStrengthBar'

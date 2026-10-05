@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
-import { ChevronRight } from 'lucide-react'
+import { CaretRight as ChevronRight } from '@phosphor-icons/react/dist/csr/CaretRight'
 import PlaceImage from '../components/discover/PlaceImage'
 import { ListingBreadcrumb } from '../components/home/search/SearchComponents'
 import InternalLink from '../components/InternalLink'

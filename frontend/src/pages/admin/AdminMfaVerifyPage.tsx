@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ShieldCheck } from 'lucide-react'
+import { ShieldCheck } from '@phosphor-icons/react/dist/csr/ShieldCheck'
 import { Button, Panel } from '../../components/ui'
 import { supabase } from '../../supabase'
 import { refreshAdminMfaSession } from '../../utils/adminMfa'

@@ -1,10 +1,21 @@
-import type { LucideIcon } from 'lucide-react'
-import { BedDouble, Bike, Church, Coffee, Film, Landmark, Martini, ShoppingBag, SlidersHorizontal, Sparkles, TreePine, Utensils } from 'lucide-react'
+import type { Icon as PhosphorIcon } from '@phosphor-icons/react'
+import { Bed as BedDouble } from '@phosphor-icons/react/dist/csr/Bed'
+import { Bicycle as Bike } from '@phosphor-icons/react/dist/csr/Bicycle'
+import { Church } from '@phosphor-icons/react/dist/csr/Church'
+import { Coffee } from '@phosphor-icons/react/dist/csr/Coffee'
+import { FilmStrip as Film } from '@phosphor-icons/react/dist/csr/FilmStrip'
+import { Bank as Landmark } from '@phosphor-icons/react/dist/csr/Bank'
+import { Martini } from '@phosphor-icons/react/dist/csr/Martini'
+import { ShoppingBag } from '@phosphor-icons/react/dist/csr/ShoppingBag'
+import { SlidersHorizontal } from '@phosphor-icons/react/dist/csr/SlidersHorizontal'
+import { Sparkle as Sparkles } from '@phosphor-icons/react/dist/csr/Sparkle'
+import { Tree as TreePine } from '@phosphor-icons/react/dist/csr/Tree'
+import { ForkKnife as Utensils } from '@phosphor-icons/react/dist/csr/ForkKnife'
 import InternalLink from '../InternalLink'
 import { cx } from '../ui'
 import { placeCategories } from '../../data/placeCategories'
 
-export const categoryIcons: Record<string, LucideIcon> = {
+export const categoryIcons: Record<string, PhosphorIcon> = {
   activity: Bike,
   cafe: Coffee,
   cinema: Film,

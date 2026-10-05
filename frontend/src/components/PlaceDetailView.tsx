@@ -1,5 +1,25 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type UIEvent } from 'react'
-import { Accessibility, ArrowLeft, Bus, Camera, Check, ChevronDown, Ellipsis, Flag, Heart, Info, Navigation, Pencil, Plus, Reply, Share2, Sparkles, SquareParking, Star, Trash2, UserRound, X } from 'lucide-react'
+import { Wheelchair as Accessibility } from '@phosphor-icons/react/dist/csr/Wheelchair'
+import { ArrowLeft } from '@phosphor-icons/react/dist/csr/ArrowLeft'
+import { Bus } from '@phosphor-icons/react/dist/csr/Bus'
+import { Camera } from '@phosphor-icons/react/dist/csr/Camera'
+import { Check } from '@phosphor-icons/react/dist/csr/Check'
+import { CaretDown as ChevronDown } from '@phosphor-icons/react/dist/csr/CaretDown'
+import { DotsThree as Ellipsis } from '@phosphor-icons/react/dist/csr/DotsThree'
+import { Flag } from '@phosphor-icons/react/dist/csr/Flag'
+import { Heart } from '@phosphor-icons/react/dist/csr/Heart'
+import { Info } from '@phosphor-icons/react/dist/csr/Info'
+import { NavigationArrow as Navigation } from '@phosphor-icons/react/dist/csr/NavigationArrow'
+import { PencilSimple as Pencil } from '@phosphor-icons/react/dist/csr/PencilSimple'
+import { Plus } from '@phosphor-icons/react/dist/csr/Plus'
+import { ArrowBendUpLeft as Reply } from '@phosphor-icons/react/dist/csr/ArrowBendUpLeft'
+import { ShareNetwork as Share2 } from '@phosphor-icons/react/dist/csr/ShareNetwork'
+import { Sparkle as Sparkles } from '@phosphor-icons/react/dist/csr/Sparkle'
+import { LetterCircleP as SquareParking } from '@phosphor-icons/react/dist/csr/LetterCircleP'
+import { Star } from '@phosphor-icons/react/dist/csr/Star'
+import { Trash as Trash2 } from '@phosphor-icons/react/dist/csr/Trash'
+import { User as UserRound } from '@phosphor-icons/react/dist/csr/User'
+import { X } from '@phosphor-icons/react/dist/csr/X'
 import { useGuestAuthPrompt } from './GuestAuthPrompt'
 import AddToGalaPlanModal from './AddToGalaPlanModal'
 import InternalLink from './InternalLink'
@@ -486,7 +506,7 @@ function StarRatingInput({
           aria-label={`Rate ${ratingValue} out of 5`}
           aria-pressed={ratingValue <= value}
         >
-          <Star className="h-7 w-7" fill="currentColor" strokeWidth={0} aria-hidden="true" />
+          <Star className="h-7 w-7" weight="fill" aria-hidden="true" />
         </button>
       ))}
     </div>
@@ -503,8 +523,7 @@ function StarsDisplay({ rating }: { rating: number }) {
         <Star
           key={value}
           className={cx('h-4 w-4', value <= rating ? 'text-[var(--ink)]' : 'text-[var(--line)]')}
-          fill="currentColor"
-          strokeWidth={0}
+          weight="fill"
           aria-hidden="true"
         />
       ))}
@@ -1931,7 +1950,7 @@ function PlaceDetailView({
     'inline-flex min-h-[44px] items-center gap-1 text-[12px] font-semibold text-[var(--ink-2)] hover:text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-60'
   const commentMenuItemClassName =
     'flex min-h-[44px] w-full items-center gap-2 px-3 text-left text-[13px] font-medium text-[var(--ink)] hover:bg-[var(--fill)] disabled:cursor-not-allowed disabled:text-[var(--ink-3)]'
-  const heartIcon = <Heart aria-hidden="true" fill={isSaved ? 'currentColor' : 'none'} style={isSaved ? { color: 'var(--tara)' } : undefined} />
+  const heartIcon = <Heart aria-hidden="true" weight={isSaved ? 'fill' : 'regular'} style={isSaved ? { color: 'var(--tara)' } : undefined} />
 
   const renderComment = (comment: PlaceComment, isReply = false): ReactNode => {
     const isDeleted = isCommentDeleted(comment)

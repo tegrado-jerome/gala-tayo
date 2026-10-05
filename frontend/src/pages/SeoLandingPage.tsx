@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ChevronRight } from 'lucide-react'
+import { CaretRight as ChevronRight } from '@phosphor-icons/react/dist/csr/CaretRight'
 import PlaceCard, { withLiveDetail } from '../components/PlaceCard'
 import { ListingBreadcrumb, MasonrySkeleton } from '../components/home/search/SearchComponents'
 import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'

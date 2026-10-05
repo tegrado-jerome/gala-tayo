@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { MapPin, Trash2, X } from 'lucide-react'
+import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
+import { Trash as Trash2 } from '@phosphor-icons/react/dist/csr/Trash'
+import { X } from '@phosphor-icons/react/dist/csr/X'
 import GoogleSignInButton from '../components/GoogleSignInButton'
 import DestructiveConfirmModal from '../components/DestructiveConfirmModal'
 import InternalLink from '../components/InternalLink'

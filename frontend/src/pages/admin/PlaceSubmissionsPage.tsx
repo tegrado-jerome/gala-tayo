@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { ExternalLink } from 'lucide-react'
+import { ArrowSquareOut as ExternalLink } from '@phosphor-icons/react/dist/csr/ArrowSquareOut'
 import { Button, Empty, KeyValue, Tag, buttonClass } from '../../components/ui'
 import { useSystemMessage } from '../../context/SystemMessageContext'
 import { useAdminAccess } from '../../hooks/useAdminAccess'

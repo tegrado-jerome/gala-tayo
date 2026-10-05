@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { ShieldCheck } from 'lucide-react'
+import { ShieldCheck } from '@phosphor-icons/react/dist/csr/ShieldCheck'
 import { Button, Panel, Skeleton } from '../../components/ui'
 import { supabase } from '../../supabase'
 import { refreshAdminMfaSession } from '../../utils/adminMfa'

@@ -1,5 +1,6 @@
 import { Children, useRef, type ReactNode } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { CaretLeft as ChevronLeft } from '@phosphor-icons/react/dist/csr/CaretLeft'
+import { CaretRight as ChevronRight } from '@phosphor-icons/react/dist/csr/CaretRight'
 import { Button, SectionHead } from '../ui'
 
 type RailProps = {

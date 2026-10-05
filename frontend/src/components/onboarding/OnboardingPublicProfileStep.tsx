@@ -1,5 +1,6 @@
 import { useState, type ChangeEvent } from 'react'
-import { ArrowRight, Camera } from 'lucide-react'
+import { ArrowRight } from '@phosphor-icons/react/dist/csr/ArrowRight'
+import { Camera } from '@phosphor-icons/react/dist/csr/Camera'
 import OnboardingLayout from './OnboardingLayout'
 import type { OnboardingErrors, OnboardingFormState } from './types'
 import { avatarUploadAccept } from '../../utils/avatarUpload'

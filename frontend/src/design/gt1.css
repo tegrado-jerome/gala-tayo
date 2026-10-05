@@ -266,6 +266,24 @@ textarea.g-input { height: auto; min-height: 96px; padding: 12px 14px; resize: v
 .g-hscroll::-webkit-scrollbar { display: none; }
 .g-hscroll > * { flex: 0 0 72%; scroll-snap-align: start; min-width: 0; }
 @media (min-width: 768px) { .g-hscroll { margin-inline: 0; padding-inline: 0; gap: 20px; } .g-hscroll > * { flex-basis: 240px; } }
+
+/* ---------- Home: Airbnb-style search pill + icon category tabs ---------- */
+.g-hsearch { display: flex; align-items: center; gap: 8px; max-width: 640px; margin: 0 auto; padding: 6px 6px 6px 18px; border-radius: var(--r-pill); background: var(--surface); border: 1px solid var(--line-2); box-shadow: 0 4px 18px rgba(15, 33, 56, 0.12); }
+.g-hsearch-main { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; min-height: 48px; color: var(--ink); text-decoration: none; }
+.g-hsearch-main svg { width: 20px; height: 20px; flex-shrink: 0; }
+.g-hsearch-ai { display: grid; place-items: center; width: 46px; height: 46px; flex-shrink: 0; border-radius: 50%; background: var(--tara); color: #0f2138; }
+.g-hsearch-ai svg { width: 20px; height: 20px; }
+.g-cats { display: flex; gap: 26px; margin: 14px -16px 0; padding: 0 16px; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid var(--line-2); }
+.g-cats::-webkit-scrollbar { display: none; }
+.g-cat { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; min-height: 64px; padding: 10px 2px 10px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--ink-3); font: 600 12px/1 var(--font-body); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.g-cat svg { width: 26px; height: 26px; }
+.g-cat:hover { color: var(--ink); border-bottom-color: var(--line); }
+.g-cat[aria-selected='true'] { color: var(--ink); border-bottom-color: var(--ink); }
+.g-cat:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; border-radius: var(--r-1); }
+@media (min-width: 768px) { .g-cats { margin-inline: 0; padding-inline: 0; justify-content: center; gap: 36px; } }
+.g-cat-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 12px; }
+@media (min-width: 768px) { .g-cat-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px 20px; } }
+@media (min-width: 1100px) { .g-cat-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .g-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line-2); margin-bottom: 16px; overflow-x: auto; scrollbar-width: none; }
 .g-tabs::-webkit-scrollbar { display: none; }
 .g-tab { padding: 12px 14px; min-height: 44px; font: 500 14px/1 var(--font-body); color: var(--ink-2); background: none; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; cursor: pointer; }
@@ -304,7 +322,8 @@ textarea.g-input { height: auto; min-height: 96px; padding: 12px 14px; resize: v
 .g-tabbar a, .g-tabbar button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 52px; font: 500 11px/1 var(--font-body); color: var(--ink-3); background: none; border: 0; text-decoration: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .g-tabbar [aria-current='page'] { color: var(--ink); }
 .g-tabbar svg { width: 22px; height: 22px; }
-.g-tabbar .g-tara { width: 54px; height: 54px; min-height: 0; margin: -20px auto 0; border-radius: 18px; background: var(--ink); color: var(--on-ink); font: 700 13px/1 var(--font-display); box-shadow: 0 0 0 4px var(--surface), var(--sh-2); }
+.g-tabbar .g-tara { width: 50px; height: 50px; min-height: 0; margin: 0 auto; border-radius: 16px; background: var(--tara); color: #0f2138; box-shadow: 0 6px 16px rgba(255, 107, 74, 0.35); }
+.g-tabbar .g-tara svg { width: 24px; height: 24px; }
 @media (min-width: 1024px) { .g-tabbar { display: none; } }
 
 /* ---------- Place card ---------- */
@@ -425,7 +444,8 @@ textarea.g-input { height: auto; min-height: 96px; padding: 12px 14px; resize: v
 
 /* ---------- Maps (Leaflet + OSM), tinted to paper ---------- */
 .leaflet-container { font-family: var(--font-body); background: var(--fill); }
-.leaflet-container .leaflet-tile-pane { filter: grayscale(0.9) contrast(0.92) brightness(1.04); }
+/* Full-colour OSM tiles (parks green, water blue, roads yellow), softened a touch so pins stay on top. */
+.leaflet-container .leaflet-tile-pane { filter: saturate(0.9) brightness(1.03); }
 :root[data-theme='dark'] .leaflet-container .leaflet-tile-pane { filter: grayscale(1) invert(0.92) contrast(0.9) brightness(0.9); }
 .leaflet-container .leaflet-control-attribution { font-size: 11px; background: color-mix(in srgb, var(--surface) 82%, transparent); color: var(--ink-3); }
 .leaflet-container .leaflet-control-attribution a { color: var(--ink-2); }

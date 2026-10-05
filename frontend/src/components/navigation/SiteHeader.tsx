@@ -1,4 +1,5 @@
-import { Search, Sparkles } from 'lucide-react'
+import { MagnifyingGlass as Search } from '@phosphor-icons/react/dist/csr/MagnifyingGlass'
+import { Sparkle as Sparkles } from '@phosphor-icons/react/dist/csr/Sparkle'
 import InternalLink from '../InternalLink'
 import UserMenu from '../UserMenu'
 import { Button } from '../ui'
