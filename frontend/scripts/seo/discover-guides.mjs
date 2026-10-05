@@ -108,6 +108,11 @@ function score(candidate, signals) {
     total += Math.log10(1 + impressions) * 3
     reasons.push(`${impressions} Search Console impressions`)
   }
+  const proven = signals.guides.filter((guide) => (guide.goodFor ?? guide.category) === key).reduce((sum, guide) => sum + guide.impressions, 0)
+  if (proven) {
+    total += Math.log10(1 + proven) * 2
+    reasons.push(`similar guides got ${proven} impressions`)
+  }
   reasons.push(`${candidate.local.length} autocomplete matches`)
   return { total, reasons }
 }
@@ -124,6 +129,7 @@ async function main() {
     trends: (await readJson('trends.json', [])).filter((trend) => trend.date >= since),
     seasons: activeSeasons(),
     searchConsole: (await readJson('search-console.json', { queries: [] })).queries,
+    guides: (await readJson('search-console.json', { guides: [] })).guides ?? [],
   }
   const previousSuggestions = await readJson('autocomplete.json', {})
   const snapshot = {}
