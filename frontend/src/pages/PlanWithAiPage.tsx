@@ -108,6 +108,7 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
   const [usage, setUsage] = useState<{ remaining: number; limit: number } | null>(null)
   const [isSignInOpen, setIsSignInOpen] = useState(false)
   const [isDailyLimit, setIsDailyLimit] = useState(false)
+  const [canRetry, setCanRetry] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [submittedPrompt, setSubmittedPrompt] = useState('')
   const autoStartedRef = useRef(false)
@@ -139,6 +140,8 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
     } catch (buildError) {
       setError(buildError instanceof Error ? buildError.message : 'Plan with AI failed. Try again.')
       setIsDailyLimit(buildError instanceof GalaPlanAiError && buildError.status === 429)
+      // Daily limits and off-topic or uncovered-area answers won't change on retry; everything else might.
+      setCanRetry(!(buildError instanceof GalaPlanAiError) || (buildError.status !== 429 && buildError.status !== 422 && buildError.status !== 400))
       setStatus('error')
     }
   }
@@ -227,6 +230,7 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
   const dateLabel = draft?.date
     ? new Date(`${draft.date}T00:00:00`).toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' })
     : 'Any day'
+  const todayIso = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(new Date())
   const firstTime = stops[0]?.time
   const lastTime = stops[stops.length - 1]?.time
   const timeRange = firstTime && lastTime && firstTime !== lastTime ? `${formatTime24(firstTime)} – ${formatTime24(lastTime)}` : firstTime ? formatTime24(firstTime) : null
@@ -272,6 +276,11 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
               {error}
               {isDailyLimit && (!session || isGuest) ? ' Create a free account to get more AI plans per day.' : ''}
             </p>
+            {canRetry && submittedPrompt ? (
+              <Button variant="soft" size="sm" className="mt-2" onClick={() => void build(submittedPrompt)}>
+                Try again
+              </Button>
+            ) : null}
           </TaraSays>
         ) : null}
 
@@ -342,8 +351,23 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
             <h2 id="plan-with-ai-draft-title" className="g-h2 mt-1.5">
               {draft.title}
             </h2>
-            <p className="g-sm g-mut mt-1">{[dateLabel, timeRange].filter(Boolean).join(' · ')}</p>
+            <div className="g-sm g-mut mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+              <label className="relative inline-flex min-h-11 cursor-pointer items-center gap-1 font-semibold text-[var(--ink)] underline decoration-dotted underline-offset-4">
+                {dateLabel}
+                <span className="sr-only">, change date</span>
+                <input
+                  type="date"
+                  value={draft.date ?? ''}
+                  min={todayIso}
+                  onChange={(event) => event.target.value && setDraft({ ...draft, date: event.target.value, date_source: 'prompt' })}
+                  className="absolute inset-0 cursor-pointer opacity-0"
+                />
+              </label>
+              {timeRange ? <span>· {timeRange}</span> : null}
+              {draft.date_source === 'default' ? <span className="g-xs">(next Saturday, tap to change)</span> : null}
+            </div>
             {draft.summary ? <p className="g-sm mt-2 leading-relaxed">{draft.summary}</p> : null}
+            {draft.source === 'fallback' ? <p className="g-xs g-mut mt-2">Tara was busy, so this is a quick plan from GalaTayo places. Swap stops as you like.</p> : null}
 
             <div className="g-tstats mt-4" style={{ ['--n' as string]: 3 }}>
               <div className="g-tstat">

@@ -22,6 +22,8 @@ type MapViewProps = {
   className?: string
   mapClassName?: string
   layoutKey?: string | number
+  /** Pixels at the bottom covered by an overlay (e.g. a results sheet); pins are kept above it. */
+  bottomInset?: number
   pickMode?: boolean
   pickPosition?: LatLngInput
   onPickPositionChange?: (latLng: [number, number]) => void
@@ -404,7 +406,8 @@ function safeFlyTo(map: L.Map, center: unknown, zoom: number) {
   }
 }
 
-function safeFitBounds(map: L.Map, latLngs: unknown) {
+/** Fits one or more points, keeping them clear of `bottomInset` px covered by an overlay such as a results sheet. */
+function safeFitBounds(map: L.Map, latLngs: unknown, bottomInset = 0) {
   if (!Array.isArray(latLngs)) {
     return
   }
@@ -414,12 +417,18 @@ function safeFitBounds(map: L.Map, latLngs: unknown) {
     .filter((latLng): latLng is ValidLatLng => isValidLatLngTuple(latLng))
     .map((latLng): ValidLatLng => [latLng[0], latLng[1]])
 
-  if (boundsInput.length < 2 || !isMapMeasurable(map)) {
+  if (boundsInput.length === 0 || !isMapMeasurable(map)) {
     return
   }
 
   try {
-    map.fitBounds(boundsInput, { padding: [40, 40], maxZoom: 15, animate: false })
+    map.invalidateSize({ pan: false })
+    map.fitBounds(L.latLngBounds(boundsInput), {
+      paddingTopLeft: [40, 40],
+      paddingBottomRight: [40, 40 + bottomInset],
+      maxZoom: 15,
+      animate: false,
+    })
   } catch {
     // Keep invalid Leaflet internals from blanking the React tree.
   }
@@ -438,14 +447,12 @@ function MapSizeSync({
   const lastAppliedViewKeyRef = useRef<string>('')
 
   useEffect(() => {
-    const nextViewKey = `${center[0]}:${center[1]}:${zoom}:${layoutKey ?? 'default'}`
-
-    if (lastAppliedViewKeyRef.current === nextViewKey) {
-      return
+    // Recenter only when the requested center changes: a new layout (new pins) must not undo the fit to those pins.
+    const nextViewKey = `${center[0]}:${center[1]}:${zoom}`
+    if (lastAppliedViewKeyRef.current !== nextViewKey) {
+      lastAppliedViewKeyRef.current = nextViewKey
+      safeSetView(map, center, zoom)
     }
-
-    lastAppliedViewKeyRef.current = nextViewKey
-    safeSetView(map, center, zoom)
 
     const invalidateMapSize = () => map.invalidateSize()
     const animationFrameId = requestAnimationFrame(invalidateMapSize)
@@ -511,11 +518,13 @@ function FitMapToPlaces({
   defaultCenter,
   defaultZoom,
   autoFitToPlaces,
+  bottomInset,
 }: {
   validPlaces: ValidMapPlace[]
   defaultCenter: ValidLatLng
   defaultZoom: number
   autoFitToPlaces: boolean
+  bottomInset: number
 }) {
   const map = useMap()
 
@@ -530,34 +539,20 @@ function FitMapToPlaces({
 
     const safeLatLngs = validPlaces
       .map((item) => normalizeLatLng(item.latLng))
-      .filter((latLng): latLng is ValidLatLng => latLng !== null)
+      .filter((latLng): latLng is ValidLatLng => latLng !== null && isValidLatLngTuple(latLng))
 
     if (safeLatLngs.length === 0) {
       safeSetView(map, safeDefaultCenter, safeDefaultZoom)
       return
     }
 
-    if (safeLatLngs.length === 1) {
-      const target = safeLatLngs[0]
-
-      if (!isValidLatLngTuple(target)) {
-        return
-      }
-
-      safeFlyTo(map, [target[0], target[1]], Math.max(safeDefaultZoom, 15))
-      return
-    }
-
-    const boundsInput = safeLatLngs
-      .filter(isValidLatLngTuple)
-      .map((latLng): ValidLatLng => [latLng[0], latLng[1]])
-
-    if (boundsInput.length < 2) {
-      return
-    }
-
-    safeFitBounds(map, boundsInput)
-  }, [autoFitToPlaces, defaultCenter, defaultZoom, map, validPlaces])
+    // Fit every pin into the part of the map not covered by the results sheet, then again once
+    // the layout has settled (the container can still be resizing when results arrive).
+    const fit = () => safeFitBounds(map, safeLatLngs, bottomInset)
+    fit()
+    const settleTimeoutId = window.setTimeout(fit, 350)
+    return () => window.clearTimeout(settleTimeoutId)
+  }, [autoFitToPlaces, bottomInset, defaultCenter, defaultZoom, map, validPlaces])
 
   return null
 }
@@ -657,12 +652,14 @@ function FocusSelectedPlaceEffect({
   focusSelectedPlaceOnChange,
   selectedPlaceFocusSignal,
   zoom,
+  bottomInset,
 }: {
   validPlaces: ValidMapPlace[]
   selectedPlaceId?: string | null
   focusSelectedPlaceOnChange: boolean
   selectedPlaceFocusSignal?: number
   zoom: number
+  bottomInset: number
 }) {
   const map = useMap()
   const lastHandledSignalRef = useRef<number | undefined>(undefined)
@@ -688,8 +685,13 @@ function FocusSelectedPlaceEffect({
       return
     }
 
-    safeFlyTo(map, selectedPlace.latLng, Math.max(zoom, 15))
-  }, [focusSelectedPlaceOnChange, map, selectedPlaceFocusSignal, selectedPlaceId, validPlaces, zoom])
+    // Aim above the covered strip so the selected pin lands in the visible part of the map.
+    const targetZoom = Math.max(zoom, 15)
+    const target = bottomInset > 0
+      ? map.unproject(map.project(selectedPlace.latLng, targetZoom).add([0, bottomInset / 2]), targetZoom)
+      : selectedPlace.latLng
+    safeFlyTo(map, Array.isArray(target) ? target : [target.lat, target.lng], targetZoom)
+  }, [bottomInset, focusSelectedPlaceOnChange, map, selectedPlaceFocusSignal, selectedPlaceId, validPlaces, zoom])
 
   return null
 }
@@ -730,6 +732,7 @@ function MapView({
   className = '',
   mapClassName = '',
   layoutKey,
+  bottomInset = 0,
   pickMode = false,
   pickPosition,
   onPickPositionChange,
@@ -874,6 +877,7 @@ function MapView({
               defaultCenter={safeCenter}
               defaultZoom={safeZoom}
               autoFitToPlaces={autoFitToPlaces}
+              bottomInset={bottomInset}
             />
             {focusSelectedPlaceOnChange ? (
               <FocusSelectedPlaceEffect
@@ -882,6 +886,7 @@ function MapView({
                 focusSelectedPlaceOnChange={focusSelectedPlaceOnChange}
                 selectedPlaceFocusSignal={selectedPlaceFocusSignal}
                 zoom={safeZoom}
+                bottomInset={bottomInset}
               />
             ) : null}
             <TileLayer

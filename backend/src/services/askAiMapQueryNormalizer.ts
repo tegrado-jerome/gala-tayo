@@ -41,7 +41,7 @@ type ParsedNormalizerResponse = Partial<NormalizedAskAiMapQuery> & {
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_MODEL = "openai/gpt-oss-20b";
-const GROQ_TIMEOUT_MS = Number(process.env.ASK_AI_MAP_NORMALIZER_TIMEOUT_MS || 8000);
+const GROQ_TIMEOUT_MS = Number(process.env.ASK_AI_MAP_NORMALIZER_TIMEOUT_MS || 4000);
 const GROQ_MAX_TOKENS = Number(process.env.ASK_AI_MAP_NORMALIZER_MAX_TOKENS || 220);
 
 function normalizeText(value: string | undefined | null): string {
@@ -615,8 +615,14 @@ function shouldNormalizePrompt(rawPrompt: string): boolean {
   return wordCount > 6 || normalized.length > 40;
 }
 
-export function shouldNormalizeAskAiMapPrompt(_rawPrompt: string): boolean {
-  return true;
+// Short "<place type> in <area>" searches parse fine without a model call (saves ~1-2 s);
+// Taglish, budgets and vibes still go through the normalizer.
+export function shouldNormalizeAskAiMapPrompt(rawPrompt: string): boolean {
+  const text = normalizeText(rawPrompt).toLowerCase();
+  const isSimple =
+    text.split(/\s+/).length <= 6 &&
+    /^(?:[a-z]+\s+)?(malls?|restaurants?|parks?|cafes?|coffee shops?|hotels?|resorts?|museums?|bars?|pubs?|ramen|samgyup|cinemas?|beaches|tourist spots?)\s+(?:in|near|around|at)\s+[a-z .'-]+$/.test(text);
+  return !isSimple;
 }
 
 export async function normalizeAskAiMapQuery(
@@ -655,6 +661,9 @@ export async function normalizeAskAiMapQuery(
       temperature: 0,
       max_completion_tokens: GROQ_MAX_TOKENS,
       stream: false,
+      // gpt-oss reasoning shares the small token cap; without this the JSON often never arrives.
+      reasoning_effort: "low",
+      include_reasoning: false,
     }),
     signal: abortSignal,
   });

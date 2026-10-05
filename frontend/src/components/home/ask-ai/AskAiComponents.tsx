@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import ReactMarkdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { ArrowUp } from '@phosphor-icons/react/dist/csr/ArrowUp'
@@ -88,6 +88,40 @@ const markdownComponents: Components = {
   td: ({ children }) => <td className="border border-[var(--line)] px-3 py-2 align-top">{children}</td>,
 }
 
+/** Markdown renderers for one answer: bold GalaTayo place names become in-app links. */
+function useAnswerComponents(sources: AskAiSource[] | undefined): Components {
+  return useMemo(() => {
+    const byName = new Map((sources ?? []).flatMap((source) => {
+      const path = toInternalPath(source.url)
+      return path ? [[source.title.trim().toLowerCase(), path] as const] : []
+    }))
+    if (byName.size === 0) return markdownComponents
+    return {
+      ...markdownComponents,
+      strong: ({ children }) => {
+        const text = typeof children === 'string' ? children : Array.isArray(children) && children.every((child) => typeof child === 'string') ? children.join('') : null
+        const path = text ? byName.get(text.trim().toLowerCase()) : undefined
+        return path ? (
+          <InternalLink href={path} className="font-semibold underline decoration-[var(--tara)] decoration-2 underline-offset-2">
+            {children}
+          </InternalLink>
+        ) : (
+          <strong className="font-semibold">{children}</strong>
+        )
+      },
+    }
+  }, [sources])
+}
+
+function AnswerMarkdown({ content, sources }: { content: string; sources?: AskAiSource[] }) {
+  const components = useAnswerComponents(sources)
+  return (
+    <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>
+      {content}
+    </ReactMarkdown>
+  )
+}
+
 function AiMessage({ children, live }: { children: ReactNode; live?: boolean }) {
   return (
     <div className="m-msg-ai" aria-live={live ? 'polite' : undefined}>
@@ -139,6 +173,7 @@ const ChatMessageList = memo(function ChatMessageList({
   isLimitReached,
   onSend,
   onRetryUsage,
+  onRetry,
 }: {
   isSessionLoading: boolean
   isRegistered: boolean
@@ -151,6 +186,7 @@ const ChatMessageList = memo(function ChatMessageList({
   isLimitReached: boolean
   onSend: (text?: string) => void
   onRetryUsage: () => void
+  onRetry?: () => void
 }) {
   const limitNotice = isRegistered && isLimitReached && !isSubmitting ? <Notice tone="warn">Ubos na ang AI chats mo today. Balik ka bukas.</Notice> : null
 
@@ -200,10 +236,10 @@ const ChatMessageList = memo(function ChatMessageList({
           </div>
         ) : (
           <AiMessage key={index}>
-            <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
-              {message.content}
-            </ReactMarkdown>
-            {index === lastAssistantIndex && sources.length > 0 ? <SourceLinks sources={sources} /> : null}
+            <AnswerMarkdown content={message.content} sources={message.sources ?? (index === lastAssistantIndex ? sources : undefined)} />
+            {(message.sources ?? (index === lastAssistantIndex ? sources : [])).length > 0 ? (
+              <SourceLinks sources={message.sources ?? sources} />
+            ) : null}
           </AiMessage>
         ),
       )}
@@ -219,7 +255,16 @@ const ChatMessageList = memo(function ChatMessageList({
         </AiMessage>
       ) : null}
 
-      {answerError && !isSubmitting && messages.length > 0 && !isChatbotDailyLimitMessage(answerError) ? <Notice tone="bad">{answerError}</Notice> : null}
+      {answerError && !isSubmitting && messages.length > 0 && !isChatbotDailyLimitMessage(answerError) ? (
+        <div className="flex flex-col items-start gap-2">
+          <Notice tone="bad">{answerError}</Notice>
+          {onRetry && messages[messages.length - 1]?.role === 'user' && !isLimitReached ? (
+            <Button variant="soft" size="sm" onClick={onRetry}>
+              Try again
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
 
       {messages.length > 0 ? limitNotice : null}
     </div>
@@ -237,6 +282,7 @@ function AskAiModePanel({
   answerError,
   messages,
   onRetryUsage,
+  onRetry,
   onSubmit,
   onStartOver,
   onGuestUpgradePrompt,
@@ -255,6 +301,7 @@ function AskAiModePanel({
   answerError: string | null
   messages: ChatMessage[]
   onRetryUsage: () => void
+  onRetry?: () => void
   onSubmit: (questionOverride?: string) => void
   onStartOver: () => void
   onGuestUpgradePrompt: () => void
@@ -336,6 +383,7 @@ function AskAiModePanel({
           isLimitReached={isLimitReached}
           onSend={handleSend}
           onRetryUsage={onRetryUsage}
+          onRetry={onRetry}
         />
         {canShowOnMap ? (
           <Button variant="line" size="sm" className="mt-3 self-start" onClick={() => onShowOnMap?.(lastUserQuestion)}>

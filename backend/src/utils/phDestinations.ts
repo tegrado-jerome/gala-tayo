@@ -159,6 +159,12 @@ function hasPhrase(normalizedText: string, phrase: string): boolean {
   return Boolean(normalizedPhrase) && new RegExp(`(^|\\s)${escapeRegExp(normalizedPhrase)}($|\\s)`).test(normalizedText);
 }
 
+/** True when free text names any destination, Metro Manila included ("QC", "Makati", "Siargao"). */
+export function mentionsDestination(query: string): boolean {
+  const normalizedQuery = normalizeLocationText(query);
+  return Boolean(normalizedQuery) && DESTINATIONS.some((destination) => getDestinationNameKeys(destination).some((phrase) => hasPhrase(normalizedQuery, phrase)));
+}
+
 /** Destinations outside Metro Manila named in free text, longest match first. */
 export function inferProvincialDestinationsFromQuery(query: string): Array<{ destination: Destination; matchedPhrase: string }> {
   const normalizedQuery = normalizeLocationText(query);

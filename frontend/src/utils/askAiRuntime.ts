@@ -27,6 +27,8 @@ export type AskAiJobStatus = 'pending' | 'streaming' | 'completed' | 'failed' | 
 export type ChatMessage = {
   role: 'user' | 'assistant'
   content: string
+  /** GalaTayo places named in an assistant answer, as in-app links. */
+  sources?: AskAiSource[]
 }
 
 type AskAiUsageSummary = {

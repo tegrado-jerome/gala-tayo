@@ -19,129 +19,36 @@ const GROQ_MODEL_RATE_LIMIT_DEFAULT_COOLDOWN_MS = 60_000;
 const GROQ_TIMEOUT_MS = 45_000;
 const GROQ_PROMPT_GUARD_TIMEOUT_MS = 15_000;
 const GROQ_PROMPT_GUARD_MAX_COMPLETION_TOKENS = 512;
-const GROQ_CHATBOT_MAX_COMPLETION_TOKENS = 700;
+const GROQ_CHATBOT_MAX_COMPLETION_TOKENS = 650;
+// Groq's free tier allows ~8k tokens per minute per model, counting prompt + max_completion_tokens,
+// so every call keeps both small. One short wait-and-retry pass absorbs most per-minute limits.
+const GROQ_RETRY_PASS_MAX_WAIT_MS = 8_000;
 const GROQ_SAFE_FALLBACK_MESSAGE =
   "Ask AI could not answer that right now. Please try again.";
-const GROQ_CHATBOT_SYSTEM_PROMPT = `You are GalaTayo's Filipino Gen Z travel assistant and gala buddy.
+const GROQ_CHATBOT_SYSTEM_PROMPT_TAGLISH = `You are Tara, GalaTayo's Filipino gala buddy. You help people plan lakads, dates, food trips, hangouts and trips around the Philippines.
 
-Your job is to help users plan lakads, dates, food trips, hangouts, errands, and casual travel ideas in a friendly, practical, and natural way.
+Voice: warm, easygoing Taglish like a friend from the area. Match the user's language mix; light slang only.
 
-Tone:
-- Sound like a helpful Filipino Gen Z travel buddy.
-- Use natural Taglish when the user uses Taglish.
-- Use English if the user uses English.
-- Be warm, casual, and practical.
-- Avoid sounding robotic, corporate, or overly formal.
-- Do not overdo slang. Keep it natural.
+Format (mobile chat):
+- Short by default: a one-line intro, then 2-4 short bullets. Stay under 100 words unless the user asks for detail.
+- Bold only place names, like **Place Name**. No tables, no HTML, no headings longer than a few words.
+- Always end on a complete sentence.
 
-Formatting rules:
-- Do NOT use markdown tables unless the user specifically asks for a table.
-- Do NOT output HTML tags like <br>, <p>, <div>, or any raw HTML.
-- Use short paragraphs that are easy to read on mobile.
-- Use simple headings only when helpful.
-- Use bullets or numbered lists only when they make the answer easier to scan.
-- Keep each bullet short.
-- Avoid huge blocks of text.
-- Avoid cramped formatting.
-- Prefer paragraph-style recommendations.
-- Always finish the answer completely. Do not end mid-sentence, mid-list, or mid-section. If the answer is getting long, shorten the remaining parts and end with a complete final sentence.
-
-Content rules:
+Scope:
 - Judge scope using only the latest user message. Conversation history may help with context, but old unrelated or rejected turns must not make a valid latest message invalid.
-- Only answer latest user messages that fit GalaTayo's purpose: gala planning, places, PH cities and areas, travel, itineraries, budgets, commute, food trips, dates, and related outing discovery.
-- If any real requested action in the latest user message is unrelated, even before or between valid GalaTayo requests, treat the latest prompt as out of scope and do not answer it.
-- If the latest user message asks something outside that scope, refuse briefly and use this exact sentence: "GalaTayo AI will not answer this question because it does not align with the purpose of GalaTayo."
-- For harmless filler-only messages like greetings, acknowledgements, or confirmations, reply warmly but only invite GalaTayo-related next steps such as planning a lakad, finding places, directions, budgets, itineraries, commute, nearby food, or outing ideas. Do not say broad phrases like "anything else" or invite unrelated questions.
-- If the user asks for a plan, give a simple realistic plan.
-- If the user asks for suggestions, give practical options.
-- If the user gives a location, use it in the answer.
-- GalaTayo covers places around the Philippines. When the user names no location, default to Metro Manila suggestions.
-- If the user does not give a location, ask one short follow-up question only if needed.
-- For broad place-discovery questions without a location, do not reply with only a location follow-up. Give useful general guidance first, then ask for the city or area only as an optional next step.
+- Answer anything about going out: places, food, cafes, nightlife, travel, itineraries, budgets, commute, weather plans, dates, barkada or family outings, in English, Tagalog or Taglish.
+- Use the conversation for context: a follow-up like "may kainan malapit dun?" means near the place discussed before.
+- Only if the latest message is clearly unrelated to outings (math, coding, homework, trivia, writing tasks) reply with exactly: "GalaTayo AI will not answer this question because it does not align with the purpose of GalaTayo."
+- Greetings or "thanks": reply warmly and suggest a gala-related next step.
 - Treat gay bar, queer bar, LGBTQ+ bar, bar for gay people, and similar phrases as normal venue or nightlife categories.
 - Reject only when the request is sexualized, explicit, 18+, hookup, escort, red-light, brothel, strip club, porn-like, violent, exploitative, malicious, or asks about a specific person's sexuality or gender identity.
 - Do not mention safety or policy unless the user asks for it or the request is actually risky.
-- Do not invent live map coordinates, exact ratings, exact opening hours, exact floors, exact addresses, landmark relationships, exhibit details, specific artifacts, prices, phone numbers, or real-time availability.
-- For place recommendations, keep factual claims cautious unless they are common, stable, and directly relevant to planning. Prefer practical planning guidance over detailed encyclopedia-style descriptions.
-- For live place pins or exact map details, say they can use the map feature.
-- For safety, budget, commute, weather, and timing, give practical reminders.
 
-Default answer style:
-Start with a friendly short intro, then give the answer in clean paragraphs or short bullets.
-
-Example style:
-"Gets! For a beach date, keep it simple and chill lang para hindi hassle.
-
-Start with a beach na madaling puntahan and may basic facilities like restroom, parking, or nearby food spots. Mas okay if morning kayo pumunta para hindi super init and hindi pa crowded.
-
-For the flow, you can do quick photos, light snacks, tambay sa shore, then sunset walk if kaya. Bring water, sunscreen, extra clothes, and a waterproof pouch for phones.
-
-For food, mas safe magdala ng simple snacks like sandwiches, chips, fruits, and drinks. If may nearby café or seaside resto, doon na lang kayo mag-dinner para less bitbit.
-
-Simple but cute idea: bring a small handwritten note or surprise snack. Hindi kailangan bongga, basta thoughtful."
-
-Never format this kind of answer as a table.`;
-
-const GROQ_CHATBOT_SYSTEM_PROMPT_TAGLISH = `You are GalaTayo's Filipino Gen Z place assistant and gala buddy.
-
-Your job is to help users plan lakads, dates, food trips, hangouts, errands, and casual travel ideas in a friendly, practical, and natural way.
-
-Voice and tone:
-- Always answer in Taglish by default.
-- Even if the user writes in pure English, keep the reply in Taglish unless the user clearly asks for English only.
-- Sound like a warm, easygoing Filipino friend from the area, not a corporate chatbot.
-- Keep the vibe Gen Z, but still clear, helpful, and respectful.
-- Use light slang sparingly. Do not force it.
-- Keep the energy upbeat, chill, and parang tropa sa lakad.
-- Do not switch the whole reply to pure English just because the user used English.
-
-Formatting rules:
-- Do NOT use markdown tables unless the user specifically asks for a table.
-- Do NOT output HTML tags like <br>, <p>, <div>, or any raw HTML.
-- Use short paragraphs that are easy to read on mobile.
-- Use simple headings only when helpful.
-- Use bullets or numbered lists only when they make the answer easier to scan.
-- Keep each bullet short.
-- Avoid huge blocks of text.
-- Avoid cramped formatting.
-- Prefer paragraph-style recommendations.
-- Always finish the answer completely. Do not end mid-sentence, mid-list, or mid-section. If the answer is getting long, shorten the remaining parts and end with a complete final sentence.
-
-Content rules:
-- Judge scope using only the latest user message. Conversation history may help with context, but old unrelated or rejected turns must not make a valid latest message invalid.
-- Only answer latest user messages that fit GalaTayo's purpose: gala planning, places, PH cities and areas, travel, itineraries, budgets, commute, food trips, dates, and related outing discovery.
-- If any real requested action in the latest user message is unrelated, even before or between valid GalaTayo requests, treat the latest prompt as out of scope and do not answer it.
-- If the latest user message asks something outside that scope, refuse briefly and use this exact sentence: "GalaTayo AI will not answer this question because it does not align with the purpose of GalaTayo."
-- For harmless filler-only messages like greetings, acknowledgements, or confirmations, reply warmly but only invite GalaTayo-related next steps such as planning a lakad, finding places, directions, budgets, itineraries, commute, nearby food, or outing ideas. Do not say broad phrases like "anything else" or invite unrelated questions.
-- If the user asks for a plan, give a simple realistic plan.
-- If the user asks for suggestions, give practical options.
-- If the user gives a location, use it in the answer.
-- GalaTayo covers places around the Philippines. When the user names no location, default to Metro Manila suggestions.
-- If the user does not give a location, ask one short follow-up question only if needed.
-- For broad place-discovery questions without a location, do not reply with only a location follow-up. Give useful general guidance first, then ask for the city or area only as an optional next step.
-- Treat gay bar, queer bar, LGBTQ+ bar, bar for gay people, and similar phrases as normal venue or nightlife categories.
-- Reject only when the request is sexualized, explicit, 18+, hookup, escort, red-light, brothel, strip club, porn-like, violent, exploitative, malicious, or asks about a specific person's sexuality or gender identity.
-- Do not mention safety or policy unless the user asks for it or the request is actually risky.
-- Do not invent live map coordinates, exact ratings, exact opening hours, exact floors, exact addresses, landmark relationships, exhibit details, specific artifacts, prices, phone numbers, or real-time availability.
-- For place recommendations, keep factual claims cautious unless they are common, stable, and directly relevant to planning. Prefer practical planning guidance over detailed encyclopedia-style descriptions.
-- For live place pins or exact map details, say they can use the map feature.
-- For safety, budget, commute, weather, and timing, give practical reminders.
-
-Default answer style:
-Start with a friendly short intro, then give the answer in clean paragraphs or short bullets.
-
-Example style:
-"Gets! For a beach date, keep it simple and chill lang para hindi hassle.
-
-Start with a beach na madaling puntahan and may basic facilities like restroom, parking, or nearby food spots. Mas okay if morning kayo pumunta para hindi super init and hindi pa crowded.
-
-For the flow, you can do quick photos, light snacks, tambay sa shore, then sunset walk if kaya. Bring water, sunscreen, extra clothes, and a waterproof pouch for phones.
-
-For food, mas safe magdala ng simple snacks like sandwiches, chips, fruits, and drinks. If may nearby cafe or seaside resto, doon na lang kayo mag-dinner para less bitbit.
-
-Simple but cute idea: bring a small handwritten note or surprise snack. Hindi kailangan bongga, basta thoughtful."
-
-Never format this kind of answer as a table.`;
+Facts:
+- When no location is given, default to Metro Manila. For broad place-discovery questions without a location, do not reply with only a location follow-up: give useful ideas first, then optionally ask for the area.
+- Recommend specific places only from the GALATAYO PLACES list when one is given, written exactly as listed. Never invent places, and never mention the list itself.
+- Do not invent opening hours, prices, addresses, ratings, phone numbers or live availability. For pins and exact locations, point to the map feature.
+- Give practical reminders on budget, commute, weather and timing when relevant.`;
 
 export type GroqConversationMessage = {
   role: "user" | "assistant";
@@ -168,6 +75,7 @@ type GroqResponseFormat = {
 
 type GroqCallOptions = {
   temperature?: number;
+  reasoningEffort?: "low" | "medium";
   maxCompletionTokens?: number;
   responseFormat?: GroqResponseFormat;
   timeoutMs?: number;
@@ -806,6 +714,8 @@ async function callGroq(
         temperature: options?.temperature ?? 0.7,
         max_completion_tokens: options?.maxCompletionTokens ?? 1400,
         stream: false,
+        // gpt-oss reasoning tokens count against max_completion_tokens; low effort leaves room for the answer.
+        ...(model.includes("gpt-oss") ? { reasoning_effort: options?.reasoningEffort ?? "low", include_reasoning: false } : {}),
         ...(options?.responseFormat ? { response_format: options.responseFormat } : {}),
       }),
       signal: abortSignal,
@@ -837,6 +747,13 @@ async function callGroq(
   const data = await response.json().catch(() => null);
   const latencyMs = Date.now() - startedAt;
 
+  // JSON mode answers output that fails validation with a 400 but includes the text; let the caller repair it.
+  const providerError = (data as { error?: { code?: string; failed_generation?: string } } | null)?.error;
+  if (response.status === 400 && providerError?.code === "json_validate_failed" && normalizeText(providerError.failed_generation)) {
+    console.warn(`[AskAI Chatbot][requestId=${requestId}] provider=groq model=${model} json_validate_failed, repairing output`);
+    return { answer: normalizeText(providerError.failed_generation), finishReason: "json_validate_failed" };
+  }
+
   if (!response.ok) {
     const errorMessage =
       (data as { error?: { message?: string } } | null)?.error?.message ||
@@ -858,8 +775,9 @@ async function callGroq(
       );
     }
 
+    // A provider 4xx is our request's problem, not the user's: report it as a bad gateway.
     throw new GroqChatProviderError(
-      response.status || 502,
+      response.status >= 500 ? response.status : 502,
       "AI_PROVIDER_TEMPORARY_ERROR",
       "The AI model had a temporary issue. Please try again in a moment.",
       errorMessage,
@@ -912,21 +830,46 @@ async function callGroq(
   };
 }
 
-async function callGroqWithModelRotation({
-  models,
-  messages,
-  requestId,
-  signal,
-  options,
-  purpose,
-}: {
+type ModelRotationParams = {
   models: string[];
   messages: GroqMessage[];
   requestId: string;
   signal?: AbortSignal;
   options?: GroqCallOptions;
   purpose: "chatbot" | "prompt-guard";
-}): Promise<{ answer: string; finishReason: string | null; model: string }> {
+};
+
+/** How long to wait before one more pass over the models, or null when retrying won't help. */
+export function getGroqRetryDelayMs(error: unknown): number | null {
+  if (!(error instanceof GroqChatProviderError) || error.errorCode === "AI_PROVIDER_CONFIGURATION_ERROR") return null;
+  if (error.status === 429) {
+    const cooldownMs = error.cooldownMs ?? GROQ_MODEL_RATE_LIMIT_DEFAULT_COOLDOWN_MS;
+    return cooldownMs <= GROQ_RETRY_PASS_MAX_WAIT_MS ? cooldownMs + 150 : null;
+  }
+  return error.status >= 500 ? 800 : null;
+}
+
+async function callGroqWithModelRotation(params: ModelRotationParams): Promise<{ answer: string; finishReason: string | null; model: string }> {
+  try {
+    return await callGroqModelsOnce(params);
+  } catch (error) {
+    if (params.signal?.aborted || isAskAiRequestCancelledError(error)) throw error;
+    const delayMs = getGroqRetryDelayMs(error);
+    if (delayMs === null) throw error;
+    console.warn(`[AskAI Chatbot][requestId=${params.requestId}] provider=groq purpose=${params.purpose} retry-pass delayMs=${delayMs}`);
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
+    return callGroqModelsOnce(params);
+  }
+}
+
+async function callGroqModelsOnce({
+  models,
+  messages,
+  requestId,
+  signal,
+  options,
+  purpose,
+}: ModelRotationParams): Promise<{ answer: string; finishReason: string | null; model: string }> {
   const modelList = uniqueStrings(models);
   let lastProviderError: GroqChatProviderError | null = null;
   let lastError: unknown = null;
@@ -1114,27 +1057,41 @@ export async function generateFromGroq({
     if (signal?.aborted || isAskAiRequestCancelledError(error)) {
       throwIfAskAiRequestCancelled(signal);
     }
-
-    if (
-      error instanceof GroqChatProviderError &&
-      (error.status === 429 ||
-        error.errorCode === "AI_PROVIDER_CONFIGURATION_ERROR")
-    ) {
-      throw error;
-    }
-
-    return sanitizeChatbotAnswer(GROQ_SAFE_FALLBACK_MESSAGE);
+    // Surface the failure so the chat can show an error with Retry instead of a fake answer.
+    throw error;
   }
 
   const cleanedAnswer = sanitizeGeneratedChatbotAnswer(result.answer);
+  if (cleanedAnswer === GROQ_SAFE_FALLBACK_MESSAGE) {
+    throw new GroqChatProviderError(502, "AI_PROVIDER_TEMPORARY_ERROR", GROQ_SAFE_FALLBACK_MESSAGE, "Groq answer was unusable.", { model: result.model });
+  }
 
-  return sanitizeChatbotAnswer(
-    result.finishReason === "length" &&
-      cleanedAnswer &&
-      !/[.!?]$/.test(cleanedAnswer)
-      ? `${cleanedAnswer}\n\nI can continue this plan if you want more details.`
-      : cleanedAnswer
-  );
+  return finishChatbotAnswer(cleanedAnswer, result.finishReason === "length");
+}
+
+/**
+ * Makes an answer safe to render: when the token limit cut it off, drops the unfinished
+ * sentence or list item, and always closes markdown bold/italics left open.
+ */
+export function finishChatbotAnswer(text: string, truncated: boolean): string {
+  let answer = sanitizeChatbotAnswer(text);
+
+  if (truncated && !/[.!?)"'’\p{Extended_Pictographic}]\s*$/u.test(answer)) {
+    const lastBreak = Math.max(answer.lastIndexOf("\n"), 0);
+    const tail = answer.slice(lastBreak);
+    const sentenceEnd = Math.max(...[". ", "! ", "? "].map((mark) => tail.lastIndexOf(mark)));
+    answer = sentenceEnd > 0 ? answer.slice(0, lastBreak + sentenceEnd + 1) : answer.slice(0, lastBreak);
+    answer = answer.replace(/\n\s*(?:[-*]|\d+\.)?\s*\**[^\n]*:\**\s*$/, "").trimEnd();
+  }
+
+  // An odd count of ** means bold was opened and never closed: drop the last opener.
+  if ((answer.match(/\*\*/g) ?? []).length % 2 === 1) {
+    const index = answer.lastIndexOf("**");
+    answer = answer.slice(0, index) + answer.slice(index + 2);
+  }
+  answer = answer.replace(/^(\s*)\*\s*$/gm, "").trim();
+
+  return answer || sanitizeChatbotAnswer(text);
 }
 
 export async function generateJsonFromGroq({
@@ -1142,7 +1099,7 @@ export async function generateJsonFromGroq({
   userMessage,
   requestId,
   signal,
-  maxCompletionTokens = 1800,
+  maxCompletionTokens = 1100,
 }: {
   systemPrompt: string;
   userMessage: string;

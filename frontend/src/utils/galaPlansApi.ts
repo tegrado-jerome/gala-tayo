@@ -290,6 +290,10 @@ export type GalaPlanAiDraft = {
   title: string
   summary: string
   date: string | null
+  /** "prompt" when the date came from the request, "default" when Tara picked the next Saturday. */
+  date_source?: 'prompt' | 'default'
+  /** "fallback" when the AI was busy and the plan was built from GalaTayo places without it. */
+  source?: 'ai' | 'fallback'
   group_size: number
   stops: Array<{
     place_id: string
@@ -311,11 +315,13 @@ export class GalaPlanAiError extends Error {
   }
 }
 
-export async function draftGalaPlanWithAi(prompt: string, session?: Session | null) {
+export async function draftGalaPlanWithAi(prompt: string, session?: Session | null, date?: string | null) {
   const response = await fetch(getApiUrl('/gala-plans/ai-draft'), {
     method: 'POST',
     headers: await getAskAiRequestHeaders(session?.access_token ?? null),
-    body: JSON.stringify({ prompt }),
+    body: JSON.stringify(date ? { prompt, date } : { prompt }),
+  }).catch(() => {
+    throw new GalaPlanAiError("Couldn't reach Tara. Check your connection and try again.", 0, 'NETWORK')
   })
   const data = (await response.json().catch(() => ({}))) as {
     draft?: GalaPlanAiDraft
