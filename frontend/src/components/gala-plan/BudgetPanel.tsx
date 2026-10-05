@@ -64,7 +64,7 @@ function BudgetPanel({ plan, barkada, session, onBarkadaChange }: BudgetPanelPro
 
       {goingMembers.length > 1 && perHead > 0 ? (
         <>
-          <SectionHead title="Hatian" sub={plan.viewer_is_owner ? 'Mark people paid as they settle.' : 'Settle with the host anytime.'} />
+          <SectionHead title="Hatian (split the bill)" sub={plan.viewer_is_owner ? 'Mark people paid as they settle.' : 'Settle with the host anytime.'} />
           <Panel style={{ paddingBlock: 4 }}>
             {goingMembers.map((member) => (
               <div key={member.user_id} className="g-bal">

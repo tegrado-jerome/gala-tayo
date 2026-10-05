@@ -26,6 +26,7 @@ import { MemberAvatar } from './place-detail/MemberAvatar'
 import CheckInButton from './place-detail/CheckInButton'
 import { getSulitLevel } from './place-detail/SulitMeter'
 import { GoodForList } from './place-detail/GoodForList'
+import { displayCityName } from '../utils/cityName'
 import { cleanString, titleCase, uniqueList, isAcceptedContributionImage, contributionImageErrorMessage, parseJsonResponse } from './place-detail/helpers'
 import type { PlaceDetailViewProps, PlaceReview, PlaceReviewsResponse, PlaceComment, PlaceCommentsResponse, PlaceImageContributionResponse, PlaceDetailCommunityCache } from './place-detail/types'
 
@@ -2350,47 +2351,52 @@ function PlaceDetailView({
 
   return (
     <Page>
-      <nav aria-label="Breadcrumb" className="-mt-2 mb-2">
-        <ol className="g-sm g-mut flex flex-wrap items-center gap-x-1.5">
-          <li className="inline-flex" aria-hidden="true">
-            <ArrowLeft className="h-4 w-4" />
-          </li>
-          {breadcrumbItems.map((item, index) => (
-            <li
-              key={`${item.label}-${index}`}
-              className={cx('items-center gap-1.5', index === breadcrumbItems.length - 1 ? 'inline-flex' : 'hidden md:inline-flex')}
-            >
-              {index > 0 ? (
-                <span className="g-fnt hidden md:inline" aria-hidden="true">
-                  /
-                </span>
-              ) : null}
-              <InternalLink href={item.href ?? '/places'} className="inline-flex min-h-[44px] items-center hover:text-[var(--ink)]">
-                {item.label}
-              </InternalLink>
+      <div className="-mt-2 mb-2 flex items-center justify-between gap-3">
+        <nav aria-label="Breadcrumb" className="min-w-0">
+          <ol className="g-sm g-mut flex flex-wrap items-center gap-x-1.5">
+            <li className="inline-flex" aria-hidden="true">
+              <ArrowLeft className="h-4 w-4" />
             </li>
-          ))}
-        </ol>
-      </nav>
+            {breadcrumbItems.map((item, index) => (
+              <li
+                key={`${item.label}-${index}`}
+                className={cx('items-center gap-1.5', index === breadcrumbItems.length - 1 ? 'inline-flex' : 'hidden md:inline-flex')}
+              >
+                {index > 0 ? (
+                  <span className="g-fnt hidden md:inline" aria-hidden="true">
+                    /
+                  </span>
+                ) : null}
+                <InternalLink href={item.href ?? '/places'} className="inline-flex min-h-[44px] items-center hover:text-[var(--ink)]">
+                  {item.label}
+                </InternalLink>
+              </li>
+            ))}
+          </ol>
+        </nav>
+        <Button variant="line" size="sm" iconOnly aria-label="Share" className="g-only-desk shrink-0" onClick={() => void handleSharePlace()}>
+          <Share2 aria-hidden="true" />
+        </Button>
+      </div>
 
-      <div className="flex items-start gap-3 md:items-center md:gap-4">
-        <h1 className="g-h1 min-w-0 flex-1 md:flex-none">{place.name}</h1>
-        <Button variant="line" size="sm" className="shrink-0" onClick={() => void handleSharePlace()}>
+      <div className="flex items-start gap-3">
+        <h1 className="g-h1 min-w-0 flex-1">{place.name}</h1>
+        <Button variant="line" size="sm" className="g-only-mob shrink-0" onClick={() => void handleSharePlace()}>
           <Share2 aria-hidden="true" />
           Share
         </Button>
       </div>
-      <p className="g-mut mt-1.5 flex flex-wrap items-center gap-x-1.5">
+      <p className="g-mut mt-1.5 flex flex-wrap items-center gap-x-2">
         <span>
-          {categoryLabel} · {locationLabel} ·
+          {[categoryLabel, displayCityName(locationLabel)].filter(Boolean).join(' · ')}
+          {headlineReviewCount >= MIN_RATINGS_TO_SHOW ? (
+            <>
+              {' · '}
+              <b className="font-semibold text-[var(--ink)]">★ {headlineRating.toFixed(1)}</b> ({formatRatingCount(headlineReviewCount)} ratings)
+            </>
+          ) : null}
         </span>
-        {headlineReviewCount >= MIN_RATINGS_TO_SHOW ? (
-          <span>
-            <b className="font-semibold text-[var(--ink)]">★ {headlineRating.toFixed(1)}</b> ({formatRatingCount(headlineReviewCount)} ratings)
-          </span>
-        ) : (
-          <Tag>New</Tag>
-        )}
+        {headlineReviewCount >= MIN_RATINGS_TO_SHOW ? null : <Tag>New</Tag>}
       </p>
       {shareError ? <p className="g-hint is-error mt-2">{shareError}</p> : null}
       {saveError ? <p className="g-hint is-error mt-2">{saveError}</p> : null}

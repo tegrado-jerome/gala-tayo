@@ -22,6 +22,7 @@ import { getStaticPlaceImageUrlForSlug } from '../data/placeIndexVisuals'
 import { R2_PUBLIC_BASE_URL } from '../data/r2Config'
 import { useListingRail } from '../hooks/useListingRail'
 import { useManilaWeather, type ManilaWeather } from '../hooks/useManilaWeather'
+import { displayCityName } from '../utils/cityName'
 import { fetchHomePlaceDetailsBatch } from '../utils/placeDetailCache'
 import { resolveAreaMeta } from '../utils/routes'
 
@@ -220,7 +221,7 @@ function HomePage({ navigationSource }: { navigationSource: NavigationSource }) 
               <span className="block aspect-square overflow-hidden rounded-full">
                 <PlaceImage candidates={imageUrl ? [imageUrl] : []} className="h-full w-full object-cover" />
               </span>
-              <span className="g-sm mt-2 block font-semibold">{tile.label}</span>
+              <span className="g-sm mt-2 block font-semibold">{displayCityName(tile.label)}</span>
             </InternalLink>
           )
         })}

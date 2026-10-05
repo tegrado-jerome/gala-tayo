@@ -45,6 +45,19 @@ function sortPlacesAlphabetically(places: SeoPlaceSummary[]) {
   return [...places].sort((left, right) => left.name.localeCompare(right.name))
 }
 
+const categoryNouns: Record<string, [string, string]> = {
+  activity: ['activity', 'activities'],
+  food: ['food spot', 'food spots'],
+  heritage: ['heritage site', 'heritage sites'],
+  nightlife: ['nightlife spot', 'nightlife spots'],
+}
+
+function formatCategoryCount(categorySlug: string, categoryLabel: string, total: number) {
+  const label = categoryLabel.toLowerCase()
+  const [singular, plural] = categoryNouns[categorySlug] ?? [label, `${label}s`]
+  return `${total.toLocaleString('en-PH')} ${total === 1 ? singular : plural}`
+}
+
 function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'push' }: CategoryPlacesPageProps) {
   const listingGuestAuth = useGuestAuthPrompt()
   const [routeCache] = useState(() => {
@@ -330,7 +343,7 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
 
       <header className="mt-5 max-w-[40rem]">
         <h1 className="g-h1">{categoryLabel} places in Metro Manila</h1>
-        <p className="g-mut mt-2">{categoryLabel} spots across Metro Manila</p>
+        <p className="g-mut mt-2 min-h-[1.5em]">{payload.total > 0 ? formatCategoryCount(categorySlug, categoryLabel, payload.total) : null}</p>
       </header>
 
       {errorMessage ? (

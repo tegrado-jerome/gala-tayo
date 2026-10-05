@@ -116,14 +116,13 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
         <ArrowLeft className="h-4 w-4" />
         @{plan.owner?.username || username}
       </InternalLink>
-      {cover ? (
-        <div className="mt-2 aspect-[16/9] overflow-hidden bg-[var(--fill)] lg:aspect-[5/2]" style={{ borderRadius: 'var(--r-4)' }}>
-          <img src={cover} alt="" className="h-full w-full object-cover" />
-        </div>
-      ) : null}
-
-      <div className="g-split mt-6 lg:mt-8">
+      <div className="g-split mt-2">
         <div className="min-w-0">
+          {cover ? (
+            <div className="mb-5 aspect-[16/9] overflow-hidden bg-[var(--fill)] lg:mb-6 lg:aspect-[2/1]" style={{ borderRadius: 'var(--r-4)' }}>
+              <img src={cover} alt="" className="h-full w-full object-cover" />
+            </div>
+          ) : null}
           <InternalLink href={profileHref} className="inline-flex min-h-11 items-center gap-2">
             <Avatar src={plan.owner?.avatar_url ?? plan.owner?.provider_avatar_url} name={ownerName} size={28} />
             <span className="g-eyebrow">{ownerName} shared this gala</span>
@@ -145,7 +144,7 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
             <h2 className="g-h3">Sama ka?</h2>
             <p className="g-sm g-mut mt-0.5">Send it to the barkada or heart it for later.</p>
             <div className="mt-3 grid grid-cols-2 gap-2">
-              <Button variant="ink" onClick={() => void shareGalaPlanLink(plan.owner.username, plan.slug, plan.title)}>
+              <Button variant="tara" onClick={() => void shareGalaPlanLink(plan.owner.username, plan.slug, plan.title)}>
                 <Share />
                 Share
               </Button>

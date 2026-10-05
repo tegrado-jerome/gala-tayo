@@ -1,9 +1,9 @@
-import { useMemo, useState } from 'react'
-import { Search, Sparkles, Trash2 } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { MoreHorizontal, Search, Sparkles, Trash2 } from 'lucide-react'
 import GoogleSignInButton from '../components/GoogleSignInButton'
 import InternalLink from '../components/InternalLink'
 import DestructiveConfirmModal from '../components/DestructiveConfirmModal'
-import { Button, Empty, Page, PlaceCard, PlaceCardSkeleton, cx } from '../components/ui'
+import { Button, Empty, Page, PlaceCard, PlaceCardSkeleton, Sheet, cx } from '../components/ui'
 import { useSavedFavorites, type FavoritePlace } from '../context/SavedFavoritesContext'
 import { getPlacePhoto } from '../utils/placePhoto'
 import { getPublicSiteUrl } from '../utils/site'
@@ -60,9 +60,27 @@ function FavoritesPage() {
   const [removingIds, setRemovingIds] = useState<Set<string>>(new Set())
   const [isClearingAll, setIsClearingAll] = useState(false)
   const [isClearAllDialogOpen, setIsClearAllDialogOpen] = useState(false)
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
   const [clearAllError, setClearAllError] = useState('')
   const [visibleFavoritesCount, setVisibleFavoritesCount] = useState(FAVORITES_LOAD_MORE_BATCH_SIZE)
   const { session, isSessionLoading, isFavoritesLoading, favoritesError, favorites, removeFavorite, clearAllFavorites } = useSavedFavorites()
+
+  useEffect(() => {
+    if (!isMenuOpen) return undefined
+    const closeOutside = (event: PointerEvent) => {
+      if (!menuRef.current?.contains(event.target as Node)) setIsMenuOpen(false)
+    }
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsMenuOpen(false)
+    }
+    document.addEventListener('pointerdown', closeOutside)
+    document.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.removeEventListener('pointerdown', closeOutside)
+      document.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [isMenuOpen])
 
   const savedPlaces = useMemo(() => favorites.filter((favorite) => Boolean(favorite.place)), [favorites])
 
@@ -117,6 +135,22 @@ function FavoritesPage() {
   }
 
   const isSignedIn = !isSessionLoading && Boolean(session?.user)
+  const removeAllItem = (
+    <button
+      type="button"
+      role="menuitem"
+      className="flex min-h-11 w-full items-center gap-3 whitespace-nowrap rounded-[var(--r-2)] px-3 text-left font-medium hover:bg-[var(--fill)] disabled:opacity-40"
+      style={{ color: 'var(--bad)' }}
+      disabled={isClearingAll}
+      onClick={() => {
+        setIsMenuOpen(false)
+        setIsClearAllDialogOpen(true)
+      }}
+    >
+      <Trash2 className="g-ic" aria-hidden="true" />
+      {isClearingAll ? 'Removing...' : 'Remove all places'}
+    </button>
+  )
 
   return (
     <Page>
@@ -166,15 +200,33 @@ function FavoritesPage() {
       {isSignedIn ? (
         <div className="grid gap-4">
           {savedPlaces.length > 0 ? (
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <label className="g-search min-w-0 sm:flex-1">
+            <div className="flex items-center gap-2">
+              <label className="g-search min-w-0 flex-1">
                 <Search className="g-ic" aria-hidden="true" />
                 <input value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Search saved places" aria-label="Search saved places" />
               </label>
-              <Button variant="text" size="sm" onClick={() => setIsClearAllDialogOpen(true)} disabled={isClearingAll} className="self-start sm:self-auto">
-                <Trash2 aria-hidden="true" />
-                {isClearingAll ? 'Removing...' : 'Remove all'}
-              </Button>
+              <div ref={menuRef} className="relative shrink-0">
+                <Button variant="line" iconOnly aria-label="More options" aria-haspopup="menu" aria-expanded={isMenuOpen} onClick={() => setIsMenuOpen((open) => !open)}>
+                  <MoreHorizontal aria-hidden="true" />
+                </Button>
+                {isMenuOpen ? (
+                  <>
+                    <div
+                      role="menu"
+                      aria-label="Saved places options"
+                      className="absolute right-0 top-full z-50 mt-2 hidden w-max p-1 lg:block"
+                      style={{ background: 'var(--surface)', border: '1px solid var(--line-2)', borderRadius: 'var(--r-3)', boxShadow: 'var(--sh-2)' }}
+                    >
+                      {removeAllItem}
+                    </div>
+                    <div className="lg:hidden">
+                      <Sheet open onClose={() => setIsMenuOpen(false)} title="Saved places" labelledBy="saved-options-title">
+                        {removeAllItem}
+                      </Sheet>
+                    </div>
+                  </>
+                ) : null}
+              </div>
             </div>
           ) : null}
 
@@ -217,9 +269,6 @@ function FavoritesPage() {
                   />
                 ))}
               </div>
-              <p className="g-xs g-mut text-center">
-                Showing {visibleSavedPlaces.length} of {filteredSavedPlaces.length} place{filteredSavedPlaces.length === 1 ? '' : 's'}
-              </p>
               {hasMoreSavedPlaces ? (
                 <div className="flex justify-center">
                   <Button variant="line" onClick={() => setVisibleFavoritesCount((current) => current + FAVORITES_LOAD_MORE_BATCH_SIZE)}>

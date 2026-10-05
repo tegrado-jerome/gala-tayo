@@ -155,13 +155,15 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
     }
   }
 
+  const displayName = loadedProfile ? loadedProfile.display_name?.trim() || getDisplayName(loadedProfile) : ''
+  const firstName = displayName.split(/\s+/)[0]
   const FollowIcon = relationshipState === 'following' ? Check : relationshipState === 'pending' ? Clock : UserPlus
 
   return (
     <Page>
       {isLoading && !loadedProfile ? (
         <div className="flex items-center gap-4" aria-label="Loading profile">
-          <Skeleton className="h-[88px] w-[88px] !rounded-full" />
+          <Skeleton className="h-[72px] w-[72px] !rounded-full lg:h-24 lg:w-24" />
           <div className="flex-1">
             <Skeleton className="h-6 w-48" />
             <Skeleton className="mt-2 h-4 w-32" />
@@ -179,8 +181,16 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
             <div className="flex items-start gap-4 lg:gap-6">
               <ProfileAvatar profile={loadedProfile} size="xl" />
               <div className="min-w-0 flex-1">
-                <h1 className="g-h1 truncate">{loadedProfile.display_name?.trim() || getDisplayName(loadedProfile)}</h1>
-                <p className="g-mut truncate">@{loadedProfile.username}</p>
+                <h1 className="g-h1 truncate">{displayName}</h1>
+                <p className="flex min-w-0 items-center gap-2">
+                  <span className="g-mut truncate">@{loadedProfile.username}</span>
+                  {loadedProfile.is_public ? null : (
+                    <Tag tone="warn" className="shrink-0">
+                      <Lock aria-hidden="true" />
+                      Private
+                    </Tag>
+                  )}
+                </p>
                 <p className="g-sm mt-3 flex flex-wrap items-center gap-x-1">
                   <button type="button" className="inline-flex min-h-11 items-center gap-1" onClick={() => void openList('followers')} disabled={!canOpenFollowLists}>
                     <b>{loadedProfile.followers_count}</b>
@@ -201,31 +211,25 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
             </div>
 
             {loadedProfile.bio ? <p className="mt-3 max-w-[60ch]">{loadedProfile.bio}</p> : null}
-            {!loadedProfile.is_public || relationshipState === 'self' ? (
-              <p className="g-sm mt-2 flex flex-wrap items-center gap-2">
-                {!loadedProfile.is_public ? (
-                  <Tag tone="warn">
-                    <Lock aria-hidden="true" />
-                    Private
-                  </Tag>
-                ) : null}
-                {relationshipState === 'self' ? <Tag tone="tara">Your public view</Tag> : null}
+            {relationshipState === 'self' ? (
+              <p className="mt-2">
+                <Tag>Your public view</Tag>
               </p>
             ) : null}
 
             <div className="mt-4 grid grid-cols-2 gap-2">
               {relationshipState === 'self' ? (
-                <Button variant="soft" block href="/account-settings">
+                <Button variant="line" block href="/account-settings">
                   <Settings aria-hidden="true" />
                   Edit profile
                 </Button>
               ) : (
-                <Button variant={relationshipState === 'following' || relationshipState === 'pending' ? 'soft' : 'ink'} block onClick={() => void handleFollow()}>
+                <Button variant={relationshipState === 'following' || relationshipState === 'pending' ? 'line' : 'ink'} block onClick={() => void handleFollow()}>
                   <FollowIcon aria-hidden="true" />
                   {RELATIONSHIP_LABELS[relationshipState]}
                 </Button>
               )}
-              <Button variant="soft" block onClick={() => void handleShare()}>
+              <Button variant="line" block onClick={() => void handleShare()}>
                 <Share2 aria-hidden="true" />
                 Share profile
               </Button>
@@ -243,7 +247,11 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
           {lockedMessage ? (
             <Empty title="This profile is private." description={lockedMessage} />
           ) : plans.length === 0 ? (
-            <Empty title="Wala pang public plans." description={relationshipState === 'self' ? 'Make a plan public so it shows up here.' : 'Check back soon.'} />
+            relationshipState === 'self' ? (
+              <Empty title="Wala pang public plans." description="Make a plan public so it shows up here." />
+            ) : (
+              <p className="g-mut">{firstName} hasn't shared a plan yet.</p>
+            )
           ) : (
             <div className="g-group lg:max-w-[720px]">
               {plans.map((plan) => {

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { BookMarked, CalendarDays, ChevronRight, Eye, Heart, History, LogOut, Moon, Settings, Share2, ShieldCheck, Sparkles, Stamp as StampIcon, Sun, UserPlus } from 'lucide-react'
+import { BookMarked, CalendarDays, ChevronRight, Eye, Heart, History, Lock, LogOut, Moon, Settings, Share2, ShieldCheck, Sparkles, Stamp as StampIcon, Sun, UserPlus } from 'lucide-react'
 import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
 import InternalLink from '../components/InternalLink'
 import ProfileAvatar from '../components/ProfileAvatar'
@@ -342,7 +342,7 @@ function ProfilePage({ session }: ProfilePageProps) {
     <Page>
       {isLoading && !profile ? (
         <div className="flex items-center gap-4" aria-label="Loading profile">
-          <Skeleton className="h-[88px] w-[88px] !rounded-full" />
+          <Skeleton className="h-[72px] w-[72px] !rounded-full lg:h-24 lg:w-24" />
           <div className="flex-1">
             <Skeleton className="h-6 w-48" />
             <Skeleton className="mt-2 h-4 w-32" />
@@ -357,7 +357,15 @@ function ProfilePage({ session }: ProfilePageProps) {
               <ProfileAvatar profile={profile} size="xl" />
               <div className="min-w-0 flex-1">
                 <h1 className="g-h1 truncate">{displayName}</h1>
-                <p className="g-mut truncate">@{profile.username}</p>
+                <p className="flex min-w-0 items-center gap-2">
+                  <span className="g-mut truncate">@{profile.username}</span>
+                  {profile.is_public ? null : (
+                    <Tag tone="warn" className="shrink-0">
+                      <Lock aria-hidden="true" />
+                      Private
+                    </Tag>
+                  )}
+                </p>
                 <p className="g-sm mt-3 flex flex-wrap items-center gap-x-1">
                   <button type="button" className="inline-flex min-h-11 items-center gap-1" onClick={() => void openList('followers')}>
                     <b>{profile.followers_count ?? 0}</b>
@@ -378,16 +386,15 @@ function ProfilePage({ session }: ProfilePageProps) {
             </div>
 
             <p className="mt-3 max-w-[60ch]">{profile.bio || 'Add a short bio so people know your vibe before they follow.'}</p>
-            <p className="g-sm g-mut mt-2 flex items-center gap-2">
-              <Tag tone={profile.is_public ? 'neutral' : 'warn'}>{profile.is_public ? 'Public' : 'Private'}</Tag>
-              {followRequests.length > 0 ? `${followRequests.length} pending request${followRequests.length === 1 ? '' : 's'}` : null}
-            </p>
+            {followRequests.length > 0 ? (
+              <p className="g-sm g-mut mt-2">{`${followRequests.length} pending request${followRequests.length === 1 ? '' : 's'}`}</p>
+            ) : null}
 
             <div className="mt-4 grid grid-cols-2 gap-2">
-              <Button variant="soft" block href="/account-settings">
+              <Button variant="line" block href="/account-settings">
                 Edit profile
               </Button>
-              <Button variant="soft" block onClick={() => void handleShare()}>
+              <Button variant="line" block onClick={() => void handleShare()}>
                 <Share2 aria-hidden="true" />
                 Share profile
               </Button>

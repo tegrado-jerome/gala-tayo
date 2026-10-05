@@ -75,10 +75,14 @@ export function SectionHead({ title, sub, action, className, as: Heading = 'h2' 
 export function Avatar({ src, name, size = 28, className }: { src?: string | null; name?: string | null; size?: number; className?: string }) {
   const style: CSSProperties = { width: size, height: size }
   if (src) return <img className={cx('g-av', className)} style={style} src={src} alt={name ?? ''} loading="lazy" />
-  const initial = (name ?? '?').trim().charAt(0).toUpperCase() || '?'
+  const initials = (name ?? '').trim().split(/\s+/).slice(0, 2).map((word) => word.charAt(0).toUpperCase()).join('') || '?'
   return (
-    <span className={cx('g-av', 'grid place-items-center font-semibold text-[var(--ink-2)]', className)} style={{ ...style, fontSize: Math.round(size * 0.42) }} aria-label={name ?? undefined}>
-      {initial}
+    <span
+      className={cx('g-av', 'grid place-items-center font-semibold', className)}
+      style={{ ...style, background: 'var(--sea-soft)', color: 'var(--sea)', fontFamily: 'var(--font-display)', fontSize: Math.round(size * (initials.length > 1 ? 0.36 : 0.42)) }}
+      aria-label={name ?? undefined}
+    >
+      {initials}
     </span>
   )
 }
