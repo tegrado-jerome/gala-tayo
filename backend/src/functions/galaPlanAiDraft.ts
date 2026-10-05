@@ -1,35 +1,62 @@
 import { randomUUID } from "node:crypto";
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
-import { getActiveNormalizedPlaces } from "../domain/places";
+import { getActiveNormalizedPlaces, type NormalizedPlace } from "../domain/places";
 import { consumeAskAiUsageForActor, refundAskAiUsageForActor } from "../services/askAiUsageService";
 import { generateJsonFromGroq } from "../services/groqChatProvider";
 import { getApprovedPlaceImagesByPlaceIds } from "../services/placeImagesService";
-import { buildSystemPrompt, buildUserMessage, manilaToday, parseDraft, resolvePromptDate, selectCandidates } from "../services/galaPlanDraftPlanner";
+import {
+  buildFallbackDraft,
+  buildSystemPrompt,
+  buildUserMessage,
+  findUncoveredArea,
+  getPlanSunset,
+  manilaToday,
+  parseDraft,
+  parseGroupSize,
+  PLAN_CANDIDATES,
+  resolvePlanDate,
+  scheduleStops,
+  selectCandidates,
+  wantsSunset,
+  weekdayOf,
+  type DraftResponse,
+} from "../services/galaPlanDraftPlanner";
 import { resolveAskAiActor, type AskAiActor } from "../utils/askAiActor";
 import { buildImageUrl } from "../utils/r2UrlResolver";
-import { shouldAcceptAskAiPrompt } from "./askAi";
-import { ASK_AI_SCOPE_REJECTION_MESSAGE, evaluateAskAiStrictPgGuard } from "./askAiStrictPgGuard";
+import { buildDailyLimitMessage, shouldAcceptAskAiPrompt } from "./askAi";
+import { ASK_AI_SCOPE_REJECTION_MESSAGE } from "./askAiStrictPgGuard";
 
 const JSON_HEADERS = { "Content-Type": "application/json", "Cache-Control": "no-store" };
 const MAX_PROMPT_LENGTH = 400;
-const RETRY_DELAY_MS = 1500;
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
-// Groq's free tier occasionally rate-limits or returns malformed JSON; one short retry absorbs most of it.
-async function withOneRetry<T>(task: () => Promise<T>): Promise<T> {
+async function getBody(request: HttpRequest) {
   try {
-    return await task();
+    const body = (await request.json()) as { prompt?: unknown; date?: unknown };
+    return {
+      prompt: typeof body?.prompt === "string" ? body.prompt.trim() : "",
+      date: typeof body?.date === "string" && ISO_DATE.test(body.date) ? body.date : null,
+    };
   } catch {
-    await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS));
-    return task();
+    return { prompt: "", date: null };
   }
 }
 
-async function getPrompt(request: HttpRequest) {
+type ModelOutcome = { draft: DraftResponse } | { offTopic: true } | { failed: string };
+
+async function draftWithModel(prompt: string, candidates: NormalizedPlace[], plan: { date: string; weekday: string; sunsetMinutes: number }, requestId: string): Promise<ModelOutcome> {
   try {
-    const body = (await request.json()) as { prompt?: unknown };
-    return typeof body?.prompt === "string" ? body.prompt.trim() : "";
-  } catch {
-    return "";
+    const raw = await generateJsonFromGroq({
+      systemPrompt: buildSystemPrompt(plan),
+      userMessage: buildUserMessage(prompt, candidates),
+      requestId,
+    });
+    const parsed = parseDraft(raw, candidates);
+    if (!parsed) return { failed: "unusable plan JSON" };
+    if (!("stops" in parsed)) return { offTopic: true };
+    return { draft: parsed };
+  } catch (error) {
+    return { failed: error instanceof Error ? error.message : String(error) };
   }
 }
 
@@ -45,41 +72,61 @@ export async function postGalaPlanAiDraft(request: HttpRequest, context: Invocat
       return { status: 401, headers: JSON_HEADERS, jsonBody: { message: "Sign in or refresh the page to use Plan with AI." } };
     }
 
-    const prompt = await getPrompt(request);
+    const { prompt, date: requestedDate } = await getBody(request);
     if (prompt.length < 3 || prompt.length > MAX_PROMPT_LENGTH) {
       return { status: 400, headers: JSON_HEADERS, jsonBody: { message: `Describe your gala in 3 to ${MAX_PROMPT_LENGTH} characters.` } };
     }
 
-    const isAccepted =
-      evaluateAskAiStrictPgGuard(prompt).accepted &&
-      (await withOneRetry(() => shouldAcceptAskAiPrompt({ message: prompt, requestId, context }))).accepted;
-    if (!isAccepted) {
-      return { status: 422, headers: JSON_HEADERS, jsonBody: { message: ASK_AI_SCOPE_REJECTION_MESSAGE } };
+    if (!(await shouldAcceptAskAiPrompt({ message: prompt, requestId, context })).accepted) {
+      return { status: 422, headers: JSON_HEADERS, jsonBody: { code: "OFF_TOPIC", message: ASK_AI_SCOPE_REJECTION_MESSAGE } };
+    }
+
+    const places = await getActiveNormalizedPlaces();
+    const uncoveredArea = findUncoveredArea(places, prompt);
+    if (uncoveredArea) {
+      return { status: 422, headers: JSON_HEADERS, jsonBody: { code: "NO_PLACES_IN_AREA", message: `GalaTayo doesn't have enough places in ${uncoveredArea} yet, so Tara can't plan there without guessing. Try another area for now.` } };
     }
 
     const usage = await consumeAskAiUsageForActor(actor, "chatbot_ai");
     if (!usage.allowed) {
-      return { status: 429, headers: JSON_HEADERS, jsonBody: { code: "DAILY_LIMIT", message: "You've used today's AI requests. They reset at midnight.", usage } };
+      return { status: 429, headers: JSON_HEADERS, jsonBody: { code: "DAILY_LIMIT", message: buildDailyLimitMessage(actor, usage.dailyLimit), usage } };
     }
     consumedUsage = true;
 
-    const candidates = selectCandidates(await getActiveNormalizedPlaces(), prompt);
+    const today = manilaToday();
+    const planDate = requestedDate && requestedDate >= today.iso ? { date: requestedDate, source: "prompt" as const } : resolvePlanDate(prompt, today.iso);
+    const candidates = selectCandidates(places, prompt, PLAN_CANDIDATES);
+    const sunsetMinutes = getPlanSunset(planDate.date, candidates);
+
+    const outcome = await draftWithModel(prompt, candidates, { date: planDate.date, weekday: weekdayOf(planDate.date), sunsetMinutes }, requestId);
+    if ("offTopic" in outcome) {
+      await refundAskAiUsageForActor({ actor, usageType: "chatbot_ai" }).catch(() => undefined);
+      return { status: 422, headers: JSON_HEADERS, jsonBody: { code: "OFF_TOPIC", message: ASK_AI_SCOPE_REJECTION_MESSAGE } };
+    }
+
+    let draft: DraftResponse | null = "draft" in outcome ? outcome.draft : null;
+    const source = draft ? "ai" : "fallback";
+    if (!draft) {
+      context.warn(`[GalaPlan AI] requestId=${requestId} model failed (${"failed" in outcome ? outcome.failed : "unknown"}); using fallback planner`);
+      draft = buildFallbackDraft(prompt, candidates);
+      // The fallback costs nothing, so it doesn't use up a daily AI request.
+      await refundAskAiUsageForActor({ actor, usageType: "chatbot_ai" }).catch(() => undefined);
+      consumedUsage = false;
+    }
+    if (!draft) {
+      return { status: 503, headers: JSON_HEADERS, jsonBody: { code: "AI_BUSY", message: "Plan with AI couldn't find enough places for that. Try another area or vibe." } };
+    }
+
     const candidatesById = new Map(candidates.map((place) => [place.id, place]));
-    const draft = await withOneRetry(async () => {
-      const raw = await generateJsonFromGroq({
-        systemPrompt: buildSystemPrompt(manilaToday()),
-        userMessage: buildUserMessage(prompt, candidates),
-        requestId,
-      });
-      const parsed = parseDraft(raw, new Set(candidatesById.keys()));
-      if (!parsed) throw new Error("AI returned an unusable plan.");
-      return parsed;
+    const isToday = planDate.date === today.iso;
+    const stopsInOrder = scheduleStops(draft.stops, candidatesById, {
+      sunsetMinutes,
+      wantsSunset: wantsSunset(prompt),
+      notBefore: isToday ? Math.ceil((today.minutes + 60) / 15) * 15 : undefined,
     });
 
-    draft.date = resolvePromptDate(prompt, manilaToday().iso) ?? draft.date;
-
-    const images = await getApprovedPlaceImagesByPlaceIds(draft.stops.map((stop) => stop.place_id)).catch(() => new Map());
-    const stops = draft.stops.map((stop) => {
+    const images = await getApprovedPlaceImagesByPlaceIds(stopsInOrder.map((stop) => stop.place_id)).catch(() => new Map());
+    const stops = stopsInOrder.map((stop) => {
       const place = candidatesById.get(stop.place_id)!;
       const storageKey = images.get(place.id)?.[0]?.storage_key;
       return {
@@ -103,14 +150,25 @@ export async function postGalaPlanAiDraft(request: HttpRequest, context: Invocat
     return {
       status: 200,
       headers: JSON_HEADERS,
-      jsonBody: { draft: { ...draft, stops }, usage: { ...usage } },
+      jsonBody: {
+        draft: {
+          ...draft,
+          group_size: parseGroupSize(prompt) ?? draft.group_size,
+          date: planDate.date,
+          date_source: planDate.source,
+          sunset: `${String(Math.floor(sunsetMinutes / 60)).padStart(2, "0")}:${String(sunsetMinutes % 60).padStart(2, "0")}`,
+          source,
+          stops,
+        },
+        usage: consumedUsage ? { ...usage } : { ...usage, requestCount: usage.requestCount - 1, remaining: usage.remaining + 1 },
+      },
     };
   } catch (error) {
     context.error(`[GalaPlan AI] requestId=${requestId} failed:`, error);
     if (consumedUsage && actor) {
       await refundAskAiUsageForActor({ actor, usageType: "chatbot_ai" }).catch(() => undefined);
     }
-    return { status: 502, headers: JSON_HEADERS, jsonBody: { message: "Plan with AI couldn't build a plan right now. Try again in a moment." } };
+    return { status: 503, headers: JSON_HEADERS, jsonBody: { code: "AI_BUSY", message: "Plan with AI couldn't build a plan right now. Try again in a moment." } };
   }
 }
 

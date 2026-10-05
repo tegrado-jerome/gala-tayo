@@ -781,7 +781,7 @@ describe("Ask AI chatbot generation scope", () => {
             requests[1]?.messages?.[0]?.content ?? "",
             /Do not mention safety or policy unless the user asks/i
           );
-          assert.equal(requests[1]?.max_completion_tokens, 700);
+          assert.equal(requests[1]?.max_completion_tokens, 900);
         }
       );
 
@@ -832,7 +832,7 @@ describe("Ask AI chatbot generation scope", () => {
       [
         {
           status: 429,
-          error: "Rate limit reached. Please try again in 1s.",
+          error: "Rate limit reached. Please try again in 30s.",
         },
       ],
       async (requests) => {

@@ -9,6 +9,7 @@ import {
   checkAskAiUsageForActorType,
   consumeAskAiUsageForActor,
   refundAskAiUsageForActor,
+  type AskAiUsageResult,
 } from "../services/askAiUsageService";
 import {
   GroqChatProviderError,
@@ -16,7 +17,6 @@ import {
   type GroqConversationMessage,
   classifyAskAiPromptWithGroq,
   generateFromGroq,
-  sanitizeChatbotAnswer,
 } from "../services/groqChatProvider";
 import {
   getAskAiRequestId,
@@ -26,11 +26,11 @@ import {
 } from "../utils/askAiCancellation";
 import { resolveAskAiActor, type AskAiActor } from "../utils/askAiActor";
 import { getActiveNormalizedPlaces, type NormalizedPlace } from "../domain/places";
-import { selectCandidates } from "../services/galaPlanDraftPlanner";
+import { detectLocationIntent, findUncoveredArea, hasLocation, selectCandidates } from "../services/galaPlanDraftPlanner";
 import { resolveAreaSlug } from "../utils/seoPlaces";
 import {
   ASK_AI_SCOPE_REJECTION_MESSAGE,
-  evaluateAskAiStrictPgGuard,
+  classifyAskAiScope,
   normalizeAskAiPromptForStrictPgGuard,
 } from "./askAiStrictPgGuard";
 
@@ -54,18 +54,17 @@ export function normalizeAskAiPromptForGuard(value: string): string {
 export function evaluateAskAiPromptGuardDecision(
   decision: AskAiPromptGuardDecision
 ): AskAiPromptGuardResult {
+  // Refuse only what the classifier says is off-topic or unsafe; several valid asks in one message are fine.
   const hasInvalidActions = decision.invalidActions.length > 0;
   const hasRejectedAction = decision.actions.some((action) => !action.isAllowed);
 
   if (
-    !decision.accepted ||
     hasInvalidActions ||
     hasRejectedAction ||
-    decision.mixedIntent ||
-    decision.secondaryIntentPresent ||
     decision.label === "unrelated" ||
     decision.label === "deceptive" ||
-    decision.label === "harmful"
+    decision.label === "harmful" ||
+    (!decision.accepted && !decision.fillerOnly)
   ) {
     return {
       accepted: false,
@@ -77,6 +76,12 @@ export function evaluateAskAiPromptGuardDecision(
   };
 }
 
+/**
+ * Scope check before answering. Plain outing/food/travel questions (any language mix) pass
+ * without a model call; clear off-topic or unsafe ones are refused; only unclear ones go to
+ * the model guard. If that guard is unavailable the message goes through, because the answer
+ * model refuses clearly unrelated questions on its own.
+ */
 export async function shouldAcceptAskAiPrompt({
   message,
   requestId,
@@ -86,24 +91,27 @@ export async function shouldAcceptAskAiPrompt({
   requestId: string;
   context: InvocationContext;
 }): Promise<AskAiPromptGuardResult> {
+  const scope = classifyAskAiScope(message);
+  context.log(`[AskAI Chatbot] scope requestId=${requestId} decision=${scope}`);
+  if (scope !== "unsure") {
+    return { accepted: scope === "allow" };
+  }
+
   try {
-    const normalizedMessage = normalizeAskAiPromptForGuard(message);
     const decision = await classifyAskAiPromptWithGroq({
-      message: normalizedMessage,
+      message: normalizeAskAiPromptForGuard(message),
       requestId,
     });
 
     context.log(
-      `[AskAI Chatbot] prompt-guard decision requestId=${requestId} accepted=${decision.accepted} label=${decision.label} fillerOnly=${decision.fillerOnly} actions=${decision.actions.length} invalidActions=${decision.invalidActions.length} mixedIntent=${decision.mixedIntent} secondaryIntentPresent=${decision.secondaryIntentPresent} confidence=${decision.confidence ?? "n/a"} reason=${decision.reason}`
+      `[AskAI Chatbot] prompt-guard decision requestId=${requestId} accepted=${decision.accepted} label=${decision.label} fillerOnly=${decision.fillerOnly} actions=${decision.actions.length} invalidActions=${decision.invalidActions.length} confidence=${decision.confidence ?? "n/a"} reason=${decision.reason}`
     );
 
     return evaluateAskAiPromptGuardDecision(decision);
   } catch (error) {
     const reason = error instanceof Error ? error.message : "Unknown error";
-    context.warn(
-      `[AskAI Chatbot] prompt-guard unavailable requestId=${requestId} reason=${reason}`
-    );
-    throw error;
+    context.warn(`[AskAI Chatbot] prompt-guard unavailable requestId=${requestId} reason=${reason}; letting the answer model decide`);
+    return { accepted: true };
   }
 }
 
@@ -143,7 +151,7 @@ function trimHistoryContent(role: "user" | "assistant", content: string): string
   return content.length > maxLength ? `${content.slice(0, maxLength)}...` : content;
 }
 
-const MAX_GROUNDING_PLACES = 20;
+const MAX_GROUNDING_PLACES = 16;
 const MAX_SOURCES = 6;
 
 // Recommendations must come from GalaTayo's own places so every suggestion has a real page to open.
@@ -158,15 +166,47 @@ function buildPlaceGrounding(places: NormalizedPlace[]) {
   return [header, ...lines].join("\n");
 }
 
-function findMentionedPlaces(answer: string, places: NormalizedPlace[]) {
+/** GalaTayo places named in the answer, in the order they appear, as in-app links. */
+export function findMentionedPlaces(answer: string, places: NormalizedPlace[]) {
   const text = answer.toLowerCase();
   return places
-    .filter((place) => place.name && place.slug && text.includes(place.name.toLowerCase()))
+    .filter((place) => place.name && place.slug)
+    .map((place) => ({ place, index: text.indexOf(place.name.toLowerCase()) }))
+    .filter((entry) => entry.index >= 0)
+    .sort((a, b) => a.index - b.index)
     .slice(0, MAX_SOURCES)
-    .map((place) => ({
+    .map(({ place }) => ({
       title: place.name,
       url: `/places/${encodeURIComponent(resolveAreaSlug(place.city, place.area).slug)}/${encodeURIComponent(place.slug)}`,
     }));
+}
+
+/**
+ * A follow-up like "may kainan malapit dun?" names no place, so ground it in the
+ * latest area the user named earlier instead of falling back to all of Metro Manila.
+ */
+export function resolveLocationContext(message: string, history: GroqConversationMessage[], places: NormalizedPlace[]) {
+  if (hasLocation(detectLocationIntent(places, message))) return message;
+  const earlier = [...history].reverse().find((turn) => turn.role === "user" && hasLocation(detectLocationIntent(places, turn.content)));
+  return earlier ? `${message} ${earlier.content}` : message;
+}
+
+function toUsageBody(usage: AskAiUsageResult) {
+  return {
+    allowed: usage.allowed,
+    usageType: usage.usageType,
+    dailyLimit: usage.dailyLimit,
+    requestCount: usage.requestCount,
+    remaining: usage.remaining,
+    resetsAt: usage.resetsAt,
+  };
+}
+
+/** States the real limit so the message never contradicts the usage pill (guests and members have different limits). */
+export function buildDailyLimitMessage(actor: AskAiActor, dailyLimit: number) {
+  return actor.kind === "guest"
+    ? `You've used all ${dailyLimit} free AI requests for today. Log in to get more.`
+    : `You've used all ${dailyLimit} AI requests for today. They reset at midnight.`;
 }
 
 function getConversationHistory(value: unknown): GroqConversationMessage[] {
@@ -282,15 +322,6 @@ export async function postAskAiChatbot(
       };
     }
 
-    const strictPgGuard = evaluateAskAiStrictPgGuard(message);
-
-    if (!strictPgGuard.accepted) {
-      context.log(
-        `[AskAI Chatbot] strict-pg rejected requestId=${requestId} actorId=${resolvedActor!.id} actorKind=${resolvedActor!.kind} pattern=${strictPgGuard.blockedPattern ?? "n/a"}`
-      );
-      return buildScopeRejectionResponse(requestId);
-    }
-
     const promptGuard = await shouldAcceptAskAiPrompt({
       message,
       requestId,
@@ -314,74 +345,28 @@ export async function postAskAiChatbot(
     if (!aiUsage.allowed) {
       const doubleCheck = await checkAskAiUsageForActorType(resolvedActor!, "chatbot_ai").catch(() => null);
 
-      if (doubleCheck && doubleCheck.allowed && doubleCheck.remaining > 0) {
-        context.warn(
-          `[AskAI Chatbot] RPC quota block overridden: requestCount=${doubleCheck.requestCount} remaining=${doubleCheck.remaining} actorId=${resolvedActor!.id} actorKind=${resolvedActor!.kind}`
-        );
-        const correctedAiUsage = aiUsage;
-        correctedAiUsage.allowed = true;
-        correctedAiUsage.remaining = doubleCheck.remaining;
-        correctedAiUsage.requestCount = doubleCheck.requestCount;
+      if (!doubleCheck?.allowed || doubleCheck.remaining <= 0) {
         context.log(
-          `[AskAI Chatbot] quota overridden: remaining=${correctedAiUsage.remaining} actorId=${resolvedActor!.id} actorKind=${resolvedActor!.kind}`
+          `[AskAI Chatbot] quota blocked: usageType=chatbot_ai remaining=0 actorId=${resolvedActor!.id} actorKind=${resolvedActor!.kind}`
         );
-        quotaConsumedUserId = resolvedActor!.id;
-        const cancellation = registerAskAiRequest(requestId, {
-          actor: resolvedActor!,
-          usageType: "chatbot_ai",
-        });
-        unregisterCancellation = cancellation.unregister;
-        const answer = sanitizeChatbotAnswer(
-          await generateFromGroq({
-            message,
-            conversationHistory,
-            requestId,
-            signal: cancellation.signal,
-          })
-        );
-        context.log(`[AskAI Chatbot] REQUEST COMPLETED requestId=${requestId}`);
+
         return {
-          status: 200,
+          status: 429,
           headers: JSON_HEADERS,
           jsonBody: {
-            ok: true,
-            answer,
-            sources: [],
-            usage: {
-              allowed: correctedAiUsage.allowed,
-              usageType: correctedAiUsage.usageType,
-              dailyLimit: correctedAiUsage.dailyLimit,
-              requestCount: correctedAiUsage.requestCount,
-              remaining: correctedAiUsage.remaining,
-              resetsAt: correctedAiUsage.resetsAt,
-            },
+            ok: false,
+            error: "daily_ai_limit_reached",
+            message: buildDailyLimitMessage(resolvedActor!, aiUsage.dailyLimit),
+            usage: toUsageBody(aiUsage),
             requestId,
           },
         };
       }
 
-      context.log(
-        `[AskAI Chatbot] quota blocked: usageType=chatbot_ai remaining=0 actorId=${resolvedActor!.id} actorKind=${resolvedActor!.kind}`
+      context.warn(
+        `[AskAI Chatbot] RPC quota block overridden: requestCount=${doubleCheck.requestCount} remaining=${doubleCheck.remaining} actorId=${resolvedActor!.id} actorKind=${resolvedActor!.kind}`
       );
-
-      return {
-        status: 429,
-        headers: JSON_HEADERS,
-        jsonBody: {
-          ok: false,
-          error: "daily_ai_limit_reached",
-          message: "You have reached your Chatbot AI daily limit.",
-          usage: {
-            allowed: aiUsage.allowed,
-            usageType: aiUsage.usageType,
-            dailyLimit: aiUsage.dailyLimit,
-            requestCount: aiUsage.requestCount,
-            remaining: aiUsage.remaining,
-            resetsAt: aiUsage.resetsAt,
-          },
-          requestId,
-        },
-      };
+      Object.assign(aiUsage, { allowed: true, remaining: doubleCheck.remaining, requestCount: doubleCheck.requestCount });
     }
 
     quotaConsumedUserId = resolvedActor!.id;
@@ -390,33 +375,30 @@ export async function postAskAiChatbot(
       `[AskAI Chatbot] quota consumed: remaining=${aiUsage.remaining} actorId=${resolvedActor!.id} actorKind=${resolvedActor!.kind}`
     );
 
-    context.log(
-      `[AskAI Chatbot] provider=groq requestId=${requestId} MODEL REQUEST STARTED questionLength=${message.length}`
-    );
-
     const cancellation = registerAskAiRequest(requestId, {
       actor: resolvedActor!,
       usageType: "chatbot_ai",
     });
     unregisterCancellation = cancellation.unregister;
 
-    const candidates = selectCandidates(await getActiveNormalizedPlaces(), message).slice(0, MAX_GROUNDING_PLACES);
-    const answer = sanitizeChatbotAnswer(
-      await generateFromGroq({
-        message,
-        conversationHistory,
-        requestId,
-        signal: cancellation.signal,
-        groundingContext: buildPlaceGrounding(candidates),
-      })
-    );
+    const places = await getActiveNormalizedPlaces();
+    const locationText = resolveLocationContext(message, conversationHistory, places);
+    const uncoveredArea = findUncoveredArea(places, locationText);
+    const candidates = uncoveredArea ? [] : selectCandidates(places, message, MAX_GROUNDING_PLACES, locationText);
+    const answer = await generateFromGroq({
+      message,
+      conversationHistory,
+      requestId,
+      signal: cancellation.signal,
+      groundingContext: uncoveredArea
+        ? `GalaTayo has no listed places in ${uncoveredArea} yet. Do not name specific venues there; give general tips (local food to try, areas, timing, commute) and mention GalaTayo is still adding places there.`
+        : buildPlaceGrounding(candidates),
+    });
     const sources = findMentionedPlaces(answer, candidates);
 
     context.log(
-      `[AskAI Chatbot] provider=groq requestId=${requestId} MODEL RESPONSE RECEIVED answerLength=${answer.length}`
+      `[AskAI Chatbot] provider=groq requestId=${requestId} REQUEST COMPLETED answerLength=${answer.length} sources=${sources.length}`
     );
-
-    context.log(`[AskAI Chatbot] REQUEST COMPLETED requestId=${requestId}`);
 
     return {
       status: 200,
@@ -425,14 +407,7 @@ export async function postAskAiChatbot(
         ok: true,
         answer,
         sources,
-        usage: {
-          allowed: aiUsage.allowed,
-          usageType: aiUsage.usageType,
-          dailyLimit: aiUsage.dailyLimit,
-          requestCount: aiUsage.requestCount,
-          remaining: aiUsage.remaining,
-          resetsAt: aiUsage.resetsAt,
-        },
+        usage: toUsageBody(aiUsage),
         requestId,
       },
     };
@@ -504,23 +479,10 @@ export async function postAskAiChatbot(
     const providerError =
       error instanceof GroqChatProviderError ? error : null;
 
-    if (providerError?.status === 429) {
-      return {
-        status: 429,
-        headers: JSON_HEADERS,
-        jsonBody: {
-          ok: false,
-          error: providerError.userMessage,
-          errorCode: providerError.errorCode,
-          userMessage: providerError.userMessage,
-          requestId,
-        },
-      };
-    }
-
     if (providerError) {
       return {
-        status: providerError.status >= 500 ? 503 : providerError.status,
+        // Provider trouble (including its rate limits) is temporary: 503 so clients offer Retry, never a daily-limit message.
+        status: 503,
         headers: JSON_HEADERS,
         jsonBody: {
           ok: false,
