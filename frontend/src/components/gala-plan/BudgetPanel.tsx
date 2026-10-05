@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { Check, Minus, Plus } from 'lucide-react'
-import { Avatar, Button, KeyValue, Panel, SectionHead, Stats, Tag, cx } from '../ui'
+import { Avatar, Button, Empty, KeyValue, Panel, SectionHead, Stats, Tag, cx } from '../ui'
 import { personAvatar, personName } from './BarkadaPanel'
 import { setGalaPlanMemberPaid, type GalaPlanBarkada } from '../../utils/galaPlanBarkadaApi'
 import type { GalaPlanDetail } from '../../utils/galaPlansApi'
@@ -39,7 +39,7 @@ function BudgetPanel({ plan, barkada, session, onBarkadaChange }: BudgetPanelPro
         items={[
           { value: formatPeso(perHead * groupSize), label: 'est. total' },
           { value: formatPeso(perHead), label: 'each' },
-          goingMembers.length > 1 ? { value: unpaid, label: 'unsettled' } : { value: groupSize, label: 'people' },
+          goingMembers.length > 1 && perHead > 0 ? { value: unpaid, label: 'unsettled' } : { value: groupSize, label: groupSize === 1 ? 'person' : 'people' },
         ]}
       />
 
@@ -58,7 +58,11 @@ function BudgetPanel({ plan, barkada, session, onBarkadaChange }: BudgetPanelPro
         </div>
       ) : null}
 
-      {goingMembers.length > 1 ? (
+      {perHead === 0 ? (
+        <Empty className="mt-4" title="Libre lahat" description="Every stop is free, so there's nothing to split. Rides are paid as you go." />
+      ) : null}
+
+      {goingMembers.length > 1 && perHead > 0 ? (
         <>
           <SectionHead title="Hatian" sub={plan.viewer_is_owner ? 'Mark people paid as they settle.' : 'Settle with the host anytime.'} />
           <Panel style={{ paddingBlock: 4 }}>

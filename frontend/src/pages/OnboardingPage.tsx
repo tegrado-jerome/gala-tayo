@@ -367,6 +367,11 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
 
     hasSuggestedUsernameRef.current = true
 
+    const fullName = [values.firstName.trim(), values.lastName.trim()].filter(Boolean).join(' ')
+    if (fullName) {
+      setValues((currentValues) => (currentValues.displayName.trim() ? currentValues : { ...currentValues, displayName: fullName }))
+    }
+
     if (values.username.trim()) {
       return
     }

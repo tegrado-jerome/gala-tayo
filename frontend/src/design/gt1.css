@@ -387,6 +387,8 @@ textarea.g-input { height: auto; min-height: 96px; padding: 12px 14px; resize: v
 .g-ai { padding: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-4); box-shadow: var(--sh-2); }
 .g-ai textarea { width: 100%; border: 0; resize: none; background: none; outline: 0; color: var(--ink); font: 500 17px/1.4 var(--font-display); min-height: 52px; }
 .g-ai textarea::placeholder { color: var(--ink-3); }
+.g-ai textarea:focus, .g-ai textarea:focus-visible { box-shadow: none; outline: 0; }
+.g-ai:focus-within { border-color: var(--ink); }
 .g-ai-bar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .g-draft { padding: 16px; border-left: 2px solid var(--tara); background: var(--surface); border-radius: 0 var(--r-3) var(--r-3) 0; }
 .g-ai-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--tara-ink); }

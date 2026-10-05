@@ -351,7 +351,7 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
 
       const result = await submitPlaceSubmission(formData, session)
       showSystemMessage({
-        title: 'Place Submission Successful!',
+        title: 'Thanks, place sent for review',
         description: result.message || 'Your place was submitted for admin review.',
       })
       setDraft(emptyDraft)

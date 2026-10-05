@@ -5,7 +5,7 @@ import {
   registerAskAiTask,
 } from './askAiTaskStore'
 import { getApiUrl } from './apiClient'
-import { buildAskAiRequestHeaders, getOrCreateAskAiGuestId } from './askAiIdentity'
+import { getAskAiRequestHeaders, getOrCreateAskAiGuestId } from './askAiIdentity'
 
 type AskAiUsageStatus = {
   usageType: 'ask_ai_total' | 'live_search' | 'chatbot_ai' | 'ask_ai_maps'
@@ -453,7 +453,7 @@ export async function submitAskAiRuntimeRequest({
       method: 'POST',
       cache: 'no-store',
       headers: {
-        ...buildAskAiRequestHeaders(accessToken ?? null),
+        ...(await getAskAiRequestHeaders(accessToken ?? null)),
         'x-request-id': requestId,
       },
       body: JSON.stringify({ question, conversationHistory }),

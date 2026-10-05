@@ -341,7 +341,7 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
         cachedAt: Date.now(),
       })
       showSystemMessage({
-        title: 'Account Update Successful!',
+        title: 'Changes saved',
         description: 'Your account settings were updated.',
       })
       emitAccountUpdated()
@@ -446,7 +446,7 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
         cachedAt: Date.now(),
       })
       showSystemMessage({
-        title: 'Photo Update Successful!',
+        title: 'Photo updated',
         description: 'Your profile photo was updated.',
       })
       emitAccountUpdated()

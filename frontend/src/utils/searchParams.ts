@@ -28,9 +28,8 @@ export function readSearchUrlState(search: string): SearchUrlState {
 
   const goodFor = goodForValue && validGoodForValues.has(goodForValue as SearchGoodForValue) ? (goodForValue as SearchGoodForValue) : null
   const budget = budgetValue && validBudgetValues.has(budgetValue as SearchBudgetValue) ? (budgetValue as SearchBudgetValue) : null
-  const hasFilters = Boolean(category || city || goodFor || budget)
   return {
-    q: hasFilters ? '' : q,
+    q,
     category,
     city,
     goodFor,
@@ -58,7 +57,7 @@ export function buildSearchPath(
   const budget = normalizeSlugParam(state.budget ?? null)
   const page = typeof state.page === 'number' && Number.isFinite(state.page) && state.page > 0 ? Math.floor(state.page) : 1
   const hasFilters = Boolean(category || city || goodFor || budget)
-  const searchQuery = hasFilters ? '' : q
+  const searchQuery = q
   const hasCriteria = Boolean(searchQuery || hasFilters)
 
   if (!hasCriteria) {

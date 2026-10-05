@@ -2,7 +2,7 @@ import type { Session } from '@supabase/supabase-js'
 import { getSupabaseAccessToken } from '../supabase'
 import { getApiUrl } from './apiClient'
 import type { PublicGalaPlanPreviewPlace } from './profileApi'
-import { buildAskAiRequestHeaders } from './askAiIdentity'
+import { getAskAiRequestHeaders } from './askAiIdentity'
 
 export type GalaPlanVisibility = 'private' | 'public'
 export type GalaPlanStatus = 'active' | 'deleted' | string
@@ -314,7 +314,7 @@ export class GalaPlanAiError extends Error {
 export async function draftGalaPlanWithAi(prompt: string, session?: Session | null) {
   const response = await fetch(getApiUrl('/gala-plans/ai-draft'), {
     method: 'POST',
-    headers: buildAskAiRequestHeaders(session?.access_token ?? null),
+    headers: await getAskAiRequestHeaders(session?.access_token ?? null),
     body: JSON.stringify({ prompt }),
   })
   const data = (await response.json().catch(() => ({}))) as {

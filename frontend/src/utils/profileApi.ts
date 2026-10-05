@@ -26,6 +26,7 @@ export type RelationshipState = 'self' | 'not_following' | 'pending' | 'followin
 export type PublicProfile = {
   user_id: string
   username: string
+  display_name?: string | null
   avatar_url: string | null
   provider_avatar_url: string | null
   bio: string | null
@@ -117,7 +118,7 @@ export type PublicProfileResponse = {
   plans: PublicGalaPlanSummary[]
 }
 
-export type FollowListUser = Pick<PublicProfile, 'user_id' | 'username' | 'avatar_url' | 'provider_avatar_url' | 'bio'>
+export type FollowListUser = Pick<PublicProfile, 'user_id' | 'username' | 'display_name' | 'avatar_url' | 'provider_avatar_url' | 'bio'>
 
 export type FollowRequest = {
   id: string

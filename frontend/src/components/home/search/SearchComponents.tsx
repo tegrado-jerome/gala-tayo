@@ -422,7 +422,7 @@ function SearchResults({
       </div>
 
       <Button
-        className="g-only-mob fixed bottom-[calc(var(--tabbar-h)+16px+env(safe-area-inset-bottom,0px))] left-1/2 z-[5500] -translate-x-1/2 shadow-[var(--sh-3)]"
+        className="g-only-mob fixed bottom-[calc(var(--tabbar-h)+28px+env(safe-area-inset-bottom,0px))] left-1/2 z-[5500] -translate-x-1/2 shadow-[var(--sh-3)]"
         onClick={() => onMobileViewChange(mobileView === 'map' ? 'cards' : 'map')}
       >
         {mobileView === 'map' ? <List aria-hidden="true" /> : <MapIcon aria-hidden="true" />}

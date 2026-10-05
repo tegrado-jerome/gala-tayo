@@ -1,3 +1,4 @@
+import { supabase } from '../supabase'
 const ASK_AI_GUEST_ID_KEY = 'galatayo:ask-ai-guest-id'
 const ASK_AI_GUEST_ID_HEADER = 'x-ask-ai-guest-id'
 
@@ -72,4 +73,10 @@ export function buildAskAiRequestHeaders(accessToken?: string | null) {
 
 export function getAskAiGuestIdHeaderName() {
   return ASK_AI_GUEST_ID_HEADER
+}
+
+/** Reads the session at call time so an expired token is refreshed before the request, instead of silently counting as a guest. */
+export async function getAskAiRequestHeaders(fallbackToken?: string | null) {
+  const { data } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }))
+  return buildAskAiRequestHeaders(data.session?.access_token ?? fallbackToken ?? null)
 }
