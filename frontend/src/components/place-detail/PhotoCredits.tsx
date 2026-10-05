@@ -1,3 +1,4 @@
+import InternalLink from '../InternalLink'
 import type { PlaceGalleryPhoto } from '../../utils/placeGalleryPhotos'
 
 function sourceName(sourceUrl: string) {
@@ -11,7 +12,7 @@ function sourceName(sourceUrl: string) {
   }
 }
 
-/** Author and licence for each credited photo, as CC BY / BY-SA require. */
+/** Author, licence/source and a takedown route for each credited photo. */
 function PhotoCredits({ photos }: { photos: PlaceGalleryPhoto[] }) {
   return (
     <details className="group mt-8 text-[13px] text-[var(--ink-3)]">
@@ -37,6 +38,13 @@ function PhotoCredits({ photos }: { photos: PlaceGalleryPhoto[] }) {
           </li>
         ))}
       </ol>
+      <p className="mt-2">
+        Is one of these your photo?{' '}
+        <InternalLink href="/feedback" className="underline underline-offset-2">
+          Ask us to credit it differently or take it down
+        </InternalLink>
+        .
+      </p>
     </details>
   )
 }

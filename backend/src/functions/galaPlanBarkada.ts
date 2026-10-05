@@ -49,7 +49,8 @@ async function loadViewablePlan(planId: string, viewerId: string | null): Promis
   const plan = await getPlanById(planId);
   if (!plan || plan.status === "deleted") return null;
   if (plan.user_id === viewerId) return plan;
-  return isActive(plan) && plan.visibility === "public" ? plan : null;
+  // Link access: private plans are unlisted, but the id link is the invite, so invited friends can view and RSVP.
+  return isActive(plan) ? plan : null;
 }
 
 async function buildBarkadaPayload(plan: PlanRow, viewerId: string | null) {

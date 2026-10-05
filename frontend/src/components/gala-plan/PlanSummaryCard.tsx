@@ -64,9 +64,9 @@ export function TripCard({ plan, showOwner = false, wide = false }: { plan: Gala
           <Tag tone={status.tone === 'sea' ? 'neutral' : 'solid'} className={status.tone === 'sea' ? 'is-sea' : undefined}>{status.label}</Tag>
         </span>
         {plan.viewer_is_owner ? (
-          <span className="g-trip-vis" title={isPublic ? 'Shared by link' : 'Private'}>
+          <span className="g-trip-vis" title={isPublic ? 'On your profile' : 'Link only'}>
             {isPublic ? <LinkSimple aria-hidden="true" /> : <LockSimple aria-hidden="true" />}
-            <span className="sr-only">{isPublic ? 'Shared by link' : 'Private'}</span>
+            <span className="sr-only">{isPublic ? 'On your profile' : 'Link only'}</span>
           </span>
         ) : null}
       </div>

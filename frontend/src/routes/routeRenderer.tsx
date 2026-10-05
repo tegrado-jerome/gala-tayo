@@ -375,9 +375,7 @@ function renderRouteContent(descriptor: RouteDescriptor, inputs: RouteInputs) {
       }
       return <GalaPlansPage mode="edit" planId={descriptor.planId} session={session} />
     case 'gala-plans-detail':
-      if (!session) {
-        return <LoginPage />
-      }
+      // Guests can open a plan link (the link is the invite); RSVP/edit actions ask them to sign in.
       return <GalaPlansPage mode="detail" planId={descriptor.planId} session={session} />
     case 'reports':
       if (!session) {

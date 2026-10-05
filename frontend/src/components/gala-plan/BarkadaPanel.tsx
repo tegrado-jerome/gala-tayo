@@ -3,6 +3,7 @@ import type { Session } from '@supabase/supabase-js'
 import { Check } from '@phosphor-icons/react/dist/csr/Check'
 import { Stack as Layers } from '@phosphor-icons/react/dist/csr/Stack'
 import { Plus } from '@phosphor-icons/react/dist/csr/Plus'
+import { useGuestAuthPrompt } from '../GuestAuthPrompt'
 import { Avatar, AvatarStack, Button, Empty, Panel, Tag, cx } from '../ui'
 import {
   createGalaPlanPoll,
@@ -49,8 +50,9 @@ function toStackPeople(members: Array<Pick<GalaPlanMember, 'user_id' | 'profile'
   return members.map((member) => ({ id: member.user_id, avatarUrl: personAvatar(member.profile), name: personName(member.profile) }))
 }
 
-function canJoinPlan(plan: GalaPlanDetail, session: Session | null | undefined) {
-  return Boolean(session) && (plan.viewer_is_owner || plan.visibility === 'public')
+// The plan link is the invite, so anyone signed in who can open the plan can RSVP and vote.
+function canJoinPlan(_plan: GalaPlanDetail, session: Session | null | undefined) {
+  return Boolean(session)
 }
 
 function useAction(onChange: (barkada: GalaPlanBarkada) => void) {
@@ -71,9 +73,11 @@ export function RsvpPanel({ plan, barkada, session, onChange }: BarkadaProps) {
   const going = barkada.members.filter((member) => member.rsvp === 'going')
   const maybe = barkada.members.filter((member) => member.rsvp === 'maybe').length
   const canJoin = canJoinPlan(plan, session)
+  const guestAuth = useGuestAuthPrompt()
 
   return (
     <Panel>
+      {guestAuth.promptElement}
       <h2 className="g-h3">{plan.viewer_is_owner ? 'Sino ang sasama?' : 'Sasama ka?'}</h2>
       {!plan.viewer_is_owner ? (
         <div className="g-rsvp mt-3" role="group" aria-label="Your RSVP">
@@ -82,9 +86,8 @@ export function RsvpPanel({ plan, barkada, session, onChange }: BarkadaProps) {
               key={option.value}
               type="button"
               aria-pressed={barkada.viewer_rsvp === option.value}
-              className={cx(option.value === 'going' && 'is-go', 'disabled:opacity-50')}
-              disabled={!canJoin}
-              onClick={() => void run(() => setGalaPlanRsvp(plan.id, option.value, session))}
+              className={cx(option.value === 'going' && 'is-go')}
+              onClick={() => (canJoin ? void run(() => setGalaPlanRsvp(plan.id, option.value, session)) : guestAuth.open('plans-page'))}
             >
               {option.label}
             </button>

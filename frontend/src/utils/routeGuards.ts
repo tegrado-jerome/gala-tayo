@@ -40,8 +40,6 @@ export function isProtectedAccountPath(pathname: string) {
 
   return (
     isExactProtectedPath ||
-    /^\/gala-plan\/[^/]+\/?$/i.test(pathname) ||
-    /^\/gala-plans\/[^/]+\/?$/i.test(pathname) ||
     /^\/gala-plan\/[^/]+\/edit\/?$/i.test(pathname) ||
     /^\/gala-plans\/[^/]+\/edit\/?$/i.test(pathname) ||
     /^\/places\/[^/]+\/(comments|reviews|photos)\/?$/i.test(pathname)
