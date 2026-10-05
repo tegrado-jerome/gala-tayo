@@ -2,6 +2,7 @@ import { useEffect, type ButtonHTMLAttributes, type CSSProperties, type HTMLAttr
 import type { Icon as PhosphorIcon } from '@phosphor-icons/react'
 import { Heart } from '@phosphor-icons/react/dist/csr/Heart'
 import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
+import { createPortal } from 'react-dom'
 import InternalLink from '../InternalLink'
 import { formatPlaceCardMeta } from '../../utils/placeLocation'
 import { resizedMediaUrl } from '../../data/r2Config'
@@ -289,14 +290,16 @@ export function Sheet({ open, onClose, title, children, labelledBy }: { open: bo
   }, [open, onClose])
 
   if (!open) return null
-  return (
+  // Portal to <body> so a sheet is never trapped under a sticky bar or a parent's stacking context.
+  return createPortal(
     <div className="g-sheet-scrim" onClick={onClose} role="presentation">
       <div className="g-sheet" role="dialog" aria-modal="true" aria-labelledby={labelledBy} onClick={(event) => event.stopPropagation()}>
         <div className="g-grab" />
         {title ? <h2 id={labelledBy} className="g-h3 mb-3">{title}</h2> : null}
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 

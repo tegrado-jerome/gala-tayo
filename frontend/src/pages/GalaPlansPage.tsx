@@ -549,7 +549,7 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
   const dateLabel = dateMode === 'date' && date
     ? new Date(`${date}T00:00:00`).toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' })
     : 'Anytime'
-  const summary = [dateLabel, `${items.length} ${items.length === 1 ? 'stop' : 'stops'}`, visibility === 'public' ? 'Link on' : 'Private'].join(' · ')
+  const summary = [dateLabel, `${items.length} ${items.length === 1 ? 'stop' : 'stops'}`, visibility === 'public' ? 'On your profile' : 'Link only'].join(' · ')
 
   return (
     <Page narrow>
@@ -633,13 +633,13 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
               label="Who can open it"
               value={visibility === 'public' ? 'public' : 'private'}
               options={[
-                { value: 'private', label: 'Private' },
-                { value: 'public', label: 'Anyone with the link' },
+                { value: 'private', label: 'Link only' },
+                { value: 'public', label: 'Public' },
               ]}
               onChange={setVisibility}
             />
             <p className="g-hint mt-2">
-              {visibility === 'public' ? 'Anyone with the link can view, RSVP and vote.' : 'Only you can open it until you share the link.'}
+              {visibility === 'public' ? 'Shows on your profile. Anyone can view, RSVP and vote.' : 'Not on your profile. Only people you send the link to can open it.'}
             </p>
           </section>
 

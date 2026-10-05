@@ -603,16 +603,7 @@ export async function getGalaPlanDetail(request: HttpRequest, context: Invocatio
         }
         return notFound();
       }
-      if (plan.visibility !== "public") {
-        if (SHOULD_LOG_DETAIL_TRACE) {
-          context.log("GET /api/gala-plans/{id} decision", {
-            ...decisionTrace,
-            allow: false,
-            denyReason: "not_public_for_non_owner",
-          });
-        }
-        return notFound();
-      }
+      // "Private" plans are link-only: not listed anywhere, but anyone holding the (unguessable) id link can view and RSVP.
     }
     if (SHOULD_LOG_DETAIL_TRACE) {
       context.log("GET /api/gala-plans/{id} decision", {
@@ -699,8 +690,9 @@ export async function deleteGalaPlan(request: HttpRequest, context: InvocationCo
     const plan = await getOwnedPlan(user.id, request.params.id);
     if (!plan) return notFound();
     const supabase = await getSupabaseAdminClient();
+    // Hard delete: the status check constraint has no "deleted" value, and stops/RSVPs/votes cascade with the plan.
     const { error } = await (supabase.from("gala_plans") as any)
-      .update({ status: DELETED_STATUS, updated_at: new Date().toISOString() })
+      .delete()
       .eq("id", plan.id)
       .eq("user_id", user.id);
     if (error) throw error;

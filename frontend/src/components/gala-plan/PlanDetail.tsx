@@ -26,7 +26,8 @@ import PlanRouteMap, { useIsDesktop } from './PlanRouteMap'
 import { TripCover, hasCoverPhoto } from './PlanSummaryCard'
 import PlanTimeline, { type TimelineStop } from './PlanTimeline'
 import { RecapStoryButton } from './RecapStory'
-import { getGalaPlanBarkada, type GalaPlanBarkada } from '../../utils/galaPlanBarkadaApi'
+import { getGalaPlanBarkada, setGalaPlanRsvp, type GalaPlanBarkada } from '../../utils/galaPlanBarkadaApi'
+import { useGuestAuthPrompt } from '../GuestAuthPrompt'
 import {
   deleteGalaPlan,
   getGalaPlan,
@@ -118,6 +119,7 @@ function StatCell({ icon: Icon, value, label, onClick, ariaLabel }: { icon: Phos
 
 function PlanDetail({ planId, session }: { planId: string; session?: Session | null }) {
   useActionBarMode()
+  const guestAuth = useGuestAuthPrompt()
   const [plan, setPlan] = useState<GalaPlanDetail | null>(null)
   const [barkada, setBarkada] = useState<GalaPlanBarkada | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -230,6 +232,18 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
     } catch {
       setPlan(previous)
       setNotice('Could not save the new order. Try again.')
+    }
+  }
+
+  const joinPlan = async () => {
+    if (!session) {
+      guestAuth.open('plans-page')
+      return
+    }
+    try {
+      setBarkada(await setGalaPlanRsvp(plan.id, 'going', session))
+    } catch (joinError) {
+      setNotice(joinError instanceof Error ? joinError.message : 'Hindi ma-RSVP. Try again.')
     }
   }
 
@@ -455,7 +469,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
           <header className="mt-5">
             <div className="flex flex-wrap items-center gap-2">
               {days !== null ? <Tag tone={days === 0 ? 'sea' : 'neutral'}>{formatDaysUntil(days)}</Tag> : <Tag>Date TBD</Tag>}
-              {plan.viewer_is_owner ? <span className="g-xs g-mut">{plan.visibility === 'public' ? 'Shared by link' : 'Private'}</span> : null}
+              {plan.viewer_is_owner ? <span className="g-xs g-mut">{plan.visibility === 'public' ? 'On your profile' : 'Link only'}</span> : null}
             </div>
             <h1 className="g-h1 mt-2">{plan.title}</h1>
             <div className="g-sm g-mut mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
@@ -561,6 +575,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
         {hasRoute && isDesktop ? <aside className="g-plan-map" aria-label="Map">{routeMap}</aside> : null}
       </div>
 
+      {guestAuth.promptElement}
       <div className="h-16 lg:hidden" aria-hidden="true" />
       <div className="g-sticky-bar lg:hidden">
         <div className="mx-auto flex max-w-[720px] gap-2">
@@ -568,10 +583,21 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
             <Share />
             Share
           </Button>
-          <Button variant="tara" className="min-w-0 flex-[1.5]" onClick={() => setIsInviteOpen(true)}>
-            <UserPlus />
-            Invite barkada
-          </Button>
+          {plan.viewer_is_owner ? (
+            <Button variant="tara" className="min-w-0 flex-[1.5]" onClick={() => setIsInviteOpen(true)}>
+              <UserPlus />
+              Invite barkada
+            </Button>
+          ) : readyBarkada?.viewer_rsvp === 'going' ? (
+            <Button variant="soft" className="min-w-0 flex-[1.5]" disabled>
+              <Check />
+              Sasama ka na
+            </Button>
+          ) : (
+            <Button variant="tara" className="min-w-0 flex-[1.5]" onClick={() => void joinPlan()}>
+              Tara, sasama ako!
+            </Button>
+          )}
         </div>
       </div>
     </Page>
