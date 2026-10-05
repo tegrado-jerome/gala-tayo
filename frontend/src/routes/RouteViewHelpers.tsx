@@ -20,7 +20,7 @@ export function NotFoundPage({
 }) {
   return (
     <main className="g-page g-page-narrow flex min-h-[70dvh] flex-col items-center justify-center text-center">
-      <span className="m-404" aria-hidden="true">
+      <span className="m-lost" aria-hidden="true">
         <CompassRose weight="duotone" />
       </span>
       <p className="m-onb-step mt-8">Error 404</p>

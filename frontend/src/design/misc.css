@@ -3,7 +3,7 @@
 @layer components {
 /* ---------- Auth sheet (Airbnb-style: centred title bar, email first) ---------- */
 .m-auth { width: 100%; flex: 1 0 auto; padding: 0 0 40px; }
-.m-auth-card { width: 100%; max-width: 520px; margin: 0 auto; background: var(--surface); }
+.m-auth-card { width: 100%; max-width: 520px; margin: 0 auto; }
 .m-auth-bar { position: relative; display: flex; align-items: center; justify-content: center; min-height: 60px; padding: 0 56px; border-bottom: 1px solid var(--line-2); font: 700 16px/1.2 var(--font-display); text-align: center; }
 .m-auth-back { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: none; color: var(--ink); cursor: pointer; }
 .m-auth-back:hover { background: var(--fill); }
@@ -19,7 +19,7 @@
 .m-auth-fine a, .m-auth-fine button { color: var(--ink-2); text-decoration: underline; text-underline-offset: 2px; background: none; border: 0; padding: 0; font: inherit; cursor: pointer; }
 @media (min-width: 768px) {
   .m-auth { display: grid; place-items: start center; padding: 48px 16px 64px; background: var(--fill); }
-  .m-auth-card { border-radius: var(--r-4); box-shadow: var(--sh-2); overflow: hidden; }
+  .m-auth-card { border-radius: var(--r-4); background: var(--surface); box-shadow: var(--sh-2); overflow: hidden; }
   .m-auth-body { padding: 28px 32px 32px; }
 }
 
@@ -173,6 +173,6 @@
 .m-rate button:hover { border-color: var(--ink); }
 .m-rate button[aria-pressed='true'] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); background: var(--tara-soft); color: var(--ink); }
 .m-rate svg { width: 30px; height: 30px; }
-.m-404 { display: grid; place-items: center; width: 96px; height: 96px; border-radius: 28px; background: var(--sea-soft); color: var(--sea); transform: rotate(-6deg); }
-.m-404 svg { width: 52px; height: 52px; }
+.m-lost { display: grid; place-items: center; width: 96px; height: 96px; border-radius: 28px; background: var(--sea-soft); color: var(--sea); transform: rotate(-6deg); }
+.m-lost svg { width: 52px; height: 52px; }
 }
