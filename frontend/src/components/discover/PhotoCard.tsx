@@ -2,6 +2,7 @@ import { useMemo, useState, type MouseEvent } from 'react'
 import { Heart } from 'lucide-react'
 import InternalLink from '../InternalLink'
 import { Tag } from '../ui'
+import PlaceImage from './PlaceImage'
 import { useSavedFavorites } from '../../context/SavedFavoritesContext'
 import { getStaticPlaceImageUrlForSlug } from '../../data/placeIndexVisuals'
 import { prefetchPlaceDetail } from '../../utils/placeDetailCache'
@@ -28,6 +29,15 @@ export function getPlaceHref(place: PhotoCardPlace) {
   if (!place.slug) return '/search'
   const areaMeta = resolveAreaMeta({ city: place.city, area: place.area, localArea: place.localArea })
   return getCanonicalPlacePath({ areaSlug: areaMeta.slug, placeSlug: place.slug })
+}
+
+/** One meta line: price, rating, then area (the part that truncates first). */
+export function formatPlaceMeta(place: PhotoCardPlace) {
+  const price =
+    place.budgetMin == null ? null : place.budgetMin <= 0 ? 'Free entry' : `₱${Math.round(place.budgetMin).toLocaleString('en-PH')}/head`
+  const rating = place.rating ? `★ ${place.rating.toFixed(1)}` : null
+  const area = place.localArea || place.area || place.city
+  return [price, rating, area].filter(Boolean).join(' · ')
 }
 
 export function getPlaceImageCandidates(place: PhotoCardPlace) {
@@ -58,8 +68,6 @@ type PhotoCardProps = {
 
 function PhotoCard({ place, onGuestFavorite, badge, priority = false, onOpen, onActivate, onHover, isSelected = false }: PhotoCardProps) {
   const candidates = useMemo(() => getPlaceImageCandidates(place), [place])
-  const [failed, setFailed] = useState<string[]>([])
-  const imageUrl = candidates.find((candidate) => !failed.includes(candidate)) ?? null
   const { isPlaceSaved, saveFavorite, removeFavorite } = useSavedFavorites()
   const [isSaving, setIsSaving] = useState(false)
   const placeId = place.id.trim()
@@ -87,11 +95,9 @@ function PhotoCard({ place, onGuestFavorite, badge, priority = false, onOpen, on
     }
   }
 
-  const isFree = place.budgetMin != null && place.budgetMin <= 0
   const isTopRated = (place.rating ?? 0) >= TOP_RATED_MIN
-  const badgeLabel = badge ?? (isFree ? 'Free' : isTopRated ? 'Top rated' : null)
-  const areaText = place.localArea || place.area || place.city
-  const meta = [place.category, areaText].filter(Boolean).join(' · ')
+  const badgeLabel = badge ?? (isTopRated ? 'Top rated' : null)
+  const meta = formatPlaceMeta(place)
 
   return (
     <article
@@ -116,38 +122,15 @@ function PhotoCard({ place, onGuestFavorite, badge, priority = false, onOpen, on
         }}
       >
         <div className="g-pc-img" style={isSelected ? { boxShadow: '0 0 0 2px var(--paper), 0 0 0 4px var(--ink)' } : undefined}>
-          {imageUrl ? (
-            <img
-              src={imageUrl}
-              alt=""
-              loading={priority ? 'eager' : 'lazy'}
-              decoding="async"
-              fetchPriority={priority ? 'high' : 'low'}
-              onError={() => setFailed((current) => [...current, imageUrl])}
-            />
-          ) : null}
+          <PlaceImage candidates={candidates} category={place.category} priority={priority} className="h-full w-full" />
           {badgeLabel ? (
             <span className="g-pc-flag">
-              <Tag tone={isFree || badgeLabel === 'Rain-safe' ? 'ok' : 'solid'}>{badgeLabel}</Tag>
+              <Tag tone={badgeLabel === 'Rain-safe' ? 'neutral' : 'solid'} className={badgeLabel === 'Rain-safe' ? 'is-sea' : undefined}>{badgeLabel}</Tag>
             </span>
           ) : null}
         </div>
-        <div className="g-pc-title">
-          <span className="g-h3">{place.name}</span>
-          {place.rating ? <span className="g-sm shrink-0">★ {place.rating.toFixed(1)}</span> : null}
-        </div>
-        {meta ? <div className="g-pc-meta">{meta}</div> : null}
-        {place.budgetMin != null ? (
-          <div className="g-sulit">
-            {isFree ? (
-              <b>Free entry</b>
-            ) : (
-              <>
-                from <b>₱{Math.round(place.budgetMin).toLocaleString('en-PH')}</b>
-              </>
-            )}
-          </div>
-        ) : null}
+        <div className="g-h3 mt-2.5 line-clamp-2">{place.name}</div>
+        {meta ? <div className="g-pc-meta mt-0.5">{meta}</div> : null}
       </InternalLink>
       <button
         type="button"

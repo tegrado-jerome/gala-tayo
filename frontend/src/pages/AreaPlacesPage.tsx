@@ -248,7 +248,6 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
   const isPageTransitionLoading = isLoading || isRefreshing
   const shouldShowInitialSkeleton = isLoading && payload.items.length === 0 && !errorMessage
   const shouldShowEmptyState = !isPageTransitionLoading && allPlaces.length === 0 && !errorMessage
-  const activeFilterLabel = FILTER_OPTIONS.find((filter) => filter.value === activeCategory)?.label ?? 'All'
   const fetchPlacesForPage = async (page: number, category = activeCategory, signal?: AbortSignal) => {
     return getSeoListingPage({
       areaSlug: normalizedAreaSlug,
@@ -345,11 +344,11 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
       <header className="mt-5 flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0 max-w-[36rem]">
           <h1 className="g-h1">Places in {areaName}</h1>
-          <p className="g-mut mt-2">Browse local picks in {areaName}, then open each place page for budget, commute, and planning details.</p>
+          <p className="g-mut mt-2">Cafes, parks and food spots in {areaName}</p>
         </div>
         <Button variant="soft" size="sm" onClick={() => openFloatingChat(askAiQuestion)}>
           <Sparkles aria-hidden="true" />
-          Ask AI about {areaName}
+          Ask AI
         </Button>
       </header>
 
@@ -370,20 +369,11 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
           className="mt-8"
           title={`Wala pang places in ${areaName}`}
           description="Check back later for new gala spots, or try another category in this city."
-          action={
-            <Button variant="soft" onClick={() => openFloatingChat(askAiQuestion)}>
-              <Sparkles aria-hidden="true" />
-              Ask AI instead
-            </Button>
-          }
+          action={<Button variant="line" href="/places">Browse other cities</Button>}
         />
       ) : (
         <section aria-label={`Places in ${areaName}`}>
-          <SectionHead
-            title={activeCategory === 'all' ? 'All places' : `${activeFilterLabel} places`}
-            sub="The city's parks, cafes, landmarks, and local favorites in one place."
-          />
-          <div className={cx('g-grid transition-opacity', isPageTransitionLoading && 'pointer-events-none opacity-60')}>
+          <div className={cx('g-grid mt-6 transition-opacity', isPageTransitionLoading && 'pointer-events-none opacity-60')}>
             {allPlaces.map((rawPlace) => (
               <PlaceCard
                 key={rawPlace.id}

@@ -315,7 +315,7 @@ function SearchPagination({
   )
 }
 
-function AskAiButton({ question, label = 'Ask AI about these results' }: { question: string; label?: string }) {
+function AskAiButton({ question, label = 'Ask AI' }: { question: string; label?: string }) {
   return (
     <Button variant="soft" size="sm" onClick={() => openFloatingChat(question)}>
       <Sparkles aria-hidden="true" />
@@ -447,12 +447,7 @@ function SearchEmptyState({
   askAiQuestion?: string
   onSearchAgain?: () => void
 }) {
-  const askAi = askAiQuestion ? (
-    <Button variant="soft" onClick={() => openFloatingChat(askAiQuestion)}>
-      <Sparkles aria-hidden="true" />
-      Ask AI instead
-    </Button>
-  ) : null
+  const askAi = askAiQuestion ? <AskAiButton question={askAiQuestion} /> : null
 
   if (error) {
     return (

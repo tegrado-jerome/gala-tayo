@@ -14,10 +14,9 @@ const AI_PROMPT_PLACE_LIMIT = 6
 const SAVED_TABS = [
   { key: 'places', href: '/favorites', label: 'Places' },
   { key: 'plans', href: '/gala-plans/favorites', label: 'Plans' },
-  { key: 'history', href: '/history', label: 'History' },
 ] as const
 
-/** Places / Plans / History switcher shared by the saved screens. Each tab keeps its own route. */
+/** Places / Plans switcher shared by the saved screens. Each tab keeps its own route. */
 export function SavedTabs({ current, placesCount }: { current: (typeof SAVED_TABS)[number]['key']; placesCount?: number }) {
   return (
     <nav className="g-tabs mt-5" aria-label="Saved">
@@ -168,7 +167,7 @@ function FavoritesPage() {
         <div className="grid gap-4">
           {savedPlaces.length > 0 ? (
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <label className="g-search min-w-0 flex-1">
+              <label className="g-search min-w-0 sm:flex-1">
                 <Search className="g-ic" aria-hidden="true" />
                 <input value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Search saved places" aria-label="Search saved places" />
               </label>

@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { BookMarked, ChevronRight, Eye, Heart, History, Settings, Share2, Sparkles, Stamp as StampIcon, UserPlus } from 'lucide-react'
+import { BookMarked, CalendarDays, ChevronRight, Eye, Heart, History, LogOut, Moon, Settings, Share2, ShieldCheck, Sparkles, Stamp as StampIcon, Sun, UserPlus } from 'lucide-react'
 import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
 import InternalLink from '../components/InternalLink'
 import ProfileAvatar from '../components/ProfileAvatar'
 import { Button, Empty, Page, Row, SectionHead, Sheet, Skeleton, Stamp, Tabs, Tag } from '../components/ui'
 import { useSystemMessage } from '../context/SystemMessageContext'
+import { useTheme } from '../context/ThemeContext'
+import { signOut } from '../services/authApi'
 import { useAppUser } from '../context/AppUserContext'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import {
@@ -74,22 +76,22 @@ let memCachedUserId: string | null = null
 
 type Loadable<T> = { status: 'loading' } | { status: 'ready'; data: T } | { status: 'error'; message: string }
 
+/** Compact plan row for a `g-group` list: 64px thumbnail, title, one meta line. */
 export function PlanCard({ href, title, imageUrl, tag, date, meta }: { href: string; title: string; imageUrl?: string | null; tag?: string; date?: string; meta: string }) {
   return (
-    <InternalLink href={href} className="g-card block min-w-0 overflow-hidden no-underline" ariaLabel={title}>
-      <div className="aspect-[16/10] w-full" style={{ background: 'var(--fill)' }}>
-        {imageUrl ? <img src={imageUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" /> : null}
-      </div>
-      <div className="flex flex-col gap-2 p-4" style={{ color: 'var(--ink)' }}>
-        {tag || date ? (
-          <div className="flex items-center gap-2">
-            {tag ? <Tag>{tag}</Tag> : null}
-            {date ? <span className="g-sm g-mut">{date}</span> : null}
-          </div>
-        ) : null}
-        <span className="g-h3 truncate">{title}</span>
-        <span className="g-sm g-mut">{meta}</span>
-      </div>
+    <InternalLink href={href} className="g-group-row py-2" ariaLabel={title}>
+      {imageUrl ? (
+        <img src={imageUrl} alt="" loading="lazy" decoding="async" className="h-16 w-16 shrink-0 rounded-[var(--r-2)] object-cover" />
+      ) : (
+        <span className="grid h-16 w-16 shrink-0 place-items-center rounded-[var(--r-2)]" style={{ background: 'var(--sea-soft)', color: 'var(--sea)' }}>
+          <CalendarDays className="h-6 w-6" aria-hidden="true" />
+        </span>
+      )}
+      <span className="min-w-0 flex-1">
+        <span className="g-h3 block truncate">{title}</span>
+        <span className="g-sm g-mut block truncate">{[tag, date, meta].filter(Boolean).join(' · ')}</span>
+      </span>
+      <ChevronRight className="g-ic shrink-0" aria-hidden="true" style={{ color: 'var(--ink-3)' }} />
     </InternalLink>
   )
 }
@@ -174,7 +176,9 @@ function ProfilePage({ session }: ProfilePageProps) {
   const [activeTab, setActiveTab] = useState<ProfileTab>('plans')
   const [plans, setPlans] = useState<Loadable<GalaPlanSummary[]>>({ status: 'loading' })
   const [stamps, setStamps] = useState<Loadable<CityStamp[]>>({ status: 'loading' })
+  const [isSigningOut, setIsSigningOut] = useState(false)
   const { showSystemMessage } = useSystemMessage()
+  const { resolvedTheme, setThemePreference } = useTheme()
 
   useEffect(() => {
     if (!session?.user?.id) {
@@ -293,11 +297,23 @@ function ProfilePage({ session }: ProfilePageProps) {
     }
   }
 
+  const handleSignOut = async () => {
+    try {
+      setIsSigningOut(true)
+      setErrorMessage('')
+      await signOut({ scope: 'local' })
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Sign out failed. Try again.')
+    } finally {
+      setIsSigningOut(false)
+    }
+  }
+
   if (isGuestProfile) {
     return (
       <Page narrow className="flex min-h-[60vh] items-center justify-center">
         <div className="w-full max-w-[440px]">
-          <GuestAuthPrompt variant="profile" mode="inline-card" className="gala-auth-prompt--protected-feature gala-auth-prompt--protected-feature-accent" />
+          <GuestAuthPrompt variant="profile" mode="inline-card" />
         </div>
       </Page>
     )
@@ -315,6 +331,12 @@ function ProfilePage({ session }: ProfilePageProps) {
     { href: '/find-friends', label: 'Find friends', sub: '', icon: UserPlus },
     { href: `/u/${encodeURIComponent(profile?.username || '')}`, label: 'View public profile', sub: '', icon: Eye },
   ]
+  const accountLinks = [
+    { href: '/account-settings', label: 'Settings', icon: Settings },
+    { href: '/privacy-center', label: 'Privacy center', icon: ShieldCheck },
+  ]
+  const isDark = resolvedTheme === 'dark'
+  const ThemeIcon = isDark ? Sun : Moon
 
   return (
     <Page>
@@ -334,15 +356,8 @@ function ProfilePage({ session }: ProfilePageProps) {
             <div className="flex items-start gap-4 lg:gap-6">
               <ProfileAvatar profile={profile} size="xl" />
               <div className="min-w-0 flex-1">
-                <div className="flex items-start gap-2">
-                  <div className="min-w-0 flex-1">
-                    <h1 className="g-h1 truncate">{displayName}</h1>
-                    <p className="g-mut truncate">@{profile.username}</p>
-                  </div>
-                  <Button variant="text" iconOnly href="/account-settings" aria-label="Account settings" className="-mr-2 shrink-0">
-                    <Settings aria-hidden="true" />
-                  </Button>
-                </div>
+                <h1 className="g-h1 truncate">{displayName}</h1>
+                <p className="g-mut truncate">@{profile.username}</p>
                 <p className="g-sm mt-3 flex flex-wrap items-center gap-x-1">
                   <button type="button" className="inline-flex min-h-11 items-center gap-1" onClick={() => void openList('followers')}>
                     <b>{profile.followers_count ?? 0}</b>
@@ -378,16 +393,39 @@ function ProfilePage({ session }: ProfilePageProps) {
               </Button>
             </div>
 
-            <nav className="g-list mt-5" aria-label="Your stuff">
-              {shortcuts.map(({ href, label, sub, icon: Icon }) => (
-                <Row key={href} href={href} action={<ChevronRight className="g-ic" aria-hidden="true" style={{ color: 'var(--ink-3)' }} />}>
-                  <div className="flex min-h-7 items-center gap-3">
-                    <Icon className="g-ic" aria-hidden="true" />
-                    <span className="font-semibold">{label}</span>
-                    {sub ? <span className="g-sm g-mut truncate">{sub}</span> : null}
-                  </div>
-                </Row>
-              ))}
+            <nav className="mt-5 grid gap-4" aria-label="Your stuff">
+              <div className="g-group">
+                {shortcuts.map(({ href, label, sub, icon: Icon }) => (
+                  <InternalLink key={href} href={href} className="g-group-row">
+                    <Icon aria-hidden="true" />
+                    {label}
+                    <span className="g-group-end">
+                      {sub}
+                      <ChevronRight className="g-ic" aria-hidden="true" />
+                    </span>
+                  </InternalLink>
+                ))}
+              </div>
+              <div className="g-group">
+                {accountLinks.map(({ href, label, icon: Icon }) => (
+                  <InternalLink key={href} href={href} className="g-group-row">
+                    <Icon aria-hidden="true" />
+                    {label}
+                    <span className="g-group-end">
+                      <ChevronRight className="g-ic" aria-hidden="true" />
+                    </span>
+                  </InternalLink>
+                ))}
+                <button type="button" role="switch" aria-checked={isDark} className="g-group-row" onClick={() => setThemePreference(isDark ? 'light' : 'dark')}>
+                  <ThemeIcon aria-hidden="true" />
+                  Dark mode
+                  <span className="g-group-end">{isDark ? 'On' : 'Off'}</span>
+                </button>
+                <button type="button" className="g-group-row disabled:opacity-60" onClick={() => void handleSignOut()} disabled={isSigningOut}>
+                  <LogOut aria-hidden="true" />
+                  {isSigningOut ? 'Logging out...' : 'Log out'}
+                </button>
+              </div>
             </nav>
           </section>
 
@@ -410,9 +448,9 @@ function ProfilePage({ session }: ProfilePageProps) {
 
             {activeTab === 'plans' ? (
               plans.status === 'loading' ? (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-2 lg:max-w-[720px]" aria-label="Loading plans">
                   {Array.from({ length: 3 }, (_, index) => (
-                    <Skeleton key={index} className="aspect-[16/12]" />
+                    <Skeleton key={index} className="h-20" />
                   ))}
                 </div>
               ) : plans.status === 'error' ? (
@@ -430,7 +468,7 @@ function ProfilePage({ session }: ProfilePageProps) {
                 />
               ) : (
                 <>
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  <div className="g-group lg:max-w-[720px]">
                     {plans.data.slice(0, TAB_PREVIEW_LIMIT).map((plan) => {
                       const placeCount = plan.places_count ?? plan.place_count ?? 0
                       const hearts = plan.hearts_count ?? plan.heart_count ?? 0

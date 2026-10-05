@@ -199,7 +199,6 @@ export default function SeoLandingPage({
 
       <SectionHead
         title="Recommended places"
-        sub={`Picks from ${PRODUCT_NAME} that fit this guide.`}
         action={
           <Button variant="soft" size="sm" onClick={() => openFloatingChat(askAiQuestion)}>
             <Sparkles aria-hidden="true" />
@@ -216,12 +215,7 @@ export default function SeoLandingPage({
         <Empty
           title="Wala pang matching places"
           description="We'll keep this guide updated as more places are added."
-          action={
-            <Button variant="soft" onClick={() => openFloatingChat(askAiQuestion)}>
-              <Sparkles aria-hidden="true" />
-              Ask AI instead
-            </Button>
-          }
+          action={<Button variant="line" href="/places">Browse places</Button>}
         />
       ) : (
         <div className="g-grid">

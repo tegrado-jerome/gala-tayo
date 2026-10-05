@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { PlaceTile } from '../components/PlaceCard'
+import { PlaceTile, getCategoryIcon } from '../components/PlaceCard'
 import { ListingBreadcrumb } from '../components/home/search/SearchComponents'
 import InternalLink from '../components/InternalLink'
 import SeoHead from '../components/SeoHead'
@@ -82,9 +82,8 @@ function PlaceCategoriesIndexPage() {
       <ListingBreadcrumb items={[{ label: 'Home', href: '/home' }, { label: 'Places', href: '/places' }, { label: 'Categories' }]} />
 
       <header className="mt-5 max-w-[42rem]">
-        <p className="g-eyebrow">Metro Manila</p>
-        <h1 className="g-h1 mt-2">Browse Metro Manila place categories</h1>
-        <p className="g-mut mt-2">Open a category to explore matching places from across Metro Manila.</p>
+        <h1 className="g-h1">Browse Metro Manila place categories</h1>
+        <p className="g-mut mt-2">Pick a category to see spots across Metro Manila.</p>
       </header>
 
       <SectionHead title="Categories" sub={<InternalLink href="/places" className="underline underline-offset-2">Or browse by city</InternalLink>} />
@@ -95,6 +94,7 @@ function PlaceCategoriesIndexPage() {
             href={`/places/categories/${category.value}`}
             title={category.label}
             meta={`Open ${category.label.toLowerCase()} places`}
+            icon={getCategoryIcon(category.value)}
             imageUrls={getDiscoveryImageCandidates(categoryRepresentativePlaceSlugs[category.value], representativePlaces[categoryRepresentativePlaceSlugs[category.value]])}
           />
         ))}

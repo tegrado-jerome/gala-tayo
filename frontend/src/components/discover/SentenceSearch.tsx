@@ -43,7 +43,7 @@ function SentenceSearch({ className }: { className?: string }) {
           ))}
         </select>
         <span>with</span>
-        <select aria-label="Who's going" className="g-slot is-on appearance-none" value={goodFor} onChange={(event) => setGoodFor(event.target.value as SearchGoodForValue)}>
+        <select aria-label="Who's going" className="g-slot appearance-none" value={goodFor} onChange={(event) => setGoodFor(event.target.value as SearchGoodForValue)}>
           {groupOptions.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}

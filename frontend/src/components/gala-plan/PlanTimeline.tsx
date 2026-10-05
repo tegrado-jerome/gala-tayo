@@ -1,4 +1,4 @@
-import { Fragment } from 'react'
+import { Fragment, type CSSProperties } from 'react'
 import { ArrowDown, ArrowUp, Car, Footprints, X } from 'lucide-react'
 import InternalLink from '../InternalLink'
 import { Button } from '../ui'
@@ -22,7 +22,7 @@ type PlanTimelineProps = {
 }
 
 function StopTime({ value }: { value: string | null }) {
-  if (!value) return <div className="g-stop-time g-fnt">–</div>
+  if (!value) return <div aria-hidden="true" />
   const match = value.match(/^(.*?)\s*(AM|PM)$/i)
   return (
     <div className="g-stop-time">
@@ -39,12 +39,12 @@ function StopTime({ value }: { value: string | null }) {
   )
 }
 
-function LegRow({ leg }: { leg: TravelLeg }) {
+function LegRow({ leg, style }: { leg: TravelLeg; style?: CSSProperties }) {
   const distance = leg.km < 1 ? `${Math.round(leg.km * 1000)} m` : `${leg.km.toFixed(1)} km`
   const Icon = leg.mode === 'walk' ? Footprints : Car
 
   return (
-    <li className="g-leg" aria-label="Travel to next stop">
+    <li className="g-leg" style={style} aria-label="Travel to next stop">
       <span className="g-leg-rail" aria-hidden="true" />
       <div className="g-modes">
         <span className="g-mode is-on">
@@ -57,7 +57,11 @@ function LegRow({ leg }: { leg: TravelLeg }) {
   )
 }
 
+const noTimeStop: CSSProperties = { gridTemplateColumns: 'minmax(0, 1fr)' }
+const noTimeLeg: CSSProperties = { gridTemplateColumns: '28px minmax(0, 1fr)' }
+
 function PlanTimeline({ stops, onMove, onRemove }: PlanTimelineProps) {
+  const hasTimes = stops.some((stop) => stop.time)
   return (
     <ol>
       {stops.map((stop, index) => {
@@ -72,8 +76,8 @@ function PlanTimeline({ stops, onMove, onRemove }: PlanTimelineProps) {
 
         return (
           <Fragment key={stop.key}>
-            <li className={`g-stop ${index > 0 && !leg ? 'mt-2' : ''}`}>
-              <StopTime value={stop.time} />
+            <li className={`g-stop ${index > 0 && !leg ? 'mt-2' : ''}`} style={hasTimes ? undefined : noTimeStop}>
+              {hasTimes ? <StopTime value={stop.time} /> : null}
               <div className="g-stop-box">
                 {stop.place.image_url ? <img src={stop.place.image_url} alt="" loading="lazy" /> : null}
                 <div className="min-w-0 flex-1">
@@ -90,10 +94,10 @@ function PlanTimeline({ stops, onMove, onRemove }: PlanTimelineProps) {
                   <div className="flex shrink-0 flex-col">
                     {onMove ? (
                       <>
-                        <Button variant="text" size="sm" iconOnly onClick={() => onMove(index, -1)} disabled={index === 0} aria-label={`Move ${stop.place.name} earlier`}>
+                        <Button variant="soft" size="sm" iconOnly onClick={() => onMove(index, -1)} disabled={index === 0} aria-label={`Move ${stop.place.name} earlier`}>
                           <ArrowUp />
                         </Button>
-                        <Button variant="text" size="sm" iconOnly onClick={() => onMove(index, 1)} disabled={index === stops.length - 1} aria-label={`Move ${stop.place.name} later`}>
+                        <Button variant="soft" size="sm" iconOnly className="mt-1" onClick={() => onMove(index, 1)} disabled={index === stops.length - 1} aria-label={`Move ${stop.place.name} later`}>
                           <ArrowDown />
                         </Button>
                       </>
@@ -107,7 +111,7 @@ function PlanTimeline({ stops, onMove, onRemove }: PlanTimelineProps) {
                 ) : null}
               </div>
             </li>
-            {leg ? <LegRow leg={leg} /> : null}
+            {leg ? <LegRow leg={leg} style={hasTimes ? undefined : noTimeLeg} /> : null}
           </Fragment>
         )
       })}

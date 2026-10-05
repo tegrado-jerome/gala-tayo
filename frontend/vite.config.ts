@@ -36,7 +36,6 @@ export default defineConfig({
           if (id.includes('@supabase/supabase-js') || id.includes('@supabase/')) return 'supabase'
           if (id.includes('leaflet') || id.includes('react-leaflet')) return 'maps'
           if (id.includes('react-markdown') || id.includes('remark-gfm') || id.includes('micromark') || id.includes('unified')) return 'markdown'
-          if (id.includes('@fortawesome')) return 'icons'
           return undefined
         },
       },

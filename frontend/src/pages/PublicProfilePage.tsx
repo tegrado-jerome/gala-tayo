@@ -245,7 +245,7 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
           ) : plans.length === 0 ? (
             <Empty title="Wala pang public plans." description={relationshipState === 'self' ? 'Make a plan public so it shows up here.' : 'Check back soon.'} />
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="g-group lg:max-w-[720px]">
               {plans.map((plan) => {
                 const placeCount = plan.places_count ?? 0
                 return (

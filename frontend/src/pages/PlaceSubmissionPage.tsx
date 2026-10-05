@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { ChevronDown, ImagePlus, MapPin, Search } from 'lucide-react'
-import { Button, Page, Panel, Tag, buttonClass } from '../components/ui'
+import { Button, Page, Tag, buttonClass } from '../components/ui'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import MinimalBackNav from '../components/navigation/MinimalBackNav'
 import MapView from '../components/MapView'
@@ -60,6 +60,10 @@ const categoryOptions = [
   'nightlife',
   'shopping',
 ]
+
+function toTitleCase(value: string) {
+  return value.charAt(0).toUpperCase() + value.slice(1)
+}
 
 const crowdOptions = ['Low', 'Moderate', 'Busy']
 const indoorOutdoorOptions = ['Indoor', 'Outdoor', 'Mixed']
@@ -129,12 +133,12 @@ function FormSection({
   children: ReactNode
 }) {
   return (
-    <Panel as="section">
+    <section>
       {step ? <p className="g-eyebrow">Step {step}</p> : null}
-      <h2 className="g-h3 mt-1">{title}</h2>
+      <h2 className="g-h2 mt-1">{title}</h2>
       {description ? <p className="g-sm g-mut mt-1">{description}</p> : null}
       <div className="mt-4">{children}</div>
-    </Panel>
+    </section>
   )
 }
 
@@ -387,17 +391,17 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
             <Tag>Exact pin required</Tag>
           </div>
 
-          <form className="mt-6 grid gap-4" onSubmit={handleSubmit}>
+          <form className="mt-8 grid gap-8" onSubmit={handleSubmit}>
             <FormSection step={1} title="Basic details" description="Keep it short and searchable.">
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Place name">
                   <input value={draft.name} onChange={(event) => updateDraft('name', event.target.value.slice(0, 160))} placeholder="10.25 Cafe" required className="g-input" />
                 </Field>
                 <Field label="Category">
-                  <select value={draft.category} onChange={(event) => updateDraft('category', event.target.value)} className="g-input">
+                  <select value={draft.category} onChange={(event) => updateDraft('category', event.target.value)} className="g-input g-select">
                     {categoryOptions.map((option) => (
                       <option key={option} value={option}>
-                        {option}
+                        {toTitleCase(option)}
                       </option>
                     ))}
                   </select>
@@ -431,15 +435,10 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
                 </div>
                 {searchError ? <p className="g-hint is-error">{searchError}</p> : null}
                 {searchResults.length > 0 ? (
-                  <div className="g-card divide-y divide-[var(--line-2)] overflow-hidden">
+                  <div className="g-group">
                     {searchResults.map((result) => (
-                      <button
-                        key={result.place_id}
-                        type="button"
-                        onClick={() => handleSelectSearchResult(result)}
-                        className="flex min-h-[48px] w-full items-start gap-2.5 px-3.5 py-3 text-left text-sm transition-colors hover:bg-[var(--fill)]"
-                      >
-                        <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[var(--ink-3)]" aria-hidden="true" />
+                      <button key={result.place_id} type="button" onClick={() => handleSelectSearchResult(result)} className="g-group-row py-3 text-sm">
+                        <MapPin aria-hidden="true" />
                         <span className="min-w-0">{result.display_name}</span>
                       </button>
                     ))}
@@ -492,17 +491,17 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
               </Field>
             </FormSection>
 
-            <section className="g-card">
+            <section>
               <details className="group" open>
-                <summary className="flex min-h-[64px] cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 md:px-5">
+                <summary className="flex min-h-[44px] cursor-pointer list-none items-center justify-between gap-3">
                   <span className="min-w-0">
-                    <span className="g-h3 block">More details</span>
+                    <span className="g-h2 block">More details</span>
                     <span className="g-sm g-mut block">Required to complete the submission.</span>
                   </span>
                   <ChevronDown className="h-4 w-4 shrink-0 text-[var(--ink-3)] transition-transform group-open:rotate-180" aria-hidden="true" />
                 </summary>
 
-                <div className="grid gap-6 border-t border-[var(--line-2)] px-4 pt-4 pb-5 md:px-5">
+                <div className="mt-4 grid gap-6">
                   <div>
                     <p className="g-eyebrow">Quick facts</p>
                     <div className="mt-3 grid gap-4 sm:grid-cols-3">
@@ -555,7 +554,7 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
                     <p className="g-eyebrow">Practical details</p>
                     <div className="mt-3 grid gap-4 sm:grid-cols-3">
                       <Field label="Crowd level">
-                        <select value={draft.crowdLevel} onChange={(event) => updateDraft('crowdLevel', event.target.value)} required className="g-input">
+                        <select value={draft.crowdLevel} onChange={(event) => updateDraft('crowdLevel', event.target.value)} required className="g-input g-select">
                           {crowdOptions.map((option) => (
                             <option key={option} value={option}>
                               {option}
@@ -564,7 +563,7 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
                         </select>
                       </Field>
                       <Field label="Indoor / outdoor">
-                        <select value={draft.indoorOutdoor} onChange={(event) => updateDraft('indoorOutdoor', event.target.value)} required className="g-input">
+                        <select value={draft.indoorOutdoor} onChange={(event) => updateDraft('indoorOutdoor', event.target.value)} required className="g-input g-select">
                           {indoorOutdoorOptions.map((option) => (
                             <option key={option} value={option}>
                               {option}
@@ -641,31 +640,31 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
         </div>
 
         <aside className="g-only-desk lg:sticky lg:top-24">
-          <div className="flex flex-col gap-4">
-            <Panel>
+          <div className="flex flex-col gap-8">
+            <section>
               <p className="g-eyebrow">Before you post</p>
               <ul className="g-sm g-mut mt-3 grid gap-2">
                 <li>Pin the exact place, not just the street or barangay center.</li>
                 <li>Write a quick practical description people can scan fast.</li>
                 <li>Upload real photos that show the vibe or actual location.</li>
               </ul>
-            </Panel>
-            <Panel>
+            </section>
+            <section>
               <p className="g-eyebrow">How approval works</p>
               <ol className="g-sm g-mut mt-3 grid list-decimal gap-2 pl-4">
                 <li>Fill the details and confirm the pin.</li>
                 <li>Add 1 to 3 photos for review.</li>
                 <li>An admin checks it before it becomes visible.</li>
               </ol>
-            </Panel>
-            <Panel>
+            </section>
+            <section>
               <p className="g-eyebrow">What gets saved</p>
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {['Name', 'Category', 'Address', 'City', 'Area', 'Map pin', 'Description', 'Budget', 'Commute', 'Parking', 'Nearby context', 'Photos'].map((item) => (
                   <Tag key={item}>{item}</Tag>
                 ))}
               </div>
-            </Panel>
+            </section>
           </div>
         </aside>
       </div>

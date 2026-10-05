@@ -334,11 +334,11 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
       <header className="mt-5 flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0 max-w-[40rem]">
           <h1 className="g-h1">{categoryLabel} places in Metro Manila</h1>
-          <p className="g-mut mt-2">Browse {categoryLabel.toLowerCase()} picks and open each place page for budget, timing and location.</p>
+          <p className="g-mut mt-2">{categoryLabel} spots across Metro Manila</p>
         </div>
         <Button variant="soft" size="sm" onClick={() => openFloatingChat(askAiQuestion)}>
           <Sparkles aria-hidden="true" />
-          Ask AI about these places
+          Ask AI
         </Button>
       </header>
 
@@ -351,17 +351,11 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
           className="mt-8"
           title={`Wala pang ${categoryLabel.toLowerCase()} places`}
           description="Check back later or try another category."
-          action={
-            <Button variant="soft" onClick={() => openFloatingChat(askAiQuestion)}>
-              <Sparkles aria-hidden="true" />
-              Ask AI instead
-            </Button>
-          }
+          action={<Button variant="line" href="/places/categories">See all categories</Button>}
         />
       ) : (
         <section aria-label={`${categoryLabel} places`}>
-          <SectionHead title={`${categoryLabel} places`} sub="Spots across Metro Manila that match this category." />
-          <div className={cx('g-grid transition-opacity', isPageTransitionLoading && 'pointer-events-none opacity-60')}>
+          <div className={cx('g-grid mt-6 transition-opacity', isPageTransitionLoading && 'pointer-events-none opacity-60')}>
             {places.map((rawPlace) => (
               <PlaceCard
                 key={rawPlace.id}

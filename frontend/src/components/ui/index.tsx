@@ -1,5 +1,5 @@
 import { useEffect, type ButtonHTMLAttributes, type CSSProperties, type HTMLAttributes, type MouseEvent, type ReactNode } from 'react'
-import { Heart } from 'lucide-react'
+import { Heart, MapPin, type LucideIcon } from 'lucide-react'
 import InternalLink from '../InternalLink'
 
 export function cx(...values: Array<string | false | null | undefined>) {
@@ -47,7 +47,7 @@ export function Chips({ className, ...rest }: HTMLAttributes<HTMLDivElement>) {
   return <div className={cx('g-chips', className)} {...rest} />
 }
 
-type TagTone = 'neutral' | 'ok' | 'warn' | 'bad' | 'tara' | 'solid'
+type TagTone = 'neutral' | 'ok' | 'warn' | 'bad' | 'tara' | 'sea' | 'solid'
 export function Tag({ tone = 'neutral', className, ...rest }: HTMLAttributes<HTMLSpanElement> & { tone?: TagTone }) {
   return <span className={cx('g-tag', tone !== 'neutral' && `is-${tone}`, className)} {...rest} />
 }
@@ -135,6 +135,7 @@ export type PlaceCardProps = {
   href: string
   title: string
   imageUrl?: string | null
+  icon?: LucideIcon
   meta?: ReactNode
   rating?: number | null
   pricePerHead?: string | null
@@ -145,11 +146,23 @@ export type PlaceCardProps = {
   className?: string
 }
 
-export function PlaceCard({ href, title, imageUrl, meta, rating, pricePerHead, sulit, flag, saved, onToggleSave, className }: PlaceCardProps) {
+const clampTwoLines: CSSProperties = { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', whiteSpace: 'normal' }
+
+/** `pricePerHead` "Free" renders as "Free entry". A "Sulit" tag shows only for great value (score 8+ of 10). */
+export function PlaceCard({ href, title, imageUrl, icon: FallbackIcon = MapPin, meta, rating, pricePerHead, sulit, flag, saved, onToggleSave, className }: PlaceCardProps) {
+  const isFree = pricePerHead === 'Free'
+  const price = pricePerHead ? (isFree ? 'Free entry' : `${pricePerHead}/head`) : null
+  const showSulit = !isFree && sulit != null && sulit >= 8
   return (
     <InternalLink href={href} className={cx('g-pc', className)}>
-      <div className="g-pc-img">
-        {imageUrl ? <img src={imageUrl} alt="" loading="lazy" decoding="async" /> : null}
+      <div className="g-pc-img" style={imageUrl ? undefined : { background: 'var(--sea-soft)' }}>
+        {imageUrl ? (
+          <img src={imageUrl} alt="" loading="lazy" decoding="async" />
+        ) : (
+          <span className="grid h-full w-full place-items-center" aria-hidden="true">
+            <FallbackIcon size={32} color="var(--sea)" strokeWidth={1.75} />
+          </span>
+        )}
         {flag ? <span className="g-pc-flag">{flag}</span> : null}
         {onToggleSave ? (
           <button
@@ -168,22 +181,15 @@ export function PlaceCard({ href, title, imageUrl, meta, rating, pricePerHead, s
         ) : null}
       </div>
       <div className="g-pc-title">
-        <span className="g-h3">{title}</span>
-        {rating ? <span className="g-sm shrink-0">★ {rating.toFixed(1)}</span> : null}
+        <span className="g-h3" style={clampTwoLines}>{title}</span>
       </div>
       {meta ? <div className="g-pc-meta">{meta}</div> : null}
-      {pricePerHead || sulit != null ? (
+      {price || rating || showSulit ? (
         <div className="g-sulit">
-          {pricePerHead ? (
-            <>
-              <b>{pricePerHead}</b>/head
-            </>
-          ) : null}
-          {sulit != null ? (
-            <>
-              {pricePerHead ? ' · ' : null}Sulit <SulitMeter score={sulit} />
-            </>
-          ) : null}
+          {price ? <b>{price}</b> : null}
+          {price && rating ? <span aria-hidden="true">·</span> : null}
+          {rating ? <span className="text-[var(--ink)]">★ {rating.toFixed(1)}</span> : null}
+          {showSulit ? <Tag tone="ok" className="ml-1">Sulit</Tag> : null}
         </div>
       ) : null}
     </InternalLink>

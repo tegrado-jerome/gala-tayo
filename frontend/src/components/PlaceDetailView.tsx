@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode, type TouchEvent } from 'react'
-import { Accessibility, ArrowLeft, Bus, Camera, Check, Clock, Ellipsis, Flag, Heart, Navigation, Pencil, Plus, Reply, Share2, Sparkles, SquareParking, Star, Timer, Trash2, UserRound, Users, Wallet, X, type LucideIcon } from 'lucide-react'
+import { Accessibility, ArrowLeft, Bus, Camera, Check, ChevronDown, Clock, Ellipsis, Flag, Heart, Navigation, Pencil, Plus, Reply, Share2, Sparkles, SquareParking, Star, Timer, Trash2, UserRound, Users, Wallet, X, type LucideIcon } from 'lucide-react'
 import { useGuestAuthPrompt } from './GuestAuthPrompt'
 import AddToGalaPlanModal from './AddToGalaPlanModal'
 import InternalLink from './InternalLink'
@@ -1873,13 +1873,12 @@ function PlaceDetailView({
     ...(accessibilityText ? [{ value: 'access' as const, label: 'Accessibility', icon: Accessibility, text: accessibilityText }] : []),
   ]
   const activeAccessMode = accessModes.find((mode) => mode.value === accessMode) ?? accessModes[0]
-  const fitItems = [
-    { label: 'Category', value: categoryLabel },
-    { label: 'Crowd', value: cleanString(place.crowd_level) ? titleCase(cleanString(place.crowd_level)) : '' },
+  const factItems = [
     { label: 'Hours', value: cleanString(place.hours) },
+    { label: 'Crowd', value: cleanString(place.crowd_level) && !cleanString(place.best_time_to_visit) ? titleCase(cleanString(place.crowd_level)) : '' },
   ].filter((item) => item.value)
+  const budgetNotes = cleanString(place.budget_notes)
   const askAiQuestion = `Tell me about ${place.name} in ${locationLabel}. Is it good for a barkada gala, what should we try there, and when is the best time to go?`
-  const planWithAiHref = `/plan-with-ai?q=${encodeURIComponent(`A barkada gala in ${locationLabel} with a stop at ${place.name}`)}`
   const commentActionClassName =
     'inline-flex min-h-[44px] items-center gap-1 text-[12px] font-semibold text-[var(--ink-2)] hover:text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-60'
   const commentMenuItemClassName =
@@ -2186,23 +2185,18 @@ function PlaceDetailView({
   ) : (
     <>
       <section>
-        <SectionHead
-          title="Reviews"
-          sub={hasRatings ? `★ ${averageRating.toFixed(1)} · ${formatRatingCount(reviewCount)} ${reviewCount === 1 ? 'rating' : 'ratings'}` : 'Wala pang ratings'}
-        />
+        <SectionHead title="Reviews" />
         <Panel>
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <span className="g-h1">{(hasRatings ? averageRating : 0).toFixed(1)}</span>
-            <StarsDisplay rating={hasRatings ? Math.round(averageRating) : 0} />
-            <span className="g-sm g-mut">
-              ({formatRatingCount(reviewCount)} {reviewCount === 1 ? 'rating' : 'ratings'})
-            </span>
-          </div>
-          <p className="g-sm g-mut mt-1">
-            {hasRatings
-              ? `Rated ${averageRating.toFixed(1)} by ${reviewCount} ${reviewCount === 1 ? 'person' : 'people'}.`
-              : 'Be the first to help others decide.'}
-          </p>
+          {hasRatings ? (
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <StarsDisplay rating={Math.round(averageRating)} />
+              <span className="g-sm g-mut">
+                {formatRatingCount(reviewCount)} {reviewCount === 1 ? 'rating' : 'ratings'}
+              </span>
+            </div>
+          ) : (
+            <p className="g-sm g-mut">Wala pang ratings. Be the first to help others decide.</p>
+          )}
           <hr className="g-sep my-4" />
 
           {currentUserId && (!hasCurrentUserReview || isReviewEditing) ? (
@@ -2405,7 +2399,7 @@ function PlaceDetailView({
         <div className="min-w-0">
           {placeTags.length > 0 || place.status === 'Open' || place.status === 'Closed' ? (
             <div className="flex flex-wrap gap-2">
-              {place.status === 'Open' ? <Tag tone="ok">Open now</Tag> : null}
+              {place.status === 'Open' ? <Tag className="is-sea">Open now</Tag> : null}
               {place.status === 'Closed' ? <Tag tone="bad">Closed</Tag> : null}
               {placeTags.map((tag) => (
                 <Tag key={tag}>{tag}</Tag>
@@ -2430,19 +2424,28 @@ function PlaceDetailView({
             </ul>
           ) : null}
 
-          <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1">
-            <Button variant="soft" onClick={() => openFloatingChat(askAiQuestion)}>
-              <Sparkles aria-hidden="true" />
-              Ask AI about this place
-            </Button>
-            <Button variant="text" href={planWithAiHref}>
-              Plan a gala here with AI
-            </Button>
-          </div>
+          <CheckInButton
+            className="mt-5 lg:hidden"
+            placeId={place.id}
+            placeName={place.name}
+            session={appSession}
+            onGuest={() => guestAuth.open('community')}
+          />
+
+          <Button variant="soft" size="sm" className="mt-5" onClick={() => openFloatingChat(askAiQuestion)}>
+            <Sparkles aria-hidden="true" />
+            Ask AI about this place
+          </Button>
 
           <section>
             <SectionHead title="About" />
             <p className="max-w-[640px] text-[15px] leading-relaxed">{quickTake}</p>
+            {factItems.length > 0 ? (
+              <div className="mt-3 max-w-[640px]">
+                <KeyValue items={factItems} />
+              </div>
+            ) : null}
+            {budgetNotes ? <p className="g-xs g-mut mt-2 max-w-[640px] leading-relaxed">{budgetNotes}</p> : null}
           </section>
 
           <section>
@@ -2483,12 +2486,15 @@ function PlaceDetailView({
 
           <section>
             <SectionHead title="Good to know" />
-            <div className="grid gap-5">
+            <div className="g-group">
               {faqItems.map((item) => (
-                <div key={item.question}>
-                  <h3 className="g-h3">{item.question}</h3>
-                  <p className="g-sm g-mut mt-1 leading-relaxed">{item.answer}</p>
-                </div>
+                <details key={item.question} className="group">
+                  <summary className="flex min-h-12 cursor-pointer list-none items-center gap-3 px-4 py-2 hover:bg-[var(--fill)] [&::-webkit-details-marker]:hidden">
+                    <h3 className="min-w-0 flex-1 text-[15px] font-medium leading-snug">{item.question}</h3>
+                    <ChevronDown className="h-4 w-4 shrink-0 text-[var(--ink-3)] transition-transform group-open:rotate-180" aria-hidden="true" />
+                  </summary>
+                  <p className="g-sm g-mut px-4 pb-4 leading-relaxed">{item.answer}</p>
+                </details>
               ))}
             </div>
             {canonicalPlaceLink && areaLink && areaBreadcrumb ? (
@@ -2509,7 +2515,7 @@ function PlaceDetailView({
           {communitySection}
         </div>
 
-        <aside className="g-side" aria-label="Plan this place">
+        <aside className="g-side hidden lg:flex" aria-label="Plan this place">
           <Panel>
             <p className="g-h2">{priceLine || 'Check price on site'}</p>
             {sulitLevel ? (
@@ -2519,12 +2525,10 @@ function PlaceDetailView({
               </p>
             ) : null}
             <div className="mt-5 flex flex-col gap-2">
-              <div className="hidden lg:block">
-                <Button variant="tara" block onClick={handleAddToPlan}>
-                  <Plus aria-hidden="true" />
-                  Add to plan
-                </Button>
-              </div>
+              <Button variant="tara" block onClick={handleAddToPlan}>
+                <Plus aria-hidden="true" />
+                Add to plan
+              </Button>
               <div className="flex items-start gap-2">
                 <CheckInButton
                   className="min-w-0 flex-1"
@@ -2544,19 +2548,8 @@ function PlaceDetailView({
                   {heartIcon}
                 </Button>
               </div>
-              <Button variant="line" block onClick={openDirections} disabled={!directionsUrl}>
-                <Navigation aria-hidden="true" />
-                Directions
-              </Button>
             </div>
-            <p className="g-xs g-mut mt-3 text-center">Free to plan. Share it with your barkada.</p>
           </Panel>
-
-          <div className="g-panel">
-            <h2 className="g-h3 mb-1">Details</h2>
-            <KeyValue items={fitItems} />
-            {cleanString(place.budget_notes) ? <p className="g-xs g-mut mt-2 leading-relaxed">{cleanString(place.budget_notes)}</p> : null}
-          </div>
         </aside>
       </div>
 
@@ -2580,7 +2573,7 @@ function PlaceDetailView({
           >
             {heartIcon}
           </Button>
-          <Button variant="ink" onClick={handleAddToPlan}>
+          <Button variant="tara" onClick={handleAddToPlan}>
             <Plus aria-hidden="true" />
             Add to plan
           </Button>

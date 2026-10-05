@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Trash2, X } from 'lucide-react'
+import { MapPin, Trash2, X } from 'lucide-react'
 import GoogleSignInButton from '../components/GoogleSignInButton'
 import DestructiveConfirmModal from '../components/DestructiveConfirmModal'
-import { Button, Empty, Page, Row, Skeleton } from '../components/ui'
-import { SavedTabs } from './FavoritesPage'
+import InternalLink from '../components/InternalLink'
+import { Button, Empty, Page, Skeleton } from '../components/ui'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { useBottomNav } from '../context/BottomNavContext'
 import { getSupabaseAccessToken } from '../supabase'
@@ -102,9 +102,9 @@ function getPlaceMeta(place: HistoryPlace) {
   return Array.from(new Set(parts)).join(' · ')
 }
 
-function formatViewedAt(value: string) {
+function formatViewedTime(value: string) {
   const viewedAt = parseSupabaseTimestamp(value)
-  return viewedAt ? viewedAt.toLocaleString('en', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : ''
+  return viewedAt ? viewedAt.toLocaleTimeString('en', { hour: 'numeric', minute: '2-digit', timeZone: 'Asia/Manila' }) : ''
 }
 
 function parseSupabaseTimestamp(value: string) {
@@ -131,36 +131,24 @@ function getManilaDateKey(date: Date) {
   return `${year}-${month}-${day}`
 }
 
-function getHistorySectionTitle(value: string) {
+function getHistoryDay(value: string) {
   const viewedAt = parseSupabaseTimestamp(value)
+  if (!viewedAt) return { key: 'earlier', title: 'Earlier' }
 
-  if (!viewedAt) {
-    return 'Earlier'
-  }
-
+  const key = getManilaDateKey(viewedAt)
   const now = new Date()
-  const yesterday = new Date(now)
-  yesterday.setDate(now.getDate() - 1)
-
-  if (getManilaDateKey(viewedAt) === getManilaDateKey(now)) {
-    return 'Today'
+  const yesterday = new Date(now.getTime() - 86400000)
+  if (key === getManilaDateKey(now)) return { key, title: 'Today' }
+  if (key === getManilaDateKey(yesterday)) return { key, title: 'Yesterday' }
+  const sameYear = key.slice(0, 4) === getManilaDateKey(now).slice(0, 4)
+  return {
+    key,
+    title: viewedAt.toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric', year: sameYear ? undefined : 'numeric', timeZone: 'Asia/Manila' }),
   }
-
-  if (getManilaDateKey(viewedAt) === getManilaDateKey(yesterday)) {
-    return 'Yesterday'
-  }
-
-  const elapsedDays = Math.floor((now.getTime() - viewedAt.getTime()) / 86400000)
-
-  if (elapsedDays < 7) {
-    return 'Earlier this week'
-  }
-
-  return 'Older'
 }
 
 function HistoryPage() {
-  const { session, isSessionLoading, favorites } = useSavedFavorites()
+  const { session, isSessionLoading } = useSavedFavorites()
   const currentUserId = session?.user?.id ?? null
   const cachedHistory = currentUserId ? readHistoryCache(currentUserId) : null
   const [history, setHistory] = useState<HistoryItem[] | null>(null)
@@ -250,19 +238,14 @@ function HistoryPage() {
     [visibleHistory, visibleHistoryCount]
   )
   const historySections = useMemo(() => {
-    const grouped = new Map<string, HistoryItem[]>()
-
+    const grouped = new Map<string, { title: string; items: HistoryItem[] }>()
     visibleHistoryItems.forEach((item) => {
-      const title = getHistorySectionTitle(item.created_at)
-      grouped.set(title, [...(grouped.get(title) || []), item])
+      const day = getHistoryDay(item.created_at)
+      const section = grouped.get(day.key) ?? { title: day.title, items: [] }
+      section.items.push(item)
+      grouped.set(day.key, section)
     })
-
-    return ['Today', 'Yesterday', 'Earlier this week', 'Older']
-      .map((title) => ({
-        title,
-        items: grouped.get(title) || [],
-      }))
-      .filter((section) => section.items.length > 0)
+    return Array.from(grouped.values())
   }, [visibleHistoryItems])
   const hasMoreHistory = visibleHistoryItems.length < visibleHistory.length
   const canClearHistory = Boolean(currentUserId) && visibleHistory.length > 0
@@ -368,11 +351,9 @@ function HistoryPage() {
   return (
     <Page>
       <header>
-        <h1 className="g-h1">Saved</h1>
+        <h1 className="g-h1">History</h1>
         <p className="g-mut mt-2">Places you opened recently, easy to revisit.</p>
       </header>
-
-      <SavedTabs current="history" placesCount={currentUserId ? favorites.filter((favorite) => favorite.place).length : undefined} />
 
       <DestructiveConfirmModal
         isOpen={isClearHistoryDialogOpen}
@@ -393,15 +374,15 @@ function HistoryPage() {
       ) : null}
 
       {(currentUserId || isSessionLoading) && isHistoryLoading && !displayHistory && !errorMessage ? (
-        <div className="g-list" aria-label="Loading history">
+        <div className="mt-6 grid gap-2" aria-label="Loading history">
           {Array.from({ length: 5 }, (_, index) => (
-            <Skeleton key={index} className="h-[86px]" />
+            <Skeleton key={index} className="h-16" />
           ))}
         </div>
       ) : null}
 
       {!shouldShowBlankHistoryArea && currentUserId && (displayHistory !== null || errorMessage) ? (
-        <div className="grid gap-4">
+        <div className="mt-4 flex min-w-0 flex-col gap-4">
           {errorMessage ? (
             <p role="alert" className="g-sm" style={{ color: 'var(--bad)' }}>
               {errorMessage}
@@ -429,37 +410,39 @@ function HistoryPage() {
                   </Button>
                 ) : null}
               </div>
-              <div className="g-list">
+              <div className="g-group">
                 {section.items.map((item) => {
                   const place = item.place as HistoryPlace
                   const name = place.name || 'Viewed place'
-                  const meta = getPlaceMeta(place)
+                  const meta = [getPlaceMeta(place), formatViewedTime(item.created_at)].filter(Boolean).join(' · ')
+                  const photo = getPlacePhoto(place)
                   return (
-                    <Row
-                      key={item.id}
-                      href={`/places/${encodeURIComponent(place.slug as string)}`}
-                      imageUrl={getPlacePhoto(place) || null}
-                      action={
-                        <Button
-                          variant="soft"
-                          size="sm"
-                          iconOnly
-                          aria-label={`Remove ${name} from history`}
-                          disabled={deletingIds.has(item.id)}
-                          onClick={(event) => {
-                            event.preventDefault()
-                            event.stopPropagation()
-                            void handleDeleteHistoryItem(item.id)
-                          }}
-                        >
-                          <X aria-hidden="true" />
-                        </Button>
-                      }
-                    >
-                      <div className="g-h3 truncate">{name}</div>
-                      {meta ? <div className="g-sm g-mut truncate">{meta}</div> : null}
-                      <div className="g-xs g-fnt truncate">Viewed {formatViewedAt(item.created_at)}</div>
-                    </Row>
+                    <div key={item.id} className="flex min-w-0 items-center gap-1 pr-2">
+                      <InternalLink href={`/places/${encodeURIComponent(place.slug as string)}`} className="g-group-row min-w-0 flex-1 py-2 pr-1">
+                        {photo ? (
+                          <img src={photo} alt="" loading="lazy" decoding="async" className="h-12 w-12 shrink-0 rounded-[var(--r-2)] object-cover" />
+                        ) : (
+                          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-[var(--r-2)]" style={{ background: 'var(--sea-soft)', color: 'var(--sea)' }}>
+                            <MapPin className="h-5 w-5" aria-hidden="true" />
+                          </span>
+                        )}
+                        <span className="min-w-0 flex-1">
+                          <span className="g-h3 block truncate">{name}</span>
+                          {meta ? <span className="g-sm g-mut block truncate">{meta}</span> : null}
+                        </span>
+                      </InternalLink>
+                      <Button
+                        variant="text"
+                        size="sm"
+                        iconOnly
+                        className="shrink-0"
+                        aria-label={`Remove ${name} from history`}
+                        disabled={deletingIds.has(item.id)}
+                        onClick={() => void handleDeleteHistoryItem(item.id)}
+                      >
+                        <X aria-hidden="true" />
+                      </Button>
+                    </div>
                   )
                 })}
               </div>

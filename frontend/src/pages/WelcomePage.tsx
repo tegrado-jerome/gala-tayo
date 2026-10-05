@@ -1,12 +1,12 @@
 import { useEffect, type ReactNode } from 'react'
 import { Sparkles } from 'lucide-react'
-import PhotoCard from '../components/discover/PhotoCard'
+import PhotoCard, { getPlaceImageCandidates } from '../components/discover/PhotoCard'
 import Rail from '../components/discover/Rail'
 import SentenceSearch from '../components/discover/SentenceSearch'
 import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
 import InternalLink from '../components/InternalLink'
 import SeoHead from '../components/SeoHead'
-import { Avatar, Button, Page, Panel, SectionHead, Stamp } from '../components/ui'
+import { AvatarStack, Button, Page, SectionHead } from '../components/ui'
 import { homePopularTopPickPlaces } from '../data/homeRecommendations'
 import { metroManilaAreas } from '../data/metroManilaAreas'
 import type { NavigationSource } from '../utils/navigationLoading'
@@ -18,15 +18,23 @@ const footerLinks = [
   { href: '/terms', label: 'Terms' },
 ]
 
-function FeaturePanel({ art, title, body }: { art: ReactNode; title: string; body: string }) {
+// The shared area list stores ASCII names; show the proper spelling.
+const displayAreaName = (name: string) => name.replace('Las Pinas', 'Las Piñas').replace('Paranaque', 'Parañaque')
+
+const heroPlace = homePopularTopPickPlaces[0]
+const heroImageUrl = getPlaceImageCandidates(heroPlace)[0]
+
+function Step({ n, title, body, art }: { n: number; title: string; body: string; art: ReactNode }) {
   return (
-    <Panel as="article" className="flex flex-col">
-      <div className="grid min-h-[150px] place-items-center overflow-hidden" aria-hidden="true">
+    <li className="min-w-0">
+      <div className="g-card grid aspect-square place-items-center overflow-hidden p-2" aria-hidden="true">
         {art}
       </div>
-      <h3 className="g-h3 mt-4">{title}</h3>
-      <p className="g-sm g-mut mt-1">{body}</p>
-    </Panel>
+      <p className="g-h3 mt-2">
+        {n}. {title}
+      </p>
+      <p className="g-xs g-mut mt-0.5">{body}</p>
+    </li>
   )
 }
 
@@ -53,27 +61,38 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
         jsonLd={buildBrandJsonLd()}
       />
       <Page>
-        <section data-navigation-source={navigationSource} className="max-w-[760px] pt-4 md:pt-12">
-          <p className="g-eyebrow">Metro Manila</p>
-          <h1 className="g-d1 mt-3">Gala tayo. Kami na sa plano.</h1>
-          <p className="g-mut mt-4 text-[17px]">Find the place, vote on the date, split the bill. One link for the whole barkada.</p>
-          <SentenceSearch className="mt-7" />
-          <div className="mt-5 flex flex-wrap items-center gap-3">
-            <Button variant="tara" size="lg" href="/plan-with-ai">
-              <Sparkles />
-              Plan a gala
-            </Button>
-            <Button variant="line" size="lg" href="/home">
-              Explore places
-            </Button>
+        <section
+          data-navigation-source={navigationSource}
+          className="relative -mx-4 -mt-5 flex min-h-[420px] flex-col justify-end overflow-hidden md:mx-0 md:mt-0 md:min-h-[520px] md:rounded-[var(--r-4)]"
+          style={{ height: '60vh' }}
+        >
+          {heroImageUrl ? (
+            <img src={heroImageUrl} alt={heroPlace.name} fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
+          ) : null}
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.45) 50%, rgba(0,0,0,0.15) 100%)' }} />
+          <div className="relative max-w-[640px] px-4 pb-7 text-white md:px-10 md:pb-10">
+            <p className="text-[12px] font-semibold uppercase tracking-[0.04em] text-white/80">Metro Manila</p>
+            <h1 className="g-d1 mt-3">Gala tayo. Kami na sa plano.</h1>
+            <p className="mt-3 text-[17px] text-white/85">Find the place, vote on the date, split the bill.</p>
+            <div className="mt-5 flex flex-wrap items-center gap-3">
+              <Button variant="tara" size="lg" href="/plan-with-ai">
+                <Sparkles />
+                Plan a gala
+              </Button>
+              <Button variant="line" size="lg" href="/home">
+                Explore places
+              </Button>
+            </div>
+            <p className="g-sm mt-4 text-white/80">
+              Wala pang account?{' '}
+              <InternalLink href="/signup" className="font-semibold text-white underline underline-offset-2">
+                Sign up free
+              </InternalLink>
+            </p>
           </div>
-          <p className="g-sm g-mut mt-4">
-            Wala pang account?{' '}
-            <InternalLink href="/signup" className="font-semibold text-[var(--ink)] underline underline-offset-2">
-              Sign up free
-            </InternalLink>
-          </p>
         </section>
+
+        <SentenceSearch className="mt-6 max-w-[760px]" />
 
         <Rail title="Happening this weekend" subtitle="Places people are going to" seeAllHref="/places">
           {homePopularTopPickPlaces.map((place) => (
@@ -81,55 +100,49 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
           ))}
         </Rail>
 
-        <SectionHead title="Less chasing, more gala" sub="The boring parts of planning, handled" />
-        <div className="grid gap-4 md:grid-cols-3 md:gap-6">
-          <FeaturePanel
-            title="Plan together"
-            body="Send one link. Friends RSVP and vote on the date, no app needed."
+        <SectionHead title="Less chasing, more gala" sub="One link for the whole barkada" />
+        <ol className="grid max-w-[760px] grid-cols-3 gap-3 md:gap-6">
+          <Step
+            n={1}
+            title="Plan"
+            body="Pick spots and a date"
             art={
-              <div className="g-rsvp w-full max-w-[320px]">
-                <button type="button" tabIndex={-1} className="is-go" aria-pressed="true">
-                  Tara!
-                </button>
-                <button type="button" tabIndex={-1}>
-                  Baka
-                </button>
-                <button type="button" tabIndex={-1}>
-                  Pass
-                </button>
+              <div className="flex flex-col items-center">
+                <span className="g-xs g-mut font-semibold uppercase tracking-[0.04em]">Sat</span>
+                <span className="text-[clamp(40px,12vw,72px)] font-semibold leading-none" style={{ fontFamily: "var(--font-display)" }}>12</span>
+                <span className="g-xs g-mut mt-1">3 stops</span>
               </div>
             }
           />
-          <FeaturePanel
-            title="Hatian"
-            body="Log who paid. Everyone sees what they owe and settles via GCash or Maya."
+          <Step
+            n={2}
+            title="Invite"
+            body="Friends RSVP, no app"
             art={
-              <div className="g-bal w-full">
-                <Avatar name="Bea" size={36} />
-                <div className="min-w-0">
-                  <b className="g-sm block">You owe Bea</b>
-                  <span className="g-xs g-mut">Wildflour dinner</span>
-                </div>
-                <span className="g-amt is-owe">₱450</span>
+              <div className="flex flex-col items-center gap-2">
+                <AvatarStack people={[{ name: 'Bea' }, { name: 'Migs' }, { name: 'Jo' }]} size={32} />
+                <span className="rounded-full bg-[var(--ink)] px-3 py-1 text-[13px] font-semibold text-[var(--on-ink)]">Tara!</span>
               </div>
             }
           />
-          <FeaturePanel
-            title="Passport"
-            body="Tap “I'm here” where you go. Collect stamps and keep your barkada streak."
+          <Step
+            n={3}
+            title="Split"
+            body="Hatian (split the bill)"
             art={
-              <div className="flex scale-[0.85] gap-3">
-                <Stamp title="Poblacion regular" />
-                <Stamp title="Early bird" state="new" />
-                <Stamp title="Museum hopper" sub="3 of 5" state="progress" progress={0.6} />
+              <div className="flex flex-col items-center">
+                <span className="text-[clamp(26px,8vw,48px)] font-semibold leading-none" style={{ fontFamily: "var(--font-display)" }}>₱450</span>
+                <span className="g-xs g-mut mt-1">each</span>
               </div>
             }
           />
-        </div>
+        </ol>
 
-        <section aria-labelledby="welcome-intro-title" className="max-w-[760px]">
-          <SectionHead as="h2" title={<span id="welcome-intro-title">What is Gala Tayo?</span>} />
-          <div className="g-mut flex flex-col gap-3">
+        <section aria-labelledby="welcome-about-title" className="mt-16 max-w-[760px]">
+          <h2 id="welcome-about-title" className="g-h3">
+            About GalaTayo
+          </h2>
+          <div className="g-sm g-mut mt-2 flex flex-col gap-2">
             <p>
               Gala Tayo (written GalaTayo) is a free Metro Manila place discovery app. "Gala tayo" is Filipino for "let's go out", and that is
               the whole idea: find a place, invite the barkada, and go.
@@ -138,19 +151,28 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
               Every place page lists the city, category, budget range, best time to visit, who it suits, commute and parking notes, and common
               questions. You can browse by city or category, read curated guides, or ask the AI planner for a full-day itinerary with a budget.
             </p>
+            <p>
+              {BRAND_NAME} is built in the Philippines for people planning dates, barkada hangouts, family outings, and solo gala days across Metro
+              Manila.{' '}
+              <InternalLink href="/about" className="text-[var(--ink)] underline underline-offset-2">
+                Read more about Gala Tayo
+              </InternalLink>
+              .
+            </p>
           </div>
 
-          <h3 className="g-h3 mt-8">Browse by city</h3>
-          <ul className="g-chips mt-3">
+          <h3 className="g-sm mt-5 font-semibold">Browse by city</h3>
+          <ul className="g-chips mt-2">
             {metroManilaAreas.map((area) => (
               <li key={area.slug}>
                 <InternalLink href={`/places/${area.slug}`} className="g-chip">
-                  {area.name}
+                  {displayAreaName(area.name)}
                 </InternalLink>
               </li>
             ))}
           </ul>
 
+<<<<<<< Updated upstream
           <h3 className="g-h3 mt-8">Hindi makapag-decide?</h3>
           <p className="g-sm g-mut mt-2">
             <InternalLink href="/saan-tayo" className="text-[var(--ink)] underline underline-offset-2">
@@ -161,6 +183,10 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
 
           <h3 className="g-h3 mt-8">Popular guides</h3>
           <ul className="g-chips mt-3">
+=======
+          <h3 className="g-sm mt-5 font-semibold">Popular guides</h3>
+          <ul className="g-chips mt-2">
+>>>>>>> Stashed changes
             {SEO_LANDING_TARGETS.map((target) => (
               <li key={target.slug}>
                 <InternalLink href={`/guides/${target.slug}`} className="g-chip">
@@ -169,15 +195,6 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
               </li>
             ))}
           </ul>
-
-          <p className="g-sm g-mut mt-8">
-            {BRAND_NAME} is built in the Philippines for people planning dates, barkada hangouts, family outings, and solo gala days across Metro
-            Manila.{' '}
-            <InternalLink href="/about" className="text-[var(--ink)] underline underline-offset-2">
-              Read more about Gala Tayo
-            </InternalLink>
-            .
-          </p>
         </section>
 
         <footer className="mt-16 flex flex-wrap items-center justify-between gap-4 border-t border-[var(--line-2)] pt-6">
