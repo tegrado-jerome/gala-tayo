@@ -7,7 +7,6 @@ import {
   useState,
   type PropsWithChildren,
 } from 'react'
-import { isForcedLightThemePath } from '../utils/themeRoutes'
 
 export type ThemePreference = 'light' | 'dark'
 export type ResolvedTheme = 'light' | 'dark'
@@ -24,9 +23,7 @@ type ThemeContextValue = {
   setThemePreference: (preference: ThemePreference) => void
 }
 
-type ThemeProviderProps = PropsWithChildren<{
-  pathname: string
-}>
+type ThemeProviderProps = PropsWithChildren
 
 const ThemeContext = createContext<ThemeContextValue | null>(null)
 
@@ -90,9 +87,9 @@ function endThemeSwitchingAfterCommit() {
   })
 }
 
-export function ThemeProvider({ children, pathname }: ThemeProviderProps) {
+export function ThemeProvider({ children }: ThemeProviderProps) {
   const [themePreference, setThemePreferenceState] = useState<ThemePreference>(() => readStoredThemePreference())
-  const resolvedTheme: ResolvedTheme = isForcedLightThemePath(pathname) ? 'light' : themePreference
+  const resolvedTheme: ResolvedTheme = themePreference
 
   useLayoutEffect(() => {
     if (typeof document === 'undefined') {
@@ -108,7 +105,7 @@ export function ThemeProvider({ children, pathname }: ThemeProviderProps) {
 
     const themeColorMeta = document.querySelector('meta[name="theme-color"]')
     if (themeColorMeta) {
-      themeColorMeta.setAttribute('content', resolvedTheme === 'dark' ? '#0b1626' : '#FFFFFF')
+      themeColorMeta.setAttribute('content', resolvedTheme === 'dark' ? '#0c1a1d' : '#FFFAF4')
     }
 
     if (root.dataset[THEME_SWITCHING_ATTRIBUTE] === 'true') {

@@ -31,7 +31,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="application-name" content="GalaTayo" />
     <meta name="apple-mobile-web-app-title" content="GalaTayo" />
-    <meta name="theme-color" content="#FFFFFF" />
+    <meta name="theme-color" content="#FFFAF4" />
     <meta name="description" content="Discover gala-worthy places around the Philippines by city, category, budget, and vibe. Get AI-powered recommendations and plan your next gala." />
     <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
     <meta property="og:title" content="GalaTayo - Discover places around the Philippines" />
@@ -48,13 +48,13 @@
       }
 
       html, body, #root {
-        background: #ffffff;
+        background: #fffaf4;
       }
 
       html[data-theme="dark"],
       html[data-theme="dark"] body,
       html[data-theme="dark"] #root {
-        background: #0b1626;
+        background: #0c1a1d;
       }
 
       .critical-app-loader {
@@ -63,7 +63,7 @@
         z-index: 2147483647;
         display: grid;
         place-items: center;
-        background: #ffffff;
+        background: #fffaf4;
         color: #14343b;
         opacity: 1;
         visibility: visible;
@@ -101,19 +101,10 @@
     </style>
     <script>
       (function () {
-        function normalizeThemeRoutePath(pathname) {
-          return pathname.replace(/\/+$/, '') || '/';
-        }
-
-        function isForcedLightThemePath(pathname) {
-          return normalizeThemeRoutePath(pathname) === '/';
-        }
-
         try {
-          var isForcedLightRoute = isForcedLightThemePath(window.location.pathname || '/');
           var storedPreference = localStorage.getItem('galatayo:theme-preference');
           var preference = storedPreference === 'dark' ? 'dark' : 'light';
-          var resolvedTheme = isForcedLightRoute ? 'light' : preference;
+          var resolvedTheme = preference;
           document.documentElement.dataset.theme = resolvedTheme;
           document.documentElement.dataset.themePreference = preference;
           document.documentElement.style.colorScheme = resolvedTheme;
