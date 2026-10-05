@@ -61,6 +61,48 @@ export async function signInWithGoogle(nextPath?: string | null, flow?: 'signup'
   }
 }
 
+/** Turns the current guest (anonymous) user into a real account in place, so its id and data are kept. */
+export async function upgradeGuestWithEmailPassword(email: string, password: string, nextPath?: string | null) {
+  const { data, error } = await supabase.auth.updateUser(
+    { email: email.trim().toLowerCase(), password },
+    { emailRedirectTo: getAuthCallbackUrl(nextPath ?? '/onboarding', 'signup') },
+  )
+
+  if (error) {
+    throw error
+  }
+
+  return data.user
+}
+
+/** Links Google to the current guest user; Supabase needs "Allow manual linking" on for this. */
+export async function linkGoogleToGuest(nextPath?: string | null) {
+  const { error } = await supabase.auth.linkIdentity({
+    provider: 'google',
+    options: {
+      redirectTo: getAuthCallbackUrl(nextPath, 'signup'),
+    },
+  })
+
+  if (error) {
+    throw error
+  }
+}
+
+export async function resendGuestUpgradeEmail(email: string) {
+  const { error } = await supabase.auth.resend({ type: 'email_change', email: email.trim().toLowerCase() })
+
+  if (error) {
+    throw error
+  }
+}
+
+export function isEmailTakenError(error: unknown) {
+  const code = (error as { code?: string } | null)?.code
+  const message = error instanceof Error ? error.message.toLowerCase() : ''
+  return code === 'email_exists' || code === 'user_already_exists' || message.includes('already been registered') || message.includes('already exists')
+}
+
 export async function signUpWithEmailPassword(email: string, password: string, nextPath?: string | null) {
   const normalizedEmail = email.trim().toLowerCase()
   const { data, error } = await supabase.auth.signUp({

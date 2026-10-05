@@ -365,7 +365,7 @@ export default function SaanTayoPage() {
                       { ...mapSeoPlaceToCard({ ...place, description: null, address: null, updatedAt: null }), budget_min: place.budgetMin, good_for: place.goodFor },
                       details[place.slug],
                     )}
-                    onGuestSave={() => guestAuth.open('favorite')}
+                    onGuestSave={(retry) => guestAuth.open('favorite', retry)}
                   />
                 </li>
               ))}

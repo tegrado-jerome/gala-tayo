@@ -2,6 +2,7 @@ import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/fu
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { getCurrentUser, getOptionalCurrentUser } from "../utils/social";
 import { getPlanById, getProfilesByUserIds, isActive, isUuid, mapOwner, type PlanRow } from "./galaPlans";
+import { ensureGuestProfile } from "./profileHelpers";
 
 type Rsvp = "going" | "maybe" | "no";
 type MemberRow = { user_id: string; rsvp: Rsvp; paid: boolean };
@@ -137,6 +138,8 @@ export async function putGalaPlanRsvp(request: HttpRequest, context: InvocationC
     const user = await getCurrentUser(request);
     const plan = await loadViewablePlan(String(request.params.id ?? ""), user.id);
     if (!plan) return json(404, { message: "Gala plan not found." });
+    // Gives guests a "Guest xxxx" name in the members list.
+    await ensureGuestProfile(user);
 
     const rsvp = (await readBody(request)).rsvp as Rsvp;
     if (!RSVP_VALUES.has(rsvp)) return json(400, { message: "RSVP must be going, maybe, or no." });
@@ -236,6 +239,7 @@ export async function putGalaPlanPollVote(request: HttpRequest, context: Invocat
     if (!plan || !isUuid(pollId) || typeof optionId !== "string" || !isUuid(optionId)) {
       return json(400, { message: "Pick an option to vote." });
     }
+    await ensureGuestProfile(user);
 
     const supabase = await getSupabaseAdminClient();
     const option = check(

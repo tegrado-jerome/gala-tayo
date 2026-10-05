@@ -283,8 +283,24 @@ export async function getAccountUser(userId: string): Promise<AccountUserRow | n
   return (data as AccountUserRow | null) ?? null;
 }
 
+/** users.email is NOT NULL, so guests get a reserved, undeliverable placeholder until they add a real email. */
+export function guestPlaceholderEmail(userId: string) {
+  return `${userId}@guest.galatayo.invalid`;
+}
+
+function isGuestPlaceholderEmail(email: string | null | undefined) {
+  return Boolean(email?.endsWith("@guest.galatayo.invalid"));
+}
+
 export async function getOrCreateAccountUser(userId: string, email: string | null | undefined): Promise<AccountUserRow> {
   const existing = await getAccountUser(userId);
+  if (existing && email && isGuestPlaceholderEmail(existing.email)) {
+    // A guest who upgraded: swap the placeholder for their real email.
+    const supabase = await getSupabaseAdminClient();
+    const { data, error } = await (supabase.from("users") as any).update({ email }).eq("id", userId).select(ACCOUNT_USER_COLUMNS).single();
+    if (error) throw error;
+    return data as AccountUserRow;
+  }
   if (existing) return existing;
   const supabase = await getSupabaseAdminClient();
   const now = new Date().toISOString();
@@ -297,6 +313,19 @@ export async function getOrCreateAccountUser(userId: string, email: string | nul
     throw error;
   }
   return data as AccountUserRow;
+}
+
+/**
+ * gala_plans.user_id references profiles, which references users, so a guest needs both rows before
+ * saving a plan. Display name is "Guest" plus a short id. No-op for real accounts.
+ */
+export async function ensureGuestProfile(user: { id: string; isAnonymous?: boolean }) {
+  if (!user.isAnonymous) return;
+  await getOrCreateAccountUser(user.id, guestPlaceholderEmail(user.id));
+  const profile = await getOrCreateProfile(user.id);
+  if (!profile.display_name) {
+    await saveProfile(user.id, { display_name: `Guest ${user.id.slice(0, 4)}` });
+  }
 }
 
 export async function assertUsernameAvailable(username: string, userId: string) {

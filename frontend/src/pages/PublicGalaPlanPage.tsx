@@ -146,7 +146,10 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
 
   return (
     <Page className="pt-0 md:pt-6 lg:pt-8">
-      <GuestAuthPrompt variant="plans-page" mode="modal" isOpen={isSignInOpen} onClose={() => setIsSignInOpen(false)} />
+      <GuestAuthPrompt variant="plans-page" mode="modal" isOpen={isSignInOpen} onClose={() => setIsSignInOpen(false)} onContinue={() => {
+          setIsSignInOpen(false)
+          navigateToPath(planHref)
+        }} />
 
       <div className={cx('g-plan-split', hasRoute ? 'has-map' : 'mx-auto max-w-[760px]')}>
         <div className="min-w-0">
@@ -208,7 +211,7 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
             <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
               <Button variant="tara" onClick={joinPlan}>
                 <UsersThree />
-                {session ? 'Tara, RSVP' : 'Log in to RSVP'}
+                {session ? 'Tara, RSVP' : 'RSVP'}
               </Button>
               <Button variant="soft" onClick={() => void shareGalaPlanLink(plan.owner.username, plan.slug, plan.title)}>
                 <Share />

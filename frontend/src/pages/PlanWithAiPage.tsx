@@ -1,3 +1,4 @@
+import type { Session } from '@supabase/supabase-js'
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { ArrowsDownUp } from '@phosphor-icons/react/dist/csr/ArrowsDownUp'
 import { Check } from '@phosphor-icons/react/dist/csr/Check'
@@ -98,7 +99,7 @@ function DraftSkeleton() {
 }
 
 function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
-  const { session } = useAppUser()
+  const { session, isGuest } = useAppUser()
   const [prompt, setPrompt] = useState(initialPrompt)
   const [status, setStatus] = useState<Status>('idle')
   const [error, setError] = useState<string | null>(null)
@@ -187,9 +188,9 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
     requestAnimationFrame(() => promptRef.current?.focus())
   }
 
-  const save = async () => {
+  const save = async (activeSession: Session | null = session) => {
     if (!draft) return
-    if (!session) {
+    if (!activeSession) {
       setIsSignInOpen(true)
       return
     }
@@ -214,7 +215,7 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
             notes: stop.note || null,
           })),
         },
-        session,
+        activeSession,
       )
       navigateToPath(`/gala-plans/${plan.id}`)
     } catch (saveError) {
@@ -233,7 +234,10 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
 
   return (
     <Page narrow>
-      <GuestAuthPrompt variant="add-plan" mode="modal" isOpen={isSignInOpen} onClose={() => setIsSignInOpen(false)} />
+      <GuestAuthPrompt variant="add-plan" mode="modal" isOpen={isSignInOpen} onClose={() => setIsSignInOpen(false)} onContinue={(guestSession) => {
+          setIsSignInOpen(false)
+          void save(guestSession)
+        }} />
 
       <p className="g-ai-badge">
         <Sparkles aria-hidden="true" />
@@ -266,7 +270,7 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
           <TaraSays>
             <p role="alert" className="g-sm rounded-[var(--r-3)] bg-[var(--bad-soft)] px-4 py-3 text-[var(--bad)]">
               {error}
-              {isDailyLimit && !session ? ' Log in to get more AI plans per day.' : ''}
+              {isDailyLimit && (!session || isGuest) ? ' Create a free account to get more AI plans per day.' : ''}
             </p>
           </TaraSays>
         ) : null}
@@ -406,7 +410,7 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
                 {isEditing ? 'Done' : 'Edit stops'}
               </Button>
               <Button variant="tara" className="flex-[2]" onClick={() => void save()} loading={status === 'saving'} disabled={status === 'saving'}>
-                {session ? 'Save & invite' : 'Log in to save'}
+                {session ? 'Save & invite' : 'Save plan'}
               </Button>
             </div>
           </div>

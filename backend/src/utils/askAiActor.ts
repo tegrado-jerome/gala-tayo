@@ -40,6 +40,10 @@ export async function resolveAskAiActor(request: HttpRequest): Promise<AskAiActo
 
     if (authHeader) {
       const user = await validateJwt(request);
+      // Guest sessions get the smaller guest AI limits, keyed by their user id.
+      if (user.isAnonymous) {
+        return { kind: "guest", id: user.id };
+      }
       return {
         kind: "registered",
         id: user.id,

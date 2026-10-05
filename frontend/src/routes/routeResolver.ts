@@ -3,7 +3,8 @@ import type { CurrentUserResponse } from '../utils/profileApi'
 import type { AdminMfaStatus } from '../utils/adminMfa'
 import type { UserMfaStatus } from '../utils/userMfa'
 import { ADMIN_BASE_PATH, ADMIN_MFA_SETUP_PATH, ADMIN_MFA_VERIFY_PATH, getAdminPath } from '../utils/adminRoutes'
-import { isAdminPath, isProtectedAccountPath } from '../utils/routeGuards'
+import { isAccountOnlyPath, isAdminPath, isProtectedAccountPath } from '../utils/routeGuards'
+import { isAnonymousSession } from '../utils/guestSession'
 import { isPath } from '../utils/routes'
 import type { NavigationSource } from '../app/useAppLocationState'
 
@@ -127,6 +128,12 @@ export function resolveRouteDescriptor(inputs: RouteInputs): RouteDescriptor {
     return { kind: 'initial-auth-loader' }
   }
 
+  const isGuestSession = isAnonymousSession(session)
+
+  if (isGuestSession && isAccountOnlyPath(pathname)) {
+    return { kind: 'protected-feature-gate' }
+  }
+
   if (isPath(pathname, '/onboarding')) {
     return { kind: 'onboarding' }
   }
@@ -148,7 +155,7 @@ export function resolveRouteDescriptor(inputs: RouteInputs): RouteDescriptor {
   }
 
   if (isAdminPath(pathname)) {
-    if (!session) {
+    if (!session || isGuestSession) {
       return { kind: 'admin-auth' }
     }
 

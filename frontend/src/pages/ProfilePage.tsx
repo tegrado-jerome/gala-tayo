@@ -23,13 +23,15 @@ import { Sparkle } from '@phosphor-icons/react/dist/csr/Sparkle'
 import { Stamp as StampIcon } from '@phosphor-icons/react/dist/csr/Stamp'
 import { Sun } from '@phosphor-icons/react/dist/csr/Sun'
 import { UserPlus } from '@phosphor-icons/react/dist/csr/UserPlus'
+import { User as UserIcon } from '@phosphor-icons/react/dist/csr/User'
 import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
 import InternalLink from '../components/InternalLink'
 import ProfileAvatar from '../components/ProfileAvatar'
 import { Button, Empty, Page, SectionHead, Sheet, Skeleton, Tag, cx } from '../components/ui'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { useTheme } from '../context/ThemeContext'
-import { signOut } from '../services/authApi'
+import { buildAuthPath, signOut } from '../services/authApi'
+import { isAnonymousSession } from '../utils/guestSession'
 import { useAppUser } from '../context/AppUserContext'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import {
@@ -216,7 +218,107 @@ export function FollowListSheet({ title, users, emptyLabel, onClose }: { title: 
   )
 }
 
+const GUEST_LOCKED_ROWS: Array<{ icon: PhosphorIcon; title: string; sub: string }> = [
+  { icon: Eye, title: 'Public profile', sub: 'Share your profile and gala plans' },
+  { icon: UserPlus, title: 'Followers and friends', sub: 'Follow your barkada and see their plans' },
+  { icon: ChatCenteredText, title: 'Reviews, tips and photos', sub: 'Rate places and help other gala-goers' },
+  { icon: MapPinPlus, title: 'Submit a place', sub: 'Add a spot we’re missing' },
+  { icon: Sparkle, title: 'More AI each day', sub: 'Higher daily limits for Ask AI and Plan with AI' },
+]
+
+/** Me page for a guest (anonymous) session: their stuff, plus what an account unlocks. */
+function GuestProfile({ session }: { session: Session }) {
+  const { favorites } = useSavedFavorites()
+  const { resolvedTheme, setThemePreference } = useTheme()
+  const [planCount, setPlanCount] = useState<number | null>(null)
+  const [stampCount, setStampCount] = useState<number | null>(null)
+  const [isLeaving, setIsLeaving] = useState(false)
+  const savedCount = favorites.filter((favorite) => favorite.place).length
+  const signupPath = buildAuthPath('/signup', '/profile')
+  const isDark = resolvedTheme === 'dark'
+
+  useEffect(() => {
+    let isMounted = true
+    listMyGalaPlans(session)
+      .then((data) => isMounted && setPlanCount(data.plans.length))
+      .catch(() => undefined)
+    getMyPassport(session)
+      .then((data) => isMounted && setStampCount(data.available ? data.stamps.filter((stamp) => stamp.collected).length : 0))
+      .catch(() => undefined)
+    return () => {
+      isMounted = false
+    }
+  }, [session])
+
+  const leaveGuestMode = async () => {
+    if (!window.confirm('Leave guest mode? Your saved places, plans and stamps will be lost unless you create an account first.')) return
+    setIsLeaving(true)
+    await signOut({ scope: 'local' }).catch(() => undefined)
+    setIsLeaving(false)
+  }
+
+  return (
+    <Page narrow>
+      <h1 className="g-h1">Profile</h1>
+
+      <section className="mt-5 rounded-[var(--r-4)] p-5" style={{ background: 'var(--tara-soft)' }} aria-labelledby="guest-banner-title">
+        <div className="flex items-center gap-3">
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-[var(--surface)]" aria-hidden="true">
+            <UserIcon weight="duotone" className="h-6 w-6" />
+          </span>
+          <div className="min-w-0">
+            <p className="g-xs g-mut">
+              <Tag>Guest</Tag> #{session.user.id.slice(0, 4)}
+            </p>
+            <h2 id="guest-banner-title" className="g-h3 mt-1">Create an account to keep your stuff</h2>
+          </div>
+        </div>
+        <p className="g-sm mt-2">Right now your saves, plans and stamps live on this device only. An account keeps them and syncs them everywhere.</p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button variant="tara" href={signupPath}>Create account</Button>
+          <Button variant="line" href={buildAuthPath('/login', '/profile')}>Log in</Button>
+        </div>
+      </section>
+
+      <nav aria-label="Your stuff" className="me-sec">
+        <h2>Your gala</h2>
+        <div className="me-rows">
+          <MeRow icon={StampIcon} tone="tara" title="Passport" sub={stampCount ? plural(stampCount, 'city stamp') : 'Tap “I’m here” at a spot to earn a city stamp'} href="/passport" />
+          <MeRow icon={Heart} title="Saved" sub={savedCount ? plural(savedCount, 'saved place') : 'Tap the heart on a place to keep it'} href="/favorites" />
+          <MeRow icon={CalendarBlank} title="Gala plans" sub={planCount ? plural(planCount, 'plan') : 'Plans you made or joined'} href="/gala-plans" />
+          <MeRow icon={ClockCounterClockwise} title="History" sub="Places you opened recently" href="/history" />
+        </div>
+      </nav>
+
+      <nav aria-label="With a free account" className="me-sec">
+        <h2>With a free account</h2>
+        <div className="me-rows">
+          {GUEST_LOCKED_ROWS.map((row) => (
+            <MeRow key={row.title} icon={row.icon} title={row.title} sub={row.sub} href={signupPath} end={<Lock aria-label="Needs an account" />} />
+          ))}
+        </div>
+      </nav>
+
+      <nav aria-label="Settings" className="me-sec">
+        <h2>Settings</h2>
+        <div className="me-rows">
+          <MeRow icon={isDark ? Sun : Moon} title="Dark mode" sub={isDark ? 'On' : 'Off'} checked={isDark} onClick={() => setThemePreference(isDark ? 'light' : 'dark')} />
+          <MeRow icon={ChatCenteredText} title="Send feedback" sub="Tell us what to fix or add" href="/feedback" />
+          <MeRow icon={SignOut} title={isLeaving ? 'Leaving...' : 'Leave guest mode'} sub="Clears your guest stuff from this device" onClick={() => void leaveGuestMode()} disabled={isLeaving} />
+        </div>
+      </nav>
+    </Page>
+  )
+}
+
 function ProfilePage({ session }: ProfilePageProps) {
+  if (isAnonymousSession(session)) {
+    return <GuestProfile session={session!} />
+  }
+  return <AccountProfilePage session={session} />
+}
+
+function AccountProfilePage({ session }: ProfilePageProps) {
   const { currentProfile } = useAppUser()
   const { favorites } = useSavedFavorites()
   const isGuestProfile = !session?.user?.id

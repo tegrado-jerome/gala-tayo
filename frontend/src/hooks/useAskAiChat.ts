@@ -14,6 +14,7 @@ import type { ChatMessage } from '../utils/askAiRuntime'
 import { getApiUrl } from '../utils/apiClient'
 import { getAskAiUsageStatusFromResponse, type AskAiUsageResponse, type AskAiUsageStatus } from '../utils/askAiUsage'
 import { getAskAiRequestHeaders, getOrCreateAskAiGuestId } from '../utils/askAiIdentity'
+import { hasAccountSession } from '../utils/guestSession'
 import { trackAskAiChatbotUsed } from '../utils/analytics'
 import {
   type AskAiSource,
@@ -280,7 +281,7 @@ export function useAskAiChat(initialQuestion = '') {
 
   return {
     panelProps: {
-      isRegistered: Boolean(session?.user),
+      isRegistered: hasAccountSession(session),
       isSessionLoading,
       usageStatus,
       isUsageLoading,

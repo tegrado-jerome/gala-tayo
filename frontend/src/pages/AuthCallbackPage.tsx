@@ -4,6 +4,7 @@ import { supabase } from '../supabase'
 import { getCurrentEmailConflict, getPostAuthRedirect, markSignupOnboardingAccess } from '../services/authApi'
 import { getOnboardingStatus } from '../utils/profileApi'
 import { getUserMfaStatus } from '../utils/userMfa'
+import { isAnonymousSession } from '../utils/guestSession'
 import { buildAuthPath } from '../services/authApi'
 import { navigateToPath, replaceWithPath } from '../utils/navigation'
 import { trackLoginCompleted, trackSignUpCompleted } from '../utils/analytics'
@@ -40,6 +41,18 @@ async function waitForSession(): Promise<Session | null> {
   })
 }
 
+/** Supabase reports OAuth/link failures as error params in the query or hash. */
+function getCallbackError() {
+  const params = new URLSearchParams(window.location.search)
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''))
+  const code = params.get('error_code') ?? hashParams.get('error_code')
+  const description = params.get('error_description') ?? hashParams.get('error_description')
+  if (code === 'identity_already_exists') {
+    return 'That Google account already has a GalaTayo account. Log in with Google instead. What you did as a guest stays in this guest session and won’t move over.'
+  }
+  return code || description ? description || 'We could not finish signing you in.' : null
+}
+
 function AuthCallbackPage() {
   const [retryCount, setRetryCount] = useState(0)
   const [errorMessage, setErrorMessage] = useState('')
@@ -49,6 +62,11 @@ function AuthCallbackPage() {
 
     const finishAuth = async () => {
       try {
+        const callbackError = getCallbackError()
+        if (callbackError) {
+          throw new Error(callbackError)
+        }
+
         const flow = new URLSearchParams(window.location.search).get('flow')
         const isSignupFlow = flow === 'signup'
         const code = new URLSearchParams(window.location.search).get('code')
@@ -69,6 +87,14 @@ function AuthCallbackPage() {
 
         if (!session) {
           throw new Error('We could not finish signing you in.')
+        }
+
+        if (isAnonymousSession(session)) {
+          // The guest's email is not confirmed yet; keep them in guest mode.
+          if (isMounted) {
+            replaceWithPath('/profile')
+          }
+          return
         }
 
         if (isSignupFlow) {

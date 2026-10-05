@@ -64,7 +64,8 @@ function CheckInButton({
   placeId: string
   placeName: string
   session: Session | null | undefined
-  onGuest: () => void
+  /** Called for visitors without a session; `retry` re-runs the check-in once a guest session exists. */
+  onGuest: (retry: (session: Session) => void) => void
   iconOnly?: boolean
   className?: string
 }) {
@@ -80,16 +81,16 @@ function CheckInButton({
     return () => window.clearTimeout(timer)
   }, [iconOnly, isToastVisible, message])
 
-  const checkIn = async () => {
-    if (!session) {
-      onGuest()
+  const checkIn = async (activeSession: Session | null | undefined = session) => {
+    if (!activeSession) {
+      onGuest((guestSession) => void checkIn(guestSession))
       return
     }
 
     setStatus({ kind: 'working' })
     try {
       const coords = await getCurrentPosition()
-      const result = await checkInAtPlace(placeId, coords, session)
+      const result = await checkInAtPlace(placeId, coords, activeSession)
       if (!result.available) {
         setStatus({ kind: 'error', message: 'The passport is getting set up. Try again soon.' })
       } else if (result.new_stamp_city) {

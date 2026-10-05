@@ -99,7 +99,7 @@ function RailSkeleton() {
   )
 }
 
-function ListingRail({ title, subtitle, href, areaSlug, category, onGuestFavorite }: { title: string; subtitle?: string; href: string; areaSlug?: string; category?: string; onGuestFavorite: () => void }) {
+function ListingRail({ title, subtitle, href, areaSlug, category, onGuestFavorite }: { title: string; subtitle?: string; href: string; areaSlug?: string; category?: string; onGuestFavorite: (retry: () => void) => void }) {
   const places = useListingRail({ areaSlug, category })
   if (places && places.length === 0) return null
   return places ? (
@@ -116,7 +116,7 @@ function ListingRail({ title, subtitle, href, areaSlug, category, onGuestFavorit
   )
 }
 
-function CategoryGrid({ category, onGuestFavorite }: { category: string; onGuestFavorite: () => void }) {
+function CategoryGrid({ category, onGuestFavorite }: { category: string; onGuestFavorite: (retry: () => void) => void }) {
   const places = useListingRail({ category })
   const href = `/places/categories/${category}`
   const label = placeCategories.find((item) => item.value === category)?.label ?? category
@@ -163,7 +163,7 @@ function HomeDiscover({ isRaining = false, top, greeting, className }: { isRaini
   const guestAuth = useGuestAuthPrompt()
   const detailsBySlug = useCuratedDetails()
   const [active, setActive] = useState(FOR_YOU)
-  const openGuestFavorite = () => guestAuth.open('favorite')
+  const openGuestFavorite = (retry: () => void) => guestAuth.open('favorite', retry)
   const withDetails = (places: PhotoCardPlace[]) => places.map((place) => ({ ...place, ...(place.slug ? detailsBySlug[place.slug] : null) }))
   const popular = useMemo(() => withDetails(homePopularTopPickPlaces), [detailsBySlug]) // eslint-disable-line react-hooks/exhaustive-deps
   const topPicks = useMemo(() => withDetails(homeAllTopPickPlaces), [detailsBySlug]) // eslint-disable-line react-hooks/exhaustive-deps

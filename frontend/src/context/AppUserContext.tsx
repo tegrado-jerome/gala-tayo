@@ -2,9 +2,12 @@ import { createContext, useContext, type PropsWithChildren } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import type { CurrentUserResponse } from '../utils/profileApi'
 import type { AdminMfaStatus } from '../utils/adminMfa'
+import { isAnonymousSession } from '../utils/guestSession'
 
 type AppUserContextValue = {
   session: Session | null
+  /** True for a Supabase anonymous (guest) session. */
+  isGuest: boolean
   currentUser: CurrentUserResponse['user'] | null
   currentProfile: CurrentUserResponse['profile'] | null
   isSessionLoading: boolean
@@ -16,7 +19,7 @@ type AppUserContextValue = {
 
 const AppUserContext = createContext<AppUserContextValue | null>(null)
 
-type AppUserProviderProps = PropsWithChildren<AppUserContextValue>
+type AppUserProviderProps = PropsWithChildren<Omit<AppUserContextValue, 'isGuest'>>
 
 function AppUserProvider({
   children,
@@ -30,6 +33,7 @@ function AppUserProvider({
     <AppUserContext.Provider
       value={{
         session,
+        isGuest: isAnonymousSession(session),
         currentUser,
         currentProfile,
         isSessionLoading,

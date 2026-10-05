@@ -1,5 +1,6 @@
 import { MagnifyingGlass as Search } from '@phosphor-icons/react/dist/csr/MagnifyingGlass'
 import { Sparkle as Sparkles } from '@phosphor-icons/react/dist/csr/Sparkle'
+import { User as UserRound } from '@phosphor-icons/react/dist/csr/User'
 import InternalLink from '../InternalLink'
 import UserMenu from '../UserMenu'
 import { Button } from '../ui'
@@ -36,7 +37,7 @@ export function BrandLogo({ className = '' }: { className?: string }) {
 }
 
 function SiteHeader({ pathname }: { pathname: string }) {
-  const { currentUser, currentProfile, session } = useAppUser()
+  const { currentUser, currentProfile, session, isGuest } = useAppUser()
   const isMinimal = MINIMAL_PATHS.some((path) => isPath(pathname, path))
   const showChat = !NO_CHAT_PATHS.some((path) => isPath(pathname, path))
 
@@ -74,7 +75,17 @@ function SiteHeader({ pathname }: { pathname: string }) {
               <Button variant="soft" size="sm" iconOnly className="g-only-mob" href="/search" aria-label="Search places">
                 <Search aria-hidden="true" />
               </Button>
-              {session ? (
+              {isGuest ? (
+                <>
+                  <Button variant="text" size="sm" href="/profile" className="no-underline" aria-label="Guest mode, open your profile">
+                    <UserRound aria-hidden="true" />
+                    Guest
+                  </Button>
+                  <Button variant="ink" size="sm" href="/signup?next=%2Fprofile" className="g-only-desk">
+                    Create account
+                  </Button>
+                </>
+              ) : session ? (
                 <>
                   <Button variant="ink" size="sm" href="/plan-with-ai" className="g-only-desk">
                     Tara, plan
