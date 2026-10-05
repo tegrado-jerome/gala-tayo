@@ -31,7 +31,7 @@ function OnboardingPublicProfileStep({
   onNext,
 }: OnboardingPublicProfileStepProps) {
   const normalizedUsername = values.username.trim().toLowerCase().replace(/^@+/, '')
-  const previewName = values.displayName.trim() || 'Display name'
+  const previewName = values.displayName.trim() || 'Your name'
   const previewUsername = normalizedUsername || 'username'
 
   const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {

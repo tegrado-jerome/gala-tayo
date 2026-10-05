@@ -182,7 +182,7 @@ function SearchHub({
     }>
   ) => {
     const mergedState = {
-      rawQuery: '',
+      rawQuery,
       category: selectedCategory,
       area: selectedArea,
       goodFor: selectedGoodFor,
@@ -191,7 +191,7 @@ function SearchHub({
       ...nextState,
     }
 
-    if (!mergedState.category && !mergedState.area && !mergedState.goodFor && !mergedState.budget) {
+    if (!mergedState.rawQuery.trim() && !mergedState.category && !mergedState.area && !mergedState.goodFor && !mergedState.budget) {
       handleClearSearch()
       return
     }

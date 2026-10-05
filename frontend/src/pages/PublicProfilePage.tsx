@@ -175,57 +175,62 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
         <Empty title="Hindi ma-load ang profile." description={<span role="alert">{errorMessage}</span>} />
       ) : loadedProfile ? (
         <>
-          <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-start lg:gap-8">
-            <div className="flex min-w-0 gap-4 lg:gap-6">
+          <section className="lg:max-w-[720px]">
+            <div className="flex items-start gap-4 lg:gap-6">
               <ProfileAvatar profile={loadedProfile} size="xl" />
               <div className="min-w-0 flex-1">
-                <h1 className="g-h1 truncate">{getDisplayName(loadedProfile)}</h1>
-                <p className="g-sm g-mut mt-1 flex items-center gap-2">
-                  <span className="truncate">@{loadedProfile.username}</span>
-                  {!loadedProfile.is_public ? (
-                    <Tag>
-                      <Lock aria-hidden="true" />
-                      Private
-                    </Tag>
-                  ) : null}
-                  {relationshipState === 'self' ? <Tag tone="tara">Your public view</Tag> : null}
+                <h1 className="g-h1 truncate">{loadedProfile.display_name?.trim() || getDisplayName(loadedProfile)}</h1>
+                <p className="g-mut truncate">@{loadedProfile.username}</p>
+                <p className="g-sm mt-3 flex flex-wrap items-center gap-x-1">
+                  <button type="button" className="inline-flex min-h-11 items-center gap-1" onClick={() => void openList('followers')} disabled={!canOpenFollowLists}>
+                    <b>{loadedProfile.followers_count}</b>
+                    <span className="g-mut">{loadedProfile.followers_count === 1 ? 'follower' : 'followers'}</span>
+                  </button>
+                  <span className="g-mut" aria-hidden="true">·</span>
+                  <button type="button" className="inline-flex min-h-11 items-center gap-1" onClick={() => void openList('following')} disabled={!canOpenFollowLists}>
+                    <b>{loadedProfile.following_count}</b>
+                    <span className="g-mut">following</span>
+                  </button>
+                  <span className="g-mut" aria-hidden="true">·</span>
+                  <span className="inline-flex min-h-11 items-center gap-1">
+                    <b>{plans.length}</b>
+                    <span className="g-mut">{plans.length === 1 ? 'plan' : 'plans'}</span>
+                  </span>
                 </p>
-                <p className="mt-2 max-w-[60ch]">{loadedProfile.bio || 'No bio yet.'}</p>
               </div>
             </div>
 
-            <div className="g-stats">
-              <button type="button" className="g-stat text-left" onClick={() => void openList('followers')} disabled={!canOpenFollowLists}>
-                <b>{loadedProfile.followers_count}</b>
-                <span>Followers</span>
-              </button>
-              <button type="button" className="g-stat text-left" onClick={() => void openList('following')} disabled={!canOpenFollowLists}>
-                <b>{loadedProfile.following_count}</b>
-                <span>Following</span>
-              </button>
-              <div className="g-stat">
-                <b>{plans.length}</b>
-                <span>{plans.length === 1 ? 'Plan' : 'Plans'}</span>
-              </div>
+            <p className="mt-3 max-w-[60ch]">{loadedProfile.bio || 'No bio yet.'}</p>
+            {!loadedProfile.is_public || relationshipState === 'self' ? (
+              <p className="g-sm mt-2 flex flex-wrap items-center gap-2">
+                {!loadedProfile.is_public ? (
+                  <Tag tone="warn">
+                    <Lock aria-hidden="true" />
+                    Private
+                  </Tag>
+                ) : null}
+                {relationshipState === 'self' ? <Tag tone="tara">Your public view</Tag> : null}
+              </p>
+            ) : null}
+
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              {relationshipState === 'self' ? (
+                <Button variant="soft" block href="/account-settings">
+                  <Settings aria-hidden="true" />
+                  Edit profile
+                </Button>
+              ) : (
+                <Button variant={relationshipState === 'following' || relationshipState === 'pending' ? 'soft' : 'ink'} block onClick={() => void handleFollow()}>
+                  <FollowIcon aria-hidden="true" />
+                  {RELATIONSHIP_LABELS[relationshipState]}
+                </Button>
+              )}
+              <Button variant="soft" block onClick={() => void handleShare()}>
+                <Share2 aria-hidden="true" />
+                Share profile
+              </Button>
             </div>
           </section>
-
-          <div className="mt-5 flex flex-wrap items-center gap-2">
-            {relationshipState === 'self' ? (
-              <Button variant="line" size="sm" href="/account-settings">
-                <Settings aria-hidden="true" />
-                Edit profile
-              </Button>
-            ) : (
-              <Button variant={relationshipState === 'following' || relationshipState === 'pending' ? 'line' : 'tara'} size="sm" onClick={() => void handleFollow()}>
-                <FollowIcon aria-hidden="true" />
-                {RELATIONSHIP_LABELS[relationshipState]}
-              </Button>
-            )}
-            <Button variant="soft" size="sm" iconOnly aria-label="Share profile" onClick={() => void handleShare()}>
-              <Share2 aria-hidden="true" />
-            </Button>
-          </div>
 
           {notice ? (
             <p role="status" className="g-sm mt-4 rounded-[var(--r-2)] px-3 py-2" style={{ background: 'var(--warn-soft)', color: 'var(--warn)' }}>

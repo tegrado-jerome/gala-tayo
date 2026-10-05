@@ -5,7 +5,7 @@ import { ArrowLeft, ArrowRight, CalendarDays, Check, Globe, Lock, Plus, Search, 
 import PlanDetail from '../components/gala-plan/PlanDetail'
 import PlanList from '../components/gala-plan/PlanList'
 import InternalLink from '../components/InternalLink'
-import { Button, Chip, Empty, KeyValue, Page, Panel, Row, SectionHead, Skeleton, cx } from '../components/ui'
+import { Button, Empty, KeyValue, Page, Panel, Row, SectionHead, Skeleton, cx } from '../components/ui'
 import {
   composeGalaPlanDescription,
   createGalaPlan,
@@ -460,6 +460,14 @@ function OptionCard({ on, title, description, icon, onClick }: { on: boolean; ti
   )
 }
 
+/** "Add to plan → Create plan" on a place page passes that place so it becomes the first stop. */
+function readStartingStop(): DraftItem[] {
+  const params = new URLSearchParams(window.location.search)
+  const placeId = params.get('place_id')
+  if (!placeId) return []
+  return [{ draft_id: `${placeId}-start`, place_id: placeId, day_number: 1, sort_order: 1, time_label: null, notes: null, estimated_minutes: null, place: { id: placeId, name: params.get('place_name') } }]
+}
+
 function PlanForm({ session, planId }: { session?: Session | null; planId?: string | null }) {
   const isEdit = Boolean(planId)
   const [step, setStep] = useState(0)
@@ -468,7 +476,7 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
   const [dateMode, setDateMode] = useState<GalaPlanDateMode>('anytime')
   const [date, setDate] = useState('')
   const [visibility, setVisibility] = useState<GalaPlanVisibility>('private')
-  const [items, setItems] = useState<DraftItem[]>([])
+  const [items, setItems] = useState<DraftItem[]>(() => (planId ? [] : readStartingStop()))
   const [isLoading, setIsLoading] = useState(isEdit)
   const [isSaving, setIsSaving] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
@@ -549,12 +557,18 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
       <p className="g-eyebrow mt-2">{isEdit ? 'Edit plan' : 'New plan'} · Step {step + 1} of {STEPS.length}</p>
       <h1 className="g-h1 mt-2">{STEPS[step].title}</h1>
 
-      <nav className="mt-5 flex flex-wrap gap-2" aria-label="Steps">
+      <nav className="mt-5 grid grid-cols-4 gap-1.5" aria-label="Steps">
         {STEPS.map((entry, index) => (
-          <Chip key={entry.label} on={index === step} aria-current={index === step ? 'step' : undefined} onClick={() => goTo(index)}>
-            {index < step ? <Check /> : <span>{index + 1} ·</span>}
-            {entry.label}
-          </Chip>
+          <button
+            key={entry.label}
+            type="button"
+            onClick={() => goTo(index)}
+            aria-current={index === step ? 'step' : undefined}
+            className="flex min-h-11 flex-col justify-end gap-1.5 text-left"
+          >
+            <span className={cx('h-1 rounded-full', index <= step ? 'bg-[var(--ink)]' : 'bg-[var(--fill-2)]')} />
+            <span className={cx('g-xs', index === step ? 'font-semibold text-[var(--ink)]' : 'g-mut')}>{entry.label}</span>
+          </button>
         ))}
       </nav>
 

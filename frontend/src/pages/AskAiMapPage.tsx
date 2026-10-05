@@ -33,7 +33,7 @@ import { getAskAiUsageStatusFromResponse, normalizeAskAiUsageStatus, type AskAiU
 import { registerAskAiTask, completeAskAiTask, failAskAiTask } from '../utils/askAiTaskStore'
 import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
 import { getApiUrl } from '../utils/apiClient'
-import { buildAskAiRequestHeaders, getOrCreateAskAiGuestId } from '../utils/askAiIdentity'
+import { getAskAiRequestHeaders, getOrCreateAskAiGuestId } from '../utils/askAiIdentity'
 import { trackAskAiMapsUsed } from '../utils/analytics'
 import { useAskAiUsageAutoRefresh } from '../hooks/useAskAiUsageAutoRefresh'
 import { useAskAiViewportHeightSync } from '../hooks/useAskAiViewportHeightSync'
@@ -248,7 +248,7 @@ function AskAiMapPage() {
     const response = await fetch(usageEndpoint, {
       method: 'GET',
       cache: 'no-store',
-      headers: buildAskAiRequestHeaders(accessToken ?? null),
+      headers: await getAskAiRequestHeaders(accessToken ?? null),
       signal,
     })
 
@@ -643,7 +643,7 @@ function AskAiMapPage() {
         cache: 'no-store',
         signal: controller.signal,
         headers: {
-          ...buildAskAiRequestHeaders(session?.access_token ?? null),
+          ...(await getAskAiRequestHeaders(session?.access_token ?? null)),
           'x-request-id': requestId,
         },
         body: JSON.stringify({

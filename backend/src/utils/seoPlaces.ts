@@ -199,7 +199,7 @@ function buildSeoListingPageCacheKey(args: {
   ].join(":");
 }
 
-function resolveAreaSlug(city: string | null, area: string | null): { slug: string; name: string } {
+export function resolveAreaSlug(city: string | null, area: string | null): { slug: string; name: string } {
   const candidates = [city, area]
     .map((value) => cleanString(value))
     .filter((value): value is string => Boolean(value));

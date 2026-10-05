@@ -1,51 +1,87 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Loader2, Search, X } from 'lucide-react'
+import InternalLink from '../components/InternalLink'
 import ProfileAvatar from '../components/ProfileAvatar'
-import { Button, Empty, Page, Row, SectionHead, Skeleton, Tag } from '../components/ui'
-import { getFollowing, getMyProfile, getProfileSuggestions, normalizeUsername, searchProfiles, type FollowListUser, type PublicProfile } from '../utils/profileApi'
+import { Button, Empty, Page, SectionHead, Skeleton, Tag } from '../components/ui'
+import { useSystemMessage } from '../context/SystemMessageContext'
+import {
+  followProfile,
+  getFollowing,
+  getMyProfile,
+  getProfileSuggestions,
+  normalizeUsername,
+  searchProfiles,
+  unfollowProfile,
+  type FollowListUser,
+  type PublicProfile,
+  type RelationshipState,
+} from '../utils/profileApi'
 import { supabase } from '../supabase'
 
 function formatCompactCount(value: number) {
   return new Intl.NumberFormat('en', { notation: 'compact' }).format(value)
 }
 
-function PersonRow({
-  profile,
-  href,
-  tag,
-  meta,
-}: {
-  profile: FollowListUser
-  href: string
-  tag?: string
-  meta?: string
-}) {
-  return (
-    <Row href={href}>
-      <div className="flex min-w-0 items-center gap-3">
-        <ProfileAvatar profile={profile} size="sm" />
-        <div className="min-w-0 flex-1">
-          <div className="flex min-w-0 items-center gap-2">
-            <span className="g-h3 truncate">@{profile.username}</span>
-            {tag ? <Tag className="shrink-0">{tag}</Tag> : null}
-          </div>
-          <div className="g-sm g-mut truncate">{profile.bio || 'View profile'}</div>
-          {meta ? <div className="g-xs g-fnt">{meta}</div> : null}
-        </div>
-      </div>
-    </Row>
-  )
+type PersonProfile = FollowListUser & Partial<Pick<PublicProfile, 'is_public' | 'followers_count' | 'following_count'>>
+
+const FOLLOW_LABELS: Record<RelationshipState, string> = {
+  self: 'You',
+  following: 'Following',
+  pending: 'Requested',
+  not_following: 'Follow',
+  blocked: 'Follow',
 }
 
-function PublicProfileRow({ profile, currentUserId }: { profile: PublicProfile; currentUserId: string | null }) {
+function PersonRow({
+  profile,
+  currentUserId,
+  relationship,
+  followersCount,
+  onToggleFollow,
+}: {
+  profile: PersonProfile
+  currentUserId: string | null
+  relationship: RelationshipState
+  followersCount?: number
+  onToggleFollow: (profile: PersonProfile) => void
+}) {
   const isOwnProfile = Boolean(currentUserId && profile.user_id === currentUserId)
+  const title = profile.display_name?.trim() || `@${profile.username}`
+  const isFollowing = relationship === 'following' || relationship === 'pending'
+  const counts =
+    followersCount !== undefined || profile.following_count !== undefined
+      ? `${formatCompactCount(followersCount ?? 0)} followers · ${formatCompactCount(profile.following_count ?? 0)} following`
+      : null
+
   return (
-    <PersonRow
-      profile={profile}
-      href={isOwnProfile ? '/profile' : `/u/${encodeURIComponent(profile.username)}`}
-      tag={isOwnProfile ? 'You' : undefined}
-      meta={`${formatCompactCount(profile.followers_count ?? 0)} followers · ${formatCompactCount(profile.following_count ?? 0)} following`}
-    />
+    <div className="g-row relative">
+      <ProfileAvatar profile={profile} size="sm" />
+      <InternalLink
+        href={isOwnProfile ? '/profile' : `/u/${encodeURIComponent(profile.username)}`}
+        className="min-w-0 flex-1 no-underline after:absolute after:inset-0 after:rounded-[inherit] after:content-['']"
+      >
+        <span className="flex min-w-0 items-center gap-2">
+          <span className="g-h3 truncate">{title}</span>
+          {isOwnProfile ? <Tag className="shrink-0">You</Tag> : null}
+        </span>
+        <span className="g-sm g-mut block truncate">@{profile.username}</span>
+        {counts ? <span className="g-xs g-fnt block truncate">{counts}</span> : null}
+      </InternalLink>
+      {isOwnProfile ? null : (
+        <Button
+          variant={isFollowing ? 'soft' : 'ink'}
+          size="sm"
+          className="relative z-10 min-w-[104px] shrink-0"
+          aria-label={`${FOLLOW_LABELS[relationship]} @${profile.username}`}
+          onClick={(event) => {
+            event.stopPropagation()
+            onToggleFollow(profile)
+          }}
+        >
+          {FOLLOW_LABELS[relationship]}
+        </Button>
+      )}
+    </div>
   )
 }
 
@@ -85,6 +121,10 @@ function ProfileSearchPage() {
   const normalizedQuery = useMemo(() => normalizeUsername(query), [query])
   const isShowingSearchResults = normalizedQuery.length >= 2
   const followingUsernames = useMemo(() => new Set(followingProfiles.map((profile) => profile.username)), [followingProfiles])
+  const [relationships, setRelationships] = useState<Record<string, RelationshipState>>({})
+  const [followerCounts, setFollowerCounts] = useState<Record<string, number>>({})
+  const followRequestsInFlight = useRef(new Set<string>())
+  const { showSystemMessage } = useSystemMessage()
   const visibleSuggestionPool = suggestions.filter((profile) => !followingUsernames.has(profile.username))
   const visibleResults = results
   const visibleSuggestions = visibleSuggestionPool
@@ -223,6 +263,55 @@ function ProfileSearchPage() {
     }
   }, [normalizedQuery])
 
+  const getRelationship = (username: string): RelationshipState =>
+    relationships[username] ?? (followingUsernames.has(username) ? 'following' : 'not_following')
+
+  const getFollowersCount = (profile: PersonProfile) => followerCounts[profile.username] ?? profile.followers_count
+
+  const handleToggleFollow = async (profile: PersonProfile) => {
+    const { username } = profile
+    if (followRequestsInFlight.current.has(username)) return
+    followRequestsInFlight.current.add(username)
+
+    const previousState = getRelationship(username)
+    const previousCount = getFollowersCount(profile)
+    const isUndo = previousState === 'following' || previousState === 'pending'
+    const optimisticState: RelationshipState = isUndo ? 'not_following' : profile.is_public === false ? 'pending' : 'following'
+    const countDelta = previousState === 'following' ? -1 : optimisticState === 'following' ? 1 : 0
+
+    setRelationships((current) => ({ ...current, [username]: optimisticState }))
+    if (previousCount !== undefined) {
+      setFollowerCounts((current) => ({ ...current, [username]: Math.max(0, previousCount + countDelta) }))
+    }
+
+    try {
+      const data = isUndo ? await unfollowProfile(username) : await followProfile(username)
+      setRelationships((current) => ({ ...current, [username]: data.relationship_state }))
+      if (previousCount !== undefined) {
+        setFollowerCounts((current) => ({ ...current, [username]: data.followers_count }))
+      }
+    } catch (error) {
+      setRelationships((current) => ({ ...current, [username]: previousState }))
+      if (previousCount !== undefined) {
+        setFollowerCounts((current) => ({ ...current, [username]: previousCount }))
+      }
+      showSystemMessage({ title: 'Could not update follow', description: error instanceof Error ? error.message : 'Try again in a bit.' })
+    } finally {
+      followRequestsInFlight.current.delete(username)
+    }
+  }
+
+  const renderPerson = (profile: PersonProfile) => (
+    <PersonRow
+      key={profile.user_id}
+      profile={profile}
+      currentUserId={currentUserId}
+      relationship={getRelationship(profile.username)}
+      followersCount={getFollowersCount(profile)}
+      onToggleFollow={(target) => void handleToggleFollow(target)}
+    />
+  )
+
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -243,7 +332,7 @@ function ProfileSearchPage() {
         <h1 className="g-h1">Find friends</h1>
         <p className="g-mut mt-2">Search usernames and build your barkada on GalaTayo.</p>
 
-        <label className="g-search mt-5">
+        <label className="g-search mt-5 focus-within:border-[var(--ink)]">
           <Search className="g-ic" aria-hidden="true" />
           <input
             ref={inputRef}
@@ -251,6 +340,7 @@ function ProfileSearchPage() {
             onChange={(event) => setQuery(event.target.value.toLowerCase())}
             placeholder="Search by @username"
             aria-label="Search by username"
+            className="focus:shadow-none focus:outline-none focus-visible:shadow-none focus-visible:outline-none"
             autoCapitalize="none"
             spellCheck={false}
             autoFocus
@@ -280,9 +370,7 @@ function ProfileSearchPage() {
         <section>
           <SectionHead title="Matching members" sub={`${results.length} match${results.length === 1 ? '' : 'es'}`} />
           <div className={LIST_GRID}>
-            {visibleResults.map((profile) => (
-              <PublicProfileRow key={profile.user_id} profile={profile} currentUserId={currentUserId} />
-            ))}
+            {visibleResults.map(renderPerson)}
           </div>
         </section>
       ) : null}
@@ -296,9 +384,7 @@ function ProfileSearchPage() {
               {followingErrorMessage ? <ErrorLine>{followingErrorMessage}</ErrorLine> : null}
               {!isLoadingFollowing && !followingErrorMessage && followingProfiles.length > 0 ? (
                 <div className={LIST_GRID}>
-                  {followingProfiles.map((profile) => (
-                    <PersonRow key={profile.user_id} profile={profile} href={`/u/${encodeURIComponent(profile.username)}`} tag="Following" />
-                  ))}
+                  {followingProfiles.map(renderPerson)}
                 </div>
               ) : null}
               {!isLoadingFollowing && !followingErrorMessage && followingProfiles.length === 0 ? (
@@ -319,9 +405,7 @@ function ProfileSearchPage() {
             ) : null}
             {!isLoadingSuggestions && !isLoadingFollowing && visibleSuggestions.length > 0 ? (
               <div className={LIST_GRID}>
-                {visibleSuggestions.map((profile) => (
-                  <PublicProfileRow key={profile.user_id} profile={profile} currentUserId={currentUserId} />
-                ))}
+                {visibleSuggestions.map(renderPerson)}
               </div>
             ) : null}
           </section>

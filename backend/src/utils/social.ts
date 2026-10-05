@@ -8,6 +8,7 @@ export type GalaPlanVisibility = "private" | "followers" | "public" | "unlisted"
 export type SocialProfile = {
   user_id: string;
   username: string | null;
+  display_name?: string | null;
   avatar_url: string | null;
   provider_avatar_url: string | null;
   bio: string | null;
@@ -38,9 +39,9 @@ export type SocialGalaPlan = {
 };
 
 export const PROFILE_COLUMNS =
-  "user_id, username, avatar_url, provider_avatar_url, bio, is_public, show_followers, show_following, default_gala_plan_visibility, followers_count, following_count, onboarding_completed_at, created_at, updated_at";
+  "user_id, username, display_name, avatar_url, provider_avatar_url, bio, is_public, show_followers, show_following, default_gala_plan_visibility, followers_count, following_count, onboarding_completed_at, created_at, updated_at";
 const BASE_PROFILE_COLUMNS =
-  "user_id, username, avatar_url, provider_avatar_url, bio, is_public, onboarding_completed_at, created_at, updated_at";
+  "user_id, username, display_name, avatar_url, provider_avatar_url, bio, is_public, onboarding_completed_at, created_at, updated_at";
 export const GALA_PLAN_COLUMNS =
   "id, user_id, title, description, slug, visibility, status, published_at, hearts_count, created_at, updated_at";
 
@@ -281,6 +282,7 @@ export function publicProfilePayload(profile: SocialProfile) {
   return {
     user_id: profile.user_id,
     username: profile.username,
+    display_name: profile.display_name ?? null,
     avatar_url: profile.avatar_url,
     provider_avatar_url: profile.provider_avatar_url,
     bio: profile.bio,

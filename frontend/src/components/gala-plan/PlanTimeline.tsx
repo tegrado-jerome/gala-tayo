@@ -22,7 +22,7 @@ type PlanTimelineProps = {
 }
 
 function StopTime({ value }: { value: string | null }) {
-  if (!value) return <div className="g-stop-time" />
+  if (!value) return <div className="g-stop-time g-fnt">–</div>
   const match = value.match(/^(.*?)\s*(AM|PM)$/i)
   return (
     <div className="g-stop-time">

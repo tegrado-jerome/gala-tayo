@@ -112,7 +112,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
     date ? date.toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' }) : 'Any day',
     `${plan.place_count} ${plan.place_count === 1 ? 'stop' : 'stops'}`,
     plan.owner?.username ? `Hosted by @${plan.owner.username}` : null,
-    plan.items.length > 0 ? `${formatPeso(perHead)}/head` : null,
+    plan.items.length > 0 ? (perHead > 0 ? `${formatPeso(perHead)}/head` : 'Free entry') : null,
   ].filter(Boolean)
 
   const moveStop = async (index: number, direction: -1 | 1) => {
@@ -210,7 +210,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
           { value: 'barkada' as const, label: <>Barkada{count(readyBarkada.members.length)}</> },
         ]
       : []),
-    { value: 'hatian', label: <>Hatian<span className="g-fnt ml-1">{formatPeso(perHead)}</span></> },
+    { value: 'hatian', label: perHead > 0 ? <>Hatian<span className="g-fnt ml-1">{formatPeso(perHead)}</span></> : 'Hatian' },
   ]
   const activeTab = tabs.some((entry) => entry.value === tab) ? tab : 'itinerary'
 

@@ -111,7 +111,7 @@ function AddToGalaPlanModal({ isOpen, placeId, placeName, onClose }: AddToGalaPl
           description="Start one and this place becomes its first stop."
           action={
             <div className="flex flex-wrap justify-center gap-2">
-              <Button variant="tara" onClick={() => goTo('/gala-plans/new')}>
+              <Button variant="tara" onClick={() => goTo(`/gala-plans/new?place_id=${encodeURIComponent(placeId)}&place_name=${encodeURIComponent(placeName)}`)}>
                 <Plus />
                 Create plan
               </Button>

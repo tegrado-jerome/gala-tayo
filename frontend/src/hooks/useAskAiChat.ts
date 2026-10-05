@@ -13,7 +13,7 @@ import {
 import type { ChatMessage } from '../utils/askAiRuntime'
 import { getApiUrl } from '../utils/apiClient'
 import { getAskAiUsageStatusFromResponse, type AskAiUsageResponse, type AskAiUsageStatus } from '../utils/askAiUsage'
-import { buildAskAiRequestHeaders, getOrCreateAskAiGuestId } from '../utils/askAiIdentity'
+import { getAskAiRequestHeaders, getOrCreateAskAiGuestId } from '../utils/askAiIdentity'
 import { trackAskAiChatbotUsed } from '../utils/analytics'
 import {
   type AskAiSource,
@@ -243,7 +243,7 @@ export function useAskAiChat(initialQuestion = '') {
         const response = await fetch(getApiUrl('/ask-ai/usage/check'), {
           method: 'GET',
           cache: 'no-store',
-          headers: buildAskAiRequestHeaders(session?.access_token ?? null),
+          headers: await getAskAiRequestHeaders(session?.access_token ?? null),
           signal: controller.signal,
         })
 
