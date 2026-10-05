@@ -1,7 +1,8 @@
 name: Weekly guides
 
-# Adds up to 3 new /guides pages a week for searches people actually make (Google
-# autocomplete) where GalaTayo has at least 6 real places, then redeploys the site.
+# Every Monday: reads Search Console and GA4 (when the Google secret is set), adds up to 3
+# /guides pages for the strongest search demand where GalaTayo has at least 6 real places,
+# redeploys the site, and posts the week's SEO report as an issue.
 on:
   schedule:
     - cron: "0 19 * * 0" # Monday 3:00 AM Philippine time
@@ -10,15 +11,18 @@ on:
 permissions:
   contents: write
   actions: write
+  issues: write
 
 concurrency:
-  group: weekly-guides
+  group: seo-data
   cancel-in-progress: false
 
 jobs:
   discover:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      SEO_REPORT_PATH: /tmp/seo-report.md
     steps:
       - uses: actions/checkout@v4
 
@@ -26,22 +30,36 @@ jobs:
         with:
           node-version: 22
 
+      - name: Traffic report
+        working-directory: frontend
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          GA4_PROPERTY_ID: ${{ vars.GA4_PROPERTY_ID }}
+        run: node scripts/seo/report.mjs
+
       - name: Find new guides
         working-directory: frontend
-        run: node scripts/discover-guides.mjs
+        run: node scripts/seo/discover-guides.mjs
 
       - name: Commit and redeploy
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if git diff --quiet -- frontend/src/data/seoGuides.json; then
-            echo "No new guides."
-            exit 0
-          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add frontend/src/data/seoGuides.json
+          git add frontend/src/data/seoGuides.json frontend/scripts/seo/data
+          if git diff --cached --quiet; then
+            exit 0
+          fi
           git commit -m "feat(seo): add weekly guides"
+          git pull --rebase
           git push
-          # Pushes made with the workflow token don't trigger other workflows, so start the deploy directly.
-          gh workflow run azure-static-web-apps-kind-tree-0b9f6df00.yml --ref main
+          if ! git diff --quiet HEAD~1 -- frontend/src/data/seoGuides.json; then
+            # Pushes made with the workflow token don't trigger other workflows, so start the deploy directly.
+            gh workflow run azure-static-web-apps-kind-tree-0b9f6df00.yml --ref main
+          fi
+
+      - name: Post weekly report
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh issue create --title "SEO report $(date -u +%Y-%m-%d)" --body-file "$SEO_REPORT_PATH"
