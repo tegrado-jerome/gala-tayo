@@ -42,7 +42,8 @@ function ProtectedFeatureGate({ pathname }: ProtectedFeatureGateProps) {
           </Page>
         )}
       </div>
-      <GuestAuthPrompt variant={authVariant} mode="modal" isOpen onClose={leaveGate} />
+      {/* A new guest session re-renders the route, so continuing needs no extra step. */}
+      <GuestAuthPrompt variant={authVariant} mode="modal" isOpen onClose={leaveGate} onContinue={() => undefined} />
     </>
   )
 }

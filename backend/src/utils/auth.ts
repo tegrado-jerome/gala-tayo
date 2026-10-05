@@ -5,6 +5,8 @@ export type AuthenticatedUser = {
   id: string;
   email?: string;
   metadata?: Record<string, unknown>;
+  /** Supabase anonymous (guest) user. Account-only endpoints are blocked for these in guestAccessHook. */
+  isAnonymous?: boolean;
 };
 
 export async function validateJwt(request: HttpRequest): Promise<AuthenticatedUser> {
@@ -32,6 +34,7 @@ export async function validateJwt(request: HttpRequest): Promise<AuthenticatedUs
     id: data.user.id,
     email: data.user.email,
     metadata: data.user.user_metadata as Record<string, unknown>,
+    isAnonymous: data.user.is_anonymous === true,
   };
 }
 

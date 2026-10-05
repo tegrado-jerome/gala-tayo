@@ -46,6 +46,35 @@ export function isProtectedAccountPath(pathname: string) {
   )
 }
 
+/** Pages a guest (anonymous) session cannot use: they need a real account. */
+export function isAccountOnlyPath(pathname: string) {
+  return (
+    [
+      '/onboarding',
+      '/mfa/verify',
+      '/reports',
+      '/comment-notices',
+      '/find-friends',
+      '/profiles/search',
+      '/profile/search',
+      '/account',
+      '/settings',
+      '/settings/change-password',
+      '/settings/password',
+      '/settings/security',
+      '/account-settings',
+      '/account-settings/change-password',
+      '/privacy-center',
+      '/submit-place',
+      '/places/new',
+      '/places/submit',
+      '/my-submissions',
+      '/submissions',
+      '/photos/upload',
+    ].some((path) => isPath(pathname, path)) || /^\/places\/[^/]+\/(comments|reviews|photos)\/?$/i.test(pathname)
+  )
+}
+
 export function isAdminPath(pathname: string) {
   return isSecretAdminPath(pathname)
 }

@@ -221,6 +221,11 @@ export async function getMfaStatus(
   try {
     const authUser = await validateJwt(request);
 
+    // Guest sessions have no email to send a device code to.
+    if (authUser.isAnonymous) {
+      return { status: 200, jsonBody: { needsMfa: false } };
+    }
+
     const authHeader = request.headers.get("authorization") ?? "";
     const token = authHeader.replace(/^Bearer\s+/i, "");
     const sessionId = extractSessionIdFromToken(token);

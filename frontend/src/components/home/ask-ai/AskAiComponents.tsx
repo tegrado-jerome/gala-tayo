@@ -350,7 +350,7 @@ function AskAiModePanel({
           <p className="g-xs g-mut mb-2 flex flex-wrap items-center gap-x-1 px-1">
             Guest mode, limited chats a day.
             <button type="button" onClick={onGuestUpgradePrompt} className="font-semibold text-[var(--ink)] underline underline-offset-2">
-              Log in for more
+              Get more with a free account
             </button>
           </p>
         ) : null}

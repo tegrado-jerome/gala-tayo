@@ -8,6 +8,7 @@ import { getUserMfaStatus, type UserMfaStatus } from '../utils/userMfa'
 import { clearAppResumeCache, readAppResumeCache, writeAppResumeCache } from '../utils/appResumeCache'
 import { clearEmptyHashFragment } from '../utils/navigation'
 import { isAdminPath } from '../utils/routeGuards'
+import { isAnonymousSession } from '../utils/guestSession'
 
 const INITIAL_AUTH_TIMEOUT_MS = 6000
 
@@ -65,6 +66,8 @@ export function useAuthOrchestration({ pathname }: { pathname: string }) {
   const hasCompletedInitialAuthRef = useRef(false)
   const skipNextUserMfaLoadRef = useRef(false)
   const userId = session?.user?.id ?? null
+  // Guest (anonymous) sessions have no profile, onboarding or device-code MFA.
+  const isAnonymous = isAnonymousSession(session)
 
   useEffect(() => {
     let isMounted = true
@@ -178,6 +181,12 @@ export function useAuthOrchestration({ pathname }: { pathname: string }) {
       return undefined
     }
 
+    if (isAnonymousSession(activeSession)) {
+      setNeedsOnboarding(false)
+      setHasResolvedProfile(true)
+      return undefined
+    }
+
     let isMounted = true
     const isInitialProfileResolution = !hasResolvedProfile
 
@@ -230,6 +239,16 @@ export function useAuthOrchestration({ pathname }: { pathname: string }) {
       return undefined
     }
 
+    if (isAnonymousSession(activeSession)) {
+      setCurrentUser(null)
+      setCurrentProfile(null)
+      setNeedsOnboarding(false)
+      setHasResolvedProfile(true)
+      setProfileError('')
+      setIsCurrentProfileLoading(false)
+      return undefined
+    }
+
     let isMounted = true
 
     const loadCurrentProfile = async () => {
@@ -262,7 +281,7 @@ export function useAuthOrchestration({ pathname }: { pathname: string }) {
     return () => {
       isMounted = false
     }
-  }, [hasResolvedInitialAuth, pathname, profileRefreshKey, userId])
+  }, [hasResolvedInitialAuth, isAnonymous, pathname, profileRefreshKey, userId])
 
   useEffect(() => {
     if (!hasResolvedInitialAuth) {
@@ -271,7 +290,7 @@ export function useAuthOrchestration({ pathname }: { pathname: string }) {
 
     const activeSession = sessionRef.current
 
-    if (!activeSession) {
+    if (!activeSession || isAnonymousSession(activeSession)) {
       setAdminMfaStatus(null)
       setIsAdminMfaLoading(false)
       return undefined
@@ -303,7 +322,7 @@ export function useAuthOrchestration({ pathname }: { pathname: string }) {
     return () => {
       isMounted = false
     }
-  }, [hasResolvedInitialAuth, profileRefreshKey, userId])
+  }, [hasResolvedInitialAuth, isAnonymous, profileRefreshKey, userId])
 
   useEffect(() => {
     if (!hasResolvedInitialAuth) {
@@ -315,6 +334,12 @@ export function useAuthOrchestration({ pathname }: { pathname: string }) {
     if (!activeSession) {
       skipNextUserMfaLoadRef.current = false
       setUserMfaStatus(null)
+      setIsUserMfaLoading(false)
+      return undefined
+    }
+
+    if (isAnonymousSession(activeSession)) {
+      setUserMfaStatus({ needsMfa: false })
       setIsUserMfaLoading(false)
       return undefined
     }
@@ -352,7 +377,7 @@ export function useAuthOrchestration({ pathname }: { pathname: string }) {
     return () => {
       isMounted = false
     }
-  }, [hasResolvedInitialAuth, profileRefreshKey, userId])
+  }, [hasResolvedInitialAuth, isAnonymous, profileRefreshKey, userId])
 
   useEffect(() => {
     if (!hasResolvedInitialAuth) {
@@ -424,6 +449,7 @@ export function useAuthOrchestration({ pathname }: { pathname: string }) {
     adminMfaStatus,
     isUserMfaLoading,
     userMfaStatus,
+    isAnonymous,
     profileError,
     profileRefreshKey,
     setProfileRefreshKey,

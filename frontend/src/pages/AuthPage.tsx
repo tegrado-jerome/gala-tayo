@@ -4,12 +4,15 @@ import AuthMethodChooser from '../components/auth/AuthMethodChooser'
 import PasswordStrengthBar from '../components/auth/PasswordStrengthBar'
 import {
   getPostAuthRedirect,
+  isEmailTakenError,
   markAdminPasswordSession,
   markSignupOnboardingAccess,
+  resendGuestUpgradeEmail,
   resendSignUpConfirmationEmail,
   setRememberMePreference,
   signInWithEmailPassword,
   signUpWithEmailPassword,
+  upgradeGuestWithEmailPassword,
 } from '../services/authApi'
 import { buildAuthPath, getRequestedNextPath } from '../services/authApi'
 import { navigateToPath, replaceWithPath } from '../utils/navigation'
@@ -27,6 +30,7 @@ type AuthMode = 'sign_in' | 'create_account'
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const minPasswordLength = 8
 const resendCooldownMs = 2 * 60 * 1000
+const GUEST_EMAIL_TAKEN_MESSAGE = 'This email already has an account. Log in instead. What you did as a guest stays in this guest session and won’t move over.'
 
 async function preloadAuthTargetPath(path: string) {
   if (path.startsWith('/mfa/verify')) {
@@ -94,7 +98,7 @@ type AuthPageProps = {
 }
 
 function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
-  const { session } = useAppUser()
+  const { session, isGuest } = useAppUser()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -140,7 +144,8 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
   const isSubmitDisabled = isSubmitting || isGoogleLoading
 
   useEffect(() => {
-    if (!session) {
+    // A guest session is not "signed in" here: the guest is on this page to log in or upgrade.
+    if (!session || isGuest) {
       return
     }
 
@@ -183,7 +188,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
     return () => {
       isMounted = false
     }
-  }, [isCreateMode, session])
+  }, [isCreateMode, isGuest, session])
 
   const resetFormState = () => {
     setPassword('')
@@ -233,6 +238,21 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
 
     try {
       setIsSubmitting(true)
+
+      if (isCreateMode && isGuest) {
+        try {
+          await upgradeGuestWithEmailPassword(normalizedEmail, password, nextPath)
+        } catch (upgradeError) {
+          setError(isEmailTakenError(upgradeError) ? GUEST_EMAIL_TAKEN_MESSAGE : getFriendlyAuthError(upgradeError, mode))
+          return
+        }
+        setEmail(normalizedEmail)
+        setPassword('')
+        setConfirmPassword('')
+        setIsConfirmationPending(true)
+        signUpCooldown.startCooldown()
+        return
+      }
 
       if (isCreateMode) {
         setRememberMePreference(true)
@@ -301,7 +321,11 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
       setIsResendingConfirmation(true)
       setError('')
       setResendMessage('')
-      await resendSignUpConfirmationEmail(normalizedEmail, nextPath)
+      if (isGuest) {
+        await resendGuestUpgradeEmail(normalizedEmail)
+      } else {
+        await resendSignUpConfirmationEmail(normalizedEmail, nextPath)
+      }
       signUpCooldown.startCooldown()
       setResendMessage('We sent another confirmation email.')
     } catch (caughtError) {
@@ -323,7 +347,9 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
         ? 'Pick a password for your new account.'
         : 'Enter your password to continue.'
       : isCreateMode
-        ? 'Make an account and start planning your next gala with the barkada.'
+        ? isGuest
+          ? 'Keep everything you did as a guest and use it on any device.'
+          : 'Make an account and start planning your next gala with the barkada.'
         : 'Log in to see your plans and barkadas.'
 
   if (isConfirmationPending) {
@@ -338,7 +364,10 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
         title="Check your email"
         sub={
           <>
-            We sent a link to <b style={{ color: 'var(--ink)' }}>{normalizedEmail}</b>. Confirm it, then come back and log in with your email and password.
+            We sent a link to <b style={{ color: 'var(--ink)' }}>{normalizedEmail}</b>.{' '}
+            {isGuest
+              ? 'Open it to finish your account. Your saved places, plans and stamps come with you.'
+              : 'Confirm it, then come back and log in with your email and password.'}
           </>
         }
       >
@@ -380,6 +409,9 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
       {resetSuccess ? <AuthNotice>Password updated. You can now sign in with your new password.</AuthNotice> : null}
       {!allowGoogle ? <AuthNotice tone="warn">Admin access uses email and password only. Account creation is disabled here.</AuthNotice> : null}
       {resendMessage ? <AuthNotice>{resendMessage}</AuthNotice> : null}
+      {isGuest && !isCreateMode ? (
+        <AuthNotice tone="warn">You’re using GalaTayo as a guest. Logging in switches to your account, and guest stuff stays behind. To keep it, create an account instead.</AuthNotice>
+      ) : null}
 
       <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
         {step === 'email' ? (

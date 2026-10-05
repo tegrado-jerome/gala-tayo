@@ -87,7 +87,11 @@ export function RsvpPanel({ plan, barkada, session, onChange }: BarkadaProps) {
               type="button"
               aria-pressed={barkada.viewer_rsvp === option.value}
               className={cx(option.value === 'going' && 'is-go')}
-              onClick={() => (canJoin ? void run(() => setGalaPlanRsvp(plan.id, option.value, session)) : guestAuth.open('plans-page'))}
+              onClick={() =>
+                canJoin
+                  ? void run(() => setGalaPlanRsvp(plan.id, option.value, session))
+                  : guestAuth.open('plans-page', (guestSession) => void run(() => setGalaPlanRsvp(plan.id, option.value, guestSession)))
+              }
             >
               {option.label}
             </button>
@@ -203,11 +207,13 @@ export function PollsPanel({ plan, barkada, session, onChange }: BarkadaProps) {
   const { error, run } = useAction(onChange)
   const isOwner = plan.viewer_is_owner
   const canJoin = canJoinPlan(plan, session)
+  const guestAuth = useGuestAuthPrompt()
   const [swipePollId, setSwipePollId] = useState<string | null>(null)
   const swipePoll = barkada.polls.find((poll) => poll.id === swipePollId)
 
   return (
     <div className="grid gap-4">
+      {guestAuth.promptElement}
       {swipePoll ? <SwipeVote plan={plan} poll={swipePoll} session={session} onChange={onChange} onClose={() => setSwipePollId(null)} /> : null}
       {barkada.polls.length === 0 && !isOwner ? <Empty title="Wala pang poll" description="When the host opens a vote, it shows up here." /> : null}
       {barkada.polls.map((poll) => (
@@ -228,11 +234,13 @@ export function PollsPanel({ plan, barkada, session, onChange }: BarkadaProps) {
                 <button
                   key={option.id}
                   type="button"
-                  disabled={!canJoin}
                   aria-pressed={isMine}
-                  onClick={() => void run(() => voteGalaPlanPoll(plan.id, poll.id, option.id, session))}
+                  onClick={() =>
+                    canJoin
+                      ? void run(() => voteGalaPlanPoll(plan.id, poll.id, option.id, session))
+                      : guestAuth.open('plans-page', (guestSession) => void run(() => voteGalaPlanPoll(plan.id, poll.id, option.id, guestSession)))
+                  }
                   className={cx('g-po', isMine && 'is-mine')}
-                  style={canJoin ? undefined : { cursor: 'default' }}
                 >
                   <span className="g-po-fill" style={{ width: `${share}%` }} aria-hidden="true" />
                   <span className="flex min-w-0 items-center gap-2">

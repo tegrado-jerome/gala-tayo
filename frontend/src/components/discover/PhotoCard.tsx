@@ -64,7 +64,7 @@ export function getPlaceImageCandidates(place: PhotoCardPlace) {
 
 type PhotoCardProps = {
   place: PhotoCardPlace
-  onGuestFavorite: () => void
+  onGuestFavorite: (retry: () => void) => void
   badge?: string | null
   priority?: boolean
   onOpen?: () => void
@@ -98,7 +98,7 @@ function PhotoCard({ place, onGuestFavorite, badge, priority = false, onOpen, on
         await removeFavorite(placeId, place.slug)
       } else {
         const result = await saveFavorite(placeId, place.slug)
-        if (result.status === 'guest') onGuestFavorite()
+        if (result.status === 'guest') onGuestFavorite(() => void saveFavorite(placeId, place.slug))
       }
     } finally {
       setIsSaving(false)

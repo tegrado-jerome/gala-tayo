@@ -235,13 +235,13 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
     }
   }
 
-  const joinPlan = async () => {
-    if (!session) {
-      guestAuth.open('plans-page')
+  const joinPlan = async (activeSession: Session | null | undefined = session) => {
+    if (!activeSession) {
+      guestAuth.open('plans-page', (guestSession) => void joinPlan(guestSession))
       return
     }
     try {
-      setBarkada(await setGalaPlanRsvp(plan.id, 'going', session))
+      setBarkada(await setGalaPlanRsvp(plan.id, 'going', activeSession))
     } catch (joinError) {
       setNotice(joinError instanceof Error ? joinError.message : 'Hindi ma-RSVP. Try again.')
     }

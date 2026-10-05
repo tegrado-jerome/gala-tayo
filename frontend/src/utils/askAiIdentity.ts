@@ -1,4 +1,5 @@
 import { supabase } from '../supabase'
+import { isAnonymousSession } from './guestSessionCore'
 const ASK_AI_GUEST_ID_KEY = 'galatayo:ask-ai-guest-id'
 const ASK_AI_GUEST_ID_HEADER = 'x-ask-ai-guest-id'
 
@@ -78,5 +79,10 @@ export function getAskAiGuestIdHeaderName() {
 /** Reads the session at call time so an expired token is refreshed before the request, instead of silently counting as a guest. */
 export async function getAskAiRequestHeaders(fallbackToken?: string | null) {
   const { data } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }))
-  return buildAskAiRequestHeaders(data.session?.access_token ?? fallbackToken ?? null)
+  const headers = buildAskAiRequestHeaders(data.session?.access_token ?? fallbackToken ?? null)
+  // Guest sessions keep counting against this device's guest AI limit.
+  if (isAnonymousSession(data.session)) {
+    headers[ASK_AI_GUEST_ID_HEADER] = getOrCreateAskAiGuestId()
+  }
+  return headers
 }

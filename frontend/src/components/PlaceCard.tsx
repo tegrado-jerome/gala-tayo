@@ -178,7 +178,7 @@ function getReviewCount(place: PlaceCardData) {
 
 type PlaceCardProps = {
   place: PlaceCardData
-  onGuestSave: () => void
+  onGuestSave: (retry: () => void) => void
   selected?: boolean
   onOpen?: () => void
   onHover?: () => void
@@ -206,7 +206,7 @@ function PlaceCard({ place, onGuestSave, selected = false, onOpen, onHover, clas
         await removeFavorite(placeId, place.slug)
       } else {
         const result = await saveFavorite(placeId, place.slug)
-        if (result.status === 'guest') onGuestSave()
+        if (result.status === 'guest') onGuestSave(() => void saveFavorite(placeId, place.slug))
       }
     } finally {
       setIsSaving(false)

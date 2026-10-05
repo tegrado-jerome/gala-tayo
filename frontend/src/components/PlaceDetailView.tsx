@@ -738,9 +738,11 @@ function PlaceDetailView({
       cleanString(nextUser?.email?.split('@')[0]) ||
       'GalaTayo member'
 
-    setCurrentUserId(nextUser?.id ?? null)
+    // Guests (anonymous sessions) can't comment, rate, report or add photos, so treat them as signed out here.
+    const isGuest = nextUser?.is_anonymous === true
+    setCurrentUserId(nextUser && !isGuest ? nextUser.id : null)
 
-    if (!nextUser) {
+    if (!nextUser || isGuest) {
       setCurrentUserAvatarFallbackName(metadataDisplayName)
       setCurrentUserAvatarUrl(null)
       return
@@ -1016,7 +1018,7 @@ function PlaceDetailView({
       const result = await saveFavorite(placeId, placeSlug)
 
       if (result.status === 'guest') {
-        guestAuth.open('favorite')
+        guestAuth.open('favorite', () => void handleSavePlace())
         return
       }
 
@@ -1682,7 +1684,7 @@ function PlaceDetailView({
   const openDirections = () => openDirectionsUrl(directionsUrl)
   const handleAddToPlan = () => {
     if (!appSession) {
-      guestAuth.open('add-plan')
+      guestAuth.open('add-plan', () => setIsAddToPlanOpen(true))
       return
     }
     setIsAddToPlanOpen(true)
@@ -2504,7 +2506,7 @@ function PlaceDetailView({
                 Add to plan
               </Button>
               <div className="flex items-start gap-2">
-                <CheckInButton className="min-w-0 flex-1" placeId={place.id} placeName={place.name} session={appSession} onGuest={() => guestAuth.open('community')} />
+                <CheckInButton className="min-w-0 flex-1" placeId={place.id} placeName={place.name} session={appSession} onGuest={(retry) => guestAuth.open('passport-page', retry)} />
                 <Button variant="soft" iconOnly onClick={() => void handleSavePlace()} disabled={isSaving} aria-pressed={isSaved} aria-label={saveLabel}>
                   {heartIcon}
                 </Button>
@@ -2525,7 +2527,7 @@ function PlaceDetailView({
               {valueText ? <span style={isSulit ? undefined : { color: 'var(--ink-2)' }}>{valueText}</span> : null}
             </div>
           ) : null}
-          <CheckInButton iconOnly placeId={place.id} placeName={place.name} session={appSession} onGuest={() => guestAuth.open('community')} />
+          <CheckInButton iconOnly placeId={place.id} placeName={place.name} session={appSession} onGuest={(retry) => guestAuth.open('passport-page', retry)} />
           <Button variant="tara" size="lg" className={barPrice ? 'shrink-0' : 'min-w-0 flex-1'} onClick={handleAddToPlan}>
             <Plus aria-hidden="true" />
             Add to plan

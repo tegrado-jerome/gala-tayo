@@ -43,6 +43,7 @@ import { registerAskAiTask, completeAskAiTask, failAskAiTask } from '../utils/as
 import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
 import { getApiUrl } from '../utils/apiClient'
 import { getAskAiRequestHeaders, getOrCreateAskAiGuestId } from '../utils/askAiIdentity'
+import { hasAccountSession } from '../utils/guestSession'
 import { trackAskAiMapsUsed } from '../utils/analytics'
 import { useAskAiUsageAutoRefresh } from '../hooks/useAskAiUsageAutoRefresh'
 import { useAskAiViewportHeightSync } from '../hooks/useAskAiViewportHeightSync'
@@ -202,7 +203,7 @@ function AskAiMapPage() {
   const initialAskAiMapState = initialAskAiMapRuntimeState ?? initialAskAiMapRouteCache
   const { session, isSessionLoading } = useSavedFavorites()
   useAskAiViewportHeightSync()
-  const isRegistered = Boolean(session?.user)
+  const isRegistered = hasAccountSession(session)
   const [query, setQuery] = useState(initialAskAiMapState?.query ?? '')
   const [selectedChipIds, setSelectedChipIds] = useState<AskAiMapChipId[]>(
     (initialAskAiMapState?.selectedChipIds as AskAiMapChipId[] | undefined) ?? []
@@ -724,7 +725,7 @@ function AskAiMapPage() {
       }
 
       const errorMessage = getAskAiMapsRequestErrorMessage(error)
-      if (!session?.access_token && errorMessage.toLowerCase().includes('daily limit')) {
+      if (!isRegistered && errorMessage.toLowerCase().includes('daily limit')) {
         setIsGuestUpgradePromptOpen(true)
       }
       failAskAiTask('maps', errorMessage)

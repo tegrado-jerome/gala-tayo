@@ -61,7 +61,7 @@ function TrendingFeed() {
       />
       <Masonry>
         {places.map((place, index) => (
-          <PhotoCard key={place.slug} place={place} masonryIndex={index} priority={index < 2} onGuestFavorite={() => guestAuth.open('favorite')} />
+          <PhotoCard key={place.slug} place={place} masonryIndex={index} priority={index < 2} onGuestFavorite={(retry) => guestAuth.open('favorite', retry)} />
         ))}
       </Masonry>
       {guestAuth.promptElement}

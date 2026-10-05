@@ -1,4 +1,5 @@
-import { markSignupOnboardingAccess, setRememberMePreference, signInWithGoogle } from '../../services/authApi'
+import { linkGoogleToGuest, markSignupOnboardingAccess, setRememberMePreference, signInWithGoogle } from '../../services/authApi'
+import { useAppUser } from '../../context/AppUserContext'
 import { getRequestedNextPath } from '../../services/authApi'
 import { Button } from '../ui'
 import GoogleMark from './GoogleMark'
@@ -13,6 +14,8 @@ type AuthMethodChooserProps = {
 }
 
 function AuthMethodChooser({ isGoogleLoading, onGoogleLoadingChange, onError, nextPath, flow, rememberMe }: AuthMethodChooserProps) {
+  const { isGuest } = useAppUser()
+
   const handleGoogleSignIn = async () => {
     try {
       onGoogleLoadingChange(true)
@@ -20,6 +23,10 @@ function AuthMethodChooser({ isGoogleLoading, onGoogleLoadingChange, onError, ne
       setRememberMePreference(rememberMe ?? true)
       if (flow === 'signup') {
         markSignupOnboardingAccess()
+      }
+      if (isGuest && flow === 'signup') {
+        await linkGoogleToGuest(nextPath ?? getRequestedNextPath())
+        return
       }
       await signInWithGoogle(nextPath ?? getRequestedNextPath(), flow)
     } catch (error) {

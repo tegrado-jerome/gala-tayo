@@ -392,7 +392,7 @@ function SearchResults({
   onSelectPlace: (placeId: string) => void
   onOpenPlace: (placeId: string) => void
   onPageChange: (page: number) => void
-  onGuestSave: () => void
+  onGuestSave: (retry: () => void) => void
 }) {
   const isDesktop = useIsDesktop()
   const showMobileMap = !isDesktop && mobileView === 'map'

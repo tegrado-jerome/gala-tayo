@@ -376,7 +376,7 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
                   placeDetailsBySlug[rawPlace.slug],
                 )}
                 selected={selectedPlaceId === rawPlace.id}
-                onGuestSave={() => listingGuestAuth.open('favorite')}
+                onGuestSave={(retry) => listingGuestAuth.open('favorite', retry)}
                 onOpen={() => {
                   setSelectedPlaceId(rawPlace.id)
                   writeListingRouteCache({

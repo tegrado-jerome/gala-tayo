@@ -744,7 +744,7 @@ function SearchHub({
             onSelectPlace={handleMapPlaceSelect}
             onOpenPlace={handlePlaceSelect}
             onPageChange={handlePageChange}
-            onGuestSave={() => guestAuth.open('favorite')}
+            onGuestSave={(retry) => guestAuth.open('favorite', retry)}
           />
         ) : (
           <Empty

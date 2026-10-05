@@ -3,6 +3,7 @@ import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { buildImageUrl } from "../utils/r2UrlResolver";
 import { getApprovedPlaceImagesByPlaceIds } from "../services/placeImagesService";
 import { createSlug, getCurrentUser, getOptionalCurrentUser } from "../utils/social";
+import { ensureGuestProfile } from "./profileHelpers";
 
 type PlanVisibility = "private" | "public";
 type PlanStatus = "active" | "deleted";
@@ -478,6 +479,8 @@ export async function createGalaPlan(request: HttpRequest, context: InvocationCo
       if (!placeCheck.ok) return { status: 400, jsonBody: { message: `Unknown place_id: ${placeCheck.missing.join(", ")}` } };
     }
 
+    // gala_plans.user_id references profiles, so guests need a minimal profile first.
+    await ensureGuestProfile(user);
     const supabase = await getSupabaseAdminClient();
     const { data, error } = await (supabase.from("gala_plans") as any)
       .insert({

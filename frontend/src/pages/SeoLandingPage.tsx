@@ -255,7 +255,7 @@ export default function SeoLandingPage({
                 <PlaceCard
                   masonryIndex={index}
                   place={withLiveDetail({ ...mapSeoPlaceToCard(rawPlace), budget_min: rawPlace.budgetMin, good_for: rawPlace.goodFor }, placeDetailsBySlug[rawPlace.slug])}
-                  onGuestSave={() => listingGuestAuth.open('favorite')}
+                  onGuestSave={(retry) => listingGuestAuth.open('favorite', retry)}
                 />
                 {rawPlace.description ? <p className="m-rank-desc">{rawPlace.description}</p> : null}
               </li>
