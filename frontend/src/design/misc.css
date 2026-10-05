@@ -123,7 +123,7 @@
 .m-budget span { font-size: 12px; color: var(--ink-2); }
 
 /* ---------- Chat (Tara) ---------- */
-.m-tara { display: grid; place-items: center; width: 32px; height: 32px; flex: 0 0 auto; border-radius: 50%; background: var(--tara); color: #0f2138; }
+.m-tara { display: grid; place-items: center; width: 32px; height: 32px; flex: 0 0 auto; border-radius: 50%; background: var(--tara); color: #ffffff; }
 .m-tara svg { width: 17px; height: 17px; }
 .m-tara.is-lg { width: 56px; height: 56px; border-radius: 18px; }
 .m-tara.is-lg svg { width: 28px; height: 28px; }
