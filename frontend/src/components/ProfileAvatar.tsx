@@ -16,7 +16,7 @@ const sizeClasses = {
   sm: 'h-12 w-12 text-base',
   md: 'h-16 w-16 text-xl',
   lg: 'h-24 w-24 text-3xl',
-  xl: 'h-[88px] w-[88px] text-3xl lg:h-28 lg:w-28',
+  xl: 'h-[72px] w-[72px] text-[28px] lg:h-24 lg:w-24 lg:text-[36px]',
 }
 
 function ProfileAvatar({ profile, size = 'md', showOnlineIndicator = false }: ProfileAvatarProps) {
@@ -26,7 +26,7 @@ function ProfileAvatar({ profile, size = 'md', showOnlineIndicator = false }: Pr
   return (
     <span
       className={`${sizeClasses[size]} relative flex shrink-0 items-center justify-center rounded-full font-semibold`}
-      style={{ background: 'var(--fill)', color: 'var(--ink-2)', fontFamily: 'var(--font-display)' }}
+      style={{ background: 'var(--sea-soft)', color: 'var(--sea)', fontFamily: 'var(--font-display)' }}
     >
       <span className="flex h-full w-full items-center justify-center overflow-hidden rounded-full">
         {resolvedSrc ? (

@@ -7,6 +7,8 @@ import { getStaticPlaceImageUrlForSlug } from '../../data/placeIndexVisuals'
 import { listMyGalaPlans, parseGalaPlanDescription, type GalaPlanSummary } from '../../utils/galaPlansApi'
 import { daysUntil, formatDaysUntil, getPlanDate, pickNextPlan } from '../../utils/galaPlanTrip'
 
+const MAX_LISTED_STOPS = 5
+
 type LoadState = { status: 'loading' } | { status: 'ready'; plan: GalaPlanSummary | null } | { status: 'error' }
 
 function PlanCard({ plan }: { plan: GalaPlanSummary }) {
@@ -17,25 +19,43 @@ function PlanCard({ plan }: { plan: GalaPlanSummary }) {
   const note = parseGalaPlanDescription(plan.description).description
   const meta = [`${plan.place_count} ${plan.place_count === 1 ? 'stop' : 'stops'}`, plan.visibility === 'public' ? 'Shared' : 'Private']
 
+  const shownStops = stops.slice(0, MAX_LISTED_STOPS)
+  const hiddenStopCount = plan.place_count - shownStops.length
+
   return (
-    <InternalLink href={`/gala-plans/${plan.id}`} className="g-card grid overflow-hidden md:grid-cols-2">
-      <div className="aspect-[16/10] md:aspect-auto md:min-h-[320px]">
-        <PlaceImage candidates={covers} className="h-full w-full object-cover" />
+    <InternalLink
+      href={`/gala-plans/${plan.id}`}
+      className="g-card grid overflow-hidden lg:max-h-[320px] lg:min-h-[260px] lg:grid-cols-[5fr_7fr]"
+    >
+      <div className="relative aspect-[16/10] lg:aspect-auto">
+        <PlaceImage candidates={covers} className="absolute inset-0 h-full w-full object-cover" />
       </div>
-      <div className="flex min-w-0 flex-col gap-3 p-4 md:p-6">
-        <div className="flex flex-wrap items-center gap-2">
-          {days !== null && days >= 0 ? <Tag>{formatDaysUntil(days)}</Tag> : null}
-          <span className="g-sm g-mut">
-            {date ? date.toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' }) : 'No date yet'}
-          </span>
+      <div className="grid min-w-0 gap-5 p-4 md:p-6 lg:grid-cols-2 lg:gap-8">
+        <div className="flex min-w-0 flex-col gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            {days !== null && days >= 0 ? <Tag>{formatDaysUntil(days)}</Tag> : null}
+            <span className="g-sm g-mut">
+              {date ? date.toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' }) : 'No date yet'}
+            </span>
+          </div>
+          <h3 className="g-h1 line-clamp-2">{plan.title}</h3>
+          {note ? <p className="g-sm g-mut line-clamp-2">{note}</p> : null}
+          <p className="g-xs g-fnt">{meta.join(' · ')}</p>
+          <div className="mt-2">
+            <span className={buttonClass({ variant: 'ink', size: 'sm' })}>Open plan</span>
+          </div>
         </div>
-        <h3 className="g-h1">{plan.title}</h3>
-        {stops.length > 0 ? <p className="g-sm g-mut">{stops.map((stop) => stop.name).join(' → ')}</p> : null}
-        {note ? <p className="g-sm g-mut line-clamp-2">{note}</p> : null}
-        <p className="g-xs g-fnt">{meta.join(' · ')}</p>
-        <div className="mt-auto pt-2">
-          <span className={buttonClass({ variant: 'ink', size: 'sm' })}>Open plan</span>
-        </div>
+        {shownStops.length > 0 ? (
+          <ol className="flex min-w-0 flex-col gap-3 lg:border-l lg:border-[var(--line-2)] lg:pl-8" aria-label="Stops">
+            {shownStops.map((stop, index) => (
+              <li key={stop.id} className="flex min-w-0 items-center gap-3">
+                <span className="g-num">{index + 1}</span>
+                <span className="g-sm min-w-0 truncate font-medium">{stop.name}</span>
+              </li>
+            ))}
+            {hiddenStopCount > 0 ? <li className="g-xs g-fnt pl-[34px]">+{hiddenStopCount} more</li> : null}
+          </ol>
+        ) : null}
       </div>
     </InternalLink>
   )

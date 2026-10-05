@@ -56,7 +56,7 @@ function PlanMenu({ menu, onClose, onDelete }: { menu: Menu; onClose: () => void
 
   if (menu === 'popover') {
     return (
-      <div ref={ref} role="menu" className="absolute right-0 top-full z-10 mt-2 w-56" style={{ borderRadius: 'var(--r-3)', boxShadow: 'var(--sh-2)' }}>
+      <div ref={ref} role="menu" className="absolute left-0 top-full z-10 mt-2 w-56" style={{ borderRadius: 'var(--r-3)', boxShadow: 'var(--sh-2)' }}>
         {items}
       </div>
     )
@@ -247,16 +247,17 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
   }
 
   const closeMenu = () => setMenu(null)
+  const actionStyle = { height: 40 }
   const count = (value: number) => (value > 0 ? <span className="g-fnt ml-1">{value}</span> : null)
   const tabs: Array<{ value: Tab; label: ReactNode }> = [
-    { value: 'itinerary', label: <>Itinerary{count(stops.length)}</> },
+    { value: 'itinerary', label: <>Stops{count(stops.length)}</> },
     ...(readyBarkada
       ? [
           { value: 'polls' as const, label: <>Polls{count(readyBarkada.polls.length)}</> },
           { value: 'barkada' as const, label: <>Barkada{count(readyBarkada.members.length)}</> },
         ]
       : []),
-    { value: 'hatian', label: perHead > 0 ? <>Hatian (split the bill)<span className="g-fnt ml-1">{formatPeso(perHead)}</span></> : 'Hatian (split the bill)' },
+    { value: 'hatian', label: 'Hatian' },
   ]
   const activeTab = tabs.some((entry) => entry.value === tab) ? tab : 'itinerary'
 
@@ -282,102 +283,102 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
       />
 
       <BackLink />
-      {cover ? (
-        <div className="mt-2 aspect-[16/9] overflow-hidden bg-[var(--fill)] lg:aspect-[3/1]" style={{ borderRadius: 'var(--r-4)' }}>
-          <img src={cover} alt="" className="h-full w-full object-cover" />
-        </div>
-      ) : null}
-
-      <header className="mt-5 flex flex-wrap items-end justify-between gap-4 lg:mt-6">
+      <div className="g-split mt-2">
         <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            {days !== null ? <Tag>{formatDaysUntil(days)}</Tag> : <Tag>Date TBD</Tag>}
-            {plan.viewer_is_owner ? <span className="g-sm g-mut">{plan.visibility === 'public' ? 'Shared by link' : 'Private'}</span> : null}
-          </div>
-          <h1 className="g-h1 mt-2.5">{plan.title}</h1>
-          <p className="g-mut mt-1.5">{meta.join(' · ')}</p>
-          {description ? <p className="mt-3 max-w-[65ch]">{description}</p> : null}
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant="line" size="sm" onClick={() => void share()}>
-            <Share />
-            Share
-          </Button>
-          {plan.viewer_is_owner ? (
-            <>
-              <Button variant="soft" size="sm" onClick={() => navigateToPath(`/gala-plans/${encodeURIComponent(plan.id)}/edit`)}>
-                <Pencil />
-                Edit
+          {cover ? (
+            <div className="aspect-[16/9] overflow-hidden bg-[var(--fill)] lg:aspect-[2/1]" style={{ borderRadius: 'var(--r-4)' }}>
+              <img src={cover} alt="" className="h-full w-full object-cover" />
+            </div>
+          ) : null}
+
+          <header className={cover ? 'mt-5 lg:mt-6' : 'mt-3'}>
+            <div className="flex flex-wrap items-center gap-2">
+              {days !== null ? <Tag>{formatDaysUntil(days)}</Tag> : <Tag>Date TBD</Tag>}
+              {plan.viewer_is_owner ? <span className="g-sm g-mut">{plan.visibility === 'public' ? 'Shared by link' : 'Private'}</span> : null}
+            </div>
+            <h1 className="g-h1 mt-2.5">{plan.title}</h1>
+            <p className="g-mut mt-1.5">{meta.join(' · ')}</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button variant="line" style={actionStyle} onClick={() => void share()}>
+                <Share />
+                Share
               </Button>
-              <div className="relative">
-                <Button
-                  variant="soft"
-                  size="sm"
-                  iconOnly
-                  aria-label="More options"
-                  aria-haspopup="menu"
-                  aria-expanded={menu !== null}
-                  onClick={() => setMenu(menu ? null : window.matchMedia('(min-width: 1024px)').matches ? 'popover' : 'sheet')}
-                >
-                  <MoreHorizontal />
-                </Button>
-                <PlanMenu
-                  menu={menu}
-                  onClose={closeMenu}
-                  onDelete={() => {
-                    setMenu(null)
-                    setConfirm('delete')
-                  }}
-                />
-              </div>
-            </>
-          ) : plan.visibility === 'public' ? (
-            <Button variant="soft" size="sm" aria-pressed={plan.viewer_has_hearted} aria-label={plan.viewer_has_hearted ? 'Remove heart' : 'Heart this plan'} onClick={() => void heart()}>
-              <Heart fill={plan.viewer_has_hearted ? 'currentColor' : 'none'} />
-              {plan.heart_count}
-            </Button>
-          ) : null}
-        </div>
-      </header>
-      {notice ? <p role="status" className="g-sm mt-3">{notice}</p> : null}
-
-      <div className="g-split mt-6 lg:mt-8">
-        <div className="min-w-0">
-          <Tabs label="Plan sections" value={activeTab} options={tabs} onChange={setTab} />
-
-          {activeTab === 'itinerary' ? (
-            stops.length === 0 ? (
-              <Empty
-                title="Wala pang stops"
-                description="Let AI fill the day, or add places from any place page."
-                action={
-                  <Button variant="soft" href={`/plan-with-ai?q=${encodeURIComponent(plan.title)}`}>
-                    <Sparkles />
-                    Fill my day with AI
+              {plan.viewer_is_owner ? (
+                <>
+                  <Button variant="line" style={actionStyle} onClick={() => navigateToPath(`/gala-plans/${encodeURIComponent(plan.id)}/edit`)}>
+                    <Pencil />
+                    Edit
                   </Button>
-                }
-              />
-            ) : (
-              <>
-                <PlanTimeline stops={stops} onMove={plan.viewer_is_owner && isReordering ? (index, direction) => void moveStop(index, direction) : undefined} />
-                <div className={`mt-4 flex flex-wrap gap-2 ${stops.some((stop) => stop.time) ? 'pl-[54px]' : ''}`}>
-                  <Button variant="soft" size="sm" onClick={suggestNextStop}>
-                    <Sparkles />
-                    Suggest next stop
-                  </Button>
-                  {plan.viewer_is_owner && stops.length > 1 ? (
-                    <Button variant="line" size="sm" aria-pressed={isReordering} onClick={() => setIsReordering(!isReordering)}>
-                      {isReordering ? <Check /> : <ArrowDownUp />}
-                      {isReordering ? 'Done' : 'Edit order'}
+                  <div className="relative">
+                    <Button
+                      variant="line"
+                      iconOnly
+                      style={{ ...actionStyle, width: 40 }}
+                      aria-label="More options"
+                      aria-haspopup="menu"
+                      aria-expanded={menu !== null}
+                      onClick={() => setMenu(menu ? null : window.matchMedia('(min-width: 1024px)').matches ? 'popover' : 'sheet')}
+                    >
+                      <MoreHorizontal />
                     </Button>
-                  ) : null}
-                </div>
-              </>
-            )
-          ) : null}
-          {activeTab === 'polls' && readyBarkada ? <PollsPanel plan={plan} barkada={readyBarkada} session={session} onChange={setBarkada} /> : null}
-          {activeTab === 'barkada' && readyBarkada ? <MembersList barkada={readyBarkada} /> : null}
-          {activeTab === 'hatian' ? <BudgetPanel plan={plan} barkada={barkada} session={session} onBarkadaChange={setBarkada} /> : null}
+                    <PlanMenu
+                      menu={menu}
+                      onClose={closeMenu}
+                      onDelete={() => {
+                        setMenu(null)
+                        setConfirm('delete')
+                      }}
+                    />
+                  </div>
+                </>
+              ) : plan.visibility === 'public' ? (
+                <Button variant="line" style={actionStyle} aria-pressed={plan.viewer_has_hearted} aria-label={plan.viewer_has_hearted ? 'Remove heart' : 'Heart this plan'} onClick={() => void heart()}>
+                  <Heart fill={plan.viewer_has_hearted ? 'currentColor' : 'none'} />
+                  {plan.heart_count}
+                </Button>
+              ) : null}
+            </div>
+            {description ? <p className="mt-4 max-w-[65ch]">{description}</p> : null}
+          </header>
+          {notice ? <p role="status" className="g-sm mt-3">{notice}</p> : null}
+
+          <div className="mt-6 lg:mt-8">
+            <Tabs label="Plan sections" value={activeTab} options={tabs} onChange={setTab} />
+
+            {activeTab === 'itinerary' ? (
+              stops.length === 0 ? (
+                <Empty
+                  title="Wala pang stops"
+                  description="Let AI fill the day, or add places from any place page."
+                  action={
+                    <Button variant="soft" href={`/plan-with-ai?q=${encodeURIComponent(plan.title)}`}>
+                      <Sparkles />
+                      Fill my day with AI
+                    </Button>
+                  }
+                />
+              ) : (
+                <>
+                  <PlanTimeline stops={stops} onMove={plan.viewer_is_owner && isReordering ? (index, direction) => void moveStop(index, direction) : undefined} />
+                  <div className={`mt-4 flex flex-wrap gap-2 ${stops.some((stop) => stop.time) ? 'pl-[54px]' : ''}`}>
+                    <Button variant="soft" size="sm" onClick={suggestNextStop}>
+                      <Sparkles />
+                      Suggest next stop
+                    </Button>
+                    {plan.viewer_is_owner && stops.length > 1 ? (
+                      <Button variant="line" size="sm" aria-pressed={isReordering} onClick={() => setIsReordering(!isReordering)}>
+                        {isReordering ? <Check /> : <ArrowDownUp />}
+                        {isReordering ? 'Done' : 'Edit order'}
+                      </Button>
+                    ) : null}
+                  </div>
+                </>
+              )
+            ) : null}
+            {activeTab === 'polls' && readyBarkada ? <PollsPanel plan={plan} barkada={readyBarkada} session={session} onChange={setBarkada} /> : null}
+            {activeTab === 'barkada' && readyBarkada ? <MembersList barkada={readyBarkada} /> : null}
+            {activeTab === 'hatian' ? <BudgetPanel plan={plan} barkada={barkada} session={session} onBarkadaChange={setBarkada} /> : null}
+          </div>
         </div>
 
         <aside className="g-side">
@@ -387,11 +388,11 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
             <p className="g-sm g-mut mt-0.5">
               {plan.viewer_is_owner && plan.visibility !== 'public' ? 'Private for now. Copying turns on link sharing.' : 'Anyone with the link can view and vote.'}
             </p>
-            <Button variant="ink" block className="mt-3" onClick={() => void copyLink()}>
+            <Button variant={plan.viewer_is_owner ? 'tara' : 'ink'} block className="mt-3" onClick={() => void copyLink()}>
               {copied ? <Check /> : <Link2 />}
-              {copied ? 'Copied' : 'Copy invite link'}
+              {copied ? 'Link copied' : 'Copy invite link'}
             </Button>
-            <p className="g-xs g-fnt mt-2 truncate" title={shareUrl}>{shareUrl}</p>
+            <p role="status" className="sr-only">{copied ? 'Invite link copied' : ''}</p>
           </Panel>
           <PlanRouteMap stops={stops} />
         </aside>

@@ -46,6 +46,7 @@ const PLACE_SEARCH_DEFAULT_LIMIT = 10
 const PLACE_SEARCH_DEBOUNCE_MS = 325
 const TIME_PERIODS = ['AM', 'PM'] as const
 const TABBAR_OFF_CLASS = 'g-tabbar-off'
+const TITLE_REQUIRED = 'Give your gala a name first.'
 
 type TimePeriod = (typeof TIME_PERIODS)[number]
 
@@ -480,6 +481,7 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
   const [isLoading, setIsLoading] = useState(isEdit)
   const [isSaving, setIsSaving] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  const titleRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     document.body.classList.add(TABBAR_OFF_CLASS)
@@ -512,7 +514,12 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
-    if (!title.trim()) { setErrorMessage('Title is required.'); return }
+    if (isSaving) return
+    if (!title.trim()) {
+      setErrorMessage(TITLE_REQUIRED)
+      titleRef.current?.focus()
+      return
+    }
     try {
       setIsSaving(true)
       setErrorMessage('')
@@ -531,7 +538,7 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
     }
   }
 
-  const titleMissing = errorMessage === 'Title is required.'
+  const titleMissing = errorMessage === TITLE_REQUIRED
   const aiHref = `/plan-with-ai${title.trim() ? `?q=${encodeURIComponent(title.trim())}` : ''}`
   const dateLabel = dateMode === 'date' && date
     ? new Date(`${date}T00:00:00`).toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' })
@@ -558,13 +565,19 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
           <label htmlFor="plan-title" className="sr-only">Plan name</label>
           <input
             id="plan-title"
+            ref={titleRef}
             className={`g-h1 w-full border-0 border-b bg-transparent pb-3 text-[var(--ink)] outline-none focus:!shadow-none focus:!outline-none ${titleMissing ? 'border-[var(--bad)]' : 'border-[var(--line)] focus:border-[var(--ink)]'}`}
             value={title}
-            onChange={(event) => setTitle(event.target.value)}
+            onChange={(event) => {
+              setTitle(event.target.value)
+              if (titleMissing) setErrorMessage('')
+            }}
             placeholder="Name your gala"
             aria-invalid={titleMissing || undefined}
+            aria-describedby={titleMissing ? 'plan-title-error' : undefined}
             autoFocus={!isEdit}
           />
+          {titleMissing ? <p id="plan-title-error" role="alert" className="g-hint is-error mt-2">{errorMessage}</p> : null}
           <label htmlFor="plan-description" className="sr-only">What's the vibe?</label>
           <textarea
             id="plan-description"
@@ -624,14 +637,17 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
             </p>
           </section>
 
-          {errorMessage ? <p role="alert" className="g-hint is-error mt-6">{errorMessage}</p> : null}
+          {errorMessage && !titleMissing ? <p role="alert" className="g-hint is-error mt-6">{errorMessage}</p> : null}
         </form>
       )}
 
-      <div className="fixed inset-x-0 bottom-0 z-[4000] border-t" style={{ background: 'var(--surface)', borderColor: 'var(--line-2)' }}>
-        <div className="mx-auto flex max-w-[760px] items-center gap-3 px-4 pt-3 lg:px-8" style={{ paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}>
+      <div
+        className="z-[4000]"
+        style={{ position: 'fixed', insetInline: 0, bottom: 0, background: 'var(--paper)', borderTop: '1px solid var(--line)', padding: '12px 16px calc(12px + env(safe-area-inset-bottom, 0px))' }}
+      >
+        <div className="mx-auto flex max-w-[728px] items-center gap-3 lg:max-w-[696px]">
           <p className="g-sm g-mut min-w-0 flex-1 truncate">{isLoading ? null : summary}</p>
-          <Button type="submit" form="plan-form" variant="tara" size="lg" loading={isSaving} disabled={isLoading || isSaving || !title.trim()}>
+          <Button type="submit" form="plan-form" variant="tara" size="lg" loading={isSaving}>
             {isEdit ? 'Save' : 'Create plan'}
           </Button>
         </div>

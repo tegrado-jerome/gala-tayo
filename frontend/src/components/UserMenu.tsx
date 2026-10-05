@@ -43,7 +43,7 @@ type MenuLink = { path: string; label: string; icon: LucideIcon }
 const DESKTOP_ACCOUNT_MENU_QUERY = '(min-width: 1024px)'
 
 const PRIMARY_LINKS: MenuLink[] = [
-  { path: '/passport', label: 'Pasyal Passport', icon: Stamp },
+  { path: '/passport', label: 'Passport', icon: Stamp },
   { path: '/favorites', label: 'Saved', icon: Heart },
   { path: '/history', label: 'History', icon: History },
   { path: '/gala-plans', label: 'Gala plans', icon: CalendarDays },

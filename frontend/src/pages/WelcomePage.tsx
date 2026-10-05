@@ -9,6 +9,7 @@ import SeoHead from '../components/SeoHead'
 import { AvatarStack, Button, Page, SectionHead } from '../components/ui'
 import { homePopularTopPickPlaces } from '../data/homeRecommendations'
 import { metroManilaAreas } from '../data/metroManilaAreas'
+import { displayCityName } from '../utils/cityName'
 import type { NavigationSource } from '../utils/navigationLoading'
 import { BRAND_NAME, SEO_LANDING_TARGETS, buildBrandJsonLd } from '../utils/seoLandingPages'
 
@@ -17,9 +18,6 @@ const footerLinks = [
   { href: '/privacy', label: 'Privacy' },
   { href: '/terms', label: 'Terms' },
 ]
-
-// The shared area list stores ASCII names; show the proper spelling.
-const displayAreaName = (name: string) => name.replace('Las Pinas', 'Las Piñas').replace('Paranaque', 'Parañaque')
 
 const heroPlace = homePopularTopPickPlaces[0]
 const heroImageUrl = getPlaceImageCandidates(heroPlace)[0]
@@ -60,7 +58,7 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
         }}
         jsonLd={buildBrandJsonLd()}
       />
-      <Page>
+      <Page className="pb-10 lg:pb-16">
         <section
           data-navigation-source={navigationSource}
           className="relative -mx-4 -mt-5 flex min-h-[420px] flex-col justify-end overflow-hidden md:mx-0 md:mt-0 md:min-h-[520px] md:rounded-[var(--r-4)]"
@@ -70,7 +68,11 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
             <img src={heroImageUrl} alt={heroPlace.name} fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
           ) : null}
           <div
-            className="absolute inset-0"
+            className="absolute inset-0 md:hidden"
+            style={{ background: 'linear-gradient(to top, rgba(26,25,23,.85) 0%, rgba(26,25,23,0) 60%)' }}
+          />
+          <div
+            className="absolute inset-0 hidden md:block"
             style={{ background: 'linear-gradient(180deg, rgba(26,25,23,0) 30%, rgba(26,25,23,.78) 100%), rgba(26,25,23,.15)' }}
           />
           <div className="relative max-w-[640px] px-4 pb-7 text-left text-white md:px-10 md:pb-20">
@@ -141,7 +143,7 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
           />
         </ol>
 
-        <details className="group mt-16 max-w-[760px] text-[14px] text-[var(--ink-2)]">
+        <details className="group mt-10 max-w-[760px] text-[14px] text-[var(--ink-2)]">
           <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 font-semibold text-[var(--ink)] [&::-webkit-details-marker]:hidden">
             About GalaTayo
             <ChevronDown aria-hidden="true" className="h-4 w-4 transition-transform group-open:rotate-180" />
@@ -170,7 +172,7 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
             {metroManilaAreas.map((area) => (
               <li key={area.slug}>
                 <InternalLink href={`/places/${area.slug}`} className="g-chip">
-                  {displayAreaName(area.name)}
+                  {displayCityName(area.name)}
                 </InternalLink>
               </li>
             ))}
@@ -196,7 +198,7 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
           </ul>
         </details>
 
-        <footer className="mt-16 flex flex-wrap items-center justify-between gap-4 border-t border-[var(--line-2)] pt-6">
+        <footer className="mt-10 flex flex-wrap items-center justify-between gap-4 border-t border-[var(--line-2)] pt-6">
           <nav aria-label="Footer" className="g-sm g-mut flex flex-wrap items-center gap-x-5">
             <span>© {new Date().getFullYear()} GalaTayo</span>
             {footerLinks.map((link) => (
