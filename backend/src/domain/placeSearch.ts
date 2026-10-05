@@ -414,11 +414,13 @@ export function scorePlaceNameMatch(place: NormalizedPlace, query: string): numb
 
   const tokens = cleanedQuery.split(" ").filter(Boolean);
 
+  // The place's own name outranks curated search terms: "San Agustin" should find San Agustin Church
+  // before a cafe that merely lists its barangay, San Agustin, as a search term.
   const bestExactScore = Math.max(
-    scoreCandidateText(normalizeSearchText(place.name), cleanedQuery, { exact: 100, startsWith: 80, contains: 60 }),
-    scoreCandidateText(normalizeSearchText(place.slug), cleanedQuery, { exact: 90, startsWith: 70, contains: 55 }),
+    scoreCandidateText(normalizeSearchText(place.name), cleanedQuery, { exact: 100, startsWith: 90, contains: 80 }),
+    scoreCandidateText(normalizeSearchText(place.slug), cleanedQuery, { exact: 95, startsWith: 85, contains: 70 }),
     ...place.search_terms.map((term) =>
-      scoreCandidateText(normalizeSearchText(term), cleanedQuery, { exact: 85, startsWith: 65, contains: 50 }),
+      scoreCandidateText(normalizeSearchText(term), cleanedQuery, { exact: 75, startsWith: 60, contains: 50 }),
     ),
   );
 

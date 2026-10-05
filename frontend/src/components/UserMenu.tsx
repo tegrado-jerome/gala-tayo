@@ -24,7 +24,7 @@ import { signOut } from '../services/authApi'
 import { useAvatarImageSrc } from '../utils/avatarImageCache'
 import type { CurrentUserResponse } from '../utils/profileApi'
 import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
-import { navigateToPath } from '../utils/navigation'
+import { navigateToPath, replaceWithPath } from '../utils/navigation'
 import { resizedMediaUrl } from '../data/r2Config'
 
 type AccountUser = {
@@ -140,6 +140,7 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
         scope: 'local',
         onBeforeTransitionEnd: async () => {
           close()
+          replaceWithPath('/')
         },
       })
     } catch (error) {
