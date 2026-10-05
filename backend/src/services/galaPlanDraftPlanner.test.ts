@@ -49,6 +49,15 @@ describe("selectCandidates", () => {
     assert.equal(ids.includes("d"), false);
     assert.equal(ids[0], "a");
   });
+
+  it("stays in Metro Manila unless the prompt names another destination", () => {
+    const mixed = [
+      place({ id: "baguio", name: "Pine Cafe", category: "Cafe", city: "Baguio", average_rating: 5 }),
+      place({ id: "makati", name: "Corner Cafe", category: "Cafe", city: "Makati", average_rating: 3 }),
+    ];
+    assert.equal(selectCandidates(mixed, "Chill cafe date")[0].id, "makati");
+    assert.equal(selectCandidates(mixed, "Cafe hopping sa Baguio")[0].id, "baguio");
+  });
 });
 
 describe("parseDraft", () => {

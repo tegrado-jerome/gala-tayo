@@ -2,20 +2,17 @@ import { useEffect, useMemo, useState } from 'react'
 import { MagnifyingGlass as Search } from '@phosphor-icons/react/dist/csr/MagnifyingGlass'
 import { Sparkle as Sparkles } from '@phosphor-icons/react/dist/csr/Sparkle'
 import PhotoCard, { type PhotoCardPlace } from '../discover/PhotoCard'
-import PlaceImage from '../discover/PlaceImage'
 import Rail from '../discover/Rail'
+import ExploreCities from './ExploreCities'
 import HomeQuickPicks from './HomeQuickPicks'
 import { categoryIcons } from '../discover/CategoryTabs'
 import InternalLink from '../InternalLink'
 import { useGuestAuthPrompt } from '../GuestAuthPrompt'
 import { Button, Empty, SectionHead, Skeleton, cx } from '../ui'
-import { homeAllTopPickPlaces, homeCityRecommendations, homePopularTopPickPlaces } from '../../data/homeRecommendations'
+import { homeAllTopPickPlaces, homePopularTopPickPlaces } from '../../data/homeRecommendations'
 import { getPlaceCategoryLabel, placeCategories } from '../../data/placeCategories'
-import { getStaticPlaceImageUrlForSlug } from '../../data/placeIndexVisuals'
 import { useListingRail } from '../../hooks/useListingRail'
-import { displayCityName } from '../../utils/cityName'
 import { fetchHomePlaceDetailsBatch } from '../../utils/placeDetailCache'
-import { resolveAreaMeta } from '../../utils/routes'
 
 const FOR_YOU = 'for-you'
 // Everyday picks first, niche ones last.
@@ -161,35 +158,6 @@ function CategoryGrid({ category, onGuestFavorite }: { category: string; onGuest
   )
 }
 
-function CityChips() {
-  return (
-    <section className="min-w-0">
-      <SectionHead
-        title="Explore by city"
-        action={
-          <Button variant="text" href="/places">
-            All cities
-          </Button>
-        }
-      />
-      <ul className="g-chips">
-        {homeCityRecommendations.map((tile) => {
-          const citySlug = resolveAreaMeta({ city: tile.label }).slug
-          const imageUrl = tile.place.imageUrl ?? getStaticPlaceImageUrlForSlug(tile.place.slug)
-          return (
-            <li key={tile.label}>
-              <InternalLink href={`/places/${encodeURIComponent(citySlug)}`} className="g-chip !h-11 !gap-2 !pl-1.5 no-underline">
-                <PlaceImage candidates={imageUrl ? [imageUrl] : []} className="h-8 w-8 shrink-0 rounded-full object-cover" />
-                {displayCityName(tile.label)}
-              </InternalLink>
-            </li>
-          )
-        })}
-      </ul>
-    </section>
-  )
-}
-
 /** Search pill, icon category tabs, then photo rails. Shared by Home and the guest landing page. */
 function HomeDiscover({ isRaining = false, top, greeting, className }: { isRaining?: boolean; top?: React.ReactNode; greeting?: React.ReactNode; className?: string }) {
   const guestAuth = useGuestAuthPrompt()
@@ -226,7 +194,7 @@ function HomeDiscover({ isRaining = false, top, greeting, className }: { isRaini
           </Rail>
           <ListingRail title="Food trip" subtitle="Kain muna" href="/places/categories/food" category="food" onGuestFavorite={openGuestFavorite} />
           {isRaining ? null : rainyRail}
-          <CityChips />
+          <ExploreCities />
         </>
       ) : (
         <CategoryGrid key={active} category={active} onGuestFavorite={openGuestFavorite} />

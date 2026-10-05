@@ -1,5 +1,6 @@
 import type { NormalizedPlace } from "./places";
 import { FINAL_PLACE_CATEGORIES } from "./places";
+import { DESTINATIONS, getDestinationNameKeys, isMetroManilaDestination } from "../utils/phDestinations";
 
 export type PlaceSearchFilters = {
   category?: string | null;
@@ -53,10 +54,21 @@ const CITY_DICTIONARY: Record<string, string[]> = {
   Pasig: ["pasig", "pasig city", "ortigas"],
   Pateros: ["pateros"],
   "Quezon City": ["qc", "quezon city"],
-  "San Juan": ["san juan", "san juan city"],
+  "San Juan": ["san juan", "san juan city", "little baguio"],
   Taguig: ["bgc", "bonifacio global city", "taguig", "taguig city"],
   Valenzuela: ["valenzuela", "valenzuela city"],
 };
+
+// Destinations outside Metro Manila, keyed by the city name stored on places.
+const PROVINCIAL_CITY_DICTIONARY: Record<string, string[]> = Object.fromEntries(
+  DESTINATIONS.filter((destination) => !isMetroManilaDestination(destination)).map((destination) => [
+    destination.name,
+    getDestinationNameKeys(destination),
+  ]),
+);
+
+// Words inside destination aliases that are too generic to count as a location.
+const GENERIC_LOCATION_WORDS = new Set(["city", "island", "beach", "bay", "freeport", "port", "rice", "terraces", "garden", "of"]);
 
 const GOOD_FOR_NAMES: Record<string, string[]> = {
   date: ["date", "dates", "romantic", "couple", "anniversary"],
@@ -108,6 +120,15 @@ function buildKnownWords(): Set<string> {
   for (const [city, aliases] of Object.entries(CITY_DICTIONARY)) {
     addWords(city);
     for (const a of aliases) addWords(a);
+  }
+
+  for (const aliases of Object.values(PROVINCIAL_CITY_DICTIONARY)) {
+    for (const alias of aliases) {
+      words.add(alias);
+      for (const w of alias.split(" ")) {
+        if (w && !GENERIC_LOCATION_WORDS.has(w)) words.add(w);
+      }
+    }
   }
 
   for (const [id, aliases] of Object.entries(GOOD_FOR_NAMES)) {
@@ -201,7 +222,7 @@ function canonicalCity(value: string | null | undefined): string | null {
   const normalizedValue = normalizeSearchText(value ?? "");
   if (!normalizedValue || normalizedValue === "all") return null;
 
-  for (const [city, aliases] of Object.entries(CITY_DICTIONARY)) {
+  for (const [city, aliases] of [...Object.entries(CITY_DICTIONARY), ...Object.entries(PROVINCIAL_CITY_DICTIONARY)]) {
     if ([city, ...aliases].some((alias) => normalizeSearchText(alias) === normalizedValue)) {
       return city;
     }
@@ -235,7 +256,7 @@ function cityMatches(placeCity: string | null | undefined, city: string | null):
   const normalizedPlaceCity = normalizeSearchText(placeCity ?? "");
   if (!normalizedPlaceCity) return false;
 
-  const cityAliases = [city, ...(CITY_DICTIONARY[city] ?? [])];
+  const cityAliases = [city, ...(CITY_DICTIONARY[city] ?? PROVINCIAL_CITY_DICTIONARY[city] ?? [])];
   return cityAliases.some((alias) => normalizeSearchText(alias) === normalizedPlaceCity);
 }
 
@@ -243,8 +264,33 @@ export function detectCategoryFromQuery(query: string): string | null {
   return detectFromDictionary(query, CATEGORY_NAMES);
 }
 
+function longestPhraseMatch(normalizedQuery: string, dictionary: Record<string, string[]>): { city: string; length: number } | null {
+  let best: { city: string; length: number } | null = null;
+
+  for (const [city, aliases] of Object.entries(dictionary)) {
+    for (const alias of [city, ...aliases]) {
+      const length = normalizeSearchText(alias).length;
+      if (includesWholePhrase(normalizedQuery, alias) && (!best || length > best.length)) {
+        best = { city, length };
+      }
+    }
+  }
+
+  return best;
+}
+
+// Metro Manila keeps its original first-match order; a destination elsewhere wins only with a
+// longer phrase, so "san juan" stays in Metro Manila but "san juan la union" goes to La Union.
 export function detectCityFromQuery(query: string): string | null {
-  return detectFromDictionary(query, CITY_DICTIONARY);
+  const normalizedQuery = normalizeSearchText(query);
+  const metroManilaCity = detectFromDictionary(normalizedQuery, CITY_DICTIONARY);
+  const provincialMatch = longestPhraseMatch(normalizedQuery, PROVINCIAL_CITY_DICTIONARY);
+
+  if (!provincialMatch) return metroManilaCity;
+  if (!metroManilaCity) return provincialMatch.city;
+
+  const metroManilaLength = longestPhraseMatch(normalizedQuery, { [metroManilaCity]: CITY_DICTIONARY[metroManilaCity] })?.length ?? 0;
+  return provincialMatch.length > metroManilaLength ? provincialMatch.city : metroManilaCity;
 }
 
 export function detectBudgetFromQuery(query: string): BudgetFilter | null {

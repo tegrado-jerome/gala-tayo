@@ -1,10 +1,11 @@
 import type { NormalizedPlace } from "../domain/places";
+import { inferProvincialDestinationsFromQuery, isMetroManilaDestination, resolveDestination } from "../utils/phDestinations";
 
 const MAX_CANDIDATES = 60;
 const MIN_STOPS = 2;
 const MAX_STOPS = 6;
 
-// Common Metro Manila nicknames mapped to the city names stored on places.
+// Common Metro Manila nicknames mapped to the city names stored on places (other destinations are matched through phDestinations).
 const AREA_ALIASES: Record<string, string> = {
   bgc: "taguig",
   "bonifacio global city": "taguig",
@@ -67,14 +68,30 @@ export function manilaToday() {
   return { iso: `${get("year")}-${get("month")}-${get("day")}`, weekday: get("weekday") };
 }
 
-function scorePlace(place: NormalizedPlace, text: string, cities: Set<string>, categories: Set<string>) {
+type LocationIntent = {
+  cities: Set<string>;
+  destinationSlugs: Set<string>;
+};
+
+// With no place named in the prompt, plans stay in Metro Manila.
+function scoreLocation(place: NormalizedPlace, { cities, destinationSlugs }: LocationIntent) {
   const city = (place.city ?? "").toLowerCase();
+  const destination = resolveDestination(place.city, place.area);
+
+  if (cities.size > 0 || destinationSlugs.size > 0) {
+    return cities.has(city) || (destination !== null && destinationSlugs.has(destination.slug)) ? 6 : -4;
+  }
+
+  return destination === null || isMetroManilaDestination(destination) ? 0 : -10;
+}
+
+function scorePlace(place: NormalizedPlace, text: string, location: LocationIntent, categories: Set<string>) {
   const haystack = [place.name, place.area, place.category, ...place.tags, ...place.good_for, ...place.search_terms]
     .join(" ")
     .toLowerCase();
 
   let score = 0;
-  if (cities.size > 0) score += cities.has(city) ? 6 : -4;
+  score += scoreLocation(place, location);
   if (categories.has(place.category)) score += 4;
   for (const word of text.split(/[^a-z0-9ñ]+/).filter((token) => token.length > 3)) {
     if (haystack.includes(word)) score += 1;
@@ -93,6 +110,7 @@ export function selectCandidates(places: NormalizedPlace[], prompt: string) {
   for (const [alias, city] of Object.entries(AREA_ALIASES)) {
     if (new RegExp(`\\b${alias}\\b`).test(text)) cities.add(city);
   }
+  const destinationSlugs = new Set(inferProvincialDestinationsFromQuery(prompt).map(({ destination }) => destination.slug));
   const categories = new Set(
     Object.entries(CATEGORY_KEYWORDS)
       .filter(([, words]) => words.some((word) => text.includes(word)))
@@ -101,14 +119,14 @@ export function selectCandidates(places: NormalizedPlace[], prompt: string) {
 
   return places
     .filter((place) => place.latitude != null && place.longitude != null)
-    .map((place) => ({ place, score: scorePlace(place, text, cities, categories) }))
+    .map((place) => ({ place, score: scorePlace(place, text, { cities, destinationSlugs }, categories) }))
     .sort((a, b) => b.score - a.score)
     .slice(0, MAX_CANDIDATES)
     .map((entry) => entry.place);
 }
 
 export function buildSystemPrompt(today: { iso: string; weekday: string }) {
-  return `You plan one-day outings ("gala") in Metro Manila for GalaTayo.
+  return `You plan one-day outings ("gala") around the Philippines for GalaTayo. When the request names no place, plan in Metro Manila.
 Today is ${today.weekday}, ${today.iso} (Asia/Manila).
 Pick ${MIN_STOPS}-${MAX_STOPS} stops ONLY from the CANDIDATES list, using their exact id.
 Order stops so travel is short, respect the user's budget in PHP, and choose realistic times (24h "HH:MM") and durations in minutes (30-240).

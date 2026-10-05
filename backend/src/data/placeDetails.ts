@@ -245,7 +245,7 @@ function mapPlaceRowToDetail(row: Record<string, unknown>): PlaceDetail {
   const address = getNullableString(row.address);
   const city = getNullableString(row.city);
   const area = getNullableString(row.area);
-  const location = [area || address, city].filter(Boolean).join(", ") || "Metro Manila";
+  const location = [area || address, city].filter(Boolean).join(", ") || "Philippines";
   const description =
     typeof row.description === "string" && row.description.trim()
       ? row.description.trim()

@@ -28,6 +28,7 @@ import {
   fallbackCategories,
   fallbackGoodForOptions,
   fallbackAreas,
+  toCityOptions,
   budgetOptions,
   clearAllSearchRouteCaches,
   readSearchRouteCache,
@@ -157,7 +158,7 @@ function SearchHub({
   )
   const canSubmitSearch = Boolean(rawQuery.trim() || selectedCategory || selectedArea || selectedGoodFor || selectedBudget)
   const categoryOptions = categories.map((category) => ({ value: category.id, label: category.name }))
-  const cityOptions = areas.filter((area) => area.id !== 'all').map((area) => ({ value: area.id, label: area.name }))
+  const cityOptions = toCityOptions(areas)
   const budgetFilterOptions = budgetOptions.map((budget) => ({ value: budget.value, label: budget.label }))
   const visiblePlaces = hasSearched ? searchResults : []
   const totalResults = searchTotalCount
@@ -638,6 +639,8 @@ function SearchHub({
                 id: area.id,
                 name: area.name,
                 type: area.type,
+                region: area.region,
+                province: area.province,
               }))
             : areas
 
@@ -761,7 +764,7 @@ function SearchHub({
           status={searchStatus}
           message={searchFeedbackMessage}
           error={searchError}
-          askAiQuestion={searchLabel ? `Find me ${searchLabel} in Metro Manila` : 'Help me find a gala spot in Metro Manila'}
+          askAiQuestion={searchLabel ? `Find me ${searchLabel}` : 'Help me find a gala spot in Metro Manila'}
           onSearchAgain={handleSearchAgain}
         />
       )}

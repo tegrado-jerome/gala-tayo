@@ -9,7 +9,7 @@ import path from 'node:path'
 import { activeSeasons, frontendDir, readJson, report, writeJson } from './signals.mjs'
 
 const guidesPath = path.join(frontendDir, 'src/data/seoGuides.json')
-const areasPath = path.join(frontendDir, 'src/data/metroManilaAreas.ts')
+const destinationsPath = path.join(frontendDir, 'src/data/phDestinations.json')
 const goodForTagsPath = path.join(frontendDir, '../backend/src/data/goodForTags.json')
 const apiBase = (process.env.GALATAYO_API_BASE_URL || 'https://galatayo-api-cvawfwgrg6akdmem.southeastasia-01.azurewebsites.net/api').replace(/\/+$/, '')
 const dryRun = process.argv.includes('--dry-run')
@@ -51,9 +51,16 @@ const titleCase = (text) =>
     .map((word, index) => (index > 0 && SMALL_WORDS.has(word) ? word : word.charAt(0).toUpperCase() + word.slice(1)))
     .join(' ')
 
+// Every destination plus Metro Manila as a whole (guides like "Cafes in Metro Manila").
 async function readAreas() {
-  const source = await readFile(areasPath, 'utf8')
-  return [...source.matchAll(/\{ slug: '([^']+)', name: '([^']+)'/g)].map(([, slug, name]) => ({ slug, name }))
+  const { regions } = JSON.parse(await readFile(destinationsPath, 'utf8'))
+  const cities = regions.flatMap((region) => region.provinces.flatMap((province) => province.cities))
+  const metroManila = regions.find((region) => region.slug === 'metro-manila')
+  const metroManilaSlugs = metroManila.provinces.flatMap((province) => province.cities.map((city) => city.slug))
+  return [
+    ...cities.map((city) => ({ slug: city.slug, name: city.name, areaSlugs: [city.slug] })),
+    { slug: metroManila.slug, name: metroManila.name, areaSlugs: metroManilaSlugs },
+  ]
 }
 
 async function loadPlaces() {
@@ -65,11 +72,11 @@ async function loadPlaces() {
   }
 }
 
-function countPlaces(places, goodForTags, { areaSlug, category, goodFor }) {
+function countPlaces(places, goodForTags, { areaSlugs, category, goodFor }) {
   const tags = goodFor ? goodForTags[goodFor] ?? [goodFor] : null
   return places.filter(
     (place) =>
-      (!areaSlug || place.areaSlug === areaSlug) &&
+      areaSlugs.includes(place.areaSlug) &&
       (!category || (place.category || '').toLowerCase() === category) &&
       (!tags || place.goodFor.some((tag) => tags.includes(tag))),
   ).length
@@ -125,7 +132,7 @@ function score(candidate, signals) {
 
 async function main() {
   const guides = JSON.parse(await readFile(guidesPath, 'utf8'))
-  const areas = [...(await readAreas()), { slug: null, name: 'Metro Manila' }]
+  const areas = await readAreas()
   const existing = new Set(guides.map((guide) => [guide.areaSlug ?? '', guide.category ?? '', guide.goodFor ?? ''].join('|')))
   const slugs = new Set(guides.map((guide) => guide.slug))
   const goodForTags = JSON.parse(await readFile(goodForTagsPath, 'utf8'))
@@ -145,7 +152,7 @@ async function main() {
     for (const intent of INTENTS) {
       const key = [area.slug ?? '', intent.category ?? '', intent.goodFor ?? ''].join('|')
       if (existing.has(key)) continue
-      const total = countPlaces(places, goodForTags, { areaSlug: area.slug, category: intent.category, goodFor: intent.goodFor })
+      const total = countPlaces(places, goodForTags, { areaSlugs: area.areaSlugs, category: intent.category, goodFor: intent.goodFor })
       if (total >= minPlaces) candidates.push({ area, intent, total })
     }
   }

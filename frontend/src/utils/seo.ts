@@ -1,5 +1,5 @@
 import galaTayoLogo from '../assets/brand/galatayo-logo.svg'
-import { metroManilaAreaNameBySlug } from '../data/metroManilaAreas'
+import { getAreaLabelBySlug } from '../data/destinations'
 import { formatLabelFromSlug, getCanonicalPlacePath, resolveAreaMeta } from './routes'
 import { getPublicSiteOrigin } from './site'
 
@@ -33,7 +33,7 @@ type SeoConfig = {
 }
 
 const DEFAULT_TITLE = 'GalaTayo'
-const DEFAULT_DESCRIPTION = 'Discover Metro Manila places by city, category, budget, and vibe. Get AI-powered recommendations and plan your next gala with GalaTayo.'
+const DEFAULT_DESCRIPTION = 'Discover gala-worthy places around the Philippines by city, category, budget, and vibe. Get AI-powered recommendations and plan your next gala with GalaTayo.'
 const DEFAULT_OG_IMAGE = galaTayoLogo
 const DEFAULT_LOCALE = 'en_PH'
 
@@ -50,7 +50,7 @@ function getAbsoluteUrl(pathOrUrl: string) {
 }
 
 function getAreaNameBySlug(areaSlug: string) {
-  return metroManilaAreaNameBySlug.get(areaSlug) ?? formatLabelFromSlug(areaSlug)
+  return getAreaLabelBySlug(areaSlug) ?? formatLabelFromSlug(areaSlug)
 }
 
 function updateOrCreateMeta(selector: string, attributes: Record<string, string>) {

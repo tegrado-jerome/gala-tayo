@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { Fragment, useEffect, useState, type FormEvent } from 'react'
 import { CloudRain } from '@phosphor-icons/react/dist/csr/CloudRain'
 import { List } from '@phosphor-icons/react/dist/csr/List'
 import { MapTrifold as MapIcon } from '@phosphor-icons/react/dist/csr/MapTrifold'
@@ -21,7 +21,7 @@ const QUICK_CATEGORY_IDS = ['cafe', 'food', 'nightlife', 'park']
 const QUICK_CITY_IDS = ['makati', 'quezon-city']
 const QUICK_BUDGET: SearchBudgetValue = 'under-500'
 
-type FilterOption<T extends string = string> = { value: T; label: string }
+type FilterOption<T extends string = string> = { value: T; label: string; group?: string }
 
 function useIsDesktop() {
   const [isDesktop, setIsDesktop] = useState(() => typeof window !== 'undefined' && window.matchMedia(DESKTOP_QUERY).matches)
@@ -140,10 +140,15 @@ function FilterGroup<T extends string>({
         <Chip on={value === null} onClick={() => onChange(null)}>
           {emptyLabel}
         </Chip>
-        {options.map((option) => (
-          <Chip key={option.value} on={option.value === value} onClick={() => onChange(option.value)}>
-            {option.label}
-          </Chip>
+        {options.map((option, index) => (
+          <Fragment key={option.value}>
+            {option.group && option.group !== options[index - 1]?.group ? (
+              <span className="g-xs g-mut mt-1 w-full font-semibold">{option.group}</span>
+            ) : null}
+            <Chip on={option.value === value} onClick={() => onChange(option.value)}>
+              {option.label}
+            </Chip>
+          </Fragment>
         ))}
       </div>
     </fieldset>
@@ -502,11 +507,11 @@ function SearchEmptyState({
     return null
   }
 
-  const title = status === 'unsupported_location' ? 'Metro Manila lang muna' : 'Wala kaming nahanap'
+  const title = status === 'unsupported_location' ? 'Wala pa kami diyan' : 'Wala kaming nahanap'
   const description =
     message ||
     (status === 'unsupported_location'
-      ? 'We only cover Metro Manila for now.'
+      ? 'We do not cover that area yet. Try another city.'
       : status === 'empty_query'
         ? 'Try a place, category, or city.'
         : 'Try another category, city, or budget, or let AI find it for you.')

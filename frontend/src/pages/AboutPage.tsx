@@ -11,7 +11,7 @@ import '../design/misc.css'
 
 const aboutHighlights: Array<{ title: string; body: string; icon: PhosphorIcon }> = [
   {
-    title: 'Discover Metro Manila places',
+    title: 'Discover places around the Philippines',
     body: 'GalaTayo helps people browse places to visit for dates, barkada hangouts, family plans, chill days, and everyday gala ideas.',
     icon: Compass,
   },
@@ -32,8 +32,8 @@ function AboutPage() {
     {
       '@context': 'https://schema.org',
       '@type': 'AboutPage',
-      name: 'About GalaTayo | Metro Manila place discovery',
-      description: 'Learn about GalaTayo and how it helps people discover places, plan gala ideas, and explore Metro Manila.',
+      name: 'About GalaTayo | Place discovery around the Philippines',
+      description: 'Learn about GalaTayo and how it helps people discover places, plan gala ideas, and explore the Philippines.',
       url: `${getSiteOrigin()}/about`,
     },
     {
@@ -49,8 +49,8 @@ function AboutPage() {
   return (
     <Page narrow>
       <SeoHead
-        title="About GalaTayo | Metro Manila place discovery"
-        description="Learn about GalaTayo and how it helps people discover places, plan gala ideas, and explore Metro Manila."
+        title="About GalaTayo | Place discovery around the Philippines"
+        description="Learn about GalaTayo and how it helps people discover places, plan gala ideas, and explore the Philippines."
         canonicalPath="/about"
         jsonLd={jsonLd}
       />
@@ -70,7 +70,7 @@ function AboutPage() {
 
         <div className="m-prose mt-6 max-w-[65ch]">
           <p>
-            GalaTayo, also written Gala Tayo, is a Metro Manila place discovery and planning app built to help people find hangout spots,
+            GalaTayo, also written Gala Tayo, is a place discovery and planning app built to help people find gala-worthy spots around the Philippines,
             browse public place pages, and map out their next gala.
           </p>
           <p className="g-mut">
@@ -90,10 +90,10 @@ function AboutPage() {
           ))}
         </div>
 
-        <h2 className="g-h2 mt-12">Metro Manila focus</h2>
+        <h2 className="g-h2 mt-12">From Metro Manila to the provinces</h2>
         <p className="m-prose mt-3 max-w-[65ch]">
-          GalaTayo focuses on Metro Manila places and area pages so browse routes, canonical place URLs, and planning links stay clear and
-          consistent across the app.
+          GalaTayo started with the 17 cities of Metro Manila and now covers destinations around the Philippines, from Baguio and La Union
+          to Cebu, Bohol, Palawan and Siargao. Every city has its own area page, and place URLs stay the same as new regions are added.
         </p>
 
         <div className="mt-8 flex flex-wrap gap-2 border-t border-[var(--line-2)] pt-8">

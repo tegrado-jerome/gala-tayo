@@ -1,5 +1,5 @@
 // Daily: keeps Google Trends "trending now" searches in the Philippines that relate to going
-// out in Metro Manila (weather, holidays, events, food, areas), with Google's traffic estimate.
+// out (weather, holidays, events, food, areas), with Google's traffic estimate.
 import { classifyTrend, readJson, writeJson } from './signals.mjs'
 
 const FEED_URL = 'https://trends.google.com/trending/rss?geo=PH'

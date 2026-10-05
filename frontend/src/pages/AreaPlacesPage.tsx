@@ -7,7 +7,8 @@ import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
 import { Button, Empty, Masonry, Page, SectionHead, cx } from '../components/ui'
 import InternalLink from '../components/InternalLink'
 import SeoHead from '../components/SeoHead'
-import { getAreaLabelBySlug, normalizeAreaSlug } from '../data/metroManilaAreas'
+import { METRO_MANILA_REGION_SLUG, getAreaLabelBySlug, getDestinationBySlug, getRegionBySlug, normalizeAreaSlug } from '../data/destinations'
+import { displayCityName } from '../utils/cityName'
 import { navigateToPath, scrollViewportToTopInstant } from '../utils/navigation'
 import { formatLabelFromSlug, getSiteOrigin } from '../utils/seo'
 import { getListingPlaceViewportTop, peekPendingListingRouteCache, readListingRouteCache, restoreListingRouteScroll, writeListingRouteCache } from '../utils/listingRouteCache'
@@ -93,6 +94,12 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
   const skipInitialFetchRef = useRef(Boolean(routeCache) && navigationSource !== 'pop')
   const pageDataReadyRef = useRef<number | null>(null)
   const areaName = getAreaLabelBySlug(normalizedAreaSlug) || formatLabelFromSlug(normalizedAreaSlug)
+  const destination = getDestinationBySlug(normalizedAreaSlug)
+  const region = getRegionBySlug(normalizedAreaSlug)
+  const parentRegion = destination && destination.regionSlug !== METRO_MANILA_REGION_SLUG ? getRegionBySlug(destination.regionSlug) : null
+  const areaScope = !destination || destination.regionSlug === METRO_MANILA_REGION_SLUG
+    ? 'across Metro Manila'
+    : `around ${destination.provinceName}`
   const searchParams = useMemo(() => new URLSearchParams(search), [search])
   const activeCategory = normalizeValue(searchParams.get('category')) || 'all'
   const currentPage = Math.max(Number(searchParams.get('page') || '1') || 1, 1)
@@ -302,7 +309,15 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
           itemListElement: [
             { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/home` },
             { '@type': 'ListItem', position: 2, name: 'Places', item: `${getSiteOrigin()}/places` },
-            { '@type': 'ListItem', position: 3, name: areaName, item: `${getSiteOrigin()}/places/${encodeURIComponent(normalizedAreaSlug)}` },
+            ...(parentRegion
+              ? [{ '@type': 'ListItem', position: 3, name: parentRegion.name, item: `${getSiteOrigin()}/places/${parentRegion.slug}` }]
+              : []),
+            {
+              '@type': 'ListItem',
+              position: parentRegion ? 4 : 3,
+              name: areaName,
+              item: `${getSiteOrigin()}/places/${encodeURIComponent(normalizedAreaSlug)}`,
+            },
           ],
         },
         {
@@ -324,18 +339,41 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
     <Page>
       <SeoHead
         title={`Places in ${areaName} and Local Gala Ideas | ${BRAND_NAME}`}
-        description={`${PRODUCT_NAME} helps you discover places in ${areaName}, from cafes and food spots to parks, museums, and date ideas across Metro Manila.`}
+        description={
+          region
+            ? `${PRODUCT_NAME} helps you discover places in ${areaName}, from cafes and food spots to parks, museums, and date ideas in every city of the region.`
+            : `${PRODUCT_NAME} helps you discover places in ${areaName}, from cafes and food spots to parks, museums, and date ideas ${areaScope}.`
+        }
         canonicalPath={`/places/${encodeURIComponent(normalizedAreaSlug)}`}
         robots={shouldIndexAreaPage ? 'index,follow' : 'noindex,follow'}
         jsonLd={jsonLd}
       />
 
-      <ListingBreadcrumb items={[{ label: 'Home', href: '/home' }, { label: 'Places', href: '/places' }, { label: areaName }]} />
+      <ListingBreadcrumb
+        items={[
+          { label: 'Home', href: '/home' },
+          { label: 'Places', href: '/places' },
+          ...(parentRegion ? [{ label: parentRegion.name, href: `/places/${parentRegion.slug}` }] : []),
+          { label: areaName },
+        ]}
+      />
 
       <header className="mt-5 max-w-[36rem]">
         <h1 className="g-h1">Places in {areaName}</h1>
-        <p className="g-mut mt-2">Cafes, parks and food spots in {areaName}</p>
+        <p className="g-mut mt-2">
+          {destination && parentRegion ? `Cafes, parks and food spots in ${areaName}, ${destination.provinceName}` : `Cafes, parks and food spots in ${areaName}`}
+        </p>
       </header>
+
+      {region ? (
+        <nav aria-label={`Cities in ${region.name}`} className="g-chips mt-4">
+          {region.destinations.map((item) => (
+            <InternalLink key={item.slug} href={`/places/${item.slug}`} className="g-chip">
+              {displayCityName(item.label)}
+            </InternalLink>
+          ))}
+        </nav>
+      ) : null}
 
       <SearchPillLink className="g-only-mob mt-4" />
 

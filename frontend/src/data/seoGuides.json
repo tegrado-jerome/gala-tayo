@@ -138,6 +138,7 @@
   {
     "slug": "date-places-in-metro-manila",
     "label": "Date Places in Metro Manila",
+    "areaSlug": "metro-manila",
     "goodFor": "date",
     "keywords": [
       "date places in metro manila",
@@ -148,6 +149,7 @@
   {
     "slug": "study-cafes-in-metro-manila",
     "label": "Study Cafes in Metro Manila",
+    "areaSlug": "metro-manila",
     "category": "cafe",
     "goodFor": "study",
     "keywords": [
@@ -255,6 +257,7 @@
   {
     "slug": "restaurants-in-metro-manila",
     "label": "Restaurants in Metro Manila",
+    "areaSlug": "metro-manila",
     "category": "food",
     "keywords": [
       "restaurants in metro manila",
@@ -268,6 +271,7 @@
   {
     "slug": "malls-in-metro-manila",
     "label": "Malls in Metro Manila",
+    "areaSlug": "metro-manila",
     "category": "mall",
     "keywords": [
       "malls in metro manila",
@@ -281,6 +285,7 @@
   {
     "slug": "things-to-do-in-metro-manila",
     "label": "Things to Do in Metro Manila",
+    "areaSlug": "metro-manila",
     "category": "activity",
     "keywords": [
       "things to do in metro manila",
@@ -294,6 +299,7 @@
   {
     "slug": "cafes-in-metro-manila",
     "label": "Cafes in Metro Manila",
+    "areaSlug": "metro-manila",
     "category": "cafe",
     "keywords": [
       "cafes in metro manila",
@@ -307,6 +313,7 @@
   {
     "slug": "cinemas-in-metro-manila",
     "label": "Cinemas in Metro Manila",
+    "areaSlug": "metro-manila",
     "category": "cinema",
     "keywords": [
       "cinemas in metro manila",
@@ -320,6 +327,7 @@
   {
     "slug": "museums-in-metro-manila",
     "label": "Museums in Metro Manila",
+    "areaSlug": "metro-manila",
     "category": "museum",
     "keywords": [
       "museums in metro manila",

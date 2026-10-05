@@ -3,6 +3,7 @@ import { MapContainer, Marker, Polyline, TileLayer, useMap } from 'react-leaflet
 import L, { type LatLngTuple } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { cx } from '.'
+import { METRO_MANILA_CENTER } from '../../data/destinations'
 
 export type MapPoint = {
   id: string
@@ -54,14 +55,29 @@ function FitBounds({ points }: { points: LatLngTuple[] }) {
 }
 
 /** Real OpenStreetMap map (full colour) with GalaTayo pins. */
-export default function GtMap({ points, route, tall, className, label = 'Map' }: { points: MapPoint[]; route?: boolean; tall?: boolean; className?: string; label?: string }) {
+export default function GtMap({
+  points,
+  route,
+  tall,
+  className,
+  label = 'Map',
+  fallbackCenter = METRO_MANILA_CENTER,
+}: {
+  points: MapPoint[]
+  route?: boolean
+  tall?: boolean
+  className?: string
+  label?: string
+  /** Where to look when there are no pins yet, e.g. the place's city. Defaults to Metro Manila. */
+  fallbackCenter?: [number, number]
+}) {
   const coords = points.map((p) => [p.lat, p.lng] as LatLngTuple)
   const routeCoords = points.filter((p) => p.kind === 'number').map((p) => [p.lat, p.lng] as LatLngTuple)
-  const center = coords[0] ?? ([14.5547, 121.0244] as LatLngTuple)
+  const center = coords[0] ?? (fallbackCenter as LatLngTuple)
 
   return (
     <div className={cx('g-map', tall && 'is-tall', className)} role="region" aria-label={label}>
-      <MapContainer center={center} zoom={14} zoomControl={false} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
+      <MapContainer center={center} zoom={coords.length > 0 ? 14 : 12} zoomControl={false} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
         <TileLayer url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="&copy; OpenStreetMap contributors" maxZoom={19} referrerPolicy="strict-origin-when-cross-origin" />
         {route && routeCoords.length > 1 ? (
           <Polyline positions={routeCoords} pathOptions={{ className: 'g-route', weight: 3, dashArray: '2 8', lineCap: 'round' }} />

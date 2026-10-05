@@ -364,7 +364,7 @@ function ItineraryBuilder({
                   }
                 >
                   <p className="g-h3 truncate">{place.name}</p>
-                  <p className="g-sm g-mut truncate">{getPlaceMeta(place) || place.address || 'Metro Manila place'}</p>
+                  <p className="g-sm g-mut truncate">{getPlaceMeta(place) || place.address || 'GalaTayo place'}</p>
                 </Row>
               )
             })}
@@ -387,7 +387,7 @@ function ItineraryBuilder({
           <div className="min-w-0">
             <p className="g-eyebrow">Adding</p>
             <p className="g-h3 mt-1">{selectedPlace.name}</p>
-            <p className="g-sm g-mut">{getPlaceMeta(selectedPlace) || selectedPlace.address || 'Metro Manila place'}</p>
+            <p className="g-sm g-mut">{getPlaceMeta(selectedPlace) || selectedPlace.address || 'GalaTayo place'}</p>
           </div>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             <NumberField label="Day" value={draftDay} onChange={(value) => setDraftDay(Math.max(1, Number(value) || 1))} />

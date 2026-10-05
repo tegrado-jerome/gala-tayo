@@ -1,37 +1,8 @@
 import { inferMetroManilaLocationsFromQuery } from "./metroManilaLocations";
+import { inferProvincialDestinationsFromQuery } from "./phDestinations";
 import { normalizeSearchText } from "./searchMatching";
 
-const UNSUPPORTED_LOCATION_KEYWORDS = [
-  "cavite",
-  "cavite city",
-  "bacoor",
-  "imus",
-  "dasmarinas",
-  "dasmarinas",
-  "general trias",
-  "trece martires",
-  "kawit",
-  "tanza",
-  "rosario cavite",
-  "tagaytay",
-  "rizal",
-  "antipolo",
-  "laguna",
-  "sta rosa",
-  "santa rosa",
-  "calamba",
-  "nuvali",
-  "bulacan",
-  "malolos",
-  "meycauayan",
-  "batangas",
-  "lipa",
-  "pampanga",
-  "angeles",
-  "subic",
-  "olongapo",
-];
-
+// "unsupported_location" stays in the union so older clients keep compiling; nationwide search never returns it.
 export type SearchValidationStatus =
   | "ok"
   | "empty_query"
@@ -45,35 +16,14 @@ export type SearchValidationResult = {
   unsupportedLocationKeywords: string[];
 };
 
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+/** Metro Manila cities and landmarks first, then destinations elsewhere in the Philippines. */
+export function inferSupportedLocationNames(query: string): string[] {
+  const metroManilaNames = inferMetroManilaLocationsFromQuery(query).cityNames;
+  const provincialNames = inferProvincialDestinationsFromQuery(query).map(({ destination }) => destination.name);
+  return [...new Set([...metroManilaNames, ...provincialNames])];
 }
 
-function hasPhraseMatch(normalizedInput: string, phrase: string): boolean {
-  const normalizedPhrase = normalizeSearchText(phrase);
-
-  if (!normalizedPhrase) {
-    return false;
-  }
-
-  return new RegExp(`(^|\\s)${escapeRegExp(normalizedPhrase)}($|\\s)`).test(
-    normalizedInput
-  );
-}
-
-function getUnsupportedLocationKeywords(normalizedQuery: string): string[] {
-  const matches = new Set<string>();
-
-  for (const keyword of UNSUPPORTED_LOCATION_KEYWORDS) {
-    if (hasPhraseMatch(normalizedQuery, keyword)) {
-      matches.add(normalizeSearchText(keyword));
-    }
-  }
-
-  return [...matches];
-}
-
-export function validateMetroManilaSearchQuery({
+export function validateSearchQuery({
   query,
   hasSelectedFilters,
   hasNearbySearch,
@@ -85,63 +35,13 @@ export function validateMetroManilaSearchQuery({
   allowBroadDiscovery: boolean;
 }): SearchValidationResult {
   const normalizedQuery = normalizeSearchText(query);
-  const supportedLocations = inferMetroManilaLocationsFromQuery(normalizedQuery);
-  const unsupportedLocationKeywords = getUnsupportedLocationKeywords(normalizedQuery);
-  if (allowBroadDiscovery) {
-    return {
-      status: "ok",
-      message: null,
-      normalizedQuery,
-      supportedLocationNames: supportedLocations.cityNames,
-      unsupportedLocationKeywords,
-    };
-  }
-
-  if (!normalizedQuery && !hasSelectedFilters && !hasNearbySearch) {
-    return {
-      status: "empty_query",
-      message: "Try adding a place, category, or location.",
-      normalizedQuery,
-      supportedLocationNames: supportedLocations.cityNames,
-      unsupportedLocationKeywords,
-    };
-  }
-
-  if (unsupportedLocationKeywords.length > 0) {
-    return {
-      status: "unsupported_location",
-      message: "We currently support Metro Manila only.",
-      normalizedQuery,
-      supportedLocationNames: supportedLocations.cityNames,
-      unsupportedLocationKeywords,
-    };
-  }
-
-  if (!normalizedQuery) {
-    return {
-      status: "ok",
-      message: null,
-      normalizedQuery,
-      supportedLocationNames: supportedLocations.cityNames,
-      unsupportedLocationKeywords,
-    };
-  }
-
-  if (hasSelectedFilters || hasNearbySearch) {
-    return {
-      status: "ok",
-      message: null,
-      normalizedQuery,
-      supportedLocationNames: supportedLocations.cityNames,
-      unsupportedLocationKeywords,
-    };
-  }
+  const isEmpty = !allowBroadDiscovery && !normalizedQuery && !hasSelectedFilters && !hasNearbySearch;
 
   return {
-    status: "ok",
-    message: null,
+    status: isEmpty ? "empty_query" : "ok",
+    message: isEmpty ? "Try adding a place, category, or location." : null,
     normalizedQuery,
-    supportedLocationNames: supportedLocations.cityNames,
-    unsupportedLocationKeywords,
+    supportedLocationNames: inferSupportedLocationNames(normalizedQuery),
+    unsupportedLocationKeywords: [],
   };
 }

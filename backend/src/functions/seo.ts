@@ -2,6 +2,7 @@ import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/fu
 import { CATEGORIES } from "./filters";
 import { checkEndpointRateLimit } from "../utils/redisRateLimit";
 import { getSeoAreaPage, getSeoAreaSummaries, getSeoListingPage, getSeoPlaceSummaries } from "../utils/seoPlaces";
+import { REGIONS } from "../utils/phDestinations";
 import { getSiteUrl } from "../utils/siteUrl";
 
 type SitemapEntry = {
@@ -161,6 +162,22 @@ function buildSitemapEntries(args: {
       lastmod: areaCounts.get(area.slug)?.latestUpdatedAt ?? null,
     }))
 
+  // Region hubs (/places/metro-manila, /places/calabarzon...) only add value once places span more than one region.
+  const regionsWithPlaces = REGIONS
+    .map((region) => ({
+      region,
+      counts: region.destinations.map((destination) => areaCounts.get(destination.slug)).filter((count): count is AreaCount => Boolean(count)),
+    }))
+    .filter(({ counts }) => counts.length > 0)
+  const regionEntries: SitemapEntry[] = regionsWithPlaces.length > 1
+    ? regionsWithPlaces.map(({ region, counts }) => ({
+        path: `/places/${region.slug}`,
+        priority: "0.8",
+        changefreq: "weekly",
+        lastmod: counts.reduce<string | null>((latest, count) => pickLatestTimestamp(latest, count.latestUpdatedAt), null),
+      }))
+    : []
+
   const categoryEntries: SitemapEntry[] = CATEGORIES
     .filter((category) => (categoryCounts.get(category.id)?.placeCount ?? 0) > 0)
     .map((category) => ({
@@ -177,7 +194,7 @@ function buildSitemapEntries(args: {
     lastmod: place.updatedAt ?? null,
   }))
 
-  return [...staticEntries, ...categoryEntries, ...areaEntries, ...placeEntries]
+  return [...staticEntries, ...categoryEntries, ...regionEntries, ...areaEntries, ...placeEntries]
 }
 
 export async function seoPlaces(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {

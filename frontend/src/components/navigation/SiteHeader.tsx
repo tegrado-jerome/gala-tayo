@@ -60,7 +60,7 @@ function SiteHeader({ pathname }: { pathname: string }) {
             <div className="g-head-search">
               <InternalLink href="/search" className="g-head-search-link" ariaLabel="Search places">
                 <Search className="g-ic" aria-hidden="true" />
-                <span className="truncate">Search places in Metro Manila</span>
+                <span className="truncate">Search places around the Philippines</span>
               </InternalLink>
               {showChat ? (
                 <button type="button" className="g-head-ask" onClick={() => openFloatingChat()}>

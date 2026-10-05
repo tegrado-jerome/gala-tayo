@@ -2,6 +2,7 @@ import type { RefObject } from 'react'
 import { supabase } from '../../supabase'
 import { normalizeTypedSearchText, buildSearchPath, type SearchBudgetValue, type SearchGoodForValue } from '../../utils/searchParams'
 import { navigateToPath } from '../../utils/navigation'
+import { destinations } from '../../data/destinations'
 import type { PlaceCardData, PlaceCategoryMeta, PlaceTagMeta } from '../PlaceCard'
 import type { ChatMessage, AskAiJobStatus } from '../../utils/askAiRuntime'
 
@@ -16,6 +17,8 @@ type BackendArea = {
   id: string
   name: string
   type: 'all' | 'city' | 'municipality'
+  region?: string
+  province?: string
 }
 
 type CategoryChip = {
@@ -27,6 +30,8 @@ type AreaChip = {
   id: string
   name: string
   type: 'all' | 'city' | 'municipality'
+  region?: string
+  province?: string
 }
 
 type GoodForChip = {
@@ -586,24 +591,20 @@ const fallbackGoodForOptions: GoodForChip[] = [
 
 const fallbackAreas: AreaChip[] = [
   { id: 'all', name: 'All areas', type: 'all' },
-  { id: 'caloocan', name: 'Caloocan', type: 'city' },
-  { id: 'las-pinas', name: 'Las Piñas', type: 'city' },
-  { id: 'makati', name: 'Makati', type: 'city' },
-  { id: 'malabon', name: 'Malabon', type: 'city' },
-  { id: 'mandaluyong', name: 'Mandaluyong', type: 'city' },
-  { id: 'manila', name: 'Manila', type: 'city' },
-  { id: 'marikina', name: 'Marikina', type: 'city' },
-  { id: 'muntinlupa', name: 'Muntinlupa', type: 'city' },
-  { id: 'navotas', name: 'Navotas', type: 'city' },
-  { id: 'paranaque', name: 'Parañaque', type: 'city' },
-  { id: 'pasay', name: 'Pasay', type: 'city' },
-  { id: 'pasig', name: 'Pasig', type: 'city' },
-  { id: 'quezon-city', name: 'Quezon City', type: 'city' },
-  { id: 'san-juan', name: 'San Juan', type: 'city' },
-  { id: 'taguig', name: 'Taguig', type: 'city' },
-  { id: 'valenzuela', name: 'Valenzuela', type: 'city' },
-  { id: 'pateros', name: 'Pateros', type: 'municipality' },
+  ...destinations.map((destination) => ({
+    id: destination.slug,
+    name: destination.label,
+    type: destination.type,
+    region: destination.regionName,
+    province: destination.provinceName,
+  })),
 ]
+
+function toCityOptions(areas: AreaChip[]) {
+  return areas
+    .filter((area) => area.id !== 'all')
+    .map((area) => ({ value: area.id, label: area.name, group: area.region }))
+}
 
 const budgetOptions: BudgetOption[] = [
   { value: 'free', label: 'Free' },
@@ -812,7 +813,7 @@ function mapBackendPlaceToCard(place: BackendSearchPlace): PlaceCardData | null 
     return null
   }
 
-  const area = place.location || place.address || place.city || place.area || 'Metro Manila'
+  const area = place.location || place.address || place.city || place.area || 'Philippines'
   const reviewCount =
     place.reviewCount === null || place.reviewCount === undefined ? undefined : String(place.reviewCount)
   const curatedImageUrls = Array.isArray(place.curatedImageUrls)
@@ -911,6 +912,7 @@ export {
   fallbackCategories,
   fallbackGoodForOptions,
   fallbackAreas,
+  toCityOptions,
   budgetOptions,
   readPersistentStorage,
   writePersistentStorage,

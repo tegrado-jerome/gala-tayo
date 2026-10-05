@@ -65,8 +65,8 @@ function PlaceCategoriesIndexPage() {
     {
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
-      name: `Metro Manila Place Categories | ${BRAND_NAME}`,
-      description: `${PRODUCT_NAME} groups Metro Manila places by category: food, cafes, parks, museums, and more.`,
+      name: `Place Categories | ${BRAND_NAME}`,
+      description: `${PRODUCT_NAME} groups places around the Philippines by category: food, cafes, parks, museums, and more.`,
       url: `${getSiteOrigin()}/places/categories`,
     },
     {
@@ -93,8 +93,8 @@ function PlaceCategoriesIndexPage() {
   return (
     <Page>
       <SeoHead
-        title={`Metro Manila Place Categories and Guides | ${BRAND_NAME}`}
-        description={`${PRODUCT_NAME} helps you browse Metro Manila place categories like cafes, food, parks, museums, and nightlife.`}
+        title={`Place Categories and Guides | ${BRAND_NAME}`}
+        description={`${PRODUCT_NAME} helps you browse place categories around the Philippines like cafes, food, parks, museums, and nightlife.`}
         canonicalPath="/places/categories"
         jsonLd={jsonLd}
       />
@@ -103,8 +103,8 @@ function PlaceCategoriesIndexPage() {
 
       <header className="mt-5 flex flex-wrap items-end justify-between gap-4">
         <div className="max-w-[42rem]">
-          <h1 className="g-h1">Browse Metro Manila place categories</h1>
-          <p className="g-mut mt-2">Pick a category to see spots across Metro Manila.</p>
+          <h1 className="g-h1">Browse place categories</h1>
+          <p className="g-mut mt-2">Pick a category to see spots around the Philippines.</p>
         </div>
         <InternalLink href="/places" className="g-btn g-btn-line g-btn-sm">
           <MapTrifold aria-hidden="true" />

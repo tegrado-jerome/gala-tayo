@@ -1,11 +1,10 @@
-import { metroManilaAreaNameBySlug, metroManilaAreaSlugByAlias, normalizeAreaSlug } from '../data/metroManilaAreas'
+import { isKnownAreaSlug as isKnownDestinationSlug, normalizeAreaSlug, resolveDestination } from '../data/destinations'
 import { getPlaceCategoryLabel } from '../data/placeCategories'
 import { ADMIN_BASE_PATH, ADMIN_MFA_SETUP_PATH, ADMIN_MFA_VERIFY_PATH } from './adminRoutes'
 import { getPublicSiteOrigin } from './site'
 import { getLandingTargetBySlug } from './seoLandingPages'
 
 const searchRouteCachePrefix = 'galatayo:search-route:'
-const knownAreaSlugs = new Set<string>(metroManilaAreaSlugByAlias.keys())
 
 type RoutePattern = {
   pattern: RegExp
@@ -94,16 +93,6 @@ const routePatterns: RoutePattern[] = [
   { pattern: /^\/place\/([^/]+)$/, getLabel: ([, slug]) => formatLabelFromSlug(decodeURIComponent(slug)) },
 ]
 
-function normalizeText(value: string) {
-  return value
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/&/g, ' and ')
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim()
-}
-
 function slugify(value: string) {
   return value
     .normalize('NFKD')
@@ -126,31 +115,12 @@ export function formatLabelFromSlug(value: string) {
 }
 
 export function resolveAreaMeta(areaLike: AreaLike) {
-  const candidates = [areaLike.city, areaLike.localArea, areaLike.area]
-    .map((value) => value?.trim() || '')
-    .filter(Boolean)
-
-  for (const candidate of candidates) {
-    const normalizedCandidate = normalizeText(candidate)
-    const slugMatch = [...metroManilaAreaSlugByAlias.entries()].find(([slugAlias]) => normalizeText(slugAlias) === normalizedCandidate)
-    if (slugMatch) {
-      const canonicalSlug = slugMatch[1]
-      return { slug: canonicalSlug, name: metroManilaAreaNameBySlug.get(canonicalSlug) || candidate }
-    }
-
-    const nameMatch = [...metroManilaAreaNameBySlug.entries()].find(([slug, name]) => {
-      if (slug !== normalizeAreaSlug(slug)) {
-        return false
-      }
-
-      return normalizeText(name) === normalizedCandidate || normalizeText(`${name} City`) === normalizedCandidate
-    })
-    if (nameMatch) {
-      return { slug: nameMatch[0], name: nameMatch[1] }
-    }
+  const destination = resolveDestination(areaLike.city, areaLike.localArea, areaLike.area)
+  if (destination) {
+    return { slug: destination.slug, name: destination.name }
   }
 
-  const fallbackName = candidates[0] || 'Metro Manila'
+  const fallbackName = [areaLike.city, areaLike.localArea, areaLike.area].map((value) => value?.trim() || '').find(Boolean) || 'Metro Manila'
   return {
     slug: slugify(fallbackName) || 'metro-manila',
     name: fallbackName,
@@ -236,7 +206,7 @@ export function parseLandingPagePath(pathname: string): string | null {
 }
 
 export function isKnownAreaSlug(value: string) {
-  return knownAreaSlugs.has(value.toLowerCase())
+  return isKnownDestinationSlug(value)
 }
 
 export function shouldSkipTopScrollRestore(pathname: string, search: string) {

@@ -11,12 +11,12 @@ import { useBottomNav } from '../context/BottomNavContext'
 import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
 import { navigateToPath } from '../utils/navigation'
 import { buildSearchPath, hasActiveSearchCriteria, normalizeTypedSearchText, readSearchUrlState } from '../utils/searchParams'
-import { budgetOptions, fallbackAreas, fallbackCategories } from '../components/home/homeHelpers'
+import { budgetOptions, fallbackAreas, fallbackCategories, toCityOptions } from '../components/home/homeHelpers'
 import { homeAllTopPickPlaces } from '../data/homeRecommendations'
 import { fetchHomePlaceDetailsBatch } from '../utils/placeDetailCache'
 import type { SearchBudgetValue } from '../utils/searchParams'
 
-const cityOptions = fallbackAreas.filter((area) => area.id !== 'all').map((area) => ({ value: area.id, label: area.name }))
+const cityOptions = toCityOptions(fallbackAreas)
 const categoryOptions = fallbackCategories.map((category) => ({ value: category.id, label: category.name }))
 const budgetFilterOptions = budgetOptions.map((budget) => ({ value: budget.value, label: budget.label }))
 const trendingSlugs = homeAllTopPickPlaces.map((place) => place.slug)

@@ -7,18 +7,18 @@ import { Page } from '../components/ui'
 import type { NavigationSource } from '../app/useAppLocationState'
 import { useAppUser } from '../context/AppUserContext'
 import { R2_PUBLIC_BASE_URL } from '../data/r2Config'
-import { useManilaWeather } from '../hooks/useManilaWeather'
+import { useWeather } from '../hooks/useWeather'
 
 function HomePage({ navigationSource }: { navigationSource: NavigationSource }) {
   void navigationSource
   const { currentProfile, currentUser } = useAppUser()
-  const weather = useManilaWeather()
+  const weather = useWeather()
   const isRaining = Boolean(weather?.isRaining)
   const greetingName = currentUser?.firstName?.trim() || currentProfile?.displayName?.trim().split(/\s+/)[0] || null
   const seoConfig = useMemo(
     () => ({
       title: 'Home | GalaTayo',
-      description: 'Discover Metro Manila places by city, category, budget, and vibe.',
+      description: 'Discover gala-worthy places around the Philippines by city, category, budget, and vibe.',
       canonicalPath: '/home',
       preconnectOrigins: [new URL(R2_PUBLIC_BASE_URL).origin],
     }),
@@ -28,7 +28,7 @@ function HomePage({ navigationSource }: { navigationSource: NavigationSource }) 
   return (
     <Page>
       <SeoHead {...seoConfig} />
-      <h1 className="sr-only">{greetingName ? `Tara, ${greetingName}? Places to go in Metro Manila` : 'Places to go in Metro Manila'}</h1>
+      <h1 className="sr-only">{greetingName ? `Tara, ${greetingName}? Places to go around the Philippines` : 'Places to go around the Philippines'}</h1>
       <HomeDiscover
         isRaining={isRaining}
         greeting={

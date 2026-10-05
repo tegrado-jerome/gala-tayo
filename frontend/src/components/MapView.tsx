@@ -6,6 +6,7 @@ import { Plus } from '@phosphor-icons/react/dist/csr/Plus'
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import type { PlaceCardData } from './PlaceCard'
 import { Button, cx } from './ui'
+import { METRO_MANILA_CENTER } from '../data/destinations'
 
 type MapViewProps = {
   places?: PlaceCardData[]
@@ -48,7 +49,8 @@ type ValidMapPlace = {
   mallClusterSize: number
 }
 
-const metroManilaCenter: ValidLatLng = [14.5995, 120.9842]
+// Only used when there is nothing to fit: the map otherwise frames its pins wherever they are in the country.
+const metroManilaCenter: ValidLatLng = METRO_MANILA_CENTER
 const philippinesLatRange = { min: 4, max: 21 }
 const philippinesLngRange = { min: 116, max: 127 }
 const mallParentMatchers: RegExp[] = [
@@ -364,6 +366,11 @@ function getSafeMarkerLatLng(place: PlaceCardData): ValidLatLng | null {
   return null
 }
 
+// Leaflet throws (_leaflet_pos) when it fits a map whose container is already gone.
+function isMapMeasurable(map: L.Map) {
+  return map.getContainer().isConnected
+}
+
 function safeSetView(map: L.Map, center: unknown, zoom: number) {
   const safeCenter = normalizeLatLng(center) ?? metroManilaCenter
   const safeZoom = Number.isFinite(zoom) ? zoom : 12
@@ -407,7 +414,7 @@ function safeFitBounds(map: L.Map, latLngs: unknown) {
     .filter((latLng): latLng is ValidLatLng => isValidLatLngTuple(latLng))
     .map((latLng): ValidLatLng => [latLng[0], latLng[1]])
 
-  if (boundsInput.length < 2) {
+  if (boundsInput.length < 2 || !isMapMeasurable(map)) {
     return
   }
 
