@@ -116,8 +116,10 @@ const fallbackPreview: FeaturePreview = {
 
 function getAuthVariant(pathname: string): GuestAuthVariant {
   if (pathname.startsWith('/ask-ai')) return 'ask-ai'
-  if (pathname === '/favorites' || pathname === '/favorites/') return 'favorite'
-  if (pathname.startsWith('/gala-plan') || pathname.startsWith('/gala-plans')) return 'add-plan'
+  if (pathname.startsWith('/favorites') || pathname.startsWith('/history')) return 'saved-page'
+  if (pathname.startsWith('/gala-plan') || pathname.startsWith('/plan-with-ai')) return 'plans-page'
+  if (pathname.startsWith('/passport')) return 'passport-page'
+  if (/^\/(profile|account-settings|settings|privacy-center|my-submissions|reports|feedback|submit-place)/.test(pathname)) return 'account-page'
   return 'community'
 }
 

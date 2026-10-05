@@ -18,6 +18,10 @@ export type GuestAuthVariant =
   | 'report-user'
   | 'community'
   | 'contribute-photo'
+  | 'saved-page'
+  | 'plans-page'
+  | 'passport-page'
+  | 'account-page'
 
 export type GuestAuthDisplayMode = 'modal' | 'inline-card' | 'page-state'
 
@@ -114,6 +118,34 @@ const variantConfigs: Record<GuestAuthVariant, VariantConfig> = {
     title: 'Log in to add a photo',
     description: 'Share your photos of this place and help others see more of it.',
     benefits: ['Share your photos', 'Get credit for your photos'],
+  },
+  'saved-page': {
+    icon: Heart,
+    label: 'Saved',
+    title: 'Log in to see your saved places',
+    description: 'Everything you heart stays here, on every device.',
+    benefits: ['Keep a list of spots to try', 'See places you viewed recently', 'Turn saved spots into a plan'],
+  },
+  'plans-page': {
+    icon: CalendarPlus,
+    label: 'Plans',
+    title: 'Log in to plan with your barkada',
+    description: 'Build a gala, share one link, and let everyone RSVP and vote.',
+    benefits: ['Plan with AI in one sentence', 'Share a Tara? link with friends', 'Split the bill with Hatian'],
+  },
+  'passport-page': {
+    icon: Star,
+    label: 'Passport',
+    title: 'Log in to collect stamps',
+    description: "Tap “I'm here” at real spots to earn a stamp for each city.",
+    benefits: ['Earn a stamp per city', 'Keep a weekly gala streak'],
+  },
+  'account-page': {
+    icon: UserRound,
+    label: 'Account',
+    title: 'Log in to manage your account',
+    description: 'Update your profile, privacy and password.',
+    benefits: ['Edit your profile', 'Control who sees your activity'],
   },
 }
 
