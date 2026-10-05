@@ -426,8 +426,6 @@ textarea.g-input { height: auto; min-height: 96px; padding: 12px 14px; resize: v
 /* ---------- Maps (Leaflet + OSM), tinted to paper ---------- */
 .leaflet-container { font-family: var(--font-body); background: var(--fill); }
 .leaflet-container .leaflet-tile-pane { filter: grayscale(0.9) contrast(0.92) brightness(1.04); }
-.g-map.is-night, .g-map.is-night .leaflet-container { background: #0f2138; }
-.g-map.is-night .leaflet-tile-pane { filter: grayscale(1) invert(1) sepia(1) hue-rotate(178deg) saturate(1.3) brightness(0.95) contrast(0.9); }
 :root[data-theme='dark'] .leaflet-container .leaflet-tile-pane { filter: grayscale(1) invert(0.92) contrast(0.9) brightness(0.9); }
 .leaflet-container .leaflet-control-attribution { font-size: 11px; background: color-mix(in srgb, var(--surface) 82%, transparent); color: var(--ink-3); }
 .leaflet-container .leaflet-control-attribution a { color: var(--ink-2); }
