@@ -137,7 +137,7 @@ function drawStory(ctx: CanvasRenderingContext2D, story: Story, images: Array<HT
   const sea = token('--sea')
   const white = token('--on-ink')
   const fill2 = token('--fill-2')
-  const display = getComputedStyle(document.documentElement).getPropertyValue('--font-display').trim() || 'Outfit, sans-serif'
+  const display = getComputedStyle(document.documentElement).getPropertyValue('--font-display').trim() || 'Fraunces, serif'
   const body = getComputedStyle(document.documentElement).getPropertyValue('--font-body').trim() || 'sans-serif'
 
   ctx.fillStyle = ink
@@ -281,7 +281,7 @@ function toBlob(canvas: HTMLCanvasElement) {
 /** Renders the story card to a PNG. Photos that fail to load (or block CORS) are skipped, never breaking the export. */
 async function renderStoryPng(story: Story) {
   try {
-    await Promise.all([document.fonts.load('800 112px Outfit'), document.fonts.load('800 28px Outfit'), document.fonts.load('700 34px Outfit')])
+    await Promise.all([document.fonts.load('600 112px Fraunces'), document.fonts.load('600 28px Fraunces'), document.fonts.load('700 34px "DM Sans"')])
   } catch {
     // Fallback fonts are fine.
   }

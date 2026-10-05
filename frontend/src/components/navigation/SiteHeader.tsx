@@ -18,8 +18,8 @@ const NO_CHAT_PATHS = ['/', '/ask-ai/maps', '/ask-ai/map', '/plan-with-ai']
 export function BrandMark({ size = 26 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden="true" className="shrink-0">
-      <rect width="64" height="64" rx="18" fill="#14343b" />
-      <path d="M20 35a12 12 0 0 1 24 0Z" fill="#ff7a1a" />
+      <rect width="64" height="64" rx="18" fill="#111111" />
+      <path d="M20 35a12 12 0 0 1 24 0Z" fill="#34e0a1" />
       <rect x="12" y="38" width="40" height="4" rx="2" fill="#fff" />
       <rect x="19" y="45.5" width="26" height="4" rx="2" fill="#fff" opacity=".75" />
       <rect x="26" y="53" width="12" height="4" rx="2" fill="#fff" opacity=".5" />
