@@ -551,7 +551,7 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
     onCancel: cancelEdit,
     error: editing === key ? errorMessage : undefined,
     footer: (
-      <Button type="submit" variant="ink" disabled={cannotSave}>
+      <Button type="submit" variant="tara" disabled={cannotSave}>
         {isSaving ? 'Saving…' : 'Save'}
       </Button>
     ),
@@ -610,7 +610,7 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
               {...rowProps('birthdate')}
               onCancel={() => setEditing(null)}
               footer={
-                <Button variant="ink" onClick={() => setEditing(null)}>
+                <Button variant="tara" onClick={() => setEditing(null)}>
                   Done
                 </Button>
               }

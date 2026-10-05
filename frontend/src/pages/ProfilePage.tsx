@@ -683,7 +683,7 @@ function AccountProfilePage({ session }: ProfilePageProps) {
                 title="Wala pang plans."
                 description="Describe your gala in one line and let Tara draft it."
                 action={
-                  <Button variant="ink" href="/plan-with-ai">
+                  <Button variant="tara" href="/plan-with-ai">
                     <Sparkle aria-hidden="true" />
                     Plan with AI
                   </Button>

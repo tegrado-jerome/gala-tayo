@@ -39,7 +39,7 @@ function NewStampSheet({ city, streakWeeks, onClose }: { city: string; streakWee
           {streakWeeks > 0 ? `${streakWeeks}-week streak. Gala again next week to keep it going.` : 'Gala once a week to start a streak.'}
         </p>
         <div className="mt-6 grid w-full grid-cols-2 gap-2">
-          <Button variant="ink" href="/passport">See passport</Button>
+          <Button variant="tara" href="/passport">See passport</Button>
           <button type="button" ref={closeRef} className={buttonClass({ variant: 'line' })} onClick={onClose}>
             Nice!
           </button>

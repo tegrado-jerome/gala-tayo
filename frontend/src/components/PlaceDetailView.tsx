@@ -2769,7 +2769,7 @@ function PlaceDetailView({
             <X aria-hidden="true" />
             Cancel
           </Button>
-          <Button variant="ink" onClick={() => void handleSubmitContribution()} disabled={isContributionSubmitting}>
+          <Button variant="tara" onClick={() => void handleSubmitContribution()} disabled={isContributionSubmitting}>
             <Check aria-hidden="true" />
             {isContributionSubmitting ? 'Submitting…' : 'Submit'}
           </Button>
