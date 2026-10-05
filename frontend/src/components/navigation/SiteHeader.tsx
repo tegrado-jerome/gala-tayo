@@ -1,9 +1,8 @@
-import { Moon, Search, Sparkles, Sun } from 'lucide-react'
+import { Search, Sparkles } from 'lucide-react'
 import InternalLink from '../InternalLink'
 import UserMenu from '../UserMenu'
 import { Button } from '../ui'
 import { useAppUser } from '../../context/AppUserContext'
-import { useTheme } from '../../context/ThemeContext'
 import { openFloatingChat } from '../../utils/floatingChat'
 import { isPath } from '../../utils/routes'
 import { primaryNav } from './navItems'
@@ -13,10 +12,23 @@ const MINIMAL_PATHS = ['/login', '/signup', '/auth', '/onboarding', '/forgot-pas
 // The floating AI chat is not mounted on these, so the header skips its button.
 const NO_CHAT_PATHS = ['/', '/ask-ai/maps', '/ask-ai/map', '/plan-with-ai']
 
+/** Sunset over the bay: the GalaTayo mark. */
+export function BrandMark({ size = 26 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden="true" className="shrink-0">
+      <rect width="64" height="64" rx="18" fill="var(--tara)" />
+      <path d="M20 35a12 12 0 0 1 24 0Z" fill="#fff" />
+      <rect x="12" y="38" width="40" height="4" rx="2" fill="#fff" />
+      <rect x="19" y="45.5" width="26" height="4" rx="2" fill="#fff" opacity=".75" />
+      <rect x="26" y="53" width="12" height="4" rx="2" fill="#fff" opacity=".5" />
+    </svg>
+  )
+}
+
 export function BrandLogo({ className = '' }: { className?: string }) {
   return (
     <span className={`g-logo ${className}`}>
-      <i aria-hidden="true" />
+      <BrandMark />
       galatayo
     </span>
   )
@@ -24,11 +36,8 @@ export function BrandLogo({ className = '' }: { className?: string }) {
 
 function SiteHeader({ pathname }: { pathname: string }) {
   const { currentUser, currentProfile, session } = useAppUser()
-  const { resolvedTheme, setThemePreference } = useTheme()
   const isMinimal = MINIMAL_PATHS.some((path) => isPath(pathname, path))
   const showChat = !NO_CHAT_PATHS.some((path) => isPath(pathname, path))
-  const nextTheme = resolvedTheme === 'dark' ? 'light' : 'dark'
-  const ThemeIcon = resolvedTheme === 'dark' ? Sun : Moon
 
   return (
     <header className="g-head">
@@ -47,34 +56,38 @@ function SiteHeader({ pathname }: { pathname: string }) {
               ))}
             </nav>
 
-            <InternalLink href="/search" className="g-head-search" ariaLabel="Search places">
-              <Search className="g-ic" aria-hidden="true" />
-              <span>
-                Gala in <b>Metro Manila</b>
-              </span>
-            </InternalLink>
+            <div className="g-head-search">
+              <InternalLink href="/search" className="g-head-search-link" ariaLabel="Search places">
+                <Search className="g-ic" aria-hidden="true" />
+                <span className="truncate">Search places in Metro Manila</span>
+              </InternalLink>
+              {showChat ? (
+                <button type="button" className="g-head-ask" onClick={() => openFloatingChat()}>
+                  <Sparkles aria-hidden="true" />
+                  Ask AI
+                </button>
+              ) : null}
+            </div>
 
             <div className="g-head-right">
               {showChat ? (
-                <Button variant="soft" size="sm" onClick={() => openFloatingChat()} aria-label="Ask GalaTayo AI">
+                <Button variant="soft" size="sm" iconOnly className="g-only-mob" onClick={() => openFloatingChat()} aria-label="Ask GalaTayo AI">
                   <Sparkles aria-hidden="true" />
-                  <span className="g-only-desk">Ask AI</span>
                 </Button>
               ) : null}
-              <Button variant="ink" size="sm" href="/plan-with-ai" className="g-only-desk">
-                Tara, plan
-              </Button>
-              <Button variant="soft" size="sm" iconOnly className="g-only-desk" onClick={() => setThemePreference(nextTheme)} aria-label={`Switch to ${nextTheme} mode`}>
-                <ThemeIcon aria-hidden="true" />
-              </Button>
               {session ? (
-                <UserMenu user={currentUser} profile={currentProfile} compact />
+                <>
+                  <Button variant="ink" size="sm" href="/plan-with-ai" className="g-only-desk">
+                    Tara, plan
+                  </Button>
+                  <UserMenu user={currentUser} profile={currentProfile} compact />
+                </>
               ) : (
                 <>
-                  <Button variant="line" size="sm" href="/login">
+                  <Button variant="text" size="sm" href="/login" className="no-underline">
                     Log in
                   </Button>
-                  <Button variant="ink" size="sm" href="/signup" className="g-only-desk">
+                  <Button variant="ink" size="sm" href="/signup">
                     Sign up
                   </Button>
                 </>

@@ -72,6 +72,18 @@ function validateUsernameLocally(username: string) {
   return validateUsername(username) || ''
 }
 
+function buildUsernameSuggestion(firstName: string, lastName: string) {
+  const toPart = (value: string) =>
+    value
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '')
+  const suggestion = [toPart(firstName), toPart(lastName)].filter(Boolean).join('_').slice(0, 27).replace(/_+$/, '')
+
+  return validateUsernameLocally(suggestion) ? '' : suggestion
+}
+
 function trimError(value: string, label: string, maxLength = 80) {
   const trimmed = value.trim()
 
@@ -259,6 +271,8 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
   valuesRef.current = values
   const sessionRef = useRef(session)
   sessionRef.current = session
+  const hasSuggestedUsernameRef = useRef(false)
+  const pendingSuggestionRef = useRef<string | null>(null)
 
   const normalizedUsername = useMemo(() => values.username.trim().toLowerCase().replace(/^@+/, ''), [values.username])
   const usernameValidationError = useMemo(() => validateUsernameLocally(normalizedUsername), [normalizedUsername])
@@ -343,6 +357,30 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
 
   useEffect(() => {
     if (values.step !== 2) {
+      hasSuggestedUsernameRef.current = false
+      return
+    }
+
+    if (!isDraftReady || hasSuggestedUsernameRef.current) {
+      return
+    }
+
+    hasSuggestedUsernameRef.current = true
+
+    if (values.username.trim()) {
+      return
+    }
+
+    const suggestion = buildUsernameSuggestion(values.firstName, values.lastName)
+
+    if (suggestion) {
+      pendingSuggestionRef.current = suggestion
+      setValues((currentValues) => (currentValues.username.trim() ? currentValues : { ...currentValues, username: suggestion }))
+    }
+  }, [isDraftReady, values.firstName, values.lastName, values.step, values.username])
+
+  useEffect(() => {
+    if (values.step !== 2) {
       setUsernameStatus('idle')
       setErrors((currentErrors) => {
         if (!currentErrors.username) {
@@ -379,6 +417,14 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
             return
           }
 
+          if (!result.available && pendingSuggestionRef.current === normalizedUsername) {
+            pendingSuggestionRef.current = null
+            const retry = `${normalizedUsername}${Math.floor(10 + Math.random() * 90)}`
+            setValues((currentValues) => (currentValues.username === normalizedUsername ? { ...currentValues, username: retry } : currentValues))
+            return
+          }
+
+          pendingSuggestionRef.current = null
           setUsernameStatus(result.available ? 'available' : 'taken')
 
           if (!result.available) {

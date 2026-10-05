@@ -27,12 +27,6 @@ export function uniqueList(values: Array<string | undefined | null>) {
     })
 }
 
-export function formatPriceLevel(level: number | null | undefined): string {
-  if (level == null) return ''
-  const symbols = ['Free', '₱', '₱₱', '₱₱₱', '₱₱₱₱']
-  return symbols[Math.min(Math.max(Math.floor(level), 0), 4)] || ''
-}
-
 export async function isAcceptedContributionImage(file: File): Promise<boolean> {
   return isValidImageFile(file)
 }

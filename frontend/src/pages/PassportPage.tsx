@@ -11,13 +11,15 @@ type LoadState = { status: 'loading' } | { status: 'ready'; passport: Passport }
 const SPOTS_PER_CITY = 10
 const NEW_STAMP_DAYS = 7
 const DAY_MS = 86400000
+const STAMP_GRID =
+  'grid grid-cols-3 justify-items-center gap-x-2 gap-y-5 md:grid-cols-4 lg:grid-cols-6 [&_.g-stamp]:h-[88px] [&_.g-stamp]:w-[88px] [&_.g-stamp]:p-2 [&_.g-stamp_b]:text-[10px] [&_.g-stamp_span]:mt-0.5 [&_.g-stamp_span]:text-[10px]'
 
 function shortDate(value: string) {
   return new Date(value).toLocaleDateString('en', { month: 'short', day: 'numeric' })
 }
 
 function stampState(stamp: CityStamp): { state: 'done' | 'new' | 'locked'; sub: string } {
-  if (!stamp.collected) return { state: 'locked', sub: 'Check in here' }
+  if (!stamp.collected) return { state: 'locked', sub: 'Visit to unlock' }
   if (!stamp.first_checkin_at) return { state: 'done', sub: `${stamp.places} ${stamp.places === 1 ? 'spot' : 'spots'}` }
   const firstAt = new Date(stamp.first_checkin_at)
   if (Date.now() - firstAt.getTime() < NEW_STAMP_DAYS * DAY_MS) return { state: 'new', sub: `New · ${shortDate(stamp.first_checkin_at)}` }
@@ -77,6 +79,7 @@ function PassportPage({ session }: { session: Session }) {
   const sortedStamps = useMemo(() => [...stamps].sort((a, b) => Number(b.collected) - Number(a.collected)), [stamps])
   const firstCheckins = useMemo(() => new Set(stamps.map((stamp) => stamp.first_checkin_at).filter(Boolean)), [stamps])
   const days = useMemo(() => lastSevenDays(passport?.recent ?? []), [passport])
+  const hasStamps = (passport?.recent.length ?? 0) > 0
 
   return (
     <Page>
@@ -84,7 +87,7 @@ function PassportPage({ session }: { session: Session }) {
         <div className="min-w-0">
           <p className="g-eyebrow">{currentProfile?.username ? `@${currentProfile.username}` : 'Your passport'}</p>
           <h1 className="g-h1 mt-1">Pasyal Passport</h1>
-          <p className="g-mut mt-2">Every check-in is a stamp. Every stamp is a kwento.</p>
+          <p className="g-mut mt-2">Tap “I'm here” at a spot to collect that city's stamp.</p>
         </div>
         {passport ? (
           <div className="lg:w-[520px]">
@@ -101,10 +104,10 @@ function PassportPage({ session }: { session: Session }) {
 
       {state.status === 'loading' ? (
         <div className="mt-6 grid gap-6" aria-label="Loading passport">
-          <Skeleton className="h-[240px]" />
-          <div className="grid grid-cols-2 justify-items-center gap-6 md:grid-cols-4">
-            {Array.from({ length: 4 }, (_, index) => (
-              <Skeleton key={index} className="h-[100px] w-[100px] !rounded-full" />
+          <Skeleton className="h-[120px]" />
+          <div className={STAMP_GRID}>
+            {Array.from({ length: 6 }, (_, index) => (
+              <Skeleton key={index} className="h-[88px] w-[88px] !rounded-full" />
             ))}
           </div>
         </div>
@@ -124,97 +127,103 @@ function PassportPage({ session }: { session: Session }) {
       ) : null}
 
       {passport ? (
-        <div className="g-split mt-6">
-          <div className="min-w-0">
-            <PassportMap stamps={stamps} />
-
-            <SectionHead title="Stamps" sub={`${collected} earned · ${total - collected} to go`} className={visitedCities.length > 0 ? undefined : '!mt-0'} />
-            <div className="grid grid-cols-2 justify-items-center gap-x-4 gap-y-8 min-[480px]:grid-cols-3 md:grid-cols-4">
-              {sortedStamps.map((stamp) => {
-                const { state: kind, sub } = stampState(stamp)
-                return <Stamp key={stamp.city} title={stamp.city} sub={sub} state={kind} />
-              })}
+        <>
+          <Panel className="mt-6">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="g-h3">Gala streak</h2>
+                <p className="g-xs g-mut">Gala once a week to keep it going.</p>
+              </div>
+              <b className="g-h3 shrink-0">
+                {passport.streak_weeks} {passport.streak_weeks === 1 ? 'week' : 'weeks'}
+              </b>
             </div>
+            <div className="g-days" role="list" aria-label="Stamps collected in the last 7 days">
+              {days.map((day) => (
+                <i key={day.key} role="listitem" aria-label={`${day.full}${day.done ? ', checked in' : ''}`} className={day.done ? 'is-f' : day.today ? 'is-t' : undefined}>
+                  {day.label}
+                </i>
+              ))}
+            </div>
+          </Panel>
 
-            <SectionHead title="Recent check-ins" sub={`${passport.total_checkins} total`} />
-            {passport.recent.length > 0 ? (
-              <div className="g-list">
-                {passport.recent.map((checkin) => {
-                  const when = new Date(checkin.created_at).toLocaleString('en', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
-                  return (
-                    <Row key={`${checkin.place_id}-${checkin.created_at}`} href={checkin.slug ? `/places/${encodeURIComponent(checkin.slug)}` : undefined}>
-                      <div className="g-h3 truncate">{checkin.name}</div>
-                      <div className="g-sm g-mut truncate">{[checkin.city, when].filter(Boolean).join(' · ')}</div>
-                      {firstCheckins.has(checkin.created_at) ? (
-                        <Tag tone="ok" className="mt-1">
-                          New city
-                        </Tag>
-                      ) : null}
-                    </Row>
-                  )
+          <div className="g-split">
+            <div className="min-w-0">
+              <SectionHead title="Stamps" sub={`${collected} earned · ${total - collected} to go`} />
+              <div className={STAMP_GRID}>
+                {sortedStamps.map((stamp) => {
+                  const { state: kind, sub } = stampState(stamp)
+                  return <Stamp key={stamp.city} title={stamp.city} sub={sub} state={kind} />
                 })}
               </div>
-            ) : (
-              <Empty
-                title="Wala pang check-ins."
-                description="Open a place when you're there and tap Check in."
-                action={<Button variant="line" href="/search">Find a spot</Button>}
-              />
-            )}
-          </div>
 
-          <aside className="g-side">
-            <Panel>
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <h2 className="g-h3">Gala streak</h2>
-                  <p className="g-xs g-mut">Gala once a week to keep it going.</p>
-                </div>
-                <b className="g-h3 shrink-0">
-                  {passport.streak_weeks} {passport.streak_weeks === 1 ? 'week' : 'weeks'}
-                </b>
-              </div>
-              <div className="g-days" role="list" aria-label="Check-ins in the last 7 days">
-                {days.map((day) => (
-                  <i key={day.key} role="listitem" aria-label={`${day.full}${day.done ? ', checked in' : ''}`} className={day.done ? 'is-f' : day.today ? 'is-t' : undefined}>
-                    {day.label}
-                  </i>
-                ))}
-              </div>
-            </Panel>
-
-            <Panel>
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="g-h3">Cities</h2>
-                <span className="g-sm g-mut">{passport.total_checkins} check-ins</span>
-              </div>
-              {visitedCities.length > 0 ? (
-                <div className="mt-2">
-                  {visitedCities.map((stamp, index) => (
-                    <div
-                      key={stamp.city}
-                      className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 py-3"
-                      style={index > 0 ? { borderTop: '1px solid var(--line-2)' } : undefined}
-                    >
-                      <span className="g-sm truncate font-semibold">{stamp.city}</span>
-                      <span className="g-sm g-mut">{stamp.places}</span>
-                      <CityMeter places={stamp.places} />
-                    </div>
-                  ))}
-                  <p className="g-xs g-mut mt-2">{SPOTS_PER_CITY} spots per city fills the bar.</p>
+              <SectionHead title="Recent stamps" sub={`${passport.total_checkins} total`} />
+              {hasStamps ? (
+                <div className="g-list">
+                  {passport.recent.map((checkin) => {
+                    const when = new Date(checkin.created_at).toLocaleString('en', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+                    return (
+                      <Row key={`${checkin.place_id}-${checkin.created_at}`} href={checkin.slug ? `/places/${encodeURIComponent(checkin.slug)}` : undefined}>
+                        <div className="g-h3 truncate">{checkin.name}</div>
+                        <div className="g-sm g-mut truncate">{[checkin.city, when].filter(Boolean).join(' · ')}</div>
+                        {firstCheckins.has(checkin.created_at) ? (
+                          <Tag tone="ok" className="mt-1">
+                            New city
+                          </Tag>
+                        ) : null}
+                      </Row>
+                    )
+                  })}
                 </div>
               ) : (
-                <p className="g-sm g-mut mt-2">Your first check-in starts the list.</p>
+                <Empty
+                  title="Wala pang stamps."
+                  description="Open a place when you're there and tap “I'm here”."
+                  action={<Button variant="tara" href="/search">Find a spot</Button>}
+                />
               )}
-            </Panel>
+            </div>
 
-            <Button variant="tara" size="lg" block href="/search">
-              <MapPin aria-hidden="true" />
-              Check in nearby
-            </Button>
-            <p className="g-xs g-mut -mt-2 text-center">Open the spot you're at and tap Check in. Works only when you're there.</p>
-          </aside>
-        </div>
+            <aside className="g-side lg:mt-9">
+              <PassportMap stamps={stamps} />
+
+              <Panel>
+                <div className="flex items-center justify-between gap-3">
+                  <h2 className="g-h3">Cities</h2>
+                  <span className="g-sm g-mut">{passport.total_checkins} {passport.total_checkins === 1 ? 'visit' : 'visits'}</span>
+                </div>
+                {visitedCities.length > 0 ? (
+                  <div className="mt-2">
+                    {visitedCities.map((stamp, index) => (
+                      <div
+                        key={stamp.city}
+                        className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 py-3"
+                        style={index > 0 ? { borderTop: '1px solid var(--line-2)' } : undefined}
+                      >
+                        <span className="g-sm truncate font-semibold">{stamp.city}</span>
+                        <span className="g-sm g-mut">{stamp.places}</span>
+                        <CityMeter places={stamp.places} />
+                      </div>
+                    ))}
+                    <p className="g-xs g-mut mt-2">{SPOTS_PER_CITY} spots per city fills the bar.</p>
+                  </div>
+                ) : (
+                  <p className="g-sm g-mut mt-2">Your first stamp starts the list.</p>
+                )}
+              </Panel>
+
+              {hasStamps ? (
+                <>
+                  <Button variant="tara" size="lg" block href="/search">
+                    <MapPin aria-hidden="true" />
+                    Get a stamp nearby
+                  </Button>
+                  <p className="g-xs g-mut -mt-2 text-center">Open the spot you're at and tap “I'm here”. Works only when you're there.</p>
+                </>
+              ) : null}
+            </aside>
+          </div>
+        </>
       ) : null}
     </Page>
   )

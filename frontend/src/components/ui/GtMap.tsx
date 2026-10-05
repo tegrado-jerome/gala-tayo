@@ -44,7 +44,7 @@ export default function GtMap({ points, route, tall, className, label = 'Map' }:
   return (
     <div className={cx('g-map', tall && 'is-tall', className)} role="region" aria-label={label}>
       <MapContainer center={center} zoom={14} zoomControl={false} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
-        <TileLayer url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="&copy; OpenStreetMap contributors" maxZoom={19} />
+        <TileLayer url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="&copy; OpenStreetMap contributors" maxZoom={19} referrerPolicy="strict-origin-when-cross-origin" />
         {route && routeCoords.length > 1 ? (
           <Polyline positions={routeCoords} pathOptions={{ className: 'g-route', weight: 3, dashArray: '2 8', lineCap: 'round' }} />
         ) : null}

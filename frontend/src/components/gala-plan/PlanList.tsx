@@ -1,9 +1,9 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { ArrowLeft, Plus, Sparkles } from 'lucide-react'
+import { ArrowLeft, ChevronRight, Plus, Sparkles } from 'lucide-react'
 import InternalLink from '../InternalLink'
 import PlanSummaryCard from './PlanSummaryCard'
-import { Button, Empty, Page, Skeleton, Tabs } from '../ui'
+import { Button, Empty, Page, Row, SectionHead, Skeleton, Tabs } from '../ui'
 import { listFavoriteGalaPlans, listMyGalaPlans, type GalaPlanSummary } from '../../utils/galaPlansApi'
 import { daysUntil, getPlanDate } from '../../utils/galaPlanTrip'
 import { navigateToPath } from '../../utils/navigation'
@@ -13,6 +13,8 @@ type Bucket = 'upcoming' | 'anytime' | 'invited' | 'past'
 type Filter = Bucket | 'hearted'
 
 const bucketOrder: Bucket[] = ['upcoming', 'anytime', 'invited', 'past']
+
+const planIdeas = ['Food crawl in Poblacion', 'Rainy day in Makati, indoor lang', 'Sunset at Manila Bay', 'Museum day in Manila']
 
 const emptyCopy: Record<Bucket, { title: string; description: string }> = {
   upcoming: { title: 'Wala pang upcoming gala', description: 'Set a date on a plan and it shows up here.' },
@@ -164,6 +166,22 @@ function PlanList({ session, favorites = false }: { session?: Session | null; fa
               </div>
             }
           />
+        ) : null}
+
+        {isEmpty ? (
+          <section aria-labelledby="plan-ideas">
+            <SectionHead title={<span id="plan-ideas">Start from an idea</span>} sub="Tap one and AI drafts it for you." />
+            <div className="g-list">
+              {planIdeas.map((idea) => (
+                <Row key={idea} href={`/plan-with-ai?q=${encodeURIComponent(idea)}`} action={<ChevronRight className="g-ic shrink-0" aria-hidden="true" style={{ color: 'var(--ink-3)' }} />}>
+                  <div className="flex min-h-7 items-center gap-3">
+                    <Sparkles className="g-ic shrink-0" aria-hidden="true" style={{ color: 'var(--ink-2)' }} />
+                    <span className="g-h3 truncate">{idea}</span>
+                  </div>
+                </Row>
+              ))}
+            </div>
+          </section>
         ) : null}
 
         {state.status === 'ready' && plans.length > 0 ? (

@@ -1,4 +1,4 @@
-import type { ChangeEvent } from 'react'
+import { useState, type ChangeEvent } from 'react'
 import { ArrowRight, Camera } from 'lucide-react'
 import OnboardingLayout from './OnboardingLayout'
 import type { OnboardingErrors, OnboardingFormState } from './types'
@@ -45,8 +45,18 @@ function OnboardingPublicProfileStep({
     onAvatarSelected(file)
   }
 
+  const [touched, setTouched] = useState({ displayName: false, username: false })
+  const [attemptedNext, setAttemptedNext] = useState(false)
+  const displayNameError = attemptedNext || touched.displayName ? errors.displayName : ''
+  const usernameError = usernameStatus === 'taken' || attemptedNext || touched.username ? errors.username : ''
+
+  const handleNext = () => {
+    setAttemptedNext(true)
+    onNext()
+  }
+
   const usernameMessage =
-    errors.username ||
+    usernameError ||
     (usernameStatus === 'checking'
       ? 'Checking username...'
       : usernameStatus === 'available'
@@ -54,7 +64,7 @@ function OnboardingPublicProfileStep({
         : usernameStatus === 'taken'
           ? 'That username is already taken.'
           : 'Use lowercase letters, numbers, underscore, or dot.')
-  const usernameIsError = Boolean(errors.username) || usernameStatus === 'taken'
+  const usernameIsError = Boolean(usernameError) || usernameStatus === 'taken'
 
   return (
     <OnboardingLayout
@@ -67,7 +77,7 @@ function OnboardingPublicProfileStep({
           <Button variant="soft" onClick={onBack}>
             Back
           </Button>
-          <Button variant="tara" onClick={onNext} disabled={disableNext || usernameStatus === 'checking' || isUploadingAvatar}>
+          <Button variant="tara" onClick={handleNext} disabled={(attemptedNext && disableNext) || usernameStatus === 'checking' || isUploadingAvatar}>
             {usernameStatus === 'checking' ? 'Checking...' : 'Next'}
             {usernameStatus === 'checking' ? null : <ArrowRight aria-hidden="true" />}
           </Button>
@@ -121,13 +131,14 @@ function OnboardingPublicProfileStep({
               id="onboarding-display-name"
               value={values.displayName}
               onChange={(event) => onUpdate({ displayName: event.target.value })}
+              onBlur={() => setTouched((current) => ({ ...current, displayName: true }))}
               maxLength={80}
               autoComplete="nickname"
-              aria-invalid={Boolean(errors.displayName) || undefined}
-              aria-describedby={errors.displayName ? 'onboarding-display-name-msg' : undefined}
+              aria-invalid={Boolean(displayNameError) || undefined}
+              aria-describedby={displayNameError ? 'onboarding-display-name-msg' : undefined}
               className="g-input"
             />
-            {errors.displayName ? <span id="onboarding-display-name-msg" className="g-hint is-error">{errors.displayName}</span> : null}
+            {displayNameError ? <span id="onboarding-display-name-msg" className="g-hint is-error">{displayNameError}</span> : null}
           </div>
 
           <div className="g-field">
@@ -140,6 +151,7 @@ function OnboardingPublicProfileStep({
                 id="onboarding-username"
                 value={values.username}
                 onChange={(event) => onUpdate({ username: event.target.value.toLowerCase().replace(/^@+/, '') })}
+                onBlur={() => setTouched((current) => ({ ...current, username: true }))}
                 autoCapitalize="none"
                 autoComplete="username"
                 spellCheck={false}
