@@ -16,6 +16,9 @@ import {
   PLAN_CANDIDATES,
   resolvePlanDate,
   scheduleStops,
+  keepStopsNearby,
+  wantsEvening,
+  detectLocationIntent,
   selectCandidates,
   wantsSunset,
   weekdayOf,
@@ -114,10 +117,13 @@ export async function postGalaPlanAiDraft(request: HttpRequest, context: Invocat
 
     const candidatesById = new Map(candidates.map((place) => [place.id, place]));
     const isToday = planDate.date === today.iso;
-    const stopsInOrder = scheduleStops(draft.stops, candidatesById, {
+    const earliestToday = isToday ? Math.ceil((today.minutes + 60) / 15) * 15 : 0;
+    const earliestForVibe = wantsEvening(prompt) ? 16 * 60 : 0;
+    const nearbyStops = keepStopsNearby(draft.stops, candidatesById, detectLocationIntent(places, prompt));
+    const stopsInOrder = scheduleStops(nearbyStops, candidatesById, {
       sunsetMinutes,
       wantsSunset: wantsSunset(prompt),
-      notBefore: isToday ? Math.ceil((today.minutes + 60) / 15) * 15 : undefined,
+      notBefore: Math.max(earliestToday, earliestForVibe) || undefined,
     });
 
     const images = await getApprovedPlaceImagesByPlaceIds(stopsInOrder.map((stop) => stop.place_id)).catch(() => new Map());
