@@ -1,10 +1,8 @@
-import PhotoCard from '../components/discover/PhotoCard'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import type { PlaceCardData } from '../components/PlaceCard'
-import AppHeader from '../components/AppHeader'
-import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
+import { isRainSafe, type PlaceCardData } from '../components/PlaceCard'
+import { GuestAuthPrompt, useGuestAuthPrompt } from '../components/GuestAuthPrompt'
 import PromptBuilderModal from '../components/PromptBuilderModal'
-import { BOTTOM_NAV_RESERVED_CLASS } from '../components/layout/Primitives'
+import { Button, Empty, Page, Sheet } from '../components/ui'
 import { navigateToPath, writePlaceReturnState } from '../utils/navigation'
 import { useAskAiViewportHeightSync } from '../hooks/useAskAiViewportHeightSync'
 import { getApiUrl } from '../utils/apiClient'
@@ -41,7 +39,6 @@ import {
   isSearchResultsRoute,
   updateSearchPageUrl,
   normalizeSearchText,
-  buildSearchSentence,
   buildSearchResultSummary,
   buildFilterSearchText,
   getSearchRequestHeaders,
@@ -49,20 +46,14 @@ import {
 } from '../components/home/homeHelpers'
 
 import {
-  SearchLandingBar,
-  SearchLoadingState,
-  SearchLoadingCard,
-  MobileResultsTabs,
-  toPhotoCardPlace,
-  GuidedSearchPage,
-  MobileResultsView,
-  DesktopResultsView,
+  ExploreSearchBar,
+  QuickFilterChips,
   SearchEmptyState,
-  SearchPagination,
   SearchFilterPanel,
-  ActiveSearchChips,
+  SearchPageBreadcrumb,
+  SearchResults,
+  SearchResultsSkeleton,
 } from '../components/home/search/SearchComponents'
-import MapView from '../components/MapView'
 
 function SearchHub({
   initialPromptBuilderOpen = false,
@@ -80,6 +71,7 @@ function SearchHub({
   )
   const initialRouteCache = initialRouteCacheRef.current
   useAskAiViewportHeightSync()
+  const guestAuth = useGuestAuthPrompt()
   const [isPromptBuilderOpen, setIsPromptBuilderOpen] = useState(initialPromptBuilderOpen)
   const [categories, setCategories] = useState(initialFiltersCacheRef.current?.categories ?? fallbackCategories)
   const [areas, setAreas] = useState<AreaChip[]>(initialFiltersCacheRef.current?.areas ?? fallbackAreas)
@@ -116,6 +108,8 @@ function SearchHub({
   const [searchTotalCount, setSearchTotalCount] = useState(initialRouteCache?.totalCount ?? initialRouteCache?.searchResults.length ?? 0)
   const [searchTotalPages, setSearchTotalPages] = useState(initialRouteCache?.totalPages ?? 1)
   const [hasSearched, setHasSearched] = useState(Boolean(initialRouteCache))
+  const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false)
+  const [rainSafeOnly, setRainSafeOnly] = useState(false)
   const hasRestoredInitialScrollRef = useRef(false)
   const searchRequestVersion = useRef(0)
   const searchRequestStartTimeRef = useRef(0)
@@ -141,11 +135,6 @@ function SearchHub({
     () => (selectedGoodFor ? fallbackGoodForOptions.find((option) => option.id === selectedGoodFor)?.name ?? null : null),
     [selectedGoodFor]
   )
-  const searchSentence = buildSearchSentence({
-    categoryLabel: selectedCategoryName,
-    areaName: selectedAreaName,
-    budgetLabel: selectedBudgetLabel,
-  })
   const searchResultSummary = useMemo(
     () =>
       buildSearchResultSummary({
@@ -159,45 +148,16 @@ function SearchHub({
     [rawQuery, searchTotalCount, selectedAreaName, selectedBudgetLabel, selectedCategoryName, selectedGoodForName]
   )
   const canSubmitSearch = Boolean(rawQuery.trim() || selectedCategory || selectedArea || selectedGoodFor || selectedBudget)
-  const searchFilterPanel = (
-    <SearchFilterPanel
-      cityLabel="City"
-      categoryLabel="Category"
-      budgetLabel="Budget"
-      selectedCity={selectedArea}
-      selectedCategory={selectedCategory}
-      selectedBudget={selectedBudget}
-      cityOptions={areas.filter((area) => area.id !== 'all').map((area) => ({ value: area.id, label: area.name }))}
-      categoryOptions={categories.map((category) => ({ value: category.id, label: category.name }))}
-      budgetOptions={budgetOptions.map((budget) => ({ value: budget.value, label: budget.label }))}
-      onCityChange={(value) => {
-        submitResultFilterChange({ area: value, page: 1 })
-      }}
-      onCategoryChange={(value) => {
-        submitResultFilterChange({ category: value, page: 1 })
-      }}
-      onBudgetChange={(value) => {
-        submitResultFilterChange({ budget: value, page: 1 })
-      }}
-      onClearAll={() => {
-        submitResultFilterChange({
-          category: null,
-          area: null,
-          goodFor: null,
-          budget: null,
-          page: 1,
-        })
-      }}
-    />
-  )
-  const shouldShowSearchFiltersPanel = !hasSearched && !initialSearchState?.autoSearch
+  const categoryOptions = categories.map((category) => ({ value: category.id, label: category.name }))
+  const cityOptions = areas.filter((area) => area.id !== 'all').map((area) => ({ value: area.id, label: area.name }))
+  const budgetFilterOptions = budgetOptions.map((budget) => ({ value: budget.value, label: budget.label }))
   const visiblePlaces = hasSearched ? searchResults : []
   const totalResults = searchTotalCount
   const totalPages = Math.max(1, searchTotalPages)
   const safeCurrentPage = Math.min(Math.max(currentPage, 1), totalPages)
-  const selectedPlace = selectedPlaceId ? visiblePlaces.find((place) => place.id === selectedPlaceId) ?? null : null
-  const shouldShowGuidedSearch = !hasSearched && !initialSearchState?.autoSearch
-  const shouldUseMinimalSearchLayout = Boolean(initialSearchState?.autoSearch)
+  const hasRainData = visiblePlaces.some((place) => Boolean(place.indoor_outdoor || place.weather_fit))
+  const shownPlaces = rainSafeOnly && hasRainData ? visiblePlaces.filter(isRainSafe) : visiblePlaces
+  const searchLabel = activeSearchLabel || rawQuery.trim()
   const isSearching = isInitialSearching || isRefreshingSearch
   const shouldShowSearchLoadingState = isInitialSearching
   const clearFilterChip = (key: 'category' | 'city' | 'good_for' | 'budget') => {
@@ -702,354 +662,124 @@ function SearchHub({
     return () => controller.abort()
   }, [])
 
-  if (shouldUseMinimalSearchLayout) {
+  const closePromptBuilder = () => {
+    setIsPromptBuilderOpen(false)
+    if (initialPromptBuilderOpen) {
+      navigateToPath('/search')
+    }
+  }
+
+  if (isPromptBuilderOpen) {
     return (
-      <div className="gala-page-background min-h-screen overflow-x-hidden text-[var(--text)]">
-        <main className="w-full">
-          {visiblePlaces.length > 0 ? (
-            <>
-              <div className={`mx-auto w-full px-4 pt-[max(12px,env(safe-area-inset-top))] sm:px-6 sm:pt-6 lg:hidden ${BOTTOM_NAV_RESERVED_CLASS}`}>
-                <section className="mx-auto w-full max-w-[430px]">
-                  <SearchLandingBar
-                    value={rawQuery}
-                    onChange={handleRawQueryChange}
-                    onSubmit={() => void handleSearch()}
-                    disabled={isSearching}
-                    canSubmit={canSubmitSearch}
-                    placeholder="Discover a city"
-                    className="!mt-5"
-                  />
-
-                  <ActiveSearchChips
-                    cityLabel={selectedAreaName}
-                    categoryLabel={selectedCategoryName}
-                    goodForLabel={selectedGoodForName}
-                    budgetLabel={selectedBudgetLabel}
-                    onRemoveCity={() => clearFilterChip('city')}
-                    onRemoveCategory={() => clearFilterChip('category')}
-                    onRemoveGoodFor={() => clearFilterChip('good_for')}
-                    onRemoveBudget={() => clearFilterChip('budget')}
-                  />
-
-                  <MobileResultsTabs selectedView={mobileResultsView} onViewChange={setMobileResultsView} />
-
-                  {shouldShowSearchLoadingState ? (
-                    <div className="mt-4 grid gap-3">
-                      <SearchLoadingCard compact />
-                      <SearchLoadingCard compact />
-                    </div>
-                  ) : mobileResultsView === 'cards' ? (
-                    <div className="mt-4 grid gap-3">
-                      <div className={`grid gap-x-4 gap-y-8 transition sm:grid-cols-2 ${isPageLoading ? 'pointer-events-none opacity-60' : 'opacity-100'}`}>
-                        {visiblePlaces.map((place, index) => {
-                          const cardPlace = toPhotoCardPlace(place)
-                          return (
-                            <PhotoCard
-                              key={place.id}
-                              place={cardPlace}
-                              priority={index < 2}
-                              badge={cardPlace.budgetMin === 0 ? 'Free' : null}
-                              isSelected={selectedPlaceId === place.id}
-                              onGuestFavorite={() => setPromptLogin(true)}
-                              onActivate={handlePlaceSelect}
-                            />
-                          )
-                        })}
-                      </div>
-                      <div className="pt-1">
-                        <SearchPagination
-                          currentPage={safeCurrentPage}
-                          totalPages={totalPages}
-                          totalCount={totalResults}
-                          pageSize={SEARCH_RESULTS_PER_PAGE}
-                          isLoading={isPageLoading}
-                          compact
-                          onPageChange={handlePageChange}
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="mt-4 grid gap-4">
-                      <section className="overflow-hidden rounded-[22px] border border-[var(--line)] bg-white shadow-[0_10px_24px_rgba(27,26,23,0.05)]">
-                        <MapView
-                          places={visiblePlaces}
-                          selectedPlaceId={selectedPlaceId}
-                          onPlaceSelect={handleMapPlaceSelect}
-                          onPlaceOpen={handlePlaceSelect}
-                          autoFitToPlaces
-                          className="!h-[360px] !rounded-none !border-0"
-                        />
-                      </section>
-
-                      {selectedPlace ? (
-                        <div className="max-w-[340px]">
-                          <PhotoCard
-                            place={toPhotoCardPlace(selectedPlace)}
-                            isSelected
-                            onGuestFavorite={() => setPromptLogin(true)}
-                            onActivate={handlePlaceSelect}
-                          />
-                        </div>
-                      ) : null}
-
-                      <button
-                        type="button"
-                        onClick={() => setMobileResultsView('cards')}
-                        className="inline-flex items-center gap-2 self-start text-sm font-black text-slate-700"
-                      >
-                        Back to places
-                      </button>
-
-                      <SearchPagination
-                        currentPage={safeCurrentPage}
-                        totalPages={totalPages}
-                        totalCount={totalResults}
-                        pageSize={SEARCH_RESULTS_PER_PAGE}
-                        isLoading={isPageLoading}
-                        compact
-                        onPageChange={handlePageChange}
-                      />
-                    </div>
-                  )}
-                </section>
-              </div>
-
-              <div className="hidden lg:block">
-                <DesktopResultsView
-                  rawQuery={rawQuery}
-                  places={visiblePlaces}
-                  totalCount={totalResults}
-                  currentPage={safeCurrentPage}
-                  totalPages={totalPages}
-                  selectedPlaceId={selectedPlaceId}
-                  heading={searchResultSummary.heading}
-                  subheading={searchResultSummary.subheading || 'in GalaTayo'}
-                  cityLabel={selectedAreaName}
-                  categoryLabel={selectedCategoryName}
-                  goodForLabel={selectedGoodForName}
-                  budgetLabel={selectedBudgetLabel}
-                  isRefreshing={isRefreshingSearch}
-                  isPageLoading={isPageLoading}
-                  scrollContainerRef={desktopResultsScrollRef}
-                  onRawQueryChange={handleRawQueryChange}
-                  onSubmitSearch={() => void handleSearch()}
-                  onSelectPlace={handleMapPlaceSelect}
-                  onPageChange={handlePageChange}
-                  onViewDetails={handlePlaceSelect}
-                  onRemoveCity={() => clearFilterChip('city')}
-                  onRemoveCategory={() => clearFilterChip('category')}
-                  onRemoveGoodFor={() => clearFilterChip('good_for')}
-                  onRemoveBudget={() => clearFilterChip('budget')}
-                />
-              </div>
-            </>
-          ) : (
-            <div className={`mx-auto w-full px-4 pt-[max(12px,env(safe-area-inset-top))] sm:px-6 sm:pt-6 lg:px-8 ${BOTTOM_NAV_RESERVED_CLASS}`}>
-              <section className="mx-auto w-full max-w-[430px] lg:max-w-[640px] xl:max-w-[720px]">
-                <SearchLandingBar
-                  value={rawQuery}
-                  onChange={handleRawQueryChange}
-                  onSubmit={() => void handleSearch()}
-                  disabled={isSearching}
-                  canSubmit={canSubmitSearch}
-                  placeholder="Discover a city"
-                  className="!mt-5"
-                />
-
-                {shouldShowSearchLoadingState ? (
-                  <div className="mt-4 grid gap-3">
-                    <SearchLoadingCard compact />
-                    <SearchLoadingCard compact />
-                  </div>
-                ) : (
-                  <SearchEmptyState
-                    hasSearched={hasSearched}
-                    status={searchStatus}
-                    message={searchFeedbackMessage}
-                    error={searchError}
-                    onSearchAgain={handleSearchAgain}
-                  />
-                )}
-              </section>
-            </div>
-          )}
-        </main>
+      <div className="flex min-h-[70dvh] flex-col">
+        <PromptBuilderModal isOpen={isPromptBuilderOpen} initialState={null} onClose={closePromptBuilder} />
       </div>
     )
   }
 
-    return (
-      <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] lg:h-[calc(100dvh-var(--site-header-h))] lg:overflow-hidden">
-        <GuestAuthPrompt
-          variant="ask-ai"
-          mode="modal"
-          isOpen={promptLogin}
-          onClose={() => setPromptLogin(false)}
-          className="gala-auth-prompt--protected-feature gala-auth-prompt--protected-feature-accent"
-        />
-        {shouldShowSearchFiltersPanel ? searchFilterPanel : null}
+  return (
+    <Page>
+      <GuestAuthPrompt
+        variant="ask-ai"
+        mode="modal"
+        isOpen={promptLogin}
+        onClose={() => setPromptLogin(false)}
+        className="gala-auth-prompt--protected-feature gala-auth-prompt--protected-feature-accent"
+      />
 
-      <div className="gala-page-background flex min-h-screen flex-col overflow-x-hidden lg:hidden">
-          <AppHeader signInLabel="Mag-sign in" minimal />
+      <SearchPageBreadcrumb className="mb-4" />
+      <ExploreSearchBar
+        value={rawQuery}
+        onChange={handleRawQueryChange}
+        onSubmit={() => void handleSearch()}
+        disabled={isSearching}
+        canSubmit={canSubmitSearch}
+        className="lg:max-w-[640px]"
+      />
+      {searchValidationMessage ? <p className="g-hint mt-2">{searchValidationMessage}</p> : null}
 
-          <main className={`overflow-x-hidden ${isPromptBuilderOpen ? 'flex min-h-[100dvh] flex-col overflow-hidden pb-0' : 'flex-1 min-h-0 pb-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] sm:pb-[calc(env(safe-area-inset-bottom,0px)+4.75rem)]'}`}>
-            {isPromptBuilderOpen ? (
-              <PromptBuilderModal
-                isOpen={isPromptBuilderOpen}
-                initialState={null}
-                onClose={() => {
-                  setIsPromptBuilderOpen(false)
-                  if (initialPromptBuilderOpen) {
-                    navigateToPath('/search')
-                  }
-                }}
-              />
-            ) : shouldShowSearchLoadingState ? (
-              <SearchLoadingState searchLabel={activeSearchLabel} mobileViewportCentered />
-            ) : shouldShowGuidedSearch ? (
-              <GuidedSearchPage
-                rawQuery={rawQuery}
-                searchSentence={searchSentence}
-                isSearching={isSearching}
-                validationMessage={searchValidationMessage}
-                searchError={searchError}
-                canSubmit={canSubmitSearch}
-                
-                onRawQueryChange={handleRawQueryChange}
-                onClearSearch={handleClearSearch}
-                onSubmitSearch={() => void handleSearch()}
-              />
-            ) : (
-                  visiblePlaces.length > 0 ? (
-                    <MobileResultsView
-                      places={visiblePlaces}
-                      totalCount={totalResults}
-                      currentPage={safeCurrentPage}
-                      totalPages={totalPages}
-                      selectedPlace={selectedPlace}
-                      selectedPlaceId={selectedPlaceId}
-                      heading={searchResultSummary.heading}
-                      subheading={searchResultSummary.subheading || 'in GalaTayo'}
-                      cityLabel={selectedAreaName}
-                      categoryLabel={selectedCategoryName}
-                      goodForLabel={selectedGoodForName}
-                      budgetLabel={selectedBudgetLabel}
-                      isRefreshing={isRefreshingSearch}
-                      isPageLoading={isPageLoading}
-                      selectedView={mobileResultsView}
-                      onViewChange={setMobileResultsView}
-                      onPageChange={handlePageChange}
-                      onSelectPlace={handleMapPlaceSelect}
-                      onViewDetails={handlePlaceSelect}
-                      onClearSearch={handleClearSearch}
-                      onRemoveCity={() => clearFilterChip('city')}
-                      onRemoveCategory={() => clearFilterChip('category')}
-                      onRemoveGoodFor={() => clearFilterChip('good_for')}
-                      onRemoveBudget={() => clearFilterChip('budget')}
-                    />
-                  ) : (
-                    <section className="px-4 py-4">
-                      <SearchEmptyState
-                        hasSearched={hasSearched}
-                        status={searchStatus}
-                        message={searchFeedbackMessage}
-                        error={searchError}
-                        onSearchAgain={handleSearchAgain}
-                      />
-                    </section>
-                  )
-            )}
-          </main>
-        </div>
+      <QuickFilterChips
+        className="mt-4"
+        categoryOptions={categoryOptions}
+        cityOptions={cityOptions}
+        budgetOptions={budgetFilterOptions}
+        selectedCategory={selectedCategory}
+        selectedCity={selectedArea}
+        selectedBudget={selectedBudget}
+        goodForLabel={selectedGoodForName}
+        onOpenFilters={() => setIsFilterSheetOpen(true)}
+        onCategoryChange={(value) => submitResultFilterChange({ category: value, page: 1 })}
+        onCityChange={(value) => submitResultFilterChange({ area: value, page: 1 })}
+        onBudgetChange={(value) => submitResultFilterChange({ budget: value, page: 1 })}
+        onClearGoodFor={() => clearFilterChip('good_for')}
+        rainSafe={hasRainData ? { on: rainSafeOnly, onToggle: () => setRainSafeOnly((value) => !value) } : undefined}
+      />
 
-        <div
-          className={`hidden w-full lg:grid ${
-            isPromptBuilderOpen
-              ? 'h-[calc(var(--ask-ai-viewport-height,100svh)-var(--site-header-h))] overflow-hidden grid-rows-[auto_minmax(0,1fr)]'
-              : 'h-[calc(var(--ask-ai-viewport-height,100svh)-var(--site-header-h))] overflow-hidden lg:grid-rows-[auto_minmax(0,1fr)_auto]'
-          }`}
-        >
-          <AppHeader minimal />
-
-          <div
-            className={
-              isPromptBuilderOpen
-                ? 'flex h-full min-h-0 flex-col overflow-hidden'
-                : shouldShowGuidedSearch
-                  ? 'min-h-0 overflow-hidden'
-                  : 'grid h-full min-h-0 overflow-hidden grid-rows-[minmax(0,1fr)]'
+      {shouldShowSearchLoadingState ? (
+        <SearchResultsSkeleton />
+      ) : visiblePlaces.length > 0 ? (
+        shownPlaces.length > 0 ? (
+          <SearchResults
+            places={shownPlaces}
+            totalCount={totalResults}
+            currentPage={safeCurrentPage}
+            totalPages={totalPages}
+            heading={searchResultSummary.heading}
+            subheading={[searchResultSummary.subheading || 'in GalaTayo', rainSafeOnly && hasRainData ? '· rain-safe on this page' : ''].filter(Boolean).join(' ')}
+            askAiQuestion={`Help me pick the best spot from these results: ${searchLabel}`}
+            selectedPlaceId={selectedPlaceId}
+            isPageLoading={isPageLoading}
+            mobileView={mobileResultsView}
+            onMobileViewChange={setMobileResultsView}
+            onSelectPlace={handleMapPlaceSelect}
+            onOpenPlace={handlePlaceSelect}
+            onPageChange={handlePageChange}
+            onGuestSave={() => guestAuth.open('favorite')}
+          />
+        ) : (
+          <Empty
+            className="mt-8"
+            title="Walang rain-safe spots dito"
+            description="None of the places on this page are marked indoor or rain-friendly."
+            action={
+              <Button variant="line" onClick={() => setRainSafeOnly(false)}>
+                Show all places
+              </Button>
             }
-          >
-            {isPromptBuilderOpen ? (
-              <PromptBuilderModal
-                isOpen={isPromptBuilderOpen}
-                initialState={null}
-                onClose={() => {
-                  setIsPromptBuilderOpen(false)
-                  if (initialPromptBuilderOpen) {
-                    navigateToPath('/search')
-                  }
-                }}
-              />
-            ) : shouldShowSearchLoadingState ? (
-              <SearchLoadingState searchLabel={activeSearchLabel} />
-            ) : shouldShowGuidedSearch ? (
-              <GuidedSearchPage
-                rawQuery={rawQuery}
-                searchSentence={searchSentence}
-                isSearching={isSearching}
-                validationMessage={searchValidationMessage}
-                searchError={searchError}
-                canSubmit={canSubmitSearch}
-                
-                onRawQueryChange={handleRawQueryChange}
-                onClearSearch={handleClearSearch}
-                onSubmitSearch={() => void handleSearch()}
-              />
-            ) : (
-                  visiblePlaces.length > 0 ? (
-                    <DesktopResultsView
-                      rawQuery={rawQuery}
-                      places={visiblePlaces}
-                      totalCount={totalResults}
-                      currentPage={safeCurrentPage}
-                      totalPages={totalPages}
-                      selectedPlaceId={selectedPlaceId}
-                      heading={searchResultSummary.heading}
-                      subheading={searchResultSummary.subheading || 'in GalaTayo'}
-                      cityLabel={selectedAreaName}
-                      categoryLabel={selectedCategoryName}
-                      goodForLabel={selectedGoodForName}
-                      budgetLabel={selectedBudgetLabel}
-                      isRefreshing={isRefreshingSearch}
-                      isPageLoading={isPageLoading}
-                      scrollContainerRef={desktopResultsScrollRef}
-                      onRawQueryChange={handleRawQueryChange}
-                      onSubmitSearch={() => void handleSearch()}
-                      onSelectPlace={handleMapPlaceSelect}
-                      onPageChange={handlePageChange}
-                      onViewDetails={handlePlaceSelect}
-                      onRemoveCity={() => clearFilterChip('city')}
-                      onRemoveCategory={() => clearFilterChip('category')}
-                      onRemoveGoodFor={() => clearFilterChip('good_for')}
-                      onRemoveBudget={() => clearFilterChip('budget')}
-                    />
-                  ) : (
-                    <section className="px-8 py-8">
-                      <SearchEmptyState
-                        hasSearched={hasSearched}
-                        status={searchStatus}
-                        message={searchFeedbackMessage}
-                        error={searchError}
-                        onSearchAgain={handleSearchAgain}
-                      />
-                    </section>
-                  )
-            )}
-          </div>
-        </div>
-      </div>
-    )
-  }
+          />
+        )
+      ) : (
+        <SearchEmptyState
+          hasSearched={hasSearched}
+          status={searchStatus}
+          message={searchFeedbackMessage}
+          error={searchError}
+          askAiQuestion={searchLabel ? `Find me ${searchLabel} in Metro Manila` : 'Help me find a gala spot in Metro Manila'}
+          onSearchAgain={handleSearchAgain}
+        />
+      )}
+
+      <Sheet open={isFilterSheetOpen} onClose={() => setIsFilterSheetOpen(false)} title="Filters" labelledBy="search-hub-filters-title">
+        <SearchFilterPanel
+          selectedCity={selectedArea}
+          selectedCategory={selectedCategory}
+          selectedBudget={selectedBudget}
+          cityOptions={cityOptions}
+          categoryOptions={categoryOptions}
+          budgetOptions={budgetFilterOptions}
+          onCityChange={(value) => submitResultFilterChange({ area: value, page: 1 })}
+          onCategoryChange={(value) => submitResultFilterChange({ category: value, page: 1 })}
+          onBudgetChange={(value) => submitResultFilterChange({ budget: value, page: 1 })}
+          onClearAll={() => {
+            setIsFilterSheetOpen(false)
+            submitResultFilterChange({ category: null, area: null, goodFor: null, budget: null, page: 1 })
+          }}
+          onApplyFilters={() => setIsFilterSheetOpen(false)}
+        />
+      </Sheet>
+      {guestAuth.promptElement}
+    </Page>
+  )
+}
 
 export default SearchHub

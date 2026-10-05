@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { AppIcon, type AppIconName } from './AppIcon'
+import { CalendarPlus, Camera, Check, Flag, Heart, MessageCircle, ShieldAlert, Sparkles, Star, UserRound, Users, X, type LucideIcon } from 'lucide-react'
 import { buildAuthPath } from '../services/authApi'
 import { navigateToPath } from '../utils/navigation'
 import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
+import { Button, Page, Panel, Sheet, cx } from './ui'
 
 export type GuestAuthVariant =
   | 'ask-ai'
@@ -29,277 +30,150 @@ export type GuestAuthPromptProps = {
 }
 
 type VariantConfig = {
-  icon: AppIconName
+  icon: LucideIcon
   label: string
   title: string
   description: string
   benefits: string[]
-  benefitIcons: AppIconName[]
 }
 
 const variantConfigs: Record<GuestAuthVariant, VariantConfig> = {
   'ask-ai': {
-    icon: 'askAi',
-    label: 'AI PLANNING',
+    icon: Sparkles,
+    label: 'AI planning',
     title: 'You have reached your GalaTayo AI limit',
     description: 'Create an account to unlock 20 chatbot asks and 10 map searches per day, plus save your planning history.',
-    benefits: [
-      '20 AI chatbot asks daily',
-      '10 AI map searches daily',
-      'Save your chats and plans',
-      'Keep browsing with your account',
-    ],
-    benefitIcons: ['askAi', 'map', 'galaPlan', 'users'],
+    benefits: ['20 AI chatbot asks daily', '10 AI map searches daily', 'Save your chats and plans'],
   },
   profile: {
-    icon: 'profile',
-    label: 'PROFILE',
+    icon: UserRound,
+    label: 'Profile',
     title: 'Log in to manage your profile',
-    description: 'Create an account or log in to set up your public profile, follow friends, and personalize GalaTayo.',
-    benefits: [
-      'Edit your username and bio',
-      'Manage your profile privacy',
-      'Find and follow friends',
-      'Keep your gala activity connected',
-    ],
-    benefitIcons: ['profile', 'lock', 'users', 'history'],
+    description: 'Set up your public profile, follow friends, and make GalaTayo yours.',
+    benefits: ['Edit your username and bio', 'Manage your profile privacy', 'Find and follow friends'],
   },
   favorite: {
-    icon: 'favorites',
-    label: 'FAVORITES',
-    title: 'Sign in to save this place',
-    description: 'Log in or create an account to add this spot to your favorites and find it again later.',
-    benefits: [
-      'Save favorite places',
-      'Track recently viewed spots',
-      'Add places to gala plans',
-    ],
-    benefitIcons: ['favorites', 'history', 'calendarPlan'],
+    icon: Heart,
+    label: 'Saved',
+    title: 'Log in to save this place',
+    description: 'Add this spot to your saved places and find it again later.',
+    benefits: ['Save favorite places', 'Track recently viewed spots', 'Add places to gala plans'],
   },
   'add-plan': {
-    icon: 'calendarPlan',
-    label: 'GALA PLAN',
+    icon: CalendarPlus,
+    label: 'Gala plan',
     title: 'Log in to add this to a gala plan',
-    description: 'Create an account or log in to organize places into your gala plans.',
-    benefits: [
-      'Build custom gala plans',
-      'Save places for later',
-      'Plan trips with friends',
-    ],
-    benefitIcons: ['galaPlan', 'favorites', 'users'],
+    description: 'Organize places into gala plans and share them with your barkada.',
+    benefits: ['Build custom gala plans', 'Save places for later', 'Plan trips with friends'],
   },
   'report-place': {
-    icon: 'reports',
-    label: 'PLACE REPORT',
+    icon: Flag,
+    label: 'Place report',
     title: 'Log in to report this place',
-    description: 'To keep reports trustworthy, only signed-in members can submit place concerns.',
-    benefits: [
-      'Report wrong place details',
-      'Help keep GalaTayo accurate',
-      'Support safer recommendations',
-    ],
-    benefitIcons: ['reports', 'check', 'users'],
+    description: 'To keep reports trustworthy, only signed-in members can send place concerns.',
+    benefits: ['Report wrong place details', 'Help keep GalaTayo accurate'],
   },
   'rate-place': {
-    icon: 'reviews',
-    label: 'COMMUNITY',
+    icon: Star,
+    label: 'Community',
     title: 'Log in to rate this place',
-    description: 'Sign in to leave ratings and help other gala-goers discover better spots.',
-    benefits: [
-      'Rate places',
-      'Share your experience',
-      'Help improve recommendations',
-    ],
-    benefitIcons: ['reviews', 'comments', 'users'],
+    description: 'Leave ratings and help other gala-goers find better spots.',
+    benefits: ['Rate places', 'Share your experience'],
   },
   comment: {
-    icon: 'comments',
-    label: 'COMMUNITY',
+    icon: MessageCircle,
+    label: 'Community',
     title: 'Join the conversation',
-    description: 'Log in or create an account to leave a comment and share your thoughts about this place.',
-    benefits: [
-      'Leave comments',
-      'Join community discussions',
-      'Help other gala-goers',
-    ],
-    benefitIcons: ['comments', 'users', 'favorites'],
+    description: 'Log in to leave a comment and share what you think about this place.',
+    benefits: ['Leave comments', 'Help other gala-goers'],
   },
   'report-comment': {
-    icon: 'reports',
-    label: 'COMMENT REPORT',
+    icon: Flag,
+    label: 'Comment report',
     title: 'Log in to report this comment',
-    description: 'Only signed-in members can report comments so we can review issues responsibly.',
-    benefits: [
-      'Report harmful comments',
-      'Help keep discussions safe',
-      'Support the community',
-    ],
-    benefitIcons: ['reports', 'warning', 'users'],
+    description: 'Only signed-in members can report comments so we can review issues properly.',
+    benefits: ['Report harmful comments', 'Help keep discussions safe'],
   },
   'report-user': {
-    icon: 'warning',
-    label: 'USER REPORT',
+    icon: ShieldAlert,
+    label: 'User report',
     title: 'Log in to report this user',
     description: 'Only signed-in members can report users so GalaTayo can review concerns properly.',
-    benefits: [
-      'Report unsafe behavior',
-      'Protect the community',
-      'Help moderation review issues',
-    ],
-    benefitIcons: ['warning', 'lock', 'check'],
+    benefits: ['Report unsafe behavior', 'Help moderation review issues'],
   },
   community: {
-    icon: 'users',
-    label: 'COMMUNITY',
+    icon: Users,
+    label: 'Community',
     title: 'Join the community',
     description: 'Log in to rate this place, leave a comment, and help other gala-goers.',
-    benefits: [
-      'Rate and review places',
-      'Join the conversation',
-      'Help improve recommendations',
-    ],
-    benefitIcons: ['reviews', 'comments', 'users'],
+    benefits: ['Rate and review places', 'Join the conversation'],
   },
   'contribute-photo': {
-    icon: 'photo',
-    label: 'PHOTO CONTRIBUTION',
-    title: 'Log in to contribute a photo',
-    description: 'Sign in to share your photos of this place and help other gala-goers see more of it.',
-    benefits: [
-      'Share your travel photos',
-      'Help the community discover spots',
-      'Get attribution for your photos',
-    ],
-    benefitIcons: ['photo', 'users', 'profile'],
+    icon: Camera,
+    label: 'Photo',
+    title: 'Log in to add a photo',
+    description: 'Share your photos of this place and help others see more of it.',
+    benefits: ['Share your photos', 'Get credit for your photos'],
   },
 }
 
-function GuestAuthPromptCard({
-  variant,
-  mode,
-  onClose,
-  className = '',
-}: {
-  variant: GuestAuthVariant
-  mode: GuestAuthDisplayMode
-  onClose?: () => void
-  className?: string
-}) {
+function GuestAuthPromptBody({ variant, titleId, onClose, onLater }: { variant: GuestAuthVariant; titleId: string; onClose?: () => void; onLater: () => void }) {
   const config = variantConfigs[variant]
+  const Icon = config.icon
   const currentPath = `${window.location.pathname}${window.location.search}`
-  const modalWidthClass = mode === 'modal' ? 'mx-auto w-full max-w-[360px] sm:max-w-[400px] lg:max-w-[420px]' : ''
-  const isDarkMode =
-    typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'dark'
-  const useAccentIconTint = className?.includes('gala-auth-prompt--protected-feature-accent') && isDarkMode
-  const accentIconStyle = useAccentIconTint ? { color: '#9fc2ff' } : undefined
 
-  const card = (
-    <section
-      className={`gala-auth-prompt overflow-hidden rounded-[24px] border border-[var(--line)] bg-white shadow-[0_12px_38px_rgba(27,26,23,0.07)] ${modalWidthClass} ${mode === 'inline-card' ? 'mx-auto w-full max-w-[480px]' : ''} ${className}`}
-    >
-      <div className="px-5 pt-5 pb-3 sm:px-6 sm:pt-6">
-        <div className="flex items-start gap-3.5">
-          <span className="gala-auth-prompt__icon-badge flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px] bg-[var(--accent-soft)] text-[var(--accent-deep)]">
-            <AppIcon name={config.icon} className="gala-auth-prompt__icon h-5 w-5" style={accentIconStyle} />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--accent)]">
-              {config.label}
-            </p>
-            <h2 className="mt-1 text-[17px] font-black leading-tight text-[var(--text-main)] sm:text-[18px]">
-              {config.title}
-            </h2>
-            <p className="mt-2 text-[13px] font-semibold leading-5 text-[var(--muted)]">
-              {config.description}
-            </p>
-          </div>
-          {onClose ? (
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Close"
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-[var(--line)] bg-white text-slate-500 transition hover:bg-slate-50 hover:text-slate-800"
-            >
-              <AppIcon name="clear" className="h-3.5 w-3.5" />
-            </button>
-          ) : null}
+  return (
+    <>
+      <div className="flex items-start gap-3">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full" style={{ background: 'var(--fill)', color: 'var(--ink)' }} aria-hidden="true">
+          <Icon className="g-ic" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="g-eyebrow">{config.label}</p>
+          <h2 id={titleId} className="g-h3 mt-1">
+            {config.title}
+          </h2>
         </div>
+        {onClose ? (
+          <Button variant="soft" size="sm" iconOnly onClick={onClose} aria-label="Close">
+            <X aria-hidden="true" />
+          </Button>
+        ) : null}
       </div>
+
+      <p className="g-sm g-mut mt-3 leading-5">{config.description}</p>
 
       {config.benefits.length > 0 ? (
-        <div className="px-5 pb-4 pl-[4.5rem] sm:px-6 sm:pl-16 md:pl-20">
-          <ul className="grid gap-1.5">
-            {config.benefits.map((benefit, index) => (
-              <li
-                key={benefit}
-                className="flex items-center gap-2 text-[12px] font-semibold text-[var(--muted)]"
-              >
-                <AppIcon
-                  name={config.benefitIcons[index] ?? 'check'}
-                  className="gala-auth-prompt__benefit-icon h-3.5 w-3.5 shrink-0 text-[var(--accent)]"
-                  style={accentIconStyle}
-                />
-                {benefit}
-              </li>
-            ))}
-          </ul>
-        </div>
+        <ul className="mt-3 grid gap-1.5">
+          {config.benefits.map((benefit) => (
+            <li key={benefit} className="g-sm flex items-center gap-2">
+              <Check className="h-4 w-4 shrink-0" style={{ color: 'var(--ok)' }} aria-hidden="true" />
+              {benefit}
+            </li>
+          ))}
+        </ul>
       ) : null}
 
-      <div className="px-5 pt-1 pb-2 sm:px-6">
-        <div className="grid grid-cols-2 gap-2.5">
-          <button
-            type="button"
-            onClick={() => navigateToPath(buildAuthPath('/login', currentPath))}
-            className="inline-flex h-11 w-full items-center justify-center rounded-[14px] bg-[var(--accent)] px-4 text-[14px] font-semibold text-white transition hover:bg-[var(--accent-deep)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)]"
-          >
-            Log in
-          </button>
-          <button
-            type="button"
-            onClick={() => navigateToPath(buildAuthPath('/signup', currentPath))}
-            className="inline-flex h-11 w-full items-center justify-center rounded-[14px] border border-[var(--line)] bg-white px-4 text-[14px] font-semibold text-[var(--text-main)] transition hover:border-[var(--line-strong)] hover:bg-[var(--surface-alt)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)]"
-          >
-            Create account
-          </button>
-        </div>
-        <div className="mt-3 flex justify-center">
-          {onClose ? (
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-3 text-[13px] font-semibold text-[var(--muted)] transition hover:text-[var(--text-main)]"
-            >
-              Maybe later
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => navigateToPath('/home')}
-              className="px-4 py-3 text-[13px] font-semibold text-[var(--muted)] transition hover:text-[var(--text-main)]"
-            >
-              Maybe later
-            </button>
-          )}
-        </div>
+      <div className="mt-5 grid grid-cols-2 gap-2">
+        <Button variant="ink" block onClick={() => navigateToPath(buildAuthPath('/login', currentPath))}>
+          Log in
+        </Button>
+        <Button variant="line" block onClick={() => navigateToPath(buildAuthPath('/signup', currentPath))}>
+          Create account
+        </Button>
       </div>
-    </section>
+      <div className="mt-2 flex justify-center">
+        <Button variant="text" size="sm" onClick={onLater}>
+          Maybe later
+        </Button>
+      </div>
+    </>
   )
-
-  return card
 }
 
-function GuestAuthPromptModal({
-  variant,
-  isOpen,
-  onClose,
-  className,
-}: {
-  variant: GuestAuthVariant
-  isOpen: boolean
-  onClose: () => void
-  className?: string
-}) {
+function GuestAuthPromptModal({ variant, isOpen, onClose }: { variant: GuestAuthVariant; isOpen: boolean; onClose: () => void }) {
+  const titleId = useId()
+
   useEffect(() => {
     if (!isOpen) {
       return undefined
@@ -326,46 +200,21 @@ function GuestAuthPromptModal({
   }
 
   return createPortal(
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label="Sign in required"
-      className={`fixed inset-0 z-[7000] flex items-center justify-center bg-slate-950/45 px-3 py-6 sm:px-4 ${className ?? ''}`}
-      onClick={onClose}
-    >
-      <div className="w-full" onClick={(event) => event.stopPropagation()}>
-        <GuestAuthPromptCard variant={variant} mode="modal" onClose={onClose} className={className} />
+    <Sheet open onClose={onClose} labelledBy={titleId}>
+      <div className="mx-auto w-full max-w-[420px] pb-1">
+        <GuestAuthPromptBody variant={variant} titleId={titleId} onClose={onClose} onLater={onClose} />
       </div>
-    </div>,
+    </Sheet>,
     document.body,
   )
 }
 
-function GuestAuthPromptPageState({
-  variant,
-  backPath,
-  backLabel,
-}: {
-  variant: GuestAuthVariant
-  backPath?: string
-  backLabel?: string
-}) {
+function GuestAuthPromptCard({ variant, className }: { variant: GuestAuthVariant; className?: string }) {
+  const titleId = useId()
   return (
-    <main className="gala-page-background flex min-h-screen items-center justify-center px-4 py-8">
-      <div className="w-full max-w-[440px] lg:max-w-[460px] xl:max-w-[480px] 2xl:max-w-[500px]">
-        {backPath ? (
-          <button
-            type="button"
-            onClick={() => navigateToPath(backPath)}
-            className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-[var(--line)] bg-white/88 px-4 py-2 text-[13px] font-semibold text-slate-700 transition hover:border-[var(--accent)] hover:text-[var(--accent-deep)]"
-          >
-            <AppIcon name="back" className="h-3.5 w-3.5" />
-            {backLabel || 'Back'}
-          </button>
-        ) : null}
-        <GuestAuthPromptCard variant={variant} mode="page-state" />
-      </div>
-    </main>
+    <Panel as="section" aria-labelledby={titleId} className={cx('mx-auto w-full max-w-[480px]', className)}>
+      <GuestAuthPromptBody variant={variant} titleId={titleId} onLater={() => navigateToPath('/home')} />
+    </Panel>
   )
 }
 
@@ -399,19 +248,16 @@ export function GuestAuthPrompt(props: GuestAuthPromptProps) {
   const { variant, mode = 'modal', isOpen, onClose, className } = props
 
   if (mode === 'page-state') {
-    return <GuestAuthPromptPageState variant={variant} />
+    return (
+      <Page narrow>
+        <GuestAuthPromptCard variant={variant} className="md:mt-6" />
+      </Page>
+    )
   }
 
   if (mode === 'inline-card') {
-    return <GuestAuthPromptCard variant={variant} mode="inline-card" className={className} />
+    return <GuestAuthPromptCard variant={variant} className={className} />
   }
 
-  return (
-    <GuestAuthPromptModal
-      variant={variant}
-      isOpen={isOpen ?? false}
-      onClose={onClose ?? (() => {})}
-      className={className}
-    />
-  )
+  return <GuestAuthPromptModal variant={variant} isOpen={isOpen ?? false} onClose={onClose ?? (() => {})} />
 }

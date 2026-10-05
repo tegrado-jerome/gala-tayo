@@ -1,14 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ChangeEvent, FormEvent, ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCheck, faChevronDown, faCircleUser, faGlobe, faShield } from '@fortawesome/free-solid-svg-icons'
-import AppHeader from '../components/AppHeader'
+import { ChevronRight } from 'lucide-react'
 import BirthdatePicker from '../components/BirthdatePicker'
-import PageHeroHeader from '../components/PageHeroHeader'
 import MinimalBackNav from '../components/navigation/MinimalBackNav'
 import ProfileAvatar from '../components/ProfileAvatar'
-import { PageContainer, PageShell, ResponsiveGrid, CardSurface, Stack, Section } from '../components/layout/ResponsiveLayouts'
+import { Button, Empty, Page, Panel, SectionHead, buttonClass } from '../components/ui'
 import { useAppUser } from '../context/AppUserContext'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { uploadProfileAvatar } from '../services/onboardingApi'
@@ -68,10 +65,6 @@ function emitAccountUpdated() {
   window.dispatchEvent(new Event('galatayo:account-updated'))
 }
 
-function inputClassName() {
-  return 'gala-field px-3'
-}
-
 function getAccountSettingsResumeCacheKey(userId: string) {
   return `${ACCOUNT_SETTINGS_RESUME_CACHE_PREFIX}${userId}`
 }
@@ -118,191 +111,23 @@ function writeAccountSettingsResumeCache(userId: string, cache: AccountSettingsR
   }
 }
 
-type PrivacyOptionTone = 'public' | 'private' | 'followers' | 'unlisted'
+const optionalLabel = <span className="g-fnt font-normal">Optional</span>
 
-type PrivacyOption = {
-  value: string
-  label: string
-  description: string
-  tone: PrivacyOptionTone
-}
-
-const profileVisibilityOptions: PrivacyOption[] = [
-  {
-    value: 'public',
-    label: 'Public',
-    description: 'Anyone can view your profile and follower lists.',
-    tone: 'public',
-  },
-  {
-    value: 'private',
-    label: 'Private',
-    description: 'People need approval before they can follow you.',
-    tone: 'private',
-  },
-]
-
-type PrivacySelectProps = {
-  label: string
-  value: string
-  onChange: (value: string) => void
-  options: PrivacyOption[]
-  helperText: string
-  id: string
-}
-
-function PrivacySelect({ label, value, onChange, options, helperText, id }: PrivacySelectProps) {
-  const [isOpen, setIsOpen] = useState(false)
-  const rootRef = useRef<HTMLDivElement | null>(null)
-  const menuRef = useRef<HTMLDivElement | null>(null)
-  const buttonId = `${id}-button`
-  const menuId = `${id}-menu`
-  const selectedOption = options.find((option) => option.value === value) ?? options[0]
-
-  useEffect(() => {
-    function handlePointerDown(event: PointerEvent) {
-      const targetNode = event.target as Node
-      if (!rootRef.current?.contains(targetNode)) {
-        setIsOpen(false)
-      }
-    }
-
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        setIsOpen(false)
-      }
-    }
-
-    window.addEventListener('pointerdown', handlePointerDown)
-    window.addEventListener('keydown', handleKeyDown)
-
-    return () => {
-      window.removeEventListener('pointerdown', handlePointerDown)
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (!isOpen) {
-      return
-    }
-
-    document.documentElement.classList.add('gala-select-open')
-    document.body.classList.add('gala-select-open')
-
-    const scrollMenuIntoView = () => {
-      const menuElement = menuRef.current
-      if (!menuElement) {
-        return
-      }
-
-      const menuRect = menuElement.getBoundingClientRect()
-      const viewportPadding = 16
-      const bottomNav = document.querySelector<HTMLElement>('nav[aria-label="Primary"]')
-      const navRect = bottomNav?.getBoundingClientRect()
-      const reservedBottomSpace = navRect && navRect.height > 0 && navRect.top < window.innerHeight ? navRect.height + 12 : 0
-      const visibleBottom = window.innerHeight - reservedBottomSpace - viewportPadding
-      const overflowBottom = menuRect.bottom - visibleBottom
-      const overflowTop = viewportPadding - menuRect.top
-
-      if (overflowBottom > 0) {
-        window.scrollBy({ top: overflowBottom + 12, behavior: 'smooth' })
-      } else if (overflowTop > 0) {
-        window.scrollBy({ top: -(overflowTop + 12), behavior: 'smooth' })
-      }
-    }
-
-    const frame = window.requestAnimationFrame(scrollMenuIntoView)
-
-    return () => {
-      window.cancelAnimationFrame(frame)
-      document.documentElement.classList.remove('gala-select-open')
-      document.body.classList.remove('gala-select-open')
-    }
-  }, [isOpen])
-
-  return (
-    <div ref={rootRef} className="gala-select-root grid w-full min-w-0 gap-2">
-      <span className="text-sm font-semibold text-slate-800">{label}</span>
-      <div className="relative w-full min-w-0">
-        <button
-          id={buttonId}
-          type="button"
-          aria-haspopup="listbox"
-          aria-expanded={isOpen}
-          aria-controls={menuId}
-          onClick={() => setIsOpen((current) => !current)}
-          className="gala-select-trigger"
-        >
-          <span className="flex min-w-0 items-center gap-3">
-            <span className={`gala-select-tone gala-select-tone-${selectedOption.tone}`}>{selectedOption.label.slice(0, 1)}</span>
-            <span className="min-w-0">
-              <span className="block truncate text-left text-sm font-semibold text-slate-900">{selectedOption.label}</span>
-              <span className="block truncate text-left text-xs text-slate-500">{selectedOption.description}</span>
-            </span>
-          </span>
-          <FontAwesomeIcon icon={faChevronDown} className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-        </button>
-
-        {isOpen ? (
-          <div
-            ref={menuRef}
-            id={menuId}
-            role="listbox"
-            aria-labelledby={buttonId}
-            className="gala-select-menu absolute left-0 top-full mt-2 w-full max-w-full"
-          >
-            {options.map((option) => {
-              const selected = option.value === value
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  role="option"
-                  aria-selected={selected}
-                  onClick={() => {
-                    onChange(option.value)
-                    setIsOpen(false)
-                  }}
-                  className={`gala-select-option ${selected ? 'gala-select-option-selected' : ''}`}
-                >
-                  <span className={`gala-select-tone gala-select-tone-${option.tone}`}>{option.label.slice(0, 1)}</span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-semibold text-slate-900">{option.label}</span>
-                    <span className="block text-xs text-slate-500">{option.description}</span>
-                  </span>
-                  {selected ? <FontAwesomeIcon icon={faCheck} className="h-4 w-4 text-[var(--accent)]" /> : null}
-                </button>
-              )
-            })}
-          </div>
-        ) : null}
-      </div>
-      <span className="text-xs text-slate-500">{helperText}</span>
-    </div>
+function SettingsRow({ label, value, onClick }: { label: string; value?: ReactNode; onClick?: () => void }) {
+  const body = (
+    <>
+      <span className="min-w-0 flex-1 text-[15px]">{label}</span>
+      {value ? <span className="g-mut min-w-0 truncate text-right text-sm">{value}</span> : null}
+      {onClick ? <ChevronRight className="h-4 w-4 shrink-0 text-[var(--ink-3)]" aria-hidden="true" /> : null}
+    </>
   )
-}
-
-
-type SectionHeaderProps = {
-  title: string
-  description: string
-  icon: ReactNode
-}
-
-function SectionHeader({ title, description, icon }: SectionHeaderProps) {
-  return (
-    <div className="account-settings-section-header group rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-4 transition duration-200 hover:border-slate-300 hover:bg-white hover:shadow-[0_10px_30px_rgba(27,26,23,0.06)] sm:px-5">
-      <div className="flex items-start gap-3">
-        <span className="account-settings-section-icon inline-flex h-10 w-10 flex-none items-center justify-center rounded-xl bg-white text-[var(--accent-deep)] ring-1 ring-slate-200 transition group-hover:scale-[1.02] group-hover:ring-[rgba(var(--accent-rgb),0.22)]">
-          {icon}
-        </span>
-        <div className="min-w-0">
-          <h2 className="account-settings-section-title text-lg font-bold text-slate-900">{title}</h2>
-          <p className="account-settings-section-description mt-1 text-sm text-slate-500">{description}</p>
-        </div>
-      </div>
-    </div>
+  const className = 'flex min-h-[52px] w-full items-center gap-3 px-4 py-2.5 text-left'
+  return onClick ? (
+    <button type="button" onClick={onClick} className={`${className} transition-colors hover:bg-[var(--fill)]`}>
+      {body}
+    </button>
+  ) : (
+    <div className={className}>{body}</div>
   )
 }
 
@@ -641,230 +466,134 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
         provider_avatar_url: currentUser?.profile?.providerAvatarUrl ?? null,
       }
 
-  const sharedInputClassName = inputClassName()
-
   return (
-    <PageShell>
-      <AppHeader />
-      <main className="w-full pb-20 pt-4 sm:pb-24 sm:pt-5 lg:py-8 lg:pb-28">
-        <PageContainer size="wide" className="account-settings-page">
-          <div className="mb-5">
-            <MinimalBackNav to="/profile" label="Profile" preferHistory={false} className="hidden sm:inline-flex" />
+    <Page narrow>
+      <MinimalBackNav to="/profile" label="Profile" preferHistory={false} />
+      <h1 className="g-h1 mt-2">Account settings</h1>
+      <p className="g-mut mt-1 truncate text-[15px]">{currentUser?.user.email ?? 'Your profile, details and privacy'}</p>
+
+      {isLoading && !(currentUser && profile) ? <FormSkeleton rows={6} className="mt-6" /> : null}
+      {currentUser && profile ? (
+        <form onSubmit={handleSave}>
+          <Panel className="mt-6 flex items-center gap-4">
+            <ProfileAvatar profile={avatarProfile} size="lg" />
+            <div className="min-w-0 flex-1">
+              <p className="g-h3 truncate">{displayName.trim() || 'Your account'}</p>
+              <p className="g-sm g-mut truncate">@{publicUsername || 'username'}</p>
+              <label className={`${buttonClass({ variant: 'line', size: 'sm' })} mt-2 cursor-pointer`}>
+                {isUploadingAvatar ? 'Uploading…' : 'Change photo'}
+                <input type="file" accept={avatarUploadAccept} onChange={handleAvatarChange} className="sr-only" />
+              </label>
+            </div>
+          </Panel>
+          <p className={`g-hint mt-2 ${avatarError ? 'is-error' : ''}`}>{avatarError || 'Optional. JPEG, PNG, or WebP up to 5MB.'}</p>
+
+          <SectionHead title="Profile" sub="Basic info people recognize across GalaTayo." />
+          <Panel className="grid gap-4 sm:grid-cols-2">
+            <div className="g-field">
+              <label htmlFor="settings-first-name">First name</label>
+              <input id="settings-first-name" value={firstName} onChange={(event) => setFirstName(event.target.value)} className="g-input" autoComplete="given-name" />
+            </div>
+            <div className="g-field">
+              <label htmlFor="settings-middle-name">Middle name {optionalLabel}</label>
+              <input id="settings-middle-name" value={middleName} onChange={(event) => setMiddleName(event.target.value)} className="g-input" autoComplete="additional-name" />
+            </div>
+            <div className="g-field">
+              <label htmlFor="settings-last-name">Last name</label>
+              <input id="settings-last-name" value={lastName} onChange={(event) => setLastName(event.target.value)} className="g-input" autoComplete="family-name" />
+            </div>
+            <div className="g-field">
+              <span className="g-label">Birthdate {optionalLabel}</span>
+              <BirthdatePicker
+                value={birthdate}
+                onChange={(nextBirthdate) => {
+                  setBirthdate(nextBirthdate)
+                  saveBirthdate(nextBirthdate)
+                }}
+                error={birthdateError}
+              />
+            </div>
+            <div className="g-field sm:col-span-2">
+              <label htmlFor="settings-display-name">Display name</label>
+              <input id="settings-display-name" value={displayName} onChange={(event) => setDisplayName(event.target.value)} maxLength={80} className="g-input" />
+            </div>
+          </Panel>
+
+          <SectionHead title="Public details" sub="What people see when they open your profile." />
+          <Panel className="grid gap-4">
+            <div className="g-field">
+              <label htmlFor="settings-username">Username</label>
+              <div className="relative">
+                <span className="g-mut pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2" aria-hidden="true">@</span>
+                <input
+                  id="settings-username"
+                  value={usernameInput}
+                  onChange={(event) => setUsernameInput(event.target.value.toLowerCase())}
+                  className="g-input"
+                  style={{ paddingLeft: 30 }}
+                  aria-invalid={Boolean(usernameError) || undefined}
+                  aria-describedby="settings-username-hint"
+                  autoCapitalize="none"
+                  autoComplete="username"
+                  spellCheck={false}
+                />
+              </div>
+              <span id="settings-username-hint" className={`g-hint ${usernameError ? 'is-error' : ''}`}>
+                {usernameError || 'People can search for you with this username.'}
+              </span>
+            </div>
+            <div className="g-field">
+              <label htmlFor="settings-bio">Bio {optionalLabel}</label>
+              <textarea id="settings-bio" value={bioInput} onChange={(event) => setBioInput(event.target.value)} maxLength={280} className="g-input" />
+              <span className="g-hint text-right">{bioInput.length}/280</span>
+            </div>
+          </Panel>
+
+          <SectionHead title="Privacy and security" />
+          <div className="g-card divide-y divide-[var(--line-2)] overflow-hidden">
+            <label className="flex min-h-[64px] cursor-pointer items-center gap-3 px-4 py-3">
+              <span className="min-w-0 flex-1">
+                <span className="block text-[15px]">Public profile</span>
+                <span className="g-sm g-mut block">
+                  {isPublic ? 'Anyone can view your profile and your follower/following lists.' : 'People need to request access, and follower/following names stay hidden.'}
+                </span>
+              </span>
+              <input type="checkbox" role="switch" checked={isPublic} onChange={(event) => setIsPublic(event.target.checked)} className="peer sr-only" />
+              <span
+                aria-hidden="true"
+                className="relative h-7 w-12 shrink-0 rounded-full bg-[var(--fill-2)] transition-colors peer-checked:bg-[var(--ink)] peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--ink)] after:absolute after:top-0.5 after:left-0.5 after:h-6 after:w-6 after:rounded-full after:bg-[var(--surface)] after:shadow-[var(--sh-1)] after:transition-transform peer-checked:after:translate-x-5"
+              />
+            </label>
+            <SettingsRow label="Password" value="Change" onClick={() => navigateToPath('/account-settings/change-password')} />
+            <SettingsRow label="Privacy center" onClick={() => navigateToPath('/privacy-center')} />
+            <SettingsRow label="View my profile" onClick={() => navigateToPath('/profile')} />
+            <SettingsRow label="Joined" value={formatDate(profile.created_at)} />
           </div>
 
-          {isLoading && !(currentUser && profile) ? <FormSkeleton rows={6} /> : null}
-          {currentUser && profile ? (
-            <form onSubmit={handleSave} className="grid gap-6 lg:gap-8">
-              <PageHeroHeader
-                className="account-settings-hero"
-                eyebrow="Account Settings"
-                title="Manage your profile and privacy"
-                description="Update your personal details, public profile, and default visibility settings in one place."
-                icon={<FontAwesomeIcon icon={faCircleUser} className="h-4 w-4" />}
-                badges={
-                  <div className="account-settings-hero-meta">
-                    <span className="account-settings-hero-chip">
-                      <FontAwesomeIcon icon={faGlobe} className="h-3.5 w-3.5" />
-                      <span>{profile.is_public ? 'Public profile' : 'Private profile'}</span>
-                    </span>
-                    <span className="account-settings-hero-divider" aria-hidden="true" />
-                    <span className="account-settings-hero-chip account-settings-hero-chip-email">
-                      <span>{currentUser.user.email ?? 'Email unavailable'}</span>
-                    </span>
-                  </div>
-                }
-              />
-              <CardSurface pad="loose" tone="outlined" className="rounded-2xl">
-                <div className="grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
-                  <div className="self-start">
-                    <div className="mt-5 flex items-center gap-3">
-                      <ProfileAvatar profile={avatarProfile} size="lg" />
-                      <div className="min-w-0">
-                        <p className="truncate text-base font-bold text-slate-900">{displayName.trim() || 'Your account'}</p>
-                        <p className="truncate text-sm text-slate-500">@{publicUsername || 'username'}</p>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => navigateToPath('/profile')}
-                      className="app-button app-button-primary app-button-md mt-4 w-full sm:w-auto"
-                    >
-                      Go to profile
-                    </button>
-                  </div>
-
-                  <div className="grid gap-4 border-t border-slate-200 pt-4 text-sm text-slate-600 lg:border-t-0 lg:border-l lg:pl-6 lg:pt-0">
-                    <div className="flex items-start justify-between gap-3">
-                      <span>Joined</span>
-                      <span className="text-right font-medium text-slate-900">{formatDate(profile.created_at)}</span>
-                    </div>
-                    <div className="flex items-start justify-between gap-3">
-                      <span>Visibility</span>
-                      <span className="text-right font-medium text-slate-900">{profile.is_public ? 'Public' : 'Private'}</span>
-                    </div>
-                    <div className="flex items-start justify-between gap-3">
-                      <span>Password</span>
-                      <button
-                        type="button"
-                        onClick={() => navigateToPath('/account-settings/change-password')}
-                        className="font-semibold text-[var(--accent)] hover:underline"
-                      >
-                        Change
-                      </button>
-                    </div>
-                    <p className="text-sm text-slate-500">{currentUser.user.email ?? 'No email on file'}</p>
-                  </div>
-                </div>
-              </CardSurface>
-
-              <Section gap="loose">
-                <Section gap="default" as="section" className="border-b border-slate-200 pb-8">
-                  <SectionHeader
-                    title="Profile"
-                    description="Basic info people recognize across GalaTayo."
-                    icon={<FontAwesomeIcon icon={faCircleUser} className="h-5 w-5" />}
-                  />
-                  <div className="mt-5">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex items-center gap-4">
-                        <ProfileAvatar profile={avatarProfile} size="lg" />
-                        <div>
-                          <p className="text-base font-semibold text-slate-900">{displayName.trim() || 'Your account'}</p>
-                          <p className="text-sm text-slate-500">{currentUser.user.email ?? 'No email on file'}</p>
-                        </div>
-                      </div>
-                      <div className="sm:text-right">
-                        <label className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
-                          {isUploadingAvatar ? 'Uploading...' : 'Upload Photo'}
-                          <input type="file" accept={avatarUploadAccept} onChange={handleAvatarChange} className="sr-only" />
-                        </label>
-                        <p className="mt-2 flex items-center gap-2 text-xs text-slate-500">
-                          JPEG, PNG, or WebP up to 5MB.
-                          <span className="optional-label">Optional</span>
-                        </p>
-                      </div>
-                    </div>
-                    {avatarError ? <p className="mt-3 text-sm font-semibold text-red-600">{avatarError}</p> : null}
-
-                    <ResponsiveGrid cols={2} gap="default" className="mt-6">
-                      <label className="grid gap-2">
-                        <span className="text-sm font-semibold text-slate-800">First Name</span>
-                        <input value={firstName} onChange={(event) => setFirstName(event.target.value)} className={sharedInputClassName} />
-                      </label>
-                      <label className="grid gap-2">
-                        <span className="flex items-center gap-2 text-sm font-semibold text-slate-800">
-                          Middle Name
-                          <span className="optional-label">Optional</span>
-                        </span>
-                        <input value={middleName} onChange={(event) => setMiddleName(event.target.value)} className={sharedInputClassName} />
-                      </label>
-                      <label className="grid gap-2">
-                        <span className="text-sm font-semibold text-slate-800">Last Name</span>
-                        <input value={lastName} onChange={(event) => setLastName(event.target.value)} className={sharedInputClassName} />
-                      </label>
-                      <div className="hidden sm:block" aria-hidden="true" />
-                      <label className="grid gap-2">
-                        <span className="flex items-center gap-2 text-sm font-semibold text-slate-800">
-                          Birthdate
-                          <span className="optional-label">Optional</span>
-                        </span>
-                        <BirthdatePicker
-                          value={birthdate}
-                          onChange={(nextBirthdate) => {
-                            setBirthdate(nextBirthdate)
-                            saveBirthdate(nextBirthdate)
-                          }}
-                          error={birthdateError}
-                        />
-                      </label>
-                      <label className="grid gap-2 sm:col-span-2">
-                        <span className="text-sm font-semibold text-slate-800">Display Name</span>
-                        <input value={displayName} onChange={(event) => setDisplayName(event.target.value)} maxLength={80} className={sharedInputClassName} />
-                      </label>
-                    </ResponsiveGrid>
-                  </div>
-                </Section>
-
-                <Section gap="default" as="section" className="border-b border-slate-200 pb-8">
-                  <SectionHeader
-                    title="Public Details"
-                    description="This is the information shown when people open your public profile."
-                    icon={<FontAwesomeIcon icon={faGlobe} className="h-5 w-5" />}
-                  />
-                  <div className="mt-5 grid gap-4">
-                    <label className="grid gap-2">
-                      <span className="text-sm font-semibold text-slate-800">Username</span>
-                      <span className="flex h-11 items-center rounded-xl border border-slate-300 bg-white px-3 focus-within:border-[#1877f2] focus-within:ring-4 focus-within:ring-[#e7f3ff]">
-                        <span className="font-semibold text-slate-500">@</span>
-                        <input
-                          value={usernameInput}
-                          onChange={(event) => setUsernameInput(event.target.value.toLowerCase())}
-                          className="min-w-0 flex-1 border-0 bg-transparent px-1 text-sm font-medium text-slate-900 outline-none"
-                          autoCapitalize="none"
-                          autoComplete="username"
-                          spellCheck={false}
-                        />
-                      </span>
-                      <span className={`text-xs font-medium ${usernameError ? 'text-red-600' : 'text-slate-500'}`}>
-                        {usernameError || 'People can search for you with this username.'}
-                      </span>
-                    </label>
-
-                    <label className="grid gap-2">
-                      <span className="flex items-center gap-2 text-sm font-semibold text-slate-800">
-                        Bio
-                        <span className="optional-label">Optional</span>
-                      </span>
-                      <textarea
-                        value={bioInput}
-                        onChange={(event) => setBioInput(event.target.value)}
-                        maxLength={280}
-                        className="min-h-28 resize-none rounded-xl border border-slate-300 bg-white px-3 py-3 text-sm font-medium leading-6 text-slate-900 outline-none transition focus:border-[#1877f2] focus:ring-4 focus:ring-[#e7f3ff]"
-                      />
-                    </label>
-                  </div>
-                </Section>
-
-                <Section gap="default" as="section">
-                  <SectionHeader
-                    title="Privacy"
-                    description="Keep these defaults simple and easy to scan."
-                    icon={<FontAwesomeIcon icon={faShield} className="h-5 w-5" />}
-                  />
-                  <div className="mt-5 grid w-full min-w-0 gap-4">
-                    <PrivacySelect
-                      id="profile-visibility"
-                      label="Profile Visibility"
-                      value={isPublic ? 'public' : 'private'}
-                      onChange={(nextValue) => setIsPublic(nextValue === 'public')}
-                      options={profileVisibilityOptions}
-                      helperText={isPublic ? 'Anyone can view your profile and your follower/following lists.' : 'People need to request access, and follower/following names stay hidden.'}
-                    />
-                  </div>
-                </Section>
-
-                <Stack gap="tight">
-                  {errorMessage ? <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{errorMessage}</p> : null}
-                  <div className="flex justify-end">
-                    <button
-                      type="submit"
-                      disabled={Boolean(usernameError || personalInfoError) || isSaving}
-                      className="app-button app-button-primary app-button-md px-5"
-                    >
-                      {isSaving ? 'Saving...' : 'Save changes'}
-                    </button>
-                  </div>
-                </Stack>
-              </Section>
-            </form>
-          ) : (
-            <p className="rounded-2xl border border-red-200 bg-white px-5 py-6 text-sm font-medium text-red-700 shadow-sm">
-              {errorMessage || 'Account settings are unavailable right now.'}
+          {errorMessage ? (
+            <p className="g-hint is-error mt-6" role="alert">
+              {errorMessage}
             </p>
-          )}
-        </PageContainer>
-      </main>
-    </PageShell>
+          ) : null}
+          <div className="mt-6 flex justify-end">
+            <Button type="submit" variant="tara" className="w-full sm:w-auto" disabled={Boolean(usernameError || personalInfoError) || isSaving}>
+              {isSaving ? 'Saving…' : 'Save changes'}
+            </Button>
+          </div>
+        </form>
+      ) : (
+        <Empty
+          className="mt-6"
+          title="Hindi ma-load ang settings"
+          description={errorMessage || 'Account settings are unavailable right now.'}
+          action={
+            <Button variant="line" onClick={() => window.location.reload()}>
+              Try again
+            </Button>
+          }
+        />
+      )}
+    </Page>
   )
 }
 

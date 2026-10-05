@@ -1,5 +1,7 @@
+import { ArrowRight } from 'lucide-react'
 import OnboardingLayout from './OnboardingLayout'
 import BirthdatePicker from '../BirthdatePicker'
+import { Button } from '../ui'
 import type { OnboardingErrors, OnboardingFormState } from './types'
 
 type OnboardingPersonalInfoStepProps = {
@@ -10,68 +12,63 @@ type OnboardingPersonalInfoStepProps = {
   onNext: () => void
 }
 
+type NameKey = 'firstName' | 'middleName' | 'lastName'
+
+const nameFields: Array<{ key: NameKey; label: string; autoComplete: string; optional?: boolean }> = [
+  { key: 'firstName', label: 'First name', autoComplete: 'given-name' },
+  { key: 'middleName', label: 'Middle name', autoComplete: 'additional-name', optional: true },
+  { key: 'lastName', label: 'Last name', autoComplete: 'family-name' },
+]
+
 function OnboardingPersonalInfoStep({ values, errors, disableNext, onUpdate, onNext }: OnboardingPersonalInfoStepProps) {
   return (
     <OnboardingLayout
       step={1}
       eyebrow="Personal details"
       title="Tell us about you"
-      description="We use these details to complete your account setup and age checks."
+      description="We use these details to finish your account setup and age check."
       actions={
-        <div className="col-span-2 flex w-full justify-end sm:w-auto">
-          <button type="button" onClick={onNext} disabled={disableNext} className="onboarding-button onboarding-button-primary disabled:cursor-not-allowed disabled:opacity-60">
-            Continue
-          </button>
-        </div>
+        <Button variant="tara" onClick={onNext} disabled={disableNext}>
+          Next
+          <ArrowRight aria-hidden="true" />
+        </Button>
       }
     >
-      <div className="onboarding-form-grid">
-        <label className="onboarding-field">
-          <span className="onboarding-label">First Name</span>
-          <input
-            value={values.firstName}
-            onChange={(event) => onUpdate({ firstName: event.target.value })}
-            maxLength={80}
-            autoComplete="given-name"
-            className="onboarding-input"
-          />
-          {errors.firstName ? <span className="onboarding-error">{errors.firstName}</span> : null}
-        </label>
-        <label className="onboarding-field">
-          <span className="onboarding-label onboarding-label-inline">
-            Middle Name
-            <span className="optional-label">Optional</span>
-          </span>
-          <input
-            value={values.middleName}
-            onChange={(event) => onUpdate({ middleName: event.target.value })}
-            maxLength={80}
-            autoComplete="additional-name"
-            className="onboarding-input"
-          />
-          {errors.middleName ? <span className="onboarding-error">{errors.middleName}</span> : null}
-        </label>
-        <label className="onboarding-field">
-          <span className="onboarding-label">Last Name</span>
-          <input
-            value={values.lastName}
-            onChange={(event) => onUpdate({ lastName: event.target.value })}
-            maxLength={80}
-            autoComplete="family-name"
-            className="onboarding-input"
-          />
-          {errors.lastName ? <span className="onboarding-error">{errors.lastName}</span> : null}
-        </label>
-        <label className="onboarding-field onboarding-field-wide">
-          <span className="onboarding-label">Birthdate</span>
+      <div className="grid gap-5 md:grid-cols-2">
+        {nameFields.map((field) => {
+          const id = `onboarding-${field.key}`
+          const error = errors[field.key]
+          return (
+            <div key={field.key} className="g-field">
+              <label htmlFor={id}>
+                {field.label}
+                {field.optional ? <span className="g-fnt font-normal"> · Optional</span> : null}
+              </label>
+              <input
+                id={id}
+                value={values[field.key]}
+                onChange={(event) => onUpdate({ [field.key]: event.target.value })}
+                maxLength={80}
+                autoComplete={field.autoComplete}
+                aria-invalid={Boolean(error) || undefined}
+                aria-describedby={error ? `${id}-msg` : undefined}
+                className="g-input"
+              />
+              {error ? <span id={`${id}-msg`} className="g-hint is-error">{error}</span> : null}
+            </div>
+          )
+        })}
+        <div className="g-field">
+          <label htmlFor="onboarding-birthdate">Birthdate</label>
           <BirthdatePicker
+            id="onboarding-birthdate"
             value={values.birthdate}
             onChange={(birthdate) => onUpdate({ birthdate })}
             minYear={1900}
             maxYear={new Date().getUTCFullYear()}
             error={errors.birthdate}
           />
-        </label>
+        </div>
       </div>
     </OnboardingLayout>
   )

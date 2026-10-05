@@ -1,20 +1,17 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faHouse, faLocationDot } from '@fortawesome/free-solid-svg-icons'
-import { AppIcon } from '../components/AppIcon'
-import AppHeader from '../components/AppHeader'
-import Breadcrumb from '../components/navigation/Breadcrumb'
+import { Sparkles } from 'lucide-react'
 import CompactPagination from '../components/CompactPagination'
-import type { PlaceCardData } from '../components/PlaceCard'
-import PhotoCard from '../components/discover/PhotoCard'
-import { toPhotoCardPlace } from '../components/home/search/SearchComponents'
+import PlaceCard, { withLiveDetail } from '../components/PlaceCard'
+import { ListingBreadcrumb } from '../components/home/search/SearchComponents'
 import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
 import PlaceListingSkeleton from '../components/PlaceListingSkeleton'
+import { Button, Chip, Chips, Empty, Page, SectionHead, cx } from '../components/ui'
+import InternalLink from '../components/InternalLink'
 import SeoHead from '../components/SeoHead'
-import { PageContainer, PageShell, ResponsiveGrid } from '../components/layout/ResponsiveLayouts'
 import { placeCategories } from '../data/placeCategories'
 import { getAreaLabelBySlug, normalizeAreaSlug } from '../data/metroManilaAreas'
 import { navigateToPath, scrollViewportToTopInstant } from '../utils/navigation'
+import { openFloatingChat } from '../utils/floatingChat'
 import { formatLabelFromSlug, getSiteOrigin } from '../utils/seo'
 import { getListingPlaceViewportTop, peekPendingListingRouteCache, readListingRouteCache, restoreListingRouteScroll, writeListingRouteCache } from '../utils/listingRouteCache'
 import { fetchPlaceDetailsBatch, readCachedPlaceDetail } from '../utils/placeDetailCache'
@@ -330,8 +327,11 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
       ]
     : null
 
+  const askAiQuestion = `Help me pick places to visit in ${areaName}`
+  const relatedGuides = SEO_LANDING_TARGETS.filter((target) => target.areaSlug === normalizedAreaSlug).slice(0, 4)
+
   return (
-    <PageShell>
+    <Page>
       <SeoHead
         title={`Places in ${areaName} and Local Gala Ideas | ${BRAND_NAME}`}
         description={`${PRODUCT_NAME} helps you discover places in ${areaName}, from cafes and food spots to parks, museums, and date ideas across Metro Manila.`}
@@ -339,149 +339,106 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
         robots={shouldIndexAreaPage ? 'index,follow' : 'noindex,follow'}
         jsonLd={jsonLd}
       />
-      <AppHeader minimal />
 
-      <main className="w-full pb-12 pt-5 sm:pb-14">
-        <PageContainer className="px-4 sm:px-6 lg:px-8">
-        <Breadcrumb
-          showBack
-          items={[
-            { label: 'Home', href: '/home', icon: <FontAwesomeIcon icon={faHouse} className="h-3.5 w-3.5" /> },
-            { label: 'Places', href: '/places', icon: <FontAwesomeIcon icon={faLocationDot} className="h-3.5 w-3.5" /> },
-            { label: areaName, icon: <FontAwesomeIcon icon={faLocationDot} className="h-3.5 w-3.5" /> },
-          ]}
+      <ListingBreadcrumb items={[{ label: 'Home', href: '/home' }, { label: 'Places', href: '/places' }, { label: areaName }]} />
+
+      <header className="mt-5 flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0 max-w-[36rem]">
+          <h1 className="g-h1">Places in {areaName}</h1>
+          <p className="g-mut mt-2">Browse local picks in {areaName}, then open each place page for budget, commute, and planning details.</p>
+        </div>
+        <Button variant="soft" size="sm" onClick={() => openFloatingChat(askAiQuestion)}>
+          <Sparkles aria-hidden="true" />
+          Ask AI about {areaName}
+        </Button>
+      </header>
+
+      <Chips className="mt-5" role="group" aria-label="Category">
+        {FILTER_OPTIONS.map((filter) => (
+          <Chip key={filter.value} on={filter.value === activeCategory} onClick={() => navigateToPath(getPagePath(1, filter.value))}>
+            {filter.label}
+          </Chip>
+        ))}
+      </Chips>
+
+      {errorMessage ? (
+        <Empty className="mt-8" title={`Hindi ma-load ang places in ${areaName}`} description="Please try again in a bit." />
+      ) : shouldShowInitialSkeleton ? (
+        <PlaceListingSkeleton cardCount={PAGE_SIZE} helperText={`Loading places in ${areaName}.`} />
+      ) : shouldShowEmptyState ? (
+        <Empty
+          className="mt-8"
+          title={`Wala pang places in ${areaName}`}
+          description="Check back later for new gala spots, or try another category in this city."
+          action={
+            <Button variant="soft" onClick={() => openFloatingChat(askAiQuestion)}>
+              <Sparkles aria-hidden="true" />
+              Ask AI instead
+            </Button>
+          }
         />
-
-        <section className="mt-5 pb-2">
-          <h1 className="text-[2.15rem] font-black leading-[0.95] tracking-[-0.045em] text-slate-950 sm:text-[2.6rem]">
-            Places in {areaName}
-          </h1>
-          <p className="mt-3 max-w-[36rem] text-[15px] leading-7 text-[var(--muted)]">
-            Browse local picks in {areaName}, then open each place page for budget, commute, and planning details.
-          </p>
-        </section>
-
-        {errorMessage ? (
-          <section className="mt-6 rounded-[24px] border border-[#E5E7EB] bg-white px-5 py-6 shadow-[0_6px_20px_rgba(17,24,39,0.03)]">
-            <h2 className="text-base font-semibold text-[var(--text-main)]">We couldn't load places in {areaName} right now.</h2>
-            <p className="mt-1 text-sm leading-6 text-[var(--muted)]">Please try again in a bit.</p>
-          </section>
-        ) : null}
-
-        {!errorMessage ? (
-          <>
-            {shouldShowInitialSkeleton ? (
-              <PlaceListingSkeleton
-                cardCount={PAGE_SIZE}
-                helperText={`Loading places in ${areaName}.`}
+      ) : (
+        <section aria-label={`Places in ${areaName}`}>
+          <SectionHead
+            title={activeCategory === 'all' ? 'All places' : `${activeFilterLabel} places`}
+            sub="The city's parks, cafes, landmarks, and local favorites in one place."
+          />
+          <div className={cx('g-grid transition-opacity', isPageTransitionLoading && 'pointer-events-none opacity-60')}>
+            {allPlaces.map((rawPlace) => (
+              <PlaceCard
+                key={rawPlace.id}
+                place={withLiveDetail(
+                  { ...mapSeoPlaceToCard(rawPlace), imageUrl: null, curatedImageUrls: [], budget_min: rawPlace.budgetMin, good_for: rawPlace.goodFor },
+                  placeDetailsBySlug[rawPlace.slug],
+                )}
+                selected={selectedPlaceId === rawPlace.id}
+                onGuestSave={() => listingGuestAuth.open('favorite')}
+                onOpen={() => {
+                  setSelectedPlaceId(rawPlace.id)
+                  writeListingRouteCache({
+                    items: payload.items,
+                    total: payload.total,
+                    page: payload.page,
+                    pageSize: payload.pageSize,
+                    totalPages: payload.totalPages,
+                    scrollY: window.scrollY,
+                    selectedPlaceId: rawPlace.id,
+                    selectedPlaceViewportTop: getListingPlaceViewportTop(rawPlace.id),
+                    pendingScrollRestore: true,
+                  })
+                }}
               />
-            ) : shouldShowEmptyState ? (
-              <section className="mt-10 rounded-[28px] border border-[#e5e7eb] bg-white px-5 py-8 text-center shadow-sm sm:px-6">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
-                  <AppIcon name="compass" className="h-7 w-7" />
-                </div>
-                <h2 className="mt-4 text-[1.2rem] font-black text-slate-950">No places found in {areaName} yet.</h2>
-                <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-                  Check back later for new gala spots, or try another category in this city.
-                </p>
-              </section>
-            ) : (
-              <section className="mt-9">
-                <div className="flex items-end justify-between gap-3">
-                  <div>
-                    <h2 className="text-[1.35rem] font-black tracking-[-0.03em] text-slate-950">
-                      {activeCategory === 'all' ? 'All places' : `${activeFilterLabel} places`}
-                    </h2>
-                    <p className="mt-1 text-[13px] leading-6 text-[var(--muted)]">
-                      See the city’s parks, cafes, landmarks, and local favorites in one place.
-                    </p>
-                  </div>
-                </div>
-                <div className={`mt-4 transition ${isPageTransitionLoading ? 'pointer-events-none opacity-60' : 'opacity-100'}`}>
-                  <ResponsiveGrid className="gap-x-5 gap-y-9">
-                  {allPlaces.map((rawPlace, index) => {
-                    const place = mapSeoPlaceToCard(rawPlace) as PlaceCardData
-                    const basePlace = {
-                      ...place,
-                      imageUrl: null,
-                      curatedImageUrls: [],
-                    }
-                    const livePlace = placeDetailsBySlug[rawPlace.slug]
-                    const resolvedPlace = livePlace
-                      ? {
-                          ...basePlace,
-                          thumbnailUrl: livePlace.thumbnailUrl ?? null,
-                          imageUrl: livePlace.imageUrl ?? null,
-                          curatedImageUrls: livePlace.curatedImageUrls ?? [],
-                        }
-                      : basePlace
-                    return (
-                      <div key={rawPlace.id}>
-                        <PhotoCard
-                          place={toPhotoCardPlace(resolvedPlace)}
-                          isSelected={selectedPlaceId === rawPlace.id}
-                          priority={index < 4}
-                          badge={resolvedPlace.budget_min === 0 ? 'Free' : null}
-                          onGuestFavorite={() => listingGuestAuth.open('favorite')}
-                          onOpen={() => {
-                            setSelectedPlaceId(rawPlace.id)
-                            writeListingRouteCache({
-                              items: payload.items,
-                              total: payload.total,
-                              page: payload.page,
-                              pageSize: payload.pageSize,
-                              totalPages: payload.totalPages,
-                              scrollY: window.scrollY,
-                              selectedPlaceId: rawPlace.id,
-                              selectedPlaceViewportTop: getListingPlaceViewportTop(rawPlace.id),
-                              pendingScrollRestore: true,
-                            })
-                          }}
-                        />
-                      </div>
-                    )
-                  })}
-                  </ResponsiveGrid>
-                </div>
+            ))}
+          </div>
 
-                {SEO_LANDING_TARGETS.some((target) => target.areaSlug === normalizedAreaSlug) ? (
-                  <div className="mt-6 rounded-[24px] border border-[#E5E7EB] bg-white px-5 py-5 shadow-[0_6px_20px_rgba(17,24,39,0.03)]">
-                    <h3 className="text-sm font-semibold text-slate-950">Popular search-style guides for {areaName}</h3>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {SEO_LANDING_TARGETS.filter((target) => target.areaSlug === normalizedAreaSlug).slice(0, 4).map((target) => (
-                        <button
-                          key={target.slug}
-                          type="button"
-                          onClick={() => navigateToPath(`/guides/${target.slug}`)}
-                          className="rounded-full border border-[var(--primary-soft)] bg-[#F8FBFF] px-3 py-1.5 text-xs font-semibold text-[var(--accent)] transition hover:border-[var(--accent)]"
-                        >
-                          {target.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-              </section>
-            )}
+          {allPlaces.length > 0 && totalPages > 1 ? (
+            <CompactPagination
+              className="mt-10"
+              currentPage={safePage}
+              totalPages={totalPages}
+              totalItems={payload.total}
+              pageSize={payload.pageSize}
+              onPageChange={handlePageChange}
+              isLoading={isPageTransitionLoading}
+            />
+          ) : null}
 
-            {allPlaces.length > 0 && totalPages > 1 ? (
-              <section className="mt-6">
-                <CompactPagination
-                  currentPage={safePage}
-                  totalPages={totalPages}
-                  totalItems={payload.total}
-                  pageSize={payload.pageSize}
-                  onPageChange={handlePageChange}
-                  isLoading={isPageTransitionLoading}
-                />
-              </section>
-            ) : null}
-          </>
-        ) : null}
-        </PageContainer>
-      </main>
+          {relatedGuides.length > 0 ? (
+            <>
+              <SectionHead title={`Popular guides for ${areaName}`} as="h3" />
+              <div className="flex flex-wrap gap-2">
+                {relatedGuides.map((target) => (
+                  <InternalLink key={target.slug} href={`/guides/${target.slug}`} className="g-chip">
+                    {target.label}
+                  </InternalLink>
+                ))}
+              </div>
+            </>
+          ) : null}
+        </section>
+      )}
       {listingGuestAuth.promptElement}
-    </PageShell>
+    </Page>
   )
 }
 

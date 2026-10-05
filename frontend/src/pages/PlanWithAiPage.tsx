@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faMinus, faPlus, faRotateRight, faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons'
-import MinimalBackNav from '../components/navigation/MinimalBackNav'
-import PlanRouteMap from '../components/gala-plan/PlanRouteMap'
-import PlanTimeline, { type TimelineStop } from '../components/gala-plan/PlanTimeline'
+import { ArrowDown, ArrowRight, ArrowUp, Check, Minus, Plus, X } from 'lucide-react'
 import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
+import AskAiUsagePill from '../components/AskAiUsagePill'
+import InternalLink from '../components/InternalLink'
+import GtMap, { type MapPoint } from '../components/ui/GtMap'
+import { Button, Chip, KeyValue, Page, SectionHead, Skeleton, Tag } from '../components/ui'
 import { useAppUser } from '../context/AppUserContext'
 import {
   composeGalaPlanDescription,
@@ -13,35 +13,43 @@ import {
   GalaPlanAiError,
   type GalaPlanAiDraft,
 } from '../utils/galaPlansApi'
-import { estimatePerHead, formatPeso, formatTime24 } from '../utils/galaPlanTrip'
+import { estimatePerHead, formatPeso, formatTime24, getPlanLegs, type TravelLeg } from '../utils/galaPlanTrip'
 import { navigateToPath, replaceWithPath } from '../utils/navigation'
+import { getCanonicalPlacePath } from '../utils/routes'
+import { resolveAreaMeta } from '../utils/seo'
 
 type Status = 'idle' | 'building' | 'ready' | 'saving' | 'error'
 
 const examplePrompts = [
-  'Relaxed Sunday in Manila for 4, ₱800 each, ending at sunset',
-  'Dinner and a movie in BGC for two, ₱2,000 budget',
-  'Rainy day in Makati: a museum, then a cafe',
+  { label: 'Sunday in Manila, ₱800 each', prompt: 'Relaxed Sunday in Manila for 4, ₱800 each, ending at sunset' },
+  { label: 'BGC dinner and a movie', prompt: 'Dinner and a movie in BGC for two, ₱2,000 budget' },
+  { label: 'Rainy day in Makati', prompt: 'Rainy day in Makati: a museum, then a cafe' },
 ]
 
-function toTimelineStops(draft: GalaPlanAiDraft): TimelineStop[] {
-  return draft.stops.map((stop) => ({
-    key: stop.place_id,
-    time: stop.time ? formatTime24(stop.time) : null,
-    minutes: stop.minutes,
-    note: stop.note,
-    place: stop.place,
-  }))
+function describeLeg(leg: TravelLeg) {
+  return leg.mode === 'walk' ? `walk ${leg.minutes} min` : `Grab ~${leg.minutes} min`
 }
 
-function BuildingState() {
+function describeCommute(legs: Array<TravelLeg | null>) {
+  const known = legs.filter((leg): leg is TravelLeg => leg !== null)
+  if (known.length === 0) return 'Depends on where you start'
+  const walk = known.filter((leg) => leg.mode === 'walk').reduce((sum, leg) => sum + leg.minutes, 0)
+  const rides = known.filter((leg) => leg.mode === 'ride')
+  if (rides.length === 0) return `${walk} min walking total · no Grab needed`
+  const rideMinutes = rides.reduce((sum, leg) => sum + leg.minutes, 0)
+  const fare = rides.reduce((sum, leg) => sum + leg.fare, 0)
+  return [walk ? `${walk} min walk` : null, `${rideMinutes} min Grab (~${formatPeso(fare)})`].filter(Boolean).join(' · ')
+}
+
+function DraftSkeleton() {
   return (
-    <div className="space-y-3" aria-live="polite">
-      <p className="font-display text-[20px] italic text-[var(--text-main)]">Building your plan…</p>
+    <div className="g-draft" aria-hidden="true">
+      <Skeleton className="h-5 w-1/2" />
+      <Skeleton className="mt-3 h-3 w-1/3" />
       {[0, 1, 2].map((index) => (
-        <div key={index} className="flex gap-3.5">
-          <span className="mt-3 h-8 w-8 shrink-0 animate-pulse rounded-full bg-[var(--primary-soft)]" />
-          <span className="h-[88px] flex-1 animate-pulse rounded-[16px] bg-[var(--home-skeleton-base)]" />
+        <div key={index} className="mt-4 flex gap-3">
+          <Skeleton className="h-4 w-12" />
+          <Skeleton className="h-4 flex-1" />
         </div>
       ))}
     </div>
@@ -55,13 +63,25 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
   const [error, setError] = useState<string | null>(null)
   const [draft, setDraft] = useState<GalaPlanAiDraft | null>(null)
   const [groupSize, setGroupSize] = useState(1)
-  const [remaining, setRemaining] = useState<number | null>(null)
+  const [usage, setUsage] = useState<{ remaining: number; limit: number } | null>(null)
   const [isSignInOpen, setIsSignInOpen] = useState(false)
   const [isDailyLimit, setIsDailyLimit] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
   const autoStartedRef = useRef(false)
+  const promptRef = useRef<HTMLTextAreaElement | null>(null)
 
-  const stops = useMemo(() => (draft ? toTimelineStops(draft) : []), [draft])
+  const stops = useMemo(() => draft?.stops ?? [], [draft])
+  const legs = useMemo(() => getPlanLegs(stops), [stops])
   const perHead = useMemo(() => estimatePerHead(stops, groupSize), [stops, groupSize])
+  const mapPoints = useMemo<MapPoint[]>(
+    () =>
+      stops.flatMap((stop, index) =>
+        stop.place.latitude != null && stop.place.longitude != null
+          ? [{ id: stop.place_id, lat: stop.place.latitude, lng: stop.place.longitude, label: String(index + 1), kind: 'number' as const }]
+          : [],
+      ),
+    [stops],
+  )
 
   const build = async (text: string) => {
     const trimmed = text.trim()
@@ -70,11 +90,12 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
     setStatus('building')
     setError(null)
     setIsDailyLimit(false)
+    setIsEditing(false)
     try {
       const result = await draftGalaPlanWithAi(trimmed, session)
       setDraft(result.draft)
       setGroupSize(result.draft.group_size)
-      setRemaining(result.usage?.remaining ?? null)
+      setUsage(result.usage ? { remaining: result.usage.remaining, limit: result.usage.dailyLimit } : null)
       setStatus('ready')
     } catch (buildError) {
       setError(buildError instanceof Error ? buildError.message : 'Plan with AI failed. Try again.')
@@ -108,6 +129,15 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
   const removeStop = (index: number) => {
     if (!draft || draft.stops.length <= 1) return
     setDraft({ ...draft, stops: draft.stops.filter((_, stopIndex) => stopIndex !== index) })
+  }
+
+  const startOver = () => {
+    setDraft(null)
+    setPrompt('')
+    setError(null)
+    setIsEditing(false)
+    setStatus('idle')
+    promptRef.current?.focus()
   }
 
   const save = async () => {
@@ -149,143 +179,186 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
   const dateLabel = draft?.date
     ? new Date(`${draft.date}T00:00:00`).toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' })
     : 'Any day'
+  const firstTime = stops[0]?.time
+  const lastTime = stops[stops.length - 1]?.time
+  const timeRange = firstTime && lastTime ? `${formatTime24(firstTime)} – ${formatTime24(lastTime)}` : null
 
   return (
-    <main className="min-h-[100dvh] bg-[var(--bg)] pb-[calc(env(safe-area-inset-bottom,0px)+10rem)] text-[var(--text)] lg:pb-16">
+    <Page narrow>
       <GuestAuthPrompt variant="add-plan" mode="modal" isOpen={isSignInOpen} onClose={() => setIsSignInOpen(false)} />
 
-      <div className="mx-auto w-full max-w-[1180px] px-4 pt-5 sm:px-6 lg:px-8 lg:pt-8">
-        <MinimalBackNav to="/home" preferHistory />
+      <p className="g-eyebrow">New plan</p>
+      <h1 className="g-h1 mt-2">Plan with AI</h1>
+      <p className="g-mut mt-2">Describe the gala. You get a draft you can edit, not a chat.</p>
 
-        <header className="mt-4 max-w-[720px]">
-          <p className="font-data inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--primary)]">
-            <FontAwesomeIcon icon={faWandMagicSparkles} className="h-3 w-3" />
-            Plan with AI
-          </p>
-          <h1 className="mt-1.5 text-[30px] font-medium leading-[1.1] text-[var(--text-main)] sm:text-[38px]">
-            Plan a full day in one sentence
-          </h1>
-        </header>
-
-        <form onSubmit={handleSubmit} className="mt-5 max-w-[720px]">
-          <label htmlFor="plan-with-ai-prompt" className="sr-only">Describe your gala</label>
-          <div className="flex items-end gap-2 rounded-[20px] bg-[var(--ink)] p-2 pl-4">
-            <textarea
-              id="plan-with-ai-prompt"
-              value={prompt}
-              onChange={(event) => setPrompt(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' && !event.shiftKey) {
-                  event.preventDefault()
-                  void build(prompt)
-                }
+      <form onSubmit={handleSubmit} className="g-ai mt-6">
+        <label htmlFor="plan-with-ai-prompt" className="sr-only">
+          Describe your gala
+        </label>
+        <textarea
+          id="plan-with-ai-prompt"
+          ref={promptRef}
+          value={prompt}
+          onChange={(event) => setPrompt(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+              event.preventDefault()
+              void build(prompt)
+            }
+          }}
+          maxLength={400}
+          rows={3}
+          placeholder="Chill Saturday for 6 in Makati, ₱1k each, indoor if rain"
+        />
+        <div className="g-ai-bar mt-3">
+          {examplePrompts.map((example) => (
+            <Chip
+              key={example.label}
+              disabled={status === 'building'}
+              onClick={() => {
+                setPrompt(example.prompt)
+                void build(example.prompt)
               }}
-              maxLength={400}
-              rows={2}
-              placeholder="Where, when, how many people, what budget?"
-              className="font-display min-h-[52px] flex-1 resize-none bg-transparent py-2 text-[17px] italic leading-snug text-[var(--bg)] outline-none placeholder:text-[var(--bg)] placeholder:opacity-50"
-            />
-            <button
-              type="submit"
-              disabled={status === 'building' || !prompt.trim()}
-              className="inline-flex h-11 shrink-0 items-center gap-2 rounded-full bg-[var(--primary)] px-4 text-[14px] font-semibold text-white transition-opacity disabled:opacity-50"
             >
-              {draft ? <FontAwesomeIcon icon={faRotateRight} className="h-3.5 w-3.5" /> : null}
-              {draft ? 'Rebuild' : 'Build plan'}
-            </button>
-          </div>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {examplePrompts.map((example) => (
-              <button
-                key={example}
-                type="button"
-                onClick={() => {
-                  setPrompt(example)
-                  void build(example)
-                }}
-                className="rounded-full border border-[var(--line)] px-3 py-1.5 text-left text-[12px] text-[var(--text-strong)] transition-colors hover:border-[var(--line-strong)] hover:text-[var(--text-main)]"
-              >
-                {example}
-              </button>
-            ))}
-          </div>
-        </form>
-
-        {error ? (
-          <div role="alert" className="mt-5 max-w-[720px] rounded-[16px] border border-[var(--danger-border)] bg-[var(--danger-soft)] px-4 py-3 text-[14px] text-[var(--text-main)]">
-            {error}
-            {isDailyLimit && !session ? ' Sign in to get more AI requests per day.' : ''}
-          </div>
-        ) : null}
-
-        <div className="mt-8">
-          {status === 'building' ? <BuildingState /> : null}
-
-          {draft && status !== 'building' ? (
-            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:items-start lg:gap-10">
-              <section className="min-w-0">
-                <div className="flex flex-wrap items-end justify-between gap-3 border-b border-[var(--line)] pb-4">
-                  <div className="min-w-0">
-                    <h2 className="text-[26px] font-medium leading-tight text-[var(--text-main)]">{draft.title}</h2>
-                    <p className="font-data mt-1 text-[12px] text-[var(--text-muted)]">
-                      {dateLabel} · {stops.length} stops{remaining !== null ? ` · ${remaining} AI requests left today` : ''}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-display text-[26px] leading-none text-[var(--text-main)]">{formatPeso(perHead)}</p>
-                    <p className="font-data mt-1 text-[11px] uppercase tracking-[0.08em] text-[var(--text-muted)]">est. per head</p>
-                  </div>
-                </div>
-
-                {draft.summary ? <p className="mt-4 text-[14px] leading-6 text-[var(--text-strong)]">{draft.summary}</p> : null}
-
-                <div className="mt-4 flex items-center gap-3">
-                  <span className="text-[13px] text-[var(--text-muted)]">Group size</span>
-                  <div className="flex items-center rounded-full border border-[var(--line)]">
-                    <button type="button" aria-label="Fewer people" onClick={() => setGroupSize((size) => Math.max(1, size - 1))} className="flex h-9 w-9 items-center justify-center text-[var(--text-strong)]">
-                      <FontAwesomeIcon icon={faMinus} className="h-3 w-3" />
-                    </button>
-                    <span className="font-data w-8 text-center text-[14px] font-medium text-[var(--text-main)]">{groupSize}</span>
-                    <button type="button" aria-label="More people" onClick={() => setGroupSize((size) => Math.min(20, size + 1))} className="flex h-9 w-9 items-center justify-center text-[var(--text-strong)]">
-                      <FontAwesomeIcon icon={faPlus} className="h-3 w-3" />
-                    </button>
-                  </div>
-                  <span className="text-[12px] text-[var(--text-muted)]">Rides are split across the group.</span>
-                </div>
-
-                <div className="mt-4">
-                  <PlanTimeline stops={stops} onMove={moveStop} onRemove={stops.length > 2 ? removeStop : undefined} />
-                </div>
-
-                <p className="mt-3 text-[12px] text-[var(--text-muted)]">
-                  Gawa ng AI ang plano na ito. Times, fares and prices are estimates; check before you go.
-                </p>
-              </section>
-
-              <aside className="min-w-0 lg:sticky lg:top-[calc(var(--site-header-h)+1.5rem)]">
-                <PlanRouteMap stops={stops} className="h-[260px] sm:h-[320px] lg:h-[420px]" />
-                <div className="fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom,0px)+4rem)] z-[5500] border-t border-[var(--line)] bg-[var(--surface-overlay)] px-4 py-3 backdrop-blur-xl lg:static lg:mt-4 lg:border-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
-                  <div className="mx-auto flex max-w-[720px] items-center gap-3">
-                    <div className="min-w-0 lg:hidden">
-                      <p className="font-display text-[20px] leading-none text-[var(--text-main)]">{formatPeso(perHead)}</p>
-                      <p className="font-data mt-0.5 text-[10px] uppercase tracking-[0.08em] text-[var(--text-muted)]">per head</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => void save()}
-                      disabled={status === 'saving'}
-                      className="inline-flex h-12 flex-1 items-center justify-center rounded-full bg-[var(--primary)] px-5 text-[15px] font-semibold text-white transition-opacity hover:opacity-95 disabled:opacity-60"
-                    >
-                      {status === 'saving' ? 'Saving…' : session ? 'Save as Gala Plan' : 'Sign in to save'}
-                    </button>
-                  </div>
-                </div>
-              </aside>
-            </div>
-          ) : null}
+              {example.label}
+            </Chip>
+          ))}
+          <span className="ml-auto flex items-center gap-3">
+            {usage ? <AskAiUsagePill usageStatus={usage} /> : null}
+            <Button
+              type="submit"
+              variant="ink"
+              size="sm"
+              iconOnly
+              loading={status === 'building'}
+              disabled={status === 'building' || !prompt.trim()}
+              aria-label={draft ? 'Rebuild plan' : 'Build plan'}
+            >
+              <ArrowRight aria-hidden="true" />
+            </Button>
+          </span>
         </div>
-      </div>
-    </main>
+      </form>
+
+      {error ? (
+        <p role="alert" className="g-sm mt-4 rounded-[var(--r-3)] bg-[var(--bad-soft)] px-4 py-3 text-[var(--bad)]">
+          {error}
+          {isDailyLimit && !session ? ' Log in to get more AI plans per day.' : ''}
+        </p>
+      ) : null}
+
+      {status === 'building' ? (
+        <section aria-live="polite">
+          <SectionHead title="Your draft" sub="Building your plan…" action={<span className="g-live">Thinking</span>} />
+          <DraftSkeleton />
+        </section>
+      ) : null}
+
+      {draft && status !== 'building' ? (
+        <section>
+          <SectionHead
+            title="Your draft"
+            sub={`${dateLabel} · ${stops.length} stops`}
+            action={<span className="g-live shrink-0">Ready</span>}
+          />
+
+          <div className="g-draft">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="g-h3 min-w-0">{draft.title}</h2>
+              <b className="g-sm shrink-0">{formatPeso(perHead)}/head</b>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <Tag>Fits {groupSize}</Tag>
+              <Tag>{dateLabel}</Tag>
+              {timeRange ? <Tag>{timeRange}</Tag> : null}
+            </div>
+            {draft.summary ? <p className="g-sm g-mut mt-3">{draft.summary}</p> : null}
+
+            <ol className="mt-3">
+              {stops.map((stop, index) => {
+                const legIn = index > 0 ? legs[index - 1] : null
+                const meta = [
+                  legIn ? describeLeg(legIn) : stop.place.category,
+                  stop.minutes ? `${stop.minutes} min` : null,
+                  stop.place.budget_min != null ? formatPeso(stop.place.budget_min) : null,
+                ].filter(Boolean)
+                const href = getCanonicalPlacePath({ areaSlug: resolveAreaMeta(stop.place).slug, placeSlug: stop.place.slug })
+
+                return (
+                  <li key={stop.place_id} className="grid grid-cols-[64px_minmax(0,1fr)_auto] items-start gap-2 py-2 text-[14px]">
+                    <b className="pt-0.5">{stop.time ? formatTime24(stop.time) : `Stop ${index + 1}`}</b>
+                    <div className="min-w-0">
+                      <InternalLink href={href} className="hover:underline">
+                        {stop.place.name}
+                      </InternalLink>
+                      {meta.length ? <span className="g-mut"> · {meta.join(' · ')}</span> : null}
+                      {stop.note ? <p className="g-sm g-mut mt-0.5 line-clamp-2">{stop.note}</p> : null}
+                    </div>
+                    {isEditing ? (
+                      <div className="flex">
+                        <Button variant="text" size="sm" iconOnly onClick={() => moveStop(index, -1)} disabled={index === 0} aria-label={`Move ${stop.place.name} earlier`}>
+                          <ArrowUp aria-hidden="true" />
+                        </Button>
+                        <Button variant="text" size="sm" iconOnly onClick={() => moveStop(index, 1)} disabled={index === stops.length - 1} aria-label={`Move ${stop.place.name} later`}>
+                          <ArrowDown aria-hidden="true" />
+                        </Button>
+                        {stops.length > 2 ? (
+                          <Button variant="text" size="sm" iconOnly onClick={() => removeStop(index)} aria-label={`Remove ${stop.place.name}`}>
+                            <X aria-hidden="true" />
+                          </Button>
+                        ) : null}
+                      </div>
+                    ) : (
+                      <span />
+                    )}
+                  </li>
+                )
+              })}
+            </ol>
+
+            <hr className="g-sep mt-3" />
+            <div className="mt-2">
+              <KeyValue
+                items={[
+                  { label: 'Commute', value: describeCommute(legs) },
+                  {
+                    label: 'Group size',
+                    value: (
+                      <span className="inline-flex items-center gap-1">
+                        <Button variant="soft" size="sm" iconOnly aria-label="Fewer people" onClick={() => setGroupSize((size) => Math.max(1, size - 1))}>
+                          <Minus aria-hidden="true" />
+                        </Button>
+                        <span className="w-7 text-center">{groupSize}</span>
+                        <Button variant="soft" size="sm" iconOnly aria-label="More people" onClick={() => setGroupSize((size) => Math.min(20, size + 1))}>
+                          <Plus aria-hidden="true" />
+                        </Button>
+                      </span>
+                    ),
+                  },
+                  { label: 'Cost', value: `${formatPeso(perHead)}/head · rides split by ${groupSize}` },
+                ]}
+              />
+            </div>
+          </div>
+
+          {mapPoints.length > 0 ? <GtMap points={mapPoints} route className="mt-4" label="Route of your draft plan" /> : null}
+
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <Button variant="tara" onClick={() => void save()} loading={status === 'saving'} disabled={status === 'saving'}>
+              <Check aria-hidden="true" />
+              {session ? 'Save as plan' : 'Log in to save'}
+            </Button>
+            <Button variant="soft" onClick={() => setIsEditing((value) => !value)} aria-pressed={isEditing}>
+              {isEditing ? 'Done editing' : 'Edit stops'}
+            </Button>
+            <Button variant="text" onClick={startOver}>
+              Start over
+            </Button>
+          </div>
+          <p className="g-xs g-fnt mt-3">Gawa ng AI ang plano na ito. Times, fares and prices are estimates; check before you go.</p>
+        </section>
+      ) : null}
+    </Page>
   )
 }
 

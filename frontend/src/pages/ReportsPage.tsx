@@ -1,10 +1,7 @@
-import { Children, useEffect, useMemo, useState, type ReactNode } from 'react'
-import AppHeader from '../components/AppHeader'
+import { useEffect, useState, type ReactNode } from 'react'
 import MinimalBackNav from '../components/navigation/MinimalBackNav'
-import { AppIcon } from '../components/AppIcon'
 import GoogleSignInButton from '../components/GoogleSignInButton'
-import PageHeroHeader from '../components/PageHeroHeader'
-import { PageContainer, PageShell, CardSurface, Stack } from '../components/layout/ResponsiveLayouts'
+import { Empty, Page, Panel, Skeleton, Tabs, Tag } from '../components/ui'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { getSupabaseAccessToken } from '../supabase'
 import { fetchMyCommentReports, type CommentReportReason, type CommentReportStatus, type MyCommentReport } from '../utils/commentReportsApi'
@@ -93,114 +90,22 @@ function redactSensitiveIdentifiers(value: string) {
     .replace(/\b[A-Za-z0-9_-]{20,}\b/g, '[hidden]')
 }
 
-function getStatusClass(status: CommentReportStatus | PlaceReportStatus) {
-  if (status === 'action_taken' || status === 'resolved') {
-    return 'border-[rgba(var(--accent-rgb),0.18)] bg-[var(--primary-soft)] text-[var(--accent-deep)]'
-  }
-
-  if (status === 'dismissed') {
-    return 'border-slate-200 bg-slate-100 text-slate-700'
-  }
-
-  if (status === 'reviewing') {
-    return 'border-sky-200 bg-sky-50 text-sky-700'
-  }
-
-  return 'border-amber-200 bg-amber-50 text-amber-700'
+function statusTone(status: CommentReportStatus | PlaceReportStatus) {
+  if (status === 'action_taken' || status === 'resolved') return 'ok'
+  if (status === 'pending') return 'warn'
+  return 'neutral'
 }
 
-function SummaryPill({ icon, label, value }: { icon: 'profile' | 'reports' | 'comments'; label: string; value: string }) {
+function PlaceTitle({ name, slug }: { name: string; slug: string }) {
+  if (!slug) return <>{name}</>
   return (
-    <span className="inline-flex items-center gap-2 rounded-lg border border-[var(--line)] bg-white px-3 py-1.5 text-sm font-semibold text-slate-700">
-      <span className="text-slate-500">
-        <AppIcon name={icon} size="ui" />
-      </span>
-      <span>{label}</span>
-      <span className="font-black text-slate-950">{value}</span>
-    </span>
+    <button type="button" onClick={() => navigateToPlace(slug)} className="text-left underline-offset-2 hover:underline">
+      {name}
+    </button>
   )
 }
 
-function SectionDropdown({
-  icon,
-  title,
-  description,
-  countLabel,
-  isOpen,
-  onToggle,
-  children,
-}: {
-  icon: 'profile' | 'reports' | 'comments'
-  title: string
-  description: string
-  countLabel: string
-  isOpen: boolean
-  onToggle: () => void
-  children: ReactNode
-}) {
-  return (
-    <section className="gala-card px-4 py-4 sm:px-5">
-      <button
-        type="button"
-        onClick={onToggle}
-        aria-expanded={isOpen}
-        className="flex w-full items-start gap-3 rounded-lg py-1 text-left transition hover:bg-slate-50"
-      >
-        <span className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-[var(--line)] bg-white text-slate-700">
-          <AppIcon name={icon} size="ui" />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <span>
-              <span className="block text-lg font-black text-slate-950">{title}</span>
-              <span className="mt-1 block max-w-3xl text-sm font-medium leading-6 text-slate-600">{description}</span>
-            </span>
-            <span className="inline-flex items-center gap-3 self-start sm:self-center">
-              <span className="rounded-lg border border-[var(--line)] bg-white px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-slate-600">
-                {countLabel}
-              </span>
-              <span className={`flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--line)] bg-white text-slate-500 transition ${isOpen ? 'rotate-180' : ''}`}>
-                <AppIcon name="chevronDown" size={18} />
-              </span>
-            </span>
-          </span>
-        </span>
-      </button>
-      {isOpen ? (
-        <div className="pt-4">
-          {children}
-        </div>
-      ) : null}
-    </section>
-  )
-}
-
-function SectionEmptyState({
-  title,
-  description,
-}: {
-  title: string
-  description: string
-}) {
-  return (
-    <section className="px-0 py-1">
-      <div className="rounded-lg border border-dashed border-[var(--line)] bg-white px-4 py-4">
-        <h3 className="text-sm font-black text-slate-950">{title}</h3>
-        <p className="mt-1 text-sm font-medium leading-6 text-slate-600">{description}</p>
-      </div>
-    </section>
-  )
-}
-
-function SectionList({ children }: { children: ReactNode }) {
-  return (
-    <div className="grid gap-3">
-      {children}
-    </div>
-  )
-}
-
-function CompactEntry({
+function ReportEntry({
   topLine,
   title,
   status,
@@ -213,31 +118,17 @@ function CompactEntry({
   meta: string[]
   children?: ReactNode
 }) {
-  const detailItems = Children.toArray(children)
-
   return (
-    <article className="rounded-lg border border-[var(--line)] bg-white px-4 py-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <article className="g-card p-4">
+      <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">{topLine}</p>
-          <div className="mt-1 text-[15px] font-bold leading-6 text-slate-950">{title}</div>
-          <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[13px] font-medium text-slate-600">
-            {meta.map((item) => (
-              <p key={item}>{item}</p>
-            ))}
-          </div>
+          <p className="g-xs g-mut">{topLine}</p>
+          <div className="g-h3 mt-0.5">{title}</div>
+          {meta.length > 0 ? <p className="g-xs g-fnt mt-1">{meta.join(' · ')}</p> : null}
         </div>
-        <div className="flex items-center gap-2 sm:pl-4">
-          {status}
-        </div>
+        {status}
       </div>
-      {detailItems.length > 0 ? (
-        <div className="mt-3 border-t border-white/70 pt-3">
-          <div className="grid gap-3 text-sm text-slate-700">
-            {detailItems}
-          </div>
-        </div>
-      ) : null}
+      {children ? <div className="g-sm mt-3 grid gap-2">{children}</div> : null}
     </article>
   )
 }
@@ -250,41 +141,23 @@ function CommentReportCard({ report }: { report: MyCommentReport }) {
   const commentPreview = report.comment?.text ? redactSensitiveIdentifiers(report.comment.text) : ''
 
   return (
-    <CompactEntry
+    <ReportEntry
       topLine={commentReasonLabels[report.reason]}
-      title={
-        placeSlug ? (
-          <button
-            type="button"
-            onClick={() => navigateToPlace(placeSlug)}
-            className="text-left transition hover:text-[var(--accent-deep)]"
-          >
-            {placeName}
-          </button>
-        ) : (
-          placeName
-        )
-      }
-      status={
-        <span className={`inline-flex w-fit shrink-0 rounded-full border px-2.5 py-1 text-xs font-black ${getStatusClass(report.status)}`}>
-          {commentStatusLabels[report.status]}
-        </span>
-      }
+      title={<PlaceTitle name={placeName} slug={placeSlug} />}
+      status={<Tag tone={statusTone(report.status)} className="shrink-0">{commentStatusLabels[report.status]}</Tag>}
       meta={[submittedDate ? `Submitted ${submittedDate}` : '', resolvedDate ? `Resolved ${resolvedDate}` : ''].filter(Boolean)}
     >
       {commentPreview ? (
-        <blockquote className="rounded-2xl border border-white/70 bg-white/58 px-3 py-2.5 text-sm font-medium leading-6 text-slate-800">
-          {commentPreview}
-        </blockquote>
+        <blockquote className="border-l-2 border-[var(--line)] pl-3 text-[var(--ink-2)]">{commentPreview}</blockquote>
       ) : (
-        <p className="text-sm font-medium text-slate-500">Comment preview unavailable.</p>
+        <p className="g-fnt">Comment preview unavailable.</p>
       )}
       {report.details ? (
-        <p className="leading-6">
-          <span className="font-black text-slate-950">Your note:</span> {report.details}
+        <p>
+          <span className="font-semibold">Your note:</span> {report.details}
         </p>
       ) : null}
-    </CompactEntry>
+    </ReportEntry>
   )
 }
 
@@ -298,41 +171,30 @@ function PlaceReportCard({ report }: { report: MyPlaceReport }) {
     resolvedDate ? `Resolved ${resolvedDate}` : '',
     report.image ? 'Linked to a specific place photo' : '',
   ].filter(Boolean)
+  const hasDetails = Boolean(report.details || report.moderatorNote)
 
   return (
-    <CompactEntry
+    <ReportEntry
       topLine={placeReasonLabels[report.reason]}
-      title={
-        placeSlug ? (
-          <button
-            type="button"
-            onClick={() => navigateToPlace(placeSlug)}
-            className="text-left transition hover:text-[var(--accent-deep)]"
-          >
-            {placeName}
-          </button>
-        ) : (
-          placeName
-        )
-      }
-      status={
-        <span className={`inline-flex w-fit shrink-0 rounded-full border px-2.5 py-1 text-xs font-black ${getStatusClass(report.status)}`}>
-          {placeStatusLabels[report.status]}
-        </span>
-      }
+      title={<PlaceTitle name={placeName} slug={placeSlug} />}
+      status={<Tag tone={statusTone(report.status)} className="shrink-0">{placeStatusLabels[report.status]}</Tag>}
       meta={meta}
     >
-      {report.details ? (
-        <p className="leading-6">
-          <span className="font-black text-slate-950">Your note:</span> {report.details}
-        </p>
+      {hasDetails ? (
+        <>
+          {report.details ? (
+            <p>
+              <span className="font-semibold">Your note:</span> {report.details}
+            </p>
+          ) : null}
+          {report.moderatorNote ? (
+            <p className="rounded-[var(--r-2)] bg-[var(--fill)] px-3 py-2">
+              <span className="font-semibold">Moderator note:</span> {report.moderatorNote}
+            </p>
+          ) : null}
+        </>
       ) : null}
-      {report.moderatorNote ? (
-        <div className="rounded-2xl border border-[rgba(var(--accent-rgb),0.18)] bg-[rgba(var(--accent-rgb),0.06)] px-3 py-2.5 leading-6 text-slate-800">
-          <span className="font-black text-slate-950">Moderator note:</span> {report.moderatorNote}
-        </div>
-      ) : null}
-    </CompactEntry>
+    </ReportEntry>
   )
 }
 
@@ -344,10 +206,7 @@ function ReportsPage() {
   const [isTokenLoading, setIsTokenLoading] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
-  const [openSections, setOpenSections] = useState({
-    placeReports: false,
-    commentReports: false,
-  })
+  const [activeTab, setActiveTab] = useState<'places' | 'comments'>('places')
 
   useEffect(() => {
     if (!session?.user) {
@@ -417,125 +276,78 @@ function ReportsPage() {
   const visibleIsLoading = hasAuthenticatedReportAccess && isLoading
   const visibleErrorMessage = hasAuthenticatedReportAccess ? errorMessage : ''
 
-  const reportCountLabel = useMemo(() => {
-    const total = visibleCommentReports.length + visiblePlaceReports.length
-    return total === 1 ? '1 report item' : `${total} report items`
-  }, [visibleCommentReports.length, visiblePlaceReports.length])
+  const signInPanel = (title: string, body: string) => (
+    <Panel className="mt-6">
+      <h2 className="g-h3">{title}</h2>
+      <p className="g-sm g-mut mt-1">{body}</p>
+      <GoogleSignInButton className="mt-4" redirectTo={getPublicSiteUrl('/reports')} />
+    </Panel>
+  )
 
-  const placeReportsLabel = useMemo(() => {
-    return visiblePlaceReports.length === 1 ? '1 place report' : `${visiblePlaceReports.length} place reports`
-  }, [visiblePlaceReports.length])
-
-  const commentReportsLabel = useMemo(() => {
-    return visibleCommentReports.length === 1 ? '1 comment report' : `${visibleCommentReports.length} comment reports`
-  }, [visibleCommentReports.length])
+  const activeReports = activeTab === 'places' ? visiblePlaceReports : visibleCommentReports
 
   return (
-    <PageShell>
-      <AppHeader showTaglishChip={false} />
+    <Page narrow>
+      <MinimalBackNav to="/home" label="Home" preferHistory={false} />
+      <h1 className="g-h1 mt-2">Your reports</h1>
+      <p className="g-mut mt-1 text-[15px]">Everything you flagged, plus what the team decided.</p>
 
-      <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-7">
-        <PageContainer size="default">
-          <Stack gap="loose">
-            <div className="mb-5">
-              <MinimalBackNav to="/home" label="Home" preferHistory={false} />
+      {isSessionLoading || (session?.user && isTokenLoading) ? <InlineSkeleton className="mt-6" /> : null}
+
+      {!isSessionLoading && !session?.user
+        ? signInPanel(
+            'Sign in to see your reports',
+            'Your submitted reports stay private to your account, and admin-reviewed outcomes are only shown here after the team validates the issue.',
+          )
+        : null}
+
+      {!isSessionLoading && session?.user && !isTokenLoading && !accessToken
+        ? signInPanel('Please sign in again', 'Your account is recognized, but the secure session needed to load private reports is missing.')
+        : null}
+
+      {!isSessionLoading && hasAuthenticatedReportAccess ? (
+        <div className="mt-6">
+          <Tabs
+            label="Report type"
+            value={activeTab}
+            onChange={setActiveTab}
+            options={[
+              { value: 'places', label: `Places · ${visiblePlaceReports.length}` },
+              { value: 'comments', label: `Comments · ${visibleCommentReports.length}` },
+            ]}
+          />
+          <p className="g-sm g-mut mb-3">
+            {activeTab === 'places'
+              ? 'Concerns you submitted about a place, listing, details, or photo.'
+              : 'Reports you submitted against comments posted on a place.'}
+          </p>
+
+          {visibleIsLoading ? (
+            <div className="g-list" aria-busy="true">
+              <Skeleton className="h-24" />
+              <Skeleton className="h-24" />
             </div>
-
-            <PageHeroHeader
-              eyebrow="Reports"
-              title="Reports and updates"
-              description="A compact view of everything you submitted, plus admin-reviewed outcomes when they are ready to share."
-              icon={<AppIcon name="reports" size="ui" />}
-              badges={
-                <>
-                  <SummaryPill icon="reports" label="All" value={reportCountLabel} />
-                  <SummaryPill icon="reports" label="Places" value={String(visiblePlaceReports.length)} />
-                  <SummaryPill icon="reports" label="Comments" value={String(visibleCommentReports.length)} />
-                </>
+          ) : visibleErrorMessage ? (
+            <Empty title="Hindi ma-load ang reports" description={visibleErrorMessage} />
+          ) : activeReports.length === 0 ? (
+            <Empty
+              title={activeTab === 'places' ? 'Wala pang place report' : 'Wala pang comment report'}
+              description={
+                activeTab === 'places'
+                  ? 'When you report a place concern or a photo issue, it will show up here.'
+                  : 'When you report a comment on a place, it will appear here.'
               }
             />
-
-            {isSessionLoading ? <InlineSkeleton /> : null}
-
-            {!isSessionLoading && !session?.user ? (
-              <CardSurface pad="loose">
-                <h2 className="text-lg font-black text-slate-950">Please sign in to view your reports.</h2>
-                <p className="mt-2 max-w-xl text-sm font-medium leading-6 text-[var(--muted)]">
-                  Your submitted reports stay private to your account, and admin-reviewed outcomes are only shown here after the team validates the issue.
-                </p>
-                <GoogleSignInButton className="mt-4" redirectTo={getPublicSiteUrl('/reports')} />
-              </CardSurface>
-            ) : null}
-
-            {!isSessionLoading && session?.user && isTokenLoading ? <InlineSkeleton /> : null}
-
-            {!isSessionLoading && session?.user && !isTokenLoading && !accessToken ? (
-              <CardSurface pad="loose">
-                <h2 className="text-lg font-black text-slate-950">Please sign in again to view your reports.</h2>
-                <p className="mt-2 max-w-xl text-sm font-medium leading-6 text-[var(--muted)]">
-                  Your account is recognized, but the secure session needed to load private reports is missing.
-                </p>
-                <GoogleSignInButton className="mt-4" redirectTo={getPublicSiteUrl('/reports')} />
-              </CardSurface>
-            ) : null}
-
-            {!isSessionLoading && hasAuthenticatedReportAccess ? (
-              <Stack gap="default">
-                <div>
-                  {!visibleIsLoading && visibleErrorMessage ? <p className="text-sm font-medium text-red-600">{visibleErrorMessage}</p> : null}
-                </div>
-
-                <Stack gap="tight">
-                  <SectionDropdown
-                    icon="reports"
-                    title="Place Reports"
-                    description="Concerns you submitted about a place, listing, details, or photo."
-                    countLabel={placeReportsLabel}
-                    isOpen={openSections.placeReports}
-                    onToggle={() => setOpenSections((current) => ({ ...current, placeReports: !current.placeReports }))}
-                  >
-                    {visiblePlaceReports.length > 0 ? (
-                      <SectionList>
-                        {visiblePlaceReports.map((report) => (
-                          <PlaceReportCard key={report.id} report={report} />
-                        ))}
-                      </SectionList>
-                    ) : (
-                      <SectionEmptyState
-                        title="No place reports yet"
-                        description="When you report a place concern or a photo issue, it will show up here."
-                      />
-                    )}
-                  </SectionDropdown>
-
-                  <SectionDropdown
-                    icon="comments"
-                    title="Comment Reports"
-                    description="Reports you submitted against comments posted on a place."
-                    countLabel={commentReportsLabel}
-                    isOpen={openSections.commentReports}
-                    onToggle={() => setOpenSections((current) => ({ ...current, commentReports: !current.commentReports }))}
-                  >
-                    {visibleCommentReports.length > 0 ? (
-                      <SectionList>
-                        {visibleCommentReports.map((report) => (
-                          <CommentReportCard key={report.id} report={report} />
-                        ))}
-                      </SectionList>
-                    ) : (
-                      <SectionEmptyState
-                        title="No comment reports yet"
-                        description="When you report a comment on a place, it will appear in this section."
-                      />
-                    )}
-                  </SectionDropdown>
-                </Stack>
-              </Stack>
-            ) : null}
-          </Stack>
-        </PageContainer>
-      </main>
-    </PageShell>
+          ) : (
+            <div className="g-list">
+              {activeTab === 'places'
+                ? visiblePlaceReports.map((report) => <PlaceReportCard key={report.id} report={report} />)
+                : visibleCommentReports.map((report) => <CommentReportCard key={report.id} report={report} />)}
+            </div>
+          )}
+        </div>
+      ) : null}
+    </Page>
   )
 }
 

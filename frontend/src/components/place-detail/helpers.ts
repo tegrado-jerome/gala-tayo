@@ -1,3 +1,5 @@
+import { IMAGE_UPLOAD_ERROR_MESSAGE, isValidImageFile } from '../../utils/imageUpload'
+
 export function cleanString(value?: string | null) {
   return value?.trim() || ''
 }
@@ -30,8 +32,6 @@ export function formatPriceLevel(level: number | null | undefined): string {
   const symbols = ['Free', '₱', '₱₱', '₱₱₱', '₱₱₱₱']
   return symbols[Math.min(Math.max(Math.floor(level), 0), 4)] || ''
 }
-
-import { IMAGE_UPLOAD_ERROR_MESSAGE, isValidImageFile } from '../../utils/imageUpload'
 
 export async function isAcceptedContributionImage(file: File): Promise<boolean> {
   return isValidImageFile(file)

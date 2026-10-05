@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import PlaceDetailView from '../components/PlaceDetailView'
 import SeoHead from '../components/SeoHead'
+import { Button, Empty, Page, Skeleton } from '../components/ui'
 import { replaceWithPath } from '../utils/navigation'
 import { getCanonicalPlacePath, getCategoryBreadcrumbMeta, getHistoryState, resolveAreaMeta } from '../utils/routes'
 import { buildPlaceDescription, buildPlaceFaqSchema, getStructuredPlaceType } from '../utils/placeSeo'
@@ -172,7 +173,51 @@ export default function SharedPlacePage({
   }, [areaMeta, canonicalPath, place])
 
   if (isLoading) {
-    return null
+    return (
+      <Page>
+        <div aria-busy="true" aria-label="Loading place">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="mt-4 h-8 w-2/3 max-w-[420px]" />
+          <Skeleton className="mt-3 h-4 w-1/2 max-w-[320px]" />
+          <Skeleton className="mt-6 h-[240px] w-full md:h-[400px]" />
+          <div className="g-stats mt-6">
+            <Skeleton className="h-[72px]" />
+            <Skeleton className="h-[72px]" />
+            <Skeleton className="h-[72px]" />
+          </div>
+        </div>
+      </Page>
+    )
+  }
+
+  if (notFound) {
+    return (
+      <>
+        <SeoHead title="Not Found | GalaTayo" robots="noindex,follow" />
+        <Page narrow>
+          <Empty
+            title="Place not found"
+            description="We could not find this spot. Baka na-move or na-remove na."
+            action={<Button href="/places">Browse places</Button>}
+          />
+        </Page>
+      </>
+    )
+  }
+
+  if (errorMessage) {
+    return (
+      <>
+        <SeoHead title="Error | GalaTayo" robots="noindex,follow" />
+        <Page narrow>
+          <Empty
+            title="Unable to load place"
+            description={errorMessage}
+            action={<Button onClick={() => window.location.reload()}>Try again</Button>}
+          />
+        </Page>
+      </>
+    )
   }
 
   if (!place) {
@@ -243,32 +288,6 @@ export default function SharedPlacePage({
           ],
         }
       : null
-
-  if (notFound) {
-    return (
-      <>
-        <SeoHead title="Not Found | GalaTayo" robots="noindex,follow" />
-        <main className="min-h-screen bg-[var(--bg)] px-6 py-10 text-[var(--text)]">
-          <h1 className="text-2xl font-semibold text-slate-900">Place not found</h1>
-          <p className="mt-2 text-sm text-[var(--muted)]">
-            We could not find details for this shared link.
-          </p>
-        </main>
-      </>
-    )
-  }
-
-  if (errorMessage) {
-    return (
-      <>
-        <SeoHead title="Error | GalaTayo" robots="noindex,follow" />
-        <main className="min-h-screen bg-[var(--bg)] px-6 py-10 text-[var(--text)]">
-          <h1 className="text-2xl font-semibold text-slate-900">Unable to load place</h1>
-          <p className="mt-2 text-sm text-[var(--muted)]">{errorMessage}</p>
-        </main>
-      </>
-    )
-  }
 
   return (
     <>

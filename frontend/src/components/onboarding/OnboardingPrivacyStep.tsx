@@ -1,7 +1,6 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faGlobe, faShield } from '@fortawesome/free-solid-svg-icons'
-import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
+import { ArrowRight, Check, Globe, Lock, type LucideIcon } from 'lucide-react'
 import OnboardingLayout from './OnboardingLayout'
+import { Button } from '../ui'
 import type { OnboardingErrors, OnboardingFormState, ProfileVisibility } from './types'
 
 type OnboardingPrivacyStepProps = {
@@ -13,18 +12,18 @@ type OnboardingPrivacyStepProps = {
   onNext: () => void
 }
 
-const options: Array<{ value: ProfileVisibility; title: string; description: string; icon: IconDefinition }> = [
+const options: Array<{ value: ProfileVisibility; title: string; description: string; icon: LucideIcon }> = [
   {
     value: 'public',
     title: 'Public profile',
-    description: 'Let other users view your public profile, shared activity, and community presence.',
-    icon: faGlobe,
+    description: 'Others can see your profile, shared activity, and who you follow.',
+    icon: Globe,
   },
   {
     value: 'private',
     title: 'Private profile',
-    description: 'Keep your profile hidden while your private gala plans and account details stay protected.',
-    icon: faShield,
+    description: 'Your profile stays hidden. Your plans and account details stay private either way.',
+    icon: Lock,
   },
 ]
 
@@ -33,20 +32,21 @@ function OnboardingPrivacyStep({ values, errors, disableNext, onUpdate, onBack, 
     <OnboardingLayout
       step={3}
       eyebrow="Privacy"
-      title="Choose your privacy"
-      description="Decide whether your profile is visible to everyone or kept private."
+      title="Who can see your profile?"
+      description="You can change this anytime in settings."
       actions={
         <>
-          <button type="button" onClick={onBack} className="onboarding-button onboarding-button-secondary">
+          <Button variant="soft" onClick={onBack}>
             Back
-          </button>
-          <button type="button" onClick={onNext} disabled={disableNext} className="onboarding-button onboarding-button-primary disabled:cursor-not-allowed disabled:opacity-60">
-            Continue
-          </button>
+          </Button>
+          <Button variant="tara" onClick={onNext} disabled={disableNext}>
+            Next
+            <ArrowRight aria-hidden="true" />
+          </Button>
         </>
       }
     >
-      <div className="onboarding-form-grid">
+      <div className="grid gap-3 md:grid-cols-2 md:gap-4">
         {options.map((option) => {
           const selected = values.profileVisibility === option.value
           const Icon = option.icon
@@ -55,19 +55,22 @@ function OnboardingPrivacyStep({ values, errors, disableNext, onUpdate, onBack, 
             <button
               key={option.value}
               type="button"
+              aria-pressed={selected}
               onClick={() => onUpdate({ profileVisibility: option.value })}
-              className={`onboarding-choice ${selected ? 'is-selected' : ''}`}
+              className="g-panel relative flex min-h-[112px] flex-col items-start gap-3 text-left"
+              style={selected ? { borderColor: 'var(--ink)', boxShadow: 'inset 0 0 0 1px var(--ink)' } : undefined}
             >
-              <span className="onboarding-choice-icon" aria-hidden="true">
-                <FontAwesomeIcon icon={Icon} className="h-5 w-5" />
+              <Icon className="g-ic" aria-hidden="true" />
+              <span className="min-w-0 pr-8">
+                <span className="g-h3 block">{option.title}</span>
+                <span className="g-sm g-mut mt-1 block leading-5">{option.description}</span>
               </span>
-              <span className="block text-sm font-black text-[var(--text-main)] sm:text-base">{option.title}</span>
-              <span className="mt-1.5 block text-xs font-semibold leading-5 text-[var(--muted)] sm:mt-2 sm:text-sm sm:leading-6">{option.description}</span>
+              {selected ? <Check className="g-ic absolute right-4 top-4" aria-hidden="true" /> : null}
             </button>
           )
         })}
-        {errors.profileVisibility ? <span className="onboarding-error">{errors.profileVisibility}</span> : null}
       </div>
+      {errors.profileVisibility ? <p className="g-hint is-error mt-3">{errors.profileVisibility}</p> : null}
     </OnboardingLayout>
   )
 }

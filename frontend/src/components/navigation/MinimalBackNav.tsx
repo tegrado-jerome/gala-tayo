@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { ChevronLeft } from 'lucide-react'
 import { navigateToPath } from '../../utils/navigation'
 import { hasInAppBackHistory } from '../../utils/routes'
 import { MINIMAL_NAV_LINK_CLASS } from './navigationStyles'
@@ -58,6 +59,7 @@ function MinimalBackNav({
       aria-label={accessibleLabel}
       className={[MINIMAL_NAV_LINK_CLASS, className].filter(Boolean).join(' ')}
     >
+      <ChevronLeft className="h-4 w-4" aria-hidden="true" />
       {label}
     </button>
   )

@@ -1,6 +1,8 @@
 import OnboardingLayout from './OnboardingLayout'
 import type { OnboardingErrors, OnboardingFormState } from './types'
 import InternalLink from '../InternalLink'
+import { AuthNotice } from '../auth/AuthCard'
+import { Button } from '../ui'
 
 type OnboardingAgreementStepProps = {
   values: Pick<OnboardingFormState, 'acceptedTerms' | 'acceptedPrivacy'>
@@ -19,44 +21,42 @@ function OnboardingAgreementStep({ values, errors, isSubmitting, disableNext, on
   return (
     <OnboardingLayout
       step={4}
-      eyebrow="Final step"
+      eyebrow="Last step"
       title="You're almost done"
-      description="Agree to the terms and privacy policy to finish creating your GalaTayo profile."
+      description="Agree to the terms and privacy policy to finish your GalaTayo profile."
       actions={
         <>
-          <button type="button" onClick={onBack} disabled={isSubmitting} className="onboarding-button onboarding-button-secondary" >
+          <Button variant="soft" onClick={onBack} disabled={isSubmitting}>
             Back
-          </button>
-          <button type="button" onClick={onFinish} disabled={disableNext || !accepted || isSubmitting} className="onboarding-button onboarding-button-primary disabled:cursor-not-allowed disabled:opacity-60">
-            {isSubmitting ? 'Finishing...' : 'Finish Setup'}
-          </button>
+          </Button>
+          <Button variant="tara" onClick={onFinish} disabled={disableNext || !accepted || isSubmitting}>
+            {isSubmitting ? 'Finishing...' : 'Finish setup'}
+          </Button>
         </>
       }
     >
-      <div className="onboarding-form-grid">
-        <div className={`onboarding-choice onboarding-choice-checkbox onboarding-field-wide ${accepted ? 'is-selected' : ''}`}>
+      <div className="flex flex-col gap-4">
+        <div
+          className="g-panel flex items-start gap-3"
+          style={accepted ? { borderColor: 'var(--ink)', boxShadow: 'inset 0 0 0 1px var(--ink)' } : undefined}
+        >
           <input
             id={checkboxId}
             type="checkbox"
             checked={accepted}
             onChange={(event) => onUpdate({ acceptedTerms: event.target.checked, acceptedPrivacy: event.target.checked })}
-            className="mt-1 h-5 w-5 shrink-0 accent-[var(--accent)]"
+            className="mt-0.5 h-5 w-5 shrink-0"
+            style={{ accentColor: 'var(--ink)' }}
           />
-          <span className="text-sm font-bold leading-6 sm:text-[15px]">
+          <span className="leading-6">
             <label htmlFor={checkboxId} className="cursor-pointer">
               I have read and agree to GalaTayo's{' '}
             </label>
-            <InternalLink
-              href="/terms"
-              className="font-black text-[var(--onboarding-link)] underline underline-offset-4 transition hover:text-[var(--onboarding-link-hover)]"
-            >
+            <InternalLink href="/terms" className="font-semibold underline underline-offset-[3px]">
               Terms of Service
             </InternalLink>
             {' '}and{' '}
-            <InternalLink
-              href="/privacy"
-              className="font-black text-[var(--onboarding-link)] underline underline-offset-4 transition hover:text-[var(--onboarding-link-hover)]"
-            >
+            <InternalLink href="/privacy" className="font-semibold underline underline-offset-[3px]">
               Privacy Policy
             </InternalLink>
             <label htmlFor={checkboxId} className="cursor-pointer">
@@ -65,11 +65,9 @@ function OnboardingAgreementStep({ values, errors, isSubmitting, disableNext, on
           </span>
         </div>
 
-        {errors.form ? <p className="onboarding-error-panel">{errors.form}</p> : null}
+        {errors.form ? <AuthNotice tone="bad">{errors.form}</AuthNotice> : null}
 
-        <p className="onboarding-age-note">
-          By creating an account, you confirm that you are at least 13 years old.
-        </p>
+        <p className="g-xs g-mut">By creating an account, you confirm that you are at least 13 years old.</p>
       </div>
     </OnboardingLayout>
   )

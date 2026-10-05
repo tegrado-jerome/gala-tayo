@@ -1,9 +1,8 @@
 import { useMemo, useState } from 'react'
-import AppHeader from '../components/AppHeader'
+import { Angry, Frown, Laugh, Meh, Smile } from 'lucide-react'
 import MinimalBackNav from '../components/navigation/MinimalBackNav'
-import { AppIcon } from '../components/AppIcon'
 import GoogleSignInButton from '../components/GoogleSignInButton'
-import { FormContainer, PageContainer, PageShell, CardSurface, Stack } from '../components/layout/ResponsiveLayouts'
+import { Button, Page, Panel, cx } from '../components/ui'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { getApiUrl } from '../utils/apiClient'
 import { getPublicSiteUrl } from '../utils/site'
@@ -12,60 +11,12 @@ import { InlineSkeleton } from '../components/loading/SkeletonStates'
 const COMMENT_MAX_LENGTH = 500
 
 const ratingOptions = [
-  { value: 1, label: 'Very bad', face: 'frown-heavy' },
-  { value: 2, label: 'Bad', face: 'frown' },
-  { value: 3, label: 'Okay', face: 'neutral' },
-  { value: 4, label: 'Good', face: 'smile' },
-  { value: 5, label: 'Excellent', face: 'laugh' },
+  { value: 1, label: 'Very bad', Icon: Angry },
+  { value: 2, label: 'Bad', Icon: Frown },
+  { value: 3, label: 'Okay', Icon: Meh },
+  { value: 4, label: 'Good', Icon: Smile },
+  { value: 5, label: 'Excellent', Icon: Laugh },
 ]
-
-type IconProps = {
-  className?: string
-}
-
-function HeartGraphic() {
-  return (
-    <svg viewBox="0 0 180 180" className="h-[164px] w-[164px]" aria-hidden="true">
-      <defs>
-        <radialGradient id="heart-bg" cx="35%" cy="30%" r="80%">
-          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.98" />
-          <stop offset="55%" stopColor="#86b5ff" stopOpacity="0.98" />
-          <stop offset="100%" stopColor="#3770ed" stopOpacity="1" />
-        </radialGradient>
-        <linearGradient id="heart-spark" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#8be6d9" />
-          <stop offset="100%" stopColor="#58d1bf" />
-        </linearGradient>
-      </defs>
-      <circle cx="92" cy="96" r="56" fill="url(#heart-bg)" opacity="0.95" />
-      <path
-        d="M75.5 71.5c7.4 0 13.2 3.8 16.5 9.1 3.3-5.3 9.1-9.1 16.5-9.1 10.6 0 19 8.4 19 18.9 0 21.5-35.5 38.5-35.5 38.5S56.5 111.9 56.5 90.4c0-10.5 8.4-18.9 19-18.9Z"
-        fill="#ffffff"
-        opacity="0.96"
-      />
-      <path d="M44 114l-18 8 11 6 7-14Z" fill="#ffffff" opacity="0.95" />
-      <path d="M42 114l-6 20 20-14-14-6Z" fill="#eaf1ff" opacity="0.9" />
-      <path d="M120 34l2.5 10 10 2.5-10 2.5-2.5 10-2.5-10-10-2.5 10-2.5 2.5-10Z" fill="url(#heart-spark)" />
-      <circle cx="43" cy="40" r="11" fill="#c5dcff" opacity="0.9" />
-      <circle cx="149" cy="132" r="5" fill="#6abce8" opacity="0.85" />
-      <path d="M72 138c11 4 22 4 33 0" fill="none" stroke="#8ab4ff" strokeDasharray="7 8" strokeWidth="3" strokeLinecap="round" />
-      <path d="M104 141l16-1-7-10-9 11Z" fill="#ffffff" opacity="0.92" />
-    </svg>
-  )
-}
-
-function FaceIcon({ mood, className = 'h-10 w-10' }: IconProps & { mood: string }) {
-  const iconName =
-    mood === 'laugh'
-      ? 'moodLaugh'
-      : mood === 'smile'
-        ? 'moodSmile'
-        : mood === 'neutral'
-          ? 'moodNeutral'
-          : 'moodFrown'
-
-  return <AppIcon name={iconName} className={className} strokeWidth={1.8} />
-}
 
 function parseJsonResponse(text: string): { message?: string } {
   if (!text.trim()) {
@@ -137,126 +88,84 @@ function FeedbackPage() {
   }
 
   return (
-    <PageShell>
-      <AppHeader showTaglishChip={false} />
+    <Page narrow>
+      <MinimalBackNav to="/home" label="Home" preferHistory={false} />
+      <p className="g-eyebrow mt-2">Help and feedback</p>
+      <h1 className="g-h1 mt-2">How can we help?</h1>
+      <p className="g-mut mt-1 text-[15px]">Send feedback connected to your account.</p>
 
-      <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-8">
-        <PageContainer size="wide">
-          <Stack gap="default">
-            <div className="mb-5">
-              <MinimalBackNav to="/home" label="Home" preferHistory={false} />
+      {isSessionLoading ? <InlineSkeleton className="mt-6" /> : null}
+
+      {!isSessionLoading && !session?.user ? (
+        <Panel className="mt-6">
+          <h2 className="g-h3">Sign in to send feedback</h2>
+          <p className="g-sm g-mut mt-1">Feedback is connected to your account so we can keep submissions useful.</p>
+          <GoogleSignInButton className="mt-4" redirectTo={getPublicSiteUrl('/feedback')} />
+        </Panel>
+      ) : null}
+
+      {!isSessionLoading && session?.user ? (
+        <section id="feedback-form" className="mt-6 scroll-mt-6">
+          <Panel className="grid gap-6">
+            <fieldset>
+              <legend className="g-h3">How was your experience?</legend>
+              <div className="mt-3 grid grid-cols-5 gap-1.5 sm:gap-2">
+                {ratingOptions.map(({ value, label, Icon }) => {
+                  const isSelected = rating === value
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setRating(value)}
+                      aria-pressed={isSelected}
+                      aria-label={`Rate ${label}`}
+                      className={cx(
+                        'flex min-h-[72px] min-w-0 flex-col items-center justify-center gap-1.5 rounded-[var(--r-2)] border px-1 transition-colors',
+                        isSelected ? 'border-[var(--ink)] bg-[var(--fill)] text-[var(--ink)]' : 'border-[var(--line)] text-[var(--ink-2)] hover:border-[var(--ink)]',
+                      )}
+                    >
+                      <Icon className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={1.8} aria-hidden="true" />
+                      <span className="text-[11px] font-medium leading-tight sm:text-xs">{label}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </fieldset>
+
+            <div className="g-field">
+              <label htmlFor="feedback-comment">Tell us more</label>
+              <textarea
+                id="feedback-comment"
+                value={comment}
+                onChange={(event) => setComment(event.target.value)}
+                maxLength={COMMENT_MAX_LENGTH}
+                rows={5}
+                placeholder="Share your thoughts about GalaTayo…"
+                className="g-input min-h-40"
+              />
+              <span className="g-hint text-right">
+                {remainingCount < 60 ? `${remainingCount} characters left` : `${comment.length} / ${COMMENT_MAX_LENGTH}`}
+              </span>
             </div>
 
-            <section className="overflow-hidden">
-              <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-center">
-                <div className="space-y-2 sm:space-y-3">
-                  <p className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--home-eyebrow)]">
-                    <span className="text-[var(--home-eyebrow-icon)]">
-                      <AppIcon name="comments" className="h-4 w-4" />
-                    </span>
-                    <span>Help &amp; Feedback</span>
-                  </p>
-                  <h1 className="gala-page-title max-w-2xl">
-                    How can we help?
-                  </h1>
-                  <p className="gala-page-description">
-                    Send feedback connected to your account.
-                  </p>
-                </div>
-                <div className="hidden justify-end lg:flex" aria-hidden="true">
-                  <div className="drop-shadow-[0_18px_34px_rgba(47,116,232,0.22)]">
-                    <HeartGraphic />
-                  </div>
-                </div>
-              </div>
-            </section>
+            {errorMessage ? (
+              <p className="g-hint is-error -mt-2" role="alert">
+                {errorMessage}
+              </p>
+            ) : null}
+            {statusMessage ? (
+              <p className="g-sm -mt-2 font-semibold text-[var(--ok)]" role="status">
+                {statusMessage}
+              </p>
+            ) : null}
 
-        {isSessionLoading ? <InlineSkeleton /> : null}
-
-        {!isSessionLoading && !session?.user ? (
-          <CardSurface pad="loose">
-            <h2 className="text-lg font-black text-slate-950">Sign in to use Help &amp; Feedback</h2>
-            <p className="mt-2 max-w-xl text-sm text-[var(--muted)]">
-              Feedback is connected to your account so we can keep submissions useful.
-            </p>
-            <GoogleSignInButton className="mt-4" redirectTo={getPublicSiteUrl('/feedback')} />
-          </CardSurface>
-        ) : null}
-
-        {!isSessionLoading && session?.user ? (
-          <section id="feedback-form" className="scroll-mt-6">
-            <FormContainer className="px-0">
-              <Stack gap="loose">
-                <section>
-                  <h2 className="mb-2 text-[20px] font-black tracking-[-0.03em] text-slate-950 sm:mb-3 sm:text-[24px]">How was your experience?</h2>
-                  <div className="grid grid-cols-5 gap-1 sm:gap-3">
-                    {ratingOptions.map((option) => {
-                      const isSelected = rating === option.value
-
-                      return (
-                        <button
-                          key={option.value}
-                          type="button"
-                          onClick={() => setRating(option.value)}
-                          className={`flex min-w-0 flex-col items-center justify-center gap-1 rounded-xl border-0 px-1 py-1 text-center font-black transition active:scale-[0.98] ${
-                            isSelected
-                              ? 'bg-[var(--accent-soft)] text-[var(--accent-deep)]'
-                              : 'bg-transparent text-slate-700 hover:bg-[var(--accent-soft)] hover:text-[var(--accent-deep)]'
-                          }`}
-                          aria-label={`Rate ${option.label}`}
-                        >
-                          <FaceIcon mood={option.face} className={`h-7 w-7 sm:h-12 sm:w-12 ${isSelected ? 'scale-105' : ''}`} />
-                          <span className="text-[9px] leading-tight sm:text-sm">{option.label}</span>
-                        </button>
-                      )
-                    })}
-                  </div>
-                </section>
-
-                <label className="block">
-                  <span className="mb-2 block text-[20px] font-black tracking-[-0.03em] text-slate-950 sm:mb-3 sm:text-[22px]">Tell us more</span>
-                  <div className="relative">
-                    <textarea
-                      value={comment}
-                      onChange={(event) => setComment(event.target.value)}
-                      maxLength={COMMENT_MAX_LENGTH}
-                      rows={5}
-                      placeholder="Share your thoughts about your experience on GalaTayo..."
-                      className="gala-field min-h-40 w-full resize-none px-4 py-3.5 pb-9 text-sm leading-relaxed placeholder:text-slate-400 sm:min-h-44 sm:py-4 sm:pb-10 sm:text-base"
-                    />
-                    <span className="absolute bottom-2.5 right-3.5 text-xs font-semibold text-[var(--muted)] sm:bottom-3 sm:right-4 sm:text-sm">
-                      {comment.length} / {COMMENT_MAX_LENGTH}
-                    </span>
-                  </div>
-                  {remainingCount < 60 ? (
-                    <p className="mt-2 text-xs font-semibold text-[var(--muted)]">{remainingCount} characters left</p>
-                  ) : null}
-                </label>
-
-                {errorMessage || statusMessage ? (
-                  <div className="-mt-1">
-                    {errorMessage ? <p className="text-sm font-semibold text-red-600">{errorMessage}</p> : null}
-                    {statusMessage ? <p className="text-sm font-semibold text-[var(--accent-deep)]">{statusMessage}</p> : null}
-                  </div>
-                ) : null}
-
-                <button
-                  type="button"
-                  onClick={() => void handleSubmit()}
-                  disabled={isSubmitting}
-                  className="app-button app-button-primary app-button-md w-full sm:w-auto"
-                >
-                  <AppIcon name="send" className="h-5 w-5" />
-                  {isSubmitting ? 'Sending...' : 'Send Feedback'}
-                </button>
-              </Stack>
-            </FormContainer>
-          </section>
-        ) : null}
-          </Stack>
-        </PageContainer>
-      </main>
-    </PageShell>
+            <Button variant="tara" onClick={() => void handleSubmit()} disabled={isSubmitting} className="w-full sm:w-auto sm:justify-self-end">
+              {isSubmitting ? 'Sending…' : 'Send feedback'}
+            </Button>
+          </Panel>
+        </section>
+      ) : null}
+    </Page>
   )
 }
 

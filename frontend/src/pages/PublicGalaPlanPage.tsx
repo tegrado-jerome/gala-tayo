@@ -1,39 +1,26 @@
 import { useEffect, useMemo, useState } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronRight } from '@fortawesome/free-solid-svg-icons'
-import AppHeader from '../components/AppHeader'
-import { AppIcon } from '../components/AppIcon'
-import MinimalBackNav from '../components/navigation/MinimalBackNav'
-import ProfileAvatar from '../components/ProfileAvatar'
-import { PageContainer, PageShell, CardSurface, Stack } from '../components/layout/ResponsiveLayouts'
+import { ArrowLeft, CalendarDays, Heart, MapPin, Share, Sparkles } from 'lucide-react'
+import InternalLink from '../components/InternalLink'
+import PlanRouteMap from '../components/gala-plan/PlanRouteMap'
+import PlanTimeline, { type TimelineStop } from '../components/gala-plan/PlanTimeline'
+import { Avatar, Button, Empty, Page, Panel, SectionHead, Skeleton } from '../components/ui'
 import { getDisplayName, getPublicGalaPlan, type PublicGalaPlan } from '../utils/profileApi'
-import { navigateToPath } from '../utils/navigation'
 import { formatGalaPlanDate, parseGalaPlanDescription } from '../utils/galaPlansApi'
 import { heartGalaPlan, unheartGalaPlan } from '../utils/galaPlanHeartsApi'
 import { shareGalaPlanLink } from '../utils/share'
-import { FormSkeleton } from '../components/loading/SkeletonStates'
 
 type PublicGalaPlanPageProps = {
   username: string
   slug: string
 }
 
-function placeMetaLabel(city?: string | null, category?: string | null) {
-  const parts = [city, category].filter(Boolean)
-  return parts.length > 0 ? parts.join(' - ') : 'GalaTayo place'
-}
-
-function formatPlaceCountLabel(count: number) {
-  return `${count} ${count === 1 ? 'place' : 'places'}`
-}
-
 function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
   const [plan, setPlan] = useState<PublicGalaPlan | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
   const [notFound, setNotFound] = useState(false)
   const [lockedMessage, setLockedMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [notice, setNotice] = useState('')
+
   useEffect(() => {
     let isMounted = true
 
@@ -56,8 +43,6 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
           setErrorMessage(error instanceof Error ? error.message : 'Failed to load gala plan.')
         }
         setPlan(null)
-      } finally {
-        if (isMounted) setIsLoading(false)
       }
     }
 
@@ -68,8 +53,11 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
     }
   }, [slug, username])
 
-  const parsedDescription = parseGalaPlanDescription(plan?.description)
   const items = useMemo(() => [...(plan?.items || [])].sort((first, second) => first.order_index - second.order_index), [plan])
+  const stops = useMemo<TimelineStop[]>(
+    () => items.map((item) => ({ key: item.id, time: null, minutes: null, note: item.notes, place: item.place })),
+    [items],
+  )
 
   const toggleHeart = async () => {
     if (!plan) return
@@ -89,166 +77,93 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
     }
   }
 
+  const profileHref = `/u/${encodeURIComponent(plan?.owner?.username || username)}`
+
+  if (notFound || lockedMessage || errorMessage) {
+    return (
+      <Page narrow>
+        <Empty
+          className="mt-6"
+          title={notFound ? 'Gala plan not found' : lockedMessage || 'Hindi ma-open ang plan'}
+          description={lockedMessage ? 'Follow to request access kung followers-only ito.' : errorMessage || 'The link may be old or the plan was removed.'}
+          action={<Button variant="soft" href={notFound || errorMessage ? '/explore' : profileHref}>{lockedMessage ? 'View profile' : 'Explore places'}</Button>}
+        />
+      </Page>
+    )
+  }
+
+  if (!plan) {
+    return (
+      <Page>
+        <div aria-label="Loading plan">
+          <Skeleton className="aspect-[16/9] lg:aspect-[5/2]" />
+          <Skeleton className="mt-6 h-4 w-40" />
+          <Skeleton className="mt-3 h-8 w-2/3" />
+          <Skeleton className="mt-8 h-40" />
+        </div>
+      </Page>
+    )
+  }
+
+  const description = parseGalaPlanDescription(plan.description).description
+  const cover = items.find((item) => item.place.image_url)?.place.image_url
+  const ownerName = getDisplayName(plan.owner)
+  const city = items.find((item) => item.place.city)?.place.city
+
   return (
-    <PageShell>
-      <AppHeader />
-      <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
-        <PageContainer size="narrow">
-          {isLoading && !plan ? <FormSkeleton rows={4} /> : null}
-          {notFound ? (
-            <CardSurface pad="loose" className="text-center">
-              <h1 className="text-xl font-black text-slate-950">Gala plan not found.</h1>
-            </CardSurface>
-          ) : lockedMessage ? (
-            <CardSurface pad="loose" className="text-center">
-              <h1 className="text-xl font-black text-slate-950">{lockedMessage}</h1>
-              <p className="mt-2 text-sm font-semibold text-[var(--muted)]">Follow to request access kung followers-only ito.</p>
-              <button type="button" onClick={() => navigateToPath(`/u/${encodeURIComponent(username)}`)} className="mt-5 h-10 rounded-full bg-slate-950 px-4 text-sm font-black text-white">View profile</button>
-            </CardSurface>
-          ) : errorMessage ? (
-            <CardSurface pad="loose" className="text-center text-sm font-bold text-red-700">{errorMessage}</CardSurface>
-          ) : isLoading && !plan ? null : (
-            <Stack gap="default">
-              <section className="relative overflow-hidden py-1">
-              <div className="pointer-events-none absolute -right-12 top-0 h-32 w-32 rounded-full bg-sky-100/80 blur-2xl" />
-              <div className="pointer-events-none absolute left-0 top-20 h-24 w-24 rounded-full bg-[rgba(var(--accent-rgb),0.1)] blur-2xl" />
+    <Page>
+      <InternalLink href={profileHref} className="g-sm g-mut inline-flex min-h-11 items-center gap-1.5">
+        <ArrowLeft className="h-4 w-4" />
+        @{plan.owner?.username || username}
+      </InternalLink>
+      {cover ? (
+        <div className="mt-2 aspect-[16/9] overflow-hidden bg-[var(--fill)] lg:aspect-[5/2]" style={{ borderRadius: 'var(--r-4)' }}>
+          <img src={cover} alt="" className="h-full w-full object-cover" />
+        </div>
+      ) : null}
 
-              <div className="relative">
-                <MinimalBackNav to={`/u/${encodeURIComponent(plan?.owner?.username || username)}`} className="mb-4 border-0 bg-transparent px-0 py-0 text-slate-500 shadow-none ring-0 hover:bg-transparent" />
+      <div className="g-split mt-6 lg:mt-8">
+        <div className="min-w-0">
+          <InternalLink href={profileHref} className="inline-flex min-h-11 items-center gap-2">
+            <Avatar src={plan.owner?.avatar_url ?? plan.owner?.provider_avatar_url} name={ownerName} size={28} />
+            <span className="g-eyebrow">{ownerName} shared this gala</span>
+          </InternalLink>
+          <h1 className="g-h1 mt-1">{plan.title}</h1>
+          <div className="g-sm g-mut mt-2 flex flex-wrap gap-x-4 gap-y-1.5">
+            <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-4 w-4" />{formatGalaPlanDate(plan.description)}</span>
+            {city ? <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4" />{city}</span> : null}
+            <span>{items.length} {items.length === 1 ? 'stop' : 'stops'}</span>
+          </div>
+          {description ? <p className="mt-3 max-w-[65ch]">{description}</p> : null}
 
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <span className="inline-flex items-center text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
-                    Gala plan
-                  </span>
-                  <span className="inline-flex shrink-0 items-center gap-1.5 text-[11px] font-black uppercase tracking-[0.12em] text-slate-500">
-                    <AppIcon name="place" className="h-3.5 w-3.5" />
-                      {formatPlaceCountLabel(plan?.items.length ?? 0)}
-                  </span>
-                </div>
+          <SectionHead title="The plan" sub={items.length > 0 ? `${items.length} ${items.length === 1 ? 'stop' : 'stops'} · travel times are estimates` : undefined} />
+          {stops.length === 0 ? <Empty title="Wala pang stops" description="This plan has no places yet." /> : <PlanTimeline stops={stops} />}
+        </div>
 
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <h1 className="max-w-[13ch] text-[2rem] font-black leading-[0.95] tracking-[-0.05em] text-slate-950 sm:max-w-none sm:text-[2.35rem]">
-                      {plan?.title || 'Public gala plan'}
-                    </h1>
-                    <p className="text-sm font-semibold text-slate-500">
-                      A minimalist route dropped into a clean social-style layout.
-                    </p>
-                  </div>
-
-                    <button
-                      type="button"
-                      onClick={() => plan?.owner?.username ? navigateToPath(`/u/${encodeURIComponent(plan.owner.username)}`) : undefined}
-                      className="flex w-full items-center gap-2.5 px-0 py-2 text-left transition"
-                    >
-                      <ProfileAvatar profile={plan?.owner ?? { username, avatar_url: null, provider_avatar_url: null }} size="sm" />
-                    <span className="min-w-0">
-                      <span className="block truncate text-sm font-black text-slate-950">{plan?.owner ? getDisplayName(plan.owner) : `@${username}`}</span>
-                      <span className="mt-0.5 inline-flex max-w-full items-center gap-1 truncate text-xs font-black text-[var(--accent-deep)]">
-                        <span className="truncate">@{plan?.owner?.username || username}</span>
-                        <FontAwesomeIcon icon={faChevronRight} className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                      </span>
-                      <span className="mt-1 block text-xs font-semibold text-slate-500">{formatGalaPlanDate(plan?.description)}</span>
-                    </span>
-                  </button>
-
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <div className="px-1 py-1">
-                      <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-400">Stops</p>
-                      <p className="mt-2 text-lg font-black tracking-[-0.03em] text-slate-950">{plan?.items.length ?? 0}</p>
-                    </div>
-                    <div className="px-1 py-1">
-                      <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-400">Hearts</p>
-                      <p className="mt-2 text-lg font-black tracking-[-0.03em] text-slate-950">{plan?.hearts_count ?? 0}</p>
-                    </div>
-                  </div>
-
-                  {parsedDescription.description ? (
-                    <p className="text-sm font-semibold leading-6 text-slate-700">{parsedDescription.description}</p>
-                  ) : null}
-
-                  <div className="flex gap-2.5">
-                    <button
-                      type="button"
-                      onClick={() => void toggleHeart()}
-                      className={`inline-flex min-w-0 flex-1 sm:flex-none items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-black transition ${
-                        plan?.viewer_has_hearted
-                          ? 'bg-rose-50 text-rose-700 hover:bg-rose-100'
-                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                      }`}
-                    >
-                      <AppIcon name="favorites" className={`h-4 w-4 ${plan?.viewer_has_hearted ? 'fill-current text-rose-600' : ''}`} />
-                      <span>{plan?.hearts_count ?? 0}</span>
-                    </button>
-                      <button
-                        type="button"
-                        onClick={() => plan ? void shareGalaPlanLink(plan.owner.username, plan.slug, plan.title) : undefined}
-                        className="inline-flex min-w-0 flex-1 sm:flex-none items-center justify-center gap-2 rounded-full bg-slate-100 px-4 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-200"
-                      >
-                      <AppIcon name="share" className="h-4 w-4" />
-                      <span>Share</span>
-                    </button>
-                  </div>
-
-                  {notice ? <p className="text-sm font-bold text-amber-800">{notice}</p> : null}
-                </div>
-              </div>
-              </section>
-
-              <section className="space-y-3">
-              <div className="flex items-center justify-between gap-3 px-1">
-                <span className="inline-flex items-center text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
-                  Places
-                </span>
-                <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">{formatPlaceCountLabel(items.length)}</p>
-              </div>
-
-                  {items.length === 0 ? (
-                <p className="px-1 text-sm font-semibold text-[var(--muted)]">This plan has no places yet.</p>
-              ) : (
-                <Stack gap="tight">
-                  {items.map((item, index) => (
-                    <article key={item.id} className="border-b border-slate-200/80 px-1 pb-4 last:border-b-0">
-                      <div className="flex items-start gap-3">
-                        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-black text-slate-950">
-                          {index + 1}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0">
-                              <h3 className="text-[1.05rem] font-black leading-5 tracking-[-0.03em] text-slate-950">{item.place.name}</h3>
-                              <p className="mt-1 text-xs font-bold text-slate-500">{placeMetaLabel(item.place.city, item.place.category)}</p>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => navigateToPath(`/places/${encodeURIComponent(item.place.slug)}`)}
-                              className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-slate-950 px-3.5 text-xs font-black text-white transition hover:bg-slate-800"
-                            >
-                              <AppIcon name="arrowRight" className="h-3.5 w-3.5" />
-                              View
-                            </button>
-                          </div>
-
-                          {item.place.address ? (
-                            <p className="mt-3 inline-flex max-w-full items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-600">
-                              <AppIcon name="place" className="h-3 w-3 shrink-0" />
-                              <span className="truncate">{item.place.address}</span>
-                            </p>
-                          ) : null}
-
-                          {item.notes ? <p className="mt-3 text-sm font-semibold leading-6 text-slate-700">{item.notes}</p> : null}
-                        </div>
-                      </div>
-                    </article>
-                  ))}
-                </Stack>
-              )}
-              </section>
-            </Stack>
-          )}
-        </PageContainer>
-      </main>
-    </PageShell>
+        <aside className="g-side">
+          <Panel>
+            <h2 className="g-h3">Sama ka?</h2>
+            <p className="g-sm g-mut mt-0.5">Send it to the barkada or heart it for later.</p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <Button variant="ink" onClick={() => void shareGalaPlanLink(plan.owner.username, plan.slug, plan.title)}>
+                <Share />
+                Share
+              </Button>
+              <Button variant="soft" aria-pressed={plan.viewer_has_hearted} aria-label={plan.viewer_has_hearted ? 'Remove heart' : 'Heart this plan'} onClick={() => void toggleHeart()}>
+                <Heart fill={plan.viewer_has_hearted ? 'currentColor' : 'none'} />
+                {plan.hearts_count}
+              </Button>
+            </div>
+            {notice ? <p role="status" className="g-hint mt-2">{notice}</p> : null}
+          </Panel>
+          <PlanRouteMap stops={stops} />
+          <Button variant="line" block href={`/plan-with-ai?q=${encodeURIComponent(`A gala like ${plan.title}`)}`}>
+            <Sparkles />
+            Plan your own with AI
+          </Button>
+        </aside>
+      </div>
+    </Page>
   )
 }
 

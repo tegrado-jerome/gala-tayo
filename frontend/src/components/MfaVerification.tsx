@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faRightFromBracket, faCircleCheck } from '@fortawesome/free-solid-svg-icons'
+import { CircleCheck, LogOut } from 'lucide-react'
 import { sendMfaEmailCode, verifyMfaEmailCode } from '../utils/userMfa'
 import { setDeviceToken } from '../utils/mfaDevice'
 import { navigateToPath } from '../utils/navigation'
 import { getRequestedNextPath, signOut } from '../services/authApi'
-import galaTayoLogo from '../assets/brand/galatayo-logo.svg'
+import { AuthCard, AuthNotice } from './auth/AuthCard'
+import { Button, buttonClass } from './ui'
 
 const OTP_LENGTH = 6
 
@@ -233,100 +233,77 @@ function MfaVerification({ session, nextPath: nextPathProp, onSuccess }: MfaVeri
       : 'Resend OTP'
 
   return (
-    <div className="mx-auto flex w-full max-w-[420px] flex-col items-center text-center">
-      <img
-        src={galaTayoLogo}
-        alt="GalaTayo"
-        className="mb-8 h-auto w-[180px] sm:w-[210px] md:w-[230px]"
-        loading="eager"
-      />
-
-      <h1 className="text-[26px] font-black text-slate-950 sm:text-[30px]">Verify OTP</h1>
-      <p className="mt-2 max-w-[320px] text-sm font-semibold leading-6 text-slate-500">
-        Enter the 6-digit code sent to{' '}
-        <span className="font-bold text-slate-800">{maskedEmail || 'your email'}</span>
-      </p>
-
+    <AuthCard
+      eyebrow="Two-step check"
+      title="Enter your code"
+      sub={
+        <>
+          We sent a 6-digit code to <b style={{ color: 'var(--ink)' }}>{maskedEmail || 'your email'}</b>.
+        </>
+      }
+    >
       {devOtp && import.meta.env.DEV ? (
-        <p className="mt-3 w-full rounded-xl border border-yellow-200 bg-yellow-50 px-4 py-2 text-sm font-bold text-yellow-800">
-          DEV MODE — OTP: <span className="tracking-[0.3em]">{devOtp}</span>
-        </p>
+        <AuthNotice tone="warn">
+          Dev mode OTP: <span className="font-semibold tracking-[0.3em]">{devOtp}</span>
+        </AuthNotice>
       ) : null}
 
-      <div className="mt-8 flex w-full items-center justify-center gap-2.5 sm:gap-3">
+      <div className="flex justify-center gap-2" role="group" aria-label="6-digit code">
         {digits.map((digit, index) => (
           <input
             key={index}
             ref={(el) => { inputRefs.current[index] = el }}
             type="text"
             inputMode="numeric"
+            autoComplete={index === 0 ? 'one-time-code' : 'off'}
             maxLength={1}
             value={digit}
+            aria-label={`Digit ${index + 1}`}
+            aria-invalid={Boolean(errorMessage) || undefined}
             onChange={(event) => handleDigitChange(index, event.target.value)}
             onKeyDown={(event) => handleKeyDown(index, event)}
             onPaste={index === 0 ? handlePaste : undefined}
-            className="h-14 w-12 rounded-xl border border-[var(--line)] bg-white text-center text-2xl font-black text-slate-900 shadow-[inset_0_1px_2px_rgba(27,26,23,0.03)] outline-none transition focus:border-[var(--accent)] focus:shadow-[var(--focus-ring)] sm:h-16 sm:w-14 sm:text-[28px]"
+            className="g-input h-14 w-12 min-w-0 !p-0 text-center text-xl font-semibold"
           />
         ))}
       </div>
 
-      {errorMessage ? (
-        <p className="mt-4 w-full rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
-          {errorMessage}
-        </p>
-      ) : null}
+      {errorMessage ? <AuthNotice tone="bad">{errorMessage}</AuthNotice> : null}
 
       {successMessage && !errorMessage ? (
-        <p className="mt-4 flex items-center gap-2 text-sm font-semibold text-green-600">
-          <FontAwesomeIcon icon={faCircleCheck} className="h-4 w-4" />
+        <p className="g-sm flex items-center gap-2 font-semibold" role="status" style={{ color: 'var(--ok)' }}>
+          <CircleCheck className="g-ic" aria-hidden="true" />
           {successMessage}
         </p>
       ) : null}
 
-      <div className="mt-5 text-sm font-semibold leading-6 text-slate-500">
-        <p>Didn&#39;t receive the code?</p>
-        <button
-          type="button"
-          onClick={() => void handleSendCode()}
-          disabled={isSendingCode || cooldownSeconds > 0}
-          className="font-semibold text-[var(--accent)] underline hover:text-[var(--accent-deep)] disabled:text-[var(--text-disabled)] disabled:no-underline"
-        >
-          {resendText}
-        </button>
-      </div>
-
-      <div className="mt-6 w-full">
-        <button
-          ref={verifyButtonRef}
-          type="button"
-          onClick={() => void handleVerify()}
-          disabled={!codeComplete || isVerifying}
-          className="app-button app-button-primary app-button-md w-full"
-        >
-          {isVerifying ? 'Verifying...' : 'Verify OTP'}
-        </button>
-      </div>
-
-      <label className="mt-5 flex cursor-pointer items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-800">
-        <input
-          type="checkbox"
-          checked={trustDevice}
-          onChange={(event) => setTrustDevice(event.target.checked)}
-          className="h-4 w-4 rounded border-[var(--line)] text-[var(--accent)] focus:ring-[var(--accent)]"
-        />
-        Remember this device
-      </label>
-
-      <button
-        type="button"
-        onClick={() => void handleCancel()}
-        disabled={isVerifying}
-        className="mt-6 flex items-center gap-1.5 text-sm font-semibold text-red-500 hover:text-red-700"
-      >
-        <FontAwesomeIcon icon={faRightFromBracket} className="h-4 w-4" />
-        Cancel
+      <button ref={verifyButtonRef} type="button" className={buttonClass({ variant: 'ink', block: true })} onClick={() => void handleVerify()} disabled={!codeComplete || isVerifying}>
+        {isVerifying ? 'Verifying...' : 'Verify'}
       </button>
-    </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+        <label className="g-sm inline-flex min-h-11 cursor-pointer items-center gap-2" style={{ color: 'var(--ink-2)' }}>
+          <input
+            type="checkbox"
+            checked={trustDevice}
+            onChange={(event) => setTrustDevice(event.target.checked)}
+            className="h-[18px] w-[18px]"
+            style={{ accentColor: 'var(--ink)' }}
+          />
+          Remember this device
+        </label>
+        <Button variant="text" size="sm" onClick={() => void handleSendCode()} disabled={isSendingCode || cooldownSeconds > 0}>
+          {resendText}
+        </Button>
+      </div>
+
+      <hr className="g-sep" />
+
+      <Button variant="text" size="sm" className="mx-auto" onClick={() => void handleCancel()} disabled={isVerifying}>
+        <LogOut aria-hidden="true" />
+        Cancel and log out
+      </Button>
+    </AuthCard>
   )
 }
 

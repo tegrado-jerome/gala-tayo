@@ -1,204 +1,42 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowRight } from '@fortawesome/free-solid-svg-icons'
-import { useEffect, useMemo, useRef, useState } from 'react'
-import SeoHead from '../components/SeoHead'
-import { navigateToPath } from '../utils/navigation'
-import type { NavigationSource } from '../utils/navigationLoading'
+import { useEffect, type ReactNode } from 'react'
+import { Sparkles } from 'lucide-react'
+import PhotoCard from '../components/discover/PhotoCard'
+import Rail from '../components/discover/Rail'
+import SentenceSearch from '../components/discover/SentenceSearch'
+import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
 import InternalLink from '../components/InternalLink'
-import { BRAND_NAME, SEO_LANDING_TARGETS, buildBrandJsonLd } from '../utils/seoLandingPages'
+import SeoHead from '../components/SeoHead'
+import { Avatar, Button, Page, Panel, SectionHead, Stamp } from '../components/ui'
+import { homePopularTopPickPlaces } from '../data/homeRecommendations'
 import { metroManilaAreas } from '../data/metroManilaAreas'
+import type { NavigationSource } from '../utils/navigationLoading'
+import { BRAND_NAME, SEO_LANDING_TARGETS, buildBrandJsonLd } from '../utils/seoLandingPages'
 
-type WelcomeAsset = {
-  src: string
-  media?: string
-  type?: string
-}
+const footerLinks = [
+  { href: '/about', label: 'About' },
+  { href: '/privacy', label: 'Privacy' },
+  { href: '/terms', label: 'Terms' },
+]
 
-function supportsWebp(): boolean {
-  if (typeof document === 'undefined') return false
-  const canvas = document.createElement('canvas')
-  if (canvas.getContext?.('2d')) {
-    return canvas.toDataURL('image/webp').startsWith('data:image/webp')
-  }
-  return false
-}
-
-function getSources(useWebp: boolean): WelcomeAsset[] {
-  const sources: WelcomeAsset[] = []
-  if (useWebp) {
-    sources.push(
-      { src: '/images/welcome/mobile.webp', media: '(max-width: 639px)', type: 'image/webp' },
-      { src: '/images/welcome/tablet.webp', media: '(max-width: 1023px)', type: 'image/webp' },
-      { src: '/images/welcome/laptop-desktop.webp', type: 'image/webp' },
-    )
-  }
-  sources.push(
-    { src: '/images/welcome/mobile.png', media: '(max-width: 639px)' },
-    { src: '/images/welcome/tablet.png', media: '(max-width: 1023px)' },
-    { src: '/images/welcome/laptop-desktop.png' },
-  )
-  return sources
-}
-
-const WELCOME_LOADING_MIN_MS = 2000
-
-let initialWelcomeStartConsumed = false
-
-function consumeInitialWelcomeStart(): number {
-  const w = window as unknown as Record<string, unknown>
-  if (!initialWelcomeStartConsumed && w.__galatayoWelcomeStart && w.__galatayoWelcomeStartUsed === false) {
-    initialWelcomeStartConsumed = true
-    w.__galatayoWelcomeStartUsed = true
-    return w.__galatayoWelcomeStart as number
-  }
-  return Date.now()
-}
-
-function getWelcomeHeroSrc(useWebp: boolean) {
-  const ext = useWebp ? 'webp' : 'png'
-  if (typeof window === 'undefined') {
-    return `/images/welcome/laptop-desktop.${ext}`
-  }
-
-  if (window.innerWidth <= 639) {
-    return `/images/welcome/mobile.${ext}`
-  }
-
-  if (window.innerWidth <= 1023) {
-    return `/images/welcome/tablet.${ext}`
-  }
-
-  return `/images/welcome/laptop-desktop.${ext}`
-}
-
-function WelcomeLoader() {
+function FeaturePanel({ art, title, body }: { art: ReactNode; title: string; body: string }) {
   return (
-    <div className="welcome-loader" aria-label="Loading welcome screen" aria-live="polite">
-      <span className="sr-only">Loading welcome screen</span>
-      <div className="welcome-loader__content" aria-hidden="true">
-        <picture>
-          <source srcSet="/images/brand/galatayo-logo-loader.webp" type="image/webp" />
-          <img
-            src="/images/brand/galatayo-logo-loader.png"
-            alt=""
-            className="welcome-loader__logo"
-            width={420}
-            height={180}
-            fetchPriority="high"
-            decoding="async"
-          />
-        </picture>
+    <Panel as="article" className="flex flex-col">
+      <div className="grid min-h-[150px] place-items-center overflow-hidden" aria-hidden="true">
+        {art}
       </div>
-    </div>
+      <h3 className="g-h3 mt-4">{title}</h3>
+      <p className="g-sm g-mut mt-1">{body}</p>
+    </Panel>
   )
 }
 
-type WelcomePageProps = {
-  navigationSource?: NavigationSource
-}
-
-function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
-  const [useWebp] = useState(() => supportsWebp())
-  const [heroSrc, setHeroSrc] = useState(() => getWelcomeHeroSrc(useWebp))
-  const [isReady, setIsReady] = useState(false)
-  const [timeReady, setTimeReady] = useState(false)
-  const [imageReady, setImageReady] = useState(false)
-  const hasRevealedRef = useRef(false)
-  const heroImgRef = useRef<HTMLImageElement>(null)
-  const activeSources = useMemo(() => getSources(useWebp), [useWebp])
-  const startTimeRef = useRef(consumeInitialWelcomeStart())
+function WelcomePage({ navigationSource = 'push' }: { navigationSource?: NavigationSource }) {
+  const guestAuth = useGuestAuthPrompt()
 
   useEffect(() => {
-    if (!isReady) return
     const w = window as unknown as Record<string, (() => void) | undefined>
-    if (typeof w.__galatayoSetWelcomeReady === 'function') {
-      w.__galatayoSetWelcomeReady()
-    }
-  }, [isReady])
-
-  useEffect(() => {
-    let animationFrameId = 0
-
-    const updateHeroSrc = () => {
-      if (hasRevealedRef.current) {
-        return
-      }
-
-      window.cancelAnimationFrame(animationFrameId)
-      animationFrameId = window.requestAnimationFrame(() => {
-        const next = getWelcomeHeroSrc(useWebp)
-        setHeroSrc((prev) => (prev === next ? prev : next))
-      })
-    }
-
-    window.addEventListener('resize', updateHeroSrc)
-    window.addEventListener('orientationchange', updateHeroSrc)
-
-    return () => {
-      window.cancelAnimationFrame(animationFrameId)
-      window.removeEventListener('resize', updateHeroSrc)
-      window.removeEventListener('orientationchange', updateHeroSrc)
-    }
-  }, [useWebp])
-
-  useEffect(() => {
-    if (hasRevealedRef.current) {
-      return
-    }
-
-    setIsReady(false)
-    setTimeReady(false)
-
-    const elapsedMs = Date.now() - startTimeRef.current
-    const remainingMs = Math.max(0, WELCOME_LOADING_MIN_MS - elapsedMs)
-    const timeoutId = window.setTimeout(() => {
-      setTimeReady(true)
-    }, remainingMs)
-
-    return () => {
-      window.clearTimeout(timeoutId)
-    }
-  }, [startTimeRef])
-
-  useEffect(() => {
-    if (hasRevealedRef.current) {
-      return
-    }
-
-    setImageReady(false)
-  }, [heroSrc])
-
-  useEffect(() => {
-    if (hasRevealedRef.current) {
-      return
-    }
-
-    const img = heroImgRef.current
-    if (!img) {
-      return
-    }
-
-    if (img.complete) {
-      if (typeof img.decode === 'function') {
-        img.decode().then(() => setImageReady(true)).catch(() => setImageReady(true))
-      } else {
-        setImageReady(true)
-      }
-    }
-  }, [heroSrc])
-
-  useEffect(() => {
-    if (!timeReady || !imageReady || hasRevealedRef.current) {
-      return
-    }
-
-    hasRevealedRef.current = true
-    setIsReady(true)
-  }, [timeReady, imageReady])
-
-  const handleStartExploring = () => {
-    navigateToPath('/home')
-  }
+    w.__galatayoSetWelcomeReady?.()
+  }, [])
 
   return (
     <>
@@ -214,100 +52,139 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
         }}
         jsonLd={buildBrandJsonLd()}
       />
-      <main
-        className={`welcome-page${isReady ? ' is-ready' : ' is-loading'}`}
-        aria-busy={!isReady}
-        data-navigation-source={navigationSource}
-      >
-        <picture className="welcome-page__media" aria-hidden="true">
-          {activeSources.map((asset) => (
-            <source key={asset.src} srcSet={asset.src} media={asset.media} type={asset.type} />
-          ))}
-          <img
-            ref={heroImgRef}
-            src={heroSrc}
-            alt="Two people looking over the city skyline at sunset."
-            className="welcome-page__image"
-            width={1440}
-            height={2560}
-            loading="eager"
-            fetchPriority="high"
-            sizes="100vw"
-            onLoad={() => {
-              const img = heroImgRef.current
-              if (img && typeof img.decode === 'function') {
-                img.decode().then(() => setImageReady(true)).catch(() => setImageReady(true))
-              } else {
-                setImageReady(true)
-              }
-            }}
-            onError={() => setImageReady(true)}
-          />
-        </picture>
+      <Page>
+        <section data-navigation-source={navigationSource} className="max-w-[760px] pt-4 md:pt-12">
+          <p className="g-eyebrow">Metro Manila</p>
+          <h1 className="g-d1 mt-3">Gala tayo. Kami na sa plano.</h1>
+          <p className="g-mut mt-4 text-[17px]">Find the place, vote on the date, split the bill. One link for the whole barkada.</p>
+          <SentenceSearch className="mt-7" />
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            <Button variant="tara" size="lg" href="/plan-with-ai">
+              <Sparkles />
+              Plan a gala
+            </Button>
+            <Button variant="line" size="lg" href="/home">
+              Explore places
+            </Button>
+          </div>
+          <p className="g-sm g-mut mt-4">
+            Wala pang account?{' '}
+            <InternalLink href="/signup" className="font-semibold text-[var(--ink)] underline underline-offset-2">
+              Sign up free
+            </InternalLink>
+          </p>
+        </section>
 
-        <div className="welcome-page__overlay" />
-        <section className="welcome-page__content" aria-hidden={!isReady}>
-          <div className="welcome-page__copy">
-            <h1 className="welcome-page__title">
-              <span className="welcome-page__title-line">Your next</span>{' '}
-              <span className="welcome-page__title-line">Metro Manila</span>{' '}
-              <span className="welcome-page__title-line">gala starts here.</span>
-            </h1>
-            <p className="welcome-page__description">
-              Discover places, date spots, cafes, and local ideas with GalaTayo.
+        <Rail title="Happening this weekend" subtitle="Places people are going to" seeAllHref="/places">
+          {homePopularTopPickPlaces.map((place) => (
+            <PhotoCard key={place.slug} place={place} onGuestFavorite={() => guestAuth.open('favorite')} />
+          ))}
+        </Rail>
+
+        <SectionHead title="Less chasing, more gala" sub="The boring parts of planning, handled" />
+        <div className="grid gap-4 md:grid-cols-3 md:gap-6">
+          <FeaturePanel
+            title="Plan together"
+            body="Send one link. Friends RSVP and vote on the date, no app needed."
+            art={
+              <div className="g-rsvp w-full max-w-[320px]">
+                <button type="button" tabIndex={-1} className="is-go" aria-pressed="true">
+                  Tara!
+                </button>
+                <button type="button" tabIndex={-1}>
+                  Baka
+                </button>
+                <button type="button" tabIndex={-1}>
+                  Pass
+                </button>
+              </div>
+            }
+          />
+          <FeaturePanel
+            title="Hatian"
+            body="Log who paid. Everyone sees what they owe and settles via GCash or Maya."
+            art={
+              <div className="g-bal w-full">
+                <Avatar name="Bea" size={36} />
+                <div className="min-w-0">
+                  <b className="g-sm block">You owe Bea</b>
+                  <span className="g-xs g-mut">Wildflour dinner</span>
+                </div>
+                <span className="g-amt is-owe">₱450</span>
+              </div>
+            }
+          />
+          <FeaturePanel
+            title="Passport"
+            body="Check in where you go. Collect stamps and keep your barkada streak."
+            art={
+              <div className="flex scale-[0.85] gap-3">
+                <Stamp title="Poblacion regular" />
+                <Stamp title="Early bird" state="new" />
+                <Stamp title="Museum hopper" sub="3 of 5" state="progress" progress={0.6} />
+              </div>
+            }
+          />
+        </div>
+
+        <section aria-labelledby="welcome-intro-title" className="max-w-[760px]">
+          <SectionHead as="h2" title={<span id="welcome-intro-title">What is Gala Tayo?</span>} />
+          <div className="g-mut flex flex-col gap-3">
+            <p>
+              Gala Tayo (written GalaTayo) is a free Metro Manila place discovery app. "Gala tayo" is Filipino for "let's go out", and that is
+              the whole idea: find a place, invite the barkada, and go.
+            </p>
+            <p>
+              Every place page lists the city, category, budget range, best time to visit, who it suits, commute and parking notes, and common
+              questions. You can browse by city or category, read curated guides, or ask the AI planner for a full-day itinerary with a budget.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={handleStartExploring}
-            className="welcome-page__button"
-            disabled={!isReady}
-          >
-            <span className="welcome-page__button-label">Start exploring</span>
-            <FontAwesomeIcon icon={faArrowRight} className="welcome-page__button-icon" aria-hidden="true" />
-          </button>
-        </section>
-        {!isReady && <WelcomeLoader />}
-      </main>
-      <section className="welcome-intro" aria-labelledby="welcome-intro-title">
-        <div className="welcome-intro__inner">
-          <h2 id="welcome-intro-title" className="welcome-intro__title">
-            What is Gala Tayo?
-          </h2>
-          <p className="welcome-intro__lead">
-            Gala Tayo (written GalaTayo) is a free Metro Manila place discovery app. "Gala tayo" is Filipino for "let's go out",
-            and that is the whole idea: find a place, invite the barkada, and go.
-          </p>
-          <p className="welcome-intro__body">
-            Every place page lists the city, category, budget range, best time to visit, who it suits, commute and parking notes,
-            and common questions. You can browse by city or category, read curated guides, or ask the AI planner for a
-            full-day itinerary with a budget.
-          </p>
 
-          <h3 className="welcome-intro__subtitle">Browse by city</h3>
-          <ul className="welcome-intro__links">
+          <h3 className="g-h3 mt-8">Browse by city</h3>
+          <ul className="g-chips mt-3">
             {metroManilaAreas.map((area) => (
               <li key={area.slug}>
-                <InternalLink href={`/places/${area.slug}`}>{area.name}</InternalLink>
+                <InternalLink href={`/places/${area.slug}`} className="g-chip">
+                  {area.name}
+                </InternalLink>
               </li>
             ))}
           </ul>
 
-          <h3 className="welcome-intro__subtitle">Popular guides</h3>
-          <ul className="welcome-intro__links">
+          <h3 className="g-h3 mt-8">Popular guides</h3>
+          <ul className="g-chips mt-3">
             {SEO_LANDING_TARGETS.map((target) => (
               <li key={target.slug}>
-                <InternalLink href={`/guides/${target.slug}`}>{target.label}</InternalLink>
+                <InternalLink href={`/guides/${target.slug}`} className="g-chip">
+                  {target.label}
+                </InternalLink>
               </li>
             ))}
           </ul>
 
-          <p className="welcome-intro__footnote">
-            {BRAND_NAME} is built in the Philippines for people planning dates, barkada hangouts, family outings, and solo
-            gala days across Metro Manila. <InternalLink href="/about">Read more about Gala Tayo</InternalLink>.
+          <p className="g-sm g-mut mt-8">
+            {BRAND_NAME} is built in the Philippines for people planning dates, barkada hangouts, family outings, and solo gala days across Metro
+            Manila.{' '}
+            <InternalLink href="/about" className="text-[var(--ink)] underline underline-offset-2">
+              Read more about Gala Tayo
+            </InternalLink>
+            .
           </p>
-        </div>
-      </section>
+        </section>
+
+        <footer className="mt-16 flex flex-wrap items-center justify-between gap-4 border-t border-[var(--line-2)] pt-6">
+          <nav aria-label="Footer" className="g-sm g-mut flex flex-wrap items-center gap-x-5">
+            <span>© {new Date().getFullYear()} GalaTayo</span>
+            {footerLinks.map((link) => (
+              <InternalLink key={link.href} href={link.href} className="inline-flex min-h-11 items-center hover:text-[var(--ink)]">
+                {link.label}
+              </InternalLink>
+            ))}
+          </nav>
+          <span className="g-sm g-mut">Made in Metro Manila</span>
+        </footer>
+      </Page>
+      {guestAuth.promptElement}
     </>
   )
 }

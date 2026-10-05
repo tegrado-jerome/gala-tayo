@@ -1,9 +1,7 @@
 import { useMemo, useState, type MouseEvent } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faHeart, faStar } from '@fortawesome/free-solid-svg-icons'
-import { faHeart as faHeartOutline } from '@fortawesome/free-regular-svg-icons'
+import { Heart } from 'lucide-react'
 import InternalLink from '../InternalLink'
-import { useTilt } from '../../hooks/useParallax'
+import { Tag } from '../ui'
 import { useSavedFavorites } from '../../context/SavedFavoritesContext'
 import { getStaticPlaceImageUrlForSlug } from '../../data/placeIndexVisuals'
 import { prefetchPlaceDetail } from '../../utils/placeDetailCache'
@@ -32,7 +30,7 @@ export function getPlaceHref(place: PhotoCardPlace) {
   return getCanonicalPlacePath({ areaSlug: areaMeta.slug, placeSlug: place.slug })
 }
 
-function getImageCandidates(place: PhotoCardPlace) {
+export function getPlaceImageCandidates(place: PhotoCardPlace) {
   const candidates = [
     place.thumbnailUrl,
     place.imageUrl,
@@ -44,11 +42,6 @@ function getImageCandidates(place: PhotoCardPlace) {
     if (url && !unique.includes(url)) unique.push(url)
     return unique
   }, [])
-}
-
-function formatPrice(budgetMin: number | null | undefined) {
-  if (budgetMin == null) return null
-  return budgetMin <= 0 ? 'Free' : `from ₱${Math.round(budgetMin).toLocaleString('en-PH')}`
 }
 
 type PhotoCardProps = {
@@ -63,9 +56,8 @@ type PhotoCardProps = {
   isSelected?: boolean
 }
 
-// Airbnb-style listing card: square photo with a save heart, then name, place and price lines.
 function PhotoCard({ place, onGuestFavorite, badge, priority = false, onOpen, onActivate, onHover, isSelected = false }: PhotoCardProps) {
-  const candidates = useMemo(() => getImageCandidates(place), [place])
+  const candidates = useMemo(() => getPlaceImageCandidates(place), [place])
   const [failed, setFailed] = useState<string[]>([])
   const imageUrl = candidates.find((candidate) => !failed.includes(candidate)) ?? null
   const { isPlaceSaved, saveFavorite, removeFavorite } = useSavedFavorites()
@@ -73,7 +65,6 @@ function PhotoCard({ place, onGuestFavorite, badge, priority = false, onOpen, on
   const placeId = place.id.trim()
   const isSaved = [place.slug, placeId].some((key) => isPlaceSaved(key))
   const href = getPlaceHref(place)
-  const price = formatPrice(place.budgetMin)
 
   const prefetch = () => {
     if (place.slug) void prefetchPlaceDetail(place.slug)
@@ -97,16 +88,14 @@ function PhotoCard({ place, onGuestFavorite, badge, priority = false, onOpen, on
   }
 
   const isFree = place.budgetMin != null && place.budgetMin <= 0
-  const tilt = useTilt<HTMLDivElement>()
-  // Same idea as GetYourGuide/Klook "Top rated": only shown when the rating earns it.
   const isTopRated = (place.rating ?? 0) >= TOP_RATED_MIN
   const badgeLabel = badge ?? (isFree ? 'Free' : isTopRated ? 'Top rated' : null)
-  const isStrongBadge = badgeLabel != null && badgeLabel !== 'Free'
   const areaText = place.localArea || place.area || place.city
+  const meta = [place.category, areaText].filter(Boolean).join(' · ')
 
   return (
     <article
-      className="group relative min-w-0"
+      className="relative min-w-0"
       data-search-place-id={place.id}
       onMouseEnter={() => {
         prefetch()
@@ -117,7 +106,7 @@ function PhotoCard({ place, onGuestFavorite, badge, priority = false, onOpen, on
       <InternalLink
         href={href}
         ariaLabel={place.name}
-        className="block rounded-[14px] outline-offset-4"
+        className="g-pc"
         onClick={(event) => {
           onOpen?.()
           if (onActivate) {
@@ -126,13 +115,7 @@ function PhotoCard({ place, onGuestFavorite, badge, priority = false, onOpen, on
           }
         }}
       >
-        <div
-          onPointerMove={tilt.onPointerMove}
-          onPointerLeave={tilt.onPointerLeave}
-          className={`tilt-card relative aspect-[3/2] overflow-hidden rounded-[14px] bg-[var(--bg-soft)] ${
-            isSelected ? 'ring-2 ring-[var(--primary)] ring-offset-2 ring-offset-[var(--bg)]' : ''
-          }`}
-        >
+        <div className="g-pc-img" style={isSelected ? { boxShadow: '0 0 0 2px var(--paper), 0 0 0 4px var(--ink)' } : undefined}>
           {imageUrl ? (
             <img
               src={imageUrl}
@@ -141,51 +124,39 @@ function PhotoCard({ place, onGuestFavorite, badge, priority = false, onOpen, on
               decoding="async"
               fetchPriority={priority ? 'high' : 'low'}
               onError={() => setFailed((current) => [...current, imageUrl])}
-              className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
             />
           ) : null}
-          <span aria-hidden="true" className="tilt-card__glare" />
           {badgeLabel ? (
-            <span
-              className={`absolute left-3 top-3 rounded-md px-2 py-1 text-[12px] font-bold ${
-                isStrongBadge ? 'bg-[#067647] text-white' : 'bg-[#e6f6ee] text-[#067647]'
-              }`}
-            >
-              {badgeLabel}
+            <span className="g-pc-flag">
+              <Tag tone={isFree || badgeLabel === 'Rain-safe' ? 'ok' : 'solid'}>{badgeLabel}</Tag>
             </span>
           ) : null}
         </div>
-        <div className="mt-3 min-w-0">
-          <p className="flex min-w-0 items-center gap-1.5 text-[13px] font-medium text-[var(--text-muted)]">
-            {place.rating ? (
-              <span className="inline-flex shrink-0 items-center gap-1 font-bold text-[var(--primary)]">
-                <FontAwesomeIcon icon={faStar} className="h-3 w-3" />
-                {place.rating.toFixed(1)}
-              </span>
-            ) : null}
-            {place.rating && areaText ? <span aria-hidden="true">·</span> : null}
-            {areaText ? <span className="truncate">{areaText}</span> : null}
-          </p>
-          <h3 className="mt-1 line-clamp-2 text-[17px] font-bold leading-[1.3] tracking-[-0.01em] text-[var(--text-main)]">{place.name}</h3>
-          {place.category ? <p className="mt-1 truncate text-[14px] text-[var(--text-strong)]">{place.category}</p> : null}
-          {price ? (
-            <div className="mt-2.5">
-              <span className="block text-[12px] text-[var(--text-muted)]">{isFree ? 'Entrance' : 'from'}</span>
-              <span className={`text-[17px] font-extrabold ${isFree ? 'text-[var(--primary)]' : 'text-[var(--text-main)]'}`}>
-                {isFree ? 'Free' : price.replace(/^from /, '')}
-              </span>
-            </div>
-          ) : null}
+        <div className="g-pc-title">
+          <span className="g-h3">{place.name}</span>
+          {place.rating ? <span className="g-sm shrink-0">★ {place.rating.toFixed(1)}</span> : null}
         </div>
+        {meta ? <div className="g-pc-meta">{meta}</div> : null}
+        {place.budgetMin != null ? (
+          <div className="g-sulit">
+            {isFree ? (
+              <b>Free entry</b>
+            ) : (
+              <>
+                from <b>₱{Math.round(place.budgetMin).toLocaleString('en-PH')}</b>
+              </>
+            )}
+          </div>
+        ) : null}
       </InternalLink>
       <button
         type="button"
+        className="g-pc-save"
         onClick={(event) => void toggleSave(event)}
         aria-pressed={isSaved}
         aria-label={isSaved ? `Remove ${place.name} from saved` : `Save ${place.name}`}
-        className="absolute right-3 top-3 flex h-[34px] w-[34px] items-center justify-center rounded-full bg-[rgba(255,255,255,0.95)] text-[#101828] shadow-[0_2px_8px_rgba(0,0,0,0.15)] transition-transform hover:scale-110 active:scale-95"
       >
-        <FontAwesomeIcon icon={isSaved ? faHeart : faHeartOutline} className={`h-4 w-4 ${isSaved ? 'text-[#067647]' : ''}`} />
+        <Heart className="g-ic" />
       </button>
     </article>
   )

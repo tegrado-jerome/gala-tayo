@@ -1,177 +1,73 @@
-import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowUpRightFromSquare, faCircleNotch, faMagnifyingGlass, faUsers, faXmark } from '@fortawesome/free-solid-svg-icons'
-import AppHeader from '../components/AppHeader'
-import MinimalBackNav from '../components/navigation/MinimalBackNav'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Loader2, Search, X } from 'lucide-react'
 import ProfileAvatar from '../components/ProfileAvatar'
-import UnifiedLoadingState from '../components/UnifiedLoadingState'
-import { PageContainer } from '../components/layout/ResponsiveLayouts'
+import { Button, Empty, Page, Row, SectionHead, Skeleton, Tag } from '../components/ui'
 import { getFollowing, getMyProfile, getProfileSuggestions, normalizeUsername, searchProfiles, type FollowListUser, type PublicProfile } from '../utils/profileApi'
-import { navigateToPath } from '../utils/navigation'
 import { supabase } from '../supabase'
 
 function formatCompactCount(value: number) {
   return new Intl.NumberFormat('en', { notation: 'compact' }).format(value)
 }
 
-function ProfileResultCard({
+function PersonRow({
   profile,
-  currentUserId,
-  emphasis = 'default',
+  href,
+  tag,
+  meta,
 }: {
-  profile: PublicProfile
-  currentUserId: string | null
-  emphasis?: 'default' | 'featured'
+  profile: FollowListUser
+  href: string
+  tag?: string
+  meta?: string
 }) {
-  const isOwnProfile = Boolean(currentUserId && profile.user_id === currentUserId)
-  const followersCount = profile.followers_count ?? 0
-  const followingCount = profile.following_count ?? 0
-  const actionPath = isOwnProfile ? '/profile' : `/u/${encodeURIComponent(profile.username)}`
-
-  if (emphasis === 'default') {
-    return (
-      <button
-        type="button"
-        onClick={() => navigateToPath(actionPath)}
-        className="group gala-card w-full overflow-hidden px-2.5 py-3 text-left transition duration-200 hover:border-slate-300 hover:bg-slate-50 sm:px-3"
-      >
-        <span className="flex min-w-0 items-center gap-2.5 sm:gap-3">
-          <span className="shrink-0">
-            <ProfileAvatar profile={profile} size="sm" />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="flex min-w-0 items-center gap-1.5 sm:gap-2">
-              <span className="truncate text-[14px] font-black text-slate-950">
-                @{profile.username}
-              </span>
-              {isOwnProfile ? (
-                <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-slate-500">
-                  You
-                </span>
-              ) : (
-                <span className="shrink-0 rounded-full bg-[var(--accent-wash)] px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-[#1669d6]">
-                  New
-                </span>
-              )}
-            </span>
-            <span className="mt-1 block line-clamp-2 text-[12px] font-semibold leading-4.5 text-[var(--muted)]">
-              {profile.bio || 'Public profile ready for new connections.'}
-            </span>
-            <span className="mt-2 flex items-center gap-2 whitespace-nowrap text-[9px] font-black uppercase tracking-[0.12em] text-slate-500 sm:gap-x-3 sm:text-[10px] sm:tracking-[0.14em]">
-              <span>{formatCompactCount(followersCount)} followers</span>
-              <span>{formatCompactCount(followingCount)} following</span>
-            </span>
-          </span>
-          <span className="flex shrink-0 flex-col items-end gap-2">
-            <span className="flex items-center gap-1 rounded-full bg-[var(--accent)] px-2.5 py-1.5 text-[8px] font-black uppercase tracking-[0.14em] text-white transition group-hover:bg-[var(--accent-deep)] sm:px-3 sm:text-[9px]">
-              View
-              <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="h-3 w-3" />
-            </span>
-          </span>
-        </span>
-      </button>
-    )
-  }
-
   return (
-    <button
-      type="button"
-      onClick={() => navigateToPath(actionPath)}
-      className="group gala-card flex w-full items-center gap-2.5 overflow-hidden px-3 py-3 text-left transition duration-200 hover:border-[var(--accent)] sm:gap-3 sm:px-4"
-    >
-      <span className="flex shrink-0 items-center self-center">
+    <Row href={href}>
+      <div className="flex min-w-0 items-center gap-3">
         <ProfileAvatar profile={profile} size="sm" />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
-          <span className="truncate text-[14px] font-black text-slate-950 sm:text-[15px]">
-            @{profile.username}
-          </span>
-          {isOwnProfile ? (
-            <span className="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">
-              You
-            </span>
-          ) : null}
-        </span>
-        <span className="mt-1 block line-clamp-2 text-[13px] font-semibold leading-5 text-[var(--muted)]">
-          {profile.bio || 'Public profile ready for new connections.'}
-        </span>
-      </span>
-      <span className="flex shrink-0 items-center self-center gap-1 rounded-full bg-[var(--accent)] px-2.5 py-2 text-[9px] font-black uppercase tracking-[0.14em] text-white transition group-hover:bg-[var(--accent-deep)] sm:px-3 sm:text-[10px]">
-        View
-        <FontAwesomeIcon icon={faArrowUpRightFromSquare} className="h-3.5 w-3.5" />
-      </span>
-    </button>
+        <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="g-h3 truncate">@{profile.username}</span>
+            {tag ? <Tag className="shrink-0">{tag}</Tag> : null}
+          </div>
+          <div className="g-sm g-mut truncate">{profile.bio || 'View profile'}</div>
+          {meta ? <div className="g-xs g-fnt">{meta}</div> : null}
+        </div>
+      </div>
+    </Row>
   )
 }
 
-function FollowedProfileRow({ profile }: { profile: FollowListUser }) {
+function PublicProfileRow({ profile, currentUserId }: { profile: PublicProfile; currentUserId: string | null }) {
+  const isOwnProfile = Boolean(currentUserId && profile.user_id === currentUserId)
   return (
-    <button
-      type="button"
-      onClick={() => navigateToPath(`/u/${encodeURIComponent(profile.username)}`)}
-      className="group gala-card flex w-full items-center gap-2.5 overflow-hidden px-3 py-3 text-left transition hover:border-slate-300 hover:bg-slate-50 sm:gap-3 sm:px-4"
-    >
-      <ProfileAvatar profile={profile} size="sm" />
-      <span className="min-w-0 flex-1">
-        <span className="flex min-w-0 items-center gap-1.5 sm:gap-2">
-          <span className="truncate text-sm font-black text-slate-950">@{profile.username}</span>
-          <span className="shrink-0 rounded-full bg-[var(--accent-wash)] px-2 py-1 text-[10px] font-black uppercase tracking-[0.14em] text-[#1669d6]">
-            Following
-          </span>
-        </span>
-        <span className="mt-1 block truncate text-sm font-semibold text-[var(--muted)]">
-          {profile.bio || 'Already part of your circle.'}
-        </span>
-      </span>
-      <span className="shrink-0 text-[10px] font-black uppercase tracking-[0.14em] text-slate-400 transition group-hover:text-slate-700 sm:text-[11px]">
-        Open
-      </span>
-    </button>
+    <PersonRow
+      profile={profile}
+      href={isOwnProfile ? '/profile' : `/u/${encodeURIComponent(profile.username)}`}
+      tag={isOwnProfile ? 'You' : undefined}
+      meta={`${formatCompactCount(profile.followers_count ?? 0)} followers · ${formatCompactCount(profile.following_count ?? 0)} following`}
+    />
   )
 }
 
-function SectionMessage({
-  tone = 'neutral',
-  children,
-}: {
-  tone?: 'neutral' | 'error'
-  children: ReactNode
-}) {
-  const toneClassName =
-    tone === 'error'
-      ? 'border-red-200 bg-red-50/90 text-red-700'
-      : 'border-0 bg-transparent px-0 text-[var(--muted)] shadow-none'
-
+function RowsSkeleton() {
   return (
-    <p className={`rounded-lg border px-4 py-3 text-sm font-semibold ${toneClassName}`}>
+    <div className="g-list" aria-label="Loading">
+      {Array.from({ length: 3 }, (_, index) => (
+        <Skeleton key={index} className="h-[72px]" />
+      ))}
+    </div>
+  )
+}
+
+function ErrorLine({ children }: { children: string }) {
+  return (
+    <p role="alert" className="g-sm" style={{ color: 'var(--bad)' }}>
       {children}
     </p>
   )
 }
 
-function SectionHeader({
-  eyebrow,
-  title,
-  description,
-  trailing,
-}: {
-  eyebrow: string
-  title: string
-  description: string
-  trailing?: ReactNode
-}) {
-  return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <span className="gala-eyebrow">{eyebrow}</span>
-        <h2 className="gala-section-title mt-2">{title}</h2>
-        <p className="gala-section-description mt-1">{description}</p>
-      </div>
-      {trailing ? <div className="shrink-0">{trailing}</div> : null}
-    </div>
-  )
-}
+const LIST_GRID = 'grid gap-2.5 lg:grid-cols-2'
 
 function ProfileSearchPage() {
   const [query, setQuery] = useState('')
@@ -192,10 +88,6 @@ function ProfileSearchPage() {
   const visibleSuggestionPool = suggestions.filter((profile) => !followingUsernames.has(profile.username))
   const visibleResults = results
   const visibleSuggestions = visibleSuggestionPool
-  const hasStatusMessage =
-    (normalizedQuery.length > 0 && normalizedQuery.length < 2) ||
-    Boolean(errorMessage) ||
-    (!isSearching && normalizedQuery.length >= 2 && !errorMessage && results.length === 0)
   const helperCopy =
     normalizedQuery.length === 0
       ? 'Search by username or browse suggestions to discover active members.'
@@ -344,214 +236,98 @@ function ProfileSearchPage() {
     return () => document.removeEventListener('keydown', handler)
   }, [])
 
-  const summaryCount = isShowingSearchResults ? visibleResults.length : visibleSuggestions.length
-  const isSummaryLoading = isShowingSearchResults ? isSearching : isLoadingSuggestions || isLoadingFollowing
 
   return (
-    <div className="gala-app-page pb-[calc(env(safe-area-inset-bottom,0px)+4.5rem)] sm:pb-[calc(env(safe-area-inset-bottom,0px)+4.75rem)] lg:pb-0">
-      <AppHeader fixed />
-      <main className="gala-app-main">
-        <PageContainer size="wide" className="grid gap-5 sm:gap-6">
-          <div className="pt-2">
-            <MinimalBackNav to="/home" label="Home" preferHistory={false} className="hidden sm:inline-flex" />
+    <Page>
+      <header className="max-w-[640px]">
+        <h1 className="g-h1">Find friends</h1>
+        <p className="g-mut mt-2">Search usernames and build your barkada on GalaTayo.</p>
+
+        <label className="g-search mt-5">
+          <Search className="g-ic" aria-hidden="true" />
+          <input
+            ref={inputRef}
+            value={query}
+            onChange={(event) => setQuery(event.target.value.toLowerCase())}
+            placeholder="Search by @username"
+            aria-label="Search by username"
+            autoCapitalize="none"
+            spellCheck={false}
+            autoFocus
+          />
+          {isSearching && normalizedQuery.length >= 2 ? (
+            <Loader2 className="g-ic mr-3 animate-spin" aria-label="Searching" />
+          ) : query ? (
+            <Button variant="text" size="sm" iconOnly aria-label="Clear search" onClick={() => setQuery('')}>
+              <X aria-hidden="true" />
+            </Button>
+          ) : null}
+        </label>
+        <p className="g-xs g-mut mt-2">{helperCopy}</p>
+      </header>
+
+      {errorMessage ? (
+        <div className="mt-6">
+          <ErrorLine>{errorMessage}</ErrorLine>
+        </div>
+      ) : null}
+
+      {!isSearching && isShowingSearchResults && !errorMessage && results.length === 0 ? (
+        <Empty className="mt-6" title="No members found." description={`Walang @${normalizedQuery}. Try another spelling.`} />
+      ) : null}
+
+      {results.length > 0 ? (
+        <section>
+          <SectionHead title="Matching members" sub={`${results.length} match${results.length === 1 ? '' : 'es'}`} />
+          <div className={LIST_GRID}>
+            {visibleResults.map((profile) => (
+              <PublicProfileRow key={profile.user_id} profile={profile} currentUserId={currentUserId} />
+            ))}
           </div>
+        </section>
+      ) : null}
 
-          <section className="gala-page-header">
-            <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px] xl:items-end">
-              <div className="max-w-[620px]">
-                <div className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--home-eyebrow)]">
-                  <FontAwesomeIcon icon={faUsers} className="h-4 w-4 text-[var(--home-eyebrow-icon)]" />
-                  Find Friends
+      {!isShowingSearchResults ? (
+        <>
+          {!isLoadingFollowing || followingErrorMessage || followingProfiles.length > 0 ? (
+            <section>
+              <SectionHead title="People you follow" sub={!isLoadingFollowing && followingProfiles.length > 0 ? `${followingProfiles.length} following` : undefined} />
+              {isLoadingFollowing ? <RowsSkeleton /> : null}
+              {followingErrorMessage ? <ErrorLine>{followingErrorMessage}</ErrorLine> : null}
+              {!isLoadingFollowing && !followingErrorMessage && followingProfiles.length > 0 ? (
+                <div className={LIST_GRID}>
+                  {followingProfiles.map((profile) => (
+                    <PersonRow key={profile.user_id} profile={profile} href={`/u/${encodeURIComponent(profile.username)}`} tag="Following" />
+                  ))}
                 </div>
-                <h1 className="gala-page-title">
-                  Connect with people around GalaTayo
-                </h1>
-                <p className="gala-page-description">
-                  Search usernames, open profiles fast, and browse suggested people in a familiar social layout.
-                </p>
-
-                <div className="relative mt-5">
-                  <FontAwesomeIcon icon={faMagnifyingGlass} className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-                  <input
-                    ref={inputRef}
-                    value={query}
-                    onChange={(event) => setQuery(event.target.value.toLowerCase())}
-                    placeholder="Search by @username..."
-                    className="w-full rounded-xl border-0 bg-white/80 py-3.5 pl-11 pr-11 text-[1.05rem] font-semibold text-slate-900 outline-none ring-1 ring-slate-200 transition-all placeholder:font-medium placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-[var(--accent)] sm:text-[1.15rem]"
-                    autoCapitalize="none"
-                    spellCheck={false}
-                    autoFocus
-                  />
-                  {isSearching && normalizedQuery.length >= 2 ? (
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                      <FontAwesomeIcon icon={faCircleNotch} className="h-5 w-5 animate-spin text-[var(--accent)]" />
-                    </div>
-                  ) : query ? (
-                    <button
-                      type="button"
-                      onClick={() => setQuery('')}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full hover:bg-slate-100 transition"
-                    >
-                      <FontAwesomeIcon icon={faXmark} className="h-4 w-4 text-slate-400" />
-                    </button>
-                  ) : null}
-                </div>
-
-                <p className="gala-section-description mt-3">{helperCopy}</p>
-              </div>
-
-              <aside className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-                <div className="rounded-[24px] border border-transparent bg-transparent p-0 shadow-none">
-                  <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-500">Search view</p>
-                  <p className="mt-3 text-3xl font-black tracking-[-0.04em] text-slate-950">
-                    {isSummaryLoading ? '...' : summaryCount}
-                  </p>
-                  <p className="mt-1 text-sm font-semibold leading-6 text-slate-600">
-                    {isSummaryLoading ? 'Loading...' : summaryCount === 1 ? 'Profile currently visible.' : 'Profiles currently visible.'}
-                  </p>
-                </div>
-                <div className="rounded-[24px] border border-transparent bg-transparent p-0 shadow-none">
-                  <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-500">Your circle</p>
-                  <p className="mt-3 text-3xl font-black tracking-[-0.04em] text-slate-950">
-                    {isLoadingFollowing ? '...' : formatCompactCount(followingProfiles.length)}
-                  </p>
-                  <p className="mt-1 text-sm font-semibold leading-6 text-slate-600">
-                    People you already follow.
-                  </p>
-                </div>
-              </aside>
-            </div>
-          </section>
-
-          {hasStatusMessage ? (
-            <section className="mt-4 grid gap-3">
-              {normalizedQuery.length > 0 && normalizedQuery.length < 2 ? (
-                <SectionMessage>Type at least 2 characters.</SectionMessage>
               ) : null}
-
-              {errorMessage ? <SectionMessage tone="error">{errorMessage}</SectionMessage> : null}
-
-              {!isSearching && normalizedQuery.length >= 2 && !errorMessage && results.length === 0 ? (
-                <SectionMessage>No members found.</SectionMessage>
+              {!isLoadingFollowing && !followingErrorMessage && followingProfiles.length === 0 ? (
+                <Empty title="Wala ka pang fina-follow." description="Open a few suggested profiles below to start your circle." />
               ) : null}
             </section>
           ) : null}
 
-          {results.length > 0 ? (
-            <section className="mt-8">
-              <SectionHeader
-                eyebrow="Search Results"
-                title="Matching members"
-                description="Relevant usernames shown in a direct, scrollable people feed."
-                trailing={
-                  <span className="rounded-full bg-white px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-slate-500">
-                    {results.length} match{results.length === 1 ? '' : 'es'}
-                  </span>
-                }
-                />
-              <div className="mt-4 grid gap-3 md:grid-cols-2 2xl:grid-cols-3">
-                {visibleResults.map((profile) => (
-                  <ProfileResultCard key={profile.user_id} profile={profile} currentUserId={currentUserId} emphasis="featured" />
+          <section>
+            <SectionHead
+              title="Suggested for you"
+              sub={!isLoadingSuggestions && !isLoadingFollowing && !suggestionsErrorMessage && visibleSuggestions.length > 0 ? `${visibleSuggestions.length} profiles` : undefined}
+            />
+            {isLoadingSuggestions || isLoadingFollowing ? <RowsSkeleton /> : null}
+            {suggestionsErrorMessage ? <ErrorLine>{suggestionsErrorMessage}</ErrorLine> : null}
+            {!isLoadingSuggestions && !isLoadingFollowing && !suggestionsErrorMessage && visibleSuggestions.length === 0 ? (
+              <Empty title="No suggested users yet." description="Search a username above instead." />
+            ) : null}
+            {!isLoadingSuggestions && !isLoadingFollowing && visibleSuggestions.length > 0 ? (
+              <div className={LIST_GRID}>
+                {visibleSuggestions.map((profile) => (
+                  <PublicProfileRow key={profile.user_id} profile={profile} currentUserId={currentUserId} />
                 ))}
               </div>
-            </section>
-          ) : null}
-
-          {!isShowingSearchResults ? (
-            <section className="mt-8 sm:mt-10">
-              <div className="grid gap-10 sm:gap-12">
-                {!isLoadingFollowing || followingErrorMessage || followingProfiles.length > 0 ? (
-                  <section>
-                    <SectionHeader
-                      eyebrow="Following"
-                      title="People you already follow"
-                      description="A simple list of profiles already in your network."
-                      trailing={
-                        !isLoadingFollowing && followingProfiles.length > 0 ? (
-                          <span className="rounded-full bg-white px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-slate-500">
-                            {followingProfiles.length} following
-                          </span>
-                        ) : undefined
-                      }
-                    />
-
-                    <div className="mt-4 grid gap-2">
-                      {isLoadingFollowing ? (
-                        <UnifiedLoadingState
-                          variant="inline"
-                          title="Preparing your following list..."
-                          message="We are loading people you already follow."
-                        />
-                      ) : null}
-                      {followingErrorMessage ? <SectionMessage tone="error">{followingErrorMessage}</SectionMessage> : null}
-                      {!isLoadingFollowing && !followingErrorMessage && followingProfiles.length > 0 ? (
-                        <div className="grid gap-2 lg:grid-cols-2 2xl:grid-cols-3">
-                          {followingProfiles.map((profile) => (
-                            <FollowedProfileRow key={profile.user_id} profile={profile} />
-                          ))}
-                        </div>
-                      ) : null}
-                      {!isLoadingFollowing && !followingErrorMessage && followingProfiles.length === 0 ? (
-                        <div className="gala-empty-state gala-empty-state-plain px-4 py-5">
-                          <span className="gala-count-pill">
-                            Start your circle
-                          </span>
-                          <h3 className="mt-3 text-[1.05rem] font-black text-slate-950">
-                            You are not following anyone yet
-                          </h3>
-                          <p className="mt-2 text-sm font-semibold leading-6 text-[var(--muted)]">
-                            Browse the suggested users below and open a few profiles to start building your network.
-                          </p>
-                        </div>
-                      ) : null}
-                    </div>
-                  </section>
-                ) : null}
-
-                <section className="border-t border-slate-200/70 pt-8 sm:pt-10">
-                  <SectionHeader
-                    eyebrow="Suggested Users"
-                    title="Suggested for you"
-                    description="New people to discover, excluding profiles you already follow."
-                    trailing={
-                      !isLoadingSuggestions && !isLoadingFollowing && !suggestionsErrorMessage && visibleSuggestions.length > 0 ? (
-                        <span className="rounded-full bg-white px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-slate-500">
-                          {visibleSuggestions.length} profiles
-                        </span>
-                      ) : undefined
-                    }
-                  />
-
-                  <div className="mt-4 grid gap-3">
-                    {isLoadingSuggestions || isLoadingFollowing ? (
-                      <UnifiedLoadingState
-                        variant="inline"
-                        title="Preparing suggestions..."
-                        message="We are loading profiles you may want to follow."
-                      />
-                    ) : null}
-
-                    {suggestionsErrorMessage ? <SectionMessage tone="error">{suggestionsErrorMessage}</SectionMessage> : null}
-
-                    {!isLoadingSuggestions && !isLoadingFollowing && !suggestionsErrorMessage && visibleSuggestions.length === 0 ? (
-                      <SectionMessage>No suggested users yet.</SectionMessage>
-                    ) : null}
-
-                    {!isLoadingSuggestions && !isLoadingFollowing && visibleSuggestions.length > 0 ? (
-                      <div className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
-                        {visibleSuggestions.map((profile) => (
-                          <ProfileResultCard key={profile.user_id} profile={profile} currentUserId={currentUserId} />
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
-                </section>
-              </div>
-            </section>
-          ) : null}
-        </PageContainer>
-      </main>
-    </div>
+            ) : null}
+          </section>
+        </>
+      ) : null}
+    </Page>
   )
 }
 

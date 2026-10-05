@@ -1,8 +1,9 @@
 import type { ChangeEvent } from 'react'
+import { ArrowRight, Camera } from 'lucide-react'
 import OnboardingLayout from './OnboardingLayout'
 import type { OnboardingErrors, OnboardingFormState } from './types'
 import { avatarUploadAccept } from '../../utils/avatarUpload'
-import { SkeletonLine } from '../loading/SkeletonStates'
+import { Avatar, Button, Panel, Skeleton, buttonClass, cx } from '../ui'
 
 type UsernameStatus = 'idle' | 'checking' | 'available' | 'taken' | 'invalid'
 
@@ -30,7 +31,7 @@ function OnboardingPublicProfileStep({
   onNext,
 }: OnboardingPublicProfileStepProps) {
   const normalizedUsername = values.username.trim().toLowerCase().replace(/^@+/, '')
-  const previewName = values.displayName.trim() || 'Display Name'
+  const previewName = values.displayName.trim() || 'Display name'
   const previewUsername = normalizedUsername || 'username'
 
   const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -53,94 +54,109 @@ function OnboardingPublicProfileStep({
         : usernameStatus === 'taken'
           ? 'That username is already taken.'
           : 'Use lowercase letters, numbers, underscore, or dot.')
+  const usernameIsError = Boolean(errors.username) || usernameStatus === 'taken'
 
   return (
     <OnboardingLayout
       step={2}
       eyebrow="Public profile"
       title="Build your profile"
-      description="Choose how your name appears and pick a username people can recognize."
+      description="Choose how your name shows up and pick a username your barkada can find."
       actions={
         <>
-          <button type="button" onClick={onBack} className="onboarding-button onboarding-button-secondary">
+          <Button variant="soft" onClick={onBack}>
             Back
-          </button>
-          <button type="button" onClick={onNext} disabled={disableNext || usernameStatus === 'checking' || isUploadingAvatar} className="onboarding-button onboarding-button-primary disabled:cursor-not-allowed disabled:opacity-60">
-            {usernameStatus === 'checking' ? 'Checking...' : 'Continue'}
-          </button>
+          </Button>
+          <Button variant="tara" onClick={onNext} disabled={disableNext || usernameStatus === 'checking' || isUploadingAvatar}>
+            {usernameStatus === 'checking' ? 'Checking...' : 'Next'}
+            {usernameStatus === 'checking' ? null : <ArrowRight aria-hidden="true" />}
+          </Button>
         </>
       }
     >
-      <div className="onboarding-profile-layout">
-        <aside className="onboarding-profile-aside">
-          <div className="onboarding-preview">
-            <span className="onboarding-avatar">
-              {values.avatarUrl ? <img src={values.avatarUrl} alt="" className="h-full w-full object-cover" /> : previewName.charAt(0).toUpperCase()}
-            </span>
-            <span className="min-w-0">
-              <span className="block truncate text-[15px] font-black text-[var(--text-main)] sm:text-lg">{previewName}</span>
-              <span className="block truncate text-xs font-bold text-[var(--accent-deep)] sm:text-sm">@{previewUsername}</span>
-            </span>
+      <div className="flex flex-col gap-6">
+        <Panel className="flex items-center gap-4">
+          <Avatar src={values.avatarUrl} name={previewName} size={56} />
+          <div className="min-w-0 flex-1">
+            <p className="g-h3 truncate">{previewName}</p>
+            <p className="g-sm g-mut truncate">@{previewUsername}</p>
           </div>
-
-          <label className="onboarding-field onboarding-profile-upload">
-            <span className="onboarding-label onboarding-label-inline">
-              Profile Photo
-              <span className="optional-label">Optional</span>
-            </span>
+          <div className="shrink-0">
             <input
+              id="onboarding-avatar"
               type="file"
               accept={avatarUploadAccept}
               onChange={handleAvatarChange}
-              className="onboarding-file-input"
+              className="peer sr-only"
               disabled={isUploadingAvatar}
               aria-busy={isUploadingAvatar}
+              aria-describedby="onboarding-avatar-msg"
             />
-            {isUploadingAvatar ? (
-              <div className="onboarding-uploading-banner" aria-live="polite" aria-busy="true">
-                <span className="sr-only">Uploading photo</span>
-                <div className="min-w-0">
-                  <SkeletonLine className="h-3.5 w-28" />
-                  <SkeletonLine className="mt-2 h-3 w-48 max-w-full" />
-                </div>
-              </div>
-            ) : (
-              <span className="onboarding-help">JPEG, PNG, or WebP up to 5MB. You can update this later too.</span>
-            )}
-            {errors.avatar ? <span className="onboarding-error">{errors.avatar}</span> : null}
-          </label>
-        </aside>
+            <label
+              htmlFor="onboarding-avatar"
+              className={cx(buttonClass({ variant: 'line', size: 'sm' }), 'peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2', isUploadingAvatar && 'pointer-events-none opacity-60')}
+            >
+              <Camera aria-hidden="true" />
+              {values.avatarUrl ? 'Change' : 'Add photo'}
+            </label>
+          </div>
+        </Panel>
 
-        <div className="onboarding-profile-fields">
-          <label className="onboarding-field">
-            <span className="onboarding-label">Display Name</span>
+        <div id="onboarding-avatar-msg" className="-mt-3" aria-live="polite">
+          {isUploadingAvatar ? (
+            <div aria-busy="true">
+              <span className="sr-only">Uploading photo</span>
+              <Skeleton className="h-3 w-48 max-w-full" />
+            </div>
+          ) : (
+            <p className="g-hint">Photo is optional. JPEG, PNG, or WebP up to 5MB. You can change it later.</p>
+          )}
+          {errors.avatar ? <p className="g-hint is-error mt-1">{errors.avatar}</p> : null}
+        </div>
+
+        <div className="grid gap-5 md:grid-cols-2">
+          <div className="g-field">
+            <label htmlFor="onboarding-display-name">Display name</label>
             <input
+              id="onboarding-display-name"
               value={values.displayName}
               onChange={(event) => onUpdate({ displayName: event.target.value })}
               maxLength={80}
               autoComplete="nickname"
-              className="onboarding-input"
+              aria-invalid={Boolean(errors.displayName) || undefined}
+              aria-describedby={errors.displayName ? 'onboarding-display-name-msg' : undefined}
+              className="g-input"
             />
-            {errors.displayName ? <span className="onboarding-error">{errors.displayName}</span> : null}
-          </label>
+            {errors.displayName ? <span id="onboarding-display-name-msg" className="g-hint is-error">{errors.displayName}</span> : null}
+          </div>
 
-          <label className="onboarding-field">
-            <span className="onboarding-label">Username</span>
-            <span className="onboarding-input onboarding-input-row">
-              <span className="font-black text-[var(--accent-deep)]">@</span>
+          <div className="g-field">
+            <label htmlFor="onboarding-username">Username</label>
+            <div className="relative">
+              <span className="g-mut pointer-events-none absolute inset-y-0 left-3.5 grid place-items-center font-semibold" aria-hidden="true">
+                @
+              </span>
               <input
+                id="onboarding-username"
                 value={values.username}
                 onChange={(event) => onUpdate({ username: event.target.value.toLowerCase().replace(/^@+/, '') })}
-                className="min-w-0 flex-1 border-0 bg-transparent px-1 text-[13px] font-black text-[var(--text-main)] outline-none sm:text-sm"
                 autoCapitalize="none"
                 autoComplete="username"
                 spellCheck={false}
+                aria-invalid={usernameIsError || undefined}
+                aria-describedby="onboarding-username-msg"
+                className="g-input !pl-8"
               />
-            </span>
-            <span className={`onboarding-status ${errors.username || usernameStatus === 'taken' ? 'is-error' : usernameStatus === 'available' ? 'is-success' : ''}`}>
+            </div>
+            <span
+              id="onboarding-username-msg"
+              className={cx('g-hint', usernameIsError && 'is-error')}
+              style={!usernameIsError && usernameStatus === 'available' ? { color: 'var(--ok)' } : undefined}
+              aria-live="polite"
+            >
               {usernameMessage}
             </span>
-          </label>
+          </div>
         </div>
       </div>
     </OnboardingLayout>

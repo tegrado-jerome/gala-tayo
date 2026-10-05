@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { AppIcon } from './AppIcon'
+import { Copy, RotateCcw, Search, Sparkles, Trash2 } from 'lucide-react'
 import MinimalBackNav from './navigation/MinimalBackNav'
+import { Button, Chip, Panel, Skeleton, buttonClass } from './ui'
 import type { PromptBuilderFieldId, PromptBuilderState } from '../utils/promptBuilder'
 import {
   buildPromptBuilderOutputs,
@@ -28,84 +29,40 @@ const compactHelperText: Partial<Record<PromptBuilderFieldId, string>> = {
   budget: 'Not listed? Type your own.',
 }
 
-function TrashIcon() {
-  return <AppIcon name="trash" className="h-5 w-5" />
+const externalLinkIcons: Record<string, string> = {
+  ChatGPT: '/images/prompt-builder-icons/ChatGPT.webp',
+  Claude: '/images/prompt-builder-icons/Claude.webp',
+  Gemini: '/images/prompt-builder-icons/Gemini.webp',
+  Perplexity: '/images/prompt-builder-icons/Perplexity.webp',
+  Facebook: '/images/prompt-builder-icons/Facebook.webp',
+  TikTok: '/images/prompt-builder-icons/Tiktok.webp',
+  Instagram: '/images/prompt-builder-icons/Instagram.webp',
+  X: '/images/prompt-builder-icons/X.webp',
 }
 
-function GenerateIcon() {
-  return <AppIcon name="promptBuilder" className="h-5 w-5" />
-}
+const scrollerClass = 'mx-auto flex h-full min-h-0 w-full max-w-[1240px] flex-col overflow-y-auto overscroll-contain px-4 pt-4 pb-[calc(var(--tabbar-h)+env(safe-area-inset-bottom,0px)+1.5rem)] lg:px-8 lg:pt-6 lg:pb-12'
+const textBoxClass = 'g-sm mt-3 whitespace-pre-wrap break-words rounded-[var(--r-2)] bg-[var(--fill)] p-3 leading-relaxed'
 
-function CopyIcon() {
-  return <AppIcon name="copy" className="h-5 w-5" />
-}
-
-function SearchIcon() {
-  return <AppIcon name="search" className="h-5 w-5" />
-}
-
-function RefreshIcon() {
-  return <AppIcon name="refresh" className="h-5 w-5" />
-}
-
-function SparkleIcon() {
-  return <AppIcon name="askAi" className="h-5 w-5" />
-}
-
-function BotIcon() {
-  return <AppIcon name="bot" className="h-5 w-5" />
-}
-
-function BackToHomeButton({ className = '' }: { className?: string }) {
-  return <MinimalBackNav to="/" className={className} />
-}
-
-function getExternalLinkImageSrc(label: string) {
-  switch (label) {
-    case 'ChatGPT':
-      return '/images/prompt-builder-icons/ChatGPT.webp'
-    case 'Claude':
-      return '/images/prompt-builder-icons/Claude.webp'
-    case 'Gemini':
-      return '/images/prompt-builder-icons/Gemini.webp'
-    case 'Perplexity':
-      return '/images/prompt-builder-icons/Perplexity.webp'
-    case 'Facebook':
-      return '/images/prompt-builder-icons/Facebook.webp'
-    case 'TikTok':
-      return '/images/prompt-builder-icons/Tiktok.webp'
-    case 'Instagram':
-      return '/images/prompt-builder-icons/Instagram.webp'
-    case 'X':
-      return '/images/prompt-builder-icons/X.webp'
-    default:
-      return ''
-  }
-}
-
-function ExternalLinkBadge({ label }: { label: string }) {
-  const imageSrc = getExternalLinkImageSrc(label)
-
-  if (imageSrc) {
-    return (
-      <img
-        src={imageSrc}
-        alt=""
-        className="h-7 w-7 shrink-0 object-contain"
-        loading="lazy"
-        onError={(event) => {
-          event.currentTarget.style.display = 'none'
-        }}
-      />
-    )
-  }
-
+function ExternalLinks({ links }: { links: Array<{ label: string; href: string }> }) {
   return (
-    <span className="relative inline-flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[rgba(27,26,23,0.1)] bg-white">
-      <span className="text-[9px] font-bold tracking-[0.04em] text-slate-500">
-        {label.slice(0, 2).toUpperCase()}
-      </span>
-    </span>
+    <div className="mt-3 grid grid-cols-2 gap-2">
+      {links.map((link) => (
+        <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer" aria-label={`Open ${link.label} in a new tab`} className={buttonClass({ variant: 'line', size: 'sm' })}>
+          {externalLinkIcons[link.label] ? (
+            <img
+              src={externalLinkIcons[link.label]}
+              alt=""
+              className="h-5 w-5 object-contain"
+              loading="lazy"
+              onError={(event) => {
+                event.currentTarget.style.display = 'none'
+              }}
+            />
+          ) : null}
+          {link.label}
+        </a>
+      ))}
+    </div>
   )
 }
 
@@ -125,12 +82,7 @@ async function copyText(text: string): Promise<void> {
   document.body.removeChild(textarea)
 }
 
-function toggleFieldValue(
-  state: PromptBuilderState,
-  fieldId: PromptBuilderFieldId,
-  value: string,
-  multiSelect: boolean
-): PromptBuilderState {
+function toggleFieldValue(state: PromptBuilderState, fieldId: PromptBuilderFieldId, value: string, multiSelect: boolean): PromptBuilderState {
   const currentValues = state[fieldId]
   const isSelected = currentValues.includes(value)
   const nextValues = multiSelect
@@ -144,11 +96,7 @@ function toggleFieldValue(
   return { ...state, [fieldId]: nextValues }
 }
 
-export default function PromptBuilderModal({
-  isOpen,
-  initialState,
-  onClose,
-}: PromptBuilderModalProps) {
+export default function PromptBuilderModal({ isOpen, initialState, onClose }: PromptBuilderModalProps) {
   const [state, setState] = useState<PromptBuilderState>(() => initialState ?? createEmptyPromptBuilderState())
   const [copiedTarget, setCopiedTarget] = useState<CopyTarget | null>(null)
   const [hasGeneratedPrompt, setHasGeneratedPrompt] = useState(false)
@@ -166,10 +114,7 @@ export default function PromptBuilderModal({
   const showClearAll = hasGeneratedPrompt || hasInput
 
   useEffect(() => {
-    if (!isOpen) {
-      return
-    }
-
+    if (!isOpen) return
     setState(initialState ?? createEmptyPromptBuilderState())
     setCopiedTarget(null)
     setHasGeneratedPrompt(false)
@@ -177,59 +122,34 @@ export default function PromptBuilderModal({
   }, [initialState, isOpen])
 
   useEffect(() => {
-    if (!isOpen) {
-      return
-    }
-
+    if (!isOpen) return
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onClose()
-      }
+      if (event.key === 'Escape') onClose()
     }
-
     window.addEventListener('keydown', handleKeyDown)
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-    }
+    return () => window.removeEventListener('keydown', handleKeyDown)
   }, [isOpen, onClose])
 
   useEffect(() => {
-    if (!copiedTarget) {
-      return
-    }
-
+    if (!copiedTarget) return
     const timeoutId = window.setTimeout(() => setCopiedTarget(null), 1800)
     return () => window.clearTimeout(timeoutId)
   }, [copiedTarget])
 
   useEffect(() => {
     return () => {
-      if (generationTimeoutRef.current !== null) {
-        window.clearTimeout(generationTimeoutRef.current)
-      }
+      if (generationTimeoutRef.current !== null) window.clearTimeout(generationTimeoutRef.current)
     }
   }, [])
 
-  if (!isOpen) {
-    return null
-  }
+  if (!isOpen) return null
 
   const handleCustomChange = (fieldId: PromptBuilderFieldId, value: string) => {
-    setState((currentState) => ({
-      ...currentState,
-      custom: {
-        ...currentState.custom,
-        [fieldId]: value,
-      },
-    }))
+    setState((currentState) => ({ ...currentState, custom: { ...currentState.custom, [fieldId]: value } }))
   }
 
   const handleCopy = async (target: CopyTarget, text: string) => {
-    if (!text.trim()) {
-      return
-    }
-
+    if (!text.trim()) return
     await copyText(text)
     setCopiedTarget(target)
   }
@@ -246,26 +166,19 @@ export default function PromptBuilderModal({
     }
 
     requestAnimationFrame(() => {
-      const scrollContainer = questionsPanelRef.current?.closest('.overflow-y-auto') as HTMLElement | null
-      if (scrollContainer) {
-        scrollContainer.scrollTo({ top: 0, behavior: 'smooth' })
-      } else {
-        questionsPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }
+      questionsPanelRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
     })
   }
 
   const handleGeneratePrompt = () => {
     if (!hasGeneratedPrompt && !isGeneratingPrompt) {
       setIsGeneratingPrompt(true)
-
       generationTimeoutRef.current = window.setTimeout(() => {
         setHasGeneratedPrompt(true)
         setIsGeneratingPrompt(false)
         generationTimeoutRef.current = null
         outputPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       }, 650)
-
       return
     }
 
@@ -278,352 +191,160 @@ export default function PromptBuilderModal({
   }
 
   const questionSections = promptBuilderSections.filter((section) => primaryQuestionIds.includes(section.id))
-  return hasGeneratedPrompt || isGeneratingPrompt ? (
-    <section
-      className="gala-page-background flex h-full min-h-0 flex-1 flex-col overflow-hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="prompt-builder-title"
-    >
-      <div
-        ref={outputPanelRef}
-        className="prompt-builder-shell mx-auto flex h-full min-h-0 w-full min-w-0 flex-col overflow-y-auto overscroll-contain px-3 pb-[calc(env(safe-area-inset-bottom,0px)+5rem)] pt-3 sm:px-4 sm:pb-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] sm:pt-4 lg:px-8 lg:pt-6"
-      >
-        <div className="flex w-full justify-start">
-          <BackToHomeButton />
-        </div>
 
-        {isGeneratingPrompt ? (
-          <div className="mt-4 rounded-2xl border border-[rgba(27,26,23,0.08)] bg-white px-4 py-5 shadow-[0_8px_24px_rgba(27,26,23,0.03)] sm:px-5 sm:py-6">
-            <div className="animate-pulse space-y-3">
-              <div className="h-6 w-40 rounded-full bg-slate-200" />
-              <div className="h-4 w-64 rounded-full bg-slate-200" />
-              <div className="grid gap-3">
-                <div className="h-56 rounded-[16px] bg-slate-100" />
-                <div className="h-56 rounded-[16px] bg-slate-100" />
-              </div>
+  if (hasGeneratedPrompt || isGeneratingPrompt) {
+    return (
+      <section className="flex h-full min-h-0 flex-1 flex-col overflow-hidden" role="dialog" aria-modal="true" aria-labelledby="prompt-builder-title">
+        <div ref={outputPanelRef} className={scrollerClass}>
+          <MinimalBackNav to="/" />
+
+          {isGeneratingPrompt ? (
+            <div className="mt-6 grid gap-3" aria-live="polite">
+              <span className="sr-only">Building your prompt…</span>
+              <Skeleton className="h-7 w-48" />
+              <Skeleton className="h-4 w-64" />
+              <Skeleton className="h-48 w-full" />
             </div>
-          </div>
-        ) : (
-          <>
-            <div className="prompt-hero mt-1 flex flex-col items-center gap-2 overflow-visible text-center lg:mt-2 lg:flex-row lg:items-center lg:justify-start lg:gap-8 lg:text-left">
-              <div className="flex min-w-0 flex-1 flex-col items-center gap-3 lg:items-start">
-                <div className="min-w-0 max-w-2xl lg:self-center">
-                  <h1
-                    id="prompt-builder-title"
-                    className="text-[2rem] font-black tracking-[-0.05em] text-slate-950 sm:text-[2.5rem] lg:text-[2.15rem]"
-                  >
-                    Prompt ready <span className="inline-flex text-amber-400"><SparkleIcon /></span>
-                  </h1>
-                  <p className="mt-1 text-[13px] leading-relaxed text-slate-600 sm:text-[14px]">
-                    Your stronger gala prompt is ready to copy and use anywhere.
-                  </p>
-                </div>
-              </div>
+          ) : (
+            <>
+              <span className="g-ai-badge mt-4">
+                <Sparkles aria-hidden="true" />
+                Prompt builder
+              </span>
+              <h1 id="prompt-builder-title" className="g-h1 mt-2">
+                Prompt ready
+              </h1>
+              <p className="g-mut mt-1">Your stronger gala prompt is ready to copy and use anywhere.</p>
 
-            </div>
-
-            <div className="prompt-result-layout mt-4 lg:mt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-8">
-              <section className="min-w-0 p-1 sm:p-0.5">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[rgba(47,116,232,0.1)] text-[var(--accent-deep)]">
-                    <CopyIcon />
+              <div className="g-split mt-6">
+                <Panel as="section" className="min-w-0">
+                  <h2 className="g-h3">Copy-ready AI prompt</h2>
+                  <p className="g-sm g-mut mt-0.5">Copy this prompt and use it in any AI app.</p>
+                  <pre className={`${textBoxClass} max-h-[240px] overflow-auto font-[inherit]`}>{aiPrompt}</pre>
+                  <div className="mt-3 grid gap-2">
+                    <Button variant="ink" block onClick={() => void handleCopy('prompt', aiPrompt)} disabled={!aiPrompt}>
+                      <Copy aria-hidden="true" />
+                      {copiedTarget === 'prompt' ? 'Copied' : 'Copy full prompt'}
+                    </Button>
+                    <Button variant="soft" block onClick={onClose}>
+                      <Sparkles aria-hidden="true" />
+                      Back to GalaTayo AI
+                    </Button>
                   </div>
-                  <div className="min-w-0">
-                    <h2 className="text-[1rem] font-bold text-slate-950 sm:text-[1.1rem]">Copy-ready AI prompt</h2>
-                    <p className="mt-0.5 text-[12px] leading-relaxed text-slate-600">Copy this prompt and use it in any AI app.</p>
-                  </div>
-                </div>
+                </Panel>
 
-                <pre className="mt-3 max-h-[180px] overflow-auto whitespace-pre-wrap break-words rounded-[14px] border border-[rgba(27,26,23,0.1)] bg-[linear-gradient(180deg,#fcfdff,#f7f9fc)] p-3 text-[13px] leading-relaxed text-slate-800 sm:text-[14px] lg:max-h-[240px]">
-                  {aiPrompt}
-                </pre>
-                <button
-                  type="button"
-                  onClick={() => handleCopy('prompt', aiPrompt)}
-                  disabled={!aiPrompt}
-                  className="mt-3 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[14px] bg-[var(--accent)] px-4 py-2.5 text-[13px] font-semibold text-white shadow-[0_10px_22px_rgba(47,116,232,0.22)] transition hover:bg-[var(--accent-deep)] disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <CopyIcon />
-                  <span>{copiedTarget === 'prompt' ? 'Copied' : 'Copy full prompt'}</span>
-                </button>
+                <aside className="g-side">
+                  <Panel>
+                    <h2 className="g-h3">Search again in GalaTayo</h2>
+                    <p className="g-sm g-mut mt-0.5">Use your refined prompt to find better matching places.</p>
+                    <div className={textBoxClass}>{galaTayoSearchPhrase}</div>
+                    <Button variant="line" block className="mt-3" onClick={handleSearchInGalaTayo}>
+                      <Search aria-hidden="true" />
+                      Search in GalaTayo
+                    </Button>
 
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="mt-3 inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-[14px] border border-[rgba(27,26,23,0.08)] bg-slate-100 px-4 py-2.5 text-[13px] font-semibold text-slate-700 transition hover:bg-slate-200"
-                >
-                  <BotIcon />
-                  <span>Back to GalaTayo AI</span>
-                </button>
-              </section>
+                    <hr className="g-sep my-4" />
+                    <h3 className="g-h3">Use this in another AI</h3>
+                    <p className="g-sm g-mut mt-0.5">Copy the prompt first, then paste it into your app.</p>
+                    <ExternalLinks links={aiLinks} />
 
-              <div
-                aria-hidden="true"
-                className="my-4 h-px w-full bg-[rgba(27,26,23,0.08)] lg:hidden"
-              />
+                    <hr className="g-sep my-4" />
+                    <h3 className="g-h3">Short search keyword</h3>
+                    <p className="g-sm g-mut mt-0.5">Use for videos, posts, and reviews.</p>
+                    <div className={textBoxClass}>{searchKeyword}</div>
+                    <Button variant="line" block className="mt-3" onClick={() => void handleCopy('keyword', searchKeyword)} disabled={!searchKeyword}>
+                      <Copy aria-hidden="true" />
+                      {copiedTarget === 'keyword' ? 'Copied' : 'Copy keyword'}
+                    </Button>
 
-              <aside className="prompt-preview-panel">
-                <div className="preview-card p-1 sm:p-0.5">
-                  <section>
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[rgba(var(--accent-rgb),0.1)] text-[var(--accent)]">
-                        <RefreshIcon />
-                      </div>
-                      <div className="min-w-0">
-                        <h2 className="text-[1rem] font-bold text-slate-950 sm:text-[1.1rem]">Search again in GalaTayo</h2>
-                        <p className="mt-0.5 text-[12px] leading-relaxed text-slate-600">
-                          Use your refined prompt to find better matching places.
-                        </p>
-                      </div>
-                    </div>
+                    <h3 className="g-h3 mt-4">Search manually</h3>
+                    <p className="g-sm g-mut mt-0.5">Use the keyword across your social apps.</p>
+                    <ExternalLinks links={searchLinks} />
 
-                    <div className="mt-3 rounded-[14px] border border-[rgba(27,26,23,0.1)] bg-[linear-gradient(180deg,#fbfdff,#f7fbff)] px-3 py-3 text-[13px] leading-relaxed text-slate-800 sm:text-[14px]">
-                      {galaTayoSearchPhrase}
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={handleSearchInGalaTayo}
-                      className="mt-3 inline-flex min-h-[46px] w-full items-center justify-center gap-2 rounded-[14px] bg-[var(--accent)] px-4 py-2.5 text-[13px] font-semibold text-white shadow-[0_10px_22px_rgba(var(--accent-rgb),0.2)] transition hover:bg-[var(--accent-deep)]"
-                    >
-                      <SearchIcon />
-                      <span>Search in GalaTayo</span>
-                    </button>
-                  </section>
-
-                  <div className="my-4 border-t border-[rgba(27,26,23,0.08)]" />
-
-                  <section>
-                    <h3 className="text-[0.96rem] font-bold text-slate-950">Use this in another AI</h3>
-                    <p className="mt-0.5 text-[12px] leading-relaxed text-slate-600">
-                      Copy the prompt first, then paste it into your app.
-                    </p>
-                    <div className="mt-3 grid grid-cols-2 gap-2">
-                      {aiLinks.map((link) => (
-                        <a
-                          key={link.label}
-                          href={link.href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label={`Open ${link.label} in a new tab`}
-                          className="inline-flex items-center justify-center gap-2 rounded-[14px] border border-[rgba(27,26,23,0.1)] bg-white px-2.5 py-2.5 text-[12px] font-medium text-slate-900 transition hover:border-[rgba(27,26,23,0.22)] hover:bg-slate-50"
-                        >
-                          <ExternalLinkBadge label={link.label} />
-                          <span>{link.label}</span>
-                        </a>
-                      ))}
-                    </div>
-                  </section>
-
-                  <div className="my-4 border-t border-[rgba(27,26,23,0.08)]" />
-
-                  <section>
-                    <div className="flex items-start gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[rgba(168,85,247,0.1)] text-[rgb(147,51,234)]">
-                        <SearchIcon />
-                      </div>
-                      <div className="min-w-0">
-                        <h2 className="text-[1rem] font-bold text-slate-950 sm:text-[1.1rem]">Short search keyword</h2>
-                        <p className="mt-0.5 text-[12px] leading-relaxed text-slate-600">Use for videos, posts, and reviews.</p>
-                      </div>
-                    </div>
-
-                    <div className="mt-3 rounded-[14px] border border-[rgba(168,85,247,0.16)] bg-[rgba(168,85,247,0.06)] px-3 py-3 text-[13px] leading-relaxed text-slate-800 sm:text-[14px]">
-                      {searchKeyword}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleCopy('keyword', searchKeyword)}
-                      disabled={!searchKeyword}
-                      className="mt-3 inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[14px] border border-[rgb(168,85,247)] bg-white px-4 py-2.5 text-[13px] font-semibold text-[rgb(147,51,234)] transition hover:bg-[rgba(168,85,247,0.08)] disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <CopyIcon />
-                      <span>{copiedTarget === 'keyword' ? 'Copied' : 'Copy keyword'}</span>
-                    </button>
-
-                    <h3 className="mt-4 text-[0.96rem] font-bold text-slate-950">Search manually</h3>
-                    <p className="mt-0.5 text-[12px] leading-relaxed text-slate-600">
-                      Use the keyword across your social apps.
-                    </p>
-                    <div className="mt-3 grid grid-cols-2 gap-2">
-                      {searchLinks.map((link) => (
-                        <a
-                          key={link.label}
-                          href={link.href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label={`Open ${link.label} in a new tab`}
-                          className="inline-flex items-center justify-center gap-2 rounded-[14px] border border-[rgba(27,26,23,0.1)] bg-white px-2.5 py-2.5 text-[12px] font-medium text-slate-900 transition hover:border-[rgba(27,26,23,0.22)] hover:bg-slate-50"
-                        >
-                          <ExternalLinkBadge label={link.label} />
-                          <span>{link.label}</span>
-                        </a>
-                      ))}
-                    </div>
-                  </section>
-
-                  <div className="mt-4">
-                    <button
-                      type="button"
-                      onClick={handleReset}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-[14px] bg-transparent px-3 py-2.5 text-[13px] font-semibold text-[var(--accent)] transition hover:bg-[rgba(47,116,232,0.06)]"
-                    >
-                      <RefreshIcon />
-                      <span>Start over</span>
-                    </button>
-                  </div>
-                </div>
-              </aside>
-            </div>
-          </>
-        )}
-      </div>
-    </section>
-  ) : (
-    <section
-      className="gala-page-background flex h-full min-h-0 flex-1 flex-col overflow-hidden"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="prompt-builder-title"
-    >
-      <div
-        ref={questionsPanelRef}
-        className="prompt-builder-shell mx-auto flex h-full min-h-0 w-full min-w-0 flex-col overflow-y-auto overscroll-contain px-3 pb-[calc(env(safe-area-inset-bottom,0px)+5rem)] pt-3 sm:px-4 sm:pb-[calc(env(safe-area-inset-bottom,0px)+5.5rem)] sm:pt-4 lg:px-8 lg:pt-6"
-      >
-        <div className="flex w-full justify-start">
-          <BackToHomeButton />
-        </div>
-
-        <div className="prompt-hero lg:mt-2 lg:flex lg:items-center lg:justify-between lg:gap-8">
-          <div className="flex min-w-0 flex-1 flex-col items-center gap-3 text-center lg:text-left">
-            <div className="mt-0 flex flex-col items-center gap-2 px-1 text-center sm:px-2 lg:items-start lg:text-left lg:px-0">
-              <div className="min-w-0">
-                <h1 id="prompt-builder-title" className="text-[1.45rem] font-black tracking-[-0.05em] text-slate-950 sm:text-[1.8rem] lg:text-[2rem]">
-                  Prompt Builder
-                </h1>
-                <p className="mt-1 text-[12px] leading-relaxed text-slate-600 sm:text-[13px] lg:text-[14px]">
-                  Build a stronger gala prompt without using GalaTayo AI credits.
-                </p>
+                    <Button variant="text" block className="mt-3" onClick={handleReset}>
+                      <RotateCcw aria-hidden="true" />
+                      Start over
+                    </Button>
+                  </Panel>
+                </aside>
               </div>
-            </div>
-          </div>
+            </>
+          )}
         </div>
+      </section>
+    )
+  }
 
-        <div className="prompt-builder-layout mt-4 sm:mt-5 lg:mt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-8">
-          <div className="prompt-steps flex flex-col">
+  return (
+    <section className="flex h-full min-h-0 flex-1 flex-col overflow-hidden" role="dialog" aria-modal="true" aria-labelledby="prompt-builder-title">
+      <div ref={questionsPanelRef} className={scrollerClass}>
+        <MinimalBackNav to="/" />
+
+        <span className="g-ai-badge mt-4">
+          <Sparkles aria-hidden="true" />
+          No AI credits used
+        </span>
+        <h1 id="prompt-builder-title" className="g-h1 mt-2">
+          Prompt builder
+        </h1>
+        <p className="g-mut mt-1">Build a stronger gala prompt without using GalaTayo AI credits.</p>
+
+        <div className="g-split mt-6">
+          <div className="flex min-w-0 flex-col gap-3">
             {questionSections.map((section, index) => (
-              <section
-                key={section.id}
-                className="prompt-step-card min-w-0 rounded-2xl border border-[rgba(27,26,23,0.1)] bg-white p-3 shadow-[0_8px_22px_rgba(27,26,23,0.03)] sm:p-4 lg:p-5"
-              >
-                <div className="step-header flex min-w-0 items-center justify-between gap-2.5">
-                  <div className="step-title-group flex min-w-0 items-center gap-2.5">
-                    <span className="step-number inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-[rgba(27,26,23,0.12)] bg-slate-50 text-[13px] font-bold text-slate-900 sm:h-8 sm:w-8 sm:text-[14px] lg:h-9 lg:w-9 lg:text-[15px]">
-                      {index + 1}
-                    </span>
-                    <div className="min-w-0">
-                      <h2 className="text-[1rem] font-black tracking-[-0.03em] text-slate-950 sm:text-[1.1rem] lg:text-[1.15rem]">
-                        {section.title}
-                      </h2>
-                    </div>
-                  </div>
-
+              <Panel as="section" key={section.id} className="min-w-0">
+                <div className="flex items-center gap-2.5">
+                  <span className="g-num">{index + 1}</span>
+                  <h2 className="g-h3">{section.title}</h2>
                 </div>
 
-                <div className="mt-2.5 flex min-w-0 flex-wrap gap-1.5 lg:gap-2">
-                  {section.chips.map((chip) => {
-                    const isSelected = state[section.id].includes(chip)
-
-                    return (
-                      <button
-                        key={chip}
-                        type="button"
-                        aria-pressed={isSelected}
-                        onClick={() =>
-                          setState((currentState) =>
-                            toggleFieldValue(currentState, section.id, chip, section.multiSelect)
-                          )
-                        }
-                        className={`prompt-chip max-w-full rounded-[999px] border px-2.5 py-1 text-[11px] transition sm:px-3 sm:text-[12px] lg:px-3.5 lg:py-1.5 lg:text-[13px] ${
-                          isSelected
-                            ? 'selected border-[var(--accent)] bg-[var(--accent-soft)] text-[var(--accent)]'
-                            : 'border-[rgba(27,26,23,0.12)] bg-white text-slate-700 hover:border-slate-400'
-                        }`}
-                      >
-                        <span className="block max-w-full truncate">{chip}</span>
-                      </button>
-                    )
-                  })}
-
-                  <span className="inline-flex max-w-full rounded-[999px] border border-dashed border-[rgba(27,26,23,0.12)] px-2.5 py-1 text-[11px] text-slate-400 sm:px-3 sm:text-[12px] lg:px-3.5 lg:py-1.5 lg:text-[13px]">
-                    <span className="block max-w-full truncate">{`${section.customLabel}...`}</span>
-                  </span>
+                <div className="mt-3 flex min-w-0 flex-wrap gap-2">
+                  {section.chips.map((chip) => (
+                    <Chip
+                      key={chip}
+                      on={state[section.id].includes(chip)}
+                      className="max-w-full"
+                      onClick={() => setState((currentState) => toggleFieldValue(currentState, section.id, chip, section.multiSelect))}
+                    >
+                      <span className="truncate">{chip}</span>
+                    </Chip>
+                  ))}
                 </div>
 
-                <p className="mt-2 text-[11px] leading-relaxed text-slate-500 sm:text-[12px] lg:text-[13px]">
+                <label htmlFor={`prompt-builder-${section.id}`} className="g-hint mt-3 block">
                   {compactHelperText[section.id] ?? section.helperText}
-                </p>
-
+                </label>
                 <input
                   id={`prompt-builder-${section.id}`}
                   value={state.custom[section.id]}
                   onChange={(event) => handleCustomChange(section.id, event.target.value)}
                   placeholder={section.placeholder}
-                  className="prompt-custom-input mt-2 block min-h-[38px] w-full min-w-0 max-w-full rounded-xl border border-[rgba(27,26,23,0.12)] bg-[rgba(248,250,252,0.9)] px-3 py-2 text-[13px] text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-300 focus:ring-2 focus:ring-slate-200 sm:text-[14px] lg:min-h-[44px] lg:text-[15px]"
+                  className="g-input mt-1.5"
                 />
-              </section>
+              </Panel>
             ))}
 
-            <div className="mx-auto mt-4 grid w-full max-w-[560px] grid-cols-1 gap-2 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:mt-5">
-              <button
-                type="button"
-                onClick={handleReset}
-                disabled={!showClearAll || isGeneratingPrompt}
-                className="inline-flex min-h-[42px] w-full items-center justify-center gap-2 rounded-full border border-[rgba(27,26,23,0.12)] bg-white px-4 py-2 text-[0.84rem] font-semibold text-slate-700 shadow-[0_1px_2px_rgba(27,26,23,0.04)] transition hover:border-[rgba(27,26,23,0.2)] hover:bg-slate-50 disabled:cursor-not-allowed disabled:border-[rgba(27,26,23,0.08)] disabled:bg-[var(--bg-soft)] disabled:text-[var(--text-disabled)] lg:min-h-[44px] lg:text-[0.88rem]"
-              >
-                <TrashIcon />
-                <span>Clear all</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleGeneratePrompt}
-                disabled={isGeneratingPrompt || !hasInput}
-                className="inline-flex min-h-[42px] w-full items-center justify-center gap-2 rounded-full bg-[var(--accent-deep)] px-4 py-2 text-[0.86rem] font-semibold tracking-[-0.01em] text-white shadow-[0_8px_18px_rgba(23,45,107,0.22)] transition hover:bg-[#0f1f4d] disabled:cursor-not-allowed disabled:bg-[var(--bg-soft)]0 lg:min-h-[44px] lg:text-[0.9rem]"
-              >
-                <GenerateIcon />
-                <span>{isGeneratingPrompt ? 'Generating...' : 'Generate'}</span>
-              </button>
+            <div className="mt-2 grid gap-2 sm:grid-cols-2">
+              <Button variant="line" onClick={handleReset} disabled={!showClearAll || isGeneratingPrompt}>
+                <Trash2 aria-hidden="true" />
+                Clear all
+              </Button>
+              <Button variant="ink" onClick={handleGeneratePrompt} disabled={isGeneratingPrompt || !hasInput}>
+                <Sparkles aria-hidden="true" />
+                Generate
+              </Button>
             </div>
           </div>
 
-          <aside className="hidden lg:flex lg:flex-col lg:gap-4 lg:sticky lg:top-6 lg:self-start">
-            <div className="rounded-2xl border border-[rgba(27,26,23,0.08)] bg-white p-5 shadow-[0_8px_22px_rgba(27,26,23,0.03)]">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[rgba(47,116,232,0.1)] text-[var(--accent-deep)]">
-                  <SparkleIcon />
-                </div>
-                <div className="min-w-0">
-                  <h3 className="text-[0.95rem] font-bold text-slate-950">Quick tips</h3>
-                  <p className="text-[12px] text-slate-500">Get better results</p>
-                </div>
-              </div>
-              <ul className="mt-4 space-y-3 text-[13px] leading-relaxed text-slate-600">
-                <li className="flex items-start gap-2">
-                  <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]" />
-                  <span>Fill in at least 2-3 fields for stronger prompts.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]" />
-                  <span>Use specific locations for better place matches.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent)]" />
-                  <span>Select your companion type for vibe-matched spots.</span>
-                </li>
+          <aside className="g-side g-only-desk">
+            <Panel>
+              <h3 className="g-h3">Quick tips</h3>
+              <ul className="g-sm g-mut mt-3 list-disc space-y-2 pl-5">
+                <li>Fill in at least 2–3 fields for stronger prompts.</li>
+                <li>Use specific locations for better place matches.</li>
+                <li>Pick who you're with for vibe-matched spots.</li>
               </ul>
-            </div>
+            </Panel>
           </aside>
         </div>
       </div>

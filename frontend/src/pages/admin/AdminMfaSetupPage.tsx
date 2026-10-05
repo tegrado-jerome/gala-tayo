@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import AppHeader from '../../components/AppHeader'
-import { PageContainer, PageShell } from '../../components/layout/ResponsiveLayouts'
+import { ShieldCheck } from 'lucide-react'
+import { Button, Panel, Skeleton } from '../../components/ui'
 import { supabase } from '../../supabase'
 import { refreshAdminMfaSession } from '../../utils/adminMfa'
 import { navigateToPath } from '../../utils/navigation'
 import { signOut } from '../../services/authApi'
 import { ADMIN_BASE_PATH } from '../../utils/adminRoutes'
-import { FormSkeleton } from '../../components/loading/SkeletonStates'
+import './admin.css'
 
 type EnrollmentState = {
   factorId: string
@@ -117,86 +117,64 @@ function AdminMfaSetupPage({ session }: { session: Session }) {
   }
 
   return (
-    <PageShell>
-      <AppHeader />
-      <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
-        <PageContainer size="narrow">
-          {isLoading ? (
-            <FormSkeleton rows={4} />
-          ) : (
-          <section className="admin-card p-5 sm:p-6">
-            <p className="admin-eyebrow">Admin Security</p>
-            <h1 className="mt-2 text-2xl font-black text-slate-950">Set up your authenticator</h1>
-            <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
-              Scan the QR code with your authenticator app, or enter the manual secret, then type the 6-digit code to finish setup.
-            </p>
+    <main className="ga-center">
+      {isLoading ? (
+        <div className="grid w-full max-w-3xl gap-3" aria-busy="true">
+          <Skeleton className="h-6 w-1/3" />
+          <Skeleton className="h-8 w-2/3" />
+          <Skeleton className="h-48" />
+        </div>
+      ) : (
+        <Panel as="section" className="w-full max-w-3xl">
+          <p className="g-eyebrow flex items-center gap-1.5">
+            <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
+            Admin security
+          </p>
+          <h1 className="g-h1 mt-2">Set up your authenticator</h1>
+          <p className="g-sm g-mut mt-2">
+            Scan the QR code with your authenticator app, or enter the manual secret, then type the 6-digit code to finish setup.
+          </p>
 
-            <div className="mt-6 grid gap-5 lg:grid-cols-[240px_minmax(0,1fr)]">
-              <div className="rounded-2xl border border-[var(--line)] bg-white p-4">
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">Scan QR code</p>
-                <div
-                  className="mt-3 flex min-h-[192px] items-center justify-center rounded-2xl border border-dashed border-[var(--line)] bg-slate-50 p-3"
-                  dangerouslySetInnerHTML={{ __html: enrollment?.qrCode ?? '' }}
-                />
+          <div className="mt-6 grid gap-5 lg:grid-cols-[240px_minmax(0,1fr)]">
+            <div>
+              <p className="g-eyebrow">Scan QR code</p>
+              <div className="ga-qr mt-2" dangerouslySetInnerHTML={{ __html: enrollment?.qrCode ?? '' }} />
+            </div>
+
+            <div className="grid content-start gap-4">
+              <div className="ga-box">
+                <p className="g-eyebrow">Manual secret</p>
+                <p className="ga-mono mt-2">{manualSecret || 'Secret unavailable'}</p>
               </div>
 
-              <div className="grid gap-4">
-                <div className="rounded-2xl border border-[var(--line)] bg-slate-50 p-4">
-                  <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">Manual secret</p>
-                  <p className="mt-3 break-all rounded-xl border border-[var(--line)] bg-white px-3 py-3 font-mono text-sm font-bold text-slate-900">
-                    {manualSecret || 'Secret unavailable'}
-                  </p>
-                </div>
+              <label className="g-field">
+                <span className="g-label">Enter 6-digit code</span>
+                <input
+                  value={code}
+                  onChange={(event) => setCode(normalizeCode(event.target.value))}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  placeholder="123456"
+                  className="g-input ga-code"
+                />
+              </label>
 
-                <label className="block">
-                  <span className="text-xs font-black uppercase tracking-[0.18em] text-slate-500">Enter 6-digit code</span>
-                  <input
-                    value={code}
-                    onChange={(event) => setCode(normalizeCode(event.target.value))}
-                    inputMode="numeric"
-                    autoComplete="one-time-code"
-                    placeholder="123456"
-                    className="mt-2 h-12 w-full rounded-2xl border border-[var(--line)] bg-white px-4 text-lg font-black tracking-[0.35em] text-slate-900 outline-none focus:border-[var(--accent)]"
-                  />
-                </label>
+              {errorMessage ? <p role="alert" className="ga-msg is-bad">Invalid or expired code. {errorMessage}</p> : null}
+              {successMessage ? <p role="status" className="ga-msg is-ok">{successMessage}</p> : null}
 
-                {errorMessage ? (
-                  <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
-                    Invalid or expired code. {errorMessage}
-                  </p>
-                ) : null}
-
-                {successMessage ? (
-                  <p className="rounded-xl border border-[rgba(var(--accent-rgb),0.18)] bg-[var(--primary-soft)] px-4 py-3 text-sm font-semibold text-[var(--accent-deep)]">
-                    {successMessage}
-                  </p>
-                ) : null}
-
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <button
-                    type="button"
-                    onClick={() => void handleVerify()}
-                    disabled={code.length !== 6 || isSubmitting}
-                    className="app-button app-button-primary app-button-md"
-                  >
-                    {isSubmitting ? 'Verifying...' : 'Verify authenticator'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void handleCancel()}
-                    disabled={isSubmitting}
-                    className="app-button app-button-secondary app-button-md"
-                  >
-                    Cancel / logout
-                  </button>
-                </div>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button onClick={() => void handleVerify()} disabled={code.length !== 6 || isSubmitting}>
+                  {isSubmitting ? 'Verifying...' : 'Verify authenticator'}
+                </Button>
+                <Button variant="line" onClick={() => void handleCancel()} disabled={isSubmitting}>
+                  Cancel / logout
+                </Button>
               </div>
             </div>
-          </section>
-          )}
-        </PageContainer>
-      </main>
-    </PageShell>
+          </div>
+        </Panel>
+      )}
+    </main>
   )
 }
 

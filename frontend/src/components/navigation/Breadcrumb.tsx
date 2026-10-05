@@ -1,9 +1,7 @@
 import type { ReactNode } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronRight } from '@fortawesome/free-solid-svg-icons'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import InternalLink from '../InternalLink'
-import { useBackNavigation } from '../../utils/navigation'
-import { navigateToPath } from '../../utils/navigation'
+import { navigateToPath, useBackNavigation } from '../../utils/navigation'
 import { MINIMAL_BREADCRUMB_LINK_CLASS, MINIMAL_NAV_LINK_CLASS } from './navigationStyles'
 
 type BreadcrumbItem = {
@@ -45,13 +43,13 @@ function Breadcrumb({
     : items
 
   return (
-    <nav aria-label="Breadcrumb" className={`hidden text-sm lg:block${className ? ` ${className}` : ''}`}>
+    <nav aria-label="Breadcrumb" className={`hidden min-w-0 text-[13px] lg:block${className ? ` ${className}` : ''}`}>
       {showBack && (
-        <div className="mb-3">
+        <div className="mb-1">
           <BackButton backTo={backTo} label={backLabel} preferHistory={preferHistory} />
         </div>
       )}
-      <ol className="hidden md:flex flex-wrap items-center gap-1.5 text-[0.92rem]">
+      <ol className="hidden flex-wrap items-center gap-1.5 md:flex">
         {items.map((item, idx) => (
           <BreadcrumbItemEl
             key={idx}
@@ -60,7 +58,7 @@ function Breadcrumb({
           />
         ))}
       </ol>
-      <ol className="flex md:hidden flex-nowrap items-center gap-1.5 overflow-hidden text-[0.92rem]">
+      <ol className="flex flex-nowrap items-center gap-1.5 overflow-hidden md:hidden">
         {mobileItems.map((item, idx) => (
           <BreadcrumbItemEl
             key={idx}
@@ -108,6 +106,7 @@ function BackButton({
         aria-label={previousLabel ? `Back to ${previousLabel}` : label}
         className={MINIMAL_NAV_LINK_CLASS}
       >
+        <ChevronLeft className="h-4 w-4" aria-hidden="true" />
         {label}
       </button>
     </div>
@@ -121,10 +120,10 @@ function BreadcrumbItemEl({ item, showChevron }: { item: BreadcrumbItem; showChe
   return (
     <li className={`flex items-center gap-1.5 ${isCurrent ? 'min-w-0' : 'shrink-0'}`}>
       {showChevron && (
-        <FontAwesomeIcon icon={faChevronRight} className="h-3.5 w-3.5 flex-shrink-0 text-slate-300" />
+        <ChevronRight className="h-3.5 w-3.5 shrink-0 text-[var(--ink-3)]" aria-hidden="true" />
       )}
       {isEllipsis ? (
-        <span className="text-sm text-slate-400 px-0.5" aria-hidden="true">{ELLIPSIS}</span>
+        <span className="px-0.5 text-[var(--ink-3)]" aria-hidden="true">{ELLIPSIS}</span>
       ) : item.href ? (
         <InternalLink
           href={item.href}
@@ -136,7 +135,7 @@ function BreadcrumbItemEl({ item, showChevron }: { item: BreadcrumbItem; showChe
       ) : (
         <span
           aria-current="page"
-          className="breadcrumb-current flex min-w-0 items-center gap-1.5 font-semibold"
+          className="flex min-w-0 items-center gap-1.5 font-semibold text-[var(--ink)]"
         >
           {item.icon && <span className="shrink-0">{item.icon}</span>}
           <span className="truncate min-w-0">{item.label}</span>

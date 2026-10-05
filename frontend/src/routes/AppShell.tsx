@@ -6,7 +6,7 @@ import SiteHeader from '../components/navigation/SiteHeader'
 import { shouldShowSiteHeader } from '../utils/routeGuards'
 import FloatingChat from '../components/FloatingChat'
 import { PageShellSkeleton } from '../components/loading/SkeletonStates'
-import { AppIcon } from '../components/AppIcon'
+import { LogOut } from 'lucide-react'
 import { AppUserProvider } from '../context/AppUserContext'
 import { SavedFavoritesProvider } from '../context/SavedFavoritesContext'
 import { SystemMessageProvider } from '../context/SystemMessageContext'
@@ -62,34 +62,18 @@ export function AppShell({ session, currentUser, currentProfile, adminMfa, hasRe
                 <div className={`flex ${appShellHeightClass} flex-col`}>{children}</div>
               </Suspense>
               {showLogoutTransition ? (
-                <div className={`gala-logout-overlay ${isLogoutTransitionExiting ? 'exit' : 'enter'}`} aria-live="polite" aria-busy="true">
-                  <div className="gala-logout-card">
-                    <div className="gala-logout-status">
-                      <span className="gala-logout-icon" aria-hidden="true">
-                        <AppIcon name="logOut" className="h-5 w-5" />
-                      </span>
-                      <div className="gala-logout-copy">
-                        <p className="gala-logout-title">Logging out</p>
-                        <p className="gala-logout-message">Switching to Guest mode...</p>
-                      </div>
-                    </div>
-                    <div className="gala-logout-progress" aria-hidden="true">
-                      <span />
-                    </div>
-                    <div className="gala-logout-preview" aria-hidden="true">
-                      <div className="gala-logout-preview-main">
-                        <span className="gala-logout-preview-chip">
-                          <AppIcon name="sparkles" className="h-3.5 w-3.5" />
-                          Guest mode
-                        </span>
-                        <span className="gala-logout-preview-line gala-logout-preview-line-wide" />
-                        <span className="gala-logout-preview-line" />
-                      </div>
-                      <div className="gala-logout-preview-side">
-                        <span />
-                        <span />
-                        <span />
-                      </div>
+                <div
+                  className={`fixed inset-0 z-[8000] grid place-items-center bg-[color-mix(in_srgb,var(--paper)_86%,transparent)] px-4 backdrop-blur-sm transition-opacity duration-200 ${isLogoutTransitionExiting ? 'opacity-0' : 'animate-[g-fade_200ms_ease-out] opacity-100'}`}
+                  aria-live="polite"
+                  aria-busy="true"
+                >
+                  <div className="g-panel flex w-full max-w-[320px] items-center gap-3 shadow-[var(--sh-2)]">
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[var(--fill)] text-[var(--ink)]" aria-hidden="true">
+                      <LogOut className="h-[18px] w-[18px]" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="g-h3">Logging out</p>
+                      <p className="g-sm g-mut">Switching to guest mode…</p>
                     </div>
                   </div>
                 </div>

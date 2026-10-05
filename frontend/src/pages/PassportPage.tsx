@@ -1,16 +1,58 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faFire } from '@fortawesome/free-solid-svg-icons'
-import CityStamp from '../components/passport/CityStamp'
-import InternalLink from '../components/InternalLink'
-import MinimalBackNav from '../components/navigation/MinimalBackNav'
-import { PageShell } from '../components/layout/ResponsiveLayouts'
-import { getMyPassport, type Passport } from '../utils/passportApi'
+import { MapPin } from 'lucide-react'
+import PassportMap from '../components/passport/PassportMap'
+import { Button, Empty, Page, Panel, Row, SectionHead, Skeleton, Stamp, Stats, Tag } from '../components/ui'
+import { useAppUser } from '../context/AppUserContext'
+import { getMyPassport, type CityStamp, type Passport } from '../utils/passportApi'
 
 type LoadState = { status: 'loading' } | { status: 'ready'; passport: Passport } | { status: 'error'; message: string }
 
+const SPOTS_PER_CITY = 10
+const NEW_STAMP_DAYS = 7
+const DAY_MS = 86400000
+
+function shortDate(value: string) {
+  return new Date(value).toLocaleDateString('en', { month: 'short', day: 'numeric' })
+}
+
+function stampState(stamp: CityStamp): { state: 'done' | 'new' | 'locked'; sub: string } {
+  if (!stamp.collected) return { state: 'locked', sub: 'Check in here' }
+  if (!stamp.first_checkin_at) return { state: 'done', sub: `${stamp.places} ${stamp.places === 1 ? 'spot' : 'spots'}` }
+  const firstAt = new Date(stamp.first_checkin_at)
+  if (Date.now() - firstAt.getTime() < NEW_STAMP_DAYS * DAY_MS) return { state: 'new', sub: `New · ${shortDate(stamp.first_checkin_at)}` }
+  return { state: 'done', sub: `${shortDate(stamp.first_checkin_at)} · ${firstAt.getFullYear()}` }
+}
+
+function lastSevenDays(checkins: Array<{ created_at: string }>) {
+  const checked = new Set(checkins.map((checkin) => new Date(checkin.created_at).toDateString()))
+  const now = Date.now()
+  return Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(now - (6 - index) * DAY_MS)
+    const key = date.toDateString()
+    return {
+      key,
+      label: date.toLocaleDateString('en', { weekday: 'narrow' }),
+      full: date.toLocaleDateString('en', { weekday: 'long' }),
+      done: checked.has(key),
+      today: index === 6,
+    }
+  })
+}
+
+function CityMeter({ places }: { places: number }) {
+  const filled = Math.min(SPOTS_PER_CITY, places)
+  return (
+    <span className="col-span-2 grid grid-cols-10 gap-1" aria-hidden="true">
+      {Array.from({ length: SPOTS_PER_CITY }, (_, index) => (
+        <i key={index} className="block h-[3px] rounded-full" style={{ background: index < filled ? 'var(--ink)' : 'var(--line)' }} />
+      ))}
+    </span>
+  )
+}
+
 function PassportPage({ session }: { session: Session }) {
+  const { currentProfile } = useAppUser()
   const [state, setState] = useState<LoadState>({ status: 'loading' })
 
   useEffect(() => {
@@ -28,92 +70,153 @@ function PassportPage({ session }: { session: Session }) {
   }, [session])
 
   const passport = state.status === 'ready' && state.passport.available ? state.passport : null
-  const collected = passport?.stamps.filter((stamp) => stamp.collected).length ?? 0
-  const total = passport?.stamps.length ?? 0
+  const stamps = useMemo(() => passport?.stamps ?? [], [passport])
+  const collected = stamps.filter((stamp) => stamp.collected).length
+  const total = stamps.length
+  const visitedCities = useMemo(() => stamps.filter((stamp) => stamp.collected).sort((a, b) => b.places - a.places), [stamps])
+  const sortedStamps = useMemo(() => [...stamps].sort((a, b) => Number(b.collected) - Number(a.collected)), [stamps])
+  const firstCheckins = useMemo(() => new Set(stamps.map((stamp) => stamp.first_checkin_at).filter(Boolean)), [stamps])
+  const days = useMemo(() => lastSevenDays(passport?.recent ?? []), [passport])
 
   return (
-    <PageShell>
-      <main className="mx-auto w-full max-w-[980px] px-4 pb-[calc(env(safe-area-inset-bottom,0px)+6rem)] pt-5 sm:px-6 lg:px-8 lg:pb-16 lg:pt-8">
-        <MinimalBackNav to="/profile" label="Profile" preferHistory />
-
-        <header className="mt-4">
-          <p className="font-data text-[11px] uppercase tracking-[0.14em] text-[var(--primary)]">Pasyal Passport</p>
-          <h1 className="mt-1 text-[32px] font-medium leading-[1.05] text-[var(--text-main)] sm:text-[40px]">
-            Your city stamps
-          </h1>
-          <p className="mt-2 max-w-[60ch] text-[15px] leading-6 text-[var(--text-strong)]">
-            Check in on a place page when you're there to collect that city's stamp. Keep a gala every week to grow your streak.
-          </p>
-        </header>
-
-        {state.status === 'loading' ? (
-          <div className="mt-8 h-[320px] animate-pulse rounded-[20px] bg-[var(--home-skeleton-base)]" aria-label="Loading passport" />
-        ) : null}
-        {state.status === 'error' ? <p role="alert" className="mt-8 text-[14px] text-[var(--danger)]">{state.message}</p> : null}
-        {state.status === 'ready' && !state.passport.available ? (
-          <p className="mt-8 rounded-[16px] border border-[var(--line)] bg-[var(--card)] p-5 text-[14px] text-[var(--text-strong)]">
-            The passport is getting set up. Check back soon.
-          </p>
-        ) : null}
-
+    <Page>
+      <header className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <div className="min-w-0">
+          <p className="g-eyebrow">{currentProfile?.username ? `@${currentProfile.username}` : 'Your passport'}</p>
+          <h1 className="g-h1 mt-1">Pasyal Passport</h1>
+          <p className="g-mut mt-2">Every check-in is a stamp. Every stamp is a kwento.</p>
+        </div>
         {passport ? (
-          <>
-            <section className="mt-6 grid grid-cols-3 gap-3" aria-label="Passport summary">
-              <div className="rounded-[16px] bg-[var(--primary)] p-4 text-white">
-                <p className="font-data text-[10px] uppercase tracking-[0.1em] opacity-85">Cities</p>
-                <p className="font-display mt-1 text-[28px] leading-none">{collected}<span className="text-[16px] opacity-80">/{total}</span></p>
-              </div>
-              <div className="rounded-[16px] bg-[var(--ink)] p-4 text-[var(--bg)]">
-                <p className="font-data inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.1em] opacity-80">
-                  <FontAwesomeIcon icon={faFire} className="h-3 w-3 text-[var(--primary)]" />
-                  Streak
-                </p>
-                <p className="font-display mt-1 text-[28px] leading-none">
-                  {passport.streak_weeks}
-                  <span className="text-[16px] opacity-80"> {passport.streak_weeks === 1 ? 'wk' : 'wks'}</span>
-                </p>
-              </div>
-              <div className="rounded-[16px] border border-[var(--line)] bg-[var(--card)] p-4">
-                <p className="font-data text-[10px] uppercase tracking-[0.1em] text-[var(--text-muted)]">Spots</p>
-                <p className="font-display mt-1 text-[28px] leading-none text-[var(--text-main)]">{passport.unique_places}</p>
-              </div>
-            </section>
+          <div className="lg:w-[520px]">
+            <Stats
+              items={[
+                { value: `${collected}/${total}`, label: 'city stamps' },
+                { value: `${passport.streak_weeks} wk`, label: 'gala streak' },
+                { value: passport.unique_places, label: passport.unique_places === 1 ? 'spot' : 'spots' },
+              ]}
+            />
+          </div>
+        ) : null}
+      </header>
 
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--bg-soft)]" role="progressbar" aria-valuemin={0} aria-valuemax={total} aria-valuenow={collected} aria-label="Cities collected">
-              <div className="h-full rounded-full bg-[var(--primary)] transition-[width]" style={{ width: `${total ? (collected / total) * 100 : 0}%` }} />
+      {state.status === 'loading' ? (
+        <div className="mt-6 grid gap-6" aria-label="Loading passport">
+          <Skeleton className="h-[240px]" />
+          <div className="grid grid-cols-2 justify-items-center gap-6 md:grid-cols-4">
+            {Array.from({ length: 4 }, (_, index) => (
+              <Skeleton key={index} className="h-[100px] w-[100px] !rounded-full" />
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {state.status === 'error' ? (
+        <Empty
+          className="mt-6"
+          title="Hindi ma-load ang passport mo."
+          description={<span role="alert">{state.message}</span>}
+          action={<Button variant="line" onClick={() => window.location.reload()}>Try again</Button>}
+        />
+      ) : null}
+
+      {state.status === 'ready' && !state.passport.available ? (
+        <Empty className="mt-6" title="The passport is getting set up." description="Check back soon." />
+      ) : null}
+
+      {passport ? (
+        <div className="g-split mt-6">
+          <div className="min-w-0">
+            <PassportMap stamps={stamps} />
+
+            <SectionHead title="Stamps" sub={`${collected} earned · ${total - collected} to go`} className={visitedCities.length > 0 ? undefined : '!mt-0'} />
+            <div className="grid grid-cols-2 justify-items-center gap-x-4 gap-y-8 min-[480px]:grid-cols-3 md:grid-cols-4">
+              {sortedStamps.map((stamp) => {
+                const { state: kind, sub } = stampState(stamp)
+                return <Stamp key={stamp.city} title={stamp.city} sub={sub} state={kind} />
+              })}
             </div>
 
-            <section className="mt-8" aria-label="City stamps">
-              <h2 className="font-data text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">City stamps</h2>
-              <ul className="mt-4 grid grid-cols-3 gap-x-3 gap-y-5 min-[480px]:grid-cols-4 sm:grid-cols-5 lg:grid-cols-6">
-                {passport.stamps.map((stamp) => <CityStamp key={stamp.city} stamp={stamp} />)}
-              </ul>
-            </section>
-
+            <SectionHead title="Recent check-ins" sub={`${passport.total_checkins} total`} />
             {passport.recent.length > 0 ? (
-              <section className="mt-10" aria-label="Recent check-ins">
-                <h2 className="font-data text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--text-muted)]">Recent check-ins</h2>
-                <ul className="mt-3 divide-y divide-[var(--line)] rounded-[16px] border border-[var(--line)] bg-[var(--card)]">
-                  {passport.recent.map((checkin) => (
-                    <li key={`${checkin.place_id}-${checkin.created_at}`} className="flex items-center justify-between gap-3 px-4 py-3">
-                      <span className="min-w-0 truncate text-[14px] text-[var(--text-main)]">{checkin.name}</span>
-                      <span className="font-data shrink-0 text-[12px] text-[var(--text-muted)]">
-                        {checkin.city} · {new Date(checkin.created_at).toLocaleDateString('en', { month: 'short', day: 'numeric' })}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
+              <div className="g-list">
+                {passport.recent.map((checkin) => {
+                  const when = new Date(checkin.created_at).toLocaleString('en', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+                  return (
+                    <Row key={`${checkin.place_id}-${checkin.created_at}`} href={checkin.slug ? `/places/${encodeURIComponent(checkin.slug)}` : undefined}>
+                      <div className="g-h3 truncate">{checkin.name}</div>
+                      <div className="g-sm g-mut truncate">{[checkin.city, when].filter(Boolean).join(' · ')}</div>
+                      {firstCheckins.has(checkin.created_at) ? (
+                        <Tag tone="ok" className="mt-1">
+                          New city
+                        </Tag>
+                      ) : null}
+                    </Row>
+                  )
+                })}
+              </div>
             ) : (
-              <p className="mt-10 text-[14px] text-[var(--text-muted)]">
-                No stamps yet. Open a place when you're there and tap <strong>Check in</strong>.{' '}
-                <InternalLink href="/search" className="font-semibold text-[var(--primary-dark)] underline">Find a spot</InternalLink>
-              </p>
+              <Empty
+                title="Wala pang check-ins."
+                description="Open a place when you're there and tap Check in."
+                action={<Button variant="line" href="/search">Find a spot</Button>}
+              />
             )}
-          </>
-        ) : null}
-      </main>
-    </PageShell>
+          </div>
+
+          <aside className="g-side">
+            <Panel>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h2 className="g-h3">Gala streak</h2>
+                  <p className="g-xs g-mut">Gala once a week to keep it going.</p>
+                </div>
+                <b className="g-h3 shrink-0">
+                  {passport.streak_weeks} {passport.streak_weeks === 1 ? 'week' : 'weeks'}
+                </b>
+              </div>
+              <div className="g-days" role="list" aria-label="Check-ins in the last 7 days">
+                {days.map((day) => (
+                  <i key={day.key} role="listitem" aria-label={`${day.full}${day.done ? ', checked in' : ''}`} className={day.done ? 'is-f' : day.today ? 'is-t' : undefined}>
+                    {day.label}
+                  </i>
+                ))}
+              </div>
+            </Panel>
+
+            <Panel>
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="g-h3">Cities</h2>
+                <span className="g-sm g-mut">{passport.total_checkins} check-ins</span>
+              </div>
+              {visitedCities.length > 0 ? (
+                <div className="mt-2">
+                  {visitedCities.map((stamp, index) => (
+                    <div
+                      key={stamp.city}
+                      className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 py-3"
+                      style={index > 0 ? { borderTop: '1px solid var(--line-2)' } : undefined}
+                    >
+                      <span className="g-sm truncate font-semibold">{stamp.city}</span>
+                      <span className="g-sm g-mut">{stamp.places}</span>
+                      <CityMeter places={stamp.places} />
+                    </div>
+                  ))}
+                  <p className="g-xs g-mut mt-2">{SPOTS_PER_CITY} spots per city fills the bar.</p>
+                </div>
+              ) : (
+                <p className="g-sm g-mut mt-2">Your first check-in starts the list.</p>
+              )}
+            </Panel>
+
+            <Button variant="tara" size="lg" block href="/search">
+              <MapPin aria-hidden="true" />
+              Check in nearby
+            </Button>
+            <p className="g-xs g-mut -mt-2 text-center">Open the spot you're at and tap Check in. Works only when you're there.</p>
+          </aside>
+        </div>
+      ) : null}
+    </Page>
   )
 }
 

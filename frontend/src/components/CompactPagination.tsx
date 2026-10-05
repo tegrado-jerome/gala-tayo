@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import InternalLink from './InternalLink'
-import { InlineSkeleton } from './loading/SkeletonStates'
+import { cx } from './ui'
 
 type CompactPaginationProps = {
   currentPage: number
@@ -23,9 +22,7 @@ function buildPaginationItems(currentPage: number, totalPages: number) {
   }
 
   const start = Math.max(1, Math.min(currentPage - 2, totalPages - 4))
-  const end = start + 4
-
-  return Array.from({ length: end - start + 1 }, (_, index) => start + index)
+  return Array.from({ length: 5 }, (_, index) => start + index)
 }
 
 function CompactPagination({
@@ -72,51 +69,41 @@ function CompactPagination({
   }
 
   const items = buildPaginationItems(currentPage, totalPages)
-  const previousPage = Math.max(1, currentPage - 1)
-  const nextPage = Math.min(totalPages, currentPage + 1)
   const hasSummary = typeof totalItems === 'number' && typeof pageSize === 'number' && totalItems > 0 && pageSize > 0
   const rangeStart = hasSummary ? (currentPage - 1) * pageSize + 1 : 0
   const rangeEnd = hasSummary ? Math.min(currentPage * pageSize, totalItems) : 0
-  const controlBaseClass =
-    'inline-flex shrink-0 items-center justify-center border transition duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-white disabled:cursor-not-allowed disabled:opacity-50'
-  const pageChipBaseClass = `${controlBaseClass} h-10 min-w-10 rounded-full px-3 text-[0.9rem] font-semibold sm:h-11 sm:min-w-11 sm:px-3.5`
-  const arrowChipClass = `${controlBaseClass} h-10 w-10 rounded-full border-transparent bg-transparent text-slate-500 hover:border-transparent hover:bg-slate-100 hover:text-slate-900 sm:h-11 sm:w-11`
-  const inactivePageChipClass =
-    'border-transparent bg-transparent text-slate-500 hover:border-transparent hover:bg-slate-100 hover:text-slate-900'
-  const activePageChipClass = 'cursor-default border-[var(--accent-deep)] bg-[var(--accent-deep)] text-white'
-  const shellClass =
-    'flex max-w-full flex-col items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-2'
+  const isBusy = isLoading || pendingPage !== null
 
-  const renderPageControl = (
-    page: number,
-    content: ReactNode,
-    ariaLabel: string,
-    className: string,
-    disabled = false,
-  ) => {
+  const renderControl = (page: number, content: ReactNode, ariaLabel: string, isCurrent = false, disabled = false) => {
+    const classes = cx('g-btn g-btn-sm g-btn-icon', isCurrent ? 'g-btn-ink' : 'text-[var(--ink)] hover:bg-[var(--fill)]')
+
+    if (disabled) {
+      return (
+        <span aria-hidden="true" className={cx(classes, 'opacity-30')}>
+          {content}
+        </span>
+      )
+    }
+
     if (hasNavigationHandler) {
-      const isCurrentPage = page === currentPage
-      const isDisabled = disabled || isLoading || pendingPage !== null
-
       return (
         <button
           type="button"
-          onClick={isCurrentPage || isDisabled ? undefined : () => {
-            setPendingPage(page)
-
-            if (pendingTimerRef.current) {
-              clearTimeout(pendingTimerRef.current)
-            }
-
-            pendingTimerRef.current = setTimeout(() => {
-              onPageChange?.(page)
-            }, navigationDelayMs)
-          }}
+          onClick={
+            isCurrent || isBusy
+              ? undefined
+              : () => {
+                  setPendingPage(page)
+                  if (pendingTimerRef.current) {
+                    clearTimeout(pendingTimerRef.current)
+                  }
+                  pendingTimerRef.current = setTimeout(() => onPageChange?.(page), navigationDelayMs)
+                }
+          }
           aria-label={ariaLabel}
-          aria-current={isCurrentPage ? 'page' : undefined}
-          aria-disabled={isCurrentPage || isDisabled ? 'true' : undefined}
-          disabled={isDisabled}
-          className={className}
+          aria-current={isCurrent ? 'page' : undefined}
+          disabled={!isCurrent && isBusy}
+          className={classes}
         >
           {content}
         </button>
@@ -124,83 +111,31 @@ function CompactPagination({
     }
 
     return (
-      <InternalLink
-        href={getHref?.(page) ?? '#'}
-        ariaLabel={ariaLabel}
-        className={className}
-      >
+      <InternalLink href={getHref?.(page) ?? '#'} ariaLabel={ariaLabel} aria-current={isCurrent ? 'page' : undefined} className={classes}>
         {content}
       </InternalLink>
     )
   }
 
   return (
-    <nav
-      aria-label="Pagination"
-      className={`flex w-full flex-col items-center ${className ?? ''}`.trim()}
-    >
-      <div className="flex w-full flex-col items-center gap-3">
-        <div className={`${shellClass} overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}>
-          <div className="flex items-center justify-center gap-1">
-            {currentPage > 1 ? (
-              renderPageControl(
-                previousPage,
-                <FontAwesomeIcon icon={faChevronLeft} className="h-3.5 w-3.5" />,
-                'Previous page',
-                arrowChipClass,
-              )
-          ) : (
-            <span
-              aria-hidden="true"
-              className={`${arrowChipClass} pointer-events-none text-slate-300 hover:text-slate-300`}
-            >
-              <FontAwesomeIcon icon={faChevronLeft} className="h-3.5 w-3.5" />
-            </span>
-          )}
-
-            {items.map((item) => (
-              <span key={item}>
-                {renderPageControl(
-                  item,
-                  item,
-                  item === currentPage ? `Current page, page ${item}` : `Go to page ${item}`,
-                  `${pageChipBaseClass} ${item === currentPage ? activePageChipClass : inactivePageChipClass}`,
-                )}
-              </span>
-            ))}
-
-            {currentPage < totalPages ? (
-              renderPageControl(
-                nextPage,
-                <FontAwesomeIcon icon={faChevronRight} className="h-3.5 w-3.5" />,
-                'Next page',
-                arrowChipClass,
-              )
-            ) : (
-              <span
-                aria-hidden="true"
-                className={`${arrowChipClass} pointer-events-none text-slate-300 hover:text-slate-300`}
-              >
-                <FontAwesomeIcon icon={faChevronRight} className="h-3.5 w-3.5" />
-              </span>
-            )}
-          </div>
-        </div>
-
-        {hasSummary ? (
-          <div className="w-full text-center">
-            <p className="text-xs font-medium text-slate-500 sm:text-sm">
-              Results: {rangeStart}-{rangeEnd} of {totalItems}
-            </p>
-          </div>
-        ) : null}
-
-        {(isLoading || pendingPage !== null) && showLoadingMessage ? (
-          <div className="w-full">
-            <InlineSkeleton className="justify-center text-center" />
-          </div>
-        ) : null}
+    <nav aria-label="Pagination" className={cx('flex w-full flex-col items-center gap-2', className)}>
+      <div className="flex items-center justify-center gap-1">
+        {renderControl(Math.max(1, currentPage - 1), <ChevronLeft />, 'Previous page', false, currentPage <= 1)}
+        {items.map((item) => (
+          <span key={item}>{renderControl(item, item, item === currentPage ? `Current page, page ${item}` : `Go to page ${item}`, item === currentPage)}</span>
+        ))}
+        {renderControl(Math.min(totalPages, currentPage + 1), <ChevronRight />, 'Next page', false, currentPage >= totalPages)}
       </div>
+      {hasSummary ? (
+        <p className="g-xs g-mut">
+          {rangeStart}–{rangeEnd} of {totalItems}
+        </p>
+      ) : null}
+      {isBusy && showLoadingMessage ? (
+        <p className="g-xs g-fnt" aria-live="polite">
+          Loading…
+        </p>
+      ) : null}
     </nav>
   )
 }

@@ -921,8 +921,8 @@ export function formatOpenStatus(place: AskAiMapPlace): OpenStatusDisplay {
     return {
       label: 'Status unknown',
       tone: 'unknown',
-      className: 'bg-slate-100 text-slate-600',
-      dotClassName: 'text-slate-400',
+      className: 'g-tag',
+      dotClassName: 'g-fnt',
       hoursText,
     }
   }
@@ -931,8 +931,8 @@ export function formatOpenStatus(place: AskAiMapPlace): OpenStatusDisplay {
     return {
       label,
       tone: 'closed',
-      className: 'bg-rose-50 text-rose-700',
-      dotClassName: 'text-rose-500',
+      className: 'g-tag is-bad',
+      dotClassName: 'text-[var(--bad)]',
       hoursText,
     }
   }
@@ -940,8 +940,8 @@ export function formatOpenStatus(place: AskAiMapPlace): OpenStatusDisplay {
   return {
     label,
     tone: 'open',
-    className: 'bg-[var(--primary-soft)] text-[var(--accent-deep)]',
-    dotClassName: 'text-[var(--accent)]',
+    className: 'g-tag is-ok',
+    dotClassName: 'text-[var(--ok)]',
     hoursText,
   }
 }
@@ -973,7 +973,7 @@ export function shortenAddress(address: string, maxLength = 64) {
 }
 
 export function getMetaDot(hasPreviousValue: boolean) {
-  return hasPreviousValue ? <span className="text-[11px] text-slate-300">{'\u00B7'}</span> : null
+  return hasPreviousValue ? <span className="g-fnt" aria-hidden="true">{'\u00B7'}</span> : null
 }
 
 export function getMapsHref(place: AskAiMapPlace) {

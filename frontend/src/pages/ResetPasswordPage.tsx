@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { AppIcon } from '../components/AppIcon'
+import { TriangleAlert } from 'lucide-react'
+import { AuthCard, AuthNotice } from '../components/auth/AuthCard'
+import PasswordField from '../components/auth/PasswordField'
 import PasswordStrengthBar from '../components/auth/PasswordStrengthBar'
-import { FormContainer } from '../components/layout/ResponsiveLayouts'
-import { FormSkeleton } from '../components/loading/SkeletonStates'
+import { Button, Page, Panel, Skeleton } from '../components/ui'
 import { supabase } from '../supabase'
 import { getPasswordStrength } from '../utils/passwordStrength'
 import { navigateToPath } from '../utils/navigation'
@@ -100,143 +101,74 @@ function ResetPasswordPage() {
 
   if (!isSessionReady) {
     return (
-      <main className="gala-page-background relative flex min-h-screen min-h-[100dvh] items-center justify-center overflow-x-hidden px-4 py-6 text-[var(--text)] sm:px-6 sm:py-8">
-        <FormContainer className="relative z-[2]">
-          <FormSkeleton rows={3} className="mx-auto max-w-[440px]" />
-        </FormContainer>
-      </main>
+      <Page>
+        <Panel className="mx-auto flex w-full max-w-[420px] flex-col gap-4 md:mt-6 md:!p-8" aria-busy="true">
+          <Skeleton className="h-8 w-2/3" />
+          <Skeleton className="h-4 w-1/2" />
+          <Skeleton className="mt-2 h-12 w-full" />
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-11 w-full" />
+        </Panel>
+      </Page>
     )
   }
 
   if (!hasSession) {
     return (
-      <main className="gala-page-background relative flex min-h-screen min-h-[100dvh] items-center justify-center overflow-x-hidden px-4 py-6 text-[var(--text)] sm:px-6 sm:py-8">
-        <FormContainer className="relative z-[2]">
-          <section className="mx-auto flex w-full max-w-[360px] items-center justify-center md:max-w-[420px] lg:max-w-[440px]">
-            <div className="w-full text-center">
-              <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-[1.2rem] border border-[var(--line)] bg-[var(--panel)] shadow-sm">
-                <AppIcon name="warning" className="h-5 w-5 text-[var(--warning)]" />
-              </div>
-              <div className="mt-5">
-                <h1 className="text-[1.6rem] font-semibold leading-[1.02] tracking-[-0.04em] text-[var(--text-main)] sm:text-[1.85rem]">Invalid or expired link</h1>
-                <p className="mx-auto mt-3 max-w-[280px] text-[13px] leading-6 text-[var(--muted)] sm:text-[14px] sm:leading-7">
-                  This password reset link is no longer valid. Please request a new one.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => navigateToPath('/forgot-password')}
-                  className="mt-6 inline-flex min-h-[2.75rem] items-center justify-center rounded-[0.875rem] bg-[var(--accent)] px-6 text-[14px] font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[var(--accent-deep)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)]"
-                >
-                  Request new link
-                </button>
-              </div>
-            </div>
-          </section>
-        </FormContainer>
-      </main>
+      <AuthCard
+        icon={<TriangleAlert className="g-ic" style={{ color: 'var(--warn)' }} />}
+        title="Invalid or expired link"
+        sub="This password reset link is no longer valid. Request a new one and use it right away."
+      >
+        <Button variant="ink" block onClick={() => navigateToPath('/forgot-password')}>
+          Request new link
+        </Button>
+      </AuthCard>
     )
   }
 
   return (
-    <main className="gala-page-background relative flex min-h-screen min-h-[100dvh] items-center justify-center overflow-x-hidden px-4 py-6 text-[var(--text)] sm:px-6 sm:py-8">
-      <FormContainer className="relative z-[2]">
-        <section className="mx-auto flex w-full max-w-[360px] items-center justify-center md:max-w-[420px] lg:max-w-[440px]">
-          <div className="w-full">
-            <div className="pb-3 pt-1 text-center">
-              <div className="mx-auto max-w-[280px] px-2">
-                <h1 className="inline-flex flex-wrap items-center justify-center gap-2 text-[1.6rem] font-bold leading-[0.96] tracking-[-0.05em] text-[var(--text-main)] sm:text-[1.85rem]">
-                  <AppIcon name="lock" className="h-6 w-6 text-[var(--accent-deep)]" />
-                  Reset your password
-                </h1>
-                <p className="mx-auto mt-3 max-w-[260px] text-[13px] leading-6 text-[var(--muted)] sm:text-[14px] sm:leading-7">
-                  Enter a new password for your account.
-                </p>
-              </div>
+    <AuthCard title="Reset your password" sub="Pick a new password for your account.">
+      <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+        <PasswordField
+          id="reset-password"
+          label="New password"
+          value={newPassword}
+          onChange={setNewPassword}
+          visible={isPasswordVisible}
+          onToggleVisible={() => setIsPasswordVisible((current) => !current)}
+          required
+          minLength={minPasswordLength}
+          autoComplete="new-password"
+          placeholder="At least 8 characters"
+          hint="Use uppercase, lowercase, a number, and a symbol."
+        >
+          <PasswordStrengthBar password={newPassword} />
+        </PasswordField>
 
-              <div className="mt-6">
-                <form className="mt-3 grid gap-3 text-left" onSubmit={handleSubmit}>
-                  <label className="grid gap-2 text-[13px] font-medium text-[var(--text)]">
-                    <span className="inline-flex items-center gap-1.5 pl-1 text-[13px] font-medium text-[var(--text)]">
-                      <AppIcon name="lock" className="h-3.5 w-3.5 text-[var(--accent-deep)]" />
-                      New Password
-                    </span>
-                    <span className="flex h-[2.85rem] items-center gap-3 rounded-[1.2rem] border border-[var(--line)] bg-[var(--panel)] px-3.5 shadow-sm transition focus-within:border-[var(--accent)] focus-within:bg-[var(--panel)]">
-                      <input
-                        type={isPasswordVisible ? 'text' : 'password'}
-                        value={newPassword}
-                        onChange={(event) => setNewPassword(event.target.value)}
-                        required
-                        minLength={minPasswordLength}
-                        autoComplete="new-password"
-                        placeholder="Enter new password"
-                        className="auth-form-input h-full w-full min-w-0 bg-transparent text-[14px] font-medium text-[var(--text)] outline-none placeholder:font-normal placeholder:text-[var(--text-disabled)]"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setIsPasswordVisible((current) => !current)}
-                        className="inline-flex h-8 w-8 flex-none items-center justify-center rounded-full text-[var(--muted)] transition hover:bg-[var(--accent-wash)] hover:text-[var(--accent-deep)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)]"
-                        aria-label={isPasswordVisible ? 'Hide password' : 'Show password'}
-                        aria-pressed={isPasswordVisible}
-                      >
-                        <AppIcon name={isPasswordVisible ? 'eyeOff' : 'eye'} className="h-4 w-4" />
-                      </button>
-                    </span>
-                    <PasswordStrengthBar password={newPassword} />
-                  </label>
+        <PasswordField
+          id="reset-confirm-password"
+          label="Confirm new password"
+          value={confirmNewPassword}
+          onChange={setConfirmNewPassword}
+          visible={isConfirmPasswordVisible}
+          onToggleVisible={() => setIsConfirmPasswordVisible((current) => !current)}
+          required
+          minLength={minPasswordLength}
+          autoComplete="new-password"
+          placeholder="Type it again"
+          invalid={confirmPasswordHasMismatch}
+          error={confirmPasswordHasMismatch ? 'Confirm password does not match.' : undefined}
+          hint={confirmNewPassword.length > 0 && confirmPasswordMatches ? <span style={{ color: 'var(--ok)' }}>Passwords match.</span> : undefined}
+        />
 
-                  <label className="grid gap-2 text-[13px] font-medium text-[var(--text)]">
-                    <span className="inline-flex items-center gap-1.5 pl-1 text-[13px] font-medium text-[var(--text)]">
-                      <AppIcon name="lock" className="h-3.5 w-3.5 text-[var(--accent-deep)]" />
-                      Confirm New Password
-                    </span>
-                    <span className={`flex h-[2.85rem] items-center gap-3 rounded-[1.2rem] border px-3.5 shadow-sm transition ${confirmPasswordHasMismatch ? 'border-red-300 bg-[var(--panel)] focus-within:border-red-400' : 'border-[var(--line)] bg-[var(--panel)] focus-within:border-[var(--accent)] focus-within:bg-[var(--panel)]'}`}>
-                      <input
-                        type={isConfirmPasswordVisible ? 'text' : 'password'}
-                        value={confirmNewPassword}
-                        onChange={(event) => setConfirmNewPassword(event.target.value)}
-                        required
-                        minLength={minPasswordLength}
-                        autoComplete="new-password"
-                        placeholder="Confirm new password"
-                        className="auth-form-input h-full w-full min-w-0 bg-transparent text-[14px] font-medium text-[var(--text)] outline-none placeholder:font-normal placeholder:text-[var(--text-disabled)]"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setIsConfirmPasswordVisible((current) => !current)}
-                        className="inline-flex h-8 w-8 flex-none items-center justify-center rounded-full text-[var(--muted)] transition hover:bg-[var(--accent-wash)] hover:text-[var(--accent-deep)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)]"
-                        aria-label={isConfirmPasswordVisible ? 'Hide password' : 'Show password'}
-                        aria-pressed={isConfirmPasswordVisible}
-                      >
-                        <AppIcon name={isConfirmPasswordVisible ? 'eyeOff' : 'eye'} className="h-4 w-4" />
-                      </button>
-                    </span>
-                    {confirmPasswordHasMismatch ? (
-                      <span className="text-xs text-red-600">
-                        Confirm password does not match.
-                      </span>
-                    ) : confirmNewPassword.length > 0 && confirmPasswordMatches ? (
-                      <span className="text-xs text-[var(--accent-deep)]">
-                        Passwords match.
-                      </span>
-                    ) : null}
-                  </label>
+        {error ? <AuthNotice tone="bad">{error}</AuthNotice> : null}
 
-                  <button
-                    type="submit"
-                    disabled={isSubmitDisabled}
-                    className="w-full inline-flex h-[2.75rem] items-center justify-center gap-2 rounded-[0.875rem] bg-[var(--accent)] px-5 text-[14px] font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[var(--accent-deep)] focus:outline-none focus:ring-4 focus:ring-[var(--accent-soft)] disabled:cursor-not-allowed disabled:opacity-70"
-                  >
-                    {isSubmitting ? 'Resetting password...' : 'Reset password'}
-                  </button>
-                </form>
-              </div>
-
-              {error ? <p className="mt-3 rounded-[0.875rem] border border-[var(--danger-border)] bg-[var(--danger-soft)] px-4 py-3 text-[13px] text-[var(--danger)] shadow-sm">{error}</p> : null}
-            </div>
-          </div>
-        </section>
-      </FormContainer>
-    </main>
+        <Button type="submit" variant="ink" block disabled={isSubmitDisabled}>
+          {isSubmitting ? 'Resetting password...' : 'Reset password'}
+        </Button>
+      </form>
+    </AuthCard>
   )
 }
 

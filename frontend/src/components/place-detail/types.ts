@@ -66,35 +66,6 @@ export type PlaceImageContributionResponse = {
   message?: string
 }
 
-export type IconName =
-  | 'back'
-  | 'photo'
-  | 'share'
-  | 'chevronDown'
-  | 'save'
-  | 'directions'
-  | 'location'
-  | 'category'
-  | 'budget'
-  | 'clock'
-  | 'hourglass'
-  | 'home'
-  | 'crowd'
-  | 'rain'
-  | 'eye'
-  | 'fire'
-  | 'utensils'
-  | 'heart'
-  | 'users'
-  | 'book'
-  | 'bus'
-  | 'car'
-  | 'globe'
-  | 'warning'
-  | 'sparkle'
-  | 'circleInfo'
-  | 'userGroup'
-
 export type PlaceDetailCommunityCache = {
   averageRating: number | null
   reviewCount: number

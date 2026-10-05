@@ -1,12 +1,11 @@
-import { useEffect, useState, type MouseEvent } from 'react'
-import { AppIcon } from './AppIcon'
-import { AppSkeleton } from './AppUI'
-import { normalizePlaceSlug } from '../data/curatedPlaceImages'
+import { useMemo, useState, type MouseEvent } from 'react'
+import { PlaceCard as KitPlaceCard, Tag, cx } from './ui'
+import { getSulitLevel } from './place-detail/SulitMeter'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
-import { useSystemMessage } from '../context/SystemMessageContext'
-import { useGuestAuthPrompt } from './GuestAuthPrompt'
-import InternalLink from './InternalLink'
+import { getStaticPlaceImageUrlForSlug } from '../data/placeIndexVisuals'
+import { prefetchPlaceDetail } from '../utils/placeDetailCache'
 import { getCanonicalPlacePath, resolveAreaMeta } from '../utils/routes'
+import type { PlaceDetail } from '../types/appTypes'
 
 type PlaceCategoryMeta = {
   id: string
@@ -88,453 +87,146 @@ type PlaceCardData = {
   approvedImageCount?: number
 }
 
+export function getPlaceHref(place: Pick<PlaceCardData, 'slug' | 'city' | 'area' | 'localArea'>) {
+  const slug = place.slug?.trim()
+  if (!slug) return '/search'
+  const areaMeta = resolveAreaMeta({ city: place.city, area: place.area, localArea: place.localArea })
+  return getCanonicalPlacePath({ areaSlug: areaMeta.slug, placeSlug: slug })
+}
+
+export function formatPricePerHead(budgetMin: number | null | undefined) {
+  if (budgetMin == null || !Number.isFinite(budgetMin)) return null
+  return budgetMin <= 0 ? 'Free' : `₱${Math.round(budgetMin).toLocaleString('en-PH')}`
+}
+
+export function getSulitScore(budgetMin: number | null | undefined) {
+  if (budgetMin == null || !Number.isFinite(budgetMin)) return null
+  return (5 - getSulitLevel(Math.max(0, budgetMin)).index) * 2
+}
+
+export function isRainSafe(place: Pick<PlaceCardData, 'indoor_outdoor' | 'weather_fit'>) {
+  const setting = place.indoor_outdoor?.toLowerCase() ?? ''
+  const weather = place.weather_fit?.toLowerCase() ?? ''
+  return (setting.includes('indoor') && !setting.includes('outdoor')) || /rain|all[- ]?weather|any weather/.test(weather)
+}
+
+export function withLiveDetail(place: PlaceCardData, live: PlaceDetail | undefined): PlaceCardData {
+  if (!live) return place
+  return {
+    ...place,
+    thumbnailUrl: live.thumbnailUrl ?? null,
+    imageUrl: live.imageUrl ?? null,
+    curatedImageUrls: live.curatedImageUrls ?? [],
+    rating: live.rating ?? place.rating ?? null,
+    budget_min: place.budget_min ?? live.budget_min ?? null,
+    good_for: place.good_for?.length ? place.good_for : live.good_for,
+    indoor_outdoor: live.indoor_outdoor ?? null,
+    weather_fit: live.weather_fit ?? null,
+  }
+}
+
+function getImageCandidates(place: PlaceCardData) {
+  const candidates = [place.thumbnailUrl, place.imageUrl, ...(place.curatedImageUrls ?? []), getStaticPlaceImageUrlForSlug(place.slug ?? place.id)]
+  return candidates.reduce<string[]>((unique, candidate) => {
+    const url = candidate?.trim()
+    if (url && !unique.includes(url)) unique.push(url)
+    return unique
+  }, [])
+}
+
+function getMeta(place: PlaceCardData) {
+  const area = place.localArea || place.city || place.area
+  const fit = place.good_for?.find((item) => item.trim())
+  return [place.category, area, fit ? `good for ${fit.toLowerCase()}` : null].filter(Boolean).join(' · ')
+}
+
 type PlaceCardProps = {
   place: PlaceCardData
-  isSelected?: boolean
-  compact?: boolean
-  searchResultCard?: boolean
-  imagePriority?: boolean
+  onGuestSave: () => void
+  selected?: boolean
+  onOpen?: () => void
+  onHover?: () => void
   className?: string
-  footerNote?: string | null
-  onOpen?: (placeId: string) => void
-  onSelect?: (placeId: string) => void
-  dataSearchPlaceId?: string
-  href?: string | null
 }
 
-const loadedCardImageUrls = new Set<string>()
-
-function getReadableChipName(value: string) {
-  return value
-    .split(/[-_\s]+/)
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-    .join(' ')
-}
-
-function hasDisplayValue(value: string | null | undefined) {
-  const normalizedValue = value?.trim().toLowerCase()
-  return Boolean(normalizedValue && normalizedValue !== 'unknown' && normalizedValue !== 'n/a' && normalizedValue !== 'none')
-}
-
-function getCanonicalChipKey(value: string) {
-  const normalizedValue = value
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, ' ')
-    .replace(/\bfriendly\b/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-
-  if (!normalizedValue) {
-    return ''
-  }
-
-  if (normalizedValue.includes('date')) return 'date'
-  if (normalizedValue.includes('family')) return 'family'
-  if (normalizedValue.includes('barkada')) return 'barkada'
-  if (normalizedValue.includes('commute')) return 'commute'
-  if (normalizedValue.includes('study')) return 'study'
-  if (normalizedValue.includes('nightlife')) return 'nightlife'
-  if (normalizedValue.includes('cafe')) return 'cafe'
-
-  return normalizedValue
-}
-
-function getCanonicalChipLabel(key: string, fallbackLabel: string) {
-  const canonicalLabels: Record<string, string> = {
-    barkada: 'Barkada',
-    cafe: 'Cafe',
-    commute: 'Commute',
-    date: 'Date',
-    family: 'Family',
-    nightlife: 'Nightlife',
-    study: 'Study',
-  }
-
-  return canonicalLabels[key] ?? fallbackLabel
-}
-
-function getPlaceChips(place: PlaceCardData) {
-  const sourceChips = [
-    ...(place.matchedTags ?? []),
-    ...(place.matchedCategories ?? []),
-    ...((place.matchedTags?.length || place.matchedCategories?.length) ? [] : place.tags ?? []),
-  ]
-  const seenChipKeys = new Set<string>()
-
-  return sourceChips
-    .map((chip) => ({
-      id: chip.id,
-      name: chip.name?.trim() || getReadableChipName(chip.id),
-    }))
-    .filter((chip) => {
-      const canonicalKey = getCanonicalChipKey(chip.name)
-
-      if (!canonicalKey || seenChipKeys.has(canonicalKey)) {
-        return false
-      }
-
-      seenChipKeys.add(canonicalKey)
-      return true
-    })
-    .map((chip) => {
-      const canonicalKey = getCanonicalChipKey(chip.name)
-
-      return {
-        id: chip.id,
-        key: canonicalKey,
-        name: getCanonicalChipLabel(canonicalKey, chip.name),
-      }
-    })
-}
-
-function getPlaceHref(place: PlaceCardData, overrideHref?: string | null) {
-  const trimmedOverrideHref = overrideHref?.trim()
-
-  if (trimmedOverrideHref) {
-    return trimmedOverrideHref
-  }
-
-  const trimmedSlug = place.slug?.trim()
-
-  if (!trimmedSlug) {
-    return null
-  }
-
-  const areaMeta = resolveAreaMeta({
-    city: place.city,
-    area: place.area,
-    localArea: place.localArea,
-  })
-
-  return getCanonicalPlacePath({
-    areaSlug: areaMeta.slug,
-    placeSlug: trimmedSlug,
-  })
-}
-
-function formatCardRating(place: PlaceCardData) {
-  if (typeof place.rating === 'number' && Number.isFinite(place.rating) && place.rating > 0) {
-    return place.rating % 1 === 0 ? String(place.rating) : place.rating.toFixed(1)
-  }
-
-  if (typeof place.markerRatingText === 'string' && place.markerRatingText.trim()) {
-    return place.markerRatingText.trim()
-  }
-
-  return '0'
-}
-
-function formatCardReviewCount(place: PlaceCardData) {
-  if (typeof place.ratingCount === 'number' && Number.isFinite(place.ratingCount)) {
-    return Math.max(0, Math.floor(place.ratingCount))
-  }
-
-  if (typeof place.reviewCount === 'string') {
-    const parsedCount = Number.parseInt(place.reviewCount.replace(/[^0-9-]/g, ''), 10)
-
-    if (Number.isFinite(parsedCount)) {
-      return Math.max(0, parsedCount)
-    }
-  }
-
-  return 0
-}
-
-function PlaceCard({
-  place,
-  isSelected = false,
-  compact = false,
-  searchResultCard = false,
-  imagePriority = false,
-  className = '',
-  footerNote = null,
-  onOpen,
-  onSelect,
-  dataSearchPlaceId,
-  href,
-}: PlaceCardProps) {
-  const photoUrl = place.thumbnailUrl?.trim() || place.imageUrl?.trim() || null
-  const photoAlt = place.imageAlt?.trim() || place.name
-  const [isSaving, setIsSaving] = useState(false)
-  const [saveError, setSaveError] = useState('')
-  const [isPhotoLoaded, setIsPhotoLoaded] = useState(() => photoUrl ? loadedCardImageUrls.has(photoUrl) : false)
-  const guestAuth = useGuestAuthPrompt()
+/** Listing card wired to saved places, prefetch and listing return state. Renders the GT1 kit card. */
+function PlaceCard({ place, onGuestSave, selected = false, onOpen, onHover, className }: PlaceCardProps) {
+  const candidates = useMemo(() => getImageCandidates(place), [place])
+  const [failed, setFailed] = useState<string[]>([])
+  const imageUrl = candidates.find((candidate) => !failed.includes(candidate)) ?? null
   const { isPlaceSaved, saveFavorite, removeFavorite } = useSavedFavorites()
-  const { showSystemMessage } = useSystemMessage()
-  const normalizedNameSlug = normalizePlaceSlug(place.name)
+  const [isSaving, setIsSaving] = useState(false)
   const placeId = place.id.trim()
-  const isSaved = [place.slug, normalizedNameSlug, place.id].some((slug) => isPlaceSaved(slug))
-  const displayChips = getPlaceChips(place)
-  const resolvedHref = getPlaceHref(place, href)
-  const searchCardSummary = place.description?.trim() || place.reason.trim()
-  const searchCardSubtitle = hasDisplayValue(place.badge) ? place.badge : place.category
-  const searchCardRatingText = formatCardRating(place)
-  const searchCardReviewCount = formatCardReviewCount(place)
-  const normalizedBadge = place.badge.trim().toLowerCase()
-  const normalizedCategory = place.category.trim().toLowerCase()
-  const shouldShowCategory = hasDisplayValue(place.category) && normalizedCategory !== normalizedBadge
-  const mediaClassName = compact ? 'w-[84px] rounded-[20px] sm:w-[92px]' : 'w-[112px] rounded-[18px]'
-  const cardBodyClassName = compact ? 'py-3' : 'min-h-[136px] p-3'
-  const shouldRenderMedia = Boolean(photoUrl) || !compact
-  const shouldShowPhoto = Boolean(photoUrl) && isPhotoLoaded
+  const saved = [place.slug, placeId].some((key) => isPlaceSaved(key))
+  const rainSafe = isRainSafe(place)
+  const isFree = place.budget_min != null && place.budget_min <= 0
 
-  useEffect(() => {
-    if (photoUrl && loadedCardImageUrls.has(photoUrl)) {
-      setIsPhotoLoaded(true)
-    } else {
-      setIsPhotoLoaded(false)
-    }
-  }, [photoUrl])
-  const handleActivate = (event: MouseEvent<HTMLAnchorElement>) => {
-    if (event.button !== 0 || event.metaKey || event.altKey || event.ctrlKey || event.shiftKey) {
-      return
-    }
-
-    onOpen?.(place.id)
-    onSelect?.(place.id)
-  }
-
-  const handleSave = async () => {
+  const toggleSave = async () => {
+    if (isSaving) return
+    setIsSaving(true)
     try {
-      setIsSaving(true)
-      setSaveError('')
-
-      if (isSaved) {
-        const message = await removeFavorite(placeId, place.slug)
-        showSystemMessage({
-          title: 'Place Removed',
-          description: message,
-        })
-        return
+      if (saved) {
+        await removeFavorite(placeId, place.slug)
+      } else {
+        const result = await saveFavorite(placeId, place.slug)
+        if (result.status === 'guest') onGuestSave()
       }
-
-      const result = await saveFavorite(placeId, place.slug)
-
-      if (result.status === 'guest') {
-        guestAuth.open('favorite')
-        return
-      }
-
-      showSystemMessage({
-        title: result.status === 'already-saved' ? 'Already Saved' : 'Place Saved!',
-        description: result.message,
-      })
-    } catch (error) {
-      setSaveError(error instanceof Error ? error.message : 'Failed to save favorite.')
     } finally {
       setIsSaving(false)
     }
   }
 
-  const cardContent = searchResultCard ? (
-    <div className="overflow-hidden">
-      <div className={`relative w-full overflow-hidden bg-[linear-gradient(180deg,var(--primary-soft)_0%,rgba(var(--accent-rgb),0.06)_100%)] ${compact ? 'aspect-[1.55]' : 'aspect-[1.38]'}`}>
-        {!shouldShowPhoto ? (
-          <div className="absolute inset-0">
-            <AppSkeleton className="h-full w-full rounded-none bg-[linear-gradient(135deg,rgba(219,234,254,0.8),rgba(248,250,252,0.95))]" />
-          </div>
-        ) : null}
-
-        {photoUrl ? (
-          <img
-            src={photoUrl ?? undefined}
-            alt={photoAlt}
-            className={`absolute inset-0 h-full w-full object-cover object-center transition-opacity duration-300 ${shouldShowPhoto ? 'opacity-100' : 'opacity-0'}`}
-            loading={imagePriority ? 'eager' : 'lazy'}
-            decoding="async"
-            fetchPriority={imagePriority ? 'high' : 'low'}
-            sizes={compact ? '100vw' : '(min-width: 1024px) 420px, 100vw'}
-            onLoad={() => {
-              if (photoUrl) loadedCardImageUrls.add(photoUrl)
-              setIsPhotoLoaded(true)
-            }}
-            onError={() => setIsPhotoLoaded(false)}
-          />
-        ) : null}
-
-        {!photoUrl ? (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <AppSkeleton className={`h-full w-full rounded-none bg-[linear-gradient(135deg,rgba(219,234,254,0.8),rgba(248,250,252,0.95))]`} />
-          </div>
-        ) : null}
-
-        <div className={`absolute inline-flex items-center gap-1.5 rounded-full border border-white/70 bg-white/92 font-bold tracking-[0.01em] text-slate-700 shadow-[0_8px_18px_rgba(27,26,23,0.12)] backdrop-blur-sm ${compact ? 'bottom-2.5 right-2.5 px-2 py-0.5 text-[9px]' : 'bottom-3 right-3 px-2.5 py-1 text-[10px]'}`}>
-          <AppIcon name="reviews" className="h-3.5 w-3.5 shrink-0 text-amber-500" />
-          <span>{searchCardRatingText}</span>
-          <span className="text-slate-300">·</span>
-          <span>{`Reviews (${searchCardReviewCount})`}</span>
-        </div>
-      </div>
-
-      <div className={`px-3.5 ${compact ? 'pb-3 pt-2' : 'pb-3.5 pt-2.5'}`}>
-        <h2 className={`line-clamp-2 pb-0.5 font-black leading-[1.15] tracking-[-0.03em] text-slate-950 ${compact ? 'text-[14px]' : 'text-[15px]'}`}>
-          {place.name}
-        </h2>
-
-        {searchCardSubtitle ? (
-          <p className={`mt-1 font-bold tracking-[0.01em] text-[var(--accent-deep)]/80 ${compact ? 'text-[10px]' : 'text-[11px]'}`}>
-            {searchCardSubtitle}
-          </p>
-        ) : null}
-
-        {searchCardSummary ? (
-          <p className={`mt-1.5 line-clamp-3 text-slate-600 ${compact ? 'text-[11px] leading-[1.35]' : 'text-[12px] leading-5'}`}>
-            {searchCardSummary}
-          </p>
-        ) : null}
-      </div>
-    </div>
-  ) : (
-    <div className={`flex gap-3 px-3 ${compact ? 'items-stretch' : 'items-stretch'} ${cardBodyClassName}`}>
-      {shouldRenderMedia ? (
-        photoUrl ? (
-          <div className={`${mediaClassName} relative shrink-0 overflow-hidden border border-[rgba(148,163,184,0.18)] shadow-[inset_0_1px_0_rgba(255,255,255,0.45)] ${compact ? 'h-full min-h-[112px] self-stretch' : 'h-full self-stretch'}`}>
-            {!isPhotoLoaded ? (
-              <AppSkeleton className="absolute inset-0 h-full w-full rounded-none bg-[linear-gradient(135deg,rgba(219,234,254,0.8),rgba(248,250,252,0.95))]" />
-            ) : null}
-            <img
-              src={photoUrl}
-              alt={photoAlt}
-              className={`h-full w-full object-cover transition-opacity duration-300 ${isPhotoLoaded ? 'opacity-100' : 'opacity-0'}`}
-              loading={imagePriority ? 'eager' : 'lazy'}
-              decoding="async"
-              fetchPriority={imagePriority ? 'high' : 'low'}
-              sizes={compact ? '(min-width: 640px) 92px, 84px' : '112px'}
-              onLoad={() => {
-                if (photoUrl) loadedCardImageUrls.add(photoUrl)
-                setIsPhotoLoaded(true)
-              }}
-              onError={() => setIsPhotoLoaded(false)}
-            />
-          </div>
-        ) : (
-          <div className={`${mediaClassName} relative shrink-0 overflow-hidden border border-[rgba(148,163,184,0.18)] ${compact ? 'h-full min-h-[112px] self-stretch' : 'h-full self-stretch'}`}>
-            <AppSkeleton className="absolute inset-0 h-full w-full rounded-none bg-[linear-gradient(135deg,rgba(219,234,254,0.8),rgba(248,250,252,0.95))]" />
-          </div>
-        )
-      ) : null}
-
-      <div className="relative min-w-0 flex flex-1 flex-col overflow-hidden">
-        <div className={`flex items-start justify-between gap-2 ${compact ? 'pr-10' : ''}`}>
-          <div className="min-w-0 flex-1">
-            <h2 className={`line-clamp-2 font-black leading-[1.08] tracking-[-0.03em] text-slate-950 ${compact ? 'text-[15px]' : 'text-[17px]'}`}>
-              {place.name}
-            </h2>
-            <div className="mt-1.5 flex items-center gap-2">
-              <span className="rounded-full bg-[var(--accent-soft)] px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-[var(--accent-deep)]">
-                {place.badge}
-              </span>
-              {shouldShowCategory ? (
-                <p className="line-clamp-1 text-[11px] font-medium text-slate-500">{place.category}</p>
-              ) : null}
-            </div>
-          </div>
-        </div>
-
-        <div className={`min-w-0 overflow-hidden ${compact ? 'mt-1.5 space-y-1' : 'mt-2 space-y-1.5'}`}>
-          <div className="flex items-start gap-1.5 text-[11px] text-slate-500">
-            <AppIcon name="place" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" />
-            <span className={`leading-4 ${compact ? 'line-clamp-2' : 'line-clamp-2'}`}>{place.area}</span>
-          </div>
-
-          {displayChips.length > 0 ? (
-            <div className={`flex min-h-6 flex-wrap gap-1.5 overflow-hidden ${compact ? 'max-h-6' : 'max-h-[3rem]'}`}>
-              {displayChips.map((chip, index) => (
-                <span
-                  key={`${chip.id}-${chip.name}`}
-                  className={`inline-flex max-w-full min-w-0 rounded-full border border-[var(--accent-glow)] bg-[var(--primary-soft)] px-2.5 py-1 text-[10px] font-semibold text-slate-600 ${
-                    compact
-                      ? index >= 1 ? 'hidden' : 'inline-flex'
-                      : index >= 2 ? 'hidden sm:inline-flex' : 'inline-flex'
-                  }`}
-                >
-                  <span className="truncate">{chip.name}</span>
-                </span>
-              ))}
-            </div>
-          ) : null}
-        </div>
-
-        <div className={`min-w-0 ${compact ? 'mt-1.5' : 'mt-auto pt-2'}`}>
-          <div className="flex items-center gap-3 text-[11px] text-slate-500">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-50 px-2 py-1">
-              <span
-                className={`inline-block h-1.5 w-1.5 rounded-full ${
-                  place.status === 'Open' ? 'bg-[var(--accent)]' : 'bg-slate-400'
-                }`}
-              />
-              {place.status}
-            </span>
-          </div>
-
-          <p className={`mt-1 text-[11px] leading-4 text-slate-500 ${compact ? 'line-clamp-1' : 'line-clamp-2'}`}>{place.reason}</p>
-          {footerNote ? (
-            <p className="mt-1 line-clamp-1 text-[10px] font-black uppercase tracking-[0.08em] text-[var(--accent-deep)]">
-              {footerNote}
-            </p>
-          ) : null}
-        </div>
-      </div>
-    </div>
-  )
+  const prefetch = () => {
+    if (place.slug) void prefetchPlaceDetail(place.slug)
+  }
 
   return (
-    <>
-      <article
-        data-search-place-id={dataSearchPlaceId}
-        onMouseEnter={() => {
-          if (!searchResultCard) {
-            onSelect?.(place.id)
-          }
-        }}
-        onFocus={() => onSelect?.(place.id)}
-        className={`relative overflow-hidden rounded-[26px] border ${searchResultCard ? 'bg-white shadow-[0_8px_22px_rgba(27,26,23,0.05)]' : 'bg-[linear-gradient(180deg,#ffffff_0%,#fcfdff_100%)] shadow-[0_12px_28px_rgba(27,26,23,0.06)]'} transition ${
-          compact ? '' : 'hover:-translate-y-0.5 hover:shadow-[0_18px_36px_rgba(27,26,23,0.09)]'
-        } ${
-          isSelected
-            ? 'border-[var(--accent-glow)] ring-2 ring-[var(--accent-soft)]'
-            : 'border-[rgba(148,163,184,0.22)]'
-        } ${className}`}
-      >
-        {resolvedHref ? (
-          <InternalLink
-            href={resolvedHref}
-            onClick={handleActivate}
-            className="block h-full w-full outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-soft)] focus-visible:ring-inset"
-          >
-            {cardContent}
-          </InternalLink>
-        ) : (
-          <div className="block h-full w-full">{cardContent}</div>
-        )}
+    <div
+      data-search-place-id={place.id}
+      className={cx('min-w-0', selected && 'rounded-[var(--r-3)] ring-2 ring-[var(--ink)] ring-offset-4 ring-offset-[var(--paper)]', className)}
+      onMouseEnter={() => {
+        prefetch()
+        onHover?.()
+      }}
+      onFocus={prefetch}
+      onClickCapture={(event: MouseEvent<HTMLDivElement>) => {
+        if (!(event.target as HTMLElement).closest('.g-pc-save')) onOpen?.()
+      }}
+      onError={(event) => {
+        if (event.target instanceof HTMLImageElement && imageUrl) setFailed((current) => [...current, imageUrl])
+      }}
+    >
+      <KitPlaceCard
+        href={getPlaceHref(place)}
+        title={place.name}
+        imageUrl={imageUrl}
+        meta={getMeta(place)}
+        rating={typeof place.rating === 'number' && place.rating > 0 ? place.rating : null}
+        pricePerHead={isFree ? null : formatPricePerHead(place.budget_min)}
+        sulit={getSulitScore(place.budget_min)}
+        flag={isFree ? <Tag tone="ok">Free</Tag> : rainSafe ? <Tag tone="ok">Rain-safe</Tag> : null}
+        saved={saved}
+        onToggleSave={() => void toggleSave()}
+      />
+    </div>
+  )
+}
 
-        <button
-          type="button"
-          aria-label={isSaved ? 'Remove from favorites' : 'Save to favorites'}
-          onClick={(event) => {
-            event.stopPropagation()
-            void handleSave()
-          }}
-          disabled={isSaving}
-          className={`absolute right-3 top-3 z-20 inline-flex h-8 w-8 items-center justify-center rounded-full border bg-white transition disabled:cursor-not-allowed disabled:opacity-60 ${
-            isSaved
-              ? 'border-rose-200 text-rose-600 shadow-[0_6px_14px_rgba(244,63,94,0.16)]'
-              : 'border-[rgba(148,163,184,0.22)] text-slate-400 hover:border-rose-200 hover:text-rose-600'
-          }`}
-        >
-          <AppIcon name="favorites" className={`h-4 w-4 ${isSaved ? 'fill-current text-rose-600' : ''}`} />
-        </button>
+/** Index tile (city or category) with image fallbacks. */
+export function PlaceTile({ href, title, meta, imageUrls }: { href: string; title: string; meta: string; imageUrls: string[] }) {
+  const [imageIndex, setImageIndex] = useState(0)
+  const sourceKey = imageUrls.join('|')
+  const [lastSourceKey, setLastSourceKey] = useState(sourceKey)
 
-        {saveError ? (
-          <p className="border-t border-red-100 bg-red-50 px-3 py-2 text-[11px] text-red-600">
-            {saveError}
-          </p>
-        ) : null}
-      </article>
+  if (sourceKey !== lastSourceKey) {
+    setLastSourceKey(sourceKey)
+    setImageIndex(0)
+  }
 
-      {guestAuth.promptElement}
-    </>
+  return (
+    <div className="min-w-0" onError={() => setImageIndex((current) => current + 1)}>
+      <KitPlaceCard href={href} title={title} meta={meta} imageUrl={imageUrls[imageIndex] ?? null} />
+    </div>
   )
 }
 

@@ -1,4 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
+import { ShieldAlert } from 'lucide-react'
+import { Button, Panel } from '../components/ui'
 import { signOut } from '../services/authApi'
 import { ADMIN_BASE_PATH } from '../utils/adminRoutes'
 import type { AdminMfaStatus } from '../utils/adminMfa'
@@ -12,30 +14,20 @@ function AdminAccessDenied({ message = 'Your account does not have admin access.
   }
 
   return (
-    <main className="gala-page-background flex min-h-screen items-center justify-center px-4 py-10 text-center text-[var(--text)]">
-      <section className="w-full max-w-md">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-[16px] border border-[rgba(220,38,38,0.16)] bg-red-50 text-red-600">
-          <span className="text-lg font-black">!</span>
-        </div>
-        <h1 className="mt-5 text-2xl font-black text-slate-950">Admin access required</h1>
-        <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">{message}</p>
+    <main className="flex min-h-screen items-center justify-center px-4 py-10">
+      <Panel as="section" className="w-full max-w-md text-center">
+        <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-[var(--bad-soft)] text-[var(--bad)]">
+          <ShieldAlert className="g-ic" aria-hidden="true" />
+        </span>
+        <h1 className="g-h2 mt-4">Admin access required</h1>
+        <p className="g-sm g-mut mt-2">{message}</p>
         <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
-          <button
-            type="button"
-            onClick={() => navigateToPath('/home')}
-            className="app-button app-button-primary app-button-md"
-          >
-            Go home
-          </button>
-          <button
-            type="button"
-            onClick={() => void handleAdminSignIn()}
-            className="app-button app-button-secondary app-button-md"
-          >
+          <Button onClick={() => navigateToPath('/home')}>Go home</Button>
+          <Button variant="line" onClick={() => void handleAdminSignIn()}>
             Admin sign in
-          </button>
+          </Button>
         </div>
-      </section>
+      </Panel>
     </main>
   )
 }

@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import AppHeader from '../components/AppHeader'
 import MinimalBackNav from '../components/navigation/MinimalBackNav'
-import { PageContainer, PageShell, EmptyState, Stack } from '../components/layout/ResponsiveLayouts'
+import { Button, Empty, Page, Skeleton, Tag } from '../components/ui'
 import { getMyPlaceSubmissions, type PlaceSubmission } from '../utils/placeSubmissionsApi'
-import { AdminListSkeleton } from '../components/loading/SkeletonStates'
 
 function formatDate(value?: string | null) {
   if (!value) return ''
@@ -18,15 +16,21 @@ function formatDate(value?: string | null) {
   })
 }
 
-const statusStyles: Record<string, string> = {
-  pending: 'bg-amber-50 text-amber-700 border-amber-200',
-  approved: 'bg-[var(--primary-soft)] text-[var(--accent-deep)] border-[rgba(var(--accent-rgb),0.18)]',
-  rejected: 'bg-rose-50 text-rose-700 border-rose-200',
+const statusTones: Record<string, 'warn' | 'ok' | 'bad'> = {
+  pending: 'warn',
+  approved: 'ok',
+  rejected: 'bad',
+}
+
+const statusLabels: Record<string, string> = {
+  pending: 'Pending',
+  approved: 'Approved',
+  rejected: 'Rejected',
 }
 
 function MyPlaceSubmissionsPage({ session }: { session: Session }) {
   const [submissions, setSubmissions] = useState<PlaceSubmission[]>([])
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState('')
 
   useEffect(() => {
@@ -59,105 +63,79 @@ function MyPlaceSubmissionsPage({ session }: { session: Session }) {
   }, [session])
 
   return (
-    <PageShell>
-      <AppHeader />
-      <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
-        <PageContainer size="wide">
-        <Stack gap="default">
-        <MinimalBackNav onClick={() => window.history.back()} className="mb-4" />
-
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="gala-page-kicker">Community places</p>
-            <h1 className="gala-page-title">My place submissions</h1>
-            <p className="gala-page-description">
-              Track every place you submitted and see whether it is still pending, already approved, or needs changes.
-            </p>
-          </div>
-          <button
-            type="button"
-            disabled
-            aria-disabled="true"
-            title="Coming soon"
-            className="app-button app-button-primary app-button-md cursor-not-allowed opacity-70"
-          >
-            Submit another place
-            <span className="ml-2 rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.14em] text-white">
-              Soon
-            </span>
-          </button>
+    <Page narrow>
+      <MinimalBackNav onClick={() => window.history.back()} />
+      <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="g-h1">My place submissions</h1>
+          <p className="g-mut mt-1 text-[15px]">See if each place is pending, approved, or needs changes.</p>
         </div>
+        <Button variant="line" disabled title="Coming soon" className="shrink-0 self-start sm:self-auto">
+          Submit another place
+          <Tag>Soon</Tag>
+        </Button>
+      </div>
 
-        {errorMessage ? <p className="mt-4 text-sm font-bold text-red-600">{errorMessage}</p> : null}
-
+      <div className="mt-6">
         {isLoading && submissions.length === 0 ? (
-          <AdminListSkeleton count={2} className="mt-8" />
+          <div className="g-list" aria-busy="true">
+            <Skeleton className="h-[88px]" />
+            <Skeleton className="h-[88px]" />
+          </div>
+        ) : errorMessage && submissions.length === 0 ? (
+          <Empty title="Hindi ma-load ang submissions" description={errorMessage} action={<Button variant="line" onClick={() => window.location.reload()}>Try again</Button>} />
         ) : submissions.length === 0 ? (
-          <EmptyState
-            title="No place submissions yet."
-            description="Once you submit a place for review, it will show up here."
-            variant="plain"
-          />
+          <Empty title="Wala pang na-submit" description="Once you submit a place for review, it shows up here." />
         ) : (
-          <div className="mt-8 grid gap-0">
+          <div className="g-list">
             {submissions.map((submission) => (
-              <article
-                key={submission.id}
-                className="border-t border-[var(--line)] py-5 first:border-t-0 first:pt-0"
-              >
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className={`rounded-full border px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] ${statusStyles[submission.status] || 'border-slate-200 bg-slate-100 text-slate-700'}`}>
-                        {submission.status}
-                      </span>
-                      <span className="rounded-full border border-[var(--line)] bg-white px-3 py-1 text-[11px] font-black uppercase tracking-[0.18em] text-slate-600">
-                        {submission.category}
-                      </span>
+              <article key={submission.id} className="g-card p-3">
+                <div className="flex items-start gap-3">
+                  {submission.images[0]?.imageUrl ? (
+                    <img src={submission.images[0].imageUrl} alt="" loading="lazy" className="g-row-img" />
+                  ) : (
+                    <span className="g-row-img" aria-hidden="true" />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <h2 className="g-h3 min-w-0 truncate">{submission.name}</h2>
+                      <Tag tone={statusTones[submission.status] ?? 'neutral'} className="shrink-0">
+                        {statusLabels[submission.status] ?? submission.status}
+                      </Tag>
                     </div>
-                    <h2 className="mt-3 text-xl font-black text-slate-950">{submission.name}</h2>
-                    <p className="mt-1 text-sm font-semibold text-slate-700">
-                      {submission.area ? `${submission.area}, ` : ''}
+                    <p className="g-sm g-mut truncate">
+                      {submission.category} · {submission.area ? `${submission.area}, ` : ''}
                       {submission.city}
                     </p>
-                    <p className="mt-1 text-xs font-bold text-slate-500">Submitted {formatDate(submission.createdAt)}</p>
+                    <p className="g-xs g-fnt mt-0.5">Submitted {formatDate(submission.createdAt)}</p>
                   </div>
-
-                  {submission.images[0]?.imageUrl ? (
-                    <div className="w-full overflow-hidden rounded-[20px] border border-[var(--line)] bg-white lg:w-44">
-                      <img src={submission.images[0].imageUrl || ''} alt="" className="h-32 w-full object-cover" />
-                    </div>
-                  ) : null}
                 </div>
 
-                <p className="mt-4 text-sm font-semibold leading-6 text-slate-800">{submission.description}</p>
+                {submission.description ? <p className="g-sm mt-3 line-clamp-3">{submission.description}</p> : null}
 
                 {submission.status === 'approved' && submission.approvedPlaceId ? (
-                  <div className="mt-4 rounded-2xl border border-[rgba(var(--accent-rgb),0.18)] bg-[var(--primary-soft)] px-4 py-3 text-sm font-semibold text-[var(--accent-deep)]">
-                    Approved and published.
-                  </div>
+                  <p className="g-sm mt-3 rounded-[var(--r-2)] bg-[var(--ok-soft)] px-3 py-2 text-[var(--ok)]">Approved and published.</p>
                 ) : null}
 
                 {submission.status === 'rejected' ? (
-                  <div className="mt-4 grid gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-800">
-                    <p>{submission.rejectionReason || 'This submission was rejected by an admin reviewer.'}</p>
+                  <div className="g-sm mt-3 grid gap-1 rounded-[var(--r-2)] bg-[var(--bad-soft)] px-3 py-2">
+                    <p className="text-[var(--bad)]">{submission.rejectionReason || 'This submission was rejected by an admin reviewer.'}</p>
                     {submission.adminNote ? <p>Admin note: {submission.adminNote}</p> : null}
                   </div>
                 ) : null}
 
-                {submission.status === 'pending' ? (
-                  <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
-                    Waiting for admin review.
-                  </div>
-                ) : null}
+                {submission.status === 'pending' ? <p className="g-sm g-mut mt-3">Waiting for admin review.</p> : null}
               </article>
             ))}
           </div>
         )}
-        </Stack>
-        </PageContainer>
-      </main>
-    </PageShell>
+        {errorMessage && submissions.length > 0 ? (
+          <p className="g-hint is-error mt-3" role="alert">
+            {errorMessage}
+          </p>
+        ) : null}
+      </div>
+    </Page>
   )
 }
 
