@@ -3,7 +3,7 @@
 @layer components {
 /* ---------- Auth sheet (Airbnb-style: centred title bar, email first) ---------- */
 .m-auth { width: 100%; flex: 1 0 auto; padding: 0 0 40px; }
-.m-auth-card { width: 100%; max-width: 520px; margin: 0 auto; background: var(--surface); }
+.m-auth-card { width: 100%; max-width: 520px; margin: 0 auto; }
 .m-auth-bar { position: relative; display: flex; align-items: center; justify-content: center; min-height: 60px; padding: 0 56px; border-bottom: 1px solid var(--line-2); font: 700 16px/1.2 var(--font-display); text-align: center; }
 .m-auth-back { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: none; color: var(--ink); cursor: pointer; }
 .m-auth-back:hover { background: var(--fill); }
@@ -19,7 +19,7 @@
 .m-auth-fine a, .m-auth-fine button { color: var(--ink-2); text-decoration: underline; text-underline-offset: 2px; background: none; border: 0; padding: 0; font: inherit; cursor: pointer; }
 @media (min-width: 768px) {
   .m-auth { display: grid; place-items: start center; padding: 48px 16px 64px; background: var(--fill); }
-  .m-auth-card { border-radius: var(--r-4); box-shadow: var(--sh-2); overflow: hidden; }
+  .m-auth-card { border-radius: var(--r-4); background: var(--surface); box-shadow: var(--sh-2); overflow: hidden; }
   .m-auth-body { padding: 28px 32px 32px; }
 }
 
@@ -35,7 +35,7 @@
 .m-onb-step { font-size: 13px; font-weight: 600; color: var(--tara-ink); }
 .m-onb-title { font: 600 clamp(28px, 6vw, 40px)/1.08 var(--font-display); letter-spacing: -0.03em; text-wrap: balance; margin-top: 8px; }
 .m-onb-foot { position: fixed; inset: auto 0 0 0; z-index: 60; background: var(--surface); box-shadow: 0 -1px 0 var(--line-2); padding-bottom: env(safe-area-inset-bottom, 0px); }
-.m-onb-prog { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.m-onb-prog { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
 .m-onb-prog i { height: 6px; background: var(--fill-2); overflow: hidden; }
 .m-onb-prog i::after { content: ''; display: block; height: 100%; width: var(--w, 0%); background: var(--ink); transition: width var(--t-slow) var(--ease-g); }
 .m-onb-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 1240px; margin: 0 auto; padding: 14px 16px; }
@@ -91,9 +91,14 @@
 .m-rank-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 12px; list-style: none; padding: 0; margin: 0; }
 @media (min-width: 768px) { .m-rank-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (min-width: 1024px) { .m-rank-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 32px 24px; } }
-.m-rank { position: relative; min-width: 0; container-type: inline-size; }
-.m-rank-n { position: absolute; z-index: 2; left: 10px; top: calc(100cqw - 40px); display: grid; place-items: center; min-width: 30px; height: 30px; padding: 0 8px; border-radius: var(--r-pill); background: var(--ink); color: var(--on-ink); font: 700 13px/1 var(--font-display); box-shadow: 0 0 0 2px var(--surface); pointer-events: none; }
-.m-rank-desc { margin-top: 6px; font-size: 13px; line-height: 1.45; color: var(--ink-2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.m-rank { position: relative; min-width: 0; display: flex; flex-direction: column; }
+/* Cards in one row share a height; the blurb under them is always two lines tall. */
+.m-rank > div, .m-rank > div > div { flex: 1 1 auto; display: flex; flex-direction: column; }
+.m-rank .g-pc { flex: 1 1 auto; }
+/* Rank sits on the photo's top-left corner, clear of the title; a rain-safe flag moves beside it. */
+.m-rank-n { position: absolute; z-index: 2; left: 10px; top: 10px; display: grid; place-items: center; min-width: 30px; height: 30px; padding: 0 8px; border-radius: var(--r-pill); background: var(--ink); color: var(--on-ink); font: 700 13px/1 var(--font-display); box-shadow: var(--sh-1); pointer-events: none; }
+.m-rank .g-pc-flag { left: 48px; }
+.m-rank-desc { margin-top: 6px; min-height: calc(2 * 1.45em); font-size: 13px; line-height: 1.45; color: var(--ink-2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .m-faq { border-top: 1px solid var(--line-2); }
 .m-faq details { border-bottom: 1px solid var(--line-2); }
 .m-faq summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 56px; padding: 14px 0; list-style: none; cursor: pointer; font: 600 16px/1.35 var(--font-display); }
@@ -123,7 +128,7 @@
 .m-budget span { font-size: 12px; color: var(--ink-2); }
 
 /* ---------- Chat (Tara) ---------- */
-.m-tara { display: grid; place-items: center; width: 32px; height: 32px; flex: 0 0 auto; border-radius: 50%; background: var(--tara); color: #ffffff; }
+.m-tara { display: grid; place-items: center; width: 32px; height: 32px; flex: 0 0 auto; border-radius: 50%; background: var(--tara); color: var(--on-tara); }
 .m-tara svg { width: 17px; height: 17px; }
 .m-tara.is-lg { width: 56px; height: 56px; border-radius: 18px; }
 .m-tara.is-lg svg { width: 28px; height: 28px; }
@@ -160,12 +165,14 @@
 .m-toc::-webkit-scrollbar { display: none; }
 .m-toc a { flex: 0 0 auto; display: inline-flex; align-items: center; min-height: 36px; padding: 0 12px; border-radius: var(--r-pill); border: 1px solid var(--line); color: var(--ink); font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap; }
 .m-toc a:hover { border-color: var(--ink); }
+.m-toc a { position: relative; }
+.m-toc a::after { content: ''; position: absolute; inset: -4px 0; }
 .m-legal section { scroll-margin-top: 128px; }
 .m-rate { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
 .m-rate button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 84px; min-width: 0; padding: 0 2px; border: 1px solid var(--line); border-radius: var(--r-3); background: var(--surface); color: var(--ink-2); font: 600 12px/1.2 var(--font-body); cursor: pointer; transition: border-color var(--t-fast), background var(--t-fast); }
 .m-rate button:hover { border-color: var(--ink); }
 .m-rate button[aria-pressed='true'] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); background: var(--tara-soft); color: var(--ink); }
 .m-rate svg { width: 30px; height: 30px; }
-.m-404 { display: grid; place-items: center; width: 96px; height: 96px; border-radius: 28px; background: var(--sea-soft); color: var(--sea); transform: rotate(-6deg); }
-.m-404 svg { width: 52px; height: 52px; }
+.m-lost { display: grid; place-items: center; width: 96px; height: 96px; border-radius: 28px; background: var(--sea-soft); color: var(--sea); transform: rotate(-6deg); }
+.m-lost svg { width: 52px; height: 52px; }
 }

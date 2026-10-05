@@ -333,7 +333,7 @@ export default function PromptBuilderModal({ isOpen, initialState, onClose }: Pr
                 <Trash2 aria-hidden="true" />
                 Clear all
               </Button>
-              <Button variant="ink" onClick={handleGeneratePrompt} disabled={isGeneratingPrompt || !hasInput}>
+              <Button variant="tara" onClick={handleGeneratePrompt} disabled={isGeneratingPrompt || !hasInput}>
                 <Sparkles aria-hidden="true" />
                 Generate
               </Button>

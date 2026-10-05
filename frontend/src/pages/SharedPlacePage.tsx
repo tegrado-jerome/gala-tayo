@@ -16,6 +16,8 @@ import { clearHistoryCache } from '../utils/historyCache'
 import type { PlaceDetail, PlaceDetailCardData } from '../types/appTypes'
 import { cachePlaceDetail, readCachedPlaceDetail } from '../utils/placeDetailCache'
 import { BRAND_NAME, PRODUCT_NAME } from '../utils/seoLandingPages'
+import { socialImageUrl } from '../data/r2Config'
+import { getPlaceLeadPhoto } from '../utils/placeGalleryPhotos'
 
 export default function SharedPlacePage({
   slug,
@@ -310,6 +312,8 @@ export default function SharedPlacePage({
         }
       : null
 
+  const shareImageUrl = place ? getPlaceLeadPhoto(place.slug) || place.imageUrl || place.thumbnailUrl || place.curatedImageUrls?.[0] || null : null
+
   return (
     <>
       <SeoHead
@@ -318,11 +322,7 @@ export default function SharedPlacePage({
         canonicalPath={canonicalPath ?? undefined}
         robots={place?.isGalaWorthy === false ? 'noindex,follow' : undefined}
         openGraphType="website"
-        image={
-          place?.imageUrl || place?.thumbnailUrl || place?.curatedImageUrls?.[0]
-            ? { url: place.imageUrl || place.thumbnailUrl || place.curatedImageUrls?.[0] || '', alt: place.name }
-            : null
-        }
+        image={shareImageUrl ? { url: socialImageUrl(shareImageUrl), alt: place?.name } : null}
         jsonLd={placeJsonLd}
       />
       <PlaceDetailView

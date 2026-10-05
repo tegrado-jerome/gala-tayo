@@ -77,7 +77,7 @@ async function readSitemapPaths() {
 // Guides and tools live in the frontend, so their URLs are added here rather than by the API sitemap.
 async function readFrontendPaths() {
   const guides = JSON.parse(await readFile(path.join(root, 'src/data/seoGuides.json'), 'utf8'))
-  return ['/saan-tayo', ...guides.map((guide) => `/guides/${guide.slug}`)]
+  return ['/saan-tayo', '/guides', ...guides.map((guide) => `/guides/${guide.slug}`)]
 }
 
 const locFor = (routePath) => `${siteOrigin}${routePath === '/' ? '/' : routePath}`
@@ -188,7 +188,7 @@ function buildLlmsTxt(pages) {
     `GalaTayo lists ${placeCount} places around the Philippines, each with a page covering budget, best time to visit, who it suits and location. Every place is listed in the sitemap: ${siteOrigin}/sitemap.xml`,
     '',
     ...section('Tools', (routePath) => routePath === '/saan-tayo'),
-    ...section('Guides', (routePath) => routePath.startsWith('/guides/')),
+    ...section('Guides', (routePath) => routePath.startsWith('/guides')),
     ...section('Cities and regions', (routePath) => /^\/places\/[^/]+$/.test(routePath) && routePath !== '/places/categories'),
     ...section('Categories', (routePath) => routePath.startsWith('/places/categories/')),
     ...section('About', (routePath) => ['/about', '/privacy', '/terms'].includes(routePath)),

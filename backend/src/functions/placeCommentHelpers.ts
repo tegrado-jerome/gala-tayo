@@ -335,17 +335,24 @@ export function buildCommentTree(
       };
     });
 
+  // A removed comment only stays as a placeholder while it still has live replies to hold together.
   return [...topLevel, ...orphanPlaceholderParents]
     .sort((left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime())
     .map((comment) => ({
       ...comment,
       replies: (repliesByParentId.get(comment.id) || [])
+        .filter((reply) => !isRemovedComment(reply))
         .sort((left, right) => new Date(left.created_at).getTime() - new Date(right.created_at).getTime())
         .map((reply) => ({
           ...reply,
           replies: [],
         })),
-    }));
+    }))
+    .filter((comment) => !isRemovedComment(comment) || comment.replies.length > 0);
+}
+
+function isRemovedComment(comment: Pick<PlaceCommentRow, "status" | "deleted_at">) {
+  return Boolean(comment.deleted_at) || comment.status === "deleted" || comment.status === "hidden";
 }
 
 export function normalizeCommentForClient<

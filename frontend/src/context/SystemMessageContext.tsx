@@ -1,17 +1,36 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { AppIcon } from '../components/AppIcon'
+import { Check } from '@phosphor-icons/react/dist/csr/Check'
+import { Info } from '@phosphor-icons/react/dist/csr/Info'
+import { WarningCircle } from '@phosphor-icons/react/dist/csr/WarningCircle'
+
+export type SystemMessageTone = 'success' | 'info' | 'error'
 
 type SystemMessagePayload = {
   title: string
   description?: string
   durationMs?: number
+  /** Defaults from the title: failures read as errors, removals as info, the rest as success. */
+  tone?: SystemMessageTone
 }
 
 type SystemMessageState = {
   id: number
   title: string
   description: string
+  tone: SystemMessageTone
 }
+
+const ERROR_TITLE = /could not|couldn't|can't|cannot|failed|unable|error/i
+const INFO_TITLE = /removed|deleted|already|copied|updated|required|rejected/i
+
+function guessTone(title: string): SystemMessageTone {
+  if (ERROR_TITLE.test(title)) return 'error'
+  if (INFO_TITLE.test(title)) return 'info'
+  return 'success'
+}
+
+const TONE_CLASS: Record<SystemMessageTone, string> = { success: 'is-ok', info: '', error: 'is-bad' }
+const TONE_ICON = { success: Check, info: Info, error: WarningCircle }
 
 type SystemMessageContextValue = {
   showSystemMessage: (payload: SystemMessagePayload) => void
@@ -34,13 +53,14 @@ function SystemMessageProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => clearMessageTimer, [clearMessageTimer])
 
-  const showSystemMessage = useCallback(({ title, description = '', durationMs = DEFAULT_DURATION_MS }: SystemMessagePayload) => {
+  const showSystemMessage = useCallback(({ title, description = '', durationMs = DEFAULT_DURATION_MS, tone }: SystemMessagePayload) => {
     clearMessageTimer()
 
     setMessage({
       id: Date.now(),
       title,
       description,
+      tone: tone ?? guessTone(title),
     })
 
     timerRef.current = window.setTimeout(() => {
@@ -58,25 +78,25 @@ function SystemMessageProvider({ children }: { children: ReactNode }) {
       {children}
       {message ? (
         <div className="pointer-events-none fixed inset-x-4 top-4 z-[9999] flex justify-center sm:inset-x-auto sm:right-5 sm:top-5 sm:justify-end">
-          <div
-            key={message.id}
-            className="system-message-toast w-full max-w-[420px] rounded-2xl border border-[rgba(var(--accent-rgb),0.18)] bg-white px-4 py-3 text-slate-900 shadow-md"
-            role="status"
-            aria-live="polite"
-          >
-            <div className="flex items-start gap-3">
-              <span className="system-message-toast-icon mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[var(--primary-soft)] text-[var(--accent-deep)]">
-                <AppIcon name="check" className="h-5 w-5" strokeWidth={2.25} />
-              </span>
-              <div className="min-w-0">
-                <p className="system-message-toast-title text-sm font-semibold text-slate-950">{message.title}</p>
-                {message.description ? <p className="system-message-toast-description mt-1 text-xs leading-5 text-slate-600">{message.description}</p> : null}
-              </div>
-            </div>
-          </div>
+          <SystemToast key={message.id} message={message} />
         </div>
       ) : null}
     </SystemMessageContext.Provider>
+  )
+}
+
+function SystemToast({ message }: { message: SystemMessageState }) {
+  const Icon = TONE_ICON[message.tone]
+  return (
+    <div className={`g-toast ${TONE_CLASS[message.tone]}`} role={message.tone === 'error' ? 'alert' : 'status'} aria-live={message.tone === 'error' ? 'assertive' : 'polite'}>
+      <span className="g-toast-ic" aria-hidden="true">
+        <Icon weight="bold" />
+      </span>
+      <div className="g-toast-body">
+        <p className="g-toast-title">{message.title}</p>
+        {message.description ? <p className="g-toast-desc">{message.description}</p> : null}
+      </div>
+    </div>
   )
 }
 

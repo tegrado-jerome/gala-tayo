@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import OnboardingProgress from './OnboardingProgress'
+import OnboardingProgress, { ONBOARDING_STEP_LABELS } from './OnboardingProgress'
 import type { OnboardingStep } from './types'
 import '../../design/misc.css'
 
@@ -20,7 +20,7 @@ function OnboardingLayout({ step, title, description, children, primary, onBack,
     <>
       <main className="m-onb">
         <header>
-          <p className="m-onb-step">Step {step} of 4</p>
+          <p className="m-onb-step">Step {step} of {ONBOARDING_STEP_LABELS.length}</p>
           <h1 className="m-onb-title">{title}</h1>
           <p className="g-mut mt-3 text-[16px] leading-relaxed">{description}</p>
         </header>

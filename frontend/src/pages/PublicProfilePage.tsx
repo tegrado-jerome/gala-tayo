@@ -183,7 +183,7 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
       ) : null}
 
       {notFound ? (
-        <Empty title="Profile not found." description="Baka mali ang username. Try searching for them." action={<Button variant="ink" href="/find-friends">Find friends</Button>} />
+        <Empty title="Profile not found." description="Baka mali ang username. Try searching for them." action={<Button variant="tara" href="/find-friends">Find friends</Button>} />
       ) : errorMessage ? (
         <Empty title="Hindi ma-load ang profile." description={<span role="alert">{errorMessage}</span>} />
       ) : loadedProfile ? (

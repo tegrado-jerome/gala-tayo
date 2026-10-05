@@ -5,7 +5,7 @@
 .g-qpick svg { width: 18px; height: 18px; color: var(--tara-ink); }
 .g-qpick:hover { border-color: var(--ink); }
 .g-qpick:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
-.g-qpick.is-hot { background: var(--ink); border-color: var(--ink); color: #fff; }
+.g-qpick.is-hot { background: var(--ink); border-color: var(--ink); color: var(--on-ink); }
 .g-qpick.is-hot svg { color: var(--tara); }
 .g-qpick:disabled { opacity: 0.5; cursor: default; }
 @media (min-width: 768px) { .g-qpicks { justify-content: center; margin-inline: 0; padding-inline: 0; } }

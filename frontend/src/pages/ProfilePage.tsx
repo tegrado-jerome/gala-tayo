@@ -32,6 +32,7 @@ import { useSystemMessage } from '../context/SystemMessageContext'
 import { useTheme } from '../context/ThemeContext'
 import { buildAuthPath, signOut } from '../services/authApi'
 import { isAnonymousSession } from '../utils/guestSession'
+import { replaceWithPath } from '../utils/navigation'
 import { useAppUser } from '../context/AppUserContext'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import {
@@ -500,7 +501,7 @@ function AccountProfilePage({ session }: ProfilePageProps) {
     try {
       setIsSigningOut(true)
       setErrorMessage('')
-      await signOut({ scope: 'local' })
+      await signOut({ scope: 'local', onBeforeTransitionEnd: async () => replaceWithPath('/') })
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Sign out failed. Try again.')
     } finally {
@@ -682,7 +683,7 @@ function AccountProfilePage({ session }: ProfilePageProps) {
                 title="Wala pang plans."
                 description="Describe your gala in one line and let Tara draft it."
                 action={
-                  <Button variant="ink" href="/plan-with-ai">
+                  <Button variant="tara" href="/plan-with-ai">
                     <Sparkle aria-hidden="true" />
                     Plan with AI
                   </Button>

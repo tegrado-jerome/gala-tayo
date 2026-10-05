@@ -170,7 +170,7 @@ export default function SeoLandingPage({
       '@type': 'BreadcrumbList',
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/home` },
-        { '@type': 'ListItem', position: 2, name: 'Places', item: `${getSiteOrigin()}/places` },
+        { '@type': 'ListItem', position: 2, name: 'Guides', item: `${getSiteOrigin()}/guides` },
         { '@type': 'ListItem', position: 3, name: metadata.h1, item: `${getSiteOrigin()}${metadata.canonicalPath}` },
       ],
     },
@@ -201,7 +201,7 @@ export default function SeoLandingPage({
     <Page>
       <SeoHead title={metadata.title} description={metadata.description} canonicalPath={metadata.canonicalPath} robots={isThin ? 'noindex,follow' : undefined} jsonLd={jsonLd} />
 
-      <ListingBreadcrumb items={[{ label: 'Home', href: '/home' }, { label: 'Places', href: '/places' }, { label: metadata.h1 }]} />
+      <ListingBreadcrumb items={[{ label: 'Home', href: '/home' }, { label: 'Guides', href: '/guides' }, { label: metadata.h1 }]} />
 
       <article>
         <header className="mt-5 max-w-[46rem]">

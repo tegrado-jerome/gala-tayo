@@ -18,6 +18,11 @@ export function getPlaceCardPhoto(slug: string | null | undefined) {
   return (slug && cardPhotoBySlug[slug]) || null
 }
 
+/** The full-size first HD photo, derived from the bundled card photo so the hero can render before the manifest loads. */
+export function getPlaceLeadPhoto(slug: string | null | undefined) {
+  return getPlaceCardPhoto(slug)?.replace(/-card\.webp$/, '.webp') ?? null
+}
+
 /** Every HD photo for one place. The full manifest is loaded on demand so cards don't pay for it. */
 export function usePlaceGalleryPhotos(slug: string | null | undefined) {
   const [photos, setPhotos] = useState<{ slug: string; list: PlaceGalleryPhoto[] } | null>(null)

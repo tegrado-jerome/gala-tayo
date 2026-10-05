@@ -93,8 +93,13 @@ function App() {
 
     if (redirectTarget) {
       navigateToPath(redirectTarget)
+      return
     }
-  }, [hasResolvedInitialAuth, hasResolvedProfile, isOnboardingAllowedPath, isPasswordResetPath, needsOnboarding, pathname, session])
+
+    if (session && hasResolvedInitialAuth && pathname === '/' && !showLogoutTransition) {
+      replaceWithPath(`/home${search}`)
+    }
+  }, [hasResolvedInitialAuth, hasResolvedProfile, isOnboardingAllowedPath, isPasswordResetPath, needsOnboarding, pathname, search, session, showLogoutTransition])
 
   useEffect(() => {
     if (!legacyAdminRedirectPath) {
@@ -179,7 +184,7 @@ function App() {
   }
 
   return (
-    <ThemeProvider pathname={pathname}>
+    <ThemeProvider>
       <CookieConsentProvider>
         <AppShell
           session={session}

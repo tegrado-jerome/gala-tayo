@@ -38,7 +38,7 @@ import GtMap, { type MapPoint } from './ui/GtMap'
 import { getCuratedPlaceImages, normalizePlaceSlug } from '../data/curatedPlaceImages'
 import PhotoCredits from './place-detail/PhotoCredits'
 import { useActionBarMode } from '../hooks/useActionBarMode'
-import { usePlaceGalleryPhotos } from '../utils/placeGalleryPhotos'
+import { getPlaceLeadPhoto, usePlaceGalleryPhotos } from '../utils/placeGalleryPhotos'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { useAppUser } from '../context/AppUserContext'
@@ -58,7 +58,8 @@ import { MemberAvatar } from './place-detail/MemberAvatar'
 import CheckInButton from './place-detail/CheckInButton'
 import { getSulitLevel } from './place-detail/SulitMeter'
 import { GoodForList } from './place-detail/GoodForList'
-import { AllPhotos, DesktopGallery, PhoneGallery, usePhotoList } from './place-detail/PlaceGallery'
+import DestructiveConfirmModal from './DestructiveConfirmModal'
+import { AllPhotos, DesktopGallery, PhoneGallery, useIsDesktopGallery, usePhotoList } from './place-detail/PlaceGallery'
 import { RatingBubbles } from './place-detail/RatingBubbles'
 import { SectionTabs } from './place-detail/SectionTabs'
 import '../design/place.css'
@@ -301,12 +302,12 @@ function StarRatingInput({
           disabled={disabled}
           className={cx(
             'grid h-11 w-11 place-items-center rounded-full transition-colors hover:bg-[var(--fill)] disabled:cursor-not-allowed disabled:opacity-60',
-            ratingValue <= value ? 'text-[var(--ink)]' : 'text-[var(--line)]',
+            ratingValue <= value ? 'text-[var(--tara-ink)]' : 'text-[var(--ink-3)]',
           )}
           aria-label={`Rate ${ratingValue} out of 5`}
           aria-pressed={ratingValue <= value}
         >
-          <Star className="h-7 w-7" weight="fill" aria-hidden="true" />
+          <Star className="h-7 w-7" weight={ratingValue <= value ? 'fill' : 'regular'} aria-hidden="true" />
         </button>
       ))}
     </div>
@@ -322,8 +323,8 @@ function StarsDisplay({ rating }: { rating: number }) {
       {[1, 2, 3, 4, 5].map((value) => (
         <Star
           key={value}
-          className={cx('h-4 w-4', value <= rating ? 'text-[var(--ink)]' : 'text-[var(--line)]')}
-          weight="fill"
+          className={cx('h-4 w-4', value <= rating ? 'text-[var(--tara-ink)]' : 'text-[var(--ink-3)]')}
+          weight={value <= rating ? 'fill' : 'regular'}
           aria-hidden="true"
         />
       ))}
@@ -388,7 +389,7 @@ function markCommentReported(comments: PlaceComment[], commentId: string): Place
 }
 
 function countThreadComments(comments: PlaceComment[]): number {
-  return comments.reduce((total, comment) => total + 1 + countThreadComments(comment.replies), 0)
+  return comments.reduce((total, comment) => total + (isCommentDeleted(comment) ? 0 : 1) + countThreadComments(comment.replies), 0)
 }
 
 function replaceCommentById(comments: PlaceComment[], commentId: string, nextComment: PlaceComment): PlaceComment[] {
@@ -439,6 +440,29 @@ function removeCommentById(comments: PlaceComment[], commentId: string): PlaceCo
 
 function isCommentDeleted(comment: PlaceComment): boolean {
   return comment.status === 'deleted' || Boolean(comment.deleted_at)
+}
+
+/** Removed comments with no live replies aren't worth a "[Deleted comment]" line. */
+function pruneDeletedComments(comments: PlaceComment[]): PlaceComment[] {
+  return comments
+    .map((comment) => ({ ...comment, replies: pruneDeletedComments(comment.replies) }))
+    .filter((comment) => !isCommentDeleted(comment) || comment.replies.length > 0)
+}
+
+/** Drops a deleted comment outright; it only stays as a placeholder while live replies hang off it. */
+function deleteCommentById(comments: PlaceComment[], commentId: string, deletedAt?: string | null): PlaceComment[] {
+  const target = findCommentById(comments, commentId)
+  if (target && countThreadComments(target.replies) > 0) return markCommentDeletedById(comments, commentId, deletedAt)
+  return removeCommentById(comments, commentId).filter((comment) => !isCommentDeleted(comment) || countThreadComments(comment.replies) > 0)
+}
+
+function findCommentById(comments: PlaceComment[], commentId: string): PlaceComment | null {
+  for (const comment of comments) {
+    if (comment.id === commentId) return comment
+    const reply = findCommentById(comment.replies, commentId)
+    if (reply) return reply
+  }
+  return null
 }
 
 function markCommentDeletedById(comments: PlaceComment[], commentId: string, deletedAt?: string | null): PlaceComment[] {
@@ -583,6 +607,7 @@ function PlaceDetailView({
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
   const [editCommentBody, setEditCommentBody] = useState('')
   const [mutatingCommentId, setMutatingCommentId] = useState<string | null>(null)
+  const [confirmDeleteCommentId, setConfirmDeleteCommentId] = useState<string | null>(null)
   const [openCommentMenuId, setOpenCommentMenuId] = useState<string | null>(null)
   const [reportingCommentId, setReportingCommentId] = useState<string | null>(null)
   const [reportReason, setReportReason] = useState<CommentReportReason | ''>('')
@@ -610,8 +635,10 @@ function PlaceDetailView({
   ])
   const hdPhotos = usePlaceGalleryPhotos(cleanString(place.slug) || null)
   useActionBarMode()
-  // Credited HD photos lead; the place's own uploads follow.
+  const isDesktopGallery = useIsDesktopGallery()
+  // Credited HD photos lead; the place's own uploads follow. The lead is known before the manifest loads, so the hero never swaps.
   const { photos: galleryPhotos, markPhotoBroken } = usePhotoList([
+    getPlaceLeadPhoto(cleanString(place.slug) || null),
     ...hdPhotos.map((photo) => photo.url),
     ...(placeOwnPhotos.length > 0 ? placeOwnPhotos : getCuratedPlaceImages(place.name)),
   ])
@@ -865,7 +892,7 @@ function PlaceDetailView({
           throw new Error(result?.message || 'Unable to load comments.')
         }
 
-        setComments(result?.comments ?? [])
+        setComments(pruneDeletedComments(result?.comments ?? []))
         writePlaceDetailCommunityCache(placeId, {
           averageRating,
           reviewCount,
@@ -1536,7 +1563,7 @@ function PlaceDetailView({
 
       if (!response.ok) {
         if (response.status === 404) {
-          setComments((currentComments) => markCommentDeletedById(currentComments, commentId))
+          setComments((currentComments) => deleteCommentById(currentComments, commentId))
           void fetchPlaceComments()
           showSystemMessage({
             title: 'Comment Removed',
@@ -1548,7 +1575,7 @@ function PlaceDetailView({
         throw new Error(result?.message || 'Unable to delete comment.')
       }
 
-      setComments((currentComments) => markCommentDeletedById(currentComments, commentId, result?.comment?.deleted_at ?? new Date().toISOString()))
+      setComments((currentComments) => deleteCommentById(currentComments, commentId, result?.comment?.deleted_at ?? new Date().toISOString()))
       void fetchPlaceComments()
       showSystemMessage({
         title: 'Comment Deleted',
@@ -1873,7 +1900,7 @@ function PlaceDetailView({
                         role="menuitem"
                         onClick={() => {
                           setOpenCommentMenuId(null)
-                          void handleDeleteComment(comment.id)
+                          setConfirmDeleteCommentId(comment.id)
                         }}
                         disabled={isMutating}
                         className={cx(commentMenuItemClassName, 'text-[var(--bad)]')}
@@ -2256,6 +2283,7 @@ function PlaceDetailView({
       </nav>
 
       <div className="flex flex-col">
+        {isDesktopGallery ? null : (
         <div className="order-1 lg:hidden">
           <PhoneGallery
             photos={galleryPhotos}
@@ -2286,6 +2314,7 @@ function PlaceDetailView({
             }
           />
         </div>
+        )}
 
         <header className="pd-sheet order-2 lg:order-1 lg:mb-6">
           <div className="lg:flex lg:items-end lg:justify-between lg:gap-6">
@@ -2340,6 +2369,7 @@ function PlaceDetailView({
           {contributionError && !isContributionOpen ? <p className="g-hint is-error mt-2">{contributionError}</p> : null}
         </header>
 
+        {isDesktopGallery ? (
         <div className="g-only-desk order-3 lg:order-2">
           <DesktopGallery
             photos={galleryPhotos}
@@ -2353,6 +2383,7 @@ function PlaceDetailView({
             onMapClick={() => scrollToSection('getting-there')}
           />
         </div>
+        ) : null}
       </div>
 
       <div className="lg:mt-8 lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:gap-16">
@@ -2551,6 +2582,20 @@ function PlaceDetailView({
         />
       ) : null}
 
+      <DestructiveConfirmModal
+        isOpen={confirmDeleteCommentId !== null}
+        title="Delete this comment?"
+        description="It will be removed from this place for everyone. This can't be undone."
+        confirmLabel="Delete"
+        isConfirming={mutatingCommentId !== null}
+        onCancel={() => setConfirmDeleteCommentId(null)}
+        onConfirm={async () => {
+          if (!confirmDeleteCommentId) return
+          await handleDeleteComment(confirmDeleteCommentId)
+          setConfirmDeleteCommentId(null)
+        }}
+      />
+
       {guestAuth.promptElement}
       <AddToGalaPlanModal isOpen={isAddToPlanOpen} placeId={place.id} placeName={place.name} onClose={() => setIsAddToPlanOpen(false)} />
 
@@ -2724,7 +2769,7 @@ function PlaceDetailView({
             <X aria-hidden="true" />
             Cancel
           </Button>
-          <Button variant="ink" onClick={() => void handleSubmitContribution()} disabled={isContributionSubmitting}>
+          <Button variant="tara" onClick={() => void handleSubmitContribution()} disabled={isContributionSubmitting}>
             <Check aria-hidden="true" />
             {isContributionSubmitting ? 'Submitting…' : 'Submit'}
           </Button>

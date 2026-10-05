@@ -7,27 +7,25 @@ import { Button } from '../ui'
 type OnboardingAgreementStepProps = {
   values: Pick<OnboardingFormState, 'acceptedTerms' | 'acceptedPrivacy'>
   errors: OnboardingErrors
-  isSubmitting: boolean
   disableNext: boolean
   onUpdate: (updates: Partial<OnboardingFormState>) => void
   onBack: () => void
-  onFinish: () => void
+  onNext: () => void
 }
 
-function OnboardingAgreementStep({ values, errors, isSubmitting, disableNext, onUpdate, onBack, onFinish }: OnboardingAgreementStepProps) {
+function OnboardingAgreementStep({ values, errors, disableNext, onUpdate, onBack, onNext }: OnboardingAgreementStepProps) {
   const accepted = values.acceptedTerms && values.acceptedPrivacy
   const checkboxId = 'onboarding-accept-legal'
 
   return (
     <OnboardingLayout
       step={4}
-      title="Last na, promise"
-      description="Agree to the terms and privacy policy to finish your GalaTayo profile."
+      title="Quick legal bit"
+      description="Before we ask for your legal name and birthdate, please agree to how GalaTayo handles your data."
       onBack={onBack}
-      backDisabled={isSubmitting}
       primary={
-        <Button variant="tara" size="lg" onClick={onFinish} disabled={disableNext || !accepted || isSubmitting}>
-          {isSubmitting ? 'Finishing...' : 'Finish setup'}
+        <Button variant="tara" size="lg" onClick={onNext} disabled={disableNext || !accepted}>
+          Agree and continue
         </Button>
       }
     >

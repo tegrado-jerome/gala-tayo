@@ -1,4 +1,3 @@
-import galaTayoLogo from '../assets/brand/galatayo-logo.svg'
 import { getAreaLabelBySlug } from '../data/destinations'
 import { formatLabelFromSlug, getCanonicalPlacePath, resolveAreaMeta } from './routes'
 import { getPublicSiteOrigin } from './site'
@@ -34,7 +33,8 @@ type SeoConfig = {
 
 const DEFAULT_TITLE = 'GalaTayo'
 const DEFAULT_DESCRIPTION = 'Discover gala-worthy places around the Philippines by city, category, budget, and vibe. Get AI-powered recommendations and plan your next gala with GalaTayo.'
-const DEFAULT_OG_IMAGE = galaTayoLogo
+// Link previews (Messenger, Facebook) can't render SVG, so the fallback is a 1200x630 JPG.
+const DEFAULT_OG_IMAGE = '/images/og/galatayo-og.jpg'
 const DEFAULT_LOCALE = 'en_PH'
 
 function getSiteOrigin() {
@@ -137,6 +137,12 @@ function applySeo(config: SeoConfig) {
   updateOrCreateMeta('meta[property="og:locale"]', { property: 'og:locale', content: locale })
   updateOrCreateMeta('meta[property="og:image"]', { property: 'og:image', content: imageUrl })
   updateOrCreateMeta('meta[property="og:image:alt"]', { property: 'og:image:alt', content: imageAlt })
+  if (config.image?.url) {
+    removeBySelector('meta[property="og:image:width"], meta[property="og:image:height"]')
+  } else {
+    updateOrCreateMeta('meta[property="og:image:width"]', { property: 'og:image:width', content: '1200' })
+    updateOrCreateMeta('meta[property="og:image:height"]', { property: 'og:image:height', content: '630' })
+  }
   updateOrCreateMeta('meta[name="twitter:card"]', { name: 'twitter:card', content: 'summary_large_image' })
   updateOrCreateMeta('meta[name="twitter:title"]', { name: 'twitter:title', content: title })
   updateOrCreateMeta('meta[name="twitter:description"]', { name: 'twitter:description', content: description })

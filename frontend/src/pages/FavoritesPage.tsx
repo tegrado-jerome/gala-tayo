@@ -315,7 +315,7 @@ function FavoritesPage() {
               <Empty
                 title="Wala ka pang saved places."
                 description="Tap the heart on any place to keep it here."
-                action={<Button variant="ink" href="/search">Explore places</Button>}
+                action={<Button variant="tara" href="/search">Explore places</Button>}
               />
             ) : null}
 

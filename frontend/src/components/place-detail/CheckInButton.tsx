@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
 import type { Session } from '@supabase/supabase-js'
 import { Stamp } from '@phosphor-icons/react/dist/csr/Stamp'
+import { WarningCircle } from '@phosphor-icons/react/dist/csr/WarningCircle'
 import { Button, Sheet, buttonClass, cx } from '../ui'
 import { checkInAtPlace, getCurrentPosition } from '../../utils/passportApi'
 
@@ -38,7 +39,7 @@ function NewStampSheet({ city, streakWeeks, onClose }: { city: string; streakWee
           {streakWeeks > 0 ? `${streakWeeks}-week streak. Gala again next week to keep it going.` : 'Gala once a week to start a streak.'}
         </p>
         <div className="mt-6 grid w-full grid-cols-2 gap-2">
-          <Button variant="ink" href="/passport">See passport</Button>
+          <Button variant="tara" href="/passport">See passport</Button>
           <button type="button" ref={closeRef} className={buttonClass({ variant: 'line' })} onClick={onClose}>
             Nice!
           </button>
@@ -141,11 +142,11 @@ function CheckInButton({
       {iconOnly ? (
         <div className="pointer-events-none absolute inset-x-4 bottom-full mb-2 flex justify-center" aria-live="polite">
           {message && isToastVisible ? (
-            <p
-              className={cx('g-sm max-w-[420px] rounded-[var(--r-3)] px-4 py-2.5', status.kind === 'error' ? 'bg-[var(--bad-soft)] text-[var(--bad)]' : 'bg-[var(--ink)] text-[var(--on-ink)]')}
-              style={{ boxShadow: 'var(--sh-2)' }}
-            >
-              {message}
+            <p className={cx('g-toast', status.kind === 'error' ? 'is-bad' : 'is-ok')}>
+              <span className="g-toast-ic" aria-hidden="true">
+                {status.kind === 'error' ? <WarningCircle weight="bold" /> : <Stamp weight="bold" />}
+              </span>
+              <span className="g-toast-body">{message}</span>
             </p>
           ) : null}
         </div>

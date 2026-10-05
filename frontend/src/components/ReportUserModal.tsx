@@ -159,7 +159,7 @@ function ReportUserModal({
             <Button variant="line" block onClick={closeIfIdle} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button variant="ink" block onClick={() => void handleSubmit()} disabled={isSubmitting || !reason}>
+            <Button variant="tara" block onClick={() => void handleSubmit()} disabled={isSubmitting || !reason}>
               {isSubmitting ? 'Submitting…' : 'Submit report'}
             </Button>
           </div>

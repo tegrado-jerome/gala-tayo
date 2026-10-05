@@ -66,6 +66,7 @@ export type RouteDescriptor =
   | { kind: 'prompt-builder' }
   | { kind: 'places-index' }
   | { kind: 'place-categories-index' }
+  | { kind: 'guides-index' }
   | { kind: 'seo-landing'; slug: string }
   | { kind: 'category-places'; categorySlug: string }
   | { kind: 'shared-place'; slug: string; expectedAreaSlug?: string; redirectToCanonical?: boolean }
@@ -256,6 +257,10 @@ export function resolveRouteDescriptor(inputs: RouteInputs): RouteDescriptor {
 
   if (categoryPageSlug) {
     return { kind: 'category-places', categorySlug: categoryPageSlug }
+  }
+
+  if (isPath(pathname, '/guides')) {
+    return { kind: 'guides-index' }
   }
 
   if (landingPageSlug) {

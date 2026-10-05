@@ -244,7 +244,7 @@ function PrivacyCenterPage({ session }: { session: Session }) {
             ) : null}
 
             <div className="flex justify-end">
-              <Button type="submit" variant="ink" className="w-full sm:w-auto" disabled={isSubmittingPrivacyRequest}>
+              <Button type="submit" variant="tara" className="w-full sm:w-auto" disabled={isSubmittingPrivacyRequest}>
                 {isSubmittingPrivacyRequest ? 'Submitting…' : 'Submit request'}
               </Button>
             </div>

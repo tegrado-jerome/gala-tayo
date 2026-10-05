@@ -48,7 +48,7 @@
 .pd-float-btn:hover { background: var(--fill); }
 
 /* ---------- All photos view ---------- */
-.pd-photos { position: fixed; inset: 0; z-index: 7200; display: flex; flex-direction: column; background: var(--surface); animation: g-fade var(--t) var(--ease-g); }
+.pd-photos { position: fixed; inset: 0; z-index: 7200; display: flex; flex-direction: column; background: var(--paper); animation: g-fade var(--t) var(--ease-g); }
 .pd-photos-bar { display: flex; align-items: center; gap: 8px; height: 60px; padding: 0 8px; padding-top: env(safe-area-inset-top, 0px); border-bottom: 1px solid var(--line-2); flex: 0 0 auto; }
 .pd-photos-bar h2 { flex: 1; min-width: 0; text-align: center; }
 .pd-photos-body { flex: 1; overflow-y: auto; overscroll-behavior: contain; }

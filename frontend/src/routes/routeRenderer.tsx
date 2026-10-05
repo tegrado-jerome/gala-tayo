@@ -48,6 +48,7 @@ const PlacesIndexPage = lazy(() => import('../pages/PlacesIndexPage'))
 const PlaceCategoriesIndexPage = lazy(() => import('../pages/PlaceCategoriesIndexPage'))
 const CategoryPlacesPage = lazy(() => import('../pages/CategoryPlacesPage'))
 const SeoLandingPage = lazy(() => import('../pages/SeoLandingPage'))
+const GuidesIndexPage = lazy(() => import('../pages/GuidesIndexPage'))
 const MfaVerifyPage = lazy(() => import('../pages/MfaVerifyPage'))
 const AdminDashboard = lazy(() => import('../pages/admin/Dashboard'))
 const AdminPlaceImagesPage = lazy(() => import('../pages/admin/PlaceImagesPage'))
@@ -286,6 +287,8 @@ function renderRouteContent(descriptor: RouteDescriptor, inputs: RouteInputs) {
       return <PlacesIndexPage />
     case 'place-categories-index':
       return <PlaceCategoriesIndexPage />
+    case 'guides-index':
+      return <GuidesIndexPage />
     case 'seo-landing':
       return <SeoLandingPage slug={descriptor.slug} navigationSource={navigationSource} />
     case 'category-places':
