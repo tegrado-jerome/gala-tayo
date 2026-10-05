@@ -60,8 +60,13 @@ function AboutPage() {
                 <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">About</p>
                 <h1 className="mt-2 text-3xl font-black leading-tight text-slate-950 sm:text-4xl">About GalaTayo</h1>
                 <p className="mt-4 text-sm font-semibold leading-7 text-slate-700">
-                  GalaTayo is a Metro Manila place discovery and planning app built to help people find hangout spots, browse public place pages,
-                  and map out their next gala.
+                  GalaTayo, also written Gala Tayo, is a Metro Manila place discovery and planning app built to help people find hangout
+                  spots, browse public place pages, and map out their next gala.
+                </p>
+                <p className="mt-3 text-sm font-semibold leading-7 text-slate-700">
+                  The name comes from the Filipino phrase "gala tayo", which means "let's go out". GalaTayo launched in July 2026 and is
+                  built in the Philippines. It is free to use, and every place page is public so you can share it with the barkada without
+                  signing in.
                 </p>
               </div>
             </header>

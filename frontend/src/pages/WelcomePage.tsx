@@ -4,8 +4,9 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import SeoHead from '../components/SeoHead'
 import { navigateToPath } from '../utils/navigation'
 import type { NavigationSource } from '../utils/navigationLoading'
-import { getPublicSiteOrigin } from '../utils/site'
-import { BRAND_NAME, PRODUCT_NAME } from '../utils/seoLandingPages'
+import InternalLink from '../components/InternalLink'
+import { BRAND_NAME, SEO_LANDING_TARGETS, buildBrandJsonLd } from '../utils/seoLandingPages'
+import { metroManilaAreas } from '../data/metroManilaAreas'
 
 type WelcomeAsset = {
   src: string
@@ -211,26 +212,7 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
           url: '/images/welcome/laptop-desktop.webp',
           alt: 'Metro Manila welcome scene on GalaTayo',
         }}
-        jsonLd={[
-          {
-            '@context': 'https://schema.org',
-            '@type': 'WebSite',
-            name: PRODUCT_NAME,
-            url: `${getPublicSiteOrigin()}/`,
-            potentialAction: {
-              '@type': 'SearchAction',
-              target: `${getPublicSiteOrigin()}/search?q={search_term_string}`,
-              'query-input': 'required name=search_term_string',
-            },
-          },
-          {
-            '@context': 'https://schema.org',
-            '@type': 'Organization',
-            name: BRAND_NAME,
-            url: `${getPublicSiteOrigin()}/`,
-            logo: `${getPublicSiteOrigin()}/favicon.png`,
-          },
-        ]}
+        jsonLd={buildBrandJsonLd()}
       />
       <main
         className={`welcome-page${isReady ? ' is-ready' : ' is-loading'}`}
@@ -287,6 +269,45 @@ function WelcomePage({ navigationSource = 'push' }: WelcomePageProps) {
         </section>
         {!isReady && <WelcomeLoader />}
       </main>
+      <section className="welcome-intro" aria-labelledby="welcome-intro-title">
+        <div className="welcome-intro__inner">
+          <h2 id="welcome-intro-title" className="welcome-intro__title">
+            What is Gala Tayo?
+          </h2>
+          <p className="welcome-intro__lead">
+            Gala Tayo (written GalaTayo) is a free Metro Manila place discovery app. "Gala tayo" is Filipino for "let's go out",
+            and that is the whole idea: find a place, invite the barkada, and go.
+          </p>
+          <p className="welcome-intro__body">
+            Every place page lists the city, category, budget range, best time to visit, who it suits, commute and parking notes,
+            and common questions. You can browse by city or category, read curated guides, or ask the AI planner for a
+            full-day itinerary with a budget.
+          </p>
+
+          <h3 className="welcome-intro__subtitle">Browse by city</h3>
+          <ul className="welcome-intro__links">
+            {metroManilaAreas.map((area) => (
+              <li key={area.slug}>
+                <InternalLink href={`/places/${area.slug}`}>{area.name}</InternalLink>
+              </li>
+            ))}
+          </ul>
+
+          <h3 className="welcome-intro__subtitle">Popular guides</h3>
+          <ul className="welcome-intro__links">
+            {SEO_LANDING_TARGETS.map((target) => (
+              <li key={target.slug}>
+                <InternalLink href={`/guides/${target.slug}`}>{target.label}</InternalLink>
+              </li>
+            ))}
+          </ul>
+
+          <p className="welcome-intro__footnote">
+            {BRAND_NAME} is built in the Philippines for people planning dates, barkada hangouts, family outings, and solo
+            gala days across Metro Manila. <InternalLink href="/about">Read more about Gala Tayo</InternalLink>.
+          </p>
+        </div>
+      </section>
     </>
   )
 }

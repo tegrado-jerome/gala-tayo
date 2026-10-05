@@ -6289,3 +6289,74 @@ body.feature-guide-open nav[aria-label="Primary"] {
     transition: none !important;
   }
 }
+
+.welcome-intro {
+  background: var(--bg);
+  color: var(--text-main);
+  padding: clamp(40px, 8vw, 72px) 16px;
+}
+
+.welcome-intro__inner {
+  max-width: 44rem;
+  margin: 0 auto;
+}
+
+.welcome-intro__title {
+  margin: 0;
+  font-size: clamp(1.625rem, 5vw, 2.125rem);
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.welcome-intro__lead {
+  margin: 18px 0 0;
+  font-size: 1.0625rem;
+  line-height: 1.6;
+}
+
+.welcome-intro__body,
+.welcome-intro__footnote {
+  margin: 14px 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--text-muted, #475569);
+}
+
+.welcome-intro__subtitle {
+  margin: 28px 0 0;
+  font-size: 1.0625rem;
+  font-weight: 800;
+}
+
+.welcome-intro__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.welcome-intro__links a {
+  display: inline-block;
+  padding: 6px 12px;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: inherit;
+  text-decoration: none;
+}
+
+.welcome-intro__links a:hover,
+.welcome-intro__footnote a:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.welcome-intro__footnote a {
+  color: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+}

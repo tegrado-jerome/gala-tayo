@@ -1,5 +1,6 @@
 import { getAreaLabelBySlug } from '../data/metroManilaAreas'
 import { getPlaceCategoryLabel } from '../data/placeCategories'
+import { getPublicSiteOrigin } from './site'
 
 type SeoLandingTarget = {
   slug: string
@@ -23,7 +24,42 @@ type SeoLandingMetadata = {
 }
 
 const BRAND_NAME = 'GalaTayo'
+const BRAND_ALTERNATE_NAME = 'Gala Tayo'
 const PRODUCT_NAME = 'GalaTayo'
+const BRAND_DESCRIPTION =
+  'GalaTayo (Gala Tayo) is a Metro Manila place discovery and planning app. Browse places by city, category, budget, and vibe, then plan your next gala with friends.'
+
+function buildBrandJsonLd() {
+  const origin = getPublicSiteOrigin()
+  return [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      '@id': `${origin}/#website`,
+      name: PRODUCT_NAME,
+      alternateName: BRAND_ALTERNATE_NAME,
+      url: `${origin}/`,
+      inLanguage: 'en-PH',
+      publisher: { '@id': `${origin}/#organization` },
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: `${origin}/search?q={search_term_string}`,
+        'query-input': 'required name=search_term_string',
+      },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'Organization',
+      '@id': `${origin}/#organization`,
+      name: BRAND_NAME,
+      alternateName: BRAND_ALTERNATE_NAME,
+      description: BRAND_DESCRIPTION,
+      url: `${origin}/`,
+      logo: `${origin}/favicon.png`,
+      areaServed: { '@type': 'Place', name: 'Metro Manila, Philippines' },
+    },
+  ]
+}
 
 const SEO_LANDING_TARGETS: SeoLandingTarget[] = [
   {
@@ -283,8 +319,11 @@ function buildLandingMetadata(target: SeoLandingTarget): SeoLandingMetadata {
 }
 
 export {
+  BRAND_ALTERNATE_NAME,
+  BRAND_DESCRIPTION,
   BRAND_NAME,
   PRODUCT_NAME,
+  buildBrandJsonLd,
   SEO_LANDING_TARGETS,
   buildLandingMetadata,
   getLandingPath,
