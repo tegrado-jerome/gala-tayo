@@ -36,10 +36,13 @@ function FitBounds({ points }: { points: LatLngTuple[] }) {
   useEffect(() => {
     if (points.length === 0) return
     const fit = () => {
-      // A map mounted while hidden or mid-layout measures 0px and would fit to a far-out zoom; re-measure first.
-      map.invalidateSize()
-      if (points.length === 1) map.setView(points[0], 15)
-      else map.fitBounds(points, { padding: [36, 36], maxZoom: 16 })
+      const container = map.getContainer()
+      // Skip while detached or 0px tall; Leaflet throws (_leaflet_pos) if it pans a map that is gone.
+      if (!container.isConnected || container.clientHeight === 0) return
+      // A map mounted mid-layout measures the wrong size and would fit to a far-out zoom; re-measure first.
+      map.invalidateSize({ pan: false })
+      if (points.length === 1) map.setView(points[0], 15, { animate: false })
+      else map.fitBounds(points, { padding: [36, 36], maxZoom: 16, animate: false })
     }
     fit()
     const observer = new ResizeObserver(fit)
