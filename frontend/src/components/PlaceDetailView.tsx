@@ -26,7 +26,7 @@ import { MemberAvatar } from './place-detail/MemberAvatar'
 import CheckInButton from './place-detail/CheckInButton'
 import { getSulitLevel } from './place-detail/SulitMeter'
 import { GoodForList } from './place-detail/GoodForList'
-import { displayCityName } from '../utils/cityName'
+import { formatPlaceLocation } from '../utils/placeLocation'
 import { cleanString, titleCase, uniqueList, isAcceptedContributionImage, contributionImageErrorMessage, parseJsonResponse } from './place-detail/helpers'
 import type { PlaceDetailViewProps, PlaceReview, PlaceReviewsResponse, PlaceComment, PlaceCommentsResponse, PlaceImageContributionResponse, PlaceDetailCommunityCache } from './place-detail/types'
 
@@ -379,6 +379,33 @@ function PlacePhoto({
         <ImageSourceInfo />
       </div>
     </div>
+  )
+}
+
+function ReadMoreText({ text }: { text: string }) {
+  const textRef = useRef<HTMLParagraphElement | null>(null)
+  const [isExpanded, setIsExpanded] = useState(false)
+  const [isClamped, setIsClamped] = useState(false)
+
+  useEffect(() => {
+    const element = textRef.current
+    if (!element || isExpanded) return
+    const observer = new ResizeObserver(() => setIsClamped(element.scrollHeight > element.clientHeight + 1))
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [text, isExpanded])
+
+  return (
+    <>
+      <p ref={textRef} className={cx('max-w-[640px] text-[15px] leading-relaxed', !isExpanded && 'line-clamp-4')}>
+        {text}
+      </p>
+      {isClamped || isExpanded ? (
+        <Button variant="text" size="sm" aria-expanded={isExpanded} onClick={() => setIsExpanded((value) => !value)}>
+          {isExpanded ? 'Show less' : 'Read more'}
+        </Button>
+      ) : null}
+    </>
   )
 }
 
@@ -772,7 +799,7 @@ function PlaceDetailView({
     cleanString(place.city) ||
     'Not available'
   const categoryLabel = cleanString(place.category) || 'Place'
-  const locationLabel = cleanString(place.localArea) || cleanString(place.area) || cleanString(place.city) || 'Metro Manila'
+  const locationLabel = formatPlaceLocation({ area: cleanString(place.localArea) || cleanString(place.area), city: cleanString(place.city) }) || 'Metro Manila'
   const goodFor = uniqueList(place.good_for ?? [])
   const priceBadgeLabel = buildPriceBadgeLabel(place.budget_min, place.price_level, place.budget_notes, place.category, place.name)
   const directionsUrl = getDirectionsUrl(place)
@@ -2232,9 +2259,11 @@ function PlaceDetailView({
                   : 'Tap a star to rate this place.'}
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                <Button variant="ink" size="sm" onClick={() => void handleSubmitReview()} disabled={isReviewSubmitting || isReviewDeleting || reviewRating < 1}>
-                  {isReviewSubmitting ? 'Saving…' : 'Save rating'}
-                </Button>
+                {reviewRating > 0 ? (
+                  <Button variant="ink" size="sm" onClick={() => void handleSubmitReview()} disabled={isReviewSubmitting || isReviewDeleting}>
+                    {isReviewSubmitting ? 'Saving…' : 'Save rating'}
+                  </Button>
+                ) : null}
                 {hasCurrentUserReview ? (
                   <Button
                     variant="text"
@@ -2321,11 +2350,13 @@ function PlaceDetailView({
                 className="g-input"
                 style={{ minHeight: isCommentComposerFocused || commentBody.trim() ? 96 : 52 }}
               />
-              <div className="mt-2 flex justify-end">
-                <Button variant="ink" size="sm" onClick={() => void handleSubmitComment()} disabled={isCommentSubmitting || !commentBody.trim()}>
-                  {isCommentSubmitting ? 'Posting…' : 'Comment'}
-                </Button>
-              </div>
+              {commentBody.trim() || isCommentSubmitting ? (
+                <div className="mt-2 flex justify-end">
+                  <Button variant="ink" size="sm" onClick={() => void handleSubmitComment()} disabled={isCommentSubmitting}>
+                    {isCommentSubmitting ? 'Posting…' : 'Comment'}
+                  </Button>
+                </div>
+              ) : null}
             </div>
           </div>
         ) : null}
@@ -2388,7 +2419,7 @@ function PlaceDetailView({
       </div>
       <p className="g-mut mt-1.5 flex flex-wrap items-center gap-x-2">
         <span>
-          {[categoryLabel, displayCityName(locationLabel)].filter(Boolean).join(' · ')}
+          {[categoryLabel, locationLabel].filter(Boolean).join(' · ')}
           {headlineReviewCount >= MIN_RATINGS_TO_SHOW ? (
             <>
               {' · '}
@@ -2444,13 +2475,13 @@ function PlaceDetailView({
 
           <section className={sectionClassName}>
             <SectionHead className={sectionHeadClassName} title="About" />
-            <p className="max-w-[640px] text-[15px] leading-relaxed">{quickTake}</p>
+            <ReadMoreText text={quickTake} />
             {factItems.length > 0 ? (
               <div className="mt-3 max-w-[640px]">
                 <KeyValue items={factItems} />
               </div>
             ) : null}
-            {budgetNotes ? <p className="g-xs g-mut mt-2 max-w-[640px] leading-relaxed">{budgetNotes}</p> : null}
+            {budgetNotes ? <p className="g-xs g-mut mt-2">Prices can change — check before you go.</p> : null}
             <Button variant="text" size="sm" className="mt-2" onClick={() => openFloatingChat(askAiQuestion)}>
               <Sparkles aria-hidden="true" />
               Ask AI about this place

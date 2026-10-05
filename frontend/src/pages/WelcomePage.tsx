@@ -24,14 +24,16 @@ const heroImageUrl = getPlaceImageCandidates(heroPlace)[0]
 
 function Step({ n, title, body, art }: { n: number; title: string; body: string; art: ReactNode }) {
   return (
-    <li className="min-w-0 shrink-0 basis-[72%] snap-start md:basis-auto">
-      <div className="g-card grid h-[180px] place-items-center overflow-hidden p-3 md:h-[220px]" aria-hidden="true">
-        {art}
+    <li className="flex min-w-0 items-center gap-4 md:block">
+      <div className="g-card grid h-24 w-24 shrink-0 grid-cols-[minmax(0,1fr)] place-items-center overflow-hidden md:h-[220px] md:w-auto" aria-hidden="true">
+        <div className="w-max scale-[0.5] md:scale-100">{art}</div>
       </div>
-      <p className="mt-3 text-[17px] font-semibold leading-snug">
-        {n}. {title}
-      </p>
-      <p className="g-mut mt-1 text-[15px]">{body}</p>
+      <div className="min-w-0">
+        <p className="text-[17px] font-semibold leading-snug md:mt-3">
+          {n}. {title}
+        </p>
+        <p className="g-mut mt-1 text-[15px]">{body}</p>
+      </div>
     </li>
   )
 }
@@ -76,7 +78,9 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
             style={{ background: 'linear-gradient(180deg, rgba(26,25,23,0) 30%, rgba(26,25,23,.78) 100%), rgba(26,25,23,.15)' }}
           />
           <div className="relative max-w-[640px] px-4 pb-7 text-left text-white md:px-10 md:pb-20">
-            <p className="text-[12px] font-semibold uppercase tracking-[0.04em] text-white/80">Metro Manila</p>
+            <p className="text-[12px] font-semibold uppercase tracking-[0.04em] text-white/80" style={{ textShadow: '0 1px 2px rgba(0,0,0,.4)' }}>
+              Metro Manila
+            </p>
             <h1 className="g-d1 mt-3">Gala tayo. Kami na sa plano.</h1>
             <p className="mt-3 text-[17px] text-white/85">Find the place, vote on the date, split the bill.</p>
             <div className="mt-5 flex flex-wrap items-center gap-3">
@@ -106,7 +110,7 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
         </Rail>
 
         <SectionHead title="Less chasing, more gala" sub="One link for the whole barkada" />
-        <ol className="-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 [scrollbar-width:none] md:mx-0 md:grid md:grid-cols-3 md:gap-6 md:overflow-visible md:px-0">
+        <ol className="flex flex-col gap-3 md:grid md:grid-cols-3 md:gap-6">
           <Step
             n={1}
             title="Plan"

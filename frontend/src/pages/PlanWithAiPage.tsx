@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
-import { ArrowDown, ArrowRight, ArrowUp, Check, Minus, Plus, X } from 'lucide-react'
+import { ArrowDown, ArrowRight, ArrowUp, Check, ChevronRight, CloudRain, Clapperboard, Minus, Plus, Sunset, Trees, X } from 'lucide-react'
 import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
 import AskAiUsagePill from '../components/AskAiUsagePill'
 import InternalLink from '../components/InternalLink'
 import GtMap, { type MapPoint } from '../components/ui/GtMap'
-import { Button, Chip, KeyValue, Page, SectionHead, Skeleton, Tag } from '../components/ui'
+import { Button, KeyValue, Page, SectionHead, Skeleton, Tag } from '../components/ui'
 import { useAppUser } from '../context/AppUserContext'
 import {
   composeGalaPlanDescription,
@@ -21,9 +21,10 @@ import { resolveAreaMeta } from '../utils/seo'
 type Status = 'idle' | 'building' | 'ready' | 'saving' | 'error'
 
 const examplePrompts = [
-  { label: 'Sunday in Manila, ₱800 each', prompt: 'Relaxed Sunday in Manila for 4, ₱800 each, ending at sunset' },
-  { label: 'BGC dinner and a movie', prompt: 'Dinner and a movie in BGC for two, ₱2,000 budget' },
-  { label: 'Rainy day in Makati', prompt: 'Rainy day in Makati: a museum, then a cafe' },
+  { icon: CloudRain, title: 'Rainy Saturday in Makati', detail: 'Indoor, ₱1k each', prompt: 'Rainy Saturday in Makati for 4, indoor spots only, ₱1,000 each' },
+  { icon: Sunset, title: 'Sunday in Manila', detail: 'Museums to sunset, ₱800 each', prompt: 'Relaxed Sunday in Manila for 4, ₱800 each, ending at sunset' },
+  { icon: Clapperboard, title: 'BGC date night', detail: 'Dinner and a movie for two, ₱2k', prompt: 'Dinner and a movie in BGC for two, ₱2,000 budget' },
+  { icon: Trees, title: 'Barkada day in QC', detail: 'Parks and a food trip for 6, ₱600 each', prompt: 'Barkada day in Quezon City for 6: a park, then a food trip, ₱600 each' },
 ]
 
 function describeLeg(leg: TravelLeg) {
@@ -210,35 +211,54 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
           rows={3}
           placeholder="Chill Saturday for 6 in Makati, ₱1k each, indoor if rain"
         />
-        <div className="g-ai-bar mt-3">
-          {examplePrompts.map((example) => (
-            <Chip
-              key={example.label}
-              disabled={status === 'building'}
-              onClick={() => {
-                setPrompt(example.prompt)
-                void build(example.prompt)
-              }}
-            >
-              {example.label}
-            </Chip>
-          ))}
-          <span className="ml-auto flex items-center gap-3">
-            {usage ? <AskAiUsagePill usageStatus={usage} /> : null}
+        <div className="g-ai-bar mt-3 min-h-9 justify-end gap-3">
+          {usage ? <AskAiUsagePill usageStatus={usage} /> : null}
+          {prompt.trim() || status === 'building' ? (
             <Button
               type="submit"
               variant="ink"
               size="sm"
               iconOnly
               loading={status === 'building'}
-              disabled={status === 'building' || !prompt.trim()}
+              disabled={status === 'building'}
               aria-label={draft ? 'Rebuild plan' : 'Build plan'}
             >
               <ArrowRight aria-hidden="true" />
             </Button>
-          </span>
+          ) : null}
         </div>
       </form>
+
+      {!draft && status !== 'building' ? (
+        <section className="mt-8">
+          <h2 className="g-h3">Try one of these</h2>
+          <div className="g-group mt-3">
+            {examplePrompts.map((example) => {
+              const ExampleIcon = example.icon
+              return (
+                <button
+                  key={example.title}
+                  type="button"
+                  className="g-group-row py-3"
+                  onClick={() => {
+                    setPrompt(example.prompt)
+                    void build(example.prompt)
+                  }}
+                >
+                  <ExampleIcon aria-hidden="true" />
+                  <span className="min-w-0">
+                    <span className="block">{example.title}</span>
+                    <span className="g-sm g-mut block truncate">{example.detail}</span>
+                  </span>
+                  <span className="g-group-end">
+                    <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </section>
+      ) : null}
 
       {error ? (
         <p role="alert" className="g-sm mt-4 rounded-[var(--r-3)] bg-[var(--bad-soft)] px-4 py-3 text-[var(--bad)]">
@@ -285,7 +305,11 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
                 const href = getCanonicalPlacePath({ areaSlug: resolveAreaMeta(stop.place).slug, placeSlug: stop.place.slug })
 
                 return (
-                  <li key={stop.place_id} className="grid grid-cols-[64px_minmax(0,1fr)_auto] items-start gap-2 py-2 text-[14px]">
+                  <li
+                    key={stop.place_id}
+                    className="grid grid-cols-[64px_minmax(0,1fr)_auto] items-start gap-2 py-2 text-[14px] motion-safe:animate-[g-up_320ms_var(--ease-g)_both]"
+                    style={{ animationDelay: `${index * 70}ms` }}
+                  >
                     <b className="pt-0.5">{stop.time ? formatTime24(stop.time) : `Stop ${index + 1}`}</b>
                     <div className="min-w-0">
                       <InternalLink href={href} className="hover:underline">

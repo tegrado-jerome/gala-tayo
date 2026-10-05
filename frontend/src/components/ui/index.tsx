@@ -1,6 +1,7 @@
 import { useEffect, type ButtonHTMLAttributes, type CSSProperties, type HTMLAttributes, type MouseEvent, type ReactNode } from 'react'
 import { Heart, MapPin, type LucideIcon } from 'lucide-react'
 import InternalLink from '../InternalLink'
+import { formatPlaceCardMeta } from '../../utils/placeLocation'
 
 export function cx(...values: Array<string | false | null | undefined>) {
   return values.filter(Boolean).join(' ')
@@ -72,10 +73,17 @@ export function SectionHead({ title, sub, action, className, as: Heading = 'h2' 
   )
 }
 
+/** First letters of the first two words, else the first two letters. */
+function getInitials(name?: string | null) {
+  const words = (name ?? '').trim().split(/\s+/).filter(Boolean)
+  const initials = words.length > 1 ? words[0].charAt(0) + words[1].charAt(0) : (words[0] ?? '').slice(0, 2)
+  return initials.toUpperCase() || '?'
+}
+
 export function Avatar({ src, name, size = 28, className }: { src?: string | null; name?: string | null; size?: number; className?: string }) {
   const style: CSSProperties = { width: size, height: size }
   if (src) return <img className={cx('g-av', className)} style={style} src={src} alt={name ?? ''} loading="lazy" />
-  const initials = (name ?? '').trim().split(/\s+/).slice(0, 2).map((word) => word.charAt(0).toUpperCase()).join('') || '?'
+  const initials = getInitials(name)
   return (
     <span
       className={cx('g-av', 'grid place-items-center font-semibold', className)}
@@ -141,6 +149,9 @@ export type PlaceCardProps = {
   imageUrl?: string | null
   icon?: LucideIcon
   meta?: ReactNode
+  category?: string | null
+  area?: string | null
+  city?: string | null
   rating?: number | null
   reviewCount?: number | null
   tint?: PlaceCardTint
@@ -160,10 +171,12 @@ const clampTwoLines: CSSProperties = { display: '-webkit-box', WebkitLineClamp: 
 
 /**
  * `pricePerHead` "Free" renders as "Free entry". A "Sulit" tag shows only for great value (score 8+ of 10).
+ * Without `meta`, the meta line is built from `category`, `area` and `city` as "Category · Area, City".
  * The rating hides when `reviewCount` is known and under 3. The tinted icon sits under the image, so loading or failed media is never a grey box.
  */
-export function PlaceCard({ href, title, imageUrl, icon: FallbackIcon = MapPin, meta, rating, reviewCount, tint = 'warn', pricePerHead, sulit, flag, saved, onToggleSave, className }: PlaceCardProps) {
+export function PlaceCard({ href, title, imageUrl, icon: FallbackIcon = MapPin, meta, category, area, city, rating, reviewCount, tint = 'warn', pricePerHead, sulit, flag, saved, onToggleSave, className }: PlaceCardProps) {
   const isFree = pricePerHead === 'Free'
+  const metaLine = meta ?? (formatPlaceCardMeta({ category, area, city }) || null)
   const price = pricePerHead ? (isFree ? 'Free entry' : `${pricePerHead}/head`) : null
   const showSulit = !isFree && sulit != null && sulit >= 8
   const shownRating = rating && (reviewCount == null || reviewCount >= 3) ? rating : null
@@ -194,7 +207,7 @@ export function PlaceCard({ href, title, imageUrl, icon: FallbackIcon = MapPin, 
       <div className="g-pc-title">
         <span className="g-h3" style={clampTwoLines}>{title}</span>
       </div>
-      {meta ? <div className="g-pc-meta">{meta}</div> : null}
+      {metaLine ? <div className="g-pc-meta" title={typeof metaLine === 'string' ? metaLine : undefined}>{metaLine}</div> : null}
       {price || shownRating || showSulit ? (
         <div className="g-sulit">
           {price ? <b>{price}</b> : null}

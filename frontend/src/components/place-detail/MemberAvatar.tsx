@@ -1,16 +1,6 @@
 import { useState } from 'react'
+import { Avatar } from '../ui'
 import { cleanString } from './helpers'
-
-function getInitials(label: string) {
-  const initials = label
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part.charAt(0).toUpperCase())
-    .join('')
-
-  return initials || 'GT'
-}
 
 export function MemberAvatar({
   displayName,
@@ -42,15 +32,7 @@ export function MemberAvatar({
     )
   }
 
-  return (
-    <span
-      className="g-av grid place-items-center font-semibold text-[var(--ink-2)]"
-      style={{ width: size, height: size, fontSize: Math.round(size * 0.36) }}
-      aria-hidden="true"
-    >
-      {getInitials(displayName)}
-    </span>
-  )
+  return <Avatar name={displayName} size={size} />
 }
 
 export default MemberAvatar

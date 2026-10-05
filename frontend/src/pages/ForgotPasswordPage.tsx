@@ -120,7 +120,7 @@ function ForgotPasswordPage() {
 
         {error ? <AuthNotice tone="bad">{error}</AuthNotice> : null}
 
-        <Button type="submit" variant="ink" block disabled={isSubmitDisabled}>
+        <Button type="submit" variant="tara" block disabled={isSubmitDisabled}>
           {isSubmitting ? 'Sending...' : 'Send reset link'}
         </Button>
       </form>

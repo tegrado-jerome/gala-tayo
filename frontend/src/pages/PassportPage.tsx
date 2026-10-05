@@ -12,6 +12,15 @@ const STAMP_GRID = 'grid grid-cols-3 justify-items-center gap-x-2 gap-y-5 md:gri
 const PHONE_LOCKED_PREVIEW = 8
 const STREAK_WEEKS_SHOWN = 8
 const DAY_MS = 24 * 60 * 60 * 1000
+const SEEN_STAMP_KEY = 'galatayo-passport-seen-stamp'
+
+function readSeenStamp() {
+  try {
+    return localStorage.getItem(SEEN_STAMP_KEY)
+  } catch {
+    return null
+  }
+}
 
 function plural(count: number, word: string, many = `${word}s`) {
   return `${count} ${count === 1 ? word : many}`
@@ -24,16 +33,16 @@ function shortDate(value: string) {
 type StampKind = 'newest' | 'collected' | 'locked'
 
 const STAMP_STYLE: Record<StampKind, CSSProperties> = {
-  locked: { border: '1px solid var(--line)', color: 'var(--ink-3)' },
+  locked: { border: '1px dashed color-mix(in srgb, var(--ink-3) 30%, transparent)', color: 'var(--ink-3)' },
   collected: { border: '2px solid var(--sea)', color: 'var(--sea)', transform: 'rotate(-8deg)' },
-  newest: { border: '2px solid var(--sea)', background: 'var(--sea)', color: 'var(--surface)', transform: 'rotate(6deg)' },
+  newest: { border: '2px solid var(--sea)', background: 'var(--sea)', color: 'var(--surface)', transform: 'rotate(6deg)', '--g-rot': '6deg' } as CSSProperties,
 }
 
-function CityStampBadge({ stamp, kind, className }: { stamp: CityStamp; kind: StampKind; className?: string }) {
+function CityStampBadge({ stamp, kind, press, className }: { stamp: CityStamp; kind: StampKind; press?: boolean; className?: string }) {
   const sub = kind === 'locked' ? null : stamp.first_checkin_at ? shortDate(stamp.first_checkin_at) : plural(stamp.places, 'spot')
   return (
     <div
-      className={cx('grid h-24 w-24 shrink-0 place-items-center rounded-full p-1 text-center', className)}
+      className={cx('grid h-24 w-24 shrink-0 place-items-center rounded-full p-1 text-center', press && 'g-press', className)}
       style={STAMP_STYLE[kind]}
       aria-label={`${stamp.city}, ${sub ? `collected ${sub}` : 'not collected yet'}`}
       role="img"
@@ -96,6 +105,16 @@ function PassportPage({ session }: { session: Session }) {
     [stamps],
   )
   const hasStamps = (passport?.recent.length ?? 0) > 0
+  const [seenStamp] = useState(readSeenStamp)
+
+  useEffect(() => {
+    if (!newestCity) return
+    try {
+      localStorage.setItem(SEEN_STAMP_KEY, newestCity)
+    } catch {
+      // Storage can be unavailable in private browsing; the press then replays next visit.
+    }
+  }, [newestCity])
 
   return (
     <Page>
@@ -167,6 +186,7 @@ function PassportPage({ session }: { session: Session }) {
                       key={stamp.city}
                       stamp={stamp}
                       kind={!stamp.collected ? 'locked' : stamp.city === newestCity ? 'newest' : 'collected'}
+                      press={stamp.city === newestCity && newestCity !== seenStamp}
                       className={hideOnPhone ? 'max-md:hidden' : undefined}
                     />
                   )
@@ -179,28 +199,6 @@ function PassportPage({ session }: { session: Session }) {
                   </Button>
                 </div>
               ) : null}
-
-              <SectionHead title="Recent stamps" />
-              {hasStamps ? (
-                <div className="g-list">
-                  {passport.recent.map((checkin) => {
-                    const when = new Date(checkin.created_at).toLocaleString('en', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
-                    return (
-                      <Row key={`${checkin.place_id}-${checkin.created_at}`} href={checkin.slug ? `/places/${encodeURIComponent(checkin.slug)}` : undefined}>
-                        <div className="g-h3 truncate">{checkin.name}</div>
-                        <div className="g-sm g-mut truncate">{[checkin.city, when].filter(Boolean).join(' · ')}</div>
-                        {firstCheckins.has(checkin.created_at) ? <span className="g-tag is-sea mt-1">New city</span> : null}
-                      </Row>
-                    )
-                  })}
-                </div>
-              ) : (
-                <Empty
-                  title="Wala pang stamps."
-                  description="Open a place when you're there and tap “I'm here”."
-                  action={<Button variant="tara" href="/search">Find a spot</Button>}
-                />
-              )}
             </div>
 
             <aside className="g-side">
@@ -215,6 +213,30 @@ function PassportPage({ session }: { session: Session }) {
                   <p className="g-xs g-mut -mt-2 text-center">Open the spot you're at and tap “I'm here”. Works only when you're there.</p>
                 </>
               ) : null}
+
+              <section className="min-w-0">
+                <SectionHead title="Recent stamps" className="lg:!mt-2" />
+                {hasStamps ? (
+                  <div className="g-list">
+                    {passport.recent.map((checkin) => {
+                      const when = new Date(checkin.created_at).toLocaleString('en', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+                      return (
+                        <Row key={`${checkin.place_id}-${checkin.created_at}`} href={checkin.slug ? `/places/${encodeURIComponent(checkin.slug)}` : undefined}>
+                          <div className="g-h3 truncate">{checkin.name}</div>
+                          <div className="g-sm g-mut truncate">{[checkin.city, when].filter(Boolean).join(' · ')}</div>
+                          {firstCheckins.has(checkin.created_at) ? <span className="g-tag is-sea mt-1">New city</span> : null}
+                        </Row>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <Empty
+                    title="Wala pang stamps."
+                    description="Open a place when you're there and tap “I'm here”."
+                    action={<Button variant="tara" href="/search">Find a spot</Button>}
+                  />
+                )}
+              </section>
             </aside>
           </div>
         </>
