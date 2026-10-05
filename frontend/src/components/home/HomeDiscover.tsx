@@ -16,7 +16,7 @@ import { fetchHomePlaceDetailsBatch } from '../../utils/placeDetailCache'
 
 const FOR_YOU = 'for-you'
 // Everyday picks first, niche ones last.
-const TAB_ORDER = ['food', 'cafe', 'park', 'museum', 'heritage', 'mall', 'nightlife', 'cinema', 'activity', 'hotel']
+const TAB_ORDER = ['food', 'cafe', 'park', 'museum', 'heritage', 'mall', 'nightlife', 'activity', 'hotel']
 
 // Airbnb-style icon tabs. "For you" shows the curated rails; a category shows its own grid.
 const tabs = [

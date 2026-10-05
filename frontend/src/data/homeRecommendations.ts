@@ -1,4 +1,5 @@
 import { normalizePlaceSlug } from './curatedPlaceImages'
+import galaWorthy from './galaWorthy.json'
 import { getStaticPlaceImageUrlForSlug } from './placeIndexVisuals'
 
 type HomeRecommendationPlace = {
@@ -124,8 +125,8 @@ const homeFeaturedPlaces = homePopularTopPickPlaces
 
 const homeCityRecommendations: HomeRecommendationTile[] = [
   { label: 'Caloocan', place: createRecommendationPlace({ name: 'Caloocan City People’s Park', city: 'Caloocan' }) },
-  { label: 'Las Piñas', place: createRecommendationPlace({ name: 'SM Southmall', city: 'Las Piñas' }) },
-  { label: 'Makati', place: createRecommendationPlace({ name: 'Glorietta', city: 'Makati' }) },
+  { label: 'Las Piñas', place: createRecommendationPlace({ name: 'St. Joseph Parish Bamboo Organ Church', city: 'Las Piñas' }) },
+  { label: 'Makati', place: createRecommendationPlace({ name: 'Ayala Triangle Gardens', city: 'Makati' }) },
   { label: 'Malabon', place: createRecommendationPlace({ name: 'Malabon Zoo, Aquarium and Botanical Garden', city: 'Malabon' }) },
   { label: 'Mandaluyong', place: createRecommendationPlace({ name: 'Shangri-La Plaza', city: 'Mandaluyong' }) },
   { label: 'Manila', place: createRecommendationPlace({ name: 'Intramuros', city: 'Manila' }) },
@@ -166,13 +167,25 @@ const homeCategoryRecommendations: HomeRecommendationTile[] = [
   },
 ]
 
+// Only gala-worthy places are recommended; the hidden list comes from the gala-worthy scoring (shared with the backend).
+const hiddenSlugs = new Set((galaWorthy as { hidden: string[] }).hidden)
+const isWorthy = (place: HomeRecommendationPlace) => !hiddenSlugs.has(normalizePlaceSlug(place.slug || place.name))
+const worthyPlaces = (places: HomeRecommendationPlace[]) => places.filter(isWorthy)
+// Cities with no gala-worthy places yet would open an empty page.
+const CITIES_WITHOUT_WORTHY_PLACES = new Set(['Caloocan', 'Malabon', 'Muntinlupa', 'Navotas', 'Pateros', 'Valenzuela'])
+
+const visibleAllTopPickPlaces = worthyPlaces(homeAllTopPickPlaces)
+const visiblePopularTopPickPlaces = worthyPlaces(homePopularTopPickPlaces)
+const visibleRecommendedTopPickPlaces = worthyPlaces(homeRecommendedTopPickPlaces)
+const visibleCityRecommendations = homeCityRecommendations.filter((tile) => !CITIES_WITHOUT_WORTHY_PLACES.has(tile.label))
+
 export {
-  homeAllTopPickPlaces,
+  visibleAllTopPickPlaces as homeAllTopPickPlaces,
   homeCategoryRecommendations,
-  homeCityRecommendations,
+  visibleCityRecommendations as homeCityRecommendations,
   homeFeaturedPlaces,
-  homePopularTopPickPlaces,
-  homeRecommendedTopPickPlaces,
+  visiblePopularTopPickPlaces as homePopularTopPickPlaces,
+  visibleRecommendedTopPickPlaces as homeRecommendedTopPickPlaces,
   createRecommendationPlace,
 }
 export type { HomeRecommendationPlace, HomeRecommendationTile }
