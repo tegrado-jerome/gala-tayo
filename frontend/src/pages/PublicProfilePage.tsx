@@ -200,7 +200,7 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
               </div>
             </div>
 
-            <p className="mt-3 max-w-[60ch]">{loadedProfile.bio || 'No bio yet.'}</p>
+            {loadedProfile.bio ? <p className="mt-3 max-w-[60ch]">{loadedProfile.bio}</p> : null}
             {!loadedProfile.is_public || relationshipState === 'self' ? (
               <p className="g-sm mt-2 flex flex-wrap items-center gap-2">
                 {!loadedProfile.is_public ? (

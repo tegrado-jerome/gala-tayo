@@ -90,7 +90,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
       <Page>
         <BackLink />
         <div aria-label="Loading plan">
-          <Skeleton className="mt-2 aspect-[16/9] lg:aspect-[5/2]" />
+          <Skeleton className="mt-2 aspect-[16/9] lg:aspect-[3/1]" />
           <Skeleton className="mt-6 h-8 w-2/3" />
           <Skeleton className="mt-3 h-4 w-1/2" />
           <Skeleton className="mt-8 h-40" />
@@ -111,7 +111,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
   const meta = [
     date ? date.toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' }) : 'Any day',
     `${plan.place_count} ${plan.place_count === 1 ? 'stop' : 'stops'}`,
-    plan.owner?.username ? `Hosted by @${plan.owner.username}` : null,
+    plan.owner?.username ? `Hosted by ${plan.owner.display_name?.trim() || `@${plan.owner.username}`}` : null,
     plan.items.length > 0 ? (perHead > 0 ? `${formatPeso(perHead)}/head` : 'Free entry') : null,
   ].filter(Boolean)
 
@@ -237,7 +237,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
 
       <BackLink />
       {cover ? (
-        <div className="mt-2 aspect-[16/9] overflow-hidden bg-[var(--fill)] lg:aspect-[5/2]" style={{ borderRadius: 'var(--r-4)' }}>
+        <div className="mt-2 aspect-[16/9] overflow-hidden bg-[var(--fill)] lg:aspect-[3/1]" style={{ borderRadius: 'var(--r-4)' }}>
           <img src={cover} alt="" className="h-full w-full object-cover" />
         </div>
       ) : null}
