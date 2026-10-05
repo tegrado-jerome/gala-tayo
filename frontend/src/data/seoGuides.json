@@ -251,5 +251,44 @@
       "kids friendly manila",
       "manila family day ideas"
     ]
+  },
+  {
+    "slug": "restaurants-in-metro-manila",
+    "label": "Restaurants in Metro Manila",
+    "category": "food",
+    "keywords": [
+      "restaurants in metro manila",
+      "restaurants in metro manila with private rooms",
+      "restaurants in metro manila with birthday promo",
+      "restaurants in metro manila with function rooms",
+      "restaurants in metro manila for family"
+    ],
+    "addedAt": "2026-10-05"
+  },
+  {
+    "slug": "malls-in-metro-manila",
+    "label": "Malls in Metro Manila",
+    "category": "mall",
+    "keywords": [
+      "malls in metro manila",
+      "malls in metro manila philippines",
+      "malls in metro manila open today",
+      "best malls in metro manila",
+      "new malls in metro manila"
+    ],
+    "addedAt": "2026-10-05"
+  },
+  {
+    "slug": "things-to-do-in-metro-manila",
+    "label": "Things to Do in Metro Manila",
+    "category": "activity",
+    "keywords": [
+      "things to do in metro manila",
+      "things to do in metro manila with kids",
+      "things to do in metro manila this weekend",
+      "things to do in metro manila philippines",
+      "things to do in metro manila reddit"
+    ],
+    "addedAt": "2026-10-05"
   }
 ]
