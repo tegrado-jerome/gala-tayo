@@ -207,7 +207,7 @@ function PhoneHeroBar() {
 
   return (
     <div className="absolute inset-x-4 top-[max(14px,env(safe-area-inset-top))] z-[2] flex items-center sm:inset-x-6 lg:hidden">
-      <BrandLogo tone="light" className="text-[21px]" />
+      <BrandLogo />
       <div className="ml-auto flex items-center gap-2">
         <button
           type="button"
