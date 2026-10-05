@@ -7,8 +7,7 @@ import { buildAuthPath } from '../services/authApi'
 import { getOnboardingStatus } from '../utils/profileApi'
 import { navigateToPath, replaceWithPath } from '../utils/navigation'
 import { openFloatingChat } from '../utils/floatingChat'
-import { getPublicSiteOrigin } from '../utils/site'
-import { BRAND_NAME, PRODUCT_NAME } from '../utils/seoLandingPages'
+import { BRAND_NAME, buildBrandJsonLd } from '../utils/seoLandingPages'
 import { AdminRouteGate } from './AdminRouteGate'
 import { InitialAuthLoader, NotFoundPage } from './RouteViewHelpers'
 import type { RouteDescriptor, RouteInputs } from './routeResolver'
@@ -230,26 +229,7 @@ function renderRouteContent(descriptor: RouteDescriptor, inputs: RouteInputs) {
             title={`Metro Manila Places, Date Spots, and Gala Ideas | ${BRAND_NAME}`}
             description={`${BRAND_NAME} helps you discover Metro Manila places, date spots, barkada hangouts, family-friendly plans, and searchable local recommendations.`}
             canonicalPath="/home"
-            jsonLd={[
-              {
-                '@context': 'https://schema.org',
-                '@type': 'WebSite',
-                name: PRODUCT_NAME,
-                url: `${getPublicSiteOrigin()}/`,
-                potentialAction: {
-                  '@type': 'SearchAction',
-                  target: `${getPublicSiteOrigin()}/search?q={search_term_string}`,
-                  'query-input': 'required name=search_term_string',
-                },
-              },
-              {
-                '@context': 'https://schema.org',
-                '@type': 'Organization',
-                name: BRAND_NAME,
-                url: `${getPublicSiteOrigin()}/`,
-                logo: `${getPublicSiteOrigin()}/favicon.png`,
-              },
-            ]}
+            jsonLd={buildBrandJsonLd()}
           />
           <HomePage navigationSource={navigationSource} />
         </>

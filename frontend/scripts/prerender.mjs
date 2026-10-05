@@ -158,9 +158,11 @@ function buildLlmsTxt(pages) {
   const placeCount = pages.filter((page) => /^\/places\/[^/]+\/[^/]+$/.test(page.routePath) && !page.routePath.startsWith('/places/categories/')).length
 
   return [
-    '# GalaTayo',
+    '# GalaTayo (Gala Tayo)',
     '',
     `> ${home?.description || 'Discover places to visit in Metro Manila by city, category, budget and vibe.'}`,
+    '',
+    "GalaTayo, also written \"Gala Tayo\" (Filipino for \"let's go out\"), is a free Metro Manila place discovery and planning app built in the Philippines, live since July 2026.",
     '',
     `GalaTayo lists ${placeCount} places across Metro Manila, each with a page covering budget, best time to visit, who it suits and location. Every place is listed in the sitemap: ${siteOrigin}/sitemap.xml`,
     '',

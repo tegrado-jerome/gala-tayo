@@ -33,4 +33,22 @@ Disallow: /submissions
 Disallow: /comment-notices
 Disallow: /u/
 Disallow: /admin
+# AI search and answer engines
+User-agent: GPTBot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: ClaudeBot
+User-agent: Claude-SearchBot
+User-agent: Claude-User
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: Google-Extended
+User-agent: Applebot-Extended
+User-agent: Bingbot
+Allow: /
+Disallow: /admin
+Disallow: /auth/
+Disallow: /account
+Disallow: /settings
+
 Sitemap: https://galatayo.app/sitemap.xml
