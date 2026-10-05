@@ -47,10 +47,6 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
         robots="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"
         canonicalPath="/"
         openGraphType="website"
-        image={{
-          url: '/images/welcome/laptop-desktop.webp',
-          alt: 'Metro Manila welcome scene on GalaTayo',
-        }}
         jsonLd={buildBrandJsonLd()}
       />
       <Page className="pb-10 lg:pb-16">

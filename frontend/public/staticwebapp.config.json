@@ -24,18 +24,188 @@
     {
       "route": "/",
       "cacheControl": "no-cache, no-store, must-revalidate"
+    },
+    {
+      "route": "/home",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/search",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/ask-ai",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/ask-ai/*",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/passport",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/plan-with-ai",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/prompt-builder",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/login",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/signup",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/auth/*",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/reset-password",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/forgot-password",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/onboarding",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/mfa/*",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/find-friends",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/profiles/*",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/profile",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/profile/*",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/me",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/u/*",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/account",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/account-settings",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/account-settings/*",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/settings",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/settings/*",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/privacy-center",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/favorites",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/history",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/feedback",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/reports",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/comment-notices",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/submissions",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/my-submissions",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/gala-plan",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/gala-plan/*",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/gala-plans",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/gala-plans/*",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/submit-place",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/places/new",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/places/submit",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/place/*",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/photos/upload",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/admin",
+      "rewrite": "/app-shell.html"
+    },
+    {
+      "route": "/admin/*",
+      "rewrite": "/app-shell.html"
     }
   ],
-  "navigationFallback": {
-    "rewrite": "/app-shell.html",
-    "exclude": [
-      "/api/*",
-      "/assets/*",
-      "/data/*",
-      "/images/*",
-      "/sitemap.xml",
-      "/robots.txt"
-    ]
+  "responseOverrides": {
+    "404": {
+      "rewrite": "/app-shell.html"
+    }
   },
   "responseHeaders": {
     "X-Content-Type-Options": "nosniff",
