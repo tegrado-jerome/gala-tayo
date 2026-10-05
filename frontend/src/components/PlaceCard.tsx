@@ -7,6 +7,7 @@ import { getSulitLevel } from './place-detail/SulitMeter'
 import { categoryIcons } from './discover/CategoryTabs'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { getStaticPlaceImageUrlForSlug } from '../data/placeIndexVisuals'
+import { getPlaceCardPhoto } from '../utils/placeGalleryPhotos'
 import { prefetchPlaceDetail } from '../utils/placeDetailCache'
 import { getCanonicalPlacePath, resolveAreaMeta } from '../utils/routes'
 import type { PlaceDetail } from '../types/appTypes'
@@ -131,7 +132,7 @@ export function withLiveDetail(place: PlaceCardData, live: PlaceDetail | undefin
 }
 
 function getImageCandidates(place: PlaceCardData) {
-  const candidates = [place.thumbnailUrl, place.imageUrl, ...(place.curatedImageUrls ?? []), getStaticPlaceImageUrlForSlug(place.slug ?? place.id)]
+  const candidates = [getPlaceCardPhoto(place.slug), place.thumbnailUrl, place.imageUrl, ...(place.curatedImageUrls ?? []), getStaticPlaceImageUrlForSlug(place.slug ?? place.id)]
   return candidates.reduce<string[]>((unique, candidate) => {
     const url = candidate?.trim()
     if (url && !unique.includes(url)) unique.push(url)

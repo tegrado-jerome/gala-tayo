@@ -7,6 +7,7 @@ import PlaceImage from './PlaceImage'
 import { useSavedFavorites } from '../../context/SavedFavoritesContext'
 import { getStaticPlaceImageUrlForSlug } from '../../data/placeIndexVisuals'
 import { prefetchPlaceDetail } from '../../utils/placeDetailCache'
+import { getPlaceCardPhoto } from '../../utils/placeGalleryPhotos'
 import { formatPlaceCardMeta } from '../../utils/placeLocation'
 import { getCanonicalPlacePath, resolveAreaMeta } from '../../utils/routes'
 
@@ -48,6 +49,7 @@ function formatPlaceFacts(place: PhotoCardPlace) {
 
 export function getPlaceImageCandidates(place: PhotoCardPlace) {
   const candidates = [
+    getPlaceCardPhoto(place.slug),
     place.thumbnailUrl,
     place.imageUrl,
     ...(place.curatedImageUrls ?? []),

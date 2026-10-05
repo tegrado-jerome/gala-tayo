@@ -36,6 +36,8 @@ import ReportUserModal from './ReportUserModal'
 import { Button, Chip, Empty, Page, Sheet, Skeleton, SulitMeter, Tag, cx } from './ui'
 import GtMap, { type MapPoint } from './ui/GtMap'
 import { getCuratedPlaceImages, normalizePlaceSlug } from '../data/curatedPlaceImages'
+import PhotoCredits from './place-detail/PhotoCredits'
+import { usePlaceGalleryPhotos } from '../utils/placeGalleryPhotos'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { useAppUser } from '../context/AppUserContext'
@@ -605,9 +607,12 @@ function PlaceDetailView({
     place.curatedImageUrl,
     ...(place.curatedImageUrls ?? []),
   ])
-  const { photos: galleryPhotos, markPhotoBroken } = usePhotoList(
-    placeOwnPhotos.length > 0 ? placeOwnPhotos : getCuratedPlaceImages(place.name),
-  )
+  const hdPhotos = usePlaceGalleryPhotos(cleanString(place.slug) || null)
+  // Credited HD photos lead; the place's own uploads follow.
+  const { photos: galleryPhotos, markPhotoBroken } = usePhotoList([
+    ...hdPhotos.map((photo) => photo.url),
+    ...(placeOwnPhotos.length > 0 ? placeOwnPhotos : getCuratedPlaceImages(place.name)),
+  ])
   const [allPhotosIndex, setAllPhotosIndex] = useState<number | null>(null)
   const closeAllPhotos = useCallback(() => setAllPhotosIndex(null), [])
   const approvedImageCount = place.approvedImageCount ?? 0
@@ -2462,6 +2467,8 @@ function PlaceDetailView({
               </nav>
             ) : null}
           </section>
+
+          {hdPhotos.length > 0 ? <PhotoCredits photos={hdPhotos} /> : null}
 
           <div className="mt-8 border-t border-[var(--line-2)] pt-2">
             <Button variant="text" size="sm" onClick={handleOpenPlaceConcern}>
