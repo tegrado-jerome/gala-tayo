@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { CaretLeft as ChevronLeft } from '@phosphor-icons/react/dist/csr/CaretLeft'
 import { CaretRight as ChevronRight } from '@phosphor-icons/react/dist/csr/CaretRight'
+import { CircleNotch } from '@phosphor-icons/react/dist/csr/CircleNotch'
 import InternalLink from './InternalLink'
 import { cx } from './ui'
 
@@ -76,7 +77,7 @@ function CompactPagination({
   const isBusy = isLoading || pendingPage !== null
 
   const renderControl = (page: number, content: ReactNode, ariaLabel: string, isCurrent = false, disabled = false) => {
-    const classes = cx('g-btn g-btn-sm g-btn-icon', isCurrent ? 'g-btn-ink' : 'text-[var(--ink)] hover:bg-[var(--fill)]')
+    const classes = cx('g-page-btn', isCurrent && 'is-on')
 
     if (disabled) {
       return (
@@ -106,7 +107,7 @@ function CompactPagination({
           disabled={!isCurrent && isBusy}
           className={classes}
         >
-          {content}
+          {pendingPage === page ? <CircleNotch className="animate-spin" weight="bold" aria-hidden="true" /> : content}
         </button>
       )
     }
@@ -120,7 +121,7 @@ function CompactPagination({
 
   return (
     <nav aria-label="Pagination" className={cx('flex w-full flex-col items-center gap-2', className)}>
-      <div className="flex items-center justify-center gap-1">
+      <div className="flex items-center justify-center gap-1.5">
         {renderControl(Math.max(1, currentPage - 1), <ChevronLeft />, 'Previous page', false, currentPage <= 1)}
         {items.map((item) => (
           <span key={item}>{renderControl(item, item, item === currentPage ? `Current page, page ${item}` : `Go to page ${item}`, item === currentPage)}</span>
@@ -132,11 +133,7 @@ function CompactPagination({
           {rangeStart}–{rangeEnd} of {totalItems}
         </p>
       ) : null}
-      {isBusy && showLoadingMessage ? (
-        <p className="g-xs g-fnt" aria-live="polite">
-          Loading…
-        </p>
-      ) : null}
+      {isBusy && showLoadingMessage ? <span className="sr-only" aria-live="polite">Loading page</span> : null}
     </nav>
   )
 }

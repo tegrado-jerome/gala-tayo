@@ -314,17 +314,10 @@ export function KeyValue({ items }: { items: Array<{ label: ReactNode; value: Re
 
 /** Pinterest-style photo feed: CSS columns, 2 on phones, 3 on tablets, `desktopColumns` from 1024px. */
 export function Masonry({ desktopColumns = 4, className, ...rest }: HTMLAttributes<HTMLDivElement> & { desktopColumns?: 3 | 4 }) {
-  return (
-    <div
-      className={cx('columns-2 gap-2.5 md:columns-3 [&>*]:mb-2.5 [&>*]:break-inside-avoid', desktopColumns === 4 && 'lg:columns-4', className)}
-      {...rest}
-    />
-  )
+  return <div className={cx('g-cat-grid', desktopColumns === 3 && 'is-3', className)} {...rest} />
 }
 
-const masonryRatios = ['3 / 4', '4 / 5', '1 / 1', '4 / 3']
 
-const captionShadow: CSSProperties = { color: '#fff', textShadow: '0 1px 3px rgba(15, 33, 56, 0.7)' }
 
 export type MasonryCardProps = {
   href: string
@@ -347,32 +340,32 @@ export type MasonryCardProps = {
   className?: string
 }
 
-/** Photo tile for `Masonry`: caption with price on the image, heart top-right, meta under the photo on desktop. */
-export function MasonryCard({ href, title, imageUrl, media, index = 0, price, meta, flag, icon: FallbackIcon = MapPin, tint = 'sea', saved, onToggleSave, selected, priority, onClick, className }: MasonryCardProps) {
-  const caption = price ? `${title} · ${price}` : title
+/** Listing card for `Masonry`: square photo with a heart, then name, meta and price underneath (Airbnb-style). `index` is kept for older call sites. */
+export function MasonryCard({ href, title, imageUrl, media, price, meta, flag, icon: FallbackIcon = MapPin, tint = 'sea', saved, onToggleSave, selected, priority, onClick, className }: MasonryCardProps) {
   return (
     <div className={cx('relative min-w-0', className)}>
-      <InternalLink href={href} ariaLabel={caption} className="g-pc" onClick={onClick}>
-        <div
-          className="g-pc-img"
-          style={{ aspectRatio: masonryRatios[index % masonryRatios.length], background: `var(--${tint}-soft)`, boxShadow: selected ? '0 0 0 2px var(--paper), 0 0 0 4px var(--ink)' : undefined }}
-        >
+      <InternalLink href={href} ariaLabel={price ? `${title} · ${price}` : title} className="g-pc" onClick={onClick}>
+        <div className="g-pc-img" style={{ background: `var(--${tint}-soft)`, boxShadow: selected ? '0 0 0 2px var(--paper), 0 0 0 4px var(--ink)' : undefined }}>
           <span className="absolute inset-0 grid place-items-center" aria-hidden="true">
-            <FallbackIcon size={28} color={tintInk[tint]} strokeWidth={1.75} opacity={0.45} />
+            <FallbackIcon size={28} color={tintInk[tint]} opacity={0.45} />
           </span>
           {media ?? (imageUrl ? <img className="relative" src={imageUrl} alt="" loading={priority ? 'eager' : 'lazy'} decoding="async" /> : null)}
-          <span className="absolute inset-x-0 bottom-0 h-1/2" style={{ background: 'linear-gradient(transparent, rgba(15, 33, 56, 0.55))' }} aria-hidden="true" />
           {flag ? <span className="g-pc-flag">{flag}</span> : null}
-          <span className="absolute inset-x-2.5 bottom-2.5 text-[13px] font-bold leading-tight" style={{ ...captionShadow, ...clampTwoLines }}>
-            {caption}
-          </span>
         </div>
-        {meta ? <div className="g-only-desk g-pc-meta mt-1.5 g-xs">{meta}</div> : null}
+        <div className="g-pc-title">
+          <span className="g-h3" style={clampTwoLines}>{title}</span>
+        </div>
+        {meta ? <div className="g-pc-meta">{meta}</div> : null}
+        {price ? (
+          <div className="g-sulit">
+            <b>{price === 'Free' ? 'Free entry' : `${price}/head`}</b>
+          </div>
+        ) : null}
       </InternalLink>
       {onToggleSave ? (
         <button
           type="button"
-          className="g-pc-save !right-2 !top-2"
+          className="g-pc-save"
           aria-pressed={Boolean(saved)}
           aria-label={saved ? `Remove ${title} from saved` : `Save ${title}`}
           onClick={(event: MouseEvent) => {
@@ -381,7 +374,7 @@ export function MasonryCard({ href, title, imageUrl, media, index = 0, price, me
             onToggleSave()
           }}
         >
-          <Heart size={17} weight={saved ? 'fill' : 'regular'} />
+          <Heart className="g-ic" weight={saved ? 'fill' : 'regular'} />
         </button>
       ) : null}
     </div>

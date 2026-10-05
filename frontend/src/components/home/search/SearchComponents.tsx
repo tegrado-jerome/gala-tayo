@@ -287,13 +287,16 @@ function QuickFilterChips({
   )
 }
 
-const skeletonRatios = ['3 / 4', '4 / 5', '1 / 1', '4 / 3']
 
 function MasonrySkeleton({ count = 8 }: { count?: number }) {
   return (
     <Masonry aria-hidden="true">
       {Array.from({ length: count }, (_, index) => (
-        <Skeleton key={index} className="!rounded-[var(--r-3)]" style={{ aspectRatio: skeletonRatios[index % skeletonRatios.length] }} />
+        <div key={index} className="min-w-0">
+          <Skeleton className="aspect-square w-full !rounded-[var(--r-3)]" />
+          <Skeleton className="mt-2.5 h-4 w-3/4" />
+          <Skeleton className="mt-1.5 h-3 w-1/2" />
+        </div>
       ))}
     </Masonry>
   )

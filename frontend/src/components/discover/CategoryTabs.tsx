@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import type { Icon as PhosphorIcon } from '@phosphor-icons/react'
 import { Bed as BedDouble } from '@phosphor-icons/react/dist/csr/Bed'
 import { Bicycle as Bike } from '@phosphor-icons/react/dist/csr/Bicycle'
@@ -13,7 +14,7 @@ import { Tree as TreePine } from '@phosphor-icons/react/dist/csr/Tree'
 import { ForkKnife as Utensils } from '@phosphor-icons/react/dist/csr/ForkKnife'
 import InternalLink from '../InternalLink'
 import { cx } from '../ui'
-import { placeCategories } from '../../data/placeCategories'
+import { getPlaceCategoryLabel } from '../../data/placeCategories'
 
 export const categoryIcons: Record<string, PhosphorIcon> = {
   activity: Bike,
@@ -28,32 +29,48 @@ export const categoryIcons: Record<string, PhosphorIcon> = {
   park: TreePine,
 }
 
-const tabs = [
-  { value: 'all', label: 'For you', href: '/places', icon: Sparkles },
-  ...placeCategories.map((category) => ({
-    value: category.value,
-    label: category.label,
-    href: `/places/categories/${category.value}`,
-    icon: categoryIcons[category.value] ?? Sparkles,
-  })),
-]
+// Everyday picks first, niche ones last.
+export const CATEGORY_TAB_ORDER = ['food', 'cafe', 'park', 'museum', 'heritage', 'mall', 'nightlife', 'cinema', 'activity', 'hotel']
 
-function CategoryTabs({ active = 'all', showFilters = false }: { active?: string; showFilters?: boolean }) {
+type CategoryTabsProps = {
+  active?: string
+  /** Where each tab links; defaults to the category listing pages. */
+  getHref?: (value: string) => string
+  allLabel?: string
+  showFilters?: boolean
+  className?: string
+}
+
+/** Icon tabs with an underline on the active one, shared by Home and the listing pages. */
+function CategoryTabs({ active = 'all', getHref = (value) => (value === 'all' ? '/places' : `/places/categories/${value}`), allLabel = 'All', showFilters = false, className }: CategoryTabsProps) {
+  const tabs = [
+    { value: 'all', label: allLabel, icon: Sparkles },
+    ...CATEGORY_TAB_ORDER.map((value) => ({ value, label: getPlaceCategoryLabel(value), icon: categoryIcons[value] ?? Sparkles })),
+  ]
+  const navRef = useRef<HTMLElement>(null)
+  // Bring the active tab into view when it sits past the phone's edge.
+  useEffect(() => {
+    const nav = navRef.current
+    const tab = nav?.querySelector<HTMLElement>('[aria-current="page"]')
+    if (nav && tab && (tab.offsetLeft + tab.offsetWidth > nav.clientWidth || tab.offsetLeft < nav.scrollLeft)) {
+      nav.scrollLeft = tab.offsetLeft - (nav.clientWidth - tab.offsetWidth) / 2
+    }
+  }, [active])
   return (
-    <nav aria-label="Browse by category" className="g-chips">
+    <nav ref={navRef} aria-label="Browse by category" className={cx('g-cats', className)}>
       {tabs.map((tab) => {
-        const Icon = tab.icon
+        const TabIcon = tab.icon
         const isActive = tab.value === active
         return (
-          <InternalLink key={tab.value} href={tab.href} aria-current={isActive ? 'page' : undefined} className={cx('g-chip', isActive && 'is-on')}>
-            <Icon />
+          <InternalLink key={tab.value} href={getHref(tab.value)} aria-current={isActive ? 'page' : undefined} className="g-cat no-underline">
+            <TabIcon weight={isActive ? 'fill' : 'duotone'} aria-hidden="true" />
             {tab.label}
           </InternalLink>
         )
       })}
       {showFilters ? (
-        <InternalLink href="/search" className="g-chip">
-          <SlidersHorizontal />
+        <InternalLink href="/search" className="g-cat no-underline">
+          <SlidersHorizontal weight="duotone" aria-hidden="true" />
           Filters
         </InternalLink>
       ) : null}

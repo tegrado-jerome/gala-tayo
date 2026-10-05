@@ -1,12 +1,13 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import CompactPagination from '../components/CompactPagination'
+import CategoryTabs from '../components/discover/CategoryTabs'
 import PlaceCard, { withLiveDetail } from '../components/PlaceCard'
 import { ListingBreadcrumb, MasonrySkeleton, SearchPillLink } from '../components/home/search/SearchComponents'
 import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
-import { Button, Chips, Empty, Masonry, Page, SectionHead, cx } from '../components/ui'
+import { Button, Empty, Masonry, Page, SectionHead, cx } from '../components/ui'
 import InternalLink from '../components/InternalLink'
 import SeoHead from '../components/SeoHead'
-import { getPlaceCategoryLabel, placeCategories } from '../data/placeCategories'
+import { getPlaceCategoryLabel } from '../data/placeCategories'
 import { navigateToPath, scrollViewportToTopInstant } from '../utils/navigation'
 import { getSiteOrigin } from '../utils/seo'
 import { getListingPlaceViewportTop, peekPendingListingRouteCache, readListingRouteCache, restoreListingRouteScroll, writeListingRouteCache } from '../utils/listingRouteCache'
@@ -347,18 +348,7 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
 
       <SearchPillLink className="g-only-mob mt-4" />
 
-      <Chips className="mt-4" aria-label="Categories">
-        {placeCategories.map((category) => (
-          <InternalLink
-            key={category.value}
-            href={`/places/categories/${category.value}`}
-            aria-current={category.value === categorySlug ? 'page' : undefined}
-            className={cx('g-chip no-underline', category.value === categorySlug && 'is-on')}
-          >
-            {category.label}
-          </InternalLink>
-        ))}
-      </Chips>
+      <CategoryTabs active={categorySlug} />
 
       {errorMessage ? (
         <Empty className="mt-8" title={`Hindi ma-load ang ${categoryLabel.toLowerCase()} places`} description="Please try again in a bit." />
