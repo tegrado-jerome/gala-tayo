@@ -1,7 +1,8 @@
 import type { CSSProperties } from 'react'
 import type { OnboardingStep } from './types'
 
-const stepLabels = ['Personal', 'Profile', 'Privacy', 'Finish']
+export const ONBOARDING_STEP_LABELS = ['Profile', 'Interests', 'Visibility', 'Terms', 'Details']
+const stepLabels = ONBOARDING_STEP_LABELS
 
 /** Segmented bar across the top of the sticky footer. The current step fills halfway, done steps fill fully. */
 function OnboardingProgress({ step }: { step: OnboardingStep }) {

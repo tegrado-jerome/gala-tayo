@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import OnboardingAgreementStep from '../components/onboarding/OnboardingAgreementStep'
+import OnboardingInterestsStep from '../components/onboarding/OnboardingInterestsStep'
 import OnboardingPersonalInfoStep from '../components/onboarding/OnboardingPersonalInfoStep'
 import OnboardingPrivacyStep from '../components/onboarding/OnboardingPrivacyStep'
 import OnboardingPublicProfileStep from '../components/onboarding/OnboardingPublicProfileStep'
 import { AuthNotice } from '../components/auth/AuthCard'
-import type { OnboardingErrors, OnboardingFormState, OnboardingStep } from '../components/onboarding/types'
+import { ONBOARDING_STEPS, type OnboardingErrors, type OnboardingFormState, type OnboardingStep } from '../components/onboarding/types'
 import {
   checkUsernameAvailable,
   completeOnboardingSetup,
@@ -144,20 +145,24 @@ function getDraftStorageKey(userId: string) {
   return `galatayo:onboarding-draft:${userId}`
 }
 
+const LAST_STEP = ONBOARDING_STEPS.personal
+// No profile field for interests yet, so they stay on this device for the home feed to read.
+const INTERESTS_STORAGE_KEY = 'galatayo:interests'
+
 function isValidStep(value: unknown): value is OnboardingStep {
-  return value === 1 || value === 2 || value === 3 || value === 4
+  return value === 1 || value === 2 || value === 3 || value === 4 || value === 5
 }
 
 function normalizeStep(value: unknown, fallbackStep: OnboardingStep): OnboardingStep {
-  if (isValidStep(value)) {
-    return value
-  }
+  return isValidStep(value) ? value : fallbackStep
+}
 
-  if (value === 5) {
-    return 4
+function saveInterests(interests: string[]) {
+  try {
+    window.localStorage.setItem(INTERESTS_STORAGE_KEY, JSON.stringify(interests))
+  } catch {
+    // Interests are a nice-to-have.
   }
-
-  return fallbackStep
 }
 
 function createInitialValues(session: Session): OnboardingFormState {
@@ -176,6 +181,7 @@ function createInitialValues(session: Session): OnboardingFormState {
     username: '',
     avatarUrl: providerAvatarUrl || null,
     avatarStorageKey: null,
+    interests: [],
     profileVisibility: 'public',
     showFollowers: true,
     showFollowing: true,
@@ -209,11 +215,14 @@ function normalizeDraftValues(values: Partial<OnboardingFormState> | null | unde
 
   const normalizedProfileVisibility = values.profileVisibility === 'private' ? 'private' : 'public'
   const shouldShowFollowLists = normalizedProfileVisibility === 'public'
+  // Drafts saved before the steps were reordered have no interests list; their step numbers mean other screens.
+  const isCurrentFlow = Array.isArray(values.interests)
 
   return {
     ...fallbackValues,
     ...values,
-    step: normalizeStep(values.step, fallbackValues.step),
+    interests: isCurrentFlow ? values.interests!.filter((item): item is string => typeof item === 'string') : [],
+    step: isCurrentFlow ? normalizeStep(values.step, fallbackValues.step) : ONBOARDING_STEPS.profile,
     profileVisibility: normalizedProfileVisibility,
     showFollowers: shouldShowFollowLists,
     showFollowing: shouldShowFollowLists,
@@ -356,7 +365,7 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
   }, [isRedirectingHome, onComplete, session.user.id])
 
   useEffect(() => {
-    if (values.step !== 2) {
+    if (values.step !== ONBOARDING_STEPS.profile) {
       hasSuggestedUsernameRef.current = false
       return
     }
@@ -385,7 +394,7 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
   }, [isDraftReady, values.firstName, values.lastName, values.step, values.username])
 
   useEffect(() => {
-    if (values.step !== 2) {
+    if (values.step !== ONBOARDING_STEPS.profile) {
       setUsernameStatus('idle')
       setErrors((currentErrors) => {
         if (!currentErrors.username) {
@@ -493,7 +502,7 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
   const validateStep = (step: OnboardingStep) => {
     const nextErrors: OnboardingErrors = {}
 
-    if (step === 1) {
+    if (step === ONBOARDING_STEPS.personal) {
       nextErrors.firstName = trimError(values.firstName, 'First Name')
       nextErrors.lastName = trimError(values.lastName, 'Last Name')
       nextErrors.birthdate = validateBirthdate(values.birthdate)
@@ -503,7 +512,7 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
       }
     }
 
-    if (step === 2) {
+    if (step === ONBOARDING_STEPS.profile) {
       nextErrors.displayName = trimError(values.displayName, 'Display Name')
       nextErrors.username = usernameValidationError || errors.username
 
@@ -516,11 +525,11 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
       }
     }
 
-    if (step === 3 && values.profileVisibility !== 'public' && values.profileVisibility !== 'private') {
+    if (step === ONBOARDING_STEPS.visibility && values.profileVisibility !== 'public' && values.profileVisibility !== 'private') {
       nextErrors.profileVisibility = 'Please select whether you want a Public or Private profile.'
     }
 
-    if (step === 4 && (!values.acceptedTerms || !values.acceptedPrivacy)) {
+    if (step === ONBOARDING_STEPS.terms && (!values.acceptedTerms || !values.acceptedPrivacy)) {
       nextErrors.form = 'You need to agree to both the Terms of Service and Privacy Policy to continue.'
     }
 
@@ -536,7 +545,7 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
       return
     }
 
-    goToStep(Math.min(4, currentValues.step + 1) as OnboardingStep)
+    goToStep(Math.min(LAST_STEP, currentValues.step + 1) as OnboardingStep)
   }
 
   const previousStep = () => {
@@ -568,7 +577,12 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
   }
 
   const finishSetup = async () => {
-    if (!validateStep(4)) {
+    if (!values.acceptedTerms || !values.acceptedPrivacy) {
+      goToStep(ONBOARDING_STEPS.terms)
+      return
+    }
+
+    if (!validateStep(ONBOARDING_STEPS.personal)) {
       return
     }
 
@@ -580,6 +594,7 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
       trackOnboardingCompleted({
         method: 'profile_setup',
       })
+      saveInterests(values.interests)
       clearOnboardingDraft(session.user.id)
       onComplete?.(account)
       replaceWithPath('/home')
@@ -596,14 +611,14 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
     }
   }
 
-  const currentStepErrorKeys: Array<keyof OnboardingErrors> =
-    values.step === 1
-      ? ['firstName', 'middleName', 'lastName', 'birthdate']
-      : values.step === 2
-        ? ['displayName', 'username', 'avatar']
-        : values.step === 3
-          ? ['profileVisibility']
-          : ['form']
+  const stepErrorKeys: Record<OnboardingStep, Array<keyof OnboardingErrors>> = {
+    1: ['displayName', 'username', 'avatar'],
+    2: [],
+    3: ['profileVisibility'],
+    4: ['form'],
+    5: ['firstName', 'middleName', 'lastName', 'birthdate'],
+  }
+  const currentStepErrorKeys = stepErrorKeys[values.step]
   const hasCurrentStepErrors = currentStepErrorKeys.some((key) => Boolean(errors[key]))
 
   if (isRedirectingHome) {
@@ -611,30 +626,21 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
   }
 
   let content = (
-    <OnboardingPersonalInfoStep
+    <OnboardingPublicProfileStep
       values={values}
       errors={errors}
+      usernameStatus={usernameStatus}
+      isUploadingAvatar={isUploadingAvatar}
       disableNext={hasCurrentStepErrors}
       onUpdate={updateValues}
+      onAvatarSelected={handleAvatarSelected}
       onNext={nextStep}
     />
   )
 
-  if (values.step === 2) {
-    content = (
-      <OnboardingPublicProfileStep
-        values={values}
-        errors={errors}
-        usernameStatus={usernameStatus}
-        isUploadingAvatar={isUploadingAvatar}
-        disableNext={hasCurrentStepErrors}
-        onUpdate={updateValues}
-        onAvatarSelected={handleAvatarSelected}
-        onBack={previousStep}
-        onNext={nextStep}
-      />
-    )
-  } else if (values.step === 3) {
+  if (values.step === ONBOARDING_STEPS.interests) {
+    content = <OnboardingInterestsStep values={values} onUpdate={updateValues} onBack={previousStep} onNext={nextStep} />
+  } else if (values.step === ONBOARDING_STEPS.visibility) {
     content = (
       <OnboardingPrivacyStep
         values={values}
@@ -645,9 +651,20 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
         onNext={nextStep}
       />
     )
-  } else if (values.step === 4) {
+  } else if (values.step === ONBOARDING_STEPS.terms) {
     content = (
       <OnboardingAgreementStep
+        values={values}
+        errors={errors}
+        disableNext={hasCurrentStepErrors}
+        onUpdate={updateValues}
+        onBack={previousStep}
+        onNext={nextStep}
+      />
+    )
+  } else if (values.step === ONBOARDING_STEPS.personal) {
+    content = (
+      <OnboardingPersonalInfoStep
         values={values}
         errors={errors}
         isSubmitting={isSubmitting}

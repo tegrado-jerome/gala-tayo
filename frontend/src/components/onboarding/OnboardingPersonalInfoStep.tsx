@@ -1,6 +1,6 @@
-import { ArrowRight } from '@phosphor-icons/react/dist/csr/ArrowRight'
 import OnboardingLayout from './OnboardingLayout'
 import BirthdatePicker from '../BirthdatePicker'
+import { AuthNotice } from '../auth/AuthCard'
 import { Button } from '../ui'
 import type { OnboardingErrors, OnboardingFormState } from './types'
 
@@ -8,8 +8,10 @@ type OnboardingPersonalInfoStepProps = {
   values: Pick<OnboardingFormState, 'firstName' | 'middleName' | 'lastName' | 'birthdate'>
   errors: OnboardingErrors
   disableNext: boolean
+  isSubmitting: boolean
   onUpdate: (updates: Partial<OnboardingFormState>) => void
-  onNext: () => void
+  onBack: () => void
+  onFinish: () => void
 }
 
 type NameKey = 'firstName' | 'middleName' | 'lastName'
@@ -20,16 +22,17 @@ const nameFields: Array<{ key: NameKey; label: string; autoComplete: string; opt
   { key: 'lastName', label: 'Last name', autoComplete: 'family-name' },
 ]
 
-function OnboardingPersonalInfoStep({ values, errors, disableNext, onUpdate, onNext }: OnboardingPersonalInfoStepProps) {
+function OnboardingPersonalInfoStep({ values, errors, disableNext, isSubmitting, onUpdate, onBack, onFinish }: OnboardingPersonalInfoStepProps) {
   return (
     <OnboardingLayout
-      step={1}
-      title="Kumusta! What's your name?"
-      description="We use these details to finish your account setup and age check. Only you see your birthdate."
+      step={5}
+      title="Last step: your legal name"
+      description="Needed for your account and age check. Only you see these; your profile shows your display name."
+      onBack={onBack}
+      backDisabled={isSubmitting}
       primary={
-        <Button variant="tara" size="lg" onClick={onNext} disabled={disableNext}>
-          Next
-          <ArrowRight aria-hidden="true" />
+        <Button variant="tara" size="lg" onClick={onFinish} disabled={disableNext || isSubmitting}>
+          {isSubmitting ? 'Finishing...' : 'Finish setup'}
         </Button>
       }
     >
@@ -69,6 +72,7 @@ function OnboardingPersonalInfoStep({ values, errors, disableNext, onUpdate, onN
           />
         </div>
       </div>
+      {errors.form ? <AuthNotice tone="bad" className="mt-5">{errors.form}</AuthNotice> : null}
     </OnboardingLayout>
   )
 }

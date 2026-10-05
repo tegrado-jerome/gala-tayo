@@ -16,7 +16,7 @@ type OnboardingPublicProfileStepProps = {
   disableNext: boolean
   onUpdate: (updates: Partial<OnboardingFormState>) => void
   onAvatarSelected: (file: File) => void
-  onBack: () => void
+  onBack?: () => void
   onNext: () => void
 }
 
@@ -69,8 +69,8 @@ function OnboardingPublicProfileStep({
 
   return (
     <OnboardingLayout
-      step={2}
-      title="How should the barkada find you?"
+      step={1}
+      title="Kumusta! How should the barkada find you?"
       description="Choose how your name shows up and pick a username your friends can search."
       onBack={onBack}
       primary={

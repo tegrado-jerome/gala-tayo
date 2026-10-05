@@ -35,7 +35,7 @@
 .m-onb-step { font-size: 13px; font-weight: 600; color: var(--tara-ink); }
 .m-onb-title { font: 600 clamp(28px, 6vw, 40px)/1.08 var(--font-display); letter-spacing: -0.03em; text-wrap: balance; margin-top: 8px; }
 .m-onb-foot { position: fixed; inset: auto 0 0 0; z-index: 60; background: var(--surface); box-shadow: 0 -1px 0 var(--line-2); padding-bottom: env(safe-area-inset-bottom, 0px); }
-.m-onb-prog { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }
+.m-onb-prog { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
 .m-onb-prog i { height: 6px; background: var(--fill-2); overflow: hidden; }
 .m-onb-prog i::after { content: ''; display: block; height: 100%; width: var(--w, 0%); background: var(--ink); transition: width var(--t-slow) var(--ease-g); }
 .m-onb-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 1240px; margin: 0 auto; padding: 14px 16px; }
