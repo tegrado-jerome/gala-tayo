@@ -26,12 +26,12 @@
     <link rel="preconnect" href="https://tile.openstreetmap.org" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="application-name" content="GalaTayo" />
     <meta name="apple-mobile-web-app-title" content="GalaTayo" />
-    <meta name="theme-color" content="#FFFAF4" />
+    <meta name="theme-color" content="#ffffff" />
     <meta name="description" content="Discover gala-worthy places around the Philippines by city, category, budget, and vibe. Get AI-powered recommendations and plan your next gala." />
     <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
     <meta property="og:title" content="GalaTayo - Discover places around the Philippines" />
@@ -52,7 +52,7 @@
       }
 
       html, body, #root {
-        background: #fffaf4;
+        background: #ffffff;
       }
 
       html[data-theme="dark"],
@@ -67,8 +67,8 @@
         z-index: 2147483647;
         display: grid;
         place-items: center;
-        background: #fffaf4;
-        color: #14343b;
+        background: #ffffff;
+        color: #111111;
         opacity: 1;
         visibility: visible;
         pointer-events: auto;
@@ -89,7 +89,7 @@
         display: inline-flex;
         align-items: center;
         gap: 10px;
-        font: 700 34px/1 'Outfit', system-ui, sans-serif;
+        font: 600 34px/1 'Fraunces', Georgia, serif;
         letter-spacing: -0.04em;
         animation: critical-logo-breathe 2.4s ease-in-out infinite;
       }
@@ -122,7 +122,7 @@
   </head>
   <body>
     <div id="critical-welcome-loader" class="critical-app-loader" aria-label="Loading GalaTayo">
-      <span class="critical-app-loader__logo" aria-hidden="true"><svg width="40" height="40" viewBox="0 0 64 64"><rect width="64" height="64" rx="18" fill="#14343b"/><path d="M20 35a12 12 0 0 1 24 0Z" fill="#ff7a1a"/><rect x="12" y="38" width="40" height="4" rx="2" fill="#fff"/><rect x="19" y="45.5" width="26" height="4" rx="2" fill="#fff" opacity=".75"/><rect x="26" y="53" width="12" height="4" rx="2" fill="#fff" opacity=".5"/></svg>galatayo</span>
+      <span class="critical-app-loader__logo" aria-hidden="true"><svg width="40" height="40" viewBox="0 0 64 64"><rect width="64" height="64" rx="18" fill="#111111"/><path d="M20 35a12 12 0 0 1 24 0Z" fill="#34e0a1"/><rect x="12" y="38" width="40" height="4" rx="2" fill="#fff"/><rect x="19" y="45.5" width="26" height="4" rx="2" fill="#fff" opacity=".75"/><rect x="26" y="53" width="12" height="4" rx="2" fill="#fff" opacity=".5"/></svg>galatayo</span>
     </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>

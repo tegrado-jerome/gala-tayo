@@ -2,11 +2,11 @@
 .g-qpicks { display: flex; gap: 8px; margin: 14px -16px 0; padding: 2px 16px 4px; overflow-x: auto; scrollbar-width: none; }
 .g-qpicks::-webkit-scrollbar { display: none; }
 .g-qpick { display: inline-flex; align-items: center; gap: 7px; flex: 0 0 auto; height: 40px; padding: 0 14px; border: 1.5px solid var(--line); border-radius: var(--r-pill); background: var(--surface); color: var(--ink); font: 600 13px/1 var(--font-body); white-space: nowrap; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-.g-qpick svg { width: 18px; height: 18px; color: var(--tara-ink); }
+.g-qpick svg { width: 18px; height: 18px; color: var(--sea); }
 .g-qpick:hover { border-color: var(--ink); }
 .g-qpick:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .g-qpick.is-hot { background: var(--ink); border-color: var(--ink); color: var(--on-ink); }
-.g-qpick.is-hot svg { color: var(--tara); }
+.g-qpick.is-hot svg { color: #34e0a1; }
 .g-qpick:disabled { opacity: 0.5; cursor: default; }
 @media (min-width: 768px) { .g-qpicks { justify-content: center; margin-inline: 0; padding-inline: 0; } }
 
