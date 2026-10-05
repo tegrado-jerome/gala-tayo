@@ -205,7 +205,7 @@ function toUsageBody(usage: AskAiUsageResult) {
 /** States the real limit so the message never contradicts the usage pill (guests and members have different limits). */
 export function buildDailyLimitMessage(actor: AskAiActor, dailyLimit: number) {
   return actor.kind === "guest"
-    ? `You've used all ${dailyLimit} free AI requests for today. Log in to get more.`
+    ? `You've used all ${dailyLimit} free AI requests for today.`
     : `You've used all ${dailyLimit} AI requests for today. They reset at midnight.`;
 }
 

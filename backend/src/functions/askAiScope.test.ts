@@ -59,7 +59,7 @@ describe("evaluateAskAiPromptGuardDecision", () => {
 
 describe("daily limit message", () => {
   it("states the limit that actually applies", () => {
-    assert.match(buildDailyLimitMessage({ kind: "guest", id: "guest-123456" }, 5), /all 5 free AI requests.*Log in/);
+    assert.match(buildDailyLimitMessage({ kind: "guest", id: "guest-123456" }, 5), /all 5 free AI requests for today/);
     assert.match(buildDailyLimitMessage({ kind: "registered", id: "u", user: { id: "u" } }, 20), /all 20 AI requests/);
   });
 });

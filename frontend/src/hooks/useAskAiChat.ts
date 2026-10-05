@@ -64,7 +64,7 @@ export function useAskAiChat(initialQuestion = '') {
   const [isGuestPromptOpen, setIsGuestPromptOpen] = useState(false)
   const lastAutoSubmittedQuestionRef = useRef('')
 
-  const submit = async (questionOverride?: string) => {
+  const submit = async (questionOverride?: string, baseMessages: ChatMessage[] = messages) => {
     const nextQuestion = normalizeSearchText(questionOverride ?? question)
     const guestId = session?.access_token ? null : getOrCreateAskAiGuestId()
 
@@ -75,7 +75,7 @@ export function useAskAiChat(initialQuestion = '') {
     setQuestion(nextQuestion)
 
     const updatedMessages: ChatMessage[] = [
-      ...messages,
+      ...baseMessages,
       { role: 'user' as const, content: nextQuestion },
     ]
     setMessages(updatedMessages)
@@ -138,13 +138,14 @@ export function useAskAiChat(initialQuestion = '') {
         })
         setMessages((prev) => {
           const lastMessage = prev[prev.length - 1]
+          const reply = { role: 'assistant' as const, content: runtimeState.answer, sources: runtimeState.sources }
           if (lastMessage?.role === 'assistant' && lastMessage.content === runtimeState.answer) {
             return prev
           }
           if (lastMessage?.role === 'assistant') {
-            return [...prev.slice(0, -1), { role: 'assistant' as const, content: runtimeState.answer }]
+            return [...prev.slice(0, -1), reply]
           }
-          return [...prev, { role: 'assistant' as const, content: runtimeState.answer }]
+          return [...prev, reply]
         })
       }
     })
@@ -293,6 +294,11 @@ export function useAskAiChat(initialQuestion = '') {
       messages,
       onRetryUsage: () => setUsageRefreshSignal((signal) => signal + 1),
       onSubmit: (questionOverride?: string) => void submit(questionOverride),
+      // Re-sends the last unanswered question without adding it to the chat twice.
+      onRetry: () => {
+        const lastMessage = messages[messages.length - 1]
+        if (lastMessage?.role === 'user') void submit(lastMessage.content, messages.slice(0, -1))
+      },
       onStartOver: startOver,
       onGuestUpgradePrompt: () => setIsGuestPromptOpen(true),
     },
