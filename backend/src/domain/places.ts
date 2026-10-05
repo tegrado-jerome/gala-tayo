@@ -1,3 +1,4 @@
+import { hiddenSlugFilter } from "../utils/galaWorthy";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { getJsonCacheValue, setJsonCacheValue, deleteJsonCacheValue } from "../services/redisCacheService";
 
@@ -95,7 +96,7 @@ export const PUBLIC_PLACE_COLUMNS = [
   "updated_at",
 ].join(",");
 
-const ACTIVE_PLACES_CACHE_KEY = "places:active:normalized:v2";
+const ACTIVE_PLACES_CACHE_KEY = "places:active:normalized:v3";
 const ACTIVE_PLACES_CACHE_TTL_SECONDS = 60 * 10;
 const ACTIVE_PLACES_DEPLOY_VERSION_KEY = "places:active:deploy-version";
 
@@ -202,21 +203,29 @@ export function normalizePlaceRecord(row: Record<string, unknown>, warn?: (messa
   };
 }
 
-export async function getActiveNormalizedPlaces(): Promise<NormalizedPlace[]> {
+/**
+ * Active places for discovery (search, AI, plans). Places flagged not gala-worthy are left out;
+ * pass `includeHidden` where a hidden place must still resolve (e.g. passport stamps from old check-ins).
+ */
+export async function getActiveNormalizedPlaces({ includeHidden = false }: { includeHidden?: boolean } = {}): Promise<NormalizedPlace[]> {
   await checkDeployVersion();
-  const cachedPlaces = await getJsonCacheValue<NormalizedPlace[]>(ACTIVE_PLACES_CACHE_KEY);
+  const cacheKey = includeHidden ? `${ACTIVE_PLACES_CACHE_KEY}:all` : ACTIVE_PLACES_CACHE_KEY;
+  const cachedPlaces = await getJsonCacheValue<NormalizedPlace[]>(cacheKey);
   if (cachedPlaces) return cachedPlaces;
 
   const supabase = await getSupabaseAdminClient();
-  const { data, error } = await (supabase.from("places") as any)
+  let query = (supabase.from("places") as any)
     .select(PUBLIC_PLACE_COLUMNS)
-    .eq("status", "active")
+    .eq("status", "active");
+  const hiddenFilter = includeHidden ? null : hiddenSlugFilter();
+  if (hiddenFilter) query = query.not("slug", "in", hiddenFilter);
+  const { data, error } = await query
     .order("name", { ascending: true, nullsFirst: false })
     .limit(1000);
 
   if (error) throw new Error("Failed to load active places.");
 
   const places = ((data ?? []) as Array<Record<string, unknown>>).map((row) => normalizePlaceRecord(row));
-  await setJsonCacheValue(ACTIVE_PLACES_CACHE_KEY, places, { ttlSeconds: ACTIVE_PLACES_CACHE_TTL_SECONDS });
+  await setJsonCacheValue(cacheKey, places, { ttlSeconds: ACTIVE_PLACES_CACHE_TTL_SECONDS });
   return places;
 }

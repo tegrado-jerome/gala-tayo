@@ -2540,6 +2540,7 @@ function PlaceDetailView({
           startIndex={allPhotosIndex}
           onBroken={markPhotoBroken}
           onClose={closeAllPhotos}
+          credits={Object.fromEntries(hdPhotos.map((photo) => [photo.url, `${photo.author} · ${photo.license}`]))}
           showAddPhotoAction={showAddPhotoAction}
           onContribute={() => {
             closeAllPhotos()

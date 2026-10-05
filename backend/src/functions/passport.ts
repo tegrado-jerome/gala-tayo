@@ -38,7 +38,7 @@ async function buildPassport(userId: string) {
   }
 
   const checkins = (data ?? []) as CheckinRow[];
-  const places = await getActiveNormalizedPlaces();
+  const places = await getActiveNormalizedPlaces({ includeHidden: true });
   const placesById = new Map(places.map((place) => [place.id, place]));
   const cities = Array.from(new Set(places.map((place) => place.city).filter((city): city is string => Boolean(city)))).sort();
   const withCity = checkins.map((checkin) => ({ ...checkin, city: placesById.get(checkin.place_id)?.city ?? null }));
@@ -69,7 +69,7 @@ export async function postPlaceCheckin(request: HttpRequest, context: Invocation
   try {
     const user = await getCurrentUser(request);
     const placeId = String(request.params.placeId ?? "");
-    const place = (await getActiveNormalizedPlaces()).find((entry) => entry.id === placeId);
+    const place = (await getActiveNormalizedPlaces({ includeHidden: true })).find((entry) => entry.id === placeId);
     if (!place) return { status: 404, jsonBody: { message: "Place not found." } };
 
     const body = ((await request.json().catch(() => ({}))) ?? {}) as { latitude?: unknown; longitude?: unknown };

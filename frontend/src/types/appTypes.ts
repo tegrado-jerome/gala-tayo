@@ -31,6 +31,8 @@ export type PlaceDetail = {
   latitude: number | string
   longitude: number | string
   status?: string | null
+  /** False when the place is hidden from discovery (not gala-worthy); its page stays reachable but noindex. */
+  is_gala_worthy?: boolean | null
   imageUrl?: string | null
   thumbnailUrl?: string | null
   curatedImageUrls?: string[] | null
@@ -42,6 +44,7 @@ export type PlaceDetail = {
 export type PlaceDetailCardData = PlaceCardData & {
   id: string
   slug: string
+  isGalaWorthy?: boolean
 }
 
 export type AppResumeCache = {
