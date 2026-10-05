@@ -2,7 +2,9 @@
 // guide picker, and writes the traffic part of the weekly SEO report. Skips cleanly when the
 // Google service account secret is not set.
 import { findSearchConsoleSite, getAccessToken, listSitemaps, readCredentials, runGa4Report, searchAnalytics } from './google.mjs'
-import { readJson, report, writeJson } from './signals.mjs'
+import { readFile } from 'node:fs/promises'
+import path from 'node:path'
+import { frontendDir, readJson, report, writeJson } from './signals.mjs'
 
 const DOMAIN = 'galatayo.app'
 const day = (offset) => new Date(Date.now() - offset * 86400000).toISOString().slice(0, 10)
@@ -14,14 +16,17 @@ async function searchConsoleSection(token) {
   if (!site) return '## Google Search\n\nThe service account is not a user on the Search Console property yet.'
 
   const range = { startDate: day(30), endDate: day(2) }
-  const [totals, queries, pages, sitemaps] = await Promise.all([
+  const guidePageFilter = { dimensionFilterGroups: [{ filters: [{ dimension: 'page', operator: 'contains', expression: '/guides/' }] }] }
+  const [totals, queries, pages, sitemaps, guideRows] = await Promise.all([
     searchAnalytics(token, site, { ...range }),
     searchAnalytics(token, site, { ...range, dimensions: ['query'], rowLimit: 250 }),
     searchAnalytics(token, site, { ...range, dimensions: ['page'], rowLimit: 10 }),
     listSitemaps(token, site),
+    searchAnalytics(token, site, { ...range, dimensions: ['page', 'query'], rowLimit: 1000, ...guidePageFilter }),
   ])
   const queryRows = (queries.rows ?? []).map((row) => ({ query: row.keys[0], clicks: row.clicks, impressions: row.impressions, position: row.position }))
-  await writeJson('search-console.json', { range, queries: queryRows })
+  const guides = await guidePerformance(guideRows.rows ?? [])
+  await writeJson('search-console.json', { range, queries: queryRows, guides: guides.map(({ slug, goodFor, category, impressions, clicks }) => ({ slug, goodFor, category, impressions, clicks })) })
 
   const total = totals.rows?.[0] ?? { clicks: 0, impressions: 0, ctr: 0, position: 0 }
   const strikingDistance = queryRows.filter((row) => row.position >= 8 && row.position <= 20 && row.impressions >= 5).slice(0, 10)
@@ -34,9 +39,34 @@ async function searchConsoleSection(token) {
     table(['Search', 'Impressions', 'Position'], strikingDistance.map((row) => [row.query, row.impressions, row.position.toFixed(1)])),
     '### Top pages',
     table(['Page', 'Clicks', 'Impressions'], (pages.rows ?? []).map((row) => [row.keys[0].replace(`https://${DOMAIN}`, ''), row.clicks, row.impressions])),
+    '### How each guide is doing',
+    table(
+      ['Guide', 'Added', 'Clicks', 'Impressions', 'Position', 'Top search'],
+      guides.filter((guide) => guide.impressions > 0).map((guide) => [`/guides/${guide.slug}`, guide.addedAt ?? '-', guide.clicks, guide.impressions, guide.position.toFixed(1), guide.topQuery]),
+    ),
+    `${guides.filter((guide) => guide.impressions === 0).length} of ${guides.length} guides have not shown in Google yet. New pages usually take 2 to 8 weeks.`,
     '### Sitemaps',
     table(['Sitemap', 'Last read', 'Errors', 'Warnings'], (sitemaps.sitemap ?? []).map((entry) => [entry.path, entry.lastDownloaded?.slice(0, 10) ?? '-', entry.errors ?? 0, entry.warnings ?? 0])),
   ].join('\n\n')
+}
+
+// Totals Search Console rows per guide page, so each guide's keywords can be judged by real traffic.
+async function guidePerformance(rows) {
+  const guides = JSON.parse(await readFile(path.join(frontendDir, 'src/data/seoGuides.json'), 'utf8'))
+  return guides
+    .map((guide) => {
+      const own = rows.filter((row) => row.keys[0].replace(/\/+$/, '').endsWith(`/guides/${guide.slug}`))
+      const impressions = own.reduce((sum, row) => sum + row.impressions, 0)
+      const top = [...own].sort((a, b) => b.impressions - a.impressions)[0]
+      return {
+        ...guide,
+        impressions,
+        clicks: own.reduce((sum, row) => sum + row.clicks, 0),
+        position: impressions ? own.reduce((sum, row) => sum + row.position * row.impressions, 0) / impressions : 0,
+        topQuery: top?.keys[1] ?? '-',
+      }
+    })
+    .sort((a, b) => b.impressions - a.impressions)
 }
 
 async function analyticsSection(token, propertyId) {

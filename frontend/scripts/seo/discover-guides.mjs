@@ -2,6 +2,8 @@
 // search demand, then appends the best few to src/data/seoGuides.json. Signals, strongest first:
 // fresh Google Trends, newly rising autocomplete suggestions, the season, Search Console
 // impressions, and plain autocomplete demand. Run: node scripts/seo/discover-guides.mjs [--dry-run]
+// With --trending-only (daily), it adds at most one guide, and only for a strong trend from the
+// last two days, so fresh topics go live the same day instead of waiting for Monday.
 import { readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { activeSeasons, frontendDir, readJson, report, writeJson } from './signals.mjs'
@@ -11,9 +13,11 @@ const areasPath = path.join(frontendDir, 'src/data/metroManilaAreas.ts')
 const goodForTagsPath = path.join(frontendDir, '../backend/src/data/goodForTags.json')
 const apiBase = (process.env.GALATAYO_API_BASE_URL || 'https://galatayo-api-cvawfwgrg6akdmem.southeastasia-01.azurewebsites.net/api').replace(/\/+$/, '')
 const dryRun = process.argv.includes('--dry-run')
-const guidesPerRun = Number(process.env.GUIDES_PER_RUN || 3)
+const trendingOnly = process.argv.includes('--trending-only')
+const guidesPerRun = Number(process.env.GUIDES_PER_RUN || (trendingOnly ? 1 : 3))
+const STRONG_TREND_SEARCHES = 1000
 const minPlaces = 6
-const TREND_DAYS = 14
+const TREND_DAYS = trendingOnly ? 2 : 14
 
 const INTENTS = [
   { goodFor: 'date', phrases: ['date spots in {c}', 'date places in {c}', 'date ideas in {c}'] },
@@ -87,7 +91,9 @@ function score(candidate, signals) {
 
   const trendHits = signals.trends.filter((trend) => trend.intents.includes(key) && (!trend.areaSlug || trend.areaSlug === areaSlug))
   if (trendHits.length) {
-    total += trendHits.reduce((sum, trend) => sum + Math.log10(10 + trend.traffic), 0) * 2
+    // Trends outweigh every other signal, and newer ones count more.
+    const age = (trend) => (Date.now() - Date.parse(trend.date)) / 86400000
+    total += trendHits.reduce((sum, trend) => sum + Math.log10(10 + trend.traffic) * Math.max(0.3, 1 - age(trend) / TREND_DAYS), 0) * 5
     reasons.push(`trending: ${trendHits.map((trend) => trend.title).slice(0, 2).join(', ')}`)
   }
   if (candidate.rising.length) {
@@ -108,8 +114,13 @@ function score(candidate, signals) {
     total += Math.log10(1 + impressions) * 3
     reasons.push(`${impressions} Search Console impressions`)
   }
+  const proven = signals.guides.filter((guide) => (guide.goodFor ?? guide.category) === key).reduce((sum, guide) => sum + guide.impressions, 0)
+  if (proven) {
+    total += Math.log10(1 + proven) * 2
+    reasons.push(`similar guides got ${proven} impressions`)
+  }
   reasons.push(`${candidate.local.length} autocomplete matches`)
-  return { total, reasons }
+  return { total, reasons, trending: trendHits.length > 0 }
 }
 
 async function main() {
@@ -121,9 +132,10 @@ async function main() {
   const places = await loadPlaces()
   const since = new Date(Date.now() - TREND_DAYS * 86400000).toISOString().slice(0, 10)
   const signals = {
-    trends: (await readJson('trends.json', [])).filter((trend) => trend.date >= since),
+    trends: (await readJson('trends.json', [])).filter((trend) => trend.date >= since && (!trendingOnly || trend.traffic >= STRONG_TREND_SEARCHES)),
     seasons: activeSeasons(),
     searchConsole: (await readJson('search-console.json', { queries: [] })).queries,
+    guides: (await readJson('search-console.json', { guides: [] })).guides ?? [],
   }
   const previousSuggestions = await readJson('autocomplete.json', {})
   const snapshot = {}
@@ -138,8 +150,10 @@ async function main() {
     }
   }
 
+  const trendIntents = new Set(signals.trends.flatMap((trend) => trend.intents))
   const scored = []
   for (const candidate of candidates) {
+    if (trendingOnly && !trendIntents.has(intentKey(candidate.intent))) continue
     const city = candidate.area.name.toLowerCase()
     const phrases = candidate.intent.phrases.map((phrase) => phrase.replace('{c}', city))
     const suggestions = await suggest(phrases[0])
@@ -152,7 +166,9 @@ async function main() {
     const rising = before ? local.filter((value) => !before.includes(value)) : []
     const phrase = phrases.find((value) => local.includes(value)) ?? phrases[0]
     const enriched = { ...candidate, phrase, local, rising }
-    scored.push({ ...enriched, score: score(enriched, signals) })
+    const result = score(enriched, signals)
+    if (trendingOnly && !result.trending) continue
+    scored.push({ ...enriched, score: result })
   }
 
   scored.sort((a, b) => b.score.total - a.score.total || b.total - a.total)
@@ -180,7 +196,7 @@ async function main() {
   const seasonNames = signals.seasons.map((season) => season.name).join(', ') || 'none'
   await report(
     [
-      '## New guides this week',
+      trendingOnly ? '## Fresh trend guide' : '## New guides this week',
       `${candidates.length} city and topic combos have at least ${minPlaces} places. Active seasons: ${seasonNames}.`,
       added.length
         ? added.map(({ pick, guide }) => `- [${guide.label}](https://galatayo.app/guides/${guide.slug}), ${pick.total} places. Why: ${pick.score.reasons.join('; ')}.`).join('\n')
@@ -189,7 +205,8 @@ async function main() {
   )
 
   if (!dryRun) {
-    await writeJson('autocomplete.json', { ...previousSuggestions, ...snapshot })
+    // Daily runs keep last week's snapshot so the weekly job can still spot rising searches.
+    if (!trendingOnly) await writeJson('autocomplete.json', { ...previousSuggestions, ...snapshot })
     if (added.length) await writeFile(guidesPath, `${JSON.stringify([...guides, ...added.map(({ guide }) => guide)], null, 2)}\n`)
   }
 }
