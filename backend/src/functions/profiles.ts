@@ -64,6 +64,11 @@ import {
   saveProfile,
 } from "./profileHelpers";
 
+// Drafts are a convenience; until the onboarding_drafts migration is applied the endpoint answers without saving.
+function isMissingTableError(error: { code?: string }) {
+  return error.code === "PGRST205" || error.code === "42P01";
+}
+
 export async function onboardingDraft(
   request: HttpRequest,
   context: InvocationContext
@@ -79,7 +84,7 @@ export async function onboardingDraft(
         .eq("user_id", authUser.id)
         .maybeSingle();
 
-      if (error) {
+      if (error && !isMissingTableError(error)) {
         throw error;
       }
 
@@ -117,6 +122,10 @@ export async function onboardingDraft(
       )
       .select("updated_at")
       .single();
+
+    if (error && isMissingTableError(error)) {
+      return { status: 200, jsonBody: { saved: false, updatedAt: null } };
+    }
 
     if (error) {
       throw error;

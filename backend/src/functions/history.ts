@@ -293,8 +293,9 @@ export async function historyPlaceView(
     const supabaseAdmin = await getSupabaseAdminClient();
     const historyTable = supabaseAdmin.from("history") as any;
 
+    // One row per person and place: a repeat visit moves it back to the top.
     const { data: history, error: historyError } = await historyTable
-      .insert([
+      .upsert(
         {
           user_id: user.id,
           type: "place_view",
@@ -302,7 +303,8 @@ export async function historyPlaceView(
           place_id: place.id,
           created_at: new Date().toISOString(),
         },
-      ])
+        { onConflict: "user_id,type,place_id" }
+      )
       .select("id, user_id, type, query, place_id, created_at")
       .single();
 
