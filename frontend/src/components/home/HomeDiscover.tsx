@@ -4,6 +4,7 @@ import { Sparkle as Sparkles } from '@phosphor-icons/react/dist/csr/Sparkle'
 import PhotoCard, { type PhotoCardPlace } from '../discover/PhotoCard'
 import PlaceImage from '../discover/PlaceImage'
 import Rail from '../discover/Rail'
+import HomeQuickPicks from './HomeQuickPicks'
 import { categoryIcons } from '../discover/CategoryTabs'
 import InternalLink from '../InternalLink'
 import { useGuestAuthPrompt } from '../GuestAuthPrompt'
@@ -206,6 +207,7 @@ function HomeDiscover({ isRaining = false, top, greeting, className }: { isRaini
       {greeting ? <p className="g-home-hello">{greeting}</p> : null}
       <HomeSearch />
       <CategoryBar active={active} onChange={setActive} />
+      <HomeQuickPicks pool={[...popular, ...topPicks]} />
       {top}
       {active === FOR_YOU ? (
         <>
