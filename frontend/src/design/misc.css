@@ -1,4 +1,5 @@
 /* Auth, onboarding, guides, index, AI chat and article pages. Builds on gt1.css tokens. */
+@layer properties, theme, base, components, utilities;
 @layer components {
 /* ---------- Auth sheet (Airbnb-style: centred title bar, email first) ---------- */
 .m-auth { width: 100%; flex: 1 0 auto; padding: 0 0 40px; }
