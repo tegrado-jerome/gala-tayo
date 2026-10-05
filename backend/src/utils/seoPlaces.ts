@@ -1,4 +1,4 @@
-import { hiddenSlugFilter } from "./galaWorthy";
+import { isGalaWorthySlug } from "./galaWorthy";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { CATEGORIES } from "../functions/filters";
 import { PUBLIC_PLACE_COLUMNS } from "../domain/places";
@@ -75,7 +75,7 @@ const APPROVED_IMAGE_LOOKUP_BATCH_SIZE = 100;
 const MAX_APPROVED_IMAGES_PER_PLACE = 3;
 const SEO_PLACE_SUMMARIES_CACHE_KEY = "seo:places:summaries:v3";
 const SEO_PLACE_SUMMARIES_CACHE_TTL_SECONDS = 60 * 10;
-const SEO_LISTING_PAGE_CACHE_PREFIX = "seo:listings:v3";
+const SEO_LISTING_PAGE_CACHE_PREFIX = "seo:listings:v4";
 const SEO_LISTING_PAGE_CACHE_TTL_SECONDS = 60 * 10;
 
 function cleanString(value: unknown): string | null {
@@ -285,12 +285,9 @@ export async function getSeoPlaceSummaries(options: SeoPlaceSummaryOptions = {})
   }
 
   const supabase = await getSupabaseAdminClient();
-  let summaryQuery = (supabase.from("places") as any)
+  const { data, error } = await (supabase.from("places") as any)
     .select(SEO_PLACE_SELECT)
-    .eq("status", "active");
-  const hiddenFilter = hiddenSlugFilter();
-  if (hiddenFilter) summaryQuery = summaryQuery.not("slug", "in", hiddenFilter);
-  const { data, error } = await summaryQuery
+    .eq("status", "active")
     .order("name", { ascending: true, nullsFirst: false })
     .limit(1000);
 
@@ -298,7 +295,7 @@ export async function getSeoPlaceSummaries(options: SeoPlaceSummaryOptions = {})
     throw new Error("Failed to load places for SEO.");
   }
 
-  const placeRows = ((data ?? []) as PlaceRow[]).filter(isPublicPlace);
+  const placeRows = ((data ?? []) as PlaceRow[]).filter((row) => isPublicPlace(row) && isGalaWorthySlug(cleanString(row.slug)));
   const placeIds = placeRows
     .map((row) => cleanString(row.id))
     .filter((value): value is string => Boolean(value));
@@ -426,15 +423,10 @@ export async function getSeoListingPage({
   const categoryLabel = getCategoryLabel(normalizedCategory);
   const locationOrFilter = buildLocationOrFilter(getAreaNamesForQuery(normalizedAreaSlug));
 
-  const buildListingQuery = () => {
-    let query = (supabase.from("places") as any)
-      .select(SEO_LISTING_PLACE_SELECT, { count: "exact" })
-      .eq("status", "active");
-
-    const hiddenFilter = hiddenSlugFilter();
-    if (hiddenFilter) {
-      query = query.not("slug", "in", hiddenFilter);
-    }
+  // Hidden (not gala-worthy) places are filtered in code: a `slug not in (...)` list makes the
+  // request URL too long once location filters are added, which broke the static listing build.
+  const buildListingQuery = (columns: string) => {
+    let query = (supabase.from("places") as any).select(columns).eq("status", "active");
 
     if (categoryLabel) {
       query = query.eq("category", categoryLabel);
@@ -449,21 +441,27 @@ export async function getSeoListingPage({
     }
 
     return query;
-  }
+  };
 
-  const countResult = await buildListingQuery().limit(1);
-  if (countResult.error) {
+  const idResult = await buildListingQuery("id, slug").order("name", { ascending: true, nullsFirst: false }).limit(2000);
+  if (idResult.error) {
     throw new Error("Failed to load listing places.");
   }
+  const visibleIds = ((idResult.data ?? []) as Array<{ id: string; slug: string | null }>)
+    .filter((row) => isGalaWorthySlug(row.slug))
+    .map((row) => String(row.id));
 
-  const total = countResult.count ?? 0;
+  const total = visibleIds.length;
   const totalPages = Math.max(1, Math.ceil(total / safePageSize));
   const safePage = Math.min(safeRequestedPage, totalPages);
   const startIndex = (safePage - 1) * safePageSize;
-  const endIndex = startIndex + safePageSize - 1;
-  const { data, error } = await buildListingQuery()
-    .order("name", { ascending: true, nullsFirst: false })
-    .range(startIndex, endIndex);
+  const pageIds = visibleIds.slice(startIndex, startIndex + safePageSize);
+  const { data, error } = pageIds.length
+    ? await (supabase.from("places") as any)
+        .select(SEO_LISTING_PLACE_SELECT)
+        .in("id", pageIds)
+        .order("name", { ascending: true, nullsFirst: false })
+    : { data: [], error: null };
 
   if (error) {
     throw new Error("Failed to load listing places.");

@@ -1,4 +1,4 @@
-import { hiddenSlugFilter } from "../utils/galaWorthy";
+import { isGalaWorthySlug } from "../utils/galaWorthy";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { getJsonCacheValue, setJsonCacheValue, deleteJsonCacheValue } from "../services/redisCacheService";
 
@@ -217,15 +217,15 @@ export async function getActiveNormalizedPlaces({ includeHidden = false }: { inc
   let query = (supabase.from("places") as any)
     .select(PUBLIC_PLACE_COLUMNS)
     .eq("status", "active");
-  const hiddenFilter = includeHidden ? null : hiddenSlugFilter();
-  if (hiddenFilter) query = query.not("slug", "in", hiddenFilter);
   const { data, error } = await query
     .order("name", { ascending: true, nullsFirst: false })
     .limit(1000);
 
   if (error) throw new Error("Failed to load active places.");
 
-  const places = ((data ?? []) as Array<Record<string, unknown>>).map((row) => normalizePlaceRecord(row));
+  const places = ((data ?? []) as Array<Record<string, unknown>>)
+    .map((row) => normalizePlaceRecord(row))
+    .filter((place) => includeHidden || isGalaWorthySlug(place.slug));
   await setJsonCacheValue(cacheKey, places, { ttlSeconds: ACTIVE_PLACES_CACHE_TTL_SECONDS });
   return places;
 }
