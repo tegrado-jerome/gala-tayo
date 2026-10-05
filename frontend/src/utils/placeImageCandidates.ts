@@ -1,4 +1,5 @@
 import { getCuratedPlaceImages, normalizePlaceSlug } from '../data/curatedPlaceImages'
+import { getPlaceCardPhoto } from './placeGalleryPhotos'
 
 type PlaceImageSource = {
   name?: string | null
@@ -37,6 +38,7 @@ function resolvePlaceImageCandidates(place: PlaceImageSource) {
   const candidates: string[] = []
   const seen = new Set<string>()
 
+  pushUniqueImageCandidate(candidates, seen, getPlaceCardPhoto(place.slug))
   pushUniqueImageCandidate(candidates, seen, place.thumbnailUrl)
   pushUniqueImageCandidate(candidates, seen, place.imageUrl)
   pushUniqueImageCandidate(candidates, seen, place.curatedImageUrl)

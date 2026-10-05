@@ -1,4 +1,5 @@
 import { getCuratedPlaceImages } from '../data/curatedPlaceImages'
+import { getPlaceCardPhoto } from './placeGalleryPhotos'
 
 type PlacePhotoSource = {
   name?: string | null
@@ -8,6 +9,11 @@ type PlacePhotoSource = {
 }
 
 function getPlacePhoto(source: PlacePhotoSource) {
+  const hdPhoto = getPlaceCardPhoto(source.slug)
+  if (hdPhoto) {
+    return hdPhoto
+  }
+
   const directPhoto = source.photo_url?.trim()
 
   if (directPhoto) {
