@@ -81,7 +81,7 @@ function CategoryBar({ active, onChange }: { active: string; onChange: (value: s
       {tabs.map((tab) => {
         const Icon = tab.icon
         return (
-          <button key={tab.value} type="button" role="tab" aria-selected={tab.value === active} className="g-cat" onClick={() => onChange(tab.value)}>
+          <button key={tab.value} type="button" role="tab" aria-selected={tab.value === active} className={`g-cat c-${tab.value}`} onClick={() => onChange(tab.value)}>
             <Icon weight={tab.value === active ? 'fill' : 'duotone'} aria-hidden="true" />
             {tab.label}
           </button>
@@ -190,7 +190,7 @@ function CityChips() {
 }
 
 /** Search pill, icon category tabs, then photo rails. Shared by Home and the guest landing page. */
-function HomeDiscover({ isRaining = false, top, className }: { isRaining?: boolean; top?: React.ReactNode; className?: string }) {
+function HomeDiscover({ isRaining = false, top, greeting, className }: { isRaining?: boolean; top?: React.ReactNode; greeting?: React.ReactNode; className?: string }) {
   const guestAuth = useGuestAuthPrompt()
   const detailsBySlug = useCuratedDetails()
   const [active, setActive] = useState(FOR_YOU)
@@ -203,6 +203,7 @@ function HomeDiscover({ isRaining = false, top, className }: { isRaining?: boole
 
   return (
     <div className={cx('min-w-0', className)}>
+      {greeting ? <p className="g-home-hello">{greeting}</p> : null}
       <HomeSearch />
       <CategoryBar active={active} onChange={setActive} />
       {top}

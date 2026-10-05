@@ -31,6 +31,11 @@ function HomePage({ navigationSource }: { navigationSource: NavigationSource }) 
       <h1 className="sr-only">{greetingName ? `Tara, ${greetingName}? Places to go in Metro Manila` : 'Places to go in Metro Manila'}</h1>
       <HomeDiscover
         isRaining={isRaining}
+        greeting={
+          <span aria-hidden="true">
+            Tara{greetingName ? `, ${greetingName}` : ''}, <em>gala</em> tayo?
+          </span>
+        }
         top={
           <>
             {isRaining && weather ? (
