@@ -352,9 +352,12 @@ const CATEGORY_OPENING: Record<string, { min: number; max: number }> = {
   Heritage: { min: 8 * 60, max: 17 * 60 },
 };
 
+const NIGHT_VENUE = /\b(night market|night bazaar|night food market|light park|firefly)\b/i;
+
 function stopKind(place: NormalizedPlace, note: string, clock: number | null, wantsSunset: boolean): StopKind {
   const text = `${note} ${place.name} ${place.tags.join(" ")} ${place.good_for.join(" ")} ${place.best_time_to_visit ?? ""}`.toLowerCase();
-  if (place.category === "Nightlife") return "nightlife";
+  // Night markets, light shows and firefly tours only happen after dark.
+  if (place.category === "Nightlife" || NIGHT_VENUE.test(place.name)) return "nightlife";
   if (wantsSunset && SUNSET_WORDS.test(text) && place.category !== "Food") return "sunset";
   if (SUNSET_WORDS.test(note) && place.category !== "Food") return "sunset";
   if (place.category === "Food") {
@@ -540,6 +543,27 @@ export function buildFallbackDraft(prompt: string, candidates: NormalizedPlace[]
 
 export function wantsSunset(prompt: string) {
   return SUNSET_WORDS.test(prompt);
+}
+
+/** Date nights and "gabi" plans start late afternoon instead of the default morning. */
+export function wantsEvening(prompt: string) {
+  return /\b(date night|night out|gabi|evening|tonight|mamayang gabi|dinner|hapunan|inuman|nightlife|after work|after office)\b/i.test(prompt);
+}
+
+/**
+ * Keeps a plan in the area that was asked for: with a named place, stops elsewhere are dropped;
+ * without one, stops far from the first stop are dropped. Never leaves fewer than two stops.
+ */
+export function keepStopsNearby(stops: DraftStop[], placesById: Map<string, NormalizedPlace>, intent: LocationIntent, maxKm = 12): DraftStop[] {
+  const resolved = stops.filter((stop) => placesById.has(stop.place_id));
+  const inArea = hasLocation(intent)
+    ? resolved.filter((stop) => matchesLocation(placesById.get(stop.place_id)!, intent))
+    : resolved.filter((stop) => {
+        const first = placesById.get(resolved[0].place_id)!;
+        const km = distanceKm(first, placesById.get(stop.place_id)!);
+        return km === null || km <= maxKm;
+      });
+  return inArea.length >= MIN_STOPS ? inArea : resolved;
 }
 
 export function getPlanSunset(date: string, places: NormalizedPlace[]) {

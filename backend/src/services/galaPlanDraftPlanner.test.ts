@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { NormalizedPlace } from "../domain/places";
-import { buildFallbackDraft, findUncoveredArea, parseDraft, parseGroupSize, resolvePlanDate, resolvePromptDate, scheduleStops, selectCandidates } from "./galaPlanDraftPlanner";
+import { buildFallbackDraft, detectLocationIntent, findUncoveredArea, keepStopsNearby, parseDraft, parseGroupSize, resolvePlanDate, resolvePromptDate, scheduleStops, selectCandidates, wantsEvening } from "./galaPlanDraftPlanner";
 
 function place(overrides: Partial<NormalizedPlace>): NormalizedPlace {
   return {
@@ -227,5 +227,38 @@ describe("findUncoveredArea", () => {
     assert.equal(findUncoveredArea(places, "Baguio day trip"), "Baguio");
     assert.equal(findUncoveredArea(places, "Makati food trip"), null);
     assert.equal(findUncoveredArea(places, "chill cafe date"), null);
+  });
+});
+
+describe("plan sense rules", () => {
+  const bgcCafe = place({ id: "a", name: "BGC Cafe", category: "Cafe", city: "Taguig", latitude: 14.55, longitude: 121.05 });
+  const bgcDinner = place({ id: "b", name: "BGC Dinner", category: "Food", city: "Taguig", latitude: 14.552, longitude: 121.048 });
+  const cubao = place({ id: "c", name: "Cubao Expo", category: "Activity", city: "Quezon City", latitude: 14.62, longitude: 121.05 });
+  const byId = new Map([bgcCafe, bgcDinner, cubao].map((p) => [p.id, p]));
+  const stop = (id: string) => ({ place_id: id, time: "", minutes: 60, note: "" });
+
+  it("treats date nights and gabi plans as evening plans", () => {
+    assert.equal(wantsEvening("Date night in BGC under 2000"), true);
+    assert.equal(wantsEvening("Gala mamayang gabi sa Makati"), true);
+    assert.equal(wantsEvening("Rainy day museums in Manila"), false);
+  });
+
+  it("drops stops outside the named area", () => {
+    const intent = detectLocationIntent([bgcCafe, bgcDinner, cubao], "date night in taguig");
+    const kept = keepStopsNearby([stop("a"), stop("c"), stop("b")], byId, intent);
+    assert.deepEqual(kept.map((s) => s.place_id), ["a", "b"]);
+  });
+
+  it("keeps stops close together when no area is named", () => {
+    const kept = keepStopsNearby([stop("a"), stop("b"), stop("c")], byId, { cities: new Set(), destinationSlugs: new Set() }, 5);
+    assert.deepEqual(kept.map((s) => s.place_id), ["a", "b"]);
+  });
+
+  it("schedules night markets after dark", () => {
+    const market = place({ id: "m", name: "Baguio Night Market", category: "Activity", latitude: 16.41, longitude: 120.6 });
+    const cafe = place({ id: "k", name: "Cafe", category: "Cafe", latitude: 16.411, longitude: 120.601 });
+    const out = scheduleStops([stop("m"), stop("k")], new Map([market, cafe].map((p) => [p.id, p])), { sunsetMinutes: 17 * 60 + 40, wantsSunset: false });
+    const marketStop = out.find((s) => s.place_id === "m")!;
+    assert.ok(Number(marketStop.time.split(":")[0]) >= 19);
   });
 });
