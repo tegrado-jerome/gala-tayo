@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState, type CSSProperties } from 'react'
-import { CaretRight as ChevronRight } from '@phosphor-icons/react/dist/csr/CaretRight'
+import { useEffect, useMemo, useState } from 'react'
+import { SquaresFour } from '@phosphor-icons/react/dist/csr/SquaresFour'
 import PlaceImage from '../components/discover/PlaceImage'
 import { ListingBreadcrumb } from '../components/home/search/SearchComponents'
 import InternalLink from '../components/InternalLink'
@@ -13,6 +13,7 @@ import { fetchPlaceDetailsBatch } from '../utils/placeDetailCache'
 import { getSeoListingPage } from '../utils/seoApi'
 import { getSiteOrigin } from '../utils/seo'
 import { BRAND_NAME, PRODUCT_NAME } from '../utils/seoLandingPages'
+import '../design/misc.css'
 
 function formatPlaceCount(count: number) {
   return `${count.toLocaleString('en-PH')} ${count === 1 ? 'place' : 'places'}`
@@ -67,9 +68,8 @@ function PlacesIndexPage() {
     }
   }, [representativeSlugs])
 
-  const heroAreas = areaCards.slice(0, 2)
-  const otherAreas = areaCards.slice(2)
-  const desktopColumns = [5, 4, 3].find((columns) => otherAreas.length % columns === 0) ?? 4
+  const heroAreas = areaCards.slice(0, 4)
+  const otherAreas = areaCards.slice(4)
   const getAreaImageCandidates = (areaSlug: string) =>
     getDiscoveryImageCandidates(cityRepresentativePlaceSlugs[areaSlug], representativePlaces[cityRepresentativePlaceSlugs[areaSlug]])
   const getCountLabel = (areaSlug: string) => (placeCounts[areaSlug] != null ? formatPlaceCount(placeCounts[areaSlug]) : 'See places')
@@ -115,48 +115,43 @@ function PlacesIndexPage() {
 
       <ListingBreadcrumb items={[{ label: 'Home', href: '/home' }, { label: 'Places' }]} />
 
-      <header className="mt-5 max-w-[42rem]">
-        <h1 className="g-h1">Metro Manila places to visit</h1>
-        <p className="g-mut mt-2">Pick a city to see its cafes, parks and food spots.</p>
+      <header className="mt-5 flex flex-wrap items-end justify-between gap-4">
+        <div className="max-w-[42rem]">
+          <h1 className="g-h1">Metro Manila places to visit</h1>
+          <p className="g-mut mt-2">Pick a city to see its cafes, parks and food spots.</p>
+        </div>
+        <InternalLink href="/places/categories" className="g-btn g-btn-line g-btn-sm">
+          <SquaresFour aria-hidden="true" />
+          Browse by category
+        </InternalLink>
       </header>
 
-      <SectionHead title="Cities" sub={<InternalLink href="/places/categories" className="underline underline-offset-2">Or browse by category</InternalLink>} />
-      <div className="grid grid-cols-2 gap-3 md:gap-6">
-        {heroAreas.map((area) => (
+      <SectionHead title="Most to explore" sub="Cities with the most GalaTayo places" />
+      <div className="m-top">
+        {heroAreas.map((area, index) => (
           <InternalLink key={area.slug} href={`/places/${area.slug}`} className="g-pc">
-            <span className="g-pc-img block aspect-[4/5] md:aspect-[16/10]">
-              <PlaceImage candidates={getAreaImageCandidates(area.slug)} priority className="h-full w-full object-cover" />
+            <span className="g-pc-img block">
+              <PlaceImage candidates={getAreaImageCandidates(area.slug)} priority={index < 2} className="h-full w-full object-cover" />
             </span>
-            <span className="g-h2 mt-2.5 block truncate">{displayCityName(area.name)}</span>
-            <span className="g-sm g-mut block">{getCountLabel(area.slug)}</span>
+            <span className="g-pc-title">
+              <span className="g-h3">{displayCityName(area.name)}</span>
+            </span>
+            <span className="g-pc-meta block">{getCountLabel(area.slug)}</span>
           </InternalLink>
         ))}
       </div>
 
-      <div className="g-group mt-6 lg:hidden">
+      <SectionHead title="Explore every city" />
+      <div className="m-near">
         {otherAreas.map((area) => (
-          <InternalLink key={area.slug} href={`/places/${area.slug}`} className="g-group-row py-2">
-            <PlaceImage candidates={getAreaImageCandidates(area.slug)} className="h-14 w-14 shrink-0 rounded-[var(--r-2)] object-cover" />
-            <span className="min-w-0 truncate">{displayCityName(area.name)}</span>
-            <span className="g-group-end">
-              {getCountLabel(area.slug)}
-              <ChevronRight className="h-4 w-4" aria-hidden="true" />
+          <InternalLink key={area.slug} href={`/places/${area.slug}`}>
+            <span className="m-near-img">
+              <PlaceImage candidates={getAreaImageCandidates(area.slug)} />
             </span>
-          </InternalLink>
-        ))}
-      </div>
-
-      <div
-        className="mt-8 hidden gap-6 lg:grid lg:grid-cols-[repeat(var(--city-cols),minmax(0,1fr))]"
-        style={{ '--city-cols': desktopColumns } as CSSProperties}
-      >
-        {otherAreas.map((area) => (
-          <InternalLink key={area.slug} href={`/places/${area.slug}`} className="g-pc">
-            <span className="g-pc-img block aspect-[4/3]">
-              <PlaceImage candidates={getAreaImageCandidates(area.slug)} className="h-full w-full object-cover" />
+            <span className="min-w-0">
+              <b>{displayCityName(area.name)}</b>
+              <small>{getCountLabel(area.slug)}</small>
             </span>
-            <span className="g-h3 mt-2 block truncate">{displayCityName(area.name)}</span>
-            <span className="g-sm g-mut block">{getCountLabel(area.slug)}</span>
           </InternalLink>
         ))}
       </div>

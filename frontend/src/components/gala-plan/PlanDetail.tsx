@@ -1,25 +1,31 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { RecapStoryButton } from './RecapStory'
 import type { Session } from '@supabase/supabase-js'
+import type { Icon as PhosphorIcon } from '@phosphor-icons/react'
 import { ArrowsDownUp as ArrowDownUp } from '@phosphor-icons/react/dist/csr/ArrowsDownUp'
 import { ArrowLeft } from '@phosphor-icons/react/dist/csr/ArrowLeft'
 import { CalendarBlank as CalendarDays } from '@phosphor-icons/react/dist/csr/CalendarBlank'
 import { Check } from '@phosphor-icons/react/dist/csr/Check'
+import { Coins } from '@phosphor-icons/react/dist/csr/Coins'
 import { Heart } from '@phosphor-icons/react/dist/csr/Heart'
 import { LinkSimple as Link2 } from '@phosphor-icons/react/dist/csr/LinkSimple'
+import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
 import { DotsThree as MoreHorizontal } from '@phosphor-icons/react/dist/csr/DotsThree'
+import { Path } from '@phosphor-icons/react/dist/csr/Path'
 import { PencilSimple as Pencil } from '@phosphor-icons/react/dist/csr/PencilSimple'
 import { Export as Share } from '@phosphor-icons/react/dist/csr/Export'
 import { Sparkle as Sparkles } from '@phosphor-icons/react/dist/csr/Sparkle'
 import { Trash as Trash2 } from '@phosphor-icons/react/dist/csr/Trash'
 import { UserPlus } from '@phosphor-icons/react/dist/csr/UserPlus'
+import { UsersThree } from '@phosphor-icons/react/dist/csr/UsersThree'
 import DestructiveConfirmModal from '../DestructiveConfirmModal'
 import InternalLink from '../InternalLink'
-import { AvatarStack, Button, Empty, Page, Panel, Sheet, Skeleton, Tabs, Tag, cx } from '../ui'
+import { Avatar, AvatarStack, Button, Empty, Page, Sheet, Skeleton, Tabs, Tag, cx } from '../ui'
 import { MembersList, PollsPanel, RsvpPanel, personAvatar, personName } from './BarkadaPanel'
 import BudgetPanel from './BudgetPanel'
-import PlanRouteMap from './PlanRouteMap'
+import PlanRouteMap, { useIsDesktop } from './PlanRouteMap'
+import { TripCover, hasCoverPhoto } from './PlanSummaryCard'
 import PlanTimeline, { type TimelineStop } from './PlanTimeline'
+import { RecapStoryButton } from './RecapStory'
 import { getGalaPlanBarkada, type GalaPlanBarkada } from '../../utils/galaPlanBarkadaApi'
 import {
   deleteGalaPlan,
@@ -34,13 +40,10 @@ import { daysUntil, estimatePerHead, formatDaysUntil, formatPeso, getPlanDate, g
 import { openFloatingChat } from '../../utils/floatingChat'
 import { navigateToPath } from '../../utils/navigation'
 import { buildPrivateGalaPlanShareUrl, shareLink } from '../../utils/share'
+import '../../design/plans.css'
 
 type Tab = 'itinerary' | 'polls' | 'barkada' | 'hatian'
 type Menu = 'sheet' | 'popover' | null
-
-const NAVY = '#0f2138'
-const heroSurface = 'h-11 rounded-full border-0 bg-[var(--surface)] text-[var(--ink)] shadow-[var(--sh-2)] cursor-pointer'
-const heroButton = `${heroSurface} grid w-11 place-items-center`
 
 function PlanMenu({ menu, onClose, onDelete }: { menu: Menu; onClose: () => void; onDelete: () => void }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -93,16 +96,20 @@ function BackLink() {
   )
 }
 
-function MistTile({ onClick, children, label }: { onClick?: () => void; children: ReactNode; label: string }) {
+function StatCell({ icon: Icon, value, label, onClick, ariaLabel }: { icon: PhosphorIcon; value: ReactNode; label: ReactNode; onClick?: () => void; ariaLabel?: string }) {
+  const content = (
+    <>
+      <b>{value}</b>
+      <span>
+        <Icon aria-hidden="true" />
+        {label}
+      </span>
+    </>
+  )
+  if (!onClick) return <div className="g-tstat">{content}</div>
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      className="flex min-h-[84px] min-w-0 flex-col justify-between gap-2 border-0 bg-[var(--fill)] p-3 text-left text-[var(--ink)] transition-colors hover:bg-[var(--fill-2)] motion-reduce:transition-none"
-      style={{ borderRadius: 'var(--r-3)' }}
-    >
-      {children}
+    <button type="button" className="g-tstat" onClick={onClick} aria-label={ariaLabel}>
+      {content}
     </button>
   )
 }
@@ -119,8 +126,8 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
   const [isReordering, setIsReordering] = useState(false)
   const [menu, setMenu] = useState<Menu>(null)
   const [isInviteOpen, setIsInviteOpen] = useState(false)
-  const [isSheetUp, setIsSheetUp] = useState(false)
   const tabsRef = useRef<HTMLDivElement>(null)
+  const isDesktop = useIsDesktop()
 
   useEffect(() => {
     let isCancelled = false
@@ -165,14 +172,16 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
   }
   if (!plan) {
     return (
-      <Page className="pt-0 lg:pt-8">
-        <div aria-label="Loading plan" className="lg:grid lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:gap-10">
-          <Skeleton className="-mx-4 h-[48vh] rounded-none lg:mx-0 lg:h-[calc(100vh-132px)] lg:rounded-[var(--r-4)]" />
+      <Page className="pt-0 md:pt-6">
+        <div aria-label="Loading plan" className="g-plan-split has-map">
           <div>
-            <Skeleton className="mt-6 h-8 w-2/3" />
+            <Skeleton className="-mx-4 h-[240px] rounded-none md:mx-0 md:h-[320px] md:rounded-[var(--r-4)]" />
+            <Skeleton className="mt-5 h-8 w-2/3" />
             <Skeleton className="mt-3 h-4 w-1/2" />
+            <Skeleton className="mt-5 h-[72px]" />
             <Skeleton className="mt-8 h-40" />
           </div>
+          <Skeleton className="g-only-desk h-[calc(100vh-128px)] rounded-[var(--r-4)]" />
         </div>
       </Page>
     )
@@ -187,22 +196,21 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
   const perHead = estimatePerHead(plan.items, Math.max(1, going.length))
   const shareUrl = buildPrivateGalaPlanShareUrl(plan.id)
   const cover = plan.items.find((item) => item.place.image_url)?.place.image_url
+  const coverStops = plan.items.map((item) => item.place)
+  const hasPhotos = hasCoverPhoto(coverStops)
   const lastStop = plan.items[plan.items.length - 1]
   const dateText = date ? date.toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' }) : null
   const totalKm = getPlanLegs(plan.items).reduce((sum, leg) => sum + (leg?.km ?? 0), 0)
   const hasRoute = plan.items.some((item) => item.place.latitude != null && item.place.longitude != null)
-  const meta = [
-    dateText ?? 'Any day',
-    totalKm > 0 ? `${totalKm < 1 ? `${Math.round(totalKm * 1000)} m` : `${totalKm.toFixed(1)} km`}` : null,
-    `${plan.place_count} ${plan.place_count === 1 ? 'stop' : 'stops'}`,
-    plan.owner?.username ? `Hosted by ${plan.owner.display_name?.trim() || `@${plan.owner.username}`}` : null,
-  ].filter(Boolean)
+  const coverIsMap = !hasPhotos && hasRoute && !isDesktop
+  const hostName = plan.owner?.display_name?.trim() || (plan.owner?.username ? `@${plan.owner.username}` : null)
 
   const viewerMember = readyBarkada?.members.find((member) => member.user_id === session?.user?.id)
   const host = readyBarkada?.members.find((member) => member.is_owner)
-  const hostName = (host ? personName(host.profile) : plan.owner?.display_name || plan.owner?.username || 'the host').split(' ')[0]
+  const hostFirstName = (host ? personName(host.profile) : plan.owner?.display_name || plan.owner?.username || 'the host').split(' ')[0]
   const owesHost = Boolean(viewerMember && !viewerMember.is_owner && viewerMember.rsvp === 'going' && perHead > 0)
-  const costLine = owesHost ? (viewerMember?.paid ? `settled with ${hostName}` : `you owe ${hostName}`) : perHead > 0 ? 'per head, est.' : 'nothing to split'
+  const costLine = owesHost ? (viewerMember?.paid ? `settled with ${hostFirstName}` : `you owe ${hostFirstName}`) : perHead > 0 ? 'per head, est.' : 'nothing to split'
+  const costLabel = owesHost ? (viewerMember?.paid ? 'settled' : `owe ${hostFirstName}`) : 'each, est.'
 
   const moveStop = async (index: number, direction: -1 | 1) => {
     const next = [...plan.items]
@@ -344,7 +352,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
   const closeMenu = () => setMenu(null)
   const count = (value: number) => (value > 0 ? <span className="g-fnt ml-1">{value}</span> : null)
   const tabs: Array<{ value: Tab; label: ReactNode }> = [
-    { value: 'itinerary', label: <>Stops{count(stops.length)}</> },
+    { value: 'itinerary', label: <>Itinerary{count(stops.length)}</> },
     ...(readyBarkada
       ? [
           { value: 'polls' as const, label: <>Polls{count(readyBarkada.polls.length)}</> },
@@ -357,19 +365,19 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
 
   const heroActions = plan.viewer_is_owner ? (
     <>
-      <button type="button" className={heroButton} aria-label="Edit plan" onClick={() => navigateToPath(`/gala-plans/${encodeURIComponent(plan.id)}/edit`)}>
-        <Pencil className="g-ic" />
+      <button type="button" className="g-round" aria-label="Edit plan" onClick={() => navigateToPath(`/gala-plans/${encodeURIComponent(plan.id)}/edit`)}>
+        <Pencil />
       </button>
       <div className="relative">
         <button
           type="button"
-          className={heroButton}
+          className="g-round"
           aria-label="More options"
           aria-haspopup="menu"
           aria-expanded={menu !== null}
           onClick={() => setMenu(menu ? null : window.matchMedia('(min-width: 1024px)').matches ? 'popover' : 'sheet')}
         >
-          <MoreHorizontal className="g-ic" />
+          <MoreHorizontal weight="bold" />
         </button>
         <PlanMenu
           menu={menu}
@@ -384,18 +392,29 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
   ) : plan.visibility === 'public' ? (
     <button
       type="button"
-      className={cx(heroSurface, 'flex items-center gap-1.5 px-3.5')}
+      className="g-round is-wide"
       aria-pressed={plan.viewer_has_hearted}
       aria-label={plan.viewer_has_hearted ? 'Remove heart' : 'Heart this plan'}
       onClick={() => void heart()}
     >
-      <Heart className="g-ic" weight={plan.viewer_has_hearted ? 'fill' : 'regular'} style={plan.viewer_has_hearted ? { color: 'var(--tara)' } : undefined} />
-      <span className="g-sm font-semibold">{plan.heart_count}</span>
+      <Heart weight={plan.viewer_has_hearted ? 'fill' : 'regular'} style={plan.viewer_has_hearted ? { color: 'var(--tara)' } : undefined} />
+      {plan.heart_count}
     </button>
   ) : null
 
+  const stats = [
+    <StatCell key="stops" icon={MapPin} value={stops.length} label={stops.length === 1 ? 'stop' : 'stops'} onClick={() => openTab('itinerary')} ariaLabel={`${stops.length} stops. Open itinerary`} />,
+    totalKm > 0 ? <StatCell key="km" icon={Path} value={totalKm < 1 ? `${Math.round(totalKm * 1000)} m` : `${totalKm.toFixed(1)} km`} label="route" /> : null,
+    <StatCell key="cost" icon={Coins} value={formatPeso(perHead)} label={costLabel} onClick={() => openTab('hatian')} ariaLabel={`${formatPeso(perHead)} ${costLine}. Open hatian`} />,
+    readyBarkada ? (
+      <StatCell key="going" icon={UsersThree} value={going.length} label="going" onClick={() => openTab('barkada')} ariaLabel={`${going.length} tara, ${maybeCount} baka. Open barkada`} />
+    ) : null,
+  ].filter(Boolean)
+
+  const routeMap = hasRoute ? <PlanRouteMap stops={stops} className={isDesktop || coverIsMap ? undefined : 'mb-6'} label={`Route map for ${plan.title}`} /> : null
+
   return (
-    <Page className="pt-0 lg:pt-8">
+    <Page className="pt-0 md:pt-6 lg:pt-8">
       <DestructiveConfirmModal
         isOpen={confirm === 'delete'}
         title="Delete this gala plan?"
@@ -418,100 +437,91 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
         {invite}
       </Sheet>
 
-      <div className="lg:grid lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-start lg:gap-10">
-        <div className="relative -mx-4 lg:sticky lg:top-24 lg:mx-0">
-          <div className="h-[48vh] min-h-[300px] lg:h-[calc(100vh-132px)] lg:min-h-[420px]">
-            {hasRoute ? (
-              <PlanRouteMap stops={stops} className="!h-full !rounded-none !border-0 lg:!rounded-[var(--r-4)]" />
-            ) : (
-              <div className="relative h-full overflow-hidden lg:rounded-[var(--r-4)]" style={{ background: NAVY }}>
-                {cover ? <img src={cover} alt="" className="h-full w-full object-cover opacity-80" /> : null}
-              </div>
-            )}
+      <div className={cx('g-plan-split', hasRoute ? 'has-map' : 'mx-auto max-w-[760px]')}>
+        <div className="min-w-0">
+          <div className="g-plan-cover">
+            {coverIsMap ? routeMap : <TripCover stops={coverStops} priority />}
+            <div className="g-plan-bar">
+              <InternalLink href="/gala-plans" className="g-round" ariaLabel="Back to plans">
+                <ArrowLeft />
+              </InternalLink>
+              {heroActions ? <div className="flex gap-2">{heroActions}</div> : null}
+            </div>
           </div>
-          <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start justify-between p-4">
-            <InternalLink href="/gala-plans" className={cx(heroButton, 'pointer-events-auto')} ariaLabel="Back to plans">
-              <ArrowLeft className="g-ic" />
-            </InternalLink>
-            {heroActions ? <div className="pointer-events-auto flex gap-2">{heroActions}</div> : null}
-          </div>
-        </div>
 
-        <div
-          className={cx(
-            'relative z-[1] -mx-4 rounded-t-[var(--r-4)] bg-[var(--surface)] px-4 pb-6 shadow-[0_-8px_24px_rgba(15,33,56,0.12)] transition-[margin] duration-300 motion-reduce:transition-none lg:mx-0 lg:mt-0 lg:rounded-none lg:p-0 lg:shadow-none',
-            isSheetUp ? '-mt-[24vh]' : '-mt-7',
-          )}
-        >
-          <button
-            type="button"
-            className="g-only-mob mx-auto flex h-7 w-16 items-center justify-center border-0 bg-transparent"
-            aria-label={isSheetUp ? 'Show more map' : 'Show more plan'}
-            aria-expanded={isSheetUp}
-            onClick={() => setIsSheetUp(!isSheetUp)}
-          >
-            <span className="block h-1 w-9 rounded-full bg-[var(--line)]" />
-          </button>
-
-          <header className="lg:pt-1">
+          <header className="mt-5">
             <div className="flex flex-wrap items-center gap-2">
               {days !== null ? <Tag tone={days === 0 ? 'sea' : 'neutral'}>{formatDaysUntil(days)}</Tag> : <Tag>Date TBD</Tag>}
               {plan.viewer_is_owner ? <span className="g-xs g-mut">{plan.visibility === 'public' ? 'Shared by link' : 'Private'}</span> : null}
             </div>
             <h1 className="g-h1 mt-2">{plan.title}</h1>
-            <p className="g-sm g-mut mt-1">{meta.join(' · ')}</p>
+            <div className="g-sm g-mut mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+              <span className="inline-flex items-center gap-1.5">
+                <CalendarDays className="h-4 w-4" aria-hidden="true" />
+                {dateText ?? 'Any day'}
+              </span>
+              {hostName ? (
+                <span className="inline-flex min-w-0 items-center gap-1.5">
+                  <Avatar src={plan.owner?.avatar_url ?? plan.owner?.provider_avatar_url} name={hostName} size={20} />
+                  <span className="truncate">Hosted by {hostName}</span>
+                </span>
+              ) : null}
+            </div>
           </header>
 
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            {readyBarkada ? (
-              <MistTile onClick={() => openTab('barkada')} label={`${going.length} tara, ${maybeCount} baka. Open barkada`}>
-                {going.length > 0 ? (
-                  <AvatarStack people={going.map((member) => ({ id: member.user_id, avatarUrl: personAvatar(member.profile), name: personName(member.profile) }))} max={4} size={26} />
-                ) : (
-                  <UserPlus className="g-ic" style={{ color: 'var(--ink-3)' }} aria-hidden="true" />
-                )}
-                <span className="g-xs g-mut">
-                  <b className="text-[var(--ink)]">{going.length} tara</b> · {maybeCount} baka
-                </span>
-              </MistTile>
-            ) : (
-              <MistTile onClick={() => openTab('itinerary')} label={`${stops.length} stops. Open stops`}>
-                <b className="g-h2">{stops.length}</b>
-                <span className="g-xs g-mut">{stops.length === 1 ? 'stop' : 'stops'}</span>
-              </MistTile>
-            )}
-            <MistTile onClick={() => openTab('hatian')} label={`${formatPeso(perHead)} ${costLine}. Open hatian`}>
-              <b className="g-h2">{formatPeso(perHead)}</b>
-              <span className="g-xs g-mut">{costLine}</span>
-            </MistTile>
-          </div>
+          <div className="g-tstats mt-4" style={{ ['--n' as string]: stats.length }}>{stats}</div>
 
-          {description ? <p className="g-sm mt-4 max-w-[65ch]">{description}</p> : null}
-          {notice ? <p role="status" className="g-sm mt-3">{notice}</p> : null}
+          {description ? <p className="g-sm mt-4 max-w-[65ch] leading-relaxed">{description}</p> : null}
+          {notice ? <p role="status" className="g-sm mt-3 rounded-[var(--r-2)] bg-[var(--fill)] px-3 py-2">{notice}</p> : null}
+
+          {readyBarkada ? (
+            <div className="mt-4 flex min-h-14 items-center gap-3 rounded-[var(--r-3)] border border-[var(--line-2)] px-3 py-2">
+              {going.length > 0 ? (
+                <AvatarStack people={going.map((member) => ({ id: member.user_id, avatarUrl: personAvatar(member.profile), name: personName(member.profile) }))} max={4} size={30} />
+              ) : (
+                <span className="grid h-[30px] w-[30px] place-items-center rounded-full bg-[var(--fill)]" aria-hidden="true">
+                  <UserPlus className="h-4 w-4" style={{ color: 'var(--ink-2)' }} />
+                </span>
+              )}
+              <button type="button" className="g-sm min-h-11 min-w-0 flex-1 truncate border-0 bg-transparent p-0 text-left text-[var(--ink)]" onClick={() => openTab('barkada')}>
+                <b>{going.length} tara</b>
+                <span className="g-mut"> · {maybeCount} baka</span>
+              </button>
+              <Button variant="soft" size="sm" onClick={() => setIsInviteOpen(true)}>
+                <UserPlus />
+                Invite
+              </Button>
+            </div>
+          ) : null}
+
           {readyBarkada && !plan.viewer_is_owner ? (
             <div className="mt-4">
               <RsvpPanel plan={plan} barkada={readyBarkada} session={session} onChange={setBarkada} />
             </div>
           ) : null}
-          <Panel className="g-only-desk mt-4">
-            <h2 className="g-h3 mb-1">Invite the barkada</h2>
-            {invite}
-          </Panel>
 
-          {plan.items.length > 0 ? (
-            <div className="mt-4">
-              <RecapStoryButton plan={plan} friends={going.length || readyBarkada?.members.length || 0} className="w-full lg:w-auto" />
-            </div>
-          ) : null}
+          <div className="mt-4 flex flex-wrap gap-2">
+            {plan.items.length > 0 ? <RecapStoryButton plan={plan} friends={going.length || readyBarkada?.members.length || 0} className="flex-1 lg:flex-none" /> : null}
+            <Button variant="line" className="g-only-desk" onClick={() => void share()}>
+              <Share />
+              Share
+            </Button>
+            {readyBarkada ? null : (
+              <Button variant="line" className="g-only-desk" onClick={() => setIsInviteOpen(true)}>
+                <UserPlus />
+                Invite barkada
+              </Button>
+            )}
+          </div>
 
-          <div ref={tabsRef} className="mt-6 scroll-mt-20">
+          <div ref={tabsRef} className="mt-7 scroll-mt-20">
             <Tabs label="Plan sections" value={activeTab} options={tabs} onChange={setTab} />
 
             {activeTab === 'itinerary' ? (
               stops.length === 0 ? (
                 <Empty
                   title="Wala pang stops"
-                  description="Let AI fill the day, or add places from any place page."
+                  description="Let Tara fill the day, or add places from any place page."
                   action={
                     <Button variant="soft" href={`/plan-with-ai?q=${encodeURIComponent(plan.title)}`}>
                       <Sparkles />
@@ -521,10 +531,11 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
                 />
               ) : (
                 <>
+                  {!isDesktop && !coverIsMap ? routeMap : null}
                   <PlanTimeline stops={stops} onMove={plan.viewer_is_owner && isReordering ? (index, direction) => void moveStop(index, direction) : undefined} />
-                  <div className={`mt-4 flex flex-wrap gap-2 ${stops.some((stop) => stop.time) ? 'pl-[54px]' : ''}`}>
+                  <div className="mt-5 flex flex-wrap gap-2 pl-10">
                     <Button variant="soft" size="sm" onClick={suggestNextStop}>
-                      <Sparkles />
+                      <Sparkles style={{ color: 'var(--tara-ink)' }} />
                       Suggest next stop
                     </Button>
                     {plan.viewer_is_owner && stops.length > 1 ? (
@@ -534,6 +545,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
                       </Button>
                     ) : null}
                   </div>
+                  <p className="g-xs g-fnt mt-3 pl-10">Travel times and fares are rough Grab and walking estimates.</p>
                 </>
               )
             ) : null}
@@ -542,13 +554,12 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
             {activeTab === 'hatian' ? <BudgetPanel plan={plan} barkada={barkada} session={session} onBarkadaChange={setBarkada} /> : null}
           </div>
         </div>
+
+        {hasRoute && isDesktop ? <aside className="g-plan-map" aria-label="Map">{routeMap}</aside> : null}
       </div>
 
       <div className="h-16 lg:hidden" aria-hidden="true" />
-      <div
-        className="fixed inset-x-0 z-[5500] border-t border-[var(--line-2)] bg-[var(--surface)] px-4 py-2.5 lg:hidden"
-        style={{ bottom: 'calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px))' }}
-      >
+      <div className="g-sticky-bar lg:hidden">
         <div className="mx-auto flex max-w-[720px] gap-2">
           <Button variant="soft" className="min-w-0 flex-1" onClick={() => void share()}>
             <Share />

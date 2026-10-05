@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { ArrowLeft } from '@phosphor-icons/react/dist/csr/ArrowLeft'
 import { CaretRight as ChevronRight } from '@phosphor-icons/react/dist/csr/CaretRight'
@@ -6,20 +6,15 @@ import { Heart } from '@phosphor-icons/react/dist/csr/Heart'
 import { Plus } from '@phosphor-icons/react/dist/csr/Plus'
 import { Sparkle as Sparkles } from '@phosphor-icons/react/dist/csr/Sparkle'
 import InternalLink from '../InternalLink'
-import PlanSummaryCard, { PlanRow } from './PlanSummaryCard'
-import { Button, Chips, Empty, Page, SectionHead, Skeleton } from '../ui'
+import { TripCard } from './PlanSummaryCard'
+import { Button, Chips, Empty, Page, SectionHead, Skeleton, Tabs } from '../ui'
 import { listFavoriteGalaPlans, listMyGalaPlans, type GalaPlanSummary } from '../../utils/galaPlansApi'
 import { daysUntil, getPlanDate } from '../../utils/galaPlanTrip'
+import '../../design/plans.css'
 
 type LoadState = { status: 'loading' } | { status: 'ready'; plans: GalaPlanSummary[] } | { status: 'error'; message: string }
 type Bucket = 'today' | 'upcoming' | 'anytime' | 'invited' | 'past'
-
-const groupOrder: Array<{ key: Exclude<Bucket, 'today'>; title: string }> = [
-  { key: 'upcoming', title: 'Upcoming' },
-  { key: 'anytime', title: 'Anytime' },
-  { key: 'invited', title: 'Invited' },
-  { key: 'past', title: 'Past' },
-]
+type Tab = 'upcoming' | 'invited' | 'past'
 
 const planIdeas = ['Food crawl in Poblacion', 'Rainy day in Makati, indoor lang', 'Sunset at Manila Bay', 'Museum day in Manila']
 
@@ -41,36 +36,34 @@ function groupPlans(plans: GalaPlanSummary[]) {
   return buckets
 }
 
-function PlanRows({ plans, showOwner }: { plans: GalaPlanSummary[]; showOwner?: boolean }) {
+function TripGrid({ plans, showOwner }: { plans: GalaPlanSummary[]; showOwner?: (plan: GalaPlanSummary) => boolean }) {
   return (
-    <div className="flex flex-col">
-      {plans.map((plan) => <PlanRow key={plan.id} plan={plan} showOwner={showOwner} />)}
+    <div className="g-trips">
+      {plans.map((plan) => <TripCard key={plan.id} plan={plan} showOwner={showOwner ? showOwner(plan) : false} />)}
     </div>
   )
 }
 
-function ListSkeleton() {
+function GridSkeleton() {
   return (
-    <div aria-label="Loading plans">
+    <div className="g-trips" aria-label="Loading plans">
       {[0, 1, 2].map((index) => (
-        <div key={index} className="flex items-center gap-3 py-2.5">
-          <Skeleton className="h-14 w-14 shrink-0" style={{ borderRadius: 'var(--r-3)' }} />
-          <div className="min-w-0 flex-1">
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="mt-2 h-3 w-1/2" />
-          </div>
+        <div key={index}>
+          <Skeleton className="aspect-[4/3] w-full" style={{ borderRadius: 'var(--r-3)' }} />
+          <Skeleton className="mt-3 h-4 w-3/4" />
+          <Skeleton className="mt-2 h-3 w-1/2" />
         </div>
       ))}
     </div>
   )
 }
 
-function IdeaRows({ ideas }: { ideas: string[] }) {
+function IdeaChips({ ideas }: { ideas: string[] }) {
   return (
     <Chips>
       {ideas.map((idea) => (
-        <InternalLink key={idea} href={`/plan-with-ai?q=${encodeURIComponent(idea)}`} className="g-chip border-0 bg-[var(--fill)] no-underline">
-          <Sparkles aria-hidden="true" />
+        <InternalLink key={idea} href={`/plan-with-ai?q=${encodeURIComponent(idea)}`} className="g-chip no-underline">
+          <Sparkles aria-hidden="true" style={{ color: 'var(--tara-ink)' }} />
           {idea}
         </InternalLink>
       ))}
@@ -78,12 +71,11 @@ function IdeaRows({ ideas }: { ideas: string[] }) {
   )
 }
 
-function GroupHead({ id, children }: { id: string; children: ReactNode }) {
-  return <h2 id={id} className="g-h3 mb-2">{children}</h2>
-}
+const isGuestPlan = (plan: GalaPlanSummary) => !plan.viewer_is_owner
 
 function PlanList({ session, favorites = false }: { session?: Session | null; favorites?: boolean }) {
   const [state, setState] = useState<LoadState>({ status: 'loading' })
+  const [tab, setTab] = useState<Tab | null>(null)
 
   useEffect(() => {
     let isCancelled = false
@@ -108,7 +100,7 @@ function PlanList({ session, favorites = false }: { session?: Session | null; fa
 
   if (favorites) {
     return (
-      <Page narrow>
+      <Page>
         <InternalLink href="/gala-plans" className="g-sm g-mut inline-flex min-h-11 items-center gap-1.5">
           <ArrowLeft className="h-4 w-4" />
           Plans
@@ -116,12 +108,12 @@ function PlanList({ session, favorites = false }: { session?: Session | null; fa
         <p className="g-eyebrow mt-2">Saved from friends</p>
         <h1 className="g-h1 mt-1">Hearted plans</h1>
         <div className="mt-6">
-          {state.status === 'loading' ? <ListSkeleton /> : null}
+          {state.status === 'loading' ? <GridSkeleton /> : null}
           {errorState}
           {state.status === 'ready' && plans.length === 0 ? (
             <Empty title="No hearted plans yet" description="Heart public plans from friends to keep them here." action={<Button variant="soft" href="/explore">Find something to do</Button>} />
           ) : null}
-          {plans.length > 0 ? <PlanRows plans={plans} showOwner /> : null}
+          {plans.length > 0 ? <TripGrid plans={plans} showOwner={() => true} /> : null}
         </div>
       </Page>
     )
@@ -129,14 +121,21 @@ function PlanList({ session, favorites = false }: { session?: Session | null; fa
 
   const buckets = groupPlans(plans)
   const isEmpty = state.status === 'ready' && plans.length === 0
-
-  const heartedLink = (
-    <InternalLink href="/gala-plans/favorites" className="flex min-h-12 items-center gap-3 rounded-[var(--r-3)] bg-[var(--fill)] px-4 text-[var(--ink)] no-underline">
-      <Heart className="g-ic" aria-hidden="true" />
-      <span className="g-sm font-semibold">Hearted plans</span>
-      <ChevronRight className="g-ic ml-auto" style={{ color: 'var(--ink-3)' }} aria-hidden="true" />
-    </InternalLink>
+  const tabPlans: Record<Tab, GalaPlanSummary[]> = {
+    upcoming: [...buckets.today, ...buckets.upcoming, ...buckets.anytime],
+    invited: buckets.invited,
+    past: buckets.past,
+  }
+  const tabOptions = (
+    [
+      { value: 'upcoming', label: 'Upcoming' },
+      { value: 'invited', label: 'Invited' },
+      { value: 'past', label: 'Past' },
+    ] as const
   )
+    .filter((option) => tabPlans[option.value].length > 0)
+    .map((option) => ({ value: option.value, label: <>{option.label}<span className="g-fnt ml-1">{tabPlans[option.value].length}</span></> }))
+  const activeTab: Tab = tab && tabPlans[tab].length > 0 ? tab : tabOptions[0]?.value ?? 'upcoming'
 
   return (
     <Page>
@@ -159,15 +158,15 @@ function PlanList({ session, favorites = false }: { session?: Session | null; fa
         </div>
       </header>
 
-      <div className="g-split mt-5">
-        <div className="min-w-0">
-          {state.status === 'loading' ? <ListSkeleton /> : null}
-          {errorState}
+      <div className="mt-5">
+        {state.status === 'loading' ? <GridSkeleton /> : null}
+        {errorState}
 
-          {isEmpty ? (
+        {isEmpty ? (
+          <>
             <Empty
               title="Wala pang plano"
-              description="Say the vibe in one sentence and AI drafts the whole day. Or add places yourself."
+              description="Say the vibe in one sentence and Tara drafts the whole day. Or add places yourself."
               action={
                 <div className="flex flex-col items-center gap-1">
                   <Button variant="tara" href="/plan-with-ai">
@@ -178,45 +177,66 @@ function PlanList({ session, favorites = false }: { session?: Session | null; fa
                 </div>
               }
             />
-          ) : null}
-
-          {isEmpty ? (
             <section aria-labelledby="plan-ideas">
-              <SectionHead title={<span id="plan-ideas">Start from an idea</span>} sub="Tap one and AI drafts it for you." />
-              <IdeaRows ideas={planIdeas} />
+              <SectionHead title={<span id="plan-ideas">Start from an idea</span>} sub="Tap one and Tara drafts it for you." />
+              <IdeaChips ideas={planIdeas} />
             </section>
-          ) : null}
+          </>
+        ) : null}
 
-          {state.status === 'ready' && plans.length > 0 ? (
-            <div className="grid gap-7">
-              {buckets.today.length > 0 ? (
-                <section aria-labelledby="plans-today" className="grid gap-4">
-                  <h2 id="plans-today" className="sr-only">Today</h2>
-                  {buckets.today.map((plan) => <PlanSummaryCard key={plan.id} plan={plan} showOwner={!plan.viewer_is_owner} />)}
-                </section>
-              ) : null}
-              {groupOrder.map(({ key, title }) =>
-                buckets[key].length > 0 ? (
-                  <section key={key} aria-labelledby={`plans-${key}`}>
-                    <GroupHead id={`plans-${key}`}>{title}</GroupHead>
-                    <PlanRows plans={buckets[key]} showOwner={key === 'invited'} />
+        {state.status === 'ready' && plans.length > 0 ? (
+          <>
+            {tabOptions.length > 1 ? <Tabs label="Plan groups" value={activeTab} options={tabOptions} onChange={setTab} /> : null}
+
+            {activeTab === 'upcoming' ? (
+              <div className="grid gap-8">
+                {buckets.today.length > 0 ? (
+                  <section aria-labelledby="plans-today" className="grid gap-6 md:grid-cols-2">
+                    <h2 id="plans-today" className="sr-only">Today</h2>
+                    {buckets.today.map((plan) => <TripCard key={plan.id} plan={plan} showOwner={isGuestPlan(plan)} wide />)}
                   </section>
-                ) : null,
-              )}
-              <div className="g-only-mob">{heartedLink}</div>
-            </div>
-          ) : null}
-        </div>
+                ) : null}
+                {buckets.upcoming.length > 0 ? (
+                  <section aria-labelledby="plans-upcoming">
+                    <h2 id="plans-upcoming" className="g-h3 mb-3">Coming up</h2>
+                    <TripGrid plans={buckets.upcoming} />
+                  </section>
+                ) : null}
+                {buckets.anytime.length > 0 ? (
+                  <section aria-labelledby="plans-anytime">
+                    <h2 id="plans-anytime" className="g-h3 mb-3">No date yet</h2>
+                    <TripGrid plans={buckets.anytime} />
+                  </section>
+                ) : null}
+              </div>
+            ) : null}
+            {activeTab === 'invited' ? (
+              <section aria-label="Invited">
+                <TripGrid plans={buckets.invited} showOwner={() => true} />
+              </section>
+            ) : null}
+            {activeTab === 'past' ? (
+              <section aria-label="Past">
+                <TripGrid plans={buckets.past} />
+              </section>
+            ) : null}
 
-        <aside className="g-side g-only-desk">
-          {heartedLink}
-          {isEmpty ? null : (
-            <section aria-labelledby="plan-ideas-side">
-              <GroupHead id="plan-ideas-side">Start from an idea</GroupHead>
-              <IdeaRows ideas={planIdeas.slice(0, 3)} />
-            </section>
-          )}
-        </aside>
+            <div className="mt-10 grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+              <section aria-labelledby="plan-ideas">
+                <h2 id="plan-ideas" className="g-h3 mb-3">Start from an idea</h2>
+                <IdeaChips ideas={planIdeas} />
+              </section>
+              <InternalLink href="/gala-plans/favorites" className="flex min-h-14 items-center gap-3 rounded-[var(--r-3)] border border-[var(--line-2)] px-4 text-[var(--ink)] no-underline hover:bg-[var(--fill)]">
+                <Heart className="g-ic" weight="duotone" style={{ color: 'var(--tara-ink)' }} aria-hidden="true" />
+                <span className="min-w-0">
+                  <span className="g-sm block font-semibold">Hearted plans</span>
+                  <span className="g-xs g-mut block">Plans you saved from friends</span>
+                </span>
+                <ChevronRight className="g-ic ml-auto" style={{ color: 'var(--ink-3)' }} aria-hidden="true" />
+              </InternalLink>
+            </div>
+          </>
+        ) : null}
       </div>
     </Page>
   )

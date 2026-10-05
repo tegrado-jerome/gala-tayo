@@ -1,7 +1,13 @@
 import type { CSSProperties, ReactNode } from 'react'
-import { Page, Panel, cx } from '../ui'
+import { CaretLeft } from '@phosphor-icons/react/dist/csr/CaretLeft'
+import { cx } from '../ui'
+import '../../design/misc.css'
 
 type AuthCardProps = {
+  /** Title in the centred top bar, e.g. "Log in". */
+  bar?: ReactNode
+  onBack?: () => void
+  backLabel?: string
   eyebrow?: ReactNode
   title: ReactNode
   sub?: ReactNode
@@ -9,23 +15,34 @@ type AuthCardProps = {
   children?: ReactNode
 }
 
-export function AuthCard({ eyebrow, title, sub, icon, children }: AuthCardProps) {
+/** Airbnb-style auth sheet: centred title bar, then one column of fields. Full-bleed on phones, a floating card from 768px. */
+export function AuthCard({ bar = 'GalaTayo', onBack, backLabel = 'Back', eyebrow, title, sub, icon, children }: AuthCardProps) {
   return (
-    <Page>
-      <Panel as="section" className="mx-auto flex w-full max-w-[420px] flex-col gap-5 max-md:!border-0 max-md:!p-0 md:mt-6 md:!rounded-[var(--r-4)] md:!p-8 md:shadow-[var(--sh-2)]">
-        <header>
-          {icon ? (
-            <span className="mb-4 grid h-11 w-11 place-items-center rounded-full" style={{ background: 'var(--fill)', color: 'var(--ink)' }} aria-hidden="true">
-              {icon}
-            </span>
+    <main className="m-auth">
+      <section className="m-auth-card" aria-labelledby="auth-card-title">
+        <div className="m-auth-bar">
+          {onBack ? (
+            <button type="button" className="m-auth-back" onClick={onBack} aria-label={backLabel}>
+              <CaretLeft weight="bold" aria-hidden="true" />
+            </button>
           ) : null}
-          {eyebrow ? <p className="g-eyebrow">{eyebrow}</p> : null}
-          <h1 className={cx('g-h1', Boolean(eyebrow) && 'mt-2')}>{title}</h1>
-          {sub ? <p className="g-sm g-mut mt-2">{sub}</p> : null}
-        </header>
-        {children}
-      </Panel>
-    </Page>
+          {bar}
+        </div>
+        <div className="m-auth-body">
+          <header>
+            {icon ? (
+              <span className="m-auth-mark mb-4" aria-hidden="true">
+                {icon}
+              </span>
+            ) : null}
+            {eyebrow ? <p className="m-onb-step">{eyebrow}</p> : null}
+            <h1 id="auth-card-title" className={cx('g-h1', Boolean(eyebrow) && 'mt-1.5')}>{title}</h1>
+            {sub ? <p className="g-mut mt-2 text-[15px] leading-relaxed">{sub}</p> : null}
+          </header>
+          {children}
+        </div>
+      </section>
+    </main>
   )
 }
 
@@ -42,10 +59,8 @@ export function AuthNotice({ tone = 'ok', children, className }: { tone?: Notice
 
 export function OrDivider() {
   return (
-    <div className="flex items-center gap-3" aria-hidden="true">
-      <span className="g-sep flex-1" />
-      <span className="g-xs g-fnt">or</span>
-      <span className="g-sep flex-1" />
+    <div className="m-or" aria-hidden="true">
+      or
     </div>
   )
 }

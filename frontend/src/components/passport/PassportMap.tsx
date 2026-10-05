@@ -25,12 +25,12 @@ const CITY_CENTERS: Record<string, [number, number]> = {
 }
 
 // gt1.css map styles are unlayered, so these overrides need `!`.
-// Collected cities are teal stamp pins; the rest are faint dots so the whole metro shows even before the first stamp.
-const NIGHT_PINS =
-  '[&_.g-lpin.is-on]:!bg-[var(--sea)] [&_.g-lpin.is-on]:!text-[var(--surface)] [&_.g-lpin.is-on]:!shadow-[0_0_0_3px_rgba(255,255,255,0.9)] ' +
-  '[&_.g-lpin:not(.is-on)]:!h-2.5 [&_.g-lpin:not(.is-on)]:!w-2.5 [&_.g-lpin:not(.is-on)]:!p-0 [&_.g-lpin:not(.is-on)]:!bg-white/35 [&_.g-lpin:not(.is-on)]:!shadow-none'
+// Collected cities are teal stamp pills; the rest are small navy dots so the whole metro shows even before the first stamp.
+const STAMP_PINS =
+  '[&_.g-lpin.is-on]:!bg-[var(--sea)] [&_.g-lpin.is-on]:!text-white [&_.g-lpin.is-on]:!shadow-[0_0_0_3px_#fff,0_6px_16px_rgba(15,33,56,0.25)] ' +
+  '[&_.g-lpin:not(.is-on)]:!h-2.5 [&_.g-lpin:not(.is-on)]:!w-2.5 [&_.g-lpin:not(.is-on)]:!p-0 [&_.g-lpin:not(.is-on)]:!bg-[#0f2138]/45 [&_.g-lpin:not(.is-on)]:!shadow-[0_0_0_2px_#fff]'
 
-/** Night map of Metro Manila: one stamp pin per city you have checked in at, a faint dot for the rest. */
+/** Full-colour map of Metro Manila: one stamp pin per city you have checked in at, a small dot for the rest. */
 function PassportMap({ stamps, className }: { stamps: CityStamp[]; className?: string }) {
   const points: MapPoint[] = stamps.flatMap((stamp) => {
     const center = CITY_CENTERS[stamp.city.trim().toLowerCase()]
@@ -39,7 +39,7 @@ function PassportMap({ stamps, className }: { stamps: CityStamp[]; className?: s
     return [{ id: stamp.city, lat: center[0], lng: center[1], label: collected ? stamp.city : '', active: collected }]
   })
 
-  return <GtMap night points={points} label="Cities you have checked in at" className={cx('!rounded-none !border-0', NIGHT_PINS, className)} />
+  return <GtMap points={points} label="Cities you have checked in at" className={cx(STAMP_PINS, className)} />
 }
 
 export default PassportMap

@@ -70,24 +70,19 @@ function OnboardingPublicProfileStep({
   return (
     <OnboardingLayout
       step={2}
-      eyebrow="Public profile"
-      title="Build your profile"
-      description="Choose how your name shows up and pick a username your barkada can find."
-      actions={
-        <>
-          <Button variant="soft" onClick={onBack}>
-            Back
-          </Button>
-          <Button variant="tara" onClick={handleNext} disabled={(attemptedNext && disableNext) || usernameStatus === 'checking' || isUploadingAvatar}>
-            {usernameStatus === 'checking' ? 'Checking...' : 'Next'}
-            {usernameStatus === 'checking' ? null : <ArrowRight aria-hidden="true" />}
-          </Button>
-        </>
+      title="How should the barkada find you?"
+      description="Choose how your name shows up and pick a username your friends can search."
+      onBack={onBack}
+      primary={
+        <Button variant="tara" size="lg" onClick={handleNext} disabled={(attemptedNext && disableNext) || usernameStatus === 'checking' || isUploadingAvatar}>
+          {usernameStatus === 'checking' ? 'Checking...' : 'Next'}
+          {usernameStatus === 'checking' ? null : <ArrowRight aria-hidden="true" />}
+        </Button>
       }
     >
       <div className="flex flex-col gap-6">
-        <Panel className="flex items-center gap-4">
-          <Avatar src={values.avatarUrl} name={previewName} size={56} />
+        <Panel className="flex items-center gap-4 !rounded-[var(--r-4)] !p-5 shadow-[var(--sh-2)]">
+          <Avatar src={values.avatarUrl} name={previewName} size={64} />
           <div className="min-w-0 flex-1">
             <p className="g-h3 truncate">{previewName}</p>
             <p className="g-sm g-mut truncate">@{previewUsername}</p>
@@ -137,7 +132,7 @@ function OnboardingPublicProfileStep({
               autoComplete="nickname"
               aria-invalid={Boolean(displayNameError) || undefined}
               aria-describedby={displayNameError ? 'onboarding-display-name-msg' : undefined}
-              className="g-input"
+              className="g-input h-14 text-[16px]"
             />
             {displayNameError ? <span id="onboarding-display-name-msg" className="g-hint is-error">{displayNameError}</span> : null}
           </div>
@@ -158,7 +153,7 @@ function OnboardingPublicProfileStep({
                 spellCheck={false}
                 aria-invalid={usernameIsError || undefined}
                 aria-describedby="onboarding-username-msg"
-                className="g-input !pl-8"
+                className="g-input h-14 !pl-8 text-[16px]"
               />
             </div>
             <span

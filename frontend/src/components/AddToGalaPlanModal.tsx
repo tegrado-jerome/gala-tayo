@@ -3,10 +3,22 @@ import type { Session } from '@supabase/supabase-js'
 import { Check } from '@phosphor-icons/react/dist/csr/Check'
 import { Plus } from '@phosphor-icons/react/dist/csr/Plus'
 import { Sparkle as Sparkles } from '@phosphor-icons/react/dist/csr/Sparkle'
+import PlaceImage from './discover/PlaceImage'
+import { getStaticPlaceImageUrlForSlug } from '../data/placeIndexVisuals'
 import { supabase } from '../supabase'
 import { addPlaceToGalaPlan, listMyGalaPlans, type GalaPlanSummary } from '../utils/galaPlansApi'
+import { getPlanDate } from '../utils/galaPlanTrip'
 import { navigateToPath } from '../utils/navigation'
 import { Button, Empty, Sheet, Skeleton } from './ui'
+
+function planThumbs(plan: GalaPlanSummary) {
+  return (plan.preview_places ?? []).flatMap((stop) => [stop.image_url, getStaticPlaceImageUrlForSlug(stop.slug)]).filter((url): url is string => Boolean(url))
+}
+
+function planMeta(plan: GalaPlanSummary) {
+  const date = getPlanDate(plan)
+  return [date ? date.toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' }) : 'Anytime', `${plan.place_count} ${plan.place_count === 1 ? 'stop' : 'stops'}`].join(' · ')
+}
 
 type AddToGalaPlanModalProps = {
   isOpen: boolean
@@ -133,11 +145,18 @@ function AddToGalaPlanModal({ isOpen, placeId, placeName, onClose }: AddToGalaPl
               const isSelected = plan.id === selectedPlanId
               return (
                 <button key={plan.id} type="button" role="option" aria-selected={isSelected} className="g-group-row py-2.5" onClick={() => setSelectedPlanId(plan.id)}>
+                  <PlaceImage candidates={planThumbs(plan)} className="h-12 w-12 shrink-0 overflow-hidden rounded-[var(--r-2)] object-cover" />
                   <span className="min-w-0 flex-1">
                     <span className="g-h3 block truncate">{plan.title}</span>
-                    <span className="g-sm g-mut block font-normal">{plan.place_count} {plan.place_count === 1 ? 'stop' : 'stops'}</span>
+                    <span className="g-sm g-mut block font-normal">{planMeta(plan)}</span>
                   </span>
-                  {isSelected ? <Check className="g-ic shrink-0" aria-hidden="true" /> : null}
+                  <span
+                    className="grid h-6 w-6 shrink-0 place-items-center rounded-full"
+                    style={isSelected ? { background: 'var(--ink)', color: 'var(--on-ink)' } : { boxShadow: 'inset 0 0 0 1.5px var(--line)' }}
+                    aria-hidden="true"
+                  >
+                    {isSelected ? <Check weight="bold" className="h-3.5 w-3.5" /> : null}
+                  </span>
                 </button>
               )
             })}

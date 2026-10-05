@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { reportUser, type SubmitUserReportPayload, type UserReportReason } from '../utils/userReportsApi'
 import { useGuestAuthPrompt } from './GuestAuthPrompt'
-import { Button, Chip, Sheet } from './ui'
+import { Flag } from '@phosphor-icons/react/dist/csr/Flag'
+import { Button, Sheet } from './ui'
+import '../design/me.css'
 
 const userReportReasons: Array<{ label: string; value: UserReportReason }> = [
   { label: 'Fake account', value: 'fake_account' },
@@ -100,16 +102,26 @@ function ReportUserModal({
     <>
       {createPortal(
         <Sheet open={isOpen} onClose={closeIfIdle} title="Report user" labelledBy="report-user-title">
-          <p className="g-sm g-mut -mt-2">Private, and only admins see it.</p>
-          <p className="g-sm mt-1 font-semibold">{reportingLabel}</p>
+          <div className="-mt-1 flex items-center gap-3 rounded-[var(--r-3)] bg-[var(--fill)] p-3">
+            <span className="me-ic is-bad" aria-hidden="true">
+              <Flag weight="duotone" />
+            </span>
+            <div className="min-w-0">
+              <p className="g-sm truncate font-semibold">{reportingLabel}</p>
+              <p className="g-xs g-mut">Private, and only admins see it.</p>
+            </div>
+          </div>
 
-          <fieldset className="mt-4">
-            <legend className="g-label">Reason</legend>
-            <div className="mt-2 flex flex-wrap gap-2">
+          <fieldset className="mt-5">
+            <legend className="g-label">Why are you reporting this user?</legend>
+            <div role="radiogroup" aria-label="Reason" className="mt-2">
               {userReportReasons.map((option) => (
-                <Chip
+                <button
                   key={option.value}
-                  on={reason === option.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={reason === option.value}
+                  className="me-choice"
                   disabled={isSubmitting}
                   onClick={() => {
                     setReason(option.value)
@@ -117,13 +129,13 @@ function ReportUserModal({
                   }}
                 >
                   {option.label}
-                </Chip>
+                </button>
               ))}
             </div>
           </fieldset>
 
           <div className="g-field mt-4">
-            <label htmlFor="report-user-details">Details</label>
+            <label htmlFor="report-user-details">Details <span className="g-fnt font-normal">Optional</span></label>
             <textarea
               id="report-user-details"
               className="g-input"

@@ -1,15 +1,17 @@
 import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { CaretLeft as ChevronLeft } from '@phosphor-icons/react/dist/csr/CaretLeft'
+import { LockKey } from '@phosphor-icons/react/dist/csr/LockKey'
 import { AuthNotice } from '../components/auth/AuthCard'
 import PasswordField from '../components/auth/PasswordField'
 import PasswordStrengthBar from '../components/auth/PasswordStrengthBar'
-import { Button, Page, Panel } from '../components/ui'
+import { Button, Page } from '../components/ui'
 import { navigateToPath } from '../utils/navigation'
 import { hasInAppBackHistory } from '../utils/routes'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { getPasswordStrength } from '../utils/passwordStrength'
 import { updateAccountPassword } from '../services/authApi'
+import '../design/me.css'
 
 function ChangePasswordPage() {
   const [newPassword, setNewPassword] = useState('')
@@ -69,21 +71,26 @@ function ChangePasswordPage() {
           Account settings
         </Button>
 
-        <header className="mt-4">
-          <p className="g-eyebrow">Security</p>
-          <h1 className="g-h1 mt-2">Change password</h1>
+        <header className="mt-2">
+          <p className="g-eyebrow">Login and security</p>
+          <h1 className="g-h1 mt-1">Change password</h1>
           <p className="g-mut mt-2">
             This changes the password you use to log in to GalaTayo, not just a profile field.
           </p>
         </header>
 
-        <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-5">
-          <Panel className="!p-4" style={{ background: 'var(--fill)', borderColor: 'transparent' }}>
-            <p className="g-h3">How it works</p>
-            <p className="g-sm g-mut mt-1 leading-5">
-              After saving, your next email-and-password login uses this new password. Google users can set one here too if the session allows it.
-            </p>
-          </Panel>
+        <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-5">
+          <div className="flex items-start gap-3 rounded-[var(--r-3)] bg-[var(--fill)] p-4">
+            <span className="me-ic !bg-[var(--surface)]" aria-hidden="true">
+              <LockKey weight="duotone" />
+            </span>
+            <div className="min-w-0">
+              <p className="g-h3">How it works</p>
+              <p className="g-sm g-mut mt-1 leading-5">
+                After saving, your next email-and-password login uses this new password. Google users can set one here too if the session allows it.
+              </p>
+            </div>
+          </div>
 
           <PasswordField
             id="change-password"
@@ -113,7 +120,7 @@ function ChangePasswordPage() {
 
           {securityError ? <AuthNotice tone="bad">{securityError}</AuthNotice> : null}
 
-          <Button type="submit" variant="ink" block disabled={isSavingPassword || !newPassword || !confirmNewPassword}>
+          <Button type="submit" variant="tara" size="lg" block disabled={isSavingPassword || !newPassword || !confirmNewPassword}>
             {isSavingPassword ? 'Updating password...' : 'Save new password'}
           </Button>
         </form>

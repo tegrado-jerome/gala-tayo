@@ -21,25 +21,18 @@ function OnboardingAgreementStep({ values, errors, isSubmitting, disableNext, on
   return (
     <OnboardingLayout
       step={4}
-      eyebrow="Last step"
-      title="You're almost done"
+      title="Last na, promise"
       description="Agree to the terms and privacy policy to finish your GalaTayo profile."
-      actions={
-        <>
-          <Button variant="soft" onClick={onBack} disabled={isSubmitting}>
-            Back
-          </Button>
-          <Button variant="tara" onClick={onFinish} disabled={disableNext || !accepted || isSubmitting}>
-            {isSubmitting ? 'Finishing...' : 'Finish setup'}
-          </Button>
-        </>
+      onBack={onBack}
+      backDisabled={isSubmitting}
+      primary={
+        <Button variant="tara" size="lg" onClick={onFinish} disabled={disableNext || !accepted || isSubmitting}>
+          {isSubmitting ? 'Finishing...' : 'Finish setup'}
+        </Button>
       }
     >
       <div className="flex flex-col gap-4">
-        <div
-          className="g-panel flex items-start gap-3"
-          style={accepted ? { borderColor: 'var(--ink)', boxShadow: 'inset 0 0 0 1px var(--ink)' } : undefined}
-        >
+        <div className="m-choice !min-h-0 cursor-default" aria-pressed={accepted}>
           <input
             id={checkboxId}
             type="checkbox"

@@ -1,21 +1,19 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
-import { ArrowDown } from '@phosphor-icons/react/dist/csr/ArrowDown'
-import { ArrowUp } from '@phosphor-icons/react/dist/csr/ArrowUp'
-import { CaretRight as ChevronRight } from '@phosphor-icons/react/dist/csr/CaretRight'
+import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { ArrowsDownUp } from '@phosphor-icons/react/dist/csr/ArrowsDownUp'
+import { Check } from '@phosphor-icons/react/dist/csr/Check'
 import { CloudRain } from '@phosphor-icons/react/dist/csr/CloudRain'
 import { FilmSlate as Clapperboard } from '@phosphor-icons/react/dist/csr/FilmSlate'
 import { Minus } from '@phosphor-icons/react/dist/csr/Minus'
-import { PencilLine as PenLine } from '@phosphor-icons/react/dist/csr/PencilLine'
+import { PencilSimple } from '@phosphor-icons/react/dist/csr/PencilSimple'
 import { Plus } from '@phosphor-icons/react/dist/csr/Plus'
 import { PaperPlaneTilt as Send } from '@phosphor-icons/react/dist/csr/PaperPlaneTilt'
 import { Sparkle as Sparkles } from '@phosphor-icons/react/dist/csr/Sparkle'
 import { SunHorizon as Sunset } from '@phosphor-icons/react/dist/csr/SunHorizon'
 import { Tree as Trees } from '@phosphor-icons/react/dist/csr/Tree'
-import { X } from '@phosphor-icons/react/dist/csr/X'
 import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
 import AskAiUsagePill from '../components/AskAiUsagePill'
-import InternalLink from '../components/InternalLink'
-import GtMap, { type MapPoint } from '../components/ui/GtMap'
+import PlanRouteMap from '../components/gala-plan/PlanRouteMap'
+import PlanTimeline, { type TimelineStop } from '../components/gala-plan/PlanTimeline'
 import { Button, KeyValue, Page, Skeleton } from '../components/ui'
 import { useAppUser } from '../context/AppUserContext'
 import {
@@ -27,21 +25,16 @@ import {
 } from '../utils/galaPlansApi'
 import { estimatePerHead, formatPeso, formatTime24, getPlanLegs, type TravelLeg } from '../utils/galaPlanTrip'
 import { navigateToPath, replaceWithPath } from '../utils/navigation'
-import { getCanonicalPlacePath } from '../utils/routes'
-import { resolveAreaMeta } from '../utils/seo'
+import '../design/plans.css'
 
 type Status = 'idle' | 'building' | 'ready' | 'saving' | 'error'
 
 const examplePrompts = [
-  { icon: CloudRain, title: 'Rainy Saturday in Makati', detail: 'Indoor, ₱1k each', prompt: 'Rainy Saturday in Makati for 4, indoor spots only, ₱1,000 each' },
-  { icon: Sunset, title: 'Sunday in Manila', detail: 'Museums to sunset, ₱800 each', prompt: 'Relaxed Sunday in Manila for 4, ₱800 each, ending at sunset' },
-  { icon: Clapperboard, title: 'BGC date night', detail: 'Dinner and a movie for two, ₱2k', prompt: 'Dinner and a movie in BGC for two, ₱2,000 budget' },
-  { icon: Trees, title: 'Barkada day in QC', detail: 'Parks and a food trip for 6, ₱600 each', prompt: 'Barkada day in Quezon City for 6: a park, then a food trip, ₱600 each' },
+  { icon: CloudRain, title: 'Rainy Saturday in Makati, indoor, ₱1k each', prompt: 'Rainy Saturday in Makati for 4, indoor spots only, ₱1,000 each' },
+  { icon: Sunset, title: 'Sunday in Manila, museums to sunset', prompt: 'Relaxed Sunday in Manila for 4, ₱800 each, ending at sunset' },
+  { icon: Clapperboard, title: 'BGC date night, ₱2k', prompt: 'Dinner and a movie in BGC for two, ₱2,000 budget' },
+  { icon: Trees, title: 'Barkada day in QC for 6', prompt: 'Barkada day in Quezon City for 6: a park, then a food trip, ₱600 each' },
 ]
-
-function describeLeg(leg: TravelLeg) {
-  return leg.mode === 'walk' ? `walk ${leg.minutes} min` : `Grab ~${leg.minutes} min`
-}
 
 function describeCommute(legs: Array<TravelLeg | null>) {
   const known = legs.filter((leg): leg is TravelLeg => leg !== null)
@@ -54,33 +47,52 @@ function describeCommute(legs: Array<TravelLeg | null>) {
   return [walk ? `${walk} min walk` : null, `${rideMinutes} min Grab (~${formatPeso(fare)})`].filter(Boolean).join(' · ')
 }
 
-function DraftSkeleton() {
+/** Tara's side of the chat: coral sparkle avatar, then the reply. */
+function TaraSays({ children, label = 'Tara' }: { children: ReactNode; label?: string }) {
   return (
-    <div aria-hidden="true">
-      <Skeleton className="h-5 w-1/2" />
-      <Skeleton className="mt-4 h-[200px] w-full rounded-[var(--r-3)]" />
-      {[0, 1, 2].map((index) => (
-        <div key={index} className="mt-4 flex items-center gap-3">
-          <Skeleton className="h-[52px] w-[52px] shrink-0" />
-          <div className="flex-1">
-            <Skeleton className="h-4 w-1/2" />
-            <Skeleton className="mt-2 h-3 w-1/3" />
-          </div>
-        </div>
-      ))}
+    <div className="g-chat-tara">
+      <span className="g-chat-av" aria-hidden="true">
+        <Sparkles weight="fill" />
+      </span>
+      <div className="min-w-0">
+        <p className="sr-only">{label}:</p>
+        {children}
+      </div>
     </div>
   )
 }
 
-function PromptBubble({ text, onEdit }: { text: string; onEdit?: () => void }) {
+function MeSays({ text, onEdit }: { text: string; onEdit?: () => void }) {
   return (
-    <div className="mt-6 flex items-start gap-2 rounded-[var(--r-3)] bg-[var(--fill)] py-3 pr-2 pl-4">
-      <p className="min-w-0 flex-1 py-1 text-[17px] leading-[1.4] font-medium [font-family:var(--font-display)] break-words">{text}</p>
-      {onEdit ? (
-        <Button variant="text" size="sm" iconOnly className="shrink-0" onClick={onEdit} aria-label="Edit prompt">
-          <PenLine aria-hidden="true" />
-        </Button>
-      ) : null}
+    <div className="g-chat-me">
+      <div>
+        <p className="sr-only">You:</p>
+        <p className="min-w-0 flex-1">{text}</p>
+        {onEdit ? (
+          <Button variant="text" size="sm" iconOnly className="shrink-0 no-underline" onClick={onEdit} aria-label="Edit prompt">
+            <PencilSimple aria-hidden="true" />
+          </Button>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
+function DraftSkeleton() {
+  return (
+    <div aria-hidden="true" className="mt-4">
+      <Skeleton className="h-6 w-2/3" />
+      <Skeleton className="mt-4 h-[200px] w-full rounded-[var(--r-3)]" />
+      {[0, 1, 2].map((index) => (
+        <div key={index} className="mt-5 flex items-start gap-3">
+          <Skeleton className="h-7 w-7 shrink-0 rounded-full" />
+          <div className="flex-1">
+            <Skeleton className="h-4 w-1/2" />
+            <Skeleton className="mt-2 h-3 w-1/3" />
+          </div>
+          <Skeleton className="h-[76px] w-[76px] shrink-0 rounded-[var(--r-2)]" />
+        </div>
+      ))}
     </div>
   )
 }
@@ -103,13 +115,8 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
   const stops = useMemo(() => draft?.stops ?? [], [draft])
   const legs = useMemo(() => getPlanLegs(stops), [stops])
   const perHead = useMemo(() => estimatePerHead(stops, groupSize), [stops, groupSize])
-  const mapPoints = useMemo<MapPoint[]>(
-    () =>
-      stops.flatMap((stop, index) =>
-        stop.place.latitude != null && stop.place.longitude != null
-          ? [{ id: stop.place_id, lat: stop.place.latitude, lng: stop.place.longitude, label: String(index + 1), kind: 'number' as const, imageUrl: stop.place.image_url ?? null }]
-          : [],
-      ),
+  const timelineStops = useMemo<TimelineStop[]>(
+    () => stops.map((stop) => ({ key: stop.place_id, time: stop.time ? formatTime24(stop.time) : null, minutes: stop.minutes, note: stop.note || null, place: stop.place })),
     [stops],
   )
 
@@ -233,167 +240,156 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
         Tara AI
       </p>
       <h1 className="g-h1 mt-2">Plan with AI</h1>
-      {showComposer ? <p className="g-mut mt-2">One line in, a mapped day out. Edit it, then invite the barkada.</p> : null}
 
-      {showComposer ? (
-        <form onSubmit={handleSubmit} className="g-ai mt-6">
-          <label htmlFor="plan-with-ai-prompt" className="sr-only">
-            Describe your gala
-          </label>
-          <textarea
-            id="plan-with-ai-prompt"
-            ref={promptRef}
-            value={prompt}
-            onChange={(event) => setPrompt(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault()
-                void build(prompt)
-              }
-            }}
-            maxLength={400}
-            rows={3}
-            placeholder="Chill Saturday for 6 in Makati, ₱1k each, indoor if rain"
-          />
-          <div className="g-ai-bar mt-3 min-h-11 justify-end gap-3">
-            {usage ? <AskAiUsagePill usageStatus={usage} /> : null}
-            <Button type="submit" variant="tara" iconOnly disabled={!prompt.trim()} aria-label="Build plan">
-              <Send aria-hidden="true" />
-            </Button>
-          </div>
-        </form>
-      ) : (
-        <PromptBubble text={submittedPrompt} onEdit={status === 'building' ? undefined : editPrompt} />
-      )}
+      <div className="mt-6 grid gap-5" aria-live="polite">
+        {showComposer ? (
+          <TaraSays>
+            <p className="g-chat-say">Kumusta! Tell me the vibe, the area, your budget and who's coming. I'll map the whole day, then you can edit it and invite the barkada.</p>
+          </TaraSays>
+        ) : (
+          <MeSays text={submittedPrompt} onEdit={status === 'building' ? undefined : editPrompt} />
+        )}
 
-      {showComposer ? (
-        <section className="mt-8">
-          <h2 className="g-h3">Try one of these</h2>
-          <div className="g-group mt-3">
-            {examplePrompts.map((example) => {
-              const ExampleIcon = example.icon
-              return (
-                <button
-                  key={example.title}
-                  type="button"
-                  className="g-group-row py-3"
-                  onClick={() => {
-                    setPrompt(example.prompt)
-                    void build(example.prompt)
-                  }}
-                >
-                  <ExampleIcon aria-hidden="true" />
-                  <span className="min-w-0">
-                    <span className="block">{example.title}</span>
-                    <span className="g-sm g-mut block truncate">{example.detail}</span>
-                  </span>
-                  <span className="g-group-end">
-                    <ChevronRight className="h-4 w-4" aria-hidden="true" />
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-        </section>
-      ) : null}
-
-      {error ? (
-        <p role="alert" className="g-sm mt-4 rounded-[var(--r-3)] bg-[var(--bad-soft)] px-4 py-3 text-[var(--bad)]">
-          {error}
-          {isDailyLimit && !session ? ' Log in to get more AI plans per day.' : ''}
-        </p>
-      ) : null}
-
-      {status === 'building' ? (
-        <section className="mt-6" aria-live="polite">
-          <p className="g-eyebrow text-[var(--tara-ink)]!">Building your draft…</p>
-          <div className="mt-3">
+        {status === 'building' ? (
+          <TaraSays>
+            <span className="g-typing" aria-hidden="true">
+              <i />
+              <i />
+              <i />
+            </span>
+            <p className="g-sm g-mut mt-2">Building your draft…</p>
             <DraftSkeleton />
-          </div>
-        </section>
+          </TaraSays>
+        ) : null}
+
+        {error ? (
+          <TaraSays>
+            <p role="alert" className="g-sm rounded-[var(--r-3)] bg-[var(--bad-soft)] px-4 py-3 text-[var(--bad)]">
+              {error}
+              {isDailyLimit && !session ? ' Log in to get more AI plans per day.' : ''}
+            </p>
+          </TaraSays>
+        ) : null}
+
+        {draft && status !== 'building' ? (
+          <TaraSays>
+            <p className="g-chat-say">Here's your draft. Reorder or drop stops with Edit, then save it.</p>
+          </TaraSays>
+        ) : null}
+      </div>
+
+      {showComposer ? (
+        <>
+          <form onSubmit={handleSubmit} className="g-ai mt-5">
+            <label htmlFor="plan-with-ai-prompt" className="sr-only">
+              Describe your gala
+            </label>
+            <textarea
+              id="plan-with-ai-prompt"
+              ref={promptRef}
+              value={prompt}
+              onChange={(event) => setPrompt(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                  event.preventDefault()
+                  void build(prompt)
+                }
+              }}
+              maxLength={400}
+              rows={3}
+              placeholder="Chill Saturday for 6 in Makati, ₱1k each, indoor if rain"
+            />
+            <div className="g-ai-bar mt-3 min-h-11 justify-end gap-3">
+              {usage ? <AskAiUsagePill usageStatus={usage} /> : null}
+              <Button type="submit" variant="tara" iconOnly disabled={!prompt.trim()} aria-label="Build plan">
+                <Send aria-hidden="true" />
+              </Button>
+            </div>
+          </form>
+
+          <section className="mt-8" aria-labelledby="plan-ai-ideas">
+            <h2 id="plan-ai-ideas" className="g-h3">Try one of these</h2>
+            <div className="g-sugg mt-3">
+              {examplePrompts.map((example) => {
+                const ExampleIcon = example.icon
+                return (
+                  <button
+                    key={example.title}
+                    type="button"
+                    onClick={() => {
+                      setPrompt(example.prompt)
+                      void build(example.prompt)
+                    }}
+                  >
+                    <ExampleIcon weight="duotone" aria-hidden="true" />
+                    {example.title}
+                  </button>
+                )
+              })}
+            </div>
+          </section>
+        </>
       ) : null}
 
       {draft && status !== 'building' ? (
-        <section className="mt-6 pb-16 lg:pb-0" aria-labelledby="plan-with-ai-draft-title">
-          <p className="g-eyebrow text-[var(--tara-ink)]!">Draft ready · {formatPeso(perHead)}/head</p>
-          <h2 id="plan-with-ai-draft-title" className="g-h2 mt-1.5">
-            {draft.title}
-          </h2>
-          <p className="g-sm g-mut mt-1">{[dateLabel, timeRange, `${stops.length} ${stops.length === 1 ? 'stop' : 'stops'}`, `fits ${groupSize}`].filter(Boolean).join(' · ')}</p>
-          {draft.summary ? <p className="g-sm g-mut mt-2">{draft.summary}</p> : null}
+        <section className="mt-5 pb-20 lg:pb-0" aria-labelledby="plan-with-ai-draft-title">
+          <div className="rounded-[var(--r-4)] border border-[var(--line-2)] p-4 md:p-5">
+            <p className="g-eyebrow text-[var(--tara-ink)]!">Draft ready</p>
+            <h2 id="plan-with-ai-draft-title" className="g-h2 mt-1.5">
+              {draft.title}
+            </h2>
+            <p className="g-sm g-mut mt-1">{[dateLabel, timeRange].filter(Boolean).join(' · ')}</p>
+            {draft.summary ? <p className="g-sm mt-2 leading-relaxed">{draft.summary}</p> : null}
 
-          {mapPoints.length > 0 ? <GtMap points={mapPoints} route night className="mt-4" label="Route of your draft plan" /> : null}
+            <div className="g-tstats mt-4" style={{ ['--n' as string]: 3 }}>
+              <div className="g-tstat">
+                <b>{stops.length}</b>
+                <span>{stops.length === 1 ? 'stop' : 'stops'}</span>
+              </div>
+              <div className="g-tstat">
+                <b>{formatPeso(perHead)}</b>
+                <span>each, est.</span>
+              </div>
+              <div className="g-tstat">
+                <b>{groupSize}</b>
+                <span>{groupSize === 1 ? 'person' : 'people'}</span>
+              </div>
+            </div>
 
-          <ol className="mt-4 flex flex-col">
-            {stops.map((stop, index) => {
-              const legIn = index > 0 ? legs[index - 1] : null
-              const meta = [
-                stop.time ? formatTime24(stop.time) : `Stop ${index + 1}`,
-                stop.minutes ? `${stop.minutes} min` : null,
-                stop.place.budget_min != null ? formatPeso(stop.place.budget_min) : null,
-              ].filter(Boolean)
-              const href = getCanonicalPlacePath({ areaSlug: resolveAreaMeta(stop.place).slug, placeSlug: stop.place.slug })
+            <PlanRouteMap stops={timelineStops} className="mt-4" label="Route of your draft plan" />
 
-              return (
-                <li key={stop.place_id} className="motion-safe:animate-[g-up_320ms_var(--ease-g)_both]" style={{ animationDelay: `${index * 70}ms` }}>
-                  {legIn ? <p className="g-xs g-fnt py-0.5 pl-16">{describeLeg(legIn)}</p> : null}
-                  <div className="flex items-center gap-3 py-1.5">
-                    <span className="relative h-[52px] w-[52px] shrink-0 overflow-hidden rounded-[var(--r-2)] bg-[var(--fill)]">
-                      <span className="absolute inset-0 grid place-items-center font-semibold text-[var(--ink-2)] [font-family:var(--font-display)]" aria-hidden="true">
-                        {index + 1}
+            <div className="mt-5">
+              <PlanTimeline
+                stops={timelineStops}
+                animate
+                onMove={isEditing ? moveStop : undefined}
+                onRemove={isEditing && stops.length > 2 ? removeStop : undefined}
+              />
+            </div>
+
+            <hr className="g-sep mt-5" />
+            <div className="mt-2">
+              <KeyValue
+                items={[
+                  { label: 'Commute', value: describeCommute(legs) },
+                  {
+                    label: 'Group size',
+                    value: (
+                      <span className="inline-flex items-center gap-1">
+                        <Button variant="soft" size="sm" iconOnly aria-label="Fewer people" onClick={() => setGroupSize((size) => Math.max(1, size - 1))}>
+                          <Minus aria-hidden="true" />
+                        </Button>
+                        <span className="w-7 text-center">{groupSize}</span>
+                        <Button variant="soft" size="sm" iconOnly aria-label="More people" onClick={() => setGroupSize((size) => Math.min(20, size + 1))}>
+                          <Plus aria-hidden="true" />
+                        </Button>
                       </span>
-                      {stop.place.image_url ? <img src={stop.place.image_url} alt="" loading="lazy" decoding="async" className="relative h-full w-full object-cover" onError={(event) => event.currentTarget.remove()} /> : null}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <InternalLink href={href} className="block truncate text-[15px] font-semibold hover:underline">
-                        {stop.place.name}
-                      </InternalLink>
-                      <p className="g-xs g-mut mt-0.5 truncate">{meta.join(' · ')}</p>
-                      {stop.note ? <p className="g-xs g-fnt mt-0.5 line-clamp-2">{stop.note}</p> : null}
-                    </div>
-                    {isEditing ? (
-                      <div className="flex shrink-0">
-                        <Button variant="text" size="sm" iconOnly onClick={() => moveStop(index, -1)} disabled={index === 0} aria-label={`Move ${stop.place.name} earlier`}>
-                          <ArrowUp aria-hidden="true" />
-                        </Button>
-                        <Button variant="text" size="sm" iconOnly onClick={() => moveStop(index, 1)} disabled={index === stops.length - 1} aria-label={`Move ${stop.place.name} later`}>
-                          <ArrowDown aria-hidden="true" />
-                        </Button>
-                        {stops.length > 2 ? (
-                          <Button variant="text" size="sm" iconOnly onClick={() => removeStop(index)} aria-label={`Remove ${stop.place.name}`}>
-                            <X aria-hidden="true" />
-                          </Button>
-                        ) : null}
-                      </div>
-                    ) : null}
-                  </div>
-                </li>
-              )
-            })}
-          </ol>
-
-          <hr className="g-sep mt-4" />
-          <div className="mt-2">
-            <KeyValue
-              items={[
-                { label: 'Commute', value: describeCommute(legs) },
-                {
-                  label: 'Group size',
-                  value: (
-                    <span className="inline-flex items-center gap-1">
-                      <Button variant="soft" size="sm" iconOnly aria-label="Fewer people" onClick={() => setGroupSize((size) => Math.max(1, size - 1))}>
-                        <Minus aria-hidden="true" />
-                      </Button>
-                      <span className="w-7 text-center">{groupSize}</span>
-                      <Button variant="soft" size="sm" iconOnly aria-label="More people" onClick={() => setGroupSize((size) => Math.min(20, size + 1))}>
-                        <Plus aria-hidden="true" />
-                      </Button>
-                    </span>
-                  ),
-                },
-                { label: 'Cost', value: `${formatPeso(perHead)}/head · rides split by ${groupSize}` },
-              ]}
-            />
+                    ),
+                  },
+                  { label: 'Cost', value: `${formatPeso(perHead)}/head · rides split by ${groupSize}` },
+                ]}
+              />
+            </div>
           </div>
 
           <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3">
@@ -403,13 +399,16 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
             </Button>
           </div>
 
-          <div className="fixed inset-x-0 bottom-[calc(var(--tabbar-h)+env(safe-area-inset-bottom,0px))] z-[5500] flex gap-3 border-t border-[var(--line-2)] bg-[var(--surface)] px-4 py-3 lg:sticky lg:bottom-0 lg:z-10 lg:mt-4 lg:px-0">
-            <Button variant="soft" className="flex-1" onClick={() => setIsEditing((value) => !value)} aria-pressed={isEditing}>
-              {isEditing ? 'Done' : 'Edit'}
-            </Button>
-            <Button variant="tara" className="flex-[2]" onClick={() => void save()} loading={status === 'saving'} disabled={status === 'saving'}>
-              {session ? 'Save & invite' : 'Log in to save'}
-            </Button>
+          <div className="g-sticky-bar is-inline">
+            <div className="mx-auto flex max-w-[720px] gap-3">
+              <Button variant="soft" className="flex-1" onClick={() => setIsEditing((value) => !value)} aria-pressed={isEditing}>
+                {isEditing ? <Check /> : <ArrowsDownUp />}
+                {isEditing ? 'Done' : 'Edit stops'}
+              </Button>
+              <Button variant="tara" className="flex-[2]" onClick={() => void save()} loading={status === 'saving'} disabled={status === 'saving'}>
+                {session ? 'Save & invite' : 'Log in to save'}
+              </Button>
+            </div>
           </div>
         </section>
       ) : null}

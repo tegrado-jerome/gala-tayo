@@ -1,0 +1,189 @@
+/*
+  "Me" pages: profile, saved, passport, history, settings, people.
+  Airbnb account rows and wishlist collages, Polarsteps passport stats. Tokens come from gt1.css.
+*/
+
+@layer components {
+/* ---------- Profile card (Airbnb host card: identity left, stats right) ---------- */
+.me-card { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: center; gap: 12px; padding: 22px 18px; background: var(--surface); border: 1px solid var(--line-2); border-radius: var(--r-4); box-shadow: 0 6px 20px rgba(15, 33, 56, 0.08); }
+.me-id { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; text-align: center; }
+.me-id .g-h2 { margin-top: 10px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.me-id-sub { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; font-size: 13px; color: var(--ink-2); }
+.me-nums { display: flex; flex-direction: column; min-width: 0; }
+.me-num { display: flex; flex-direction: column; gap: 2px; min-height: 52px; justify-content: center; padding: 8px 0; color: var(--ink); text-decoration: none; text-align: left; background: none; border: 0; font: inherit; }
+.me-num + .me-num { border-top: 1px solid var(--line-2); }
+.me-num b { font: 600 22px/1 var(--font-display); letter-spacing: -0.02em; }
+.me-num span { font-size: 11px; font-weight: 600; color: var(--ink-2); }
+a.me-num:hover b, button.me-num:not(:disabled):hover b { text-decoration: underline; text-underline-offset: 3px; }
+button.me-num:not(:disabled) { cursor: pointer; }
+.me-num:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: var(--r-1); }
+.me-social { display: flex; align-items: center; justify-content: center; gap: 4px; flex-wrap: wrap; font-size: 13px; }
+.me-social button { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; padding: 0 4px; background: none; border: 0; color: var(--ink); font: inherit; cursor: pointer; }
+.me-social button:disabled { cursor: default; }
+.me-social button:not(:disabled):hover span { text-decoration: underline; text-underline-offset: 3px; }
+.me-social span { color: var(--ink-2); }
+@media (min-width: 768px) { .me-card { padding: 28px 24px; gap: 20px; } .me-num b { font-size: 24px; } }
+
+/* ---------- Account rows (Airbnb profile tab) ---------- */
+.me-sec { margin-top: 32px; }
+.me-sec > h2 { font: 600 20px/1.2 var(--font-display); letter-spacing: -0.015em; margin-bottom: 4px; }
+.me-sec > .me-sec-sub { font-size: 13px; color: var(--ink-2); margin: -2px 0 8px; }
+.me-rows { display: flex; flex-direction: column; margin-inline: -8px; }
+.me-row { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 68px; padding: 12px 8px; border: 0; border-radius: var(--r-2); background: none; color: var(--ink); font: inherit; text-align: left; text-decoration: none; cursor: pointer; -webkit-tap-highlight-color: transparent; position: relative; }
+.me-row + .me-row::before { content: ''; position: absolute; top: 0; left: 62px; right: 8px; border-top: 1px solid var(--line-2); }
+.me-row:hover { background: var(--fill); }
+.me-row:hover::before, .me-row:hover + .me-row::before { border-color: transparent; }
+.me-row:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+.me-row:disabled { opacity: 0.6; cursor: default; }
+.me-ic { display: grid; place-items: center; width: 40px; height: 40px; flex: 0 0 auto; border-radius: var(--r-2); background: var(--fill); color: var(--ink); }
+.me-ic svg { width: 22px; height: 22px; }
+.me-ic.is-tara { background: var(--tara-soft); color: var(--tara-ink); }
+.me-ic.is-sea { background: var(--sea-soft); color: var(--sea); }
+.me-ic.is-warn { background: var(--warn-soft); color: var(--warn); }
+.me-ic.is-bad { background: var(--bad-soft); color: var(--bad); }
+.me-row-t { flex: 1; min-width: 0; }
+.me-row-t > b { display: block; font-size: 15px; font-weight: 600; line-height: 1.3; }
+.me-row-t > span { display: block; margin-top: 2px; font-size: 13px; line-height: 1.35; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.me-row-end { display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto; margin-left: auto; font-size: 14px; color: var(--ink-3); }
+.me-row-end svg { width: 18px; height: 18px; }
+.me-row.is-bad .me-row-t > b { color: var(--bad); }
+
+/* Switch: <button role="switch"> row or <input type="checkbox"> + .me-switch */
+.me-switch { position: relative; width: 48px; height: 28px; flex: 0 0 auto; border-radius: var(--r-pill); background: var(--fill-2); transition: background var(--t) var(--ease-g); }
+.me-switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 24px; height: 24px; border-radius: 50%; background: #fff; box-shadow: var(--sh-1); transition: transform var(--t) var(--ease-g); }
+[aria-checked='true'] .me-switch, input:checked + .me-switch { background: var(--ink); }
+[aria-checked='true'] .me-switch::after, input:checked + .me-switch::after { transform: translateX(20px); }
+input:focus-visible + .me-switch { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* ---------- Plan tiles (Airbnb "past trips") ---------- */
+.me-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 12px; }
+@media (min-width: 768px) { .me-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px 20px; } }
+.me-tile { display: block; min-width: 0; color: inherit; text-decoration: none; }
+.me-tile-art { position: relative; display: grid; place-items: center; aspect-ratio: 4 / 3; border-radius: var(--r-3); overflow: hidden; background: var(--sea-soft); color: var(--sea); }
+.me-tile-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform var(--t-slow) var(--ease-g); }
+.me-tile:hover .me-tile-art img { transform: scale(1.03); }
+.me-tile-art .g-tag { position: absolute; top: 8px; left: 8px; }
+.me-tile-t { margin-top: 8px; font: 600 15px/1.3 var(--font-display); letter-spacing: -0.01em; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.me-tile-s { font-size: 13px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------- Wishlists (Airbnb saved collections with a photo collage) ---------- */
+.me-wls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 12px; }
+@media (min-width: 768px) { .me-wls { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px 20px; } }
+@media (min-width: 1200px) { .me-wls { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+.me-wl { display: block; width: 100%; min-width: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; text-decoration: none; cursor: pointer; }
+.me-wl-art { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; gap: 2px; aspect-ratio: 1 / 1; border-radius: var(--r-3); overflow: hidden; background: var(--surface); box-shadow: 0 2px 10px rgba(15, 33, 56, 0.1); transition: box-shadow var(--t) var(--ease-g); }
+.me-wl-art > * { position: relative; display: grid; place-items: center; min-width: 0; min-height: 0; background: var(--fill); color: var(--ink-3); }
+.me-wl-art > :first-child { grid-row: span 2; }
+.me-wl-art.is-1 > :first-child { grid-column: span 2; }
+.me-wl-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.me-wl-art svg { width: 28px; height: 28px; }
+.me-wl:hover .me-wl-art { box-shadow: 0 6px 20px rgba(15, 33, 56, 0.16); }
+.me-wl[aria-pressed='true'] .me-wl-art { box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--ink); }
+.me-wl:focus-visible { outline: none; }
+.me-wl:focus-visible .me-wl-art { box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--ink); }
+.me-wl-t { display: block; margin-top: 10px; font: 600 15px/1.3 var(--font-display); letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.me-wl-s { display: block; font-size: 13px; color: var(--ink-2); }
+
+/* ---------- Passport (Polarsteps header: map, avatar, stat columns) ---------- */
+.me-pp-map { position: relative; margin-inline: -16px; }
+.me-pp-map .g-map { height: clamp(220px, 34vh, 300px); border: 0; border-radius: 0; }
+@media (min-width: 1024px) { .me-pp-map { margin-inline: 0; } .me-pp-map .g-map { height: 340px; border-radius: var(--r-4); } }
+.me-pp-sheet { position: relative; z-index: 2; margin: -28px -16px 0; padding: 0 16px; background: var(--paper); border-radius: var(--r-4) var(--r-4) 0 0; }
+@media (min-width: 1024px) { .me-pp-sheet { margin: -48px 32px 0; padding: 0 28px 4px; border-radius: var(--r-4); box-shadow: var(--sh-2); } }
+.me-pp-head { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.me-pp-head > :first-child { margin-top: -44px; box-shadow: 0 0 0 4px var(--paper); border-radius: 50%; }
+.me-pp-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 18px; }
+.me-pp-stats > div { display: flex; flex-direction: column; gap: 4px; padding: 2px 0 2px 14px; min-width: 0; }
+.me-pp-stats > div + div { border-left: 1px solid var(--line); }
+.me-pp-stats b { font: 600 26px/1 var(--font-display); letter-spacing: -0.02em; }
+.me-pp-stats b small { font-size: 14px; font-weight: 600; color: var(--ink-3); }
+.me-pp-stats span { font-size: 13px; color: var(--ink-2); }
+@media (min-width: 768px) { .me-pp-stats b { font-size: 32px; } .me-pp-stats > div { padding-left: 24px; } }
+.me-stamps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); justify-items: center; gap: 20px 8px; }
+@media (min-width: 768px) { .me-stamps { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .me-stamps { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+.me-stamp { display: grid; place-items: center; width: 96px; height: 96px; padding: 6px; border-radius: 50%; text-align: center; flex: 0 0 auto; }
+.me-stamp b { display: block; font: 700 10px/1.15 var(--font-display); text-transform: uppercase; letter-spacing: 0.02em; }
+.me-stamp span { display: block; margin-top: 3px; font-size: 10px; line-height: 1.2; }
+.me-stamp.is-got { background: var(--sea); color: #fff; box-shadow: inset 0 0 0 4px var(--sea), inset 0 0 0 5px rgba(255, 255, 255, 0.55); transform: rotate(var(--g-rot, -6deg)); }
+.me-stamp.is-got span { opacity: 0.85; }
+.me-stamp.is-new { --g-rot: 6deg; background: var(--tara); color: #0f2138; box-shadow: inset 0 0 0 4px var(--tara), inset 0 0 0 5px rgba(15, 33, 56, 0.35); }
+.me-stamp.is-lock { border: 1.5px dashed color-mix(in srgb, var(--ink-3) 45%, transparent); color: var(--ink-3); }
+.me-stamp.is-sm { width: 72px; height: 72px; }
+.me-stamp.is-sm b { font-size: 9px; }
+
+/* ---------- Timeline (History, recent stamps) ---------- */
+.me-tl-day { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; padding-left: 28px; }
+.me-tl-day::before { content: ''; position: absolute; left: 1px; top: 50%; width: 12px; height: 12px; margin-top: -6px; border-radius: 50%; background: var(--paper); box-shadow: inset 0 0 0 3px var(--ink); }
+.me-tl-day.is-first::before { background: var(--tara); box-shadow: 0 0 0 4px var(--tara-soft); }
+.me-tl-list { margin: 0 0 8px 6px; padding: 4px 0 12px 21px; border-left: 2px solid var(--line-2); list-style: none; }
+.me-tl-item { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.me-tl-link { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; min-height: 72px; padding: 8px; margin-left: -8px; border-radius: var(--r-3); color: var(--ink); text-decoration: none; }
+.me-tl-link:hover { background: var(--fill); }
+.me-tl-link:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+.me-thumb { position: relative; display: grid; place-items: center; width: 56px; height: 56px; flex: 0 0 auto; border-radius: var(--r-2); overflow: hidden; background: var(--sea-soft); color: var(--sea); }
+.me-thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.me-thumb svg { width: 22px; height: 22px; }
+.me-tl-t { flex: 1; min-width: 0; }
+.me-tl-t > b { display: block; font: 600 15px/1.3 var(--font-display); letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.me-tl-t > span { display: block; font-size: 13px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.me-tl-time { flex: 0 0 auto; font-size: 12px; font-weight: 600; color: var(--ink-3); white-space: nowrap; }
+
+/* ---------- People (find friends, follow lists) ---------- */
+.me-people { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (min-width: 768px) { .me-people { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { .me-people { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; } }
+.me-pcard { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; padding: 18px 12px 12px; text-align: center; background: var(--surface); border: 1px solid var(--line-2); border-radius: var(--r-3); transition: box-shadow var(--t) var(--ease-g); }
+.me-pcard:hover { box-shadow: var(--sh-2); }
+.me-pcard > a { color: inherit; text-decoration: none; }
+.me-pcard > a::after { content: ''; position: absolute; inset: 0; border-radius: inherit; }
+.me-pcard > a:focus-visible { outline: none; }
+.me-pcard:focus-within { box-shadow: 0 0 0 2px var(--ink); }
+.me-pcard .g-btn { position: relative; z-index: 1; margin-top: 10px; }
+.me-pcard-n { max-width: 100%; margin-top: 8px; font: 600 15px/1.3 var(--font-display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.me-pcard-s { max-width: 100%; font-size: 13px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.me-prow { position: relative; display: flex; align-items: center; gap: 12px; min-height: 72px; padding: 10px 8px; margin-inline: -8px; border-radius: var(--r-3); }
+.me-prow:hover { background: var(--fill); }
+.me-prow + .me-prow::before { content: ''; position: absolute; top: 0; left: 68px; right: 8px; border-top: 1px solid var(--line-2); }
+.me-prow:hover::before, .me-prow:hover + .me-prow::before { border-color: transparent; }
+.me-prow > a { flex: 1; min-width: 0; color: inherit; text-decoration: none; }
+.me-prow > a::after { content: ''; position: absolute; inset: 0; border-radius: inherit; }
+.me-prow > a:focus-visible { outline: none; }
+.me-prow:focus-within { box-shadow: inset 0 0 0 2px var(--ink); }
+.me-prow .g-btn { position: relative; z-index: 1; flex: 0 0 auto; }
+
+/* ---------- Settings (Airbnb personal info: rows that expand to edit) ---------- */
+.me-edit { padding: 18px 0; border-bottom: 1px solid var(--line-2); }
+.me-edit-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.me-edit-head > div { min-width: 0; }
+.me-edit-head b { display: block; font-size: 15px; font-weight: 600; }
+.me-edit-head p { margin-top: 2px; font-size: 14px; color: var(--ink-2); overflow-wrap: anywhere; }
+.me-edit-head .g-btn-text { min-height: 32px; font-size: 14px; font-weight: 600; }
+.me-edit-body { display: grid; gap: 14px; margin-top: 14px; }
+.me-edit-acts { display: flex; align-items: center; gap: 12px; }
+.me-savebar { position: sticky; z-index: 20; bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px) + 10px); display: flex; align-items: center; gap: 12px; margin-top: 20px; padding: 10px 10px 10px 18px; background: var(--surface); border: 1px solid var(--line-2); border-radius: var(--r-pill); box-shadow: var(--sh-2); }
+.me-savebar > p { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; }
+@media (min-width: 1024px) { .me-savebar { bottom: 20px; } }
+
+/* ---------- Choice list (report reasons, request types) ---------- */
+.me-choice { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 0 14px; border: 1px solid var(--line); border-radius: var(--r-2); background: var(--surface); color: var(--ink); font: 500 15px/1.3 var(--font-body); text-align: left; cursor: pointer; }
+.me-choice + .me-choice { margin-top: 8px; }
+.me-choice::after { content: ''; width: 20px; height: 20px; margin-left: auto; flex: 0 0 auto; border-radius: 50%; box-shadow: inset 0 0 0 2px var(--line); transition: box-shadow var(--t) var(--ease-g); }
+.me-choice[aria-checked='true'] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.me-choice[aria-checked='true']::after { box-shadow: inset 0 0 0 6px var(--ink); }
+.me-choice:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.me-choice:disabled { opacity: 0.6; cursor: default; }
+
+/* ---------- Status card (submissions, privacy requests) ---------- */
+.me-status { display: flex; gap: 12px; padding: 14px 0; }
+.me-status + .me-status { border-top: 1px solid var(--line-2); }
+.me-status .me-thumb { width: 72px; height: 72px; }
+.me-note { margin-top: 10px; padding: 10px 12px; border-radius: var(--r-2); background: var(--fill); font-size: 13px; }
+.me-note.is-ok { background: var(--ok-soft); color: var(--ok); }
+.me-note.is-bad { background: var(--bad-soft); color: var(--ink); }
+.me-note.is-bad > :first-child { color: var(--bad); font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  .me-switch, .me-switch::after, .me-tile-art img, .me-wl-art, .me-pcard { transition: none !important; }
+}
+}

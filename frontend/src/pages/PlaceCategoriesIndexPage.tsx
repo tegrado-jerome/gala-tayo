@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { PlaceTile, getCategoryIcon, getCategoryTint } from '../components/PlaceCard'
+import { MapTrifold } from '@phosphor-icons/react/dist/csr/MapTrifold'
+import { getCategoryIcon, getCategoryTint } from '../components/PlaceCard'
+import PlaceImage from '../components/discover/PlaceImage'
 import { ListingBreadcrumb } from '../components/home/search/SearchComponents'
 import InternalLink from '../components/InternalLink'
 import SeoHead from '../components/SeoHead'
@@ -8,6 +10,8 @@ import { placeCategories } from '../data/placeCategories'
 import { categoryRepresentativePlaceSlugs, getDiscoveryImageCandidates } from '../data/placeIndexVisuals'
 import type { PlaceDetail } from '../types/appTypes'
 import { fetchPlaceDetailsBatch } from '../utils/placeDetailCache'
+import { getSeoListingPage } from '../utils/seoApi'
+import '../design/misc.css'
 import { getSiteOrigin } from '../utils/seo'
 import { BRAND_NAME, PRODUCT_NAME } from '../utils/seoLandingPages'
 
@@ -21,6 +25,22 @@ function PlaceCategoriesIndexPage() {
     [categoryCards]
   )
   const [representativePlaces, setRepresentativePlaces] = useState<Record<string, PlaceDetail>>({})
+  const [placeCounts, setPlaceCounts] = useState<Record<string, number>>({})
+
+  useEffect(() => {
+    const controller = new AbortController()
+    void Promise.all(
+      categoryCards.map((category) =>
+        getSeoListingPage({ category: category.value, page: 1, pageSize: 1, signal: controller.signal })
+          .then((listing): [string, number] => [category.value, listing.total])
+          .catch(() => null)
+      )
+    ).then((entries) => {
+      if (controller.signal.aborted) return
+      setPlaceCounts(Object.fromEntries(entries.filter((entry): entry is [string, number] => entry !== null)))
+    })
+    return () => controller.abort()
+  }, [categoryCards])
 
   useEffect(() => {
     let isMounted = true
@@ -81,24 +101,43 @@ function PlaceCategoriesIndexPage() {
 
       <ListingBreadcrumb items={[{ label: 'Home', href: '/home' }, { label: 'Places', href: '/places' }, { label: 'Categories' }]} />
 
-      <header className="mt-5 max-w-[42rem]">
-        <h1 className="g-h1">Browse Metro Manila place categories</h1>
-        <p className="g-mut mt-2">Pick a category to see spots across Metro Manila.</p>
+      <header className="mt-5 flex flex-wrap items-end justify-between gap-4">
+        <div className="max-w-[42rem]">
+          <h1 className="g-h1">Browse Metro Manila place categories</h1>
+          <p className="g-mut mt-2">Pick a category to see spots across Metro Manila.</p>
+        </div>
+        <InternalLink href="/places" className="g-btn g-btn-line g-btn-sm">
+          <MapTrifold aria-hidden="true" />
+          Browse by city
+        </InternalLink>
       </header>
 
-      <SectionHead title="Categories" sub={<InternalLink href="/places" className="underline underline-offset-2">Or browse by city</InternalLink>} />
-      <div className="g-grid is-4">
-        {categoryCards.map((category) => (
-          <PlaceTile
-            key={category.value}
-            href={`/places/categories/${category.value}`}
-            title={category.label}
-            meta={`Open ${category.label.toLowerCase()} places`}
-            icon={getCategoryIcon(category.value)}
-            tint={getCategoryTint(category.value)}
-            imageUrls={getDiscoveryImageCandidates(categoryRepresentativePlaceSlugs[category.value], representativePlaces[categoryRepresentativePlaceSlugs[category.value]])}
-          />
-        ))}
+      <SectionHead title="What are you in the mood for?" />
+      <div className="m-cgrid">
+        {categoryCards.map((category) => {
+          const Icon = getCategoryIcon(category.value)
+          const tint = getCategoryTint(category.value)
+          const count = placeCounts[category.value]
+          return (
+            <InternalLink key={category.value} href={`/places/categories/${category.value}`} className="m-ctile">
+              <span className="m-ctile-photo">
+                <span className="m-ctile-ic" style={{ background: `var(--${tint}-soft)`, color: tint === 'tara' ? 'var(--tara-ink)' : `var(--${tint})` }} aria-hidden="true">
+                  <Icon weight="duotone" />
+                </span>
+                <span className="m-ctile-thumb" aria-hidden="true">
+                  <PlaceImage
+                    candidates={getDiscoveryImageCandidates(categoryRepresentativePlaceSlugs[category.value], representativePlaces[categoryRepresentativePlaceSlugs[category.value]])}
+                    category={category.value}
+                  />
+                </span>
+              </span>
+              <span className="min-w-0">
+                <span className="g-h3 block truncate">{category.label}</span>
+                <span className="g-sm g-mut block">{count != null ? `${count.toLocaleString('en-PH')} ${count === 1 ? 'place' : 'places'}` : 'See places'}</span>
+              </span>
+            </InternalLink>
+          )
+        })}
       </div>
     </Page>
   )

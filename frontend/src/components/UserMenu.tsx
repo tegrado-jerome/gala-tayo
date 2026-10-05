@@ -59,7 +59,7 @@ const HELP_LINKS: MenuLink[] = [
   { path: '/reports', label: 'My reports', icon: Flag },
 ]
 
-const ITEM_CLASS = 'flex min-h-[44px] w-full items-center gap-3 rounded-[var(--r-2)] px-3 text-left text-[15px] font-medium hover:bg-[var(--fill)] focus-visible:bg-[var(--fill)] focus-visible:outline-none disabled:opacity-60'
+const ITEM_CLASS = 'flex min-h-[46px] w-full items-center gap-3 rounded-[var(--r-2)] px-3 text-left text-[15px] font-medium hover:bg-[var(--fill)] focus-visible:bg-[var(--fill)] focus-visible:outline-none disabled:opacity-60'
 
 function getDisplayName(user: AccountUser, profile: CurrentUserResponse['profile'] | null) {
   return profile?.displayName ?? profile?.username ?? user.email ?? 'Account'
@@ -166,16 +166,15 @@ function UserMenu({ user = null, profile = null, compact = false }: UserMenuProp
 
   const panel = effectiveUser ? (
     <div role="menu" aria-label="Account" style={{ color: 'var(--ink)' }}>
-      <button type="button" role="menuitem" className={cx(ITEM_CLASS, 'min-h-[60px] gap-3')} onClick={() => closeAndNavigate('/profile')}>
-        <AccountAvatar src={avatarSrc} name={displayName} size={40} onError={() => setFailedAvatarUrl(avatarUrl)} />
+      <button type="button" role="menuitem" className={cx(ITEM_CLASS, 'min-h-[72px] gap-3')} onClick={() => closeAndNavigate('/profile')}>
+        <AccountAvatar src={avatarSrc} name={displayName} size={48} onError={() => setFailedAvatarUrl(avatarUrl)} />
         <span className="min-w-0 flex-1">
           <span className="g-h3 block truncate">{displayName}</span>
-          <span className="g-xs g-mut block truncate">{effectiveUser.email ? effectiveUser.email : 'View profile'}</span>
+          <span className="g-xs g-mut block truncate">Show profile</span>
         </span>
         <ChevronRight className="g-ic g-fnt" aria-hidden="true" />
       </button>
       {separator}
-      {renderLink({ path: '/profile', label: 'Profile', icon: User })}
       {PRIMARY_LINKS.map(renderLink)}
       {separator}
       {ACCOUNT_LINKS.map(renderLink)}

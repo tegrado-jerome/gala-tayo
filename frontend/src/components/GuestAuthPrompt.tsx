@@ -17,6 +17,7 @@ import { buildAuthPath } from '../services/authApi'
 import { navigateToPath } from '../utils/navigation'
 import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
 import { Button, Page, Panel, Sheet, cx } from './ui'
+import '../design/misc.css'
 
 export type GuestAuthVariant =
   | 'ask-ai'
@@ -169,44 +170,42 @@ function GuestAuthPromptBody({ variant, titleId, onClose, onLater }: { variant: 
   return (
     <>
       <div className="flex items-start gap-3">
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full" style={{ background: 'var(--fill)', color: 'var(--ink)' }} aria-hidden="true">
-          <Icon className="g-ic" />
+        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-[16px]" style={{ background: 'var(--tara-soft)', color: 'var(--tara-ink)' }} aria-hidden="true">
+          <Icon weight="duotone" className="h-7 w-7" />
         </span>
-        <div className="min-w-0 flex-1">
-          <p className="g-eyebrow">{config.label}</p>
-          <h2 id={titleId} className="g-h3 mt-1">
+        <div className="min-w-0 flex-1 pt-0.5">
+          <h2 id={titleId} className="g-h3 text-[17px]">
             {config.title}
           </h2>
+          <p className="g-sm g-mut mt-1 leading-5">{config.description}</p>
         </div>
         {onClose ? (
-          <Button variant="soft" size="sm" iconOnly onClick={onClose} aria-label="Close">
+          <Button variant="text" size="sm" iconOnly className="-mr-2 -mt-2 !no-underline" onClick={onClose} aria-label="Close">
             <X aria-hidden="true" />
           </Button>
         ) : null}
       </div>
 
-      <p className="g-sm g-mut mt-3 leading-5">{config.description}</p>
-
       {config.benefits.length > 0 ? (
-        <ul className="mt-3 grid gap-1.5">
+        <ul className="m-perks" aria-label={`${config.label} perks`}>
           {config.benefits.map((benefit) => (
-            <li key={benefit} className="g-sm flex items-center gap-2">
-              <Check className="h-4 w-4 shrink-0" style={{ color: 'var(--ok)' }} aria-hidden="true" />
+            <li key={benefit}>
+              <Check weight="bold" aria-hidden="true" />
               {benefit}
             </li>
           ))}
         </ul>
       ) : null}
 
-      <div className="mt-5 grid grid-cols-2 gap-2">
-        <Button variant="ink" block onClick={() => navigateToPath(buildAuthPath('/login', currentPath))}>
+      <div className="mt-5 grid gap-2">
+        <Button variant="tara" size="lg" block onClick={() => navigateToPath(buildAuthPath('/login', currentPath))}>
           Log in
         </Button>
         <Button variant="line" block onClick={() => navigateToPath(buildAuthPath('/signup', currentPath))}>
-          Create account
+          Create a free account
         </Button>
       </div>
-      <div className="mt-2 flex justify-center">
+      <div className="mt-1 flex justify-center">
         <Button variant="text" size="sm" onClick={onLater}>
           Maybe later
         </Button>
@@ -256,7 +255,7 @@ function GuestAuthPromptModal({ variant, isOpen, onClose }: { variant: GuestAuth
 function GuestAuthPromptCard({ variant, className }: { variant: GuestAuthVariant; className?: string }) {
   const titleId = useId()
   return (
-    <Panel as="section" aria-labelledby={titleId} className={cx('mx-auto w-full max-w-[480px]', className)}>
+    <Panel as="section" aria-labelledby={titleId} className={cx('mx-auto w-full max-w-[480px] !rounded-[var(--r-4)] !p-5 shadow-[var(--sh-2)]', className)}>
       <GuestAuthPromptBody variant={variant} titleId={titleId} onLater={() => navigateToPath('/home')} />
     </Panel>
   )

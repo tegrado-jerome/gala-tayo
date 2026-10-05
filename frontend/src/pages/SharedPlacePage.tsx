@@ -174,21 +174,36 @@ export default function SharedPlacePage({
 
   if (isLoading) {
     return (
-      <Page className="pt-0 lg:pt-8">
+      <Page className="pt-0 lg:pt-6">
         <div aria-busy="true" aria-label="Loading place">
-          <Skeleton className="g-only-desk mb-4 h-4 w-40" />
-          <Skeleton className="-mx-4 h-[52vh] min-h-[300px] max-h-[560px] rounded-none lg:mx-0 lg:h-[460px] lg:max-h-none lg:w-[calc(100%-400px)] lg:rounded-[var(--r-4)]" />
-          <div className="relative -mx-4 -mt-7 rounded-t-[var(--r-4)] bg-[var(--surface)] px-4 pt-6 lg:mx-0 lg:mt-8 lg:rounded-none lg:px-0 lg:pt-0">
+          <Skeleton className="g-only-desk mb-5 mt-3 h-4 w-40" />
+          <Skeleton className="-mx-4 h-[min(78vw,56vh)] min-h-[280px] max-h-[520px] rounded-none lg:hidden" />
+          <div className="relative -mx-4 -mt-6 rounded-t-[var(--r-4)] bg-[var(--surface)] px-4 pt-6 lg:mx-0 lg:mt-0 lg:rounded-none lg:px-0 lg:pt-0">
             <Skeleton className="h-3.5 w-40" />
             <Skeleton className="mt-3 h-8 w-2/3 max-w-[420px]" />
-            <div className="mt-4 flex gap-2">
-              <Skeleton className="h-8 w-20 rounded-[var(--r-pill)]" />
-              <Skeleton className="h-8 w-24 rounded-[var(--r-pill)]" />
-              <Skeleton className="h-8 w-16 rounded-[var(--r-pill)]" />
+            <div className="mt-3 flex gap-1.5">
+              <Skeleton className="h-7 w-24 rounded-[var(--r-1)]" />
+              <Skeleton className="h-7 w-20 rounded-[var(--r-1)]" />
+              <Skeleton className="h-7 w-28 rounded-[var(--r-1)]" />
             </div>
-            <Skeleton className="mt-5 h-3.5 w-full max-w-[640px]" />
-            <Skeleton className="mt-2 h-3.5 w-5/6 max-w-[560px]" />
-            <Skeleton className="mt-2 h-3.5 w-2/3 max-w-[480px]" />
+          </div>
+          <div className="g-only-desk mt-5 grid h-[440px] grid-cols-[2fr_1fr_1fr] grid-rows-2 gap-2 overflow-hidden rounded-[var(--r-3)]">
+            <Skeleton className="row-span-2 rounded-none" />
+            <Skeleton className="rounded-none" />
+            <Skeleton className="rounded-none" />
+            <Skeleton className="rounded-none" />
+            <Skeleton className="rounded-none" />
+          </div>
+          <div className="mt-6 grid gap-4 lg:mt-10 lg:max-w-[calc(100%-424px)] lg:grid-cols-2">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="flex items-center gap-3">
+                <Skeleton className="h-[38px] w-[38px] shrink-0 rounded-[var(--r-2)]" />
+                <div className="min-w-0 flex-1">
+                  <Skeleton className="h-3 w-16" />
+                  <Skeleton className="mt-2 h-3.5 w-3/4" />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </Page>

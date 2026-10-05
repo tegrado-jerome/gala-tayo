@@ -109,6 +109,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false)
   const [confirmPasswordTouched, setConfirmPasswordTouched] = useState(false)
   const [submitAttempted, setSubmitAttempted] = useState(false)
+  const [step, setStep] = useState<'email' | 'password'>('email')
 
   const isCreateMode = mode === 'create_account'
   const isAdminSurface = surface === 'admin'
@@ -195,12 +196,34 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
     setConfirmPasswordTouched(false)
     setSubmitAttempted(false)
     setResendMessage('')
+    setStep('email')
+  }
+
+  const editEmail = () => {
+    setStep('email')
+    setError('')
+    setSubmitAttempted(false)
+    window.setTimeout(() => document.getElementById('auth-email')?.focus(), 0)
   }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
     setError('')
+
+    if (step === 'email') {
+      if (fieldErrors.email) {
+        setSubmitAttempted(true)
+        document.getElementById('auth-email')?.focus()
+        return
+      }
+      setSubmitAttempted(false)
+      setEmail(normalizedEmail)
+      setStep('password')
+      window.setTimeout(() => document.getElementById('auth-password')?.focus(), 0)
+      return
+    }
+
     setSubmitAttempted(true)
     const firstInvalidField = fieldErrors.email ? 'auth-email' : fieldErrors.password ? 'auth-password' : fieldErrors.confirm ? 'auth-confirm-password' : null
     if (firstInvalidField) {
@@ -291,12 +314,17 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
     }
   }
 
-  const cardTitle = isAdminSurface ? 'Admin sign in' : isCreateMode ? 'Create an account' : 'Welcome back'
+  const barTitle = isAdminSurface ? 'Admin sign in' : isCreateMode ? 'Sign up' : 'Log in'
+  const cardTitle = isAdminSurface ? 'Admin sign in' : isCreateMode ? 'Welcome to GalaTayo' : 'Welcome back'
   const cardDescription = isAdminSurface
     ? 'Use your admin email and password to continue.'
-    : isCreateMode
-    ? 'Set up your GalaTayo account and start planning your next gala.'
-    : 'Log in to see your plans and barkadas.'
+    : step === 'password'
+      ? isCreateMode
+        ? 'Pick a password for your new account.'
+        : 'Enter your password to continue.'
+      : isCreateMode
+        ? 'Make an account and start planning your next gala with the barkada.'
+        : 'Log in to see your plans and barkadas.'
 
   if (isConfirmationPending) {
     const resendLabel = signUpCooldown.isCoolingDown
@@ -305,13 +333,21 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
 
     return (
       <AuthCard
-        icon={<Mail className="g-ic" />}
+        bar="Sign up"
+        icon={<Mail weight="duotone" />}
         title="Check your email"
-        sub="We sent a link to confirm your GalaTayo account. After confirming, come back and log in with your email and password."
+        sub={
+          <>
+            We sent a link to <b style={{ color: 'var(--ink)' }}>{normalizedEmail}</b>. Confirm it, then come back and log in with your email and password.
+          </>
+        }
       >
         {resendMessage ? <AuthNotice>{resendMessage}</AuthNotice> : null}
         {error ? <AuthNotice tone="bad">{error}</AuthNotice> : null}
         <div className="grid gap-3">
+          <Button variant="tara" size="lg" block onClick={resetFormState}>
+            Continue
+          </Button>
           <Button
             variant="line"
             block
@@ -319,9 +355,6 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
             disabled={signUpCooldown.isCoolingDown || isResendingConfirmation}
           >
             {isResendingConfirmation ? 'Sending...' : resendLabel}
-          </Button>
-          <Button variant="tara" block onClick={resetFormState}>
-            Continue
           </Button>
         </div>
       </AuthCard>
@@ -334,18 +367,115 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
       : isAdminSurface
         ? 'Checking access...'
         : 'Signing in...'
-    : isCreateMode
-      ? 'Create account'
-      : isAdminSurface
-        ? 'Sign in securely'
-        : 'Continue'
+    : step === 'email'
+      ? 'Continue'
+      : isCreateMode
+        ? 'Create account'
+        : isAdminSurface
+          ? 'Sign in securely'
+          : 'Log in'
 
   return (
-    <AuthCard title={cardTitle} sub={cardDescription}>
+    <AuthCard bar={barTitle} onBack={step === 'password' ? editEmail : undefined} backLabel="Change email" title={cardTitle} sub={cardDescription}>
       {resetSuccess ? <AuthNotice>Password updated. You can now sign in with your new password.</AuthNotice> : null}
+      {!allowGoogle ? <AuthNotice tone="warn">Admin access uses email and password only. Account creation is disabled here.</AuthNotice> : null}
+      {resendMessage ? <AuthNotice>{resendMessage}</AuthNotice> : null}
 
-      {allowGoogle ? (
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
+        {step === 'email' ? (
+          <div className="g-field">
+            <label htmlFor="auth-email">Email</label>
+            <input
+              id="auth-email"
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              required
+              autoComplete="email"
+              autoFocus
+              placeholder="you@email.com"
+              aria-invalid={Boolean(emailError) || undefined}
+              aria-describedby={emailError ? 'auth-email-msg' : undefined}
+              className="g-input h-14 text-[16px]"
+            />
+            {emailError ? <span id="auth-email-msg" className="g-hint is-error">{emailError}</span> : null}
+          </div>
+        ) : (
+          <>
+            <input type="email" name="username" autoComplete="username" value={normalizedEmail} readOnly hidden />
+            <div className="m-auth-who">
+              <b title={normalizedEmail}>{normalizedEmail}</b>
+              <Button variant="text" size="sm" onClick={editEmail}>
+                Edit
+              </Button>
+            </div>
+
+            <PasswordField
+              id="auth-password"
+              label={isCreateMode ? 'Create a password' : 'Password'}
+              value={password}
+              onChange={setPassword}
+              visible={isPasswordVisible}
+              onToggleVisible={() => setIsPasswordVisible((current) => !current)}
+              required
+              minLength={isCreateMode ? minPasswordLength : undefined}
+              autoComplete={isCreateMode ? 'new-password' : 'current-password'}
+              placeholder={isCreateMode ? 'At least 8 characters' : 'Your password'}
+              invalid={passwordIsInvalid || Boolean(shownErrors.password)}
+              error={shownErrors.password}
+              hint={isCreateMode ? 'Use uppercase, lowercase, a number, and a symbol.' : undefined}
+            >
+              {isCreateMode ? <PasswordStrengthBar password={password} /> : null}
+            </PasswordField>
+
+            {isCreateMode ? (
+              <PasswordField
+                id="auth-confirm-password"
+                label="Confirm password"
+                value={confirmPassword}
+                onChange={setConfirmPassword}
+                onBlur={() => setConfirmPasswordTouched(true)}
+                visible={isConfirmPasswordVisible}
+                onToggleVisible={() => setIsConfirmPasswordVisible((current) => !current)}
+                required
+                minLength={minPasswordLength}
+                autoComplete="new-password"
+                placeholder="Type it again"
+                invalid={confirmPasswordHasMismatch || Boolean(shownErrors.confirm)}
+                error={shownErrors.confirm ?? (confirmPasswordTouched && confirmPasswordHasMismatch ? 'Passwords do not match.' : undefined)}
+              />
+            ) : (
+              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+                <label className="g-sm inline-flex min-h-11 cursor-pointer items-center gap-2" style={{ color: 'var(--ink-2)' }}>
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(event) => setRememberMe(event.target.checked)}
+                    className="h-[18px] w-[18px]"
+                    style={{ accentColor: 'var(--ink)' }}
+                  />
+                  Remember me
+                </label>
+                {allowForgotPassword ? (
+                  <Button variant="text" size="sm" onClick={() => navigateToPath('/forgot-password')}>
+                    Forgot password?
+                  </Button>
+                ) : null}
+              </div>
+            )}
+          </>
+        )}
+
+        {error ? <AuthNotice tone="bad">{error}</AuthNotice> : null}
+
+        <Button type="submit" variant="tara" size="lg" block disabled={isSubmitDisabled}>
+          {submitLabel}
+        </Button>
+      </form>
+
+      {allowGoogle && step === 'email' ? (
         <>
+          <OrDivider />
           <AuthMethodChooser
             isGoogleLoading={isGoogleLoading}
             onGoogleLoadingChange={handleGoogleLoadingChange}
@@ -354,112 +484,26 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
             flow={isCreateMode ? 'signup' : undefined}
             rememberMe={rememberMe}
           />
-          <OrDivider />
         </>
-      ) : (
-        <AuthNotice tone="warn">Admin access uses email and password only. Account creation is disabled here.</AuthNotice>
-      )}
-
-      {resendMessage ? <AuthNotice>{resendMessage}</AuthNotice> : null}
-
-      <form className="flex flex-col gap-5" onSubmit={handleSubmit} noValidate>
-        <div className="g-field">
-          <label htmlFor="auth-email">Email</label>
-          <input
-            id="auth-email"
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            required
-            autoComplete="email"
-            placeholder="you@email.com"
-            aria-invalid={Boolean(emailError) || undefined}
-            aria-describedby={emailError ? 'auth-email-msg' : undefined}
-            className="g-input"
-          />
-          {emailError ? <span id="auth-email-msg" className="g-hint is-error">{emailError}</span> : null}
-        </div>
-
-        <PasswordField
-          id="auth-password"
-          label="Password"
-          value={password}
-          onChange={setPassword}
-          visible={isPasswordVisible}
-          onToggleVisible={() => setIsPasswordVisible((current) => !current)}
-          required
-          minLength={isCreateMode ? minPasswordLength : undefined}
-          autoComplete={isCreateMode ? 'new-password' : 'current-password'}
-          placeholder={isCreateMode ? 'At least 8 characters' : 'Your password'}
-          invalid={passwordIsInvalid || Boolean(shownErrors.password)}
-          error={shownErrors.password}
-          hint={isCreateMode ? 'Use uppercase, lowercase, a number, and a symbol.' : undefined}
-        >
-          {isCreateMode ? <PasswordStrengthBar password={password} /> : null}
-        </PasswordField>
-
-        {isCreateMode ? (
-          <PasswordField
-            id="auth-confirm-password"
-            label="Confirm password"
-            value={confirmPassword}
-            onChange={setConfirmPassword}
-            onBlur={() => setConfirmPasswordTouched(true)}
-            visible={isConfirmPasswordVisible}
-            onToggleVisible={() => setIsConfirmPasswordVisible((current) => !current)}
-            required
-            minLength={minPasswordLength}
-            autoComplete="new-password"
-            placeholder="Type it again"
-            invalid={confirmPasswordHasMismatch || Boolean(shownErrors.confirm)}
-            error={shownErrors.confirm ?? (confirmPasswordTouched && confirmPasswordHasMismatch ? 'Passwords do not match.' : undefined)}
-          />
-        ) : null}
-
-        {!isCreateMode ? (
-          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-            <label className="g-sm inline-flex min-h-11 cursor-pointer items-center gap-2" style={{ color: 'var(--ink-2)' }}>
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(event) => setRememberMe(event.target.checked)}
-                className="h-[18px] w-[18px]"
-                style={{ accentColor: 'var(--ink)' }}
-              />
-              Remember me
-            </label>
-            {allowForgotPassword ? (
-              <Button variant="text" size="sm" onClick={() => navigateToPath('/forgot-password')}>
-                Forgot password?
-              </Button>
-            ) : null}
-          </div>
-        ) : null}
-
-        {error ? <AuthNotice tone="bad">{error}</AuthNotice> : null}
-
-        <Button type="submit" variant="tara" block disabled={isSubmitDisabled}>
-          {submitLabel}
-        </Button>
-      </form>
+      ) : null}
 
       {allowSignupLink ? (
         <p className="g-sm g-mut text-center">
-          {isCreateMode ? 'Already have an account?' : 'New here?'}{' '}
+          {isCreateMode ? 'Already have an account?' : 'New to GalaTayo?'}{' '}
           <InlineLink onClick={() => navigateToPath(buildAuthPath(isCreateMode ? '/login' : '/signup', nextPath))}>
-            {isCreateMode ? 'Log in' : 'Create account'}
+            {isCreateMode ? 'Log in' : 'Create an account'}
           </InlineLink>
         </p>
       ) : null}
 
       {isCreateMode ? (
-        <p className="g-xs g-fnt">
+        <p className="m-auth-fine">
           By creating an account, you agree to GalaTayo&apos;s{' '}
-          <button type="button" onClick={() => navigateToPath('/terms')} className="underline underline-offset-2" style={{ color: 'var(--ink-2)' }}>
+          <button type="button" onClick={() => navigateToPath('/terms')}>
             Terms
           </button>{' '}
           and{' '}
-          <button type="button" onClick={() => navigateToPath('/privacy')} className="underline underline-offset-2" style={{ color: 'var(--ink-2)' }}>
+          <button type="button" onClick={() => navigateToPath('/privacy')}>
             Privacy Policy
           </button>
           .

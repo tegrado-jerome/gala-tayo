@@ -1,6 +1,6 @@
 import type { Icon as PhosphorIcon } from '@phosphor-icons/react'
 import { ArrowRight } from '@phosphor-icons/react/dist/csr/ArrowRight'
-import { Check } from '@phosphor-icons/react/dist/csr/Check'
+import { CheckCircle } from '@phosphor-icons/react/dist/csr/CheckCircle'
 import { Globe } from '@phosphor-icons/react/dist/csr/Globe'
 import { Lock } from '@phosphor-icons/react/dist/csr/Lock'
 import OnboardingLayout from './OnboardingLayout'
@@ -35,22 +35,17 @@ function OnboardingPrivacyStep({ values, errors, disableNext, onUpdate, onBack, 
   return (
     <OnboardingLayout
       step={3}
-      eyebrow="Privacy"
       title="Who can see your profile?"
       description="You can change this anytime in settings."
-      actions={
-        <>
-          <Button variant="soft" onClick={onBack}>
-            Back
-          </Button>
-          <Button variant="tara" onClick={onNext} disabled={disableNext}>
-            Next
-            <ArrowRight aria-hidden="true" />
-          </Button>
-        </>
+      onBack={onBack}
+      primary={
+        <Button variant="tara" size="lg" onClick={onNext} disabled={disableNext}>
+          Next
+          <ArrowRight aria-hidden="true" />
+        </Button>
       }
     >
-      <div className="grid gap-3 md:grid-cols-2 md:gap-4">
+      <div className="grid gap-3">
         {options.map((option) => {
           const selected = values.profileVisibility === option.value
           const Icon = option.icon
@@ -61,15 +56,14 @@ function OnboardingPrivacyStep({ values, errors, disableNext, onUpdate, onBack, 
               type="button"
               aria-pressed={selected}
               onClick={() => onUpdate({ profileVisibility: option.value })}
-              className="g-panel relative flex min-h-[112px] flex-col items-start gap-3 text-left"
-              style={selected ? { borderColor: 'var(--ink)', boxShadow: 'inset 0 0 0 1px var(--ink)' } : undefined}
+              className="m-choice"
             >
-              <Icon className="g-ic" aria-hidden="true" />
+              <Icon weight="duotone" aria-hidden="true" />
               <span className="min-w-0 pr-8">
                 <span className="g-h3 block">{option.title}</span>
                 <span className="g-sm g-mut mt-1 block leading-5">{option.description}</span>
               </span>
-              {selected ? <Check className="g-ic absolute right-4 top-4" aria-hidden="true" /> : null}
+              {selected ? <CheckCircle weight="fill" className="g-ic absolute right-4 top-4" aria-hidden="true" /> : null}
             </button>
           )
         })}

@@ -1,11 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
 import { CaretRight as ChevronRight } from '@phosphor-icons/react/dist/csr/CaretRight'
+import { CaretDown } from '@phosphor-icons/react/dist/csr/CaretDown'
+import { CloudRain } from '@phosphor-icons/react/dist/csr/CloudRain'
+import { Sun } from '@phosphor-icons/react/dist/csr/Sun'
 import { ShareNetwork as Share2 } from '@phosphor-icons/react/dist/csr/ShareNetwork'
 import { Shuffle } from '@phosphor-icons/react/dist/csr/Shuffle'
 import PlaceCard, { withLiveDetail } from '../components/PlaceCard'
 import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
 import SeoHead from '../components/SeoHead'
-import { Button, Chip, Chips, Empty, Page, Panel, Row, SectionHead } from '../components/ui'
+import InternalLink from '../components/InternalLink'
+import { Button, Chip, Chips, Empty, Page, Row, SectionHead } from '../components/ui'
+import '../design/misc.css'
 import { metroManilaAreas } from '../data/metroManilaAreas'
 import { formatPeso } from '../utils/galaPlanTrip'
 import { fetchPlaceDetailsBatch } from '../utils/placeDetailCache'
@@ -226,84 +231,100 @@ export default function SaanTayoPage() {
         jsonLd={jsonLd}
       />
 
-      <header className="max-w-[46rem]">
-        <p className="g-eyebrow">Free tool</p>
-        <h1 className="g-h1 mt-2">Saan tayo?</h1>
-        <p className="g-mut mt-3">
-          Hindi makapag-decide? Pick a city, your budget per head and who you&apos;re with. We&apos;ll suggest 3 places in Metro Manila that fit.
-        </p>
-      </header>
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:items-start lg:gap-12">
+        <header className="lg:sticky lg:top-24">
+          <p className="m-onb-step">Free tool · no sign up</p>
+          <h1 className="m-onb-title">Saan tayo?</h1>
+          <p className="g-mut mt-3 max-w-[40ch] text-[16px] leading-relaxed">
+            Hindi makapag-decide? Answer 4 quick ones and we&apos;ll pick 3 places in Metro Manila that fit.
+          </p>
+        </header>
 
-      <Panel className="mt-6 max-w-[46rem]">
-        <div className="grid gap-5">
-          <div className="g-field">
-            <label htmlFor="saan-tayo-city">Saang city?</label>
-            <select id="saan-tayo-city" className="g-input g-select" value={city} onChange={(event) => setCity(event.target.value)}>
-              <option value="">Kahit saan sa Metro Manila</option>
-              {metroManilaAreas.map((area) => (
-                <option key={area.slug} value={area.slug}>
-                  {area.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="g-field">
-            <span className="g-label" id="saan-tayo-budget">Budget per head</span>
-            <Chips role="group" aria-labelledby="saan-tayo-budget">
-              {BUDGET_OPTIONS.map((option) => (
-                <Chip key={option.value} aria-pressed={budget === option.value} onClick={() => setBudget(option.value)}>
-                  {option.label}
+        <div className="m-steps">
+          <div className="m-step is-done">
+            <span className="m-step-n" aria-hidden="true">1</span>
+            <div className="min-w-0">
+              <span className="m-step-label" id="saan-tayo-city">Saang city?</span>
+              <Chips role="group" aria-labelledby="saan-tayo-city">
+                <Chip aria-pressed={city === ''} onClick={() => setCity('')}>
+                  Kahit saan
                 </Chip>
-              ))}
-            </Chips>
+                {metroManilaAreas.map((area) => (
+                  <Chip key={area.slug} aria-pressed={city === area.slug} onClick={() => setCity(area.slug)}>
+                    {area.name}
+                  </Chip>
+                ))}
+              </Chips>
+            </div>
           </div>
 
-          <div className="g-field">
-            <span className="g-label" id="saan-tayo-who">Kasama mo?</span>
-            <Chips role="group" aria-labelledby="saan-tayo-who">
-              {WHO_OPTIONS.map((option) => (
-                <Chip key={option.value} aria-pressed={who === option.value} onClick={() => setWho(option.value)}>
-                  {option.label}
+          <div className="m-step is-done">
+            <span className="m-step-n" aria-hidden="true">2</span>
+            <div className="min-w-0">
+              <span className="m-step-label" id="saan-tayo-budget">Budget per head</span>
+              <Chips role="group" aria-labelledby="saan-tayo-budget">
+                {BUDGET_OPTIONS.map((option) => (
+                  <Chip key={option.value} aria-pressed={budget === option.value} onClick={() => setBudget(option.value)}>
+                    {option.label}
+                  </Chip>
+                ))}
+              </Chips>
+            </div>
+          </div>
+
+          <div className="m-step is-done">
+            <span className="m-step-n" aria-hidden="true">3</span>
+            <div className="min-w-0">
+              <span className="m-step-label" id="saan-tayo-who">Kasama mo?</span>
+              <Chips role="group" aria-labelledby="saan-tayo-who">
+                {WHO_OPTIONS.map((option) => (
+                  <Chip key={option.value} aria-pressed={who === option.value} onClick={() => setWho(option.value)}>
+                    {option.label}
+                  </Chip>
+                ))}
+              </Chips>
+            </div>
+          </div>
+
+          <div className="m-step is-done">
+            <span className="m-step-n" aria-hidden="true">4</span>
+            <div className="min-w-0">
+              <span className="m-step-label" id="saan-tayo-rain">Umuulan ba?</span>
+              <Chips role="group" aria-labelledby="saan-tayo-rain">
+                <Chip aria-pressed={!rainy} onClick={() => setRainy(false)}>
+                  <Sun aria-hidden="true" />
+                  Hindi
                 </Chip>
-              ))}
-            </Chips>
+                <Chip aria-pressed={rainy} onClick={() => setRainy(true)}>
+                  <CloudRain aria-hidden="true" />
+                  Oo, indoor lang
+                </Chip>
+              </Chips>
+            </div>
           </div>
 
-          <div className="g-field">
-            <span className="g-label" id="saan-tayo-rain">Umuulan ba?</span>
-            <Chips role="group" aria-labelledby="saan-tayo-rain">
-              <Chip aria-pressed={!rainy} onClick={() => setRainy(false)}>
-                Hindi
-              </Chip>
-              <Chip aria-pressed={rainy} onClick={() => setRainy(true)}>
-                Oo, indoor lang
-              </Chip>
-            </Chips>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <Button variant="tara" onClick={run} disabled={isLoading || Boolean(loadError)} loading={isLoading}>
+          <div className="m-step-go">
+            <Button variant="tara" size="lg" className="flex-1 sm:flex-none" onClick={run} disabled={isLoading || Boolean(loadError)} loading={isLoading}>
               Tara, pick 3!
             </Button>
             {result?.picks.length ? (
               <>
-                <Button variant="soft" onClick={run}>
+                <Button variant="soft" size="lg" onClick={run} aria-label="Shuffle picks" className="max-sm:!w-[52px] max-sm:!px-0">
                   <Shuffle aria-hidden="true" />
-                  Shuffle
+                  <span className="max-sm:sr-only">Shuffle</span>
                 </Button>
-                <Button variant="line" onClick={share}>
+                <Button variant="line" size="lg" onClick={share} aria-label="Share picks" className="max-sm:!w-[52px] max-sm:!px-0">
                   <Share2 aria-hidden="true" />
-                  Share
+                  <span className="max-sm:sr-only">Share</span>
                 </Button>
               </>
             ) : null}
+            {shareNote ? <p className="g-sm g-mut w-full" role="status">{shareNote}</p> : null}
           </div>
-          {shareNote ? <p className="g-sm g-mut" role="status">{shareNote}</p> : null}
         </div>
-      </Panel>
+      </div>
 
-      <section aria-live="polite" className="mt-8">
+      <section aria-live="polite" className="mt-6">
         {loadError ? (
           <Empty title="May problema" description={loadError} />
         ) : result === null ? null : result.picks.length === 0 ? (
@@ -311,24 +332,28 @@ export default function SaanTayoPage() {
         ) : (
           <>
             <SectionHead title="Ito ang picks mo" sub={`${result.matchCount} places fit. Shuffle for 3 more.`} />
-            {result.note ? <p className="g-sm g-mut mb-4">{result.note}</p> : null}
-            <div className="g-grid">
-              {result.picks.map((place) => (
-                <PlaceCard
-                  key={place.id}
-                  place={withLiveDetail(
-                    { ...mapSeoPlaceToCard({ ...place, description: null, address: null, updatedAt: null }), budget_min: place.budgetMin, good_for: place.goodFor },
-                    details[place.slug],
-                  )}
-                  onGuestSave={() => guestAuth.open('favorite')}
-                />
+            {result.note ? <p className="g-wx mb-4">{result.note}</p> : null}
+            <ol className="m-picks" aria-label="Your 3 picks">
+              {result.picks.map((place, index) => (
+                <li key={place.id} className="m-rank">
+                  <span className="m-rank-n" aria-label={`Pick ${index + 1}`}>
+                    {index + 1}
+                  </span>
+                  <PlaceCard
+                    place={withLiveDetail(
+                      { ...mapSeoPlaceToCard({ ...place, description: null, address: null, updatedAt: null }), budget_min: place.budgetMin, good_for: place.goodFor },
+                      details[place.slug],
+                    )}
+                    onGuestSave={() => guestAuth.open('favorite')}
+                  />
+                </li>
               ))}
-            </div>
+            </ol>
           </>
         )}
       </section>
 
-      <div className="g-split mt-12">
+      <div className="g-split mt-14">
         <div className="min-w-0">
           <section aria-labelledby="saan-tayo-budgets">
             <h2 id="saan-tayo-budgets" className="g-h2">
@@ -337,28 +362,31 @@ export default function SaanTayoPage() {
             <p className="g-sm g-mut mt-2">
               The median starting budget per head of GalaTayo places in each Metro Manila city, cheapest first. Use it to set your budget before you pick.
             </p>
-            <div className="g-list mt-4">
+            <div className="m-budget mt-4">
               {cityStats.map((row) => (
-                <Row key={row.slug} href={`/places/${row.slug}`} action={<ChevronRight className="g-ic text-[var(--ink-3)]" aria-hidden="true" />}>
-                  <div className="g-h3 truncate">{row.name}</div>
-                  <div className="g-xs g-mut truncate">
+                <InternalLink key={row.slug} href={`/places/${row.slug}`}>
+                  <b>{row.name}</b>
+                  <span>
                     {row.typical === null ? 'Budget varies' : row.typical === 0 ? 'Mostly free' : `${formatPeso(row.typical)} per head`} · {row.count} places
-                  </div>
-                </Row>
+                  </span>
+                </InternalLink>
               ))}
             </div>
           </section>
 
-          <section aria-labelledby="saan-tayo-faq" className="mt-10">
+          <section aria-labelledby="saan-tayo-faq" className="mt-12">
             <h2 id="saan-tayo-faq" className="g-h2">
               Quick answers
             </h2>
-            <div className="g-list mt-4">
-              {FAQS.map((faq) => (
-                <Panel as="article" key={faq.question}>
-                  <h3 className="g-h3">{faq.question}</h3>
-                  <p className="g-sm g-mut mt-2">{faq.answer}</p>
-                </Panel>
+            <div className="m-faq mt-4">
+              {FAQS.map((faq, index) => (
+                <details key={faq.question} open={index === 0}>
+                  <summary>
+                    {faq.question}
+                    <CaretDown aria-hidden="true" />
+                  </summary>
+                  <p>{faq.answer}</p>
+                </details>
               ))}
             </div>
           </section>

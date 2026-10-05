@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ChangeEvent, FormEvent, ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { CaretRight as ChevronRight } from '@phosphor-icons/react/dist/csr/CaretRight'
+import { Camera } from '@phosphor-icons/react/dist/csr/Camera'
+import { Eye } from '@phosphor-icons/react/dist/csr/Eye'
+import { LockKey } from '@phosphor-icons/react/dist/csr/LockKey'
+import { ShieldCheck } from '@phosphor-icons/react/dist/csr/ShieldCheck'
 import BirthdatePicker from '../components/BirthdatePicker'
 import MinimalBackNav from '../components/navigation/MinimalBackNav'
 import ProfileAvatar from '../components/ProfileAvatar'
@@ -20,8 +23,9 @@ import {
   updateMyProfile,
   validateUsername,
 } from '../utils/profileApi'
-import { navigateToPath } from '../utils/navigation'
 import { FormSkeleton } from '../components/loading/SkeletonStates'
+import { MeRow } from './ProfilePage'
+import '../design/me.css'
 
 type AccountSettingsPageProps = {
   session: Session
@@ -111,38 +115,67 @@ function writeAccountSettingsResumeCache(userId: string, cache: AccountSettingsR
   }
 }
 
-const optionalLabel = <span className="g-fnt font-normal">Optional</span>
+type EditKey = 'name' | 'displayName' | 'birthdate' | 'username' | 'bio'
 
-function SettingsRow({ label, value, onClick }: { label: string; value?: ReactNode; onClick?: () => void }) {
-  const body = (
-    <>
-      <span className="min-w-0 flex-1">{label}</span>
-      {value || onClick ? (
-        <span className="g-group-end min-w-0">
-          {value ? <span className="truncate">{value}</span> : null}
-          {onClick ? <ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" /> : null}
-        </span>
+/** Airbnb personal-info row: label and current value, "Edit" opens the inputs in place. */
+function EditRow({
+  id,
+  label,
+  value,
+  open,
+  onEdit,
+  onCancel,
+  error,
+  footer,
+  children,
+}: {
+  id: string
+  label: string
+  value: ReactNode
+  open: boolean
+  onEdit: () => void
+  onCancel: () => void
+  error?: string
+  footer: ReactNode
+  children: ReactNode
+}) {
+  return (
+    <div className="me-edit">
+      <div className="me-edit-head">
+        <div>
+          <b id={`${id}-label`}>{label}</b>
+          {open ? null : <p>{value}</p>}
+        </div>
+        <Button variant="text" size="sm" aria-expanded={open} aria-controls={`${id}-body`} aria-describedby={`${id}-label`} onClick={open ? onCancel : onEdit}>
+          {open ? 'Cancel' : 'Edit'}
+        </Button>
+      </div>
+      {open ? (
+        <div id={`${id}-body`} className="me-edit-body" role="group" aria-labelledby={`${id}-label`}>
+          {children}
+          {error ? (
+            <p className="g-hint is-error" role="alert">
+              {error}
+            </p>
+          ) : null}
+          <div className="me-edit-acts">{footer}</div>
+        </div>
       ) : null}
-    </>
-  )
-  return onClick ? (
-    <button type="button" onClick={onClick} className="g-group-row">
-      {body}
-    </button>
-  ) : (
-    <div className="g-group-row cursor-default hover:bg-transparent">{body}</div>
+    </div>
   )
 }
 
 function SettingsSection({ title, sub, children }: { title: string; sub?: string; children: ReactNode }) {
   return (
-    <section className="mt-8">
+    <section className="mt-10">
       <h2 className="g-h2">{title}</h2>
       {sub ? <p className="g-sm g-mut mt-1">{sub}</p> : null}
-      <div className="mt-4">{children}</div>
+      <div className="mt-1">{children}</div>
     </section>
   )
 }
+
+const notProvided = <span className="g-fnt">Not provided</span>
 
 function AccountSettingsPage({ session }: AccountSettingsPageProps) {
   const { currentProfile } = useAppUser()
@@ -218,6 +251,7 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
   const [usernameInput, setUsernameInput] = useState(initialCachedProfile?.username ?? currentProfile?.username ?? '')
   const [bioInput, setBioInput] = useState(initialCachedProfile?.bio ?? '')
   const [isPublic, setIsPublic] = useState(initialCachedProfile?.is_public ?? true)
+  const [editing, setEditing] = useState<EditKey | null>(null)
 
   useEffect(() => {
     if (!currentProfile) {
@@ -353,6 +387,7 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
         title: 'Changes saved',
         description: 'Your account settings were updated.',
       })
+      setEditing(null)
       emitAccountUpdated()
     } catch (error) {
       const status = (error as Error & { status?: number }).status
@@ -475,6 +510,55 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
         provider_avatar_url: currentUser?.profile?.providerAvatarUrl ?? null,
       }
 
+  const saved = {
+    firstName: currentUser?.user.firstName ?? '',
+    lastName: currentUser?.user.lastName ?? '',
+    displayName: currentUser?.profile?.displayName ?? '',
+    username: profile?.username ?? '',
+    bio: profile?.bio ?? '',
+    isPublic: profile?.is_public ?? true,
+  }
+  const isDirty =
+    firstName !== saved.firstName ||
+    lastName !== saved.lastName ||
+    displayName !== saved.displayName ||
+    usernameInput !== saved.username ||
+    bioInput !== saved.bio ||
+    isPublic !== saved.isPublic
+  const cannotSave = Boolean(usernameError || personalInfoError) || isSaving
+
+  const cancelEdit = () => {
+    if (editing === 'name') {
+      setFirstName(saved.firstName)
+      setLastName(saved.lastName)
+    } else if (editing === 'displayName') {
+      setDisplayName(saved.displayName)
+    } else if (editing === 'username') {
+      setUsernameInput(saved.username)
+    } else if (editing === 'bio') {
+      setBioInput(saved.bio)
+    }
+    setErrorMessage('')
+    setEditing(null)
+  }
+
+  const rowProps = (key: EditKey) => ({
+    open: editing === key,
+    onEdit: () => {
+      if (editing) cancelEdit()
+      setEditing(key)
+    },
+    onCancel: cancelEdit,
+    error: editing === key ? errorMessage : undefined,
+    footer: (
+      <Button type="submit" variant="ink" disabled={cannotSave}>
+        {isSaving ? 'Saving…' : 'Save'}
+      </Button>
+    ),
+  })
+
+  const birthdateLabel = birthdate && isValidBirthdate(birthdate) ? formatDate(`${birthdate}T00:00:00`) : null
+
   return (
     <Page narrow>
       <MinimalBackNav to="/profile" label="Profile" preferHistory={false} />
@@ -484,51 +568,79 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
       {isLoading && !(currentUser && profile) ? <FormSkeleton rows={6} className="mt-6" /> : null}
       {currentUser && profile ? (
         <form onSubmit={handleSave}>
-          <div className="mt-6 flex items-center gap-4">
+          <section className="me-card mt-6 !grid-cols-[auto_minmax(0,1fr)] !gap-4" aria-label="Profile photo">
             <ProfileAvatar profile={avatarProfile} size="lg" />
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0">
               <p className="g-h3 truncate">{displayName.trim() || 'Your account'}</p>
               <p className="g-sm g-mut truncate">@{publicUsername || 'username'}</p>
-              <label className={`${buttonClass({ variant: 'line', size: 'sm' })} mt-2 cursor-pointer`}>
+              <label className={`${buttonClass({ variant: 'line', size: 'sm' })} mt-3 cursor-pointer focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[var(--ink)]`}>
+                <Camera aria-hidden="true" />
                 {isUploadingAvatar ? 'Uploading…' : 'Change photo'}
                 <input type="file" accept={avatarUploadAccept} onChange={handleAvatarChange} className="sr-only" />
               </label>
+              <p className={`g-hint mt-2 ${avatarError ? 'is-error' : ''}`} role={avatarError ? 'alert' : undefined}>
+                {avatarError || 'Optional. JPEG, PNG, or WebP up to 5MB.'}
+              </p>
             </div>
-          </div>
-          <p className={`g-hint mt-2 ${avatarError ? 'is-error' : ''}`}>{avatarError || 'Optional. JPEG, PNG, or WebP up to 5MB.'}</p>
+          </section>
 
-          <SettingsSection title="Profile" sub="Basic info people recognize across GalaTayo.">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="g-field">
-                <label htmlFor="settings-first-name">First name</label>
-                <input id="settings-first-name" value={firstName} onChange={(event) => setFirstName(event.target.value)} className="g-input" autoComplete="given-name" />
+          <SettingsSection title="Personal info" sub="Only you see these. We use them to keep your account yours.">
+            <EditRow id="settings-name" label="Legal name" value={[saved.firstName, saved.lastName].filter(Boolean).join(' ') || notProvided} {...rowProps('name')}>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="g-field">
+                  <label htmlFor="settings-first-name">First name</label>
+                  <input id="settings-first-name" value={firstName} onChange={(event) => setFirstName(event.target.value)} className="g-input" autoComplete="given-name" />
+                </div>
+                <div className="g-field">
+                  <label htmlFor="settings-last-name">Last name</label>
+                  <input id="settings-last-name" value={lastName} onChange={(event) => setLastName(event.target.value)} className="g-input" autoComplete="family-name" />
+                </div>
               </div>
+            </EditRow>
+            <EditRow id="settings-display" label="Display name" value={saved.displayName || notProvided} {...rowProps('displayName')}>
               <div className="g-field">
-                <label htmlFor="settings-last-name">Last name</label>
-                <input id="settings-last-name" value={lastName} onChange={(event) => setLastName(event.target.value)} className="g-input" autoComplete="family-name" />
-              </div>
-              <div className="g-field">
-                <span className="g-label">Birthdate {optionalLabel}</span>
-                <BirthdatePicker
-                  value={birthdate}
-                  onChange={(nextBirthdate) => {
-                    setBirthdate(nextBirthdate)
-                    saveBirthdate(nextBirthdate)
-                  }}
-                  error={birthdateError}
-                />
-              </div>
-              <div className="g-field sm:col-span-2">
-                <label htmlFor="settings-display-name">Display name</label>
+                <label htmlFor="settings-display-name">Shown on your profile and plans</label>
                 <input id="settings-display-name" value={displayName} onChange={(event) => setDisplayName(event.target.value)} maxLength={80} className="g-input" />
+              </div>
+            </EditRow>
+            <EditRow
+              id="settings-birthdate"
+              label="Birthdate"
+              value={birthdateLabel ?? <span className="g-fnt">Optional · not provided</span>}
+              {...rowProps('birthdate')}
+              onCancel={() => setEditing(null)}
+              footer={
+                <Button variant="ink" onClick={() => setEditing(null)}>
+                  Done
+                </Button>
+              }
+            >
+              <p className="g-sm g-mut">Saves as soon as you pick a date.</p>
+              <BirthdatePicker
+                value={birthdate}
+                onChange={(nextBirthdate) => {
+                  setBirthdate(nextBirthdate)
+                  saveBirthdate(nextBirthdate)
+                }}
+                error={birthdateError}
+              />
+            </EditRow>
+            <div className="me-edit">
+              <div className="me-edit-head">
+                <div>
+                  <b>Email</b>
+                  <p>{currentUser.user.email ?? notProvided}</p>
+                </div>
               </div>
             </div>
           </SettingsSection>
 
           <SettingsSection title="Public details" sub="What people see when they open your profile.">
-            <div className="grid gap-4">
+            <EditRow id="settings-handle" label="Username" value={saved.username ? `@${saved.username}` : notProvided} {...rowProps('username')}>
               <div className="g-field">
-                <label htmlFor="settings-username">Username</label>
+                <label htmlFor="settings-username" className="sr-only">
+                  Username
+                </label>
                 <div className="relative">
                   <span className="g-mut pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2" aria-hidden="true">@</span>
                   <input
@@ -548,46 +660,57 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
                   {usernameError || 'People can search for you with this username.'}
                 </span>
               </div>
+            </EditRow>
+            <EditRow id="settings-about" label="Bio" value={saved.bio ? <span className="line-clamp-2">{saved.bio}</span> : <span className="g-fnt">Optional · not provided</span>} {...rowProps('bio')}>
               <div className="g-field">
-                <label htmlFor="settings-bio">Bio {optionalLabel}</label>
-                <textarea id="settings-bio" value={bioInput} onChange={(event) => setBioInput(event.target.value)} maxLength={280} className="g-input" />
+                <label htmlFor="settings-bio" className="sr-only">
+                  Bio
+                </label>
+                <textarea id="settings-bio" value={bioInput} onChange={(event) => setBioInput(event.target.value)} maxLength={280} className="g-input" placeholder="Kape, museums, and long walks sa Intramuros." />
                 <span className="g-hint text-right">{bioInput.length}/280</span>
               </div>
-            </div>
+            </EditRow>
           </SettingsSection>
 
           <SettingsSection title="Privacy and security">
-            <div className="g-group">
-              <label className="g-group-row py-3">
-                <span className="min-w-0 flex-1">
-                  <span className="block">Public profile</span>
-                  <span className="g-sm g-mut block">
-                    {isPublic ? 'Anyone can view your profile and your follower/following lists.' : 'People need to request access, and follower/following names stay hidden.'}
-                  </span>
+            <label className="me-edit flex cursor-pointer items-center gap-4">
+              <span className="min-w-0 flex-1">
+                <b className="block text-[15px] font-semibold">Public profile</b>
+                <span className="g-sm g-mut mt-0.5 block">
+                  {isPublic ? 'Anyone can view your profile and your follower/following lists.' : 'People need to request access, and follower/following names stay hidden.'}
                 </span>
-                <input type="checkbox" role="switch" checked={isPublic} onChange={(event) => setIsPublic(event.target.checked)} className="peer sr-only" />
-                <span
-                  aria-hidden="true"
-                  className="relative h-7 w-12 shrink-0 rounded-full bg-[var(--fill-2)] transition-colors peer-checked:bg-[var(--ink)] peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--ink)] after:absolute after:top-0.5 after:left-0.5 after:h-6 after:w-6 after:rounded-full after:bg-[var(--surface)] after:shadow-[var(--sh-1)] after:transition-transform peer-checked:after:translate-x-5"
-                />
-              </label>
-              <SettingsRow label="Password" value="Change" onClick={() => navigateToPath('/account-settings/change-password')} />
-              <SettingsRow label="Privacy center" onClick={() => navigateToPath('/privacy-center')} />
-              <SettingsRow label="View my profile" onClick={() => navigateToPath('/profile')} />
-              <SettingsRow label="Joined" value={formatDate(profile.created_at)} />
+              </span>
+              <input type="checkbox" role="switch" checked={isPublic} onChange={(event) => setIsPublic(event.target.checked)} className="sr-only" />
+              <span className="me-switch" aria-hidden="true" />
+            </label>
+            <div className="me-rows mt-2">
+              <MeRow icon={LockKey} title="Password" sub="Change the password you log in with" href="/account-settings/change-password" />
+              <MeRow icon={ShieldCheck} title="Privacy center" sub="Data requests and account deletion" href="/privacy-center" />
+              <MeRow icon={Eye} title="View my profile" sub={formatDate(profile.created_at) === 'Not available' ? undefined : `Joined ${formatDate(profile.created_at)}`} href="/profile" />
             </div>
           </SettingsSection>
 
-          {errorMessage ? (
+          {isDirty && editing === null ? (
+            <div className="me-savebar">
+              <p>
+                {errorMessage ? (
+                  <span role="alert" style={{ color: 'var(--bad)' }}>
+                    {errorMessage}
+                  </span>
+                ) : (
+                  'You have unsaved changes'
+                )}
+              </p>
+              <Button type="submit" variant="tara" disabled={cannotSave}>
+                {isSaving ? 'Saving…' : 'Save changes'}
+              </Button>
+            </div>
+          ) : null}
+          {!isDirty && editing === null && errorMessage ? (
             <p className="g-hint is-error mt-6" role="alert">
               {errorMessage}
             </p>
           ) : null}
-          <div className="mt-8 flex justify-end">
-            <Button type="submit" variant="tara" className="w-full sm:w-auto" disabled={Boolean(usernameError || personalInfoError) || isSaving}>
-              {isSaving ? 'Saving…' : 'Save changes'}
-            </Button>
-          </div>
         </form>
       ) : (
         <Empty
