@@ -43,10 +43,10 @@ function CheckInButton({
         kind: 'done',
         message: result.new_stamp_city
           ? `New stamp: ${result.new_stamp_city}. Streak: ${result.streak_weeks} ${result.streak_weeks === 1 ? 'week' : 'weeks'}.`
-          : `Checked in at ${placeName}. Streak: ${result.streak_weeks} ${result.streak_weeks === 1 ? 'week' : 'weeks'}.`,
+          : `Visit saved at ${placeName}. Streak: ${result.streak_weeks} ${result.streak_weeks === 1 ? 'week' : 'weeks'}.`,
       })
     } catch (error) {
-      setStatus({ kind: 'error', message: error instanceof Error ? error.message : 'Could not check in.' })
+      setStatus({ kind: 'error', message: error instanceof Error ? error.message : 'Could not collect your stamp. Try again.' })
     }
   }
 
@@ -60,11 +60,11 @@ function CheckInButton({
       ) : (
         <Button variant="line" block onClick={() => void checkIn()} loading={status.kind === 'working'}>
           <Stamp aria-hidden="true" />
-          Check in
+          I'm here
         </Button>
       )}
       <p className={cx('g-xs mt-2', status.kind === 'error' ? 'text-[var(--bad)]' : 'g-mut')} aria-live="polite">
-        {status.kind === 'done' || status.kind === 'error' ? status.message : 'Here now? Check in for this city’s Pasyal Passport stamp.'}
+        {status.kind === 'done' || status.kind === 'error' ? status.message : 'At this place now? Tap “I’m here” to collect this city’s Pasyal Passport stamp.'}
       </p>
     </div>
   )

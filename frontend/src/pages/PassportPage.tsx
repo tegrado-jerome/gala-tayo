@@ -17,7 +17,7 @@ function shortDate(value: string) {
 }
 
 function stampState(stamp: CityStamp): { state: 'done' | 'new' | 'locked'; sub: string } {
-  if (!stamp.collected) return { state: 'locked', sub: 'Check in here' }
+  if (!stamp.collected) return { state: 'locked', sub: 'Visit to unlock' }
   if (!stamp.first_checkin_at) return { state: 'done', sub: `${stamp.places} ${stamp.places === 1 ? 'spot' : 'spots'}` }
   const firstAt = new Date(stamp.first_checkin_at)
   if (Date.now() - firstAt.getTime() < NEW_STAMP_DAYS * DAY_MS) return { state: 'new', sub: `New · ${shortDate(stamp.first_checkin_at)}` }
@@ -136,7 +136,7 @@ function PassportPage({ session }: { session: Session }) {
               })}
             </div>
 
-            <SectionHead title="Recent check-ins" sub={`${passport.total_checkins} total`} />
+            <SectionHead title="Recent stamps" sub={`${passport.total_checkins} total`} />
             {passport.recent.length > 0 ? (
               <div className="g-list">
                 {passport.recent.map((checkin) => {
@@ -156,8 +156,8 @@ function PassportPage({ session }: { session: Session }) {
               </div>
             ) : (
               <Empty
-                title="Wala pang check-ins."
-                description="Open a place when you're there and tap Check in."
+                title="Wala pang stamps."
+                description="Open a place when you're there and tap “I'm here”."
                 action={<Button variant="line" href="/search">Find a spot</Button>}
               />
             )}
@@ -210,9 +210,9 @@ function PassportPage({ session }: { session: Session }) {
 
             <Button variant="tara" size="lg" block href="/search">
               <MapPin aria-hidden="true" />
-              Check in nearby
+              Get a stamp nearby
             </Button>
-            <p className="g-xs g-mut -mt-2 text-center">Open the spot you're at and tap Check in. Works only when you're there.</p>
+            <p className="g-xs g-mut -mt-2 text-center">Open the spot you're at and tap “I'm here”. Works only when you're there.</p>
           </aside>
         </div>
       ) : null}

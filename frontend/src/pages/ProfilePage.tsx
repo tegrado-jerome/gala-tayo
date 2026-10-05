@@ -464,7 +464,7 @@ function ProfilePage({ session }: ProfilePageProps) {
               ) : stamps.data.length === 0 ? (
                 <Empty
                   title="Wala pang stamps."
-                  description="Check in at a place to earn that city's stamp."
+                  description="Visit a place and tap “I'm here” to earn that city's stamp."
                   action={<Button variant="line" href="/passport">Open passport</Button>}
                 />
               ) : (

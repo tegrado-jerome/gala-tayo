@@ -155,7 +155,7 @@ function PassportTeaser() {
     body = (
       <Empty
         title="Collect a stamp in every city"
-        description="Check in where you gala and keep your barkada streak."
+        description="Collect a stamp wherever you gala and keep your barkada streak."
         action={<Button variant="ink" size="sm" href="/login">Sign in to start</Button>}
       />
     )
@@ -173,7 +173,7 @@ function PassportTeaser() {
               {ready.streak_weeks} {ready.streak_weeks === 1 ? 'week' : 'weeks'}
             </b>
           </div>
-          <p className="g-xs g-mut">{ready.streak_weeks > 0 ? 'Gala once a week to keep it going' : 'Check in this week to start one'}</p>
+          <p className="g-xs g-mut">{ready.streak_weeks > 0 ? 'Gala once a week to keep it going' : 'Collect a stamp this week to start one'}</p>
         </div>
         <div className="mt-5 flex flex-wrap justify-center gap-5">
           {collected.slice(0, 2).map((stamp) => (

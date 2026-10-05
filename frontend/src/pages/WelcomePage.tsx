@@ -116,7 +116,7 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
           />
           <FeaturePanel
             title="Passport"
-            body="Check in where you go. Collect stamps and keep your barkada streak."
+            body="Tap “I'm here” where you go. Collect stamps and keep your barkada streak."
             art={
               <div className="flex scale-[0.85] gap-3">
                 <Stamp title="Poblacion regular" />
