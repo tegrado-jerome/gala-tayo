@@ -37,6 +37,7 @@ import { Button, Chip, Empty, Page, Sheet, Skeleton, SulitMeter, Tag, cx } from 
 import GtMap, { type MapPoint } from './ui/GtMap'
 import { getCuratedPlaceImages, normalizePlaceSlug } from '../data/curatedPlaceImages'
 import PhotoCredits from './place-detail/PhotoCredits'
+import { useActionBarMode } from '../hooks/useActionBarMode'
 import { usePlaceGalleryPhotos } from '../utils/placeGalleryPhotos'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { useSystemMessage } from '../context/SystemMessageContext'
@@ -608,6 +609,7 @@ function PlaceDetailView({
     ...(place.curatedImageUrls ?? []),
   ])
   const hdPhotos = usePlaceGalleryPhotos(cleanString(place.slug) || null)
+  useActionBarMode()
   // Credited HD photos lead; the place's own uploads follow.
   const { photos: galleryPhotos, markPhotoBroken } = usePhotoList([
     ...hdPhotos.map((photo) => photo.url),
@@ -2515,7 +2517,7 @@ function PlaceDetailView({
 
       <div className="h-20 lg:hidden" aria-hidden="true" />
 
-      <div className="pd-bar lg:hidden" style={{ bottom: 'calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px))' }}>
+      <div className="pd-bar lg:hidden">
         <div className="pd-bar-in">
           {barPrice ? (
             <div className="pd-bar-price">

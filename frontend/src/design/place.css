@@ -22,7 +22,7 @@
 .pd-hit:focus-visible { outline: 2px solid var(--surface); outline-offset: -2px; }
 
 /* Title sheet that overlaps the photo on phones */
-.pd-sheet { position: relative; margin: -24px -16px 0; padding: 22px 16px 0; background: var(--surface); border-radius: var(--r-4) var(--r-4) 0 0; }
+.pd-sheet { position: relative; margin: -24px -16px 0; padding: 22px 16px 0; background: var(--paper); border-radius: var(--r-4) var(--r-4) 0 0; }
 @media (min-width: 1024px) { .pd-sheet { margin: 0 0 20px; padding: 0; border-radius: 0; } }
 
 /* ---------- Desktop photo grid ---------- */
@@ -89,7 +89,7 @@ a.pd-fact:hover .pd-fact-v { text-decoration: underline; text-underline-offset: 
 .pd-offers svg { width: 26px; height: 26px; flex: 0 0 auto; color: var(--ink); }
 
 /* ---------- Section tabs (desktop) ---------- */
-.pd-tabs { position: sticky; top: 68px; z-index: 40; display: flex; gap: 24px; margin: 0 0 8px; padding: 0; background: var(--surface); border-bottom: 1px solid var(--line-2); list-style: none; }
+.pd-tabs { position: sticky; top: 68px; z-index: 40; display: flex; gap: 24px; margin: 0 0 8px; padding: 0; background: var(--paper); border-bottom: 1px solid var(--line-2); list-style: none; }
 .pd-tabs a { position: relative; display: inline-flex; align-items: center; height: 52px; font-size: 14px; font-weight: 500; color: var(--ink-2); text-decoration: none; }
 .pd-tabs a:hover { color: var(--ink); }
 .pd-tabs a[aria-current='true'] { color: var(--ink); font-weight: 600; }
@@ -141,7 +141,7 @@ a.pd-fact:hover .pd-fact-v { text-decoration: underline; text-underline-offset: 
 .pd-spin { display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--line); border-top-color: var(--ink); animation: g-spin 0.7s linear infinite; vertical-align: -2px; }
 
 /* Phone sticky action bar */
-.pd-bar { position: fixed; inset-inline: 0; z-index: 5500; padding: 10px 16px; background: var(--surface); border-top: 1px solid var(--line-2); box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.06); }
+.pd-bar { position: fixed; inset-inline: 0; bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px)); z-index: 5500; padding: 10px 16px; background: var(--surface); border-top: 1px solid var(--line-2); box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.06); }
 .pd-bar-in { position: relative; display: flex; align-items: center; gap: 10px; max-width: 720px; margin: 0 auto; }
 .pd-bar-price { min-width: 0; flex: 1 1 auto; }
 .pd-bar-price b { display: block; font: 700 16px/1.2 var(--font-display); letter-spacing: -0.02em; white-space: nowrap; }

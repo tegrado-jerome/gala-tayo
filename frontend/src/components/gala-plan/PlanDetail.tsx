@@ -41,6 +41,7 @@ import { openFloatingChat } from '../../utils/floatingChat'
 import { navigateToPath } from '../../utils/navigation'
 import { buildPrivateGalaPlanShareUrl, shareLink } from '../../utils/share'
 import '../../design/plans.css'
+import { useActionBarMode } from '../../hooks/useActionBarMode'
 import { resizedMediaUrl } from '../../data/r2Config'
 
 type Tab = 'itinerary' | 'polls' | 'barkada' | 'hatian'
@@ -116,6 +117,7 @@ function StatCell({ icon: Icon, value, label, onClick, ariaLabel }: { icon: Phos
 }
 
 function PlanDetail({ planId, session }: { planId: string; session?: Session | null }) {
+  useActionBarMode()
   const [plan, setPlan] = useState<GalaPlanDetail | null>(null)
   const [barkada, setBarkada] = useState<GalaPlanBarkada | null>(null)
   const [error, setError] = useState<string | null>(null)
