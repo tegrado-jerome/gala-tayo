@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
-import { ArrowDown, ArrowRight, ArrowUp, Check, ChevronRight, CloudRain, Clapperboard, Minus, Plus, Sunset, Trees, X } from 'lucide-react'
+import { ArrowDown, ArrowUp, ChevronRight, CloudRain, Clapperboard, Minus, PenLine, Plus, Send, Sparkles, Sunset, Trees, X } from 'lucide-react'
 import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
 import AskAiUsagePill from '../components/AskAiUsagePill'
 import InternalLink from '../components/InternalLink'
 import GtMap, { type MapPoint } from '../components/ui/GtMap'
-import { Button, KeyValue, Page, SectionHead, Skeleton, Tag } from '../components/ui'
+import { Button, KeyValue, Page, Skeleton } from '../components/ui'
 import { useAppUser } from '../context/AppUserContext'
 import {
   composeGalaPlanDescription,
@@ -44,15 +44,31 @@ function describeCommute(legs: Array<TravelLeg | null>) {
 
 function DraftSkeleton() {
   return (
-    <div className="g-draft" aria-hidden="true">
+    <div aria-hidden="true">
       <Skeleton className="h-5 w-1/2" />
-      <Skeleton className="mt-3 h-3 w-1/3" />
+      <Skeleton className="mt-4 h-[200px] w-full rounded-[var(--r-3)]" />
       {[0, 1, 2].map((index) => (
-        <div key={index} className="mt-4 flex gap-3">
-          <Skeleton className="h-4 w-12" />
-          <Skeleton className="h-4 flex-1" />
+        <div key={index} className="mt-4 flex items-center gap-3">
+          <Skeleton className="h-[52px] w-[52px] shrink-0" />
+          <div className="flex-1">
+            <Skeleton className="h-4 w-1/2" />
+            <Skeleton className="mt-2 h-3 w-1/3" />
+          </div>
         </div>
       ))}
+    </div>
+  )
+}
+
+function PromptBubble({ text, onEdit }: { text: string; onEdit?: () => void }) {
+  return (
+    <div className="mt-6 flex items-start gap-2 rounded-[var(--r-3)] bg-[var(--fill)] py-3 pr-2 pl-4">
+      <p className="min-w-0 flex-1 py-1 text-[17px] leading-[1.4] font-medium [font-family:var(--font-display)] break-words">{text}</p>
+      {onEdit ? (
+        <Button variant="text" size="sm" iconOnly className="shrink-0" onClick={onEdit} aria-label="Edit prompt">
+          <PenLine aria-hidden="true" />
+        </Button>
+      ) : null}
     </div>
   )
 }
@@ -68,6 +84,7 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
   const [isSignInOpen, setIsSignInOpen] = useState(false)
   const [isDailyLimit, setIsDailyLimit] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
+  const [submittedPrompt, setSubmittedPrompt] = useState('')
   const autoStartedRef = useRef(false)
   const promptRef = useRef<HTMLTextAreaElement | null>(null)
 
@@ -78,7 +95,7 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
     () =>
       stops.flatMap((stop, index) =>
         stop.place.latitude != null && stop.place.longitude != null
-          ? [{ id: stop.place_id, lat: stop.place.latitude, lng: stop.place.longitude, label: String(index + 1), kind: 'number' as const }]
+          ? [{ id: stop.place_id, lat: stop.place.latitude, lng: stop.place.longitude, label: String(index + 1), kind: 'number' as const, imageUrl: stop.place.image_url ?? null }]
           : [],
       ),
     [stops],
@@ -89,6 +106,7 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
     if (!trimmed || status === 'building') return
 
     setStatus('building')
+    setSubmittedPrompt(trimmed)
     setError(null)
     setIsDailyLimit(false)
     setIsEditing(false)
@@ -138,7 +156,16 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
     setError(null)
     setIsEditing(false)
     setStatus('idle')
-    promptRef.current?.focus()
+    requestAnimationFrame(() => promptRef.current?.focus())
+  }
+
+  const editPrompt = () => {
+    setDraft(null)
+    setPrompt(submittedPrompt)
+    setError(null)
+    setIsEditing(false)
+    setStatus('idle')
+    requestAnimationFrame(() => promptRef.current?.focus())
   }
 
   const save = async () => {
@@ -182,54 +209,52 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
     : 'Any day'
   const firstTime = stops[0]?.time
   const lastTime = stops[stops.length - 1]?.time
-  const timeRange = firstTime && lastTime ? `${formatTime24(firstTime)} – ${formatTime24(lastTime)}` : null
+  const timeRange = firstTime && lastTime && firstTime !== lastTime ? `${formatTime24(firstTime)} – ${formatTime24(lastTime)}` : firstTime ? formatTime24(firstTime) : null
+  const showComposer = !draft && status !== 'building'
 
   return (
     <Page narrow>
       <GuestAuthPrompt variant="add-plan" mode="modal" isOpen={isSignInOpen} onClose={() => setIsSignInOpen(false)} />
 
-      <p className="g-eyebrow">New plan</p>
+      <p className="g-ai-badge">
+        <Sparkles aria-hidden="true" />
+        Tara AI
+      </p>
       <h1 className="g-h1 mt-2">Plan with AI</h1>
-      <p className="g-mut mt-2">Describe the gala. You get a draft you can edit, not a chat.</p>
+      {showComposer ? <p className="g-mut mt-2">One line in, a mapped day out. Edit it, then invite the barkada.</p> : null}
 
-      <form onSubmit={handleSubmit} className="g-ai mt-6">
-        <label htmlFor="plan-with-ai-prompt" className="sr-only">
-          Describe your gala
-        </label>
-        <textarea
-          id="plan-with-ai-prompt"
-          ref={promptRef}
-          value={prompt}
-          onChange={(event) => setPrompt(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' && !event.shiftKey) {
-              event.preventDefault()
-              void build(prompt)
-            }
-          }}
-          maxLength={400}
-          rows={3}
-          placeholder="Chill Saturday for 6 in Makati, ₱1k each, indoor if rain"
-        />
-        <div className="g-ai-bar mt-3 min-h-9 justify-end gap-3">
-          {usage ? <AskAiUsagePill usageStatus={usage} /> : null}
-          {prompt.trim() || status === 'building' ? (
-            <Button
-              type="submit"
-              variant="ink"
-              size="sm"
-              iconOnly
-              loading={status === 'building'}
-              disabled={status === 'building'}
-              aria-label={draft ? 'Rebuild plan' : 'Build plan'}
-            >
-              <ArrowRight aria-hidden="true" />
+      {showComposer ? (
+        <form onSubmit={handleSubmit} className="g-ai mt-6">
+          <label htmlFor="plan-with-ai-prompt" className="sr-only">
+            Describe your gala
+          </label>
+          <textarea
+            id="plan-with-ai-prompt"
+            ref={promptRef}
+            value={prompt}
+            onChange={(event) => setPrompt(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault()
+                void build(prompt)
+              }
+            }}
+            maxLength={400}
+            rows={3}
+            placeholder="Chill Saturday for 6 in Makati, ₱1k each, indoor if rain"
+          />
+          <div className="g-ai-bar mt-3 min-h-11 justify-end gap-3">
+            {usage ? <AskAiUsagePill usageStatus={usage} /> : null}
+            <Button type="submit" variant="tara" iconOnly disabled={!prompt.trim()} aria-label="Build plan">
+              <Send aria-hidden="true" />
             </Button>
-          ) : null}
-        </div>
-      </form>
+          </div>
+        </form>
+      ) : (
+        <PromptBubble text={submittedPrompt} onEdit={status === 'building' ? undefined : editPrompt} />
+      )}
 
-      {!draft && status !== 'building' ? (
+      {showComposer ? (
         <section className="mt-8">
           <h2 className="g-h3">Try one of these</h2>
           <div className="g-group mt-3">
@@ -268,58 +293,54 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
       ) : null}
 
       {status === 'building' ? (
-        <section aria-live="polite">
-          <SectionHead title="Your draft" sub="Building your plan…" action={<span className="g-live">Thinking</span>} />
-          <DraftSkeleton />
+        <section className="mt-6" aria-live="polite">
+          <p className="g-eyebrow text-[var(--tara-ink)]!">Building your draft…</p>
+          <div className="mt-3">
+            <DraftSkeleton />
+          </div>
         </section>
       ) : null}
 
       {draft && status !== 'building' ? (
-        <section>
-          <SectionHead
-            title="Your draft"
-            sub={`${dateLabel} · ${stops.length} stops`}
-            action={<span className="g-live shrink-0">Ready</span>}
-          />
+        <section className="mt-6 pb-16 lg:pb-0" aria-labelledby="plan-with-ai-draft-title">
+          <p className="g-eyebrow text-[var(--tara-ink)]!">Draft ready · {formatPeso(perHead)}/head</p>
+          <h2 id="plan-with-ai-draft-title" className="g-h2 mt-1.5">
+            {draft.title}
+          </h2>
+          <p className="g-sm g-mut mt-1">{[dateLabel, timeRange, `${stops.length} ${stops.length === 1 ? 'stop' : 'stops'}`, `fits ${groupSize}`].filter(Boolean).join(' · ')}</p>
+          {draft.summary ? <p className="g-sm g-mut mt-2">{draft.summary}</p> : null}
 
-          <div className="g-draft">
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <h2 className="g-h3 min-w-0">{draft.title}</h2>
-              <b className="g-sm shrink-0">{formatPeso(perHead)}/head</b>
-            </div>
-            <div className="mt-2 flex flex-wrap gap-2">
-              <Tag>Fits {groupSize}</Tag>
-              <Tag>{dateLabel}</Tag>
-              {timeRange ? <Tag>{timeRange}</Tag> : null}
-            </div>
-            {draft.summary ? <p className="g-sm g-mut mt-3">{draft.summary}</p> : null}
+          {mapPoints.length > 0 ? <GtMap points={mapPoints} route night className="mt-4" label="Route of your draft plan" /> : null}
 
-            <ol className="mt-3">
-              {stops.map((stop, index) => {
-                const legIn = index > 0 ? legs[index - 1] : null
-                const meta = [
-                  legIn ? describeLeg(legIn) : stop.place.category,
-                  stop.minutes ? `${stop.minutes} min` : null,
-                  stop.place.budget_min != null ? formatPeso(stop.place.budget_min) : null,
-                ].filter(Boolean)
-                const href = getCanonicalPlacePath({ areaSlug: resolveAreaMeta(stop.place).slug, placeSlug: stop.place.slug })
+          <ol className="mt-4 flex flex-col">
+            {stops.map((stop, index) => {
+              const legIn = index > 0 ? legs[index - 1] : null
+              const meta = [
+                stop.time ? formatTime24(stop.time) : `Stop ${index + 1}`,
+                stop.minutes ? `${stop.minutes} min` : null,
+                stop.place.budget_min != null ? formatPeso(stop.place.budget_min) : null,
+              ].filter(Boolean)
+              const href = getCanonicalPlacePath({ areaSlug: resolveAreaMeta(stop.place).slug, placeSlug: stop.place.slug })
 
-                return (
-                  <li
-                    key={stop.place_id}
-                    className="grid grid-cols-[64px_minmax(0,1fr)_auto] items-start gap-2 py-2 text-[14px] motion-safe:animate-[g-up_320ms_var(--ease-g)_both]"
-                    style={{ animationDelay: `${index * 70}ms` }}
-                  >
-                    <b className="pt-0.5">{stop.time ? formatTime24(stop.time) : `Stop ${index + 1}`}</b>
-                    <div className="min-w-0">
-                      <InternalLink href={href} className="hover:underline">
+              return (
+                <li key={stop.place_id} className="motion-safe:animate-[g-up_320ms_var(--ease-g)_both]" style={{ animationDelay: `${index * 70}ms` }}>
+                  {legIn ? <p className="g-xs g-fnt py-0.5 pl-16">{describeLeg(legIn)}</p> : null}
+                  <div className="flex items-center gap-3 py-1.5">
+                    <span className="relative h-[52px] w-[52px] shrink-0 overflow-hidden rounded-[var(--r-2)] bg-[var(--fill)]">
+                      <span className="absolute inset-0 grid place-items-center font-semibold text-[var(--ink-2)] [font-family:var(--font-display)]" aria-hidden="true">
+                        {index + 1}
+                      </span>
+                      {stop.place.image_url ? <img src={stop.place.image_url} alt="" loading="lazy" decoding="async" className="relative h-full w-full object-cover" onError={(event) => event.currentTarget.remove()} /> : null}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <InternalLink href={href} className="block truncate text-[15px] font-semibold hover:underline">
                         {stop.place.name}
                       </InternalLink>
-                      {meta.length ? <span className="g-mut"> · {meta.join(' · ')}</span> : null}
-                      {stop.note ? <p className="g-sm g-mut mt-0.5 line-clamp-2">{stop.note}</p> : null}
+                      <p className="g-xs g-mut mt-0.5 truncate">{meta.join(' · ')}</p>
+                      {stop.note ? <p className="g-xs g-fnt mt-0.5 line-clamp-2">{stop.note}</p> : null}
                     </div>
                     {isEditing ? (
-                      <div className="flex">
+                      <div className="flex shrink-0">
                         <Button variant="text" size="sm" iconOnly onClick={() => moveStop(index, -1)} disabled={index === 0} aria-label={`Move ${stop.place.name} earlier`}>
                           <ArrowUp aria-hidden="true" />
                         </Button>
@@ -332,54 +353,52 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
                           </Button>
                         ) : null}
                       </div>
-                    ) : (
-                      <span />
-                    )}
-                  </li>
-                )
-              })}
-            </ol>
+                    ) : null}
+                  </div>
+                </li>
+              )
+            })}
+          </ol>
 
-            <hr className="g-sep mt-3" />
-            <div className="mt-2">
-              <KeyValue
-                items={[
-                  { label: 'Commute', value: describeCommute(legs) },
-                  {
-                    label: 'Group size',
-                    value: (
-                      <span className="inline-flex items-center gap-1">
-                        <Button variant="soft" size="sm" iconOnly aria-label="Fewer people" onClick={() => setGroupSize((size) => Math.max(1, size - 1))}>
-                          <Minus aria-hidden="true" />
-                        </Button>
-                        <span className="w-7 text-center">{groupSize}</span>
-                        <Button variant="soft" size="sm" iconOnly aria-label="More people" onClick={() => setGroupSize((size) => Math.min(20, size + 1))}>
-                          <Plus aria-hidden="true" />
-                        </Button>
-                      </span>
-                    ),
-                  },
-                  { label: 'Cost', value: `${formatPeso(perHead)}/head · rides split by ${groupSize}` },
-                ]}
-              />
-            </div>
+          <hr className="g-sep mt-4" />
+          <div className="mt-2">
+            <KeyValue
+              items={[
+                { label: 'Commute', value: describeCommute(legs) },
+                {
+                  label: 'Group size',
+                  value: (
+                    <span className="inline-flex items-center gap-1">
+                      <Button variant="soft" size="sm" iconOnly aria-label="Fewer people" onClick={() => setGroupSize((size) => Math.max(1, size - 1))}>
+                        <Minus aria-hidden="true" />
+                      </Button>
+                      <span className="w-7 text-center">{groupSize}</span>
+                      <Button variant="soft" size="sm" iconOnly aria-label="More people" onClick={() => setGroupSize((size) => Math.min(20, size + 1))}>
+                        <Plus aria-hidden="true" />
+                      </Button>
+                    </span>
+                  ),
+                },
+                { label: 'Cost', value: `${formatPeso(perHead)}/head · rides split by ${groupSize}` },
+              ]}
+            />
           </div>
 
-          {mapPoints.length > 0 ? <GtMap points={mapPoints} route className="mt-4" label="Route of your draft plan" /> : null}
-
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <Button variant="tara" onClick={() => void save()} loading={status === 'saving'} disabled={status === 'saving'}>
-              <Check aria-hidden="true" />
-              {session ? 'Save as plan' : 'Log in to save'}
-            </Button>
-            <Button variant="soft" onClick={() => setIsEditing((value) => !value)} aria-pressed={isEditing}>
-              {isEditing ? 'Done editing' : 'Edit stops'}
-            </Button>
-            <Button variant="text" onClick={startOver}>
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-x-3">
+            <p className="g-xs g-fnt min-w-0 flex-1">Gawa ng AI ang plano na ito. Times, fares and prices are estimates; check before you go.</p>
+            <Button variant="text" size="sm" onClick={startOver}>
               Start over
             </Button>
           </div>
-          <p className="g-xs g-fnt mt-3">Gawa ng AI ang plano na ito. Times, fares and prices are estimates; check before you go.</p>
+
+          <div className="fixed inset-x-0 bottom-[calc(var(--tabbar-h)+env(safe-area-inset-bottom,0px))] z-[5500] flex gap-3 border-t border-[var(--line-2)] bg-[var(--surface)] px-4 py-3 lg:sticky lg:bottom-0 lg:z-10 lg:mt-4 lg:px-0">
+            <Button variant="soft" className="flex-1" onClick={() => setIsEditing((value) => !value)} aria-pressed={isEditing}>
+              {isEditing ? 'Done' : 'Edit'}
+            </Button>
+            <Button variant="tara" className="flex-[2]" onClick={() => void save()} loading={status === 'saving'} disabled={status === 'saving'}>
+              {session ? 'Save & invite' : 'Log in to save'}
+            </Button>
+          </div>
         </section>
       ) : null}
     </Page>

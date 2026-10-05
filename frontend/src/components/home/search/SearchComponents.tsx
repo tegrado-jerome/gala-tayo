@@ -4,7 +4,7 @@ import PlaceCard, { getPlaceHref, type PlaceCardData } from '../../PlaceCard'
 import CompactPagination from '../../CompactPagination'
 import MapView from '../../MapView'
 import InternalLink from '../../InternalLink'
-import { Button, Chip, Chips, Empty, PlaceCardSkeleton, Row, Skeleton, cx } from '../../ui'
+import { Button, Chip, Chips, Empty, Masonry, Row, Skeleton, cx } from '../../ui'
 import { openFloatingChat } from '../../../utils/floatingChat'
 import { SEARCH_RESULTS_PER_PAGE, type BackendSearchStatus, type MobileResultsViewMode } from '../homeHelpers'
 import type { SearchBudgetValue } from '../../../utils/searchParams'
@@ -63,7 +63,7 @@ function ExploreSearchBar({
   onSubmit,
   canSubmit = value.trim().length > 0,
   disabled = false,
-  placeholder = 'Search places, cities, or categories',
+  placeholder = 'Search places, cities, or a vibe',
   inputId = 'search-page-input',
   className,
 }: {
@@ -82,7 +82,7 @@ function ExploreSearchBar({
   }
 
   return (
-    <form role="search" onSubmit={handleSubmit} className={cx('g-search', className)}>
+    <form role="search" onSubmit={handleSubmit} className={cx('g-search !border-transparent !bg-[var(--fill)]', className)}>
       <Search className="g-ic" aria-hidden="true" />
       <label htmlFor={inputId} className="sr-only">
         Search places, cities, or categories
@@ -100,6 +100,16 @@ function ExploreSearchBar({
         <Search />
       </Button>
     </form>
+  )
+}
+
+/** Search pill for listing pages; opens Explore search. */
+function SearchPillLink({ label = 'Search or describe a vibe', className }: { label?: string; className?: string }) {
+  return (
+    <InternalLink href="/search" className={cx('g-search !border-transparent !bg-[var(--fill)] g-sm no-underline', className)}>
+      <Search className="g-ic" aria-hidden="true" />
+      {label}
+    </InternalLink>
   )
 }
 
@@ -270,16 +280,26 @@ function QuickFilterChips({
   )
 }
 
+const skeletonRatios = ['3 / 4', '4 / 5', '1 / 1', '4 / 3']
+
+function MasonrySkeleton({ count = 8 }: { count?: number }) {
+  return (
+    <Masonry aria-hidden="true">
+      {Array.from({ length: count }, (_, index) => (
+        <Skeleton key={index} className="!rounded-[var(--r-3)]" style={{ aspectRatio: skeletonRatios[index % skeletonRatios.length] }} />
+      ))}
+    </Masonry>
+  )
+}
+
 function SearchResultsSkeleton() {
   return (
     <div className="mt-8" aria-busy="true" aria-live="polite">
       <span className="sr-only">Loading search results</span>
       <Skeleton className="h-7 w-56" />
       <Skeleton className="mt-2 h-4 w-40" />
-      <div className="g-grid mt-6">
-        {Array.from({ length: 6 }, (_, index) => (
-          <PlaceCardSkeleton key={index} />
-        ))}
+      <div className="mt-6">
+        <MasonrySkeleton />
       </div>
     </div>
   )
@@ -365,7 +385,7 @@ function SearchResults({
 
   return (
     <>
-      <div className="g-sec-head !mt-8">
+      <div className="g-sec-head !mt-6">
         <div className="min-w-0">
           <h1 className="g-h2">{heading}</h1>
           {subheading ? <div className="g-sub">{subheading}</div> : null}
@@ -395,31 +415,32 @@ function SearchResults({
               )}
             </>
           ) : (
-            <div className={cx('g-grid transition-opacity', isPageLoading && 'pointer-events-none opacity-60')}>
-              {places.map((place) => (
+            <Masonry desktopColumns={3} className={cx('transition-opacity', isPageLoading && 'pointer-events-none opacity-60')}>
+              {places.map((place, index) => (
                 <PlaceCard
                   key={place.id}
                   place={place}
+                  masonryIndex={index}
                   selected={selectedPlaceId === place.id}
                   onGuestSave={onGuestSave}
                   onHover={isDesktop ? () => onSelectPlace(place.id) : undefined}
                   onOpen={() => onOpenPlace(place.id)}
                 />
               ))}
-            </div>
+            </Masonry>
           )}
           <SearchPagination currentPage={currentPage} totalPages={totalPages} totalCount={totalCount} isLoading={isPageLoading} onPageChange={onPageChange} />
         </section>
 
         {isDesktop ? (
           <aside className="g-side" aria-label="Map">
-            <MapView places={places} selectedPlaceId={selectedPlaceId} onPlaceSelect={onSelectPlace} autoFitToPlaces className="g-map is-tall" />
+            <MapView places={places} selectedPlaceId={selectedPlaceId} onPlaceSelect={onSelectPlace} autoFitToPlaces className="g-map is-tall !rounded-[var(--r-4)]" />
           </aside>
         ) : null}
       </div>
 
       <Button
-        className="g-only-mob fixed bottom-[calc(var(--tabbar-h)+16px+env(safe-area-inset-bottom,0px))] left-1/2 z-[5500] -translate-x-1/2 shadow-[var(--sh-3)]"
+        className="g-only-mob fixed bottom-[calc(var(--tabbar-h)+16px+env(safe-area-inset-bottom,0px))] left-1/2 z-[5500] -translate-x-1/2 !px-5 shadow-[var(--sh-3)]"
         onClick={() => onMobileViewChange(mobileView === 'map' ? 'cards' : 'map')}
       >
         {mobileView === 'map' ? <List aria-hidden="true" /> : <MapIcon aria-hidden="true" />}
@@ -502,6 +523,7 @@ function SearchEmptyState({
 
 export {
   ListingBreadcrumb,
+  MasonrySkeleton,
   ExploreSearchBar,
   QuickFilterChips,
   SearchEmptyState,
@@ -510,5 +532,6 @@ export {
   SearchPagination,
   SearchResults,
   SearchResultsSkeleton,
+  SearchPillLink,
 }
 export type { FilterOption }

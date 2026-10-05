@@ -11,6 +11,8 @@ export type MapPoint = {
   /** Text in the pill. Numbered stops pass the number. */
   label?: string
   kind?: 'pill' | 'number' | 'me'
+  /** Photo shown as a round pin; numbered stops show their number as a small coral badge on it. */
+  imageUrl?: string | null
   active?: boolean
   onClick?: () => void
 }
@@ -20,6 +22,11 @@ function pinIcon(point: MapPoint) {
   if (kind === 'me') return L.divIcon({ className: 'g-lm', html: '<span class="g-lme"></span>', iconSize: undefined })
   const cls = cx('g-lpin', kind === 'number' && 'is-n', point.active && 'is-on')
   const text = (point.label ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] as string)
+  if (point.imageUrl) {
+    const src = point.imageUrl.replace(/"/g, '%22')
+    const badge = kind === 'number' && text ? `<span class="g-lphoto-n">${text}</span>` : ''
+    return L.divIcon({ className: 'g-lm', html: `<span class="g-lphoto${point.active ? ' is-on' : ''}"><img src="${src}" alt="" loading="lazy" />${badge}</span>`, iconSize: undefined })
+  }
   return L.divIcon({ className: 'g-lm', html: `<span class="${cls}">${text}</span>`, iconSize: undefined })
 }
 
@@ -36,13 +43,13 @@ function FitBounds({ points }: { points: LatLngTuple[] }) {
 }
 
 /** Real OpenStreetMap map with GT1 pins. Tiles are tinted to the paper palette in gt1.css. */
-export default function GtMap({ points, route, tall, className, label = 'Map' }: { points: MapPoint[]; route?: boolean; tall?: boolean; className?: string; label?: string }) {
+export default function GtMap({ points, route, tall, night, className, label = 'Map' }: { points: MapPoint[]; route?: boolean; tall?: boolean; night?: boolean; className?: string; label?: string }) {
   const coords = points.map((p) => [p.lat, p.lng] as LatLngTuple)
   const routeCoords = points.filter((p) => p.kind === 'number').map((p) => [p.lat, p.lng] as LatLngTuple)
   const center = coords[0] ?? ([14.5547, 121.0244] as LatLngTuple)
 
   return (
-    <div className={cx('g-map', tall && 'is-tall', className)} role="region" aria-label={label}>
+    <div className={cx('g-map', tall && 'is-tall', night && 'is-night', className)} role="region" aria-label={label}>
       <MapContainer center={center} zoom={14} zoomControl={false} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
         <TileLayer url="https://tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="&copy; OpenStreetMap contributors" maxZoom={19} referrerPolicy="strict-origin-when-cross-origin" />
         {route && routeCoords.length > 1 ? (

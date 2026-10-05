@@ -174,16 +174,21 @@ export default function SharedPlacePage({
 
   if (isLoading) {
     return (
-      <Page>
+      <Page className="pt-0 lg:pt-8">
         <div aria-busy="true" aria-label="Loading place">
-          <Skeleton className="h-4 w-24" />
-          <Skeleton className="mt-4 h-8 w-2/3 max-w-[420px]" />
-          <Skeleton className="mt-3 h-4 w-1/2 max-w-[320px]" />
-          <Skeleton className="mt-6 h-[240px] w-full md:h-[400px]" />
-          <div className="g-stats mt-6">
-            <Skeleton className="h-[72px]" />
-            <Skeleton className="h-[72px]" />
-            <Skeleton className="h-[72px]" />
+          <Skeleton className="g-only-desk mb-4 h-4 w-40" />
+          <Skeleton className="-mx-4 h-[52vh] min-h-[300px] max-h-[560px] rounded-none lg:mx-0 lg:h-[460px] lg:max-h-none lg:w-[calc(100%-400px)] lg:rounded-[var(--r-4)]" />
+          <div className="relative -mx-4 -mt-7 rounded-t-[var(--r-4)] bg-[var(--surface)] px-4 pt-6 lg:mx-0 lg:mt-8 lg:rounded-none lg:px-0 lg:pt-0">
+            <Skeleton className="h-3.5 w-40" />
+            <Skeleton className="mt-3 h-8 w-2/3 max-w-[420px]" />
+            <div className="mt-4 flex gap-2">
+              <Skeleton className="h-8 w-20 rounded-[var(--r-pill)]" />
+              <Skeleton className="h-8 w-24 rounded-[var(--r-pill)]" />
+              <Skeleton className="h-8 w-16 rounded-[var(--r-pill)]" />
+            </div>
+            <Skeleton className="mt-5 h-3.5 w-full max-w-[640px]" />
+            <Skeleton className="mt-2 h-3.5 w-5/6 max-w-[560px]" />
+            <Skeleton className="mt-2 h-3.5 w-2/3 max-w-[480px]" />
           </div>
         </div>
       </Page>

@@ -108,7 +108,7 @@ export function ThemeProvider({ children, pathname }: ThemeProviderProps) {
 
     const themeColorMeta = document.querySelector('meta[name="theme-color"]')
     if (themeColorMeta) {
-      themeColorMeta.setAttribute('content', resolvedTheme === 'dark' ? '#141311' : '#F6F2EB')
+      themeColorMeta.setAttribute('content', resolvedTheme === 'dark' ? '#0b1626' : '#FFFFFF')
     }
 
     if (root.dataset[THEME_SWITCHING_ATTRIBUTE] === 'true') {

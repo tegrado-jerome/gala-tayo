@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { MoreHorizontal, Search, Sparkles, Trash2 } from 'lucide-react'
+import { Heart, MapPin, MoreHorizontal, Search, Sparkles, Trash2 } from 'lucide-react'
 import GoogleSignInButton from '../components/GoogleSignInButton'
 import InternalLink from '../components/InternalLink'
 import DestructiveConfirmModal from '../components/DestructiveConfirmModal'
-import { Button, Empty, Page, PlaceCard, PlaceCardSkeleton, Sheet, cx } from '../components/ui'
+import { Button, Empty, Page, Sheet, Skeleton, cx } from '../components/ui'
 import { useSavedFavorites, type FavoritePlace } from '../context/SavedFavoritesContext'
 import { getPlacePhoto } from '../utils/placePhoto'
 import { getPublicSiteUrl } from '../utils/site'
@@ -40,18 +40,57 @@ function getPlaceMeta(place: FavoritePlace) {
   return Array.from(new Set(parts)).join(' · ') || 'Saved place'
 }
 
-export function SavedPlaceCard({ place, onRemove }: { place: FavoritePlace; onRemove?: () => void }) {
+const MASONRY = 'columns-2 gap-2.5 md:columns-3 md:gap-3 lg:columns-4'
+// Real photo sizes are unknown, so heights alternate by position for the Pinterest rhythm.
+const MASONRY_RATIOS = ['3 / 4', '4 / 5', '1 / 1', '4 / 3']
+const PHOTO_SHADE = 'linear-gradient(to top, rgba(15, 33, 56, 0.62) 0%, rgba(15, 33, 56, 0) 55%)'
+
+function getPriceLabel(place: FavoritePlace) {
+  if (place.is_free) return 'Free'
+  if (place.budget_min != null && place.budget_min > 0) return `₱${Math.round(place.budget_min).toLocaleString('en-PH')}`
+  return null
+}
+
+/** Masonry tile: photo with the name and price on it, heart top-right, meta under it on desktop. */
+export function SavedPlaceCard({ place, index = 0, onRemove }: { place: FavoritePlace; index?: number; onRemove?: () => void }) {
   const placeSlug = place.slug?.trim() || place.id
+  const title = place.name || 'Saved place'
+  const photo = getPlacePhoto(place)
+  const price = getPriceLabel(place)
   return (
-    <PlaceCard
-      href={`/places/${encodeURIComponent(placeSlug)}`}
-      title={place.name || 'Saved place'}
-      imageUrl={getPlacePhoto(place)}
-      meta={getPlaceMeta(place)}
-      rating={place.rating}
-      saved
-      onToggleSave={onRemove}
-    />
+    <div className="relative mb-2.5 break-inside-avoid md:mb-3">
+      <InternalLink href={`/places/${encodeURIComponent(placeSlug)}`} className="group block min-w-0 no-underline">
+        <div className="relative overflow-hidden rounded-[var(--r-3)]" style={{ aspectRatio: MASONRY_RATIOS[index % MASONRY_RATIOS.length], background: 'var(--sea-soft)' }}>
+          <span className="absolute inset-0 grid place-items-center" aria-hidden="true">
+            <MapPin size={28} color="var(--sea)" strokeWidth={1.75} opacity={0.45} />
+          </span>
+          {photo ? (
+            <img src={photo} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" />
+          ) : null}
+          <span className="absolute inset-0" style={{ background: PHOTO_SHADE }} aria-hidden="true" />
+          <span className="absolute inset-x-2.5 bottom-2.5 line-clamp-2 text-[13px] font-bold leading-snug text-white" style={{ textShadow: '0 1px 3px rgba(15, 33, 56, 0.5)' }}>
+            {title}
+            {price ? ` · ${price}` : ''}
+          </span>
+        </div>
+        <span className="g-xs g-mut mt-1.5 hidden truncate md:block">{getPlaceMeta(place)}</span>
+      </InternalLink>
+      {onRemove ? (
+        <button type="button" className="g-pc-save" aria-pressed="true" aria-label={`Remove ${title} from saved`} onClick={onRemove}>
+          <Heart className="g-ic" aria-hidden="true" />
+        </button>
+      ) : null}
+    </div>
+  )
+}
+
+function MasonrySkeleton() {
+  return (
+    <div className={MASONRY} aria-label="Loading saved places">
+      {Array.from({ length: 6 }, (_, index) => (
+        <Skeleton key={index} className="mb-2.5 break-inside-avoid !rounded-[var(--r-3)] md:mb-3" style={{ aspectRatio: MASONRY_RATIOS[index % MASONRY_RATIOS.length] }} />
+      ))}
+    </div>
   )
 }
 
@@ -162,7 +201,7 @@ function FavoritesPage() {
             : 'Your favorite gala spots, ready when you are.'}
         </p>
         {isSignedIn && savedPlaces.length > 0 ? (
-          <Button variant="soft" href={aiPlanHref} className="mt-4">
+          <Button variant="tara" href={aiPlanHref} className="mt-4">
             <Sparkles aria-hidden="true" />
             Plan a gala from my saved places
           </Button>
@@ -182,11 +221,7 @@ function FavoritesPage() {
       />
 
       {isSessionLoading ? (
-        <div className="g-grid is-4" aria-label="Loading saved places">
-          {Array.from({ length: 4 }, (_, index) => (
-            <PlaceCardSkeleton key={index} />
-          ))}
-        </div>
+        <MasonrySkeleton />
       ) : null}
 
       {!isSessionLoading && !session?.user ? (
@@ -237,11 +272,7 @@ function FavoritesPage() {
           ) : null}
 
           {isFavoritesLoading && savedPlaces.length === 0 ? (
-            <div className="g-grid is-4" aria-label="Loading saved places">
-              {Array.from({ length: 4 }, (_, index) => (
-                <PlaceCardSkeleton key={index} />
-              ))}
-            </div>
+            <MasonrySkeleton />
           ) : favoritesError ? (
             <Empty title="Hindi ma-load ang saved places." description={<span role="alert">{favoritesError}</span>} />
           ) : null}
@@ -260,10 +291,11 @@ function FavoritesPage() {
 
           {visibleSavedPlaces.length > 0 ? (
             <>
-              <div className="g-grid is-4">
-                {visibleSavedPlaces.map((favorite) => (
+              <div className={MASONRY}>
+                {visibleSavedPlaces.map((favorite, index) => (
                   <SavedPlaceCard
                     key={favorite.id}
+                    index={index}
                     place={favorite.place as FavoritePlace}
                     onRemove={() => void handleRemoveFavorite(favorite.place?.id || favorite.id)}
                   />

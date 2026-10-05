@@ -3,7 +3,7 @@ import type { Session } from '@supabase/supabase-js'
 import { ArrowLeft, ChevronRight, Heart, Plus, Sparkles } from 'lucide-react'
 import InternalLink from '../InternalLink'
 import PlanSummaryCard, { PlanRow } from './PlanSummaryCard'
-import { Button, Empty, Page, SectionHead, Skeleton } from '../ui'
+import { Button, Chips, Empty, Page, SectionHead, Skeleton } from '../ui'
 import { listFavoriteGalaPlans, listMyGalaPlans, type GalaPlanSummary } from '../../utils/galaPlansApi'
 import { daysUntil, getPlanDate } from '../../utils/galaPlanTrip'
 
@@ -39,7 +39,7 @@ function groupPlans(plans: GalaPlanSummary[]) {
 
 function PlanRows({ plans, showOwner }: { plans: GalaPlanSummary[]; showOwner?: boolean }) {
   return (
-    <div className="g-group">
+    <div className="flex flex-col">
       {plans.map((plan) => <PlanRow key={plan.id} plan={plan} showOwner={showOwner} />)}
     </div>
   )
@@ -47,10 +47,10 @@ function PlanRows({ plans, showOwner }: { plans: GalaPlanSummary[]; showOwner?: 
 
 function ListSkeleton() {
   return (
-    <div className="g-group" aria-label="Loading plans">
+    <div aria-label="Loading plans">
       {[0, 1, 2].map((index) => (
-        <div key={index} className="flex items-center gap-3 px-4 py-3">
-          <Skeleton className="h-16 w-16 shrink-0" />
+        <div key={index} className="flex items-center gap-3 py-2.5">
+          <Skeleton className="h-14 w-14 shrink-0" style={{ borderRadius: 'var(--r-3)' }} />
           <div className="min-w-0 flex-1">
             <Skeleton className="h-4 w-3/4" />
             <Skeleton className="mt-2 h-3 w-1/2" />
@@ -63,17 +63,14 @@ function ListSkeleton() {
 
 function IdeaRows({ ideas }: { ideas: string[] }) {
   return (
-    <div className="g-group">
+    <Chips>
       {ideas.map((idea) => (
-        <InternalLink key={idea} href={`/plan-with-ai?q=${encodeURIComponent(idea)}`} className="g-group-row">
+        <InternalLink key={idea} href={`/plan-with-ai?q=${encodeURIComponent(idea)}`} className="g-chip border-0 bg-[var(--fill)] no-underline">
           <Sparkles aria-hidden="true" />
-          <span className="min-w-0 truncate">{idea}</span>
-          <span className="g-group-end">
-            <ChevronRight className="g-ic" aria-hidden="true" />
-          </span>
+          {idea}
         </InternalLink>
       ))}
-    </div>
+    </Chips>
   )
 }
 
@@ -130,12 +127,10 @@ function PlanList({ session, favorites = false }: { session?: Session | null; fa
   const isEmpty = state.status === 'ready' && plans.length === 0
 
   const heartedLink = (
-    <InternalLink href="/gala-plans/favorites" className="g-group-row">
-      <Heart aria-hidden="true" />
-      Hearted plans
-      <span className="g-group-end">
-        <ChevronRight className="g-ic" aria-hidden="true" />
-      </span>
+    <InternalLink href="/gala-plans/favorites" className="flex min-h-12 items-center gap-3 rounded-[var(--r-3)] bg-[var(--fill)] px-4 text-[var(--ink)] no-underline">
+      <Heart className="g-ic" aria-hidden="true" />
+      <span className="g-sm font-semibold">Hearted plans</span>
+      <ChevronRight className="g-ic ml-auto" style={{ color: 'var(--ink-3)' }} aria-hidden="true" />
     </InternalLink>
   )
 
@@ -153,7 +148,7 @@ function PlanList({ session, favorites = false }: { session?: Session | null; fa
               Plan with AI
             </Button>
           )}
-          <Button variant="line" size="sm" href="/gala-plans/new">
+          <Button variant="soft" size="sm" href="/gala-plans/new">
             <Plus />
             New plan
           </Button>
@@ -204,13 +199,13 @@ function PlanList({ session, favorites = false }: { session?: Session | null; fa
                   </section>
                 ) : null,
               )}
-              <div className="g-group g-only-mob">{heartedLink}</div>
+              <div className="g-only-mob">{heartedLink}</div>
             </div>
           ) : null}
         </div>
 
         <aside className="g-side g-only-desk">
-          <div className="g-group">{heartedLink}</div>
+          {heartedLink}
           {isEmpty ? null : (
             <section aria-labelledby="plan-ideas-side">
               <GroupHead id="plan-ideas-side">Start from an idea</GroupHead>

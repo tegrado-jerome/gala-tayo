@@ -53,7 +53,7 @@ function MobileBottomNav({ currentPath }: { currentPath: string }) {
 
   return (
     <>
-      <nav aria-label="Primary" className="g-tabbar">
+      <nav aria-label="Primary" className="g-tabbar bg-[color-mix(in_srgb,var(--surface)_88%,transparent)] backdrop-blur-md">
         {tabBarLeft.map((item) => (
           <Tab key={item.href} item={item} currentPath={currentPath} />
         ))}

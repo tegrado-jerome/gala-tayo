@@ -6,41 +6,41 @@
 
 :root:root {
   color-scheme: light;
-  --font-body: 'Instrument Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-display: 'Bricolage Grotesque', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-body: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Sora', 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
 
-  --paper: #f6f2eb;
+  --paper: #ffffff;
   --surface: #ffffff;
-  --ink: #1a1917;
-  --ink-hover: #000000;
-  --ink-2: #6f6a63;
-  --ink-3: #716b63;
-  --line: #e6e1da;
-  --line-2: #efebe5;
-  --fill: #f3efe9;
-  --fill-2: #ebe6de;
-  --tara: #cc4a22;
-  --tara-soft: #fbe9e2;
-  --tara-ink: #b23f1c;
-  --sea: #1f5f5b;
-  --sea-soft: #e2eeec;
-  --ok: #277a4c;
-  --ok-soft: #e3f1e8;
-  --bad: #c0392b;
-  --bad-soft: #f8e3e0;
+  --ink: #0f2138;
+  --ink-hover: #091628;
+  --ink-2: #5b6678;
+  --ink-3: #6b7588;
+  --line: #e3e7ed;
+  --line-2: #edf0f4;
+  --fill: #f2f4f7;
+  --fill-2: #e6eaf0;
+  --tara: #ff6b4a;
+  --tara-soft: #ffe9e3;
+  --tara-ink: #c93f22;
+  --sea: #13786d;
+  --sea-soft: #e1f4f1;
+  --ok: #13786d;
+  --ok-soft: #e1f4f1;
+  --bad: #c4352a;
+  --bad-soft: #fde7e4;
   --warn: #875d08;
-  --warn-soft: #f7edd6;
+  --warn-soft: #fbf0d9;
   --on-ink: #ffffff;
-  --scrim: rgba(26, 25, 23, 0.4);
+  --scrim: rgba(15, 33, 56, 0.45);
 
-  --r-1: 6px;
-  --r-2: 10px;
-  --r-3: 14px;
-  --r-4: 20px;
+  --r-1: 8px;
+  --r-2: 12px;
+  --r-3: 18px;
+  --r-4: 26px;
   --r-pill: 999px;
-  --sh-1: 0 1px 2px rgba(26, 25, 23, 0.06);
-  --sh-2: 0 6px 20px rgba(26, 25, 23, 0.08);
-  --sh-3: 0 18px 48px rgba(26, 25, 23, 0.16);
+  --sh-1: 0 1px 2px rgba(15, 33, 56, 0.06);
+  --sh-2: 0 8px 24px rgba(15, 33, 56, 0.10);
+  --sh-3: 0 20px 50px rgba(15, 33, 56, 0.20);
   --t-fast: 120ms;
   --t: 200ms;
   --t-slow: 320ms;
@@ -94,39 +94,40 @@
   --radius-lg: var(--r-3);
   --radius-xl: var(--r-4);
   --focus-ring: 0 0 0 3px var(--fill-2);
-  --ink-soft: #3a3733;
+  --ink-soft: #33415a;
+  --night: #0f2138;
   --stone: var(--ink-2);
 }
 
 :root:root[data-theme='dark'] {
   color-scheme: dark;
-  --paper: #141311;
-  --surface: #1d1b19;
-  --ink: #f4f0ea;
+  --paper: #0b1626;
+  --surface: #12223a;
+  --ink: #f2f5fa;
   --ink-hover: #ffffff;
-  --ink-2: #a8a199;
-  --ink-3: #8a847b;
-  --line: #2e2b27;
-  --line-2: #26231f;
-  --fill: #24221f;
-  --fill-2: #2e2b27;
-  --tara: #cc4a22;
-  --tara-soft: #3a2219;
-  --tara-ink: #ff9a78;
-  --sea: #6cc0b6;
-  --sea-soft: #16302d;
-  --ok: #5cbf86;
-  --ok-soft: #1c2e23;
+  --ink-2: #a7b2c4;
+  --ink-3: #8d99ad;
+  --line: #22344f;
+  --line-2: #1a2b44;
+  --fill: #172a45;
+  --fill-2: #203655;
+  --tara: #ff6b4a;
+  --tara-soft: #3a2420;
+  --tara-ink: #ff9a82;
+  --sea: #4fd1c1;
+  --sea-soft: #0f3a3a;
+  --ok: #4fd1c1;
+  --ok-soft: #0f3a3a;
   --bad: #e8675a;
   --bad-soft: #3a1f1c;
   --warn: #e0ab3c;
   --warn-soft: #33291a;
-  --on-ink: #141311;
+  --on-ink: #0b1626;
   --scrim: rgba(0, 0, 0, 0.6);
-  --accent-rgb: 244, 240, 234;
-  --text-strong: #d9d3cb;
-  --border-strong: #3a3631;
-  --ink-soft: #d9d3cb;
+  --accent-rgb: 242, 245, 250;
+  --text-strong: #d5dde9;
+  --border-strong: #2c4262;
+  --ink-soft: #d5dde9;
   --sh-2: 0 6px 20px rgba(0, 0, 0, 0.35);
   --sh-3: 0 18px 48px rgba(0, 0, 0, 0.5);
 }
@@ -164,8 +165,8 @@ body {
 .g-btn svg { width: 18px; height: 18px; flex: 0 0 auto; }
 .g-btn-ink { background: var(--ink); color: var(--on-ink); }
 .g-btn-ink:hover { background: var(--ink-hover); }
-.g-btn-tara { background: var(--tara); color: #fff; }
-.g-btn-tara:hover { background: var(--tara-ink); }
+.g-btn-tara { background: var(--tara); color: #0f2138; }
+.g-btn-tara:hover { background: color-mix(in srgb, var(--tara) 85%, #ffffff); }
 .g-btn-soft { background: var(--fill); color: var(--ink); }
 .g-btn-soft:hover { background: var(--fill-2); }
 .g-btn-line { background: var(--surface); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
@@ -303,7 +304,7 @@ textarea.g-input { height: auto; min-height: 96px; padding: 12px 14px; resize: v
 .g-tabbar a, .g-tabbar button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 52px; font: 500 11px/1 var(--font-body); color: var(--ink-3); background: none; border: 0; text-decoration: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .g-tabbar [aria-current='page'] { color: var(--ink); }
 .g-tabbar svg { width: 22px; height: 22px; }
-.g-tabbar .g-tara { width: 54px; height: 54px; min-height: 0; margin: -20px auto 0; border-radius: 50%; background: var(--ink); color: var(--on-ink); font: 700 13px/1 var(--font-display); box-shadow: 0 0 0 4px var(--surface), var(--sh-2); }
+.g-tabbar .g-tara { width: 54px; height: 54px; min-height: 0; margin: -20px auto 0; border-radius: 18px; background: var(--ink); color: var(--on-ink); font: 700 13px/1 var(--font-display); box-shadow: 0 0 0 4px var(--surface), var(--sh-2); }
 @media (min-width: 1024px) { .g-tabbar { display: none; } }
 
 /* ---------- Place card ---------- */
@@ -336,7 +337,7 @@ textarea.g-input { height: auto; min-height: 96px; padding: 12px 14px; resize: v
 .g-rsvp { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 6px; background: var(--fill); border-radius: var(--r-pill); }
 .g-rsvp button { height: 42px; border: 0; border-radius: var(--r-pill); background: none; color: var(--ink); font: 600 15px/1 var(--font-body); cursor: pointer; }
 .g-rsvp button[aria-pressed='true'] { background: var(--surface); box-shadow: var(--sh-1); }
-.g-rsvp button.is-go[aria-pressed='true'] { background: var(--tara); color: #fff; }
+.g-rsvp button.is-go[aria-pressed='true'] { background: var(--tara); color: #0f2138; }
 .g-po { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 44px; padding: 0 12px; border-radius: var(--r-2); border: 1px solid var(--line); margin-top: 8px; overflow: hidden; background: var(--surface); color: var(--ink); font: 500 14px/1.2 var(--font-body); text-align: left; cursor: pointer; }
 .g-po-fill { position: absolute; inset: 0 auto 0 0; background: var(--fill); }
 .g-po > *:not(.g-po-fill) { position: relative; }
@@ -424,7 +425,9 @@ textarea.g-input { height: auto; min-height: 96px; padding: 12px 14px; resize: v
 
 /* ---------- Maps (Leaflet + OSM), tinted to paper ---------- */
 .leaflet-container { font-family: var(--font-body); background: var(--fill); }
-.leaflet-container .leaflet-tile-pane { filter: grayscale(0.85) sepia(0.18) contrast(0.92) brightness(1.04); }
+.leaflet-container .leaflet-tile-pane { filter: grayscale(0.9) contrast(0.92) brightness(1.04); }
+.g-map.is-night, .g-map.is-night .leaflet-container { background: #0f2138; }
+.g-map.is-night .leaflet-tile-pane { filter: grayscale(1) invert(1) sepia(1) hue-rotate(178deg) saturate(1.8) brightness(0.62) contrast(1.15); }
 :root[data-theme='dark'] .leaflet-container .leaflet-tile-pane { filter: grayscale(1) invert(0.92) contrast(0.9) brightness(0.9); }
 .leaflet-container .leaflet-control-attribution { font-size: 11px; background: color-mix(in srgb, var(--surface) 82%, transparent); color: var(--ink-3); }
 .leaflet-container .leaflet-control-attribution a { color: var(--ink-2); }
@@ -434,8 +437,12 @@ textarea.g-input { height: auto; min-height: 96px; padding: 12px 14px; resize: v
 .g-lm { background: none; border: 0; }
 .g-lpin { display: inline-flex; align-items: center; height: 28px; padding: 0 10px; border-radius: var(--r-pill); background: var(--surface); color: var(--ink); box-shadow: var(--sh-2); font: 600 12px/1 var(--font-body); white-space: nowrap; transform: translate(-50%, -50%); }
 .g-lpin.is-on { background: var(--ink); color: var(--on-ink); }
-.g-lpin.is-n { width: 28px; padding: 0; justify-content: center; border-radius: 50%; background: var(--ink); color: var(--on-ink); box-shadow: 0 0 0 3px var(--surface), var(--sh-2); }
-.g-route { stroke: var(--ink); }
+.g-lpin.is-n { width: 28px; padding: 0; justify-content: center; border-radius: 50%; background: var(--tara); color: #0f2138; box-shadow: 0 0 0 3px var(--surface), var(--sh-2); }
+.g-route { stroke: var(--tara); }
+.g-lphoto { position: relative; display: block; width: 44px; height: 44px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35); transform: translate(-50%, -50%); background: #1b3354; }
+.g-lphoto img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
+.g-lphoto.is-on { width: 52px; height: 52px; border-color: var(--tara); }
+.g-lphoto-n { position: absolute; top: -6px; right: -6px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 999px; background: var(--tara); color: #0f2138; font: 800 11px/20px var(--font-display); text-align: center; border: 2px solid #fff; }
 .g-lme { display: block; width: 14px; height: 14px; border-radius: 50%; background: var(--sea); box-shadow: 0 0 0 6px var(--sea-soft), 0 0 0 7px var(--surface); transform: translate(-50%, -50%); }
 
 @layer components {

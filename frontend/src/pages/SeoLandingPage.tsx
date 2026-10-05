@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ChevronRight } from 'lucide-react'
 import PlaceCard, { withLiveDetail } from '../components/PlaceCard'
-import { ListingBreadcrumb } from '../components/home/search/SearchComponents'
+import { ListingBreadcrumb, MasonrySkeleton } from '../components/home/search/SearchComponents'
 import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
-import PlaceListingSkeleton from '../components/PlaceListingSkeleton'
-import { Button, Empty, KeyValue, Page, Panel, Row, SectionHead } from '../components/ui'
+import { Button, Empty, Masonry, Page, Panel, Row, SectionHead, Tag } from '../components/ui'
 import SeoHead from '../components/SeoHead'
 import { fetchPlaceDetailsBatch } from '../utils/placeDetailCache'
 import { getAreaLabelBySlug } from '../data/metroManilaAreas'
@@ -136,7 +135,9 @@ export default function SeoLandingPage({
   const seeAllHref = target.goodFor ? null : target.category && !target.areaSlug ? `/places/categories/${target.category}` : target.areaSlug && !target.category ? `/places/${target.areaSlug}` : null
   const isThin = !isLoading && !errorMessage && total < MIN_INDEXABLE_GUIDE_PLACES
   const budgets = items.map((item) => item.budgetMin).filter((value): value is number => typeof value === 'number' && value > 0)
-  const budgetRange = budgets.length ? `${formatPeso(Math.min(...budgets))} to ${formatPeso(Math.max(...budgets))} per head` : 'Varies per place'
+  const minBudget = budgets.length ? Math.min(...budgets) : 0
+  const maxBudget = budgets.length ? Math.max(...budgets) : 0
+  const budgetRange = !budgets.length ? 'Varies per place' : minBudget === maxBudget ? `${formatPeso(minBudget)} per head` : `${formatPeso(minBudget)} to ${formatPeso(maxBudget)} per head`
   const latestUpdate = items.map((item) => item.updatedAt).filter((value): value is string => Boolean(value)).sort().at(-1)
   const updatedLabel = latestUpdate ? new Date(latestUpdate).toLocaleDateString('en-PH', { month: 'long', year: 'numeric' }) : null
   const jsonLd = [
@@ -182,22 +183,29 @@ export default function SeoLandingPage({
         <p className="g-mut mt-3">{metadata.intro}</p>
       </header>
 
-      <Panel className="mt-6 max-w-[46rem]">
-        <KeyValue
-          items={[
-            { label: 'Area', value: areaName },
-            { label: 'Category', value: categoryLabel || 'Mixed discovery' },
-            { label: 'Places', value: isLoading ? '…' : total },
-            { label: 'Starting budget', value: isLoading ? '…' : budgetRange },
-            ...(updatedLabel ? [{ label: 'Updated', value: updatedLabel }] : []),
-          ]}
-        />
-      </Panel>
+      <ul className="mt-5 flex flex-wrap gap-2" aria-label="Guide facts">
+        {[
+          areaName,
+          categoryLabel || 'Mixed discovery',
+          isLoading ? null : `${total} ${total === 1 ? 'place' : 'places'}`,
+          isLoading ? null : budgets.length ? budgetRange : 'Budget varies',
+          updatedLabel ? `Updated ${updatedLabel}` : null,
+        ]
+          .filter(Boolean)
+          .map((fact) => (
+            <li key={fact}>
+              <Tag>{fact}</Tag>
+            </li>
+          ))}
+      </ul>
 
       <SectionHead title="Recommended places" />
 
       {isLoading ? (
-        <PlaceListingSkeleton cardCount={8} helperText={`Loading ${metadata.h1.toLowerCase()}.`} />
+        <div aria-busy="true">
+          <span className="sr-only">Loading {metadata.h1.toLowerCase()}.</span>
+          <MasonrySkeleton />
+        </div>
       ) : errorMessage ? (
         <Empty title="Hindi ma-load ang guide" description={errorMessage} />
       ) : items.length === 0 ? (
@@ -207,15 +215,16 @@ export default function SeoLandingPage({
           action={<Button variant="line" href="/places">Browse places</Button>}
         />
       ) : (
-        <div className="g-grid">
-          {items.map((rawPlace) => (
+        <Masonry>
+          {items.map((rawPlace, index) => (
             <PlaceCard
               key={rawPlace.id}
+              masonryIndex={index}
               place={withLiveDetail({ ...mapSeoPlaceToCard(rawPlace), budget_min: rawPlace.budgetMin, good_for: rawPlace.goodFor }, placeDetailsBySlug[rawPlace.slug])}
               onGuestSave={() => listingGuestAuth.open('favorite')}
             />
           ))}
-        </div>
+        </Masonry>
       )}
       {seeAllHref && total > items.length ? (
         <Button variant="line" href={seeAllHref} className="mt-6">

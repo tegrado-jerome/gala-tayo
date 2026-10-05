@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { Check, Plus } from 'lucide-react'
+import { Check, Layers, Plus } from 'lucide-react'
 import { Avatar, AvatarStack, Button, Empty, Panel, Tag, cx } from '../ui'
 import {
   createGalaPlanPoll,
@@ -12,6 +12,7 @@ import {
   type GalaPlanRsvp,
 } from '../../utils/galaPlanBarkadaApi'
 import type { GalaPlanDetail, GalaPlanOwner } from '../../utils/galaPlansApi'
+import SwipeVote from './SwipeVote'
 
 export type ReadyBarkada = Extract<GalaPlanBarkada, { available: true }>
 
@@ -197,9 +198,12 @@ export function PollsPanel({ plan, barkada, session, onChange }: BarkadaProps) {
   const { error, run } = useAction(onChange)
   const isOwner = plan.viewer_is_owner
   const canJoin = canJoinPlan(plan, session)
+  const [swipePollId, setSwipePollId] = useState<string | null>(null)
+  const swipePoll = barkada.polls.find((poll) => poll.id === swipePollId)
 
   return (
     <div className="grid gap-4">
+      {swipePoll ? <SwipeVote plan={plan} poll={swipePoll} session={session} onChange={onChange} onClose={() => setSwipePollId(null)} /> : null}
       {barkada.polls.length === 0 && !isOwner ? <Empty title="Wala pang poll" description="When the host opens a vote, it shows up here." /> : null}
       {barkada.polls.map((poll) => (
         <Panel as="article" key={poll.id}>
@@ -240,10 +244,18 @@ export function PollsPanel({ plan, barkada, session, onChange }: BarkadaProps) {
               )
             })}
           </div>
-          <p className="g-xs g-mut mt-2">
-            {poll.total_votes} {poll.total_votes === 1 ? 'vote' : 'votes'}
-            {poll.viewer_option_id ? ' · tap another option to change your vote' : ''}
-          </p>
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+            <p className="g-xs g-mut">
+              {poll.total_votes} {poll.total_votes === 1 ? 'vote' : 'votes'}
+              {poll.viewer_option_id ? ' · tap another option to change your vote' : ''}
+            </p>
+            {canJoin && poll.options.length > 1 ? (
+              <Button variant="ink" size="sm" onClick={() => setSwipePollId(poll.id)}>
+                <Layers />
+                Swipe to vote
+              </Button>
+            ) : null}
+          </div>
         </Panel>
       ))}
       {isOwner ? <PollComposer plan={plan} session={session} onChange={onChange} /> : null}

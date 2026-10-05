@@ -185,7 +185,7 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
                 <p className="flex min-w-0 items-center gap-2">
                   <span className="g-mut truncate">@{loadedProfile.username}</span>
                   {loadedProfile.is_public ? null : (
-                    <Tag tone="warn" className="shrink-0">
+                    <Tag className="shrink-0">
                       <Lock aria-hidden="true" />
                       Private
                     </Tag>
@@ -228,7 +228,7 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
                   Edit profile
                 </Button>
               ) : (
-                <Button variant={relationshipState === 'following' || relationshipState === 'pending' ? 'line' : 'ink'} block onClick={() => void handleFollow()}>
+                <Button variant={relationshipState === 'following' || relationshipState === 'pending' ? 'line' : 'tara'} block onClick={() => void handleFollow()}>
                   <FollowIcon aria-hidden="true" />
                   {RELATIONSHIP_LABELS[relationshipState]}
                 </Button>
@@ -241,7 +241,7 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
           </section>
 
           {notice ? (
-            <p role="status" className="g-sm mt-4 rounded-[var(--r-2)] px-3 py-2" style={{ background: 'var(--warn-soft)', color: 'var(--warn)' }}>
+            <p role="status" className="g-sm mt-4 rounded-[var(--r-2)] px-3 py-2" style={{ background: 'var(--fill)', color: 'var(--ink)' }}>
               {notice}
             </p>
           ) : null}

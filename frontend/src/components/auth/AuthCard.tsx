@@ -12,7 +12,7 @@ type AuthCardProps = {
 export function AuthCard({ eyebrow, title, sub, icon, children }: AuthCardProps) {
   return (
     <Page>
-      <Panel as="section" className="mx-auto flex w-full max-w-[420px] flex-col gap-5 md:mt-6 md:!p-8">
+      <Panel as="section" className="mx-auto flex w-full max-w-[420px] flex-col gap-5 max-md:!border-0 max-md:!p-0 md:mt-6 md:!rounded-[var(--r-4)] md:!p-8 md:shadow-[var(--sh-2)]">
         <header>
           {icon ? (
             <span className="mb-4 grid h-11 w-11 place-items-center rounded-full" style={{ background: 'var(--fill)', color: 'var(--ink)' }} aria-hidden="true">

@@ -64,21 +64,21 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
         <section
           data-navigation-source={navigationSource}
           className="relative -mx-4 -mt-5 flex min-h-[420px] flex-col justify-end overflow-hidden md:mx-0 md:mt-0 md:min-h-[520px] md:rounded-[var(--r-4)]"
-          style={{ height: '60vh' }}
+          style={{ height: '60vh', background: '#0f2138' }}
         >
           {heroImageUrl ? (
             <img src={heroImageUrl} alt={heroPlace.name} fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
           ) : null}
           <div
             className="absolute inset-0 md:hidden"
-            style={{ background: 'linear-gradient(to top, rgba(26,25,23,.85) 0%, rgba(26,25,23,0) 60%)' }}
+            style={{ background: 'linear-gradient(to top, rgba(15,33,56,.92) 0%, rgba(15,33,56,.35) 55%, rgba(15,33,56,.1) 100%)' }}
           />
           <div
             className="absolute inset-0 hidden md:block"
-            style={{ background: 'linear-gradient(180deg, rgba(26,25,23,0) 30%, rgba(26,25,23,.78) 100%), rgba(26,25,23,.15)' }}
+            style={{ background: 'linear-gradient(90deg, rgba(15,33,56,.88) 0%, rgba(15,33,56,.45) 55%, rgba(15,33,56,.1) 100%)' }}
           />
           <div className="relative max-w-[640px] px-4 pb-7 text-left text-white md:px-10 md:pb-20">
-            <p className="text-[12px] font-semibold uppercase tracking-[0.04em] text-white/80" style={{ textShadow: '0 1px 2px rgba(0,0,0,.4)' }}>
+            <p className="text-[12px] font-semibold uppercase tracking-[0.04em] text-white/80" style={{ textShadow: '0 1px 2px rgba(15,33,56,.4)' }}>
               Metro Manila
             </p>
             <h1 className="g-d1 mt-3">Gala tayo. Kami na sa plano.</h1>
@@ -88,7 +88,7 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
                 <Sparkles />
                 Plan a gala
               </Button>
-              <Button variant="line" size="lg" href="/home">
+              <Button variant="soft" size="lg" href="/home" className="!bg-white/15 !text-white backdrop-blur-sm hover:!bg-white/25">
                 Explore places
               </Button>
             </div>

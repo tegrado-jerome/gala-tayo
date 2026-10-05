@@ -371,7 +371,7 @@ function ProfilePage({ session }: ProfilePageProps) {
                 <p className="flex min-w-0 items-center gap-2">
                   <span className="g-mut truncate">@{profile.username}</span>
                   {profile.is_public ? null : (
-                    <Tag tone="warn" className="shrink-0">
+                    <Tag className="shrink-0">
                       <Lock aria-hidden="true" />
                       Private
                     </Tag>
@@ -531,7 +531,7 @@ function ProfilePage({ session }: ProfilePageProps) {
                 />
               ) : (
                 <>
-                  <div className="grid grid-cols-2 justify-items-center gap-x-4 gap-y-8 min-[480px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+                  <div className="grid grid-cols-2 justify-items-center gap-x-4 gap-y-8 min-[480px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 [&_.g-stamp]:border-0 [&_.g-stamp]:bg-[var(--sea)] [&_.g-stamp]:text-[var(--surface)] [&_.g-stamp_span]:text-[var(--surface)] [&_.g-stamp_span]:opacity-85">
                     {stamps.data.map((stamp) => (
                       <Stamp key={stamp.city} title={stamp.city} sub={`${stamp.places} ${stamp.places === 1 ? 'spot' : 'spots'}`} />
                     ))}

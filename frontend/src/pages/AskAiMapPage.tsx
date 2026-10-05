@@ -147,7 +147,7 @@ const AskAiMapComposer = memo(function AskAiMapComposer({
   }
 
   return (
-    <div className="flex items-end gap-2 rounded-[var(--r-4)] border border-[var(--line)] bg-[var(--surface)] p-1.5 pl-3 focus-within:border-[var(--ink)]">
+    <div className="flex items-end gap-2 rounded-[var(--r-4)] border border-transparent bg-[var(--fill)] p-1.5 pl-4 focus-within:border-[var(--ink)]">
       <label htmlFor="ask-ai-map-input" className="sr-only">
         Ask the map
       </label>
@@ -169,7 +169,7 @@ const AskAiMapComposer = memo(function AskAiMapComposer({
         className="max-h-[120px] min-h-[40px] min-w-0 flex-1 resize-none overflow-y-auto bg-transparent py-2 text-[16px] font-medium leading-snug text-[var(--ink)] outline-none [font-family:var(--font-display)] placeholder:text-[var(--ink-3)]"
       />
       <Button
-        variant="ink"
+        variant={isSearching ? 'ink' : 'tara'}
         iconOnly
         onClick={() => (isSearching ? onCancel() : handleSubmit())}
         disabled={!isSearching && (!canSubmit || (isLimitReached && isRegistered))}
@@ -804,7 +804,7 @@ function AskAiMapPage() {
       <GuestAuthPrompt variant="ask-ai" mode="modal" isOpen={isGuestUpgradePromptOpen} onClose={() => setIsGuestUpgradePromptOpen(false)} />
 
       <main className="fixed inset-x-0 top-[calc(56px+env(safe-area-inset-top,0px))] bottom-[calc(var(--tabbar-h)+env(safe-area-inset-bottom,0px))] overflow-hidden overscroll-none lg:top-[68px] lg:bottom-0 lg:grid lg:grid-cols-[minmax(0,1fr)_400px]">
-        <section className="absolute inset-0 lg:relative" aria-label="AI map">
+        <section className="absolute inset-0 lg:relative [&_.g-lpin.is-n]:bg-[var(--ink)] [&_.g-lpin.is-n]:text-[var(--on-ink)] [&_.g-lpin.is-on]:bg-[var(--ink)] [&_.g-lpin.is-on]:text-[var(--on-ink)]" aria-label="AI map">
           <MapView
             places={mapPlaces}
             selectedPlaceId={selectedPlaceId}
@@ -899,7 +899,7 @@ function AskAiMapPage() {
             className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] lg:mx-0 lg:min-h-0 lg:flex-1 lg:snap-none lg:flex-col lg:overflow-x-hidden lg:overflow-y-auto lg:px-0 [&::-webkit-scrollbar]:hidden"
           >
             {isSearching && !isGuestUpgradePromptOpen ? (
-              <div className="g-card w-[85%] shrink-0 p-4 lg:w-full" aria-live="polite">
+              <div className="w-[85%] shrink-0 rounded-[var(--r-3)] rounded-tl-[var(--r-1)] bg-[var(--fill)] p-4 lg:w-full" aria-live="polite">
                 <span className="g-ai-badge">
                   <Sparkles aria-hidden="true" />
                   Thinking…
@@ -941,7 +941,7 @@ function AskAiMapPage() {
                       onMouseLeave={() => setFocusedPlaceId(selectedPlace?.id ?? null)}
                       className={cx(
                         'g-card flex w-[85%] shrink-0 snap-center cursor-pointer flex-col p-3.5 transition-[border-color,box-shadow] lg:w-full',
-                        isSelected && 'border-[var(--ink)]! shadow-[var(--sh-2)]',
+                        isSelected && 'border-[var(--ink)]! shadow-[inset_0_0_0_1px_var(--ink)]',
                       )}
                     >
                       <div className="flex items-start gap-2.5">
@@ -1023,7 +1023,7 @@ function AskAiMapPage() {
                 </Button>
               </div>
 
-              <div className="g-draft mt-4">
+              <div className="mt-4 rounded-[var(--r-3)] rounded-tl-[var(--r-1)] bg-[var(--fill)] p-4">
                 <span className="g-ai-badge">
                   <Sparkles aria-hidden="true" />
                   Why it fits

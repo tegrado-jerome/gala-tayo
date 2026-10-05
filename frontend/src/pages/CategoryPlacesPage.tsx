@@ -1,13 +1,12 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import CompactPagination from '../components/CompactPagination'
 import PlaceCard, { withLiveDetail } from '../components/PlaceCard'
-import { ListingBreadcrumb } from '../components/home/search/SearchComponents'
+import { ListingBreadcrumb, MasonrySkeleton, SearchPillLink } from '../components/home/search/SearchComponents'
 import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
-import PlaceListingSkeleton from '../components/PlaceListingSkeleton'
-import { Button, Empty, Page, SectionHead, cx } from '../components/ui'
+import { Button, Chips, Empty, Masonry, Page, SectionHead, cx } from '../components/ui'
 import InternalLink from '../components/InternalLink'
 import SeoHead from '../components/SeoHead'
-import { getPlaceCategoryLabel } from '../data/placeCategories'
+import { getPlaceCategoryLabel, placeCategories } from '../data/placeCategories'
 import { navigateToPath, scrollViewportToTopInstant } from '../utils/navigation'
 import { getSiteOrigin } from '../utils/seo'
 import { getListingPlaceViewportTop, peekPendingListingRouteCache, readListingRouteCache, restoreListingRouteScroll, writeListingRouteCache } from '../utils/listingRouteCache'
@@ -346,10 +345,28 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
         <p className="g-mut mt-2 min-h-[1.5em]">{payload.total > 0 ? formatCategoryCount(categorySlug, categoryLabel, payload.total) : null}</p>
       </header>
 
+      <SearchPillLink className="g-only-mob mt-4" />
+
+      <Chips className="mt-4" aria-label="Categories">
+        {placeCategories.map((category) => (
+          <InternalLink
+            key={category.value}
+            href={`/places/categories/${category.value}`}
+            aria-current={category.value === categorySlug ? 'page' : undefined}
+            className={cx('g-chip no-underline', category.value === categorySlug && 'is-on')}
+          >
+            {category.label}
+          </InternalLink>
+        ))}
+      </Chips>
+
       {errorMessage ? (
         <Empty className="mt-8" title={`Hindi ma-load ang ${categoryLabel.toLowerCase()} places`} description="Please try again in a bit." />
       ) : shouldShowInitialSkeleton ? (
-        <PlaceListingSkeleton cardCount={PAGE_SIZE} helperText={`Loading ${categoryLabel.toLowerCase()} places.`} />
+        <div className="mt-6" aria-busy="true">
+          <span className="sr-only">Loading {categoryLabel.toLowerCase()} places.</span>
+          <MasonrySkeleton count={PAGE_SIZE} />
+        </div>
       ) : shouldShowEmptyState ? (
         <Empty
           className="mt-8"
@@ -359,10 +376,11 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
         />
       ) : (
         <section aria-label={`${categoryLabel} places`}>
-          <div className={cx('g-grid mt-6 transition-opacity', isPageTransitionLoading && 'pointer-events-none opacity-60')}>
-            {places.map((rawPlace) => (
+          <Masonry className={cx('mt-6 transition-opacity', isPageTransitionLoading && 'pointer-events-none opacity-60')}>
+            {places.map((rawPlace, index) => (
               <PlaceCard
                 key={rawPlace.id}
+                masonryIndex={index}
                 place={withLiveDetail(
                   { ...mapSeoPlaceToCard(rawPlace), imageUrl: null, curatedImageUrls: [], budget_min: rawPlace.budgetMin, good_for: rawPlace.goodFor },
                   placeDetailsBySlug[rawPlace.slug],
@@ -385,7 +403,7 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
                 }}
               />
             ))}
-          </div>
+          </Masonry>
 
           {places.length > 0 && totalPages > 1 ? (
             <CompactPagination
