@@ -246,6 +246,7 @@ function SearchPage({
       </div>
 
       <ExploreShortcuts />
+      <div aria-hidden="true" className="h-16 lg:hidden" />
 
       <Button
         href="/ask-ai/maps"
