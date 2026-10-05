@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ChangeEvent, FormEvent, ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { ChevronRight } from 'lucide-react'
+import { CaretRight as ChevronRight } from '@phosphor-icons/react/dist/csr/CaretRight'
 import BirthdatePicker from '../components/BirthdatePicker'
 import MinimalBackNav from '../components/navigation/MinimalBackNav'
 import ProfileAvatar from '../components/ProfileAvatar'

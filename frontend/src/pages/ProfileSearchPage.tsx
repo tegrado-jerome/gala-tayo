@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Loader2, Search, X } from 'lucide-react'
+import { CircleNotch as Loader2 } from '@phosphor-icons/react/dist/csr/CircleNotch'
+import { MagnifyingGlass as Search } from '@phosphor-icons/react/dist/csr/MagnifyingGlass'
+import { X } from '@phosphor-icons/react/dist/csr/X'
 import InternalLink from '../components/InternalLink'
 import ProfileAvatar from '../components/ProfileAvatar'
 import { Button, Empty, Page, SectionHead, Skeleton, Tag } from '../components/ui'

@@ -1,13 +1,9 @@
 import { useEffect, type ReactNode } from 'react'
-import { ChevronDown, Sparkles } from 'lucide-react'
-import PhotoCard, { getPlaceImageCandidates } from '../components/discover/PhotoCard'
-import Rail from '../components/discover/Rail'
-import SentenceSearch from '../components/discover/SentenceSearch'
-import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
+import { CaretDown as ChevronDown } from '@phosphor-icons/react/dist/csr/CaretDown'
+import HomeDiscover from '../components/home/HomeDiscover'
 import InternalLink from '../components/InternalLink'
 import SeoHead from '../components/SeoHead'
-import { AvatarStack, Button, Page, SectionHead } from '../components/ui'
-import { homePopularTopPickPlaces } from '../data/homeRecommendations'
+import { AvatarStack, Page, SectionHead } from '../components/ui'
 import { metroManilaAreas } from '../data/metroManilaAreas'
 import { displayCityName } from '../utils/cityName'
 import type { NavigationSource } from '../utils/navigationLoading'
@@ -19,8 +15,6 @@ const footerLinks = [
   { href: '/terms', label: 'Terms' },
 ]
 
-const heroPlace = homePopularTopPickPlaces[0]
-const heroImageUrl = getPlaceImageCandidates(heroPlace)[0]
 
 function Step({ n, title, body, art }: { n: number; title: string; body: string; art: ReactNode }) {
   return (
@@ -39,7 +33,6 @@ function Step({ n, title, body, art }: { n: number; title: string; body: string;
 }
 
 function WelcomePage({ navigationSource = 'push' }: { navigationSource?: NavigationSource }) {
-  const guestAuth = useGuestAuthPrompt()
 
   useEffect(() => {
     const w = window as unknown as Record<string, (() => void) | undefined>
@@ -61,53 +54,12 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
         jsonLd={buildBrandJsonLd()}
       />
       <Page className="pb-10 lg:pb-16">
-        <section
-          data-navigation-source={navigationSource}
-          className="relative -mx-4 -mt-5 flex min-h-[420px] flex-col justify-end overflow-hidden md:mx-0 md:mt-0 md:min-h-[520px] md:rounded-[var(--r-4)]"
-          style={{ height: '60vh', background: '#0f2138' }}
-        >
-          {heroImageUrl ? (
-            <img src={heroImageUrl} alt={heroPlace.name} fetchPriority="high" decoding="async" className="absolute inset-0 h-full w-full object-cover" />
-          ) : null}
-          <div
-            className="absolute inset-0 md:hidden"
-            style={{ background: 'linear-gradient(to top, rgba(15,33,56,.92) 0%, rgba(15,33,56,.35) 55%, rgba(15,33,56,.1) 100%)' }}
-          />
-          <div
-            className="absolute inset-0 hidden md:block"
-            style={{ background: 'linear-gradient(90deg, rgba(15,33,56,.88) 0%, rgba(15,33,56,.45) 55%, rgba(15,33,56,.1) 100%)' }}
-          />
-          <div className="relative max-w-[640px] px-4 pb-7 text-left text-white md:px-10 md:pb-20">
-            <p className="text-[12px] font-semibold uppercase tracking-[0.04em] text-white/80" style={{ textShadow: '0 1px 2px rgba(15,33,56,.4)' }}>
-              Metro Manila
-            </p>
-            <h1 className="g-d1 mt-3">Gala tayo. Kami na sa plano.</h1>
-            <p className="mt-3 text-[17px] text-white/85">Find the place, vote on the date, split the bill.</p>
-            <div className="mt-5 flex flex-wrap items-center gap-3">
-              <Button variant="tara" size="lg" href="/plan-with-ai">
-                <Sparkles />
-                Plan a gala
-              </Button>
-              <Button variant="soft" size="lg" href="/home" className="!bg-white/15 !text-white backdrop-blur-sm hover:!bg-white/25">
-                Explore places
-              </Button>
-            </div>
-            <p className="g-sm mt-4 text-white/80">
-              Wala pang account?{' '}
-              <InternalLink href="/signup" className="font-semibold text-white underline underline-offset-2">
-                Sign up free
-              </InternalLink>
-            </p>
-          </div>
-        </section>
+        <header data-navigation-source={navigationSource} className="mb-5 min-w-0 text-center md:mb-7">
+          <h1 className="g-d1">Gala tayo. Kami na sa plano.</h1>
+          <p className="g-mut mt-2 text-[16px]">Find the place, vote on the date, split the bill.</p>
+        </header>
 
-        <SentenceSearch className="relative z-[2] mx-auto mt-6 max-w-[760px] md:-mt-9" />
-
-        <Rail title="Happening this weekend" subtitle="Places people are going to" seeAllHref="/places">
-          {homePopularTopPickPlaces.map((place) => (
-            <PhotoCard key={place.slug} place={place} onGuestFavorite={() => guestAuth.open('favorite')} />
-          ))}
-        </Rail>
+        <HomeDiscover />
 
         <SectionHead title="Less chasing, more gala" sub="One link for the whole barkada" />
         <ol className="flex flex-col gap-3 md:grid md:grid-cols-3 md:gap-6">
@@ -214,7 +166,6 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
           <span className="g-sm g-mut">Made in Metro Manila</span>
         </footer>
       </Page>
-      {guestAuth.promptElement}
     </>
   )
 }

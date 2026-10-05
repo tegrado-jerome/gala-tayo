@@ -1,5 +1,6 @@
 import { useMemo, useState, type MouseEvent } from 'react'
-import { MapPin, type LucideIcon } from 'lucide-react'
+import type { Icon as PhosphorIcon } from '@phosphor-icons/react'
+import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
 import { PlaceCard as KitPlaceCard, MasonryCard, Tag, cx, type PlaceCardTint } from './ui'
 import { formatPlaceCardMeta } from '../utils/placeLocation'
 import { getSulitLevel } from './place-detail/SulitMeter'
@@ -142,7 +143,7 @@ export function toTitleCase(value: string | null | undefined) {
   return (value ?? '').trim().replace(/(^|[\s/-])(\p{Ll})/gu,(_, lead: string, letter: string) => lead + letter.toUpperCase())
 }
 
-const categoryIconAliases: Array<[RegExp, LucideIcon]> = [
+const categoryIconAliases: Array<[RegExp, PhosphorIcon]> = [
   [/caf|coffee/i, categoryIcons.cafe],
   [/food|restaurant|eat|dining|bar(?!k)/i, categoryIcons.food],
   [/night|club|pub/i, categoryIcons.nightlife],
@@ -155,7 +156,7 @@ const categoryIconAliases: Array<[RegExp, LucideIcon]> = [
   [/activit|sport|adventure/i, categoryIcons.activity],
 ]
 
-export function getCategoryIcon(category: string | null | undefined): LucideIcon {
+export function getCategoryIcon(category: string | null | undefined): PhosphorIcon {
   const key = (category ?? '').trim().toLowerCase()
   if (!key) return MapPin
   return categoryIcons[key] ?? categoryIconAliases.find(([pattern]) => pattern.test(key))?.[1] ?? MapPin
@@ -274,7 +275,7 @@ function PlaceCard({ place, onGuestSave, selected = false, onOpen, onHover, clas
 }
 
 /** Index tile (city or category) with image fallbacks. */
-export function PlaceTile({ href, title, meta, imageUrls, icon, tint }: { href: string; title: string; meta: string; imageUrls: string[]; icon?: LucideIcon; tint?: PlaceCardTint }) {
+export function PlaceTile({ href, title, meta, imageUrls, icon, tint }: { href: string; title: string; meta: string; imageUrls: string[]; icon?: PhosphorIcon; tint?: PlaceCardTint }) {
   const [failed, setFailed] = useState<string[]>([])
   const imageUrl = imageUrls.find((url) => !failed.includes(url)) ?? null
 

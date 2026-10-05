@@ -1,6 +1,7 @@
 import { useEffect, useId, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
-import { ChevronDown, Lightbulb } from 'lucide-react'
+import { CaretDown as ChevronDown } from '@phosphor-icons/react/dist/csr/CaretDown'
+import { Lightbulb } from '@phosphor-icons/react/dist/csr/Lightbulb'
 import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
 import { Button, Sheet, cx } from './ui'
 

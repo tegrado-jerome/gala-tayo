@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { ShieldAlert } from 'lucide-react'
+import { ShieldWarning as ShieldAlert } from '@phosphor-icons/react/dist/csr/ShieldWarning'
 import { Button, Panel } from '../components/ui'
 import { signOut } from '../services/authApi'
 import { ADMIN_BASE_PATH } from '../utils/adminRoutes'

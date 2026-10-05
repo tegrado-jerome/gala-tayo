@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye } from '@phosphor-icons/react/dist/csr/Eye'
+import { EyeSlash as EyeOff } from '@phosphor-icons/react/dist/csr/EyeSlash'
 
 type PasswordFieldProps = {
   id: string

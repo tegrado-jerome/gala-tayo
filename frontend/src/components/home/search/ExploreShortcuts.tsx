@@ -1,4 +1,8 @@
-import { ChevronRight, LayoutGrid, MapPin, Map as MapIcon, Sparkles } from 'lucide-react'
+import { CaretRight as ChevronRight } from '@phosphor-icons/react/dist/csr/CaretRight'
+import { SquaresFour as LayoutGrid } from '@phosphor-icons/react/dist/csr/SquaresFour'
+import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
+import { MapTrifold as MapIcon } from '@phosphor-icons/react/dist/csr/MapTrifold'
+import { Sparkle as Sparkles } from '@phosphor-icons/react/dist/csr/Sparkle'
 import { Row } from '../../ui'
 
 const shortcuts = [

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { MapPin } from 'lucide-react'
+import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
 import PassportMap from '../components/passport/PassportMap'
 import { Button, Empty, Page, Row, SectionHead, Skeleton, cx } from '../components/ui'
 import { useAppUser } from '../context/AppUserContext'

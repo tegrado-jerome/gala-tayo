@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ChevronLeft } from 'lucide-react'
+import { CaretLeft as ChevronLeft } from '@phosphor-icons/react/dist/csr/CaretLeft'
 import { navigateToPath } from '../../utils/navigation'
 import { hasInAppBackHistory } from '../../utils/routes'
 import { MINIMAL_NAV_LINK_CLASS } from './navigationStyles'

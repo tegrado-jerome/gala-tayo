@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { Mail } from 'lucide-react'
+import { EnvelopeSimple as Mail } from '@phosphor-icons/react/dist/csr/EnvelopeSimple'
 import AuthMethodChooser from '../components/auth/AuthMethodChooser'
 import PasswordStrengthBar from '../components/auth/PasswordStrengthBar'
 import {

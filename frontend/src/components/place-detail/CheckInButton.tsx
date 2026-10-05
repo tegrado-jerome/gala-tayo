@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
 import type { Session } from '@supabase/supabase-js'
-import { Stamp } from 'lucide-react'
+import { Stamp } from '@phosphor-icons/react/dist/csr/Stamp'
 import { Button, Sheet, buttonClass, cx } from '../ui'
 import { checkInAtPlace, getCurrentPosition } from '../../utils/passportApi'
 

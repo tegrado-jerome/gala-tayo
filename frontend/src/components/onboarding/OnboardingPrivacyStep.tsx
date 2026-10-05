@@ -1,4 +1,8 @@
-import { ArrowRight, Check, Globe, Lock, type LucideIcon } from 'lucide-react'
+import type { Icon as PhosphorIcon } from '@phosphor-icons/react'
+import { ArrowRight } from '@phosphor-icons/react/dist/csr/ArrowRight'
+import { Check } from '@phosphor-icons/react/dist/csr/Check'
+import { Globe } from '@phosphor-icons/react/dist/csr/Globe'
+import { Lock } from '@phosphor-icons/react/dist/csr/Lock'
 import OnboardingLayout from './OnboardingLayout'
 import { Button } from '../ui'
 import type { OnboardingErrors, OnboardingFormState, ProfileVisibility } from './types'
@@ -12,7 +16,7 @@ type OnboardingPrivacyStepProps = {
   onNext: () => void
 }
 
-const options: Array<{ value: ProfileVisibility; title: string; description: string; icon: LucideIcon }> = [
+const options: Array<{ value: ProfileVisibility; title: string; description: string; icon: PhosphorIcon }> = [
   {
     value: 'public',
     title: 'Public profile',

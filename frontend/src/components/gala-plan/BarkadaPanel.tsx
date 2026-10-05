@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { Check, Layers, Plus } from 'lucide-react'
+import { Check } from '@phosphor-icons/react/dist/csr/Check'
+import { Stack as Layers } from '@phosphor-icons/react/dist/csr/Stack'
+import { Plus } from '@phosphor-icons/react/dist/csr/Plus'
 import { Avatar, AvatarStack, Button, Empty, Panel, Tag, cx } from '../ui'
 import {
   createGalaPlanPoll,

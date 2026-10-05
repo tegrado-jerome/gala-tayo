@@ -1,5 +1,7 @@
 import { useEffect, type ButtonHTMLAttributes, type CSSProperties, type HTMLAttributes, type MouseEvent, type ReactNode } from 'react'
-import { Heart, MapPin, type LucideIcon } from 'lucide-react'
+import type { Icon as PhosphorIcon } from '@phosphor-icons/react'
+import { Heart } from '@phosphor-icons/react/dist/csr/Heart'
+import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
 import InternalLink from '../InternalLink'
 import { formatPlaceCardMeta } from '../../utils/placeLocation'
 
@@ -147,7 +149,7 @@ export type PlaceCardProps = {
   href: string
   title: string
   imageUrl?: string | null
-  icon?: LucideIcon
+  icon?: PhosphorIcon
   meta?: ReactNode
   category?: string | null
   area?: string | null
@@ -200,7 +202,7 @@ export function PlaceCard({ href, title, imageUrl, icon: FallbackIcon = MapPin, 
               onToggleSave()
             }}
           >
-            <Heart className="g-ic" />
+            <Heart className="g-ic" weight={saved ? 'fill' : 'regular'} />
           </button>
         ) : null}
       </div>
@@ -335,7 +337,7 @@ export type MasonryCardProps = {
   price?: string | null
   meta?: ReactNode
   flag?: ReactNode
-  icon?: LucideIcon
+  icon?: PhosphorIcon
   tint?: PlaceCardTint
   saved?: boolean
   onToggleSave?: () => void
@@ -379,7 +381,7 @@ export function MasonryCard({ href, title, imageUrl, media, index = 0, price, me
             onToggleSave()
           }}
         >
-          <Heart size={17} />
+          <Heart size={17} weight={saved ? 'fill' : 'regular'} />
         </button>
       ) : null}
     </div>

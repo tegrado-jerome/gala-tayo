@@ -1,5 +1,11 @@
 import type { Session } from '@supabase/supabase-js'
-import { ArrowUpRight, Flag, Image, MapPinPlus, MessageSquare, UserRound, type LucideIcon } from 'lucide-react'
+import type { Icon as PhosphorIcon } from '@phosphor-icons/react'
+import { ArrowUpRight } from '@phosphor-icons/react/dist/csr/ArrowUpRight'
+import { Flag } from '@phosphor-icons/react/dist/csr/Flag'
+import { Image } from '@phosphor-icons/react/dist/csr/Image'
+import { MapPinPlus } from '@phosphor-icons/react/dist/csr/MapPinPlus'
+import { ChatCenteredText as MessageSquare } from '@phosphor-icons/react/dist/csr/ChatCenteredText'
+import { User as UserRound } from '@phosphor-icons/react/dist/csr/User'
 import { Button } from '../../components/ui'
 import { useAdminAccess } from '../../hooks/useAdminAccess'
 import { navigateToPath } from '../../utils/navigation'
@@ -10,7 +16,7 @@ type DashboardSection = {
   title: string
   description: string
   path: string
-  icon: LucideIcon
+  icon: PhosphorIcon
 }
 
 const sections: DashboardSection[] = [

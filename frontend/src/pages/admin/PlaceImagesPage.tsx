@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { Search } from 'lucide-react'
+import { MagnifyingGlass as Search } from '@phosphor-icons/react/dist/csr/MagnifyingGlass'
 import { Button, Chip, Chips, Empty, Sheet, Skeleton } from '../../components/ui'
 import { useSystemMessage } from '../../context/SystemMessageContext'
 import { useAdminAccess } from '../../hooks/useAdminAccess'

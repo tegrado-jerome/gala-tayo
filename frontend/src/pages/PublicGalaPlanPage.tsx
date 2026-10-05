@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowLeft, CalendarDays, Heart, MapPin, Share, Sparkles } from 'lucide-react'
+import { ArrowLeft } from '@phosphor-icons/react/dist/csr/ArrowLeft'
+import { CalendarBlank as CalendarDays } from '@phosphor-icons/react/dist/csr/CalendarBlank'
+import { Heart } from '@phosphor-icons/react/dist/csr/Heart'
+import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
+import { Export as Share } from '@phosphor-icons/react/dist/csr/Export'
+import { Sparkle as Sparkles } from '@phosphor-icons/react/dist/csr/Sparkle'
 import InternalLink from '../components/InternalLink'
 import PlanRouteMap from '../components/gala-plan/PlanRouteMap'
 import PlanTimeline, { type TimelineStop } from '../components/gala-plan/PlanTimeline'
@@ -149,7 +154,7 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
                 Share
               </Button>
               <Button variant="soft" aria-pressed={plan.viewer_has_hearted} aria-label={plan.viewer_has_hearted ? 'Remove heart' : 'Heart this plan'} onClick={() => void toggleHeart()}>
-                <Heart fill={plan.viewer_has_hearted ? 'currentColor' : 'none'} />
+                <Heart weight={plan.viewer_has_hearted ? 'fill' : 'regular'} />
                 {plan.hearts_count}
               </Button>
             </div>

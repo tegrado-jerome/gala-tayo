@@ -1,7 +1,18 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { RecapStoryButton } from './RecapStory'
 import type { Session } from '@supabase/supabase-js'
-import { ArrowDownUp, ArrowLeft, CalendarDays, Check, Heart, Link2, MoreHorizontal, Pencil, Share, Sparkles, Trash2, UserPlus } from 'lucide-react'
+import { ArrowsDownUp as ArrowDownUp } from '@phosphor-icons/react/dist/csr/ArrowsDownUp'
+import { ArrowLeft } from '@phosphor-icons/react/dist/csr/ArrowLeft'
+import { CalendarBlank as CalendarDays } from '@phosphor-icons/react/dist/csr/CalendarBlank'
+import { Check } from '@phosphor-icons/react/dist/csr/Check'
+import { Heart } from '@phosphor-icons/react/dist/csr/Heart'
+import { LinkSimple as Link2 } from '@phosphor-icons/react/dist/csr/LinkSimple'
+import { DotsThree as MoreHorizontal } from '@phosphor-icons/react/dist/csr/DotsThree'
+import { PencilSimple as Pencil } from '@phosphor-icons/react/dist/csr/PencilSimple'
+import { Export as Share } from '@phosphor-icons/react/dist/csr/Export'
+import { Sparkle as Sparkles } from '@phosphor-icons/react/dist/csr/Sparkle'
+import { Trash as Trash2 } from '@phosphor-icons/react/dist/csr/Trash'
+import { UserPlus } from '@phosphor-icons/react/dist/csr/UserPlus'
 import DestructiveConfirmModal from '../DestructiveConfirmModal'
 import InternalLink from '../InternalLink'
 import { AvatarStack, Button, Empty, Page, Panel, Sheet, Skeleton, Tabs, Tag, cx } from '../ui'
@@ -378,7 +389,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
       aria-label={plan.viewer_has_hearted ? 'Remove heart' : 'Heart this plan'}
       onClick={() => void heart()}
     >
-      <Heart className="g-ic" fill={plan.viewer_has_hearted ? 'currentColor' : 'none'} style={plan.viewer_has_hearted ? { color: 'var(--tara)' } : undefined} />
+      <Heart className="g-ic" weight={plan.viewer_has_hearted ? 'fill' : 'regular'} style={plan.viewer_has_hearted ? { color: 'var(--tara)' } : undefined} />
       <span className="g-sm font-semibold">{plan.heart_count}</span>
     </button>
   ) : null

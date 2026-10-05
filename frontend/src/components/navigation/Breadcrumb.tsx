@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { CaretLeft as ChevronLeft } from '@phosphor-icons/react/dist/csr/CaretLeft'
+import { CaretRight as ChevronRight } from '@phosphor-icons/react/dist/csr/CaretRight'
 import InternalLink from '../InternalLink'
 import { navigateToPath, useBackNavigation } from '../../utils/navigation'
 import { MINIMAL_BREADCRUMB_LINK_CLASS, MINIMAL_NAV_LINK_CLASS } from './navigationStyles'

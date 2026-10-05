@@ -1,25 +1,23 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import {
-  CalendarDays,
-  ChevronDown,
-  ChevronRight,
-  Flag,
-  Heart,
-  History,
-  LogOut,
-  MapPinPlus,
-  MessageSquare,
-  Moon,
-  Send,
-  Settings,
-  ShieldCheck,
-  Stamp,
-  Sun,
-  User,
-  UserPlus,
-  type LucideIcon,
-} from 'lucide-react'
+import type { Icon as PhosphorIcon } from '@phosphor-icons/react'
+import { CalendarBlank as CalendarDays } from '@phosphor-icons/react/dist/csr/CalendarBlank'
+import { CaretDown as ChevronDown } from '@phosphor-icons/react/dist/csr/CaretDown'
+import { CaretRight as ChevronRight } from '@phosphor-icons/react/dist/csr/CaretRight'
+import { Flag } from '@phosphor-icons/react/dist/csr/Flag'
+import { Heart } from '@phosphor-icons/react/dist/csr/Heart'
+import { ClockCounterClockwise as History } from '@phosphor-icons/react/dist/csr/ClockCounterClockwise'
+import { SignOut as LogOut } from '@phosphor-icons/react/dist/csr/SignOut'
+import { MapPinPlus } from '@phosphor-icons/react/dist/csr/MapPinPlus'
+import { ChatCenteredText as MessageSquare } from '@phosphor-icons/react/dist/csr/ChatCenteredText'
+import { Moon } from '@phosphor-icons/react/dist/csr/Moon'
+import { PaperPlaneTilt as Send } from '@phosphor-icons/react/dist/csr/PaperPlaneTilt'
+import { GearSix as Settings } from '@phosphor-icons/react/dist/csr/GearSix'
+import { ShieldCheck } from '@phosphor-icons/react/dist/csr/ShieldCheck'
+import { Stamp } from '@phosphor-icons/react/dist/csr/Stamp'
+import { Sun } from '@phosphor-icons/react/dist/csr/Sun'
+import { User } from '@phosphor-icons/react/dist/csr/User'
+import { UserPlus } from '@phosphor-icons/react/dist/csr/UserPlus'
 import { Avatar, Button, Sheet, cx } from './ui'
 import { useTheme } from '../context/ThemeContext'
 import { signOut } from '../services/authApi'
@@ -38,7 +36,7 @@ type UserMenuProps = {
   compact?: boolean
 }
 
-type MenuLink = { path: string; label: string; icon: LucideIcon }
+type MenuLink = { path: string; label: string; icon: PhosphorIcon }
 
 const DESKTOP_ACCOUNT_MENU_QUERY = '(min-width: 1024px)'
 

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { CircleCheck, LogOut } from 'lucide-react'
+import { CheckCircle as CircleCheck } from '@phosphor-icons/react/dist/csr/CheckCircle'
+import { SignOut as LogOut } from '@phosphor-icons/react/dist/csr/SignOut'
 import { sendMfaEmailCode, verifyMfaEmailCode } from '../utils/userMfa'
 import { setDeviceToken } from '../utils/mfaDevice'
 import { navigateToPath } from '../utils/navigation'

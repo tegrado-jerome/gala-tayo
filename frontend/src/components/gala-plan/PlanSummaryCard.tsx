@@ -1,4 +1,5 @@
-import { ChevronRight, MapPin } from 'lucide-react'
+import { CaretRight as ChevronRight } from '@phosphor-icons/react/dist/csr/CaretRight'
+import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
 import InternalLink from '../InternalLink'
 import { getStaticPlaceImageUrlForSlug } from '../../data/placeIndexVisuals'
 import type { GalaPlanSummary } from '../../utils/galaPlansApi'

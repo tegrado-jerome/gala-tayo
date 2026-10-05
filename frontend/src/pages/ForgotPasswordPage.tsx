@@ -1,5 +1,5 @@
 import { useMemo, useState, type FormEvent } from 'react'
-import { Mail } from 'lucide-react'
+import { EnvelopeSimple as Mail } from '@phosphor-icons/react/dist/csr/EnvelopeSimple'
 import { AuthCard, AuthNotice, InlineLink } from '../components/auth/AuthCard'
 import { Button } from '../components/ui'
 import { sendPasswordResetEmail } from '../services/authApi'

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
-import { TriangleAlert } from 'lucide-react'
+import { Warning as TriangleAlert } from '@phosphor-icons/react/dist/csr/Warning'
 import { AuthCard, AuthNotice } from '../components/auth/AuthCard'
 import PasswordField from '../components/auth/PasswordField'
 import PasswordStrengthBar from '../components/auth/PasswordStrengthBar'

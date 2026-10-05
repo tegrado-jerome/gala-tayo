@@ -8,7 +8,10 @@ import type {
   TextareaHTMLAttributes,
 } from 'react'
 import { forwardRef } from 'react'
-import { CircleAlert, CircleCheck, Info, TriangleAlert } from 'lucide-react'
+import { WarningCircle as CircleAlert } from '@phosphor-icons/react/dist/csr/WarningCircle'
+import { CheckCircle as CircleCheck } from '@phosphor-icons/react/dist/csr/CheckCircle'
+import { Info } from '@phosphor-icons/react/dist/csr/Info'
+import { Warning as TriangleAlert } from '@phosphor-icons/react/dist/csr/Warning'
 import { AppIcon, type AppIconName } from './AppIcon'
 import { buttonClass } from './ui'
 

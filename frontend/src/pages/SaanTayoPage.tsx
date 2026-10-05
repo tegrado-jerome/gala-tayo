@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ChevronRight, Share2, Shuffle } from 'lucide-react'
+import { CaretRight as ChevronRight } from '@phosphor-icons/react/dist/csr/CaretRight'
+import { ShareNetwork as Share2 } from '@phosphor-icons/react/dist/csr/ShareNetwork'
+import { Shuffle } from '@phosphor-icons/react/dist/csr/Shuffle'
 import PlaceCard, { withLiveDetail } from '../components/PlaceCard'
 import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
 import SeoHead from '../components/SeoHead'

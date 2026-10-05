@@ -1,4 +1,4 @@
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight } from '@phosphor-icons/react/dist/csr/ArrowRight'
 import OnboardingLayout from './OnboardingLayout'
 import BirthdatePicker from '../BirthdatePicker'
 import { Button } from '../ui'

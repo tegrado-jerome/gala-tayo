@@ -1,5 +1,6 @@
 import { useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
-import { ArrowUp, Sparkles } from 'lucide-react'
+import { ArrowUp } from '@phosphor-icons/react/dist/csr/ArrowUp'
+import { Sparkle as Sparkles } from '@phosphor-icons/react/dist/csr/Sparkle'
 import { Button, cx } from '../ui'
 import { navigateToPath } from '../../utils/navigation'
 

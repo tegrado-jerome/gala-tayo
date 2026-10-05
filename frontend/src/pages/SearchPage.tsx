@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
-import { Map as MapIcon } from 'lucide-react'
+import { MapTrifold as MapIcon } from '@phosphor-icons/react/dist/csr/MapTrifold'
 import SearchHub from './SearchHub'
 import PhotoCard, { type PhotoCardPlace } from '../components/discover/PhotoCard'
 import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
