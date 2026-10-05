@@ -329,5 +329,19 @@
       "best museums in metro manila"
     ],
     "addedAt": "2026-10-05"
+  },
+  {
+    "slug": "malls-in-makati",
+    "label": "Malls in Makati",
+    "areaSlug": "makati",
+    "category": "mall",
+    "keywords": [
+      "malls in makati",
+      "malls in makati city",
+      "malls in makati area",
+      "malls in makati with cinema",
+      "malls in makati philippines"
+    ],
+    "addedAt": "2026-10-05"
   }
 ]

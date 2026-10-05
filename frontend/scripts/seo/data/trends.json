@@ -24,5 +24,17 @@
       "museum"
     ],
     "areaSlug": null
+  },
+  {
+    "title": "dodgers vs braves",
+    "traffic": 500,
+    "date": "2026-10-05",
+    "intents": [
+      "activity",
+      "nightlife",
+      "mall",
+      "food-trip"
+    ],
+    "areaSlug": null
   }
 ]
