@@ -22,6 +22,7 @@ import {
   type Profile,
 } from '../utils/profileApi'
 import { formatGalaPlanDate, listMyGalaPlans, type GalaPlanSummary } from '../utils/galaPlansApi'
+import { daysUntil, getPlanDate } from '../utils/galaPlanTrip'
 import { getMyPassport, type CityStamp } from '../utils/passportApi'
 import { preloadAvatarImage } from '../utils/avatarImageCache'
 import { navigateToPath } from '../utils/navigation'
@@ -73,6 +74,16 @@ function writeCache(userId: string, cache: ProfilePageCache) {
 
 let memCache: { profile: Profile; followRequests: FollowRequest[] } | null = null
 let memCachedUserId: string | null = null
+
+function planDateLabel(plan: GalaPlanSummary) {
+  const date = getPlanDate(plan)
+  if (!date) return formatGalaPlanDate(plan.description)
+  const days = daysUntil(date)
+  if (days === 0) return 'Today'
+  if (days === 1) return 'Tomorrow'
+  const year = date.getFullYear() === new Date().getFullYear() ? undefined : 'numeric'
+  return date.toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric', year })
+}
 
 type Loadable<T> = { status: 'loading' } | { status: 'ready'; data: T } | { status: 'error'; message: string }
 
@@ -354,7 +365,7 @@ function ProfilePage({ session }: ProfilePageProps) {
         <>
           <section className="lg:max-w-[720px]">
             <div className="flex items-start gap-4 lg:gap-6">
-              <ProfileAvatar profile={profile} size="xl" />
+              <ProfileAvatar profile={{ ...profile, display_name: currentProfile?.displayName }} size="xl" />
               <div className="min-w-0 flex-1">
                 <h1 className="g-h1 truncate">{displayName}</h1>
                 <p className="flex min-w-0 items-center gap-2">
@@ -486,7 +497,7 @@ function ProfilePage({ session }: ProfilePageProps) {
                           title={plan.title}
                           imageUrl={plan.preview_places?.[0]?.image_url}
                           tag={plan.visibility === 'public' ? 'Public' : 'Private'}
-                          date={formatGalaPlanDate(plan.description)}
+                          date={planDateLabel(plan)}
                           meta={`${placeCount} ${placeCount === 1 ? 'stop' : 'stops'}${hearts ? ` · ${hearts} ♥` : ''}`}
                         />
                       )

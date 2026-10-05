@@ -73,11 +73,6 @@ function SiteHeader({ pathname }: { pathname: string }) {
               <Button variant="soft" size="sm" iconOnly className="g-only-mob" href="/search" aria-label="Search places">
                 <Search aria-hidden="true" />
               </Button>
-              {showChat && session ? (
-                <Button variant="soft" size="sm" iconOnly className="g-only-mob" onClick={() => openFloatingChat()} aria-label="Ask GalaTayo AI">
-                  <Sparkles aria-hidden="true" />
-                </Button>
-              ) : null}
               {session ? (
                 <>
                   <Button variant="ink" size="sm" href="/plan-with-ai" className="g-only-desk">

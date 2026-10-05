@@ -115,11 +115,13 @@ function slugify(value: string) {
     .replace(/^-+|-+$/g, '')
 }
 
+const LOWERCASE_WORDS = new Set(['a', 'an', 'and', 'at', 'by', 'de', 'del', 'for', 'in', 'ng', 'of', 'on', 'sa', 'the', 'to', 'x'])
+
 export function formatLabelFromSlug(value: string) {
   return value
     .split('-')
     .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .map((part, index) => (index > 0 && LOWERCASE_WORDS.has(part) ? part : part.charAt(0).toUpperCase() + part.slice(1)))
     .join(' ')
 }
 

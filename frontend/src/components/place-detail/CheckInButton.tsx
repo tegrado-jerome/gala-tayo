@@ -1,7 +1,8 @@
-import { useEffect, useId, useState } from 'react'
+import { useEffect, useId, useRef, useState, type CSSProperties } from 'react'
+import { createPortal } from 'react-dom'
 import type { Session } from '@supabase/supabase-js'
 import { Stamp } from 'lucide-react'
-import { Button, cx } from '../ui'
+import { Button, Sheet, buttonClass, cx } from '../ui'
 import { checkInAtPlace, getCurrentPosition } from '../../utils/passportApi'
 
 type Status =
@@ -9,6 +10,44 @@ type Status =
   | { kind: 'working' }
   | { kind: 'done'; message: string }
   | { kind: 'error'; message: string }
+
+function weeks(count: number) {
+  return `${count} ${count === 1 ? 'week' : 'weeks'}`
+}
+
+function NewStampSheet({ city, streakWeeks, onClose }: { city: string; streakWeeks: number; onClose: () => void }) {
+  const closeRef = useRef<HTMLButtonElement>(null)
+  const titleId = useId()
+  const today = new Date().toLocaleDateString('en', { month: 'short', day: 'numeric' })
+
+  useEffect(() => {
+    closeRef.current?.focus()
+  }, [])
+
+  return createPortal(
+    <Sheet open onClose={onClose} labelledBy={titleId}>
+      <div className="flex flex-col items-center pb-1 pt-4 text-center">
+        <div className="g-stamp-big g-press" style={{ '--g-rot': '-6deg' } as CSSProperties} aria-hidden="true">
+          <div className="min-w-0">
+            <b>{city}</b>
+            <span>{today}</span>
+          </div>
+        </div>
+        <h2 id={titleId} className="g-h2 mt-6">New stamp: {city}</h2>
+        <p className="g-sm mt-1.5" style={{ color: 'var(--sea)' }}>
+          {streakWeeks > 0 ? `${streakWeeks}-week streak. Gala again next week to keep it going.` : 'Gala once a week to start a streak.'}
+        </p>
+        <div className="mt-6 grid w-full grid-cols-2 gap-2">
+          <Button variant="ink" href="/passport">See passport</Button>
+          <button type="button" ref={closeRef} className={buttonClass({ variant: 'line' })} onClick={onClose}>
+            Nice!
+          </button>
+        </div>
+      </div>
+    </Sheet>,
+    document.body,
+  )
+}
 
 const EXPLAINER = 'At this place now? Tap “I’m here” to collect this city’s Passport stamp.'
 const TOAST_MS = 6000
@@ -31,6 +70,7 @@ function CheckInButton({
 }) {
   const [status, setStatus] = useState<Status>({ kind: 'idle' })
   const [isToastVisible, setIsToastVisible] = useState(false)
+  const [newStamp, setNewStamp] = useState<{ city: string; streakWeeks: number } | null>(null)
   const explainerId = useId()
   const message = status.kind === 'done' || status.kind === 'error' ? status.message : ''
 
@@ -52,13 +92,12 @@ function CheckInButton({
       const result = await checkInAtPlace(placeId, coords, session)
       if (!result.available) {
         setStatus({ kind: 'error', message: 'The passport is getting set up. Try again soon.' })
+      } else if (result.new_stamp_city) {
+        setStatus({ kind: 'done', message: `New stamp: ${result.new_stamp_city}.` })
+        setNewStamp({ city: result.new_stamp_city, streakWeeks: result.streak_weeks })
+        return
       } else {
-        setStatus({
-          kind: 'done',
-          message: result.new_stamp_city
-            ? `New stamp: ${result.new_stamp_city}. Streak: ${result.streak_weeks} ${result.streak_weeks === 1 ? 'week' : 'weeks'}.`
-            : `Visit saved at ${placeName}. Streak: ${result.streak_weeks} ${result.streak_weeks === 1 ? 'week' : 'weeks'}.`,
-        })
+        setStatus({ kind: 'done', message: `Visit saved at ${placeName}. Streak: ${weeks(result.streak_weeks)}.` })
       }
     } catch (error) {
       setStatus({ kind: 'error', message: error instanceof Error ? error.message : 'Could not collect your stamp. Try again.' })
@@ -91,6 +130,7 @@ function CheckInButton({
   return (
     <div className={cx('min-w-0', iconOnly && 'shrink-0', className)}>
       {button}
+      {newStamp ? <NewStampSheet city={newStamp.city} streakWeeks={newStamp.streakWeeks} onClose={() => setNewStamp(null)} /> : null}
       <span id={explainerId} className="sr-only">
         {EXPLAINER}
       </span>

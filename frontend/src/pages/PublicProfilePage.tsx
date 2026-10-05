@@ -201,11 +201,15 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
                     <b>{loadedProfile.following_count}</b>
                     <span className="g-mut">following</span>
                   </button>
-                  <span className="g-mut" aria-hidden="true">·</span>
-                  <span className="inline-flex min-h-11 items-center gap-1">
-                    <b>{plans.length}</b>
-                    <span className="g-mut">{plans.length === 1 ? 'plan' : 'plans'}</span>
-                  </span>
+                  {plans.length > 0 ? (
+                    <>
+                      <span className="g-mut" aria-hidden="true">·</span>
+                      <span className="inline-flex min-h-11 items-center gap-1">
+                        <b>{plans.length}</b>
+                        <span className="g-mut">{plans.length === 1 ? 'plan' : 'plans'}</span>
+                      </span>
+                    </>
+                  ) : null}
                 </p>
               </div>
             </div>

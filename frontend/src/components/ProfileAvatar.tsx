@@ -1,9 +1,10 @@
 import { useAvatarImageSrc } from '../utils/avatarImageCache'
-import { getDisplayAvatar, getUsernameInitial } from '../utils/profileApi'
+import { getDisplayAvatar } from '../utils/profileApi'
 
 type ProfileAvatarProps = {
   profile: {
     username: string | null
+    display_name?: string | null
     avatar_url: string | null
     provider_avatar_url: string | null
   }
@@ -19,6 +20,12 @@ const sizeClasses = {
   xl: 'h-[72px] w-[72px] text-[28px] lg:h-24 lg:w-24 lg:text-[36px]',
 }
 
+function initialsFor(displayName: string | null | undefined, username: string | null) {
+  const words = (displayName ?? '').trim().split(/\s+/).filter(Boolean)
+  const letters = words.length > 1 ? words[0].charAt(0) + words[1].charAt(0) : (words[0] ?? username?.trim() ?? '').slice(0, 2)
+  return letters.toUpperCase() || 'G'
+}
+
 function ProfileAvatar({ profile, size = 'md', showOnlineIndicator = false }: ProfileAvatarProps) {
   const avatarUrl = getDisplayAvatar(profile)
   const resolvedSrc = useAvatarImageSrc(avatarUrl)
@@ -32,7 +39,7 @@ function ProfileAvatar({ profile, size = 'md', showOnlineIndicator = false }: Pr
         {resolvedSrc ? (
           <img src={resolvedSrc} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" loading="eager" decoding="async" />
         ) : (
-          getUsernameInitial(profile.username)
+          initialsFor(profile.display_name, profile.username)
         )}
       </span>
       {showOnlineIndicator ? (

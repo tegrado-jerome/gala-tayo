@@ -320,7 +320,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
           >
             {isResendingConfirmation ? 'Sending...' : resendLabel}
           </Button>
-          <Button variant="ink" block onClick={resetFormState}>
+          <Button variant="tara" block onClick={resetFormState}>
             Continue
           </Button>
         </div>
@@ -438,7 +438,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
 
         {error ? <AuthNotice tone="bad">{error}</AuthNotice> : null}
 
-        <Button type="submit" variant={isCreateMode ? 'tara' : 'ink'} block disabled={isSubmitDisabled}>
+        <Button type="submit" variant="tara" block disabled={isSubmitDisabled}>
           {submitLabel}
         </Button>
       </form>

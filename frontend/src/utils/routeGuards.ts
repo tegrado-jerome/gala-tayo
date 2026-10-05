@@ -1,10 +1,9 @@
 import { isPath } from './routes'
 import { isAdminPath as isSecretAdminPath } from './adminRoutes'
 
-const sharedRouteMatchers = [
-  (pathname: string) => /^\/u\/[^/]+\/?$/i.test(pathname),
-  (pathname: string) => /^\/u\/[^/]+\/(?:plans|gala)\/[^/]+\/?$/i.test(pathname),
-]
+const isPublicProfilePath = (pathname: string) => /^\/u\/[^/]+\/?$/i.test(pathname)
+const isSharedPlanPath = (pathname: string) => /^\/u\/[^/]+\/(?:plans|gala)\/[^/]+\/?$/i.test(pathname)
+const sharedRouteMatchers = [isPublicProfilePath, isSharedPlanPath]
 
 export function isProtectedAccountPath(pathname: string) {
   const isExactProtectedPath = [
@@ -64,9 +63,7 @@ export function shouldShowMobileBottomNav(pathname: string) {
     return false
   }
 
-  if (
-    sharedRouteMatchers.some((matcher) => matcher(pathname))
-  ) {
+  if (isSharedPlanPath(pathname)) {
     return false
   }
 
@@ -134,7 +131,7 @@ export function getNoindexForPath(pathname: string) {
 
   if (
     pathname.startsWith('/auth/') ||
-    /^\/u\/[^/]+\/?$/i.test(pathname) ||
+    isPublicProfilePath(pathname) ||
     /^\/gala-plan(?:s)?\b/i.test(pathname)
   ) {
     return true

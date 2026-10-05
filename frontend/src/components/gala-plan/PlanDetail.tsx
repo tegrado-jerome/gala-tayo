@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { ArrowDownUp, ArrowLeft, Check, Heart, Link2, MoreHorizontal, Pencil, Share, Sparkles, Trash2 } from 'lucide-react'
+import { ArrowDownUp, ArrowLeft, CalendarDays, Check, Heart, Link2, MoreHorizontal, Pencil, Share, Sparkles, Trash2 } from 'lucide-react'
 import DestructiveConfirmModal from '../DestructiveConfirmModal'
 import InternalLink from '../InternalLink'
 import { Button, Empty, Page, Panel, Sheet, Skeleton, Tabs, Tag } from '../ui'
@@ -153,8 +153,9 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
   const shareUrl = buildPrivateGalaPlanShareUrl(plan.id)
   const cover = plan.items.find((item) => item.place.image_url)?.place.image_url
   const lastStop = plan.items[plan.items.length - 1]
+  const dateText = date ? date.toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' }) : null
   const meta = [
-    date ? date.toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' }) : 'Any day',
+    dateText ?? 'Any day',
     `${plan.place_count} ${plan.place_count === 1 ? 'stop' : 'stops'}`,
     plan.owner?.username ? `Hosted by ${plan.owner.display_name?.trim() || `@${plan.owner.username}`}` : null,
     plan.items.length > 0 ? (perHead > 0 ? `${formatPeso(perHead)}/head` : 'Free entry') : null,
@@ -183,7 +184,11 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
       setConfirm('publish')
       return
     }
-    await shareLink({ url: shareUrl, title: plan.title, text: `Sama ka? ${plan.title}` })
+    try {
+      await shareLink({ url: shareUrl, title: plan.title, text: `Sama ka? ${plan.title}` })
+    } catch {
+      return
+    }
     setNotice('Invite link ready. Send it to your barkada.')
   }
 
@@ -246,6 +251,49 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
     )
   }
 
+  const canShare = typeof navigator.share === 'function'
+  const inviteCard = (
+    <Panel>
+      <h2 className="g-h3">Invite the barkada</h2>
+      <p className="g-sm g-mut mt-0.5">
+        {plan.viewer_is_owner && plan.visibility !== 'public' ? 'Private for now. Copying turns on link sharing.' : 'Anyone with the link can view and vote.'}
+      </p>
+      <figure className="mt-3">
+        <figcaption className="g-xs g-mut mb-1.5">What your barkada sees</figcaption>
+        <div className="g-invite-preview">
+          {cover ? (
+            <img src={cover} alt="" loading="lazy" />
+          ) : (
+            <span className="grid place-items-center" style={{ background: 'var(--sea-soft)', color: 'var(--sea)' }} aria-hidden="true">
+              <CalendarDays className="g-ic" />
+            </span>
+          )}
+          <div className="min-w-0">
+            <div className="g-h3 truncate">{plan.title}</div>
+            <div className="g-xs g-mut">{dateText ?? 'Date TBD'}</div>
+            <div className="g-invite-pills" aria-hidden="true">
+              <span>Tara!</span>
+              <span>Baka</span>
+              <span>Pass</span>
+            </div>
+          </div>
+        </div>
+      </figure>
+      <div className="mt-3 flex gap-2">
+        <Button variant={plan.viewer_is_owner ? 'tara' : 'ink'} className="min-w-0 flex-1" onClick={() => void copyLink()}>
+          {copied ? <Check /> : <Link2 />}
+          {copied ? 'Link copied' : 'Copy link'}
+        </Button>
+        {canShare ? (
+          <Button variant="line" iconOnly aria-label="Share invite" onClick={() => void share()}>
+            <Share />
+          </Button>
+        ) : null}
+      </div>
+      <p role="status" className="sr-only">{copied ? 'Invite link copied' : ''}</p>
+    </Panel>
+  )
+
   const closeMenu = () => setMenu(null)
   const actionStyle = { height: 40 }
   const count = (value: number) => (value > 0 ? <span className="g-fnt ml-1">{value}</span> : null)
@@ -298,11 +346,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
             </div>
             <h1 className="g-h1 mt-2.5">{plan.title}</h1>
             <p className="g-mut mt-1.5">{meta.join(' · ')}</p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button variant="line" style={actionStyle} onClick={() => void share()}>
-                <Share />
-                Share
-              </Button>
+            <div className="mt-4 flex flex-wrap gap-2 empty:hidden">
               {plan.viewer_is_owner ? (
                 <>
                   <Button variant="line" style={actionStyle} onClick={() => navigateToPath(`/gala-plans/${encodeURIComponent(plan.id)}/edit`)}>
@@ -341,6 +385,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
             {description ? <p className="mt-4 max-w-[65ch]">{description}</p> : null}
           </header>
           {notice ? <p role="status" className="g-sm mt-3">{notice}</p> : null}
+          <div className="g-only-mob mt-5">{inviteCard}</div>
 
           <div className="mt-6 lg:mt-8">
             <Tabs label="Plan sections" value={activeTab} options={tabs} onChange={setTab} />
@@ -383,17 +428,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
 
         <aside className="g-side">
           {readyBarkada ? <RsvpPanel plan={plan} barkada={readyBarkada} session={session} onChange={setBarkada} /> : null}
-          <Panel>
-            <h2 className="g-h3">Invite link</h2>
-            <p className="g-sm g-mut mt-0.5">
-              {plan.viewer_is_owner && plan.visibility !== 'public' ? 'Private for now. Copying turns on link sharing.' : 'Anyone with the link can view and vote.'}
-            </p>
-            <Button variant={plan.viewer_is_owner ? 'tara' : 'ink'} block className="mt-3" onClick={() => void copyLink()}>
-              {copied ? <Check /> : <Link2 />}
-              {copied ? 'Link copied' : 'Copy invite link'}
-            </Button>
-            <p role="status" className="sr-only">{copied ? 'Invite link copied' : ''}</p>
-          </Panel>
+          <div className="g-only-desk">{inviteCard}</div>
           <PlanRouteMap stops={stops} />
         </aside>
       </div>

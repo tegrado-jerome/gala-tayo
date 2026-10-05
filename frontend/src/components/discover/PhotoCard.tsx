@@ -1,11 +1,13 @@
 import { useMemo, useState, type MouseEvent } from 'react'
 import { Heart } from 'lucide-react'
 import InternalLink from '../InternalLink'
+import { toTitleCase } from '../PlaceCard'
 import { Tag } from '../ui'
 import PlaceImage from './PlaceImage'
 import { useSavedFavorites } from '../../context/SavedFavoritesContext'
 import { getStaticPlaceImageUrlForSlug } from '../../data/placeIndexVisuals'
 import { prefetchPlaceDetail } from '../../utils/placeDetailCache'
+import { formatPlaceCardMeta } from '../../utils/placeLocation'
 import { getCanonicalPlacePath, resolveAreaMeta } from '../../utils/routes'
 
 export type PhotoCardPlace = {
@@ -31,13 +33,12 @@ export function getPlaceHref(place: PhotoCardPlace) {
   return getCanonicalPlacePath({ areaSlug: areaMeta.slug, placeSlug: place.slug })
 }
 
-/** One meta line: price, rating, then area (the part that truncates first). */
-export function formatPlaceMeta(place: PhotoCardPlace) {
+/** Price and rating for the line under the meta. */
+function formatPlaceFacts(place: PhotoCardPlace) {
   const price =
     place.budgetMin == null ? null : place.budgetMin <= 0 ? 'Free entry' : `₱${Math.round(place.budgetMin).toLocaleString('en-PH')}/head`
   const rating = place.rating ? `★ ${place.rating.toFixed(1)}` : null
-  const area = place.localArea || place.area || place.city
-  return [price, rating, area].filter(Boolean).join(' · ')
+  return [price, rating].filter(Boolean).join(' · ')
 }
 
 export function getPlaceImageCandidates(place: PhotoCardPlace) {
@@ -97,7 +98,8 @@ function PhotoCard({ place, onGuestFavorite, badge, priority = false, onOpen, on
 
   const isTopRated = (place.rating ?? 0) >= TOP_RATED_MIN
   const badgeLabel = badge ?? (isTopRated ? 'Top rated' : null)
-  const meta = formatPlaceMeta(place)
+  const meta = formatPlaceCardMeta({ category: toTitleCase(place.category), area: place.localArea || place.area, city: place.city })
+  const facts = formatPlaceFacts(place)
 
   return (
     <article
@@ -130,7 +132,8 @@ function PhotoCard({ place, onGuestFavorite, badge, priority = false, onOpen, on
           ) : null}
         </div>
         <div className="g-h3 mt-2.5 line-clamp-2">{place.name}</div>
-        {meta ? <div className="g-pc-meta mt-0.5">{meta}</div> : null}
+        {meta ? <div className="g-pc-meta mt-0.5" title={meta}>{meta}</div> : null}
+        {facts ? <div className="g-sulit">{facts}</div> : null}
       </InternalLink>
       <button
         type="button"

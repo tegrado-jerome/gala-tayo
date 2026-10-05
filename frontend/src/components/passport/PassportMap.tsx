@@ -30,7 +30,7 @@ function PassportMap({ stamps }: { stamps: CityStamp[] }) {
   const points: MapPoint[] = visited.flatMap((stamp) => {
     const center = CITY_CENTERS[stamp.city.trim().toLowerCase()]
     if (!center) return []
-    return [{ id: stamp.city, lat: center[0], lng: center[1], label: `${stamp.city} · ${stamp.places}`, active: stamp.city === topCity }]
+    return [{ id: stamp.city, lat: center[0], lng: center[1], label: stamp.city, active: stamp.city === topCity }]
   })
 
   if (points.length === 0) return null

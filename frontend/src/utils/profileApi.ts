@@ -314,10 +314,6 @@ export function getDisplayName(profile: Pick<PublicProfile, 'username'>) {
   return profile.username ?? 'GalaTayo user'
 }
 
-export function getUsernameInitial(username: string | null | undefined) {
-  return username?.trim().charAt(0).toUpperCase() || 'G'
-}
-
 export function isAdminRole(role: unknown) {
   return typeof role === 'string' && role.trim().toLowerCase() === 'admin'
 }

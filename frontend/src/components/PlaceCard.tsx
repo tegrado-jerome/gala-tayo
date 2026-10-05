@@ -137,12 +137,7 @@ function getImageCandidates(place: PlaceCardData) {
   }, [])
 }
 
-function getMeta(place: PlaceCardData) {
-  const area = place.localArea || place.city || place.area
-  return [toTitleCase(place.category), area].filter(Boolean).join(' · ')
-}
-
-function toTitleCase(value: string | null | undefined) {
+export function toTitleCase(value: string | null | undefined) {
   return (value ?? '').trim().replace(/(^|[\s/-])(\p{Ll})/gu,(_, lead: string, letter: string) => lead + letter.toUpperCase())
 }
 
@@ -239,7 +234,9 @@ function PlaceCard({ place, onGuestSave, selected = false, onOpen, onHover, clas
         imageUrl={imageUrl}
         icon={getCategoryIcon(place.category)}
         tint={getCategoryTint(place.category)}
-        meta={getMeta(place)}
+        category={toTitleCase(place.category)}
+        area={place.localArea || place.area}
+        city={place.city}
         rating={typeof place.rating === 'number' && place.rating > 0 ? place.rating : null}
         reviewCount={getReviewCount(place)}
         pricePerHead={formatPricePerHead(place.budget_min)}
