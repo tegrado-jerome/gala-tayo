@@ -55,6 +55,14 @@ import {
   SearchResultsSkeleton,
 } from '../components/home/search/SearchComponents'
 
+type SearchApiPlace = BackendSearchPlace & { budget_min?: number | string | null }
+
+function toFiniteNumber(value: number | string | null | undefined) {
+  if (value == null || value === '') return null
+  const number = Number(value)
+  return Number.isFinite(number) ? number : null
+}
+
 function SearchHub({
   initialPromptBuilderOpen = false,
   initialSearchState,
@@ -434,7 +442,7 @@ function SearchHub({
         limit?: number
         totalCount?: number
         totalPages?: number
-        places?: BackendSearchPlace[]
+        places?: SearchApiPlace[]
         geminiResponse?: string
         result?: {
           page?: number
@@ -442,7 +450,7 @@ function SearchHub({
           totalCount?: number
           totalPages?: number
           geminiResponse?: string
-          places?: BackendSearchPlace[]
+          places?: SearchApiPlace[]
         }
       }
 
@@ -474,9 +482,10 @@ function SearchHub({
       const responseTotalPages =
         data.totalPages ?? data.result?.totalPages ?? Math.max(1, Math.ceil(responseTotalCount / SEARCH_RESULTS_PER_PAGE))
       setCurrentPage(responsePage)
-      const mappedPlaces = backendPlaces
-        .map(mapBackendPlaceToCard)
-        .filter((place): place is PlaceCardData => Boolean(place))
+      const mappedPlaces = backendPlaces.flatMap((backendPlace) => {
+        const card = mapBackendPlaceToCard(backendPlace)
+        return card ? [{ ...card, budget_min: toFiniteNumber(backendPlace.budget_min), ratingCount: toFiniteNumber(backendPlace.reviewCount) }] : []
+      })
 
       setSearchResults(mappedPlaces)
       setSearchTotalCount(responseTotalCount)
@@ -725,7 +734,6 @@ function SearchHub({
             totalPages={totalPages}
             heading={searchResultSummary.heading}
             subheading={[searchResultSummary.subheading || 'in GalaTayo', rainSafeOnly && hasRainData ? '· rain-safe on this page' : ''].filter(Boolean).join(' ')}
-            askAiQuestion={`Help me pick the best spot from these results: ${searchLabel}`}
             selectedPlaceId={selectedPlaceId}
             isPageLoading={isPageLoading}
             mobileView={mobileResultsView}
