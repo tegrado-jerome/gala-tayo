@@ -7,6 +7,7 @@ import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
 import { Button, cx } from '../ui'
 import GtMap, { type MapPoint } from '../ui/GtMap'
 import { uniqueList } from './helpers'
+import { resizedMediaUrl } from '../../data/r2Config'
 
 const IMAGE_SOURCE_NOTE = 'Images come from third-party sources.'
 
@@ -109,7 +110,7 @@ export function PhoneGallery({ photos, placeName, onBroken, onOpen, showAddPhoto
               aria-label={`Open photo ${index + 1} of ${photos.length}`}
             >
               <img
-                src={photo}
+                src={resizedMediaUrl(photo, 'hero')}
                 alt={index === 0 ? placeName : `${placeName}, photo ${index + 1} of ${photos.length}`}
                 loading={index === 0 ? 'eager' : 'lazy'}
                 fetchPriority={index === 0 ? 'high' : undefined}
@@ -182,7 +183,7 @@ export function DesktopGallery({
           aria-label={`Open photo ${index + 1} of ${photos.length}`}
         >
           <img
-            src={photo}
+            src={resizedMediaUrl(photo, 'hero')}
             alt={index === 0 ? placeName : ''}
             loading={index === 0 ? 'eager' : 'lazy'}
             fetchPriority={index === 0 ? 'high' : undefined}
@@ -288,7 +289,7 @@ export function AllPhotos({
             const isWide = index % 3 === 0 || (index === photos.length - 1 && index % 3 === 1)
             return (
               <figure key={photo} data-photo-index={index} className={cx(isWide && 'is-wide')}>
-                <img src={photo} alt={`${placeName}, photo ${index + 1} of ${photos.length}`} loading={index < 3 ? 'eager' : 'lazy'} onError={() => onBroken(photo)} />
+                <img src={resizedMediaUrl(photo, 'hero')} alt={`${placeName}, photo ${index + 1} of ${photos.length}`} loading={index < 3 ? 'eager' : 'lazy'} onError={() => onBroken(photo)} />
               </figure>
             )
           })}

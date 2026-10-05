@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Avatar } from '../ui'
 import { cleanString } from './helpers'
+import { resizedMediaUrl } from '../../data/r2Config'
 
 export function MemberAvatar({
   displayName,
@@ -21,7 +22,7 @@ export function MemberAvatar({
   if (shouldShowImage) {
     return (
       <img
-        src={cleanAvatarUrl}
+        src={resizedMediaUrl(cleanAvatarUrl, 'thumb')}
         alt={`${displayName} avatar`}
         className="g-av block"
         style={{ width: size, height: size }}

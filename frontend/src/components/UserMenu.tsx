@@ -25,6 +25,7 @@ import { useAvatarImageSrc } from '../utils/avatarImageCache'
 import type { CurrentUserResponse } from '../utils/profileApi'
 import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
 import { navigateToPath } from '../utils/navigation'
+import { resizedMediaUrl } from '../data/r2Config'
 
 type AccountUser = {
   email: string | null
@@ -67,7 +68,7 @@ function getDisplayName(user: AccountUser, profile: CurrentUserResponse['profile
 
 function AccountAvatar({ src, name, size, onError }: { src: string | null; name: string; size: number; onError: () => void }) {
   if (!src) return <Avatar name={name} size={size} />
-  return <img className="g-av" style={{ width: size, height: size }} src={src} alt="" referrerPolicy="no-referrer" decoding="async" onError={onError} />
+  return <img className="g-av" style={{ width: size, height: size }} src={resizedMediaUrl(src, 'thumb')} alt="" referrerPolicy="no-referrer" decoding="async" onError={onError} />
 }
 
 function UserMenu({ user = null, profile = null, compact = false }: UserMenuProps) {

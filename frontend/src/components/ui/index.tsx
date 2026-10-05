@@ -4,6 +4,7 @@ import { Heart } from '@phosphor-icons/react/dist/csr/Heart'
 import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
 import InternalLink from '../InternalLink'
 import { formatPlaceCardMeta } from '../../utils/placeLocation'
+import { resizedMediaUrl } from '../../data/r2Config'
 
 export function cx(...values: Array<string | false | null | undefined>) {
   return values.filter(Boolean).join(' ')
@@ -84,7 +85,7 @@ function getInitials(name?: string | null) {
 
 export function Avatar({ src, name, size = 28, className }: { src?: string | null; name?: string | null; size?: number; className?: string }) {
   const style: CSSProperties = { width: size, height: size }
-  if (src) return <img className={cx('g-av', className)} style={style} src={src} alt={name ?? ''} loading="lazy" />
+  if (src) return <img className={cx('g-av', className)} style={style} src={resizedMediaUrl(src, 'thumb')} alt={name ?? ''} loading="lazy" />
   const initials = getInitials(name)
   return (
     <span
@@ -188,7 +189,7 @@ export function PlaceCard({ href, title, imageUrl, icon: FallbackIcon = MapPin, 
         <span className="absolute inset-0 grid place-items-center" aria-hidden="true">
           <FallbackIcon size={28} color={tintInk[tint]} strokeWidth={1.75} opacity={0.45} />
         </span>
-        {imageUrl ? <img className="relative" src={imageUrl} alt="" loading="lazy" decoding="async" /> : null}
+        {imageUrl ? <img className="relative" src={resizedMediaUrl(imageUrl, 'card')} alt="" loading="lazy" decoding="async" /> : null}
         {flag ? <span className="g-pc-flag">{flag}</span> : null}
         {onToggleSave ? (
           <button
@@ -230,7 +231,7 @@ export function PlaceCard({ href, title, imageUrl, icon: FallbackIcon = MapPin, 
 export function Row({ href, imageUrl, children, action, className, style, onClick }: { href?: string; imageUrl?: string | null; children: ReactNode; action?: ReactNode; className?: string; style?: CSSProperties; onClick?: () => void }) {
   const body = (
     <>
-      {imageUrl !== undefined ? imageUrl ? <img src={imageUrl} alt="" loading="lazy" /> : <span className="g-row-img" /> : null}
+      {imageUrl !== undefined ? imageUrl ? <img src={resizedMediaUrl(imageUrl, 'thumb')} alt="" loading="lazy" /> : <span className="g-row-img" /> : null}
       <div className="g-row-body">{children}</div>
       {action}
     </>
@@ -349,7 +350,7 @@ export function MasonryCard({ href, title, imageUrl, media, price, meta, flag, i
           <span className="absolute inset-0 grid place-items-center" aria-hidden="true">
             <FallbackIcon size={28} color={tintInk[tint]} opacity={0.45} />
           </span>
-          {media ?? (imageUrl ? <img className="relative" src={imageUrl} alt="" loading={priority ? 'eager' : 'lazy'} decoding="async" /> : null)}
+          {media ?? (imageUrl ? <img className="relative" src={resizedMediaUrl(imageUrl, 'card')} alt="" loading={priority ? 'eager' : 'lazy'} decoding="async" /> : null)}
           {flag ? <span className="g-pc-flag">{flag}</span> : null}
         </div>
         <div className="g-pc-title">

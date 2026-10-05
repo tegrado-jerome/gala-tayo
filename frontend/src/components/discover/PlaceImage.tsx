@@ -1,6 +1,7 @@
 import { useState, type CSSProperties } from 'react'
 import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
 import { categoryIcons } from './CategoryTabs'
+import { resizedMediaUrl } from '../../data/r2Config'
 
 function categoryKey(category?: string | null) {
   return (category ?? '')
@@ -38,7 +39,7 @@ function PlaceImage({
 
   return (
     <img
-      src={src}
+      src={resizedMediaUrl(src, 'card')}
       alt=""
       loading={priority ? 'eager' : 'lazy'}
       decoding="async"

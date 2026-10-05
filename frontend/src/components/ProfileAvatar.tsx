@@ -1,5 +1,6 @@
 import { useAvatarImageSrc } from '../utils/avatarImageCache'
 import { getDisplayAvatar } from '../utils/profileApi'
+import { resizedMediaUrl } from '../data/r2Config'
 
 type ProfileAvatarProps = {
   profile: {
@@ -39,7 +40,7 @@ function ProfileAvatar({ profile, size = 'md', showOnlineIndicator = false, clas
     >
       <span className="flex h-full w-full items-center justify-center overflow-hidden rounded-full">
         {resolvedSrc ? (
-          <img src={resolvedSrc} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" loading="eager" decoding="async" />
+          <img src={resizedMediaUrl(resolvedSrc, 'thumb')} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" loading="eager" decoding="async" />
         ) : (
           initialsFor(profile.display_name, profile.username)
         )}
