@@ -1068,6 +1068,18 @@
                 "Iloilo"
               ],
               "featured": true
+            },
+            {
+              "slug": "carles",
+              "name": "Carles",
+              "type": "municipality",
+              "center": [
+                11.581,
+                123.355
+              ],
+              "aliases": [
+                "islas-de-gigantes"
+              ]
             }
           ]
         }
@@ -1210,6 +1222,43 @@
               "aliases": [
                 "Oslob, Cebu"
               ]
+            },
+            {
+              "slug": "santa-fe-cebu",
+              "name": "Santa Fe",
+              "type": "municipality",
+              "center": [
+                11.1554,
+                123.8023
+              ],
+              "aliases": [
+                "santa-fe",
+                "santa-fe-bantayan"
+              ]
+            },
+            {
+              "slug": "bantayan",
+              "name": "Bantayan",
+              "type": "municipality",
+              "center": [
+                11.1494,
+                123.7505
+              ],
+              "aliases": [
+                "bantayan-island"
+              ]
+            },
+            {
+              "slug": "daanbantayan",
+              "name": "Daanbantayan",
+              "type": "municipality",
+              "center": [
+                11.323,
+                124.137
+              ],
+              "aliases": [
+                "malapascua"
+              ]
             }
           ]
         },
@@ -1243,6 +1292,40 @@
               "aliases": [
                 "Tagbilaran City"
               ]
+            },
+            {
+              "slug": "danao-bohol",
+              "name": "Danao",
+              "type": "municipality",
+              "center": [
+                10.023,
+                124.22
+              ],
+              "aliases": [
+                "danao"
+              ]
+            },
+            {
+              "slug": "candijay",
+              "name": "Candijay",
+              "type": "municipality",
+              "center": [
+                9.8302,
+                124.4198
+              ],
+              "aliases": []
+            },
+            {
+              "slug": "anda-bohol",
+              "name": "Anda",
+              "type": "municipality",
+              "center": [
+                9.747,
+                124.578
+              ],
+              "aliases": [
+                "anda"
+              ]
             }
           ]
         }
@@ -1271,6 +1354,18 @@
               ],
               "aliases": [
                 "Tacloban City"
+              ]
+            },
+            {
+              "slug": "palompon",
+              "name": "Palompon",
+              "type": "municipality",
+              "center": [
+                11.1146,
+                124.2508
+              ],
+              "aliases": [
+                "kalanggaman"
               ]
             }
           ]
@@ -1437,6 +1532,61 @@
                 "cloud 9"
               ],
               "featured": true
+            }
+          ]
+        },
+        {
+          "slug": "surigao-del-sur",
+          "name": "Surigao del Sur",
+          "cities": [
+            {
+              "slug": "hinatuan",
+              "name": "Hinatuan",
+              "type": "municipality",
+              "center": [
+                8.4586,
+                126.3558
+              ],
+              "aliases": []
+            },
+            {
+              "slug": "bislig",
+              "name": "Bislig City",
+              "type": "city",
+              "center": [
+                8.1711,
+                126.2294
+              ],
+              "aliases": [
+                "bislig-city"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "soccsksargen",
+      "name": "Soccsksargen",
+      "officialName": "Region XII (Soccsksargen)",
+      "center": [
+        6.223,
+        124.7086
+      ],
+      "provinces": [
+        {
+          "slug": "south-cotabato",
+          "name": "South Cotabato",
+          "cities": [
+            {
+              "slug": "lake-sebu",
+              "name": "Lake Sebu",
+              "type": "municipality",
+              "center": [
+                6.223,
+                124.7086
+              ],
+              "aliases": []
             }
           ]
         }
