@@ -80,6 +80,7 @@ type FollowRow = {
 type FollowListProfileRow = {
   user_id: string;
   username: string | null;
+  display_name: string | null;
   avatar_url: string | null;
   provider_avatar_url: string | null;
   bio: string | null;
@@ -508,7 +509,7 @@ async function getProfilesByUserId(userIds: string[]) {
 
   const supabase = await getSupabaseAdminClient();
   const { data, error } = await (supabase.from("profiles") as any)
-    .select("user_id, username, avatar_url, provider_avatar_url, bio")
+    .select("user_id, username, display_name, avatar_url, provider_avatar_url, bio")
     .in("user_id", uniqueUserIds);
 
   if (error) throw error;

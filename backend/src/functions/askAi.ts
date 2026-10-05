@@ -25,6 +25,9 @@ import {
   registerAskAiRequest,
 } from "../utils/askAiCancellation";
 import { resolveAskAiActor, type AskAiActor } from "../utils/askAiActor";
+import { getActiveNormalizedPlaces, type NormalizedPlace } from "../domain/places";
+import { selectCandidates } from "../services/galaPlanDraftPlanner";
+import { resolveAreaSlug } from "../utils/seoPlaces";
 import {
   ASK_AI_SCOPE_REJECTION_MESSAGE,
   evaluateAskAiStrictPgGuard,
@@ -138,6 +141,32 @@ function trimHistoryContent(role: "user" | "assistant", content: string): string
       : MAX_USER_HISTORY_CONTENT_LENGTH;
 
   return content.length > maxLength ? `${content.slice(0, maxLength)}...` : content;
+}
+
+const MAX_GROUNDING_PLACES = 20;
+const MAX_SOURCES = 6;
+
+// Recommendations must come from GalaTayo's own places so every suggestion has a real page to open.
+function buildPlaceGrounding(places: NormalizedPlace[]) {
+  if (places.length === 0) return undefined;
+  const lines = places.map((place) => {
+    const budget = place.budget_min != null ? (place.budget_min === 0 ? "free" : `from PHP ${place.budget_min}`) : "budget unknown";
+    const goodFor = place.good_for.slice(0, 3).join(", ");
+    return `- ${place.name} | ${place.category ?? "Place"} | ${place.city ?? "Metro Manila"} | ${budget}${goodFor ? ` | good for ${goodFor}` : ""}`;
+  });
+  const header = "GALATAYO PLACES. When you suggest specific places, pick ONLY from this list and write each name exactly as shown. If none fit, say so honestly instead of inventing a place.";
+  return [header, ...lines].join("\n");
+}
+
+function findMentionedPlaces(answer: string, places: NormalizedPlace[]) {
+  const text = answer.toLowerCase();
+  return places
+    .filter((place) => place.name && place.slug && text.includes(place.name.toLowerCase()))
+    .slice(0, MAX_SOURCES)
+    .map((place) => ({
+      title: place.name,
+      url: `/places/${encodeURIComponent(resolveAreaSlug(place.city, place.area).slug)}/${encodeURIComponent(place.slug)}`,
+    }));
 }
 
 function getConversationHistory(value: unknown): GroqConversationMessage[] {
@@ -371,14 +400,17 @@ export async function postAskAiChatbot(
     });
     unregisterCancellation = cancellation.unregister;
 
+    const candidates = selectCandidates(await getActiveNormalizedPlaces(), message).slice(0, MAX_GROUNDING_PLACES);
     const answer = sanitizeChatbotAnswer(
       await generateFromGroq({
         message,
         conversationHistory,
         requestId,
         signal: cancellation.signal,
+        groundingContext: buildPlaceGrounding(candidates),
       })
     );
+    const sources = findMentionedPlaces(answer, candidates);
 
     context.log(
       `[AskAI Chatbot] provider=groq requestId=${requestId} MODEL RESPONSE RECEIVED answerLength=${answer.length}`
@@ -392,7 +424,7 @@ export async function postAskAiChatbot(
       jsonBody: {
         ok: true,
         answer,
-        sources: [],
+        sources,
         usage: {
           allowed: aiUsage.allowed,
           usageType: aiUsage.usageType,

@@ -156,6 +156,8 @@ type GroqRequestParams = {
   conversationHistory?: GroqConversationMessage[];
   requestId: string;
   signal?: AbortSignal;
+  /** Extra system context, e.g. the GalaTayo places the answer must recommend from. */
+  groundingContext?: string;
 };
 
 type GroqResponseFormat = {
@@ -1069,6 +1071,7 @@ export async function generateFromGroq({
   conversationHistory = [],
   requestId,
   signal,
+  groundingContext,
 }: GroqRequestParams): Promise<string> {
   const messages: GroqMessage[] = [
     {
@@ -1076,6 +1079,10 @@ export async function generateFromGroq({
       content: GROQ_CHATBOT_SYSTEM_PROMPT_TAGLISH,
     },
   ];
+
+  if (groundingContext) {
+    messages.push({ role: "system", content: groundingContext });
+  }
 
   messages.push(
     ...conversationHistory,
