@@ -1,12 +1,12 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import CompactPagination from '../components/CompactPagination'
+import CategoryTabs from '../components/discover/CategoryTabs'
 import PlaceCard, { withLiveDetail } from '../components/PlaceCard'
 import { ListingBreadcrumb, MasonrySkeleton, SearchPillLink } from '../components/home/search/SearchComponents'
 import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
-import { Button, Chip, Chips, Empty, Masonry, Page, SectionHead, cx } from '../components/ui'
+import { Button, Empty, Masonry, Page, SectionHead, cx } from '../components/ui'
 import InternalLink from '../components/InternalLink'
 import SeoHead from '../components/SeoHead'
-import { placeCategories } from '../data/placeCategories'
 import { getAreaLabelBySlug, normalizeAreaSlug } from '../data/metroManilaAreas'
 import { navigateToPath, scrollViewportToTopInstant } from '../utils/navigation'
 import { formatLabelFromSlug, getSiteOrigin } from '../utils/seo'
@@ -22,11 +22,6 @@ type AreaPlacesPageProps = {
   search?: string
   navigationSource?: 'push' | 'replace' | 'pop'
 }
-
-const FILTER_OPTIONS = [
-  { label: 'All', value: 'all' },
-  ...[...placeCategories].sort((left, right) => left.label.localeCompare(right.label)),
-] as const
 
 const PAGE_SIZE = 10
 
@@ -344,13 +339,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
 
       <SearchPillLink className="g-only-mob mt-4" />
 
-      <Chips className="mt-4" role="group" aria-label="Category">
-        {FILTER_OPTIONS.map((filter) => (
-          <Chip key={filter.value} on={filter.value === activeCategory} onClick={() => navigateToPath(getPagePath(1, filter.value))}>
-            {filter.label}
-          </Chip>
-        ))}
-      </Chips>
+      <CategoryTabs active={activeCategory} getHref={(value) => getPagePath(1, value)} />
 
       {errorMessage ? (
         <Empty className="mt-8" title={`Hindi ma-load ang places in ${areaName}`} description="Please try again in a bit." />
