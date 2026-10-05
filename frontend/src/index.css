@@ -4,7 +4,7 @@
 
 :root {
   color-scheme: light;
-  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: "Outfit", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --bg-main: #ffffff;
   --bg-soft: #f7f8f7;
   --panel: #ffffff;
@@ -83,7 +83,7 @@
   --onboarding-progress-track: rgba(148, 163, 184, 0.18);
   --onboarding-progress-complete: rgba(var(--accent-rgb), 0.34);
   --onboarding-progress-active: var(--primary);
-  --font-display: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Outfit", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --ink: #101828;
 }
 

@@ -62,7 +62,7 @@ function CategoryTabs({ active = 'all', getHref = (value) => (value === 'all' ? 
         const TabIcon = tab.icon
         const isActive = tab.value === active
         return (
-          <InternalLink key={tab.value} href={getHref(tab.value)} aria-current={isActive ? 'page' : undefined} className="g-cat no-underline">
+          <InternalLink key={tab.value} href={getHref(tab.value)} aria-current={isActive ? 'page' : undefined} className={`g-cat c-${tab.value} no-underline`}>
             <TabIcon weight={isActive ? 'fill' : 'duotone'} aria-hidden="true" />
             {tab.label}
           </InternalLink>

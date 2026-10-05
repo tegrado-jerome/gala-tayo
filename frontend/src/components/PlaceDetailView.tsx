@@ -2063,8 +2063,8 @@ function PlaceDetailView({
   const sectionTabs = [
     { id: 'overview', label: 'Overview' },
     { id: 'getting-there', label: 'Getting there' },
+    { id: 'faq', label: 'Good to know' },
     { id: 'reviews', label: 'Reviews' },
-    { id: 'faq', label: 'FAQ' },
   ]
   const pillClass = 'g-tag h-7 px-2.5 text-[13px]'
 
@@ -2426,13 +2426,6 @@ function PlaceDetailView({
             </Button>
           </section>
 
-          <section id="reviews" className="pd-sec pd-anchor" aria-labelledby="place-reviews">
-            <h2 id="place-reviews" className="pd-sec-title">
-              Reviews
-            </h2>
-            {communitySection}
-          </section>
-
           <section id="faq" className="pd-sec pd-anchor" aria-labelledby="place-faq">
             <h2 id="place-faq" className="pd-sec-title">
               Good to know
@@ -2448,25 +2441,33 @@ function PlaceDetailView({
                 </details>
               ))}
             </div>
-            {canonicalPlaceLink && areaLink && areaBreadcrumb ? (
-              <nav aria-label="Explore more" className="pd-links">
-                <InternalLink href={areaLink} className="pd-link">
-                  <MapPin weight="duotone" aria-hidden="true" />
-                  More in {areaBreadcrumb.areaName}
-                </InternalLink>
-                {categoryBreadcrumb ? (
-                  <InternalLink href={new URL(categoryBreadcrumb.childItem).pathname} className="pd-link">
-                    <Compass weight="duotone" aria-hidden="true" />
-                    More {categoryBreadcrumb.childName}
-                  </InternalLink>
-                ) : null}
-                <InternalLink href="/places" className="pd-link">
-                  <Compass weight="duotone" aria-hidden="true" />
-                  Browse all places
-                </InternalLink>
-              </nav>
-            ) : null}
           </section>
+
+          <section id="reviews" className="pd-sec pd-anchor" aria-labelledby="place-reviews">
+            <h2 id="place-reviews" className="pd-sec-title">
+              Reviews
+            </h2>
+            {communitySection}
+          </section>
+
+          {canonicalPlaceLink && areaLink && areaBreadcrumb ? (
+            <nav aria-label="Explore more" className="pd-links">
+              <InternalLink href={areaLink} className="pd-link">
+                <MapPin weight="duotone" aria-hidden="true" />
+                More in {areaBreadcrumb.areaName}
+              </InternalLink>
+              {categoryBreadcrumb ? (
+                <InternalLink href={new URL(categoryBreadcrumb.childItem).pathname} className="pd-link">
+                  <Compass weight="duotone" aria-hidden="true" />
+                  More {categoryBreadcrumb.childName}
+                </InternalLink>
+              ) : null}
+              <InternalLink href="/places" className="pd-link">
+                <Compass weight="duotone" aria-hidden="true" />
+                Browse all places
+              </InternalLink>
+            </nav>
+          ) : null}
 
           {hdPhotos.length > 0 ? <PhotoCredits photos={hdPhotos} /> : null}
 
