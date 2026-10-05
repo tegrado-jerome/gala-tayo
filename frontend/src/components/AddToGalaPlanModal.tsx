@@ -4,7 +4,7 @@ import { Check, Plus, Sparkles } from 'lucide-react'
 import { supabase } from '../supabase'
 import { addPlaceToGalaPlan, listMyGalaPlans, type GalaPlanSummary } from '../utils/galaPlansApi'
 import { navigateToPath } from '../utils/navigation'
-import { Button, Empty, Row, Sheet, Skeleton } from './ui'
+import { Button, Empty, Sheet, Skeleton } from './ui'
 
 type AddToGalaPlanModalProps = {
   isOpen: boolean
@@ -126,20 +126,17 @@ function AddToGalaPlanModal({ isOpen, placeId, placeName, onClose }: AddToGalaPl
 
       {plans.length > 0 ? (
         <>
-          <div className="g-list max-h-[46dvh] overflow-y-auto" role="listbox" aria-label="Choose plan">
+          <div className="g-group max-h-[46dvh] overflow-y-auto" role="listbox" aria-label="Choose plan">
             {plans.map((plan) => {
               const isSelected = plan.id === selectedPlanId
               return (
-                <div key={plan.id} role="option" aria-selected={isSelected}>
-                  <Row
-                    onClick={() => setSelectedPlanId(plan.id)}
-                    className={isSelected ? 'ring-1 ring-[var(--ink)]' : undefined}
-                    action={isSelected ? <Check className="g-ic" /> : null}
-                  >
-                    <p className="g-h3 truncate">{plan.title}</p>
-                    <p className="g-sm g-mut">{plan.place_count} {plan.place_count === 1 ? 'stop' : 'stops'}</p>
-                  </Row>
-                </div>
+                <button key={plan.id} type="button" role="option" aria-selected={isSelected} className="g-group-row py-2.5" onClick={() => setSelectedPlanId(plan.id)}>
+                  <span className="min-w-0 flex-1">
+                    <span className="g-h3 block truncate">{plan.title}</span>
+                    <span className="g-sm g-mut block font-normal">{plan.place_count} {plan.place_count === 1 ? 'stop' : 'stops'}</span>
+                  </span>
+                  {isSelected ? <Check className="g-ic shrink-0" aria-hidden="true" /> : null}
+                </button>
               )
             })}
           </div>

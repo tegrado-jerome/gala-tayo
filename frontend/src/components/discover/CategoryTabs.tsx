@@ -4,7 +4,7 @@ import InternalLink from '../InternalLink'
 import { cx } from '../ui'
 import { placeCategories } from '../../data/placeCategories'
 
-const categoryIcons: Record<string, LucideIcon> = {
+export const categoryIcons: Record<string, LucideIcon> = {
   activity: Bike,
   cafe: Coffee,
   cinema: Film,

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import PlaceImage from '../discover/PlaceImage'
 import InternalLink from '../InternalLink'
 import { Button, Empty, Skeleton, Tag, buttonClass } from '../ui'
 import { useAppUser } from '../../context/AppUserContext'
@@ -12,18 +13,18 @@ function PlanCard({ plan }: { plan: GalaPlanSummary }) {
   const date = getPlanDate(plan)
   const days = date ? daysUntil(date) : null
   const stops = plan.preview_places ?? []
-  const cover = stops.map((stop) => stop.image_url ?? getStaticPlaceImageUrlForSlug(stop.slug)).find(Boolean) ?? null
+  const covers = stops.flatMap((stop) => [stop.image_url, getStaticPlaceImageUrlForSlug(stop.slug)]).filter((url): url is string => Boolean(url))
   const note = parseGalaPlanDescription(plan.description).description
   const meta = [`${plan.place_count} ${plan.place_count === 1 ? 'stop' : 'stops'}`, plan.visibility === 'public' ? 'Shared' : 'Private']
 
   return (
     <InternalLink href={`/gala-plans/${plan.id}`} className="g-card grid overflow-hidden md:grid-cols-2">
-      <div className="aspect-[16/10] bg-[var(--fill)] md:aspect-auto md:min-h-[320px]">
-        {cover ? <img src={cover} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" /> : null}
+      <div className="aspect-[16/10] md:aspect-auto md:min-h-[320px]">
+        <PlaceImage candidates={covers} className="h-full w-full object-cover" />
       </div>
       <div className="flex min-w-0 flex-col gap-3 p-4 md:p-6">
         <div className="flex flex-wrap items-center gap-2">
-          {days !== null && days >= 0 ? <Tag tone="tara">{formatDaysUntil(days)}</Tag> : null}
+          {days !== null && days >= 0 ? <Tag>{formatDaysUntil(days)}</Tag> : null}
           <span className="g-sm g-mut">
             {date ? date.toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' }) : 'No date yet'}
           </span>

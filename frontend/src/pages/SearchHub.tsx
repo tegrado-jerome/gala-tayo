@@ -684,7 +684,6 @@ function SearchHub({
         mode="modal"
         isOpen={promptLogin}
         onClose={() => setPromptLogin(false)}
-        className="gala-auth-prompt--protected-feature gala-auth-prompt--protected-feature-accent"
       />
 
       <SearchPageBreadcrumb className="mb-4" />

@@ -1,0 +1,53 @@
+import { useState, type CSSProperties } from 'react'
+import { MapPin } from 'lucide-react'
+import { categoryIcons } from './CategoryTabs'
+
+function categoryKey(category?: string | null) {
+  return (category ?? '')
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .trim()
+}
+
+/** Tries each image URL in turn; when none loads, shows a sea-tinted tile with the category icon instead of a grey box. */
+function PlaceImage({
+  candidates,
+  category,
+  priority = false,
+  className,
+  style,
+}: {
+  candidates: string[]
+  category?: string | null
+  priority?: boolean
+  className?: string
+  style?: CSSProperties
+}) {
+  const [failed, setFailed] = useState<string[]>([])
+  const src = candidates.find((candidate) => !failed.includes(candidate))
+
+  if (!src) {
+    const Icon = categoryIcons[categoryKey(category)] ?? MapPin
+    return (
+      <span aria-hidden="true" className={className} style={{ display: 'grid', placeItems: 'center', background: 'var(--sea-soft)', color: 'var(--sea)', ...style }}>
+        <Icon size={32} strokeWidth={1.75} />
+      </span>
+    )
+  }
+
+  return (
+    <img
+      src={src}
+      alt=""
+      loading={priority ? 'eager' : 'lazy'}
+      decoding="async"
+      fetchPriority={priority ? 'high' : 'low'}
+      onError={() => setFailed((current) => [...current, src])}
+      className={className}
+      style={style}
+    />
+  )
+}
+
+export default PlaceImage

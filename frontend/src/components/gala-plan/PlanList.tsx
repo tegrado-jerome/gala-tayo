@@ -1,37 +1,35 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { ArrowLeft, ChevronRight, Plus, Sparkles } from 'lucide-react'
+import { ArrowLeft, ChevronRight, Heart, Plus, Sparkles } from 'lucide-react'
 import InternalLink from '../InternalLink'
-import PlanSummaryCard from './PlanSummaryCard'
-import { Button, Empty, Page, Row, SectionHead, Skeleton, Tabs } from '../ui'
+import PlanSummaryCard, { PlanRow } from './PlanSummaryCard'
+import { Button, Empty, Page, SectionHead, Skeleton } from '../ui'
 import { listFavoriteGalaPlans, listMyGalaPlans, type GalaPlanSummary } from '../../utils/galaPlansApi'
 import { daysUntil, getPlanDate } from '../../utils/galaPlanTrip'
-import { navigateToPath } from '../../utils/navigation'
 
 type LoadState = { status: 'loading' } | { status: 'ready'; plans: GalaPlanSummary[] } | { status: 'error'; message: string }
-type Bucket = 'upcoming' | 'anytime' | 'invited' | 'past'
-type Filter = Bucket | 'hearted'
+type Bucket = 'today' | 'upcoming' | 'anytime' | 'invited' | 'past'
 
-const bucketOrder: Bucket[] = ['upcoming', 'anytime', 'invited', 'past']
+const groupOrder: Array<{ key: Exclude<Bucket, 'today'>; title: string }> = [
+  { key: 'upcoming', title: 'Upcoming' },
+  { key: 'anytime', title: 'Anytime' },
+  { key: 'invited', title: 'Invited' },
+  { key: 'past', title: 'Past' },
+]
 
 const planIdeas = ['Food crawl in Poblacion', 'Rainy day in Makati, indoor lang', 'Sunset at Manila Bay', 'Museum day in Manila']
 
-const emptyCopy: Record<Bucket, { title: string; description: string }> = {
-  upcoming: { title: 'Wala pang upcoming gala', description: 'Set a date on a plan and it shows up here.' },
-  anytime: { title: 'No undated plans', description: 'Plans without a date land here.' },
-  invited: { title: 'No invites yet', description: 'Plans your barkada shares with you show up here.' },
-  past: { title: 'Wala pang past galas', description: 'Your finished plans show up here after the gala.' },
-}
-
 function bucketOf(plan: GalaPlanSummary): Bucket {
-  if (!plan.viewer_is_owner) return 'invited'
   const date = getPlanDate(plan)
-  if (!date) return 'anytime'
-  return daysUntil(date) >= 0 ? 'upcoming' : 'past'
+  const days = date ? daysUntil(date) : null
+  if (days === 0) return 'today'
+  if (!plan.viewer_is_owner) return 'invited'
+  if (days === null) return 'anytime'
+  return days > 0 ? 'upcoming' : 'past'
 }
 
 function groupPlans(plans: GalaPlanSummary[]) {
-  const buckets: Record<Bucket, GalaPlanSummary[]> = { upcoming: [], anytime: [], invited: [], past: [] }
+  const buckets: Record<Bucket, GalaPlanSummary[]> = { today: [], upcoming: [], anytime: [], invited: [], past: [] }
   for (const plan of plans) buckets[bucketOf(plan)].push(plan)
   const time = (plan: GalaPlanSummary) => getPlanDate(plan)?.getTime() ?? 0
   buckets.upcoming.sort((a, b) => time(a) - time(b))
@@ -39,41 +37,37 @@ function groupPlans(plans: GalaPlanSummary[]) {
   return buckets
 }
 
-function tabLabel(text: string, count: number): ReactNode {
+function PlanRows({ plans, showOwner }: { plans: GalaPlanSummary[]; showOwner?: boolean }) {
   return (
-    <>
-      {text}
-      {count > 0 ? <span className="g-fnt ml-1">{count}</span> : null}
-    </>
-  )
-}
-
-function PlanGrid({ plans, showOwner }: { plans: GalaPlanSummary[]; showOwner?: boolean }) {
-  return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 lg:gap-6">
-      {plans.map((plan) => <PlanSummaryCard key={plan.id} plan={plan} showOwner={showOwner} />)}
+    <div className="g-group">
+      {plans.map((plan) => <PlanRow key={plan.id} plan={plan} showOwner={showOwner} />)}
     </div>
   )
 }
 
 function ListSkeleton() {
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 lg:gap-6" aria-label="Loading plans">
+    <div className="g-group" aria-label="Loading plans">
       {[0, 1, 2].map((index) => (
-        <div key={index}>
-          <Skeleton className="aspect-[16/9]" />
-          <Skeleton className="mt-3 h-4 w-3/4" />
-          <Skeleton className="mt-2 h-3 w-1/2" />
+        <div key={index} className="flex items-center gap-3 px-4 py-3">
+          <Skeleton className="h-16 w-16 shrink-0" />
+          <div className="min-w-0 flex-1">
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="mt-2 h-3 w-1/2" />
+          </div>
         </div>
       ))}
     </div>
   )
 }
 
+function GroupHead({ id, children }: { id: string; children: ReactNode }) {
+  return <h2 id={id} className="g-h3 mb-2">{children}</h2>
+}
+
 function PlanList({ session, favorites = false }: { session?: Session | null; favorites?: boolean }) {
   const [state, setState] = useState<LoadState>({ status: 'loading' })
-  const [filter, setFilter] = useState<Bucket | null>(null)
-
+  
   useEffect(() => {
     let isCancelled = false
     setState({ status: 'loading' })
@@ -97,7 +91,7 @@ function PlanList({ session, favorites = false }: { session?: Session | null; fa
 
   if (favorites) {
     return (
-      <Page>
+      <Page narrow>
         <InternalLink href="/gala-plans" className="g-sm g-mut inline-flex min-h-11 items-center gap-1.5">
           <ArrowLeft className="h-4 w-4" />
           Plans
@@ -110,25 +104,17 @@ function PlanList({ session, favorites = false }: { session?: Session | null; fa
           {state.status === 'ready' && plans.length === 0 ? (
             <Empty title="No hearted plans yet" description="Heart public plans from friends to keep them here." action={<Button variant="soft" href="/explore">Find something to do</Button>} />
           ) : null}
-          {plans.length > 0 ? <PlanGrid plans={plans} showOwner /> : null}
+          {plans.length > 0 ? <PlanRows plans={plans} showOwner /> : null}
         </div>
       </Page>
     )
   }
 
   const buckets = groupPlans(plans)
-  const active = filter ?? bucketOrder.find((key) => buckets[key].length > 0) ?? 'upcoming'
-  const tabOptions: Array<{ value: Filter; label: ReactNode }> = [
-    { value: 'upcoming', label: tabLabel('Upcoming', buckets.upcoming.length) },
-    { value: 'anytime', label: tabLabel('Anytime', buckets.anytime.length) },
-    ...(buckets.invited.length > 0 ? [{ value: 'invited' as const, label: tabLabel('Invited', buckets.invited.length) }] : []),
-    { value: 'past', label: tabLabel('Past', buckets.past.length) },
-    { value: 'hearted', label: 'Hearted' },
-  ]
   const isEmpty = state.status === 'ready' && plans.length === 0
 
   return (
-    <Page>
+    <Page narrow>
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
           <p className="g-eyebrow">Your galas</p>
@@ -171,42 +157,46 @@ function PlanList({ session, favorites = false }: { session?: Session | null; fa
         {isEmpty ? (
           <section aria-labelledby="plan-ideas">
             <SectionHead title={<span id="plan-ideas">Start from an idea</span>} sub="Tap one and AI drafts it for you." />
-            <div className="g-list">
+            <div className="g-group">
               {planIdeas.map((idea) => (
-                <Row key={idea} href={`/plan-with-ai?q=${encodeURIComponent(idea)}`} action={<ChevronRight className="g-ic shrink-0" aria-hidden="true" style={{ color: 'var(--ink-3)' }} />}>
-                  <div className="flex min-h-7 items-center gap-3">
-                    <Sparkles className="g-ic shrink-0" aria-hidden="true" style={{ color: 'var(--ink-2)' }} />
-                    <span className="g-h3 truncate">{idea}</span>
-                  </div>
-                </Row>
+                <InternalLink key={idea} href={`/plan-with-ai?q=${encodeURIComponent(idea)}`} className="g-group-row">
+                  <Sparkles aria-hidden="true" />
+                  <span className="min-w-0 truncate">{idea}</span>
+                  <span className="g-group-end">
+                    <ChevronRight className="g-ic" aria-hidden="true" />
+                  </span>
+                </InternalLink>
               ))}
             </div>
           </section>
         ) : null}
 
         {state.status === 'ready' && plans.length > 0 ? (
-          <>
-            <Tabs<Filter>
-              label="Plan lists"
-              value={active}
-              options={tabOptions}
-              onChange={(value) => (value === 'hearted' ? navigateToPath('/gala-plans/favorites') : setFilter(value))}
-            />
-            {buckets[active].length > 0 ? (
-              <PlanGrid plans={buckets[active]} showOwner={active === 'invited'} />
-            ) : (
-              <Empty
-                title={emptyCopy[active].title}
-                description={emptyCopy[active].description}
-                action={
-                  <Button variant="soft" href="/plan-with-ai">
-                    <Sparkles />
-                    Plan one with AI
-                  </Button>
-                }
-              />
+          <div className="grid gap-7">
+            {buckets.today.length > 0 ? (
+              <section aria-labelledby="plans-today" className="grid gap-4">
+                <h2 id="plans-today" className="sr-only">Today</h2>
+                {buckets.today.map((plan) => <PlanSummaryCard key={plan.id} plan={plan} showOwner={!plan.viewer_is_owner} />)}
+              </section>
+            ) : null}
+            {groupOrder.map(({ key, title }) =>
+              buckets[key].length > 0 ? (
+                <section key={key} aria-labelledby={`plans-${key}`}>
+                  <GroupHead id={`plans-${key}`}>{title}</GroupHead>
+                  <PlanRows plans={buckets[key]} showOwner={key === 'invited'} />
+                </section>
+              ) : null,
             )}
-          </>
+            <div className="g-group">
+              <InternalLink href="/gala-plans/favorites" className="g-group-row">
+                <Heart aria-hidden="true" />
+                Hearted plans
+                <span className="g-group-end">
+                  <ChevronRight className="g-ic" aria-hidden="true" />
+                </span>
+              </InternalLink>
+            </div>
+          </div>
         ) : null}
       </div>
     </Page>

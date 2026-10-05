@@ -1,6 +1,8 @@
 import { useMemo, useState, type MouseEvent } from 'react'
+import { MapPin, type LucideIcon } from 'lucide-react'
 import { PlaceCard as KitPlaceCard, Tag, cx } from './ui'
 import { getSulitLevel } from './place-detail/SulitMeter'
+import { categoryIcons } from './discover/CategoryTabs'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { getStaticPlaceImageUrlForSlug } from '../data/placeIndexVisuals'
 import { prefetchPlaceDetail } from '../utils/placeDetailCache'
@@ -136,8 +138,30 @@ function getImageCandidates(place: PlaceCardData) {
 
 function getMeta(place: PlaceCardData) {
   const area = place.localArea || place.city || place.area
-  const fit = place.good_for?.find((item) => item.trim())
-  return [place.category, area, fit ? `good for ${fit.toLowerCase()}` : null].filter(Boolean).join(' · ')
+  return [toTitleCase(place.category), area].filter(Boolean).join(' · ')
+}
+
+function toTitleCase(value: string | null | undefined) {
+  return (value ?? '').trim().replace(/(^|[\s/-])(\p{Ll})/gu,(_, lead: string, letter: string) => lead + letter.toUpperCase())
+}
+
+const categoryIconAliases: Array<[RegExp, LucideIcon]> = [
+  [/caf|coffee/i, categoryIcons.cafe],
+  [/food|restaurant|eat|dining|bar(?!k)/i, categoryIcons.food],
+  [/night|club|pub/i, categoryIcons.nightlife],
+  [/park|garden|nature|beach|trail/i, categoryIcons.park],
+  [/museum|gallery|art/i, categoryIcons.museum],
+  [/church|heritage|histor/i, categoryIcons.heritage],
+  [/mall|shop|market/i, categoryIcons.mall],
+  [/cinema|movie|theat/i, categoryIcons.cinema],
+  [/hotel|resort|stay/i, categoryIcons.hotel],
+  [/activit|sport|adventure/i, categoryIcons.activity],
+]
+
+export function getCategoryIcon(category: string | null | undefined): LucideIcon {
+  const key = (category ?? '').trim().toLowerCase()
+  if (!key) return MapPin
+  return categoryIcons[key] ?? categoryIconAliases.find(([pattern]) => pattern.test(key))?.[1] ?? MapPin
 }
 
 type PlaceCardProps = {
@@ -159,7 +183,6 @@ function PlaceCard({ place, onGuestSave, selected = false, onOpen, onHover, clas
   const placeId = place.id.trim()
   const saved = [place.slug, placeId].some((key) => isPlaceSaved(key))
   const rainSafe = isRainSafe(place)
-  const isFree = place.budget_min != null && place.budget_min <= 0
 
   const toggleSave = async () => {
     if (isSaving) return
@@ -200,11 +223,12 @@ function PlaceCard({ place, onGuestSave, selected = false, onOpen, onHover, clas
         href={getPlaceHref(place)}
         title={place.name}
         imageUrl={imageUrl}
+        icon={getCategoryIcon(place.category)}
         meta={getMeta(place)}
         rating={typeof place.rating === 'number' && place.rating > 0 ? place.rating : null}
-        pricePerHead={isFree ? null : formatPricePerHead(place.budget_min)}
+        pricePerHead={formatPricePerHead(place.budget_min)}
         sulit={getSulitScore(place.budget_min)}
-        flag={isFree ? <Tag tone="ok">Free</Tag> : rainSafe ? <Tag tone="ok">Rain-safe</Tag> : null}
+        flag={rainSafe ? <Tag tone="solid">Rain-safe</Tag> : null}
         saved={saved}
         onToggleSave={() => void toggleSave()}
       />
@@ -213,7 +237,7 @@ function PlaceCard({ place, onGuestSave, selected = false, onOpen, onHover, clas
 }
 
 /** Index tile (city or category) with image fallbacks. */
-export function PlaceTile({ href, title, meta, imageUrls }: { href: string; title: string; meta: string; imageUrls: string[] }) {
+export function PlaceTile({ href, title, meta, imageUrls, icon }: { href: string; title: string; meta: string; imageUrls: string[]; icon?: LucideIcon }) {
   const [imageIndex, setImageIndex] = useState(0)
   const sourceKey = imageUrls.join('|')
   const [lastSourceKey, setLastSourceKey] = useState(sourceKey)
@@ -225,7 +249,7 @@ export function PlaceTile({ href, title, meta, imageUrls }: { href: string; titl
 
   return (
     <div className="min-w-0" onError={() => setImageIndex((current) => current + 1)}>
-      <KitPlaceCard href={href} title={title} meta={meta} imageUrl={imageUrls[imageIndex] ?? null} />
+      <KitPlaceCard href={href} title={title} meta={meta} icon={icon} imageUrl={imageUrls[imageIndex] ?? null} />
     </div>
   )
 }

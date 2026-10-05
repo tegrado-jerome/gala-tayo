@@ -5,7 +5,7 @@ import { ChevronRight } from 'lucide-react'
 import BirthdatePicker from '../components/BirthdatePicker'
 import MinimalBackNav from '../components/navigation/MinimalBackNav'
 import ProfileAvatar from '../components/ProfileAvatar'
-import { Button, Empty, Page, Panel, SectionHead, buttonClass } from '../components/ui'
+import { Button, Empty, Page, buttonClass } from '../components/ui'
 import { useAppUser } from '../context/AppUserContext'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { uploadProfileAvatar } from '../services/onboardingApi'
@@ -116,18 +116,31 @@ const optionalLabel = <span className="g-fnt font-normal">Optional</span>
 function SettingsRow({ label, value, onClick }: { label: string; value?: ReactNode; onClick?: () => void }) {
   const body = (
     <>
-      <span className="min-w-0 flex-1 text-[15px]">{label}</span>
-      {value ? <span className="g-mut min-w-0 truncate text-right text-sm">{value}</span> : null}
-      {onClick ? <ChevronRight className="h-4 w-4 shrink-0 text-[var(--ink-3)]" aria-hidden="true" /> : null}
+      <span className="min-w-0 flex-1">{label}</span>
+      {value || onClick ? (
+        <span className="g-group-end min-w-0">
+          {value ? <span className="truncate">{value}</span> : null}
+          {onClick ? <ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" /> : null}
+        </span>
+      ) : null}
     </>
   )
-  const className = 'flex min-h-[52px] w-full items-center gap-3 px-4 py-2.5 text-left'
   return onClick ? (
-    <button type="button" onClick={onClick} className={`${className} transition-colors hover:bg-[var(--fill)]`}>
+    <button type="button" onClick={onClick} className="g-group-row">
       {body}
     </button>
   ) : (
-    <div className={className}>{body}</div>
+    <div className="g-group-row cursor-default hover:bg-transparent">{body}</div>
+  )
+}
+
+function SettingsSection({ title, sub, children }: { title: string; sub?: string; children: ReactNode }) {
+  return (
+    <section className="mt-8">
+      <h2 className="g-h2">{title}</h2>
+      {sub ? <p className="g-sm g-mut mt-1">{sub}</p> : null}
+      <div className="mt-4">{children}</div>
+    </section>
   )
 }
 
@@ -199,7 +212,6 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
   const birthdateSaveQueueRef = useRef(Promise.resolve())
 
   const [firstName, setFirstName] = useState(initialCachedCurrentUser?.user.firstName ?? '')
-  const [middleName, setMiddleName] = useState(initialCachedCurrentUser?.user.middleName ?? '')
   const [lastName, setLastName] = useState(initialCachedCurrentUser?.user.lastName ?? '')
   const [birthdate, setBirthdate] = useState(initialCachedCurrentUser?.user.birthdate ?? '')
   const [displayName, setDisplayName] = useState(initialCachedCurrentUser?.profile?.displayName ?? currentProfile?.displayName ?? '')
@@ -256,7 +268,6 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
         setCurrentUser(accountData)
         setProfile(profileData.profile)
         setFirstName(accountData.user.firstName ?? '')
-        setMiddleName(accountData.user.middleName ?? '')
         setLastName(accountData.user.lastName ?? '')
         setBirthdate(accountData.user.birthdate ?? '')
         setDisplayName(accountData.profile?.displayName ?? '')
@@ -308,7 +319,6 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
         updateCurrentUser(
           {
             firstName: firstName.trim(),
-            middleName: middleName.trim() || null,
             lastName: lastName.trim(),
             birthdate: birthdate.trim(),
             displayName: displayName.trim(),
@@ -328,7 +338,6 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
       setCurrentUser(accountData)
       setProfile(profileData.profile)
       setFirstName(accountData.user.firstName ?? '')
-      setMiddleName(accountData.user.middleName ?? '')
       setLastName(accountData.user.lastName ?? '')
       setBirthdate(accountData.user.birthdate ?? '')
       setDisplayName(accountData.profile?.displayName ?? '')
@@ -475,7 +484,7 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
       {isLoading && !(currentUser && profile) ? <FormSkeleton rows={6} className="mt-6" /> : null}
       {currentUser && profile ? (
         <form onSubmit={handleSave}>
-          <Panel className="mt-6 flex items-center gap-4">
+          <div className="mt-6 flex items-center gap-4">
             <ProfileAvatar profile={avatarProfile} size="lg" />
             <div className="min-w-0 flex-1">
               <p className="g-h3 truncate">{displayName.trim() || 'Your account'}</p>
@@ -485,97 +494,96 @@ function AccountSettingsPage({ session }: AccountSettingsPageProps) {
                 <input type="file" accept={avatarUploadAccept} onChange={handleAvatarChange} className="sr-only" />
               </label>
             </div>
-          </Panel>
+          </div>
           <p className={`g-hint mt-2 ${avatarError ? 'is-error' : ''}`}>{avatarError || 'Optional. JPEG, PNG, or WebP up to 5MB.'}</p>
 
-          <SectionHead title="Profile" sub="Basic info people recognize across GalaTayo." />
-          <Panel className="grid gap-4 sm:grid-cols-2">
-            <div className="g-field">
-              <label htmlFor="settings-first-name">First name</label>
-              <input id="settings-first-name" value={firstName} onChange={(event) => setFirstName(event.target.value)} className="g-input" autoComplete="given-name" />
-            </div>
-            <div className="g-field">
-              <label htmlFor="settings-middle-name">Middle name {optionalLabel}</label>
-              <input id="settings-middle-name" value={middleName} onChange={(event) => setMiddleName(event.target.value)} className="g-input" autoComplete="additional-name" />
-            </div>
-            <div className="g-field">
-              <label htmlFor="settings-last-name">Last name</label>
-              <input id="settings-last-name" value={lastName} onChange={(event) => setLastName(event.target.value)} className="g-input" autoComplete="family-name" />
-            </div>
-            <div className="g-field">
-              <span className="g-label">Birthdate {optionalLabel}</span>
-              <BirthdatePicker
-                value={birthdate}
-                onChange={(nextBirthdate) => {
-                  setBirthdate(nextBirthdate)
-                  saveBirthdate(nextBirthdate)
-                }}
-                error={birthdateError}
-              />
-            </div>
-            <div className="g-field sm:col-span-2">
-              <label htmlFor="settings-display-name">Display name</label>
-              <input id="settings-display-name" value={displayName} onChange={(event) => setDisplayName(event.target.value)} maxLength={80} className="g-input" />
-            </div>
-          </Panel>
-
-          <SectionHead title="Public details" sub="What people see when they open your profile." />
-          <Panel className="grid gap-4">
-            <div className="g-field">
-              <label htmlFor="settings-username">Username</label>
-              <div className="relative">
-                <span className="g-mut pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2" aria-hidden="true">@</span>
-                <input
-                  id="settings-username"
-                  value={usernameInput}
-                  onChange={(event) => setUsernameInput(event.target.value.toLowerCase())}
-                  className="g-input"
-                  style={{ paddingLeft: 30 }}
-                  aria-invalid={Boolean(usernameError) || undefined}
-                  aria-describedby="settings-username-hint"
-                  autoCapitalize="none"
-                  autoComplete="username"
-                  spellCheck={false}
+          <SettingsSection title="Profile" sub="Basic info people recognize across GalaTayo.">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="g-field">
+                <label htmlFor="settings-first-name">First name</label>
+                <input id="settings-first-name" value={firstName} onChange={(event) => setFirstName(event.target.value)} className="g-input" autoComplete="given-name" />
+              </div>
+              <div className="g-field">
+                <label htmlFor="settings-last-name">Last name</label>
+                <input id="settings-last-name" value={lastName} onChange={(event) => setLastName(event.target.value)} className="g-input" autoComplete="family-name" />
+              </div>
+              <div className="g-field">
+                <span className="g-label">Birthdate {optionalLabel}</span>
+                <BirthdatePicker
+                  value={birthdate}
+                  onChange={(nextBirthdate) => {
+                    setBirthdate(nextBirthdate)
+                    saveBirthdate(nextBirthdate)
+                  }}
+                  error={birthdateError}
                 />
               </div>
-              <span id="settings-username-hint" className={`g-hint ${usernameError ? 'is-error' : ''}`}>
-                {usernameError || 'People can search for you with this username.'}
-              </span>
+              <div className="g-field sm:col-span-2">
+                <label htmlFor="settings-display-name">Display name</label>
+                <input id="settings-display-name" value={displayName} onChange={(event) => setDisplayName(event.target.value)} maxLength={80} className="g-input" />
+              </div>
             </div>
-            <div className="g-field">
-              <label htmlFor="settings-bio">Bio {optionalLabel}</label>
-              <textarea id="settings-bio" value={bioInput} onChange={(event) => setBioInput(event.target.value)} maxLength={280} className="g-input" />
-              <span className="g-hint text-right">{bioInput.length}/280</span>
-            </div>
-          </Panel>
+          </SettingsSection>
 
-          <SectionHead title="Privacy and security" />
-          <div className="g-card divide-y divide-[var(--line-2)] overflow-hidden">
-            <label className="flex min-h-[64px] cursor-pointer items-center gap-3 px-4 py-3">
-              <span className="min-w-0 flex-1">
-                <span className="block text-[15px]">Public profile</span>
-                <span className="g-sm g-mut block">
-                  {isPublic ? 'Anyone can view your profile and your follower/following lists.' : 'People need to request access, and follower/following names stay hidden.'}
+          <SettingsSection title="Public details" sub="What people see when they open your profile.">
+            <div className="grid gap-4">
+              <div className="g-field">
+                <label htmlFor="settings-username">Username</label>
+                <div className="relative">
+                  <span className="g-mut pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2" aria-hidden="true">@</span>
+                  <input
+                    id="settings-username"
+                    value={usernameInput}
+                    onChange={(event) => setUsernameInput(event.target.value.toLowerCase())}
+                    className="g-input"
+                    style={{ paddingLeft: 30 }}
+                    aria-invalid={Boolean(usernameError) || undefined}
+                    aria-describedby="settings-username-hint"
+                    autoCapitalize="none"
+                    autoComplete="username"
+                    spellCheck={false}
+                  />
+                </div>
+                <span id="settings-username-hint" className={`g-hint ${usernameError ? 'is-error' : ''}`}>
+                  {usernameError || 'People can search for you with this username.'}
                 </span>
-              </span>
-              <input type="checkbox" role="switch" checked={isPublic} onChange={(event) => setIsPublic(event.target.checked)} className="peer sr-only" />
-              <span
-                aria-hidden="true"
-                className="relative h-7 w-12 shrink-0 rounded-full bg-[var(--fill-2)] transition-colors peer-checked:bg-[var(--ink)] peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--ink)] after:absolute after:top-0.5 after:left-0.5 after:h-6 after:w-6 after:rounded-full after:bg-[var(--surface)] after:shadow-[var(--sh-1)] after:transition-transform peer-checked:after:translate-x-5"
-              />
-            </label>
-            <SettingsRow label="Password" value="Change" onClick={() => navigateToPath('/account-settings/change-password')} />
-            <SettingsRow label="Privacy center" onClick={() => navigateToPath('/privacy-center')} />
-            <SettingsRow label="View my profile" onClick={() => navigateToPath('/profile')} />
-            <SettingsRow label="Joined" value={formatDate(profile.created_at)} />
-          </div>
+              </div>
+              <div className="g-field">
+                <label htmlFor="settings-bio">Bio {optionalLabel}</label>
+                <textarea id="settings-bio" value={bioInput} onChange={(event) => setBioInput(event.target.value)} maxLength={280} className="g-input" />
+                <span className="g-hint text-right">{bioInput.length}/280</span>
+              </div>
+            </div>
+          </SettingsSection>
+
+          <SettingsSection title="Privacy and security">
+            <div className="g-group">
+              <label className="g-group-row py-3">
+                <span className="min-w-0 flex-1">
+                  <span className="block">Public profile</span>
+                  <span className="g-sm g-mut block">
+                    {isPublic ? 'Anyone can view your profile and your follower/following lists.' : 'People need to request access, and follower/following names stay hidden.'}
+                  </span>
+                </span>
+                <input type="checkbox" role="switch" checked={isPublic} onChange={(event) => setIsPublic(event.target.checked)} className="peer sr-only" />
+                <span
+                  aria-hidden="true"
+                  className="relative h-7 w-12 shrink-0 rounded-full bg-[var(--fill-2)] transition-colors peer-checked:bg-[var(--ink)] peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-[var(--ink)] after:absolute after:top-0.5 after:left-0.5 after:h-6 after:w-6 after:rounded-full after:bg-[var(--surface)] after:shadow-[var(--sh-1)] after:transition-transform peer-checked:after:translate-x-5"
+                />
+              </label>
+              <SettingsRow label="Password" value="Change" onClick={() => navigateToPath('/account-settings/change-password')} />
+              <SettingsRow label="Privacy center" onClick={() => navigateToPath('/privacy-center')} />
+              <SettingsRow label="View my profile" onClick={() => navigateToPath('/profile')} />
+              <SettingsRow label="Joined" value={formatDate(profile.created_at)} />
+            </div>
+          </SettingsSection>
 
           {errorMessage ? (
             <p className="g-hint is-error mt-6" role="alert">
               {errorMessage}
             </p>
           ) : null}
-          <div className="mt-6 flex justify-end">
+          <div className="mt-8 flex justify-end">
             <Button type="submit" variant="tara" className="w-full sm:w-auto" disabled={Boolean(usernameError || personalInfoError) || isSaving}>
               {isSaving ? 'Saving…' : 'Save changes'}
             </Button>

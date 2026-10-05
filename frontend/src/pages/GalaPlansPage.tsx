@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { ArrowLeft, ArrowRight, CalendarDays, Check, Globe, Lock, Plus, Search, Sparkles, Trash2, X } from 'lucide-react'
+import { ArrowLeft, Plus, Search, Sparkles, Trash2, X } from 'lucide-react'
 import PlanDetail from '../components/gala-plan/PlanDetail'
 import PlanList from '../components/gala-plan/PlanList'
 import InternalLink from '../components/InternalLink'
-import { Button, Empty, KeyValue, Page, Panel, Row, SectionHead, Skeleton, cx } from '../components/ui'
+import { Button, Empty, Page, Panel, Row, SectionHead, Skeleton } from '../components/ui'
 import {
   composeGalaPlanDescription,
   createGalaPlan,
@@ -45,12 +45,7 @@ type GalaPlansPageProps = {
 const PLACE_SEARCH_DEFAULT_LIMIT = 10
 const PLACE_SEARCH_DEBOUNCE_MS = 325
 const TIME_PERIODS = ['AM', 'PM'] as const
-const STEPS = [
-  { label: 'Name', title: "Ano'ng plano?" },
-  { label: 'When', title: 'Kailan tayo?' },
-  { label: 'Where', title: 'Saan tayo?' },
-  { label: 'Share', title: 'Sino ang makakakita?' },
-] as const
+const TABBAR_OFF_CLASS = 'g-tabbar-off'
 
 type TimePeriod = (typeof TIME_PERIODS)[number]
 
@@ -142,9 +137,11 @@ function TimeField({ value, onChange }: { value: { time: string; period: TimePer
 function ItineraryBuilder({
   items,
   onItemsChange,
+  action,
 }: {
   items: DraftItem[]
   onItemsChange: (items: DraftItem[]) => void
+  action?: ReactNode
 }) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchPlaceResult[]>([])
@@ -305,7 +302,12 @@ function ItineraryBuilder({
   }
 
   return (
-    <div>
+    <section aria-labelledby="plan-stops">
+      <SectionHead
+        title={<span id="plan-stops">Stops</span>}
+        sub={items.length > 0 ? `${items.length} ${items.length === 1 ? 'place' : 'places'} so far` : undefined}
+        action={action}
+      />
       <div className="g-search">
         <Search className="g-ic" />
         <input
@@ -402,11 +404,10 @@ function ItineraryBuilder({
 
       {errorMessage ? <p role="alert" className="g-hint is-error mt-3">{errorMessage}</p> : null}
 
-      <SectionHead title="Stops" sub={items.length > 0 ? `${items.length} ${items.length === 1 ? 'place' : 'places'} so far` : undefined} />
       {items.length === 0 ? (
-        <Empty title="Wala pang stops" description="Search a place above, choose it, then add it here." />
+        <Empty className="mt-4" title="Wala pang stops" description="Search a place above, choose it, then add it here." />
       ) : (
-        <div className="grid gap-6">
+        <div className="mt-5 grid gap-6">
           {groupedItems.map(([dayNumber, dayItems]) => (
             <section key={dayNumber}>
               <p className="g-eyebrow">Day {dayNumber}</p>
@@ -440,7 +441,7 @@ function ItineraryBuilder({
           ))}
         </div>
       )}
-    </div>
+    </section>
   )
 }
 
@@ -448,15 +449,15 @@ function toPayload(items: DraftItem[]): GalaPlanItemPayload[] {
   return [...items].sort((first, second) => (first.day_number ?? 1) - (second.day_number ?? 1) || (first.sort_order ?? 0) - (second.sort_order ?? 0)).map((item, index) => ({ place_id: item.place_id, day_number: item.day_number ?? 1, sort_order: item.sort_order ?? index + 1, time_label: item.time_label ?? null, notes: item.notes ?? null, estimated_minutes: item.estimated_minutes ?? null }))
 }
 
-function OptionCard({ on, title, description, icon, onClick }: { on: boolean; title: string; description: string; icon: ReactNode; onClick: () => void }) {
+function Segmented<T extends string>({ label, value, options, onChange }: { label: string; value: T; options: Array<{ value: T; label: string }>; onChange: (value: T) => void }) {
   return (
-    <button type="button" aria-pressed={on} onClick={onClick} className="g-panel w-full text-left" style={on ? { borderColor: 'var(--ink)' } : undefined}>
-      <span className="flex items-center justify-between gap-3">
-        <span className="g-h3">{title}</span>
-        {on ? <Check className="g-ic" /> : icon}
-      </span>
-      <span className="g-sm g-mut mt-1.5 block">{description}</span>
-    </button>
+    <div className="g-rsvp" role="group" aria-label={label} style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>
+      {options.map((option) => (
+        <button key={option.value} type="button" aria-pressed={value === option.value} onClick={() => onChange(option.value)}>
+          {option.label}
+        </button>
+      ))}
+    </div>
   )
 }
 
@@ -470,7 +471,6 @@ function readStartingStop(): DraftItem[] {
 
 function PlanForm({ session, planId }: { session?: Session | null; planId?: string | null }) {
   const isEdit = Boolean(planId)
-  const [step, setStep] = useState(0)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [dateMode, setDateMode] = useState<GalaPlanDateMode>('anytime')
@@ -480,7 +480,11 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
   const [isLoading, setIsLoading] = useState(isEdit)
   const [isSaving, setIsSaving] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
-  const lastStep = STEPS.length - 1
+
+  useEffect(() => {
+    document.body.classList.add(TABBAR_OFF_CLASS)
+    return () => document.body.classList.remove(TABBAR_OFF_CLASS)
+  }, [])
 
   useEffect(() => {
     if (!planId) return
@@ -506,19 +510,8 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [planId, session?.user?.id])
 
-  const goTo = (next: number) => {
-    if (next > 0 && !title.trim()) {
-      setErrorMessage('Title is required.')
-      setStep(0)
-      return
-    }
-    setErrorMessage('')
-    setStep(Math.max(0, Math.min(lastStep, next)))
-  }
-
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
-    if (!isEdit && step < lastStep) { goTo(step + 1); return }
     if (!title.trim()) { setErrorMessage('Title is required.'); return }
     try {
       setIsSaving(true)
@@ -538,131 +531,111 @@ function PlanForm({ session, planId }: { session?: Session | null; planId?: stri
     }
   }
 
+  const titleMissing = errorMessage === 'Title is required.'
   const aiHref = `/plan-with-ai${title.trim() ? `?q=${encodeURIComponent(title.trim())}` : ''}`
   const dateLabel = dateMode === 'date' && date
-    ? new Date(`${date}T00:00:00`).toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
+    ? new Date(`${date}T00:00:00`).toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' })
     : 'Anytime'
-  const submitButton = (
-    <Button type="submit" variant="tara" loading={isSaving} disabled={isSaving || !title.trim()}>
-      {isEdit ? 'Save changes' : 'Create plan'}
-    </Button>
-  )
+  const summary = [dateLabel, `${items.length} ${items.length === 1 ? 'stop' : 'stops'}`, visibility === 'public' ? 'Link on' : 'Private'].join(' · ')
 
   return (
     <Page narrow>
+      <style>{`body.${TABBAR_OFF_CLASS} .g-tabbar { display: none; }`}</style>
       <InternalLink href={planId ? `/gala-plans/${encodeURIComponent(planId)}` : '/gala-plans'} className="g-sm g-mut inline-flex min-h-11 items-center gap-1.5">
         <ArrowLeft className="h-4 w-4" />
         Cancel
       </InternalLink>
-      <p className="g-eyebrow mt-2">{isEdit ? 'Edit plan' : 'New plan'} · Step {step + 1} of {STEPS.length}</p>
-      <h1 className="g-h1 mt-2">{STEPS[step].title}</h1>
-
-      <nav className="mt-5 grid grid-cols-4 gap-1.5" aria-label="Steps">
-        {STEPS.map((entry, index) => (
-          <button
-            key={entry.label}
-            type="button"
-            onClick={() => goTo(index)}
-            aria-current={index === step ? 'step' : undefined}
-            className="flex min-h-11 flex-col justify-end gap-1.5 text-left"
-          >
-            <span className={cx('h-1 rounded-full', index <= step ? 'bg-[var(--ink)]' : 'bg-[var(--fill-2)]')} />
-            <span className={cx('g-xs', index === step ? 'font-semibold text-[var(--ink)]' : 'g-mut')}>{entry.label}</span>
-          </button>
-        ))}
-      </nav>
+      <h1 className="sr-only">{isEdit ? 'Edit plan' : 'New plan'}</h1>
 
       {isLoading ? (
-        <div className="mt-8 grid gap-3" aria-label="Loading plan">
-          <Skeleton className="h-4 w-24" />
+        <div className="mt-6 grid gap-3" aria-label="Loading plan">
+          <Skeleton className="h-10 w-3/4" />
           <Skeleton className="h-12" />
           <Skeleton className="h-24" />
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="mt-8">
-          {step === 0 ? (
-            <div className="grid gap-5">
-              <div className="g-field">
-                <label htmlFor="plan-title">Plan name</label>
-                <input id="plan-title" className="g-input" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Cafe crawl in BGC" aria-invalid={errorMessage === 'Title is required.' || undefined} autoFocus={!isEdit} />
-                <span className="g-hint">You can change this anytime.</span>
-              </div>
-              <div className="g-field">
-                <label htmlFor="plan-description">What's the vibe? <span className="g-fnt font-normal">optional</span></label>
-                <textarea id="plan-description" className="g-input" value={description} onChange={(event) => setDescription(event.target.value)} rows={4} placeholder="What kind of day is this plan for?" />
-              </div>
-            </div>
-          ) : null}
+        <form id="plan-form" onSubmit={handleSubmit} className="mt-4">
+          <label htmlFor="plan-title" className="sr-only">Plan name</label>
+          <input
+            id="plan-title"
+            className={`g-h1 w-full border-0 border-b bg-transparent pb-3 text-[var(--ink)] outline-none focus:!shadow-none focus:!outline-none ${titleMissing ? 'border-[var(--bad)]' : 'border-[var(--line)] focus:border-[var(--ink)]'}`}
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            placeholder="Name your gala"
+            aria-invalid={titleMissing || undefined}
+            autoFocus={!isEdit}
+          />
+          <label htmlFor="plan-description" className="sr-only">What's the vibe?</label>
+          <textarea
+            id="plan-description"
+            className="g-input mt-4"
+            style={{ minHeight: 72 }}
+            value={description}
+            onChange={(event) => setDescription(event.target.value)}
+            rows={2}
+            placeholder="What's the vibe? (optional)"
+          />
 
-          {step === 1 ? (
-            <div className="grid gap-3">
-              <div className="grid gap-3 md:grid-cols-2">
-                <OptionCard on={dateMode === 'date'} title="Fixed date" description="You set the day. Good when the barkada already agreed." icon={<CalendarDays className="g-ic g-fnt" />} onClick={() => setDateMode('date')} />
-                <OptionCard on={dateMode !== 'date'} title="Anytime" description="No date yet. Set it later once everyone's free." icon={<CalendarDays className="g-ic g-fnt" />} onClick={() => setDateMode('anytime')} />
+          <section aria-labelledby="plan-when">
+            <SectionHead title={<span id="plan-when">When</span>} />
+            <Segmented<GalaPlanDateMode>
+              label="When"
+              value={dateMode === 'date' ? 'date' : 'anytime'}
+              options={[
+                { value: 'anytime', label: 'Anytime' },
+                { value: 'date', label: 'Pick a date' },
+              ]}
+              onChange={setDateMode}
+            />
+            {dateMode === 'date' ? (
+              <div className="g-field mt-3">
+                <label htmlFor="plan-date" className="sr-only">Date</label>
+                <input id="plan-date" type="date" className="g-input" value={date} onChange={(event) => setDate(event.target.value)} />
               </div>
-              {dateMode === 'date' ? (
-                <div className="g-field mt-3">
-                  <label htmlFor="plan-date">Date</label>
-                  <input id="plan-date" type="date" className="g-input" value={date} onChange={(event) => setDate(event.target.value)} />
-                </div>
-              ) : null}
-            </div>
-          ) : null}
+            ) : (
+              <p className="g-hint mt-2">Set it later once everyone's free.</p>
+            )}
+          </section>
 
-          {step === 2 ? (
-            <>
-              <div className="g-draft mb-5 flex flex-wrap items-center justify-between gap-3">
-                <p className="g-sm min-w-0 flex-1">Ayaw mag-isip? Describe the day and AI builds the stops for you.</p>
-                <Button variant="soft" size="sm" href={aiHref}>
-                  <Sparkles />
-                  Fill my day with AI
-                </Button>
-              </div>
-              <ItineraryBuilder items={items} onItemsChange={setItems} />
-            </>
-          ) : null}
-
-          {step === 3 ? (
-            <div className="grid gap-3">
-              <div className="grid gap-3 md:grid-cols-2">
-                <OptionCard on={visibility === 'private'} title="Private" description="Only you can open it until you share the link." icon={<Lock className="g-ic g-fnt" />} onClick={() => setVisibility('private')} />
-                <OptionCard on={visibility === 'public'} title="Shared by link" description="Anyone with the link can view, RSVP and vote." icon={<Globe className="g-ic g-fnt" />} onClick={() => setVisibility('public')} />
-              </div>
-              <SectionHead title="Review" />
-              <Panel>
-                <KeyValue
-                  items={[
-                    { label: 'Plan', value: title || '—' },
-                    { label: 'When', value: dateLabel },
-                    { label: 'Stops', value: items.length },
-                    { label: 'Visibility', value: visibility === 'public' ? 'Shared by link' : 'Private' },
-                  ]}
-                />
-              </Panel>
-            </div>
-          ) : null}
-
-          {errorMessage ? <p role="alert" className="g-hint is-error mt-4">{errorMessage}</p> : null}
-
-          <div className={cx('mt-10 flex items-center gap-2', step > 0 ? 'justify-between' : 'justify-end')}>
-            {step > 0 ? (
-              <Button variant="soft" onClick={() => goTo(step - 1)}>
-                <ArrowLeft />
-                Back
+          <ItineraryBuilder
+            items={items}
+            onItemsChange={setItems}
+            action={
+              <Button variant="soft" size="sm" href={aiHref}>
+                <Sparkles />
+                Fill with AI
               </Button>
-            ) : null}
-            <div className="flex gap-2">
-              {step < lastStep ? (
-                <Button variant={isEdit ? 'line' : 'tara'} onClick={() => goTo(step + 1)}>
-                  Next: {STEPS[step + 1].label}
-                  <ArrowRight />
-                </Button>
-              ) : null}
-              {isEdit || step === lastStep ? submitButton : null}
-            </div>
-          </div>
+            }
+          />
+
+          <section aria-labelledby="plan-visibility">
+            <SectionHead title={<span id="plan-visibility">Who can open it</span>} />
+            <Segmented<GalaPlanVisibility>
+              label="Who can open it"
+              value={visibility === 'public' ? 'public' : 'private'}
+              options={[
+                { value: 'private', label: 'Private' },
+                { value: 'public', label: 'Anyone with the link' },
+              ]}
+              onChange={setVisibility}
+            />
+            <p className="g-hint mt-2">
+              {visibility === 'public' ? 'Anyone with the link can view, RSVP and vote.' : 'Only you can open it until you share the link.'}
+            </p>
+          </section>
+
+          {errorMessage ? <p role="alert" className="g-hint is-error mt-6">{errorMessage}</p> : null}
         </form>
       )}
+
+      <div className="fixed inset-x-0 bottom-0 z-[4000] border-t" style={{ background: 'var(--surface)', borderColor: 'var(--line-2)' }}>
+        <div className="mx-auto flex max-w-[760px] items-center gap-3 px-4 pt-3 lg:px-8" style={{ paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))' }}>
+          <p className="g-sm g-mut min-w-0 flex-1 truncate">{isLoading ? null : summary}</p>
+          <Button type="submit" form="plan-form" variant="tara" size="lg" loading={isSaving} disabled={isLoading || isSaving || !title.trim()}>
+            {isEdit ? 'Save' : 'Create plan'}
+          </Button>
+        </div>
+      </div>
     </Page>
   )
 }

@@ -1,15 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
-import { CloudRain, CloudSun } from 'lucide-react'
-import CategoryTabs from '../components/discover/CategoryTabs'
+import { CloudRain } from 'lucide-react'
 import PhotoCard, { getPlaceHref, getPlaceImageCandidates, type PhotoCardPlace } from '../components/discover/PhotoCard'
+import PlaceImage from '../components/discover/PlaceImage'
 import Rail from '../components/discover/Rail'
 import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
 import NextGalaCard from '../components/home/NextGalaCard'
 import PlanWithAiCard from '../components/home/PlanWithAiCard'
-import RainyDayBanner from '../components/home/RainyDayBanner'
 import InternalLink from '../components/InternalLink'
 import SeoHead from '../components/SeoHead'
-import { Button, Empty, Page, PlaceCardSkeleton, Row, SectionHead, Skeleton, Stamp, Tabs, Tag } from '../components/ui'
+import { Button, Empty, Page, PlaceCardSkeleton, SectionHead, Skeleton, Tabs } from '../components/ui'
 import type { NavigationSource } from '../app/useAppLocationState'
 import { useAppUser } from '../context/AppUserContext'
 import {
@@ -19,12 +18,10 @@ import {
   homeRecommendedTopPickPlaces,
   type HomeRecommendationPlace,
 } from '../data/homeRecommendations'
-import { metroManilaAreas } from '../data/metroManilaAreas'
 import { getStaticPlaceImageUrlForSlug } from '../data/placeIndexVisuals'
 import { R2_PUBLIC_BASE_URL } from '../data/r2Config'
 import { useListingRail } from '../hooks/useListingRail'
 import { useManilaWeather, type ManilaWeather } from '../hooks/useManilaWeather'
-import { getMyPassport, type Passport } from '../utils/passportApi'
 import { fetchHomePlaceDetailsBatch } from '../utils/placeDetailCache'
 import { resolveAreaMeta } from '../utils/routes'
 
@@ -38,37 +35,24 @@ const topPickTabs: Array<{ id: TopPicksTab; label: string; places: HomeRecommend
 
 const topPickSlugs = Array.from(new Set(topPickTabs.flatMap((tab) => tab.places.map((place) => place.slug))))
 
-const listingRails = [
-  { key: 'museum', title: 'Museums', subtitle: 'Free and paid galleries across Metro Manila', category: 'museum', href: '/places/categories/museum' },
-  { key: 'cafe', title: 'Cafés', subtitle: 'Popular cafés across the metro', category: 'cafe', href: '/places/categories/cafe' },
-]
-
-type ListingRailConfig = (typeof listingRails)[number]
-
+// Shown in place of "For you" only while it is raining.
 const rainSafeRail = {
-  ...listingRails[0],
-  title: 'Rain-safe picks near you',
+  title: 'Rain-safe picks',
   subtitle: 'Indoor museums and galleries, para hindi mabasa',
+  category: 'museum',
+  href: '/places/categories/museum',
 }
 
 function WeatherPill({ weather }: { weather: ManilaWeather }) {
-  if (weather.isRaining) {
-    return (
-      <span className="g-wx">
-        <CloudRain />
-        {weather.label} · indoor picks first
-      </span>
-    )
-  }
   return (
-    <span className="g-wx" style={{ background: 'var(--fill)', color: 'var(--ink-2)' }}>
-      <CloudSun />
-      {weather.temperature}°C, {weather.label.toLowerCase()} · good gala weather
+    <span className="g-wx">
+      <CloudRain />
+      {weather.label} · indoor picks first
     </span>
   )
 }
 
-function ListingRail({ rail, badge, onGuestFavorite }: { rail: ListingRailConfig; badge?: string; onGuestFavorite: () => void }) {
+function ListingRail({ rail, badge, onGuestFavorite }: { rail: typeof rainSafeRail; badge?: string; onGuestFavorite: () => void }) {
   const places = useListingRail({ category: rail.category })
   if (places && places.length === 0) return null
 
@@ -96,7 +80,7 @@ function WeekendRadar() {
         }
       />
       {!places ? (
-        <div className="g-list">
+        <div className="grid gap-2.5 md:grid-cols-2 md:gap-x-6">
           {Array.from({ length: 4 }, (_, index) => (
             <Skeleton key={index} className="h-[86px] w-full" />
           ))}
@@ -104,102 +88,24 @@ function WeekendRadar() {
       ) : places.length === 0 ? (
         <Empty title="Wala pang laman ang radar" description="Browse Makati spots while we load more." action={<Button variant="line" size="sm" href="/places/makati">Explore Makati</Button>} />
       ) : (
-        <ol className="g-list">
+        <ol className="grid gap-2.5 md:grid-cols-2 md:gap-x-6">
           {places.slice(0, 5).map((place, index) => (
             <li key={place.id}>
-              <Row href={getPlaceHref(place)} imageUrl={getPlaceImageCandidates(place)[0] ?? null} action={<span className="g-num">{index + 1}</span>}>
-                <div className="g-h3 whitespace-nowrap">{place.name}</div>
-                <div className="g-sm g-mut whitespace-nowrap">{[place.category, place.area ?? place.city].filter(Boolean).join(' · ')}</div>
-                {place.budgetMin != null ? (
-                  <div className="g-sulit">
-                    {place.budgetMin <= 0 ? <Tag tone="ok">Free</Tag> : <>from <b>₱{Math.round(place.budgetMin).toLocaleString('en-PH')}</b></>}
-                  </div>
-                ) : null}
-              </Row>
+              <InternalLink href={getPlaceHref(place)} className="g-row">
+                <PlaceImage candidates={getPlaceImageCandidates(place)} category={place.category} className="g-row-img" />
+                <div className="g-row-body">
+                  <div className="g-h3 whitespace-nowrap">{place.name}</div>
+                  <div className="g-sm g-mut whitespace-nowrap">{[place.category, place.area ?? place.city].filter(Boolean).join(' · ')}</div>
+                  {place.budgetMin != null ? (
+                    <div className="g-sm whitespace-nowrap">{place.budgetMin <= 0 ? 'Free entry' : `₱${Math.round(place.budgetMin).toLocaleString('en-PH')}/head`}</div>
+                  ) : null}
+                </div>
+                <span className="g-num">{index + 1}</span>
+              </InternalLink>
             </li>
           ))}
         </ol>
       )}
-    </section>
-  )
-}
-
-function PassportTeaser() {
-  const { session, isSessionLoading } = useAppUser()
-  const [passport, setPassport] = useState<Passport | 'error' | null>(null)
-
-  useEffect(() => {
-    if (isSessionLoading || !session) return
-    let isCancelled = false
-    getMyPassport(session)
-      .then((result) => {
-        if (!isCancelled) setPassport(result)
-      })
-      .catch(() => {
-        if (!isCancelled) setPassport('error')
-      })
-    return () => {
-      isCancelled = true
-    }
-  }, [isSessionLoading, session])
-
-  const ready = passport && passport !== 'error' && passport.available ? passport : null
-  const collected = ready ? ready.stamps.filter((stamp) => stamp.collected) : []
-  const totalCities = ready ? ready.stamps.length || metroManilaAreas.length : metroManilaAreas.length
-
-  let body
-  if (!isSessionLoading && !session) {
-    body = (
-      <Empty
-        title="Collect a stamp in every city"
-        description="Collect a stamp wherever you gala and keep your barkada streak."
-        action={<Button variant="ink" size="sm" href="/login">Sign in to start</Button>}
-      />
-    )
-  } else if (passport === null) {
-    body = <Skeleton className="h-[220px] w-full" />
-  } else if (passport === 'error' || !ready) {
-    body = <Empty title="Passport is resting" description="Hindi ma-load ngayon. Try opening it in a bit." action={<Button variant="line" size="sm" href="/passport">Open passport</Button>} />
-  } else {
-    body = (
-      <>
-        <div className="g-panel">
-          <div className="flex items-center justify-between gap-3">
-            <span className="g-h3">Gala streak</span>
-            <b className="g-h3">
-              {ready.streak_weeks} {ready.streak_weeks === 1 ? 'week' : 'weeks'}
-            </b>
-          </div>
-          <p className="g-xs g-mut">{ready.streak_weeks > 0 ? 'Gala once a week to keep it going' : 'Collect a stamp this week to start one'}</p>
-        </div>
-        <div className="mt-5 flex flex-wrap justify-center gap-5">
-          {collected.slice(0, 2).map((stamp) => (
-            <Stamp
-              key={stamp.city}
-              title={stamp.city}
-              sub={stamp.first_checkin_at ? new Date(stamp.first_checkin_at).toLocaleDateString('en', { month: 'short', day: 'numeric' }).toUpperCase() : undefined}
-            />
-          ))}
-          <Stamp title="City hopper" sub={`${collected.length} of ${totalCities}`} state="progress" progress={collected.length / totalCities} />
-        </div>
-      </>
-    )
-  }
-
-  return (
-    <section className="min-w-0">
-      <SectionHead
-        title="Passport"
-        sub={ready ? `${ready.total_checkins} check-ins · ${collected.length} ${collected.length === 1 ? 'city' : 'cities'}` : 'Stamps and streaks'}
-        action={
-          session ? (
-            <Button variant="text" href="/passport">
-              Open
-            </Button>
-          ) : undefined
-        }
-      />
-      {body}
     </section>
   )
 }
@@ -266,7 +172,7 @@ function HomePage({ navigationSource }: { navigationSource: NavigationSource }) 
         <h1 className="g-d1 mt-2">{greetingName ? `Tara, ${greetingName}?` : 'Tara, gala tayo?'}</h1>
         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
           <p className="g-mut">{isRaining ? 'Maulan ngayon, so indoor spots muna.' : 'Describe your gala and Tara AI plans the whole day.'}</p>
-          {weather ? <WeatherPill weather={weather} /> : null}
+          {isRaining && weather ? <WeatherPill weather={weather} /> : null}
         </div>
       </header>
 
@@ -284,48 +190,31 @@ function HomePage({ navigationSource }: { navigationSource: NavigationSource }) 
       />
       <NextGalaCard />
 
-      {isRaining && weather ? (
-        <>
-          <div className="mt-9">
-            <RainyDayBanner weather={weather} />
-          </div>
-          <ListingRail rail={rainSafeRail} badge="Rain-safe" onGuestFavorite={openGuestFavorite} />
-        </>
-      ) : null}
+      {isRaining ? (
+        <ListingRail rail={rainSafeRail} badge="Rain-safe" onGuestFavorite={openGuestFavorite} />
+      ) : (
+        <Rail
+          title="For you this week"
+          subtitle="What locals are saving right now"
+          seeAllHref="/places"
+          headerAside={<Tabs label="For you" value={activeTab} options={topPickTabs.map((tab) => ({ value: tab.id, label: tab.label }))} onChange={setActiveTab} />}
+        >
+          {topPicks.map((place, index) => (
+            <PhotoCard key={`${activeTab}-${place.slug}`} place={place} priority={index < 2} onGuestFavorite={openGuestFavorite} />
+          ))}
+        </Rail>
+      )}
 
-      <Rail
-        title="For you this week"
-        subtitle="What locals are saving right now"
-        seeAllHref="/places"
-        headerAside={<Tabs label="Trending" value={activeTab} options={topPickTabs.map((tab) => ({ value: tab.id, label: tab.label }))} onChange={setActiveTab} />}
-      >
-        {topPicks.map((place, index) => (
-          <PhotoCard key={`${activeTab}-${place.slug}`} place={place} priority={index < 2} onGuestFavorite={openGuestFavorite} />
-        ))}
-      </Rail>
+      <WeekendRadar />
 
-      <SectionHead title="Browse by vibe" />
-      <CategoryTabs active="all" showFilters />
-
-      <div className="grid gap-x-10 md:grid-cols-2">
-        <WeekendRadar />
-        <PassportTeaser />
-      </div>
-
-      {listingRails
-        .filter((rail) => !(isRaining && rail.key === rainSafeRail.key))
-        .map((rail) => (
-          <ListingRail key={rail.key} rail={rail} onGuestFavorite={openGuestFavorite} />
-        ))}
-
-      <Rail title="Explore by city" subtitle="Collect a stamp in every city with your Pasyal Passport" seeAllHref="/places" seeAllLabel="All cities" itemBasis={104}>
+      <Rail title="Explore by city" subtitle="Pick a city, see what's worth the trip" seeAllHref="/places" seeAllLabel="All cities" itemBasis={104}>
         {homeCityRecommendations.map((tile) => {
           const citySlug = resolveAreaMeta({ city: tile.label }).slug
           const imageUrl = tile.place.imageUrl ?? getStaticPlaceImageUrlForSlug(tile.place.slug)
           return (
             <InternalLink key={tile.label} href={`/places/${encodeURIComponent(citySlug)}`} className="block text-center">
-              <span className="block aspect-square overflow-hidden rounded-full bg-[var(--fill)]">
-                {imageUrl ? <img src={imageUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" /> : null}
+              <span className="block aspect-square overflow-hidden rounded-full">
+                <PlaceImage candidates={imageUrl ? [imageUrl] : []} className="h-full w-full object-cover" />
               </span>
               <span className="g-sm mt-2 block font-semibold">{tile.label}</span>
             </InternalLink>

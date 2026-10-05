@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { ArrowLeft, Heart, Link2, Pencil, Share, Sparkles, Trash2 } from 'lucide-react'
+import { ArrowDownUp, ArrowLeft, Check, Heart, Link2, MoreHorizontal, Pencil, Share, Sparkles, Trash2 } from 'lucide-react'
 import DestructiveConfirmModal from '../DestructiveConfirmModal'
 import InternalLink from '../InternalLink'
-import { Button, Empty, Page, Panel, Skeleton, Tabs, Tag } from '../ui'
+import { Button, Empty, Page, Panel, Sheet, Skeleton, Tabs, Tag } from '../ui'
 import { MembersList, PollsPanel, RsvpPanel } from './BarkadaPanel'
 import BudgetPanel from './BudgetPanel'
 import PlanRouteMap from './PlanRouteMap'
@@ -24,6 +24,49 @@ import { navigateToPath } from '../../utils/navigation'
 import { buildPrivateGalaPlanShareUrl, shareLink } from '../../utils/share'
 
 type Tab = 'itinerary' | 'polls' | 'barkada' | 'hatian'
+type Menu = 'sheet' | 'popover' | null
+
+function PlanMenu({ menu, onClose, onDelete }: { menu: Menu; onClose: () => void; onDelete: () => void }) {
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (menu !== 'popover') return
+    const onPointer = (event: PointerEvent) => {
+      if (!ref.current?.parentElement?.contains(event.target as Node)) onClose()
+    }
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+    }
+    document.addEventListener('pointerdown', onPointer)
+    window.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('pointerdown', onPointer)
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [menu, onClose])
+
+  const items = (
+    <div className="g-group">
+      <button type="button" className="g-group-row" style={{ color: 'var(--bad)' }} onClick={onDelete}>
+        <Trash2 aria-hidden="true" style={{ color: 'var(--bad)' }} />
+        Delete plan
+      </button>
+    </div>
+  )
+
+  if (menu === 'popover') {
+    return (
+      <div ref={ref} role="menu" className="absolute right-0 top-full z-10 mt-2 w-56" style={{ borderRadius: 'var(--r-3)', boxShadow: 'var(--sh-2)' }}>
+        {items}
+      </div>
+    )
+  }
+  return (
+    <Sheet open={menu === 'sheet'} onClose={onClose} title="Plan options" labelledBy="plan-options-title">
+      {items}
+    </Sheet>
+  )
+}
 
 function BackLink() {
   return (
@@ -43,6 +86,8 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
   const [confirm, setConfirm] = useState<'delete' | 'publish' | null>(null)
   const [isWorking, setIsWorking] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [isReordering, setIsReordering] = useState(false)
+  const [menu, setMenu] = useState<Menu>(null)
 
   useEffect(() => {
     let isCancelled = false
@@ -201,6 +246,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
     )
   }
 
+  const closeMenu = () => setMenu(null)
   const count = (value: number) => (value > 0 ? <span className="g-fnt ml-1">{value}</span> : null)
   const tabs: Array<{ value: Tab; label: ReactNode }> = [
     { value: 'itinerary', label: <>Itinerary{count(stops.length)}</> },
@@ -210,7 +256,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
           { value: 'barkada' as const, label: <>Barkada{count(readyBarkada.members.length)}</> },
         ]
       : []),
-    { value: 'hatian', label: perHead > 0 ? <>Hatian<span className="g-fnt ml-1">{formatPeso(perHead)}</span></> : 'Hatian' },
+    { value: 'hatian', label: perHead > 0 ? <>Hatian (split the bill)<span className="g-fnt ml-1">{formatPeso(perHead)}</span></> : 'Hatian (split the bill)' },
   ]
   const activeTab = tabs.some((entry) => entry.value === tab) ? tab : 'itinerary'
 
@@ -245,7 +291,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
       <header className="mt-5 flex flex-wrap items-end justify-between gap-4 lg:mt-6">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            {days !== null ? <Tag tone={days >= 0 ? 'tara' : 'neutral'}>{formatDaysUntil(days)}</Tag> : <Tag>Date TBD</Tag>}
+            {days !== null ? <Tag>{formatDaysUntil(days)}</Tag> : <Tag>Date TBD</Tag>}
             {plan.viewer_is_owner ? <span className="g-sm g-mut">{plan.visibility === 'public' ? 'Shared by link' : 'Private'}</span> : null}
           </div>
           <h1 className="g-h1 mt-2.5">{plan.title}</h1>
@@ -263,9 +309,27 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
                 <Pencil />
                 Edit
               </Button>
-              <Button variant="soft" size="sm" iconOnly aria-label="Delete plan" onClick={() => setConfirm('delete')}>
-                <Trash2 />
-              </Button>
+              <div className="relative">
+                <Button
+                  variant="soft"
+                  size="sm"
+                  iconOnly
+                  aria-label="More options"
+                  aria-haspopup="menu"
+                  aria-expanded={menu !== null}
+                  onClick={() => setMenu(menu ? null : window.matchMedia('(min-width: 1024px)').matches ? 'popover' : 'sheet')}
+                >
+                  <MoreHorizontal />
+                </Button>
+                <PlanMenu
+                  menu={menu}
+                  onClose={closeMenu}
+                  onDelete={() => {
+                    setMenu(null)
+                    setConfirm('delete')
+                  }}
+                />
+              </div>
             </>
           ) : plan.visibility === 'public' ? (
             <Button variant="soft" size="sm" aria-pressed={plan.viewer_has_hearted} aria-label={plan.viewer_has_hearted ? 'Remove heart' : 'Heart this plan'} onClick={() => void heart()}>
@@ -295,12 +359,18 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
               />
             ) : (
               <>
-                <PlanTimeline stops={stops} onMove={plan.viewer_is_owner ? (index, direction) => void moveStop(index, direction) : undefined} />
-                <div className="mt-4 flex flex-wrap gap-2 pl-[54px]">
+                <PlanTimeline stops={stops} onMove={plan.viewer_is_owner && isReordering ? (index, direction) => void moveStop(index, direction) : undefined} />
+                <div className={`mt-4 flex flex-wrap gap-2 ${stops.some((stop) => stop.time) ? 'pl-[54px]' : ''}`}>
                   <Button variant="soft" size="sm" onClick={suggestNextStop}>
                     <Sparkles />
                     Suggest next stop
                   </Button>
+                  {plan.viewer_is_owner && stops.length > 1 ? (
+                    <Button variant="line" size="sm" aria-pressed={isReordering} onClick={() => setIsReordering(!isReordering)}>
+                      {isReordering ? <Check /> : <ArrowDownUp />}
+                      {isReordering ? 'Done' : 'Edit order'}
+                    </Button>
+                  ) : null}
                 </div>
               </>
             )
@@ -313,17 +383,15 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
         <aside className="g-side">
           {readyBarkada ? <RsvpPanel plan={plan} barkada={readyBarkada} session={session} onChange={setBarkada} /> : null}
           <Panel>
-            <h2 className="g-h3">Tara? link</h2>
+            <h2 className="g-h3">Invite link</h2>
             <p className="g-sm g-mut mt-0.5">
               {plan.viewer_is_owner && plan.visibility !== 'public' ? 'Private for now. Copying turns on link sharing.' : 'Anyone with the link can view and vote.'}
             </p>
-            <div className="mt-3 flex gap-2">
-              <input className="g-input min-w-0" value={shareUrl} readOnly aria-label="Plan link" onFocus={(event) => event.currentTarget.select()} />
-              <Button variant="ink" size="sm" className="self-center" onClick={() => void copyLink()}>
-                <Link2 />
-                {copied ? 'Copied' : 'Copy'}
-              </Button>
-            </div>
+            <Button variant="ink" block className="mt-3" onClick={() => void copyLink()}>
+              {copied ? <Check /> : <Link2 />}
+              {copied ? 'Copied' : 'Copy invite link'}
+            </Button>
+            <p className="g-xs g-fnt mt-2 truncate" title={shareUrl}>{shareUrl}</p>
           </Panel>
           <PlanRouteMap stops={stops} />
         </aside>

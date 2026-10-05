@@ -4,7 +4,7 @@ import type { Session } from '@supabase/supabase-js'
 import { ChevronRight } from 'lucide-react'
 import MinimalBackNav from '../components/navigation/MinimalBackNav'
 import SeoHead from '../components/SeoHead'
-import { Button, Empty, Page, Panel, SectionHead, Skeleton, Tag } from '../components/ui'
+import { Button, Empty, Page, Skeleton, Tag } from '../components/ui'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import {
   getMyPrivacyRequests,
@@ -65,12 +65,14 @@ function formatDateTime(value: string | null | undefined) {
 }
 
 function LinkRow({ label, value, href, onClick }: { label: string; value?: string; href?: string; onClick?: () => void }) {
-  const className = 'flex min-h-[52px] w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-[var(--fill)]'
+  const className = 'g-group-row'
   const body = (
     <>
-      <span className="min-w-0 flex-1 text-[15px]">{label}</span>
-      {value ? <span className="g-mut min-w-0 truncate text-sm">{value}</span> : null}
-      <ChevronRight className="h-4 w-4 shrink-0 text-[var(--ink-3)]" aria-hidden="true" />
+      <span className="min-w-0 flex-1">{label}</span>
+      <span className="g-group-end min-w-0">
+        {value ? <span className="truncate">{value}</span> : null}
+        <ChevronRight className="h-4 w-4 shrink-0" aria-hidden="true" />
+      </span>
     </>
   )
   return href ? (
@@ -199,50 +201,58 @@ function PrivacyCenterPage({ session }: { session: Session }) {
           : 'Ask for your data, fix it, or delete it. We reply by email.'}
       </p>
 
-      <div className="g-card mt-6 divide-y divide-[var(--line-2)] overflow-hidden">
+      <div className="g-group mt-6">
         <LinkRow label="Email us" value={contactEmail} href={`mailto:${contactEmail}`} />
         <LinkRow label="Terms of service" onClick={() => navigateToPath('/terms')} />
         <LinkRow label="Privacy policy" onClick={() => navigateToPath('/privacy')} />
       </div>
 
-      <SectionHead title="Your requests" sub="Latest status of what you sent us." action={<Tag>{privacyRequests.length}</Tag>} />
-      {isLoading ? (
-        <div className="g-list" aria-busy="true">
-          <Skeleton className="h-[72px]" />
-          <Skeleton className="h-[72px]" />
+      <section className="mt-8">
+        <div className="mb-4 flex items-end justify-between gap-4">
+          <div className="min-w-0">
+            <h2 className="g-h2">Your requests</h2>
+            <p className="g-sm g-mut mt-1">Latest status of what you sent us.</p>
+          </div>
+          <Tag>{privacyRequests.length}</Tag>
         </div>
-      ) : loadError ? (
-        <Empty title="Hindi ma-load ang requests" description={loadError} action={<Button variant="line" onClick={() => window.location.reload()}>Try again</Button>} />
-      ) : privacyRequests.length === 0 ? (
-        <Empty title="Wala pang request" description="Anything you send below shows up here." />
-      ) : (
-        <div className="g-list">
-          {privacyRequests.slice(0, 8).map((request) => (
-            <article key={request.id} className="g-card p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="g-h3">{privacyRequestLabels[request.requestType]}</p>
-                  <p className="g-xs g-mut mt-0.5">{formatDateTime(request.createdAt)}</p>
+        {isLoading ? (
+          <div className="g-list" aria-busy="true">
+            <Skeleton className="h-[72px]" />
+            <Skeleton className="h-[72px]" />
+          </div>
+        ) : loadError ? (
+          <Empty title="Hindi ma-load ang requests" description={loadError} action={<Button variant="line" onClick={() => window.location.reload()}>Try again</Button>} />
+        ) : privacyRequests.length === 0 ? (
+          <Empty title="Wala pang request" description="Anything you send below shows up here." />
+        ) : (
+          <div className="g-group">
+            {privacyRequests.slice(0, 8).map((request) => (
+              <article key={request.id} className="px-4 py-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="g-h3">{privacyRequestLabels[request.requestType]}</p>
+                    <p className="g-xs g-mut mt-0.5">{formatDateTime(request.createdAt)}</p>
+                  </div>
+                  <Tag tone={requestStatusTones[request.status]} className="shrink-0">
+                    {requestStatusLabels[request.status]}
+                  </Tag>
                 </div>
-                <Tag tone={requestStatusTones[request.status]} className="shrink-0">
-                  {requestStatusLabels[request.status]}
-                </Tag>
-              </div>
-              {request.details ? <p className="g-sm g-mut mt-2 line-clamp-2">{request.details}</p> : null}
-              {request.moderatorNote ? <p className="g-sm mt-2 rounded-[var(--r-2)] bg-[var(--fill)] px-3 py-2">{request.moderatorNote}</p> : null}
-            </article>
-          ))}
-        </div>
-      )}
+                {request.details ? <p className="g-sm g-mut mt-2 line-clamp-2">{request.details}</p> : null}
+                {request.moderatorNote ? <p className="g-sm mt-2 rounded-[var(--r-2)] bg-[var(--fill)] px-3 py-2">{request.moderatorNote}</p> : null}
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
 
-      <SectionHead title="New request" />
-      <Panel as="section">
+      <section className="mt-8">
+        <h2 className="g-h2 mb-4">New request</h2>
         <form onSubmit={handleSubmitPrivacyRequest} className="grid gap-4">
           <div className="g-field">
             <label htmlFor="privacy-request-type">Request type</label>
             <select
               id="privacy-request-type"
-              className="g-input"
+              className="g-input g-select"
               value={privacyRequestType}
               onChange={(event) => setPrivacyRequestType(event.target.value as PrivacyRequestType)}
             >
@@ -282,11 +292,11 @@ function PrivacyCenterPage({ session }: { session: Session }) {
             </Button>
           </div>
         </form>
-      </Panel>
+      </section>
 
-      <SectionHead title="Delete account" />
-      <Panel as="section">
-        <p className="g-sm g-mut">We review every request before account data is removed, detached, or anonymized.</p>
+      <section className="mt-8">
+        <h2 className="g-h2">Delete account</h2>
+        <p className="g-sm g-mut mt-1">We review every request before account data is removed, detached, or anonymized.</p>
         {isDeletionExpanded ? (
           <form onSubmit={handleSubmitDeletionRequest} className="mt-4 grid gap-3">
             <div className="g-field">
@@ -328,7 +338,7 @@ function PrivacyCenterPage({ session }: { session: Session }) {
             Request deletion
           </Button>
         )}
-      </Panel>
+      </section>
     </Page>
   )
 }

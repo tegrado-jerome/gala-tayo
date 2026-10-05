@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Building2 } from 'lucide-react'
 import { PlaceTile } from '../components/PlaceCard'
 import { ListingBreadcrumb } from '../components/home/search/SearchComponents'
 import InternalLink from '../components/InternalLink'
@@ -85,9 +86,8 @@ function PlacesIndexPage() {
       <ListingBreadcrumb items={[{ label: 'Home', href: '/home' }, { label: 'Places' }]} />
 
       <header className="mt-5 max-w-[42rem]">
-        <p className="g-eyebrow">Metro Manila</p>
-        <h1 className="g-h1 mt-2">Metro Manila places to visit</h1>
-        <p className="g-mut mt-2">Pick a city, then browse its cafes, food spots, parks, museums, and more.</p>
+        <h1 className="g-h1">Metro Manila places to visit</h1>
+        <p className="g-mut mt-2">Pick a city to see its cafes, parks and food spots.</p>
       </header>
 
       <SectionHead title="Cities" sub={<InternalLink href="/places/categories" className="underline underline-offset-2">Or browse by category</InternalLink>} />
@@ -98,6 +98,7 @@ function PlacesIndexPage() {
             href={`/places/${area.slug}`}
             title={area.name}
             meta={`Open ${area.name} places`}
+            icon={Building2}
             imageUrls={getDiscoveryImageCandidates(cityRepresentativePlaceSlugs[area.slug], representativePlaces[cityRepresentativePlaceSlugs[area.slug]])}
           />
         ))}

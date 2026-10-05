@@ -5,10 +5,9 @@ import { openFloatingChat } from '../../utils/floatingChat'
 import { navigateToPath } from '../../utils/navigation'
 
 const suggestions = [
-  'Dinner and a movie in BGC for two, ₱2,000',
-  'Rainy Saturday with the barkada, indoor lang',
-  'Free museums in Manila, then merienda',
-  'Chill café crawl in Maginhawa',
+  'Date night in BGC, ₱2,000',
+  'Rainy day with the barkada',
+  'Free museums in Manila',
 ]
 
 function planWithAi(text: string) {
@@ -34,7 +33,7 @@ function PlanWithAiCard() {
   return (
     <section aria-labelledby="home-ai-title">
       <form onSubmit={handleSubmit} className="g-ai">
-        <div className="g-ai-badge" id="home-ai-title">
+        <div className="g-ai-badge" id="home-ai-title" style={{ color: 'var(--ink-2)' }}>
           <Sparkles />
           Plan with Tara AI
         </div>
