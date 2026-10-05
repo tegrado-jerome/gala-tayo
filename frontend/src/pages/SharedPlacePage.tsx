@@ -315,6 +315,7 @@ export default function SharedPlacePage({
         title={place ? `${place.name} in ${areaMeta?.name || 'Metro Manila'} | ${BRAND_NAME}` : `Place Details | ${PRODUCT_NAME}`}
         description={place ? buildPlaceDescription(place, areaMeta?.name || 'Metro Manila') : `Discover searchable place details, FAQs, and planning info on ${PRODUCT_NAME}.`}
         canonicalPath={canonicalPath ?? undefined}
+        robots={place?.isGalaWorthy === false ? 'noindex,follow' : undefined}
         openGraphType="website"
         image={
           place?.imageUrl || place?.thumbnailUrl || place?.curatedImageUrls?.[0]

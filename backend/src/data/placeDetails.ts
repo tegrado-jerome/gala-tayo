@@ -1,3 +1,4 @@
+import { isGalaWorthySlug } from "../utils/galaWorthy";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import {
   getApprovedPlaceImages,
@@ -58,6 +59,7 @@ export type PlaceDetail = {
   budget_min?: number | null;
   price_level?: number | null;
   status?: string | null;
+  is_gala_worthy?: boolean | null;
   verification_status?: string | null;
   verification_notes?: string | null;
   verification_sources?: string[];
@@ -292,6 +294,7 @@ function mapPlaceRowToDetail(row: Record<string, unknown>): PlaceDetail {
     budget_min: getNullableNumber(row.budget_min),
     price_level: getNullableNumber(row.price_level),
     status: getNullableString(row.status),
+    is_gala_worthy: isGalaWorthySlug(getNullableString(row.slug)),
     verification_status: getNullableString(row.verification_status),
     verification_notes: getNullableString(row.verification_notes),
     verification_sources: getStringArray(row.verification_sources),

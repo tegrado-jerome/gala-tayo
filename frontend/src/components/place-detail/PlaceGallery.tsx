@@ -230,10 +230,13 @@ export function AllPhotos({
   onClose,
   showAddPhotoAction,
   onContribute,
+  credits,
 }: {
   photos: string[]
   placeName: string
   startIndex: number
+  /** Photo URL → "Author · Licence" line shown under that photo. */
+  credits?: Record<string, string>
   onBroken: (url: string) => void
   onClose: () => void
   showAddPhotoAction: boolean
@@ -290,6 +293,7 @@ export function AllPhotos({
             return (
               <figure key={photo} data-photo-index={index} className={cx(isWide && 'is-wide')}>
                 <img src={resizedMediaUrl(photo, 'hero')} alt={`${placeName}, photo ${index + 1} of ${photos.length}`} loading={index < 3 ? 'eager' : 'lazy'} onError={() => onBroken(photo)} />
+                {credits?.[photo] ? <figcaption className="g-xs g-mut mt-1">Photo: {credits[photo]}</figcaption> : null}
               </figure>
             )
           })}

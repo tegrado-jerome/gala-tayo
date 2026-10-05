@@ -20,6 +20,7 @@ export function mapBackendPlaceToCardData(place: PlaceDetail): PlaceDetailCardDa
     id: place.id,
     slug: place.slug,
     name: place.name,
+    isGalaWorthy: place.is_gala_worthy !== false,
     faqs: Array.isArray(place.faqs)
       ? place.faqs.filter(
           (faq): faq is { question: string; answer: string } =>

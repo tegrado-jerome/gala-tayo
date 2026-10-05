@@ -1,3 +1,4 @@
+import { hiddenSlugFilter } from "./galaWorthy";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { CATEGORIES, METRO_MANILA_AREAS } from "../functions/filters";
 import { PUBLIC_PLACE_COLUMNS } from "../domain/places";
@@ -71,9 +72,9 @@ const SEO_LISTING_PLACE_SELECT = [
 ].join(",");
 const APPROVED_IMAGE_LOOKUP_BATCH_SIZE = 100;
 const MAX_APPROVED_IMAGES_PER_PLACE = 3;
-const SEO_PLACE_SUMMARIES_CACHE_KEY = "seo:places:summaries:v2";
+const SEO_PLACE_SUMMARIES_CACHE_KEY = "seo:places:summaries:v3";
 const SEO_PLACE_SUMMARIES_CACHE_TTL_SECONDS = 60 * 10;
-const SEO_LISTING_PAGE_CACHE_PREFIX = "seo:listings:v2";
+const SEO_LISTING_PAGE_CACHE_PREFIX = "seo:listings:v3";
 const SEO_LISTING_PAGE_CACHE_TTL_SECONDS = 60 * 10;
 
 const AREA_NAME_OVERRIDES: Record<string, string> = {
@@ -335,9 +336,12 @@ export async function getSeoPlaceSummaries(options: SeoPlaceSummaryOptions = {})
   }
 
   const supabase = await getSupabaseAdminClient();
-  const { data, error } = await (supabase.from("places") as any)
+  let summaryQuery = (supabase.from("places") as any)
     .select(SEO_PLACE_SELECT)
-    .eq("status", "active")
+    .eq("status", "active");
+  const hiddenFilter = hiddenSlugFilter();
+  if (hiddenFilter) summaryQuery = summaryQuery.not("slug", "in", hiddenFilter);
+  const { data, error } = await summaryQuery
     .order("name", { ascending: true, nullsFirst: false })
     .limit(1000);
 
@@ -478,6 +482,11 @@ export async function getSeoListingPage({
     let query = (supabase.from("places") as any)
       .select(SEO_LISTING_PLACE_SELECT, { count: "exact" })
       .eq("status", "active");
+
+    const hiddenFilter = hiddenSlugFilter();
+    if (hiddenFilter) {
+      query = query.not("slug", "in", hiddenFilter);
+    }
 
     if (categoryLabel) {
       query = query.eq("category", categoryLabel);
