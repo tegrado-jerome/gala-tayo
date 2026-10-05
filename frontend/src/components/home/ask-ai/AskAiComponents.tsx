@@ -54,14 +54,14 @@ const markdownComponents: Components = {
 }
 
 const aiBubbleClass =
-  'w-full min-w-0 max-w-[92%] self-start rounded-[var(--r-3)] rounded-tl-[var(--r-1)] border border-[var(--line-2)] bg-[var(--surface)] px-4 py-3 text-[15px] leading-[1.65]'
+  'w-full min-w-0 max-w-[92%] self-start rounded-[var(--r-3)] rounded-tl-[var(--r-1)] bg-[var(--fill)] px-4 py-3 text-[15px] leading-[1.65] text-[var(--ink)]'
 
 function SourceLinks({ sources }: { sources: AskAiSource[] }) {
   return (
-    <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-[var(--line-2)] pt-3">
+    <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-[var(--fill-2)] pt-3">
       <span className="g-eyebrow mr-1">Sources</span>
       {sources.map((source) => (
-        <a key={source.url} href={source.url} target="_blank" rel="noopener noreferrer" className="g-tag max-w-[200px]">
+        <a key={source.url} href={source.url} target="_blank" rel="noopener noreferrer" className="g-tag is-solid max-w-[200px]">
           <span className="truncate">{source.title}</span>
           <ExternalLink aria-hidden="true" />
         </a>
@@ -261,7 +261,7 @@ function AskAiModePanel({
     <div className={`flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-[var(--paper)] ${className}`}>
       <div className="flex shrink-0 items-center gap-2 border-b border-[var(--line-2)] bg-[var(--surface)] px-4 py-2 pt-[max(env(safe-area-inset-top,0px),0.5rem)] sm:pt-2">
         <div className="min-w-0 flex-1">
-          <p className="g-h3 leading-tight">Ask AI</p>
+          <p className="g-h3 leading-tight">Tara AI</p>
           <AskAiUsagePill usageStatus={usageStatus} />
         </div>
         <Button variant="soft" size="sm" onClick={onStartOver} aria-label="New chat">
@@ -307,7 +307,7 @@ function AskAiModePanel({
             </button>
           </p>
         ) : null}
-        <div className="flex items-end gap-2 rounded-[var(--r-4)] border border-[var(--line)] bg-[var(--surface)] p-1.5 pl-3 focus-within:border-[var(--ink)]">
+        <div className="flex items-end gap-2 rounded-[var(--r-4)] border border-transparent bg-[var(--fill)] p-1.5 pl-4 focus-within:border-[var(--ink)]">
           <label htmlFor="ask-ai-chat-input" className="sr-only">
             Message GalaTayo AI
           </label>
@@ -328,7 +328,7 @@ function AskAiModePanel({
             className="max-h-[140px] min-h-[40px] flex-1 resize-none overflow-y-auto bg-transparent py-2 text-[16px] leading-snug text-[var(--ink)] outline-none placeholder:text-[var(--ink-3)] disabled:cursor-not-allowed"
           />
           <Button
-            variant="ink"
+            variant={isSubmitting ? 'ink' : 'tara'}
             iconOnly
             onClick={() => (isSubmitting ? cancelAskAiRuntimeRequest() : handleSend())}
             disabled={!isSubmitting && (isUsagePending || (!draftQuestion.trim() && !isLimitReached) || (isLimitReached && isRegistered))}

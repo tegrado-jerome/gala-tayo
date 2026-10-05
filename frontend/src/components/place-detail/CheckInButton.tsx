@@ -52,7 +52,7 @@ function NewStampSheet({ city, streakWeeks, onClose }: { city: string; streakWee
 const EXPLAINER = 'At this place now? Tap “I’m here” to collect this city’s Passport stamp.'
 const TOAST_MS = 6000
 
-/** `iconOnly` renders a 44px stamp button whose result shows as a toast above the nearest positioned parent. */
+/** `iconOnly` renders a 52px square stamp button whose result shows as a toast above the nearest positioned parent. */
 function CheckInButton({
   placeId,
   placeName,
@@ -105,17 +105,20 @@ function CheckInButton({
     setIsToastVisible(true)
   }
 
+  const variant = iconOnly ? 'soft' : 'line'
+  const iconClass = iconOnly ? 'h-[52px] w-[52px] rounded-[var(--r-2)]' : undefined
   const button =
     status.kind === 'done' ? (
-      <Button variant="line" block={!iconOnly} iconOnly={iconOnly} href="/passport" aria-label="View passport">
+      <Button variant={variant} block={!iconOnly} iconOnly={iconOnly} className={iconClass} href="/passport" aria-label="View passport">
         <Stamp aria-hidden="true" />
         {iconOnly ? null : 'View passport'}
       </Button>
     ) : (
       <Button
-        variant="line"
+        variant={variant}
         block={!iconOnly}
         iconOnly={iconOnly}
+        className={iconClass}
         onClick={() => void checkIn()}
         loading={status.kind === 'working'}
         title={EXPLAINER}

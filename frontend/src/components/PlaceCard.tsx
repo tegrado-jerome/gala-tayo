@@ -1,6 +1,7 @@
 import { useMemo, useState, type MouseEvent } from 'react'
 import { MapPin, type LucideIcon } from 'lucide-react'
-import { PlaceCard as KitPlaceCard, Tag, cx, type PlaceCardTint } from './ui'
+import { PlaceCard as KitPlaceCard, MasonryCard, Tag, cx, type PlaceCardTint } from './ui'
+import { formatPlaceCardMeta } from '../utils/placeLocation'
 import { getSulitLevel } from './place-detail/SulitMeter'
 import { categoryIcons } from './discover/CategoryTabs'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
@@ -180,10 +181,12 @@ type PlaceCardProps = {
   onOpen?: () => void
   onHover?: () => void
   className?: string
+  /** Renders the masonry photo tile; the index picks its aspect ratio. */
+  masonryIndex?: number
 }
 
 /** Listing card wired to saved places, prefetch and listing return state. Renders the GT1 kit card. */
-function PlaceCard({ place, onGuestSave, selected = false, onOpen, onHover, className }: PlaceCardProps) {
+function PlaceCard({ place, onGuestSave, selected = false, onOpen, onHover, className, masonryIndex }: PlaceCardProps) {
   const candidates = useMemo(() => getImageCandidates(place), [place])
   const [failed, setFailed] = useState<string[]>([])
   const imageUrl = candidates.find((candidate) => !failed.includes(candidate)) ?? null
@@ -212,10 +215,14 @@ function PlaceCard({ place, onGuestSave, selected = false, onOpen, onHover, clas
     if (place.slug) void prefetchPlaceDetail(place.slug)
   }
 
+  const isMasonry = masonryIndex !== undefined
+  const pricePerHead = formatPricePerHead(place.budget_min)
+  const rainSafeFlag = rainSafe ? <Tag tone="solid">Rain-safe</Tag> : null
+
   return (
     <div
       data-search-place-id={place.id}
-      className={cx('min-w-0', selected && 'rounded-[var(--r-3)] ring-2 ring-[var(--ink)] ring-offset-4 ring-offset-[var(--paper)]', className)}
+      className={cx('min-w-0', selected && !isMasonry && 'rounded-[var(--r-3)] ring-2 ring-[var(--ink)] ring-offset-4 ring-offset-[var(--paper)]', className)}
       onMouseEnter={() => {
         prefetch()
         onHover?.()
@@ -228,23 +235,40 @@ function PlaceCard({ place, onGuestSave, selected = false, onOpen, onHover, clas
         if (event.target instanceof HTMLImageElement && imageUrl) setFailed((current) => [...current, imageUrl])
       }}
     >
-      <KitPlaceCard
-        href={getPlaceHref(place)}
-        title={place.name}
-        imageUrl={imageUrl}
-        icon={getCategoryIcon(place.category)}
-        tint={getCategoryTint(place.category)}
-        category={toTitleCase(place.category)}
-        area={place.localArea || place.area}
-        city={place.city}
-        rating={typeof place.rating === 'number' && place.rating > 0 ? place.rating : null}
-        reviewCount={getReviewCount(place)}
-        pricePerHead={formatPricePerHead(place.budget_min)}
-        sulit={getSulitScore(place.budget_min)}
-        flag={rainSafe ? <Tag tone="solid">Rain-safe</Tag> : null}
-        saved={saved}
-        onToggleSave={() => void toggleSave()}
-      />
+      {isMasonry ? (
+        <MasonryCard
+          href={getPlaceHref(place)}
+          title={place.name}
+          imageUrl={imageUrl}
+          index={masonryIndex}
+          icon={getCategoryIcon(place.category)}
+          tint={getCategoryTint(place.category)}
+          price={pricePerHead}
+          meta={formatPlaceCardMeta({ category: toTitleCase(place.category), area: place.localArea || place.area, city: place.city }) || null}
+          flag={rainSafeFlag}
+          selected={selected}
+          saved={saved}
+          onToggleSave={() => void toggleSave()}
+        />
+      ) : (
+        <KitPlaceCard
+          href={getPlaceHref(place)}
+          title={place.name}
+          imageUrl={imageUrl}
+          icon={getCategoryIcon(place.category)}
+          tint={getCategoryTint(place.category)}
+          category={toTitleCase(place.category)}
+          area={place.localArea || place.area}
+          city={place.city}
+          rating={typeof place.rating === 'number' && place.rating > 0 ? place.rating : null}
+          reviewCount={getReviewCount(place)}
+          pricePerHead={pricePerHead}
+          sulit={getSulitScore(place.budget_min)}
+          flag={rainSafeFlag}
+          saved={saved}
+          onToggleSave={() => void toggleSave()}
+        />
+      )}
     </div>
   )
 }

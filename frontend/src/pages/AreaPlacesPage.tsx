@@ -1,10 +1,9 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import CompactPagination from '../components/CompactPagination'
 import PlaceCard, { withLiveDetail } from '../components/PlaceCard'
-import { ListingBreadcrumb } from '../components/home/search/SearchComponents'
+import { ListingBreadcrumb, MasonrySkeleton, SearchPillLink } from '../components/home/search/SearchComponents'
 import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
-import PlaceListingSkeleton from '../components/PlaceListingSkeleton'
-import { Button, Chip, Chips, Empty, Page, SectionHead, cx } from '../components/ui'
+import { Button, Chip, Chips, Empty, Masonry, Page, SectionHead, cx } from '../components/ui'
 import InternalLink from '../components/InternalLink'
 import SeoHead from '../components/SeoHead'
 import { placeCategories } from '../data/placeCategories'
@@ -343,7 +342,9 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
         <p className="g-mut mt-2">Cafes, parks and food spots in {areaName}</p>
       </header>
 
-      <Chips className="mt-5" role="group" aria-label="Category">
+      <SearchPillLink className="g-only-mob mt-4" />
+
+      <Chips className="mt-4" role="group" aria-label="Category">
         {FILTER_OPTIONS.map((filter) => (
           <Chip key={filter.value} on={filter.value === activeCategory} onClick={() => navigateToPath(getPagePath(1, filter.value))}>
             {filter.label}
@@ -354,7 +355,10 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
       {errorMessage ? (
         <Empty className="mt-8" title={`Hindi ma-load ang places in ${areaName}`} description="Please try again in a bit." />
       ) : shouldShowInitialSkeleton ? (
-        <PlaceListingSkeleton cardCount={PAGE_SIZE} helperText={`Loading places in ${areaName}.`} />
+        <div className="mt-6" aria-busy="true">
+          <span className="sr-only">Loading places in {areaName}.</span>
+          <MasonrySkeleton count={PAGE_SIZE} />
+        </div>
       ) : shouldShowEmptyState ? (
         <Empty
           className="mt-8"
@@ -364,10 +368,11 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
         />
       ) : (
         <section aria-label={`Places in ${areaName}`}>
-          <div className={cx('g-grid mt-6 transition-opacity', isPageTransitionLoading && 'pointer-events-none opacity-60')}>
-            {allPlaces.map((rawPlace) => (
+          <Masonry className={cx('mt-6 transition-opacity', isPageTransitionLoading && 'pointer-events-none opacity-60')}>
+            {allPlaces.map((rawPlace, index) => (
               <PlaceCard
                 key={rawPlace.id}
+                masonryIndex={index}
                 place={withLiveDetail(
                   { ...mapSeoPlaceToCard(rawPlace), imageUrl: null, curatedImageUrls: [], budget_min: rawPlace.budgetMin, good_for: rawPlace.goodFor },
                   placeDetailsBySlug[rawPlace.slug],
@@ -390,7 +395,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
                 }}
               />
             ))}
-          </div>
+          </Masonry>
 
           {allPlaces.length > 0 && totalPages > 1 ? (
             <CompactPagination

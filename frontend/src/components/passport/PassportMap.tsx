@@ -1,4 +1,5 @@
 import GtMap, { type MapPoint } from '../ui/GtMap'
+import { cx } from '../ui'
 import type { CityStamp } from '../../utils/passportApi'
 
 const CITY_CENTERS: Record<string, [number, number]> = {
@@ -23,18 +24,22 @@ const CITY_CENTERS: Record<string, [number, number]> = {
   valenzuela: [14.7011, 120.983],
 }
 
-/** One pill per city you have checked in at, placed on the city centre. */
-function PassportMap({ stamps }: { stamps: CityStamp[] }) {
-  const visited = stamps.filter((stamp) => stamp.collected && stamp.places > 0)
-  const topCity = visited.reduce<CityStamp | null>((best, stamp) => (!best || stamp.places > best.places ? stamp : best), null)?.city
-  const points: MapPoint[] = visited.flatMap((stamp) => {
+// gt1.css map styles are unlayered, so these overrides need `!`.
+// Collected cities are teal stamp pins; the rest are faint dots so the whole metro shows even before the first stamp.
+const NIGHT_PINS =
+  '[&_.g-lpin.is-on]:!bg-[var(--sea)] [&_.g-lpin.is-on]:!text-[var(--surface)] [&_.g-lpin.is-on]:!shadow-[0_0_0_3px_rgba(255,255,255,0.9)] ' +
+  '[&_.g-lpin:not(.is-on)]:!h-2.5 [&_.g-lpin:not(.is-on)]:!w-2.5 [&_.g-lpin:not(.is-on)]:!p-0 [&_.g-lpin:not(.is-on)]:!bg-white/35 [&_.g-lpin:not(.is-on)]:!shadow-none'
+
+/** Night map of Metro Manila: one stamp pin per city you have checked in at, a faint dot for the rest. */
+function PassportMap({ stamps, className }: { stamps: CityStamp[]; className?: string }) {
+  const points: MapPoint[] = stamps.flatMap((stamp) => {
     const center = CITY_CENTERS[stamp.city.trim().toLowerCase()]
     if (!center) return []
-    return [{ id: stamp.city, lat: center[0], lng: center[1], label: stamp.city, active: stamp.city === topCity }]
+    const collected = stamp.collected && stamp.places > 0
+    return [{ id: stamp.city, lat: center[0], lng: center[1], label: collected ? stamp.city : '', active: collected }]
   })
 
-  if (points.length === 0) return null
-  return <GtMap points={points} label="Cities you have checked in at" className="lg:!h-[300px]" />
+  return <GtMap night points={points} label="Cities you have checked in at" className={cx('!rounded-none !border-0', NIGHT_PINS, className)} />
 }
 
 export default PassportMap

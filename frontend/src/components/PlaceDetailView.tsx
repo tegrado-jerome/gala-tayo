@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode, type TouchEvent } from 'react'
-import { Accessibility, ArrowLeft, Bus, Camera, Check, ChevronDown, Clock, Ellipsis, Flag, Heart, Info, Navigation, Pencil, Plus, Reply, Share2, Sparkles, SquareParking, Star, Timer, Trash2, UserRound, Users, X, type LucideIcon } from 'lucide-react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type UIEvent } from 'react'
+import { Accessibility, ArrowLeft, Bus, Camera, Check, ChevronDown, Ellipsis, Flag, Heart, Info, Navigation, Pencil, Plus, Reply, Share2, Sparkles, SquareParking, Star, Trash2, UserRound, X } from 'lucide-react'
 import { useGuestAuthPrompt } from './GuestAuthPrompt'
 import AddToGalaPlanModal from './AddToGalaPlanModal'
 import InternalLink from './InternalLink'
 import ReportUserModal from './ReportUserModal'
-import { Button, Chip, Empty, KeyValue, Page, Panel, SectionHead, Sheet, Skeleton, SulitMeter, Tag, cx } from './ui'
+import { Button, Chip, Empty, KeyValue, Page, Sheet, Skeleton, SulitMeter, Tag, cx } from './ui'
 import GtMap, { type MapPoint } from './ui/GtMap'
 import { getCuratedPlaceImages, normalizePlaceSlug } from '../data/curatedPlaceImages'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
@@ -137,48 +137,23 @@ function buildPriceBadgeLabel(
 }
 
 
-type PlaceHighlight = { icon: LucideIcon; title: string; detail?: string }
-
-function describeBestTime(bestTime: string) {
-  const match = bestTime.match(/^(weekday|weekend)s?\s+(morning|afternoon|evening|night)s?$/i)
-  return match ? `Best on ${match[1].toLowerCase()} ${match[2].toLowerCase()}s` : `Best time: ${bestTime}`
+function sentenceCase(value: string) {
+  return value ? value.charAt(0).toUpperCase() + value.slice(1) : ''
 }
 
-function buildPlaceHighlights({
-  bestTime,
-  crowdLevel,
-  visitDuration,
-  goodFor,
-  notIdealFor,
-}: {
-  bestTime: string
-  crowdLevel: string
-  visitDuration: string
-  goodFor: string[]
-  notIdealFor: string[]
-}): PlaceHighlight[] {
-  const highlights: PlaceHighlight[] = []
+function formatVisitDuration(value: string) {
+  return value
+    .replace(/(\d)\s*-\s*(\d)/g, '$1–$2')
+    .replace(/\bhours?\b/gi, (unit) => (unit.length > 4 ? 'hrs' : 'hr'))
+    .replace(/\bminutes?\b/gi, 'min')
+}
 
-  if (visitDuration) {
-    highlights.push({ icon: Timer, title: `Plan for ${visitDuration.replace(/(\d)\s*-\s*(\d)/g, '$1–$2')}` })
-  }
+const INDOOR_CATEGORY_PATTERN = /museum|mall|gallery|cinema|aquarium|library|arcade|theat|bowling|church/i
 
-  if (bestTime) {
-    highlights.push({
-      icon: Clock,
-      title: describeBestTime(bestTime),
-      detail: crowdLevel ? `Crowd is usually ${crowdLevel.toLowerCase()}` : undefined,
-    })
-  }
-
-  const goodForText = goodFor.join(' ').toLowerCase()
-  if (/barkada|group|friends|catch/.test(goodForText)) {
-    highlights.push({ icon: Users, title: 'Good for barkada' })
-  } else if (/barkada|group|friends|crowd/.test(notIdealFor.join(' ').toLowerCase()) || /date|couple|solo|study/.test(goodForText)) {
-    highlights.push({ icon: Users, title: 'Better for small groups' })
-  }
-
-  return highlights
+function isRainSafePlace(indoorOutdoor: string, weatherFit: string, category: string) {
+  if (/rain|indoor|all[\s-]?weather/i.test(weatherFit)) return true
+  if (indoorOutdoor) return /indoor/i.test(indoorOutdoor) && !/outdoor/i.test(indoorOutdoor)
+  return INDOOR_CATEGORY_PATTERN.test(category)
 }
 
 type LatLng = { lat: number; lng: number }
@@ -226,7 +201,126 @@ function useKnownUserLocation() {
   return location
 }
 
-function PlacePhoto({
+function usePhotoList(imageUrls: string[]) {
+  const [brokenPhotoUrls, setBrokenPhotoUrls] = useState<Set<string>>(new Set())
+  const photoSourceKey = uniqueList(imageUrls).join('|')
+
+  useEffect(() => {
+    setBrokenPhotoUrls(new Set())
+  }, [photoSourceKey])
+
+  const photos = uniqueList(imageUrls)
+    .filter((photo) => !brokenPhotoUrls.has(photo))
+    .slice(0, 5)
+
+  const markPhotoBroken = (photoUrl: string) => {
+    setBrokenPhotoUrls((current) => {
+      if (current.has(photoUrl)) return current
+      const next = new Set(current)
+      next.add(photoUrl)
+      return next
+    })
+  }
+
+  return { photos, markPhotoBroken }
+}
+
+const overlayButtonStyle: CSSProperties = {
+  background: 'color-mix(in srgb, var(--surface) 84%, transparent)',
+  boxShadow: 'var(--sh-1)',
+  backdropFilter: 'blur(8px)',
+  WebkitBackdropFilter: 'blur(8px)',
+}
+const overlayButtonClass = 'grid h-11 w-11 shrink-0 place-items-center rounded-full text-[var(--ink)] [&_svg]:h-5 [&_svg]:w-5'
+
+function NoPhotos({ showAddPhotoAction, onContribute, className }: { showAddPhotoAction: boolean; onContribute: () => void; className?: string }) {
+  return (
+    <div className={cx('grid place-items-center bg-[var(--sea-soft)] px-6 text-center', className)}>
+      <div>
+        <Camera className="mx-auto h-8 w-8 text-[var(--sea)]" aria-hidden="true" />
+        <p className="g-h3 mt-3">Wala pang photos</p>
+        <p className="g-sm g-mut mt-1">Be the first to add a photo of this spot.</p>
+        {showAddPhotoAction ? (
+          <Button variant="ink" size="sm" onClick={onContribute} className="mt-4">
+            <Camera aria-hidden="true" />
+            Add photo
+          </Button>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
+function PhotoHero({
+  imageUrls,
+  placeName,
+  topBar,
+  showAddPhotoAction,
+  onContribute,
+}: {
+  imageUrls: string[]
+  placeName: string
+  topBar: ReactNode
+  showAddPhotoAction: boolean
+  onContribute: () => void
+}) {
+  const { photos, markPhotoBroken } = usePhotoList(imageUrls)
+  const [activeIndex, setActiveIndex] = useState(0)
+  const safeIndex = Math.min(activeIndex, Math.max(photos.length - 1, 0))
+
+  const handleScroll = (event: UIEvent<HTMLDivElement>) => {
+    const track = event.currentTarget
+    if (track.clientWidth > 0) setActiveIndex(Math.round(track.scrollLeft / track.clientWidth))
+  }
+
+  return (
+    <div className="relative -mx-4 h-[52vh] min-h-[300px] max-h-[560px] overflow-hidden bg-[var(--fill)] lg:hidden">
+      {photos.length > 0 ? (
+        <div
+          className="flex h-full snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          onScroll={handleScroll}
+          aria-roledescription="carousel"
+          aria-label={`Photos of ${placeName}`}
+        >
+          {photos.map((photo, index) => (
+            <img
+              key={photo}
+              src={photo}
+              alt={index === 0 ? placeName : `${placeName}, photo ${index + 1} of ${photos.length}`}
+              className="h-full w-full shrink-0 snap-center object-cover"
+              loading={index === 0 ? 'eager' : 'lazy'}
+              onError={() => markPhotoBroken(photo)}
+            />
+          ))}
+        </div>
+      ) : (
+        <NoPhotos showAddPhotoAction={showAddPhotoAction} onContribute={onContribute} className="h-full pb-7" />
+      )}
+      <div className="absolute inset-x-0 top-0 flex items-center gap-2 px-4 pt-3">{topBar}</div>
+      {photos.length > 0 ? (
+        <div className="absolute inset-x-0 bottom-10 flex items-end justify-between gap-2 px-2.5">
+          <ImageSourceInfo />
+          {photos.length > 1 ? (
+            <div className="mb-3.5 flex gap-1.5" aria-hidden="true">
+              {photos.map((photo, index) => (
+                <span key={photo} className={cx('h-1.5 rounded-full bg-white shadow-[0_0_3px_rgba(0,0,0,0.45)] transition-all', index === safeIndex ? 'w-4' : 'w-1.5 opacity-60')} />
+              ))}
+            </div>
+          ) : null}
+          {showAddPhotoAction ? (
+            <button type="button" onClick={onContribute} className={overlayButtonClass} style={overlayButtonStyle} aria-label="Add a photo">
+              <Camera aria-hidden="true" />
+            </button>
+          ) : (
+            <span className="w-11" aria-hidden="true" />
+          )}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+function PhotoGallery({
   imageUrls,
   placeName,
   currentIndex,
@@ -241,141 +335,55 @@ function PlacePhoto({
   showAddPhotoAction: boolean
   onContribute: () => void
 }) {
-  const swipeStartX = useRef<number | null>(null)
-  const [brokenPhotoUrls, setBrokenPhotoUrls] = useState<Set<string>>(new Set())
-  const photoSourceKey = uniqueList(imageUrls).join('|')
-
-  useEffect(() => {
-    setBrokenPhotoUrls(new Set())
-  }, [photoSourceKey])
-
-  const photos = uniqueList(imageUrls)
-    .filter((photo) => !brokenPhotoUrls.has(photo))
-    .slice(0, 5)
+  const { photos, markPhotoBroken } = usePhotoList(imageUrls)
   const safeIndex = photos.length > 0 ? Math.min(Math.max(currentIndex, 0), photos.length - 1) : 0
   const activePhoto = photos[safeIndex] ?? null
   const tileIndexes = photos.map((_, index) => index).filter((index) => index !== safeIndex)
 
-  const markPhotoBroken = (photoUrl: string) => {
-    setBrokenPhotoUrls((current) => {
-      if (current.has(photoUrl)) return current
-      const next = new Set(current)
-      next.add(photoUrl)
-      return next
-    })
-  }
-
-  const handleTouchStart = (event: TouchEvent<HTMLDivElement>) => {
-    swipeStartX.current = event.changedTouches[0]?.clientX ?? null
-  }
-
-  const handleTouchEnd = (event: TouchEvent<HTMLDivElement>) => {
-    const startX = swipeStartX.current
-    swipeStartX.current = null
-    if (startX === null || photos.length < 2) return
-    const deltaX = (event.changedTouches[0]?.clientX ?? startX) - startX
-    if (Math.abs(deltaX) < 40) return
-    if (deltaX < 0 && safeIndex < photos.length - 1) onSelect(safeIndex + 1)
-    if (deltaX > 0 && safeIndex > 0) onSelect(safeIndex - 1)
-  }
-
-  const addPhotoButton = showAddPhotoAction ? (
-    <Button variant="line" size="sm" onClick={onContribute} className="absolute right-3 top-3">
-      <Camera aria-hidden="true" />
-      Add photo
-    </Button>
-  ) : null
-
   if (!activePhoto) {
-    return (
-      <div className="grid h-[240px] place-items-center rounded-[var(--r-3)] bg-[var(--sea-soft)] px-6 text-center md:h-[400px]">
-        <div>
-          <Camera className="mx-auto h-8 w-8 text-[var(--sea)]" aria-hidden="true" />
-          <p className="g-h3 mt-3">Wala pang photos</p>
-          <p className="g-sm g-mut mt-1">Be the first to add a photo of this spot.</p>
-          {showAddPhotoAction ? (
-            <Button variant="ink" size="sm" onClick={onContribute} className="mt-4">
-              <Camera aria-hidden="true" />
-              Add photo
-            </Button>
-          ) : null}
-        </div>
-      </div>
-    )
+    return <NoPhotos showAddPhotoAction={showAddPhotoAction} onContribute={onContribute} className="h-[420px] rounded-[var(--r-4)]" />
   }
 
   const tileCount = Math.min(tileIndexes.length, 4)
-  const desktopColumns = tileCount === 0 ? '1fr' : tileCount === 1 ? '2fr 1fr' : '2fr 1fr 1fr'
+  const columns = tileCount === 0 ? '1fr' : tileCount === 1 ? '2fr 1fr' : '2fr 1fr 1fr'
 
   return (
-    <div>
-      <div className="md:hidden">
-        <div
-          className="relative overflow-hidden rounded-[var(--r-3)] bg-[var(--fill)]"
-          style={{ aspectRatio: '4 / 3' }}
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-        >
-          <img src={activePhoto} alt={placeName} className="h-full w-full object-cover" loading="eager" onError={() => markPhotoBroken(activePhoto)} />
-          {photos.length > 1 ? (
-            <Tag tone="solid" className="absolute bottom-3 right-3">
-              {safeIndex + 1} / {photos.length}
-            </Tag>
-          ) : null}
-          {addPhotoButton}
-          <ImageSourceInfo />
-        </div>
-        {photos.length > 1 ? (
-          <div className="mt-2 grid grid-cols-5 gap-2">
-            {photos.map((photo, index) => (
-              <button
-                key={`${photo}-thumb`}
-                type="button"
-                onClick={() => onSelect(index)}
-                aria-label={`Show photo ${index + 1} of ${placeName}`}
-                aria-pressed={index === safeIndex}
-                className={cx(
-                  'h-14 overflow-hidden rounded-[var(--r-2)] bg-[var(--fill)]',
-                  index === safeIndex && 'outline outline-2 outline-offset-2 outline-[var(--ink)]',
-                )}
-              >
-                <img src={photo} alt="" className="h-full w-full object-cover" loading="lazy" onError={() => markPhotoBroken(photo)} />
-              </button>
-            ))}
-          </div>
-        ) : null}
+    <div
+      className="relative grid h-[460px] gap-2 overflow-hidden rounded-[var(--r-4)]"
+      style={{ gridTemplateColumns: columns, gridTemplateRows: 'repeat(2, minmax(0, 1fr))' }}
+    >
+      <div className="overflow-hidden bg-[var(--fill)]" style={{ gridRow: 'span 2' }}>
+        <img src={activePhoto} alt={placeName} className="h-full w-full object-cover" loading="eager" onError={() => markPhotoBroken(activePhoto)} />
       </div>
-
-      <div
-        className="relative hidden h-[440px] gap-2 overflow-hidden rounded-[var(--r-4)] md:grid"
-        style={{ gridTemplateColumns: desktopColumns, gridTemplateRows: 'repeat(2, minmax(0, 1fr))' }}
-      >
-        <div className="overflow-hidden bg-[var(--fill)]" style={{ gridRow: 'span 2' }}>
-          <img src={activePhoto} alt={placeName} className="h-full w-full object-cover" loading="eager" onError={() => markPhotoBroken(activePhoto)} />
-        </div>
-        {tileIndexes.slice(0, 4).map((photoIndex, position) => {
-          const photo = photos[photoIndex]
-          const spansRows = tileCount <= 2 || (tileCount === 3 && position === 0)
-          return (
-            <button
-              key={`${photo}-tile`}
-              type="button"
-              onClick={() => onSelect(photoIndex)}
-              aria-label={`Show photo ${photoIndex + 1} of ${placeName}`}
-              className="group overflow-hidden bg-[var(--fill)]"
-              style={spansRows ? { gridRow: 'span 2' } : undefined}
-            >
-              <img
-                src={photo}
-                alt=""
-                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                loading="lazy"
-                onError={() => markPhotoBroken(photo)}
-              />
-            </button>
-          )
-        })}
-        {addPhotoButton}
+      {tileIndexes.slice(0, 4).map((photoIndex, position) => {
+        const photo = photos[photoIndex]
+        const spansRows = tileCount <= 2 || (tileCount === 3 && position === 0)
+        return (
+          <button
+            key={`${photo}-tile`}
+            type="button"
+            onClick={() => onSelect(photoIndex)}
+            aria-label={`Show photo ${photoIndex + 1} of ${placeName}`}
+            className="group overflow-hidden bg-[var(--fill)]"
+            style={spansRows ? { gridRow: 'span 2' } : undefined}
+          >
+            <img
+              src={photo}
+              alt=""
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+              loading="lazy"
+              onError={() => markPhotoBroken(photo)}
+            />
+          </button>
+        )
+      })}
+      {showAddPhotoAction ? (
+        <Button variant="line" size="sm" onClick={onContribute} className="absolute right-3 top-3">
+          <Camera aria-hidden="true" />
+          Add photo
+        </Button>
+      ) : null}
+      <div className="absolute bottom-1.5 left-1.5">
         <ImageSourceInfo />
       </div>
     </div>
@@ -413,7 +421,7 @@ function ImageSourceInfo() {
   const [isOpen, setIsOpen] = useState(false)
   const note = 'Images come from third-party sources.'
   return (
-    <div className="absolute bottom-1.5 left-1.5 flex items-center gap-1">
+    <div className="flex items-center gap-1">
       <button
         type="button"
         title={note}
@@ -1878,17 +1886,19 @@ function PlaceDetailView({
   const sulitLevel = budgetAmount != null ? getSulitLevel(budgetAmount) : null
   const priceLine =
     budgetAmount == null ? priceBadgeLabel : budgetAmount <= 0 ? 'Free entry' : `₱${budgetAmount.toLocaleString('en-PH')} / head`
-  const highlights = buildPlaceHighlights({
-    bestTime: cleanString(place.best_time_to_visit),
-    crowdLevel: cleanString(place.crowd_level),
-    visitDuration: cleanString(place.visit_duration),
-    goodFor,
-    notIdealFor: place.not_ideal_for ?? [],
-  })
-  const placeTags = uniqueList([
-    ...(place.tags ?? []).slice(0, 4).map((tag) => tag.name),
-    cleanString(place.indoor_outdoor) ? titleCase(cleanString(place.indoor_outdoor)) : '',
-  ]).filter((tag) => !/free|budget|price|₱|open|closed/i.test(tag) && tag.toLowerCase() !== categoryLabel.toLowerCase())
+  const chipPrice =
+    budgetAmount != null
+      ? budgetAmount <= 0
+        ? 'Free entry'
+        : `₱${budgetAmount.toLocaleString('en-PH')}/head`
+      : priceBadgeLabel.startsWith('Starting from ₱')
+        ? `${priceBadgeLabel.replace('Starting from ', '')}/head`
+        : priceBadgeLabel.startsWith('Starting from')
+          ? ''
+          : priceBadgeLabel
+  const timeNeeded = formatVisitDuration(cleanString(place.visit_duration))
+  const isRainSafe = isRainSafePlace(cleanString(place.indoor_outdoor), cleanString(place.weather_fit), categoryLabel)
+  const factChipClass = 'inline-flex h-8 items-center gap-1 rounded-[var(--r-pill)] bg-[var(--fill)] px-3 text-[13px] font-semibold text-[var(--ink)]'
   const placeLat = toCoordinate(place.coordinates?.lat) ?? toCoordinate(place.latitude) ?? toCoordinate(place.lat)
   const placeLng = toCoordinate(place.coordinates?.lng) ?? toCoordinate(place.longitude) ?? toCoordinate(place.lng)
   const placePosition = placeLat != null && placeLng != null && (placeLat !== 0 || placeLng !== 0) ? { lat: placeLat, lng: placeLng } : null
@@ -1912,7 +1922,8 @@ function PlaceDetailView({
   const activeAccessMode = accessModes.find((mode) => mode.value === accessMode) ?? accessModes[0]
   const factItems = [
     { label: 'Hours', value: cleanString(place.hours) },
-    { label: 'Crowd', value: cleanString(place.crowd_level) && !cleanString(place.best_time_to_visit) ? titleCase(cleanString(place.crowd_level)) : '' },
+    { label: 'Best time', value: sentenceCase(cleanString(place.best_time_to_visit)) },
+    { label: 'Crowd', value: titleCase(cleanString(place.crowd_level)) },
   ].filter((item) => item.value)
   const budgetNotes = cleanString(place.budget_notes)
   const askAiQuestion = `Tell me about ${place.name} in ${locationLabel}. Is it good for a barkada gala, what should we try there, and when is the best time to go?`
@@ -2211,19 +2222,19 @@ function PlaceDetailView({
     )
   }
 
-  const sectionClassName = 'border-t border-[var(--line)] py-6'
-  const sectionHeadClassName = '!mt-0'
+  const sectionClassName = 'mt-6 border-t border-[var(--line-2)] pt-6'
+  const sectionTitleClassName = 'g-h3 mb-3'
   const ratingCountLabel =`${formatRatingCount(reviewCount)} ${reviewCount === 1 ? 'rating' : 'ratings'}`
 
   const communitySection = !isCommunityPlaceReady ? (
     <section aria-labelledby="place-reviews" className={sectionClassName}>
-      <SectionHead className={sectionHeadClassName} title={<span id="place-reviews">Reviews</span>} />
+      <h2 id="place-reviews" className={sectionTitleClassName}>Reviews</h2>
       <Empty title="Reviews open soon" description="Ratings and comments aren't ready for this spot yet." />
     </section>
   ) : (
     <>
       <section className={sectionClassName}>
-        <SectionHead className={sectionHeadClassName} title="Reviews" />
+        <h2 className={sectionTitleClassName}>Reviews</h2>
         <div>
           {reviewCount >= MIN_RATINGS_TO_SHOW && averageRating !== null ? (
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -2320,17 +2331,16 @@ function PlaceDetailView({
       </section>
 
       <section className={sectionClassName}>
-        <SectionHead
-          className={sectionHeadClassName}
-          title="Comments"
-          sub={
-            isCommentsLoading
-              ? 'Loading comments…'
+        <h2 className={sectionTitleClassName}>
+          Comments
+          <span className="g-sm g-mut ml-2 font-[family-name:var(--font-body)] font-normal tracking-normal">
+            {isCommentsLoading
+              ? 'Loading…'
               : visibleCommentCount === 0
-                ? 'Wala pang comments'
-                : `${visibleCommentCount} comment${visibleCommentCount === 1 ? '' : 's'}`
-          }
-        />
+                ? 'Wala pa'
+                : visibleCommentCount}
+          </span>
+        </h2>
         {currentUserId ? (
           <div className="flex items-start gap-3">
             <MemberAvatar displayName={currentUserAvatarFallbackName} avatarUrl={currentUserAvatarUrl} compact />
@@ -2380,183 +2390,195 @@ function PlaceDetailView({
     </>
   )
 
+  const backItem = breadcrumbItems[breadcrumbItems.length - 1]
+  const saveLabel = isSaved ? `Remove ${place.name} from saved` : `Save ${place.name}`
+
   return (
-    <Page>
-      <div className="-mt-2 mb-2 flex items-center justify-between gap-3">
-        <nav aria-label="Breadcrumb" className="min-w-0">
-          <ol className="g-sm g-mut flex flex-wrap items-center gap-x-1.5">
-            <li className="inline-flex" aria-hidden="true">
-              <ArrowLeft className="h-4 w-4" />
-            </li>
-            {breadcrumbItems.map((item, index) => (
-              <li
-                key={`${item.label}-${index}`}
-                className={cx('items-center gap-1.5', index === breadcrumbItems.length - 1 ? 'inline-flex' : 'hidden md:inline-flex')}
-              >
-                {index > 0 ? (
-                  <span className="g-fnt hidden md:inline" aria-hidden="true">
-                    /
-                  </span>
-                ) : null}
-                <InternalLink href={item.href ?? '/places'} className="inline-flex min-h-[44px] items-center hover:text-[var(--ink)]">
-                  {item.label}
-                </InternalLink>
-              </li>
-            ))}
-          </ol>
-        </nav>
-        <Button variant="line" size="sm" iconOnly aria-label="Share" className="g-only-desk shrink-0" onClick={() => void handleSharePlace()}>
-          <Share2 aria-hidden="true" />
-        </Button>
-      </div>
+    <Page className="pt-0 lg:pt-8">
+      <PhotoHero
+        imageUrls={galleryPhotos}
+        placeName={place.name}
+        showAddPhotoAction={approvedImageCount < 3}
+        onContribute={handleOpenContribution}
+        topBar={
+          <>
+            <InternalLink href={backItem?.href ?? '/places'} ariaLabel={`Back to ${backItem?.label ?? 'places'}`} className="shrink-0 rounded-full">
+              <span className={overlayButtonClass} style={overlayButtonStyle} aria-hidden="true">
+                <ArrowLeft />
+              </span>
+            </InternalLink>
+            <span className="flex-1" />
+            <button type="button" className={overlayButtonClass} style={overlayButtonStyle} aria-label="Share" onClick={() => void handleSharePlace()}>
+              <Share2 aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              className={overlayButtonClass}
+              style={overlayButtonStyle}
+              onClick={() => void handleSavePlace()}
+              disabled={isSaving}
+              aria-pressed={isSaved}
+              aria-label={saveLabel}
+            >
+              {heartIcon}
+            </button>
+          </>
+        }
+      />
 
-      <div className="flex items-start gap-3">
-        <h1 className="g-h1 min-w-0 flex-1">{place.name}</h1>
-        <Button variant="line" size="sm" className="g-only-mob shrink-0" onClick={() => void handleSharePlace()}>
-          <Share2 aria-hidden="true" />
-          Share
-        </Button>
-      </div>
-      <p className="g-mut mt-1.5 flex flex-wrap items-center gap-x-2">
-        <span>
-          {[categoryLabel, locationLabel].filter(Boolean).join(' · ')}
-          {headlineReviewCount >= MIN_RATINGS_TO_SHOW ? (
-            <>
-              {' · '}
-              <b className="font-semibold text-[var(--ink)]">★ {headlineRating.toFixed(1)}</b> ({formatRatingCount(headlineReviewCount)} ratings)
-            </>
-          ) : null}
-        </span>
-        {headlineReviewCount >= MIN_RATINGS_TO_SHOW ? null : <Tag>New</Tag>}
-      </p>
-      {shareError ? <p className="g-hint is-error mt-2">{shareError}</p> : null}
-      {saveError ? <p className="g-hint is-error mt-2">{saveError}</p> : null}
-      {contributionError && !isContributionOpen ? <p className="g-hint is-error mt-2">{contributionError}</p> : null}
-
-      <div className="mt-4 md:mt-6">
-        <PlacePhoto
-          imageUrls={galleryPhotos}
-          placeName={place.name}
-          currentIndex={activeGalleryIndex}
-          onSelect={(index) => setActiveGalleryState({ key: galleryStateKey, index })}
-          showAddPhotoAction={approvedImageCount < 3}
-          onContribute={handleOpenContribution}
-        />
-      </div>
-
-      <div className="g-split mt-6 md:mt-8">
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:gap-10">
         <div className="min-w-0">
-          {placeTags.length > 0 || place.status === 'Open' || place.status === 'Closed' ? (
-            <div className="flex flex-wrap gap-2">
-              {place.status === 'Open' ? <Tag className="is-sea">Open now</Tag> : null}
-              {place.status === 'Closed' ? <Tag tone="bad">Closed</Tag> : null}
-              {placeTags.map((tag) => (
-                <Tag key={tag}>{tag}</Tag>
-              ))}
-            </div>
-          ) : null}
-
-          {highlights.length > 0 ? (
-            <ul className="mt-5 grid gap-5 border-t border-[var(--line)] py-6" aria-label="Highlights">
-              {highlights.map((item) => {
-                const HighlightIcon = item.icon
-                return (
-                  <li key={item.title} className={cx('flex gap-4', item.detail ? 'items-start' : 'items-center')}>
-                    <HighlightIcon className="h-6 w-6 shrink-0" strokeWidth={1.75} aria-hidden="true" />
-                    <div className="min-w-0">
-                      <p className="text-[15px] font-semibold leading-snug">{item.title}</p>
-                      {item.detail ? <p className="g-sm g-mut mt-0.5">{item.detail}</p> : null}
-                    </div>
+          <div className="g-only-desk mb-4 flex items-center justify-between gap-3">
+            <nav aria-label="Breadcrumb" className="min-w-0">
+              <ol className="g-sm g-mut flex flex-wrap items-center gap-x-1.5">
+                <li className="inline-flex" aria-hidden="true">
+                  <ArrowLeft className="h-4 w-4" />
+                </li>
+                {breadcrumbItems.map((item, index) => (
+                  <li key={`${item.label}-${index}`} className="inline-flex items-center gap-1.5">
+                    {index > 0 ? (
+                      <span className="g-fnt" aria-hidden="true">
+                        /
+                      </span>
+                    ) : null}
+                    <InternalLink href={item.href ?? '/places'} className="inline-flex min-h-[44px] items-center hover:text-[var(--ink)]">
+                      {item.label}
+                    </InternalLink>
                   </li>
-                )
-              })}
-            </ul>
-          ) : null}
+                ))}
+              </ol>
+            </nav>
+            <Button variant="line" size="sm" iconOnly aria-label="Share" className="shrink-0" onClick={() => void handleSharePlace()}>
+              <Share2 aria-hidden="true" />
+            </Button>
+          </div>
 
-          <section className={sectionClassName}>
-            <SectionHead className={sectionHeadClassName} title="About" />
-            <ReadMoreText text={quickTake} />
+          <div className="g-only-desk mb-8">
+            <PhotoGallery
+              imageUrls={galleryPhotos}
+              placeName={place.name}
+              currentIndex={activeGalleryIndex}
+              onSelect={(index) => setActiveGalleryState({ key: galleryStateKey, index })}
+              showAddPhotoAction={approvedImageCount < 3}
+              onContribute={handleOpenContribution}
+            />
+          </div>
+
+          <div className="relative -mx-4 -mt-7 rounded-t-[var(--r-4)] bg-[var(--surface)] px-4 pt-2.5 lg:mx-0 lg:mt-0 lg:rounded-none lg:p-0">
+            <div className="g-grab lg:hidden" aria-hidden="true" />
+            <p className="g-sm g-mut">{[categoryLabel, locationLabel].filter(Boolean).join(' · ')}</p>
+            <h1 className="mt-1 font-[family-name:var(--font-display)] text-[28px] font-bold leading-[1.1] tracking-[-0.03em] [text-wrap:balance] lg:text-[40px]">
+              {place.name}
+            </h1>
+
+            <ul className="mt-3.5 flex flex-wrap gap-2" aria-label="At a glance">
+              {place.status === 'Open' ? <li className={cx(factChipClass, 'bg-[var(--sea-soft)] text-[var(--sea)]')}>Open now</li> : null}
+              {place.status === 'Closed' ? <li className={cx(factChipClass, 'bg-[var(--bad-soft)] text-[var(--bad)]')}>Closed</li> : null}
+              {chipPrice ? <li className={factChipClass}>{chipPrice}</li> : null}
+              {isRainSafe ? <li className={factChipClass}>Rain-safe</li> : null}
+              {timeNeeded ? <li className={factChipClass}>{timeNeeded}</li> : null}
+              {headlineReviewCount >= MIN_RATINGS_TO_SHOW ? (
+                <li className={factChipClass}>
+                  ★ {headlineRating.toFixed(1)}
+                  <span className="g-mut font-medium">({formatRatingCount(headlineReviewCount)})</span>
+                </li>
+              ) : (
+                <li className={factChipClass}>New</li>
+              )}
+            </ul>
+
+            {shareError ? <p className="g-hint is-error mt-2">{shareError}</p> : null}
+            {saveError ? <p className="g-hint is-error mt-2">{saveError}</p> : null}
+            {contributionError && !isContributionOpen ? <p className="g-hint is-error mt-2">{contributionError}</p> : null}
+
+            <div className="g-mut mt-4">
+              <ReadMoreText text={quickTake} />
+            </div>
             {factItems.length > 0 ? (
-              <div className="mt-3 max-w-[640px]">
+              <div className="mt-2 max-w-[640px]">
                 <KeyValue items={factItems} />
               </div>
             ) : null}
-            {budgetNotes ? <p className="g-xs g-mut mt-2">Prices can change — check before you go.</p> : null}
-            <Button variant="text" size="sm" className="mt-2" onClick={() => openFloatingChat(askAiQuestion)}>
+            {budgetNotes ? <p className="g-xs g-fnt mt-2">Prices can change. Check before you go.</p> : null}
+            <Button variant="text" size="sm" onClick={() => openFloatingChat(askAiQuestion)}>
               <Sparkles aria-hidden="true" />
               Ask AI about this place
             </Button>
-          </section>
 
-          <section className={sectionClassName}>
-            <SectionHead className={sectionHeadClassName} title="Good for" />
-            <GoodForList values={goodFor} />
-          </section>
+            <section className={sectionClassName}>
+              <h2 className={sectionTitleClassName}>
+                Getting there
+                {distanceKm != null ? (
+                  <span className="g-sm g-mut ml-2 font-[family-name:var(--font-body)] font-normal tracking-normal">
+                    About {distanceKm < 1 ? 'less than 1' : distanceKm.toFixed(1)} km{distanceFromUserKm != null ? ' from you' : ' away'}
+                  </span>
+                ) : null}
+              </h2>
+              <p className="g-sm whitespace-pre-line">{addressLabel}</p>
+              {mapPoints.length > 0 ? <GtMap points={mapPoints} label={`Map of ${place.name}`} className="mt-3 h-[180px] md:h-[280px]" /> : null}
+              <div className="g-modes mt-3" role="group" aria-label="Ways to get there">
+                {accessModes.map((mode) => {
+                  const ModeIcon = mode.icon
+                  return (
+                    <button
+                      key={mode.value}
+                      type="button"
+                      className={cx('g-mode', mode.value === activeAccessMode.value && 'is-on')}
+                      aria-pressed={mode.value === activeAccessMode.value}
+                      onClick={() => setAccessMode(mode.value)}
+                    >
+                      <ModeIcon aria-hidden="true" />
+                      {mode.label}
+                    </button>
+                  )
+                })}
+              </div>
+              <p className="g-sm g-mut mt-2">{activeAccessMode.text}</p>
+              <Button variant="soft" size="sm" className="mt-3" onClick={openDirections} disabled={!directionsUrl}>
+                <Navigation aria-hidden="true" />
+                Directions
+              </Button>
+            </section>
 
-          <section className={sectionClassName}>
-            <SectionHead className={sectionHeadClassName} title="Getting there" sub={distanceKm != null ? `About ${distanceKm < 1 ? 'less than 1' : distanceKm.toFixed(1)} km${distanceFromUserKm != null ? ' from you' : ' away'}` : undefined} />
-            <p className="g-sm whitespace-pre-line">{addressLabel}</p>
-            <div className="g-modes mt-3" role="group" aria-label="Ways to get there">
-              {accessModes.map((mode) => {
-                const ModeIcon = mode.icon
-                return (
-                  <button
-                    key={mode.value}
-                    type="button"
-                    className={cx('g-mode', mode.value === activeAccessMode.value && 'is-on')}
-                    aria-pressed={mode.value === activeAccessMode.value}
-                    onClick={() => setAccessMode(mode.value)}
-                  >
-                    <ModeIcon aria-hidden="true" />
-                    {mode.label}
-                  </button>
-                )
-              })}
-            </div>
-            <div className="g-leg">
-              <span className="g-leg-rail" aria-hidden="true" />
-              <p className="g-sm g-mut py-1">{activeAccessMode.text}</p>
-            </div>
-            {mapPoints.length > 0 ? <GtMap points={mapPoints} label={`Map of ${place.name}`} className="mt-2 md:h-[320px]" /> : null}
-            <Button variant="line" size="sm" className="mt-3" onClick={openDirections} disabled={!directionsUrl}>
-              <Navigation aria-hidden="true" />
-              Directions
-            </Button>
-          </section>
+            <section className={sectionClassName}>
+              <h2 className={sectionTitleClassName}>Good for</h2>
+              <GoodForList values={goodFor} />
+            </section>
 
-          <section className={sectionClassName}>
-            <SectionHead className={sectionHeadClassName} title="Good to know" />
-            <div className="divide-y divide-[var(--line-2)]">
-              {faqItems.map((item) => (
-                <details key={item.question} className="group">
-                  <summary className="flex min-h-12 cursor-pointer list-none items-center gap-3 py-3 hover:underline [&::-webkit-details-marker]:hidden">
-                    <h3 className="min-w-0 flex-1 text-[15px] font-medium leading-snug">{item.question}</h3>
-                    <ChevronDown className="h-4 w-4 shrink-0 text-[var(--ink-3)] transition-transform group-open:rotate-180" aria-hidden="true" />
-                  </summary>
-                  <p className="g-sm g-mut pb-4 leading-relaxed">{item.answer}</p>
-                </details>
-              ))}
-            </div>
-            {canonicalPlaceLink && areaLink && areaBreadcrumb ? (
-              <p className="g-sm g-mut mt-4">
-                Explore more from{' '}
-                <InternalLink href={areaLink} className="text-[var(--ink)] underline underline-offset-2">
-                  {areaBreadcrumb.areaName}
-                </InternalLink>{' '}
-                or browse the full{' '}
-                <InternalLink href="/places" className="text-[var(--ink)] underline underline-offset-2">
-                  places hub
-                </InternalLink>
-                .
-              </p>
-            ) : null}
-          </section>
+            <section className={sectionClassName}>
+              <h2 className={sectionTitleClassName}>Good to know</h2>
+              <div className="divide-y divide-[var(--line-2)]">
+                {faqItems.map((item) => (
+                  <details key={item.question} className="group">
+                    <summary className="flex min-h-12 cursor-pointer list-none items-center gap-3 py-3 [&::-webkit-details-marker]:hidden">
+                      <h3 className="min-w-0 flex-1 text-[15px] font-medium leading-snug">{item.question}</h3>
+                      <ChevronDown className="h-4 w-4 shrink-0 text-[var(--ink-3)] transition-transform group-open:rotate-180" aria-hidden="true" />
+                    </summary>
+                    <p className="g-sm g-mut pb-4 leading-relaxed">{item.answer}</p>
+                  </details>
+                ))}
+              </div>
+              {canonicalPlaceLink && areaLink && areaBreadcrumb ? (
+                <p className="g-sm g-mut mt-4">
+                  Explore more from{' '}
+                  <InternalLink href={areaLink} className="text-[var(--ink)] underline underline-offset-2">
+                    {areaBreadcrumb.areaName}
+                  </InternalLink>{' '}
+                  or browse the full{' '}
+                  <InternalLink href="/places" className="text-[var(--ink)] underline underline-offset-2">
+                    places hub
+                  </InternalLink>
+                  .
+                </p>
+              ) : null}
+            </section>
 
-          {communitySection}
+            {communitySection}
+          </div>
         </div>
 
-        <aside className="g-side hidden lg:flex" aria-label="Plan this place">
-          <Panel>
+        <aside className="g-only-desk sticky top-24" aria-label="Plan this place">
+          <div className="g-card p-5" style={{ boxShadow: 'var(--sh-2)' }}>
             <p className="g-h2">{priceLine || 'Check price on site'}</p>
             {sulitLevel ? (
               <p className="g-sulit mt-1.5">
@@ -2565,7 +2587,7 @@ function PlaceDetailView({
               </p>
             ) : null}
             <div className="mt-5 flex flex-col gap-2">
-              <Button variant="tara" block onClick={handleAddToPlan}>
+              <Button variant="tara" size="lg" block onClick={handleAddToPlan}>
                 <Plus aria-hidden="true" />
                 Add to plan
               </Button>
@@ -2577,19 +2599,12 @@ function PlaceDetailView({
                   session={appSession}
                   onGuest={() => guestAuth.open('community')}
                 />
-                <Button
-                  variant="soft"
-                  iconOnly
-                  onClick={() => void handleSavePlace()}
-                  disabled={isSaving}
-                  aria-pressed={isSaved}
-                  aria-label={isSaved ? `Remove ${place.name} from saved` : `Save ${place.name}`}
-                >
+                <Button variant="soft" iconOnly onClick={() => void handleSavePlace()} disabled={isSaving} aria-pressed={isSaved} aria-label={saveLabel}>
                   {heartIcon}
                 </Button>
               </div>
             </div>
-          </Panel>
+          </div>
         </aside>
       </div>
 
@@ -2600,21 +2615,8 @@ function PlaceDetailView({
         style={{ bottom: 'calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px))' }}
       >
         <div className="relative mx-auto flex max-w-[720px] items-center gap-2">
-          <p className="min-w-0 flex-1 truncate">
-            <span className="g-h3">{priceLine || 'Price on site'}</span>
-          </p>
           <CheckInButton iconOnly placeId={place.id} placeName={place.name} session={appSession} onGuest={() => guestAuth.open('community')} />
-          <Button
-            variant="soft"
-            iconOnly
-            onClick={() => void handleSavePlace()}
-            disabled={isSaving}
-            aria-pressed={isSaved}
-            aria-label={isSaved ? `Remove ${place.name} from saved` : `Save ${place.name}`}
-          >
-            {heartIcon}
-          </Button>
-          <Button variant="tara" onClick={handleAddToPlan}>
+          <Button variant="tara" size="lg" className="min-w-0 flex-1" onClick={handleAddToPlan}>
             <Plus aria-hidden="true" />
             Add to plan
           </Button>

@@ -309,3 +309,79 @@ export function KeyValue({ items }: { items: Array<{ label: ReactNode; value: Re
     </div>
   )
 }
+
+/** Pinterest-style photo feed: CSS columns, 2 on phones, 3 on tablets, `desktopColumns` from 1024px. */
+export function Masonry({ desktopColumns = 4, className, ...rest }: HTMLAttributes<HTMLDivElement> & { desktopColumns?: 3 | 4 }) {
+  return (
+    <div
+      className={cx('columns-2 gap-2.5 md:columns-3 [&>*]:mb-2.5 [&>*]:break-inside-avoid', desktopColumns === 4 && 'lg:columns-4', className)}
+      {...rest}
+    />
+  )
+}
+
+const masonryRatios = ['3 / 4', '4 / 5', '1 / 1', '4 / 3']
+
+const captionShadow: CSSProperties = { color: '#fff', textShadow: '0 1px 3px rgba(15, 33, 56, 0.7)' }
+
+export type MasonryCardProps = {
+  href: string
+  title: string
+  imageUrl?: string | null
+  /** Replaces the `<img>`, e.g. an image with its own fallbacks. */
+  media?: ReactNode
+  /** Picks the aspect ratio when real image sizes are unknown. */
+  index?: number
+  price?: string | null
+  meta?: ReactNode
+  flag?: ReactNode
+  icon?: LucideIcon
+  tint?: PlaceCardTint
+  saved?: boolean
+  onToggleSave?: () => void
+  selected?: boolean
+  priority?: boolean
+  onClick?: (event: MouseEvent<HTMLAnchorElement>) => void
+  className?: string
+}
+
+/** Photo tile for `Masonry`: caption with price on the image, heart top-right, meta under the photo on desktop. */
+export function MasonryCard({ href, title, imageUrl, media, index = 0, price, meta, flag, icon: FallbackIcon = MapPin, tint = 'sea', saved, onToggleSave, selected, priority, onClick, className }: MasonryCardProps) {
+  const caption = price ? `${title} · ${price}` : title
+  return (
+    <div className={cx('relative min-w-0', className)}>
+      <InternalLink href={href} ariaLabel={caption} className="g-pc" onClick={onClick}>
+        <div
+          className="g-pc-img"
+          style={{ aspectRatio: masonryRatios[index % masonryRatios.length], background: `var(--${tint}-soft)`, boxShadow: selected ? '0 0 0 2px var(--paper), 0 0 0 4px var(--ink)' : undefined }}
+        >
+          <span className="absolute inset-0 grid place-items-center" aria-hidden="true">
+            <FallbackIcon size={28} color={tintInk[tint]} strokeWidth={1.75} opacity={0.45} />
+          </span>
+          {media ?? (imageUrl ? <img className="relative" src={imageUrl} alt="" loading={priority ? 'eager' : 'lazy'} decoding="async" /> : null)}
+          <span className="absolute inset-x-0 bottom-0 h-1/2" style={{ background: 'linear-gradient(transparent, rgba(15, 33, 56, 0.55))' }} aria-hidden="true" />
+          {flag ? <span className="g-pc-flag">{flag}</span> : null}
+          <span className="absolute inset-x-2.5 bottom-2.5 text-[13px] font-bold leading-tight" style={{ ...captionShadow, ...clampTwoLines }}>
+            {caption}
+          </span>
+        </div>
+        {meta ? <div className="g-only-desk g-pc-meta mt-1.5 g-xs">{meta}</div> : null}
+      </InternalLink>
+      {onToggleSave ? (
+        <button
+          type="button"
+          className="g-pc-save !right-2 !top-2"
+          aria-pressed={Boolean(saved)}
+          aria-label={saved ? `Remove ${title} from saved` : `Save ${title}`}
+          onClick={(event: MouseEvent) => {
+            event.preventDefault()
+            event.stopPropagation()
+            onToggleSave()
+          }}
+        >
+          <Heart size={17} />
+        </button>
+      ) : null}
+    </div>
+  )
+}

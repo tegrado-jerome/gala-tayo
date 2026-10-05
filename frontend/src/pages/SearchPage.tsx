@@ -1,19 +1,73 @@
-import { useEffect, useLayoutEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import { Map as MapIcon } from 'lucide-react'
 import SearchHub from './SearchHub'
+import PhotoCard, { type PhotoCardPlace } from '../components/discover/PhotoCard'
+import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
 import ExploreShortcuts from '../components/home/search/ExploreShortcuts'
 import { ExploreSearchBar, QuickFilterChips, SearchFilterPanel, SearchPageBreadcrumb } from '../components/home/search/SearchComponents'
 import { FeatureGuideModalTrigger, featureGuideContent } from '../components/FeatureGuideModal'
-import { Button, Page, Sheet } from '../components/ui'
+import { Button, Masonry, Page, SectionHead, Sheet } from '../components/ui'
 import { useBottomNav } from '../context/BottomNavContext'
 import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
 import { navigateToPath } from '../utils/navigation'
 import { buildSearchPath, hasActiveSearchCriteria, normalizeTypedSearchText, readSearchUrlState } from '../utils/searchParams'
 import { budgetOptions, fallbackAreas, fallbackCategories } from '../components/home/homeHelpers'
+import { homeAllTopPickPlaces } from '../data/homeRecommendations'
+import { fetchHomePlaceDetailsBatch } from '../utils/placeDetailCache'
 import type { SearchBudgetValue } from '../utils/searchParams'
 
 const cityOptions = fallbackAreas.filter((area) => area.id !== 'all').map((area) => ({ value: area.id, label: area.name }))
 const categoryOptions = fallbackCategories.map((category) => ({ value: category.id, label: category.name }))
 const budgetFilterOptions = budgetOptions.map((budget) => ({ value: budget.value, label: budget.label }))
+const trendingSlugs = homeAllTopPickPlaces.map((place) => place.slug)
+
+function TrendingFeed() {
+  const guestAuth = useGuestAuthPrompt()
+  const [detailsBySlug, setDetailsBySlug] = useState<Record<string, Partial<PhotoCardPlace>>>({})
+
+  // Real ids (for saving) and prices come from the batch endpoint; tiles render before it answers.
+  useEffect(() => {
+    let isActive = true
+    void fetchHomePlaceDetailsBatch({ slugs: trendingSlugs, cityImageRequests: [] })
+      .then(({ places }) => {
+        if (!isActive) return
+        setDetailsBySlug(
+          Object.fromEntries(
+            places.map((place) => [
+              place.slug,
+              { id: place.id, category: place.category, budgetMin: place.budget_min != null ? Number(place.budget_min) : null },
+            ]),
+          ),
+        )
+      })
+      .catch(() => undefined)
+    return () => {
+      isActive = false
+    }
+  }, [])
+
+  const places = useMemo(() => homeAllTopPickPlaces.map((place): PhotoCardPlace => ({ ...place, ...detailsBySlug[place.slug] })), [detailsBySlug])
+
+  return (
+    <section className="min-w-0" aria-labelledby="explore-trending-title">
+      <SectionHead
+        title={<span id="explore-trending-title">Trending this week</span>}
+        className="!mt-7"
+        action={
+          <Button variant="text" href="/places">
+            All places
+          </Button>
+        }
+      />
+      <Masonry>
+        {places.map((place, index) => (
+          <PhotoCard key={place.slug} place={place} masonryIndex={index} priority={index < 2} onGuestFavorite={() => guestAuth.open('favorite')} />
+        ))}
+      </Masonry>
+      {guestAuth.promptElement}
+    </section>
+  )
+}
 
 function SearchPage({
   navigationSource = 'push',
@@ -136,10 +190,9 @@ function SearchPage({
   return (
     <Page>
       <SearchPageBreadcrumb />
-      <h1 className="g-h1 mt-5">Saan tayo gagala?</h1>
-      <p className="g-mut mt-2">Search places, cities, or categories.</p>
+      <h1 className="g-h1 mt-4">Saan tayo gagala?</h1>
 
-      <ExploreSearchBar className="mt-5" value={rawQuery} onChange={handleDraftQueryChange} onSubmit={handleSearch} canSubmit={canSearch} />
+      <ExploreSearchBar className="mt-4 lg:max-w-[640px]" value={rawQuery} onChange={handleDraftQueryChange} onSubmit={handleSearch} canSubmit={canSearch} />
 
       <QuickFilterChips
         className="mt-4"
@@ -166,7 +219,9 @@ function SearchPage({
         </div>
       ) : null}
 
-      <div className="mt-4">
+      <TrendingFeed />
+
+      <div className="mt-6">
         <FeatureGuideModalTrigger
           content={featureGuideContent.search}
           triggerLabel="Need help searching?"
@@ -191,6 +246,15 @@ function SearchPage({
       </div>
 
       <ExploreShortcuts />
+
+      <Button
+        href="/ask-ai/maps"
+        className="g-only-mob fixed bottom-[calc(var(--tabbar-h)+16px+env(safe-area-inset-bottom,0px))] left-1/2 z-[5500] -translate-x-1/2 !px-5 shadow-[var(--sh-3)]"
+        aria-label="Open the map"
+      >
+        <MapIcon aria-hidden="true" />
+        Map
+      </Button>
 
       <Sheet open={isFilterPanelOpen} onClose={() => setIsFilterPanelOpen(false)} title="Filters" labelledBy="search-filters-title">
         <SearchFilterPanel

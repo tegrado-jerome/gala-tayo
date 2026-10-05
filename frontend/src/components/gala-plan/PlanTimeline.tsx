@@ -82,7 +82,7 @@ function PlanTimeline({ stops, onMove, onRemove }: PlanTimelineProps) {
                 {stop.place.image_url ? <img src={stop.place.image_url} alt="" loading="lazy" /> : null}
                 <div className="min-w-0 flex-1">
                   <div className="flex min-w-0 items-center gap-2">
-                    <span className="g-num">{index + 1}</span>
+                    <span className="g-num" style={{ background: 'var(--tara)', color: '#0f2138', fontWeight: 700 }}>{index + 1}</span>
                     <InternalLink href={placeHref} className="g-h3 min-w-0 truncate hover:underline">
                       {stop.place.name}
                     </InternalLink>

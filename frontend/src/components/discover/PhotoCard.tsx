@@ -2,7 +2,7 @@ import { useMemo, useState, type MouseEvent } from 'react'
 import { Heart } from 'lucide-react'
 import InternalLink from '../InternalLink'
 import { toTitleCase } from '../PlaceCard'
-import { Tag } from '../ui'
+import { MasonryCard, Tag } from '../ui'
 import PlaceImage from './PlaceImage'
 import { useSavedFavorites } from '../../context/SavedFavoritesContext'
 import { getStaticPlaceImageUrlForSlug } from '../../data/placeIndexVisuals'
@@ -31,6 +31,11 @@ export function getPlaceHref(place: PhotoCardPlace) {
   if (!place.slug) return '/search'
   const areaMeta = resolveAreaMeta({ city: place.city, area: place.area, localArea: place.localArea })
   return getCanonicalPlacePath({ areaSlug: areaMeta.slug, placeSlug: place.slug })
+}
+
+function formatPrice(budgetMin: number | null | undefined) {
+  if (budgetMin == null) return null
+  return budgetMin <= 0 ? 'Free' : `₱${Math.round(budgetMin).toLocaleString('en-PH')}`
 }
 
 /** Price and rating for the line under the meta. */
@@ -65,9 +70,11 @@ type PhotoCardProps = {
   onActivate?: (placeId: string) => void
   onHover?: () => void
   isSelected?: boolean
+  /** Renders the masonry photo tile; the index picks its aspect ratio. */
+  masonryIndex?: number
 }
 
-function PhotoCard({ place, onGuestFavorite, badge, priority = false, onOpen, onActivate, onHover, isSelected = false }: PhotoCardProps) {
+function PhotoCard({ place, onGuestFavorite, badge, priority = false, onOpen, onActivate, onHover, isSelected = false, masonryIndex }: PhotoCardProps) {
   const candidates = useMemo(() => getPlaceImageCandidates(place), [place])
   const { isPlaceSaved, saveFavorite, removeFavorite } = useSavedFavorites()
   const [isSaving, setIsSaving] = useState(false)
@@ -79,9 +86,9 @@ function PhotoCard({ place, onGuestFavorite, badge, priority = false, onOpen, on
     if (place.slug) void prefetchPlaceDetail(place.slug)
   }
 
-  const toggleSave = async (event: MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault()
-    event.stopPropagation()
+  const toggleSave = async (event?: MouseEvent<HTMLButtonElement>) => {
+    event?.preventDefault()
+    event?.stopPropagation()
     if (isSaving) return
     setIsSaving(true)
     try {
@@ -100,6 +107,36 @@ function PhotoCard({ place, onGuestFavorite, badge, priority = false, onOpen, on
   const badgeLabel = badge ?? (isTopRated ? 'Top rated' : null)
   const meta = formatPlaceCardMeta({ category: toTitleCase(place.category), area: place.localArea || place.area, city: place.city })
   const facts = formatPlaceFacts(place)
+  const handleOpen = (event: MouseEvent<HTMLAnchorElement>) => {
+    onOpen?.()
+    if (onActivate) {
+      event.preventDefault()
+      onActivate(place.id)
+    }
+  }
+  const badgeTag = badgeLabel ? (
+    <Tag tone={badgeLabel === 'Rain-safe' ? 'neutral' : 'solid'} className={badgeLabel === 'Rain-safe' ? 'is-sea' : undefined}>{badgeLabel}</Tag>
+  ) : null
+
+  if (masonryIndex !== undefined) {
+    return (
+      <article className="min-w-0" data-search-place-id={place.id} onMouseEnter={prefetch} onFocus={prefetch}>
+        <MasonryCard
+          href={href}
+          title={place.name}
+          index={masonryIndex}
+          media={<PlaceImage candidates={candidates} category={place.category} priority={priority} className="relative h-full w-full" />}
+          price={formatPrice(place.budgetMin)}
+          meta={meta || null}
+          flag={badgeTag}
+          selected={isSelected}
+          saved={isSaved}
+          onToggleSave={() => void toggleSave()}
+          onClick={handleOpen}
+        />
+      </article>
+    )
+  }
 
   return (
     <article
@@ -115,21 +152,11 @@ function PhotoCard({ place, onGuestFavorite, badge, priority = false, onOpen, on
         href={href}
         ariaLabel={place.name}
         className="g-pc"
-        onClick={(event) => {
-          onOpen?.()
-          if (onActivate) {
-            event.preventDefault()
-            onActivate(place.id)
-          }
-        }}
+        onClick={handleOpen}
       >
         <div className="g-pc-img" style={isSelected ? { boxShadow: '0 0 0 2px var(--paper), 0 0 0 4px var(--ink)' } : undefined}>
           <PlaceImage candidates={candidates} category={place.category} priority={priority} className="h-full w-full" />
-          {badgeLabel ? (
-            <span className="g-pc-flag">
-              <Tag tone={badgeLabel === 'Rain-safe' ? 'neutral' : 'solid'} className={badgeLabel === 'Rain-safe' ? 'is-sea' : undefined}>{badgeLabel}</Tag>
-            </span>
-          ) : null}
+          {badgeTag ? <span className="g-pc-flag">{badgeTag}</span> : null}
         </div>
         <div className="g-h3 mt-2.5 line-clamp-2">{place.name}</div>
         {meta ? <div className="g-pc-meta mt-0.5" title={meta}>{meta}</div> : null}

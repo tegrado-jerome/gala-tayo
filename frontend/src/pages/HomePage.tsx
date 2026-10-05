@@ -2,20 +2,19 @@ import { useEffect, useMemo, useState } from 'react'
 import { CloudRain } from 'lucide-react'
 import PhotoCard, { getPlaceHref, getPlaceImageCandidates, type PhotoCardPlace } from '../components/discover/PhotoCard'
 import PlaceImage from '../components/discover/PlaceImage'
-import Rail from '../components/discover/Rail'
 import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
 import NextGalaCard from '../components/home/NextGalaCard'
 import PlanWithAiCard from '../components/home/PlanWithAiCard'
 import InternalLink from '../components/InternalLink'
+import { toTitleCase } from '../components/PlaceCard'
 import SeoHead from '../components/SeoHead'
-import { Button, Empty, Page, PlaceCardSkeleton, SectionHead, Skeleton, Tabs } from '../components/ui'
+import { Button, Chip, Chips, Empty, Masonry, Page, SectionHead, Skeleton } from '../components/ui'
 import type { NavigationSource } from '../app/useAppLocationState'
 import { useAppUser } from '../context/AppUserContext'
 import {
   homeAllTopPickPlaces,
   homeCityRecommendations,
   homePopularTopPickPlaces,
-  homeRecommendedTopPickPlaces,
   type HomeRecommendationPlace,
 } from '../data/homeRecommendations'
 import { getStaticPlaceImageUrlForSlug } from '../data/placeIndexVisuals'
@@ -26,23 +25,20 @@ import { displayCityName } from '../utils/cityName'
 import { fetchHomePlaceDetailsBatch } from '../utils/placeDetailCache'
 import { resolveAreaMeta } from '../utils/routes'
 
-type TopPicksTab = 'all' | 'popular' | 'recommended'
+type FeedId = 'for-you' | 'popular' | 'date-night' | 'rainy-day'
 
-const topPickTabs: Array<{ id: TopPicksTab; label: string; places: HomeRecommendationPlace[] }> = [
-  { id: 'all', label: 'All', places: homeAllTopPickPlaces },
-  { id: 'popular', label: 'Popular', places: homePopularTopPickPlaces },
-  { id: 'recommended', label: 'Recommended', places: homeRecommendedTopPickPlaces },
+type Feed = { id: FeedId; label: string; href: string } & ({ places: HomeRecommendationPlace[] } | { category: string })
+
+const feeds: Feed[] = [
+  { id: 'for-you', label: 'For you', href: '/places', places: homeAllTopPickPlaces },
+  { id: 'popular', label: 'Popular', href: '/places', places: homePopularTopPickPlaces },
+  { id: 'date-night', label: 'Date night', href: '/places/categories/food', category: 'food' },
+  { id: 'rainy-day', label: 'Rainy day', href: '/places/categories/museum', category: 'museum' },
 ]
 
-const topPickSlugs = Array.from(new Set(topPickTabs.flatMap((tab) => tab.places.map((place) => place.slug))))
+const curatedSlugs = Array.from(new Set([...homeAllTopPickPlaces, ...homePopularTopPickPlaces].map((place) => place.slug)))
 
-// Shown in place of "For you" only while it is raining.
-const rainSafeRail = {
-  title: 'Rain-safe picks',
-  subtitle: 'Indoor museums and galleries, para hindi mabasa',
-  category: 'museum',
-  href: '/places/categories/museum',
-}
+const skeletonRatios = ['3 / 4', '4 / 5', '1 / 1', '4 / 3']
 
 function WeatherPill({ weather }: { weather: ManilaWeather }) {
   return (
@@ -53,17 +49,47 @@ function WeatherPill({ weather }: { weather: ManilaWeather }) {
   )
 }
 
-function ListingRail({ rail, badge, onGuestFavorite }: { rail: typeof rainSafeRail; badge?: string; onGuestFavorite: () => void }) {
-  const places = useListingRail({ category: rail.category })
-  if (places && places.length === 0) return null
-
+function FeedSkeleton() {
   return (
-    <Rail title={rail.title} subtitle={rail.subtitle} seeAllHref={rail.href}>
-      {places
-        ? places.map((place) => <PhotoCard key={place.id} place={place} badge={badge} onGuestFavorite={onGuestFavorite} />)
-        : Array.from({ length: 5 }, (_, index) => <PlaceCardSkeleton key={index} />)}
-    </Rail>
+    <Masonry aria-hidden="true">
+      {Array.from({ length: 8 }, (_, index) => (
+        <Skeleton key={index} className="!rounded-[var(--r-3)]" style={{ aspectRatio: skeletonRatios[index % skeletonRatios.length] }} />
+      ))}
+    </Masonry>
   )
+}
+
+function PlaceFeed({ places, onGuestFavorite }: { places: PhotoCardPlace[]; onGuestFavorite: () => void }) {
+  return (
+    <Masonry>
+      {places.map((place, index) => (
+        <PhotoCard key={place.id} place={place} masonryIndex={index} priority={index < 2} onGuestFavorite={onGuestFavorite} />
+      ))}
+    </Masonry>
+  )
+}
+
+function ListingFeed({ category, href, onGuestFavorite }: { category: string; href: string; onGuestFavorite: () => void }) {
+  const places = useListingRail({ category })
+  if (!places) return <FeedSkeleton />
+  if (places.length === 0) {
+    return (
+      <Empty
+        title="Wala pang laman dito"
+        description="Try another pick or browse all places."
+        action={
+          <Button variant="line" size="sm" href={href}>
+            Browse places
+          </Button>
+        }
+      />
+    )
+  }
+  return <PlaceFeed places={places} onGuestFavorite={onGuestFavorite} />
+}
+
+function formatShortPrice(budgetMin: number) {
+  return budgetMin <= 0 ? 'Free' : `₱${Math.round(budgetMin).toLocaleString('en-PH')}`
 }
 
 function WeekendRadar() {
@@ -76,32 +102,38 @@ function WeekendRadar() {
         sub="Most-visited in Makati this month"
         action={
           <Button variant="text" href="/places/makati">
-            See all 10
+            See all
           </Button>
         }
       />
       {!places ? (
-        <div className="grid gap-2.5 md:grid-cols-2 md:gap-x-6">
+        <div className="grid gap-x-8 md:grid-cols-2">
           {Array.from({ length: 4 }, (_, index) => (
-            <Skeleton key={index} className="h-[86px] w-full" />
+            <Skeleton key={index} className="my-2 h-11 w-full" />
           ))}
         </div>
       ) : places.length === 0 ? (
-        <Empty title="Wala pang laman ang radar" description="Browse Makati spots while we load more." action={<Button variant="line" size="sm" href="/places/makati">Explore Makati</Button>} />
+        <Empty
+          title="Wala pang laman ang radar"
+          description="Browse Makati spots while we load more."
+          action={
+            <Button variant="line" size="sm" href="/places/makati">
+              Explore Makati
+            </Button>
+          }
+        />
       ) : (
-        <ol className="grid gap-2.5 md:grid-cols-2 md:gap-x-6">
-          {places.slice(0, 5).map((place, index) => (
-            <li key={place.id}>
-              <InternalLink href={getPlaceHref(place)} className="g-row">
-                <PlaceImage candidates={getPlaceImageCandidates(place)} category={place.category} className="g-row-img" />
-                <div className="g-row-body">
-                  <div className="g-h3 whitespace-nowrap">{place.name}</div>
-                  <div className="g-sm g-mut whitespace-nowrap">{[place.category, place.area ?? place.city].filter(Boolean).join(' · ')}</div>
-                  {place.budgetMin != null ? (
-                    <div className="g-sm whitespace-nowrap">{place.budgetMin <= 0 ? 'Free entry' : `₱${Math.round(place.budgetMin).toLocaleString('en-PH')}/head`}</div>
-                  ) : null}
-                </div>
-                <span className="g-num">{index + 1}</span>
+        <ol className="grid gap-x-8 md:grid-cols-2">
+          {places.slice(0, 6).map((place, index) => (
+            <li key={place.id} className="min-w-0 border-b border-[var(--line-2)]">
+              <InternalLink href={getPlaceHref(place)} className="flex min-h-[60px] min-w-0 items-center gap-3 py-2 text-inherit no-underline">
+                <span className="g-xs g-fnt w-4 shrink-0 text-center font-semibold">{index + 1}</span>
+                <PlaceImage candidates={getPlaceImageCandidates(place)} category={place.category} className="h-11 w-11 shrink-0 rounded-[var(--r-2)] object-cover" />
+                <span className="min-w-0 flex-1">
+                  <span className="g-sm block truncate font-semibold">{place.name}</span>
+                  <span className="g-xs g-mut block truncate">{[toTitleCase(place.category), place.area ?? place.city].filter(Boolean).join(' · ')}</span>
+                </span>
+                {place.budgetMin != null ? <span className="g-xs shrink-0 font-semibold">{formatShortPrice(place.budgetMin)}</span> : null}
               </InternalLink>
             </li>
           ))}
@@ -113,17 +145,17 @@ function WeekendRadar() {
 
 function HomePage({ navigationSource }: { navigationSource: NavigationSource }) {
   void navigationSource
-  const { currentProfile, currentUser, session } = useAppUser()
+  const { currentProfile, currentUser } = useAppUser()
   const guestAuth = useGuestAuthPrompt()
   const weather = useManilaWeather()
-  const [activeTab, setActiveTab] = useState<TopPicksTab>('all')
+  const [chosenFeed, setChosenFeed] = useState<FeedId | null>(null)
   const [detailsBySlug, setDetailsBySlug] = useState<Record<string, Partial<PhotoCardPlace>>>({})
   const openGuestFavorite = () => guestAuth.open('favorite')
 
   // Ratings, real ids (for saving) and prices come from the batch endpoint; cards render before it answers.
   useEffect(() => {
     let isActive = true
-    void fetchHomePlaceDetailsBatch({ slugs: topPickSlugs, cityImageRequests: [] })
+    void fetchHomePlaceDetailsBatch({ slugs: curatedSlugs, cityImageRequests: [] })
       .then(({ places }) => {
         if (!isActive) return
         setDetailsBySlug(
@@ -146,13 +178,15 @@ function HomePage({ navigationSource }: { navigationSource: NavigationSource }) 
     }
   }, [])
 
-  const topPicks = useMemo(() => {
-    const tab = topPickTabs.find((entry) => entry.id === activeTab) ?? topPickTabs[0]
-    return tab.places.map((place): PhotoCardPlace => ({ ...place, ...detailsBySlug[place.slug] }))
-  }, [activeTab, detailsBySlug])
+  const isRaining = Boolean(weather?.isRaining)
+  // Rain switches the default feed to indoor picks until the user picks a chip.
+  const activeFeed = feeds.find((feed) => feed.id === (chosenFeed ?? (isRaining ? 'rainy-day' : 'for-you'))) ?? feeds[0]
+  const curatedPlaces = useMemo(
+    () => ('places' in activeFeed ? activeFeed.places.map((place): PhotoCardPlace => ({ ...place, ...detailsBySlug[place.slug] })) : null),
+    [activeFeed, detailsBySlug],
+  )
 
   const greetingName = currentUser?.firstName?.trim() || currentProfile?.displayName?.trim().split(/\s+/)[0] || null
-  const isRaining = Boolean(weather?.isRaining)
   const today = new Date().toLocaleDateString('en-PH', { weekday: 'long', month: 'short', day: 'numeric' })
   const seoConfig = useMemo(
     () => ({
@@ -170,62 +204,74 @@ function HomePage({ navigationSource }: { navigationSource: NavigationSource }) 
 
       <header className="min-w-0">
         <p className="g-eyebrow">{today}</p>
-        <h1 className="g-d1 mt-2">{greetingName ? `Tara, ${greetingName}?` : 'Tara, gala tayo?'}</h1>
-        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
-          <p className="g-mut">{isRaining ? 'Maulan ngayon, so indoor spots muna.' : 'Describe your gala and Tara AI plans the whole day.'}</p>
-          {isRaining && weather ? <WeatherPill weather={weather} /> : null}
-        </div>
+        <h1 className="g-d1 mt-1.5">{greetingName ? `Tara, ${greetingName}?` : 'Tara, gala tayo?'}</h1>
+        {isRaining && weather ? (
+          <div className="mt-3">
+            <WeatherPill weather={weather} />
+          </div>
+        ) : null}
       </header>
 
-      <div className="mt-6 md:mt-7">
+      <NextGalaCard />
+
+      <div className="mt-5 md:mt-6">
         <PlanWithAiCard />
       </div>
 
-      {session ? (
-        <>
-          <SectionHead
-            title="Your next gala"
-            action={
-              <Button variant="text" href="/gala-plans">
-                All plans
-              </Button>
-            }
-          />
-          <NextGalaCard />
-        </>
-      ) : null}
-
-      {isRaining ? (
-        <ListingRail rail={rainSafeRail} badge="Rain-safe" onGuestFavorite={openGuestFavorite} />
-      ) : (
-        <Rail
-          title="For you this week"
-          subtitle="What locals are saving right now"
-          seeAllHref="/places"
-          headerAside={<Tabs label="For you" value={activeTab} options={topPickTabs.map((tab) => ({ value: tab.id, label: tab.label }))} onChange={setActiveTab} />}
-        >
-          {topPicks.map((place, index) => (
-            <PhotoCard key={`${activeTab}-${place.slug}`} place={place} priority={index < 2} onGuestFavorite={openGuestFavorite} />
-          ))}
-        </Rail>
-      )}
+      <section className="mt-7 min-w-0" aria-labelledby="home-feed-title">
+        <h2 id="home-feed-title" className="sr-only">
+          Places for you
+        </h2>
+        <div className="mb-4 flex min-w-0 items-center justify-between gap-3">
+          <Chips role="group" aria-label="Pick a mood" className="min-w-0 flex-1">
+            {feeds.map((feed) => (
+              <Chip key={feed.id} on={feed.id === activeFeed.id} onClick={() => setChosenFeed(feed.id)}>
+                {feed.label}
+              </Chip>
+            ))}
+          </Chips>
+          <span className="g-only-desk">
+            <Button variant="text" href={activeFeed.href}>
+              See all
+            </Button>
+          </span>
+        </div>
+        {curatedPlaces ? (
+          <PlaceFeed places={curatedPlaces} onGuestFavorite={openGuestFavorite} />
+        ) : 'category' in activeFeed ? (
+          <ListingFeed key={activeFeed.id} category={activeFeed.category} href={activeFeed.href} onGuestFavorite={openGuestFavorite} />
+        ) : null}
+        <div className="g-only-mob mt-2 flex justify-center">
+          <Button variant="soft" size="sm" href={activeFeed.href}>
+            See more
+          </Button>
+        </div>
+      </section>
 
       <WeekendRadar />
 
-      <Rail title="Explore by city" subtitle="Pick a city, see what's worth the trip" seeAllHref="/places" seeAllLabel="All cities" itemBasis={104}>
-        {homeCityRecommendations.map((tile) => {
-          const citySlug = resolveAreaMeta({ city: tile.label }).slug
-          const imageUrl = tile.place.imageUrl ?? getStaticPlaceImageUrlForSlug(tile.place.slug)
-          return (
-            <InternalLink key={tile.label} href={`/places/${encodeURIComponent(citySlug)}`} className="block text-center">
-              <span className="block aspect-square overflow-hidden rounded-full">
-                <PlaceImage candidates={imageUrl ? [imageUrl] : []} className="h-full w-full object-cover" />
-              </span>
-              <span className="g-sm mt-2 block font-semibold">{displayCityName(tile.label)}</span>
-            </InternalLink>
-          )
-        })}
-      </Rail>
+      <section className="min-w-0">
+        <SectionHead
+          title="Explore by city"
+          action={
+            <Button variant="text" href="/places">
+              All cities
+            </Button>
+          }
+        />
+        <Chips aria-label="Cities">
+          {homeCityRecommendations.map((tile) => {
+            const citySlug = resolveAreaMeta({ city: tile.label }).slug
+            const imageUrl = tile.place.imageUrl ?? getStaticPlaceImageUrlForSlug(tile.place.slug)
+            return (
+              <InternalLink key={tile.label} href={`/places/${encodeURIComponent(citySlug)}`} className="g-chip !h-11 !gap-2 !pl-1.5 no-underline">
+                <PlaceImage candidates={imageUrl ? [imageUrl] : []} className="h-8 w-8 shrink-0 rounded-full object-cover" />
+                {displayCityName(tile.label)}
+              </InternalLink>
+            )
+          })}
+        </Chips>
+      </section>
 
       {guestAuth.promptElement}
     </Page>
