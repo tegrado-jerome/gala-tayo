@@ -120,11 +120,12 @@ function scoreLocation(place: NormalizedPlace, location: LocationIntent) {
 
 /** The place named in the request when GalaTayo has too few places there, so callers can say so instead of planning elsewhere. */
 export function findUncoveredArea(places: NormalizedPlace[], text: string, minimum = 2): string | null {
+  // Within Metro Manila, neighbouring cities are a short ride away, so plans can draw on them.
+  const provincial = inferProvincialDestinationsFromQuery(text)[0]?.destination;
+  if (!provincial) return null;
   const location = detectLocationIntent(places, text);
-  if (!hasLocation(location)) return null;
   const covered = places.filter((place) => place.latitude != null && matchesLocation(place, location)).length;
-  if (covered >= minimum) return null;
-  return inferProvincialDestinationsFromQuery(text)[0]?.destination.label ?? [...location.cities][0] ?? null;
+  return covered >= minimum ? null : provincial.label;
 }
 
 function scorePlace(place: NormalizedPlace, text: string, location: LocationIntent, categories: Set<string>) {
@@ -160,8 +161,10 @@ export function selectCandidates(places: NormalizedPlace[], prompt: string, limi
   const location = detectLocationIntent(places, locationText);
   const categories = detectCategories(text);
 
-  return places
-    .filter((place) => place.latitude != null && place.longitude != null)
+  const mapped = places.filter((place) => place.latitude != null && place.longitude != null);
+  // When the named area has enough places, stay inside it instead of padding the list with other cities.
+  const inArea = hasLocation(location) ? mapped.filter((place) => matchesLocation(place, location)) : [];
+  return (inArea.length >= 10 ? inArea : mapped)
     .map((place) => ({ place, score: scorePlace(place, text, location, categories) }))
     .sort((a, b) => b.score - a.score)
     .slice(0, limit)
@@ -181,9 +184,8 @@ function formatClock12(minutes: number) {
 export function buildSystemPrompt(plan: { date: string; weekday: string; sunsetMinutes: number }) {
   return `You plan one-day outings ("gala") in the Philippines for GalaTayo. When the request names no place, plan in Metro Manila.
 The gala is on ${plan.weekday}, ${plan.date}. Sunset is about ${formatClock12(plan.sunsetMinutes)}.
-Pick ${MIN_STOPS}-${MAX_STOPS} stops ONLY from CANDIDATES, by their ref (p1, p2...). Never invent places.
+Pick ${MIN_STOPS}-${MAX_STOPS} stops ONLY from CANDIDATES, by their ref (p1, p2...). Never invent places. Always return at least ${MIN_STOPS} stops: if nothing fits exactly, use the closest fitting candidates (a mall for a movie, a cafe for snacks).
 Keep travel short, respect the budget in PHP, and use realistic 24h times: lunch 11:00-14:00, dinner 17:30-21:00, bars after 19:00, a sunset stop starts about 45 min before sunset. Durations 30-240 minutes.
-If the request has nothing to do with going out, food, travel or places, reply {"off_topic": true}.
 Reply with JSON only:
 {"title": string (max 60 chars, Taglish ok), "summary": string (max 140 chars), "group_size": integer (1 if not stated), "stops": [{"ref": "p1", "time": "HH:MM", "minutes": integer, "note": string (max 80 chars, why this stop)}]}`;
 }
@@ -238,13 +240,12 @@ function resolveStopPlace(entry: Record<string, unknown>, candidates: Normalized
   return null;
 }
 
-export type ParsedDraft = { offTopic: true } | DraftResponse;
+
 
 /** Tolerant parse of the model's plan; repairs damaged JSON and loose field names. Null when unusable. */
-export function parseDraft(raw: string, candidates: NormalizedPlace[]): ParsedDraft | null {
+export function parseDraft(raw: string, candidates: NormalizedPlace[]): DraftResponse | null {
   const value = extractJsonObject(raw);
   if (!value) return null;
-  if (value.off_topic === true) return { offTopic: true };
 
   const rawStops = [value.stops, value.itinerary, value.plan].find(Array.isArray) as unknown[] | undefined;
   const seen = new Set<string>();
@@ -355,7 +356,7 @@ function stopKind(place: NormalizedPlace, note: string, clock: number | null, wa
   const text = `${note} ${place.name} ${place.tags.join(" ")} ${place.good_for.join(" ")} ${place.best_time_to_visit ?? ""}`.toLowerCase();
   if (place.category === "Nightlife") return "nightlife";
   if (wantsSunset && SUNSET_WORDS.test(text) && place.category !== "Food") return "sunset";
-  if (SUNSET_WORDS.test(note)) return "sunset";
+  if (SUNSET_WORDS.test(note) && place.category !== "Food") return "sunset";
   if (place.category === "Food") {
     if (/\b(breakfast|almusal|brunch)\b/.test(note.toLowerCase())) return "breakfast";
     if (/\b(lunch|tanghalian)\b/.test(note.toLowerCase())) return "lunch";
@@ -467,7 +468,8 @@ export function scheduleStops(
 
   return items
     .map((item, index) => ({ ...item.stop, time: formatClock(roundTo5(starts[index])) }))
-    .filter((stop, index) => index < MIN_STOPS || starts[index] < 23 * 60 + 30);
+    // Drop trailing stops that would start after the venue closes or too late at night (always keep two).
+    .filter((stop, index) => index < MIN_STOPS || (starts[index] < 23 * 60 + 30 && starts[index] <= windowFor(index).max + 30));
 }
 
 // ---------------------------------------------------------------------------
@@ -497,6 +499,7 @@ function firstSentence(text: string | null) {
 export function buildFallbackDraft(prompt: string, candidates: NormalizedPlace[]): DraftResponse | null {
   const requested = detectCategories(prompt);
   const wantsSunset = SUNSET_WORDS.test(prompt);
+  const wantsEvening = wantsSunset || /\b(dinner|hapunan|night|gabi|evening|inuman|movie)\b/i.test(prompt);
   if (wantsSunset) requested.add("Park");
   if (requested.size < 2) ["Cafe", "Food"].forEach((category) => requested.add(category));
   const slots = FALLBACK_ORDER.filter((category) => requested.has(category)).slice(0, 4);
@@ -527,7 +530,8 @@ export function buildFallbackDraft(prompt: string, candidates: NormalizedPlace[]
     group_size: parseGroupSize(prompt) ?? 1,
     stops: picks.map((place) => ({
       place_id: place.id,
-      time: "",
+      // A meal hint lets scheduleStops put food at lunch or dinner as the request implies.
+      time: place.category === "Food" ? (wantsEvening ? "19:00" : "12:00") : "",
       minutes: DEFAULT_MINUTES[place.category] ?? 60,
       note: firstSentence(place.description) || place.good_for.slice(0, 2).join(", "),
     })),

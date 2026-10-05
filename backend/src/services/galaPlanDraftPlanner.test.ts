@@ -82,7 +82,7 @@ describe("parseDraft", () => {
       candidates,
     );
 
-    assert.ok(draft && "stops" in draft);
+    assert.ok(draft);
     assert.deepEqual(draft.stops.map((stop) => stop.place_id), ["a", "b"]);
     assert.equal(draft.stops[0].minutes, 240);
     assert.equal(draft.stops[1].minutes, 30);
@@ -92,7 +92,7 @@ describe("parseDraft", () => {
   it("repairs loose output: fences, trailing commas, 12h times, ids or names instead of refs", () => {
     const raw = '```json\n{"title":"Gala","itinerary":[{"place_id":"c","time":"3:30 PM","duration":"2 hours"},{"name":"some thai","time":"7pm","minutes":"90"},]}\n```';
     const draft = parseDraft(raw, candidates);
-    assert.ok(draft && "stops" in draft);
+    assert.ok(draft);
     assert.deepEqual(
       draft.stops.map((stop) => [stop.place_id, stop.time, stop.minutes]),
       [
@@ -100,10 +100,6 @@ describe("parseDraft", () => {
         ["a", "19:00", 90],
       ],
     );
-  });
-
-  it("flags off-topic requests", () => {
-    assert.deepEqual(parseDraft('{"off_topic": true}', candidates), { offTopic: true });
   });
 
   it("rejects unusable output and plans with fewer than two stops", () => {

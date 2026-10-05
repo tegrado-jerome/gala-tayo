@@ -42,7 +42,7 @@ async function getBody(request: HttpRequest) {
   }
 }
 
-type ModelOutcome = { draft: DraftResponse } | { offTopic: true } | { failed: string };
+type ModelOutcome = { draft: DraftResponse } | { failed: string };
 
 async function draftWithModel(prompt: string, candidates: NormalizedPlace[], plan: { date: string; weekday: string; sunsetMinutes: number }, requestId: string): Promise<ModelOutcome> {
   try {
@@ -53,7 +53,6 @@ async function draftWithModel(prompt: string, candidates: NormalizedPlace[], pla
     });
     const parsed = parseDraft(raw, candidates);
     if (!parsed) return { failed: "unusable plan JSON" };
-    if (!("stops" in parsed)) return { offTopic: true };
     return { draft: parsed };
   } catch (error) {
     return { failed: error instanceof Error ? error.message : String(error) };
@@ -99,10 +98,6 @@ export async function postGalaPlanAiDraft(request: HttpRequest, context: Invocat
     const sunsetMinutes = getPlanSunset(planDate.date, candidates);
 
     const outcome = await draftWithModel(prompt, candidates, { date: planDate.date, weekday: weekdayOf(planDate.date), sunsetMinutes }, requestId);
-    if ("offTopic" in outcome) {
-      await refundAskAiUsageForActor({ actor, usageType: "chatbot_ai" }).catch(() => undefined);
-      return { status: 422, headers: JSON_HEADERS, jsonBody: { code: "OFF_TOPIC", message: ASK_AI_SCOPE_REJECTION_MESSAGE } };
-    }
 
     let draft: DraftResponse | null = "draft" in outcome ? outcome.draft : null;
     const source = draft ? "ai" : "fallback";

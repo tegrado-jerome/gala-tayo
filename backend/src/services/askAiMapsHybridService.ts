@@ -10,6 +10,7 @@ import {
 
 import { getActiveNormalizedPlaces } from "../domain/places";
 import { resolveAreaSlug } from "../utils/seoPlaces";
+import { detectCategories } from "./galaPlanDraftPlanner";
 
 let GoogleGenAIForMaps = GoogleGenAI;
 const DEFAULT_SEARCH_AREA = "Metro Manila, Philippines";
@@ -166,7 +167,7 @@ export type AskAiMapGroundedPlace = {
     openingHoursSummary?: string | null;
   };
   source?: {
-    recommendation: "gemini_map_grounding" | "geoapify_fallback";
+    recommendation: "gemini_map_grounding" | "geoapify_fallback" | "galatayo";
     coordinates: "geoapify_coordinate_fill" | "gemini_coordinate_fallback" | "geoapify_fallback" | "none";
     details: "gemini_map_grounding" | "geoapify";
   };
@@ -197,7 +198,7 @@ export type AskAiMapGroundedPlace = {
 };
 
 export type AskAiMapsSearchResult = {
-  mode: "gemini_grounding_primary_geoapify_coordinates" | "geoapify_fallback_only" | "no_verified_results";
+  mode: "gemini_grounding_primary_geoapify_coordinates" | "galatayo_places" | "geoapify_fallback_only" | "no_verified_results";
   query: string;
   searchArea: string | null;
   answerText: string;
@@ -1413,7 +1414,9 @@ async function callGeminiMapsGroundingWithModel(
       contents: buildGeminiPrompt(intent),
       config: {
         temperature: 0,
-        maxOutputTokens: 1400,
+        maxOutputTokens: 2000,
+        // Thinking tokens share maxOutputTokens and add seconds; place lookup does not need them.
+        thinkingConfig: { thinkingBudget: 0 },
         tools: [{ googleMaps: {} }],
         abortSignal: signal,
       },
@@ -1440,7 +1443,8 @@ async function callGeminiMapsGroundingWithModel(
     logger?.log(`[AskAiMaps] gemini_model=${model} gemini_grounding_chunks=${chunks.length} grounding_supports=${supports.length}`);
 
     for (const chunk of chunks) {
-      const web = chunk.web as { uri?: string; title?: string } | undefined;
+      // Maps grounding returns place chunks under "maps" (older responses used "web").
+      const web = (chunk.maps ?? chunk.web) as { uri?: string; title?: string } | undefined;
       if (web) {
         groundingChunks.push({ web });
       }
@@ -1480,11 +1484,16 @@ async function callGeminiMapsGroundingWithModel(
   const seenUris = new Set<string>();
   const mapsChunks: Array<{ uri: string; title: string }> = [];
 
+  const seenTitles = new Set<string>();
   for (const chunk of groundingChunks) {
     const uri = chunk.web?.uri;
-    const title = normalizeText(chunk.web?.title);
-    if (uri && uri.includes("google.com/maps") && !seenUris.has(uri)) {
+    // Titles arrive as "Name - Google Maps"; review chunks repeat a place as "Review of Name".
+    const title = normalizeText(chunk.web?.title)?.replace(/\s+-\s+Google Maps$/i, "") ?? null;
+    const isReview = /\/maps\/reviews\//.test(uri ?? "") || /^Review of /i.test(title ?? "");
+    const titleKey = normalizeKey(title ?? "");
+    if (uri && !isReview && /google\.[a-z.]+\/maps|maps\.google\.|maps\.app\.goo\.gl|goo\.gl\/maps/.test(uri) && !seenUris.has(uri) && !seenTitles.has(titleKey)) {
       seenUris.add(uri);
+      if (titleKey) seenTitles.add(titleKey);
       mapsChunks.push({ uri, title: title ?? "" });
     }
   }
@@ -2260,9 +2269,7 @@ async function fillSinglePlaceCoords(
   const addressOnlyQuery = candidateAddress ? candidateAddress : null;
   const uniqueQueries = uniqueStrings(addressOnlyQuery ? [queries[0], addressOnlyQuery] : queries, 2);
   const maxAddressDistanceKm = Math.max(30, area.radiusMeters / 500);
-  const PER_QUERY_TIMEOUT_MS = 1800;
-  const MAX_TOTAL_TIME_MS = 3000;
-  const startTime = Date.now();
+  const PER_QUERY_TIMEOUT_MS = 3000;
 
   const candidates: Array<{
     coordinates: { latitude: number; longitude: number };
@@ -2273,11 +2280,8 @@ async function fillSinglePlaceCoords(
     query: string;
   }> = [];
 
-  for (const query of uniqueQueries) {
-    if (Date.now() - startTime > MAX_TOTAL_TIME_MS) {
-      break;
-    }
-
+  // Both queries run at once: sequential lookups regularly ran past the batch time budget.
+  await Promise.all(uniqueQueries.map(async (query) => {
     queriesTried.push(query);
 
     try {
@@ -2331,9 +2335,9 @@ async function fillSinglePlaceCoords(
         });
       }
     } catch {
-      continue;
+      // A slow or failed lookup just means no pin from this query.
     }
-  }
+  }));
 
   if (candidates.length > 0) {
     candidates.sort((a, b) => {
@@ -2372,6 +2376,68 @@ function getCandidateKey(candidate: GeminiCandidate, area: GeoapifyResolvedArea)
 
 type GalaTayoMatch = { coordinates: { latitude: number; longitude: number }; path: string };
 
+/** GalaTayo places near the search area that fit the query, used when Gemini returns nothing. */
+async function searchGalaTayoPlaces(intent: AskAiMapIntent, area: GeoapifyResolvedArea, limit: number): Promise<AskAiMapGroundedPlace[]> {
+  const maxDistanceKm = Math.max(8, Math.min(30, area.radiusMeters / 1000));
+  const categories = detectCategories(intent.rawQuery);
+  const words = normalizeKey(intent.rawQuery).split(" ").filter((word) => word.length > 3);
+  const nearby = (await getActiveNormalizedPlaces())
+    .filter((place) => place.latitude != null && place.longitude != null)
+    .map((place) => ({ place, distanceKm: getDistanceKm(area.center, { latitude: place.latitude!, longitude: place.longitude! }) }))
+    .filter(({ place, distanceKm }) => distanceKm <= maxDistanceKm && (categories.size === 0 || categories.has(place.category)));
+
+  return nearby
+    .map((entry) => {
+      const haystack = normalizeKey([entry.place.name, entry.place.category, ...entry.place.tags, ...entry.place.good_for].join(" "));
+      const wordHits = words.filter((word) => haystack.includes(word)).length;
+      return { ...entry, wordHits, score: wordHits * 2 + (entry.place.average_rating ?? 0) / 2.5 - entry.distanceKm / 5 };
+    })
+    // With no known category ("ramen"), only places that actually mention the words count.
+    .filter((entry) => categories.size > 0 || entry.wordHits > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map(({ place, distanceKm }): AskAiMapGroundedPlace => {
+      const reason = firstSentenceOf(place.description) || `Listed on GalaTayo as a ${place.category.toLowerCase()} in ${place.city ?? "the area"}.`;
+      return {
+        id: `galatayo:${place.id}`,
+        name: place.name,
+        reason,
+        whyThisFits: reason,
+        category: place.category,
+        displayCategory: place.category,
+        address: place.address,
+        lat: place.latitude,
+        lng: place.longitude,
+        latitude: place.latitude,
+        longitude: place.longitude,
+        hasPin: true,
+        coordinateStatus: "geoapify_coordinate_fill",
+        coordinateConfidence: "high",
+        coordinates: {
+          lat: place.latitude!,
+          lng: place.longitude!,
+          latitude: place.latitude!,
+          longitude: place.longitude!,
+          source: "geoapify",
+          trusted: true,
+          verified: true,
+          confidence: "high",
+        },
+        rating: place.average_rating,
+        reviewCount: place.review_count,
+        googleMapsUri: place.google_maps_url,
+        distanceKm: Number(distanceKm.toFixed(2)),
+        matchConfidence: "high",
+        source: { recommendation: "galatayo", coordinates: "geoapify_coordinate_fill", details: "geoapify" },
+        galatayoPath: `/places/${encodeURIComponent(resolveAreaSlug(place.city, place.area).slug)}/${encodeURIComponent(place.slug)}`,
+      };
+    });
+}
+
+function firstSentenceOf(text: string | null) {
+  const sentence = (text ?? "").split(/(?<=[.!?])\s/)[0]?.trim() ?? "";
+  return sentence.length > 140 ? `${sentence.slice(0, 137).trimEnd()}...` : sentence;
+}
 /** Gemini candidates that are also GalaTayo places near the search area, keyed like the coordinate fill cache. */
 async function matchGalaTayoPlaces(candidates: GeminiCandidate[], area: GeoapifyResolvedArea): Promise<Map<string, GalaTayoMatch>> {
   const maxDistanceKm = Math.max(30, area.radiusMeters / 500);
@@ -4067,15 +4133,15 @@ async function buildAskAiMapResponse(args: {
 
   // Gemini already writes a grounded one-liner per place; a second model call only added ~5 s and Groq quota.
   const groqExplanations =
-    args.explanationSource === "gemini_maps_grounding"
+    args.explanationSource === "gemini_maps_grounding" || args.mode === "galatayo_places"
       ? null
       : await generateWhyThisFitsBatch(args.places.slice(0, counts.max), args.intent, args.signal);
 
   const places = args.places.slice(0, counts.max).map((place, index) => {
-    const groqExplanation = groqExplanations?.[String(index)] ?? (args.explanationSource === "gemini_maps_grounding" ? place.whyThisFits ?? null : null);
+    const groqExplanation = groqExplanations?.[String(index)] ?? (args.explanationSource === "gemini_maps_grounding" || args.mode === "galatayo_places" ? place.whyThisFits ?? null : null);
     const sanitizedGroqExplanation =
       groqExplanation && normalizeText(groqExplanation)
-        ? sanitizeWhyThisFits(groqExplanation, place, args.intent)
+        ? sanitizeWhyThisFits(groqExplanation.replace(/\s*\[\d+(?:,\s*\d+)*\]/g, ""), place, args.intent)
         : "";
     const whyThisFits =
       sanitizedGroqExplanation
@@ -4250,9 +4316,15 @@ export async function searchAskAiMaps(
   let finalPlaces: AskAiMapGroundedPlace[];
   let mode: AskAiMapsSearchResult["mode"];
 
+  const galatayoPlaces = verifiedGeminiPlaces.length > 0 ? [] : await searchGalaTayoPlaces(intent, area, counts.max).catch(() => []);
+
   if (verifiedGeminiPlaces.length > 0) {
     finalPlaces = verifiedGeminiPlaces;
     mode = "gemini_grounding_primary_geoapify_coordinates";
+  } else if (galatayoPlaces.length >= 3) {
+    // Gemini is down or rate-limited: GalaTayo's own places are real, pinned and linkable.
+    finalPlaces = galatayoPlaces;
+    mode = "galatayo_places";
   } else {
     throwIfAskAiRequestCancelled(signal);
     let geoapifyPlaces = await searchGeoapifyStrictFallback(intent, area);

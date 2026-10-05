@@ -160,9 +160,11 @@ function buildPlaceGrounding(places: NormalizedPlace[]) {
   const lines = places.map((place) => {
     const budget = place.budget_min != null ? (place.budget_min === 0 ? "free" : `from PHP ${place.budget_min}`) : "budget unknown";
     const goodFor = place.good_for.slice(0, 3).join(", ");
-    return `- ${place.name} | ${place.category ?? "Place"} | ${place.city ?? "Philippines"} | ${budget}${goodFor ? ` | good for ${goodFor}` : ""}`;
+    const where = [place.area, place.city].filter(Boolean).join(", ") || "Philippines";
+    return `- ${place.name} | ${place.category ?? "Place"} | ${where} | ${budget}${goodFor ? ` | good for ${goodFor}` : ""}`;
   });
-  const header = "GALATAYO PLACES. When you suggest specific places, pick ONLY from this list and write each name exactly as shown. If none fit, say so honestly instead of inventing a place.";
+  const header =
+    "GALATAYO PLACES in or near the area asked about (name | category | area | budget). Recommend only these, written exactly as shown. If none are in the exact neighbourhood, suggest the closest ones and say they are nearby. Never invent places and never mention this list.";
   return [header, ...lines].join("\n");
 }
 

@@ -19,10 +19,10 @@ const GROQ_MODEL_RATE_LIMIT_DEFAULT_COOLDOWN_MS = 60_000;
 const GROQ_TIMEOUT_MS = 45_000;
 const GROQ_PROMPT_GUARD_TIMEOUT_MS = 15_000;
 const GROQ_PROMPT_GUARD_MAX_COMPLETION_TOKENS = 512;
-const GROQ_CHATBOT_MAX_COMPLETION_TOKENS = 900;
+const GROQ_CHATBOT_MAX_COMPLETION_TOKENS = 650;
 // Groq's free tier allows ~8k tokens per minute per model, counting prompt + max_completion_tokens,
 // so every call keeps both small. One short wait-and-retry pass absorbs most per-minute limits.
-const GROQ_RETRY_PASS_MAX_WAIT_MS = 3_000;
+const GROQ_RETRY_PASS_MAX_WAIT_MS = 8_000;
 const GROQ_SAFE_FALLBACK_MESSAGE =
   "Ask AI could not answer that right now. Please try again.";
 const GROQ_CHATBOT_SYSTEM_PROMPT_TAGLISH = `You are Tara, GalaTayo's Filipino gala buddy. You help people plan lakads, dates, food trips, hangouts and trips around the Philippines.
