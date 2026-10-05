@@ -20,6 +20,7 @@ import { getSeoListingPage, mapSeoPlaceToCard, type SeoPlaceSummary } from '../u
 import { BRAND_NAME, MIN_INDEXABLE_GUIDE_PLACES, PRODUCT_NAME, buildLandingMetadata, getLandingTargetBySlug, getRelatedLandingTargets } from '../utils/seoLandingPages'
 import { formatPeso } from '../utils/galaPlanTrip'
 import type { PlaceDetail } from '../types/appTypes'
+import { resizedMediaUrl } from '../data/r2Config'
 
 function LandingFaqJsonLd({ faqs }: { faqs: Array<{ question: string; answer: string }> }) {
   return {
@@ -213,7 +214,7 @@ export default function SeoLandingPage({
         {heroPlace?.imageUrl ? (
           <figure>
             <div className="m-hero">
-              <img src={heroPlace.imageUrl} alt={heroPlace.name} fetchPriority="high" decoding="async" />
+              <img src={resizedMediaUrl(heroPlace.imageUrl, 'hero')} alt={heroPlace.name} fetchPriority="high" decoding="async" />
             </div>
             <figcaption className="m-caption">Pictured: {heroPlace.name}</figcaption>
           </figure>

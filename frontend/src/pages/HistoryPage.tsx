@@ -13,6 +13,7 @@ import { getPlacePhoto } from '../utils/placePhoto'
 import { getApiUrl } from '../utils/apiClient'
 import { getPublicSiteUrl } from '../utils/site'
 import '../design/me.css'
+import { resizedMediaUrl } from '../data/r2Config'
 
 const HISTORY_CACHE_PREFIX = 'galatayo:history:'
 const HISTORY_CACHE_TTL_MS = 5 * 60 * 1000
@@ -437,7 +438,7 @@ function HistoryPage() {
                       <InternalLink href={`/places/${encodeURIComponent(place.slug as string)}`} className="me-tl-link">
                         <span className="me-thumb" aria-hidden="true">
                           <MapPin weight="duotone" />
-                          {photo ? <img src={photo} alt="" loading="lazy" decoding="async" /> : null}
+                          {photo ? <img src={resizedMediaUrl(photo, 'thumb')} alt="" loading="lazy" decoding="async" /> : null}
                         </span>
                         <span className="me-tl-t">
                           <b>{name}</b>

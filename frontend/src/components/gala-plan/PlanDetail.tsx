@@ -41,6 +41,7 @@ import { openFloatingChat } from '../../utils/floatingChat'
 import { navigateToPath } from '../../utils/navigation'
 import { buildPrivateGalaPlanShareUrl, shareLink } from '../../utils/share'
 import '../../design/plans.css'
+import { resizedMediaUrl } from '../../data/r2Config'
 
 type Tab = 'itinerary' | 'polls' | 'barkada' | 'hatian'
 type Menu = 'sheet' | 'popover' | null
@@ -317,7 +318,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
         <figcaption className="g-xs g-mut mb-1.5">What your barkada sees</figcaption>
         <div className="g-invite-preview">
           {cover ? (
-            <img src={cover} alt="" loading="lazy" />
+            <img src={resizedMediaUrl(cover, 'card')} alt="" loading="lazy" />
           ) : (
             <span className="grid place-items-center" style={{ background: 'var(--sea-soft)', color: 'var(--sea)' }} aria-hidden="true">
               <CalendarDays className="g-ic" />

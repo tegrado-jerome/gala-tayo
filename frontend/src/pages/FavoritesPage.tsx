@@ -17,6 +17,7 @@ import { listFavoriteGalaPlans } from '../utils/galaPlansApi'
 import { getPlacePhoto } from '../utils/placePhoto'
 import { getPublicSiteUrl } from '../utils/site'
 import '../design/me.css'
+import { resizedMediaUrl } from '../data/r2Config'
 
 const FAVORITES_LOAD_MORE_BATCH_SIZE = 12
 const AI_PROMPT_PLACE_LIMIT = 6
@@ -45,7 +46,7 @@ function Collage({ photos, icon: Icon }: { photos: string[]; icon: typeof MapPin
       {slots.map((photo, index) => (
         <span key={index}>
           <Icon weight="duotone" />
-          {photo ? <img src={photo} alt="" loading="lazy" decoding="async" /> : null}
+          {photo ? <img src={resizedMediaUrl(photo, 'thumb')} alt="" loading="lazy" decoding="async" /> : null}
         </span>
       ))}
     </span>

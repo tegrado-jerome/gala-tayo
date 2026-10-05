@@ -9,6 +9,7 @@ import { getStaticPlaceImageUrlForSlug } from '../../data/placeIndexVisuals'
 import { voteGalaPlanPoll, type GalaPlanBarkada, type GalaPlanPoll } from '../../utils/galaPlanBarkadaApi'
 import type { GalaPlanDetail } from '../../utils/galaPlansApi'
 import { formatPeso } from '../../utils/galaPlanTrip'
+import { resizedMediaUrl } from '../../data/r2Config'
 
 type Option = GalaPlanPoll['options'][number]
 type Phase = 'deck' | 'saving' | 'done' | 'end'
@@ -46,7 +47,7 @@ function OptionCard({ plan, option, dx, dragging, isMine }: { plan: GalaPlanDeta
         transition: dragging ? 'none' : `transform ${FLY_MS}ms var(--ease-g)`,
       }}
     >
-      {image ? <img src={image} alt="" draggable={false} className="absolute inset-0 h-full w-full object-cover" /> : null}
+      {image ? <img src={resizedMediaUrl(image, 'card')} alt="" draggable={false} className="absolute inset-0 h-full w-full object-cover" /> : null}
       <div className="absolute inset-0" style={{ background: image ? 'linear-gradient(180deg, rgba(15,33,56,0) 45%, rgba(15,33,56,0.88) 100%)' : undefined }} aria-hidden="true" />
 
       <span
