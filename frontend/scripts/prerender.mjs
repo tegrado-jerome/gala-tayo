@@ -240,14 +240,14 @@ async function main() {
 
       try {
         const result = await snapshot(page, job.routePath)
+        // Noindex pages are still written so crawlers see the noindex tag without running JavaScript.
+        const outputPath = job.routePath === '/' ? indexPath : path.join(dist, job.routePath, 'index.html')
+        await mkdir(path.dirname(outputPath), { recursive: true })
+        await writeFile(outputPath, buildHtml(shellHtml, result))
         if (result.robots.includes('noindex')) {
           noindexPaths.push(job.routePath)
           continue
         }
-
-        const outputPath = job.routePath === '/' ? indexPath : path.join(dist, job.routePath, 'index.html')
-        await mkdir(path.dirname(outputPath), { recursive: true })
-        await writeFile(outputPath, buildHtml(shellHtml, result))
         pages.push({ routePath: job.routePath, title: result.title, description: result.description })
         rendered += 1
       } catch (error) {
