@@ -1,17 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowRight, faCompass, faHouse, faLocationDot, faTag } from '@fortawesome/free-solid-svg-icons'
-import AppHeader from '../components/AppHeader'
-import Breadcrumb from '../components/navigation/Breadcrumb'
-import InternalLink from '../components/InternalLink'
-import type { PlaceCardData } from '../components/PlaceCard'
-import PhotoCard from '../components/discover/PhotoCard'
-import { toPhotoCardPlace } from '../components/home/search/SearchComponents'
+import { ChevronRight, Sparkles } from 'lucide-react'
+import PlaceCard, { withLiveDetail } from '../components/PlaceCard'
+import { ListingBreadcrumb } from '../components/home/search/SearchComponents'
 import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
 import PlaceListingSkeleton from '../components/PlaceListingSkeleton'
+import { Button, Empty, KeyValue, Page, Panel, Row, SectionHead } from '../components/ui'
 import SeoHead from '../components/SeoHead'
-import { PageContainer, PageShell, ResponsiveGrid } from '../components/layout/ResponsiveLayouts'
+import { openFloatingChat } from '../utils/floatingChat'
 import { fetchPlaceDetailsBatch } from '../utils/placeDetailCache'
 import { getAreaLabelBySlug } from '../data/metroManilaAreas'
 import { getPlaceCategoryLabel } from '../data/placeCategories'
@@ -122,15 +117,14 @@ export default function SeoLandingPage({
 
   if (!target || !metadata) {
     return (
-      <PageShell>
+      <Page>
         <SeoHead title={`Guide Not Found | ${PRODUCT_NAME}`} robots="noindex,follow" />
-        <AppHeader minimal />
-        <main className="w-full pb-12 pt-5">
-          <PageContainer className="px-4 sm:px-6 lg:px-8">
-            <h1 className="text-2xl font-black text-slate-950">Guide not found</h1>
-          </PageContainer>
-        </main>
-      </PageShell>
+        <h1 className="g-h1">Guide not found</h1>
+        <p className="g-mut mt-2">Baka na-move na ito. Try browsing places instead.</p>
+        <Button variant="line" href="/places" className="mt-5">
+          Browse places
+        </Button>
+      </Page>
     )
   }
 
@@ -168,149 +162,98 @@ export default function SeoLandingPage({
     LandingFaqJsonLd({ faqs: metadata.faqs }),
   ]
 
+  const askAiQuestion = `Help me pick from ${metadata.h1}`
+
   return (
-    <PageShell>
-      <SeoHead
-        title={metadata.title}
-        description={metadata.description}
-        canonicalPath={metadata.canonicalPath}
-        jsonLd={jsonLd}
+    <Page>
+      <SeoHead title={metadata.title} description={metadata.description} canonicalPath={metadata.canonicalPath} jsonLd={jsonLd} />
+
+      <ListingBreadcrumb items={[{ label: 'Home', href: '/home' }, { label: 'Places', href: '/places' }, { label: metadata.h1 }]} />
+
+      <header className="mt-5 max-w-[46rem]">
+        <p className="g-eyebrow">{BRAND_NAME} guide</p>
+        <h1 className="g-h1 mt-2">{metadata.h1}</h1>
+        <p className="g-mut mt-3">{metadata.intro}</p>
+      </header>
+
+      <Panel className="mt-6 max-w-[46rem]">
+        <KeyValue
+          items={[
+            { label: 'Area', value: areaName },
+            { label: 'Category', value: categoryLabel || 'Mixed discovery' },
+            { label: 'Good for', value: metadata.summary },
+          ]}
+        />
+      </Panel>
+
+      <SectionHead
+        title="Recommended places"
+        sub={`Picks from ${PRODUCT_NAME} that fit this guide.`}
+        action={
+          <Button variant="soft" size="sm" onClick={() => openFloatingChat(askAiQuestion)}>
+            <Sparkles aria-hidden="true" />
+            Ask AI
+          </Button>
+        }
       />
-      <AppHeader minimal />
 
-      <main className="w-full pb-12 pt-5 sm:pb-14">
-        <PageContainer className="px-4 sm:px-6 lg:px-8">
-          <Breadcrumb
-            showBack
-            items={[
-              { label: 'Home', href: '/home', icon: <FontAwesomeIcon icon={faHouse} className="h-3.5 w-3.5" /> },
-              { label: 'Places', href: '/places', icon: <FontAwesomeIcon icon={faCompass} className="h-3.5 w-3.5" /> },
-              { label: metadata.h1, icon: <FontAwesomeIcon icon={faTag} className="h-3.5 w-3.5" /> },
-            ]}
-          />
+      {isLoading ? (
+        <PlaceListingSkeleton cardCount={8} helperText={`Loading ${metadata.h1.toLowerCase()}.`} />
+      ) : errorMessage ? (
+        <Empty title="Hindi ma-load ang guide" description={errorMessage} />
+      ) : items.length === 0 ? (
+        <Empty
+          title="Wala pang matching places"
+          description="We'll keep this guide updated as more places are added."
+          action={
+            <Button variant="soft" onClick={() => openFloatingChat(askAiQuestion)}>
+              <Sparkles aria-hidden="true" />
+              Ask AI instead
+            </Button>
+          }
+        />
+      ) : (
+        <div className="g-grid">
+          {items.map((rawPlace) => (
+            <PlaceCard
+              key={rawPlace.id}
+              place={withLiveDetail({ ...mapSeoPlaceToCard(rawPlace), budget_min: rawPlace.budgetMin, good_for: rawPlace.goodFor }, placeDetailsBySlug[rawPlace.slug])}
+              onGuestSave={() => listingGuestAuth.open('favorite')}
+            />
+          ))}
+        </div>
+      )}
 
-          <section className="mt-5 rounded-[28px] border border-[#E5E7EB] bg-white px-5 py-6 shadow-[0_8px_24px_rgba(17,24,39,0.04)] sm:px-7">
-            <span className="inline-flex items-center rounded-full border border-[var(--primary-soft)] bg-[var(--accent-soft)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--accent)]">
-              {BRAND_NAME} Guide
-            </span>
-            <h1 className="mt-4 text-[2rem] font-black leading-[0.95] tracking-[-0.045em] text-slate-950 sm:text-[2.6rem]">
-              {metadata.h1}
-            </h1>
-            <p className="mt-3 max-w-[46rem] text-[15px] leading-7 text-[var(--muted)]">{metadata.intro}</p>
-            <div className="mt-5 grid gap-3 md:grid-cols-3">
-              <InfoCard title="Area coverage" body={areaName} icon={faLocationDot} />
-              <InfoCard title="Category focus" body={categoryLabel || 'Mixed discovery'} icon={faTag} />
-              <InfoCard title="Search intent" body={metadata.summary} icon={faCompass} />
-            </div>
-          </section>
+      <div className="g-split mt-12">
+        <section aria-labelledby="guide-faq-title" className="min-w-0">
+          <h2 id="guide-faq-title" className="g-h2">
+            Quick answers
+          </h2>
+          <div className="g-list mt-4">
+            {metadata.faqs.map((faq) => (
+              <Panel as="article" key={faq.question}>
+                <h3 className="g-h3">{faq.question}</h3>
+                <p className="g-sm g-mut mt-2">{faq.answer}</p>
+              </Panel>
+            ))}
+          </div>
+        </section>
 
-          <section className="mt-8">
-            <div className="flex items-end justify-between gap-3">
-              <div>
-                <h2 className="text-[1.35rem] font-black tracking-[-0.03em] text-slate-950">Recommended places</h2>
-                <p className="mt-1 text-[13px] leading-6 text-[var(--muted)]">
-                  Picks from {PRODUCT_NAME} that fit this guide.
-                </p>
-              </div>
-            </div>
-
-            {isLoading ? (
-              <PlaceListingSkeleton cardCount={8} helperText={`Loading ${metadata.h1.toLowerCase()}.`} />
-            ) : errorMessage ? (
-              <section className="mt-4 rounded-[24px] border border-[#E5E7EB] bg-white px-5 py-6 shadow-[0_6px_20px_rgba(17,24,39,0.03)]">
-                <h2 className="text-base font-semibold text-[var(--text-main)]">We couldn&apos;t load this guide right now.</h2>
-                <p className="mt-1 text-sm leading-6 text-[var(--muted)]">{errorMessage}</p>
-              </section>
-            ) : items.length === 0 ? (
-              <section className="mt-4 rounded-[24px] border border-[#E5E7EB] bg-white px-5 py-6 shadow-[0_6px_20px_rgba(17,24,39,0.03)]">
-                <h2 className="text-base font-semibold text-[var(--text-main)]">No matching places yet.</h2>
-                <p className="mt-1 text-sm leading-6 text-[var(--muted)]">We&apos;ll keep this guide updated as more approved places are added.</p>
-              </section>
-            ) : (
-              <ResponsiveGrid className="mt-4 gap-x-5 gap-y-9">
-                {items.map((rawPlace, index) => {
-                  const place = mapSeoPlaceToCard(rawPlace) as PlaceCardData
-                  const livePlace = placeDetailsBySlug[rawPlace.slug]
-                  const resolvedPlace = livePlace
-                    ? {
-                        ...place,
-                        thumbnailUrl: livePlace.thumbnailUrl ?? null,
-                        imageUrl: livePlace.imageUrl ?? null,
-                        curatedImageUrls: livePlace.curatedImageUrls ?? [],
-                      }
-                    : place
-
-                  return (
-                    <PhotoCard
-                      key={rawPlace.id}
-                      place={toPhotoCardPlace(resolvedPlace)}
-                      priority={index < 4}
-                      badge={resolvedPlace.budget_min === 0 ? 'Free' : null}
-                      onGuestFavorite={() => listingGuestAuth.open('favorite')}
-                    />
-                  )
-                })}
-              </ResponsiveGrid>
-            )}
-          </section>
-
-          <section className="mt-8 grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-            <div className="rounded-[28px] border border-[#E5E7EB] bg-white px-5 py-6 shadow-[0_8px_24px_rgba(17,24,39,0.04)]">
-              <h2 className="text-[1.25rem] font-black tracking-[-0.03em] text-slate-950">Quick answers for AI and search</h2>
-              <div className="mt-4 space-y-4">
-                {metadata.faqs.map((faq) => (
-                  <article key={faq.question} className="rounded-2xl bg-[var(--surface-alt)] px-4 py-4">
-                    <h3 className="text-sm font-semibold text-slate-950">{faq.question}</h3>
-                    <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{faq.answer}</p>
-                  </article>
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded-[28px] border border-[#E5E7EB] bg-white px-5 py-6 shadow-[0_8px_24px_rgba(17,24,39,0.04)]">
-              <h2 className="text-[1.25rem] font-black tracking-[-0.03em] text-slate-950">Related guides</h2>
-              <div className="mt-4 space-y-3">
-                {relatedTargets.map((relatedTarget) => (
-                  <InternalLink
-                    key={relatedTarget.slug}
-                    href={`/guides/${relatedTarget.slug}`}
-                    className="group flex items-center justify-between rounded-2xl border border-[#E5E7EB] px-4 py-4 transition hover:border-[var(--primary-soft)] hover:bg-[#F8FBFF]"
-                  >
-                    <div>
-                      <p className="text-sm font-semibold text-slate-950">{relatedTarget.label}</p>
-                      <p className="mt-1 text-xs leading-5 text-[var(--muted)]">
-                        {relatedTarget.keywords.slice(0, 2).join(' • ')}
-                      </p>
-                    </div>
-                    <FontAwesomeIcon icon={faArrowRight} className="h-3.5 w-3.5 text-[#64748B] transition group-hover:text-[var(--accent)]" />
-                  </InternalLink>
-                ))}
-              </div>
-            </div>
-          </section>
-        </PageContainer>
-      </main>
-      {listingGuestAuth.promptElement}
-    </PageShell>
-  )
-}
-
-function InfoCard({
-  title,
-  body,
-  icon,
-}: {
-  title: string
-  body: string
-  icon: IconDefinition
-}) {
-  return (
-    <article className="rounded-2xl bg-[var(--surface-alt)] px-4 py-4">
-      <div className="flex items-center gap-2 text-[var(--accent)]">
-        <FontAwesomeIcon icon={icon} className="h-3.5 w-3.5" />
-        <p className="text-[11px] font-semibold uppercase tracking-[0.12em]">{title}</p>
+        <aside aria-labelledby="guide-related-title" className="g-side">
+          <h2 id="guide-related-title" className="g-h2">
+            Related guides
+          </h2>
+          <div className="g-list">
+            {relatedTargets.map((relatedTarget) => (
+              <Row key={relatedTarget.slug} href={`/guides/${relatedTarget.slug}`} action={<ChevronRight className="g-ic text-[var(--ink-3)]" aria-hidden="true" />}>
+                <div className="g-h3 truncate">{relatedTarget.label}</div>
+                <div className="g-xs g-mut truncate">{relatedTarget.keywords.slice(0, 2).join(' · ')}</div>
+              </Row>
+            ))}
+          </div>
+        </aside>
       </div>
-      <p className="mt-3 text-sm leading-6 text-[var(--muted)]">{body}</p>
-    </article>
+      {listingGuestAuth.promptElement}
+    </Page>
   )
 }

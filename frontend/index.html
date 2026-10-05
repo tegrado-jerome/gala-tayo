@@ -26,7 +26,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <link rel="preload" as="image" href="/images/brand/galatayo-logo-loader.webp" type="image/webp" fetchpriority="high" />
     <link rel="preload" as="image" href="/images/welcome/mobile.webp" type="image/webp" media="(max-width: 639px)" fetchpriority="high" />
     <link rel="preload" as="image" href="/images/welcome/tablet.webp" type="image/webp" media="(min-width: 640px) and (max-width: 1023px)" fetchpriority="high" />
     <link rel="preload" as="image" href="/images/welcome/laptop-desktop.webp" type="image/webp" media="(min-width: 1024px)" fetchpriority="high" />
@@ -50,13 +49,13 @@
       }
 
       html, body, #root {
-        background: #ffffff;
+        background: #fbf9f6;
       }
 
       html[data-theme="dark"],
       html[data-theme="dark"] body,
       html[data-theme="dark"] #root {
-        background: #0b1210;
+        background: #141311;
       }
 
       .critical-app-loader {
@@ -65,8 +64,8 @@
         z-index: 2147483647;
         display: grid;
         place-items: center;
-        background: #ffffff;
-        color: #067647;
+        background: #fbf9f6;
+        color: #1a1917;
         opacity: 1;
         visibility: visible;
         pointer-events: auto;
@@ -84,35 +83,28 @@
       }
 
       .critical-app-loader__logo {
-        display: block;
-        width: clamp(260px, 62vw, 420px);
-        height: auto;
-        object-fit: contain;
-        opacity: 0.96;
-        animation: critical-logo-breathe 2.8s ease-in-out -1.4s infinite;
-        will-change: transform, opacity;
-        filter:
-          drop-shadow(0 12px 26px rgba(15, 23, 42, 0.08))
-          drop-shadow(0 0 6px rgba(255, 255, 255, 0.14));
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font: 700 34px/1 'Bricolage Grotesque', 'Instrument Sans', system-ui, sans-serif;
+        letter-spacing: -0.04em;
+        animation: critical-logo-breathe 2.4s ease-in-out infinite;
+      }
+
+      .critical-app-loader__logo i {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #e4572e;
       }
 
       @keyframes critical-logo-breathe {
-        0%, 100% {
-          opacity: 1;
-          transform: scale(1);
-        }
-
-        50% {
-          opacity: 0.94;
-          transform: scale(1.012);
-        }
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
       }
 
       @media (prefers-reduced-motion: reduce) {
-        .critical-app-loader__logo {
-          animation-duration: 1ms;
-          animation-iteration-count: 1;
-        }
+        .critical-app-loader__logo { animation: none; }
       }
     </style>
     <script>
@@ -143,10 +135,7 @@
   </head>
   <body>
     <div id="critical-welcome-loader" class="critical-app-loader" aria-label="Loading GalaTayo">
-      <picture aria-hidden="true">
-        <source srcset="/images/brand/galatayo-logo-loader.webp" type="image/webp" />
-        <img class="critical-app-loader__logo" src="/images/brand/galatayo-logo-loader.png" alt="" width="840" height="360" fetchpriority="high" decoding="async" />
-      </picture>
+      <span class="critical-app-loader__logo" aria-hidden="true"><i></i>galatayo</span>
     </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
@@ -155,7 +144,7 @@
         var isWelcome = (location.pathname.replace(/\/+$/, '') || '/') === '/';
         if (!isWelcome) return;
 
-        var MIN_WELCOME_MS = 2000;
+        var MIN_WELCOME_MS = 600;
         var MAX_FALLBACK_MS = 10000;
         var start = window.__galatayoWelcomeStart || Date.now();
         var isReady = false;

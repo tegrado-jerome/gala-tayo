@@ -7,7 +7,8 @@ import { getUserMfaStatus } from '../utils/userMfa'
 import { buildAuthPath } from '../services/authApi'
 import { navigateToPath, replaceWithPath } from '../utils/navigation'
 import { trackLoginCompleted, trackSignUpCompleted } from '../utils/analytics'
-import { PageShell } from '../components/layout/ResponsiveLayouts'
+import { AuthCard } from '../components/auth/AuthCard'
+import { Button, Page } from '../components/ui'
 
 async function waitForSession(): Promise<Session | null> {
   const {
@@ -140,39 +141,37 @@ function AuthCallbackPage() {
 
   if (errorMessage) {
     return (
-      <PageShell reserveBottomNav={false}>
-        <main className="gala-page-background min-h-screen min-h-[100dvh] text-[var(--text)]">
-          <div className="flex min-h-[100dvh] items-center justify-center px-6">
-            <section className="flex w-full max-w-[420px] flex-col items-center text-center">
-              <h1 className="text-3xl font-black">Sign-in problem</h1>
-              <p className="mt-4 text-sm font-semibold leading-6 text-[var(--text-muted)]">{errorMessage}</p>
-              <div className="mt-8 flex flex-col items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setErrorMessage('')
-                    setRetryCount((current) => current + 1)
-                  }}
-                  className="app-button app-button-primary app-button-md w-[220px]"
-                >
-                  Try again
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigateToPath(buildAuthPath('/login', window.location.search ? new URLSearchParams(window.location.search).get('next') : null))}
-                  className="text-sm font-semibold text-[var(--text-muted)] underline underline-offset-2 transition hover:text-[var(--text)]"
-                >
-                  Back to login
-                </button>
-              </div>
-            </section>
-          </div>
-        </main>
-      </PageShell>
+      <AuthCard title="Sign-in problem" sub={errorMessage}>
+        <div className="grid gap-2">
+          <Button
+            variant="ink"
+            block
+            onClick={() => {
+              setErrorMessage('')
+              setRetryCount((current) => current + 1)
+            }}
+          >
+            Try again
+          </Button>
+          <Button
+            variant="text"
+            className="mx-auto"
+            onClick={() => navigateToPath(buildAuthPath('/login', window.location.search ? new URLSearchParams(window.location.search).get('next') : null))}
+          >
+            Back to login
+          </Button>
+        </div>
+      </AuthCard>
     )
   }
 
-  return <PageShell reserveBottomNav={false} />
+  return (
+    <Page>
+      <p className="g-sm g-mut mt-16 text-center" role="status" aria-live="polite">
+        Signing you in...
+      </p>
+    </Page>
+  )
 }
 
 export default AuthCallbackPage

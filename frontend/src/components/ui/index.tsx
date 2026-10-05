@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, CSSProperties, HTMLAttributes, MouseEvent, ReactNode } from 'react'
+import { useEffect, type ButtonHTMLAttributes, type CSSProperties, type HTMLAttributes, type MouseEvent, type ReactNode } from 'react'
 import { Heart } from 'lucide-react'
 import InternalLink from '../InternalLink'
 
@@ -190,7 +190,7 @@ export function PlaceCard({ href, title, imageUrl, meta, rating, pricePerHead, s
   )
 }
 
-export function Row({ href, imageUrl, children, action, className, onClick }: { href?: string; imageUrl?: string | null; children: ReactNode; action?: ReactNode; className?: string; onClick?: () => void }) {
+export function Row({ href, imageUrl, children, action, className, style, onClick }: { href?: string; imageUrl?: string | null; children: ReactNode; action?: ReactNode; className?: string; style?: CSSProperties; onClick?: () => void }) {
   const body = (
     <>
       {imageUrl !== undefined ? imageUrl ? <img src={imageUrl} alt="" loading="lazy" /> : <span className="g-row-img" /> : null}
@@ -199,8 +199,8 @@ export function Row({ href, imageUrl, children, action, className, onClick }: { 
     </>
   )
   if (href) return <InternalLink href={href} className={cx('g-row', className)}>{body}</InternalLink>
-  if (onClick) return <button type="button" onClick={onClick} className={cx('g-row', 'w-full text-left', className)}>{body}</button>
-  return <div className={cx('g-row', className)}>{body}</div>
+  if (onClick) return <button type="button" onClick={onClick} style={style} className={cx('g-row', 'w-full text-left', className)}>{body}</button>
+  return <div style={style} className={cx('g-row', className)}>{body}</div>
 }
 
 export function Empty({ title, description, action, className }: { title: ReactNode; description?: ReactNode; action?: ReactNode; className?: string }) {
@@ -241,6 +241,15 @@ export function Stamp({ title, sub, state = 'done', progress }: { title: string;
 }
 
 export function Sheet({ open, onClose, title, children, labelledBy }: { open: boolean; onClose: () => void; title?: ReactNode; children: ReactNode; labelledBy?: string }) {
+  useEffect(() => {
+    if (!open) return
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open, onClose])
+
   if (!open) return null
   return (
     <div className="g-sheet-scrim" onClick={onClose} role="presentation">

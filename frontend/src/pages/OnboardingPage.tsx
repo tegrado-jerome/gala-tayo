@@ -4,7 +4,7 @@ import OnboardingAgreementStep from '../components/onboarding/OnboardingAgreemen
 import OnboardingPersonalInfoStep from '../components/onboarding/OnboardingPersonalInfoStep'
 import OnboardingPrivacyStep from '../components/onboarding/OnboardingPrivacyStep'
 import OnboardingPublicProfileStep from '../components/onboarding/OnboardingPublicProfileStep'
-import { StateContainer } from '../components/layout/ResponsiveLayouts'
+import { AuthNotice } from '../components/auth/AuthCard'
 import type { OnboardingErrors, OnboardingFormState, OnboardingStep } from '../components/onboarding/types'
 import {
   checkUsernameAvailable,
@@ -611,13 +611,11 @@ function OnboardingPage({ session, onComplete }: OnboardingPageProps) {
   return (
     <>
       {statusError ? (
-        <main className="pointer-events-none fixed inset-x-0 top-4 z-[80] px-4">
-          <StateContainer className="flex justify-center">
-            <section className="w-full max-w-[520px] rounded-2xl border border-amber-200 bg-amber-50/95 px-4 py-3 text-center shadow-[0_18px_42px_rgba(27,26,23,0.12)] backdrop-blur">
-              <p className="text-sm font-semibold leading-6 text-amber-900">{statusError}</p>
-            </section>
-          </StateContainer>
-        </main>
+        <div className="pointer-events-none fixed inset-x-0 top-20 z-[80] flex justify-center px-4">
+          <AuthNotice tone="warn" className="w-full max-w-[520px] text-center">
+            {statusError}
+          </AuthNotice>
+        </div>
       ) : null}
       {content}
     </>

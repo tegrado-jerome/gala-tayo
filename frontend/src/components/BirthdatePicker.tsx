@@ -1,11 +1,12 @@
 import { createPortal } from 'react-dom'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCalendar, faChevronDown, faChevronLeft, faChevronRight } from '@fortawesome/free-solid-svg-icons'
+import { Calendar, ChevronDown, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
+import { Button, cx } from './ui'
 
 type BirthdatePickerProps = {
+  id?: string
   value: string
   onChange: (value: string) => void
   helperText?: string
@@ -79,7 +80,7 @@ const BIRTHDATE_WEEKDAYS = Array.from({ length: 7 }, (_, index) =>
   }).format(new Date(Date.UTC(2024, 0, 7 + index))),
 )
 
-function BirthdatePicker({ value, onChange, helperText, error, minYear = 1900, maxYear }: BirthdatePickerProps) {
+function BirthdatePicker({ id, value, onChange, helperText, error, minYear = 1900, maxYear }: BirthdatePickerProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [isYearMenuOpen, setIsYearMenuOpen] = useState(false)
   const [yearMenuStyle, setYearMenuStyle] = useState<CSSProperties>({})
@@ -202,7 +203,7 @@ function BirthdatePicker({ value, onChange, helperText, error, minYear = 1900, m
     }
 
     const frameId = window.requestAnimationFrame(() => {
-      const selectedOption = yearMenuRef.current?.querySelector<HTMLButtonElement>('.gala-date-year-option.is-selected')
+      const selectedOption = yearMenuRef.current?.querySelector<HTMLButtonElement>('[aria-selected="true"]')
       selectedOption?.scrollIntoView({ block: 'center' })
     })
 
@@ -252,147 +253,134 @@ function BirthdatePicker({ value, onChange, helperText, error, minYear = 1900, m
 
   const isDateDisabled = (date: Date) => date < minDate || date > maxDate
 
+  const longDate = (date: Date) => new Intl.DateTimeFormat(undefined, { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' }).format(date)
+  const messageId = id && (error || helperText) ? `${id}-msg` : undefined
+
   return (
-    <div className="gala-date-picker">
+    <div className="flex flex-col gap-1.5">
       <button
         ref={triggerRef}
+        id={id}
         type="button"
         aria-haspopup="dialog"
         aria-expanded={isOpen}
+        aria-invalid={Boolean(error) || undefined}
+        aria-describedby={messageId}
         onClick={() => (isOpen ? closeCalendar() : openCalendar())}
-        className="gala-date-trigger"
+        className="g-input flex items-center justify-between gap-3 text-left"
       >
         <span className="flex min-w-0 items-center gap-3">
-          <span className="gala-date-icon">
-            <FontAwesomeIcon icon={faCalendar} className="h-4.5 w-4.5" />
-          </span>
-          <span className="min-w-0">
-            <span className={`block truncate text-left text-sm font-semibold ${selectedDate ? 'text-[var(--text-main)]' : 'text-[var(--text-disabled)]'}`}>
-              {selectedDate ? new Intl.DateTimeFormat(undefined, { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' }).format(selectedDate) : 'Select birthdate'}
-            </span>
-            <span className="block truncate text-left text-xs text-[var(--muted)]">
-              {selectedDate ? 'Stored as YYYY-MM-DD' : 'Optional birthdate for your account'}
-            </span>
+          <Calendar className="g-ic" style={{ color: 'var(--ink-2)' }} aria-hidden="true" />
+          <span className="truncate" style={{ color: selectedDate ? 'var(--ink)' : 'var(--ink-3)' }}>
+            {selectedDate ? longDate(selectedDate) : 'Select birthdate'}
           </span>
         </span>
-        <span className="flex items-center gap-2">
-          <FontAwesomeIcon icon={faChevronDown} className={`gala-date-chevron h-4 w-4 shrink-0 text-[var(--text-disabled)] transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-        </span>
+        <ChevronDown
+          className="g-ic"
+          style={{ color: 'var(--ink-3)', transform: isOpen ? 'rotate(180deg)' : undefined, transition: 'transform var(--t) var(--ease-g)' }}
+          aria-hidden="true"
+        />
       </button>
 
       {isOpen
         ? createPortal(
-            <div className="gala-date-popover" role="presentation" onClick={closeCalendar}>
+            <div className="g-sheet-scrim" role="presentation" onClick={closeCalendar}>
               <div
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby={dialogTitleId}
-                className="gala-date-popover-shell"
+                className="g-sheet"
+                style={{ maxWidth: 420 }}
                 onClick={(event) => event.stopPropagation()}
               >
-                <div className="gala-date-popover-header">
+                <div className="g-grab" />
+                <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p id={dialogTitleId} className="text-[11px] font-black uppercase tracking-[0.18em] text-[var(--accent)]">
+                    <h2 id={dialogTitleId} className="g-h3">
                       Birthdate
-                    </p>
-                    <p className="mt-1 text-xs font-semibold text-[var(--muted)]">
-                      {selectedDate ? 'Edit your stored birthdate.' : 'Pick a birthdate.'}
-                    </p>
+                    </h2>
+                    <p className="g-xs g-mut mt-0.5">{selectedDate ? 'Edit your birthdate.' : 'Pick your birthdate.'}</p>
                   </div>
+                  <Button variant="soft" size="sm" iconOnly onClick={closeCalendar} aria-label="Close">
+                    <X aria-hidden="true" />
+                  </Button>
                 </div>
 
-                <div className="gala-date-popover-controls">
-                  <button
-                    type="button"
-                    onClick={goPrevMonth}
-                    disabled={!canGoPrev}
-                    className="gala-date-nav-button"
-                    aria-label="Previous month"
-                  >
-                    <FontAwesomeIcon icon={faChevronLeft} className="h-4 w-4" />
-                  </button>
+                <div className="mt-4 flex items-center justify-between gap-2">
+                  <Button variant="line" size="sm" iconOnly onClick={goPrevMonth} disabled={!canGoPrev} aria-label="Previous month">
+                    <ChevronLeft aria-hidden="true" />
+                  </Button>
 
-                  <div className="gala-date-month-label">
-                    <span className="block text-sm font-black tracking-[-0.03em] text-[var(--text-main)]">
-                      {new Intl.DateTimeFormat(undefined, { month: 'long', timeZone: 'UTC' }).format(visibleMonth)}
-                    </span>
-                    <div className="gala-date-year-wrap">
-                      <button
-                        ref={yearButtonRef}
-                        type="button"
-                        onClick={() => setIsYearMenuOpen((current) => !current)}
-                        className="gala-date-year-button"
-                        aria-haspopup="listbox"
-                        aria-expanded={isYearMenuOpen}
-                      >
-                        <span>{visibleMonth.getUTCFullYear()}</span>
-                        <FontAwesomeIcon icon={faChevronDown} className={`h-3.5 w-3.5 transition-transform ${isYearMenuOpen ? 'rotate-180' : ''}`} />
-                      </button>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={goNextMonth}
-                    disabled={!canGoNext}
-                    className="gala-date-nav-button"
-                    aria-label="Next month"
-                  >
-                    <FontAwesomeIcon icon={faChevronRight} className="h-4 w-4" />
-                  </button>
-                </div>
-
-                <div className="gala-date-popover-actions">
-                  <button type="button" onClick={() => setVisibleMonth(today)} className="gala-date-utility-button">
-                    Today
-                  </button>
-                  {selectedDate ? (
-                    <button type="button" onClick={clearDate} className="gala-date-utility-button">
-                      Clear
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span className="g-h3">{new Intl.DateTimeFormat(undefined, { month: 'long', timeZone: 'UTC' }).format(visibleMonth)}</span>
+                    <button
+                      ref={yearButtonRef}
+                      type="button"
+                      onClick={() => setIsYearMenuOpen((current) => !current)}
+                      className="g-chip"
+                      aria-haspopup="listbox"
+                      aria-expanded={isYearMenuOpen}
+                      aria-label={`Year ${visibleMonth.getUTCFullYear()}, change year`}
+                    >
+                      {visibleMonth.getUTCFullYear()}
+                      <ChevronDown style={{ transform: isYearMenuOpen ? 'rotate(180deg)' : undefined }} aria-hidden="true" />
                     </button>
-                  ) : null}
+                  </div>
+
+                  <Button variant="line" size="sm" iconOnly onClick={goNextMonth} disabled={!canGoNext} aria-label="Next month">
+                    <ChevronRight aria-hidden="true" />
+                  </Button>
                 </div>
 
-                <div className="gala-date-calendar">
-                  <div className="gala-date-weekdays">
-                    {BIRTHDATE_WEEKDAYS.map((day) => (
-                      <span key={day} className="gala-date-weekday">
-                        {day}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="gala-date-grid">
-                    {calendarDays.map((date) => {
-                      const dayNumber = date.getUTCDate()
-                      const isCurrentMonth = isSameUtcMonth(date, visibleMonth)
-                      const isSelected = isSameUtcDay(date, selectedDate)
-                      const isToday = isSameUtcDay(date, new Date())
-                      const isDisabled = isDateDisabled(date)
+                <div className="mt-4 grid grid-cols-7 gap-1 text-center">
+                  {BIRTHDATE_WEEKDAYS.map((day) => (
+                    <span key={day} className="g-xs g-fnt py-1 font-semibold">
+                      {day}
+                    </span>
+                  ))}
+                  {calendarDays.map((date) => {
+                    const isCurrentMonth = isSameUtcMonth(date, visibleMonth)
+                    const isSelected = isSameUtcDay(date, selectedDate)
+                    const isToday = isSameUtcDay(date, new Date())
+                    const isDisabled = isDateDisabled(date)
 
-                      return (
-                        <button
-                          key={date.toISOString()}
-                          type="button"
-                          disabled={isDisabled}
-                          onClick={() => selectDate(date)}
-                          className={[
-                            'gala-date-day',
-                            isCurrentMonth ? 'gala-date-day-current' : 'gala-date-day-outside',
-                            isSelected ? 'gala-date-day-selected' : '',
-                            isToday ? 'gala-date-day-today' : '',
-                          ].join(' ')}
-                        >
-                          <span>{dayNumber}</span>
-                        </button>
-                      )
-                    })}
-                  </div>
+                    return (
+                      <button
+                        key={date.toISOString()}
+                        type="button"
+                        disabled={isDisabled}
+                        onClick={() => selectDate(date)}
+                        aria-pressed={isSelected}
+                        aria-label={longDate(date)}
+                        className={cx(
+                          'g-sm grid h-10 place-items-center rounded-full',
+                          isSelected ? 'font-semibold' : 'hover:bg-[var(--fill)]',
+                          isDisabled ? 'cursor-not-allowed opacity-35' : 'cursor-pointer',
+                        )}
+                        style={{
+                          background: isSelected ? 'var(--ink)' : undefined,
+                          color: isSelected ? 'var(--on-ink)' : isCurrentMonth ? 'var(--ink)' : 'var(--ink-3)',
+                          boxShadow: isToday && !isSelected ? 'inset 0 0 0 1px var(--ink-3)' : undefined,
+                        }}
+                      >
+                        {date.getUTCDate()}
+                      </button>
+                    )
+                  })}
                 </div>
 
-                <div className="gala-date-popover-footer">
-                  <span className="text-xs font-semibold text-[var(--muted)]">
-                    {selectedDate ? `Selected: ${new Intl.DateTimeFormat(undefined, { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' }).format(selectedDate)}` : 'Choose a birthdate for age checks and reminders.'}
-                  </span>
+                <div className="mt-3 flex items-center justify-between gap-3">
+                  <span className="g-xs g-mut min-w-0">{selectedDate ? `Selected: ${longDate(selectedDate)}` : 'Used for age checks and reminders.'}</span>
+                  <div className="flex shrink-0 gap-2">
+                    <Button variant="text" size="sm" onClick={() => setVisibleMonth(today)}>
+                      Today
+                    </Button>
+                    {selectedDate ? (
+                      <Button variant="text" size="sm" onClick={clearDate}>
+                        Clear
+                      </Button>
+                    ) : null}
+                  </div>
                 </div>
               </div>
               {isYearMenuOpen
@@ -401,8 +389,15 @@ function BirthdatePicker({ value, onChange, helperText, error, minYear = 1900, m
                       ref={yearMenuRef}
                       role="listbox"
                       aria-label="Birth year"
-                      className="gala-date-year-menu"
-                      style={{ visibility: 'hidden', ...yearMenuStyle }}
+                      className="overflow-y-auto p-1"
+                      style={{
+                        visibility: 'hidden',
+                        background: 'var(--surface)',
+                        border: '1px solid var(--line)',
+                        borderRadius: 'var(--r-3)',
+                        boxShadow: 'var(--sh-3)',
+                        ...yearMenuStyle,
+                      }}
                       onClick={(event) => event.stopPropagation()}
                     >
                       {yearOptions.map((year) => {
@@ -414,7 +409,8 @@ function BirthdatePicker({ value, onChange, helperText, error, minYear = 1900, m
                             role="option"
                             aria-selected={selected}
                             onClick={() => handleYearSelect(year)}
-                            className={`gala-date-year-option ${selected ? 'is-selected' : ''}`}
+                            className={cx('g-sm block h-9 w-full rounded-[var(--r-2)] text-center', selected ? 'font-semibold' : 'hover:bg-[var(--fill)]')}
+                            style={selected ? { background: 'var(--ink)', color: 'var(--on-ink)' } : { color: 'var(--ink)' }}
                           >
                             {year}
                           </button>
@@ -429,8 +425,11 @@ function BirthdatePicker({ value, onChange, helperText, error, minYear = 1900, m
           )
         : null}
 
-      {helperText ? <p className="text-xs font-semibold text-[var(--muted)]">{helperText}</p> : null}
-      {error ? <p className="text-xs font-semibold text-red-600">{error}</p> : null}
+      {error ? (
+        <span id={messageId} className="g-hint is-error">{error}</span>
+      ) : helperText ? (
+        <span id={messageId} className="g-hint">{helperText}</span>
+      ) : null}
     </div>
   )
 }

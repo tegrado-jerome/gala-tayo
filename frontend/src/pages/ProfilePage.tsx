@@ -1,43 +1,41 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import AppHeader from '../components/AppHeader'
-import { AppSkeleton } from '../components/AppUI'
-import PasswordStrengthBar from '../components/auth/PasswordStrengthBar'
+import { BookMarked, Eye, Heart, History, Settings, Share2, Sparkles, Stamp as StampIcon, UserPlus } from 'lucide-react'
 import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
-import MinimalBackNav from '../components/navigation/MinimalBackNav'
-import { AppIcon } from '../components/AppIcon'
-import PageHeroHeader from '../components/PageHeroHeader'
+import InternalLink from '../components/InternalLink'
 import ProfileAvatar from '../components/ProfileAvatar'
-import { PageContainer, PageShell, CardSurface } from '../components/layout/ResponsiveLayouts'
+import { Button, Empty, Page, Row, SectionHead, Sheet, Skeleton, Stamp, Tabs, Tag } from '../components/ui'
+import { SavedPlaceCard } from './FavoritesPage'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { useAppUser } from '../context/AppUserContext'
-import { getPasswordStrength } from '../utils/passwordStrength'
-import { updateAccountPassword } from '../services/authApi'
+import { useSavedFavorites, type FavoritePlace } from '../context/SavedFavoritesContext'
 import {
   getDisplayAvatar,
   getFollowers,
   getFollowing,
   getFollowRequests,
   getMyProfile,
-  normalizeUsername,
   respondToFollowRequest,
   type FollowListUser,
   type FollowRequest,
   type Profile,
-  updateMyProfile,
-  validateUsername,
 } from '../utils/profileApi'
+import { formatGalaPlanDate, listMyGalaPlans, type GalaPlanSummary } from '../utils/galaPlansApi'
+import { getMyPassport, type CityStamp } from '../utils/passportApi'
 import { preloadAvatarImage } from '../utils/avatarImageCache'
 import { navigateToPath } from '../utils/navigation'
-import { FormSkeleton, SkeletonLine } from '../components/loading/SkeletonStates'
+import { shareLink } from '../utils/share'
+import { getPublicSiteOrigin } from '../utils/site'
 
 type ProfilePageProps = {
   session: Session | null
 }
 
+type ProfileTab = 'plans' | 'stamps' | 'saved'
+
 const PROFILE_CACHE_PREFIX = 'galatayo:profile-page:'
 const PROFILE_CACHE_TTL_MS = 10 * 60 * 1000
+const TAB_PREVIEW_LIMIT = 6
 
 type ProfilePageCache = {
   profile: Profile
@@ -75,91 +73,61 @@ function writeCache(userId: string, cache: ProfilePageCache) {
 let memCache: { profile: Profile; followRequests: FollowRequest[] } | null = null
 let memCachedUserId: string | null = null
 
-function GuestProfileSkeleton() {
+type Loadable<T> = { status: 'loading' } | { status: 'ready'; data: T } | { status: 'error'; message: string }
+
+export function PlanCard({ href, title, imageUrl, tag, date, meta }: { href: string; title: string; imageUrl?: string | null; tag?: string; date?: string; meta: string }) {
   return (
-    <div aria-hidden="true" className="guest-profile-skeleton">
-      <div className="guest-profile-skeleton-pill mb-5 inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white/80 px-4 py-2">
-        <AppSkeleton className="h-3.5 w-3.5 rounded-full" />
-        <SkeletonLine className="h-3.5 w-16" />
+    <InternalLink href={href} className="g-card block min-w-0 overflow-hidden no-underline" ariaLabel={title}>
+      <div className="aspect-[16/10] w-full" style={{ background: 'var(--fill)' }}>
+        {imageUrl ? <img src={imageUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" /> : null}
       </div>
+      <div className="flex flex-col gap-2 p-4" style={{ color: 'var(--ink)' }}>
+        {tag || date ? (
+          <div className="flex items-center gap-2">
+            {tag ? <Tag>{tag}</Tag> : null}
+            {date ? <span className="g-sm g-mut">{date}</span> : null}
+          </div>
+        ) : null}
+        <span className="g-h3 truncate">{title}</span>
+        <span className="g-sm g-mut">{meta}</span>
+      </div>
+    </InternalLink>
+  )
+}
 
-      <section className="pb-1">
-        <SkeletonLine className="h-3 w-14" />
-        <SkeletonLine className="mt-3 h-9 w-72 max-w-[85%]" />
-        <SkeletonLine className="mt-3 h-4 w-[26rem] max-w-full" />
-      </section>
-
-      <CardSurface pad="loose" className="guest-profile-skeleton-card profile-summary-card mt-5">
-        <div className="profile-summary-header">
-          <div className="profile-summary-identity">
-            <AppSkeleton className="h-20 w-20 shrink-0 rounded-full" />
-            <div className="profile-summary-copy min-w-0 flex-1">
-              <div className="profile-summary-meta">
-                <AppSkeleton className="h-8 w-24 rounded-full" />
-                <SkeletonLine className="h-3.5 w-12" />
+export function FollowListSheet({ title, users, emptyLabel, onClose }: { title: string; users: FollowListUser[] | null; emptyLabel: string; onClose: () => void }) {
+  return (
+    <Sheet open={users !== null} onClose={onClose} title={title} labelledBy="follow-list-title">
+      {users?.length === 0 ? <p className="g-sm g-mut">{emptyLabel}</p> : null}
+      <div className="g-list">
+        {users?.map((user) => (
+          <Row
+            key={user.user_id}
+            onClick={() => {
+              onClose()
+              navigateToPath(`/u/${encodeURIComponent(user.username)}`)
+            }}
+          >
+            <div className="flex min-w-0 items-center gap-3">
+              <ProfileAvatar profile={user} size="xs" />
+              <div className="min-w-0">
+                <div className="g-h3 truncate">@{user.username}</div>
+                <div className="g-sm g-mut truncate">{user.bio || 'View profile'}</div>
               </div>
-              <SkeletonLine className="mt-3 h-11 w-48 max-w-[80%]" />
-              <SkeletonLine className="mt-3 h-4 w-20" />
-              <SkeletonLine className="mt-4 h-4 w-full max-w-[34rem]" />
-              <SkeletonLine className="mt-2 h-4 w-5/6 max-w-[28rem]" />
             </div>
-          </div>
-
-          <div className="profile-summary-actions">
-            <AppSkeleton className="h-11 w-32 rounded-[16px]" />
-            <AppSkeleton className="h-11 w-32 rounded-[16px]" />
-          </div>
-        </div>
-
-        <div className="profile-summary-stats">
-          <div className="profile-summary-stat">
-            <SkeletonLine className="h-4 w-24" />
-          </div>
-          <div className="profile-summary-stat">
-            <SkeletonLine className="h-4 w-24" />
-          </div>
-          <div className="profile-summary-stat-note">
-            <AppSkeleton className="h-4 w-4 rounded-full" />
-            <SkeletonLine className="h-4 w-64 max-w-[60vw]" />
-          </div>
-          <div className="profile-summary-stat-note">
-            <AppSkeleton className="h-4 w-4 rounded-full" />
-            <SkeletonLine className="h-4 w-28" />
-          </div>
-        </div>
-      </CardSurface>
-
-      <section className="guest-profile-skeleton-section mt-8">
-        <div className="guest-profile-skeleton-section-header flex flex-col gap-3 border-b border-[var(--line)] pb-5 sm:flex-row sm:items-end sm:justify-between">
-          <div className="min-w-0 flex-1">
-            <SkeletonLine className="h-3 w-12" />
-            <SkeletonLine className="mt-3 h-7 w-44 max-w-[80%]" />
-            <SkeletonLine className="mt-3 h-4 w-72 max-w-full" />
-          </div>
-          <AppSkeleton className="h-8 w-24 rounded-full" />
-        </div>
-
-        <div className="guest-profile-skeleton-list divide-y divide-[var(--line)] pt-3">
-          {Array.from({ length: 2 }).map((_, index) => (
-            <article key={`guest-profile-request-skeleton-${index}`} className="flex items-center justify-between gap-3 py-4">
-              <div className="min-w-0 flex-1">
-                <SkeletonLine className="h-4 w-32 max-w-[70%]" />
-                <SkeletonLine className="mt-2 h-3.5 w-52 max-w-full" />
-              </div>
-              <div className="flex gap-2">
-                <AppSkeleton className="h-9 w-20 rounded-lg" />
-                <AppSkeleton className="h-9 w-20 rounded-full" />
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-    </div>
+          </Row>
+        ))}
+      </div>
+      <Button variant="line" block className="mt-4" onClick={onClose}>
+        Close
+      </Button>
+    </Sheet>
   )
 }
 
 function ProfilePage({ session }: ProfilePageProps) {
   const { currentProfile } = useAppUser()
+  const { favorites, isFavoritesLoading } = useSavedFavorites()
   const isGuestProfile = !session?.user?.id
   const cachedAtRender = useMemo(() => {
     if (memCache && memCachedUserId === session?.user?.id) {
@@ -200,28 +168,14 @@ function ProfilePage({ session }: ProfilePageProps) {
   })
   const [isLoading, setIsLoading] = useState(false)
   const [, setIsRefreshing] = useState(false)
-  const [isEditing, setIsEditing] = useState(false)
-  const [usernameInput, setUsernameInput] = useState(() => cachedAtRender?.profile.username ?? '')
-  const [bioInput, setBioInput] = useState(() => cachedAtRender?.profile.bio ?? '')
-  const [isPublic, setIsPublic] = useState(() => cachedAtRender?.profile.is_public ?? true)
-  const [defaultPlanVisibility, setDefaultPlanVisibility] = useState<Profile['default_gala_plan_visibility']>(
-    () => cachedAtRender?.profile.default_gala_plan_visibility ?? 'private',
-  )
   const [followRequests, setFollowRequests] = useState<FollowRequest[]>(() => cachedAtRender?.followRequests ?? [])
   const [listTitle, setListTitle] = useState('')
   const [listUsers, setListUsers] = useState<FollowListUser[] | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
-  const [isSaving, setIsSaving] = useState(false)
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmNewPassword, setConfirmNewPassword] = useState('')
-  const [securityError, setSecurityError] = useState('')
-  const [isSavingPassword, setIsSavingPassword] = useState(false)
+  const [activeTab, setActiveTab] = useState<ProfileTab>('plans')
+  const [plans, setPlans] = useState<Loadable<GalaPlanSummary[]>>({ status: 'loading' })
+  const [stamps, setStamps] = useState<Loadable<CityStamp[]>>({ status: 'loading' })
   const { showSystemMessage } = useSystemMessage()
-  const passwordStrength = useMemo(() => getPasswordStrength(newPassword), [newPassword])
-
-  const normalizedUsername = useMemo(() => normalizeUsername(usernameInput), [usernameInput])
-  const usernameError = normalizedUsername ? validateUsername(normalizedUsername) : 'Username is required.'
-  const bioCharacterCount = bioInput.trim().length
 
   useEffect(() => {
     if (!session?.user?.id) {
@@ -251,10 +205,6 @@ function ProfilePage({ session }: ProfilePageProps) {
 
         if (data.profile) {
           setProfile(data.profile)
-          setUsernameInput(data.profile.username ?? '')
-          setBioInput(data.profile.bio ?? '')
-          setIsPublic(data.profile.is_public)
-          setDefaultPlanVisibility(data.profile.default_gala_plan_visibility ?? 'private')
 
           const avatarUrl = getDisplayAvatar(data.profile)
           if (avatarUrl) {
@@ -291,70 +241,26 @@ function ProfilePage({ session }: ProfilePageProps) {
       isMounted = false
       controller.abort()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user?.id])
 
-  const handleSave = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+  useEffect(() => {
+    if (!session?.user?.id) return
+    let isMounted = true
+    const toMessage = (error: unknown) => (error instanceof Error ? error.message : 'Something went wrong. Try again.')
 
-    if (usernameError) {
-      setErrorMessage(usernameError)
-      return
+    listMyGalaPlans(session)
+      .then((data) => isMounted && setPlans({ status: 'ready', data: data.plans }))
+      .catch((error) => isMounted && setPlans({ status: 'error', message: toMessage(error) }))
+    getMyPassport(session)
+      .then((data) => isMounted && setStamps({ status: 'ready', data: data.available ? data.stamps.filter((stamp) => stamp.collected) : [] }))
+      .catch((error) => isMounted && setStamps({ status: 'error', message: toMessage(error) }))
+
+    return () => {
+      isMounted = false
     }
-
-    try {
-      setIsSaving(true)
-      setErrorMessage('')
-      const data = await updateMyProfile(
-        {
-          username: normalizedUsername,
-          bio: bioInput.trim() || null,
-          is_public: isPublic,
-          default_gala_plan_visibility: defaultPlanVisibility,
-        },
-        session,
-      )
-
-      if (data.profile) {
-        setProfile(data.profile)
-        setUsernameInput(data.profile.username ?? '')
-        setBioInput(data.profile.bio ?? '')
-        setIsPublic(data.profile.is_public)
-        setDefaultPlanVisibility(data.profile.default_gala_plan_visibility ?? 'private')
-
-        const avatarUrl = getDisplayAvatar(data.profile)
-        if (avatarUrl) {
-          void preloadAvatarImage(avatarUrl)
-        }
-
-        if (memCache) {
-          memCache.profile = data.profile
-        }
-        if (session?.user?.id) {
-          writeCache(session.user.id, {
-            profile: data.profile,
-            followRequests,
-            cachedAt: Date.now(),
-          })
-        }
-      }
-      setIsEditing(false)
-      showSystemMessage({
-        title: 'Profile Update Successful!',
-        description: 'Your public profile details were updated.',
-      })
-    } catch (error) {
-      const status = (error as Error & { status?: number }).status
-      setErrorMessage(
-        status === 409
-          ? 'That username is taken. Try another one.'
-          : error instanceof Error
-            ? error.message
-            : 'Failed to update profile.',
-      )
-    } finally {
-      setIsSaving(false)
-    }
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.id])
 
   const handleFollowRequest = async (requestId: string, action: 'accept' | 'reject') => {
     setFollowRequests((requests) => requests.filter((request) => request.id !== requestId))
@@ -377,404 +283,278 @@ function ProfilePage({ session }: ProfilePageProps) {
     }
   }
 
-  const handleUpdatePassword = async () => {
-    if (!passwordStrength.meetsComplexity) {
-      setSecurityError('Use a stronger password with uppercase, lowercase, digit, and special character.')
-      return
-    }
-
-    if (newPassword !== confirmNewPassword) {
-      setSecurityError('Passwords do not match.')
-      return
-    }
-
+  const handleShare = async () => {
+    if (!profile?.username) return
+    const canNativeShare = typeof navigator.share === 'function'
     try {
-      setIsSavingPassword(true)
-      setSecurityError('')
-      await updateAccountPassword(newPassword)
-      setNewPassword('')
-      setConfirmNewPassword('')
-      showSystemMessage({
-        title: 'Password Updated!',
-        description: 'You can now use email and password login for this account.',
-      })
+      await shareLink({ url: `${getPublicSiteOrigin()}/u/${encodeURIComponent(profile.username)}`, title: `@${profile.username} on GalaTayo` })
+      if (!canNativeShare) showSystemMessage({ title: 'Link copied', description: 'Your profile link is ready to paste.' })
     } catch (error) {
-      setSecurityError(error instanceof Error ? error.message : 'Could not update password. Please try again.')
-    } finally {
-      setIsSavingPassword(false)
+      if ((error as Error).name !== 'AbortError') showSystemMessage({ title: 'Could not share', description: 'Try again in a bit.' })
     }
   }
 
-  const profileContent = (
-    <>
-      <div className="mb-5">
-        <MinimalBackNav to="/home" label="Home" preferHistory={false} className="hidden sm:inline-flex" />
-      </div>
-
-      <PageHeroHeader
-        eyebrow="Profile"
-        title="Your GalaTayo profile"
-        description="Update how you show up and keep your account details in sync."
-        icon={<AppIcon name="profile" className="h-4 w-4" />}
-        className="pb-1"
-        divider={false}
-      />
-
-      {isLoading && !profile ? <FormSkeleton rows={5} className="mt-5" /> : null}
-      {profile ? (
-        <>
-          <CardSurface pad="loose" className="profile-summary-card">
-            <div className="profile-summary-header">
-              <div className="profile-summary-identity">
-                <div className="shrink-0">
-                  <ProfileAvatar profile={profile} size="lg" />
-                </div>
-                <div className="profile-summary-copy">
-                  <div className="profile-summary-meta">
-                    <span className="profile-summary-chip">
-                      <AppIcon name={profile.is_public ? 'eye' : 'lock'} className="h-3.5 w-3.5" />
-                    </span>
-                    <span className="profile-summary-state">{profile.is_public ? 'Public' : 'Private'}</span>
-                  </div>
-                  <h1 className="profile-summary-title">
-                    @{profile.username}
-                  </h1>
-                  <p className="profile-summary-bio">
-                    {profile.bio || 'Give your profile a short intro so people know your vibe before they follow.'}
-                  </p>
-                </div>
-              </div>
-
-              {profile.username ? (
-                <div className="profile-summary-actions">
-                  <button
-                    type="button"
-                    onClick={() => navigateToPath(isGuestProfile ? '/login' : '/find-friends')}
-                    className="app-button app-button-secondary app-button-md"
-                  >
-                    <AppIcon name="users" className="h-4 w-4" />
-                    {isGuestProfile ? 'Log in' : 'Find friends'}
-                  </button>
-                  {!isGuestProfile ? (
-                    <button type="button" onClick={() => navigateToPath('/passport')} className="app-button app-button-secondary app-button-md">
-                      <AppIcon name="tourist" className="h-4 w-4" />
-                      Passport
-                    </button>
-                  ) : null}
-                  <button
-                    type="button"
-                    onClick={() =>
-                      navigateToPath(isGuestProfile ? '/signup' : `/u/${encodeURIComponent(profile.username || '')}`)
-                    }
-                    className="app-button app-button-secondary app-button-md"
-                  >
-                    <AppIcon name="share" className="h-4 w-4" />
-                    {isGuestProfile ? 'Create account' : 'View public'}
-                  </button>
-                </div>
-              ) : null}
-            </div>
-
-            <div className="profile-summary-stats">
-              <button type="button" onClick={() => void openList('followers')} className="profile-summary-stat">
-                <span>{profile.followers_count ?? 0}</span>
-                <span>Followers</span>
-              </button>
-              <button type="button" onClick={() => void openList('following')} className="profile-summary-stat">
-                <span>{profile.following_count ?? 0}</span>
-                <span>Following</span>
-              </button>
-              <span className="profile-summary-stat-note">
-                <AppIcon name={profile.is_public ? 'eye' : 'lock'} className="h-4 w-4 text-slate-400" />
-                {profile.is_public ? 'Follower and following lists are visible system-wide' : 'Follower and following names stay hidden system-wide'}
-              </span>
-              <span className="profile-summary-stat-note">
-                <AppIcon name="profile" className="h-4 w-4 text-slate-400" />
-                {followRequests.length} pending requests
-              </span>
-            </div>
-          </CardSurface>
-
-          {isEditing && !isGuestProfile ? (
-            <form className="gala-card mt-8 overflow-hidden" onSubmit={handleSave}>
-              <section className="grid gap-4 px-5 py-6 sm:px-6">
-                <div>
-                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Profile</p>
-                  <h2 className="mt-2 text-xl font-black tracking-[-0.03em] text-slate-950">Identity and presentation</h2>
-                </div>
-                <div className="grid gap-4">
-                  <label className="grid gap-2">
-                    <span className="text-sm font-black text-slate-900">Username</span>
-                    <span className="flex h-12 items-center rounded-2xl border border-[var(--line-strong)] bg-white px-4 focus-within:border-[var(--accent)] focus-within:ring-2 focus-within:ring-[var(--accent-soft)]">
-                      <span className="font-black text-[var(--accent-deep)]">@</span>
-                      <input
-                        value={usernameInput}
-                        onChange={(event) => setUsernameInput(event.target.value.toLowerCase())}
-                        className="min-w-0 flex-1 border-0 bg-transparent px-1 text-base font-black text-slate-950 outline-none"
-                        autoCapitalize="none"
-                        autoComplete="username"
-                        spellCheck={false}
-                      />
-                    </span>
-                    <span className={`text-xs font-semibold ${usernameError ? 'text-red-600' : 'text-[var(--muted)]'}`}>
-                      {usernameError || 'This is how friends find you on GalaTayo.'}
-                    </span>
-                  </label>
-
-                  <label className="grid gap-2">
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="flex items-center gap-2 text-sm font-black text-slate-900">
-                        Bio
-                        <span className="optional-label">Optional</span>
-                      </span>
-                      <span className="text-xs font-black uppercase tracking-[0.12em] text-slate-400">{bioInput.length}/280</span>
-                    </div>
-                    <textarea
-                      value={bioInput}
-                      onChange={(event) => setBioInput(event.target.value)}
-                      className="min-h-32 resize-none rounded-2xl border border-[var(--line-strong)] bg-white px-4 py-3 text-sm font-semibold leading-6 text-slate-900 outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]"
-                      maxLength={280}
-                    />
-                  </label>
-                </div>
-              </section>
-
-              <section className="grid gap-4 border-t border-[var(--line)] px-5 py-6 sm:px-6">
-                <div>
-                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Privacy</p>
-                  <h2 className="mt-2 text-xl font-black tracking-[-0.03em] text-slate-950">Audience and access</h2>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="grid gap-2 sm:col-span-2">
-                    <span className="text-sm font-black text-slate-900">Profile Visibility</span>
-                    <select value={isPublic ? 'public' : 'private'} onChange={(event) => setIsPublic(event.target.value === 'public')} className="h-12 rounded-2xl border border-[var(--line-strong)] bg-white px-4 text-sm font-black text-slate-950 outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]">
-                      <option value="public">Public</option>
-                      <option value="private">Private</option>
-                    </select>
-                    <span className="text-xs font-semibold text-[var(--muted)]">
-                      {isPublic ? 'Anyone can view your profile and your follower/following lists.' : 'People need to request to follow you, and follower/following names stay hidden.'}
-                    </span>
-                  </label>
-                  <label className="grid gap-2 sm:col-span-2">
-                    <span className="text-sm font-black text-slate-900">Default Gala Plan Visibility</span>
-                    <select value={defaultPlanVisibility} onChange={(event) => setDefaultPlanVisibility(event.target.value as Profile['default_gala_plan_visibility'])} className="h-12 rounded-2xl border border-[var(--line-strong)] bg-white px-4 text-sm font-black text-slate-950 outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]">
-                      <option value="private">Private</option>
-                      <option value="followers">Followers only</option>
-                      <option value="public">Public</option>
-                      <option value="unlisted">Unlisted</option>
-                    </select>
-                    <span className="text-xs font-semibold text-[var(--muted)]">
-                      Unlisted plan: Anyone with the link can view, but it will not appear on your profile.
-                    </span>
-                  </label>
-                </div>
-              </section>
-
-              <section className="grid gap-4 border-t border-[var(--line)] px-5 py-6 sm:px-6">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Preview</p>
-                    <h2 className="mt-2 text-xl font-black tracking-[-0.03em] text-slate-950">How your profile looks</h2>
-                  </div>
-                  <div className="text-sm font-semibold text-slate-500">
-                    Bio length: <span className="font-black text-slate-950">{bioCharacterCount}/280</span>
-                  </div>
-                </div>
-                <div className="grid gap-4 rounded-[24px] bg-[var(--surface-alt)] p-4 sm:grid-cols-[auto,minmax(0,1fr)] sm:items-center">
-                  <ProfileAvatar
-                    profile={{
-                      username: normalizedUsername || 'your-name',
-                      avatar_url: profile.avatar_url,
-                      provider_avatar_url: profile.provider_avatar_url,
-                    }}
-                    size="md"
-                  />
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">
-                      {isPublic ? 'Public profile' : 'Private profile'}
-                    </p>
-                    <p className="mt-1 truncate text-2xl font-black tracking-[-0.04em] text-slate-950">@{normalizedUsername || 'your-name'}</p>
-                    <p className="mt-2 text-sm font-semibold leading-6 text-slate-600">
-                      {bioInput.trim() || 'Add a short bio so other people know your vibe.'}
-                    </p>
-                  </div>
-                </div>
-              </section>
-
-              <section className="grid gap-4 border-t border-[var(--line)] px-5 py-6 sm:px-6">
-                <div>
-                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Security</p>
-                  <h2 className="mt-2 text-xl font-black tracking-[-0.03em] text-slate-950">Account access</h2>
-                </div>
-                <div className="grid gap-4 sm:max-w-xl">
-                  <p className="text-sm font-semibold leading-6 text-[var(--muted)]">
-                    Add or update email/password login for this same GalaTayo account.
-                  </p>
-                  <label className="grid gap-2">
-                    <span className="text-sm font-black text-slate-900">New Password</span>
-                    <input
-                      type="password"
-                      value={newPassword}
-                      onChange={(event) => setNewPassword(event.target.value)}
-                      minLength={8}
-                      autoComplete="new-password"
-                      className="h-12 rounded-2xl border border-[var(--line-strong)] bg-white px-4 text-sm font-semibold outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]"
-                    />
-                    <PasswordStrengthBar password={newPassword} />
-                  </label>
-                  <label className="grid gap-2">
-                    <span className="text-sm font-black text-slate-900">Confirm Password</span>
-                    <input
-                      type="password"
-                      value={confirmNewPassword}
-                      onChange={(event) => setConfirmNewPassword(event.target.value)}
-                      minLength={8}
-                      autoComplete="new-password"
-                      className="h-12 rounded-2xl border border-[var(--line-strong)] bg-white px-4 text-sm font-semibold outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-soft)]"
-                    />
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => void handleUpdatePassword()}
-                    disabled={isSavingPassword || !newPassword || !confirmNewPassword}
-                    className="app-button app-button-primary app-button-md"
-                  >
-                    {isSavingPassword ? 'Updating password...' : 'Set password'}
-                  </button>
-                  {securityError ? <span className="text-sm font-bold text-red-600">{securityError}</span> : null}
-                </div>
-              </section>
-
-              {errorMessage ? <p className="border-t border-[var(--line)] px-5 py-4 text-sm font-bold text-red-700 sm:px-6">{errorMessage}</p> : null}
-
-              <div className="flex flex-col gap-3 border-t border-[var(--line)] px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-                <p className="text-sm font-semibold text-slate-600">Changes update your public profile and future plan defaults.</p>
-                <button
-                  type="submit"
-                  disabled={Boolean(usernameError) || isSaving}
-                  className="app-button app-button-primary app-button-md"
-                >
-                  {isSaving ? 'Saving...' : 'Save profile'}
-                </button>
-              </div>
-            </form>
-          ) : null}
-
-          <section className="mt-8">
-            <div className="flex flex-col gap-3 border-b border-[var(--line)] pb-5 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-slate-500">Social</p>
-                <h2 className="mt-2 text-xl font-black tracking-[-0.03em] text-slate-950">Follow requests</h2>
-                <p className="mt-1 text-sm font-semibold text-[var(--muted)]">
-                  {profile.is_public ? 'Public profiles accept followers automatically.' : 'Approve who can see your private activity.'}
-                </p>
-              </div>
-              <span className="inline-flex items-center gap-2 self-start rounded-full bg-[var(--chip)] px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">
-                <AppIcon name="profile" className="h-3.5 w-3.5" />
-                {followRequests.length} pending
-              </span>
-            </div>
-
-            {followRequests.length === 0 ? (
-              <p className="pt-5 text-sm font-semibold text-[var(--muted)]">
-                {profile.is_public ? 'Public profiles accept followers automatically.' : 'Approve who can see your private activity.'}
-              </p>
-            ) : (
-              <div className="divide-y divide-[var(--line)] pt-3">
-                {followRequests.map((request) => (
-                  <article key={request.id} className="flex items-center justify-between gap-3 py-4">
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-black text-slate-950">@{request.follower.username}</p>
-                      <p className="truncate text-xs font-semibold text-[var(--muted)]">{request.follower.bio || 'Wants to follow you.'}</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <button type="button" onClick={() => void handleFollowRequest(request.id, 'accept')} className="h-9 rounded-lg bg-[var(--accent)] px-4 text-xs font-black text-white">
-                        Accept
-                      </button>
-                      <button type="button" onClick={() => void handleFollowRequest(request.id, 'reject')} className="h-9 rounded-full border border-[var(--line)] bg-white px-4 text-xs font-black text-slate-700">
-                        Reject
-                      </button>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            )}
-          </section>
-        </>
-      ) : (
-        <p className="rounded-3xl border border-red-100 bg-white px-5 py-6 text-sm font-semibold text-red-700">
-          {errorMessage || 'Profile unavailable.'}
-        </p>
-      )}
-
-      {listUsers ? (
-        <div className="fixed inset-0 z-[7000] flex items-center justify-center bg-slate-950/35 px-4">
-          <section className="w-full max-w-md rounded-[28px] bg-white p-5 shadow-xl">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="text-lg font-black text-slate-950">{listTitle}</h2>
-              <button type="button" onClick={() => setListUsers(null)} className="h-9 rounded-full border border-[var(--line)] px-3 text-sm font-black">Close</button>
-            </div>
-            {listUsers.length === 0 ? <p className="mt-4 text-sm font-bold text-[var(--muted)]">No users yet.</p> : null}
-            <div className="mt-4 grid gap-2 max-h-[20rem] overflow-y-auto pr-1">
-              {listUsers.map((user) => (
-                <button
-                  key={user.user_id}
-                  type="button"
-                  onClick={() => {
-                    setListUsers(null)
-                    navigateToPath(`/u/${encodeURIComponent(user.username)}`)
-                  }}
-                  className="flex min-w-0 items-center gap-3 rounded-2xl border border-[var(--line)] bg-white px-3 py-3 text-left transition hover:border-[var(--accent)] hover:bg-[var(--chip)]"
-                >
-                  <ProfileAvatar profile={user} size="sm" />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-black text-slate-950">@{user.username}</span>
-                    <span className="mt-0.5 block truncate text-xs font-semibold text-[var(--muted)]">
-                      {user.bio || 'View profile'}
-                    </span>
-                  </span>
-                  <span className="shrink-0 text-xs font-black text-[var(--accent-deep)]">View</span>
-                </button>
-              ))}
-            </div>
-          </section>
+  if (isGuestProfile) {
+    return (
+      <Page narrow className="flex min-h-[60vh] items-center justify-center">
+        <div className="w-full max-w-[440px]">
+          <GuestAuthPrompt variant="profile" mode="inline-card" className="gala-auth-prompt--protected-feature gala-auth-prompt--protected-feature-accent" />
         </div>
-      ) : null}
-    </>
-  )
+      </Page>
+    )
+  }
+
+  const savedPlaces = favorites.filter((favorite) => favorite.place)
+  const stampCount = stamps.status === 'ready' ? stamps.data.length : null
+  const planCount = plans.status === 'ready' ? plans.data.length : null
 
   return (
-    <>
-      {isGuestProfile ? (
-        <PageShell tone="surface" reserveBottomNav={false}>
-          <AppHeader />
-          <main className="relative flex min-h-0 flex-1 overflow-hidden px-4 pb-12 pt-4 text-[var(--text)] sm:px-6 sm:pb-14 sm:pt-5 lg:py-10">
-            <div className="guest-profile-skeleton-backdrop pointer-events-none absolute inset-0 select-none overflow-hidden">
-              <div className="mx-auto w-full max-w-6xl profile-page-container">
-                <GuestProfileSkeleton />
+    <Page>
+      {isLoading && !profile ? (
+        <div className="flex items-center gap-4" aria-label="Loading profile">
+          <Skeleton className="h-[88px] w-[88px] !rounded-full" />
+          <div className="flex-1">
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="mt-2 h-4 w-32" />
+          </div>
+        </div>
+      ) : null}
+
+      {profile ? (
+        <>
+          <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-start lg:gap-8">
+            <div className="flex min-w-0 gap-4 lg:gap-6">
+              <ProfileAvatar profile={profile} size="xl" />
+              <div className="min-w-0 flex-1">
+                <h1 className="g-h1 truncate">@{profile.username}</h1>
+                <p className="g-sm g-mut mt-1 flex items-center gap-2">
+                  <Tag tone={profile.is_public ? 'neutral' : 'warn'}>{profile.is_public ? 'Public' : 'Private'}</Tag>
+                  {followRequests.length > 0 ? `${followRequests.length} pending request${followRequests.length === 1 ? '' : 's'}` : null}
+                </p>
+                <p className="mt-2 max-w-[60ch]">{profile.bio || 'Add a short bio so people know your vibe before they follow.'}</p>
               </div>
             </div>
 
-            <div className="relative z-20 flex w-full items-center justify-center">
-              <div className="w-full max-w-[420px] lg:max-w-[440px] xl:max-w-[460px] 2xl:max-w-[480px]">
-                <GuestAuthPrompt
-                  variant="profile"
-                  mode="inline-card"
-                  className="gala-auth-prompt--protected-feature gala-auth-prompt--protected-feature-accent"
-                />
-              </div>
+            <div className="g-stats">
+              <button type="button" className="g-stat text-left" onClick={() => void openList('followers')}>
+                <b>{profile.followers_count ?? 0}</b>
+                <span>Followers</span>
+              </button>
+              <button type="button" className="g-stat text-left" onClick={() => void openList('following')}>
+                <b>{profile.following_count ?? 0}</b>
+                <span>Following</span>
+              </button>
+              <InternalLink href="/passport" className="g-stat no-underline" ariaLabel={`${stampCount ?? 0} city stamps, open passport`}>
+                <b style={{ color: 'var(--ink)' }}>{stampCount ?? '–'}</b>
+                <span>Stamps</span>
+              </InternalLink>
             </div>
-          </main>
-        </PageShell>
-      ) : (
-        <PageShell>
-          <AppHeader />
-          <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
-            <PageContainer size="wide" className="profile-page-container">{profileContent}</PageContainer>
-          </main>
-        </PageShell>
-      )}
-    </>
+          </section>
+
+          <div className="mt-5 flex flex-wrap items-center gap-2">
+            <Button variant="line" size="sm" href="/account-settings">
+              Edit profile
+            </Button>
+            <Button variant="soft" size="sm" iconOnly aria-label="Share profile" onClick={() => void handleShare()}>
+              <Share2 aria-hidden="true" />
+            </Button>
+            <Button variant="soft" size="sm" iconOnly href="/account-settings" aria-label="Account settings">
+              <Settings aria-hidden="true" />
+            </Button>
+            <Button variant="soft" size="sm" href={`/u/${encodeURIComponent(profile.username || '')}`}>
+              <Eye aria-hidden="true" />
+              View public
+            </Button>
+            <Button variant="soft" size="sm" href="/find-friends">
+              <UserPlus aria-hidden="true" />
+              Find friends
+            </Button>
+          </div>
+
+          <nav className="mt-5 grid grid-cols-3 gap-2" aria-label="Your stuff">
+            {[
+              { href: '/passport', label: 'Passport', icon: StampIcon },
+              { href: '/favorites', label: 'Saved', icon: Heart },
+              { href: '/history', label: 'History', icon: History },
+            ].map(({ href, label, icon: Icon }) => (
+              <InternalLink key={href} href={href} className="g-row min-h-[56px] justify-center gap-2 font-semibold lg:justify-start">
+                <Icon className="g-ic" aria-hidden="true" />
+                <span className="g-sm truncate">{label}</span>
+              </InternalLink>
+            ))}
+          </nav>
+
+          {errorMessage ? (
+            <p role="alert" className="g-sm mt-4" style={{ color: 'var(--bad)' }}>
+              {errorMessage}
+            </p>
+          ) : null}
+
+          <div className="mt-8">
+            <Tabs
+              label="Profile sections"
+              value={activeTab}
+              onChange={setActiveTab}
+              options={[
+                { value: 'plans', label: planCount ? `Plans ${planCount}` : 'Plans' },
+                { value: 'stamps', label: stampCount ? `Stamps ${stampCount}` : 'Stamps' },
+                { value: 'saved', label: savedPlaces.length ? `Saved ${savedPlaces.length}` : 'Saved' },
+              ]}
+            />
+
+            {activeTab === 'plans' ? (
+              plans.status === 'loading' ? (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {Array.from({ length: 3 }, (_, index) => (
+                    <Skeleton key={index} className="aspect-[16/12]" />
+                  ))}
+                </div>
+              ) : plans.status === 'error' ? (
+                <Empty title="Hindi ma-load ang plans mo." description={plans.message} />
+              ) : plans.data.length === 0 ? (
+                <Empty
+                  title="Wala pang plans."
+                  description="Describe your gala in one line and let AI draft it."
+                  action={
+                    <Button variant="ink" href="/plan-with-ai">
+                      <Sparkles aria-hidden="true" />
+                      Plan with AI
+                    </Button>
+                  }
+                />
+              ) : (
+                <>
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {plans.data.slice(0, TAB_PREVIEW_LIMIT).map((plan) => {
+                      const placeCount = plan.places_count ?? plan.place_count ?? 0
+                      const hearts = plan.hearts_count ?? plan.heart_count ?? 0
+                      return (
+                        <PlanCard
+                          key={plan.id}
+                          href={`/gala-plans/${encodeURIComponent(plan.id)}`}
+                          title={plan.title}
+                          imageUrl={plan.preview_places?.[0]?.image_url}
+                          tag={plan.visibility === 'public' ? 'Public' : 'Private'}
+                          date={formatGalaPlanDate(plan.description)}
+                          meta={`${placeCount} ${placeCount === 1 ? 'stop' : 'stops'}${hearts ? ` · ${hearts} ♥` : ''}`}
+                        />
+                      )
+                    })}
+                  </div>
+                  {plans.data.length > TAB_PREVIEW_LIMIT ? (
+                    <div className="mt-4 flex justify-center">
+                      <Button variant="line" href="/gala-plans">
+                        All {plans.data.length} plans
+                      </Button>
+                    </div>
+                  ) : null}
+                </>
+              )
+            ) : null}
+
+            {activeTab === 'stamps' ? (
+              stamps.status === 'loading' ? (
+                <div className="grid grid-cols-2 justify-items-center gap-6 md:grid-cols-4">
+                  {Array.from({ length: 4 }, (_, index) => (
+                    <Skeleton key={index} className="h-[100px] w-[100px] !rounded-full" />
+                  ))}
+                </div>
+              ) : stamps.status === 'error' ? (
+                <Empty title="Hindi ma-load ang stamps mo." description={stamps.message} />
+              ) : stamps.data.length === 0 ? (
+                <Empty
+                  title="Wala pang stamps."
+                  description="Check in at a place to earn that city's stamp."
+                  action={<Button variant="line" href="/passport">Open passport</Button>}
+                />
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 justify-items-center gap-x-4 gap-y-8 min-[480px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+                    {stamps.data.map((stamp) => (
+                      <Stamp key={stamp.city} title={stamp.city} sub={`${stamp.places} ${stamp.places === 1 ? 'spot' : 'spots'}`} />
+                    ))}
+                  </div>
+                  <div className="mt-6 flex justify-center">
+                    <Button variant="line" href="/passport">
+                      <BookMarked aria-hidden="true" />
+                      Open passport
+                    </Button>
+                  </div>
+                </>
+              )
+            ) : null}
+
+            {activeTab === 'saved' ? (
+              isFavoritesLoading && savedPlaces.length === 0 ? (
+                <div className="g-grid">
+                  {Array.from({ length: 3 }, (_, index) => (
+                    <Skeleton key={index} style={{ aspectRatio: '1 / 1' }} />
+                  ))}
+                </div>
+              ) : savedPlaces.length === 0 ? (
+                <Empty
+                  title="Wala ka pang saved places."
+                  description="Tap the heart on any place to keep it here."
+                  action={<Button variant="line" href="/search">Explore places</Button>}
+                />
+              ) : (
+                <>
+                  <div className="g-grid">
+                    {savedPlaces.slice(0, TAB_PREVIEW_LIMIT).map((favorite) => (
+                      <SavedPlaceCard key={favorite.id} place={favorite.place as FavoritePlace} />
+                    ))}
+                  </div>
+                  <div className="mt-6 flex justify-center">
+                    <Button variant="line" href="/favorites">
+                      See all saved
+                    </Button>
+                  </div>
+                </>
+              )
+            ) : null}
+          </div>
+
+          <SectionHead
+            title="Follow requests"
+            sub={profile.is_public ? 'Public profiles accept followers automatically.' : 'Approve who can see your private activity.'}
+            action={<Tag>{followRequests.length} pending</Tag>}
+          />
+          {followRequests.length === 0 ? (
+            <p className="g-sm g-mut">Walang pending requests.</p>
+          ) : (
+            <div className="g-list lg:max-w-[640px]">
+              {followRequests.map((request) => (
+                <Row
+                  key={request.id}
+                  action={
+                    <div className="flex shrink-0 gap-2">
+                      <Button variant="ink" size="sm" onClick={() => void handleFollowRequest(request.id, 'accept')}>
+                        Accept
+                      </Button>
+                      <Button variant="line" size="sm" onClick={() => void handleFollowRequest(request.id, 'reject')}>
+                        Reject
+                      </Button>
+                    </div>
+                  }
+                >
+                  <div className="flex min-w-0 items-center gap-3">
+                    <ProfileAvatar profile={request.follower} size="xs" />
+                    <div className="min-w-0">
+                      <div className="g-h3 truncate">@{request.follower.username}</div>
+                      <div className="g-sm g-mut truncate">{request.follower.bio || 'Wants to follow you.'}</div>
+                    </div>
+                  </div>
+                </Row>
+              ))}
+            </div>
+          )}
+        </>
+      ) : !isLoading ? (
+        <Empty title="Profile unavailable." description={<span role="alert">{errorMessage || 'Try again in a bit.'}</span>} />
+      ) : null}
+
+      <FollowListSheet title={listTitle} users={listUsers} emptyLabel="No users yet." onClose={() => setListUsers(null)} />
+    </Page>
   )
 }
 

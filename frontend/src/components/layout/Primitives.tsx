@@ -8,7 +8,7 @@ import { createPortal } from 'react-dom'
 import { cn } from '../AppUI'
 
 export const BOTTOM_NAV_RESERVED_CLASS =
-  'pb-[calc(env(safe-area-inset-bottom,0px)+6rem)] sm:pb-[calc(env(safe-area-inset-bottom,0px)+6.25rem)] lg:pb-8'
+  'pb-[calc(var(--tabbar-h)+env(safe-area-inset-bottom,0px)+28px)] lg:pb-10'
 
 type PageShellTone = 'app' | 'surface' | 'plain'
 
@@ -21,21 +21,12 @@ type PageShellProps = PropsWithChildren<{
 export function PageShell({
   children,
   className,
-  tone = 'app',
   reserveBottomNav = true,
 }: PageShellProps) {
-  const toneClass =
-    tone === 'surface'
-      ? 'gala-page-background'
-      : tone === 'plain'
-        ? 'bg-[var(--bg)] text-[var(--text)]'
-        : 'gala-page-shell'
-
   return (
     <div
       className={cn(
-        'flex min-h-[100dvh] flex-col',
-        toneClass,
+        'relative isolate flex min-h-[100dvh] flex-col overflow-x-clip bg-[var(--paper)] text-[var(--ink)]',
         reserveBottomNav ? BOTTOM_NAV_RESERVED_CLASS : '',
         className,
       )}
@@ -46,9 +37,9 @@ export function PageShell({
 }
 
 const SIZE_CLASSES = {
-  narrow: 'w-full max-w-[480px] sm:max-w-[560px] md:max-w-[600px] lg:max-w-[640px]',
-  default: 'w-full max-w-[430px] sm:max-w-[840px] md:max-w-[980px] lg:max-w-[1160px] xl:max-w-[1320px] 2xl:max-w-[1440px]',
-  wide: 'w-full max-w-[520px] sm:max-w-[960px] md:max-w-[1200px] lg:max-w-[1360px] xl:max-w-[1520px] 2xl:max-w-[1680px]',
+  narrow: 'w-full max-w-[760px]',
+  default: 'w-full max-w-[1240px]',
+  wide: 'w-full max-w-[1440px]',
   full: 'w-full max-w-none',
 } as const
 
@@ -74,7 +65,7 @@ export function PageContainer({
       className={cn(
         'mx-auto',
         SIZE_CLASSES[size],
-        bleed ? 'px-0' : 'px-4 sm:px-6 lg:px-8',
+        bleed ? 'px-0' : 'px-4 lg:px-8',
         className,
       )}
     >
@@ -188,20 +179,20 @@ export function CardSurface({
 
   const toneClass =
     tone === 'soft'
-      ? 'border-[var(--line)] bg-[var(--surface-alt)] shadow-none'
+      ? 'border-transparent bg-[var(--fill)]'
       : tone === 'outlined'
-        ? 'border-[var(--line-strong)] bg-[var(--panel)] shadow-none'
+        ? 'border-[var(--line)] bg-[var(--surface)]'
         : tone === 'frosted'
-          ? 'border-white/70 bg-white/80 shadow-[var(--shadow-soft)] backdrop-blur-md'
-          : 'gala-card rounded-[24px]'
+          ? 'border-[var(--line-2)] bg-[color-mix(in_srgb,var(--surface)_88%,transparent)] backdrop-blur-md'
+          : 'border-[var(--line-2)] bg-[var(--surface)]'
 
   return (
     <Component
       className={cn(
-        'rounded-2xl border',
+        'min-w-0 rounded-[var(--r-3)] border text-[var(--ink)]',
         toneClass,
         padClass,
-        interactive ? 'app-card-interactive' : '',
+        interactive ? 'cursor-pointer transition-colors hover:border-[var(--line)]' : '',
         className,
       )}
     >
@@ -231,13 +222,13 @@ export function EmptyState({
     <div
       className={cn(
         'grid w-full justify-items-center gap-3 text-center',
-        variant === 'card' ? 'app-empty-state' : 'py-6',
+        variant === 'card' ? 'rounded-[var(--r-3)] border border-dashed border-[var(--line)] px-5 py-8' : 'py-6',
         className,
       )}
     >
-      {icon ? <div className="app-empty-state-media">{icon}</div> : null}
-      <p className="app-empty-state-title">{title}</p>
-      {description ? <p className="app-empty-state-description max-w-md">{description}</p> : null}
+      {icon ? <div className="flex justify-center text-[var(--ink-3)]">{icon}</div> : null}
+      <p className="g-h3">{title}</p>
+      {description ? <p className="g-sm g-mut max-w-md">{description}</p> : null}
       {action ? <div className="mt-2 flex justify-center">{action}</div> : null}
     </div>
   )
@@ -320,7 +311,7 @@ export function MapLayout({ children, className, height, tone = 'split' }: MapLa
     return (
       <div
         className={cn(
-          'relative flex min-h-[100dvh] w-full flex-col overflow-hidden bg-[var(--bg)] text-[var(--text)]',
+          'relative flex min-h-[100dvh] w-full flex-col overflow-hidden bg-[var(--paper)] text-[var(--ink)]',
           className,
         )}
         style={height ? { height } : undefined}
@@ -361,8 +352,8 @@ export function MapSidebar({ children, className, flush = false }: MapSidebarPro
   return (
     <aside
       className={cn(
-        'flex min-h-0 w-full flex-col overflow-y-auto overscroll-contain bg-[var(--panel)]',
-        flush ? '' : 'border-t border-[var(--line)] lg:border-l lg:border-t-0',
+        'flex min-h-0 w-full flex-col overflow-y-auto overscroll-contain bg-[var(--surface)]',
+        flush ? '' : 'border-t border-[var(--line-2)] lg:border-l lg:border-t-0',
         className,
       )}
     >
@@ -395,11 +386,10 @@ export function BottomSheet({
     return null
   }
 
-  // Portal to <body> so the overlay stacks above the app shell (bottom nav, chat bubble).
   return createPortal(
     <div
       className={cn(
-        'fixed inset-0 z-[7000] flex items-end justify-center bg-slate-950/45 px-3 pb-3 sm:items-center sm:px-4 sm:pb-0',
+        'fixed inset-0 z-[7000] flex animate-[g-fade_200ms_ease-out] items-end justify-center bg-[var(--scrim)] md:items-center md:px-4 motion-reduce:animate-none',
         className,
       )}
       role="dialog"
@@ -409,8 +399,7 @@ export function BottomSheet({
     >
       <div
         className={cn(
-          'gala-modal-card w-full max-w-md overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--panel)] shadow-[var(--shadow-strong)]',
-          'sm:max-w-lg',
+          'w-full max-w-[560px] animate-[g-up_320ms_var(--ease-g)] overflow-hidden rounded-t-[var(--r-4)] bg-[var(--surface)] text-[var(--ink)] shadow-[var(--sh-3)] md:rounded-[var(--r-4)] motion-reduce:animate-none',
           fullHeight
             ? 'max-h-[92dvh] sm:max-h-[88dvh]'
             : 'max-h-[88dvh] sm:max-h-[85dvh]',
@@ -422,7 +411,6 @@ export function BottomSheet({
       </div>
     </div>,
     document.body,
-
   )
 }
 
@@ -457,11 +445,10 @@ export function CenteredModal({
     return null
   }
 
-  // Portal to <body> so the overlay stacks above the app shell (bottom nav, chat bubble).
   return createPortal(
     <div
       className={cn(
-        'fixed inset-0 z-[7000] flex items-center justify-center bg-slate-950/45 px-3 py-6 sm:px-4',
+        'fixed inset-0 z-[7000] flex animate-[g-fade_200ms_ease-out] items-center justify-center bg-[var(--scrim)] px-4 py-6 motion-reduce:animate-none',
         className,
       )}
       role="dialog"
@@ -471,7 +458,7 @@ export function CenteredModal({
     >
       <div
         className={cn(
-          'gala-modal-card w-full overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--panel)] shadow-[var(--shadow-strong)]',
+          'w-full animate-[g-up_320ms_var(--ease-g)] overflow-hidden rounded-[var(--r-4)] border border-[var(--line-2)] bg-[var(--surface)] text-[var(--ink)] shadow-[var(--sh-3)] motion-reduce:animate-none',
           CENTERED_MODAL_WIDTHS[maxWidth],
           panelClassName,
         )}
@@ -481,7 +468,6 @@ export function CenteredModal({
       </div>
     </div>,
     document.body,
-
   )
 }
 
@@ -533,8 +519,8 @@ export function AppHeaderLayout({ children, className, showBorder = true }: AppH
     <>
       <header
         className={cn(
-          'fixed inset-x-0 top-0 z-[5000] w-full bg-[var(--header-bg)] backdrop-blur supports-[backdrop-filter]:bg-[var(--header-bg)]',
-          showBorder ? 'border-b border-[var(--line)]' : '',
+          'fixed inset-x-0 top-0 z-[5000] w-full bg-[var(--header-bg)] backdrop-blur-md',
+          showBorder ? 'border-b border-[var(--line-2)]' : '',
           className,
         )}
       >

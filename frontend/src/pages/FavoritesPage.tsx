@@ -1,126 +1,57 @@
 import { useMemo, useState } from 'react'
-import AppHeader from '../components/AppHeader'
-import MinimalBackNav from '../components/navigation/MinimalBackNav'
+import { Search, Sparkles, Trash2 } from 'lucide-react'
 import GoogleSignInButton from '../components/GoogleSignInButton'
-import PageHeroHeader from '../components/PageHeroHeader'
-import { PageContainer, PageShell, CardSurface, EmptyState, Stack } from '../components/layout/ResponsiveLayouts'
-import { BOTTOM_NAV_RESERVED_CLASS } from '../components/layout/Primitives'
-import ActivityPlaceCard from '../components/ActivityPlaceCard'
+import InternalLink from '../components/InternalLink'
 import DestructiveConfirmModal from '../components/DestructiveConfirmModal'
+import { Button, Empty, Page, PlaceCard, PlaceCardSkeleton, cx } from '../components/ui'
 import { useSavedFavorites, type FavoritePlace } from '../context/SavedFavoritesContext'
 import { getPlacePhoto } from '../utils/placePhoto'
 import { getPublicSiteUrl } from '../utils/site'
-import { InlineSkeleton, ListingSkeleton } from '../components/loading/SkeletonStates'
 
-const FAVORITES_LOAD_MORE_BATCH_SIZE = 10
-const FAVORITES_GRID_CLASSNAME =
-  'grid w-full grid-cols-1 items-start gap-3 md:grid-cols-2 md:gap-4 lg:grid-cols-3 xl:grid-cols-4'
+const FAVORITES_LOAD_MORE_BATCH_SIZE = 12
+const AI_PROMPT_PLACE_LIMIT = 6
 
-function TrashIcon({ className = 'h-4 w-4' }: { className?: string }) {
+const SAVED_TABS = [
+  { key: 'places', href: '/favorites', label: 'Places' },
+  { key: 'plans', href: '/gala-plans/favorites', label: 'Plans' },
+  { key: 'history', href: '/history', label: 'History' },
+] as const
+
+/** Places / Plans / History switcher shared by the saved screens. Each tab keeps its own route. */
+export function SavedTabs({ current, placesCount }: { current: (typeof SAVED_TABS)[number]['key']; placesCount?: number }) {
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className} aria-hidden="true">
-      <path d="M4 7h16" />
-      <path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7" />
-      <path d="m10 11 .3 6" />
-      <path d="m14 11-.3 6" />
-      <path d="M6.5 7 7.4 20h9.2l.9-13" />
-    </svg>
-  )
-}
-
-type IconProps = {
-  className?: string
-}
-
-function PinIcon({ className = 'h-4 w-4' }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className} aria-hidden="true">
-      <path d="M12 21s6-5.7 6-11a6 6 0 1 0-12 0c0 5.3 6 11 6 11Z" />
-      <circle cx="12" cy="10" r="2.4" />
-    </svg>
-  )
-}
-
-function SearchIcon({ className = 'h-4 w-4' }: IconProps) {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" className={className} aria-hidden="true">
-      <circle cx="11" cy="11" r="6.5" />
-      <path d="m16 16 4 4" />
-    </svg>
-  )
-}
-
-function getPlaceCategory(place: FavoritePlace) {
-  return place.category?.trim() || 'Place'
-}
-
-function getPlaceLocation(place: FavoritePlace) {
-  const city = place.city?.trim() || ''
-  const area = place.area?.trim() || ''
-
-  return area || city || 'Location unavailable'
-}
-
-function getPlaceChips(place: FavoritePlace) {
-  const chips = [getPlaceCategory(place), place.area, place.city]
-    .filter((value): value is string => Boolean(value?.trim()))
-    .map((value) => value.trim())
-
-  return Array.from(new Set(chips)).slice(0, 3)
-}
-
-function getPlaceSearchText(place: FavoritePlace) {
-  return [
-    place.name,
-    place.address,
-    place.city,
-    place.area,
-    place.category,
-  ]
-    .filter(Boolean)
-    .join(' ')
-    .toLowerCase()
-}
-
-function FavoriteCard({
-  favorite,
-  onRemove,
-  isRemoving,
-}: {
-  favorite: { id: string; place: FavoritePlace | null }
-  onRemove: () => void
-  isRemoving: boolean
-}) {
-  const place = favorite.place as FavoritePlace
-  const placeSlug = place.slug?.trim() || place.id
-  const chips = getPlaceChips(place)
-  const location = getPlaceLocation(place)
-  const photoUrl = getPlacePhoto(place)
-
-  return (
-    <ActivityPlaceCard
-      title={place.name || 'Saved place'}
-      categoryLabel={chips.slice(0, 2).join(' / ')}
-      location={location}
-      chips={chips}
-      photoUrl={photoUrl}
-      placeSlug={placeSlug}
-      photoAlt={place.name || 'Saved place'}
-      compactMobile
-      footer={
-        <button
-          type="button"
-          onClick={(event) => {
-            event.stopPropagation()
-            onRemove()
-          }}
-          disabled={isRemoving}
-          className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 text-xs font-black text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+    <nav className="g-tabs mt-5" aria-label="Saved">
+      {SAVED_TABS.map((tab) => (
+        <InternalLink
+          key={tab.key}
+          href={tab.href}
+          className={cx('g-tab inline-flex items-center gap-1.5 no-underline', tab.key === current && 'is-on')}
+          aria-current={tab.key === current ? 'page' : undefined}
         >
-          <TrashIcon className="h-4 w-4" />
-          {isRemoving ? 'Removing...' : 'Remove'}
-        </button>
-      }
+          {tab.label}
+          {tab.key === 'places' && placesCount ? <span className="g-fnt">{placesCount}</span> : null}
+        </InternalLink>
+      ))}
+    </nav>
+  )
+}
+
+function getPlaceMeta(place: FavoritePlace) {
+  const parts = [place.category?.trim(), place.area?.trim() || place.city?.trim()].filter(Boolean)
+  return Array.from(new Set(parts)).join(' · ') || 'Saved place'
+}
+
+export function SavedPlaceCard({ place, onRemove }: { place: FavoritePlace; onRemove?: () => void }) {
+  const placeSlug = place.slug?.trim() || place.id
+  return (
+    <PlaceCard
+      href={`/places/${encodeURIComponent(placeSlug)}`}
+      title={place.name || 'Saved place'}
+      imageUrl={getPlacePhoto(place)}
+      meta={getPlaceMeta(place)}
+      rating={place.rating}
+      saved
+      onToggleSave={onRemove}
     />
   )
 }
@@ -132,38 +63,31 @@ function FavoritesPage() {
   const [isClearAllDialogOpen, setIsClearAllDialogOpen] = useState(false)
   const [clearAllError, setClearAllError] = useState('')
   const [visibleFavoritesCount, setVisibleFavoritesCount] = useState(FAVORITES_LOAD_MORE_BATCH_SIZE)
-  const {
-    session,
-    isSessionLoading,
-    isFavoritesLoading,
-    favoritesError,
-    favorites,
-    removeFavorite,
-    clearAllFavorites,
-  } = useSavedFavorites()
+  const { session, isSessionLoading, isFavoritesLoading, favoritesError, favorites, removeFavorite, clearAllFavorites } = useSavedFavorites()
 
-  const savedPlaces = useMemo(
-    () => favorites.filter((favorite) => Boolean(favorite.place)),
-    [favorites]
-  )
+  const savedPlaces = useMemo(() => favorites.filter((favorite) => Boolean(favorite.place)), [favorites])
 
   const filteredSavedPlaces = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase()
-
+    if (!normalizedQuery) return savedPlaces
     return savedPlaces.filter((favorite) => {
       const place = favorite.place as FavoritePlace
-      const haystack = getPlaceSearchText(place)
-
-      return !normalizedQuery || haystack.includes(normalizedQuery)
+      return [place.name, place.address, place.city, place.area, place.category].filter(Boolean).join(' ').toLowerCase().includes(normalizedQuery)
     })
   }, [savedPlaces, searchQuery])
-  const visibleSavedPlaces = useMemo(
-    () => filteredSavedPlaces.slice(0, visibleFavoritesCount),
-    [filteredSavedPlaces, visibleFavoritesCount]
-  )
+  const visibleSavedPlaces = useMemo(() => filteredSavedPlaces.slice(0, visibleFavoritesCount), [filteredSavedPlaces, visibleFavoritesCount])
   const hasMoreSavedPlaces = visibleSavedPlaces.length < filteredSavedPlaces.length
 
+  const aiPlanHref = useMemo(() => {
+    const names = savedPlaces
+      .map((favorite) => favorite.place?.name?.trim())
+      .filter(Boolean)
+      .slice(0, AI_PROMPT_PLACE_LIMIT)
+    return names.length > 0 ? `/plan-with-ai?q=${encodeURIComponent(`Plan a gala from my saved places: ${names.join(', ')}`)}` : '/plan-with-ai'
+  }, [savedPlaces])
+
   const handleRemoveFavorite = async (favoriteId: string) => {
+    if (removingIds.has(favoriteId)) return
     setRemovingIds((current) => new Set(current).add(favoriteId))
 
     try {
@@ -177,26 +101,15 @@ function FavoritesPage() {
     }
   }
 
-  const handleClearAll = () => {
-    if (isClearingAll) {
-      return
-    }
-
-    setIsClearAllDialogOpen(true)
-  }
-
   const confirmClearAll = async () => {
-    if (isClearingAll) {
-      return
-    }
+    if (isClearingAll) return
 
     try {
       setIsClearingAll(true)
       setClearAllError('')
       await clearAllFavorites()
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to clear favorites. Please try again.'
-      setClearAllError(message)
+      setClearAllError(error instanceof Error ? error.message : 'Unable to clear favorites. Please try again.')
     } finally {
       setIsClearingAll(false)
       setIsClearAllDialogOpen(false)
@@ -204,146 +117,122 @@ function FavoritesPage() {
     }
   }
 
+  const isSignedIn = !isSessionLoading && Boolean(session?.user)
+
   return (
-    <PageShell reserveBottomNav={false}>
-      <AppHeader showTaglishChip={false} />
+    <Page>
+      <header>
+        <h1 className="g-h1">Saved</h1>
+        <p className="g-mut mt-2">
+          {isSignedIn && savedPlaces.length > 0
+            ? `${savedPlaces.length} saved place${savedPlaces.length === 1 ? '' : 's'}. Pick a few and turn them into a gala.`
+            : 'Your favorite gala spots, ready when you are.'}
+        </p>
+        {isSignedIn && savedPlaces.length > 0 ? (
+          <Button variant="soft" href={aiPlanHref} className="mt-4">
+            <Sparkles aria-hidden="true" />
+            Plan a gala from my saved places
+          </Button>
+        ) : null}
+      </header>
 
-      <main className={`favorites-page w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-8 ${BOTTOM_NAV_RESERVED_CLASS}`}>
-        <PageContainer size="wide">
-          <div className="mb-5">
-            <MinimalBackNav to="/home" label="Home" preferHistory={false} />
-          </div>
+      <SavedTabs current="places" placesCount={isSignedIn ? savedPlaces.length : undefined} />
 
-          <PageHeroHeader
-            eyebrow="Favorites"
-            title="Saved places"
-            description="Your favorite gala spots, ready when you are."
-            icon={<PinIcon />}
-            badges={
-              <>
-                <span className="gala-count-pill">
-                  {savedPlaces.length} saved place{savedPlaces.length === 1 ? '' : 's'}
-                </span>
-                  <span className="gala-count-pill">
-                    {searchQuery.trim() ? `Filtering "${searchQuery.trim()}"` : 'Quick access'}
-                  </span>
-                </>
-              }
-              divider={false}
-              className="pb-0"
-            />
+      <DestructiveConfirmModal
+        isOpen={isClearAllDialogOpen}
+        title="Remove all saved places?"
+        description="This will clear every place from Favorites. You can save them again later."
+        confirmLabel="Remove all"
+        isConfirming={isClearingAll}
+        onCancel={() => setIsClearAllDialogOpen(false)}
+        onConfirm={() => void confirmClearAll()}
+      />
 
-          <DestructiveConfirmModal
-            isOpen={isClearAllDialogOpen}
-            title="Remove all saved places?"
-            description="This will clear every place from Favorites. You can save them again later."
-            confirmLabel="Remove all"
-            isConfirming={isClearingAll}
-            onCancel={() => setIsClearAllDialogOpen(false)}
-            onConfirm={() => void confirmClearAll()}
-          />
+      {isSessionLoading ? (
+        <div className="g-grid is-4" aria-label="Loading saved places">
+          {Array.from({ length: 4 }, (_, index) => (
+            <PlaceCardSkeleton key={index} />
+          ))}
+        </div>
+      ) : null}
 
-          {isSessionLoading ? (
-            <CardSurface pad="default" className="mt-6">
-              <InlineSkeleton />
-            </CardSurface>
-          ) : null}
+      {!isSessionLoading && !session?.user ? (
+        <Empty
+          title="Sign in to see your saved places."
+          description="Your saved places are connected to your account."
+          action={<GoogleSignInButton redirectTo={getPublicSiteUrl('/favorites')} />}
+        />
+      ) : null}
 
-          {!isSessionLoading && !session?.user ? (
-            <CardSurface pad="loose" className="mt-6">
-              <h2 className="text-lg font-black text-slate-950">Sign in to view favorites</h2>
-              <p className="mt-2 max-w-xl text-sm text-[var(--muted)]">
-                Your saved places are connected to your account.
-              </p>
-              <GoogleSignInButton className="mt-4" redirectTo={getPublicSiteUrl('/favorites')} />
-            </CardSurface>
-          ) : null}
-
-          {!isSessionLoading && session?.user ? (
-            <Stack gap="tight">
-              <label className="relative block mt-2">
-                <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">
-                  <SearchIcon className="h-5 w-5" />
-                </span>
-                <input
-                  value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                  placeholder="Search saved places"
-                  className="gala-field px-12 text-base"
-                />
+      {isSignedIn ? (
+        <div className="grid gap-4">
+          {savedPlaces.length > 0 ? (
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <label className="g-search min-w-0 flex-1">
+                <Search className="g-ic" aria-hidden="true" />
+                <input value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Search saved places" aria-label="Search saved places" />
               </label>
-
-              {clearAllError ? (
-                <p className="pt-1 text-sm font-medium text-red-600">{clearAllError}</p>
-              ) : null}
-
-              {isFavoritesLoading && savedPlaces.length === 0 ? (
-                <ListingSkeleton count={4} className="pt-1" />
-              ) : favoritesError ? (
-                <p className="pt-1 text-sm font-medium text-red-600">{favoritesError}</p>
-              ) : null}
-
-              {savedPlaces.length === 0 && !isFavoritesLoading && !favoritesError ? (
-                <EmptyState
-                  title="Wala ka pang saved places."
-                  description="Mag-search muna ng places para ma-save mo sila dito."
-                  variant="plain"
-                />
-              ) : null}
-
-              {savedPlaces.length > 0 && filteredSavedPlaces.length === 0 ? (
-                <div className="flex items-center justify-center py-16 sm:py-24">
-                  <p className="text-center text-sm font-black text-slate-950">No saved places match that search.</p>
-                </div>
-              ) : null}
-
-              {filteredSavedPlaces.length > 0 ? (
-                <div className="space-y-3">
-                  <div className="flex flex-col gap-3 px-1 sm:flex-row sm:items-center sm:justify-between">
-                    <p className="favorites-history-section-title text-lg font-black uppercase tracking-[0.2em] text-[var(--accent-deep)]">Saved</p>
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-                      <p className="text-xs font-semibold text-[var(--muted)] sm:text-right">
-                        Showing {visibleSavedPlaces.length} of {filteredSavedPlaces.length} place{filteredSavedPlaces.length === 1 ? '' : 's'}
-                      </p>
-                      <button
-                        type="button"
-                        onClick={handleClearAll}
-                        disabled={isClearingAll}
-                        className="favorites-history-destructive-button inline-flex h-9 w-fit items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-red-200 bg-white px-3 text-xs font-black text-red-500 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60 sm:px-3.5 sm:self-end"
-                      >
-                        <TrashIcon className="h-3.5 w-3.5" />
-                        {isClearingAll ? 'Removing...' : 'Remove all'}
-                      </button>
-                    </div>
-                  </div>
-                  <div className={FAVORITES_GRID_CLASSNAME}>
-                    {visibleSavedPlaces.map((favorite) => (
-                      <FavoriteCard
-                        key={favorite.id}
-                        favorite={favorite}
-                        onRemove={() => void handleRemoveFavorite(favorite.place?.id || favorite.id)}
-                        isRemoving={removingIds.has(favorite.place?.id || favorite.id)}
-                      />
-                    ))}
-                  </div>
-                  {hasMoreSavedPlaces ? (
-                    <div className="flex justify-center pt-1">
-                      <button
-                        type="button"
-                        onClick={() => setVisibleFavoritesCount((current) => current + FAVORITES_LOAD_MORE_BATCH_SIZE)}
-                        className="favorites-history-load-more-button inline-flex h-10 items-center justify-center rounded-lg border border-[var(--accent)] bg-white px-5 text-sm font-black text-[var(--accent-deep)] transition hover:bg-[var(--accent-wash)]"
-                      >
-                        Load more...
-                      </button>
-                    </div>
-                  ) : null}
-                </div>
-              ) : null}
-            </Stack>
+              <Button variant="text" size="sm" onClick={() => setIsClearAllDialogOpen(true)} disabled={isClearingAll} className="self-start sm:self-auto">
+                <Trash2 aria-hidden="true" />
+                {isClearingAll ? 'Removing...' : 'Remove all'}
+              </Button>
+            </div>
           ) : null}
-        </PageContainer>
-      </main>
-    </PageShell>
+
+          {clearAllError ? (
+            <p role="alert" className="g-sm" style={{ color: 'var(--bad)' }}>
+              {clearAllError}
+            </p>
+          ) : null}
+
+          {isFavoritesLoading && savedPlaces.length === 0 ? (
+            <div className="g-grid is-4" aria-label="Loading saved places">
+              {Array.from({ length: 4 }, (_, index) => (
+                <PlaceCardSkeleton key={index} />
+              ))}
+            </div>
+          ) : favoritesError ? (
+            <Empty title="Hindi ma-load ang saved places." description={<span role="alert">{favoritesError}</span>} />
+          ) : null}
+
+          {savedPlaces.length === 0 && !isFavoritesLoading && !favoritesError ? (
+            <Empty
+              title="Wala ka pang saved places."
+              description="Tap the heart on any place to keep it here."
+              action={<Button variant="ink" href="/search">Explore places</Button>}
+            />
+          ) : null}
+
+          {savedPlaces.length > 0 && filteredSavedPlaces.length === 0 ? (
+            <Empty title="No saved places match that search." action={<Button variant="line" onClick={() => setSearchQuery('')}>Clear search</Button>} />
+          ) : null}
+
+          {visibleSavedPlaces.length > 0 ? (
+            <>
+              <div className="g-grid is-4">
+                {visibleSavedPlaces.map((favorite) => (
+                  <SavedPlaceCard
+                    key={favorite.id}
+                    place={favorite.place as FavoritePlace}
+                    onRemove={() => void handleRemoveFavorite(favorite.place?.id || favorite.id)}
+                  />
+                ))}
+              </div>
+              <p className="g-xs g-mut text-center">
+                Showing {visibleSavedPlaces.length} of {filteredSavedPlaces.length} place{filteredSavedPlaces.length === 1 ? '' : 's'}
+              </p>
+              {hasMoreSavedPlaces ? (
+                <div className="flex justify-center">
+                  <Button variant="line" onClick={() => setVisibleFavoritesCount((current) => current + FAVORITES_LOAD_MORE_BATCH_SIZE)}>
+                    Load more
+                  </Button>
+                </div>
+              ) : null}
+            </>
+          ) : null}
+        </div>
+      ) : null}
+    </Page>
   )
 }
 

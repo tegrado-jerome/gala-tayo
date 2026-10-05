@@ -1,10 +1,7 @@
-import AppHeader from '../components/AppHeader'
 import Breadcrumb from '../components/navigation/Breadcrumb'
-import { PageContainer, PageShell } from '../components/layout/ResponsiveLayouts'
 import SeoHead from '../components/SeoHead'
+import { KeyValue, Page } from '../components/ui'
 import { getSiteOrigin } from '../utils/seo'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faFileLines, faHandSparkles, faHouse, faShield } from '@fortawesome/free-solid-svg-icons'
 
 type LegalPageProps = {
   type: 'terms' | 'privacy'
@@ -273,25 +270,17 @@ function LegalPage({ type }: LegalPageProps) {
   const seoDescription = isTerms
     ? 'Read GalaTayo terms covering accounts, content, place information, AI features, moderation, and service rules.'
     : 'Read the GalaTayo privacy policy covering account data, public content, AI feature usage, storage, and user rights.'
-  const breadcrumbItems = [
-    { label: 'Home', href: '/home', icon: <FontAwesomeIcon icon={faHouse} className="h-3.5 w-3.5" /> },
-    { label: isTerms ? 'Terms' : 'Privacy', icon: <FontAwesomeIcon icon={faShield} className="h-3.5 w-3.5" /> },
-  ]
-  const quickFacts = [
+  const breadcrumbItems = [{ label: 'Home', href: '/home' }, { label: isTerms ? 'Terms' : 'Privacy' }]
+  const summaries = [
     {
-      label: 'Applies to',
-      value: 'Users who access or use GalaTayo',
-      icon: <FontAwesomeIcon icon={faHandSparkles} className="h-4 w-4" />,
+      title: isTerms ? 'How to use this' : 'What this covers',
+      body: isTerms
+        ? 'These terms explain how people can use GalaTayo, what content is allowed, and how moderation works.'
+        : 'This policy explains what data may be collected, how it is used, and when it may be shared with service providers.',
     },
     {
-      label: 'Updated',
-      value: 'July 22, 2026',
-      icon: <FontAwesomeIcon icon={faFileLines} className="h-4 w-4" />,
-    },
-    {
-      label: 'Contact',
-      value: contactEmail,
-      icon: <FontAwesomeIcon icon={faShield} className="h-4 w-4" />,
+      title: 'Your controls',
+      body: 'We keep the language direct so users can understand what they can request, change, or delete.',
     },
   ]
   const jsonLd = [
@@ -313,132 +302,61 @@ function LegalPage({ type }: LegalPageProps) {
   ]
 
   return (
-    <PageShell>
+    <Page narrow>
       <SeoHead title={seoTitle} description={seoDescription} canonicalPath={canonicalPath} jsonLd={jsonLd} />
-      <AppHeader />
-      <main className="legal-page w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:pb-16 lg:pt-8">
-        <PageContainer size="wide" className="px-4 sm:px-6 lg:px-8">
-          <div className="mx-auto w-full max-w-[1080px]">
-            <Breadcrumb
-              showBack
-              backTo="/home"
-              preferHistory
-              className="mb-5 sm:mb-6"
-              items={breadcrumbItems}
-            />
+      <Breadcrumb showBack backTo="/home" preferHistory className="mb-4" items={breadcrumbItems} />
 
-            <section className="legal-page__hero relative overflow-hidden rounded-[32px] border border-[rgba(var(--accent-rgb),0.12)] bg-[var(--card)] px-5 py-6 shadow-[0_18px_42px_rgba(17,24,39,0.06)] backdrop-blur-sm sm:px-7 sm:py-8 lg:px-10 lg:py-10">
-              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[rgba(var(--accent-rgb),0.4)] to-transparent" />
-              <div className="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.8fr)] lg:items-start">
-                <div className="min-w-0">
-                  <div className="legal-page__badge inline-flex items-center gap-2 rounded-full border border-[rgba(var(--accent-rgb),0.12)] bg-white/70 px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)] shadow-[0_8px_22px_rgba(17,24,39,0.04)]">
-                    <FontAwesomeIcon icon={faShield} className="h-3.5 w-3.5 text-[var(--accent)]" />
-                    <span>{isTerms ? 'Terms of Service' : 'Privacy Policy'}</span>
-                  </div>
-                  <h1 className="legal-page__title mt-4 text-3xl font-black leading-tight tracking-[-0.04em] text-slate-950 sm:text-4xl lg:text-5xl">
-                    {title}
-                  </h1>
-                  <p className="legal-page__intro mt-4 max-w-3xl text-sm font-semibold leading-7 text-slate-700 sm:text-[15px]">
-                    {intro}
-                  </p>
-                  <div className="mt-6 flex flex-wrap gap-2">
-                    {isTerms ? (
-                      <>
-                        <span className="inline-flex items-center rounded-full bg-[var(--accent-soft)] px-3 py-1.5 text-[12px] font-bold text-[var(--accent)]">
-                          Account rules
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="inline-flex items-center rounded-full bg-[var(--accent-soft)] px-3 py-1.5 text-[12px] font-bold text-[var(--accent)]">
-                          Data handling
-                        </span>
-                      </>
-                    )}
-                  </div>
-                </div>
+      <article className="max-w-[65ch]">
+        <p className="g-eyebrow">{isTerms ? 'Terms of service' : 'Privacy policy'}</p>
+        <h1 className="g-h1 mt-2">{title}</h1>
+        <p className="g-mut mt-3 text-[16px] leading-relaxed">{intro}</p>
 
-                <aside className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
-                  {quickFacts.map((fact) => (
-                    <div
-                      key={fact.label}
-                      className="legal-page__fact flex items-start gap-3 rounded-2xl bg-white/35 px-3 py-2.5 sm:max-lg:gap-2 sm:max-lg:px-2 sm:max-lg:py-1.5"
-                    >
-                      <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)] sm:max-lg:h-7 sm:max-lg:w-7">
-                        {fact.icon}
-                      </span>
-                      <div className="min-w-0">
-                        <p className="legal-page__fact-label text-[11px] font-black uppercase tracking-[0.14em] text-slate-500 sm:max-lg:text-[9px] sm:max-lg:leading-[1.05]">
-                          {fact.label}
-                        </p>
-                        <p className="legal-page__fact-value mt-0.5 break-words text-sm font-bold leading-6 text-slate-900 sm:max-lg:line-clamp-2 sm:max-lg:text-[11px] sm:max-lg:leading-4.5">
-                          {fact.value}
-                        </p>
-                      </div>
-                    </div>
+        <div className="g-panel mt-6">
+          <KeyValue
+            items={[
+              { label: 'Applies to', value: 'Users who access or use GalaTayo' },
+              { label: 'Updated', value: 'July 22, 2026' },
+              { label: 'Contact', value: <a href={`mailto:${contactEmail}`} className="break-all underline underline-offset-2">{contactEmail}</a> },
+            ]}
+          />
+        </div>
+
+        <div className="mt-6 grid gap-4">
+          {summaries.map((summary) => (
+            <div key={summary.title}>
+              <h2 className="g-h3">{summary.title}</h2>
+              <p className="g-mut mt-1 text-[15px] leading-relaxed">{summary.body}</p>
+            </div>
+          ))}
+        </div>
+
+        {sections.map((section) => (
+          <section key={section.title} className="mt-10 border-t border-[var(--line-2)] pt-8">
+            <h2 className="g-h2">{section.title}</h2>
+            <div className="mt-3 grid gap-3 text-[16px] leading-[1.7]">
+              {section.body.map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
+              {section.bullets ? (
+                <ul className="grid list-disc gap-2 pl-5">
+                  {section.bullets.map((item) => (
+                    <li key={item}>{item}</li>
                   ))}
-                </aside>
-              </div>
-            </section>
+                </ul>
+              ) : null}
+            </div>
+          </section>
+        ))}
 
-            <article className="legal-page__article mt-6 sm:mt-7 lg:mt-8">
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {[
-                  {
-                    title: isTerms ? 'How to use this' : 'What this covers',
-                    body: isTerms
-                      ? 'These terms explain how people can use GalaTayo, what content is allowed, and how moderation works.'
-                      : 'This policy explains what data may be collected, how it is used, and when it may be shared with service providers.',
-                  },
-                  {
-                    title: 'Your controls',
-                    body: 'We keep the language direct so users can understand what they can request, change, or delete.',
-                  },
-                  {
-                    title: 'Need help?',
-                    body: `Questions, rights requests, or content concerns can be sent to ${contactEmail}.`,
-                  },
-                ].map((card) => (
-                  <div key={card.title} className="legal-page__summary-card space-y-2">
-                    <h2 className="legal-page__summary-title text-base font-black tracking-[-0.02em] text-slate-950">{card.title}</h2>
-                    <p className="legal-page__summary-body text-sm font-semibold leading-6 text-slate-700">{card.body}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-8 space-y-7 sm:mt-9 sm:space-y-8 lg:mt-10 lg:space-y-9">
-                {sections.map((section, index) => (
-                  <section
-                    key={section.title}
-                    className={`legal-page__section ${index === 0 ? 'pt-0' : 'border-t border-slate-200/70 pt-7 sm:pt-8'}`}
-                  >
-                    <h2 className="legal-page__section-title text-lg font-black tracking-[-0.02em] text-slate-950 sm:text-[1.2rem]">
-                      {section.title}
-                    </h2>
-                    <div className="mt-3 grid gap-3 sm:gap-4">
-                      {section.body.map((paragraph) => (
-                        <p key={paragraph} className="legal-page__section-body text-sm font-semibold leading-7 text-slate-700 sm:text-[15px]">
-                          {paragraph}
-                        </p>
-                      ))}
-                      {section.bullets ? (
-                        <ul className="legal-page__section-bullets grid gap-2 pl-5 text-sm font-semibold leading-7 text-slate-700 sm:text-[15px]">
-                          {section.bullets.map((item) => (
-                            <li key={item} className="list-disc">
-                              {item}
-                            </li>
-                          ))}
-                        </ul>
-                      ) : null}
-                    </div>
-                  </section>
-                ))}
-              </div>
-            </article>
-          </div>
-        </PageContainer>
-      </main>
-    </PageShell>
+        <p className="g-sm g-mut mt-10 border-t border-[var(--line-2)] pt-6">
+          Questions, rights requests, or content concerns? Email{' '}
+          <a href={`mailto:${contactEmail}`} className="font-semibold text-[var(--ink)] underline underline-offset-2">
+            {contactEmail}
+          </a>
+          .
+        </p>
+      </article>
+    </Page>
   )
 }
 

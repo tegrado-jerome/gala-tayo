@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faStamp } from '@fortawesome/free-solid-svg-icons'
-import InternalLink from '../InternalLink'
+import { Stamp } from 'lucide-react'
+import { Button, cx } from '../ui'
 import { checkInAtPlace, getCurrentPosition } from '../../utils/passportApi'
 
 type Status =
@@ -16,11 +15,13 @@ function CheckInButton({
   placeName,
   session,
   onGuest,
+  className,
 }: {
   placeId: string
   placeName: string
   session: Session | null | undefined
   onGuest: () => void
+  className?: string
 }) {
   const [status, setStatus] = useState<Status>({ kind: 'idle' })
 
@@ -50,30 +51,21 @@ function CheckInButton({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[16px] border border-dashed border-[var(--line-strong)] px-4 py-3">
-      <div className="min-w-0 flex-1">
-        <p className="text-[14px] font-semibold text-[var(--text-main)]">Here now?</p>
-        <p className="text-[12px] text-[var(--text-muted)]" aria-live="polite">
-          {status.kind === 'done' || status.kind === 'error'
-            ? status.message
-            : 'Check in to collect this city’s Pasyal Passport stamp.'}
-        </p>
-      </div>
+    <div className={cx('min-w-0', className)}>
       {status.kind === 'done' ? (
-        <InternalLink href="/passport" className="inline-flex h-10 items-center rounded-full bg-[var(--primary)] px-4 text-[13px] font-bold text-white">
+        <Button variant="line" block href="/passport">
+          <Stamp aria-hidden="true" />
           View passport
-        </InternalLink>
+        </Button>
       ) : (
-        <button
-          type="button"
-          onClick={() => void checkIn()}
-          disabled={status.kind === 'working'}
-          className="inline-flex h-10 items-center gap-2 rounded-full bg-[var(--primary)] px-4 text-[13px] font-bold text-white disabled:opacity-60"
-        >
-          <FontAwesomeIcon icon={faStamp} className="h-3.5 w-3.5 text-white" />
-          {status.kind === 'working' ? 'Checking…' : 'Check in'}
-        </button>
+        <Button variant="line" block onClick={() => void checkIn()} loading={status.kind === 'working'}>
+          <Stamp aria-hidden="true" />
+          Check in
+        </Button>
       )}
+      <p className={cx('g-xs mt-2', status.kind === 'error' ? 'text-[var(--bad)]' : 'g-mut')} aria-live="polite">
+        {status.kind === 'done' || status.kind === 'error' ? status.message : 'Here now? Check in for this city’s Pasyal Passport stamp.'}
+      </p>
     </div>
   )
 }

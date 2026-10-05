@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { AppIcon } from './AppIcon'
+import { createPortal } from 'react-dom'
 import { reportUser, type SubmitUserReportPayload, type UserReportReason } from '../utils/userReportsApi'
 import { useGuestAuthPrompt } from './GuestAuthPrompt'
-import { BottomSheet } from './layout/Primitives'
+import { Button, Chip, Sheet } from './ui'
 
 const userReportReasons: Array<{ label: string; value: UserReportReason }> = [
   { label: 'Fake account', value: 'fake_account' },
@@ -98,92 +98,62 @@ function ReportUserModal({
 
   return (
     <>
-      <BottomSheet
-        isOpen={isOpen}
-        onClose={closeIfIdle}
-        sheetClassName="max-w-[380px] rounded-[24px] border border-[#E5E7EB] bg-[#FFFFFF] p-4 shadow-[0_24px_70px_rgba(27,26,23,0.16)] sm:p-4.5"
-        ariaLabel="Report user"
-      >
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="report-user-title"
-        >
-        <div className="flex items-start gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent)]">
-            <AppIcon name="reports" className="h-4 w-4" />
-          </span>
-          <div className="min-w-0">
-            <h3 id="report-user-title" className="text-[17px] font-black text-[var(--text-main)]">
-              Report user
-            </h3>
-            <p className="mt-0.5 text-[12px] font-medium leading-5 text-[var(--muted)]">
-              Your report is private and reviewed by admins.
-            </p>
-            <p className="mt-1.5 text-[12px] font-black text-[var(--accent)]">{reportingLabel}</p>
-          </div>
-        </div>
+      {createPortal(
+        <Sheet open={isOpen} onClose={closeIfIdle} title="Report user" labelledBy="report-user-title">
+          <p className="g-sm g-mut -mt-2">Private, and only admins see it.</p>
+          <p className="g-sm mt-1 font-semibold">{reportingLabel}</p>
 
-        <div className="mt-4 grid gap-1.5">
-          {userReportReasons.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => {
-                setReason(option.value)
-                setErrorMessage('')
-              }}
+          <fieldset className="mt-4">
+            <legend className="g-label">Reason</legend>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {userReportReasons.map((option) => (
+                <Chip
+                  key={option.value}
+                  on={reason === option.value}
+                  disabled={isSubmitting}
+                  onClick={() => {
+                    setReason(option.value)
+                    setErrorMessage('')
+                  }}
+                >
+                  {option.label}
+                </Chip>
+              ))}
+            </div>
+          </fieldset>
+
+          <div className="g-field mt-4">
+            <label htmlFor="report-user-details">Details</label>
+            <textarea
+              id="report-user-details"
+              className="g-input"
+              value={details}
+              onChange={(event) => setDetails(event.target.value.slice(0, 500))}
               disabled={isSubmitting}
-              className={`min-h-10 rounded-[16px] border px-3.5 py-2.5 text-left text-[13px] font-bold transition disabled:cursor-not-allowed disabled:opacity-70 ${
-                reason === option.value
-                  ? 'border-[var(--primary)] bg-[var(--accent-soft)] text-[var(--accent)]'
-                  : 'border-[#E5E7EB] bg-[#FFFFFF] text-[var(--text-main)] hover:border-[#CBD5E1]'
-              }`}
-              aria-pressed={reason === option.value}
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
+              maxLength={500}
+              rows={3}
+              placeholder="Add details to help us review this report."
+            />
+            <span className="g-hint text-right">{details.length}/500</span>
+          </div>
 
-        <label className="mt-4 block">
-          <span className="text-[12px] font-black text-[var(--text-main)]">Details</span>
-          <textarea
-            value={details}
-            onChange={(event) => setDetails(event.target.value.slice(0, 500))}
-            disabled={isSubmitting}
-            maxLength={500}
-            rows={3}
-            placeholder="Add details to help us review this report."
-            className="mt-1.5 w-full resize-none rounded-[16px] border border-[#E5E7EB] bg-[#FFFFFF] px-3.5 py-3 text-[13px] font-medium leading-5 text-[var(--text-main)] outline-none transition placeholder:text-[#9CA3AF] focus:border-[var(--primary)] focus:ring-2 focus:ring-[var(--primary-soft)] disabled:cursor-not-allowed disabled:opacity-70"
-          />
-          <span className="mt-1 block text-right text-[11px] font-bold text-[var(--muted)]">{details.length}/500</span>
-        </label>
+          {errorMessage ? (
+            <p className="g-hint is-error mt-2" role="alert">
+              {errorMessage}
+            </p>
+          ) : null}
 
-        <div className="mt-2 min-h-5">
-          {errorMessage ? <p className="text-[12px] font-bold text-red-600">{errorMessage}</p> : null}
-        </div>
-
-        <div className="mt-4 flex gap-2">
-          <button
-            type="button"
-            onClick={closeIfIdle}
-            disabled={isSubmitting}
-            className="inline-flex min-h-10 flex-1 sm:flex-none items-center justify-center rounded-full border border-[#E5E7EB] bg-[#FFFFFF] px-4 text-[13px] font-black text-[var(--text-main)] disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={() => void handleSubmit()}
-            disabled={isSubmitting || !reason}
-            className="inline-flex min-h-10 flex-1 sm:flex-none items-center justify-center rounded-full border border-[var(--primary)] bg-[var(--primary)] px-4 text-[13px] font-black text-white disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            {isSubmitting ? 'Submitting...' : 'Submit'}
-          </button>
-        </div>
-        </div>
-      </BottomSheet>
+          <div className="mt-5 grid grid-cols-2 gap-2">
+            <Button variant="line" block onClick={closeIfIdle} disabled={isSubmitting}>
+              Cancel
+            </Button>
+            <Button variant="ink" block onClick={() => void handleSubmit()} disabled={isSubmitting || !reason}>
+              {isSubmitting ? 'Submitting…' : 'Submit report'}
+            </Button>
+          </div>
+        </Sheet>,
+        document.body,
+      )}
       {guestAuth.promptElement}
     </>
   )

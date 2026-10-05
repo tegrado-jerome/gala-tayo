@@ -1,145 +1,19 @@
-import ExploreShortcuts from '../components/home/search/ExploreShortcuts'
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faMagnifyingGlass, faSliders, faXmark } from '@fortawesome/free-solid-svg-icons'
+import { useEffect, useLayoutEffect, useState } from 'react'
 import SearchHub from './SearchHub'
-import { AppIcon } from '../components/AppIcon'
-import PageHeroHeader from '../components/PageHeroHeader'
-import { SearchFilterPanel, SearchPageBreadcrumb } from '../components/home/search/SearchComponents'
+import ExploreShortcuts from '../components/home/search/ExploreShortcuts'
+import { ExploreSearchBar, QuickFilterChips, SearchFilterPanel, SearchPageBreadcrumb } from '../components/home/search/SearchComponents'
+import { FeatureGuideModalTrigger, featureGuideContent } from '../components/FeatureGuideModal'
+import { Button, Page, Sheet } from '../components/ui'
 import { useBottomNav } from '../context/BottomNavContext'
-import { useTheme } from '../context/ThemeContext'
-import { BOTTOM_NAV_RESERVED_CLASS } from '../components/layout/Primitives'
 import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
 import { navigateToPath } from '../utils/navigation'
 import { buildSearchPath, hasActiveSearchCriteria, normalizeTypedSearchText, readSearchUrlState } from '../utils/searchParams'
 import { budgetOptions, fallbackAreas, fallbackCategories } from '../components/home/homeHelpers'
-import { FeatureGuideModalTrigger, featureGuideContent } from '../components/FeatureGuideModal'
 import type { SearchBudgetValue } from '../utils/searchParams'
 
-function SearchPageLandingBar({
-  value,
-  placeholder = 'Discover a city',
-  onChange,
-  onSubmit,
-  onFilterClick,
-  filtersOpen = false,
-  hasActiveFilters = false,
-  canSubmit = value.trim().length > 0,
-}: {
-  value: string
-  placeholder?: string
-  onChange: (value: string) => void
-  onSubmit: () => void
-  onFilterClick?: () => void
-  filtersOpen?: boolean
-  hasActiveFilters?: boolean
-  canSubmit?: boolean
-}) {
-  const inputRef = useRef<HTMLInputElement | null>(null)
-
-  return (
-    <div
-      className="search-landing-bar mt-7 flex h-14 w-full items-center justify-between rounded-[20px] border border-[var(--home-search-border)] bg-[var(--home-search-bg)] px-4 text-[var(--home-search-text)] transition hover:border-[var(--home-search-hover-border)] hover:bg-[var(--home-search-hover-bg)]"
-      onClick={() => inputRef.current?.focus()}
-    >
-      <span className="flex min-w-0 flex-1 items-center gap-2.5 text-[var(--home-search-text)]">
-        <FontAwesomeIcon icon={faMagnifyingGlass} className="search-landing-bar__icon h-[21px] w-[21px] shrink-0 text-[var(--home-search-text)]" />
-        <label htmlFor="search-page-input" className="sr-only">
-          Search places, cities, or categories
-        </label>
-        <input
-          ref={inputRef}
-          id="search-page-input"
-          type="text"
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter' && canSubmit) {
-              event.preventDefault()
-              onSubmit()
-            }
-          }}
-          placeholder={placeholder}
-          className="search-landing-input min-w-0 flex-1 bg-transparent text-[15px] font-medium text-[var(--home-search-text)] outline-none placeholder:font-medium placeholder:text-[var(--home-search-placeholder)] disabled:cursor-not-allowed"
-        />
-      </span>
-
-      {onFilterClick ? (
-        <button
-          type="button"
-          onClick={(event) => {
-            event.stopPropagation()
-            onFilterClick()
-          }}
-          aria-label={filtersOpen ? 'Close filters' : 'Open filters'}
-          aria-expanded={filtersOpen}
-          aria-pressed={filtersOpen}
-          className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition disabled:cursor-not-allowed ${
-            filtersOpen || hasActiveFilters
-              ? 'bg-[var(--home-search-hover-bg)] text-[var(--home-search-text)]'
-              : 'text-[var(--home-search-text)] hover:bg-[var(--home-search-hover-bg)] hover:text-[var(--home-search-text)]'
-          } disabled:text-[var(--text-disabled)]`}
-        >
-          <FontAwesomeIcon icon={faSliders} className="search-landing-bar__icon h-[21px] w-[21px]" />
-        </button>
-      ) : null}
-    </div>
-  )
-}
-
-function SearchActiveFilterChips({
-  cityLabel,
-  categoryLabel,
-  budgetLabel,
-  onClearAll,
-  onClearCity,
-  onClearCategory,
-  onClearBudget,
-}: {
-  cityLabel: string | null
-  categoryLabel: string | null
-  budgetLabel: string | null
-  onClearAll: () => void
-  onClearCity: () => void
-  onClearCategory: () => void
-  onClearBudget: () => void
-}) {
-  const chips = [
-    cityLabel ? { key: 'city', label: cityLabel, onClear: onClearCity } : null,
-    categoryLabel ? { key: 'category', label: categoryLabel, onClear: onClearCategory } : null,
-    budgetLabel ? { key: 'budget', label: budgetLabel, onClear: onClearBudget } : null,
-  ].filter(Boolean) as Array<{ key: string; label: string; onClear: () => void }>
-
-  if (chips.length === 0) {
-    return null
-  }
-
-  return (
-    <div className="mt-3 flex flex-col gap-3">
-      <div className="flex flex-wrap gap-2">
-        {chips.map((chip) => (
-          <button
-            key={chip.key}
-            type="button"
-            onClick={chip.onClear}
-            className="search-active-filter-chip inline-flex items-center gap-2 rounded-full border border-[rgba(var(--accent-rgb),0.14)] bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-[0_6px_16px_rgba(27,26,23,0.04)] transition hover:border-[var(--accent-deep)] hover:text-[var(--accent-deep)]"
-          >
-            <span>{chip.label}</span>
-            <AppIcon name="clear" className="h-3.5 w-3.5" />
-          </button>
-        ))}
-      </div>
-
-      <button
-        type="button"
-        onClick={onClearAll}
-        className="search-active-filter-chip search-active-filter-chip--clear-all inline-flex w-fit items-center gap-2 rounded-full border border-[rgba(148,163,184,0.24)] bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-500 transition hover:border-[var(--accent-deep)] hover:text-[var(--accent-deep)]"
-      >
-        Clear all filters
-      </button>
-    </div>
-  )
-}
+const cityOptions = fallbackAreas.filter((area) => area.id !== 'all').map((area) => ({ value: area.id, label: area.name }))
+const categoryOptions = fallbackCategories.map((category) => ({ value: category.id, label: category.name }))
+const budgetFilterOptions = budgetOptions.map((budget) => ({ value: budget.value, label: budget.label }))
 
 function SearchPage({
   navigationSource = 'push',
@@ -163,23 +37,7 @@ function SearchPage({
   const rawQuery = shouldShowResults ? initialQuery : draftQuery
   const activeTypedQuery = normalizeTypedSearchText(rawQuery)
   const { setHidden } = useBottomNav()
-  const { resolvedTheme } = useTheme()
 
-  const categoryLabel = useMemo(
-    () =>
-      selectedCategory
-        ? fallbackCategories.find((category) => category.id === selectedCategory)?.name ?? null
-        : null,
-    [selectedCategory]
-  )
-  const cityLabel = useMemo(
-    () => (selectedCity ? fallbackAreas.find((area) => area.id === selectedCity)?.name ?? null : null),
-    [selectedCity]
-  )
-  const budgetLabel = useMemo(
-    () => (selectedBudget ? budgetOptions.find((budget) => budget.value === selectedBudget)?.label ?? null : null),
-    [selectedBudget]
-  )
   const hasActiveFilters = Boolean(selectedCity || selectedCategory || selectedBudget)
   const canSearch = Boolean(activeTypedQuery.length > 0 || selectedCategory || selectedCity || selectedBudget)
 
@@ -237,9 +95,6 @@ function SearchPage({
     navigateToPath('/search')
   }
 
-  const handleClearCity = () => setSelectedCity(null)
-  const handleClearCategory = () => setSelectedCategory(null)
-  const handleClearBudget = () => setSelectedBudget(null)
   const handleDraftQueryChange = (value: string) => {
     setDraftQuery(value)
     if (value.trim()) {
@@ -279,148 +134,87 @@ function SearchPage({
   }
 
   return (
-    <div className="gala-page-background min-h-screen overflow-x-hidden text-[var(--text)]">
-      <main className={`w-full px-4 pt-[max(28px,env(safe-area-inset-top))] sm:px-6 sm:pt-8 md:flex md:justify-center lg:px-8 ${BOTTOM_NAV_RESERVED_CLASS}`}>
-          <section className="w-full max-w-[430px] sm:max-w-[560px] lg:max-w-[640px] xl:max-w-[720px]">
-            <SearchPageBreadcrumb className="mb-4" />
-          <PageHeroHeader
-            eyebrow="Explore"
-            title="Find your next gala spot"
-            description="Search places, cities, or categories and fine-tune results."
-            icon={<FontAwesomeIcon icon={faMagnifyingGlass} className="h-4 w-4" />}
-            className="pb-0"
-            centered
-            centeredAt="md"
-            divider={false}
-          />
-          <SearchPageLandingBar
-            value={rawQuery}
-            onChange={handleDraftQueryChange}
-            onSubmit={handleSearch}
-            placeholder="Discover a city"
-            canSubmit={canSearch}
-            onFilterClick={() => setIsFilterPanelOpen((value) => !value)}
-            filtersOpen={isFilterPanelOpen}
-            hasActiveFilters={hasActiveFilters}
-          />
-          {isFilterPanelOpen ? (
-            <div
-              className="search-filters-modal fixed inset-0 z-[7000] flex items-stretch justify-center bg-slate-950/30 px-0 pt-0 backdrop-blur-[2px] sm:items-center sm:px-4 sm:py-6"
-              onClick={() => setIsFilterPanelOpen(false)}
-            >
-              <div
-                className="search-filters-modal__sheet flex h-[100dvh] w-full max-w-none flex-col overflow-hidden bg-white sm:h-auto sm:max-h-[min(92dvh,920px)] sm:max-w-[820px] sm:rounded-[30px] sm:border sm:border-[rgba(148,163,184,0.18)] sm:shadow-[0_20px_60px_rgba(27,26,23,0.22)]"
-                onClick={(event) => event.stopPropagation()}
-              >
-                <div className="search-filters-modal__header flex items-start justify-between gap-4 border-b border-[rgba(148,163,184,0.16)] px-4 py-4 sm:px-5">
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-500">Filters</p>
-                    <h2 className="mt-1 text-[1.05rem] font-black tracking-[-0.03em] text-slate-950">Refine your search</h2>
-                    <p className="mt-1 text-sm leading-6 text-slate-500">Use clean dropdowns, then apply when you’re ready.</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsFilterPanelOpen(false)}
-                    aria-label="Close filters"
-                    className="search-filters-modal__close inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[rgba(148,163,184,0.18)] bg-white text-slate-500 transition hover:border-[rgba(100,116,139,0.34)] hover:text-slate-900"
-                  >
-                    <FontAwesomeIcon icon={faXmark} className="h-5 w-5" />
-                  </button>
-                </div>
+    <Page>
+      <SearchPageBreadcrumb />
+      <h1 className="g-h1 mt-5">Saan tayo gagala?</h1>
+      <p className="g-mut mt-2">Search places, cities, or categories.</p>
 
-                <SearchFilterPanel
-                  cityLabel="City"
-                  categoryLabel="Category"
-                  budgetLabel="Budget"
-                  selectedCity={selectedCity}
-                  selectedCategory={selectedCategory}
-                  selectedBudget={selectedBudget}
-                  cityOptions={fallbackAreas.filter((area) => area.id !== 'all').map((area) => ({ value: area.id, label: area.name }))}
-                  categoryOptions={fallbackCategories.map((category) => ({ value: category.id, label: category.name }))}
-                  budgetOptions={budgetOptions.map((budget) => ({ value: budget.value, label: budget.label }))}
-                  onCityChange={handleCityChange}
-                  onCategoryChange={handleCategoryChange}
-                  onBudgetChange={handleBudgetChange}
-                  showHeader={false}
-                  showActions={false}
-                  className="min-h-0 flex-1 overflow-y-auto border-0 bg-transparent px-4 py-4 shadow-none sm:px-5"
-                />
+      <ExploreSearchBar className="mt-5" value={rawQuery} onChange={handleDraftQueryChange} onSubmit={handleSearch} canSubmit={canSearch} />
 
-                <div className="search-filters-modal__footer border-t border-[rgba(148,163,184,0.16)] bg-white px-4 py-4 sm:px-5">
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        handleClearAll()
-                        setIsFilterPanelOpen(false)
-                      }}
-                      className="search-filters-modal__reset inline-flex h-12 items-center justify-center rounded-2xl border border-[rgba(148,163,184,0.18)] bg-white px-4 text-sm font-bold text-slate-500 transition hover:border-[var(--accent-deep)] hover:text-[var(--accent-deep)]"
-                    >
-                      Reset All
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsFilterPanelOpen(false)
-                        handleSearch()
-                      }}
-                      disabled={!canSearch}
-                      className="search-filters-modal__apply inline-flex h-12 items-center justify-center rounded-2xl bg-[var(--accent)] px-4 text-sm font-bold text-white shadow-[0_14px_30px_rgba(var(--accent-rgb),0.18)] transition hover:bg-[var(--accent-deep)] disabled:cursor-not-allowed disabled:bg-[var(--bg-soft)] disabled:text-[var(--text-disabled)]"
-                    >
-                      Apply Filters{hasActiveFilters ? ` (${[selectedCity, selectedCategory, selectedBudget].filter(Boolean).length})` : ''}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : null}
-          {hasActiveFilters ? (
-            <SearchActiveFilterChips
-              cityLabel={cityLabel}
-              categoryLabel={categoryLabel}
-              budgetLabel={budgetLabel}
-              onClearAll={handleClearAll}
-              onClearCity={handleClearCity}
-              onClearCategory={handleClearCategory}
-              onClearBudget={handleClearBudget}
-            />
-          ) : null}
-          <button
-            type="button"
-            onClick={handleSearch}
-            disabled={!canSearch}
-            className="mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[var(--accent)] px-5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(var(--accent-rgb),0.18)] transition hover:bg-[var(--accent-deep)] active:scale-[0.99] disabled:cursor-not-allowed  disabled:shadow-none disabled:bg-[var(--bg-soft)] disabled:text-[var(--text-disabled)]"
-          >
-            <FontAwesomeIcon icon={faMagnifyingGlass} className="h-4 w-4 shrink-0" />
-            {activeTypedQuery.length > 0 ? 'Search places' : 'Apply filters'}
-          </button>
-          <div className="mt-5 text-center">
-            <FeatureGuideModalTrigger
-              content={featureGuideContent.search}
-              triggerLabel="Need help searching?"
-              className="feature-guide-search-trigger feature-guide-search-trigger--shimmer !inline-flex !gap-1 !rounded-none !border-none !bg-transparent !px-0 !py-0 !text-xs !font-normal !normal-case !tracking-normal !min-h-0 !animate-none !shadow-none !no-underline hover:!translate-y-0"
-              triggerIconClassName={resolvedTheme === 'dark' ? 'text-[var(--text-main)]' : 'text-[var(--primary-dark)]'}
-              onSampleClick={(sample) => {
-                const namePrefix = 'By place name — '
-                const locationPrefix = 'By location — '
-                const categoryPrefix = 'By category — '
-                if (sample.startsWith(namePrefix)) {
-                  const q = sample.slice(namePrefix.length)
-                  navigateToPath(buildSearchPath({ q, page: 1 }))
-                } else if (sample.startsWith(locationPrefix)) {
-                  const loc = sample.slice(locationPrefix.length).toLowerCase()
-                  navigateToPath(buildSearchPath({ city: loc, page: 1 }))
-                } else if (sample.startsWith(categoryPrefix)) {
-                  const cat = sample.slice(categoryPrefix.length).toLowerCase()
-                  navigateToPath(buildSearchPath({ category: cat, page: 1 }))
-                }
-              }}
-            />
-          </div>
-          <ExploreShortcuts />
-        </section>
-      </main>
-    </div>
+      <QuickFilterChips
+        className="mt-4"
+        categoryOptions={categoryOptions}
+        cityOptions={cityOptions}
+        budgetOptions={budgetFilterOptions}
+        selectedCategory={selectedCategory}
+        selectedCity={selectedCity}
+        selectedBudget={selectedBudget}
+        onOpenFilters={() => setIsFilterPanelOpen(true)}
+        onCategoryChange={handleCategoryChange}
+        onCityChange={handleCityChange}
+        onBudgetChange={handleBudgetChange}
+      />
+
+      {hasActiveFilters ? (
+        <div className="mt-5 flex flex-wrap items-center gap-3">
+          <Button variant="tara" onClick={handleSearch} disabled={!canSearch}>
+            Show places
+          </Button>
+          <Button variant="text" onClick={handleClearAll}>
+            Clear all
+          </Button>
+        </div>
+      ) : null}
+
+      <div className="mt-4">
+        <FeatureGuideModalTrigger
+          content={featureGuideContent.search}
+          triggerLabel="Need help searching?"
+          className="!inline-flex !min-h-11 !gap-1 !rounded-none !border-none !bg-transparent !px-0 !py-0 !text-xs !font-normal !normal-case !tracking-normal !text-[var(--ink-2)] !shadow-none !no-underline !animate-none hover:!translate-y-0"
+          triggerIconClassName="text-[var(--ink-2)]"
+          onSampleClick={(sample) => {
+            const namePrefix = 'By place name — '
+            const locationPrefix = 'By location — '
+            const categoryPrefix = 'By category — '
+            if (sample.startsWith(namePrefix)) {
+              const q = sample.slice(namePrefix.length)
+              navigateToPath(buildSearchPath({ q, page: 1 }))
+            } else if (sample.startsWith(locationPrefix)) {
+              const loc = sample.slice(locationPrefix.length).toLowerCase()
+              navigateToPath(buildSearchPath({ city: loc, page: 1 }))
+            } else if (sample.startsWith(categoryPrefix)) {
+              const cat = sample.slice(categoryPrefix.length).toLowerCase()
+              navigateToPath(buildSearchPath({ category: cat, page: 1 }))
+            }
+          }}
+        />
+      </div>
+
+      <ExploreShortcuts />
+
+      <Sheet open={isFilterPanelOpen} onClose={() => setIsFilterPanelOpen(false)} title="Filters" labelledBy="search-filters-title">
+        <SearchFilterPanel
+          selectedCity={selectedCity}
+          selectedCategory={selectedCategory}
+          selectedBudget={selectedBudget}
+          cityOptions={cityOptions}
+          categoryOptions={categoryOptions}
+          budgetOptions={budgetFilterOptions}
+          onCityChange={handleCityChange}
+          onCategoryChange={handleCategoryChange}
+          onBudgetChange={handleBudgetChange}
+          onClearAll={() => {
+            handleClearAll()
+            setIsFilterPanelOpen(false)
+          }}
+          onApplyFilters={() => {
+            setIsFilterPanelOpen(false)
+            handleSearch()
+          }}
+          canApply={canSearch}
+        />
+      </Sheet>
+    </Page>
   )
 }
 

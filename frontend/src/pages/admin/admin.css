@@ -1,0 +1,38 @@
+.ga-shell { width: 100%; max-width: 1240px; margin: 0 auto; padding: 16px 16px 48px; display: grid; gap: 20px; }
+@media (min-width: 1024px) { .ga-shell { grid-template-columns: 220px minmax(0, 1fr); gap: 40px; padding: 32px 32px 96px; } }
+.ga-main { min-width: 0; display: flex; flex-direction: column; gap: 20px; }
+
+.ga-brand { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.ga-side { display: none; }
+@media (min-width: 1024px) {
+  .ga-side { display: flex; flex-direction: column; gap: 4px; position: sticky; top: 32px; align-self: start; }
+  .ga-top { display: none; }
+}
+.ga-side .ga-brand { margin-bottom: 16px; padding: 0 12px; }
+.ga-nav-item {
+  display: flex; align-items: center; gap: 10px; width: 100%; min-height: 40px; padding: 0 12px;
+  border: 0; border-radius: var(--r-2); background: none; color: var(--ink-2);
+  font: 500 14px/1 var(--font-body); text-align: left; cursor: pointer;
+  transition: background var(--t) var(--ease-g), color var(--t) var(--ease-g);
+}
+.ga-nav-item:hover { background: var(--fill); color: var(--ink); }
+.ga-nav-item[aria-current='page'] { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: inset 0 0 0 1px var(--line-2); }
+.ga-nav-item:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.ga-nav-item svg { width: 16px; height: 16px; flex: 0 0 auto; }
+.ga-side-foot { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line-2); }
+
+.ga-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 16px; padding-bottom: 16px; border-bottom: 1px solid var(--line-2); }
+
+.ga-box { min-width: 0; padding: 12px 14px; border-radius: var(--r-2); background: var(--fill); }
+.ga-box p { overflow-wrap: anywhere; }
+.ga-msg { padding: 10px 14px; border-radius: var(--r-2); font-size: 13px; font-weight: 500; line-height: 1.5; overflow-wrap: anywhere; }
+.ga-msg.is-bad { background: var(--bad-soft); color: var(--bad); }
+.ga-msg.is-ok { background: var(--ok-soft); color: var(--ok); }
+.ga-link { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+
+.ga-img { display: block; width: 100%; object-fit: cover; background: var(--fill); }
+.ga-code { font: 600 20px/1 var(--font-body); letter-spacing: 0.35em; }
+.ga-qr { display: grid; place-items: center; min-height: 192px; padding: 12px; border: 1px dashed var(--line); border-radius: var(--r-2); background: var(--surface); }
+.ga-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; overflow-wrap: anywhere; }
+
+.ga-center { min-height: 100vh; display: grid; place-items: center; padding: 40px 16px; }

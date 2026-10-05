@@ -57,12 +57,11 @@ function FloatingChatPanel({ initialQuestion }: { initialQuestion: string }) {
         mode="modal"
         isOpen={isGuestPromptOpen}
         onClose={closeGuestPrompt}
-        className="gala-auth-prompt--protected-feature gala-auth-prompt--protected-feature-accent"
       />
       <div
         role="dialog"
         aria-label="GalaTayo AI chat"
-        className="fixed inset-0 z-[7000] h-[100dvh] overflow-hidden bg-[var(--bg)] sm:inset-auto sm:top-[84px] sm:bottom-auto sm:right-4 sm:h-[min(640px,calc(100dvh-12rem))] sm:w-[400px] sm:rounded-[24px] sm:border sm:border-[var(--line)] sm:shadow-[0_24px_60px_rgba(27,26,23,0.22)] lg:right-6 lg:h-[min(640px,calc(100dvh-7rem))]"
+        className="fixed inset-0 z-[7000] h-[100dvh] overflow-hidden bg-[var(--paper)] sm:inset-auto sm:right-4 sm:top-[72px] sm:h-[min(680px,calc(100dvh-6rem))] sm:w-[400px] sm:rounded-[var(--r-4)] sm:border sm:border-[var(--line)] sm:shadow-[var(--sh-3)] lg:right-8 lg:top-[80px]"
       >
         <AskAiModePanel
           {...panelProps}

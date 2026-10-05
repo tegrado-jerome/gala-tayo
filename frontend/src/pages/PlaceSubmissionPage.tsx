@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import AppHeader from '../components/AppHeader'
-import { AppIcon, type AppIconName } from '../components/AppIcon'
-import PageHeroHeader from '../components/PageHeroHeader'
-import { DetailLayout, FormContainer, PageContainer, PageShell } from '../components/layout/ResponsiveLayouts'
+import { ChevronDown, ImagePlus, MapPin, Search } from 'lucide-react'
+import { Button, Page, Panel, Tag, buttonClass } from '../components/ui'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import MinimalBackNav from '../components/navigation/MinimalBackNav'
 import MapView from '../components/MapView'
@@ -66,11 +64,6 @@ const categoryOptions = [
 const crowdOptions = ['Low', 'Moderate', 'Busy']
 const indoorOutdoorOptions = ['Indoor', 'Outdoor', 'Mixed']
 const metroManilaCenter: [number, number] = [14.5995, 120.9842]
-const fieldClassName =
-  'gala-field mt-2 w-full px-4 text-sm placeholder:text-slate-400'
-const textInputClassName = `${fieldClassName} h-11`
-const textAreaClassName = `${fieldClassName} py-3`
-const mapSearchInputClassName = `${fieldClassName} h-14 pl-11 text-[15px]`
 
 function splitList(value: string) {
   return value
@@ -126,46 +119,33 @@ const emptyDraft: PlaceDraft = {
 
 function FormSection({
   step,
-  eyebrow,
   title,
   description,
-  icon,
   children,
 }: {
   step?: number
-  eyebrow?: string
   title: string
   description?: string
-  icon?: AppIconName
   children: ReactNode
 }) {
   return (
-    <section className="border-t border-[var(--line)] pt-8 first:border-t-0 first:pt-0">
-      <div className="mb-5">
-        {eyebrow || step ? (
-          <div className="flex flex-wrap items-center gap-2">
-            {step ? (
-              <span className="inline-flex items-center rounded-full bg-[var(--accent-wash)] px-2.5 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-[var(--accent-deep)]">
-                Step {step}
-              </span>
-            ) : null}
-            {eyebrow ? (
-              <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[var(--accent-deep)]">{eyebrow}</p>
-            ) : null}
-          </div>
-        ) : null}
-        <div className="mt-1 flex items-center gap-2">
-          {icon ? (
-            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--accent-wash)] text-[var(--accent-deep)]">
-              <AppIcon name={icon} className="h-5 w-5" />
-            </span>
-          ) : null}
-          <h2 className="text-lg font-black tracking-[-0.03em] text-slate-950">{title}</h2>
-        </div>
-        {description ? <p className="mt-1 text-sm font-semibold leading-6 text-slate-600">{description}</p> : null}
-      </div>
+    <Panel as="section">
+      {step ? <p className="g-eyebrow">Step {step}</p> : null}
+      <h2 className="g-h3 mt-1">{title}</h2>
+      {description ? <p className="g-sm g-mut mt-1">{description}</p> : null}
+      <div className="mt-4">{children}</div>
+    </Panel>
+  )
+}
+
+function Field({ label, optional, className, children }: { label: string; optional?: boolean; className?: string; children: ReactNode }) {
+  return (
+    <label className={`g-field ${className ?? ''}`}>
+      <span className="g-label">
+        {label} {optional ? <span className="g-fnt font-normal">Optional</span> : null}
+      </span>
       {children}
-    </section>
+    </label>
   )
 }
 
@@ -387,484 +367,309 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
   }
 
   return (
-    <PageShell>
-      <AppHeader />
-      <main className="w-full pb-12 pt-4 sm:pb-14 sm:pt-5 lg:py-10">
-        <PageContainer size="wide">
-          <MinimalBackNav onClick={() => window.history.back()} className="mb-4" />
+    <Page>
+      <MinimalBackNav onClick={() => window.history.back()} />
 
-          <DetailLayout className="gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
-          <section className="min-w-0">
-            <FormContainer>
-            <PageHeroHeader
-              eyebrow="Submit Places"
-              title="Submit a new place"
-              description="Fill this like a clean social post: exact location, a short strong description, and a few real photos. The place stays private until admin approval."
-              icon={<AppIcon name="place" className="h-4 w-4" />}
-              badges={
-                <>
-                  <span className="gala-count-pill">Pending review</span>
-                  <span className="gala-count-pill">1 to 3 photos</span>
-                  <span className="gala-count-pill">Exact pin required</span>
-                  <span className="gala-count-pill">Minimal, clear details</span>
-                </>
-              }
-            />
+      <div className="g-split mt-2">
+        <div className="min-w-0">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div className="min-w-0">
+              <h1 className="g-h1">Submit a new place</h1>
+              <p className="g-mut mt-1 max-w-[60ch] text-[15px]">Exact pin, a short honest description, and a few real photos. It stays private until an admin approves it.</p>
+            </div>
+            <Button variant="line" size="sm" className="shrink-0 self-start sm:self-auto" onClick={() => navigateToPath(session ? '/submissions' : '/login')}>
+              My submissions
+            </Button>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            <Tag>Pending review</Tag>
+            <Tag>1 to 3 photos</Tag>
+            <Tag>Exact pin required</Tag>
+          </div>
 
-            <form className="mt-3 grid gap-8 sm:mt-4" onSubmit={handleSubmit}>
-              <div className="sm:max-w-[220px]">
-                <button
-                  type="button"
-                  onClick={() => navigateToPath(session ? '/submissions' : '/login')}
-                  className="app-button app-button-secondary app-button-md w-full"
-                >
-                  <AppIcon name="list" className="h-4 w-4" />
-                  View submissions
-                </button>
+          <form className="mt-6 grid gap-4" onSubmit={handleSubmit}>
+            <FormSection step={1} title="Basic details" description="Keep it short and searchable.">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Place name">
+                  <input value={draft.name} onChange={(event) => updateDraft('name', event.target.value.slice(0, 160))} placeholder="10.25 Cafe" required className="g-input" />
+                </Field>
+                <Field label="Category">
+                  <select value={draft.category} onChange={(event) => updateDraft('category', event.target.value)} className="g-input">
+                    {categoryOptions.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
               </div>
+            </FormSection>
 
-              <FormSection
-                step={1}
-                eyebrow="Start here"
-                title="Basic details"
-                description="Keep it short and searchable, similar to how places appear on social apps."
-                icon="place"
-              >
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="block">
-                    <span className="text-sm font-black text-slate-900">Place name</span>
+            <FormSection step={2} title="Pin the spot" description="Search first, then tap the exact entrance or storefront.">
+              <div className="grid gap-3">
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <div className="relative min-w-0 flex-1">
+                    <Search className="pointer-events-none absolute top-1/2 left-3.5 h-[18px] w-[18px] -translate-y-1/2 text-[var(--ink-3)]" aria-hidden="true" />
                     <input
-                      value={draft.name}
-                      onChange={(event) => updateDraft('name', event.target.value.slice(0, 160))}
-                      placeholder="10.25 Cafe"
-                      required
-                      className={textInputClassName}
-                    />
-                  </label>
-                  <label className="block">
-                    <span className="text-sm font-black text-slate-900">Category</span>
-                    <select
-                      value={draft.category}
-                      onChange={(event) => updateDraft('category', event.target.value)}
-                      className={textInputClassName}
-                    >
-                      {categoryOptions.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-              </FormSection>
-
-              <FormSection
-                step={2}
-                eyebrow="Pin the spot"
-                title="Map and location"
-                description="Search first, then refine the marker by tapping the exact entrance or storefront."
-                icon="map"
-              >
-                <div className="grid gap-3">
-                  <div className="flex flex-col gap-3 sm:flex-row">
-                    <div className="relative flex-1">
-                      <AppIcon
-                        name="search"
-                        className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
-                      />
-                      <input
-                        value={searchQuery}
-                        onChange={(event) => setSearchQuery(event.target.value)}
-                        placeholder="Search street, building, barangay, or landmark"
-                        className={`${mapSearchInputClassName} flex-1`}
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => void handleMapSearch()}
-                      className="app-button app-button-primary app-button-md sm:min-w-[164px]"
-                    >
-                      <AppIcon name="map" className="h-4 w-4" />
-                      {isSearching ? 'Searching...' : 'Search map'}
-                    </button>
-                  </div>
-                  {searchError ? <p className="text-sm font-bold text-red-600">{searchError}</p> : null}
-                  {searchResults.length > 0 ? (
-                    <div className="grid gap-2">
-                      {searchResults.map((result) => (
-                        <button
-                          key={result.place_id}
-                          type="button"
-                          onClick={() => handleSelectSearchResult(result)}
-                          className="rounded-2xl border border-[var(--line)] bg-slate-50 px-4 py-3 text-left text-sm font-semibold text-slate-700 transition hover:border-[var(--accent)] hover:bg-white"
-                        >
-                          {result.display_name}
-                        </button>
-                      ))}
-                    </div>
-                  ) : null}
-
-                  <div className="overflow-hidden rounded-[24px] ring-1 ring-[var(--line)]">
-                    <MapView
-                      pickMode
-                      pickPosition={coordinates}
-                      onPickPositionChange={handleCoordinateChange}
-                      pickRecenterSignal={shouldRecenter ? 1 : 0}
-                      center={coordinates}
-                      zoom={16}
-                      className="h-[300px] w-full sm:h-[320px]"
+                      value={searchQuery}
+                      onChange={(event) => setSearchQuery(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter') {
+                          event.preventDefault()
+                          void handleMapSearch()
+                        }
+                      }}
+                      placeholder="Street, building, barangay, or landmark"
+                      aria-label="Search the map"
+                      className="g-input"
+                      style={{ paddingLeft: 40 }}
                     />
                   </div>
-
-                  <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-600">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-black text-slate-700">
-                      <AppIcon name="nearMeFixed" className="h-3.5 w-3.5" />
-                      {formatCoordinates(coordinates)}
-                    </span>
-                    <div className="inline-flex items-center gap-1.5">
-                      <AppIcon name="compass" className="h-4 w-4 text-slate-400" />
-                      {isReverseGeocoding ? <InlineSkeleton /> : 'Tap map or drag the pin for the exact spot.'}
-                    </div>
+                  <Button variant="ink" onClick={() => void handleMapSearch()} disabled={isSearching} className="sm:min-w-[140px]">
+                    {isSearching ? 'Searching…' : 'Search map'}
+                  </Button>
+                </div>
+                {searchError ? <p className="g-hint is-error">{searchError}</p> : null}
+                {searchResults.length > 0 ? (
+                  <div className="g-card divide-y divide-[var(--line-2)] overflow-hidden">
+                    {searchResults.map((result) => (
+                      <button
+                        key={result.place_id}
+                        type="button"
+                        onClick={() => handleSelectSearchResult(result)}
+                        className="flex min-h-[48px] w-full items-start gap-2.5 px-3.5 py-3 text-left text-sm transition-colors hover:bg-[var(--fill)]"
+                      >
+                        <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[var(--ink-3)]" aria-hidden="true" />
+                        <span className="min-w-0">{result.display_name}</span>
+                      </button>
+                    ))}
                   </div>
-                </div>
-              </FormSection>
+                ) : null}
 
-              <FormSection
-                step={3}
-                title="Where is it"
-                description="Add the full address and area so the place is easy to verify and find."
-                icon="home"
-              >
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="block sm:col-span-2">
-                    <span className="text-sm font-black text-slate-900">Address</span>
-                    <textarea
-                      value={draft.address}
-                      onChange={(event) => updateDraft('address', event.target.value.slice(0, 500))}
-                      rows={3}
-                      required
-                      className={textAreaClassName}
-                    />
-                  </label>
-                  <label className="block">
-                    <span className="text-sm font-black text-slate-900">City</span>
-                    <input
-                      value={draft.city}
-                      onChange={(event) => updateDraft('city', event.target.value.slice(0, 120))}
-                      required
-                      className={textInputClassName}
-                    />
-                  </label>
-                  <label className="block">
-                    <span className="text-sm font-black text-slate-900">Area / barangay</span>
-                    <input
-                      value={draft.area}
-                      onChange={(event) => updateDraft('area', event.target.value.slice(0, 120))}
-                      className={textInputClassName}
-                    />
-                  </label>
-                </div>
-              </FormSection>
-
-              <FormSection
-                step={4}
-                eyebrow="Post copy"
-                title="About the place"
-                description="Write like a helpful caption, not a brochure."
-                icon="promptBuilderAlt"
-              >
-                <label className="block">
-                  <span className="text-sm font-black text-slate-900">Description</span>
-                  <textarea
-                    value={draft.description}
-                    onChange={(event) => updateDraft('description', event.target.value.slice(0, 5000))}
-                    rows={5}
-                    required
-                    placeholder="Write the quick place intro and why it is worth going to."
-                    className={textAreaClassName}
+                <div className="overflow-hidden rounded-[var(--r-3)] border border-[var(--line-2)]">
+                  <MapView
+                    pickMode
+                    pickPosition={coordinates}
+                    onPickPositionChange={handleCoordinateChange}
+                    pickRecenterSignal={shouldRecenter ? 1 : 0}
+                    center={coordinates}
+                    zoom={16}
+                    className="h-[300px] w-full sm:h-[320px]"
                   />
-                </label>
-              </FormSection>
-
-              <section className="border-t border-[var(--line)] pt-8">
-                <details className="group" open>
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3 text-left">
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white text-[var(--accent-deep)]">
-                        <AppIcon name="list" className="h-5 w-5" />
-                      </span>
-                      <div>
-                        <p className="text-sm font-black text-slate-950">More details</p>
-                        <p className="text-xs font-semibold text-slate-500">Required details to complete the place submission.</p>
-                      </div>
-                    </div>
-                    <AppIcon name="chevronDown" className="h-4 w-4 text-slate-500 transition group-open:rotate-180" />
-                  </summary>
-
-                  <div className="mt-6 grid gap-8">
-                    <FormSection title="Quick facts" description="Short fields scan better and keep the page from feeling oversized." icon="history">
-                      <div className="grid gap-4 sm:grid-cols-3">
-                        <label className="block">
-                          <span className="text-sm font-black text-slate-900">Best time to visit</span>
-                          <input
-                            value={draft.bestTimeToVisit}
-                            onChange={(event) => updateDraft('bestTimeToVisit', event.target.value.slice(0, 200))}
-                            placeholder="Late afternoon to late evening"
-                            required
-                            className={textInputClassName}
-                          />
-                        </label>
-                        <label className="block">
-                          <span className="text-sm font-black text-slate-900">Visit duration</span>
-                          <input
-                            value={draft.visitDuration}
-                            onChange={(event) => updateDraft('visitDuration', event.target.value.slice(0, 120))}
-                            placeholder="1-2.5 hours"
-                            required
-                            className={textInputClassName}
-                          />
-                        </label>
-                        <label className="block">
-                          <span className="text-sm font-black text-slate-900">Budget min</span>
-                          <input
-                            value={draft.budgetMin}
-                            onChange={(event) => updateDraft('budgetMin', event.target.value.replace(/[^\d]/g, '').slice(0, 6))}
-                            placeholder="250"
-                            required
-                            className={textInputClassName}
-                          />
-                        </label>
-                      </div>
-                    </FormSection>
-
-                    <FormSection title="Audience and vibe" description="These tags help people understand whether the place fits their plan." icon="askAi">
-                      <div className="grid gap-4 sm:grid-cols-2">
-                        <label className="block">
-                          <span className="text-sm font-black text-slate-900">Good for</span>
-                          <textarea
-                            value={draft.goodFor}
-                            onChange={(event) => updateDraft('goodFor', event.target.value.slice(0, 600))}
-                            rows={4}
-                            placeholder={'One per line or comma separated\ncoffee hangouts\ncasual dates'}
-                            required
-                            className={textAreaClassName}
-                          />
-                        </label>
-                        <label className="block">
-                          <span className="text-sm font-black text-slate-900">Not ideal for</span>
-                          <textarea
-                            value={draft.notIdealFor}
-                            onChange={(event) => updateDraft('notIdealFor', event.target.value.slice(0, 600))}
-                            rows={4}
-                            placeholder={'One per line or comma separated\nwhole-day plans\nout-of-town plans'}
-                            required
-                            className={textAreaClassName}
-                          />
-                        </label>
-                      </div>
-                    </FormSection>
-
-                    <FormSection title="Practical details" description="Leave crisp notes people actually use before going out." icon="compass">
-                      <div className="grid gap-4 sm:grid-cols-3">
-                        <label className="block">
-                          <span className="text-sm font-black text-slate-900">Crowd level</span>
-                          <select
-                            value={draft.crowdLevel}
-                            onChange={(event) => updateDraft('crowdLevel', event.target.value)}
-                            required
-                            className={textInputClassName}
-                          >
-                            {crowdOptions.map((option) => (
-                              <option key={option} value={option}>
-                                {option}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                        <label className="block">
-                          <span className="text-sm font-black text-slate-900">Indoor / outdoor</span>
-                          <select
-                            value={draft.indoorOutdoor}
-                            onChange={(event) => updateDraft('indoorOutdoor', event.target.value)}
-                            required
-                            className={textInputClassName}
-                          >
-                            {indoorOutdoorOptions.map((option) => (
-                              <option key={option} value={option}>
-                                {option}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-                        <label className="block">
-                          <span className="flex items-center gap-2 text-sm font-black text-slate-900">
-                            Website
-                            <span className="optional-label">Optional</span>
-                          </span>
-                          <input
-                            value={draft.websiteUrl}
-                            onChange={(event) => updateDraft('websiteUrl', event.target.value.slice(0, 500))}
-                            placeholder="https://..."
-                            required
-                            className={textInputClassName}
-                          />
-                        </label>
-                        <label className="block sm:col-span-3">
-                          <span className="text-sm font-black text-slate-900">Weather fit</span>
-                          <textarea
-                            value={draft.weatherFit}
-                            onChange={(event) => updateDraft('weatherFit', event.target.value.slice(0, 500))}
-                            rows={3}
-                            required
-                            className={textAreaClassName}
-                          />
-                        </label>
-                        <label className="block">
-                          <span className="text-sm font-black text-slate-900">Parking info</span>
-                          <textarea
-                            value={draft.parkingInfo}
-                            onChange={(event) => updateDraft('parkingInfo', event.target.value.slice(0, 1000))}
-                            rows={4}
-                            required
-                            className={textAreaClassName}
-                          />
-                        </label>
-                        <label className="block">
-                          <span className="text-sm font-black text-slate-900">Commute access</span>
-                          <textarea
-                            value={draft.commuteAccess}
-                            onChange={(event) => updateDraft('commuteAccess', event.target.value.slice(0, 1000))}
-                            rows={4}
-                            required
-                            className={textAreaClassName}
-                          />
-                        </label>
-                        <label className="block">
-                          <span className="text-sm font-black text-slate-900">Nearby context</span>
-                          <textarea
-                            value={draft.nearbyContext}
-                            onChange={(event) => updateDraft('nearbyContext', event.target.value.slice(0, 1200))}
-                            rows={4}
-                            required
-                            className={textAreaClassName}
-                          />
-                        </label>
-                      </div>
-                    </FormSection>
-                  </div>
-                </details>
-              </section>
-
-              <FormSection
-                step={5}
-                eyebrow="Final touch"
-                title="Attach images"
-                description="One strong cover is enough to start, but up to three gives reviewers more confidence."
-                icon="uploadPhoto"
-              >
-                <div className="py-1">
-                  <label className="block">
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif"
-                      multiple
-                      onChange={handlePhotoSelection}
-                      className="w-full text-sm font-semibold text-slate-700 file:mr-4 file:h-10 file:rounded-lg file:border-0 file:bg-[var(--accent)] file:px-4 file:text-sm file:font-black file:text-white"
-                    />
-                  </label>
-
-                  {photoPreviews.length > 0 ? (
-                    <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                      {photoPreviews.map((preview, index) => (
-                        <article key={`${preview.file.name}-${index}`} className="overflow-hidden rounded-[20px] border border-[var(--line)] bg-white">
-                          <img src={preview.url} alt="" className="h-32 w-full object-cover" />
-                          <div className="flex items-center justify-between gap-2 p-3">
-                            <p className="min-w-0 truncate text-xs font-black text-slate-700">{preview.file.name}</p>
-                            <button
-                              type="button"
-                              onClick={() => removePhotoAt(index)}
-                              className="rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-black text-red-600"
-                            >
-                              Remove
-                            </button>
-                          </div>
-                        </article>
-                      ))}
-                    </div>
-                  ) : null}
                 </div>
-              </FormSection>
 
-              {errorMessage ? <p className="text-sm font-bold text-red-600">{errorMessage}</p> : null}
-
-              <div className="border-t border-[var(--line)] pt-6">
-                <p className="text-sm font-semibold text-slate-600">
-                  {session
-                    ? 'Keep it accurate and compact. Admin reviews before this goes live.'
-                    : 'You can browse the form now. Log in when you are ready to submit or view your submissions.'}
-                </p>
-                <div className="mt-4 sm:max-w-[220px]">
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="app-button app-button-primary app-button-md w-full"
-                  >
-                    <AppIcon name="send" className="h-4 w-4" />
-                    {isSubmitting ? 'Submitting...' : session ? 'Submit place' : 'Log in to submit'}
-                  </button>
+                <div className="g-sm g-mut flex flex-wrap items-center gap-2">
+                  <Tag>{formatCoordinates(coordinates)}</Tag>
+                  {isReverseGeocoding ? <InlineSkeleton /> : <span>Tap the map or drag the pin for the exact spot.</span>}
                 </div>
               </div>
-            </form>
-            </FormContainer>
-          </section>
+            </FormSection>
 
-          <aside className="hidden self-start lg:sticky lg:top-24 lg:grid lg:gap-4">
-            <section className="border-t border-[var(--line)] pt-4 first:border-t-0 first:pt-0">
-              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[var(--accent-deep)]">Before you post</p>
-              <div className="mt-3 grid gap-3 text-sm font-semibold text-slate-600">
-                <p>Pin the exact place, not just the street or barangay center.</p>
-                <p>Write a quick practical description people can scan fast.</p>
-                <p>Upload real photos that show the vibe or actual location.</p>
+            <FormSection step={3} title="Where is it" description="Full address and area so it is easy to verify and find.">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Address" className="sm:col-span-2">
+                  <textarea value={draft.address} onChange={(event) => updateDraft('address', event.target.value.slice(0, 500))} rows={3} required className="g-input" />
+                </Field>
+                <Field label="City">
+                  <input value={draft.city} onChange={(event) => updateDraft('city', event.target.value.slice(0, 120))} required className="g-input" />
+                </Field>
+                <Field label="Area / barangay">
+                  <input value={draft.area} onChange={(event) => updateDraft('area', event.target.value.slice(0, 120))} className="g-input" />
+                </Field>
               </div>
-            </section>
+            </FormSection>
 
-            <section className="border-t border-[var(--line)] pt-4">
-              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[var(--accent-deep)]">Approval flow</p>
-              <ol className="mt-3 grid gap-3 text-sm font-semibold leading-6 text-slate-600">
-                <li>1. Fill the details and confirm the pin.</li>
-                <li>2. Add 1 to 3 photos for review.</li>
-                <li>3. Admin checks the submission before it becomes visible.</li>
-              </ol>
-            </section>
+            <FormSection step={4} title="About the place" description="Write like a helpful caption, not a brochure.">
+              <Field label="Description">
+                <textarea
+                  value={draft.description}
+                  onChange={(event) => updateDraft('description', event.target.value.slice(0, 5000))}
+                  rows={5}
+                  required
+                  placeholder="A quick intro and why it is worth going to."
+                  className="g-input"
+                />
+              </Field>
+            </FormSection>
 
-            <section className="border-t border-[var(--line)] pt-4">
-              <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[var(--accent-deep)]">What gets saved</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {[
-                  'Name',
-                  'Category',
-                  'Address',
-                  'City',
-                  'Area',
-                  'Map pin',
-                  'Description',
-                  'Budget',
-                  'Commute',
-                  'Parking',
-                  'Nearby context',
-                  'Photos',
-                ].map((item) => (
-                  <span key={item} className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600">
-                    {item}
+            <section className="g-card">
+              <details className="group" open>
+                <summary className="flex min-h-[64px] cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 md:px-5">
+                  <span className="min-w-0">
+                    <span className="g-h3 block">More details</span>
+                    <span className="g-sm g-mut block">Required to complete the submission.</span>
                   </span>
+                  <ChevronDown className="h-4 w-4 shrink-0 text-[var(--ink-3)] transition-transform group-open:rotate-180" aria-hidden="true" />
+                </summary>
+
+                <div className="grid gap-6 border-t border-[var(--line-2)] px-4 pt-4 pb-5 md:px-5">
+                  <div>
+                    <p className="g-eyebrow">Quick facts</p>
+                    <div className="mt-3 grid gap-4 sm:grid-cols-3">
+                      <Field label="Best time to visit">
+                        <input value={draft.bestTimeToVisit} onChange={(event) => updateDraft('bestTimeToVisit', event.target.value.slice(0, 200))} placeholder="Late afternoon to evening" required className="g-input" />
+                      </Field>
+                      <Field label="Visit duration">
+                        <input value={draft.visitDuration} onChange={(event) => updateDraft('visitDuration', event.target.value.slice(0, 120))} placeholder="1-2.5 hours" required className="g-input" />
+                      </Field>
+                      <Field label="Budget min (₱)">
+                        <input
+                          value={draft.budgetMin}
+                          onChange={(event) => updateDraft('budgetMin', event.target.value.replace(/[^\d]/g, '').slice(0, 6))}
+                          placeholder="250"
+                          inputMode="numeric"
+                          required
+                          className="g-input"
+                        />
+                      </Field>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="g-eyebrow">Audience and vibe</p>
+                    <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                      <Field label="Good for">
+                        <textarea
+                          value={draft.goodFor}
+                          onChange={(event) => updateDraft('goodFor', event.target.value.slice(0, 600))}
+                          rows={4}
+                          placeholder={'One per line or comma separated\ncoffee hangouts\ncasual dates'}
+                          required
+                          className="g-input"
+                        />
+                      </Field>
+                      <Field label="Not ideal for">
+                        <textarea
+                          value={draft.notIdealFor}
+                          onChange={(event) => updateDraft('notIdealFor', event.target.value.slice(0, 600))}
+                          rows={4}
+                          placeholder={'One per line or comma separated\nwhole-day plans\nout-of-town plans'}
+                          required
+                          className="g-input"
+                        />
+                      </Field>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="g-eyebrow">Practical details</p>
+                    <div className="mt-3 grid gap-4 sm:grid-cols-3">
+                      <Field label="Crowd level">
+                        <select value={draft.crowdLevel} onChange={(event) => updateDraft('crowdLevel', event.target.value)} required className="g-input">
+                          {crowdOptions.map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                      </Field>
+                      <Field label="Indoor / outdoor">
+                        <select value={draft.indoorOutdoor} onChange={(event) => updateDraft('indoorOutdoor', event.target.value)} required className="g-input">
+                          {indoorOutdoorOptions.map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                      </Field>
+                      <Field label="Website" optional>
+                        <input value={draft.websiteUrl} onChange={(event) => updateDraft('websiteUrl', event.target.value.slice(0, 500))} placeholder="https://…" required className="g-input" />
+                      </Field>
+                      <Field label="Weather fit" className="sm:col-span-3">
+                        <textarea value={draft.weatherFit} onChange={(event) => updateDraft('weatherFit', event.target.value.slice(0, 500))} rows={3} required className="g-input" />
+                      </Field>
+                      <Field label="Parking info">
+                        <textarea value={draft.parkingInfo} onChange={(event) => updateDraft('parkingInfo', event.target.value.slice(0, 1000))} rows={4} required className="g-input" />
+                      </Field>
+                      <Field label="Commute access">
+                        <textarea value={draft.commuteAccess} onChange={(event) => updateDraft('commuteAccess', event.target.value.slice(0, 1000))} rows={4} required className="g-input" />
+                      </Field>
+                      <Field label="Nearby context">
+                        <textarea value={draft.nearbyContext} onChange={(event) => updateDraft('nearbyContext', event.target.value.slice(0, 1200))} rows={4} required className="g-input" />
+                      </Field>
+                    </div>
+                  </div>
+                </div>
+              </details>
+            </section>
+
+            <FormSection step={5} title="Photos" description="One strong cover is enough. Up to three helps reviewers.">
+              <label className={`${buttonClass({ variant: 'line' })} cursor-pointer`}>
+                <ImagePlus aria-hidden="true" />
+                {photoPreviews.length > 0 ? 'Change photos' : 'Add photos'}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif"
+                  multiple
+                  onChange={handlePhotoSelection}
+                  className="sr-only"
+                />
+              </label>
+
+              {photoPreviews.length > 0 ? (
+                <div className="mt-4 grid grid-cols-3 gap-2">
+                  {photoPreviews.map((preview, index) => (
+                    <figure key={`${preview.file.name}-${index}`} className="relative min-w-0">
+                      <img src={preview.url} alt="" className="aspect-square w-full rounded-[var(--r-2)] object-cover" />
+                      <figcaption className="g-xs g-mut mt-1 truncate">{preview.file.name}</figcaption>
+                      <button type="button" className="g-xs min-h-[44px] font-semibold text-[var(--bad)] underline underline-offset-2" onClick={() => removePhotoAt(index)}>
+                        Remove
+                      </button>
+                    </figure>
+                  ))}
+                </div>
+              ) : null}
+            </FormSection>
+
+            {errorMessage ? (
+              <p className="g-hint is-error" role="alert">
+                {errorMessage}
+              </p>
+            ) : null}
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="g-sm g-mut">
+                {session
+                  ? 'Admin reviews it before it goes live.'
+                  : 'You can fill the form now. Log in when you are ready to submit.'}
+              </p>
+              <Button type="submit" variant="tara" disabled={isSubmitting} className="w-full shrink-0 sm:w-auto">
+                {isSubmitting ? 'Submitting…' : session ? 'Submit place' : 'Log in to submit'}
+              </Button>
+            </div>
+          </form>
+        </div>
+
+        <aside className="g-only-desk lg:sticky lg:top-24">
+          <div className="flex flex-col gap-4">
+            <Panel>
+              <p className="g-eyebrow">Before you post</p>
+              <ul className="g-sm g-mut mt-3 grid gap-2">
+                <li>Pin the exact place, not just the street or barangay center.</li>
+                <li>Write a quick practical description people can scan fast.</li>
+                <li>Upload real photos that show the vibe or actual location.</li>
+              </ul>
+            </Panel>
+            <Panel>
+              <p className="g-eyebrow">How approval works</p>
+              <ol className="g-sm g-mut mt-3 grid list-decimal gap-2 pl-4">
+                <li>Fill the details and confirm the pin.</li>
+                <li>Add 1 to 3 photos for review.</li>
+                <li>An admin checks it before it becomes visible.</li>
+              </ol>
+            </Panel>
+            <Panel>
+              <p className="g-eyebrow">What gets saved</p>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {['Name', 'Category', 'Address', 'City', 'Area', 'Map pin', 'Description', 'Budget', 'Commute', 'Parking', 'Nearby context', 'Photos'].map((item) => (
+                  <Tag key={item}>{item}</Tag>
                 ))}
               </div>
-            </section>
-          </aside>
-          </DetailLayout>
-        </PageContainer>
-      </main>
-    </PageShell>
+            </Panel>
+          </div>
+        </aside>
+      </div>
+    </Page>
   )
 }
 

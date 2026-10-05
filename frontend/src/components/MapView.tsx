@@ -1,9 +1,10 @@
 import { memo, useEffect, useMemo, useRef } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { renderToStaticMarkup } from 'react-dom/server'
+import { Minus, Plus } from 'lucide-react'
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from 'react-leaflet'
 import type { PlaceCardData } from './PlaceCard'
+import { Button, cx } from './ui'
 
 type MapViewProps = {
   places?: PlaceCardData[]
@@ -76,25 +77,16 @@ const mallParentMatchers: RegExp[] = [
   /\bFairview Terraces\b/i,
 ]
 
+function escapeHtml(value: string) {
+  return value.replace(/[&<>"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[character] as string)
+}
+
 function renderMarkerPinIcon(placeName: string, order: number, isSelected: boolean, isFocused: boolean) {
-  const stackClasses = ['gt-map-pin-badge']
-
-  if (isSelected) {
-    stackClasses.push('is-selected')
+  if (isSelected || isFocused) {
+    return `<span class="${cx('g-lpin', isSelected && 'is-on')}">${order} · ${escapeHtml(placeName)}</span>`
   }
 
-  if (isFocused) {
-    stackClasses.push('is-focused')
-  }
-
-  return renderToStaticMarkup(
-    <span className={stackClasses.join(' ')} aria-hidden="true">
-      <span className="gt-map-pin-badge__body">
-        <span className="gt-map-pin-badge__number">{order}</span>
-      </span>
-      <span className="gt-map-pin-badge__label">{placeName}</span>
-    </span>
-  )
+  return `<span class="g-lpin is-n" title="${escapeHtml(placeName)}">${order}</span>`
 }
 
 function getClusteredMarkerPosition(latLng: ValidLatLng, clusterOrder: number, clusterSize: number): ValidLatLng {
@@ -120,14 +112,10 @@ function createCapsuleMarkerIcon(
   isSelected: boolean,
   isFocused: boolean,
 ) {
-  const pinIcon = renderMarkerPinIcon(placeName, order, isSelected, isFocused)
-
   return L.divIcon({
-    className: 'gt-map-pin-badge-wrapper',
-    html: pinIcon,
-    iconSize: [200, 56],
-    iconAnchor: [17, 46],
-    popupAnchor: [0, -46],
+    className: 'g-lm',
+    html: renderMarkerPinIcon(placeName, order, isSelected, isFocused),
+    iconSize: undefined,
   })
 }
 
@@ -568,17 +556,9 @@ function FitMapToPlaces({
 
 function createPickPinIcon() {
   return L.divIcon({
-    className: 'gt-map-pin-badge-wrapper',
-    html: renderToStaticMarkup(
-      <span className="gt-map-pin-badge" aria-hidden="true">
-        <span className="gt-map-pin-badge__body">
-          <span className="gt-map-pin-badge__number">*</span>
-        </span>
-      </span>
-    ),
-    iconSize: [44, 44],
-    iconAnchor: [22, 38],
-    popupAnchor: [0, -38],
+    className: 'g-lm',
+    html: '<span class="g-lpin is-on">Here</span>',
+    iconSize: undefined,
   })
 }
 
@@ -704,6 +684,28 @@ function FocusSelectedPlaceEffect({
   }, [focusSelectedPlaceOnChange, map, selectedPlaceFocusSignal, selectedPlaceId, validPlaces, zoom])
 
   return null
+}
+
+function ZoomControls() {
+  const map = useMap()
+  const ref = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (!ref.current) return
+    L.DomEvent.disableClickPropagation(ref.current)
+    L.DomEvent.disableScrollPropagation(ref.current)
+  }, [])
+
+  return (
+    <div ref={ref} className="absolute right-3 top-3 z-[1000] flex flex-col gap-2">
+      <Button variant="line" size="sm" iconOnly aria-label="Zoom in" onClick={() => map.zoomIn()}>
+        <Plus />
+      </Button>
+      <Button variant="line" size="sm" iconOnly aria-label="Zoom out" onClick={() => map.zoomOut()}>
+        <Minus />
+      </Button>
+    </div>
+  )
 }
 
 function MapView({
@@ -832,11 +834,13 @@ function MapView({
         center={safeCenter}
         zoom={safeZoom}
         scrollWheelZoom
+        zoomControl={false}
         inertia
         easeLinearity={0.15}
         className={`galatayo-leaflet-map h-full w-full ${mapClassName}`.trim()}
       >
         <MapSizeSync center={safeCenter} zoom={safeZoom} layoutKey={layoutKey} />
+        <ZoomControls />
         {pickMode ? (
           <>
             {pickPosition && onPickPositionChange ? (

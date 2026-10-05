@@ -1,34 +1,126 @@
 import { useState, type FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import ProfileAvatar from '../ProfileAvatar'
+import { Check, Plus } from 'lucide-react'
+import { Avatar, AvatarStack, Button, Empty, Panel, Tag, cx } from '../ui'
 import {
   createGalaPlanPoll,
   deleteGalaPlanPoll,
   setGalaPlanRsvp,
   voteGalaPlanPoll,
   type GalaPlanBarkada,
+  type GalaPlanMember,
   type GalaPlanRsvp,
 } from '../../utils/galaPlanBarkadaApi'
-import type { GalaPlanDetail } from '../../utils/galaPlansApi'
+import type { GalaPlanDetail, GalaPlanOwner } from '../../utils/galaPlansApi'
 
-type ReadyBarkada = Extract<GalaPlanBarkada, { available: true }>
+export type ReadyBarkada = Extract<GalaPlanBarkada, { available: true }>
 
-const rsvpOptions: Array<{ value: GalaPlanRsvp; label: string }> = [
-  { value: 'going', label: 'Going' },
-  { value: 'maybe', label: 'Maybe' },
-  { value: 'no', label: "Can't go" },
-]
-
-const rsvpLabel: Record<GalaPlanRsvp, string> = { going: 'Going', maybe: 'Maybe', no: "Can't" }
-
-type BarkadaPanelProps = {
+type BarkadaProps = {
   plan: GalaPlanDetail
   barkada: ReadyBarkada
   session: Session | null | undefined
   onChange: (barkada: GalaPlanBarkada) => void
 }
 
-function PollComposer({ plan, session, onChange }: Omit<BarkadaPanelProps, 'barkada'>) {
+const rsvpOptions: Array<{ value: GalaPlanRsvp; label: string }> = [
+  { value: 'going', label: 'Tara!' },
+  { value: 'maybe', label: 'Baka' },
+  { value: 'no', label: 'Pass' },
+]
+
+const rsvpTag: Record<GalaPlanRsvp, { label: string; tone: 'ok' | 'warn' | 'neutral' }> = {
+  going: { label: 'Tara', tone: 'ok' },
+  maybe: { label: 'Baka', tone: 'warn' },
+  no: { label: 'Pass', tone: 'neutral' },
+}
+
+export function personName(profile: GalaPlanOwner | null | undefined) {
+  return profile?.display_name || profile?.username || 'GalaTayo user'
+}
+
+export function personAvatar(profile: GalaPlanOwner | null | undefined) {
+  return profile?.avatar_url ?? profile?.provider_avatar_url ?? null
+}
+
+function toStackPeople(members: Array<Pick<GalaPlanMember, 'user_id' | 'profile'>>) {
+  return members.map((member) => ({ id: member.user_id, avatarUrl: personAvatar(member.profile), name: personName(member.profile) }))
+}
+
+function canJoinPlan(plan: GalaPlanDetail, session: Session | null | undefined) {
+  return Boolean(session) && (plan.viewer_is_owner || plan.visibility === 'public')
+}
+
+function useAction(onChange: (barkada: GalaPlanBarkada) => void) {
+  const [error, setError] = useState<string | null>(null)
+  const run = async (action: () => Promise<GalaPlanBarkada>) => {
+    setError(null)
+    try {
+      onChange(await action())
+    } catch (actionError) {
+      setError(actionError instanceof Error ? actionError.message : 'Something went wrong.')
+    }
+  }
+  return { error, run }
+}
+
+export function RsvpPanel({ plan, barkada, session, onChange }: BarkadaProps) {
+  const { error, run } = useAction(onChange)
+  const going = barkada.members.filter((member) => member.rsvp === 'going')
+  const maybe = barkada.members.filter((member) => member.rsvp === 'maybe').length
+  const canJoin = canJoinPlan(plan, session)
+
+  return (
+    <Panel>
+      <h2 className="g-h3">{plan.viewer_is_owner ? 'Sino ang sasama?' : 'Sasama ka?'}</h2>
+      {!plan.viewer_is_owner ? (
+        <div className="g-rsvp mt-3" role="group" aria-label="Your RSVP">
+          {rsvpOptions.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              aria-pressed={barkada.viewer_rsvp === option.value}
+              className={cx(option.value === 'going' && 'is-go', 'disabled:opacity-50')}
+              disabled={!canJoin}
+              onClick={() => void run(() => setGalaPlanRsvp(plan.id, option.value, session))}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
+      <div className="mt-3.5 flex min-w-0 items-center gap-2.5">
+        {going.length > 0 ? <AvatarStack people={toStackPeople(going)} /> : null}
+        <span className="g-sm min-w-0">
+          <b>{going.length} tara</b>
+          {maybe ? <span className="g-mut"> · {maybe} baka</span> : null}
+        </span>
+      </div>
+      {error ? <p role="alert" className="g-hint is-error mt-2">{error}</p> : null}
+      {!session ? <p className="g-hint mt-2">Sign in to RSVP and vote.</p> : null}
+    </Panel>
+  )
+}
+
+export function MembersList({ barkada }: { barkada: ReadyBarkada }) {
+  return (
+    <Panel style={{ paddingBlock: 4 }}>
+      {barkada.members.map((member) => (
+        <div key={member.user_id} className="g-bal">
+          <Avatar src={personAvatar(member.profile)} name={personName(member.profile)} size={36} />
+          <div className="min-w-0">
+            <p className="g-sm truncate font-semibold">{personName(member.profile)}</p>
+            {member.is_owner ? <p className="g-xs g-mut">Host</p> : null}
+          </div>
+          <span className="ml-auto">
+            <Tag tone={rsvpTag[member.rsvp].tone}>{rsvpTag[member.rsvp].label}</Tag>
+          </span>
+        </div>
+      ))}
+    </Panel>
+  )
+}
+
+function PollComposer({ plan, session, onChange }: Omit<BarkadaProps, 'barkada'>) {
   const [question, setQuestion] = useState('Where should we eat?')
   const [options, setOptions] = useState(['', ''])
   const [error, setError] = useState<string | null>(null)
@@ -63,179 +155,100 @@ function PollComposer({ plan, session, onChange }: Omit<BarkadaPanelProps, 'bark
   }
 
   return (
-    <form onSubmit={submit} className="rounded-[16px] border border-dashed border-[var(--line-strong)] p-4">
-      <label htmlFor="poll-question" className="font-data text-[11px] uppercase tracking-[0.12em] text-[var(--text-muted)]">
-        New poll
-      </label>
-      <input
-        id="poll-question"
-        value={question}
-        onChange={(event) => setQuestion(event.target.value)}
-        maxLength={120}
-        className="font-display mt-1 w-full bg-transparent text-[18px] text-[var(--text-main)] outline-none"
-      />
+    <form onSubmit={submit} className="g-panel grid gap-3">
+      <div className="g-field">
+        <label htmlFor="poll-question">New poll</label>
+        <input id="poll-question" className="g-input" value={question} onChange={(event) => setQuestion(event.target.value)} maxLength={120} />
+      </div>
       <datalist id="poll-place-suggestions">
         {suggestions.map((name) => <option key={name} value={name} />)}
       </datalist>
-      <div className="mt-3 grid gap-2">
+      <div className="grid gap-2">
         {options.map((option, index) => (
           <input
             key={index}
+            className="g-input"
             value={option}
             list="poll-place-suggestions"
             onChange={(event) => setOptions((current) => current.map((value, i) => (i === index ? event.target.value : value)))}
             placeholder={`Option ${index + 1}`}
             maxLength={80}
             aria-label={`Option ${index + 1}`}
-            className="h-10 rounded-xl border border-[var(--line)] bg-[var(--card)] px-3 text-[14px] text-[var(--text-main)] outline-none focus:border-[var(--line-strong)]"
           />
         ))}
       </div>
-      {error ? <p className="mt-2 text-[13px] text-[var(--danger)]">{error}</p> : null}
-      <div className="mt-3 flex items-center gap-2">
+      {error ? <p className="g-hint is-error">{error}</p> : null}
+      <div className="flex items-center gap-2">
         {options.length < 4 ? (
-          <button type="button" onClick={() => setOptions((current) => [...current, ''])} className="h-9 rounded-full px-3 text-[13px] font-medium text-[var(--text-strong)] hover:bg-[var(--hover-surface-strong)]">
-            + Option
-          </button>
+          <Button variant="soft" size="sm" onClick={() => setOptions((current) => [...current, ''])}>
+            <Plus />
+            Option
+          </Button>
         ) : null}
-        <button type="submit" disabled={isSaving} className="ml-auto h-9 rounded-full bg-[var(--ink)] px-4 text-[13px] font-semibold text-[var(--bg)] disabled:opacity-60">
-          {isSaving ? 'Posting…' : 'Post poll'}
-        </button>
+        <Button type="submit" variant="ink" size="sm" className="ml-auto" loading={isSaving} disabled={isSaving}>
+          Post poll
+        </Button>
       </div>
     </form>
   )
 }
 
-function BarkadaPanel({ plan, barkada, session, onChange }: BarkadaPanelProps) {
-  const [error, setError] = useState<string | null>(null)
+export function PollsPanel({ plan, barkada, session, onChange }: BarkadaProps) {
+  const { error, run } = useAction(onChange)
   const isOwner = plan.viewer_is_owner
-  const canJoin = Boolean(session) && (isOwner || plan.visibility === 'public')
-
-  const run = async (action: () => Promise<GalaPlanBarkada>) => {
-    setError(null)
-    try {
-      onChange(await action())
-    } catch (actionError) {
-      setError(actionError instanceof Error ? actionError.message : 'Something went wrong.')
-    }
-  }
+  const canJoin = canJoinPlan(plan, session)
 
   return (
-    <div className="grid gap-6">
-      {!isOwner ? (
-        <section>
-          <h3 className="font-data text-[11px] uppercase tracking-[0.12em] text-[var(--text-muted)]">Are you going?</h3>
-          <div className="mt-2 flex gap-2" role="radiogroup" aria-label="Your RSVP">
-            {rsvpOptions.map((option) => {
-              const isSelected = barkada.viewer_rsvp === option.value
+    <div className="grid gap-4">
+      {barkada.polls.length === 0 && !isOwner ? <Empty title="Wala pang poll" description="When the host opens a vote, it shows up here." /> : null}
+      {barkada.polls.map((poll) => (
+        <Panel as="article" key={poll.id}>
+          <div className="flex items-start justify-between gap-3">
+            <h3 className="g-h3 min-w-0">{poll.question}</h3>
+            {isOwner ? (
+              <Button variant="text" size="sm" onClick={() => void run(() => deleteGalaPlanPoll(plan.id, poll.id, session))}>
+                Remove
+              </Button>
+            ) : null}
+          </div>
+          <div className="mt-1">
+            {poll.options.map((option) => {
+              const share = poll.total_votes ? Math.round((option.votes / poll.total_votes) * 100) : 0
+              const isMine = poll.viewer_option_id === option.id
               return (
                 <button
-                  key={option.value}
+                  key={option.id}
                   type="button"
-                  role="radio"
-                  aria-checked={isSelected}
                   disabled={!canJoin}
-                  onClick={() => void run(() => setGalaPlanRsvp(plan.id, option.value, session))}
-                  className={`h-10 flex-1 rounded-full border text-[14px] font-semibold transition-colors disabled:opacity-50 ${
-                    isSelected
-                      ? 'border-transparent bg-[var(--primary)] text-white'
-                      : 'border-[var(--line)] text-[var(--text-main)] hover:border-[var(--line-strong)]'
-                  }`}
+                  aria-pressed={isMine}
+                  onClick={() => void run(() => voteGalaPlanPoll(plan.id, poll.id, option.id, session))}
+                  className={cx('g-po', isMine && 'is-mine')}
+                  style={canJoin ? undefined : { cursor: 'default' }}
                 >
-                  {option.label}
+                  <span className="g-po-fill" style={{ width: `${share}%` }} aria-hidden="true" />
+                  <span className="flex min-w-0 items-center gap-2">
+                    {isMine ? <Check className="h-4 w-4 shrink-0" /> : null}
+                    <span className="truncate">{option.label}</span>
+                  </span>
+                  <span className="flex shrink-0 items-center gap-2">
+                    {option.voters.length > 0 ? (
+                      <AvatarStack people={option.voters.map((voter) => ({ id: voter.user_id, avatarUrl: personAvatar(voter), name: personName(voter) }))} max={3} size={22} />
+                    ) : null}
+                    {option.votes}
+                  </span>
                 </button>
               )
             })}
           </div>
-        </section>
-      ) : null}
-
-      <section>
-        <h3 className="font-data text-[11px] uppercase tracking-[0.12em] text-[var(--text-muted)]">
-          Barkada · {barkada.members.filter((member) => member.rsvp === 'going').length} going
-        </h3>
-        <ul className="mt-2 divide-y divide-[var(--line)] rounded-[16px] border border-[var(--line)] bg-[var(--card)]">
-          {barkada.members.map((member) => (
-            <li key={member.user_id} className="flex items-center gap-3 px-3.5 py-2.5">
-              <ProfileAvatar
-                profile={{
-                  username: member.profile?.username ?? null,
-                  avatar_url: member.profile?.avatar_url ?? null,
-                  provider_avatar_url: member.profile?.provider_avatar_url ?? null,
-                }}
-                size="sm"
-              />
-              <span className="min-w-0 flex-1 truncate text-[14px] text-[var(--text-main)]">
-                {member.profile?.display_name || member.profile?.username || 'GalaTayo user'}
-                {member.is_owner ? <span className="text-[var(--text-muted)]"> · host</span> : null}
-              </span>
-              <span className={`font-data text-[12px] ${member.rsvp === 'going' ? 'text-[var(--success)]' : 'text-[var(--text-muted)]'}`}>
-                {rsvpLabel[member.rsvp]}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="grid gap-3">
-        <h3 className="font-data text-[11px] uppercase tracking-[0.12em] text-[var(--text-muted)]">Polls</h3>
-        {barkada.polls.length === 0 && !isOwner ? (
-          <p className="text-[14px] text-[var(--text-muted)]">No polls yet.</p>
-        ) : null}
-        {barkada.polls.map((poll) => {
-          const leader = Math.max(0, ...poll.options.map((option) => option.votes))
-          return (
-            <article key={poll.id} className="rounded-[16px] border border-[var(--line)] bg-[var(--card)] p-4">
-              <div className="flex items-start justify-between gap-3">
-                <p className="font-display text-[19px] leading-tight text-[var(--text-main)]">{poll.question}</p>
-                {isOwner ? (
-                  <button type="button" onClick={() => void run(() => deleteGalaPlanPoll(plan.id, poll.id, session))} className="text-[12px] text-[var(--text-muted)] hover:text-[var(--danger)]">
-                    Remove
-                  </button>
-                ) : null}
-              </div>
-              <ul className="mt-3 grid gap-2">
-                {poll.options.map((option) => {
-                  const share = poll.total_votes ? Math.round((option.votes / poll.total_votes) * 100) : 0
-                  const isMine = poll.viewer_option_id === option.id
-                  const isLeading = option.votes > 0 && option.votes === leader
-                  return (
-                    <li key={option.id}>
-                      <button
-                        type="button"
-                        disabled={!canJoin}
-                        onClick={() => void run(() => voteGalaPlanPoll(plan.id, poll.id, option.id, session))}
-                        aria-pressed={isMine}
-                        className={`relative flex h-11 w-full items-center overflow-hidden rounded-xl border px-3 text-left text-[14px] transition-colors disabled:cursor-default ${
-                          isMine ? 'border-[var(--primary)]' : 'border-[var(--line)] hover:border-[var(--line-strong)]'
-                        }`}
-                      >
-                        <span
-                          aria-hidden="true"
-                          className={`absolute inset-y-0 left-0 ${isLeading ? 'bg-[var(--primary-soft)]' : 'bg-[var(--bg-soft)]'}`}
-                          style={{ width: `${share}%` }}
-                        />
-                        <span className="relative min-w-0 flex-1 truncate font-medium text-[var(--text-main)]">{option.label}</span>
-                        <span className="font-data relative text-[12px] text-[var(--text-muted)]">{option.votes}</span>
-                      </button>
-                    </li>
-                  )
-                })}
-              </ul>
-              <p className="font-data mt-2 text-[11px] text-[var(--text-muted)]">
-                {poll.total_votes} {poll.total_votes === 1 ? 'vote' : 'votes'}
-                {poll.viewer_option_id ? ' · tap another option to change your vote' : ''}
-              </p>
-            </article>
-          )
-        })}
-        {isOwner ? <PollComposer plan={plan} session={session} onChange={onChange} /> : null}
-      </section>
-
-      {error ? <p role="alert" className="text-[13px] text-[var(--danger)]">{error}</p> : null}
-      {!session ? <p className="text-[13px] text-[var(--text-muted)]">Sign in to RSVP and vote.</p> : null}
+          <p className="g-xs g-mut mt-2">
+            {poll.total_votes} {poll.total_votes === 1 ? 'vote' : 'votes'}
+            {poll.viewer_option_id ? ' · tap another option to change your vote' : ''}
+          </p>
+        </Panel>
+      ))}
+      {isOwner ? <PollComposer plan={plan} session={session} onChange={onChange} /> : null}
+      {error ? <p role="alert" className="g-hint is-error">{error}</p> : null}
+      {!session ? <p className="g-hint">Sign in to RSVP and vote.</p> : null}
     </div>
   )
 }
-
-export default BarkadaPanel

@@ -1,18 +1,14 @@
-﻿import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import AppHeader from './AppHeader'
-import { AppIcon } from './AppIcon'
-import { GuestAuthPrompt, useGuestAuthPrompt } from './GuestAuthPrompt'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode, type TouchEvent } from 'react'
+import { Accessibility, ArrowLeft, Bus, Camera, Check, Ellipsis, Flag, Heart, Navigation, Pencil, Plus, Reply, Share2, Sparkles, SquareParking, Star, Trash2, UserRound, Wallet, X } from 'lucide-react'
+import { useGuestAuthPrompt } from './GuestAuthPrompt'
 import AddToGalaPlanModal from './AddToGalaPlanModal'
 import InternalLink from './InternalLink'
-import MapView from './MapView'
 import ReportUserModal from './ReportUserModal'
 import PlaceImageNotice from './PlaceImageNotice'
-import { PageContainer, PageShell } from './layout/ResponsiveLayouts'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCamera, faCheck, faComment, faEllipsis, faFlag, faPen, faReply, faTrash, faWallet, faXmark } from '@fortawesome/free-solid-svg-icons'
+import { Button, Chip, Empty, KeyValue, Page, Panel, SectionHead, Sheet, Skeleton, Tag, cx } from './ui'
+import GtMap, { type MapPoint } from './ui/GtMap'
 import { getCuratedPlaceImages, normalizePlaceSlug } from '../data/curatedPlaceImages'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
-import { useTheme } from '../context/ThemeContext'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { useAppUser } from '../context/AppUserContext'
 import { getSupabaseAccessToken, getSupabaseSession, hasSessionUserChanged, shouldPropagateSessionChange, supabase } from '../supabase'
@@ -26,26 +22,17 @@ import { getApiUrl } from '../utils/apiClient'
 import { navigateToPath } from '../utils/navigation'
 import { preparePlaceImageUploadFile } from '../utils/imageUpload'
 import { trackPlaceReportSubmitted, trackPlaceShared } from '../utils/analytics'
-import { Icon } from './place-detail/Icon'
+import { openFloatingChat } from '../utils/floatingChat'
 import { MemberAvatar } from './place-detail/MemberAvatar'
-import { SectionHeading } from './place-detail/SectionHeading'
-import SulitMeter from './place-detail/SulitMeter'
 import CheckInButton from './place-detail/CheckInButton'
+import { getSulitLevel } from './place-detail/SulitMeter'
 import { GoodForList } from './place-detail/GoodForList'
-import { TransportColumn } from './place-detail/TransportColumn'
-import { DetailSection } from './place-detail/DetailSection'
-import { cleanString, titleCase, uniqueList, isAcceptedContributionImage, contributionImageErrorMessage, parseJsonResponse } from './place-detail/helpers'
+import { cleanString, formatPriceLevel, titleCase, uniqueList, isAcceptedContributionImage, contributionImageErrorMessage, parseJsonResponse } from './place-detail/helpers'
 import type { PlaceDetailViewProps, PlaceReview, PlaceReviewsResponse, PlaceComment, PlaceCommentsResponse, PlaceImageContributionResponse, PlaceDetailCommunityCache } from './place-detail/types'
-import Breadcrumb from './navigation/Breadcrumb'
-import { faHouse, faLocationDot, faMagnifyingGlass, faTableCellsLarge } from '@fortawesome/free-solid-svg-icons'
-import { getCategoryIconName } from './AppIcon'
-
-
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const PLACE_DETAIL_COMMUNITY_CACHE_PREFIX = 'galatayo:place-community:'
 const PLACE_DETAIL_COMMUNITY_CACHE_TTL_MS = 10 * 60 * 1000
-const filledStar = '★'
 
 
 
@@ -149,480 +136,209 @@ function buildPriceBadgeLabel(
   return labels[Math.min(Math.max(Math.floor(priceLevel), 0), labels.length - 1)] || ''
 }
 
+
+type LatLng = { lat: number; lng: number }
+
+function toCoordinate(value: number | string | null | undefined) {
+  if (value == null || value === '') return null
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+function distanceBetweenKm(from: LatLng, to: LatLng) {
+  const toRad = (deg: number) => (deg * Math.PI) / 180
+  const dLat = toRad(to.lat - from.lat)
+  const dLng = toRad(to.lng - from.lng)
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(from.lat)) * Math.cos(toRad(to.lat)) * Math.sin(dLng / 2) ** 2
+  return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
+function useKnownUserLocation() {
+  const [location, setLocation] = useState<LatLng | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    if (typeof navigator === 'undefined' || !navigator.geolocation || !navigator.permissions?.query) return
+
+    navigator.permissions
+      .query({ name: 'geolocation' })
+      .then((status) => {
+        if (cancelled || status.state !== 'granted') return
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            if (!cancelled) setLocation({ lat: position.coords.latitude, lng: position.coords.longitude })
+          },
+          () => undefined,
+          { maximumAge: 300000, timeout: 10000 },
+        )
+      })
+      .catch(() => undefined)
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  return location
+}
+
 function PlacePhoto({
-  imageUrls = [],
+  imageUrls,
   placeName,
   currentIndex,
-  onPrevious,
-  onNext,
   onSelect,
-  showAddPhotoAction = false,
+  showAddPhotoAction,
   onContribute,
-  priceBadgeLabel = '',
 }: {
-  imageUrls?: string[]
+  imageUrls: string[]
   placeName: string
   currentIndex: number
-  onPrevious?: () => void
-  onNext?: () => void
-  onSelect?: (index: number) => void
-  showAddPhotoAction?: boolean
-  onContribute?: () => void
-  priceBadgeLabel?: string
+  onSelect: (index: number) => void
+  showAddPhotoAction: boolean
+  onContribute: () => void
 }) {
   const swipeStartX = useRef<number | null>(null)
   const [brokenPhotoUrls, setBrokenPhotoUrls] = useState<Set<string>>(new Set())
-  const [isMdUp, setIsMdUp] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return window.matchMedia('(min-width: 768px)').matches
-  })
   const photoSourceKey = uniqueList(imageUrls).join('|')
 
   useEffect(() => {
     setBrokenPhotoUrls(new Set())
   }, [photoSourceKey])
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const mediaQuery = window.matchMedia('(min-width: 768px)')
-    const handleChange = () => setIsMdUp(mediaQuery.matches)
-    mediaQuery.addEventListener('change', handleChange)
-    return () => mediaQuery.removeEventListener('change', handleChange)
-  }, [])
-
   const photos = uniqueList(imageUrls)
     .filter((photo) => !brokenPhotoUrls.has(photo))
-    .slice(0, 3)
-  const hasCarouselControls = photos.length > 1
+    .slice(0, 5)
   const safeIndex = photos.length > 0 ? Math.min(Math.max(currentIndex, 0), photos.length - 1) : 0
   const activePhoto = photos[safeIndex] ?? null
-  const canGoPrevious = hasCarouselControls && safeIndex > 0
-  const canGoNext = hasCarouselControls && safeIndex < photos.length - 1
-  const totalPhotoSlots = 3
-  const thumbSlots = Array.from({ length: totalPhotoSlots }, (_, index) => photos[index] ?? null)
-  const sidePhotoIndexes = photos
-    .map((_, index) => index)
-    .filter((index) => index !== safeIndex)
-    .slice(0, 2)
-  const mobileFrameClassName =
-    'relative overflow-hidden bg-transparent shadow-none sm:rounded-[28px] sm:border sm:border-[rgba(148,163,184,0.22)] sm:bg-[linear-gradient(180deg,#f7f9ff_0%,#eef3fb_44%,#e6ebf5_100%)] sm:shadow-[0_18px_44px_rgba(27,26,23,0.08)] md:border-white/14 md:bg-[rgba(27,26,23,0.12)] md:backdrop-blur-2xl'
-  const desktopGlassFrameClassName =
-    'relative overflow-hidden border border-white/14 bg-[rgba(27,26,23,0.12)] shadow-[0_18px_44px_rgba(27,26,23,0.08)] backdrop-blur-2xl md:rounded-[28px]'
-  const heroAspectClassName = 'aspect-[4/3] sm:aspect-[17/10] md:aspect-[1.75/1] lg:aspect-[1.95/1]'
-  const emptyAddTileClassName =
-    'border-2 border-dotted border-white/22 bg-[linear-gradient(180deg,rgba(0,0,0,0.74),rgba(12,12,12,0.62))] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_18px_34px_rgba(0,0,0,0.28)] backdrop-blur-2xl transition hover:border-white/32 hover:bg-[linear-gradient(180deg,rgba(0,0,0,0.82),rgba(10,10,10,0.7))]'
-  const emptySlotClassName =
-    'cursor-default border-white/12 bg-[linear-gradient(180deg,rgba(0,0,0,0.5),rgba(0,0,0,0.38))] text-white/30 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_12px_30px_rgba(0,0,0,0.2)] backdrop-blur-2xl'
-
-  const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
-    swipeStartX.current = event.changedTouches[0]?.clientX ?? null
-  }
-
-  const handleTouchEnd = (event: React.TouchEvent<HTMLDivElement>) => {
-    if (!hasCarouselControls || swipeStartX.current === null) {
-      swipeStartX.current = null
-      return
-    }
-
-    const endX = event.changedTouches[0]?.clientX ?? swipeStartX.current
-    const deltaX = endX - swipeStartX.current
-    swipeStartX.current = null
-
-    if (Math.abs(deltaX) < 40) {
-      return
-    }
-
-    if (deltaX < 0) {
-      if (canGoNext) {
-        onNext?.()
-      }
-      return
-    }
-
-    if (canGoPrevious) {
-      onPrevious?.()
-    }
-  }
+  const tileIndexes = photos.map((_, index) => index).filter((index) => index !== safeIndex)
 
   const markPhotoBroken = (photoUrl: string) => {
-    if (!photoUrl) {
-      return
-    }
-
     setBrokenPhotoUrls((current) => {
-      if (current.has(photoUrl)) {
-        return current
-      }
-
+      if (current.has(photoUrl)) return current
       const next = new Set(current)
       next.add(photoUrl)
       return next
     })
   }
 
+  const handleTouchStart = (event: TouchEvent<HTMLDivElement>) => {
+    swipeStartX.current = event.changedTouches[0]?.clientX ?? null
+  }
+
+  const handleTouchEnd = (event: TouchEvent<HTMLDivElement>) => {
+    const startX = swipeStartX.current
+    swipeStartX.current = null
+    if (startX === null || photos.length < 2) return
+    const deltaX = (event.changedTouches[0]?.clientX ?? startX) - startX
+    if (Math.abs(deltaX) < 40) return
+    if (deltaX < 0 && safeIndex < photos.length - 1) onSelect(safeIndex + 1)
+    if (deltaX > 0 && safeIndex > 0) onSelect(safeIndex - 1)
+  }
+
+  const addPhotoButton = showAddPhotoAction ? (
+    <Button variant="line" size="sm" onClick={onContribute} className="absolute right-3 top-3">
+      <Camera aria-hidden="true" />
+      Add photo
+    </Button>
+  ) : null
+
   if (!activePhoto) {
     return (
-      <div className="grid gap-2.5 sm:gap-3">
-        <div className="-mx-4 w-[calc(100%+2rem)] max-w-[calc(100%+2rem)] sm:mx-0 sm:w-full sm:max-w-none md:mx-auto md:max-w-5xl lg:max-w-[88rem]">
-          <div className={mobileFrameClassName}>
-            <div className="relative isolate overflow-hidden">
-              <div className={`${heroAspectClassName} relative w-full overflow-hidden`}>
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.92),rgba(238,243,251,0.82)_38%,rgba(224,231,244,0.92)_100%)]" />
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-white/55 to-transparent sm:h-24" />
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-slate-950/10 via-slate-950/4 to-transparent sm:h-32" />
-
-                <div className="absolute inset-x-4 top-4 z-10 sm:inset-x-5 sm:top-5">
-                  <div className="flex items-center justify-between gap-2">
-                    {priceBadgeLabel ? (
-                      <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[rgba(27,26,23,0.72)] px-3 py-1.5 text-[12px] font-semibold text-white backdrop-blur-sm">
-                        <FontAwesomeIcon icon={faWallet} className="h-3.5 w-3.5" />
-                        {priceBadgeLabel}
-                      </span>
-                    ) : null}
-                    {showAddPhotoAction ? (
-                      <button
-                        type="button"
-                        onClick={onContribute}
-                        aria-label="Add photo"
-                        className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-white/28 bg-[rgba(27,26,23,0.34)] px-3 py-1.5 text-[11px] font-black text-white shadow-[0_10px_24px_rgba(27,26,23,0.12)] backdrop-blur-md transition hover:bg-[rgba(27,26,23,0.46)] sm:px-3.5 sm:py-2 sm:text-[12px]"
-                      >
-                        <FontAwesomeIcon icon={faCamera} className="h-4 w-4" />
-                        <span className="hidden min-[380px]:inline">Add photo</span>
-                      </button>
-                    ) : null}
-                  </div>
-                </div>
-
-                <div className="relative z-10 flex h-full items-center justify-center px-6 py-8 text-center sm:px-8 sm:py-10">
-                  <div className="flex max-w-[340px] flex-col items-center gap-4 px-5 py-6">
-                    <span className="flex h-14 w-14 items-center justify-center rounded-full border border-[rgba(var(--accent-rgb),0.22)] bg-[var(--card)] shadow-[0_16px_40px_rgba(37,99,235,0.12)]">
-                      <Icon name="photo" className="h-7 w-7 text-[var(--accent-deep)]" />
-                    </span>
-                    <div className="space-y-1">
-                      <p className="text-[17px] font-black tracking-[-0.02em] text-[#111827]">No place photos yet</p>
-                      <p className="text-[13px] font-semibold leading-5 text-[#475569]">
-                      Be the first to add a photo for this spot.
-                      </p>
-                    </div>
-
-                  </div>
-                </div>
-
-                <div className="absolute inset-x-0 bottom-0 hidden overflow-x-auto px-4 pb-4 pt-8 sm:block sm:px-5 sm:pb-5">
-                  <div className="flex min-w-max items-center gap-2.5">
-                    {thumbSlots.map((_, index) => {
-                      const shouldUseAddTile = showAddPhotoAction && index === 0
-
-                      return (
-                        <button
-                          key={`empty-gallery-thumb-${index}`}
-                          type="button"
-                          onClick={shouldUseAddTile ? onContribute : undefined}
-                          disabled={!shouldUseAddTile}
-                          className={`flex h-16 w-16 items-center justify-center rounded-2xl border shadow-[0_12px_24px_rgba(27,26,23,0.18)] transition ${shouldUseAddTile ? emptyAddTileClassName : emptySlotClassName}`}
-                          aria-label={
-                            shouldUseAddTile
-                              ? `Add a photo for ${placeName}`
-                              : `Empty photo slot ${index + 1} of ${placeName}`
-                          }
-                        >
-                          <FontAwesomeIcon
-                            icon={faCamera}
-                            className={`h-5 w-5 ${shouldUseAddTile ? 'text-white/95 drop-shadow-[0_6px_16px_rgba(27,26,23,0.2)]' : 'text-white/45'}`}
-                          />
-
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              </div>
-            </div>
+      <div className="grid gap-2">
+        <div className="grid h-[240px] place-items-center rounded-[var(--r-3)] bg-[var(--fill)] px-6 text-center md:h-[400px]">
+          <div>
+            <Camera className="mx-auto h-8 w-8 text-[var(--ink-3)]" aria-hidden="true" />
+            <p className="g-h3 mt-3">Wala pang photos</p>
+            <p className="g-sm g-mut mt-1">Be the first to add a photo of this spot.</p>
+            {showAddPhotoAction ? (
+              <Button variant="ink" size="sm" onClick={onContribute} className="mt-4">
+                <Camera aria-hidden="true" />
+                Add photo
+              </Button>
+            ) : null}
           </div>
         </div>
-
         <PlaceImageNotice />
       </div>
     )
   }
 
+  const tileCount = Math.min(tileIndexes.length, 4)
+  const desktopColumns = tileCount === 0 ? '1fr' : tileCount <= 2 ? '2fr 1fr' : '2fr 1fr 1fr'
+
   return (
-    <div className="grid gap-2.5 sm:gap-3">
-      <div className="-mx-4 w-[calc(100%+2rem)] max-w-[calc(100%+2rem)] sm:mx-0 sm:w-full sm:max-w-none md:mx-auto md:max-w-5xl lg:max-w-[88rem]">
-        {!isMdUp ? (
-          <div className={mobileFrameClassName}>
-            <div className="relative isolate overflow-hidden">
-              <div
-                onTouchStart={handleTouchStart}
-                onTouchEnd={handleTouchEnd}
-                className={`${heroAspectClassName} h-full w-full bg-neutral-100`}
-              >
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.24),rgba(27,26,23,0.06)_42%,rgba(27,26,23,0.18)_100%)]" />
-                <img
-                  src={activePhoto}
-                  alt={placeName}
-                  className="h-full w-full object-cover transition duration-300 md:object-center"
-                  loading="eager"
-                  onError={() => markPhotoBroken(activePhoto)}
-                />
-              </div>
-
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-slate-950/55 via-slate-950/18 to-transparent" />
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-slate-950/82 via-slate-950/32 to-transparent" />
-
-              <div className="absolute inset-x-4 top-4 z-10 sm:inset-x-5 sm:top-5">
-                <div className="flex items-center justify-between gap-2">
-                  {priceBadgeLabel ? (
-                    <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[rgba(27,26,23,0.72)] px-3 py-1.5 text-[12px] font-semibold text-white backdrop-blur-sm">
-                      <FontAwesomeIcon icon={faWallet} className="h-3.5 w-3.5" />
-                      {priceBadgeLabel}
-                    </span>
-                  ) : null}
-                  <div className="flex items-center gap-2">
-                    {showAddPhotoAction ? (
-                      <button
-                        type="button"
-                        onClick={onContribute}
-                        aria-label="Add photo"
-                        className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-white/28 bg-[rgba(27,26,23,0.34)] px-3 py-1.5 text-[11px] font-black text-white shadow-[0_10px_24px_rgba(27,26,23,0.12)] backdrop-blur-sm transition hover:bg-[rgba(27,26,23,0.46)] sm:px-3.5 sm:py-2 sm:text-[12px]"
-                      >
-                        <FontAwesomeIcon icon={faCamera} className="h-4 w-4" />
-                        <span className="hidden min-[380px]:inline">Add photo</span>
-                      </button>
-                    ) : null}
-                    <span className="whitespace-nowrap rounded-full bg-black/45 px-3 py-1 text-[12px] font-black text-white backdrop-blur-sm">
-{safeIndex + 1} / {imageUrls.length}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="absolute inset-x-0 bottom-0 hidden overflow-x-auto px-4 pb-4 pt-8 sm:block sm:px-5 sm:pb-5">
-                <div className="flex min-w-max items-center gap-2.5">
-                  {thumbSlots.map((photo, index) => {
-                    if (photo) {
-                      return (
-                        <button
-                          key={`${photo}-thumb`}
-                          type="button"
-                          onClick={() => onSelect?.(index)}
-                          className={`relative overflow-hidden rounded-2xl border transition ${
-                            index === safeIndex
-                              ? 'border-white shadow-[0_14px_30px_rgba(27,26,23,0.28)] ring-2 ring-white/90'
-                              : 'border-white/35 shadow-[0_12px_24px_rgba(27,26,23,0.22)]'
-                          }`}
-                          aria-label={`Show photo ${index + 1} of ${placeName}`}
-                          aria-pressed={index === safeIndex}
-                        >
-                          <img
-                            src={photo}
-                            alt={placeName}
-                            className="h-16 w-16 object-cover"
-                            loading="lazy"
-                            onError={() => markPhotoBroken(photo)}
-                          />
-                        </button>
-                      )
-                    }
-
-                    const shouldUseAddTile = showAddPhotoAction && index === photos.length
-
-                    return (
-                        <button
-                          key={`empty-thumb-${index}`}
-                          type="button"
-                          onClick={shouldUseAddTile ? onContribute : undefined}
-                          disabled={!shouldUseAddTile}
-                          className={`flex h-16 w-16 items-center justify-center rounded-2xl border text-white backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.18)] transition ${
-                            shouldUseAddTile
-                              ? 'border-2 border-dotted border-white/22 bg-[linear-gradient(180deg,rgba(0,0,0,0.74),rgba(12,12,12,0.62))] hover:border-white/30 hover:bg-[linear-gradient(180deg,rgba(0,0,0,0.82),rgba(10,10,10,0.7))]'
-                              : 'cursor-default border-dashed border-white/10 bg-[rgba(30,41,59,0.35)] text-white/40'
-                          }`}
-                          aria-label={
-                            shouldUseAddTile
-                              ? `Add a photo for ${placeName}`
-                              : `Empty photo slot ${index + 1} of ${placeName}`
-                          }
-                      >
-                        <FontAwesomeIcon icon={faCamera} className="h-5 w-5" />
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-
-        <div className={photos.length > 1 ? 'grid md:grid-cols-[minmax(0,1.32fr)_minmax(17rem,0.82fr)] md:gap-4 lg:grid-cols-[minmax(0,1.62fr)_minmax(21rem,0.78fr)] lg:gap-5' : 'grid'}>
-          <div className={`${desktopGlassFrameClassName} h-full`}>
-            <div className="relative isolate h-full overflow-hidden">
-              <div className="relative h-full min-h-[23.5rem] overflow-hidden bg-[rgba(27,26,23,0.08)] lg:min-h-[28rem]">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.12),rgba(27,26,23,0.04)_42%,rgba(27,26,23,0.16)_100%)]" />
-                <img
-                  src={activePhoto}
-                  alt={placeName}
-                  className="h-full w-full object-cover object-center transition duration-300"
-                  loading="eager"
-                  onError={() => markPhotoBroken(activePhoto)}
-                />
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-slate-950/55 via-slate-950/18 to-transparent" />
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-slate-950/82 via-slate-950/32 to-transparent" />
-
-                <div className="absolute inset-x-5 top-5 z-10 sm:inset-x-5 sm:top-5">
-                  <div className="flex items-center justify-between gap-2">
-                    {priceBadgeLabel ? (
-                      <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-[rgba(27,26,23,0.72)] px-3 py-1.5 text-[12px] font-semibold text-white backdrop-blur-sm">
-                        <FontAwesomeIcon icon={faWallet} className="h-3.5 w-3.5" />
-                        {priceBadgeLabel}
-                      </span>
-                    ) : null}
-                    <div className="flex items-center gap-2">
-                      {showAddPhotoAction ? (
-                        <button
-                          type="button"
-                          onClick={onContribute}
-                          className="inline-flex items-center gap-1.5 rounded-full border border-white/28 bg-[rgba(27,26,23,0.34)] px-3.5 py-2 text-[12px] font-black text-white shadow-[0_10px_24px_rgba(27,26,23,0.12)] backdrop-blur-sm transition hover:bg-[rgba(27,26,23,0.46)]"
-                        >
-                          <FontAwesomeIcon icon={faCamera} className="h-4 w-4" />
-                        Add photo
-                        </button>
-                      ) : null}
-                      <span className="whitespace-nowrap rounded-full bg-black/45 px-3 py-1 text-[12px] font-black text-white backdrop-blur-sm">
-{safeIndex + 1} / {imageUrls.length}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="absolute inset-x-5 bottom-5 flex items-center gap-2.5">
-                  {thumbSlots.map((photo, index) => {
-                    if (photo) {
-                      return (
-                        <button
-                          key={`${photo}-desktop-thumb`}
-                          type="button"
-                          onClick={() => onSelect?.(index)}
-                          className={`relative overflow-hidden rounded-2xl border transition ${
-                            index === safeIndex
-                              ? 'border-white shadow-[0_14px_30px_rgba(27,26,23,0.28)] ring-2 ring-white/90'
-                              : 'border-white/35 shadow-[0_12px_24px_rgba(27,26,23,0.22)]'
-                          }`}
-                          aria-label={`Show photo ${index + 1} of ${placeName}`}
-                          aria-pressed={index === safeIndex}
-                        >
-                          <img
-                            src={photo}
-                            alt={placeName}
-                            className="h-16 w-16 object-cover"
-                            loading="lazy"
-                            onError={() => markPhotoBroken(photo)}
-                          />
-                        </button>
-                      )
-                    }
-
-                    const shouldUseAddTile = showAddPhotoAction && index === photos.length
-
-                    return (
-                      <button
-                        key={`desktop-empty-thumb-${index}`}
-                        type="button"
-                        onClick={shouldUseAddTile ? onContribute : undefined}
-                        disabled={!shouldUseAddTile}
-                        className={`flex h-16 w-16 items-center justify-center rounded-2xl border text-white backdrop-blur-sm shadow-[0_12px_24px_rgba(27,26,23,0.18)] transition ${
-                          shouldUseAddTile
-                            ? 'border-dashed border-white/24 bg-[linear-gradient(180deg,rgba(30,41,59,0.9),rgba(27,26,23,0.78))] text-white hover:border-white/32 hover:bg-[linear-gradient(180deg,rgba(51,65,85,0.92),rgba(27,26,23,0.82))]'
-                            : 'cursor-default border-white/14 bg-[rgba(27,26,23,0.28)] text-white/35'
-                        }`}
-                        aria-label={
-                          shouldUseAddTile
-                            ? `Add a photo for ${placeName}`
-                            : `Empty photo slot ${index + 1} of ${placeName}`
-                        }
-                      >
-                        <FontAwesomeIcon icon={faCamera} className="h-5 w-5" />
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>
-
+    <div className="grid gap-2">
+      <div className="md:hidden">
+        <div
+          className="relative overflow-hidden rounded-[var(--r-3)] bg-[var(--fill)]"
+          style={{ aspectRatio: '4 / 3' }}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          <img src={activePhoto} alt={placeName} className="h-full w-full object-cover" loading="eager" onError={() => markPhotoBroken(activePhoto)} />
           {photos.length > 1 ? (
-          <div className="grid min-h-[23.5rem] grid-rows-2 gap-4 lg:min-h-[28rem] lg:gap-5">
-            {[0, 1].map((slotIndex) => {
-              const photoIndex = sidePhotoIndexes[slotIndex]
-              const photo = photoIndex != null ? photos[photoIndex] : null
-              const shouldUseAddTile = showAddPhotoAction && photo == null
-
-              if (photo && photoIndex != null) {
-                return (
-                  <button
-                    key={`${photo}-desktop-side`}
-                    type="button"
-                    onClick={() => onSelect?.(photoIndex)}
-                    className={`${desktopGlassFrameClassName} group h-full min-h-[11.25rem] overflow-hidden text-left lg:min-h-[13.4rem]`}
-                    aria-label={`Show photo ${photoIndex + 1} of ${placeName}`}
-                    aria-pressed={photoIndex === safeIndex}
-                  >
-                    <div className="relative h-full w-full overflow-hidden">
-                      <img
-                        src={photo}
-                        alt={placeName}
-                        className="h-full w-full object-cover object-center transition duration-300 group-hover:scale-[1.02]"
-                      />
-                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-slate-950/55 via-transparent to-slate-950/10" />
-                    </div>
-                  </button>
-                )
-              }
-
-              return (
-                <button
-                  key={`desktop-side-empty-${slotIndex}`}
-                  type="button"
-                  onClick={shouldUseAddTile ? onContribute : undefined}
-                  disabled={!shouldUseAddTile}
-                  className={`${desktopGlassFrameClassName} flex h-full min-h-[11.25rem] items-center justify-center overflow-hidden lg:min-h-[13.4rem] ${
-                    shouldUseAddTile ? emptyAddTileClassName : emptySlotClassName
-                  }`}
-                  aria-label={
-                    shouldUseAddTile
-                      ? `Add a photo for ${placeName}`
-                      : `Empty photo slot ${slotIndex + 1} of ${placeName}`
-                  }
-                >
-                  <span className="flex flex-col items-center gap-2 px-4 text-center">
-                    <FontAwesomeIcon
-                      icon={faCamera}
-                      className={`h-6 w-6 ${shouldUseAddTile ? 'text-white/95 drop-shadow-[0_6px_16px_rgba(0,0,0,0.35)]' : 'text-white/40'}`}
-                    />
-
-                    {shouldUseAddTile ? (
-                      <span className="text-[13px] font-black tracking-[-0.01em] text-white/95">Add photo</span>
-                    ) : (
-                      <span className="text-[13px] font-semibold">No image yet</span>
-                    )}
-                    {shouldUseAddTile ? (
-                      <span className="text-[11px] font-semibold text-white/70">Tap to upload</span>
-                    ) : null}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
+            <Tag tone="solid" className="absolute bottom-3 right-3">
+              {safeIndex + 1} / {photos.length}
+            </Tag>
           ) : null}
+          {addPhotoButton}
         </div>
-        )}
+        {photos.length > 1 ? (
+          <div className="mt-2 grid grid-cols-5 gap-2">
+            {photos.map((photo, index) => (
+              <button
+                key={`${photo}-thumb`}
+                type="button"
+                onClick={() => onSelect(index)}
+                aria-label={`Show photo ${index + 1} of ${placeName}`}
+                aria-pressed={index === safeIndex}
+                className={cx(
+                  'h-14 overflow-hidden rounded-[var(--r-2)] bg-[var(--fill)]',
+                  index === safeIndex && 'outline outline-2 outline-offset-2 outline-[var(--ink)]',
+                )}
+              >
+                <img src={photo} alt="" className="h-full w-full object-cover" loading="lazy" onError={() => markPhotoBroken(photo)} />
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
+
+      <div
+        className="hidden h-[400px] gap-2 md:grid lg:h-[420px]"
+        style={{ gridTemplateColumns: desktopColumns, gridTemplateRows: 'repeat(2, minmax(0, 1fr))' }}
+      >
+        <div className="relative overflow-hidden rounded-[var(--r-3)] bg-[var(--fill)]" style={{ gridRow: 'span 2' }}>
+          <img src={activePhoto} alt={placeName} className="h-full w-full object-cover" loading="eager" onError={() => markPhotoBroken(activePhoto)} />
+          {addPhotoButton}
+        </div>
+        {tileIndexes.slice(0, 4).map((photoIndex, position) => {
+          const photo = photos[photoIndex]
+          const spansRows = tileCount === 1 || (tileCount === 3 && position === 0)
+          return (
+            <button
+              key={`${photo}-tile`}
+              type="button"
+              onClick={() => onSelect(photoIndex)}
+              aria-label={`Show photo ${photoIndex + 1} of ${placeName}`}
+              className="group overflow-hidden rounded-[var(--r-3)] bg-[var(--fill)]"
+              style={spansRows ? { gridRow: 'span 2' } : undefined}
+            >
+              <img
+                src={photo}
+                alt=""
+                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                loading="lazy"
+                onError={() => markPhotoBroken(photo)}
+              />
+            </button>
+          )
+        })}
       </div>
       <PlaceImageNotice />
     </div>
   )
 }
-
-
 
 const commentReportReasons: Array<{ value: CommentReportReason; label: string }> = [
   { value: 'spam', label: 'Spam' },
@@ -641,6 +357,7 @@ const placeConcernReasons: Array<{ value: PlaceReportReason; label: string }> = 
   { value: 'other', label: 'Other' },
 ]
 
+
 function StarRatingInput({
   value,
   disabled,
@@ -651,35 +368,38 @@ function StarRatingInput({
   onChange: (value: number) => void
 }) {
   return (
-    <div className="flex items-center gap-1.5" aria-label="Choose rating">
+    <div className="flex items-center gap-1" role="group" aria-label="Choose rating">
       {[1, 2, 3, 4, 5].map((ratingValue) => (
         <button
           key={ratingValue}
           type="button"
           onClick={() => onChange(ratingValue)}
           disabled={disabled}
-          className={`flex h-12 w-12 items-center justify-center text-[34px] leading-none transition duration-200 hover:-translate-y-0.5 ${
-            ratingValue <= value
-              ? 'text-amber-500'
-              : 'text-slate-300 hover:text-amber-400'
-          } disabled:cursor-not-allowed disabled:opacity-70`}
+          className={cx(
+            'grid h-11 w-11 place-items-center rounded-full transition-colors hover:bg-[var(--fill)] disabled:cursor-not-allowed disabled:opacity-60',
+            ratingValue <= value ? 'text-[var(--ink)]' : 'text-[var(--line)]',
+          )}
           aria-label={`Rate ${ratingValue} out of 5`}
           aria-pressed={ratingValue <= value}
         >
-          {filledStar}
+          <Star className="h-7 w-7" fill="currentColor" strokeWidth={0} aria-hidden="true" />
         </button>
       ))}
     </div>
   )
 }
 
-function StarsDisplay({ rating, compact = false }: { rating: number; compact?: boolean }) {
+function StarsDisplay({ rating }: { rating: number }) {
   return (
-    <span className={`inline-flex ${compact ? 'gap-0.5 text-[13px]' : 'gap-1 text-[16px]'} text-amber-500`} aria-label={`${rating} out of 5 stars`}>
+    <span className="inline-flex gap-0.5" role="img" aria-label={`${rating} out of 5 stars`}>
       {[1, 2, 3, 4, 5].map((value) => (
-        <span key={value} className={value <= rating ? 'text-amber-500' : 'text-slate-300'}>
-          {filledStar}
-        </span>
+        <Star
+          key={value}
+          className={cx('h-4 w-4', value <= rating ? 'text-[var(--ink)]' : 'text-[var(--line)]')}
+          fill="currentColor"
+          strokeWidth={0}
+          aria-hidden="true"
+        />
       ))}
     </span>
   )
@@ -873,34 +593,6 @@ const EMPTY_PLACE_DETAIL = {
   approvedImageCount: 0,
 }
 
-function MapViewMemo({
-  place,
-  zoom,
-  autoFitToPlaces,
-  className,
-}: {
-  place: NonNullable<PlaceDetailViewProps['place']>
-  zoom: number
-  autoFitToPlaces: boolean
-  className: string
-}) {
-  const places = useMemo(() => [place], [place])
-  const center = useMemo(
-    () => [place.coordinates.lat, place.coordinates.lng] as [number | string | null, number | string | null],
-    [place.coordinates.lat, place.coordinates.lng],
-  )
-
-  return (
-    <MapView
-      places={places}
-      selectedPlaceId={place.id}
-      center={center}
-      zoom={zoom}
-      autoFitToPlaces={autoFitToPlaces}
-      className={className}
-    />
-  )
-}
 
 function PlaceDetailView({
   place: inputPlace,
@@ -911,31 +603,15 @@ function PlaceDetailView({
 }: PlaceDetailViewProps) {
   const place = inputPlace ?? EMPTY_PLACE_DETAIL
   const { currentProfile, session: appSession } = useAppUser()
-  const ReviewSkeleton = () => (
-    <div className="mt-4 grid gap-3" aria-hidden="true">
-      <div className="app-skeleton app-skeleton--soft h-5 w-40 rounded-full" />
-      <div className="app-skeleton h-11 w-full rounded-2xl" />
-      <div className="app-skeleton app-skeleton--soft h-4 w-52 rounded-full" />
-      <div className="app-skeleton h-10 w-28 rounded-xl" />
-    </div>
-  )
-
-  const CommentSkeleton = () => (
-    <ul className="mt-4 grid gap-3.5" aria-hidden="true">
+  const commentSkeleton = (
+    <ul className="mt-4 grid gap-4" aria-hidden="true">
       {Array.from({ length: 3 }).map((_, index) => (
-        <li key={`comment-skeleton-${index}`} className="rounded-[22px] border border-slate-200/80 bg-white/90 p-4">
-          <div className="flex items-start gap-3">
-            <div className="app-skeleton h-10 w-10 shrink-0 rounded-full" />
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <div className="app-skeleton h-4 w-28 rounded-full" />
-                <div className="app-skeleton app-skeleton--soft h-3 w-16 rounded-full" />
-              </div>
-              <div className="mt-3 grid gap-2">
-                <div className="app-skeleton h-4 w-full rounded-full" />
-                <div className="app-skeleton app-skeleton--soft h-4 w-4/5 rounded-full" />
-              </div>
-            </div>
+        <li key={`comment-skeleton-${index}`} className="flex items-start gap-3">
+          <Skeleton className="h-8 w-8 shrink-0 rounded-full" />
+          <div className="min-w-0 flex-1">
+            <Skeleton className="h-3.5 w-28" />
+            <Skeleton className="mt-2 h-3.5 w-full" />
+            <Skeleton className="mt-2 h-3.5 w-4/5" />
           </div>
         </li>
       ))}
@@ -997,45 +673,9 @@ function PlaceDetailView({
   const [isReportSubmitting, setIsReportSubmitting] = useState(false)
   const commentMenuRef = useRef<HTMLDivElement | null>(null)
   const { isPlaceSaved, saveFavorite, removeFavorite } = useSavedFavorites()
-  const { resolvedTheme } = useTheme()
   const { showSystemMessage } = useSystemMessage()
-  const isDarkTheme = resolvedTheme === 'dark'
-  const commentSectionSurfaceClassName = isDarkTheme
-    ? '!border-[#28405f] !bg-[linear-gradient(180deg,rgba(10,18,32,0.99),rgba(8,14,26,0.97))] !shadow-[0_20px_44px_rgba(0,0,0,0.24)]'
-    : 'border-slate-200/80 bg-slate-50/55'
-  const commentComposerSurfaceClassName = isDarkTheme
-    ? '!border !border-[#28405f] !bg-[linear-gradient(180deg,rgba(15,26,44,0.98),rgba(12,21,36,0.98))] !shadow-[inset_0_1px_0_rgba(148,163,184,0.05)]'
-    : 'bg-white'
-  const commentReplySurfaceClassName = isDarkTheme
-    ? '!border !border-[#28405f] !bg-[linear-gradient(180deg,rgba(15,26,44,0.98),rgba(12,21,36,0.98))]'
-    : 'bg-slate-50'
-  const commentCardSurfaceClassName = isDarkTheme
-    ? '!border-[#2c4d73] !bg-[linear-gradient(180deg,rgba(17,29,49,0.98),rgba(13,23,39,0.98))] !shadow-[0_12px_28px_rgba(0,0,0,0.2),inset_0_1px_0_rgba(148,163,184,0.05)]'
-    : 'border-slate-200/80 bg-slate-50/80'
-  const commentCardFailedClassName = isDarkTheme
-    ? '!border-[#7a3141] !bg-[linear-gradient(180deg,rgba(46,16,28,0.96),rgba(28,12,22,0.96))]'
-    : 'border-red-200 bg-red-50/70'
-  const commentCardDeletedClassName = isDarkTheme
-    ? '!border-[#2c4d73] !bg-[#101c2f]/95'
-    : 'border-slate-200/70 bg-slate-100/90'
-  const commentTextPrimaryClassName = isDarkTheme ? 'text-[#f4f8ff]' : 'text-slate-950'
-  const commentTextSecondaryClassName = isDarkTheme ? 'text-[#c8d6e8]' : 'text-slate-500'
-  const commentTextMutedClassName = isDarkTheme ? 'text-[#91a7c3]' : 'text-slate-400'
-  const commentTextBodyClassName = isDarkTheme ? 'text-[#d7e2f2]' : 'text-slate-700'
-  const commentBadgeSurfaceClassName = isDarkTheme ? '!bg-[rgba(var(--accent-rgb),0.16)]' : 'bg-[var(--accent-wash)]'
-  const commentBadgeTextClassName = isDarkTheme ? 'text-[var(--primary-soft)]' : 'text-[var(--accent-deep)]'
-  const commentMenuButtonClassName = isDarkTheme
-    ? 'inline-flex h-7 w-7 items-center justify-center rounded-full text-[#9cb0c9] transition hover:!bg-[#1a2b44] hover:!text-[var(--primary-soft)]'
-    : 'inline-flex h-7 w-7 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-200/70 hover:text-slate-600'
-  const commentMenuClassName = isDarkTheme
-    ? 'absolute right-0 top-8 z-20 min-w-[11rem] overflow-hidden rounded-xl border border-[#28405f] !bg-[#0f1b2d] py-1 shadow-[0_16px_34px_rgba(0,0,0,0.36)]'
-    : 'absolute right-0 top-8 z-20 min-w-[11rem] overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-[0_12px_28px_rgba(27,26,23,0.12)]'
-  const commentMenuItemClassName = isDarkTheme
-    ? 'flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-bold text-[#d7e2f2] transition hover:!bg-[#17263b] hover:!text-[#f4f8ff] disabled:cursor-not-allowed disabled:text-[#7f94b1]'
-    : 'flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-bold text-slate-700 transition hover:bg-slate-50 hover:text-slate-950 disabled:cursor-not-allowed disabled:text-[var(--text-disabled)]'
-  const commentMenuItemDangerClassName = isDarkTheme
-    ? 'flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-bold text-[#fda4a4] transition hover:!bg-[#301521] hover:!text-[#fecaca] disabled:cursor-not-allowed disabled:opacity-70'
-    : 'flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] font-bold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70'
+  const userLocation = useKnownUserLocation()
+  const [accessMode, setAccessMode] = useState<'commute' | 'parking' | 'access'>('commute')
 
   const placeOwnPhotos = uniqueList([
     place.imageUrl,
@@ -1044,8 +684,8 @@ function PlaceDetailView({
     ...(place.curatedImageUrls ?? []),
   ])
   const galleryPhotos = placeOwnPhotos.length > 0
-    ? placeOwnPhotos.slice(0, 3)
-    : getCuratedPlaceImages(place.name).slice(0, 3)
+    ? placeOwnPhotos.slice(0, 5)
+    : getCuratedPlaceImages(place.name).slice(0, 5)
   const galleryStateKey = `${place.id}:${galleryPhotos.join('|')}`
   const [activeGalleryState, setActiveGalleryState] = useState({ key: galleryStateKey, index: 0 })
   const activeGalleryIndex =
@@ -1053,13 +693,6 @@ function PlaceDetailView({
       ? Math.min(activeGalleryState.index, Math.max(galleryPhotos.length - 1, 0))
       : 0
   const approvedImageCount = place.approvedImageCount ?? 0
-  const budgetLabel = (() => {
-    const parts: string[] = []
-    if (place.budget_min != null) parts.push(`From ₱${Number(place.budget_min).toLocaleString()}`)
-    const note = cleanString(place.budget_notes)
-    if (note) parts.push(note)
-    return parts.join(' · ') || 'Not available'
-  })()
   const addressLabel =
     cleanString(place.address) ||
     [cleanString(place.localArea || place.area), cleanString(place.city)].filter(Boolean).join(', ') ||
@@ -1077,28 +710,14 @@ function PlaceDetailView({
   const isCommunityPlaceReady = UUID_PATTERN.test(placeId)
   const canContributePhoto = Boolean(currentUserId && isCommunityPlaceReady && approvedImageCount < 3)
   const areaLink = areaBreadcrumb ? `/places/${encodeURIComponent(areaBreadcrumb.areaSlug)}` : null
-  const breadcrumbItems = categoryBreadcrumb
+  const breadcrumbItems: Array<{ label: string; href?: string }> = categoryBreadcrumb
     ? [
-        { label: categoryBreadcrumb.parentName, href: new URL(categoryBreadcrumb.parentItem).pathname, icon: <FontAwesomeIcon icon={faTableCellsLarge} className="h-3.5 w-3.5" /> },
-        { label: categoryBreadcrumb.childName, href: new URL(categoryBreadcrumb.childItem).pathname, icon: <AppIcon name={getCategoryIconName(categoryBreadcrumb.childName)} className="h-3.5 w-3.5" /> },
-        { label: place.name, icon: <FontAwesomeIcon icon={faLocationDot} className="h-3.5 w-3.5" /> },
+        { label: categoryBreadcrumb.parentName, href: new URL(categoryBreadcrumb.parentItem).pathname },
+        { label: categoryBreadcrumb.childName, href: new URL(categoryBreadcrumb.childItem).pathname },
       ]
     : returnHref && returnLabel
-      ? [
-          {
-            label: returnLabel,
-            href: returnHref,
-            icon: returnHref.startsWith('/search') ? <FontAwesomeIcon icon={faMagnifyingGlass} className="h-3.5 w-3.5" /> : returnLabel === 'Home' ? <FontAwesomeIcon icon={faHouse} className="h-3.5 w-3.5" /> : <FontAwesomeIcon icon={faLocationDot} className="h-3.5 w-3.5" />,
-          },
-          { label: place.name, icon: <FontAwesomeIcon icon={faLocationDot} className="h-3.5 w-3.5" /> },
-        ]
-      : [
-          { label: 'Places', href: '/places', icon: <FontAwesomeIcon icon={faLocationDot} className="h-3.5 w-3.5" /> },
-          ...(areaBreadcrumb
-            ? [{ label: areaBreadcrumb.areaName, href: areaLink!, icon: <FontAwesomeIcon icon={faLocationDot} className="h-3.5 w-3.5" /> }]
-            : []),
-          { label: place.name, icon: <FontAwesomeIcon icon={faLocationDot} className="h-3.5 w-3.5" /> },
-        ]
+      ? [{ label: returnLabel, href: returnHref }]
+      : [{ label: 'Places', href: '/places' }, ...(areaBreadcrumb && areaLink ? [{ label: areaBreadcrumb.areaName, href: areaLink }] : [])]
   const canonicalPlaceLink = areaBreadcrumb ? `/places/${encodeURIComponent(areaBreadcrumb.areaSlug)}/${encodeURIComponent(placeSlug)}` : null
   const placeFaqs =
     'faqs' in place && Array.isArray(place.faqs)
@@ -2149,6 +1768,64 @@ function PlaceDetailView({
     'Reachable by local routes, short walks, or ride-hailing depending on where you are coming from.'
   const parkingText = cleanString(place.parking_info) || 'Parking depends on time and crowd, so plan ahead if bringing a car.'
   const visibleCommentCount = countThreadComments(comments)
+  const closePlaceConcern = () => {
+    if (!isPlaceConcernSubmitting) {
+      setIsPlaceConcernOpen(false)
+      setPlaceConcernError('')
+    }
+  }
+  const budgetAmount =
+    place.budget_min != null && Number.isFinite(Number(place.budget_min)) ? Math.max(0, Math.round(Number(place.budget_min))) : null
+  const sulitLabel = budgetAmount != null ? getSulitLevel(budgetAmount).label : ''
+  const priceHeadline = budgetAmount == null ? '' : budgetAmount <= 0 ? 'Free' : `₱${budgetAmount.toLocaleString('en-PH')}`
+  const groupPattern = /barkada|group|friends|catch/
+  const barkadaFit = groupPattern.test(goodFor.join(' ').toLowerCase())
+    ? 'Yes'
+    : groupPattern.test((place.not_ideal_for ?? []).join(' ').toLowerCase())
+      ? 'Not ideal'
+      : 'Maybe'
+  const bestTime = cleanString(place.best_time_to_visit)
+  const placeTags = uniqueList([
+    ...(place.tags ?? []).slice(0, 4).map((tag) => tag.name),
+    cleanString(place.indoor_outdoor) ? titleCase(cleanString(place.indoor_outdoor)) : '',
+  ])
+  const placeLat = toCoordinate(place.coordinates?.lat) ?? toCoordinate(place.latitude) ?? toCoordinate(place.lat)
+  const placeLng = toCoordinate(place.coordinates?.lng) ?? toCoordinate(place.longitude) ?? toCoordinate(place.lng)
+  const placePosition = placeLat != null && placeLng != null && (placeLat !== 0 || placeLng !== 0) ? { lat: placeLat, lng: placeLng } : null
+  const distanceFromUserKm = placePosition && userLocation ? distanceBetweenKm(userLocation, placePosition) : null
+  const distanceKm =
+    distanceFromUserKm ?? (typeof place.distanceKm === 'number' && Number.isFinite(place.distanceKm) ? place.distanceKm : null)
+  const mapPoints: MapPoint[] = placePosition
+    ? [
+        { id: 'place', lat: placePosition.lat, lng: placePosition.lng, label: place.name, active: true },
+        ...(userLocation && distanceFromUserKm != null && distanceFromUserKm <= 60
+          ? [{ id: 'me', lat: userLocation.lat, lng: userLocation.lng, kind: 'me' as const }]
+          : []),
+      ]
+    : []
+  const accessibilityText = cleanString(place.accessibility_notes)
+  const accessModes = [
+    { value: 'commute' as const, label: place.commute_friendly ? 'Commute-friendly' : 'Commute', icon: Bus, text: commuteText },
+    { value: 'parking' as const, label: 'Parking', icon: SquareParking, text: parkingText },
+    ...(accessibilityText ? [{ value: 'access' as const, label: 'Accessibility', icon: Accessibility, text: accessibilityText }] : []),
+  ]
+  const activeAccessMode = accessModes.find((mode) => mode.value === accessMode) ?? accessModes[0]
+  const fitItems = [
+    { label: 'Good for groups', value: barkadaFit },
+    { label: 'Category', value: categoryLabel },
+    { label: 'Budget', value: priceBadgeLabel || 'Not available' },
+    { label: 'Best time', value: bestTime },
+    { label: 'Tambay time', value: cleanString(place.visit_duration) },
+    { label: 'Crowd', value: cleanString(place.crowd_level) ? titleCase(cleanString(place.crowd_level)) : '' },
+    { label: 'Hours', value: cleanString(place.hours) },
+  ].filter((item) => item.value)
+  const askAiQuestion = `Tell me about ${place.name} in ${locationLabel}. Is it good for a barkada gala, what should we try there, and when is the best time to go?`
+  const planWithAiHref = `/plan-with-ai?q=${encodeURIComponent(`A barkada gala in ${locationLabel} with a stop at ${place.name}`)}`
+  const commentActionClassName =
+    'inline-flex min-h-[44px] items-center gap-1 text-[12px] font-semibold text-[var(--ink-2)] hover:text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-60'
+  const commentMenuItemClassName =
+    'flex min-h-[44px] w-full items-center gap-2 px-3 text-left text-[13px] font-medium text-[var(--ink)] hover:bg-[var(--fill)] disabled:cursor-not-allowed disabled:text-[var(--ink-3)]'
+  const heartIcon = <Heart aria-hidden="true" fill={isSaved ? 'currentColor' : 'none'} style={isSaved ? { color: 'var(--tara)' } : undefined} />
 
   const renderComment = (comment: PlaceComment, isReply = false): ReactNode => {
     const isDeleted = isCommentDeleted(comment)
@@ -2179,16 +1856,26 @@ function PlaceDetailView({
       }
     }
 
+    const openReport = () => {
+      setReportingCommentId(comment.id)
+      setReportReason('')
+      setReportDetails('')
+      setReportError('')
+      setOpenCommentMenuId(null)
+    }
+
+    const startEditing = () => {
+      setEditingCommentId(comment.id)
+      setEditCommentBody(comment.comment)
+      setCommentError('')
+      setOpenCommentMenuId(null)
+    }
+
     return (
-      <li key={comment.id} className={isReply ? 'ml-2 border-l border-slate-200/80 pl-3 sm:ml-3 sm:pl-4' : ''}>
-        <div className={`flex items-start gap-2.5 sm:gap-3 ${isPending ? 'opacity-75' : ''}`}>
+      <li key={comment.id} className={isReply ? 'ml-4 border-l border-[var(--line-2)] pl-3' : ''}>
+        <div className={cx('flex items-start gap-3', isPending && 'opacity-75')}>
           {canOpenProfile ? (
-            <button
-              type="button"
-              onClick={handleOpenCommentProfile}
-              aria-label={`Open ${displayName}'s profile`}
-              className="shrink-0 rounded-full"
-            >
+            <button type="button" onClick={handleOpenCommentProfile} aria-label={`Open ${displayName}'s profile`} className="shrink-0 rounded-full">
               <MemberAvatar displayName={displayName} avatarUrl={avatarUrl} compact reply={isReply} />
             </button>
           ) : (
@@ -2197,76 +1884,50 @@ function PlaceDetailView({
 
           <div className="min-w-0 flex-1">
             <div
-              className={`place-detail-comment-card w-full min-w-0 rounded-[16px] border px-3 py-2.5 ${
+              className={cx(
+                'rounded-[var(--r-3)] border px-3 py-2.5',
                 isFailed
-                  ? commentCardFailedClassName
+                  ? 'border-[var(--bad)] bg-[var(--bad-soft)]'
                   : isDeleted
-                    ? commentCardDeletedClassName
-                    : commentCardSurfaceClassName
-              }`}
+                    ? 'border-[var(--line-2)] bg-[var(--fill)]'
+                    : 'border-[var(--line-2)] bg-[var(--surface)]',
+              )}
             >
               <div className="flex items-start gap-2">
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                    {canOpenProfile ? (
-                      <button
-                        type="button"
-                        onClick={handleOpenCommentProfile}
-                        className={`block min-w-0 truncate text-[14px] font-black transition hover:opacity-80 ${commentTextPrimaryClassName}`}
-                      >
-                        {displayName}
-                      </button>
-                    ) : (
-                      <span className={`block min-w-0 truncate text-[14px] font-black ${commentTextPrimaryClassName}`}>{displayName}</span>
-                    )}
-                    {isOwner ? (
-                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] ${commentBadgeSurfaceClassName} ${commentBadgeTextClassName}`}>
-                        You
-                      </span>
-                    ) : null}
-                    <span className={`text-[11px] font-semibold ${commentTextSecondaryClassName}`}>
-                      {formatReviewDate(comment.updated_at || comment.created_at)}
-                      {isEdited ? <span className={`ml-1 ${commentTextMutedClassName}`}>edited</span> : null}
-                    </span>
-                    {isPending ? (
-                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black ${commentBadgeSurfaceClassName} ${commentBadgeTextClassName}`}>
-                        Posting...
-                      </span>
-                    ) : null}
-                  </div>
+                <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
+                  {canOpenProfile ? (
+                    <button type="button" onClick={handleOpenCommentProfile} className="g-sm min-h-11 min-w-0 truncate text-left font-semibold hover:underline">
+                      {displayName}
+                    </button>
+                  ) : (
+                    <span className="g-sm min-w-0 truncate font-semibold">{displayName}</span>
+                  )}
+                  {isOwner ? <Tag>You</Tag> : null}
+                  <span className="g-xs g-fnt">
+                    {formatReviewDate(comment.updated_at || comment.created_at)}
+                    {isEdited ? ' · edited' : null}
+                  </span>
+                  {isPending ? <Tag>Posting…</Tag> : null}
                 </div>
                 {!isDeleted && currentUserId ? (
-                  <div className="relative shrink-0" ref={isMenuOpen ? commentMenuRef : null}>
+                  <div className="relative -my-1 -mr-1 shrink-0" ref={isMenuOpen ? commentMenuRef : null}>
                     <button
                       type="button"
                       aria-label="Open comment actions"
                       aria-haspopup="menu"
                       aria-expanded={isMenuOpen}
                       onClick={() => setOpenCommentMenuId((currentId) => (currentId === comment.id ? null : comment.id))}
-                      className={commentMenuButtonClassName}
+                      className="grid h-9 w-9 place-items-center rounded-full text-[var(--ink-3)] hover:bg-[var(--fill)] hover:text-[var(--ink)]"
                     >
-                      <FontAwesomeIcon icon={faEllipsis} className="h-4 w-4" />
+                      <Ellipsis className="h-4 w-4" aria-hidden="true" />
                     </button>
 
                     {isMenuOpen ? (
-                      <div
-                        role="menu"
-                        className={commentMenuClassName}
-                      >
-                    {isOwner ? (
+                      <div role="menu" className="g-card absolute right-0 top-10 z-20 min-w-[12rem] overflow-hidden py-1" style={{ boxShadow: 'var(--sh-2)' }}>
+                        {isOwner ? (
                           <>
-                            <button
-                              type="button"
-                              role="menuitem"
-                              onClick={() => {
-                                setEditingCommentId(comment.id)
-                                setEditCommentBody(comment.comment)
-                                setCommentError('')
-                                setOpenCommentMenuId(null)
-                              }}
-                              className={commentMenuItemClassName}
-                            >
-                              <FontAwesomeIcon icon={faPen} className="h-3.5 w-3.5" />
+                            <button type="button" role="menuitem" onClick={startEditing} className={commentMenuItemClassName}>
+                              <Pencil className="h-4 w-4" aria-hidden="true" />
                               Edit comment
                             </button>
                             <button
@@ -2277,29 +1938,27 @@ function PlaceDetailView({
                                 void handleDeleteComment(comment.id)
                               }}
                               disabled={isMutating}
-                              className={commentMenuItemDangerClassName}
+                              className={cx(commentMenuItemClassName, 'text-[var(--bad)]')}
                             >
-                              <FontAwesomeIcon icon={faTrash} className="h-3.5 w-3.5" />
-                              {isMutating ? 'Deleting...' : 'Delete comment'}
+                              <Trash2 className="h-4 w-4" aria-hidden="true" />
+                              {isMutating ? 'Deleting…' : 'Delete comment'}
                             </button>
                           </>
-                        ) : currentUserId ? (
+                        ) : (
                           <>
                             <button
                               type="button"
                               role="menuitem"
-                              onClick={() => {
-                                setReportingCommentId(comment.id)
-                                setReportReason('')
-                                setReportDetails('')
-                                setReportError('')
-                                setOpenCommentMenuId(null)
-                              }}
+                              onClick={openReport}
                               disabled={isReportedByCurrentUser || isReportSubmitting}
                               className={commentMenuItemClassName}
                             >
-                              <FontAwesomeIcon icon={faFlag} className="h-3.5 w-3.5" />
-                              {isReportedByCurrentUser ? 'Already reported' : isReportSubmitting && reportingCommentId === comment.id ? 'Reporting...' : 'Report comment'}
+                              <Flag className="h-4 w-4" aria-hidden="true" />
+                              {isReportedByCurrentUser
+                                ? 'Already reported'
+                                : isReportSubmitting && reportingCommentId === comment.id
+                                  ? 'Reporting…'
+                                  : 'Report comment'}
                             </button>
                             <button
                               type="button"
@@ -2308,11 +1967,11 @@ function PlaceDetailView({
                               disabled={reportedUserIds.has(comment.user_id)}
                               className={commentMenuItemClassName}
                             >
-                              <AppIcon name="profile" className="h-3.5 w-3.5" />
+                              <UserRound className="h-4 w-4" aria-hidden="true" />
                               {reportedUserIds.has(comment.user_id) ? 'Already reported user' : 'Report user'}
                             </button>
                           </>
-                        ) : null}
+                        )}
                       </div>
                     ) : null}
                   </div>
@@ -2321,48 +1980,43 @@ function PlaceDetailView({
 
               {isEditing ? (
                 <div className="mt-2">
+                  <label htmlFor={`edit-comment-${comment.id}`} className="sr-only">
+                    Edit comment
+                  </label>
                   <textarea
+                    id={`edit-comment-${comment.id}`}
                     value={editCommentBody}
                     onChange={(event) => setEditCommentBody(event.target.value)}
                     rows={3}
                     disabled={isMutating}
-                    className={`comment-composer-input w-full resize-none rounded-xl px-3 py-2.5 text-[14px] font-semibold outline-none transition disabled:cursor-not-allowed disabled:opacity-70 ${
-                      isDarkTheme ? 'bg-transparent text-[#e8f0fb]' : 'bg-white text-slate-800'
-                    }`}
+                    className="g-input"
                   />
                   <div className="mt-2 flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={() => void handleUpdateComment(comment.id)}
-                      disabled={isMutating}
-                      className="rounded-full border border-[var(--accent)] bg-[var(--accent)] px-4 py-2 text-[12px] font-extrabold text-white shadow-[0_10px_20px_rgba(47,116,232,0.2)] disabled:cursor-not-allowed disabled:opacity-70"
-                    >
-                      {isMutating ? 'Saving...' : 'Save'}
-                    </button>
-                    <button
-                      type="button"
+                    <Button variant="ink" size="sm" onClick={() => void handleUpdateComment(comment.id)} disabled={isMutating}>
+                      {isMutating ? 'Saving…' : 'Save'}
+                    </Button>
+                    <Button
+                      variant="line"
+                      size="sm"
                       onClick={() => {
                         setEditingCommentId(null)
                         setEditCommentBody('')
                       }}
                       disabled={isMutating}
-                      className="rounded-full border border-[var(--line)] bg-white px-4 py-2 text-[12px] font-extrabold text-slate-700 disabled:cursor-not-allowed disabled:opacity-70"
                     >
                       Cancel
-                    </button>
+                    </Button>
                   </div>
                 </div>
               ) : (
-                <p className={`mt-1.5 whitespace-pre-line break-words text-[14px] font-semibold leading-[1.45] ${isDeleted ? `italic ${commentTextMutedClassName}` : commentTextBodyClassName}`}>{comment.comment}</p>
+                <p className={cx('mt-1 whitespace-pre-line break-words text-[14px] leading-[1.5]', isDeleted && 'g-fnt italic')}>{comment.comment}</p>
               )}
 
-              {isFailed && comment.local_error_message ? (
-                <p className="mt-2 text-[12px] font-bold text-red-600">{comment.local_error_message}</p>
-              ) : null}
+              {isFailed && comment.local_error_message ? <p className="g-hint is-error mt-2">{comment.local_error_message}</p> : null}
             </div>
 
             {!isEditing ? (
-              <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 pl-0.5 text-[11px] font-extrabold">
+              <div className="flex flex-wrap items-center gap-x-4 pl-1">
                 {!isDeleted && !isReply && currentUserId ? (
                   <button
                     type="button"
@@ -2372,49 +2026,35 @@ function PlaceDetailView({
                       setCommentError('')
                     }}
                     disabled={isMutating}
-                    className="inline-flex items-center gap-1 text-slate-500 transition hover:text-[var(--accent-deep)] disabled:cursor-not-allowed disabled:opacity-70"
+                    className={commentActionClassName}
                   >
-                    <FontAwesomeIcon icon={faReply} className="h-3.5 w-3.5" />
+                    <Reply className="h-3.5 w-3.5" aria-hidden="true" />
                     Reply
                   </button>
                 ) : null}
                 {!isDeleted && isOwner ? (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEditingCommentId(comment.id)
-                        setEditCommentBody(comment.comment)
-                        setCommentError('')
-                      }}
-                      disabled={isMutating}
-                      className="inline-flex items-center gap-1 text-slate-500 transition hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
-                    >
-                      <FontAwesomeIcon icon={faPen} className="h-3.5 w-3.5" />
-                      Edit
-                    </button>
-                  </>
+                  <button type="button" onClick={startEditing} disabled={isMutating} className={commentActionClassName}>
+                    <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                    Edit
+                  </button>
                 ) : null}
                 {!isDeleted && !isOwner && currentUserId ? (
                   isReportedByCurrentUser ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-1 text-slate-500">
-                      <FontAwesomeIcon icon={faFlag} className="h-3.5 w-3.5" />
-                      Reported
+                    <span className="inline-flex min-h-[44px] items-center">
+                      <Tag>
+                        <Flag aria-hidden="true" />
+                        Reported
+                      </Tag>
                     </span>
                   ) : (
                     <button
                       type="button"
-                      onClick={() => {
-                        setReportingCommentId(comment.id)
-                        setReportReason('')
-                        setReportDetails('')
-                        setReportError('')
-                      }}
+                      onClick={openReport}
                       disabled={isReportSubmitting && reportingCommentId === comment.id}
-                      className="inline-flex items-center gap-1 text-slate-500 transition hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+                      className={commentActionClassName}
                     >
-                      <FontAwesomeIcon icon={faFlag} className="h-3.5 w-3.5" />
-                      {isReportSubmitting && reportingCommentId === comment.id ? 'Reporting...' : 'Report'}
+                      <Flag className="h-3.5 w-3.5" aria-hidden="true" />
+                      {isReportSubmitting && reportingCommentId === comment.id ? 'Reporting…' : 'Report'}
                     </button>
                   )
                 ) : null}
@@ -2424,16 +2064,11 @@ function PlaceDetailView({
                       type="button"
                       onClick={() => void handleRetryFailedComment(comment.id)}
                       disabled={isCommentSubmitting}
-                      className="inline-flex items-center gap-1 text-[var(--accent-deep)] transition hover:text-[var(--accent)] disabled:cursor-not-allowed disabled:opacity-70"
+                      className={cx(commentActionClassName, 'text-[var(--ink)] underline underline-offset-2')}
                     >
                       Retry
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDiscardFailedComment(comment.id)}
-                      disabled={isCommentSubmitting}
-                      className="inline-flex items-center gap-1 text-slate-500 transition hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
-                    >
+                    <button type="button" onClick={() => handleDiscardFailedComment(comment.id)} disabled={isCommentSubmitting} className={commentActionClassName}>
                       Dismiss
                     </button>
                   </>
@@ -2444,610 +2079,518 @@ function PlaceDetailView({
         </div>
 
         {replyingToCommentId === comment.id ? (
-          <div className={`place-detail-comment-reply ml-8 mt-2.5 rounded-[16px] px-3 py-3 sm:ml-9 ${commentReplySurfaceClassName}`}>
+          <div className="ml-11 mt-1">
+            <label htmlFor={`reply-${comment.id}`} className="sr-only">
+              Reply to {displayName}
+            </label>
             <textarea
+              id={`reply-${comment.id}`}
               value={replyBody}
               onChange={(event) => setReplyBody(event.target.value)}
               rows={2}
               disabled={isMutating}
-              placeholder="Add a reply..."
-              className={`comment-composer-input w-full resize-none rounded-xl px-3 py-2.5 text-[14px] font-semibold outline-none transition disabled:cursor-not-allowed disabled:opacity-70 ${
-                isDarkTheme ? 'bg-transparent text-[#e8f0fb]' : 'bg-white text-slate-800'
-              }`}
+              placeholder="Add a reply…"
+              className="g-input"
+              style={{ minHeight: 72 }}
             />
             <div className="mt-2 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => void handleSubmitReply(comment.id)}
-                disabled={isMutating}
-                className="rounded-full border border-[var(--accent)] bg-[var(--accent)] px-4 py-2 text-[12px] font-extrabold text-white shadow-[0_10px_20px_rgba(47,116,232,0.2)] disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                {isMutating ? 'Replying...' : 'Reply'}
-              </button>
-              <button
-                type="button"
+              <Button variant="ink" size="sm" onClick={() => void handleSubmitReply(comment.id)} disabled={isMutating}>
+                {isMutating ? 'Replying…' : 'Reply'}
+              </Button>
+              <Button
+                variant="line"
+                size="sm"
                 onClick={() => {
                   setReplyingToCommentId(null)
                   setReplyBody('')
                 }}
                 disabled={isMutating}
-                className={`rounded-full border px-4 py-2 text-[12px] font-extrabold disabled:cursor-not-allowed disabled:opacity-70 ${
-                  isDarkTheme
-                    ? 'border-[#28405f] bg-[#0f1b2d] text-[#d7e2f2]'
-                    : 'border-[var(--line)] bg-white text-slate-700'
-                }`}
               >
                 Cancel
-              </button>
+              </Button>
             </div>
           </div>
         ) : null}
 
-        {comment.replies.length > 0 ? (
-          <ul className="mt-2.5 grid gap-2.5">
-            {comment.replies.map((reply) => renderComment(reply, true))}
-          </ul>
-        ) : null}
+        {comment.replies.length > 0 ? <ul className="mt-2 grid gap-2">{comment.replies.map((reply) => renderComment(reply, true))}</ul> : null}
       </li>
     )
   }
 
-  const renderCommunitySection = () =>
-    !isCommunityPlaceReady ? (
-      <DetailSection>
-                    <SectionHeading
-                      icon="userGroup"
-                      title="Community"
-                      badgeClassName="place-detail-section-heading--alt"
-                      iconClassName="place-detail-section-heading--alt-icon"
-                      titleClassName="place-detail-community-heading-title"
-                    />
-        <div className={`place-detail-comments mt-5 rounded-3xl border p-4 sm:p-5 ${commentSectionSurfaceClassName}`}>
-          <ReviewSkeleton />
-          <div className="mt-5 border-t border-[var(--line)] pt-5">
-            <CommentSkeleton />
-          </div>
-        </div>
-      </DetailSection>
-    ) : (
-      <DetailSection>
-        <SectionHeading
-          icon="userGroup"
-          title="Community"
-          badgeClassName="place-detail-section-heading--alt"
-          iconClassName="place-detail-section-heading--alt-icon"
-          titleClassName="place-detail-community-heading-title"
+  const hasRatings = reviewCount > 0 && averageRating !== null
+
+  const communitySection = !isCommunityPlaceReady ? (
+    <section aria-labelledby="place-reviews">
+      <SectionHead title={<span id="place-reviews">Reviews</span>} />
+      <Empty title="Reviews open soon" description="Ratings and comments aren't ready for this spot yet." />
+    </section>
+  ) : (
+    <>
+      <section>
+        <SectionHead
+          title="Reviews"
+          sub={hasRatings ? `★ ${averageRating.toFixed(1)} · ${formatRatingCount(reviewCount)} ${reviewCount === 1 ? 'rating' : 'ratings'}` : 'Wala pang ratings'}
         />
-        <div className="mt-5">
-          <div>
-            <h3 className="text-[20px] font-black text-slate-950">Rate this place</h3>
-            <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[14px] font-semibold text-slate-600">
-              <span className="text-[15px] font-black text-slate-950">
-                {(reviewCount > 0 && averageRating !== null ? averageRating : 0).toFixed(1)}
-              </span>
-              <StarsDisplay rating={reviewCount > 0 && averageRating !== null ? Math.round(averageRating) : 0} compact />
-              <span className="text-slate-500">
-                {reviewCount > 0
-                  ? `(${formatRatingCount(reviewCount)} ${reviewCount === 1 ? 'rating' : 'ratings'})`
-                  : '(0 ratings)'}
-              </span>
-            </div>
-            <p className="mt-1 text-[14px] font-semibold text-slate-600">
-              {reviewCount > 0 && averageRating !== null
-                ? `Rated ${averageRating.toFixed(1)} by ${reviewCount} ${reviewCount === 1 ? 'person' : 'people'}.`
-                : '0 ratings yet. Be the first to help others decide.'}
-            </p>
-
-            {currentUserId && (!hasCurrentUserReview || isReviewEditing) ? (
-              <div className="mt-4">
-                <div className="w-full overflow-x-auto">
-                  <StarRatingInput
-                    value={reviewRating}
-                    disabled={isReviewSubmitting || isReviewDeleting}
-                    onChange={(value) => {
-                      setReviewRating(value)
-                      setReviewError('')
-                    }}
-                  />
-                </div>
-                <p className="mt-2 text-[13px] font-semibold text-slate-500">
-                  {reviewRating > 0 ? `Your rating: ${reviewRating} star${reviewRating === 1 ? '' : 's'} \u00B7 ${getRatingTone(reviewRating)}` : 'Tap a star to rate this place.'}
-                </p>
-                <div className="mt-2 min-h-5">
-                  {reviewError ? <p className="text-[13px] font-bold text-red-600">{reviewError}</p> : null}
-                </div>
-
-                <div className="mt-3">
-                  <button
-                    type="button"
-                    onClick={() => void handleSubmitReview()}
-                    disabled={isReviewSubmitting || isReviewDeleting || reviewRating < 1}
-                    className="inline-flex min-h-10 items-center justify-center rounded-xl border border-[var(--accent)] bg-[var(--accent)] px-4 text-[13px] font-extrabold text-white shadow-[0_12px_24px_rgba(47,116,232,0.2)] transition hover:-translate-y-[1px] disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-[var(--bg-soft)] disabled:text-slate-500 disabled:shadow-none disabled:opacity-100"
-                  >
-                    {isReviewSubmitting ? 'Saving...' : 'Save rating'}
-                  </button>
-                  {hasCurrentUserReview ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsReviewEditing(false)
-                        setReviewRating(currentUserReview?.rating ?? 0)
-                        setReviewError('')
-                      }}
-                      disabled={isReviewSubmitting || isReviewDeleting}
-                      className="ml-3 text-[12px] font-extrabold text-slate-500 transition hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
-                    >
-                      Cancel
-                    </button>
-                  ) : null}
-                </div>
-              </div>
-            ) : currentUserId && currentUserReview ? (
-              <div className="mt-4">
-                <div className="w-full overflow-x-auto">
-                  <StarsDisplay rating={currentUserReview.rating} />
-                </div>
-                <p className="mt-2 text-[13px] font-semibold text-slate-500">
-                  Your rating: {currentUserReview.rating} star{currentUserReview.rating === 1 ? '' : 's'} {'\u00B7'} {getRatingTone(currentUserReview.rating)}
-                </p>
-                <div className="mt-2 flex flex-wrap items-center gap-3 text-[12px] font-extrabold">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsReviewEditing(true)
-                      setReviewRating(currentUserReview.rating)
-                      setReviewError('')
-                    }}
-                    disabled={isReviewSubmitting || isReviewDeleting}
-                    className="text-slate-500 transition hover:text-[var(--accent-deep)] disabled:cursor-not-allowed disabled:opacity-70"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void handleDeleteReview()}
-                    disabled={isReviewSubmitting || isReviewDeleting}
-                    className="text-red-500 transition hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-70"
-                  >
-                    {isReviewDeleting ? 'Removing...' : 'Remove'}
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="mt-4">
-                <p className="text-[13px] font-semibold text-slate-400">Sign in to leave a rating.</p>
-              </div>
-            )}
-            <div className="mt-4 flex justify-start md:justify-end">
-              <button
-                type="button"
-                onClick={handleOpenPlaceConcern}
-                className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-red-600 transition hover:text-red-700"
-              >
-                <Icon name="warning" className="h-3.5 w-3.5" />
-                Report a concern
-              </button>
-            </div>
+        <Panel>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span className="g-h1">{(hasRatings ? averageRating : 0).toFixed(1)}</span>
+            <StarsDisplay rating={hasRatings ? Math.round(averageRating) : 0} />
+            <span className="g-sm g-mut">
+              ({formatRatingCount(reviewCount)} {reviewCount === 1 ? 'rating' : 'ratings'})
+            </span>
           </div>
+          <p className="g-sm g-mut mt-1">
+            {hasRatings
+              ? `Rated ${averageRating.toFixed(1)} by ${reviewCount} ${reviewCount === 1 ? 'person' : 'people'}.`
+              : 'Be the first to help others decide.'}
+          </p>
+          <hr className="g-sep my-4" />
 
-          <div className="mt-5 border-t border-[var(--line)] pt-5">
-            <div className={`place-detail-comments mt-5 rounded-3xl border p-4 sm:p-5 ${commentSectionSurfaceClassName}`}>
-              <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200/80 pb-3">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2.5">
-                    <span className={`place-detail-comments-icon inline-flex h-8 w-8 items-center justify-center rounded-2xl ${commentBadgeSurfaceClassName} ${commentBadgeTextClassName}`}>
-                      <FontAwesomeIcon icon={faComment} className="h-4 w-4" />
-                    </span>
-                    <div>
-                      <h3 className={`place-detail-comments-title text-[18px] font-black ${commentTextPrimaryClassName}`}>Comments</h3>
-                      <p className={`mt-0.5 text-[13px] font-semibold ${commentTextSecondaryClassName}`}>
-                        {isCommentsLoading
-                          ? 'Loading comments...'
-                          : visibleCommentCount === 0
-                            ? '0 comments'
-                            : `${visibleCommentCount} comment${visibleCommentCount === 1 ? '' : 's'}`}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {currentUserId ? (
-                <div className="mt-4 flex items-start gap-3">
-                  <MemberAvatar displayName={currentUserAvatarFallbackName} avatarUrl={currentUserAvatarUrl} compact />
-                  <div className="min-w-0 flex-1">
-                    <div className={`place-detail-comments-composer rounded-[14px] px-3 py-2.5 transition ${commentComposerSurfaceClassName}`}>
-                      <textarea
-                        value={commentBody}
-                        onChange={(event) => setCommentBody(event.target.value)}
-                        onFocus={() => setIsCommentComposerFocused(true)}
-                        onBlur={() => setIsCommentComposerFocused(false)}
-                        rows={2}
-                        disabled={isCommentSubmitting}
-                        placeholder="Write a quick comment..."
-                        className={`comment-composer-input w-full resize-none border-0 bg-transparent px-0 py-0 text-[14px] font-semibold outline-none placeholder:text-slate-400 disabled:cursor-not-allowed disabled:opacity-70 ${
-                          isCommentComposerFocused || commentBody.trim() ? 'h-[80px]' : 'h-[48px]'
-                        } ${isDarkTheme ? 'text-[#e8f0fb] placeholder:text-[#7f94b1]' : 'text-slate-800'}`}
-                      />
-                      <div className="mt-2 flex justify-end">
-                        <button
-                          type="button"
-                          onClick={() => void handleSubmitComment()}
-                          disabled={isCommentSubmitting || !commentBody.trim()}
-                          className="rounded-lg border border-[var(--accent)] bg-[var(--accent)] px-4 py-2 text-[12px] font-extrabold text-white disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-[var(--bg-soft)] disabled:text-slate-500 disabled:opacity-100"
-                        >
-                          {isCommentSubmitting ? 'Posting...' : 'Comment'}
-                        </button>
-                      </div>
-                    </div>
-                    <div className="mt-2 min-h-5">
-                      {commentError ? <p className="text-[13px] font-bold text-red-600">{commentError}</p> : null}
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="mt-4">
-                  <GuestAuthPrompt
-                    variant="community"
-                    mode="inline-card"
-                    className="gala-auth-prompt--protected-feature"
-                  />
-                </div>
-              )}
-
-              {isCommentsLoading ? (
-                <CommentSkeleton />
-              ) : visibleCommentCount === 0 ? (
-                <div className={`place-detail-comments-empty mt-5 flex flex-col items-center rounded-[20px] border border-dashed px-6 py-8 text-center ${isDarkTheme ? 'border-[#28405f] bg-[#0d1727]' : 'border-[var(--line-strong)] bg-slate-50'}`}>
-                  <span className={`place-detail-comments-empty-icon inline-flex h-12 w-12 items-center justify-center rounded-full ${commentBadgeSurfaceClassName} ${commentBadgeTextClassName}`}>
-                    <FontAwesomeIcon icon={faComment} className="h-5 w-5" />
-                  </span>
-                  <p className={`mt-3 text-[16px] font-black ${commentTextPrimaryClassName}`}>No comments yet</p>
-                  <p className={`mt-1 max-w-[26rem] text-[13px] font-semibold leading-5 ${commentTextSecondaryClassName}`}>
-                    Be the first to share something about this place.
-                  </p>
-                </div>
-              ) : (
-                <ul className="mt-4 grid gap-3.5">
-                  {comments.map((comment) => renderComment(comment))}
-                </ul>
-              )}
-            </div>
-          </div>
-        </div>
-      </DetailSection>
-    )
-  return (
-    <PageShell tone="surface">
-      <AppHeader />
-
-      <main className="w-full pb-44 pt-0 lg:pb-16 lg:pt-6">
-        <PageContainer size="wide">
-          <Breadcrumb
-            showBack
-            className="mb-4 pt-5"
-            items={breadcrumbItems}
-          />
-
-          <PlacePhoto
-            imageUrls={galleryPhotos}
-            placeName={place.name}
-            currentIndex={activeGalleryIndex}
-            onPrevious={() =>
-              setActiveGalleryState((currentState) => ({
-                key: galleryStateKey,
-                index: Math.max((currentState.key === galleryStateKey ? currentState.index : 0) - 1, 0),
-              }))
-            }
-            onNext={() =>
-              setActiveGalleryState((currentState) => ({
-                key: galleryStateKey,
-                index: Math.min((currentState.key === galleryStateKey ? currentState.index : 0) + 1, galleryPhotos.length - 1),
-              }))
-            }
-            onSelect={(index) => setActiveGalleryState({ key: galleryStateKey, index })}
-            showAddPhotoAction={approvedImageCount < 3}
-            onContribute={handleOpenContribution}
-            priceBadgeLabel={priceBadgeLabel}
-          />
-
-          <section className="pb-6 pt-6 lg:pt-8">
-            <div className="flex flex-wrap items-end justify-between gap-4">
-              <div className="min-w-0">
-                <h1 className="min-w-0 text-[26px] font-extrabold leading-tight tracking-[-0.025em] text-[var(--text-main)] sm:text-[34px]">{place.name}</h1>
-                <p className="mt-1.5 flex flex-wrap items-center gap-x-1.5 text-[15px] text-[var(--text-main)]">
-                  <span className="font-bold text-[var(--primary)]">★ {headlineRating.toFixed(1)}</span>
-                  <span className="text-[var(--text-muted)]">
-                    · {formatRatingCount(headlineReviewCount)} {headlineReviewCount === 1 ? 'rating' : 'ratings'} · {categoryLabel} · {locationLabel}
-                  </span>
-                </p>
-              </div>
-              <div className="hidden gap-1 sm:flex">
-                <button type="button" onClick={handleSharePlace} className="inline-flex h-9 items-center gap-2 rounded-lg px-3 text-[14px] font-semibold text-[var(--text-main)] underline underline-offset-2 hover:bg-[var(--hover-surface-strong)]">
-                  <Icon name="share" className="h-4 w-4" />
-                  Share
-                </button>
-                <button type="button" onClick={handleSavePlace} disabled={isSaving} aria-pressed={isSaved} className="inline-flex h-9 items-center gap-2 rounded-lg px-3 text-[14px] font-semibold text-[var(--text-main)] underline underline-offset-2 hover:bg-[var(--hover-surface-strong)]">
-                  <Icon name="save" className={`h-4 w-4 ${isSaved ? 'fill-current text-[var(--primary)]' : ''}`} />
-                  {isSaved ? 'Saved' : 'Save'}
-                </button>
-              </div>
-            </div>
-            <div className="mt-2">
-              {shareError ? <p className="text-[12px] font-bold text-red-600">{shareError}</p> : null}
-              {saveError ? <p className="text-[12px] font-bold text-red-600">{saveError}</p> : null}
-              {contributionError && !isContributionOpen ? <p className="text-[12px] font-bold text-red-600">{contributionError}</p> : null}
-            </div>
-
-            <div className="mt-6 lg:hidden">
-              <CheckInButton placeId={place.id} placeName={place.name} session={appSession} onGuest={() => guestAuth.open('community')} />
-            </div>
-
-            <div className="mt-8 grid gap-10 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-20">
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-3 border-b border-[var(--line)] pb-8">
-                  {place.budget_min != null ? <SulitMeter pesos={place.budget_min} /> : null}
-                  <span className="text-[15px] text-[var(--text-muted)]">{budgetLabel}</span>
-                </div>
-
-                <DetailSection>
-                  <SectionHeading
-                    icon="eye"
-                    title="Quick Take"
-                    badgeClassName="place-detail-section-heading--alt"
-                    iconClassName="place-detail-section-heading--alt-icon"
-                  />
-                  <p className="mt-4 text-[16px] leading-7 text-[var(--text-strong)]">{quickTake}</p>
-                </DetailSection>
-
-                <DetailSection>
-                  <SectionHeading
-                    icon="fire"
-                    title="Best For"
-                    badgeClassName="place-detail-section-heading--alt"
-                    iconClassName="place-detail-section-heading--alt-icon"
-                  />
-                  <div className="mt-6">
-                    <GoodForList values={goodFor} iconClassName="place-detail-section-heading--alt-icon" />
-                  </div>
-                </DetailSection>
-
-                <DetailSection>
-                  <SectionHeading icon="book" title="At a glance" />
-                  <dl className="mt-6 grid gap-5 sm:grid-cols-3">
-                    <div>
-                      <dt className="text-[14px] text-[var(--text-muted)]">Category</dt>
-                      <dd className="mt-1 text-[16px] font-semibold text-[var(--text-main)]">{categoryLabel}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-[14px] text-[var(--text-muted)]">Best time</dt>
-                      <dd className="mt-1 text-[16px] font-semibold text-[var(--text-main)]">{cleanString(place.best_time_to_visit) || 'Check on site'}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-[14px] text-[var(--text-muted)]">Budget</dt>
-                      <dd className="mt-1 text-[16px] font-semibold text-[var(--text-main)]">{budgetLabel}</dd>
-                    </div>
-                  </dl>
-                </DetailSection>
-
-                <DetailSection>
-                  <SectionHeading
-                    icon="location"
-                    title="Where you’ll be"
-                    badgeClassName="place-detail-section-heading--alt"
-                    iconClassName="place-detail-section-heading--alt-icon"
-                  />
-                  <p className="mt-4 whitespace-pre-line text-[16px] leading-6 text-[var(--text-strong)]">{addressLabel}</p>
-                  <div className="mt-6 overflow-hidden rounded-[20px] border border-[var(--line)] bg-[var(--bg-soft)]">
-                    <MapViewMemo
-                      place={place}
-                      zoom={16}
-                      autoFitToPlaces={false}
-                      className="!h-[260px] !rounded-none !border-0 sm:!h-[360px]"
-                    />
-                  </div>
-                </DetailSection>
-
-                <DetailSection>
-                  <SectionHeading
-                    icon="bus"
-                    title="How To Get There"
-                    badgeClassName="place-detail-section-heading--alt"
-                    iconClassName="place-detail-section-heading--alt-icon"
-                  />
-                  <div className="mt-6 grid gap-6 sm:grid-cols-2">
-                    <TransportColumn icon="bus" title="Commute" iconClassName="place-detail-section-heading--alt-icon">
-                      {commuteText}
-                    </TransportColumn>
-                    <TransportColumn icon="car" title="Parking" iconClassName="place-detail-section-heading--alt-icon">
-                      {parkingText}
-                    </TransportColumn>
-                  </div>
-                </DetailSection>
-
-                <DetailSection>
-                  <SectionHeading
-                    icon="book"
-                    title="FREQUENTLY ASKED QUESTIONS"
-                    preserveCase
-                    badgeClassName="place-detail-section-heading--alt"
-                    iconClassName="place-detail-section-heading--alt-icon"
-                  />
-                  <div className="mt-6 space-y-6">
-                    {faqItems.map((item) => (
-                      <div key={item.question}>
-                        <h3 className="text-[16px] font-semibold text-[var(--text-main)]">{item.question}</h3>
-                        <p className="mt-1 text-[15px] leading-6 text-[var(--text-muted)]">{item.answer}</p>
-                      </div>
-                    ))}
-                  </div>
-                  {canonicalPlaceLink && areaLink && areaBreadcrumb ? (
-                    <p className="mt-4 text-[13px] font-semibold leading-6 text-slate-600">
-                      Explore more from{' '}
-                      <InternalLink href={areaLink} className="place-detail-more-links text-[var(--accent)] underline underline-offset-2">
-                        {areaBreadcrumb.areaName}
-                      </InternalLink>{' '}
-                      or browse the full{' '}
-                      <InternalLink href="/places" className="place-detail-more-links text-[var(--accent)] underline underline-offset-2">
-                        places hub
-                      </InternalLink>.
-                    </p>
-                  ) : null}
-                </DetailSection>
-
-                {renderCommunitySection()}
-              </div>
-
-              <aside className="hidden lg:block">
-                <div className="sticky top-[calc(var(--site-header-h)+2rem)] rounded-[20px] border border-[var(--line)] bg-[var(--card)] p-6 shadow-[0_6px_16px_rgba(27,26,23,0.12)]">
-                  <p className="text-[22px] text-[var(--text-main)]">
-                    {place.budget_min == null ? (
-                      <span className="font-semibold">Check price on site</span>
-                    ) : Number(place.budget_min) <= 0 ? (
-                      <span className="font-semibold">Free entry</span>
-                    ) : (
-                      <>
-                        <span className="font-semibold">₱{Number(place.budget_min).toLocaleString('en-PH')}</span>
-                        <span className="text-[16px] text-[var(--text-muted)]"> per person</span>
-                      </>
-                    )}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleAddToPlan}
-                    className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[var(--primary)] text-[16px] font-semibold text-white transition-opacity hover:opacity-95"
-                  >
-                    Add to Gala Plan
-                  </button>
-                  <button
-                    type="button"
-                    onClick={openDirections}
-                    disabled={!directionsUrl}
-                    className="mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-[var(--text-main)] text-[16px] font-semibold text-[var(--text-main)] transition-colors hover:bg-[var(--hover-surface-strong)] disabled:opacity-40"
-                  >
-                    <Icon name="directions" className="h-4 w-4" />
-                    Directions
-                  </button>
-                  <p className="mt-4 text-center text-[13px] text-[var(--text-muted)]">Free to plan. Share it with your barkada.</p>
-                  <div className="mt-5 border-t border-[var(--line)] pt-5">
-                    <CheckInButton placeId={place.id} placeName={place.name} session={appSession} onGuest={() => guestAuth.open('community')} />
-                  </div>
-                </div>
-              </aside>
-            </div>
-          </section>
-        </PageContainer>
-      </main>
-
-
-      <div className="fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom,0px)+4rem)] z-[5500] border-t border-[var(--line)] bg-[var(--surface-overlay)] px-4 py-3 backdrop-blur-xl lg:hidden">
-        <div className="mx-auto flex max-w-[720px] items-center gap-3">
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[15px] font-semibold text-[var(--text-main)]">
-              {place.budget_min == null ? 'Price on site' : Number(place.budget_min) <= 0 ? 'Free entry' : `₱${Number(place.budget_min).toLocaleString('en-PH')} per person`}
-            </p>
-            <button type="button" onClick={openDirections} disabled={!directionsUrl} className="text-[13px] font-semibold text-[var(--text-main)] underline underline-offset-2 disabled:opacity-40">
-              Directions
-            </button>
-          </div>
-          <button type="button" onClick={handleSavePlace} disabled={isSaving} aria-pressed={isSaved} aria-label={isSaved ? 'Saved' : 'Save'} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-[var(--line)] text-[var(--text-main)]">
-            <Icon name="save" className={`h-5 w-5 ${isSaved ? 'fill-current text-[var(--primary)]' : ''}`} />
-          </button>
-          <button type="button" onClick={handleAddToPlan} className="inline-flex h-12 shrink-0 items-center rounded-xl bg-[var(--primary)] px-5 text-[15px] font-semibold text-white">
-            Add to plan
-          </button>
-        </div>
-      </div>
-      {guestAuth.promptElement}
-      <AddToGalaPlanModal
-        isOpen={isAddToPlanOpen}
-        placeId={place.id}
-        placeName={place.name}
-        onClose={() => setIsAddToPlanOpen(false)}
-      />
-
-      {reportingCommentId ? (
-        <div
-          className="fixed inset-0 z-[9998] flex items-center justify-center bg-slate-950/45 px-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="report-comment-title"
-          onClick={closeReportCommentModal}
-        >
-          <div
-            className="w-full max-w-sm rounded-2xl border border-[var(--line)] bg-white p-3 shadow-[0_24px_70px_rgba(27,26,23,0.25)]"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <h3 id="report-comment-title" className="text-[18px] font-black text-slate-950">
-              <strong>Report comment</strong>
-            </h3>
-            <p className="mt-1 text-[13px] font-semibold text-slate-700">Why are you reporting this comment?</p>
-
-            <div className="mt-3 grid grid-cols-2 gap-1.5">
-              {commentReportReasons.map((reason) => (
-                <button
-                  key={reason.value}
-                  type="button"
-                  onClick={() => {
-                    setReportReason(reason.value)
-                    setReportError('')
+          {currentUserId && (!hasCurrentUserReview || isReviewEditing) ? (
+            <div>
+              <p className="g-label">Your rating</p>
+              <div className="mt-1 overflow-x-auto">
+                <StarRatingInput
+                  value={reviewRating}
+                  disabled={isReviewSubmitting || isReviewDeleting}
+                  onChange={(value) => {
+                    setReviewRating(value)
+                    setReviewError('')
                   }}
-                  disabled={isReportSubmitting}
-                  className={`min-h-11 rounded-xl border px-3 text-left text-[14px] font-extrabold transition ${
-                    reportReason === reason.value
-                      ? 'border-[var(--accent)] bg-[var(--accent-wash)] text-[var(--accent-deep)]'
-                      : 'border-[var(--line)] bg-white text-slate-800 hover:border-[var(--accent)]'
-                  } disabled:cursor-not-allowed disabled:opacity-70`}
-                  aria-pressed={reportReason === reason.value}
+                />
+              </div>
+              <p className="g-sm g-mut mt-1">
+                {reviewRating > 0
+                  ? `${reviewRating} star${reviewRating === 1 ? '' : 's'} · ${getRatingTone(reviewRating)}`
+                  : 'Tap a star to rate this place.'}
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <Button variant="ink" size="sm" onClick={() => void handleSubmitReview()} disabled={isReviewSubmitting || isReviewDeleting || reviewRating < 1}>
+                  {isReviewSubmitting ? 'Saving…' : 'Save rating'}
+                </Button>
+                {hasCurrentUserReview ? (
+                  <Button
+                    variant="text"
+                    size="sm"
+                    onClick={() => {
+                      setIsReviewEditing(false)
+                      setReviewRating(currentUserReview?.rating ?? 0)
+                      setReviewError('')
+                    }}
+                    disabled={isReviewSubmitting || isReviewDeleting}
+                  >
+                    Cancel
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+          ) : currentUserId && currentUserReview ? (
+            <div>
+              <p className="g-label">Your rating</p>
+              <div className="mt-2">
+                <StarsDisplay rating={currentUserReview.rating} />
+              </div>
+              <p className="g-sm g-mut mt-1">
+                {currentUserReview.rating} star{currentUserReview.rating === 1 ? '' : 's'} · {getRatingTone(currentUserReview.rating)}
+              </p>
+              <div className="mt-1 flex flex-wrap items-center gap-3">
+                <Button
+                  variant="text"
+                  size="sm"
+                  onClick={() => {
+                    setIsReviewEditing(true)
+                    setReviewRating(currentUserReview.rating)
+                    setReviewError('')
+                  }}
+                  disabled={isReviewSubmitting || isReviewDeleting}
                 >
-                  {reason.label}
-                </button>
+                  Edit
+                </Button>
+                <Button variant="text" size="sm" className="text-[var(--bad)]" onClick={() => void handleDeleteReview()} disabled={isReviewSubmitting || isReviewDeleting}>
+                  {isReviewDeleting ? 'Removing…' : 'Remove'}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="g-sm g-mut">Sign in to leave a rating.</p>
+              <Button variant="line" size="sm" onClick={() => guestAuth.open('community')}>
+                Sign in
+              </Button>
+            </div>
+          )}
+          {reviewError ? <p className="g-hint is-error mt-2">{reviewError}</p> : null}
+        </Panel>
+      </section>
+
+      <section>
+        <SectionHead
+          title="Comments"
+          sub={
+            isCommentsLoading
+              ? 'Loading comments…'
+              : visibleCommentCount === 0
+                ? 'Wala pang comments'
+                : `${visibleCommentCount} comment${visibleCommentCount === 1 ? '' : 's'}`
+          }
+        />
+        {currentUserId ? (
+          <div className="flex items-start gap-3">
+            <MemberAvatar displayName={currentUserAvatarFallbackName} avatarUrl={currentUserAvatarUrl} compact />
+            <div className="min-w-0 flex-1">
+              <label htmlFor="place-comment" className="sr-only">
+                Write a comment
+              </label>
+              <textarea
+                id="place-comment"
+                value={commentBody}
+                onChange={(event) => setCommentBody(event.target.value)}
+                onFocus={() => setIsCommentComposerFocused(true)}
+                onBlur={() => setIsCommentComposerFocused(false)}
+                rows={2}
+                disabled={isCommentSubmitting}
+                placeholder="Share a tip for the barkada…"
+                className="g-input"
+                style={{ minHeight: isCommentComposerFocused || commentBody.trim() ? 96 : 52 }}
+              />
+              <div className="mt-2 flex justify-end">
+                <Button variant="ink" size="sm" onClick={() => void handleSubmitComment()} disabled={isCommentSubmitting || !commentBody.trim()}>
+                  {isCommentSubmitting ? 'Posting…' : 'Comment'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="g-panel flex flex-wrap items-center justify-between gap-3">
+            <p className="g-sm g-mut min-w-0">Sign in to join the kwentuhan.</p>
+            <Button variant="line" size="sm" onClick={() => guestAuth.open('community')}>
+              Sign in
+            </Button>
+          </div>
+        )}
+        {commentError ? <p className="g-hint is-error mt-2">{commentError}</p> : null}
+
+        {isCommentsLoading ? (
+          commentSkeleton
+        ) : visibleCommentCount === 0 ? (
+          <Empty className="mt-4" title="Wala pang comments" description="Be the first to share something about this place." />
+        ) : (
+          <ul className="mt-4 grid gap-4">{comments.map((comment) => renderComment(comment))}</ul>
+        )}
+
+        <div className="mt-6">
+          <Button variant="text" size="sm" onClick={handleOpenPlaceConcern}>
+            <Flag aria-hidden="true" />
+            Report a concern
+          </Button>
+        </div>
+      </section>
+    </>
+  )
+
+  return (
+    <Page>
+      <nav aria-label="Breadcrumb" className="-mt-2 mb-2">
+        <ol className="g-sm g-mut flex flex-wrap items-center gap-x-1.5">
+          <li className="inline-flex" aria-hidden="true">
+            <ArrowLeft className="h-4 w-4" />
+          </li>
+          {breadcrumbItems.map((item, index) => (
+            <li
+              key={`${item.label}-${index}`}
+              className={cx('items-center gap-1.5', index === breadcrumbItems.length - 1 ? 'inline-flex' : 'hidden md:inline-flex')}
+            >
+              {index > 0 ? (
+                <span className="g-fnt hidden md:inline" aria-hidden="true">
+                  /
+                </span>
+              ) : null}
+              <InternalLink href={item.href ?? '/places'} className="inline-flex min-h-[44px] items-center hover:text-[var(--ink)]">
+                {item.label}
+              </InternalLink>
+            </li>
+          ))}
+        </ol>
+      </nav>
+
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="g-h1">{place.name}</h1>
+          <p className="g-mut mt-1.5">
+            {categoryLabel} · {locationLabel} ·{' '}
+            <b className="font-semibold text-[var(--ink)]">★ {headlineRating.toFixed(1)}</b> ({formatRatingCount(headlineReviewCount)}{' '}
+            {headlineReviewCount === 1 ? 'rating' : 'ratings'})
+          </p>
+        </div>
+        <Button variant="line" size="sm" onClick={() => void handleSharePlace()}>
+          <Share2 aria-hidden="true" />
+          Share
+        </Button>
+      </div>
+      {shareError ? <p className="g-hint is-error mt-2">{shareError}</p> : null}
+      {saveError ? <p className="g-hint is-error mt-2">{saveError}</p> : null}
+      {contributionError && !isContributionOpen ? <p className="g-hint is-error mt-2">{contributionError}</p> : null}
+
+      <div className="mt-4 md:mt-6">
+        <PlacePhoto
+          imageUrls={galleryPhotos}
+          placeName={place.name}
+          currentIndex={activeGalleryIndex}
+          onSelect={(index) => setActiveGalleryState({ key: galleryStateKey, index })}
+          showAddPhotoAction={approvedImageCount < 3}
+          onContribute={handleOpenContribution}
+        />
+      </div>
+
+      <div className="g-split mt-6 md:mt-8">
+        <div className="min-w-0">
+          {placeTags.length > 0 || priceBadgeLabel || place.status !== 'Unknown' ? (
+            <div className="flex flex-wrap gap-2">
+              {place.status === 'Open' ? <Tag tone="ok">Open now</Tag> : null}
+              {place.status === 'Closed' ? <Tag tone="bad">Closed</Tag> : null}
+              {priceBadgeLabel ? (
+                <Tag>
+                  <Wallet aria-hidden="true" />
+                  {priceBadgeLabel}
+                </Tag>
+              ) : null}
+              {placeTags.map((tag) => (
+                <Tag key={tag}>{tag}</Tag>
               ))}
             </div>
+          ) : null}
 
-            <label className="mt-3 block">
-              <span className="flex items-center gap-2 text-[12px] font-black text-slate-800">
-                Extra details
-                <span className="optional-label">Optional</span>
-              </span>
-              <textarea
-                value={reportDetails}
-                onChange={(event) => setReportDetails(event.target.value.slice(0, 500))}
-                disabled={isReportSubmitting}
-                rows={3}
-                placeholder="Add any context that helps us review this."
-                className="mt-1.5 w-full resize-none rounded-xl border border-[var(--line)] bg-white px-3 py-1.5 text-[13px] font-semibold leading-5 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-wash)]"
-              />
-              <span className="mt-1 block text-right text-[11px] font-bold text-slate-500">{reportDetails.length}/500</span>
-            </label>
-
-            <div className="mt-2 min-h-0">
-              {reportError ? <p className="text-[12px] font-bold text-red-600">{reportError}</p> : null}
+          <div className="g-stats mt-4">
+            <div className="g-stat">
+              <b className="truncate">{priceHeadline || formatPriceLevel(place.price_level) || '—'}</b>
+              <span>{sulitLabel ? `Sulit · ${sulitLabel}` : 'Sulit'}</span>
             </div>
-
-            <div className="mt-3 grid grid-cols-2 gap-1.5">
-              <button
-                type="button"
-                onClick={closeReportCommentModal}
-                disabled={isReportSubmitting}
-                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-[var(--line)] bg-white px-3 text-[13px] font-extrabold text-slate-700"
-              >
-                <AppIcon name="clear" className="h-4 w-4" />
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleReportComment(reportingCommentId)}
-                disabled={isReportSubmitting || !reportReason}
-                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-red-600 bg-red-600 px-3 text-[13px] font-extrabold text-white disabled:opacity-50"
-              >
-                <AppIcon name="reports" className="h-4 w-4" />
-                {isReportSubmitting ? 'Submitting...' : 'Submit report'}
-              </button>
+            <div className="g-stat">
+              <b className="truncate">{barkadaFit}</b>
+              <span>Barkada-fit</span>
+            </div>
+            <div className="g-stat" title={bestTime || undefined}>
+              <b className={cx(bestTime.length > 8 ? 'line-clamp-2 !text-[15px] !leading-tight md:!text-[18px]' : 'truncate')}>{bestTime || '—'}</b>
+              <span>Best time</span>
             </div>
           </div>
+
+          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1">
+            <Button variant="soft" onClick={() => openFloatingChat(askAiQuestion)}>
+              <Sparkles aria-hidden="true" />
+              Ask AI about this place
+            </Button>
+            <Button variant="text" href={planWithAiHref}>
+              Plan a gala here with AI
+            </Button>
+          </div>
+
+          <section>
+            <SectionHead title="About" />
+            <p className="max-w-[640px] text-[15px] leading-relaxed">{quickTake}</p>
+          </section>
+
+          <section>
+            <SectionHead title="Good for" />
+            <GoodForList values={goodFor} />
+          </section>
+
+          <section>
+            <SectionHead title="Getting there" sub={distanceKm != null ? `About ${distanceKm < 1 ? 'less than 1' : distanceKm.toFixed(1)} km${distanceFromUserKm != null ? ' from you' : ' away'}` : undefined} />
+            <p className="g-sm whitespace-pre-line">{addressLabel}</p>
+            <div className="g-modes mt-3" role="group" aria-label="Ways to get there">
+              {accessModes.map((mode) => {
+                const ModeIcon = mode.icon
+                return (
+                  <button
+                    key={mode.value}
+                    type="button"
+                    className={cx('g-mode', mode.value === activeAccessMode.value && 'is-on')}
+                    aria-pressed={mode.value === activeAccessMode.value}
+                    onClick={() => setAccessMode(mode.value)}
+                  >
+                    <ModeIcon aria-hidden="true" />
+                    {mode.label}
+                  </button>
+                )
+              })}
+            </div>
+            <div className="g-leg">
+              <span className="g-leg-rail" aria-hidden="true" />
+              <p className="g-sm g-mut py-1">{activeAccessMode.text}</p>
+            </div>
+            {mapPoints.length > 0 ? <GtMap points={mapPoints} label={`Map of ${place.name}`} className="mt-2 md:h-[320px]" /> : null}
+            <Button variant="line" size="sm" className="mt-3" onClick={openDirections} disabled={!directionsUrl}>
+              <Navigation aria-hidden="true" />
+              Directions
+            </Button>
+          </section>
+
+          <section>
+            <SectionHead title="Good to know" />
+            <div className="grid gap-5">
+              {faqItems.map((item) => (
+                <div key={item.question}>
+                  <h3 className="g-h3">{item.question}</h3>
+                  <p className="g-sm g-mut mt-1 leading-relaxed">{item.answer}</p>
+                </div>
+              ))}
+            </div>
+            {canonicalPlaceLink && areaLink && areaBreadcrumb ? (
+              <p className="g-sm g-mut mt-4">
+                Explore more from{' '}
+                <InternalLink href={areaLink} className="text-[var(--ink)] underline underline-offset-2">
+                  {areaBreadcrumb.areaName}
+                </InternalLink>{' '}
+                or browse the full{' '}
+                <InternalLink href="/places" className="text-[var(--ink)] underline underline-offset-2">
+                  places hub
+                </InternalLink>
+                .
+              </p>
+            ) : null}
+          </section>
+
+          {communitySection}
         </div>
-      ) : null}
+
+        <aside className="g-side" aria-label="Plan this place">
+          <Panel>
+            <div className="flex items-start justify-between gap-3">
+              <p className="min-w-0">
+                <span className="g-h2">{priceHeadline || 'Check price on site'}</span>
+                {budgetAmount != null && budgetAmount > 0 ? <span className="g-mut"> /head</span> : null}
+              </p>
+              {place.status === 'Open' ? <Tag tone="ok">Open</Tag> : place.status === 'Closed' ? <Tag tone="bad">Closed</Tag> : null}
+            </div>
+            {sulitLabel ? (
+              <p className="g-sulit">
+                Sulit · <b>{sulitLabel}</b>
+              </p>
+            ) : null}
+            <div className="mt-5 flex flex-col gap-2">
+              <div className="hidden lg:block">
+                <Button variant="tara" block onClick={handleAddToPlan}>
+                  <Plus aria-hidden="true" />
+                  Add to plan
+                </Button>
+              </div>
+              <div className="flex items-start gap-2">
+                <CheckInButton
+                  className="min-w-0 flex-1"
+                  placeId={place.id}
+                  placeName={place.name}
+                  session={appSession}
+                  onGuest={() => guestAuth.open('community')}
+                />
+                <Button
+                  variant="soft"
+                  iconOnly
+                  onClick={() => void handleSavePlace()}
+                  disabled={isSaving}
+                  aria-pressed={isSaved}
+                  aria-label={isSaved ? `Remove ${place.name} from saved` : `Save ${place.name}`}
+                >
+                  {heartIcon}
+                </Button>
+              </div>
+              <Button variant="line" block onClick={openDirections} disabled={!directionsUrl}>
+                <Navigation aria-hidden="true" />
+                Directions
+              </Button>
+            </div>
+            <p className="g-xs g-mut mt-3 text-center">Free to plan. Share it with your barkada.</p>
+          </Panel>
+
+          <div className="g-panel">
+            <h2 className="g-h3 mb-1">Barkada-fit</h2>
+            <KeyValue items={fitItems} />
+            {cleanString(place.budget_notes) ? <p className="g-xs g-mut mt-2 leading-relaxed">{cleanString(place.budget_notes)}</p> : null}
+          </div>
+        </aside>
+      </div>
+
+      <div className="h-20 lg:hidden" aria-hidden="true" />
+
+      <div
+        className="fixed inset-x-0 z-[5500] border-t border-[var(--line-2)] bg-[var(--surface)] px-4 py-2.5 lg:hidden"
+        style={{ bottom: 'calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px))' }}
+      >
+        <div className="mx-auto flex max-w-[720px] items-center gap-3">
+          <p className="min-w-0 flex-1 truncate">
+            <span className="g-h3">{priceHeadline || 'Price on site'}</span>
+            {budgetAmount != null && budgetAmount > 0 ? <span className="g-sm g-mut"> /head</span> : null}
+          </p>
+          <Button
+            variant="soft"
+            iconOnly
+            onClick={() => void handleSavePlace()}
+            disabled={isSaving}
+            aria-pressed={isSaved}
+            aria-label={isSaved ? `Remove ${place.name} from saved` : `Save ${place.name}`}
+          >
+            {heartIcon}
+          </Button>
+          <Button variant="ink" onClick={handleAddToPlan}>
+            <Plus aria-hidden="true" />
+            Add to plan
+          </Button>
+        </div>
+      </div>
+
+      {guestAuth.promptElement}
+      <AddToGalaPlanModal isOpen={isAddToPlanOpen} placeId={place.id} placeName={place.name} onClose={() => setIsAddToPlanOpen(false)} />
+
+      <Sheet open={Boolean(reportingCommentId)} onClose={closeReportCommentModal} title="Report comment" labelledBy="report-comment-title">
+        <p className="g-sm g-mut">Why are you reporting this comment?</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {commentReportReasons.map((reason) => (
+            <Chip
+              key={reason.value}
+              on={reportReason === reason.value}
+              onClick={() => {
+                setReportReason(reason.value)
+                setReportError('')
+              }}
+              disabled={isReportSubmitting}
+            >
+              {reason.label}
+            </Chip>
+          ))}
+        </div>
+        <div className="g-field mt-4">
+          <label htmlFor="report-comment-details">
+            Extra details <span className="g-fnt font-normal">Optional</span>
+          </label>
+          <textarea
+            id="report-comment-details"
+            value={reportDetails}
+            onChange={(event) => setReportDetails(event.target.value.slice(0, 500))}
+            disabled={isReportSubmitting}
+            rows={3}
+            placeholder="Add any context that helps us review this."
+            className="g-input"
+          />
+          <span className="g-hint text-right">{reportDetails.length}/500</span>
+        </div>
+        {reportError ? <p className="g-hint is-error mt-2">{reportError}</p> : null}
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <Button variant="line" onClick={closeReportCommentModal} disabled={isReportSubmitting}>
+            <X aria-hidden="true" />
+            Cancel
+          </Button>
+          <Button
+            variant="danger"
+            onClick={() => {
+              if (reportingCommentId) void handleReportComment(reportingCommentId)
+            }}
+            disabled={isReportSubmitting || !reportReason}
+          >
+            <Flag aria-hidden="true" />
+            {isReportSubmitting ? 'Submitting…' : 'Submit report'}
+          </Button>
+        </div>
+      </Sheet>
 
       <ReportUserModal
         isOpen={Boolean(reportingUser)}
@@ -3065,197 +2608,116 @@ function PlaceDetailView({
         }}
       />
 
-      {isPlaceConcernOpen ? (
-        <div
-          className="fixed inset-0 z-[9998] flex items-center justify-center bg-slate-950/45 px-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="report-place-concern-title"
-          onClick={() => {
-            if (!isPlaceConcernSubmitting) {
-              setIsPlaceConcernOpen(false)
-              setPlaceConcernError('')
-            }
-          }}
-        >
-          <div
-            className="w-full max-w-sm rounded-2xl border border-[var(--line)] bg-white p-3 shadow-[0_24px_70px_rgba(27,26,23,0.25)]"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <h3 id="report-place-concern-title" className="text-[18px] font-black text-slate-950">
-              <strong>Report place concern</strong>
-            </h3>
-            <p className="mt-1 text-[13px] font-semibold text-slate-700">
-              Send this place report directly to GalaTayo for review.
-            </p>
-
-            <div className="mt-3 grid grid-cols-2 gap-1.5">
-              {placeConcernReasons.map((reason) => (
-                <button
-                  key={reason.value}
-                  type="button"
-                  onClick={() => {
-                    setPlaceConcernReason(reason.value)
-                    setPlaceConcernError('')
-                  }}
-                  disabled={isPlaceConcernSubmitting}
-                  className={`min-h-11 rounded-xl border px-3 text-left text-[14px] font-extrabold transition ${
-                    placeConcernReason === reason.value
-                      ? 'border-[var(--accent)] bg-[var(--accent-wash)] text-[var(--accent-deep)]'
-                      : 'border-[var(--line)] bg-white text-slate-800 hover:border-[var(--accent)]'
-                  } disabled:cursor-not-allowed disabled:opacity-70`}
-                  aria-pressed={placeConcernReason === reason.value}
-                >
-                  {reason.label}
-                </button>
-              ))}
-            </div>
-
-            <label className="mt-3 block">
-              <span className="flex items-center gap-2 text-[12px] font-black text-slate-800">
-                Extra details
-                <span className="optional-label">Optional</span>
-              </span>
-              <textarea
-                value={placeConcernDetails}
-                onChange={(event) => setPlaceConcernDetails(event.target.value.slice(0, 1000))}
-                disabled={isPlaceConcernSubmitting}
-                rows={3}
-                placeholder="Tell us what looks wrong or what should be reviewed."
-                className="mt-1.5 w-full resize-none rounded-xl border border-[var(--line)] bg-white px-3 py-1.5 text-[13px] font-semibold leading-5 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-wash)]"
-              />
-              <span className="mt-1 block text-right text-[11px] font-bold text-slate-500">{placeConcernDetails.length}/1000</span>
-            </label>
-
-            <div className="mt-2 min-h-0">
-              {placeConcernError ? <p className="text-[12px] font-bold text-red-600">{placeConcernError}</p> : null}
-            </div>
-
-            <div className="mt-3 grid grid-cols-2 gap-1.5">
-              <button
-                type="button"
-                onClick={() => {
-                  if (!isPlaceConcernSubmitting) {
-                    setIsPlaceConcernOpen(false)
-                    setPlaceConcernError('')
-                  }
-                }}
-                disabled={isPlaceConcernSubmitting}
-                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-[var(--line)] bg-white px-3 text-[13px] font-extrabold text-slate-700"
-              >
-                <AppIcon name="clear" className="h-4 w-4" />
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleSubmitPlaceConcern()}
-                disabled={isPlaceConcernSubmitting || !placeConcernReason}
-                className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-red-600 bg-red-600 px-3 text-[13px] font-extrabold text-white disabled:opacity-50"
-              >
-                <AppIcon name="reports" className="h-4 w-4" />
-                {isPlaceConcernSubmitting ? 'Submitting...' : 'Submit report'}
-              </button>
-            </div>
-          </div>
+      <Sheet open={isPlaceConcernOpen} onClose={closePlaceConcern} title="Report a concern" labelledBy="report-place-concern-title">
+        <p className="g-sm g-mut">Send this to the GalaTayo team for review.</p>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {placeConcernReasons.map((reason) => (
+            <Chip
+              key={reason.value}
+              on={placeConcernReason === reason.value}
+              onClick={() => {
+                setPlaceConcernReason(reason.value)
+                setPlaceConcernError('')
+              }}
+              disabled={isPlaceConcernSubmitting}
+            >
+              {reason.label}
+            </Chip>
+          ))}
         </div>
-      ) : null}
-
-      {isContributionOpen ? (
-        <div
-          className="fixed inset-0 z-[9998] flex items-center justify-center bg-slate-950/45 px-5 py-8 sm:px-4 sm:py-0"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="contribute-photo-title"
-          onClick={() => {
-            if (!isContributionSubmitting) {
-              setIsContributionOpen(false)
-            }
-          }}
-        >
-          <div
-            className="w-full max-w-[22rem] -translate-y-12 rounded-2xl border border-[var(--line)] bg-white p-4 shadow-[0_24px_70px_rgba(27,26,23,0.25)] sm:max-w-md sm:translate-y-0"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <h3 id="contribute-photo-title" className="text-[18px] font-black text-slate-950">
-              Contribute Photo
-            </h3>
-            <p className="mt-1 text-[14px] font-semibold leading-6 text-slate-700">
-              Submitted photos are reviewed first before appearing publicly.
-            </p>
-
-            <label className="mt-4 block">
-              <span className="text-[13px] font-black text-slate-800">Image file</span>
-              <input
-                type="file"
-                accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif"
-                disabled={isContributionSubmitting}
-                onChange={(event) => {
-                  setContributionFile(event.target.files?.[0] ?? null)
-                  setContributionError('')
-                }}
-                className="mt-2 w-full text-sm font-semibold text-slate-700 file:mr-4 file:h-10 file:rounded-lg file:border-0 file:bg-black file:px-4 file:text-sm file:font-black file:text-white disabled:cursor-not-allowed disabled:opacity-70"
-              />
-              <span className="mt-1 block text-xs font-semibold text-[var(--muted)]">JPEG, PNG, or WebP up to 5MB.</span>
-            </label>
-
-            <label className="mt-4 block">
-              <span className="flex items-center gap-2 text-[13px] font-black text-slate-800">
-                Source URL
-                <span className="optional-label">Optional</span>
-              </span>
-              <input
-                type="url"
-                value={contributionSourceUrl}
-                onChange={(event) => setContributionSourceUrl(event.target.value.slice(0, 500))}
-                disabled={isContributionSubmitting}
-                placeholder="https://..."
-                className="mt-2 h-11 w-full rounded-xl border border-[var(--line)] bg-white px-3 text-[14px] font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-wash)] disabled:cursor-not-allowed disabled:opacity-70"
-              />
-            </label>
-
-            <label className="mt-4 block">
-              <span className="flex items-center gap-2 text-[13px] font-black text-slate-800">
-                Contributor note
-                <span className="optional-label">Optional</span>
-              </span>
-              <textarea
-                value={contributionNote}
-                onChange={(event) => setContributionNote(event.target.value.slice(0, 1000))}
-                disabled={isContributionSubmitting}
-                rows={4}
-                placeholder="Anything the reviewer should know?"
-                className="mt-2 w-full resize-none rounded-xl border border-[var(--line)] bg-white px-3 py-2 text-[14px] font-semibold leading-6 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent-wash)] disabled:cursor-not-allowed disabled:opacity-70"
-              />
-            </label>
-
-            <div className="mt-3 min-h-5">
-              {contributionError ? <p className="text-[13px] font-bold text-red-600">{contributionError}</p> : null}
-            </div>
-
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setIsContributionOpen(false)}
-                disabled={isContributionSubmitting}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[var(--line)] bg-white px-4 text-[14px] font-extrabold text-slate-700 disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                <FontAwesomeIcon icon={faXmark} className="h-4 w-4" />
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleSubmitContribution()}
-                disabled={isContributionSubmitting}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[var(--accent)] bg-[var(--accent)] px-4 text-[14px] font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                <FontAwesomeIcon icon={faCheck} className="h-4 w-4" />
-                {isContributionSubmitting ? 'Submitting...' : 'Submit'}
-              </button>
-            </div>
-          </div>
+        <div className="g-field mt-4">
+          <label htmlFor="report-place-details">
+            Extra details <span className="g-fnt font-normal">Optional</span>
+          </label>
+          <textarea
+            id="report-place-details"
+            value={placeConcernDetails}
+            onChange={(event) => setPlaceConcernDetails(event.target.value.slice(0, 1000))}
+            disabled={isPlaceConcernSubmitting}
+            rows={3}
+            placeholder="Tell us what looks wrong or what should be reviewed."
+            className="g-input"
+          />
+          <span className="g-hint text-right">{placeConcernDetails.length}/1000</span>
         </div>
-      ) : null}
-    </PageShell>
+        {placeConcernError ? <p className="g-hint is-error mt-2">{placeConcernError}</p> : null}
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <Button variant="line" onClick={closePlaceConcern} disabled={isPlaceConcernSubmitting}>
+            <X aria-hidden="true" />
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={() => void handleSubmitPlaceConcern()} disabled={isPlaceConcernSubmitting || !placeConcernReason}>
+            <Flag aria-hidden="true" />
+            {isPlaceConcernSubmitting ? 'Submitting…' : 'Submit report'}
+          </Button>
+        </div>
+      </Sheet>
+
+      <Sheet
+        open={isContributionOpen}
+        onClose={() => {
+          if (!isContributionSubmitting) setIsContributionOpen(false)
+        }}
+        title="Add a photo"
+        labelledBy="contribute-photo-title"
+      >
+        <p className="g-sm g-mut">We review every photo before it shows up publicly.</p>
+        <div className="g-field mt-4">
+          <label htmlFor="contribute-photo-file">Image file</label>
+          <input
+            id="contribute-photo-file"
+            type="file"
+            accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif"
+            disabled={isContributionSubmitting}
+            onChange={(event) => {
+              setContributionFile(event.target.files?.[0] ?? null)
+              setContributionError('')
+            }}
+            className="g-sm w-full file:mr-3 file:h-9 file:cursor-pointer file:rounded-full file:border-0 file:bg-[var(--ink)] file:px-4 file:font-semibold file:text-[var(--on-ink)] disabled:cursor-not-allowed disabled:opacity-60"
+          />
+          <span className="g-hint">JPEG, PNG, or WebP up to 5MB.</span>
+        </div>
+        <div className="g-field mt-4">
+          <label htmlFor="contribute-photo-source">
+            Source URL <span className="g-fnt font-normal">Optional</span>
+          </label>
+          <input
+            id="contribute-photo-source"
+            type="url"
+            value={contributionSourceUrl}
+            onChange={(event) => setContributionSourceUrl(event.target.value.slice(0, 500))}
+            disabled={isContributionSubmitting}
+            placeholder="https://…"
+            className="g-input"
+          />
+        </div>
+        <div className="g-field mt-4">
+          <label htmlFor="contribute-photo-note">
+            Note for the reviewer <span className="g-fnt font-normal">Optional</span>
+          </label>
+          <textarea
+            id="contribute-photo-note"
+            value={contributionNote}
+            onChange={(event) => setContributionNote(event.target.value.slice(0, 1000))}
+            disabled={isContributionSubmitting}
+            rows={3}
+            placeholder="Anything the reviewer should know?"
+            className="g-input"
+          />
+        </div>
+        {contributionError ? <p className="g-hint is-error mt-2">{contributionError}</p> : null}
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <Button variant="line" onClick={() => setIsContributionOpen(false)} disabled={isContributionSubmitting}>
+            <X aria-hidden="true" />
+            Cancel
+          </Button>
+          <Button variant="ink" onClick={() => void handleSubmitContribution()} disabled={isContributionSubmitting}>
+            <Check aria-hidden="true" />
+            {isContributionSubmitting ? 'Submitting…' : 'Submit'}
+          </Button>
+        </div>
+      </Sheet>
+    </Page>
   )
 }
 
