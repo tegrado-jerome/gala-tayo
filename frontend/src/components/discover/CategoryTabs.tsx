@@ -30,7 +30,7 @@ export const categoryIcons: Record<string, PhosphorIcon> = {
 }
 
 // Everyday picks first, niche ones last.
-export const CATEGORY_TAB_ORDER = ['food', 'cafe', 'park', 'museum', 'heritage', 'mall', 'nightlife', 'cinema', 'activity', 'hotel']
+export const CATEGORY_TAB_ORDER = ['food', 'cafe', 'park', 'museum', 'heritage', 'mall', 'nightlife', 'activity', 'hotel']
 
 type CategoryTabsProps = {
   active?: string

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { CaretLeft as ChevronLeft } from '@phosphor-icons/react/dist/csr/CaretLeft'
 import { CaretRight as ChevronRight } from '@phosphor-icons/react/dist/csr/CaretRight'
-import { CircleNotch } from '@phosphor-icons/react/dist/csr/CircleNotch'
 import InternalLink from './InternalLink'
 import { cx } from './ui'
 
@@ -37,7 +36,7 @@ function CompactPagination({
   className,
   isLoading = false,
   showLoadingMessage = true,
-  navigationDelayMs = 120,
+  navigationDelayMs = 0,
 }: CompactPaginationProps) {
   const [pendingPage, setPendingPage] = useState<number | null>(null)
   const pendingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -47,10 +46,10 @@ function CompactPagination({
       return
     }
 
-    if (pendingPage === currentPage || isLoading) {
+    if (pendingPage === currentPage) {
       setPendingPage(null)
     }
-  }, [currentPage, isLoading, pendingPage])
+  }, [currentPage, pendingPage])
 
   useEffect(() => {
     return () => {
@@ -70,7 +69,10 @@ function CompactPagination({
     return null
   }
 
-  const items = buildPaginationItems(currentPage, totalPages)
+  // Airbnb/Google pattern: the clicked page becomes active right away (no spinner in the button);
+  // the results area shows the loading state instead.
+  const activePage = pendingPage ?? currentPage
+  const items = buildPaginationItems(activePage, totalPages)
   const hasSummary = typeof totalItems === 'number' && typeof pageSize === 'number' && totalItems > 0 && pageSize > 0
   const rangeStart = hasSummary ? (currentPage - 1) * pageSize + 1 : 0
   const rangeEnd = hasSummary ? Math.min(currentPage * pageSize, totalItems) : 0
@@ -107,7 +109,7 @@ function CompactPagination({
           disabled={!isCurrent && isBusy}
           className={classes}
         >
-          {pendingPage === page ? <CircleNotch className="animate-spin" weight="bold" aria-hidden="true" /> : content}
+          {content}
         </button>
       )
     }
@@ -122,11 +124,11 @@ function CompactPagination({
   return (
     <nav aria-label="Pagination" className={cx('flex w-full flex-col items-center gap-2', className)}>
       <div className="flex items-center justify-center gap-1.5">
-        {renderControl(Math.max(1, currentPage - 1), <ChevronLeft />, 'Previous page', false, currentPage <= 1)}
+        {renderControl(Math.max(1, activePage - 1), <ChevronLeft />, 'Previous page', false, activePage <= 1)}
         {items.map((item) => (
-          <span key={item}>{renderControl(item, item, item === currentPage ? `Current page, page ${item}` : `Go to page ${item}`, item === currentPage)}</span>
+          <span key={item}>{renderControl(item, item, item === activePage ? `Current page, page ${item}` : `Go to page ${item}`, item === activePage)}</span>
         ))}
-        {renderControl(Math.min(totalPages, currentPage + 1), <ChevronRight />, 'Next page', false, currentPage >= totalPages)}
+        {renderControl(Math.min(totalPages, activePage + 1), <ChevronRight />, 'Next page', false, activePage >= totalPages)}
       </div>
       {hasSummary ? (
         <p className="g-xs g-mut">
