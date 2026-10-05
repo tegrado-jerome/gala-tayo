@@ -1,0 +1,56 @@
+{
+  "range": {
+    "startDate": "2026-09-05",
+    "endDate": "2026-10-03"
+  },
+  "queries": [
+    {
+      "query": "gala tayo",
+      "clicks": 1,
+      "impressions": 26,
+      "position": 8.153846153846153
+    },
+    {
+      "query": "gabriela silang monument makati",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 9
+    },
+    {
+      "query": "galayo",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 55
+    },
+    {
+      "query": "historical places in mandaluyong",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 1
+    },
+    {
+      "query": "market place kalentong",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 9
+    },
+    {
+      "query": "met live metro park photo studio philippines",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 11
+    },
+    {
+      "query": "mitsukoshi bgc",
+      "clicks": 0,
+      "impressions": 1,
+      "position": 13
+    },
+    {
+      "query": "performing arts manila",
+      "clicks": 0,
+      "impressions": 2,
+      "position": 62.5
+    }
+  ]
+}
