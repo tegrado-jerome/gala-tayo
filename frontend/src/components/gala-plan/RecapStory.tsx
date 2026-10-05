@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Film, Share2, X } from 'lucide-react'
 import { Button, buttonClass, cx } from '../ui'
 import type { GalaPlanDetail } from '../../utils/galaPlansApi'
@@ -466,7 +467,7 @@ export default function RecapStory({ plan, friends = 0, onClose }: { plan: GalaP
     }
   }
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[7500] flex flex-col items-center justify-center gap-4 bg-[var(--ink-hover)] px-4 pt-[max(env(safe-area-inset-top,0px),16px)] pb-[max(env(safe-area-inset-bottom,0px),16px)] motion-safe:animate-[g-fade_200ms_var(--ease-g)_both]"
       role="dialog"
@@ -500,7 +501,8 @@ export default function RecapStory({ plan, friends = 0, onClose }: { plan: GalaP
       <p className="g-xs min-h-4 text-center text-[var(--on-ink)]" aria-live="polite">
         {message}
       </p>
-    </div>
+    </div>,
+    document.body,
   )
 }
 
