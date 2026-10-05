@@ -12,7 +12,8 @@ import { getAreaLabelBySlug } from '../data/metroManilaAreas'
 import { getPlaceCategoryLabel } from '../data/placeCategories'
 import { getSiteOrigin } from '../utils/seo'
 import { getSeoListingPage, mapSeoPlaceToCard, type SeoPlaceSummary } from '../utils/seoApi'
-import { BRAND_NAME, PRODUCT_NAME, SEO_LANDING_TARGETS, buildLandingMetadata, getLandingTargetBySlug } from '../utils/seoLandingPages'
+import { BRAND_NAME, MIN_INDEXABLE_GUIDE_PLACES, PRODUCT_NAME, buildLandingMetadata, getLandingTargetBySlug, getRelatedLandingTargets } from '../utils/seoLandingPages'
+import { formatPeso } from '../utils/galaPlanTrip'
 import type { PlaceDetail } from '../types/appTypes'
 
 function LandingFaqJsonLd({ faqs }: { faqs: Array<{ question: string; answer: string }> }) {
@@ -40,6 +41,7 @@ export default function SeoLandingPage({
   const target = useMemo(() => getLandingTargetBySlug(slug), [slug])
   const metadata = useMemo(() => (target ? buildLandingMetadata(target) : null), [target])
   const [items, setItems] = useState<SeoPlaceSummary[]>([])
+  const [total, setTotal] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [placeDetailsBySlug, setPlaceDetailsBySlug] = useState<Record<string, PlaceDetail>>({})
@@ -62,7 +64,7 @@ export default function SeoLandingPage({
           category: target.category ?? null,
           goodFor: target.goodFor ?? null,
           page: 1,
-          pageSize: 12,
+          pageSize: 10,
           signal: controller.signal,
         })
 
@@ -71,6 +73,7 @@ export default function SeoLandingPage({
         }
 
         setItems(payload.items)
+        setTotal(payload.total)
       } catch (error) {
         if ((error as Error).name === 'AbortError') {
           return
@@ -130,7 +133,13 @@ export default function SeoLandingPage({
 
   const areaName = target.displayAreaName || getAreaLabelBySlug(target.areaSlug) || 'Metro Manila'
   const categoryLabel = target.category ? getPlaceCategoryLabel(target.category) : null
-  const relatedTargets = SEO_LANDING_TARGETS.filter((candidate) => candidate.slug !== target.slug).slice(0, 4)
+  const relatedTargets = getRelatedLandingTargets(target)
+  const seeAllHref = target.goodFor ? null : target.category && !target.areaSlug ? `/places/categories/${target.category}` : target.areaSlug && !target.category ? `/places/${target.areaSlug}` : null
+  const isThin = !isLoading && !errorMessage && total < MIN_INDEXABLE_GUIDE_PLACES
+  const budgets = items.map((item) => item.budgetMin).filter((value): value is number => typeof value === 'number' && value > 0)
+  const budgetRange = budgets.length ? `${formatPeso(Math.min(...budgets))} to ${formatPeso(Math.max(...budgets))} per head` : 'Varies per place'
+  const latestUpdate = items.map((item) => item.updatedAt).filter((value): value is string => Boolean(value)).sort().at(-1)
+  const updatedLabel = latestUpdate ? new Date(latestUpdate).toLocaleDateString('en-PH', { month: 'long', year: 'numeric' }) : null
   const jsonLd = [
     {
       '@context': 'https://schema.org',
@@ -166,7 +175,7 @@ export default function SeoLandingPage({
 
   return (
     <Page>
-      <SeoHead title={metadata.title} description={metadata.description} canonicalPath={metadata.canonicalPath} jsonLd={jsonLd} />
+      <SeoHead title={metadata.title} description={metadata.description} canonicalPath={metadata.canonicalPath} robots={isThin ? 'noindex,follow' : undefined} jsonLd={jsonLd} />
 
       <ListingBreadcrumb items={[{ label: 'Home', href: '/home' }, { label: 'Places', href: '/places' }, { label: metadata.h1 }]} />
 
@@ -181,7 +190,9 @@ export default function SeoLandingPage({
           items={[
             { label: 'Area', value: areaName },
             { label: 'Category', value: categoryLabel || 'Mixed discovery' },
-            { label: 'Good for', value: metadata.summary },
+            { label: 'Places', value: isLoading ? '…' : total },
+            { label: 'Starting budget', value: isLoading ? '…' : budgetRange },
+            ...(updatedLabel ? [{ label: 'Updated', value: updatedLabel }] : []),
           ]}
         />
       </Panel>
@@ -223,6 +234,11 @@ export default function SeoLandingPage({
           ))}
         </div>
       )}
+      {seeAllHref && total > items.length ? (
+        <Button variant="line" href={seeAllHref} className="mt-6">
+          See all {total} places
+        </Button>
+      ) : null}
 
       <div className="g-split mt-12">
         <section aria-labelledby="guide-faq-title" className="min-w-0">
@@ -250,6 +266,10 @@ export default function SeoLandingPage({
                 <div className="g-xs g-mut truncate">{relatedTarget.keywords.slice(0, 2).join(' · ')}</div>
               </Row>
             ))}
+            <Row href="/saan-tayo" action={<ChevronRight className="g-ic text-[var(--ink-3)]" aria-hidden="true" />}>
+              <div className="g-h3 truncate">Saan tayo? Pick 3 places for me</div>
+              <div className="g-xs g-mut truncate">By city, budget and who you're with</div>
+            </Row>
           </div>
         </aside>
       </div>

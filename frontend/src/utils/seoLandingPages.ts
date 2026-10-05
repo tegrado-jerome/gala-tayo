@@ -1,6 +1,7 @@
 import { getAreaLabelBySlug } from '../data/metroManilaAreas'
 import { getPlaceCategoryLabel } from '../data/placeCategories'
 import { getPublicSiteOrigin } from './site'
+import seoGuides from '../data/seoGuides.json'
 
 type SeoLandingTarget = {
   slug: string
@@ -10,6 +11,7 @@ type SeoLandingTarget = {
   displayAreaName?: string | null
   label: string
   keywords: string[]
+  addedAt?: string
 }
 
 type SeoLandingMetadata = {
@@ -61,165 +63,7 @@ function buildBrandJsonLd() {
   ]
 }
 
-const SEO_LANDING_TARGETS: SeoLandingTarget[] = [
-  {
-    slug: 'best-cafes-in-makati',
-    areaSlug: 'makati',
-    category: 'cafe',
-    label: 'Best Cafes in Makati',
-    keywords: ['best cafes in makati', 'coffee shops in makati', 'makati cafe guide', 'GalaTayo cafes'],
-  },
-  {
-    slug: 'restaurants-in-quezon-city',
-    areaSlug: 'quezon-city',
-    category: 'food',
-    label: 'Restaurants in Quezon City',
-    keywords: ['restaurants in quezon city', 'best food in qc', 'kainan sa qc', 'GalaTayo food guide'],
-  },
-  {
-    slug: 'museums-in-manila',
-    areaSlug: 'manila',
-    category: 'museum',
-    label: 'Museums in Manila',
-    keywords: ['museums in manila', 'art galleries in manila', 'cultural places in manila', 'GalaTayo museum guide'],
-  },
-  {
-    slug: 'parks-in-pasig',
-    areaSlug: 'pasig',
-    category: 'park',
-    label: 'Parks in Pasig',
-    keywords: ['parks in pasig', 'outdoor places in pasig', 'pasig walking spots', 'GalaTayo park guide'],
-  },
-  {
-    slug: 'date-spots-in-bgc',
-    areaSlug: 'taguig',
-    goodFor: 'date',
-    displayAreaName: 'BGC',
-    label: 'Date Spots in BGC',
-    keywords: ['date spots in bgc', 'romantic places in bgc', 'bgc date ideas', 'GalaTayo date guide'],
-  },
-  {
-    slug: 'family-friendly-places-in-quezon-city',
-    areaSlug: 'quezon-city',
-    goodFor: 'family',
-    label: 'Family-Friendly Places in Quezon City',
-    keywords: ['family-friendly places in quezon city', 'kids places in qc', 'family gala in qc', 'GalaTayo family guide'],
-  },
-  {
-    slug: 'study-cafes-in-manila',
-    areaSlug: 'manila',
-    category: 'cafe',
-    goodFor: 'study',
-    label: 'Study Cafes in Manila',
-    keywords: ['study cafes in manila', 'quiet cafes in manila', 'cafes with wifi in manila', 'GalaTayo study cafes'],
-  },
-  {
-    slug: 'chill-spots-in-taguig',
-    areaSlug: 'taguig',
-    goodFor: 'chill',
-    label: 'Chill Spots in Taguig',
-    keywords: ['chill spots in taguig', 'tambayan in taguig', 'relaxing places in taguig', 'GalaTayo chill guide'],
-  },
-  {
-    slug: 'kainan-sa-bgc',
-    areaSlug: 'taguig',
-    category: 'food',
-    displayAreaName: 'BGC',
-    label: 'Kainan sa BGC',
-    keywords: ['kainan sa bgc', 'restaurants in bgc', 'food trip in bgc', 'GalaTayo BGC food'],
-  },
-  {
-    slug: 'tambayan-sa-makati',
-    areaSlug: 'makati',
-    goodFor: 'chill',
-    label: 'Tambayan sa Makati',
-    keywords: ['tambayan sa makati', 'chill spots in makati', 'makati hangout places', 'GalaTayo tambayan guide'],
-  },
-  {
-    slug: 'saan-mag-date-sa-qc',
-    areaSlug: 'quezon-city',
-    goodFor: 'date',
-    displayAreaName: 'QC',
-    label: 'Saan Mag Date sa QC',
-    keywords: ['saan mag date sa qc', 'date places in quezon city', 'qc date spots', 'GalaTayo QC date guide'],
-  },
-  {
-    slug: 'things-to-do-in-makati',
-    areaSlug: 'makati',
-    category: 'activity',
-    label: 'Things to Do in Makati',
-    keywords: ['things to do in makati', 'activities in makati', 'makati gala ideas', 'GalaTayo Makati activity guide'],
-  },
-  {
-    slug: 'date-places-in-metro-manila',
-    goodFor: 'date',
-    label: 'Date Places in Metro Manila',
-    keywords: ['date places in metro manila', 'metro manila date spots', 'romantic places in metro manila', 'GalaTayo date ideas'],
-  },
-  {
-    slug: 'study-cafes-in-metro-manila',
-    category: 'cafe',
-    goodFor: 'study',
-    label: 'Study Cafes in Metro Manila',
-    keywords: ['study cafes in metro manila', 'quiet cafes with wifi', 'best cafes for studying', 'GalaTayo study guide'],
-  },
-  {
-    slug: 'nightlife-in-makati',
-    areaSlug: 'makati',
-    category: 'nightlife',
-    label: 'Nightlife in Makati',
-    keywords: ['nightlife in makati', 'bars in makati', 'clubs in makati', 'makati night out spots', 'GalaTayo nightlife guide'],
-  },
-  {
-    slug: 'heritage-sites-in-manila',
-    areaSlug: 'manila',
-    category: 'heritage',
-    label: 'Heritage Sites in Manila',
-    keywords: ['heritage sites in manila', 'historical places in manila', 'intramuros guide', 'manila landmarks', 'GalaTayo heritage guide'],
-  },
-  {
-    slug: 'cheap-eats-in-manila',
-    areaSlug: 'manila',
-    category: 'food',
-    label: 'Cheap Eats in Manila',
-    keywords: ['cheap eats in manila', 'budget food in manila', 'murang kainan sa manila', 'manila affordable restaurants', 'GalaTayo food guide'],
-  },
-  {
-    slug: 'mall-shopping-in-pasig',
-    areaSlug: 'pasig',
-    category: 'mall',
-    label: 'Mall Shopping in Pasig',
-    keywords: ['malls in pasig', 'shopping in pasig', 'pasig lifestyle centers', 'pasig shopping guide', 'GalaTayo mall guide'],
-  },
-  {
-    slug: 'cinemas-in-quezon-city',
-    areaSlug: 'quezon-city',
-    category: 'cinema',
-    label: 'Cinemas in Quezon City',
-    keywords: ['cinemas in quezon city', 'movie theaters in qc', 'sine sa qc', 'quezon city movie guide', 'GalaTayo cinema guide'],
-  },
-  {
-    slug: 'hotels-and-staycations-in-taguig',
-    areaSlug: 'taguig',
-    category: 'hotel',
-    label: 'Hotels and Staycations in Taguig',
-    keywords: ['hotels in taguig', 'staycation in bgc', 'taguig accommodation', 'bgc hotel guide', 'GalaTayo staycation guide'],
-  },
-  {
-    slug: 'barkada-hangouts-in-makati',
-    areaSlug: 'makati',
-    goodFor: 'barkada',
-    label: 'Barkada Hangouts in Makati',
-    keywords: ['barkada hangouts in makati', 'group places in makati', 'tropa gala makati', 'makati group activities', 'GalaTayo barkada guide'],
-  },
-  {
-    slug: 'family-outing-in-manila',
-    areaSlug: 'manila',
-    goodFor: 'family',
-    label: 'Family Outing in Manila',
-    keywords: ['family outing in manila', 'family places in manila', 'kids friendly manila', 'manila family day ideas', 'GalaTayo family guide'],
-  },
-]
+const SEO_LANDING_TARGETS: SeoLandingTarget[] = seoGuides
 
 const GOOD_FOR_LABELS: Record<string, string> = {
   date: 'date',
@@ -227,6 +71,50 @@ const GOOD_FOR_LABELS: Record<string, string> = {
   family: 'family',
   study: 'study',
   chill: 'chill',
+  'rainy-day': 'rainy day',
+  'food-trip': 'food trip',
+  'photo-spot': 'photo',
+  free: 'free',
+}
+
+const MIN_INDEXABLE_GUIDE_PLACES = 6
+
+const INTENT_NOTES: Record<string, (area: string) => string> = {
+  date: (area) => `Each pick shows the budget per head and the best time to go, so you can plan a date in ${area} without guessing the bill.`,
+  family: (area) => `Picks lean toward places with space for kids and lolas, plus parking and commute notes for a family day in ${area}.`,
+  barkada: (area) => `These work for groups: room to stay long, sharing plates, and budgets the whole barkada can split in ${area}.`,
+  study: (area) => `Look for the best time to visit on each pick to find quieter hours for studying around ${area}.`,
+  chill: (area) => `Low-effort spots in ${area} for when you just want to sit, eat and talk without a big plan.`,
+  'rainy-day': (area) => `All indoor or covered, so your plans in ${area} survive the rain. Check commute notes before heading out in a downpour.`,
+  'food-trip': (area) => `Food stops in ${area} you can chain into one food trip, with a budget per head on every pick.`,
+  'photo-spot': (area) => `Spots in ${area} with good light and backdrops. Golden hour is usually the best time to shoot.`,
+  free: (area) => `No entrance fee needed for these spots in ${area}. Budget only for food and the commute.`,
+}
+
+const CATEGORY_NOTES: Record<string, (area: string) => string> = {
+  cafe: (area) => `Compare cafes in ${area} by budget, vibe and who they suit, from quick coffee runs to long tambay sessions.`,
+  food: (area) => `Restaurants and food spots in ${area} with a starting budget per head, so you know the damage before you go.`,
+  mall: (area) => `Malls in ${area} with notes on parking, commute and what else is nearby for a full gala.`,
+  museum: (area) => `Museums in ${area} with notes on fees, best time to visit and how long to stay.`,
+  park: (area) => `Parks and open spaces in ${area}. Go early morning or late afternoon to skip the heat.`,
+  heritage: (area) => `Heritage and historical sites in ${area}, best paired with a walking route and a merienda stop.`,
+  activity: (area) => `Things to do in ${area}, from active days out to easy indoor plans.`,
+  nightlife: (area) => `Bars and night spots in ${area} with notes on crowd, budget and how to get home.`,
+  hotel: (area) => `Hotels and staycation options in ${area} with a starting budget so you can compare quickly.`,
+  cinema: (area) => `Cinemas in ${area} and what to pair them with before or after the movie.`,
+}
+
+function getRelatedLandingTargets(target: SeoLandingTarget, limit = 6) {
+  const score = (candidate: SeoLandingTarget) =>
+    (candidate.areaSlug && candidate.areaSlug === target.areaSlug ? 2 : 0) +
+    (candidate.goodFor && candidate.goodFor === target.goodFor ? 1 : 0) +
+    (candidate.category && candidate.category === target.category ? 1 : 0)
+
+  return SEO_LANDING_TARGETS.filter((candidate) => candidate.slug !== target.slug)
+    .map((candidate) => ({ candidate, score: score(candidate) }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map(({ candidate }) => candidate)
 }
 
 function getLandingPath(slug: string) {
@@ -289,9 +177,15 @@ function buildLandingMetadata(target: SeoLandingTarget): SeoLandingMetadata {
     summary = `${BRAND_NAME} surfaces ${goodForLabel}-friendly places in ${scopedAreaName} with budget, timing and location details for planning.`
   }
 
+  const note = (target.goodFor && INTENT_NOTES[target.goodFor]) || (target.category && CATEGORY_NOTES[target.category]) || null
+  const description = `${h1} on ${PRODUCT_NAME}. ${intro}`
+  if (note) {
+    intro = `${intro} ${note(scopedAreaName)}`
+  }
+
   return {
     title: `${h1} | ${BRAND_NAME}`,
-    description: `${h1} on ${PRODUCT_NAME}. ${intro}`,
+    description,
     h1,
     intro,
     summary,
@@ -325,7 +219,9 @@ export {
   PRODUCT_NAME,
   buildBrandJsonLd,
   SEO_LANDING_TARGETS,
+  MIN_INDEXABLE_GUIDE_PLACES,
   buildLandingMetadata,
+  getRelatedLandingTargets,
   getLandingPath,
   getLandingTargetBySlug,
 }

@@ -151,6 +151,14 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
             ))}
           </ul>
 
+          <h3 className="g-h3 mt-8">Hindi makapag-decide?</h3>
+          <p className="g-sm g-mut mt-2">
+            <InternalLink href="/saan-tayo" className="text-[var(--ink)] underline underline-offset-2">
+              Try Saan tayo?
+            </InternalLink>{' '}
+            Pick a city, budget per head and who you&apos;re with, and get 3 places to go.
+          </p>
+
           <h3 className="g-h3 mt-8">Popular guides</h3>
           <ul className="g-chips mt-3">
             {SEO_LANDING_TARGETS.map((target) => (

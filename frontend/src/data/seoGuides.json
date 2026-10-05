@@ -1,0 +1,255 @@
+[
+  {
+    "slug": "best-cafes-in-makati",
+    "label": "Best Cafes in Makati",
+    "areaSlug": "makati",
+    "category": "cafe",
+    "keywords": [
+      "best cafes in makati",
+      "coffee shops in makati",
+      "makati cafe guide"
+    ]
+  },
+  {
+    "slug": "restaurants-in-quezon-city",
+    "label": "Restaurants in Quezon City",
+    "areaSlug": "quezon-city",
+    "category": "food",
+    "keywords": [
+      "restaurants in quezon city",
+      "best food in qc",
+      "kainan sa qc"
+    ]
+  },
+  {
+    "slug": "museums-in-manila",
+    "label": "Museums in Manila",
+    "areaSlug": "manila",
+    "category": "museum",
+    "keywords": [
+      "museums in manila",
+      "art galleries in manila",
+      "cultural places in manila"
+    ]
+  },
+  {
+    "slug": "parks-in-pasig",
+    "label": "Parks in Pasig",
+    "areaSlug": "pasig",
+    "category": "park",
+    "keywords": [
+      "parks in pasig",
+      "outdoor places in pasig",
+      "pasig walking spots"
+    ]
+  },
+  {
+    "slug": "date-spots-in-bgc",
+    "label": "Date Spots in BGC",
+    "areaSlug": "taguig",
+    "displayAreaName": "BGC",
+    "goodFor": "date",
+    "keywords": [
+      "date spots in bgc",
+      "romantic places in bgc",
+      "bgc date ideas"
+    ]
+  },
+  {
+    "slug": "family-friendly-places-in-quezon-city",
+    "label": "Family-Friendly Places in Quezon City",
+    "areaSlug": "quezon-city",
+    "goodFor": "family",
+    "keywords": [
+      "family-friendly places in quezon city",
+      "kids places in qc",
+      "family gala in qc"
+    ]
+  },
+  {
+    "slug": "study-cafes-in-manila",
+    "label": "Study Cafes in Manila",
+    "areaSlug": "manila",
+    "category": "cafe",
+    "goodFor": "study",
+    "keywords": [
+      "study cafes in manila",
+      "quiet cafes in manila",
+      "cafes with wifi in manila"
+    ]
+  },
+  {
+    "slug": "chill-spots-in-taguig",
+    "label": "Chill Spots in Taguig",
+    "areaSlug": "taguig",
+    "goodFor": "chill",
+    "keywords": [
+      "chill spots in taguig",
+      "tambayan in taguig",
+      "relaxing places in taguig"
+    ]
+  },
+  {
+    "slug": "kainan-sa-bgc",
+    "label": "Kainan sa BGC",
+    "areaSlug": "taguig",
+    "displayAreaName": "BGC",
+    "category": "food",
+    "keywords": [
+      "kainan sa bgc",
+      "restaurants in bgc",
+      "food trip in bgc"
+    ]
+  },
+  {
+    "slug": "tambayan-sa-makati",
+    "label": "Tambayan sa Makati",
+    "areaSlug": "makati",
+    "goodFor": "chill",
+    "keywords": [
+      "tambayan sa makati",
+      "chill spots in makati",
+      "makati hangout places"
+    ]
+  },
+  {
+    "slug": "saan-mag-date-sa-qc",
+    "label": "Saan Mag Date sa QC",
+    "areaSlug": "quezon-city",
+    "displayAreaName": "QC",
+    "goodFor": "date",
+    "keywords": [
+      "saan mag date sa qc",
+      "date places in quezon city",
+      "qc date spots"
+    ]
+  },
+  {
+    "slug": "things-to-do-in-makati",
+    "label": "Things to Do in Makati",
+    "areaSlug": "makati",
+    "category": "activity",
+    "keywords": [
+      "things to do in makati",
+      "activities in makati",
+      "makati gala ideas"
+    ]
+  },
+  {
+    "slug": "date-places-in-metro-manila",
+    "label": "Date Places in Metro Manila",
+    "goodFor": "date",
+    "keywords": [
+      "date places in metro manila",
+      "metro manila date spots",
+      "romantic places in metro manila"
+    ]
+  },
+  {
+    "slug": "study-cafes-in-metro-manila",
+    "label": "Study Cafes in Metro Manila",
+    "category": "cafe",
+    "goodFor": "study",
+    "keywords": [
+      "study cafes in metro manila",
+      "quiet cafes with wifi",
+      "best cafes for studying"
+    ]
+  },
+  {
+    "slug": "nightlife-in-makati",
+    "label": "Nightlife in Makati",
+    "areaSlug": "makati",
+    "category": "nightlife",
+    "keywords": [
+      "nightlife in makati",
+      "bars in makati",
+      "clubs in makati",
+      "makati night out spots"
+    ]
+  },
+  {
+    "slug": "heritage-sites-in-manila",
+    "label": "Heritage Sites in Manila",
+    "areaSlug": "manila",
+    "category": "heritage",
+    "keywords": [
+      "heritage sites in manila",
+      "historical places in manila",
+      "intramuros guide",
+      "manila landmarks"
+    ]
+  },
+  {
+    "slug": "cheap-eats-in-manila",
+    "label": "Cheap Eats in Manila",
+    "areaSlug": "manila",
+    "category": "food",
+    "keywords": [
+      "cheap eats in manila",
+      "budget food in manila",
+      "murang kainan sa manila",
+      "manila affordable restaurants"
+    ]
+  },
+  {
+    "slug": "mall-shopping-in-pasig",
+    "label": "Mall Shopping in Pasig",
+    "areaSlug": "pasig",
+    "category": "mall",
+    "keywords": [
+      "malls in pasig",
+      "shopping in pasig",
+      "pasig lifestyle centers",
+      "pasig shopping guide"
+    ]
+  },
+  {
+    "slug": "cinemas-in-quezon-city",
+    "label": "Cinemas in Quezon City",
+    "areaSlug": "quezon-city",
+    "category": "cinema",
+    "keywords": [
+      "cinemas in quezon city",
+      "movie theaters in qc",
+      "sine sa qc",
+      "quezon city movie guide"
+    ]
+  },
+  {
+    "slug": "hotels-and-staycations-in-taguig",
+    "label": "Hotels and Staycations in Taguig",
+    "areaSlug": "taguig",
+    "category": "hotel",
+    "keywords": [
+      "hotels in taguig",
+      "staycation in bgc",
+      "taguig accommodation",
+      "bgc hotel guide"
+    ]
+  },
+  {
+    "slug": "barkada-hangouts-in-makati",
+    "label": "Barkada Hangouts in Makati",
+    "areaSlug": "makati",
+    "goodFor": "barkada",
+    "keywords": [
+      "barkada hangouts in makati",
+      "group places in makati",
+      "tropa gala makati",
+      "makati group activities"
+    ]
+  },
+  {
+    "slug": "family-outing-in-manila",
+    "label": "Family Outing in Manila",
+    "areaSlug": "manila",
+    "goodFor": "family",
+    "keywords": [
+      "family outing in manila",
+      "family places in manila",
+      "kids friendly manila",
+      "manila family day ideas"
+    ]
+  }
+]

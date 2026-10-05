@@ -74,6 +74,27 @@ async function readSitemapPaths() {
     .filter((value, index, all) => all.indexOf(value) === index)
 }
 
+// Guides and tools live in the frontend, so their URLs are added here rather than by the API sitemap.
+async function readFrontendPaths() {
+  const guides = JSON.parse(await readFile(path.join(root, 'src/data/seoGuides.json'), 'utf8'))
+  return ['/saan-tayo', ...guides.map((guide) => `/guides/${guide.slug}`)]
+}
+
+const locFor = (routePath) => `${siteOrigin}${routePath === '/' ? '/' : routePath}`
+
+// The sitemap should list only pages that rendered as indexable.
+async function writeSitemap(addedPaths, droppedPaths) {
+  const sitemapPath = path.join(dist, 'sitemap.xml')
+  let sitemap = await readFile(sitemapPath, 'utf8')
+  const dropped = new Set(droppedPaths.map(locFor))
+  sitemap = sitemap.replace(/\s*<url>\s*<loc>([^<]+)<\/loc>[\s\S]*?<\/url>/g, (block, loc) => (dropped.has(loc.trim()) ? '' : block))
+  const additions = addedPaths
+    .filter((routePath) => !dropped.has(locFor(routePath)))
+    .map((routePath) => `  <url>\n    <loc>${locFor(routePath)}</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`)
+  sitemap = sitemap.replace('</urlset>', `${additions.join('')}</urlset>`)
+  await writeFile(sitemapPath, sitemap)
+}
+
 async function snapshot(page, routePath) {
   const expectedCanonical = `${siteOrigin}${routePath === '/' ? '/' : routePath}`
 
@@ -166,6 +187,7 @@ function buildLlmsTxt(pages) {
     '',
     `GalaTayo lists ${placeCount} places across Metro Manila, each with a page covering budget, best time to visit, who it suits and location. Every place is listed in the sitemap: ${siteOrigin}/sitemap.xml`,
     '',
+    ...section('Tools', (routePath) => routePath === '/saan-tayo'),
     ...section('Guides', (routePath) => routePath.startsWith('/guides/')),
     ...section('Cities', (routePath) => /^\/places\/[^/]+$/.test(routePath) && routePath !== '/places/categories'),
     ...section('Categories', (routePath) => routePath.startsWith('/places/categories/')),
@@ -184,7 +206,9 @@ async function main() {
     throw new Error('dist/index.html has no empty <div id="root"></div> to fill')
   }
 
-  const routes = (await readSitemapPaths()).slice(0, pageLimit)
+  const sitemapPaths = await readSitemapPaths()
+  const addedPaths = (await readFrontendPaths()).filter((routePath) => !sitemapPaths.includes(routePath))
+  const routes = [...sitemapPaths, ...addedPaths].slice(0, pageLimit)
   const server = await startServer(shellHtml)
   const browser = await chromium.launch({ channel: process.env.PRERENDER_CHROME_CHANNEL || 'chrome' })
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, colorScheme: 'light', serviceWorkers: 'block' })
@@ -199,6 +223,7 @@ async function main() {
     })
   }
   const failures = []
+  const noindexPaths = []
   const pages = []
   const queue = routes.map((routePath) => ({ routePath, attempt: 1 }))
   let rendered = 0
@@ -215,7 +240,10 @@ async function main() {
 
       try {
         const result = await snapshot(page, job.routePath)
-        if (result.robots.includes('noindex')) throw new Error(`page is noindex (${result.robots})`)
+        if (result.robots.includes('noindex')) {
+          noindexPaths.push(job.routePath)
+          continue
+        }
 
         const outputPath = job.routePath === '/' ? indexPath : path.join(dist, job.routePath, 'index.html')
         await mkdir(path.dirname(outputPath), { recursive: true })
@@ -239,11 +267,13 @@ async function main() {
   server.close()
 
   await writeFile(path.join(dist, 'llms.txt'), buildLlmsTxt(pages))
+  await writeSitemap(addedPaths, noindexPaths)
   console.log(`Prerendered ${rendered}/${routes.length} pages.`)
+  noindexPaths.forEach((routePath) => console.log(`  noindex, left out of sitemap: ${routePath}`))
   failures.forEach((failure) => console.warn(`  skipped ${failure}`))
 
   // Skipped pages still work through the SPA fallback; only fail when most pages broke.
-  if (rendered < routes.length * 0.8) {
+  if (rendered < (routes.length - noindexPaths.length) * 0.8) {
     process.exitCode = 1
   }
 }
