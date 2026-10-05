@@ -8,7 +8,8 @@ import { buildAuthPath } from '../services/authApi'
 import { navigateToPath, replaceWithPath } from '../utils/navigation'
 import { trackLoginCompleted, trackSignUpCompleted } from '../utils/analytics'
 import { AuthCard } from '../components/auth/AuthCard'
-import { Button, Page } from '../components/ui'
+import { Button } from '../components/ui'
+import { Warning } from '@phosphor-icons/react/dist/csr/Warning'
 
 async function waitForSession(): Promise<Session | null> {
   const {
@@ -141,10 +142,11 @@ function AuthCallbackPage() {
 
   if (errorMessage) {
     return (
-      <AuthCard title="Sign-in problem" sub={errorMessage}>
+      <AuthCard bar="Log in" icon={<Warning weight="duotone" style={{ color: 'var(--warn)' }} />} title="Hindi natuloy ang sign-in" sub={errorMessage}>
         <div className="grid gap-2">
           <Button
-            variant="ink"
+            variant="tara"
+            size="lg"
             block
             onClick={() => {
               setErrorMessage('')
@@ -166,11 +168,19 @@ function AuthCallbackPage() {
   }
 
   return (
-    <Page>
-      <p className="g-sm g-mut mt-16 text-center" role="status" aria-live="polite">
-        Signing you in...
-      </p>
-    </Page>
+    <main className="m-auth">
+      <div className="m-auth-card">
+        <div className="m-auth-body items-center py-16 text-center" role="status" aria-live="polite">
+          <span className="m-dots" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+          </span>
+          <p className="g-h3">Signing you in</p>
+          <p className="g-sm g-mut -mt-3">Sandali lang, almost there.</p>
+        </div>
+      </div>
+    </main>
   )
 }
 

@@ -1,114 +1,81 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { CalendarBlank } from '@phosphor-icons/react/dist/csr/CalendarBlank'
 import { Heart } from '@phosphor-icons/react/dist/csr/Heart'
 import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
 import { DotsThree as MoreHorizontal } from '@phosphor-icons/react/dist/csr/DotsThree'
+import { X } from '@phosphor-icons/react/dist/csr/X'
 import { MagnifyingGlass as Search } from '@phosphor-icons/react/dist/csr/MagnifyingGlass'
 import { Sparkle as Sparkles } from '@phosphor-icons/react/dist/csr/Sparkle'
 import { Trash as Trash2 } from '@phosphor-icons/react/dist/csr/Trash'
 import GoogleSignInButton from '../components/GoogleSignInButton'
 import InternalLink from '../components/InternalLink'
 import DestructiveConfirmModal from '../components/DestructiveConfirmModal'
-import { Button, Empty, Page, Sheet, Skeleton, cx } from '../components/ui'
+import PhotoCard, { type PhotoCardPlace } from '../components/discover/PhotoCard'
+import { Button, Empty, Masonry, Page, PlaceCardSkeleton, Sheet } from '../components/ui'
 import { useSavedFavorites, type FavoritePlace } from '../context/SavedFavoritesContext'
+import { listFavoriteGalaPlans } from '../utils/galaPlansApi'
 import { getPlacePhoto } from '../utils/placePhoto'
 import { getPublicSiteUrl } from '../utils/site'
+import '../design/me.css'
 
 const FAVORITES_LOAD_MORE_BATCH_SIZE = 12
 const AI_PROMPT_PLACE_LIMIT = 6
 
-const SAVED_TABS = [
-  { key: 'places', href: '/favorites', label: 'Places' },
-  { key: 'plans', href: '/gala-plans/favorites', label: 'Plans' },
-] as const
+const CITY_COLLECTION_LIMIT = 6
 
-/** Places / Plans switcher shared by the saved screens. Each tab keeps its own route. */
-export function SavedTabs({ current, placesCount }: { current: (typeof SAVED_TABS)[number]['key']; placesCount?: number }) {
+function toPhotoCardPlace(place: FavoritePlace): PhotoCardPlace {
+  return {
+    id: place.id,
+    slug: place.slug,
+    name: place.name || 'Saved place',
+    category: place.category,
+    area: place.area,
+    city: place.city,
+    imageUrl: getPlacePhoto(place),
+    rating: place.rating,
+    budgetMin: place.is_free ? 0 : place.budget_min,
+  }
+}
+
+/** Airbnb wishlist cover: one big photo and two small ones; empty slots show the icon on mist. */
+function Collage({ photos, icon: Icon }: { photos: string[]; icon: typeof MapPin }) {
+  const slots = photos.length >= 3 ? photos.slice(0, 3) : photos.length > 0 ? [photos[0]] : [null]
   return (
-    <nav className="g-tabs mt-5" aria-label="Saved">
-      {SAVED_TABS.map((tab) => (
-        <InternalLink
-          key={tab.key}
-          href={tab.href}
-          className={cx('g-tab inline-flex items-center gap-1.5 no-underline', tab.key === current && 'is-on')}
-          aria-current={tab.key === current ? 'page' : undefined}
-        >
-          {tab.label}
-          {tab.key === 'places' && placesCount ? <span className="g-fnt">{placesCount}</span> : null}
-        </InternalLink>
+    <span className={slots.length === 1 ? 'me-wl-art is-1' : 'me-wl-art'} aria-hidden="true">
+      {slots.map((photo, index) => (
+        <span key={index}>
+          <Icon weight="duotone" />
+          {photo ? <img src={photo} alt="" loading="lazy" decoding="async" /> : null}
+        </span>
       ))}
-    </nav>
+    </span>
   )
 }
 
-function getPlaceMeta(place: FavoritePlace) {
-  const parts = [place.category?.trim(), place.area?.trim() || place.city?.trim()].filter(Boolean)
-  return Array.from(new Set(parts)).join(' · ') || 'Saved place'
-}
-
-const MASONRY = 'columns-2 gap-2.5 md:columns-3 md:gap-3 lg:columns-4'
-// Real photo sizes are unknown, so heights alternate by position for the Pinterest rhythm.
-const MASONRY_RATIOS = ['3 / 4', '4 / 5', '1 / 1', '4 / 3']
-const PHOTO_SHADE = 'linear-gradient(to top, rgba(15, 33, 56, 0.62) 0%, rgba(15, 33, 56, 0) 55%)'
-
-function getPriceLabel(place: FavoritePlace) {
-  if (place.is_free) return 'Free'
-  if (place.budget_min != null && place.budget_min > 0) return `₱${Math.round(place.budget_min).toLocaleString('en-PH')}`
-  return null
-}
-
-/** Masonry tile: photo with the name and price on it, heart top-right, meta under it on desktop. */
-export function SavedPlaceCard({ place, index = 0, onRemove }: { place: FavoritePlace; index?: number; onRemove?: () => void }) {
-  const placeSlug = place.slug?.trim() || place.id
-  const title = place.name || 'Saved place'
-  const photo = getPlacePhoto(place)
-  const price = getPriceLabel(place)
+function GridSkeleton() {
   return (
-    <div className="relative mb-2.5 break-inside-avoid md:mb-3">
-      <InternalLink href={`/places/${encodeURIComponent(placeSlug)}`} className="group block min-w-0 no-underline">
-        <div className="relative overflow-hidden rounded-[var(--r-3)]" style={{ aspectRatio: MASONRY_RATIOS[index % MASONRY_RATIOS.length], background: 'var(--sea-soft)' }}>
-          <span className="absolute inset-0 grid place-items-center" aria-hidden="true">
-            <MapPin size={28} color="var(--sea)" strokeWidth={1.75} opacity={0.45} />
-          </span>
-          {photo ? (
-            <img src={photo} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" />
-          ) : null}
-          <span className="absolute inset-0" style={{ background: PHOTO_SHADE }} aria-hidden="true" />
-          <span className="absolute inset-x-2.5 bottom-2.5 line-clamp-2 text-[13px] font-bold leading-snug text-white" style={{ textShadow: '0 1px 3px rgba(15, 33, 56, 0.5)' }}>
-            {title}
-            {price ? ` · ${price}` : ''}
-          </span>
-        </div>
-        <span className="g-xs g-mut mt-1.5 hidden truncate md:block">{getPlaceMeta(place)}</span>
-      </InternalLink>
-      {onRemove ? (
-        <button type="button" className="g-pc-save" aria-pressed="true" aria-label={`Remove ${title} from saved`} onClick={onRemove}>
-          <Heart className="g-ic" aria-hidden="true" />
-        </button>
-      ) : null}
-    </div>
-  )
-}
-
-function MasonrySkeleton() {
-  return (
-    <div className={MASONRY} aria-label="Loading saved places">
-      {Array.from({ length: 6 }, (_, index) => (
-        <Skeleton key={index} className="mb-2.5 break-inside-avoid !rounded-[var(--r-3)] md:mb-3" style={{ aspectRatio: MASONRY_RATIOS[index % MASONRY_RATIOS.length] }} />
+    <Masonry aria-label="Loading saved places">
+      {Array.from({ length: 4 }, (_, index) => (
+        <PlaceCardSkeleton key={index} />
       ))}
-    </div>
+    </Masonry>
   )
 }
+
+type SavedPlans = { count: number; photos: string[] } | null
 
 function FavoritesPage() {
   const [searchQuery, setSearchQuery] = useState('')
-  const [removingIds, setRemovingIds] = useState<Set<string>>(new Set())
+  const [cityFilter, setCityFilter] = useState<string | null>(null)
   const [isClearingAll, setIsClearingAll] = useState(false)
   const [isClearAllDialogOpen, setIsClearAllDialogOpen] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const gridRef = useRef<HTMLElement>(null)
   const [clearAllError, setClearAllError] = useState('')
   const [visibleFavoritesCount, setVisibleFavoritesCount] = useState(FAVORITES_LOAD_MORE_BATCH_SIZE)
-  const { session, isSessionLoading, isFavoritesLoading, favoritesError, favorites, removeFavorite, clearAllFavorites } = useSavedFavorites()
+  const [savedPlans, setSavedPlans] = useState<SavedPlans>(null)
+  const { session, isSessionLoading, isFavoritesLoading, favoritesError, favorites, clearAllFavorites } = useSavedFavorites()
 
   useEffect(() => {
     if (!isMenuOpen) return undefined
@@ -126,16 +93,48 @@ function FavoritesPage() {
     }
   }, [isMenuOpen])
 
+  useEffect(() => {
+    if (!session?.user) return undefined
+    let isMounted = true
+    listFavoriteGalaPlans(session)
+      .then((data) => {
+        if (!isMounted) return
+        const photos = data.plans.flatMap((plan) => (plan.preview_places ?? []).map((place) => place.image_url?.trim()).filter((url): url is string => Boolean(url)))
+        setSavedPlans({ count: data.plans.length, photos: Array.from(new Set(photos)) })
+      })
+      .catch(() => {
+        if (isMounted) setSavedPlans(null)
+      })
+    return () => {
+      isMounted = false
+    }
+  }, [session])
+
   const savedPlaces = useMemo(() => favorites.filter((favorite) => Boolean(favorite.place)), [favorites])
+
+  // Real collections from the saved places themselves: one per city once places span 2+ cities.
+  const cityCollections = useMemo(() => {
+    const byCity = new Map<string, FavoritePlace[]>()
+    for (const favorite of savedPlaces) {
+      const place = favorite.place as FavoritePlace
+      const city = place.city?.trim()
+      if (city) byCity.set(city, [...(byCity.get(city) ?? []), place])
+    }
+    if (byCity.size < 2) return []
+    return Array.from(byCity, ([city, places]) => ({ city, places }))
+      .sort((a, b) => b.places.length - a.places.length)
+      .slice(0, CITY_COLLECTION_LIMIT)
+  }, [savedPlaces])
 
   const filteredSavedPlaces = useMemo(() => {
     const normalizedQuery = searchQuery.trim().toLowerCase()
-    if (!normalizedQuery) return savedPlaces
     return savedPlaces.filter((favorite) => {
       const place = favorite.place as FavoritePlace
+      if (cityFilter && place.city?.trim() !== cityFilter) return false
+      if (!normalizedQuery) return true
       return [place.name, place.address, place.city, place.area, place.category].filter(Boolean).join(' ').toLowerCase().includes(normalizedQuery)
     })
-  }, [savedPlaces, searchQuery])
+  }, [savedPlaces, searchQuery, cityFilter])
   const visibleSavedPlaces = useMemo(() => filteredSavedPlaces.slice(0, visibleFavoritesCount), [filteredSavedPlaces, visibleFavoritesCount])
   const hasMoreSavedPlaces = visibleSavedPlaces.length < filteredSavedPlaces.length
 
@@ -147,19 +146,12 @@ function FavoritesPage() {
     return names.length > 0 ? `/plan-with-ai?q=${encodeURIComponent(`Plan a gala from my saved places: ${names.join(', ')}`)}` : '/plan-with-ai'
   }, [savedPlaces])
 
-  const handleRemoveFavorite = async (favoriteId: string) => {
-    if (removingIds.has(favoriteId)) return
-    setRemovingIds((current) => new Set(current).add(favoriteId))
+  const photosOf = (places: FavoritePlace[]) => places.map((place) => getPlacePhoto(place)).filter((url): url is string => Boolean(url))
 
-    try {
-      await removeFavorite(favoriteId)
-    } catch {
-      setRemovingIds((current) => {
-        const next = new Set(current)
-        next.delete(favoriteId)
-        return next
-      })
-    }
+  const pickCity = (city: string | null) => {
+    setCityFilter(city)
+    setVisibleFavoritesCount(FAVORITES_LOAD_MORE_BATCH_SIZE)
+    gridRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   const confirmClearAll = async () => {
@@ -175,6 +167,7 @@ function FavoritesPage() {
       setIsClearingAll(false)
       setIsClearAllDialogOpen(false)
       setVisibleFavoritesCount(FAVORITES_LOAD_MORE_BATCH_SIZE)
+      setCityFilter(null)
     }
   }
 
@@ -198,22 +191,22 @@ function FavoritesPage() {
 
   return (
     <Page>
-      <header>
-        <h1 className="g-h1">Saved</h1>
-        <p className="g-mut mt-2">
-          {isSignedIn && savedPlaces.length > 0
-            ? `${savedPlaces.length} saved place${savedPlaces.length === 1 ? '' : 's'}. Pick a few and turn them into a gala.`
-            : 'Your favorite gala spots, ready when you are.'}
-        </p>
+      <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+        <div className="min-w-0">
+          <h1 className="g-h1">Saved</h1>
+          <p className="g-mut mt-1">
+            {isSignedIn && savedPlaces.length > 0
+              ? `${savedPlaces.length} saved place${savedPlaces.length === 1 ? '' : 's'}. Pick a few and turn them into a gala.`
+              : 'Your favorite gala spots, ready when you are.'}
+          </p>
+        </div>
         {isSignedIn && savedPlaces.length > 0 ? (
-          <Button variant="tara" href={aiPlanHref} className="mt-4">
+          <Button variant="tara" href={aiPlanHref}>
             <Sparkles aria-hidden="true" />
-            Plan a gala from my saved places
+            Plan a gala from these
           </Button>
         ) : null}
       </header>
-
-      <SavedTabs current="places" placesCount={isSignedIn ? savedPlaces.length : undefined} />
 
       <DestructiveConfirmModal
         isOpen={isClearAllDialogOpen}
@@ -226,11 +219,14 @@ function FavoritesPage() {
       />
 
       {isSessionLoading ? (
-        <MasonrySkeleton />
+        <div className="mt-6">
+          <GridSkeleton />
+        </div>
       ) : null}
 
       {!isSessionLoading && !session?.user ? (
         <Empty
+          className="mt-6"
           title="Sign in to see your saved places."
           description="Your saved places are connected to your account."
           action={<GoogleSignInButton redirectTo={getPublicSiteUrl('/favorites')} />}
@@ -238,84 +234,125 @@ function FavoritesPage() {
       ) : null}
 
       {isSignedIn ? (
-        <div className="grid gap-4">
-          {savedPlaces.length > 0 ? (
-            <div className="flex items-center gap-2">
-              <label className="g-search min-w-0 flex-1">
-                <Search className="g-ic" aria-hidden="true" />
-                <input value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Search saved places" aria-label="Search saved places" />
-              </label>
-              <div ref={menuRef} className="relative shrink-0">
-                <Button variant="line" iconOnly aria-label="More options" aria-haspopup="menu" aria-expanded={isMenuOpen} onClick={() => setIsMenuOpen((open) => !open)}>
-                  <MoreHorizontal aria-hidden="true" />
-                </Button>
-                {isMenuOpen ? (
-                  <>
-                    <div
-                      role="menu"
-                      aria-label="Saved places options"
-                      className="absolute right-0 top-full z-50 mt-2 hidden w-max p-1 lg:block"
-                      style={{ background: 'var(--surface)', border: '1px solid var(--line-2)', borderRadius: 'var(--r-3)', boxShadow: 'var(--sh-2)' }}
-                    >
-                      {removeAllItem}
-                    </div>
-                    <div className="lg:hidden">
-                      <Sheet open onClose={() => setIsMenuOpen(false)} title="Saved places" labelledBy="saved-options-title">
-                        {removeAllItem}
-                      </Sheet>
-                    </div>
-                  </>
-                ) : null}
-              </div>
+        <>
+          <section aria-label="Collections" className="mt-6">
+            <div className="me-wls">
+              <button type="button" className="me-wl" aria-pressed={cityFilter === null} onClick={() => pickCity(null)}>
+                <Collage photos={photosOf(savedPlaces.map((favorite) => favorite.place as FavoritePlace))} icon={Heart} />
+                <span className="me-wl-t">All saved places</span>
+                <span className="me-wl-s">{isFavoritesLoading && savedPlaces.length === 0 ? 'Loading…' : `${savedPlaces.length} saved`}</span>
+              </button>
+              <InternalLink href="/gala-plans/favorites" className="me-wl">
+                <Collage photos={savedPlans?.photos ?? []} icon={CalendarBlank} />
+                <span className="me-wl-t">Saved plans</span>
+                <span className="me-wl-s">{savedPlans ? `${savedPlans.count} saved` : 'Plans you hearted'}</span>
+              </InternalLink>
+              {cityCollections.map(({ city, places }) => (
+                <button key={city} type="button" className="me-wl" aria-pressed={cityFilter === city} onClick={() => pickCity(cityFilter === city ? null : city)}>
+                  <Collage photos={photosOf(places)} icon={MapPin} />
+                  <span className="me-wl-t">{city}</span>
+                  <span className="me-wl-s">{places.length} saved</span>
+                </button>
+              ))}
             </div>
-          ) : null}
+          </section>
 
-          {clearAllError ? (
-            <p role="alert" className="g-sm" style={{ color: 'var(--bad)' }}>
-              {clearAllError}
-            </p>
-          ) : null}
-
-          {isFavoritesLoading && savedPlaces.length === 0 ? (
-            <MasonrySkeleton />
-          ) : favoritesError ? (
-            <Empty title="Hindi ma-load ang saved places." description={<span role="alert">{favoritesError}</span>} />
-          ) : null}
-
-          {savedPlaces.length === 0 && !isFavoritesLoading && !favoritesError ? (
-            <Empty
-              title="Wala ka pang saved places."
-              description="Tap the heart on any place to keep it here."
-              action={<Button variant="ink" href="/search">Explore places</Button>}
-            />
-          ) : null}
-
-          {savedPlaces.length > 0 && filteredSavedPlaces.length === 0 ? (
-            <Empty title="No saved places match that search." action={<Button variant="line" onClick={() => setSearchQuery('')}>Clear search</Button>} />
-          ) : null}
-
-          {visibleSavedPlaces.length > 0 ? (
-            <>
-              <div className={MASONRY}>
-                {visibleSavedPlaces.map((favorite, index) => (
-                  <SavedPlaceCard
-                    key={favorite.id}
-                    index={index}
-                    place={favorite.place as FavoritePlace}
-                    onRemove={() => void handleRemoveFavorite(favorite.place?.id || favorite.id)}
-                  />
-                ))}
-              </div>
-              {hasMoreSavedPlaces ? (
-                <div className="flex justify-center">
-                  <Button variant="line" onClick={() => setVisibleFavoritesCount((current) => current + FAVORITES_LOAD_MORE_BATCH_SIZE)}>
-                    Load more
-                  </Button>
-                </div>
+          <section ref={gridRef} aria-labelledby="saved-places-title" className="mt-10 grid scroll-mt-24 gap-4">
+            <div className="flex min-w-0 items-center gap-2">
+              <h2 id="saved-places-title" className="g-h2 truncate">{cityFilter ? `Saved in ${cityFilter}` : 'Saved places'}</h2>
+              {cityFilter ? (
+                <Button variant="soft" size="sm" iconOnly aria-label="Show all saved places" onClick={() => pickCity(null)}>
+                  <X aria-hidden="true" />
+                </Button>
               ) : null}
-            </>
-          ) : null}
-        </div>
+            </div>
+
+            {savedPlaces.length > 0 ? (
+              <div className="flex items-center gap-2">
+                <label className="g-search min-w-0 flex-1 focus-within:border-[var(--ink)]">
+                  <Search className="g-ic" aria-hidden="true" />
+                  <input value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Search saved places" aria-label="Search saved places" />
+                </label>
+                <div ref={menuRef} className="relative shrink-0">
+                  <Button variant="line" iconOnly aria-label="More options" aria-haspopup="menu" aria-expanded={isMenuOpen} onClick={() => setIsMenuOpen((open) => !open)}>
+                    <MoreHorizontal aria-hidden="true" />
+                  </Button>
+                  {isMenuOpen ? (
+                    <>
+                      <div
+                        role="menu"
+                        aria-label="Saved places options"
+                        className="absolute right-0 top-full z-50 mt-2 hidden w-max p-1 lg:block"
+                        style={{ background: 'var(--surface)', border: '1px solid var(--line-2)', borderRadius: 'var(--r-3)', boxShadow: 'var(--sh-2)' }}
+                      >
+                        {removeAllItem}
+                      </div>
+                      <div className="lg:hidden">
+                        <Sheet open onClose={() => setIsMenuOpen(false)} title="Saved places" labelledBy="saved-options-title">
+                          {removeAllItem}
+                        </Sheet>
+                      </div>
+                    </>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
+
+            {clearAllError ? (
+              <p role="alert" className="g-sm" style={{ color: 'var(--bad)' }}>
+                {clearAllError}
+              </p>
+            ) : null}
+
+            {isFavoritesLoading && savedPlaces.length === 0 ? (
+              <GridSkeleton />
+            ) : favoritesError ? (
+              <Empty title="Hindi ma-load ang saved places." description={<span role="alert">{favoritesError}</span>} />
+            ) : null}
+
+            {savedPlaces.length === 0 && !isFavoritesLoading && !favoritesError ? (
+              <Empty
+                title="Wala ka pang saved places."
+                description="Tap the heart on any place to keep it here."
+                action={<Button variant="ink" href="/search">Explore places</Button>}
+              />
+            ) : null}
+
+            {savedPlaces.length > 0 && filteredSavedPlaces.length === 0 ? (
+              <Empty
+                title="No saved places match that search."
+                action={
+                  <Button
+                    variant="line"
+                    onClick={() => {
+                      setSearchQuery('')
+                      setCityFilter(null)
+                    }}
+                  >
+                    Clear search
+                  </Button>
+                }
+              />
+            ) : null}
+
+            {visibleSavedPlaces.length > 0 ? (
+              <>
+                <Masonry>
+                  {visibleSavedPlaces.map((favorite) => (
+                    <PhotoCard key={favorite.id} place={toPhotoCardPlace(favorite.place as FavoritePlace)} onGuestFavorite={() => undefined} />
+                  ))}
+                </Masonry>
+                {hasMoreSavedPlaces ? (
+                  <div className="flex justify-center">
+                    <Button variant="line" onClick={() => setVisibleFavoritesCount((current) => current + FAVORITES_LOAD_MORE_BATCH_SIZE)}>
+                      Show more
+                    </Button>
+                  </div>
+                ) : null}
+              </>
+            ) : null}
+          </section>
+        </>
       ) : null}
     </Page>
   )

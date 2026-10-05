@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react'
+import { Flag } from '@phosphor-icons/react/dist/csr/Flag'
 import MinimalBackNav from '../components/navigation/MinimalBackNav'
 import GoogleSignInButton from '../components/GoogleSignInButton'
 import { Empty, Page, Panel, Skeleton, Tabs, Tag } from '../components/ui'
@@ -9,6 +10,7 @@ import { fetchMyPlaceReports, type MyPlaceReport, type PlaceReportReason, type P
 import { navigateToPlace } from '../utils/navigation'
 import { getPublicSiteUrl } from '../utils/site'
 import { InlineSkeleton } from '../components/loading/SkeletonStates'
+import '../design/misc.css'
 
 const commentReasonLabels: Record<CommentReportReason, string> = {
   spam: 'Spam',
@@ -119,7 +121,7 @@ function ReportEntry({
   children?: ReactNode
 }) {
   return (
-    <article className="g-card p-4">
+    <article className="g-card p-4 sm:p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="g-xs g-mut">{topLine}</p>
@@ -289,8 +291,14 @@ function ReportsPage() {
   return (
     <Page narrow>
       <MinimalBackNav to="/home" label="Home" preferHistory={false} />
-      <h1 className="g-h1 mt-2">Your reports</h1>
-      <p className="g-mut mt-1 text-[15px]">Everything you flagged, plus what the team decided.</p>
+      <header className="m-art-head mt-2">
+        <span className="m-art-ic" aria-hidden="true">
+          <Flag weight="duotone" />
+        </span>
+        <p className="m-onb-step">Safety</p>
+        <h1 className="g-h1 mt-1.5">Your reports</h1>
+        <p className="g-mut mt-2 text-[16px]">Everything you flagged, plus what the team decided.</p>
+      </header>
 
       {isSessionLoading || (session?.user && isTokenLoading) ? <InlineSkeleton className="mt-6" /> : null}
 

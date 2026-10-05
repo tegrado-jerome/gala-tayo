@@ -1,20 +1,29 @@
+import type { Icon as PhosphorIcon } from '@phosphor-icons/react'
+import { CalendarPlus } from '@phosphor-icons/react/dist/csr/CalendarPlus'
+import { Compass } from '@phosphor-icons/react/dist/csr/Compass'
+import { MapTrifold } from '@phosphor-icons/react/dist/csr/MapTrifold'
+import { Sparkle } from '@phosphor-icons/react/dist/csr/Sparkle'
 import MinimalBackNav from '../components/navigation/MinimalBackNav'
 import SeoHead from '../components/SeoHead'
 import { Button, Page } from '../components/ui'
 import { getSiteOrigin } from '../utils/seo'
+import '../design/misc.css'
 
-const aboutHighlights = [
+const aboutHighlights: Array<{ title: string; body: string; icon: PhosphorIcon }> = [
   {
     title: 'Discover Metro Manila places',
     body: 'GalaTayo helps people browse places to visit for dates, barkada hangouts, family plans, chill days, and everyday gala ideas.',
+    icon: Compass,
   },
   {
     title: 'Plan your next gala',
     body: 'You can search places, build gala plans, and save ideas for later without changing how you already explore the app.',
+    icon: CalendarPlus,
   },
   {
     title: 'Use AI-powered help',
     body: 'GalaTayo AI features can help you narrow down ideas, while place pages stay focused on clear location and planning details.',
+    icon: Sparkle,
   },
 ]
 
@@ -47,37 +56,54 @@ function AboutPage() {
       />
       <MinimalBackNav to="/home" label="Home" preferHistory={false} />
 
-      <article className="mt-2 max-w-[65ch] text-[16px] leading-[1.7]">
-        <p className="g-eyebrow">About</p>
-        <h1 className="g-h1 mt-2">About GalaTayo</h1>
-        <p className="mt-4">
-          GalaTayo, also written Gala Tayo, is a Metro Manila place discovery and planning app built to help people find hangout spots,
-          browse public place pages, and map out their next gala.
-        </p>
-        <p className="g-mut mt-3">
-          The name comes from the Filipino phrase "gala tayo", which means "let's go out". GalaTayo launched in July 2026 and is built in
-          the Philippines. It is free to use, and every place page is public so you can share it with the barkada without signing in.
-        </p>
+      <article className="mt-2">
+        <header className="m-art-head">
+          <span className="m-art-ic" aria-hidden="true">
+            <MapTrifold weight="duotone" />
+          </span>
+          <p className="m-onb-step">About</p>
+          <h1 className="g-h1 mt-1.5">About GalaTayo</h1>
+          <p className="g-mut mt-3 max-w-[60ch] text-[16px] leading-relaxed">
+            &ldquo;Gala tayo&rdquo; means &ldquo;let&apos;s go out&rdquo;. That&apos;s the whole idea.
+          </p>
+        </header>
 
-        <h2 className="g-h2 mt-10">What GalaTayo helps you do</h2>
-        <div className="mt-4 grid gap-3">
-          {aboutHighlights.map((item) => (
-            <section key={item.title} className="g-panel">
-              <h3 className="g-h3">{item.title}</h3>
-              <p className="g-sm g-mut mt-1 leading-relaxed">{item.body}</p>
+        <div className="m-prose mt-6 max-w-[65ch]">
+          <p>
+            GalaTayo, also written Gala Tayo, is a Metro Manila place discovery and planning app built to help people find hangout spots,
+            browse public place pages, and map out their next gala.
+          </p>
+          <p className="g-mut">
+            The name comes from the Filipino phrase &ldquo;gala tayo&rdquo;, which means &ldquo;let&apos;s go out&rdquo;. GalaTayo launched in July 2026 and is built in
+            the Philippines. It is free to use, and every place page is public so you can share it with the barkada without signing in.
+          </p>
+        </div>
+
+        <h2 className="g-h2 mt-12">What GalaTayo helps you do</h2>
+        <div className="m-feat mt-5">
+          {aboutHighlights.map(({ title, body, icon: Icon }) => (
+            <section key={title}>
+              <Icon weight="duotone" aria-hidden="true" />
+              <h3 className="g-h3 mt-3">{title}</h3>
+              <p className="g-sm g-mut mt-1 leading-relaxed">{body}</p>
             </section>
           ))}
         </div>
 
-        <h2 className="g-h2 mt-10">Metro Manila focus</h2>
-        <p className="mt-3">
+        <h2 className="g-h2 mt-12">Metro Manila focus</h2>
+        <p className="m-prose mt-3 max-w-[65ch]">
           GalaTayo focuses on Metro Manila places and area pages so browse routes, canonical place URLs, and planning links stay clear and
           consistent across the app.
         </p>
 
-        <Button variant="ink" href="/places" className="mt-8">
-          Browse places
-        </Button>
+        <div className="mt-8 flex flex-wrap gap-2 border-t border-[var(--line-2)] pt-8">
+          <Button variant="tara" size="lg" href="/places">
+            Browse places
+          </Button>
+          <Button variant="line" size="lg" href="/saan-tayo">
+            Saan tayo?
+          </Button>
+        </div>
       </article>
     </Page>
   )

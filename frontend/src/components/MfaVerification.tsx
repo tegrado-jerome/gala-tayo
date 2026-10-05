@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { CheckCircle as CircleCheck } from '@phosphor-icons/react/dist/csr/CheckCircle'
+import { ShieldCheck } from '@phosphor-icons/react/dist/csr/ShieldCheck'
 import { SignOut as LogOut } from '@phosphor-icons/react/dist/csr/SignOut'
 import { sendMfaEmailCode, verifyMfaEmailCode } from '../utils/userMfa'
 import { setDeviceToken } from '../utils/mfaDevice'
@@ -235,7 +236,8 @@ function MfaVerification({ session, nextPath: nextPathProp, onSuccess }: MfaVeri
 
   return (
     <AuthCard
-      eyebrow="Two-step check"
+      bar="Two-step check"
+      icon={<ShieldCheck weight="duotone" />}
       title="Enter your code"
       sub={
         <>
@@ -249,7 +251,7 @@ function MfaVerification({ session, nextPath: nextPathProp, onSuccess }: MfaVeri
         </AuthNotice>
       ) : null}
 
-      <div className="flex justify-center gap-2" role="group" aria-label="6-digit code">
+      <div className="m-otp" role="group" aria-label="6-digit code">
         {digits.map((digit, index) => (
           <input
             key={index}
@@ -264,7 +266,7 @@ function MfaVerification({ session, nextPath: nextPathProp, onSuccess }: MfaVeri
             onChange={(event) => handleDigitChange(index, event.target.value)}
             onKeyDown={(event) => handleKeyDown(index, event)}
             onPaste={index === 0 ? handlePaste : undefined}
-            className="g-input h-14 w-12 min-w-0 !p-0 text-center text-xl font-semibold"
+            className={digit ? 'is-f' : undefined}
           />
         ))}
       </div>
@@ -278,7 +280,7 @@ function MfaVerification({ session, nextPath: nextPathProp, onSuccess }: MfaVeri
         </p>
       ) : null}
 
-      <button ref={verifyButtonRef} type="button" className={buttonClass({ variant: 'ink', block: true })} onClick={() => void handleVerify()} disabled={!codeComplete || isVerifying}>
+      <button ref={verifyButtonRef} type="button" className={buttonClass({ variant: 'tara', size: 'lg', block: true })} onClick={() => void handleVerify()} disabled={!codeComplete || isVerifying}>
         {isVerifying ? 'Verifying...' : 'Verify'}
       </button>
 

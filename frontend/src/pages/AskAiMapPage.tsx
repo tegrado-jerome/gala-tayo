@@ -11,6 +11,7 @@ import { Star } from '@phosphor-icons/react/dist/csr/Star'
 import { X } from '@phosphor-icons/react/dist/csr/X'
 import { FeatureGuideModalTrigger, featureGuideContent } from '../components/FeatureGuideModal'
 import AskAiUsagePill from '../components/AskAiUsagePill'
+import { TaraAvatar } from '../components/home/ask-ai/AskAiComponents'
 import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
 import MapView from '../components/MapView'
 import { Button, Chip, Panel, Sheet, Skeleton, Tag, buttonClass, cx } from '../components/ui'
@@ -155,7 +156,7 @@ const AskAiMapComposer = memo(function AskAiMapComposer({
   }
 
   return (
-    <div className="flex items-end gap-2 rounded-[var(--r-4)] border border-transparent bg-[var(--fill)] p-1.5 pl-4 focus-within:border-[var(--ink)]">
+    <div className="flex items-end gap-2 rounded-[var(--r-4)] border border-[var(--line)] bg-[var(--surface)] p-1.5 pl-4 shadow-[var(--sh-1)] focus-within:border-[var(--ink)]">
       <label htmlFor="ask-ai-map-input" className="sr-only">
         Ask the map
       </label>
@@ -857,13 +858,12 @@ function AskAiMapPage() {
         <aside className="absolute inset-x-0 bottom-0 z-[650] flex max-h-[62%] flex-col gap-3 rounded-t-[var(--r-4)] border-t border-[var(--line-2)] bg-[var(--surface)] px-4 pt-2.5 pb-3 shadow-[var(--sh-3)] lg:relative lg:inset-auto lg:z-auto lg:max-h-none lg:min-h-0 lg:rounded-none lg:border-t-0 lg:border-l lg:px-5 lg:py-5 lg:shadow-none">
           <div className="g-grab mb-0! lg:hidden" aria-hidden="true" />
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
+            <TaraAvatar />
             <div className="min-w-0 flex-1">
-              <span className="g-ai-badge">
-                <Sparkles aria-hidden="true" />
-                AI map
-              </span>
-              <h1 className="g-h2 mt-1 hidden truncate lg:block">{query.trim() || 'Ask the map'}</h1>
+              <p className="g-h3 leading-tight lg:hidden">Ask the map</p>
+              <h1 className="g-h2 hidden truncate lg:block">{query.trim() || 'Ask the map'}</h1>
+              <p className="g-xs g-mut">Tara pins the picks for you</p>
             </div>
             <AskAiUsagePill usageStatus={askAiMapsUsageStatus} />
             <FeatureGuideModalTrigger content={featureGuideContent.maps} className="h-11 w-11" />
@@ -907,14 +907,17 @@ function AskAiMapPage() {
             className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] lg:mx-0 lg:min-h-0 lg:flex-1 lg:snap-none lg:flex-col lg:overflow-x-hidden lg:overflow-y-auto lg:px-0 [&::-webkit-scrollbar]:hidden"
           >
             {isSearching && !isGuestUpgradePromptOpen ? (
-              <div className="w-[85%] shrink-0 rounded-[var(--r-3)] rounded-tl-[var(--r-1)] bg-[var(--fill)] p-4 lg:w-full" aria-live="polite">
-                <span className="g-ai-badge">
-                  <Sparkles aria-hidden="true" />
-                  Thinking…
-                </span>
-                {query ? <p className="g-sm g-mut mt-2 line-clamp-2">“{query.trim()}”</p> : null}
-                <Skeleton className="mt-3 h-3 w-4/5" />
-                <Skeleton className="mt-2 h-3 w-3/5" />
+              <div className="m-msg-ai w-[85%] shrink-0 lg:w-full" aria-live="polite">
+                <TaraAvatar />
+                <div className="m-bubble-ai flex-1">
+                  <span className="m-dots" aria-hidden="true">
+                    <i />
+                    <i />
+                    <i />
+                  </span>
+                  <span className="sr-only">Tara is searching</span>
+                  {query ? <p className="g-sm g-mut line-clamp-2">Looking for “{query.trim()}”</p> : null}
+                </div>
               </div>
             ) : null}
 

@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { Check } from '@phosphor-icons/react/dist/csr/Check'
 import { CircleNotch as Loader2 } from '@phosphor-icons/react/dist/csr/CircleNotch'
+import { Clock } from '@phosphor-icons/react/dist/csr/Clock'
 import { MagnifyingGlass as Search } from '@phosphor-icons/react/dist/csr/MagnifyingGlass'
+import { UserPlus } from '@phosphor-icons/react/dist/csr/UserPlus'
 import { X } from '@phosphor-icons/react/dist/csr/X'
 import InternalLink from '../components/InternalLink'
 import ProfileAvatar from '../components/ProfileAvatar'
@@ -19,6 +22,7 @@ import {
   type RelationshipState,
 } from '../utils/profileApi'
 import { supabase } from '../supabase'
+import '../design/me.css'
 
 function formatCompactCount(value: number) {
   return new Intl.NumberFormat('en', { notation: 'compact' }).format(value)
@@ -34,34 +38,57 @@ const FOLLOW_LABELS: Record<RelationshipState, string> = {
   blocked: 'Follow',
 }
 
-function PersonRow({
-  profile,
-  currentUserId,
-  relationship,
-  followersCount,
-  onToggleFollow,
-}: {
+type PersonProps = {
   profile: PersonProfile
   currentUserId: string | null
   relationship: RelationshipState
   followersCount?: number
   onToggleFollow: (profile: PersonProfile) => void
-}) {
+}
+
+function personInfo({ profile, currentUserId, relationship, followersCount }: PersonProps) {
   const isOwnProfile = Boolean(currentUserId && profile.user_id === currentUserId)
-  const title = profile.display_name?.trim() || `@${profile.username}`
-  const isFollowing = relationship === 'following' || relationship === 'pending'
-  const counts =
-    followersCount !== undefined || profile.following_count !== undefined
-      ? `${formatCompactCount(followersCount ?? 0)} followers · ${formatCompactCount(profile.following_count ?? 0)} following`
-      : null
+  return {
+    isOwnProfile,
+    href: isOwnProfile ? '/profile' : `/u/${encodeURIComponent(profile.username)}`,
+    title: profile.display_name?.trim() || `@${profile.username}`,
+    isFollowing: relationship === 'following' || relationship === 'pending',
+    counts:
+      followersCount !== undefined || profile.following_count !== undefined
+        ? `${formatCompactCount(followersCount ?? 0)} followers · ${formatCompactCount(profile.following_count ?? 0)} following`
+        : null,
+  }
+}
+
+function FollowButton({ profile, relationship, isFollowing, onToggleFollow, block }: Pick<PersonProps, 'profile' | 'relationship' | 'onToggleFollow'> & { isFollowing: boolean; block?: boolean }) {
+  const Icon = relationship === 'following' ? Check : relationship === 'pending' ? Clock : UserPlus
+  return (
+    <Button
+      variant={isFollowing ? 'soft' : 'ink'}
+      size="sm"
+      block={block}
+      className={block ? undefined : 'min-w-[104px]'}
+      aria-label={`${FOLLOW_LABELS[relationship]} @${profile.username}`}
+      onClick={(event) => {
+        event.stopPropagation()
+        onToggleFollow(profile)
+      }}
+    >
+      <Icon aria-hidden="true" />
+      {FOLLOW_LABELS[relationship]}
+    </Button>
+  )
+}
+
+/** List row for people you follow and search matches: avatar, name, handle, counts, follow button. */
+function PersonRow(props: PersonProps) {
+  const { profile, relationship, onToggleFollow } = props
+  const { isOwnProfile, href, title, isFollowing, counts } = personInfo(props)
 
   return (
-    <div className="g-row relative">
+    <div className="me-prow">
       <ProfileAvatar profile={profile} size="sm" />
-      <InternalLink
-        href={isOwnProfile ? '/profile' : `/u/${encodeURIComponent(profile.username)}`}
-        className="min-w-0 flex-1 no-underline after:absolute after:inset-0 after:rounded-[inherit] after:content-['']"
-      >
+      <InternalLink href={href}>
         <span className="flex min-w-0 items-center gap-2">
           <span className="g-h3 truncate">{title}</span>
           {isOwnProfile ? <Tag className="shrink-0">You</Tag> : null}
@@ -69,19 +96,28 @@ function PersonRow({
         <span className="g-sm g-mut block truncate">@{profile.username}</span>
         {counts ? <span className="g-xs g-fnt block truncate">{counts}</span> : null}
       </InternalLink>
-      {isOwnProfile ? null : (
-        <Button
-          variant={isFollowing ? 'soft' : 'ink'}
-          size="sm"
-          className="relative z-10 min-w-[104px] shrink-0"
-          aria-label={`${FOLLOW_LABELS[relationship]} @${profile.username}`}
-          onClick={(event) => {
-            event.stopPropagation()
-            onToggleFollow(profile)
-          }}
-        >
-          {FOLLOW_LABELS[relationship]}
-        </Button>
+      {isOwnProfile ? null : <FollowButton profile={profile} relationship={relationship} isFollowing={isFollowing} onToggleFollow={onToggleFollow} />}
+    </div>
+  )
+}
+
+/** Suggestion card: big avatar, name, handle, counts, full-width follow button. */
+function PersonCard(props: PersonProps) {
+  const { profile, relationship, onToggleFollow } = props
+  const { isOwnProfile, href, title, isFollowing, counts } = personInfo(props)
+
+  return (
+    <div className="me-pcard">
+      <ProfileAvatar profile={profile} size="md" />
+      <InternalLink href={href} ariaLabel={`${title}, @${profile.username}`}>
+        <span className="me-pcard-n block">{title}</span>
+      </InternalLink>
+      <span className="me-pcard-s">@{profile.username}</span>
+      {counts ? <span className="g-xs g-fnt max-w-full truncate">{counts}</span> : null}
+      {isOwnProfile ? (
+        <Tag className="mt-3">You</Tag>
+      ) : (
+        <FollowButton profile={profile} relationship={relationship} isFollowing={isFollowing} onToggleFollow={onToggleFollow} block />
       )}
     </div>
   )
@@ -89,9 +125,25 @@ function PersonRow({
 
 function RowsSkeleton() {
   return (
-    <div className="g-list" aria-label="Loading">
+    <div className={LIST_GRID} aria-label="Loading">
       {Array.from({ length: 3 }, (_, index) => (
-        <Skeleton key={index} className="h-[72px]" />
+        <div key={index} className="flex items-center gap-3 py-3">
+          <Skeleton className="h-12 w-12 shrink-0 !rounded-full" />
+          <div className="flex-1">
+            <Skeleton className="h-4 w-1/2" />
+            <Skeleton className="mt-2 h-3 w-1/3" />
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function CardsSkeleton() {
+  return (
+    <div className="me-people" aria-label="Loading">
+      {Array.from({ length: 4 }, (_, index) => (
+        <Skeleton key={index} className="h-[196px] !rounded-[var(--r-3)]" />
       ))}
     </div>
   )
@@ -105,7 +157,7 @@ function ErrorLine({ children }: { children: string }) {
   )
 }
 
-const LIST_GRID = 'grid gap-2.5 lg:grid-cols-2'
+const LIST_GRID = 'grid lg:grid-cols-2 lg:gap-x-10'
 
 function ProfileSearchPage() {
   const [query, setQuery] = useState('')
@@ -303,16 +355,15 @@ function ProfileSearchPage() {
     }
   }
 
-  const renderPerson = (profile: PersonProfile) => (
-    <PersonRow
-      key={profile.user_id}
-      profile={profile}
-      currentUserId={currentUserId}
-      relationship={getRelationship(profile.username)}
-      followersCount={getFollowersCount(profile)}
-      onToggleFollow={(target) => void handleToggleFollow(target)}
-    />
-  )
+  const personProps = (profile: PersonProfile): PersonProps => ({
+    profile,
+    currentUserId,
+    relationship: getRelationship(profile.username),
+    followersCount: getFollowersCount(profile),
+    onToggleFollow: (target) => void handleToggleFollow(target),
+  })
+  const renderPerson = (profile: PersonProfile) => <PersonRow key={profile.user_id} {...personProps(profile)} />
+  const renderCard = (profile: PersonProfile) => <PersonCard key={profile.user_id} {...personProps(profile)} />
 
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -332,9 +383,9 @@ function ProfileSearchPage() {
     <Page>
       <header className="max-w-[640px]">
         <h1 className="g-h1">Find friends</h1>
-        <p className="g-mut mt-2">Search usernames and build your barkada on GalaTayo.</p>
+        <p className="g-mut mt-1">Search usernames and build your barkada on GalaTayo.</p>
 
-        <label className="g-search mt-5 focus-within:border-[var(--ink)]">
+        <label className="g-search mt-5 !h-14 shadow-[var(--sh-2)] focus-within:border-[var(--ink)]">
           <Search className="g-ic" aria-hidden="true" />
           <input
             ref={inputRef}
@@ -400,14 +451,14 @@ function ProfileSearchPage() {
               title="Suggested for you"
               sub={!isLoadingSuggestions && !isLoadingFollowing && !suggestionsErrorMessage && visibleSuggestions.length > 0 ? `${visibleSuggestions.length} profiles` : undefined}
             />
-            {isLoadingSuggestions || isLoadingFollowing ? <RowsSkeleton /> : null}
+            {isLoadingSuggestions || isLoadingFollowing ? <CardsSkeleton /> : null}
             {suggestionsErrorMessage ? <ErrorLine>{suggestionsErrorMessage}</ErrorLine> : null}
             {!isLoadingSuggestions && !isLoadingFollowing && !suggestionsErrorMessage && visibleSuggestions.length === 0 ? (
               <Empty title="No suggested users yet." description="Search a username above instead." />
             ) : null}
             {!isLoadingSuggestions && !isLoadingFollowing && visibleSuggestions.length > 0 ? (
-              <div className={LIST_GRID}>
-                {visibleSuggestions.map(renderPerson)}
+              <div className="me-people">
+                {visibleSuggestions.map(renderCard)}
               </div>
             ) : null}
           </section>

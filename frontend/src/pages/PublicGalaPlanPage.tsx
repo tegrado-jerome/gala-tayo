@@ -1,18 +1,27 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeft } from '@phosphor-icons/react/dist/csr/ArrowLeft'
 import { CalendarBlank as CalendarDays } from '@phosphor-icons/react/dist/csr/CalendarBlank'
+import { Coins } from '@phosphor-icons/react/dist/csr/Coins'
 import { Heart } from '@phosphor-icons/react/dist/csr/Heart'
 import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
+import { Path } from '@phosphor-icons/react/dist/csr/Path'
 import { Export as Share } from '@phosphor-icons/react/dist/csr/Export'
 import { Sparkle as Sparkles } from '@phosphor-icons/react/dist/csr/Sparkle'
+import { UsersThree } from '@phosphor-icons/react/dist/csr/UsersThree'
+import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
 import InternalLink from '../components/InternalLink'
-import PlanRouteMap from '../components/gala-plan/PlanRouteMap'
+import PlanRouteMap, { useIsDesktop } from '../components/gala-plan/PlanRouteMap'
+import { TripCover } from '../components/gala-plan/PlanSummaryCard'
 import PlanTimeline, { type TimelineStop } from '../components/gala-plan/PlanTimeline'
-import { Avatar, Button, Empty, Page, Panel, SectionHead, Skeleton } from '../components/ui'
+import { Avatar, Button, Empty, Page, Panel, SectionHead, Skeleton, cx } from '../components/ui'
+import { useAppUser } from '../context/AppUserContext'
 import { getDisplayName, getPublicGalaPlan, type PublicGalaPlan } from '../utils/profileApi'
 import { formatGalaPlanDate, parseGalaPlanDescription } from '../utils/galaPlansApi'
 import { heartGalaPlan, unheartGalaPlan } from '../utils/galaPlanHeartsApi'
+import { estimatePerHead, formatPeso, getPlanLegs } from '../utils/galaPlanTrip'
+import { navigateToPath } from '../utils/navigation'
 import { shareGalaPlanLink } from '../utils/share'
+import '../design/plans.css'
 
 type PublicGalaPlanPageProps = {
   username: string
@@ -20,11 +29,14 @@ type PublicGalaPlanPageProps = {
 }
 
 function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
+  const { session } = useAppUser()
   const [plan, setPlan] = useState<PublicGalaPlan | null>(null)
   const [notFound, setNotFound] = useState(false)
   const [lockedMessage, setLockedMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
   const [notice, setNotice] = useState('')
+  const [isSignInOpen, setIsSignInOpen] = useState(false)
+  const isDesktop = useIsDesktop()
 
   useEffect(() => {
     let isMounted = true
@@ -99,73 +111,132 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
 
   if (!plan) {
     return (
-      <Page>
-        <div aria-label="Loading plan">
-          <Skeleton className="aspect-[16/9] lg:aspect-[5/2]" />
-          <Skeleton className="mt-6 h-4 w-40" />
-          <Skeleton className="mt-3 h-8 w-2/3" />
-          <Skeleton className="mt-8 h-40" />
+      <Page className="pt-0 md:pt-6">
+        <div aria-label="Loading plan" className="g-plan-split has-map">
+          <div>
+            <Skeleton className="-mx-4 h-[240px] rounded-none md:mx-0 md:h-[320px] md:rounded-[var(--r-4)]" />
+            <Skeleton className="mt-5 h-4 w-40" />
+            <Skeleton className="mt-3 h-8 w-2/3" />
+            <Skeleton className="mt-5 h-[72px]" />
+            <Skeleton className="mt-8 h-40" />
+          </div>
+          <Skeleton className="g-only-desk h-[calc(100vh-128px)] rounded-[var(--r-4)]" />
         </div>
       </Page>
     )
   }
 
   const description = parseGalaPlanDescription(plan.description).description
-  const cover = items.find((item) => item.place.image_url)?.place.image_url
   const ownerName = getDisplayName(plan.owner)
   const city = items.find((item) => item.place.city)?.place.city
+  const hasRoute = items.some((item) => item.place.latitude != null && item.place.longitude != null)
+  const totalKm = getPlanLegs(items).reduce((sum, leg) => sum + (leg?.km ?? 0), 0)
+  const perHead = estimatePerHead(items, 1)
+  const planHref = `/gala-plans/${encodeURIComponent(plan.id)}`
+
+  const joinPlan = () => {
+    if (!session) {
+      setIsSignInOpen(true)
+      return
+    }
+    navigateToPath(planHref)
+  }
+
+  const routeMap = hasRoute ? <PlanRouteMap stops={stops} className={isDesktop ? undefined : 'mb-6'} label={`Route map for ${plan.title}`} /> : null
 
   return (
-    <Page>
-      <InternalLink href={profileHref} className="g-sm g-mut inline-flex min-h-11 items-center gap-1.5">
-        <ArrowLeft className="h-4 w-4" />
-        @{plan.owner?.username || username}
-      </InternalLink>
-      <div className="g-split mt-2">
+    <Page className="pt-0 md:pt-6 lg:pt-8">
+      <GuestAuthPrompt variant="plans-page" mode="modal" isOpen={isSignInOpen} onClose={() => setIsSignInOpen(false)} />
+
+      <div className={cx('g-plan-split', hasRoute ? 'has-map' : 'mx-auto max-w-[760px]')}>
         <div className="min-w-0">
-          {cover ? (
-            <div className="mb-5 aspect-[16/9] overflow-hidden bg-[var(--fill)] lg:mb-6 lg:aspect-[2/1]" style={{ borderRadius: 'var(--r-4)' }}>
-              <img src={cover} alt="" className="h-full w-full object-cover" />
+          <div className="g-plan-cover">
+            <TripCover stops={items.map((item) => item.place)} priority />
+            <div className="g-plan-bar">
+              <InternalLink href={profileHref} className="g-round" ariaLabel={`Back to @${plan.owner?.username || username}`}>
+                <ArrowLeft />
+              </InternalLink>
+              <button
+                type="button"
+                className="g-round is-wide"
+                aria-pressed={plan.viewer_has_hearted}
+                aria-label={plan.viewer_has_hearted ? 'Remove heart' : 'Heart this plan'}
+                onClick={() => void toggleHeart()}
+              >
+                <Heart weight={plan.viewer_has_hearted ? 'fill' : 'regular'} style={plan.viewer_has_hearted ? { color: 'var(--tara)' } : undefined} />
+                {plan.hearts_count}
+              </button>
             </div>
-          ) : null}
-          <InternalLink href={profileHref} className="inline-flex min-h-11 items-center gap-2">
-            <Avatar src={plan.owner?.avatar_url ?? plan.owner?.provider_avatar_url} name={ownerName} size={28} />
-            <span className="g-eyebrow">{ownerName} shared this gala</span>
-          </InternalLink>
-          <h1 className="g-h1 mt-1">{plan.title}</h1>
-          <div className="g-sm g-mut mt-2 flex flex-wrap gap-x-4 gap-y-1.5">
-            <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-4 w-4" />{formatGalaPlanDate(plan.description)}</span>
-            {city ? <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4" />{city}</span> : null}
-            <span>{items.length} {items.length === 1 ? 'stop' : 'stops'}</span>
           </div>
-          {description ? <p className="mt-3 max-w-[65ch]">{description}</p> : null}
 
-          <SectionHead title="The plan" sub={items.length > 0 ? `${items.length} ${items.length === 1 ? 'stop' : 'stops'} · travel times are estimates` : undefined} />
-          {stops.length === 0 ? <Empty title="Wala pang stops" description="This plan has no places yet." /> : <PlanTimeline stops={stops} />}
-        </div>
+          <header className="mt-5">
+            <InternalLink href={profileHref} className="inline-flex min-h-11 items-center gap-2 no-underline">
+              <Avatar src={plan.owner?.avatar_url ?? plan.owner?.provider_avatar_url} name={ownerName} size={28} />
+              <span className="g-sm g-mut">
+                <b className="text-[var(--ink)]">{ownerName}</b> shared this gala
+              </span>
+            </InternalLink>
+            <h1 className="g-h1 mt-1">{plan.title}</h1>
+            <div className="g-sm g-mut mt-2 flex flex-wrap gap-x-4 gap-y-1.5">
+              <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-4 w-4" aria-hidden="true" />{formatGalaPlanDate(plan.description)}</span>
+              {city ? <span className="inline-flex items-center gap-1.5"><MapPin className="h-4 w-4" aria-hidden="true" />{city}</span> : null}
+            </div>
+          </header>
 
-        <aside className="g-side">
-          <Panel>
+          <div className="g-tstats mt-4" style={{ ['--n' as string]: totalKm > 0 ? 3 : 2 }}>
+            <div className="g-tstat">
+              <b>{items.length}</b>
+              <span><MapPin aria-hidden="true" />{items.length === 1 ? 'stop' : 'stops'}</span>
+            </div>
+            {totalKm > 0 ? (
+              <div className="g-tstat">
+                <b>{totalKm < 1 ? `${Math.round(totalKm * 1000)} m` : `${totalKm.toFixed(1)} km`}</b>
+                <span><Path aria-hidden="true" />route</span>
+              </div>
+            ) : null}
+            <div className="g-tstat">
+              <b>{formatPeso(perHead)}</b>
+              <span><Coins aria-hidden="true" />solo, est.</span>
+            </div>
+          </div>
+
+          {description ? <p className="g-sm mt-4 max-w-[65ch] leading-relaxed">{description}</p> : null}
+
+          <Panel className="mt-5">
             <h2 className="g-h3">Sama ka?</h2>
-            <p className="g-sm g-mut mt-0.5">Send it to the barkada or heart it for later.</p>
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <Button variant="tara" onClick={() => void shareGalaPlanLink(plan.owner.username, plan.slug, plan.title)}>
+            <p className="g-sm g-mut mt-0.5">RSVP with the barkada, vote on stops and split the bill.</p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
+              <Button variant="tara" onClick={joinPlan}>
+                <UsersThree />
+                {session ? 'Tara, RSVP' : 'Log in to RSVP'}
+              </Button>
+              <Button variant="soft" onClick={() => void shareGalaPlanLink(plan.owner.username, plan.slug, plan.title)}>
                 <Share />
                 Share
-              </Button>
-              <Button variant="soft" aria-pressed={plan.viewer_has_hearted} aria-label={plan.viewer_has_hearted ? 'Remove heart' : 'Heart this plan'} onClick={() => void toggleHeart()}>
-                <Heart weight={plan.viewer_has_hearted ? 'fill' : 'regular'} />
-                {plan.hearts_count}
               </Button>
             </div>
             {notice ? <p role="status" className="g-hint mt-2">{notice}</p> : null}
           </Panel>
-          <PlanRouteMap stops={stops} />
-          <Button variant="line" block href={`/plan-with-ai?q=${encodeURIComponent(`A gala like ${plan.title}`)}`}>
-            <Sparkles />
-            Plan your own with AI
-          </Button>
-        </aside>
+
+          <SectionHead title="The plan" sub={items.length > 0 ? `${items.length} ${items.length === 1 ? 'stop' : 'stops'} · travel times are estimates` : undefined} />
+          {stops.length === 0 ? (
+            <Empty title="Wala pang stops" description="This plan has no places yet." />
+          ) : (
+            <>
+              {isDesktop ? null : routeMap}
+              <PlanTimeline stops={stops} />
+            </>
+          )}
+
+          <div className="mt-8">
+            <Button variant="line" block href={`/plan-with-ai?q=${encodeURIComponent(`A gala like ${plan.title}`)}`}>
+              <Sparkles style={{ color: 'var(--tara-ink)' }} />
+              Plan your own with AI
+            </Button>
+          </div>
+        </div>
+
+        {hasRoute && isDesktop ? <aside className="g-plan-map" aria-label="Map">{routeMap}</aside> : null}
       </div>
     </Page>
   )

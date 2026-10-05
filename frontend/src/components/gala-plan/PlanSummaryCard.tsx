@@ -1,114 +1,96 @@
-import { CaretRight as ChevronRight } from '@phosphor-icons/react/dist/csr/CaretRight'
-import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
+import { Heart } from '@phosphor-icons/react/dist/csr/Heart'
+import { LinkSimple } from '@phosphor-icons/react/dist/csr/LinkSimple'
+import { LockSimple } from '@phosphor-icons/react/dist/csr/LockSimple'
+import { MapTrifold } from '@phosphor-icons/react/dist/csr/MapTrifold'
 import InternalLink from '../InternalLink'
+import PlaceImage from '../discover/PlaceImage'
+import { Avatar, Tag, cx } from '../ui'
 import { getStaticPlaceImageUrlForSlug } from '../../data/placeIndexVisuals'
 import type { GalaPlanSummary } from '../../utils/galaPlansApi'
-import type { PublicGalaPlanPreviewPlace } from '../../utils/profileApi'
-import { getPlanDate } from '../../utils/galaPlanTrip'
+import { daysUntil, formatDaysUntil, getPlanDate } from '../../utils/galaPlanTrip'
+import '../../design/plans.css'
 
-/** Pin heights (percent of the art box) so the route zigzags left to right. */
-const ROUTE_Y = [62, 34, 64, 32]
+type CoverStop = { slug?: string | null; image_url?: string | null; category?: string | null }
 
-function planMeta(plan: GalaPlanSummary, showOwner: boolean) {
-  return [
-    `${plan.place_count} ${plan.place_count === 1 ? 'stop' : 'stops'}`,
-    showOwner && plan.owner?.username ? `@${plan.owner.username}` : plan.visibility === 'public' ? 'Shared by link' : 'Private',
-  ].join(' · ')
+/** Stops that have a photo, as image candidates for the cover tiles. */
+function coverTiles(stops: CoverStop[]) {
+  return stops
+    .map((stop) => ({ category: stop.category ?? null, candidates: [stop.image_url, getStaticPlaceImageUrlForSlug(stop.slug ?? '')].filter((url): url is string => Boolean(url)) }))
+    .filter((tile) => tile.candidates.length > 0)
+    .slice(0, 3)
 }
 
-function stopImage(stop: PublicGalaPlanPreviewPlace) {
-  return stop.image_url || getStaticPlaceImageUrlForSlug(stop.slug) || null
-}
-
-function planCover(plan: GalaPlanSummary) {
-  for (const stop of plan.preview_places ?? []) {
-    const image = stopImage(stop)
-    if (image) return image
-  }
-  return null
-}
-
-function Thumb({ src }: { src: string | null }) {
-  if (src) return <img src={src} alt="" loading="lazy" decoding="async" className="h-14 w-14 shrink-0 object-cover" style={{ borderRadius: 'var(--r-3)' }} />
+/** Photo collage from the plan's stops: 1 photo, 2 side by side, or 1 big + 2 small. */
+export function TripCover({ stops, wide, className, priority }: { stops: CoverStop[]; wide?: boolean; className?: string; priority?: boolean }) {
+  const tiles = coverTiles(stops)
   return (
-    <span className="grid h-14 w-14 shrink-0 place-items-center" style={{ borderRadius: 'var(--r-3)', background: 'var(--sea-soft)', color: 'var(--sea)' }} aria-hidden="true">
-      <MapPin className="h-6 w-6" />
-    </span>
-  )
-}
-
-export function PlanRow({ plan, showOwner = false }: { plan: GalaPlanSummary; showOwner?: boolean }) {
-  const date = getPlanDate(plan)
-  return (
-    <InternalLink
-      href={`/gala-plans/${plan.id}`}
-      className="-mx-2 flex min-h-[76px] items-center gap-3 rounded-[var(--r-3)] px-2 py-2.5 text-[var(--ink)] no-underline transition-colors hover:bg-[var(--fill)] motion-reduce:transition-none"
-    >
-      <Thumb src={planCover(plan)} />
-      <span className="min-w-0 flex-1">
-        {date ? <span className="g-xs block font-semibold uppercase tracking-[0.04em] text-[var(--ink-3)]">{date.toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' })}</span> : null}
-        <span className="g-h3 block truncate">{plan.title}</span>
-        <span className="g-sm g-mut block truncate">{planMeta(plan, showOwner)}</span>
-      </span>
-      <ChevronRight className="g-ic shrink-0" style={{ color: 'var(--ink-3)' }} aria-hidden="true" />
-    </InternalLink>
-  )
-}
-
-/** Decorative night route: up to four stop photos joined by a dotted coral line. */
-function RouteArt({ stops }: { stops: PublicGalaPlanPreviewPlace[] }) {
-  const shown = stops.slice(0, ROUTE_Y.length)
-  if (shown.length === 0) return null
-  const slots = shown.map((_, index) => (shown.length === 1 ? [50, 50] : [10 + (index * 80) / (shown.length - 1), ROUTE_Y[index]]))
-
-  return (
-    <div className="relative h-[124px]" aria-hidden="true">
-      <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-        <polyline
-          points={slots.map(([x, y]) => `${x},${y}`).join(' ')}
-          fill="none"
-          stroke="var(--tara)"
-          strokeWidth="2.5"
-          strokeDasharray="1 6"
-          strokeLinecap="round"
-          vectorEffect="non-scaling-stroke"
-        />
-      </svg>
-      {shown.map((stop, index) => {
-        const image = stopImage(stop)
-        const [x, y] = slots[index]
-        return (
-          <span
-            key={stop.id}
-            className="absolute grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 place-items-center overflow-hidden rounded-full"
-            style={{ left: `${x}%`, top: `${y}%`, border: '3px solid #fff', background: 'var(--sea-soft)', color: 'var(--sea)' }}
-          >
-            {image ? <img src={image} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" /> : <MapPin className="h-4 w-4" />}
-          </span>
-        )
-      })}
+    <div className={cx('g-trip-cover', wide && 'is-wide', tiles.length >= 2 && `is-${tiles.length}`, className)} aria-hidden="true">
+      {tiles.length === 0 ? (
+        <span className="grid place-items-center" style={{ background: 'var(--sea-soft)', color: 'var(--sea)' }}>
+          <MapTrifold size={36} weight="duotone" />
+        </span>
+      ) : (
+        tiles.map((tile, index) => <PlaceImage key={index} candidates={tile.candidates} category={tile.category} priority={priority && index === 0} className="h-full w-full" />)
+      )}
     </div>
   )
 }
 
-/** Today's plan as a navy night-route card, like Home's. */
-function PlanSummaryCard({ plan, showOwner = false }: { plan: GalaPlanSummary; showOwner?: boolean }) {
-  const stops = plan.preview_places ?? []
+export function hasCoverPhoto(stops: CoverStop[]) {
+  return coverTiles(stops).length > 0
+}
+
+export function planStatus(plan: Pick<GalaPlanSummary, 'description'>) {
+  const date = getPlanDate(plan)
+  if (!date) return { label: 'No date yet', tone: 'solid' as const, date: null }
+  const days = daysUntil(date)
+  return { label: formatDaysUntil(days), tone: days === 0 ? ('sea' as const) : ('solid' as const), date }
+}
+
+/** Trip card for the plans list, like Wanderlog's "My trips": cover collage, title, date and stops. */
+export function TripCard({ plan, showOwner = false, wide = false }: { plan: GalaPlanSummary; showOwner?: boolean; wide?: boolean }) {
+  const status = planStatus(plan)
+  const dateText = status.date ? status.date.toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' }) : 'Anytime'
+  const stops = `${plan.place_count} ${plan.place_count === 1 ? 'stop' : 'stops'}`
+  const hearts = plan.heart_count ?? plan.hearts_count ?? 0
+  const ownerName = plan.owner?.display_name?.trim() || (plan.owner?.username ? `@${plan.owner.username}` : null)
+  const isPublic = plan.visibility === 'public'
 
   return (
-    <InternalLink
-      href={`/gala-plans/${plan.id}`}
-      className="block overflow-hidden rounded-[var(--r-4)] bg-[#0f2138] p-4 text-white no-underline shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)] md:p-5"
-    >
-      <RouteArt stops={stops} />
-      <p className="g-xs mt-3 font-bold uppercase tracking-[0.06em]" style={{ color: 'var(--tara)' }}>Today</p>
-      <p className="g-h2 mt-1 line-clamp-2" style={{ color: '#fff' }}>{plan.title}</p>
-      <p className="g-sm mt-1 truncate" style={{ color: 'rgba(255,255,255,0.78)' }}>
-        {planMeta(plan, showOwner)}
-        {stops.length > 0 ? ` · ${stops.map((stop) => stop.name).join(' → ')}` : ''}
-      </p>
+    <InternalLink href={`/gala-plans/${plan.id}`} className="g-trip">
+      <div className="relative">
+        <TripCover stops={plan.preview_places ?? []} wide={wide} priority={wide} />
+        <span className="g-trip-flag">
+          <Tag tone={status.tone === 'sea' ? 'neutral' : 'solid'} className={status.tone === 'sea' ? 'is-sea' : undefined}>{status.label}</Tag>
+        </span>
+        {plan.viewer_is_owner ? (
+          <span className="g-trip-vis" title={isPublic ? 'Shared by link' : 'Private'}>
+            {isPublic ? <LinkSimple aria-hidden="true" /> : <LockSimple aria-hidden="true" />}
+            <span className="sr-only">{isPublic ? 'Shared by link' : 'Private'}</span>
+          </span>
+        ) : null}
+      </div>
+      <h3 className={cx(wide ? 'g-h2' : 'g-h3', 'mt-2.5 line-clamp-2')}>{plan.title}</h3>
+      <p className="g-pc-meta mt-0.5">{[dateText, stops].join(' · ')}</p>
+      {(showOwner && ownerName) || hearts > 0 ? (
+        <div className="g-trip-foot">
+          {showOwner && ownerName ? (
+            <span className="flex min-w-0 items-center gap-2">
+              <Avatar src={plan.owner?.avatar_url ?? plan.owner?.provider_avatar_url} name={ownerName} size={24} />
+              <span className="g-xs g-mut truncate">Hosted by {ownerName}</span>
+            </span>
+          ) : null}
+          {hearts > 0 ? (
+            <span className="g-xs g-mut ml-auto inline-flex shrink-0 items-center gap-1">
+              <Heart weight="fill" className="h-3.5 w-3.5" style={{ color: 'var(--tara)' }} aria-hidden="true" />
+              {hearts}
+              <span className="sr-only">{hearts === 1 ? 'heart' : 'hearts'}</span>
+            </span>
+          ) : null}
+        </div>
+      ) : null}
     </InternalLink>
   )
 }
 
-export default PlanSummaryCard
+export default TripCard

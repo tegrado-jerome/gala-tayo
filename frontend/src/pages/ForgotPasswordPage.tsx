@@ -78,18 +78,19 @@ function ForgotPasswordPage() {
 
     return (
       <AuthCard
-        icon={<Mail className="g-ic" />}
+        bar="Reset password"
+        icon={<Mail weight="duotone" />}
         title="Check your email"
         sub="If an account exists with that email, we sent password reset instructions."
       >
         {statusMessage ? <AuthNotice>{statusMessage}</AuthNotice> : null}
         {error ? <AuthNotice tone="bad">{error}</AuthNotice> : null}
         <div className="grid gap-3">
+          <Button variant="tara" size="lg" block onClick={() => navigateToPath('/login')}>
+            Back to login
+          </Button>
           <Button variant="line" block onClick={() => void handleResendResetEmail()} disabled={resendCooldown.isCoolingDown || isResending}>
             {isResending ? 'Sending...' : resendLabel}
-          </Button>
-          <Button variant="ink" block onClick={() => navigateToPath('/login')}>
-            Back to login
           </Button>
         </div>
       </AuthCard>
@@ -97,7 +98,7 @@ function ForgotPasswordPage() {
   }
 
   return (
-    <AuthCard title="Forgot password?" sub="No worries. Enter your email and we'll send you a reset link.">
+    <AuthCard bar="Reset password" onBack={() => navigateToPath('/login')} backLabel="Back to login" title="Forgot your password?" sub="Walang problema. Enter your email and we'll send you a reset link.">
       <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
         <div className="g-field">
           <label htmlFor="forgot-email">Email</label>
@@ -111,7 +112,7 @@ function ForgotPasswordPage() {
             placeholder="you@email.com"
             aria-invalid={Boolean(error) || undefined}
             aria-describedby="forgot-email-hint"
-            className="g-input"
+            className="g-input h-14 text-[16px]"
           />
           <span id="forgot-email-hint" className="g-hint">
             One resend every 2 minutes, to keep things secure.
@@ -120,7 +121,7 @@ function ForgotPasswordPage() {
 
         {error ? <AuthNotice tone="bad">{error}</AuthNotice> : null}
 
-        <Button type="submit" variant="tara" block disabled={isSubmitDisabled}>
+        <Button type="submit" variant="tara" size="lg" block disabled={isSubmitDisabled}>
           {isSubmitting ? 'Sending...' : 'Send reset link'}
         </Button>
       </form>

@@ -4,9 +4,12 @@ import { SmileySad as Frown } from '@phosphor-icons/react/dist/csr/SmileySad'
 import { SmileyWink as Laugh } from '@phosphor-icons/react/dist/csr/SmileyWink'
 import { SmileyMeh as Meh } from '@phosphor-icons/react/dist/csr/SmileyMeh'
 import { Smiley as Smile } from '@phosphor-icons/react/dist/csr/Smiley'
+import { ChatCircleText } from '@phosphor-icons/react/dist/csr/ChatCircleText'
+import { CheckCircle } from '@phosphor-icons/react/dist/csr/CheckCircle'
 import MinimalBackNav from '../components/navigation/MinimalBackNav'
 import GoogleSignInButton from '../components/GoogleSignInButton'
-import { Button, Page, Panel, cx } from '../components/ui'
+import { Button, Page, Panel } from '../components/ui'
+import '../design/misc.css'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { getApiUrl } from '../utils/apiClient'
 import { getPublicSiteUrl } from '../utils/site'
@@ -94,11 +97,17 @@ function FeedbackPage() {
   return (
     <Page narrow>
       <MinimalBackNav to="/home" label="Home" preferHistory={false} />
-      <p className="g-eyebrow mt-2">Help and feedback</p>
-      <h1 className="g-h1 mt-2">How can we help?</h1>
-      <p className="g-mut mt-1 text-[15px]">Send feedback connected to your account.</p>
+      <header className="m-art-head mt-2">
+        <span className="m-art-ic" aria-hidden="true">
+          <ChatCircleText weight="duotone" />
+        </span>
+        <p className="m-onb-step">Help and feedback</p>
+        <h1 className="g-h1 mt-1.5">Kumusta ang GalaTayo for you?</h1>
+        <p className="g-mut mt-2 text-[16px]">Tell us what works and what doesn&apos;t.</p>
+      </header>
 
       {isSessionLoading ? <InlineSkeleton className="mt-6" /> : null}
+
 
       {!isSessionLoading && !session?.user ? (
         <Panel className="mt-6">
@@ -110,10 +119,10 @@ function FeedbackPage() {
 
       {!isSessionLoading && session?.user ? (
         <section id="feedback-form" className="mt-6 scroll-mt-6">
-          <Panel className="grid gap-6">
+          <div className="grid gap-7">
             <fieldset>
               <legend className="g-h3">How was your experience?</legend>
-              <div className="mt-3 grid grid-cols-5 gap-1.5 sm:gap-2">
+              <div className="m-rate mt-3">
                 {ratingOptions.map(({ value, label, Icon }) => {
                   const isSelected = rating === value
                   return (
@@ -123,13 +132,9 @@ function FeedbackPage() {
                       onClick={() => setRating(value)}
                       aria-pressed={isSelected}
                       aria-label={`Rate ${label}`}
-                      className={cx(
-                        'flex min-h-[72px] min-w-0 flex-col items-center justify-center gap-1.5 rounded-[var(--r-2)] border px-1 transition-colors',
-                        isSelected ? 'border-[var(--ink)] bg-[var(--fill)] text-[var(--ink)]' : 'border-[var(--line)] text-[var(--ink-2)] hover:border-[var(--ink)]',
-                      )}
                     >
-                      <Icon className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={1.8} aria-hidden="true" />
-                      <span className="text-[11px] font-medium leading-tight sm:text-xs">{label}</span>
+                      <Icon weight={isSelected ? 'fill' : 'duotone'} aria-hidden="true" />
+                      <span>{label}</span>
                     </button>
                   )
                 })}
@@ -145,7 +150,7 @@ function FeedbackPage() {
                 maxLength={COMMENT_MAX_LENGTH}
                 rows={5}
                 placeholder="Share your thoughts about GalaTayo…"
-                className="g-input min-h-40"
+                className="g-input min-h-40 py-3 text-[16px] leading-relaxed"
               />
               <span className="g-hint text-right">
                 {remainingCount < 60 ? `${remainingCount} characters left` : `${comment.length} / ${COMMENT_MAX_LENGTH}`}
@@ -158,15 +163,16 @@ function FeedbackPage() {
               </p>
             ) : null}
             {statusMessage ? (
-              <p className="g-sm -mt-2 font-semibold text-[var(--ok)]" role="status">
+              <p className="g-sm -mt-2 flex items-center gap-2 rounded-[var(--r-2)] bg-[var(--ok-soft)] px-3.5 py-3 font-semibold text-[var(--ok)]" role="status">
+                <CheckCircle weight="fill" className="h-5 w-5 shrink-0" aria-hidden="true" />
                 {statusMessage}
               </p>
             ) : null}
 
-            <Button variant="tara" onClick={() => void handleSubmit()} disabled={isSubmitting} className="w-full sm:w-auto sm:justify-self-end">
+            <Button variant="tara" size="lg" onClick={() => void handleSubmit()} disabled={isSubmitting} className="w-full sm:w-auto sm:justify-self-start">
               {isSubmitting ? 'Sending…' : 'Send feedback'}
             </Button>
-          </Panel>
+          </div>
         </section>
       ) : null}
     </Page>

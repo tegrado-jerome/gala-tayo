@@ -1,14 +1,23 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type UIEvent } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import type { Icon as PhosphorIcon } from '@phosphor-icons/react'
 import { Wheelchair as Accessibility } from '@phosphor-icons/react/dist/csr/Wheelchair'
 import { ArrowLeft } from '@phosphor-icons/react/dist/csr/ArrowLeft'
 import { Bus } from '@phosphor-icons/react/dist/csr/Bus'
-import { Camera } from '@phosphor-icons/react/dist/csr/Camera'
 import { Check } from '@phosphor-icons/react/dist/csr/Check'
 import { CaretDown as ChevronDown } from '@phosphor-icons/react/dist/csr/CaretDown'
 import { DotsThree as Ellipsis } from '@phosphor-icons/react/dist/csr/DotsThree'
 import { Flag } from '@phosphor-icons/react/dist/csr/Flag'
 import { Heart } from '@phosphor-icons/react/dist/csr/Heart'
-import { Info } from '@phosphor-icons/react/dist/csr/Info'
+import { Clock } from '@phosphor-icons/react/dist/csr/Clock'
+import { Compass } from '@phosphor-icons/react/dist/csr/Compass'
+import { Hourglass } from '@phosphor-icons/react/dist/csr/Hourglass'
+import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
+import { Path } from '@phosphor-icons/react/dist/csr/Path'
+import { SealCheck } from '@phosphor-icons/react/dist/csr/SealCheck'
+import { SunHorizon } from '@phosphor-icons/react/dist/csr/SunHorizon'
+import { Umbrella } from '@phosphor-icons/react/dist/csr/Umbrella'
+import { UsersThree } from '@phosphor-icons/react/dist/csr/UsersThree'
+import { Wallet } from '@phosphor-icons/react/dist/csr/Wallet'
 import { NavigationArrow as Navigation } from '@phosphor-icons/react/dist/csr/NavigationArrow'
 import { PencilSimple as Pencil } from '@phosphor-icons/react/dist/csr/PencilSimple'
 import { Plus } from '@phosphor-icons/react/dist/csr/Plus'
@@ -24,7 +33,7 @@ import { useGuestAuthPrompt } from './GuestAuthPrompt'
 import AddToGalaPlanModal from './AddToGalaPlanModal'
 import InternalLink from './InternalLink'
 import ReportUserModal from './ReportUserModal'
-import { Button, Chip, Empty, KeyValue, Page, Sheet, Skeleton, SulitMeter, Tag, cx } from './ui'
+import { Button, Chip, Empty, Page, Sheet, Skeleton, SulitMeter, Tag, cx } from './ui'
 import GtMap, { type MapPoint } from './ui/GtMap'
 import { getCuratedPlaceImages, normalizePlaceSlug } from '../data/curatedPlaceImages'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
@@ -46,6 +55,10 @@ import { MemberAvatar } from './place-detail/MemberAvatar'
 import CheckInButton from './place-detail/CheckInButton'
 import { getSulitLevel } from './place-detail/SulitMeter'
 import { GoodForList } from './place-detail/GoodForList'
+import { AllPhotos, DesktopGallery, PhoneGallery, usePhotoList } from './place-detail/PlaceGallery'
+import { RatingBubbles } from './place-detail/RatingBubbles'
+import { SectionTabs } from './place-detail/SectionTabs'
+import '../design/place.css'
 import { formatPlaceLocation } from '../utils/placeLocation'
 import { cleanString, titleCase, uniqueList, isAcceptedContributionImage, contributionImageErrorMessage, parseJsonResponse } from './place-detail/helpers'
 import type { PlaceDetailViewProps, PlaceReview, PlaceReviewsResponse, PlaceComment, PlaceCommentsResponse, PlaceImageContributionResponse, PlaceDetailCommunityCache } from './place-detail/types'
@@ -221,195 +234,6 @@ function useKnownUserLocation() {
   return location
 }
 
-function usePhotoList(imageUrls: string[]) {
-  const [brokenPhotoUrls, setBrokenPhotoUrls] = useState<Set<string>>(new Set())
-  const photoSourceKey = uniqueList(imageUrls).join('|')
-
-  useEffect(() => {
-    setBrokenPhotoUrls(new Set())
-  }, [photoSourceKey])
-
-  const photos = uniqueList(imageUrls)
-    .filter((photo) => !brokenPhotoUrls.has(photo))
-    .slice(0, 5)
-
-  const markPhotoBroken = (photoUrl: string) => {
-    setBrokenPhotoUrls((current) => {
-      if (current.has(photoUrl)) return current
-      const next = new Set(current)
-      next.add(photoUrl)
-      return next
-    })
-  }
-
-  return { photos, markPhotoBroken }
-}
-
-const overlayButtonStyle: CSSProperties = {
-  background: 'color-mix(in srgb, var(--surface) 84%, transparent)',
-  boxShadow: 'var(--sh-1)',
-  backdropFilter: 'blur(8px)',
-  WebkitBackdropFilter: 'blur(8px)',
-}
-const overlayButtonClass = 'grid h-11 w-11 shrink-0 place-items-center rounded-full text-[var(--ink)] [&_svg]:h-5 [&_svg]:w-5'
-
-function NoPhotos({ showAddPhotoAction, onContribute, className }: { showAddPhotoAction: boolean; onContribute: () => void; className?: string }) {
-  return (
-    <div className={cx('grid place-items-center bg-[var(--sea-soft)] px-6 text-center', className)}>
-      <div>
-        <Camera className="mx-auto h-8 w-8 text-[var(--sea)]" aria-hidden="true" />
-        <p className="g-h3 mt-3">Wala pang photos</p>
-        <p className="g-sm g-mut mt-1">Be the first to add a photo of this spot.</p>
-        {showAddPhotoAction ? (
-          <Button variant="ink" size="sm" onClick={onContribute} className="mt-4">
-            <Camera aria-hidden="true" />
-            Add photo
-          </Button>
-        ) : null}
-      </div>
-    </div>
-  )
-}
-
-function PhotoHero({
-  imageUrls,
-  placeName,
-  topBar,
-  showAddPhotoAction,
-  onContribute,
-}: {
-  imageUrls: string[]
-  placeName: string
-  topBar: ReactNode
-  showAddPhotoAction: boolean
-  onContribute: () => void
-}) {
-  const { photos, markPhotoBroken } = usePhotoList(imageUrls)
-  const [activeIndex, setActiveIndex] = useState(0)
-  const safeIndex = Math.min(activeIndex, Math.max(photos.length - 1, 0))
-
-  const handleScroll = (event: UIEvent<HTMLDivElement>) => {
-    const track = event.currentTarget
-    if (track.clientWidth > 0) setActiveIndex(Math.round(track.scrollLeft / track.clientWidth))
-  }
-
-  return (
-    <div className="relative -mx-4 h-[52vh] min-h-[300px] max-h-[560px] overflow-hidden bg-[var(--fill)] lg:hidden">
-      {photos.length > 0 ? (
-        <div
-          className="flex h-full snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-          onScroll={handleScroll}
-          aria-roledescription="carousel"
-          aria-label={`Photos of ${placeName}`}
-        >
-          {photos.map((photo, index) => (
-            <img
-              key={photo}
-              src={photo}
-              alt={index === 0 ? placeName : `${placeName}, photo ${index + 1} of ${photos.length}`}
-              className="h-full w-full shrink-0 snap-center object-cover"
-              loading={index === 0 ? 'eager' : 'lazy'}
-              onError={() => markPhotoBroken(photo)}
-            />
-          ))}
-        </div>
-      ) : (
-        <NoPhotos showAddPhotoAction={showAddPhotoAction} onContribute={onContribute} className="h-full pb-7" />
-      )}
-      <div className="absolute inset-x-0 top-0 flex items-center gap-2 px-4 pt-3">{topBar}</div>
-      {photos.length > 0 ? (
-        <div className="absolute inset-x-0 bottom-10 flex items-end justify-between gap-2 px-2.5">
-          <ImageSourceInfo />
-          {photos.length > 1 ? (
-            <div className="mb-3.5 flex gap-1.5" aria-hidden="true">
-              {photos.map((photo, index) => (
-                <span key={photo} className={cx('h-1.5 rounded-full bg-white shadow-[0_0_3px_rgba(0,0,0,0.45)] transition-all', index === safeIndex ? 'w-4' : 'w-1.5 opacity-60')} />
-              ))}
-            </div>
-          ) : null}
-          {showAddPhotoAction ? (
-            <button type="button" onClick={onContribute} className={overlayButtonClass} style={overlayButtonStyle} aria-label="Add a photo">
-              <Camera aria-hidden="true" />
-            </button>
-          ) : (
-            <span className="w-11" aria-hidden="true" />
-          )}
-        </div>
-      ) : null}
-    </div>
-  )
-}
-
-function PhotoGallery({
-  imageUrls,
-  placeName,
-  currentIndex,
-  onSelect,
-  showAddPhotoAction,
-  onContribute,
-}: {
-  imageUrls: string[]
-  placeName: string
-  currentIndex: number
-  onSelect: (index: number) => void
-  showAddPhotoAction: boolean
-  onContribute: () => void
-}) {
-  const { photos, markPhotoBroken } = usePhotoList(imageUrls)
-  const safeIndex = photos.length > 0 ? Math.min(Math.max(currentIndex, 0), photos.length - 1) : 0
-  const activePhoto = photos[safeIndex] ?? null
-  const tileIndexes = photos.map((_, index) => index).filter((index) => index !== safeIndex)
-
-  if (!activePhoto) {
-    return <NoPhotos showAddPhotoAction={showAddPhotoAction} onContribute={onContribute} className="h-[420px] rounded-[var(--r-4)]" />
-  }
-
-  const tileCount = Math.min(tileIndexes.length, 4)
-  const columns = tileCount === 0 ? '1fr' : tileCount === 1 ? '2fr 1fr' : '2fr 1fr 1fr'
-
-  return (
-    <div
-      className="relative grid h-[460px] gap-2 overflow-hidden rounded-[var(--r-4)]"
-      style={{ gridTemplateColumns: columns, gridTemplateRows: 'repeat(2, minmax(0, 1fr))' }}
-    >
-      <div className="overflow-hidden bg-[var(--fill)]" style={{ gridRow: 'span 2' }}>
-        <img src={activePhoto} alt={placeName} className="h-full w-full object-cover" loading="eager" onError={() => markPhotoBroken(activePhoto)} />
-      </div>
-      {tileIndexes.slice(0, 4).map((photoIndex, position) => {
-        const photo = photos[photoIndex]
-        const spansRows = tileCount <= 2 || (tileCount === 3 && position === 0)
-        return (
-          <button
-            key={`${photo}-tile`}
-            type="button"
-            onClick={() => onSelect(photoIndex)}
-            aria-label={`Show photo ${photoIndex + 1} of ${placeName}`}
-            className="group overflow-hidden bg-[var(--fill)]"
-            style={spansRows ? { gridRow: 'span 2' } : undefined}
-          >
-            <img
-              src={photo}
-              alt=""
-              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-              loading="lazy"
-              onError={() => markPhotoBroken(photo)}
-            />
-          </button>
-        )
-      })}
-      {showAddPhotoAction ? (
-        <Button variant="line" size="sm" onClick={onContribute} className="absolute right-3 top-3">
-          <Camera aria-hidden="true" />
-          Add photo
-        </Button>
-      ) : null}
-      <div className="absolute bottom-1.5 left-1.5">
-        <ImageSourceInfo />
-      </div>
-    </div>
-  )
-}
-
 function ReadMoreText({ text }: { text: string }) {
   const textRef = useRef<HTMLParagraphElement | null>(null)
   const [isExpanded, setIsExpanded] = useState(false)
@@ -434,33 +258,6 @@ function ReadMoreText({ text }: { text: string }) {
         </Button>
       ) : null}
     </>
-  )
-}
-
-function ImageSourceInfo() {
-  const [isOpen, setIsOpen] = useState(false)
-  const note = 'Images come from third-party sources.'
-  return (
-    <div className="flex items-center gap-1">
-      <button
-        type="button"
-        title={note}
-        aria-label="About these images"
-        aria-expanded={isOpen}
-        onClick={() => setIsOpen((open) => !open)}
-        onBlur={() => setIsOpen(false)}
-        className="grid h-11 w-11 place-items-center rounded-full"
-      >
-        <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--surface)] text-[var(--ink)]" style={{ boxShadow: 'var(--sh-1)' }}>
-          <Info className="h-4 w-4" aria-hidden="true" />
-        </span>
-      </button>
-      {isOpen ? (
-        <span role="status" className="g-tag is-solid">
-          {note}
-        </span>
-      ) : null}
-    </div>
   )
 }
 
@@ -801,7 +598,6 @@ function PlaceDetailView({
   const { isPlaceSaved, saveFavorite, removeFavorite } = useSavedFavorites()
   const { showSystemMessage } = useSystemMessage()
   const userLocation = useKnownUserLocation()
-  const [accessMode, setAccessMode] = useState<'commute' | 'parking' | 'access'>('commute')
 
   const placeOwnPhotos = uniqueList([
     place.imageUrl,
@@ -809,15 +605,11 @@ function PlaceDetailView({
     place.curatedImageUrl,
     ...(place.curatedImageUrls ?? []),
   ])
-  const galleryPhotos = placeOwnPhotos.length > 0
-    ? placeOwnPhotos.slice(0, 5)
-    : getCuratedPlaceImages(place.name).slice(0, 5)
-  const galleryStateKey = `${place.id}:${galleryPhotos.join('|')}`
-  const [activeGalleryState, setActiveGalleryState] = useState({ key: galleryStateKey, index: 0 })
-  const activeGalleryIndex =
-    activeGalleryState.key === galleryStateKey
-      ? Math.min(activeGalleryState.index, Math.max(galleryPhotos.length - 1, 0))
-      : 0
+  const { photos: galleryPhotos, markPhotoBroken } = usePhotoList(
+    placeOwnPhotos.length > 0 ? placeOwnPhotos : getCuratedPlaceImages(place.name),
+  )
+  const [allPhotosIndex, setAllPhotosIndex] = useState<number | null>(null)
+  const closeAllPhotos = useCallback(() => setAllPhotosIndex(null), [])
   const approvedImageCount = place.approvedImageCount ?? 0
   const addressLabel =
     cleanString(place.address) ||
@@ -1917,33 +1709,38 @@ function PlaceDetailView({
           : priceBadgeLabel
   const timeNeeded = formatVisitDuration(cleanString(place.visit_duration))
   const isRainSafe = isRainSafePlace(cleanString(place.indoor_outdoor), cleanString(place.weather_fit), categoryLabel)
-  const factChipClass = 'inline-flex h-8 items-center gap-1 rounded-[var(--r-pill)] bg-[var(--fill)] px-3 text-[13px] font-semibold text-[var(--ink)]'
   const placeLat = toCoordinate(place.coordinates?.lat) ?? toCoordinate(place.latitude) ?? toCoordinate(place.lat)
   const placeLng = toCoordinate(place.coordinates?.lng) ?? toCoordinate(place.longitude) ?? toCoordinate(place.lng)
   const placePosition = placeLat != null && placeLng != null && (placeLat !== 0 || placeLng !== 0) ? { lat: placeLat, lng: placeLng } : null
   const distanceFromUserKm = placePosition && userLocation ? distanceBetweenKm(userLocation, placePosition) : null
   const distanceKm =
     distanceFromUserKm ?? (typeof place.distanceKm === 'number' && Number.isFinite(place.distanceKm) ? place.distanceKm : null)
+  const distanceLabel =
+    distanceKm != null ? `About ${distanceKm < 1 ? 'less than 1' : distanceKm.toFixed(1)} km${distanceFromUserKm != null ? ' from you' : ' away'}` : ''
   const mapPoints: MapPoint[] = placePosition
     ? [
-        { id: 'place', lat: placePosition.lat, lng: placePosition.lng, label: place.name, active: true },
+        { id: 'place', lat: placePosition.lat, lng: placePosition.lng, label: place.name, imageUrl: galleryPhotos[0] ?? null, active: true },
         ...(userLocation && distanceFromUserKm != null && distanceFromUserKm <= 60
           ? [{ id: 'me', lat: userLocation.lat, lng: userLocation.lng, kind: 'me' as const }]
           : []),
       ]
     : []
   const accessibilityText = cleanString(place.accessibility_notes)
-  const accessModes = [
-    { value: 'commute' as const, label: place.commute_friendly ? 'Commute-friendly' : 'Commute', icon: Bus, text: commuteText },
-    { value: 'parking' as const, label: 'Parking', icon: SquareParking, text: parkingText },
-    ...(accessibilityText ? [{ value: 'access' as const, label: 'Accessibility', icon: Accessibility, text: accessibilityText }] : []),
+  const accessRows = [
+    { key: 'commute', title: place.commute_friendly ? 'Commute-friendly' : 'By commute', icon: Bus, text: commuteText },
+    { key: 'parking', title: 'Parking', icon: SquareParking, text: parkingText },
+    ...(accessibilityText ? [{ key: 'access', title: 'Accessibility', icon: Accessibility, text: accessibilityText }] : []),
   ]
-  const activeAccessMode = accessModes.find((mode) => mode.value === accessMode) ?? accessModes[0]
-  const factItems = [
-    { label: 'Hours', value: cleanString(place.hours) },
-    { label: 'Best time', value: sentenceCase(cleanString(place.best_time_to_visit)) },
-    { label: 'Crowd', value: titleCase(cleanString(place.crowd_level)) },
-  ].filter((item) => item.value)
+  const hoursText = cleanString(place.hours)
+  const commuteSummary = place.commute_friendly ? 'Commute-friendly' : cleanString(place.commute_access).split(/(?<=\.)\s/)[0]
+  const keyFacts: Array<{ key: string; icon: PhosphorIcon; label: string; value: string; href?: string }> = [
+    { key: 'hours', icon: Clock, label: 'Hours', value: /^(not available|n\/a|unknown)$/i.test(hoursText) ? '' : hoursText },
+    { key: 'budget', icon: Wallet, label: 'Budget', value: cleanString(place.budget_notes) || chipPrice },
+    { key: 'duration', icon: Hourglass, label: 'Time needed', value: timeNeeded },
+    { key: 'best-time', icon: SunHorizon, label: 'Best time', value: sentenceCase(cleanString(place.best_time_to_visit)) },
+    { key: 'crowd', icon: UsersThree, label: 'Crowd', value: titleCase(cleanString(place.crowd_level)) },
+    { key: 'getting-there', icon: Path, label: 'Getting there', value: distanceLabel || commuteSummary, href: '#getting-there' },
+  ].filter((fact) => fact.value)
   const budgetNotes = cleanString(place.budget_notes)
   const askAiQuestion = `Tell me about ${place.name} in ${locationLabel}. Is it good for a barkada gala, what should we try there, and when is the best time to go?`
   const commentActionClassName =
@@ -1999,611 +1796,697 @@ function PlaceDetailView({
       setOpenCommentMenuId(null)
     }
 
+    const avatar = <MemberAvatar displayName={displayName} avatarUrl={avatarUrl} reply={isReply} />
+
     return (
-      <li key={comment.id} className={isReply ? 'ml-4 border-l border-[var(--line-2)] pl-3' : ''}>
-        <div className={cx('flex items-start gap-3', isPending && 'opacity-75')}>
+      <li key={comment.id} className={isReply ? cx(isPending && 'opacity-75') : cx('pd-review', isFailed && 'is-failed', isPending && 'is-pending')}>
+        <div className="flex items-start gap-3">
           {canOpenProfile ? (
             <button type="button" onClick={handleOpenCommentProfile} aria-label={`Open ${displayName}'s profile`} className="shrink-0 rounded-full">
-              <MemberAvatar displayName={displayName} avatarUrl={avatarUrl} compact reply={isReply} />
+              {avatar}
             </button>
           ) : (
-            <MemberAvatar displayName={displayName} avatarUrl={avatarUrl} compact reply={isReply} />
+            <span className="shrink-0">{avatar}</span>
           )}
 
           <div className="min-w-0 flex-1">
-            <div className={cx(isFailed && 'rounded-[var(--r-3)] bg-[var(--bad-soft)] px-3 py-2.5')}>
-              <div className="flex items-start gap-2">
-                <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
-                  {canOpenProfile ? (
-                    <button type="button" onClick={handleOpenCommentProfile} className="g-sm min-h-11 min-w-0 truncate text-left font-semibold hover:underline">
-                      {displayName}
-                    </button>
-                  ) : (
-                    <span className="g-sm min-w-0 truncate font-semibold">{displayName}</span>
-                  )}
-                  {isOwner ? <Tag>You</Tag> : null}
-                  {isTeamComment ? (
-                    <Tag tone="sea" title="Written by the GalaTayo team, not a visitor">
-                      GalaTayo team
-                    </Tag>
-                  ) : null}
-                  <span className="g-xs g-fnt">
-                    {formatReviewDate(comment.updated_at || comment.created_at)}
-                    {isEdited ? ' · edited' : null}
-                  </span>
-                  {isPending ? <Tag>Posting…</Tag> : null}
-                </div>
-                {!isDeleted && currentUserId ? (
-                  <div className="relative -my-1 -mr-1 shrink-0" ref={isMenuOpen ? commentMenuRef : null}>
-                    <button
-                      type="button"
-                      aria-label="Open comment actions"
-                      aria-haspopup="menu"
-                      aria-expanded={isMenuOpen}
-                      onClick={() => setOpenCommentMenuId((currentId) => (currentId === comment.id ? null : comment.id))}
-                      className="grid h-9 w-9 place-items-center rounded-full text-[var(--ink-3)] hover:bg-[var(--fill)] hover:text-[var(--ink)]"
-                    >
-                      <Ellipsis className="h-4 w-4" aria-hidden="true" />
-                    </button>
-
-                    {isMenuOpen ? (
-                      <div role="menu" className="g-card absolute right-0 top-10 z-20 min-w-[12rem] overflow-hidden py-1" style={{ boxShadow: 'var(--sh-2)' }}>
-                        {isOwner ? (
-                          <>
-                            <button type="button" role="menuitem" onClick={startEditing} className={commentMenuItemClassName}>
-                              <Pencil className="h-4 w-4" aria-hidden="true" />
-                              Edit comment
-                            </button>
-                            <button
-                              type="button"
-                              role="menuitem"
-                              onClick={() => {
-                                setOpenCommentMenuId(null)
-                                void handleDeleteComment(comment.id)
-                              }}
-                              disabled={isMutating}
-                              className={cx(commentMenuItemClassName, 'text-[var(--bad)]')}
-                            >
-                              <Trash2 className="h-4 w-4" aria-hidden="true" />
-                              {isMutating ? 'Deleting…' : 'Delete comment'}
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              type="button"
-                              role="menuitem"
-                              onClick={openReport}
-                              disabled={isReportedByCurrentUser || isReportSubmitting}
-                              className={commentMenuItemClassName}
-                            >
-                              <Flag className="h-4 w-4" aria-hidden="true" />
-                              {isReportedByCurrentUser
-                                ? 'Already reported'
-                                : isReportSubmitting && reportingCommentId === comment.id
-                                  ? 'Reporting…'
-                                  : 'Report comment'}
-                            </button>
-                            <button
-                              type="button"
-                              role="menuitem"
-                              onClick={() => handleOpenUserReport(comment.user_id, comment.member_username, displayName)}
-                              disabled={reportedUserIds.has(comment.user_id)}
-                              className={commentMenuItemClassName}
-                            >
-                              <UserRound className="h-4 w-4" aria-hidden="true" />
-                              {reportedUserIds.has(comment.user_id) ? 'Already reported user' : 'Report user'}
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    ) : null}
-                  </div>
-                ) : null}
-              </div>
-
-              {isEditing ? (
-                <div className="mt-2">
-                  <label htmlFor={`edit-comment-${comment.id}`} className="sr-only">
-                    Edit comment
-                  </label>
-                  <textarea
-                    id={`edit-comment-${comment.id}`}
-                    value={editCommentBody}
-                    onChange={(event) => setEditCommentBody(event.target.value)}
-                    rows={3}
-                    disabled={isMutating}
-                    className="g-input"
-                  />
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    <Button variant="ink" size="sm" onClick={() => void handleUpdateComment(comment.id)} disabled={isMutating}>
-                      {isMutating ? 'Saving…' : 'Save'}
-                    </Button>
-                    <Button
-                      variant="line"
-                      size="sm"
-                      onClick={() => {
-                        setEditingCommentId(null)
-                        setEditCommentBody('')
-                      }}
-                      disabled={isMutating}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
+            <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+              {canOpenProfile ? (
+                <button type="button" onClick={handleOpenCommentProfile} className="min-h-6 min-w-0 truncate text-left text-[14px] font-semibold hover:underline">
+                  {displayName}
+                </button>
               ) : (
-                <p className={cx('mt-1 whitespace-pre-line break-words text-[14px] leading-[1.5]', isDeleted && 'g-fnt italic')}>{commentText}</p>
+                <span className="min-w-0 truncate text-[14px] font-semibold">{displayName}</span>
               )}
-
-              {isFailed && comment.local_error_message ? <p className="g-hint is-error mt-2">{comment.local_error_message}</p> : null}
+              {isOwner ? <Tag>You</Tag> : null}
+              {isTeamComment ? (
+                <Tag tone="sea" title="Written by the GalaTayo team, not a visitor">
+                  <SealCheck weight="fill" aria-hidden="true" />
+                  GalaTayo team
+                </Tag>
+              ) : null}
+              {isPending ? (
+                <Tag>
+                  <span className="pd-spin" style={{ width: 10, height: 10, borderWidth: 1.5 }} aria-hidden="true" />
+                  Posting
+                </Tag>
+              ) : null}
             </div>
-
-            {!isEditing ? (
-              <div className="flex flex-wrap items-center gap-x-4 pl-1">
-                {!isDeleted && !isReply && currentUserId ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setReplyingToCommentId(replyingToCommentId === comment.id ? null : comment.id)
-                      setReplyBody('')
-                      setCommentError('')
-                    }}
-                    disabled={isMutating}
-                    className={commentActionClassName}
-                  >
-                    <Reply className="h-3.5 w-3.5" aria-hidden="true" />
-                    Reply
-                  </button>
-                ) : null}
-                {!isDeleted && isOwner ? (
-                  <button type="button" onClick={startEditing} disabled={isMutating} className={commentActionClassName}>
-                    <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
-                    Edit
-                  </button>
-                ) : null}
-                {!isDeleted && !isOwner && currentUserId ? (
-                  isReportedByCurrentUser ? (
-                    <span className="inline-flex min-h-[44px] items-center">
-                      <Tag>
-                        <Flag aria-hidden="true" />
-                        Reported
-                      </Tag>
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={openReport}
-                      disabled={isReportSubmitting && reportingCommentId === comment.id}
-                      className={commentActionClassName}
-                    >
-                      <Flag className="h-3.5 w-3.5" aria-hidden="true" />
-                      {isReportSubmitting && reportingCommentId === comment.id ? 'Reporting…' : 'Report'}
-                    </button>
-                  )
-                ) : null}
-                {isFailed ? (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => void handleRetryFailedComment(comment.id)}
-                      disabled={isCommentSubmitting}
-                      className={cx(commentActionClassName, 'text-[var(--ink)] underline underline-offset-2')}
-                    >
-                      Retry
-                    </button>
-                    <button type="button" onClick={() => handleDiscardFailedComment(comment.id)} disabled={isCommentSubmitting} className={commentActionClassName}>
-                      Dismiss
-                    </button>
-                  </>
-                ) : null}
-              </div>
-            ) : null}
+            <p className="g-xs g-mut mt-0.5">
+              {formatReviewDate(comment.updated_at || comment.created_at)}
+              {isEdited ? ' · edited' : null}
+            </p>
           </div>
+
+          {!isDeleted && currentUserId ? (
+            <div className="relative -my-1 -mr-2 shrink-0" ref={isMenuOpen ? commentMenuRef : null}>
+              <button
+                type="button"
+                aria-label="Open comment actions"
+                aria-haspopup="menu"
+                aria-expanded={isMenuOpen}
+                onClick={() => setOpenCommentMenuId((currentId) => (currentId === comment.id ? null : comment.id))}
+                className="grid h-11 w-11 place-items-center rounded-full text-[var(--ink-3)] hover:bg-[var(--fill)] hover:text-[var(--ink)]"
+              >
+                <Ellipsis className="h-5 w-5" weight="bold" aria-hidden="true" />
+              </button>
+
+              {isMenuOpen ? (
+                <div role="menu" className="g-card absolute right-0 top-11 z-20 min-w-[12rem] overflow-hidden py-1" style={{ boxShadow: 'var(--sh-2)' }}>
+                  {isOwner ? (
+                    <>
+                      <button type="button" role="menuitem" onClick={startEditing} className={commentMenuItemClassName}>
+                        <Pencil className="h-4 w-4" aria-hidden="true" />
+                        Edit comment
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setOpenCommentMenuId(null)
+                          void handleDeleteComment(comment.id)
+                        }}
+                        disabled={isMutating}
+                        className={cx(commentMenuItemClassName, 'text-[var(--bad)]')}
+                      >
+                        <Trash2 className="h-4 w-4" aria-hidden="true" />
+                        {isMutating ? 'Deleting…' : 'Delete comment'}
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={openReport}
+                        disabled={isReportedByCurrentUser || isReportSubmitting}
+                        className={commentMenuItemClassName}
+                      >
+                        <Flag className="h-4 w-4" aria-hidden="true" />
+                        {isReportedByCurrentUser
+                          ? 'Already reported'
+                          : isReportSubmitting && reportingCommentId === comment.id
+                            ? 'Reporting…'
+                            : 'Report comment'}
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => handleOpenUserReport(comment.user_id, comment.member_username, displayName)}
+                        disabled={reportedUserIds.has(comment.user_id)}
+                        className={commentMenuItemClassName}
+                      >
+                        <UserRound className="h-4 w-4" aria-hidden="true" />
+                        {reportedUserIds.has(comment.user_id) ? 'Already reported user' : 'Report user'}
+                      </button>
+                    </>
+                  )}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
         </div>
 
-        {replyingToCommentId === comment.id ? (
-          <div className="ml-11 mt-1">
-            <label htmlFor={`reply-${comment.id}`} className="sr-only">
-              Reply to {displayName}
-            </label>
-            <textarea
-              id={`reply-${comment.id}`}
-              value={replyBody}
-              onChange={(event) => setReplyBody(event.target.value)}
-              rows={2}
-              disabled={isMutating}
-              placeholder="Add a reply…"
-              className="g-input"
-              style={{ minHeight: 72 }}
-            />
-            <div className="mt-2 flex flex-wrap gap-2">
-              <Button variant="ink" size="sm" onClick={() => void handleSubmitReply(comment.id)} disabled={isMutating}>
-                {isMutating ? 'Replying…' : 'Reply'}
-              </Button>
-              <Button
-                variant="line"
-                size="sm"
-                onClick={() => {
-                  setReplyingToCommentId(null)
-                  setReplyBody('')
-                }}
+        <div className={isReply ? 'pl-10' : ''}>
+          {isEditing ? (
+            <div className="mt-3">
+              <label htmlFor={`edit-comment-${comment.id}`} className="sr-only">
+                Edit comment
+              </label>
+              <textarea
+                id={`edit-comment-${comment.id}`}
+                value={editCommentBody}
+                onChange={(event) => setEditCommentBody(event.target.value)}
+                rows={3}
                 disabled={isMutating}
-              >
-                Cancel
-              </Button>
+                className="g-input"
+              />
+              <div className="mt-2 flex flex-wrap gap-2">
+                <Button variant="ink" size="sm" onClick={() => void handleUpdateComment(comment.id)} disabled={isMutating}>
+                  {isMutating ? 'Saving…' : 'Save'}
+                </Button>
+                <Button
+                  variant="line"
+                  size="sm"
+                  onClick={() => {
+                    setEditingCommentId(null)
+                    setEditCommentBody('')
+                  }}
+                  disabled={isMutating}
+                >
+                  Cancel
+                </Button>
+              </div>
             </div>
-          </div>
-        ) : null}
+          ) : (
+            <p className={cx('mt-2.5 whitespace-pre-line break-words text-[14px] leading-[1.6]', isDeleted && 'g-fnt italic')}>{commentText}</p>
+          )}
 
-        {comment.replies.length > 0 ? <ul className="mt-2 grid gap-2">{comment.replies.map((reply) => renderComment(reply, true))}</ul> : null}
+          {isFailed && comment.local_error_message ? <p className="g-hint is-error mt-2">{comment.local_error_message}</p> : null}
+
+          {!isEditing ? (
+            <div className="-mb-2 flex flex-wrap items-center gap-x-4">
+              {!isDeleted && !isReply && currentUserId ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReplyingToCommentId(replyingToCommentId === comment.id ? null : comment.id)
+                    setReplyBody('')
+                    setCommentError('')
+                  }}
+                  disabled={isMutating}
+                  className={commentActionClassName}
+                >
+                  <Reply className="h-4 w-4" aria-hidden="true" />
+                  Reply
+                </button>
+              ) : null}
+              {!isDeleted && isOwner ? (
+                <button type="button" onClick={startEditing} disabled={isMutating} className={commentActionClassName}>
+                  <Pencil className="h-4 w-4" aria-hidden="true" />
+                  Edit
+                </button>
+              ) : null}
+              {!isDeleted && !isOwner && currentUserId ? (
+                isReportedByCurrentUser ? (
+                  <span className="inline-flex min-h-[44px] items-center">
+                    <Tag>
+                      <Flag aria-hidden="true" />
+                      Reported
+                    </Tag>
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={openReport}
+                    disabled={isReportSubmitting && reportingCommentId === comment.id}
+                    className={commentActionClassName}
+                  >
+                    <Flag className="h-4 w-4" aria-hidden="true" />
+                    {isReportSubmitting && reportingCommentId === comment.id ? 'Reporting…' : 'Report'}
+                  </button>
+                )
+              ) : null}
+              {isFailed ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => void handleRetryFailedComment(comment.id)}
+                    disabled={isCommentSubmitting}
+                    className={cx(commentActionClassName, 'text-[var(--ink)] underline underline-offset-2')}
+                  >
+                    Retry
+                  </button>
+                  <button type="button" onClick={() => handleDiscardFailedComment(comment.id)} disabled={isCommentSubmitting} className={commentActionClassName}>
+                    Dismiss
+                  </button>
+                </>
+              ) : null}
+            </div>
+          ) : null}
+
+          {replyingToCommentId === comment.id ? (
+            <div className="mt-2">
+              <label htmlFor={`reply-${comment.id}`} className="sr-only">
+                Reply to {displayName}
+              </label>
+              <textarea
+                id={`reply-${comment.id}`}
+                value={replyBody}
+                onChange={(event) => setReplyBody(event.target.value)}
+                rows={2}
+                disabled={isMutating}
+                placeholder="Add a reply…"
+                className="g-input"
+                style={{ minHeight: 72 }}
+              />
+              <div className="mt-2 flex flex-wrap gap-2">
+                <Button variant="ink" size="sm" onClick={() => void handleSubmitReply(comment.id)} disabled={isMutating}>
+                  {isMutating ? 'Replying…' : 'Reply'}
+                </Button>
+                <Button
+                  variant="line"
+                  size="sm"
+                  onClick={() => {
+                    setReplyingToCommentId(null)
+                    setReplyBody('')
+                  }}
+                  disabled={isMutating}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          ) : null}
+
+          {comment.replies.length > 0 ? <ul className="pd-replies">{comment.replies.map((reply) => renderComment(reply, true))}</ul> : null}
+        </div>
       </li>
     )
   }
 
-  const sectionClassName = 'mt-6 border-t border-[var(--line-2)] pt-6'
-  const sectionTitleClassName = 'g-h3 mb-3'
-  const ratingCountLabel =`${formatRatingCount(reviewCount)} ${reviewCount === 1 ? 'rating' : 'ratings'}`
+  const ratingCountLabel = `${formatRatingCount(reviewCount)} ${reviewCount === 1 ? 'rating' : 'ratings'}`
+  const hasHeadlineScore = headlineReviewCount >= MIN_RATINGS_TO_SHOW
+  const sulitLabel = sulitLevel && sulitLevel.index > 0 ? sulitLevel.label : ''
+  // Only good-value spots earn the "Sulit" tag; pricier ones just show their level.
+  const isSulit = Boolean(sulitLevel && sulitLevel.index > 0 && sulitLevel.index <= 2)
+  const valueText = sulitLabel ? (isSulit ? `Sulit · ${sulitLabel}` : sulitLabel) : ''
+  const barPrice = chipPrice || priceLine
+  const scrollToSection = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' })
+  }
+  const sectionTabs = [
+    { id: 'overview', label: 'Overview' },
+    { id: 'getting-there', label: 'Getting there' },
+    { id: 'reviews', label: 'Reviews' },
+    { id: 'faq', label: 'FAQ' },
+  ]
+  const pillClass = 'g-tag h-7 px-2.5 text-[13px]'
+
+  const headlineRatingNode = hasHeadlineScore ? (
+    <button type="button" onClick={() => scrollToSection('reviews')} className="inline-flex min-h-8 items-center gap-2 text-[14px]">
+      <RatingBubbles rating={headlineRating} />
+      <b className="font-semibold">{headlineRating.toFixed(1)}</b>
+      <span className="g-mut underline underline-offset-2">
+        {formatRatingCount(headlineReviewCount)} {headlineReviewCount === 1 ? 'rating' : 'ratings'}
+      </span>
+    </button>
+  ) : null
 
   const communitySection = !isCommunityPlaceReady ? (
-    <section aria-labelledby="place-reviews" className={sectionClassName}>
-      <h2 id="place-reviews" className={sectionTitleClassName}>Reviews</h2>
-      <Empty title="Reviews open soon" description="Ratings and comments aren't ready for this spot yet." />
-    </section>
+    <Empty title="Reviews open soon" description="Ratings and comments aren't ready for this spot yet." />
   ) : (
     <>
-      <section className={sectionClassName}>
-        <h2 className={sectionTitleClassName}>Reviews</h2>
-        <div>
-          {reviewCount >= MIN_RATINGS_TO_SHOW && averageRating !== null ? (
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <StarsDisplay rating={Math.round(averageRating)} />
-              <span className="g-sm g-mut">{ratingCountLabel}</span>
+      <div className="pd-score">
+        {reviewCount >= MIN_RATINGS_TO_SHOW && averageRating !== null ? (
+          <>
+            <span className="pd-score-num">{averageRating.toFixed(1)}</span>
+            <div className="min-w-0">
+              <RatingBubbles rating={averageRating} large />
+              <p className="g-sm g-mut mt-1">{ratingCountLabel} from the GalaTayo crowd</p>
             </div>
-          ) : reviewCount > 0 ? (
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <Tag>New</Tag>
-              <span className="g-sm g-mut">{ratingCountLabel} so far. We show the score after {MIN_RATINGS_TO_SHOW}.</span>
-            </div>
-          ) : (
-            <p className="g-sm g-mut">Wala pang ratings. Be the first to help others decide.</p>
-          )}
-          {currentUserId ? <hr className="g-sep my-4" /> : null}
+          </>
+        ) : reviewCount > 0 ? (
+          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+            <Tag tone="tara">New</Tag>
+            <span className="g-sm g-mut">
+              {ratingCountLabel} so far. We show the score after {MIN_RATINGS_TO_SHOW}.
+            </span>
+          </div>
+        ) : (
+          <p className="g-sm g-mut">Wala pang ratings. Be the first to help others decide.</p>
+        )}
+      </div>
 
-          {currentUserId && (!hasCurrentUserReview || isReviewEditing) ? (
-            <div>
-              <p className="g-label">Your rating</p>
-              <div className="mt-1 overflow-x-auto">
-                <StarRatingInput
-                  value={reviewRating}
-                  disabled={isReviewSubmitting || isReviewDeleting}
-                  onChange={(value) => {
-                    setReviewRating(value)
-                    setReviewError('')
-                  }}
-                />
-              </div>
-              <p className="g-sm g-mut mt-1">
-                {reviewRating > 0
-                  ? `${reviewRating} star${reviewRating === 1 ? '' : 's'} · ${getRatingTone(reviewRating)}`
-                  : 'Tap a star to rate this place.'}
-              </p>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                {reviewRating > 0 ? (
-                  <Button variant="ink" size="sm" onClick={() => void handleSubmitReview()} disabled={isReviewSubmitting || isReviewDeleting}>
-                    {isReviewSubmitting ? 'Saving…' : 'Save rating'}
-                  </Button>
-                ) : null}
-                {hasCurrentUserReview ? (
-                  <Button
-                    variant="text"
-                    size="sm"
-                    onClick={() => {
-                      setIsReviewEditing(false)
-                      setReviewRating(currentUserReview?.rating ?? 0)
-                      setReviewError('')
-                    }}
-                    disabled={isReviewSubmitting || isReviewDeleting}
-                  >
-                    Cancel
-                  </Button>
-                ) : null}
-              </div>
-            </div>
-          ) : currentUserId && currentUserReview ? (
-            <div>
-              <p className="g-label">Your rating</p>
-              <div className="mt-2">
-                <StarsDisplay rating={currentUserReview.rating} />
-              </div>
-              <p className="g-sm g-mut mt-1">
-                {currentUserReview.rating} star{currentUserReview.rating === 1 ? '' : 's'} · {getRatingTone(currentUserReview.rating)}
-              </p>
-              <div className="mt-1 flex flex-wrap items-center gap-3">
-                <Button
-                  variant="text"
-                  size="sm"
-                  onClick={() => {
-                    setIsReviewEditing(true)
-                    setReviewRating(currentUserReview.rating)
-                    setReviewError('')
-                  }}
-                  disabled={isReviewSubmitting || isReviewDeleting}
-                >
-                  Edit
-                </Button>
-                <Button variant="text" size="sm" className="text-[var(--bad)]" onClick={() => void handleDeleteReview()} disabled={isReviewSubmitting || isReviewDeleting}>
-                  {isReviewDeleting ? 'Removing…' : 'Remove'}
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-              <p className="g-sm min-w-0">Sign in to rate and comment.</p>
-              <Button variant="line" size="sm" onClick={() => guestAuth.open('community')}>
-                Sign in
+      {currentUserId && (!hasCurrentUserReview || isReviewEditing) ? (
+        <div className="mt-5">
+          <p className="g-label">Your rating</p>
+          <div className="-ml-2.5 mt-1 overflow-x-auto">
+            <StarRatingInput
+              value={reviewRating}
+              disabled={isReviewSubmitting || isReviewDeleting}
+              onChange={(value) => {
+                setReviewRating(value)
+                setReviewError('')
+              }}
+            />
+          </div>
+          <p className="g-sm g-mut mt-1">
+            {reviewRating > 0 ? `${reviewRating} star${reviewRating === 1 ? '' : 's'} · ${getRatingTone(reviewRating)}` : 'Tap a star to rate this place.'}
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {reviewRating > 0 ? (
+              <Button variant="ink" size="sm" onClick={() => void handleSubmitReview()} disabled={isReviewSubmitting || isReviewDeleting}>
+                {isReviewSubmitting ? 'Saving…' : 'Save rating'}
               </Button>
-            </div>
-          )}
-          {reviewError ? <p className="g-hint is-error mt-2">{reviewError}</p> : null}
+            ) : null}
+            {hasCurrentUserReview ? (
+              <Button
+                variant="text"
+                size="sm"
+                onClick={() => {
+                  setIsReviewEditing(false)
+                  setReviewRating(currentUserReview?.rating ?? 0)
+                  setReviewError('')
+                }}
+                disabled={isReviewSubmitting || isReviewDeleting}
+              >
+                Cancel
+              </Button>
+            ) : null}
+          </div>
         </div>
-      </section>
-
-      <section className={sectionClassName}>
-        <h2 className={sectionTitleClassName}>
-          Comments
-          <span className="g-sm g-mut ml-2 font-[family-name:var(--font-body)] font-normal tracking-normal">
-            {isCommentsLoading
-              ? 'Loading…'
-              : visibleCommentCount === 0
-                ? 'Wala pa'
-                : visibleCommentCount}
-          </span>
-        </h2>
-        {currentUserId ? (
-          <div className="flex items-start gap-3">
-            <MemberAvatar displayName={currentUserAvatarFallbackName} avatarUrl={currentUserAvatarUrl} compact />
-            <div className="min-w-0 flex-1">
-              <label htmlFor="place-comment" className="sr-only">
-                Write a comment
-              </label>
-              <textarea
-                id="place-comment"
-                value={commentBody}
-                onChange={(event) => setCommentBody(event.target.value)}
-                onFocus={() => setIsCommentComposerFocused(true)}
-                onBlur={() => setIsCommentComposerFocused(false)}
-                rows={2}
-                disabled={isCommentSubmitting}
-                placeholder="Share a tip for the barkada…"
-                className="g-input"
-                style={{ minHeight: isCommentComposerFocused || commentBody.trim() ? 96 : 52 }}
-              />
-              {commentBody.trim() || isCommentSubmitting ? (
-                <div className="mt-2 flex justify-end">
-                  <Button variant="ink" size="sm" onClick={() => void handleSubmitComment()} disabled={isCommentSubmitting}>
-                    {isCommentSubmitting ? 'Posting…' : 'Comment'}
-                  </Button>
-                </div>
-              ) : null}
+      ) : currentUserId && currentUserReview ? (
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+          <div className="min-w-0">
+            <p className="g-label">Your rating</p>
+            <div className="mt-1.5 flex items-center gap-2">
+              <StarsDisplay rating={currentUserReview.rating} />
+              <span className="g-sm g-mut">{getRatingTone(currentUserReview.rating)}</span>
             </div>
           </div>
-        ) : null}
-        {commentError ? <p className="g-hint is-error mt-2">{commentError}</p> : null}
-
-        {isCommentsLoading ? (
-          commentSkeleton
-        ) : visibleCommentCount === 0 ? (
-          <p className="g-sm g-mut mt-2">Be the first to share something about this place.</p>
-        ) : (
-          <ul className="mt-4 grid gap-4">{comments.map((comment) => renderComment(comment))}</ul>
-        )}
-
-        <div className="mt-6">
-          <Button variant="text" size="sm" onClick={handleOpenPlaceConcern}>
-            <Flag aria-hidden="true" />
-            Report a concern
+          <div className="flex items-center gap-3">
+            <Button
+              variant="text"
+              size="sm"
+              onClick={() => {
+                setIsReviewEditing(true)
+                setReviewRating(currentUserReview.rating)
+                setReviewError('')
+              }}
+              disabled={isReviewSubmitting || isReviewDeleting}
+            >
+              Edit
+            </Button>
+            <Button variant="text" size="sm" className="text-[var(--bad)]" onClick={() => void handleDeleteReview()} disabled={isReviewSubmitting || isReviewDeleting}>
+              {isReviewDeleting ? 'Removing…' : 'Remove'}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+          <p className="g-sm min-w-0">Sign in to rate and leave a tip.</p>
+          <Button variant="line" size="sm" onClick={() => guestAuth.open('community')}>
+            Sign in
           </Button>
         </div>
-      </section>
+      )}
+      {reviewError ? <p className="g-hint is-error mt-2">{reviewError}</p> : null}
+
+      <h3 className="g-h3 mb-3 mt-8 flex items-center gap-2">
+        Tips from the barkada
+        <span className="g-sm g-mut font-[family-name:var(--font-body)] font-normal tracking-normal">
+          {isCommentsLoading ? <span className="pd-spin" role="status" aria-label="Loading comments" /> : visibleCommentCount === 0 ? null : `· ${visibleCommentCount}`}
+        </span>
+      </h3>
+      {currentUserId ? (
+        <div className="mb-4 flex items-start gap-3">
+          <MemberAvatar displayName={currentUserAvatarFallbackName} avatarUrl={currentUserAvatarUrl} />
+          <div className="min-w-0 flex-1">
+            <label htmlFor="place-comment" className="sr-only">
+              Write a comment
+            </label>
+            <textarea
+              id="place-comment"
+              value={commentBody}
+              onChange={(event) => setCommentBody(event.target.value)}
+              onFocus={() => setIsCommentComposerFocused(true)}
+              onBlur={() => setIsCommentComposerFocused(false)}
+              rows={2}
+              disabled={isCommentSubmitting}
+              placeholder="Share a tip for the barkada…"
+              className="g-input"
+              style={{ minHeight: isCommentComposerFocused || commentBody.trim() ? 96 : 52 }}
+            />
+            {commentBody.trim() || isCommentSubmitting ? (
+              <div className="mt-2 flex justify-end">
+                <Button variant="ink" size="sm" onClick={() => void handleSubmitComment()} disabled={isCommentSubmitting}>
+                  {isCommentSubmitting ? 'Posting…' : 'Post tip'}
+                </Button>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+      {commentError ? <p className="g-hint is-error mb-3">{commentError}</p> : null}
+
+      {isCommentsLoading ? (
+        commentSkeleton
+      ) : visibleCommentCount === 0 ? (
+        <p className="g-sm g-mut">Be the first to share something about this place.</p>
+      ) : (
+        <ul className="pd-reviews">{comments.map((comment) => renderComment(comment))}</ul>
+      )}
     </>
   )
 
   const backItem = breadcrumbItems[breadcrumbItems.length - 1]
   const saveLabel = isSaved ? `Remove ${place.name} from saved` : `Save ${place.name}`
+  const showAddPhotoAction = approvedImageCount < 3
 
   return (
-    <Page className="pt-0 lg:pt-8">
-      <PhotoHero
-        imageUrls={galleryPhotos}
-        placeName={place.name}
-        showAddPhotoAction={approvedImageCount < 3}
-        onContribute={handleOpenContribution}
-        topBar={
-          <>
-            <InternalLink href={backItem?.href ?? '/places'} ariaLabel={`Back to ${backItem?.label ?? 'places'}`} className="shrink-0 rounded-full">
-              <span className={overlayButtonClass} style={overlayButtonStyle} aria-hidden="true">
-                <ArrowLeft />
-              </span>
-            </InternalLink>
-            <span className="flex-1" />
-            <button type="button" className={overlayButtonClass} style={overlayButtonStyle} aria-label="Share" onClick={() => void handleSharePlace()}>
-              <Share2 aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              className={overlayButtonClass}
-              style={overlayButtonStyle}
-              onClick={() => void handleSavePlace()}
-              disabled={isSaving}
-              aria-pressed={isSaved}
-              aria-label={saveLabel}
-            >
-              {heartIcon}
-            </button>
-          </>
-        }
-      />
+    <Page className="pt-0 lg:pt-6">
+      <nav aria-label="Breadcrumb" className="g-only-desk mb-2">
+        <ol className="g-sm g-mut flex flex-wrap items-center gap-x-1.5">
+          <li className="inline-flex" aria-hidden="true">
+            <ArrowLeft className="h-4 w-4" />
+          </li>
+          {breadcrumbItems.map((item, index) => (
+            <li key={`${item.label}-${index}`} className="inline-flex items-center gap-1.5">
+              {index > 0 ? (
+                <span className="g-fnt" aria-hidden="true">
+                  /
+                </span>
+              ) : null}
+              <InternalLink href={item.href ?? '/places'} className="inline-flex min-h-[44px] items-center hover:text-[var(--ink)]">
+                {item.label}
+              </InternalLink>
+            </li>
+          ))}
+        </ol>
+      </nav>
 
-      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:gap-10">
-        <div className="min-w-0">
-          <div className="g-only-desk mb-4 flex items-center justify-between gap-3">
-            <nav aria-label="Breadcrumb" className="min-w-0">
-              <ol className="g-sm g-mut flex flex-wrap items-center gap-x-1.5">
-                <li className="inline-flex" aria-hidden="true">
-                  <ArrowLeft className="h-4 w-4" />
-                </li>
-                {breadcrumbItems.map((item, index) => (
-                  <li key={`${item.label}-${index}`} className="inline-flex items-center gap-1.5">
-                    {index > 0 ? (
-                      <span className="g-fnt" aria-hidden="true">
-                        /
-                      </span>
-                    ) : null}
-                    <InternalLink href={item.href ?? '/places'} className="inline-flex min-h-[44px] items-center hover:text-[var(--ink)]">
-                      {item.label}
-                    </InternalLink>
-                  </li>
-                ))}
-              </ol>
-            </nav>
-            <Button variant="line" size="sm" iconOnly aria-label="Share" className="shrink-0" onClick={() => void handleSharePlace()}>
-              <Share2 aria-hidden="true" />
-            </Button>
-          </div>
-
-          <div className="g-only-desk mb-8">
-            <PhotoGallery
-              imageUrls={galleryPhotos}
-              placeName={place.name}
-              currentIndex={activeGalleryIndex}
-              onSelect={(index) => setActiveGalleryState({ key: galleryStateKey, index })}
-              showAddPhotoAction={approvedImageCount < 3}
-              onContribute={handleOpenContribution}
-            />
-          </div>
-
-          <div className="relative -mx-4 -mt-7 rounded-t-[var(--r-4)] bg-[var(--surface)] px-4 pt-2.5 lg:mx-0 lg:mt-0 lg:rounded-none lg:p-0">
-            <div className="g-grab lg:hidden" aria-hidden="true" />
-            <p className="g-sm g-mut">{[categoryLabel, locationLabel].filter(Boolean).join(' · ')}</p>
-            <h1 className="mt-1 font-[family-name:var(--font-display)] text-[28px] font-bold leading-[1.1] tracking-[-0.03em] [text-wrap:balance] lg:text-[40px]">
-              {place.name}
-            </h1>
-
-            <ul className="mt-3.5 flex flex-wrap gap-2" aria-label="At a glance">
-              {place.status === 'Open' ? <li className={cx(factChipClass, 'bg-[var(--sea-soft)] text-[var(--sea)]')}>Open now</li> : null}
-              {place.status === 'Closed' ? <li className={cx(factChipClass, 'bg-[var(--bad-soft)] text-[var(--bad)]')}>Closed</li> : null}
-              {chipPrice ? <li className={factChipClass}>{chipPrice}</li> : null}
-              {isRainSafe ? <li className={factChipClass}>Rain-safe</li> : null}
-              {timeNeeded ? <li className={factChipClass}>{timeNeeded}</li> : null}
-              {headlineReviewCount >= MIN_RATINGS_TO_SHOW ? (
-                <li className={factChipClass}>
-                  ★ {headlineRating.toFixed(1)}
-                  <span className="g-mut font-medium">({formatRatingCount(headlineReviewCount)})</span>
-                </li>
-              ) : (
-                <li className={factChipClass}>New</li>
-              )}
-            </ul>
-
-            {shareError ? <p className="g-hint is-error mt-2">{shareError}</p> : null}
-            {saveError ? <p className="g-hint is-error mt-2">{saveError}</p> : null}
-            {contributionError && !isContributionOpen ? <p className="g-hint is-error mt-2">{contributionError}</p> : null}
-
-            <div className="g-mut mt-4">
-              <ReadMoreText text={quickTake} />
-            </div>
-            {factItems.length > 0 ? (
-              <div className="mt-2 max-w-[640px]">
-                <KeyValue items={factItems} />
-              </div>
-            ) : null}
-            {budgetNotes ? <p className="g-xs g-fnt mt-2">Prices can change. Check before you go.</p> : null}
-            <Button variant="text" size="sm" onClick={() => openFloatingChat(askAiQuestion)}>
-              <Sparkles aria-hidden="true" />
-              Ask AI about this place
-            </Button>
-
-            <section className={sectionClassName}>
-              <h2 className={sectionTitleClassName}>
-                Getting there
-                {distanceKm != null ? (
-                  <span className="g-sm g-mut ml-2 font-[family-name:var(--font-body)] font-normal tracking-normal">
-                    About {distanceKm < 1 ? 'less than 1' : distanceKm.toFixed(1)} km{distanceFromUserKm != null ? ' from you' : ' away'}
+      <div className="flex flex-col">
+        <div className="order-1 lg:hidden">
+          <PhoneGallery
+            photos={galleryPhotos}
+            placeName={place.name}
+            onBroken={markPhotoBroken}
+            onOpen={setAllPhotosIndex}
+            showAddPhotoAction={showAddPhotoAction}
+            onContribute={handleOpenContribution}
+            topBar={
+              <>
+                <InternalLink href={backItem?.href ?? '/places'} ariaLabel={`Back to ${backItem?.label ?? 'places'}`} className="pd-hit">
+                  <span className="pd-round" aria-hidden="true">
+                    <ArrowLeft />
                   </span>
-                ) : null}
-              </h2>
-              <p className="g-sm whitespace-pre-line">{addressLabel}</p>
-              {mapPoints.length > 0 ? <GtMap points={mapPoints} label={`Map of ${place.name}`} className="mt-3 h-[180px] md:h-[280px]" /> : null}
-              <div className="g-modes mt-3" role="group" aria-label="Ways to get there">
-                {accessModes.map((mode) => {
-                  const ModeIcon = mode.icon
+                </InternalLink>
+                <span className="flex-1" />
+                <button type="button" className="pd-hit" aria-label="Share" onClick={() => void handleSharePlace()}>
+                  <span className="pd-round" aria-hidden="true">
+                    <Share2 />
+                  </span>
+                </button>
+                <button type="button" className="pd-hit" onClick={() => void handleSavePlace()} disabled={isSaving} aria-pressed={isSaved} aria-label={saveLabel}>
+                  <span className="pd-round" aria-hidden="true">
+                    {heartIcon}
+                  </span>
+                </button>
+              </>
+            }
+          />
+        </div>
+
+        <header className="pd-sheet order-2 lg:order-1 lg:mb-6">
+          <div className="lg:flex lg:items-end lg:justify-between lg:gap-6">
+            <div className="min-w-0">
+              <p className="g-sm g-mut">{[categoryLabel, locationLabel].filter(Boolean).join(' · ')}</p>
+              <h1 className="mt-1 font-[family-name:var(--font-display)] text-[28px] font-bold leading-[1.1] tracking-[-0.03em] [text-wrap:balance] lg:text-[36px]">
+                {place.name}
+              </h1>
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
+                {headlineRatingNode}
+                <ul className="flex flex-wrap items-center gap-1.5" aria-label="At a glance">
+                  {place.status === 'Open' ? (
+                    <li className={cx(pillClass, 'is-sea font-semibold')}>
+                      <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
+                      Open now
+                    </li>
+                  ) : null}
+                  {place.status === 'Closed' ? <li className={cx(pillClass, 'is-bad font-semibold')}>Closed</li> : null}
+                  {chipPrice ? <li className={cx(pillClass, 'font-semibold text-[var(--ink)]')}>{chipPrice}</li> : null}
+                  {sulitLabel ? (
+                    isSulit ? (
+                      <li className={cx(pillClass, 'is-tara')}>
+                        <b className="font-bold">Sulit</b>· {sulitLabel}
+                      </li>
+                    ) : (
+                      <li className={pillClass}>{sulitLabel}</li>
+                    )
+                  ) : null}
+                  {hasHeadlineScore ? null : <li className={pillClass}>New</li>}
+                  {isRainSafe ? (
+                    <li className={pillClass}>
+                      <Umbrella aria-hidden="true" />
+                      Rain-safe
+                    </li>
+                  ) : null}
+                </ul>
+              </div>
+            </div>
+            <div className="g-only-desk flex shrink-0 items-center gap-1">
+              <Button variant="text" size="sm" onClick={() => void handleSharePlace()}>
+                <Share2 aria-hidden="true" />
+                Share
+              </Button>
+              <Button variant="text" size="sm" onClick={() => void handleSavePlace()} disabled={isSaving} aria-pressed={isSaved} aria-label={saveLabel}>
+                {heartIcon}
+                {isSaved ? 'Saved' : 'Save'}
+              </Button>
+            </div>
+          </div>
+          {shareError ? <p className="g-hint is-error mt-2">{shareError}</p> : null}
+          {saveError ? <p className="g-hint is-error mt-2">{saveError}</p> : null}
+          {contributionError && !isContributionOpen ? <p className="g-hint is-error mt-2">{contributionError}</p> : null}
+        </header>
+
+        <div className="g-only-desk order-3 lg:order-2">
+          <DesktopGallery
+            photos={galleryPhotos}
+            placeName={place.name}
+            onBroken={markPhotoBroken}
+            onOpen={setAllPhotosIndex}
+            showAddPhotoAction={showAddPhotoAction}
+            onContribute={handleOpenContribution}
+            mapPoints={mapPoints}
+            mapCaption={locationLabel}
+            onMapClick={() => scrollToSection('getting-there')}
+          />
+        </div>
+      </div>
+
+      <div className="lg:mt-8 lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:gap-16">
+        <div className="min-w-0">
+          <SectionTabs items={sectionTabs} />
+
+          <section id="overview" className="pd-anchor mt-5 lg:mt-6" aria-label="Overview">
+            {keyFacts.length > 0 ? (
+              <ul className="pd-facts" aria-label="Key facts">
+                {keyFacts.map((fact) => {
+                  const FactIcon = fact.icon
                   return (
-                    <button
-                      key={mode.value}
-                      type="button"
-                      className={cx('g-mode', mode.value === activeAccessMode.value && 'is-on')}
-                      aria-pressed={mode.value === activeAccessMode.value}
-                      onClick={() => setAccessMode(mode.value)}
-                    >
-                      <ModeIcon aria-hidden="true" />
-                      {mode.label}
-                    </button>
+                    <li key={fact.key} className="pd-fact">
+                      <span className="pd-fact-ic" aria-hidden="true">
+                        <FactIcon weight="duotone" />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="pd-fact-k">{fact.label}</p>
+                        <p className="pd-fact-v" title={fact.value}>{fact.value}</p>
+                      </div>
+                    </li>
                   )
                 })}
-              </div>
-              <p className="g-sm g-mut mt-2">{activeAccessMode.text}</p>
-              <Button variant="soft" size="sm" className="mt-3" onClick={openDirections} disabled={!directionsUrl}>
-                <Navigation aria-hidden="true" />
-                Directions
-              </Button>
-            </section>
+              </ul>
+            ) : null}
+            {budgetNotes ? <p className="g-xs g-fnt mt-1">Prices can change. Check before you go.</p> : null}
 
-            <section className={sectionClassName}>
-              <h2 className={sectionTitleClassName}>Good for</h2>
+            <div className="pd-sec">
+              <h2 className="pd-sec-title">About this spot</h2>
+              <div className="g-mut">
+                <ReadMoreText text={quickTake} />
+              </div>
+              <Button variant="soft" size="sm" className="mt-3" onClick={() => openFloatingChat(askAiQuestion)}>
+                <Sparkles weight="fill" style={{ color: 'var(--tara)' }} aria-hidden="true" />
+                Ask AI about this place
+              </Button>
+            </div>
+          </section>
+
+          {goodFor.length > 0 ? (
+            <section className="pd-sec" aria-labelledby="place-good-for">
+              <h2 id="place-good-for" className="pd-sec-title">
+                Good for
+              </h2>
               <GoodForList values={goodFor} />
             </section>
+          ) : null}
 
-            <section className={sectionClassName}>
-              <h2 className={sectionTitleClassName}>Good to know</h2>
-              <div className="divide-y divide-[var(--line-2)]">
-                {faqItems.map((item) => (
-                  <details key={item.question} className="group">
-                    <summary className="flex min-h-12 cursor-pointer list-none items-center gap-3 py-3 [&::-webkit-details-marker]:hidden">
-                      <h3 className="min-w-0 flex-1 text-[15px] font-medium leading-snug">{item.question}</h3>
-                      <ChevronDown className="h-4 w-4 shrink-0 text-[var(--ink-3)] transition-transform group-open:rotate-180" aria-hidden="true" />
-                    </summary>
-                    <p className="g-sm g-mut pb-4 leading-relaxed">{item.answer}</p>
-                  </details>
-                ))}
-              </div>
-              {canonicalPlaceLink && areaLink && areaBreadcrumb ? (
-                <p className="g-sm g-mut mt-4">
-                  Explore more from{' '}
-                  <InternalLink href={areaLink} className="text-[var(--ink)] underline underline-offset-2">
-                    {areaBreadcrumb.areaName}
-                  </InternalLink>{' '}
-                  or browse the full{' '}
-                  <InternalLink href="/places" className="text-[var(--ink)] underline underline-offset-2">
-                    places hub
-                  </InternalLink>
-                  .
-                </p>
-              ) : null}
-            </section>
+          <section id="getting-there" className="pd-sec pd-anchor" aria-labelledby="place-where">
+            <h2 id="place-where" className="pd-sec-title">
+              Where you&rsquo;ll be
+            </h2>
+            <p className="text-[15px] font-medium">{addressLabel}</p>
+            {distanceLabel ? <p className="g-sm g-mut mt-0.5">{distanceLabel}</p> : null}
+            {mapPoints.length > 0 ? (
+              <GtMap points={mapPoints} label={`Map of ${place.name}`} className="mt-4 h-[220px] overflow-hidden rounded-[var(--r-3)] md:h-[320px]" />
+            ) : null}
+            <ul className="pd-rows mt-2">
+              {accessRows.map((row) => {
+                const RowIcon = row.icon
+                return (
+                  <li key={row.key}>
+                    <RowIcon weight="duotone" aria-hidden="true" />
+                    <div className="min-w-0">
+                      <b>{row.title}</b>
+                      <p>{row.text}</p>
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+            <Button variant="line" size="sm" className="mt-3" onClick={openDirections} disabled={!directionsUrl}>
+              <Navigation aria-hidden="true" />
+              Get directions
+            </Button>
+          </section>
 
+          <section id="reviews" className="pd-sec pd-anchor" aria-labelledby="place-reviews">
+            <h2 id="place-reviews" className="pd-sec-title">
+              Reviews
+            </h2>
             {communitySection}
+          </section>
+
+          <section id="faq" className="pd-sec pd-anchor" aria-labelledby="place-faq">
+            <h2 id="place-faq" className="pd-sec-title">
+              Good to know
+            </h2>
+            <div className="pd-faq">
+              {faqItems.map((item) => (
+                <details key={item.question} className="group">
+                  <summary>
+                    <h3 className="min-w-0 flex-1 text-[15px] font-medium leading-snug">{item.question}</h3>
+                    <ChevronDown className="h-4 w-4 shrink-0 text-[var(--ink-3)] transition-transform group-open:rotate-180" aria-hidden="true" />
+                  </summary>
+                  <p>{item.answer}</p>
+                </details>
+              ))}
+            </div>
+            {canonicalPlaceLink && areaLink && areaBreadcrumb ? (
+              <nav aria-label="Explore more" className="pd-links">
+                <InternalLink href={areaLink} className="pd-link">
+                  <MapPin weight="duotone" aria-hidden="true" />
+                  More in {areaBreadcrumb.areaName}
+                </InternalLink>
+                {categoryBreadcrumb ? (
+                  <InternalLink href={new URL(categoryBreadcrumb.childItem).pathname} className="pd-link">
+                    <Compass weight="duotone" aria-hidden="true" />
+                    More {categoryBreadcrumb.childName}
+                  </InternalLink>
+                ) : null}
+                <InternalLink href="/places" className="pd-link">
+                  <Compass weight="duotone" aria-hidden="true" />
+                  Browse all places
+                </InternalLink>
+              </nav>
+            ) : null}
+          </section>
+
+          <div className="mt-8 border-t border-[var(--line-2)] pt-2">
+            <Button variant="text" size="sm" onClick={handleOpenPlaceConcern}>
+              <Flag aria-hidden="true" />
+              Report a concern
+            </Button>
           </div>
         </div>
 
-        <aside className="g-only-desk sticky top-24" aria-label="Plan this place">
-          <div className="g-card p-5" style={{ boxShadow: 'var(--sh-2)' }}>
-            <p className="g-h2">{priceLine || 'Check price on site'}</p>
+        <aside className="g-only-desk sticky top-[148px]" aria-label="Plan this place">
+          <div className="g-card p-6" style={{ boxShadow: 'var(--sh-2)' }}>
+            <p className="font-[family-name:var(--font-display)] text-[24px] font-bold tracking-[-0.02em]">{priceLine || 'Check price on site'}</p>
             {sulitLevel ? (
               <p className="g-sulit mt-1.5">
                 Sulit <SulitMeter score={(5 - sulitLevel.index) * 2} />
                 {sulitLevel.index > 0 ? <b>{sulitLevel.label}</b> : null}
               </p>
+            ) : null}
+            {hasHeadlineScore ? (
+              <div className="mt-3 flex items-center gap-2 text-[13px]">
+                <RatingBubbles rating={headlineRating} />
+                <span className="g-mut">
+                  {headlineRating.toFixed(1)} · {formatRatingCount(headlineReviewCount)} ratings
+                </span>
+              </div>
             ) : null}
             <div className="mt-5 flex flex-col gap-2">
               <Button variant="tara" size="lg" block onClick={handleAddToPlan}>
@@ -2611,36 +2494,49 @@ function PlaceDetailView({
                 Add to plan
               </Button>
               <div className="flex items-start gap-2">
-                <CheckInButton
-                  className="min-w-0 flex-1"
-                  placeId={place.id}
-                  placeName={place.name}
-                  session={appSession}
-                  onGuest={() => guestAuth.open('community')}
-                />
+                <CheckInButton className="min-w-0 flex-1" placeId={place.id} placeName={place.name} session={appSession} onGuest={() => guestAuth.open('community')} />
                 <Button variant="soft" iconOnly onClick={() => void handleSavePlace()} disabled={isSaving} aria-pressed={isSaved} aria-label={saveLabel}>
                   {heartIcon}
                 </Button>
               </div>
             </div>
+            <p className="g-xs g-fnt mt-3 text-center">Tara! Add it to a barkada plan, then do the hatian later.</p>
           </div>
         </aside>
       </div>
 
       <div className="h-20 lg:hidden" aria-hidden="true" />
 
-      <div
-        className="fixed inset-x-0 z-[5500] border-t border-[var(--line-2)] bg-[var(--surface)] px-4 py-2.5 lg:hidden"
-        style={{ bottom: 'calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px))' }}
-      >
-        <div className="relative mx-auto flex max-w-[720px] items-center gap-2">
+      <div className="pd-bar lg:hidden" style={{ bottom: 'calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px))' }}>
+        <div className="pd-bar-in">
+          {barPrice ? (
+            <div className="pd-bar-price">
+              <b>{barPrice}</b>
+              {valueText ? <span style={isSulit ? undefined : { color: 'var(--ink-2)' }}>{valueText}</span> : null}
+            </div>
+          ) : null}
           <CheckInButton iconOnly placeId={place.id} placeName={place.name} session={appSession} onGuest={() => guestAuth.open('community')} />
-          <Button variant="tara" size="lg" className="min-w-0 flex-1" onClick={handleAddToPlan}>
+          <Button variant="tara" size="lg" className={barPrice ? 'shrink-0' : 'min-w-0 flex-1'} onClick={handleAddToPlan}>
             <Plus aria-hidden="true" />
             Add to plan
           </Button>
         </div>
       </div>
+
+      {allPhotosIndex !== null && galleryPhotos.length > 0 ? (
+        <AllPhotos
+          photos={galleryPhotos}
+          placeName={place.name}
+          startIndex={allPhotosIndex}
+          onBroken={markPhotoBroken}
+          onClose={closeAllPhotos}
+          showAddPhotoAction={showAddPhotoAction}
+          onContribute={() => {
+            closeAllPhotos()
+            handleOpenContribution()
+          }}
+        />
+      ) : null}
 
       {guestAuth.promptElement}
       <AddToGalaPlanModal isOpen={isAddToPlanOpen} placeId={place.id} placeName={place.name} onClose={() => setIsAddToPlanOpen(false)} />

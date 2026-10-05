@@ -16,7 +16,8 @@ type Phase = 'deck' | 'saving' | 'done' | 'end'
 const SWIPE_PX = 96
 const FLY_MS = 220
 
-const NAVY = '#0f2138'
+// Navy text on coral, the system rule for the main action.
+const ON_TARA = '#0f2138'
 
 function findPlace(plan: GalaPlanDetail, option: Option) {
   const label = option.label.trim().toLowerCase()
@@ -39,7 +40,7 @@ function OptionCard({ plan, option, dx, dragging, isMine }: { plan: GalaPlanDeta
       className="relative h-full w-full overflow-hidden select-none"
       style={{
         borderRadius: 'var(--r-4)',
-        background: NAVY,
+        background: image ? 'var(--fill-2)' : 'var(--sea-soft)',
         boxShadow: 'var(--sh-3)',
         transform: `translateX(${dx}px) rotate(${dx / 24}deg)`,
         transition: dragging ? 'none' : `transform ${FLY_MS}ms var(--ease-g)`,
@@ -50,22 +51,22 @@ function OptionCard({ plan, option, dx, dragging, isMine }: { plan: GalaPlanDeta
 
       <span
         className="absolute left-5 top-5 rounded-[var(--r-1)] px-3 py-1"
-        style={{ border: '3px solid var(--tara)', color: 'var(--tara)', background: NAVY, font: '700 20px/1 var(--font-display)', transform: 'rotate(-12deg)', opacity: Math.max(0, lean) }}
+        style={{ border: '3px solid var(--tara)', color: 'var(--tara-ink)', background: 'var(--surface)', font: '700 20px/1 var(--font-display)', transform: 'rotate(-12deg)', opacity: Math.max(0, lean) }}
         aria-hidden="true"
       >
         TARA!
       </span>
       <span
         className="absolute right-5 top-5 rounded-[var(--r-1)] px-3 py-1"
-        style={{ border: '3px solid #fff', color: '#fff', background: NAVY, font: '700 20px/1 var(--font-display)', transform: 'rotate(12deg)', opacity: Math.max(0, -lean) }}
+        style={{ border: '3px solid var(--ink)', color: 'var(--ink)', background: 'var(--surface)', font: '700 20px/1 var(--font-display)', transform: 'rotate(12deg)', opacity: Math.max(0, -lean) }}
         aria-hidden="true"
       >
         SKIP
       </span>
 
-      <div className="absolute inset-x-0 bottom-0 p-5 text-white">
+      <div className="absolute inset-x-0 bottom-0 p-5" style={{ color: image ? '#fff' : 'var(--ink)' }}>
         {isMine ? <span className="g-tag is-solid mb-2">Your pick</span> : null}
-        <p className={image ? 'g-h1' : 'g-d1'} style={{ color: '#fff', overflowWrap: 'anywhere' }}>{option.label}</p>
+        <p className={image ? 'g-h1' : 'g-d1'} style={{ color: 'inherit', overflowWrap: 'anywhere' }}>{option.label}</p>
         {meta ? <p className="g-sm mt-1" style={{ opacity: 0.85 }}>{meta}</p> : null}
         <div className="mt-3 flex min-h-7 items-center gap-2">
           {option.voters.length > 0 ? (
@@ -80,7 +81,7 @@ function OptionCard({ plan, option, dx, dragging, isMine }: { plan: GalaPlanDeta
   )
 }
 
-/** Full-screen deck of a poll's options. Right (or ✓) votes for the option, left (or ✕) skips. */
+/** Full-screen deck of a poll's options. Swipe right (or the check button) to vote for the option, left (or the X button) to skip. */
 function SwipeVote({ plan, poll, session, onChange, onClose }: { plan: GalaPlanDetail; poll: GalaPlanPoll; session: Session | null | undefined; onChange: (barkada: GalaPlanBarkada) => void; onClose: () => void }) {
   const [index, setIndex] = useState(0)
   const [dx, setDx] = useState(0)
@@ -201,8 +202,8 @@ function SwipeVote({ plan, poll, session, onChange, onClose }: { plan: GalaPlanD
 
       {phase === 'done' && result ? (
         <div className="mx-auto flex w-full max-w-[420px] flex-1 flex-col items-center justify-center px-6 text-center">
-          <span className="g-press grid h-24 w-24 place-items-center rounded-full" style={{ background: 'var(--tara)', color: NAVY, ['--g-rot' as string]: '-6deg' }} aria-hidden="true">
-            <Check className="h-10 w-10" strokeWidth={2.5} />
+          <span className="g-press grid h-24 w-24 place-items-center rounded-full" style={{ background: 'var(--tara)', color: ON_TARA, ['--g-rot' as string]: '-6deg' }} aria-hidden="true">
+            <Check className="h-10 w-10" weight="bold" />
           </span>
           <p className="g-h1 mt-6" role="status">You picked {result.label}</p>
           <p className="g-mut mt-2">{result.others === 0 ? "You're the first. Hatakin mo na sila." : `${result.others} ${result.others === 1 ? 'other' : 'others'} too`}</p>
@@ -253,13 +254,13 @@ function SwipeVote({ plan, poll, session, onChange, onClose }: { plan: GalaPlanD
             <button
               type="button"
               className={roundButton}
-              style={{ background: 'var(--tara)', color: NAVY, boxShadow: 'var(--sh-2)' }}
+              style={{ background: 'var(--tara)', color: ON_TARA, boxShadow: 'var(--sh-2)' }}
               aria-label={`Tara! Vote for ${option.label}`}
               aria-busy={phase === 'saving' || undefined}
               disabled={phase !== 'deck'}
               onClick={() => void tara()}
             >
-              <Check className="h-7 w-7" strokeWidth={2.5} />
+              <Check className="h-7 w-7" weight="bold" />
             </button>
           </div>
         </>

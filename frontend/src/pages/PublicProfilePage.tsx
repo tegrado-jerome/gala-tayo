@@ -6,8 +6,9 @@ import { GearSix as Settings } from '@phosphor-icons/react/dist/csr/GearSix'
 import { ShareNetwork as Share2 } from '@phosphor-icons/react/dist/csr/ShareNetwork'
 import { UserPlus } from '@phosphor-icons/react/dist/csr/UserPlus'
 import ProfileAvatar from '../components/ProfileAvatar'
-import { Button, Empty, Page, SectionHead, Skeleton, Tag } from '../components/ui'
-import { FollowListSheet, PlanCard } from './ProfilePage'
+import { Button, Empty, Page, Skeleton, Tag } from '../components/ui'
+import { FollowListSheet, PlanTile, joinedLabel } from './ProfilePage'
+import '../design/me.css'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import {
   followProfile,
@@ -162,16 +163,21 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
 
   const displayName = loadedProfile ? loadedProfile.display_name?.trim() || getDisplayName(loadedProfile) : ''
   const firstName = displayName.split(/\s+/)[0]
+  const joined = joinedLabel(loadedProfile?.created_at)
   const FollowIcon = relationshipState === 'following' ? Check : relationshipState === 'pending' ? Clock : UserPlus
 
   return (
     <Page>
       {isLoading && !loadedProfile ? (
-        <div className="flex items-center gap-4" aria-label="Loading profile">
-          <Skeleton className="h-[72px] w-[72px] !rounded-full lg:h-24 lg:w-24" />
-          <div className="flex-1">
-            <Skeleton className="h-6 w-48" />
-            <Skeleton className="mt-2 h-4 w-32" />
+        <div className="me-card mx-auto max-w-[520px]" aria-label="Loading profile">
+          <div className="me-id">
+            <Skeleton className="h-24 w-24 !rounded-full" />
+            <Skeleton className="mt-3 h-5 w-32" />
+          </div>
+          <div className="grid gap-3">
+            <Skeleton className="h-10" />
+            <Skeleton className="h-10" />
+            <Skeleton className="h-10" />
           </div>
         </div>
       ) : null}
@@ -181,14 +187,14 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
       ) : errorMessage ? (
         <Empty title="Hindi ma-load ang profile." description={<span role="alert">{errorMessage}</span>} />
       ) : loadedProfile ? (
-        <>
-          <section className="lg:max-w-[720px]">
-            <div className="flex items-start gap-4 lg:gap-6">
-              <ProfileAvatar profile={loadedProfile} size="xl" />
-              <div className="min-w-0 flex-1">
-                <h1 className="g-h1 truncate">{displayName}</h1>
-                <p className="flex min-w-0 items-center gap-2">
-                  <span className="g-mut truncate">@{loadedProfile.username}</span>
+        <div className="grid items-start gap-8 lg:grid-cols-[360px_minmax(0,1fr)] lg:gap-16">
+          <aside className="min-w-0 lg:sticky lg:top-24">
+            <section className="me-card" aria-label={`${displayName} profile`}>
+              <div className="me-id">
+                <ProfileAvatar profile={loadedProfile} size="xxl" />
+                <h1 className="g-h2">{displayName}</h1>
+                <p className="me-id-sub">
+                  <span className="truncate">@{loadedProfile.username}</span>
                   {loadedProfile.is_public ? null : (
                     <Tag className="shrink-0">
                       <Lock aria-hidden="true" />
@@ -196,33 +202,28 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
                     </Tag>
                   )}
                 </p>
-                <p className="g-sm mt-3 flex flex-wrap items-center gap-x-1">
-                  <button type="button" className="inline-flex min-h-11 items-center gap-1" onClick={() => void openList('followers')} disabled={!canOpenFollowLists}>
-                    <b>{loadedProfile.followers_count}</b>
-                    <span className="g-mut">{loadedProfile.followers_count === 1 ? 'follower' : 'followers'}</span>
-                  </button>
-                  <span className="g-mut" aria-hidden="true">·</span>
-                  <button type="button" className="inline-flex min-h-11 items-center gap-1" onClick={() => void openList('following')} disabled={!canOpenFollowLists}>
-                    <b>{loadedProfile.following_count}</b>
-                    <span className="g-mut">following</span>
-                  </button>
-                  {plans.length > 0 ? (
-                    <>
-                      <span className="g-mut" aria-hidden="true">·</span>
-                      <span className="inline-flex min-h-11 items-center gap-1">
-                        <b>{plans.length}</b>
-                        <span className="g-mut">{plans.length === 1 ? 'plan' : 'plans'}</span>
-                      </span>
-                    </>
-                  ) : null}
-                </p>
+                {joined ? <p className="g-xs g-fnt mt-1">{joined}</p> : null}
               </div>
-            </div>
+              <div className="me-nums">
+                <button type="button" className="me-num" onClick={() => void openList('followers')} disabled={!canOpenFollowLists}>
+                  <b>{loadedProfile.followers_count}</b>
+                  <span>{loadedProfile.followers_count === 1 ? 'Follower' : 'Followers'}</span>
+                </button>
+                <button type="button" className="me-num" onClick={() => void openList('following')} disabled={!canOpenFollowLists}>
+                  <b>{loadedProfile.following_count}</b>
+                  <span>Following</span>
+                </button>
+                <div className="me-num">
+                  <b>{lockedMessage ? '–' : plans.length}</b>
+                  <span>{plans.length === 1 ? 'Public plan' : 'Public plans'}</span>
+                </div>
+              </div>
+            </section>
 
-            {loadedProfile.bio ? <p className="mt-3 max-w-[60ch]">{loadedProfile.bio}</p> : null}
+            {loadedProfile.bio ? <p className="mt-4 max-w-[60ch] text-[15px] leading-relaxed">{loadedProfile.bio}</p> : null}
             {relationshipState === 'self' ? (
-              <p className="mt-2">
-                <Tag>Your public view</Tag>
+              <p className="mt-3">
+                <Tag tone="sea">Your public view</Tag>
               </p>
             ) : null}
 
@@ -240,44 +241,49 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
               )}
               <Button variant="line" block onClick={() => void handleShare()}>
                 <Share2 aria-hidden="true" />
-                Share profile
+                Share
               </Button>
             </div>
-          </section>
 
-          {notice ? (
-            <p role="status" className="g-sm mt-4 rounded-[var(--r-2)] px-3 py-2" style={{ background: 'var(--fill)', color: 'var(--ink)' }}>
-              {notice}
+            {notice ? (
+              <p role="status" className="me-note">
+                {notice}
+              </p>
+            ) : null}
+          </aside>
+
+          <section className="min-w-0" aria-labelledby="public-plans-title">
+            <h2 id="public-plans-title" className="g-h2">{relationshipState === 'self' ? 'Your public plans' : `${firstName}’s plans`}</h2>
+            <p className="g-sm g-mut mt-1 mb-4">
+              {lockedMessage ? 'Follow to see their plans.' : plans.length ? `${plans.length} public ${plans.length === 1 ? 'plan' : 'plans'}` : 'Shared plans show up here.'}
             </p>
-          ) : null}
 
-          <SectionHead title="Plans" sub={plans.length ? `${plans.length} public ${plans.length === 1 ? 'plan' : 'plans'}` : undefined} />
-
-          {lockedMessage ? (
-            <Empty title="This profile is private." description={lockedMessage} />
-          ) : plans.length === 0 ? (
-            relationshipState === 'self' ? (
-              <Empty title="Wala pang public plans." description="Make a plan public so it shows up here." />
+            {lockedMessage ? (
+              <Empty title="This profile is private." description={lockedMessage} />
+            ) : plans.length === 0 ? (
+              relationshipState === 'self' ? (
+                <Empty title="Wala pang public plans." description="Make a plan public so it shows up here." />
+              ) : (
+                <Empty title={`${firstName} hasn't shared a plan yet.`} description="Follow them to catch the next one." />
+              )
             ) : (
-              <p className="g-mut">{firstName} hasn't shared a plan yet.</p>
-            )
-          ) : (
-            <div className="g-group lg:max-w-[720px]">
-              {plans.map((plan) => {
-                const placeCount = plan.places_count ?? 0
-                return (
-                  <PlanCard
-                    key={plan.id}
-                    href={`/u/${encodeURIComponent(loadedProfile.username)}/plans/${encodeURIComponent(plan.slug)}`}
-                    title={plan.title}
-                    imageUrl={plan.preview_places?.[0]?.image_url}
-                    meta={`${placeCount} ${placeCount === 1 ? 'stop' : 'stops'}${plan.hearts_count ? ` · ${plan.hearts_count} ♥` : ''}`}
-                  />
-                )
-              })}
-            </div>
-          )}
-        </>
+              <div className="me-tiles">
+                {plans.map((plan) => {
+                  const placeCount = plan.places_count ?? 0
+                  return (
+                    <PlanTile
+                      key={plan.id}
+                      href={`/u/${encodeURIComponent(loadedProfile.username)}/plans/${encodeURIComponent(plan.slug)}`}
+                      title={plan.title}
+                      imageUrl={plan.preview_places?.[0]?.image_url}
+                      meta={`${placeCount} ${placeCount === 1 ? 'stop' : 'stops'}${plan.hearts_count ? ` · ${plan.hearts_count} ${plan.hearts_count === 1 ? 'heart' : 'hearts'}` : ''}`}
+                    />
+                  )
+                })}
+              </div>
+            )}
+          </section>
+        </div>
       ) : null}
 
       <FollowListSheet title={listTitle} users={listUsers} emptyLabel="This list is private." onClose={() => setListUsers(null)} />

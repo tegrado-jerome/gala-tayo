@@ -1,32 +1,47 @@
 import type { ReactNode } from 'react'
-import { Page } from '../ui'
 import OnboardingProgress from './OnboardingProgress'
 import type { OnboardingStep } from './types'
+import '../../design/misc.css'
 
 type OnboardingLayoutProps = {
   step: OnboardingStep
   title: string
   description: string
-  eyebrow?: string
   children: ReactNode
-  actions: ReactNode
+  /** The main action on the right of the sticky bar. */
+  primary: ReactNode
+  onBack?: () => void
+  backDisabled?: boolean
 }
 
-function OnboardingLayout({ step, title, description, eyebrow, children, actions }: OnboardingLayoutProps) {
+/** One question per screen with a big title, and a sticky footer: progress bar on top, Back on the left, Next on the right. */
+function OnboardingLayout({ step, title, description, children, primary, onBack, backDisabled }: OnboardingLayoutProps) {
   return (
-    <Page narrow>
-      <OnboardingProgress step={step} />
+    <>
+      <main className="m-onb">
+        <header>
+          <p className="m-onb-step">Step {step} of 4</p>
+          <h1 className="m-onb-title">{title}</h1>
+          <p className="g-mut mt-3 text-[16px] leading-relaxed">{description}</p>
+        </header>
 
-      <header className="mt-8">
-        {eyebrow ? <p className="g-eyebrow">{eyebrow}</p> : null}
-        <h1 className="g-h1 mt-2">{title}</h1>
-        <p className="g-mut mt-2">{description}</p>
-      </header>
+        <div className="mt-8">{children}</div>
+      </main>
 
-      <div className="mt-8">{children}</div>
-
-      <div className="mt-8 flex items-center justify-end gap-3">{actions}</div>
-    </Page>
+      <div className="m-onb-foot">
+        <OnboardingProgress step={step} />
+        <div className="m-onb-actions">
+          {onBack ? (
+            <button type="button" className="m-onb-back" onClick={onBack} disabled={backDisabled}>
+              Back
+            </button>
+          ) : (
+            <span />
+          )}
+          {primary}
+        </div>
+      </div>
+    </>
   )
 }
 

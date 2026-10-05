@@ -1,25 +1,32 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { BookBookmark as BookMarked } from '@phosphor-icons/react/dist/csr/BookBookmark'
-import { CalendarBlank as CalendarDays } from '@phosphor-icons/react/dist/csr/CalendarBlank'
-import { CaretRight as ChevronRight } from '@phosphor-icons/react/dist/csr/CaretRight'
+import type { Icon as PhosphorIcon } from '@phosphor-icons/react'
+import { CalendarBlank } from '@phosphor-icons/react/dist/csr/CalendarBlank'
+import { CaretDown } from '@phosphor-icons/react/dist/csr/CaretDown'
+import { CaretRight } from '@phosphor-icons/react/dist/csr/CaretRight'
+import { ChatCenteredText } from '@phosphor-icons/react/dist/csr/ChatCenteredText'
+import { ClockCounterClockwise } from '@phosphor-icons/react/dist/csr/ClockCounterClockwise'
 import { Eye } from '@phosphor-icons/react/dist/csr/Eye'
+import { Flag } from '@phosphor-icons/react/dist/csr/Flag'
+import { GearSix } from '@phosphor-icons/react/dist/csr/GearSix'
 import { Heart } from '@phosphor-icons/react/dist/csr/Heart'
-import { ClockCounterClockwise as History } from '@phosphor-icons/react/dist/csr/ClockCounterClockwise'
+import { LockKey } from '@phosphor-icons/react/dist/csr/LockKey'
 import { Lock } from '@phosphor-icons/react/dist/csr/Lock'
-import { SignOut as LogOut } from '@phosphor-icons/react/dist/csr/SignOut'
+import { MapPinPlus } from '@phosphor-icons/react/dist/csr/MapPinPlus'
 import { Moon } from '@phosphor-icons/react/dist/csr/Moon'
-import { GearSix as Settings } from '@phosphor-icons/react/dist/csr/GearSix'
-import { ShareNetwork as Share2 } from '@phosphor-icons/react/dist/csr/ShareNetwork'
+import { Notepad } from '@phosphor-icons/react/dist/csr/Notepad'
+import { PencilSimple } from '@phosphor-icons/react/dist/csr/PencilSimple'
+import { ShareNetwork } from '@phosphor-icons/react/dist/csr/ShareNetwork'
 import { ShieldCheck } from '@phosphor-icons/react/dist/csr/ShieldCheck'
-import { Sparkle as Sparkles } from '@phosphor-icons/react/dist/csr/Sparkle'
+import { SignOut } from '@phosphor-icons/react/dist/csr/SignOut'
+import { Sparkle } from '@phosphor-icons/react/dist/csr/Sparkle'
 import { Stamp as StampIcon } from '@phosphor-icons/react/dist/csr/Stamp'
 import { Sun } from '@phosphor-icons/react/dist/csr/Sun'
 import { UserPlus } from '@phosphor-icons/react/dist/csr/UserPlus'
 import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
 import InternalLink from '../components/InternalLink'
 import ProfileAvatar from '../components/ProfileAvatar'
-import { Button, Empty, Page, Row, SectionHead, Sheet, Skeleton, Stamp, Tabs, Tag } from '../components/ui'
+import { Button, Empty, Page, SectionHead, Sheet, Skeleton, Tag, cx } from '../components/ui'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { useTheme } from '../context/ThemeContext'
 import { signOut } from '../services/authApi'
@@ -40,19 +47,18 @@ import { formatGalaPlanDate, listMyGalaPlans, type GalaPlanSummary } from '../ut
 import { daysUntil, getPlanDate } from '../utils/galaPlanTrip'
 import { getMyPassport, type CityStamp } from '../utils/passportApi'
 import { preloadAvatarImage } from '../utils/avatarImageCache'
-import { navigateToPath } from '../utils/navigation'
 import { shareLink } from '../utils/share'
 import { getPublicSiteOrigin } from '../utils/site'
+import '../design/me.css'
 
 type ProfilePageProps = {
   session: Session | null
 }
 
-type ProfileTab = 'plans' | 'stamps'
-
 const PROFILE_CACHE_PREFIX = 'galatayo:profile-page:'
 const PROFILE_CACHE_TTL_MS = 10 * 60 * 1000
-const TAB_PREVIEW_LIMIT = 6
+const PLAN_PREVIEW_LIMIT = 4
+const STAMP_PREVIEW_LIMIT = 6
 
 type ProfilePageCache = {
   profile: Profile
@@ -100,24 +106,89 @@ function planDateLabel(plan: GalaPlanSummary) {
   return date.toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric', year })
 }
 
-type Loadable<T> = { status: 'loading' } | { status: 'ready'; data: T } | { status: 'error'; message: string }
+function plural(count: number, word: string, many = `${word}s`) {
+  return `${count} ${count === 1 ? word : many}`
+}
 
-/** Compact plan row for a `g-group` list: 64px thumbnail, title, one meta line. */
-export function PlanCard({ href, title, imageUrl, tag, date, meta }: { href: string; title: string; imageUrl?: string | null; tag?: string; date?: string; meta: string }) {
-  return (
-    <InternalLink href={href} className="g-group-row py-2" ariaLabel={title}>
-      {imageUrl ? (
-        <img src={imageUrl} alt="" loading="lazy" decoding="async" className="h-16 w-16 shrink-0 rounded-[var(--r-2)] object-cover" />
-      ) : (
-        <span className="grid h-16 w-16 shrink-0 place-items-center rounded-[var(--r-2)]" style={{ background: 'var(--sea-soft)', color: 'var(--sea)' }}>
-          <CalendarDays className="h-6 w-6" aria-hidden="true" />
-        </span>
-      )}
-      <span className="min-w-0 flex-1">
-        <span className="g-h3 block truncate">{title}</span>
-        <span className="g-sm g-mut block truncate">{[tag, date, meta].filter(Boolean).join(' · ')}</span>
+/** "Joined Oct 2026", or null when the date is missing. */
+export function joinedLabel(value: string | null | undefined) {
+  if (!value) return null
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return null
+  return `Joined ${date.toLocaleDateString('en', { month: 'short', year: 'numeric' })}`
+}
+
+type Loadable<T> = { status: 'loading' } | { status: 'ready'; data: T } | { status: 'error'; message: string }
+type PassportSummary = { stamps: CityStamp[]; places: number; streak: number }
+
+/** Airbnb-style account row: duotone icon tile, title, one-line subtitle, caret. Renders a link, a button, or a switch. */
+export function MeRow({
+  icon: Icon,
+  title,
+  sub,
+  href,
+  onClick,
+  end,
+  tone,
+  checked,
+  expanded,
+  disabled,
+}: {
+  icon: PhosphorIcon
+  title: ReactNode
+  sub?: ReactNode
+  href?: string
+  onClick?: () => void
+  end?: ReactNode
+  tone?: 'tara' | 'sea' | 'warn' | 'bad'
+  checked?: boolean
+  /** Makes the row a disclosure button for an inline panel. */
+  expanded?: boolean
+  disabled?: boolean
+}) {
+  const body = (
+    <>
+      <span className={cx('me-ic', tone && `is-${tone}`)} aria-hidden="true">
+        <Icon weight="duotone" />
       </span>
-      <ChevronRight className="g-ic shrink-0" aria-hidden="true" style={{ color: 'var(--ink-3)' }} />
+      <span className="me-row-t">
+        <b>{title}</b>
+        {sub ? <span>{sub}</span> : null}
+      </span>
+      <span className="me-row-end">
+        {checked !== undefined ? <span className="me-switch" aria-hidden="true" /> : end}
+        {href ? <CaretRight aria-hidden="true" /> : null}
+        {expanded !== undefined ? <CaretDown aria-hidden="true" className={cx('transition-transform', expanded && 'rotate-180')} /> : null}
+      </span>
+    </>
+  )
+  if (href && /^(mailto:|https?:)/.test(href)) return <a href={href} className="me-row">{body}</a>
+  if (href) return <InternalLink href={href} className="me-row">{body}</InternalLink>
+  if (checked !== undefined) {
+    return (
+      <button type="button" role="switch" aria-checked={checked} className="me-row" onClick={onClick} disabled={disabled}>
+        {body}
+      </button>
+    )
+  }
+  return (
+    <button type="button" className="me-row" onClick={onClick} disabled={disabled} aria-expanded={expanded}>
+      {body}
+    </button>
+  )
+}
+
+/** Plan tile for a `me-tiles` grid: 4:3 cover photo, title, one meta line. */
+export function PlanTile({ href, title, imageUrl, tag, meta }: { href: string; title: string; imageUrl?: string | null; tag?: string; meta: string }) {
+  return (
+    <InternalLink href={href} className="me-tile" ariaLabel={title}>
+      <span className="me-tile-art">
+        <CalendarBlank size={28} weight="duotone" aria-hidden="true" />
+        {imageUrl ? <img src={imageUrl} alt="" loading="lazy" decoding="async" /> : null}
+        {tag ? <Tag tone="solid">{tag}</Tag> : null}
+      </span>
+      <span className="me-tile-t">{title}</span>
+      <span className="me-tile-s block">{meta}</span>
     </InternalLink>
   )
 }
@@ -126,23 +197,16 @@ export function FollowListSheet({ title, users, emptyLabel, onClose }: { title: 
   return (
     <Sheet open={users !== null} onClose={onClose} title={title} labelledBy="follow-list-title">
       {users?.length === 0 ? <p className="g-sm g-mut">{emptyLabel}</p> : null}
-      <div className="g-list">
+      <div>
         {users?.map((user) => (
-          <Row
-            key={user.user_id}
-            onClick={() => {
-              onClose()
-              navigateToPath(`/u/${encodeURIComponent(user.username)}`)
-            }}
-          >
-            <div className="flex min-w-0 items-center gap-3">
-              <ProfileAvatar profile={user} size="xs" />
-              <div className="min-w-0">
-                <div className="g-h3 truncate">@{user.username}</div>
-                <div className="g-sm g-mut truncate">{user.bio || 'View profile'}</div>
-              </div>
-            </div>
-          </Row>
+          <div key={user.user_id} className="me-prow">
+            <ProfileAvatar profile={user} size="sm" />
+            <InternalLink href={`/u/${encodeURIComponent(user.username)}`} onClick={onClose}>
+              <span className="g-h3 block truncate">{user.display_name?.trim() || `@${user.username}`}</span>
+              <span className="g-sm g-mut block truncate">{user.display_name?.trim() ? `@${user.username}` : user.bio || 'View profile'}</span>
+            </InternalLink>
+            <CaretRight className="g-ic shrink-0" style={{ color: 'var(--ink-3)' }} aria-hidden="true" />
+          </div>
         ))}
       </div>
       <Button variant="line" block className="mt-4" onClick={onClose}>
@@ -199,9 +263,8 @@ function ProfilePage({ session }: ProfilePageProps) {
   const [listTitle, setListTitle] = useState('')
   const [listUsers, setListUsers] = useState<FollowListUser[] | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
-  const [activeTab, setActiveTab] = useState<ProfileTab>('plans')
   const [plans, setPlans] = useState<Loadable<GalaPlanSummary[]>>({ status: 'loading' })
-  const [stamps, setStamps] = useState<Loadable<CityStamp[]>>({ status: 'loading' })
+  const [passport, setPassport] = useState<Loadable<PassportSummary>>({ status: 'loading' })
   const [isSigningOut, setIsSigningOut] = useState(false)
   const { showSystemMessage } = useSystemMessage()
   const { resolvedTheme, setThemePreference } = useTheme()
@@ -282,8 +345,16 @@ function ProfilePage({ session }: ProfilePageProps) {
       .then((data) => isMounted && setPlans({ status: 'ready', data: data.plans }))
       .catch((error) => isMounted && setPlans({ status: 'error', message: toMessage(error) }))
     getMyPassport(session)
-      .then((data) => isMounted && setStamps({ status: 'ready', data: data.available ? data.stamps.filter((stamp) => stamp.collected) : [] }))
-      .catch((error) => isMounted && setStamps({ status: 'error', message: toMessage(error) }))
+      .then((data) =>
+        isMounted &&
+        setPassport({
+          status: 'ready',
+          data: data.available
+            ? { stamps: data.stamps.filter((stamp) => stamp.collected), places: data.unique_places, streak: data.streak_weeks }
+            : { stamps: [], places: 0, streak: 0 },
+        }),
+      )
+      .catch((error) => isMounted && setPassport({ status: 'error', message: toMessage(error) }))
 
     return () => {
       isMounted = false
@@ -345,46 +416,47 @@ function ProfilePage({ session }: ProfilePageProps) {
     )
   }
 
-  const savedPlaces = favorites.filter((favorite) => favorite.place)
-  const stampCount = stamps.status === 'ready' ? stamps.data.length : null
+  const savedCount = favorites.filter((favorite) => favorite.place).length
+  const passportData = passport.status === 'ready' ? passport.data : null
+  const stampCount = passportData ? passportData.stamps.length : null
   const planCount = plans.status === 'ready' ? plans.data.length : null
   const displayName = currentProfile?.displayName?.trim() || profile?.username || 'Your profile'
   const showFollowRequests = !profile?.is_public || followRequests.length > 0
-  const shortcuts = [
-    { href: '/passport', label: 'Passport', sub: stampCount ? `${stampCount} ${stampCount === 1 ? 'stamp' : 'stamps'}` : '', icon: StampIcon },
-    { href: '/favorites', label: 'Saved places', sub: savedPlaces.length ? String(savedPlaces.length) : '', icon: Heart },
-    { href: '/history', label: 'History', sub: '', icon: History },
-    { href: '/find-friends', label: 'Find friends', sub: '', icon: UserPlus },
-    { href: `/u/${encodeURIComponent(profile?.username || '')}`, label: 'View public profile', sub: '', icon: Eye },
-  ]
-  const accountLinks = [
-    { href: '/account-settings', label: 'Settings', icon: Settings },
-    { href: '/privacy-center', label: 'Privacy center', icon: ShieldCheck },
-  ]
+  const joined = joinedLabel(profile?.created_at)
   const isDark = resolvedTheme === 'dark'
-  const ThemeIcon = isDark ? Sun : Moon
+  const passportSub = passportData
+    ? stampCount
+      ? [plural(stampCount, 'city stamp'), passportData.streak ? `${plural(passportData.streak, 'week')} streak` : null].filter(Boolean).join(' · ')
+      : 'Tap “I’m here” at a spot to earn a city stamp'
+    : 'City stamps and your weekly streak'
 
   return (
     <Page>
+      <h1 className="g-h1">Profile</h1>
+
       {isLoading && !profile ? (
-        <div className="flex items-center gap-4" aria-label="Loading profile">
-          <Skeleton className="h-[72px] w-[72px] !rounded-full lg:h-24 lg:w-24" />
-          <div className="flex-1">
-            <Skeleton className="h-6 w-48" />
-            <Skeleton className="mt-2 h-4 w-32" />
+        <div className="me-card mt-5" aria-label="Loading profile">
+          <div className="me-id">
+            <Skeleton className="h-24 w-24 !rounded-full" />
+            <Skeleton className="mt-3 h-5 w-32" />
+          </div>
+          <div className="grid gap-3">
+            <Skeleton className="h-10" />
+            <Skeleton className="h-10" />
+            <Skeleton className="h-10" />
           </div>
         </div>
       ) : null}
 
       {profile ? (
-        <>
-          <section className="lg:max-w-[720px]">
-            <div className="flex items-start gap-4 lg:gap-6">
-              <ProfileAvatar profile={{ ...profile, display_name: currentProfile?.displayName }} size="xl" />
-              <div className="min-w-0 flex-1">
-                <h1 className="g-h1 truncate">{displayName}</h1>
-                <p className="flex min-w-0 items-center gap-2">
-                  <span className="g-mut truncate">@{profile.username}</span>
+        <div className="mt-5 grid items-start gap-8 lg:grid-cols-[360px_minmax(0,1fr)] lg:gap-16">
+          <aside className="min-w-0 lg:sticky lg:top-24">
+            <section className="me-card" aria-label="Your profile">
+              <div className="me-id">
+                <ProfileAvatar profile={{ ...profile, display_name: currentProfile?.displayName }} size="xxl" />
+                <h2 className="g-h2">{displayName}</h2>
+                <p className="me-id-sub">
+                  <span className="truncate">@{profile.username}</span>
                   {profile.is_public ? null : (
                     <Tag className="shrink-0">
                       <Lock aria-hidden="true" />
@@ -392,217 +464,208 @@ function ProfilePage({ session }: ProfilePageProps) {
                     </Tag>
                   )}
                 </p>
-                <p className="g-sm mt-3 flex flex-wrap items-center gap-x-1">
-                  <button type="button" className="inline-flex min-h-11 items-center gap-1" onClick={() => void openList('followers')}>
-                    <b>{profile.followers_count ?? 0}</b>
-                    <span className="g-mut">{profile.followers_count === 1 ? 'follower' : 'followers'}</span>
-                  </button>
-                  <span className="g-mut" aria-hidden="true">·</span>
-                  <button type="button" className="inline-flex min-h-11 items-center gap-1" onClick={() => void openList('following')}>
-                    <b>{profile.following_count ?? 0}</b>
-                    <span className="g-mut">following</span>
-                  </button>
-                  <span className="g-mut" aria-hidden="true">·</span>
-                  <InternalLink href="/passport" className="inline-flex min-h-11 items-center gap-1 no-underline" ariaLabel={`${stampCount ?? 0} city stamps, open passport`}>
-                    <b style={{ color: 'var(--ink)' }}>{stampCount ?? '–'}</b>
-                    <span className="g-mut">{stampCount === 1 ? 'stamp' : 'stamps'}</span>
-                  </InternalLink>
-                </p>
+                {joined ? <p className="g-xs g-fnt mt-1">{joined}</p> : null}
               </div>
-            </div>
+              <div className="me-nums">
+                <InternalLink href="/passport" className="me-num" ariaLabel={`${passportData?.places ?? 0} places visited, open passport`}>
+                  <b>{passportData ? passportData.places : '–'}</b>
+                  <span>{passportData?.places === 1 ? 'Place visited' : 'Places visited'}</span>
+                </InternalLink>
+                <InternalLink href="/gala-plans" className="me-num" ariaLabel={`${planCount ?? 0} plans, open gala plans`}>
+                  <b>{planCount ?? '–'}</b>
+                  <span>{planCount === 1 ? 'Plan' : 'Plans'}</span>
+                </InternalLink>
+                <InternalLink href="/favorites" className="me-num" ariaLabel={`${savedCount} saved places, open saved`}>
+                  <b>{savedCount}</b>
+                  <span>Saved</span>
+                </InternalLink>
+              </div>
+            </section>
 
-            <p className="mt-3 max-w-[60ch]">{profile.bio || 'Add a short bio so people know your vibe before they follow.'}</p>
-            {followRequests.length > 0 ? (
-              <p className="g-sm g-mut mt-2">{`${followRequests.length} pending request${followRequests.length === 1 ? '' : 's'}`}</p>
-            ) : null}
+            <p className="me-social mt-2">
+              <button type="button" onClick={() => void openList('followers')}>
+                <b>{profile.followers_count ?? 0}</b>
+                <span>{profile.followers_count === 1 ? 'follower' : 'followers'}</span>
+              </button>
+              <i className="g-fnt not-italic" aria-hidden="true">·</i>
+              <button type="button" onClick={() => void openList('following')}>
+                <b>{profile.following_count ?? 0}</b>
+                <span>following</span>
+              </button>
+              {followRequests.length > 0 ? (
+                <>
+                  <i className="g-fnt not-italic" aria-hidden="true">·</i>
+                  <Tag tone="tara">{followRequests.length} pending</Tag>
+                </>
+              ) : null}
+            </p>
+
+            {profile.bio ? (
+              <p className="mt-2 max-w-[60ch] text-[15px] leading-relaxed">{profile.bio}</p>
+            ) : (
+              <p className="g-sm g-mut mt-2">
+                Add a short bio so people know your vibe before they follow.{' '}
+                <InternalLink href="/account-settings" className="font-semibold text-[var(--ink)] underline underline-offset-2">
+                  Add bio
+                </InternalLink>
+              </p>
+            )}
 
             <div className="mt-4 grid grid-cols-2 gap-2">
               <Button variant="line" block href="/account-settings">
+                <PencilSimple aria-hidden="true" />
                 Edit profile
               </Button>
               <Button variant="line" block onClick={() => void handleShare()}>
-                <Share2 aria-hidden="true" />
-                Share profile
+                <ShareNetwork aria-hidden="true" />
+                Share
               </Button>
             </div>
+          </aside>
 
-            <nav className="mt-5 grid gap-4" aria-label="Your stuff">
-              <div className="g-group">
-                {shortcuts.map(({ href, label, sub, icon: Icon }) => (
-                  <InternalLink key={href} href={href} className="g-group-row">
-                    <Icon aria-hidden="true" />
-                    {label}
-                    <span className="g-group-end">
-                      {sub}
-                      <ChevronRight className="g-ic" aria-hidden="true" />
-                    </span>
-                  </InternalLink>
-                ))}
-              </div>
-              <div className="g-group">
-                {accountLinks.map(({ href, label, icon: Icon }) => (
-                  <InternalLink key={href} href={href} className="g-group-row">
-                    <Icon aria-hidden="true" />
-                    {label}
-                    <span className="g-group-end">
-                      <ChevronRight className="g-ic" aria-hidden="true" />
-                    </span>
-                  </InternalLink>
-                ))}
-                <button type="button" role="switch" aria-checked={isDark} className="g-group-row" onClick={() => setThemePreference(isDark ? 'light' : 'dark')}>
-                  <ThemeIcon aria-hidden="true" />
-                  Dark mode
-                  <span className="g-group-end">{isDark ? 'On' : 'Off'}</span>
-                </button>
-                <button type="button" className="g-group-row disabled:opacity-60" onClick={() => void handleSignOut()} disabled={isSigningOut}>
-                  <LogOut aria-hidden="true" />
-                  {isSigningOut ? 'Logging out...' : 'Log out'}
-                </button>
-              </div>
-            </nav>
-          </section>
-
-          {errorMessage ? (
-            <p role="alert" className="g-sm mt-4" style={{ color: 'var(--bad)' }}>
-              {errorMessage}
-            </p>
-          ) : null}
-
-          <div className="mt-8">
-            <Tabs
-              label="Profile sections"
-              value={activeTab}
-              onChange={setActiveTab}
-              options={[
-                { value: 'plans', label: planCount ? `Plans ${planCount}` : 'Plans' },
-                { value: 'stamps', label: stampCount ? `Stamps ${stampCount}` : 'Stamps' },
-              ]}
-            />
-
-            {activeTab === 'plans' ? (
-              plans.status === 'loading' ? (
-                <div className="grid gap-2 lg:max-w-[720px]" aria-label="Loading plans">
-                  {Array.from({ length: 3 }, (_, index) => (
-                    <Skeleton key={index} className="h-20" />
-                  ))}
-                </div>
-              ) : plans.status === 'error' ? (
-                <Empty title="Hindi ma-load ang plans mo." description={plans.message} />
-              ) : plans.data.length === 0 ? (
-                <Empty
-                  title="Wala pang plans."
-                  description="Describe your gala in one line and let AI draft it."
-                  action={
-                    <Button variant="ink" href="/plan-with-ai">
-                      <Sparkles aria-hidden="true" />
-                      Plan with AI
-                    </Button>
-                  }
-                />
-              ) : (
-                <>
-                  <div className="g-group lg:max-w-[720px]">
-                    {plans.data.slice(0, TAB_PREVIEW_LIMIT).map((plan) => {
-                      const placeCount = plan.places_count ?? plan.place_count ?? 0
-                      const hearts = plan.hearts_count ?? plan.heart_count ?? 0
-                      return (
-                        <PlanCard
-                          key={plan.id}
-                          href={`/gala-plans/${encodeURIComponent(plan.id)}`}
-                          title={plan.title}
-                          imageUrl={plan.preview_places?.[0]?.image_url}
-                          tag={plan.visibility === 'public' ? 'Public' : 'Private'}
-                          date={planDateLabel(plan)}
-                          meta={`${placeCount} ${placeCount === 1 ? 'stop' : 'stops'}${hearts ? ` · ${hearts} ♥` : ''}`}
-                        />
-                      )
-                    })}
-                  </div>
-                  {plans.data.length > TAB_PREVIEW_LIMIT ? (
-                    <div className="mt-4 flex justify-center">
-                      <Button variant="line" href="/gala-plans">
-                        All {plans.data.length} plans
-                      </Button>
-                    </div>
-                  ) : null}
-                </>
-              )
+          <div className="min-w-0">
+            {errorMessage ? (
+              <p role="alert" className="g-sm mb-4" style={{ color: 'var(--bad)' }}>
+                {errorMessage}
+              </p>
             ) : null}
 
-            {activeTab === 'stamps' ? (
-              stamps.status === 'loading' ? (
-                <div className="grid grid-cols-2 justify-items-center gap-6 md:grid-cols-4">
-                  {Array.from({ length: 4 }, (_, index) => (
-                    <Skeleton key={index} className="h-[100px] w-[100px] !rounded-full" />
-                  ))}
-                </div>
-              ) : stamps.status === 'error' ? (
-                <Empty title="Hindi ma-load ang stamps mo." description={stamps.message} />
-              ) : stamps.data.length === 0 ? (
-                <Empty
-                  title="Wala pang stamps."
-                  description="Visit a place and tap “I'm here” to earn that city's stamp."
-                  action={<Button variant="line" href="/passport">Open passport</Button>}
-                />
-              ) : (
-                <>
-                  <div className="grid grid-cols-2 justify-items-center gap-x-4 gap-y-8 min-[480px]:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 [&_.g-stamp]:border-0 [&_.g-stamp]:bg-[var(--sea)] [&_.g-stamp]:text-[var(--surface)] [&_.g-stamp_span]:text-[var(--surface)] [&_.g-stamp_span]:opacity-85">
-                    {stamps.data.map((stamp) => (
-                      <Stamp key={stamp.city} title={stamp.city} sub={`${stamp.places} ${stamp.places === 1 ? 'spot' : 'spots'}`} />
+            {showFollowRequests ? (
+              <section className="me-sec !mt-0 mb-8">
+                <h2>Follow requests</h2>
+                <p className="me-sec-sub">{profile.is_public ? 'Public profiles accept followers automatically.' : 'Approve who can see your private activity.'}</p>
+                {followRequests.length === 0 ? (
+                  <p className="g-sm g-mut">Walang pending requests.</p>
+                ) : (
+                  <div>
+                    {followRequests.map((request) => (
+                      <div key={request.id} className="me-prow">
+                        <ProfileAvatar profile={request.follower} size="sm" />
+                        <InternalLink href={`/u/${encodeURIComponent(request.follower.username)}`}>
+                          <span className="g-h3 block truncate">@{request.follower.username}</span>
+                          <span className="g-sm g-mut block truncate">{request.follower.bio || 'Wants to follow you.'}</span>
+                        </InternalLink>
+                        <Button variant="ink" size="sm" onClick={() => void handleFollowRequest(request.id, 'accept')}>
+                          Accept
+                        </Button>
+                        <Button variant="line" size="sm" onClick={() => void handleFollowRequest(request.id, 'reject')}>
+                          Reject
+                        </Button>
+                      </div>
                     ))}
                   </div>
-                  <div className="mt-6 flex justify-center">
-                    <Button variant="line" href="/passport">
-                      <BookMarked aria-hidden="true" />
-                      Open passport
-                    </Button>
-                  </div>
-                </>
-              )
+                )}
+              </section>
             ) : null}
-          </div>
 
-          {showFollowRequests ? (
-            <>
-              <SectionHead
-                title="Follow requests"
-                sub={profile.is_public ? 'Public profiles accept followers automatically.' : 'Approve who can see your private activity.'}
-                action={<Tag>{followRequests.length} pending</Tag>}
+            <SectionHead
+              title="Your plans"
+              sub={planCount ? plural(planCount, 'plan') : undefined}
+              className="!mt-0"
+              action={planCount && planCount > PLAN_PREVIEW_LIMIT ? <Button variant="text" size="sm" href="/gala-plans">See all</Button> : undefined}
+            />
+            {plans.status === 'loading' ? (
+              <div className="me-tiles" aria-label="Loading plans">
+                {Array.from({ length: 2 }, (_, index) => (
+                  <div key={index}>
+                    <Skeleton className="!rounded-[var(--r-3)]" style={{ aspectRatio: '4 / 3' }} />
+                    <Skeleton className="mt-2 h-4 w-3/4" />
+                  </div>
+                ))}
+              </div>
+            ) : plans.status === 'error' ? (
+              <Empty title="Hindi ma-load ang plans mo." description={plans.message} />
+            ) : plans.data.length === 0 ? (
+              <Empty
+                title="Wala pang plans."
+                description="Describe your gala in one line and let Tara draft it."
+                action={
+                  <Button variant="ink" href="/plan-with-ai">
+                    <Sparkle aria-hidden="true" />
+                    Plan with AI
+                  </Button>
+                }
               />
-              {followRequests.length === 0 ? (
-                <p className="g-sm g-mut">Walang pending requests.</p>
-              ) : (
-                <div className="g-list lg:max-w-[640px]">
-                  {followRequests.map((request) => (
-                    <Row
-                      key={request.id}
-                      action={
-                        <div className="flex shrink-0 gap-2">
-                          <Button variant="ink" size="sm" onClick={() => void handleFollowRequest(request.id, 'accept')}>
-                            Accept
-                          </Button>
-                          <Button variant="line" size="sm" onClick={() => void handleFollowRequest(request.id, 'reject')}>
-                            Reject
-                          </Button>
-                        </div>
-                      }
-                    >
-                      <div className="flex min-w-0 items-center gap-3">
-                        <ProfileAvatar profile={request.follower} size="xs" />
-                        <div className="min-w-0">
-                          <div className="g-h3 truncate">@{request.follower.username}</div>
-                          <div className="g-sm g-mut truncate">{request.follower.bio || 'Wants to follow you.'}</div>
-                        </div>
-                      </div>
-                    </Row>
+            ) : (
+              <div className="me-tiles">
+                {plans.data.slice(0, PLAN_PREVIEW_LIMIT).map((plan) => {
+                  const placeCount = plan.places_count ?? plan.place_count ?? 0
+                  const hearts = plan.hearts_count ?? plan.heart_count ?? 0
+                  return (
+                    <PlanTile
+                      key={plan.id}
+                      href={`/gala-plans/${encodeURIComponent(plan.id)}`}
+                      title={plan.title}
+                      imageUrl={plan.preview_places?.[0]?.image_url}
+                      tag={plan.visibility === 'public' ? 'Public' : 'Private'}
+                      meta={[planDateLabel(plan), plural(placeCount, 'stop'), hearts ? plural(hearts, 'heart') : null].filter(Boolean).join(' · ')}
+                    />
+                  )
+                })}
+              </div>
+            )}
+
+            {passportData && passportData.stamps.length > 0 ? (
+              <>
+                <SectionHead title="City stamps" sub={plural(passportData.stamps.length, 'stamp')} action={<Button variant="text" size="sm" href="/passport">Open passport</Button>} />
+                <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pt-1 pb-2 [scrollbar-width:none]">
+                  {passportData.stamps.slice(0, STAMP_PREVIEW_LIMIT).map((stamp, index) => (
+                    <span key={stamp.city} className="me-stamp is-got is-sm" style={{ '--g-rot': `${index % 2 ? 5 : -6}deg` } as CSSProperties} role="img" aria-label={`${stamp.city}, ${plural(stamp.places, 'spot')}`}>
+                      <span>
+                        <b>{stamp.city}</b>
+                        <span>{plural(stamp.places, 'spot')}</span>
+                      </span>
+                    </span>
                   ))}
                 </div>
-              )}
-            </>
-          ) : null}
-        </>
+              </>
+            ) : null}
+
+            <nav aria-label="Your stuff" className="me-sec">
+              <h2>Your gala</h2>
+              <div className="me-rows">
+                <MeRow icon={StampIcon} tone="tara" title="Passport" sub={passportSub} href="/passport" />
+                <MeRow icon={Heart} title="Saved" sub={savedCount ? plural(savedCount, 'saved place') : 'Tap the heart on a place to keep it'} href="/favorites" />
+                <MeRow icon={CalendarBlank} title="Gala plans" sub={planCount ? plural(planCount, 'plan') : 'Plans you made or joined'} href="/gala-plans" />
+                <MeRow icon={ClockCounterClockwise} title="History" sub="Places you opened recently" href="/history" />
+                <MeRow icon={UserPlus} tone="sea" title="Find friends" sub="Build your barkada" href="/find-friends" />
+                <MeRow icon={Eye} title="View public profile" sub="See what others see" href={`/u/${encodeURIComponent(profile.username || '')}`} />
+              </div>
+            </nav>
+
+            <nav aria-label="Account" className="me-sec">
+              <h2>Account</h2>
+              <div className="me-rows">
+                <MeRow icon={GearSix} title="Account settings" sub="Name, username, photo, privacy" href="/account-settings" />
+                <MeRow icon={LockKey} title="Change password" sub="Update how you log in" href="/account-settings/change-password" />
+                <MeRow icon={ShieldCheck} title="Privacy center" sub="Data requests and account deletion" href="/privacy-center" />
+                <MeRow
+                  icon={isDark ? Sun : Moon}
+                  title="Dark mode"
+                  sub={isDark ? 'On' : 'Off'}
+                  checked={isDark}
+                  onClick={() => setThemePreference(isDark ? 'light' : 'dark')}
+                />
+              </div>
+            </nav>
+
+            <nav aria-label="Community and help" className="me-sec">
+              <h2>Community</h2>
+              <div className="me-rows">
+                <MeRow icon={MapPinPlus} title="Submit a place" sub="Know a spot we’re missing?" href="/submit-place" />
+                <MeRow icon={Notepad} title="My submissions" sub="Review status of places you sent" href="/submissions" />
+                <MeRow icon={ChatCenteredText} title="Send feedback" sub="Tell us what to fix or add" href="/feedback" />
+                <MeRow icon={Flag} title="My reports" sub="Reports you filed" href="/reports" />
+              </div>
+            </nav>
+
+            <div className="me-rows mt-6 border-t border-[var(--line-2)] pt-2">
+              <MeRow icon={SignOut} title={isSigningOut ? 'Logging out...' : 'Log out'} onClick={() => void handleSignOut()} disabled={isSigningOut} />
+            </div>
+          </div>
+        </div>
       ) : !isLoading ? (
-        <Empty title="Profile unavailable." description={<span role="alert">{errorMessage || 'Try again in a bit.'}</span>} />
+        <Empty className="mt-5" title="Profile unavailable." description={<span role="alert">{errorMessage || 'Try again in a bit.'}</span>} />
       ) : null}
 
       <FollowListSheet title={listTitle} users={listUsers} emptyLabel="No users yet." onClose={() => setListUsers(null)} />

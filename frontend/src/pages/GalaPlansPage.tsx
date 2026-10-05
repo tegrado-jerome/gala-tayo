@@ -23,6 +23,7 @@ import {
 } from '../utils/galaPlansApi'
 import { navigateToPath } from '../utils/navigation'
 import { getApiUrl } from '../utils/apiClient'
+import '../design/plans.css'
 
 type Mode = 'list' | 'favorites' | 'new' | 'detail' | 'edit'
 
@@ -423,7 +424,7 @@ function ItineraryBuilder({
                   return (
                     <Panel key={item.draft_id} as="article" className="grid gap-3">
                       <div className="flex items-start gap-3">
-                        <span className="g-num mt-0.5">{item.sort_order ?? 1}</span>
+                        <span className="g-tl-dot !mt-0 shrink-0" aria-hidden="true">{item.sort_order ?? 1}</span>
                         <div className="min-w-0 flex-1">
                           <p className="g-h3 truncate">{item.place.name}</p>
                           <p className="g-sm g-mut truncate">{getPlaceMeta(item.place)}</p>

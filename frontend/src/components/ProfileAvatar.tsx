@@ -8,8 +8,9 @@ type ProfileAvatarProps = {
     avatar_url: string | null
     provider_avatar_url: string | null
   }
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl'
   showOnlineIndicator?: boolean
+  className?: string
 }
 
 const sizeClasses = {
@@ -18,6 +19,7 @@ const sizeClasses = {
   md: 'h-16 w-16 text-xl',
   lg: 'h-24 w-24 text-3xl',
   xl: 'h-[72px] w-[72px] text-[28px] lg:h-24 lg:w-24 lg:text-[36px]',
+  xxl: 'h-24 w-24 text-[34px] lg:h-28 lg:w-28 lg:text-[40px]',
 }
 
 function initialsFor(displayName: string | null | undefined, username: string | null) {
@@ -26,13 +28,13 @@ function initialsFor(displayName: string | null | undefined, username: string | 
   return letters.toUpperCase() || 'G'
 }
 
-function ProfileAvatar({ profile, size = 'md', showOnlineIndicator = false }: ProfileAvatarProps) {
+function ProfileAvatar({ profile, size = 'md', showOnlineIndicator = false, className }: ProfileAvatarProps) {
   const avatarUrl = getDisplayAvatar(profile)
   const resolvedSrc = useAvatarImageSrc(avatarUrl)
 
   return (
     <span
-      className={`${sizeClasses[size]} relative flex shrink-0 items-center justify-center rounded-full font-semibold`}
+      className={`${sizeClasses[size]} ${className ?? ''} relative flex shrink-0 items-center justify-center rounded-full font-semibold`}
       style={{ background: 'var(--sea-soft)', color: 'var(--sea)', fontFamily: 'var(--font-display)' }}
     >
       <span className="flex h-full w-full items-center justify-center overflow-hidden rounded-full">

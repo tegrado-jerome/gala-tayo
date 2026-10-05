@@ -8,19 +8,48 @@ import { NotePencil as SquarePen } from '@phosphor-icons/react/dist/csr/NotePenc
 import { Sparkle as Sparkles } from '@phosphor-icons/react/dist/csr/Sparkle'
 import { Square } from '@phosphor-icons/react/dist/csr/Square'
 import { X } from '@phosphor-icons/react/dist/csr/X'
+import type { Icon as PhosphorIcon } from '@phosphor-icons/react'
+import { Heart } from '@phosphor-icons/react/dist/csr/Heart'
+import { ForkKnife } from '@phosphor-icons/react/dist/csr/ForkKnife'
+import { Path } from '@phosphor-icons/react/dist/csr/Path'
+import { Coins } from '@phosphor-icons/react/dist/csr/Coins'
+import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
+import InternalLink from '../../InternalLink'
+import '../../../design/misc.css'
 import AskAiUsagePill from '../../AskAiUsagePill'
 import { FeatureGuideModalTrigger, featureGuideContent } from '../../FeatureGuideModal'
-import { Button, Chip, Skeleton } from '../../ui'
+import { Button } from '../../ui'
 import type { AskAiSource } from '../homeHelpers'
 import { cancelAskAiRuntimeRequest, type ChatMessage } from '../../../utils/askAiRuntime'
 import type { AskAiUsageStatus } from '../../../utils/askAiUsage'
 
-const starterPrompts = [
-  { label: 'Date ideas', prompt: 'Plan a date gala' },
-  { label: 'Food trip', prompt: 'Plan a food trip' },
-  { label: 'Quick itinerary', prompt: 'Create a quick itinerary' },
-  { label: 'Budget picks', prompt: 'Suggest budget-friendly places to visit' },
+const starterPrompts: Array<{ label: string; prompt: string; icon: PhosphorIcon }> = [
+  { label: 'Date ideas', prompt: 'Plan a date gala', icon: Heart },
+  { label: 'Food trip', prompt: 'Plan a food trip', icon: ForkKnife },
+  { label: 'Quick itinerary', prompt: 'Create a quick itinerary', icon: Path },
+  { label: 'Budget picks', prompt: 'Suggest budget-friendly places to visit', icon: Coins },
 ]
+
+/** Tara, the GalaTayo AI: a coral sparkle avatar. */
+export function TaraAvatar({ large = false }: { large?: boolean }) {
+  return (
+    <span className={large ? 'm-tara is-lg' : 'm-tara'} aria-hidden="true">
+      <Sparkles weight="fill" />
+    </span>
+  )
+}
+
+/** Returns an in-app path for GalaTayo links so sources open without a page reload. */
+function toInternalPath(url: string) {
+  if (url.startsWith('/') && !url.startsWith('//')) return url
+  try {
+    const parsed = new URL(url)
+    if (parsed.origin === window.location.origin || /(^|\.)galatayo\.app$/.test(parsed.hostname)) return `${parsed.pathname}${parsed.search}`
+  } catch {
+    return null
+  }
+  return null
+}
 
 function isChatbotDailyLimitMessage(message: string | null) {
   if (!message) return false
@@ -59,19 +88,32 @@ const markdownComponents: Components = {
   td: ({ children }) => <td className="border border-[var(--line)] px-3 py-2 align-top">{children}</td>,
 }
 
-const aiBubbleClass =
-  'w-full min-w-0 max-w-[92%] self-start rounded-[var(--r-3)] rounded-tl-[var(--r-1)] bg-[var(--fill)] px-4 py-3 text-[15px] leading-[1.65] text-[var(--ink)]'
+function AiMessage({ children, live }: { children: ReactNode; live?: boolean }) {
+  return (
+    <div className="m-msg-ai" aria-live={live ? 'polite' : undefined}>
+      <TaraAvatar />
+      <div className="m-bubble-ai">{children}</div>
+    </div>
+  )
+}
 
 function SourceLinks({ sources }: { sources: AskAiSource[] }) {
   return (
-    <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-[var(--fill-2)] pt-3">
-      <span className="g-eyebrow mr-1">Sources</span>
-      {sources.map((source) => (
-        <a key={source.url} href={source.url} target="_blank" rel="noopener noreferrer" className="g-tag is-solid max-w-[200px]">
-          <span className="truncate">{source.title}</span>
-          <ExternalLink aria-hidden="true" />
-        </a>
-      ))}
+    <div className="m-src" aria-label="Sources">
+      {sources.map((source) => {
+        const internalPath = toInternalPath(source.url)
+        return internalPath ? (
+          <InternalLink key={source.url} href={internalPath}>
+            <MapPin weight="fill" aria-hidden="true" />
+            <span>{source.title}</span>
+          </InternalLink>
+        ) : (
+          <a key={source.url} href={source.url} target="_blank" rel="noopener noreferrer">
+            <ExternalLink aria-hidden="true" />
+            <span>{source.title}</span>
+          </a>
+        )
+      })}
     </div>
   )
 }
@@ -128,20 +170,18 @@ const ChatMessageList = memo(function ChatMessageList({
 
   if (messages.length === 0 && !isSubmitting && !answer) {
     return (
-      <div className="my-auto flex flex-col gap-4 py-6">
+      <div className="my-auto flex flex-col gap-5 py-6">
         <div>
-          <span className="g-ai-badge">
-            <Sparkles aria-hidden="true" />
-            GalaTayo AI
-          </span>
-          <h2 className="g-h1 mt-2">Ano ang plano today?</h2>
-          <p className="g-sm g-mut mt-1">Places, food, dates, at iba pa. English or Taglish, okay lang.</p>
+          <TaraAvatar large />
+          <h2 className="g-h1 mt-4">Hi, I&apos;m Tara. Ano ang plano today?</h2>
+          <p className="g-sm g-mut mt-1.5">Places, food, dates, at iba pa. English or Taglish, okay lang.</p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {starterPrompts.map((chip) => (
-            <Chip key={chip.label} disabled={isLimitReached && isRegistered} onClick={() => onSend(chip.prompt)}>
-              {chip.label}
-            </Chip>
+        <div className="m-starters">
+          {starterPrompts.map(({ label, prompt, icon: Icon }) => (
+            <button key={label} type="button" className="m-starter" disabled={isLimitReached && isRegistered} onClick={() => onSend(prompt)}>
+              <Icon weight="duotone" aria-hidden="true" />
+              {label}
+            </button>
           ))}
         </div>
         {limitNotice}
@@ -152,31 +192,31 @@ const ChatMessageList = memo(function ChatMessageList({
   const lastAssistantIndex = messages.map((message) => message.role).lastIndexOf('assistant')
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
       {messages.map((message, index) =>
         message.role === 'user' ? (
-          <div key={index} className="max-w-[85%] self-end rounded-[var(--r-3)] rounded-tr-[var(--r-1)] bg-[var(--ink)] px-4 py-2.5 text-[15px] leading-relaxed text-[var(--on-ink)]">
+          <div key={index} className="m-bubble-me">
             <p className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{message.content}</p>
           </div>
         ) : (
-          <div key={index} className={aiBubbleClass}>
+          <AiMessage key={index}>
             <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
               {message.content}
             </ReactMarkdown>
             {index === lastAssistantIndex && sources.length > 0 ? <SourceLinks sources={sources} /> : null}
-          </div>
+          </AiMessage>
         ),
       )}
 
       {isSubmitting && !answer ? (
-        <div className={aiBubbleClass} aria-live="polite">
-          <span className="g-ai-badge">
-            <Sparkles aria-hidden="true" />
-            Thinking…
+        <AiMessage live>
+          <span className="m-dots" aria-hidden="true">
+            <i />
+            <i />
+            <i />
           </span>
-          <Skeleton className="mt-3 h-3 w-11/12" />
-          <Skeleton className="mt-2 h-3 w-3/4" />
-        </div>
+          <span className="sr-only">Tara is thinking</span>
+        </AiMessage>
       ) : null}
 
       {answerError && !isSubmitting && messages.length > 0 && !isChatbotDailyLimitMessage(answerError) ? <Notice tone="bad">{answerError}</Notice> : null}
@@ -266,8 +306,9 @@ function AskAiModePanel({
   return (
     <div className={`flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden bg-[var(--paper)] ${className}`}>
       <div className="flex shrink-0 items-center gap-2 border-b border-[var(--line-2)] bg-[var(--surface)] px-4 py-2 pt-[max(env(safe-area-inset-top,0px),0.5rem)] sm:pt-2">
+        <TaraAvatar />
         <div className="min-w-0 flex-1">
-          <p className="g-h3 leading-tight">Tara AI</p>
+          <p className="g-h3 leading-tight">Tara</p>
           <AskAiUsagePill usageStatus={usageStatus} />
         </div>
         <Button variant="soft" size="sm" onClick={onStartOver} aria-label="New chat">
@@ -313,9 +354,9 @@ function AskAiModePanel({
             </button>
           </p>
         ) : null}
-        <div className="flex items-end gap-2 rounded-[var(--r-4)] border border-transparent bg-[var(--fill)] p-1.5 pl-4 focus-within:border-[var(--ink)]">
+        <div className="flex items-end gap-2 rounded-[var(--r-4)] border border-[var(--line)] bg-[var(--surface)] p-1.5 pl-4 shadow-[var(--sh-1)] focus-within:border-[var(--ink)]">
           <label htmlFor="ask-ai-chat-input" className="sr-only">
-            Message GalaTayo AI
+            Message Tara
           </label>
           <textarea
             id="ask-ai-chat-input"
@@ -328,7 +369,7 @@ function AskAiModePanel({
                 handleSend()
               }
             }}
-            placeholder="Saan tayo? Ask anything…"
+            placeholder="Saan tayo? Ask Tara anything…"
             rows={1}
             disabled={isSubmitting || isUsagePending || (isLimitReached && isRegistered)}
             className="max-h-[140px] min-h-[40px] flex-1 resize-none overflow-y-auto bg-transparent py-2 text-[16px] leading-snug text-[var(--ink)] outline-none placeholder:text-[var(--ink-3)] disabled:cursor-not-allowed"

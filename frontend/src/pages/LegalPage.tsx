@@ -1,7 +1,18 @@
+import { Scales } from '@phosphor-icons/react/dist/csr/Scales'
+import { ShieldCheck } from '@phosphor-icons/react/dist/csr/ShieldCheck'
 import Breadcrumb from '../components/navigation/Breadcrumb'
 import SeoHead from '../components/SeoHead'
 import { KeyValue, Page } from '../components/ui'
 import { getSiteOrigin } from '../utils/seo'
+import '../design/misc.css'
+
+function sectionId(title: string) {
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+}
+
+function shortTitle(title: string) {
+  return title.replace(/^\d+\.\s*/, '')
+}
 
 type LegalPageProps = {
   type: 'terms' | 'privacy'
@@ -306,12 +317,17 @@ function LegalPage({ type }: LegalPageProps) {
       <SeoHead title={seoTitle} description={seoDescription} canonicalPath={canonicalPath} jsonLd={jsonLd} />
       <Breadcrumb showBack backTo="/home" preferHistory className="mb-4" items={breadcrumbItems} />
 
-      <article className="max-w-[65ch]">
-        <p className="g-eyebrow">{isTerms ? 'Terms of service' : 'Privacy policy'}</p>
-        <h1 className="g-h1 mt-2">{title}</h1>
-        <p className="g-mut mt-3 text-[16px] leading-relaxed">{intro}</p>
+      <article className="m-legal">
+        <header className="m-art-head border-0 pb-0">
+          <span className="m-art-ic" aria-hidden="true">
+            {isTerms ? <Scales weight="duotone" /> : <ShieldCheck weight="duotone" />}
+          </span>
+          <p className="m-onb-step">{isTerms ? 'Terms of service' : 'Privacy policy'}</p>
+          <h1 className="g-h1 mt-1.5">{title}</h1>
+          <p className="g-mut mt-3 max-w-[65ch] text-[16px] leading-relaxed">{intro}</p>
+        </header>
 
-        <div className="g-panel mt-6">
+        <div className="g-panel mt-6 max-w-[65ch]">
           <KeyValue
             items={[
               { label: 'Applies to', value: 'Users who access or use GalaTayo' },
@@ -321,7 +337,7 @@ function LegalPage({ type }: LegalPageProps) {
           />
         </div>
 
-        <div className="mt-6 grid gap-4">
+        <div className="mt-6 grid max-w-[65ch] gap-4 sm:grid-cols-2">
           {summaries.map((summary) => (
             <div key={summary.title}>
               <h2 className="g-h3">{summary.title}</h2>
@@ -330,8 +346,23 @@ function LegalPage({ type }: LegalPageProps) {
           ))}
         </div>
 
+        <nav aria-label="Sections" className="m-toc mt-8">
+          {sections.map((section) => (
+            <a
+              key={section.title}
+              href={`#${sectionId(section.title)}`}
+              onClick={(event) => {
+                event.preventDefault()
+                document.getElementById(sectionId(section.title))?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
+              }}
+            >
+              {shortTitle(section.title)}
+            </a>
+          ))}
+        </nav>
+
         {sections.map((section) => (
-          <section key={section.title} className="mt-10 border-t border-[var(--line-2)] pt-8">
+          <section key={section.title} id={sectionId(section.title)} className="mt-10 max-w-[65ch] border-t border-[var(--line-2)] pt-8 first-of-type:border-0 first-of-type:pt-0">
             <h2 className="g-h2">{section.title}</h2>
             <div className="mt-3 grid gap-3 text-[16px] leading-[1.7]">
               {section.body.map((paragraph) => (
@@ -348,7 +379,7 @@ function LegalPage({ type }: LegalPageProps) {
           </section>
         ))}
 
-        <p className="g-sm g-mut mt-10 border-t border-[var(--line-2)] pt-6">
+        <p className="g-sm g-mut mt-10 max-w-[65ch] rounded-[var(--r-3)] bg-[var(--fill)] p-4">
           Questions, rights requests, or content concerns? Email{' '}
           <a href={`mailto:${contactEmail}`} className="font-semibold text-[var(--ink)] underline underline-offset-2">
             {contactEmail}

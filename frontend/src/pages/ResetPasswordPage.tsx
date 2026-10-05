@@ -3,7 +3,7 @@ import { Warning as TriangleAlert } from '@phosphor-icons/react/dist/csr/Warning
 import { AuthCard, AuthNotice } from '../components/auth/AuthCard'
 import PasswordField from '../components/auth/PasswordField'
 import PasswordStrengthBar from '../components/auth/PasswordStrengthBar'
-import { Button, Page, Panel, Skeleton } from '../components/ui'
+import { Button, Skeleton } from '../components/ui'
 import { supabase } from '../supabase'
 import { getPasswordStrength } from '../utils/passwordStrength'
 import { navigateToPath } from '../utils/navigation'
@@ -101,26 +101,27 @@ function ResetPasswordPage() {
 
   if (!isSessionReady) {
     return (
-      <Page>
-        <Panel className="mx-auto flex w-full max-w-[420px] flex-col gap-4 md:mt-6 md:!p-8" aria-busy="true">
-          <Skeleton className="h-8 w-2/3" />
+      <AuthCard bar="Reset password" title={<Skeleton className="h-8 w-2/3" />}>
+        <div className="flex flex-col gap-4" aria-busy="true">
+          <span className="sr-only">Checking your reset link</span>
           <Skeleton className="h-4 w-1/2" />
-          <Skeleton className="mt-2 h-12 w-full" />
           <Skeleton className="h-12 w-full" />
-          <Skeleton className="h-11 w-full" />
-        </Panel>
-      </Page>
+          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-[52px] w-full" />
+        </div>
+      </AuthCard>
     )
   }
 
   if (!hasSession) {
     return (
       <AuthCard
-        icon={<TriangleAlert className="g-ic" style={{ color: 'var(--warn)' }} />}
+        bar="Reset password"
+        icon={<TriangleAlert weight="duotone" style={{ color: 'var(--warn)' }} />}
         title="Invalid or expired link"
         sub="This password reset link is no longer valid. Request a new one and use it right away."
       >
-        <Button variant="ink" block onClick={() => navigateToPath('/forgot-password')}>
+        <Button variant="tara" size="lg" block onClick={() => navigateToPath('/forgot-password')}>
           Request new link
         </Button>
       </AuthCard>
@@ -128,7 +129,7 @@ function ResetPasswordPage() {
   }
 
   return (
-    <AuthCard title="Reset your password" sub="Pick a new password for your account.">
+    <AuthCard bar="Reset password" title="Pick a new password" sub="Make it strong, then log in with it right away.">
       <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
         <PasswordField
           id="reset-password"
@@ -164,7 +165,7 @@ function ResetPasswordPage() {
 
         {error ? <AuthNotice tone="bad">{error}</AuthNotice> : null}
 
-        <Button type="submit" variant="tara" block disabled={isSubmitDisabled}>
+        <Button type="submit" variant="tara" size="lg" block disabled={isSubmitDisabled}>
           {isSubmitting ? 'Resetting password...' : 'Reset password'}
         </Button>
       </form>

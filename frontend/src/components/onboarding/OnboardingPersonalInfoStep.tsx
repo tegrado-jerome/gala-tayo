@@ -24,11 +24,10 @@ function OnboardingPersonalInfoStep({ values, errors, disableNext, onUpdate, onN
   return (
     <OnboardingLayout
       step={1}
-      eyebrow="Personal details"
-      title="Tell us about you"
-      description="We use these details to finish your account setup and age check."
-      actions={
-        <Button variant="tara" onClick={onNext} disabled={disableNext}>
+      title="Kumusta! What's your name?"
+      description="We use these details to finish your account setup and age check. Only you see your birthdate."
+      primary={
+        <Button variant="tara" size="lg" onClick={onNext} disabled={disableNext}>
           Next
           <ArrowRight aria-hidden="true" />
         </Button>
@@ -52,7 +51,7 @@ function OnboardingPersonalInfoStep({ values, errors, disableNext, onUpdate, onN
                 autoComplete={field.autoComplete}
                 aria-invalid={Boolean(error) || undefined}
                 aria-describedby={error ? `${id}-msg` : undefined}
-                className="g-input"
+                className="g-input h-14 text-[16px]"
               />
               {error ? <span id={`${id}-msg`} className="g-hint is-error">{error}</span> : null}
             </div>

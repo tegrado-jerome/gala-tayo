@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from 'react'
+import { useEffect, useState } from 'react'
 import PlaceImage from '../discover/PlaceImage'
 import InternalLink from '../InternalLink'
 import { AvatarStack, Button, SectionHead, Skeleton } from '../ui'
@@ -12,9 +12,6 @@ import { daysUntil, formatDaysUntil, getPlanDate, pickNextPlan } from '../../uti
 type NextPlan = { plan: GalaPlanSummary; detail: GalaPlanDetail | null; going: GalaPlanMember[] }
 
 type LoadState = { status: 'loading' } | { status: 'ready'; next: NextPlan | null }
-
-// The card stays navy in both themes, like the night map on top of it.
-const nightCard: CSSProperties = { background: 'var(--night, #0f2138)', color: 'var(--on-night, #ffffff)' }
 
 function formatEyebrow(plan: GalaPlanSummary, detail: GalaPlanDetail | null) {
   const date = getPlanDate(plan)
@@ -49,33 +46,33 @@ function PlanCard({ next }: { next: NextPlan }) {
   const facts = [going.length > 0 ? `${going.length} going` : null, stops, budget].filter(Boolean).join(' · ')
 
   return (
-    <InternalLink href={`/gala-plans/${plan.id}`} className="block overflow-hidden rounded-[var(--r-4)] no-underline md:grid md:grid-cols-[3fr_2fr]" ariaLabel={`Open ${plan.title}`}>
-      <div className="pointer-events-none relative h-[180px] md:h-full md:min-h-[220px]" aria-hidden="true" style={nightCard}>
+    <InternalLink
+      href={`/gala-plans/${plan.id}`}
+      className="block overflow-hidden rounded-[var(--r-4)] border border-[var(--line-2)] bg-[var(--surface)] text-[var(--ink)] no-underline transition-shadow hover:shadow-[var(--sh-2)] motion-reduce:transition-none md:grid md:grid-cols-[3fr_2fr]"
+      ariaLabel={`Open ${plan.title}`}
+    >
+      <div className="pointer-events-none relative h-[180px] bg-[var(--fill)] md:h-full md:min-h-[220px]" aria-hidden="true">
         {points.length > 0 ? (
-          <GtMap night route points={points} className="!h-full !rounded-none !border-0" label={`Route for ${plan.title}`} />
+          <GtMap route points={points} className="!h-full !rounded-none !border-0" label={`Route for ${plan.title}`} />
         ) : (
           <PlaceImage candidates={covers} className="absolute inset-0 h-full w-full object-cover" />
         )}
       </div>
-      <div className="flex min-w-0 flex-col justify-end gap-1.5 p-4 md:p-6" style={nightCard}>
-        <p className="text-[11px] font-bold uppercase tracking-[0.06em]" style={{ color: 'var(--tara)' }}>
-          {formatEyebrow(plan, detail)}
-        </p>
-        <h3 className="g-h2 line-clamp-2" style={{ color: 'inherit' }}>
-          {plan.title}
-        </h3>
+      <div className="flex min-w-0 flex-col justify-center gap-1.5 p-4 md:p-6">
+        <p className="g-xs font-bold uppercase tracking-[0.06em] text-[var(--tara-ink)]">{formatEyebrow(plan, detail)}</p>
+        <h3 className="g-h2 line-clamp-2">{plan.title}</h3>
         <div className="mt-1.5 flex min-w-0 items-center gap-2.5">
           {going.length > 0 ? (
             <AvatarStack size={26} max={4} people={going.map((member) => ({ id: member.user_id, avatarUrl: member.profile?.avatar_url ?? member.profile?.provider_avatar_url, name: member.profile?.display_name ?? member.profile?.username }))} />
           ) : null}
-          <span className="g-xs min-w-0 truncate opacity-80">{facts}</span>
+          <span className="g-xs g-mut min-w-0 truncate">{facts}</span>
         </div>
       </div>
     </InternalLink>
   )
 }
 
-/** Home's "Your next gala": a navy card with the plan's route on a night map. Hidden when signed out or without a plan. */
+/** Home's "Your next gala": a light trip card with the plan's route on the colour map. Hidden when signed out or without a plan. */
 function NextGalaCard() {
   const { session, isSessionLoading } = useAppUser()
   const [state, setState] = useState<LoadState>({ status: 'loading' })

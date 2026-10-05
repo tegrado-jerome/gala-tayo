@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { CaretDown as ChevronDown } from '@phosphor-icons/react/dist/csr/CaretDown'
+import { Clock } from '@phosphor-icons/react/dist/csr/Clock'
+import { X } from '@phosphor-icons/react/dist/csr/X'
 import { ImageSquare as ImagePlus } from '@phosphor-icons/react/dist/csr/ImageSquare'
 import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
 import { MagnifyingGlass as Search } from '@phosphor-icons/react/dist/csr/MagnifyingGlass'
-import { Button, Page, Tag, buttonClass } from '../components/ui'
+import { Button, Page, Tag } from '../components/ui'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import MinimalBackNav from '../components/navigation/MinimalBackNav'
 import MapView from '../components/MapView'
@@ -136,11 +138,22 @@ function FormSection({
   children: ReactNode
 }) {
   return (
-    <section>
-      {step ? <p className="g-eyebrow">Step {step}</p> : null}
-      <h2 className="g-h2 mt-1">{title}</h2>
-      {description ? <p className="g-sm g-mut mt-1">{description}</p> : null}
-      <div className="mt-4">{children}</div>
+    <section className="border-t border-[var(--line-2)] pt-8">
+      <div className="flex items-start gap-3">
+        {step ? (
+          <span className="g-num mt-0.5 !h-7 !w-7 !text-[13px] !leading-7" aria-hidden="true">
+            {step}
+          </span>
+        ) : null}
+        <div className="min-w-0">
+          <h2 className="g-h2">
+            {step ? <span className="sr-only">Step {step}: </span> : null}
+            {title}
+          </h2>
+          {description ? <p className="g-sm g-mut mt-1">{description}</p> : null}
+        </div>
+      </div>
+      <div className="mt-5">{children}</div>
     </section>
   )
 }
@@ -384,15 +397,22 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
               <h1 className="g-h1">Submit a new place</h1>
               <p className="g-mut mt-1 max-w-[60ch] text-[15px]">Exact pin, a short honest description, and a few real photos. It stays private until an admin approves it.</p>
             </div>
-            <Button variant="line" size="sm" className="shrink-0 self-start sm:self-auto" onClick={() => navigateToPath(session ? '/submissions' : '/login')}>
+            <Button variant="soft" size="sm" className="shrink-0 self-start sm:self-auto" onClick={() => navigateToPath(session ? '/submissions' : '/login')}>
               My submissions
             </Button>
           </div>
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            <Tag>Pending review</Tag>
-            <Tag>1 to 3 photos</Tag>
-            <Tag>Exact pin required</Tag>
-          </div>
+          <ul className="mt-5 grid grid-cols-3 gap-2" aria-label="What you need">
+            {[
+              { icon: Clock, label: 'Reviewed before it goes live' },
+              { icon: ImagePlus, label: '1 to 3 real photos' },
+              { icon: MapPin, label: 'Exact map pin' },
+            ].map(({ icon: Icon, label }) => (
+              <li key={label} className="flex flex-col items-start gap-2 rounded-[var(--r-3)] bg-[var(--fill)] p-3">
+                <Icon weight="duotone" className="h-6 w-6" aria-hidden="true" />
+                <span className="g-xs font-semibold leading-snug">{label}</span>
+              </li>
+            ))}
+          </ul>
 
           <form className="mt-8 grid gap-8" onSubmit={handleSubmit}>
             <FormSection step={1} title="Basic details" description="Keep it short and searchable.">
@@ -494,7 +514,7 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
               </Field>
             </FormSection>
 
-            <section>
+            <section className="border-t border-[var(--line-2)] pt-8">
               <details className="group" open>
                 <summary className="flex min-h-[44px] cursor-pointer list-none items-center justify-between gap-3">
                   <span className="min-w-0">
@@ -575,7 +595,7 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
                         </select>
                       </Field>
                       <Field label="Website" optional>
-                        <input value={draft.websiteUrl} onChange={(event) => updateDraft('websiteUrl', event.target.value.slice(0, 500))} placeholder="https://…" required className="g-input" />
+                        <input value={draft.websiteUrl} onChange={(event) => updateDraft('websiteUrl', event.target.value.slice(0, 500))} placeholder="https://…" className="g-input" />
                       </Field>
                       <Field label="Weather fit" className="sm:col-span-3">
                         <textarea value={draft.weatherFit} onChange={(event) => updateDraft('weatherFit', event.target.value.slice(0, 500))} rows={3} required className="g-input" />
@@ -596,9 +616,10 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
             </section>
 
             <FormSection step={5} title="Photos" description="One strong cover is enough. Up to three helps reviewers.">
-              <label className={`${buttonClass({ variant: 'line' })} cursor-pointer`}>
-                <ImagePlus aria-hidden="true" />
-                {photoPreviews.length > 0 ? 'Change photos' : 'Add photos'}
+              <label className="flex min-h-[148px] cursor-pointer flex-col items-center justify-center gap-2 rounded-[var(--r-3)] border-2 border-dashed border-[var(--line)] p-6 text-center transition-colors hover:border-[var(--ink)] focus-within:border-[var(--ink)]">
+                <ImagePlus weight="duotone" className="h-8 w-8" aria-hidden="true" />
+                <span className="g-h3">{photoPreviews.length > 0 ? 'Change photos' : 'Add photos'}</span>
+                <span className="g-xs g-mut">JPG, PNG, WebP or HEIC. Up to 3.</span>
                 <input
                   type="file"
                   accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif"
@@ -612,11 +633,17 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
                 <div className="mt-4 grid grid-cols-3 gap-2">
                   {photoPreviews.map((preview, index) => (
                     <figure key={`${preview.file.name}-${index}`} className="relative min-w-0">
-                      <img src={preview.url} alt="" className="aspect-square w-full rounded-[var(--r-2)] object-cover" />
-                      <figcaption className="g-xs g-mut mt-1 truncate">{preview.file.name}</figcaption>
-                      <button type="button" className="g-xs min-h-[44px] font-semibold text-[var(--bad)] underline underline-offset-2" onClick={() => removePhotoAt(index)}>
-                        Remove
+                      <img src={preview.url} alt="" className="aspect-square w-full rounded-[var(--r-3)] object-cover" />
+                      {index === 0 ? <Tag tone="solid" className="absolute top-2 left-2">Cover</Tag> : null}
+                      <button
+                        type="button"
+                        className="absolute top-1.5 right-1.5 grid h-9 w-9 place-items-center rounded-full bg-[var(--surface)] text-[var(--ink)] shadow-[var(--sh-1)]"
+                        aria-label={`Remove ${preview.file.name}`}
+                        onClick={() => removePhotoAt(index)}
+                      >
+                        <X className="h-4 w-4" aria-hidden="true" />
                       </button>
+                      <figcaption className="g-xs g-mut mt-1 truncate">{preview.file.name}</figcaption>
                     </figure>
                   ))}
                 </div>
@@ -629,7 +656,7 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
               </p>
             ) : null}
 
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3 border-t border-[var(--line-2)] pt-6 sm:flex-row sm:items-center sm:justify-between">
               <p className="g-sm g-mut">
                 {session
                   ? 'Admin reviews it before it goes live.'
@@ -643,7 +670,7 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
         </div>
 
         <aside className="g-only-desk lg:sticky lg:top-24">
-          <div className="flex flex-col gap-8">
+          <div className="flex flex-col gap-6 rounded-[var(--r-4)] border border-[var(--line-2)] p-6">
             <section>
               <p className="g-eyebrow">Before you post</p>
               <ul className="g-sm g-mut mt-3 grid gap-2">

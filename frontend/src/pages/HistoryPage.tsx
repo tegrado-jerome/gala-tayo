@@ -12,6 +12,7 @@ import { getSupabaseAccessToken } from '../supabase'
 import { getPlacePhoto } from '../utils/placePhoto'
 import { getApiUrl } from '../utils/apiClient'
 import { getPublicSiteUrl } from '../utils/site'
+import '../design/me.css'
 
 const HISTORY_CACHE_PREFIX = 'galatayo:history:'
 const HISTORY_CACHE_TTL_MS = 5 * 60 * 1000
@@ -351,10 +352,18 @@ function HistoryPage() {
   }
 
   return (
-    <Page>
-      <header>
-        <h1 className="g-h1">History</h1>
-        <p className="g-mut mt-2">Places you opened recently, easy to revisit.</p>
+    <Page narrow>
+      <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
+        <div className="min-w-0">
+          <h1 className="g-h1">History</h1>
+          <p className="g-mut mt-1">Places you opened recently, easy to revisit.</p>
+        </div>
+        {canClearHistory ? (
+          <Button variant="text" size="sm" onClick={() => void handleClearHistory()} disabled={isClearing}>
+            <Trash2 aria-hidden="true" />
+            {isClearing ? 'Clearing...' : 'Clear history'}
+          </Button>
+        ) : null}
       </header>
 
       <DestructiveConfirmModal
@@ -369,6 +378,7 @@ function HistoryPage() {
 
       {!isSessionLoading && !currentUserId ? (
         <Empty
+          className="mt-6"
           title="Sign in to see your history."
           description="Your recently viewed places are private to your account."
           action={<GoogleSignInButton redirectTo={getPublicSiteUrl('/history')} />}
@@ -376,17 +386,26 @@ function HistoryPage() {
       ) : null}
 
       {(currentUserId || isSessionLoading) && isHistoryLoading && !displayHistory && !errorMessage ? (
-        <div className="mt-6 grid gap-2" aria-label="Loading history">
-          {Array.from({ length: 5 }, (_, index) => (
-            <Skeleton key={index} className="h-16" />
-          ))}
+        <div className="mt-6" aria-label="Loading history">
+          <Skeleton className="h-5 w-24" />
+          <div className="me-tl-list mt-3">
+            {Array.from({ length: 5 }, (_, index) => (
+              <div key={index} className="flex items-center gap-3 py-2">
+                <Skeleton className="h-14 w-14 shrink-0" />
+                <div className="flex-1">
+                  <Skeleton className="h-4 w-2/3" />
+                  <Skeleton className="mt-2 h-3 w-1/3" />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       ) : null}
 
       {!shouldShowBlankHistoryArea && currentUserId && (displayHistory !== null || errorMessage) ? (
-        <div className="mt-4 flex min-w-0 flex-col gap-4">
+        <div className="mt-6 flex min-w-0 flex-col">
           {errorMessage ? (
-            <p role="alert" className="g-sm" style={{ color: 'var(--bad)' }}>
+            <p role="alert" className="g-sm mb-4" style={{ color: 'var(--bad)' }}>
               {errorMessage}
             </p>
           ) : null}
@@ -401,63 +420,56 @@ function HistoryPage() {
 
           {historySections.map((section, index) => (
             <section key={section.title} aria-labelledby={`history-${index}`}>
-              <div className="mb-3 mt-2 flex min-h-[44px] items-center justify-between gap-3">
+              <div className={index === 0 ? 'me-tl-day is-first' : 'me-tl-day'}>
                 <h2 id={`history-${index}`} className="g-h3">
                   {section.title}
                 </h2>
-                {index === 0 && canClearHistory ? (
-                  <Button variant="text" size="sm" onClick={() => void handleClearHistory()} disabled={isClearing}>
-                    <Trash2 aria-hidden="true" />
-                    {isClearing ? 'Clearing...' : 'Clear history'}
-                  </Button>
-                ) : null}
+                <span className="g-xs g-fnt">{section.items.length} {section.items.length === 1 ? 'place' : 'places'}</span>
               </div>
-              <div className="g-group">
+              <ol className="me-tl-list">
                 {section.items.map((item) => {
                   const place = item.place as HistoryPlace
                   const name = place.name || 'Viewed place'
-                  const meta = [getPlaceMeta(place), formatViewedTime(item.created_at)].filter(Boolean).join(' · ')
+                  const meta = getPlaceMeta(place)
                   const photo = getPlacePhoto(place)
                   return (
-                    <div key={item.id} className="flex min-w-0 items-center gap-1 pr-2">
-                      <InternalLink href={`/places/${encodeURIComponent(place.slug as string)}`} className="g-group-row min-w-0 flex-1 py-2 pr-1">
-                        {photo ? (
-                          <img src={photo} alt="" loading="lazy" decoding="async" className="h-12 w-12 shrink-0 rounded-[var(--r-2)] object-cover" />
-                        ) : (
-                          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-[var(--r-2)]" style={{ background: 'var(--sea-soft)', color: 'var(--sea)' }}>
-                            <MapPin className="h-5 w-5" aria-hidden="true" />
-                          </span>
-                        )}
-                        <span className="min-w-0 flex-1">
-                          <span className="g-h3 block truncate">{name}</span>
-                          {meta ? <span className="g-sm g-mut block truncate">{meta}</span> : null}
+                    <li key={item.id} className="me-tl-item">
+                      <InternalLink href={`/places/${encodeURIComponent(place.slug as string)}`} className="me-tl-link">
+                        <span className="me-thumb" aria-hidden="true">
+                          <MapPin weight="duotone" />
+                          {photo ? <img src={photo} alt="" loading="lazy" decoding="async" /> : null}
                         </span>
+                        <span className="me-tl-t">
+                          <b>{name}</b>
+                          {meta ? <span>{meta}</span> : null}
+                        </span>
+                        <span className="me-tl-time">{formatViewedTime(item.created_at)}</span>
                       </InternalLink>
                       <Button
                         variant="text"
                         size="sm"
                         iconOnly
-                        className="shrink-0"
+                        className="shrink-0 !no-underline"
                         aria-label={`Remove ${name} from history`}
                         disabled={deletingIds.has(item.id)}
                         onClick={() => void handleDeleteHistoryItem(item.id)}
                       >
                         <X aria-hidden="true" />
                       </Button>
-                    </div>
+                    </li>
                   )
                 })}
-              </div>
+              </ol>
             </section>
           ))}
 
           {hasMoreHistory ? (
-            <div className="flex flex-col items-center gap-3">
+            <div className="mt-2 flex flex-col items-center gap-3">
               <p className="g-xs g-mut">
                 Showing {visibleHistoryItems.length} of {visibleHistory.length} visits
               </p>
               <Button variant="line" onClick={() => setVisibleHistoryCount((current) => current + HISTORY_LOAD_MORE_BATCH_SIZE)}>
-                Load more
+                Show more
               </Button>
             </div>
           ) : null}

@@ -1,20 +1,20 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
+import InternalLink from '../components/InternalLink'
 import PassportMap from '../components/passport/PassportMap'
-import { Button, Empty, Page, Row, SectionHead, Skeleton, cx } from '../components/ui'
+import ProfileAvatar from '../components/ProfileAvatar'
+import { Button, Empty, Page, SectionHead, Skeleton, Tag, cx } from '../components/ui'
 import { useAppUser } from '../context/AppUserContext'
 import { getMyPassport, type CityStamp, type Passport } from '../utils/passportApi'
+import '../design/me.css'
 
 type LoadState = { status: 'loading' } | { status: 'ready'; passport: Passport } | { status: 'error'; message: string }
 
-const STAMP_GRID = 'grid grid-cols-3 justify-items-center gap-x-2 gap-y-5 md:grid-cols-4 lg:grid-cols-6'
 const PHONE_LOCKED_PREVIEW = 8
 const STREAK_WEEKS_SHOWN = 8
 const DAY_MS = 24 * 60 * 60 * 1000
 const SEEN_STAMP_KEY = 'galatayo-passport-seen-stamp'
-// The hero stays Manila Bay navy in both themes, like the night map under it.
-const NAVY = '#0f2138'
 
 function readSeenStamp() {
   try {
@@ -34,24 +34,22 @@ function shortDate(value: string) {
 
 type StampKind = 'newest' | 'collected' | 'locked'
 
-const STAMP_STYLE: Record<StampKind, CSSProperties> = {
-  locked: { border: '1.5px dashed color-mix(in srgb, var(--ink-3) 40%, transparent)', color: 'var(--ink-3)' },
-  collected: { background: 'var(--sea)', color: 'var(--surface)', transform: 'rotate(-8deg)' },
-  newest: { background: 'var(--sea)', color: 'var(--surface)', boxShadow: '0 0 0 4px var(--surface), 0 0 0 6px var(--sea)', transform: 'rotate(6deg)', '--g-rot': '6deg' } as CSSProperties,
-}
+const STAMP_CLASS: Record<StampKind, string> = { newest: 'is-got is-new', collected: 'is-got', locked: 'is-lock' }
 
-function CityStampBadge({ stamp, kind, press, className }: { stamp: CityStamp; kind: StampKind; press?: boolean; className?: string }) {
+function CityStampBadge({ stamp, kind, press, index, className }: { stamp: CityStamp; kind: StampKind; press?: boolean; index: number; className?: string }) {
   const sub = kind === 'locked' ? null : stamp.first_checkin_at ? shortDate(stamp.first_checkin_at) : plural(stamp.places, 'spot')
+  // Collected stamps tilt a little each way, like real ink stamps.
+  const style = kind === 'collected' ? ({ '--g-rot': `${index % 3 === 1 ? 5 : index % 3 === 2 ? -2 : -7}deg` } as CSSProperties) : undefined
   return (
     <div
-      className={cx('grid h-24 w-24 shrink-0 place-items-center rounded-full p-1 text-center', press && 'g-press', className)}
-      style={STAMP_STYLE[kind]}
+      className={cx('me-stamp', STAMP_CLASS[kind], press && 'g-press', className)}
+      style={style}
       aria-label={`${stamp.city}, ${sub ? `collected ${sub}` : 'not collected yet'}`}
       role="img"
     >
       <div className="min-w-0">
-        <b className="block whitespace-nowrap font-[family-name:var(--font-display)] text-[10px] font-bold uppercase leading-tight">{stamp.city}</b>
-        {sub ? <span className="mt-0.5 block text-[10px] leading-tight" style={{ opacity: kind === 'locked' ? 1 : 0.85 }}>{sub}</span> : null}
+        <b>{stamp.city}</b>
+        {sub ? <span>{sub}</span> : null}
       </div>
     </div>
   )
@@ -118,137 +116,178 @@ function PassportPage({ session }: { session: Session }) {
     }
   }, [newestCity])
 
+  const avatarProfile = {
+    username: currentProfile?.username ?? null,
+    display_name: currentProfile?.displayName ?? null,
+    avatar_url: currentProfile?.avatarUrl ?? null,
+    provider_avatar_url: currentProfile?.providerAvatarUrl ?? null,
+  }
+
   return (
     <Page className="!pt-0 lg:!pt-8">
-      <section className="relative -mx-4 overflow-hidden text-white lg:mx-0 lg:rounded-[var(--r-4)]" style={{ background: NAVY }}>
-        <header className="relative z-[2] min-w-0 px-4 pt-5 pb-4 lg:px-8 lg:pt-7">
-          <p className="g-eyebrow !text-white/70">{currentProfile?.username ? `@${currentProfile.username}` : 'Your passport'}</p>
-          <h1 className="g-h1 mt-1">Passport</h1>
-          {passport ? (
-            <p className="mt-1.5 text-[15px] text-white/80">
-              {collected} of {plural(total, 'city', 'cities')} · {plural(passport.total_checkins, 'visit')}
-            </p>
-          ) : null}
+      <div className="me-pp-map">
+        {passport ? <PassportMap stamps={stamps} /> : <Skeleton className="h-[clamp(220px,34vh,300px)] !rounded-none lg:h-[340px] lg:!rounded-[var(--r-4)]" />}
+      </div>
+
+      <div className="me-pp-sheet">
+        <header className="me-pp-head">
+          <ProfileAvatar profile={avatarProfile} size="lg" />
+          <p className="g-eyebrow mt-3">{currentProfile?.username ? `@${currentProfile.username}` : 'Your passport'}</p>
+          <h1 className="g-h1 mt-1">Pasyal Passport</h1>
+          {passport ? <p className="g-sm g-mut mt-1">{collected} of {plural(total, 'Metro city', 'Metro cities')} stamped</p> : null}
         </header>
+
         {passport ? (
-          <PassportMap stamps={stamps} className="!h-[clamp(220px,34vh,320px)] lg:!h-[340px]" />
-        ) : (
-          <div className="h-[clamp(220px,34vh,320px)] lg:h-[340px]" aria-hidden="true" />
-        )}
-      </section>
-
-      <div className="relative z-[2] -mx-4 -mt-7 rounded-t-[var(--r-4)] bg-[var(--surface)] px-4 pt-2.5 lg:mx-0 lg:mt-8 lg:rounded-none lg:px-0 lg:pt-0">
-        <div className="g-grab lg:hidden" />
-
-        {state.status === 'loading' ? (
-          <div className="mt-2 grid gap-6" aria-label="Loading passport">
-            <Skeleton className="h-[72px]" />
-            <div className={STAMP_GRID}>
-              {Array.from({ length: 6 }, (_, index) => (
-                <Skeleton key={index} className="h-24 w-24 !rounded-full" />
-              ))}
+          <div className="me-pp-stats" aria-label="Passport stats">
+            <div>
+              <b>
+                {collected}
+                <small>/{total}</small>
+              </b>
+              <span>{collected === 1 ? 'Stamp' : 'Stamps'}</span>
+            </div>
+            <div>
+              <b>{passport.unique_places}</b>
+              <span>{passport.unique_places === 1 ? 'Place' : 'Places'}</span>
+            </div>
+            <div>
+              <b>{passport.total_checkins}</b>
+              <span>{passport.total_checkins === 1 ? 'Visit' : 'Visits'}</span>
             </div>
           </div>
-        ) : null}
-
-        {state.status === 'error' ? (
-          <Empty
-            className="mt-2"
-            title="Hindi ma-load ang passport mo."
-            description={<span role="alert">{state.message}</span>}
-            action={<Button variant="line" onClick={() => window.location.reload()}>Try again</Button>}
-          />
-        ) : null}
-
-        {state.status === 'ready' && !state.passport.available ? (
-          <Empty className="mt-2" title="The passport is getting set up." description="Check back soon." />
+        ) : state.status === 'loading' ? (
+          <Skeleton className="mt-5 h-[52px]" />
         ) : null}
 
         {passport ? (
-          <div className="g-split">
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 rounded-[var(--r-3)] bg-[var(--fill)] px-4 py-3">
             <div className="min-w-0">
-              <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 py-2">
-                <div className="min-w-0">
-                  <h2 className="g-h3">{plural(passport.streak_weeks, 'week')} streak</h2>
-                  <p className="g-xs g-mut">Gala once a week to keep it going.</p>
-                </div>
-                <ol className="flex items-center gap-2" aria-label="Visits in the last 8 weeks">
-                  {weeks.map((week) => (
-                    <li
-                      key={week.key}
-                      aria-label={`${week.current ? 'This week' : week.label}, ${week.done ? 'visited' : 'no visit'}`}
-                      className="block h-3.5 w-3.5 rounded-full"
-                      style={{
-                        background: week.done ? 'var(--sea)' : 'var(--fill-2)',
-                        ...(week.current ? { outline: '2px solid var(--sea)', outlineOffset: 2 } : null),
-                      }}
-                    />
-                  ))}
-                </ol>
-              </div>
-
-              <SectionHead title="Stamps" sub={`${collected} collected`} className="!mt-6" />
-              <div className={STAMP_GRID}>
-                {sortedStamps.map((stamp, index) => {
-                  const hideOnPhone = !showAllStamps && index >= collected + PHONE_LOCKED_PREVIEW
-                  return (
-                    <CityStampBadge
-                      key={stamp.city}
-                      stamp={stamp}
-                      kind={!stamp.collected ? 'locked' : stamp.city === newestCity ? 'newest' : 'collected'}
-                      press={stamp.city === newestCity && newestCity !== seenStamp}
-                      className={hideOnPhone ? 'max-md:hidden' : undefined}
-                    />
-                  )
-                })}
-              </div>
-              {hiddenOnPhone > 0 && !showAllStamps ? (
-                <div className="mt-5 flex justify-center md:hidden">
-                  <Button variant="soft" size="sm" onClick={() => setShowAllStamps(true)}>
-                    +{hiddenOnPhone} more {hiddenOnPhone === 1 ? 'city' : 'cities'}
-                  </Button>
-                </div>
-              ) : null}
+              <h2 className="g-h3">{plural(passport.streak_weeks, 'week')} streak</h2>
+              <p className="g-xs g-mut">Gala once a week to keep it going.</p>
             </div>
+            <ol className="flex items-center gap-2" aria-label="Visits in the last 8 weeks">
+              {weeks.map((week) => (
+                <li
+                  key={week.key}
+                  aria-label={`${week.current ? 'This week' : week.label}, ${week.done ? 'visited' : 'no visit'}`}
+                  className="block h-3.5 w-3.5 rounded-full"
+                  style={{
+                    background: week.done ? 'var(--sea)' : 'var(--fill-2)',
+                    ...(week.current ? { outline: '2px solid var(--sea)', outlineOffset: 2 } : null),
+                  }}
+                />
+              ))}
+            </ol>
+          </div>
+        ) : null}
+        <div className="h-5 lg:h-6" />
+      </div>
 
-            <aside className="g-side">
+      {state.status === 'loading' ? (
+        <div className="me-stamps mt-8" aria-label="Loading passport">
+          {Array.from({ length: 6 }, (_, index) => (
+            <Skeleton key={index} className="h-24 w-24 !rounded-full" />
+          ))}
+        </div>
+      ) : null}
+
+      {state.status === 'error' ? (
+        <Empty
+          className="mt-6"
+          title="Hindi ma-load ang passport mo."
+          description={<span role="alert">{state.message}</span>}
+          action={<Button variant="line" onClick={() => window.location.reload()}>Try again</Button>}
+        />
+      ) : null}
+
+      {state.status === 'ready' && !state.passport.available ? <Empty className="mt-6" title="The passport is getting set up." description="Check back soon." /> : null}
+
+      {passport ? (
+        <div className="g-split lg:mt-4">
+          <div className="min-w-0">
+            <SectionHead title="Stamps" sub={`${collected} collected · ${total - collected} to go`} className="!mt-8" />
+            <div className="me-stamps">
+              {sortedStamps.map((stamp, index) => {
+                const hideOnPhone = !showAllStamps && index >= collected + PHONE_LOCKED_PREVIEW
+                return (
+                  <CityStampBadge
+                    key={stamp.city}
+                    stamp={stamp}
+                    index={index}
+                    kind={!stamp.collected ? 'locked' : stamp.city === newestCity ? 'newest' : 'collected'}
+                    press={stamp.city === newestCity && newestCity !== seenStamp}
+                    className={hideOnPhone ? 'max-md:hidden' : undefined}
+                  />
+                )
+              })}
+            </div>
+            {hiddenOnPhone > 0 && !showAllStamps ? (
+              <div className="mt-5 flex justify-center md:hidden">
+                <Button variant="soft" size="sm" onClick={() => setShowAllStamps(true)}>
+                  +{hiddenOnPhone} more {hiddenOnPhone === 1 ? 'city' : 'cities'}
+                </Button>
+              </div>
+            ) : null}
+          </div>
+
+          <aside className="g-side lg:pt-8">
+            {hasStamps ? (
+              <div className="mt-6 lg:mt-0">
+                <Button variant="tara" size="lg" block href="/search">
+                  <MapPin aria-hidden="true" />
+                  Get a stamp nearby
+                </Button>
+                <p className="g-xs g-mut mt-2 text-center">Open the spot you're at and tap “I'm here”. Works only when you're there.</p>
+              </div>
+            ) : null}
+
+            <section className="min-w-0">
+              <h2 className="g-h2 mt-6 mb-3 lg:mt-2">Recent stamps</h2>
               {hasStamps ? (
-                <div className="mt-6 lg:mt-0">
-                  <Button variant="tara" size="lg" block href="/search">
-                    <MapPin aria-hidden="true" />
-                    Get a stamp nearby
-                  </Button>
-                  <p className="g-xs g-mut mt-2 text-center">Open the spot you're at and tap “I'm here”. Works only when you're there.</p>
-                </div>
-              ) : null}
-
-              <section className="min-w-0">
-                <SectionHead title="Recent stamps" className="lg:!mt-2" />
-                {hasStamps ? (
-                  <div className="g-list">
+                <div>
+                  <div className="me-tl-day is-first">
+                    <span className="g-sm font-semibold">Latest visits</span>
+                  </div>
+                  <ol className="me-tl-list">
                     {passport.recent.map((checkin) => {
                       const when = new Date(checkin.created_at).toLocaleString('en', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+                      const body = (
+                        <>
+                          <span className="me-thumb" aria-hidden="true">
+                            <MapPin weight="duotone" />
+                          </span>
+                          <span className="me-tl-t">
+                            <b>{checkin.name}</b>
+                            <span>{[checkin.city, when].filter(Boolean).join(' · ')}</span>
+                          </span>
+                          {firstCheckins.has(checkin.created_at) ? <Tag tone="sea" className="shrink-0">New city</Tag> : null}
+                        </>
+                      )
                       return (
-                        <Row key={`${checkin.place_id}-${checkin.created_at}`} href={checkin.slug ? `/places/${encodeURIComponent(checkin.slug)}` : undefined}>
-                          <div className="g-h3 truncate">{checkin.name}</div>
-                          <div className="g-sm g-mut truncate">{[checkin.city, when].filter(Boolean).join(' · ')}</div>
-                          {firstCheckins.has(checkin.created_at) ? <span className="g-tag is-sea mt-1">New city</span> : null}
-                        </Row>
+                        <li key={`${checkin.place_id}-${checkin.created_at}`} className="me-tl-item">
+                          {checkin.slug ? (
+                            <InternalLink href={`/places/${encodeURIComponent(checkin.slug)}`} className="me-tl-link">
+                              {body}
+                            </InternalLink>
+                          ) : (
+                            <div className="me-tl-link">{body}</div>
+                          )}
+                        </li>
                       )
                     })}
-                  </div>
-                ) : (
-                  <Empty
-                    title="Wala pang stamps."
-                    description="Open a place when you're there and tap “I'm here”."
-                    action={<Button variant="tara" href="/search">Get a stamp nearby</Button>}
-                  />
-                )}
-              </section>
-            </aside>
-          </div>
-        ) : null}
-      </div>
+                  </ol>
+                </div>
+              ) : (
+                <Empty
+                  title="Wala pang stamps."
+                  description="Open a place when you're there and tap “I'm here”."
+                  action={<Button variant="tara" href="/search">Get a stamp nearby</Button>}
+                />
+              )}
+            </section>
+          </aside>
+        </div>
+      ) : null}
     </Page>
   )
 }

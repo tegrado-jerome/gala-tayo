@@ -1,0 +1,155 @@
+/* Place detail page: Airbnb-style gallery, Tripadvisor rating bubbles, Klook facts. Tokens come from gt1.css. */
+
+/* ---------- Phone gallery ---------- */
+.pd-hero { position: relative; margin-inline: -16px; height: min(78vw, 56vh); min-height: 280px; max-height: 520px; overflow: hidden; background: var(--fill); }
+.pd-hero-track { display: flex; height: 100%; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; }
+.pd-hero-track::-webkit-scrollbar { display: none; }
+.pd-hero-slide { flex: 0 0 100%; height: 100%; scroll-snap-align: center; scroll-snap-stop: always; border: 0; padding: 0; background: none; cursor: zoom-in; }
+.pd-hero-slide img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.pd-hero-top { position: absolute; inset: 0 0 auto 0; display: flex; align-items: center; gap: 10px; padding: 12px 16px; pointer-events: none; }
+.pd-hero-top > * { pointer-events: auto; }
+.pd-hero-bottom { position: absolute; inset: auto 0 34px 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 12px; pointer-events: none; }
+.pd-hero-bottom > * { pointer-events: auto; }
+.pd-count { display: inline-flex; align-items: center; height: 26px; padding: 0 10px; border-radius: var(--r-1); background: rgba(15, 33, 56, 0.72); color: #fff; font: 600 12px/1 var(--font-body); letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
+
+.pd-round { display: grid; place-items: center; width: 40px; height: 40px; flex: 0 0 auto; border: 0; border-radius: 50%; background: color-mix(in srgb, var(--surface) 90%, transparent); color: var(--ink); box-shadow: 0 2px 8px rgba(15, 33, 56, 0.16); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); cursor: pointer; transition: transform var(--t-fast) var(--ease-g); }
+.pd-round svg { width: 18px; height: 18px; }
+.pd-round:active { transform: scale(0.94); }
+.pd-round.is-sm { width: 32px; height: 32px; }
+.pd-round.is-sm svg { width: 15px; height: 15px; }
+/* 44px tap area around the visual circle */
+.pd-hit { display: grid; place-items: center; min-width: 44px; min-height: 44px; border: 0; padding: 0; background: none; border-radius: 50%; cursor: pointer; }
+.pd-hit:focus-visible { outline: 2px solid var(--surface); outline-offset: -2px; }
+
+/* Title sheet that overlaps the photo on phones */
+.pd-sheet { position: relative; margin: -24px -16px 0; padding: 22px 16px 0; background: var(--surface); border-radius: var(--r-4) var(--r-4) 0 0; }
+@media (min-width: 1024px) { .pd-sheet { margin: 0 0 20px; padding: 0; border-radius: 0; } }
+
+/* ---------- Desktop photo grid ---------- */
+.pd-grid { position: relative; display: grid; gap: 8px; height: 440px; border-radius: var(--r-3); overflow: hidden; grid-template-rows: repeat(2, minmax(0, 1fr)); }
+.pd-grid.is-single { grid-template-columns: 1fr; }
+.pd-grid.n-1 { grid-template-columns: 2fr 1fr; }
+.pd-grid.n-2 { grid-template-columns: 2fr 1fr; }
+.pd-grid.n-3, .pd-grid.n-4, .pd-grid.n-5 { grid-template-columns: 2fr 1fr 1fr; }
+.pd-tile { position: relative; display: block; min-width: 0; min-height: 0; border: 0; padding: 0; overflow: hidden; background: var(--fill); cursor: zoom-in; }
+.pd-tile img { display: block; width: 100%; height: 100%; object-fit: cover; transition: filter var(--t) var(--ease-g), transform var(--t-slow) var(--ease-g); }
+.pd-tile:hover img { filter: brightness(0.9); }
+.pd-tile:focus-visible { outline: 3px solid var(--ink); outline-offset: -3px; }
+.pd-tile.is-main { grid-row: span 2; }
+.pd-tile.is-tall { grid-row: span 2; }
+.pd-grid-map { grid-row: span 2; position: relative; min-width: 0; background: var(--fill); }
+.pd-grid-map .g-map { height: 100%; border-radius: 0; }
+.pd-grid-map-label { position: absolute; left: 12px; bottom: 12px; z-index: 500; display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border: 0; border-radius: var(--r-pill); background: var(--surface); color: var(--ink); font: 600 13px/1 var(--font-body); box-shadow: var(--sh-2); cursor: pointer; }
+.pd-grid-map-label svg { width: 15px; height: 15px; }
+.pd-grid-actions { position: absolute; right: 16px; bottom: 16px; display: flex; gap: 8px; }
+.pd-grid-info { position: absolute; left: 6px; bottom: 6px; }
+.pd-float-btn { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; border: 1px solid var(--ink); border-radius: var(--r-2); background: var(--surface); color: var(--ink); font: 600 13px/1 var(--font-body); cursor: pointer; box-shadow: var(--sh-1); }
+.pd-float-btn svg { width: 16px; height: 16px; }
+.pd-float-btn:hover { background: var(--fill); }
+
+/* ---------- All photos view ---------- */
+.pd-photos { position: fixed; inset: 0; z-index: 7200; display: flex; flex-direction: column; background: var(--surface); animation: g-fade var(--t) var(--ease-g); }
+.pd-photos-bar { display: flex; align-items: center; gap: 8px; height: 60px; padding: 0 8px; padding-top: env(safe-area-inset-top, 0px); border-bottom: 1px solid var(--line-2); flex: 0 0 auto; }
+.pd-photos-bar h2 { flex: 1; min-width: 0; text-align: center; }
+.pd-photos-body { flex: 1; overflow-y: auto; overscroll-behavior: contain; }
+.pd-photos-grid { max-width: 820px; margin: 0 auto; padding: 16px 16px calc(32px + env(safe-area-inset-bottom, 0px)); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pd-photos-grid figure { margin: 0; min-width: 0; scroll-margin-top: 16px; }
+.pd-photos-grid img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--r-2); background: var(--fill); }
+.pd-photos-grid figure.is-wide { grid-column: span 2; }
+.pd-photos-grid figure.is-wide img { aspect-ratio: 3 / 2; }
+
+/* ---------- Rating bubbles (Tripadvisor-style) ---------- */
+.pd-bubbles { display: inline-flex; align-items: center; gap: 3px; }
+.pd-bub { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid var(--sea); background: transparent; }
+.pd-bub.is-full { background: var(--sea); }
+.pd-bub.is-half { background: linear-gradient(90deg, var(--sea) 50%, transparent 50%); }
+.pd-bubbles.is-lg .pd-bub { width: 16px; height: 16px; border-width: 2px; }
+
+/* ---------- Key facts (Klook-style) ---------- */
+.pd-facts { display: grid; grid-template-columns: 1fr; gap: 0; margin: 0; padding: 0; list-style: none; }
+.pd-fact { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; min-width: 0; }
+.pd-fact + .pd-fact { border-top: 1px solid var(--line-2); }
+.pd-fact-ic { display: grid; place-items: center; width: 38px; height: 38px; flex: 0 0 auto; border-radius: var(--r-2); background: var(--fill); color: var(--ink); }
+.pd-fact-ic svg { width: 22px; height: 22px; }
+.pd-fact dt, .pd-fact-k { font-size: 12px; font-weight: 500; color: var(--ink-2); }
+.pd-fact dd, .pd-fact-v { margin: 2px 0 0; font-size: 14px; font-weight: 600; line-height: 1.35; color: var(--ink); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+a.pd-fact { text-decoration: none; color: inherit; border-radius: var(--r-2); }
+a.pd-fact:hover .pd-fact-v { text-decoration: underline; text-underline-offset: 2px; }
+@media (min-width: 768px) {
+  .pd-facts { grid-template-columns: 1fr 1fr; column-gap: 24px; }
+  .pd-fact + .pd-fact { border-top: 0; }
+  .pd-fact { border-top: 1px solid var(--line-2); }
+  .pd-fact:nth-child(-n + 2) { border-top: 0; }
+}
+
+/* ---------- Offers list ("Good for") ---------- */
+.pd-offers { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; margin: 0; padding: 0; list-style: none; }
+.pd-offers li { display: flex; align-items: center; gap: 12px; min-width: 0; font-size: 15px; color: var(--ink); }
+.pd-offers li span { min-width: 0; overflow-wrap: anywhere; }
+.pd-offers svg { width: 26px; height: 26px; flex: 0 0 auto; color: var(--ink); }
+
+/* ---------- Section tabs (desktop) ---------- */
+.pd-tabs { position: sticky; top: 68px; z-index: 40; display: flex; gap: 24px; margin: 0 0 8px; padding: 0; background: var(--surface); border-bottom: 1px solid var(--line-2); list-style: none; }
+.pd-tabs a { position: relative; display: inline-flex; align-items: center; height: 52px; font-size: 14px; font-weight: 500; color: var(--ink-2); text-decoration: none; }
+.pd-tabs a:hover { color: var(--ink); }
+.pd-tabs a[aria-current='true'] { color: var(--ink); font-weight: 600; }
+.pd-tabs a[aria-current='true']::after { content: ''; position: absolute; inset: auto 0 -1px 0; height: 2px; border-radius: 2px; background: var(--ink); }
+.pd-anchor { scroll-margin-top: 72px; }
+@media (min-width: 1024px) { .pd-anchor { scroll-margin-top: 136px; } }
+
+/* ---------- Sections ---------- */
+.pd-sec { margin-top: 28px; padding-top: 28px; border-top: 1px solid var(--line-2); }
+.pd-sec-title { font: 700 20px/1.2 var(--font-display); letter-spacing: -0.02em; margin: 0 0 14px; }
+@media (min-width: 1024px) { .pd-sec { margin-top: 36px; padding-top: 36px; } .pd-sec-title { font-size: 22px; } }
+
+/* Info rows (commute, parking, access) */
+.pd-rows { margin: 0; padding: 0; list-style: none; }
+.pd-rows li { display: flex; gap: 14px; padding: 12px 0; }
+.pd-rows li + li { border-top: 1px solid var(--line-2); }
+.pd-rows svg { width: 24px; height: 24px; flex: 0 0 auto; margin-top: 1px; color: var(--ink); }
+.pd-rows b { display: block; font-size: 14px; font-weight: 600; }
+.pd-rows p { margin: 2px 0 0; font-size: 14px; line-height: 1.5; color: var(--ink-2); }
+
+/* Rating summary */
+.pd-score { display: flex; align-items: center; gap: 16px; padding: 16px; border-radius: var(--r-3); background: var(--fill); }
+.pd-score-num { font: 700 40px/1 var(--font-display); letter-spacing: -0.03em; }
+
+/* Review cards */
+.pd-reviews { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+@media (min-width: 768px) { .pd-reviews { gap: 14px; } }
+.pd-review { padding: 16px; border: 1px solid var(--line); border-radius: var(--r-3); background: var(--surface); }
+.pd-review.is-failed { border-color: var(--bad); background: var(--bad-soft); }
+.pd-review.is-pending { opacity: 0.75; }
+.pd-replies { display: grid; gap: 12px; margin: 12px 0 0; padding: 0 0 0 14px; border-left: 2px solid var(--line-2); list-style: none; }
+
+/* FAQ */
+.pd-faq { border: 1px solid var(--line); border-radius: var(--r-3); overflow: hidden; }
+.pd-faq details + details { border-top: 1px solid var(--line-2); }
+.pd-faq summary { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 12px 16px; cursor: pointer; list-style: none; }
+.pd-faq summary::-webkit-details-marker { display: none; }
+.pd-faq summary:hover { background: var(--fill); }
+.pd-faq summary:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+.pd-faq details > p { margin: 0; padding: 0 16px 16px; font-size: 14px; line-height: 1.6; color: var(--ink-2); }
+
+/* Related links */
+.pd-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.pd-link { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border: 1px solid var(--line); border-radius: var(--r-pill); color: var(--ink); font: 500 14px/1 var(--font-body); text-decoration: none; }
+.pd-link svg { width: 16px; height: 16px; }
+.pd-link:hover { border-color: var(--ink); }
+
+/* Spinner for inline loading */
+.pd-spin { display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--line); border-top-color: var(--ink); animation: g-spin 0.7s linear infinite; vertical-align: -2px; }
+
+/* Phone sticky action bar */
+.pd-bar { position: fixed; inset-inline: 0; z-index: 5500; padding: 10px 16px; background: var(--surface); border-top: 1px solid var(--line-2); box-shadow: 0 -6px 18px rgba(15, 33, 56, 0.06); }
+.pd-bar-in { position: relative; display: flex; align-items: center; gap: 10px; max-width: 720px; margin: 0 auto; }
+.pd-bar-price { min-width: 0; flex: 1 1 auto; }
+.pd-bar-price b { display: block; font: 700 16px/1.2 var(--font-display); letter-spacing: -0.02em; white-space: nowrap; }
+.pd-bar-price span { display: block; margin-top: 2px; font-size: 12px; color: var(--sea); font-weight: 600; white-space: nowrap; }
+.pd-bar .g-btn-lg { height: 48px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pd-photos, .pd-spin { animation: none !important; }
+  .pd-tile img, .pd-round { transition: none !important; }
+  .pd-hero-track { scroll-behavior: auto; }
+}
