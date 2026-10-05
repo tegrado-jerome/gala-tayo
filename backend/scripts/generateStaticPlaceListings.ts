@@ -1,12 +1,19 @@
-import { mkdir, rm, writeFile } from "fs/promises";
+import { mkdir, readFile, rm, writeFile } from "fs/promises";
 import path from "path";
 import { CATEGORIES, METRO_MANILA_AREAS } from "../src/functions/filters";
-import { getSeoListingPage, type SeoListingPage } from "../src/utils/seoPlaces";
-import { SEO_LANDING_TARGETS } from "../src/utils/seoLandingPages";
+import { getSeoListingPage, getSeoPlaceSummaries, type SeoListingPage } from "../src/utils/seoPlaces";
 
 const AREA_PAGE_SIZE = 10;
 const CATEGORY_PAGE_SIZE = 12;
-const OUTPUT_DIR = path.resolve(__dirname, "../../frontend/public/data/place-listings");
+const DATA_DIR = path.resolve(__dirname, "../../frontend/public/data");
+const OUTPUT_DIR = path.join(DATA_DIR, "place-listings");
+const GUIDES_FILE = path.resolve(__dirname, "../../frontend/src/data/seoGuides.json");
+
+type GuideTarget = {
+  areaSlug?: string | null;
+  category?: string | null;
+  goodFor?: string | null;
+};
 
 type ListingTarget = {
   areaSlug: string | null;
@@ -64,7 +71,27 @@ async function generateTarget(target: ListingTarget) {
   return firstPage.totalPages;
 }
 
+async function writeCompactPlaces() {
+  const places = await getSeoPlaceSummaries();
+  const compact = places.map((place) => ({
+    id: place.id,
+    slug: place.slug,
+    name: place.name,
+    category: place.category,
+    area: place.area,
+    city: place.city,
+    areaSlug: place.areaSlug,
+    goodFor: place.goodFor,
+    budgetMin: place.budgetMin,
+    canonicalPath: place.canonicalPath,
+    imageUrl: place.imageUrl,
+  }));
+  await writeFile(path.join(DATA_DIR, "places-compact.json"), `${JSON.stringify(compact)}\n`, "utf8");
+  console.log(`Generated places-compact.json with ${compact.length} places`);
+}
+
 async function main() {
+  const guides = JSON.parse(await readFile(GUIDES_FILE, "utf8")) as GuideTarget[];
   const areas = METRO_MANILA_AREAS.filter((area) => area.id !== "all").map((area) => area.id);
   const categories = CATEGORIES.map((category) => category.id);
   const targets: ListingTarget[] = [
@@ -73,7 +100,7 @@ async function main() {
     ...areas.flatMap((areaSlug) =>
       categories.map((category) => ({ areaSlug, category, goodFor: null, pageSize: AREA_PAGE_SIZE })),
     ),
-    ...SEO_LANDING_TARGETS.map((target) => ({
+    ...guides.map((target) => ({
       areaSlug: target.areaSlug ?? null,
       category: target.category ?? null,
       goodFor: target.goodFor ?? null,
@@ -92,6 +119,8 @@ async function main() {
       `Generated area=${target.areaSlug ?? "all"} category=${target.category ?? "all"} pages=${totalPages}`,
     );
   }
+
+  await writeCompactPlaces();
 
   await writeFile(path.join(OUTPUT_DIR, "manifest.json"), `${JSON.stringify({
     generatedAt: new Date().toISOString(),

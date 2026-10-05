@@ -74,6 +74,7 @@ export type RouteDescriptor =
   | { kind: 'reset-password' }
   | { kind: 'forgot-password' }
   | { kind: 'about' }
+  | { kind: 'saan-tayo' }
   | { kind: 'profile-search' }
   | { kind: 'public-gala-plan'; username: string; slug: string }
   | { kind: 'public-profile'; username: string }
@@ -292,6 +293,10 @@ export function resolveRouteDescriptor(inputs: RouteInputs): RouteDescriptor {
 
   if (isPath(pathname, '/about')) {
     return { kind: 'about' }
+  }
+
+  if (isPath(pathname, '/saan-tayo')) {
+    return { kind: 'saan-tayo' }
   }
 
   if (

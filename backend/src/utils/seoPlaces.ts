@@ -4,6 +4,7 @@ import { PUBLIC_PLACE_COLUMNS } from "../domain/places";
 import { deleteJsonCacheValue, getJsonCacheValue, setJsonCacheValue } from "../services/redisCacheService";
 import { buildImageUrl } from "./r2UrlResolver";
 import { createBaseSlug } from "./slug";
+import goodForTags from "../data/goodForTags.json";
 
 type PlaceRow = Record<string, unknown>;
 
@@ -72,7 +73,7 @@ const APPROVED_IMAGE_LOOKUP_BATCH_SIZE = 100;
 const MAX_APPROVED_IMAGES_PER_PLACE = 3;
 const SEO_PLACE_SUMMARIES_CACHE_KEY = "seo:places:summaries:v2";
 const SEO_PLACE_SUMMARIES_CACHE_TTL_SECONDS = 60 * 10;
-const SEO_LISTING_PAGE_CACHE_PREFIX = "seo:listings:v1";
+const SEO_LISTING_PAGE_CACHE_PREFIX = "seo:listings:v2";
 const SEO_LISTING_PAGE_CACHE_TTL_SECONDS = 60 * 10;
 
 const AREA_NAME_OVERRIDES: Record<string, string> = {
@@ -180,6 +181,13 @@ function buildLocationOrFilter(areaNames: string[]): string | null {
 
   const values = areaNames.map((value) => `"${escapePostgrestString(value)}"`).join(",");
   return `city.in.(${values}),area.in.(${values})`;
+}
+
+// Guide slugs map to the tag labels editors use on places (for example "date" covers "Casual Date" and "Date Night").
+const GOOD_FOR_TAGS: Record<string, string[]> = goodForTags;
+
+function getGoodForTags(goodFor: string) {
+  return GOOD_FOR_TAGS[goodFor] ?? [goodFor];
 }
 
 function buildSeoListingPageCacheKey(args: {
@@ -480,7 +488,7 @@ export async function getSeoListingPage({
     }
 
     if (normalizedGoodFor) {
-      query = query.contains("good_for", [normalizedGoodFor]);
+      query = query.overlaps("good_for", getGoodForTags(normalizedGoodFor));
     }
 
     return query;

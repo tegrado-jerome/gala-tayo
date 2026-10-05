@@ -1,0 +1,11 @@
+{
+  "date": ["Casual Date", "Date Night"],
+  "family": ["Family Trip"],
+  "barkada": ["Barkada Hangout", "Group Dining"],
+  "study": ["Study Spot"],
+  "chill": ["Chill", "Quick Hangout"],
+  "rainy-day": ["Rainy Day", "Rainy Day Hangout", "Rainy Day Gala"],
+  "food-trip": ["Food Trip"],
+  "photo-spot": ["Photo Spot", "Instagrammable", "Photo Walk"],
+  "free": ["Free Activity"]
+}

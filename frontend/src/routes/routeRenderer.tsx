@@ -37,6 +37,7 @@ const ProfileSearchPage = lazy(() => import('../pages/ProfileSearchPage'))
 const PublicGalaPlanPage = lazy(() => import('../pages/PublicGalaPlanPage'))
 const LegalPage = lazy(() => import('../pages/LegalPage'))
 const AboutPage = lazy(() => import('../pages/AboutPage'))
+const SaanTayoPage = lazy(() => import('../pages/SaanTayoPage'))
 const PlaceSubmissionPage = lazy(() => import('../pages/PlaceSubmissionPage'))
 const MyPlaceSubmissionsPage = lazy(() => import('../pages/MyPlaceSubmissionsPage'))
 const AskAiMapPage = lazy(() => import('../pages/AskAiMapPage'))
@@ -319,6 +320,8 @@ function renderRouteContent(descriptor: RouteDescriptor, inputs: RouteInputs) {
       return <ForgotPasswordPage />
     case 'about':
       return <AboutPage />
+    case 'saan-tayo':
+      return <SaanTayoPage />
     case 'profile-search':
       return <ProfileSearchPage />
     case 'public-gala-plan':

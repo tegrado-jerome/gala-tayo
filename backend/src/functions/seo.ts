@@ -3,7 +3,6 @@ import { CATEGORIES } from "./filters";
 import { checkEndpointRateLimit } from "../utils/redisRateLimit";
 import { getSeoAreaPage, getSeoAreaSummaries, getSeoListingPage, getSeoPlaceSummaries } from "../utils/seoPlaces";
 import { getSiteUrl } from "../utils/siteUrl";
-import { SEO_LANDING_TARGETS } from "../utils/seoLandingPages";
 
 type SitemapEntry = {
   path: string;
@@ -151,11 +150,6 @@ function buildSitemapEntries(args: {
     { path: "/about", priority: "0.6", changefreq: "monthly" },
     { path: "/privacy", priority: "0.4", changefreq: "yearly" },
     { path: "/terms", priority: "0.4", changefreq: "yearly" },
-    ...SEO_LANDING_TARGETS.map((target) => ({
-      path: target.path,
-      priority: "0.8",
-      changefreq: "weekly",
-    })),
   ]
 
   const areaEntries: SitemapEntry[] = areas
