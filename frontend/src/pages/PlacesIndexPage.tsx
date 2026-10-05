@@ -9,20 +9,42 @@ import { metroManilaAreas } from '../data/metroManilaAreas'
 import { cityRepresentativePlaceSlugs, getDiscoveryImageCandidates } from '../data/placeIndexVisuals'
 import type { PlaceDetail } from '../types/appTypes'
 import { fetchPlaceDetailsBatch } from '../utils/placeDetailCache'
+import { getSeoListingPage } from '../utils/seoApi'
 import { getSiteOrigin } from '../utils/seo'
 import { BRAND_NAME, PRODUCT_NAME } from '../utils/seoLandingPages'
 
+function formatPlaceCount(count: number) {
+  return `${count.toLocaleString('en-PH')} ${count === 1 ? 'place' : 'places'}`
+}
+
 function PlacesIndexPage() {
+  const [placeCounts, setPlaceCounts] = useState<Record<string, number>>({})
   const areaCards = useMemo(
-    () => [...metroManilaAreas].sort((left, right) => left.name.localeCompare(right.name)),
-    []
+    () =>
+      [...metroManilaAreas].sort(
+        (left, right) => (placeCounts[right.slug] ?? 0) - (placeCounts[left.slug] ?? 0) || left.name.localeCompare(right.name)
+      ),
+    [placeCounts]
   )
   const representativeSlugs = useMemo(
-    () => [
-      ...areaCards.map((area) => cityRepresentativePlaceSlugs[area.slug]).filter(Boolean),
-    ],
-    [areaCards]
+    () => metroManilaAreas.map((area) => cityRepresentativePlaceSlugs[area.slug]).filter(Boolean),
+    []
   )
+
+  useEffect(() => {
+    const controller = new AbortController()
+    void Promise.all(
+      metroManilaAreas.map((area) =>
+        getSeoListingPage({ areaSlug: area.slug, page: 1, pageSize: 1, signal: controller.signal })
+          .then((listing): [string, number] => [area.slug, listing.total])
+          .catch(() => null)
+      )
+    ).then((entries) => {
+      if (controller.signal.aborted) return
+      setPlaceCounts(Object.fromEntries(entries.filter((entry): entry is [string, number] => entry !== null)))
+    })
+    return () => controller.abort()
+  }, [])
   const [representativePlaces, setRepresentativePlaces] = useState<Record<string, PlaceDetail>>({})
 
   useEffect(() => {
@@ -97,7 +119,7 @@ function PlacesIndexPage() {
             key={area.slug}
             href={`/places/${area.slug}`}
             title={area.name}
-            meta={`Open ${area.name} places`}
+            meta={placeCounts[area.slug] != null ? formatPlaceCount(placeCounts[area.slug]) : `Open ${area.name} places`}
             icon={Building2}
             imageUrls={getDiscoveryImageCandidates(cityRepresentativePlaceSlugs[area.slug], representativePlaces[cityRepresentativePlaceSlugs[area.slug]])}
           />

@@ -1,6 +1,6 @@
 import { useMemo, useState, type MouseEvent } from 'react'
 import { MapPin, type LucideIcon } from 'lucide-react'
-import { PlaceCard as KitPlaceCard, Tag, cx } from './ui'
+import { PlaceCard as KitPlaceCard, Tag, cx, type PlaceCardTint } from './ui'
 import { getSulitLevel } from './place-detail/SulitMeter'
 import { categoryIcons } from './discover/CategoryTabs'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
@@ -120,6 +120,7 @@ export function withLiveDetail(place: PlaceCardData, live: PlaceDetail | undefin
     imageUrl: live.imageUrl ?? null,
     curatedImageUrls: live.curatedImageUrls ?? [],
     rating: live.rating ?? place.rating ?? null,
+    ratingCount: live.review_count ?? place.ratingCount ?? null,
     budget_min: place.budget_min ?? live.budget_min ?? null,
     good_for: place.good_for?.length ? place.good_for : live.good_for,
     indoor_outdoor: live.indoor_outdoor ?? null,
@@ -162,6 +163,19 @@ export function getCategoryIcon(category: string | null | undefined): LucideIcon
   const key = (category ?? '').trim().toLowerCase()
   if (!key) return MapPin
   return categoryIcons[key] ?? categoryIconAliases.find(([pattern]) => pattern.test(key))?.[1] ?? MapPin
+}
+
+export function getCategoryTint(category: string | null | undefined): PlaceCardTint {
+  const key = (category ?? '').trim().toLowerCase()
+  if (/caf|coffee|food|restaurant|eat|dining|night|club|pub|bar(?!k)/.test(key)) return 'tara'
+  if (/museum|gallery|art|heritage|church|histor|park|garden|nature|beach|trail/.test(key)) return 'sea'
+  return 'warn'
+}
+
+function getReviewCount(place: PlaceCardData) {
+  if (typeof place.ratingCount === 'number' && Number.isFinite(place.ratingCount)) return place.ratingCount
+  const parsed = Number.parseInt(place.reviewCount ?? '', 10)
+  return Number.isFinite(parsed) ? parsed : 0
 }
 
 type PlaceCardProps = {
@@ -224,8 +238,10 @@ function PlaceCard({ place, onGuestSave, selected = false, onOpen, onHover, clas
         title={place.name}
         imageUrl={imageUrl}
         icon={getCategoryIcon(place.category)}
+        tint={getCategoryTint(place.category)}
         meta={getMeta(place)}
         rating={typeof place.rating === 'number' && place.rating > 0 ? place.rating : null}
+        reviewCount={getReviewCount(place)}
         pricePerHead={formatPricePerHead(place.budget_min)}
         sulit={getSulitScore(place.budget_min)}
         flag={rainSafe ? <Tag tone="solid">Rain-safe</Tag> : null}
@@ -237,19 +253,18 @@ function PlaceCard({ place, onGuestSave, selected = false, onOpen, onHover, clas
 }
 
 /** Index tile (city or category) with image fallbacks. */
-export function PlaceTile({ href, title, meta, imageUrls, icon }: { href: string; title: string; meta: string; imageUrls: string[]; icon?: LucideIcon }) {
-  const [imageIndex, setImageIndex] = useState(0)
-  const sourceKey = imageUrls.join('|')
-  const [lastSourceKey, setLastSourceKey] = useState(sourceKey)
-
-  if (sourceKey !== lastSourceKey) {
-    setLastSourceKey(sourceKey)
-    setImageIndex(0)
-  }
+export function PlaceTile({ href, title, meta, imageUrls, icon, tint }: { href: string; title: string; meta: string; imageUrls: string[]; icon?: LucideIcon; tint?: PlaceCardTint }) {
+  const [failed, setFailed] = useState<string[]>([])
+  const imageUrl = imageUrls.find((url) => !failed.includes(url)) ?? null
 
   return (
-    <div className="min-w-0" onError={() => setImageIndex((current) => current + 1)}>
-      <KitPlaceCard href={href} title={title} meta={meta} icon={icon} imageUrl={imageUrls[imageIndex] ?? null} />
+    <div
+      className="min-w-0"
+      onError={() => {
+        if (imageUrl) setFailed((current) => [...current, imageUrl])
+      }}
+    >
+      <KitPlaceCard href={href} title={title} meta={meta} icon={icon} tint={tint} imageUrl={imageUrl} />
     </div>
   )
 }

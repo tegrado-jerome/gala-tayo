@@ -1,5 +1,4 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { Sparkles } from 'lucide-react'
 import CompactPagination from '../components/CompactPagination'
 import PlaceCard, { withLiveDetail } from '../components/PlaceCard'
 import { ListingBreadcrumb } from '../components/home/search/SearchComponents'
@@ -10,7 +9,6 @@ import InternalLink from '../components/InternalLink'
 import SeoHead from '../components/SeoHead'
 import { getPlaceCategoryLabel } from '../data/placeCategories'
 import { navigateToPath, scrollViewportToTopInstant } from '../utils/navigation'
-import { openFloatingChat } from '../utils/floatingChat'
 import { getSiteOrigin } from '../utils/seo'
 import { getListingPlaceViewportTop, peekPendingListingRouteCache, readListingRouteCache, restoreListingRouteScroll, writeListingRouteCache } from '../utils/listingRouteCache'
 import { fetchPlaceDetailsBatch, readCachedPlaceDetail } from '../utils/placeDetailCache'
@@ -309,7 +307,6 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
       ]
     : null
 
-  const askAiQuestion = `Help me pick ${categoryLabel.toLowerCase()} places in Metro Manila`
   const relatedGuides = SEO_LANDING_TARGETS.filter((target) => target.category === categorySlug).slice(0, 4)
 
   return (
@@ -331,15 +328,9 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
         ]}
       />
 
-      <header className="mt-5 flex flex-wrap items-end justify-between gap-4">
-        <div className="min-w-0 max-w-[40rem]">
-          <h1 className="g-h1">{categoryLabel} places in Metro Manila</h1>
-          <p className="g-mut mt-2">{categoryLabel} spots across Metro Manila</p>
-        </div>
-        <Button variant="soft" size="sm" onClick={() => openFloatingChat(askAiQuestion)}>
-          <Sparkles aria-hidden="true" />
-          Ask AI
-        </Button>
+      <header className="mt-5 max-w-[40rem]">
+        <h1 className="g-h1">{categoryLabel} places in Metro Manila</h1>
+        <p className="g-mut mt-2">{categoryLabel} spots across Metro Manila</p>
       </header>
 
       {errorMessage ? (

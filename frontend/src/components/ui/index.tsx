@@ -138,6 +138,8 @@ export type PlaceCardProps = {
   icon?: LucideIcon
   meta?: ReactNode
   rating?: number | null
+  reviewCount?: number | null
+  tint?: PlaceCardTint
   pricePerHead?: string | null
   sulit?: number | null
   flag?: ReactNode
@@ -146,23 +148,28 @@ export type PlaceCardProps = {
   className?: string
 }
 
+export type PlaceCardTint = 'tara' | 'sea' | 'warn'
+
+const tintInk: Record<PlaceCardTint, string> = { tara: 'var(--tara-ink)', sea: 'var(--sea)', warn: 'var(--warn)' }
+
 const clampTwoLines: CSSProperties = { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', whiteSpace: 'normal' }
 
-/** `pricePerHead` "Free" renders as "Free entry". A "Sulit" tag shows only for great value (score 8+ of 10). */
-export function PlaceCard({ href, title, imageUrl, icon: FallbackIcon = MapPin, meta, rating, pricePerHead, sulit, flag, saved, onToggleSave, className }: PlaceCardProps) {
+/**
+ * `pricePerHead` "Free" renders as "Free entry". A "Sulit" tag shows only for great value (score 8+ of 10).
+ * The rating hides when `reviewCount` is known and under 3. The tinted icon sits under the image, so loading or failed media is never a grey box.
+ */
+export function PlaceCard({ href, title, imageUrl, icon: FallbackIcon = MapPin, meta, rating, reviewCount, tint = 'warn', pricePerHead, sulit, flag, saved, onToggleSave, className }: PlaceCardProps) {
   const isFree = pricePerHead === 'Free'
   const price = pricePerHead ? (isFree ? 'Free entry' : `${pricePerHead}/head`) : null
   const showSulit = !isFree && sulit != null && sulit >= 8
+  const shownRating = rating && (reviewCount == null || reviewCount >= 3) ? rating : null
   return (
     <InternalLink href={href} className={cx('g-pc', className)}>
-      <div className="g-pc-img" style={imageUrl ? undefined : { background: 'var(--sea-soft)' }}>
-        {imageUrl ? (
-          <img src={imageUrl} alt="" loading="lazy" decoding="async" />
-        ) : (
-          <span className="grid h-full w-full place-items-center" aria-hidden="true">
-            <FallbackIcon size={32} color="var(--sea)" strokeWidth={1.75} />
-          </span>
-        )}
+      <div className="g-pc-img" style={{ background: `var(--${tint}-soft)` }}>
+        <span className="absolute inset-0 grid place-items-center" aria-hidden="true">
+          <FallbackIcon size={28} color={tintInk[tint]} strokeWidth={1.75} opacity={0.45} />
+        </span>
+        {imageUrl ? <img className="relative" src={imageUrl} alt="" loading="lazy" decoding="async" /> : null}
         {flag ? <span className="g-pc-flag">{flag}</span> : null}
         {onToggleSave ? (
           <button
@@ -184,11 +191,16 @@ export function PlaceCard({ href, title, imageUrl, icon: FallbackIcon = MapPin, 
         <span className="g-h3" style={clampTwoLines}>{title}</span>
       </div>
       {meta ? <div className="g-pc-meta">{meta}</div> : null}
-      {price || rating || showSulit ? (
+      {price || shownRating || showSulit ? (
         <div className="g-sulit">
           {price ? <b>{price}</b> : null}
-          {price && rating ? <span aria-hidden="true">·</span> : null}
-          {rating ? <span className="text-[var(--ink)]">★ {rating.toFixed(1)}</span> : null}
+          {price && shownRating ? <span aria-hidden="true">·</span> : null}
+          {shownRating ? (
+            <span className="text-[var(--ink)]">
+              ★ {shownRating.toFixed(1)}
+              {reviewCount != null ? <span className="g-mut"> ({reviewCount.toLocaleString('en-PH')})</span> : null}
+            </span>
+          ) : null}
           {showSulit ? <Tag tone="ok" className="ml-1">Sulit</Tag> : null}
         </div>
       ) : null}

@@ -315,7 +315,7 @@ function SearchPagination({
   )
 }
 
-function AskAiButton({ question, label = 'Ask AI' }: { question: string; label?: string }) {
+function AskAiButton({ question, label = 'Ask AI instead' }: { question: string; label?: string }) {
   return (
     <Button variant="soft" size="sm" onClick={() => openFloatingChat(question)}>
       <Sparkles aria-hidden="true" />
@@ -335,7 +335,6 @@ function SearchResults({
   totalPages,
   heading,
   subheading,
-  askAiQuestion,
   selectedPlaceId,
   isPageLoading,
   mobileView,
@@ -351,7 +350,6 @@ function SearchResults({
   totalPages: number
   heading: string
   subheading: string
-  askAiQuestion: string
   selectedPlaceId: string | null
   isPageLoading: boolean
   mobileView: MobileResultsViewMode
@@ -367,16 +365,15 @@ function SearchResults({
 
   return (
     <>
-      <div className="g-sec-head !mt-8 flex-wrap">
+      <div className="g-sec-head !mt-8">
         <div className="min-w-0">
           <h1 className="g-h2">{heading}</h1>
           {subheading ? <div className="g-sub">{subheading}</div> : null}
         </div>
-        <AskAiButton question={askAiQuestion} />
       </div>
 
       <div className="g-split">
-        <section id="search-results-anchor" className="min-w-0" aria-label="Results">
+        <section id="search-results-anchor" className="min-w-0 pb-[68px] lg:pb-0" aria-label="Results">
           {showMobileMap ? (
             <>
               <MapView
@@ -422,7 +419,7 @@ function SearchResults({
       </div>
 
       <Button
-        className="g-only-mob fixed bottom-[calc(var(--tabbar-h)+28px+env(safe-area-inset-bottom,0px))] left-1/2 z-[5500] -translate-x-1/2 shadow-[var(--sh-3)]"
+        className="g-only-mob fixed bottom-[calc(var(--tabbar-h)+16px+env(safe-area-inset-bottom,0px))] left-1/2 z-[5500] -translate-x-1/2 shadow-[var(--sh-3)]"
         onClick={() => onMobileViewChange(mobileView === 'map' ? 'cards' : 'map')}
       >
         {mobileView === 'map' ? <List aria-hidden="true" /> : <MapIcon aria-hidden="true" />}
@@ -504,7 +501,6 @@ function SearchEmptyState({
 }
 
 export {
-  AskAiButton,
   ListingBreadcrumb,
   ExploreSearchBar,
   QuickFilterChips,

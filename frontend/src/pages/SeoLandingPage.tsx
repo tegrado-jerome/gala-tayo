@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ChevronRight, Sparkles } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import PlaceCard, { withLiveDetail } from '../components/PlaceCard'
 import { ListingBreadcrumb } from '../components/home/search/SearchComponents'
 import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
 import PlaceListingSkeleton from '../components/PlaceListingSkeleton'
 import { Button, Empty, KeyValue, Page, Panel, Row, SectionHead } from '../components/ui'
 import SeoHead from '../components/SeoHead'
-import { openFloatingChat } from '../utils/floatingChat'
 import { fetchPlaceDetailsBatch } from '../utils/placeDetailCache'
 import { getAreaLabelBySlug } from '../data/metroManilaAreas'
 import { getPlaceCategoryLabel } from '../data/placeCategories'
@@ -171,8 +170,6 @@ export default function SeoLandingPage({
     LandingFaqJsonLd({ faqs: metadata.faqs }),
   ]
 
-  const askAiQuestion = `Help me pick from ${metadata.h1}`
-
   return (
     <Page>
       <SeoHead title={metadata.title} description={metadata.description} canonicalPath={metadata.canonicalPath} robots={isThin ? 'noindex,follow' : undefined} jsonLd={jsonLd} />
@@ -197,15 +194,7 @@ export default function SeoLandingPage({
         />
       </Panel>
 
-      <SectionHead
-        title="Recommended places"
-        action={
-          <Button variant="soft" size="sm" onClick={() => openFloatingChat(askAiQuestion)}>
-            <Sparkles aria-hidden="true" />
-            Ask AI
-          </Button>
-        }
-      />
+      <SectionHead title="Recommended places" />
 
       {isLoading ? (
         <PlaceListingSkeleton cardCount={8} helperText={`Loading ${metadata.h1.toLowerCase()}.`} />

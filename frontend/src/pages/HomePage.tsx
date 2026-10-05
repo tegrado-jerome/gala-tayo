@@ -112,7 +112,7 @@ function WeekendRadar() {
 
 function HomePage({ navigationSource }: { navigationSource: NavigationSource }) {
   void navigationSource
-  const { currentProfile, currentUser } = useAppUser()
+  const { currentProfile, currentUser, session } = useAppUser()
   const guestAuth = useGuestAuthPrompt()
   const weather = useManilaWeather()
   const [activeTab, setActiveTab] = useState<TopPicksTab>('all')
@@ -180,15 +180,19 @@ function HomePage({ navigationSource }: { navigationSource: NavigationSource }) 
         <PlanWithAiCard />
       </div>
 
-      <SectionHead
-        title="Your next gala"
-        action={
-          <Button variant="text" href="/gala-plans">
-            All plans
-          </Button>
-        }
-      />
-      <NextGalaCard />
+      {session ? (
+        <>
+          <SectionHead
+            title="Your next gala"
+            action={
+              <Button variant="text" href="/gala-plans">
+                All plans
+              </Button>
+            }
+          />
+          <NextGalaCard />
+        </>
+      ) : null}
 
       {isRaining ? (
         <ListingRail rail={rainSafeRail} badge="Rain-safe" onGuestFavorite={openGuestFavorite} />

@@ -108,6 +108,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false)
   const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] = useState(false)
   const [confirmPasswordTouched, setConfirmPasswordTouched] = useState(false)
+  const [submitAttempted, setSubmitAttempted] = useState(false)
 
   const isCreateMode = mode === 'create_account'
   const isAdminSurface = surface === 'admin'
@@ -121,16 +122,21 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
   const emailIsInvalid = isCreateMode && !emailFormatIsValid
   const passwordIsInvalid = isCreateMode && password.length > 0 && !passwordStrength.meetsComplexity
   const confirmPasswordHasMismatch = isCreateMode && confirmPassword.length > 0 && password !== confirmPassword
-  const isCreateFormValid =
-    isEmailValid &&
-    passwordStrength.meetsComplexity &&
-    confirmPassword.length >= minPasswordLength &&
-    password === confirmPassword
-  const isLoginFormValid = isEmailValid && password.length > 0
+  const fieldErrors = {
+    email: !normalizedEmail ? 'Enter your email.' : !isEmailValid ? 'Enter a valid email address.' : undefined,
+    password: !password
+      ? isCreateMode ? 'Create a password.' : 'Enter your password.'
+      : isCreateMode && !passwordStrength.meetsComplexity
+        ? 'Use uppercase, lowercase, a number, and a symbol.'
+        : undefined,
+    confirm: !isCreateMode ? undefined : !confirmPassword ? 'Type your password again.' : password !== confirmPassword ? 'Passwords do not match.' : undefined,
+  }
+  const shownErrors: Partial<typeof fieldErrors> = submitAttempted ? fieldErrors : {}
+  const emailError = shownErrors.email ?? (emailIsInvalid ? 'Enter a valid email address.' : undefined)
   const allowGoogle = !isAdminSurface
   const allowSignupLink = !isAdminSurface
   const allowForgotPassword = !isCreateMode
-  const isSubmitDisabled = isSubmitting || isGoogleLoading || (isCreateMode ? !isCreateFormValid : !isLoginFormValid)
+  const isSubmitDisabled = isSubmitting || isGoogleLoading
 
   useEffect(() => {
     if (!session) {
@@ -187,38 +193,22 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
     setIsPasswordVisible(false)
     setIsConfirmPasswordVisible(false)
     setConfirmPasswordTouched(false)
+    setSubmitAttempted(false)
     setResendMessage('')
-  }
-
-  const validateForm = (normalizedValue: string) => {
-    if (!normalizedValue) {
-      throw new Error('Email is required.')
-    }
-
-    if (!emailPattern.test(normalizedValue)) {
-      throw new Error('Enter a valid email address.')
-    }
-
-    if (!password) {
-      throw new Error('Password is required.')
-    }
-
-    if (isCreateMode && !getPasswordStrength(password).meetsComplexity) {
-      throw new Error('Use a stronger password with uppercase, lowercase, digit, and special character.')
-    }
-
-    if (isCreateMode && password !== confirmPassword) {
-      throw new Error('Passwords do not match.')
-    }
   }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
-    try {
-      setError('')
-      validateForm(normalizedEmail)
+    setError('')
+    setSubmitAttempted(true)
+    const firstInvalidField = fieldErrors.email ? 'auth-email' : fieldErrors.password ? 'auth-password' : fieldErrors.confirm ? 'auth-confirm-password' : null
+    if (firstInvalidField) {
+      document.getElementById(firstInvalidField)?.focus()
+      return
+    }
 
+    try {
       setIsSubmitting(true)
 
       if (isCreateMode) {
@@ -372,7 +362,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
 
       {resendMessage ? <AuthNotice>{resendMessage}</AuthNotice> : null}
 
-      <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+      <form className="flex flex-col gap-5" onSubmit={handleSubmit} noValidate>
         <div className="g-field">
           <label htmlFor="auth-email">Email</label>
           <input
@@ -383,11 +373,11 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
             required
             autoComplete="email"
             placeholder="you@email.com"
-            aria-invalid={emailIsInvalid || undefined}
-            aria-describedby={emailIsInvalid ? 'auth-email-msg' : undefined}
+            aria-invalid={Boolean(emailError) || undefined}
+            aria-describedby={emailError ? 'auth-email-msg' : undefined}
             className="g-input"
           />
-          {emailIsInvalid ? <span id="auth-email-msg" className="g-hint is-error">Enter a valid email address.</span> : null}
+          {emailError ? <span id="auth-email-msg" className="g-hint is-error">{emailError}</span> : null}
         </div>
 
         <PasswordField
@@ -401,7 +391,8 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
           minLength={isCreateMode ? minPasswordLength : undefined}
           autoComplete={isCreateMode ? 'new-password' : 'current-password'}
           placeholder={isCreateMode ? 'At least 8 characters' : 'Your password'}
-          invalid={passwordIsInvalid}
+          invalid={passwordIsInvalid || Boolean(shownErrors.password)}
+          error={shownErrors.password}
           hint={isCreateMode ? 'Use uppercase, lowercase, a number, and a symbol.' : undefined}
         >
           {isCreateMode ? <PasswordStrengthBar password={password} /> : null}
@@ -420,8 +411,8 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
             minLength={minPasswordLength}
             autoComplete="new-password"
             placeholder="Type it again"
-            invalid={confirmPasswordHasMismatch}
-            error={confirmPasswordTouched && confirmPasswordHasMismatch ? 'Confirm password does not match.' : undefined}
+            invalid={confirmPasswordHasMismatch || Boolean(shownErrors.confirm)}
+            error={shownErrors.confirm ?? (confirmPasswordTouched && confirmPasswordHasMismatch ? 'Passwords do not match.' : undefined)}
           />
         ) : null}
 
