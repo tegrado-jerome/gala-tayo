@@ -30,7 +30,7 @@ const termsSections: LegalSection[] = [
   {
     title: '1. About GalaTayo',
     body: [
-      'GalaTayo is a Metro Manila place discovery and gala planning system created as a personal portfolio and career showcase project. It is currently not commercialized and is intended to demonstrate a real-world place discovery, planning, and community-based system.',
+      'GalaTayo is a place discovery and gala planning system for places around the Philippines, created as a personal portfolio and career showcase project. It is currently not commercialized and is intended to demonstrate a real-world place discovery, planning, and community-based system.',
       'GalaTayo helps users discover places, view place details, save places, create gala plans, interact with community features, and use optional AI-assisted features if available.',
       'GalaTayo does not officially represent, own, operate, or endorse the listed places unless clearly stated.',
     ],
@@ -175,7 +175,7 @@ const privacySections: LegalSection[] = [
   {
     title: '1. Who We Are',
     body: [
-      'GalaTayo is a Metro Manila place discovery and gala planning system created as a personal portfolio and career showcase project. It is currently not commercialized and is intended to demonstrate a real-world place discovery, planning, and community-based system.',
+      'GalaTayo is a place discovery and gala planning system for places around the Philippines, created as a personal portfolio and career showcase project. It is currently not commercialized and is intended to demonstrate a real-world place discovery, planning, and community-based system.',
       `For privacy questions, data requests, content concerns, or rights concerns, contact ${contactEmail}.`,
     ],
   },

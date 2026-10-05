@@ -1,7 +1,8 @@
 import { mkdir, readFile, rm, writeFile } from "fs/promises";
 import path from "path";
-import { CATEGORIES, METRO_MANILA_AREAS } from "../src/functions/filters";
-import { getSeoListingPage, getSeoPlaceSummaries, type SeoListingPage } from "../src/utils/seoPlaces";
+import { CATEGORIES } from "../src/functions/filters";
+import { DESTINATIONS, REGIONS, getDestinationBySlug, isMetroManilaDestination } from "../src/utils/phDestinations";
+import { getSeoListingPage, getSeoPlaceSummaries, type SeoListingPage, type SeoPlaceSummary } from "../src/utils/seoPlaces";
 
 const AREA_PAGE_SIZE = 10;
 const CATEGORY_PAGE_SIZE = 12;
@@ -71,8 +72,18 @@ async function generateTarget(target: ListingTarget) {
   return firstPage.totalPages;
 }
 
-async function writeCompactPlaces() {
-  const places = await getSeoPlaceSummaries();
+// Metro Manila cities always get listings (their pages predate the nationwide rollout);
+// other destinations and regions only once they have places.
+function getListingAreaSlugs(places: SeoPlaceSummary[]) {
+  const placeAreaSlugs = new Set(places.map((place) => place.areaSlug).filter((slug) => getDestinationBySlug(slug)));
+  const metroManilaSlugs = DESTINATIONS.filter((destination) => isMetroManilaDestination(destination)).map((destination) => destination.slug);
+  const regionSlugs = REGIONS
+    .filter((region) => region.destinations.some((destination) => placeAreaSlugs.has(destination.slug)))
+    .map((region) => region.slug);
+  return [...new Set([...metroManilaSlugs, ...placeAreaSlugs, ...regionSlugs])];
+}
+
+async function writeCompactPlaces(places: SeoPlaceSummary[]) {
   const compact = places.map((place) => ({
     id: place.id,
     slug: place.slug,
@@ -92,7 +103,8 @@ async function writeCompactPlaces() {
 
 async function main() {
   const guides = JSON.parse(await readFile(GUIDES_FILE, "utf8")) as GuideTarget[];
-  const areas = METRO_MANILA_AREAS.filter((area) => area.id !== "all").map((area) => area.id);
+  const places = await getSeoPlaceSummaries();
+  const areas = getListingAreaSlugs(places);
   const categories = CATEGORIES.map((category) => category.id);
   const targets: ListingTarget[] = [
     ...areas.map((areaSlug) => ({ areaSlug, category: null, goodFor: null, pageSize: AREA_PAGE_SIZE })),
@@ -120,7 +132,7 @@ async function main() {
     );
   }
 
-  await writeCompactPlaces();
+  await writeCompactPlaces(places);
 
   await writeFile(path.join(OUTPUT_DIR, "manifest.json"), `${JSON.stringify({
     generatedAt: new Date().toISOString(),

@@ -10,6 +10,7 @@ import { Button, Page, Tag } from '../components/ui'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import MinimalBackNav from '../components/navigation/MinimalBackNav'
 import MapView from '../components/MapView'
+import { METRO_MANILA_CENTER, destinations, resolveDestination } from '../data/destinations'
 import { navigateToPath } from '../utils/navigation'
 import { submitPlaceSubmission } from '../utils/placeSubmissionsApi'
 import {
@@ -72,7 +73,6 @@ function toTitleCase(value: string) {
 
 const crowdOptions = ['Low', 'Moderate', 'Busy']
 const indoorOutdoorOptions = ['Indoor', 'Outdoor', 'Mixed']
-const metroManilaCenter: [number, number] = [14.5995, 120.9842]
 
 function splitList(value: string) {
   return value
@@ -97,8 +97,9 @@ function getLocationParts(address?: Record<string, string | undefined>) {
     address?.state_district ||
     address?.county ||
     ''
+  const destination = resolveDestination(city, address?.province || address?.state)
 
-  return { area, city }
+  return { area, city: destination?.name ?? city }
 }
 
 function formatCoordinates(value: [number, number]) {
@@ -171,7 +172,7 @@ function Field({ label, optional, className, children }: { label: string; option
 
 function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
   const [draft, setDraft] = useState<PlaceDraft>(emptyDraft)
-  const [coordinates, setCoordinates] = useState<[number, number]>(metroManilaCenter)
+  const [coordinates, setCoordinates] = useState<[number, number]>(METRO_MANILA_CENTER)
   const [shouldRecenter, setShouldRecenter] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
@@ -286,6 +287,14 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
     }))
   }
 
+  // Until a pin is placed, typing a known city moves the map there.
+  const recenterOnCity = (city: string) => {
+    const destination = resolveDestination(city)
+    if (!destination || coordinates[0] !== METRO_MANILA_CENTER[0] || coordinates[1] !== METRO_MANILA_CENTER[1]) return
+    setShouldRecenter(true)
+    setCoordinates(destination.center)
+  }
+
   const handleCoordinateChange = (nextCoordinates: [number, number]) => {
     setShouldRecenter(false)
     setCoordinates(nextCoordinates)
@@ -375,7 +384,7 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
         description: result.message || 'Your place was submitted for admin review.',
       })
       setDraft(emptyDraft)
-      setCoordinates(metroManilaCenter)
+      setCoordinates(METRO_MANILA_CENTER)
       setSelectedPhotos([])
       setSearchQuery('')
       setSearchResults([])
@@ -493,7 +502,21 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
                   <textarea value={draft.address} onChange={(event) => updateDraft('address', event.target.value.slice(0, 500))} rows={3} required className="g-input" />
                 </Field>
                 <Field label="City">
-                  <input value={draft.city} onChange={(event) => updateDraft('city', event.target.value.slice(0, 120))} required className="g-input" />
+                  <input
+                    value={draft.city}
+                    onChange={(event) => updateDraft('city', event.target.value.slice(0, 120))}
+                    onBlur={() => recenterOnCity(draft.city)}
+                    list="submission-city-options"
+                    required
+                    className="g-input"
+                  />
+                  <datalist id="submission-city-options">
+                    {destinations.map((destination) => (
+                      <option key={destination.slug} value={destination.name}>
+                        {destination.provinceName}
+                      </option>
+                    ))}
+                  </datalist>
                 </Field>
                 <Field label="Area / barangay">
                   <input value={draft.area} onChange={(event) => updateDraft('area', event.target.value.slice(0, 120))} className="g-input" />

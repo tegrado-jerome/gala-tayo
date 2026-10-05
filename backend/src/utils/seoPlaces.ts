@@ -1,11 +1,12 @@
 import { hiddenSlugFilter } from "./galaWorthy";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
-import { CATEGORIES, METRO_MANILA_AREAS } from "../functions/filters";
+import { CATEGORIES } from "../functions/filters";
 import { PUBLIC_PLACE_COLUMNS } from "../domain/places";
 import { deleteJsonCacheValue, getJsonCacheValue, setJsonCacheValue } from "../services/redisCacheService";
 import { buildImageUrl } from "./r2UrlResolver";
 import { createBaseSlug } from "./slug";
 import goodForTags from "../data/goodForTags.json";
+import { DESTINATIONS, getDestinationBySlug, getLocationNamesForAreaSlug, getRegionBySlug, resolveDestination } from "./phDestinations";
 
 type PlaceRow = Record<string, unknown>;
 
@@ -77,11 +78,6 @@ const SEO_PLACE_SUMMARIES_CACHE_TTL_SECONDS = 60 * 10;
 const SEO_LISTING_PAGE_CACHE_PREFIX = "seo:listings:v3";
 const SEO_LISTING_PAGE_CACHE_TTL_SECONDS = 60 * 10;
 
-const AREA_NAME_OVERRIDES: Record<string, string> = {
-  "las-pinas": "Las Pinas",
-  paranaque: "Paranaque",
-};
-
 function cleanString(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
@@ -105,39 +101,6 @@ function cleanStringArray(value: unknown): string[] {
     : [];
 }
 
-function normalizeText(value: string): string {
-  return value
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/&/g, " and ")
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim();
-}
-
-function buildAreaLookup() {
-  const lookup = new Map<string, { slug: string; name: string }>();
-
-  for (const area of METRO_MANILA_AREAS) {
-    if (area.id === "all") {
-      continue;
-    }
-
-    lookup.set(normalizeText(area.id), {
-      slug: area.id,
-      name: AREA_NAME_OVERRIDES[area.id] ?? area.name,
-    });
-    lookup.set(normalizeText(AREA_NAME_OVERRIDES[area.id] ?? area.name), {
-      slug: area.id,
-      name: AREA_NAME_OVERRIDES[area.id] ?? area.name,
-    });
-  }
-
-  return lookup;
-}
-
-const areaLookup = buildAreaLookup();
-
 function sanitizeCachePart(value: string | null | undefined): string {
   return (value ?? "")
     .trim()
@@ -159,16 +122,8 @@ function getAreaNamesForQuery(areaSlug: string | null): string[] {
     return [];
   }
 
-  const area = METRO_MANILA_AREAS.find((candidate) => candidate.id === areaSlug);
-  const areaMeta = areaLookup.get(normalizeText(areaSlug));
-  return Array.from(new Set([
-    areaSlug,
-    area?.name,
-    AREA_NAME_OVERRIDES[areaSlug],
-    areaMeta?.name,
-  ]
-    .map((value) => cleanString(value))
-    .filter((value): value is string => Boolean(value))));
+  const names = getLocationNamesForAreaSlug(areaSlug);
+  return names.length > 0 ? names : [areaSlug];
 }
 
 function escapePostgrestString(value: string): string {
@@ -209,18 +164,12 @@ function buildSeoListingPageCacheKey(args: {
 }
 
 export function resolveAreaSlug(city: string | null, area: string | null): { slug: string; name: string } {
-  const candidates = [city, area]
-    .map((value) => cleanString(value))
-    .filter((value): value is string => Boolean(value));
-
-  for (const candidate of candidates) {
-    const match = areaLookup.get(normalizeText(candidate));
-    if (match) {
-      return match;
-    }
+  const destination = resolveDestination(city, area);
+  if (destination) {
+    return { slug: destination.slug, name: destination.name };
   }
 
-  const fallbackSource = candidates[0] ?? "Metro Manila";
+  const fallbackSource = [city, area].map((value) => cleanString(value)).find((value): value is string => Boolean(value)) ?? "Metro Manila";
   return {
     slug: createBaseSlug(fallbackSource) || "metro-manila",
     name: fallbackSource,
@@ -387,16 +336,12 @@ export async function getSeoAreaSummaries(places?: SeoPlaceSummary[]): Promise<S
   const resolvedPlaces = places ?? (await getSeoPlaceSummaries());
   const counts = new Map<string, SeoAreaSummary>();
 
-  for (const area of METRO_MANILA_AREAS) {
-    if (area.id === "all") {
-      continue;
-    }
-
-    counts.set(area.id, {
-      slug: area.id,
-      name: AREA_NAME_OVERRIDES[area.id] ?? area.name,
+  for (const destination of DESTINATIONS) {
+    counts.set(destination.slug, {
+      slug: destination.slug,
+      name: destination.name,
       placeCount: 0,
-      canonicalPath: `/places/${encodeURIComponent(area.id)}`,
+      canonicalPath: `/places/${encodeURIComponent(destination.slug)}`,
     });
   }
 
@@ -426,17 +371,20 @@ export async function getSeoAreaPage(areaSlug: string): Promise<SeoAreaPage | nu
     return null;
   }
 
-  const areaMeta = areaLookup.get(normalizeText(normalizedAreaSlug));
-  if (!areaMeta) {
+  const allPlaces = await getSeoPlaceSummaries();
+  const region = getRegionBySlug(normalizedAreaSlug);
+  const regionSlugs = new Set(region?.destinations.map((destination) => destination.slug) ?? []);
+  const places = allPlaces.filter((place) => (region ? regionSlugs.has(place.areaSlug) : place.areaSlug === normalizedAreaSlug));
+  const areaName = getDestinationBySlug(normalizedAreaSlug)?.name ?? region?.name ?? (places[0] ? resolveAreaSlug(places[0].city, places[0].area).name : null);
+
+  if (!areaName) {
     return null;
   }
-
-  const places = (await getSeoPlaceSummaries()).filter((place) => place.areaSlug === normalizedAreaSlug);
 
   return {
     area: {
       slug: normalizedAreaSlug,
-      name: areaMeta.name,
+      name: areaName,
       placeCount: places.length,
       canonicalPath: `/places/${encodeURIComponent(normalizedAreaSlug)}`,
     },

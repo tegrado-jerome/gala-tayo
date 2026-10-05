@@ -294,7 +294,7 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
           '@context': 'https://schema.org',
           '@type': 'CollectionPage',
           name: `${categoryLabel} Places | ${BRAND_NAME}`,
-          description: `${PRODUCT_NAME} helps you browse ${categoryLabel.toLowerCase()} places across Metro Manila and open a page for each one with budget, best time to visit and location.`,
+          description: `${PRODUCT_NAME} helps you browse ${categoryLabel.toLowerCase()} places around the Philippines and open a page for each one with budget, best time to visit and location.`,
           url: `${getSiteOrigin()}/places/categories/${encodeURIComponent(categorySlug)}`,
         },
         {
@@ -325,8 +325,8 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
   return (
     <Page>
       <SeoHead
-        title={`${categoryLabel} Places in Metro Manila | ${BRAND_NAME}`}
-        description={`${PRODUCT_NAME} helps you explore ${categoryLabel.toLowerCase()} places across Metro Manila, compare local options, and open detailed place pages for planning.`}
+        title={`${categoryLabel} Places in the Philippines | ${BRAND_NAME}`}
+        description={`${PRODUCT_NAME} helps you explore ${categoryLabel.toLowerCase()} places around the Philippines, compare local options, and open detailed place pages for planning.`}
         canonicalPath={`/places/categories/${encodeURIComponent(categorySlug)}`}
         robots={shouldIndexCategoryPage ? 'index,follow' : 'noindex,follow'}
         jsonLd={jsonLd}
@@ -342,7 +342,7 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
       />
 
       <header className="mt-5 max-w-[40rem]">
-        <h1 className="g-h1">{categoryLabel} places in Metro Manila</h1>
+        <h1 className="g-h1">{categoryLabel} places in the Philippines</h1>
         <p className="g-mut mt-2 min-h-[1.5em]">{payload.total > 0 ? formatCategoryCount(categorySlug, categoryLabel, payload.total) : null}</p>
       </header>
 

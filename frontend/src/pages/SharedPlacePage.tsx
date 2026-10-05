@@ -4,6 +4,7 @@ import SeoHead from '../components/SeoHead'
 import { Button, Empty, Page, Skeleton } from '../components/ui'
 import { replaceWithPath } from '../utils/navigation'
 import { getCanonicalPlacePath, getCategoryBreadcrumbMeta, getHistoryState, resolveAreaMeta } from '../utils/routes'
+import { getDestinationBySlug } from '../data/destinations'
 import { buildPlaceDescription, buildPlaceFaqSchema, getStructuredPlaceType } from '../utils/placeSeo'
 import { mapBackendPlaceToCardData } from '../utils/placeMapping'
 import { formatLabelFromSlug } from '../utils/routes'
@@ -298,7 +299,7 @@ export default function SharedPlacePage({
                 '@type': 'PostalAddress',
                 addressLocality: place.city || areaMeta.name,
                 streetAddress: place.address || undefined,
-                addressRegion: 'Metro Manila',
+                addressRegion: getDestinationBySlug(areaMeta.slug)?.provinceName,
                 addressCountry: 'PH',
               },
               image: place.imageUrl || place.curatedImageUrls?.[0] || undefined,

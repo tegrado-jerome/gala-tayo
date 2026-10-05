@@ -625,7 +625,7 @@ function PlaceDetailView({
     cleanString(place.city) ||
     'Not available'
   const categoryLabel = cleanString(place.category) || 'Place'
-  const locationLabel = formatPlaceLocation({ area: cleanString(place.localArea) || cleanString(place.area), city: cleanString(place.city) }) || 'Metro Manila'
+  const locationLabel = formatPlaceLocation({ area: cleanString(place.localArea) || cleanString(place.area), city: cleanString(place.city) }) || 'the Philippines'
   const goodFor = uniqueList(place.good_for ?? [])
   const priceBadgeLabel = buildPriceBadgeLabel(place.budget_min, place.price_level, place.budget_notes, place.category, place.name)
   const directionsUrl = getDirectionsUrl(place)
@@ -654,7 +654,7 @@ function PlaceDetailView({
   const fallbackFaqItems = [
     {
       question: `What is ${place.name} best for?`,
-      answer: goodFor.length > 0 ? `${place.name} is best for ${goodFor.map(titleCase).join(', ')}.` : `${place.name} works best for a casual Metro Manila gala.`,
+      answer: goodFor.length > 0 ? `${place.name} is best for ${goodFor.map(titleCase).join(', ')}.` : `${place.name} works best for a casual gala.`,
     },
     {
       question: `What should I know before going to ${place.name}?`,

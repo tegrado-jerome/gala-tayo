@@ -134,7 +134,7 @@ function PassportPage({ session }: { session: Session }) {
           <ProfileAvatar profile={avatarProfile} size="lg" />
           <p className="g-eyebrow mt-3">{currentProfile?.username ? `@${currentProfile.username}` : 'Your passport'}</p>
           <h1 className="g-h1 mt-1">Pasyal Passport</h1>
-          {passport ? <p className="g-sm g-mut mt-1">{collected} of {plural(total, 'Metro city', 'Metro cities')} stamped</p> : null}
+          {passport ? <p className="g-sm g-mut mt-1">{collected} of {plural(total, 'city', 'cities')} stamped</p> : null}
         </header>
 
         {passport ? (

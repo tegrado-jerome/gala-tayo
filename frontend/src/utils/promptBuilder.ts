@@ -44,7 +44,7 @@ export const promptBuilderSections: PromptBuilderSection[] = [
   {
     id: 'location',
     title: 'Where do you want to go?',
-    chips: ['Makati', 'BGC / Taguig', 'Manila', 'Quezon City', 'Pasay', 'Pasig', 'Mandaluyong', 'San Juan', 'Paranaque', 'Anywhere in Metro Manila', 'Near me'],
+    chips: ['Makati', 'BGC / Taguig', 'Manila', 'Quezon City', 'Pasay', 'Pasig', 'Mandaluyong', 'San Juan', 'Paranaque', 'Anywhere in Metro Manila', 'Tagaytay', 'Baguio', 'La Union', 'Near me'],
     customLabel: 'Custom location',
     helperText: 'Type a city, mall, landmark, station, or area if it is not listed.',
     placeholder: 'Type location here...',
@@ -125,7 +125,7 @@ export function buildAiPrompt(state: PromptBuilderState): string {
   const detailText = details.map(([label, value]) => `${label}: ${value}`).join('. ')
 
   const prompt = [
-    'Help me plan a practical gala in Metro Manila.',
+    getValue(state, 'location') ? 'Help me plan a practical gala in the Philippines.' : 'Help me plan a practical gala in Metro Manila.',
     detailText,
     'Recommend the best area or place choices for this.',
     'Give 3 strong options with why each fits, rough budget, and best time to go.',

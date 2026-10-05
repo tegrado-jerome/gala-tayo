@@ -227,8 +227,8 @@ function renderRouteContent(descriptor: RouteDescriptor, inputs: RouteInputs) {
       return (
         <>
           <SeoHead
-            title={`Metro Manila Places, Date Spots, and Gala Ideas | ${BRAND_NAME}`}
-            description={`${BRAND_NAME} helps you discover Metro Manila places, date spots, barkada hangouts, family-friendly plans, and searchable local recommendations.`}
+            title={`Places to Visit in the Philippines, Date Spots, and Gala Ideas | ${BRAND_NAME}`}
+            description={`${BRAND_NAME} helps you discover gala-worthy places around the Philippines, date spots, barkada hangouts, family-friendly plans, and searchable local recommendations.`}
             canonicalPath="/home"
             jsonLd={buildBrandJsonLd()}
           />
@@ -238,7 +238,7 @@ function renderRouteContent(descriptor: RouteDescriptor, inputs: RouteInputs) {
     case 'search':
       return (
         <>
-          <SeoHead title="Search | GalaTayo" description="Search Metro Manila places on GalaTayo." canonicalPath="/search" robots="noindex,follow" />
+          <SeoHead title="Search | GalaTayo" description="Search places around the Philippines on GalaTayo." canonicalPath="/search" robots="noindex,follow" />
           <SearchPage navigationSource={navigationSource} />
         </>
       )
@@ -264,14 +264,14 @@ function renderRouteContent(descriptor: RouteDescriptor, inputs: RouteInputs) {
       }
       return (
         <>
-          <SeoHead title="Pasyal Passport | GalaTayo" description="Your Metro Manila city stamps and weekly gala streak." canonicalPath="/passport" robots="noindex,follow" />
+          <SeoHead title="Pasyal Passport | GalaTayo" description="Your city stamps from around the Philippines and weekly gala streak." canonicalPath="/passport" robots="noindex,follow" />
           <PassportPage session={session} />
         </>
       )
     case 'plan-with-ai':
       return (
         <>
-          <SeoHead title="Plan with AI | GalaTayo" description="Describe your gala in one sentence and get a full-day Metro Manila plan." canonicalPath="/plan-with-ai" robots="noindex,follow" />
+          <SeoHead title="Plan with AI | GalaTayo" description="Describe your gala in one sentence and get a full-day gala plan." canonicalPath="/plan-with-ai" robots="noindex,follow" />
           <PlanWithAiPage initialPrompt={descriptor.initialPrompt} />
         </>
       )

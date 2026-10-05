@@ -4,7 +4,7 @@ import HomeDiscover from '../components/home/HomeDiscover'
 import InternalLink from '../components/InternalLink'
 import SeoHead from '../components/SeoHead'
 import { AvatarStack, Page, SectionHead } from '../components/ui'
-import { metroManilaAreas } from '../data/metroManilaAreas'
+import { metroManilaAreas } from '../data/destinations'
 import { displayCityName } from '../utils/cityName'
 import type { NavigationSource } from '../utils/navigationLoading'
 import { BRAND_NAME, SEO_LANDING_TARGETS, buildBrandJsonLd } from '../utils/seoLandingPages'
@@ -42,8 +42,8 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
   return (
     <>
       <SeoHead
-        title={`Discover Metro Manila Places and Gala Ideas | ${BRAND_NAME}`}
-        description={`${BRAND_NAME} helps you discover Metro Manila places by city, category, budget, and vibe, with AI help to plan your next gala.`}
+        title={`Discover Places Around the Philippines and Gala Ideas | ${BRAND_NAME}`}
+        description={`${BRAND_NAME} helps you discover gala-worthy places around the Philippines by city, category, budget, and vibe, with AI help to plan your next gala.`}
         robots="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"
         canonicalPath="/"
         openGraphType="website"
@@ -106,7 +106,7 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
           </summary>
           <div className="mt-2 flex flex-col gap-2">
             <p>
-              Gala Tayo (written GalaTayo) is a free Metro Manila place discovery app. "Gala tayo" is Filipino for "let's go out", and that is
+              Gala Tayo (written GalaTayo) is a free place discovery app for gala-worthy places around the Philippines. "Gala tayo" is Filipino for "let's go out", and that is
               the whole idea: find a place, invite the barkada, and go.
             </p>
             <p>
@@ -114,8 +114,8 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
               questions. You can browse by city or category, read curated guides, or ask the AI planner for a full-day itinerary with a budget.
             </p>
             <p>
-              {BRAND_NAME} is built in the Philippines for people planning dates, barkada hangouts, family outings, and solo gala days across Metro
-              Manila.{' '}
+              {BRAND_NAME} is built in the Philippines for people planning dates, barkada hangouts, family outings, and solo gala days, from Metro
+              Manila to the provinces.{' '}
               <InternalLink href="/about" className="text-[var(--ink)] underline underline-offset-2">
                 Read more about Gala Tayo
               </InternalLink>
@@ -123,7 +123,7 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
             </p>
           </div>
 
-          <h3 className="mt-5 font-semibold text-[var(--ink)]">Browse by city</h3>
+          <h3 className="mt-5 font-semibold text-[var(--ink)]">Browse Metro Manila by city</h3>
           <ul className="g-chips mt-2">
             {metroManilaAreas.map((area) => (
               <li key={area.slug}>
@@ -132,6 +132,11 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
                 </InternalLink>
               </li>
             ))}
+            <li>
+              <InternalLink href="/places" className="g-chip">
+                All destinations
+              </InternalLink>
+            </li>
           </ul>
 
           <h3 className="mt-5 font-semibold text-[var(--ink)]">Hindi makapag-decide?</h3>
@@ -163,7 +168,7 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
               </InternalLink>
             ))}
           </nav>
-          <span className="g-sm g-mut">Made in Metro Manila</span>
+          <span className="g-sm g-mut">Made in the Philippines</span>
         </footer>
       </Page>
     </>

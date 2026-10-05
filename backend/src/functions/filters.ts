@@ -1,4 +1,5 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
+import { DESTINATIONS } from "../utils/phDestinations";
 
 export type Category = {
   id: string;
@@ -7,10 +8,12 @@ export type Category = {
   searchTerms: string[];
 };
 
-export type MetroManilaArea = {
+export type AreaOption = {
   id: string;
   name: string;
   type: "all" | "city" | "municipality";
+  region?: string;
+  province?: string;
 };
 
 export type GoodForOption = {
@@ -116,25 +119,16 @@ export const GOOD_FOR_OPTIONS: GoodForOption[] = [
   },
 ];
 
-export const METRO_MANILA_AREAS: MetroManilaArea[] = [
+// NCR first, then the rest of the country region by region.
+export const AREAS: AreaOption[] = [
   { id: "all", name: "All areas", type: "all" },
-  { id: "caloocan", name: "Caloocan", type: "city" },
-  { id: "las-pinas", name: "Las Piñas", type: "city" },
-  { id: "makati", name: "Makati", type: "city" },
-  { id: "malabon", name: "Malabon", type: "city" },
-  { id: "mandaluyong", name: "Mandaluyong", type: "city" },
-  { id: "manila", name: "Manila", type: "city" },
-  { id: "marikina", name: "Marikina", type: "city" },
-  { id: "muntinlupa", name: "Muntinlupa", type: "city" },
-  { id: "navotas", name: "Navotas", type: "city" },
-  { id: "paranaque", name: "Parañaque", type: "city" },
-  { id: "pasay", name: "Pasay", type: "city" },
-  { id: "pasig", name: "Pasig", type: "city" },
-  { id: "quezon-city", name: "Quezon City", type: "city" },
-  { id: "san-juan", name: "San Juan", type: "city" },
-  { id: "taguig", name: "Taguig", type: "city" },
-  { id: "valenzuela", name: "Valenzuela", type: "city" },
-  { id: "pateros", name: "Pateros", type: "municipality" },
+  ...DESTINATIONS.map((destination) => ({
+    id: destination.slug,
+    name: destination.label,
+    type: destination.type,
+    region: destination.regionName,
+    province: destination.provinceName,
+  })),
 ];
 
 export function findCategoryById(id: string | undefined): Category | null {
@@ -145,12 +139,12 @@ export function findCategoryById(id: string | undefined): Category | null {
   return CATEGORIES.find((category) => category.id === id) ?? null;
 }
 
-export function findAreaById(id: string | undefined): MetroManilaArea | null {
+export function findAreaById(id: string | undefined): AreaOption | null {
   if (!id || id === "all") {
     return null;
   }
 
-  return METRO_MANILA_AREAS.find((area) => area.id === id) ?? null;
+  return AREAS.find((area) => area.id === id) ?? null;
 }
 
 export function findGoodForById(id: string | undefined): GoodForOption | null {
@@ -171,7 +165,7 @@ export async function filters(
     status: 200,
     jsonBody: {
       categories: CATEGORIES,
-      areas: METRO_MANILA_AREAS,
+      areas: AREAS,
       goodForOptions: GOOD_FOR_OPTIONS,
     },
   };

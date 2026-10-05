@@ -10,7 +10,7 @@ import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { getJsonCacheValue, setJsonCacheValue } from "../services/redisCacheService";
 import { checkEndpointRateLimit } from "../utils/redisRateLimit";
 import { generateSearchCacheKey } from "../utils/cacheKey";
-import { validateMetroManilaSearchQuery, type SearchValidationStatus } from "../utils/searchQueryValidation";
+import { validateSearchQuery, type SearchValidationStatus } from "../utils/searchQueryValidation";
 import { findAreaById, findCategoryById, findGoodForById } from "./filters";
 import {
   type SearchRequestBody,
@@ -252,7 +252,7 @@ export async function search(
     const hasSelectedFilters = categoryId !== "all" || areaId !== "all" || goodForId !== "all" || budget !== "any";
     const hasNearbySearch = Boolean(nearbySearch);
     const isBroadDiscoverySearch = false;
-    const queryValidation = validateMetroManilaSearchQuery({ query, hasSelectedFilters, hasNearbySearch, allowBroadDiscovery: isBroadDiscoverySearch });
+    const queryValidation = validateSearchQuery({ query, hasSelectedFilters, hasNearbySearch, allowBroadDiscovery: isBroadDiscoverySearch });
 
     if (categoryId !== "all" && !selectedCategory) return { status: 400, jsonBody: { message: "Invalid category filter." } };
     if (areaId !== "all" && !selectedArea) return { status: 400, jsonBody: { message: "Invalid area filter." } };

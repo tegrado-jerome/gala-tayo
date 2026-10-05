@@ -13,7 +13,7 @@ import { Button, Empty, Page, Row, SectionHead } from '../components/ui'
 import '../design/misc.css'
 import SeoHead from '../components/SeoHead'
 import { fetchPlaceDetailsBatch } from '../utils/placeDetailCache'
-import { getAreaLabelBySlug } from '../data/metroManilaAreas'
+import { getAreaLabelBySlug } from '../data/destinations'
 import { getPlaceCategoryLabel } from '../data/placeCategories'
 import { getSiteOrigin } from '../utils/seo'
 import { getSeoListingPage, mapSeoPlaceToCard, type SeoPlaceSummary } from '../utils/seoApi'
@@ -137,10 +137,18 @@ export default function SeoLandingPage({
     )
   }
 
-  const areaName = target.displayAreaName || getAreaLabelBySlug(target.areaSlug) || 'Metro Manila'
+  const areaName = target.displayAreaName || getAreaLabelBySlug(target.areaSlug) || 'the Philippines'
   const categoryLabel = target.category ? getPlaceCategoryLabel(target.category) : null
   const relatedTargets = getRelatedLandingTargets(target)
-  const seeAllHref = target.goodFor ? null : target.category && !target.areaSlug ? `/places/categories/${target.category}` : target.areaSlug && !target.category ? `/places/${target.areaSlug}` : null
+  const seeAllHref = target.goodFor
+    ? null
+    : target.category && target.areaSlug
+      ? `/places/${target.areaSlug}?category=${target.category}`
+      : target.category
+        ? `/places/categories/${target.category}`
+        : target.areaSlug
+          ? `/places/${target.areaSlug}`
+          : null
   const isThin = !isLoading && !errorMessage && total < MIN_INDEXABLE_GUIDE_PLACES
   const budgets = items.map((item) => item.budgetMin).filter((value): value is number => typeof value === 'number' && value > 0)
   const minBudget = budgets.length ? Math.min(...budgets) : 0

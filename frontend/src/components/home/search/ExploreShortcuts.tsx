@@ -8,7 +8,7 @@ import { Row } from '../../ui'
 const shortcuts = [
   { href: '/plan-with-ai', title: 'Plan with AI', sub: 'Turn one sentence into a full day', icon: Sparkles },
   { href: '/ask-ai/maps', title: 'AI map', sub: "Ask the map what's near you", icon: MapIcon },
-  { href: '/places', title: 'Browse by city', sub: 'All Metro Manila cities', icon: MapPin },
+  { href: '/places', title: 'Browse by city', sub: 'Metro Manila and beyond', icon: MapPin },
   { href: '/places/categories', title: 'Browse by category', sub: 'Cafes, food, parks, museums and more', icon: LayoutGrid },
 ]
 

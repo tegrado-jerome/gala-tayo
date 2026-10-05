@@ -1,4 +1,4 @@
-import { getAreaLabelBySlug } from '../data/metroManilaAreas'
+import { getAreaLabelBySlug } from '../data/destinations'
 import { getPlaceCategoryLabel } from '../data/placeCategories'
 import { getPublicSiteOrigin } from './site'
 import seoGuides from '../data/seoGuides.json'
@@ -29,7 +29,7 @@ const BRAND_NAME = 'GalaTayo'
 const BRAND_ALTERNATE_NAME = 'Gala Tayo'
 const PRODUCT_NAME = 'GalaTayo'
 const BRAND_DESCRIPTION =
-  'GalaTayo (Gala Tayo) is a Metro Manila place discovery and planning app. Browse places by city, category, budget, and vibe, then plan your next gala with friends.'
+  'GalaTayo (Gala Tayo) is a place discovery and planning app for gala-worthy places around the Philippines. Browse places by city, category, budget, and vibe, then plan your next gala with friends.'
 
 function buildBrandJsonLd() {
   const origin = getPublicSiteOrigin()
@@ -58,7 +58,7 @@ function buildBrandJsonLd() {
       description: BRAND_DESCRIPTION,
       url: `${origin}/`,
       logo: `${origin}/favicon.png`,
-      areaServed: { '@type': 'Place', name: 'Metro Manila, Philippines' },
+      areaServed: { '@type': 'Country', name: 'Philippines' },
     },
   ]
 }
@@ -126,7 +126,7 @@ function getLandingTargetBySlug(slug: string) {
 }
 
 function getDisplayAreaName(target: SeoLandingTarget) {
-  return target.displayAreaName || getAreaLabelBySlug(target.areaSlug) || 'Metro Manila'
+  return target.displayAreaName || getAreaLabelBySlug(target.areaSlug) || 'the Philippines'
 }
 
 function buildLandingHeading(target: SeoLandingTarget) {
@@ -148,9 +148,9 @@ function buildLandingHeading(target: SeoLandingTarget) {
     return `${goodForLabel} places in ${areaName}`
   }
   if (categoryLabel && goodForLabel) {
-    return `${categoryLabel} for ${goodForLabel} plans in Metro Manila`
+    return `${categoryLabel} for ${goodForLabel} plans around the Philippines`
   }
-  return 'Metro Manila guides'
+  return 'GalaTayo guides'
 }
 
 function buildLandingMetadata(target: SeoLandingTarget): SeoLandingMetadata {
@@ -160,7 +160,7 @@ function buildLandingMetadata(target: SeoLandingTarget): SeoLandingMetadata {
   const h1 = buildLandingHeading(target)
   const categoryPhrase = categoryLabel ? categoryLabel.toLowerCase() : 'places'
   const audiencePhrase = goodForLabel ? `${goodForLabel} plans` : 'gala plans'
-  const scopedAreaName = target.areaSlug ? areaName : 'Metro Manila'
+  const scopedAreaName = target.areaSlug ? areaName : 'the Philippines'
   const canonicalPath = getLandingPath(target.slug)
 
   let summary = `Explore ${h1.toLowerCase()} on ${BRAND_NAME}.`
@@ -194,7 +194,7 @@ function buildLandingMetadata(target: SeoLandingTarget): SeoLandingMetadata {
     faqs: [
       {
         question: `What can I find on ${h1}?`,
-        answer: `This guide collects ${categoryPhrase} recommendations${target.areaSlug ? ` in ${scopedAreaName}` : ' across Metro Manila'} and highlights useful context like budget, audience fit, commute notes, and nearby areas.`,
+        answer: `This guide collects ${categoryPhrase} recommendations${target.areaSlug ? ` in ${scopedAreaName}` : ' around the Philippines'} and highlights useful context like budget, audience fit, commute notes, and nearby areas.`,
       },
       {
         question: `How does ${BRAND_NAME} choose places for this guide?`,
@@ -202,7 +202,7 @@ function buildLandingMetadata(target: SeoLandingTarget): SeoLandingMetadata {
       },
       {
         question: `What types of places are featured in ${h1}?`,
-        answer: `This guide features ${categoryPhrase}${target.areaSlug ? ` available in ${scopedAreaName}` : ' across Metro Manila'}, with a focus on practical details like budget range, commute access, parking availability, and audience fit.`,
+        answer: `This guide features ${categoryPhrase}${target.areaSlug ? ` available in ${scopedAreaName}` : ' around the Philippines'}, with a focus on practical details like budget range, commute access, parking availability, and audience fit.`,
       },
       {
         question: `Is ${h1} updated regularly?`,

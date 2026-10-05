@@ -4,13 +4,13 @@ import PlaceImage from '../components/discover/PlaceImage'
 import { ListingBreadcrumb } from '../components/home/search/SearchComponents'
 import InternalLink from '../components/InternalLink'
 import SeoHead from '../components/SeoHead'
-import { Page, SectionHead } from '../components/ui'
-import { metroManilaAreas } from '../data/metroManilaAreas'
+import { Button, Page, SectionHead } from '../components/ui'
+import { METRO_MANILA_REGION_SLUG, metroManilaAreas, regions, type Destination } from '../data/destinations'
 import { cityRepresentativePlaceSlugs, getDiscoveryImageCandidates } from '../data/placeIndexVisuals'
 import type { PlaceDetail } from '../types/appTypes'
 import { displayCityName } from '../utils/cityName'
+import { countPlacesByAreaSlug, loadCompactPlaces, type CompactPlace } from '../utils/compactPlaces'
 import { fetchPlaceDetailsBatch } from '../utils/placeDetailCache'
-import { getSeoListingPage } from '../utils/seoApi'
 import { getSiteOrigin } from '../utils/seo'
 import { BRAND_NAME, PRODUCT_NAME } from '../utils/seoLandingPages'
 import '../design/misc.css'
@@ -19,45 +19,49 @@ function formatPlaceCount(count: number) {
   return `${count.toLocaleString('en-PH')} ${count === 1 ? 'place' : 'places'}`
 }
 
+function sortByPlaceCount(destinations: Destination[], placeCounts: Record<string, number>) {
+  return [...destinations].sort(
+    (left, right) => (placeCounts[right.slug] ?? 0) - (placeCounts[left.slug] ?? 0) || left.name.localeCompare(right.name)
+  )
+}
+
 function PlacesIndexPage() {
-  const [placeCounts, setPlaceCounts] = useState<Record<string, number>>({})
-  const areaCards = useMemo(
+  const [places, setPlaces] = useState<CompactPlace[] | null>(null)
+  const placeCounts = useMemo(() => (places ? countPlacesByAreaSlug(places) : {}), [places])
+  const areaCards = useMemo(() => sortByPlaceCount(metroManilaAreas, placeCounts), [placeCounts])
+  const otherRegions = useMemo(
     () =>
-      [...metroManilaAreas].sort(
-        (left, right) => (placeCounts[right.slug] ?? 0) - (placeCounts[left.slug] ?? 0) || left.name.localeCompare(right.name)
-      ),
+      regions
+        .filter((region) => region.slug !== METRO_MANILA_REGION_SLUG)
+        .map((region) => ({ region, destinations: sortByPlaceCount(region.destinations.filter((destination) => placeCounts[destination.slug]), placeCounts) }))
+        .filter(({ destinations }) => destinations.length > 0),
     [placeCounts]
   )
   const representativeSlugs = useMemo(
     () => metroManilaAreas.map((area) => cityRepresentativePlaceSlugs[area.slug]).filter(Boolean),
     []
   )
-
-  useEffect(() => {
-    const controller = new AbortController()
-    void Promise.all(
-      metroManilaAreas.map((area) =>
-        getSeoListingPage({ areaSlug: area.slug, page: 1, pageSize: 1, signal: controller.signal })
-          .then((listing): [string, number] => [area.slug, listing.total])
-          .catch(() => null)
-      )
-    ).then((entries) => {
-      if (controller.signal.aborted) return
-      setPlaceCounts(Object.fromEntries(entries.filter((entry): entry is [string, number] => entry !== null)))
-    })
-    return () => controller.abort()
-  }, [])
   const [representativePlaces, setRepresentativePlaces] = useState<Record<string, PlaceDetail>>({})
 
   useEffect(() => {
     let isMounted = true
-    void fetchPlaceDetailsBatch(representativeSlugs).then((places) => {
+    loadCompactPlaces()
+      .then((loaded) => isMounted && setPlaces(loaded))
+      .catch(() => isMounted && setPlaces([]))
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  useEffect(() => {
+    let isMounted = true
+    void fetchPlaceDetailsBatch(representativeSlugs).then((loaded) => {
       if (!isMounted) {
         return
       }
 
       setRepresentativePlaces(
-        Object.fromEntries(places.map((place) => [place.slug, place]))
+        Object.fromEntries(loaded.map((place) => [place.slug, place]))
       )
     }).catch(() => {
       // Tiles fall back to their placeholder when the preview images fail to load.
@@ -70,16 +74,23 @@ function PlacesIndexPage() {
 
   const heroAreas = areaCards.slice(0, 4)
   const otherAreas = areaCards.slice(4)
-  const getAreaImageCandidates = (areaSlug: string) =>
-    getDiscoveryImageCandidates(cityRepresentativePlaceSlugs[areaSlug], representativePlaces[cityRepresentativePlaceSlugs[areaSlug]])
-  const getCountLabel = (areaSlug: string) => (placeCounts[areaSlug] != null ? formatPlaceCount(placeCounts[areaSlug]) : 'See places')
+  const getAreaImageCandidates = (areaSlug: string) => {
+    const representativeSlug = cityRepresentativePlaceSlugs[areaSlug]
+    if (representativeSlug) {
+      return getDiscoveryImageCandidates(representativeSlug, representativePlaces[representativeSlug])
+    }
+    const imageUrl = places?.find((place) => place.areaSlug === areaSlug && place.imageUrl)?.imageUrl
+    return imageUrl ? [imageUrl] : []
+  }
+  const getCountLabel = (areaSlug: string) => (places ? formatPlaceCount(placeCounts[areaSlug] ?? 0) : 'See places')
+  const listedAreas = [...areaCards, ...otherRegions.flatMap(({ destinations }) => destinations)]
 
   const jsonLd = [
     {
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
-      name: `Metro Manila Places | ${BRAND_NAME}`,
-      description: `${PRODUCT_NAME} organizes Metro Manila cities so you can browse local places and gala ideas city by city.`,
+      name: `Places to Visit in the Philippines | ${BRAND_NAME}`,
+      description: `${PRODUCT_NAME} organizes Metro Manila cities and destinations around the Philippines so you can browse local places and gala ideas city by city.`,
       url: `${getSiteOrigin()}/places`,
     },
     {
@@ -93,22 +104,20 @@ function PlacesIndexPage() {
     {
       '@context': 'https://schema.org',
       '@type': 'ItemList',
-      itemListElement: [
-        ...areaCards.map((area, index) => ({
-          '@type': 'ListItem',
-          position: index + 1,
-          name: area.name,
-          url: `${getSiteOrigin()}/places/${encodeURIComponent(area.slug)}`,
-        })),
-      ],
+      itemListElement: listedAreas.map((area, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        name: area.name,
+        url: `${getSiteOrigin()}/places/${encodeURIComponent(area.slug)}`,
+      })),
     },
   ]
 
   return (
     <Page>
       <SeoHead
-        title={`Metro Manila Cities and Places to Visit | ${BRAND_NAME}`}
-        description={`${PRODUCT_NAME} lets you browse Metro Manila cities, local place pages, and city-based gala ideas in one directory.`}
+        title={`Cities and Places to Visit in the Philippines | ${BRAND_NAME}`}
+        description={`${PRODUCT_NAME} lets you browse Metro Manila cities and destinations around the Philippines, with local place pages and city-based gala ideas in one directory.`}
         canonicalPath="/places"
         jsonLd={jsonLd}
       />
@@ -117,8 +126,8 @@ function PlacesIndexPage() {
 
       <header className="mt-5 flex flex-wrap items-end justify-between gap-4">
         <div className="max-w-[42rem]">
-          <h1 className="g-h1">Metro Manila places to visit</h1>
-          <p className="g-mut mt-2">Pick a city to see its cafes, parks and food spots.</p>
+          <h1 className="g-h1">Places to visit around the Philippines</h1>
+          <p className="g-mut mt-2">Pick a city to see its cafes, parks and food spots. Metro Manila first, then the rest of the country.</p>
         </div>
         <InternalLink href="/places/categories" className="g-btn g-btn-line g-btn-sm">
           <SquaresFour aria-hidden="true" />
@@ -126,7 +135,11 @@ function PlacesIndexPage() {
         </InternalLink>
       </header>
 
-      <SectionHead title="Most to explore" sub="Cities with the most GalaTayo places" />
+      <SectionHead
+        title="Metro Manila"
+        sub="Cities with the most GalaTayo places"
+        action={otherRegions.length > 0 ? <Button variant="text" href={`/places/${METRO_MANILA_REGION_SLUG}`}>See all</Button> : null}
+      />
       <div className="m-top">
         {heroAreas.map((area, index) => (
           <InternalLink key={area.slug} href={`/places/${area.slug}`} className="g-pc">
@@ -141,7 +154,7 @@ function PlacesIndexPage() {
         ))}
       </div>
 
-      <SectionHead title="Explore every city" />
+      <SectionHead title="Every Metro Manila city" />
       <div className="m-near">
         {otherAreas.map((area) => (
           <InternalLink key={area.slug} href={`/places/${area.slug}`}>
@@ -155,6 +168,31 @@ function PlacesIndexPage() {
           </InternalLink>
         ))}
       </div>
+
+      {otherRegions.map(({ region, destinations }) => (
+        <section key={region.slug} aria-labelledby={`region-${region.slug}`}>
+          <SectionHead
+            title={<span id={`region-${region.slug}`}>{region.name}</span>}
+            sub={region.officialName}
+            action={<Button variant="text" href={`/places/${region.slug}`}>See all</Button>}
+          />
+          <div className="m-near">
+            {destinations.map((destination) => (
+              <InternalLink key={destination.slug} href={`/places/${destination.slug}`}>
+                <span className="m-near-img">
+                  <PlaceImage candidates={getAreaImageCandidates(destination.slug)} />
+                </span>
+                <span className="min-w-0">
+                  <b>{destination.label}</b>
+                  <small>
+                    {destination.provinceName} · {getCountLabel(destination.slug)}
+                  </small>
+                </span>
+              </InternalLink>
+            ))}
+          </div>
+        </section>
+      ))}
     </Page>
   )
 }

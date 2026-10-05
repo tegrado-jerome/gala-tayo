@@ -11,15 +11,15 @@ import SeoHead from '../components/SeoHead'
 import InternalLink from '../components/InternalLink'
 import { Button, Chip, Chips, Empty, Page, Row, SectionHead } from '../components/ui'
 import '../design/misc.css'
-import { metroManilaAreas } from '../data/metroManilaAreas'
+import { METRO_MANILA_REGION_SLUG, getDestinationBySlug, getRegionBySlug, regions } from '../data/destinations'
 import { formatPeso } from '../utils/galaPlanTrip'
 import { fetchPlaceDetailsBatch } from '../utils/placeDetailCache'
 import { getSiteOrigin } from '../utils/seo'
-import { getSeoPlaces, mapSeoPlaceToCard, type SeoPlaceSummary } from '../utils/seoApi'
+import { countPlacesByAreaSlug, loadCompactPlaces, type CompactPlace } from '../utils/compactPlaces'
+import { displayCityName } from '../utils/cityName'
+import { mapSeoPlaceToCard } from '../utils/seoApi'
 import { SEO_LANDING_TARGETS } from '../utils/seoLandingPages'
 import type { PlaceDetail } from '../types/appTypes'
-
-type CompactPlace = Pick<SeoPlaceSummary, 'id' | 'slug' | 'name' | 'category' | 'area' | 'city' | 'areaSlug' | 'goodFor' | 'budgetMin' | 'canonicalPath' | 'imageUrl'>
 
 const WHO_OPTIONS = [
   { value: 'date', label: 'Date', tags: ['Casual Date', 'Date Night'] },
@@ -44,7 +44,7 @@ const FAQS = [
   {
     question: 'Ano ang Saan tayo?',
     answer:
-      'Saan tayo? is a free GalaTayo tool that picks 3 places in Metro Manila for you. Choose a city, a budget per head and who you are going with, and it suggests places that fit.',
+      'Saan tayo? is a free GalaTayo tool that picks 3 places for you, in Metro Manila or wherever you are headed in the Philippines. Choose a city, a budget per head and who you are going with, and it suggests places that fit.',
   },
   {
     question: 'Libre ba ito?',
@@ -57,22 +57,9 @@ const FAQS = [
   },
   {
     question: 'What if there are not enough places in my city?',
-    answer: 'Saan tayo? first drops the rainy day filter, then adds nearby cities, and tells you when it did. Try a higher budget for more choices.',
+    answer: 'Saan tayo? first drops the rainy day filter, then adds nearby cities in the same region, and tells you when it did. Try a higher budget for more choices.',
   },
 ]
-
-async function loadPlaces(): Promise<CompactPlace[]> {
-  try {
-    const response = await fetch('/data/places-compact.json', { headers: { Accept: 'application/json' } })
-    if (response.ok && response.headers.get('content-type')?.includes('json')) {
-      return (await response.json()) as CompactPlace[]
-    }
-  } catch {
-    // Fall back to the API below.
-  }
-  const payload = await getSeoPlaces()
-  return payload.places
-}
 
 function shuffle<T>(values: T[]) {
   const copy = [...values]
@@ -93,8 +80,10 @@ function readInitialChoice() {
   const params = new URLSearchParams(typeof window === 'undefined' ? '' : window.location.search)
   const who = WHO_OPTIONS.find((option) => option.value === params.get('who'))?.value ?? 'date'
   const budget = params.has('budget') ? Number(params.get('budget')) : 500
+  const cityDestination = getDestinationBySlug(params.get('city'))
   return {
-    city: metroManilaAreas.some((area) => area.slug === params.get('city')) ? (params.get('city') as string) : '',
+    region: cityDestination?.regionSlug ?? getRegionBySlug(params.get('region'))?.slug ?? METRO_MANILA_REGION_SLUG,
+    city: cityDestination?.slug ?? '',
     budget: BUDGET_OPTIONS.some((option) => option.value === budget) ? budget : 500,
     who,
     rainy: params.get('rain') === '1',
@@ -102,17 +91,18 @@ function readInitialChoice() {
   }
 }
 
-function pickPlaces(places: CompactPlace[], choice: { city: string; budget: number; who: string; rainy: boolean }) {
+function pickPlaces(places: CompactPlace[], choice: { region: string; city: string; budget: number; who: string; rainy: boolean }) {
   const whoTags: readonly string[] = WHO_OPTIONS.find((option) => option.value === choice.who)?.tags ?? []
   const fitsWho = (place: CompactPlace) => place.goodFor.some((tag) => whoTags.includes(tag))
   const fitsBudget = (place: CompactPlace) => !choice.budget || (place.budgetMin ?? 0) <= choice.budget
   const fitsRain = (place: CompactPlace) => place.goodFor.some((tag) => RAINY_TAGS.includes(tag))
-  const inCity = (place: CompactPlace) => !choice.city || place.areaSlug === choice.city
+  const inRegion = (place: CompactPlace) => getDestinationBySlug(place.areaSlug)?.regionSlug === choice.region
+  const inCity = (place: CompactPlace) => (choice.city ? place.areaSlug === choice.city : inRegion(place))
 
   const attempts: Array<{ filter: (place: CompactPlace) => boolean; note: string | null }> = [
     { filter: (place) => inCity(place) && fitsWho(place) && fitsBudget(place) && (!choice.rainy || fitsRain(place)), note: null },
     { filter: (place) => inCity(place) && fitsWho(place) && fitsBudget(place), note: choice.rainy ? 'Kulang ang indoor picks dito, so we included outdoor ones. Check the weather!' : null },
-    { filter: (place) => fitsWho(place) && fitsBudget(place), note: 'Kulang ang picks sa city na ito, so we added places from nearby cities.' },
+    { filter: (place) => inRegion(place) && fitsWho(place) && fitsBudget(place), note: 'Kulang ang picks sa city na ito, so we added places from nearby cities.' },
   ]
 
   for (const attempt of attempts) {
@@ -130,6 +120,7 @@ export default function SaanTayoPage() {
   const [places, setPlaces] = useState<CompactPlace[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [region, setRegion] = useState(initial.region)
   const [city, setCity] = useState(initial.city)
   const [budget, setBudget] = useState(initial.budget)
   const [who, setWho] = useState<string>(initial.who)
@@ -140,7 +131,7 @@ export default function SaanTayoPage() {
 
   useEffect(() => {
     let active = true
-    loadPlaces()
+    loadCompactPlaces()
       .then((loaded) => {
         if (!active) return
         setPlaces(loaded)
@@ -167,8 +158,19 @@ export default function SaanTayoPage() {
     }
   }, [result])
 
+  const placeCounts = useMemo(() => countPlacesByAreaSlug(places), [places])
+  const regionOptions = useMemo(
+    () => regions.filter((option) => option.slug === METRO_MANILA_REGION_SLUG || option.destinations.some((destination) => placeCounts[destination.slug])),
+    [placeCounts],
+  )
+  const regionDestinations = useMemo(() => {
+    const destinations = getRegionBySlug(region)?.destinations ?? []
+    return region === METRO_MANILA_REGION_SLUG ? destinations : destinations.filter((destination) => placeCounts[destination.slug] || destination.slug === city)
+  }, [city, placeCounts, region])
+  const regionName = getRegionBySlug(region)?.name ?? 'Metro Manila'
+
   const cityStats = useMemo(() => {
-    return metroManilaAreas
+    return regionDestinations
       .map((area) => {
         const inArea = places.filter((place) => place.areaSlug === area.slug)
         const budgets = inArea.map((place) => place.budgetMin).filter((value): value is number => typeof value === 'number')
@@ -176,10 +178,20 @@ export default function SaanTayoPage() {
       })
       .filter((row) => row.count > 0)
       .sort((a, b) => (a.typical ?? Infinity) - (b.typical ?? Infinity))
-  }, [places])
+  }, [places, regionDestinations])
 
-  const choice = { city, budget, who, rainy }
-  const shareQuery = new URLSearchParams({ ...(city ? { city } : {}), budget: String(budget), who, ...(rainy ? { rain: '1' } : {}) }).toString()
+  const choice = { region, city, budget, who, rainy }
+  const shareQuery = new URLSearchParams({
+    ...(city ? { city } : region !== METRO_MANILA_REGION_SLUG ? { region } : {}),
+    budget: String(budget),
+    who,
+    ...(rainy ? { rain: '1' } : {}),
+  }).toString()
+
+  const chooseRegion = (nextRegion: string) => {
+    setRegion(nextRegion)
+    setCity('')
+  }
 
   const run = () => {
     setResult(pickPlaces(places, choice))
@@ -189,7 +201,7 @@ export default function SaanTayoPage() {
 
   const share = async () => {
     const url = `${getSiteOrigin()}/saan-tayo?${shareQuery}`
-    const text = result?.picks.length ? `Saan tayo? ${result.picks.map((place) => place.name).join(', ')}` : 'Saan tayo? Pick 3 places in Metro Manila'
+    const text = result?.picks.length ? `Saan tayo? ${result.picks.map((place) => place.name).join(', ')}` : `Saan tayo? Pick 3 places in ${regionName}`
     try {
       if (navigator.share) {
         await navigator.share({ title: 'Saan tayo?', text, url })
@@ -202,18 +214,18 @@ export default function SaanTayoPage() {
     }
   }
 
-  const relatedGuides = SEO_LANDING_TARGETS.filter((target) => (city ? target.areaSlug === city : !target.areaSlug) || target.goodFor === who).slice(0, 6)
+  const relatedGuides = SEO_LANDING_TARGETS.filter((target) => (city ? target.areaSlug === city : !target.areaSlug || target.areaSlug === region) || target.goodFor === who).slice(0, 6)
   const canonical = `${getSiteOrigin()}/saan-tayo`
   const jsonLd = [
     {
       '@context': 'https://schema.org',
       '@type': 'WebApplication',
-      name: 'Saan tayo? Metro Manila gala picker',
+      name: 'Saan tayo? Gala picker',
       url: canonical,
       applicationCategory: 'TravelApplication',
       operatingSystem: 'Web',
       offers: { '@type': 'Offer', price: '0', priceCurrency: 'PHP' },
-      areaServed: { '@type': 'Place', name: 'Metro Manila, Philippines' },
+      areaServed: { '@type': 'Country', name: 'Philippines' },
     },
     {
       '@context': 'https://schema.org',
@@ -225,8 +237,8 @@ export default function SaanTayoPage() {
   return (
     <Page>
       <SeoHead
-        title="Saan Tayo? Free Metro Manila Gala Picker by Budget | GalaTayo"
-        description="Can't decide where to go? Pick a city, budget per head and who you're with, and Saan tayo? suggests 3 places in Metro Manila. Free, no sign up."
+        title="Saan Tayo? Free Gala Picker by City and Budget | GalaTayo"
+        description="Can't decide where to go? Pick a city, budget per head and who you're with, and Saan tayo? suggests 3 places, in Metro Manila or wherever you're headed in the Philippines. Free, no sign up."
         canonicalPath="/saan-tayo"
         jsonLd={jsonLd}
       />
@@ -236,7 +248,7 @@ export default function SaanTayoPage() {
           <p className="m-onb-step">Free tool · no sign up</p>
           <h1 className="m-onb-title">Saan tayo?</h1>
           <p className="g-mut mt-3 max-w-[40ch] text-[16px] leading-relaxed">
-            Hindi makapag-decide? Answer 4 quick ones and we&apos;ll pick 3 places in Metro Manila that fit.
+            Hindi makapag-decide? Answer 4 quick ones and we&apos;ll pick 3 places in {regionName} that fit.
           </p>
         </header>
 
@@ -245,13 +257,22 @@ export default function SaanTayoPage() {
             <span className="m-step-n" aria-hidden="true">1</span>
             <div className="min-w-0">
               <span className="m-step-label" id="saan-tayo-city">Saang city?</span>
+              {regionOptions.length > 1 ? (
+                <Chips role="group" aria-label="Region" className="mb-2">
+                  {regionOptions.map((option) => (
+                    <Chip key={option.slug} aria-pressed={region === option.slug} onClick={() => chooseRegion(option.slug)}>
+                      {option.name}
+                    </Chip>
+                  ))}
+                </Chips>
+              ) : null}
               <Chips role="group" aria-labelledby="saan-tayo-city">
                 <Chip aria-pressed={city === ''} onClick={() => setCity('')}>
-                  Kahit saan
+                  {region === METRO_MANILA_REGION_SLUG ? 'Kahit saan' : `Kahit saan sa ${regionName}`}
                 </Chip>
-                {metroManilaAreas.map((area) => (
+                {regionDestinations.map((area) => (
                   <Chip key={area.slug} aria-pressed={city === area.slug} onClick={() => setCity(area.slug)}>
-                    {area.name}
+                    {region === METRO_MANILA_REGION_SLUG ? area.name : displayCityName(area.label)}
                   </Chip>
                 ))}
               </Chips>
@@ -360,7 +381,7 @@ export default function SaanTayoPage() {
               Typical starting budget per city
             </h2>
             <p className="g-sm g-mut mt-2">
-              The median starting budget per head of GalaTayo places in each Metro Manila city, cheapest first. Use it to set your budget before you pick.
+              The median starting budget per head of GalaTayo places in each {regionName} city, cheapest first. Use it to set your budget before you pick.
             </p>
             <div className="m-budget mt-4">
               {cityStats.map((row) => (
