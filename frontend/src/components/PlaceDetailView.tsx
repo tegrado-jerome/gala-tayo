@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode, type TouchEvent } from 'react'
-import { Accessibility, ArrowLeft, Bus, Camera, Check, Ellipsis, Flag, Heart, Navigation, Pencil, Plus, Reply, Share2, Sparkles, SquareParking, Star, Trash2, UserRound, Wallet, X } from 'lucide-react'
+import { Accessibility, ArrowLeft, Bus, Camera, Check, Clock, Ellipsis, Flag, Heart, Navigation, Pencil, Plus, Reply, Share2, Sparkles, SquareParking, Star, Timer, Trash2, UserRound, Users, Wallet, X, type LucideIcon } from 'lucide-react'
 import { useGuestAuthPrompt } from './GuestAuthPrompt'
 import AddToGalaPlanModal from './AddToGalaPlanModal'
 import InternalLink from './InternalLink'
 import ReportUserModal from './ReportUserModal'
 import PlaceImageNotice from './PlaceImageNotice'
-import { Button, Chip, Empty, KeyValue, Page, Panel, SectionHead, Sheet, Skeleton, Tag, cx } from './ui'
+import { Button, Chip, Empty, KeyValue, Page, Panel, SectionHead, Sheet, Skeleton, SulitMeter, Tag, cx } from './ui'
 import GtMap, { type MapPoint } from './ui/GtMap'
 import { getCuratedPlaceImages, normalizePlaceSlug } from '../data/curatedPlaceImages'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
@@ -27,7 +27,7 @@ import { MemberAvatar } from './place-detail/MemberAvatar'
 import CheckInButton from './place-detail/CheckInButton'
 import { getSulitLevel } from './place-detail/SulitMeter'
 import { GoodForList } from './place-detail/GoodForList'
-import { cleanString, formatPriceLevel, titleCase, uniqueList, isAcceptedContributionImage, contributionImageErrorMessage, parseJsonResponse } from './place-detail/helpers'
+import { cleanString, titleCase, uniqueList, isAcceptedContributionImage, contributionImageErrorMessage, parseJsonResponse } from './place-detail/helpers'
 import type { PlaceDetailViewProps, PlaceReview, PlaceReviewsResponse, PlaceComment, PlaceCommentsResponse, PlaceImageContributionResponse, PlaceDetailCommunityCache } from './place-detail/types'
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
@@ -136,6 +136,65 @@ function buildPriceBadgeLabel(
   return labels[Math.min(Math.max(Math.floor(priceLevel), 0), labels.length - 1)] || ''
 }
 
+
+type PlaceHighlight = { icon: LucideIcon; title: string; detail: string }
+
+function describeBestTime(bestTime: string) {
+  const match = bestTime.match(/^(weekday|weekend)s?\s+(morning|afternoon|evening|night)s?$/i)
+  return match ? `Best on ${match[1].toLowerCase()} ${match[2].toLowerCase()}s` : `Best time: ${bestTime}`
+}
+
+function buildPlaceHighlights({
+  priceLine,
+  sulitLabel,
+  bestTime,
+  crowdLevel,
+  visitDuration,
+  goodFor,
+  notIdealFor,
+  commuteFriendly,
+}: {
+  priceLine: string
+  sulitLabel: string
+  bestTime: string
+  crowdLevel: string
+  visitDuration: string
+  goodFor: string[]
+  notIdealFor: string[]
+  commuteFriendly: boolean
+}): PlaceHighlight[] {
+  const highlights: PlaceHighlight[] = []
+
+  if (priceLine) {
+    const priceDetail = priceLine === 'Free entry' ? 'No ticket needed' : sulitLabel ? `${sulitLabel} for a Metro Manila gala` : 'Check the latest price before you go'
+    highlights.push({ icon: Wallet, title: priceLine, detail: priceDetail })
+  }
+
+  if (bestTime) {
+    highlights.push({
+      icon: Clock,
+      title: describeBestTime(bestTime),
+      detail: crowdLevel ? `Crowd is usually ${crowdLevel.toLowerCase()}` : 'Fewer crowds, easier to enjoy',
+    })
+  }
+
+  const goodForText = goodFor.join(' ').toLowerCase()
+  if (/barkada|group|friends|catch/.test(goodForText)) {
+    highlights.push({ icon: Users, title: 'Good for barkada', detail: 'Works well for group hangouts' })
+  } else if (/barkada|group|friends|crowd/.test(notIdealFor.join(' ').toLowerCase()) || /date|couple|solo|study/.test(goodForText)) {
+    highlights.push({ icon: Users, title: 'Better for small groups', detail: 'Best with a few friends, not a big barkada' })
+  }
+
+  if (visitDuration) {
+    highlights.push({ icon: Timer, title: `Plan for ${visitDuration.replace(/(\d)\s*-\s*(\d)/g, '$1–$2')}`, detail: 'Typical tambay time here' })
+  }
+
+  if (commuteFriendly) {
+    highlights.push({ icon: Bus, title: 'Commute-friendly', detail: 'Easy to reach by public transport' })
+  }
+
+  return highlights.slice(0, 4)
+}
 
 type LatLng = { lat: number; lng: number }
 
@@ -1776,19 +1835,23 @@ function PlaceDetailView({
   }
   const budgetAmount =
     place.budget_min != null && Number.isFinite(Number(place.budget_min)) ? Math.max(0, Math.round(Number(place.budget_min))) : null
-  const sulitLabel = budgetAmount != null ? getSulitLevel(budgetAmount).label : ''
-  const priceHeadline = budgetAmount == null ? '' : budgetAmount <= 0 ? 'Free' : `₱${budgetAmount.toLocaleString('en-PH')}`
-  const groupPattern = /barkada|group|friends|catch/
-  const barkadaFit = groupPattern.test(goodFor.join(' ').toLowerCase())
-    ? 'Yes'
-    : groupPattern.test((place.not_ideal_for ?? []).join(' ').toLowerCase())
-      ? 'Not ideal'
-      : 'Maybe'
-  const bestTime = cleanString(place.best_time_to_visit)
+  const sulitLevel = budgetAmount != null ? getSulitLevel(budgetAmount) : null
+  const priceLine =
+    budgetAmount == null ? priceBadgeLabel : budgetAmount <= 0 ? 'Free entry' : `₱${budgetAmount.toLocaleString('en-PH')} / head`
+  const highlights = buildPlaceHighlights({
+    priceLine,
+    sulitLabel: sulitLevel && sulitLevel.index > 0 ? sulitLevel.label : '',
+    bestTime: cleanString(place.best_time_to_visit),
+    crowdLevel: cleanString(place.crowd_level),
+    visitDuration: cleanString(place.visit_duration),
+    goodFor,
+    notIdealFor: place.not_ideal_for ?? [],
+    commuteFriendly: Boolean(place.commute_friendly),
+  })
   const placeTags = uniqueList([
     ...(place.tags ?? []).slice(0, 4).map((tag) => tag.name),
     cleanString(place.indoor_outdoor) ? titleCase(cleanString(place.indoor_outdoor)) : '',
-  ])
+  ]).filter((tag) => !/free|budget|price|₱|open|closed/i.test(tag) && tag.toLowerCase() !== categoryLabel.toLowerCase())
   const placeLat = toCoordinate(place.coordinates?.lat) ?? toCoordinate(place.latitude) ?? toCoordinate(place.lat)
   const placeLng = toCoordinate(place.coordinates?.lng) ?? toCoordinate(place.longitude) ?? toCoordinate(place.lng)
   const placePosition = placeLat != null && placeLng != null && (placeLat !== 0 || placeLng !== 0) ? { lat: placeLat, lng: placeLng } : null
@@ -1811,11 +1874,7 @@ function PlaceDetailView({
   ]
   const activeAccessMode = accessModes.find((mode) => mode.value === accessMode) ?? accessModes[0]
   const fitItems = [
-    { label: 'Good for groups', value: barkadaFit },
     { label: 'Category', value: categoryLabel },
-    { label: 'Budget', value: priceBadgeLabel || 'Not available' },
-    { label: 'Best time', value: bestTime },
-    { label: 'Tambay time', value: cleanString(place.visit_duration) },
     { label: 'Crowd', value: cleanString(place.crowd_level) ? titleCase(cleanString(place.crowd_level)) : '' },
     { label: 'Hours', value: cleanString(place.hours) },
   ].filter((item) => item.value)
@@ -2344,38 +2403,34 @@ function PlaceDetailView({
 
       <div className="g-split mt-6 md:mt-8">
         <div className="min-w-0">
-          {placeTags.length > 0 || priceBadgeLabel || place.status !== 'Unknown' ? (
+          {placeTags.length > 0 || place.status === 'Open' || place.status === 'Closed' ? (
             <div className="flex flex-wrap gap-2">
               {place.status === 'Open' ? <Tag tone="ok">Open now</Tag> : null}
               {place.status === 'Closed' ? <Tag tone="bad">Closed</Tag> : null}
-              {priceBadgeLabel ? (
-                <Tag>
-                  <Wallet aria-hidden="true" />
-                  {priceBadgeLabel}
-                </Tag>
-              ) : null}
               {placeTags.map((tag) => (
                 <Tag key={tag}>{tag}</Tag>
               ))}
             </div>
           ) : null}
 
-          <div className="g-stats mt-4">
-            <div className="g-stat">
-              <b className="truncate">{priceHeadline || formatPriceLevel(place.price_level) || '—'}</b>
-              <span>{sulitLabel ? `Sulit · ${sulitLabel}` : 'Sulit'}</span>
-            </div>
-            <div className="g-stat">
-              <b className="truncate">{barkadaFit}</b>
-              <span>Barkada-fit</span>
-            </div>
-            <div className="g-stat" title={bestTime || undefined}>
-              <b className={cx(bestTime.length > 8 ? 'line-clamp-2 !text-[15px] !leading-tight md:!text-[18px]' : 'truncate')}>{bestTime || '—'}</b>
-              <span>Best time</span>
-            </div>
-          </div>
+          {highlights.length > 0 ? (
+            <ul className="mt-5 grid gap-5 border-y border-[var(--line)] py-6" aria-label="Highlights">
+              {highlights.map((item) => {
+                const HighlightIcon = item.icon
+                return (
+                  <li key={item.title} className="flex items-start gap-4">
+                    <HighlightIcon className="mt-0.5 h-6 w-6 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+                    <div className="min-w-0">
+                      <p className="text-[15px] font-semibold leading-snug">{item.title}</p>
+                      <p className="g-sm g-mut mt-0.5">{item.detail}</p>
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          ) : null}
 
-          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1">
+          <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1">
             <Button variant="soft" onClick={() => openFloatingChat(askAiQuestion)}>
               <Sparkles aria-hidden="true" />
               Ask AI about this place
@@ -2456,16 +2511,11 @@ function PlaceDetailView({
 
         <aside className="g-side" aria-label="Plan this place">
           <Panel>
-            <div className="flex items-start justify-between gap-3">
-              <p className="min-w-0">
-                <span className="g-h2">{priceHeadline || 'Check price on site'}</span>
-                {budgetAmount != null && budgetAmount > 0 ? <span className="g-mut"> /head</span> : null}
-              </p>
-              {place.status === 'Open' ? <Tag tone="ok">Open</Tag> : place.status === 'Closed' ? <Tag tone="bad">Closed</Tag> : null}
-            </div>
-            {sulitLabel ? (
-              <p className="g-sulit">
-                Sulit · <b>{sulitLabel}</b>
+            <p className="g-h2">{priceLine || 'Check price on site'}</p>
+            {sulitLevel ? (
+              <p className="g-sulit mt-1.5">
+                Sulit <SulitMeter score={(5 - sulitLevel.index) * 2} />
+                {sulitLevel.index > 0 ? <b>{sulitLevel.label}</b> : null}
               </p>
             ) : null}
             <div className="mt-5 flex flex-col gap-2">
@@ -2503,7 +2553,7 @@ function PlaceDetailView({
           </Panel>
 
           <div className="g-panel">
-            <h2 className="g-h3 mb-1">Barkada-fit</h2>
+            <h2 className="g-h3 mb-1">Details</h2>
             <KeyValue items={fitItems} />
             {cleanString(place.budget_notes) ? <p className="g-xs g-mut mt-2 leading-relaxed">{cleanString(place.budget_notes)}</p> : null}
           </div>
@@ -2518,8 +2568,7 @@ function PlaceDetailView({
       >
         <div className="mx-auto flex max-w-[720px] items-center gap-3">
           <p className="min-w-0 flex-1 truncate">
-            <span className="g-h3">{priceHeadline || 'Price on site'}</span>
-            {budgetAmount != null && budgetAmount > 0 ? <span className="g-sm g-mut"> /head</span> : null}
+            <span className="g-h3">{priceLine || 'Price on site'}</span>
           </p>
           <Button
             variant="soft"

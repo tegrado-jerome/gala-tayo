@@ -1,14 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { BookMarked, Eye, Heart, History, Settings, Share2, Sparkles, Stamp as StampIcon, UserPlus } from 'lucide-react'
+import { BookMarked, ChevronRight, Eye, Heart, History, Settings, Share2, Sparkles, Stamp as StampIcon, UserPlus } from 'lucide-react'
 import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
 import InternalLink from '../components/InternalLink'
 import ProfileAvatar from '../components/ProfileAvatar'
 import { Button, Empty, Page, Row, SectionHead, Sheet, Skeleton, Stamp, Tabs, Tag } from '../components/ui'
-import { SavedPlaceCard } from './FavoritesPage'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { useAppUser } from '../context/AppUserContext'
-import { useSavedFavorites, type FavoritePlace } from '../context/SavedFavoritesContext'
+import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import {
   getDisplayAvatar,
   getFollowers,
@@ -31,7 +30,7 @@ type ProfilePageProps = {
   session: Session | null
 }
 
-type ProfileTab = 'plans' | 'stamps' | 'saved'
+type ProfileTab = 'plans' | 'stamps'
 
 const PROFILE_CACHE_PREFIX = 'galatayo:profile-page:'
 const PROFILE_CACHE_TTL_MS = 10 * 60 * 1000
@@ -127,7 +126,7 @@ export function FollowListSheet({ title, users, emptyLabel, onClose }: { title: 
 
 function ProfilePage({ session }: ProfilePageProps) {
   const { currentProfile } = useAppUser()
-  const { favorites, isFavoritesLoading } = useSavedFavorites()
+  const { favorites } = useSavedFavorites()
   const isGuestProfile = !session?.user?.id
   const cachedAtRender = useMemo(() => {
     if (memCache && memCachedUserId === session?.user?.id) {
@@ -307,6 +306,15 @@ function ProfilePage({ session }: ProfilePageProps) {
   const savedPlaces = favorites.filter((favorite) => favorite.place)
   const stampCount = stamps.status === 'ready' ? stamps.data.length : null
   const planCount = plans.status === 'ready' ? plans.data.length : null
+  const displayName = currentProfile?.displayName?.trim() || profile?.username || 'Your profile'
+  const showFollowRequests = !profile?.is_public || followRequests.length > 0
+  const shortcuts = [
+    { href: '/passport', label: 'Passport', sub: stampCount ? `${stampCount} ${stampCount === 1 ? 'stamp' : 'stamps'}` : '', icon: StampIcon },
+    { href: '/favorites', label: 'Saved places', sub: savedPlaces.length ? String(savedPlaces.length) : '', icon: Heart },
+    { href: '/history', label: 'History', sub: '', icon: History },
+    { href: '/find-friends', label: 'Find friends', sub: '', icon: UserPlus },
+    { href: `/u/${encodeURIComponent(profile?.username || '')}`, label: 'View public profile', sub: '', icon: Eye },
+  ]
 
   return (
     <Page>
@@ -322,67 +330,66 @@ function ProfilePage({ session }: ProfilePageProps) {
 
       {profile ? (
         <>
-          <section className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-start lg:gap-8">
-            <div className="flex min-w-0 gap-4 lg:gap-6">
+          <section className="lg:max-w-[720px]">
+            <div className="flex items-start gap-4 lg:gap-6">
               <ProfileAvatar profile={profile} size="xl" />
               <div className="min-w-0 flex-1">
-                <h1 className="g-h1 truncate">@{profile.username}</h1>
-                <p className="g-sm g-mut mt-1 flex items-center gap-2">
-                  <Tag tone={profile.is_public ? 'neutral' : 'warn'}>{profile.is_public ? 'Public' : 'Private'}</Tag>
-                  {followRequests.length > 0 ? `${followRequests.length} pending request${followRequests.length === 1 ? '' : 's'}` : null}
+                <div className="flex items-start gap-2">
+                  <div className="min-w-0 flex-1">
+                    <h1 className="g-h1 truncate">{displayName}</h1>
+                    <p className="g-mut truncate">@{profile.username}</p>
+                  </div>
+                  <Button variant="text" iconOnly href="/account-settings" aria-label="Account settings" className="-mr-2 shrink-0">
+                    <Settings aria-hidden="true" />
+                  </Button>
+                </div>
+                <p className="g-sm mt-3 flex flex-wrap items-center gap-x-1">
+                  <button type="button" className="inline-flex min-h-11 items-center gap-1" onClick={() => void openList('followers')}>
+                    <b>{profile.followers_count ?? 0}</b>
+                    <span className="g-mut">{profile.followers_count === 1 ? 'follower' : 'followers'}</span>
+                  </button>
+                  <span className="g-mut" aria-hidden="true">·</span>
+                  <button type="button" className="inline-flex min-h-11 items-center gap-1" onClick={() => void openList('following')}>
+                    <b>{profile.following_count ?? 0}</b>
+                    <span className="g-mut">following</span>
+                  </button>
+                  <span className="g-mut" aria-hidden="true">·</span>
+                  <InternalLink href="/passport" className="inline-flex min-h-11 items-center gap-1 no-underline" ariaLabel={`${stampCount ?? 0} city stamps, open passport`}>
+                    <b style={{ color: 'var(--ink)' }}>{stampCount ?? '–'}</b>
+                    <span className="g-mut">{stampCount === 1 ? 'stamp' : 'stamps'}</span>
+                  </InternalLink>
                 </p>
-                <p className="mt-2 max-w-[60ch]">{profile.bio || 'Add a short bio so people know your vibe before they follow.'}</p>
               </div>
             </div>
 
-            <div className="g-stats">
-              <button type="button" className="g-stat text-left" onClick={() => void openList('followers')}>
-                <b>{profile.followers_count ?? 0}</b>
-                <span>Followers</span>
-              </button>
-              <button type="button" className="g-stat text-left" onClick={() => void openList('following')}>
-                <b>{profile.following_count ?? 0}</b>
-                <span>Following</span>
-              </button>
-              <InternalLink href="/passport" className="g-stat no-underline" ariaLabel={`${stampCount ?? 0} city stamps, open passport`}>
-                <b style={{ color: 'var(--ink)' }}>{stampCount ?? '–'}</b>
-                <span>Stamps</span>
-              </InternalLink>
+            <p className="mt-3 max-w-[60ch]">{profile.bio || 'Add a short bio so people know your vibe before they follow.'}</p>
+            <p className="g-sm g-mut mt-2 flex items-center gap-2">
+              <Tag tone={profile.is_public ? 'neutral' : 'warn'}>{profile.is_public ? 'Public' : 'Private'}</Tag>
+              {followRequests.length > 0 ? `${followRequests.length} pending request${followRequests.length === 1 ? '' : 's'}` : null}
+            </p>
+
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <Button variant="soft" block href="/account-settings">
+                Edit profile
+              </Button>
+              <Button variant="soft" block onClick={() => void handleShare()}>
+                <Share2 aria-hidden="true" />
+                Share profile
+              </Button>
             </div>
+
+            <nav className="g-list mt-5" aria-label="Your stuff">
+              {shortcuts.map(({ href, label, sub, icon: Icon }) => (
+                <Row key={href} href={href} action={<ChevronRight className="g-ic" aria-hidden="true" style={{ color: 'var(--ink-3)' }} />}>
+                  <div className="flex min-h-7 items-center gap-3">
+                    <Icon className="g-ic" aria-hidden="true" />
+                    <span className="font-semibold">{label}</span>
+                    {sub ? <span className="g-sm g-mut truncate">{sub}</span> : null}
+                  </div>
+                </Row>
+              ))}
+            </nav>
           </section>
-
-          <div className="mt-5 flex flex-wrap items-center gap-2">
-            <Button variant="line" size="sm" href="/account-settings">
-              Edit profile
-            </Button>
-            <Button variant="soft" size="sm" iconOnly aria-label="Share profile" onClick={() => void handleShare()}>
-              <Share2 aria-hidden="true" />
-            </Button>
-            <Button variant="soft" size="sm" iconOnly href="/account-settings" aria-label="Account settings">
-              <Settings aria-hidden="true" />
-            </Button>
-            <Button variant="soft" size="sm" href={`/u/${encodeURIComponent(profile.username || '')}`}>
-              <Eye aria-hidden="true" />
-              View public
-            </Button>
-            <Button variant="soft" size="sm" href="/find-friends">
-              <UserPlus aria-hidden="true" />
-              Find friends
-            </Button>
-          </div>
-
-          <nav className="mt-5 grid grid-cols-3 gap-2" aria-label="Your stuff">
-            {[
-              { href: '/passport', label: 'Passport', icon: StampIcon },
-              { href: '/favorites', label: 'Saved', icon: Heart },
-              { href: '/history', label: 'History', icon: History },
-            ].map(({ href, label, icon: Icon }) => (
-              <InternalLink key={href} href={href} className="g-row min-h-[56px] justify-center gap-2 font-semibold lg:justify-start">
-                <Icon className="g-ic" aria-hidden="true" />
-                <span className="g-sm truncate">{label}</span>
-              </InternalLink>
-            ))}
-          </nav>
 
           {errorMessage ? (
             <p role="alert" className="g-sm mt-4" style={{ color: 'var(--bad)' }}>
@@ -398,7 +405,6 @@ function ProfilePage({ session }: ProfilePageProps) {
               options={[
                 { value: 'plans', label: planCount ? `Plans ${planCount}` : 'Plans' },
                 { value: 'stamps', label: stampCount ? `Stamps ${stampCount}` : 'Stamps' },
-                { value: 'saved', label: savedPlaces.length ? `Saved ${savedPlaces.length}` : 'Saved' },
               ]}
             />
 
@@ -483,71 +489,46 @@ function ProfilePage({ session }: ProfilePageProps) {
                 </>
               )
             ) : null}
-
-            {activeTab === 'saved' ? (
-              isFavoritesLoading && savedPlaces.length === 0 ? (
-                <div className="g-grid">
-                  {Array.from({ length: 3 }, (_, index) => (
-                    <Skeleton key={index} style={{ aspectRatio: '1 / 1' }} />
-                  ))}
-                </div>
-              ) : savedPlaces.length === 0 ? (
-                <Empty
-                  title="Wala ka pang saved places."
-                  description="Tap the heart on any place to keep it here."
-                  action={<Button variant="line" href="/search">Explore places</Button>}
-                />
-              ) : (
-                <>
-                  <div className="g-grid">
-                    {savedPlaces.slice(0, TAB_PREVIEW_LIMIT).map((favorite) => (
-                      <SavedPlaceCard key={favorite.id} place={favorite.place as FavoritePlace} />
-                    ))}
-                  </div>
-                  <div className="mt-6 flex justify-center">
-                    <Button variant="line" href="/favorites">
-                      See all saved
-                    </Button>
-                  </div>
-                </>
-              )
-            ) : null}
           </div>
 
-          <SectionHead
-            title="Follow requests"
-            sub={profile.is_public ? 'Public profiles accept followers automatically.' : 'Approve who can see your private activity.'}
-            action={<Tag>{followRequests.length} pending</Tag>}
-          />
-          {followRequests.length === 0 ? (
-            <p className="g-sm g-mut">Walang pending requests.</p>
-          ) : (
-            <div className="g-list lg:max-w-[640px]">
-              {followRequests.map((request) => (
-                <Row
-                  key={request.id}
-                  action={
-                    <div className="flex shrink-0 gap-2">
-                      <Button variant="ink" size="sm" onClick={() => void handleFollowRequest(request.id, 'accept')}>
-                        Accept
-                      </Button>
-                      <Button variant="line" size="sm" onClick={() => void handleFollowRequest(request.id, 'reject')}>
-                        Reject
-                      </Button>
-                    </div>
-                  }
-                >
-                  <div className="flex min-w-0 items-center gap-3">
-                    <ProfileAvatar profile={request.follower} size="xs" />
-                    <div className="min-w-0">
-                      <div className="g-h3 truncate">@{request.follower.username}</div>
-                      <div className="g-sm g-mut truncate">{request.follower.bio || 'Wants to follow you.'}</div>
-                    </div>
-                  </div>
-                </Row>
-              ))}
-            </div>
-          )}
+          {showFollowRequests ? (
+            <>
+              <SectionHead
+                title="Follow requests"
+                sub={profile.is_public ? 'Public profiles accept followers automatically.' : 'Approve who can see your private activity.'}
+                action={<Tag>{followRequests.length} pending</Tag>}
+              />
+              {followRequests.length === 0 ? (
+                <p className="g-sm g-mut">Walang pending requests.</p>
+              ) : (
+                <div className="g-list lg:max-w-[640px]">
+                  {followRequests.map((request) => (
+                    <Row
+                      key={request.id}
+                      action={
+                        <div className="flex shrink-0 gap-2">
+                          <Button variant="ink" size="sm" onClick={() => void handleFollowRequest(request.id, 'accept')}>
+                            Accept
+                          </Button>
+                          <Button variant="line" size="sm" onClick={() => void handleFollowRequest(request.id, 'reject')}>
+                            Reject
+                          </Button>
+                        </div>
+                      }
+                    >
+                      <div className="flex min-w-0 items-center gap-3">
+                        <ProfileAvatar profile={request.follower} size="xs" />
+                        <div className="min-w-0">
+                          <div className="g-h3 truncate">@{request.follower.username}</div>
+                          <div className="g-sm g-mut truncate">{request.follower.bio || 'Wants to follow you.'}</div>
+                        </div>
+                      </div>
+                    </Row>
+                  ))}
+                </div>
+              )}
+            </>
+          ) : null}
         </>
       ) : !isLoading ? (
         <Empty title="Profile unavailable." description={<span role="alert">{errorMessage || 'Try again in a bit.'}</span>} />

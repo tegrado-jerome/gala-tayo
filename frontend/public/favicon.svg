@@ -1,5 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="GalaTayo">
-  <rect width="64" height="64" rx="18" fill="#0b8f5a"/>
-  <path d="M32 12c-8.3 0-15 6.5-15 14.6C17 37.4 32 52 32 52s15-14.6 15-25.4C47 18.5 40.3 12 32 12Z" fill="#fff"/>
-  <circle cx="32" cy="26.5" r="5.5" fill="#0b8f5a"/>
+  <rect width="64" height="64" rx="18" fill="#e4572e"/>
+  <path d="M20 35a12 12 0 0 1 24 0Z" fill="#fff"/>
+  <rect x="12" y="38" width="40" height="4" rx="2" fill="#fff"/>
+  <rect x="19" y="45.5" width="26" height="4" rx="2" fill="#fff" opacity=".75"/>
+  <rect x="26" y="53" width="12" height="4" rx="2" fill="#fff" opacity=".5"/>
 </svg>

@@ -3,7 +3,6 @@ import { CloudRain, CloudSun } from 'lucide-react'
 import CategoryTabs from '../components/discover/CategoryTabs'
 import PhotoCard, { getPlaceHref, getPlaceImageCandidates, type PhotoCardPlace } from '../components/discover/PhotoCard'
 import Rail from '../components/discover/Rail'
-import SentenceSearch from '../components/discover/SentenceSearch'
 import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
 import NextGalaCard from '../components/home/NextGalaCard'
 import PlanWithAiCard from '../components/home/PlanWithAiCard'
@@ -41,9 +40,7 @@ const topPickSlugs = Array.from(new Set(topPickTabs.flatMap((tab) => tab.places.
 
 const listingRails = [
   { key: 'museum', title: 'Museums', subtitle: 'Free and paid galleries across Metro Manila', category: 'museum', href: '/places/categories/museum' },
-  { key: 'manila', title: 'Things to do in Manila', subtitle: 'Heritage sites, parks and food spots', areaSlug: 'manila', href: '/places/manila' },
   { key: 'cafe', title: 'Cafés', subtitle: 'Popular cafés across the metro', category: 'cafe', href: '/places/categories/cafe' },
-  { key: 'nightlife', title: 'Nightlife', subtitle: 'Rooftops, bars and late-night spots', category: 'nightlife', href: '/places/categories/nightlife' },
 ]
 
 type ListingRailConfig = (typeof listingRails)[number]
@@ -72,7 +69,7 @@ function WeatherPill({ weather }: { weather: ManilaWeather }) {
 }
 
 function ListingRail({ rail, badge, onGuestFavorite }: { rail: ListingRailConfig; badge?: string; onGuestFavorite: () => void }) {
-  const places = useListingRail({ areaSlug: 'areaSlug' in rail ? rail.areaSlug : undefined, category: 'category' in rail ? rail.category : undefined })
+  const places = useListingRail({ category: rail.category })
   if (places && places.length === 0) return null
 
   return (
@@ -247,7 +244,7 @@ function HomePage({ navigationSource }: { navigationSource: NavigationSource }) 
     return tab.places.map((place): PhotoCardPlace => ({ ...place, ...detailsBySlug[place.slug] }))
   }, [activeTab, detailsBySlug])
 
-  const greetingName = currentProfile?.displayName?.trim() || currentUser?.firstName?.trim() || null
+  const greetingName = currentUser?.firstName?.trim() || currentProfile?.displayName?.trim().split(/\s+/)[0] || null
   const isRaining = Boolean(weather?.isRaining)
   const today = new Date().toLocaleDateString('en-PH', { weekday: 'long', month: 'short', day: 'numeric' })
   const seoConfig = useMemo(
@@ -264,19 +261,18 @@ function HomePage({ navigationSource }: { navigationSource: NavigationSource }) 
     <Page>
       <SeoHead {...seoConfig} />
 
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div className="min-w-0">
-          <p className="g-eyebrow">{today}</p>
-          <h1 className="g-d1 mt-2">{greetingName ? `Tara, ${greetingName}?` : 'Tara, gala tayo?'}</h1>
-          <p className="g-mut mt-2">{isRaining ? 'Maulan ngayon, so indoor spots muna.' : 'Saan tayo this weekend?'}</p>
+      <header className="min-w-0">
+        <p className="g-eyebrow">{today}</p>
+        <h1 className="g-d1 mt-2">{greetingName ? `Tara, ${greetingName}?` : 'Tara, gala tayo?'}</h1>
+        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+          <p className="g-mut">{isRaining ? 'Maulan ngayon, so indoor spots muna.' : 'Describe your gala and Tara AI plans the whole day.'}</p>
+          {weather ? <WeatherPill weather={weather} /> : null}
         </div>
-        {weather ? <WeatherPill weather={weather} /> : null}
       </header>
 
-      <SentenceSearch className="mt-6 md:mt-7" />
-
-      <SectionHead title="Tara, plan natin" sub="Describe it in one line. Tara AI builds the whole day." />
-      <PlanWithAiCard />
+      <div className="mt-6 md:mt-7">
+        <PlanWithAiCard />
+      </div>
 
       <SectionHead
         title="Your next gala"

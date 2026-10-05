@@ -14,9 +14,9 @@
         }
       })();
     </script>
-    <link rel="icon" href="/favicon.ico?v=3" sizes="48x48" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=3" />
+    <link rel="icon" href="/favicon.ico?v=4" sizes="48x48" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=4" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=4" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="dns-prefetch" href="//media.galatayo.app" />
     <link rel="preconnect" href="https://media.galatayo.app" />
@@ -91,13 +91,6 @@
         animation: critical-logo-breathe 2.4s ease-in-out infinite;
       }
 
-      .critical-app-loader__logo i {
-        width: 14px;
-        height: 14px;
-        border-radius: 50%;
-        background: #e4572e;
-      }
-
       @keyframes critical-logo-breathe {
         0%, 100% { opacity: 1; }
         50% { opacity: 0.6; }
@@ -135,7 +128,7 @@
   </head>
   <body>
     <div id="critical-welcome-loader" class="critical-app-loader" aria-label="Loading GalaTayo">
-      <span class="critical-app-loader__logo" aria-hidden="true"><i></i>galatayo</span>
+      <span class="critical-app-loader__logo" aria-hidden="true"><svg width="40" height="40" viewBox="0 0 64 64"><rect width="64" height="64" rx="18" fill="#e4572e"/><path d="M20 35a12 12 0 0 1 24 0Z" fill="#fff"/><rect x="12" y="38" width="40" height="4" rx="2" fill="#fff"/><rect x="19" y="45.5" width="26" height="4" rx="2" fill="#fff" opacity=".75"/><rect x="26" y="53" width="12" height="4" rx="2" fill="#fff" opacity=".5"/></svg>galatayo</span>
     </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
