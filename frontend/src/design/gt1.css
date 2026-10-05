@@ -288,9 +288,9 @@ textarea.g-input { height: auto; min-height: 96px; padding: 12px 14px; resize: v
 .g-head-search { display: none; flex: 1 1 360px; max-width: 440px; margin-inline: auto; align-items: center; height: 44px; padding: 4px; border: 1px solid var(--line); border-radius: var(--r-pill); background: var(--surface); box-shadow: var(--sh-1); transition: box-shadow var(--t) var(--ease-g); }
 .g-head-search:hover { box-shadow: var(--sh-2); }
 .g-head-search-link { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; height: 100%; padding: 0 12px; font-size: 14px; color: var(--ink-2); text-decoration: none; }
-.g-head-ask { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border: 0; border-radius: var(--r-pill); background: var(--tara-soft); color: var(--tara-ink); font: 600 13px/1 var(--font-body); cursor: pointer; white-space: nowrap; }
+.g-head-ask { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border: 0; border-radius: var(--r-pill); background: var(--fill); color: var(--ink); font: 600 13px/1 var(--font-body); cursor: pointer; white-space: nowrap; }
 .g-head-ask svg { width: 15px; height: 15px; }
-.g-head-ask:hover { background: color-mix(in srgb, var(--tara-soft) 80%, var(--tara)); }
+.g-head-ask:hover { background: var(--fill-2); }
 .g-head-right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
 .g-head-right .no-underline { text-decoration: none; }
 @media (min-width: 1024px) { .g-nav, .g-head-search { display: flex; } .g-head-search + .g-head-right { margin-left: 0; } }

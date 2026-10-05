@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { PlaceTile, getCategoryIcon } from '../components/PlaceCard'
+import { PlaceTile, getCategoryIcon, getCategoryTint } from '../components/PlaceCard'
 import { ListingBreadcrumb } from '../components/home/search/SearchComponents'
 import InternalLink from '../components/InternalLink'
 import SeoHead from '../components/SeoHead'
@@ -95,6 +95,7 @@ function PlaceCategoriesIndexPage() {
             title={category.label}
             meta={`Open ${category.label.toLowerCase()} places`}
             icon={getCategoryIcon(category.value)}
+            tint={getCategoryTint(category.value)}
             imageUrls={getDiscoveryImageCandidates(categoryRepresentativePlaceSlugs[category.value], representativePlaces[categoryRepresentativePlaceSlugs[category.value]])}
           />
         ))}

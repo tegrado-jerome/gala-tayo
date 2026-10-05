@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode, type TouchEvent } from 'react'
-import { Accessibility, ArrowLeft, Bus, Camera, Check, ChevronDown, Clock, Ellipsis, Flag, Heart, Navigation, Pencil, Plus, Reply, Share2, Sparkles, SquareParking, Star, Timer, Trash2, UserRound, Users, Wallet, X, type LucideIcon } from 'lucide-react'
+import { Accessibility, ArrowLeft, Bus, Camera, Check, ChevronDown, Clock, Ellipsis, Flag, Heart, Info, Navigation, Pencil, Plus, Reply, Share2, Sparkles, SquareParking, Star, Timer, Trash2, UserRound, Users, X, type LucideIcon } from 'lucide-react'
 import { useGuestAuthPrompt } from './GuestAuthPrompt'
 import AddToGalaPlanModal from './AddToGalaPlanModal'
 import InternalLink from './InternalLink'
 import ReportUserModal from './ReportUserModal'
-import PlaceImageNotice from './PlaceImageNotice'
 import { Button, Chip, Empty, KeyValue, Page, Panel, SectionHead, Sheet, Skeleton, SulitMeter, Tag, cx } from './ui'
 import GtMap, { type MapPoint } from './ui/GtMap'
 import { getCuratedPlaceImages, normalizePlaceSlug } from '../data/curatedPlaceImages'
@@ -137,7 +136,7 @@ function buildPriceBadgeLabel(
 }
 
 
-type PlaceHighlight = { icon: LucideIcon; title: string; detail: string }
+type PlaceHighlight = { icon: LucideIcon; title: string; detail?: string }
 
 function describeBestTime(bestTime: string) {
   const match = bestTime.match(/^(weekday|weekend)s?\s+(morning|afternoon|evening|night)s?$/i)
@@ -145,55 +144,40 @@ function describeBestTime(bestTime: string) {
 }
 
 function buildPlaceHighlights({
-  priceLine,
-  sulitLabel,
   bestTime,
   crowdLevel,
   visitDuration,
   goodFor,
   notIdealFor,
-  commuteFriendly,
 }: {
-  priceLine: string
-  sulitLabel: string
   bestTime: string
   crowdLevel: string
   visitDuration: string
   goodFor: string[]
   notIdealFor: string[]
-  commuteFriendly: boolean
 }): PlaceHighlight[] {
   const highlights: PlaceHighlight[] = []
 
-  if (priceLine) {
-    const priceDetail = priceLine === 'Free entry' ? 'No ticket needed' : sulitLabel ? `${sulitLabel} for a Metro Manila gala` : 'Check the latest price before you go'
-    highlights.push({ icon: Wallet, title: priceLine, detail: priceDetail })
+  if (visitDuration) {
+    highlights.push({ icon: Timer, title: `Plan for ${visitDuration.replace(/(\d)\s*-\s*(\d)/g, '$1–$2')}` })
   }
 
   if (bestTime) {
     highlights.push({
       icon: Clock,
       title: describeBestTime(bestTime),
-      detail: crowdLevel ? `Crowd is usually ${crowdLevel.toLowerCase()}` : 'Fewer crowds, easier to enjoy',
+      detail: crowdLevel ? `Crowd is usually ${crowdLevel.toLowerCase()}` : undefined,
     })
   }
 
   const goodForText = goodFor.join(' ').toLowerCase()
   if (/barkada|group|friends|catch/.test(goodForText)) {
-    highlights.push({ icon: Users, title: 'Good for barkada', detail: 'Works well for group hangouts' })
+    highlights.push({ icon: Users, title: 'Good for barkada' })
   } else if (/barkada|group|friends|crowd/.test(notIdealFor.join(' ').toLowerCase()) || /date|couple|solo|study/.test(goodForText)) {
-    highlights.push({ icon: Users, title: 'Better for small groups', detail: 'Best with a few friends, not a big barkada' })
+    highlights.push({ icon: Users, title: 'Better for small groups' })
   }
 
-  if (visitDuration) {
-    highlights.push({ icon: Timer, title: `Plan for ${visitDuration.replace(/(\d)\s*-\s*(\d)/g, '$1–$2')}`, detail: 'Typical tambay time here' })
-  }
-
-  if (commuteFriendly) {
-    highlights.push({ icon: Bus, title: 'Commute-friendly', detail: 'Easy to reach by public transport' })
-  }
-
-  return highlights.slice(0, 4)
+  return highlights
 }
 
 type LatLng = { lat: number; lng: number }
@@ -303,30 +287,27 @@ function PlacePhoto({
 
   if (!activePhoto) {
     return (
-      <div className="grid gap-2">
-        <div className="grid h-[240px] place-items-center rounded-[var(--r-3)] bg-[var(--fill)] px-6 text-center md:h-[400px]">
-          <div>
-            <Camera className="mx-auto h-8 w-8 text-[var(--ink-3)]" aria-hidden="true" />
-            <p className="g-h3 mt-3">Wala pang photos</p>
-            <p className="g-sm g-mut mt-1">Be the first to add a photo of this spot.</p>
-            {showAddPhotoAction ? (
-              <Button variant="ink" size="sm" onClick={onContribute} className="mt-4">
-                <Camera aria-hidden="true" />
-                Add photo
-              </Button>
-            ) : null}
-          </div>
+      <div className="grid h-[240px] place-items-center rounded-[var(--r-3)] bg-[var(--sea-soft)] px-6 text-center md:h-[400px]">
+        <div>
+          <Camera className="mx-auto h-8 w-8 text-[var(--sea)]" aria-hidden="true" />
+          <p className="g-h3 mt-3">Wala pang photos</p>
+          <p className="g-sm g-mut mt-1">Be the first to add a photo of this spot.</p>
+          {showAddPhotoAction ? (
+            <Button variant="ink" size="sm" onClick={onContribute} className="mt-4">
+              <Camera aria-hidden="true" />
+              Add photo
+            </Button>
+          ) : null}
         </div>
-        <PlaceImageNotice />
       </div>
     )
   }
 
   const tileCount = Math.min(tileIndexes.length, 4)
-  const desktopColumns = tileCount === 0 ? '1fr' : tileCount <= 2 ? '2fr 1fr' : '2fr 1fr 1fr'
+  const desktopColumns = tileCount === 0 ? '1fr' : tileCount === 1 ? '2fr 1fr' : '2fr 1fr 1fr'
 
   return (
-    <div className="grid gap-2">
+    <div>
       <div className="md:hidden">
         <div
           className="relative overflow-hidden rounded-[var(--r-3)] bg-[var(--fill)]"
@@ -341,6 +322,7 @@ function PlacePhoto({
             </Tag>
           ) : null}
           {addPhotoButton}
+          <ImageSourceInfo />
         </div>
         {photos.length > 1 ? (
           <div className="mt-2 grid grid-cols-5 gap-2">
@@ -364,23 +346,22 @@ function PlacePhoto({
       </div>
 
       <div
-        className="hidden h-[400px] gap-2 md:grid lg:h-[420px]"
+        className="relative hidden h-[440px] gap-2 overflow-hidden rounded-[var(--r-4)] md:grid"
         style={{ gridTemplateColumns: desktopColumns, gridTemplateRows: 'repeat(2, minmax(0, 1fr))' }}
       >
-        <div className="relative overflow-hidden rounded-[var(--r-3)] bg-[var(--fill)]" style={{ gridRow: 'span 2' }}>
+        <div className="overflow-hidden bg-[var(--fill)]" style={{ gridRow: 'span 2' }}>
           <img src={activePhoto} alt={placeName} className="h-full w-full object-cover" loading="eager" onError={() => markPhotoBroken(activePhoto)} />
-          {addPhotoButton}
         </div>
         {tileIndexes.slice(0, 4).map((photoIndex, position) => {
           const photo = photos[photoIndex]
-          const spansRows = tileCount === 1 || (tileCount === 3 && position === 0)
+          const spansRows = tileCount <= 2 || (tileCount === 3 && position === 0)
           return (
             <button
               key={`${photo}-tile`}
               type="button"
               onClick={() => onSelect(photoIndex)}
               aria-label={`Show photo ${photoIndex + 1} of ${placeName}`}
-              className="group overflow-hidden rounded-[var(--r-3)] bg-[var(--fill)]"
+              className="group overflow-hidden bg-[var(--fill)]"
               style={spansRows ? { gridRow: 'span 2' } : undefined}
             >
               <img
@@ -393,8 +374,36 @@ function PlacePhoto({
             </button>
           )
         })}
+        {addPhotoButton}
+        <ImageSourceInfo />
       </div>
-      <PlaceImageNotice />
+    </div>
+  )
+}
+
+function ImageSourceInfo() {
+  const [isOpen, setIsOpen] = useState(false)
+  const note = 'Images come from third-party sources.'
+  return (
+    <div className="absolute bottom-1.5 left-1.5 flex items-center gap-1">
+      <button
+        type="button"
+        title={note}
+        aria-label="About these images"
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen((open) => !open)}
+        onBlur={() => setIsOpen(false)}
+        className="grid h-11 w-11 place-items-center rounded-full"
+      >
+        <span className="grid h-8 w-8 place-items-center rounded-full bg-[var(--surface)] text-[var(--ink)]" style={{ boxShadow: 'var(--sh-1)' }}>
+          <Info className="h-4 w-4" aria-hidden="true" />
+        </span>
+      </button>
+      {isOpen ? (
+        <span role="status" className="g-tag is-solid">
+          {note}
+        </span>
+      ) : null}
     </div>
   )
 }
@@ -447,6 +456,9 @@ function StarRatingInput({
     </div>
   )
 }
+
+const TEAM_COMMENT_PREFIX = /^\s*(?:❗\s*)?This is not a real user review\.[\s\S]*?—\s*Guide comment\s*—\s*/
+const MIN_RATINGS_TO_SHOW = 3
 
 function StarsDisplay({ rating }: { rating: number }) {
   return (
@@ -1839,14 +1851,11 @@ function PlaceDetailView({
   const priceLine =
     budgetAmount == null ? priceBadgeLabel : budgetAmount <= 0 ? 'Free entry' : `₱${budgetAmount.toLocaleString('en-PH')} / head`
   const highlights = buildPlaceHighlights({
-    priceLine,
-    sulitLabel: sulitLevel && sulitLevel.index > 0 ? sulitLevel.label : '',
     bestTime: cleanString(place.best_time_to_visit),
     crowdLevel: cleanString(place.crowd_level),
     visitDuration: cleanString(place.visit_duration),
     goodFor,
     notIdealFor: place.not_ideal_for ?? [],
-    commuteFriendly: Boolean(place.commute_friendly),
   })
   const placeTags = uniqueList([
     ...(place.tags ?? []).slice(0, 4).map((tag) => tag.name),
@@ -1902,6 +1911,9 @@ function PlaceDetailView({
     const avatarUrl = cleanString(comment.member_avatar_url)
     const isEdited = wasEdited(comment.created_at, comment.updated_at)
     const canOpenProfile = isOwner || Boolean(profileUsername)
+    const teamCommentText = isDeleted ? '' : comment.comment.replace(TEAM_COMMENT_PREFIX, '')
+    const isTeamComment = !isDeleted && teamCommentText !== comment.comment
+    const commentText = isTeamComment ? teamCommentText : comment.comment
 
     const handleOpenCommentProfile = () => {
       if (isOwner) {
@@ -1941,16 +1953,7 @@ function PlaceDetailView({
           )}
 
           <div className="min-w-0 flex-1">
-            <div
-              className={cx(
-                'rounded-[var(--r-3)] border px-3 py-2.5',
-                isFailed
-                  ? 'border-[var(--bad)] bg-[var(--bad-soft)]'
-                  : isDeleted
-                    ? 'border-[var(--line-2)] bg-[var(--fill)]'
-                    : 'border-[var(--line-2)] bg-[var(--surface)]',
-              )}
-            >
+            <div className={cx(isFailed && 'rounded-[var(--r-3)] bg-[var(--bad-soft)] px-3 py-2.5')}>
               <div className="flex items-start gap-2">
                 <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
                   {canOpenProfile ? (
@@ -1961,6 +1964,11 @@ function PlaceDetailView({
                     <span className="g-sm min-w-0 truncate font-semibold">{displayName}</span>
                   )}
                   {isOwner ? <Tag>You</Tag> : null}
+                  {isTeamComment ? (
+                    <Tag tone="sea" title="Written by the GalaTayo team, not a visitor">
+                      GalaTayo team
+                    </Tag>
+                  ) : null}
                   <span className="g-xs g-fnt">
                     {formatReviewDate(comment.updated_at || comment.created_at)}
                     {isEdited ? ' · edited' : null}
@@ -2067,7 +2075,7 @@ function PlaceDetailView({
                   </div>
                 </div>
               ) : (
-                <p className={cx('mt-1 whitespace-pre-line break-words text-[14px] leading-[1.5]', isDeleted && 'g-fnt italic')}>{comment.comment}</p>
+                <p className={cx('mt-1 whitespace-pre-line break-words text-[14px] leading-[1.5]', isDeleted && 'g-fnt italic')}>{commentText}</p>
               )}
 
               {isFailed && comment.local_error_message ? <p className="g-hint is-error mt-2">{comment.local_error_message}</p> : null}
@@ -2175,29 +2183,34 @@ function PlaceDetailView({
     )
   }
 
-  const hasRatings = reviewCount > 0 && averageRating !== null
+  const sectionClassName = 'border-t border-[var(--line)] py-6'
+  const sectionHeadClassName = '!mt-0'
+  const ratingCountLabel =`${formatRatingCount(reviewCount)} ${reviewCount === 1 ? 'rating' : 'ratings'}`
 
   const communitySection = !isCommunityPlaceReady ? (
-    <section aria-labelledby="place-reviews">
-      <SectionHead title={<span id="place-reviews">Reviews</span>} />
+    <section aria-labelledby="place-reviews" className={sectionClassName}>
+      <SectionHead className={sectionHeadClassName} title={<span id="place-reviews">Reviews</span>} />
       <Empty title="Reviews open soon" description="Ratings and comments aren't ready for this spot yet." />
     </section>
   ) : (
     <>
-      <section>
-        <SectionHead title="Reviews" />
-        <Panel>
-          {hasRatings ? (
+      <section className={sectionClassName}>
+        <SectionHead className={sectionHeadClassName} title="Reviews" />
+        <div>
+          {reviewCount >= MIN_RATINGS_TO_SHOW && averageRating !== null ? (
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <StarsDisplay rating={Math.round(averageRating)} />
-              <span className="g-sm g-mut">
-                {formatRatingCount(reviewCount)} {reviewCount === 1 ? 'rating' : 'ratings'}
-              </span>
+              <span className="g-sm g-mut">{ratingCountLabel}</span>
+            </div>
+          ) : reviewCount > 0 ? (
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <Tag>New</Tag>
+              <span className="g-sm g-mut">{ratingCountLabel} so far. We show the score after {MIN_RATINGS_TO_SHOW}.</span>
             </div>
           ) : (
             <p className="g-sm g-mut">Wala pang ratings. Be the first to help others decide.</p>
           )}
-          <hr className="g-sep my-4" />
+          {currentUserId ? <hr className="g-sep my-4" /> : null}
 
           {currentUserId && (!hasCurrentUserReview || isReviewEditing) ? (
             <div>
@@ -2265,19 +2278,20 @@ function PlaceDetailView({
               </div>
             </div>
           ) : (
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="g-sm g-mut">Sign in to leave a rating.</p>
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+              <p className="g-sm min-w-0">Sign in to rate and comment.</p>
               <Button variant="line" size="sm" onClick={() => guestAuth.open('community')}>
                 Sign in
               </Button>
             </div>
           )}
           {reviewError ? <p className="g-hint is-error mt-2">{reviewError}</p> : null}
-        </Panel>
+        </div>
       </section>
 
-      <section>
+      <section className={sectionClassName}>
         <SectionHead
+          className={sectionHeadClassName}
           title="Comments"
           sub={
             isCommentsLoading
@@ -2313,20 +2327,13 @@ function PlaceDetailView({
               </div>
             </div>
           </div>
-        ) : (
-          <div className="g-panel flex flex-wrap items-center justify-between gap-3">
-            <p className="g-sm g-mut min-w-0">Sign in to join the kwentuhan.</p>
-            <Button variant="line" size="sm" onClick={() => guestAuth.open('community')}>
-              Sign in
-            </Button>
-          </div>
-        )}
+        ) : null}
         {commentError ? <p className="g-hint is-error mt-2">{commentError}</p> : null}
 
         {isCommentsLoading ? (
           commentSkeleton
         ) : visibleCommentCount === 0 ? (
-          <Empty className="mt-4" title="Wala pang comments" description="Be the first to share something about this place." />
+          <p className="g-sm g-mut mt-2">Be the first to share something about this place.</p>
         ) : (
           <ul className="mt-4 grid gap-4">{comments.map((comment) => renderComment(comment))}</ul>
         )}
@@ -2366,20 +2373,25 @@ function PlaceDetailView({
         </ol>
       </nav>
 
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="g-h1">{place.name}</h1>
-          <p className="g-mut mt-1.5">
-            {categoryLabel} · {locationLabel} ·{' '}
-            <b className="font-semibold text-[var(--ink)]">★ {headlineRating.toFixed(1)}</b> ({formatRatingCount(headlineReviewCount)}{' '}
-            {headlineReviewCount === 1 ? 'rating' : 'ratings'})
-          </p>
-        </div>
-        <Button variant="line" size="sm" onClick={() => void handleSharePlace()}>
+      <div className="flex items-start gap-3 md:items-center md:gap-4">
+        <h1 className="g-h1 min-w-0 flex-1 md:flex-none">{place.name}</h1>
+        <Button variant="line" size="sm" className="shrink-0" onClick={() => void handleSharePlace()}>
           <Share2 aria-hidden="true" />
           Share
         </Button>
       </div>
+      <p className="g-mut mt-1.5 flex flex-wrap items-center gap-x-1.5">
+        <span>
+          {categoryLabel} · {locationLabel} ·
+        </span>
+        {headlineReviewCount >= MIN_RATINGS_TO_SHOW ? (
+          <span>
+            <b className="font-semibold text-[var(--ink)]">★ {headlineRating.toFixed(1)}</b> ({formatRatingCount(headlineReviewCount)} ratings)
+          </span>
+        ) : (
+          <Tag>New</Tag>
+        )}
+      </p>
       {shareError ? <p className="g-hint is-error mt-2">{shareError}</p> : null}
       {saveError ? <p className="g-hint is-error mt-2">{saveError}</p> : null}
       {contributionError && !isContributionOpen ? <p className="g-hint is-error mt-2">{contributionError}</p> : null}
@@ -2408,15 +2420,15 @@ function PlaceDetailView({
           ) : null}
 
           {highlights.length > 0 ? (
-            <ul className="mt-5 grid gap-5 border-y border-[var(--line)] py-6" aria-label="Highlights">
+            <ul className="mt-5 grid gap-5 border-t border-[var(--line)] py-6" aria-label="Highlights">
               {highlights.map((item) => {
                 const HighlightIcon = item.icon
                 return (
-                  <li key={item.title} className="flex items-start gap-4">
-                    <HighlightIcon className="mt-0.5 h-6 w-6 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+                  <li key={item.title} className={cx('flex gap-4', item.detail ? 'items-start' : 'items-center')}>
+                    <HighlightIcon className="h-6 w-6 shrink-0" strokeWidth={1.75} aria-hidden="true" />
                     <div className="min-w-0">
                       <p className="text-[15px] font-semibold leading-snug">{item.title}</p>
-                      <p className="g-sm g-mut mt-0.5">{item.detail}</p>
+                      {item.detail ? <p className="g-sm g-mut mt-0.5">{item.detail}</p> : null}
                     </div>
                   </li>
                 )
@@ -2424,21 +2436,8 @@ function PlaceDetailView({
             </ul>
           ) : null}
 
-          <CheckInButton
-            className="mt-5 lg:hidden"
-            placeId={place.id}
-            placeName={place.name}
-            session={appSession}
-            onGuest={() => guestAuth.open('community')}
-          />
-
-          <Button variant="soft" size="sm" className="mt-5" onClick={() => openFloatingChat(askAiQuestion)}>
-            <Sparkles aria-hidden="true" />
-            Ask AI about this place
-          </Button>
-
-          <section>
-            <SectionHead title="About" />
+          <section className={sectionClassName}>
+            <SectionHead className={sectionHeadClassName} title="About" />
             <p className="max-w-[640px] text-[15px] leading-relaxed">{quickTake}</p>
             {factItems.length > 0 ? (
               <div className="mt-3 max-w-[640px]">
@@ -2446,15 +2445,19 @@ function PlaceDetailView({
               </div>
             ) : null}
             {budgetNotes ? <p className="g-xs g-mut mt-2 max-w-[640px] leading-relaxed">{budgetNotes}</p> : null}
+            <Button variant="text" size="sm" className="mt-2" onClick={() => openFloatingChat(askAiQuestion)}>
+              <Sparkles aria-hidden="true" />
+              Ask AI about this place
+            </Button>
           </section>
 
-          <section>
-            <SectionHead title="Good for" />
+          <section className={sectionClassName}>
+            <SectionHead className={sectionHeadClassName} title="Good for" />
             <GoodForList values={goodFor} />
           </section>
 
-          <section>
-            <SectionHead title="Getting there" sub={distanceKm != null ? `About ${distanceKm < 1 ? 'less than 1' : distanceKm.toFixed(1)} km${distanceFromUserKm != null ? ' from you' : ' away'}` : undefined} />
+          <section className={sectionClassName}>
+            <SectionHead className={sectionHeadClassName} title="Getting there" sub={distanceKm != null ? `About ${distanceKm < 1 ? 'less than 1' : distanceKm.toFixed(1)} km${distanceFromUserKm != null ? ' from you' : ' away'}` : undefined} />
             <p className="g-sm whitespace-pre-line">{addressLabel}</p>
             <div className="g-modes mt-3" role="group" aria-label="Ways to get there">
               {accessModes.map((mode) => {
@@ -2484,16 +2487,16 @@ function PlaceDetailView({
             </Button>
           </section>
 
-          <section>
-            <SectionHead title="Good to know" />
-            <div className="g-group">
+          <section className={sectionClassName}>
+            <SectionHead className={sectionHeadClassName} title="Good to know" />
+            <div className="divide-y divide-[var(--line-2)]">
               {faqItems.map((item) => (
                 <details key={item.question} className="group">
-                  <summary className="flex min-h-12 cursor-pointer list-none items-center gap-3 px-4 py-2 hover:bg-[var(--fill)] [&::-webkit-details-marker]:hidden">
+                  <summary className="flex min-h-12 cursor-pointer list-none items-center gap-3 py-3 hover:underline [&::-webkit-details-marker]:hidden">
                     <h3 className="min-w-0 flex-1 text-[15px] font-medium leading-snug">{item.question}</h3>
                     <ChevronDown className="h-4 w-4 shrink-0 text-[var(--ink-3)] transition-transform group-open:rotate-180" aria-hidden="true" />
                   </summary>
-                  <p className="g-sm g-mut px-4 pb-4 leading-relaxed">{item.answer}</p>
+                  <p className="g-sm g-mut pb-4 leading-relaxed">{item.answer}</p>
                 </details>
               ))}
             </div>
@@ -2559,10 +2562,11 @@ function PlaceDetailView({
         className="fixed inset-x-0 z-[5500] border-t border-[var(--line-2)] bg-[var(--surface)] px-4 py-2.5 lg:hidden"
         style={{ bottom: 'calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px))' }}
       >
-        <div className="mx-auto flex max-w-[720px] items-center gap-3">
+        <div className="relative mx-auto flex max-w-[720px] items-center gap-2">
           <p className="min-w-0 flex-1 truncate">
             <span className="g-h3">{priceLine || 'Price on site'}</span>
           </p>
+          <CheckInButton iconOnly placeId={place.id} placeName={place.name} session={appSession} onGuest={() => guestAuth.open('community')} />
           <Button
             variant="soft"
             iconOnly

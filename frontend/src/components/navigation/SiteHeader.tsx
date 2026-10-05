@@ -73,7 +73,7 @@ function SiteHeader({ pathname }: { pathname: string }) {
               <Button variant="soft" size="sm" iconOnly className="g-only-mob" href="/search" aria-label="Search places">
                 <Search aria-hidden="true" />
               </Button>
-              {showChat ? (
+              {showChat && session ? (
                 <Button variant="soft" size="sm" iconOnly className="g-only-mob" onClick={() => openFloatingChat()} aria-label="Ask GalaTayo AI">
                   <Sparkles aria-hidden="true" />
                 </Button>
@@ -92,7 +92,7 @@ function SiteHeader({ pathname }: { pathname: string }) {
                   <Button variant="text" size="sm" href="/login" className="no-underline">
                     Log in
                   </Button>
-                  <Button variant="ink" size="sm" href="/signup">
+                  <Button variant="ink" size="sm" href="/signup" className="g-only-desk">
                     Sign up
                   </Button>
                 </>

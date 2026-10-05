@@ -1,5 +1,4 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { Sparkles } from 'lucide-react'
 import CompactPagination from '../components/CompactPagination'
 import PlaceCard, { withLiveDetail } from '../components/PlaceCard'
 import { ListingBreadcrumb } from '../components/home/search/SearchComponents'
@@ -11,7 +10,6 @@ import SeoHead from '../components/SeoHead'
 import { placeCategories } from '../data/placeCategories'
 import { getAreaLabelBySlug, normalizeAreaSlug } from '../data/metroManilaAreas'
 import { navigateToPath, scrollViewportToTopInstant } from '../utils/navigation'
-import { openFloatingChat } from '../utils/floatingChat'
 import { formatLabelFromSlug, getSiteOrigin } from '../utils/seo'
 import { getListingPlaceViewportTop, peekPendingListingRouteCache, readListingRouteCache, restoreListingRouteScroll, writeListingRouteCache } from '../utils/listingRouteCache'
 import { fetchPlaceDetailsBatch, readCachedPlaceDetail } from '../utils/placeDetailCache'
@@ -326,7 +324,6 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
       ]
     : null
 
-  const askAiQuestion = `Help me pick places to visit in ${areaName}`
   const relatedGuides = SEO_LANDING_TARGETS.filter((target) => target.areaSlug === normalizedAreaSlug).slice(0, 4)
 
   return (
@@ -341,15 +338,9 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
 
       <ListingBreadcrumb items={[{ label: 'Home', href: '/home' }, { label: 'Places', href: '/places' }, { label: areaName }]} />
 
-      <header className="mt-5 flex flex-wrap items-end justify-between gap-4">
-        <div className="min-w-0 max-w-[36rem]">
-          <h1 className="g-h1">Places in {areaName}</h1>
-          <p className="g-mut mt-2">Cafes, parks and food spots in {areaName}</p>
-        </div>
-        <Button variant="soft" size="sm" onClick={() => openFloatingChat(askAiQuestion)}>
-          <Sparkles aria-hidden="true" />
-          Ask AI
-        </Button>
+      <header className="mt-5 max-w-[36rem]">
+        <h1 className="g-h1">Places in {areaName}</h1>
+        <p className="g-mut mt-2">Cafes, parks and food spots in {areaName}</p>
       </header>
 
       <Chips className="mt-5" role="group" aria-label="Category">
