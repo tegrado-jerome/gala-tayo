@@ -27,8 +27,8 @@ const CITY_CENTERS: Record<string, [number, number]> = {
 // gt1.css map styles are unlayered, so these overrides need `!`.
 // Collected cities are teal stamp pills; the rest are small navy dots so the whole metro shows even before the first stamp.
 const STAMP_PINS =
-  '[&_.g-lpin.is-on]:!bg-[var(--sea)] [&_.g-lpin.is-on]:!text-white [&_.g-lpin.is-on]:!shadow-[0_0_0_3px_#fff,0_6px_16px_rgba(15,33,56,0.25)] ' +
-  '[&_.g-lpin:not(.is-on)]:!h-2.5 [&_.g-lpin:not(.is-on)]:!w-2.5 [&_.g-lpin:not(.is-on)]:!p-0 [&_.g-lpin:not(.is-on)]:!bg-[#0f2138]/45 [&_.g-lpin:not(.is-on)]:!shadow-[0_0_0_2px_#fff]'
+  '[&_.g-lpin.is-on]:!bg-[var(--sea)] [&_.g-lpin.is-on]:!text-white [&_.g-lpin.is-on]:!shadow-[0_0_0_3px_#fff,0_6px_16px_rgba(0,0,0,0.25)] ' +
+  '[&_.g-lpin:not(.is-on)]:!h-2.5 [&_.g-lpin:not(.is-on)]:!w-2.5 [&_.g-lpin:not(.is-on)]:!p-0 [&_.g-lpin:not(.is-on)]:!bg-[#222222]/45 [&_.g-lpin:not(.is-on)]:!shadow-[0_0_0_2px_#fff]'
 
 /** Full-colour map of Metro Manila: one stamp pin per city you have checked in at, a small dot for the rest. */
 function PassportMap({ stamps, className }: { stamps: CityStamp[]; className?: string }) {

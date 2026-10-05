@@ -10,9 +10,9 @@
 .pd-hero-top > * { pointer-events: auto; }
 .pd-hero-bottom { position: absolute; inset: auto 0 34px 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 12px; pointer-events: none; }
 .pd-hero-bottom > * { pointer-events: auto; }
-.pd-count { display: inline-flex; align-items: center; height: 26px; padding: 0 10px; border-radius: var(--r-1); background: rgba(15, 33, 56, 0.72); color: #fff; font: 600 12px/1 var(--font-body); letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
+.pd-count { display: inline-flex; align-items: center; height: 26px; padding: 0 10px; border-radius: var(--r-1); background: rgba(0, 0, 0, 0.72); color: #fff; font: 600 12px/1 var(--font-body); letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
 
-.pd-round { display: grid; place-items: center; width: 40px; height: 40px; flex: 0 0 auto; border: 0; border-radius: 50%; background: color-mix(in srgb, var(--surface) 90%, transparent); color: var(--ink); box-shadow: 0 2px 8px rgba(15, 33, 56, 0.16); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); cursor: pointer; transition: transform var(--t-fast) var(--ease-g); }
+.pd-round { display: grid; place-items: center; width: 40px; height: 40px; flex: 0 0 auto; border: 0; border-radius: 50%; background: color-mix(in srgb, var(--surface) 90%, transparent); color: var(--ink); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); cursor: pointer; transition: transform var(--t-fast) var(--ease-g); }
 .pd-round svg { width: 18px; height: 18px; }
 .pd-round:active { transform: scale(0.94); }
 .pd-round.is-sm { width: 32px; height: 32px; }
@@ -141,7 +141,7 @@ a.pd-fact:hover .pd-fact-v { text-decoration: underline; text-underline-offset: 
 .pd-spin { display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--line); border-top-color: var(--ink); animation: g-spin 0.7s linear infinite; vertical-align: -2px; }
 
 /* Phone sticky action bar */
-.pd-bar { position: fixed; inset-inline: 0; z-index: 5500; padding: 10px 16px; background: var(--surface); border-top: 1px solid var(--line-2); box-shadow: 0 -6px 18px rgba(15, 33, 56, 0.06); }
+.pd-bar { position: fixed; inset-inline: 0; z-index: 5500; padding: 10px 16px; background: var(--surface); border-top: 1px solid var(--line-2); box-shadow: 0 -6px 18px rgba(0, 0, 0, 0.06); }
 .pd-bar-in { position: relative; display: flex; align-items: center; gap: 10px; max-width: 720px; margin: 0 auto; }
 .pd-bar-price { min-width: 0; flex: 1 1 auto; }
 .pd-bar-price b { display: block; font: 700 16px/1.2 var(--font-display); letter-spacing: -0.02em; white-space: nowrap; }

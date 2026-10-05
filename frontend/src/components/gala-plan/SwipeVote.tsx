@@ -18,7 +18,7 @@ const SWIPE_PX = 96
 const FLY_MS = 220
 
 // Navy text on coral, the system rule for the main action.
-const ON_TARA = '#0f2138'
+const ON_TARA = '#ffffff'
 
 function findPlace(plan: GalaPlanDetail, option: Option) {
   const label = option.label.trim().toLowerCase()
@@ -48,7 +48,7 @@ function OptionCard({ plan, option, dx, dragging, isMine }: { plan: GalaPlanDeta
       }}
     >
       {image ? <img src={resizedMediaUrl(image, 'card')} alt="" draggable={false} className="absolute inset-0 h-full w-full object-cover" /> : null}
-      <div className="absolute inset-0" style={{ background: image ? 'linear-gradient(180deg, rgba(15,33,56,0) 45%, rgba(15,33,56,0.88) 100%)' : undefined }} aria-hidden="true" />
+      <div className="absolute inset-0" style={{ background: image ? 'linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(0,0,0,0.88) 100%)' : undefined }} aria-hidden="true" />
 
       <span
         className="absolute left-5 top-5 rounded-[var(--r-1)] px-3 py-1"

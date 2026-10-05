@@ -26,7 +26,7 @@
     <link rel="preconnect" href="https://tile.openstreetmap.org" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <link rel="preload" as="image" href="/images/welcome/mobile.webp" type="image/webp" media="(max-width: 639px)" fetchpriority="high" />
     <link rel="preload" as="image" href="/images/welcome/tablet.webp" type="image/webp" media="(min-width: 640px) and (max-width: 1023px)" fetchpriority="high" />
@@ -67,7 +67,7 @@
         display: grid;
         place-items: center;
         background: #ffffff;
-        color: #0f2138;
+        color: #222222;
         opacity: 1;
         visibility: visible;
         pointer-events: auto;
@@ -88,7 +88,7 @@
         display: inline-flex;
         align-items: center;
         gap: 10px;
-        font: 700 34px/1 'Sora', 'Plus Jakarta Sans', system-ui, sans-serif;
+        font: 700 34px/1 'Plus Jakarta Sans', system-ui, sans-serif;
         letter-spacing: -0.04em;
         animation: critical-logo-breathe 2.4s ease-in-out infinite;
       }
@@ -130,7 +130,7 @@
   </head>
   <body>
     <div id="critical-welcome-loader" class="critical-app-loader" aria-label="Loading GalaTayo">
-      <span class="critical-app-loader__logo" aria-hidden="true"><svg width="40" height="40" viewBox="0 0 64 64"><rect width="64" height="64" rx="18" fill="#0f2138"/><path d="M20 35a12 12 0 0 1 24 0Z" fill="#ff6b4a"/><rect x="12" y="38" width="40" height="4" rx="2" fill="#fff"/><rect x="19" y="45.5" width="26" height="4" rx="2" fill="#fff" opacity=".75"/><rect x="26" y="53" width="12" height="4" rx="2" fill="#fff" opacity=".5"/></svg>galatayo</span>
+      <span class="critical-app-loader__logo" aria-hidden="true"><svg width="40" height="40" viewBox="0 0 64 64"><rect width="64" height="64" rx="18" fill="#222222"/><path d="M20 35a12 12 0 0 1 24 0Z" fill="#ff6b4a"/><rect x="12" y="38" width="40" height="4" rx="2" fill="#fff"/><rect x="19" y="45.5" width="26" height="4" rx="2" fill="#fff" opacity=".75"/><rect x="26" y="53" width="12" height="4" rx="2" fill="#fff" opacity=".5"/></svg>galatayo</span>
     </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
