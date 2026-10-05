@@ -1,1 +1,28 @@
-[]
+[
+  {
+    "title": "national teachers day october 5",
+    "traffic": 200,
+    "date": "2026-10-05",
+    "intents": [
+      "rainy-day",
+      "cafe",
+      "mall",
+      "cinema",
+      "museum"
+    ],
+    "areaSlug": null
+  },
+  {
+    "title": "pagasa",
+    "traffic": 5000,
+    "date": "2026-10-05",
+    "intents": [
+      "rainy-day",
+      "cafe",
+      "mall",
+      "cinema",
+      "museum"
+    ],
+    "areaSlug": null
+  }
+]
