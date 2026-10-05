@@ -12,6 +12,8 @@ export type AskAiMapOptionalDetails = {
 export type AskAiMapPlace = {
   id: string
   name: string
+  /** In-app page when the place is also listed on GalaTayo. */
+  galatayoPath?: string
   rating?: number
   reviewCount?: number
   category?: string

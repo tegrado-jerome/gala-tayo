@@ -696,38 +696,26 @@ export function hasVerifiedCoordinates(
       ? place.coordinates as Record<string, unknown>
       : null
   const explicitStatus = typeof place.coordinateStatus === 'string' ? String(place.coordinateStatus) : ''
+
+  if (place.hasPin === false || explicitStatus === 'missing_coordinates' || explicitStatus === 'unverified') {
+    return false
+  }
+
+  // The backend decides which coordinates are good enough to pin (and says so with hasPin);
+  // without that flag, fall back to trusting only high-confidence coordinates from known sources.
+  if (place.hasPin === true) {
+    return true
+  }
+
   const source =
     typeof coordinateRecord?.source === 'string'
       ? (coordinateRecord.source as NormalizedCoordinates['source'])
       : typeof place.coordinateSource === 'string'
         ? (place.coordinateSource as NormalizedCoordinates['source'])
         : normalizedCoordinates.source
-  const confidence =
-    coordinateRecord?.confidence === 'high' ||
-    place.coordinateConfidence === 'high'
-      ? 'high'
-      : coordinateRecord?.confidence === 'medium' ||
-          place.coordinateConfidence === 'medium'
-        ? 'medium'
-        : null
+  const isHighConfidence = coordinateRecord?.confidence === 'high' || place.coordinateConfidence === 'high'
 
-  if (confidence !== 'high') {
-    return false
-  }
-
-  if (explicitStatus === 'missing_coordinates' || explicitStatus === 'unverified') {
-    return false
-  }
-
-  if (explicitStatus === 'verified' && isTrustedCoordinateSource(source)) {
-    return true
-  }
-
-  if ((coordinateRecord?.verified === true || coordinateRecord?.trusted === true) && isTrustedCoordinateSource(source)) {
-    return true
-  }
-
-  return isTrustedCoordinateSource(source)
+  return isHighConfidence && isTrustedCoordinateSource(source)
 }
 
 export function normalizePlaces(value: unknown): AskAiMapPlace[] {
@@ -795,6 +783,7 @@ export function normalizePlaces(value: unknown): AskAiMapPlace[] {
                     normalizedName,
                     candidate.address as string | undefined,
                   ),
+      galatayoPath: typeof candidate.galatayoPath === 'string' && candidate.galatayoPath.startsWith('/places/') ? candidate.galatayoPath : undefined,
       googleMapsUri: typeof candidate.googleMapsUri === 'string' ? candidate.googleMapsUri : undefined,
       placeId: typeof candidate.placeId === 'string' ? candidate.placeId : undefined,
       sourceTitle: typeof candidate.sourceTitle === 'string' ? candidate.sourceTitle : undefined,

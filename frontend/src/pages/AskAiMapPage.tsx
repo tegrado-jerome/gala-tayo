@@ -14,6 +14,7 @@ import AskAiUsagePill from '../components/AskAiUsagePill'
 import { TaraAvatar } from '../components/home/ask-ai/AskAiComponents'
 import { GuestAuthPrompt } from '../components/GuestAuthPrompt'
 import MapView from '../components/MapView'
+import InternalLink from '../components/InternalLink'
 import { Button, Chip, Panel, Sheet, Skeleton, Tag, buttonClass, cx } from '../components/ui'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import {
@@ -191,6 +192,27 @@ const AskAiMapComposer = memo(function AskAiMapComposer({
   )
 })
 
+/** Height of the mobile results sheet covering the map (0 on desktop, where results sit beside it). */
+function useSheetInset(element: HTMLElement | null) {
+  const [inset, setInset] = useState(0)
+
+  useEffect(() => {
+    if (!element) return
+    const desktop = window.matchMedia('(min-width: 1024px)')
+    const update = () => setInset(desktop.matches ? 0 : Math.round(element.getBoundingClientRect().height / 20) * 20)
+    update()
+    const observer = new ResizeObserver(update)
+    observer.observe(element)
+    desktop.addEventListener('change', update)
+    return () => {
+      observer.disconnect()
+      desktop.removeEventListener('change', update)
+    }
+  }, [element])
+
+  return inset
+}
+
 function AskAiMapPage() {
   const initialAskAiMapRuntimeStateRef = useRef(
     hasActiveAskAiMapRuntimeState() ? getAskAiMapRuntimeState() : null
@@ -243,6 +265,8 @@ function AskAiMapPage() {
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(initialAskAiMapState?.selectedPlaceId ?? null)
   const [focusedPlaceId, setFocusedPlaceId] = useState<string | null>(initialAskAiMapState?.focusedPlaceId ?? null)
   const [selectedPlaceFocusSignal, setSelectedPlaceFocusSignal] = useState(0)
+  const [sheetElement, setSheetElement] = useState<HTMLElement | null>(null)
+  const sheetInset = useSheetInset(sheetElement)
   const [isPlaceDetailOpen, setIsPlaceDetailOpen] = useState(false)
   const [isMapPinNoticeDismissed, setIsMapPinNoticeDismissed] = useState(false)
   async function refreshAskAiMapsUsage(accessToken?: string | null, signal?: AbortSignal) {
@@ -826,6 +850,7 @@ function AskAiMapPage() {
             selectedPlaceFocusSignal={selectedPlaceFocusSignal}
             className="h-full"
             layoutKey={mapLayoutKey}
+            bottomInset={sheetInset}
             onPlaceSelect={selectPlace}
           />
 
@@ -856,7 +881,7 @@ function AskAiMapPage() {
           ) : null}
         </section>
 
-        <aside className="absolute inset-x-0 bottom-0 z-[650] flex max-h-[62%] flex-col gap-3 rounded-t-[var(--r-4)] border-t border-[var(--line-2)] bg-[var(--surface)] px-4 pt-2.5 pb-3 shadow-[var(--sh-3)] lg:relative lg:inset-auto lg:z-auto lg:max-h-none lg:min-h-0 lg:rounded-none lg:border-t-0 lg:border-l lg:px-5 lg:py-5 lg:shadow-none">
+        <aside ref={setSheetElement} className="absolute inset-x-0 bottom-0 z-[650] flex max-h-[62%] flex-col gap-3 rounded-t-[var(--r-4)] border-t border-[var(--line-2)] bg-[var(--surface)] px-4 pt-2.5 pb-3 shadow-[var(--sh-3)] lg:relative lg:inset-auto lg:z-auto lg:max-h-none lg:min-h-0 lg:rounded-none lg:border-t-0 lg:border-l lg:px-5 lg:py-5 lg:shadow-none">
           <div className="g-grab mb-0! lg:hidden" aria-hidden="true" />
 
           <div className="flex items-center gap-2.5">
@@ -1086,8 +1111,13 @@ function AskAiMapPage() {
               <DetailList title="Parking" items={selectedDisplayPlace.parkingItems} />
               <DetailList title="Accessibility" items={selectedDisplayPlace.accessibilityItems} />
 
+              {selectedPlace?.galatayoPath ? (
+                <InternalLink href={selectedPlace.galatayoPath} className={cx(buttonClass({ variant: 'tara', block: true }), 'mt-5 no-underline')}>
+                  View on GalaTayo
+                </InternalLink>
+              ) : null}
               {selectedGoogleMapsUrl ? (
-                <a href={selectedGoogleMapsUrl} target="_blank" rel="noreferrer" className={cx(buttonClass({ variant: 'ink', block: true }), 'mt-5')}>
+                <a href={selectedGoogleMapsUrl} target="_blank" rel="noreferrer" className={cx(buttonClass({ variant: 'ink', block: true }), selectedPlace?.galatayoPath ? 'mt-2' : 'mt-5')}>
                   <MapPin aria-hidden="true" />
                   Open in Google Maps
                 </a>
