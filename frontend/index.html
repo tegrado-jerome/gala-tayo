@@ -2,6 +2,8 @@
 <html lang="en-PH">
   <head>
     <meta charset="UTF-8" />
+    <!-- Fix cascade-layer order before any stylesheet loads; a lazy chunk declaring `components` first would let the reset beat the kit. -->
+    <style>@layer properties, theme, base, components, utilities;</style>
     <script>
       (function () {
         var p = (location.pathname.replace(/\/+$/, '') || '/');
