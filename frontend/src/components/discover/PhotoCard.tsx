@@ -110,7 +110,7 @@ function PhotoCard({ place, onGuestFavorite, badge, priority = false, onOpen, on
         media={<PlaceImage candidates={candidates} category={place.category} priority={priority} className="g-pc-media" />}
         icon={getCategoryIcon(place.category)}
         category={toTitleCase(place.category)}
-        area={place.localArea || place.area}
+        area={(place.localArea || place.area)?.replace(/\s*\([^)]*\)/g, '') || null}
         city={place.city}
         rating={place.rating}
         reviewCount={place.reviewCount}

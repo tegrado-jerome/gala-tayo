@@ -1,3 +1,4 @@
+import galaScores from "../data/galaScores.json";
 import {
   app,
   HttpRequest,
@@ -101,6 +102,8 @@ async function resolveUserContext(request: HttpRequest): Promise<SearchUserConte
   }
 }
 
+
+const GALA_SCORES: Record<string, number> = galaScores;
 function createSearchId(): string {
   return `search_${randomUUID()}`;
 }
@@ -218,6 +221,9 @@ export async function findSearchPlaces({
       if (nearbySearch && left.distanceKm !== null && right.distanceKm !== null && left.distanceKm !== right.distanceKm) {
         return left.distanceKm - right.distanceKm;
       }
+      // Equal matches: the more gala-worthy (higher scored) place first, not alphabetical.
+      const scoreGap = (GALA_SCORES[String(right.row.slug ?? "")] ?? 0) - (GALA_SCORES[String(left.row.slug ?? "")] ?? 0);
+      if (scoreGap !== 0) return scoreGap;
       return String(left.row.name ?? "").localeCompare(String(right.row.name ?? ""));
     })
     .map(({ row, distanceKm, score }) =>

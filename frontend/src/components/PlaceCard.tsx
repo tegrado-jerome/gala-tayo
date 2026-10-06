@@ -109,7 +109,12 @@ export function formatPricePerHead(budgetMin: number | null | undefined) {
 export function formatVisitDuration(duration: string | null | undefined) {
   const text = duration?.trim()
   if (!text) return null
+  // Cards have one short line: drop asides in brackets and squeeze long phrasings ("Half day to several days" → "Half day+").
   return text
+    .replace(/\s*\([^)]*\)/g, '')
+    .replace(/\s+to\s+(several|multiple|a few)\s+days?/gi, '+')
+    .replace(/\bseveral days\b/gi, 'Multi-day')
+    .replace(/\s+to\s+(a\s+)?full day/gi, '–full day')
     .replace(/(\d)\s*-\s*(\d)/g, '$1–$2')
     .replace(/\s*-\s*/g, '–')
     .replace(/\bhours?\b/gi, (word) => (word.toLowerCase() === 'hour' ? 'hr' : 'hrs'))
