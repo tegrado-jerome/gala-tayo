@@ -6,7 +6,7 @@ import { MapTrifold } from '@phosphor-icons/react/dist/csr/MapTrifold'
 import InternalLink from '../InternalLink'
 import PlaceImage from '../discover/PlaceImage'
 import { Avatar, Tag, cx } from '../ui'
-import { getStaticPlaceImageUrlForSlug } from '../../data/placeIndexVisuals'
+import { getPlacePhotoCandidates } from '../../data/placeIndexVisuals'
 import type { GalaPlanSummary } from '../../utils/galaPlansApi'
 import { daysUntil, formatDaysUntil, getPlanDate } from '../../utils/galaPlanTrip'
 import '../../design/plans.css'
@@ -16,7 +16,7 @@ type CoverStop = { slug?: string | null; image_url?: string | null; category?: s
 /** Image candidates for the first stop that has a photo. */
 function coverTile(stops: CoverStop[]) {
   return stops
-    .map((stop) => ({ category: stop.category ?? null, candidates: [stop.image_url, getStaticPlaceImageUrlForSlug(stop.slug ?? '')].filter((url): url is string => Boolean(url)) }))
+    .map((stop) => ({ category: stop.category ?? null, candidates: getPlacePhotoCandidates(stop.slug, stop.image_url) }))
     .find((tile) => tile.candidates.length > 0)
 }
 

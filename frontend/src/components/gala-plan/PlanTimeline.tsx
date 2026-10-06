@@ -6,7 +6,7 @@ import { X } from '@phosphor-icons/react/dist/csr/X'
 import InternalLink from '../InternalLink'
 import PlaceImage from '../discover/PlaceImage'
 import { Button } from '../ui'
-import { getStaticPlaceImageUrlForSlug } from '../../data/placeIndexVisuals'
+import { getPlacePhotoCandidates } from '../../data/placeIndexVisuals'
 import type { GalaPlanPlace } from '../../utils/galaPlansApi'
 import { estimateLeg, formatPeso, type TravelLeg } from '../../utils/galaPlanTrip'
 import { getCanonicalPlacePath } from '../../utils/routes'
@@ -55,7 +55,7 @@ function PlanTimeline({ stops, onMove, onRemove, animate = false }: PlanTimeline
         const leg = index < stops.length - 1 ? estimateLeg(stop.place, stops[index + 1].place) : null
         const placeHref = getCanonicalPlacePath({ areaSlug: resolveAreaMeta(stop.place).slug, placeSlug: stop.place.slug })
         const meta = [stop.place.category, stop.place.area || stop.place.city, stop.place.budget_min != null ? formatPeso(stop.place.budget_min) : null].filter(Boolean)
-        const images = [stop.place.image_url, getStaticPlaceImageUrlForSlug(stop.place.slug)].filter((url): url is string => Boolean(url))
+        const images = getPlacePhotoCandidates(stop.place.slug, stop.place.image_url)
 
         return (
           <li

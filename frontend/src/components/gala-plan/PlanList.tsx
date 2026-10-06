@@ -144,17 +144,18 @@ function PlanList({ session, favorites = false }: { session?: Session | null; fa
           <p className="g-eyebrow">Your galas</p>
           <h1 className="g-h1 mt-1">Plans</h1>
         </div>
-        <div className="flex gap-2">
+        {/* One main action: Plan with AI. Building by hand stays a quiet text link. */}
+        <div className="flex items-center gap-1">
+          <Button variant="text" size="sm" href="/gala-plans/new">
+            <Plus />
+            New plan
+          </Button>
           {isEmpty ? null : (
             <Button variant="tara" size="sm" href="/plan-with-ai">
               <Sparkles />
               Plan with AI
             </Button>
           )}
-          <Button variant="soft" size="sm" href="/gala-plans/new">
-            <Plus />
-            New plan
-          </Button>
         </div>
       </header>
 

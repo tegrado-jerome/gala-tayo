@@ -696,7 +696,7 @@ function AccountProfilePage({ session }: ProfilePageProps) {
                     key={plan.id}
                     href={`/gala-plans/${encodeURIComponent(plan.id)}`}
                     title={plan.title}
-                    imageUrl={plan.preview_places?.[0]?.image_url}
+                    imageUrl={plan.preview_places?.[0] ? getPlacePhoto({ slug: plan.preview_places[0].slug, photo_url: plan.preview_places[0].image_url }) : null}
                     tag={plan.visibility === 'public' ? undefined : 'Private'}
                     meta={[planDateLabel(plan), plural(placeCount, 'stop'), hearts ? plural(hearts, 'heart') : null].filter(Boolean).join(' · ')}
                   />

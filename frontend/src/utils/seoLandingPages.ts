@@ -94,7 +94,7 @@ const INTENT_NOTES: Record<string, (area: string) => string> = {
   barkada: (area) => `These work for groups: room to stay long, sharing plates, and budgets the whole barkada can split in ${area}.`,
   study: (area) => `Look for the best time to visit on each pick to find quieter hours for studying around ${area}.`,
   chill: (area) => `Low-effort spots in ${area} for when you just want to sit, eat and talk without a big plan.`,
-  'rainy-day': (area) => `All indoor or covered, so your plans in ${area} survive the rain. Check commute notes before heading out in a downpour.`,
+  'rainy-day': (area) => `All indoor or covered, so your plans in ${area} survive the rain.`,
   'food-trip': (area) => `Food stops in ${area} you can chain into one food trip, with a budget per head on every pick.`,
   'photo-spot': (area) => `Spots in ${area} with good light and backdrops. Golden hour is usually the best time to shoot.`,
   free: (area) => `No entrance fee needed for these spots in ${area}. Budget only for food and the commute.`,

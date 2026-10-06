@@ -215,7 +215,7 @@ function PublicGalaPlanPage({ username, slug }: PublicGalaPlanPageProps) {
             {notice ? <p role="status" className="g-hint mt-2">{notice}</p> : null}
           </Panel>
 
-          <SectionHead title="The plan" sub={items.length > 0 ? `${items.length} ${items.length === 1 ? 'stop' : 'stops'} · travel times are estimates` : undefined} />
+          <SectionHead title="The plan" sub={items.length > 0 ? `${items.length} ${items.length === 1 ? 'stop' : 'stops'}` : undefined} />
           {stops.length === 0 ? (
             <Empty title="Wala pang stops" description="This plan has no places yet." />
           ) : (

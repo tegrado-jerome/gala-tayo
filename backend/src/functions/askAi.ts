@@ -428,8 +428,9 @@ export async function postAskAiChatbot(
     const budgetPerHead = chatBudgetPerHead(message);
     const candidates = uncoveredArea ? [] : selectCandidates(places, message, MAX_GROUNDING_PLACES, locationText, { budgetPerHead, start: null });
     const answer = await generateFromGroq({
-      // Models drift to English; a note on the message itself keeps Taglish questions answered in Taglish.
-      message: isTaglish(message) ? `${message}\n\n(Sagot in Taglish.)` : message,
+      message,
+      // Models drift to English; a closing language rule keeps Taglish questions answered in Taglish.
+      replyLanguage: isTaglish(message) ? "taglish" : "english",
       conversationHistory,
       requestId,
       signal: cancellation.signal,

@@ -268,7 +268,6 @@ function AskAiMapPage() {
   const [sheetElement, setSheetElement] = useState<HTMLElement | null>(null)
   const sheetInset = useSheetInset(sheetElement)
   const [isPlaceDetailOpen, setIsPlaceDetailOpen] = useState(false)
-  const [isMapPinNoticeDismissed, setIsMapPinNoticeDismissed] = useState(false)
   async function refreshAskAiMapsUsage(accessToken?: string | null, signal?: AbortSignal) {
     const usageEndpoint = getApiUrl('/ask-ai/usage/check?type=ask_ai_maps')
     const guestId = accessToken ? null : getOrCreateAskAiGuestId()
@@ -456,7 +455,6 @@ function AskAiMapPage() {
     () => normalizedPlaces.filter((place) => place.mapCoordinates !== null).length,
     [normalizedPlaces]
   )
-  const hasMissingMapPins = normalizedPlaces.some((place) => place.mapCoordinates === null)
   const selectedPlace = useMemo(
     () => normalizedPlaces.find((place) => place.id === selectedPlaceId) ?? normalizedPlaces[0] ?? null,
     [normalizedPlaces, selectedPlaceId]
@@ -475,7 +473,6 @@ function AskAiMapPage() {
   const mapLayoutKey = `${normalizedPlaces.length}:${placesWithPinsCount}`
   const shouldShowPermissionPrompt =
     permissionState === 'prompt' || permissionState === 'requesting' || permissionState === 'denied'
-  const shouldShowMapPinNotice = !isSearching && hasMissingMapPins && !isMapPinNoticeDismissed
   const shouldShowLimitWarning =
     isRegistered &&
     !isSearching &&
@@ -649,7 +646,6 @@ function AskAiMapPage() {
 
     setQuery(effectiveQuery)
     setHasSearched(true)
-    setIsMapPinNoticeDismissed(false)
     patchAskAiMapRuntimeState({
       query: effectiveQuery,
       selectedChipIds: effectiveSelectedChipIds,
@@ -920,11 +916,6 @@ function AskAiMapPage() {
           {shouldShowLimitWarning ? <Notice tone="warn">Ubos na ang AI map searches mo today. Balik ka bukas.</Notice> : null}
           {errorMessage && !isSearching ? <Notice tone="bad">{errorMessage}</Notice> : null}
           {!errorMessage && statusMessage && !isSearching ? <Notice tone="info">{statusMessage}</Notice> : null}
-          {shouldShowMapPinNotice ? (
-            <Notice tone="info" onDismiss={() => setIsMapPinNoticeDismissed(true)}>
-              Some picks have no pin because we could not verify their exact spot. Open details for the Google Maps link.
-            </Notice>
-          ) : null}
 
           {!isSearching && normalizedPlaces.length > 0 ? <p className="g-xs g-fnt hidden lg:block">{normalizedPlaces.length} places</p> : null}
 

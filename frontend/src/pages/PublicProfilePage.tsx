@@ -8,6 +8,7 @@ import { UserPlus } from '@phosphor-icons/react/dist/csr/UserPlus'
 import ProfileAvatar from '../components/ProfileAvatar'
 import { Button, Empty, Page, Skeleton, Tag } from '../components/ui'
 import { FollowListSheet, PlanTile, joinedLabel } from './ProfilePage'
+import { getPlacePhoto } from '../utils/placePhoto'
 import '../design/me.css'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import {
@@ -275,7 +276,7 @@ function PublicProfilePage({ username }: PublicProfilePageProps) {
                       key={plan.id}
                       href={`/u/${encodeURIComponent(loadedProfile.username)}/plans/${encodeURIComponent(plan.slug)}`}
                       title={plan.title}
-                      imageUrl={plan.preview_places?.[0]?.image_url}
+                      imageUrl={plan.preview_places?.[0] ? getPlacePhoto({ slug: plan.preview_places[0].slug, photo_url: plan.preview_places[0].image_url }) : null}
                       meta={`${placeCount} ${placeCount === 1 ? 'stop' : 'stops'}${plan.hearts_count ? ` · ${plan.hearts_count} ${plan.hearts_count === 1 ? 'heart' : 'hearts'}` : ''}`}
                     />
                   )

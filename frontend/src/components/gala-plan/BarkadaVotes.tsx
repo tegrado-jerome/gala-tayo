@@ -18,7 +18,7 @@ import { useGuestAuthPrompt } from '../GuestAuthPrompt'
 import { AvatarStack, Button, Panel, Tag, cx } from '../ui'
 import { personAvatar, personName } from './BarkadaPanel'
 import SwipeVote, { type SwipeCard } from './SwipeVote'
-import { getStaticPlaceImageUrlForSlug } from '../../data/placeIndexVisuals'
+import { getPlacePhotoCandidates } from '../../data/placeIndexVisuals'
 import { getApiUrl } from '../../utils/apiClient'
 import {
   DATE_OPTIONS,
@@ -451,7 +451,7 @@ export function SpotDeck({ plan, spots, session, onChange, onPlanChange }: VoteP
   const unswiped = spots.filter((spot) => spot.viewerChoice === null).length
   const inPlan = new Set(plan.items.map((item) => item.place_id))
 
-  const imageFor = (spot: SpotChoice) => details.get(spot.slug)?.imageUrl || getStaticPlaceImageUrlForSlug(spot.slug) || null
+  const imageFor = (spot: SpotChoice) => getPlacePhotoCandidates(spot.slug, details.get(spot.slug)?.imageUrl)[0] ?? null
 
   if (spots.length === 0) {
     if (!plan.viewer_is_owner) return null

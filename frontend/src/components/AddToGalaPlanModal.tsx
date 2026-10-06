@@ -4,7 +4,7 @@ import { Check } from '@phosphor-icons/react/dist/csr/Check'
 import { Plus } from '@phosphor-icons/react/dist/csr/Plus'
 import { Sparkle as Sparkles } from '@phosphor-icons/react/dist/csr/Sparkle'
 import PlaceImage from './discover/PlaceImage'
-import { getStaticPlaceImageUrlForSlug } from '../data/placeIndexVisuals'
+import { getPlacePhotoCandidates } from '../data/placeIndexVisuals'
 import { supabase } from '../supabase'
 import { addPlaceToGalaPlan, listMyGalaPlans, type GalaPlanSummary } from '../utils/galaPlansApi'
 import { getPlanDate } from '../utils/galaPlanTrip'
@@ -12,7 +12,7 @@ import { navigateToPath } from '../utils/navigation'
 import { Button, Empty, Sheet, Skeleton } from './ui'
 
 function planThumbs(plan: GalaPlanSummary) {
-  return (plan.preview_places ?? []).flatMap((stop) => [stop.image_url, getStaticPlaceImageUrlForSlug(stop.slug)]).filter((url): url is string => Boolean(url))
+  return (plan.preview_places ?? []).flatMap((stop) => getPlacePhotoCandidates(stop.slug, stop.image_url))
 }
 
 function planMeta(plan: GalaPlanSummary) {

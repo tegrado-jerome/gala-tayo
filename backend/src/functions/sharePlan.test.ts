@@ -22,6 +22,17 @@ describe("plan share preview", () => {
     assert.match(preview.imageUrl, /cdn-cgi\/image\/width=1200,height=630,fit=cover.*\/places\/bhs\/1\.jpg$/);
   });
 
+  it("prefers the curated HD photo over an upload", () => {
+    const hd = describePlanShare({
+      title: "Kain sa Binondo",
+      description: null,
+      stops: [{ slug: "dong-bei-dumplings", city: "Manila", storageKey: "places/dong-bei-dumplings/dong-bei-dumplings-1.webp" }],
+      planUrl: "https://galatayo.app/gala-plans/abc",
+      shareUrl: "https://galatayo.app/p/abc",
+    });
+    assert.match(hd.imageUrl, /\/places\/dong-bei-dumplings\/hd\/dong-bei-dumplings-1\.webp$/);
+  });
+
   it("renders escaped OG tags and sends people on to the plan", () => {
     const html = renderSharePage({ ...preview, title: 'Tara <script>"x"' });
     assert.match(html, /<meta property="og:title" content="Tara &lt;script&gt;&quot;x&quot;">/);

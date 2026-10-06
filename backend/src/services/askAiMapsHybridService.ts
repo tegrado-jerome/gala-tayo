@@ -12,6 +12,7 @@ import { getActiveNormalizedPlaces } from "../domain/places";
 import { resolveAreaSlug } from "../utils/seoPlaces";
 import { detectCategories } from "./galaPlanDraftPlanner";
 import { detectAliasedCities, locationText, mentionsPhrase } from "../utils/areaAliases";
+import { resolveKnownArea } from "../utils/phDestinations";
 
 let GoogleGenAIForMaps = GoogleGenAI;
 const DEFAULT_SEARCH_AREA = "Metro Manila, Philippines";
@@ -339,7 +340,10 @@ const ASK_AI_MAPS_DEFAULT_GROQ_WHY_MODELS = [
 ];
 const GEOAPIFY_GEOCODE_ENDPOINT = "https://api.geoapify.com/v1/geocode/search";
 const GEOAPIFY_PLACES_ENDPOINT = "https://api.geoapify.com/v2/places";
-const GEMINI_TIMEOUT_MS = 45_000;
+// One Gemini call rarely needs more than ~10 s; the whole lookup (all models) stops at 16 s and
+// GalaTayo's own places answer instead, so a search never hangs for half a minute.
+const GEMINI_TIMEOUT_MS = 12_000;
+const GEMINI_TOTAL_BUDGET_MS = 16_000;
 const GEOAPIFY_TIMEOUT_MS = 8_000;
 const MAX_CANDIDATES = 8;
 const SOFT_STRICT_MIN_RESULTS = 4;
@@ -1279,6 +1283,35 @@ async function resolveSearchAreaWithGeoapify(
     return null;
   }
 
+  // GalaTayo's own city/province/region list answers first: no network wait, and "Batangas"
+  // is the province, not the first school a geocoder finds with that name.
+  const known = resolveKnownArea(intent.searchAreaText);
+  if (known) {
+    const [latitude, longitude] = known.center;
+    const radiusMeters = known.radiusKm * 1000;
+    return {
+      label: known.kind === "city" ? known.label : `${known.label}, Philippines`,
+      center: { latitude, longitude },
+      filter: `circle:${longitude},${latitude},${radiusMeters}`,
+      bias: `proximity:${longitude},${latitude}`,
+      city: resolveKnownAreaAlias(intent.searchAreaText)?.city ?? known.city,
+      province: resolveKnownAreaAlias(intent.searchAreaText)?.province ?? known.province,
+      radiusMeters,
+    };
+  }
+
+  const cacheKey = normalizeKey(intent.searchAreaText);
+  const cached = geocodedAreaCache.get(cacheKey);
+  if (cached) return cached;
+  const resolved = await geocodeSearchArea(intent, signal);
+  if (resolved) geocodedAreaCache.set(cacheKey, resolved);
+  return resolved;
+}
+
+/** Geocoded areas by their text, so a repeated area costs no second geocoder call (cleared on restart). */
+const geocodedAreaCache = new Map<string, GeoapifyResolvedArea>();
+
+async function geocodeSearchArea(intent: AskAiMapIntent & { searchAreaText: string }, signal?: AbortSignal): Promise<GeoapifyResolvedArea | null> {
   const apiKey = await getGeoapifyApiKey();
   const url = new URL(GEOAPIFY_GEOCODE_ENDPOINT);
   url.searchParams.set("text", buildAreaResolutionText(intent.searchAreaText));
@@ -1401,7 +1434,8 @@ async function callGeminiMapsGroundingWithModel(
   intent: AskAiMapIntent,
   model: string,
   logger?: AskAiMapsLogger,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  timeoutMs = GEMINI_TIMEOUT_MS
 ): Promise<GeminiMapsGroundingResult> {
   logger?.log(
     `[AskAiMaps] gemini_called=${true} gemini_model=${model} grounding_enabled=${true}`
@@ -1422,7 +1456,7 @@ async function callGeminiMapsGroundingWithModel(
         abortSignal: signal,
       },
     }),
-    GEMINI_TIMEOUT_MS,
+    timeoutMs,
     `Gemini timed out on ${model}.`,
     signal
   );
@@ -1610,10 +1644,16 @@ async function callGeminiMapsGrounding(
   const modelsToTry = getConfiguredModelList("ASK_AI_MAPS_GEMINI_MODELS", ASK_AI_MAPS_DEFAULT_GEMINI_MODELS);
   logger?.log(`[AskAiMaps] gemini_models_configured=${modelsToTry.join(",")}`);
 
+  const deadline = Date.now() + GEMINI_TOTAL_BUDGET_MS;
   for (let index = 0; index < modelsToTry.length; index++) {
     const model = modelsToTry[index];
+    const remaining = deadline - Date.now();
+    if (remaining < 3000) {
+      logger?.log(`[AskAiMaps] gemini_budget_spent before model=${model}`);
+      break;
+    }
     try {
-      const result = await callGeminiMapsGroundingWithModel(intent, model, logger, signal);
+      const result = await callGeminiMapsGroundingWithModel(intent, model, logger, signal, Math.min(GEMINI_TIMEOUT_MS, remaining));
       if (result.invalidJson) {
         logger?.log(`[AskAiMaps] gemini_model=${model} fallbackReason=invalid-json`);
         continue;
@@ -3035,10 +3075,10 @@ function getPlaceSpecificEvidenceSentence(place: AskAiMapGroundedPlace): string 
   }
 
   if (details.length === 1) {
-    return `Mapped siya as ${details[0]}, so relevant siya as a shortlist result.`;
+    return `Mapped siya as ${details[0]}.`;
   }
 
-  return "May usable map result siya, pero limited ang extra details.";
+  return "";
 }
 
 function getRatingEvidenceSentence(place: AskAiMapGroundedPlace, input: WhyThisFitsInput): string | null {
@@ -3057,7 +3097,7 @@ function getRatingEvidenceSentence(place: AskAiMapGroundedPlace, input: WhyThisF
     return `Rating-wise, may ${place.rating!.toFixed(1)} stars siya sa Maps.`;
   }
 
-  return "Rating-wise, hindi malinaw sa available map data, so treat it as shortlist option muna.";
+  return null;
 }
 
 function getAccessEvidenceSentence(place: AskAiMapGroundedPlace, input: WhyThisFitsInput): string | null {
@@ -3078,24 +3118,16 @@ function getAccessEvidenceSentence(place: AskAiMapGroundedPlace, input: WhyThisF
       return `Access-wise, around ${formatWhyThisFitsDistance(distanceKm)} siya from the search area.`;
     }
 
-    return "Access-wise, near siya sa requested search area.";
+    return null;
   }
 
   if (distanceKm !== null) {
     return `Location-wise, relevant siya sa nearby search mo at around ${formatWhyThisFitsDistance(distanceKm)} from the search area.`;
   }
 
-  return "Location-wise, relevant siya sa requested search area based on the map result.";
+  return null;
 }
 
-function getBudgetEvidenceSentence(input: WhyThisFitsInput): string | null {
-  if (!input.wantsBudget) {
-    return null;
-  }
-
-  const budgetLabel = typeof input.budgetAmount === "number" ? `PHP ${input.budgetAmount}` : "budget";
-  return `Budget-wise, possible ${budgetLabel} shortlist siya.`;
-}
 
 function getOpenNowEvidenceSentence(place: AskAiMapGroundedPlace, input: WhyThisFitsInput): string | null {
   if (!input.wantsOpenNow) {
@@ -3107,9 +3139,7 @@ function getOpenNowEvidenceSentence(place: AskAiMapGroundedPlace, input: WhyThis
     normalizeText(place.optionalDetails?.openingHoursSummary) ??
     normalizeText(place.optionalDetails?.hoursText);
 
-  return hoursText
-    ? `Schedule-wise, may map hours info na "${hoursText}", pero verify pa rin before leaving.`
-    : "Schedule-wise, check current hours muna since live open status is not clearly verified here.";
+  return hoursText ? `Hours sa map listing: ${hoursText}.` : null;
 }
 
 function getGeneralEvidenceSentence(place: AskAiMapGroundedPlace, input: WhyThisFitsInput): string | null {
@@ -3129,7 +3159,7 @@ function getGeneralEvidenceSentence(place: AskAiMapGroundedPlace, input: WhyThis
     return `Distance-wise, around ${formatWhyThisFitsDistance(place.distanceKm)} siya from the search area, useful for comparing nearby options.`;
   }
 
-  return "Good siyang i-check beside the other results para makita mo which one fits your exact lakad better.";
+  return null;
 }
 
 function buildGroundedWhyThisFits(place: AskAiMapGroundedPlace, intent: AskAiMapIntent): string {
@@ -3138,10 +3168,9 @@ function buildGroundedWhyThisFits(place: AskAiMapGroundedPlace, intent: AskAiMap
   const directText =
     input.matchMode === "direct"
       ? `Pasok siya sa ${input.queryFocus || input.foodActivityIntent} search mo based on the map result. ${placeSpecificEvidence}`
-      : `Related option siya for ${input.queryFocus || input.foodActivityIntent}, so okay siyang i-check kung flexible ka sa exact place type. ${placeSpecificEvidence}`;
+      : `Related option siya for ${input.queryFocus || input.foodActivityIntent}. ${placeSpecificEvidence}`;
   const prioritySentences = uniqueStrings([
     directText,
-    getBudgetEvidenceSentence(input),
     getAccessEvidenceSentence(place, input),
     getOpenNowEvidenceSentence(place, input),
     getRatingEvidenceSentence(place, input),
@@ -3369,64 +3398,34 @@ function buildBudgetExplanationSuffixForPlace(
       /mall|cafe|park|shopping|tourist/i.test(
         normalizeKey(`${place.name} ${place.category ?? ""} ${place.displayCategory ?? ""}`)
       )
-        ? "Window shopping, tambay, and enjoying the aircon are the low-cost parts here."
-        : "This is more of a browse-and-check spot, but food or extras can still add up.";
+        ? "Libre ang window shopping at tambay dito."
+        : "";
 
-    return ` Budget fit: good for low-cost gala. ${activityText} Food, parking, cinema, and shopping may still cost money.`;
+    return activityText ? ` ${activityText}` : "";
   }
 
   if (!budgetLabel) {
-    return ` Budget fit: not clearly shown on Maps, so this is a possible match, not a guaranteed budget pick.${placeSummary ? ` ${placeSummary}.` : ""}`;
+    return placeSummary ? ` ${placeSummary}.` : "";
   }
 
   if (budgetFitTier === "within") {
-    return ` Budget fit: likely pasok sa ${budgetLabel}. ${directIntentMatch ? "Direct match siya sa hinahanap mong type of place." : "Relevant siya sa prompt mo."}${placeSummary ? ` ${placeSummary}.` : ""}`;
+    return ` Budget fit: pasok sa ${budgetLabel}. ${directIntentMatch ? "Direct match siya sa hinahanap mong type of place." : "Relevant siya sa prompt mo."}${placeSummary ? ` ${placeSummary}.` : ""}`;
   }
 
   if (budgetFitTier === "near") {
-    return ` Budget fit: near ${budgetLabel}, pero expect possible dagdag if may drinks, sides, upgrades, or service fees. ${directIntentMatch ? "Good match siya for the craving/activity." : "Relevant pa rin siya as a shortlist option."}${placeSummary ? ` ${placeSummary}.` : ""}`;
+    return ` Budget fit: malapit sa ${budgetLabel}; drinks at sides ang dagdag. ${directIntentMatch ? "Good match siya for the craving/activity." : ""}${placeSummary ? ` ${placeSummary}.` : ""}`;
   }
 
   if (budgetFitTier === "over") {
-    return ` Budget fit: likely above ${budgetLabel}, so kailangan magdagdag. ${directIntentMatch ? "Good match siya sa intent mo, pero hindi siya pinaka-tipid." : "Relevant pa rin siya, pero not the cheapest pick."}${placeSummary ? ` ${placeSummary}.` : ""}`;
+    return ` Budget fit: lampas sa ${budgetLabel}. ${directIntentMatch ? "Good match siya sa intent mo, pero hindi siya pinaka-tipid." : ""}${placeSummary ? ` ${placeSummary}.` : ""}`;
   }
 
-  return ` Budget fit: not clearly shown on Maps, so this is a possible match, not a guaranteed budget pick.${placeSummary ? ` ${placeSummary}.` : ""}`;
+  return placeSummary ? ` ${placeSummary}.` : "";
 }
 
+/** Prices aren't in the map data, so only a free gala gets a budget line. */
 function buildBudgetExplanationSuffix(intent: AskAiMapIntent): string {
-  const budgetMentioned =
-    intent.budgetIntent &&
-    intent.budgetIntent !== "unknown" ||
-    typeof intent.budgetAmount === "number" ||
-    Boolean(intent.budgetPerPerson);
-
-  if (!budgetMentioned) {
-    return "";
-  }
-
-  const amountText =
-    typeof intent.budgetAmount === "number" && Number.isFinite(intent.budgetAmount)
-      ? `₱${Math.round(intent.budgetAmount)}`
-      : null;
-  const budgetLabel =
-    intent.budgetIntent === "free_or_low_cost"
-      ? "budget-friendly"
-      : intent.budgetIntent === "low_cost"
-        ? "low-cost"
-        : intent.budgetIntent === "free"
-          ? "free/low-cost"
-          : "budget-aware";
-
-  if (intent.budgetIntent === "free") {
-    return " Walking around, window shopping, and tambay are usually the low-cost parts, but food, parking, rides, and attractions may still cost money.";
-  }
-
-  if (amountText) {
-    return ` Budget note: possible match ito, pero check muna current promo/rate if you're targeting ${amountText}${intent.budgetPerPerson ? " per head" : ""}; prices can change.`;
-  }
-
-  return ` Budget note: possible match ito, but verify current price/promo first since rates can change.`;
+  return intent.budgetIntent === "free" ? " Libre ang lakad, window shopping at tambay; food at rides ang gastos." : "";
 }
 
 function buildWhyThisFits(place: AskAiMapGroundedPlace, intent: AskAiMapIntent): string {
@@ -3525,8 +3524,8 @@ async function generateWhyThisFitsBatch(
       `Detected constraints: ${promptConstraints.constraints.join(", ") || "general relevance"}`,
       "",
       "For each place, write a short 2-3 sentence Taglish explanation that answers why this place fits the user's actual intent and constraints.",
-      "Use only the facts listed for each place. Mention rating/reviews only when provided. Mention distance, nearby, or walkability only when distance is provided; if the user asked for walkable and distance is missing, say to check map directions first.",
-      "Mention budget, prices, promos, affordability, tipid, or sulit only when Detected constraints includes budget-aware. For budget requests, say it is a possible budget shortlist and tell the user to check current prices/promos because live menu/rate data is not verified.",
+      "Use only the facts listed for each place. Mention rating/reviews only when provided. Mention distance, nearby, or walkability only when distance is provided; otherwise leave it out.",
+      "Mention budget, prices, promos, affordability, tipid, or sulit only when Detected constraints includes budget-aware. For budget requests, state the listed price fit plainly; when no price is listed, say nothing about price. Never tell the user to check, verify or confirm anything.",
       "Do not invent food quality, broth, toppings, serving size, menu prices, student budget, interiors, decor, seating, atmosphere, opening status, or exact walking route unless those facts are listed.",
       "Make each explanation place-specific using the listed category, short area/address clue, distance, rating/reviews, hours, or match signal. Avoid copy-paste wording across places.",
       "Add 1 relevant emoji at the end. Do not repeat the place name, full address, category label, or raw metadata. No markdown. Avoid em dashes.",
@@ -4272,6 +4271,9 @@ export async function searchAskAiMaps(
     (error: unknown) => ({ result: null, error })
   );
   const area = await resolveSearchAreaWithGeoapify(intent, signal);
+  // GalaTayo's own places are the fallback when Gemini fails; look them up while Gemini works.
+  const emptyGalaTayo: GalaTayoSearch = { places: [], city: null, inCityCount: 0, areaName: "" };
+  const galatayoPromise = area ? searchGalaTayoPlaces(intent, area, getTargetCounts(intent).max).catch(() => emptyGalaTayo) : Promise.resolve(emptyGalaTayo);
   if (!area) {
     logStructured(logger, "missing_area", {
       rawQuery,
@@ -4340,14 +4342,14 @@ export async function searchAskAiMaps(
         fillCache.set(key, { coordinates: match.coordinates, geoapifyPlaceId: null, confidence: "high", queriesTried: [], source: "galatayo" });
       }
 
+      // Candidates are checked side by side; order is kept for ranking.
+      const results = await Promise.all(candidates.map((candidate) => verifyCandidateWithGeoapify(candidate, intent, area, fillCache, logger)));
       const accepted: AskAiMapGroundedPlace[] = [];
-      for (const candidate of candidates) {
-        const result = await verifyCandidateWithGeoapify(candidate, intent, area, fillCache, logger);
-        if (result.accepted && result.place) {
-          const match = galatayoMatches.get(getCandidateKey(candidate, area));
-          accepted.push(match ? { ...result.place, galatayoPath: match.path } : result.place);
-        }
-      }
+      results.forEach((result, index) => {
+        if (!result.accepted || !result.place) return;
+        const match = galatayoMatches.get(getCandidateKey(candidates[index], area));
+        accepted.push(match ? { ...result.place, galatayoPath: match.path } : result.place);
+      });
 
       verifiedGeminiPlaces = rankVerifiedPlaces(dedupePlaces(accepted), intent);
     }
@@ -4356,10 +4358,7 @@ export async function searchAskAiMaps(
   let finalPlaces: AskAiMapGroundedPlace[];
   let mode: AskAiMapsSearchResult["mode"];
 
-  const galatayo: GalaTayoSearch =
-    verifiedGeminiPlaces.length > 0
-      ? { places: [], city: null, inCityCount: 0, areaName: "" }
-      : await searchGalaTayoPlaces(intent, area, counts.max).catch(() => ({ places: [], city: null, inCityCount: 0, areaName: "" }));
+  const galatayo: GalaTayoSearch = verifiedGeminiPlaces.length > 0 ? emptyGalaTayo : await galatayoPromise;
   const galatayoPlaces = galatayo.places;
 
   if (verifiedGeminiPlaces.length > 0) {

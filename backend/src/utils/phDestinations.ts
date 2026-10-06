@@ -162,6 +162,57 @@ function hasPhrase(normalizedText: string, phrase: string): boolean {
   return Boolean(normalizedPhrase) && new RegExp(`(^|\\s)${escapeRegExp(normalizedPhrase)}($|\\s)`).test(normalizedText);
 }
 
+export type KnownArea = {
+  kind: "city" | "province" | "region";
+  label: string;
+  center: [number, number];
+  radiusKm: number;
+  city: string | null;
+  province: string | null;
+};
+
+const AREA_RADIUS_KM = { city: 15, province: 60, region: 120 } as const;
+
+function provinceArea(province: RawRegion["provinces"][number]): KnownArea {
+  const centers = province.cities.map((city) => city.center);
+  return {
+    kind: "province",
+    label: province.name,
+    center: [centers.reduce((sum, c) => sum + c[0], 0) / centers.length, centers.reduce((sum, c) => sum + c[1], 0) / centers.length],
+    radiusKm: AREA_RADIUS_KM.province,
+    city: null,
+    province: province.name,
+  };
+}
+
+const areaByNameKey = new Map<string, KnownArea>();
+// Cities first, so "Batangas City" stays the city while plain "Batangas" means the province below.
+for (const destination of DESTINATIONS) {
+  // Metro Manila cities sit side by side, so their circle stays tight.
+  const radiusKm = isMetroManilaDestination(destination) ? 5 : AREA_RADIUS_KM.city;
+  const area: KnownArea = { kind: "city", label: destination.label, center: destination.center, radiusKm, city: destination.label, province: destination.provinceName };
+  for (const key of getDestinationNameKeys(destination)) areaByNameKey.set(key, area);
+}
+for (const region of destinationData.regions as RawRegion[]) {
+  for (const province of region.provinces) {
+    if (province.cities.length === 0) continue;
+    for (const key of [province.slug, province.name, `${province.name} province`].map(normalizeLocationText)) areaByNameKey.set(key, provinceArea(province));
+  }
+  const regionArea: KnownArea = { kind: "region", label: region.name, center: toCenter(region.center), radiusKm: AREA_RADIUS_KM.region, city: null, province: null };
+  for (const key of [region.slug, region.name, region.officialName].map(normalizeLocationText)) if (!areaByNameKey.has(key)) areaByNameKey.set(key, regionArea);
+}
+
+/**
+ * A city, province or region from the area text of a search ("Batangas", "Baguio, Benguet", "Bicol"),
+ * from GalaTayo's own destination list, so the map never has to geocode a province to a school.
+ */
+export function resolveKnownArea(text: string | null | undefined): KnownArea | null {
+  if (!text) return null;
+  const whole = normalizeLocationText(text.replace(/\bphilippines\b/i, ""));
+  const first = normalizeLocationText(text.split(",")[0] ?? "");
+  return areaByNameKey.get(whole) ?? areaByNameKey.get(first) ?? null;
+}
+
 /** True when free text names any destination, Metro Manila included ("QC", "Makati", "Siargao"). */
 export function mentionsDestination(query: string): boolean {
   const normalizedQuery = normalizeLocationText(query);

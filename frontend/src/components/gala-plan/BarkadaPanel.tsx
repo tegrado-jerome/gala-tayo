@@ -16,7 +16,7 @@ import {
   type GalaPlanRsvp,
 } from '../../utils/galaPlanBarkadaApi'
 import type { GalaPlanDetail, GalaPlanOwner } from '../../utils/galaPlansApi'
-import { getStaticPlaceImageUrlForSlug } from '../../data/placeIndexVisuals'
+import { getPlacePhotoCandidates } from '../../data/placeIndexVisuals'
 import { splitPolls } from '../../utils/barkadaVotes'
 import { formatPeso } from '../../utils/galaPlanTrip'
 import { KailanPoll, SpotDeck, TaraBurst } from './BarkadaVotes'
@@ -217,7 +217,7 @@ function pollCards(plan: GalaPlanDetail, poll: GalaPlanPoll): SwipeCard[] {
     return {
       id: option.id,
       title: option.label,
-      image: place ? place.image_url || getStaticPlaceImageUrlForSlug(place.slug) || null : null,
+      image: place ? getPlacePhotoCandidates(place.slug, place.image_url)[0] ?? null : null,
       meta: place ? [place.category, place.area || place.city, place.budget_min ? `${formatPeso(place.budget_min)}/head` : null].filter(Boolean).join(' · ') : null,
       votes: option.votes,
       voters: option.voters,

@@ -1066,6 +1066,7 @@ function PlaceDetailView({
       showSystemMessage({
         title: result.status === 'already-saved' ? 'Already in Saved' : 'Na-save!',
         description: 'Find it anytime in Saved.',
+        action: { label: 'Add to a plan', onClick: () => setIsAddToPlanOpen(true) },
       })
     } catch (error) {
       setSaveError(error instanceof Error ? error.message : 'Failed to save favorite.')

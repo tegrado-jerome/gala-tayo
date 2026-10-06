@@ -146,6 +146,11 @@ function getValidSourceUrl(source: Record<string, unknown>) {
     return null
   }
 
+  // GalaTayo place pages come back as in-app paths ("/places/taguig/bonifacio-high-street").
+  if (rawUrl.startsWith('/') && !rawUrl.startsWith('//')) {
+    return rawUrl
+  }
+
   try {
     const parsedUrl = new URL(rawUrl)
     return parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:' ? parsedUrl.href : null

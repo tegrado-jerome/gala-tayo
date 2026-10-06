@@ -2,6 +2,7 @@ import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/fu
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
 import { buildImageUrl } from "../utils/r2UrlResolver";
 import { getApprovedPlaceImagesByPlaceIds } from "../services/placeImagesService";
+import { hasCuratedPhoto, placePhotoKey } from "../utils/hdPhotos";
 import { createSlug, getCurrentUser, getOptionalCurrentUser } from "../utils/social";
 import { ensureGuestProfile } from "./profileHelpers";
 
@@ -277,20 +278,20 @@ async function getHeartedPlanIds(userId: string | null | undefined, planIds: str
   return new Set(((data || []) as Array<{ gala_plan_id: string }>).map((row) => row.gala_plan_id));
 }
 
-// Plan items join `places`, which has no image column; the primary image lives in `place_images`.
+// Plan items join `places`, which has no image column: the photo is the curated HD photo,
+// else the primary approved upload in `place_images`.
 async function attachPlaceImages(items: ItemRow[]): Promise<ItemRow[]> {
-  const placeIds = items.map((item) => item.places?.id).filter((id): id is string => Boolean(id));
-  if (placeIds.length === 0) return items;
-
-  try {
-    const imagesByPlaceId = await getApprovedPlaceImagesByPlaceIds(placeIds);
-    return items.map((item) => {
-      const storageKey = item.places ? imagesByPlaceId.get(item.places.id)?.[0]?.storage_key : null;
-      return storageKey && item.places ? { ...item, places: { ...item.places, storage_key: storageKey } } : item;
-    });
-  } catch {
-    return items;
-  }
+  const uploadIds = items
+    .filter((item) => item.places?.id && !hasCuratedPhoto(item.places.slug))
+    .map((item) => item.places!.id);
+  const imagesByPlaceId = uploadIds.length
+    ? await getApprovedPlaceImagesByPlaceIds(uploadIds).catch(() => new Map<string, Array<{ storage_key: string }>>())
+    : new Map<string, Array<{ storage_key: string }>>();
+  return items.map((item) => {
+    if (!item.places) return item;
+    const storageKey = placePhotoKey(item.places.slug, imagesByPlaceId.get(item.places.id)?.[0]?.storage_key);
+    return storageKey ? { ...item, places: { ...item.places, storage_key: storageKey } } : item;
+  });
 }
 
 export async function getPlanItems(planIds: string[], previewOnly = false) {

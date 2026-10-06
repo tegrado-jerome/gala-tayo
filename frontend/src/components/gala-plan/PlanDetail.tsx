@@ -34,14 +34,13 @@ import {
   type GalaPlanDetail,
 } from '../../utils/galaPlansApi'
 import { daysUntil, estimatePerHead, formatDaysUntil, formatPeso, getPlanDate, getPlanLegs } from '../../utils/galaPlanTrip'
-import { getStaticPlaceImageUrlForSlug } from '../../data/placeIndexVisuals'
+import { getPlacePhotoCandidates } from '../../data/placeIndexVisuals'
 import { openFloatingChat } from '../../utils/floatingChat'
 import { navigateToPath } from '../../utils/navigation'
 import { buildGalaPlanInviteUrl } from '../../utils/share'
 import { bestDate, formatDateChoice, inviteMessage, lockedDate, splitPolls } from '../../utils/barkadaVotes'
 import '../../design/plans.css'
 import { useActionBarMode } from '../../hooks/useActionBarMode'
-import { resizedMediaUrl } from '../../data/r2Config'
 
 type Tab = 'itinerary' | 'polls' | 'barkada' | 'hatian'
 
@@ -254,9 +253,9 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
   const payingGuests = going.filter((member) => !member.is_owner)
   const paidCount = payingGuests.filter((member) => member.paid).length
   const shareUrl = buildGalaPlanInviteUrl(plan.id)
-  const cover = plan.items.find((item) => item.place.image_url)?.place.image_url
+  const coverPhotos = plan.items.flatMap((item) => getPlacePhotoCandidates(item.place.slug, item.place.image_url))
   const coverStops = plan.items.map((item) => item.place)
-  const storyStop = plan.items.find((item) => item.place.image_url || getStaticPlaceImageUrlForSlug(item.place.slug))?.place
+  const storyStop = plan.items[0]?.place
   const lastStop = plan.items[plan.items.length - 1]
   const dateText = date ? date.toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' }) : null
   const totalKm = getPlanLegs(plan.items).reduce((sum, leg) => sum + (leg?.km ?? 0), 0)
@@ -375,8 +374,8 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
       <figure className="mt-3">
         <figcaption className="g-xs g-mut mb-1.5">What your barkada sees</figcaption>
         <div className="g-invite-preview">
-          {cover ? (
-            <img src={resizedMediaUrl(cover, 'card')} alt="" loading="lazy" />
+          {coverPhotos.length > 0 ? (
+            <PlaceImage candidates={coverPhotos} category={plan.items[0]?.place.category} />
           ) : (
             <span className="grid place-items-center" style={{ background: 'var(--fill)', color: 'var(--ink-2)' }} aria-hidden="true">
               <CalendarDays className="g-ic" />
@@ -481,9 +480,13 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
       ? `${joinNames(maybe.map((member) => personName(member.profile).split(' ')[0]))} said baka`
       : passing.length > 0
         ? `${passing.length} can't make it`
-        : going.length <= 1
-          ? 'Send the link so the barkada can reply'
-          : 'Everyone who replied is in'
+        : going.length > 1
+          ? 'Everyone who replied is in'
+          : plan.viewer_is_owner
+            ? 'Send the link so the barkada can reply'
+            : viewerMember?.rsvp === 'going'
+              ? 'Kasama ka na. Hintayin ang iba!'
+              : 'Ikaw na lang ang kulang!'
 
   const splitCells = [
     { value: formatPeso(perHead), label: costLabel },
@@ -612,18 +615,20 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
                 <>
                   {!isDesktop ? routeMap : null}
                   <PlanTimeline stops={stops} onMove={plan.viewer_is_owner && isReordering ? (index, direction) => void moveStop(index, direction) : undefined} />
-                  <div className="mt-6 flex flex-wrap gap-2">
-                    <Button variant="soft" size="sm" onClick={suggestNextStop}>
-                      <Sparkles />
-                      Suggest next stop
-                    </Button>
-                    {plan.viewer_is_owner && stops.length > 1 ? (
-                      <Button variant="line" size="sm" aria-pressed={isReordering} onClick={() => setIsReordering(!isReordering)}>
-                        {isReordering ? <Check /> : <ArrowDownUp />}
-                        {isReordering ? 'Done' : 'Edit order'}
+                  {plan.viewer_is_owner ? (
+                    <div className="mt-6 flex flex-wrap gap-2">
+                      <Button variant="soft" size="sm" onClick={suggestNextStop}>
+                        <Sparkles />
+                        Suggest next stop
                       </Button>
-                    ) : null}
-                  </div>
+                      {stops.length > 1 ? (
+                        <Button variant="line" size="sm" aria-pressed={isReordering} onClick={() => setIsReordering(!isReordering)}>
+                          {isReordering ? <Check /> : <ArrowDownUp />}
+                          {isReordering ? 'Done' : 'Edit order'}
+                        </Button>
+                      ) : null}
+                    </div>
+                  ) : null}
 
                   <section aria-labelledby="plan-split-title" className="mt-8">
                     <h2 id="plan-split-title" className="g-h2 mb-3">Budget</h2>
@@ -640,7 +645,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
                   <section className="g-story mt-6" aria-labelledby="plan-story-title">
                     <span className="g-story-mock" aria-hidden="true">
                       {storyStop ? (
-                        <PlaceImage candidates={[storyStop.image_url, getStaticPlaceImageUrlForSlug(storyStop.slug)].filter((url): url is string => Boolean(url))} category={storyStop.category} className="h-full w-full" />
+                        <PlaceImage candidates={getPlacePhotoCandidates(storyStop.slug, storyStop.image_url)} category={storyStop.category} className="h-full w-full" />
                       ) : (
                         <span />
                       )}

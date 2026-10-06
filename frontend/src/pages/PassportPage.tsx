@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
+import { X } from '@phosphor-icons/react/dist/csr/X'
+import DestructiveConfirmModal from '../components/DestructiveConfirmModal'
 import InternalLink from '../components/InternalLink'
 import PassportMap from '../components/passport/PassportMap'
 import GalaWrapped from '../components/passport/GalaWrapped'
 import ProfileAvatar from '../components/ProfileAvatar'
 import { Button, Empty, Page, SectionHead, Skeleton, Tag, cx } from '../components/ui'
 import { useAppUser } from '../context/AppUserContext'
-import { getMyPassport, type CityStamp, type Passport } from '../utils/passportApi'
+import { getMyPassport, removeCheckin, type CityStamp, type Passport } from '../utils/passportApi'
 import '../design/me.css'
 
 type LoadState = { status: 'loading' } | { status: 'ready'; passport: Passport } | { status: 'error'; message: string }
@@ -77,6 +79,24 @@ function recentWeeks(checkins: Array<{ created_at: string }>, streakWeeks: numbe
 function PassportPage({ session }: { session: Session }) {
   const { currentProfile } = useAppUser()
   const [state, setState] = useState<LoadState>({ status: 'loading' })
+  const [removing, setRemoving] = useState<{ id: string; name: string } | null>(null)
+  const [isRemoving, setIsRemoving] = useState(false)
+  const [removeError, setRemoveError] = useState<string | null>(null)
+
+  const confirmRemove = async () => {
+    if (!removing) return
+    setIsRemoving(true)
+    setRemoveError(null)
+    try {
+      setState({ status: 'ready', passport: await removeCheckin(removing.id, session) })
+      setRemoving(null)
+    } catch (error) {
+      setRemoveError(error instanceof Error ? error.message : 'Could not remove the visit. Try again.')
+      setRemoving(null)
+    } finally {
+      setIsRemoving(false)
+    }
+  }
 
   useEffect(() => {
     let isCancelled = false
@@ -126,6 +146,15 @@ function PassportPage({ session }: { session: Session }) {
 
   return (
     <Page className="!pt-0 lg:!pt-8">
+      <DestructiveConfirmModal
+        isOpen={removing !== null}
+        title="Remove this visit?"
+        description={removing ? `Your check-in at ${removing.name} comes off your passport. A city stamp goes too if it was your only visit there.` : ''}
+        confirmLabel="Remove visit"
+        isConfirming={isRemoving}
+        onCancel={() => setRemoving(null)}
+        onConfirm={confirmRemove}
+      />
       <div className="me-pp-map">
         {passport ? <PassportMap stamps={stamps} /> : <Skeleton className="h-[clamp(220px,34vh,300px)] !rounded-none lg:h-[340px] lg:!rounded-[var(--r-4)]" />}
       </div>
@@ -250,6 +279,7 @@ function PassportPage({ session }: { session: Session }) {
                   <div className="me-tl-day is-first">
                     <span className="g-sm font-semibold">Latest visits</span>
                   </div>
+                  {removeError ? <p role="alert" className="g-sm mb-2 text-[var(--bad)]">{removeError}</p> : null}
                   <ol className="me-tl-list">
                     {passport.recent.map((checkin) => {
                       const when = new Date(checkin.created_at).toLocaleString('en', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
@@ -274,6 +304,17 @@ function PassportPage({ session }: { session: Session }) {
                           ) : (
                             <div className="me-tl-link">{body}</div>
                           )}
+                          {checkin.id ? (
+                            <Button
+                              variant="text"
+                              size="sm"
+                              iconOnly
+                              aria-label={`Remove visit to ${checkin.name}`}
+                              onClick={() => setRemoving({ id: checkin.id!, name: checkin.name })}
+                            >
+                              <X />
+                            </Button>
+                          ) : null}
                         </li>
                       )
                     })}

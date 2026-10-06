@@ -4,7 +4,7 @@ import { getActiveNormalizedPlaces } from "../domain/places";
 import { buildCityStamps, isNearPlace, recentCheckinHistory, weeklyStreak } from "../services/passport";
 import { getCurrentUser } from "../utils/social";
 
-type CheckinRow = { place_id: string; checkin_date: string; created_at: string };
+type CheckinRow = { id: string; place_id: string; checkin_date: string; created_at: string };
 
 class PassportUnavailableError extends Error {}
 
@@ -29,7 +29,7 @@ function handleError(context: InvocationContext, label: string, error: unknown):
 async function buildPassport(userId: string) {
   const supabase = await getSupabaseAdminClient();
   const { data, error } = await (supabase.from("gala_place_checkins") as any)
-    .select("place_id, checkin_date, created_at")
+    .select("id, place_id, checkin_date, created_at")
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
   if (error) {
@@ -51,7 +51,7 @@ async function buildPassport(userId: string) {
     streak_weeks: weeklyStreak(checkins.map((checkin) => checkin.checkin_date), manilaToday()),
     recent: withCity.slice(0, 5).map((checkin) => {
       const place = placesById.get(checkin.place_id);
-      return { place_id: checkin.place_id, name: place?.name ?? "Place", slug: place?.slug ?? null, city: checkin.city, created_at: checkin.created_at };
+      return { id: checkin.id, place_id: checkin.place_id, name: place?.name ?? "Place", slug: place?.slug ?? null, city: checkin.city, created_at: checkin.created_at };
     }),
     // For the monthly Gala Wrapped recap.
     history: recentCheckinHistory(withCity, new Date()).map((checkin) => ({
@@ -113,5 +113,27 @@ export async function postPlaceCheckin(request: HttpRequest, context: Invocation
   }
 }
 
+/** Removes one of the signed-in user's check-ins (a mistaken stamp) and returns the updated passport. */
+export async function deleteMyCheckin(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
+  try {
+    const user = await getCurrentUser(request);
+    const supabase = await getSupabaseAdminClient();
+    const { data, error } = await (supabase.from("gala_place_checkins") as any)
+      .delete()
+      .eq("id", String(request.params.checkinId ?? ""))
+      .eq("user_id", user.id)
+      .select("id");
+    if (error) {
+      if (isMissingTable(error)) throw new PassportUnavailableError();
+      throw error;
+    }
+    if (!data || data.length === 0) return { status: 404, jsonBody: { message: "Check-in not found." } };
+    return { status: 200, jsonBody: await buildPassport(user.id) };
+  } catch (error) {
+    return handleError(context, "DELETE checkin", error);
+  }
+}
+
 app.http("myPassport", { methods: ["GET"], authLevel: "anonymous", route: "me/passport", handler: getMyPassport });
+app.http("myCheckinDelete", { methods: ["DELETE"], authLevel: "anonymous", route: "me/checkins/{checkinId:guid}", handler: deleteMyCheckin });
 app.http("placeCheckin", { methods: ["POST"], authLevel: "anonymous", route: "places/{placeId:guid}/checkin", handler: postPlaceCheckin });

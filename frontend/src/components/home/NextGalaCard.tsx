@@ -4,7 +4,8 @@ import InternalLink from '../InternalLink'
 import { AvatarStack, Button, SectionHead, Skeleton } from '../ui'
 import type { MapPoint } from '../ui/GtMap'
 import { useAppUser } from '../../context/AppUserContext'
-import { getStaticPlaceImageUrlForSlug } from '../../data/placeIndexVisuals'
+import { getPlacePhotoCandidates } from '../../data/placeIndexVisuals'
+import { getPlacePhoto } from '../../utils/placePhoto'
 import { getGalaPlanBarkada, type GalaPlanMember } from '../../utils/galaPlanBarkadaApi'
 import { getGalaPlan, listMyGalaPlans, type GalaPlanDetail, type GalaPlanSummary } from '../../utils/galaPlansApi'
 import { daysUntil, formatDaysUntil, getPlanDate, pickNextPlan } from '../../utils/galaPlanTrip'
@@ -29,7 +30,7 @@ function getRoutePoints(detail: GalaPlanDetail | null): MapPoint[] {
   return [...detail.items]
     .sort((left, right) => left.day_number - right.day_number || left.sort_order - right.sort_order)
     .filter((item) => item.place.latitude != null && item.place.longitude != null)
-    .map((item, index) => ({ id: item.id, lat: Number(item.place.latitude), lng: Number(item.place.longitude), kind: 'number', label: String(index + 1), imageUrl: item.place.image_url ?? null }))
+    .map((item, index) => ({ id: item.id, lat: Number(item.place.latitude), lng: Number(item.place.longitude), kind: 'number', label: String(index + 1), imageUrl: getPlacePhoto({ slug: item.place.slug, photo_url: item.place.image_url }) }))
 }
 
 function formatBudget(detail: GalaPlanDetail | null) {
@@ -42,7 +43,7 @@ function formatBudget(detail: GalaPlanDetail | null) {
 function PlanCard({ next }: { next: NextPlan }) {
   const { plan, detail, going } = next
   const points = getRoutePoints(detail)
-  const covers = (plan.preview_places ?? []).flatMap((stop) => [stop.image_url, getStaticPlaceImageUrlForSlug(stop.slug)]).filter((url): url is string => Boolean(url))
+  const covers = (plan.preview_places ?? []).flatMap((stop) => getPlacePhotoCandidates(stop.slug, stop.image_url))
   const budget = formatBudget(detail)
   const stops = `${plan.place_count} ${plan.place_count === 1 ? 'stop' : 'stops'}`
   const facts = [going.length > 0 ? `${going.length} going` : null, stops, budget].filter(Boolean).join(' · ')

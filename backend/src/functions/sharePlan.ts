@@ -1,4 +1,5 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from "@azure/functions";
+import { hdPhotoKey } from "../utils/hdPhotos";
 import { getR2PublicBaseUrl } from "../utils/r2UrlResolver";
 import { getConfiguredSiteUrl } from "../utils/siteUrl";
 import { getPlanById, getPlanItems, isActive, isUuid } from "./galaPlans";
@@ -39,7 +40,7 @@ function mostCommon(values: Array<string | null | undefined>) {
 export function describePlanShare(input: {
   title: string;
   description: string | null;
-  stops: Array<{ city: string | null; storageKey: string | null }>;
+  stops: Array<{ slug?: string | null; city: string | null; storageKey: string | null }>;
   planUrl: string;
   shareUrl: string;
 }): PlanSharePreview {
@@ -49,7 +50,8 @@ export function describePlanShare(input: {
     count > 0 ? `${count} ${count === 1 ? "stop" : "stops"}` : null,
     mostCommon(input.stops.map((stop) => stop.city)),
   ].filter(Boolean);
-  const photo = input.stops.find((stop) => stop.storageKey)?.storageKey;
+  // The full HD photo crops best to 1200x630; places without one use their own photo.
+  const photo = input.stops.map((stop) => hdPhotoKey(stop.slug, "full") ?? stop.storageKey).find(Boolean);
   return {
     title: input.title.trim() || "Gala plan",
     description: parts.length ? `${parts.join(" · ")}. Sama ka? RSVP on GalaTayo.` : "Sama ka? RSVP on GalaTayo.",
@@ -120,7 +122,7 @@ export async function getPlanSharePage(request: HttpRequest, context: Invocation
     const preview = describePlanShare({
       title: plan.title,
       description: plan.description,
-      stops: items.map((item) => ({ city: item.places?.city ?? null, storageKey: item.places?.storage_key ?? null })),
+      stops: items.map((item) => ({ slug: item.places?.slug ?? null, city: item.places?.city ?? null, storageKey: item.places?.storage_key ?? null })),
       planUrl: `${siteUrl}/gala-plans/${plan.id}`,
       shareUrl: request.url.split("?")[0],
     });
