@@ -130,16 +130,16 @@ export function canvasToPng(canvas: HTMLCanvasElement) {
 }
 
 /** Draws with photos, and falls back to a photo-free version if the canvas cannot be exported. */
-export async function renderStory(draw: (ctx: CanvasRenderingContext2D, withPhotos: boolean) => void) {
+export async function renderStory(draw: (ctx: CanvasRenderingContext2D, withPhotos: boolean) => void, width = STORY_W, height = STORY_H) {
   const canvas = document.createElement('canvas')
-  canvas.width = STORY_W
-  canvas.height = STORY_H
+  canvas.width = width
+  canvas.height = height
   const ctx = canvas.getContext('2d')
   if (!ctx) return null
   draw(ctx, true)
   const blob = await canvasToPng(canvas)
   if (blob) return blob
-  ctx.clearRect(0, 0, STORY_W, STORY_H)
+  ctx.clearRect(0, 0, width, height)
   draw(ctx, false)
   return canvasToPng(canvas)
 }

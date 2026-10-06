@@ -29,8 +29,14 @@ async function geminiApiKey(): Promise<string | null> {
 
 export type WriterResult = { text: string; model: string };
 
-/** Returns the model's raw JSON text and which model wrote it. */
-export async function writeGalaTodayDraft(systemPrompt: string, userMessage: string, requestId: string, warn: (message: string) => void): Promise<WriterResult> {
+/** Returns the model's raw JSON text and which model wrote it. Drafts run warm (wit); the editor pass runs cool. */
+export async function writeGalaTodayDraft(
+  systemPrompt: string,
+  userMessage: string,
+  requestId: string,
+  warn: (message: string) => void,
+  temperature = 0.95
+): Promise<WriterResult> {
   const apiKey = await geminiApiKey().catch(() => null);
   if (apiKey) {
     const ai = new GoogleGenAI({ apiKey });
@@ -41,8 +47,8 @@ export async function writeGalaTodayDraft(systemPrompt: string, userMessage: str
           contents: userMessage,
           config: {
             systemInstruction: systemPrompt,
-            temperature: 0.8,
-            maxOutputTokens: 1200,
+            temperature,
+            maxOutputTokens: 1600,
             responseMimeType: "application/json",
             abortSignal: AbortSignal.timeout(GEMINI_TIMEOUT_MS),
           },
@@ -55,6 +61,6 @@ export async function writeGalaTodayDraft(systemPrompt: string, userMessage: str
       }
     }
   }
-  const text = await generateJsonFromGroq({ systemPrompt, userMessage, requestId, maxCompletionTokens: 900 });
+  const text = await generateJsonFromGroq({ systemPrompt, userMessage, requestId, maxCompletionTokens: 1300 });
   return { text, model: "groq" };
 }

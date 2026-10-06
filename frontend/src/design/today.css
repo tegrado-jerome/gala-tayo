@@ -1,27 +1,65 @@
-/* Gala Today: a daily trend-to-gala post. Sand card, sticker chip, stacked place faces. */
+/* Gala Today: creator-style daily posts. Format sticker, meme card, minimal editorial text. */
 .t-kicker { display: inline-flex; align-items: center; gap: 8px; font: 700 12px/1 var(--font-body); letter-spacing: 0.12em; text-transform: uppercase; color: var(--tara-ink); }
 .t-live { width: 8px; height: 8px; border-radius: 50%; background: var(--mint, #34e0a1); box-shadow: 0 0 0 0 rgb(52 224 161 / 0.6); animation: t-pulse 2s ease-out infinite; }
 @keyframes t-pulse { 70% { box-shadow: 0 0 0 8px rgb(52 224 161 / 0); } 100% { box-shadow: 0 0 0 0 rgb(52 224 161 / 0); } }
 @media (prefers-reduced-motion: reduce) { .t-live { animation: none; } }
 
-.t-chip { display: inline-flex; overflow-wrap: anywhere; align-items: center; gap: 6px; max-width: 100%; margin-top: 12px; padding: 6px 12px; border: 2px solid var(--ink); border-radius: 999px; background: var(--mint, #34e0a1); color: #111; font: 700 13px/1.2 var(--font-body); transform: rotate(-1.5deg); box-shadow: 2px 2px 0 var(--ink); }
-.t-chip svg { width: 14px; height: 14px; flex: none; }
+/* The format sticker. */
+.t-chip { display: inline-flex; align-items: center; max-width: 100%; margin-top: 12px; padding: 6px 12px; overflow-wrap: anywhere; border: 2px solid #111; border-radius: 999px; background: var(--mint, #34e0a1); color: #111; font: 800 12px/1.2 var(--font-body); letter-spacing: 0.08em; text-transform: uppercase; transform: rotate(-1.5deg); box-shadow: 2px 2px 0 #111; }
+.t-chip-on-photo { position: absolute; top: 12px; left: 12px; max-width: calc(100% - 24px); margin: 0; }
 
-.t-card { display: flex; flex-direction: column; align-items: flex-start; width: 100%; min-width: 0; box-sizing: border-box; padding: 20px; border-radius: var(--r-3); background: var(--fill); color: var(--ink); text-decoration: none; transition: transform var(--t-fast); }
+/* Card: lead photo with the meme's top line, then text. */
+.t-card { display: flex; flex-direction: column; width: 100%; min-width: 0; box-sizing: border-box; border-radius: var(--r-3); background: var(--fill); color: var(--ink); text-decoration: none; overflow: hidden; transition: transform var(--t-fast); }
 .t-card:hover { transform: translateY(-2px); }
 .t-card:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
-.t-card-title { margin-top: 14px; font: 700 24px/1.15 var(--font-display); letter-spacing: -0.02em; }
-.t-card-hook { margin-top: 8px; font-size: 15px; line-height: 1.45; color: var(--ink-2); }
-.t-faces { display: flex; align-items: center; width: 100%; margin-top: 16px; min-width: 0; }
-.t-faces img { width: 36px; height: 36px; flex: none; border: 2px solid var(--fill); border-radius: 50%; object-fit: cover; }
-.t-faces img + img { margin-left: -10px; }
-.t-faces-label { flex: 1; min-width: 0; margin-left: 10px; overflow: hidden; font: 600 13px/1.3 var(--font-body); text-overflow: ellipsis; white-space: nowrap; color: var(--ink-2); }
+.t-card-photo { position: relative; display: block; aspect-ratio: 16 / 10; background: #222; }
+.t-card-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.t-card-photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgb(17 17 17 / 0.82), rgb(17 17 17 / 0.1) 60%, rgb(17 17 17 / 0) 75%); }
+.t-card-meme { position: absolute; z-index: 1; right: 16px; bottom: 14px; left: 16px; display: -webkit-box; overflow: hidden; color: #fff; font: 800 22px/1.12 var(--font-body); letter-spacing: -0.02em; text-shadow: 0 1px 12px rgb(0 0 0 / 0.35); -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+.t-card-photo .t-chip { z-index: 1; }
+.t-card-text { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; padding: 16px 18px 18px; }
+.t-card-title { margin-top: 10px; font: 700 21px/1.2 var(--font-display); letter-spacing: -0.02em; }
+.t-card-hook { margin-top: 6px; font-size: 15px; line-height: 1.45; color: var(--ink-2); }
+.t-card-places { width: 100%; margin-top: 12px; overflow: hidden; font: 600 13px/1.3 var(--font-body); text-overflow: ellipsis; white-space: nowrap; color: var(--ink-2); }
 
 .t-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
-.t-lead { margin-top: 14px; font: 600 19px/1.45 var(--font-body); }
+@media (min-width: 768px) { .t-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Post page. */
+.t-post { min-width: 0; }
+.t-meme { margin: 20px 0 0; }
+.t-meme-frame { position: relative; overflow: hidden; aspect-ratio: 4 / 5; max-width: 480px; border-radius: 12px; background: #222; }
+.t-meme-frame > img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.t-meme-draft { position: absolute; inset: 0; }
+.t-meme-draft img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.t-meme-draft::before { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(rgb(17 17 17 / 0.7), rgb(17 17 17 / 0) 40%, rgb(17 17 17 / 0) 55%, rgb(17 17 17 / 0.88)); }
+.t-meme-sticker { position: absolute; z-index: 2; top: 6%; left: 6%; max-width: 88%; padding: 4px 10px; border: 2px solid #111; border-radius: 999px; background: var(--mint, #34e0a1); color: #111; font: 800 11px/1.2 var(--font-body); letter-spacing: 0.08em; text-transform: uppercase; transform: rotate(-2deg); box-shadow: 2px 2px 0 #111; }
+.t-meme-cap { position: absolute; z-index: 2; right: 6%; left: 6%; color: #fff; font: 800 clamp(22px, 7vw, 34px)/1.08 var(--font-body); letter-spacing: -0.02em; text-shadow: 0 2px 16px rgb(0 0 0 / 0.35); }
+.t-meme-top { top: 15%; }
+.t-meme-bottom { bottom: 14%; }
+.t-meme-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 12px; }
+
+.t-lead { margin-top: 20px; font: 600 19px/1.45 var(--font-body); }
+.t-weather { display: flex; align-items: flex-start; gap: 8px; margin-top: 12px; padding: 10px 12px; border-radius: 12px; background: var(--fill); font-size: 14px; line-height: 1.4; color: var(--ink-2); }
+.t-weather svg { flex: none; width: 18px; height: 18px; margin-top: 1px; }
 .t-body { margin-top: 12px; font-size: 16px; line-height: 1.65; color: var(--ink-2); }
-.t-picks { display: grid; gap: 24px; list-style: none; padding: 0; }
+.t-panel { margin-top: 18px; padding: 16px; border-radius: 12px; background: var(--fill); }
+.t-panel-big { font: 600 30px/1.1 var(--font-display); letter-spacing: -0.02em; color: var(--tara-ink); }
+.t-panel-big span { font: 600 16px/1 var(--font-body); color: var(--ink-2); }
+.t-panel-label { font: 700 12px/1 var(--font-body); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-2); }
+.t-items { display: grid; gap: 6px; margin-top: 10px; padding-left: 18px; list-style: disc; font-size: 15px; line-height: 1.45; }
+.t-clues { display: grid; gap: 10px; padding-left: 22px; list-style: decimal; font-size: 16px; line-height: 1.5; }
+.t-reveal { margin-top: 20px; }
+.t-reveal summary { display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border: 1px solid var(--ink); border-radius: 999px; cursor: pointer; font: 700 15px/1 var(--font-body); list-style: none; }
+.t-reveal summary::-webkit-details-marker { display: none; }
+.t-reveal[open] summary { display: none; }
+.t-answer { margin: 4px 0 16px; font-size: 18px; }
+.t-picks { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; list-style: none; padding: 0; }
+.t-picks > li { min-width: 0; }
 @media (min-width: 768px) { .t-picks { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; } }
+.t-flag { display: inline-flex; padding: 4px 10px; border-radius: 999px; background: #111; color: #fff; font: 800 12px/1.2 var(--font-body); letter-spacing: 0.06em; text-transform: uppercase; }
 .t-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
 .t-note { margin-top: 20px; }
 .t-note a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.t-picks .g-pc-meta { display: -webkit-box; white-space: normal; font-size: 14px; line-height: 1.4; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+.t-post > .t-kicker { display: flex; width: 100%; }
