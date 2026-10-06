@@ -62,3 +62,4 @@
 .t-note { margin-top: 20px; }
 .t-note a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
 .t-picks .g-pc-meta { display: -webkit-box; white-space: normal; font-size: 14px; line-height: 1.4; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+.t-post > .t-kicker { display: flex; width: 100%; }
