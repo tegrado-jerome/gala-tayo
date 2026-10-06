@@ -23,7 +23,9 @@ import {
 // Posts live in Redis (newest first). The daily workflow also commits them into the frontend
 // repo, so the site keeps its history even if the cache is cleared.
 // v2: v1 held a first post that broke the one-region and no-unbacked-claims rules.
-const POSTS_KEY = "gala-today:posts:v2";
+const POSTS_KEY = "gala-today:posts:v3";
+// Paused until the creator-format upgrade passes QA; the API returns no posts and nothing is generated.
+const GALA_TODAY_ENABLED = false;
 const MAX_POSTS = 90;
 const MAX_POSTS_PER_DAY = 2;
 const USER_AGENT = "Mozilla/5.0 (compatible; GalaTayoBot/1.0; +https://galatayo.app)";
@@ -80,11 +82,13 @@ async function holidayToday(date: string, context: InvocationContext): Promise<s
 }
 
 export async function readGalaTodayPosts(): Promise<GalaTodayPost[]> {
+  if (!GALA_TODAY_ENABLED) return [];
   return (await getJsonCacheValue<GalaTodayPost[]>(POSTS_KEY)) ?? [];
 }
 
 /** Writes one new post when today still has room. Returns the post, or why it skipped. */
 export async function generateGalaTodayPost(context: InvocationContext, now = new Date()): Promise<GalaTodayPost | string> {
+  if (!GALA_TODAY_ENABLED) return "paused";
   const manilaNow = new Date(now.getTime() + 8 * 3600_000);
   const date = manilaNow.toISOString().slice(0, 10);
   const posts = await readGalaTodayPosts();
