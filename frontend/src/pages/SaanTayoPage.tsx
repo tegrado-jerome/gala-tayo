@@ -43,7 +43,7 @@ import {
   type Vibe,
 } from '../utils/saanTayo'
 import { getSiteOrigin } from '../utils/seo'
-import { SEO_LANDING_TARGETS } from '../utils/seoLandingPages'
+import { MIN_INDEXABLE_GUIDE_PLACES, SEO_LANDING_TARGETS } from '../utils/seoLandingPages'
 import { manilaHourKey, nextHours } from '../utils/weather'
 
 type Scope = { kind: 'area'; slug: string } | { kind: 'near'; origin: [number, number] }
@@ -335,6 +335,16 @@ function PickCard({ place, index, faceUp, why, motion, onSwap, vote, onSend, onA
 }
 
 export default function SaanTayoPage() {
+  const [guideTotals, setGuideTotals] = useState<Record<string, number> | null>(null)
+  useEffect(() => {
+    const controller = new AbortController()
+    fetch('/data/place-listings/guides.json', { signal: controller.signal })
+      .then((response) => (response.ok && (response.headers.get('content-type') || '').includes('json') ? (response.json() as Promise<Array<{ slug: string; total: number }>>) : null))
+      .then((list) => list && setGuideTotals(Object.fromEntries(list.map((guide) => [guide.slug, guide.total]))))
+      .catch(() => undefined)
+    return () => controller.abort()
+  }, [])
+
   const guestAuth = useGuestAuthPrompt()
   const { session } = useAppUser()
   const { showSystemMessage } = useSystemMessage()
@@ -543,8 +553,12 @@ export default function SaanTayoPage() {
 
   const areaLabel = scope.kind === 'near' ? (nearLabel ? `Around ${nearLabel}` : 'Malapit sa’yo') : areaName(scope.slug)
   const guideArea = scope.kind === 'area' ? scope.slug : (getDestinationBySlug(areaPlaces[0]?.areaSlug)?.regionSlug ?? METRO_MANILA_REGION_SLUG)
-  const relatedGuides = SEO_LANDING_TARGETS.filter((target) => target.areaSlug && (target.areaSlug === guideArea || getDestinationBySlug(target.areaSlug)?.regionSlug === guideArea)).slice(0, 6)
-  const guides = relatedGuides.length ? relatedGuides : SEO_LANDING_TARGETS.slice(0, 6)
+  // Only guides with enough gala-worthy places (same rule as /guides); never cinema or hotel lists.
+  const strongGuides = SEO_LANDING_TARGETS.filter(
+    (target) => !['cinema', 'hotel'].includes(target.category ?? '') && (!guideTotals || (guideTotals[target.slug] ?? 0) >= MIN_INDEXABLE_GUIDE_PLACES)
+  )
+  const relatedGuides = strongGuides.filter((target) => target.areaSlug && (target.areaSlug === guideArea || getDestinationBySlug(target.areaSlug)?.regionSlug === guideArea)).slice(0, 6)
+  const guides = relatedGuides.length ? relatedGuides : strongGuides.slice(0, 6)
   const canonical = `${getSiteOrigin()}/saan-tayo`
   const jsonLd = [
     {
