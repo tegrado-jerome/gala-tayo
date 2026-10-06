@@ -211,9 +211,9 @@ function RailSkeleton() {
   )
 }
 
-/** "Weekday mornings; chinese new year…" → "Weekday mornings": the first clause, sentence-cased. */
+/** "Weekday mornings, outside Mass schedules" → "Weekday mornings": the first clause, sentence-cased. */
 function shortBestTime(value: string) {
-  const first = value.split(/[;(]/)[0].trim().replace(/[.,]$/, '')
+  const first = value.split(/[;(,]/)[0].trim().replace(/[.]$/, '')
   return first.charAt(0).toUpperCase() + first.slice(1)
 }
 
@@ -223,7 +223,7 @@ function WeekdayCard({ places }: { places: PlaceDetail[] }) {
   if (weekday.length === 0) return null
   return (
     <section className="min-w-0">
-      <SectionHead title="Better on a weekday" sub="Quieter on weekdays, per each place’s best time to visit" />
+      <SectionHead title="Best on weekdays" sub="Fewer crowds, per each place’s best time to visit" />
       <ul className="g-weekday">
         {weekday.map((place) => {
           const photo = photoFor(place.slug)
@@ -233,10 +233,7 @@ function WeekdayCard({ places }: { places: PlaceDetail[] }) {
                 <span className="g-weekday-img">{photo ? <img src={photo} alt="" loading="lazy" decoding="async" /> : <UsersThree weight="fill" aria-hidden="true" />}</span>
                 <span className="min-w-0">
                   <b>{place.name}</b>
-                  <span>
-                    <UsersThree weight="fill" aria-hidden="true" />
-                    {shortBestTime(place.best_time_to_visit ?? '')}
-                  </span>
+                  <span>{shortBestTime(place.best_time_to_visit ?? '')}</span>
                 </span>
               </InternalLink>
             </li>
