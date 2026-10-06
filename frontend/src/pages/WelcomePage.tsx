@@ -61,9 +61,7 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
       .catch(() => undefined)
     return () => controller.abort()
   }, [])
-  const popularGuides = SEO_LANDING_TARGETS.filter(
-    (target) => !['cinema', 'hotel'].includes(target.category ?? '') && (!guideTotals || (guideTotals[target.slug] ?? 0) >= MIN_INDEXABLE_GUIDE_PLACES)
-  )
+  const popularGuides = SEO_LANDING_TARGETS.filter((target) => !guideTotals || (guideTotals[target.slug] ?? 0) >= MIN_INDEXABLE_GUIDE_PLACES)
 
 
   useEffect(() => {

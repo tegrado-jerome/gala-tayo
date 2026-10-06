@@ -6,6 +6,7 @@
 // last two days, so fresh topics go live the same day instead of waiting for Monday.
 import { readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
+import { canCreateGuide, visiblePlacesOnly } from './guide-rules.mjs'
 import { activeSeasons, frontendDir, readJson, report, writeJson } from './signals.mjs'
 
 const guidesPath = path.join(frontendDir, 'src/data/seoGuides.json')
@@ -31,14 +32,11 @@ const INTENTS = [
   { goodFor: 'free', phrases: ['free things to do in {c}'] },
   { category: 'cafe', phrases: ['cafes in {c}', 'coffee shops in {c}'] },
   { category: 'food', phrases: ['restaurants in {c}', 'saan masarap kumain sa {c}'] },
-  { category: 'mall', phrases: ['malls in {c}'] },
   { category: 'museum', phrases: ['museums in {c}'] },
   { category: 'park', phrases: ['parks in {c}'] },
   { category: 'heritage', phrases: ['historical places in {c}', 'heritage sites in {c}'] },
   { category: 'activity', phrases: ['things to do in {c}', 'activities in {c}'] },
   { category: 'nightlife', phrases: ['bars in {c}', 'nightlife in {c}'] },
-  { category: 'hotel', phrases: ['staycation in {c}', 'hotels in {c}'] },
-  { category: 'cinema', phrases: ['cinemas in {c}'] },
 ]
 
 const SMALL_WORDS = new Set(['in', 'sa', 'to', 'for', 'of', 'and'])
@@ -66,7 +64,7 @@ async function readAreas() {
 async function loadPlaces() {
   for (let attempt = 1; ; attempt += 1) {
     const response = await fetch(`${apiBase}/seo/places`, { headers: { Origin: 'https://galatayo.app' } })
-    if (response.ok) return (await response.json()).places
+    if (response.ok) return visiblePlacesOnly((await response.json()).places)
     if (attempt === 4) throw new Error(`seo/places ${response.status}`)
     await sleep(attempt * 15000)
   }
@@ -153,7 +151,7 @@ async function main() {
       const key = [area.slug ?? '', intent.category ?? '', intent.goodFor ?? ''].join('|')
       if (existing.has(key)) continue
       const total = countPlaces(places, goodForTags, { areaSlugs: area.areaSlugs, category: intent.category, goodFor: intent.goodFor })
-      if (total >= minPlaces) candidates.push({ area, intent, total })
+      if (canCreateGuide(intent, total, minPlaces)) candidates.push({ area, intent, total })
     }
   }
 

@@ -2,6 +2,7 @@ import { getAreaLabelBySlug } from '../data/destinations'
 import { getPlaceCategoryLabel } from '../data/placeCategories'
 import { getPublicSiteOrigin } from './site'
 import destinationData from '../data/phDestinations.json'
+import guideRules from '../data/guideRules.json'
 import seoGuides from '../data/seoGuides.json'
 
 type SeoLandingTarget = {
@@ -71,7 +72,8 @@ function buildBrandJsonLd() {
   ]
 }
 
-const SEO_LANDING_TARGETS: SeoLandingTarget[] = seoGuides
+// Cinemas, hotels and malls never get a guide (see scripts/seo/guide-rules.mjs).
+const SEO_LANDING_TARGETS: SeoLandingTarget[] = seoGuides.filter((guide) => !guideRules.blockedCategories.includes(guide.category ?? ''))
 
 const GOOD_FOR_LABELS: Record<string, string> = {
   date: 'date',
@@ -86,7 +88,7 @@ const GOOD_FOR_LABELS: Record<string, string> = {
 }
 
 // A guide with four or more visible places is a real list; fewer stays noindex until it fills up.
-const MIN_INDEXABLE_GUIDE_PLACES = 4
+const MIN_INDEXABLE_GUIDE_PLACES = guideRules.minIndexablePlaces
 
 const INTENT_NOTES: Record<string, (area: string) => string> = {
   date: (area) => `Each pick shows the budget per head and the best time to go, so you can plan a date in ${area} without guessing the bill.`,

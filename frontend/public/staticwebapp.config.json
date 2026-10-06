@@ -282,6 +282,36 @@
       "statusCode": 301
     },
     {
+      "route": "/guides/mall-shopping-in-pasig",
+      "redirect": "/places/pasig",
+      "statusCode": 301
+    },
+    {
+      "route": "/guides/cinemas-in-quezon-city",
+      "redirect": "/places/quezon-city",
+      "statusCode": 301
+    },
+    {
+      "route": "/guides/hotels-and-staycations-in-taguig",
+      "redirect": "/places/taguig",
+      "statusCode": 301
+    },
+    {
+      "route": "/guides/malls-in-metro-manila",
+      "redirect": "/places/metro-manila",
+      "statusCode": 301
+    },
+    {
+      "route": "/guides/cinemas-in-metro-manila",
+      "redirect": "/places/metro-manila",
+      "statusCode": 301
+    },
+    {
+      "route": "/guides/malls-in-makati",
+      "redirect": "/places/makati",
+      "statusCode": 301
+    },
+    {
       "route": "/images/*",
       "cacheControl": "public, max-age=31536000, immutable"
     },
