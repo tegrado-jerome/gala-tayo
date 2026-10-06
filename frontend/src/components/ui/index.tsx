@@ -99,13 +99,20 @@ export function Avatar({ src, name, size = 28, className }: { src?: string | nul
   )
 }
 
-export function AvatarStack({ people, max = 6, size = 28 }: { people: Array<{ id?: string; avatarUrl?: string | null; name?: string | null }>; max?: number; size?: number }) {
+/** `live` fades each newly joined face in, and shows how many more are not pictured. */
+export function AvatarStack({ people, max = 6, size = 28, live = false }: { people: Array<{ id?: string; avatarUrl?: string | null; name?: string | null }>; max?: number; size?: number; live?: boolean }) {
   const shown = people.slice(0, max)
+  const extra = people.length - shown.length
   return (
-    <div className="g-avs">
+    <div className={cx('g-avs', live && 'is-live')}>
       {shown.map((person, index) => (
         <Avatar key={person.id ?? index} src={person.avatarUrl} name={person.name} size={size} />
       ))}
+      {live && extra > 0 ? (
+        <span className="g-av g-avs-more" style={{ width: size, height: size }} aria-label={`and ${extra} more`}>
+          +{extra}
+        </span>
+      ) : null}
     </div>
   )
 }

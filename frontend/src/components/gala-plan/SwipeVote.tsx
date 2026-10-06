@@ -1,18 +1,24 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
 import { createPortal } from 'react-dom'
-import type { Session } from '@supabase/supabase-js'
 import { Check } from '@phosphor-icons/react/dist/csr/Check'
 import { X } from '@phosphor-icons/react/dist/csr/X'
 import { AvatarStack, Button } from '../ui'
 import { personAvatar, personName } from './BarkadaPanel'
-import { getStaticPlaceImageUrlForSlug } from '../../data/placeIndexVisuals'
-import { voteGalaPlanPoll, type GalaPlanBarkada, type GalaPlanPoll } from '../../utils/galaPlanBarkadaApi'
-import type { GalaPlanDetail } from '../../utils/galaPlansApi'
-import { formatPeso } from '../../utils/galaPlanTrip'
+import type { GalaPlanBarkada } from '../../utils/galaPlanBarkadaApi'
+import type { GalaPlanOwner } from '../../utils/galaPlansApi'
 import { resizedMediaUrl } from '../../data/r2Config'
 
-type Option = GalaPlanPoll['options'][number]
-type Phase = 'deck' | 'saving' | 'done' | 'end'
+export type SwipeCard = {
+  id: string
+  title: string
+  image: string | null
+  meta: string | null
+  votes: number
+  voters: GalaPlanOwner[]
+  isMine: boolean
+}
+
+type Phase = 'deck' | 'saving' | 'done' | 'end' | 'rated'
 
 const SWIPE_PX = 96
 const FLY_MS = 220
@@ -20,21 +26,14 @@ const FLY_MS = 220
 // White text on the ink main action.
 const ON_TARA = '#ffffff'
 
-function findPlace(plan: GalaPlanDetail, option: Option) {
-  const label = option.label.trim().toLowerCase()
-  return plan.items.find((item) => item.place.id === option.place_id || item.place.name.trim().toLowerCase() === label)?.place ?? null
-}
-
 function prefersReducedMotion() {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
-function OptionCard({ plan, option, dx, dragging, isMine }: { plan: GalaPlanDetail; option: Option; dx: number; dragging: boolean; isMine: boolean }) {
-  const place = findPlace(plan, option)
-  const image = place ? place.image_url || getStaticPlaceImageUrlForSlug(place.slug) : null
-  const meta = place ? [place.category, place.area || place.city, place.budget_min ? `${formatPeso(place.budget_min)}/head` : null].filter(Boolean).join(' · ') : null
+function OptionCard({ card, dx, dragging }: { card: SwipeCard; dx: number; dragging: boolean }) {
+  const { image, meta, isMine } = card
   const lean = Math.max(-1, Math.min(1, dx / SWIPE_PX))
-  const others = option.votes - (isMine ? 1 : 0)
+  const others = card.votes - (isMine ? 1 : 0)
 
   return (
     <div
@@ -62,19 +61,19 @@ function OptionCard({ plan, option, dx, dragging, isMine }: { plan: GalaPlanDeta
         style={{ border: '3px solid var(--ink)', color: 'var(--ink)', background: 'var(--surface)', font: '700 20px/1 var(--font-display)', transform: 'rotate(12deg)', opacity: Math.max(0, -lean) }}
         aria-hidden="true"
       >
-        SKIP
+        PASS
       </span>
 
       <div className="absolute inset-x-0 bottom-0 p-5" style={{ color: image ? '#fff' : 'var(--ink)' }}>
         {isMine ? <span className="g-tag is-solid mb-2">Your pick</span> : null}
-        <p className={image ? 'g-h1' : 'g-d1'} style={{ color: 'inherit', overflowWrap: 'anywhere' }}>{option.label}</p>
+        <p className={image ? 'g-h1' : 'g-d1'} style={{ color: 'inherit', overflowWrap: 'anywhere' }}>{card.title}</p>
         {meta ? <p className="g-sm mt-1" style={{ opacity: 0.85 }}>{meta}</p> : null}
         <div className="mt-3 flex min-h-7 items-center gap-2">
-          {option.voters.length > 0 ? (
-            <AvatarStack people={option.voters.map((voter) => ({ id: voter.user_id, avatarUrl: personAvatar(voter), name: personName(voter) }))} max={4} size={26} />
+          {card.voters.length > 0 ? (
+            <AvatarStack people={card.voters.map((voter) => ({ id: voter.user_id, avatarUrl: personAvatar(voter), name: personName(voter) }))} max={4} size={26} />
           ) : null}
           <span className="g-sm font-semibold">
-            {option.votes === 0 ? 'Be the first to say tara' : isMine && others === 0 ? 'Only you so far' : `${option.votes} already said tara`}
+            {card.votes === 0 ? 'Be the first to say tara' : isMine && others === 0 ? 'Only you so far' : `${card.votes} already said tara`}
           </span>
         </div>
       </div>
@@ -82,19 +81,32 @@ function OptionCard({ plan, option, dx, dragging, isMine }: { plan: GalaPlanDeta
   )
 }
 
-/** Full-screen deck of a poll's options. Swipe right (or the check button) to vote for the option, left (or the X button) to skip. */
-function SwipeVote({ plan, poll, session, onChange, onClose }: { plan: GalaPlanDetail; poll: GalaPlanPoll; session: Session | null | undefined; onChange: (barkada: GalaPlanBarkada) => void; onClose: () => void }) {
+type SwipeVoteProps = {
+  title: string
+  cards: SwipeCard[]
+  /** Saves a tara for the card and returns the updated barkada. */
+  onTara: (card: SwipeCard) => Promise<GalaPlanBarkada>
+  /** When set, every card gets a tara or a pass and the deck runs to the end; otherwise the first tara is the pick. */
+  onPass?: (card: SwipeCard) => Promise<GalaPlanBarkada>
+  onChange: (barkada: GalaPlanBarkada) => void
+  onClose: () => void
+}
+
+/** Full-screen deck. Swipe right (or the check button) for tara, left (or the X button) to pass. */
+function SwipeVote({ title, cards, onTara, onPass, onChange, onClose }: SwipeVoteProps) {
   const [index, setIndex] = useState(0)
   const [dx, setDx] = useState(0)
   const [dragging, setDragging] = useState(false)
   const [phase, setPhase] = useState<Phase>('deck')
   const [result, setResult] = useState<{ label: string; others: number } | null>(null)
+  const [taraCount, setTaraCount] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const startX = useRef<number | null>(null)
   const dialogRef = useRef<HTMLDivElement>(null)
 
-  const option = poll.options[index]
-  const next = poll.options[index + 1]
+  const card = cards[index]
+  const next = cards[index + 1]
+  const ratesAll = Boolean(onPass)
 
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null
@@ -107,43 +119,68 @@ function SwipeVote({ plan, poll, session, onChange, onClose }: { plan: GalaPlanD
     }
   }, [])
 
-  const fly = (direction: 1 | -1, after: () => void) => {
-    if (prefersReducedMotion()) {
-      setDx(0)
-      after()
+  const fly = (direction: 1 | -1) =>
+    new Promise<void>((resolve) => {
+      if (prefersReducedMotion()) {
+        resolve()
+        return
+      }
+      setDx(direction * (window.innerWidth + 200))
+      window.setTimeout(resolve, FLY_MS)
+    })
+
+  const advance = () => {
+    setDx(0)
+    if (index + 1 >= cards.length) {
+      setPhase(ratesAll ? 'rated' : 'end')
       return
     }
-    setDx(direction * (window.innerWidth + 200))
-    window.setTimeout(after, FLY_MS)
+    setIndex(index + 1)
+    setPhase('deck')
   }
 
-  const skip = () => {
-    if (phase !== 'deck' || !option) return
-    setError(null)
-    fly(-1, () => {
-      setDx(0)
-      if (index + 1 >= poll.options.length) setPhase('end')
-      else setIndex(index + 1)
-    })
-  }
-
-  const tara = async () => {
-    if (phase !== 'deck' || !option) return
-    setError(null)
+  // The deck only moves on once the vote is saved, so a failed save never drops a vote.
+  const save = async (direction: 1 | -1, action: () => Promise<GalaPlanBarkada>) => {
     setPhase('saving')
-    const picked = option
-    fly(1, () => undefined)
+    const flown = fly(direction)
     try {
-      const barkada = await voteGalaPlanPoll(plan.id, poll.id, picked.id, session)
+      const barkada = await action()
       onChange(barkada)
-      const updated = barkada.available ? barkada.polls.find((entry) => entry.id === poll.id)?.options.find((entry) => entry.id === picked.id) : undefined
-      setResult({ label: picked.label, others: Math.max(0, (updated?.votes ?? picked.votes + 1) - 1) })
-      setPhase('done')
+      await flown
+      return barkada
     } catch (voteError) {
+      await flown
       setError(voteError instanceof Error ? voteError.message : 'Could not save your vote.')
       setDx(0)
       setPhase('deck')
+      return null
     }
+  }
+
+  const skip = async () => {
+    if (phase !== 'deck' || !card) return
+    setError(null)
+    if (!onPass) {
+      setPhase('saving')
+      await fly(-1)
+      advance()
+      return
+    }
+    if (await save(-1, () => onPass(card))) advance()
+  }
+
+  const tara = async () => {
+    if (phase !== 'deck' || !card) return
+    setError(null)
+    const picked = card
+    if (!(await save(1, () => onTara(picked)))) return
+    if (ratesAll) {
+      setTaraCount((count) => count + 1)
+      advance()
+      return
+    }
+    setResult({ label: picked.title, others: Math.max(0, picked.votes - (picked.isMine ? 1 : 0)) })
+    setPhase('done')
   }
 
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
@@ -160,17 +197,18 @@ function SwipeVote({ plan, poll, session, onChange, onClose }: { plan: GalaPlanD
     startX.current = null
     setDragging(false)
     if (dx > SWIPE_PX) void tara()
-    else if (dx < -SWIPE_PX) skip()
+    else if (dx < -SWIPE_PX) void skip()
     else setDx(0)
   }
 
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.key === 'Escape') onClose()
     else if (event.key === 'ArrowRight') void tara()
-    else if (event.key === 'ArrowLeft') skip()
+    else if (event.key === 'ArrowLeft') void skip()
   }
 
   const restart = () => {
+    setTaraCount(0)
     setIndex(0)
     setDx(0)
     setPhase('deck')
@@ -193,9 +231,9 @@ function SwipeVote({ plan, poll, session, onChange, onClose }: { plan: GalaPlanD
           <X />
         </Button>
         <div className="min-w-0 flex-1 text-center">
-          <h2 id="swipe-vote-title" className="g-h3 truncate">{poll.question}</h2>
+          <h2 id="swipe-vote-title" className="g-h3 truncate">{title}</h2>
           <p className="g-xs g-mut">
-            {phase === 'deck' || phase === 'saving' ? `Vote with the barkada · ${index + 1} of ${poll.options.length}` : 'Vote with the barkada'}
+            {phase === 'deck' || phase === 'saving' ? `Vote with the barkada · ${index + 1} of ${cards.length}` : 'Vote with the barkada'}
           </p>
         </div>
         <span className="w-11 shrink-0" aria-hidden="true" />
@@ -210,6 +248,17 @@ function SwipeVote({ plan, poll, session, onChange, onClose }: { plan: GalaPlanD
           <p className="g-mut mt-2">{result.others === 0 ? "You're the first. Hatakin mo na sila." : `${result.others} ${result.others === 1 ? 'other' : 'others'} too`}</p>
           <Button variant="ink" className="mt-8" onClick={onClose}>Back to plan</Button>
         </div>
+      ) : phase === 'rated' ? (
+        <div className="mx-auto flex w-full max-w-[420px] flex-1 flex-col items-center justify-center px-6 text-center">
+          <span className="grid h-24 w-24 place-items-center rounded-full" style={{ background: 'var(--tara)', color: ON_TARA }} aria-hidden="true">
+            <Check className="h-10 w-10" weight="bold" />
+          </span>
+          <p className="g-h1 mt-6" role="status">Tapos ka na!</p>
+          <p className="g-mut mt-2">
+            {taraCount === 0 ? 'You passed on every place.' : `You said tara to ${taraCount} of ${cards.length}.`} The ranking updates as the barkada swipes.
+          </p>
+          <Button variant="ink" className="mt-8" onClick={onClose}>See the ranking</Button>
+        </div>
       ) : phase === 'end' ? (
         <div className="mx-auto flex w-full max-w-[420px] flex-1 flex-col items-center justify-center px-6 text-center">
           <p className="g-h1" role="status">Walang napili</p>
@@ -219,12 +268,12 @@ function SwipeVote({ plan, poll, session, onChange, onClose }: { plan: GalaPlanD
             <Button variant="ink" onClick={restart}>Start over</Button>
           </div>
         </div>
-      ) : option ? (
+      ) : card ? (
         <>
           <div className="relative mx-auto w-full max-w-[420px] min-h-0 flex-1 px-5 py-4">
             {next ? (
               <div className="absolute inset-x-5 inset-y-4 scale-[0.92]" aria-hidden="true">
-                <OptionCard plan={plan} option={next} dx={0} dragging isMine={poll.viewer_option_id === next.id} />
+                <OptionCard card={next} dx={0} dragging />
               </div>
             ) : null}
             <div
@@ -234,21 +283,21 @@ function SwipeVote({ plan, poll, session, onChange, onClose }: { plan: GalaPlanD
               onPointerUp={onPointerEnd}
               onPointerCancel={onPointerEnd}
               role="group"
-              aria-label={`Option ${index + 1} of ${poll.options.length}: ${option.label}, ${option.votes} ${option.votes === 1 ? 'vote' : 'votes'}`}
+              aria-label={`Option ${index + 1} of ${cards.length}: ${card.title}, ${card.votes} ${card.votes === 1 ? 'vote' : 'votes'}`}
             >
-              <OptionCard plan={plan} option={option} dx={dx} dragging={dragging} isMine={poll.viewer_option_id === option.id} />
+              <OptionCard card={card} dx={dx} dragging={dragging} />
             </div>
           </div>
-          <p className="sr-only" aria-live="polite">{`${option.label}, ${option.votes} ${option.votes === 1 ? 'vote' : 'votes'}. Right arrow to vote, left arrow to skip.`}</p>
+          <p className="sr-only" aria-live="polite">{`${card.title}, ${card.votes} ${card.votes === 1 ? 'vote' : 'votes'}. Right arrow for tara, left arrow to pass.`}</p>
           {error ? <p role="alert" className="g-hint is-error text-center">{error}</p> : null}
           <div className="flex items-center justify-center gap-8 pb-[calc(env(safe-area-inset-bottom,0px)+28px)] pt-2">
             <button
               type="button"
               className={roundButton}
               style={{ background: 'var(--surface)', color: 'var(--ink)', boxShadow: 'inset 0 0 0 1px var(--line), var(--sh-2)' }}
-              aria-label={`Skip ${option.label}`}
+              aria-label={`${ratesAll ? 'Pass on' : 'Skip'} ${card.title}`}
               disabled={phase !== 'deck'}
-              onClick={skip}
+              onClick={() => void skip()}
             >
               <X className="h-7 w-7" />
             </button>
@@ -256,7 +305,7 @@ function SwipeVote({ plan, poll, session, onChange, onClose }: { plan: GalaPlanD
               type="button"
               className={roundButton}
               style={{ background: 'var(--tara)', color: ON_TARA, boxShadow: 'var(--sh-2)' }}
-              aria-label={`Tara! Vote for ${option.label}`}
+              aria-label={`Tara! Vote for ${card.title}`}
               aria-busy={phase === 'saving' || undefined}
               disabled={phase !== 'deck'}
               onClick={() => void tara()}

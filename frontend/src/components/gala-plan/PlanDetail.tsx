@@ -17,6 +17,7 @@ import InternalLink from '../InternalLink'
 import PlaceImage from '../discover/PlaceImage'
 import { Avatar, AvatarStack, Button, Empty, Page, Sheet, Skeleton, Tabs, Tag, cx } from '../ui'
 import { MembersList, PollsPanel, RsvpPanel, personAvatar, personName } from './BarkadaPanel'
+import { TaraBurst } from './BarkadaVotes'
 import BudgetPanel from './BudgetPanel'
 import PlanRouteMap, { useIsDesktop } from './PlanRouteMap'
 import { PlanCover } from './PlanSummaryCard'
@@ -36,12 +37,16 @@ import { daysUntil, estimatePerHead, formatDaysUntil, formatPeso, getPlanDate, g
 import { getStaticPlaceImageUrlForSlug } from '../../data/placeIndexVisuals'
 import { openFloatingChat } from '../../utils/floatingChat'
 import { navigateToPath } from '../../utils/navigation'
-import { buildGalaPlanInviteUrl, shareLink } from '../../utils/share'
+import { buildGalaPlanInviteUrl } from '../../utils/share'
+import { bestDate, formatDateChoice, inviteMessage, lockedDate, splitPolls } from '../../utils/barkadaVotes'
 import '../../design/plans.css'
 import { useActionBarMode } from '../../hooks/useActionBarMode'
 import { resizedMediaUrl } from '../../data/r2Config'
 
 type Tab = 'itinerary' | 'polls' | 'barkada' | 'hatian'
+
+// How often an open plan re-reads RSVPs and votes while the tab is visible.
+const LIVE_REFRESH_MS = 12_000
 type Menu = 'sheet' | 'popover' | null
 
 function PlanMenu({ menu, onClose, onDelete }: { menu: Menu; onClose: () => void; onDelete: () => void }) {
@@ -114,8 +119,68 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
   const [isReordering, setIsReordering] = useState(false)
   const [menu, setMenu] = useState<Menu>(null)
   const [isInviteOpen, setIsInviteOpen] = useState(false)
+  const [burst, setBurst] = useState(0)
+  const [liveBurst, setLiveBurst] = useState(0)
+  const [liveNote, setLiveNote] = useState<string | null>(null)
   const tabsRef = useRef<HTMLDivElement>(null)
+  // Bumped on every write so a slower background refresh never overwrites a newer result.
+  const writeVersion = useRef(0)
+  const isReorderingRef = useRef(false)
   const isDesktop = useIsDesktop()
+
+  const applyBarkada = (next: GalaPlanBarkada) => {
+    writeVersion.current += 1
+    setBarkada(next)
+  }
+  const applyPlan = (next: GalaPlanDetail) => {
+    writeVersion.current += 1
+    setPlan(next)
+  }
+
+  useEffect(() => {
+    isReorderingRef.current = isReordering
+  }, [isReordering])
+
+  useEffect(() => {
+    let isCancelled = false
+    const refresh = async () => {
+      if (document.visibilityState !== 'visible') return
+      const startedAt = writeVersion.current
+      try {
+        const [nextBarkada, nextPlan] = await Promise.all([getGalaPlanBarkada(planId, session), getGalaPlan(planId, session)])
+        if (isCancelled || startedAt !== writeVersion.current) return
+        setBarkada((previous) => {
+          if (previous?.available && nextBarkada.available) {
+            const wasGoing = new Set(previous.members.filter((member) => member.rsvp === 'going').map((member) => member.user_id))
+            const joined = nextBarkada.members.filter((member) => member.rsvp === 'going' && !wasGoing.has(member.user_id) && member.user_id !== session?.user?.id)
+            if (joined.length > 0) {
+              const names = joined.map((member) => personName(member.profile).split(' ')[0])
+              setLiveNote(`${names.length > 2 ? `${names.slice(0, 2).join(', ')} and ${names.length - 2} more` : names.join(' and ')} said Tara!`)
+              setLiveBurst((count) => count + 1)
+            }
+          }
+          return nextBarkada
+        })
+        if (!isReorderingRef.current) setPlan(nextPlan.plan)
+      } catch {
+        // A missed refresh is fine; the next tick tries again.
+      }
+    }
+    const timer = window.setInterval(() => void refresh(), LIVE_REFRESH_MS)
+    const onVisible = () => void refresh()
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      isCancelled = true
+      window.clearInterval(timer)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [planId, session])
+
+  useEffect(() => {
+    if (!liveNote) return
+    const timeout = window.setTimeout(() => setLiveNote(null), 5000)
+    return () => window.clearTimeout(timeout)
+  }, [liveNote])
 
   useEffect(() => {
     let isCancelled = false
@@ -196,6 +261,13 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
   const dateText = date ? date.toLocaleDateString('en', { weekday: 'short', month: 'short', day: 'numeric' }) : null
   const totalKm = getPlanLegs(plan.items).reduce((sum, leg) => sum + (leg?.km ?? 0), 0)
   const hasRoute = plan.items.some((item) => item.place.latitude != null && item.place.longitude != null)
+  const votes = readyBarkada ? splitPolls(readyBarkada.polls) : null
+  const lockedChoice = votes ? lockedDate(votes.dates, parsedDescription.dateMode === 'date' ? parsedDescription.date : null) : null
+  const leadingDate = votes ? bestDate(votes.dates) : null
+  const openDates = votes && votes.dates.length > 0 && !lockedChoice ? votes.dates : []
+  const spotsOpen = Boolean(votes && votes.spots.length > 0 && !votes.spots.some((spot) => spot.placeId && plan.items.some((item) => item.place_id === spot.placeId)))
+  const voteCount = votes ? votes.regular.length + (votes.dates.length > 0 ? 1 : 0) + (votes.spots.length > 0 ? 1 : 0) : 0
+  const invitation = inviteMessage(plan.items[0]?.place.name ?? plan.title, lockedChoice ? formatDateChoice(lockedChoice) : dateText)
   const hostName = plan.owner?.display_name?.trim() || (plan.owner?.username ? `@${plan.owner.username}` : null)
 
   const viewerMember = readyBarkada?.members.find((member) => member.user_id === session?.user?.id)
@@ -227,31 +299,36 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
       guestAuth.open('plan-rsvp', (guestSession) => void joinPlan(guestSession))
       return
     }
+    setBurst((count) => count + 1)
     try {
-      setBarkada(await setGalaPlanRsvp(plan.id, 'going', activeSession))
+      applyBarkada(await setGalaPlanRsvp(plan.id, 'going', activeSession))
     } catch (joinError) {
       setNotice(joinError instanceof Error ? joinError.message : 'Hindi ma-RSVP. Try again.')
     }
   }
 
-  // Sharing only hands out the link; it never changes who can open the plan.
-  const share = async () => {
+  const copyInvite = async () => {
     try {
-      await shareLink({ url: shareUrl, title: plan.title, text: `Sama ka? ${plan.title}` })
-    } catch {
-      return
-    }
-    setNotice('Invite link ready. Send it to your barkada.')
-  }
-
-  const copyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(shareUrl)
+      await navigator.clipboard.writeText(`${invitation} ${shareUrl}`)
       setCopied(true)
       window.setTimeout(() => setCopied(false), 2000)
     } catch {
-      await shareLink({ url: shareUrl, title: plan.title, text: `Sama ka? ${plan.title}` })
+      setNotice('Could not copy. Long-press the message to copy it.')
     }
+  }
+
+  // Sharing only hands out the link; it never changes who can open the plan.
+  const share = async () => {
+    if (typeof navigator.share !== 'function') {
+      await copyInvite()
+      return
+    }
+    try {
+      await navigator.share({ title: plan.title, text: invitation, url: shareUrl })
+    } catch {
+      return
+    }
+    setNotice('Invite sent. Hintayin ang Tara nila!')
   }
 
   const remove = async () => {
@@ -316,10 +393,13 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
           </div>
         </div>
       </figure>
+      <p className="g-invite-msg mt-3">
+        {invitation} <span>{shareUrl}</span>
+      </p>
       <div className="mt-3 flex gap-2">
-        <Button variant="ink" className="min-w-0 flex-1" onClick={() => void copyLink()}>
+        <Button variant="ink" className="min-w-0 flex-1" onClick={() => void copyInvite()}>
           {copied ? <Check /> : <Link2 />}
-          {copied ? 'Link copied' : 'Copy link'}
+          {copied ? 'Invite copied' : 'Copy invite'}
         </Button>
         {canShare ? (
           <Button variant="line" iconOnly aria-label="Share invite" onClick={() => void share()}>
@@ -327,7 +407,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
           </Button>
         ) : null}
       </div>
-      <p role="status" className="sr-only">{copied ? 'Invite link copied' : ''}</p>
+      <p role="status" className="sr-only">{copied ? 'Invite copied' : ''}</p>
     </>
   )
 
@@ -337,7 +417,7 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
     { value: 'itinerary', label: <>Itinerary{count(stops.length)}</> },
     ...(readyBarkada
       ? [
-          { value: 'polls' as const, label: <>Polls{count(readyBarkada.polls.length)}</> },
+          { value: 'polls' as const, label: <>Polls{count(voteCount)}</> },
           { value: 'barkada' as const, label: <>Barkada{count(readyBarkada.members.length)}</> },
         ]
       : []),
@@ -465,8 +545,9 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
                 <b>{rsvpLine}</b>
                 <span>{rsvpSub}</span>
               </button>
+              <TaraBurst play={liveBurst} />
               {going.length + maybe.length > 0 ? (
-                <AvatarStack people={[...going, ...maybe].map((member) => ({ id: member.user_id, avatarUrl: personAvatar(member.profile), name: personName(member.profile) }))} max={4} size={32} />
+                <AvatarStack people={[...going, ...maybe].map((member) => ({ id: member.user_id, avatarUrl: personAvatar(member.profile), name: personName(member.profile) }))} max={4} size={32} live />
               ) : null}
               {plan.viewer_is_owner ? (
                 <Button variant="line" size="sm" iconOnly aria-label="Invite the barkada" onClick={() => setIsInviteOpen(true)}>
@@ -476,9 +557,26 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
             </div>
           ) : null}
 
+          <p className="g-live-note" role="status">{liveNote}</p>
+
+          {openDates.length > 0 || spotsOpen ? (
+            <button type="button" className="g-vote-strip mt-3" onClick={() => openTab('polls')}>
+              {openDates.length > 0 ? (
+                <span>
+                  <b>Kailan?</b> {openDates.length} dates{leadingDate ? ` · best so far ${formatDateChoice(leadingDate)}` : ' · vote na'}
+                </span>
+              ) : null}
+              {spotsOpen && votes ? (
+                <span>
+                  <b>Pick the spot</b> {votes.spots.length} places · swipe Tara or Pass
+                </span>
+              ) : null}
+            </button>
+          ) : null}
+
           {readyBarkada && !plan.viewer_is_owner ? (
             <div className="mt-4">
-              <RsvpPanel plan={plan} barkada={readyBarkada} session={session} onChange={setBarkada} />
+              <RsvpPanel plan={plan} barkada={readyBarkada} session={session} onChange={applyBarkada} />
             </div>
           ) : null}
 
@@ -557,9 +655,9 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
                 </>
               )
             ) : null}
-            {activeTab === 'polls' && readyBarkada ? <PollsPanel plan={plan} barkada={readyBarkada} session={session} onChange={setBarkada} /> : null}
+            {activeTab === 'polls' && readyBarkada ? <PollsPanel plan={plan} barkada={readyBarkada} session={session} onChange={applyBarkada} onPlanChange={applyPlan} /> : null}
             {activeTab === 'barkada' && readyBarkada ? <MembersList barkada={readyBarkada} /> : null}
-            {activeTab === 'hatian' ? <BudgetPanel plan={plan} barkada={barkada} session={session} onBarkadaChange={setBarkada} /> : null}
+            {activeTab === 'hatian' ? <BudgetPanel plan={plan} barkada={barkada} session={session} onBarkadaChange={applyBarkada} /> : null}
           </div>
         </div>
 
@@ -580,9 +678,10 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
               Invite barkada
             </Button>
           ) : readyBarkada?.viewer_rsvp === 'going' ? (
-            <Button variant="soft" className="min-w-0 flex-[1.5]" disabled>
+            <Button variant="soft" className="relative min-w-0 flex-[1.5]" disabled>
               <Check />
               Sasama ka na
+              <TaraBurst play={burst} />
             </Button>
           ) : (
             <Button variant="ink" className="min-w-0 flex-[1.5]" onClick={() => void joinPlan()}>
