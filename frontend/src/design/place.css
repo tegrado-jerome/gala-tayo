@@ -76,7 +76,7 @@
 .pd-sec-title { margin: 0 0 10px; font: 600 21px/1.2 var(--font-display); letter-spacing: -0.01em; }
 .pd-prose { max-width: 680px; margin: 0; font-size: 15px; line-height: 1.6; color: var(--ink); }
 .pd-more, .pd-ask { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0; border: 0; background: none; color: var(--ink); font: 700 14px/1 var(--font-body); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
-.pd-ask { color: var(--sea); }
+.pd-ask { color: var(--sea); text-decoration: none; }
 .pd-about-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 20px; }
 .pd-about-actions:empty { display: none; }
 .pd-ask svg { width: 18px; height: 18px; }

@@ -7,13 +7,17 @@ type SimilarPlacesProps = {
   areaName: string
   areaHref: string
   currentSlug: string
+  currentId?: string | null
+  currentName?: string | null
   onGuestFavorite: (retry: () => void) => void
 }
 
 /** Real places from the same area listing, minus the one being viewed. Hidden when the area has nothing else. */
-function SimilarPlaces({ areaSlug, areaName, areaHref, currentSlug, onGuestFavorite }: SimilarPlacesProps) {
+function SimilarPlaces({ areaSlug, areaName, areaHref, currentSlug, currentId, currentName, onGuestFavorite }: SimilarPlacesProps) {
   const places = useListingRail({ areaSlug })
-  const items = (places ?? []).filter((place) => place.slug !== currentSlug).slice(0, 8)
+  // Match by slug, id or name: duplicate records of the same place must not recommend the page you're on.
+  const sameName = (name?: string | null) => Boolean(name && currentName && name.trim().toLowerCase() === currentName.trim().toLowerCase())
+  const items = (places ?? []).filter((place) => place.slug !== currentSlug && (!currentId || place.id !== currentId) && !sameName(place.name)).slice(0, 8)
   if (items.length === 0) return null
   return (
     <div className="pd-sec pd-similar">
