@@ -1,4 +1,5 @@
 import { CompassRose } from '@phosphor-icons/react/dist/csr/CompassRose'
+import SeoHead from '../components/SeoHead'
 import { Button } from '../components/ui'
 import '../design/misc.css'
 
@@ -20,6 +21,7 @@ export function NotFoundPage({
 }) {
   return (
     <main className="g-page g-page-narrow flex min-h-[70dvh] flex-col items-center justify-center text-center">
+      <SeoHead title="Page not found | GalaTayo" robots="noindex,follow" />
       <span className="m-lost" aria-hidden="true">
         <CompassRose weight="light" />
       </span>

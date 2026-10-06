@@ -166,8 +166,9 @@ export default function SaanTayoPage() {
   )
   const regionDestinations = useMemo(() => {
     const destinations = getRegionBySlug(region)?.destinations ?? []
-    return region === METRO_MANILA_REGION_SLUG ? destinations : destinations.filter((destination) => placeCounts[destination.slug] || destination.slug === city)
-  }, [city, placeCounts, region])
+    // No dead-end chips: only cities with gala-worthy places (once the list has loaded).
+    return places.length === 0 ? destinations : destinations.filter((destination) => placeCounts[destination.slug] || destination.slug === city)
+  }, [city, placeCounts, places.length, region])
   const regionName = getRegionBySlug(region)?.name ?? 'Metro Manila'
 
   const cityStats = useMemo(() => {
