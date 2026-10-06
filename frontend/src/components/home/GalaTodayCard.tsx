@@ -1,37 +1,34 @@
-import { TrendUp } from '@phosphor-icons/react/dist/csr/TrendUp'
 import InternalLink from '../InternalLink'
-import { formatPostDate, useGalaToday, type GalaTodayPost } from '../../utils/galaToday'
+import { formatPostDate, leadPick, useGalaToday, type GalaTodayPost } from '../../utils/galaToday'
 import { getPlaceCardPhoto } from '../../utils/placeGalleryPhotos'
 import '../../design/today.css'
 
-export function TrendChip({ post }: { post: GalaTodayPost }) {
-  if (!post.trend) return <span className="t-chip">{post.angle}</span>
-  return (
-    <span className="t-chip">
-      <TrendUp weight="bold" aria-hidden="true" />
-      Trending: {post.trend.title}
-    </span>
-  )
+/** The format as a sticker, e.g. "₱500 CHALLENGE" or "TIER LIST". */
+export function FormatSticker({ post, className }: { post: GalaTodayPost; className?: string }) {
+  return <span className={className ? `t-chip ${className}` : 't-chip'}>{post.sticker}</span>
 }
 
-/** One post as a compact card, for the list page and the home rail. */
+/** One post as a card: the lead photo with the meme's top line, then the title and hook. For the list page and the home rail. */
 export function GalaTodayCard({ post, headingLevel = 'h3' }: { post: GalaTodayPost; headingLevel?: 'h2' | 'h3' }) {
   const Heading = headingLevel
+  const photo = getPlaceCardPhoto(leadPick(post).slug)
   return (
     <InternalLink href={`/today/${post.slug}`} className="t-card">
-      <span className="t-kicker">
-        <span className="t-live" aria-hidden="true" />
-        Gala Today · {formatPostDate(post.date)}
+      <span className="t-card-photo">
+        {photo ? <img src={photo} alt="" loading="lazy" decoding="async" /> : null}
+        <FormatSticker post={post} className="t-chip-on-photo" />
+        <span className="t-card-meme" aria-hidden="true">
+          {post.meme.top}
+        </span>
       </span>
-      <TrendChip post={post} />
-      <Heading className="t-card-title">{post.title}</Heading>
-      <span className="t-card-hook">{post.hook}</span>
-      <span className="t-faces" aria-hidden="true">
-        {post.picks.map((pick) => {
-          const photo = getPlaceCardPhoto(pick.slug)
-          return photo ? <img key={pick.slug} src={photo} alt="" loading="lazy" decoding="async" /> : null
-        })}
-        <span className="t-faces-label">{post.picks.map((pick) => pick.name).join(' · ')}</span>
+      <span className="t-card-text">
+        <span className="t-kicker">
+          <span className="t-live" aria-hidden="true" />
+          Gala Today · {formatPostDate(post.date)}
+        </span>
+        <Heading className="t-card-title">{post.title}</Heading>
+        <span className="t-card-hook">{post.hook}</span>
+        <span className="t-card-places">{post.picks.map((pick) => pick.name).join(' · ')}</span>
       </span>
     </InternalLink>
   )

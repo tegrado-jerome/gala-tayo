@@ -2,41 +2,62 @@ import { app, HttpRequest, HttpResponseInit, InvocationContext, Timer } from "@a
 import galaScores from "../data/galaScores.json";
 import { writeGalaTodayDraft } from "../services/galaTodayWriter";
 import { getJsonCacheValue, getRedisClient, setJsonCacheValue } from "../services/redisCacheService";
+import { hasCuratedPhoto } from "../utils/hdPhotos";
 import { extractJsonObject } from "../utils/jsonRepair";
 import { getSeoPlaceSummaries } from "../utils/seoPlaces";
-import { getDestinationBySlug, REGIONS } from "../utils/phDestinations";
+import { getDestinationBySlug, inferProvincialDestinationsFromQuery, mentionsDestination, REGIONS } from "../utils/phDestinations";
 import { checkEndpointRateLimit } from "../utils/redisRateLimit";
 import {
+  budgetPlan,
+  buildEditorPrompt,
   buildPrompt,
-  calendarAngle,
-  chooseRegion,
-  parseGoogleTrendsRss,
-  parseNewsRss,
-  pickSignals,
-  rotatePlaces,
+  chooseFormat,
+  parseEditorReview,
   validateDraft,
   type GalaTodayPost,
   type TodayPlace,
-  type TrendSignal,
 } from "../utils/galaTodayCore";
+import {
+  chooseRegion,
+  chooseTrend,
+  dayContext,
+  describeRain,
+  evergreenSeeds,
+  normalizeTopic,
+  parseAutocomplete,
+  parseGoogleTrendsRss,
+  parseHourlyWeather,
+  parseNewsRss,
+  pickEvergreenQuery,
+  pickSignals,
+  rotatePlaces,
+  scoreTrends,
+  type TodayTopic,
+  type TrendSignal,
+} from "../utils/galaTodaySignals";
 
 // Posts live in Redis (newest first). The daily workflow also commits them into the frontend
 // repo, so the site keeps its history even if the cache is cleared.
-// v2: v1 held a first post that broke the one-region and no-unbacked-claims rules.
-const POSTS_KEY = "gala-today:posts:v3";
-// Paused until the creator-format upgrade passes QA; the API returns no posts and nothing is generated.
-const GALA_TODAY_ENABLED = false;
+// v4: creator formats, meme captions, trend-first topics and the editor pass (new post shape).
+const POSTS_KEY = "gala-today:posts:v4";
+const GALA_TODAY_ENABLED = true;
 const MAX_POSTS = 90;
 const MAX_POSTS_PER_DAY = 2;
+const MAX_DRAFTS = 3;
 const USER_AGENT = "Mozilla/5.0 (compatible; GalaTayoBot/1.0; +https://galatayo.app)";
-// Public, no-login sources only.
+// Free, public, no-login sources only.
 const SOURCES: Array<{ url: string; parse: (xml: string) => TrendSignal[] }> = [
   { url: "https://trends.google.com/trending/rss?geo=PH", parse: parseGoogleTrendsRss },
   { url: "https://news.google.com/rss/search?q=viral+OR+trending+when:1d&hl=en-PH&gl=PH&ceid=PH:en", parse: (xml) => parseNewsRss(xml, "Google News") },
   { url: "https://news.google.com/rss/search?q=tiktok+trend+philippines+when:2d&hl=en-PH&gl=PH&ceid=PH:en", parse: (xml) => parseNewsRss(xml, "Google News") },
+  { url: "https://news.google.com/rss/search?q=viral+food+OR+concert+OR+meme+philippines+when:2d&hl=en-PH&gl=PH&ceid=PH:en", parse: (xml) => parseNewsRss(xml, "Google News") },
   { url: "https://www.reddit.com/r/Philippines/hot.rss?limit=25", parse: (xml) => parseNewsRss(xml, "r/Philippines") },
 ];
+// Only the top trends get an autocomplete lookup, to stay polite to the free endpoint.
+const AUTOCOMPLETE_LOOKUPS = 8;
 const SCORES: Record<string, number> = galaScores;
+// Places that still work when it rains.
+const INDOOR = new Set(["Museum", "Food", "Cafe", "Mall", "Nightlife"]);
 
 async function fetchText(url: string, context: InvocationContext): Promise<string | null> {
   try {
@@ -52,7 +73,7 @@ async function fetchText(url: string, context: InvocationContext): Promise<strin
   }
 }
 
-async function collectSignals(context: InvocationContext): Promise<TrendSignal[]> {
+async function collectSignals(context: InvocationContext) {
   const results = await Promise.all(SOURCES.map(async (source) => {
     const xml = await fetchText(source.url, context);
     return xml ? source.parse(xml) : [];
@@ -60,14 +81,18 @@ async function collectSignals(context: InvocationContext): Promise<TrendSignal[]
   return pickSignals(results.flat());
 }
 
-async function manilaRainChance(context: InvocationContext): Promise<number | null> {
-  const text = await fetchText("https://api.open-meteo.com/v1/forecast?latitude=14.5995&longitude=120.9842&daily=precipitation_probability_max&timezone=Asia%2FManila&forecast_days=1", context);
-  try {
-    const value = text ? JSON.parse(text)?.daily?.precipitation_probability_max?.[0] : null;
-    return typeof value === "number" ? value : null;
-  } catch {
-    return null;
-  }
+async function autocomplete(query: string, context: InvocationContext): Promise<string[]> {
+  const text = await fetchText(`https://suggestqueries.google.com/complete/search?client=firefox&hl=en&gl=ph&q=${encodeURIComponent(query)}`, context);
+  return text ? parseAutocomplete(text) : [];
+}
+
+async function areaWeather(center: [number, number], fromHour: number, context: InvocationContext) {
+  const [lat, lon] = center;
+  const text = await fetchText(
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=precipitation_probability,precipitation&timezone=Asia%2FManila&forecast_days=1`,
+    context
+  );
+  return text ? describeRain(parseHourlyWeather(text), fromHour) : null;
 }
 
 async function holidayToday(date: string, context: InvocationContext): Promise<string | null> {
@@ -86,69 +111,109 @@ export async function readGalaTodayPosts(): Promise<GalaTodayPost[]> {
   return (await getJsonCacheValue<GalaTodayPost[]>(POSTS_KEY)) ?? [];
 }
 
+/** The region a trend names ("Baguio food crawl" → Cordillera), so the picks follow the trend. */
+function trendRegion(text: string): string | null {
+  const provincial = inferProvincialDestinationsFromQuery(text)[0]?.destination.regionSlug;
+  if (provincial) return provincial;
+  return mentionsDestination(text) ? "metro-manila" : null;
+}
+
 /** Writes one new post when today still has room. Returns the post, or why it skipped. */
 export async function generateGalaTodayPost(context: InvocationContext, now = new Date()): Promise<GalaTodayPost | string> {
   if (!GALA_TODAY_ENABLED) return "paused";
   const manilaNow = new Date(now.getTime() + 8 * 3600_000);
   const date = manilaNow.toISOString().slice(0, 10);
   const posts = await readGalaTodayPosts();
-  if (posts.filter((post) => post.date === date).length >= MAX_POSTS_PER_DAY) return "today is full";
+  const slot = posts.filter((post) => post.date === date).length;
+  if (slot >= MAX_POSTS_PER_DAY) return "today is full";
 
-  const [signals, rainChance, holiday, summaries] = await Promise.all([
-    collectSignals(context),
-    manilaRainChance(context),
-    holidayToday(date, context),
-    getSeoPlaceSummaries(),
-  ]);
-  const usedToday = new Set(posts.filter((post) => post.date === date).map((post) => post.trend?.title).filter(Boolean));
-  const freshSignals = signals.filter((signal) => !usedToday.has(signal.title));
-  const angle = calendarAngle(manilaNow, rainChance, holiday);
+  const [signals, holiday, summaries] = await Promise.all([collectSignals(context), holidayToday(date, context), getSeoPlaceSummaries()]);
 
-  const recentSlugs = new Set(posts.slice(0, 7).flatMap((post) => post.picks.map((pick) => pick.slug)));
-  const seed = Number(date.replace(/-/g, "")) + posts.length;
-  // All three picks come from one region so a post never sends people across the country in one day.
+  // 1. Topic: the highest-demand safe trend that links naturally to going out.
+  const lookups = signals.slice(0, AUTOCOMPLETE_LOOKUPS);
+  const suggestions = await Promise.all(lookups.map((signal) => autocomplete(signal.title, context)));
+  const autocompleteMap = new Map(lookups.map((signal, index) => [normalizeTopic(signal.title), suggestions[index]]));
+  const recentTopics = new Set(posts.slice(0, 10).map((post) => normalizeTopic(post.topic?.title ?? "")));
+  const scored = scoreTrends(signals, autocompleteMap);
+  const trend = chooseTrend(scored, recentTopics);
+  context.log(`Gala Today trends: ${scored.slice(0, 5).map((item) => `${item.title}=${item.score}`).join(", ") || "none"}; picked ${trend?.title ?? "evergreen"}`);
+
+  // 2. Region: the trend's own region when it names one; else local on weekdays, getaways on weekends/holidays.
   const regionOf = (areaSlug: string) => getDestinationBySlug(areaSlug)?.regionSlug ?? null;
+  const usable = summaries.filter((place) => place.description && hasCuratedPhoto(place.slug));
   const counts = new Map<string, number>();
-  for (const place of summaries) {
+  for (const place of usable) {
     const region = regionOf(place.areaSlug);
-    if (region && place.description) counts.set(region, (counts.get(region) ?? 0) + 1);
+    if (region) counts.set(region, (counts.get(region) ?? 0) + 1);
   }
-  const regionSlug = chooseRegion(angle, manilaNow.getUTCDay(), seed, [...counts].filter(([, count]) => count >= 6).map(([slug]) => slug).sort());
-  const areaName = REGIONS.find((region) => region.slug === regionSlug)?.name ?? "Metro Manila";
-  // Rainy days only get places that work in the rain (indoor categories or tagged for rainy days).
-  const isRainy = angle.startsWith("Rain");
-  const INDOOR = new Set(["Museum", "Food", "Cafe", "Mall", "Nightlife"]);
-  const fitsWeather = (place: (typeof summaries)[number]) =>
-    !isRainy || INDOOR.has(place.category ?? "") || place.goodFor.some((tag) => /rainy/i.test(tag));
-  const ranked = summaries
-    .filter((place) => place.description && regionOf(place.areaSlug) === regionSlug && fitsWeather(place))
+  const regions = [...counts].filter(([, count]) => count >= 6).map(([slug]) => slug).sort();
+  const weekday = manilaNow.getUTCDay();
+  const seed = Number(date.replace(/-/g, "")) + posts.length;
+  const regionSlug = chooseRegion(weekday === 0 || weekday === 6 || Boolean(holiday), seed, regions, trend ? trendRegion(`${trend.title} ${trend.query}`) : null);
+  const region = REGIONS.find((item) => item.slug === regionSlug);
+  const areaName = region?.name ?? "Metro Manila";
+
+  // 3. Weather is a practical side line only: rain keeps the picks indoors, never becomes the angle.
+  const weather = region ? await areaWeather(region.center, Math.max(8, manilaNow.getUTCHours() + 1), context) : null;
+  const fitsWeather = (place: (typeof summaries)[number]) => !weather?.rainy || INDOOR.has(place.category ?? "") || place.goodFor.some((tag) => /rainy/i.test(tag));
+
+  // 4. Places: real, photo-backed, gala-worthy spots in the region, most iconic first, rotated for freshness.
+  const recentSlugs = new Set(posts.slice(0, 7).flatMap((post) => post.picks.map((pick) => pick.slug)));
+  const ranked = usable
+    .filter((place) => regionOf(place.areaSlug) === regionSlug && fitsWeather(place))
     .sort((left, right) => (SCORES[right.slug] ?? 0) - (SCORES[left.slug] ?? 0));
-  const places: TodayPlace[] = rotatePlaces(ranked, recentSlugs, seed, 14).map((place) => ({
+  const candidates: TodayPlace[] = rotatePlaces(ranked, recentSlugs, seed, 14).map((place) => ({
     slug: place.slug,
     name: place.name,
     city: place.city ?? "",
     category: place.category ?? "Place",
     summary: (place.description ?? "").split(/(?<=[.!?])\s+/).slice(0, 2).join(" ").slice(0, 260),
     canonicalPath: place.canonicalPath,
+    budgetMin: place.budgetMin,
+    score: SCORES[place.slug] ?? 0,
   }));
+  if (candidates.length < 3) return "skipped: not enough places";
 
-  const { system, user } = buildPrompt(freshSignals, angle, places, date, areaName);
+  let topic: TodayTopic;
+  if (trend) topic = { kind: "trend", trend };
+  else {
+    const evergreen = await Promise.all(evergreenSeeds(areaName).map((query) => autocomplete(query, context)));
+    topic = { kind: "evergreen", query: pickEvergreenQuery(areaName, evergreen, seed) };
+  }
+
+  // 5. Format: rotates by date and slot; the budget challenge only runs on real budget data.
+  const budget = budgetPlan(candidates);
+  const format = chooseFormat(date, slot, posts[0]?.format ?? null, (id) => id !== "budget-challenge" || budget !== null);
+  const places = format === "budget-challenge" && budget ? budget.eligible : candidates;
+  const takenSlugs = new Set(posts.map((post) => post.slug));
+
+  // 6. Draft → rules → editor. Publish only when the editor scores every line 8+; else redraft with its notes.
+  let editorNotes: string | null = null;
   let lastReason = "no draft";
-  for (let attempt = 0; attempt < 3; attempt += 1) {
+  for (let attempt = 0; attempt < MAX_DRAFTS; attempt += 1) {
+    const { system, user } = buildPrompt({ date, topic, format, places, areaName, weather: weather?.line ?? null, day: dayContext(manilaNow, holiday), budget, editorNotes });
     const { text: raw, model } = await writeGalaTodayDraft(system, user, `gala-today-${date}-${attempt}`, (message) => context.warn(message));
-    context.log(`Gala Today draft ${attempt + 1} by ${model}`);
     const parsed = extractJsonObject(raw);
     if (!parsed) {
       lastReason = "unparseable";
       continue;
     }
-    const result = validateDraft(parsed, { signals: freshSignals, places, angle, date, now });
+    const result = validateDraft(parsed, { topic, format, places, areaName, weather: weather?.line ?? null, budget, date, now, takenSlugs });
     if ("reason" in result) {
       lastReason = result.reason;
+      editorNotes = `The last draft was rejected by the rules: ${result.reason}.`;
+      context.log(`Gala Today draft ${attempt + 1} (${model}) rejected: ${result.reason}`);
       continue;
     }
-    const draft = result.post;
-    const post = { ...draft, model, slug: posts.some((existing) => existing.slug === draft.slug) ? `${draft.slug}-2` : draft.slug };
+    const editor = buildEditorPrompt(result.post, places);
+    const review = parseEditorReview(extractJsonObject((await writeGalaTodayDraft(editor.system, editor.user, `gala-today-${date}-${attempt}-edit`, (message) => context.warn(message), 0.2)).text));
+    context.log(`Gala Today draft ${attempt + 1} (${model}) editor: ${JSON.stringify(review.scores)} ${review.fix}`);
+    if (!review.pass || !review.scores) {
+      lastReason = `editor: ${JSON.stringify(review.scores)}`;
+      editorNotes = review.fix || "Make it funnier and clearer.";
+      continue;
+    }
+    const post: GalaTodayPost = { ...result.post, review: review.scores, model };
     await setJsonCacheValue(POSTS_KEY, [post, ...posts].slice(0, MAX_POSTS));
     return post;
   }
@@ -164,11 +229,11 @@ async function galaTodayTimer(_timer: Timer, context: InvocationContext): Promis
   }
 }
 
-/** Only one generator runs at a time (timer and the catch-up request below). */
+/** Only one generator runs at a time (timer and the catch-up request below). Drafts plus editor passes can take minutes. */
 async function withGenerateLock<T>(run: () => Promise<T>): Promise<T | null> {
   const client = await getRedisClient();
   if (!client) return null;
-  const locked = await client.set("gala-today:lock", "1", { nx: true, ex: 180 }).catch(() => null);
+  const locked = await client.set("gala-today:lock", "1", { nx: true, ex: 420 }).catch(() => null);
   if (!locked) return null;
   try {
     return await run();
@@ -185,7 +250,7 @@ async function galaTodayList(request: HttpRequest, context: InvocationContext): 
   // Catch-up: if the morning timer missed (cold start, AI limit), the first request after 6 AM Manila writes today's post.
   const manilaNow = new Date(Date.now() + 8 * 3600_000);
   const today = manilaNow.toISOString().slice(0, 10);
-  if (manilaNow.getUTCHours() >= 6 && !posts.some((post) => post.date === today)) {
+  if (GALA_TODAY_ENABLED && manilaNow.getUTCHours() >= 6 && !posts.some((post) => post.date === today)) {
     const result = await withGenerateLock(() => generateGalaTodayPost(context));
     if (result && typeof result !== "string") posts = [result, ...posts];
   }
