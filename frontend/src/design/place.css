@@ -181,3 +181,12 @@
 /* Editor's note from the team (kept apart from visitor reviews) */
 .pd-team-note { padding: 18px; border-radius: var(--r-2); background: var(--fill); }
 .pd-team-note .pd-sec-title { margin-top: 4px; }
+
+/* Did you know? — a sand callout with one or two verified facts. */
+.pd-dyk { padding: 18px; border-radius: var(--r-2); background: var(--fill); }
+.pd-dyk .g-kicker { display: inline-flex; align-items: center; gap: 6px; }
+.pd-dyk .g-kicker svg { width: 16px; height: 16px; color: var(--tara-ink); }
+.pd-dyk-fact { margin-top: 8px; font: 500 16px/1.5 var(--font-display); color: var(--ink); }
+.pd-dyk-fact + .pd-dyk-fact { padding-top: 10px; border-top: 1px solid var(--line); }
+.pd-sources { margin-top: 20px; }
+.pd-sources a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }

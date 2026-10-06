@@ -19,6 +19,8 @@ import { Plus } from '@phosphor-icons/react/dist/csr/Plus'
 import { Prohibit } from '@phosphor-icons/react/dist/csr/Prohibit'
 import { ArrowBendUpLeft as Reply } from '@phosphor-icons/react/dist/csr/ArrowBendUpLeft'
 import { SealCheck } from '@phosphor-icons/react/dist/csr/SealCheck'
+import { ShieldCheck } from '@phosphor-icons/react/dist/csr/ShieldCheck'
+import { Lightbulb } from '@phosphor-icons/react/dist/csr/Lightbulb'
 import { ShareNetwork as Share2 } from '@phosphor-icons/react/dist/csr/ShareNetwork'
 import { Sparkle as Sparkles } from '@phosphor-icons/react/dist/csr/Sparkle'
 import { Star } from '@phosphor-icons/react/dist/csr/Star'
@@ -42,6 +44,7 @@ import { placeCategories } from '../data/placeCategories'
 import PhotoCredits from './place-detail/PhotoCredits'
 import { useActionBarMode } from '../hooks/useActionBarMode'
 import { getPlaceLeadPhoto, usePlaceGalleryPhotos } from '../utils/placeGalleryPhotos'
+import { sourceLabel, usePlaceExtras } from '../utils/placeExtras'
 import { useSavedFavorites } from '../context/SavedFavoritesContext'
 import { useSystemMessage } from '../context/SystemMessageContext'
 import { useAppUser } from '../context/AppUserContext'
@@ -645,6 +648,7 @@ function PlaceDetailView({
     ...(place.curatedImageUrls ?? []),
   ])
   const hdPhotos = usePlaceGalleryPhotos(cleanString(place.slug) || null)
+  const extras = usePlaceExtras(cleanString(place.slug) || null)
   useActionBarMode()
   // Credited HD photos lead; the place's own uploads follow. The lead is known before the manifest loads, so the hero never swaps.
   const { photos: galleryPhotos, markPhotoBroken } = usePhotoList([
@@ -1797,6 +1801,7 @@ function PlaceDetailView({
   })
   const notIdealFor = uniqueList(place.not_ideal_for ?? []).map((value) => value.toLowerCase())
   const knowBefore: Array<{ key: string; icon: PhosphorIcon; text: string }> = [
+    ...(extras.safetyTips ?? []).map((text, index) => ({ key: `safety-${index}`, icon: ShieldCheck, text })),
     { key: 'parking', icon: Car, text: cleanString(place.parking_info) },
     { key: 'budget', icon: Wallet, text: cleanString(place.budget_notes) },
     ...describedTips(place.description).map((text, index) => ({ key: `tip-${index}`, icon: Backpack, text })),
@@ -2437,7 +2442,32 @@ function PlaceDetailView({
             ) : null}
           </section>
 
-          {highlights.length > 0 ? (
+          {extras.didYouKnow?.length ? (
+            <aside className="pd-sec pd-dyk" aria-labelledby="place-dyk">
+              <p id="place-dyk" className="g-kicker">
+                <Lightbulb weight="fill" aria-hidden="true" />
+                Did you know?
+              </p>
+              {extras.didYouKnow.map((fact) => (
+                <p key={fact} className="pd-dyk-fact">
+                  {fact}
+                </p>
+              ))}
+            </aside>
+          ) : null}
+
+          {extras.whatToDo?.length ? (
+            <section className="pd-sec" aria-labelledby="place-todo">
+              <h2 id="place-todo" className="pd-sec-title">
+                What to do here
+              </h2>
+              <ul className="pd-hl">
+                {extras.whatToDo.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </section>
+          ) : highlights.length > 0 ? (
             <section className="pd-sec" aria-labelledby="place-why">
               <h2 id="place-why" className="pd-sec-title">
                 Why it&rsquo;s gala-worthy
@@ -2558,6 +2588,20 @@ function PlaceDetailView({
                 Browse all places
               </InternalLink>
             </nav>
+          ) : null}
+
+          {extras.sources?.length ? (
+            <p className="pd-sources g-xs g-mut">
+              Facts from{' '}
+              {extras.sources.map((url, index) => (
+                <span key={url}>
+                  {index > 0 ? ' · ' : ''}
+                  <a href={url} target="_blank" rel="noopener noreferrer nofollow">
+                    {sourceLabel(url)}
+                  </a>
+                </span>
+              ))}
+            </p>
           ) : null}
 
           {hdPhotos.length > 0 ? <PhotoCredits photos={hdPhotos} /> : null}
