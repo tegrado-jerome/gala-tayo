@@ -22,7 +22,8 @@ import {
 
 // Posts live in Redis (newest first). The daily workflow also commits them into the frontend
 // repo, so the site keeps its history even if the cache is cleared.
-const POSTS_KEY = "gala-today:posts:v1";
+// v2: v1 held a first post that broke the one-region and no-unbacked-claims rules.
+const POSTS_KEY = "gala-today:posts:v2";
 const MAX_POSTS = 90;
 const MAX_POSTS_PER_DAY = 2;
 const USER_AGENT = "Mozilla/5.0 (compatible; GalaTayoBot/1.0; +https://galatayo.app)";
