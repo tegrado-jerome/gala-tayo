@@ -1,4 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
+import { ArrowRight } from '@phosphor-icons/react/dist/csr/ArrowRight'
 import { MagnifyingGlass as Search } from '@phosphor-icons/react/dist/csr/MagnifyingGlass'
 import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
 import { getCategoryIcon } from '../../PlaceCard'
@@ -169,9 +170,12 @@ function SearchSuggest({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
         />
-        <Button type="submit" iconOnly aria-label="Search" disabled={!canSubmit}>
-          <Search />
-        </Button>
+        {/* One search icon only: the go button appears once there's something to search. */}
+        {canSubmit ? (
+          <Button type="submit" iconOnly aria-label="Search">
+            <ArrowRight weight="bold" />
+          </Button>
+        ) : null}
       </form>
       <ul id={listId} role="listbox" aria-label="Suggestions" className="g-suggest-list" hidden={!showList}>
         {suggestions.map((suggestion, index) => {

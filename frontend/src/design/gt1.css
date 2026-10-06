@@ -288,7 +288,6 @@ textarea.g-input { height: auto; min-height: 96px; padding: 12px 14px; resize: v
 .g-where { display: flex; align-items: center; gap: 6px; max-width: 640px; height: 52px; padding: 0 4px 0 18px; border: 1px solid #cfcfcf; border-radius: var(--r-pill); background: var(--surface); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06); }
 :root[data-theme='dark'] .g-where { border-color: var(--line); box-shadow: none; }
 /* The black logo tile keeps its shape on the dark page. */
-:root[data-theme='dark'] .g-logo-tile { stroke: #4a4a4a; stroke-width: 2; }
 .g-where-main { display: flex; flex: 1; align-items: center; gap: 10px; min-width: 0; min-height: 48px; color: var(--ink); font: 500 15px/1 var(--font-body); text-decoration: none; }
 .g-where-main svg { width: 20px; height: 20px; flex-shrink: 0; }
 .g-where-ai { display: grid; place-items: center; width: 44px; height: 44px; flex-shrink: 0; border-radius: 50%; color: var(--ink); text-decoration: none; }

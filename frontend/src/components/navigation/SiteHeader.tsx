@@ -15,14 +15,14 @@ const MINIMAL_PATHS = ['/login', '/signup', '/auth', '/onboarding', '/forgot-pas
 const NO_CHAT_PATHS = ['/', '/ask-ai/maps', '/ask-ai/map', '/plan-with-ai']
 
 /** Sunset over the bay: the GalaTayo mark. */
-export function BrandMark({ size = 26 }: { size?: number }) {
+// Golden-hour arcs: a sunset over the sea. Colours follow the theme tokens.
+export function BrandMark({ size = 30 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden="true" className="shrink-0">
-      <rect className="g-logo-tile" x="1" y="1" width="62" height="62" rx="17" fill="#111111" />
-      <path d="M20 35a12 12 0 0 1 24 0Z" fill="#34e0a1" />
-      <rect x="12" y="38" width="40" height="4" rx="2" fill="#fff" />
-      <rect x="19" y="45.5" width="26" height="4" rx="2" fill="#fff" opacity=".75" />
-      <rect x="26" y="53" width="12" height="4" rx="2" fill="#fff" opacity=".5" />
+    <svg width={size} height={Math.round(size * 0.72)} viewBox="6 12 52 38" aria-hidden="true" className="shrink-0">
+      <path d="M10 38a22 22 0 0 1 44 0" fill="none" stroke="var(--tara-ink)" strokeWidth="6.5" strokeLinecap="round"/>
+      <path d="M19.5 38a12.5 12.5 0 0 1 25 0" fill="none" stroke="var(--ink)" strokeWidth="6.5" strokeLinecap="round"/>
+      <path d="M27 38a5 5 0 0 1 10 0Z" fill="var(--mint, #34e0a1)"/>
+      <path d="M8 47c5-3.5 10 3.5 16 0s10-3.5 16 0 10 3.5 16 0" fill="none" stroke="var(--mint, #34e0a1)" strokeWidth="4.5" strokeLinecap="round"/>
     </svg>
   )
 }
@@ -39,6 +39,8 @@ export function BrandLogo({ className = '' }: { className?: string }) {
 function SiteHeader({ pathname }: { pathname: string }) {
   const { currentUser, currentProfile, session, isGuest } = useAppUser()
   const isMinimal = MINIMAL_PATHS.some((path) => isPath(pathname, path))
+  // The search page has its own big search bar, so the header one would be a duplicate.
+  const showSearch = !isPath(pathname, '/search')
   const showChat = !NO_CHAT_PATHS.some((path) => isPath(pathname, path))
 
   return (
@@ -60,10 +62,10 @@ function SiteHeader({ pathname }: { pathname: string }) {
             </nav>
 
             <div className="g-head-search">
-              <InternalLink href="/search" className="g-head-search-link" ariaLabel="Search places">
+              {showSearch ? <InternalLink href="/search" className="g-head-search-link" ariaLabel="Search places">
                 <Search className="g-ic" aria-hidden="true" />
                 <span className="truncate">Search places around the Philippines</span>
-              </InternalLink>
+              </InternalLink> : null}
               {showChat ? (
                 <button type="button" className="g-head-ask" onClick={() => openFloatingChat()}>
                   <Sparkles aria-hidden="true" />
@@ -73,9 +75,11 @@ function SiteHeader({ pathname }: { pathname: string }) {
             </div>
 
             <div className="g-head-right">
-              <Button variant="soft" size="sm" iconOnly className="g-only-mob" href="/search" aria-label="Search places">
-                <Search aria-hidden="true" />
-              </Button>
+              {showSearch ? (
+                <Button variant="soft" size="sm" iconOnly className="g-only-mob" href="/search" aria-label="Search places">
+                  <Search aria-hidden="true" />
+                </Button>
+              ) : null}
               {isGuest ? (
                 <>
                   <Button variant="text" size="sm" href="/profile" className="no-underline" aria-label="Guest mode, open your profile">
