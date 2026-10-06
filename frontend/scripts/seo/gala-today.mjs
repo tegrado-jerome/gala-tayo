@@ -12,7 +12,7 @@ async function main() {
     console.log('API_BASE_URL not set; skipping Gala Today.')
     return
   }
-  const url = `${base.endsWith('/api') ? base : `${base}/api`}/today?limit=90`
+  const url = `${base.endsWith('/api') ? base : `${base}/api`}/today?limit=90&ensure=1`
   const response = await fetch(url, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(90_000) })
   if (!response.ok) {
     console.log(`Gala Today API ${response.status}; keeping the saved posts.`)

@@ -270,7 +270,10 @@ async function galaTodayList(request: HttpRequest, context: InvocationContext): 
   // Catch-up: if the morning timer missed (cold start, AI limit), the first request after 6 AM Manila writes today's post.
   const manilaNow = new Date(Date.now() + 8 * 3600_000);
   const today = manilaNow.toISOString().slice(0, 10);
-  if (GALA_TODAY_ENABLED && manilaNow.getUTCHours() >= 6 && !posts.some((post) => post.date === today)) {
+  // Catch-up generation only on explicit request (the daily workflow sends ensure=1), never on a page view:
+  // generation can take minutes, which stalled pages and the prerender build.
+  const ensure = request.query.get("ensure") === "1";
+  if (GALA_TODAY_ENABLED && ensure && manilaNow.getUTCHours() >= 6 && !posts.some((post) => post.date === today)) {
     const result = await generateAndRecord(context, "catch-up");
     if (result && typeof result !== "string") posts = [result, ...posts];
   }
