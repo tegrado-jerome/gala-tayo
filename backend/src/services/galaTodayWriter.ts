@@ -5,9 +5,10 @@ import { generateJsonFromGroq } from "./groqChatProvider";
 
 // Gemini (free tier) writes Gala Today; Groq is only the backup. The list can be overridden with
 // GALA_TODAY_GEMINI_MODELS. Unknown or rate-limited models fall through to the next one.
+// The strongest free model writes first: Flash Lite drafts kept scoring 6-7/10 on funny and purpose.
 const DEFAULT_GEMINI_MODELS = [
+  "gemini-3.8-flash",
   "gemini-3.1-flash-lite",
-  "gemini-3.1-flash-lite-preview",
   "gemini-2.5-flash",
   "gemini-2.5-flash-lite",
 ];
