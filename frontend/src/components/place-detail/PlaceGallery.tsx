@@ -81,6 +81,11 @@ export function PhotoGrid({ photos, placeName, onBroken, onOpen, showAddPhotoAct
             <button key={photo} type="button" className="pd-pg-tile" onClick={() => onOpen(index)} aria-label={`Open photo ${index + 1} of ${photos.length}`}>
               <img
                 src={resizedMediaUrl(photo, index === 0 ? 'hero' : 'card')}
+                // Phones show the big photo about 2/3 of the screen wide, so they get the 640px file.
+                srcSet={index === 0 ? `${resizedMediaUrl(photo, 'card')} 640w, ${resizedMediaUrl(photo, 'hero')} 1280w` : undefined}
+                sizes={index === 0 ? (shown.length === 1 ? '(min-width: 1024px) 1176px, 100vw' : '(min-width: 1024px) 784px, 67vw') : undefined}
+                width={index === 0 ? 1280 : 640}
+                height={index === 0 ? 960 : 480}
                 alt={index === 0 ? placeName : ''}
                 loading={index === 0 ? 'eager' : 'lazy'}
                 fetchPriority={index === 0 ? 'high' : undefined}
@@ -201,7 +206,7 @@ export function AllPhotos({
             const isWide = index % 3 === 0 || (index === photos.length - 1 && index % 3 === 1)
             return (
               <figure key={photo} data-photo-index={index} className={cx(isWide && 'is-wide')}>
-                <img src={resizedMediaUrl(photo, 'hero')} alt={`${placeName}, photo ${index + 1} of ${photos.length}`} loading={index < 3 ? 'eager' : 'lazy'} onError={() => onBroken(photo)} />
+                <img src={resizedMediaUrl(photo, 'hero')} width={1280} height={960} alt={`${placeName}, photo ${index + 1} of ${photos.length}`} loading={index < 3 ? 'eager' : 'lazy'} onError={() => onBroken(photo)} />
                 {credits?.[photo] ? <figcaption className="g-xs g-mut mt-1">Photo: {credits[photo]}</figcaption> : null}
               </figure>
             )

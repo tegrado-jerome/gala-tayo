@@ -4,7 +4,7 @@
 /* ---------- Auth sheet (Airbnb-style: centred title bar, email first) ---------- */
 .m-auth { width: 100%; flex: 1 0 auto; padding: 0 0 40px; }
 .m-auth-card { width: 100%; max-width: 520px; margin: 0 auto; }
-.m-auth-bar { position: relative; display: flex; align-items: center; justify-content: center; min-height: 60px; padding: 0 56px; border-bottom: 1px solid var(--line); font: 600 18px/1.2 var(--font-display); text-align: center; }
+.m-auth-bar { position: relative; display: flex; align-items: center; justify-content: center; min-height: 60px; padding: 0 56px; border-bottom: 1px solid var(--line); font: 600 17px/1.2 var(--font-body); text-align: center; }
 .m-auth-back { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: none; color: var(--ink); cursor: pointer; }
 .m-auth-back:hover { background: var(--fill); }
 .m-auth-back svg { width: 18px; height: 18px; }
@@ -25,7 +25,7 @@
 
 /* ---------- OTP boxes ---------- */
 .m-otp { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; max-width: 360px; width: 100%; margin: 0 auto; }
-.m-otp input { width: 100%; min-width: 0; height: 58px; padding: 0; border: 1px solid var(--line); border-radius: var(--r-2); background: var(--surface); color: var(--ink); font: 600 24px/1 var(--font-display); text-align: center; caret-color: var(--ink); transition: border-color var(--t-fast), box-shadow var(--t-fast); }
+.m-otp input { width: 100%; min-width: 0; height: 58px; padding: 0; border: 1px solid var(--line); border-radius: var(--r-2); background: var(--surface); color: var(--ink); font: 600 24px/1 var(--font-body); text-align: center; caret-color: var(--ink); transition: border-color var(--t-fast), box-shadow var(--t-fast); }
 .m-otp input:focus { outline: 0; border-color: var(--ink); box-shadow: 0 0 0 3px var(--fill-2); }
 .m-otp input.is-f { border-color: var(--ink); background: var(--fill); }
 .m-otp input[aria-invalid='true'] { border-color: var(--bad); box-shadow: 0 0 0 3px var(--bad-soft); }
@@ -61,7 +61,7 @@
 .m-near a:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 .m-near-img { width: 64px; height: 64px; flex: 0 0 auto; border-radius: var(--r-2); overflow: hidden; background: var(--fill); }
 .m-near-img > * { width: 100%; height: 100%; object-fit: cover; }
-.m-near b { display: block; font: 600 15px/1.25 var(--font-display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.m-near b { display: block; font: 700 15px/1.25 var(--font-body); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .m-near small { display: block; font-size: 13px; color: var(--ink-2); }
 .m-near a:hover b { text-decoration: underline; text-underline-offset: 3px; }
 @media (min-width: 768px) { .m-near { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
@@ -101,7 +101,7 @@
 .m-rank-desc { margin-top: 6px; min-height: calc(2 * 1.45em); font-size: 13px; line-height: 1.45; color: var(--ink-2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .m-faq { border-top: 1px solid var(--line-2); }
 .m-faq details { border-bottom: 1px solid var(--line-2); }
-.m-faq summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 56px; padding: 14px 0; list-style: none; cursor: pointer; font: 600 16px/1.35 var(--font-display); }
+.m-faq summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 56px; padding: 14px 0; list-style: none; cursor: pointer; font: 600 16px/1.35 var(--font-body); }
 .m-faq summary::-webkit-details-marker { display: none; }
 .m-faq summary svg { width: 18px; height: 18px; flex: 0 0 auto; transition: transform var(--t) var(--ease-g); }
 .m-faq details[open] summary svg { transform: rotate(180deg); }
@@ -114,17 +114,17 @@
 .m-step + .m-step { border-top: 1px solid var(--fill-2); }
 .m-step-n { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--surface); color: var(--ink); font: 700 13px/1 var(--font-display); }
 .m-step.is-done .m-step-n { background: var(--ink); color: var(--on-ink); }
-.m-step-label { display: block; font: 600 15px/28px var(--font-display); }
+.m-step-label { display: block; font: 600 15px/28px var(--font-body); }
 .m-step .g-chips { margin-top: 8px; margin-inline: 0 -16px; padding-inline: 0 16px; }
 .m-step-go { display: flex; flex-wrap: wrap; gap: 8px; padding: 16px 0; border-top: 1px solid var(--fill-2); }
 @media (min-width: 768px) { .m-steps { padding: 8px 24px; } .m-step .g-chips { flex-wrap: wrap; margin-right: 0; padding-right: 0; overflow: visible; } }
 .m-picks { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
 @media (min-width: 560px) { .m-picks { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; } }
-@media (max-width: 559px) { .m-picks { grid-template-columns: repeat(3, 78%); overflow-x: auto; scroll-snap-type: x mandatory; margin-inline: -16px; padding-inline: 16px; scrollbar-width: none; gap: 12px; } .m-picks > * { scroll-snap-align: start; } .m-picks::-webkit-scrollbar { display: none; } }
+@media (max-width: 559px) { .m-picks { grid-template-columns: repeat(3, 78%); overflow-x: auto; scroll-snap-type: x mandatory; margin-inline: -16px; padding-inline: 16px; scroll-padding-inline: 16px; scrollbar-width: none; gap: 12px; } .m-picks > * { scroll-snap-align: start; } .m-picks::-webkit-scrollbar { display: none; } }
 .m-budget { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
 .m-budget a { display: flex; flex-direction: column; gap: 2px; min-height: 44px; padding: 12px 14px; border-radius: var(--r-2); background: var(--fill); color: inherit; text-decoration: none; }
 .m-budget a:hover { background: var(--fill-2); }
-.m-budget b { font: 600 14px/1.3 var(--font-display); }
+.m-budget b { font: 700 14px/1.3 var(--font-body); }
 .m-budget span { font-size: 12px; color: var(--ink-2); }
 
 /* ---------- Chat (Tara) ---------- */

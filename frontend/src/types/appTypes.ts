@@ -9,6 +9,9 @@ export type PlaceDetail = {
   average_rating?: string | null
   rating?: number | null
   review_count?: number | null
+  /** Member ratings only (team guide ratings left out); used for structured data. */
+  community_rating?: number | null
+  community_review_count?: number | null
   address?: string | null
   city?: string | null
   area?: string | null

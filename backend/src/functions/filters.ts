@@ -155,17 +155,35 @@ export function findGoodForById(id: string | undefined): GoodForOption | null {
   return GOOD_FOR_OPTIONS.find((option) => option.id === id) ?? null;
 }
 
+/** Categories and areas that have at least one visible place, so filters never lead to an empty list. */
+async function getListedOptions(context: InvocationContext) {
+  try {
+    const { getSeoPlaceSummaries } = await import("../utils/seoPlaces");
+    const places = await getSeoPlaceSummaries();
+    const categoryNames = new Set(places.map((place) => place.category?.toLowerCase()).filter(Boolean));
+    const areaSlugs = new Set(places.map((place) => place.areaSlug));
+    return {
+      categories: CATEGORIES.filter((category) => categoryNames.has(category.name.toLowerCase())),
+      areas: AREAS.filter((area) => area.type === "all" || areaSlugs.has(area.id)),
+    };
+  } catch (error) {
+    context.warn("Could not count places for filters; returning every option.", error);
+    return { categories: CATEGORIES, areas: AREAS };
+  }
+}
+
 export async function filters(
   request: HttpRequest,
   context: InvocationContext
 ): Promise<HttpResponseInit> {
   context.log("Fetching GalaTayo filters...");
+  const { categories, areas } = await getListedOptions(context);
 
   return {
     status: 200,
     jsonBody: {
-      categories: CATEGORIES,
-      areas: AREAS,
+      categories,
+      areas,
       goodForOptions: GOOD_FOR_OPTIONS,
     },
   };

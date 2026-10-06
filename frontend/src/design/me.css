@@ -91,7 +91,7 @@ input:focus-visible + .me-switch { outline: 2px solid var(--ink); outline-offset
 .me-tile-art.has-photo::after { content: ''; position: absolute; inset: 0; background: linear-gradient(transparent 35%, rgba(0, 0, 0, 0.72)); }
 .me-tile:hover .me-tile-art img { transform: scale(1.03); }
 .me-tile-art .g-tag { position: absolute; z-index: 1; top: 8px; left: 8px; }
-.me-tile-t { position: absolute; z-index: 1; left: 10px; right: 10px; bottom: 8px; color: var(--ink); font: 600 16px/1.2 var(--font-display); letter-spacing: -0.01em; text-align: left; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.me-tile-t { position: absolute; z-index: 1; left: 10px; right: 10px; bottom: 8px; color: var(--ink); font: 700 15px/1.25 var(--font-body); text-align: left; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .me-tile-art.has-photo .me-tile-t { color: #ffffff; }
 .me-tile-s { margin-top: 6px; font-size: 12px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .me-empty { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; padding: 16px; border-radius: var(--r-3); background: var(--fill); }
@@ -120,7 +120,7 @@ input:focus-visible + .me-switch { outline: 2px solid var(--ink); outline-offset
 .me-wl[aria-pressed='true'] .me-wl-art { box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--ink); }
 .me-wl:focus-visible { outline: none; }
 .me-wl:focus-visible .me-wl-art { box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--ink); }
-.me-wl-t { display: block; margin-top: 10px; font: 600 15px/1.3 var(--font-display); letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.me-wl-t { display: block; margin-top: 10px; font: 700 15px/1.3 var(--font-body); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .me-wl-s { display: block; font-size: 13px; color: var(--ink-2); }
 
 /* ---------- Passport (Polarsteps header: map, avatar, stat columns) ---------- */
@@ -164,7 +164,7 @@ input:focus-visible + .me-switch { outline: 2px solid var(--ink); outline-offset
 .me-thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .me-thumb svg { width: 22px; height: 22px; }
 .me-tl-t { flex: 1; min-width: 0; }
-.me-tl-t > b { display: block; font: 600 15px/1.3 var(--font-display); letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.me-tl-t > b { display: block; font: 700 15px/1.3 var(--font-body); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .me-tl-t > span { display: block; font-size: 13px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .me-tl-time { flex: 0 0 auto; font-size: 12px; font-weight: 600; color: var(--ink-3); white-space: nowrap; }
 
@@ -179,7 +179,7 @@ input:focus-visible + .me-switch { outline: 2px solid var(--ink); outline-offset
 .me-pcard > a:focus-visible { outline: none; }
 .me-pcard:focus-within { box-shadow: 0 0 0 2px var(--ink); }
 .me-pcard .g-btn { position: relative; z-index: 1; margin-top: 10px; }
-.me-pcard-n { max-width: 100%; margin-top: 8px; font: 600 15px/1.3 var(--font-display); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.me-pcard-n { max-width: 100%; margin-top: 8px; font: 700 15px/1.3 var(--font-body); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .me-pcard-s { max-width: 100%; font-size: 13px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .me-prow { position: relative; display: flex; align-items: center; gap: 12px; min-height: 72px; padding: 10px 8px; margin-inline: -8px; border-radius: var(--r-3); }
 .me-prow:hover { background: var(--fill); }

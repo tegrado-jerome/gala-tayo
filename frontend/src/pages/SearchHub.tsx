@@ -46,8 +46,8 @@ import {
   mapBackendPlaceToCard,
 } from '../components/home/homeHelpers'
 
+import SearchSuggest from '../components/home/search/SearchSuggest'
 import {
-  ExploreSearchBar,
   QuickFilterChips,
   SearchEmptyState,
   SearchFilterPanel,
@@ -699,14 +699,7 @@ function SearchHub({
       />
 
       <SearchPageBreadcrumb className="mb-4" />
-      <ExploreSearchBar
-        value={rawQuery}
-        onChange={handleRawQueryChange}
-        onSubmit={() => void handleSearch()}
-        disabled={isSearching}
-        canSubmit={canSubmitSearch}
-        className="lg:max-w-[640px]"
-      />
+      <SearchSuggest value={rawQuery} onChange={handleRawQueryChange} onSubmit={() => void handleSearch()} canSubmit={canSubmitSearch && !isSearching} />
       {searchValidationMessage ? <p className="g-hint mt-2">{searchValidationMessage}</p> : null}
 
       <QuickFilterChips

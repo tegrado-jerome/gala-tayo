@@ -6,6 +6,8 @@ import { deleteJsonCacheValue, getJsonCacheValue, setJsonCacheValue } from "../s
 import { buildImageUrl } from "./r2UrlResolver";
 import { createBaseSlug } from "./slug";
 import goodForTags from "../data/goodForTags.json";
+import galaScores from "../data/galaScores.json";
+import hdPhotoSlugs from "../data/hdPhotoSlugs.json";
 import { DESTINATIONS, getDestinationBySlug, getLocationNamesForAreaSlug, getRegionBySlug, resolveDestination } from "./phDestinations";
 
 type PlaceRow = Record<string, unknown>;
@@ -73,10 +75,35 @@ const SEO_LISTING_PLACE_SELECT = [
 ].join(",");
 const APPROVED_IMAGE_LOOKUP_BATCH_SIZE = 100;
 const MAX_APPROVED_IMAGES_PER_PLACE = 3;
-const SEO_PLACE_SUMMARIES_CACHE_KEY = "seo:places:summaries:v3";
+const SEO_PLACE_SUMMARIES_CACHE_KEY = "seo:places:summaries:v4";
 const SEO_PLACE_SUMMARIES_CACHE_TTL_SECONDS = 60 * 10;
-const SEO_LISTING_PAGE_CACHE_PREFIX = "seo:listings:v4";
+const SEO_LISTING_PAGE_CACHE_PREFIX = "seo:listings:v5";
 const SEO_LISTING_PAGE_CACHE_TTL_SECONDS = 60 * 10;
+
+// Gala-worthy scores (0-100) from the place scoring; unscored places rank after scored ones.
+const GALA_SCORES: Record<string, number> = galaScores;
+// Places with curated HD photos in R2 (mirrors the keys of frontend/src/data/placeCardPhotos.json).
+const HD_PHOTO_SLUGS = new Set<string>(hdPhotoSlugs);
+
+export function hasCuratedPhoto(slug: string | null | undefined): boolean {
+  return Boolean(slug && HD_PHOTO_SLUGS.has(slug.trim().toLowerCase()));
+}
+
+function getGalaScore(slug: string | null | undefined): number {
+  return (slug && GALA_SCORES[slug.trim().toLowerCase()]) || 0;
+}
+
+/** Lists lead with places that have a photo, then the best-scored, then A-Z so pages stay stable. */
+export function compareListingOrder(
+  left: { slug: string | null; name: string | null; hasPhoto: boolean },
+  right: { slug: string | null; name: string | null; hasPhoto: boolean }
+): number {
+  return (
+    Number(right.hasPhoto) - Number(left.hasPhoto) ||
+    getGalaScore(right.slug) - getGalaScore(left.slug) ||
+    (left.name ?? "").localeCompare(right.name ?? "")
+  );
+}
 
 function cleanString(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null;
@@ -316,7 +343,12 @@ export async function getSeoPlaceSummaries(options: SeoPlaceSummaryOptions = {})
   const places = placeRows
     .map((row) => mapPlaceRowToSeoSummary(row, imageLookup.get(String(row.id)) ?? null))
     .filter((place): place is SeoPlaceSummary => Boolean(place))
-    .sort((left, right) => left.name.localeCompare(right.name));
+    .sort((left, right) =>
+      compareListingOrder(
+        { ...left, hasPhoto: Boolean(left.imageUrl) || hasCuratedPhoto(left.slug) },
+        { ...right, hasPhoto: Boolean(right.imageUrl) || hasCuratedPhoto(right.slug) }
+      )
+    );
 
   if (shouldCachePlaces) {
     await setJsonCacheValue(SEO_PLACE_SUMMARIES_CACHE_KEY, places, { ttlSeconds: SEO_PLACE_SUMMARIES_CACHE_TTL_SECONDS });
@@ -443,12 +475,16 @@ export async function getSeoListingPage({
     return query;
   };
 
-  const idResult = await buildListingQuery("id, slug").order("name", { ascending: true, nullsFirst: false }).limit(2000);
+  const idResult = await buildListingQuery("id, slug, name").order("name", { ascending: true, nullsFirst: false }).limit(2000);
   if (idResult.error) {
     throw new Error("Failed to load listing places.");
   }
-  const visibleIds = ((idResult.data ?? []) as Array<{ id: string; slug: string | null }>)
-    .filter((row) => isGalaWorthySlug(row.slug))
+  const visibleRows = ((idResult.data ?? []) as Array<{ id: string; slug: string | null; name: string | null }>).filter((row) => isGalaWorthySlug(row.slug));
+  // Order the whole result before paging, so every page follows the same photo-first, best-first order.
+  const photoLookup = await getApprovedImageLookup(visibleRows.map((row) => String(row.id)));
+  const visibleIds = visibleRows
+    .map((row) => ({ ...row, hasPhoto: photoLookup.has(String(row.id)) || hasCuratedPhoto(row.slug) }))
+    .sort(compareListingOrder)
     .map((row) => String(row.id));
 
   const total = visibleIds.length;
@@ -457,23 +493,19 @@ export async function getSeoListingPage({
   const startIndex = (safePage - 1) * safePageSize;
   const pageIds = visibleIds.slice(startIndex, startIndex + safePageSize);
   const { data, error } = pageIds.length
-    ? await (supabase.from("places") as any)
-        .select(SEO_LISTING_PLACE_SELECT)
-        .in("id", pageIds)
-        .order("name", { ascending: true, nullsFirst: false })
+    ? await (supabase.from("places") as any).select(SEO_LISTING_PLACE_SELECT).in("id", pageIds)
     : { data: [], error: null };
 
   if (error) {
     throw new Error("Failed to load listing places.");
   }
 
-  const placeRows = ((data ?? []) as PlaceRow[]).filter(isPublicPlace);
-  const placeIds = placeRows
-    .map((row) => cleanString(row.id))
-    .filter((value): value is string => Boolean(value));
-  const imageLookup = await getApprovedImageLookup(placeIds);
+  const pageOrder = new Map(pageIds.map((id, index) => [id, index]));
+  const placeRows = ((data ?? []) as PlaceRow[])
+    .filter(isPublicPlace)
+    .sort((left, right) => (pageOrder.get(String(left.id)) ?? 0) - (pageOrder.get(String(right.id)) ?? 0));
   const items = placeRows
-    .map((row) => mapPlaceRowToSeoSummary(row, imageLookup.get(String(row.id)) ?? null))
+    .map((row) => mapPlaceRowToSeoSummary(row, photoLookup.get(String(row.id)) ?? null))
     .filter((place): place is SeoPlaceSummary => Boolean(place));
 
   const payload = {

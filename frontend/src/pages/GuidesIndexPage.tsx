@@ -53,7 +53,7 @@ function GuidesIndexPage() {
         canonicalPath="/guides"
         jsonLd={jsonLd}
       />
-      <ListingBreadcrumb items={[{ label: 'Home', href: '/home' }, { label: 'Guides' }]} />
+      <ListingBreadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Guides' }]} />
       <header className="mt-5">
         <h1 className="g-h1">Gala guides</h1>
         <p className="g-mut mt-2 max-w-[44ch]">Short lists of where to go, with the budget per head on every pick.</p>

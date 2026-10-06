@@ -281,7 +281,7 @@ function LegalPage({ type }: LegalPageProps) {
   const seoDescription = isTerms
     ? 'Read GalaTayo terms covering accounts, content, place information, AI features, moderation, and service rules.'
     : 'Read the GalaTayo privacy policy covering account data, public content, AI feature usage, storage, and user rights.'
-  const breadcrumbItems = [{ label: 'Home', href: '/home' }, { label: isTerms ? 'Terms' : 'Privacy' }]
+  const breadcrumbItems = [{ label: 'Home', href: '/' }, { label: isTerms ? 'Terms' : 'Privacy' }]
   const summaries = [
     {
       title: isTerms ? 'How to use this' : 'What this covers',
@@ -306,7 +306,7 @@ function LegalPage({ type }: LegalPageProps) {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/home` },
+        { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/` },
         { '@type': 'ListItem', position: 2, name: isTerms ? 'Terms' : 'Privacy', item: `${getSiteOrigin()}${canonicalPath}` },
       ],
     },

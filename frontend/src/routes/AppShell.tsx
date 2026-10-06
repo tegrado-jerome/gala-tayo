@@ -1,10 +1,10 @@
-import { Suspense, type ReactNode } from 'react'
+import { Suspense, lazy, useState, type ReactNode } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import SeoHead from '../components/SeoHead'
 import MobileBottomNav from '../components/navigation/MobileBottomNav'
 import SiteHeader from '../components/navigation/SiteHeader'
 import { shouldShowSiteHeader } from '../utils/routeGuards'
-import FloatingChat from '../components/FloatingChat'
+import { useFloatingChat } from '../utils/floatingChat'
 import { PageShellSkeleton } from '../components/loading/SkeletonStates'
 import { SignOut as LogOut } from '@phosphor-icons/react/dist/csr/SignOut'
 import { AppUserProvider } from '../context/AppUserContext'
@@ -15,6 +15,22 @@ import { BottomNavProvider, useBottomNav } from '../context/BottomNavContext'
 import type { CurrentUserResponse } from '../utils/profileApi'
 import type { AdminMfaStatus } from '../utils/adminMfa'
 import { getAppShellState } from './appShellState'
+import { getLabelForPath } from '../utils/routes'
+
+const FloatingChat = lazy(() => import('../components/FloatingChat'))
+
+/** The AI chat bundle loads the first time someone opens the chat, not on every page. */
+function FloatingChatGate({ pathname }: { pathname: string }) {
+  const { isOpen } = useFloatingChat()
+  const [hasOpened, setHasOpened] = useState(isOpen)
+  if (isOpen && !hasOpened) setHasOpened(true)
+  if (!hasOpened) return null
+  return (
+    <Suspense fallback={null}>
+      <FloatingChat pathname={pathname} />
+    </Suspense>
+  )
+}
 
 function BottomNavGate({ pathname }: { pathname: string }) {
   const { hidden } = useBottomNav()
@@ -38,6 +54,8 @@ export function AppShell({ session, currentUser, currentProfile, adminMfa, hasRe
   children: ReactNode
 }) {
   const { showMobileBottomNav, shouldApplyGenericNoindex } = getAppShellState(pathname, search)
+  const routeLabel = getLabelForPath(pathname)
+  const routeTitle = routeLabel ? `${routeLabel} | GalaTayo` : 'GalaTayo'
   const appShellHeightClass = pathname.startsWith('/ask-ai')
     ? 'min-h-[var(--ask-ai-viewport-height,100svh)]'
     : 'min-h-[100dvh]'
@@ -55,7 +73,7 @@ export function AppShell({ session, currentUser, currentProfile, adminMfa, hasRe
           <AskAiNotificationProvider>
             <BottomNavProvider>
               {shouldApplyGenericNoindex ? (
-                <SeoHead title="GalaTayo" canonicalPath={pathname} robots="noindex,follow" />
+                <SeoHead title={routeTitle} canonicalPath={pathname} robots="noindex,follow" />
               ) : null}
               {shouldShowSiteHeader(pathname) ? <SiteHeader pathname={pathname} /> : null}
               <Suspense fallback={<PageShellSkeleton />}>
@@ -79,7 +97,7 @@ export function AppShell({ session, currentUser, currentProfile, adminMfa, hasRe
                 </div>
               ) : null}
               {showMobileBottomNav ? <BottomNavGate pathname={pathname} /> : null}
-              <FloatingChat pathname={pathname} />
+              <FloatingChatGate pathname={pathname} />
             </BottomNavProvider>
           </AskAiNotificationProvider>
         </SavedFavoritesProvider>

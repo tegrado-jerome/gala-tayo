@@ -73,7 +73,7 @@ function PlaceCategoriesIndexPage() {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/home` },
+        { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/` },
         { '@type': 'ListItem', position: 2, name: 'Places', item: `${getSiteOrigin()}/places` },
         { '@type': 'ListItem', position: 3, name: 'Categories', item: `${getSiteOrigin()}/places/categories` },
       ],
@@ -99,7 +99,7 @@ function PlaceCategoriesIndexPage() {
         jsonLd={jsonLd}
       />
 
-      <ListingBreadcrumb items={[{ label: 'Home', href: '/home' }, { label: 'Places', href: '/places' }, { label: 'Categories' }]} />
+      <ListingBreadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Places', href: '/places' }, { label: 'Categories' }]} />
 
       <header className="mt-5 flex flex-wrap items-end justify-between gap-4">
         <div className="max-w-[42rem]">
@@ -114,7 +114,8 @@ function PlaceCategoriesIndexPage() {
 
       <SectionHead title="What are you in the mood for?" />
       <Masonry>
-        {categoryCards.map((category) => {
+        {/* Categories with no listed places (Hotel, Cinema for now) are dead ends, so they are left out. */}
+        {categoryCards.filter((category) => placeCounts[category.value] !== 0).map((category) => {
           const count = placeCounts[category.value]
           const slug = categoryRepresentativePlaceSlugs[category.value]
           return (

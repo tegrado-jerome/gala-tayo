@@ -77,7 +77,7 @@ function SystemMessageProvider({ children }: { children: ReactNode }) {
     <SystemMessageContext.Provider value={value}>
       {children}
       {message ? (
-        <div className="pointer-events-none fixed inset-x-4 top-4 z-[9999] flex justify-center sm:inset-x-auto sm:right-5 sm:top-5 sm:justify-end">
+        <div className="pointer-events-none fixed inset-x-4 bottom-[calc(var(--tabbar-h)+12px+env(safe-area-inset-bottom,0px))] z-[9999] flex justify-center sm:inset-x-auto sm:right-5 sm:justify-end lg:bottom-5">
           <SystemToast key={message.id} message={message} />
         </div>
       ) : null}

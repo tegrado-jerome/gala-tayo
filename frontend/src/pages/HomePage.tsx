@@ -19,7 +19,7 @@ function HomePage({ navigationSource }: { navigationSource: NavigationSource }) 
     () => ({
       title: 'Home | GalaTayo',
       description: 'Discover gala-worthy places around the Philippines by city, category, budget, and vibe.',
-      canonicalPath: '/home',
+      canonicalPath: '/',
       preconnectOrigins: [new URL(R2_PUBLIC_BASE_URL).origin],
     }),
     [],

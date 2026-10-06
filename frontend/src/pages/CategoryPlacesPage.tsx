@@ -41,10 +41,6 @@ const EMPTY_CATEGORY_PLACES_RESPONSE: CategoryPlacesResponse = {
   totalPages: 1,
 }
 
-function sortPlacesAlphabetically(places: SeoPlaceSummary[]) {
-  return [...places].sort((left, right) => left.name.localeCompare(right.name))
-}
-
 const categoryNouns: Record<string, [string, string]> = {
   activity: ['activity', 'activities'],
   food: ['food spot', 'food spots'],
@@ -222,7 +218,7 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
     })
   }, [navigationSource])
 
-  const places = useMemo(() => sortPlacesAlphabetically(payload.items), [payload.items])
+  const places = payload.items
 
   useEffect(() => {
     const criticalImageUrls = places
@@ -301,7 +297,7 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
           '@context': 'https://schema.org',
           '@type': 'BreadcrumbList',
           itemListElement: [
-            { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/home` },
+            { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/` },
             { '@type': 'ListItem', position: 2, name: 'Places', item: `${getSiteOrigin()}/places` },
             { '@type': 'ListItem', position: 3, name: 'Categories', item: `${getSiteOrigin()}/places/categories` },
             { '@type': 'ListItem', position: 4, name: categoryLabel, item: `${getSiteOrigin()}/places/categories/${encodeURIComponent(categorySlug)}` },
@@ -334,7 +330,7 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
 
       <ListingBreadcrumb
         items={[
-          { label: 'Home', href: '/home' },
+          { label: 'Home', href: '/' },
           { label: 'Places', href: '/places' },
           { label: 'Categories', href: '/places/categories' },
           { label: categoryLabel },
@@ -346,7 +342,7 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
       </header>
 
       <CategoryTabs active={categorySlug} />
-      <ListToolbar count={payload.total > 0 ? formatCategoryCount(categorySlug, categoryLabel, payload.total) : null} sort="Sorted A–Z" />
+      <ListToolbar count={payload.total > 0 ? formatCategoryCount(categorySlug, categoryLabel, payload.total) : null} sort="Best first" />
 
       {errorMessage ? (
         <Empty className="mt-8" title={`Hindi ma-load ang ${categoryLabel.toLowerCase()} places`} description="Please try again in a bit." />

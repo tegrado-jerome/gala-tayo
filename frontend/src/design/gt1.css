@@ -26,8 +26,8 @@
   --sea-soft: #dff8ee;
   --ok: #00553a;
   --ok-soft: #dff8ee;
-  --bad: #c4352a;
-  --bad-soft: #fde7e4;
+  --bad: #a5391b;
+  --bad-soft: #fbefea;
   --warn: #a5391b;
   --warn-soft: #f9e4dc;
   --on-ink: #ffffff;
@@ -189,6 +189,8 @@ body {
 .g-btn-block { width: 100%; }
 .g-btn-icon { width: 44px; padding: 0; }
 .g-btn-icon.g-btn-sm { width: 36px; }
+/* 36px icon buttons keep a 44x44 tap area. */
+.g-btn-icon.g-btn-sm::before { inset: -4px; }
 .g-btn:disabled, .g-btn[aria-disabled='true'] { opacity: 0.4; cursor: not-allowed; transform: none; }
 .g-btn[data-loading='true'] { color: transparent; position: relative; pointer-events: none; }
 .g-btn[data-loading='true']::after {
@@ -285,20 +287,39 @@ textarea.g-input { height: auto; min-height: 96px; padding: 12px 14px; resize: v
 @media (min-width: 768px) { .g-home-title { font-size: 44px; margin: 12px 0 20px; } }
 .g-where { display: flex; align-items: center; gap: 6px; max-width: 640px; height: 52px; padding: 0 4px 0 18px; border: 1px solid #cfcfcf; border-radius: var(--r-pill); background: var(--surface); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06); }
 :root[data-theme='dark'] .g-where { border-color: var(--line); box-shadow: none; }
+/* The black logo tile keeps its shape on the dark page. */
+:root[data-theme='dark'] .g-logo-tile { stroke: #4a4a4a; stroke-width: 2; }
 .g-where-main { display: flex; flex: 1; align-items: center; gap: 10px; min-width: 0; min-height: 48px; color: var(--ink); font: 500 15px/1 var(--font-body); text-decoration: none; }
 .g-where-main svg { width: 20px; height: 20px; flex-shrink: 0; }
 .g-where-ai { display: grid; place-items: center; width: 44px; height: 44px; flex-shrink: 0; border-radius: 50%; color: var(--ink); text-decoration: none; }
 .g-where-ai:hover { background: var(--fill); }
 .g-where > input { flex: 1; min-width: 0; height: 48px; border: 0; background: none; outline: 0; color: var(--ink); font: 500 16px/1 var(--font-body); }
 .g-where > input::placeholder { color: var(--ink-2); }
+/* The pill shows focus itself (ink border), so the input's own focus box is dropped. */
+.g-where > input:focus, .g-where > input:focus-visible { border: 0; outline: 0; box-shadow: none; }
+.g-where > input::-webkit-search-cancel-button { filter: grayscale(1); }
 .g-where:focus-within { border-color: var(--ink); }
 .g-where-ai svg { width: 20px; height: 20px; }
+/* Typeahead under the Where to? search: grouped destinations, places, categories. */
+.g-suggest { position: relative; max-width: 640px; }
+.g-suggest-list { position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 60; margin: 0; padding: 6px 0; list-style: none; max-height: min(60vh, 440px); overflow-y: auto; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-3); box-shadow: var(--sh-3); }
+.g-suggest-list[hidden] { display: none; }
+.g-suggest-list li { position: relative; display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 6px 14px; cursor: pointer; }
+.g-suggest-list li[data-group] { margin-top: 28px; }
+.g-suggest-list li[data-group]:first-child { margin-top: 26px; }
+.g-suggest-list li[data-group]::before { content: attr(data-group); position: absolute; left: 14px; top: -22px; font: 600 12px/1 var(--font-body); letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-2); }
+.g-suggest-list li:hover, .g-suggest-list li[aria-selected='true'] { background: var(--fill); }
+.g-suggest-ic { display: grid; place-items: center; width: 36px; height: 36px; flex: none; border-radius: var(--r-2); background: var(--fill); color: var(--ink); }
+.g-suggest-ic svg { width: 18px; height: 18px; }
+.g-suggest-list b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 15px/1.3 var(--font-body); color: var(--ink); }
+.g-suggest-list small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; color: var(--ink-2); }
 .g-ttabs { display: flex; gap: 22px; margin-top: 16px; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
 .g-ttabs::-webkit-scrollbar { display: none; }
-.g-ttab { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; border-bottom: 2px solid transparent; margin-bottom: -1px; color: var(--ink-2); font: 500 14px/1 var(--font-body); text-decoration: none; white-space: nowrap; }
+.g-ttab { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0; border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; background: none; color: var(--ink-2); font: 500 14px/1 var(--font-body); text-decoration: none; white-space: nowrap; cursor: pointer; }
+.g-ttab:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .g-ttab svg { width: 18px; height: 18px; }
 .g-ttab:hover { color: var(--ink); }
-.g-ttab[aria-current='page'] { color: var(--ink); font-weight: 600; border-bottom-color: var(--ink); }
+.g-ttab[aria-current='page'], .g-ttab[aria-selected='true'] { color: var(--ink); font-weight: 600; border-bottom-color: var(--ink); }
 .g-moods { display: flex; gap: 10px; margin: 16px -16px 0; padding: 0 16px; overflow-x: auto; scrollbar-width: none; }
 .g-moods::-webkit-scrollbar { display: none; }
 @media (min-width: 768px) { .g-moods { flex-wrap: wrap; margin-inline: 0; padding: 0; } }
@@ -322,18 +343,24 @@ textarea.g-input { height: auto; min-height: 96px; padding: 12px 14px; resize: v
 .g-busy + .g-busy { margin-top: 8px; }
 .g-guides { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 @media (min-width: 1024px) { .g-guides { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; } }
-@media (max-width: 1023px) { .g-guide:nth-child(n + 3) { display: none; } }
+@media (max-width: 1023px) { .g-guides:not(.is-all) .g-guide:nth-child(n + 3) { display: none; } }
 .g-guide { display: block; min-width: 0; color: inherit; text-decoration: none; border-radius: var(--r-2); }
 .g-guide:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 .g-guide-img { display: block; aspect-ratio: 3 / 2; border-radius: var(--r-2); overflow: hidden; background: var(--fill); }
 .g-guide-img > * { width: 100%; height: 100%; object-fit: cover; }
-.g-guide b { display: block; margin-top: 8px; font: 600 16px/1.2 var(--font-display); }
+.g-guide b { display: block; margin-top: 8px; font: 700 15px/1.3 var(--font-body); }
 .g-guide small { font-size: 12px; color: var(--ink-2); }
+/* Guest landing: one sign-up action right under the search. */
+.g-cta { display: flex; align-items: center; justify-content: space-between; gap: 12px; max-width: 640px; margin-top: 12px; padding: 12px 12px 12px 16px; border-radius: var(--r-2); background: var(--fill); }
+.g-cta p { min-width: 0; }
+.g-cta b { display: block; font: 700 15px/1.3 var(--font-body); }
+.g-cta span { display: block; margin-top: 2px; font-size: 13px; color: var(--ink-2); }
+.g-cta .g-btn { flex-shrink: 0; }
 .g-saan { margin-top: 28px; padding: 18px; border-radius: var(--r-4); background: #111111; color: #ffffff; }
 :root[data-theme='dark'] .g-saan { background: var(--surface); border: 1px solid var(--line); }
 .g-saan-main { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: inherit; text-decoration: none; }
 .g-saan-main b { display: block; font: 600 20px/1.2 var(--font-display); }
-.g-saan-main span { font-size: 13px; color: #cfcfcf; }
+.g-saan-main > span > span { font-size: 13px; color: #cfcfcf; }
 .g-saan-go { display: inline-flex; align-items: center; flex-shrink: 0; height: 44px; padding: 0 18px; border-radius: var(--r-pill); background: #34e0a1; color: #111111; font: 700 14px/1 var(--font-body); }
 .g-saan-main:focus-visible { outline: 2px solid #34e0a1; outline-offset: 4px; border-radius: var(--r-2); }
 
@@ -387,6 +414,8 @@ textarea.g-input { height: auto; min-height: 96px; padding: 12px 14px; resize: v
 .g-head-ask { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border: 0; border-radius: var(--r-pill); background: var(--fill); color: var(--ink); font: 600 13px/1 var(--font-body); cursor: pointer; white-space: nowrap; }
 .g-head-ask svg { width: 15px; height: 15px; }
 .g-head-ask:hover { background: var(--fill-2); }
+.g-head-ask { position: relative; }
+.g-head-ask::before { content: ''; position: absolute; inset: -5px 0; }
 .g-head-right { margin-left: auto; display: flex; align-items: center; gap: 6px; }
 .g-head-right .no-underline { text-decoration: none; }
 @media (min-width: 1024px) { .g-nav, .g-head-search { display: flex; } .g-head-search + .g-head-right { margin-left: 0; } }
@@ -527,7 +556,7 @@ body.has-action-bar .g-page { padding-bottom: calc(96px + env(safe-area-inset-bo
 
 /* ---------- AI ---------- */
 .g-ai { padding: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-4); box-shadow: var(--sh-2); }
-.g-ai textarea { width: 100%; border: 0; resize: none; background: none; outline: 0; color: var(--ink); font: 500 17px/1.4 var(--font-display); min-height: 52px; }
+.g-ai textarea { width: 100%; border: 0; resize: none; background: none; outline: 0; color: var(--ink); font: 400 16px/1.45 var(--font-body); min-height: 52px; }
 .g-ai textarea::placeholder { color: var(--ink-3); }
 .g-ai textarea:focus, .g-ai textarea:focus-visible { box-shadow: none; outline: 0; }
 .g-ai:focus-within { border-color: var(--ink); }
@@ -545,8 +574,8 @@ body.has-action-bar .g-page { padding-bottom: calc(96px + env(safe-area-inset-bo
 .g-kv > b { font-weight: 600; text-align: right; }
 
 /* ---------- Sentence search ---------- */
-.g-sentence { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 10px 10px 10px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-4); box-shadow: var(--sh-2); font: 500 15px/1.3 var(--font-display); color: var(--ink); }
-.g-slot { display: inline-flex; align-items: center; gap: 4px; min-height: 36px; padding: 0 10px; border-radius: var(--r-1); border: 0; background: var(--fill); color: var(--ink); font: 600 15px/1 var(--font-display); cursor: pointer; }
+.g-sentence { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: 10px 10px 10px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-4); box-shadow: var(--sh-2); font: 500 15px/1.3 var(--font-body); color: var(--ink); }
+.g-slot { display: inline-flex; align-items: center; gap: 4px; min-height: 36px; padding: 0 10px; border-radius: var(--r-1); border: 0; background: var(--fill); color: var(--ink); font: 600 15px/1 var(--font-body); cursor: pointer; }
 .g-slot.is-on { background: var(--tara-soft); color: var(--tara-ink); }
 .g-sentence .g-go { margin-left: auto; width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--ink); color: var(--on-ink); display: grid; place-items: center; cursor: pointer; }
 @media (min-width: 768px) { .g-sentence { font-size: 17px; border-radius: var(--r-pill); padding-left: 22px; } .g-slot { font-size: 17px; } }

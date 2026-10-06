@@ -48,10 +48,6 @@ function normalizeValue(value: string | null | undefined) {
   return (value || '').trim().toLowerCase()
 }
 
-function sortPlacesAlphabetically(places: SeoPlaceSummary[]) {
-  return [...places].sort((left, right) => left.name.localeCompare(right.name))
-}
-
 function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: AreaPlacesPageProps) {
   const listingGuestAuth = useGuestAuthPrompt()
   const normalizedAreaSlug = normalizeAreaSlug(areaSlug) || areaSlug.toLowerCase()
@@ -228,7 +224,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
     })
   }, [navigationSource])
 
-  const allPlaces = useMemo(() => sortPlacesAlphabetically(payload.items), [payload.items])
+  const allPlaces = payload.items
 
   useEffect(() => {
     const criticalImageUrls = allPlaces
@@ -307,7 +303,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
           '@context': 'https://schema.org',
           '@type': 'BreadcrumbList',
           itemListElement: [
-            { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/home` },
+            { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/` },
             { '@type': 'ListItem', position: 2, name: 'Places', item: `${getSiteOrigin()}/places` },
             ...(parentRegion
               ? [{ '@type': 'ListItem', position: 3, name: parentRegion.name, item: `${getSiteOrigin()}/places/${parentRegion.slug}` }]
@@ -351,7 +347,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
 
       <ListingBreadcrumb
         items={[
-          { label: 'Home', href: '/home' },
+          { label: 'Home', href: '/' },
           { label: 'Places', href: '/places' },
           ...(parentRegion ? [{ label: parentRegion.name, href: `/places/${parentRegion.slug}` }] : []),
           { label: areaName },
@@ -376,7 +372,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
       ) : null}
 
       <CategoryTabs active={activeCategory} getHref={(value) => getPagePath(1, value)} />
-      <ListToolbar count={payload.total > 0 ? `${payload.total.toLocaleString('en-PH')} ${payload.total === 1 ? 'place' : 'places'}` : null} sort="Sorted A–Z" />
+      <ListToolbar count={payload.total > 0 ? `${payload.total.toLocaleString('en-PH')} ${payload.total === 1 ? 'place' : 'places'}` : null} sort="Best first" />
 
       {errorMessage ? (
         <Empty className="mt-8" title={`Hindi ma-load ang places in ${areaName}`} description="Please try again in a bit." />

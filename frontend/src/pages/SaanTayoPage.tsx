@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { CaretRight as ChevronRight } from '@phosphor-icons/react/dist/csr/CaretRight'
 import { CaretDown } from '@phosphor-icons/react/dist/csr/CaretDown'
 import { CloudRain } from '@phosphor-icons/react/dist/csr/CloudRain'
@@ -53,7 +53,7 @@ const FAQS = [
   {
     question: 'Where do the places come from?',
     answer:
-      'Every pick is a GalaTayo place page with a starting budget per head, best time to visit and who the place suits. Budgets are starting prices, so check the place page before you go.',
+      'Every pick is a GalaTayo place page with a starting budget per head, best time to visit and who the place suits.',
   },
   {
     question: 'What if there are not enough places in my city?',
@@ -128,6 +128,7 @@ export default function SaanTayoPage() {
   const [result, setResult] = useState<ReturnType<typeof pickPlaces> | null>(null)
   const [details, setDetails] = useState<Record<string, PlaceDetail>>({})
   const [shareNote, setShareNote] = useState<string | null>(null)
+  const resultsRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
     let active = true
@@ -196,6 +197,8 @@ export default function SaanTayoPage() {
   const run = () => {
     setResult(pickPlaces(places, choice))
     setShareNote(null)
+    // Results sit below the form on phones, so bring them into view once they render.
+    requestAnimationFrame(() => resultsRef.current?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }))
     window.history.replaceState(null, '', `/saan-tayo?${shareQuery}`)
   }
 
@@ -345,7 +348,7 @@ export default function SaanTayoPage() {
         </div>
       </div>
 
-      <section aria-live="polite" className="mt-6">
+      <section ref={resultsRef} aria-live="polite" className="mt-6 scroll-mt-20">
         {loadError ? (
           <Empty title="May problema" description={loadError} />
         ) : result === null ? null : result.picks.length === 0 ? (
