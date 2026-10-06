@@ -266,6 +266,36 @@
               "aliases": [
                 "La Trinidad, Benguet"
               ]
+            },
+            {
+              "slug": "tuba",
+              "name": "Tuba",
+              "type": "municipality",
+              "center": [
+                16.4106,
+                120.5503
+              ],
+              "aliases": []
+            },
+            {
+              "slug": "atok",
+              "name": "Atok",
+              "type": "municipality",
+              "center": [
+                16.6253,
+                120.7692
+              ],
+              "aliases": []
+            },
+            {
+              "slug": "kabayan",
+              "name": "Kabayan",
+              "type": "municipality",
+              "center": [
+                16.5977,
+                120.8988
+              ],
+              "aliases": []
             }
           ]
         },
@@ -357,6 +387,26 @@
               "aliases": [
                 "Pagudpud, Ilocos Norte"
               ]
+            },
+            {
+              "slug": "bangui",
+              "name": "Bangui",
+              "type": "municipality",
+              "center": [
+                18.5285,
+                120.7036
+              ],
+              "aliases": []
+            },
+            {
+              "slug": "burgos-ilocos-norte",
+              "name": "Burgos, Ilocos Norte",
+              "type": "municipality",
+              "center": [
+                18.5123,
+                120.5979
+              ],
+              "aliases": []
             }
           ]
         },
@@ -380,6 +430,16 @@
                 "calle crisologo"
               ],
               "featured": true
+            },
+            {
+              "slug": "bantay",
+              "name": "Bantay",
+              "type": "municipality",
+              "center": [
+                17.5822,
+                120.3915
+              ],
+              "aliases": []
             }
           ]
         },
@@ -420,6 +480,16 @@
                 "San Fernando (La Union)",
                 "San Fernando City, La Union"
               ]
+            },
+            {
+              "slug": "san-gabriel",
+              "name": "San Gabriel",
+              "type": "municipality",
+              "center": [
+                16.6435,
+                120.4489
+              ],
+              "aliases": []
             }
           ]
         },
@@ -517,6 +587,16 @@
                 "San Fernando (Pampanga)",
                 "City of San Fernando, Pampanga"
               ]
+            },
+            {
+              "slug": "arayat",
+              "name": "Arayat",
+              "type": "municipality",
+              "center": [
+                15.1741,
+                120.7633
+              ],
+              "aliases": []
             }
           ]
         },
@@ -594,6 +674,16 @@
               "aliases": [
                 "Meycauayan City"
               ]
+            },
+            {
+              "slug": "san-miguel-bulacan",
+              "name": "San Miguel, Bulacan",
+              "type": "municipality",
+              "center": [
+                15.1189,
+                121.0851
+              ],
+              "aliases": []
             }
           ]
         },
@@ -612,6 +702,38 @@
               "aliases": [
                 "Baler, Aurora"
               ]
+            }
+          ]
+        },
+        {
+          "slug": "tarlac",
+          "name": "Tarlac",
+          "cities": [
+            {
+              "slug": "capas",
+              "name": "Capas",
+              "type": "municipality",
+              "center": [
+                15.1436,
+                120.3503
+              ],
+              "aliases": []
+            }
+          ]
+        },
+        {
+          "slug": "bataan",
+          "name": "Bataan",
+          "cities": [
+            {
+              "slug": "bagac",
+              "name": "Bagac",
+              "type": "municipality",
+              "center": [
+                14.6027,
+                120.3852
+              ],
+              "aliases": []
             }
           ]
         }
@@ -684,6 +806,16 @@
               "aliases": [
                 "Dasmarinas City"
               ]
+            },
+            {
+              "slug": "alfonso",
+              "name": "Alfonso",
+              "type": "municipality",
+              "center": [
+                14.0872,
+                120.8498
+              ],
+              "aliases": []
             }
           ]
         },
@@ -727,6 +859,26 @@
               "aliases": [
                 "Tanay, Rizal"
               ]
+            },
+            {
+              "slug": "binangonan",
+              "name": "Binangonan",
+              "type": "municipality",
+              "center": [
+                14.5329,
+                121.1868
+              ],
+              "aliases": []
+            },
+            {
+              "slug": "baras",
+              "name": "Baras",
+              "type": "municipality",
+              "center": [
+                14.605,
+                121.3386
+              ],
+              "aliases": []
             }
           ]
         },
@@ -786,6 +938,16 @@
               "aliases": [
                 "Pagsanjan, Laguna"
               ]
+            },
+            {
+              "slug": "majayjay",
+              "name": "Majayjay",
+              "type": "municipality",
+              "center": [
+                14.1101,
+                121.5074
+              ],
+              "aliases": []
             }
           ]
         },
@@ -857,6 +1019,26 @@
                 "San Juan (Batangas)",
                 "Laiya"
               ]
+            },
+            {
+              "slug": "tingloy",
+              "name": "Tingloy",
+              "type": "municipality",
+              "center": [
+                13.6453,
+                120.8673
+              ],
+              "aliases": []
+            },
+            {
+              "slug": "taal",
+              "name": "Taal",
+              "type": "municipality",
+              "center": [
+                13.8807,
+                120.9248
+              ],
+              "aliases": []
             }
           ]
         },
@@ -875,6 +1057,16 @@
               "aliases": [
                 "Lucban, Quezon"
               ]
+            },
+            {
+              "slug": "tayabas",
+              "name": "Tayabas",
+              "type": "municipality",
+              "center": [
+                14.0261,
+                121.591
+              ],
+              "aliases": []
             }
           ]
         }
@@ -915,8 +1107,7 @@
                 120.2043
               ],
               "aliases": [
-                "Coron, Palawan",
-                "Busuanga"
+                "Coron, Palawan"
               ],
               "featured": true
             },
@@ -946,6 +1137,16 @@
                 "San Vicente Palawan",
                 "Port Barton"
               ]
+            },
+            {
+              "slug": "busuanga",
+              "name": "Busuanga",
+              "type": "municipality",
+              "center": [
+                12.3,
+                119.88
+              ],
+              "aliases": []
             }
           ]
         },
@@ -999,6 +1200,36 @@
                 "mayon",
                 "cagsawa"
               ]
+            },
+            {
+              "slug": "daraga",
+              "name": "Daraga",
+              "type": "municipality",
+              "center": [
+                13.1499,
+                123.712
+              ],
+              "aliases": []
+            },
+            {
+              "slug": "camalig",
+              "name": "Camalig",
+              "type": "municipality",
+              "center": [
+                13.0998,
+                123.6157
+              ],
+              "aliases": []
+            },
+            {
+              "slug": "tabaco",
+              "name": "Tabaco",
+              "type": "municipality",
+              "center": [
+                13.2848,
+                123.6712
+              ],
+              "aliases": []
             }
           ]
         },
@@ -1017,6 +1248,32 @@
               "aliases": [
                 "Donsol, Sorsogon"
               ]
+            }
+          ]
+        },
+        {
+          "slug": "camarines-sur",
+          "name": "Camarines Sur",
+          "cities": [
+            {
+              "slug": "pili",
+              "name": "Pili",
+              "type": "municipality",
+              "center": [
+                13.5912,
+                123.2499
+              ],
+              "aliases": []
+            },
+            {
+              "slug": "caramoan",
+              "name": "Caramoan",
+              "type": "municipality",
+              "center": [
+                13.8102,
+                123.8955
+              ],
+              "aliases": []
             }
           ]
         }
@@ -1049,6 +1306,16 @@
                 "Boracay, Malay"
               ],
               "featured": true
+            },
+            {
+              "slug": "buruanga",
+              "name": "Buruanga",
+              "type": "municipality",
+              "center": [
+                11.865,
+                121.8774
+              ],
+              "aliases": []
             }
           ]
         },
@@ -1080,6 +1347,32 @@
               "aliases": [
                 "islas-de-gigantes"
               ]
+            },
+            {
+              "slug": "miagao",
+              "name": "Miagao",
+              "type": "municipality",
+              "center": [
+                10.6413,
+                122.2352
+              ],
+              "aliases": []
+            }
+          ]
+        },
+        {
+          "slug": "guimaras",
+          "name": "Guimaras",
+          "cities": [
+            {
+              "slug": "nueva-valencia",
+              "name": "Nueva Valencia",
+              "type": "municipality",
+              "center": [
+                10.559,
+                122.556
+              ],
+              "aliases": []
             }
           ]
         }
@@ -1110,6 +1403,46 @@
                 "Bacolod City"
               ],
               "featured": true
+            },
+            {
+              "slug": "silay",
+              "name": "Silay",
+              "type": "municipality",
+              "center": [
+                10.7995,
+                122.9764
+              ],
+              "aliases": []
+            },
+            {
+              "slug": "cadiz",
+              "name": "Cadiz",
+              "type": "municipality",
+              "center": [
+                11.0588,
+                123.2035
+              ],
+              "aliases": []
+            },
+            {
+              "slug": "murcia",
+              "name": "Murcia",
+              "type": "municipality",
+              "center": [
+                10.506,
+                123.11
+              ],
+              "aliases": []
+            },
+            {
+              "slug": "talisay-negros-occidental",
+              "name": "Talisay, Negros Occidental",
+              "type": "municipality",
+              "center": [
+                10.6611,
+                123.1427
+              ],
+              "aliases": []
             }
           ]
         },
@@ -1129,6 +1462,46 @@
                 "Dumaguete City"
               ],
               "featured": true
+            },
+            {
+              "slug": "dauin",
+              "name": "Dauin",
+              "type": "municipality",
+              "center": [
+                9.0733,
+                123.27
+              ],
+              "aliases": []
+            },
+            {
+              "slug": "valencia-negros-oriental",
+              "name": "Valencia, Negros Oriental",
+              "type": "municipality",
+              "center": [
+                9.296,
+                123.208
+              ],
+              "aliases": []
+            },
+            {
+              "slug": "sibulan",
+              "name": "Sibulan",
+              "type": "municipality",
+              "center": [
+                9.353,
+                123.178
+              ],
+              "aliases": []
+            },
+            {
+              "slug": "bais",
+              "name": "Bais",
+              "type": "municipality",
+              "center": [
+                9.63,
+                123.185
+              ],
+              "aliases": []
             }
           ]
         },
@@ -1259,6 +1632,46 @@
               "aliases": [
                 "malapascua"
               ]
+            },
+            {
+              "slug": "dalaguete",
+              "name": "Dalaguete",
+              "type": "municipality",
+              "center": [
+                9.824,
+                123.426
+              ],
+              "aliases": []
+            },
+            {
+              "slug": "samboan",
+              "name": "Samboan",
+              "type": "municipality",
+              "center": [
+                9.5066,
+                123.3022
+              ],
+              "aliases": []
+            },
+            {
+              "slug": "sibonga",
+              "name": "Sibonga",
+              "type": "municipality",
+              "center": [
+                9.997,
+                123.565
+              ],
+              "aliases": []
+            },
+            {
+              "slug": "badian",
+              "name": "Badian",
+              "type": "municipality",
+              "center": [
+                9.7935,
+                123.38
+              ],
+              "aliases": []
             }
           ]
         },
@@ -1326,6 +1739,56 @@
               "aliases": [
                 "anda"
               ]
+            },
+            {
+              "slug": "carmen-bohol",
+              "name": "Carmen, Bohol",
+              "type": "municipality",
+              "center": [
+                9.7988,
+                124.1673
+              ],
+              "aliases": []
+            },
+            {
+              "slug": "corella",
+              "name": "Corella",
+              "type": "municipality",
+              "center": [
+                9.6869,
+                123.9545
+              ],
+              "aliases": []
+            },
+            {
+              "slug": "bilar",
+              "name": "Bilar",
+              "type": "municipality",
+              "center": [
+                9.7095,
+                124.083
+              ],
+              "aliases": []
+            },
+            {
+              "slug": "loboc",
+              "name": "Loboc",
+              "type": "municipality",
+              "center": [
+                9.6366,
+                124.0328
+              ],
+              "aliases": []
+            },
+            {
+              "slug": "baclayon",
+              "name": "Baclayon",
+              "type": "municipality",
+              "center": [
+                9.6227,
+                123.9125
+              ],
+              "aliases": []
             }
           ]
         }
@@ -1367,6 +1830,22 @@
               "aliases": [
                 "kalanggaman"
               ]
+            }
+          ]
+        },
+        {
+          "slug": "samar",
+          "name": "Samar",
+          "cities": [
+            {
+              "slug": "basey",
+              "name": "Basey",
+              "type": "municipality",
+              "center": [
+                11.36,
+                125.135
+              ],
+              "aliases": []
             }
           ]
         }
@@ -1446,6 +1925,22 @@
                 "Mambajao, Camiguin",
                 "Camiguin Island"
               ]
+            }
+          ]
+        },
+        {
+          "slug": "bukidnon",
+          "name": "Bukidnon",
+          "cities": [
+            {
+              "slug": "manolo-fortich",
+              "name": "Manolo Fortich",
+              "type": "municipality",
+              "center": [
+                8.217,
+                124.854
+              ],
+              "aliases": []
             }
           ]
         }
@@ -1532,6 +2027,16 @@
                 "cloud 9"
               ],
               "featured": true
+            },
+            {
+              "slug": "socorro",
+              "name": "Socorro",
+              "type": "municipality",
+              "center": [
+                9.733,
+                125.962
+              ],
+              "aliases": []
             }
           ]
         },
