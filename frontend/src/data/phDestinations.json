@@ -336,6 +336,24 @@
               ]
             }
           ]
+        },
+        {
+          "slug": "kalinga",
+          "name": "Kalinga",
+          "cities": [
+            {
+              "slug": "tinglayan",
+              "name": "Tinglayan",
+              "type": "municipality",
+              "center": [
+                17.265,
+                121.1489
+              ],
+              "aliases": [
+                "Tinglayan, Kalinga"
+              ]
+            }
+          ]
         }
       ]
     },
@@ -512,6 +530,18 @@
               "keywords": [
                 "hundred islands"
               ]
+            },
+            {
+              "slug": "bolinao",
+              "name": "Bolinao",
+              "type": "municipality",
+              "center": [
+                16.3881,
+                119.8947
+              ],
+              "aliases": [
+                "Bolinao, Pangasinan"
+              ]
             }
           ]
         }
@@ -541,6 +571,62 @@
               "aliases": [
                 "Basco, Batanes",
                 "Batanes"
+              ]
+            },
+            {
+              "slug": "uyugan",
+              "name": "Uyugan",
+              "type": "municipality",
+              "center": [
+                20.3495,
+                121.9381
+              ],
+              "aliases": [
+                "Uyugan, Batanes"
+              ]
+            },
+            {
+              "slug": "sabtang",
+              "name": "Sabtang",
+              "type": "municipality",
+              "center": [
+                20.3348,
+                121.8723
+              ],
+              "aliases": [
+                "Sabtang, Batanes"
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "cagayan",
+          "name": "Cagayan",
+          "cities": [
+            {
+              "slug": "santa-ana-cagayan",
+              "name": "Santa Ana, Cagayan",
+              "type": "municipality",
+              "center": [
+                18.4589,
+                122.1419
+              ],
+              "aliases": [
+                "Santa Ana Cagayan",
+                "Santa Ana (Cagayan)"
+              ]
+            },
+            {
+              "slug": "penablanca",
+              "name": "Penablanca",
+              "label": "Peñablanca",
+              "type": "municipality",
+              "center": [
+                17.6258,
+                121.7853
+              ],
+              "aliases": [
+                "Peñablanca, Cagayan"
               ]
             }
           ]
@@ -1830,6 +1916,30 @@
               "aliases": [
                 "kalanggaman"
               ]
+            },
+            {
+              "slug": "palo",
+              "name": "Palo",
+              "type": "municipality",
+              "center": [
+                11.1583,
+                124.9917
+              ],
+              "aliases": [
+                "Palo, Leyte"
+              ]
+            },
+            {
+              "slug": "inopacan",
+              "name": "Inopacan",
+              "type": "municipality",
+              "center": [
+                10.4993,
+                124.7395
+              ],
+              "aliases": [
+                "Inopacan, Leyte"
+              ]
             }
           ]
         },
@@ -1846,6 +1956,61 @@
                 125.135
               ],
               "aliases": []
+            }
+          ]
+        },
+        {
+          "slug": "northern-samar",
+          "name": "Northern Samar",
+          "cities": [
+            {
+              "slug": "biri",
+              "name": "Biri",
+              "type": "municipality",
+              "center": [
+                12.67,
+                124.38
+              ],
+              "aliases": [
+                "Biri, Northern Samar"
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "biliran",
+          "name": "Biliran",
+          "cities": [
+            {
+              "slug": "maripipi",
+              "name": "Maripipi",
+              "type": "municipality",
+              "center": [
+                11.776,
+                124.348
+              ],
+              "aliases": [
+                "Maripipi, Biliran"
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "southern-leyte",
+          "name": "Southern Leyte",
+          "cities": [
+            {
+              "slug": "padre-burgos-southern-leyte",
+              "name": "Padre Burgos, Southern Leyte",
+              "type": "municipality",
+              "center": [
+                10.0296,
+                125.017
+              ],
+              "aliases": [
+                "Padre Burgos Southern Leyte",
+                "Padre Burgos (Southern Leyte)"
+              ]
             }
           ]
         }
@@ -1941,6 +2106,25 @@
                 124.854
               ],
               "aliases": []
+            }
+          ]
+        },
+        {
+          "slug": "lanao-del-norte",
+          "name": "Lanao del Norte",
+          "cities": [
+            {
+              "slug": "iligan",
+              "name": "Iligan",
+              "type": "city",
+              "center": [
+                8.2286,
+                124.2381
+              ],
+              "aliases": [
+                "Iligan, Lanao del Norte",
+                "Iligan City"
+              ]
             }
           ]
         }
@@ -2064,6 +2248,19 @@
               ],
               "aliases": [
                 "bislig-city"
+              ]
+            },
+            {
+              "slug": "san-agustin-surigao-del-sur",
+              "name": "San Agustin, Surigao del Sur",
+              "type": "municipality",
+              "center": [
+                8.7435,
+                126.222
+              ],
+              "aliases": [
+                "San Agustin Surigao del Sur",
+                "San Agustin (Surigao del Sur)"
               ]
             }
           ]
