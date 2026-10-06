@@ -143,7 +143,7 @@ function draw(ctx: CanvasRenderingContext2D, story: WrappedStory) {
   ctx.moveTo(PAD, 1752)
   ctx.lineTo(STORY_W - PAD, 1752)
   ctx.stroke()
-  drawWordmark(ctx, PAD, 1846, { color: STORY_INK, tileColor: STORY_INK, accent: STORY_MINT, ink: STORY_SAND })
+  drawWordmark(ctx, PAD, 1846, { color: STORY_INK, outer: '#00553A', inner: STORY_INK, accent: STORY_MINT })
   ctx.fillStyle = MUTED
   ctx.font = `500 28px ${BODY_FONT}`
   ctx.textAlign = 'right'

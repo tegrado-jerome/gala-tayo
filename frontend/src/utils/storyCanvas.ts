@@ -92,28 +92,29 @@ export function fitText(ctx: CanvasRenderingContext2D, text: string, font: (size
   return { size, lines: wrapLines(ctx, text, maxWidth, maxLines) }
 }
 
-/** The GalaTayo mark (sun over a road) plus the wordmark, drawn at (x, baseline y). */
-export function drawWordmark(ctx: CanvasRenderingContext2D, x: number, y: number, { color = STORY_WHITE, tileColor = STORY_WHITE, accent = STORY_MINT, ink = STORY_INK } = {}) {
-  const top = y - 44
-  ctx.fillStyle = tileColor
-  ctx.beginPath()
-  ctx.roundRect(x, top, 60, 60, 16)
-  ctx.fill()
+/** The GalaTayo golden-hour mark (sunset arcs over a wave) plus the wordmark, drawn at (x, baseline y). */
+export function drawWordmark(ctx: CanvasRenderingContext2D, x: number, y: number, { color = STORY_WHITE, outer = STORY_MINT, inner = STORY_WHITE, accent = STORY_MINT } = {}) {
+  // Same paths as the SVG logo (viewBox 6 12 52 38), scaled to 66px wide.
+  const scale = 66 / 52
+  ctx.save()
+  ctx.translate(x - 6 * scale, y - 44 - 12 * scale)
+  ctx.scale(scale, scale)
+  ctx.lineCap = 'round'
+  const stroke = (path: string, colour: string, width: number) => {
+    ctx.strokeStyle = colour
+    ctx.lineWidth = width
+    ctx.stroke(new Path2D(path))
+  }
+  stroke('M10 38a22 22 0 0 1 44 0', outer, 6.5)
+  stroke('M19.5 38a12.5 12.5 0 0 1 25 0', inner, 6.5)
   ctx.fillStyle = accent
-  ctx.beginPath()
-  ctx.arc(x + 30, top + 34, 13, Math.PI, 0)
-  ctx.fill()
-  ctx.fillStyle = ink
-  ctx.beginPath()
-  ctx.roundRect(x + 12, top + 38, 36, 5, 2.5)
-  ctx.fill()
-  ctx.beginPath()
-  ctx.roundRect(x + 19, top + 48, 22, 5, 2.5)
-  ctx.fill()
+  ctx.fill(new Path2D('M27 38a5 5 0 0 1 10 0Z'))
+  stroke('M8 47c5-3.5 10 3.5 16 0s10-3.5 16 0 10 3.5 16 0', accent, 4.5)
+  ctx.restore()
   ctx.fillStyle = color
   ctx.font = `600 42px ${DISPLAY_FONT}`
   ctx.letterSpacing = '-1px'
-  ctx.fillText('galatayo', x + 78, y)
+  ctx.fillText('galatayo', x + 80, y)
   ctx.letterSpacing = '0px'
 }
 
