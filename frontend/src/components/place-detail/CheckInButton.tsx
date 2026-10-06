@@ -23,19 +23,24 @@ function NewStampSheet({ city, streakWeeks, onClose }: { city: string; streakWee
 
   useEffect(() => {
     closeRef.current?.focus()
+    // A short buzz where supported, timed with the stamp landing.
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) window.setTimeout(() => navigator.vibrate?.(14), 210)
   }, [])
 
   return createPortal(
     <Sheet open onClose={onClose} labelledBy={titleId}>
       <div className="flex flex-col items-center pb-1 pt-4 text-center">
-        <div className="g-stamp-big g-press" style={{ '--g-rot': '-6deg' } as CSSProperties} aria-hidden="true">
-          <div className="min-w-0">
-            <b>{city}</b>
-            <span>{today}</span>
+        <div className="g-thud-wrap" aria-hidden="true">
+          <div className="g-stamp-big g-thud" style={{ '--g-rot': '-6deg' } as CSSProperties}>
+            <div className="min-w-0">
+              <b>{city}</b>
+              <span>{today}</span>
+            </div>
           </div>
+          <span className="g-thud-ring" />
         </div>
-        <h2 id={titleId} className="g-h2 mt-6">New stamp: {city}</h2>
-        <p className="g-sm mt-1.5" style={{ color: 'var(--sea)' }}>
+        <h2 id={titleId} className="g-h2 g-fade-in mt-6" style={{ animationDelay: '200ms' }}>New stamp: {city}</h2>
+        <p className="g-sm g-fade-in mt-1.5" style={{ color: 'var(--sea)', animationDelay: '300ms' }}>
           {streakWeeks > 0 ? `${streakWeeks}-week streak. Gala again next week to keep it going.` : 'Gala once a week to start a streak.'}
         </p>
         <div className="mt-6 grid w-full grid-cols-2 gap-2">
@@ -144,7 +149,7 @@ function CheckInButton({
           {message && isToastVisible ? (
             <p className={cx('g-toast', status.kind === 'error' ? 'is-bad' : 'is-ok')}>
               <span className="g-toast-ic" aria-hidden="true">
-                {status.kind === 'error' ? <WarningCircle weight="bold" /> : <Stamp weight="bold" />}
+                {status.kind === 'error' ? <WarningCircle weight="bold" /> : <Stamp weight="bold" className="g-thud" />}
               </span>
               <span className="g-toast-body">{message}</span>
             </p>

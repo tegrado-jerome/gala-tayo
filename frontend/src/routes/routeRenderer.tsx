@@ -16,6 +16,7 @@ const ProtectedFeatureGate = lazy(() => import('../components/ProtectedFeatureGa
 const SharedPlacePage = lazy(() => import('../pages/SharedPlacePage'))
 const PlacesSlugResolverPage = lazy(() => import('../pages/PlacesSlugResolverPage'))
 const FavoritesPage = lazy(() => import('../pages/FavoritesPage'))
+const GalaListPage = lazy(() => import('../pages/GalaListPage'))
 const HistoryPage = lazy(() => import('../pages/HistoryPage'))
 const SearchHub = lazy(() => import('../pages/SearchHub'))
 const SearchPage = lazy(() => import('../pages/SearchPage'))
@@ -347,6 +348,13 @@ function renderRouteContent(descriptor: RouteDescriptor, inputs: RouteInputs) {
       return <ChangePasswordPage />
     case 'favorites':
       return <FavoritesPage />
+    case 'gala-list':
+      return (
+        <>
+          <SeoHead title="Gala list | GalaTayo" description="A list of places to go, made on GalaTayo." canonicalPath={pathname} robots="noindex,follow" />
+          <GalaListPage key={descriptor.listId ?? 'shared'} listId={descriptor.listId} search={search} />
+        </>
+      )
     case 'history':
       return <HistoryPage />
     case 'feedback':

@@ -85,6 +85,7 @@ export type RouteDescriptor =
   | { kind: 'privacy-center' }
   | { kind: 'change-password' }
   | { kind: 'favorites' }
+  | { kind: 'gala-list'; listId: string | null }
   | { kind: 'history' }
   | { kind: 'feedback' }
   | { kind: 'gala-plans-list' }
@@ -357,6 +358,15 @@ export function resolveRouteDescriptor(inputs: RouteInputs): RouteDescriptor {
 
   if (isPath(pathname, '/favorites')) {
     return { kind: 'favorites' }
+  }
+
+  if (isPath(pathname, '/lists/shared')) {
+    return { kind: 'gala-list', listId: null }
+  }
+
+  const galaListMatch = pathname.match(/^\/lists\/([^/]+)\/?$/i)
+  if (galaListMatch) {
+    return { kind: 'gala-list', listId: decodeURIComponent(galaListMatch[1]) }
   }
 
   if (isPath(pathname, '/history')) {

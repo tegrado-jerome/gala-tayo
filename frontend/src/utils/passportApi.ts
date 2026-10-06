@@ -18,6 +18,8 @@ export type Passport =
       unique_places: number
       streak_weeks: number
       recent: Array<{ place_id: string; name: string; slug: string | null; city: string | null; created_at: string }>
+      /** Last 13 months of check-ins for Gala Wrapped; missing on older API versions. */
+      history?: Array<{ place_id: string; city: string | null; category: string | null; created_at: string }>
     }
 
 export type CheckinResult = Passport & { new_stamp_city?: string | null; place_name?: string }

@@ -47,6 +47,12 @@ export function buildGalaPlanInviteUrl(planId: string) {
   return url.startsWith('/') ? `${getPublicSiteOrigin()}${url}` : url
 }
 
+/** Link for a shared Gala list: an API page with the list's preview card that forwards to `/lists/shared`. */
+export function buildGalaListShareUrl(query: string) {
+  const url = getApiUrl(`/share/lists?${query}`)
+  return url.startsWith('/') ? `${getPublicSiteOrigin()}${url}` : url
+}
+
 async function copyTextToClipboard(text: string) {
   if (navigator.clipboard && window.isSecureContext) {
     await navigator.clipboard.writeText(text)

@@ -3,6 +3,7 @@ import type { Session } from '@supabase/supabase-js'
 import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
 import InternalLink from '../components/InternalLink'
 import PassportMap from '../components/passport/PassportMap'
+import GalaWrapped from '../components/passport/GalaWrapped'
 import ProfileAvatar from '../components/ProfileAvatar'
 import { Button, Empty, Page, SectionHead, Skeleton, Tag, cx } from '../components/ui'
 import { useAppUser } from '../context/AppUserContext'
@@ -180,6 +181,7 @@ function PassportPage({ session }: { session: Session }) {
             </ol>
           </div>
         ) : null}
+        {passport ? <GalaWrapped passport={passport} session={session} handle={currentProfile?.username ?? null} /> : null}
         <div className="h-5 lg:h-6" />
       </div>
 

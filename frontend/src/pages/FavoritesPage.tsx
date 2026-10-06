@@ -8,6 +8,7 @@ import { MagnifyingGlass as Search } from '@phosphor-icons/react/dist/csr/Magnif
 import { Sparkle as Sparkles } from '@phosphor-icons/react/dist/csr/Sparkle'
 import { Trash as Trash2 } from '@phosphor-icons/react/dist/csr/Trash'
 import GoogleSignInButton from '../components/GoogleSignInButton'
+import GalaListsSection from '../components/lists/GalaListsSection'
 import InternalLink from '../components/InternalLink'
 import DestructiveConfirmModal from '../components/DestructiveConfirmModal'
 import PhotoCard, { type PhotoCardPlace } from '../components/discover/PhotoCard'
@@ -234,6 +235,8 @@ function FavoritesPage() {
         />
       ) : null}
 
+      {!isSessionLoading && !session?.user ? <GalaListsSection className="mt-10" /> : null}
+
       {isSignedIn ? (
         <>
           <section aria-label="Collections" className="mt-6">
@@ -257,6 +260,8 @@ function FavoritesPage() {
               ))}
             </div>
           </section>
+
+          <GalaListsSection className="mt-10" />
 
           <section ref={gridRef} aria-labelledby="saved-places-title" className="mt-10 grid scroll-mt-24 gap-4">
             <div className="flex min-w-0 items-center gap-2">
