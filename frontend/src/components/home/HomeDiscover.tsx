@@ -14,6 +14,7 @@ import InternalLink from '../InternalLink'
 import { useGuestAuthPrompt } from '../GuestAuthPrompt'
 import { formatPricePerHead, formatVisitDuration } from '../PlaceCard'
 import { SectionHead, Skeleton, cx } from '../ui'
+import { GalaTodayHome } from './GalaTodayCard'
 import { galaTayoPickSlugs, getRailPickSlugs } from '../../data/galaTayoPicks'
 import { getStaticPlaceImageUrlForSlug } from '../../data/placeIndexVisuals'
 import { resizedMediaUrl } from '../../data/r2Config'
@@ -350,6 +351,7 @@ function HomeDiscover({ isRaining = false, headline, top, className }: { isRaini
         ) : (
           <>
             <MoodPills />
+            <GalaTodayHome />
             <EditorsPick place={pickDetails?.find((place) => place.slug === EDITORS_PICK.slug)} />
 
             {pickDetails ? (
