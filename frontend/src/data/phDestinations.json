@@ -1758,6 +1758,22 @@
                 123.38
               ],
               "aliases": []
+            },
+            {
+              "slug": "san-francisco-cebu",
+              "name": "San Francisco, Cebu",
+              "type": "municipality",
+              "center": [
+                10.6459,
+                124.3818
+              ],
+              "aliases": [
+                "San Francisco Cebu",
+                "San Francisco (Cebu)",
+                "Camotes",
+                "Camotes Islands",
+                "Pacijan"
+              ]
             }
           ]
         },
@@ -1939,6 +1955,20 @@
               ],
               "aliases": [
                 "Inopacan, Leyte"
+              ]
+            },
+            {
+              "slug": "ormoc",
+              "name": "Ormoc",
+              "type": "city",
+              "center": [
+                11.0053,
+                124.6091
+              ],
+              "aliases": [
+                "Ormoc City",
+                "City of Ormoc",
+                "Ormoc, Leyte"
               ]
             }
           ]
@@ -2174,6 +2204,26 @@
                 "Samal Island",
                 "Island Garden City of Samal",
                 "IGACOS"
+              ]
+            }
+          ]
+        },
+        {
+          "slug": "davao-oriental",
+          "name": "Davao Oriental",
+          "cities": [
+            {
+              "slug": "mati",
+              "name": "Mati",
+              "type": "city",
+              "center": [
+                6.9522,
+                126.2167
+              ],
+              "aliases": [
+                "Mati City",
+                "City of Mati",
+                "Mati, Davao Oriental"
               ]
             }
           ]
