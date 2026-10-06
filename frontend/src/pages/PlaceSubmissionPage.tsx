@@ -417,7 +417,7 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
               { icon: MapPin, label: 'Exact map pin' },
             ].map(({ icon: Icon, label }) => (
               <li key={label} className="flex flex-col items-start gap-2 rounded-[var(--r-3)] bg-[var(--fill)] p-3">
-                <Icon weight="duotone" className="h-6 w-6" aria-hidden="true" />
+                <Icon weight="light" className="h-6 w-6" aria-hidden="true" />
                 <span className="g-xs font-semibold leading-snug">{label}</span>
               </li>
             ))}
@@ -640,7 +640,7 @@ function PlaceSubmissionFormPage({ session }: { session: Session | null }) {
 
             <FormSection step={5} title="Photos" description="One strong cover is enough. Up to three helps reviewers.">
               <label className="flex min-h-[148px] cursor-pointer flex-col items-center justify-center gap-2 rounded-[var(--r-3)] border-2 border-dashed border-[var(--line)] p-6 text-center transition-colors hover:border-[var(--ink)] focus-within:border-[var(--ink)]">
-                <ImagePlus weight="duotone" className="h-8 w-8" aria-hidden="true" />
+                <ImagePlus weight="light" className="h-8 w-8" aria-hidden="true" />
                 <span className="g-h3">{photoPreviews.length > 0 ? 'Change photos' : 'Add photos'}</span>
                 <span className="g-xs g-mut">JPG, PNG, WebP or HEIC. Up to 3.</span>
                 <input

@@ -63,7 +63,7 @@ function IdeaChips({ ideas }: { ideas: string[] }) {
     <Chips>
       {ideas.map((idea) => (
         <InternalLink key={idea} href={`/plan-with-ai?q=${encodeURIComponent(idea)}`} className="g-chip no-underline">
-          <Sparkles aria-hidden="true" style={{ color: 'var(--tara-ink)' }} />
+          <Sparkles aria-hidden="true" />
           {idea}
         </InternalLink>
       ))}
@@ -227,7 +227,7 @@ function PlanList({ session, favorites = false }: { session?: Session | null; fa
                 <IdeaChips ideas={planIdeas} />
               </section>
               <InternalLink href="/gala-plans/favorites" className="flex min-h-14 items-center gap-3 rounded-[var(--r-3)] border border-[var(--line-2)] px-4 text-[var(--ink)] no-underline hover:bg-[var(--fill)]">
-                <Heart className="g-ic" weight="duotone" style={{ color: 'var(--tara-ink)' }} aria-hidden="true" />
+                <Heart className="g-ic" weight="light" aria-hidden="true" />
                 <span className="min-w-0">
                   <span className="g-sm block font-semibold">Hearted plans</span>
                   <span className="g-xs g-mut block">Plans you saved from friends</span>

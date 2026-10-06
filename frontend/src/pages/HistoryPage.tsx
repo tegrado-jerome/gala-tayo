@@ -437,7 +437,7 @@ function HistoryPage() {
                     <li key={item.id} className="me-tl-item">
                       <InternalLink href={`/places/${encodeURIComponent(place.slug as string)}`} className="me-tl-link">
                         <span className="me-thumb" aria-hidden="true">
-                          <MapPin weight="duotone" />
+                          <MapPin weight="light" />
                           {photo ? <img src={resizedMediaUrl(photo, 'thumb')} alt="" loading="lazy" decoding="async" /> : null}
                         </span>
                         <span className="me-tl-t">

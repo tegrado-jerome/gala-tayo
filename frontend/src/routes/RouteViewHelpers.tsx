@@ -21,7 +21,7 @@ export function NotFoundPage({
   return (
     <main className="g-page g-page-narrow flex min-h-[70dvh] flex-col items-center justify-center text-center">
       <span className="m-lost" aria-hidden="true">
-        <CompassRose weight="duotone" />
+        <CompassRose weight="light" />
       </span>
       <p className="m-onb-step mt-8">Error 404</p>
       <h1 className="g-h1 mt-1.5">Naligaw ka yata</h1>

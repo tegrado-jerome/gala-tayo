@@ -50,7 +50,7 @@ function OnboardingInterestsStep({ values, onUpdate, onBack, onNext }: Onboardin
           const isOn = values.interests.includes(value)
           return (
             <button key={value} type="button" className="m-choice !min-h-[88px] flex-col !gap-3 !p-4" aria-pressed={isOn} onClick={() => toggle(value)}>
-              <Icon weight={isOn ? 'fill' : 'duotone'} aria-hidden="true" />
+              <Icon weight={isOn ? 'fill' : 'light'} aria-hidden="true" />
               <span className="font-semibold">{label}</span>
             </button>
           )

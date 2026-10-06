@@ -79,7 +79,7 @@ function ForgotPasswordPage() {
     return (
       <AuthCard
         bar="Reset password"
-        icon={<Mail weight="duotone" />}
+        icon={<Mail weight="light" />}
         title="Check your email"
         sub="If an account exists with that email, we sent password reset instructions."
       >

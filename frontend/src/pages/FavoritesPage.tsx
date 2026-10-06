@@ -45,7 +45,7 @@ function Collage({ photos, icon: Icon }: { photos: string[]; icon: typeof MapPin
     <span className={slots.length === 1 ? 'me-wl-art is-1' : 'me-wl-art'} aria-hidden="true">
       {slots.map((photo, index) => (
         <span key={index}>
-          <Icon weight="duotone" />
+          <Icon weight="light" />
           {photo ? <img src={resizedMediaUrl(photo, 'thumb')} alt="" loading="lazy" decoding="async" /> : null}
         </span>
       ))}

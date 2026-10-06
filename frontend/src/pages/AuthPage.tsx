@@ -360,7 +360,7 @@ function AuthPage({ mode = 'sign_in', surface = 'app' }: AuthPageProps) {
     return (
       <AuthCard
         bar="Sign up"
-        icon={<Mail weight="duotone" />}
+        icon={<Mail weight="light" />}
         title="Check your email"
         sub={
           <>

@@ -99,7 +99,7 @@ function FeedbackPage() {
       <MinimalBackNav to="/home" label="Home" preferHistory={false} />
       <header className="m-art-head mt-2">
         <span className="m-art-ic" aria-hidden="true">
-          <ChatCircleText weight="duotone" />
+          <ChatCircleText weight="light" />
         </span>
         <p className="m-onb-step">Help and feedback</p>
         <h1 className="g-h1 mt-1.5">Kumusta ang GalaTayo for you?</h1>
@@ -133,7 +133,7 @@ function FeedbackPage() {
                       aria-pressed={isSelected}
                       aria-label={`Rate ${label}`}
                     >
-                      <Icon weight={isSelected ? 'fill' : 'duotone'} aria-hidden="true" />
+                      <Icon weight={isSelected ? 'fill' : 'light'} aria-hidden="true" />
                       <span>{label}</span>
                     </button>
                   )

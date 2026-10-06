@@ -272,7 +272,7 @@ function PrivacyCenterPage({ session }: { session: Session }) {
             {privacyRequests.slice(0, 8).map((request) => (
               <article key={request.id} className="me-status">
                 <span className="me-ic" aria-hidden="true">
-                  <FileText weight="duotone" />
+                  <FileText weight="light" />
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-3">

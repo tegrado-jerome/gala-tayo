@@ -17,7 +17,7 @@ type Phase = 'deck' | 'saving' | 'done' | 'end'
 const SWIPE_PX = 96
 const FLY_MS = 220
 
-// Navy text on coral, the system rule for the main action.
+// White text on the ink main action.
 const ON_TARA = '#ffffff'
 
 function findPlace(plan: GalaPlanDetail, option: Option) {

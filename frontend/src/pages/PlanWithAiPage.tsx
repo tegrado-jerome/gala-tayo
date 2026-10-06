@@ -1,6 +1,7 @@
 import type { Session } from '@supabase/supabase-js'
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { ArrowsDownUp } from '@phosphor-icons/react/dist/csr/ArrowsDownUp'
+import { CalendarBlank } from '@phosphor-icons/react/dist/csr/CalendarBlank'
 import { Check } from '@phosphor-icons/react/dist/csr/Check'
 import { CloudRain } from '@phosphor-icons/react/dist/csr/CloudRain'
 import { FilmSlate as Clapperboard } from '@phosphor-icons/react/dist/csr/FilmSlate'
@@ -48,7 +49,7 @@ function describeCommute(legs: Array<TravelLeg | null>) {
   return [walk ? `${walk} min walk` : null, `${rideMinutes} min Grab (~${formatPeso(fare)})`].filter(Boolean).join(' · ')
 }
 
-/** Tara's side of the chat: coral sparkle avatar, then the reply. */
+/** Tara's side of the chat: ink sparkle avatar, then the reply. */
 function TaraSays({ children, label = 'Tara' }: { children: ReactNode; label?: string }) {
   return (
     <div className="g-chat-tara">
@@ -243,11 +244,9 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
           void save(guestSession)
         }} />
 
-      <p className="g-ai-badge">
-        <Sparkles aria-hidden="true" />
-        Tara AI
-      </p>
+      <p className="g-eyebrow">Tara AI · Barkada plans</p>
       <h1 className="g-h1 mt-2">Plan with AI</h1>
+      <p className="g-mut mt-2 text-[15px]">Say the vibe in one line. Tara maps the day, you tweak it and invite the barkada.</p>
 
       <div className="mt-6 grid gap-5" aria-live="polite">
         {showComposer ? (
@@ -293,7 +292,7 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
 
       {showComposer ? (
         <>
-          <form onSubmit={handleSubmit} className="g-ai mt-5">
+          <form onSubmit={handleSubmit} className="g-ai is-plan mt-5">
             <label htmlFor="plan-with-ai-prompt" className="sr-only">
               Describe your gala
             </label>
@@ -314,8 +313,9 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
             />
             <div className="g-ai-bar mt-3 min-h-11 justify-end gap-3">
               {usage ? <AskAiUsagePill usageStatus={usage} /> : null}
-              <Button type="submit" variant="tara" iconOnly disabled={!prompt.trim()} aria-label="Build plan">
+              <Button type="submit" variant="ink" disabled={!prompt.trim()} aria-label="Build plan">
                 <Send aria-hidden="true" />
+                Plan it
               </Button>
             </div>
           </form>
@@ -334,7 +334,7 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
                       void build(example.prompt)
                     }}
                   >
-                    <ExampleIcon weight="duotone" aria-hidden="true" />
+                    <ExampleIcon weight="light" aria-hidden="true" />
                     {example.title}
                   </button>
                 )
@@ -346,13 +346,14 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
 
       {draft && status !== 'building' ? (
         <section className="mt-5 pb-20 lg:pb-0" aria-labelledby="plan-with-ai-draft-title">
-          <div className="rounded-[var(--r-4)] border border-[var(--line-2)] p-4 md:p-5">
-            <p className="g-eyebrow text-[var(--tara-ink)]!">Draft ready</p>
-            <h2 id="plan-with-ai-draft-title" className="g-h2 mt-1.5">
+          <div className="border-t border-[var(--line)] pt-5">
+            <p className="g-eyebrow">Draft ready</p>
+            <h2 id="plan-with-ai-draft-title" className="g-h1 mt-1.5">
               {draft.title}
             </h2>
-            <div className="g-sm g-mut mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-              <label className="relative inline-flex min-h-11 cursor-pointer items-center gap-1 font-semibold text-[var(--ink)] underline decoration-dotted underline-offset-4">
+            <div className="g-sm g-mut mt-3 flex flex-wrap items-center gap-x-2 gap-y-2">
+              <label className="g-date-chip">
+                <CalendarBlank aria-hidden="true" />
                 {dateLabel}
                 <span className="sr-only">, change date</span>
                 <input
@@ -363,7 +364,7 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
                   className="absolute inset-0 cursor-pointer opacity-0"
                 />
               </label>
-              {timeRange ? <span>· {timeRange}</span> : null}
+              {timeRange ? <span>{timeRange}</span> : null}
               {draft.date_source === 'default' ? <span className="g-xs">(next Saturday, tap to change)</span> : null}
             </div>
             {draft.summary ? <p className="g-sm mt-2 leading-relaxed">{draft.summary}</p> : null}
@@ -433,7 +434,7 @@ function PlanWithAiPage({ initialPrompt }: { initialPrompt: string }) {
                 {isEditing ? <Check /> : <ArrowsDownUp />}
                 {isEditing ? 'Done' : 'Edit stops'}
               </Button>
-              <Button variant="tara" className="flex-[2]" onClick={() => void save()} loading={status === 'saving'} disabled={status === 'saving'}>
+              <Button variant="ink" className="flex-[2]" onClick={() => void save()} loading={status === 'saving'} disabled={status === 'saving'}>
                 {session ? 'Save & invite' : 'Save plan'}
               </Button>
             </div>

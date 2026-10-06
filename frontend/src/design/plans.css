@@ -1,73 +1,103 @@
-/* Plans pages: trip cards, itinerary timeline, trip stats, Tara chat. Builds on gt1.css tokens. */
+/* Plans pages, Editorial Picks: trip cards, cover header, RSVP strip, day cards, budget split, story card, Tara chat. Builds on gt1.css tokens. */
 
-/* Trip card (plans list, like Wanderlog "My trips") */
+/* ---------- Trip card (plans list) ---------- */
 .g-trip { display: block; min-width: 0; color: inherit; text-decoration: none; }
-.g-trip-cover { position: relative; display: grid; gap: 2px; aspect-ratio: 4 / 3; border-radius: var(--r-3); overflow: hidden; background: var(--fill); }
+.g-trip-cover { position: relative; display: grid; aspect-ratio: 3 / 2; border-radius: var(--r-3); overflow: hidden; background: var(--fill); }
 .g-trip-cover.is-wide { aspect-ratio: 16 / 9; }
-.g-trip-cover.is-2 { grid-template-columns: 1fr 1fr; }
-.g-trip-cover.is-3 { grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; }
-.g-trip-cover.is-3 > :first-child { grid-row: span 2; }
 .g-trip-cover > img, .g-trip-cover > span { width: 100%; height: 100%; min-height: 0; object-fit: cover; transition: transform var(--t-slow) var(--ease-g); }
+.g-trip-cover > .g-trip-blank { display: grid; place-items: center; background: var(--fill); color: var(--ink-3); }
 .g-trip:hover .g-trip-cover > img { transform: scale(1.03); }
 .g-trip-flag { position: absolute; top: 10px; left: 10px; display: flex; gap: 6px; }
-.g-trip-vis { position: absolute; top: 10px; right: 10px; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: color-mix(in srgb, var(--surface) 92%, transparent); color: var(--ink); }
+.g-trip-flag .g-tag { height: 26px; padding: 0 10px; border-radius: var(--r-pill); font-weight: 700; }
+.g-trip-vis { position: absolute; top: 10px; right: 10px; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: #ffffff; color: #111111; }
 .g-trip-vis svg { width: 16px; height: 16px; }
+.g-trip-kick { display: block; margin-top: 12px; font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-2); }
+.g-trip-title { margin-top: 4px; font: 600 20px/1.2 var(--font-display); letter-spacing: -0.01em; color: var(--ink); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.g-trip-title.is-lg { font-size: 26px; }
+.g-trip:hover .g-trip-title { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
 .g-trip-foot { display: flex; align-items: center; gap: 8px; margin-top: 6px; min-height: 24px; }
-.g-trips { display: grid; gap: 24px 16px; grid-template-columns: minmax(0, 1fr); }
+.g-trips { display: grid; gap: 28px 16px; grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 640px) { .g-trips { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (min-width: 1024px) { .g-trips { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px 24px; } }
+@media (min-width: 1024px) { .g-trips { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 36px 24px; } }
 
-/* Trip cover on the plan page */
-.g-plan-cover { position: relative; height: 240px; margin-inline: -16px; overflow: hidden; background: var(--fill); }
+/* ---------- Plan cover header: photo with the plan name over it ---------- */
+.g-plan-cover { position: relative; height: 320px; margin-inline: -16px; overflow: hidden; background: var(--fill); }
 .g-plan-cover .g-trip-cover { height: 100%; aspect-ratio: auto; border-radius: 0; }
-.g-plan-cover .g-map { height: 100%; border: 0; border-radius: 0; }
-.g-plan-bar { position: absolute; inset: 0 0 auto; z-index: 500; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; padding: 12px 16px; pointer-events: none; }
+.g-plan-cover.has-photo::after { content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(rgba(0, 0, 0, 0.38), transparent 32%, transparent 45%, rgba(0, 0, 0, 0.72)); }
+.g-plan-cover-text { position: absolute; left: 16px; right: 16px; bottom: 18px; z-index: 2; color: var(--ink); }
+.g-plan-cover.has-photo .g-plan-cover-text { color: #ffffff; }
+.g-plan-cover-kick { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.g-plan-cover-title { margin-top: 6px; font: 600 30px/1.08 var(--font-display); letter-spacing: -0.015em; text-wrap: balance; overflow-wrap: anywhere; }
+.g-plan-cover-sub { margin-top: 6px; font-size: 14px; }
+.g-plan-cover.has-photo .g-plan-cover-sub { color: rgba(255, 255, 255, 0.92); }
+.g-plan-bar { position: absolute; inset: 0 0 auto; z-index: 3; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; padding: 12px 16px; pointer-events: none; }
 .g-plan-bar > * { pointer-events: auto; }
-.g-round { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--surface); color: var(--ink); box-shadow: var(--sh-2); cursor: pointer; }
+.g-round { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; border: 0; background: #ffffff; color: #111111; box-shadow: var(--sh-1); cursor: pointer; }
 .g-round.is-wide { display: inline-flex; width: auto; gap: 6px; padding: 0 14px; font: 600 14px/1 var(--font-body); }
 .g-round svg { width: 20px; height: 20px; }
-@media (min-width: 768px) { .g-plan-cover { height: 320px; margin-inline: 0; border-radius: var(--r-4); } }
+.g-round:focus-visible { outline: 2px solid #ffffff; outline-offset: 2px; box-shadow: 0 0 0 4px #111111; }
+@media (min-width: 768px) {
+  .g-plan-cover { height: 400px; margin-inline: 0; border-radius: var(--r-4); }
+  .g-plan-cover-text { left: 28px; right: 28px; bottom: 26px; }
+  .g-plan-cover-title { font-size: 44px; }
+  .g-plan-bar { padding: 16px; }
+}
 
-/* Trip stats row (Polarsteps-style passport numbers) */
-.g-tstats { display: grid; grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr)); border: 1px solid var(--line-2); border-radius: var(--r-3); background: var(--surface); }
-.g-tstat { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; min-height: 72px; padding: 12px; border: 0; background: none; color: var(--ink); text-align: left; font: inherit; }
-.g-tstat + .g-tstat { border-left: 1px solid var(--line-2); }
-button.g-tstat { cursor: pointer; border-radius: 0; }
-button.g-tstat:hover { background: var(--fill); }
-.g-tstat:first-child { border-radius: var(--r-3) 0 0 var(--r-3); }
-.g-tstat:last-child { border-radius: 0 var(--r-3) var(--r-3) 0; }
-.g-tstat b { font: 600 18px/1.1 var(--font-display); letter-spacing: -0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
-.g-tstat span { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--ink-2); white-space: nowrap; }
-.g-tstat svg { width: 14px; height: 14px; flex: 0 0 auto; }
-@media (min-width: 768px) { .g-tstat { padding: 14px 16px; } .g-tstat b { font-size: 22px; } }
+/* ---------- RSVP strip on sand ---------- */
+.g-rsvp-strip { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 12px 10px 14px; border-radius: var(--r-3); background: var(--fill); }
+.g-rsvp-strip-txt { flex: 1; min-width: 0; min-height: 44px; display: flex; flex-direction: column; justify-content: center; padding: 0; border: 0; background: none; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.g-rsvp-strip-txt b { font-size: 15px; font-weight: 700; }
+.g-rsvp-strip-txt span { font-size: 13px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.g-rsvp-strip-txt:hover b { text-decoration: underline; text-underline-offset: 3px; }
+.g-rsvp-strip .g-avs .g-av { border-color: var(--fill); }
 
-/* Itinerary timeline: numbered coral dots on a rail, travel legs on the line */
-.g-tl { position: relative; }
-.g-tl > li { position: relative; display: grid; grid-template-columns: 28px minmax(0, 1fr); column-gap: 12px; }
-.g-tl > li::before { content: ''; position: absolute; left: 13px; top: 0; bottom: 0; width: 2px; background: var(--line); }
-.g-tl > li:first-child::before { top: 18px; }
-.g-tl > li:last-child::before { bottom: calc(100% - 18px); }
-.g-tl > li:only-child::before { display: none; }
-.g-tl > li:not(.g-tl-leg) + li:not(.g-tl-leg) { padding-top: 20px; }
-.g-tl-dot { position: relative; z-index: 1; display: grid; place-items: center; width: 28px; height: 28px; margin-top: 4px; border-radius: 50%; background: var(--tara); color: #ffffff; font: 700 13px/1 var(--font-display); box-shadow: 0 0 0 3px var(--paper); }
-.g-tl-stop { display: flex; gap: 12px; min-width: 0; padding: 4px 0 4px; }
-.g-tl-body { min-width: 0; flex: 1; }
-.g-tl-when { display: flex; align-items: center; gap: 6px; font: 600 12px/1.2 var(--font-body); color: var(--ink-2); min-height: 20px; }
-.g-tl-when b { color: var(--ink); font-weight: 700; }
-.g-tl-name { display: block; margin-top: 2px; color: var(--ink); text-decoration: none; }
-.g-tl-name:hover { text-decoration: underline; text-underline-offset: 3px; }
-.g-tl-note { margin-top: 6px; padding: 8px 10px; border-radius: var(--r-2); background: var(--fill); font-size: 13px; line-height: 1.45; color: var(--ink); }
-.g-tl-thumb { width: 76px; height: 76px; flex: 0 0 auto; border-radius: var(--r-2); overflow: hidden; background: var(--fill); }
-.g-tl-thumb > img, .g-tl-thumb > span { width: 100%; height: 100%; object-fit: cover; }
-.g-tl-tools { display: flex; flex-direction: column; gap: 4px; flex: 0 0 auto; }
-.g-tl-leg { padding: 10px 0; }
-.g-tl-leg-ic { position: relative; z-index: 1; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--surface); color: var(--ink-2); box-shadow: inset 0 0 0 1px var(--line), 0 0 0 3px var(--paper); }
-.g-tl-leg-ic svg { width: 14px; height: 14px; }
-.g-tl-leg-txt { align-self: center; display: flex; flex-wrap: wrap; gap: 4px 8px; font-size: 12px; color: var(--ink-2); }
-.g-tl-leg-txt b { color: var(--ink); font-weight: 600; }
-@media (min-width: 768px) { .g-tl-thumb { width: 96px; height: 96px; } }
+/* ---------- Day cards ---------- */
+.pl-days { display: grid; }
+.pl-day { min-width: 0; }
+.pl-day + .pl-day { margin-top: 20px; }
+.pl-day-when { display: flex; align-items: baseline; gap: 8px; min-height: 22px; margin-bottom: 8px; }
+.pl-day-when time, .pl-day-when b { font: 600 17px/1.2 var(--font-display); letter-spacing: -0.01em; color: var(--ink); }
+.pl-day-when span { font-size: 13px; color: var(--ink-2); }
+.pl-day-row { display: grid; grid-template-columns: 88px minmax(0, 1fr) auto; gap: 14px; align-items: start; }
+.pl-day-photo { position: relative; width: 88px; height: 88px; border-radius: var(--r-2); overflow: hidden; background: var(--fill); }
+.pl-day-photo > img, .pl-day-photo > span:not(.pl-day-n) { width: 100%; height: 100%; object-fit: cover; }
+.pl-day-n { position: absolute; left: 6px; top: 6px; display: grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: var(--r-pill); background: #ffffff; color: #111111; font: 700 12px/1 var(--font-body); }
+.pl-day-name { display: block; color: var(--ink); font: 700 16px/1.3 var(--font-body); text-decoration: none; }
+.pl-day-name:hover { text-decoration: underline; text-underline-offset: 3px; }
+.pl-day-meta { margin-top: 2px; font-size: 13px; color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pl-day-note { margin-top: 6px; font-size: 14px; line-height: 1.5; color: var(--ink); }
+.pl-day-tools { display: flex; flex-direction: column; gap: 4px; }
+.pl-day-leg { display: flex; align-items: center; gap: 8px; margin: 12px 0 0 43px; padding: 6px 0 6px 31px; border-left: 1px dashed #cfcfcf; font-size: 13px; color: var(--ink-2); }
+.pl-day-leg svg { width: 16px; height: 16px; flex: 0 0 auto; color: var(--ink); }
+.pl-day-leg b { color: var(--ink); font-weight: 600; }
+@media (min-width: 768px) {
+  .pl-day-row { grid-template-columns: 112px minmax(0, 1fr) auto; gap: 18px; }
+  .pl-day-photo { width: 112px; height: 112px; }
+  .pl-day-leg { margin-left: 55px; }
+  .pl-day + .pl-day { margin-top: 24px; }
+}
 
-/* Plan page split view: itinerary left, sticky map right (Wanderlog) */
+/* ---------- Stat row (hairlines, serif numbers): budget split and plan facts ---------- */
+.g-tstats { display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); padding: 14px 0; border-block: 1px solid var(--line); text-align: center; }
+.g-tstat { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-width: 0; min-height: 56px; padding: 0 6px; color: var(--ink); }
+.g-tstat + .g-tstat { border-left: 1px solid var(--line); }
+.g-tstat b { font: 600 22px/1.1 var(--font-display); letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.g-tstat span { font-size: 12px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+@media (min-width: 768px) { .g-tstat b { font-size: 26px; } .g-tstat span { font-size: 13px; } }
+button.g-tstats { width: 100%; background: none; border-inline: 0; font: inherit; cursor: pointer; }
+button.g-tstats:hover b { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+button.g-tstats:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: var(--r-1); }
+
+/* ---------- Share as a story card ---------- */
+.g-story { display: flex; align-items: center; gap: 14px; }
+.g-story-mock { position: relative; width: 64px; height: 110px; flex: 0 0 auto; border-radius: 10px; overflow: hidden; background: #111111; }
+.g-story-mock > img, .g-story-mock > span:first-child { width: 100%; height: 100%; object-fit: cover; }
+.g-story-mock::after { content: ''; position: absolute; inset: 0; background: linear-gradient(transparent 45%, rgba(0, 0, 0, 0.75)); }
+.g-story-mock b { position: absolute; left: 5px; right: 5px; bottom: 6px; z-index: 1; color: #ffffff; font: 600 10px/1.1 var(--font-display); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.g-story-t { font-size: 15px; font-weight: 700; }
+.g-story-s { margin: 2px 0 10px; font-size: 13px; color: var(--ink-2); }
+
+/* ---------- Plan page split view: itinerary left, sticky map right ---------- */
 .g-plan-split { display: grid; gap: 24px; align-items: start; }
 @media (min-width: 1024px) {
   .g-plan-split.has-map { grid-template-columns: minmax(0, 1fr) minmax(0, 0.85fr); gap: 40px; }
@@ -75,27 +105,35 @@ button.g-tstat:hover { background: var(--fill); }
   .g-plan-map .g-map { height: calc(100vh - 128px); min-height: 420px; border-radius: var(--r-4); }
 }
 
-/* Tara chat (Plan with AI) */
+/* ---------- Tara chat (Plan with AI) ---------- */
 .g-chat-me { display: flex; justify-content: flex-end; }
-.g-chat-me > div { max-width: 86%; display: flex; align-items: flex-start; gap: 4px; padding: 10px 6px 10px 16px; border-radius: var(--r-3) var(--r-3) 6px var(--r-3); background: var(--ink); color: var(--on-ink); }
+.g-chat-me > div { max-width: 86%; display: flex; align-items: flex-start; gap: 4px; padding: 10px 6px 10px 16px; border-radius: var(--r-3) var(--r-3) 6px var(--r-3); background: var(--fill); color: var(--ink); }
 .g-chat-me p { padding-block: 4px; font: 500 15px/1.45 var(--font-body); overflow-wrap: anywhere; }
-.g-chat-me .g-btn { color: var(--on-ink); }
 .g-chat-tara { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 10px; align-items: start; }
-.g-chat-av { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--tara); color: #ffffff; }
+.g-chat-av { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: #111111; color: #34e0a1; }
 .g-chat-av svg { width: 16px; height: 16px; }
-.g-chat-say { padding-top: 6px; font-size: 15px; line-height: 1.45; }
+.g-chat-say { padding-top: 6px; font-size: 15px; line-height: 1.5; }
 .g-typing { display: inline-flex; gap: 4px; padding: 12px 14px; border-radius: 6px var(--r-3) var(--r-3) var(--r-3); background: var(--fill); }
 .g-typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-3); animation: g-typing 1s infinite ease-in-out; }
 .g-typing i:nth-child(2) { animation-delay: 0.15s; }
 .g-typing i:nth-child(3) { animation-delay: 0.3s; }
 @keyframes g-typing { 0%, 80%, 100% { opacity: 0.3; transform: none; } 40% { opacity: 1; transform: translateY(-3px); } }
+.g-ai.is-plan { border-color: #cfcfcf; border-radius: var(--r-4); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06); }
+.g-ai.is-plan textarea { font: 400 16px/1.5 var(--font-body); }
+.g-ai.is-plan textarea::placeholder { color: var(--ink-2); }
+.g-ai.is-plan:focus-within { border-color: var(--ink); }
+.g-date-chip { position: relative; display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 14px; border-radius: var(--r-pill); background: var(--fill); color: var(--ink); font: 600 13px/1 var(--font-body); cursor: pointer; }
+.g-date-chip::after { content: ''; position: absolute; inset: -4px 0; }
+.g-date-chip svg { width: 16px; height: 16px; }
+.g-date-chip:hover { background: var(--fill-2); }
+.g-date-chip:focus-within { outline: 2px solid var(--ink); outline-offset: 2px; }
 .g-sugg { display: flex; flex-wrap: wrap; gap: 8px; }
-.g-sugg button { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 14px; border-radius: var(--r-pill); border: 1px solid var(--line); background: var(--surface); color: var(--ink); font: 500 14px/1.2 var(--font-body); text-align: left; cursor: pointer; }
-.g-sugg button:hover { border-color: var(--ink); }
-.g-sugg svg { width: 18px; height: 18px; flex: 0 0 auto; color: var(--tara-ink); }
-.g-sticky-bar { position: fixed; inset-inline: 0; z-index: 5500; bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px)); padding: 10px 16px; background: var(--surface); border-top: 1px solid var(--line-2); box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.06); }
+.g-sugg button { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 16px; border-radius: var(--r-pill); border: 0; background: var(--fill); color: var(--ink); font: 500 14px/1.2 var(--font-body); text-align: left; cursor: pointer; }
+.g-sugg button:hover { background: var(--fill-2); }
+.g-sugg svg { width: 18px; height: 18px; flex: 0 0 auto; color: var(--ink); }
+.g-sticky-bar { position: fixed; inset-inline: 0; z-index: 5500; bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px)); padding: 10px 16px; background: var(--surface); border-top: 1px solid var(--line); }
 @media (min-width: 1024px) {
-  .g-sticky-bar.is-inline { position: sticky; bottom: 16px; margin-top: 16px; border: 1px solid var(--line-2); border-radius: var(--r-pill); padding: 8px; box-shadow: var(--sh-2); }
+  .g-sticky-bar.is-inline { position: sticky; bottom: 16px; margin-top: 16px; border: 1px solid var(--line); border-radius: var(--r-pill); padding: 8px; box-shadow: var(--sh-2); }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -26,8 +26,8 @@ function AskAiOverviewPage() {
         {tools.map(({ href, title, description, icon: Icon, tint }) => (
           <InternalLink key={href} href={href} className="m-ctile">
             <span className="flex items-start justify-between">
-              <span className="m-ctile-ic" style={{ background: `var(--${tint}-soft)`, color: tint === 'tara' ? 'var(--tara-ink)' : `var(--${tint})` }} aria-hidden="true">
-                <Icon weight="duotone" />
+              <span className="m-ctile-ic" data-tint={tint} aria-hidden="true">
+                <Icon weight="light" />
               </span>
               <ChevronRight className="g-ic g-fnt" aria-hidden="true" />
             </span>

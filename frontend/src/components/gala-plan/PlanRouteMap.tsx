@@ -18,7 +18,7 @@ export function useIsDesktop() {
   return useSyncExternalStore(subscribeDesktop, () => window.matchMedia(DESKTOP_QUERY).matches, () => false)
 }
 
-/** Numbered photo pins joined by the coral route on the full-colour map. Returns null when no stop has coordinates. */
+/** Numbered photo pins joined by the route line on the full-colour map. Returns null when no stop has coordinates. */
 function PlanRouteMap({ stops, className, tall, label = 'Route map' }: { stops: TimelineStop[]; className?: string; tall?: boolean; label?: string }) {
   const points = useMemo<MapPoint[]>(
     () =>

@@ -3,11 +3,12 @@ import type { Session } from '@supabase/supabase-js'
 import { Check } from '@phosphor-icons/react/dist/csr/Check'
 import { Minus } from '@phosphor-icons/react/dist/csr/Minus'
 import { Plus } from '@phosphor-icons/react/dist/csr/Plus'
-import { Avatar, Button, Empty, KeyValue, Panel, SectionHead, Stats, Tag, cx } from '../ui'
+import { Avatar, Button, Empty, KeyValue, Panel, SectionHead, Tag, cx } from '../ui'
 import { personAvatar, personName } from './BarkadaPanel'
 import { setGalaPlanMemberPaid, type GalaPlanBarkada } from '../../utils/galaPlanBarkadaApi'
 import type { GalaPlanDetail } from '../../utils/galaPlansApi'
 import { estimatePerHead, formatPeso, getPlanLegs } from '../../utils/galaPlanTrip'
+import '../../design/plans.css'
 
 type BudgetPanelProps = {
   plan: GalaPlanDetail
@@ -37,13 +38,18 @@ function BudgetPanel({ plan, barkada, session, onBarkadaChange }: BudgetPanelPro
 
   return (
     <div>
-      <Stats
-        items={[
-          { value: formatPeso(perHead * groupSize), label: 'est. total' },
-          { value: formatPeso(perHead), label: 'each' },
-          goingMembers.length > 1 && perHead > 0 ? { value: unpaid, label: 'unsettled' } : { value: groupSize, label: groupSize === 1 ? 'person' : 'people' },
-        ]}
-      />
+      <div className="g-tstats">
+        {[
+          { value: formatPeso(perHead), label: 'per head' },
+          { value: formatPeso(perHead * groupSize), label: 'group total' },
+          goingMembers.length > 1 && perHead > 0 ? { value: `${goingMembers.length - unpaid}/${goingMembers.length}`, label: 'paid' } : { value: groupSize, label: groupSize === 1 ? 'person' : 'people' },
+        ].map((cell) => (
+          <div key={cell.label} className="g-tstat">
+            <b>{cell.value}</b>
+            <span>{cell.label}</span>
+          </div>
+        ))}
+      </div>
 
       {goingMembers.length <= 1 ? (
         <div className="mt-4 flex items-center gap-3">
