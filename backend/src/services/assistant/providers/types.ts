@@ -25,6 +25,8 @@ export type ModelRequest = {
   temperature: number;
   /** "required" makes the model call a tool (first step of a clear gala ask), so answers are always grounded. */
   toolChoice?: "auto" | "required";
+  /** The search already ran and its results are in the prompt: the model only ranks and phrases, so it can skip deep thinking. */
+  grounded?: boolean;
   signal?: AbortSignal;
   requestId: string;
 };

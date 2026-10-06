@@ -1,4 +1,5 @@
 import { detectLanguage } from "../language";
+import { readGroundedResults } from "../prompt";
 import { queryTokens } from "../tools";
 import type { AssistantModelProvider, ModelRequest, ModelStep, ToolCall } from "./types";
 
@@ -39,8 +40,11 @@ export class MockProvider implements AssistantModelProvider {
   }
 
   async step(request: ModelRequest, onDelta?: (text: string) => void): Promise<ModelStep> {
-    const message = lastUserText(request);
-    const index = stepIndex(request);
+    const turnText = lastUserText(request);
+    const grounded = readGroundedResults(turnText);
+    const message = grounded ? turnText.split("\n\n<galatayo_results>")[0] : turnText;
+    // On the fast path the search already ran, so a recording skips straight to its answer.
+    const index = grounded ? Number.MAX_SAFE_INTEGER : stepIndex(request);
     const recording = this.recordings.get(key(message));
     if (recording) {
       const turn = recording.steps[Math.min(index, recording.steps.length - 1)];
@@ -49,10 +53,10 @@ export class MockProvider implements AssistantModelProvider {
       emitText(turn.text ?? "", onDelta);
       return { text: turn.text ?? "", toolCalls: [], model: "recorded" };
     }
-    return this.ruleBased(request, message, index, onDelta);
+    return this.ruleBased(request, message, index, grounded, onDelta);
   }
 
-  private ruleBased(request: ModelRequest, message: string, index: number, onDelta?: (text: string) => void): ModelStep {
+  private ruleBased(request: ModelRequest, message: string, index: number, grounded: Record<string, unknown> | null, onDelta?: (text: string) => void): ModelStep {
     if (index === 0 && request.tools.length) {
       // Like a model would: reuse what the chat remembers (area, budget, indoor, the topic for "mas mura?").
       const remembered = request.system.match(/Remembered from this chat: ([^\n]*)/)?.[1] ?? "";
@@ -67,8 +71,10 @@ export class MockProvider implements AssistantModelProvider {
       };
       return { text: "", toolCalls: [{ id: "mock-0", name: "search_places", args }], model: "rule-based" };
     }
+    type Found = { places?: Array<{ name: string; about: string | null }>; stops?: Array<{ name: string; about: string | null }> };
     const results = [...request.turns].reverse().find((turn) => turn.role === "tool");
-    const found = results?.role === "tool" ? ((results.results[0]?.result as { places?: Array<{ name: string; about: string | null }> })?.places ?? []) : [];
+    const toolResults = grounded ? Object.values(grounded) : results?.role === "tool" ? results.results.map((entry) => entry.result) : [];
+    const found = toolResults.flatMap((result) => (result as Found)?.places ?? (result as Found)?.stops ?? []);
     const taglish = detectLanguage(message) === "taglish" || /natural Taglish/.test(request.system);
     const picks = found.slice(0, 3);
     const text = picks.length

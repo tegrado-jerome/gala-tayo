@@ -8,6 +8,8 @@ import { ProviderError, type AssistantModelProvider, type ModelRequest, type Mod
 const DEFAULT_MODELS = ["gemini-3.8-flash", "gemini-3.1-flash-lite", "gemini-2.5-flash-lite"];
 const COOLDOWN_MS = 60_000;
 const FIRST_CHUNK_TIMEOUT_MS = 9_000;
+// Phrasing results already in the prompt normally starts within about a second; slower means overloaded, so move on.
+const GROUNDED_FIRST_CHUNK_TIMEOUT_MS = 5_000;
 const STEP_TIMEOUT_MS = 20_000;
 
 const cooldowns = new Map<string, number>();
@@ -39,9 +41,13 @@ function statusOf(error: unknown): number {
   return match ? Number(match[1]) : 500;
 }
 
-function thinkingFor(model: string) {
-  // Tool picking and short answers don't need long thinking; it costs seconds before the first token.
-  return model.startsWith("gemini-2.5") ? { thinkingBudget: 0 } : { thinkingLevel: ThinkingLevel.LOW };
+// Models that answered 400 to minimal thinking; they get low thinking from then on.
+const noMinimalThinking = new Set<string>();
+
+/** Tool picking needs a little thinking; phrasing results already in the prompt needs almost none (it costs seconds before the first token). */
+export function thinkingFor(model: string, grounded = false) {
+  if (model.startsWith("gemini-2.5")) return { thinkingBudget: 0 };
+  return { thinkingLevel: grounded && !noMinimalThinking.has(model) ? ThinkingLevel.MINIMAL : ThinkingLevel.LOW };
 }
 
 export class GeminiProvider implements AssistantModelProvider {
@@ -69,19 +75,28 @@ export class GeminiProvider implements AssistantModelProvider {
     let lastError: ProviderError | null = null;
 
     for (const model of models.length ? models : this.models.slice(0, 1)) {
-      let emitted = false;
-      try {
-        return await this.stepWithModel(ai, model, request, (text) => {
-          emitted = true;
-          onDelta?.(text);
-        });
-      } catch (error) {
-        if (request.signal?.aborted) throw error;
-        const status = statusOf(error);
-        if (status === 429) cooldowns.set(model, Date.now() + COOLDOWN_MS);
-        lastError = new ProviderError(this.id, status, `${model}: ${error instanceof Error ? error.message : String(error)}`, status === 429 || status >= 500 || status === 404);
-        // Text already shown can't be taken back by a second model; let the caller fall back instead.
-        if (emitted || !lastError.retryable) throw lastError;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        let emitted = false;
+        const minimal = Boolean(request.grounded) && !model.startsWith("gemini-2.5") && !noMinimalThinking.has(model);
+        try {
+          return await this.stepWithModel(ai, model, request, (text) => {
+            emitted = true;
+            onDelta?.(text);
+          });
+        } catch (error) {
+          if (request.signal?.aborted) throw error;
+          const status = statusOf(error);
+          // A model that doesn't take minimal thinking answers 400: retry it once with low thinking.
+          if (status === 400 && minimal && !emitted) {
+            noMinimalThinking.add(model);
+            continue;
+          }
+          if (status === 429) cooldowns.set(model, Date.now() + COOLDOWN_MS);
+          lastError = new ProviderError(this.id, status, `${model}: ${error instanceof Error ? error.message : String(error)}`, status === 429 || status >= 500 || status === 404);
+          // Text already shown can't be taken back by a second model; let the caller fall back instead.
+          if (emitted || !lastError.retryable) throw lastError;
+          break;
+        }
       }
     }
     throw lastError ?? new ProviderError(this.id, 503, "No Gemini model available");
@@ -90,7 +105,7 @@ export class GeminiProvider implements AssistantModelProvider {
   private async stepWithModel(ai: GoogleGenAI, model: string, request: ModelRequest, onDelta: (text: string) => void): Promise<ModelStep> {
     const timeout = AbortSignal.timeout(STEP_TIMEOUT_MS);
     const firstChunk = new AbortController();
-    const firstChunkTimer = setTimeout(() => firstChunk.abort(), FIRST_CHUNK_TIMEOUT_MS);
+    const firstChunkTimer = setTimeout(() => firstChunk.abort(), request.grounded ? GROUNDED_FIRST_CHUNK_TIMEOUT_MS : FIRST_CHUNK_TIMEOUT_MS);
     const signal = buildAbortSignal([timeout, firstChunk.signal, request.signal]);
     try {
       const stream = await ai.models.generateContentStream({
@@ -100,7 +115,7 @@ export class GeminiProvider implements AssistantModelProvider {
           systemInstruction: request.system,
           temperature: request.temperature,
           maxOutputTokens: request.maxOutputTokens,
-          thinkingConfig: thinkingFor(model),
+          thinkingConfig: thinkingFor(model, request.grounded),
           tools: request.tools.length ? [{ functionDeclarations: request.tools.map((tool) => ({ name: tool.name, description: tool.description, parametersJsonSchema: tool.parameters })) }] : undefined,
           toolConfig: request.tools.length && request.toolChoice === "required" ? { functionCallingConfig: { mode: FunctionCallingConfigMode.ANY } } : undefined,
           abortSignal: signal,
