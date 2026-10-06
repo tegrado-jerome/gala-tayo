@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { CaretRight as ChevronRight } from '@phosphor-icons/react/dist/csr/CaretRight'
-import { CaretDown } from '@phosphor-icons/react/dist/csr/CaretDown'
 import { CalendarCheck } from '@phosphor-icons/react/dist/csr/CalendarCheck'
 import { ListNumbers } from '@phosphor-icons/react/dist/csr/ListNumbers'
 import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
@@ -13,6 +12,8 @@ import { useGuestAuthPrompt } from '../components/GuestAuthPrompt'
 import { Button, Empty, Page, Row, SectionHead } from '../components/ui'
 import '../design/misc.css'
 import SeoHead from '../components/SeoHead'
+import { FaqList, QuickAnswer } from '../components/QuickAnswer'
+import { describeBestFor, describeBudgetRange, faqJsonLd } from '../utils/seoAnswers'
 import { fetchPlaceDetailsBatch } from '../utils/placeDetailCache'
 import { getAreaLabelBySlug } from '../data/destinations'
 import { getPlaceCategoryLabel } from '../data/placeCategories'
@@ -20,24 +21,8 @@ import { getSiteOrigin } from '../utils/seo'
 import { getSeoListingPage, mapSeoPlaceToCard, type SeoPlaceSummary } from '../utils/seoApi'
 import { BRAND_NAME, MIN_INDEXABLE_GUIDE_PLACES, PRODUCT_NAME, buildLandingMetadata, getGuideAreaHub, getGuideOgImagePath, getGuideSubtitle, getLandingTargetBySlug, getRelatedLandingTargets, type SeoLandingTarget } from '../utils/seoLandingPages'
 import { shareLink } from '../utils/share'
-import { formatPeso } from '../utils/galaPlanTrip'
 import type { PlaceDetail } from '../types/appTypes'
 import { heroSrcSet, resizedMediaUrl } from '../data/r2Config'
-
-function LandingFaqJsonLd({ faqs }: { faqs: Array<{ question: string; answer: string }> }) {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: faqs.map((faq) => ({
-      '@type': 'Question',
-      name: faq.question,
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: faq.answer,
-      },
-    })),
-  }
-}
 
 function GuideLinks({ heading, targets }: { heading: string; targets: SeoLandingTarget[] }) {
   return (
@@ -174,10 +159,7 @@ export default function SeoLandingPage({
           ? `/places/${target.areaSlug}`
           : null
   const isThin = !isLoading && !errorMessage && total < MIN_INDEXABLE_GUIDE_PLACES
-  const budgets = items.map((item) => item.budgetMin).filter((value): value is number => typeof value === 'number' && value > 0)
-  const minBudget = budgets.length ? Math.min(...budgets) : 0
-  const maxBudget = budgets.length ? Math.max(...budgets) : 0
-  const budgetRange = !budgets.length ? 'Varies per place' : minBudget === maxBudget ? `${formatPeso(minBudget)} per head` : `${formatPeso(minBudget)} to ${formatPeso(maxBudget)} per head`
+  const budgetRange = describeBudgetRange(items.map((item) => item.budgetMin))
   const latestUpdate = items.map((item) => item.updatedAt).filter((value): value is string => Boolean(value)).sort().at(-1)
   const listHeading = items.length ? `Top ${items.length} ${metadata.h1.replace(/^best\s+/i, '')}` : 'Top picks'
   const topNames = items.slice(0, 3).map((item) => item.name)
@@ -186,7 +168,7 @@ export default function SeoLandingPage({
     ...(topNames.length >= 3
       ? [{ question: `What are the top picks for ${metadata.h1}?`, answer: `${topNames[0]}, ${topNames[1]} and ${topNames[2]} lead this guide. All ${total} places are ranked on this page, best first.` }]
       : []),
-    ...(budgets.length ? [{ question: `How much should I budget?`, answer: `Starting budgets for the top picks run ${budgetRange}. Each place page breaks down what the money covers.` }] : []),
+    ...(budgetRange ? [{ question: `How much should I budget?`, answer: budgetRange === 'Free' ? 'The top picks are free to enter. Budget only for food and the commute.' : `Starting budgets for the top picks run ${budgetRange}. Each place page breaks down what the money covers.` }] : []),
     ...metadata.faqs,
   ]
   const updatedLabel = latestUpdate ? new Date(latestUpdate).toLocaleDateString('en-PH', { month: 'long', year: 'numeric' }) : null
@@ -232,7 +214,7 @@ export default function SeoLandingPage({
         { '@type': 'ListItem', position: 3, name: metadata.h1, item: pageUrl },
       ],
     },
-    ...(isLoading || errorMessage ? [] : [LandingFaqJsonLd({ faqs })]),
+    ...(isLoading || errorMessage ? [] : [faqJsonLd(faqs)]),
   ]
   const shareGuide = async () => {
     try {
@@ -250,7 +232,7 @@ export default function SeoLandingPage({
     { icon: MapPin, label: areaName },
     { icon: CategoryIcon, label: categoryLabel || 'Mixed discovery' },
     isLoading ? null : { icon: ListNumbers, label: `${total} ${total === 1 ? 'place' : 'places'}` },
-    isLoading ? null : { icon: Wallet, label: budgets.length ? budgetRange : 'Budget varies' },
+    isLoading ? null : { icon: Wallet, label: budgetRange ?? 'Budget varies' },
     updatedLabel ? { icon: CalendarCheck, label: `Updated ${updatedLabel}` } : null,
   ].filter((fact): fact is { icon: typeof MapPin; label: string } => Boolean(fact))
 
@@ -274,6 +256,16 @@ export default function SeoLandingPage({
           <h1 className="g-h1 mt-1.5 md:text-[40px]">{metadata.h1}</h1>
           <p className="g-mut mt-3 text-[16px] leading-relaxed">{metadata.intro}</p>
         </header>
+
+        {!isLoading && !errorMessage && items.length ? (
+          <QuickAnswer
+            rows={[
+              { label: 'Best for', value: target.quickAnswer?.bestFor ?? describeBestFor(items.map((item) => item.goodFor)) },
+              { label: 'Budget', value: target.quickAnswer?.cost ?? (budgetRange ? `${budgetRange}, starting prices before transport` : null) },
+              { label: 'Getting there', value: target.quickAnswer?.gettingThere },
+            ]}
+          />
+        ) : null}
 
         <ul className="m-facts" aria-label="Guide facts">
           {facts.map(({ icon: Icon, label }) => (
@@ -355,17 +347,7 @@ export default function SeoLandingPage({
             <h2 id="guide-faq-title" className="g-h2">
               Good to know
             </h2>
-            <div className="m-faq mt-4">
-              {faqs.map((faq, index) => (
-                <details key={faq.question} open={index === 0}>
-                  <summary>
-                    {faq.question}
-                    <CaretDown aria-hidden="true" />
-                  </summary>
-                  <p>{faq.answer}</p>
-                </details>
-              ))}
-            </div>
+            <FaqList faqs={faqs} />
           </section>
 
           <aside aria-labelledby="guide-related-title" className="g-side">

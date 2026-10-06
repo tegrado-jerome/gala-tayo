@@ -86,6 +86,12 @@ jobs:
         env:
           VITE_SITE_URL: "https://galatayo.app"
         run: npm run seo:check
+      # Compares dist/ with the live site before it is replaced, so only new or changed pages go to IndexNow.
+      - name: Find changed pages for IndexNow
+        if: github.event_name != 'pull_request'
+        continue-on-error: true
+        working-directory: frontend
+        run: node scripts/seo/indexnow.mjs --prepare
       - name: Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
@@ -97,22 +103,13 @@ jobs:
           api_location: ""
           output_location: ""
           skip_app_build: true
-      # Tell IndexNow engines (Bing, Yandex, Seznam, Naver) which pages exist so
-      # changes are recrawled quickly. Google reads the sitemap on its own.
+      # Tell IndexNow engines (Bing, Yandex, Seznam, Naver) which pages are new or changed so
+      # they are recrawled quickly. Google reads the sitemap on its own.
       - name: Notify IndexNow
         if: github.event_name != 'pull_request'
         continue-on-error: true
         working-directory: frontend
-        run: |
-          node -e "
-            const fs = require('fs');
-            const urls = [...fs.readFileSync('dist/sitemap.xml', 'utf8').matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1].trim()).slice(0, 10000);
-            fetch('https://api.indexnow.org/indexnow', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json; charset=utf-8' },
-              body: JSON.stringify({ host: 'galatayo.app', key: '70c28379c852580de89d3033d9fe287a', keyLocation: 'https://galatayo.app/70c28379c852580de89d3033d9fe287a.txt', urlList: urls }),
-            }).then((r) => console.log('IndexNow', r.status, urls.length, 'urls'));
-          "
+        run: node scripts/seo/indexnow.mjs --submit
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
