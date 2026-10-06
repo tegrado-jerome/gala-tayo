@@ -243,7 +243,7 @@ function useKnownUserLocation() {
   return location
 }
 
-function ReadMoreText({ text }: { text: string }) {
+function ReadMoreText({ text, extra }: { text: string; extra?: ReactNode }) {
   const textRef = useRef<HTMLParagraphElement | null>(null)
   const [isExpanded, setIsExpanded] = useState(false)
   const [isClamped, setIsClamped] = useState(false)
@@ -261,11 +261,14 @@ function ReadMoreText({ text }: { text: string }) {
       <p ref={textRef} className={cx('pd-prose', !isExpanded && 'line-clamp-3')}>
         {text}
       </p>
-      {isClamped || isExpanded ? (
-        <button type="button" className="pd-more" aria-expanded={isExpanded} onClick={() => setIsExpanded((value) => !value)}>
-          {isExpanded ? 'Show less' : 'Read more'}
-        </button>
-      ) : null}
+      <div className="pd-about-actions">
+        {isClamped || isExpanded ? (
+          <button type="button" className="pd-more" aria-expanded={isExpanded} onClick={() => setIsExpanded((value) => !value)}>
+            {isExpanded ? 'Show less' : 'Read more'}
+          </button>
+        ) : null}
+        {extra}
+      </div>
     </>
   )
 }
@@ -1722,7 +1725,11 @@ function PlaceDetailView({
   }
   const quickTake = cleanString(place.description) || cleanString(place.reason)
   const commuteText = cleanString(place.commute_access)
-  const visibleCommentCount = countThreadComments(comments)
+  // Team posts are editor's notes, not visitor reviews: shown on their own and never counted as tips.
+  const isTeamNote = (comment: PlaceComment) => TEAM_COMMENT_PREFIX.test(comment.comment)
+  const teamNotes = comments.filter((comment) => !isCommentDeleted(comment) && isTeamNote(comment))
+  const memberComments = comments.filter((comment) => !isTeamNote(comment))
+  const visibleCommentCount = countThreadComments(memberComments)
   const closePlaceConcern = () => {
     if (!isPlaceConcernSubmitting) {
       setIsPlaceConcernOpen(false)
@@ -2274,7 +2281,7 @@ function PlaceDetailView({
       ) : visibleCommentCount === 0 ? (
         <p className="g-sm g-mut">Be the first to share something about this place.</p>
       ) : (
-        <ul className="pd-reviews">{comments.map((comment) => renderComment(comment))}</ul>
+        <ul className="pd-reviews">{memberComments.map((comment) => renderComment(comment))}</ul>
       )}
     </>
   )
@@ -2376,11 +2383,15 @@ function PlaceDetailView({
             {quickTake ? (
               <div className="pd-sec is-first">
                 <h2 className="pd-sec-title">About</h2>
-                <ReadMoreText text={quickTake} />
-                <button type="button" className="pd-ask" onClick={() => openFloatingChat(askAiQuestion)}>
-                  <Sparkles weight="light" aria-hidden="true" />
-                  Ask AI about this place
-                </button>
+                <ReadMoreText
+                  text={quickTake}
+                  extra={
+                    <button type="button" className="pd-ask" onClick={() => openFloatingChat(askAiQuestion)}>
+                      <Sparkles weight="light" aria-hidden="true" />
+                      Ask AI about this place
+                    </button>
+                  }
+                />
               </div>
             ) : null}
 
@@ -2477,6 +2488,17 @@ function PlaceDetailView({
               Get directions
             </Button>
           </section>
+
+          {teamNotes.length > 0 ? (
+            <aside className="pd-sec pd-team-note" aria-labelledby="place-team-note">
+              <p className="g-kicker">From the GalaTayo team</p>
+              <h2 id="place-team-note" className="pd-sec-title">Editor’s note</h2>
+              {teamNotes.slice(0, 1).map((note) => (
+                <p key={note.id} className="pd-prose">{note.comment.replace(TEAM_COMMENT_PREFIX, '')}</p>
+              ))}
+              <p className="g-xs g-mut mt-2">Written by our team to help you plan. Not a visitor review.</p>
+            </aside>
+          ) : null}
 
           <section id="reviews" className="pd-sec pd-anchor" aria-labelledby="place-reviews">
             <h2 id="place-reviews" className="pd-sec-title">
