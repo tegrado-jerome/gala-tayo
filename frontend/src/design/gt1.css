@@ -679,3 +679,16 @@ body.has-action-bar .g-page { padding-bottom: calc(96px + env(safe-area-inset-bo
 .g-weekday-item b + span svg { width: 14px; height: 14px; color: var(--warn); }
 .g-suggest-ic { overflow: hidden; }
 .g-suggest-ic img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Home hero: one column on phones; on wide screens the copy + search sit beside a 3-photo collage. */
+.g-hero-collage { display: none; }
+@media (min-width: 1024px) {
+  .g-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr); gap: 48px; align-items: center; margin-bottom: 8px; }
+  .g-hero-main { min-width: 0; }
+  .g-hero-collage { display: grid; grid-template-columns: 1.15fr 1fr; grid-template-rows: 1fr 1fr; gap: 12px; height: 380px; }
+  .g-hero-collage figure { position: relative; margin: 0; overflow: hidden; border-radius: var(--r-3); background: var(--fill); }
+  .g-hero-collage figure:first-child { grid-row: span 2; }
+  .g-hero-collage img { width: 100%; height: 100%; object-fit: cover; }
+  .g-hero-collage figcaption { position: absolute; left: 10px; bottom: 10px; padding: 4px 10px; border-radius: var(--r-pill); background: rgb(0 0 0 / 0.55); color: #fff; font: 600 12px/1.2 var(--font-body); }
+}
+.g-head-search.g-head-search-chat { flex: 0 0 auto; max-width: none; border: 0; box-shadow: none; background: transparent; }
