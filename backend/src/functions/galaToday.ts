@@ -190,17 +190,20 @@ export async function generateGalaTodayPost(context: InvocationContext, now = ne
   // 6. Draft → rules → editor. Publish only when the editor scores every line 8+; else redraft with its notes.
   let editorNotes: string | null = null;
   let lastReason = "no draft";
+  const attempts: string[] = [];
   for (let attempt = 0; attempt < MAX_DRAFTS; attempt += 1) {
     const { system, user } = buildPrompt({ date, topic, format, places, areaName, weather: weather?.line ?? null, day: dayContext(manilaNow, holiday), budget, editorNotes });
     const { text: raw, model } = await writeGalaTodayDraft(system, user, `gala-today-${date}-${attempt}`, (message) => context.warn(message));
     const parsed = extractJsonObject(raw);
     if (!parsed) {
       lastReason = "unparseable";
+      attempts.push(`${model}: unparseable`);
       continue;
     }
     const result = validateDraft(parsed, { topic, format, places, areaName, weather: weather?.line ?? null, budget, date, now, takenSlugs });
     if ("reason" in result) {
       lastReason = result.reason;
+      attempts.push(`${model}: rules: ${result.reason}`);
       editorNotes = `The last draft was rejected by the rules: ${result.reason}.`;
       context.log(`Gala Today draft ${attempt + 1} (${model}) rejected: ${result.reason}`);
       continue;
@@ -210,6 +213,7 @@ export async function generateGalaTodayPost(context: InvocationContext, now = ne
     context.log(`Gala Today draft ${attempt + 1} (${model}) editor: ${JSON.stringify(review.scores)} ${review.fix}`);
     if (!review.pass || !review.scores) {
       lastReason = `editor: ${JSON.stringify(review.scores)}`;
+      attempts.push(`${model}: ${lastReason}`);
       editorNotes = review.fix || "Make it funnier and clearer.";
       continue;
     }
@@ -217,12 +221,26 @@ export async function generateGalaTodayPost(context: InvocationContext, now = ne
     await setJsonCacheValue(POSTS_KEY, [post, ...posts].slice(0, MAX_POSTS));
     return post;
   }
-  return `skipped: ${lastReason}`;
+  return `skipped: ${lastReason}${attempts.length ? ` [${attempts.join(" | ")}]` : ""}`;
+}
+
+// The last run's outcome, so a skipped day can be diagnosed without server logs (no secrets, just reasons).
+const LAST_RUN_KEY = "gala-today:last-run";
+async function generateAndRecord(context: InvocationContext, trigger: string): Promise<GalaTodayPost | string | null> {
+  let outcome: GalaTodayPost | string | null;
+  try {
+    outcome = await withGenerateLock(() => generateGalaTodayPost(context));
+  } catch (error) {
+    outcome = `error: ${error instanceof Error ? error.message.slice(0, 200) : "unknown"}`;
+  }
+  const summary = outcome === null ? "another run holds the lock" : typeof outcome === "string" ? outcome : `posted ${outcome.slug}`;
+  if (outcome !== null) await setJsonCacheValue(LAST_RUN_KEY, { at: new Date().toISOString(), trigger, result: summary.slice(0, 900) });
+  return outcome;
 }
 
 async function galaTodayTimer(_timer: Timer, context: InvocationContext): Promise<void> {
   try {
-    const result = (await withGenerateLock(() => generateGalaTodayPost(context))) ?? "another run holds the lock";
+    const result = (await generateAndRecord(context, "timer")) ?? "another run holds the lock";
     context.log(typeof result === "string" ? `Gala Today: ${result}` : `Gala Today posted: ${result.slug}`);
   } catch (error) {
     context.error("Gala Today failed", error);
@@ -251,13 +269,15 @@ async function galaTodayList(request: HttpRequest, context: InvocationContext): 
   const manilaNow = new Date(Date.now() + 8 * 3600_000);
   const today = manilaNow.toISOString().slice(0, 10);
   if (GALA_TODAY_ENABLED && manilaNow.getUTCHours() >= 6 && !posts.some((post) => post.date === today)) {
-    const result = await withGenerateLock(() => generateGalaTodayPost(context));
+    const result = await generateAndRecord(context, "catch-up");
     if (result && typeof result !== "string") posts = [result, ...posts];
   }
+  const hasToday = posts.some((post) => post.date === today);
+  const lastRun = hasToday ? undefined : await getJsonCacheValue<{ at: string; trigger: string; result: string }>(LAST_RUN_KEY);
   return {
     status: 200,
-    headers: { "Cache-Control": "public, max-age=300" },
-    jsonBody: { posts: posts.slice(0, limit) },
+    headers: { "Cache-Control": hasToday ? "public, max-age=300" : "no-store" },
+    jsonBody: { posts: posts.slice(0, limit), ...(lastRun ? { lastRun } : {}) },
   };
 }
 
