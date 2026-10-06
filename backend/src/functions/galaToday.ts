@@ -111,8 +111,13 @@ export async function generateGalaTodayPost(context: InvocationContext, now = ne
   }
   const regionSlug = chooseRegion(angle, manilaNow.getUTCDay(), seed, [...counts].filter(([, count]) => count >= 6).map(([slug]) => slug).sort());
   const areaName = REGIONS.find((region) => region.slug === regionSlug)?.name ?? "Metro Manila";
+  // Rainy days only get places that work in the rain (indoor categories or tagged for rainy days).
+  const isRainy = angle.startsWith("Rain");
+  const INDOOR = new Set(["Museum", "Food", "Cafe", "Mall", "Nightlife"]);
+  const fitsWeather = (place: (typeof summaries)[number]) =>
+    !isRainy || INDOOR.has(place.category ?? "") || place.goodFor.some((tag) => /rainy/i.test(tag));
   const ranked = summaries
-    .filter((place) => place.description && regionOf(place.areaSlug) === regionSlug)
+    .filter((place) => place.description && regionOf(place.areaSlug) === regionSlug && fitsWeather(place))
     .sort((left, right) => (SCORES[right.slug] ?? 0) - (SCORES[left.slug] ?? 0));
   const places: TodayPlace[] = rotatePlaces(ranked, recentSlugs, seed, 14).map((place) => ({
     slug: place.slug,
@@ -139,7 +144,7 @@ export async function generateGalaTodayPost(context: InvocationContext, now = ne
       continue;
     }
     const draft = result.post;
-    const post = { ...draft, slug: posts.some((existing) => existing.slug === draft.slug) ? `${draft.slug}-2` : draft.slug };
+    const post = { ...draft, model, slug: posts.some((existing) => existing.slug === draft.slug) ? `${draft.slug}-2` : draft.slug };
     await setJsonCacheValue(POSTS_KEY, [post, ...posts].slice(0, MAX_POSTS));
     return post;
   }
