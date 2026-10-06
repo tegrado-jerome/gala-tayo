@@ -1,11 +1,23 @@
 import InternalLink from '../InternalLink'
 import type { PlaceGalleryPhoto } from '../../utils/placeGalleryPhotos'
 
+const removalEmail = 'officialgalatayo@gmail.com'
+
+function removalHref(photo: PlaceGalleryPhoto) {
+  const subject = `Photo removal request: ${photo.author}`
+  const page = typeof window === 'undefined' ? '' : window.location.href
+  const body = `Please remove or re-credit this photo.\n\nPhoto: ${photo.url}\nSource: ${photo.sourceUrl}\nPage: ${page}\n`
+  return `mailto:${removalEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+}
+
 function sourceName(sourceUrl: string) {
   try {
     const host = new URL(sourceUrl).hostname.replace(/^www\./, '')
     if (host.endsWith('wikimedia.org')) return 'Wikimedia Commons'
     if (host.endsWith('flickr.com')) return 'Flickr'
+    if (host.endsWith('instagram.com')) return 'Instagram'
+    if (host.endsWith('facebook.com')) return 'Facebook'
+    if (host.endsWith('tiktok.com')) return 'TikTok'
     return host
   } catch {
     return null
@@ -35,6 +47,10 @@ function PhotoCredits({ photos }: { photos: PlaceGalleryPhoto[] }) {
               photo.license
             )}
             {sourceName(photo.sourceUrl) ? ` · via ${sourceName(photo.sourceUrl)}` : null}
+            {' · '}
+            <a href={removalHref(photo)} className="underline underline-offset-2">
+              Request removal
+            </a>
           </li>
         ))}
       </ol>
