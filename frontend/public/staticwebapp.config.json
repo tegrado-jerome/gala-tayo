@@ -2,6 +2,286 @@
   "trailingSlash": "never",
   "routes": [
     {
+      "route": "/places/angeles/mount-arayat-pampanga",
+      "redirect": "/places/arayat/mount-arayat-pampanga",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/angeles/mount-pinatubo-crater-trek",
+      "redirect": "/places/capas/mount-pinatubo-crater-trek",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/antipolo/angono-binangonan-petroglyphs",
+      "redirect": "/places/binangonan/angono-binangonan-petroglyphs",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/bacolod/balay-negrense-silay",
+      "redirect": "/places/silay/balay-negrense-silay",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/bacolod/campuestohan-highland-resort",
+      "redirect": "/places/talisay-negros-occidental/campuestohan-highland-resort",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/bacolod/lakawon-island-cadiz",
+      "redirect": "/places/cadiz/lakawon-island-cadiz",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/bacolod/mambukal-mountain-resort",
+      "redirect": "/places/murcia/mambukal-mountain-resort",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/bacolod/the-ruins-talisay",
+      "redirect": "/places/talisay-negros-occidental/the-ruins-talisay",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/baguio/bencab-museum-tuba",
+      "redirect": "/places/tuba/bencab-museum-tuba",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/batangas-city",
+      "redirect": "/places/calabarzon",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/batangas-city/taal-heritage-town-batangas",
+      "redirect": "/places/taal/taal-heritage-town-batangas",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/cagayan-de-oro/dahilayan-adventure-park",
+      "redirect": "/places/manolo-fortich/dahilayan-adventure-park",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/cebu-city/simala-shrine-sibonga",
+      "redirect": "/places/sibonga/simala-shrine-sibonga",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/coron/calauit-safari-park-busuanga",
+      "redirect": "/places/busuanga/calauit-safari-park-busuanga",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/dumaguete/apo-island-dauin",
+      "redirect": "/places/dauin/apo-island-dauin",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/dumaguete/balinsasayao-twin-lakes",
+      "redirect": "/places/sibulan/balinsasayao-twin-lakes",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/dumaguete/casaroro-falls-valencia",
+      "redirect": "/places/valencia-negros-oriental/casaroro-falls-valencia",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/dumaguete/manjuyod-sandbar-bais",
+      "redirect": "/places/bais/manjuyod-sandbar-bais",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/dumaguete/pulang-bato-falls-valencia",
+      "redirect": "/places/valencia-negros-oriental/pulang-bato-falls-valencia",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/general-luna-siargao/sohoton-cove-bucas-grande",
+      "redirect": "/places/socorro/sohoton-cove-bucas-grande",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/iloilo-city/guimaras-island-hopping-alubihod",
+      "redirect": "/places/nueva-valencia/guimaras-island-hopping-alubihod",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/iloilo-city/miagao-church",
+      "redirect": "/places/miagao/miagao-church",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/la-trinidad/mount-pulag-kabayan",
+      "redirect": "/places/kabayan/mount-pulag-kabayan",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/la-trinidad/northern-blossom-flower-farm-atok",
+      "redirect": "/places/atok/northern-blossom-flower-farm-atok",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/legazpi/cagsawa-ruins-daraga",
+      "redirect": "/places/daraga/cagsawa-ruins-daraga",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/legazpi/camsur-watersports-complex-pili",
+      "redirect": "/places/pili/camsur-watersports-complex-pili",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/legazpi/caramoan-island-hopping",
+      "redirect": "/places/caramoan/caramoan-island-hopping",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/legazpi/daraga-church-albay",
+      "redirect": "/places/daraga/daraga-church-albay",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/legazpi/mayon-skyline-tabaco",
+      "redirect": "/places/tabaco/mayon-skyline-tabaco",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/legazpi/quitinday-hills-camalig",
+      "redirect": "/places/camalig/quitinday-hills-camalig",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/lucban/tayabas-heritage-town",
+      "redirect": "/places/tayabas/tayabas-heritage-town",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/mabini-batangas/masasa-beach-tingloy",
+      "redirect": "/places/tingloy/masasa-beach-tingloy",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/malay-boracay/ariels-point-buruanga",
+      "redirect": "/places/buruanga/ariels-point-buruanga",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/malolos/biak-na-bato-national-park-bulacan",
+      "redirect": "/places/san-miguel-bulacan/biak-na-bato-national-park-bulacan",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/moalboal/badian-canyoneering",
+      "redirect": "/places/badian/badian-canyoneering",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/moalboal/kawasan-falls-badian",
+      "redirect": "/places/badian/kawasan-falls-badian",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/moalboal/osmena-peak-dalaguete",
+      "redirect": "/places/dalaguete/osmena-peak-dalaguete",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/oslob/aguinid-falls-samboan",
+      "redirect": "/places/samboan/aguinid-falls-samboan",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/pagsanjan/taytay-falls-majayjay",
+      "redirect": "/places/majayjay/taytay-falls-majayjay",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/pagudpud/bangui-windmills-ilocos-norte",
+      "redirect": "/places/bangui/bangui-windmills-ilocos-norte",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/pagudpud/cape-bojeador-lighthouse-burgos",
+      "redirect": "/places/burgos-ilocos-norte/cape-bojeador-lighthouse-burgos",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/pagudpud/kapurpurawan-rock-formation-burgos",
+      "redirect": "/places/burgos-ilocos-norte/kapurpurawan-rock-formation-burgos",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/san-juan-la-union/tangadan-falls-la-union",
+      "redirect": "/places/san-gabriel/tangadan-falls-la-union",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/subic",
+      "redirect": "/places/central-luzon",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/subic/las-casas-filipinas-de-acuzar-bagac",
+      "redirect": "/places/bagac/las-casas-filipinas-de-acuzar-bagac",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/tacloban",
+      "redirect": "/places/eastern-visayas",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/tacloban/sohoton-natural-bridge-basey",
+      "redirect": "/places/basey/sohoton-natural-bridge-basey",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/tagaytay/sonyas-garden-alfonso",
+      "redirect": "/places/alfonso/sonyas-garden-alfonso",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/tagbilaran",
+      "redirect": "/places/central-visayas",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/tagbilaran/baclayon-church",
+      "redirect": "/places/baclayon/baclayon-church",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/tagbilaran/bilar-man-made-forest",
+      "redirect": "/places/bilar/bilar-man-made-forest",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/tagbilaran/chocolate-hills-carmen",
+      "redirect": "/places/carmen-bohol/chocolate-hills-carmen",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/tagbilaran/loboc-river-cruise",
+      "redirect": "/places/loboc/loboc-river-cruise",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/tagbilaran/philippine-tarsier-sanctuary-corella",
+      "redirect": "/places/corella/philippine-tarsier-sanctuary-corella",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/tanay/masungi-georeserve-rizal",
+      "redirect": "/places/baras/masungi-georeserve-rizal",
+      "statusCode": 301
+    },
+    {
+      "route": "/places/vigan/bantay-bell-tower-ilocos-sur",
+      "redirect": "/places/bantay/bantay-bell-tower-ilocos-sur",
+      "statusCode": 301
+    },
+    {
       "route": "/images/*",
       "cacheControl": "public, max-age=31536000, immutable"
     },

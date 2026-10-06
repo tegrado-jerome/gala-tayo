@@ -11,6 +11,7 @@ import type { PlaceDetail } from '../types/appTypes'
 import { displayCityName } from '../utils/cityName'
 import { countPlacesByAreaSlug, loadCompactPlaces, type CompactPlace } from '../utils/compactPlaces'
 import { fetchPlaceDetailsBatch } from '../utils/placeDetailCache'
+import { getPlaceCardPhoto } from '../utils/placeGalleryPhotos'
 import { getSiteOrigin } from '../utils/seo'
 import { BRAND_NAME, PRODUCT_NAME } from '../utils/seoLandingPages'
 import '../design/misc.css'
@@ -25,10 +26,17 @@ function sortByPlaceCount(destinations: Destination[], placeCounts: Record<strin
   )
 }
 
+// Each region shows its busiest towns; the rest live one tap away on the region page.
+const TOWNS_PER_REGION = 4
+
 function PlacesIndexPage() {
   const [places, setPlaces] = useState<CompactPlace[] | null>(null)
   const placeCounts = useMemo(() => (places ? countPlacesByAreaSlug(places) : {}), [places])
-  const areaCards = useMemo(() => sortByPlaceCount(metroManilaAreas, placeCounts), [placeCounts])
+  // Cities without a gala-worthy place yet would be dead ends, so they're left out once counts load.
+  const areaCards = useMemo(
+    () => sortByPlaceCount(places ? metroManilaAreas.filter((area) => placeCounts[area.slug]) : metroManilaAreas, placeCounts),
+    [places, placeCounts]
+  )
   const otherRegions = useMemo(
     () =>
       regions
@@ -79,8 +87,10 @@ function PlacesIndexPage() {
     if (representativeSlug) {
       return getDiscoveryImageCandidates(representativeSlug, representativePlaces[representativeSlug])
     }
-    const imageUrl = places?.find((place) => place.areaSlug === areaSlug && place.imageUrl)?.imageUrl
-    return imageUrl ? [imageUrl] : []
+    const areaPlaces = places?.filter((place) => place.areaSlug === areaSlug) ?? []
+    const hdPhoto = areaPlaces.map((place) => getPlaceCardPhoto(place.slug)).find(Boolean)
+    const imageUrl = areaPlaces.find((place) => place.imageUrl)?.imageUrl
+    return [hdPhoto, imageUrl].filter((url): url is string => Boolean(url))
   }
   const getCountLabel = (areaSlug: string) => (places ? formatPlaceCount(placeCounts[areaSlug] ?? 0) : 'See places')
   const listedAreas = [...areaCards, ...otherRegions.flatMap(({ destinations }) => destinations)]
@@ -172,16 +182,20 @@ function PlacesIndexPage() {
           <SectionHead
             title={<span id={`region-${region.slug}`}>{region.name}</span>}
             sub={region.officialName}
-            action={<Button variant="text" href={`/places/${region.slug}`}>See all</Button>}
+            action={
+              <Button variant="text" href={`/places/${region.slug}`}>
+                {destinations.length > TOWNS_PER_REGION ? `All ${destinations.length} towns` : 'See all'}
+              </Button>
+            }
           />
           <div className="m-near">
-            {destinations.map((destination) => (
+            {destinations.slice(0, TOWNS_PER_REGION).map((destination) => (
               <InternalLink key={destination.slug} href={`/places/${destination.slug}`}>
                 <span className="m-near-img">
                   <PlaceImage candidates={getAreaImageCandidates(destination.slug)} />
                 </span>
                 <span className="min-w-0">
-                  <b>{destination.label}</b>
+                  <b>{destination.label.split(',')[0]}</b>
                   <small>
                     {destination.provinceName} · {getCountLabel(destination.slug)}
                   </small>
