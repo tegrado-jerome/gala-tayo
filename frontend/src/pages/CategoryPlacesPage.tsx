@@ -324,6 +324,7 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
         title={`${categoryLabel} Places in the Philippines | ${BRAND_NAME}`}
         description={`${PRODUCT_NAME} helps you explore ${categoryLabel.toLowerCase()} places around the Philippines, compare local options, and open detailed place pages for planning.`}
         canonicalPath={`/places/categories/${encodeURIComponent(categorySlug)}`}
+        image={{ url: `/og/categories/${encodeURIComponent(categorySlug)}.jpg`, alt: `${categoryLabel} places in the Philippines`, width: 1200, height: 630 }}
         robots={shouldIndexCategoryPage ? 'index,follow' : 'noindex,follow'}
         jsonLd={jsonLd}
       />

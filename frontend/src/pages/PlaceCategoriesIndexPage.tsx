@@ -61,6 +61,8 @@ function PlaceCategoriesIndexPage() {
     }
   }, [representativeSlugs])
 
+  // Categories with no gala-worthy places are hidden, and the ItemList lists only what is shown.
+  const shownCategories = categoryCards.filter((category) => placeCounts[category.value] !== 0)
   const jsonLd = [
     {
       '@context': 'https://schema.org',
@@ -81,7 +83,7 @@ function PlaceCategoriesIndexPage() {
     {
       '@context': 'https://schema.org',
       '@type': 'ItemList',
-      itemListElement: categoryCards.map((category, index) => ({
+      itemListElement: shownCategories.map((category, index) => ({
         '@type': 'ListItem',
         position: index + 1,
         name: category.label,
@@ -115,7 +117,7 @@ function PlaceCategoriesIndexPage() {
       <SectionHead title="What are you in the mood for?" />
       <Masonry>
         {/* Categories with no listed places (Hotel, Cinema for now) are dead ends, so they are left out. */}
-        {categoryCards.filter((category) => placeCounts[category.value] !== 0).map((category) => {
+        {shownCategories.map((category) => {
           const count = placeCounts[category.value]
           const slug = categoryRepresentativePlaceSlugs[category.value]
           return (

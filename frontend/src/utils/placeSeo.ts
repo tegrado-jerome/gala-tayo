@@ -1,6 +1,25 @@
 import type { PlaceDetailCardData } from '../types/appTypes'
 import { fitDescription } from './seo'
 
+const MAX_TITLE_LENGTH = 60
+
+/**
+ * Search title with the intent words people type ("fees", "how to get there"), kept to 60 characters:
+ * the longest pattern that fits wins, and a parenthetical in the name ("(Underground River)") is dropped first.
+ */
+export function buildPlaceTitle(name: string, areaName: string) {
+  const shortName = name.replace(/\s*\([^)]*\)/g, '').trim() || name
+  const place = shortName.toLowerCase().includes(areaName.toLowerCase()) ? shortName : `${shortName}, ${areaName}`
+  const options = [
+    `${place}: Fees, Tips and How to Get There`,
+    `${place}: What to Know Before You Go`,
+    `${place}: Fees and Tips`,
+    `${shortName}: Fees and Tips`,
+    shortName,
+  ]
+  return options.find((title) => title.length <= MAX_TITLE_LENGTH) ?? `${shortName.slice(0, MAX_TITLE_LENGTH - 1).trimEnd()}…`
+}
+
 /**
  * Meta description from the place's own words: its first sentence, then the budget and best time when they still fit.
  * Kept under 155 characters so search results show it whole.

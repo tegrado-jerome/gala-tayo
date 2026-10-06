@@ -1,7 +1,13 @@
 {
+  "id": "/",
   "name": "GalaTayo",
   "short_name": "GalaTayo",
-  "description": "Discover gala spots around Metro Manila with place search, AI help, and shareable place pages.",
+  "description": "Find gala-worthy places around the Philippines by city, budget and vibe, then plan the day with your barkada.",
+  "lang": "en-PH",
+  "categories": [
+    "travel",
+    "lifestyle"
+  ],
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

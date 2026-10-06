@@ -143,10 +143,13 @@ export function isMetroManilaDestination(destination: Destination | null | undef
   return destination?.regionSlug === METRO_MANILA_REGION_SLUG;
 }
 
-/** City values to match in the database for an area slug (a destination or a whole region). */
+/** City values to match in the database for an area slug (a destination, a whole region or a province like "bohol"). */
 export function getLocationNamesForAreaSlug(areaSlug: string | null | undefined): string[] {
   const destination = getDestinationBySlug(areaSlug);
-  const destinations = destination ? [destination] : getRegionBySlug(areaSlug)?.destinations ?? [];
+  const provinceSlug = areaSlug?.trim().toLowerCase();
+  const destinations = destination
+    ? [destination]
+    : getRegionBySlug(areaSlug)?.destinations ?? DESTINATIONS.filter((item) => item.provinceSlug === provinceSlug);
   return [...new Set(destinations.flatMap((item) => [item.slug, item.name, item.label, ...item.aliases]))];
 }
 

@@ -4,6 +4,7 @@ import { CaretDown } from '@phosphor-icons/react/dist/csr/CaretDown'
 import { CalendarCheck } from '@phosphor-icons/react/dist/csr/CalendarCheck'
 import { ListNumbers } from '@phosphor-icons/react/dist/csr/ListNumbers'
 import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
+import { ShareNetwork } from '@phosphor-icons/react/dist/csr/ShareNetwork'
 import { Shuffle } from '@phosphor-icons/react/dist/csr/Shuffle'
 import { Wallet } from '@phosphor-icons/react/dist/csr/Wallet'
 import PlaceCard, { getCategoryIcon, withLiveDetail } from '../components/PlaceCard'
@@ -17,7 +18,8 @@ import { getAreaLabelBySlug } from '../data/destinations'
 import { getPlaceCategoryLabel } from '../data/placeCategories'
 import { getSiteOrigin } from '../utils/seo'
 import { getSeoListingPage, mapSeoPlaceToCard, type SeoPlaceSummary } from '../utils/seoApi'
-import { BRAND_NAME, MIN_INDEXABLE_GUIDE_PLACES, PRODUCT_NAME, buildLandingMetadata, getGuideSubtitle, getLandingTargetBySlug, getRelatedLandingTargets } from '../utils/seoLandingPages'
+import { BRAND_NAME, MIN_INDEXABLE_GUIDE_PLACES, PRODUCT_NAME, buildLandingMetadata, getGuideAreaHub, getGuideOgImagePath, getGuideSubtitle, getLandingTargetBySlug, getRelatedLandingTargets, type SeoLandingTarget } from '../utils/seoLandingPages'
+import { shareLink } from '../utils/share'
 import { formatPeso } from '../utils/galaPlanTrip'
 import type { PlaceDetail } from '../types/appTypes'
 import { resizedMediaUrl } from '../data/r2Config'
@@ -37,6 +39,22 @@ function LandingFaqJsonLd({ faqs }: { faqs: Array<{ question: string; answer: st
   }
 }
 
+function GuideLinks({ heading, targets }: { heading: string; targets: SeoLandingTarget[] }) {
+  return (
+    <>
+      <h3 className="g-xs g-mut mt-4 font-semibold uppercase tracking-wide">{heading}</h3>
+      <div className="g-list mt-2">
+        {targets.map((relatedTarget) => (
+          <Row key={relatedTarget.slug} href={`/guides/${relatedTarget.slug}`} action={<ChevronRight className="g-ic text-[var(--ink-3)]" aria-hidden="true" />}>
+            <div className="g-h3 truncate">{relatedTarget.label}</div>
+            <div className="g-xs g-mut truncate">{getGuideSubtitle(relatedTarget)}</div>
+          </Row>
+        ))}
+      </div>
+    </>
+  )
+}
+
 export default function SeoLandingPage({
   slug,
 }: {
@@ -51,6 +69,7 @@ export default function SeoLandingPage({
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [placeDetailsBySlug, setPlaceDetailsBySlug] = useState<Record<string, PlaceDetail>>({})
+  const [shareNote, setShareNote] = useState<string | null>(null)
 
   useEffect(() => {
     if (!target) {
@@ -60,6 +79,7 @@ export default function SeoLandingPage({
     }
 
     const controller = new AbortController()
+    setShareNote(null)
 
     const load = async () => {
       try {
@@ -140,7 +160,11 @@ export default function SeoLandingPage({
   const areaName = target.displayAreaName || getAreaLabelBySlug(target.areaSlug) || 'the Philippines'
   const categoryLabel = target.category ? getPlaceCategoryLabel(target.category) : null
   const relatedTargets = getRelatedLandingTargets(target)
-  const seeAllHref = target.goodFor
+  const areaHub = getGuideAreaHub(target)
+  const pageUrl = `${getSiteOrigin()}${metadata.canonicalPath}`
+  const ogImageUrl = `${getSiteOrigin()}${getGuideOgImagePath(target.slug)}`
+  // Province guides (Bohol, Palawan) have no area page of their own to send "See all" to.
+  const seeAllHref = target.goodFor || (target.areaSlug && !getAreaLabelBySlug(target.areaSlug))
     ? null
     : target.category && target.areaSlug
       ? `/places/${target.areaSlug}?category=${target.category}`
@@ -155,41 +179,70 @@ export default function SeoLandingPage({
   const maxBudget = budgets.length ? Math.max(...budgets) : 0
   const budgetRange = !budgets.length ? 'Varies per place' : minBudget === maxBudget ? `${formatPeso(minBudget)} per head` : `${formatPeso(minBudget)} to ${formatPeso(maxBudget)} per head`
   const latestUpdate = items.map((item) => item.updatedAt).filter((value): value is string => Boolean(value)).sort().at(-1)
-  // A budget answer from the listed places themselves, so the FAQ says something real.
-  const faqs = budgets.length
-    ? [{ question: `How much should I budget?`, answer: `Starting budgets for the top picks run ${budgetRange}. Each place page breaks down what the money covers.` }, ...metadata.faqs]
-    : metadata.faqs
+  const listHeading = items.length ? `Top ${items.length} ${metadata.h1.replace(/^best\s+/i, '')}` : 'Top picks'
+  const topNames = items.slice(0, 3).map((item) => item.name)
+  // Answers built from the listed places themselves, so every FAQ says something true about this page.
+  const faqs = [
+    ...(topNames.length >= 3
+      ? [{ question: `What are the top picks for ${metadata.h1}?`, answer: `${topNames[0]}, ${topNames[1]} and ${topNames[2]} lead this guide. All ${total} places are ranked on this page, best first.` }]
+      : []),
+    ...(budgets.length ? [{ question: `How much should I budget?`, answer: `Starting budgets for the top picks run ${budgetRange}. Each place page breaks down what the money covers.` }] : []),
+    ...metadata.faqs,
+  ]
   const updatedLabel = latestUpdate ? new Date(latestUpdate).toLocaleDateString('en-PH', { month: 'long', year: 'numeric' }) : null
+  const itemList = items.length
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        '@id': `${pageUrl}#list`,
+        name: listHeading,
+        numberOfItems: items.length,
+        itemListOrder: 'https://schema.org/ItemListOrderDescending',
+        itemListElement: items.map((place, index) => ({
+          '@type': 'ListItem',
+          position: index + 1,
+          url: `${getSiteOrigin()}${place.canonicalPath}`,
+          name: place.name,
+        })),
+      }
+    : null
   const jsonLd = [
     {
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
+      '@id': `${pageUrl}#page`,
       name: metadata.h1,
       description: metadata.description,
-      url: `${getSiteOrigin()}${metadata.canonicalPath}`,
+      url: pageUrl,
+      inLanguage: 'en-PH',
       keywords: metadata.keywords.join(', '),
+      isPartOf: { '@id': `${getSiteOrigin()}/#website` },
+      publisher: { '@id': `${getSiteOrigin()}/#organization` },
+      primaryImageOfPage: { '@type': 'ImageObject', url: ogImageUrl, width: 1200, height: 630 },
+      ...(latestUpdate ? { dateModified: latestUpdate } : {}),
+      ...(itemList ? { mainEntity: { '@id': itemList['@id'] } } : {}),
     },
+    ...(itemList ? [itemList] : []),
     {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
         { '@type': 'ListItem', position: 1, name: 'Home', item: `${getSiteOrigin()}/` },
         { '@type': 'ListItem', position: 2, name: 'Guides', item: `${getSiteOrigin()}/guides` },
-        { '@type': 'ListItem', position: 3, name: metadata.h1, item: `${getSiteOrigin()}${metadata.canonicalPath}` },
+        { '@type': 'ListItem', position: 3, name: metadata.h1, item: pageUrl },
       ],
     },
-    {
-      '@context': 'https://schema.org',
-      '@type': 'ItemList',
-      itemListElement: items.map((place, index) => ({
-        '@type': 'ListItem',
-        position: index + 1,
-        url: `${getSiteOrigin()}${place.canonicalPath}`,
-        name: place.name,
-      })),
-    },
-    LandingFaqJsonLd({ faqs }),
+    ...(isLoading || errorMessage ? [] : [LandingFaqJsonLd({ faqs })]),
   ]
+  const shareGuide = async () => {
+    try {
+      const hadNativeShare = typeof navigator.share === 'function'
+      await shareLink({ url: pageUrl, title: metadata.title, text: `${metadata.h1}: ${metadata.description}` })
+      setShareNote(hadNativeShare ? null : 'Link copied. I-send mo na sa GC!')
+    } catch (error) {
+      if ((error as Error).name !== 'AbortError') setShareNote(pageUrl)
+    }
+  }
 
   const CategoryIcon = getCategoryIcon(target.category ?? null)
   const heroPlace = items.find((item) => item.imageUrl)
@@ -203,7 +256,15 @@ export default function SeoLandingPage({
 
   return (
     <Page>
-      <SeoHead title={metadata.title} description={metadata.description} canonicalPath={metadata.canonicalPath} robots={isThin ? 'noindex,follow' : undefined} jsonLd={jsonLd} />
+      <SeoHead
+        title={metadata.title}
+        description={metadata.description}
+        canonicalPath={metadata.canonicalPath}
+        robots={isThin ? 'noindex,follow' : undefined}
+        openGraphType="article"
+        image={{ url: getGuideOgImagePath(target.slug), alt: `${metadata.h1}, a ${BRAND_NAME} guide`, width: 1200, height: 630 }}
+        jsonLd={jsonLd}
+      />
 
       <ListingBreadcrumb items={[{ label: 'Home', href: '/' }, { label: 'Guides', href: '/guides' }, { label: metadata.h1 }]} />
 
@@ -223,6 +284,16 @@ export default function SeoLandingPage({
           ))}
         </ul>
 
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <Button variant="line" size="sm" onClick={() => void shareGuide()}>
+            <ShareNetwork className="g-ic" aria-hidden="true" />
+            Share this guide
+          </Button>
+          <p className="g-xs g-mut" role="status">
+            {shareNote}
+          </p>
+        </div>
+
         {heroPlace?.imageUrl ? (
           <figure>
             <div className="m-hero">
@@ -234,7 +305,7 @@ export default function SeoLandingPage({
           <div className="m-hero g-skel" aria-hidden="true" />
         ) : null}
 
-        <SectionHead title={items.length ? `Top ${items.length} picks` : 'Top picks'} sub="Ranked by GalaTayo. Tap a place for prices, hours and how to get there." />
+        <SectionHead title={listHeading} sub="Ranked by GalaTayo. Tap a place for prices, hours and how to get there." />
 
         {isLoading ? (
           <div aria-busy="true">
@@ -294,13 +365,18 @@ export default function SeoLandingPage({
             <h2 id="guide-related-title" className="g-h2">
               More guides
             </h2>
-            <div className="g-list">
-              {relatedTargets.map((relatedTarget) => (
-                <Row key={relatedTarget.slug} href={`/guides/${relatedTarget.slug}`} action={<ChevronRight className="g-ic text-[var(--ink-3)]" aria-hidden="true" />}>
-                  <div className="g-h3 truncate">{relatedTarget.label}</div>
-                  <div className="g-xs g-mut truncate">{getGuideSubtitle(relatedTarget)}</div>
+            {relatedTargets.nearby.length ? <GuideLinks heading="Nearby" targets={relatedTargets.nearby} /> : null}
+            {relatedTargets.similar.length ? <GuideLinks heading="Same idea, other places" targets={relatedTargets.similar} /> : null}
+            <div className="g-list mt-4">
+              {areaHub ? (
+                <Row href={areaHub.href} action={<ChevronRight className="g-ic text-[var(--ink-3)]" aria-hidden="true" />}>
+                  <div className="g-h3 flex items-center gap-2 truncate">
+                    <MapPin className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    All places in {areaHub.name}
+                  </div>
+                  <div className="g-xs g-mut truncate">Every gala-worthy place, by category</div>
                 </Row>
-              ))}
+              ) : null}
               <Row href="/saan-tayo" className="!bg-[var(--tara-soft)] !border-transparent" action={<ChevronRight className="g-ic text-[var(--tara-ink)]" aria-hidden="true" />}>
                 <div className="g-h3 flex items-center gap-2 truncate">
                   <Shuffle className="h-4 w-4 shrink-0 text-[var(--tara-ink)]" aria-hidden="true" />

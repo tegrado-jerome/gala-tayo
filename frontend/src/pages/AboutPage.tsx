@@ -27,14 +27,38 @@ const aboutHighlights: Array<{ title: string; body: string; icon: PhosphorIcon }
   },
 ]
 
+const curationStandards: Array<{ title: string; body: string }> = [
+  {
+    title: 'Gala-worthy only',
+    body: 'Every place is scored on real evidence: editorial lists, Philippine travel apps, Reddit threads, social buzz, review volume and Michelin, plus how well it fits a day out. Places you could find on any map app, like plain eateries, chains, ordinary malls and hotels, stay out of lists, search, AI picks and the sitemap.',
+  },
+  {
+    title: 'Food that is worth the trip',
+    body: 'The dining we keep is destination-level: Michelin and top restaurants, iconic food experiences, food markets and food streets.',
+  },
+  {
+    title: 'No fake reviews',
+    body: "Ratings and reviews come only from real visitors. Notes from our team are labelled Editor's note and never count as a review or a rating, so a place shows no rating until someone has actually been there.",
+  },
+  {
+    title: 'Know before you go',
+    body: 'Place pages carry the practical stuff: budget per head, best time to visit, parking, accessibility notes and who a place is not ideal for. Reports about unsafe, wrong or closed places go to our moderation queue, and safety reports are handled first.',
+  },
+  {
+    title: 'Credited photos',
+    body: "HD photos list their author, licence and source, such as Wikimedia Commons, on each place page. If one is yours, tell us through Feedback and we'll fix the credit or take it down.",
+  },
+]
+
 function AboutPage() {
   const jsonLd = [
     {
       '@context': 'https://schema.org',
       '@type': 'AboutPage',
       name: 'About GalaTayo | Place discovery around the Philippines',
-      description: 'Learn about GalaTayo and how it helps people discover places, plan gala ideas, and explore the Philippines.',
+      description: 'What GalaTayo is and how we pick places: gala-worthy only, scored on real evidence, no fake reviews and credited photos.',
       url: `${getSiteOrigin()}/about`,
+      mainEntity: { '@id': `${getSiteOrigin()}/#organization` },
     },
     {
       '@context': 'https://schema.org',
@@ -50,7 +74,7 @@ function AboutPage() {
     <Page narrow>
       <SeoHead
         title="About GalaTayo | Place discovery around the Philippines"
-        description="Learn about GalaTayo and how it helps people discover places, plan gala ideas, and explore the Philippines."
+        description="What GalaTayo is and how we pick places: gala-worthy only, scored on real evidence, no fake reviews and credited photos."
         canonicalPath="/about"
         jsonLd={jsonLd}
       />
@@ -95,6 +119,20 @@ function AboutPage() {
           GalaTayo started with the 17 cities of Metro Manila and now covers destinations around the Philippines, from Baguio and La Union
           to Cebu, Bohol, Palawan and Siargao. Every city has its own area page, and place URLs stay the same as new regions are added.
         </p>
+
+        <section id="curation" aria-labelledby="about-curation" className="mt-12 scroll-mt-24">
+          <h2 id="about-curation" className="g-h2">
+            About our curation
+          </h2>
+          <div className="m-prose mt-3 max-w-[65ch]">
+            {curationStandards.map(({ title, body }) => (
+              <div key={title}>
+                <h3 className="g-h3 mt-6">{title}</h3>
+                <p className="mt-1">{body}</p>
+              </div>
+            ))}
+          </div>
+        </section>
 
         <div className="mt-8 flex flex-wrap gap-2 border-t border-[var(--line-2)] pt-8">
           <Button variant="tara" size="lg" href="/places">

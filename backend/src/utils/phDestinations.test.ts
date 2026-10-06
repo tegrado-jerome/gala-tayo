@@ -79,6 +79,14 @@ describe("resolveAreaSlug", () => {
     assert.equal(names.includes("Baguio"), false);
     assert.equal(resolveDestination("Tagaytay", null)?.regionSlug, "calabarzon");
   });
+
+  it("exposes province groups for guides", () => {
+    const names = getLocationNamesForAreaSlug("bohol");
+    assert.ok(names.includes("Panglao"));
+    assert.ok(names.includes("Loboc"));
+    assert.equal(names.includes("Cebu City"), false);
+    assert.equal(getLocationNamesForAreaSlug("not-a-place").length, 0);
+  });
 });
 
 describe("location search", () => {
