@@ -213,7 +213,6 @@ function WelcomePage({ navigationSource = 'push' }: { navigationSource?: Navigat
               </InternalLink>
             ))}
           </nav>
-          <span className="g-sm g-mut">Made in the Philippines</span>
         </footer>
       </Page>
     </>
