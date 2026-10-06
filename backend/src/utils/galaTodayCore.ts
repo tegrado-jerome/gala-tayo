@@ -29,6 +29,8 @@ export type GalaTodayPost = {
   trend: { title: string; source: string; url: string | null } | null;
   angle: string;
   picks: Array<{ slug: string; name: string; city: string; canonicalPath: string; why: string }>;
+  /** Which AI model wrote it (for quality tracking; not shown). */
+  model?: string;
 };
 
 // Trends we never joke about or tie to a day out: tragedy, crime, politics, scandal, health scares.
@@ -163,7 +165,8 @@ export function chooseRegion(angle: string, weekday: number, seed: number, regio
 
 export function buildPrompt(signals: TrendSignal[], angle: string, places: TodayPlace[], date: string, areaName = "Metro Manila") {
   const system = `You write "Gala Today" for GalaTayo, a Filipino app of gala-worthy places. One short, very catchy daily post that rides what's hot right now and turns it into a gala plan.
-Voice: Gen Z Pinoy, playful Taglish, meme-literate, warm. Never mean, never about real private people.
+Voice: Gen Z Pinoy, playful Taglish, meme-literate, warm. Never mean, never about real private people. Correct Tagalog and English spelling; natural Taglish, not machine-translated.
+- If TODAY'S ANGLE is rain, every pick must be enjoyable in the rain.
 Rules:
 - Pick at most ONE trend from TRENDS that can link naturally to going out (food, a show, a vibe, weather, a viral word or meme). If none fits, use TODAY'S ANGLE instead and set trend_index to -1.
 - Use one meme format from FORMATS for the hook, rewritten for this post. Text only.
