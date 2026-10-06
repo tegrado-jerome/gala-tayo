@@ -1,5 +1,6 @@
 import { getAreaLabelBySlug } from '../data/destinations'
 import { formatLabelFromSlug, getCanonicalPlacePath, resolveAreaMeta } from './routes'
+import { serializeJsonLd } from './jsonLd'
 import { getPublicSiteOrigin } from './site'
 
 type OpenGraphImage = {
@@ -241,7 +242,7 @@ function applySeo(config: SeoConfig) {
       script.type = 'application/ld+json'
       script.setAttribute('data-galatayo-seo-jsonld', 'true')
       script.setAttribute('data-galatayo-seo-jsonld-index', String(index))
-      script.textContent = JSON.stringify(block)
+      script.textContent = serializeJsonLd(block)
       document.head.appendChild(script)
     })
   }

@@ -24,7 +24,7 @@ import {
   markAskAiRequestUsageRefunded,
   registerAskAiRequest,
 } from "../utils/askAiCancellation";
-import { resolveAskAiActor, type AskAiActor } from "../utils/askAiActor";
+import { isAskAiIpAllowed, resolveAskAiActor, type AskAiActor } from "../utils/askAiActor";
 import { getActiveNormalizedPlaces, type NormalizedPlace } from "../domain/places";
 import {
   detectCategories,
@@ -343,6 +343,13 @@ export async function postAskAiChatbot(
     context.log(`[AskAI Chatbot] REQUEST STARTED requestId=${requestId}`);
 
     resolvedActor = await resolveAskAiActor(request);
+    if (!(await isAskAiIpAllowed(request, resolvedActor))) {
+      return {
+        status: 429,
+        headers: JSON_HEADERS,
+        jsonBody: { ok: false, error: "rate_limited", message: "Too many Ask AI requests. Try again in a few minutes.", requestId },
+      };
+    }
     const body = await getRequestBody(request);
     const message =
       getStringField(body.question) ??

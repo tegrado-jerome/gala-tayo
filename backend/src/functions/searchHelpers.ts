@@ -1,5 +1,6 @@
 import { HttpRequest } from "@azure/functions";
 import { getSupabaseAdminClient } from "../config/supabaseAdmin";
+import { getClientIp } from "../utils/clientIp";
 import { getSearchTerms, inferCategoryIdsFromQuery, normalizeSearchText } from "../utils/searchMatching";
 import { getMetroManilaLocationKeywordsForCity, inferMetroManilaLocationsFromQuery } from "../utils/metroManilaLocations";
 import { findAreaById, findCategoryById, findGoodForById } from "./filters";
@@ -165,11 +166,7 @@ export type SearchUserContext =
   | { userType: "guest"; identifier: string; user?: undefined }
   | { userType: "registered"; identifier: string; user: { id: string; email?: string } };
 
-export function getClientIp(request: HttpRequest): string {
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  if (forwardedFor) return forwardedFor.split(",")[0].trim();
-  return "127.0.0.1";
-}
+export { getClientIp };
 
 export function getSearchQuery(body: SearchRequestBody): string {
   const rawQuery = body.query;

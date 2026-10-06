@@ -1,4 +1,5 @@
 import { getRedisClient } from "../services/redisCacheService";
+import { getClientIp } from "./clientIp";
 
 type RateLimitResult = {
   allowed: boolean;
@@ -69,13 +70,7 @@ export async function checkRedisCooldown(
   }
 }
 
-export function getClientIp(request: { headers: { get: (name: string) => string | null } }): string {
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  if (forwardedFor) {
-    return forwardedFor.split(",")[0].trim();
-  }
-  return "127.0.0.1";
-}
+export { getClientIp };
 
 export async function checkEndpointRateLimit(
   request: { headers: { get: (name: string) => string | null } },
