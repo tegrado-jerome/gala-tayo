@@ -1,6 +1,6 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext, Timer } from "@azure/functions";
 import galaScores from "../data/galaScores.json";
-import { generateJsonFromGroq } from "../services/groqChatProvider";
+import { writeGalaTodayDraft } from "../services/galaTodayWriter";
 import { getJsonCacheValue, getRedisClient, setJsonCacheValue } from "../services/redisCacheService";
 import { extractJsonObject } from "../utils/jsonRepair";
 import { getSeoPlaceSummaries } from "../utils/seoPlaces";
@@ -126,7 +126,8 @@ export async function generateGalaTodayPost(context: InvocationContext, now = ne
   const { system, user } = buildPrompt(freshSignals, angle, places, date, areaName);
   let lastReason = "no draft";
   for (let attempt = 0; attempt < 3; attempt += 1) {
-    const raw = await generateJsonFromGroq({ systemPrompt: system, userMessage: user, requestId: `gala-today-${date}-${attempt}`, maxCompletionTokens: 900 });
+    const { text: raw, model } = await writeGalaTodayDraft(system, user, `gala-today-${date}-${attempt}`, (message) => context.warn(message));
+    context.log(`Gala Today draft ${attempt + 1} by ${model}`);
     const parsed = extractJsonObject(raw);
     if (!parsed) {
       lastReason = "unparseable";
