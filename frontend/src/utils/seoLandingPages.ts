@@ -17,6 +17,12 @@ type SeoLandingTarget = {
   description?: string
   /** Two hand-written sentences shown under the guide title. */
   intro?: string
+  /** Search title when the label is not the phrasing people type; the brand is added when it fits in 60 characters. */
+  title?: string
+  /** Hand-written answer-first lines; `bestFor` and the budget are otherwise built from the listed places. */
+  quickAnswer?: { bestFor?: string; cost?: string; gettingThere?: string }
+  /** Questions people search for this topic, answered from facts on the page. Shown before the standard ones. */
+  faqs?: Array<{ question: string; answer: string }>
   addedAt?: string
 }
 
@@ -189,6 +195,11 @@ function buildLandingHeading(target: SeoLandingTarget) {
   return 'GalaTayo guides'
 }
 
+/** "Things to Do in Baguio | GalaTayo", dropping the brand when the title would pass 60 characters. */
+function withBrand(title: string) {
+  return title.length + BRAND_NAME.length + 3 <= 60 ? `${title} | ${BRAND_NAME}` : title
+}
+
 function buildLandingMetadata(target: SeoLandingTarget): SeoLandingMetadata {
   const areaName = getDisplayAreaName(target)
   const categoryLabel = target.category ? getPlaceCategoryLabel(target.category) : null
@@ -222,7 +233,7 @@ function buildLandingMetadata(target: SeoLandingTarget): SeoLandingMetadata {
   const description = target.description || (note ? note(scopedAreaName) : `${h1}: places to go, what they cost and the best time to visit.`)
 
   return {
-    title: `${h1} | ${BRAND_NAME}`,
+    title: withBrand(target.title || h1),
     description,
     h1,
     intro,
@@ -230,6 +241,7 @@ function buildLandingMetadata(target: SeoLandingTarget): SeoLandingMetadata {
     canonicalPath,
     keywords: target.keywords,
     faqs: [
+      ...(target.faqs ?? []),
       {
         question: `How are the places in this guide picked?`,
         answer: `Only gala-worthy places make the list. Each one is scored on real evidence, like editorial lists, Philippine travel apps, Reddit threads, review volume and Michelin, plus how well it fits a day out. Plain eateries, chains and ordinary malls are left out, and the rest are ranked best first.`,
@@ -251,6 +263,7 @@ export {
   SEO_LANDING_TARGETS,
   MIN_INDEXABLE_GUIDE_PLACES,
   buildLandingMetadata,
+  withBrand,
   getRelatedLandingTargets,
   getGuideAreaHub,
   getGuideOgImagePath,

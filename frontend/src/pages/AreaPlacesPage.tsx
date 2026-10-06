@@ -15,7 +15,10 @@ import { getListingPlaceViewportTop, peekPendingListingRouteCache, readListingRo
 import { fetchPlaceDetailsBatch, readCachedPlaceDetail } from '../utils/placeDetailCache'
 import { preloadListingImageUrls } from '../utils/listingImagePreloader'
 import { getSeoListingPage, mapSeoPlaceToCard, type SeoPlaceSummary } from '../utils/seoApi'
-import { BRAND_NAME, PRODUCT_NAME, SEO_LANDING_TARGETS } from '../utils/seoLandingPages'
+import { BRAND_NAME, PRODUCT_NAME, SEO_LANDING_TARGETS, withBrand } from '../utils/seoLandingPages'
+import { AREA_SEO } from '../data/listingSeo'
+import { FaqList, QuickAnswer } from '../components/QuickAnswer'
+import { describeBestFor, describeBudgetRange, faqJsonLd } from '../utils/seoAnswers'
 import type { PlaceDetail } from '../types/appTypes'
 
 const MIN_INDEXABLE_AREA_PLACES = 3
@@ -335,11 +338,23 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
   const relatedGuides = SEO_LANDING_TARGETS.filter((target) => target.areaSlug === normalizedAreaSlug).slice(0, 4)
   const spotCount = payload.total > 0 ? `: ${payload.total} Gala-Worthy ${payload.total === 1 ? 'Spot' : 'Spots'}` : ''
   const baseTitle = `Things to Do in ${areaName}${spotCount}`
-  const pageTitle = baseTitle.length + BRAND_NAME.length + 3 <= 60 ? `${baseTitle} | ${BRAND_NAME}` : baseTitle
+  const areaSeo = AREA_SEO[normalizedAreaSlug]
+  const pageTitle = withBrand(areaSeo?.title ?? baseTitle)
   const topNames = allPlaces.slice(0, 3).map((place) => place.name)
-  const pageDescription = topNames.length
+  // Answer-first block and FAQs only on the main city page, built from the places it lists.
+  const showAnswers = shouldIndexAreaPage && !isPageTransitionLoading && topNames.length === 3
+  const budgetRange = describeBudgetRange(allPlaces.map((place) => place.budgetMin))
+  const areaFaqs = showAnswers
+    ? [
+        { question: `What are the best tourist spots in ${areaName}?`, answer: `${topNames[0]}, ${topNames[1]} and ${topNames[2]} top the list, out of ${payload.total} gala-worthy places in ${areaName} ranked best first on this page.` },
+        ...(budgetRange && budgetRange !== 'Free' ? [{ question: `How much do places in ${areaName} cost?`, answer: `Starting prices for the top picks run ${budgetRange}. Each place page breaks down what the money covers.` }] : []),
+        ...(areaSeo?.faqs ?? []),
+      ]
+    : []
+  const pageDescription = areaSeo?.description ?? (topNames.length
     ? `${payload.total} gala-worthy ${payload.total === 1 ? 'place' : 'places'} in ${areaName}${destination && parentRegion ? `, ${destination.provinceName}` : ''}, like ${topNames.length > 1 ? `${topNames.slice(0, -1).join(', ')} and ${topNames.at(-1)}` : topNames[0]}, with the budget per head and the best time to go.`
-    : `${PRODUCT_NAME} lists gala-worthy places in ${areaName}, from food spots to parks, museums and date ideas ${region ? 'in every city of the region' : areaScope}.`
+    : `${PRODUCT_NAME} lists gala-worthy places in ${areaName}, from food spots to parks, museums and date ideas ${region ? 'in every city of the region' : areaScope}.`)
+  const placeName = destination && parentRegion ? `${areaName}, ${destination.provinceName}` : areaName
 
   return (
     <Page>
@@ -349,7 +364,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
         canonicalPath={`/places/${encodeURIComponent(normalizedAreaSlug)}`}
         image={{ url: `/og/places/${encodeURIComponent(normalizedAreaSlug)}.jpg`, alt: `Things to do in ${areaName}`, width: 1200, height: 630 }}
         robots={shouldIndexAreaPage ? 'index,follow' : 'noindex,follow'}
-        jsonLd={jsonLd}
+        jsonLd={jsonLd && areaFaqs.length ? [...jsonLd, faqJsonLd(areaFaqs)] : jsonLd}
       />
 
       <ListingBreadcrumb
@@ -363,10 +378,18 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
 
       <header className="mt-5 max-w-[36rem]">
         <h1 className="g-h1">Things to do in {areaName}</h1>
-        <p className="g-mut mt-2">
-          {destination && parentRegion ? `Cafes, parks and food spots in ${areaName}, ${destination.provinceName}` : `Cafes, parks and food spots in ${areaName}`}
-        </p>
+        <p className="g-mut mt-2">{areaSeo?.subtitle ?? `Tourist spots, food stops and day-out ideas in ${placeName}, ranked best first.`}</p>
       </header>
+
+      {showAnswers ? (
+        <QuickAnswer
+          rows={[
+            { label: 'Best for', value: describeBestFor(allPlaces.map((place) => place.goodFor)) },
+            { label: 'Budget', value: budgetRange ? `${budgetRange}, starting prices before transport` : null },
+            { label: 'Getting there', value: areaSeo?.gettingThere },
+          ]}
+        />
+      ) : null}
 
       {region ? (
         <nav aria-label={`Cities in ${region.name}`} className="g-chips mt-4">
@@ -449,6 +472,15 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
                 ))}
               </div>
             </>
+          ) : null}
+
+          {areaFaqs.length ? (
+            <section aria-labelledby="area-faq-title" className="mt-14 max-w-[46rem]">
+              <h2 id="area-faq-title" className="g-h2">
+                Good to know
+              </h2>
+              <FaqList faqs={areaFaqs} />
+            </section>
           ) : null}
         </section>
       )}

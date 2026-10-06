@@ -14,7 +14,8 @@ import { getListingPlaceViewportTop, peekPendingListingRouteCache, readListingRo
 import { fetchPlaceDetailsBatch, readCachedPlaceDetail } from '../utils/placeDetailCache'
 import { preloadListingImageUrls } from '../utils/listingImagePreloader'
 import { getSeoListingPage, mapSeoPlaceToCard, type SeoPlaceSummary } from '../utils/seoApi'
-import { BRAND_NAME, PRODUCT_NAME, SEO_LANDING_TARGETS } from '../utils/seoLandingPages'
+import { BRAND_NAME, PRODUCT_NAME, SEO_LANDING_TARGETS, withBrand } from '../utils/seoLandingPages'
+import { CATEGORY_SEO } from '../data/listingSeo'
 import type { PlaceDetail } from '../types/appTypes'
 
 type CategoryPlacesPageProps = {
@@ -317,12 +318,13 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
     : null
 
   const relatedGuides = SEO_LANDING_TARGETS.filter((target) => target.category === categorySlug).slice(0, 4)
+  const categorySeo = CATEGORY_SEO[categorySlug]
 
   return (
     <Page>
       <SeoHead
-        title={`${categoryLabel} Places in the Philippines | ${BRAND_NAME}`}
-        description={`${PRODUCT_NAME} helps you explore ${categoryLabel.toLowerCase()} places around the Philippines, compare local options, and open detailed place pages for planning.`}
+        title={categorySeo ? withBrand(categorySeo.title) : `${categoryLabel} Places in the Philippines | ${BRAND_NAME}`}
+        description={categorySeo?.description ?? `${PRODUCT_NAME} helps you explore ${categoryLabel.toLowerCase()} places around the Philippines, compare local options, and open detailed place pages for planning.`}
         canonicalPath={`/places/categories/${encodeURIComponent(categorySlug)}`}
         image={{ url: `/og/categories/${encodeURIComponent(categorySlug)}.jpg`, alt: `${categoryLabel} places in the Philippines`, width: 1200, height: 630 }}
         robots={shouldIndexCategoryPage ? 'index,follow' : 'noindex,follow'}
@@ -339,7 +341,8 @@ function CategoryPlacesPage({ categorySlug, search = '', navigationSource = 'pus
       />
 
       <header className="mt-5 max-w-[40rem]">
-        <h1 className="g-h1">{categoryLabel} places in the Philippines</h1>
+        <h1 className="g-h1">{categorySeo?.h1 ?? `${categoryLabel} places in the Philippines`}</h1>
+        {categorySeo ? <p className="g-mut mt-2">{categorySeo.intro}</p> : null}
       </header>
 
       <CategoryTabs active={categorySlug} />

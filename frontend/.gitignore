@@ -27,3 +27,5 @@ dist-ssr
 .env
 .env.*
 !.env.example
+scripts/seo/data/.cache/
+.indexnow-pending.json

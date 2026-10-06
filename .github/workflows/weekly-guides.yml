@@ -1,8 +1,9 @@
 name: Weekly guides
 
-# Every Monday: reads Search Console and GA4 (when the Google secret is set), adds up to 3
-# /guides pages for the strongest search demand where GalaTayo has at least 6 real places,
-# redeploys the site, and posts the week's SEO report as an issue.
+# Every Monday: reads Search Console and GA4 (when the Google secret is set) with search movers
+# and Core Web Vitals, refreshes the keyword engine, adds up to 3 /guides pages for the
+# strongest search demand where GalaTayo has at least 6 real places, redeploys the site, and
+# posts the week's SEO report as an issue.
 on:
   schedule:
     - cron: "0 19 * * 0" # Monday 3:00 AM Philippine time
@@ -20,7 +21,7 @@ concurrency:
 jobs:
   discover:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     env:
       SEO_REPORT_PATH: /tmp/seo-report.md
     steps:
@@ -36,6 +37,13 @@ jobs:
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
           GA4_PROPERTY_ID: ${{ vars.GA4_PROPERTY_ID }}
         run: node scripts/seo/report.mjs
+
+      # Free, no-account sources only (autocomplete, Trends RSS, Wikipedia pageviews), plus the
+      # Search Console queries report.mjs just saved. Adds keyword opportunities to the report.
+      - name: Keyword engine
+        working-directory: frontend
+        continue-on-error: true
+        run: node scripts/seo/keywords.mjs --report
 
       - name: Find new guides
         working-directory: frontend

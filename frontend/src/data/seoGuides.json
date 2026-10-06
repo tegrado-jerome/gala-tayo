@@ -169,8 +169,15 @@
       "metro manila date spots",
       "romantic places in metro manila"
     ],
-    "description": "Date places in Metro Manila, from free museum afternoons to dinners worth saving for, each with the budget per head and best time to go.",
-    "intro": "Whether it is a first date or your hundredth, these spots work. Every pick shows what it costs, so there are no surprises at the bill."
+    "description": "Date ideas in Manila, from free museum afternoons and sunset walks to dinners worth saving for, each with the budget per head and best time to go.",
+    "intro": "Whether it is a first date or your hundredth, these spots work. Every pick shows what it costs, so there are no surprises at the bill.",
+    "title": "Date Ideas in Manila: Date Spots from Free to Fancy",
+    "faqs": [
+      {
+        "question": "What are free date ideas in Manila?",
+        "answer": "The National Museum of Fine Arts and the National Museum of Natural History are free, and so are Rizal Park, Ayala Triangle Gardens and the walls of Intramuros at sunset."
+      }
+    ]
   },
   {
     "slug": "study-cafes-in-metro-manila",
@@ -212,7 +219,8 @@
       "manila landmarks"
     ],
     "description": "Heritage sites in Manila: Intramuros, Fort Santiago, Binondo and old churches, with entrance fees and the best time to walk them.",
-    "intro": "Manila wears four centuries of history on its streets. Go early morning, wear comfortable shoes and leave room for merienda in Binondo."
+    "intro": "Manila wears four centuries of history on its streets. Go early morning, wear comfortable shoes and leave room for merienda in Binondo.",
+    "title": "Historical Places in Manila: Heritage Sites, Ranked"
   },
   {
     "slug": "cheap-eats-in-manila",
@@ -253,8 +261,9 @@
       "kids friendly manila",
       "manila family day ideas"
     ],
-    "description": "Family outing ideas in Manila: museums, parks and historic walks kids enjoy too, with fees, parking and the best time to go.",
-    "intro": "Manila is full of places that work for every age. Pick one big stop, add a long lunch and call it a family day."
+    "description": "Things to do in Manila with kids: Manila Ocean Park, the free National Museums, Rizal Park and Intramuros walks, with fees and the best time to go.",
+    "intro": "Manila is full of places that work for every age. Pick one big stop, add a long lunch and call it a family day.",
+    "title": "Things to Do in Manila with Kids: Family Outing Ideas"
   },
   {
     "slug": "restaurants-in-metro-manila",
@@ -329,9 +338,23 @@
       "baguio tourist spots",
       "baguio itinerary"
     ],
-    "description": "Things to do in Baguio: Burnham Park, the night market, strawberry farms and cafes in the pines, with fees and the best time for each.",
+    "description": "Tourist spots in Baguio, ranked: Burnham Park, Mines View, Camp John Hay, the night market and Café by the Ruins, with budgets and the best time to go.",
     "intro": "Baguio rewards early risers and slow walkers. Mix the classic stops with a cafe or two and leave room for the night market.",
-    "addedAt": "2026-10-06"
+    "addedAt": "2026-10-06",
+    "title": "Things to Do in Baguio: Top Tourist Spots, Ranked",
+    "quickAnswer": {
+      "gettingThere": "Buses from Cubao and Pasay take around 4 to 6 hours via TPLEX. In the city, most stops are a short taxi ride or walk from Session Road."
+    },
+    "faqs": [
+      {
+        "question": "What are the free tourist spots in Baguio?",
+        "answer": "Burnham Park, Camp John Hay and Session Road cost nothing to enter. Mines View Park starts at around ₱20, so a full day of sights can cost less than lunch."
+      },
+      {
+        "question": "When does the Baguio night market open?",
+        "answer": "The ukay stalls on Harrison Road beside Burnham Park open at around 9 PM. Come right at opening for first dibs and a smaller crowd."
+      }
+    ]
   },
   {
     "slug": "where-to-eat-in-baguio",
@@ -356,9 +379,19 @@
       "cebu city tourist spots",
       "cebu itinerary"
     ],
-    "description": "Things to do in Cebu City: the Santo Niño basilica, Fort San Pedro, Taoist Temple and hilltop views, with fees and the best time to go.",
+    "description": "Things to do in Cebu City: Basilica del Santo Niño, the Taoist Temple, Temple of Leah, Tops Lookout and lechon at Zubuchon, with budgets per head.",
     "intro": "Cebu City is where Philippine history began. Start downtown with the heritage stops, then head up to the hills for the view.",
-    "addedAt": "2026-10-06"
+    "addedAt": "2026-10-06",
+    "title": "Things to Do in Cebu City: Tourist Spots, Ranked",
+    "quickAnswer": {
+      "gettingThere": "Fly into Mactan-Cebu International Airport, then around 30 to 60 minutes by car to the city, depending on traffic."
+    },
+    "faqs": [
+      {
+        "question": "What can you do in Cebu City in one day?",
+        "answer": "Start downtown at the Basilica Minore del Santo Niño and the Yap-San Diego Ancestral House, eat lechon for lunch, then head up to Temple of Leah and Tops Lookout for the late-afternoon view."
+      }
+    ]
   },
   {
     "slug": "things-to-do-in-el-nido",
@@ -371,7 +404,17 @@
     ],
     "description": "Things to do in El Nido: island hopping Tours A and C, Nacpan Beach and Las Cabanas sunsets, with prices and the best time to go.",
     "intro": "El Nido is all about the water. Book one island-hopping tour, keep a day for the beaches and end every evening at sunset.",
-    "addedAt": "2026-10-06"
+    "addedAt": "2026-10-06",
+    "title": "Things to Do in El Nido, Palawan: Tours, Beaches, Sunsets",
+    "quickAnswer": {
+      "gettingThere": "Fly direct to El Nido, or fly to Puerto Princesa and ride a van north for around 5 to 6 hours."
+    },
+    "faqs": [
+      {
+        "question": "Which El Nido island-hopping tour should I pick?",
+        "answer": "Tour A is the lagoon tour, with the Big and Small Lagoons. Tour C is the beach tour, with Hidden Beach, Secret Beach and Matinloc Shrine. If you only have one day, pick the one that matches what you came for."
+      }
+    ]
   },
   {
     "slug": "things-to-do-in-boracay",
@@ -382,9 +425,19 @@
       "boracay activities",
       "boracay itinerary"
     ],
-    "description": "Things to do in Boracay beyond White Beach: paraw sailing at sunset, Diniwid, kitesurfing on Bulabog and island snacks, with prices.",
+    "description": "Things to do in Boracay beyond White Beach: paraw sailing at sunset, Puka Shell Beach, quiet Diniwid, kitesurfing on Bulabog and Willy's Rock.",
     "intro": "Boracay is more than one beach. These picks fill your days between swims, from sunset sails to the quieter coves.",
-    "addedAt": "2026-10-06"
+    "addedAt": "2026-10-06",
+    "title": "Things to Do in Boracay Beyond White Beach",
+    "quickAnswer": {
+      "gettingThere": "Fly to Caticlan or Kalibo, then take the short boat ride from Caticlan Jetty Port to the island."
+    },
+    "faqs": [
+      {
+        "question": "How long is a paraw sailing ride in Boracay?",
+        "answer": "Rides usually last 30 minutes to an hour. Sunset slots go first, so book ahead or pick a boat on the beach early."
+      }
+    ]
   },
   {
     "slug": "things-to-do-in-tagaytay",
@@ -395,9 +448,19 @@
       "tagaytay food trip",
       "tagaytay day trip"
     ],
-    "description": "Things to do in Tagaytay: Taal views, bulalo, farm-to-table lunches and cafes, an easy day trip from Manila with budgets for each stop.",
-    "intro": "Tagaytay is the classic day trip south of Manila. Come for the cool air and the Taal view, stay for a long lunch.",
-    "addedAt": "2026-10-06"
+    "description": "Pasyalan sa Tagaytay: Sky Ranch and the Sky Eye, Picnic Grove and People's Park in the Sky, an easy day trip from Manila with budgets per head.",
+    "intro": "Tagaytay is the classic day trip south of Manila. Come for the cool air and the Taal view, ride the Sky Eye at sunset, then stay for a long dinner on the ridge.",
+    "addedAt": "2026-10-06",
+    "title": "Pasyalan sa Tagaytay: Things to Do and Taal Views",
+    "quickAnswer": {
+      "gettingThere": "Around 2 hours from Manila by car, more on weekends. Nasugbu-bound buses from PITX and Pasay pass through Tagaytay."
+    },
+    "faqs": [
+      {
+        "question": "Can you do Tagaytay as a day trip from Manila?",
+        "answer": "Yes. Leave early, spend the afternoon at Picnic Grove or Sky Ranch, ride the Sky Eye at sunset and have dinner on the ridge before driving back."
+      }
+    ]
   },
   {
     "slug": "things-to-do-in-siargao",
@@ -410,7 +473,17 @@
     ],
     "description": "Things to do in Siargao: Cloud 9, Magpupungko rock pools, Maasin River and the coconut road, with tips on tides and the best time to go.",
     "intro": "Siargao runs on surf time. Check the tide for the rock pools, rent a scooter and let the island set the pace.",
-    "addedAt": "2026-10-06"
+    "addedAt": "2026-10-06",
+    "title": "Things to Do in Siargao: Tourist Spots and Tide Tips",
+    "quickAnswer": {
+      "gettingThere": "Fly into Siargao (Sayak) Airport, then around 30 to 45 minutes by van or scooter to General Luna."
+    },
+    "faqs": [
+      {
+        "question": "When should I visit Magpupungko Rock Pools?",
+        "answer": "Go at low tide, when the pools are exposed and calm. Check the tide chart the day before and plan the rest of the day around it."
+      }
+    ]
   },
   {
     "slug": "things-to-do-in-coron",
@@ -421,9 +494,13 @@
       "coron island hopping",
       "coron lakes"
     ],
-    "description": "Things to do in Coron: Kayangan and Barracuda lakes, island escapades and the Calauit safari, with prices and how long each takes.",
+    "description": "Things to do in Coron: Kayangan and Barracuda lakes, Twin Lagoon, island escapades, the Mt. Tapyas sunset and Maquinit Hot Spring, with prices.",
     "intro": "Coron has some of the clearest water in the country. Plan around one or two island tours and keep a lazy day for the town.",
-    "addedAt": "2026-10-06"
+    "addedAt": "2026-10-06",
+    "title": "Things to Do in Coron: Lakes, Lagoons and Island Tours",
+    "quickAnswer": {
+      "gettingThere": "Fly into Busuanga (Francisco B. Reyes Airport), then around 30 to 40 minutes by van to Coron town."
+    }
   },
   {
     "slug": "things-to-do-in-vigan",
@@ -434,9 +511,19 @@
       "calle crisologo",
       "vigan itinerary"
     ],
-    "description": "Things to do in Vigan: Calle Crisologo, the dancing fountain, empanada stalls and heritage houses, best walked in the cool evening.",
+    "description": "Vigan tourist spots: Calle Crisologo, the Plaza Salcedo dancing fountain and Syquia Mansion, best walked in the cool evening, with budgets per head.",
     "intro": "Vigan is a Spanish-era town you can still walk through. Come late afternoon, eat empanada and stay for the fountain show.",
-    "addedAt": "2026-10-06"
+    "addedAt": "2026-10-06",
+    "title": "Vigan Tourist Spots: Things to Do in the Heritage City",
+    "quickAnswer": {
+      "gettingThere": "Around 8 to 10 hours by bus from Manila, or fly to Laoag and drive around 2 hours south."
+    },
+    "faqs": [
+      {
+        "question": "Is Vigan a UNESCO World Heritage Site?",
+        "answer": "Yes. The Historic Town of Vigan has been on the UNESCO World Heritage List since 1999, and Calle Crisologo is its best-known street."
+      }
+    ]
   },
   {
     "slug": "things-to-do-in-sagada",
@@ -447,9 +534,19 @@
       "sagada tourist spots",
       "kiltepan sunrise"
     ],
-    "description": "Things to do in Sagada: Kiltepan sunrise, Bomod-ok Falls, Lake Danum and lemon pie, with guide fees and the best time to go.",
+    "description": "Things to do in Sagada: Kiltepan sunrise, Sumaguing Cave, Bomod-ok Falls and lemon pie, with guide fees and the best time to go.",
     "intro": "Sagada is cold, quiet and worth the long ride. Wake up for the sunrise, hike to the falls and warm up with pie.",
-    "addedAt": "2026-10-06"
+    "addedAt": "2026-10-06",
+    "title": "Things to Do in Sagada: Sunrise, Caves and Lemon Pie",
+    "quickAnswer": {
+      "gettingThere": "Around 12 hours by overnight bus from Manila, or around 5 to 6 hours by bus or van from Baguio."
+    },
+    "faqs": [
+      {
+        "question": "Is the sea of clouds at Kiltepan guaranteed?",
+        "answer": "No. Clouds depend on the weather, so they are never guaranteed, but the sunrise over the Cordillera ridges is worth the early alarm either way. Weekdays are less crowded."
+      }
+    ]
   },
   {
     "slug": "indoor-activities-in-metro-manila",
@@ -464,8 +561,9 @@
       "indoor activities for kids in metro manila"
     ],
     "addedAt": "2026-10-06",
-    "description": "Indoor things to do in Metro Manila when it pours: The Mind Museum, Ayala Museum, Art in Island, Star City and cafes worth the trip.",
-    "intro": "Rain doesn't have to cancel the gala. Every pick here is indoors, from The Mind Museum and Ayala Museum to Star City's rides, so you only need to get there dry."
+    "description": "Indoor things to do in Metro Manila when it pours: The Mind Museum, Ayala Museum, Art in Island and Star City's rides, with budgets per head.",
+    "intro": "Rain doesn't have to cancel the gala. Every pick here is indoors, from The Mind Museum and Ayala Museum to Star City's rides, so you only need to get there dry.",
+    "title": "Indoor Activities in Metro Manila for Rainy Days"
   },
   {
     "slug": "date-ideas-in-makati",
@@ -479,9 +577,10 @@
       "romantic restaurants in makati",
       "date night makati"
     ],
-    "description": "Date ideas in Makati: dinner at Toyo Eatery or Blackbird, Ayala Museum, Salcedo market mornings and rooftop drinks, with budgets per head.",
-    "intro": "Makati does date night at every price point. Start at Ayala Museum, walk Ayala Triangle Gardens at dusk, then go big at Toyo Eatery or keep it easy over yakitori in Little Tokyo.",
-    "addedAt": "2026-10-06"
+    "description": "Date ideas in Makati: a walk in Ayala Triangle Gardens, Ayala Museum, drinks in Poblacion and Michelin-starred dinners, with budgets per head.",
+    "intro": "Makati does date night at every price point. Start at Ayala Museum, walk Ayala Triangle Gardens at dusk, then go big at a Michelin-starred table or keep it easy over cocktails in Poblacion.",
+    "addedAt": "2026-10-06",
+    "title": "Date Ideas in Makati: Michelin Dinners to Free Walks"
   },
   {
     "slug": "weekend-getaways-from-manila",
@@ -497,7 +596,14 @@
     ],
     "description": "Weekend getaways a drive from Manila: Masungi, Anilao dives, Tagaytay dinners, Taal heritage houses and Lucban, with budgets per head.",
     "intro": "You don't need a flight for a proper break. Rizal, Cavite, Laguna, Batangas and Quezon put mountain trails, dive sites, heritage towns and Tagaytay's ridge-view dinners a few hours' drive from Manila.",
-    "addedAt": "2026-10-06"
+    "addedAt": "2026-10-06",
+    "title": "Day Trips and Weekend Getaways from Manila",
+    "faqs": [
+      {
+        "question": "What is the easiest day trip from Manila?",
+        "answer": "Tagaytay and Rizal are the closest: Tagaytay for the Taal view and a long lunch, Rizal for Masungi Georeserve (reservation only) and Pintô Art Museum in Antipolo."
+      }
+    ]
   },
   {
     "slug": "things-to-do-in-bohol",
@@ -513,7 +619,17 @@
     ],
     "description": "Things to do in Bohol: the Chocolate Hills, tarsiers in Corella, the Loboc River, Balicasag snorkeling and Alona Beach, with budgets per head.",
     "intro": "Bohol rewards a road trip. Do the countryside loop for the Chocolate Hills, the tarsiers in Corella and lunch on the Loboc River, then give Panglao a full day for Balicasag and Alona Beach.",
-    "addedAt": "2026-10-06"
+    "addedAt": "2026-10-06",
+    "title": "Things to Do in Bohol: Countryside Loop and Panglao",
+    "quickAnswer": {
+      "gettingThere": "Fly into Bohol-Panglao International Airport, or take a fast ferry from Cebu to Tagbilaran, around 2 hours."
+    },
+    "faqs": [
+      {
+        "question": "How do I see tarsiers in Bohol responsibly?",
+        "answer": "Go to the Philippine Tarsier Sanctuary in Corella, where they live in natural forest. Talk softly, use no flash and never touch them. Skip roadside cages."
+      }
+    ]
   },
   {
     "slug": "things-to-do-in-palawan",
@@ -529,7 +645,11 @@
     ],
     "description": "Things to do in Palawan: El Nido island hopping, Coron's Kayangan Lake, the Underground River and Nacpan Beach, with budgets per head.",
     "intro": "Palawan is three trips in one: El Nido's lagoons, Coron's lakes and Puerto Princesa's Underground River. Pick one base, or two if you have a week, because the trip between them takes most of a day.",
-    "addedAt": "2026-10-06"
+    "addedAt": "2026-10-06",
+    "title": "Things to Do in Palawan: El Nido, Coron, Puerto Princesa",
+    "quickAnswer": {
+      "gettingThere": "Fly into Puerto Princesa, El Nido or Busuanga (for Coron). Moving between them takes most of a day, so pick one or two bases."
+    }
   },
   {
     "slug": "things-to-do-in-la-union",
@@ -543,9 +663,13 @@
       "san juan la union",
       "tangadan falls"
     ],
-    "description": "Things to do in La Union beyond the surf: El Union Coffee in San Juan, Tangadan Falls, Ma-Cho Temple and halo-halo in San Fernando.",
-    "intro": "Come for the San Juan surf, stay for the rest of La Union. Grab coffee at El Union, hike to Tangadan Falls, then cool down with halo-halo in San Fernando before the climb to Ma-Cho Temple.",
-    "addedAt": "2026-10-06"
+    "description": "Things to do in La Union beyond the surf: Tangadan Falls in San Gabriel, Ma-Cho Temple and halo-halo in San Fernando, with budgets per head.",
+    "intro": "Come for the San Juan surf, stay for the rest of La Union. Hike to Tangadan Falls, then cool down with halo-halo in San Fernando before the climb to Ma-Cho Temple.",
+    "addedAt": "2026-10-06",
+    "title": "Things to Do in La Union Beyond the Surf",
+    "quickAnswer": {
+      "gettingThere": "Around 5 to 6 hours by bus from Cubao or Pasay to San Juan. Tangadan Falls is a short drive inland from San Juan."
+    }
   },
   {
     "slug": "things-to-do-in-batangas",
@@ -559,9 +683,13 @@
       "anilao diving",
       "hikes in batangas"
     ],
-    "description": "Things to do in Batangas: Anilao diving, Masasa Beach, Fortune Island, Taal heritage houses and day hikes up Batulao and Pico de Loro.",
-    "intro": "Batangas is Manila's closest beach-and-mountain fix. Dive Anilao, island-hop to Fortune Island or Masasa, walk Taal's ancestral houses, and save a dry-season morning for Pico de Loro or Batulao.",
-    "addedAt": "2026-10-06"
+    "description": "Pasyalan sa Batangas: Anilao diving, Fortune Island, Laiya Beach, Taal heritage houses and a day hike up Mount Batulao, with budgets per head.",
+    "intro": "Batangas is Manila's closest beach-and-mountain fix. Dive Anilao, sail out to Fortune Island, swim at Laiya, walk Taal's ancestral houses and save a dry-season morning for Mount Batulao.",
+    "addedAt": "2026-10-06",
+    "title": "Pasyalan sa Batangas: Beaches, Dives and Day Hikes",
+    "quickAnswer": {
+      "gettingThere": "Around 2 to 3 hours from Manila by car via SLEX and the STAR Tollway, depending on where you are headed."
+    }
   },
   {
     "slug": "instagrammable-spots-in-metro-manila",
@@ -577,6 +705,133 @@
     ],
     "description": "Instagrammable spots in Metro Manila: Intramuros walls, San Agustin Church, Binondo streets, Ayala Triangle and Art in Island, with budgets per head.",
     "intro": "Manila's best backdrops are mostly old and mostly free. Shoot Intramuros and Fort Santiago in the soft light before 9 AM, then head to Binondo for the color and the food.",
+    "addedAt": "2026-10-06",
+    "title": "Instagrammable Places in Manila, Mostly Free"
+  },
+  {
+    "slug": "things-to-do-in-cebu",
+    "label": "Things to Do in Cebu",
+    "areaSlug": "cebu",
+    "displayAreaName": "Cebu",
+    "title": "Cebu Tourist Spots: Things to Do from City to South",
+    "keywords": [
+      "tourist spots in cebu",
+      "things to do in cebu",
+      "cebu tourist spots itinerary",
+      "cebu itinerary",
+      "things to do in cebu philippines"
+    ],
+    "description": "Tourist spots in Cebu, ranked: Kawasan Falls, the Moalboal sardine run, Sumilon sandbar, Temple of Leah and lechon stops, with budgets per head.",
+    "intro": "Cebu is two trips in one. Give the city a day for the Santo Niño basilica, Temple of Leah and lechon, then head south for Kawasan Falls, the Moalboal sardine run and the Sumilon sandbar off Oslob.",
+    "quickAnswer": {
+      "gettingThere": "Fly into Mactan-Cebu International Airport. South Cebu towns like Moalboal and Oslob are around 3 to 4 hours by bus from the Cebu South Bus Terminal."
+    },
+    "faqs": [
+      {
+        "question": "How many days do you need for Cebu?",
+        "answer": "Plan at least three: one for Cebu City and the Busay hills, one for Moalboal and Kawasan Falls, and one for Oslob and Sumilon Island in the far south."
+      }
+    ],
+    "addedAt": "2026-10-06"
+  },
+  {
+    "slug": "things-to-do-in-ilocos-norte",
+    "label": "Things to Do in Ilocos Norte",
+    "areaSlug": "ilocos-norte",
+    "displayAreaName": "Ilocos Norte",
+    "title": "Things to Do in Ilocos Norte: Tourist Spots, Ranked",
+    "keywords": [
+      "things to do in ilocos norte",
+      "ilocos norte tourist spots",
+      "ilocos norte itinerary",
+      "ilocos norte itinerary for 3 days",
+      "pagudpud"
+    ],
+    "description": "Ilocos Norte tourist spots: Paoay Church, the Bangui windmills, Kapurpurawan, Cape Bojeador Lighthouse and the beaches of Pagudpud, with budgets.",
+    "intro": "Ilocos Norte is a road trip up the coast. See Paoay Church and Malacañang of the North around Paoay Lake, then drive north past Kapurpurawan, Cape Bojeador and the Bangui windmills to the white sand of Pagudpud.",
+    "quickAnswer": {
+      "gettingThere": "Fly into Laoag International Airport, or ride a bus from Manila for around 9 to 10 hours. Rent a car or van to cover the coast."
+    },
+    "faqs": [
+      {
+        "question": "Is Paoay Church a UNESCO World Heritage Site?",
+        "answer": "Yes. Paoay Church is one of the four Baroque Churches of the Philippines on the UNESCO World Heritage List, famous for its 24 massive buttresses."
+      }
+    ],
+    "addedAt": "2026-10-06"
+  },
+  {
+    "slug": "things-to-do-in-batanes",
+    "label": "Things to Do in Batanes",
+    "areaSlug": "batanes",
+    "displayAreaName": "Batanes",
+    "title": "Batanes Tourist Spots: Things to Do in Batan and Sabtang",
+    "keywords": [
+      "batanes tourist spots",
+      "things to do in batanes",
+      "batanes tourist spots itinerary",
+      "batanes itinerary",
+      "vayang rolling hills"
+    ],
+    "description": "Batanes tourist spots: Vayang Rolling Hills, Marlboro Country, Basco Lighthouse at sunset, Valugan Boulder Beach and Sabtang's stone houses.",
+    "intro": "Batanes is all wind, wide hills and stone houses. Split it into a North Batan day for Vayang and the Basco Lighthouse sunset, a South Batan day for Marlboro Country, and a boat day to Sabtang.",
+    "quickAnswer": {
+      "gettingThere": "Fly into Basco Airport from Manila or Clark. Tours around Batan go by van, tricycle or bike; Sabtang is a faluwa boat ride from Ivana Port."
+    },
+    "faqs": [
+      {
+        "question": "Can you swim at Valugan Boulder Beach?",
+        "answer": "No. Valugan faces the open Pacific, the waves are strong and the shore is all boulders, so it is a look-only beach. Come for the sunrise and the sound of the rocks."
+      }
+    ],
+    "addedAt": "2026-10-06"
+  },
+  {
+    "slug": "where-to-eat-in-makati",
+    "label": "Where to Eat in Makati",
+    "areaSlug": "makati",
+    "category": "food",
+    "keywords": [
+      "where to eat in makati",
+      "makati food trip",
+      "where to eat in makati for dinner",
+      "michelin restaurants makati",
+      "fine dining makati"
+    ],
+    "description": "Where to eat in Makati: Michelin-starred Toyo Eatery, Helm, Hapag, Celera, Inatô and Kása Palma, plus dinner in the old Nielson Tower at Blackbird.",
+    "intro": "Makati is where the Michelin stars cluster. Save up for a tasting menu at Helm, Toyo Eatery or Hapag, or book Blackbird for dinner inside the 1937 Nielson Tower in Ayala Triangle.",
+    "faqs": [
+      {
+        "question": "Which Makati restaurants have Michelin stars?",
+        "answer": "Helm by Josh Boutwood has two stars. Toyo Eatery, Hapag, Celera, Inatô and Kása Palma each have one. Blackbird at the Nielson Tower is also in the Michelin Guide."
+      }
+    ],
+    "addedAt": "2026-10-06"
+  },
+  {
+    "slug": "pasyalan-sa-rizal",
+    "label": "Pasyalan sa Rizal",
+    "areaSlug": "rizal",
+    "displayAreaName": "Rizal",
+    "title": "Pasyalan sa Rizal: Day Trips near Manila",
+    "keywords": [
+      "pasyalan sa rizal",
+      "pasyalan sa tanay rizal",
+      "masungi georeserve",
+      "daranak falls",
+      "treasure mountain tanay"
+    ],
+    "description": "Pasyalan sa Rizal: Masungi Georeserve, Pintô Art Museum, Treasure Mountain sunrises, Daranak Falls and the Angono petroglyphs.",
+    "intro": "Rizal is the closest escape from the metro. Book a Masungi trail, catch the sunrise at Treasure Mountain in Tanay, swim at Daranak Falls, or spend a slow afternoon at Pintô Art Museum in Antipolo.",
+    "quickAnswer": {
+      "gettingThere": "Around 1 to 2 hours by car from Metro Manila via Marcos Highway or Ortigas Avenue Extension, depending on the stop."
+    },
+    "faqs": [
+      {
+        "question": "Do I need a reservation for Masungi Georeserve?",
+        "answer": "Yes. Masungi is visited by reservation only, in small guided groups, so book a trail slot before you go."
+      }
+    ],
     "addedAt": "2026-10-06"
   }
 ]
