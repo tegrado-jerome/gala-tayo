@@ -4,13 +4,13 @@ import { MapTrifold as MapIcon } from '@phosphor-icons/react/dist/csr/MapTrifold
 import { ChatCircleDots } from '@phosphor-icons/react/dist/csr/ChatCircleDots'
 import { Sparkle as Sparkles } from '@phosphor-icons/react/dist/csr/Sparkle'
 import InternalLink from '../components/InternalLink'
-import { TaraAvatar } from '../components/home/ask-ai/AskAiComponents'
+import { TaraAvatar } from '../components/assistant/AssistantReply'
 import { Page } from '../components/ui'
 
 const tools: Array<{ href: string; title: string; description: string; icon: PhosphorIcon; tint: 'tara' | 'sea' | 'warn' }> = [
   { href: '/plan-with-ai', title: 'Plan with AI', description: 'One sentence in, a full-day draft out.', icon: Sparkles, tint: 'tara' },
   { href: '/ask-ai/chatbot', title: 'Chat with Tara', description: 'Ask gala questions and get ideas.', icon: ChatCircleDots, tint: 'sea' },
-  { href: '/ask-ai/maps', title: 'Ask the map', description: 'Find places on a map, by vibe.', icon: MapIcon, tint: 'warn' },
+  { href: '/ask-ai/maps', title: 'Tara on the map', description: 'Same Tara, every pick pinned on a map.', icon: MapIcon, tint: 'warn' },
 ]
 
 function AskAiOverviewPage() {

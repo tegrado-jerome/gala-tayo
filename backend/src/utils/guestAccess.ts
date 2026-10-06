@@ -42,6 +42,7 @@ export const GUEST_ALLOWED_FUNCTIONS = new Set([
   "createFeedback",
   // AI, within the smaller guest daily limits
   "askAiChatbot",
+  "askAiAssistant",
   "askAiCancel",
   "askAiMaps",
   "askAiUsageCheck",

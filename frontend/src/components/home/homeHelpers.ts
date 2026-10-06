@@ -4,7 +4,6 @@ import { normalizeTypedSearchText, buildSearchPath, type SearchBudgetValue, type
 import { navigateToPath } from '../../utils/navigation'
 import { destinations } from '../../data/destinations'
 import type { PlaceCardData, PlaceCategoryMeta, PlaceTagMeta } from '../PlaceCard'
-import type { ChatMessage, AskAiJobStatus } from '../../utils/askAiRuntime'
 
 type BackendCategory = {
   id: string
@@ -46,11 +45,6 @@ type BudgetOption = {
   label: string
 }
 
-
-type AskAiSource = {
-  title: string
-  url: string
-}
 
 type HomePageInitialSearchState = {
   rawQuery?: string
@@ -140,28 +134,14 @@ type SearchRouteCache = {
   cachedAt: number
 }
 
-type AskAiRouteCache = {
-  question: string
-  answer: string
-  sources: AskAiSource[]
-  answerError: string | null
-  isSubmitting: boolean
-  messages: ChatMessage[]
-  jobId: string | null
-  jobStatus: AskAiJobStatus | null
-  cachedAt?: number
-}
-
 type IconProps = {
   className?: string
 }
 
 const searchRouteCachePrefix = 'galatayo:search-route:'
-const askAiRouteCacheKey = 'galatayo:ask-ai-route'
 const filtersCacheKey = 'galatayo:filters-cache'
 const SEARCH_RESULTS_PER_PAGE = 10
 const SEARCH_ROUTE_CACHE_TTL_MS = 30 * 60 * 1000
-const ASK_AI_ROUTE_CACHE_TTL_MS = 30 * 60 * 1000
 const FILTERS_CACHE_TTL_MS = 24 * 60 * 60 * 1000
 
 type FiltersCache = {
@@ -291,88 +271,6 @@ function writeSearchRouteCache(cache: Omit<SearchRouteCache, 'cachedAt'>) {
     }))
   } catch (error) {
     console.warn('Unable to cache search route:', error)
-  }
-}
-
-function readAskAiRouteCache(): AskAiRouteCache | null {
-  try {
-    const rawCache = readPersistentStorage(askAiRouteCacheKey)
-
-    if (!rawCache) {
-      return null
-    }
-
-    const parsedCache = JSON.parse(rawCache) as Partial<AskAiRouteCache>
-
-    if (
-      typeof parsedCache.cachedAt !== 'number' ||
-      !Number.isFinite(parsedCache.cachedAt) ||
-      Date.now() - parsedCache.cachedAt > ASK_AI_ROUTE_CACHE_TTL_MS
-    ) {
-      removePersistentStorage(askAiRouteCacheKey)
-      return null
-    }
-
-    const question = typeof parsedCache.question === 'string' ? parsedCache.question : ''
-    const answer = typeof parsedCache.answer === 'string' ? parsedCache.answer : ''
-    const sources = Array.isArray(parsedCache.sources)
-      ? parsedCache.sources.filter((source): source is AskAiSource => (
-          Boolean(source) &&
-          typeof source === 'object' &&
-          typeof (source as AskAiSource).title === 'string' &&
-          typeof (source as AskAiSource).url === 'string'
-        ))
-      : []
-    const answerError = typeof parsedCache.answerError === 'string' ? parsedCache.answerError : null
-    const isSubmitting = parsedCache.isSubmitting === true
-
-    return {
-      question,
-      answer,
-      sources,
-      answerError,
-      isSubmitting,
-      jobId: typeof parsedCache.jobId === 'string' ? parsedCache.jobId : null,
-      jobStatus:
-        parsedCache.jobStatus === 'pending' ||
-        parsedCache.jobStatus === 'streaming' ||
-        parsedCache.jobStatus === 'completed' ||
-        parsedCache.jobStatus === 'failed' ||
-        parsedCache.jobStatus === 'cancelled'
-          ? parsedCache.jobStatus
-          : null,
-      messages: Array.isArray(parsedCache.messages)
-        ? (parsedCache.messages as ChatMessage[]).filter(
-            (m) =>
-              m &&
-              typeof m === 'object' &&
-              (m.role === 'user' || m.role === 'assistant') &&
-              typeof m.content === 'string'
-          )
-        : [],
-    }
-  } catch (error) {
-    console.warn('Unable to restore cached Ask AI state:', error)
-    return null
-  }
-}
-
-function writeAskAiRouteCache(cache: AskAiRouteCache) {
-  try {
-    writePersistentStorage(askAiRouteCacheKey, JSON.stringify({
-      ...cache,
-      cachedAt: Date.now(),
-    }))
-  } catch (error) {
-    console.warn('Unable to cache Ask AI state:', error)
-  }
-}
-
-function clearAskAiRouteCache() {
-  try {
-    removePersistentStorage(askAiRouteCacheKey)
-  } catch (error) {
-    console.warn('Unable to clear cached Ask AI state:', error)
   }
 }
 
@@ -889,25 +787,21 @@ export type {
   GoodForChip,
   BudgetValue,
   BudgetOption,
-  AskAiSource,
   HomePageInitialSearchState,
   HomePageProps,
   BackendSearchPlace,
   BackendSearchStatus,
   MobileResultsViewMode,
   SearchRouteCache,
-  AskAiRouteCache,
   IconProps,
   FiltersCache,
 }
 
 export {
   searchRouteCachePrefix,
-  askAiRouteCacheKey,
   filtersCacheKey,
   SEARCH_RESULTS_PER_PAGE,
   SEARCH_ROUTE_CACHE_TTL_MS,
-  ASK_AI_ROUTE_CACHE_TTL_MS,
   FILTERS_CACHE_TTL_MS,
   fallbackCategories,
   fallbackGoodForOptions,
@@ -920,9 +814,6 @@ export {
   getCurrentSearchRouteCacheKey,
   readSearchRouteCache,
   writeSearchRouteCache,
-  readAskAiRouteCache,
-  writeAskAiRouteCache,
-  clearAskAiRouteCache,
   clearAllSearchRouteCaches,
   readFiltersCache,
   writeFiltersCache,

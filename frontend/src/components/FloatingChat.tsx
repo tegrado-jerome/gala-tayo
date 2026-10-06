@@ -1,7 +1,7 @@
-import { useEffect } from 'react'
-import { AskAiModePanel } from './home/ask-ai/AskAiComponents'
+import { useEffect, useRef, useState } from 'react'
+import { AssistantPanel } from './assistant/AssistantPanel'
 import { GuestAuthPrompt } from './GuestAuthPrompt'
-import { useAskAiChat } from '../hooks/useAskAiChat'
+import { useAssistant } from '../hooks/useAssistant'
 import { closeFloatingChat, useFloatingChat } from '../utils/floatingChat'
 import { lockBodyScroll, unlockBodyScroll } from '../utils/bodyScrollLock'
 import { navigateToPath } from '../utils/navigation'
@@ -27,7 +27,18 @@ const HIDDEN_PATHS = [
 const PHONE_QUERY = '(max-width: 639px)'
 
 function FloatingChatPanel({ initialQuestion }: { initialQuestion: string }) {
-  const { panelProps, isGuestPromptOpen, closeGuestPrompt } = useAskAiChat(initialQuestion)
+  const assistant = useAssistant('chat')
+  const [isGuestPromptOpen, setGuestPromptOpen] = useState(false)
+  const { send, isSessionLoading } = assistant
+  const askedRef = useRef('')
+
+  // A question passed in (from search or a CTA) is asked once the session is known.
+  useEffect(() => {
+    const question = initialQuestion.trim()
+    if (!question || isSessionLoading || askedRef.current === question) return
+    askedRef.current = question
+    void send(question)
+  }, [initialQuestion, isSessionLoading, send])
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -56,19 +67,21 @@ function FloatingChatPanel({ initialQuestion }: { initialQuestion: string }) {
         variant="ask-ai"
         mode="modal"
         isOpen={isGuestPromptOpen}
-        onClose={closeGuestPrompt}
+        onClose={() => setGuestPromptOpen(false)}
       />
       <div
         role="dialog"
         aria-label="GalaTayo AI chat"
         className="fixed inset-0 z-[7000] h-[100dvh] overflow-hidden bg-[var(--paper)] sm:inset-auto sm:right-4 sm:top-[72px] sm:h-[min(680px,calc(100dvh-6rem))] sm:w-[400px] sm:rounded-[var(--r-4)] sm:border sm:border-[var(--line)] sm:shadow-[var(--sh-3)] lg:right-8 lg:top-[80px]"
       >
-        <AskAiModePanel
-          {...panelProps}
+        <AssistantPanel
+          assistant={assistant}
+          mode="chat"
           onClose={closeFloatingChat}
-          onShowOnMap={(question) => {
+          onGuestUpgrade={() => setGuestPromptOpen(true)}
+          onShowMap={() => {
             closeFloatingChat()
-            navigateToPath(`/ask-ai/maps?q=${encodeURIComponent(question)}`)
+            navigateToPath('/ask-ai/maps')
           }}
           className="h-full"
         />

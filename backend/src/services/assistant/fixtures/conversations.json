@@ -1,0 +1,247 @@
+{
+ "recordedWith": "seed: scripted tool calls, answer written from tool results",
+ "conversations": [
+  {
+   "prompt": "BGC date ₱1500",
+   "steps": [
+    {
+     "toolCalls": [
+      {
+       "name": "search_places",
+       "args": {
+        "query": "date night",
+        "area": "BGC",
+        "vibe": "date",
+        "budget_max": 750
+       }
+      }
+     ]
+    },
+    {
+     "text": "Here are good picks:\n- **The Mind Museum** in Bonifacio Global City, from PHP 625.\n- **Poblacion Makati (Bar District)** in Poblacion, from PHP 500.\n- **The Spirits Library** in Poblacion, from PHP 600."
+    }
+   ]
+  },
+  {
+   "prompt": "Rainy QC barkada",
+   "steps": [
+    {
+     "toolCalls": [
+      {
+       "name": "weather",
+       "args": {
+        "area": "Quezon City"
+       }
+      },
+      {
+       "name": "search_places",
+       "args": {
+        "query": "barkada hangout",
+        "area": "Quezon City",
+        "vibe": "barkada",
+        "indoor": true
+       }
+      }
+     ]
+    },
+    {
+     "text": "Rain likely, so here are indoor picks:\n- **Art in Island** in Cubao, from PHP 850.\n- **Cubao Expo** in Cubao / Araneta City, from PHP 200.\n- **Deo Gracias** in Diliman / Scout Area, from PHP 800."
+    }
+   ]
+  },
+  {
+   "prompt": "Tagaytay family day",
+   "steps": [
+    {
+     "toolCalls": [
+      {
+       "name": "plan_day",
+       "args": {
+        "request": "Tagaytay family day trip with kids"
+       }
+      }
+     ]
+    },
+    {
+     "text": "Here are good picks:\n- **Sky Ranch Tagaytay** in Kaybagal South (Ridge), from PHP 100.\n- **Balay Dako** in Silang Crossing, from PHP 600.\n- **Antonio's** in Asisan / Zambal, from PHP 3000."
+    }
+   ]
+  },
+  {
+   "prompt": "Intramuros history walk",
+   "steps": [
+    {
+     "toolCalls": [
+      {
+       "name": "search_places",
+       "args": {
+        "query": "history walk heritage",
+        "area": "Intramuros",
+        "vibe": "solo"
+       }
+      }
+     ]
+    },
+    {
+     "text": "Here are good picks:\n- **Baluarte de San Diego** in Intramuros, from PHP 75.\n- **Fort Santiago** in Intramuros, from PHP 75.\n- **Intramuros** in Intramuros, and it's free."
+    }
+   ]
+  },
+  {
+   "prompt": "Baguio weekend",
+   "steps": [
+    {
+     "toolCalls": [
+      {
+       "name": "plan_day",
+       "args": {
+        "request": "Baguio weekend trip, sights and food"
+       }
+      }
+     ]
+    },
+    {
+     "text": "Here are good picks:\n- **Baguio City Public Market** in Central Business District, from PHP 100.\n- **Café by the Ruins** in Rizal Park / City Hall area, from PHP 400."
+    }
+   ]
+  },
+  {
+   "prompt": "beach malapit sa Manila",
+   "steps": [
+    {
+     "toolCalls": [
+      {
+       "name": "search_places",
+       "args": {
+        "query": "beach",
+        "area": "near Manila"
+       }
+      }
+     ]
+    },
+    {
+     "text": "Tara, heto ang mga swak:\n- **Laiya Beach**, from PHP 300. Top pick ko 'to!\n- **Sabang Beach Baler (Surfing)**, from PHP 350. Sulit din 'to.\n- **Patar Beach**, from PHP 30. Sulit din 'to."
+    }
+   ]
+  },
+  {
+   "prompt": "first time in Manila 2 days",
+   "steps": [
+    {
+     "toolCalls": [
+      {
+       "name": "plan_day",
+       "args": {
+        "request": "first time in Manila, history, museums and food"
+       }
+      }
+     ]
+    },
+    {
+     "text": "Here are good picks:\n- **Manila Clock Tower Museum** in Ermita, from PHP 100.\n- **Intramuros** in Intramuros, and it's free.\n- **Binondo Chinatown** in Binondo, and it's free."
+    }
+   ]
+  },
+  {
+   "prompt": "saan masarap mag-sisig",
+   "steps": [
+    {
+     "toolCalls": [
+      {
+       "name": "search_places",
+       "args": {
+        "query": "sisig",
+        "category": "Food"
+       }
+      }
+     ]
+    },
+    {
+     "text": "Tara, heto ang mga swak:\n- **Aling Lucing's Sisig**, from PHP 200. Top pick ko 'to!\n- **Ayà**. Sulit din 'to.\n- **Blackbird at the Nielson Tower**, from PHP 1500. Sulit din 'to."
+    }
+   ]
+  },
+  {
+   "prompt": "indoor activities ngayon umuulan",
+   "steps": [
+    {
+     "toolCalls": [
+      {
+       "name": "weather",
+       "args": {}
+      },
+      {
+       "name": "search_places",
+       "args": {
+        "query": "indoor activities",
+        "indoor": true
+       }
+      }
+     ]
+    },
+    {
+     "text": "Umuulan? Walang problema, indoor muna tayo:\n- **Art in Island**, from PHP 850. Top pick ko 'to!\n- **Ayala Museum**, from PHP 450. Sulit din 'to.\n- **Cantabria by Chele Gonzalez**, from PHP 1350. Sulit din 'to."
+    }
+   ]
+  },
+  {
+   "prompt": "date spot with view Makati",
+   "steps": [
+    {
+     "toolCalls": [
+      {
+       "name": "search_places",
+       "args": {
+        "query": "date view rooftop",
+        "area": "Makati",
+        "vibe": "date"
+       }
+      }
+     ]
+    },
+    {
+     "text": "Here are good picks:\n- **Poblacion Makati (Bar District)** in Poblacion, from PHP 500.\n- **Ayà** in Rockwell.\n- **The Spirits Library** in Poblacion, from PHP 600."
+    }
+   ]
+  },
+  {
+   "prompt": "cheap gala QC",
+   "steps": [
+    {
+     "toolCalls": [
+      {
+       "name": "search_places",
+       "args": {
+        "query": "gala hangout",
+        "area": "Quezon City",
+        "budget_max": 500
+       }
+      }
+     ]
+    },
+    {
+     "text": "Here are good picks:\n- **Cubao Expo** in Cubao / Araneta City, from PHP 200.\n- **Esmeralda Kitchen** in Santa Mesa Heights, from PHP 500.\n- **La Mesa Eco Park** in Greater Lagro / Fairview, from PHP 20."
+    }
+   ]
+  },
+  {
+   "prompt": "island hopping Coron budget",
+   "steps": [
+    {
+     "toolCalls": [
+      {
+       "name": "search_places",
+       "args": {
+        "query": "island hopping lagoon",
+        "area": "Coron"
+       }
+      }
+     ]
+    },
+    {
+     "text": "Here are good picks:\n- **Malcapuya Island (Coron Island Escapade)** in Malcapuya Island, from PHP 1800.\n- **Twin Lagoon** in Coron Island, from PHP 1500.\n- **Kayangan Lake** in Coron Island, from PHP 1500."
+    }
+   ]
+  }
+ ]
+}
