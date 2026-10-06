@@ -11,6 +11,7 @@ const OUTPUT_DIR = path.join(DATA_DIR, "place-listings");
 const GUIDES_FILE = path.resolve(__dirname, "../../frontend/src/data/seoGuides.json");
 
 type GuideTarget = {
+  slug: string;
   areaSlug?: string | null;
   category?: string | null;
   goodFor?: string | null;
@@ -69,7 +70,7 @@ async function generateTarget(target: ListingTarget) {
     await writeListingPayload(target, payload);
   }
 
-  return firstPage.totalPages;
+  return firstPage;
 }
 
 // Metro Manila cities always get listings (their pages predate the nationwide rollout);
@@ -124,13 +125,23 @@ async function main() {
   await rm(OUTPUT_DIR, { recursive: true, force: true });
   await mkdir(OUTPUT_DIR, { recursive: true });
 
+  const firstPages = new Map<string, SeoListingPage>();
   for (const target of targets) {
-    const totalPages = await generateTarget(target);
-    manifest.push({ ...target, totalPages });
+    const firstPage = await generateTarget(target);
+    firstPages.set(getListingPath(target, 1), firstPage);
+    manifest.push({ ...target, totalPages: firstPage.totalPages });
     console.log(
-      `Generated area=${target.areaSlug ?? "all"} category=${target.category ?? "all"} pages=${totalPages}`,
+      `Generated area=${target.areaSlug ?? "all"} category=${target.category ?? "all"} pages=${firstPage.totalPages}`,
     );
   }
+
+  // The guides index shows each guide's place count and lead place without loading every listing.
+  const guideSummaries = guides.map((guide) => {
+    const firstPage = firstPages.get(getListingPath({ areaSlug: guide.areaSlug ?? null, category: guide.category ?? null, goodFor: guide.goodFor ?? null, pageSize: AREA_PAGE_SIZE }, 1));
+    const topPlaces = (firstPage?.items ?? []).slice(0, 5).map((place) => ({ slug: place.slug, name: place.name, imageUrl: place.imageUrl }));
+    return { slug: guide.slug, total: firstPage?.total ?? 0, topPlaces };
+  });
+  await writeFile(path.join(OUTPUT_DIR, "guides.json"), `${JSON.stringify(guideSummaries)}\n`, "utf8");
 
   await writeCompactPlaces(places);
 

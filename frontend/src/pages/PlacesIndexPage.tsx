@@ -93,7 +93,8 @@ function PlacesIndexPage() {
     return [hdPhoto, imageUrl].filter((url): url is string => Boolean(url))
   }
   const getCountLabel = (areaSlug: string) => (places ? formatPlaceCount(placeCounts[areaSlug] ?? 0) : 'See places')
-  const listedAreas = [...areaCards, ...otherRegions.flatMap(({ destinations }) => destinations)]
+  // The ItemList names only the towns shown on the page; the rest are linked from each region page.
+  const listedAreas = [...areaCards, ...otherRegions.flatMap(({ destinations }) => destinations.slice(0, TOWNS_PER_REGION))]
 
   const jsonLd = [
     {

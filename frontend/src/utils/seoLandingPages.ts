@@ -252,6 +252,7 @@ export {
   getRelatedLandingTargets,
   getGuideAreaHub,
   getGuideOgImagePath,
+  getRegionSlugForArea,
   getLandingPath,
   getLandingTargetBySlug,
   getGuideSubtitle,

@@ -5,7 +5,7 @@ import { Button, Empty, Page, Skeleton } from '../components/ui'
 import { replaceWithPath } from '../utils/navigation'
 import { getCanonicalPlacePath, getCategoryBreadcrumbMeta, getHistoryState, resolveAreaMeta } from '../utils/routes'
 import { getDestinationBySlug } from '../data/destinations'
-import { buildPlaceDescription, buildPlaceFaqSchema, getStructuredPlaceType } from '../utils/placeSeo'
+import { buildPlaceDescription, buildPlaceFaqSchema, buildPlaceTitle, getStructuredPlaceType } from '../utils/placeSeo'
 import { mapBackendPlaceToCardData } from '../utils/placeMapping'
 import { formatLabelFromSlug } from '../utils/routes'
 import { getApiUrl } from '../utils/apiClient'
@@ -15,7 +15,7 @@ import { getSupabaseAccessToken, getSupabaseSession } from '../supabase'
 import { clearHistoryCache } from '../utils/historyCache'
 import type { PlaceDetail, PlaceDetailCardData } from '../types/appTypes'
 import { cachePlaceDetail, readCachedPlaceDetail } from '../utils/placeDetailCache'
-import { BRAND_NAME, PRODUCT_NAME } from '../utils/seoLandingPages'
+import { PRODUCT_NAME } from '../utils/seoLandingPages'
 import { socialImageUrl } from '../data/r2Config'
 import { getPlaceLeadPhoto } from '../utils/placeGalleryPhotos'
 
@@ -313,7 +313,7 @@ export default function SharedPlacePage({
   return (
     <>
       <SeoHead
-        title={place ? `${place.name} in ${areaMeta?.name || 'Metro Manila'} | ${BRAND_NAME}` : `Place Details | ${PRODUCT_NAME}`}
+        title={place ? buildPlaceTitle(place.name, areaMeta?.name || 'Metro Manila') : `Place Details | ${PRODUCT_NAME}`}
         description={place ? buildPlaceDescription(place, areaMeta?.name || 'Metro Manila') : `Discover searchable place details, FAQs, and planning info on ${PRODUCT_NAME}.`}
         canonicalPath={canonicalPath ?? undefined}
         robots={place?.isGalaWorthy === false ? 'noindex,follow' : undefined}

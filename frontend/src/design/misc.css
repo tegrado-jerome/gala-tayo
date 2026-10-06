@@ -176,4 +176,13 @@
 .m-rate svg { width: 30px; height: 30px; }
 .m-lost { display: grid; place-items: center; width: 96px; height: 96px; border-radius: 50%; background: var(--fill); color: var(--ink); }
 .m-lost svg { width: 52px; height: 52px; }
+/* Guides index: photo cards, 2 / 3 / 4 across. */
+.m-guide-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 12px; list-style: none; padding: 0; margin: 0; }
+@media (min-width: 768px) { .m-guide-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .m-guide-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px 20px; } }
+.m-guide-card { display: block; color: var(--ink); text-decoration: none; }
+.m-guide-photo { display: block; aspect-ratio: 4 / 3; border-radius: var(--r-3); overflow: hidden; background: var(--fill); }
+.m-guide-photo img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--t-fast); }
+.m-guide-card:hover .m-guide-photo img { transform: scale(1.03); }
+@media (prefers-reduced-motion: reduce) { .m-guide-photo img { transition: none; } .m-guide-card:hover .m-guide-photo img { transform: none; } }
 }

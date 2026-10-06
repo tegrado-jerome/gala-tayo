@@ -81,6 +81,13 @@ jobs:
           npm ci
           npm run validate
           npm run prerender
+      # Crawler's-eye checks on dist/ (JSON-LD, titles, canonicals, OG, sitemap). Reported, not blocking.
+      - name: SEO page checks
+        continue-on-error: true
+        working-directory: frontend
+        env:
+          VITE_SITE_URL: "https://galatayo.app"
+        run: npm run seo:check
       - name: Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1

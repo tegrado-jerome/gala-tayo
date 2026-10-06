@@ -7,7 +7,7 @@ import { readFile, writeFile, mkdir, copyFile, stat } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright-core'
-import { renderGuideCard } from './seo/og-card.mjs'
+import { renderPreviewCard } from './seo/og-card.mjs'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const dist = path.join(root, 'dist')
@@ -124,13 +124,14 @@ async function snapshot(page, routePath) {
 
   return page.evaluate(() => {
     const liveRoot = document.getElementById('root')
-    const photo = liveRoot.querySelector('.m-hero img, ol img')
-    const facts = [...liveRoot.querySelectorAll('.m-facts li')].map((item) => item.textContent.trim())
+    // Inputs for the page's preview card: the hero or first listed photo, the H1 and the place count.
+    const photo = [...liveRoot.querySelectorAll('.m-hero img, ol img, ul img, main img')].find((image) => /^https?:/.test(image.currentSrc || image.src))
+    const count = [...liveRoot.querySelectorAll('li, span, p, div')].find((element) => element.children.length <= 1 && /^\d[\d,]* places?$/.test(element.textContent.trim()))
     const card = {
       title: liveRoot.querySelector('h1')?.textContent.trim() || document.title,
-      area: facts[0] || '',
-      count: facts.find((fact) => /^\d+ places?$/.test(fact)) || '',
-      photoUrl: photo?.currentSrc || photo?.src || null,
+      area: liveRoot.querySelector('.m-facts li')?.textContent.trim() || '',
+      count: count?.textContent.trim() || '',
+      photoUrl: photo ? photo.currentSrc || photo.src : null,
     }
     const root = liveRoot.cloneNode(true)
     // Drop markup that only makes sense live: open dialogs, map tiles, blob images.
@@ -181,20 +182,22 @@ function buildHtml(shellHtml, { head, body }) {
 
 const defaultOgImage = `${siteOrigin}/images/og/galatayo-og.jpg`
 
-/** Saves the guide's preview card; if drawing fails, the page's tags point back to the default image. */
-async function writeGuideCard(cardPage, slug, result) {
-  const imagePath = `/og/guides/${slug}.jpg`
+const cardKickers = { guides: 'GalaTayo guide', places: 'GalaTayo · Places', categories: 'GalaTayo · Category' }
+
+/** Saves a page's preview card; if drawing fails, the page's tags point back to the default image. */
+async function writePreviewCard(cardPage, imagePath, result) {
+  const kind = imagePath.split('/')[2]
   try {
-    await renderGuideCard(cardPage, {
+    await renderPreviewCard(cardPage, {
       fontDir: path.join(dist, 'fonts'),
       title: result.card.title,
-      kicker: ['GalaTayo guide', result.card.area].filter(Boolean).join(' · '),
+      kicker: [cardKickers[kind] ?? 'GalaTayo', kind === 'guides' ? result.card.area : ''].filter(Boolean).join(' · '),
       footnote: result.card.count && !result.card.count.startsWith('0 ') ? `${result.card.count} · budget per head` : 'Budget per head on every pick',
       photoUrl: result.card.photoUrl,
-    }, path.join(dist, imagePath))
+    }, path.join(dist, decodeURIComponent(imagePath)))
     return result.head
   } catch (error) {
-    console.warn(`  preview card failed for ${slug}: ${error.message.split('\n')[0]}`)
+    console.warn(`  preview card failed for ${imagePath}: ${error.message.split('\n')[0]}`)
     return result.head.map((tag) => tag.replaceAll(`${siteOrigin}${imagePath}`, defaultOgImage))
   }
 }
@@ -288,9 +291,10 @@ async function main() {
 
       try {
         const result = await snapshot(page, job.routePath)
-        const guideSlug = job.routePath.match(/^\/guides\/([^/]+)$/)?.[1]
-        if (guideSlug) {
-          result.head = await writeGuideCard(cardPage, guideSlug, result)
+        // Pages that point og:image at /og/... get their card drawn here.
+        const cardPath = result.head.join('\n').match(new RegExp(`property="og:image" content="${siteOrigin.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(/og/[^"]+\\.jpg)"`))?.[1]
+        if (cardPath) {
+          result.head = await writePreviewCard(cardPage, cardPath, result)
         }
         // Noindex pages are still written so crawlers see the noindex tag without running JavaScript.
         const outputPath = job.routePath === '/' ? indexPath : path.join(dist, job.routePath, 'index.html')

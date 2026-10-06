@@ -18,6 +18,8 @@ import { getSeoListingPage, mapSeoPlaceToCard, type SeoPlaceSummary } from '../u
 import { BRAND_NAME, PRODUCT_NAME, SEO_LANDING_TARGETS } from '../utils/seoLandingPages'
 import type { PlaceDetail } from '../types/appTypes'
 
+const MIN_INDEXABLE_AREA_PLACES = 3
+
 type AreaPlacesPageProps = {
   areaSlug: string
   search?: string
@@ -101,7 +103,8 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
   const currentPage = Math.max(Number(searchParams.get('page') || '1') || 1, 1)
   const [confirmedPage, setConfirmedPage] = useState(() => routeCache?.page ?? currentPage)
   const hasQueryVariant = activeCategory !== 'all' || currentPage > 1
-  const shouldIndexAreaPage = !hasQueryVariant && !errorMessage && payload.total > 0
+  // A city page with one or two places is thin; it stays reachable but noindex (and out of the sitemap).
+  const shouldIndexAreaPage = !hasQueryVariant && !errorMessage && payload.total >= MIN_INDEXABLE_AREA_PLACES
   const getPagePath = (page: number, category = activeCategory) => {
     const params = new URLSearchParams()
     if (category !== 'all') {
@@ -330,17 +333,21 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
     : null
 
   const relatedGuides = SEO_LANDING_TARGETS.filter((target) => target.areaSlug === normalizedAreaSlug).slice(0, 4)
+  const spotCount = payload.total > 0 ? `: ${payload.total} Gala-Worthy ${payload.total === 1 ? 'Spot' : 'Spots'}` : ''
+  const baseTitle = `Things to Do in ${areaName}${spotCount}`
+  const pageTitle = baseTitle.length + BRAND_NAME.length + 3 <= 60 ? `${baseTitle} | ${BRAND_NAME}` : baseTitle
+  const topNames = allPlaces.slice(0, 3).map((place) => place.name)
+  const pageDescription = topNames.length
+    ? `${payload.total} gala-worthy ${payload.total === 1 ? 'place' : 'places'} in ${areaName}${destination && parentRegion ? `, ${destination.provinceName}` : ''}, like ${topNames.length > 1 ? `${topNames.slice(0, -1).join(', ')} and ${topNames.at(-1)}` : topNames[0]}, with the budget per head and the best time to go.`
+    : `${PRODUCT_NAME} lists gala-worthy places in ${areaName}, from food spots to parks, museums and date ideas ${region ? 'in every city of the region' : areaScope}.`
 
   return (
     <Page>
       <SeoHead
-        title={`Places in ${areaName} and Local Gala Ideas | ${BRAND_NAME}`}
-        description={
-          region
-            ? `${PRODUCT_NAME} helps you discover places in ${areaName}, from cafes and food spots to parks, museums, and date ideas in every city of the region.`
-            : `${PRODUCT_NAME} helps you discover places in ${areaName}, from cafes and food spots to parks, museums, and date ideas ${areaScope}.`
-        }
+        title={pageTitle}
+        description={pageDescription}
         canonicalPath={`/places/${encodeURIComponent(normalizedAreaSlug)}`}
+        image={{ url: `/og/places/${encodeURIComponent(normalizedAreaSlug)}.jpg`, alt: `Things to do in ${areaName}`, width: 1200, height: 630 }}
         robots={shouldIndexAreaPage ? 'index,follow' : 'noindex,follow'}
         jsonLd={jsonLd}
       />
@@ -355,7 +362,7 @@ function AreaPlacesPage({ areaSlug, search = '', navigationSource = 'push' }: Ar
       />
 
       <header className="mt-5 max-w-[36rem]">
-        <h1 className="g-h1">Places in {areaName}</h1>
+        <h1 className="g-h1">Things to do in {areaName}</h1>
         <p className="g-mut mt-2">
           {destination && parentRegion ? `Cafes, parks and food spots in ${areaName}, ${destination.provinceName}` : `Cafes, parks and food spots in ${areaName}`}
         </p>

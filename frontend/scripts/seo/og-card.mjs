@@ -1,5 +1,6 @@
-// Draws a guide's 1200x630 link-preview card (top photo, title, place count) in the
-// prerender's browser and saves it as a JPG, so every shared guide link gets its own preview.
+// Draws a page's 1200x630 link-preview card (top photo, title, place count) in the
+// prerender's browser and saves it as a JPG, so shared guide, city and category links
+// each get their own preview.
 import { mkdir, readFile } from 'node:fs/promises'
 import path from 'node:path'
 
@@ -36,7 +37,7 @@ function cardHtml({ fonts, title, kicker, footnote, photoUrl }) {
 </style></head><body><div class="card">
   ${photo ? `<img class="photo" src="${escapeHtml(photo)}" alt="">` : '<div class="sun"></div>'}
   <div class="shade"></div>
-  <div class="brand"><svg width="52" height="52" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="18" fill="#111111" stroke="rgba(255,255,255,.25)"/><path d="M20 35a12 12 0 0 1 24 0Z" fill="#34e0a1"/><rect x="12" y="38" width="40" height="4" rx="2" fill="#fff"/><rect x="19" y="45.5" width="26" height="4" rx="2" fill="#fff" opacity=".75"/><rect x="26" y="53" width="12" height="4" rx="2" fill="#fff" opacity=".5"/></svg>galatayo</div>
+  <div class="brand"><svg width="52" height="52" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="18" fill="#F6F1E7"/><path d="M10 38a22 22 0 0 1 44 0" fill="none" stroke="#00553A" stroke-width="6.5" stroke-linecap="round"/><path d="M19.5 38a12.5 12.5 0 0 1 25 0" fill="none" stroke="#111111" stroke-width="6.5" stroke-linecap="round"/><path d="M27 38a5 5 0 0 1 10 0Z" fill="#34E0A1"/><path d="M8 47c5-3.5 10 3.5 16 0s10-3.5 16 0 10 3.5 16 0" fill="none" stroke="#34E0A1" stroke-width="4.5" stroke-linecap="round"/></svg>galatayo</div>
   <div class="body">
     <p class="kicker">${escapeHtml(kicker)}</p>
     <h1>${escapeHtml(title)}</h1>
@@ -46,7 +47,7 @@ function cardHtml({ fonts, title, kicker, footnote, photoUrl }) {
 }
 
 /** Renders one card with an open Playwright page and writes it to `outputPath`. */
-export async function renderGuideCard(page, card, outputPath) {
+export async function renderPreviewCard(page, card, outputPath) {
   await page.setViewportSize({ width: 1200, height: 630 })
   const fonts = { body: await fontDataUrl(card.fontDir, 'dm-sans-latin.woff2'), display: await fontDataUrl(card.fontDir, 'fraunces-latin.woff2') }
   await page.setContent(cardHtml({ ...card, fonts }), { waitUntil: 'load', timeout: 30000 })
