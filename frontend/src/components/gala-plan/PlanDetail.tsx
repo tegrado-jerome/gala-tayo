@@ -23,6 +23,7 @@ import PlanRouteMap, { useIsDesktop } from './PlanRouteMap'
 import { PlanCover } from './PlanSummaryCard'
 import PlanTimeline, { type TimelineStop } from './PlanTimeline'
 import { RecapStoryButton } from './RecapStory'
+import PlanDayWeather from '../weather/PlanDayWeather'
 import { getGalaPlanBarkada, setGalaPlanRsvp, type GalaPlanBarkada } from '../../utils/galaPlanBarkadaApi'
 import { useGuestAuthPrompt } from '../GuestAuthPrompt'
 import {
@@ -539,6 +540,13 @@ function PlanDetail({ planId, session }: { planId: string; session?: Session | n
             {plan.viewer_is_owner ? <span>{plan.visibility === 'public' ? 'On your profile' : 'Link only'}</span> : null}
           </div>
 
+          {storyStop ? (
+            <PlanDayWeather
+              date={parsedDescription.dateMode === 'date' ? parsedDescription.date : null}
+              position={storyStop.latitude != null && storyStop.longitude != null ? { lat: storyStop.latitude, lng: storyStop.longitude } : null}
+              stopName={storyStop.name}
+            />
+          ) : null}
           {description ? <p className="mt-3 max-w-[65ch] text-[15px] leading-relaxed">{description}</p> : null}
           {notice ? <p role="status" className="g-sm mt-3 rounded-[var(--r-2)] bg-[var(--fill)] px-3 py-2">{notice}</p> : null}
 
