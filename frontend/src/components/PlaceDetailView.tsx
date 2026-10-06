@@ -1,41 +1,44 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import type { Icon as PhosphorIcon } from '@phosphor-icons/react'
-import { Wheelchair as Accessibility } from '@phosphor-icons/react/dist/csr/Wheelchair'
+import { Wheelchair } from '@phosphor-icons/react/dist/csr/Wheelchair'
 import { ArrowLeft } from '@phosphor-icons/react/dist/csr/ArrowLeft'
-import { Bus } from '@phosphor-icons/react/dist/csr/Bus'
+import { Backpack } from '@phosphor-icons/react/dist/csr/Backpack'
+import { Car } from '@phosphor-icons/react/dist/csr/Car'
 import { Check } from '@phosphor-icons/react/dist/csr/Check'
-import { CaretDown as ChevronDown } from '@phosphor-icons/react/dist/csr/CaretDown'
-import { DotsThree as Ellipsis } from '@phosphor-icons/react/dist/csr/DotsThree'
-import { Flag } from '@phosphor-icons/react/dist/csr/Flag'
-import { Heart } from '@phosphor-icons/react/dist/csr/Heart'
 import { Clock } from '@phosphor-icons/react/dist/csr/Clock'
 import { Compass } from '@phosphor-icons/react/dist/csr/Compass'
-import { Hourglass } from '@phosphor-icons/react/dist/csr/Hourglass'
+import { DotsThree as Ellipsis } from '@phosphor-icons/react/dist/csr/DotsThree'
+import { Door } from '@phosphor-icons/react/dist/csr/Door'
+import { Flag } from '@phosphor-icons/react/dist/csr/Flag'
+import { Heart } from '@phosphor-icons/react/dist/csr/Heart'
 import { MapPin } from '@phosphor-icons/react/dist/csr/MapPin'
-import { Path } from '@phosphor-icons/react/dist/csr/Path'
-import { SealCheck } from '@phosphor-icons/react/dist/csr/SealCheck'
-import { SunHorizon } from '@phosphor-icons/react/dist/csr/SunHorizon'
-import { Umbrella } from '@phosphor-icons/react/dist/csr/Umbrella'
-import { UsersThree } from '@phosphor-icons/react/dist/csr/UsersThree'
-import { Wallet } from '@phosphor-icons/react/dist/csr/Wallet'
+import { Medal } from '@phosphor-icons/react/dist/csr/Medal'
 import { NavigationArrow as Navigation } from '@phosphor-icons/react/dist/csr/NavigationArrow'
 import { PencilSimple as Pencil } from '@phosphor-icons/react/dist/csr/PencilSimple'
 import { Plus } from '@phosphor-icons/react/dist/csr/Plus'
+import { Prohibit } from '@phosphor-icons/react/dist/csr/Prohibit'
 import { ArrowBendUpLeft as Reply } from '@phosphor-icons/react/dist/csr/ArrowBendUpLeft'
+import { SealCheck } from '@phosphor-icons/react/dist/csr/SealCheck'
 import { ShareNetwork as Share2 } from '@phosphor-icons/react/dist/csr/ShareNetwork'
 import { Sparkle as Sparkles } from '@phosphor-icons/react/dist/csr/Sparkle'
-import { LetterCircleP as SquareParking } from '@phosphor-icons/react/dist/csr/LetterCircleP'
 import { Star } from '@phosphor-icons/react/dist/csr/Star'
+import { SunHorizon } from '@phosphor-icons/react/dist/csr/SunHorizon'
+import { Ticket } from '@phosphor-icons/react/dist/csr/Ticket'
+import { Train } from '@phosphor-icons/react/dist/csr/Train'
 import { Trash as Trash2 } from '@phosphor-icons/react/dist/csr/Trash'
 import { User as UserRound } from '@phosphor-icons/react/dist/csr/User'
+import { UsersThree } from '@phosphor-icons/react/dist/csr/UsersThree'
+import { Wallet } from '@phosphor-icons/react/dist/csr/Wallet'
 import { X } from '@phosphor-icons/react/dist/csr/X'
 import { useGuestAuthPrompt } from './GuestAuthPrompt'
 import AddToGalaPlanModal from './AddToGalaPlanModal'
 import InternalLink from './InternalLink'
 import ReportUserModal from './ReportUserModal'
-import { Button, Chip, Empty, Page, Sheet, Skeleton, SulitMeter, Tag, cx } from './ui'
+import { Button, Chip, Empty, Page, Sheet, Skeleton, Tag, cx } from './ui'
 import GtMap, { type MapPoint } from './ui/GtMap'
 import { getCuratedPlaceImages, normalizePlaceSlug } from '../data/curatedPlaceImages'
+import { homeAllTopPickPlaces } from '../data/homeRecommendations'
+import { placeCategories } from '../data/placeCategories'
 import PhotoCredits from './place-detail/PhotoCredits'
 import { useActionBarMode } from '../hooks/useActionBarMode'
 import { getPlaceLeadPhoto, usePlaceGalleryPhotos } from '../utils/placeGalleryPhotos'
@@ -57,15 +60,18 @@ import { openFloatingChat } from '../utils/floatingChat'
 import { MemberAvatar } from './place-detail/MemberAvatar'
 import CheckInButton from './place-detail/CheckInButton'
 import { getSulitLevel } from './place-detail/SulitMeter'
-import { GoodForList } from './place-detail/GoodForList'
 import DestructiveConfirmModal from './DestructiveConfirmModal'
-import { AllPhotos, DesktopGallery, PhoneGallery, useIsDesktopGallery, usePhotoList } from './place-detail/PlaceGallery'
-import { RatingBubbles } from './place-detail/RatingBubbles'
+import { AllPhotos, PhotoGrid, usePhotoList } from './place-detail/PlaceGallery'
+import { SunDots } from './place-detail/SunDots'
 import { SectionTabs } from './place-detail/SectionTabs'
+import SimilarPlaces from './place-detail/SimilarPlaces'
+import { buildHighlights, describedTips, reviewHighlights, shortBestTime, splitSentences } from './place-detail/placeInsights'
 import '../design/place.css'
 import { formatPlaceLocation } from '../utils/placeLocation'
 import { cleanString, titleCase, uniqueList, isAcceptedContributionImage, contributionImageErrorMessage, parseJsonResponse } from './place-detail/helpers'
 import type { PlaceDetailViewProps, PlaceReview, PlaceReviewsResponse, PlaceComment, PlaceCommentsResponse, PlaceImageContributionResponse, PlaceDetailCommunityCache } from './place-detail/types'
+
+const TOP_PICK_SLUGS = new Set(homeAllTopPickPlaces.map((pick) => normalizePlaceSlug(pick.slug || pick.name)))
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const PLACE_DETAIL_COMMUNITY_CACHE_PREFIX = 'galatayo:place-community:'
@@ -253,13 +259,13 @@ function ReadMoreText({ text }: { text: string }) {
 
   return (
     <>
-      <p ref={textRef} className={cx('max-w-[640px] text-[15px] leading-relaxed', !isExpanded && 'line-clamp-4')}>
+      <p ref={textRef} className={cx('pd-prose', !isExpanded && 'line-clamp-3')}>
         {text}
       </p>
       {isClamped || isExpanded ? (
-        <Button variant="text" size="sm" aria-expanded={isExpanded} onClick={() => setIsExpanded((value) => !value)}>
+        <button type="button" className="pd-more" aria-expanded={isExpanded} onClick={() => setIsExpanded((value) => !value)}>
           {isExpanded ? 'Show less' : 'Read more'}
-        </Button>
+        </button>
       ) : null}
     </>
   )
@@ -635,7 +641,6 @@ function PlaceDetailView({
   ])
   const hdPhotos = usePlaceGalleryPhotos(cleanString(place.slug) || null)
   useActionBarMode()
-  const isDesktopGallery = useIsDesktopGallery()
   // Credited HD photos lead; the place's own uploads follow. The lead is known before the manifest loads, so the hero never swaps.
   const { photos: galleryPhotos, markPhotoBroken } = usePhotoList([
     getPlaceLeadPhoto(cleanString(place.slug) || null),
@@ -1716,11 +1721,8 @@ function PlaceDetailView({
     }
     setIsAddToPlanOpen(true)
   }
-  const quickTake = cleanString(place.description) || cleanString(place.reason) || 'No quick take available yet.'
-  const commuteText =
-    cleanString(place.commute_access) ||
-    'Reachable by local routes, short walks, or ride-hailing depending on where you are coming from.'
-  const parkingText = cleanString(place.parking_info) || 'Parking depends on time and crowd, so plan ahead if bringing a car.'
+  const quickTake = cleanString(place.description) || cleanString(place.reason)
+  const commuteText = cleanString(place.commute_access)
   const visibleCommentCount = countThreadComments(comments)
   const closePlaceConcern = () => {
     if (!isPlaceConcernSubmitting) {
@@ -1731,19 +1733,22 @@ function PlaceDetailView({
   const budgetAmount =
     place.budget_min != null && Number.isFinite(Number(place.budget_min)) ? Math.max(0, Math.round(Number(place.budget_min))) : null
   const sulitLevel = budgetAmount != null ? getSulitLevel(budgetAmount) : null
-  const priceLine =
-    budgetAmount == null ? priceBadgeLabel : budgetAmount <= 0 ? 'Free entry' : `₱${budgetAmount.toLocaleString('en-PH')} / head`
-  const chipPrice =
+  const sulitLabel = sulitLevel && sulitLevel.index > 0 ? sulitLevel.label : ''
+  // Only good-value spots earn the "Sulit" word; pricier ones just show their level.
+  const valueText = sulitLabel ? (sulitLevel && sulitLevel.index <= 2 ? `Sulit · ${sulitLabel}` : sulitLabel) : ''
+  const budgetFromNote = priceBadgeLabel.startsWith('Starting from ₱') ? priceBadgeLabel.replace('Starting from ', '') : ''
+  const feeValue =
     budgetAmount != null
       ? budgetAmount <= 0
         ? 'Free entry'
-        : `₱${budgetAmount.toLocaleString('en-PH')}/head`
-      : priceBadgeLabel.startsWith('Starting from ₱')
-        ? `${priceBadgeLabel.replace('Starting from ', '')}/head`
-        : priceBadgeLabel.startsWith('Starting from')
-          ? ''
-          : priceBadgeLabel
+        : `About ₱${budgetAmount.toLocaleString('en-PH')} per person`
+      : budgetFromNote
+        ? `About ${budgetFromNote} per person`
+        : priceBadgeLabel.replace('Starting from: ', '')
+  const barPriceValue = budgetAmount != null ? (budgetAmount <= 0 ? 'Free entry' : `₱${budgetAmount.toLocaleString('en-PH')}`) : budgetFromNote
   const timeNeeded = formatVisitDuration(cleanString(place.visit_duration))
+  const bestTime = sentenceCase(cleanString(place.best_time_to_visit))
+  const bestTimeShort = shortBestTime(bestTime)
   const isRainSafe = isRainSafePlace(cleanString(place.indoor_outdoor), cleanString(place.weather_fit), categoryLabel)
   const placeLat = toCoordinate(place.coordinates?.lat) ?? toCoordinate(place.latitude) ?? toCoordinate(place.lat)
   const placeLng = toCoordinate(place.coordinates?.lng) ?? toCoordinate(place.longitude) ?? toCoordinate(place.lng)
@@ -1761,29 +1766,54 @@ function PlaceDetailView({
           : []),
       ]
     : []
-  const accessibilityText = cleanString(place.accessibility_notes)
-  const accessRows = [
-    { key: 'commute', title: place.commute_friendly ? 'Commute-friendly' : 'By commute', icon: Bus, text: commuteText },
-    { key: 'parking', title: 'Parking', icon: SquareParking, text: parkingText },
-    ...(accessibilityText ? [{ key: 'access', title: 'Accessibility', icon: Accessibility, text: accessibilityText }] : []),
-  ]
   const hoursText = cleanString(place.hours)
-  const commuteSummary = place.commute_friendly ? 'Commute-friendly' : cleanString(place.commute_access).split(/(?<=\.)\s/)[0]
-  const keyFacts: Array<{ key: string; icon: PhosphorIcon; label: string; value: string; href?: string }> = [
-    { key: 'hours', icon: Clock, label: 'Hours', value: /^(not available|n\/a|unknown)$/i.test(hoursText) ? '' : hoursText },
-    { key: 'budget', icon: Wallet, label: 'Budget', value: cleanString(place.budget_notes) || chipPrice },
-    { key: 'duration', icon: Hourglass, label: 'Time needed', value: timeNeeded },
-    { key: 'best-time', icon: SunHorizon, label: 'Best time', value: sentenceCase(cleanString(place.best_time_to_visit)) },
-    { key: 'crowd', icon: UsersThree, label: 'Crowd', value: titleCase(cleanString(place.crowd_level)) },
-    { key: 'getting-there', icon: Path, label: 'Getting there', value: distanceLabel || commuteSummary, href: '#getting-there' },
+  const commuteSummary = place.commute_friendly && !commuteText ? 'Commute-friendly' : splitSentences(commuteText)[0] ?? ''
+  const keyFacts: Array<{ key: string; icon: PhosphorIcon; value: string; note: string; href?: string; warn?: boolean }> = [
+    { key: 'duration', icon: Clock, value: timeNeeded, note: 'Time to spend' },
+    { key: 'best-time', icon: SunHorizon, value: bestTime, note: 'Best time to go' },
+    { key: 'fee', icon: Ticket, value: feeValue, note: valueText || 'Entrance and budget' },
+    { key: 'hours', icon: Door, value: /^(not available|n\/a|unknown)$/i.test(hoursText) ? '' : hoursText, note: 'Opening hours' },
+    { key: 'commute', icon: Train, value: commuteSummary, note: distanceLabel || 'Getting there', href: '#getting-there' },
+    { key: 'crowd', icon: UsersThree, value: titleCase(cleanString(place.crowd_level)), note: 'Crowd', warn: true },
   ].filter((fact) => fact.value)
-  const budgetNotes = cleanString(place.budget_notes)
+  const highlights = buildHighlights({
+    description: place.description,
+    highlights: place.highlights,
+    good_for: goodFor,
+    tags: place.tags,
+    nearby_context: place.nearby_context,
+    decision_reason: place.decision_reason,
+    commute_friendly: place.commute_friendly,
+    isRainSafe,
+  })
+  const notIdealFor = uniqueList(place.not_ideal_for ?? []).map((value) => value.toLowerCase())
+  const knowBefore: Array<{ key: string; icon: PhosphorIcon; text: string }> = [
+    { key: 'parking', icon: Car, text: cleanString(place.parking_info) },
+    { key: 'budget', icon: Wallet, text: cleanString(place.budget_notes) },
+    ...describedTips(place.description).map((text, index) => ({ key: `tip-${index}`, icon: Backpack, text })),
+    { key: 'access', icon: Wheelchair, text: cleanString(place.accessibility_notes) },
+    { key: 'not-ideal', icon: Prohibit, text: notIdealFor.length > 0 ? `Not ideal for ${notIdealFor.join(', ')}.` : '' },
+  ].filter((item) => item.text)
+  const normalizedCategory = categoryLabel.toLowerCase()
+  const categoryHref = categoryBreadcrumb
+    ? new URL(categoryBreadcrumb.childItem).pathname
+    : placeCategories.some((category) => category.value === normalizedCategory)
+      ? `/places/categories/${normalizedCategory}`
+      : null
+  const cityName = cleanString(place.city) || areaBreadcrumb?.areaName || ''
+  const localAreaName = cleanString(place.localArea) || cleanString(place.area)
+  const crumbs: Array<{ label: string; href?: string | null }> = [
+    ...(cityName ? [{ label: cityName, href: areaLink }] : []),
+    ...(localAreaName && localAreaName.toLowerCase() !== cityName.toLowerCase() ? [{ label: localAreaName }] : []),
+    { label: categoryLabel, href: categoryHref },
+  ]
+  const isTopPick = TOP_PICK_SLUGS.has(normalizePlaceSlug(placeSlug || place.name))
   const askAiQuestion = `Tell me about ${place.name} in ${locationLabel}. Is it good for a barkada gala, what should we try there, and when is the best time to go?`
   const commentActionClassName =
     'inline-flex min-h-[44px] items-center gap-1 text-[12px] font-semibold text-[var(--ink-2)] hover:text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-60'
   const commentMenuItemClassName =
     'flex min-h-[44px] w-full items-center gap-2 px-3 text-left text-[13px] font-medium text-[var(--ink)] hover:bg-[var(--fill)] disabled:cursor-not-allowed disabled:text-[var(--ink-3)]'
-  const heartIcon = <Heart aria-hidden="true" weight={isSaved ? 'fill' : 'regular'} style={isSaved ? { color: 'var(--tara)' } : undefined} />
+  const heartIcon = <Heart aria-hidden="true" weight={isSaved ? 'fill' : 'light'} style={isSaved ? { color: 'var(--bad)' } : undefined} />
 
   const renderComment = (comment: PlaceComment, isReply = false): ReactNode => {
     const isDeleted = isCommentDeleted(comment)
@@ -1838,7 +1868,7 @@ function PlaceDetailView({
       <li key={comment.id} className={isReply ? cx(isPending && 'opacity-75') : cx('pd-review', isFailed && 'is-failed', isPending && 'is-pending')}>
         <div className="flex items-start gap-3">
           {canOpenProfile ? (
-            <button type="button" onClick={handleOpenCommentProfile} aria-label={`Open ${displayName}'s profile`} className="shrink-0 rounded-full">
+            <button type="button" onClick={handleOpenCommentProfile} aria-label={`Open ${displayName}'s profile`} className="pd-av-hit shrink-0 rounded-full">
               {avatar}
             </button>
           ) : (
@@ -2083,31 +2113,20 @@ function PlaceDetailView({
 
   const ratingCountLabel = `${formatRatingCount(reviewCount)} ${reviewCount === 1 ? 'rating' : 'ratings'}`
   const hasHeadlineScore = headlineReviewCount >= MIN_RATINGS_TO_SHOW
-  const sulitLabel = sulitLevel && sulitLevel.index > 0 ? sulitLevel.label : ''
-  // Only good-value spots earn the "Sulit" tag; pricier ones just show their level.
-  const isSulit = Boolean(sulitLevel && sulitLevel.index > 0 && sulitLevel.index <= 2)
-  const valueText = sulitLabel ? (isSulit ? `Sulit · ${sulitLabel}` : sulitLabel) : ''
-  const barPrice = chipPrice || priceLine
   const scrollToSection = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' })
   }
   const sectionTabs = [
     { id: 'overview', label: 'Overview' },
-    { id: 'getting-there', label: 'Getting there' },
-    { id: 'faq', label: 'Good to know' },
+    { id: 'getting-there', label: 'Where it is' },
     { id: 'reviews', label: 'Reviews' },
+    { id: 'faq', label: 'FAQ' },
   ]
-  const pillClass = 'g-tag h-7 px-2.5 text-[13px]'
-
-  const headlineRatingNode = hasHeadlineScore ? (
-    <button type="button" onClick={() => scrollToSection('reviews')} className="inline-flex min-h-8 items-center gap-2 text-[14px]">
-      <RatingBubbles rating={headlineRating} />
-      <b className="font-semibold">{headlineRating.toFixed(1)}</b>
-      <span className="g-mut underline underline-offset-2">
-        {formatRatingCount(headlineReviewCount)} {headlineReviewCount === 1 ? 'rating' : 'ratings'}
-      </span>
-    </button>
-  ) : null
+  const reviewWords = reviewHighlights(
+    comments
+      .filter((comment) => !isCommentDeleted(comment) && !comment.local_post_state && !TEAM_COMMENT_PREFIX.test(comment.comment))
+      .map((comment) => comment.comment),
+  )
 
   const communitySection = !isCommunityPlaceReady ? (
     <Empty title="Reviews open soon" description="Ratings and comments aren't ready for this spot yet." />
@@ -2118,21 +2137,26 @@ function PlaceDetailView({
           <>
             <span className="pd-score-num">{averageRating.toFixed(1)}</span>
             <div className="min-w-0">
-              <RatingBubbles rating={averageRating} large />
+              <SunDots rating={averageRating} large />
               <p className="g-sm g-mut mt-1">{ratingCountLabel} from the GalaTayo crowd</p>
             </div>
           </>
         ) : reviewCount > 0 ? (
-          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
-            <Tag tone="tara">New</Tag>
-            <span className="g-sm g-mut">
-              {ratingCountLabel} so far. We show the score after {MIN_RATINGS_TO_SHOW}.
-            </span>
-          </div>
+          <p className="g-sm g-mut">
+            {ratingCountLabel} so far. We show the score after {MIN_RATINGS_TO_SHOW}.
+          </p>
         ) : (
           <p className="g-sm g-mut">Wala pang ratings. Be the first to help others decide.</p>
         )}
       </div>
+
+      {reviewWords.length > 0 ? (
+        <ul className="pd-rvh" aria-label="Words reviewers keep using">
+          {reviewWords.map((word) => (
+            <li key={word}>{word}</li>
+          ))}
+        </ul>
+      ) : null}
 
       {currentUserId && (!hasCurrentUserReview || isReviewEditing) ? (
         <div className="mt-5">
@@ -2211,7 +2235,7 @@ function PlaceDetailView({
 
       <h3 className="g-h3 mb-3 mt-8 flex items-center gap-2">
         Tips from the barkada
-        <span className="g-sm g-mut font-[family-name:var(--font-body)] font-normal tracking-normal">
+        <span className="g-sm g-mut font-normal">
           {isCommentsLoading ? <span className="pd-spin" role="status" aria-label="Loading comments" /> : visibleCommentCount === 0 ? null : `· ${visibleCommentCount}`}
         </span>
       </h3>
@@ -2259,223 +2283,201 @@ function PlaceDetailView({
   const backItem = breadcrumbItems[breadcrumbItems.length - 1]
   const saveLabel = isSaved ? `Remove ${place.name} from saved` : `Save ${place.name}`
   const showAddPhotoAction = approvedImageCount < 3
+  const priceSummary = barPriceValue ? (
+    <>
+      {budgetAmount === 0 ? null : <span className="pd-from">From</span>}
+      <b>{barPriceValue}</b>
+    </>
+  ) : null
 
   return (
-    <Page className="pt-0 lg:pt-6">
-      <nav aria-label="Breadcrumb" className="g-only-desk mb-2">
-        <ol className="g-sm g-mut flex flex-wrap items-center gap-x-1.5">
-          <li className="inline-flex" aria-hidden="true">
-            <ArrowLeft className="h-4 w-4" />
-          </li>
-          {breadcrumbItems.map((item, index) => (
-            <li key={`${item.label}-${index}`} className="inline-flex items-center gap-1.5">
-              {index > 0 ? (
-                <span className="g-fnt" aria-hidden="true">
-                  /
-                </span>
-              ) : null}
-              <InternalLink href={item.href ?? '/places'} className="inline-flex min-h-[44px] items-center hover:text-[var(--ink)]">
-                {item.label}
-              </InternalLink>
-            </li>
-          ))}
-        </ol>
-      </nav>
-
-      <div className="flex flex-col">
-        {isDesktopGallery ? null : (
-        <div className="order-1 lg:hidden">
-          <PhoneGallery
-            photos={galleryPhotos}
-            placeName={place.name}
-            onBroken={markPhotoBroken}
-            onOpen={setAllPhotosIndex}
-            showAddPhotoAction={showAddPhotoAction}
-            onContribute={handleOpenContribution}
-            topBar={
-              <>
-                <InternalLink href={backItem?.href ?? '/places'} ariaLabel={`Back to ${backItem?.label ?? 'places'}`} className="pd-hit">
-                  <span className="pd-round" aria-hidden="true">
-                    <ArrowLeft />
-                  </span>
-                </InternalLink>
-                <span className="flex-1" />
-                <button type="button" className="pd-hit" aria-label="Share" onClick={() => void handleSharePlace()}>
-                  <span className="pd-round" aria-hidden="true">
-                    <Share2 />
-                  </span>
-                </button>
-                <button type="button" className="pd-hit" onClick={() => void handleSavePlace()} disabled={isSaving} aria-pressed={isSaved} aria-label={saveLabel}>
-                  <span className="pd-round" aria-hidden="true">
-                    {heartIcon}
-                  </span>
-                </button>
-              </>
-            }
-          />
-        </div>
-        )}
-
-        <header className="pd-sheet order-2 lg:order-1 lg:mb-6">
-          <div className="lg:flex lg:items-end lg:justify-between lg:gap-6">
-            <div className="min-w-0">
-              <p className="g-sm g-mut">{[categoryLabel, locationLabel].filter(Boolean).join(' · ')}</p>
-              <h1 className="mt-1 font-[family-name:var(--font-display)] text-[28px] font-bold leading-[1.1] tracking-[-0.03em] [text-wrap:balance] lg:text-[36px]">
-                {place.name}
-              </h1>
-              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
-                {headlineRatingNode}
-                <ul className="flex flex-wrap items-center gap-1.5" aria-label="At a glance">
-                  {place.status === 'Open' ? (
-                    <li className={cx(pillClass, 'is-sea font-semibold')}>
-                      <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
-                      Open now
-                    </li>
-                  ) : null}
-                  {place.status === 'Closed' ? <li className={cx(pillClass, 'is-bad font-semibold')}>Closed</li> : null}
-                  {chipPrice ? <li className={cx(pillClass, 'font-semibold text-[var(--ink)]')}>{chipPrice}</li> : null}
-                  {sulitLabel ? (
-                    isSulit ? (
-                      <li className={cx(pillClass, 'is-tara')}>
-                        <b className="font-bold">Sulit</b>· {sulitLabel}
-                      </li>
-                    ) : (
-                      <li className={pillClass}>{sulitLabel}</li>
-                    )
-                  ) : null}
-                  {hasHeadlineScore ? null : <li className={pillClass}>New</li>}
-                  {isRainSafe ? (
-                    <li className={pillClass}>
-                      <Umbrella aria-hidden="true" />
-                      Rain-safe
-                    </li>
-                  ) : null}
-                </ul>
-              </div>
-            </div>
-            <div className="g-only-desk flex shrink-0 items-center gap-1">
-              <Button variant="text" size="sm" onClick={() => void handleSharePlace()}>
-                <Share2 aria-hidden="true" />
-                Share
-              </Button>
-              <Button variant="text" size="sm" onClick={() => void handleSavePlace()} disabled={isSaving} aria-pressed={isSaved} aria-label={saveLabel}>
+    <Page className="pt-0 lg:pt-8">
+      <PhotoGrid
+        photos={galleryPhotos}
+        placeName={place.name}
+        onBroken={markPhotoBroken}
+        onOpen={setAllPhotosIndex}
+        showAddPhotoAction={showAddPhotoAction}
+        onContribute={handleOpenContribution}
+        overlay={
+          <>
+            <InternalLink href={backItem?.href ?? '/places'} ariaLabel={`Back to ${backItem?.label ?? 'places'}`} className="pd-hit">
+              <span className="pd-round" aria-hidden="true">
+                <ArrowLeft weight="bold" />
+              </span>
+            </InternalLink>
+            <span className="flex-1" />
+            <button type="button" className="pd-hit" aria-label="Share" onClick={() => void handleSharePlace()}>
+              <span className="pd-round" aria-hidden="true">
+                <Share2 weight="light" />
+              </span>
+            </button>
+            <button type="button" className="pd-hit" onClick={() => void handleSavePlace()} disabled={isSaving} aria-pressed={isSaved} aria-label={saveLabel}>
+              <span className="pd-round" aria-hidden="true">
                 {heartIcon}
-                {isSaved ? 'Saved' : 'Save'}
-              </Button>
-            </div>
-          </div>
-          {shareError ? <p className="g-hint is-error mt-2">{shareError}</p> : null}
-          {saveError ? <p className="g-hint is-error mt-2">{saveError}</p> : null}
-          {contributionError && !isContributionOpen ? <p className="g-hint is-error mt-2">{contributionError}</p> : null}
-        </header>
-
-        {isDesktopGallery ? (
-        <div className="g-only-desk order-3 lg:order-2">
-          <DesktopGallery
-            photos={galleryPhotos}
-            placeName={place.name}
-            onBroken={markPhotoBroken}
-            onOpen={setAllPhotosIndex}
-            showAddPhotoAction={showAddPhotoAction}
-            onContribute={handleOpenContribution}
-            mapPoints={mapPoints}
-            mapCaption={locationLabel}
-            onMapClick={() => scrollToSection('getting-there')}
-          />
-        </div>
-        ) : null}
-      </div>
+              </span>
+            </button>
+          </>
+        }
+      />
 
       <div className="lg:mt-8 lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:gap-16">
         <div className="min-w-0">
+          <header className="pd-head">
+            <nav aria-label="Breadcrumb">
+              <ol className="pd-crumb">
+                {crumbs.map((crumb, index) => (
+                  <li key={`${crumb.label}-${index}`}>
+                    {crumb.href ? <InternalLink href={crumb.href}>{crumb.label}</InternalLink> : <span>{crumb.label}</span>}
+                  </li>
+                ))}
+              </ol>
+            </nav>
+            <div className="flex items-start justify-between gap-6">
+              <h1 className="pd-title">{place.name}</h1>
+              <div className="g-only-desk mt-1 flex shrink-0 items-center gap-1">
+                <Button variant="text" size="sm" onClick={() => void handleSharePlace()}>
+                  <Share2 weight="light" aria-hidden="true" />
+                  Share
+                </Button>
+                <Button variant="text" size="sm" onClick={() => void handleSavePlace()} disabled={isSaving} aria-pressed={isSaved} aria-label={saveLabel}>
+                  {heartIcon}
+                  {isSaved ? 'Saved' : 'Save'}
+                </Button>
+              </div>
+            </div>
+            {hasHeadlineScore || isTopPick || place.status === 'Closed' ? (
+              <div className="pd-rr">
+                {hasHeadlineScore ? (
+                  <button type="button" onClick={() => scrollToSection('reviews')} className="pd-rr-score">
+                    <SunDots rating={headlineRating} />
+                    <b>{headlineRating.toFixed(1)}</b>
+                    <u>
+                      {formatRatingCount(headlineReviewCount)} {headlineReviewCount === 1 ? 'review' : 'reviews'}
+                    </u>
+                  </button>
+                ) : null}
+                {isTopPick ? (
+                  <span className="g-pick">
+                    <Medal weight="fill" aria-hidden="true" />
+                    GalaTayo Pick
+                  </span>
+                ) : null}
+                {place.status === 'Closed' ? <span className="pd-closed">Closed</span> : null}
+              </div>
+            ) : null}
+            {shareError ? <p className="g-hint is-error mt-2">{shareError}</p> : null}
+            {saveError ? <p className="g-hint is-error mt-2">{saveError}</p> : null}
+            {contributionError && !isContributionOpen ? <p className="g-hint is-error mt-2">{contributionError}</p> : null}
+          </header>
+
           <SectionTabs items={sectionTabs} />
 
-          <section id="overview" className="pd-anchor mt-5 lg:mt-6" aria-label="Overview">
+          <section id="overview" className="pd-anchor" aria-label="Overview">
+            {quickTake ? (
+              <div className="pd-sec is-first">
+                <h2 className="pd-sec-title">About</h2>
+                <ReadMoreText text={quickTake} />
+                <button type="button" className="pd-ask" onClick={() => openFloatingChat(askAiQuestion)}>
+                  <Sparkles weight="light" aria-hidden="true" />
+                  Ask AI about this place
+                </button>
+              </div>
+            ) : null}
+
             {keyFacts.length > 0 ? (
-              <ul className="pd-facts" aria-label="Key facts">
+              <ul className="pd-kl" aria-label="Key facts">
                 {keyFacts.map((fact) => {
                   const FactIcon = fact.icon
-                  return (
-                    <li key={fact.key} className="pd-fact">
-                      <span className="pd-fact-ic" aria-hidden="true">
-                        <FactIcon weight="duotone" />
+                  const body = (
+                    <>
+                      <FactIcon weight="light" aria-hidden="true" className={fact.warn ? 'is-warn' : undefined} />
+                      <span className="min-w-0">
+                        <b>{fact.value}</b>
+                        <span>{fact.note}</span>
                       </span>
-                      <div className="min-w-0">
-                        <p className="pd-fact-k">{fact.label}</p>
-                        <p className="pd-fact-v" title={fact.value}>{fact.value}</p>
-                      </div>
+                    </>
+                  )
+                  return (
+                    <li key={fact.key}>
+                      {fact.href ? (
+                        <a
+                          href={fact.href}
+                          onClick={(event) => {
+                            event.preventDefault()
+                            scrollToSection('getting-there')
+                          }}
+                        >
+                          {body}
+                        </a>
+                      ) : (
+                        <div>{body}</div>
+                      )}
                     </li>
                   )
                 })}
               </ul>
             ) : null}
-            {budgetNotes ? <p className="g-xs g-fnt mt-1">Prices can change. Check before you go.</p> : null}
-
-            <div className="pd-sec">
-              <h2 className="pd-sec-title">About this spot</h2>
-              <div className="g-mut">
-                <ReadMoreText text={quickTake} />
-              </div>
-              <Button variant="soft" size="sm" className="mt-3" onClick={() => openFloatingChat(askAiQuestion)}>
-                <Sparkles weight="fill" style={{ color: 'var(--tara)' }} aria-hidden="true" />
-                Ask AI about this place
-              </Button>
-            </div>
           </section>
 
-          {goodFor.length > 0 ? (
-            <section className="pd-sec" aria-labelledby="place-good-for">
-              <h2 id="place-good-for" className="pd-sec-title">
-                Good for
+          {highlights.length > 0 ? (
+            <section className="pd-sec" aria-labelledby="place-why">
+              <h2 id="place-why" className="pd-sec-title">
+                Why it&rsquo;s gala-worthy
               </h2>
-              <GoodForList values={goodFor} />
+              <ul className="pd-hl">
+                {highlights.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+
+          {knowBefore.length > 0 ? (
+            <section className="pd-sec" aria-labelledby="place-know">
+              <h2 id="place-know" className="pd-sec-title">
+                Know before you go
+              </h2>
+              <div className="g-kb pd-kb">
+                {knowBefore.map((item) => {
+                  const TipIcon = item.icon
+                  return (
+                    <div key={item.key}>
+                      <TipIcon weight="light" aria-hidden="true" />
+                      <p>{item.text}</p>
+                    </div>
+                  )
+                })}
+                {place.budget_notes ? <small>Prices can change, so check before you go.</small> : null}
+              </div>
             </section>
           ) : null}
 
           <section id="getting-there" className="pd-sec pd-anchor" aria-labelledby="place-where">
             <h2 id="place-where" className="pd-sec-title">
-              Where you&rsquo;ll be
+              Where it is
             </h2>
-            <p className="text-[15px] font-medium">{addressLabel}</p>
-            {distanceLabel ? <p className="g-sm g-mut mt-0.5">{distanceLabel}</p> : null}
-            {mapPoints.length > 0 ? (
-              <GtMap points={mapPoints} label={`Map of ${place.name}`} className="mt-4 h-[220px] overflow-hidden rounded-[var(--r-3)] md:h-[320px]" />
+            <p className="pd-addr">
+              <MapPin weight="light" aria-hidden="true" />
+              <span>
+                {addressLabel}
+                {distanceLabel ? <span className="g-sm g-mut block">{distanceLabel}</span> : null}
+              </span>
+            </p>
+            {mapPoints.length > 0 ? <GtMap points={mapPoints} label={`Map of ${place.name}`} className="pd-map" /> : null}
+            {commuteText ? (
+              <p className="pd-commute">
+                <Train weight="light" aria-hidden="true" />
+                <span>
+                  <b>{place.commute_friendly ? 'Commute-friendly' : 'By commute'}</b>
+                  {commuteText}
+                </span>
+              </p>
             ) : null}
-            <ul className="pd-rows mt-2">
-              {accessRows.map((row) => {
-                const RowIcon = row.icon
-                return (
-                  <li key={row.key}>
-                    <RowIcon weight="duotone" aria-hidden="true" />
-                    <div className="min-w-0">
-                      <b>{row.title}</b>
-                      <p>{row.text}</p>
-                    </div>
-                  </li>
-                )
-              })}
-            </ul>
-            <Button variant="line" size="sm" className="mt-3" onClick={openDirections} disabled={!directionsUrl}>
-              <Navigation aria-hidden="true" />
+            <Button variant="line" size="sm" className="mt-4" onClick={openDirections} disabled={!directionsUrl}>
+              <Navigation weight="light" aria-hidden="true" />
               Get directions
             </Button>
-          </section>
-
-          <section id="faq" className="pd-sec pd-anchor" aria-labelledby="place-faq">
-            <h2 id="place-faq" className="pd-sec-title">
-              Good to know
-            </h2>
-            <div className="pd-faq">
-              {faqItems.map((item) => (
-                <details key={item.question} className="group">
-                  <summary>
-                    <h3 className="min-w-0 flex-1 text-[15px] font-medium leading-snug">{item.question}</h3>
-                    <ChevronDown className="h-4 w-4 shrink-0 text-[var(--ink-3)] transition-transform group-open:rotate-180" aria-hidden="true" />
-                  </summary>
-                  <p>{item.answer}</p>
-                </details>
-              ))}
-            </div>
           </section>
 
           <section id="reviews" className="pd-sec pd-anchor" aria-labelledby="place-reviews">
@@ -2485,20 +2487,47 @@ function PlaceDetailView({
             {communitySection}
           </section>
 
+          {areaBreadcrumb && areaLink && placeSlug ? (
+            <SimilarPlaces
+              areaSlug={areaBreadcrumb.areaSlug}
+              areaName={areaBreadcrumb.areaName}
+              areaHref={areaLink}
+              currentSlug={placeSlug}
+              onGuestFavorite={(retry) => guestAuth.open('favorite', retry)}
+            />
+          ) : null}
+
+          <section id="faq" className="pd-sec pd-anchor" aria-labelledby="place-faq">
+            <h2 id="place-faq" className="pd-sec-title">
+              FAQ
+            </h2>
+            <div className="pd-faq">
+              {faqItems.map((item) => (
+                <details key={item.question}>
+                  <summary>
+                    <h3>{item.question}</h3>
+                    <Plus weight="light" aria-hidden="true" />
+                  </summary>
+                  <p>{item.answer}</p>
+                </details>
+              ))}
+            </div>
+          </section>
+
           {canonicalPlaceLink && areaLink && areaBreadcrumb ? (
             <nav aria-label="Explore more" className="pd-links">
               <InternalLink href={areaLink} className="pd-link">
-                <MapPin weight="duotone" aria-hidden="true" />
+                <MapPin weight="light" aria-hidden="true" />
                 More in {areaBreadcrumb.areaName}
               </InternalLink>
               {categoryBreadcrumb ? (
                 <InternalLink href={new URL(categoryBreadcrumb.childItem).pathname} className="pd-link">
-                  <Compass weight="duotone" aria-hidden="true" />
+                  <Compass weight="light" aria-hidden="true" />
                   More {categoryBreadcrumb.childName}
                 </InternalLink>
               ) : null}
               <InternalLink href="/places" className="pd-link">
-                <Compass weight="duotone" aria-hidden="true" />
+                <Compass weight="light" aria-hidden="true" />
                 Browse all places
               </InternalLink>
             </nav>
@@ -2506,61 +2535,43 @@ function PlaceDetailView({
 
           {hdPhotos.length > 0 ? <PhotoCredits photos={hdPhotos} /> : null}
 
-          <div className="mt-8 border-t border-[var(--line-2)] pt-2">
+          <div className="mt-6 border-t border-[var(--line)] pt-2">
             <Button variant="text" size="sm" onClick={handleOpenPlaceConcern}>
-              <Flag aria-hidden="true" />
+              <Flag weight="light" aria-hidden="true" />
               Report a concern
             </Button>
           </div>
         </div>
 
-        <aside className="g-only-desk sticky top-[148px]" aria-label="Plan this place">
-          <div className="g-card p-6" style={{ boxShadow: 'var(--sh-2)' }}>
-            <p className="font-[family-name:var(--font-display)] text-[24px] font-bold tracking-[-0.02em]">{priceLine || 'Check price on site'}</p>
-            {sulitLevel ? (
-              <p className="g-sulit mt-1.5">
-                Sulit <SulitMeter score={(5 - sulitLevel.index) * 2} />
-                {sulitLevel.index > 0 ? <b>{sulitLevel.label}</b> : null}
-              </p>
-            ) : null}
-            {hasHeadlineScore ? (
-              <div className="mt-3 flex items-center gap-2 text-[13px]">
-                <RatingBubbles rating={headlineRating} />
-                <span className="g-mut">
-                  {headlineRating.toFixed(1)} · {formatRatingCount(headlineReviewCount)} ratings
-                </span>
-              </div>
-            ) : null}
-            <div className="mt-5 flex flex-col gap-2">
-              <Button variant="tara" size="lg" block onClick={handleAddToPlan}>
-                <Plus aria-hidden="true" />
-                Add to plan
+        <aside className="g-only-desk pd-aside" aria-label="Plan this place">
+          <div className="pd-aside-card">
+            {priceSummary ? <p className="pd-aside-price">{priceSummary}</p> : null}
+            {feeValue && !barPriceValue ? <p className="pd-aside-price"><b>{feeValue}</b></p> : null}
+            {bestTimeShort ? <p className="g-sm g-mut mt-1">Best: {bestTimeShort}</p> : null}
+            <Button variant="ink" size="lg" block className="mt-5" onClick={handleAddToPlan}>
+              <Plus weight="bold" aria-hidden="true" />
+              Add to plan
+            </Button>
+            <div className="mt-2 flex items-start gap-2">
+              <CheckInButton className="min-w-0 flex-1" placeId={place.id} placeName={place.name} session={appSession} onGuest={(retry) => guestAuth.open('passport-page', retry)} />
+              <Button variant="line" iconOnly onClick={() => void handleSavePlace()} disabled={isSaving} aria-pressed={isSaved} aria-label={saveLabel}>
+                {heartIcon}
               </Button>
-              <div className="flex items-start gap-2">
-                <CheckInButton className="min-w-0 flex-1" placeId={place.id} placeName={place.name} session={appSession} onGuest={(retry) => guestAuth.open('passport-page', retry)} />
-                <Button variant="soft" iconOnly onClick={() => void handleSavePlace()} disabled={isSaving} aria-pressed={isSaved} aria-label={saveLabel}>
-                  {heartIcon}
-                </Button>
-              </div>
             </div>
-            <p className="g-xs g-fnt mt-3 text-center">Tara! Add it to a barkada plan, then do the hatian later.</p>
+            <p className="g-xs g-mut mt-3 text-center">Tara! Add it to a barkada plan, then do the hatian later.</p>
           </div>
         </aside>
       </div>
 
-      <div className="h-20 lg:hidden" aria-hidden="true" />
-
       <div className="pd-bar lg:hidden">
         <div className="pd-bar-in">
-          {barPrice ? (
-            <div className="pd-bar-price">
-              <b>{barPrice}</b>
-              {valueText ? <span style={isSulit ? undefined : { color: 'var(--ink-2)' }}>{valueText}</span> : null}
-            </div>
-          ) : null}
+          <div className="pd-bar-price">
+            {priceSummary ? <p>{priceSummary}</p> : null}
+            {bestTimeShort ? <span>Best: {bestTimeShort}</span> : null}
+          </div>
           <CheckInButton iconOnly placeId={place.id} placeName={place.name} session={appSession} onGuest={(retry) => guestAuth.open('passport-page', retry)} />
-          <Button variant="tara" size="lg" className={barPrice ? 'shrink-0' : 'min-w-0 flex-1'} onClick={handleAddToPlan}>
-            <Plus aria-hidden="true" />
+          <Button variant="ink" size="lg" className="shrink-0" onClick={handleAddToPlan}>
+            <Plus weight="bold" aria-hidden="true" />
             Add to plan
           </Button>
         </div>

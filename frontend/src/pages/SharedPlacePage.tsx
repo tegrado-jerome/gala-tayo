@@ -177,36 +177,31 @@ export default function SharedPlacePage({
 
   if (isLoading) {
     return (
-      <Page className="pt-0 lg:pt-6">
+      <Page className="pt-0 lg:pt-8">
         <div aria-busy="true" aria-label="Loading place">
-          <Skeleton className="g-only-desk mb-5 mt-3 h-4 w-40" />
-          <Skeleton className="-mx-4 h-[min(78vw,56vh)] min-h-[280px] max-h-[520px] rounded-none lg:hidden" />
-          <div className="relative -mx-4 -mt-6 rounded-t-[var(--r-4)] bg-[var(--surface)] px-4 pt-6 lg:mx-0 lg:mt-0 lg:rounded-none lg:px-0 lg:pt-0">
-            <Skeleton className="h-3.5 w-40" />
-            <Skeleton className="mt-3 h-8 w-2/3 max-w-[420px]" />
-            <div className="mt-3 flex gap-1.5">
-              <Skeleton className="h-7 w-24 rounded-[var(--r-1)]" />
-              <Skeleton className="h-7 w-20 rounded-[var(--r-1)]" />
-              <Skeleton className="h-7 w-28 rounded-[var(--r-1)]" />
-            </div>
-          </div>
-          <div className="g-only-desk mt-5 grid h-[440px] grid-cols-[2fr_1fr_1fr] grid-rows-2 gap-2 overflow-hidden rounded-[var(--r-3)]">
+          <div className="-mx-4 grid h-[286px] grid-cols-[2fr_1fr] grid-rows-2 gap-[3px] overflow-hidden lg:mx-0 lg:h-[460px] lg:gap-2 lg:rounded-[var(--r-2)]">
             <Skeleton className="row-span-2 rounded-none" />
             <Skeleton className="rounded-none" />
             <Skeleton className="rounded-none" />
-            <Skeleton className="rounded-none" />
-            <Skeleton className="rounded-none" />
           </div>
-          <div className="mt-6 grid gap-4 lg:mt-10 lg:max-w-[calc(100%-424px)] lg:grid-cols-2">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <div key={index} className="flex items-center gap-3">
-                <Skeleton className="h-[38px] w-[38px] shrink-0 rounded-[var(--r-2)]" />
-                <div className="min-w-0 flex-1">
-                  <Skeleton className="h-3 w-16" />
-                  <Skeleton className="mt-2 h-3.5 w-3/4" />
+          <div className="pt-4 lg:mt-8 lg:max-w-[calc(100%-424px)] lg:pt-0">
+            <Skeleton className="h-3.5 w-48" />
+            <Skeleton className="mt-3 h-8 w-2/3 max-w-[420px]" />
+            <Skeleton className="mt-8 h-5 w-24" />
+            <Skeleton className="mt-3 h-3.5 w-full" />
+            <Skeleton className="mt-2 h-3.5 w-11/12" />
+            <Skeleton className="mt-2 h-3.5 w-3/5" />
+            <div className="mt-6 grid gap-4 border-y border-[var(--line)] py-4 md:grid-cols-2">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="flex items-start gap-3">
+                  <Skeleton className="h-6 w-6 shrink-0 rounded-full" />
+                  <div className="min-w-0 flex-1">
+                    <Skeleton className="h-3.5 w-3/4" />
+                    <Skeleton className="mt-2 h-3 w-20" />
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </Page>
