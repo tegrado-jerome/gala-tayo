@@ -178,7 +178,8 @@ body {
   font-family: var(--font-sans);
 }
 
-#root {
+#root,
+#root-prerendered {
   height: auto;
   min-height: 100dvh;
   width: 100%;
@@ -188,7 +189,8 @@ body {
   font-family: var(--font-sans);
 }
 
-#root > div:first-child {
+#root > div:first-child,
+#root-prerendered > div:first-child {
   height: auto;
   min-height: 100dvh;
 }

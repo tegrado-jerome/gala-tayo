@@ -17,7 +17,7 @@ import { SectionHead, Skeleton, cx } from '../ui'
 import { GalaTodayHome } from './GalaTodayCard'
 import { galaTayoPickSlugs, getRailPickSlugs } from '../../data/galaTayoPicks'
 import { getStaticPlaceImageUrlForSlug } from '../../data/placeIndexVisuals'
-import { resizedMediaUrl } from '../../data/r2Config'
+import { heroSrcSet, resizedMediaUrl } from '../../data/r2Config'
 import { useListingRail } from '../../hooks/useListingRail'
 import type { PlaceDetail } from '../../types/appTypes'
 import { fetchHomePlaceDetailsBatch } from '../../utils/placeDetailCache'
@@ -183,7 +183,7 @@ function EditorsPick({ place }: { place: PlaceDetail | undefined }) {
       {photo ? (
         <img
           src={resizedMediaUrl(photo, 'hero')}
-          srcSet={`${resizedMediaUrl(photo, 'card')} 640w, ${resizedMediaUrl(photo, 'hero')} 1280w`}
+          srcSet={heroSrcSet(photo)}
           sizes="(min-width: 1240px) 1176px, calc(100vw - 32px)"
           width={1280}
           height={720}
@@ -394,14 +394,15 @@ function HomeDiscover({ isRaining = false, headline, top, className }: { isRaini
         ) : (
           <>
             <MoodPills />
-            <GalaTodayHome />
+            {/* The editor's pick is the page's LCP photo, so it sits above Gala Today, which loads later and would push it down. */}
             <EditorsPick place={pickDetails?.find((place) => place.slug === EDITORS_PICK.slug)} />
+            <GalaTodayHome />
 
             {pickDetails ? (
               picks.length > 0 ? (
                 <Rail title="GalaTayo Picks" subtitle="Top-scored places around the country" seeAllHref="/places">
-                  {picks.map((place, index) => (
-                    <PhotoCard key={place.slug ?? place.id} place={place} priority={index < 2} onGuestFavorite={openGuestFavorite} />
+                  {picks.map((place) => (
+                    <PhotoCard key={place.slug ?? place.id} place={place} onGuestFavorite={openGuestFavorite} />
                   ))}
                 </Rail>
               ) : null
